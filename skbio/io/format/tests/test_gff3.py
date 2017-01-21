@@ -15,6 +15,7 @@ from skbio import DNA, Sequence
 from skbio.io import GFF3FormatError
 from skbio.io.format.gff3 import (_yield_record,
                                   _parse_record,
+                                  _parse_attr,
                                   _gff3_sniffer,
                                   _gff3_to_interval_metadata,
                                   _interval_metadata_to_gff3,
@@ -124,6 +125,12 @@ class SnifferTests(TestCase):
 
 
 class ReaderTests(GFF3IOTests):
+    def test_parse_attr(self):
+        s = 'Dbxref=GO:000152,GO:001234;Note=fooo'
+        obs = _parse_attr(s)
+        exp = {'db_xref': 'GO:000152,GO:001234', 'note': 'fooo'}
+        self.assertEqual(exp, obs)
+
     def test_yield_record(self):
         obs = [('data', 'seqid1', ['seqid1\txxx', 'seqid1\tyyy']),
                ('data', 'seqid2', ['seqid2\tzzz'])]
@@ -219,6 +226,43 @@ class WriterTests(GFF3IOTests):
                    if not i.startswith('#')]
 
         self.assertEqual([exp], obs)
+
+    def test_interval_metadata_to_gff3_escape(self):
+        # test escape of reserved char in GFF3
+        exp = 'ctg123\t.\tgene\t1\t9\t.\t.\t.\tID=a%3B%3D%26%2Cb'
+        imd = IntervalMetadata(9)
+        imd.add([(0, 9)], metadata={
+            'type': 'gene', 'ID': 'a;=&,b'})
+        with io.StringIO() as fh:
+            _interval_metadata_to_gff3(imd, fh, seq_id='ctg123')
+            # only compare the uncommented lines because the comments are not
+            # stored in IntervalMetadata
+            obs = [i for i in fh.getvalue().splitlines()
+                   if not i.startswith('#')]
+
+        self.assertEqual([exp], obs)
+
+    def test_interval_metadata_to_gff3_multiple_values(self):
+        # test multiple values of db_xref are correctly serialized
+        exp = 'ctg123\t.\tgene\t1\t9\t.\t.\t.\tDbxref=GO:000152,GO:001234'
+        imd = IntervalMetadata(9)
+        imd.add([(0, 9)], metadata={
+            'type': 'gene', 'db_xref': ['GO:000152', 'GO:001234']})
+        with io.StringIO() as fh:
+            _interval_metadata_to_gff3(imd, fh, seq_id='ctg123')
+            # only compare the uncommented lines because the comments are not
+            # stored in IntervalMetadata
+            obs = [i for i in fh.getvalue().splitlines()
+                   if not i.startswith('#')]
+
+        self.assertEqual([exp], obs)
+
+    def test_interval_metadata_to_gff3_empty(self):
+        imd = IntervalMetadata(None)
+        with io.StringIO() as fh:
+            _interval_metadata_to_gff3(imd, fh, seq_id='foo')
+            obs = fh.getvalue()
+        self.assertEqual(obs, '##gff-version 3\n')
 
     def test_interval_metadata_to_gff3_sub_region(self):
         seq_id = 'NC 7'

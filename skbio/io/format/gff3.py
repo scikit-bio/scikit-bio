@@ -263,7 +263,7 @@ def _gff3_to_generator(fh):
     '''
     id_lengths = {}
     for data_type, sid, data in _yield_record(fh):
-        if data_type == 'pragma':
+        if data_type == 'length':
             # get length from sequence-region pragma.
             # the pragma lines are always before the real annotation lines.
             id_lengths[sid] = data
@@ -324,7 +324,7 @@ def _gff3_to_interval_metadata(fh, seq_id):
     length = None
     for data_type, sid, data in _yield_record(fh):
         if seq_id == sid:
-            if data_type == 'pragma':
+            if data_type == 'length':
                 # get length from sequence-region pragma
                 length = data
             elif data_type == 'data':
@@ -372,7 +372,7 @@ def _yield_record(fh):
         if line.startswith('##sequence-region'):
             _, seq_id, start, end = line.split()
             length = int(end) - int(start) + 1
-            yield 'pragma', seq_id, length
+            yield 'length', seq_id, length
         if line.startswith('##FASTA'):
             # stop once reaching to sequence section
             break
