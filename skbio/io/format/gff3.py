@@ -3,9 +3,9 @@
 
 .. currentmodule:: skbio.io.format.gff3
 
-GFF3 is a standard file format for storing genomic features in a text
-file. GFF stands for Generic Feature Format. GFF files are plain
-text, 9-column, tab-delimited files [1]_.
+GFF3 (Generic Feature Format version 3) is a standard file format for
+describing features for biological sequences. It contains lines of
+text, each consisting of 9 tab-delimited columns [1]_.
 
 Format Support
 --------------
@@ -280,6 +280,8 @@ def _generator_to_gff3(obj, fh, skip_subregion=True):
     ----------
     obj : Iterable of (seq_id, IntervalMetadata)
     fh : file handler
+    skip_subregion : bool
+        write a line for each sub-regions of an ``Interval`` if it is ``False``
     '''
     # write file header
     fh.write('##gff-version 3\n')
@@ -289,7 +291,6 @@ def _generator_to_gff3(obj, fh, skip_subregion=True):
 
 @gff3.reader(Sequence)
 def _gff3_to_sequence(fh, seq_num=1):
-    ''''''
     return _construct_seq(fh, Sequence, seq_num)
 
 
@@ -302,7 +303,6 @@ def _sequence_to_gff3(obj, fh, skip_subregion=True):
 
 @gff3.reader(DNA)
 def _gff3_to_dna(fh, seq_num=1):
-    ''''''
     return _construct_seq(fh, DNA, seq_num)
 
 
@@ -320,6 +320,8 @@ def _gff3_to_interval_metadata(fh, seq_id):
     Parameters
     ----------
     fh : file handler
+    seq_id : str
+        sequence ID which the interval metadata is associated with
     '''
     length = None
     for data_type, sid, data in _yield_record(fh):
@@ -339,12 +341,16 @@ def _gff3_to_interval_metadata(fh, seq_id):
 
 @gff3.writer(IntervalMetadata)
 def _interval_metadata_to_gff3(obj, fh, seq_id, skip_subregion=True):
-    '''
+    '''Output ``IntervalMetadata`` object to GFF3 file.
+
     Parameters
     ----------
     obj : IntervalMetadata
+    fh : file object like
     seq_id : str
         ID for column 1 in the GFF3 file.
+    skip_subregion : bool
+        write a line for each sub-regions of an ``Interval`` if it is ``False``
     '''
     # write file header
     fh.write('##gff-version 3\n')
@@ -446,8 +452,8 @@ def _parse_attr(s):
     return md
 
 
-def _serialize_interval_metadata(
-        interval_metadata, seq_id, fh, skip_subregion=True):
+def _serialize_interval_metadata(interval_metadata, seq_id, fh,
+                                 skip_subregion=True):
     '''Serialize an IntervalMetadata to GFF3.
 
     Parameters
