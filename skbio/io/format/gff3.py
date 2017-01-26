@@ -214,17 +214,17 @@ Specifications/blob/master/gff3.md
 # ----------------------------------------------------------------------------
 
 import re
-from io import StringIO
 from collections import Iterable
 
 from skbio.sequence import DNA, Sequence
 from skbio.io import create_format, GFF3FormatError
 from skbio.metadata import IntervalMetadata
 from skbio.io.format._base import (
-    _line_generator, _too_many_blanks)
+    _line_generator, _too_many_blanks, _get_nth_sequence)
+from skbio.io.format.fasta import _fasta_to_generator
 from skbio.io.format._sequence_feature_vocabulary import (
     _vocabulary_change, _vocabulary_skip)
-from skbio.io import write, read
+from skbio.io import write
 
 
 gff3 = create_format('gff3')
@@ -362,10 +362,8 @@ def _construct_seq(fh, constructor=DNA, seq_num=1):
     for i, (data_type, seq_id, l) in enumerate(_yield_record(fh), 1):
         if data_type == 'data' and seq_num == i:
             lines = l
-    # you can't read directly from fh because in registry.py line 543
-    # file.tell() will fail "telling position disabled by next() call".
-    stream = StringIO(fh.read())
-    seq = read(stream, format='fasta', into=constructor, seq_num=seq_num)
+    seq = _get_nth_sequence(_fasta_to_generator(fh, constructor=constructor),
+                            seq_num=seq_num)
     seq.interval_metadata = _parse_record(lines, len(seq))
     return seq
 
