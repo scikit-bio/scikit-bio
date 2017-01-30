@@ -505,6 +505,8 @@ fuzzy=[(False, False)], metadata={'gene': 'sagC'})
 fuzzy=[(False, False)], metadata={'gene': 'sagB'})
 
     """
+    default_write_format = 'gff3'
+
     def __init__(self, upper_bound, copy_from=None):
         self._upper_bound = upper_bound
         if self.upper_bound is not None:
@@ -838,7 +840,7 @@ fuzzy=[(True, True)], metadata={'gene': 'sagB'})
                     yield intvl
 
     @experimental(as_of='0.5.1')
-    def drop(self, intervals):
+    def drop(self, intervals, negate=False):
         """Drops Interval objects.
 
         The given ``Interval`` objects will be removed and their
@@ -848,14 +850,19 @@ fuzzy=[(True, True)], metadata={'gene': 'sagB'})
         ----------
         intervals : iterable of ``Interval``
             ``Interval`` objects to drop from this object.
-
+        negate : bool
+            Negate the drop operation, i.e. keeping the specified intervals
+            instead of dropping them.
         """
         to_delete = {id(f) for f in intervals}
 
         new_intvls = []
         # iterate through queries and drop them
         for intvl in self._intervals:
-            if id(intvl) in to_delete:
+            drop = id(intvl) in to_delete
+            if negate is True:
+                drop = not drop
+            if drop:
                 intvl._interval_metadata = None
             else:
                 new_intvls.append(intvl)

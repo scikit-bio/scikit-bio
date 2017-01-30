@@ -1,0 +1,15 @@
+##gff-version   3
+##sequence-region   Chromosome 1 4641652
+#!genome-build European Nucleotide Archive ASM584v2
+#!genome-version ASM584v2
+#!genome-date 2014-08
+#!genome-build-accession GCA_000005845.2
+#!genebuild-last-updated 2014-08
+Chromosome	European Nucleotide Archive	chromosome	1	4641652	.	.	.	Alias=U00096.3;ID=chromosome:Chromosome;Is_circular=true
+###
+Chromosome	regulondb_feature	biological_region	148	148	.	+	.	external_name=Promoter thrLp (RegulonDB:ECK120010236);logic_name=regulondb_promoter
+gi|556503834|ref|NC_000913.3|	Prodigal_v2.60	gene	337	2799	1.8	+	0	ID=1_1;gc_cont=0.427
+gi|556503834|ref|NC_000913.3|	Prodigal_v2.60	CDS	337	2799	333.8	+	0	ID=1_2;Parent=1_1;rbs_motif=GGAG/GAGG;rbs_spacer=5-10bp
+NC 7	Prodigal_v2.60	gene	1	100	1.8	+	0	ID=1_1;gene=FXR receptor
+NC 7	Prodigal_v2.60	exon	1	50	1.8	+	0	Parent=1_1
+NC 7	Prodigal_v2.60	exon	56	100	1.8	+	0	Parent=1_1

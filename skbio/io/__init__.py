@@ -27,6 +27,7 @@ see the associated documentation.
    qseq
    stockholm
    genbank
+   gff3
 
 .. currentmodule:: skbio.io.registry
 
@@ -203,7 +204,7 @@ from ._exception import (UnrecognizedFormatError, FileFormatError,
                          FASTQFormatError, LSMatFormatError, NewickFormatError,
                          OrdinationFormatError, PhylipFormatError,
                          QSeqFormatError, QUALFormatError,
-                         StockholmFormatError)
+                         StockholmFormatError, GFF3FormatError)
 from .registry import write, read, sniff, create_format, io_registry
 from .util import open
 
@@ -218,6 +219,7 @@ __all__ = ['write', 'read', 'sniff', 'open', 'io_registry', 'create_format',
            'FASTAFormatError',
            'FASTQFormatError',
            'GenBankFormatError',
+           'GFF3FormatError',
            'LSMatFormatError',
            'NewickFormatError',
            'OrdinationFormatError',
@@ -241,6 +243,7 @@ import_module('skbio.io.format.ordination')
 import_module('skbio.io.format.phylip')
 import_module('skbio.io.format.qseq')
 import_module('skbio.io.format.genbank')
+import_module('skbio.io.format.gff3')
 import_module('skbio.io.format.stockholm')
 
 # This is meant to be a handy indicator to the user that they have done
