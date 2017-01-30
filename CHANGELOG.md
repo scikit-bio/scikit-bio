@@ -24,6 +24,7 @@
 ### Deprecated functionality [experimental]
 
 ### Miscellaneous
+* added support for running tests from `setup.py`. Both `python setup.py nosetests` and `python setup.py test` are now supported, however `python setup.py test` will only run a subset of the full test suite. ([#1341](https://github.com/biocore/scikit-bio/issues/1341))
 
 ## Version 0.5.1 (2016-11-12)
 

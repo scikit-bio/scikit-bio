@@ -106,6 +106,7 @@ setup(name='scikit-bio',
       packages=find_packages(),
       ext_modules=extensions,
       include_dirs=[np.get_include()],
+      setup_requires=['nose >= 1.3.7'],
       install_requires=[
           'lockfile >= 0.10.2',  # req'd for our usage of CacheControl
           'CacheControl >= 0.11.5',
@@ -118,6 +119,7 @@ setup(name='scikit-bio',
           'scipy >= 0.15.1',
           'nose >= 1.3.7'
       ],
+      test_suite='nose.collector',
       classifiers=classifiers,
       package_data={
           'skbio.diversity.alpha.tests': ['data/qiime-191-tt/*'],

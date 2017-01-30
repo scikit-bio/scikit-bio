@@ -14,6 +14,7 @@ import numpy as np
 import numpy.testing as npt
 import pandas as pd
 from IPython.core.display import Image, SVG
+from mpl_toolkits.mplot3d import Axes3D  # noqa: F401
 
 from skbio import OrdinationResults
 

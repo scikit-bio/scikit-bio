@@ -101,6 +101,7 @@ class TestRunner:
         """
         # NOTE: it doesn't seem to matter what the first element of the argv
         # list is, there just needs to be something there.
+        # changes to argv made here should also be made in setup.cfg
         argv = [self._filename, '-I DO_NOT_IGNORE_ANYTHING', '--with-doctest',
                 '--doctest-tests', '--doctest-extension=pyx']
         if verbose:
