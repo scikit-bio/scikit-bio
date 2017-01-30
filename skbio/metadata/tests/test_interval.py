@@ -708,6 +708,14 @@ class TestIntervalMetadata(unittest.TestCase, ReallyEqualMixin):
         self.im_2.drop(self.im_2._intervals)
         self.assertEqual(self.im_2, self.im_empty)
 
+    def test_drop_negate(self):
+        intvl = self.im_2._intervals[0]
+        self.im_2.drop([intvl], negate=True)
+        self.assertEqual(len(self.im_2._intervals), 1)
+        self.assertEqual(self.im_2._intervals[0], intvl)
+        # test the dropped intvl was set to dropped
+        self.assertTrue(self.im_2_2.dropped)
+
     def test_reverse(self):
         self.im_2._reverse()
         Interval(
