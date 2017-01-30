@@ -20,12 +20,13 @@ import scipy.stats
 
 from skbio import Sequence, DNA, RNA, Protein, TabularMSA
 from skbio.sequence import GrammaredSequence
-from skbio.util._decorator import classproperty, overrides
+from skbio.util import classproperty
+from skbio.util._decorator import overrides
 from skbio.util._testing import ReallyEqualMixin
 from skbio.metadata._testing import (MetadataMixinTests,
                                      PositionalMetadataMixinTests)
-from skbio.util._testing import (assert_index_equal,
-                                 assert_data_frame_almost_equal)
+from skbio.util import assert_data_frame_almost_equal
+from skbio.util._testing import assert_index_equal
 
 
 class TabularMSASubclass(TabularMSA):

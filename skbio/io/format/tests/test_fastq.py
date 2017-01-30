@@ -17,9 +17,10 @@ from skbio.io import FASTQFormatError
 from skbio.io.format.fastq import (
     _fastq_sniffer, _fastq_to_generator, _fastq_to_tabular_msa,
     _generator_to_fastq, _tabular_msa_to_fastq)
-from skbio.sequence._grammared_sequence import GrammaredSequence
+from skbio.sequence import GrammaredSequence
 from skbio.util import get_data_path
-from skbio.util._decorator import classproperty, overrides
+from skbio.util import classproperty
+from skbio.util._decorator import overrides
 
 import numpy as np
 

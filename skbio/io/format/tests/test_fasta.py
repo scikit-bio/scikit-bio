@@ -22,9 +22,10 @@ from skbio.io.format.fasta import (
     _fasta_to_tabular_msa, _generator_to_fasta,
     _sequence_to_fasta, _dna_to_fasta, _rna_to_fasta, _protein_to_fasta,
     _tabular_msa_to_fasta)
-from skbio.sequence._grammared_sequence import GrammaredSequence
+from skbio.sequence import GrammaredSequence
 from skbio.util import get_data_path
-from skbio.util._decorator import classproperty, overrides
+from skbio.util import classproperty
+from skbio.util._decorator import overrides
 
 
 class CustomSequence(GrammaredSequence):

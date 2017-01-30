@@ -11,8 +11,9 @@ from io import StringIO
 from unittest import TestCase, main
 
 from skbio import TabularMSA
-from skbio.sequence._grammared_sequence import GrammaredSequence
-from skbio.util._decorator import classproperty, overrides
+from skbio.sequence import GrammaredSequence
+from skbio.util import classproperty
+from skbio.util._decorator import overrides
 from skbio.io.format.clustal import (
     _clustal_to_tabular_msa, _tabular_msa_to_clustal, _clustal_sniffer,
     _is_clustal_seq_line, _delete_trailing_number, _check_length,
