@@ -26,6 +26,9 @@ class GenBankFormatError(FileFormatError):
     """Raised when a ``genbank`` formatted file cannot be parsed."""
     pass
 
+class EMBLFormatError(FileFormatError):
+    """Raised when a ``EMBL`` formatted file cannot be parsed."""
+    pass
 
 class GFF3FormatError(FileFormatError):
     """Raised when a ``GFF3`` formatted file cannot be parsed."""

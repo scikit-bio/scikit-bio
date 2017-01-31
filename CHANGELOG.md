@@ -2,6 +2,8 @@
 
 ## Version 0.5.1-dev (changes since 0.5.1 go here)
 
+* Added ``skbio.io.format.embl`` for reading and writing EMBL files for ``DNA``, ``RNA``, ``Protein`` and ``Sequence`` classes.
+
 ### Features
 * Added ``skbio.io.format.gff3`` for reading and writing GFF3 files for ``DNA``, ``Sequence``, and ``IntervalMetadata`` classes. ([#1450](https://github.com/biocore/scikit-bio/pull/1450))
 
