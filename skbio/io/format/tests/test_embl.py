@@ -17,7 +17,7 @@ from skbio.util import get_data_path
 from skbio.io import EMBLFormatError
 
 from skbio.io.format.embl import (
-    _embl_sniffer,)
+    _embl_sniffer, _parse_id)
 
 # TODO: implement those methods
 #    _genbank_to_generator, _genbank_to_sequence,
@@ -44,3 +44,32 @@ class SnifferTests(TestCase):
     def test_negatives(self):
         for fp in self.negative_fps:
             self.assertEqual(_embl_sniffer(fp), (False, {}))
+
+# Boilerplate for EMBL IO tests
+# TODO: implements all setUp needed
+class EMBLIOTests(TestCase):
+    def setUp(self):
+        # to test ID line
+        self.id = (
+            # This is a derived record (non-coding, rRNA and spacer records)
+            (['ID   AB000684.1:1..275:rRNA; SV 1; linear; '
+              'genomic DNA; STD; ENV; 275 BP.'],
+             {'division': 'ENV', 'mol_type': 'genomic DNA', 'shape': 'linear',
+              'accession': 'AB000684.1:1..275:rRNA', 'unit': 'bp', 
+              'size': 275, 'version': 1, 'class': 'STD'}),
+            # A standard record
+            (['ID   M14399; SV 1; linear; mRNA; STD; PRO; 63 BP.'],
+             {'division': 'PRO', 'mol_type': 'mRNA', 'shape': 'linear',
+             'accession': 'M14399', 'unit': 'bp', 
+             'size': 63, 'version': 1, 'class': 'STD'}))
+            # TODO: a Uniprot record?
+
+class ReaderTests(EMBLIOTests):
+    """Implements test for reading EMBL data"""
+    
+    # TODO: implement test to deal with all EMBL methods
+    def test_parse_id(self):
+        """Parse ID record (first line of embl format)"""
+        for serialized, parsed in self.id:
+            self.assertEqual(_parse_id(serialized), parsed)
+
