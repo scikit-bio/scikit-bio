@@ -43,6 +43,7 @@ a pair of key and value in ``metadata``. For the ``RN (Reference Number)``
 section, its value is stored as a list, as there are often multiple
 reference sections in one EMBL record.
 
+#TODO: Add a Feature section with table, like genbank
 
 Examples
 --------
@@ -184,11 +185,13 @@ import re
 
 # skbio modules
 from skbio.io import create_format, EMBLFormatError
-from skbio.io.format._base import (_line_generator)
+from skbio.io.format._base import (_line_generator, _get_nth_sequence)
+from skbio.sequence import Sequence, DNA, RNA, Protein
 
 # look at skbio.io.registry to have an idea on how to define this class
 embl = create_format('embl')
 
+# Method to determine if file is in EMBL format or not
 @embl.sniffer()
 def _embl_sniffer(fh):
     try:
@@ -204,6 +207,58 @@ def _embl_sniffer(fh):
         
     return True, {}
 
+@embl.reader(None)
+def _embl_to_generator(fh, constructor=None, **kwargs):
+    for record in _parse_embls(fh):
+        yield _construct(record, constructor, **kwargs)
+        
+# Method to read EMBL data as skbio.sequence.DNA
+@embl.reader(DNA)
+def _embl_to_dna(fh, seq_num=1, **kwargs):
+    record = _get_nth_sequence(_parse_embls(fh), seq_num)
+    return _construct(record, DNA, **kwargs)
+
+# Method to read EMBL data as skbio.sequence.DNA
+@embl.reader(RNA)
+def _embl_to_rna(fh, seq_num=1, **kwargs):
+    record = _get_nth_sequence(_parse_embls(fh), seq_num)
+    return _construct(record, RNA, **kwargs)
+
+def _construct(record, constructor=None, **kwargs):
+    '''Construct the object of Sequence, DNA, RNA, or Protein.
+    '''
+    pass
+#    seq, md, imd = record
+#    if 'lowercase' not in kwargs:
+#        kwargs['lowercase'] = True
+#    if constructor is None:
+#        unit = md['LOCUS']['unit']
+#        if unit == 'bp':
+#            # RNA mol type has T instead of U for genbank from from NCBI
+#            constructor = DNA
+#        elif unit == 'aa':
+#            constructor = Protein
+#
+#    if constructor == RNA:
+#        return DNA(
+#            seq, metadata=md, interval_metadata=imd, **kwargs).transcribe()
+#    else:
+#        return constructor(
+#            seq, metadata=md, interval_metadata=imd, **kwargs)
+
+
+def _parse_embls(fh):
+    """Chunck multiple EMBL records by '//', and returns a generator"""
+    pass
+#    data_chunks = []
+#    for line in _line_generator(fh, skip_blanks=True, strip=False):
+#        if line.startswith('//'):
+#            yield _parse_single_genbank(data_chunks)
+#            data_chunks = []
+#        else:
+#            data_chunks.append(line)
+
+            
 def _parse_id(lines):
     """
     The ID (IDentification) line is always the first line of an entry. The
@@ -264,7 +319,13 @@ def _parse_id(lines):
     
     # returning parsed attributes
     return res
+
+# TODO: define this method
+def _parse_reference(lines):
+    '''Parse single REFERENCE field.
+    '''
     
+    pass
     
     
 
