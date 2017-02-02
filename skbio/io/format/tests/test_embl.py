@@ -199,10 +199,10 @@ class EMBLIOTests(TestCase):
                             'JOURNAL': 'Gene 39(2-3):247-254(1985).',
                             'PUBMED': '3912261',
                             'REFERENCE': '1-63',
-                            'TITLE': 'Periplasmic production of correctly processed'
+                            'TITLE': '"Periplasmic production of correctly processed '
                                      'human growth hormone in Escherichia coli: '
                                      'natural and bacterial signal sequences are '
-                                     'interchangeable'
+                                     'interchangeable"'
                            }],
             },
             imd,
@@ -244,15 +244,19 @@ RT   interchangeable";
 RL   Gene 39(2-3):247-254(1985).'''.split('\n')
 
         exp = {'AUTHORS': 'Gray G.L., Baldridge J.S., '
-                          'McKeown K.S., Heyneker H.L., Chang C.N.',
+                          'McKeown K.S., Heyneker H.L., Chang C.N.;',
                'JOURNAL': 'Gene 39(2-3):247-254(1985).',
-               'PUBMED': '3912261',
+               'CROSS_REFERENCE': 'DOI; 10.1016/0378-1119(85)90319-1. PUBMED; 3912261.',
                'REFERENCE': '1-63',
-               'TITLE': 'Periplasmic production of correctly processed'
+               'TITLE': '"Periplasmic production of correctly processed '
                         'human growth hormone in Escherichia coli: '
                         'natural and bacterial signal sequences are '
-                        'interchangeable'
+                        'interchangeable";',
+                'REFERENCE_NUMBER': '[1]'
                }
+        
+        # See all differences
+        self.maxDiff = None
         self.assertEqual(_parse_reference(lines), exp)
         
     def test_genbank_to_generator_single(self):

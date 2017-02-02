@@ -191,6 +191,31 @@ from skbio.sequence import Sequence, DNA, RNA, Protein
 # look at skbio.io.registry to have an idea on how to define this class
 embl = create_format('embl')
 
+# embl has a series of keys different from genbank; moreovers keys are not so 
+# easy to understand (eg. RA for AUTHORS). Here is a
+# dictionary of keys convertion (EMBL->GB)
+KEYS_TRANSLATOR = {
+                   'RA': 'AUTHORS',
+                   'RP': 'REFERENCE',
+                   'RX': 'CROSS_REFERENCE',
+                   'RT': 'TITLE',
+                   'RL': 'JOURNAL',
+                   'RN': 'REFERENCE_NUMBER',
+                   }
+
+# a method to translate keys
+def _translate_keys(data):
+    # get all keys to validate
+    keys = data.keys()
+    
+    for old_key in keys:
+        if old_key in KEYS_TRANSLATOR.keys():
+            new_key = KEYS_TRANSLATOR[old_key]
+            data[new_key] = data.pop(old_key)
+    
+    # returning translated keys
+    return data
+                   
 # Method to determine if file is in EMBL format or not
 @embl.sniffer()
 def _embl_sniffer(fh):
@@ -320,12 +345,97 @@ def _parse_id(lines):
     # returning parsed attributes
     return res
 
+# replace skbio.io.format._sequence_feature_vocabulary.__yield_section
+def _yield_section(**kwargs):
+    '''Returns function that returns successive sections from file.
+
+    Parameters
+    ----------
+    
+    kwargs : dict, optional
+        Keyword arguments will be passed to `_line_generator`.
+
+    Returns
+    -------
+    function
+        A function accept a list of lines as input and return
+        a generator to yield section one by one.
+    '''
+    def parser(lines):
+        curr = []
+        curr_type = None
+        for line in _line_generator(lines, **kwargs):
+            # if we find another line, return the previous section
+            line_type = line.split()[0]
+            
+            # changed line type
+            if line_type != curr_type:
+                if curr:
+                    yield curr
+                    # reset curr and set curr_type to the present line type
+                    curr = []
+                    curr_type = line_type
+                    
+            curr.append(line)
+            
+        # don't forget to return the last section in the file
+        if curr:
+            yield curr
+            
+    return parser
+
+# replace skbio.io.format._sequence_feature_vocabulary._parse_section_default 
+def _parse_section_default(
+        lines, label_delimiter=None, join_delimiter=' ', return_label=False):
+    '''Parse sections in default way.
+
+    Do 2 things:
+        1. split first line with label_delimiter for label
+        2. join all the lines into one str with join_delimiter.
+    '''
+    data = []
+    label = None
+    line = lines[0]
+
+    items = line.split(label_delimiter, 1)
+
+    if len(items) == 2:
+        label, section = items
+    else:
+        label = items[0]
+        section = ""
+    data.append(section)
+
+    # remove embl keys from all records
+    data.extend(line.split(label_delimiter,1)[-1] for line in lines[1:])
+    
+    data = join_delimiter.join(i.strip() for i in data)
+    if return_label:
+        return label, data
+    else:
+        return data
+    
 # TODO: define this method
 def _parse_reference(lines):
     '''Parse single REFERENCE field.
     '''
     
-    pass
+    # parsed reference will be placed here
+    res = {}
     
+    # define a section splitter with _yield_section function defined in this module
+    section_splitter = _yield_section(skip_blanks=True, strip=False)
+    
+    # now itereta along sections (lines of the same type)
+    for section in section_splitter(lines):
+        # this function append all data in the same keywords. A list of lines as
+        # input (see skbio.io.format._sequence_feature_vocabulary)
+        label, data = _parse_section_default(
+            section, join_delimiter=' ', return_label=True)
+        
+        res[label] = data
+    
+    #return translates keys
+    return _translate_keys(res)
     
 
