@@ -9,15 +9,16 @@
 import io
 from unittest import TestCase, main
 
-from skbio import Protein, DNA, RNA, Sequence
+from skbio import DNA, RNA, Sequence
 from skbio.metadata import IntervalMetadata
 from skbio.util import get_data_path
 
-# TODO: add this type of exception
+# Module specific execption and functions
 from skbio.io import EMBLFormatError
 
 from skbio.io.format.embl import (
-    _embl_sniffer, _parse_id, _parse_reference, _embl_to_generator)
+    _embl_sniffer, _parse_id, _parse_reference, _embl_to_generator, 
+    _get_embl_section)
 
 # TODO: implement those methods
 #    _genbank_to_generator, _genbank_to_sequence,
@@ -267,7 +268,19 @@ RL   Gene 39(2-3):247-254(1985).'''.split('\n')
             exp = c(self.single[0], metadata=self.single[1],
                     positional_metadata=self.single[2])
             self.assertEqual(exp, obs)
+            
+    def test_get_embl_section(self):
+        """Verify to have a section for each embl ID"""
+        
+        with open(self.single_rna_fp) as fh:
+            for line in fh:
+                # test that this function doesn't raise exceptions
+                try:
+                    _get_embl_section(line)
                 
+                except KeyError as err:
+                    raise EMBLFormatError("Key '{0}' isn't defined in embl.KEYS_2_SECTIONS".format(err))
+                    
 if __name__ == '__main__':
     main()
 

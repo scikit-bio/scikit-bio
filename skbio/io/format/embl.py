@@ -7,7 +7,38 @@ EMBL format (:mod:`skbio.io.format.embl`)
 EMBL format stores sequence and its annotation together. The start of the
 annotation section is marked by a line beginning with the word "ID". The start
 of sequence section is marked by a line beginning with the word "SQ" and the
-end of the section is marked by a line with only "//". More information on EMBL
+end of the section is marked by a line with only "//". Here are the main keys
+for embl record::
+
+     ID - identification             (begins each entry; 1 per entry)
+     AC - accession number           (>=1 per entry)
+     PR - project identifier         (0 or 1 per entry)
+     DT - date                       (2 per entry)
+     DE - description                (>=1 per entry)
+     KW - keyword                    (>=1 per entry)
+     OS - organism species           (>=1 per entry)
+     OC - organism classification    (>=1 per entry)
+     OG - organelle                  (0 or 1 per entry)
+     RN - reference number           (>=1 per entry)
+     RC - reference comment          (>=0 per entry)
+     RP - reference positions        (>=1 per entry)
+     RX - reference cross-reference  (>=0 per entry)
+     RG - reference group            (>=0 per entry)
+     RA - reference author(s)        (>=0 per entry)
+     RT - reference title            (>=1 per entry)
+     RL - reference location         (>=1 per entry)
+     DR - database cross-reference   (>=0 per entry)
+     CC - comments or notes          (>=0 per entry)
+     AH - assembly header            (0 or 1 per entry)   
+     AS - assembly information       (0 or >=1 per entry)
+     FH - feature table header       (2 per entry)
+     FT - feature table data         (>=2 per entry)    
+     XX - spacer line                (many per entry)
+     SQ - sequence header            (1 per entry)
+     CO - contig/construct line      (0 or >=1 per entry) 
+     bb - (blanks) sequence data     (>=1 per entry)
+
+More information on EMBL
 file format can be found here [1]_.
 
 The EMBL file may ens with .embl or .txt extension. An example of EMBL file can
@@ -26,7 +57,7 @@ Format Support
 +------+------+---------------------------------------------------------------+
 |Yes   |No    |:mod:`skbio.sequence.RNA`                                      |
 +------+------+---------------------------------------------------------------+
-|Yes   |No    |:mod:`skbio.sequence.Protein`                                  |
+|No    |No    |:mod:`skbio.sequence.Protein`                                  |
 +------+------+---------------------------------------------------------------+
 |Yes   |No    | generator of :mod:`skbio.sequence.Sequence` objects           |
 +------+------+---------------------------------------------------------------+
@@ -192,9 +223,10 @@ from skbio.sequence import Sequence, DNA, RNA, Protein
 embl = create_format('embl')
 
 # embl has a series of keys different from genbank; moreovers keys are not so 
-# easy to understand (eg. RA for AUTHORS). Here is a
-# dictionary of keys convertion (EMBL->GB)
+# easy to understand (eg. RA for AUTHORS). Here is a # dictionary of keys 
+# conversion (EMBL->GB)
 KEYS_TRANSLATOR = {
+                   # reference keys
                    'RA': 'AUTHORS',
                    'RP': 'REFERENCE',
                    'RX': 'CROSS_REFERENCE',
@@ -203,8 +235,49 @@ KEYS_TRANSLATOR = {
                    'RN': 'REFERENCE_NUMBER',
                    }
 
+# the original _yield_section divides entries in sections relying on spaces (the
+# same section has the same level of indentation). Uniprot entries have a key for
+# each line, so to divide record in sections I need to define a corresponance for
+# each key to section
+KEYS_2_SECTIONS = {
+                   # identification
+                   'ID': 'ID',
+                   'AC': 'ACCESSION',
+                   # reference keys
+                   'RA': 'REFERENCE',
+                   'RP': 'REFERENCE',
+                   'RX': 'REFERENCE',
+                   'RT': 'REFERENCE',
+                   'RL': 'REFERENCE',
+                   'RN': 'REFERENCE',
+                   # spacer (discarded)
+                   'XX': 'SPACER'
+                  }
+
+# for convenience
+def _get_embl_key(line):
+    """Return first part of a string as a embl key (ie 'AC   M14399;' -> 'AC' """
+    return line.split()[0]
+    
+def _get_embl_section(line):
+    """Return the embl section from uniprot key(ie 'RA' -> 'REFERENCE'"""
+    
+    # check for spaces (no keys mean sequence)
+    if line.startswith(" "):
+        return "SEQUENCE"
+    
+    # get embl key
+    key = _get_embl_key(line)
+    
+    # get embl section from key
+    return KEYS_2_SECTIONS[key]
+    
+    
 # a method to translate keys
 def _translate_keys(data):
+    """Translate a dictionary of uniprot key->value in a genbank like 
+    dictionary of key values"""
+    
     # get all keys to validate
     keys = data.keys()
     
@@ -236,6 +309,12 @@ def _embl_sniffer(fh):
 def _embl_to_generator(fh, constructor=None, **kwargs):
     for record in _parse_embls(fh):
         yield _construct(record, constructor, **kwargs)
+
+# Method to read EMBL data as skbio.sequence.DNA
+@embl.reader(Sequence)
+def _genbank_to_sequence(fh, seq_num=1, **kwargs):
+    record = _get_nth_sequence(_parse_embls(fh), seq_num)
+    return _construct(record, Sequence, **kwargs)
         
 # Method to read EMBL data as skbio.sequence.DNA
 @embl.reader(DNA)
@@ -249,39 +328,86 @@ def _embl_to_rna(fh, seq_num=1, **kwargs):
     record = _get_nth_sequence(_parse_embls(fh), seq_num)
     return _construct(record, RNA, **kwargs)
 
+    
 def _construct(record, constructor=None, **kwargs):
     '''Construct the object of Sequence, DNA, RNA, or Protein.
     '''
-    pass
-#    seq, md, imd = record
-#    if 'lowercase' not in kwargs:
-#        kwargs['lowercase'] = True
-#    if constructor is None:
-#        unit = md['LOCUS']['unit']
-#        if unit == 'bp':
-#            # RNA mol type has T instead of U for genbank from from NCBI
-#            constructor = DNA
-#        elif unit == 'aa':
-#            constructor = Protein
-#
-#    if constructor == RNA:
-#        return DNA(
-#            seq, metadata=md, interval_metadata=imd, **kwargs).transcribe()
-#    else:
-#        return constructor(
-#            seq, metadata=md, interval_metadata=imd, **kwargs)
+
+    # sequence, metadata and interval metadata
+    seq, md, imd = record
+    
+    if 'lowercase' not in kwargs:
+        kwargs['lowercase'] = True
+        
+    if constructor is None:
+        unit = md['ID']['unit']
+        if unit == 'bp':
+            # RNA mol type has T instead of U for genbank from from NCBI
+            constructor = DNA
+        elif unit == 'aa':
+            constructor = Protein
+
+    if constructor == RNA:
+        return DNA(
+            seq, metadata=md, interval_metadata=imd, **kwargs).transcribe()
+    else:
+        return constructor(
+            seq, metadata=md, interval_metadata=imd, **kwargs)
 
 
 def _parse_embls(fh):
     """Chunck multiple EMBL records by '//', and returns a generator"""
-    pass
-#    data_chunks = []
-#    for line in _line_generator(fh, skip_blanks=True, strip=False):
-#        if line.startswith('//'):
-#            yield _parse_single_genbank(data_chunks)
-#            data_chunks = []
+
+    data_chunks = []
+    for line in _line_generator(fh, skip_blanks=True, strip=False):
+        if line.startswith('//'):
+            yield _parse_single_embl(data_chunks)
+            data_chunks = []
+        else:
+            data_chunks.append(line)
+
+def _parse_single_embl(chunks):
+    metadata = {}
+    interval_metadata = None
+    sequence = ''
+    
+    # define a section splitter with _embl_yield_section function defined in this module
+    # returns generator for each block with different line type
+    section_splitter = _embl_yield_section(
+        lambda line: _get_embl_section(line), 
+        skip_blanks=True, 
+        strip=False)
+    
+    for section in section_splitter(chunks):
+        # header is line type (eg ID, AC, ...)
+        header = section[0].split(None, 1)[0]
+        
+#        
+#        parser = _PARSER_TABLE.get(
+#            header, _embl_parse_section_default)
+#
+#        if header == 'FEATURES':
+#            # This requires 'LOCUS' line parsed before 'FEATURES', which should
+#            # be true and is implicitly checked by the sniffer.
+#            parser = partial(
+#                parser, length=metadata['LOCUS']['size'])
+#
+#        parsed = parser(section)
+#
+#        # reference can appear multiple times
+#        if header == 'REFERENCE':
+#            if header in metadata:
+#                metadata[header].append(parsed)
+#            else:
+#                metadata[header] = [parsed]
+#        elif header == 'ORIGIN':
+#            sequence = parsed
+#        elif header == 'FEATURES':
+#            interval_metadata = parsed
 #        else:
-#            data_chunks.append(line)
+#            metadata[header] = parsed
+
+    return sequence, metadata, interval_metadata
 
             
 def _parse_id(lines):
@@ -346,12 +472,15 @@ def _parse_id(lines):
     return res
 
 # replace skbio.io.format._sequence_feature_vocabulary.__yield_section
-def _yield_section(**kwargs):
+def _embl_yield_section(get_line_key, **kwargs):
     '''Returns function that returns successive sections from file.
 
     Parameters
     ----------
-    
+    get_line_key : callable
+        It takes a string as input and a key indicating the section (could be the
+        embl key or embl KEYS_2_SECTIONS)
+        
     kwargs : dict, optional
         Keyword arguments will be passed to `_line_generator`.
 
@@ -366,7 +495,7 @@ def _yield_section(**kwargs):
         curr_type = None
         for line in _line_generator(lines, **kwargs):
             # if we find another line, return the previous section
-            line_type = line.split()[0]
+            line_type = get_line_key(line)
             
             # changed line type
             if line_type != curr_type:
@@ -375,8 +504,10 @@ def _yield_section(**kwargs):
                     # reset curr and set curr_type to the present line type
                     curr = []
                     curr_type = line_type
-                    
-            curr.append(line)
+            
+            # don't append record if line type is a spacer, or others values
+            if line_type not in ['XX']:
+                curr.append(line)
             
         # don't forget to return the last section in the file
         if curr:
@@ -385,7 +516,7 @@ def _yield_section(**kwargs):
     return parser
 
 # replace skbio.io.format._sequence_feature_vocabulary._parse_section_default 
-def _parse_section_default(
+def _embl_parse_section_default(
         lines, label_delimiter=None, join_delimiter=' ', return_label=False):
     '''Parse sections in default way.
 
@@ -397,6 +528,7 @@ def _parse_section_default(
     label = None
     line = lines[0]
 
+    # take the first line, divide the key from the text
     items = line.split(label_delimiter, 1)
 
     if len(items) == 2:
@@ -404,18 +536,25 @@ def _parse_section_default(
     else:
         label = items[0]
         section = ""
+    
+    # append the text of the first element in a empty array
     data.append(section)
 
-    # remove embl keys from all records
+    # Then process all the elements with the same embl key. remove the key
+    # and append all the text in the data array
     data.extend(line.split(label_delimiter,1)[-1] for line in lines[1:])
     
+    # Now concatenate the text using join_delimiter. All content with the same
+    # key will be placed in the same string
     data = join_delimiter.join(i.strip() for i in data)
+    
+    # finally return the merged text content, and the key if needed
     if return_label:
         return label, data
     else:
         return data
     
-# TODO: define this method
+# parse an embl reference record
 def _parse_reference(lines):
     '''Parse single REFERENCE field.
     '''
@@ -423,19 +562,28 @@ def _parse_reference(lines):
     # parsed reference will be placed here
     res = {}
     
-    # define a section splitter with _yield_section function defined in this module
-    section_splitter = _yield_section(skip_blanks=True, strip=False)
+    # define a section splitter with _embl_yield_section function defined in this module
+    section_splitter = _embl_yield_section(lambda line: _get_embl_key(line),
+                                           skip_blanks=True, strip=False)
     
     # now itereta along sections (lines of the same type)
     for section in section_splitter(lines):
         # this function append all data in the same keywords. A list of lines as
         # input (see skbio.io.format._sequence_feature_vocabulary)
-        label, data = _parse_section_default(
+        label, data = _embl_parse_section_default(
             section, join_delimiter=' ', return_label=True)
         
         res[label] = data
     
     #return translates keys
     return _translate_keys(res)
-    
+
+# Map a function to each section of the entry    
+_PARSER_TABLE = {
+    'ID': _parse_id,
+    #'SOURCE': _parse_source,
+    'REFERENCE': _parse_reference,
+    #'FEATURES': _parse_feature_table,
+    #'ORIGIN': _parse_origin
+    }
 
