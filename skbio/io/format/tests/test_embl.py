@@ -68,9 +68,10 @@ class EMBLIOTests(TestCase):
             # TODO: a Uniprot record?
         
         # define a single DNA record (with no interval metadata)
+        # M14399; SV 1; linear; mRNA; STD; PRO; 63 BP.
         self.single = (
             'gtgaaacaaagcactattgcactggctgtcttaccgttactgtttacccctgtgacaaaagcc',
-            {'LOCUS': {'accession': 'M14399',
+            {'ID': {'accession': 'M14399',
                     'class': 'STD',
                     'division': 'PRO',
                     'mol_type': 'mRNA',
@@ -234,7 +235,6 @@ class ReaderTests(EMBLIOTests):
                 
     def test_parse_reference(self):
         lines = '''
-RN   [1]
 RP   1-63
 RX   DOI; 10.1016/0378-1119(85)90319-1.
 RX   PUBMED; 3912261.
@@ -252,21 +252,20 @@ RL   Gene 39(2-3):247-254(1985).'''.split('\n')
                'TITLE': '"Periplasmic production of correctly processed '
                         'human growth hormone in Escherichia coli: '
                         'natural and bacterial signal sequences are '
-                        'interchangeable";',
-                'REFERENCE_NUMBER': '[1]'
+                        'interchangeable";'
                }
         
         # See all differences
         self.maxDiff = None
         self.assertEqual(_parse_reference(lines), exp)
         
-    def test_genbank_to_generator_single(self):
+    def test_embl_to_generator_single(self):
         # test single record and uppercase sequence
-        for c in [Sequence, DNA, RNA]:
+        for c in [Sequence, DNA]:
             obs = next(_embl_to_generator(
                 self.single_upper_fp, constructor=c))
             exp = c(self.single[0], metadata=self.single[1],
-                    positional_metadata=self.single[2])
+                    positional_metadata=self.single[2], lowercase=True)
             self.assertEqual(exp, obs)
             
     def test_get_embl_section(self):
@@ -274,12 +273,15 @@ RL   Gene 39(2-3):247-254(1985).'''.split('\n')
         
         with open(self.single_rna_fp) as fh:
             for line in fh:
+                if line.startswith("//"):
+                    continue
+                
                 # test that this function doesn't raise exceptions
                 try:
                     _get_embl_section(line)
                 
                 except KeyError as err:
-                    raise EMBLFormatError("Key '{0}' isn't defined in embl.KEYS_2_SECTIONS".format(err))
+                    raise EMBLFormatError("Key {0} isn't defined in embl.KEYS_2_SECTIONS".format(err))
                     
 if __name__ == '__main__':
     main()

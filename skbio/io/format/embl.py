@@ -213,6 +213,7 @@ References
 
 # std modules
 import re
+from functools import partial
 
 # skbio modules
 from skbio.io import create_format, EMBLFormatError
@@ -226,13 +227,27 @@ embl = create_format('embl')
 # easy to understand (eg. RA for AUTHORS). Here is a # dictionary of keys 
 # conversion (EMBL->GB)
 KEYS_TRANSLATOR = {
+                   # identification
+                   'ID': 'ID',
+                   'AC': 'ACCESSION',
+                   #'PR': 'PROJECT_IDENTIFIER',
+                   'DT': 'DATE',
+                   'DE': 'DESCRIPTION',
+                   'KW': 'KEYWORDS',
+                   # Source (taxonomy and classification)
+                   'OS': 'ORGANIMS',
+                   'OC': 'taxonomy',
+                   #'OG': 'organelle'
                    # reference keys
                    'RA': 'AUTHORS',
                    'RP': 'REFERENCE',
                    'RX': 'CROSS_REFERENCE',
                    'RT': 'TITLE',
                    'RL': 'JOURNAL',
-                   'RN': 'REFERENCE_NUMBER',
+                   # Cross references
+                   'DR': 'DBSOURCE',
+                   'CC': 'COMMENT',
+                   'SQ': 'ORIGIN',
                    }
 
 # the original _yield_section divides entries in sections relying on spaces (the
@@ -243,51 +258,88 @@ KEYS_2_SECTIONS = {
                    # identification
                    'ID': 'ID',
                    'AC': 'ACCESSION',
+                   #'PR': 'PROJECT_IDENTIFIER',
+                   'DT': 'DATE',
+                   'DE': 'DESCRIPTION',
+                   'KW': 'KEYWORDS',
+                   # Source (taxonomy and classification)
+                   'OS': 'SOURCE',
+                   'OC': 'SOURCE',
+                   #'OG': 'SOURCE',
                    # reference keys
                    'RA': 'REFERENCE',
                    'RP': 'REFERENCE',
                    'RX': 'REFERENCE',
                    'RT': 'REFERENCE',
                    'RL': 'REFERENCE',
-                   'RN': 'REFERENCE',
+                   'RN': 'SPACER',
+                   # Cross references
+                   'DR': 'DBSOURCE',
+                   'CC': 'COMMENT',
+                   #'AH': 'ASSEMBLY,
+                   #'AS': 'ASSEMBLY'
+                   'FH': 'FEATURES',
+                   'FT': 'FEATURES',
+                   # sequence
+                   'SQ': 'ORIGIN',
+                   '  ': 'ORIGIN',
+                   #'CO': 'ORIGIN,'
                    # spacer (discarded)
                    'XX': 'SPACER'
                   }
 
 # for convenience
 def _get_embl_key(line):
-    """Return first part of a string as a embl key (ie 'AC   M14399;' -> 'AC' """
-    return line.split()[0]
+    """Return first part of a string as a embl key (ie 'AC   M14399;' -> 'AC')"""
+    
+    # embl keys have a fixed size of 2 chars
+    return line[:2]
     
 def _get_embl_section(line):
-    """Return the embl section from uniprot key(ie 'RA' -> 'REFERENCE'"""
-    
-    # check for spaces (no keys mean sequence)
-    if line.startswith(" "):
-        return "SEQUENCE"
-    
+    """Return the embl section from uniprot key(ie 'RA' -> 'REFERENCE')"""
+                                                
     # get embl key
     key = _get_embl_key(line)
     
     # get embl section from key
-    return KEYS_2_SECTIONS[key]
+    section = KEYS_2_SECTIONS[key]
     
+    # debug
+    #print("_get_embl_section line: >%s<"%(line))
+    #print("_get_embl_section key: >%s<"%(key))
+    #print("_get_embl_section section: >%s<"%(section))
     
+    return section
+    
+def _translate_key(key):
+    """A method to translate a single key. Return key itself if no traslation 
+    is defined"""
+    
+    if key in KEYS_TRANSLATOR:
+        return KEYS_TRANSLATOR[key]
+        
+    else:
+        return key
+        
 # a method to translate keys
 def _translate_keys(data):
     """Translate a dictionary of uniprot key->value in a genbank like 
     dictionary of key values"""
     
     # get all keys to validate
-    keys = data.keys()
+    old_keys = data.keys()
     
-    for old_key in keys:
-        if old_key in KEYS_TRANSLATOR.keys():
-            new_key = KEYS_TRANSLATOR[old_key]
-            data[new_key] = data.pop(old_key)
+    # a new dictionary of results
+    new_data = {}
+    
+    # I can't replace keys in original values, sometimes test will fails. So, I
+    # create a new copy. This is a strange behaviour, I don't understand
+    for old_key in old_keys:
+        new_key = _translate_key(old_key)
+        new_data[new_key] = data[old_key]
     
     # returning translated keys
-    return data
+    return new_data
                    
 # Method to determine if file is in EMBL format or not
 @embl.sniffer()
@@ -312,7 +364,7 @@ def _embl_to_generator(fh, constructor=None, **kwargs):
 
 # Method to read EMBL data as skbio.sequence.DNA
 @embl.reader(Sequence)
-def _genbank_to_sequence(fh, seq_num=1, **kwargs):
+def _embl_to_sequence(fh, seq_num=1, **kwargs):
     record = _get_nth_sequence(_parse_embls(fh), seq_num)
     return _construct(record, Sequence, **kwargs)
         
@@ -327,11 +379,15 @@ def _embl_to_dna(fh, seq_num=1, **kwargs):
 def _embl_to_rna(fh, seq_num=1, **kwargs):
     record = _get_nth_sequence(_parse_embls(fh), seq_num)
     return _construct(record, RNA, **kwargs)
+    
+@embl.reader(Protein)
+def _embl_to_protein(fh, seq_num=1, **kwargs):
+    record = _get_nth_sequence(_parse_embls(fh), seq_num)
+    return _construct(record, Protein, **kwargs)
 
     
 def _construct(record, constructor=None, **kwargs):
-    '''Construct the object of Sequence, DNA, RNA, or Protein.
-    '''
+    '''Construct the object of Sequence, DNA, RNA, or Protein.'''
 
     # sequence, metadata and interval metadata
     seq, md, imd = record
@@ -379,33 +435,50 @@ def _parse_single_embl(chunks):
         strip=False)
     
     for section in section_splitter(chunks):
-        # header is line type (eg ID, AC, ...)
-        header = section[0].split(None, 1)[0]
+        # key is line type (eg ID, AC, ...)
+        key = _get_embl_key(section[0])
         
-#        
-#        parser = _PARSER_TABLE.get(
-#            header, _embl_parse_section_default)
-#
-#        if header == 'FEATURES':
-#            # This requires 'LOCUS' line parsed before 'FEATURES', which should
-#            # be true and is implicitly checked by the sniffer.
-#            parser = partial(
-#                parser, length=metadata['LOCUS']['size'])
-#
-#        parsed = parser(section)
-#
-#        # reference can appear multiple times
-#        if header == 'REFERENCE':
-#            if header in metadata:
-#                metadata[header].append(parsed)
-#            else:
-#                metadata[header] = [parsed]
-#        elif header == 'ORIGIN':
-#            sequence = parsed
+        # convert header using the key translator dictionary (eg 'AC' -> 'ACCESSION')
+        header = _translate_key(key)
+        
+        # debug
+        #print("header >%s<" %(header))
+        #print("section >%s<" %(section))
+        #print("metadata >%s<" %(metadata))
+        
+        # search for a spefici method in PARSER_TABLE. _embl_parse_section_default
+        parser = _PARSER_TABLE.get(
+            header, _embl_parse_section_default)
+
+        if header == 'FEATURES':
+            # This requires 'ID' line parsed before 'FEATURES', which should
+            # be true and is implicitly checked by the sniffer. This is true 
+            # since the first section is parsed by the last else condition
+            
+            # partials add arguments to previous defined functions
+            parser = partial(
+                parser, length=metadata['ID']['size'])
+
+        # call function on section
+        parsed = parser(section)
+
+        # reference can appear multiple times
+        if header == 'REFERENCE':
+            if header in metadata:
+                metadata[header].append(parsed)
+                
+            else:
+                metadata[header] = [parsed]
+                
+        elif header == 'ORIGIN':
+            sequence = parsed
+            
 #        elif header == 'FEATURES':
 #            interval_metadata = parsed
-#        else:
-#            metadata[header] = parsed
+
+        # parse all the others sections
+        else:
+            metadata[header] = parsed
 
     return sequence, metadata, interval_metadata
 
@@ -497,23 +570,43 @@ def _embl_yield_section(get_line_key, **kwargs):
             # if we find another line, return the previous section
             line_type = get_line_key(line)
             
+            # debug
+            #print("_embl_yield_section line: >%s<" %(line))
+            #print("_embl_yield_section line_type: >%s<" %(line_type))
+            
             # changed line type
             if line_type != curr_type:
                 if curr:
+                    #debug
+                    #print("_embl_yield_section curr_type: >%s<" %(curr_type))
+                    #print("_embl_yield_section curr: >%s<" %(curr))
+                    
+                    # returning block
                     yield curr
-                    # reset curr and set curr_type to the present line type
+                    
+                    # debug
+                    #print("_embl_yield_section line_type after yield: >%s<" %(line_type))
+                    
+                    # reset curr after yield
                     curr = []
-                    curr_type = line_type
+                
+                # reset curr_type in any cases
+                curr_type = line_type
             
-            # don't append record if line type is a spacer, or others values
-            if line_type not in ['XX']:
+            # don't append record if line type is a spacer
+            if 'SPACER' not in line_type:
                 curr.append(line)
+            
+            #debug
+            #else:
+            #    print("Ignoring %s" %(line))
             
         # don't forget to return the last section in the file
         if curr:
             yield curr
             
     return parser
+
 
 # replace skbio.io.format._sequence_feature_vocabulary._parse_section_default 
 def _embl_parse_section_default(
@@ -553,7 +646,8 @@ def _embl_parse_section_default(
         return label, data
     else:
         return data
-    
+
+
 # parse an embl reference record
 def _parse_reference(lines):
     '''Parse single REFERENCE field.
@@ -578,12 +672,38 @@ def _parse_reference(lines):
     #return translates keys
     return _translate_keys(res)
 
+
+def _parse_sequence(lines):
+    '''Parse the sequence section for sequence.'''
+    
+    # result array
+    sequence = []
+    
+    for line in lines:
+        # debug
+        #print(line)
+        
+        # ignore record like SQ   Sequence 275 BP; 64 A; 73 C; 88 G; 50 T; 0 other;
+        if line.startswith('SQ'):
+            continue
+        
+        # remove the numbers inside strings. revome spaces around string
+        line = ''.join([i for i in line.strip() if not i.isdigit()])
+        
+        # remove space from sequence
+        line = line.replace(" ","")
+        
+        # append each line sequence to sequence list
+        sequence.append(line)
+        
+    return ''.join(sequence)
+
 # Map a function to each section of the entry    
 _PARSER_TABLE = {
     'ID': _parse_id,
     #'SOURCE': _parse_source,
     'REFERENCE': _parse_reference,
     #'FEATURES': _parse_feature_table,
-    #'ORIGIN': _parse_origin
+    'ORIGIN': _parse_sequence
     }
 
