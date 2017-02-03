@@ -1226,20 +1226,17 @@ def _build_basis(sbp):
     sbp : numpy.ndarray of integers
           1, -1 and 0
     """
-    W = sbp.transpose()
-    dimW = W.shape
-    isPos = (W > 0)
-    isNeg = (W < 0)
-    onesD = np.ones((dimW[0],dimW[0]))
-    nPos = np.dot(onesD, isPos)
-    nNeg = np.dot(onesD, isNeg)
+
+    dim_sbp = sbp.shape
+    isPos = (sbp > 0)
+    isNeg = (sbp < 0)
+    onesD = np.ones((dim_sbp[1],dim_sbp[1]))
+    nPos = np.dot(isPos, onesD)
+    nNeg = np.dot(isNeg, onesD)
     W = (isPos * nNeg - isNeg * nPos)
-    nn = []
-    for i in np.arange(0,W.shape[1]):
-        x = 1/np.sqrt(np.dot(W[:,i], W[:,i]))
-        nn.append(x)
-    nn = np.array([nn,]*W.shape[0])
-    V = (W * nn).transpose()
+    nn = np.apply_along_axis(lambda x: 1/np.sqrt(np.dot(x, x)), 1, W)
+    nn = np.array([nn,]*dim_sbp[1]).transpose()
+    V = W * nn
     return V
 
 
