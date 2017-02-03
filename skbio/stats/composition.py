@@ -643,6 +643,113 @@ def ilr_inv(mat, basis=None, check=True):
 
 
 @experimental(as_of="0.4.0")
+def alr(mat, denominator_col = 0):
+    r"""
+    Performs additive log ratio transformation.
+    
+    
+    This function transforms compositions from a D-part Aitchison simplex to
+    a non-isometric real space of D-1 dimensions. The argument 
+    `denominator_col` defines the index of the column used as the common
+    denominator. The :math: `alr` transformed data are amenable to multivariate
+    analysis as long as statistics don't involve distances.
+
+    :math:`alr: S^D \rightarrow \mathbb{R}^{D-1}`
+
+    The alr transformation is defined as follows
+
+    .. math::
+        alr(x) = [log \frac{x_1}{x_D}, \ldots, log \frac{x_{D-1}}{x_D}]
+
+    where :math:`D` is the index of the part used as common denominator.
+
+    Parameters
+    ----------
+    mat: numpy.ndarray
+       a matrix of proportions where
+       rows = compositions and
+       columns = components
+
+    denominator_col: int
+       the index of the column of mat which should be used as the reference
+       composition
+
+    Examples
+    --------
+    >>> import numpy as np
+    >>> from skbio.stats.composition import alr
+    >>> x = np.array([.1, .3, .4, .2])
+    >>> alr(x)
+    array([ 1.09861229,  1.38629436,  0.69314718])
+    """
+    mat = closure(mat)
+    if len(mat.shape) == 2:
+        mat_t = mat.transpose()
+        num_col = list(range(0, mat_t.shape[0]))
+        del num_col[denominator_col]
+        lr = np.log(mat_t[num_col,:]/mat_t[denominator_col,:]).transpose()
+    elif len(mat.shape) == 1:
+        num_col = list(range(0, mat.shape[0]))
+        del num_col[denominator_col]
+        lr = np.log(mat[num_col]/mat[denominator_col])
+    else:
+        raise ValueError("mat must be either 1D or 2D")
+    return lr
+
+
+@experimental(as_of="0.4.0")
+def alr_inv(mat, denominator_col = 0):
+    r"""
+    Performs inverse additive log ratio transform.
+
+    This function transforms compositions from the real space to
+    Aitchison geometry. The :math:`alr^{-1}` transform is both an isometry,
+    and an isomorphism defined on the following spaces
+
+    :math:`alr^{-1}: \mathbb{R}^{D-1} \rightarrow S^D`
+
+    The inverse alr transformation is defined as follows
+
+    .. math::
+        alr^{-1}(x) = C[exp([y:0])]
+
+    where :math:`C` is the closure operation.
+
+    Parameters
+    ----------
+    mat: numpy.ndarray
+       a matrix of alr-transformed data
+
+    denominator_col: int
+       the index of the column of mat where the common denominator should
+       be placed
+
+    Examples
+    --------
+    >>> import numpy as np
+    >>> from skbio.stats.composition import alr, alr_inv
+    >>> x = np.array([.1, .3, .4, .2])
+    >>> alr_inv(alr(x))
+    array([ 0.1,  0.3,  0.4,  0.2])
+    """  
+
+    if len(mat.shape) == 2:
+        rat = np.exp(mat).sum(axis=1) + 1
+        dat = (np.exp(mat).transpose()/rat).transpose()
+        lri = np.hstack((dat[:,range(0,denominator_col)],
+                         np.array([1/rat]).transpose(),
+                         dat[:,range(denominator_col, np.shape(dat)[1])]))
+    elif len(mat.shape) == 1:
+        rat = np.exp(mat).sum() + 1
+        dat = np.exp(mat)/rat
+        lri = np.concatenate((dat[range(0,denominator_col)],
+                              np.array([1/rat]),
+                              dat[range(denominator_col, np.shape(dat)[0])]))
+    else:
+        raise ValueError("mat must be either 1D or 2D")
+    return lri
+
+@experimental(as_of="0.4.0")
 def centralize(mat):
     r"""Center data around its geometric average.
 
@@ -1103,6 +1210,37 @@ def _gram_schmidt_basis(n):
                      [0]*(n-i-1))*np.sqrt(i/(i+1))
         basis[:, j] = e
     return basis.T
+
+
+def _build_basis(sbp):
+    """
+    Builds an orthogonal basis from a sequential binary partition. 
+       
+    "Code for a SBP. The first row represents the labels of parts of the compositional vector. At each order of
+    partition, +1 means that the part is assigned to the first group, −1 to the second group, and 0 that this part is not
+    in the group which is divided at this order."
+    J.J. Egozcue and V. Pawlowsky-Glahn, http://dugi-doc.udg.edu/bitstream/handle/10256/660/Egozcue-Pawlowsky.pdf
+    
+    Parameters
+    ----------
+    sbp : numpy.ndarray of integers
+          1, -1 and 0
+    """
+    W = sbp.transpose()
+    dimW = W.shape
+    isPos = (W > 0)
+    isNeg = (W < 0)
+    onesD = np.ones((dimW[0],dimW[0]))
+    nPos = np.dot(onesD, isPos)
+    nNeg = np.dot(onesD, isNeg)
+    W = (isPos * nNeg - isNeg * nPos)
+    nn = []
+    for i in np.arange(0,W.shape[1]):
+        x = 1/np.sqrt(np.dot(W[:,i], W[:,i]))
+        nn.append(x)
+    nn = np.array([nn,]*W.shape[0])
+    V = (W * nn).transpose()
+    return V
 
 
 def _check_orthogonality(basis):
