@@ -642,7 +642,7 @@ def ilr_inv(mat, basis=None, check=True):
     return clr_inv(np.dot(mat, basis))
 
 
-@experimental(as_of="0.4.0")
+@experimental(as_of="0.5.1-dev")
 def alr(mat, denominator_col = 0):
     r"""
     Performs additive log ratio transformation.
@@ -697,14 +697,13 @@ def alr(mat, denominator_col = 0):
     return lr
 
 
-@experimental(as_of="0.4.0")
+@experimental(as_of="0.5.1-dev")
 def alr_inv(mat, denominator_col = 0):
     r"""
     Performs inverse additive log ratio transform.
 
-    This function transforms compositions from the real space to
-    Aitchison geometry. The :math:`alr^{-1}` transform is both an isometry,
-    and an isomorphism defined on the following spaces
+    This function transforms compositions from the non-isometric real space of alrs to
+    Aitchison geometry.
 
     :math:`alr^{-1}: \mathbb{R}^{D-1} \rightarrow S^D`
 
@@ -780,7 +779,7 @@ def centralize(mat):
     return perturb_inv(mat, cen)
 
 
-@experimental(as_of="0.4.1")
+@experimental(as_of="0.5.1-dev")
 def ancom(table, grouping,
           alpha=0.05,
           tau=0.02,
@@ -1212,6 +1211,7 @@ def _gram_schmidt_basis(n):
     return basis.T
 
 
+@experimental(as_of="0.5.1-dev")
 def _build_basis(sbp):
     """
     Builds an orthogonal basis from a sequential binary partition. 
