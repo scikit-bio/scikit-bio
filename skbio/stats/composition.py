@@ -1237,7 +1237,7 @@ def _build_basis(sbp):
     nn = np.apply_along_axis(lambda x: 1/np.sqrt(np.dot(x, x)), 1, W)
     nn = np.array([nn,]*dim_sbp[1]).transpose()
     V = W * nn
-    return V
+    return clr_inv(V)
 
 
 def _check_orthogonality(basis):
