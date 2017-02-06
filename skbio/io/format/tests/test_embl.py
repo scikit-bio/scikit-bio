@@ -71,7 +71,7 @@ class EMBLIOTests(TestCase):
         # M14399; SV 1; linear; mRNA; STD; PRO; 63 BP.
         self.single = (
             'gtgaaacaaagcactattgcactggctgtcttaccgttactgtttacccctgtgacaaaagcc',
-            {'ID': {'accession': 'M14399',
+            {'LOCUS': {'accession': 'M14399',
                     'class': 'STD',
                     'division': 'PRO',
                     'mol_type': 'mRNA',
