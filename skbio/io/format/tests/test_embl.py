@@ -9,7 +9,9 @@
 import io
 from unittest import TestCase, main
 
-from skbio import DNA, RNA, Sequence
+import skbio.io
+
+from skbio import DNA, RNA, Sequence, Protein
 from skbio.metadata import IntervalMetadata
 from skbio.util import get_data_path
 
@@ -232,6 +234,26 @@ class ReaderTests(EMBLIOTests):
             with self.assertRaisesRegex(EMBLFormatError,
                                         'Could not parse the ID line:.*'):
                 _parse_id(line)
+                
+    def test_no_protein_support(self):
+        """Testing no protein support for embl"""
+        
+        # a fake protein line.
+        handle = io.StringIO('ID   M14399; SV 1; linear; mRNA; STD; PRO; 63 AA.\n//\n')
+        
+        with self.assertRaisesRegex(EMBLFormatError,
+                               "There's no protein support for EMBL record"):
+            # read a protein record
+            Protein.read(handle)
+            
+        # return to 0
+        handle.seek(0)
+        
+        with self.assertRaisesRegex(EMBLFormatError,
+                               "There's no protein support for EMBL record"):
+            # read a generic record
+            skbio.io.read(handle, format='embl')
+                               
                 
     def test_parse_reference(self):
         lines = '''

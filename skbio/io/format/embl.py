@@ -192,9 +192,9 @@ from skbio.sequence import Sequence, DNA, RNA, Protein
 # look at skbio.io.registry to have an idea on how to define this class
 embl = create_format('embl')
 
-# embl has a series of keys different from genbank; moreovers keys are not so 
-# easy to understand (eg. RA for AUTHORS). Here is a # dictionary of keys 
-# conversion (EMBL->GB)
+# embl has a series of keys different from genbank; moreover keys are not so 
+# easy to understand (eg. RA for AUTHORS). Here is a dictionary of keys 
+# conversion (EMBL->GB). All the unspecified keys will remain in embl format
 KEYS_TRANSLATOR = {
                    # identification
                    'ID': 'LOCUS',
@@ -222,7 +222,9 @@ KEYS_TRANSLATOR = {
 # the original _yield_section divides entries in sections relying on spaces (the
 # same section has the same level of indentation). Uniprot entries have a key for
 # each line, so to divide record in sections I need to define a corresponance for
-# each key to section
+# each key to section, then I will divide a record in sections using these section
+# name. Some keys are commented out since I don't find them in example. What I have
+# to do if I find them?
 KEYS_2_SECTIONS = {
                    # identification
                    'ID': 'LOCUS',
@@ -257,7 +259,7 @@ KEYS_2_SECTIONS = {
                    'XX': 'SPACER'
                   }
 
-# for convenience
+# for convenience: I think such functions are more readadble in lambda functions
 def _get_embl_key(line):
     """Return first part of a string as a embl key (ie 'AC   M14399;' -> 'AC')"""
     
@@ -284,16 +286,13 @@ def _translate_key(key):
     """A method to translate a single key. Return key itself if no traslation 
     is defined"""
     
-    if key in KEYS_TRANSLATOR:
-        return KEYS_TRANSLATOR[key]
+    return KEYS_TRANSLATOR.get(key, key)
         
-    else:
-        return key
-        
-# a method to translate keys
+# a method to translate keys for a dict object. All keys not defined will remain
+# the same
 def _translate_keys(data):
     """Translate a dictionary of uniprot key->value in a genbank like 
-    dictionary of key values"""
+    dictionary of key values. Keep old keys if no translation is defined"""
     
     # get all keys to validate
     old_keys = data.keys()
@@ -310,7 +309,8 @@ def _translate_keys(data):
     # returning translated keys
     return new_data
                    
-# Method to determine if file is in EMBL format or not
+# Method to determine if file is in EMBL format or not. A uniprot embl format 
+# can't be parsed by this module (at the moment)
 @embl.sniffer()
 def _embl_sniffer(fh):
     try:
@@ -349,10 +349,13 @@ def _embl_to_rna(fh, seq_num=1, **kwargs):
     record = _get_nth_sequence(_parse_embls(fh), seq_num)
     return _construct(record, RNA, **kwargs)
     
+# No protein support at the moment
 @embl.reader(Protein)
 def _embl_to_protein(fh, seq_num=1, **kwargs):
-    record = _get_nth_sequence(_parse_embls(fh), seq_num)
-    return _construct(record, Protein, **kwargs)
+    # no protein support, at the moment
+    #record = _get_nth_sequence(_parse_embls(fh), seq_num)
+    #return _construct(record, Protein, **kwargs)
+    raise EMBLFormatError("There's no protein support for EMBL record")
 
     
 def _construct(record, constructor=None, **kwargs):
@@ -369,8 +372,11 @@ def _construct(record, constructor=None, **kwargs):
         if unit == 'bp':
             # RNA mol type has T instead of U for genbank from from NCBI
             constructor = DNA
+            
         elif unit == 'aa':
-            constructor = Protein
+            # no protein support, at the moment
+            #constructor = Protein
+            raise EMBLFormatError("There's no protein support for EMBL record")
 
     if constructor == RNA:
         return DNA(
@@ -380,6 +386,7 @@ def _construct(record, constructor=None, **kwargs):
             seq, metadata=md, interval_metadata=imd, **kwargs)
 
 
+# looks like the genbank _parse_genbank
 def _parse_embls(fh):
     """Chunck multiple EMBL records by '//', and returns a generator"""
 
@@ -396,19 +403,22 @@ def _parse_single_embl(chunks):
     interval_metadata = None
     sequence = ''
     
-    # define a section splitter with _embl_yield_section function defined in this module
-    # returns generator for each block with different line type
+    # define a section splitter with _embl_yield_section function defined in 
+    # this module (return the embl section by embl key). returns generator for 
+    # each block with different line type
     section_splitter = _embl_yield_section(
         lambda line: _get_embl_section(line), 
         skip_blanks=True, 
         strip=False)
     
+    # process each section, like genbank does
     for section in section_splitter(chunks):
         # key is line type (eg ID, AC, ...)
         key = _get_embl_key(section[0])
         
-        # convert header using the key translator dictionary (eg 'AC' -> 'ACCESSION')
-        header = _translate_key(key)
+        # even section have different keys, (RA, RP, ...), I need to get the
+        # correct section to call the appropriate method
+        header = _get_embl_section(key)
         
         # debug
         #print("header >%s<" %(header))
