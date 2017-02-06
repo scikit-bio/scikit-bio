@@ -779,7 +779,7 @@ def centralize(mat):
     return perturb_inv(mat, cen)
 
 
-@experimental(as_of="0.5.1-dev")
+@experimental(as_of="0.4.1")
 def ancom(table, grouping,
           alpha=0.05,
           tau=0.02,
@@ -1211,7 +1211,6 @@ def _gram_schmidt_basis(n):
     return basis.T
 
 
-@experimental(as_of="0.5.1-dev")
 def _sbp_basis(sbp):
     """
     Builds an orthogonal basis from a sequential binary partition (SBP).
