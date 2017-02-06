@@ -1212,19 +1212,49 @@ def _gram_schmidt_basis(n):
 
 
 @experimental(as_of="0.5.1-dev")
-def _build_basis(sbp):
+def _sbp_basis(sbp):
     """
-    Builds an orthogonal basis from a sequential binary partition. 
-       
-    "Code for a SBP. The first row represents the labels of parts of the compositional vector. At each order of
-    partition, +1 means that the part is assigned to the first group, −1 to the second group, and 0 that this part is not
-    in the group which is divided at this order."
-    J.J. Egozcue and V. Pawlowsky-Glahn, http://dugi-doc.udg.edu/bitstream/handle/10256/660/Egozcue-Pawlowsky.pdf
-    
+    Builds an orthogonal basis from a sequential binary partition (SBP).
+    As explained in Parent et al. (2013), the "SBP describes the D−1 
+    orthogonal (geometrically independent) balances between parts and
+    groups of parts. The SBP is a (D - 1) × D matrix, in which parts 
+    labeled '+1' (group  numerator) are  balanced  with  parts  labeled 
+    '−1' (group denominator). A part labeled '0' is excluded from the
+    balance between parts. The composition is partitioned sequentially 
+    into contrasts at every hierarchically ordered row until the '+1'
+    and '-1' groups each contain a single part."
+
     Parameters
     ----------
-    sbp : numpy.ndarray of integers
+    sbp : numpy.array of integers
           1, -1 and 0
+
+    Returns
+    -------
+    numpy.array
+
+    Examples
+    --------
+    >>> import numpy as np
+    >>> sbp = np.array([[1, 1,-1,-1,-1],
+    ...                 [1,-1, 0, 0, 0],
+    ...                 [0, 0, 1,-1,-1],
+    ...                 [0, 0, 0, 1,-1]])
+    ... 
+    >>> _sbp_basis(sbp)
+    array([[ 0.31209907,  0.31209907,  0.12526729,  0.12526729,  0.12526729],
+           [ 0.36733337,  0.08930489,  0.18112058,  0.18112058,  0.18112058],
+           [ 0.17882092,  0.17882092,  0.40459293,  0.11888261,  0.11888261],
+           [ 0.18112058,  0.18112058,  0.18112058,  0.36733337,  0.08930489]])
+
+    References
+    ----------
+    Parent, S.É., Parent, L.E., Egozcue, J.J., Rozane, D.E., Hernandes, A.,
+      Lapointe, L., Hébert-Gentile, V., Naess, K., Marchand, S., Lafond, J., 
+      Mattos, D., Barlow, P., Natale, W., 2013. The plant ionome revisited by
+      the nutrient balance concept. Front. Plant Sci. 4, 39, 
+      http://dx.doi.org/10.3389/fpls.2013.00039.
+
     """
 
     dim_sbp = sbp.shape
