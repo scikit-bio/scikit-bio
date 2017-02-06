@@ -70,7 +70,7 @@ User exceptions and warnings
    QSeqFormatError
    QUALFormatError
    StockholmFormatError
-   
+
 
 Subpackages
 -----------
@@ -209,7 +209,8 @@ from ._exception import (UnrecognizedFormatError, FileFormatError,
                          FASTQFormatError, LSMatFormatError, NewickFormatError,
                          OrdinationFormatError, PhylipFormatError,
                          QSeqFormatError, QUALFormatError,
-                         StockholmFormatError, GFF3FormatError, EMBLFormatError)
+                         StockholmFormatError, GFF3FormatError,
+                         EMBLFormatError)
 from .registry import write, read, sniff, create_format, io_registry
 from .util import open
 

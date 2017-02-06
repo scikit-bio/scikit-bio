@@ -1,0 +1,102 @@
+ID   AB000684.1:1..275:rRNA; SV 1; linear; genomic DNA; STD; ENV; 275 BP.
+XX
+PA   AB000684.1
+XX
+DT   10-FEB-1997 (Rel. 50, Created)
+DT   29-JUL-2005 (Rel. 84, Last updated, Version 7)
+XX
+DE   uncultured bacterium partial 16S rRNA
+XX
+KW   ENV.
+XX
+OS   uncultured bacterium
+OC   Bacteria; environmental samples.
+XX
+RN   [1]
+RP   1-275
+RA   Inagaki F., Hayashi S., Doi K., Motomura Y., Izawa E., Ogata S.;
+RT   ;
+RL   Submitted (24-JAN-1997) to the INSDC.
+RL   Fumio Inagaki, Faculty of Agriculture, Kyushu University, Microbial Genetic
+RL   Division, Institute of Genetic Resourses; Higashi-ku Hakozaki 6-10-1,
+RL   Fukuoka-shi, Fukuoka, 812-81, Japan (E-mail:inagaki@agr.kyushu-u.ac.jp,
+RL   Tel:+81-92-642-3059, Fax:+81-92-642-3059)
+XX
+RN   [2]
+RA   Inagaki F., Hayashi S., Doi K., Motomura Y., Izawa E., Ogata S.;
+RT   "Microbial participation in the formation of siliceous deposits from
+RT   geothermal water and analysis of the extremely thermophilic bacterial
+RT   community";
+RL   FEMS Microbiol. Ecol. 24:41-48(1997).
+XX
+DR   MD5; 996348a90e49caf3f6155ad9478d6d90.
+XX
+FH   Key             Location/Qualifiers
+FH
+FT   source          1..275
+FT                   /organism="uncultured bacterium"
+FT                   /environmental_sample
+FT                   /mol_type="genomic DNA"
+FT                   /clone="2 of cluster I"
+FT                   /db_xref="taxon:77133"
+FT   rRNA            AB000684.1:<1..>275
+FT                   /product="16S rRNA"
+XX
+SQ   Sequence 275 BP; 63 A; 72 C; 88 G; 52 T; 0 other;
+     ctgcccttag ttgccactct tcggagggca ctctaagggg accgccggcg ataagccgag        60
+     gaaggtgggg atgacgtcag gtcagtatgc cctttatgcc cggggctaca caggcgctac       120
+     agtggccagg acaatgggaa gcgacccagt aatggggagc aaatccctaa acctggtcat       180
+     ggtgcagatt gagggctgaa actcgcccct catgaagccg gaatcggtag taatggcgga       240
+     tcagctaagc cgccgtgaat acgttctcgg gcctt                                  275
+//
+ID   AB000685.1:1..275:rRNA; SV 1; linear; genomic DNA; STD; ENV; 275 BP.
+XX
+PA   AB000685.1
+XX
+DT   10-FEB-1997 (Rel. 50, Created)
+DT   29-JUL-2005 (Rel. 84, Last updated, Version 7)
+XX
+DE   uncultured bacterium partial 16S rRNA
+XX
+KW   ENV.
+XX
+OS   uncultured bacterium
+OC   Bacteria; environmental samples.
+XX
+RN   [1]
+RP   1-275
+RA   Inagaki F., Hayashi S., Doi K., Motomura Y., Izawa E., Ogata S.;
+RT   ;
+RL   Submitted (24-JAN-1997) to the INSDC.
+RL   Fumio Inagaki, Faculty of Agriculture, Kyushu University, Microbial Genetic
+RL   Division, Institute of Genetic Resourses; Higashi-ku Hakozaki 6-10-1,
+RL   Fukuoka-shi, Fukuoka, 812-81, Japan (E-mail:inagaki@agr.kyushu-u.ac.jp,
+RL   Tel:+81-92-642-3059, Fax:+81-92-642-3059)
+XX
+RN   [2]
+RA   Inagaki F., Hayashi S., Doi K., Motomura Y., Izawa E., Ogata S.;
+RT   "Microbial participation in the formation of siliceous deposits from
+RT   geothermal water and analysis of the extremely thermophilic bacterial
+RT   community";
+RL   FEMS Microbiol. Ecol. 24:41-48(1997).
+XX
+DR   MD5; 9999acf6687667a872da41b64d3c11f8.
+XX
+FH   Key             Location/Qualifiers
+FH
+FT   source          1..275
+FT                   /organism="uncultured bacterium"
+FT                   /environmental_sample
+FT                   /mol_type="genomic DNA"
+FT                   /clone="3 of cluster I"
+FT                   /db_xref="taxon:77133"
+FT   rRNA            AB000685.1:<1..>275
+FT                   /product="16S rRNA"
+XX
+SQ   Sequence 275 BP; 64 A; 73 C; 88 G; 50 T; 0 other;
+     ctgcccttag ttgccaccct tcggagggca ctctaagggg accgccggcg ataagccgag        60
+     gaaggtgggg atgacgtcag gtcagtatgc cctttatgcc cggggctaca caggcgctac       120
+     agtggccagg acaatgggaa gcgacccagt aatggggagc aaatccctaa acctggtcat       180
+     ggtgcagatt gagggctgaa actcgcccct catgaagccg gaaacggtag taatggcgga       240
+     tcagctaagc cgccgtgaat acgttctcgg gcctt                                  275
+//

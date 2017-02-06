@@ -19,7 +19,7 @@ from skbio.util import get_data_path
 from skbio.io import EMBLFormatError
 
 from skbio.io.format.embl import (
-    _embl_sniffer, _parse_id, _parse_reference, _embl_to_generator, 
+    _embl_sniffer, _parse_id, _parse_reference, _embl_to_generator,
     _get_embl_section)
 
 # TODO: implement those methods
@@ -29,6 +29,7 @@ from skbio.io.format.embl import (
 #    _generator_to_genbank, _sequence_to_genbank,
 #    _protein_to_genbank, _rna_to_genbank, _dna_to_genbank,
 #    _serialize_locus)
+
 
 class SnifferTests(TestCase):
     def setUp(self):
@@ -49,6 +50,7 @@ class SnifferTests(TestCase):
         for fp in self.negative_fps:
             self.assertEqual(_embl_sniffer(fp), (False, {}))
 
+
 # Boilerplate for EMBL IO tests
 # TODO: implements all setUp needed
 class EMBLIOTests(TestCase):
@@ -56,43 +58,44 @@ class EMBLIOTests(TestCase):
         # to test ID line
         self.id = (
             # This is a derived record (non-coding, rRNA and spacer records)
-            # (feature level record: http://www.ebi.ac.uk/ena/browse/feature-level-products
+            # (feature level record:
+            # http://www.ebi.ac.uk/ena/browse/feature-level-products
+            # TODO: a Uniprot record?
             (['ID   AB000684.1:1..275:rRNA; SV 1; linear; '
               'genomic DNA; STD; ENV; 275 BP.'],
              {'division': 'ENV', 'mol_type': 'genomic DNA', 'shape': 'linear',
-              'accession': 'AB000684.1:1..275:rRNA', 'unit': 'bp', 
+              'accession': 'AB000684.1:1..275:rRNA', 'unit': 'bp',
               'size': 275, 'version': 1, 'class': 'STD'}),
             # A standard record
             (['ID   M14399; SV 1; linear; mRNA; STD; PRO; 63 BP.'],
              {'division': 'PRO', 'mol_type': 'mRNA', 'shape': 'linear',
-             'accession': 'M14399', 'unit': 'bp', 
-             'size': 63, 'version': 1, 'class': 'STD'}))
-            # TODO: a Uniprot record?
-        
+              'accession': 'M14399', 'unit': 'bp',
+              'size': 63, 'version': 1, 'class': 'STD'}))
+
         # define a single DNA record (with no interval metadata)
         # M14399; SV 1; linear; mRNA; STD; PRO; 63 BP.
         self.single = (
             'gtgaaacaaagcactattgcactggctgtcttaccgttactgtttacccctgtgacaaaagcc',
             {'LOCUS': {'accession': 'M14399',
-                    'class': 'STD',
-                    'division': 'PRO',
-                    'mol_type': 'mRNA',
-                    'shape': 'linear',
-                    'size': 63,
-                    'unit': 'bp',
-                    'version': 1}},
+                       'class': 'STD',
+                       'division': 'PRO',
+                       'mol_type': 'mRNA',
+                       'shape': 'linear',
+                       'size': 63,
+                       'unit': 'bp',
+                       'version': 1}},
             None,
             RNA)
-        
+
         # define a single DNA record uppercase (filepath)
         self.single_upper_fp = get_data_path('embl_single_record_upper')
-        
+
         # define a single RNA record file path
         self.single_rna_fp = get_data_path('embl_single_record')
-        
+
         # define a interval metadata (see skbio.metadata.IntervalMetadata)
         imd = IntervalMetadata(63)
-        
+
         # then add interval object to interval metadata. Add source
         imd.add([(0, 63)],
                 [(False, False)],
@@ -102,9 +105,10 @@ class EMBLIOTests(TestCase):
                  'type': 'source',
                  'strand': '+',
                  '__location': '1..63'})
-        
+
         imd.add([(0, 63)],
-                [(False, True)], # the second True is beacause exact location is not known
+                # the second True is beacause exact location is not known
+                [(False, True)],
                 {'phase': 0,
                  'db_xref': ['GOA:P00634',
                              'InterPro:IPR001952',
@@ -176,10 +180,10 @@ class EMBLIOTests(TestCase):
                  'transl_table': '11',
                  'translation': 'MKQSTIALAVLPLLFTPVTKA',
                  'type': 'CDS'})
-        
+
         # define a full RNA record
         self.single_rna_fp = get_data_path('embl_single_record')
-        
+
         self.single_rna = (
             'gtgaaacaaagcactattgcactggctgtcttaccgttactgtttacccctgtgacaaaagcc',
             {'LOCUS': {'accession': 'M14399',
@@ -190,31 +194,32 @@ class EMBLIOTests(TestCase):
                        'size': 63,
                        'unit': 'bp',
                        'version': 1},
-             'ACCESSION': 'M14399', # accessions (could be more than one)
-             'DATE': ["16-JUL-1988 (Rel. 16, Created)", 
+             'ACCESSION': 'M14399',  # accessions (could be more than one)
+             'DATE': ["16-JUL-1988 (Rel. 16, Created)",
                       "02-SEP-1999 (Rel. 60, Last updated, Version 3)"],
              'DESCRIPTION': "E.coli alkaline phosphatase signal mRNA, 5' end.",
              'KEYWORDS': "alkaline phosphatase; signal peptide.",
              'ORGANISM': "Escherichia coli",
-             'TAXONOMY': "Bacteria; Proteobacteria; Gammaproteobacteria; Enterobacterales; "
-                         "Enterobacteriaceae; Escherichia.",
+             'TAXONOMY': "Bacteria; Proteobacteria; Gammaproteobacteria; "
+                         "Enterobacterales; Enterobacteriaceae; Escherichia.",
              'REFERENCE': [{'AUTHORS': 'Gray G.L., Baldridge J.S., '
-                                       'McKeown K.S., Heyneker H.L., Chang C.N.',
+                                       'McKeown K.S., Heyneker H.L., '
+                                       'Chang C.N.',
                             'JOURNAL': 'Gene 39(2-3):247-254(1985).',
                             'PUBMED': '3912261',
                             'REFERENCE': '1-63',
-                            'TITLE': '"Periplasmic production of correctly processed '
-                                     'human growth hormone in Escherichia coli: '
-                                     'natural and bacterial signal sequences are '
-                                     'interchangeable"'
-                           }],
-            },
+                            'TITLE': '"Periplasmic production of correctly '
+                                     'processed human growth hormone in '
+                                     'Escherichia coli: natural and bacterial '
+                                     'signal sequences are '
+                                     'interchangeable"'}], },
             imd,
             RNA)
 
+
 class ReaderTests(EMBLIOTests):
     """Implements test for reading EMBL data"""
-    
+
     # TODO: implement test to deal with all EMBL methods
     def test_parse_id(self):
         """Parse ID record (first line of embl format)"""
@@ -229,32 +234,34 @@ class ReaderTests(EMBLIOTests):
             ['ID   M14399; SV 1; linear; mRNA; STD; PRO; 63'],
             # missing division
             ['ID   M14399; SV 1; linear; mRNA; STD;      63 BP.']]
-             
+
         for line in lines:
             with self.assertRaisesRegex(EMBLFormatError,
                                         'Could not parse the ID line:.*'):
                 _parse_id(line)
-                
+
     def test_no_protein_support(self):
         """Testing no protein support for embl"""
-        
+
         # a fake protein line.
-        handle = io.StringIO('ID   M14399; SV 1; linear; mRNA; STD; PRO; 63 AA.\n//\n')
-        
+        handle = io.StringIO('ID   M14399; SV 1; linear; mRNA; STD; '
+                             'PRO; 63 AA.\n//\n')
+
         with self.assertRaisesRegex(EMBLFormatError,
-                               "There's no protein support for EMBL record"):
+                                    "There's no protein support for EMBL "
+                                    "record"):
             # read a protein record
             Protein.read(handle)
-            
+
         # return to 0
         handle.seek(0)
-        
+
         with self.assertRaisesRegex(EMBLFormatError,
-                               "There's no protein support for EMBL record"):
+                                    "There's no protein support for EMBL "
+                                    "record"):
             # read a generic record
             skbio.io.read(handle, format='embl')
-                               
-                
+
     def test_parse_reference(self):
         lines = '''
 RP   1-63
@@ -269,18 +276,19 @@ RL   Gene 39(2-3):247-254(1985).'''.split('\n')
         exp = {'AUTHORS': 'Gray G.L., Baldridge J.S., '
                           'McKeown K.S., Heyneker H.L., Chang C.N.;',
                'JOURNAL': 'Gene 39(2-3):247-254(1985).',
-               'CROSS_REFERENCE': 'DOI; 10.1016/0378-1119(85)90319-1. PUBMED; 3912261.',
+               'CROSS_REFERENCE': 'DOI; 10.1016/0378-1119(85)90319-1. '
+                                  'PUBMED; 3912261.',
                'REFERENCE': '1-63',
                'TITLE': '"Periplasmic production of correctly processed '
                         'human growth hormone in Escherichia coli: '
                         'natural and bacterial signal sequences are '
                         'interchangeable";'
                }
-        
+
         # See all differences
         self.maxDiff = None
         self.assertEqual(_parse_reference(lines), exp)
-        
+
     def test_embl_to_generator_single(self):
         # test single record and uppercase sequence
         for c in [Sequence, DNA]:
@@ -289,22 +297,22 @@ RL   Gene 39(2-3):247-254(1985).'''.split('\n')
             exp = c(self.single[0], metadata=self.single[1],
                     positional_metadata=self.single[2], lowercase=True)
             self.assertEqual(exp, obs)
-            
+
     def test_get_embl_section(self):
         """Verify to have a section for each embl ID"""
-        
+
         with open(self.single_rna_fp) as fh:
             for line in fh:
                 if line.startswith("//"):
                     continue
-                
+
                 # test that this function doesn't raise exceptions
                 try:
                     _get_embl_section(line)
-                
+
                 except KeyError as err:
-                    raise EMBLFormatError("Key {0} isn't defined in embl.KEYS_2_SECTIONS".format(err))
-                    
+                    raise EMBLFormatError("Key {0} isn't defined in embl."
+                                          "KEYS_2_SECTIONS".format(err))
+
 if __name__ == '__main__':
     main()
-
