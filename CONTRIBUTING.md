@@ -179,7 +179,7 @@ All code that is added to scikit-bio must be unit tested, and the unit test code
 
 Running ``make test`` locally during development will include a subset of the full checks performed by Travis-CI.
 
-The scikit-bio coding guidelines describe our [expectations for unit tests](http://scikit-bio.org/development/coding_guidelines.html). You should review the unit test section before working on your test code.
+The scikit-bio coding guidelines describe our [expectations for unit tests](http://scikit-bio.org/docs/latest/development/coding_guidelines.html). You should review the unit test section before working on your test code.
 
 Tests can be executed by running ``make test`` from the base directory of the project or from within a Python or IPython session:
 
