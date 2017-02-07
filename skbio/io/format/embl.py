@@ -191,7 +191,11 @@ from functools import partial
 # skbio modules
 from skbio.io import create_format, EMBLFormatError
 from skbio.io.format._base import (_line_generator, _get_nth_sequence)
+from skbio.io.format._sequence_feature_vocabulary import (
+    _yield_section, _parse_single_feature)
+from skbio.metadata import IntervalMetadata
 from skbio.sequence import Sequence, DNA, RNA, Protein
+
 
 # look at skbio.io.registry to have an idea on how to define this class
 embl = create_format('embl')
@@ -484,7 +488,7 @@ def _parse_single_embl(chunks):
 #        elif header == 'FEATURES':
 #            interval_metadata = parsed
 
-        # parse all the others sections
+        # parse all the others sections (DATE, SOURCE, ...)
         else:
             metadata[header] = parsed
 
@@ -709,15 +713,71 @@ def _parse_sequence(lines):
 
 # boilerplate for parse feature functions
 def _parse_feature_table(lines, length):
-    """Parse feature tables"""
+    """Parse embl feature tables"""
 
-    return
+    # define interval metadata
+    imd = IntervalMetadata(length)
+
+    # remove feature header table
+    idxs = [i for i, line in enumerate(lines) if line.startswith("FH")]
+    lines = [line for i, line in enumerate(lines) if i not in idxs]
+
+    # remove FH from the header
+    lines = [line.replace("FT", "  ", 1) for line in lines]
+
+    # magic number 21: the lines following header of each feature
+    # are indented with 21 spaces.
+    feature_indent = ' ' * 21
+
+    section_splitter = _yield_section(
+        lambda x: not x.startswith(feature_indent),
+        skip_blanks=True, strip=False)
+
+    for section in section_splitter(lines):
+        _parse_single_feature(section, imd)
+    return imd
+
+
+def _parse_date(lines, label_delimiter=None, return_label=False):
+    """Parse embl data records"""
+
+    data = []
+    line = lines[0]
+
+    # take the first line, divide the key from the text
+    label, section = line.split(label_delimiter, 1)
+
+    # add section to data to return
+    data += [section]
+
+    # read all the others dates and append to data array
+    data.extend(line.split(label_delimiter, 1)[-1] for line in lines[1:])
+
+    # strip returned data
+    data = [i.strip() for i in data]
+
+    # finally return data array, and the key if needed
+    if return_label:
+        return label, data
+    else:
+        return data
+
+
+def _parse_source(lines):
+    """Parse taxonomy data"""
+
+    # I have to do the same things I do while parsing reference
+    res = _parse_reference(lines)
+
+    # then, I have to append this dictionary to a new dictionary
+    return {'SOURCE': res}
 
 
 # Map a function to each section of the entry
 _PARSER_TABLE = {
     'LOCUS': _parse_id,
-    # 'SOURCE': _parse_source,
+    'SOURCE': _parse_source,
+    'DATE': _parse_date,
     'REFERENCE': _parse_reference,
     'FEATURES': _parse_feature_table,
     'ORIGIN': _parse_sequence
