@@ -20,27 +20,25 @@ from skbio.io import EMBLFormatError
 
 from skbio.io.format.embl import (
     _embl_sniffer, _parse_id, _parse_reference, _embl_to_generator,
-    _get_embl_section)
+    _get_embl_section, _embl_to_sequence, _embl_to_dna,
+    _embl_to_rna, _embl_to_protein)
 
 # TODO: implement those methods
-#    _genbank_to_generator, _genbank_to_sequence,
-#    _genbank_to_dna, _genbank_to_rna, _genbank_to_protein,
-#    _parse_locus, _parse_reference,
-#    _generator_to_genbank, _sequence_to_genbank,
-#    _protein_to_genbank, _rna_to_genbank, _dna_to_genbank,
-#    _serialize_locus)
+#    _generator_to_embl, _sequence_to_embl,
+#    _protein_to_embl, _rna_to_embl, _dna_to_embl,
+#    _serialize_id)
 
 
 class SnifferTests(TestCase):
     def setUp(self):
         self.positive_fps = list(map(get_data_path, [
             'embl_single_record',
-            'embl_multi_records']))
+            'embl_multi_records',
+            'embl_uniprot_record']))
 
         self.negative_fps = list(map(get_data_path, [
             'empty',
-            'whitespace_only',
-            'embl_uniprot_record']))
+            'whitespace_only']))
 
     def test_positives(self):
         for fp in self.positive_fps:
@@ -181,9 +179,6 @@ class EMBLIOTests(TestCase):
                  'translation': 'MKQSTIALAVLPLLFTPVTKA',
                  'type': 'CDS'})
 
-        # define a full RNA record
-        self.single_rna_fp = get_data_path('embl_single_record')
-
         self.single_rna = (
             'gtgaaacaaagcactattgcactggctgtcttaccgttactgtttacccctgtgacaaaagcc',
             {'LOCUS': {'accession': 'M14399',
@@ -197,11 +192,13 @@ class EMBLIOTests(TestCase):
              'ACCESSION': 'M14399',  # accessions (could be more than one)
              'DATE': ["16-JUL-1988 (Rel. 16, Created)",
                       "02-SEP-1999 (Rel. 60, Last updated, Version 3)"],
+             'DBSOURCE': 'MD5; c9b40131b8622946b5aafdf5473b3d43.',
              'DESCRIPTION': "E.coli alkaline phosphatase signal mRNA, 5' end.",
              'KEYWORDS': "alkaline phosphatase; signal peptide.",
-             'ORGANISM': "Escherichia coli",
-             'TAXONOMY': "Bacteria; Proteobacteria; Gammaproteobacteria; "
-                         "Enterobacterales; Enterobacteriaceae; Escherichia.",
+             'SOURCE': {"ORGANISM": "Escherichia coli",
+                        'taxonomy': "Bacteria; Proteobacteria; "
+                        "Gammaproteobacteria; Enterobacterales; "
+                        "Enterobacteriaceae; Escherichia."},
              'REFERENCE': [{'AUTHORS': 'Gray G.L., Baldridge J.S., '
                                        'McKeown K.S., Heyneker H.L., '
                                        'Chang C.N.',
@@ -215,6 +212,146 @@ class EMBLIOTests(TestCase):
                                      'interchangeable"'}], },
             imd,
             RNA)
+
+        # define a multi record. File path
+        self.multi_fp = get_data_path('embl_multi_records')
+
+        # define interal metadata
+        imd1 = IntervalMetadata(275)
+
+        # then add interval object to interval metadata. Add source
+        imd1.add([(0, 275)],
+                 [(False, False)],
+                 {'db_xref': 'taxon:77133',
+                  'mol_type': 'genomic DNA',
+                  'organism': 'uncultured bacterium',
+                  'type': 'source',
+                  'strand': '+',
+                  'environmental_sample': None,
+                  'clone': "2 of cluster I",
+                  '__location': '1..275'})
+
+        imd1.add([(0, 275)],
+                 [(True, True)],
+                 {'product': "16S rRNA",
+                  'type': 'rRNA',
+                  '__location': "AB000684.1:<1..>275"})
+
+        # define interal metadata
+        imd2 = IntervalMetadata(275)
+
+        # then add interval object to interval metadata. Add source
+        imd2.add([(0, 275)],
+                 [(False, False)],
+                 {'db_xref': 'taxon:77133',
+                  'mol_type': 'genomic DNA',
+                  'organism': 'uncultured bacterium',
+                  'type': 'source',
+                  'strand': '+',
+                  'environmental_sample': None,
+                  'clone': "3 of cluster I",
+                  '__location': '1..275'})
+
+        imd2.add([(0, 275)],
+                 [(True, True)],
+                 {'product': "16S rRNA",
+                  'type': 'rRNA',
+                  '__location': "AB000685.1:<1..>275"})
+
+        # multi object
+        self.multi = (
+            ('CTGCCCTTAGTTGCCACTCTTCGGAGGGCACTCTAAGGGGACCGCCGGCGATAAGCCGAGGAA'
+             'GGTGGGGATGACGTCAGGTCAGTATGCCCTTTATGCCCGGGGCTACACAGGCGCTACAGTGGC'
+             'CAGGACAATGGGAAGCGACCCAGTAATGGGGAGCAAATCCCTAAACCTGGTCATGGTGCAGAT'
+             'TGAGGGCTGAAACTCGCCCCTCATGAAGCCGGAATCGGTAGTAATGGCGGATCAGCTAAGCCG'
+             'CCGTGAATACGTTCTCGGGCCTT',
+             {'PARENT_ACCESSION': 'AB000684.1',
+              'DATE': ['10-FEB-1997 (Rel. 50, Created)',
+                       '29-JUL-2005 (Rel. 84, Last updated, Version 7)'],
+              'DBSOURCE': 'MD5; 996348a90e49caf3f6155ad9478d6d90.',
+              'DESCRIPTION': 'uncultured bacterium partial 16S rRNA',
+              'KEYWORDS': 'ENV.',
+              'LOCUS': {'accession': 'AB000684.1:1..275:rRNA',
+                        'class': 'STD',
+                        'division': 'ENV',
+                        'mol_type': 'genomic DNA',
+                        'shape': 'linear',
+                        'size': 275,
+                        'unit': 'bp',
+                        'version': 1},
+              'REFERENCE': [{'AUTHORS': 'Inagaki F., Hayashi S., Doi K., '
+                                        'Motomura Y., Izawa E., Ogata S.;',
+                             'JOURNAL': 'Submitted (24-JAN-1997) to the INSDC'
+                                        '. Fumio Inagaki, Faculty of '
+                                        'Agriculture, Kyushu University, '
+                                        'Microbial Genetic Division, Institu'
+                                        'te of Genetic Resourses; Higashi-ku'
+                                        ' Hakozaki 6-10-1, Fukuoka-shi, '
+                                        'Fukuoka, 812-81, Japan (E-mail'
+                                        ':inagaki@agr.kyushu-u.ac.jp, Tel:'
+                                        '+81-92-642-3059, Fax:+81-92-642-'
+                                        '3059)',
+                             'REFERENCE': '1-275',
+                             'TITLE': ';'},
+                            {'AUTHORS': 'Inagaki F., Hayashi S., Doi K., '
+                                        'Motomura Y., Izawa E., Ogata S.;',
+                             'JOURNAL': 'FEMS Microbiol. Ecol. 24:41-48'
+                                        '(1997).',
+                             'TITLE': '"Microbial participation in the for'
+                                      'mation of siliceous deposits from '
+                                      'geothermal water and analysis of the '
+                                      'extremely thermophilic bacterial '
+                                      'community";'}],
+              'SOURCE': {'ORGANIMS': 'uncultured bacterium',
+                         'taxonomy': 'Bacteria; environmental samples.'}},
+             imd1,
+             DNA),
+            ('CTGCCCTTAGTTGCCACCCTTCGGAGGGCACTCTAAGGGGACCGCCGGCGATAAGCCGAGGAA'
+             'GGTGGGGATGACGTCAGGTCAGTATGCCCTTTATGCCCGGGGCTACACAGGCGCTACAGTGGC'
+             'CAGGACAATGGGAAGCGACCCAGTAATGGGGAGCAAATCCCTAAACCTGGTCATGGTGCAGAT'
+             'TGAGGGCTGAAACTCGCCCCTCATGAAGCCGGAAACGGTAGTAATGGCGGATCAGCTAAGCCG'
+             'CCGTGAATACGTTCTCGGGCCTT',
+             {'PARENT_ACCESSION': 'AB000685.1',
+              'DATE': ['10-FEB-1997 (Rel. 50, Created)',
+                       '29-JUL-2005 (Rel. 84, Last updated, Version 7)'],
+              'DBSOURCE': 'MD5; 9999acf6687667a872da41b64d3c11f8.',
+              'DESCRIPTION': 'uncultured bacterium partial 16S rRNA',
+              'KEYWORDS': 'ENV.',
+              'LOCUS': {'accession': 'AB000685.1:1..275:rRNA',
+                        'class': 'STD',
+                        'division': 'ENV',
+                        'mol_type': 'genomic DNA',
+                        'shape': 'linear',
+                        'size': 275,
+                        'unit': 'bp',
+                        'version': 1},
+              'REFERENCE': [{'AUTHORS': 'Inagaki F., Hayashi S., Doi K., '
+                                        'Motomura Y., Izawa E., Ogata S.;',
+                                        'JOURNAL': 'Submitted (24-JAN-1997) '
+                                        'to the INSDC. Fumio Inagaki, Faculty'
+                                        ' of Agriculture, Kyushu University, '
+                                        'Microbial Genetic Division, '
+                                        'Institute of Genetic Resourses; '
+                                        'Higashi-ku Hakozaki 6-10-1, '
+                                        'Fukuoka-shi, Fukuoka, 812-81, '
+                                        'Japan (E-mail:inagaki@agr.kyushu-'
+                                        'u.ac.jp, Tel:+81-92-642-3059, Fax:'
+                                        '+81-92-642-3059)',
+                             'REFERENCE': '1-275',
+                             'TITLE': ';'},
+                            {'AUTHORS': 'Inagaki F., Hayashi S., Doi K., '
+                                        'Motomura Y., Izawa E., Ogata S.;',
+                             'JOURNAL': 'FEMS Microbiol. Ecol. 24:41-'
+                                        '48(1997).',
+                             'TITLE': '"Microbial participation in the '
+                                      'formation of siliceous deposits from '
+                                      'geothermal water and analysis of the '
+                                      'extremely thermophilic bacterial '
+                                      'community";'}],
+              'SOURCE': {'ORGANIMS': 'uncultured bacterium',
+                         'taxonomy': 'Bacteria; environmental samples.'}},
+             imd2,
+             DNA))
 
 
 class ReaderTests(EMBLIOTests):
@@ -242,6 +379,7 @@ class ReaderTests(EMBLIOTests):
 
     def test_no_protein_support(self):
         """Testing no protein support for embl"""
+        # TODO: add protein support
 
         # a fake protein line.
         handle = io.StringIO('ID   M14399; SV 1; linear; mRNA; STD; '
@@ -313,6 +451,55 @@ RL   Gene 39(2-3):247-254(1985).'''.split('\n')
                 except KeyError as err:
                     raise EMBLFormatError("Key {0} isn't defined in embl."
                                           "KEYS_2_SECTIONS".format(err))
+
+    def test_embl_to_generator(self):
+        for i, obs in enumerate(_embl_to_generator(self.multi_fp)):
+            seq, md, imd, constructor = self.multi[i]
+            exp = constructor(seq, metadata=md, lowercase=True,
+                              interval_metadata=imd)
+            self.assertEqual(exp, obs)
+
+    def test_embl_to_sequence(self):
+        for i, exp in enumerate(self.multi):
+            obs = _embl_to_sequence(self.multi_fp, seq_num=i+1)
+            exp = Sequence(exp[0], metadata=exp[1], lowercase=True,
+                           interval_metadata=exp[2])
+            self.assertEqual(exp, obs)
+
+    def test_embl_to_rna(self):
+        seq, md, imd, constructor = self.single_rna
+        obs = _embl_to_rna(self.single_rna_fp)
+        # as a constructor, RNA nees T -> U conversion
+        exp = constructor(seq.replace("t", "u"), metadata=md,
+                          lowercase=True, interval_metadata=imd)
+
+        self.assertEqual(exp, obs)
+
+    def test_embl_to_dna(self):
+        i = 1
+        exp = self.multi[i]
+        obs = _embl_to_dna(self.multi_fp, seq_num=i+1)
+        exp = DNA(exp[0], metadata=exp[1], lowercase=True,
+                  interval_metadata=exp[2])
+
+        self.assertEqual(exp, obs)
+
+    def test_embl_to_protein(self):
+        # TODO: add protein support
+        i = 0
+        # there is no support for protein at the moment
+#        exp = self.multi[i]
+#        obs = _embl_to_protein(self.multi_fp, seq_num=i+1)
+#        exp = Protein(exp[0], metadata=exp[1],
+#                      lowercase=True, interval_metadata=exp[2])
+#        self.assertEqual(exp, obs)
+
+        with self.assertRaisesRegex(EMBLFormatError,
+                                    "There's no protein support for EMBL "
+                                    "record"):
+            # read a generic record
+            _embl_to_protein(self.multi_fp, seq_num=i+1)
+
 
 if __name__ == '__main__':
     main()

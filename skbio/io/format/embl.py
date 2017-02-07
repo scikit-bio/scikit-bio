@@ -203,9 +203,13 @@ KEYS_TRANSLATOR = {
                    # identification
                    'ID': 'LOCUS',
                    'AC': 'ACCESSION',
+                   # PA means PARENT ACCESSION (?) and applies to
+                   # feature-level-products entries
+                   'PA': 'PARENT_ACCESSION',
                    # 'PR': 'PROJECT_IDENTIFIER',
                    'DT': 'DATE',
-                   'DE': 'DESCRIPTION',
+                   'DE': 'DEFINITION',
+                   # 'GN': 'GENE_NAME',  # uniprot specific
                    'KW': 'KEYWORDS',
                    # Source (taxonomy and classification)
                    'OS': 'ORGANIMS',
@@ -214,7 +218,9 @@ KEYS_TRANSLATOR = {
                    # reference keys
                    'RA': 'AUTHORS',
                    'RP': 'REFERENCE',
+                   # 'RC': 'COMMENT',
                    'RX': 'CROSS_REFERENCE',
+                   # 'RG': 'GROUP',
                    'RT': 'TITLE',
                    'RL': 'JOURNAL',
                    # Cross references
@@ -233,9 +239,13 @@ KEYS_2_SECTIONS = {
                    # identification
                    'ID': 'LOCUS',
                    'AC': 'ACCESSION',
+                   # PA means PARENT ACCESSION (?) and applies to
+                   # feature-level-products entries
+                   'PA': 'ACCESSION',
                    # 'PR': 'PROJECT_IDENTIFIER',
                    'DT': 'DATE',
                    'DE': 'DESCRIPTION',
+                   # 'GN': 'GENE_NAME',  # uniprot specific
                    'KW': 'KEYWORDS',
                    # Source (taxonomy and classification)
                    'OS': 'SOURCE',
@@ -244,7 +254,9 @@ KEYS_2_SECTIONS = {
                    # reference keys
                    'RA': 'REFERENCE',
                    'RP': 'REFERENCE',
+                   # 'RC': 'REFERENCE',
                    'RX': 'REFERENCE',
+                   # 'RG': 'REFERENCE',
                    'RT': 'REFERENCE',
                    'RL': 'REFERENCE',
                    'RN': 'SPACER',
