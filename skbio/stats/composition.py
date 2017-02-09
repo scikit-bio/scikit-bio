@@ -643,13 +643,12 @@ def ilr_inv(mat, basis=None, check=True):
 
 
 @experimental(as_of="0.5.1-dev")
-def alr(mat, denominator_col = 0):
+def alr(mat, denominator_col=0):
     r"""
     Performs additive log ratio transformation.
-    
-    
+
     This function transforms compositions from a D-part Aitchison simplex to
-    a non-isometric real space of D-1 dimensions. The argument 
+    a non-isometric real space of D-1 dimensions. The argument
     `denominator_col` defines the index of the column used as the common
     denominator. The :math: `alr` transformed data are amenable to multivariate
     analysis as long as statistics don't involve distances.
@@ -687,7 +686,7 @@ def alr(mat, denominator_col = 0):
         mat_t = mat.transpose()
         num_col = list(range(0, mat_t.shape[0]))
         del num_col[denominator_col]
-        lr = np.log(mat_t[num_col,:]/mat_t[denominator_col,:]).transpose()
+        lr = np.log(mat_t[num_col, :]/mat_t[denominator_col, :]).transpose()
     elif len(mat.shape) == 1:
         num_col = list(range(0, mat.shape[0]))
         del num_col[denominator_col]
@@ -698,12 +697,12 @@ def alr(mat, denominator_col = 0):
 
 
 @experimental(as_of="0.5.1-dev")
-def alr_inv(mat, denominator_col = 0):
+def alr_inv(mat, denominator_col=0):
     r"""
     Performs inverse additive log ratio transform.
 
-    This function transforms compositions from the non-isometric real space of alrs to
-    Aitchison geometry.
+    This function transforms compositions from the non-isometric real space of
+    alrs to Aitchison geometry.
 
     :math:`alr^{-1}: \mathbb{R}^{D-1} \rightarrow S^D`
 
@@ -730,23 +729,24 @@ def alr_inv(mat, denominator_col = 0):
     >>> x = np.array([.1, .3, .4, .2])
     >>> alr_inv(alr(x))
     array([ 0.1,  0.3,  0.4,  0.2])
-    """  
+    """
 
     if len(mat.shape) == 2:
         rat = np.exp(mat).sum(axis=1) + 1
         dat = (np.exp(mat).transpose()/rat).transpose()
-        lri = np.hstack((dat[:,range(0,denominator_col)],
+        lri = np.hstack((dat[:, range(0, denominator_col)],
                          np.array([1/rat]).transpose(),
-                         dat[:,range(denominator_col, np.shape(dat)[1])]))
+                         dat[:, range(denominator_col, np.shape(dat)[1])]))
     elif len(mat.shape) == 1:
         rat = np.exp(mat).sum() + 1
         dat = np.exp(mat)/rat
-        lri = np.concatenate((dat[range(0,denominator_col)],
+        lri = np.concatenate((dat[range(0, denominator_col)],
                               np.array([1/rat]),
                               dat[range(denominator_col, np.shape(dat)[0])]))
     else:
         raise ValueError("mat must be either 1D or 2D")
     return lri
+
 
 @experimental(as_of="0.4.0")
 def centralize(mat):
@@ -1214,12 +1214,12 @@ def _gram_schmidt_basis(n):
 def _sbp_basis(sbp):
     """
     Builds an orthogonal basis from a sequential binary partition (SBP).
-    As explained in Parent et al. (2013), the "SBP describes the D−1 
+    As explained in Parent et al. (2013), the "SBP describes the D−1
     orthogonal (geometrically independent) balances between parts and
-    groups of parts. The SBP is a (D - 1) × D matrix, in which parts 
-    labeled '+1' (group  numerator) are  balanced  with  parts  labeled 
+    groups of parts. The SBP is a (D - 1) × D matrix, in which parts
+    labeled '+1' (group  numerator) are  balanced  with  parts  labeled
     '−1' (group denominator). A part labeled '0' is excluded from the
-    balance between parts. The composition is partitioned sequentially 
+    balance between parts. The composition is partitioned sequentially
     into contrasts at every hierarchically ordered row until the '+1'
     and '-1' groups each contain a single part."
 
@@ -1239,7 +1239,7 @@ def _sbp_basis(sbp):
     ...                 [1,-1, 0, 0, 0],
     ...                 [0, 0, 1,-1,-1],
     ...                 [0, 0, 0, 1,-1]])
-    ... 
+    ...
     >>> _sbp_basis(sbp)
     array([[ 0.31209907,  0.31209907,  0.12526729,  0.12526729,  0.12526729],
            [ 0.36733337,  0.08930489,  0.18112058,  0.18112058,  0.18112058],
@@ -1249,22 +1249,21 @@ def _sbp_basis(sbp):
     References
     ----------
     Parent, S.É., Parent, L.E., Egozcue, J.J., Rozane, D.E., Hernandes, A.,
-      Lapointe, L., Hébert-Gentile, V., Naess, K., Marchand, S., Lafond, J., 
+      Lapointe, L., Hébert-Gentile, V., Naess, K., Marchand, S., Lafond, J.,
       Mattos, D., Barlow, P., Natale, W., 2013. The plant ionome revisited by
-      the nutrient balance concept. Front. Plant Sci. 4, 39, 
+      the nutrient balance concept. Front. Plant Sci. 4, 39,
       http://dx.doi.org/10.3389/fpls.2013.00039.
-
     """
 
     dim_sbp = sbp.shape
     isPos = (sbp > 0)
     isNeg = (sbp < 0)
-    onesD = np.ones((dim_sbp[1],dim_sbp[1]))
+    onesD = np.ones((dim_sbp[1], dim_sbp[1]))
     nPos = np.dot(isPos, onesD)
     nNeg = np.dot(isNeg, onesD)
     W = (isPos * nNeg - isNeg * nPos)
     nn = np.apply_along_axis(lambda x: 1/np.sqrt(np.dot(x, x)), 1, W)
-    nn = np.array([nn,]*dim_sbp[1]).transpose()
+    nn = np.array([nn, ] * dim_sbp[1]).transpose()
     V = W * nn
     return clr_inv(V)
 
