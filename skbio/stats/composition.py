@@ -1211,7 +1211,7 @@ def _gram_schmidt_basis(n):
     return basis.T
 
 
-def _sbp_basis(sbp):
+def sbp_basis(sbp):
     """
     Builds an orthogonal basis from a sequential binary partition (SBP).
     As explained in Parent et al. (2013), the "SBP describes the D−1
