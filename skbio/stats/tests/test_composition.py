@@ -392,6 +392,42 @@ class CompositionTests(TestCase):
         with self.assertRaises(ValueError):
             ilr_inv(table, basis=basis)
 
+    def test_alr(self):
+        # 2d-composition
+        comp1 = closure(self.cdata1)
+        alr2d_byhand = np.array([np.log(comp1[:, 0]/comp1[:, 1]), np.log(comp1[:, 2]/comp1[:, 1])]).T
+        alr2d_method = alr(comp1, denominator_ix=1)
+        npt.assert_allclose(alr2d_byhand, alr2d_method)
+
+        # 1d-composition
+        comp2 = closure(self.cdata2)
+        alr1d_byhand = np.array([np.log(comp2[0]/comp2[1]), np.log(comp2[2]/comp2[1])]).T
+        alr1d_method = alr(comp2, denominator_ix=1)
+        npt.assert_allclose(alr1d_byhand, alr1d_method)
+
+    def test_alr_inv(self):
+        # 2d-composition
+        comp1 = closure(self.cdata1)
+        alr2d_byhand = np.array([np.log(comp1[:, 0]/comp1[:, 1]), np.log(comp1[:, 2]/comp1[:, 1])]).T
+        alr2d_method = alr(comp1, denominator_ix=1)
+        B = 1/(1 + np.exp(alr2d_byhand[:, 0]) + np.exp(alr2d_byhand[:, 1]))
+        A = B * np.exp(alr2d_byhand[:, 0])
+        C = B * np.exp(alr2d_byhand[:, 1])
+        alrinv2d_byhand = np.column_stack((A, B, C))
+        alrinv2d_method = alr_inv(alr2d_method, denominator_ix=1)
+        npt.assert_allclose(alrinv2d_byhand, alrinv2d_method)
+
+        # 2d-composition
+        comp2 = closure(self.cdata2)
+        alr1d_byhand = np.array([np.log(comp2[0]/comp2[1]), np.log(comp2[2]/comp2[1])]).T
+        alr1d_method = alr(comp2, denominator_ix=1)
+        B = 1/(1 + np.exp(alr1d_byhand[0]) + np.exp(alr1d_byhand[1]))
+        A = B * np.exp(alr1d_byhand[0])
+        C = B * np.exp(alr1d_byhand[1])
+        alrinv1d_byhand = np.column_stack((A, B, C))
+        alrinv1d_method = alr_inv(alr1d_method, denominator_ix=1)
+        npt.assert_allclose(alr1d_byhand, alr1d_method)
+
 
 class AncomTests(TestCase):
     def setUp(self):

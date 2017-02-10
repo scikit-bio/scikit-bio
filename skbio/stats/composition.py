@@ -684,13 +684,13 @@ def alr(mat, denominator_col=0):
     mat = closure(mat)
     if len(mat.shape) == 2:
         mat_t = mat.transpose()
-        num_col = list(range(0, mat_t.shape[0]))
-        del num_col[denominator_col]
-        lr = np.log(mat_t[num_col, :]/mat_t[denominator_col, :]).transpose()
+        numerator_ix = list(range(0, mat_t.shape[0]))
+        del numerator_ix[denominator_ix]
+        lr = np.log(mat_t[numerator_ix, :]/mat_t[denominator_ix, :]).transpose()
     elif len(mat.shape) == 1:
-        num_col = list(range(0, mat.shape[0]))
-        del num_col[denominator_col]
-        lr = np.log(mat[num_col]/mat[denominator_col])
+        numerator_ix = list(range(0, mat.shape[0]))
+        del numerator_ix[denominator_ix]
+        lr = np.log(mat[numerator_ix]/mat[denominator_ix])
     else:
         raise ValueError("mat must be either 1D or 2D")
     return lr
@@ -730,22 +730,25 @@ def alr_inv(mat, denominator_col=0):
     >>> alr_inv(alr(x))
     array([ 0.1,  0.3,  0.4,  0.2])
     """
-
     if len(mat.shape) == 2:
-        rat = np.exp(mat).sum(axis=1) + 1
-        dat = (np.exp(mat).transpose()/rat).transpose()
-        lri = np.hstack((dat[:, range(0, denominator_col)],
-                         np.array([1/rat]).transpose(),
-                         dat[:, range(denominator_col, np.shape(dat)[1])]))
+        mat_ix = np.insert(mat, denominator_ix, np.repeat(0, mat.shape[0]), axis = 1)
+        comp = np.zeros(mat_ix.shape)
+        comp[:, denominator_ix] = 1 / (np.exp(mat).sum(axis=1) + 1)
+        numerator_ix =  list(range(0, comp.shape[1]))
+        del numerator_ix[denominator]
+        for i in numerator_ix:
+            comp[:, i] = comp[:, denominator_ix] * np.exp(mat_ix[:, i])
     elif len(mat.shape) == 1:
-        rat = np.exp(mat).sum() + 1
-        dat = np.exp(mat)/rat
-        lri = np.concatenate((dat[range(0, denominator_col)],
-                              np.array([1/rat]),
-                              dat[range(denominator_col, np.shape(dat)[0])]))
+        mat_ix = np.insert(mat, denominator_ix, 0, axis = 0)
+        comp = np.zeros(mat_ix.shape)
+        comp[denominator_ix] = 1 / (np.exp(mat).sum(axis=0) + 1)
+        numerator_ix =  list(range(0, comp.shape[0]))
+        del numerator_ix[denominator]
+        for i in numerator_ix:
+            comp[i] = comp[denominator_ix] * np.exp(mat_ix[i])
     else:
         raise ValueError("mat must be either 1D or 2D")
-    return lri
+    return comp
 
 
 @experimental(as_of="0.4.0")
@@ -1240,7 +1243,7 @@ def sbp_basis(sbp):
     ...                 [0, 0, 1,-1,-1],
     ...                 [0, 0, 0, 1,-1]])
     ...
-    >>> _sbp_basis(sbp)
+    >>> sbp_basis(sbp)
     array([[ 0.31209907,  0.31209907,  0.12526729,  0.12526729,  0.12526729],
            [ 0.36733337,  0.08930489,  0.18112058,  0.18112058,  0.18112058],
            [ 0.17882092,  0.17882092,  0.40459293,  0.11888261,  0.11888261],
