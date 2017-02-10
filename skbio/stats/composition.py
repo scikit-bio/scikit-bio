@@ -669,9 +669,15 @@ def alr(mat, denominator_col=0):
        rows = compositions and
        columns = components
 
-    denominator_col: int
-       the index of the column of mat which should be used as the reference
-       composition
+    denominator_ix: int
+       the index of the column (2D-matrix) or position (vector) of
+       mat which should be used as the reference composition
+
+    Returns
+    -------
+    numpy.ndarray
+         alr-transformed data projected in a non-isometric real space
+         of D-1 dimensions for a D-parts composition
 
     Examples
     --------
@@ -718,10 +724,15 @@ def alr_inv(mat, denominator_col=0):
     mat: numpy.ndarray
        a matrix of alr-transformed data
 
-    denominator_col: int
-       the index of the column of mat where the common denominator should
-       be placed
-
+    denominator_ix: int
+       the index of the column (2D-composition) or position (1D-composition) of
+       the output where the common denominator should be placed
+   
+    Returns
+    -------
+    numpy.ndarray
+         compositional matrix summing to 1 by row or vector summing to 1
+         
     Examples
     --------
     >>> import numpy as np
@@ -1234,6 +1245,7 @@ def sbp_basis(sbp):
     Returns
     -------
     numpy.array
+      Am orthonormal basis in the Aitchison simplex
 
     Examples
     --------
@@ -1251,11 +1263,11 @@ def sbp_basis(sbp):
 
     References
     ----------
-    Parent, S.É., Parent, L.E., Egozcue, J.J., Rozane, D.E., Hernandes, A.,
-      Lapointe, L., Hébert-Gentile, V., Naess, K., Marchand, S., Lafond, J.,
-      Mattos, D., Barlow, P., Natale, W., 2013. The plant ionome revisited by
-      the nutrient balance concept. Front. Plant Sci. 4, 39,
-      http://dx.doi.org/10.3389/fpls.2013.00039.
+    .. [1] Parent, S.É., Parent, L.E., Egozcue, J.J., Rozane, D.E., Hernandes, A.,
+       Lapointe, L., Hébert-Gentile, V., Naess, K., Marchand, S., Lafond, J.,
+       Mattos, D., Barlow, P., Natale, W., 2013. The plant ionome revisited by
+       the nutrient balance concept. Front. Plant Sci. 4, 39,
+       http://dx.doi.org/10.3389/fpls.2013.00039.
     """
 
     dim_sbp = sbp.shape
