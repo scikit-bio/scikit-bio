@@ -643,7 +643,7 @@ def ilr_inv(mat, basis=None, check=True):
 
 
 @experimental(as_of="0.5.1-dev")
-def alr(mat, denominator_col=0):
+def alr(mat, denominator_idx=0):
     r"""
     Performs additive log ratio transformation.
 
@@ -669,7 +669,7 @@ def alr(mat, denominator_col=0):
        rows = compositions and
        columns = components
 
-    denominator_ix: int
+    denominator_idx: int
        the index of the column (2D-matrix) or position (vector) of
        mat which should be used as the reference composition
 
@@ -689,21 +689,21 @@ def alr(mat, denominator_col=0):
     """
     mat = closure(mat)
     if len(mat.shape) == 2:
-        mat_t = mat.transpose()
-        numerator_ix = list(range(0, mat_t.shape[0]))
-        del numerator_ix[denominator_ix]
-        lr = np.log(mat_t[numerator_ix, :]/mat_t[denominator_ix, :]).transpose()
+        mat_t = mat.T
+        numerator_idx = list(range(0, mat_t.shape[0]))
+        del numerator_idx[denominator_idx]
+        lr = np.log(mat_t[numerator_idx, :]/mat_t[denominator_idx, :]).T
     elif len(mat.shape) == 1:
-        numerator_ix = list(range(0, mat.shape[0]))
-        del numerator_ix[denominator_ix]
-        lr = np.log(mat[numerator_ix]/mat[denominator_ix])
+        numerator_idx = list(range(0, mat.shape[0]))
+        del numerator_idx[denominator_idx]
+        lr = np.log(mat[numerator_idx]/mat[denominator_idx])
     else:
         raise ValueError("mat must be either 1D or 2D")
     return lr
 
 
 @experimental(as_of="0.5.1-dev")
-def alr_inv(mat, denominator_col=0):
+def alr_inv(mat, denominator_idx=0):
     r"""
     Performs inverse additive log ratio transform.
 
@@ -724,15 +724,15 @@ def alr_inv(mat, denominator_col=0):
     mat: numpy.ndarray
        a matrix of alr-transformed data
 
-    denominator_ix: int
+    denominator_idx: int
        the index of the column (2D-composition) or position (1D-composition) of
        the output where the common denominator should be placed
-   
+
     Returns
     -------
     numpy.ndarray
          compositional matrix summing to 1 by row or vector summing to 1
-         
+
     Examples
     --------
     >>> import numpy as np
@@ -742,21 +742,22 @@ def alr_inv(mat, denominator_col=0):
     array([ 0.1,  0.3,  0.4,  0.2])
     """
     if len(mat.shape) == 2:
-        mat_ix = np.insert(mat, denominator_ix, np.repeat(0, mat.shape[0]), axis = 1)
-        comp = np.zeros(mat_ix.shape)
-        comp[:, denominator_ix] = 1 / (np.exp(mat).sum(axis=1) + 1)
-        numerator_ix =  list(range(0, comp.shape[1]))
-        del numerator_ix[denominator]
-        for i in numerator_ix:
-            comp[:, i] = comp[:, denominator_ix] * np.exp(mat_ix[:, i])
+        mat_idx = np.insert(mat, denominator_idx,
+                            np.repeat(0, mat.shape[0]), axis=1)
+        comp = np.zeros(mat_idx.shape)
+        comp[:, denominator_idx] = 1 / (np.exp(mat).sum(axis=1) + 1)
+        numerator_idx = list(range(0, comp.shape[1]))
+        del numerator_idx[denominator_idx]
+        for i in numerator_idx:
+            comp[:, i] = comp[:, denominator_idx] * np.exp(mat_idx[:, i])
     elif len(mat.shape) == 1:
-        mat_ix = np.insert(mat, denominator_ix, 0, axis = 0)
-        comp = np.zeros(mat_ix.shape)
-        comp[denominator_ix] = 1 / (np.exp(mat).sum(axis=0) + 1)
-        numerator_ix =  list(range(0, comp.shape[0]))
-        del numerator_ix[denominator]
-        for i in numerator_ix:
-            comp[i] = comp[denominator_ix] * np.exp(mat_ix[i])
+        mat_idx = np.insert(mat, denominator_idx, 0, axis=0)
+        comp = np.zeros(mat_idx.shape)
+        comp[denominator_idx] = 1 / (np.exp(mat).sum(axis=0) + 1)
+        numerator_idx = list(range(0, comp.shape[0]))
+        del numerator_idx[denominator_idx]
+        for i in numerator_idx:
+            comp[i] = comp[denominator_idx] * np.exp(mat_idx[i])
     else:
         raise ValueError("mat must be either 1D or 2D")
     return comp
@@ -1263,11 +1264,11 @@ def sbp_basis(sbp):
 
     References
     ----------
-    .. [1] Parent, S.É., Parent, L.E., Egozcue, J.J., Rozane, D.E., Hernandes, A.,
-       Lapointe, L., Hébert-Gentile, V., Naess, K., Marchand, S., Lafond, J.,
-       Mattos, D., Barlow, P., Natale, W., 2013. The plant ionome revisited by
-       the nutrient balance concept. Front. Plant Sci. 4, 39,
-       http://dx.doi.org/10.3389/fpls.2013.00039.
+    .. [1] Parent, S.É., Parent, L.E., Egozcue, J.J., Rozane, D.E.,
+       Hernandes, A., Lapointe, L., Hébert-Gentile, V., Naess, K.,
+       Marchand, S., Lafond, J., Mattos, D., Barlow, P., Natale, W., 2013.
+       The plant ionome revisited by the nutrient balance concept.
+       Front. Plant Sci. 4, 39, http://dx.doi.org/10.3389/fpls.2013.00039.
     """
 
     dim_sbp = sbp.shape
@@ -1278,7 +1279,7 @@ def sbp_basis(sbp):
     nNeg = np.dot(isNeg, onesD)
     W = (isPos * nNeg - isNeg * nPos)
     nn = np.apply_along_axis(lambda x: 1/np.sqrt(np.dot(x, x)), 1, W)
-    nn = np.array([nn, ] * dim_sbp[1]).transpose()
+    nn = np.array([nn, ] * dim_sbp[1]).T
     V = W * nn
     return clr_inv(V)
 
