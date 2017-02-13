@@ -18,6 +18,7 @@ from skbio.util import assert_data_frame_almost_equal
 from skbio.stats.composition import (closure, multiplicative_replacement,
                                      perturb, perturb_inv, power, inner,
                                      clr, clr_inv, ilr, ilr_inv, alr, alr_inv,
+                                     sbp_basis, _gram_schmidt_basis,
                                      centralize, _holm_bonferroni, ancom)
 
 
@@ -431,6 +432,43 @@ class CompositionTests(TestCase):
         alrinv1d_byhand = np.column_stack((A, B, C))[0, :]
         alrinv1d_method = alr_inv(alr1d_method, denominator_idx=1)
         npt.assert_allclose(alrinv1d_byhand, alrinv1d_method)
+
+    def test_sbp_basis_gram_schmidt(self):
+        gsbasis = clr_inv(_gram_schmidt_basis(5))
+        sbp = np.array([[1, -1, 0, 0, 0],
+                        [1, 1, -1, 0, 0],
+                        [1, 1, 1, -1, 0],
+                        [1, 1, 1, 1, -1]])
+        sbpbasis = sbp_basis(sbp)
+        npt.assert_allclose(gsbasis, sbpbasis)
+
+    def test_sbp_basis_elementwise(self):
+        sbp = np.array([[1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, -1],
+                        [1, 1, 1, 1, 1, 1, 1, -1, -1, -1, -1, 0],
+                        [1, 1, 1, 1, 1, 1, -1, 0, 0, 0, 0, 0],
+                        [1, 1, -1, -1, -1, 1, 0, 0, 0, 0, 0, 0],
+                        [1, -1, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0],
+                        [1, 0, 0, 0, 0, -1, 0, 0, 0, 0, 0, 0],
+                        [0, 0, 1, -1, -1, 0, 0, 0, 0, 0, 0, 0],
+                        [0, 0, 0, 1, -1, 0, 0, 0, 0, 0, 0, 0],
+                        [0, 0, 0, 0, 0, 0, 0, 1, -1, -1, 1, 0],
+                        [0, 0, 0, 0, 0, 0, 0, 1, 0, 0, -1, 0],
+                        [0, 0, 0, 0, 0, 0, 0, 0, 1, -1, 0, 0]])
+        sbpbasis = sbp_basis(sbp)
+        # by hand, element-wise
+        r = np.apply_along_axis(func1d=lambda x: np.sum(x > 0),
+                                axis=1, arr=sbp)
+        s = np.apply_along_axis(func1d=lambda x: np.sum(x < 0),
+                                axis=1, arr=sbp)
+        psi = np.zeros(sbp.shape)
+        for i in range(0, sbp.shape[0]):
+            for j in range(0, sbp.shape[1]):
+                if sbp[i, j] == 1:
+                    psi[i, j] = np.sqrt(s[i]/(r[i]*(r[i]+s[i])))
+                elif sbp[i, j] == -1:
+                    psi[i, j] = -np.sqrt(r[i]/(s[i]*(r[i]+s[i])))
+        basis_byhand = clr_inv(psi)
+        npt.assert_allclose(basis_byhand, sbpbasis)
 
 
 class AncomTests(TestCase):
