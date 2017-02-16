@@ -389,6 +389,35 @@ def _embl_to_protein(fh, seq_num=1, **kwargs):
     raise EMBLFormatError("There's no protein support for EMBL record")
 
 
+# Writer methods
+@embl.writer(None)
+def _generator_to_embl(obj, fh):
+    for obj_i in obj:
+        _serialize_single_embl(obj_i, fh)
+
+
+@embl.writer(Sequence)
+def _sequence_to_embl(obj, fh):
+    _serialize_single_embl(obj, fh)
+
+
+@embl.writer(DNA)
+def _dna_to_embl(obj, fh):
+    _serialize_single_embl(obj, fh)
+
+
+@embl.writer(RNA)
+def _rna_to_embl(obj, fh):
+    _serialize_single_embl(obj, fh)
+
+
+@embl.writer(Protein)
+def _protein_to_embl(obj, fh):
+    # no protein support, at the moment
+    # _serialize_single_embl(obj, fh)
+    raise EMBLFormatError("There's no protein support for EMBL record")
+
+
 def _construct(record, constructor=None, **kwargs):
     '''Construct the object of Sequence, DNA, RNA, or Protein.'''
 
@@ -495,6 +524,12 @@ def _parse_single_embl(chunks):
     return sequence, metadata, interval_metadata
 
 
+# boilerplate fucntion for writer methods
+# TODO: define writers methods
+def _serialize_single_embl(obj, fh):
+    pass
+
+
 def _parse_id(lines):
     """
     The ID (IDentification) line is always the first line of an entry. The
@@ -555,6 +590,17 @@ def _parse_id(lines):
 
     # returning parsed attributes
     return res
+
+
+def _serialize_id(header, obj, indent=12):
+    '''Serialize ID line.
+
+    Parameters
+    ----------
+    obj : dict
+    '''
+
+    pass
 
 
 # replace skbio.io.format._sequence_feature_vocabulary.__yield_section

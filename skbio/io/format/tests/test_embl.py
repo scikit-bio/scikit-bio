@@ -21,24 +21,22 @@ from skbio.io import EMBLFormatError
 from skbio.io.format.embl import (
     _embl_sniffer, _parse_id, _parse_reference, _embl_to_generator,
     _get_embl_section, _embl_to_sequence, _embl_to_dna,
-    _embl_to_rna, _embl_to_protein)
-
-# TODO: implement those methods
-#    _generator_to_embl, _sequence_to_embl,
-#    _protein_to_embl, _rna_to_embl, _dna_to_embl,
-#    _serialize_id)
+    _embl_to_rna, _embl_to_protein,
+    _generator_to_embl, _sequence_to_embl,
+    _protein_to_embl, _rna_to_embl, _dna_to_embl,
+    _serialize_id)
 
 
 class SnifferTests(TestCase):
     def setUp(self):
         self.positive_fps = list(map(get_data_path, [
             'embl_single_record',
-            'embl_multi_records',
-            'embl_uniprot_record']))
+            'embl_multi_records']))
 
         self.negative_fps = list(map(get_data_path, [
             'empty',
-            'whitespace_only']))
+            'whitespace_only',
+            'embl_uniprot_record']))
 
     def test_positives(self):
         for fp in self.positive_fps:
@@ -73,7 +71,7 @@ class EMBLIOTests(TestCase):
         # define a single DNA record (with no interval metadata)
         # M14399; SV 1; linear; mRNA; STD; PRO; 63 BP.
         self.single = (
-            'gtgaaacaaagcactattgcactggctgtcttaccgttactgtttacccctgtgacaaaagcc',
+            'gugaaacaaagcacuauugcacuggcugucuuaccguuacuguuuaccccugugacaaaagcc',
             {'LOCUS': {'accession': 'M14399',
                        'class': 'STD',
                        'division': 'PRO',
@@ -85,8 +83,25 @@ class EMBLIOTests(TestCase):
             None,
             RNA)
 
+        # define a single protein record (uniprot)
+        self.protein = (
+            'MAFSAEDVLKEYDRRRRMEALLLSLYYPNDRKLLDYKEWSPPRVQVECPKAPVEWNNPPSEKG'
+            'LIVGHFSGIKYKGEKAQASEVDVNKMCCWVSKFKDAMRRYQGIQTCKIPGKVLSDLDAKIKAY'
+            'NLTVEGVEGFVRYSRVTKQHVAAFLKELRHSKQYENVNLIHYILTDKRVDIQHLEKDLVKDFK'
+            'ALVESAHRMRQGHMINVKYILYQLLKKHGHGPDGPDILTVKTGSKGVLYDDSFRKIYTDLGWK'
+            'FTPL',
+            {'LOCUS': {'accession': '001R_FRG3G',
+                       'status': 'Reviewed',
+                       'size': 256,
+                       'unit': 'aa'}},
+            None,
+            Protein)
+
         # define a single DNA record uppercase (filepath)
         self.single_upper_fp = get_data_path('embl_single_record_upper')
+
+        # define a single RNA record lower
+        self.single_lower_fp = get_data_path('embl_single_record_lower')
 
         # define a single RNA record file path
         self.single_rna_fp = get_data_path('embl_single_record')
@@ -180,7 +195,7 @@ class EMBLIOTests(TestCase):
                  'type': 'CDS'})
 
         self.single_rna = (
-            'gtgaaacaaagcactattgcactggctgtcttaccgttactgtttacccctgtgacaaaagcc',
+            'gugaaacaaagcacuauugcacuggcugucuuaccguuacuguuuaccccugugacaaaagcc',
             {'LOCUS': {'accession': 'M14399',
                        'class': 'STD',
                        'division': 'PRO',
@@ -472,8 +487,7 @@ RL   Gene 39(2-3):247-254(1985).'''.split('\n')
     def test_embl_to_rna(self):
         seq, md, imd, constructor = self.single_rna
         obs = _embl_to_rna(self.single_rna_fp)
-        # as a constructor, RNA nees T -> U conversion
-        exp = constructor(seq.replace("t", "u"), metadata=md,
+        exp = constructor(seq, metadata=md,
                           lowercase=True, interval_metadata=imd)
 
         self.assertEqual(exp, obs)
@@ -502,6 +516,118 @@ RL   Gene 39(2-3):247-254(1985).'''.split('\n')
                                     "record"):
             # read a generic record
             _embl_to_protein(self.multi_fp, seq_num=i+1)
+
+
+class WriterTests(EMBLIOTests):
+    def test_serialize_id(self):
+        for serialized, parsed in self.id:
+            self.assertEqual(
+                _serialize_id('ID', parsed), serialized[0] + '\n')
+
+    def test_generator_to_embl(self):
+        seq, md, imd, constructor = self.single
+        obj = constructor(seq, md, interval_metadata=imd, lowercase=True)
+        with io.StringIO() as fh:
+            _generator_to_embl([obj], fh)
+            obs = fh.getvalue()
+
+        with open(self.single_lower_fp) as fh:
+            exp = fh.read()
+
+        self.assertEqual(obs, exp)
+
+    def test_sequence_to_embl(self):
+        with io.StringIO() as fh:
+            for i, (seq, md, imd, constructor) in enumerate(self.multi):
+                obj = Sequence(seq, md, interval_metadata=imd, lowercase=True)
+                _sequence_to_embl(obj, fh)
+            obs = fh.getvalue()
+
+        with open(self.multi_fp) as fh:
+            exp = fh.read()
+
+        self.assertEqual(obs, exp)
+
+    def test_dna_to_embl(self):
+        with io.StringIO() as fh:
+            for i, (seq, md, imd, constructor) in enumerate(self.multi):
+                obj = constructor(
+                    seq, md, interval_metadata=imd, lowercase=True)
+                _dna_to_embl(obj, fh)
+
+            # read all records written
+            obs = fh.getvalue()
+
+        with open(self.multi_fp) as fh:
+            exp = fh.read()
+
+        self.assertEqual(obs, exp)
+
+    def test_protein_to_embl(self):
+        seq, md, imd, constructor = self.protein
+        obj = constructor(seq, md, interval_metadata=imd)
+
+        with io.StringIO() as fh:
+            self.assertRaisesRegexp(EMBLFormatError,
+                                    "There's no protein support for EMBL "
+                                    "record",
+                                    _protein_to_embl, [obj], fh)
+
+    def test_rna_to_embl(self):
+        with io.StringIO() as fh:
+            seq, md, imd, constructor = self.single_rna
+            obj = constructor(seq, md, interval_metadata=imd, lowercase=True)
+            _rna_to_embl(obj, fh)
+            obs = fh.getvalue()
+
+        with open(self.single_rna_fp) as fh:
+            exp = fh.read()
+
+        self.assertEqual(obs, exp)
+
+
+class RoundtripTests(EMBLIOTests):
+    def test_roundtrip_generator(self):
+        with io.StringIO() as fh:
+            _generator_to_embl(_embl_to_generator(self.multi_fp), fh)
+            obs = fh.getvalue()
+
+        with open(self.multi_fp) as fh:
+            exp = fh.read()
+
+        self.assertEqual(obs, exp)
+
+    def test_roundtrip_rna(self):
+        with io.StringIO() as fh:
+            _rna_to_embl(_embl_to_rna(self.single_rna_fp), fh)
+            obs = fh.getvalue()
+
+        with open(self.single_rna_fp) as fh:
+            exp = fh.read()
+
+        self.assertEqual(obs, exp)
+
+    def test_roundtrip_dna(self):
+        with io.StringIO() as fh:
+            _dna_to_embl(_embl_to_dna(self.single_rna_fp), fh)
+            obs = fh.getvalue()
+
+        with open(self.single_rna_fp) as fh:
+            exp = fh.read()
+
+        self.assertEqual(obs, exp)
+
+    # TODO: test_roundtrip_protein
+
+    def test_roundtrip_sequence(self):
+        with io.StringIO() as fh:
+            _sequence_to_embl(_embl_to_sequence(self.single_rna_fp), fh)
+            obs = fh.getvalue()
+
+        with open(self.single_rna_fp) as fh:
+            exp = fh.read()
+
+        self.assertEqual(obs, exp)
 
 
 if __name__ == '__main__':
