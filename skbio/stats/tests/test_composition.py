@@ -408,6 +408,15 @@ class CompositionTests(TestCase):
         alr1d_method = alr(comp2, denominator_idx=1)
         npt.assert_allclose(alr1d_byhand, alr1d_method)
 
+        with self.assertRaises(ValueError):
+            alr(self.bad1)
+        with self.assertRaises(ValueError):
+            alr(self.bad2)
+
+        # make sure that inplace modification is not occurring
+        alr(self.cdata2)
+        npt.assert_allclose(self.cdata2, np.array([2, 2, 6]))
+
     def test_alr_inv(self):
         # 2d-composition
         comp1 = closure(self.cdata1)
@@ -432,6 +441,15 @@ class CompositionTests(TestCase):
         alrinv1d_byhand = np.column_stack((A, B, C))[0, :]
         alrinv1d_method = alr_inv(alr1d_method, denominator_idx=1)
         npt.assert_allclose(alrinv1d_byhand, alrinv1d_method)
+
+        # make sure that inplace modification is not occurring
+        alr_inv(self.rdata1)
+        npt.assert_allclose(self.rdata1,
+                            np.array([[0.70710678, -0.70710678, 0., 0.],
+                                      [0.40824829, 0.40824829,
+                                       -0.81649658, 0.],
+                                      [0.28867513, 0.28867513,
+                                       0.28867513, -0.8660254]]))
 
     def test_sbp_basis_gram_schmidt(self):
         gsbasis = clr_inv(_gram_schmidt_basis(5))

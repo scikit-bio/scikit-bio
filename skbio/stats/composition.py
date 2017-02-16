@@ -741,6 +741,7 @@ def alr_inv(mat, denominator_idx=0):
     >>> alr_inv(alr(x))
     array([ 0.1,  0.3,  0.4,  0.2])
     """
+    mat = np.array(mat)
     if len(mat.shape) == 2:
         mat_idx = np.insert(mat, denominator_idx,
                             np.repeat(0, mat.shape[0]), axis=1)
