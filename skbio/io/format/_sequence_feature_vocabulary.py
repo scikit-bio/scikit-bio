@@ -208,7 +208,7 @@ def _parse_loc_str(loc_str):
     b = r'(?P<B>\d+\^\d+)'
     c = r'(?P<C>\d+\.\d+)'
     d = r'(?P<D><?\d+\.\.>?\d+)'
-    e_left = r'(?P<EL><?[a-zA-Z_0-9\.]+:\d+\.\.>?\d+)'
+    e_left = r'(?P<EL>[a-zA-Z_0-9\.]+:<?\d+\.\.>?\d+)'
     e_right = r'(?P<ER><?\d+\.\.>?[a-zA-Z_0-9\.]+:\d+)'
     illegal = r'(?P<ILLEGAL>.+)'
     # The order of tokens in the master regular expression also
@@ -246,6 +246,18 @@ def _parse_loc_str(loc_str):
                 start, end = v.split('.')
             else:
                 start, end = v.split('..')
+            fuzzy_s = fuzzy_e = False
+            if start.startswith('<'):
+                start = start[1:]
+                fuzzy_s = True
+            if end.startswith('>'):
+                end = end[1:]
+                fuzzy_e = True
+            bounds.append((int(start)-1, int(end)))
+            fuzzy.append((fuzzy_s, fuzzy_e))
+        elif p == 'EL':
+            entry, interval = v.split(":")
+            start, end = interval.split('..')
             fuzzy_s = fuzzy_e = False
             if start.startswith('<'):
                 start = start[1:]
