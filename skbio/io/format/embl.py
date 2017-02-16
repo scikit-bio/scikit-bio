@@ -192,13 +192,17 @@ from functools import partial
 from skbio.io import create_format, EMBLFormatError
 from skbio.io.format._base import (_line_generator, _get_nth_sequence)
 from skbio.io.format._sequence_feature_vocabulary import (
-    _yield_section, _parse_single_feature)
+    _yield_section, _parse_single_feature, _serialize_section_default)
 from skbio.metadata import IntervalMetadata
 from skbio.sequence import Sequence, DNA, RNA, Protein
+from skbio.util._misc import chunk_str
 
 
 # look at skbio.io.registry to have an idea on how to define this class
 embl = create_format('embl')
+
+# This list is ordered used to read and write embl file.
+_HEADERS = ['LOCUS']
 
 # embl has a series of keys different from genbank; moreover keys are not so
 # easy to understand (eg. RA for AUTHORS). Here is a dictionary of keys
@@ -287,6 +291,14 @@ def _get_embl_key(line):
 
     # embl keys have a fixed size of 2 chars
     return line[:2]
+
+
+# get embl key from value
+# http://stackoverflow.com/questions/8023306/get-key-by-value-in-dictionary
+def _get_embl_key_by_value(value, mydict=KEYS_TRANSLATOR):
+    """Return the key(s) associated to a value from a dictionary"""
+
+    return list(mydict.keys())[list(mydict.values()).index(value)]
 
 
 def _get_embl_section(line):
@@ -527,7 +539,58 @@ def _parse_single_embl(chunks):
 # boilerplate fucntion for writer methods
 # TODO: define writers methods
 def _serialize_single_embl(obj, fh):
-    pass
+    '''Write a EMBL record.
+
+    Always write it in ENA canonical way:
+    1. sequence in lowercase (uniprot are uppercase)
+    2. 'u' as 't' even in RNA molecules.
+
+    Parameters
+    ----------
+    obj : Sequence or its child class
+
+    '''
+    # write out the headers
+    md = obj.metadata
+
+    for header in _HEADERS:
+        serializer = _SERIALIZER_TABLE.get(
+            header, _serialize_section_default)
+
+        # this is true also for locus line
+        if header in md:
+            # header needs to be convert into embl
+            embl_header = _get_embl_key_by_value(header)
+
+            # call the serializer function
+            out = serializer(embl_header, md[header])
+            # test if 'out' is a iterator.
+            # cf. Effective Python Item 17
+            if iter(out) is iter(out):
+                for s in out:
+                    fh.write(s)
+            else:
+                fh.write(out)
+#
+#        if header == 'FEATURES':
+#            if obj.has_interval_metadata():
+#                # magic number 21: the amount of indentation before
+#                # feature table starts as defined by INSDC
+#                indent = 21
+#                fh.write('{header:<{indent}}Location/Qualifiers\n'.format(
+#                    header=header, indent=indent))
+#                for s in serializer(obj.interval_metadata._intervals, indent):
+#                    fh.write(s)
+
+    # write out the sequence
+    # always write RNA seq as DNA
+    if isinstance(obj, RNA):
+        obj = obj.reverse_transcribe()
+
+    for s in _serialize_sequence(obj):
+        fh.write(s)
+
+    fh.write('//\n')
 
 
 def _parse_id(lines):
@@ -592,7 +655,7 @@ def _parse_id(lines):
     return res
 
 
-def _serialize_id(header, obj, indent=12):
+def _serialize_id(header, obj, indent=5):
     '''Serialize ID line.
 
     Parameters
@@ -600,7 +663,16 @@ def _serialize_id(header, obj, indent=12):
     obj : dict
     '''
 
-    pass
+    # use 'or' to convert None to ''
+    kwargs = {k: v or '' for k, v in obj.items()}
+
+    # then unit is in upper cases
+    kwargs["unit"] = kwargs["unit"].upper()
+
+    # return first line
+    return ('{header:<{indent}}{accession}; SV {version}; {shape}; '
+            '{mol_type}; {class}; {division}; {size} {unit}.\n').format(
+                header=header, indent=indent, **kwargs)
 
 
 # replace skbio.io.format._sequence_feature_vocabulary.__yield_section
@@ -760,7 +832,49 @@ def _parse_sequence(lines):
     return ''.join(sequence)
 
 
-# boilerplate for parse feature functions
+def _serialize_sequence(obj, indent=5):
+    '''Serialize seq to SQ.
+
+    Parameters
+    ----------
+    seq : str
+    '''
+
+    # magic numbers
+    n = 1
+    line_size = 60
+    frag_size = 10
+
+    # count bases in sequence
+    seq = str(obj).lower()
+    n_a = seq.count("a")
+    n_c = seq.count("c")
+    n_g = seq.count("g")
+    n_t = seq.count("t")
+    n_others = len(obj) - (n_a + n_c + n_g + n_t)
+
+    # define SQ like this:
+    # SQ   Sequence 275 BP; 63 A; 72 C; 88 G; 52 T; 0 other;
+    SQ = "SQ   Sequence {size} {unit}; {n_a} A; {n_c} C; {n_g} G; " +\
+         "{n_t} T; {n_others} other;\n"
+
+    # apply format
+    SQ = SQ.format(size=len(obj), unit=obj.metadata["LOCUS"]["unit"].upper(),
+                   n_a=n_a, n_c=n_c, n_g=n_g, n_t=n_t, n_others=n_others)
+
+    for i in range(0, len(seq), line_size):
+        line = seq[i:i+line_size]
+        s = '{key:<{indent}}{s}'.format(
+            key='', indent=indent, s=chunk_str(line, frag_size, ' '))
+        # pad string left and right
+        s = '{:<70}'.format(s) + '{:>10}\n'.format(i+len(line))
+        if n == 1:
+            # Add SQ header to sequence
+            s = SQ + s
+        n = n + line_size
+        yield s
+
+
 def _parse_feature_table(lines, length):
     """Parse embl feature tables"""
 
@@ -820,4 +934,12 @@ _PARSER_TABLE = {
     'REFERENCE': _parse_reference,
     'FEATURES': _parse_feature_table,
     'ORIGIN': _parse_sequence
+    }
+
+# for writer functions
+_SERIALIZER_TABLE = {
+    'LOCUS': _serialize_id,
+    # 'SOURCE': _serialize_source,
+    # 'REFERENCE': _serialize_reference,
+    # 'FEATURES': _serialize_feature_table
     }

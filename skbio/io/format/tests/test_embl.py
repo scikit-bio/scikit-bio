@@ -71,7 +71,7 @@ class EMBLIOTests(TestCase):
         # define a single DNA record (with no interval metadata)
         # M14399; SV 1; linear; mRNA; STD; PRO; 63 BP.
         self.single = (
-            'gugaaacaaagcacuauugcacuggcugucuuaccguuacuguuuaccccugugacaaaagcc',
+            'gtgaaacaaagcactattgcactggctgtcttaccgttactgtttacccctgtgacaaaagcc',
             {'LOCUS': {'accession': 'M14399',
                        'class': 'STD',
                        'division': 'PRO',
@@ -81,7 +81,7 @@ class EMBLIOTests(TestCase):
                        'unit': 'bp',
                        'version': 1}},
             None,
-            RNA)
+            DNA)
 
         # define a single protein record (uniprot)
         self.protein = (
@@ -539,7 +539,7 @@ class WriterTests(EMBLIOTests):
     def test_sequence_to_embl(self):
         with io.StringIO() as fh:
             for i, (seq, md, imd, constructor) in enumerate(self.multi):
-                obj = Sequence(seq, md, interval_metadata=imd, lowercase=True)
+                obj = Sequence(seq, md, interval_metadata=imd)
                 _sequence_to_embl(obj, fh)
             obs = fh.getvalue()
 
