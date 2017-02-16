@@ -543,6 +543,11 @@ def ilr(mat, basis=None, check=True):
     check: bool
         Specifies if the basis is orthonormal.
 
+    Returns
+    -------
+    np.array:
+        ilr transformed coordinates with D-1 dimensions.
+         
     Examples
     --------
     >>> import numpy as np
@@ -608,7 +613,12 @@ def ilr_inv(mat, basis=None, check=True):
 
     check: bool
         Specifies if the basis is orthonormal.
-
+    
+    Returns
+    -------
+    np.array
+        Inverse ilr coordinates representing a D dimensional
+        compositions.
 
     Examples
     --------
