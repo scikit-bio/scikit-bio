@@ -216,7 +216,7 @@ KEYS_TRANSLATOR = {
                    # 'GN': 'GENE_NAME',  # uniprot specific
                    'KW': 'KEYWORDS',
                    # Source (taxonomy and classification)
-                   'OS': 'ORGANIMS',
+                   'OS': 'ORGANISM',
                    'OC': 'taxonomy',
                    # 'OG': 'organelle'
                    # reference keys
@@ -245,7 +245,7 @@ KEYS_2_SECTIONS = {
                    'AC': 'ACCESSION',
                    # PA means PARENT ACCESSION (?) and applies to
                    # feature-level-products entries
-                   'PA': 'ACCESSION',
+                   'PA': 'PARENT_ACCESSION',
                    # 'PR': 'PROJECT_IDENTIFIER',
                    'DT': 'DATE',
                    'DE': 'DESCRIPTION',
@@ -485,8 +485,8 @@ def _parse_single_embl(chunks):
         elif header == 'ORIGIN':
             sequence = parsed
 
-#        elif header == 'FEATURES':
-#            interval_metadata = parsed
+        elif header == 'FEATURES':
+            interval_metadata = parsed
 
         # parse all the others sections (DATE, SOURCE, ...)
         else:
@@ -680,6 +680,9 @@ def _parse_reference(lines):
 
         res[label] = data
 
+    # now RX (CROSS_REFERENCE) is a joined string of multiple values. To get
+    # back to a list of values you can use: re.compile("([^;\s]*); ([^\s]*)")
+
     # return translated keys
     return _translate_keys(res)
 
@@ -763,20 +766,10 @@ def _parse_date(lines, label_delimiter=None, return_label=False):
         return data
 
 
-def _parse_source(lines):
-    """Parse taxonomy data"""
-
-    # I have to do the same things I do while parsing reference
-    res = _parse_reference(lines)
-
-    # then, I have to append this dictionary to a new dictionary
-    return {'SOURCE': res}
-
-
 # Map a function to each section of the entry
 _PARSER_TABLE = {
     'LOCUS': _parse_id,
-    'SOURCE': _parse_source,
+    'SOURCE': _parse_reference,
     'DATE': _parse_date,
     'REFERENCE': _parse_reference,
     'FEATURES': _parse_feature_table,
