@@ -617,7 +617,7 @@ def ilr_inv(mat, basis=None, check=True):
     Returns
     -------
     np.array
-        Inverse ilr coordinates representing a D dimensional
+        Inverse ilr coordinates representing D dimensional
         compositions.
 
     Examples
