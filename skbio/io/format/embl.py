@@ -186,6 +186,8 @@ References
 
 # std modules
 import re
+import textwrap
+
 from functools import partial
 
 # skbio modules
@@ -202,7 +204,15 @@ from skbio.util._misc import chunk_str
 embl = create_format('embl')
 
 # This list is ordered used to read and write embl file.
-_HEADERS = ['LOCUS']
+_HEADERS = [
+    'LOCUS',
+    'ACCESSION',
+    'DATE',
+    'DEFINITION',
+    'KEYWORDS',
+    'SOURCE',
+    'REFERENCE'
+    ]
 
 # embl has a series of keys different from genbank; moreover keys are not so
 # easy to understand (eg. RA for AUTHORS). Here is a dictionary of keys
@@ -234,6 +244,9 @@ KEYS_TRANSLATOR = {
                    # Cross references
                    'DR': 'DBSOURCE',
                    'CC': 'COMMENT',
+                   # features
+                   'FH': 'FEATURES',
+                   'FT': 'FEATURES',
                    'SQ': 'ORIGIN',
                    }
 
@@ -252,7 +265,7 @@ KEYS_2_SECTIONS = {
                    'PA': 'PARENT_ACCESSION',
                    # 'PR': 'PROJECT_IDENTIFIER',
                    'DT': 'DATE',
-                   'DE': 'DESCRIPTION',
+                   'DE': 'DEFINITION',
                    # 'GN': 'GENE_NAME',  # uniprot specific
                    'KW': 'KEYWORDS',
                    # Source (taxonomy and classification)
@@ -296,9 +309,16 @@ def _get_embl_key(line):
 # get embl key from value
 # http://stackoverflow.com/questions/8023306/get-key-by-value-in-dictionary
 def _get_embl_key_by_value(value, mydict=KEYS_TRANSLATOR):
-    """Return the key(s) associated to a value from a dictionary"""
+    """Return the key(s) associated to a value from a dictionary, or the
+    value if no key is defined"""
 
-    return list(mydict.keys())[list(mydict.values()).index(value)]
+    # try to get a key (keys) from a value in dictionary
+    try:
+        return list(mydict.keys())[list(mydict.values()).index(value)]
+
+    # returns value if key is not present
+    except ValueError:
+        return value
 
 
 def _get_embl_section(line):
@@ -345,6 +365,23 @@ def _translate_keys(data):
 
     # returning translated keys
     return new_data
+
+
+# define a default textwrap.Wrapper for embl
+def _get_embl_wrapper(embl_key, indent=5):
+    """Returns a textwrap.TextWrapper for embl records"""
+
+    # define the string to prepen (eg "OC   ")
+    prepend = '{key:<{indent}}'.format(key=embl_key, indent=indent)
+
+    # define a text wrapper object
+    wrapper = textwrap.TextWrapper(
+        initial_indent=prepend,
+        subsequent_indent=prepend,
+        width=80
+        )
+
+    return wrapper
 
 
 # Method to determine if file is in EMBL format or not. A uniprot embl format
@@ -487,23 +524,18 @@ def _parse_single_embl(chunks):
     # process each section, like genbank does
     for section in section_splitter(chunks):
         # key is line type (eg ID, AC, ...)
-        key = _get_embl_key(section[0])
+        embl_key = _get_embl_key(section[0])
 
         # even section have different keys, (RA, RP, ...), I need to get the
-        # correct section to call the appropriate method
-        header = _get_embl_section(key)
-
-        # debug
-        # print("header >%s<" %(header))
-        # print("section >%s<" %(section))
-        # print("metadata >%s<" %(metadata))
+        # correct section to call the appropriate method (eg REFERENCE)
+        embl_header = _get_embl_section(embl_key)
 
         # search for a specific method in PARSER_TABLE or set
         # _embl_parse_section_default
         parser = _PARSER_TABLE.get(
-            header, _embl_parse_section_default)
+            embl_header, _embl_parse_section_default)
 
-        if header == 'FEATURES':
+        if embl_header == 'FEATURES':
             # This requires 'ID' line parsed before 'FEATURES', which should
             # be true and is implicitly checked by the sniffer. This is true
             # since the first section is parsed by the last else condition
@@ -516,22 +548,22 @@ def _parse_single_embl(chunks):
         parsed = parser(section)
 
         # reference can appear multiple times
-        if header == 'REFERENCE':
-            if header in metadata:
-                metadata[header].append(parsed)
+        if embl_header == 'REFERENCE':
+            if embl_header in metadata:
+                metadata[embl_header].append(parsed)
 
             else:
-                metadata[header] = [parsed]
+                metadata[embl_header] = [parsed]
 
-        elif header == 'ORIGIN':
+        elif embl_header == 'ORIGIN':
             sequence = parsed
 
-        elif header == 'FEATURES':
+        elif embl_header == 'FEATURES':
             interval_metadata = parsed
 
         # parse all the others sections (DATE, SOURCE, ...)
         else:
-            metadata[header] = parsed
+            metadata[embl_header] = parsed
 
     return sequence, metadata, interval_metadata
 
@@ -553,13 +585,18 @@ def _serialize_single_embl(obj, fh):
     # write out the headers
     md = obj.metadata
 
+    # embl has a different magick number than embl
+    serialize_default = partial(
+        _serialize_section_default, indent=5)
+
     for header in _HEADERS:
         serializer = _SERIALIZER_TABLE.get(
-            header, _serialize_section_default)
+            header, serialize_default)
 
         # this is true also for locus line
         if header in md:
-            # header needs to be convert into embl
+            # header needs to be convert into embl, or matained as it is
+            # if no conversion could be defined
             embl_header = _get_embl_key_by_value(header)
 
             # call the serializer function
@@ -569,8 +606,13 @@ def _serialize_single_embl(obj, fh):
             if iter(out) is iter(out):
                 for s in out:
                     fh.write(s)
+
             else:
                 fh.write(out)
+
+            # add spacer between sections
+            fh.write("XX\n")
+
 #
 #        if header == 'FEATURES':
 #            if obj.has_interval_metadata():
@@ -587,9 +629,11 @@ def _serialize_single_embl(obj, fh):
     if isinstance(obj, RNA):
         obj = obj.reverse_transcribe()
 
+    # serialize sequence from a Sequence object
     for s in _serialize_sequence(obj):
         fh.write(s)
 
+    # terminate a embl record with
     fh.write('//\n')
 
 
@@ -745,6 +789,7 @@ def _embl_parse_section_default(
         1. split first line with label_delimiter for label
         2. join all the lines into one str with join_delimiter.
     '''
+
     data = []
     label = None
     line = lines[0]
@@ -776,7 +821,7 @@ def _embl_parse_section_default(
         return data
 
 
-# parse an embl reference record
+# parse an embl reference record. Is also applied on source records
 def _parse_reference(lines):
     '''Parse single REFERENCE field.
     '''
@@ -803,6 +848,88 @@ def _parse_reference(lines):
 
     # return translated keys
     return _translate_keys(res)
+
+
+def _serialize_reference(header, obj, indent=5):
+    """Serialize a list of references"""
+
+    reference = []
+    sort_order = ["RC", "RP", "RX", "RG", "RA", "RT", "RL"]
+
+    # deal with rx pattern
+    RX = re.compile("([^;\s]*); ([^\s]*)")
+
+    # obj is a list of references
+    for i, data in enumerate(obj):
+        # get the reference number
+        embl_key = "RN"
+
+        # get an embl wrapper
+        wrapper = _get_embl_wrapper(embl_key, indent)
+
+        # define wrapped string
+        reference += wrapper.wrap("[{RN}]".format(RN=i+1))
+
+        # now process each record for references
+        for embl_key in sort_order:
+            # get internal key
+            key = _translate_key(embl_key)
+
+            # have I this reference in my reference data?
+            if key not in data:
+                continue
+
+            # if yes, define wrapper
+            wrapper = _get_embl_wrapper(embl_key, indent)
+
+            # define wrapped string. beware RX
+            if embl_key == "RX":
+                for match in re.finditer(RX, data[key]):
+                    source, link = match.groups()
+                    # join text
+                    cross_reference = "; ".join([source, link])
+                    reference += wrapper.wrap(cross_reference)
+
+            else:
+                reference += wrapper.wrap(data[key])
+
+    # now define a string and add a final "\n"
+    s = "\n".join(reference) + "\n"
+
+    # and return it
+    return s
+
+
+def _serialize_source(header, obj, indent=5):
+    '''Serialize SOURCE.
+
+    Parameters
+    ----------
+    header: section header
+    obj : dict
+    indent : indent length
+    '''
+
+    source = []
+
+    # treat taxonomy and all others keys
+    for key in ["ORGANISM", "taxonomy"]:
+        # get embl key for my key (eg, taxonomy -> OC)
+        embl_key = _get_embl_key_by_value(key)
+
+        # get an embl wrapper
+        wrapper = _get_embl_wrapper(embl_key, indent)
+
+        # define wrapped string
+        source += wrapper.wrap(obj.get(key))
+
+    # TODO: deal with others SOURCE keys, eg OG (organelle)
+
+    # now define a string and add a final "\n"
+    s = "\n".join(source) + "\n"
+
+    # and return it
+    return s
 
 
 def _parse_sequence(lines):
@@ -837,7 +964,7 @@ def _serialize_sequence(obj, indent=5):
 
     Parameters
     ----------
-    seq : str
+    obj : DNA, RNA, Sequence Obj
     '''
 
     # magic numbers
@@ -926,6 +1053,26 @@ def _parse_date(lines, label_delimiter=None, return_label=False):
         return data
 
 
+def _serialize_date(header, date_list, indent=5):
+    '''Serialize date line.
+
+    Parameters
+    ----------
+    header : embl key id
+    date_list : a list of dates
+    '''
+
+    # the output string
+    output = ''
+
+    for date in date_list:
+        output += "{header:<{indent}}{date}\n".format(
+            header=header, indent=indent, date=date)
+
+    # return all dates
+    return output
+
+
 # Map a function to each section of the entry
 _PARSER_TABLE = {
     'LOCUS': _parse_id,
@@ -939,7 +1086,8 @@ _PARSER_TABLE = {
 # for writer functions
 _SERIALIZER_TABLE = {
     'LOCUS': _serialize_id,
-    # 'SOURCE': _serialize_source,
-    # 'REFERENCE': _serialize_reference,
+    'SOURCE': _serialize_source,
+    'DATE': _serialize_date,
+    'REFERENCE': _serialize_reference,
     # 'FEATURES': _serialize_feature_table
     }
