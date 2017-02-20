@@ -2284,12 +2284,12 @@ class TabularMSA(MetadataMixin, PositionalMetadataMixin, SkbioObject):
 
     def _get_join_index(self, other, how):
         if how == 'strict':
-            diff = self.index.sym_diff(other.index)
+            diff = self.index.symmetric_difference(other.index)
             if len(diff) > 0:
                 raise ValueError(
                     "Index labels must all match with `how='strict'`")
 
-            diff = self.positional_metadata.columns.sym_diff(
+            diff = self.positional_metadata.columns.symmetric_difference(
                 other.positional_metadata.columns)
 
             if not self.has_positional_metadata():

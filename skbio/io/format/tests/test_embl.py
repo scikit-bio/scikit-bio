@@ -568,10 +568,10 @@ class WriterTests(EMBLIOTests):
         obj = constructor(seq, md, interval_metadata=imd)
 
         with io.StringIO() as fh:
-            self.assertRaisesRegexp(EMBLFormatError,
-                                    "There's no protein support for EMBL "
-                                    "record",
-                                    _protein_to_embl, [obj], fh)
+            self.assertRaisesRegex(EMBLFormatError,
+                                   "There's no protein support for EMBL "
+                                   "record",
+                                   _protein_to_embl, [obj], fh)
 
     def test_rna_to_embl(self):
         with io.StringIO() as fh:
