@@ -16,11 +16,11 @@ RN   [1]
 RP   1-275
 RA   Inagaki F., Hayashi S., Doi K., Motomura Y., Izawa E., Ogata S.;
 RT   ;
-RL   Submitted (24-JAN-1997) to the INSDC.
-RL   Fumio Inagaki, Faculty of Agriculture, Kyushu University, Microbial Genetic
-RL   Division, Institute of Genetic Resourses; Higashi-ku Hakozaki 6-10-1,
-RL   Fukuoka-shi, Fukuoka, 812-81, Japan (E-mail:inagaki@agr.kyushu-u.ac.jp,
-RL   Tel:+81-92-642-3059, Fax:+81-92-642-3059)
+RL   Submitted (24-JAN-1997) to the INSDC. Fumio Inagaki, Faculty of
+RL   Agriculture, Kyushu University, Microbial Genetic Division, Institute of
+RL   Genetic Resourses; Higashi-ku Hakozaki 6-10-1, Fukuoka-shi, Fukuoka,
+RL   812-81, Japan (E-mail:inagaki@agr.kyushu-u.ac.jp, Tel:+81-92-642-3059,
+RL   Fax:+81-92-642-3059)
 XX
 RN   [2]
 RA   Inagaki F., Hayashi S., Doi K., Motomura Y., Izawa E., Ogata S.;
@@ -34,11 +34,11 @@ XX
 FH   Key             Location/Qualifiers
 FH
 FT   source          1..275
-FT                   /organism="uncultured bacterium"
-FT                   /environmental_sample
-FT                   /mol_type="genomic DNA"
 FT                   /clone="2 of cluster I"
 FT                   /db_xref="taxon:77133"
+FT                   /environmental_sample
+FT                   /mol_type="genomic DNA"
+FT                   /organism="uncultured bacterium"
 FT   rRNA            AB000684.1:<1..>275
 FT                   /product="16S rRNA"
 XX
@@ -67,11 +67,11 @@ RN   [1]
 RP   1-275
 RA   Inagaki F., Hayashi S., Doi K., Motomura Y., Izawa E., Ogata S.;
 RT   ;
-RL   Submitted (24-JAN-1997) to the INSDC.
-RL   Fumio Inagaki, Faculty of Agriculture, Kyushu University, Microbial Genetic
-RL   Division, Institute of Genetic Resourses; Higashi-ku Hakozaki 6-10-1,
-RL   Fukuoka-shi, Fukuoka, 812-81, Japan (E-mail:inagaki@agr.kyushu-u.ac.jp,
-RL   Tel:+81-92-642-3059, Fax:+81-92-642-3059)
+RL   Submitted (24-JAN-1997) to the INSDC. Fumio Inagaki, Faculty of
+RL   Agriculture, Kyushu University, Microbial Genetic Division, Institute of
+RL   Genetic Resourses; Higashi-ku Hakozaki 6-10-1, Fukuoka-shi, Fukuoka,
+RL   812-81, Japan (E-mail:inagaki@agr.kyushu-u.ac.jp, Tel:+81-92-642-3059,
+RL   Fax:+81-92-642-3059)
 XX
 RN   [2]
 RA   Inagaki F., Hayashi S., Doi K., Motomura Y., Izawa E., Ogata S.;
@@ -85,11 +85,11 @@ XX
 FH   Key             Location/Qualifiers
 FH
 FT   source          1..275
-FT                   /organism="uncultured bacterium"
-FT                   /environmental_sample
-FT                   /mol_type="genomic DNA"
 FT                   /clone="3 of cluster I"
 FT                   /db_xref="taxon:77133"
+FT                   /environmental_sample
+FT                   /mol_type="genomic DNA"
+FT                   /organism="uncultured bacterium"
 FT   rRNA            AB000685.1:<1..>275
 FT                   /product="16S rRNA"
 XX

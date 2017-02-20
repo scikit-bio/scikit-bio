@@ -28,13 +28,10 @@ XX
 FH   Key             Location/Qualifiers
 FH
 FT   source          1..63
-FT                   /organism="Escherichia coli"
-FT                   /mol_type="mRNA"
 FT                   /db_xref="taxon:562"
+FT                   /mol_type="mRNA"
+FT                   /organism="Escherichia coli"
 FT   CDS             1..>63
-FT                   /codon_start=1
-FT                   /transl_table=11
-FT                   /note="alkaline phosphatase signal peptide"
 FT                   /db_xref="GOA:P00634"
 FT                   /db_xref="InterPro:IPR001952"
 FT                   /db_xref="InterPro:IPR017849"
@@ -98,7 +95,10 @@ FT                   /db_xref="PDB:5JTN"
 FT                   /db_xref="PDB:5JTO"
 FT                   /db_xref="PDB:5JTP"
 FT                   /db_xref="UniProtKB/Swiss-Prot:P00634"
+FT                   /note="alkaline phosphatase signal peptide"
+FT                   /codon_start=1
 FT                   /protein_id="AAA23431.1"
+FT                   /transl_table=11
 FT                   /translation="MKQSTIALAVLPLLFTPVTKA"
 XX
 SQ   Sequence 63 BP; 17 A; 17 C; 12 G; 17 T; 0 other;

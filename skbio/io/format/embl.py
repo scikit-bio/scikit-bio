@@ -194,7 +194,8 @@ from functools import partial
 from skbio.io import create_format, EMBLFormatError
 from skbio.io.format._base import (_line_generator, _get_nth_sequence)
 from skbio.io.format._sequence_feature_vocabulary import (
-    _yield_section, _parse_single_feature, _serialize_section_default)
+    _yield_section, _parse_single_feature, _serialize_section_default,
+    _serialize_single_feature)
 from skbio.metadata import IntervalMetadata
 from skbio.sequence import Sequence, DNA, RNA, Protein
 from skbio.util._misc import chunk_str
@@ -207,11 +208,14 @@ embl = create_format('embl')
 _HEADERS = [
     'LOCUS',
     'ACCESSION',
+    'PARENT_ACCESSION',
     'DATE',
     'DEFINITION',
     'KEYWORDS',
     'SOURCE',
-    'REFERENCE'
+    'REFERENCE',
+    'DBSOURCE',
+    'FEATURES'
     ]
 
 # embl has a series of keys different from genbank; moreover keys are not so
@@ -593,12 +597,12 @@ def _serialize_single_embl(obj, fh):
         serializer = _SERIALIZER_TABLE.get(
             header, serialize_default)
 
+        # header needs to be convert into embl, or matained as it is
+        # if no conversion could be defined
+        embl_header = _get_embl_key_by_value(header)
+
         # this is true also for locus line
         if header in md:
-            # header needs to be convert into embl, or matained as it is
-            # if no conversion could be defined
-            embl_header = _get_embl_key_by_value(header)
-
             # call the serializer function
             out = serializer(embl_header, md[header])
             # test if 'out' is a iterator.
@@ -613,16 +617,21 @@ def _serialize_single_embl(obj, fh):
             # add spacer between sections
             fh.write("XX\n")
 
-#
-#        if header == 'FEATURES':
-#            if obj.has_interval_metadata():
-#                # magic number 21: the amount of indentation before
-#                # feature table starts as defined by INSDC
-#                indent = 21
-#                fh.write('{header:<{indent}}Location/Qualifiers\n'.format(
-#                    header=header, indent=indent))
-#                for s in serializer(obj.interval_metadata._intervals, indent):
-#                    fh.write(s)
+        if header == 'FEATURES':
+            if obj.has_interval_metadata():
+                # magic number 21: the amount of indentation before
+                # feature table starts as defined by INSDC
+                indent = 21
+                feature_key = "FH   Key"
+                fh.write('{header:<{indent}}Location/Qualifiers\n'.format(
+                    header=feature_key, indent=indent))
+                # add FH spacer
+                fh.write("FH\n")
+                for s in serializer(obj.interval_metadata._intervals, indent):
+                    fh.write(s)
+
+                # add spacer between sections
+                fh.write("XX\n")
 
     # write out the sequence
     # always write RNA seq as DNA
@@ -893,6 +902,11 @@ def _serialize_reference(header, obj, indent=5):
             else:
                 reference += wrapper.wrap(data[key])
 
+        # add a spacer between references (but no at the final reference)
+        # cause the caller will add spacer
+        if (i+1) < len(obj):
+            reference += ["XX"]
+
     # now define a string and add a final "\n"
     s = "\n".join(reference) + "\n"
 
@@ -1012,7 +1026,7 @@ def _parse_feature_table(lines, length):
     idxs = [i for i, line in enumerate(lines) if line.startswith("FH")]
     lines = [line for i, line in enumerate(lines) if i not in idxs]
 
-    # remove FH from the header
+    # remove FT from the header
     lines = [line.replace("FT", "  ", 1) for line in lines]
 
     # magic number 21: the lines following header of each feature
@@ -1026,6 +1040,24 @@ def _parse_feature_table(lines, length):
     for section in section_splitter(lines):
         _parse_single_feature(section, imd)
     return imd
+
+
+def _serialize_feature_table(intervals, indent=21):
+    '''
+    Parameters
+    ----------
+    intervals : list of ``Interval``
+    '''
+    for intvl in intervals:
+        tmp = _serialize_single_feature(intvl, indent)
+        output = []
+
+        # I need to prepend FT on each line
+        for line in tmp.split("\n"):
+            output += [re.sub("^  ", "FT", line)]
+
+        # re add newline
+        yield "\n".join(output)
 
 
 def _parse_date(lines, label_delimiter=None, return_label=False):
@@ -1089,5 +1121,5 @@ _SERIALIZER_TABLE = {
     'SOURCE': _serialize_source,
     'DATE': _serialize_date,
     'REFERENCE': _serialize_reference,
-    # 'FEATURES': _serialize_feature_table
+    'FEATURES': _serialize_feature_table
     }
