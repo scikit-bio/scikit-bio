@@ -451,6 +451,9 @@ class CompositionTests(TestCase):
                                       [0.28867513, 0.28867513,
                                        0.28867513, -0.8660254]]))
 
+        with self.assertRaises(ValueError):
+            alr_inv(self.bad2)
+
     def test_sbp_basis_gram_schmidt(self):
         gsbasis = clr_inv(_gram_schmidt_basis(5))
         sbp = np.array([[1, -1, 0, 0, 0],

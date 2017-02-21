@@ -51,8 +51,11 @@ Functions
    clr_inv
    ilr
    ilr_inv
+   alr
+   alr_inv
    centralize
    ancom
+   sbp_basis
 
 References
 ----------
@@ -658,7 +661,7 @@ def alr(mat, denominator_idx=0):
     The alr transformation is defined as follows
 
     .. math::
-        alr(x) = [log \frac{x_1}{x_D}, \ldots, log \frac{x_{D-1}}{x_D}]
+        alr(x) = [\ln \frac{x_1}{x_D}, \ldots, \ln \frac{x_{D-1}}{x_D}]
 
     where :math:`D` is the index of the part used as common denominator.
 
@@ -715,9 +718,14 @@ def alr_inv(mat, denominator_idx=0):
     The inverse alr transformation is defined as follows
 
     .. math::
-        alr^{-1}(x) = C[exp([y:0])]
+         alr^{-1}(x) = C[exp([y_1, y_2, ..., y_{D-1}, 0])]
 
-    where :math:`C` is the closure operation.
+    where :math:`C[x]` is the closure operation defined as
+    .. math::
+        C[x] = \left[\frac{x_1}{\sum_{i=1}^{D} x_i},\ldots,
+                     \frac{x_D}{\sum_{i=1}^{D} x_i} \right]
+    for some :math:`D` dimensional real vector :math:`x` and
+    :math:`D` is the number of components for every composition.
 
     Parameters
     ----------
@@ -1279,8 +1287,9 @@ def sbp_basis(sbp):
     nPos = np.dot(isPos, onesD)
     nNeg = np.dot(isNeg, onesD)
     W = (isPos * nNeg - isNeg * nPos)
-    nn = np.apply_along_axis(lambda x: 1/np.sqrt(np.dot(x, x)), 1, W)
-    nn = np.array([nn, ] * dim_sbp[1]).T
+
+    def _f(x): return 1 / np.sqrt(np.dot(x, x))
+    nn = np.vstack([_f(W[i, :]) for i in range(W.shape[0])])
     V = W * nn
     return clr_inv(V)
 
