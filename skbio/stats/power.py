@@ -512,17 +512,9 @@ def subsample_paired_power(test, meta, cat, control_cats, order=None,
     ...                                   counts_interval=5,
     ...                                   num_iter=25,
     ...                                   num_runs=5)
-    >>> cnt
-    array([  5.,  10.,  15.,  20.])
-    >>> pwr.mean(0)
-    array([ 0.24 ,  0.528,  0.68 ,  0.88 ])
-    >>> pwr.std(0).round(3)
-    array([ 0.088,  0.127,  0.168,  0.08 ])
 
-    Estimating off the power curve, it looks like 20 cells per group may
-    provide adequate power for this experiment, although the large variance
-    in power might suggest extending the curves or increasing the number of
-    samples per group.
+    We can use the curve we generate to estimate an appropriate power for our
+    experiment.
 
     """
 
