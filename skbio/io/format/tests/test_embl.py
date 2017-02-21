@@ -106,6 +106,9 @@ class EMBLIOTests(TestCase):
         # define a single RNA record file path
         self.single_rna_fp = get_data_path('embl_single_record')
 
+        # define a http://www.ebi.ac.uk/ena/browse/feature-level-products
+        self.feature_level_fp = get_data_path("embl_feature_level_record")
+
         # define a interval metadata (see skbio.metadata.IntervalMetadata)
         imd = IntervalMetadata(63)
 
@@ -232,144 +235,181 @@ class EMBLIOTests(TestCase):
         # define a multi record. File path
         self.multi_fp = get_data_path('embl_multi_records')
 
-        # define interal metadata
-        imd1 = IntervalMetadata(275)
+        # define interval metadata (as single metadata)
+        imd1 = imd
+
+        # define interal metadata for multi 2
+        imd2 = IntervalMetadata(743)
 
         # then add interval object to interval metadata. Add source
-        imd1.add([(0, 275)],
+        imd2.add([(0, 743)],
                  [(False, False)],
-                 {'db_xref': '"taxon:77133"',
-                  'mol_type': '"genomic DNA"',
-                  'organism': '"uncultured bacterium"',
+                 {'organism': '"Ruditapes philippinarum"',
                   'type': 'source',
+                  '__location': '1..743',
                   'strand': '+',
-                  'environmental_sample': '',
-                  'clone': '"2 of cluster I"',
-                  '__location': '1..275'})
+                  'mol_type': '"mRNA"',
+                  'db_xref': '"taxon:129788"'})
 
-        imd1.add([(0, 275)],
-                 [(True, True)],
-                 {'product': '"16S rRNA"',
-                  'type': 'rRNA',
-                  'strand': '+',
-                  '__location': "AB000684.1:<1..>275"})
-
-        # define interal metadata
-        imd2 = IntervalMetadata(275)
-
-        # then add interval object to interval metadata. Add source
-        imd2.add([(0, 275)],
+        imd2.add([(57, 444)],
                  [(False, False)],
-                 {'db_xref': '"taxon:77133"',
-                  'mol_type': '"genomic DNA"',
-                  'organism': '"uncultured bacterium"',
-                  'type': 'source',
+                 {'translation': '"MPGGKAGKDSGKAKAKAVSRSARAGLQFPVGRIHRHLKNRT'
+                                 'TSHG RVGATAAVYSAAILEYLTAEVLELAGNASKDLKVKRI'
+                                 'TPRHLQLAIRGDEELDSLIKAT IAGGGVIPHIHKSLIGKKG'
+                                 'GQQAK"',
+                  'type': 'CDS',
+                  '__location': '58..444',
+                  'protein_id': '"APY18893.1"',
                   'strand': '+',
-                  'environmental_sample': '',
-                  'clone': '"3 of cluster I"',
-                  '__location': '1..275'})
-
-        imd2.add([(0, 275)],
-                 [(True, True)],
-                 {'product': '"16S rRNA"',
-                  'type': 'rRNA',
-                  'strand': '+',
-                  '__location': "AB000685.1:<1..>275"})
+                  'phase': 0,
+                  'product': '"histone"'})
 
         # multi object
         self.multi = (
-            ('CTGCCCTTAGTTGCCACTCTTCGGAGGGCACTCTAAGGGGACCGCCGGCGATAAGCCGAGGAA'
-             'GGTGGGGATGACGTCAGGTCAGTATGCCCTTTATGCCCGGGGCTACACAGGCGCTACAGTGGC'
-             'CAGGACAATGGGAAGCGACCCAGTAATGGGGAGCAAATCCCTAAACCTGGTCATGGTGCAGAT'
-             'TGAGGGCTGAAACTCGCCCCTCATGAAGCCGGAATCGGTAGTAATGGCGGATCAGCTAAGCCG'
-             'CCGTGAATACGTTCTCGGGCCTT',
-             {'PARENT_ACCESSION': 'AB000684.1',
-              'DATE': ['10-FEB-1997 (Rel. 50, Created)',
-                       '29-JUL-2005 (Rel. 84, Last updated, Version 7)'],
-              'DBSOURCE': 'MD5; 996348a90e49caf3f6155ad9478d6d90.',
-              'DEFINITION': 'uncultured bacterium partial 16S rRNA',
-              'KEYWORDS': 'ENV.',
-              'LOCUS': {'accession': 'AB000684.1:1..275:rRNA',
+            ('GTGAAACAAAGCACTATTGCACTGGCTGTCTTACCGTTACTGTTTACCCCTGTGACAAAAGCC',
+             {'LOCUS': {'accession': 'M14399',
                         'class': 'STD',
-                        'division': 'ENV',
-                        'mol_type': 'genomic DNA',
+                        'division': 'PRO',
+                        'mol_type': 'mRNA',
                         'shape': 'linear',
-                        'size': 275,
+                        'size': 63,
                         'unit': 'bp',
                         'version': 1},
-              'REFERENCE': [{'AUTHORS': 'Inagaki F., Hayashi S., Doi K., '
-                                        'Motomura Y., Izawa E., Ogata S.;',
-                             'JOURNAL': 'Submitted (24-JAN-1997) to the INSDC'
-                                        '. Fumio Inagaki, Faculty of '
-                                        'Agriculture, Kyushu University, '
-                                        'Microbial Genetic Division, Institu'
-                                        'te of Genetic Resourses; Higashi-ku'
-                                        ' Hakozaki 6-10-1, Fukuoka-shi, '
-                                        'Fukuoka, 812-81, Japan (E-mail'
-                                        ':inagaki@agr.kyushu-u.ac.jp, Tel:'
-                                        '+81-92-642-3059, Fax:+81-92-642-'
-                                        '3059)',
-                             'REFERENCE': '1-275',
-                             'TITLE': ';'},
-                            {'AUTHORS': 'Inagaki F., Hayashi S., Doi K., '
-                                        'Motomura Y., Izawa E., Ogata S.;',
-                             'JOURNAL': 'FEMS Microbiol. Ecol. 24:41-48'
-                                        '(1997).',
-                             'TITLE': '"Microbial participation in the for'
-                                      'mation of siliceous deposits from '
-                                      'geothermal water and analysis of the '
-                                      'extremely thermophilic bacterial '
-                                      'community";'}],
-              'SOURCE': {'ORGANISM': 'uncultured bacterium',
-                         'taxonomy': 'Bacteria; environmental samples.'}},
+              'ACCESSION': 'M14399;',  # accessions (could be more than one)
+              'DATE': ["16-JUL-1988 (Rel. 16, Created)",
+                       "02-SEP-1999 (Rel. 60, Last updated, Version 3)"],
+              'DBSOURCE': 'MD5; c9b40131b8622946b5aafdf5473b3d43.',
+              'DEFINITION': "E.coli alkaline phosphatase signal mRNA, 5' end.",
+              'KEYWORDS': "alkaline phosphatase; signal peptide.",
+              'SOURCE': {"ORGANISM": "Escherichia coli",
+                         'taxonomy': "Bacteria; Proteobacteria; "
+                         "Gammaproteobacteria; Enterobacterales; "
+                         "Enterobacteriaceae; Escherichia."},
+              'REFERENCE': [{'AUTHORS': 'Gray G.L., Baldridge J.S., '
+                                        'McKeown K.S., Heyneker H.L., '
+                                        'Chang C.N.;',
+                             'JOURNAL': 'Gene 39(2-3):247-254(1985).',
+                             'CROSS_REFERENCE': 'DOI; 10.1016/0378-1119(85)'
+                                                '90319-1. PUBMED; 3912261.',
+                             'REFERENCE': '1-63',
+                             'TITLE': '"Periplasmic production of correctly '
+                                      'processed human growth hormone in '
+                                      'Escherichia coli: natural and '
+                                      'bacterial signal sequences are '
+                                      'interchangeable";'}], },
              imd1,
              DNA),
-            ('CTGCCCTTAGTTGCCACCCTTCGGAGGGCACTCTAAGGGGACCGCCGGCGATAAGCCGAGGAA'
-             'GGTGGGGATGACGTCAGGTCAGTATGCCCTTTATGCCCGGGGCTACACAGGCGCTACAGTGGC'
-             'CAGGACAATGGGAAGCGACCCAGTAATGGGGAGCAAATCCCTAAACCTGGTCATGGTGCAGAT'
-             'TGAGGGCTGAAACTCGCCCCTCATGAAGCCGGAAACGGTAGTAATGGCGGATCAGCTAAGCCG'
-             'CCGTGAATACGTTCTCGGGCCTT',
-             {'PARENT_ACCESSION': 'AB000685.1',
-              'DATE': ['10-FEB-1997 (Rel. 50, Created)',
-                       '29-JUL-2005 (Rel. 84, Last updated, Version 7)'],
-              'DBSOURCE': 'MD5; 9999acf6687667a872da41b64d3c11f8.',
-              'DEFINITION': 'uncultured bacterium partial 16S rRNA',
-              'KEYWORDS': 'ENV.',
-              'LOCUS': {'accession': 'AB000685.1:1..275:rRNA',
+            ('TGTGCACAGTCTACGCGTCATCTTGAAAGAAAGAACTACACTACTCCAAAAATAATCATGCC'
+             'TGGTGGAAAAGCTGGTAAAGATTCCGGAAAGGCCAAGGCTAAGGCAGTGTCAAGGTCCGCAA'
+             'GAGCTGGCTTACAGTTTCCAGTCGGACGTATTCACAGGCATTTGAAGAACAGAACCACTAGC'
+             'CACGGTCGTGTTGGAGCTACAGCAGCCGTTTACAGTGCAGCAATCCTTGAATACCTGACCGC'
+             'CGAAGTGCTTGAGTTGGCTGGAAACGCAAGTAAAGATCTCAAAGTAAAGAGAATCACCCCAC'
+             'GTCACTTGCAGTTGGCAATCAGAGGAGATGAAGAGTTGGATTCCCTAATTAAAGCCACAATC'
+             'GCTGGTGGTGGTGTTATTCCACATATCCACAAGTCACTTATTGGCAAGAAGGGAGGTCAGCA'
+             'AGCCAAATAAATTGGACATACTCATTCATCAGGGAACAATGTGTAGTGAATGTGTTAAAAAG'
+             'AACAATCTCATTGTGTAGCTCTTTAGTTTTATATGAATGTGTTAACATGGTCATTCACATCG'
+             'TATGACTCATAGAATCATCTGTGTATCATTTCATCCTCTCATTTTATAGCTCCTCATTTTCC'
+             'TTAGACTCATTAAAATTTTTATCTCGGAAAAATGTTTTTTCTACAATTTTAGCATTCATTTA'
+             'TCTTCATCTTGCTTTTATGTTTAATAAAACGAACTTATAATACCAAAAAAAAAAAAAAAAA',
+             {'ACCESSION': 'KX454487;',
+              'COMMENT': '##Assembly-Data-START## Sequencing Technology '
+                         ':: Sanger dideoxy sequencing ##Assembly-Data-END##',
+              'DATE': ['02-FEB-2017 (Rel. 131, Created)',
+                       '02-FEB-2017 (Rel. 131, Last updated, Version 1)'],
+              'DBSOURCE': 'MD5; cbc730cf7a8d694b50fb7dd6b993ae0d.',
+              'DEFINITION': 'Ruditapes philippinarum histone mRNA, '
+                            'complete cds.',
+              'KEYWORDS': '.',
+              'LOCUS': {'accession': 'KX454487',
                         'class': 'STD',
-                        'division': 'ENV',
-                        'mol_type': 'genomic DNA',
+                        'division': 'INV',
+                        'mol_type': 'mRNA',
                         'shape': 'linear',
-                        'size': 275,
+                        'size': 743,
                         'unit': 'bp',
                         'version': 1},
-              'REFERENCE': [{'AUTHORS': 'Inagaki F., Hayashi S., Doi K., '
-                                        'Motomura Y., Izawa E., Ogata S.;',
-                                        'JOURNAL': 'Submitted (24-JAN-1997) '
-                                        'to the INSDC. Fumio Inagaki, Faculty'
-                                        ' of Agriculture, Kyushu University, '
-                                        'Microbial Genetic Division, '
-                                        'Institute of Genetic Resourses; '
-                                        'Higashi-ku Hakozaki 6-10-1, '
-                                        'Fukuoka-shi, Fukuoka, 812-81, '
-                                        'Japan (E-mail:inagaki@agr.kyushu-'
-                                        'u.ac.jp, Tel:+81-92-642-3059, Fax:'
-                                        '+81-92-642-3059)',
-                             'REFERENCE': '1-275',
-                             'TITLE': ';'},
-                            {'AUTHORS': 'Inagaki F., Hayashi S., Doi K., '
-                                        'Motomura Y., Izawa E., Ogata S.;',
-                             'JOURNAL': 'FEMS Microbiol. Ecol. 24:41-'
-                                        '48(1997).',
-                             'TITLE': '"Microbial participation in the '
-                                      'formation of siliceous deposits from '
-                                      'geothermal water and analysis of the '
-                                      'extremely thermophilic bacterial '
-                                      'community";'}],
-              'SOURCE': {'ORGANISM': 'uncultured bacterium',
-                         'taxonomy': 'Bacteria; environmental samples.'}},
+              'REFERENCE': [
+                {'AUTHORS': 'Yang D., Zhao J., Wang Q.;',
+                 'JOURNAL': 'Submitted (27-JUN-2016) to the INSDC. Key '
+                            'Laboratory of Coastal Zone Environment Processes '
+                            'and Ecological Remediation, Yantai Institute '
+                            'of Coastal Zone Research (YIC), Chinese Academy '
+                            'of Sciences (CAS), 17 Chunhui Road, Laishan '
+                            'District, Yantai, Shandong 264003, China',
+                 'REFERENCE': '1-743',
+                 'TITLE': ';'}],
+              'SOURCE': {
+                'ORGANISM': 'Ruditapes philippinarum',
+                'taxonomy': 'Eukaryota; Metazoa; Lophotrochozoa; Mollusca; '
+                            'Bivalvia; Heteroconchia; Euheterodonta; '
+                            'Veneroida; Veneroidea; Veneridae; Ruditapes.'}},
              imd2,
              DNA))
+
+        # define the feature level product obj
+        self.feature_level = (
+            'AAUUGAAGAGUUUGAUCAUGGCUCAGAUUGAACGCUGGCGGCAGGCCUAACACAUGCAAGUC'
+            'GAGCGGCAGCACAGAGGAACUUGUUCCUUGGGUGGCGAGCGGCGGACGGGUGAGUAAUGCCU'
+            'AGGAAAUUGCCCUGAUGUGGGGGAUAACCAUUGGAAACGAUGGCUAAUACCGCAUGAUGCCU'
+            'ACGGGCCAAAGAGGGGGACCUUCUGGCCUCUCGCGUCAGGAUAUGCCUAGGUGGGAUUAGCU'
+            'AGUUGGUGAGGUAAUGGCUCACCAAGGCGACGAUCCCUAGCUGGUCUGAGAGGAUGAUCAGC'
+            'CACACUGGAACUGAGACACGGUCCAGACUCCUACGGGAGGCAGCAGUGGGGAAUAUUGCACA'
+            'AUGGGCGCAAGCCUGAUGCAGCCAUGCCGCGUGUAUGAAGAAGGCCUUCGGGUUGUAAAGUA'
+            'CUUUCAGUCGUGAGGAAGGUGGUGUUGUUAAUAGCAGCAUCAUUUGACGUUAGCGACAGAAG'
+            'AAGCACCGGCUAACUCCGUGCCAGCAGCCGCGGUAAUACGGAGGGUGCGAGCGUUAAUCGGA'
+            'AUUACUGGGCGUAAAGCGCAUGCAGGUGGUGGAUUAAGUCAGAUGUGAAAGCCCGGGGCUCA'
+            'ACCUCGGAACCGCAUUUGAAACUGGUUCACUAGAGUACUGUAGAGGGGGGUAGAAUUUCAGG'
+            'UGUAGCGGUGAAAUGCGUAGAGAUCUGAAGGAAUACCGGUGGCGAAGGCGGCCCCCUGGACA'
+            'GAUACUGACACUCAGAUGCGAAAGCGUGGGGAGCAAACAGGAUUAGAUACCCUGGUAGUCCA'
+            'CGCCGUAAACGAUGUCUACUUGGAGGUUGUGGCCUUGAGCCGUGGCUUUCGGAGCUAACGCG'
+            'UUAAGUAGACCGCCUGGGGAGUACGGUCGCAAGAUUAAAACUCAAAUGAAUUGACGGGGGCC'
+            'CGCACAAGCGGUGGAGCAUGUGGUUUAAUUCGAUGCAACGCGAAGAACCUUACCUACUCUUG'
+            'ACAUCCAGAGAAGCCAGCGGAGACGCAGGUGUGCCUUCGGGAGCUCUGAGACAGGUGCUGCA'
+            'UGGCUGUCGUCAGCUCGUGUUGUGAAAUGUUGGGUUAAGUCCCGCAACGAGCGCAACCCUUA'
+            'UCCUUGUUUGCCAGCGAGUCAUGUCGGGAACUCCAGGGAGACUGCCGGUGAUAAACCGGAGG'
+            'AAGGUGGGGACGACGUCAAGUCAUCAUGGCCCUUACGAGUAGGGCUACACACGUGCUACAAU'
+            'GGCGCAUACAGAGGGCAGCAAGCUAGCGAUAGUGAGCGAAUCCCAAAAAGUGCGUCGUAGUC'
+            'CGGAUUGGAGUCUGCAACUCGACUCCAUGAAGUCGGAAUCGCUAGUAAUCGUAGAUCAGAAU'
+            'GCUACGGUGAAUACGUUCCCGGGCCUUGUACACACCGCCCGUCACACCAUGGGAGUGGGCUG'
+            'CAAAAGAAGUGGGUAGUUUAACCUUUCGGGGAGGACGCUCACCACUUUGUGGUUCAUGACUG'
+            'GGGUGAAGUCGUAACAAGGUAGCGCUAGGGGAACCUGGCGCUGGAUCACCUCCUUA',
+            {'DATE': ['02-JUN-2014 (Rel. 121, Created)',
+                      '04-FEB-2016 (Rel. 127, Last updated, Version 5)'],
+             'DBSOURCE': 'SILVA-LSU; LK021130. SILVA-SSU; LK021130. MD5; '
+                         'afd116bf2c1a13acbf40d63d82f0218c. BioSample; '
+                         'SAMEA3865288.',
+             'DEFINITION': 'Vibrio anguillarum 16S rRNA',
+             'KEYWORDS': '.',
+             'LOCUS': {'accession': 'LK021130.1:74067..75610:rRNA',
+                       'class': 'STD',
+                       'division': 'PRO',
+                       'mol_type': 'genomic DNA',
+                       'shape': 'linear',
+                       'size': 1544,
+                       'unit': 'bp',
+                       'version': 1},
+             'PARENT_ACCESSION': 'LK021130.1',
+             'PROJECT_IDENTIFIER': 'Project:PRJEB5701;',
+             'REFERENCE': [
+                {'AUTHORS': 'Holm K.;',
+                 'JOURNAL': 'Submitted (26-MAR-2014) to the INSDC. '
+                            'Norstruct, Dept of Chemistry, University of '
+                            'Tromso, Science Park 3, NO-9037 Tromso, NORWAY.',
+                 'TITLE': ';'},
+                {'AUTHORS': 'Holm K.O., Nilsson K., Hjerde E., Willassen '
+                            'N.P., Milton D.L.;',
+                 'CROSS_REFERENCE': 'DOI; 10.1186/s40793-015-0060-7. '
+                                    'PUBMED; 26380645.',
+                 'JOURNAL': 'Stand Genomic Sci. 10:60-60(2015).',
+                 'TITLE': '"Complete genome sequence of Vibrio anguillarum '
+                          'strain NB10, a virulent isolate from the Gulf '
+                          'of Bothnia";'}],
+             'SOURCE': {
+                'ORGANISM': 'Vibrio anguillarum',
+                'taxonomy': 'Bacteria; Proteobacteria; Gammaproteobacteria; '
+                            'Vibrionales; Vibrionaceae; Vibrio.'}},
+            None,
+            RNA)
 
 
 class ReaderTests(EMBLIOTests):
@@ -516,6 +556,15 @@ RL   Gene 39(2-3):247-254(1985).'''.split('\n')
                                     "record"):
             # read a generic record
             _embl_to_protein(self.multi_fp, seq_num=i+1)
+
+        # deal with feature-level-products
+    def test_feature_level_products(self):
+        seq, md, imd, constructor = self.feature_level
+        obs = _embl_to_rna(self.feature_level_fp)
+        exp = constructor(seq, metadata=md,
+                          lowercase=True, interval_metadata=imd)
+
+        self.assertEqual(obs, exp)
 
 
 class WriterTests(EMBLIOTests):
