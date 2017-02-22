@@ -20,15 +20,15 @@ Format Support
 +------+------+---------------------------------------------------------------+
 |Reader|Writer|                          Object Class                         |
 +======+======+===============================================================+
-|Yes   |No    |:mod:`skbio.sequence.Sequence`                                 |
+|Yes   |Yes   |:mod:`skbio.sequence.Sequence`                                 |
 +------+------+---------------------------------------------------------------+
-|Yes   |No    |:mod:`skbio.sequence.DNA`                                      |
+|Yes   |Yes   |:mod:`skbio.sequence.DNA`                                      |
 +------+------+---------------------------------------------------------------+
-|Yes   |No    |:mod:`skbio.sequence.RNA`                                      |
+|Yes   |Yes   |:mod:`skbio.sequence.RNA`                                      |
 +------+------+---------------------------------------------------------------+
 |No    |No    |:mod:`skbio.sequence.Protein`                                  |
 +------+------+---------------------------------------------------------------+
-|Yes   |No    | generator of :mod:`skbio.sequence.Sequence` objects           |
+|Yes   |Yes   | generator of :mod:`skbio.sequence.Sequence` objects           |
 +------+------+---------------------------------------------------------------+
 
 Format Specification
@@ -194,8 +194,7 @@ from functools import partial
 from skbio.io import create_format, EMBLFormatError
 from skbio.io.format._base import (_line_generator, _get_nth_sequence)
 from skbio.io.format._sequence_feature_vocabulary import (
-    _yield_section, _parse_single_feature, _serialize_section_default,
-    _serialize_single_feature)
+    _yield_section, _parse_single_feature, _serialize_single_feature)
 from skbio.metadata import IntervalMetadata
 from skbio.sequence import Sequence, DNA, RNA, Protein
 from skbio.util._misc import chunk_str
@@ -209,14 +208,18 @@ _HEADERS = [
     'LOCUS',
     'ACCESSION',
     'PARENT_ACCESSION',
+    'PROJECT_IDENTIFIER',
     'DATE',
     'DEFINITION',
+    'GENE_NAME',
     'KEYWORDS',
     'SOURCE',
     'REFERENCE',
     'DBSOURCE',
+    'COMMENT',
     'FEATURES'
     ]
+
 
 # embl has a series of keys different from genbank; moreover keys are not so
 # easy to understand (eg. RA for AUTHORS). Here is a dictionary of keys
@@ -228,21 +231,21 @@ KEYS_TRANSLATOR = {
                    # PA means PARENT ACCESSION (?) and applies to
                    # feature-level-products entries
                    'PA': 'PARENT_ACCESSION',
-                   # 'PR': 'PROJECT_IDENTIFIER',
+                   'PR': 'PROJECT_IDENTIFIER',
                    'DT': 'DATE',
                    'DE': 'DEFINITION',
-                   # 'GN': 'GENE_NAME',  # uniprot specific
+                   'GN': 'GENE_NAME',  # uniprot specific
                    'KW': 'KEYWORDS',
                    # Source (taxonomy and classification)
                    'OS': 'ORGANISM',
                    'OC': 'taxonomy',
-                   # 'OG': 'organelle'
+                   'OG': 'organelle',
                    # reference keys
                    'RA': 'AUTHORS',
                    'RP': 'REFERENCE',
-                   # 'RC': 'COMMENT',
+                   'RC': 'COMMENT',
                    'RX': 'CROSS_REFERENCE',
-                   # 'RG': 'GROUP',
+                   'RG': 'GROUP',
                    'RT': 'TITLE',
                    'RL': 'JOURNAL',
                    # Cross references
@@ -267,21 +270,21 @@ KEYS_2_SECTIONS = {
                    # PA means PARENT ACCESSION (?) and applies to
                    # feature-level-products entries
                    'PA': 'PARENT_ACCESSION',
-                   # 'PR': 'PROJECT_IDENTIFIER',
+                   'PR': 'PROJECT_IDENTIFIER',
                    'DT': 'DATE',
                    'DE': 'DEFINITION',
-                   # 'GN': 'GENE_NAME',  # uniprot specific
+                   'GN': 'GENE_NAME',  # uniprot specific
                    'KW': 'KEYWORDS',
                    # Source (taxonomy and classification)
                    'OS': 'SOURCE',
                    'OC': 'SOURCE',
-                   # 'OG': 'SOURCE',
+                   'OG': 'SOURCE',
                    # reference keys
                    'RA': 'REFERENCE',
                    'RP': 'REFERENCE',
-                   # 'RC': 'REFERENCE',
+                   'RC': 'REFERENCE',
                    'RX': 'REFERENCE',
-                   # 'RG': 'REFERENCE',
+                   'RG': 'REFERENCE',
                    'RT': 'REFERENCE',
                    'RL': 'REFERENCE',
                    'RN': 'SPACER',
@@ -546,7 +549,7 @@ def _parse_single_embl(chunks):
 
             # partials add arguments to previous defined functions
             parser = partial(
-                parser, length=metadata['LOCUS']['size'])
+                parser, metadata=metadata)
 
         # call function on section
         parsed = parser(section)
@@ -572,8 +575,15 @@ def _parse_single_embl(chunks):
     return sequence, metadata, interval_metadata
 
 
-# boilerplate fucntion for writer methods
-# TODO: define writers methods
+# embl has a different magick number than embl
+# moreover, I can have a list of values
+def _embl_serialize_section_default(header, obj, indent=5):
+    for el in obj:
+        yield('{header:<{indent}}{el}\n'.format(
+                  header=header, el=el, indent=indent))
+
+
+# main function for writer methods
 def _serialize_single_embl(obj, fh):
     '''Write a EMBL record.
 
@@ -589,13 +599,9 @@ def _serialize_single_embl(obj, fh):
     # write out the headers
     md = obj.metadata
 
-    # embl has a different magick number than embl
-    serialize_default = partial(
-        _serialize_section_default, indent=5)
-
     for header in _HEADERS:
         serializer = _SERIALIZER_TABLE.get(
-            header, serialize_default)
+            header, _embl_serialize_section_default)
 
         # header needs to be convert into embl, or matained as it is
         # if no conversion could be defined
@@ -625,8 +631,10 @@ def _serialize_single_embl(obj, fh):
                 feature_key = "FH   Key"
                 fh.write('{header:<{indent}}Location/Qualifiers\n'.format(
                     header=feature_key, indent=indent))
+
                 # add FH spacer
                 fh.write("FH\n")
+
                 for s in serializer(obj.interval_metadata._intervals, indent):
                     fh.write(s)
 
@@ -728,6 +736,39 @@ def _serialize_id(header, obj, indent=5):
                 header=header, indent=indent, **kwargs)
 
 
+# For non-coding, rRNA and spacer records, where a feature-level ID has not
+# previously existed, the ID, e.g. AB012758.1:1..40:tRNA, has a complex
+# format to ensure that it is unique and unambiguous. The structure of
+# the ID may be represented as:
+# <accession>.<version>:<feature location>:<feature name>[:ordinal]
+def _parse_accession(locus_dict):
+    """Parse accession string like :
+        <accession>.<version>:<feature location>:<feature name>[:ordinal]"""
+
+    # locus_dict is the dictionary read by _parse_id
+    accession = locus_dict.get("accession")
+
+    # define a regular expression to read accession
+    pattern = re.compile("(\w+)\.([0-9]+)\:([^:]+)\:(\w+)")
+    matches = re.match(pattern, accession)
+
+    # read data
+    res = dict(zip(["parent_accession", "version", "feature_location",
+                    "feature_name"], matches.groups()))
+
+    # read locations
+    start, stop = res.get("feature_location").split("..")
+
+    # fix values. Convert in O base coordinates
+    res["start"] = int(start) - 1
+    res["stop"] = int(stop)
+    res["size"] = abs(res["stop"] - res["start"])
+    res["version"] = int(res["version"])
+
+    # return parsed accession
+    return res
+
+
 # replace skbio.io.format._sequence_feature_vocabulary.__yield_section
 def _embl_yield_section(get_line_key, **kwargs):
     '''Returns function that returns successive sections from file.
@@ -819,9 +860,29 @@ def _embl_parse_section_default(
     # and append all the text in the data array
     data.extend(line.split(label_delimiter, 1)[-1] for line in lines[1:])
 
+    # deal with data like this
+    # RL   Submitted (27-JUN-2016) to the INSDC.
+    # RL   Key Laboratory of Coastal Zone Environment Processes and Ecological
+    # RL   Remediation, Yantai Institute of Coastal Zone Research (YIC),
+    # RL   Chinese Academy of Sciences (CAS), 17 Chunhui Road, Laishan
+    # RL   District, Yantai, Shandong 264003, China
+
+    # in order to put "\n" after the first line
+    # define end of sentence pattern
+    pattern = re.compile("[\.]\n$")
+
+    # find end of sentence in data
+    idx = [True if re.search(pattern, i) else False for i in data]
+
+    # now strip only when sentence continues
+    data = [el.strip() if not idx[i] else el for i, el in enumerate(data)]
+
     # Now concatenate the text using join_delimiter. All content with the same
     # key will be placed in the same string
-    data = join_delimiter.join(i.strip() for i in data)
+    data = join_delimiter.join(data)
+
+    # now split by sentencies and strip data
+    data = [el.strip() for el in data.split("\n") if len(el) > 0]
 
     # finally return the merged text content, and the key if needed
     if return_label:
@@ -865,9 +926,6 @@ def _serialize_reference(header, obj, indent=5):
     reference = []
     sort_order = ["RC", "RP", "RX", "RG", "RA", "RT", "RL"]
 
-    # deal with rx pattern
-    RX = re.compile("([^;\s]*); ([^\s]*)")
-
     # obj is a list of references
     for i, data in enumerate(obj):
         # get the reference number
@@ -891,16 +949,14 @@ def _serialize_reference(header, obj, indent=5):
             # if yes, define wrapper
             wrapper = _get_embl_wrapper(embl_key, indent)
 
-            # define wrapped string. beware RX
-            if embl_key == "RX":
-                for match in re.finditer(RX, data[key]):
-                    source, link = match.groups()
-                    # join text
-                    cross_reference = "; ".join([source, link])
-                    reference += wrapper.wrap(cross_reference)
-
-            else:
+            if type(data[key]) is str:
+                # define wrapped string
                 reference += wrapper.wrap(data[key])
+
+            elif type(data[key]) is list:
+                # iterate over objects
+                for item in data[key]:
+                    reference += wrapper.wrap(item)
 
         # add a spacer between references (but no at the final reference)
         # cause the caller will add spacer
@@ -934,8 +990,17 @@ def _serialize_source(header, obj, indent=5):
         # get an embl wrapper
         wrapper = _get_embl_wrapper(embl_key, indent)
 
-        # define wrapped string
-        source += wrapper.wrap(obj.get(key))
+        # object could be alist
+        data = obj.get(key)
+
+        if type(data) is str:
+            # define wrapped string
+            source += wrapper.wrap(data)
+
+        elif type(data) is list:
+            # iterate over objects
+            for item in data:
+                source += wrapper.wrap(item)
 
     # TODO: deal with others SOURCE keys, eg OG (organelle)
 
@@ -948,6 +1013,17 @@ def _serialize_source(header, obj, indent=5):
 
 def _parse_sequence(lines):
     '''Parse the sequence section for sequence.'''
+
+    # when reading a feature-level-products accession, features are relative
+    # to parent accession, so we need to parse accessions like
+    # LK021130.1:74067..75610:rRNA to model a table feature like
+    # FT   rRNA            LK021130.1:74067..75610
+    # FT                   /gene="16S"
+    # FT                   /product="16S rRNA"
+    # FT                   /note="16S rRNA subunit (checked and believed
+    # FT                   to be right,based on 454- and PacBio-sequencing)"
+    # I could express features by resizing sequence, however the resulting
+    # sequence will be different than data read
 
     # result array
     sequence = []
@@ -1016,8 +1092,18 @@ def _serialize_sequence(obj, indent=5):
         yield s
 
 
-def _parse_feature_table(lines, length):
+def _embl_parse_feature_table(lines, metadata):
     """Parse embl feature tables"""
+
+    # get size of the feature
+    length = metadata["LOCUS"]["size"]
+
+    if "PARENT_ACCESSION" in metadata:
+        # this is a feature-level-products entry and features are relative
+        # to parent accession; in the same way a subset of a Sequence objcet
+        # has no interval metadata, I will refuse to process interval
+        # metadata here
+        return
 
     # define interval metadata
     imd = IntervalMetadata(length)
@@ -1111,7 +1197,7 @@ _PARSER_TABLE = {
     'SOURCE': _parse_reference,
     'DATE': _parse_date,
     'REFERENCE': _parse_reference,
-    'FEATURES': _parse_feature_table,
+    'FEATURES': _embl_parse_feature_table,
     'ORIGIN': _parse_sequence
     }
 
