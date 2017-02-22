@@ -139,9 +139,9 @@ XX
 FH   Key             Location/Qualifiers
 FH
 FT   source          1..743
-FT                   /organism="Ruditapes philippinarum"
-FT                   /mol_type="mRNA"
 FT                   /db_xref="taxon:129788"
+FT                   /mol_type="mRNA"
+FT                   /organism="Ruditapes philippinarum"
 FT   CDS             58..444
 FT                   /codon_start=1
 FT                   /product="histone"
