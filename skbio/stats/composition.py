@@ -1280,18 +1280,13 @@ def sbp_basis(sbp):
        Front. Plant Sci. 4, 39, http://dx.doi.org/10.3389/fpls.2013.00039.
     """
 
-    dim_sbp = sbp.shape
-    isPos = (sbp > 0)
-    isNeg = (sbp < 0)
-    onesD = np.ones((dim_sbp[1], dim_sbp[1]))
-    nPos = np.dot(isPos, onesD)
-    nNeg = np.dot(isNeg, onesD)
-    W = (isPos * nNeg - isNeg * nPos)
-
-    def _f(x): return 1 / np.sqrt(np.dot(x, x))
-    nn = np.vstack([_f(W[i, :]) for i in range(W.shape[0])])
-    V = W * nn
-    return clr_inv(V)
+    n_pos = (sbp == 1).sum(axis=1)
+    n_neg = (sbp == -1).sum(axis=1)
+    psi = np.zeros(sbp.shape)
+    for i in range(0, sbp.shape[0]):
+        psi[i, :] = sbp[i, :] * np.sqrt((n_neg[i] / n_pos[i])**sbp[i, :] /
+                                        np.sum(np.abs(sbp[i, :])))
+    return clr_inv(psi)
 
 
 def _check_orthogonality(basis):
