@@ -244,7 +244,7 @@ KEYS_TRANSLATOR = {
                    # reference keys
                    'RA': 'AUTHORS',
                    'RP': 'REFERENCE',
-                   'RC': 'COMMENT',
+                   'RC': 'REFERENCE_COMMENT',
                    'RX': 'CROSS_REFERENCE',
                    'RG': 'GROUP',
                    'RT': 'TITLE',
@@ -376,16 +376,24 @@ def _translate_keys(data):
 
 
 # define a default textwrap.Wrapper for embl
-def _get_embl_wrapper(embl_key, indent=5):
+def _get_embl_wrapper(embl_key, indent=5, subsequent_indent=None):
     """Returns a textwrap.TextWrapper for embl records"""
 
     # define the string to prepen (eg "OC   ")
     prepend = '{key:<{indent}}'.format(key=embl_key, indent=indent)
 
+    # deal with 2° strings and more
+    if subsequent_indent is None:
+        subsequent_prepend = prepend
+
+    else:
+        subsequent_prepend = '{key:<{indent}}'.format(
+            key=embl_key, indent=subsequent_indent)
+
     # define a text wrapper object
     wrapper = textwrap.TextWrapper(
         initial_indent=prepend,
-        subsequent_indent=prepend,
+        subsequent_indent=subsequent_prepend,
         width=80
         )
 
@@ -858,8 +866,67 @@ def _embl_parse_section_default(
     data.extend(line.split(label_delimiter, 1)[-1] for line in lines[1:])
 
     # Now concatenate the text using join_delimiter. All content with the same
-    # key will be placed in the same string
+    # key will be placed in the same string. Strip final "\n
     data = join_delimiter.join(i.strip() for i in data)
+
+    # finally return the merged text content, and the key if needed
+    if return_label:
+        return label, data
+    else:
+        return data
+
+
+def _embl_parse_section_newlines(
+        lines, label_delimiter=None, join_delimiter=' ', return_label=False):
+
+    '''Parse sections with newlines. Keep "\n" when sentences end
+
+    Do 3 things:
+        1. split first line with label_delimiter for label
+        3. Search for end of sentences, keep their "\n"
+        2. join all the lines into one str with join_delimiter.
+    '''
+
+    data = []
+    label = None
+    line = lines[0]
+
+    # take the first line, divide the key from the text
+    items = line.split(label_delimiter, 1)
+
+    if len(items) == 2:
+        label, section = items
+    else:
+        label = items[0]
+        section = ""
+
+    # append the text of the first element in a empty array
+    data.append(section)
+
+    # Then process all the elements with the same embl key. remove the key
+    # and append all the text in the data array
+    data.extend(line.split(label_delimiter, 1)[-1] for line in lines[1:])
+
+    # deal with data like this
+    # RL   Submitted (27-JUN-2016) to the INSDC.
+    # RL   Key Laboratory of Coastal Zone Environment Processes and Ecological
+    # RL   Remediation, Yantai Institute of Coastal Zone Research (YIC),
+    # RL   Chinese Academy of Sciences (CAS), 17 Chunhui Road, Laishan
+    # RL   District, Yantai, Shandong 264003, China
+
+    # in order to put "\n" after the first line
+    # define end of sentence pattern
+    pattern = re.compile("[\.]\n$")
+
+    # find end of sentence in data
+    idx = [True if re.search(pattern, i) else False for i in data]
+
+    # now strip only when sentence continues
+    data = [el.strip() if not idx[i] else el for i, el in enumerate(data)]
+
+    # Now concatenate the text using join_delimiter. All content with the same
+    # key will be placed in the same string. Strip final "\n"
+    data = join_delimiter.join(data).strip()
 
     # finally return the merged text content, and the key if needed
     if return_label:
@@ -885,7 +952,7 @@ def _parse_reference(lines):
     for section in section_splitter(lines):
         # this function append all data in the same keywords. A list of lines
         # as input (see skbio.io.format._sequence_feature_vocabulary)
-        label, data = _embl_parse_section_default(
+        label, data = _embl_parse_section_newlines(
             section, join_delimiter=' ', return_label=True)
 
         res[label] = data
@@ -929,16 +996,23 @@ def _serialize_reference(header, obj, indent=5):
             # if yes, define wrapper
             wrapper = _get_embl_wrapper(embl_key, indent)
 
-            # define wrapped string. beware RX
-            if embl_key == "RX":
-                for match in re.finditer(RX, data[key]):
-                    source, link = match.groups()
-                    # join text
-                    cross_reference = "; ".join([source, link])
-                    reference += wrapper.wrap(cross_reference)
+            # data could have newlines
+            records = data[key].split("\n")
 
-            else:
-                reference += wrapper.wrap(data[key])
+            for record in records:
+                # strip after newlines
+                record = record.strip()
+
+                # define wrapped string. beware RX
+                if embl_key == "RX":
+                    for match in re.finditer(RX, record):
+                        source, link = match.groups()
+                        # join text
+                        cross_reference = "; ".join([source, link])
+                        reference += wrapper.wrap(cross_reference)
+
+                else:
+                    reference += wrapper.wrap(record)
 
         # add a spacer between references (but no at the final reference)
         # cause the caller will add spacer
@@ -1109,16 +1183,21 @@ def _serialize_feature_table(intervals, indent=21):
     ----------
     intervals : list of ``Interval``
     '''
+
+    # define a embl wrrapper object. I need to replace only the first two
+    # characters from _serialize_single_feature output
+    wrapper = _get_embl_wrapper("FT", indent=2, subsequent_indent=21)
+
     for intvl in intervals:
         tmp = _serialize_single_feature(intvl, indent)
         output = []
 
-        # I need to prepend FT on each line
+        # I need to remove two spaces, cause I will add a FT key
         for line in tmp.split("\n"):
-            output += [re.sub("^  ", "FT", line)]
+            output += wrapper.wrap(re.sub("^  ", "", line))
 
-        # re add newline
-        yield "\n".join(output)
+        # re add newline between elements, and a final "\n"
+        yield "\n".join(output) + "\n"
 
 
 def _parse_date(lines, label_delimiter=None, return_label=False):
