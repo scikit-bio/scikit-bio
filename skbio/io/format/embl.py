@@ -636,6 +636,14 @@ def _parse_single_embl(chunks):
         elif embl_header == 'FEATURES':
             interval_metadata = parsed
 
+        elif embl_header == 'DATE':
+            # read data as default
+            metadata[embl_header] = parsed
+
+            # fix locus metadata using last date. Take only date
+            date = metadata[embl_header][-1].split()[0]
+            metadata["LOCUS"]["date"] = date
+
         # parse all the others sections (DATE, SOURCE, ...)
         else:
             metadata[embl_header] = parsed
@@ -762,7 +770,7 @@ def _parse_id(lines):
 
     try:
         res = dict(zip(
-            ['accession', 'version', 'shape', 'mol_type',
+            ['locus_name', 'version', 'shape', 'mol_type',
              'class', 'division', 'size', 'unit'],
             matches.groups()))
     except:
@@ -775,6 +783,9 @@ def _parse_id(lines):
 
     # unit are in lower cases in others modules
     res['unit'] = res['unit'].lower()
+
+    # initialize a date record (for gb compatibility)
+    res['date'] = None
 
     # returning parsed attributes
     return res
@@ -795,7 +806,7 @@ def _serialize_id(header, obj, indent=5):
     kwargs["unit"] = kwargs["unit"].upper()
 
     # return first line
-    return ('{header:<{indent}}{accession}; SV {version}; {shape}; '
+    return ('{header:<{indent}}{locus_name}; SV {version}; {shape}; '
             '{mol_type}; {class}; {division}; {size} {unit}.\n').format(
                 header=header, indent=indent, **kwargs)
 
@@ -804,20 +815,20 @@ def _serialize_id(header, obj, indent=5):
 # previously existed, the ID, e.g. AB012758.1:1..40:tRNA, has a complex
 # format to ensure that it is unique and unambiguous. The structure of
 # the ID may be represented as:
-# <accession>.<version>:<feature location>:<feature name>[:ordinal]
-def _parse_accession(locus_dict):
-    """Parse accession string like :
-        <accession>.<version>:<feature location>:<feature name>[:ordinal]"""
+# <locus_name>.<version>:<feature location>:<feature name>[:ordinal]
+def _parse_locus_name(locus_dict):
+    """Parse locus_name string like :
+        <locus_name>.<version>:<feature location>:<feature name>[:ordinal]"""
 
     # locus_dict is the dictionary read by _parse_id
-    accession = locus_dict.get("accession")
+    locus_name = locus_dict.get("locus_name")
 
-    # define a regular expression to read accession
+    # define a regular expression to read locus_name
     pattern = re.compile("(\w+)\.([0-9]+)\:([^:]+)\:(\w+)")
-    matches = re.match(pattern, accession)
+    matches = re.match(pattern, locus_name)
 
     # read data
-    res = dict(zip(["parent_accession", "version", "feature_location",
+    res = dict(zip(["parent_locus_name", "version", "feature_location",
                     "feature_name"], matches.groups()))
 
     # read locations
@@ -829,7 +840,7 @@ def _parse_accession(locus_dict):
     res["size"] = abs(res["stop"] - res["start"])
     res["version"] = int(res["version"])
 
-    # return parsed accession
+    # return parsed locus_name
     return res
 
 
