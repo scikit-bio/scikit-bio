@@ -199,7 +199,8 @@ Soppose we have an EMBL file with multiple records: we can instantiate a
 generator object to deal with multiple records
 
 >>> import skbio
->>> embl_gen = skbio.io.read(file, format="embl")
+>>> embl = io.StringIO(embl_str)
+>>> embl_gen = skbio.io.read(embl, format="embl")
 >>> dna_seq = next(embl_gen)
 
 For more informations, see :mod:`skbio.io`
@@ -1317,6 +1318,29 @@ def _serialize_comment(embl_key, obj, indent=5):
     return _serialize_list(wrapper, data)
 
 
+def _serialize_dbsource(embl_key, obj, indent=5):
+    """Serialize DBSOURCE"""
+
+    # deal with rx pattern
+    DR = re.compile("([^;\s]*); ([^\s]*)")
+
+    # get an embl wrapper
+    wrapper = _get_embl_wrapper(embl_key, indent)
+
+    # output list
+    dbsource = []
+
+    # obj is a string
+    for match in re.finditer(DR, obj):
+        source, link = match.groups()
+        # join text
+        cross_reference = "; ".join([source, link])
+        dbsource += [cross_reference]
+
+    # serialize data and return it
+    return _serialize_list(wrapper, dbsource)
+
+
 # Map a function to each section of the entry
 _PARSER_TABLE = {
     'LOCUS': _parse_id,
@@ -1335,4 +1359,5 @@ _SERIALIZER_TABLE = {
     'REFERENCE': _serialize_reference,
     'FEATURES': _serialize_feature_table,
     'COMMENT': _serialize_comment,
+    'DBSOURCE': _serialize_dbsource,
     }
