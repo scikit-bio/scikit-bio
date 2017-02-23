@@ -45,6 +45,8 @@ a pair of key and value in ``metadata``. For the ``REFERENCE``
 section, its value is stored as a list, as there are often multiple
 reference sections in one GenBank record.
 
+.. _genbank_feature_section:
+
 ``FEATURES`` section
 ^^^^^^^^^^^^^^^^^^^^
 The International Nucleotide Sequence Database Collaboration (INSDC

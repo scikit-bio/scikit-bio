@@ -10,12 +10,26 @@ of sequence section is marked by a line beginning with the word "SQ" and the
 end of the section is marked by a line with only "//". More information on
 EMBL file format can be found here [1]_.
 
-The EMBL file may ens with .embl or .txt extension. An example of EMBL file can
-be seen here [2]_.
+The EMBL file may ends with .embl or .txt extension. An example of EMBL file
+can be seen here [2]_.
+
+Feature level products
+^^^^^^^^^^^^^^^^^^^^^^
+
+Feature-level products contain nucleotide sequence and related annotation
+derived from submitted ENA assembled and annotated sequences. Data are
+distributed in flatfile format, similar to that of parent ENA records,
+with each flatfile representing a single feature. While only the sequence
+of the feature is included in such entries, features are derived from the
+parent entry, and can't be applied as interval metadata. For such reason,
+interval metatdata are ignored from Feature-level products, as they will be
+ignored by subsetting a generic Sequence object. More information on
+Feature-level product can be found here [3]_.
 
 Format Support
 --------------
 **Has Sniffer: Yes**
+**NOTE: No protein support at the moment**
 
 +------+------+---------------------------------------------------------------+
 |Reader|Writer|                          Object Class                         |
@@ -43,13 +57,23 @@ a pair of key and value in ``metadata``. For the ``RN (Reference Number)``
 section, its value is stored as a list, as there are often multiple
 reference sections in one EMBL record.
 
-#TODO: Add a Feature section with table, like genbank
+``FT`` section
+^^^^^^^^^^^^^^
+
+See :ref:`Genbank FEATURES section<genbank_feature_section>`
+
+``SQ`` section
+^^^^^^^^^^^^^^
+The sequence in the ``SQ`` section is always in lowercase for
+the EMBL files downloaded from ENA. For the RNA molecules, ``t``
+(thymine), instead of ``u`` (uracil) is used in the sequence. All
+EMBL writers follow these conventions while writing EMBL files.
 
 Examples
 --------
 
-Reading and Writing EMBL Files
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+Reading EMBL Files
+^^^^^^^^^^^^^^^^^^
 Suppose we have the following EMBL file example:
 
 >>> embl_str = '''
@@ -168,11 +192,23 @@ Now we can read it as ``DNA`` object:
 >>> embl = io.StringIO(embl_str)
 >>> dna_seq = DNA.read(embl)
 
+Reading EMBL Files using generators
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+Soppose we have an EMBL file with multiple records: we can instantiate a
+generator object to deal with multiple records
+
+>>> import skbio
+>>> embl_gen = skbio.io.read(file, format="embl")
+>>> dna_seq = next(embl_gen)
+
+For more informations, see :mod:`skbio.io`
 
 References
 ----------
 .. [1] ftp://ftp.ebi.ac.uk/pub/databases/embl/release/doc/usrman.txt
 .. [2] http://www.ebi.ac.uk/ena/data/view/X56734&display=text
+.. [3] http://www.ebi.ac.uk/ena/browse/feature-level-products
 
 """
 
