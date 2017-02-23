@@ -400,6 +400,22 @@ def _get_embl_wrapper(embl_key, indent=5, subsequent_indent=None):
     return wrapper
 
 
+def _serialize_list(embl_wrapper, data):
+    """Serialize a list of obj using a textwrap.TextWrapper instance"""
+
+    # the output array
+    output = []
+
+    for line in data:
+        output += embl_wrapper.wrap(line)
+
+    # merge dates in one string
+    output = "\n".join(output) + "\n"
+
+    # return comupted string
+    return output
+
+
 # Method to determine if file is in EMBL format or not. A uniprot embl format
 # can't be parsed by this module (at the moment)
 @embl.sniffer()
@@ -559,6 +575,12 @@ def _parse_single_embl(chunks):
             # partials add arguments to previous defined functions
             parser = partial(
                 parser, metadata=metadata)
+
+        elif embl_header == "COMMENT":
+            # mantain newlines in comments
+            # partials add arguments to previous defined functions
+            parser = partial(
+                parser, join_delimiter="\n")
 
         # call function on section
         parsed = parser(section)
@@ -1039,7 +1061,14 @@ def _serialize_source(header, obj, indent=5):
     source = []
 
     # treat taxonomy and all others keys
-    for key in ["ORGANISM", "taxonomy"]:
+    for key in ["ORGANISM", "taxonomy", "organelle"]:
+        # get data to serielize
+        data = obj.get(key)
+
+        # if key is not defined (eg. organelle, continue)
+        if data is None:
+            continue
+
         # get embl key for my key (eg, taxonomy -> OC)
         embl_key = _get_embl_key_by_value(key)
 
@@ -1047,9 +1076,7 @@ def _serialize_source(header, obj, indent=5):
         wrapper = _get_embl_wrapper(embl_key, indent)
 
         # define wrapped string
-        source += wrapper.wrap(obj.get(key))
-
-    # TODO: deal with others SOURCE keys, eg OG (organelle)
+        source += wrapper.wrap(data)
 
     # now define a string and add a final "\n"
     s = "\n".join(source) + "\n"
@@ -1225,7 +1252,7 @@ def _parse_date(lines, label_delimiter=None, return_label=False):
         return data
 
 
-def _serialize_date(header, date_list, indent=5):
+def _serialize_date(embl_key, date_list, indent=5):
     '''Serialize date line.
 
     Parameters
@@ -1234,15 +1261,24 @@ def _serialize_date(header, date_list, indent=5):
     date_list : a list of dates
     '''
 
-    # the output string
-    output = ''
+    # get an embl wrapper
+    wrapper = _get_embl_wrapper(embl_key, indent)
 
-    for date in date_list:
-        output += "{header:<{indent}}{date}\n".format(
-            header=header, indent=indent, date=date)
+    # # serialize date and return them as a string
+    return _serialize_list(wrapper, date_list)
 
-    # return all dates
-    return output
+
+def _serialize_comment(embl_key, obj, indent=5):
+    """Serialize comment (like Assembly)"""
+
+    # obj is a string, Split it by newlines
+    data = obj.split("\n")
+
+    # get an embl wrapper
+    wrapper = _get_embl_wrapper(embl_key, indent)
+
+    # serialize data and return it
+    return _serialize_list(wrapper, data)
 
 
 # Map a function to each section of the entry
@@ -1252,7 +1288,7 @@ _PARSER_TABLE = {
     'DATE': _parse_date,
     'REFERENCE': _parse_reference,
     'FEATURES': _embl_parse_feature_table,
-    'ORIGIN': _parse_sequence
+    'ORIGIN': _parse_sequence,
     }
 
 # for writer functions
@@ -1261,5 +1297,6 @@ _SERIALIZER_TABLE = {
     'SOURCE': _serialize_source,
     'DATE': _serialize_date,
     'REFERENCE': _serialize_reference,
-    'FEATURES': _serialize_feature_table
+    'FEATURES': _serialize_feature_table,
+    'COMMENT': _serialize_comment,
     }
