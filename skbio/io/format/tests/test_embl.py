@@ -222,7 +222,7 @@ class EMBLIOTests(TestCase):
                                        'Chang C.N.;',
                             'JOURNAL': 'Gene 39(2-3):247-254(1985).',
                             'CROSS_REFERENCE': 'DOI; 10.1016/0378-1119(85)'
-                                               '90319-1. PUBMED; 3912261.',
+                                               '90319-1.\n PUBMED; 3912261.',
                             'REFERENCE': '1-63',
                             'TITLE': '"Periplasmic production of correctly '
                                      'processed human growth hormone in '
@@ -290,7 +290,7 @@ class EMBLIOTests(TestCase):
                                         'Chang C.N.;',
                              'JOURNAL': 'Gene 39(2-3):247-254(1985).',
                              'CROSS_REFERENCE': 'DOI; 10.1016/0378-1119(85)'
-                                                '90319-1. PUBMED; 3912261.',
+                                                '90319-1.\n PUBMED; 3912261.',
                              'REFERENCE': '1-63',
                              'TITLE': '"Periplasmic production of correctly '
                                       'processed human growth hormone in '
@@ -312,8 +312,8 @@ class EMBLIOTests(TestCase):
              'TTAGACTCATTAAAATTTTTATCTCGGAAAAATGTTTTTTCTACAATTTTAGCATTCATTTA'
              'TCTTCATCTTGCTTTTATGTTTAATAAAACGAACTTATAATACCAAAAAAAAAAAAAAAAA',
              {'ACCESSION': 'KX454487;',
-              'COMMENT': '##Assembly-Data-START## Sequencing Technology '
-                         ':: Sanger dideoxy sequencing ##Assembly-Data-END##',
+              'COMMENT': '##Assembly-Data-START##\nSequencing Technology '
+                         ':: Sanger dideoxy sequencing\n##Assembly-Data-END##',
               'DATE': ['02-FEB-2017 (Rel. 131, Created)',
                        '02-FEB-2017 (Rel. 131, Last updated, Version 1)'],
               'DBSOURCE': 'MD5; cbc730cf7a8d694b50fb7dd6b993ae0d.',
@@ -330,7 +330,7 @@ class EMBLIOTests(TestCase):
                         'version': 1},
               'REFERENCE': [
                 {'AUTHORS': 'Yang D., Zhao J., Wang Q.;',
-                 'JOURNAL': 'Submitted (27-JUN-2016) to the INSDC. Key '
+                 'JOURNAL': 'Submitted (27-JUN-2016) to the INSDC.\n Key '
                             'Laboratory of Coastal Zone Environment Processes '
                             'and Ecological Remediation, Yantai Institute '
                             'of Coastal Zone Research (YIC), Chinese Academy '
@@ -392,13 +392,13 @@ class EMBLIOTests(TestCase):
              'PROJECT_IDENTIFIER': 'Project:PRJEB5701;',
              'REFERENCE': [
                 {'AUTHORS': 'Holm K.;',
-                 'JOURNAL': 'Submitted (26-MAR-2014) to the INSDC. '
+                 'JOURNAL': 'Submitted (26-MAR-2014) to the INSDC.\n '
                             'Norstruct, Dept of Chemistry, University of '
                             'Tromso, Science Park 3, NO-9037 Tromso, NORWAY.',
                  'TITLE': ';'},
                 {'AUTHORS': 'Holm K.O., Nilsson K., Hjerde E., Willassen '
                             'N.P., Milton D.L.;',
-                 'CROSS_REFERENCE': 'DOI; 10.1186/s40793-015-0060-7. '
+                 'CROSS_REFERENCE': 'DOI; 10.1186/s40793-015-0060-7.\n '
                                     'PUBMED; 26380645.',
                  'JOURNAL': 'Stand Genomic Sci. 10:60-60(2015).',
                  'TITLE': '"Complete genome sequence of Vibrio anguillarum '
@@ -469,10 +469,13 @@ RT   Escherichia coli: natural and bacterial signal sequences are
 RT   interchangeable";
 RL   Gene 39(2-3):247-254(1985).'''.split('\n')
 
+        # DNA, Sequence and RNA dara contain newlines
+        lines = [line+"\n" for line in lines if line != '']
+
         exp = {'AUTHORS': 'Gray G.L., Baldridge J.S., '
                           'McKeown K.S., Heyneker H.L., Chang C.N.;',
                'JOURNAL': 'Gene 39(2-3):247-254(1985).',
-               'CROSS_REFERENCE': 'DOI; 10.1016/0378-1119(85)90319-1. '
+               'CROSS_REFERENCE': 'DOI; 10.1016/0378-1119(85)90319-1.\n '
                                   'PUBMED; 3912261.',
                'REFERENCE': '1-63',
                'TITLE': '"Periplasmic production of correctly processed '
@@ -481,9 +484,12 @@ RL   Gene 39(2-3):247-254(1985).'''.split('\n')
                         'interchangeable";'
                }
 
+        # read reference
+        obs = _parse_reference(lines)
+
         # See all differences
         self.maxDiff = None
-        self.assertEqual(_parse_reference(lines), exp)
+        self.assertEqual(obs, exp)
 
     def test_embl_to_generator_single(self):
         # test single record and uppercase sequence
