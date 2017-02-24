@@ -191,6 +191,34 @@ Now we can read it as ``DNA`` object:
 >>> from skbio import DNA, RNA, Sequence
 >>> embl = io.StringIO(embl_str)
 >>> dna_seq = DNA.read(embl)
+>>> dna_seq
+DNA
+----------------------------------------------------------------------
+Metadata:
+    'ACCESSION': 'X56734; S46826;'
+    'CROSS_REFERENCE': <class 'list'>
+    'DATE': <class 'list'>
+    'DBSOURCE': 'MD5; 1e51ca3a5450c43524b9185c236cc5cc.'
+    'DEFINITION': 'Trifolium repens mRNA for non-cyanogenic beta-
+                   glucosidase'
+    'KEYWORDS': 'beta-glucosidase.'
+    'LOCUS': <class 'dict'>
+    'REFERENCE': <class 'list'>
+    'SOURCE': <class 'dict'>
+Interval metadata:
+    3 interval features
+Stats:
+    length: 1859
+    has gaps: False
+    has degenerates: False
+    has definites: True
+    GC-content: 35.99%
+----------------------------------------------------------------------
+0    AAACAAACCA AATATGGATT TTATTGTAGC CATATTTGCT CTGTTTGTTA TTAGCTCATT
+60   CACAATTACT TCCACAAATG CAGTTGAAGC TTCTACTCTT CTTGACATAG GTAACCTGAG
+...
+1740 AGAAGCTATG ATCATAACTA TAGGTTGATC CTTCATGTAT CAGTTTGATG TTGAGAATAC
+1800 TTTGAATTAA AAGTCTTTTT TTATTTTTTT AAAAAAAAAA AAAAAAAAAA AAAAAAAAA
 
 Reading EMBL Files using generators
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
@@ -223,6 +251,7 @@ References
 
 # std modules
 import re
+import copy
 import textwrap
 
 from functools import partial
@@ -241,7 +270,8 @@ from skbio.util._misc import chunk_str
 # look at skbio.io.registry to have an idea on how to define this class
 embl = create_format('embl')
 
-# This list is ordered used to read and write embl file.
+# This list is ordered used to read and write embl file. By processing those
+# values one by one, I will write embl sections with the same order
 _HEADERS = [
     'LOCUS',
     'ACCESSION',
@@ -260,7 +290,9 @@ _HEADERS = [
 
 
 # embl has a series of keys different from genbank; moreover keys are not so
-# easy to understand (eg. RA for AUTHORS). Here is a dictionary of keys
+# easy to understand (eg. RA for AUTHORS). I want to use the same keys used by
+# genbank both to convert between formats and to use the same methods to get
+# info from Sequence and its derived objects Here is a dictionary of keys
 # conversion (EMBL->GB). All the unspecified keys will remain in embl format
 KEYS_TRANSLATOR = {
                    # identification
@@ -295,9 +327,9 @@ KEYS_TRANSLATOR = {
                    'SQ': 'ORIGIN',
                    }
 
-# the original _yield_section divides entries in sections relying on spaces
-# (the same section has the same level of indentation). Uniprot entries have
-# a key for each line, so to divide record in sections I need to define a
+# the original genbank _yield_section divides entries in sections relying on
+# spaces (the same section has the same level of indentation). Uniprot entries
+# have a key for each line, so to divide record in sections I need to define a
 # corresponance for each key to section, then I will divide a record in
 # sections using these section name. Some keys are commented out since I don't
 # find them in example. What I have to do if I find them?
@@ -342,8 +374,8 @@ KEYS_2_SECTIONS = {
                   }
 
 
-# for convenience: I think such functions are more readadble in lambda
-# functions
+# for convenience: I think such functions are more readadble whiel accessing
+# valuies in lambda functions
 def _get_embl_key(line):
     """Return first part of a string as a embl key (ie 'AC M14399;' -> 'AC')"""
 
@@ -376,22 +408,22 @@ def _get_embl_section(line):
     section = KEYS_2_SECTIONS[key]
 
     # debug
-    # print("_get_embl_section line: >%s<"%(line))
-    # print("_get_embl_section key: >%s<"%(key))
-    # print("_get_embl_section section: >%s<"%(section))
+    # print("_get_embl_section line: >%s<" % (line))
+    # print("_get_embl_section key: >%s<" % (key))
+    # print("_get_embl_section section: >%s<" % (section))
 
     return section
 
 
 def _translate_key(key):
-    """A method to translate a single key. Return key itself if no traslation
-    is defined"""
+    """A method to translate a single key from EMBL to genbank. Returns key
+    itself if no traslation is defined"""
 
     return KEYS_TRANSLATOR.get(key, key)
 
 
-# a method to translate keys for a dict object. All keys not defined will
-# remain the same
+# a method to translate keys from embl to genbank for a dict object. All keys
+# not defined in the original dict will remain the same
 def _translate_keys(data):
     """Translate a dictionary of uniprot key->value in a genbank like
     dictionary of key values. Keep old keys if no translation is defined"""
@@ -413,8 +445,10 @@ def _translate_keys(data):
 
 
 # define a default textwrap.Wrapper for embl
-def _get_embl_wrapper(embl_key, indent=5, subsequent_indent=None):
-    """Returns a textwrap.TextWrapper for embl records"""
+def _get_embl_wrapper(embl_key, indent=5, subsequent_indent=None, width=80):
+    """Returns a textwrap.TextWrapper for embl records (eg, write
+    <key>   <string> by providing embl key and a string. Wrap text to
+    80 column"""
 
     # define the string to prepen (eg "OC   ")
     prepend = '{key:<{indent}}'.format(key=embl_key, indent=indent)
@@ -431,14 +465,15 @@ def _get_embl_wrapper(embl_key, indent=5, subsequent_indent=None):
     wrapper = textwrap.TextWrapper(
         initial_indent=prepend,
         subsequent_indent=subsequent_prepend,
-        width=80
+        width=width
         )
 
     return wrapper
 
 
 def _serialize_list(embl_wrapper, data):
-    """Serialize a list of obj using a textwrap.TextWrapper instance"""
+    """Serialize a list of obj using a textwrap.TextWrapper instance. Returns
+    one string of wrapped embl objects"""
 
     # the output array
     output = []
@@ -592,19 +627,19 @@ def _parse_single_embl(chunks):
 
     # process each section, like genbank does
     for section in section_splitter(chunks):
-        # key is line type (eg ID, AC, ...)
+        # embl_key is line type (eg ID, AC, ...)
         embl_key = _get_embl_key(section[0])
 
         # even section have different keys, (RA, RP, ...), I need to get the
         # correct section to call the appropriate method (eg REFERENCE)
-        embl_header = _get_embl_section(embl_key)
+        embl_section = _get_embl_section(embl_key)
 
         # search for a specific method in PARSER_TABLE or set
         # _embl_parse_section_default
         parser = _PARSER_TABLE.get(
-            embl_header, _embl_parse_section_default)
+            embl_section, _embl_parse_section_default)
 
-        if embl_header == 'FEATURES':
+        if embl_section == 'FEATURES':
             # This requires 'ID' line parsed before 'FEATURES', which should
             # be true and is implicitly checked by the sniffer. This is true
             # since the first section is parsed by the last else condition
@@ -613,7 +648,7 @@ def _parse_single_embl(chunks):
             parser = partial(
                 parser, metadata=metadata)
 
-        elif embl_header == "COMMENT":
+        elif embl_section == "COMMENT":
             # mantain newlines in comments
             # partials add arguments to previous defined functions
             parser = partial(
@@ -623,31 +658,62 @@ def _parse_single_embl(chunks):
         parsed = parser(section)
 
         # reference can appear multiple times
-        if embl_header == 'REFERENCE':
-            if embl_header in metadata:
-                metadata[embl_header].append(parsed)
+        if embl_section == 'REFERENCE':
+            # genbank data hasn't CROSS_REFERENCE section, To have a similar
+            # metatadata object, I chose to remove CCROSS_REFERENCE from
+            # each single reference and put them in metadata. Since I could
+            # have more references, I need a list of CROSS_REFERENCE, with
+            # None values when CROSS_REFERENCE are not defined
+            cross_reference = parsed.pop("CROSS_REFERENCE", None)
+
+            # fix REFERENCE metadata. Ask if is the first reference or not
+            # I need a reference number as genbank, this could be reference
+            # size
+            if embl_section in metadata:
+                RN = len(metadata[embl_section]) + 1
 
             else:
-                metadata[embl_header] = [parsed]
+                RN = 1
 
-        elif embl_header == 'ORIGIN':
+            # fix reference fields. Get RN->REFERENCE value from dict
+            positions = parsed.pop("REFERENCE", None)
+            parsed["REFERENCE"] = str(RN)
+
+            # append position to RN (eg "1  (bases 1 to 63)")
+            if positions:
+                parsed["REFERENCE"] += "  %s" % (positions)
+
+            # cross_reference will be a list of cross reference; Also
+            # metadata[REFERENCE] is a list of references
+            if embl_section in metadata:
+                # I've already seen a reference, append new one
+                metadata[embl_section].append(parsed)
+                metadata["CROSS_REFERENCE"].append(cross_reference)
+
+            else:
+                # define a list for this first reference and its RX
+                metadata[embl_section] = [parsed]
+                metadata["CROSS_REFERENCE"] = [cross_reference]
+
+        elif embl_section == 'ORIGIN':
             sequence = parsed
 
-        elif embl_header == 'FEATURES':
+        elif embl_section == 'FEATURES':
             interval_metadata = parsed
 
-        elif embl_header == 'DATE':
-            # read data as default
-            metadata[embl_header] = parsed
+        elif embl_section == 'DATE':
+            # read data (list
+            metadata[embl_section] = parsed
 
-            # fix locus metadata using last date. Take only date
-            date = metadata[embl_header][-1].split()[0]
+            # fix locus metadata using last date. Take only last date
+            date = metadata[embl_section][-1].split()[0]
             metadata["LOCUS"]["date"] = date
 
-        # parse all the others sections (DATE, SOURCE, ...)
+        # parse all the others sections (SOURCE, ...)
         else:
-            metadata[embl_header] = parsed
+            metadata[embl_section] = parsed
 
+    # return a string, metatdata as a dictionary and IntervalMetadata object
     return sequence, metadata, interval_metadata
 
 
@@ -664,25 +730,32 @@ def _serialize_single_embl(obj, fh):
     obj : Sequence or its child class
 
     '''
-    # write out the headers
+    # write out the headers. Get poinnter for semplicity
     md = obj.metadata
 
     # embl has a different magick number than embl
     serialize_default = partial(
         _serialize_section_default, indent=5)
 
+    # Now cicle for GB like headers (sections) in _HEADERS.
     for header in _HEADERS:
+        # Get appropriate serializer method or default one
         serializer = _SERIALIZER_TABLE.get(
             header, serialize_default)
 
-        # header needs to be convert into embl, or matained as it is
-        # if no conversion could be defined
-        embl_header = _get_embl_key_by_value(header)
+        # headers needs to be converted into embl, or matained as they are
+        # if no conversion could be defined.
+        embl_key = _get_embl_key_by_value(header)
 
         # this is true also for locus line
         if header in md:
+            # deal with special source case, add cross references if needed
+            if header == "REFERENCE":
+                serializer = partial(
+                    serializer, cross_references=md["CROSS_REFERENCE"])
+
             # call the serializer function
-            out = serializer(embl_header, md[header])
+            out = serializer(embl_key, md[header])
             # test if 'out' is a iterator.
             # cf. Effective Python Item 17
             if iter(out) is iter(out):
@@ -870,17 +943,9 @@ def _embl_yield_section(get_line_key, **kwargs):
             # if we find another line, return the previous section
             line_type = get_line_key(line)
 
-            # debug
-            # print("_embl_yield_section line: >%s<" %(line))
-            # print("_embl_yield_section line_type: >%s<" %(line_type))
-
             # changed line type
             if line_type != curr_type:
                 if curr:
-                    # debug
-                    # print("_embl_yield_section curr_type: >%s<" %(curr_type))
-                    # print("_embl_yield_section curr: >%s<" %(curr))
-
                     # returning block
                     yield curr
 
@@ -893,10 +958,6 @@ def _embl_yield_section(get_line_key, **kwargs):
             # don't append record if line type is a spacer
             if 'SPACER' not in line_type:
                 curr.append(line)
-
-            # debug
-            # else:
-            #    print("Ignoring %s" %(line))
 
         # don't forget to return the last section in the file
         if curr:
@@ -946,66 +1007,7 @@ def _embl_parse_section_default(
         return data
 
 
-def _embl_parse_section_newlines(
-        lines, label_delimiter=None, join_delimiter=' ', return_label=False):
-
-    '''Parse sections with newlines. Keep "\n" when sentences end
-
-    Do 3 things:
-        1. split first line with label_delimiter for label
-        3. Search for end of sentences, keep their "\n"
-        2. join all the lines into one str with join_delimiter.
-    '''
-
-    data = []
-    label = None
-    line = lines[0]
-
-    # take the first line, divide the key from the text
-    items = line.split(label_delimiter, 1)
-
-    if len(items) == 2:
-        label, section = items
-    else:
-        label = items[0]
-        section = ""
-
-    # append the text of the first element in a empty array
-    data.append(section)
-
-    # Then process all the elements with the same embl key. remove the key
-    # and append all the text in the data array
-    data.extend(line.split(label_delimiter, 1)[-1] for line in lines[1:])
-
-    # deal with data like this
-    # RL   Submitted (27-JUN-2016) to the INSDC.
-    # RL   Key Laboratory of Coastal Zone Environment Processes and Ecological
-    # RL   Remediation, Yantai Institute of Coastal Zone Research (YIC),
-    # RL   Chinese Academy of Sciences (CAS), 17 Chunhui Road, Laishan
-    # RL   District, Yantai, Shandong 264003, China
-
-    # in order to put "\n" after the first line
-    # define end of sentence pattern
-    pattern = re.compile("[\.]\n$")
-
-    # find end of sentence in data
-    idx = [True if re.search(pattern, i) else False for i in data]
-
-    # now strip only when sentence continues
-    data = [el.strip() if not idx[i] else el for i, el in enumerate(data)]
-
-    # Now concatenate the text using join_delimiter. All content with the same
-    # key will be placed in the same string. Strip final "\n"
-    data = join_delimiter.join(data).strip()
-
-    # finally return the merged text content, and the key if needed
-    if return_label:
-        return label, data
-    else:
-        return data
-
-
-# parse an embl reference record. Is also applied on source records
+# parse an embl reference record.
 def _parse_reference(lines):
     '''Parse single REFERENCE field.
     '''
@@ -1022,7 +1024,7 @@ def _parse_reference(lines):
     for section in section_splitter(lines):
         # this function append all data in the same keywords. A list of lines
         # as input (see skbio.io.format._sequence_feature_vocabulary)
-        label, data = _embl_parse_section_newlines(
+        label, data = _embl_parse_section_default(
             section, join_delimiter=' ', return_label=True)
 
         res[label] = data
@@ -1030,33 +1032,66 @@ def _parse_reference(lines):
     # now RX (CROSS_REFERENCE) is a joined string of multiple values. To get
     # back to a list of values you can use: re.compile("([^;\s]*); ([^\s]*)")
 
-    # return translated keys
+    # search for pubmed record, and add the PUBMED key
+    if "RX" in res:
+        match = re.search("PUBMED; (\d+)\.", res["RX"])
+
+        if match:
+            # add pubmed notation
+            res["PUBMED"] = match.groups()[0]
+
+    # fix RP field like genbank (if exists), Ie: (bases 1 to 63)
+    if "RP" in res:
+        match = re.search("(\d+)-(\d+)", res["RP"])
+
+        if match:
+            # fix rp fields
+            res["RP"] = "(bases {start} to {stop})".format(
+                start=match.groups()[0], stop=match.groups()[1])
+
+    # return translated keys (EMBL->GB)
     return _translate_keys(res)
 
 
-def _serialize_reference(header, obj, indent=5):
+def _serialize_reference(header, obj, cross_references, indent=5):
     """Serialize a list of references"""
 
     reference = []
     sort_order = ["RC", "RP", "RX", "RG", "RA", "RT", "RL"]
 
-    # deal with rx pattern
+    # deal with rx pattern and RP pattern
     RX = re.compile("([^;\s]*); ([^\s]*)")
+    RP = re.compile("bases (\d+) to (\d+)")
 
-    # obj is a list of references
+    # create a copy of obj, that can be changed. I need to delete values or
+    # adding new ones
+    obj = copy.deepcopy(obj)
+
+    # obj is a list of references. Now is a copy of metadata[SOURCE]
     for i, data in enumerate(obj):
-        # get the reference number
+        # get the reference number (as the iteration number)
         embl_key = "RN"
+
+        # get cross_references
+        cross_reference = cross_references[i]
+
+        # append cross reference [i] to data (obj[i]) (if they exists)
+        if cross_reference:
+            data["CROSS_REFERENCE"] = cross_reference
+
+        # delete PUBMED key (already present ion CROSS_REFERENCE)
+        if "PUBMED" in data:
+            del(data["PUBMED"])
 
         # get an embl wrapper
         wrapper = _get_embl_wrapper(embl_key, indent)
 
-        # define wrapped string
+        # define wrapped string and add RN to embl data
         reference += wrapper.wrap("[{RN}]".format(RN=i+1))
 
         # now process each record for references
         for embl_key in sort_order:
-            # get internal key
+            # get internal key (genbank like key)
             key = _translate_key(embl_key)
 
             # have I this reference in my reference data?
@@ -1081,6 +1116,20 @@ def _serialize_reference(header, obj, indent=5):
                         cross_reference = "; ".join([source, link])
                         reference += wrapper.wrap(cross_reference)
 
+                # RP case
+                elif embl_key == "RP":
+                    match = re.search(RP, record)
+
+                    # if I have position, re-define RP key
+                    if match:
+                        record = "%s-%s" % match.groups()
+                        reference += wrapper.wrap(record)
+
+                    # if not, ignore RP key
+                    else:
+                        continue
+
+                # all the other cases, go in wrapper as they are
                 else:
                     reference += wrapper.wrap(record)
 
@@ -1094,6 +1143,32 @@ def _serialize_reference(header, obj, indent=5):
 
     # and return it
     return s
+
+
+# parse an embl reference record.
+def _parse_source(lines):
+    '''Parse single SOURCE field.
+    '''
+
+    # parsed reference will be placed here
+    res = {}
+
+    # define a section splitter with _embl_yield_section function defined in
+    # this module
+    section_splitter = _embl_yield_section(lambda line: _get_embl_key(line),
+                                           skip_blanks=True, strip=False)
+
+    # now itereta along sections (lines of the same type)
+    for section in section_splitter(lines):
+        # this function append all data in the same keywords. A list of lines
+        # as input (see skbio.io.format._sequence_feature_vocabulary)
+        label, data = _embl_parse_section_default(
+            section, join_delimiter=' ', return_label=True)
+
+        res[label] = data
+
+    # return translated keys
+    return _translate_keys(res)
 
 
 def _serialize_source(header, obj, indent=5):
@@ -1345,8 +1420,8 @@ def _serialize_dbsource(embl_key, obj, indent=5):
     for match in re.finditer(DR, obj):
         source, link = match.groups()
         # join text
-        cross_reference = "; ".join([source, link])
-        dbsource += [cross_reference]
+        source = "; ".join([source, link])
+        dbsource += [source]
 
     # serialize data and return it
     return _serialize_list(wrapper, dbsource)
@@ -1355,7 +1430,7 @@ def _serialize_dbsource(embl_key, obj, indent=5):
 # Map a function to each section of the entry
 _PARSER_TABLE = {
     'LOCUS': _parse_id,
-    'SOURCE': _parse_reference,
+    'SOURCE': _parse_source,
     'DATE': _parse_date,
     'REFERENCE': _parse_reference,
     'FEATURES': _embl_parse_feature_table,
