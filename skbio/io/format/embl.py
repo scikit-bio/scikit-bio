@@ -29,6 +29,7 @@ Feature-level product can be found here [3]_.
 Format Support
 --------------
 **Has Sniffer: Yes**
+
 **NOTE: No protein support at the moment**
 
 +------+------+---------------------------------------------------------------+
@@ -717,6 +718,24 @@ def _parse_single_embl(chunks):
     return sequence, metadata, interval_metadata
 
 
+def _write_serializer(fh, serializer, embl_key, data):
+    """A simple method to write serializer to a file. Append 'XX'"""
+
+    # call the serializer function
+    out = serializer(embl_key, data)
+    # test if 'out' is a iterator.
+    # cf. Effective Python Item 17
+    if iter(out) is iter(out):
+        for s in out:
+            fh.write(s)
+
+    else:
+        fh.write(out)
+
+    # add spacer between sections
+    fh.write("XX\n")
+
+
 # main function for writer methods
 def _serialize_single_embl(obj, fh):
     '''Write a EMBL record.
@@ -755,18 +774,16 @@ def _serialize_single_embl(obj, fh):
                     serializer, cross_references=md["CROSS_REFERENCE"])
 
             # call the serializer function
-            out = serializer(embl_key, md[header])
-            # test if 'out' is a iterator.
-            # cf. Effective Python Item 17
-            if iter(out) is iter(out):
-                for s in out:
-                    fh.write(s)
+            _write_serializer(fh, serializer, embl_key, md[header])
 
-            else:
-                fh.write(out)
-
-            # add spacer between sections
-            fh.write("XX\n")
+        else:
+            # header not in metadata. Could be date read from GB?
+            if header == "DATE":
+                # Have I date in locus metadata?
+                if md["LOCUS"]["date"]:
+                    # call serializer on date. Date is a list of values
+                    _write_serializer(
+                        fh, serializer, embl_key, [md["LOCUS"]["date"]])
 
         if header == 'FEATURES':
             if obj.has_interval_metadata():
@@ -830,10 +847,10 @@ def _parse_id(lines):
     # define a specific patter for EMBL
     pattern = re.compile(r'ID'
                          ' +([^\s]+);'     # ie: CD789012
-                         ' +SV ([0-9]+);'  # 4
+                         ' +SV ([0-9]*);'  # 4
                          ' +(\w+);'        # linear
                          ' +([^;]+);'      # genomic DNA
-                         ' +(\w+);'        # HTG
+                         ' +(\w*);'        # HTG
                          ' +(\w+);'        # MAM
                          ' +(\d+)'         # 500
                          ' +(\w+)\.$')     # BP
@@ -852,7 +869,10 @@ def _parse_id(lines):
 
     # those values are integer
     res['size'] = int(res['size'])
-    res['version'] = int(res['version'])
+
+    # version could be integer
+    if res['version']:
+        res['version'] = int(res['version'])
 
     # unit are in lower cases in others modules
     res['unit'] = res['unit'].lower()
@@ -877,6 +897,11 @@ def _serialize_id(header, obj, indent=5):
 
     # then unit is in upper cases
     kwargs["unit"] = kwargs["unit"].upper()
+
+    # check for missing keys (eg from gb data)
+    for key in ["version", "class"]:
+        if key not in kwargs:
+            kwargs[key] = ""
 
     # return first line
     return ('{header:<{indent}}{locus_name}; SV {version}; {shape}; '

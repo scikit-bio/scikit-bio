@@ -423,6 +423,9 @@ class EMBLIOTests(TestCase):
             None,
             RNA)
 
+        # get a genbank file in order to to file conversion
+        self.genbank_fp = get_data_path('genbank_single_record')
+
 
 class ReaderTests(EMBLIOTests):
     """Implements test for reading EMBL data"""
@@ -697,6 +700,35 @@ class RoundtripTests(EMBLIOTests):
 
         self.assertEqual(obs, exp)
 
+
+class Convertertest(EMBLIOTests):
+    def test_gbtoembl(self):
+        genbank = DNA.read(self.genbank_fp, format="genbank")
+
+        with io.StringIO() as fh:
+            DNA.write(genbank, format="embl", file=fh)
+
+            # EMBL can't deal with genbank version (ie M14399.1  GI:145229)
+#            # read embl data and write to gb
+#            fh.seek(0)
+#            embl = DNA.read(fh, format="embl")
+
+#        with io.StringIO() as fh:
+#            DNA.write(embl, format="genbank", file=fh)
+#
+#            # read gb data
+#            obs = fh.getvalue()
+#
+#        with open(self.genbank_fp) as fh:
+#            exp = fh.read()
+#
+#        self.assertEqual(exp, obs)
+
+    def test_embltogb(self):
+        genbank = DNA.read(self.single_rna_fp, format="embl")
+
+        with io.StringIO() as fh:
+            DNA.write(genbank, format="genbank", file=fh)
 
 if __name__ == '__main__':
     main()
