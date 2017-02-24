@@ -60,26 +60,27 @@ class EMBLIOTests(TestCase):
             (['ID   AB000684.1:1..275:rRNA; SV 1; linear; '
               'genomic DNA; STD; ENV; 275 BP.'],
              {'division': 'ENV', 'mol_type': 'genomic DNA', 'shape': 'linear',
-              'accession': 'AB000684.1:1..275:rRNA', 'unit': 'bp',
-              'size': 275, 'version': 1, 'class': 'STD'}),
+              'locus_name': 'AB000684.1:1..275:rRNA', 'unit': 'bp',
+              'size': 275, 'version': 1, 'class': 'STD', 'date': None}),
             # A standard record
             (['ID   M14399; SV 1; linear; mRNA; STD; PRO; 63 BP.'],
              {'division': 'PRO', 'mol_type': 'mRNA', 'shape': 'linear',
-              'accession': 'M14399', 'unit': 'bp',
-              'size': 63, 'version': 1, 'class': 'STD'}))
+              'locus_name': 'M14399', 'unit': 'bp',
+              'size': 63, 'version': 1, 'class': 'STD', 'date': None}))
 
         # define a single DNA record (with no interval metadata)
         # M14399; SV 1; linear; mRNA; STD; PRO; 63 BP.
         self.single = (
             'gtgaaacaaagcactattgcactggctgtcttaccgttactgtttacccctgtgacaaaagcc',
-            {'LOCUS': {'accession': 'M14399',
+            {'LOCUS': {'locus_name': 'M14399',
                        'class': 'STD',
                        'division': 'PRO',
                        'mol_type': 'mRNA',
                        'shape': 'linear',
                        'size': 63,
                        'unit': 'bp',
-                       'version': 1}},
+                       'version': 1,
+                       'date': None}},
             None,
             DNA)
 
@@ -90,7 +91,7 @@ class EMBLIOTests(TestCase):
             'NLTVEGVEGFVRYSRVTKQHVAAFLKELRHSKQYENVNLIHYILTDKRVDIQHLEKDLVKDFK'
             'ALVESAHRMRQGHMINVKYILYQLLKKHGHGPDGPDILTVKTGSKGVLYDDSFRKIYTDLGWK'
             'FTPL',
-            {'LOCUS': {'accession': '001R_FRG3G',
+            {'LOCUS': {'locus_name': '001R_FRG3G',
                        'status': 'Reviewed',
                        'size': 256,
                        'unit': 'aa'}},
@@ -199,14 +200,15 @@ class EMBLIOTests(TestCase):
 
         self.single_rna = (
             'gugaaacaaagcacuauugcacuggcugucuuaccguuacuguuuaccccugugacaaaagcc',
-            {'LOCUS': {'accession': 'M14399',
+            {'LOCUS': {'locus_name': 'M14399',
                        'class': 'STD',
                        'division': 'PRO',
                        'mol_type': 'mRNA',
                        'shape': 'linear',
                        'size': 63,
                        'unit': 'bp',
-                       'version': 1},
+                       'version': 1,
+                       'date': '02-SEP-1999'},
              'ACCESSION': 'M14399;',  # accessions (could be more than one)
              'DATE': ["16-JUL-1988 (Rel. 16, Created)",
                       "02-SEP-1999 (Rel. 60, Last updated, Version 3)"],
@@ -221,14 +223,15 @@ class EMBLIOTests(TestCase):
                                        'McKeown K.S., Heyneker H.L., '
                                        'Chang C.N.;',
                             'JOURNAL': 'Gene 39(2-3):247-254(1985).',
-                            'CROSS_REFERENCE': 'DOI; 10.1016/0378-1119(85)'
-                                               '90319-1.\n PUBMED; 3912261.',
-                            'REFERENCE': '1-63',
+                            'REFERENCE': '1  (bases 1 to 63)',
                             'TITLE': '"Periplasmic production of correctly '
                                      'processed human growth hormone in '
                                      'Escherichia coli: natural and bacterial '
                                      'signal sequences are '
-                                     'interchangeable";'}], },
+                                     'interchangeable";',
+                            'PUBMED': '3912261'}],
+             'CROSS_REFERENCE': ['DOI; 10.1016/0378-1119(85)'
+                                 '90319-1. PUBMED; 3912261.']},
             imd,
             RNA)
 
@@ -267,14 +270,15 @@ class EMBLIOTests(TestCase):
         # multi object
         self.multi = (
             ('GTGAAACAAAGCACTATTGCACTGGCTGTCTTACCGTTACTGTTTACCCCTGTGACAAAAGCC',
-             {'LOCUS': {'accession': 'M14399',
+             {'LOCUS': {'locus_name': 'M14399',
                         'class': 'STD',
                         'division': 'PRO',
                         'mol_type': 'mRNA',
                         'shape': 'linear',
                         'size': 63,
                         'unit': 'bp',
-                        'version': 1},
+                        'version': 1,
+                        'date': '02-SEP-1999'},
               'ACCESSION': 'M14399;',  # accessions (could be more than one)
               'DATE': ["16-JUL-1988 (Rel. 16, Created)",
                        "02-SEP-1999 (Rel. 60, Last updated, Version 3)"],
@@ -289,14 +293,15 @@ class EMBLIOTests(TestCase):
                                         'McKeown K.S., Heyneker H.L., '
                                         'Chang C.N.;',
                              'JOURNAL': 'Gene 39(2-3):247-254(1985).',
-                             'CROSS_REFERENCE': 'DOI; 10.1016/0378-1119(85)'
-                                                '90319-1.\n PUBMED; 3912261.',
-                             'REFERENCE': '1-63',
+                             'REFERENCE': '1  (bases 1 to 63)',
                              'TITLE': '"Periplasmic production of correctly '
                                       'processed human growth hormone in '
                                       'Escherichia coli: natural and '
                                       'bacterial signal sequences are '
-                                      'interchangeable";'}], },
+                                      'interchangeable";',
+                             'PUBMED': '3912261'}],
+              'CROSS_REFERENCE': ['DOI; 10.1016/0378-1119(85)'
+                                  '90319-1. PUBMED; 3912261.']},
              imd1,
              DNA),
             ('TGTGCACAGTCTACGCGTCATCTTGAAAGAAAGAACTACACTACTCCAAAAATAATCATGCC'
@@ -320,24 +325,26 @@ class EMBLIOTests(TestCase):
               'DEFINITION': 'Ruditapes philippinarum histone mRNA, '
                             'complete cds.',
               'KEYWORDS': '.',
-              'LOCUS': {'accession': 'KX454487',
+              'LOCUS': {'locus_name': 'KX454487',
                         'class': 'STD',
                         'division': 'INV',
                         'mol_type': 'mRNA',
                         'shape': 'linear',
                         'size': 743,
                         'unit': 'bp',
-                        'version': 1},
+                        'version': 1,
+                        'date': '02-FEB-2017'},
               'REFERENCE': [
                 {'AUTHORS': 'Yang D., Zhao J., Wang Q.;',
-                 'JOURNAL': 'Submitted (27-JUN-2016) to the INSDC.\n Key '
+                 'JOURNAL': 'Submitted (27-JUN-2016) to the INSDC. Key '
                             'Laboratory of Coastal Zone Environment Processes '
                             'and Ecological Remediation, Yantai Institute '
                             'of Coastal Zone Research (YIC), Chinese Academy '
                             'of Sciences (CAS), 17 Chunhui Road, Laishan '
                             'District, Yantai, Shandong 264003, China',
-                 'REFERENCE': '1-743',
+                 'REFERENCE': '1  (bases 1 to 743)',
                  'TITLE': ';'}],
+              'CROSS_REFERENCE': [None],
               'SOURCE': {
                 'ORGANISM': 'Ruditapes philippinarum',
                 'taxonomy': 'Eukaryota; Metazoa; Lophotrochozoa; Mollusca; '
@@ -380,30 +387,35 @@ class EMBLIOTests(TestCase):
                          'SAMEA3865288.',
              'DEFINITION': 'Vibrio anguillarum 16S rRNA',
              'KEYWORDS': '.',
-             'LOCUS': {'accession': 'LK021130.1:74067..75610:rRNA',
+             'LOCUS': {'locus_name': 'LK021130.1:74067..75610:rRNA',
                        'class': 'STD',
                        'division': 'PRO',
                        'mol_type': 'genomic DNA',
                        'shape': 'linear',
                        'size': 1544,
                        'unit': 'bp',
-                       'version': 1},
+                       'version': 1,
+                       'date': '04-FEB-2016'},
              'PARENT_ACCESSION': 'LK021130.1',
              'PROJECT_IDENTIFIER': 'Project:PRJEB5701;',
              'REFERENCE': [
                 {'AUTHORS': 'Holm K.;',
-                 'JOURNAL': 'Submitted (26-MAR-2014) to the INSDC.\n '
+                 'JOURNAL': 'Submitted (26-MAR-2014) to the INSDC. '
                             'Norstruct, Dept of Chemistry, University of '
                             'Tromso, Science Park 3, NO-9037 Tromso, NORWAY.',
-                 'TITLE': ';'},
+                 'TITLE': ';',
+                 'REFERENCE': '1'},
                 {'AUTHORS': 'Holm K.O., Nilsson K., Hjerde E., Willassen '
                             'N.P., Milton D.L.;',
-                 'CROSS_REFERENCE': 'DOI; 10.1186/s40793-015-0060-7.\n '
-                                    'PUBMED; 26380645.',
                  'JOURNAL': 'Stand Genomic Sci. 10:60-60(2015).',
                  'TITLE': '"Complete genome sequence of Vibrio anguillarum '
                           'strain NB10, a virulent isolate from the Gulf '
-                          'of Bothnia";'}],
+                          'of Bothnia";',
+                 'REFERENCE': '2',
+                 'PUBMED': '26380645'}],
+             'CROSS_REFERENCE': [
+                None,
+                'DOI; 10.1186/s40793-015-0060-7. PUBMED; 26380645.'],
              'SOURCE': {
                 'ORGANISM': 'Vibrio anguillarum',
                 'taxonomy': 'Bacteria; Proteobacteria; Gammaproteobacteria; '
@@ -475,13 +487,14 @@ RL   Gene 39(2-3):247-254(1985).'''.split('\n')
         exp = {'AUTHORS': 'Gray G.L., Baldridge J.S., '
                           'McKeown K.S., Heyneker H.L., Chang C.N.;',
                'JOURNAL': 'Gene 39(2-3):247-254(1985).',
-               'CROSS_REFERENCE': 'DOI; 10.1016/0378-1119(85)90319-1.\n '
+               'CROSS_REFERENCE': 'DOI; 10.1016/0378-1119(85)90319-1. '
                                   'PUBMED; 3912261.',
-               'REFERENCE': '1-63',
+               'REFERENCE': '(bases 1 to 63)',
                'TITLE': '"Periplasmic production of correctly processed '
                         'human growth hormone in Escherichia coli: '
                         'natural and bacterial signal sequences are '
-                        'interchangeable";'
+                        'interchangeable";',
+               'PUBMED': '3912261'
                }
 
         # read reference
