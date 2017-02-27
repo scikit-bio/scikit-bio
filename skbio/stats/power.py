@@ -1072,12 +1072,12 @@ def _draw_paired_samples(meta_pairs, index, num_samps):
 
     subs = []
 
-    # Draws the other groups
-    # for set_, num_ in collections.Counter(set_pos).items():
+    # Draws the other groups. Get a collection.Counter object for simplicity
     counter = collections.Counter(set_pos)
 
-    # collections.Counter(set_pos).items() order isn't guaranteed
-    # in python 3.6, so we access such values through sets
+    # counter.items() order isn't guaranteed in python 3.6 and then the random
+    # coiche isn't reproducible between python version, even specifying seed
+    # so we access such values through sets
     for set_ in set(set_pos):
         num_ = counter[set_]
         r2 = [np.random.choice(col, num_, replace=False) for col in
