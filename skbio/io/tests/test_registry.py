@@ -1939,5 +1939,6 @@ class TestModuleFunctions(unittest.TestCase):
         with self.assertRaises(DuplicateRegistrationError):
             create_format('fasta')
 
+
 if __name__ == '__main__':
     unittest.main()

@@ -203,5 +203,6 @@ class FaithPDTests(TestCase):
         otu_ids = ['OTU1', 'OTU2', 'OTU42']
         self.assertRaises(MissingNodeError, faith_pd, counts, otu_ids, t)
 
+
 if __name__ == "__main__":
     main()

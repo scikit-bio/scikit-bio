@@ -757,5 +757,6 @@ class PairwiseAlignmentTests(TestCase):
         # but for the purposes needed here, we want the max to be the same
         # regardless of what the second item in the tuple is.
 
+
 if __name__ == "__main__":
     main()

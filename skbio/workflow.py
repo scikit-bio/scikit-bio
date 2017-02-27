@@ -220,6 +220,8 @@ class NotExecuted:
     def __call__(self, msg):
         self.msg = msg
         return self
+
+
 _not_executed = NotExecuted()
 
 
@@ -228,6 +230,8 @@ class Exists:
     @experimental(as_of="0.4.0")
     def __contains__(self, item):
         return True
+
+
 anything = Exists()  # external, for when a value can be anything
 
 
@@ -238,6 +242,8 @@ class NotNone:
             return False
         else:
             return True
+
+
 not_none = NotNone()
 
 

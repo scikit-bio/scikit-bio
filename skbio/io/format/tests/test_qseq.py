@@ -347,5 +347,6 @@ class TestQSeqSniffer(TestQSeqBase):
         for invalid, _, _, _ in self.invalid_files:
             self.assertEqual(_qseq_sniffer(invalid), (False, {}))
 
+
 if __name__ == '__main__':
     unittest.main()

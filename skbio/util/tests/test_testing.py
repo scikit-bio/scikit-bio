@@ -257,5 +257,6 @@ class TestAssertSeriesAlmostEqual(unittest.TestCase):
             assert_series_almost_equal(s, s)
             assert_series_almost_equal(s, pd.Series(s, copy=True))
 
+
 if __name__ == '__main__':
     unittest.main()

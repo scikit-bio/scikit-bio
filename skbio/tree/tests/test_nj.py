@@ -204,5 +204,6 @@ class NjTests(TestCase):
         self.assertEqual(
             _pair_members_to_new_node(dm, 'a', 'b', False), (-16, 20))
 
+
 if __name__ == "__main__":
     main()
