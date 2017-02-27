@@ -362,8 +362,8 @@ KEYS_2_SECTIONS = {
                    # Cross references
                    'DR': 'DBSOURCE',
                    'CC': 'COMMENT',
-                   # 'AH': 'ASSEMBLY,
-                   # 'AS': 'ASSEMBLY'
+                   'AH': 'ASSEMBLY',
+                   'AS': 'ASSEMBLY',
                    'FH': 'FEATURES',
                    'FT': 'FEATURES',
                    # sequence
@@ -1452,6 +1452,28 @@ def _serialize_dbsource(embl_key, obj, indent=5):
     return _serialize_list(wrapper, dbsource)
 
 
+def _parse_assembly(lines):
+    """Parse embl assembly records"""
+
+    output = []
+
+    # assembly pattern
+    pattern = re.compile("AS   ([^\s]+)\s+([^\s]+)\s+([^\s]+)\s+(\w?)")
+
+    # first line is header
+    for line in lines[1:]:
+        matches = re.search(pattern, line)
+
+        res = dict(zip(
+            ['local_span', 'primary_identifier', 'primary_span', 'comp'],
+            matches.groups()))
+
+        # append res to output
+        output += [res]
+
+    return output
+
+
 # Map a function to each section of the entry
 _PARSER_TABLE = {
     'LOCUS': _parse_id,
@@ -1460,6 +1482,7 @@ _PARSER_TABLE = {
     'REFERENCE': _parse_reference,
     'FEATURES': _embl_parse_feature_table,
     'ORIGIN': _parse_sequence,
+    'ASSEMBLY': _parse_assembly,
     }
 
 # for writer functions

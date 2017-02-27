@@ -24,7 +24,7 @@ from skbio.io.format.embl import (
     _embl_to_rna, _embl_to_protein,
     _generator_to_embl, _sequence_to_embl,
     _protein_to_embl, _rna_to_embl, _dna_to_embl,
-    _serialize_id)
+    _serialize_id, _parse_assembly)
 
 
 class SnifferTests(TestCase):
@@ -484,7 +484,7 @@ RT   Escherichia coli: natural and bacterial signal sequences are
 RT   interchangeable";
 RL   Gene 39(2-3):247-254(1985).'''.split('\n')
 
-        # DNA, Sequence and RNA dara contain newlines
+        # DNA, Sequence and RNA data contain newlines
         lines = [line+"\n" for line in lines if line != '']
 
         exp = {'AUTHORS': 'Gray G.L., Baldridge J.S., '
@@ -502,6 +502,45 @@ RL   Gene 39(2-3):247-254(1985).'''.split('\n')
 
         # read reference
         obs = _parse_reference(lines)
+
+        # See all differences
+        self.maxDiff = None
+        self.assertEqual(obs, exp)
+
+    def test_parse_assembly(self):
+        lines = """
+AH   LOCAL_SPAN     PRIMARY_IDENTIFIER     PRIMARY_SPAN     COMP
+AS   1-426          AC004528.1             18665-19090
+AS   427-526        AC001234.2             1-100            c
+AS   527-1000       TI55475028             not_available
+""".split('\n')
+
+        # DNA, Sequence and RNA data contain newlines
+        lines = [line+"\n" for line in lines if line != '']
+
+        exp = [
+            {
+             'local_span': '1-426',
+             'primary_identifier': 'AC004528.1',
+             'primary_span': '18665-19090',
+             'comp': ''
+            },
+            {
+             'local_span': '427-526',
+             'primary_identifier': 'AC001234.2',
+             'primary_span': '1-100',
+             'comp': 'c'
+            },
+            {
+             'local_span': '527-1000',
+             'primary_identifier': 'TI55475028',
+             'primary_span': 'not_available',
+             'comp': ''
+            }
+        ]
+
+        # read reference
+        obs = _parse_assembly(lines)
 
         # See all differences
         self.maxDiff = None
