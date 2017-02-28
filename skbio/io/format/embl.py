@@ -6,25 +6,25 @@ EMBL format (:mod:`skbio.io.format.embl`)
 
 EMBL format stores sequence and its annotation together. The start of the
 annotation section is marked by a line beginning with the word "ID". The start
-of sequence section is marked by a line beginning with the word "SQ" and the
-end of the section is marked by a line with only "//". More information on
-EMBL file format can be found here [1]_.
+of sequence section is marked by a line beginning with the word "SQ".
+The "//" (terminator) line also contains no data or comments and designates
+the end of an entry. More information on EMBL file format can be found
+here [1]_.
 
-The EMBL file may ends with .embl or .txt extension. An example of EMBL file
+The EMBL file may end with .embl or .txt extension. An example of EMBL file
 can be seen here [2]_.
 
-Feature level products
+Feature Level Products
 ^^^^^^^^^^^^^^^^^^^^^^
 
-Feature-level products contain nucleotide sequence and related annotation
-derived from submitted ENA assembled and annotated sequences. Data are
-distributed in flatfile format, similar to that of parent ENA records,
-with each flatfile representing a single feature. While only the sequence
-of the feature is included in such entries, features are derived from the
-parent entry, and can't be applied as interval metadata. For such reason,
-interval metatdata are ignored from Feature-level products, as they will be
-ignored by subsetting a generic Sequence object. More information on
-Feature-level product can be found here [3]_.
+As described in [3]_ *"Feature-level products contain nucleotide sequence
+and related annotations derived from submitted ENA assembled and annotated
+sequences. Data are distributed in flatfile format, similar to that of parent
+ENA records, with each flatfile representing a single feature"*.
+While only the sequence of the feature is included in such entries, features
+are derived from the parent entry, and can't be applied as interval metadata.
+For such reason, interval metatdata are ignored from Feature-level products,
+as they will be ignored by subsetting a generic Sequence object.
 
 Format Support
 --------------
@@ -48,13 +48,13 @@ Format Support
 
 Format Specification
 --------------------
-**State: Experimental as of 0.5.1.**
+**State: Experimental as of 0.5.1-dev.**
 
 Sections before ``FH (Feature Header)``
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 All the sections before ``FH (Feature Header)`` will be read into the attribute
-of ``metadata``. The header and its content of a section is stored as
-a pair of key and value in ``metadata``. For the ``RN (Reference Number)``
+of ``metadata``. The header and its content of a section are stored as
+key-value pairs in ``metadata``. For the ``RN (Reference Number)``
 section, its value is stored as a list, as there are often multiple
 reference sections in one EMBL record.
 
@@ -328,6 +328,33 @@ KEYS_TRANSLATOR = {
                    'SQ': 'ORIGIN',
                    }
 
+
+# the inverse of KEYS_TRANSLATOR, for semplicity
+REV_KEYS_TRANSLATOR = {
+        'ACCESSION': 'AC',
+        'AUTHORS': 'RA',
+        'COMMENT': 'CC',
+        'CROSS_REFERENCE': 'RX',
+        'DATE': 'DT',
+        'DBSOURCE': 'DR',
+        'DEFINITION': 'DE',
+        'FEATURES': 'FT',
+        'GENE_NAME': 'GN',
+        'GROUP': 'RG',
+        'JOURNAL': 'RL',
+        'KEYWORDS': 'KW',
+        'LOCUS': 'ID',
+        'ORGANISM': 'OS',
+        'ORIGIN': 'SQ',
+        'PARENT_ACCESSION': 'PA',
+        'PROJECT_IDENTIFIER': 'PR',
+        'REFERENCE': 'RP',
+        'REFERENCE_COMMENT': 'RC',
+        'TITLE': 'RT',
+        'organelle': 'OG',
+        'taxonomy': 'OC'}
+
+
 # the original genbank _yield_section divides entries in sections relying on
 # spaces (the same section has the same level of indentation). Uniprot entries
 # have a key for each line, so to divide record in sections I need to define a
@@ -375,8 +402,8 @@ KEYS_2_SECTIONS = {
                   }
 
 
-# for convenience: I think such functions are more readadble whiel accessing
-# valuies in lambda functions
+# for convenience: I think such functions are more readadble while accessing
+# values in lambda functions
 def _get_embl_key(line):
     """Return first part of a string as a embl key (ie 'AC M14399;' -> 'AC')"""
 
@@ -386,16 +413,16 @@ def _get_embl_key(line):
 
 # get embl key from value
 # http://stackoverflow.com/questions/8023306/get-key-by-value-in-dictionary
-def _get_embl_key_by_value(value, mydict=KEYS_TRANSLATOR):
+def _get_embl_key_by_value(value, mydict):
     """Return the key(s) associated to a value from a dictionary, or the
     value if no key is defined"""
 
     # try to get a key (keys) from a value in dictionary
     try:
-        return list(mydict.keys())[list(mydict.values()).index(value)]
+        return mydict[value]
 
     # returns value if key is not present
-    except ValueError:
+    except KeyError:
         return value
 
 
@@ -407,11 +434,6 @@ def _get_embl_section(line):
 
     # get embl section from key
     section = KEYS_2_SECTIONS[key]
-
-    # debug
-    # print("_get_embl_section line: >%s<" % (line))
-    # print("_get_embl_section key: >%s<" % (key))
-    # print("_get_embl_section section: >%s<" % (section))
 
     return section
 
@@ -429,19 +451,9 @@ def _translate_keys(data):
     """Translate a dictionary of uniprot key->value in a genbank like
     dictionary of key values. Keep old keys if no translation is defined"""
 
-    # get all keys to validate
-    old_keys = data.keys()
+    # traslate keys and get a new_data object
+    new_data = {_translate_key(k): v for k, v in data.items()}
 
-    # a new dictionary of results
-    new_data = {}
-
-    # I can't replace keys in original values, sometimes test will fails. So, I
-    # create a new copy. This is a strange behaviour, I don't understand
-    for old_key in old_keys:
-        new_key = _translate_key(old_key)
-        new_data[new_key] = data[old_key]
-
-    # returning translated keys
     return new_data
 
 
@@ -538,8 +550,6 @@ def _embl_to_rna(fh, seq_num=1, **kwargs):
 @embl.reader(Protein)
 def _embl_to_protein(fh, seq_num=1, **kwargs):
     # no protein support, at the moment
-    # record = _get_nth_sequence(_parse_embls(fh), seq_num)
-    # return _construct(record, Protein, **kwargs)
     raise EMBLFormatError("There's no protein support for EMBL record")
 
 
@@ -568,7 +578,6 @@ def _rna_to_embl(obj, fh):
 @embl.writer(Protein)
 def _protein_to_embl(obj, fh):
     # no protein support, at the moment
-    # _serialize_single_embl(obj, fh)
     raise EMBLFormatError("There's no protein support for EMBL record")
 
 
@@ -661,7 +670,7 @@ def _parse_single_embl(chunks):
         # reference can appear multiple times
         if embl_section == 'REFERENCE':
             # genbank data hasn't CROSS_REFERENCE section, To have a similar
-            # metatadata object, I chose to remove CCROSS_REFERENCE from
+            # metatadata object, I chose to remove CROSS_REFERENCE from
             # each single reference and put them in metadata. Since I could
             # have more references, I need a list of CROSS_REFERENCE, with
             # None values when CROSS_REFERENCE are not defined
@@ -764,7 +773,7 @@ def _serialize_single_embl(obj, fh):
 
         # headers needs to be converted into embl, or matained as they are
         # if no conversion could be defined.
-        embl_key = _get_embl_key_by_value(header)
+        embl_key = _get_embl_key_by_value(header, mydict=REV_KEYS_TRANSLATOR)
 
         # this is true also for locus line
         if header in md:
@@ -1218,7 +1227,7 @@ def _serialize_source(header, obj, indent=5):
             continue
 
         # get embl key for my key (eg, taxonomy -> OC)
-        embl_key = _get_embl_key_by_value(key)
+        embl_key = _get_embl_key_by_value(key, mydict=REV_KEYS_TRANSLATOR)
 
         # get an embl wrapper
         wrapper = _get_embl_wrapper(embl_key, indent)
