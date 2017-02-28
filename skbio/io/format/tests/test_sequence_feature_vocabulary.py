@@ -44,9 +44,7 @@ class Tests(TestCase):
             'join(J00194.1:1..9,3..8)',
             'join(3..8,J00194.1:1..9)',
             '1.9',
-            '1^2',
-            'J00194.1:100..202',
-            'AB000684.1:<1..>275']
+            '1^2']
 
         expects = [
             ([(8, 9)], [(False, False)], {'strand': '+'}),
@@ -56,14 +54,10 @@ class Tests(TestCase):
             ([(2, 8)], [(False, True)],  {'strand': '-'}),
             ([(2, 5), (6, 9)], [(False, True), (True, False)],
              {'strand': '-'}),
-            ([(0, 9), (2, 8)], [(False, False), (False, False)],
-             {'strand': '+'}),
-            ([(2, 8), (0, 9)], [(False, False), (False, False)],
-             {'strand': '+'}),
+            ([(2, 8)], [(False, False)], {'strand': '+'}),
+            ([(2, 8)], [(False, False)], {'strand': '+'}),
             ([(0, 9)], [(False, False)], {'strand': '+'}),
-            ([(0, 1)], [(False, False)], {'strand': '+'}),
-            ([(99, 202)], [(False, False)], {'strand': '+'}),
-            ([(0, 275)], [(True, True)], {'strand': '+'})]
+            ([(0, 1)], [(False, False)], {'strand': '+'})]
 
         for example, expect in zip(examples, expects):
             parsed = _parse_loc_str(example)
