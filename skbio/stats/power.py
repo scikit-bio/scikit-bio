@@ -1080,8 +1080,8 @@ def _draw_paired_samples(meta_pairs, index, num_samps):
     # so we access such values through sets.
     set_list = set(set_pos)
 
-    # as stated by @RNAer, since we can assure that item in sets are ordered,
-    # we choose to order set_list before accessing values
+    # then, as stated by @RNAer, since we can't assure that items in sets are
+    # ordered, we choose to order set_list before accessing values
     set_list = sorted(set_list)
 
     # now set_list is ordered and we can iterate over it to get counter obj
