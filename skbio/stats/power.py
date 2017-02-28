@@ -1076,9 +1076,16 @@ def _draw_paired_samples(meta_pairs, index, num_samps):
     counter = collections.Counter(set_pos)
 
     # counter.items() order isn't guaranteed in python 3.6 and then the random
-    # coiche isn't reproducible between python version, even specifying seed
-    # so we access such values through sets
-    for set_ in set(set_pos):
+    # choice isn't reproducible between python version, even specifying seed;
+    # so we access such values through sets.
+    set_list = set(set_pos)
+
+    # as stated by @RNAer, since we can assure that item in sets are ordered,
+    # we choose to order set_list before accessing values
+    set_list = sorted(set_list)
+
+    # now set_list is ordered and we can iterate over it to get counter obj
+    for set_ in set_list:
         num_ = counter[set_]
         r2 = [np.random.choice(col, num_, replace=False) for col in
               meta_pairs[set_]]
