@@ -758,7 +758,7 @@ def _serialize_single_embl(obj, fh):
     obj : Sequence or its child class
 
     '''
-    # write out the headers. Get poinnter for semplicity
+    # shortcut to deal with metadata
     md = obj.metadata
 
     # embl has a different magick number than embl
@@ -827,6 +827,9 @@ def _serialize_single_embl(obj, fh):
 
 def _parse_id(lines):
     """
+    From EMBL user manual (Release 130, November 2016)
+    (ftp://ftp.ebi.ac.uk/pub/databases/embl/release/doc/usrman.txt)
+
     The ID (IDentification) line is always the first line of an entry. The
     format of the ID line is:
     ID   <1>; SV <2>; <3>; <4>; <5>; <6>; <7> BP.
@@ -835,8 +838,8 @@ def _parse_id(lines):
        2. Sequence version number
        3. Topology: 'circular' or 'linear'
        4. Molecule type (see note 1 below)
-       5. Data class (see section 3.1)
-       6. Taxonomic division (see section 3.2)
+       5. Data class (see section 3.1 of EMBL user manual)
+       6. Taxonomic division (see section 3.2 of EMBL user manual)
        7. Sequence length (see note 2 below)
 
     Note 1 - Molecule type: this represents the type of molecule as stored and
@@ -901,8 +904,8 @@ def _serialize_id(header, obj, indent=5):
     obj : dict
     '''
 
-    # use 'or' to convert None to ''
-    kwargs = {k: v or '' for k, v in obj.items()}
+    # get key->value pairs, or key->'' if values is None
+    kwargs = {k: '' if v is None else v for k, v in obj.items()}
 
     # then unit is in upper cases
     kwargs["unit"] = kwargs["unit"].upper()
@@ -951,7 +954,8 @@ def _parse_locus_name(locus_dict):
     return res
 
 
-# replace skbio.io.format._sequence_feature_vocabulary.__yield_section
+# similar to skbio.io.format._sequence_feature_vocabulary.__yield_section
+# but applies to embl file format
 def _embl_yield_section(get_line_key, **kwargs):
     '''Returns function that returns successive sections from file.
 
@@ -1262,9 +1266,6 @@ def _parse_sequence(lines):
     sequence = []
 
     for line in lines:
-        # debug
-        # print(line)
-
         # ignore record like:
         # SQ   Sequence 275 BP; 64 A; 73 C; 88 G; 50 T; 0 other;
         if line.startswith('SQ'):

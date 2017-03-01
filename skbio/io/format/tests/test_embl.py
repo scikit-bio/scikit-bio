@@ -36,7 +36,8 @@ class SnifferTests(TestCase):
         self.negative_fps = list(map(get_data_path, [
             'empty',
             'whitespace_only',
-            'embl_uniprot_record']))
+            'embl_uniprot_record',
+            'embl_w_beginning_whitespace']))
 
     def test_positives(self):
         for fp in self.positive_fps:
@@ -606,11 +607,11 @@ AS   527-1000       TI55475028             not_available
         # TODO: add protein support
         i = 0
         # there is no support for protein at the moment
-#        exp = self.multi[i]
-#        obs = _embl_to_protein(self.multi_fp, seq_num=i+1)
-#        exp = Protein(exp[0], metadata=exp[1],
-#                      lowercase=True, interval_metadata=exp[2])
-#        self.assertEqual(exp, obs)
+        # exp = self.multi[i]
+        # obs = _embl_to_protein(self.multi_fp, seq_num=i+1)
+        # exp = Protein(exp[0], metadata=exp[1],
+        #               lowercase=True, interval_metadata=exp[2])
+        # self.assertEqual(exp, obs)
 
         with self.assertRaisesRegex(EMBLFormatError,
                                     "There's no protein support for EMBL "
