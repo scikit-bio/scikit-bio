@@ -211,6 +211,7 @@ class EMBLIOTests(TestCase):
                        'version': 1,
                        'date': '02-SEP-1999'},
              'ACCESSION': 'M14399;',  # accessions (could be more than one)
+             'VERSION': 'M14399.1',  # a genbank like version
              'DATE': ["16-JUL-1988 (Rel. 16, Created)",
                       "02-SEP-1999 (Rel. 60, Last updated, Version 3)"],
              'DBSOURCE': 'MD5; c9b40131b8622946b5aafdf5473b3d43.',
@@ -281,6 +282,7 @@ class EMBLIOTests(TestCase):
                         'version': 1,
                         'date': '02-SEP-1999'},
               'ACCESSION': 'M14399;',  # accessions (could be more than one)
+              'VERSION': 'M14399.1',  # a genbank like version
               'DATE': ["16-JUL-1988 (Rel. 16, Created)",
                        "02-SEP-1999 (Rel. 60, Last updated, Version 3)"],
               'DBSOURCE': 'MD5; c9b40131b8622946b5aafdf5473b3d43.',
@@ -318,6 +320,7 @@ class EMBLIOTests(TestCase):
              'TTAGACTCATTAAAATTTTTATCTCGGAAAAATGTTTTTTCTACAATTTTAGCATTCATTTA'
              'TCTTCATCTTGCTTTTATGTTTAATAAAACGAACTTATAATACCAAAAAAAAAAAAAAAAA',
              {'ACCESSION': 'KX454487;',
+              'VERSION': 'KX454487.1',
               'COMMENT': '##Assembly-Data-START##\nSequencing Technology '
                          ':: Sanger dideoxy sequencing\n##Assembly-Data-END##',
               'DATE': ['02-FEB-2017 (Rel. 131, Created)',
@@ -398,6 +401,7 @@ class EMBLIOTests(TestCase):
                        'version': 1,
                        'date': '04-FEB-2016'},
              'PARENT_ACCESSION': 'LK021130.1',
+             'VERSION': 'LK021130.1',
              'PROJECT_IDENTIFIER': 'Project:PRJEB5701;',
              'REFERENCE': [
                 {'AUTHORS': 'Holm K.;',
@@ -424,6 +428,10 @@ class EMBLIOTests(TestCase):
             None,
             RNA)
 
+        # get the feature level file without FT
+        self.feature_level_fp = get_data_path(
+                "embl_feature_level_record_no_FT")
+
         # get a genbank file in order to to file conversion
         self.genbank_fp = get_data_path('genbank_single_record')
 
@@ -431,7 +439,6 @@ class EMBLIOTests(TestCase):
 class ReaderTests(EMBLIOTests):
     """Implements test for reading EMBL data"""
 
-    # TODO: implement test to deal with all EMBL methods
     def test_parse_id(self):
         """Parse ID record (first line of embl format)"""
         for serialized, parsed in self.id:
@@ -619,7 +626,7 @@ AS   527-1000       TI55475028             not_available
             # read a generic record
             _embl_to_protein(self.multi_fp, seq_num=i+1)
 
-        # deal with feature-level-products
+    # deal with feature-level-products: ignore feature table
     def test_feature_level_products(self):
         seq, md, imd, constructor = self.feature_level
         obs = _embl_to_rna(self.feature_level_fp)
@@ -692,6 +699,20 @@ class WriterTests(EMBLIOTests):
             obs = fh.getvalue()
 
         with open(self.single_rna_fp) as fh:
+            exp = fh.read()
+
+        self.assertEqual(obs, exp)
+
+    def test_rna_to_embl_flp(self):
+        """Test writing feature level products"""
+
+        with io.StringIO() as fh:
+            seq, md, imd, constructor = self.feature_level
+            obj = constructor(seq, md, interval_metadata=imd, lowercase=True)
+            _rna_to_embl(obj, fh)
+            obs = fh.getvalue()
+
+        with open(self.feature_level_fp) as fh:
             exp = fh.read()
 
         self.assertEqual(obs, exp)

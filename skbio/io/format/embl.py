@@ -206,6 +206,7 @@ Metadata:
     'LOCUS': <class 'dict'>
     'REFERENCE': <class 'list'>
     'SOURCE': <class 'dict'>
+    'VERSION': 'X56734.1'
 Interval metadata:
     3 interval features
 Stats:
@@ -712,7 +713,7 @@ def _parse_single_embl(chunks):
             interval_metadata = parsed
 
         elif embl_section == 'DATE':
-            # read data (list
+            # read data (list)
             metadata[embl_section] = parsed
 
             # fix locus metadata using last date. Take only last date
@@ -722,6 +723,23 @@ def _parse_single_embl(chunks):
         # parse all the others sections (SOURCE, ...)
         else:
             metadata[embl_section] = parsed
+
+    # after metadata were read, add a VERSION section like genbank
+    # eval if entry is a feature level product or not
+    if "ACCESSION" in metadata:
+        metadata["VERSION"] = "{accession}.{version}".format(
+                accession=metadata["LOCUS"]["locus_name"],
+                version=metadata["LOCUS"]["version"])
+
+    elif "PARENT_ACCESSION" in metadata:
+        # locus name is in the format
+        # <accession>.<version>:<feature location>:<feature name>[:ordinal]
+        # and ordinal could be present or not, depends on how many feature
+        # are found in such location. The entry couldn't be found in others
+        # database like NCBI (at the moment) so we will take the version
+        # relying on parent accession (hoping that an update in the parent
+        # accession will generate an update in all feature level products)
+        metadata["VERSION"] = metadata["PARENT_ACCESSION"]
 
     # return a string, metatdata as a dictionary and IntervalMetadata object
     return sequence, metadata, interval_metadata
@@ -781,6 +799,11 @@ def _serialize_single_embl(obj, fh):
             if header == "REFERENCE":
                 serializer = partial(
                     serializer, cross_references=md["CROSS_REFERENCE"])
+
+            elif header == "LOCUS":
+                # pass also metadata (in case of entries from genbank)
+                serializer = partial(
+                    serializer, metadata=md)
 
             # call the serializer function
             _write_serializer(fh, serializer, embl_key, md[header])
@@ -896,7 +919,7 @@ def _parse_id(lines):
     return res
 
 
-def _serialize_id(header, obj, indent=5):
+def _serialize_id(header, obj, metadata={}, indent=5):
     '''Serialize ID line.
 
     Parameters
@@ -910,10 +933,29 @@ def _serialize_id(header, obj, indent=5):
     # then unit is in upper cases
     kwargs["unit"] = kwargs["unit"].upper()
 
-    # check for missing keys (eg from gb data)
+    # check for missing keys (eg from gb data). Keys in md are in uppercase
     for key in ["version", "class"]:
         if key not in kwargs:
-            kwargs[key] = ""
+            if key.upper() in metadata:
+                kwargs[key] = metadata[key.upper()]
+
+            else:
+                kwargs[key] = ""
+
+    # version from genbank could be "M14399.1  GI:145229". I need an integer
+    version = kwargs["version"]
+
+    # version could by empty, integer or text
+    if version != '':
+        try:
+            int(kwargs["version"])
+
+        # could be a text like M14399.1
+        except ValueError:
+            match = re.search("^\w+\.([0-9]+)", version)
+
+            if match:
+                kwargs["version"] = match.groups()[0]
 
     # return first line
     return ('{header:<{indent}}{locus_name}; SV {version}; {shape}; '
