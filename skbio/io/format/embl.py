@@ -32,6 +32,8 @@ Format Support
 
 **NOTE: No protein support at the moment**
 
+Current protein support development is tracked in issue-1499 [4]_
+
 +------+------+---------------------------------------------------------------+
 |Reader|Writer|                          Object Class                         |
 +======+======+===============================================================+
@@ -240,6 +242,7 @@ References
 .. [1] ftp://ftp.ebi.ac.uk/pub/databases/embl/release/doc/usrman.txt
 .. [2] http://www.ebi.ac.uk/ena/data/view/X56734&display=text
 .. [3] http://www.ebi.ac.uk/ena/browse/feature-level-products
+.. [4] https://github.com/biocore/scikit-bio/issues/1499
 
 """
 
@@ -551,7 +554,10 @@ def _embl_to_rna(fh, seq_num=1, **kwargs):
 @embl.reader(Protein)
 def _embl_to_protein(fh, seq_num=1, **kwargs):
     # no protein support, at the moment
-    raise EMBLFormatError("There's no protein support for EMBL record")
+    raise EMBLFormatError("There's no protein support for EMBL record. "
+                          "Current status of EMBL protein support is "
+                          "described in issue-1499 (https://github.com/"
+                          "biocore/scikit-bio/issues/1499)")
 
 
 # Writer methods
@@ -579,7 +585,10 @@ def _rna_to_embl(obj, fh):
 @embl.writer(Protein)
 def _protein_to_embl(obj, fh):
     # no protein support, at the moment
-    raise EMBLFormatError("There's no protein support for EMBL record")
+    raise EMBLFormatError("There's no protein support for EMBL record. "
+                          "Current status of EMBL protein support is "
+                          "described in issue-1499 (https://github.com/"
+                          "biocore/scikit-bio/issues/1499)")
 
 
 def _construct(record, constructor=None, **kwargs):
@@ -734,8 +743,8 @@ def _parse_single_embl(chunks):
     elif "PARENT_ACCESSION" in metadata:
         # locus name is in the format
         # <accession>.<version>:<feature location>:<feature name>[:ordinal]
-        # and ordinal could be present or not, depends on how many feature
-        # are found in such location. The entry couldn't be found in others
+        # and ordinal could be present or not, depends on how many features
+        # are found in such location. Such entry couldn't be found in others
         # database like NCBI (at the moment) so we will take the version
         # relying on parent accession (hoping that an update in the parent
         # accession will generate an update in all feature level products)

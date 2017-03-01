@@ -458,6 +458,8 @@ class ReaderTests(EMBLIOTests):
                                         'Could not parse the ID line:.*'):
                 _parse_id(line)
 
+    # current status of protein support is described in issue-1499
+    # https://github.com/biocore/scikit-bio/issues/1499
     def test_no_protein_support(self):
         """Testing no protein support for embl"""
         # TODO: add protein support
@@ -610,10 +612,13 @@ AS   527-1000       TI55475028             not_available
 
         self.assertEqual(exp, obs)
 
+    # current status of protein support is described in issue-1499
+    # https://github.com/biocore/scikit-bio/issues/1499
     def test_embl_to_protein(self):
         # TODO: add protein support
         i = 0
         # there is no support for protein at the moment
+        # when protein support will be added, this code must work
         # exp = self.multi[i]
         # obs = _embl_to_protein(self.multi_fp, seq_num=i+1)
         # exp = Protein(exp[0], metadata=exp[1],
@@ -681,6 +686,9 @@ class WriterTests(EMBLIOTests):
 
         self.assertEqual(obs, exp)
 
+    # TODO: add support for protein
+    # current status of protein support is described in issue-1499
+    # https://github.com/biocore/scikit-bio/issues/1499
     def test_protein_to_embl(self):
         seq, md, imd, constructor = self.protein
         obj = constructor(seq, md, interval_metadata=imd)
@@ -750,6 +758,8 @@ class RoundtripTests(EMBLIOTests):
         self.assertEqual(obs, exp)
 
     # TODO: test_roundtrip_protein
+    # current status of protein support is described in issue-1499
+    # https://github.com/biocore/scikit-bio/issues/1499
 
     def test_roundtrip_sequence(self):
         with io.StringIO() as fh:
