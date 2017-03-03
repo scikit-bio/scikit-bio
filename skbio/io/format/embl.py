@@ -224,6 +224,48 @@ Stats:
 1740 AGAAGCTATG ATCATAACTA TAGGTTGATC CTTCATGTAT CAGTTTGATG TTGAGAATAC
 1800 TTTGAATTAA AAGTCTTTTT TTATTTTTTT AAAAAAAAAA AAAAAAAAAA AAAAAAAAA
 
+Since this is a mRNA molecule, we may want to read it as ``RNA``.
+As the EMBL file usually have ``t`` instead of ``u`` in
+the sequence, we can read it as ``RNA`` by converting ``t`` to ``u``:
+
+>>> embl = io.StringIO(embl_str)
+>>> rna_seq = RNA.read(embl)
+>>> rna_seq
+RNA
+----------------------------------------------------------------------
+Metadata:
+    'ACCESSION': 'X56734; S46826;'
+    'CROSS_REFERENCE': <class 'list'>
+    'DATE': <class 'list'>
+    'DBSOURCE': 'MD5; 1e51ca3a5450c43524b9185c236cc5cc.'
+    'DEFINITION': 'Trifolium repens mRNA for non-cyanogenic beta-
+                   glucosidase'
+    'KEYWORDS': 'beta-glucosidase.'
+    'LOCUS': <class 'dict'>
+    'REFERENCE': <class 'list'>
+    'SOURCE': <class 'dict'>
+    'VERSION': 'X56734.1'
+Interval metadata:
+    3 interval features
+Stats:
+    length: 1859
+    has gaps: False
+    has degenerates: False
+    has definites: True
+    GC-content: 35.99%
+----------------------------------------------------------------------
+0    AAACAAACCA AAUAUGGAUU UUAUUGUAGC CAUAUUUGCU CUGUUUGUUA UUAGCUCAUU
+60   CACAAUUACU UCCACAAAUG CAGUUGAAGC UUCUACUCUU CUUGACAUAG GUAACCUGAG
+...
+1740 AGAAGCUAUG AUCAUAACUA UAGGUUGAUC CUUCAUGUAU CAGUUUGAUG UUGAGAAUAC
+1800 UUUGAAUUAA AAGUCUUUUU UUAUUUUUUU AAAAAAAAAA AAAAAAAAAA AAAAAAAAA
+
+We can also ``trascribe`` a sequence and verify that it will be a ``RNA``
+sequence
+
+>>> rna_seq == dna_seq.transcribe()
+True
+
 Reading EMBL Files using generators
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
