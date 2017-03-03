@@ -435,6 +435,50 @@ class EMBLIOTests(TestCase):
         # get a genbank file in order to to file conversion
         self.genbank_fp = get_data_path('genbank_single_record')
 
+        # a embl constructed sequence file path
+        self.embl_constructed_fp = get_data_path("embl_constructed")
+
+        # a embl constructed sequence
+        self.embl_constructed = (
+            '',
+            {'ACCESSION': 'LT357133;',
+             'CROSS_REFERENCE': [None],
+             'DATE': ['18-SEP-2016 (Rel. 130, Created)',
+                      '18-SEP-2016 (Rel. 130, Last updated, Version 1)'],
+             'DBSOURCE': 'MD5; 90c05497c7cde972dc52b8d06097f88c. ENA; '
+                         'FJUZ01000000; SET. ENA; FJUZ00000000; SET. '
+                         'BioSample; SAMEA3707213.',
+             'DEFINITION': 'Spodoptera frugiperda genome assembly, '
+                           'scaffold: C262451',
+             'KEYWORDS': '.',
+             'LOCUS': {'class': 'CON',
+                       'date': '18-SEP-2016',
+                       'division': 'INV',
+                       'locus_name': 'LT357133',
+                       'mol_type': 'genomic DNA',
+                       'shape': 'linear',
+                       'size': 140,
+                       'unit': 'bp',
+                       'version': 1},
+             'PROJECT_IDENTIFIER': 'Project:PRJEB12116;',
+             'REFERENCE': [
+                {'AUTHORS': 'Landry J.;',
+                 'JOURNAL': 'Submitted (16-MAR-2016) to the INSDC. EMBL, '
+                            'Genemics Core Facility, Meyerhofstrasse 1,, '
+                            '69117 Heidelberg, Germany',
+                 'REFERENCE': '1',
+                 'TITLE': ';'}],
+             'SOURCE': {
+               'ORGANISM': 'Spodoptera frugiperda (fall armyworm)',
+               'taxonomy': 'Eukaryota; Metazoa; Ecdysozoa; Arthropoda; '
+                           'Hexapoda; Insecta; Pterygota; Neoptera; '
+                           'Endopterygota; Lepidoptera; Glossata; Ditrysia; '
+                           'Noctuoidea; Noctuidae; Amphipyrinae; Spodoptera.'},
+             'VERSION': 'LT357133.1',
+             'CONSTRUCTED': 'join(FJUZ01138823.1:1..140)'},
+            None,
+            DNA)
+
 
 class ReaderTests(EMBLIOTests):
     """Implements test for reading EMBL data"""
@@ -635,6 +679,15 @@ AS   527-1000       TI55475028             not_available
     def test_feature_level_products(self):
         seq, md, imd, constructor = self.feature_level
         obs = _embl_to_rna(self.feature_level_fp)
+        exp = constructor(seq, metadata=md,
+                          lowercase=True, interval_metadata=imd)
+
+        self.assertEqual(obs, exp)
+
+    # deal with constructed sequences: ignore interval metadata
+    def test_constructed_sequences(self):
+        seq, md, imd, constructor = self.embl_constructed
+        obs = _embl_to_dna(self.embl_constructed_fp)
         exp = constructor(seq, metadata=md,
                           lowercase=True, interval_metadata=imd)
 

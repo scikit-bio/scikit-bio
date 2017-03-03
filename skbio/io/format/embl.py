@@ -363,8 +363,7 @@ REV_KEYS_TRANSLATOR = {
 # spaces (the same section has the same level of indentation). Uniprot entries
 # have a key for each line, so to divide record in sections I need to define a
 # corresponance for each key to section, then I will divide a record in
-# sections using these section name. Some keys are commented out since I don't
-# find them in example. What I have to do if I find them?
+# sections using these section name.
 KEYS_2_SECTIONS = {
                    # identification
                    'ID': 'LOCUS',
@@ -400,7 +399,7 @@ KEYS_2_SECTIONS = {
                    # sequence
                    'SQ': 'ORIGIN',
                    '  ': 'ORIGIN',
-                   # 'CO': 'ORIGIN,'
+                   'CO': 'CONSTRUCTED',
                    # spacer (discarded)
                    'XX': 'SPACER'
                   }
@@ -728,6 +727,12 @@ def _parse_single_embl(chunks):
             # fix locus metadata using last date. Take only last date
             date = metadata[embl_section][-1].split()[0]
             metadata["LOCUS"]["date"] = date
+
+        elif embl_section == 'CONSTRUCTED':
+            # entries like http://www.ebi.ac.uk/ena/data/view/LT357133
+            # doesn't have sequence, so no intervalmetadata (delete them)
+            interval_metadata = None
+            metadata[embl_section] = parsed
 
         # parse all the others sections (SOURCE, ...)
         else:
