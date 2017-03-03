@@ -376,35 +376,13 @@ KEYS_TRANSLATOR = {
 
 
 # the inverse of KEYS_TRANSLATOR, for semplicity
-REV_KEYS_TRANSLATOR = {
-        'ACCESSION': 'AC',
-        'AUTHORS': 'RA',
-        'COMMENT': 'CC',
-        'CROSS_REFERENCE': 'RX',
-        'DATE': 'DT',
-        'DBSOURCE': 'DR',
-        'DEFINITION': 'DE',
-        'FEATURES': 'FT',
-        'GENE_NAME': 'GN',
-        'GROUP': 'RG',
-        'JOURNAL': 'RL',
-        'KEYWORDS': 'KW',
-        'LOCUS': 'ID',
-        'ORGANISM': 'OS',
-        'ORIGIN': 'SQ',
-        'PARENT_ACCESSION': 'PA',
-        'PROJECT_IDENTIFIER': 'PR',
-        'REFERENCE': 'RP',
-        'REFERENCE_COMMENT': 'RC',
-        'TITLE': 'RT',
-        'organelle': 'OG',
-        'taxonomy': 'OC'}
+REV_KEYS_TRANSLATOR = {v: k for k, v in KEYS_TRANSLATOR.items()}
 
 
 # the original genbank _yield_section divides entries in sections relying on
 # spaces (the same section has the same level of indentation). Uniprot entries
 # have a key for each line, so to divide record in sections I need to define a
-# corresponance for each key to section, then I will divide a record in
+# correspondance for each key to section, then I will divide a record in
 # sections using these section name.
 KEYS_2_SECTIONS = {
                    # identification
@@ -454,21 +432,6 @@ def _get_embl_key(line):
 
     # embl keys have a fixed size of 2 chars
     return line[:2]
-
-
-# get embl key from value
-# http://stackoverflow.com/questions/8023306/get-key-by-value-in-dictionary
-def _get_embl_key_by_value(value, mydict):
-    """Return the key(s) associated to a value from a dictionary, or the
-    value if no key is defined"""
-
-    # try to get a key (keys) from a value in dictionary
-    try:
-        return mydict[value]
-
-    # returns value if key is not present
-    except KeyError:
-        return value
 
 
 def _get_embl_section(line):
@@ -847,7 +810,7 @@ def _serialize_single_embl(obj, fh):
 
         # headers needs to be converted into embl, or matained as they are
         # if no conversion could be defined.
-        embl_key = _get_embl_key_by_value(header, mydict=REV_KEYS_TRANSLATOR)
+        embl_key = REV_KEYS_TRANSLATOR.get(header, header)
 
         # this is true also for locus line
         if header in md:
@@ -1329,7 +1292,7 @@ def _serialize_source(header, obj, indent=5):
             continue
 
         # get embl key for my key (eg, taxonomy -> OC)
-        embl_key = _get_embl_key_by_value(key, mydict=REV_KEYS_TRANSLATOR)
+        embl_key = REV_KEYS_TRANSLATOR.get(key, key)
 
         # get an embl wrapper
         wrapper = _get_embl_wrapper(embl_key, indent)
