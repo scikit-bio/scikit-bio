@@ -1238,14 +1238,16 @@ def _gram_schmidt_basis(n):
 def sbp_basis(sbp):
     """
     Builds an orthogonal basis from a sequential binary partition (SBP).
-    As explained in Parent et al. (2013), the "SBP describes the D−1
-    orthogonal (geometrically independent) balances between parts and
-    groups of parts. The SBP is a (D - 1) × D matrix, in which parts
-    labeled '+1' (group  numerator) are  balanced  with  parts  labeled
-    '−1' (group denominator). A part labeled '0' is excluded from the
-    balance between parts. The composition is partitioned sequentially
-    into contrasts at every hierarchically ordered row until the '+1'
-    and '-1' groups each contain a single part."
+    As explained in [1], the "SBP describes the D−1 orthogonal (geometrically
+    independent) balances between parts and groups of parts. The SBP is a
+    (D - 1) × D matrix, in which parts labeled '+1' (group  numerator) are
+    balanced with parts labeled '−1' (group denominator). A part labeled '0'
+    is excluded from the balance between parts. The composition is partitioned
+    sequentially into contrasts at every hierarchically ordered row until
+    the '+1' and '-1' groups each contain a single part."
+
+    The `sbp_basis` method was originally derived from function
+    `gsi.buildilrBase()` found in the R package `compositions`. [2]
 
     Parameters
     ----------
@@ -1278,6 +1280,9 @@ def sbp_basis(sbp):
        Marchand, S., Lafond, J., Mattos, D., Barlow, P., Natale, W., 2013.
        The plant ionome revisited by the nutrient balance concept.
        Front. Plant Sci. 4, 39, http://dx.doi.org/10.3389/fpls.2013.00039.
+    .. [2] van den Boogaart, K. Gerald, Tolosana-Delgado, Raimon and Bren,
+       Matevz, 2014. `compositions`: Compositional Data Analysis. R package
+       version 1.40-1. https://CRAN.R-project.org/package=compositions.
     """
 
     n_pos = (sbp == 1).sum(axis=1)
