@@ -24,7 +24,8 @@ from skbio.io.format.embl import (
     _embl_to_rna, _embl_to_protein,
     _generator_to_embl, _sequence_to_embl,
     _protein_to_embl, _rna_to_embl, _dna_to_embl,
-    _serialize_id, _parse_assembly)
+    _serialize_id, _parse_assembly, _embl_parse_section_default,
+    _serialize_dbsource)
 
 
 class SnifferTests(TestCase):
@@ -600,6 +601,22 @@ AS   527-1000       TI55475028             not_available
         self.maxDiff = None
         self.assertEqual(obs, exp)
 
+    def test_parse_bad_assembly(self):
+        """test for a wrong assembly line"""
+
+        lines = """
+AH   LOCAL_SPAN     PRIMARY_IDENTIFIER     PRIMARY_SPAN     COMP
+AS   1-426          AC004528.1
+""".split("\n")
+
+        # DNA, Sequence and RNA data contain newlines
+        lines = [line+"\n" for line in lines if line != '']
+
+        with self.assertRaisesRegex(EMBLFormatError,
+                                    "Can't parse assembly line"):
+            # read a malformed assembly record
+            _parse_assembly(lines)
+
     def test_embl_to_generator_single(self):
         # test single record and uppercase sequence
         for c in [Sequence, DNA]:
@@ -699,6 +716,31 @@ class WriterTests(EMBLIOTests):
         for serialized, parsed in self.id:
             self.assertEqual(
                 _serialize_id('ID', parsed), serialized[0] + '\n')
+
+    def test_serialize_dbsource(self):
+        """Serialize a complex dbsource entry"""
+
+        # test with a complex uniprot dbsource
+        exp = """DR   EMBL; AY548484; AAT09660.1; -; Genomic_DNA.
+DR   RefSeq; YP_031579.1; NC_005946.1.
+DR   ProteinModelPortal; Q6GZX4; -.
+DR   SwissPalm; Q6GZX4; -.
+DR   GeneID; 2947773; -.
+DR   KEGG; vg:2947773; -.
+DR   Proteomes; UP000008770; Genome.
+"""
+
+        # split by lines
+        lines = [line+"\n" for line in exp.split("\n") if line != '']
+
+        # parse objects
+        parsed = _embl_parse_section_default(lines)
+
+        # now serialize them
+        obs = _serialize_dbsource("DR", parsed)
+
+        # test objects
+        self.assertEqual(obs, exp)
 
     def test_generator_to_embl(self):
         seq, md, imd, constructor = self.single
@@ -826,7 +868,7 @@ class RoundtripTests(EMBLIOTests):
 
 
 class Convertertest(EMBLIOTests):
-    def test_gbtoembl(self):
+    def test_gb_to_embl(self):
         genbank = DNA.read(self.genbank_fp, format="genbank")
 
         with io.StringIO() as fh:
@@ -848,7 +890,7 @@ class Convertertest(EMBLIOTests):
 #
 #        self.assertEqual(exp, obs)
 
-    def test_embltogb(self):
+    def test_embl_to_gb(self):
         genbank = DNA.read(self.single_rna_fp, format="embl")
 
         with io.StringIO() as fh:

@@ -498,7 +498,7 @@ def _get_embl_wrapper(embl_key, indent=5, subsequent_indent=None, width=80):
     return wrapper
 
 
-def _serialize_list(embl_wrapper, data):
+def _serialize_list(embl_wrapper, data, sep="\n"):
     """Serialize a list of obj using a textwrap.TextWrapper instance. Returns
     one string of wrapped embl objects"""
 
@@ -508,8 +508,8 @@ def _serialize_list(embl_wrapper, data):
     for line in data:
         output += embl_wrapper.wrap(line)
 
-    # merge dates in one string
-    output = "\n".join(output) + "\n"
+    # merge dates in one string. Add final newline
+    output = sep.join(output) + "\n"
 
     # return comupted string
     return output
@@ -1429,16 +1429,12 @@ def _parse_date(lines, label_delimiter=None, return_label=False):
     """Parse embl date records"""
 
     data = []
-    line = lines[0]
 
-    # take the first line, divide the key from the text
-    label, section = line.split(label_delimiter, 1)
-
-    # add section to data to return
-    data += [section]
+    # take the first line, and derive a label
+    label, section = lines[0].split(label_delimiter, 1)
 
     # read all the others dates and append to data array
-    data.extend(line.split(label_delimiter, 1)[-1] for line in lines[1:])
+    data.extend(line.split(label_delimiter, 1)[-1] for line in lines)
 
     # strip returned data
     data = [i.strip() for i in data]
@@ -1482,24 +1478,22 @@ def _serialize_comment(embl_key, obj, indent=5):
 def _serialize_dbsource(embl_key, obj, indent=5):
     """Serialize DBSOURCE"""
 
-    # deal with rx pattern
-    DR = re.compile("([^;\s]*); ([^\s]*)")
+    # data are stored like 'SILVA-LSU; LK021130. SILVA-SSU; LK021130. ...
+    # I need to split string after final period (not AAT09660.1)
+
+    # deal with re pattern. A pattern to find a period as end of sentence
+    DR = re.compile("\.\s")
+
+    # splitting by this pattern, I will have
+    # ["SILVA-LSU; LK021130", "SILVA-SSU; LK021130", ...]
+    # I need that each of them will be in a DR record.
 
     # get an embl wrapper
     wrapper = _get_embl_wrapper(embl_key, indent)
 
-    # output list
-    dbsource = []
-
-    # obj is a string
-    for match in re.finditer(DR, obj):
-        source, link = match.groups()
-        # join text
-        source = "; ".join([source, link])
-        dbsource += [source]
-
-    # serialize data and return it
-    return _serialize_list(wrapper, dbsource)
+    # serialize data and return it. Split dbsource using re. Add a
+    # final period between elements since I removed it by splitting
+    return _serialize_list(wrapper, re.split(DR, obj), sep=".\n")
 
 
 def _parse_assembly(lines):
@@ -1507,16 +1501,24 @@ def _parse_assembly(lines):
 
     output = []
 
-    # assembly pattern
-    pattern = re.compile("AS   ([^\s]+)\s+([^\s]+)\s+([^\s]+)\s+(\w?)")
-
-    # first line is header
+    # first line is header, skip it
     for line in lines[1:]:
-        matches = re.search(pattern, line)
+        data = line.split()
 
-        res = dict(zip(
-            ['local_span', 'primary_identifier', 'primary_span', 'comp'],
-            matches.groups()))
+        # data could have comp feature or not. First element in data is 'AS'
+        if len(data) == 5:
+            res = dict(zip(
+                ['local_span', 'primary_identifier', 'primary_span', 'comp'],
+                data[1:]))
+
+        elif len(data) == 4:
+            res = dict(zip(
+                ['local_span', 'primary_identifier', 'primary_span', 'comp'],
+                data[1:]+['']))
+
+        else:
+            raise EMBLFormatError("Can't parse assembly line %s"
+                                  % line)
 
         # append res to output
         output += [res]
