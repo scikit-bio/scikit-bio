@@ -380,7 +380,7 @@ REV_KEYS_TRANSLATOR = {v: k for k, v in KEYS_TRANSLATOR.items()}
 
 
 # the original genbank _yield_section divides entries in sections relying on
-# spaces (the same section has the same level of indentation). Uniprot entries
+# spaces (the same section has the same level of indentation). EMBL entries
 # have a key for each line, so to divide record in sections I need to define a
 # correspondance for each key to section, then I will divide a record in
 # sections using these section name.
@@ -408,6 +408,12 @@ KEYS_2_SECTIONS = {
                    'RG': 'REFERENCE',
                    'RT': 'REFERENCE',
                    'RL': 'REFERENCE',
+                   # This shuold be Reference Number. However, to split
+                   # between references with _embl_yield_section I need to
+                   # change section after reading one reference. So a single
+                   # reference is completed when I found a new RN. The
+                   # reference number information will be the reference
+                   # position in the final REFERENCE list metadata
                    'RN': 'SPACER',
                    # Cross references
                    'DR': 'DBSOURCE',
@@ -649,30 +655,35 @@ def _parse_single_embl(chunks):
         skip_blanks=True,
         strip=False)
 
-    # process each section, like genbank does
-    for section in section_splitter(chunks):
-        # embl_key is line type (eg ID, AC, ...)
-        embl_key = _get_embl_key(section[0])
+    # process each section, like genbank does.
+    for section, section_name in section_splitter(chunks):
+        # section is a list of records with the same session (eg RA, RP for
+        # for a single reference). section_name is the name of the section
+        # (eg REFERENCE for the section of the previous example)
 
-        # even section have different keys, (RA, RP, ...), I need to get the
-        # correct section to call the appropriate method (eg REFERENCE)
-        embl_section = _get_embl_section(embl_key)
-
-        # search for a specific method in PARSER_TABLE or set
-        # _embl_parse_section_default
+        # search for a specific method in PARSER_TABLE using section_name or
+        # set _embl_parse_section_default
         parser = _PARSER_TABLE.get(
-            embl_section, _embl_parse_section_default)
+            section_name, _embl_parse_section_default)
 
-        if embl_section == 'FEATURES':
+        if section_name == 'FEATURES':
             # This requires 'ID' line parsed before 'FEATURES', which should
             # be true and is implicitly checked by the sniffer. This is true
             # since the first section is parsed by the last else condition
 
-            # partials add arguments to previous defined functions
-            parser = partial(
-                parser, metadata=metadata)
+            if "PARENT_ACCESSION" in metadata:
+                # this is a feature-level-products entry and features are
+                # relative to parent accession; in the same way a subset of a
+                # Sequence object has no interval metadata, I will refuse to
+                # process interval metadata here
+                continue
 
-        elif embl_section == "COMMENT":
+            # partials add arguments to previous defined functions, in this
+            # case length of Sequence object
+            parser = partial(
+                parser, length=metadata["LOCUS"]["size"])
+
+        elif section_name == "COMMENT":
             # mantain newlines in comments
             # partials add arguments to previous defined functions
             parser = partial(
@@ -682,19 +693,22 @@ def _parse_single_embl(chunks):
         parsed = parser(section)
 
         # reference can appear multiple times
-        if embl_section == 'REFERENCE':
+        if section_name == 'REFERENCE':
             # genbank data hasn't CROSS_REFERENCE section, To have a similar
             # metatadata object, I chose to remove CROSS_REFERENCE from
             # each single reference and put them in metadata. Since I could
             # have more references, I need a list of CROSS_REFERENCE, with
-            # None values when CROSS_REFERENCE are not defined
+            # None values when CROSS_REFERENCE are not defined: there are cases
+            # in which some references have a CROSS_REFERENCE and others not.
+            # So each reference will have it's cross reference in the same
+            # index position, defined or not
             cross_reference = parsed.pop("CROSS_REFERENCE", None)
 
             # fix REFERENCE metadata. Ask if is the first reference or not
             # I need a reference number as genbank, this could be reference
             # size
-            if embl_section in metadata:
-                RN = len(metadata[embl_section]) + 1
+            if section_name in metadata:
+                RN = len(metadata[section_name]) + 1
 
             else:
                 RN = 1
@@ -709,39 +723,39 @@ def _parse_single_embl(chunks):
 
             # cross_reference will be a list of cross reference; Also
             # metadata[REFERENCE] is a list of references
-            if embl_section in metadata:
+            if section_name in metadata:
                 # I've already seen a reference, append new one
-                metadata[embl_section].append(parsed)
+                metadata[section_name].append(parsed)
                 metadata["CROSS_REFERENCE"].append(cross_reference)
 
             else:
                 # define a list for this first reference and its RX
-                metadata[embl_section] = [parsed]
+                metadata[section_name] = [parsed]
                 metadata["CROSS_REFERENCE"] = [cross_reference]
 
-        elif embl_section == 'ORIGIN':
+        elif section_name == 'ORIGIN':
             sequence = parsed
 
-        elif embl_section == 'FEATURES':
+        elif section_name == 'FEATURES':
             interval_metadata = parsed
 
-        elif embl_section == 'DATE':
+        elif section_name == 'DATE':
             # read data (list)
-            metadata[embl_section] = parsed
+            metadata[section_name] = parsed
 
             # fix locus metadata using last date. Take only last date
-            date = metadata[embl_section][-1].split()[0]
+            date = metadata[section_name][-1].split()[0]
             metadata["LOCUS"]["date"] = date
 
-        elif embl_section == 'CONSTRUCTED':
+        elif section_name == 'CONSTRUCTED':
             # entries like http://www.ebi.ac.uk/ena/data/view/LT357133
             # doesn't have sequence, so no intervalmetadata (delete them)
             interval_metadata = None
-            metadata[embl_section] = parsed
+            metadata[section_name] = parsed
 
         # parse all the others sections (SOURCE, ...)
         else:
-            metadata[embl_section] = parsed
+            metadata[section_name] = parsed
 
     # after metadata were read, add a VERSION section like genbank
     # eval if entry is a feature level product or not
@@ -982,39 +996,6 @@ def _serialize_id(header, obj, metadata={}, indent=5):
                 header=header, indent=indent, **kwargs)
 
 
-# For non-coding, rRNA and spacer records, where a feature-level ID has not
-# previously existed, the ID, e.g. AB012758.1:1..40:tRNA, has a complex
-# format to ensure that it is unique and unambiguous. The structure of
-# the ID may be represented as:
-# <locus_name>.<version>:<feature location>:<feature name>[:ordinal]
-def _parse_locus_name(locus_dict):
-    """Parse locus_name string like :
-        <locus_name>.<version>:<feature location>:<feature name>[:ordinal]"""
-
-    # locus_dict is the dictionary read by _parse_id
-    locus_name = locus_dict.get("locus_name")
-
-    # define a regular expression to read locus_name
-    pattern = re.compile("(\w+)\.([0-9]+)\:([^:]+)\:(\w+)")
-    matches = re.match(pattern, locus_name)
-
-    # read data
-    res = dict(zip(["parent_locus_name", "version", "feature_location",
-                    "feature_name"], matches.groups()))
-
-    # read locations
-    start, stop = res.get("feature_location").split("..")
-
-    # fix values. Convert in O base coordinates
-    res["start"] = int(start) - 1
-    res["stop"] = int(stop)
-    res["size"] = abs(res["stop"] - res["start"])
-    res["version"] = int(res["version"])
-
-    # return parsed locus_name
-    return res
-
-
 # similar to skbio.io.format._sequence_feature_vocabulary.__yield_section
 # but applies to embl file format
 def _embl_yield_section(get_line_key, **kwargs):
@@ -1046,7 +1027,7 @@ def _embl_yield_section(get_line_key, **kwargs):
             if line_type != curr_type:
                 if curr:
                     # returning block
-                    yield curr
+                    yield curr, curr_type
 
                     # reset curr after yield
                     curr = []
@@ -1060,7 +1041,7 @@ def _embl_yield_section(get_line_key, **kwargs):
 
         # don't forget to return the last section in the file
         if curr:
-            yield curr
+            yield curr, curr_type
 
     return parser
 
@@ -1120,7 +1101,7 @@ def _parse_reference(lines):
                                            skip_blanks=True, strip=False)
 
     # now itereta along sections (lines of the same type)
-    for section in section_splitter(lines):
+    for section, section_name in section_splitter(lines):
         # this function append all data in the same keywords. A list of lines
         # as input (see skbio.io.format._sequence_feature_vocabulary)
         label, data = _embl_parse_section_default(
@@ -1258,7 +1239,7 @@ def _parse_source(lines):
                                            skip_blanks=True, strip=False)
 
     # now itereta along sections (lines of the same type)
-    for section in section_splitter(lines):
+    for section, section_name in section_splitter(lines):
         # this function append all data in the same keywords. A list of lines
         # as input (see skbio.io.format._sequence_feature_vocabulary)
         label, data = _embl_parse_section_default(
@@ -1310,19 +1291,6 @@ def _serialize_source(header, obj, indent=5):
 def _parse_sequence(lines):
     '''Parse the sequence section for sequence.'''
 
-    # when reading a feature-level-products accession, features are relative
-    # to parent accession, so we need to parse accessions like
-    # LK021130.1:74067..75610:rRNA to model a table feature like
-    # FT   rRNA            LK021130.1:74067..75610
-    # FT                   /gene="16S"
-    # FT                   /product="16S rRNA"
-    # FT                   /note="16S rRNA subunit (checked and believed
-    # FT                   to be right,based on 454- and PacBio-sequencing)"
-    # I could express features by resizing sequence, however the resulting
-    # sequence will be different than data read. I decide to mantain
-    # sequences indentical to read values, and to discard features
-    # for such entries
-
     # result array
     sequence = []
 
@@ -1352,17 +1320,27 @@ def _serialize_sequence(obj, indent=5):
     obj : DNA, RNA, Sequence Obj
     '''
 
-    # magic numbers
-    n = 1
-    line_size = 60
+    # a flag to determine if I wrote header or not
+    flag_header = False
+
+    # magic numbers: there will be 60 letters (AA, bp) on each line
+    chunk_size = 60
+
+    # letters (AA, bp) will be grouped by 10: each group is divided by
+    # one space from each other
     frag_size = 10
 
-    # count bases in sequence
+    # this is the final line length
+    line_size = 80
+
+    # get sequence as a string with lower letters (uniprot will be upper!)
     seq = str(obj).lower()
-    n_a = seq.count("a")
-    n_c = seq.count("c")
-    n_g = seq.count("g")
-    n_t = seq.count("t")
+
+    # count bases in sequence
+    n_a = sum(obj.frequencies({"a", "A"}).values())
+    n_c = sum(obj.frequencies({"c", "C"}).values())
+    n_g = sum(obj.frequencies({"g", "G"}).values())
+    n_t = sum(obj.frequencies({"t", "T"}).values())
     n_others = len(obj) - (n_a + n_c + n_g + n_t)
 
     # define SQ like this:
@@ -1374,45 +1352,46 @@ def _serialize_sequence(obj, indent=5):
     SQ = SQ.format(size=len(obj), unit=obj.metadata["LOCUS"]["unit"].upper(),
                    n_a=n_a, n_c=n_c, n_g=n_g, n_t=n_t, n_others=n_others)
 
-    for i in range(0, len(seq), line_size):
-        line = seq[i:i+line_size]
-        s = '{key:<{indent}}{s}'.format(
-            key='', indent=indent, s=chunk_str(line, frag_size, ' '))
+    # fasta sequence will have indent spaces on the left, chunk_size/frag_size
+    # groups of frag_size letters separated by n-1 groups of single spaces,
+    # then the sequence length aligned on the right to get a string of
+    # line_size. Calculate padding for semplicity
+    n_frags = int(chunk_size / frag_size)
+    pad_right = chunk_size + n_frags-1
+    pad_left = line_size - pad_right - indent
+
+    for i in range(0, len(seq), chunk_size):
+        line = seq[i:i+chunk_size]
         # pad string left and right
-        s = '{:<70}'.format(s) + '{:>10}\n'.format(i+len(line))
-        if n == 1:
-            # Add SQ header to sequence
+        s = '{indent}{s:<{pad_right}}{pos:>{pad_left}}\n'.format(
+            indent=" "*indent,
+            s=chunk_str(line, frag_size, ' '),
+            pad_left=pad_left,
+            pos=i+len(line),
+            pad_right=pad_right)
+
+        if not flag_header:
+            # First time here. Add SQ header to sequence
             s = SQ + s
-        n = n + line_size
+
+            # When I added header, I need to turn off this flag
+            flag_header = True
+
         yield s
 
 
-def _embl_parse_feature_table(lines, metadata):
+def _embl_parse_feature_table(lines, length):
     """Parse embl feature tables"""
-
-    # get size of the feature
-    length = metadata["LOCUS"]["size"]
-
-    if "PARENT_ACCESSION" in metadata:
-        # this is a feature-level-products entry and features are relative
-        # to parent accession; in the same way a subset of a Sequence objcet
-        # has no interval metadata, I will refuse to process interval
-        # metadata here
-        return
 
     # define interval metadata
     imd = IntervalMetadata(length)
 
-    # remove feature header table
-    idxs = [i for i, line in enumerate(lines) if line.startswith("FH")]
-    lines = [line for i, line in enumerate(lines) if i not in idxs]
+    # get only FT records, and remove key from line
+    lines = [line[2:] for line in lines if line.startswith('FT')]
 
-    # remove FT from the header
-    lines = [line.replace("FT", "  ", 1) for line in lines]
-
-    # magic number 21: the lines following header of each feature
-    # are indented with 21 spaces.
-    feature_indent = ' ' * 21
+    # magic number 19: after key removal, the lines of each feature
+    # are indented with 19 spaces.
+    feature_indent = ' ' * 19
 
     section_splitter = _yield_section(
         lambda x: not x.startswith(feature_indent),
@@ -1430,7 +1409,7 @@ def _serialize_feature_table(intervals, indent=21):
     intervals : list of ``Interval``
     '''
 
-    # define a embl wrrapper object. I need to replace only the first two
+    # define a embl wrapper object. I need to replace only the first two
     # characters from _serialize_single_feature output
     wrapper = _get_embl_wrapper("FT", indent=2, subsequent_indent=21)
 
@@ -1440,14 +1419,14 @@ def _serialize_feature_table(intervals, indent=21):
 
         # I need to remove two spaces, cause I will add a FT key
         for line in tmp.split("\n"):
-            output += wrapper.wrap(re.sub("^  ", "", line))
+            output += wrapper.wrap(line[2:])
 
         # re add newline between elements, and a final "\n"
         yield "\n".join(output) + "\n"
 
 
 def _parse_date(lines, label_delimiter=None, return_label=False):
-    """Parse embl data records"""
+    """Parse embl date records"""
 
     data = []
     line = lines[0]
