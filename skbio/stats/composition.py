@@ -218,7 +218,7 @@ def multiplicative_replacement(mat, delta=None):
 
     zcnts = 1 - tot * delta
     if np.any(zcnts) < 0:
-        raise ValueError('The multiplicative replacment created negative '
+        raise ValueError('The multiplicative replacement created negative '
                          'proportions. Consider using a smaller `delta`.')
     mat = np.where(z_mat, delta, zcnts * mat)
     return mat.squeeze()

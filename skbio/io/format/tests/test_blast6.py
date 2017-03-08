@@ -115,5 +115,6 @@ class TestBlast6Reader(unittest.TestCase):
                                                'qstart', 'qend', 'sstart',
                                                'send', 'abcd', 'bitscore'])
 
+
 if __name__ == '__main__':
     unittest.main()

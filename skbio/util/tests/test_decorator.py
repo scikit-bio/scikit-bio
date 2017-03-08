@@ -347,5 +347,6 @@ class TestDeprecated(TestStabilityState):
         self.assertRaises(ValueError, deprecated, as_of='0.1.0')
         self.assertRaises(ValueError, deprecated, as_of='0.1.0', until='0.1.4')
 
+
 if __name__ == '__main__':
     unittest.main()
