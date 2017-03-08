@@ -232,5 +232,6 @@ def _motif_nitro_glycosylation(sequence, min_length, ignore):
     """Identifies N-glycosylation runs"""
     return sequence.find_with_regex("(N[^PX][ST][^PX])", ignore=ignore)
 
+
 # Leave this at the bottom
 _motifs.interpolate(Protein, "find_motifs")

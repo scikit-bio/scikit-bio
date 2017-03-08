@@ -764,5 +764,6 @@ class TestAlignmentStructure(TestSSW):
         self.assertEqual(None, alignment.aligned_target_sequence)
         self.assertEqual(None, alignment.aligned_query_sequence)
 
+
 if __name__ == '__main__':
     main()

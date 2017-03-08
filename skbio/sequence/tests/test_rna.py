@@ -49,5 +49,6 @@ class TestRNA(unittest.TestCase):
             class CustomSequence(RNA):
                 pass
 
+
 if __name__ == '__main__':
     unittest.main()

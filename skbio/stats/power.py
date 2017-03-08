@@ -1072,8 +1072,21 @@ def _draw_paired_samples(meta_pairs, index, num_samps):
 
     subs = []
 
-    # Draws the other groups
-    for set_, num_ in collections.Counter(set_pos).items():
+    # Draws the other groups. Get a collection.Counter object for simplicity
+    counter = collections.Counter(set_pos)
+
+    # counter.items() order isn't guaranteed in python 3.6 and then the random
+    # choice isn't reproducible between python version, even specifying seed;
+    # so we access such values through sets.
+    set_list = set(set_pos)
+
+    # then, as stated by @RNAer, since we can't assure that items in sets are
+    # ordered, we choose to order set_list before accessing values
+    set_list = sorted(set_list)
+
+    # now set_list is ordered and we can iterate over it to get counter obj
+    for set_ in set_list:
+        num_ = counter[set_]
         r2 = [np.random.choice(col, num_, replace=False) for col in
               meta_pairs[set_]]
         subs.append(r2)
