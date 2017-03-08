@@ -1301,13 +1301,10 @@ def _parse_sequence(lines):
             continue
 
         # remove the numbers inside strings. revome spaces around string
-        line = ''.join([i for i in line.strip() if not i.isdigit()])
+        items = [i for i in line.split() if not i.isdigit()]
 
-        # remove space from sequence
-        line = line.replace(" ", "")
-
-        # append each line sequence to sequence list
-        sequence.append(line)
+        # append each sequence items to sequence list
+        sequence += items
 
     return ''.join(sequence)
 
@@ -1336,17 +1333,27 @@ def _serialize_sequence(obj, indent=5):
     # get sequence as a string with lower letters (uniprot will be upper!)
     seq = str(obj).lower()
 
-    # count bases in sequence
-    n_a = sum(obj.frequencies({"a", "A"}).values())
-    n_c = sum(obj.frequencies({"c", "C"}).values())
-    n_g = sum(obj.frequencies({"g", "G"}).values())
-    n_t = sum(obj.frequencies({"t", "T"}).values())
+    # count bases in sequence. Frequencies returns a dictionary of occurences
+    # of A,C,G,T. Sequences are stored always in capital letters
+    freq = obj.frequencies()
+
+    # get values instead of popping them: I can't assure that the letter T,
+    # for example, is always present
+    n_a = freq.get('A', 0)
+    n_c = freq.get('C', 0)
+    n_g = freq.get('G', 0)
+    n_t = freq.get('T', 0)
+
+    # this will be the count of all others letters (more than ACGT)
     n_others = len(obj) - (n_a + n_c + n_g + n_t)
 
     # define SQ like this:
     # SQ   Sequence 275 BP; 63 A; 72 C; 88 G; 52 T; 0 other;
     SQ = "SQ   Sequence {size} {unit}; {n_a} A; {n_c} C; {n_g} G; " +\
          "{n_t} T; {n_others} other;\n"
+
+    # TODO: deal with protein SQ: they have a sequence header like:
+    # SQ   SEQUENCE   256 AA;  29735 MW;  B4840739BF7D4121 CRC64;
 
     # apply format
     SQ = SQ.format(size=len(obj), unit=obj.metadata["LOCUS"]["unit"].upper(),
@@ -1428,13 +1435,11 @@ def _serialize_feature_table(intervals, indent=21):
 def _parse_date(lines, label_delimiter=None, return_label=False):
     """Parse embl date records"""
 
-    data = []
-
     # take the first line, and derive a label
-    label, section = lines[0].split(label_delimiter, 1)
+    label = lines[0].split(label_delimiter, 1)[0]
 
     # read all the others dates and append to data array
-    data.extend(line.split(label_delimiter, 1)[-1] for line in lines)
+    data = [line.split(label_delimiter, 1)[-1] for line in lines]
 
     # strip returned data
     data = [i.strip() for i in data]
