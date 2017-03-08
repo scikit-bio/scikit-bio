@@ -973,8 +973,7 @@ def ancom(table, grouping,
 
     # Multiple comparisons
     if multiple_comparisons_correction == 'holm-bonferroni':
-        logratio_mat = np.apply_along_axis(_holm_bonferroni,
-                                           1, logratio_mat)
+        logratio_mat = np.vstack([_holm_bonferroni(i) for i in logratio_mat])
     np.fill_diagonal(logratio_mat, 1)
     W = (logratio_mat < alpha).sum(axis=1)
     c_start = W.max() / n_feat
@@ -1078,11 +1077,9 @@ def _log_compare(mat, cats,
         return significance_test(*[x[cats == k] for k in cs])
 
     for i in range(c-1):
-        ratio = (log_mat[:, i].T - log_mat[:, i+1:].T).T
-        m, p = np.apply_along_axis(func,
-                                   axis=0,
-                                   arr=ratio)
-        log_ratio[i, i+1:] = np.squeeze(np.array(p.T))
+        ratio = (log_mat[:, i].T - log_mat[:, i+1:].T)
+        p = np.array([func(i)[1] for i in ratio])
+        log_ratio[i, i+1:] = np.squeeze(p)
     return log_ratio
 
 
