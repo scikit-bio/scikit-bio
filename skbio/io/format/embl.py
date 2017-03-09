@@ -1139,7 +1139,7 @@ def _serialize_reference(header, obj, cross_references, indent=5):
     reference = []
     sort_order = ["RC", "RP", "RX", "RG", "RA", "RT", "RL"]
 
-    # deal with rx pattern and RP pattern
+    # deal with RX pattern and RP pattern
     RX = re.compile("([^;\s]*); ([^\s]*)")
     RP = re.compile("bases (\d+) to (\d+)")
 
@@ -1160,9 +1160,15 @@ def _serialize_reference(header, obj, cross_references, indent=5):
             if cross_reference:
                 data["CROSS_REFERENCE"] = cross_reference
 
-            # delete PUBMED key (already present ion CROSS_REFERENCE)
+            # delete PUBMED key (already present in CROSS_REFERENCE)
             if "PUBMED" in data:
                 del(data["PUBMED"])
+
+        else:
+            # no cross reference, do I have PUBMED in data?
+            if "PUBMED" in data:
+                # add a fake CROSS_REFERENCE
+                data["CROSS_REFERENCE"] = 'PUBMED; %s.' % data["PUBMED"]
 
         # get an embl wrapper
         wrapper = _get_embl_wrapper(embl_key, indent)
