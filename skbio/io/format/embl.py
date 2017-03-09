@@ -761,7 +761,7 @@ def _parse_single_embl(chunks):
     # eval if entry is a feature level product or not
     if "ACCESSION" in metadata:
         metadata["VERSION"] = "{accession}.{version}".format(
-                accession=metadata["LOCUS"]["locus_name"],
+                accession=metadata["ACCESSION"].split(";")[0],
                 version=metadata["LOCUS"]["version"])
 
     elif "PARENT_ACCESSION" in metadata:
@@ -831,7 +831,7 @@ def _serialize_single_embl(obj, fh):
             # deal with special source case, add cross references if needed
             if header == "REFERENCE":
                 serializer = partial(
-                    serializer, cross_references=md["CROSS_REFERENCE"])
+                    serializer, cross_references=md.get("CROSS_REFERENCE"))
 
             elif header == "LOCUS":
                 # pass also metadata (in case of entries from genbank)
@@ -1153,15 +1153,16 @@ def _serialize_reference(header, obj, cross_references, indent=5):
         embl_key = "RN"
 
         # get cross_references
-        cross_reference = cross_references[i]
+        if cross_references:
+            cross_reference = cross_references[i]
 
-        # append cross reference [i] to data (obj[i]) (if they exists)
-        if cross_reference:
-            data["CROSS_REFERENCE"] = cross_reference
+            # append cross reference [i] to data (obj[i]) (if they exists)
+            if cross_reference:
+                data["CROSS_REFERENCE"] = cross_reference
 
-        # delete PUBMED key (already present ion CROSS_REFERENCE)
-        if "PUBMED" in data:
-            del(data["PUBMED"])
+            # delete PUBMED key (already present ion CROSS_REFERENCE)
+            if "PUBMED" in data:
+                del(data["PUBMED"])
 
         # get an embl wrapper
         wrapper = _get_embl_wrapper(embl_key, indent)

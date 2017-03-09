@@ -875,26 +875,59 @@ class Convertertest(EMBLIOTests):
             DNA.write(genbank, format="embl", file=fh)
 
             # EMBL can't deal with genbank version (ie M14399.1  GI:145229)
-#            # read embl data and write to gb
-#            fh.seek(0)
-#            embl = DNA.read(fh, format="embl")
+            # read embl data and write to gb
+            fh.seek(0)
+            embl = DNA.read(fh, format="embl")
 
-#        with io.StringIO() as fh:
-#            DNA.write(embl, format="genbank", file=fh)
-#
-#            # read gb data
-#            obs = fh.getvalue()
-#
-#        with open(self.genbank_fp) as fh:
-#            exp = fh.read()
-#
-#        self.assertEqual(exp, obs)
+        with io.StringIO() as fh:
+            DNA.write(embl, format="genbank", file=fh)
+
+            # read gb data
+            obs = fh.getvalue()
+
+        with open(self.genbank_fp) as fh:
+            exp = fh.read()
+
+        self.assertEqual(exp, obs)
 
     def test_embl_to_gb(self):
         genbank = DNA.read(self.single_rna_fp, format="embl")
 
         with io.StringIO() as fh:
             DNA.write(genbank, format="genbank", file=fh)
+
+    def test_roundtrip_conversion(self):
+        """Do a roundtrip conversion"""
+
+        # EMBL records have more features than genbank, (ex more than one date,
+        # embl class, DOI cross references) so I can't convert an embl to gb
+        # and then to embl keeping all those data. But I can start from
+        # genbank record
+
+        # do genbank file -> genbank object -> embl file -> embl object ->
+        # genbank file. Ensure that first and last files are identical
+        genbank = DNA.read(self.genbank_fp, format="genbank")
+
+        # "write" genbank record in a embl file
+        with io.StringIO() as fh:
+            DNA.write(genbank, format="embl", file=fh)
+
+            # read embl file
+            fh.seek(0)
+            embl = DNA.read(fh, format="embl")
+
+        # "write" embl record in a genbank file
+        with io.StringIO() as fh:
+            DNA.write(embl, format="genbank", file=fh)
+
+            # read file object
+            obs = fh.getvalue()
+
+        with open(self.genbank_fp) as fh:
+            exp = fh.read()
+
+        self.assertEqual(exp, obs)
+
 
 if __name__ == '__main__':
     main()
