@@ -1334,8 +1334,12 @@ def _serialize_sequence(obj, indent=5):
     # one space from each other
     frag_size = 10
 
-    # this is the final line length
-    line_size = 80
+    # fasta sequence will have indent spaces on the left, chunk_size/frag_size
+    # groups of frag_size letters separated by n-1 groups of single spaces,
+    # then the sequence length aligned on the right to get a string of
+    # line_size. Setting left and right padding for semplicity
+    pad_right = 65  # there are also 5 columns for indentation
+    pad_left = 10  # sequence number will be in the last 10 columns
 
     # get sequence as a string with lower letters (uniprot will be upper!)
     seq = str(obj).lower()
@@ -1365,14 +1369,6 @@ def _serialize_sequence(obj, indent=5):
     # apply format
     SQ = SQ.format(size=len(obj), unit=obj.metadata["LOCUS"]["unit"].upper(),
                    n_a=n_a, n_c=n_c, n_g=n_g, n_t=n_t, n_others=n_others)
-
-    # fasta sequence will have indent spaces on the left, chunk_size/frag_size
-    # groups of frag_size letters separated by n-1 groups of single spaces,
-    # then the sequence length aligned on the right to get a string of
-    # line_size. Calculate padding for semplicity
-    n_frags = int(chunk_size / frag_size)
-    pad_right = chunk_size + n_frags-1
-    pad_left = line_size - pad_right - indent
 
     for i in range(0, len(seq), chunk_size):
         line = seq[i:i+chunk_size]
