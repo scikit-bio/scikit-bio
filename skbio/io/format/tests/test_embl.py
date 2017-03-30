@@ -439,47 +439,6 @@ class EMBLIOTests(TestCase):
         # a embl constructed sequence file path
         self.embl_constructed_fp = get_data_path("embl_constructed")
 
-        # a embl constructed sequence
-        self.embl_constructed = (
-            '',
-            {'ACCESSION': 'LT357133;',
-             'CROSS_REFERENCE': [None],
-             'DATE': ['18-SEP-2016 (Rel. 130, Created)',
-                      '18-SEP-2016 (Rel. 130, Last updated, Version 1)'],
-             'DBSOURCE': 'MD5; 90c05497c7cde972dc52b8d06097f88c. ENA; '
-                         'FJUZ01000000; SET. ENA; FJUZ00000000; SET. '
-                         'BioSample; SAMEA3707213.',
-             'DEFINITION': 'Spodoptera frugiperda genome assembly, '
-                           'scaffold: C262451',
-             'KEYWORDS': '.',
-             'LOCUS': {'class': 'CON',
-                       'date': '18-SEP-2016',
-                       'division': 'INV',
-                       'locus_name': 'LT357133',
-                       'mol_type': 'genomic DNA',
-                       'shape': 'linear',
-                       'size': 140,
-                       'unit': 'bp',
-                       'version': 1},
-             'PROJECT_IDENTIFIER': 'Project:PRJEB12116;',
-             'REFERENCE': [
-                {'AUTHORS': 'Landry J.;',
-                 'JOURNAL': 'Submitted (16-MAR-2016) to the INSDC. EMBL, '
-                            'Genemics Core Facility, Meyerhofstrasse 1,, '
-                            '69117 Heidelberg, Germany',
-                 'REFERENCE': '1',
-                 'TITLE': ';'}],
-             'SOURCE': {
-               'ORGANISM': 'Spodoptera frugiperda (fall armyworm)',
-               'taxonomy': 'Eukaryota; Metazoa; Ecdysozoa; Arthropoda; '
-                           'Hexapoda; Insecta; Pterygota; Neoptera; '
-                           'Endopterygota; Lepidoptera; Glossata; Ditrysia; '
-                           'Noctuoidea; Noctuidae; Amphipyrinae; Spodoptera.'},
-             'VERSION': 'LT357133.1',
-             'CONSTRUCTED': 'join(FJUZ01138823.1:1..140)'},
-            None,
-            DNA)
-
         # a simple embl version to perform embl->gb->embl conversion
         self.single_rna_simple_fp = get_data_path(
                 "embl_single_record_simple")
@@ -707,12 +666,11 @@ AS   1-426          AC004528.1
 
     # deal with constructed sequences: ignore interval metadata
     def test_constructed_sequences(self):
-        seq, md, imd, constructor = self.embl_constructed
-        obs = _embl_to_dna(self.embl_constructed_fp)
-        exp = constructor(seq, metadata=md,
-                          lowercase=True, interval_metadata=imd)
+        with self.assertRaisesRegex(
+                EMBLFormatError,
+                "There's no support for embl CON record"):
 
-        self.assertEqual(obs, exp)
+            _embl_to_dna(self.embl_constructed_fp)
 
 
 class WriterTests(EMBLIOTests):

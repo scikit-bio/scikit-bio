@@ -747,12 +747,6 @@ def _parse_single_embl(chunks):
             date = metadata[section_name][-1].split()[0]
             metadata["LOCUS"]["date"] = date
 
-        elif section_name == 'CONSTRUCTED':
-            # entries like http://www.ebi.ac.uk/ena/data/view/LT357133
-            # doesn't have sequence, so no intervalmetadata (delete them)
-            interval_metadata = None
-            metadata[section_name] = parsed
-
         # parse all the others sections (SOURCE, ...)
         else:
             metadata[section_name] = parsed
@@ -934,6 +928,15 @@ def _parse_id(lines):
     except:
         raise EMBLFormatError(
             "Could not parse the ID line:\n%s" % line)
+
+    # check for CON entries:
+    if res['class'] == "CON":
+        # entries like http://www.ebi.ac.uk/ena/data/view/LT357133
+        # doesn't have sequence, so can't be read by skbio.sequence
+        raise EMBLFormatError(
+            "There's no support for embl CON record: for more information "
+            "see issue-1506 (https://github.com/biocore/scikit-bio/issues/"
+            "1506)")
 
     # those values are integer
     res['size'] = int(res['size'])
