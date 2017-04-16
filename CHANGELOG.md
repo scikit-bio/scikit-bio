@@ -18,6 +18,7 @@
 ### Performance enhancements
 
 ### Bug fixes
+* `skbio.TreeNode.tips()` enables the `include_self` parameter if the node of interest happens to be a tip.
 
 ### Deprecated functionality [stable]
 

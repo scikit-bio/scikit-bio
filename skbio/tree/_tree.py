@@ -1314,7 +1314,7 @@ class TreeNode(SkbioObject):
         e
 
         """
-        for n in self.postorder(include_self=False):
+        for n in self.postorder(include_self=include_self):
             if n.is_tip():
                 yield n
 
