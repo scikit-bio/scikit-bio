@@ -831,7 +831,8 @@ class TreeTests(TestCase):
 
     def test_tips_self(self):
         tree = TreeNode.read(['(c, (b,a)x)y;'])
-        self.assertEqual(next(tree.children[0].tips(include_self=True)).name, 'c')
+        t = next(tree.children[0].tips(include_self=True))
+        self.assertEqual(t.name, 'c')
 
     def test_pre_and_postorder(self):
         """Pre and post order traversal of the tree"""
