@@ -489,6 +489,38 @@ class DissimilarityMatrix(SkbioObject):
         """
         return pd.DataFrame(data=self.data, index=self.ids, columns=self.ids)
 
+    @experimental(as_of="0.5.0")
+    def to_series(self):
+        """Create a ``pandas.Series`` from this ``DissimilarityMatrix``.
+        Returns
+        -------
+        pd.Series
+            ``pd.Series`` with IDs on index.
+        Examples
+        --------
+        >>> from skbio import DistanceMatrix
+        >>>>>> dm = DistanceMatrix([[0, 1, 2],[1,0,3],[2,3,0]], ids=['a','b','c'])
+        >>> dm.to_data_frame()
+            a    b    c
+        a  0.0  1.0  2.0
+        b  1.0  0.0  3.0
+        c  2.0  3.0  0.0
+        >>> dm.to_series()
+        a  a    0.0
+           b    1.0
+           c    2.0
+        b  a    1.0
+           b    0.0
+           c    3.0
+        c  a    2.0
+           b    3.0
+           c    0.0
+        dtype: float64
+        """
+        df = pd.DataFrame(data=self.data, index=self.ids, columns=self.ids)
+        stacked = df.stack()
+        return pd.Series(stacked)
+ 
     @experimental(as_of="0.4.0")
     def __str__(self):
         """Return a string representation of the dissimilarity matrix.
