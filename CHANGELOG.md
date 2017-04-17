@@ -18,7 +18,7 @@
 ### Performance enhancements
 
 ### Bug fixes
-* The include_self was not being honored in TreeNode.tips. The scope of this bug was that if tips was called on a tip, it would always result in an empty list when unrolled.
+* The `include_self` parameter  was not being honored in `skbio.TreeNode.tips`. The scope of this bug was that if tips was called on a tip, it would always result in an empty list when unrolled.
 
 ### Deprecated functionality [stable]
 
