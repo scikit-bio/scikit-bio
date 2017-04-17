@@ -830,9 +830,13 @@ class TreeTests(TestCase):
         self.assertEqual(obs2, exp)
 
     def test_tips_self(self):
+        """ See issue #1509 """
         tree = TreeNode.read(['(c, (b,a)x)y;'])
-        t = next(tree.children[0].tips(include_self=True))
+        ts = list(tree.find('c').tips(include_self=True))
+        self.assertEqual(len(ts), 1)
+        t = ts[0]
         self.assertEqual(t.name, 'c')
+        self.assertTrue(t.is_tip())
 
     def test_pre_and_postorder(self):
         """Pre and post order traversal of the tree"""
