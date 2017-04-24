@@ -16,6 +16,7 @@
 ### Backward-incompatible changes [experimental]
 
 ### Performance enhancements
+* `skbio.tree.nj` wall-clock time was decreased about 66% by vectorizing `skbio.tree._nj._compute_q`.
 
 ### Bug fixes
 * The `include_self` parameter was not being honored in `skbio.TreeNode.tips`. The scope of this bug was that if `TreeNode.tips` was called on a tip, it would always result in an empty `list` when unrolled.
