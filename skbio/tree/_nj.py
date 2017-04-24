@@ -175,10 +175,11 @@ def _compute_q(dm):
     """
     q = np.zeros(dm.shape)
     n = dm.shape[0]
-    for i in range(n):
-        for j in range(i):
-            q[i, j] = q[j, i] = \
-                ((n - 2) * dm[i, j]) - dm[i].sum() - dm[j].sum()
+    dmv = dm.to_data_frame().values
+    big_sum = np.array([dmv.sum(1)] * dm.shape[0])
+    big_sum_diffs = big_sum + big_sum.T
+    q = (n - 2) * dmv - big_sum_diffs
+    np.fill_diagonal(q, 0)
     return DistanceMatrix(q, dm.ids)
 
 
