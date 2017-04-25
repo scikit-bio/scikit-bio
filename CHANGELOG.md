@@ -16,7 +16,7 @@
 ### Backward-incompatible changes [experimental]
 
 ### Performance enhancements
-* `skbio.tree.nj` wall-clock time was decreased about 66% by vectorizing `skbio.tree._nj._compute_q`. ([#1512](https://github.com/biocore/scikit-bio/pull/1512))
+* `skbio.tree.nj` wall-clock time was decreased about 99% by vectorizing `skbio.tree._nj._compute_q` and avoiding unnecessary recalculations. ([#1512](https://github.com/biocore/scikit-bio/pull/1512), [#XXXX](https://github.com/biocore/scikit-bio/pull/XXXX))
 
 ### Bug fixes
 * The `include_self` parameter was not being honored in `skbio.TreeNode.tips`. The scope of this bug was that if `TreeNode.tips` was called on a tip, it would always result in an empty `list` when unrolled.
