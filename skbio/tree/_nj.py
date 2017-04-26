@@ -157,9 +157,12 @@ def nj(dm, disallow_negative_branch_length=True, result_constructor=None):
     # ...then determine their distance to the other remaining node, but first
     # handle the trival case where the input dm was only 3 x 3
     node_definition = node_definition or dm.ids[0]
-    internal_len = _otu_to_new_node(
-        dm, pair_member_1, pair_member_2, node_definition,
-        disallow_negative_branch_length=disallow_negative_branch_length)
+    internal_len = 0.5 * (dm[pair_member_1, node_definition] +
+                          dm[pair_member_2, node_definition] -
+                          dm[pair_member_1, pair_member_2])
+    if disallow_negative_branch_length and internal_len < 0:
+        internal_len = 0
+
     # ...and finally create the newick string describing the whole tree.
     newick = "(%s:%f, %s:%f, %s:%f);" % (pair_member_1, pair_member_1_len,
                                          node_definition, internal_len,
@@ -175,10 +178,9 @@ def _compute_q(dm):
     """
     q = np.zeros(dm.shape)
     n = dm.shape[0]
-    dmv = dm.to_data_frame().values
-    big_sum = np.array([dmv.sum(1)] * dm.shape[0])
+    big_sum = np.array([dm.data.sum(1)] * dm.shape[0])
     big_sum_diffs = big_sum + big_sum.T
-    q = (n - 2) * dmv - big_sum_diffs
+    q = (n - 2) * dm.data - big_sum_diffs
     np.fill_diagonal(q, 0)
     return DistanceMatrix(q, dm.ids)
 
@@ -198,16 +200,16 @@ def _compute_collapsed_dm(dm, i, j, disallow_negative_branch_length,
     out_ids.extend([e for e in dm.ids if e not in (i, j)])
     result = np.zeros((out_n, out_n))
     # pre-populate the result array with known distances
-    dmdf = dm.to_data_frame()
-    dmdf = dmdf.drop([i, j]).drop([i, j], axis=1)
-    result[1:, 1:] = np.array(dmdf)
+    ij_indexes = [dm.index(i), dm.index(j)]
+    result[1:, 1:] = np.delete(np.delete(dm.data, ij_indexes, axis=0),
+                               ij_indexes, axis=1)
     # calculate the new distances from the current DistanceMatrix
     k_to_u = 0.5 * (dm[i] + dm[j] - dm[i, j])
     # set negative branches to 0 if specified
     if disallow_negative_branch_length:
         k_to_u[k_to_u < 0] = 0
     # drop nodes being joined
-    k_to_u = np.delete(k_to_u, [dm.index(i), dm.index(j)])
+    k_to_u = np.delete(k_to_u, ij_indexes)
     # assign the distances to the result array
     result[0] = result[:, 0] = np.array([0] + k_to_u.data.tolist())
     return DistanceMatrix(result, out_ids)
@@ -240,7 +242,7 @@ def _lowest_index(dm):
     return tuple([res_coords[0], res_coords[1]])
 
 
-def _otu_to_new_node(dm, i, j, k, disallow_negative_branch_length):
+def x_otu_to_new_node(dm, i, j, k, disallow_negative_branch_length):
     """Return the distance between a new node and some other node.
 
     Parameters

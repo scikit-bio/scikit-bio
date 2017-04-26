@@ -11,7 +11,7 @@ from unittest import TestCase, main
 
 from skbio import DistanceMatrix, TreeNode, nj
 from skbio.tree._nj import (
-    _compute_q, _compute_collapsed_dm, _lowest_index, _otu_to_new_node,
+    _compute_q, _compute_collapsed_dm, _lowest_index,
     _pair_members_to_new_node)
 
 
@@ -166,20 +166,6 @@ class NjTests(TestCase):
     def test_lowest_index(self):
         self.assertEqual(_lowest_index(self.dm1), (4, 3))
         self.assertEqual(_lowest_index(_compute_q(self.dm1)), (1, 0))
-
-    def test_otu_to_new_node(self):
-        self.assertEqual(_otu_to_new_node(self.dm1, 'a', 'b', 'c', True), 7)
-        self.assertEqual(_otu_to_new_node(self.dm1, 'a', 'b', 'd', True), 7)
-        self.assertEqual(_otu_to_new_node(self.dm1, 'a', 'b', 'e', True), 6)
-
-    def test_otu_to_new_node_zero_branch_length(self):
-        data = [[0, 40, 3],
-                [40, 0, 3],
-                [3, 3, 0]]
-        ids = ['a', 'b', 'c']
-        dm = DistanceMatrix(data, ids)
-        self.assertEqual(_otu_to_new_node(dm, 'a', 'b', 'c', True), 0)
-        self.assertEqual(_otu_to_new_node(dm, 'a', 'b', 'c', False), -17)
 
     def test_pair_members_to_new_node(self):
         self.assertEqual(_pair_members_to_new_node(self.dm1, 'a', 'b', True),
