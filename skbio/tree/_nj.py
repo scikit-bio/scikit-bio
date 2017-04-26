@@ -242,34 +242,6 @@ def _lowest_index(dm):
     return tuple([res_coords[0], res_coords[1]])
 
 
-def x_otu_to_new_node(dm, i, j, k, disallow_negative_branch_length):
-    """Return the distance between a new node and some other node.
-
-    Parameters
-    ----------
-    dm : skbio.DistanceMatrix
-        The input distance matrix.
-    i, j : str
-        Identifiers of entries in the distance matrix to be collapsed. These
-        get collapsed to a new node, internally represented as `u`.
-    k : str
-        Identifier of the entry in the distance matrix for which distance to
-        `u` will be computed.
-    disallow_negative_branch_length : bool
-        Neighbor joining can result in negative branch lengths, which don't
-        make sense in an evolutionary context. If `True`, negative branch
-        lengths will be returned as zero, a common strategy for handling this
-        issue that was proposed by the original developers of the algorithm.
-
-    """
-    k_to_u = 0.5 * (dm[i, k] + dm[j, k] - dm[i, j])
-
-    if disallow_negative_branch_length and k_to_u < 0:
-        k_to_u = 0
-
-    return k_to_u
-
-
 def _pair_members_to_new_node(dm, i, j, disallow_negative_branch_length):
     """Return the distance between a new node and decendants of that new node.
 
