@@ -10,8 +10,6 @@ import io
 
 import numpy as np
 
-from scipy.spatial.distance import squareform
-
 from skbio.stats.distance import DistanceMatrix
 from skbio.tree import TreeNode
 from skbio.util._decorator import experimental
@@ -203,10 +201,15 @@ def _compute_collapsed_dm(dm, i, j, disallow_negative_branch_length,
     dmdf = dm.to_data_frame()
     dmdf = dmdf.drop([i, j]).drop([i, j], axis=1)
     result[1:, 1:] = np.array(dmdf)
-    # scan through the new node intersections & assign those
-    for idx1, out_id1 in enumerate(out_ids[1:]):
-        result[0, idx1 + 1] = result[idx1 + 1, 0] = _otu_to_new_node(
-            dm, i, j, out_id1, disallow_negative_branch_length)
+    # calculate the new distances from the current DistanceMatrix
+    k_to_u = 0.5 * (dm[i] + dm[j] - dm[i, j])
+    # set negative branches to 0 if specified
+    if disallow_negative_branch_length:
+        k_to_u[k_to_u < 0] = 0
+    # drop nodes being joined
+    k_to_u = np.delete(k_to_u, [dm.index(i), dm.index(j)])
+    # assign the distances to the result array
+    result[0] = result[:, 0] = np.array([0] + k_to_u.data.tolist())
     return DistanceMatrix(result, out_ids)
 
 
@@ -220,18 +223,14 @@ def _lowest_index(dm):
     method (#228).
 
     """
-    # convert to an array
-    dmarray = np.array(dm.to_data_frame())
-    # convert to dense, 1-d squareform of distance matrix
-    vec = squareform(dmarray)
     # get the positions of the lowest value
-    results = np.vstack(np.where(dmarray == np.amin(vec))).T
+    results = np.vstack(np.where(dm.data == np.amin(dm.condensed_form()))).T
     # select results in the bottom-left of the array
-    results = [r for r in results if r[0] > r[1]]
+    results = results[results[:, 0] > results[:, 1]]
     # calculate the distances of the results to [0, 0]
-    res_distances = np.sqrt([r[0]**2 + r[1]**2 for r in results])
-    # detect ties & return the point which would have
-    # been produced from the original function
+    res_distances = np.sqrt(results[:, 0]**2 + results[:, 1]**2)
+    # detect distance ties & return the point which would have
+    # been produced by the original function
     if np.count_nonzero(res_distances == np.amin(res_distances)) > 1:
         eqdistres = results[res_distances == np.amin(res_distances)]
         res_coords = eqdistres[np.argmin([r[0] for r in eqdistres])]
