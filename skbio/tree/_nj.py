@@ -157,9 +157,12 @@ def nj(dm, disallow_negative_branch_length=True, result_constructor=None):
     # ...then determine their distance to the other remaining node, but first
     # handle the trival case where the input dm was only 3 x 3
     node_definition = node_definition or dm.ids[0]
-    internal_len = _otu_to_new_node(
-        dm, pair_member_1, pair_member_2, node_definition,
-        disallow_negative_branch_length=disallow_negative_branch_length)
+    internal_len = 0.5 * (dm[pair_member_1, node_definition] +
+                          dm[pair_member_2, node_definition] -
+                          dm[pair_member_1, pair_member_2])
+    if disallow_negative_branch_length and internal_len < 0:
+        internal_len = 0
+
     # ...and finally create the newick string describing the whole tree.
     newick = "(%s:%f, %s:%f, %s:%f);" % (pair_member_1, pair_member_1_len,
                                          node_definition, internal_len,
@@ -175,10 +178,9 @@ def _compute_q(dm):
     """
     q = np.zeros(dm.shape)
     n = dm.shape[0]
-    dmv = dm.to_data_frame().values
-    big_sum = np.array([dmv.sum(1)] * dm.shape[0])
+    big_sum = np.array([dm.data.sum(1)] * dm.shape[0])
     big_sum_diffs = big_sum + big_sum.T
-    q = (n - 2) * dmv - big_sum_diffs
+    q = (n - 2) * dm.data - big_sum_diffs
     np.fill_diagonal(q, 0)
     return DistanceMatrix(q, dm.ids)
 
@@ -197,12 +199,19 @@ def _compute_collapsed_dm(dm, i, j, disallow_negative_branch_length,
     out_ids = [new_node_id]
     out_ids.extend([e for e in dm.ids if e not in (i, j)])
     result = np.zeros((out_n, out_n))
-    for idx1, out_id1 in enumerate(out_ids[1:]):
-        result[0, idx1 + 1] = result[idx1 + 1, 0] = _otu_to_new_node(
-            dm, i, j, out_id1, disallow_negative_branch_length)
-        for idx2, out_id2 in enumerate(out_ids[1:idx1+1]):
-            result[idx1+1, idx2+1] = result[idx2+1, idx1+1] = \
-                dm[out_id1, out_id2]
+    # pre-populate the result array with known distances
+    ij_indexes = [dm.index(i), dm.index(j)]
+    result[1:, 1:] = np.delete(np.delete(dm.data, ij_indexes, axis=0),
+                               ij_indexes, axis=1)
+    # calculate the new distances from the current DistanceMatrix
+    k_to_u = 0.5 * (dm[i] + dm[j] - dm[i, j])
+    # set negative branches to 0 if specified
+    if disallow_negative_branch_length:
+        k_to_u[k_to_u < 0] = 0
+    # drop nodes being joined
+    k_to_u = np.delete(k_to_u, ij_indexes)
+    # assign the distances to the result array
+    result[0] = result[:, 0] = np.concatenate([[0], k_to_u])
     return DistanceMatrix(result, out_ids)
 
 
@@ -216,43 +225,21 @@ def _lowest_index(dm):
     method (#228).
 
     """
-    lowest_value = np.inf
-    for i in range(dm.shape[0]):
-        for j in range(i):
-            curr_index = i, j
-            curr_value = dm[curr_index]
-            if curr_value < lowest_value:
-                lowest_value = curr_value
-                result = curr_index
-    return result
+    # get the positions of the lowest value
+    results = np.vstack(np.where(dm.data == np.amin(dm.condensed_form()))).T
+    # select results in the bottom-left of the array
+    results = results[results[:, 0] > results[:, 1]]
+    # calculate the distances of the results to [0, 0]
+    res_distances = np.sqrt(results[:, 0]**2 + results[:, 1]**2)
+    # detect distance ties & return the point which would have
+    # been produced by the original function
+    if np.count_nonzero(res_distances == np.amin(res_distances)) > 1:
+        eqdistres = results[res_distances == np.amin(res_distances)]
+        res_coords = eqdistres[np.argmin([r[0] for r in eqdistres])]
+    else:
+        res_coords = results[np.argmin(res_distances)]
 
-
-def _otu_to_new_node(dm, i, j, k, disallow_negative_branch_length):
-    """Return the distance between a new node and some other node.
-
-    Parameters
-    ----------
-    dm : skbio.DistanceMatrix
-        The input distance matrix.
-    i, j : str
-        Identifiers of entries in the distance matrix to be collapsed. These
-        get collapsed to a new node, internally represented as `u`.
-    k : str
-        Identifier of the entry in the distance matrix for which distance to
-        `u` will be computed.
-    disallow_negative_branch_length : bool
-        Neighbor joining can result in negative branch lengths, which don't
-        make sense in an evolutionary context. If `True`, negative branch
-        lengths will be returned as zero, a common strategy for handling this
-        issue that was proposed by the original developers of the algorithm.
-
-    """
-    k_to_u = 0.5 * (dm[i, k] + dm[j, k] - dm[i, j])
-
-    if disallow_negative_branch_length and k_to_u < 0:
-        k_to_u = 0
-
-    return k_to_u
+    return tuple([res_coords[0], res_coords[1]])
 
 
 def _pair_members_to_new_node(dm, i, j, disallow_negative_branch_length):
