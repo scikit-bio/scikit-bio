@@ -3,6 +3,8 @@
 ## Version 0.5.1-dev (changes since 0.5.1 go here)
 
 ### Features
+* Added ``skbio.tree_tree._cache_leafcount`` ``skbio.tree_tree._cache_height`` and ``skbio.tree_tree._cache_depth`` for calculating leaf count in subtrees, subtree height, and node depth. This is particularly useful for calculating tree coordinates for visualization ([#1514](https://github.com/biocore/scikit-bio/pull/1514))
+
 * Added ``skbio.io.format.gff3`` for reading and writing GFF3 files for ``DNA``, ``Sequence``, and ``IntervalMetadata`` classes. ([#1450](https://github.com/biocore/scikit-bio/pull/1450))
 
 * `skbio.metadata.IntervalMetadata` constructor has a new keyword argument, `copy_from`, for creating an `IntervalMetadata` object from an existing `IntervalMetadata` object with specified `upper_bound`.
