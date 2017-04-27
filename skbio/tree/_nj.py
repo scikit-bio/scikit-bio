@@ -211,7 +211,6 @@ def _compute_collapsed_dm(dm, i, j, disallow_negative_branch_length,
     # drop nodes being joined
     k_to_u = np.delete(k_to_u, ij_indexes)
     # assign the distances to the result array
-    #result[0] = result[:, 0] = np.array([0] + k_to_u.data.tolist())
     result[0] = result[:, 0] = np.concatenate([[0], k_to_u])
     return DistanceMatrix(result, out_ids)
 
