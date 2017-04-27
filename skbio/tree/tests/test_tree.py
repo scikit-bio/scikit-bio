@@ -1303,6 +1303,42 @@ class TreeTests(TestCase):
         with self.assertRaises(MissingNodeError):
             next(self.simple_t.shuffle(names=['x', 'y']))
 
+    def test_cache_leafcount(self):
+        t = TreeNode.read([r'((a,b)e,(c,d)f,g)r;'])
+        t._cache_leafcount()
+        self.assertEquals(t.find('r').leafcount, 5)
+        self.assertEquals(t.find('e').leafcount, 2)
+        self.assertEquals(t.find('f').leafcount, 2)
+        self.assertEquals(t.find('a').leafcount, 1)
+        self.assertEquals(t.find('b').leafcount, 1)
+        self.assertEquals(t.find('c').leafcount, 1)
+        self.assertEquals(t.find('d').leafcount, 1)
+        self.assertEquals(t.find('g').leafcount, 1)
+        self.assertEquals(t.find('r').leafcount, 5)
+
+    def test_cache_height(self):
+        t = TreeNode.read(io.StringIO("((a:2,b:6)c:4,(d:5,e:1)f:7)r:9;"))
+        t._cache_height()
+        self.assertEquals(t.find('r').height, 21.0)
+        self.assertEquals(t.find('f').height, 12.0)
+        self.assertEquals(t.find('c').height, 10.0)
+        self.assertEquals(t.find('d').height, 5.0)
+        self.assertEquals(t.find('e').height, 1.0)
+        self.assertEquals(t.find('b').height, 6.0)
+        self.assertEquals(t.find('a').height, 2.0)
+
+    def test_cache_depth(self):
+        t = TreeNode.read(io.StringIO("((a:2,b:6)c:4,(d:5,e:1)f:7)r:9;"))
+        t._cache_depth()
+
+        self.assertEquals(t.find('a').depth, 6.0)
+        self.assertEquals(t.find('b').depth, 10.0)
+        self.assertEquals(t.find('c').depth, 13.0)
+        self.assertEquals(t.find('d').depth, 12.0)
+        self.assertEquals(t.find('e').depth, 8.0)
+        self.assertEquals(t.find('f').depth, 16.0)
+        self.assertEquals(t.find('r').depth, 9.0)
+
 
 sample = """
 (

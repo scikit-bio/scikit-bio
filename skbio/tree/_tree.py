@@ -3098,3 +3098,33 @@ class TreeNode(SkbioObject):
 
             yield self
             counter += 1
+
+    def _cache_leafcount(self):
+        """ Counts the number of leaves under each subtree."""
+        for n in self.postorder():
+            if n.is_tip():
+                n.leafcount = 1
+            else:
+                n.leafcount = sum(c.leafcount for c in n.children)
+
+    def _cache_height(self):
+        """ Calculates the height of each subtree."""
+        for n in self.postorder():
+            if n.length is None:
+                raise ValueError('%s in %s has no length.' %
+                                 (n.name, self.__name__))
+            if n.is_tip():
+                n.height = n.length
+
+            else:
+                n.height = max([c.height for c in n.children]) + n.length
+
+    def _cache_depth(self):
+        for n in self.preorder():
+            if n.length is None:
+                raise ValueError('%s in %s has no length.' %
+                                 (n.name, self.__name__))
+            if n.parent:
+                n.depth = n.parent.length + n.length
+            else:
+                n.depth = n.length
