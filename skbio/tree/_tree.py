@@ -3025,12 +3025,14 @@ class TreeNode(SkbioObject):
             root = self.root()
             for n in root.postorder(include_self=True):
                 if n.length is None:
-                    raise ValueError('Missing length.')
-                if n.is_tip():
-                    n._height = n.length
-
+                    l = 0
                 else:
-                    n._height = max([c._height for c in n.children]) + n.length
+                    l = n.length
+
+                if n.is_tip():
+                    n._height = l
+                else:
+                    n._height = max([c._height for c in n.children]) + l
         return self._height
 
     @property
@@ -3041,9 +3043,12 @@ class TreeNode(SkbioObject):
             root = self.root()
             for n in root.preorder(include_self=True):
                 if n.length is None:
-                    raise ValueError('Missing length.')
+                    l = 0
+                else:
+                    l = n.length
+
                 if not n.is_root():
-                    n._depth = n.parent.depth + n.length
+                    n._depth = n.parent.depth + l
                 else:
                     n._depth = 0
         return self._depth
