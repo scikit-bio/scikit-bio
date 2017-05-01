@@ -1305,7 +1305,7 @@ class TreeTests(TestCase):
 
     def test_cache_leafcount(self):
         t = TreeNode.read([r'((a,b)e,(c,d)f,g)r;'])
-        t._cache_leafcount()
+
         self.assertEquals(t.find('r').leafcount, 5)
         self.assertEquals(t.find('e').leafcount, 2)
         self.assertEquals(t.find('f').leafcount, 2)
@@ -1318,7 +1318,7 @@ class TreeTests(TestCase):
 
     def test_cache_height(self):
         t = TreeNode.read(io.StringIO("((a:2,b:6)c:4,(d:5,e:1)f:7)r:9;"))
-        t._cache_height()
+
         self.assertEquals(t.find('r').height, 21.0)
         self.assertEquals(t.find('f').height, 12.0)
         self.assertEquals(t.find('c').height, 10.0)
@@ -1327,9 +1327,13 @@ class TreeTests(TestCase):
         self.assertEquals(t.find('b').height, 6.0)
         self.assertEquals(t.find('a').height, 2.0)
 
+    def test_cache_height_error(self):
+        t = TreeNode.read(io.StringIO("((a:2,b:6)c:4,(d:5,e)f:7)r:9;"))
+        with self.assertRaises(ValueError):
+            t.height
+
     def test_cache_depth(self):
         t = TreeNode.read(io.StringIO("((a:2,b:6)c:4,(d:5,e:1)f:7)r:9;"))
-        t._cache_depth()
 
         self.assertEquals(t.find('a').depth, 6.0)
         self.assertEquals(t.find('b').depth, 10.0)
@@ -1338,6 +1342,11 @@ class TreeTests(TestCase):
         self.assertEquals(t.find('e').depth, 8.0)
         self.assertEquals(t.find('f').depth, 16.0)
         self.assertEquals(t.find('r').depth, 9.0)
+
+    def test_cache_depth_error(self):
+        t = TreeNode.read(io.StringIO("((a:2,b:6)c:4,(d:5,e)f:7)r:9;"))
+        with self.assertRaises(ValueError):
+            t.depth
 
 
 sample = """

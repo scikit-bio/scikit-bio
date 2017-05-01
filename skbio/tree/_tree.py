@@ -3004,6 +3004,50 @@ class TreeNode(SkbioObject):
             cached.append(cache_type(func(node)))
             setattr(node, cache_attrname, reduce(reduce_f, cached))
 
+    @property
+    @experimental(as_of="0.5.1")
+    def leafcount(self):
+        """ The number of leaves under the tree."""
+        if not hasattr(self, '_leafcount'):
+            root = self.root()
+            for n in root.postorder(include_self=True):
+                if n.is_tip():
+                    n._leafcount = 1
+                else:
+                    n._leafcount = sum(c.leafcount for c in n.children)
+        return self._leafcount
+
+    @property
+    @experimental(as_of="0.5.1")
+    def height(self):
+        """ The height of the tree."""
+        if not hasattr(self, '_height'):
+            root = self.root()
+            for n in root.postorder(include_self=True):
+                if n.length is None:
+                    raise ValueError('Missing length.')
+                if n.is_tip():
+                    n._height = n.length
+
+                else:
+                    n._height = max([c._height for c in n.children]) + n.length
+        return self._height
+
+    @property
+    @experimental(as_of="0.5.1")
+    def depth(self):
+        """ The depth of the tree."""
+        if not hasattr(self, '_depth'):
+            root = self.root()
+            for n in root.preorder(include_self=True):
+                if n.length is None:
+                    raise ValueError('Missing length.')
+                if not n.is_root():
+                    n._depth = n.parent.length + n.length
+                else:
+                    n._depth = n.length
+        return self._depth
+
     @experimental(as_of="0.4.0")
     def shuffle(self, k=None, names=None, shuffle_f=np.random.shuffle, n=1):
         """Yield trees with shuffled tip names
@@ -3098,33 +3142,3 @@ class TreeNode(SkbioObject):
 
             yield self
             counter += 1
-
-    def _cache_leafcount(self):
-        """ Counts the number of leaves under each subtree."""
-        for n in self.postorder():
-            if n.is_tip():
-                n.leafcount = 1
-            else:
-                n.leafcount = sum(c.leafcount for c in n.children)
-
-    def _cache_height(self):
-        """ Calculates the height of each subtree."""
-        for n in self.postorder():
-            if n.length is None:
-                raise ValueError('%s in %s has no length.' %
-                                 (n.name, self.__name__))
-            if n.is_tip():
-                n.height = n.length
-
-            else:
-                n.height = max([c.height for c in n.children]) + n.length
-
-    def _cache_depth(self):
-        for n in self.preorder():
-            if n.length is None:
-                raise ValueError('%s in %s has no length.' %
-                                 (n.name, self.__name__))
-            if n.parent:
-                n.depth = n.parent.length + n.length
-            else:
-                n.depth = n.length
