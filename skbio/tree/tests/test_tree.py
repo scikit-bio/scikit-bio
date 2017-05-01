@@ -1337,11 +1337,11 @@ class TreeTests(TestCase):
 
         self.assertEquals(t.find('a').depth, 6.0)
         self.assertEquals(t.find('b').depth, 10.0)
-        self.assertEquals(t.find('c').depth, 13.0)
+        self.assertEquals(t.find('c').depth, 4.0)
         self.assertEquals(t.find('d').depth, 12.0)
         self.assertEquals(t.find('e').depth, 8.0)
-        self.assertEquals(t.find('f').depth, 16.0)
-        self.assertEquals(t.find('r').depth, 9.0)
+        self.assertEquals(t.find('f').depth, 7.0)
+        self.assertEquals(t.find('r').depth, 0)
 
     def test_cache_depth_error(self):
         t = TreeNode.read(io.StringIO("((a:2,b:6)c:4,(d:5,e)f:7)r:9;"))

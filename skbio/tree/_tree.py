@@ -3043,9 +3043,9 @@ class TreeNode(SkbioObject):
                 if n.length is None:
                     raise ValueError('Missing length.')
                 if not n.is_root():
-                    n._depth = n.parent.length + n.length
+                    n._depth = n.parent.depth + n.length
                 else:
-                    n._depth = n.length
+                    n._depth = 0
         return self._depth
 
     @experimental(as_of="0.4.0")
