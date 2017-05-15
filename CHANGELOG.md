@@ -21,7 +21,7 @@
 ### Bug fixes
 * The `include_self` parameter was not being honored in `skbio.TreeNode.tips`. The scope of this bug was that if `TreeNode.tips` was called on a tip, it would always result in an empty `list` when unrolled.
 
-* In `ca`, `proportion_explained` is inclued in the returned `OrdinationResults` object. ([#1345](https://github.com/biocore/scikit-bio/issues/1345))
+* In `skbio.stats.ordination.ca`, `proportion_explained` was missing in the returned `OrdinationResults` object. ([#1345](https://github.com/biocore/scikit-bio/issues/1345))
 
 ### Deprecated functionality [stable]
 
