@@ -18,8 +18,10 @@
 ### Backward-incompatible changes [experimental]
 
 ### Performance enhancements
+* `skbio.tree.nj` wall-clock runtime was decreased by 99% for a 500x500 distance matrix and 93% for a 100x100 distance matrix. ([#1512](https://github.com/biocore/scikit-bio/pull/1512), [#1513](https://github.com/biocore/scikit-bio/pull/1513))
 
 ### Bug fixes
+* The `include_self` parameter was not being honored in `skbio.TreeNode.tips`. The scope of this bug was that if `TreeNode.tips` was called on a tip, it would always result in an empty `list` when unrolled.
 
 ### Deprecated functionality [stable]
 
