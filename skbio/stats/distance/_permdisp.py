@@ -130,6 +130,7 @@ def _compute_centroid_groups(dm, grouping):
     how to do this...?
     we need one centroid per group right...
     """
+    groups = []
     #group samples in pandas dataframe
     dm.samples['grouping'] = grouping
     #compute centroids, store in separate dataframe
@@ -139,11 +140,15 @@ def _compute_centroid_groups(dm, grouping):
     #returns series of euclidean distances from corresponding centroid
     def eu_dist(x):
         return pd.Series([euclidean(x[:-1],
-                         centroids.loc[x.grouping]), x.grouping])
+                         centroids.loc[x.grouping]), x.grouping],
+                         index=['distance', 'grouping'])
     
+    for _, group in dm.samples.apply(eu_dist, axis=1).groupby('grouping'):
+        groups.append(group['distance'].tolist())
+    """   
     groups = dm.samples.apply(eu_dist,
-                              axis=1).groupby(1).aggregate(lambda x: x.tolist())
-      
+            axis=1).groupby('grouping').aggregate({'distance': lambda x: x.tolist()})
+    """
     return groups
 
 def _compute_median_groups(dm, grouping):
