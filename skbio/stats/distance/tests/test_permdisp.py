@@ -94,7 +94,7 @@ class testPERMDISP(TestCase):
         self.assertEqual(obs, exp)
 
         obs_relab = _compute_centroid_groups(dm, self.grouping_uneq_relab)
-        self.assertEqual(obs, obs_relab) 
+        self.assertEqual(obs, obs_relab)
 
     def test_centroids_mixedgroups(self):
         exp = [[2.5847022428144935, 2.285624595858895, 
@@ -113,6 +113,12 @@ class testPERMDISP(TestCase):
         
         obs_null = _compute_centroid_groups(dm, self.grouping_eq)
         self.assertEqual(exp, obs_null)
+    
+    def test_no_permuations(self):
+        stat, pval = permdisp(self.eq_mat, self.grouping_eq, permutations=0)
+        print(pval, np.nan)
+        np.isnan(pval)
+
 
 
 if __name__ == '__main__':
