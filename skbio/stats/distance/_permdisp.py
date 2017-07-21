@@ -20,7 +20,7 @@ from skbio.stats.ordination import pcoa
 from skbio.util._decorator import experimental
 
 @experimental(as_of="0.5.1")
-def permdisp(distance_matrix, grouping, colum=None, test='centroid',
+def permdisp(distance_matrix, grouping, column=None, test='centroid',
                                                     permutations=999):
     """Test for Homogeneity of Multivariate Disperisons using Marti Anderson's
     PERMDISP2 procedure. Add in some more description here...
@@ -83,7 +83,7 @@ def permdisp(distance_matrix, grouping, colum=None, test='centroid',
 
     """
     #first reduce the matrix to euclidean space using pcoa
-    dm = pcoa(distance_matrix)
+    ordination = pcoa(distance_matrix)
     #then we must get the centroid or spatial median of the dm. 
     #so i think what I can do is compute the centroid for each column
     #of the matrix and then create a new group for Zs to be according to 
@@ -115,27 +115,30 @@ def permdisp(distance_matrix, grouping, colum=None, test='centroid',
     if it is what I am looking for then the median function from the same package
     is likely helpful as well
     """
+    sample_size, num_groups, grouping, tri_idxs, distances = _preprocess_input(
+        distance_matrix, grouping, column)
 
-    groups = _compute_centroid_groups(dm, grouping)
+    test_stat_function = partial(dummy, ordination)
+    stat, p_value = _run_monte_carlo_stats(test_stat_function, grouping, 
+                                           permutations)
 
-    stat, pval = _run_monte_carlo_stats(f_oneway, groups[0].tolist(), permutations)
+    return _build_results('PERMDISP', 'F-value', sample_size, num_groups,
+                          stat, p_value, permutations)
 
-    return stat, pval
-
-def _compute_centroid_groups(dm, grouping):
+def _compute_centroid_groups(ordination, grouping):
     """
     so here we want to compute the distance from each point in a group to that
-    groups centroid (Z). Then store those Zs in corresponding groups, then send 
+    groups centroid (Z). Then store those Zs in corresponding groups, then send
     those groups to monte carlo using ANOVA
     how to do this...?
     we need one centroid per group right...
     """
     groups = []
     #group samples in pandas dataframe
-    dm.samples['grouping'] = grouping
+    ordination.samples['grouping'] = grouping
     #compute centroids, store in separate dataframe
-    centroids = dm.samples.groupby('grouping').aggregate(lambda x: x.sum()/
-                                                                    len(x))
+    centroids = ordination.samples.groupby('grouping').aggregate(lambda x: x.sum() /
+                                                                            len(x))
     
     #returns series of euclidean distances from corresponding centroid
     def eu_dist(x):
@@ -143,15 +146,16 @@ def _compute_centroid_groups(dm, grouping):
                          centroids.loc[x.grouping]), x.grouping],
                          index=['distance', 'grouping'])
     
-    for _, group in dm.samples.apply(eu_dist, axis=1).groupby('grouping'):
+    for _, group in ordination.samples.apply(eu_dist, axis=1).groupby('grouping'):
         groups.append(group['distance'].tolist())
-    """   
-    groups = dm.samples.apply(eu_dist,
-            axis=1).groupby('grouping').aggregate({'distance': lambda x: x.tolist()})
-    """
+
     return groups
 
-def _compute_median_groups(dm, grouping):
+def dummy(ordination, grouping):
+    stat, _ = f_oneway(*(_compute_centroid_groups(ordination, grouping)))
+    return stat
+
+def _compute_median_groups(ordination, grouping):
     """
     same deal as compute_centroid but using a spatial median metric
     """
