@@ -67,7 +67,7 @@ def permdisp(distance_matrix, grouping, column=None, test='centroid',
 
     Notes
     -----
-    See [1]_ for the original method reference, as well as 
+    See [1]_ for the original method reference, as well as
     ``vegan::betadisper``, available in R's vegan package [2]_.
 
     References
@@ -84,13 +84,6 @@ def permdisp(distance_matrix, grouping, column=None, test='centroid',
     """
     #first reduce the matrix to euclidean space using pcoa
     ordination = pcoa(distance_matrix)
-    #then we must get the centroid or spatial median of the dm. 
-    #so i think what I can do is compute the centroid for each column
-    #of the matrix and then create a new group for Zs to be according to 
-    #equation (1), store those in appropriate lists and ship them out to
-    #f_oneway. not sure about the permutation test though, because f_oneway
-    #will give back a pvalue as well without having run permutations but 
-    #in R they run permutests after having calculated the betadispersions right?
     
     """
     I am pretty sure that after you compute dists between points and centroids
@@ -118,47 +111,66 @@ def permdisp(distance_matrix, grouping, column=None, test='centroid',
     sample_size, num_groups, grouping, tri_idxs, distances = _preprocess_input(
         distance_matrix, grouping, column)
 
-    test_stat_function = partial(dummy, ordination)
-    stat, p_value = _run_monte_carlo_stats(test_stat_function, grouping, 
+    if test=='centroid':
+        print("Good Morning! I hope you have a beautiful day!")
+        test_stat_function = partial(cen_dummy, ordination)
+    elif test=='median':
+        print("Good afternoon beautiful! I hope that you die in a fire!")
+        test_stat_function = partial(med_dummy, ordination)
+    else:
+        raise ValueError('Test must be centroid or median')
+
+    stat, p_value = _run_monte_carlo_stats(test_stat_function, grouping,
                                            permutations)
 
     return _build_results('PERMDISP', 'F-value', sample_size, num_groups,
                           stat, p_value, permutations)
 
 def _compute_centroid_groups(ordination, grouping):
-    """
-    so here we want to compute the distance from each point in a group to that
-    groups centroid (Z). Then store those Zs in corresponding groups, then send
-    those groups to monte carlo using ANOVA
-    how to do this...?
-    we need one centroid per group right...
-    """
+
     groups = []
     #group samples in pandas dataframe
     ordination.samples['grouping'] = grouping
     #compute centroids, store in separate dataframe
-    centroids = ordination.samples.groupby('grouping').aggregate(lambda x: x.sum() /
-                                                                            len(x))
+    centroids = ordination.samples.groupby('grouping').aggregate(
+                                                     lambda x: x.sum()/len(x))
     
-    #returns series of euclidean distances from corresponding centroid
+    #returns series of euclidean distances from each point to its centroid
     def eu_dist(x):
         return pd.Series([euclidean(x[:-1],
                          centroids.loc[x.grouping]), x.grouping],
                          index=['distance', 'grouping'])
     
-    for _, group in ordination.samples.apply(eu_dist, axis=1).groupby('grouping'):
+    for _, group in ordination.samples.apply(eu_dist,
+                                             axis=1).groupby('grouping'):
         groups.append(group['distance'].tolist())
 
     return groups
 
-def dummy(ordination, grouping):
+def cen_dummy(ordination, grouping):
     stat, _ = f_oneway(*(_compute_centroid_groups(ordination, grouping)))
     return stat
 
 def _compute_median_groups(ordination, grouping):
-    """
-    same deal as compute_centroid but using a spatial median metric
-    """
+    
+    groups = []
 
-    return 0 
+    ordination.samples['grouping'] = grouping
 
+    medians = ordination.samples.groupby('grouping').aggregate(
+                                                     lambda x: np.median(x, axis=0))
+    
+    def eu_dist(x):
+        return pd.Series([euclidean(x[:-1],
+                         medians.loc[x.grouping]), x.grouping],
+                         index=['distance', 'grouping'])
+
+    for _, group in ordination.samples.apply(eu_dist,
+                                             axis=1).groupby('grouping'):
+        groups.append(group['distance'].tolist())
+    
+    return groups
+
+def med_dummy(ordination, grouping):
+    stat, _ = f_oneway(*(_compute_median_groups(ordination, grouping)))
+    return stat
