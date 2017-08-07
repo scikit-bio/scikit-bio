@@ -112,6 +112,7 @@ class SubsampleCountsTests(unittest.TestCase):
         # Input has too counts, but should work with bootstrap
         subsample_counts([0, 5, 0], 6, replace=True)
 
+
 class ISubsampleTests(unittest.TestCase):
     def setUp(self):
         np.random.seed(123)
