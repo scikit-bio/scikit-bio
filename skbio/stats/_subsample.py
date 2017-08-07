@@ -231,7 +231,7 @@ def subsample_counts(counts, n, replace=False):
         raise ValueError("Only 1-D vectors are supported.")
 
     counts_sum = counts.sum()
-    if n > counts_sum:
+    if n > counts_sum and not replace:
         raise ValueError("Cannot subsample more items than exist in input "
                          "counts vector.")
 
