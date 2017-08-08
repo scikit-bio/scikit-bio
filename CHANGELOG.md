@@ -3,7 +3,7 @@
 ## Version 0.5.1-dev (changes since 0.5.1 go here)
 
 ### Features
-* Removing ValueError check in `skbio.stats._subsample.subsample_counts` when `replace=True` [#1527](https://github.com/biocore/scikit-bio/pull/1527)i
+* Removing ValueError check in `skbio.stats._subsample.subsample_counts` when `replace=True` and `n` is greater than the number of items in counts.  [#1527](https://github.com/biocore/scikit-bio/pull/1527)
 
 * ``skbio.io.format.gff3`` for reading and writing GFF3 files for ``DNA``, ``Sequence``, and ``IntervalMetadata`` classes. ([#1450](https://github.com/biocore/scikit-bio/pull/1450))
 
