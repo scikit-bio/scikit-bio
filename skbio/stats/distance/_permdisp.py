@@ -16,6 +16,8 @@ from scipy.spatial.distance import euclidean
 from scipy.spatial.distance import cdist
 from scipy.optimize import minimize
 
+import hdmedians as hd 
+
 from ._base import (_preprocess_input, _run_monte_carlo_stats, _build_results)
 
 from skbio.stats.ordination import pcoa
@@ -159,8 +161,12 @@ def _compute_median_groups(ordination, grouping):
 
     ordination.samples['grouping'] = grouping
 
-    medians = ordination.samples.groupby('grouping').aggregate(
-            lambda x: geometric_mean(x.values[:, :-1]))
+    def cleanup(x):
+        X = x.values[:, :-1]
+        X = X.astype(np.float32)
+        return np.array(hd.geomedian(X.T))
+
+    medians = ordination.samples.groupby('grouping').aggregate(cleanup)
     
     def eu_dist(x):
         return pd.Series([euclidean(x[:-1],
@@ -177,7 +183,7 @@ def _compute_median_groups(ordination, grouping):
 def med_dummy(ordination, grouping):
     stat, _ = f_oneway(*(_compute_median_groups(ordination, grouping)))
     return stat
-
+    
 def geometric_mean(points, options={}):
     
     if len(points.shape) == 1:
@@ -245,7 +251,7 @@ def weiszfeld_method(points, options={}):
         iters += 1
 
     return guess
-
+    
 _methods = {
     'minimize': minimize_method,
     'weiszfeld': weiszfeld_method,
