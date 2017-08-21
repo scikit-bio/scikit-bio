@@ -182,7 +182,7 @@ def rda(y, x, scale_Y=False, scaling=1):
     # is (notice that L&L 1998 says in p. 586 that such scaling
     # doesn't affect the interpretation of a biplot):
     pc_ids = ['RDA%d' % (i+1) for i in range(u.shape[0])]
-    eigvals = pd.Series(eigenvalues, index=pc_ids)
+    eigvals = pd.Series(eigenvalues, index=pc_ids[:len(eigenvalues)])
     const = np.sum(eigenvalues**2)**0.25
     if scaling == 1:
         scaling_factor = const
