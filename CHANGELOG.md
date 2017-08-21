@@ -11,6 +11,8 @@
 
 * `skbio.metadata.IntervalMetadata.drop` has a new boolean parameter `negate` to indicate whether to drop or keep the specified `Interval` objects.
 
+* `composition` now has methods to compute additive log-ratio transformations and back-transformations (`alr`, `alr_inv`) as well as a method to build a basis from a sequential binary partition (`sbp_basis`),  [#1486](https://github.com/biocore/scikit-bio/pull/1486).
+
 ### Backward-incompatible changes [stable]
 
 ### Backward-incompatible changes [experimental]
@@ -20,6 +22,8 @@
 
 ### Bug fixes
 * The `include_self` parameter was not being honored in `skbio.TreeNode.tips`. The scope of this bug was that if `TreeNode.tips` was called on a tip, it would always result in an empty `list` when unrolled.
+
+* `skbio.stats.ordination.rda` The occasional column mismatch in output `biplot_scores` is fixed ([#1519](https://github.com/biocore/scikit-bio/issues/1519)).
 
 ### Deprecated functionality [stable]
 
