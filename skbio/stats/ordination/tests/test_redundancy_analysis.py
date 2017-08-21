@@ -220,7 +220,7 @@ class TestRDAResults_biplot_score(TestCase):
             proportion_explained=vegan_propexpl,
             eigvals=vegan_eigvals)
 
-        assert_ordination_results_equal(scores, exp,
+        assert_ordination_results_equal(rda_, exp,
                                         ignore_directionality=True,
                                         decimal=6)
 
