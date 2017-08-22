@@ -26,8 +26,11 @@ from skbio.util._decorator import experimental
 @experimental(as_of="0.5.1")
 def permdisp(distance_matrix, grouping, column=None, test='centroid',
                                                     permutations=999):
-    """Test for Homogeneity of Multivariate Disperisons using Marti Anderson's
-    PERMDISP2 procedure. Add in some more description here...
+    """Test for Homogeneity of Multivariate Groups Disperisons using Marti 
+    Anderson's PERMDISP2 procedure. PERMDISP is a multivariate analogue of
+    Levene's test for homogeneity of multivariate variances. Non-euclidean 
+    distances are handled by reducing the original distances to principle 
+    coordinates.This procedure has used as a means of assessing beta diversity
 
     Parameters
     ----------
@@ -88,42 +91,20 @@ def permdisp(distance_matrix, grouping, column=None, test='centroid',
     """
     #first reduce the matrix to euclidean space using pcoa
     ordination = pcoa(distance_matrix)
-    
-    """
-    I am pretty sure that after you compute dists between points and centroids
-    of each group to obtain groupings, we can use _run_monte_carlo_stats using 
-    the compiled groups, f_oneway as the test stat and the number of permutations
-    Should I use preprocess inputs as well? Because I am not sure exactly what that 
-    function returns
 
-    pseudocode:
-    if type == 'centroid':
-        groups = _compute_centroid_groups(dm, grouping) or _compute_median_
-    else ...
-
-    stat, pval = _run_monte_carlo_stats(f_oneway, groups, permutations)
-
-    after that we need to determine if we will send the info out to _build_results
-    if we want the output to be the same format as permanova or anosim
-    if thats gonna be the case then we probably need to pass through to 
-    preprocess inputs. I think where I am most stuck at the moment
-    is computing the centroid vectors. There is the centroid function
-    from scipy but I am not sure that it is giving me what I am looking for. However
-    if it is what I am looking for then the median function from the same package
-    is likely helpful as well
-    """
+    #run preproces_input to obtain variables
     sample_size, num_groups, grouping, tri_idxs, distances = _preprocess_input(
         distance_matrix, grouping, column)
-
+    
+    #determine which test type will be used
     if test=='centroid':
-        print("Good Morning! I hope you have a beautiful day!")
-        test_stat_function = partial(cen_dummy, ordination)
+        test_stat_function = partial(cen_oneway, ordination)
     elif test=='median':
-        print("Good afternoon beautiful! I hope that you die in a fire!")
-        test_stat_function = partial(med_dummy, ordination)
+        test_stat_function = partial(med_oneway, ordination)
     else:
         raise ValueError('Test must be centroid or median')
-
+    
+    #compute the stat and pval through monte_carlo tests
     stat, p_value = _run_monte_carlo_stats(test_stat_function, grouping,
                                            permutations)
 
@@ -136,22 +117,26 @@ def _compute_centroid_groups(ordination, grouping):
     #group samples in pandas dataframe
     ordination.samples['grouping'] = grouping
     #compute centroids, store in separate dataframe
-    centroids = ordination.samples.groupby('grouping').aggregate(
-                                                     lambda x: x.sum()/len(x))
+    centroids = ordination.samples.groupby('grouping').aggregate(_centroid)
     
-    #returns series of euclidean distances from each point to its centroid
-    def eu_dist(x):
-        return pd.Series([euclidean(x[:-1],
-                         centroids.loc[x.grouping]), x.grouping],
-                         index=['distance', 'grouping'])
-    
-    for _, group in ordination.samples.apply(eu_dist,
-                                             axis=1).groupby('grouping'):
+    grouped = ordination.samples.apply(eu_dist, axis=1,
+                                       centroids=centroids).groupby('grouping')
+    for _, group in grouped:
         groups.append(group['distance'].tolist())
 
     return groups
 
-def cen_dummy(ordination, grouping):
+def _centroid(x):
+    return x.sum()/len(x)
+
+#returns series of euclidean distances from each point to its centroid
+def eu_dist(x, centroids=None):
+    return pd.Series([euclidean(x[:-1],
+                     centroids.loc[x.grouping]), x.grouping],
+                     index=['distance', 'grouping'])
+
+#ship the centroid series to f_oneway for fstat
+def cen_oneway(ordination, grouping):
     stat, _ = f_oneway(*(_compute_centroid_groups(ordination, grouping)))
     return stat
 
@@ -161,13 +146,15 @@ def _compute_median_groups(ordination, grouping):
 
     ordination.samples['grouping'] = grouping
 
-    def cleanup(x):
+    def config_med(x):
+        #slice, retype and transpose group array for hd.geomedian
         X = x.values[:, :-1]
         X = X.astype(np.float32)
         return np.array(hd.geomedian(X.T))
 
-    medians = ordination.samples.groupby('grouping').aggregate(cleanup)
+    medians = ordination.samples.groupby('grouping').aggregate(config_med)
     
+    #return series of euclid distances from each point to its geo-median
     def eu_dist(x):
         return pd.Series([euclidean(x[:-1],
                          medians.loc[x.grouping]), x.grouping],
@@ -180,10 +167,15 @@ def _compute_median_groups(ordination, grouping):
     
     return groups
 
-def med_dummy(ordination, grouping):
+#ship the median series out to f_oneway
+def med_oneway(ordination, grouping):
     stat, _ = f_oneway(*(_compute_median_groups(ordination, grouping)))
     return stat
     
+
+#these functions are for the spatial median computation,
+#currently not sure whether to use these or the hdmedians package
+#either return the same result
 def geometric_mean(points, options={}):
     
     if len(points.shape) == 1:
@@ -256,3 +248,4 @@ _methods = {
     'minimize': minimize_method,
     'weiszfeld': weiszfeld_method,
 }
+
