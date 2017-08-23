@@ -13,28 +13,26 @@ from functools import partial
 import numpy as np
 import pandas as pd
 from scipy.stats import f_oneway
-from scipy.cluster.hierarchy import centroid
 from scipy.spatial.distance import euclidean
-from scipy.spatial.distance import cdist
-from scipy.optimize import minimize
 
-import hdmedians as hd 
+import hdmedians as hd
 
 from ._base import (_preprocess_input, _run_monte_carlo_stats, _build_results)
 
-from skbio.stats.ordination._ordination_results import OrdinationResults
 from skbio.stats.ordination import pcoa
 from skbio.util._decorator import experimental
 
+
 @experimental(as_of="0.5.1")
 def permdisp(distance_matrix, grouping, column=None, test='median',
-                                                    permutations=999):
-    """Test for Homogeneity of Multivariate Groups Disperisons using Marti 
+             permutations=999):
+
+    """Test for Homogeneity of Multivariate Groups Disperisons using Marti
     Anderson's PERMDISP2 procedure. PERMDISP is a multivariate analogue of
-    Levene's test for homogeneity of multivariate variances. Non-euclidean 
-    distances are handled by reducing the original distances to principle 
-    coordinates. PERMDISP calculates an F-statistic to assess whether the 
-    dispersions between groups is significant. 
+    Levene's test for homogeneity of multivariate variances. Non-euclidean
+    distances are handled by reducing the original distances to principle
+    coordinates. PERMDISP calculates an F-statistic to assess whether the
+    dispersions between groups is significant.
 
     Parameters
     ----------
@@ -64,18 +62,18 @@ def permdisp(distance_matrix, grouping, column=None, test='median',
         Number of permutations to use when assessing statistical
         significance. Must be greater than or equal to zero. If zero,
         statistical significance calculations will be skipped and the p-value
-        will be ``np.nan``.    
-    
+        will be ``np.nan``.
+
     Returns
     -------
     pandas.Series
         Results of the statistical test, including ``test statistic`` and
         ``p-value``.
-    
+
     Raises
     ------
     TypeError
-        If, when using the spatial median test, the pcoa ordination is not of 
+        If, when using the spatial median test, the pcoa ordination is not of
         type np.float32 or np.float64, the spatial median function will fail
         and the centroid test should be used instead
     ValueError
@@ -94,7 +92,7 @@ def permdisp(distance_matrix, grouping, column=None, test='median',
 
     References
     ----------
-    .. [1] Anderson, Marti J. "Distance-Based Tests for Homogeneity of 
+    .. [1] Anderson, Marti J. "Distance-Based Tests for Homogeneity of
         Multivariate Dispersions." Biometrics 62 (2006):245-253
 
     .. [2] http://cran.r-project.org/web/packages/vegan/index.html
@@ -107,7 +105,7 @@ def permdisp(distance_matrix, grouping, column=None, test='median',
     >>> from skbio import DistanceMatrix
     >>> dm = DistanceMatrix([0, 1, 1, 4],
                             [1, 0, 3, 2],
-                            [1, 3, 0, 3], 
+                            [1, 3, 0, 3],
                             [4, 2, 3, 0]],
                             ['s1', 's2', 's3', 's4'])
     >>> grouping = ['G1', 'G1', 'G2', 'G2']
@@ -115,7 +113,11 @@ def permdisp(distance_matrix, grouping, column=None, test='median',
     Run PERMDISP using 99 permutations to caluculate the p-value:
 
     >>> from skbio.stats.distance import permdisp
+    >>> import numpy as np
+    >>> #make output deterministic; not necessary for normal use
+    >>> np.random.seed(0)
     >>> permdisp(dm, grouping, permutations=99)
+    
 
 
     """
@@ -123,35 +125,40 @@ def permdisp(distance_matrix, grouping, column=None, test='median',
 
     sample_size, num_groups, grouping, tri_idxs, distances = _preprocess_input(
         distance_matrix, grouping, column)
-    
-    if test=='centroid':
+
+    if test == 'centroid':
         test_stat_function = partial(_cen_oneway, ordination)
-    elif test=='median':
+    elif test == 'median':
         test_stat_function = partial(_med_oneway, ordination)
     else:
         raise ValueError('Test must be centroid or median')
-    
+
     stat, p_value = _run_monte_carlo_stats(test_stat_function, grouping,
                                            permutations)
 
     return _build_results('PERMDISP', 'F-value', sample_size, num_groups,
                           stat, p_value, permutations)
-#XXXXreturns series of euclidean distances from each point to its centroid
-#PRIVATE
-# make this work with centroids and spatial medians
+
+
 def _eu_dist(x, vector):
+    """
+    return a series of Euclidean distances from the aggregated series,
+    sliced to exclude the grouping column to an established centroid or
+    spatial median vector
+    """
     return pd.Series([euclidean(x[:-1],
                      vector.loc[x.grouping]), x.grouping],
                      index=['distance', 'grouping'])
 
+
 def _compute_centroid_groups(ordination, grouping):
 
     groups = []
-    #xxxxgroup samples in pandas dataframe
+
     ordination.samples['grouping'] = grouping
-    #XXXXXcompute centroids, store in separate dataframe
+
     centroids = ordination.samples.groupby('grouping').aggregate(_centroid)
-    
+
     grouped = ordination.samples.apply(_eu_dist, axis=1,
                                        vector=centroids).groupby('grouping')
     for _, group in grouped:
@@ -159,44 +166,41 @@ def _compute_centroid_groups(ordination, grouping):
 
     return groups
 
+
 def _centroid(x):
     return x.sum()/len(x)
 
 
-#XXXXship the centroid series to f_oneway for fstat
-#PRIVATE
 def _cen_oneway(ordination, grouping):
     stat, _ = f_oneway(*(_compute_centroid_groups(ordination, grouping)))
     return stat
-    
+
+
 def _config_med(x):
-    # private
-    #XXXXslice, retype and transpose group array for hd.geomedian
+    """slice the vector up to the last value to exclude grouping column
+    and transpose the vector to be compatible with hd.geomedian
+    """
     X = x.values[:, :-1]
-    #X = X.astype(np.float32) # DO CASTING BEFORE
     return np.array(hd.geomedian(X.T))
 
+
 def _compute_median_groups(ordination, grouping):
-    
+
     groups = []
 
     ordination.samples['grouping'] = grouping
 
     medians = ordination.samples.groupby('grouping').aggregate(_config_med)
-    
-    #XXXreturn series of Euclidean distances from each point to its XXXXXXgeo-median
-    for _, group in ordination.samples.apply(_eu_dist,
-                                             axis=1, 
-                                           vector=medians).groupby('grouping'):
 
+    grouped = ordination.samples.apply(_eu_dist, axis=1,
+                                         vector=medians).groupby('grouping')
+
+    for _, group in grouped:
         groups.append(group['distance'].tolist())
-    
+
     return groups
 
-#XXXXship the median series out to f_oneway
-# should be private (add _ at the beginning of the name)
+
 def _med_oneway(ordination, grouping):
     stat, _ = f_oneway(*(_compute_median_groups(ordination, grouping)))
     return stat
-    
-
