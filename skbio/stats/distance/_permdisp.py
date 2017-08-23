@@ -8,6 +8,8 @@
 
 from functools import partial
 
+# mark all the functions that are not explicitly tested
+
 import numpy as np
 import pandas as pd
 from scipy.stats import f_oneway
@@ -20,17 +22,19 @@ import hdmedians as hd
 
 from ._base import (_preprocess_input, _run_monte_carlo_stats, _build_results)
 
+from skbio.stats.ordination._ordination_results import OrdinationResults
 from skbio.stats.ordination import pcoa
 from skbio.util._decorator import experimental
 
 @experimental(as_of="0.5.1")
-def permdisp(distance_matrix, grouping, column=None, test='centroid',
+def permdisp(distance_matrix, grouping, column=None, test='median',
                                                     permutations=999):
     """Test for Homogeneity of Multivariate Groups Disperisons using Marti 
     Anderson's PERMDISP2 procedure. PERMDISP is a multivariate analogue of
     Levene's test for homogeneity of multivariate variances. Non-euclidean 
     distances are handled by reducing the original distances to principle 
-    coordinates.This procedure has used as a means of assessing beta diversity
+    coordinates. PERMDISP calculates an F-statistic to assess whether the 
+    dispersions between groups is significant. 
 
     Parameters
     ----------
@@ -67,6 +71,17 @@ def permdisp(distance_matrix, grouping, column=None, test='centroid',
     pandas.Series
         Results of the statistical test, including ``test statistic`` and
         ``p-value``.
+    
+    Raises
+    ------
+    TypeError
+        If, when using the spatial median test, the pcoa ordination is not of 
+        type np.float32 or np.float64, the spatial median function will fail
+        and the centroid test should be used instead
+    ValueError
+        If the test is not centroid or median. test is set to median by default
+    TypeError
+        If the distance matrix is not an instance of a distance matrix
 
     See Also
     --------
@@ -86,41 +101,59 @@ def permdisp(distance_matrix, grouping, column=None, test='centroid',
 
     Examples
     --------
-    ...
+    Load a 4x4 distance matrix and grouping vector denoting 2 groups of
+    objects:
+
+    >>> from skbio import DistanceMatrix
+    >>> dm = DistanceMatrix([0, 1, 1, 4],
+                            [1, 0, 3, 2],
+                            [1, 3, 0, 3], 
+                            [4, 2, 3, 0]],
+                            ['s1', 's2', 's3', 's4'])
+    >>> grouping = ['G1', 'G1', 'G2', 'G2']
+
+    Run PERMDISP using 99 permutations to caluculate the p-value:
+
+    >>> from skbio.stats.distance import permdisp
+    >>> permdisp(dm, grouping, permutations=99)
+
 
     """
-    #first reduce the matrix to euclidean space using pcoa
     ordination = pcoa(distance_matrix)
 
-    #run preproces_input to obtain variables
     sample_size, num_groups, grouping, tri_idxs, distances = _preprocess_input(
         distance_matrix, grouping, column)
     
-    #determine which test type will be used
     if test=='centroid':
-        test_stat_function = partial(cen_oneway, ordination)
+        test_stat_function = partial(_cen_oneway, ordination)
     elif test=='median':
-        test_stat_function = partial(med_oneway, ordination)
+        test_stat_function = partial(_med_oneway, ordination)
     else:
         raise ValueError('Test must be centroid or median')
     
-    #compute the stat and pval through monte_carlo tests
     stat, p_value = _run_monte_carlo_stats(test_stat_function, grouping,
                                            permutations)
 
     return _build_results('PERMDISP', 'F-value', sample_size, num_groups,
                           stat, p_value, permutations)
+#XXXXreturns series of euclidean distances from each point to its centroid
+#PRIVATE
+# make this work with centroids and spatial medians
+def _eu_dist(x, vector):
+    return pd.Series([euclidean(x[:-1],
+                     vector.loc[x.grouping]), x.grouping],
+                     index=['distance', 'grouping'])
 
 def _compute_centroid_groups(ordination, grouping):
 
     groups = []
-    #group samples in pandas dataframe
+    #xxxxgroup samples in pandas dataframe
     ordination.samples['grouping'] = grouping
-    #compute centroids, store in separate dataframe
+    #XXXXXcompute centroids, store in separate dataframe
     centroids = ordination.samples.groupby('grouping').aggregate(_centroid)
     
-    grouped = ordination.samples.apply(eu_dist, axis=1,
-                                       centroids=centroids).groupby('grouping')
+    grouped = ordination.samples.apply(_eu_dist, axis=1,
+                                       vector=centroids).groupby('grouping')
     for _, group in grouped:
         groups.append(group['distance'].tolist())
 
@@ -129,16 +162,19 @@ def _compute_centroid_groups(ordination, grouping):
 def _centroid(x):
     return x.sum()/len(x)
 
-#returns series of euclidean distances from each point to its centroid
-def eu_dist(x, centroids=None):
-    return pd.Series([euclidean(x[:-1],
-                     centroids.loc[x.grouping]), x.grouping],
-                     index=['distance', 'grouping'])
 
-#ship the centroid series to f_oneway for fstat
-def cen_oneway(ordination, grouping):
+#XXXXship the centroid series to f_oneway for fstat
+#PRIVATE
+def _cen_oneway(ordination, grouping):
     stat, _ = f_oneway(*(_compute_centroid_groups(ordination, grouping)))
     return stat
+    
+def _config_med(x):
+    # private
+    #XXXXslice, retype and transpose group array for hd.geomedian
+    X = x.values[:, :-1]
+    #X = X.astype(np.float32) # DO CASTING BEFORE
+    return np.array(hd.geomedian(X.T))
 
 def _compute_median_groups(ordination, grouping):
     
@@ -146,106 +182,21 @@ def _compute_median_groups(ordination, grouping):
 
     ordination.samples['grouping'] = grouping
 
-    def config_med(x):
-        #slice, retype and transpose group array for hd.geomedian
-        X = x.values[:, :-1]
-        X = X.astype(np.float32)
-        return np.array(hd.geomedian(X.T))
-
-    medians = ordination.samples.groupby('grouping').aggregate(config_med)
+    medians = ordination.samples.groupby('grouping').aggregate(_config_med)
     
-    #return series of euclid distances from each point to its geo-median
-    def eu_dist(x):
-        return pd.Series([euclidean(x[:-1],
-                         medians.loc[x.grouping]), x.grouping],
-                         index=['distance', 'grouping'])
-
-    for _, group in ordination.samples.apply(eu_dist,
-                                             axis=1).groupby('grouping'):
+    #XXXreturn series of Euclidean distances from each point to its XXXXXXgeo-median
+    for _, group in ordination.samples.apply(_eu_dist,
+                                             axis=1, 
+                                           vector=medians).groupby('grouping'):
 
         groups.append(group['distance'].tolist())
     
     return groups
 
-#ship the median series out to f_oneway
-def med_oneway(ordination, grouping):
+#XXXXship the median series out to f_oneway
+# should be private (add _ at the beginning of the name)
+def _med_oneway(ordination, grouping):
     stat, _ = f_oneway(*(_compute_median_groups(ordination, grouping)))
     return stat
     
-
-#these functions are for the spatial median computation,
-#currently not sure whether to use these or the hdmedians package
-#either return the same result
-def geometric_mean(points, options={}):
-    
-    if len(points.shape) == 1:
-        # geometric_median((0, 0)) has too much potential for error.
-        # Did the user intend a single 2D point or two scalars?
-        # Use np.median if you meant the latter.
-        raise ValueError("Expected 2D array")
-    if points.shape[1] > 2:
-        # weiszfeld tends to converge faster in higher dimensions
-        method = 'weiszfeld'
-    else:
-        method = 'minimize'
-
-    return _methods[method](points, options)
-
-def minimize_method(points, options={}):
-    """
-    Geometric median as a convex optimization problem.
-    """
-
-    # objective function
-    def aggregate_distance(x):
-        return cdist([x], points).sum()
-
-    # initial guess: centroid
-    centroid = points.mean(axis=0)
-
-    optimize_result = minimize(aggregate_distance, centroid, method='COBYLA')
-
-    return optimize_result.x
-
-def weiszfeld_method(points, options={}):
-    """
-    Weiszfeld's algorithm as described on Wikipedia.
-    """
-
-    default_options = {'maxiter': 1000, 'tol': 1e-7}
-    default_options.update(options)
-    options = default_options
-
-    def distance_func(x):
-        return cdist([x], points)
-
-    # initial guess: centroid
-    guess = points.mean(axis=0)
-
-    iters = 0
-
-    while iters < options['maxiter']:
-        distances = distance_func(guess).T
-
-        # catch divide by zero
-        # TODO: Wikipedia cites how to deal with distance 0
-        distances = np.where(distances == 0, 1, distances)
-
-        guess_next = (points/distances).sum(axis=0) / (1./distances).sum(axis=0)
-
-        guess_movement = np.sqrt(((guess - guess_next)**2).sum())
-
-        guess = guess_next
-
-        if guess_movement <= options['tol']:
-            break
-
-        iters += 1
-
-    return guess
-    
-_methods = {
-    'minimize': minimize_method,
-    'weiszfeld': weiszfeld_method,
-}
 
