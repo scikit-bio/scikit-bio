@@ -8,8 +8,6 @@
 
 from functools import partial
 
-# mark all the functions that are not explicitly tested
-
 import numpy as np
 import pandas as pd
 from scipy.stats import f_oneway
@@ -140,7 +138,7 @@ def permdisp(distance_matrix, grouping, column=None, test='median',
                           stat, p_value, permutations)
 
 
-def _eu_dist(x, vector):
+def _eu_dist(x, vector): # not explicitly tested
     """
     return a series of Euclidean distances from the aggregated series,
     sliced to exclude the grouping column to an established centroid or
@@ -167,16 +165,16 @@ def _compute_centroid_groups(ordination, grouping):
     return groups
 
 
-def _centroid(x):
+def _centroid(x): # not explicitly tested
     return x.sum()/len(x)
 
 
-def _cen_oneway(ordination, grouping):
+def _cen_oneway(ordination, grouping): # not explicitly tested
     stat, _ = f_oneway(*(_compute_centroid_groups(ordination, grouping)))
     return stat
 
 
-def _config_med(x):
+def _config_med(x): # not explicitly tested
     """slice the vector up to the last value to exclude grouping column
     and transpose the vector to be compatible with hd.geomedian
     """
@@ -201,6 +199,6 @@ def _compute_median_groups(ordination, grouping):
     return groups
 
 
-def _med_oneway(ordination, grouping):
+def _med_oneway(ordination, grouping): # not explicitly tested
     stat, _ = f_oneway(*(_compute_median_groups(ordination, grouping)))
     return stat
