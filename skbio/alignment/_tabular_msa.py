@@ -2183,10 +2183,10 @@ class TabularMSA(MetadataMixin, PositionalMetadataMixin, SkbioObject):
             sequence count: 2
             position count: 5
         --------------------------
-        A-G-T
         ACT--
+        A-G-T
         >>> joined.index
-        Index(['b', 'a'], dtype='object')
+        Index(['a', 'b'], dtype='object')
         >>> joined.positional_metadata
            col2
         0     1
