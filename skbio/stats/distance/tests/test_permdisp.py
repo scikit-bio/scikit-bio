@@ -6,7 +6,6 @@
 # The full license is in the file COPYING.txt, distributed with this software.
 # ----------------------------------------------------------------------------
 
-import io
 from functools import partial
 from unittest import TestCase, main
 
@@ -22,27 +21,27 @@ from skbio.stats.distance._permdisp import _compute_centroid_groups
 
 class testPERMDISP(TestCase):
     
+
     def setUp(self):
-        
-        #test with 2 groups of equal size
-        #when assigned different labels, results should be the same
+        # test with 2 groups of equal size
+        # when assigned different labels, results should be the same
         self.grouping_eq = ['foo', 'foo', 'foo', 'bar', 'bar', 'bar']
         self.grouping_eq_relab = ['pyt', 'pyt', 'pyt', 'hon', 'hon', 'hon']
         self.exp_index = ['method name', 'test statistic name', 'sample size',
                           'number of groups', 'test statistic', 'p-value',
                           'number of permutations']
-        #test with 3 groups of different sizes
-        #when assigned different labels results should be the same
-        self.grouping_uneq = ['foo', 'foo', 'bar', 'bar', 'bar', 
+        # test with 3 groups of different sizes
+        # when assigned different labels results should be the same
+        self.grouping_uneq = ['foo', 'foo', 'bar', 'bar', 'bar',
                                     'qw', 'qw', 'qw', 'qw']
 
-        self.grouping_uneq_relab = [12,12, 7, 7, 7, 23, 23, 23, 23]
+        self.grouping_uneq_relab = [12, 12, 7, 7, 7, 23, 23, 23, 23]
 
         self.grouping_un_mixed = ['a', 'a', 7, 7, 7, 'b', 'b', 'b', 'b']
         
         eq_ids = ['s1', 's2', 's3', 's4', 's5', 's6']
         uneq_ids = ['s1', 's2', 's3', 's4', 's5', 's6', 's7', 's8', 's9']
-        #matrix for equal grouping
+        # matrix for equal grouping
         self.eq_mat = DistanceMatrix([[0, 4, 0, 0, 4, 2],
                                       [4, 0, 2, 0, 3, 1],
                                       [0, 2, 0, 5, 2, 5],
@@ -50,7 +49,7 @@ class testPERMDISP(TestCase):
                                       [4, 3, 2, 0, 0, 2],
                                       [2, 1, 5, 2, 2, 0]], eq_ids)
         
-        #matrix for unequal grouping
+        # matrix for unequal grouping
         self.uneq_mat = DistanceMatrix([[0, 0, 4, 0, 0, 3, 5, 3, 0],
                                         [0, 0, 0, 3, 4, 5, 3, 0, 3],
                                         [4, 0, 0, 4, 3, 1, 0, 5, 2],
@@ -61,7 +60,7 @@ class testPERMDISP(TestCase):
                                         [3, 0, 5, 3, 5, 0, 4, 0, 4],
                                         [0, 3, 2, 5, 0, 5, 3, 4, 0]], uneq_ids)
 
-        #null matrix for equal grouping
+        # null matrix for equal grouping
         self.null_mat = DistanceMatrix([[0, 0, 0, 0, 0, 0],
                                         [0, 0, 0, 0, 0, 0],
                                         [0, 0, 0, 0, 0, 0],
@@ -70,7 +69,7 @@ class testPERMDISP(TestCase):
                                         [0, 0, 0, 0, 0, 0]], eq_ids)
 
         unif_ids = ['PC.354', 'PC.355', 'PC.356', 'PC.481', 'PC.593', 'PC.607',
-                                                'PC.634', 'PC.635', 'PC.636']
+                    'PC.634', 'PC.635', 'PC.636']
 
 
         self.unifrac_dm = DistanceMatrix(
@@ -85,36 +84,47 @@ class testPERMDISP(TestCase):
         [0.566949022108, 0.65945132763, 0.699416863323, 0.64756120797, 0.0,
             0.703720200713, 0.748240937349, 0.73416971958, 0.727154987937],
 	[0.714717232268, 0.745176523638, 0.71405573754, 0.666018240373,
-            0.703720200713, 0.0, 0.707316869557, 0.636288883818, 0.699880573956],
+            0.703720200713, 0.0, 0.707316869557, 0.636288883818, 
+            0.699880573956],
 	[0.772001731764, 0.733836123821, 0.759178215168, 0.66532968784,
-            0.748240937349, 0.707316869557, 0.0, 0.565875193399, 0.560605525642],
+            0.748240937349, 0.707316869557, 0.0, 0.565875193399, 
+            0.560605525642],
 	[0.690237118413, 0.720305073505, 0.689701276341, 0.650464714994,
-            0.73416971958, 0.636288883818, 0.565875193399, 0.0, 0.575788039321],
+            0.73416971958, 0.636288883818, 0.565875193399, 0.0, 
+            0.575788039321],
 	[0.740681707488, 0.680785600439, 0.725100672826, 0.632524644216,
-            0.727154987937, 0.699880573956,0.560605525642, 0.575788039321, 0.0]],
+            0.727154987937, 0.699880573956,0.560605525642, 0.575788039321, 
+            0.0]],
         unif_ids)
 
-        
+        self.unif_grouping = ['Control', 'Control', 'Control', 'Control', 
+                              'Control', 'Fast', 'Fast', 'Fast', 'Fast']
+
+
+
         self.assert_series_equal = partial(assert_series_equal,
                                            check_index_type=True,
                                            check_series_type=True)
-        
 
-    
+
+
     def test_centroids_eq_groups(self):
         exp = [[1.2886811963240687, 1.890538910062923, 1.490527658097728],
                    [2.17349240061718, 2.3192679626679946, 2.028338553903792]]
 
         # find instances where we reuse pcoa, and only compute those once
         dm = pcoa(self.eq_mat)
-        
+
         obs = _compute_centroid_groups(dm, self.grouping_eq)
         self.assertEqual(obs, exp)
-        
+
         obs_relab = _compute_centroid_groups(dm, self.grouping_eq_relab)
         self.assertEqual(obs_relab, obs)
 
     def test_centroids_uneq_groups(self):
+        """
+        the expected result here was calculated by hand
+        """
         exp = [[2.5847022428144935, 2.285624595858895, 
                                     1.7022431146340287],
                 [1.724817266046108, 1.724817266046108],
@@ -130,22 +140,25 @@ class testPERMDISP(TestCase):
         self.assertEqual(obs, obs_relab)
 
     def test_centroids_mixedgroups(self):
-        exp = [[2.5847022428144935, 2.285624595858895, 
+        exp = [[2.5847022428144935, 2.285624595858895,
                                     1.7022431146340287],
                 [1.724817266046108, 1.724817266046108],
                 [2.4333280644972795, 2.389000390879655, 
                     2.8547180589306036, 3.218568759338847]]
         dm = pcoa(self.uneq_mat)
-        
+
         obs_mixed = _compute_centroid_groups(dm, self.grouping_un_mixed)
         self.assertEqual(exp, obs_mixed)
 
     def test_centroids_null(self):
         exp = [[0.00, 0.00, 0.00], [0.00, 0.00, 0.00]]
         dm = pcoa(self.null_mat)
-        
+
         obs_null = _compute_centroid_groups(dm, self.grouping_eq)
         self.assertEqual(exp, obs_null)
+
+    def test_medians_null(self):
+
 
     def test_no_permuations(self):
         obs = permdisp(self.eq_mat, self.grouping_eq, permutations=0)
@@ -156,57 +169,51 @@ class testPERMDISP(TestCase):
 
     def test_centroid_normal(self):
         exp = pd.Series(index=self.exp_index, 
-                        data=['PERMDISP', 'F-value', 9, 2, 0.244501519876, .63, 99],
+                        data=['PERMDISP', 'F-value', 9, 2, 0.244501519876, .
+                              63, 99],
                         name='PERMDISP results')
  
         grouping = ['Control', 'Control', 'Control', 'Control', 'Control',
                 'Fast', 'Fast', 'Fast', 'Fast']
         
         np.random.seed(0)
-        obs = permdisp(self.unifrac_dm, grouping, test='centroid', permutations=99)
+        obs = permdisp(self.unifrac_dm, grouping, test='centroid',
+                       permutations=99)
 
         self.assert_series_equal(obs, exp)
 
     def test_median_normal(self):
-        #so far I expect this one to fail, still dont have median working
 
-        # the expected values should be as produced by our implementation
-        # with whatever precision we need, AAAAANDDDD guaranteeing that this
-        # matches the results from compare_categories.py
-        # in compare_categories.py we get ....., but to make this match, .....
         exp = pd.Series(index=self.exp_index,
                         data=['PERMDISP', 'F-value', 9, 2, 0.139475441876,
                             0.61, 99],
-                        name='PERMDISP results')            
+                        name='PERMDISP results')
 
-        grouping = ['Control', 'Control', 'Control', 'Control', 'Control',
-                'Fast', 'Fast', 'Fast', 'Fast']
 
         np.random.seed(0)
-        obs = permdisp(self.unifrac_dm, grouping, test='median', permutations=99)
+        obs = permdisp(self.unifrac_dm, self.unif_grouping, test='median',
+                       permutations=99)
 
         self.assert_series_equal(obs, exp)
 
     # add test for centroids
-
     def test_not_distance_matrix(self):
         dm = []
         grouping = ['Control', 'Control', 'Control', 'Control', 'Control',
-                'Fast', 'Fast', 'Fast', 'Fast']
+                    'Fast', 'Fast', 'Fast', 'Fast']
 
         npt.assert_raises(TypeError, permdisp, dm, grouping, permutations=0)
 
-    def test_mismatched_group(self):        
-        
+    def test_mismatched_group(self):
+
         gr = ['foo', 'bar']
         npt.assert_raises(ValueError, permdisp, self.unifrac_dm, gr)
 
-    def test_single_group(self):        
- 
+    def test_single_group(self):
+
         gr = ['f', 'f', 'f', 'f', 'f', 'f', 'f', 'f', 'f']
         npt.assert_raises(ValueError, permdisp, self.unifrac_dm, gr)
 
 
 if __name__ == '__main__':
     main()
-
