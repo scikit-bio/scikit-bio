@@ -24,13 +24,16 @@ from skbio.util._decorator import experimental
 @experimental(as_of="0.5.1")
 def permdisp(distance_matrix, grouping, column=None, test='median',
              permutations=999):
+    """
 
-    """Test for Homogeneity of Multivariate Groups Disperisons using Marti
-    Anderson's PERMDISP2 procedure. PERMDISP is a multivariate analogue of
-    Levene's test for homogeneity of multivariate variances. Non-euclidean
-    distances are handled by reducing the original distances to principle
-    coordinates. PERMDISP calculates an F-statistic to assess whether the
-    dispersions between groups is significant.
+    Test for Homogeneity of Multivariate Groups Disperisons using Marti
+    Anderson's PERMDISP2 procedure.
+
+    PERMDISP is a multivariate analogue of Levene's test for homogeneity of
+    multivariate variances. Non-euclidean distances are handled by reducing the
+    original distances to principle coordinates. PERMDISP calculates an
+    F-statistic to assess whether the dispersions between groups is significant
+
 
     Parameters
     ----------
@@ -82,6 +85,7 @@ def permdisp(distance_matrix, grouping, column=None, test='median',
     See Also
     --------
     permanova
+    anosim
 
     Notes
     -----
@@ -97,16 +101,18 @@ def permdisp(distance_matrix, grouping, column=None, test='median',
 
     Examples
     --------
-    Load a 4x4 distance matrix and grouping vector denoting 2 groups of
+    Load a 6x6 distance matrix and grouping vector denoting 2 groups of
     objects:
 
     >>> from skbio import DistanceMatrix
-    >>> dm = DistanceMatrix([0, 1, 1, 4],
-                            [1, 0, 3, 2],
-                            [1, 3, 0, 3],
-                            [4, 2, 3, 0]],
-                            ['s1', 's2', 's3', 's4'])
-    >>> grouping = ['G1', 'G1', 'G2', 'G2']
+    >>>  dm = DistanceMatrix([[0,    0.5,  0.75, 1, 0.66, 0.33],
+     ...:                     [0.5,  0,    0.25, 0.33, 0.77, 0.61],
+     ...:                     [0.75, 0.25, 0,    0.1, 0.44, 0.55],
+     ...:                     [1,    0.33, 0.1,  0, 0.75, 0.88],
+     ...:                     [0.66, 0.77, 0.44, 0.75, 0, 0.77],
+     ...:                     [0.33, 0.61, 0.55, 0.88, 0.77, 0]],
+     ...:                     ['s1', 's2', 's3', 's4', 's5', 's6'])
+    >>> grouping = ['G1', 'G1', 'G1', 'G2', 'G2', 'G2']
 
     Run PERMDISP using 99 permutations to caluculate the p-value:
 
@@ -115,10 +121,98 @@ def permdisp(distance_matrix, grouping, column=None, test='median',
     >>> #make output deterministic; not necessary for normal use
     >>> np.random.seed(0)
     >>> permdisp(dm, grouping, permutations=99)
+    method name               PERMDISP
+    test statistic name        F-value
+    sample size                      6
+    number of groups                 2
+    test statistic             1.03296
+    p-value                       0.35
+    number of permutations          99
+    Name: PERMDISP results, dtype: object
+
+    The return value is a ``pandas.Series`` object containing the results of
+    the statistical test.
+
+    To suppress calculation of the p-value and only obtain the F statistic,
+    specify zero permutations:
+
+    >>> permdisp(dm, grouping, permutations=0)
+    method name               PERMDISP
+    test statistic name        F-value
+    sample size                      6
+    number of groups                 2
+    test statistic             1.03296
+    p-value                        NaN
+    number of permutations           0
+    Name: PERMDISP results, dtype: object
+
+    PERMDISP computes variances based on two types of tests, using either
+    centroids or spatial medians, also commonly reffered to as a geometric
+    median or mediancentre. The spatial median is thought to yeild a more
+    robust test statistic, and this test is used by default. Spatial medians
+    are computed using an iterative algorithm to find the optimally minimum
+    point from all other points in a group while centroids are computed
+    using a deterministic formula. As such the two different tests yeild
+    slightly different F statistics.
+
+    >>> np.random.seed(0)
+    >>> permdisp(dm, grouping, test='centroid', permutations=99)
+    method name               PERMDISP
+    test statistic name        F-value
+    sample size                      6
+    number of groups                 2
+    test statistic             3.67082
+    p-value                       0.29
+    number of permutations          99
+    Name: PERMDISP results, dtype: object
+
+    You can also provide a ``pandas.DataFrame`` and a column denoting the
+    grouping instead of a grouping vector. The following DataFrame's
+    Grouping column specifies the same grouping as the vector we used in the
+    previous examples.:
+    >>> # make output deterministic; not necessary for normal use
+    >>> np.random.seed(0)
+    >>> import pandas as pd
+    >>> df = pd.DataFrame.from_dict(
+            {'Grouping': {'s1': 'G1', 's2': 'G1', 's3': 'G1', 's4': 'G2',
+                          's5': 'G2', 's6': 'G2'}})
+    >>> permdisp(dm, df, 'Grouping', permutations=99, test='centroid')
+    method name               PERMDISP
+    test statistic name        F-value
+    sample size                      6
+    number of groups                 2
+    test statistic             3.67082
+    p-value                       0.25
+    number of permutations          99
+    Name: PERMDISP results, dtype: object
+
+    Note that when providing a ``DataFrame``, the ordering of rows and/or
+    columns does not affect the grouping vector that is extracted. The
+    ``DataFrame`` must be indexed by the distance matrix IDs (i.e., the row
+    labels must be distance matrix IDs).
+
+    If IDs (rows) are present in the ``DataFrame`` but not in the distance
+    matrix, they are ignored. The previous example's ``s7`` ID illustrates this
+    behavior: note that even though the ``DataFrame`` had 7 objects, only 6
+    were used in the test (see the "Sample size" row in the results above to
+    confirm this). Thus, the ``DataFrame`` can be a superset of the distance
+    matrix IDs. Note that the reverse is not true: IDs in the distance matrix
+    *must* be present in the ``DataFrame`` or an error will be raised.
+
+    PERMDISP should be used to determine wether the dispersions between the
+    groups in your distance matrix are significantly separated.
+    A non-significant test result indicates that group dispersions are similar
+    to eachother. PERMANOVA or ANOSIM should then be used in conjunction to
+    determine wether clustering within groups is significant.
+
+    fuck you sphinx
+    fuck you sphinx
+    fuck you sphinx
+    fuck you sphinx
+    fuck you sphinx
     
-
-
     """
+    
     ordination = pcoa(distance_matrix)
 
     sample_size, num_groups, grouping, tri_idxs, distances = _preprocess_input(
@@ -138,14 +232,16 @@ def permdisp(distance_matrix, grouping, column=None, test='median',
                           stat, p_value, permutations)
 
 
-def _eu_dist(x, vector): # not explicitly tested
+def _eu_dist(x, vector):  # not explicitly tested
     """
     return a series of Euclidean distances from the aggregated series,
     sliced to exclude the grouping column to an established centroid or
     spatial median vector
+
     """
+
     return pd.Series([euclidean(x[:-1],
-                     vector.loc[x.grouping]), x.grouping],
+                                vector.loc[x.grouping]), x.grouping],
                      index=['distance', 'grouping'])
 
 
@@ -165,19 +261,22 @@ def _compute_centroid_groups(ordination, grouping):
     return groups
 
 
-def _centroid(x): # not explicitly tested
-    return x.sum()/len(x)
+def _centroid(x):  # not explicitly tested
+    return x.sum() / len(x)
 
 
-def _cen_oneway(ordination, grouping): # not explicitly tested
+def _cen_oneway(ordination, grouping):  # not explicitly tested
     stat, _ = f_oneway(*(_compute_centroid_groups(ordination, grouping)))
     return stat
 
 
-def _config_med(x): # not explicitly tested
-    """slice the vector up to the last value to exclude grouping column
-    and transpose the vector to be compatible with hd.geomedian
+def _config_med(x):  # not explicitly tested
     """
+    slice the vector up to the last value to exclude grouping column
+    and transpose the vector to be compatible with hd.geomedian
+
+    """
+
     X = x.values[:, :-1]
     return np.array(hd.geomedian(X.T))
 
@@ -191,7 +290,7 @@ def _compute_median_groups(ordination, grouping):
     medians = ordination.samples.groupby('grouping').aggregate(_config_med)
 
     grouped = ordination.samples.apply(_eu_dist, axis=1,
-                                         vector=medians).groupby('grouping')
+                                       vector=medians).groupby('grouping')
 
     for _, group in grouped:
         groups.append(group['distance'].tolist())
@@ -199,6 +298,6 @@ def _compute_median_groups(ordination, grouping):
     return groups
 
 
-def _med_oneway(ordination, grouping): # not explicitly tested
+def _med_oneway(ordination, grouping):  # not explicitly tested
     stat, _ = f_oneway(*(_compute_median_groups(ordination, grouping)))
     return stat
