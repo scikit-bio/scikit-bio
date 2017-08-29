@@ -24,10 +24,7 @@ from skbio.util._decorator import experimental
 @experimental(as_of="0.5.1")
 def permdisp(distance_matrix, grouping, column=None, test='median',
              permutations=999):
-    """
-
-    Test for Homogeneity of Multivariate Groups Disperisons using Marti
-    Anderson's PERMDISP2 procedure.
+    """Test for Homogeneity of Multivariate Groups Disperisons using PERMDISP
 
     PERMDISP is a multivariate analogue of Levene's test for homogeneity of
     multivariate variances. Non-euclidean distances are handled by reducing the
@@ -75,7 +72,7 @@ def permdisp(distance_matrix, grouping, column=None, test='median',
     ------
     TypeError
         If, when using the spatial median test, the pcoa ordination is not of
-        type np.float32 or np.float64, the spatial median function will fail
+        type ``np.float32`` or ``np.float64``, the spatial median function will fail
         and the centroid test should be used instead
     ValueError
         If the test is not centroid or median. test is set to median by default
@@ -170,12 +167,13 @@ def permdisp(distance_matrix, grouping, column=None, test='median',
     grouping instead of a grouping vector. The following DataFrame's
     Grouping column specifies the same grouping as the vector we used in the
     previous examples.:
+
     >>> # make output deterministic; not necessary for normal use
     >>> np.random.seed(0)
     >>> import pandas as pd
     >>> df = pd.DataFrame.from_dict(
-            {'Grouping': {'s1': 'G1', 's2': 'G1', 's3': 'G1', 's4': 'G2',
-                          's5': 'G2', 's6': 'G2'}})
+    ...     {'Grouping': {'s1': 'G1', 's2': 'G1', 's3': 'G1', 's4': 'G2',
+    ...                   's5': 'G2', 's6': 'G2', 's7': 'G3'}})
     >>> permdisp(dm, df, 'Grouping', permutations=99, test='centroid')
     method name               PERMDISP
     test statistic name        F-value
@@ -205,14 +203,7 @@ def permdisp(distance_matrix, grouping, column=None, test='median',
     to eachother. PERMANOVA or ANOSIM should then be used in conjunction to
     determine wether clustering within groups is significant.
 
-    fuck you sphinx
-    fuck you sphinx
-    fuck you sphinx
-    fuck you sphinx
-    fuck you sphinx
-    
     """
-    
     ordination = pcoa(distance_matrix)
 
     sample_size, num_groups, grouping, tri_idxs, distances = _preprocess_input(
@@ -239,9 +230,8 @@ def _eu_dist(x, vector):  # not explicitly tested
     spatial median vector
 
     """
-
-    return pd.Series([euclidean(x[:-1],
-                                vector.loc[x.grouping]), x.grouping],
+    return pd.Series([euclidean(x.values[:-1],
+                                vector.loc[x.grouping].values), x.grouping],
                      index=['distance', 'grouping'])
 
 
@@ -251,8 +241,8 @@ def _compute_centroid_groups(ordination, grouping):
 
     ordination.samples['grouping'] = grouping
 
-    centroids = ordination.samples.groupby('grouping').aggregate(_centroid)
-
+    centroids = ordination.samples.groupby('grouping').aggregate(np.mean)
+    
     grouped = ordination.samples.apply(_eu_dist, axis=1,
                                        vector=centroids).groupby('grouping')
     for _, group in grouped:
