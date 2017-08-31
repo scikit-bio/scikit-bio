@@ -2084,24 +2084,26 @@ class TestSequence(TestSequenceBase, ReallyEqualMixin):
         seq_copy = copy.deepcopy(seq)
 
         self.assertEqual(seq_copy, seq)
-        self.assertIsNot(seq_copy, seq)
-        self.assertIsNot(seq_copy._bytes, seq._bytes)
-        self.assertIsNot(seq_copy._metadata, seq._metadata)
-        self.assertIsNot(seq_copy._positional_metadata,
-                         seq._positional_metadata)
-        self.assertIsNot(seq_copy._positional_metadata.values,
-                         seq._positional_metadata.values)
-        self.assertIsNot(seq_copy._metadata['foo'], seq._metadata['foo'])
-        self.assertIsNot(seq_copy._positional_metadata.loc[0, 'bar'],
-                         seq._positional_metadata.loc[0, 'bar'])
-        self.assertIsNot(seq_copy.interval_metadata, seq.interval_metadata)
-        self.assertIsNot(seq_copy.interval_metadata._intervals[0],
-                         seq.interval_metadata._intervals[0])
-        self.assertIsNot(seq_copy.interval_metadata._intervals[0].metadata,
-                         seq.interval_metadata._intervals[0].metadata)
+        self.assertIsNot(id(seq_copy), id(seq))
+        self.assertIsNot(id(seq_copy._bytes), id(seq._bytes))
+        self.assertIsNot(id(seq_copy._metadata), id(seq._metadata))
+        self.assertIsNot(id(seq_copy._positional_metadata),
+                         id(seq._positional_metadata))
+        self.assertIsNot(id(seq_copy._positional_metadata.values),
+                         id(seq._positional_metadata.values))
+        self.assertIsNot(id(seq_copy._metadata['foo']),
+                         id(seq._metadata['foo']))
+        self.assertIsNot(id(seq_copy._positional_metadata.loc[0, 'bar']),
+                         id(seq._positional_metadata.loc[0, 'bar']))
+        self.assertIsNot(id(seq_copy.interval_metadata),
+                         id(seq.interval_metadata))
+        self.assertIsNot(id(seq_copy.interval_metadata._intervals[0]),
+                         id(seq.interval_metadata._intervals[0]))
+        self.assertIsNot(id(seq_copy.interval_metadata._intervals[0].metadata),
+                         id(seq.interval_metadata._intervals[0].metadata))
         self.assertIsNot(
-            seq_copy.interval_metadata._intervals[0].metadata['gene'],
-            seq.interval_metadata._intervals[0].metadata['gene'])
+            id(seq_copy.interval_metadata._intervals[0].metadata['gene']),
+            id(seq.interval_metadata._intervals[0].metadata['gene']))
         seq_copy.metadata['foo'].append(2)
         seq_copy.metadata['foo2'] = 42
 
@@ -2117,7 +2119,7 @@ class TestSequence(TestSequenceBase, ReallyEqualMixin):
                           'baz': [43, 42, 42, 42]}))
         assert_data_frame_almost_equal(
             seq.positional_metadata,
-            pd.DataFrame({'bar': [[], [], [], []],
+            pd.DataFrame({'bar': [[1], [], [], []],
                           'baz': [42, 42, 42, 42]}))
 
     def test_copy_preserves_read_only_flag_on_bytes(self):

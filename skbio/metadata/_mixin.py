@@ -255,11 +255,11 @@ class PositionalMetadataMixin(metaclass=abc.ABCMeta):
 
         >>> seq.positional_metadata = {'degenerates': seq.degenerates()}
         >>> seq.positional_metadata
-          degenerates
-        0       False
-        1       False
-        2       False
-        3       False
+           degenerates
+        0        False
+        1        False
+        2        False
+        3        False
 
         Delete positional metadata:
 
@@ -285,7 +285,7 @@ class PositionalMetadataMixin(metaclass=abc.ABCMeta):
         try:
             # Pass copy=True to copy underlying data buffer.
             positional_metadata = pd.DataFrame(positional_metadata, copy=True)
-        except pd.core.common.PandasError as e:
+        except Exception as e:
             raise TypeError(
                 "Invalid positional metadata. Must be consumable by "
                 "`pd.DataFrame` constructor. Original pandas error message: "

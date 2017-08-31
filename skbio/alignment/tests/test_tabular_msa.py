@@ -1138,10 +1138,10 @@ class SharedIndexTests:
     def test_bad_fancy_index(self):
         msa = TabularMSA([DNA("ABCD"), DNA("GHKM"), DNA("NRST")])
 
-        with self.assertRaises((KeyError, TypeError)):
+        with self.assertRaises((KeyError, TypeError, ValueError)):
             self.get(msa, [0, "foo"])
 
-        with self.assertRaises(IndexError):
+        with self.assertRaises((IndexError, ValueError)):
             self.get(msa, (Ellipsis, [0, "foo"]))
 
     def test_asburd_slice(self):
@@ -2696,9 +2696,9 @@ class TestJoin(unittest.TestCase):
 
         self.assertEqual(
             joined,
-            TabularMSA([DNA('C--C'),
+            TabularMSA([DNA('ACCA'),
                         DNA('G..G'),
-                        DNA('ACCA')], index=[2, 1, 0],
+                        DNA('C--C')], index=[0, 1, 2],
                        positional_metadata={'foo': [1, 2, 3, 4]}))
 
     def test_how_inner_no_positional_metadata_overlap(self):
@@ -2713,8 +2713,8 @@ class TestJoin(unittest.TestCase):
 
         self.assertEqual(
             joined,
-            TabularMSA([DNA('G.-C'),
-                        DNA('AC.G')], index=['a', 'b']))
+            TabularMSA([DNA('AC.G'),
+                        DNA('G.-C')], index=['b', 'a']))
 
     def test_how_inner_no_index_overlap_with_positional_metadata_overlap(self):
         msa1 = TabularMSA([DNA('AC'),

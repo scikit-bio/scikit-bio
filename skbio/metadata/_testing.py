@@ -622,12 +622,12 @@ class PositionalMetadataMixinTests:
         self.assertEqual(obj, obj_copy)
         self.assertIsNot(obj, obj_copy)
 
-        self.assertIsNot(obj._positional_metadata,
-                         obj_copy._positional_metadata)
-        self.assertIsNot(obj._positional_metadata.values,
-                         obj_copy._positional_metadata.values)
-        self.assertIsNot(obj._positional_metadata.loc[0, 'bar'],
-                         obj_copy._positional_metadata.loc[0, 'bar'])
+        self.assertIsNot(id(obj._positional_metadata),
+                         id(obj_copy._positional_metadata))
+        self.assertIsNot(id(obj._positional_metadata.values),
+                         id(obj_copy._positional_metadata.values))
+        self.assertIsNot(id(obj._positional_metadata.loc[0, 'bar']),
+                         id(obj_copy._positional_metadata.loc[0, 'bar']))
 
         obj_copy.positional_metadata.loc[0, 'bar'].append(1)
         obj_copy.positional_metadata.loc[0, 'baz'] = 43
@@ -638,7 +638,7 @@ class PositionalMetadataMixinTests:
                           'baz': [43, 42, 42, 42]}))
         assert_data_frame_almost_equal(
             obj.positional_metadata,
-            pd.DataFrame({'bar': [[], [], [], []],
+            pd.DataFrame({'bar': [[1], [], [], []],
                           'baz': [42, 42, 42, 42]}))
 
     def test_deepcopy_preserves_range_index(self):
