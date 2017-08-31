@@ -20,6 +20,9 @@ from setuptools.extension import Extension
 import numpy as np
 
 
+###
+
+
 if sys.version_info.major != 3:
     sys.exit("scikit-bio can only be used with Python 3. You are currently "
              "running Python %d." % sys.version_info.major)
