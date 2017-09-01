@@ -12,6 +12,7 @@ import numpy as np
 import pandas as pd
 from scipy.stats import f_oneway
 from scipy.spatial.distance import euclidean
+from scipy.linalg import norm
 
 import hdmedians as hd
 
@@ -210,7 +211,7 @@ def permdisp(distance_matrix, grouping, column=None, test='median',
         distance_matrix, grouping, column)
 
     if test == 'centroid':
-        test_stat_function = partial(_cen_oneway, ordination)
+        test_stat_function = partial(_compute_centroid_groups, ordination)
     elif test == 'median':
         test_stat_function = partial(_med_oneway, ordination)
     else:
@@ -230,25 +231,39 @@ def _eu_dist(x, vector):  # not explicitly tested
     spatial median vector
 
     """
-    return pd.Series([euclidean(x.values[:-1],
-                                vector.loc[x.grouping].values), x.grouping],
-                     index=['distance', 'grouping'])
+    subgroup = []
+    groups = []
+    for g in x:
+        for i in g.values[:, :-1] :
+            dist = norm(i - centroids.loc[g.grouping].values[0])
+            subgroup.append(dist)
+        groups.append(subgroup)
+        subgroup = []
+
+
+    return groups
 
 
 def _compute_centroid_groups(ordination, grouping):
 
     groups = []
+    subgroup = []
 
     ordination.samples['grouping'] = grouping
 
-    centroids = ordination.samples.groupby('grouping').aggregate(np.mean)
+    centroids = ordination.samples.groupby('grouping').aggregate('mean')
     
-    grouped = ordination.samples.apply(_eu_dist, axis=1,
+    grouped = ordination.samples.apply(_eu_dist, axis=1, raw=True,
                                        vector=centroids).groupby('grouping')
+    
+    '''
     for _, group in grouped:
         groups.append(group['distance'].tolist())
+    '''
 
-    return groups
+    stat, _ = f_oneway(*grouped)
+
+    return stat
 
 
 def _centroid(x):  # not explicitly tested
