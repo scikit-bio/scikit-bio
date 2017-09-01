@@ -25,7 +25,8 @@ from skbio.util._decorator import experimental
 @experimental(as_of="0.5.1")
 def permdisp(distance_matrix, grouping, column=None, test='median',
              permutations=999):
-    """Test for Homogeneity of Multivariate Groups Disperisons using PERMDISP
+    """Test for Homogeneity of Multivariate Groups Disperisons using Marti
+    Anderson's PERMDISP2 procedure.
 
     PERMDISP is a multivariate analogue of Levene's test for homogeneity of
     multivariate variances. Non-euclidean distances are handled by reducing the
@@ -73,7 +74,7 @@ def permdisp(distance_matrix, grouping, column=None, test='median',
     ------
     TypeError
         If, when using the spatial median test, the pcoa ordination is not of
-        type ``np.float32`` or ``np.float64``, the spatial median function will fail
+        type np.float32 or np.float64, the spatial median function will fail
         and the centroid test should be used instead
     ValueError
         If the test is not centroid or median. test is set to median by default
@@ -168,13 +169,12 @@ def permdisp(distance_matrix, grouping, column=None, test='median',
     grouping instead of a grouping vector. The following DataFrame's
     Grouping column specifies the same grouping as the vector we used in the
     previous examples.:
-
     >>> # make output deterministic; not necessary for normal use
     >>> np.random.seed(0)
     >>> import pandas as pd
     >>> df = pd.DataFrame.from_dict(
-    ...     {'Grouping': {'s1': 'G1', 's2': 'G1', 's3': 'G1', 's4': 'G2',
-    ...                   's5': 'G2', 's6': 'G2', 's7': 'G3'}})
+    ...      {'Grouping': {'s1': 'G1', 's2': 'G1', 's3': 'G1', 's4': 'G2',
+    ...                    's5': 'G2', 's6': 'G2'}})
     >>> permdisp(dm, df, 'Grouping', permutations=99, test='centroid')
     method name               PERMDISP
     test statistic name        F-value
@@ -203,8 +203,9 @@ def permdisp(distance_matrix, grouping, column=None, test='median',
     A non-significant test result indicates that group dispersions are similar
     to eachother. PERMANOVA or ANOSIM should then be used in conjunction to
     determine wether clustering within groups is significant.
-
+    
     """
+    
     ordination = pcoa(distance_matrix)
 
     sample_size, num_groups, grouping, tri_idxs, distances = _preprocess_input(
@@ -229,19 +230,11 @@ def _eu_dist(x, vector):  # not explicitly tested
     return a series of Euclidean distances from the aggregated series,
     sliced to exclude the grouping column to an established centroid or
     spatial median vector
-
     """
-    subgroup = []
-    groups = []
-    for g in x:
-        for i in g.values[:, :-1] :
-            dist = norm(i - centroids.loc[g.grouping].values[0])
-            subgroup.append(dist)
-        groups.append(subgroup)
-        subgroup = []
 
-
-    return groups
+    return pd.Series([euclidean(x[:-1],
+                                vector.loc[x.grouping]), x.grouping],
+                     index=['distance', 'grouping'])
 
 
 def _compute_centroid_groups(ordination, grouping):
@@ -251,15 +244,16 @@ def _compute_centroid_groups(ordination, grouping):
 
     ordination.samples['grouping'] = grouping
 
+
     centroids = ordination.samples.groupby('grouping').aggregate('mean')
-    
-    grouped = ordination.samples.apply(_eu_dist, axis=1, raw=True,
+
+    grouped = ordination.samples.apply(_eu_dist, axis=1,
                                        vector=centroids).groupby('grouping')
     
-    '''
+    
     for _, group in grouped:
         groups.append(group['distance'].tolist())
-    '''
+    
 
     stat, _ = f_oneway(*grouped)
 
