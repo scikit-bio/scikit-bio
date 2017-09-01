@@ -157,7 +157,6 @@ class testPERMDISP(TestCase):
         obs_null = _compute_centroid_groups(dm, self.grouping_eq)
         self.assertEqual(exp, obs_null)
 
-    def test_medians_null(self):
 
 
     def test_no_permuations(self):
@@ -169,8 +168,8 @@ class testPERMDISP(TestCase):
 
     def test_centroid_normal(self):
         exp = pd.Series(index=self.exp_index, 
-                        data=['PERMDISP', 'F-value', 9, 2, 0.244501519876, .
-                              63, 99],
+                        data=['PERMDISP', 'F-value', 9, 2, 0.244501519876,
+                              0.63, 99],
                         name='PERMDISP results')
  
         grouping = ['Control', 'Control', 'Control', 'Control', 'Control',
