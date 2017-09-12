@@ -242,7 +242,7 @@ def _compute_centroid_groups(samples, grouping):
     return stat
 
 
-def _config_med(x):  # not explicitly tested
+def _config_med(x):  # not explicitly tested by permdisp test suite
     """
     slice the vector up to the last value to exclude grouping column
     and transpose the vector to be compatible with hd.geomedian
