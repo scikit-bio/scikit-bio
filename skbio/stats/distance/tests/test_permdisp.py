@@ -113,7 +113,6 @@ class testPERMDISP(TestCase):
                [2.17349240061718, 2.3192679626679946, 2.028338553903792]]
         exp_stat, _ = f_oneway(*exp)
 
-        # find instances where we reuse pcoa, and only compute those once
         dm = pcoa(self.eq_mat)
         dm = dm.samples
 
