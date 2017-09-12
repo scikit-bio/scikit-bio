@@ -9,11 +9,7 @@
 from functools import partial
 
 import numpy as np
-import pandas as pd
 from scipy.stats import f_oneway
-from scipy.spatial.distance import euclidean
-from scipy.linalg import norm
-from sklearn.metrics.pairwise import euclidean_distances as eudist
 from scipy.spatial.distance import cdist
 
 import hdmedians as hd
@@ -205,18 +201,14 @@ def permdisp(distance_matrix, grouping, column=None, test='median',
     A non-significant test result indicates that group dispersions are similar
     to eachother. PERMANOVA or ANOSIM should then be used in conjunction to
     determine wether clustering within groups is significant.
-    
+
     """
-    
+
     ordination = pcoa(distance_matrix)
     samples = ordination.samples
 
     sample_size, num_groups, grouping, tri_idxs, distances = _preprocess_input(
         distance_matrix, grouping, column)
-
-    samples['grouping'] = grouping
-    #_samples = samples.iloc[:,:-1]
-    #_samples = samples.values[:, :-1]
 
     if test == 'centroid':
         test_stat_function = partial(_compute_centroid_groups, samples)
@@ -227,67 +219,34 @@ def permdisp(distance_matrix, grouping, column=None, test='median',
 
     stat, p_value = _run_monte_carlo_stats(test_stat_function, grouping,
                                            permutations)
-    
-    #stat, p_value = test_stat_function(grouping)
+
     return _build_results('PERMDISP', 'F-value', sample_size, num_groups,
                           stat, p_value, permutations)
-
-
-def _eu_dist(x, vector):  # not explicitly tested
-    """
-    return a series of Euclidean distances from the aggregated series,
-    sliced to exclude the grouping column to an established centroid or
-    spatial median vector
-    """
-
-    # return pd.Series([euclidean(x.values[:-1],
-    #                  vector.loc[x.grouping].values), x.grouping],
-    #                  index=['distance', 'grouping'])
-    # return pd.Series([euclidean(x.values[:-1], vector.loc[x.grouping].values),
-    #         x.grouping])
-    # return euclidean(x.values[:-1], vector.loc[x.grouping].values)
-    # x.name
-    return norm(x.values - vector.loc[x.name].values)
 
 
 def _compute_centroid_groups(samples, grouping):
 
     groups = []
 
-    #_samples.set_index(grouping, inplace=True)
     samples['grouping'] = grouping
 
     centroids = samples.groupby('grouping').aggregate('mean')
 
-    #grouped = _samples.apply(_eu_dist,
-    #                         axis=1, reduce=True, vector=centroids).to_frame()
-    """
-
-    grouped.columns = ['distance']
-    grouped['grouping'] = grouping
-    
-    grouped.columns = ['distance', 'grouping']
-    grouped = grouped.groupby('grouping')
-    
-    for _, group in grouped:
-        groups.append(group['distance'].tolist())
-    """
     for label, df in samples.groupby('grouping'):
-        groups.append(cdist(df.values[:,:-1], [centroids.loc[label].values],
+        groups.append(cdist(df.values[:, :-1], [centroids.loc[label].values],
                       metric='euclidean'))
-                      
+
     stat, _ = f_oneway(*groups)
     stat = stat[0]
 
     return stat
 
+
 def _config_med(x):  # not explicitly tested
     """
     slice the vector up to the last value to exclude grouping column
     and transpose the vector to be compatible with hd.geomedian
-
     """
-
     X = x.values[:, :-1]
     return np.array(hd.geomedian(X.T))
 
@@ -299,24 +258,12 @@ def _compute_median_groups(samples, grouping):
     samples['grouping'] = grouping
 
     medians = samples.groupby('grouping').aggregate(_config_med)
-    """
-    grouped = ordination.samples.apply(_eu_dist, axis=1, vector=medians)
-    grouped.columns = ['distance', 'grouping']
-    grouped = grouped.groupby('grouping')
 
-    for _, group in grouped:
-        groups.append(group['distance'].tolist())
-    """
     for label, df in samples.groupby('grouping'):
-        groups.append(cdist(df.values[:,:-1], [medians.loc[label].values],
+        groups.append(cdist(df.values[:, :-1], [medians.loc[label].values],
                       metric='euclidean'))
 
     stat, _ = f_oneway(*groups)
     stat = stat[0]
-                     
-    return stat
 
-
-def _med_oneway(ordination, grouping):  # not explicitly tested
-    stat, _ = f_oneway(*(_compute_median_groups(ordination, grouping)))
     return stat

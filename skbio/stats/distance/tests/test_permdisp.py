@@ -114,6 +114,7 @@ class testPERMDISP(TestCase):
 
         # find instances where we reuse pcoa, and only compute those once
         dm = pcoa(self.eq_mat)
+        dm = dm.samples
 
         obs = _compute_centroid_groups(dm, self.grouping_eq)
         self.assertEqual(obs, exp)
@@ -132,6 +133,7 @@ class testPERMDISP(TestCase):
                     2.8547180589306036, 3.218568759338847]]
 
         dm = pcoa(self.uneq_mat)
+        dm = dm.samples
 
         obs = _compute_centroid_groups(dm, self.grouping_uneq)
         self.assertEqual(obs, exp)
@@ -146,6 +148,7 @@ class testPERMDISP(TestCase):
                 [2.4333280644972795, 2.389000390879655, 
                     2.8547180589306036, 3.218568759338847]]
         dm = pcoa(self.uneq_mat)
+        dm = dm.samples
 
         obs_mixed = _compute_centroid_groups(dm, self.grouping_un_mixed)
         self.assertEqual(exp, obs_mixed)
@@ -153,6 +156,7 @@ class testPERMDISP(TestCase):
     def test_centroids_null(self):
         exp = [[0.00, 0.00, 0.00], [0.00, 0.00, 0.00]]
         dm = pcoa(self.null_mat)
+        dm = dm.samples
 
         obs_null = _compute_centroid_groups(dm, self.grouping_eq)
         self.assertEqual(exp, obs_null)
