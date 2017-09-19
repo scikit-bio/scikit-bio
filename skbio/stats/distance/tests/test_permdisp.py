@@ -120,7 +120,7 @@ class testPERMDISP(TestCase):
         self.assertEqual(obs, exp_stat)
 
         obs_relab = _compute_centroid_groups(dm, self.grouping_eq_relab)
-        self.assertEqual(obs_relab, obs)
+        self.assertAlmostEqual(obs_relab, obs, places=6)
 
     def test_centroids_uneq_groups(self):
         """
@@ -140,7 +140,7 @@ class testPERMDISP(TestCase):
         self.assertEqual(obs, exp_stat)
 
         obs_relab = _compute_centroid_groups(dm, self.grouping_uneq_relab)
-        self.assertEqual(obs, obs_relab)
+        self.assertAlmostEqual(obs, obs_relab)
 
     def test_centroids_mixedgroups(self):
         exp = [[2.5847022428144935, 2.285624595858895,
@@ -154,7 +154,7 @@ class testPERMDISP(TestCase):
         exp_stat, _ = f_oneway(*exp)
 
         obs_mixed = _compute_centroid_groups(dm, self.grouping_un_mixed)
-        self.assertEqual(exp_stat, obs_mixed)
+        self.assertAlmostEqual(exp_stat, obs_mixed)
 
     def test_centroids_null(self):
         dm = pcoa(self.null_mat)
