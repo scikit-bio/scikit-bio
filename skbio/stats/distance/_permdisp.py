@@ -102,7 +102,7 @@ def permdisp(distance_matrix, grouping, column=None, test='median',
     objects:
 
     >>> from skbio import DistanceMatrix
-    >>>  dm = DistanceMatrix([[0,    0.5,  0.75, 1, 0.66, 0.33],
+    >>> dm = DistanceMatrix([[0,    0.5,  0.75, 1, 0.66, 0.33],
     ...                       [0.5,  0,    0.25, 0.33, 0.77, 0.61],
     ...                       [0.75, 0.25, 0,    0.1, 0.44, 0.55],
     ...                       [1,    0.33, 0.1,  0, 0.75, 0.88],
@@ -167,19 +167,19 @@ def permdisp(distance_matrix, grouping, column=None, test='median',
     grouping instead of a grouping vector. The following DataFrame's
     Grouping column specifies the same grouping as the vector we used in the
     previous examples.:
-    >>> # make output deterministic; not necessary for normal use
-    >>> np.random.seed(0)
     >>> import pandas as pd
     >>> df = pd.DataFrame.from_dict(
     ...      {'Grouping': {'s1': 'G1', 's2': 'G1', 's3': 'G1', 's4': 'G2',
     ...                    's5': 'G2', 's6': 'G2'}})
+    >>> # make output deterministic; not necessary for normal use
+    >>> np.random.seed(0)
     >>> permdisp(dm, df, 'Grouping', permutations=99, test='centroid')
     method name               PERMDISP
     test statistic name        F-value
     sample size                      6
     number of groups                 2
     test statistic             3.67082
-    p-value                       0.25
+    p-value                       0.29
     number of permutations          99
     Name: PERMDISP results, dtype: object
 
