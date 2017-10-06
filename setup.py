@@ -115,7 +115,7 @@ setup(name='scikit-bio',
           'matplotlib >= 1.4.3',
           'natsort >= 4.0.3',
           'numpy >= 1.9.2',
-          'pandas >= 0.18.0',
+          'pandas >= 0.19.2',
           'scipy >= 0.15.1',
           'nose >= 1.3.7'
       ],

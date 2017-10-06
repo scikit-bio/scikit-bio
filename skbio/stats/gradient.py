@@ -163,8 +163,10 @@ def _weight_by_vector(trajectories, w_vector):
     for i, idx in enumerate(trajectories.index):
         # Skipping the first element is it doesn't need to be weighted
         if i != 0:
-            trajectories.ix[idx] = (trajectories.ix[idx] * optimal_gradient /
-                                    (np.abs((w_vector[i] - w_vector[i-1]))))
+            trajectories.loc[idx] = (
+                trajectories.loc[idx] * optimal_gradient /
+                np.abs((w_vector[i] - w_vector[i-1]))
+            )
 
     return trajectories
 
@@ -428,7 +430,7 @@ class GradientANOVA:
                              % (len(prop_expl), axes))
 
         # Restrict coordinates to those axes that we actually need to compute
-        self._coords = coords.ix[:, :axes-1]
+        self._coords = coords.loc[:, :axes-1]
         self._prop_expl = prop_expl[:axes]
         self._metadata_map = metadata_map
         self._weighted = weighted
@@ -501,10 +503,10 @@ class GradientANOVA:
 
         # Need to take a subset of coords
         if coords_sample_ids != sample_ids:
-            self._coords = self._coords.ix[sample_ids]
+            self._coords = self._coords.loc[sample_ids]
         # Need to take a subset of metadata_map
         if mm_sample_ids != sample_ids:
-            self._metadata_map = self._metadata_map.ix[sample_ids]
+            self._metadata_map = self._metadata_map.loc[sample_ids]
 
     def _make_groups(self, trajectory_categories, sort_category):
         r"""Groups the sample ids in `self._metadata_map` by the values in
@@ -566,7 +568,7 @@ class GradientANOVA:
             If sids is an empty list
         """
         # We multiply the coord values with the prop_expl
-        trajectories = self._coords.ix[sids] * self._prop_expl
+        trajectories = self._coords.loc[sids] * self._prop_expl
 
         if trajectories.empty:
             # Raising a RuntimeError since in a usual execution this should
@@ -590,7 +592,7 @@ class GradientANOVA:
                 trajectories = trajectories_copy
 
         return self._compute_trajectories_results(group_name,
-                                                  trajectories.ix[sids])
+                                                  trajectories.loc[sids])
 
     def _compute_trajectories_results(self, group_name, trajectories):
         r"""Do the actual trajectories computation over trajectories
@@ -695,8 +697,8 @@ class TrajectoryGradientANOVA(GradientANOVA):
             # Loop through all the rows in trajectories and create '2-norm'
             # by taking the norm of the 2nd row - 1st row, 3rd row - 2nd row...
             trajectory = \
-                np.array([np.linalg.norm(trajectories.ix[i+1].get_values() -
-                                         trajectories.ix[i].get_values())
+                np.array([np.linalg.norm(trajectories.iloc[i+1].get_values() -
+                                         trajectories.iloc[i].get_values())
                           for i in range(len(trajectories) - 1)])
             calc = {'2-norm': np.linalg.norm(trajectory)}
 
@@ -745,8 +747,8 @@ class FirstDifferenceGradientANOVA(GradientANOVA):
             calc = {'mean': trajectory[0], 'std': 0}
         else:
             vec_norm = \
-                np.array([np.linalg.norm(trajectories.ix[i+1].get_values() -
-                                         trajectories.ix[i].get_values())
+                np.array([np.linalg.norm(trajectories.iloc[i+1].get_values() -
+                                         trajectories.iloc[i].get_values())
                           for i in range(len(trajectories) - 1)])
             trajectory = np.diff(vec_norm)
             calc = {'mean': np.mean(trajectory), 'std': np.std(trajectory)}
@@ -830,8 +832,8 @@ class WindowDifferenceGradientANOVA(GradientANOVA):
             calc = {'mean': trajectory, 'std': 0}
         else:
             vec_norm = \
-                np.array([np.linalg.norm(trajectories.ix[i+1].get_values() -
-                                         trajectories.ix[i].get_values())
+                np.array([np.linalg.norm(trajectories.iloc[i+1].get_values() -
+                                         trajectories.iloc[i].get_values())
                           for i in range(len(trajectories) - 1)])
             # windowed first differences won't be able on every group,
             # specially given the variation of size that a trajectory tends

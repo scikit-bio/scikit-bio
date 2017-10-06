@@ -6,6 +6,7 @@
 # The full license is in the file COPYING.txt, distributed with this software.
 # ----------------------------------------------------------------------------
 
+import functools
 from unittest import TestCase, main
 import numpy as np
 import numpy.testing as npt
@@ -882,10 +883,12 @@ class AncomTests(TestCase):
         assert_data_frame_almost_equal(result[0], exp)
 
     def test_ancom_multiple_comparisons(self):
+        significance_test = functools.partial(scipy.stats.mannwhitneyu,
+                                              alternative='two-sided')
         result = ancom(self.table1,
                        self.cats1,
                        multiple_comparisons_correction='holm-bonferroni',
-                       significance_test=scipy.stats.mannwhitneyu)
+                       significance_test=significance_test)
         exp = pd.DataFrame(
             {'W': np.array([0]*7),
              'Reject null hypothesis': np.array([False]*7, dtype=bool)})
