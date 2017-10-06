@@ -335,7 +335,7 @@ class GradientTests(BaseTests):
                                                           -0.44931561,
                                                           0.74490965])
                                       }, orient='index')
-        obs = _weight_by_vector(trajectory.ix[sample_ids],
+        obs = _weight_by_vector(trajectory.loc[sample_ids],
                                 w_vector[sample_ids])
         assert_data_frame_almost_equal(obs.sort_index(), exp.sort_index())
 
@@ -779,7 +779,7 @@ class GradientANOVATests(BaseTests):
         """Should raise a RuntimeError if the user call _get_group_trajectories
         with erroneous inputs"""
         bv = GradientANOVA(self.coords, self.prop_expl, self.metadata_map)
-        with self.assertRaises(RuntimeError):
+        with self.assertRaises(KeyError):
             bv._get_group_trajectories("foo", ['foo'])
         with self.assertRaises(RuntimeError):
             bv._get_group_trajectories("bar", [])

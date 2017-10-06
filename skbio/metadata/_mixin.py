@@ -254,7 +254,7 @@ class PositionalMetadataMixin(metaclass=abc.ABCMeta):
         Set positional metadata:
 
         >>> seq.positional_metadata = {'degenerates': seq.degenerates()}
-        >>> seq.positional_metadata
+        >>> seq.positional_metadata # doctest: +NORMALIZE_WHITESPACE
           degenerates
         0       False
         1       False
@@ -285,7 +285,10 @@ class PositionalMetadataMixin(metaclass=abc.ABCMeta):
         try:
             # Pass copy=True to copy underlying data buffer.
             positional_metadata = pd.DataFrame(positional_metadata, copy=True)
-        except pd.core.common.PandasError as e:
+        # Different versions of pandas will raise different error types. We
+        # don't really care what the type of the error is, just its message, so
+        # a blanket Exception will do.
+        except Exception as e:
             raise TypeError(
                 "Invalid positional metadata. Must be consumable by "
                 "`pd.DataFrame` constructor. Original pandas error message: "
@@ -368,7 +371,15 @@ class PositionalMetadataMixin(metaclass=abc.ABCMeta):
 
     def _deepcopy_(self, memo):
         if self.has_positional_metadata():
-            return copy.deepcopy(self.positional_metadata, memo)
+            # `copy.deepcopy` no longer recursively copies contents of the
+            # DataFrame, so we must handle the deep copy ourselves.
+            # Reference: https://github.com/pandas-dev/pandas/issues/17406
+            df = self.positional_metadata
+            data_cp = copy.deepcopy(df.values.tolist(), memo)
+            return pd.DataFrame(data_cp,
+                                index=df.index.copy(deep=True),
+                                columns=df.columns.copy(deep=True),
+                                copy=False)
         else:
             return None
 

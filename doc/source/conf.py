@@ -70,20 +70,7 @@ class NewAuto(autosummary.Autosummary):
 autosummary.Autosummary = NewAuto
 
 import sphinx_bootstrap_theme
-
-# We currently rely on the latest version of numpydoc available on GitHub:
-#   git+git://github.com/numpy/numpydoc.git
-#
-# There isn't a way to specify this in setup.py as a dependency since this
-# feature is being removed from pip. We also can't check the version of
-# numpydoc installed because there isn't a numpydoc.__version__ defined.
-try:
-    import numpydoc
-except ImportError:
-    raise RuntimeError(
-        "numpydoc v0.6 or later required. Install it with:\n"
-        "  pip install git+git://github.com/numpy/numpydoc.git@1a848331c2cf53"
-        "d4fe356f4607799524bcc577ed")
+import numpydoc
 
 @property
 def _extras(self):
