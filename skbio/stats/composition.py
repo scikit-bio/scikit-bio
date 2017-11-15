@@ -674,7 +674,7 @@ def alr(mat, denominator_idx=0):
 
     denominator_idx: int
        the index of the column (2D-matrix) or position (vector) of
-       mat which should be used as the reference composition
+       `mat` which should be used as the reference composition
 
     Returns
     -------
@@ -721,9 +721,11 @@ def alr_inv(mat, denominator_idx=0):
          alr^{-1}(x) = C[exp([y_1, y_2, ..., y_{D-1}, 0])]
 
     where :math:`C[x]` is the closure operation defined as
+
     .. math::
         C[x] = \left[\frac{x_1}{\sum_{i=1}^{D} x_i},\ldots,
                      \frac{x_D}{\sum_{i=1}^{D} x_i} \right]
+
     for some :math:`D` dimensional real vector :math:`x` and
     :math:`D` is the number of components for every composition.
 
@@ -731,10 +733,9 @@ def alr_inv(mat, denominator_idx=0):
     ----------
     mat: numpy.ndarray
        a matrix of alr-transformed data
-
     denominator_idx: int
        the index of the column (2D-composition) or position (1D-composition) of
-       the output where the common denominator should be placed
+       the output where the common denominator should be placed.
 
     Returns
     -------
@@ -1238,21 +1239,38 @@ def _gram_schmidt_basis(n):
 def sbp_basis(sbp):
     """
     Builds an orthogonal basis from a sequential binary partition (SBP).
-    As explained in [1], the "SBP describes the D−1 orthogonal (geometrically
+    As explained in [1]_, the "SBP describes the D−1 orthogonal (geometrically
     independent) balances between parts and groups of parts. The SBP is a
-    (D - 1) × D matrix, in which parts labeled '+1' (group  numerator) are
-    balanced with parts labeled '−1' (group denominator). A part labeled '0'
-    is excluded from the balance between parts. The composition is partitioned
-    sequentially into contrasts at every hierarchically ordered row until
-    the '+1' and '-1' groups each contain a single part."
+    :math:`(D - 1) \times D` matrix, in which parts labeled '+1' (group
+    numerator) are balanced with parts labeled '−1' (group denominator). A part
+    labeled '0' is excluded from the balance between parts. The composition is
+    partitioned sequentially into contrasts at every hierarchically ordered row
+    until the '+1' and '-1' groups each contain a single part."
+
+    .. math::
+
+        b_i = sqrt(r_i*s_i / r_i+s_i) * log(g(x_r_i) / g(x_s_i))
+
+    where :math:`b_i` is the :math:`i_{th}` balance (:math:`i \in [1, D-1]`)
+    where :math:`r_i` parts are coded as :math:`1` and :math:`s_i` parts are
+    coded as :math:`-1`, and :math:`g(x)` is the geometric mean of vector
+    :math:`x`.
 
     The `sbp_basis` method was originally derived from function
-    `gsi.buildilrBase()` found in the R package `compositions`. [2]
+    `gsi.buildilrBase()` found in the R package `compositions`. [2]_
 
     Parameters
     ----------
-    sbp : numpy.array of integers
-          1, -1 and 0
+    sbp: np.array, int
+        A contrast matrix, also known as a sequential binary partition, where
+        every row represents a partition between two groups of features. To
+        define the first balance, the parts are split in two groups: one group
+        labelled `+1` (numerator group) and another labelled `-1` (denominator
+        group). Then the second balance is defined by a split of the parts of
+        one of these groups, and all parts of the other group are labelled `0`
+        (not part of the balance). Splits are applied sequentially until all
+        groups have one single part. The splitting can be based on previously
+        known criteria of association or affinity.
 
     Returns
     -------
