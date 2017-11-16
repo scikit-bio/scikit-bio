@@ -51,8 +51,11 @@ Functions
    clr_inv
    ilr
    ilr_inv
+   alr
+   alr_inv
    centralize
    ancom
+   sbp_basis
 
 References
 ----------
@@ -642,6 +645,133 @@ def ilr_inv(mat, basis=None, check=True):
     return clr_inv(np.dot(mat, basis))
 
 
+@experimental(as_of="0.5.1-dev")
+def alr(mat, denominator_idx=0):
+    r"""
+    Performs additive log ratio transformation.
+
+    This function transforms compositions from a D-part Aitchison simplex to
+    a non-isometric real space of D-1 dimensions. The argument
+    `denominator_col` defines the index of the column used as the common
+    denominator. The :math: `alr` transformed data are amenable to multivariate
+    analysis as long as statistics don't involve distances.
+
+    :math:`alr: S^D \rightarrow \mathbb{R}^{D-1}`
+
+    The alr transformation is defined as follows
+
+    .. math::
+        alr(x) = [\ln \frac{x_1}{x_D}, \ldots, \ln \frac{x_{D-1}}{x_D}]
+
+    where :math:`D` is the index of the part used as common denominator.
+
+    Parameters
+    ----------
+    mat: numpy.ndarray
+       a matrix of proportions where
+       rows = compositions and
+       columns = components
+
+    denominator_idx: int
+       the index of the column (2D-matrix) or position (vector) of
+       `mat` which should be used as the reference composition
+
+    Returns
+    -------
+    numpy.ndarray
+         alr-transformed data projected in a non-isometric real space
+         of D-1 dimensions for a D-parts composition
+
+    Examples
+    --------
+    >>> import numpy as np
+    >>> from skbio.stats.composition import alr
+    >>> x = np.array([.1, .3, .4, .2])
+    >>> alr(x)
+    array([ 1.09861229,  1.38629436,  0.69314718])
+    """
+    mat = closure(mat)
+    if len(mat.shape) == 2:
+        mat_t = mat.T
+        numerator_idx = list(range(0, mat_t.shape[0]))
+        del numerator_idx[denominator_idx]
+        lr = np.log(mat_t[numerator_idx, :]/mat_t[denominator_idx, :]).T
+    elif len(mat.shape) == 1:
+        numerator_idx = list(range(0, mat.shape[0]))
+        del numerator_idx[denominator_idx]
+        lr = np.log(mat[numerator_idx]/mat[denominator_idx])
+    else:
+        raise ValueError("mat must be either 1D or 2D")
+    return lr
+
+
+@experimental(as_of="0.5.1-dev")
+def alr_inv(mat, denominator_idx=0):
+    r"""
+    Performs inverse additive log ratio transform.
+
+    This function transforms compositions from the non-isometric real space of
+    alrs to Aitchison geometry.
+
+    :math:`alr^{-1}: \mathbb{R}^{D-1} \rightarrow S^D`
+
+    The inverse alr transformation is defined as follows
+
+    .. math::
+         alr^{-1}(x) = C[exp([y_1, y_2, ..., y_{D-1}, 0])]
+
+    where :math:`C[x]` is the closure operation defined as
+
+    .. math::
+        C[x] = \left[\frac{x_1}{\sum_{i=1}^{D} x_i},\ldots,
+                     \frac{x_D}{\sum_{i=1}^{D} x_i} \right]
+    for some :math:`D` dimensional real vector :math:`x` and
+    :math:`D` is the number of components for every composition.
+
+    Parameters
+    ----------
+    mat: numpy.ndarray
+       a matrix of alr-transformed data
+    denominator_idx: int
+       the index of the column (2D-composition) or position (1D-composition) of
+       the output where the common denominator should be placed.
+
+    Returns
+    -------
+    numpy.ndarray
+         compositional matrix summing to 1 by row or vector summing to 1
+
+    Examples
+    --------
+    >>> import numpy as np
+    >>> from skbio.stats.composition import alr, alr_inv
+    >>> x = np.array([.1, .3, .4, .2])
+    >>> alr_inv(alr(x))
+    array([ 0.1,  0.3,  0.4,  0.2])
+    """
+    mat = np.array(mat)
+    if len(mat.shape) == 2:
+        mat_idx = np.insert(mat, denominator_idx,
+                            np.repeat(0, mat.shape[0]), axis=1)
+        comp = np.zeros(mat_idx.shape)
+        comp[:, denominator_idx] = 1 / (np.exp(mat).sum(axis=1) + 1)
+        numerator_idx = list(range(0, comp.shape[1]))
+        del numerator_idx[denominator_idx]
+        for i in numerator_idx:
+            comp[:, i] = comp[:, denominator_idx] * np.exp(mat_idx[:, i])
+    elif len(mat.shape) == 1:
+        mat_idx = np.insert(mat, denominator_idx, 0, axis=0)
+        comp = np.zeros(mat_idx.shape)
+        comp[denominator_idx] = 1 / (np.exp(mat).sum(axis=0) + 1)
+        numerator_idx = list(range(0, comp.shape[0]))
+        del numerator_idx[denominator_idx]
+        for i in numerator_idx:
+            comp[i] = comp[denominator_idx] * np.exp(mat_idx[i])
+    else:
+        raise ValueError("mat must be either 1D or 2D")
+    return comp
+
+
 @experimental(as_of="0.4.0")
 def centralize(mat):
     r"""Center data around its geometric average.
@@ -1103,6 +1233,76 @@ def _gram_schmidt_basis(n):
                      [0]*(n-i-1))*np.sqrt(i/(i+1))
         basis[:, j] = e
     return basis.T
+
+
+def sbp_basis(sbp):
+    """
+    Builds an orthogonal basis from a sequential binary partition (SBP). As
+    explained in [1]_, the "SBP describes the D−1 orthogonal (geometrically
+    independent) balances between parts and groups of parts. The SBP is a
+    :math:`(D - 1) \times D` matrix, in which parts labeled '+1' (group
+    numerator) are balanced with parts labeled '−1' (group denominator). A part labeled '0' is excluded from the balance between parts. The composition is
+    partitioned sequentially into contrasts at every hierarchically ordered row
+    until the '+1' and '-1' groups each contain a single part." The `sbp_basis`
+    method was originally derived from function `gsi.buildilrBase()` found in
+    the R package `compositions` [2]_. The ith balance is computed as follows
+
+    .. math::
+        b_i = sqrt(r_i*s_i / r_i+s_i) * log(g(x_r_i) / g(x_s_i))
+
+    where :math:`b_i` is the ith balance corresponding to the ith row in the
+    SBP, :math:`r_i` and :math:`s_i` and the number of respectively `+1` and
+    `-1` labels in the ith row of the SBP and :math:`g( )` is the geometric
+    mean function.
+
+    Parameters
+    ----------
+    sbp: np.array, int
+        A contrast matrix, also known as a sequential binary partition, where
+        every row represents a partition between two groups of features. A part
+        labelled `+1` would correspond to that feature being in the numerator of
+        the given row partition, a part labelled `-1` would correspond to
+        features being in the denominator of that given row partition, and `0`
+        would correspond to features excluded in the row partition.
+
+    Returns
+    -------
+    numpy.array
+      Am orthonormal basis in the Aitchison simplex
+
+    Examples
+    --------
+    >>> import numpy as np
+    >>> sbp = np.array([[1, 1,-1,-1,-1],
+    ...                 [1,-1, 0, 0, 0],
+    ...                 [0, 0, 1,-1,-1],
+    ...                 [0, 0, 0, 1,-1]])
+    ...
+    >>> sbp_basis(sbp)
+    array([[ 0.31209907,  0.31209907,  0.12526729,  0.12526729,  0.12526729],
+           [ 0.36733337,  0.08930489,  0.18112058,  0.18112058,  0.18112058],
+           [ 0.17882092,  0.17882092,  0.40459293,  0.11888261,  0.11888261],
+           [ 0.18112058,  0.18112058,  0.18112058,  0.36733337,  0.08930489]])
+
+    References
+    ----------
+    .. [1] Parent, S.É., Parent, L.E., Egozcue, J.J., Rozane, D.E.,
+       Hernandes, A., Lapointe, L., Hébert-Gentile, V., Naess, K.,
+       Marchand, S., Lafond, J., Mattos, D., Barlow, P., Natale, W., 2013.
+       The plant ionome revisited by the nutrient balance concept.
+       Front. Plant Sci. 4, 39, http://dx.doi.org/10.3389/fpls.2013.00039.
+    .. [2] van den Boogaart, K. Gerald, Tolosana-Delgado, Raimon and Bren,
+       Matevz, 2014. `compositions`: Compositional Data Analysis. R package
+       version 1.40-1. https://CRAN.R-project.org/package=compositions.
+    """
+
+    n_pos = (sbp == 1).sum(axis=1)
+    n_neg = (sbp == -1).sum(axis=1)
+    psi = np.zeros(sbp.shape)
+    for i in range(0, sbp.shape[0]):
+        psi[i, :] = sbp[i, :] * np.sqrt((n_neg[i] / n_pos[i])**sbp[i, :] /
+                                        np.sum(np.abs(sbp[i, :])))
+    return clr_inv(psi)
 
 
 def _check_orthogonality(basis):
