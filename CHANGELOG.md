@@ -13,6 +13,8 @@
 
 * `skbio.metadata.IntervalMetadata.drop` has a new boolean parameter `negate` to indicate whether to drop or keep the specified `Interval` objects.
 
+* `skbio.stats.composition` now has methods to compute additive log-ratio transformations and back-transformations (`alr`, `alr_inv`) as well as a method to build a basis from a sequential binary partition (`sbp_basis`).
+
 ### Backward-incompatible changes [stable]
 
 ### Backward-incompatible changes [experimental]
