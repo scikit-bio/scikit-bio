@@ -725,6 +725,7 @@ def alr_inv(mat, denominator_idx=0):
     .. math::
         C[x] = \left[\frac{x_1}{\sum_{i=1}^{D} x_i},\ldots,
                      \frac{x_D}{\sum_{i=1}^{D} x_i} \right]
+
     for some :math:`D` dimensional real vector :math:`x` and
     :math:`D` is the number of components for every composition.
 
