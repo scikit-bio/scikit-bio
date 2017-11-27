@@ -674,7 +674,8 @@ def alr(mat, denominator_idx=0):
 
     denominator_idx: int
        the index of the column (2D-matrix) or position (vector) of
-       `mat` which should be used as the reference composition
+       `mat` which should be used as the reference composition. By default
+       `denominator_idx=0` to specify the first column or position.
 
     Returns
     -------
@@ -735,12 +736,13 @@ def alr_inv(mat, denominator_idx=0):
        a matrix of alr-transformed data
     denominator_idx: int
        the index of the column (2D-composition) or position (1D-composition) of
-       the output where the common denominator should be placed.
+       the output where the common denominator should be placed. By default
+       `denominator_idx=0` to specify the first column or position.
 
     Returns
     -------
     numpy.ndarray
-         compositional matrix summing to 1 by row or vector summing to 1
+         Inverse alr transformed matrix or vector where rows sum to 1.
 
     Examples
     --------
@@ -1239,14 +1241,13 @@ def _gram_schmidt_basis(n):
 def sbp_basis(sbp):
     """
     Builds an orthogonal basis from a sequential binary partition (SBP). As
-    explained in [1]_, the "SBP describes the D−1 orthogonal (geometrically
-    independent) balances between parts and groups of parts. The SBP is a
-    :math:`(D - 1) \times D` matrix, in which parts labeled '+1' (group
-    numerator) are balanced with parts labeled '−1' (group denominator). A part labeled '0' is excluded from the balance between parts. The composition is
-    partitioned sequentially into contrasts at every hierarchically ordered row
-    until the '+1' and '-1' groups each contain a single part." The `sbp_basis`
-    method was originally derived from function `gsi.buildilrBase()` found in
-    the R package `compositions` [2]_. The ith balance is computed as follows
+    explained in [1]_, the SBP is a hierarchical collection of binary
+    divisions of compositional parts. The child groups are divided again until
+    all groups contain a single part. The SBP can be encoded in a
+    :math:`(D - 1) \times D` matrix where, for each row, parts can be grouped by
+    -1 and +1 tags, and 0 for excluded parts. The `sbp_basis` method was
+    originally derived from function `gsi.buildilrBase()` found in the R package
+    `compositions` [2]_. The ith balance is computed as follows
 
     .. math::
         b_i = sqrt(r_i*s_i / r_i+s_i) * log(g(x_r_i) / g(x_s_i))
