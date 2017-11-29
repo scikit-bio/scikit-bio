@@ -173,12 +173,12 @@ class TestRDAResults_biplot_score(TestCase):
     def setUp(self):
         """varespec and varechem from Väre etal. 1995 DOI: 10.2307/3236351"""
 
-        self.Y = read_csv(get_data_path('varespec.csv'))
-        self.X = read_csv(get_data_path('varechem.csv'))
+        self.Y = pd.read_csv(get_data_path('varespec.csv'))
+        self.X = pd.read_csv(get_data_path('varechem.csv'))
 
     def test_biplot_score(self):
 
-        rda_ = rda(y=varespec, x=varechem, scale_Y=False, scaling=1)
+        rda_ = rda(y=self.Y, x=self.X, scale_Y=False, scaling=1)
 
         # Load data as computed with vegan 2.4-3:
         # library(vegan)
