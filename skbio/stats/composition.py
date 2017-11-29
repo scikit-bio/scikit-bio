@@ -661,7 +661,8 @@ def alr(mat, denominator_idx=0):
     The alr transformation is defined as follows
 
     .. math::
-        alr(x) = [\ln \frac{x_1}{x_D}, \ldots, \ln \frac{x_{D-1}}{x_D}]
+        alr(x) = \left[ \ln \frac{x_1}{x_D}, \ldots,
+        \ln \frac{x_{D-1}}{x_D} \right]
 
     where :math:`D` is the index of the part used as common denominator.
 
@@ -1239,7 +1240,7 @@ def _gram_schmidt_basis(n):
 
 
 def sbp_basis(sbp):
-    """
+    r"""
     Builds an orthogonal basis from a sequential binary partition (SBP). As
     explained in [1]_, the SBP is a hierarchical collection of binary
     divisions of compositional parts. The child groups are divided again until
@@ -1250,12 +1251,13 @@ def sbp_basis(sbp):
     `compositions` [2]_. The ith balance is computed as follows
 
     .. math::
-        b_i = sqrt(r_i*s_i / r_i+s_i) * log(g(x_r_i) / g(x_s_i))
+        b_i = \sqrt{ \frac{r_i s_i}{r_i+s_i} }
+        \ln \left( \frac{g(x_{r_i})}{g(x_{s_i})} \right)
 
     where :math:`b_i` is the ith balance corresponding to the ith row in the
     SBP, :math:`r_i` and :math:`s_i` and the number of respectively `+1` and
-    `-1` labels in the ith row of the SBP and :math:`g( )` is the geometric
-    mean function.
+    `-1` labels in the ith row of the SBP and where :math:`g(x) =
+     (\prod\limits_{i=1}^{D} x_i)^{1/D}` is the geometric mean of :math:`x`.
 
     Parameters
     ----------
