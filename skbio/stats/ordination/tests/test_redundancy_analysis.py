@@ -203,6 +203,10 @@ class TestRDAResults_biplot_score(TestCase):
         vegan_eigvals = pd.read_csv(get_data_path('vare_rda_eigvals_from_vegan.csv'))
         vegan_eigvals = pd.Series(vegan_eigvals.x.values, index=rda_.eigvals.index)
 
+        # scikit-bio returns singular values, whereas vegan returns eigenvalues
+        vegan_eigvals = np.sqrt(vegan_eigvals*vegan_eigvals.shape[0])
+        vegan_propexpl = vegan_eigvals/vegan_eigvals.sum()
+
         # transform the output of rda_ to match column selection of vegan
         rda_ = OrdinationResults(
             'RDA', 'Redundancy Analysis',
