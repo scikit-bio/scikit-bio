@@ -305,7 +305,7 @@ class BetaDiversityTests(TestCase):
             beta_diversity('euclidean', [[0, 1, 3, -4], [0, 3, 12, 42]])
 
         # additional kwargs
-        error_msg = ("'not_a_real_kwarg'")
+        error_msg = "keyword argument"
         with self.assertRaisesRegex(TypeError, error_msg):
             beta_diversity('euclidean', [[0, 1, 3], [0, 3, 12]],
                            not_a_real_kwarg=42.0)
