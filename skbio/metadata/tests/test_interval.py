@@ -354,7 +354,7 @@ class TestIntervalUtil(unittest.TestCase):
         for fuzzy in fuzzy:
             try:
                 _assert_valid_fuzzy(fuzzy)
-            except:
+            except Exception:
                 self.assertTrue(False)
 
     def test_assert_valid_fuzzy_wrong_value(self):

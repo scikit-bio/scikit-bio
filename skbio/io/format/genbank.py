@@ -570,7 +570,7 @@ def _parse_locus(lines):
             ['locus_name', 'size', 'unit', 'mol_type',
              'shape', 'division', 'date'],
             matches.groups()))
-    except:
+    except Exception:
         raise GenBankFormatError(
             "Could not parse the LOCUS line:\n%s" % line)
 
