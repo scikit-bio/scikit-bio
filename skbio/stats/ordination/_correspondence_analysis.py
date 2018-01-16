@@ -70,7 +70,8 @@ def ca(X, scaling=1):
     -------
     OrdinationResults
         Object that stores the computed eigenvalues, the transformed sample
-        coordinates and the transformed features coordinates.
+        coordinates, the transformed features coordinates and the proportion
+        explained.
 
     Raises
     ------
@@ -186,6 +187,7 @@ def ca(X, scaling=1):
                                   range(eigvals.shape[0])])
     samples = pd.DataFrame(sample_scores, row_ids, sample_columns)
     features = pd.DataFrame(features_scores, column_ids, feature_columns)
-
+    proportion_explained = eigvals / eigvals.sum()
     return OrdinationResults(short_method_name, long_method_name, eigvals,
-                             samples=samples, features=features)
+                             samples=samples, features=features,
+                             proportion_explained=proportion_explained)
