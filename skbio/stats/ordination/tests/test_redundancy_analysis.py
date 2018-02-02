@@ -175,8 +175,8 @@ class TestRDAResults_biplot_score(TestCase):
 
         self.Y = pd.read_csv(get_data_path('varespec.csv'))
         self.X = pd.read_csv(get_data_path('varechem.csv'))
-        self.X = X.drop(['ID'], axis=1)
-        self.Y = Y.drop(['ID'], axis=1)
+        self.X = self.X.drop(['ID'], axis=1)
+        self.Y = self.Y.drop(['ID'], axis=1)
 
     def test_biplot_score(self):
 
