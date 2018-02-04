@@ -68,14 +68,14 @@ Check if we weighted the data or not:
 >>> print(trajectory_results.weighted)
 False
 
-Check the trajectory_results results of one of the categories:
+Check the results of one of the categories:
 
 >>> print(trajectory_results.categories[0].category)
 Treatment
 >>> print(trajectory_results.categories[0].probability)
 0.0118478282382
 
-Check the trajectory_results results of one group of one of the categories:
+Check the results of one group of one of the categories:
 
 >>> print(trajectory_results.categories[0].groups[0].name)
 Control
@@ -93,15 +93,15 @@ Control
 # The full license is in the file COPYING.txt, distributed with this software.
 # ----------------------------------------------------------------------------
 
-from __future__ import absolute_import, division, print_function
-
 from copy import deepcopy
 from collections import defaultdict
 from numbers import Integral
 
 import numpy as np
-from natsort import natsorted
+from natsort import realsorted
 from scipy.stats import f_oneway
+
+from skbio.util._decorator import experimental
 
 
 def _weight_by_vector(trajectories, w_vector):
@@ -163,8 +163,10 @@ def _weight_by_vector(trajectories, w_vector):
     for i, idx in enumerate(trajectories.index):
         # Skipping the first element is it doesn't need to be weighted
         if i != 0:
-            trajectories.ix[idx] = (trajectories.ix[idx] * optimal_gradient /
-                                    (np.abs((w_vector[i] - w_vector[i-1]))))
+            trajectories.loc[idx] = (
+                trajectories.loc[idx] * optimal_gradient /
+                np.abs((w_vector[i] - w_vector[i-1]))
+            )
 
     return trajectories
 
@@ -199,7 +201,7 @@ def _ANOVA_trajectories(category, res_by_group):
     return CategoryResults(category, p_val, res_by_group, None)
 
 
-class GroupResults(object):
+class GroupResults:
     """Store the trajectory results of a group of a metadata category
 
     Attributes
@@ -218,6 +220,7 @@ class GroupResults(object):
 
     """
 
+    @experimental(as_of="0.4.0")
     def __init__(self, name, trajectory, mean, info, message):
         self.name = name
         self.trajectory = trajectory
@@ -225,6 +228,7 @@ class GroupResults(object):
         self.info = info
         self.message = message
 
+    @experimental(as_of="0.4.0")
     def to_files(self, out_f, raw_f):
         r"""Save the trajectory analysis results for a category group to files
         in text format.
@@ -254,7 +258,7 @@ class GroupResults(object):
                     % ", ".join(map(str, self.trajectory)))
 
 
-class CategoryResults(object):
+class CategoryResults:
     """Store the trajectory results of a metadata category
 
     Attributes
@@ -270,12 +274,14 @@ class CategoryResults(object):
 
     """
 
+    @experimental(as_of="0.4.0")
     def __init__(self, category, probability, groups, message):
         self.category = category
         self.probability = probability
         self.groups = groups
         self.message = message
 
+    @experimental(as_of="0.4.0")
     def to_files(self, out_f, raw_f):
         r"""Save the trajectory analysis results for a category to files in
         text format.
@@ -302,7 +308,7 @@ class CategoryResults(object):
                 group.to_files(out_f, raw_f)
 
 
-class GradientANOVAResults(object):
+class GradientANOVAResults:
     """Store the trajectory results
 
     Attributes
@@ -316,11 +322,13 @@ class GradientANOVAResults(object):
 
     """
 
+    @experimental(as_of="0.4.0")
     def __init__(self, algorithm, weighted, categories):
         self.algorithm = algorithm
         self.weighted = weighted
         self.categories = categories
 
+    @experimental(as_of="0.4.0")
     def to_files(self, out_f, raw_f):
         r"""Save the trajectory analysis results to files in text format.
 
@@ -351,7 +359,7 @@ class GradientANOVAResults(object):
             raw_f.write('\n')
 
 
-class GradientANOVA(object):
+class GradientANOVA:
     r"""Base class for the Trajectory algorithms
 
     Parameters
@@ -392,6 +400,7 @@ class GradientANOVA(object):
     # Should be defined by the derived classes
     _alg_name = None
 
+    @experimental(as_of="0.4.0")
     def __init__(self, coords, prop_expl, metadata_map,
                  trajectory_categories=None, sort_category=None, axes=3,
                  weighted=False):
@@ -421,7 +430,7 @@ class GradientANOVA(object):
                              % (len(prop_expl), axes))
 
         # Restrict coordinates to those axes that we actually need to compute
-        self._coords = coords.ix[:, :axes-1]
+        self._coords = coords.loc[:, :axes-1]
         self._prop_expl = prop_expl[:axes]
         self._metadata_map = metadata_map
         self._weighted = weighted
@@ -448,6 +457,7 @@ class GradientANOVA(object):
         # Initialize the message buffer
         self._message_buffer = []
 
+    @experimental(as_of="0.4.0")
     def get_trajectories(self):
         r"""Compute the trajectories for each group in each category and run
         ANOVA over the results to test group independence.
@@ -463,8 +473,10 @@ class GradientANOVA(object):
         for cat, cat_groups in self._groups.items():
             # Loop through all the category values present in the current
             # category and compute the trajectory for each of them
-            res_by_group = [self._get_group_trajectories(group, sample_ids)
-                            for group, sample_ids in cat_groups.items()]
+            res_by_group = []
+            for group in sorted(cat_groups, key=lambda k: str(k)):
+                res_by_group.append(
+                    self._get_group_trajectories(group, cat_groups[group]))
 
             result.categories.append(_ANOVA_trajectories(cat, res_by_group))
 
@@ -491,10 +503,10 @@ class GradientANOVA(object):
 
         # Need to take a subset of coords
         if coords_sample_ids != sample_ids:
-            self._coords = self._coords.ix[sample_ids]
+            self._coords = self._coords.loc[sample_ids]
         # Need to take a subset of metadata_map
         if mm_sample_ids != sample_ids:
-            self._metadata_map = self._metadata_map.ix[sample_ids]
+            self._metadata_map = self._metadata_map.loc[sample_ids]
 
     def _make_groups(self, trajectory_categories, sort_category):
         r"""Groups the sample ids in `self._metadata_map` by the values in
@@ -530,7 +542,7 @@ class GradientANOVA(object):
             # Group samples by category
             gb = self._metadata_map.groupby(cat)
             for g, df in gb:
-                self._groups[cat][g] = natsorted(df.index, key=sort_val)
+                self._groups[cat][g] = realsorted(df.index, key=sort_val)
 
     def _get_group_trajectories(self, group_name, sids):
         r"""Compute the trajectory results for `group_name` containing the
@@ -556,7 +568,7 @@ class GradientANOVA(object):
             If sids is an empty list
         """
         # We multiply the coord values with the prop_expl
-        trajectories = self._coords.ix[sids] * self._prop_expl
+        trajectories = self._coords.loc[sids] * self._prop_expl
 
         if trajectories.empty:
             # Raising a RuntimeError since in a usual execution this should
@@ -580,7 +592,7 @@ class GradientANOVA(object):
                 trajectories = trajectories_copy
 
         return self._compute_trajectories_results(group_name,
-                                                  trajectories.ix[sids])
+                                                  trajectories.loc[sids])
 
     def _compute_trajectories_results(self, group_name, trajectories):
         r"""Do the actual trajectories computation over trajectories
@@ -685,8 +697,8 @@ class TrajectoryGradientANOVA(GradientANOVA):
             # Loop through all the rows in trajectories and create '2-norm'
             # by taking the norm of the 2nd row - 1st row, 3rd row - 2nd row...
             trajectory = \
-                np.array([np.linalg.norm(trajectories.ix[i+1].get_values() -
-                                         trajectories.ix[i].get_values())
+                np.array([np.linalg.norm(trajectories.iloc[i+1].get_values() -
+                                         trajectories.iloc[i].get_values())
                           for i in range(len(trajectories) - 1)])
             calc = {'2-norm': np.linalg.norm(trajectory)}
 
@@ -735,8 +747,8 @@ class FirstDifferenceGradientANOVA(GradientANOVA):
             calc = {'mean': trajectory[0], 'std': 0}
         else:
             vec_norm = \
-                np.array([np.linalg.norm(trajectories.ix[i+1].get_values() -
-                                         trajectories.ix[i].get_values())
+                np.array([np.linalg.norm(trajectories.iloc[i+1].get_values() -
+                                         trajectories.iloc[i].get_values())
                           for i in range(len(trajectories) - 1)])
             trajectory = np.diff(vec_norm)
             calc = {'mean': np.mean(trajectory), 'std': np.std(trajectory)}
@@ -781,6 +793,7 @@ class WindowDifferenceGradientANOVA(GradientANOVA):
 
     _alg_name = 'wdiff'
 
+    @experimental(as_of="0.4.0")
     def __init__(self, coords, prop_expl, metadata_map, window_size, **kwargs):
         super(WindowDifferenceGradientANOVA, self).__init__(coords, prop_expl,
                                                             metadata_map,
@@ -819,8 +832,8 @@ class WindowDifferenceGradientANOVA(GradientANOVA):
             calc = {'mean': trajectory, 'std': 0}
         else:
             vec_norm = \
-                np.array([np.linalg.norm(trajectories.ix[i+1].get_values() -
-                                         trajectories.ix[i].get_values())
+                np.array([np.linalg.norm(trajectories.iloc[i+1].get_values() -
+                                         trajectories.iloc[i].get_values())
                           for i in range(len(trajectories) - 1)])
             # windowed first differences won't be able on every group,
             # specially given the variation of size that a trajectory tends

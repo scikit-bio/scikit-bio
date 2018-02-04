@@ -6,10 +6,13 @@
 # The full license is in the file COPYING.txt, distributed with this software.
 # ----------------------------------------------------------------------------
 
-from __future__ import absolute_import, division, print_function
+
+class SkbioWarning(Warning):
+    """Used to filter our warnings from warnings given by 3rd parties"""
+    pass
 
 
-class EfficiencyWarning(Warning):
+class EfficiencyWarning(SkbioWarning):
     """Warn about potentially accidental use of inefficient code.
 
     For example, if a user doesn't have an optimized version of a
@@ -19,4 +22,21 @@ class EfficiencyWarning(Warning):
     potentially orders of magnitude slower.
 
     """
+    pass
+
+
+class RepresentationWarning(SkbioWarning):
+    """Warn about assumptions made for the successful completion of a process.
+
+    Warn about substitutions, assumptions, or particular alterations that were
+    made for the successful completion of a process. For example, if a value
+    that is required for a task is not present, a best guess or least
+    deleterious value could be used, accompanied by this warning.
+
+    """
+    pass
+
+
+class DeprecationWarning(DeprecationWarning, SkbioWarning):
+    """Used to indicate deprecated functionality in scikit-bio."""
     pass

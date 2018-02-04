@@ -1,0 +1,46 @@
+LOCUS       AAB29917   9 aa      linear   BCT   23-SEP-1994
+DEFINITION  L-carnitine amidase {N-terminal}
+ACCESSION   AAB29917
+VERSION     AAB29917.1  GI:545426
+DBSOURCE    accession AAB29917.1
+KEYWORDS    .
+SOURCE      Bacteria
+  ORGANISM  Bacteria
+            Unclassified.
+REFERENCE   1  (residues 1 to 9)
+  AUTHORS   Joeres,U. and Kula,M.R.
+  TITLE     a microbial L-carnitine amidase
+  JOURNAL   AMB 40 (5), 606-610 (1994)
+  PUBMED    7764422
+  REMARK    from the original journal article.
+REFERENCE   1  (residues 1 to 9)
+  AUTHORS   Joeres,U. and Kula,M.R.
+  TITLE     a microbial L-carnitine amidase
+  JOURNAL   AMB 40 (5), 606-610 (1994)
+  PUBMED    7764422
+COMMENT     Method: direct peptide sequencing.
+FEATURES             Location/Qualifiers
+     source          1..9
+                     /organism="Bacteria"
+     Protein         1..>9
+                     /product="L-carnitine amidase"
+ORIGIN
+        1 gsreildfk
+//
+LOCUS       HQ018078   9 bp   DNA   linear   ENV   29-AUG-2010
+DEFINITION  Uncultured Xylanimonas sp.16S, partial
+ACCESSION   HQ018078
+VERSION     HQ018078.1  GI:304421728
+KEYWORDS    ENV.
+SOURCE      uncultured Xylanimonas sp.
+  ORGANISM  uncultured Xylanimonas sp.
+            Bacteria; Actinobacteria; Micrococcales; Promicromonosporaceae; Xylanimonas; environmental samples.
+FEATURES             Location/Qualifiers
+     source          1..9
+                     /country="Brazil: Parana, Paranavai"
+                     /environmental_sample
+     rRNA            complement(<2..>8)
+                     /product="16S ribosomal RNA"
+ORIGIN
+        1 catgcaggc
+//

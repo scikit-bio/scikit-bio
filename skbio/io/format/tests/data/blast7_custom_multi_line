@@ -1,0 +1,16 @@
+# BLASTP 2.2.31+
+# Query: query1
+# Subject: subject2
+# Fields: q. start, q. end, s. start, s. end, identical, mismatches, sbjct frame, query acc.ver, subject acc.ver
+# 3 hits found
+1	8	3	10	8	0	1	query1	subject2
+2	5	2	15	8	0	2	query1	subject2
+1	6	2	12	8	0	1	query1	subject2
+# BLASTP 2.2.31+
+# Query: query1
+# Subject: subject3
+# 0 hits found
+# BLASTP 2.2.31+
+# Query: query1
+# Subject: subject4
+# 0 hits found

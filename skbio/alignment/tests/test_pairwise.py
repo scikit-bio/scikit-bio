@@ -6,22 +6,46 @@
 # The full license is in the file COPYING.txt, distributed with this software.
 # ----------------------------------------------------------------------------
 
-from __future__ import absolute_import, division, print_function
-
 from unittest import TestCase, main
 import warnings
 
 import numpy as np
 
-from skbio import Protein, DNA, BiologicalSequence, Alignment
+from skbio import Sequence, Protein, DNA, RNA, TabularMSA
 from skbio.alignment import (
     global_pairwise_align_protein, local_pairwise_align_protein,
     global_pairwise_align_nucleotide, local_pairwise_align_nucleotide,
-    make_identity_substitution_matrix)
+    make_identity_substitution_matrix, local_pairwise_align,
+    global_pairwise_align)
 from skbio.alignment._pairwise import (
     _init_matrices_sw, _init_matrices_nw,
     _compute_score_and_traceback_matrices, _traceback, _first_largest,
-    _get_seq_id, _compute_substitution_score)
+    _compute_substitution_score)
+from skbio.sequence import GrammaredSequence
+from skbio.util import classproperty
+from skbio.util._decorator import overrides
+
+
+class CustomSequence(GrammaredSequence):
+    @classproperty
+    @overrides(GrammaredSequence)
+    def gap_chars(cls):
+        return set('^$')
+
+    @classproperty
+    @overrides(GrammaredSequence)
+    def default_gap_char(cls):
+        return '^'
+
+    @classproperty
+    @overrides(GrammaredSequence)
+    def definite_chars(cls):
+        return set('WXYZ')
+
+    @classproperty
+    @overrides(GrammaredSequence)
+    def degenerate_map(cls):
+        return {}
 
 
 class PairwiseAlignmentTests(TestCase):
@@ -63,323 +87,453 @@ class PairwiseAlignmentTests(TestCase):
                     'U': {'A': -4, 'C': -4, 'G': -4, 'T': -4, 'U':  5}}
         self.assertEqual(make_identity_substitution_matrix(5, -4), expected)
 
+    # TODO: duplicate of test_global_pairwise_align_custom_alphabet, remove
+    # when nondegenerate_chars is removed
+    def test_global_pairwise_align_custom_alphabet_nondegenerate_chars(self):
+        custom_substitution_matrix = make_identity_substitution_matrix(
+            1, -1, alphabet=CustomSequence.nondegenerate_chars)
+
+        custom_msa, custom_score, custom_start_end = global_pairwise_align(
+            CustomSequence("WXYZ"), CustomSequence("WXYYZZ"),
+            10.0, 5.0, custom_substitution_matrix)
+
+        # Expected values computed by running an equivalent alignment using the
+        # DNA alphabet with the following mapping:
+        #
+        #     W X Y Z
+        #     | | | |
+        #     A C G T
+        #
+        self.assertEqual(custom_msa, TabularMSA([CustomSequence('WXYZ^^'),
+                                                 CustomSequence('WXYYZZ')]))
+        self.assertEqual(custom_score, 2.0)
+        self.assertEqual(custom_start_end, [(0, 3), (0, 5)])
+
+    def test_global_pairwise_align_custom_alphabet(self):
+        custom_substitution_matrix = make_identity_substitution_matrix(
+            1, -1, alphabet=CustomSequence.definite_chars)
+
+        custom_msa, custom_score, custom_start_end = global_pairwise_align(
+            CustomSequence("WXYZ"), CustomSequence("WXYYZZ"),
+            10.0, 5.0, custom_substitution_matrix)
+
+        # Expected values computed by running an equivalent alignment using the
+        # DNA alphabet with the following mapping:
+        #
+        #     W X Y Z
+        #     | | | |
+        #     A C G T
+        #
+        self.assertEqual(custom_msa, TabularMSA([CustomSequence('WXYZ^^'),
+                                                 CustomSequence('WXYYZZ')]))
+        self.assertEqual(custom_score, 2.0)
+        self.assertEqual(custom_start_end, [(0, 3), (0, 5)])
+
+    # TODO: duplicate of test_local_pairwise_align_custom_alphabet, remove
+    # when nondegenerate_chars is removed.
+    def test_local_pairwise_align_custom_alphabet_nondegenerate_chars(self):
+        custom_substitution_matrix = make_identity_substitution_matrix(
+            5, -4, alphabet=CustomSequence.nondegenerate_chars)
+
+        custom_msa, custom_score, custom_start_end = local_pairwise_align(
+            CustomSequence("YWXXZZYWXXWYYZWXX"),
+            CustomSequence("YWWXZZZYWXYZWWX"), 5.0, 0.5,
+            custom_substitution_matrix)
+
+        # Expected values computed by running an equivalent alignment using the
+        # DNA alphabet with the following mapping:
+        #
+        #     W X Y Z
+        #     | | | |
+        #     A C G T
+        #
+        self.assertEqual(
+            custom_msa,
+            TabularMSA([CustomSequence('WXXZZYWXXWYYZWXX'),
+                        CustomSequence('WXZZZYWX^^^YZWWX')]))
+        self.assertEqual(custom_score, 41.0)
+        self.assertEqual(custom_start_end, [(1, 16), (2, 14)])
+
+    def test_local_pairwise_align_custom_alphabet(self):
+        custom_substitution_matrix = make_identity_substitution_matrix(
+            5, -4, alphabet=CustomSequence.definite_chars)
+
+        custom_msa, custom_score, custom_start_end = local_pairwise_align(
+            CustomSequence("YWXXZZYWXXWYYZWXX"),
+            CustomSequence("YWWXZZZYWXYZWWX"), 5.0, 0.5,
+            custom_substitution_matrix)
+
+        # Expected values computed by running an equivalent alignment using the
+        # DNA alphabet with the following mapping:
+        #
+        #     W X Y Z
+        #     | | | |
+        #     A C G T
+        #
+        self.assertEqual(
+            custom_msa,
+            TabularMSA([CustomSequence('WXXZZYWXXWYYZWXX'),
+                        CustomSequence('WXZZZYWX^^^YZWWX')]))
+        self.assertEqual(custom_score, 41.0)
+        self.assertEqual(custom_start_end, [(1, 16), (2, 14)])
+
+    def test_global_pairwise_align_invalid_type(self):
+        with self.assertRaisesRegex(TypeError,
+                                    "GrammaredSequence.*"
+                                    "TabularMSA.*'Sequence'"):
+            global_pairwise_align(DNA('ACGT'), Sequence('ACGT'), 1.0, 1.0, {})
+
+    def test_global_pairwise_align_dtype_mismatch(self):
+        with self.assertRaisesRegex(TypeError,
+                                    "same dtype: 'DNA' != 'RNA'"):
+            global_pairwise_align(DNA('ACGT'), TabularMSA([RNA('ACGU')]),
+                                  1.0, 1.0, {})
+
+        with self.assertRaisesRegex(TypeError,
+                                    "same dtype: 'DNA' != 'RNA'"):
+            global_pairwise_align(TabularMSA([DNA('ACGT')]),
+                                  TabularMSA([RNA('ACGU')]),
+                                  1.0, 1.0, {})
+
     def test_global_pairwise_align_protein(self):
-        expected = ("HEAGAWGHEE-", "---PAW-HEAE", 23.0)
-        actual = global_pairwise_align_protein(
-            "HEAGAWGHEE", "PAWHEAE", gap_open_penalty=10.,
+        obs_msa, obs_score, obs_start_end = global_pairwise_align_protein(
+            Protein("HEAGAWGHEE"), Protein("PAWHEAE"), gap_open_penalty=10.,
             gap_extend_penalty=5.)
-        self.assertEqual(str(actual[0]), expected[0])
-        self.assertEqual(str(actual[1]), expected[1])
-        self.assertEqual(actual.score(), expected[2])
-        self.assertEqual(actual.start_end_positions(), [(0, 9), (0, 6)])
-        self.assertEqual(actual.ids(), list('01'))
 
-        expected = ("HEAGAWGHE-E", "---PAW-HEAE", 30.0)
+        self.assertEqual(obs_msa, TabularMSA([Protein("HEAGAWGHEE-"),
+                                              Protein("---PAW-HEAE")]))
+        self.assertEqual(obs_score, 23.0)
+        self.assertEqual(obs_start_end, [(0, 9), (0, 6)])
+
         # EMBOSS result: P---AW-HEAE
-        actual = global_pairwise_align_protein(
-            "HEAGAWGHEE", "PAWHEAE", gap_open_penalty=5.,
+        obs_msa, obs_score, obs_start_end = global_pairwise_align_protein(
+            Protein("HEAGAWGHEE"), Protein("PAWHEAE"), gap_open_penalty=5.,
             gap_extend_penalty=0.5)
-        self.assertEqual(str(actual[0]), expected[0])
-        self.assertEqual(str(actual[1]), expected[1])
-        self.assertEqual(actual.score(), expected[2])
-        self.assertEqual(actual.start_end_positions(), [(0, 9), (0, 6)])
-        self.assertEqual(actual.ids(), list('01'))
 
-        # Protein (rather than str) as input
-        expected = ("HEAGAWGHEE-", "---PAW-HEAE", 23.0)
-        actual = global_pairwise_align_protein(
-            Protein("HEAGAWGHEE", "s1"), Protein("PAWHEAE", "s2"),
-            gap_open_penalty=10., gap_extend_penalty=5.)
-        self.assertEqual(str(actual[0]), expected[0])
-        self.assertEqual(str(actual[1]), expected[1])
-        self.assertEqual(actual.score(), expected[2])
-        self.assertEqual(actual.start_end_positions(), [(0, 9), (0, 6)])
-        self.assertEqual(actual.ids(), ["s1", "s2"])
+        self.assertEqual(obs_msa, TabularMSA([Protein("HEAGAWGHE-E"),
+                                              Protein("---PAW-HEAE")]))
+        self.assertEqual(obs_score, 30.0)
+        self.assertEqual(obs_start_end, [(0, 9), (0, 6)])
 
-        # One Alignment and one Protein as input
-        expected = ("HEAGAWGHEE-", "---PAW-HEAE", 23.0)
-        actual = global_pairwise_align_protein(
-            Alignment([Protein("HEAGAWGHEE", "s1")]),
-            Protein("PAWHEAE", "s2"),
+        # Protein sequences with metadata
+        obs_msa, obs_score, obs_start_end = global_pairwise_align_protein(
+            Protein("HEAGAWGHEE", metadata={'id': "s1"}),
+            Protein("PAWHEAE", metadata={'id': "s2"}),
             gap_open_penalty=10., gap_extend_penalty=5.)
-        self.assertEqual(str(actual[0]), expected[0])
-        self.assertEqual(str(actual[1]), expected[1])
-        self.assertEqual(actual.score(), expected[2])
-        self.assertEqual(actual.start_end_positions(), [(0, 9), (0, 6)])
-        self.assertEqual(actual.ids(), ["s1", "s2"])
+
+        self.assertEqual(
+            obs_msa,
+            TabularMSA([Protein("HEAGAWGHEE-", metadata={'id': "s1"}),
+                        Protein("---PAW-HEAE", metadata={'id': "s2"})]))
+
+        self.assertEqual(obs_score, 23.0)
+        self.assertEqual(obs_start_end, [(0, 9), (0, 6)])
+
+        # One TabularMSA and one Protein as input
+        obs_msa, obs_score, obs_start_end = global_pairwise_align_protein(
+            TabularMSA([Protein("HEAGAWGHEE", metadata={'id': "s1"})]),
+            Protein("PAWHEAE", metadata={'id': "s2"}),
+            gap_open_penalty=10., gap_extend_penalty=5.)
+
+        self.assertEqual(
+            obs_msa,
+            TabularMSA([Protein("HEAGAWGHEE-", metadata={'id': "s1"}),
+                        Protein("---PAW-HEAE", metadata={'id': "s2"})]))
+
+        self.assertEqual(obs_score, 23.0)
+        self.assertEqual(obs_start_end, [(0, 9), (0, 6)])
 
         # One single-sequence alignment as input and one double-sequence
         # alignment as input. Score confirmed manually.
-        expected = ("HEAGAWGHEE-", "HDAGAWGHDE-", "---PAW-HEAE", 21.0)
-        actual = global_pairwise_align_protein(
-            Alignment([Protein("HEAGAWGHEE", "s1"),
-                       Protein("HDAGAWGHDE", "s2")]),
-            Alignment([Protein("PAWHEAE", "s3")]),
+        obs_msa, obs_score, obs_start_end = global_pairwise_align_protein(
+            TabularMSA([Protein("HEAGAWGHEE", metadata={'id': "s1"}),
+                        Protein("HDAGAWGHDE", metadata={'id': "s2"})]),
+            TabularMSA([Protein("PAWHEAE", metadata={'id': "s3"})]),
             gap_open_penalty=10., gap_extend_penalty=5.)
-        self.assertEqual(str(actual[0]), expected[0])
-        self.assertEqual(str(actual[1]), expected[1])
-        self.assertEqual(str(actual[2]), expected[2])
-        self.assertEqual(actual.score(), expected[3])
-        self.assertEqual(actual.start_end_positions(), [(0, 9), (0, 6)])
-        self.assertEqual(actual.ids(), ["s1", "s2", "s3"])
 
-        # ids are provided if they're not passed in
-        actual = global_pairwise_align_protein(
-            Protein("HEAGAWGHEE"), Protein("PAWHEAE"),
-            gap_open_penalty=10., gap_extend_penalty=5.)
-        self.assertEqual(actual.ids(), list('01'))
+        self.assertEqual(
+            obs_msa,
+            TabularMSA([Protein("HEAGAWGHEE-", metadata={'id': "s1"}),
+                        Protein("HDAGAWGHDE-", metadata={'id': "s2"}),
+                        Protein("---PAW-HEAE", metadata={'id': "s3"})]))
+
+        self.assertEqual(obs_score, 21.0)
+        self.assertEqual(obs_start_end, [(0, 9), (0, 6)])
 
         # TypeError on invalid input
         self.assertRaises(TypeError, global_pairwise_align_protein,
-                          42, "HEAGAWGHEE")
+                          42, Protein("HEAGAWGHEE"))
         self.assertRaises(TypeError, global_pairwise_align_protein,
-                          "HEAGAWGHEE", 42)
+                          Protein("HEAGAWGHEE"), 42)
+
+    def test_global_pairwise_align_protein_invalid_dtype(self):
+        with self.assertRaisesRegex(TypeError,
+                                    "TabularMSA with Protein dtype.*dtype "
+                                    "'DNA'"):
+            global_pairwise_align_protein(TabularMSA([Protein('PAW')]),
+                                          TabularMSA([DNA('ACGT')]))
 
     def test_global_pairwise_align_protein_penalize_terminal_gaps(self):
-        expected = ("HEAGAWGHEE", "---PAWHEAE", 1.0)
-        actual = global_pairwise_align_protein(
-            "HEAGAWGHEE", "PAWHEAE", gap_open_penalty=10.,
+        obs_msa, obs_score, obs_start_end = global_pairwise_align_protein(
+            Protein("HEAGAWGHEE"), Protein("PAWHEAE"), gap_open_penalty=10.,
             gap_extend_penalty=5., penalize_terminal_gaps=True)
-        self.assertEqual(str(actual[0]), expected[0])
-        self.assertEqual(str(actual[1]), expected[1])
-        self.assertEqual(actual.score(), expected[2])
-        self.assertEqual(actual.start_end_positions(), [(0, 9), (0, 6)])
-        self.assertEqual(actual.ids(), list('01'))
+
+        self.assertEqual(obs_msa, TabularMSA([Protein("HEAGAWGHEE"),
+                                              Protein("---PAWHEAE")]))
+        self.assertEqual(obs_score, 1.0)
+        self.assertEqual(obs_start_end, [(0, 9), (0, 6)])
 
     def test_global_pairwise_align_nucleotide_penalize_terminal_gaps(self):
         # in these tests one sequence is about 3x the length of the other.
         # we toggle penalize_terminal_gaps to confirm that it results in
         # different alignments and alignment scores.
-        seq1 = "ACCGTGGACCGTTAGGATTGGACCCAAGGTTG"
-        seq2 = "T"*25 + "ACCGTGGACCGTAGGATTGGACCAAGGTTA" + "A"*25
+        seq1 = DNA("ACCGTGGACCGTTAGGATTGGACCCAAGGTTG")
+        seq2 = DNA("T"*25 + "ACCGTGGACCGTAGGATTGGACCAAGGTTA" + "A"*25)
 
-        aln1 = ("-------------------------ACCGTGGACCGTTAGGA"
-                "TTGGACCCAAGGTTG-------------------------")
-        aln2 = ("TTTTTTTTTTTTTTTTTTTTTTTTTACCGTGGACCGT-AGGA"
-                "TTGGACC-AAGGTTAAAAAAAAAAAAAAAAAAAAAAAAAA")
-        expected = (aln1, aln2, 131.0)
-        actual = global_pairwise_align_nucleotide(
+        obs_msa, obs_score, obs_start_end = global_pairwise_align_nucleotide(
             seq1, seq2, gap_open_penalty=5., gap_extend_penalty=0.5,
             match_score=5, mismatch_score=-4, penalize_terminal_gaps=False)
-        self.assertEqual(str(actual[0]), expected[0])
-        self.assertEqual(str(actual[1]), expected[1])
-        self.assertEqual(actual.score(), expected[2])
 
-        aln1 = ("-------------------------ACCGTGGACCGTTAGGA"
-                "TTGGACCCAAGGTT-------------------------G")
-        aln2 = ("TTTTTTTTTTTTTTTTTTTTTTTTTACCGTGGACCGT-AGGA"
-                "TTGGACC-AAGGTTAAAAAAAAAAAAAAAAAAAAAAAAAA")
-        expected = (aln1, aln2, 97.0)
-        actual = global_pairwise_align_nucleotide(
+        self.assertEqual(
+            obs_msa,
+            TabularMSA([DNA("-------------------------ACCGTGGACCGTTAGGA"
+                            "TTGGACCCAAGGTTG-------------------------"),
+                        DNA("TTTTTTTTTTTTTTTTTTTTTTTTTACCGTGGACCGT-AGGA"
+                            "TTGGACC-AAGGTTAAAAAAAAAAAAAAAAAAAAAAAAAA")]))
+        self.assertEqual(obs_score, 131.0)
+
+        obs_msa, obs_score, obs_start_end = global_pairwise_align_nucleotide(
             seq1, seq2, gap_open_penalty=5., gap_extend_penalty=0.5,
             match_score=5, mismatch_score=-4, penalize_terminal_gaps=True)
-        self.assertEqual(str(actual[0]), expected[0])
-        self.assertEqual(str(actual[1]), expected[1])
-        self.assertEqual(actual.score(), expected[2])
+
+        self.assertEqual(
+            obs_msa,
+            TabularMSA([DNA("-------------------------ACCGTGGACCGTTAGGA"
+                            "TTGGACCCAAGGTT-------------------------G"),
+                        DNA("TTTTTTTTTTTTTTTTTTTTTTTTTACCGTGGACCGT-AGGA"
+                            "TTGGACC-AAGGTTAAAAAAAAAAAAAAAAAAAAAAAAAA")]))
+        self.assertEqual(obs_score, 97.0)
 
     def test_local_pairwise_align_protein(self):
-        expected = ("AWGHE", "AW-HE", 26.0, 4, 1)
-        actual = local_pairwise_align_protein(
-            "HEAGAWGHEE", "PAWHEAE", gap_open_penalty=10.,
+        obs_msa, obs_score, obs_start_end = local_pairwise_align_protein(
+            Protein("HEAGAWGHEE"), Protein("PAWHEAE"), gap_open_penalty=10.,
             gap_extend_penalty=5.)
-        self.assertEqual(str(actual[0]), expected[0])
-        self.assertEqual(str(actual[1]), expected[1])
-        self.assertEqual(actual.score(), expected[2])
-        self.assertEqual(actual.start_end_positions(), [(4, 8), (1, 4)])
-        self.assertEqual(actual.ids(), list('01'))
 
-        expected = ("AWGHE-E", "AW-HEAE", 32.0, 4, 1)
-        actual = local_pairwise_align_protein(
-            "HEAGAWGHEE", "PAWHEAE", gap_open_penalty=5.,
+        self.assertEqual(obs_msa, TabularMSA([Protein("AWGHE"),
+                                              Protein("AW-HE")]))
+        self.assertEqual(obs_score, 26.0)
+        self.assertEqual(obs_start_end, [(4, 8), (1, 4)])
+
+        obs_msa, obs_score, obs_start_end = local_pairwise_align_protein(
+            Protein("HEAGAWGHEE"), Protein("PAWHEAE"), gap_open_penalty=5.,
             gap_extend_penalty=0.5)
-        self.assertEqual(str(actual[0]), expected[0])
-        self.assertEqual(str(actual[1]), expected[1])
-        self.assertEqual(actual.score(), expected[2])
-        self.assertEqual(actual.start_end_positions(), [(4, 9), (1, 6)])
-        self.assertEqual(actual.ids(), list('01'))
 
-        expected = ("AWGHE", "AW-HE", 26.0, 4, 1)
-        # Protein (rather than str) as input
-        actual = local_pairwise_align_protein(
-            Protein("HEAGAWGHEE", "s1"), Protein("PAWHEAE", "s2"),
+        self.assertEqual(obs_msa, TabularMSA([Protein("AWGHE-E"),
+                                              Protein("AW-HEAE")]))
+        self.assertEqual(obs_score, 32.0)
+        self.assertEqual(obs_start_end, [(4, 9), (1, 6)])
+
+        # Protein sequences with metadata
+        obs_msa, obs_score, obs_start_end = local_pairwise_align_protein(
+            Protein("HEAGAWGHEE", metadata={'id': "s1"}),
+            Protein("PAWHEAE", metadata={'id': "s2"}),
             gap_open_penalty=10., gap_extend_penalty=5.)
-        self.assertEqual(str(actual[0]), expected[0])
-        self.assertEqual(str(actual[1]), expected[1])
-        self.assertEqual(actual.score(), expected[2])
-        self.assertEqual(actual.start_end_positions(), [(4, 8), (1, 4)])
-        self.assertEqual(actual.ids(), ["s1", "s2"])
 
-        # Fails when either input is passed as an Alignment
+        self.assertEqual(
+            obs_msa, TabularMSA([Protein("AWGHE", metadata={'id': "s1"}),
+                                 Protein("AW-HE", metadata={'id': "s2"})]))
+
+        self.assertEqual(obs_score, 26.0)
+        self.assertEqual(obs_start_end, [(4, 8), (1, 4)])
+
+        # Fails when either input is passed as a TabularMSA
         self.assertRaises(TypeError, local_pairwise_align_protein,
-                          Alignment([Protein("HEAGAWGHEE", "s1")]),
-                          Protein("PAWHEAE", "s2"), gap_open_penalty=10.,
+                          TabularMSA([Protein("HEAGAWGHEE",
+                                      metadata={'id': "s1"})]),
+                          Protein("PAWHEAE", metadata={'id': "s2"}),
+                          gap_open_penalty=10.,
                           gap_extend_penalty=5.)
         self.assertRaises(TypeError, local_pairwise_align_protein,
-                          Protein("HEAGAWGHEE", "s1"),
-                          Alignment([Protein("PAWHEAE", "s2")]),
+                          Protein("HEAGAWGHEE", metadata={'id': "s1"}),
+                          TabularMSA([Protein("PAWHEAE",
+                                      metadata={'id': "s2"})]),
                           gap_open_penalty=10., gap_extend_penalty=5.)
 
-        # ids are provided if they're not passed in
-        actual = local_pairwise_align_protein(
-            Protein("HEAGAWGHEE"), Protein("PAWHEAE"),
-            gap_open_penalty=10., gap_extend_penalty=5.)
-        self.assertEqual(actual.ids(), list('01'))
-
         # TypeError on invalid input
         self.assertRaises(TypeError, local_pairwise_align_protein,
-                          42, "HEAGAWGHEE")
+                          42, Protein("HEAGAWGHEE"))
         self.assertRaises(TypeError, local_pairwise_align_protein,
-                          "HEAGAWGHEE", 42)
+                          Protein("HEAGAWGHEE"), 42)
 
     def test_global_pairwise_align_nucleotide(self):
-        expected = ("G-ACCTTGACCAGGTACC", "GAACTTTGAC---GTAAC", 41.0, 0, 0)
-        actual = global_pairwise_align_nucleotide(
-            "GACCTTGACCAGGTACC", "GAACTTTGACGTAAC", gap_open_penalty=5.,
-            gap_extend_penalty=0.5, match_score=5, mismatch_score=-4)
-        self.assertEqual(str(actual[0]), expected[0])
-        self.assertEqual(str(actual[1]), expected[1])
-        self.assertEqual(actual.score(), expected[2])
-        self.assertEqual(actual.start_end_positions(), [(0, 16), (0, 14)])
-        self.assertEqual(actual.ids(), list('01'))
-
-        expected = ("-GACCTTGACCAGGTACC", "GAACTTTGAC---GTAAC", 32.0, 0, 0)
-        actual = global_pairwise_align_nucleotide(
-            "GACCTTGACCAGGTACC", "GAACTTTGACGTAAC", gap_open_penalty=10.,
-            gap_extend_penalty=0.5, match_score=5, mismatch_score=-4)
-        self.assertEqual(str(actual[0]), expected[0])
-        self.assertEqual(str(actual[1]), expected[1])
-        self.assertEqual(actual.score(), expected[2])
-        self.assertEqual(actual.start_end_positions(), [(0, 16), (0, 14)])
-        self.assertEqual(actual.ids(), list('01'))
-
-        # DNA (rather than str) as input
-        expected = ("-GACCTTGACCAGGTACC", "GAACTTTGAC---GTAAC", 32.0, 0, 0)
-        actual = global_pairwise_align_nucleotide(
-            DNA("GACCTTGACCAGGTACC", "s1"), DNA("GAACTTTGACGTAAC", "s2"),
-            gap_open_penalty=10., gap_extend_penalty=0.5, match_score=5,
+        obs_msa, obs_score, obs_start_end = global_pairwise_align_nucleotide(
+            DNA("GACCTTGACCAGGTACC"), DNA("GAACTTTGACGTAAC"),
+            gap_open_penalty=5., gap_extend_penalty=0.5, match_score=5,
             mismatch_score=-4)
-        self.assertEqual(str(actual[0]), expected[0])
-        self.assertEqual(str(actual[1]), expected[1])
-        self.assertEqual(actual.score(), expected[2])
-        self.assertEqual(actual.start_end_positions(), [(0, 16), (0, 14)])
-        self.assertEqual(actual.ids(), ["s1", "s2"])
 
-        # Align one DNA sequence and one Alignment, score computed manually
-        expected = ("-GACCTTGACCAGGTACC", "-GACCATGACCAGGTACC",
-                    "GAACTTTGAC---GTAAC", 27.5, 0, 0)
-        actual = global_pairwise_align_nucleotide(
-            Alignment([DNA("GACCTTGACCAGGTACC", "s1"),
-                       DNA("GACCATGACCAGGTACC", "s2")]),
-            DNA("GAACTTTGACGTAAC", "s3"),
-            gap_open_penalty=10., gap_extend_penalty=0.5, match_score=5,
-            mismatch_score=-4)
-        self.assertEqual(str(actual[0]), expected[0])
-        self.assertEqual(str(actual[1]), expected[1])
-        self.assertEqual(str(actual[2]), expected[2])
-        self.assertEqual(actual.score(), expected[3])
-        self.assertEqual(actual.start_end_positions(), [(0, 16), (0, 14)])
-        self.assertEqual(actual.ids(), ["s1", "s2", "s3"])
+        self.assertEqual(obs_msa, TabularMSA([DNA("G-ACCTTGACCAGGTACC"),
+                                              DNA("GAACTTTGAC---GTAAC")]))
+        self.assertEqual(obs_score, 41.0)
+        self.assertEqual(obs_start_end, [(0, 16), (0, 14)])
 
-        # ids are provided if they're not passed in
-        actual = global_pairwise_align_nucleotide(
+        obs_msa, obs_score, obs_start_end = global_pairwise_align_nucleotide(
             DNA("GACCTTGACCAGGTACC"), DNA("GAACTTTGACGTAAC"),
             gap_open_penalty=10., gap_extend_penalty=0.5, match_score=5,
             mismatch_score=-4)
-        self.assertEqual(actual.ids(), list('01'))
+
+        self.assertEqual(obs_msa, TabularMSA([DNA("-GACCTTGACCAGGTACC"),
+                                              DNA("GAACTTTGAC---GTAAC")]))
+        self.assertEqual(obs_score, 32.0)
+        self.assertEqual(obs_start_end, [(0, 16), (0, 14)])
+
+        # DNA sequences with metadata
+        obs_msa, obs_score, obs_start_end = global_pairwise_align_nucleotide(
+            DNA("GACCTTGACCAGGTACC", metadata={'id': "s1"}),
+            DNA("GAACTTTGACGTAAC", metadata={'id': "s2"}),
+            gap_open_penalty=10., gap_extend_penalty=0.5, match_score=5,
+            mismatch_score=-4)
+
+        self.assertEqual(
+            obs_msa,
+            TabularMSA([DNA("-GACCTTGACCAGGTACC", metadata={'id': "s1"}),
+                        DNA("GAACTTTGAC---GTAAC", metadata={'id': "s2"})]))
+
+        self.assertEqual(obs_score, 32.0)
+        self.assertEqual(obs_start_end, [(0, 16), (0, 14)])
+
+        # Align one DNA sequence and one TabularMSA, score computed manually
+        obs_msa, obs_score, obs_start_end = global_pairwise_align_nucleotide(
+            TabularMSA([DNA("GACCTTGACCAGGTACC", metadata={'id': "s1"}),
+                        DNA("GACCATGACCAGGTACC", metadata={'id': "s2"})]),
+            DNA("GAACTTTGACGTAAC", metadata={'id': "s3"}),
+            gap_open_penalty=10., gap_extend_penalty=0.5, match_score=5,
+            mismatch_score=-4)
+
+        self.assertEqual(
+            obs_msa,
+            TabularMSA([DNA("-GACCTTGACCAGGTACC", metadata={'id': "s1"}),
+                        DNA("-GACCATGACCAGGTACC", metadata={'id': "s2"}),
+                        DNA("GAACTTTGAC---GTAAC", metadata={'id': "s3"})]))
+
+        self.assertEqual(obs_score, 27.5)
+        self.assertEqual(obs_start_end, [(0, 16), (0, 14)])
 
         # TypeError on invalid input
         self.assertRaises(TypeError, global_pairwise_align_nucleotide,
-                          42, "HEAGAWGHEE")
+                          42, DNA("ACGT"))
         self.assertRaises(TypeError, global_pairwise_align_nucleotide,
-                          "HEAGAWGHEE", 42)
+                          DNA("ACGT"), 42)
+
+    def test_global_pairwise_align_nucleotide_invalid_dtype(self):
+        with self.assertRaisesRegex(TypeError,
+                                    "TabularMSA with DNA or RNA dtype.*dtype "
+                                    "'Protein'"):
+            global_pairwise_align_nucleotide(TabularMSA([DNA('ACGT')]),
+                                             TabularMSA([Protein('PAW')]))
 
     def test_local_pairwise_align_nucleotide(self):
-        expected = ("ACCTTGACCAGGTACC", "ACTTTGAC---GTAAC", 41.0, 1, 2)
-        actual = local_pairwise_align_nucleotide(
-            "GACCTTGACCAGGTACC", "GAACTTTGACGTAAC", gap_open_penalty=5.,
-            gap_extend_penalty=0.5, match_score=5, mismatch_score=-4)
-        self.assertEqual(str(actual[0]), expected[0])
-        self.assertEqual(str(actual[1]), expected[1])
-        self.assertEqual(actual.score(), expected[2])
-        self.assertEqual(actual.start_end_positions(), [(1, 16), (2, 14)])
-        self.assertEqual(actual.ids(), list('01'))
-
-        expected = ("ACCTTGAC", "ACTTTGAC", 31.0, 1, 2)
-        actual = local_pairwise_align_nucleotide(
-            "GACCTTGACCAGGTACC", "GAACTTTGACGTAAC", gap_open_penalty=10.,
-            gap_extend_penalty=5., match_score=5, mismatch_score=-4)
-        self.assertEqual(str(actual[0]), expected[0])
-        self.assertEqual(str(actual[1]), expected[1])
-        self.assertEqual(actual.score(), expected[2])
-        self.assertEqual(actual.start_end_positions(), [(1, 8), (2, 9)])
-        self.assertEqual(actual.ids(), list('01'))
-
-        # DNA (rather than str) as input
-        expected = ("ACCTTGAC", "ACTTTGAC", 31.0, 1, 2)
-        actual = local_pairwise_align_nucleotide(
-            DNA("GACCTTGACCAGGTACC", "s1"), DNA("GAACTTTGACGTAAC", "s2"),
-            gap_open_penalty=10., gap_extend_penalty=5., match_score=5,
+        obs_msa, obs_score, obs_start_end = local_pairwise_align_nucleotide(
+            DNA("GACCTTGACCAGGTACC"), DNA("GAACTTTGACGTAAC"),
+            gap_open_penalty=5., gap_extend_penalty=0.5, match_score=5,
             mismatch_score=-4)
-        self.assertEqual(str(actual[0]), expected[0])
-        self.assertEqual(str(actual[1]), expected[1])
-        self.assertEqual(actual.score(), expected[2])
-        self.assertEqual(actual.start_end_positions(), [(1, 8), (2, 9)])
-        self.assertEqual(actual.ids(), ["s1", "s2"])
 
-        # Fails when either input is passed as an Alignment
-        self.assertRaises(TypeError, local_pairwise_align_nucleotide,
-                          Alignment([DNA("GACCTTGACCAGGTACC", "s1")]),
-                          DNA("GAACTTTGACGTAAC", "s2"),
-                          gap_open_penalty=10., gap_extend_penalty=5.,
-                          match_score=5, mismatch_score=-4)
-        self.assertRaises(TypeError, local_pairwise_align_nucleotide,
-                          DNA("GACCTTGACCAGGTACC", "s1"),
-                          Alignment([DNA("GAACTTTGACGTAAC", "s2")]),
-                          gap_open_penalty=10., gap_extend_penalty=5.,
-                          match_score=5, mismatch_score=-4)
+        self.assertEqual(obs_msa, TabularMSA([DNA("ACCTTGACCAGGTACC"),
+                                              DNA("ACTTTGAC---GTAAC")]))
+        self.assertEqual(obs_score, 41.0)
+        self.assertEqual(obs_start_end, [(1, 16), (2, 14)])
 
-        # ids are provided if they're not passed in
-        actual = local_pairwise_align_nucleotide(
+        obs_msa, obs_score, obs_start_end = local_pairwise_align_nucleotide(
             DNA("GACCTTGACCAGGTACC"), DNA("GAACTTTGACGTAAC"),
             gap_open_penalty=10., gap_extend_penalty=5., match_score=5,
             mismatch_score=-4)
-        self.assertEqual(actual.ids(), list('01'))
+
+        self.assertEqual(obs_msa, TabularMSA([DNA("ACCTTGAC"),
+                                              DNA("ACTTTGAC")]))
+        self.assertEqual(obs_score, 31.0)
+        self.assertEqual(obs_start_end, [(1, 8), (2, 9)])
+
+        # DNA sequences with metadata
+        obs_msa, obs_score, obs_start_end = local_pairwise_align_nucleotide(
+            DNA("GACCTTGACCAGGTACC", metadata={'id': "s1"}),
+            DNA("GAACTTTGACGTAAC", metadata={'id': "s2"}),
+            gap_open_penalty=10., gap_extend_penalty=5., match_score=5,
+            mismatch_score=-4)
+
+        self.assertEqual(
+            obs_msa,
+            TabularMSA([DNA("ACCTTGAC", metadata={'id': "s1"}),
+                        DNA("ACTTTGAC", metadata={'id': "s2"})]))
+
+        self.assertEqual(obs_score, 31.0)
+        self.assertEqual(obs_start_end, [(1, 8), (2, 9)])
+
+        # Fails when either input is passed as a TabularMSA
+        self.assertRaises(TypeError, local_pairwise_align_nucleotide,
+                          TabularMSA([DNA("GACCTTGACCAGGTACC",
+                                          metadata={'id': "s1"})]),
+                          DNA("GAACTTTGACGTAAC", metadata={'id': "s2"}),
+                          gap_open_penalty=10., gap_extend_penalty=5.,
+                          match_score=5, mismatch_score=-4)
+        self.assertRaises(TypeError, local_pairwise_align_nucleotide,
+                          DNA("GACCTTGACCAGGTACC", metadata={'id': "s1"}),
+                          TabularMSA([DNA("GAACTTTGACGTAAC",
+                                      metadata={'id': "s2"})]),
+                          gap_open_penalty=10., gap_extend_penalty=5.,
+                          match_score=5, mismatch_score=-4)
 
         # TypeError on invalid input
         self.assertRaises(TypeError, local_pairwise_align_nucleotide,
-                          42, "HEAGAWGHEE")
+                          42, DNA("ACGT"))
         self.assertRaises(TypeError, local_pairwise_align_nucleotide,
-                          "HEAGAWGHEE", 42)
+                          DNA("ACGT"), 42)
 
     def test_nucleotide_aligners_use_substitution_matrices(self):
         alt_sub = make_identity_substitution_matrix(10, -10)
         # alternate substitution matrix yields different alignment (the
         # aligned sequences and the scores are different) with local alignment
-        actual_no_sub = local_pairwise_align_nucleotide(
-            "GACCTTGACCAGGTACC", "GAACTTTGACGTAAC", gap_open_penalty=10.,
-            gap_extend_penalty=5., match_score=5, mismatch_score=-4)
-        actual_alt_sub = local_pairwise_align_nucleotide(
-            "GACCTTGACCAGGTACC", "GAACTTTGACGTAAC", gap_open_penalty=10.,
-            gap_extend_penalty=5., match_score=5, mismatch_score=-4,
-            substitution_matrix=alt_sub)
-        self.assertNotEqual(str(actual_no_sub[0]), str(actual_alt_sub[0]))
-        self.assertNotEqual(str(actual_no_sub[1]), str(actual_alt_sub[1]))
-        self.assertNotEqual(actual_no_sub.score(),
-                            actual_alt_sub.score())
+        msa_no_sub, score_no_sub, start_end_no_sub = \
+            local_pairwise_align_nucleotide(
+                DNA("GACCTTGACCAGGTACC"), DNA("GAACTTTGACGTAAC"),
+                gap_open_penalty=10., gap_extend_penalty=5., match_score=5,
+                mismatch_score=-4)
+
+        msa_alt_sub, score_alt_sub, start_end_alt_sub = \
+            local_pairwise_align_nucleotide(
+                DNA("GACCTTGACCAGGTACC"), DNA("GAACTTTGACGTAAC"),
+                gap_open_penalty=10., gap_extend_penalty=5., match_score=5,
+                mismatch_score=-4, substitution_matrix=alt_sub)
+
+        self.assertNotEqual(msa_no_sub, msa_alt_sub)
+        self.assertNotEqual(score_no_sub, score_alt_sub)
+        self.assertNotEqual(start_end_no_sub, start_end_alt_sub)
 
         # alternate substitution matrix yields different alignment (the
         # aligned sequences and the scores are different) with global alignment
-        actual_no_sub = local_pairwise_align_nucleotide(
-            "GACCTTGACCAGGTACC", "GAACTTTGACGTAAC", gap_open_penalty=10.,
-            gap_extend_penalty=5., match_score=5, mismatch_score=-4)
-        actual_alt_sub = global_pairwise_align_nucleotide(
-            "GACCTTGACCAGGTACC", "GAACTTTGACGTAAC", gap_open_penalty=10.,
-            gap_extend_penalty=5., match_score=5, mismatch_score=-4,
-            substitution_matrix=alt_sub)
-        self.assertNotEqual(str(actual_no_sub[0]), str(actual_alt_sub[0]))
-        self.assertNotEqual(str(actual_no_sub[1]), str(actual_alt_sub[1]))
-        self.assertNotEqual(actual_no_sub.score(),
-                            actual_alt_sub.score())
+        msa_no_sub, score_no_sub, start_end_no_sub = \
+            global_pairwise_align_nucleotide(
+                DNA("GACCTTGACCAGGTACC"), DNA("GAACTTTGACGTAAC"),
+                gap_open_penalty=10., gap_extend_penalty=5., match_score=5,
+                mismatch_score=-4)
+
+        msa_alt_sub, score_alt_sub, start_end_alt_sub = \
+            global_pairwise_align_nucleotide(
+                DNA("GACCTTGACCAGGTACC"), DNA("GAACTTTGACGTAAC"),
+                gap_open_penalty=10., gap_extend_penalty=5., match_score=5,
+                mismatch_score=-4, substitution_matrix=alt_sub)
+
+        self.assertNotEqual(msa_no_sub, msa_alt_sub)
+        self.assertNotEqual(score_no_sub, score_alt_sub)
+        self.assertEqual(start_end_no_sub, start_end_alt_sub)
+
+    def test_local_pairwise_align_invalid_type(self):
+        with self.assertRaisesRegex(TypeError,
+                                    'GrammaredSequence.*Sequence'):
+            local_pairwise_align(DNA('ACGT'), Sequence('ACGT'), 1.0, 1.0, {})
+
+    def test_local_pairwise_align_type_mismatch(self):
+        with self.assertRaisesRegex(TypeError,
+                                    "same type: 'DNA' != 'RNA'"):
+            local_pairwise_align(DNA('ACGT'), RNA('ACGU'), 1.0, 1.0, {})
 
     def test_init_matrices_sw(self):
         expected_score_m = np.zeros((5, 4))
@@ -389,7 +543,8 @@ class PairwiseAlignmentTests(TestCase):
                             [0, -1, -1, -1],
                             [0, -1, -1, -1]]
         actual_score_m, actual_tback_m = _init_matrices_sw(
-            Alignment([DNA('AAA')]), Alignment([DNA('AAAA')]), 5, 2)
+            TabularMSA([DNA('AAA', metadata={'id': 'id'})]),
+            TabularMSA([DNA('AAAA', metadata={'id': 'id'})]), 5, 2)
         np.testing.assert_array_equal(actual_score_m, expected_score_m)
         np.testing.assert_array_equal(actual_tback_m, expected_tback_m)
 
@@ -405,32 +560,46 @@ class PairwiseAlignmentTests(TestCase):
                             [2, -1, -1, -1],
                             [2, -1, -1, -1]]
         actual_score_m, actual_tback_m = _init_matrices_nw(
-            Alignment([DNA('AAA')]), Alignment([DNA('AAAA')]), 5, 2)
+            TabularMSA([DNA('AAA', metadata={'id': 'id'})]),
+            TabularMSA([DNA('AAAA', metadata={'id': 'id'})]), 5, 2)
         np.testing.assert_array_equal(actual_score_m, expected_score_m)
         np.testing.assert_array_equal(actual_tback_m, expected_tback_m)
 
     def test_compute_substitution_score(self):
         # these results were computed manually
         subs_m = make_identity_substitution_matrix(5, -4)
+        gap_chars = set('-.')
+
         self.assertEqual(
-            _compute_substitution_score(['A'], ['A'], subs_m, 0), 5.0)
+            _compute_substitution_score(['A'], ['A'], subs_m, 0, gap_chars),
+            5.0)
         self.assertEqual(
-            _compute_substitution_score(['A', 'A'], ['A'], subs_m, 0), 5.0)
+            _compute_substitution_score(['A', 'A'], ['A'], subs_m, 0,
+                                        gap_chars),
+            5.0)
         self.assertEqual(
-            _compute_substitution_score(['A', 'C'], ['A'], subs_m, 0), 0.5)
-        self.assertEqual(
-            _compute_substitution_score(['A', 'C'], ['A', 'C'], subs_m, 0),
+            _compute_substitution_score(['A', 'C'], ['A'], subs_m, 0,
+                                        gap_chars),
             0.5)
         self.assertEqual(
-            _compute_substitution_score(['A', 'A'], ['A', '-'], subs_m, 0),
+            _compute_substitution_score(['A', 'C'], ['A', 'C'], subs_m, 0,
+                                        gap_chars),
+            0.5)
+        self.assertEqual(
+            _compute_substitution_score(['A', 'A'], ['A', '-'], subs_m, 0,
+                                        gap_chars),
             2.5)
         self.assertEqual(
-            _compute_substitution_score(['A', 'A'], ['A', '-'], subs_m, 1), 3)
+            _compute_substitution_score(['A', 'A'], ['A', '-'], subs_m, 1,
+                                        gap_chars),
+            3)
 
         # alt subs_m
         subs_m = make_identity_substitution_matrix(1, -2)
+
         self.assertEqual(
-            _compute_substitution_score(['A', 'A'], ['A', '-'], subs_m, 0),
+            _compute_substitution_score(['A', 'A'], ['A', '-'], subs_m, 0,
+                                        gap_chars),
             0.5)
 
     def test_compute_score_and_traceback_matrices(self):
@@ -447,8 +616,8 @@ class PairwiseAlignmentTests(TestCase):
                             [2, 2, 2, 2]]
         m = make_identity_substitution_matrix(2, -1)
         actual_score_m, actual_tback_m = _compute_score_and_traceback_matrices(
-            Alignment([DNA('ACG')]),
-            Alignment([DNA('ACGT')]), 5, 2, m)
+            TabularMSA([DNA('ACG', metadata={'id': 'id'})]),
+            TabularMSA([DNA('ACGT', metadata={'id': 'id'})]), 5, 2, m)
         np.testing.assert_array_equal(actual_score_m, expected_score_m)
         np.testing.assert_array_equal(actual_tback_m, expected_tback_m)
 
@@ -466,8 +635,8 @@ class PairwiseAlignmentTests(TestCase):
                             [2, 2, 2, 1]]
         m = make_identity_substitution_matrix(2, -1)
         actual_score_m, actual_tback_m = _compute_score_and_traceback_matrices(
-            Alignment([DNA('ACC')]),
-            Alignment([DNA('ACGT')]), 5, 2, m)
+            TabularMSA([DNA('ACC', metadata={'id': 'id'})]),
+            TabularMSA([DNA('ACGT', metadata={'id': 'id'})]), 5, 2, m)
         np.testing.assert_array_equal(actual_score_m, expected_score_m)
         np.testing.assert_array_equal(actual_tback_m, expected_tback_m)
 
@@ -485,8 +654,10 @@ class PairwiseAlignmentTests(TestCase):
                             [2, 2, 2, 1]]
         m = make_identity_substitution_matrix(2, -1)
         actual_score_m, actual_tback_m = _compute_score_and_traceback_matrices(
-            Alignment([DNA('ACC', 's1'), DNA('ACC', 's2')]),
-            Alignment([DNA('ACGT', 's3'), DNA('ACGT', 's4')]), 5, 2, m)
+            TabularMSA([DNA('ACC', metadata={'id': 's1'}),
+                        DNA('ACC', metadata={'id': 's2'})]),
+            TabularMSA([DNA('ACGT', metadata={'id': 's3'}),
+                        DNA('ACGT', metadata={'id': 's4'})]), 5, 2, m)
         np.testing.assert_array_equal(actual_score_m, expected_score_m)
         np.testing.assert_array_equal(actual_tback_m, expected_tback_m)
 
@@ -495,8 +666,9 @@ class PairwiseAlignmentTests(TestCase):
         # substitution matrix, an informative error should be raised
         m = make_identity_substitution_matrix(2, -1)
         self.assertRaises(ValueError, _compute_score_and_traceback_matrices,
-                          Alignment([DNA('AWG')]),
-                          Alignment([DNA('ACGT')]), 5, 2, m)
+                          TabularMSA([DNA('AWG', metadata={'id': 'id'})]),
+                          TabularMSA([DNA('ACGT', metadata={'id': 'id'})]),
+                          5, 2, m)
 
     def test_traceback(self):
         score_m = [[0, -5, -7, -9],
@@ -512,10 +684,12 @@ class PairwiseAlignmentTests(TestCase):
                    [2, 2, 2, 2]]
         tback_m = np.array(tback_m)
         # start at bottom-right
-        expected = ([BiologicalSequence("ACG-")],
-                    [BiologicalSequence("ACGT")], 1, 0, 0)
-        actual = _traceback(tback_m, score_m, Alignment([DNA('ACG')]),
-                            Alignment([DNA('ACGT')]), 4, 3)
+        expected = ([DNA("ACG-", metadata={'id': 'foo'})],
+                    [DNA("ACGT", metadata={'id': 'bar'})], 1, 0, 0)
+        actual = _traceback(tback_m, score_m,
+                            TabularMSA([DNA('ACG', metadata={'id': 'foo'})]),
+                            TabularMSA([DNA('ACGT', metadata={'id': 'bar'})]),
+                            4, 3)
         self.assertEqual(actual, expected)
 
         # four sequences in two alignments
@@ -532,20 +706,26 @@ class PairwiseAlignmentTests(TestCase):
                    [2, 2, 2, 2]]
         tback_m = np.array(tback_m)
         # start at bottom-right
-        expected = ([BiologicalSequence("ACG-"), BiologicalSequence("ACG-")],
-                    [BiologicalSequence("ACGT"), BiologicalSequence("ACGT")],
+        expected = ([DNA("ACG-", metadata={'id': 's1'}),
+                     DNA("ACG-", metadata={'id': 's2'})],
+                    [DNA("ACGT", metadata={'id': 's3'}),
+                     DNA("ACGT", metadata={'id': 's4'})],
                     1, 0, 0)
         actual = _traceback(tback_m, score_m,
-                            Alignment([DNA('ACG', 's1'), DNA('ACG', 's2')]),
-                            Alignment([DNA('ACGT', 's3'), DNA('ACGT', 's4')]),
+                            TabularMSA([DNA('ACG', metadata={'id': 's1'}),
+                                        DNA('ACG', metadata={'id': 's2'})]),
+                            TabularMSA([DNA('ACGT', metadata={'id': 's3'}),
+                                        DNA('ACGT', metadata={'id': 's4'})]),
                             4, 3)
         self.assertEqual(actual, expected)
 
         # start at highest-score
-        expected = ([BiologicalSequence("ACG")],
-                    [BiologicalSequence("ACG")], 6, 0, 0)
-        actual = _traceback(tback_m, score_m, Alignment([DNA('ACG')]),
-                            Alignment([DNA('ACGT')]), 3, 3)
+        expected = ([DNA("ACG", metadata={'id': 'foo'})],
+                    [DNA("ACG", metadata={'id': 'bar'})], 6, 0, 0)
+        actual = _traceback(tback_m, score_m,
+                            TabularMSA([DNA('ACG', metadata={'id': 'foo'})]),
+                            TabularMSA([DNA('ACGT', metadata={'id': 'bar'})]),
+                            3, 3)
         self.assertEqual(actual, expected)
 
         # terminate traceback before top-right
@@ -555,31 +735,28 @@ class PairwiseAlignmentTests(TestCase):
                    [2, 2, 2, 1],
                    [2, 2, 2, 2]]
         tback_m = np.array(tback_m)
-        expected = ("G", "G", 6, 2, 2)
-        expected = ([BiologicalSequence("G")],
-                    [BiologicalSequence("G")], 6, 2, 2)
-        actual = _traceback(tback_m, score_m, Alignment([DNA('ACG')]),
-                            Alignment([DNA('ACGT')]), 3, 3)
+        expected = ([DNA("G", metadata={'id': 'a'})],
+                    [DNA("G", metadata={'id': 'a'})], 6, 2, 2)
+        actual = _traceback(tback_m, score_m,
+                            TabularMSA([DNA('ACG', metadata={'id': 'a'})]),
+                            TabularMSA([DNA('ACGT', metadata={'id': 'a'})]),
+                            3, 3)
         self.assertEqual(actual, expected)
 
-    def test_get_seq_id(self):
-        self.assertEqual(_get_seq_id("AAA", "hello"), "hello")
-        self.assertEqual(_get_seq_id(DNA("AAA"), "hello"), "hello")
-        self.assertEqual(_get_seq_id(DNA("AAA", "s1"), "hello"), "s1")
-
     def test_first_largest(self):
-        l = [(5, 'a'), (5, 'b'), (5, 'c')]
-        self.assertEqual(_first_largest(l), (5, 'a'))
-        l = [(5, 'c'), (5, 'b'), (5, 'a')]
-        self.assertEqual(_first_largest(l), (5, 'c'))
-        l = [(5, 'c'), (6, 'b'), (5, 'a')]
-        self.assertEqual(_first_largest(l), (6, 'b'))
+        input = [(5, 'a'), (5, 'b'), (5, 'c')]
+        self.assertEqual(_first_largest(input), (5, 'a'))
+        input = [(5, 'c'), (5, 'b'), (5, 'a')]
+        self.assertEqual(_first_largest(input), (5, 'c'))
+        input = [(5, 'c'), (6, 'b'), (5, 'a')]
+        self.assertEqual(_first_largest(input), (6, 'b'))
         # works for more than three entries
-        l = [(5, 'c'), (6, 'b'), (5, 'a'), (7, 'd')]
-        self.assertEqual(_first_largest(l), (7, 'd'))
+        input = [(5, 'c'), (6, 'b'), (5, 'a'), (7, 'd')]
+        self.assertEqual(_first_largest(input), (7, 'd'))
         # Note that max([(5, 'a'), (5, 'c')]) == max([(5, 'c'), (5, 'a')])
         # but for the purposes needed here, we want the max to be the same
         # regardless of what the second item in the tuple is.
+
 
 if __name__ == "__main__":
     main()

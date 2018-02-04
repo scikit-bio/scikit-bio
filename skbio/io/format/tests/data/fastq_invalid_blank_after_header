@@ -1,0 +1,13 @@
+@foo bar baz
+
+AACCGG
++
+123456
+@bar baz foo
+TTGGCC
++
+876543
+@baz foo bar
+GATTTC
++
+567893

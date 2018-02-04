@@ -6,9 +6,7 @@
 # The full license is in the file COPYING.txt, distributed with this software.
 # ----------------------------------------------------------------------------
 
-from __future__ import absolute_import, division, print_function
-from six import string_types
-
+import itertools
 from copy import deepcopy
 
 import numpy as np
@@ -18,6 +16,8 @@ from scipy.spatial.distance import squareform
 from skbio._base import SkbioObject
 from skbio.stats._misc import _pprint_strs
 from skbio.util import find_duplicates
+from skbio.util._decorator import experimental, classonlymethod
+from skbio.util._misc import resolve_key
 
 
 class DissimilarityMatrixError(Exception):
@@ -56,8 +56,10 @@ class DissimilarityMatrix(SkbioObject):
     data : array_like or DissimilarityMatrix
         Square, hollow, two-dimensional ``numpy.ndarray`` of dissimilarities
         (floats), or a structure that can be converted to a ``numpy.ndarray``
-        using ``numpy.asarray``. Can instead be a `DissimilarityMatrix` (or
-        subclass) instance, in which case the instance's data will be used.
+        using ``numpy.asarray`` or a one-dimensional vector of dissimilarities
+        (floats), as defined by `scipy.spatial.distance.squareform`. Can
+        instead be a `DissimilarityMatrix` (or subclass) instance,
+        in which case the instance's data will be used.
         Data will be converted to a float ``dtype`` if necessary. A copy will
         *not* be made if already a ``numpy.ndarray`` with a float ``dtype``.
     ids : sequence of str, optional
@@ -66,20 +68,10 @@ class DissimilarityMatrix(SkbioObject):
         monotonically-increasing integers cast as strings, with numbering
         starting from zero, e.g., ``('0', '1', '2', '3', ...)``.
 
-    Attributes
-    ----------
-    data
-    ids
-    dtype
-    shape
-    size
-    T
-    png
-    svg
-
     See Also
     --------
     DistanceMatrix
+    scipy.spatial.distance.squareform
 
     Notes
     -----
@@ -97,11 +89,14 @@ class DissimilarityMatrix(SkbioObject):
     # Used in __str__
     _matrix_element_name = 'dissimilarity'
 
+    @experimental(as_of="0.4.0")
     def __init__(self, data, ids=None):
         if isinstance(data, DissimilarityMatrix):
+            ids = data.ids if ids is None else ids
             data = data.data
         data = np.asarray(data, dtype='float')
-
+        if data.ndim == 1:
+            data = squareform(data, force='tomatrix', checks=False)
         if ids is None:
             ids = (str(i) for i in range(data.shape[0]))
         ids = tuple(ids)
@@ -112,7 +107,59 @@ class DissimilarityMatrix(SkbioObject):
         self._ids = ids
         self._id_index = self._index_list(self._ids)
 
+    @classonlymethod
+    @experimental(as_of="0.5.1")
+    def from_iterable(cls, iterable, metric, key=None, keys=None):
+        """Create DissimilarityMatrix from an iterable given a metric.
+
+        Parameters
+        ----------
+        iterable : iterable
+            Iterable containing objects to compute pairwise dissimilarities on.
+        metric : callable
+            A function that takes two arguments and returns a float
+            representing the dissimilarity between the two arguments.
+        key : callable or metadata key, optional
+            A function that takes one argument and returns a string
+            representing the id of the element in the dissimilarity matrix.
+            Alternatively, a key to a `metadata` property if it exists for
+            each element in the `iterable`. If None, then default ids will be
+            used.
+        keys : iterable, optional
+            An iterable of the same length as `iterable`. Each element will be
+            used as the respective key.
+
+        Returns
+        -------
+        DissimilarityMatrix
+            The `metric` applied to all pairwise elements in the `iterable`.
+
+        Raises
+        ------
+        ValueError
+            If `key` and `keys` are both provided.
+
+        """
+        iterable = list(iterable)
+        if key is not None and keys is not None:
+            raise ValueError("Cannot use both `key` and `keys` at the same"
+                             " time.")
+
+        keys_ = None
+        if key is not None:
+            keys_ = [resolve_key(e, key) for e in iterable]
+        elif keys is not None:
+            keys_ = keys
+
+        dm = np.empty((len(iterable),) * 2)
+        for i, a in enumerate(iterable):
+            for j, b in enumerate(iterable):
+                dm[i, j] = metric(a, b)
+
+        return cls(dm, keys_)
+
     @property
+    @experimental(as_of="0.4.0")
     def data(self):
         """Array of dissimilarities.
 
@@ -127,6 +174,7 @@ class DissimilarityMatrix(SkbioObject):
         return self._data
 
     @property
+    @experimental(as_of="0.4.0")
     def ids(self):
         """Tuple of object IDs.
 
@@ -148,11 +196,13 @@ class DissimilarityMatrix(SkbioObject):
         self._id_index = self._index_list(self._ids)
 
     @property
+    @experimental(as_of="0.4.0")
     def dtype(self):
         """Data type of the dissimilarities."""
         return self.data.dtype
 
     @property
+    @experimental(as_of="0.4.0")
     def shape(self):
         """Two-element tuple containing the dissimilarity matrix dimensions.
 
@@ -165,6 +215,7 @@ class DissimilarityMatrix(SkbioObject):
         return self.data.shape
 
     @property
+    @experimental(as_of="0.4.0")
     def size(self):
         """Total number of elements in the dissimilarity matrix.
 
@@ -176,6 +227,7 @@ class DissimilarityMatrix(SkbioObject):
         return self.data.size
 
     @property
+    @experimental(as_of="0.4.0")
     def T(self):
         """Transpose of the dissimilarity matrix.
 
@@ -186,6 +238,7 @@ class DissimilarityMatrix(SkbioObject):
         """
         return self.transpose()
 
+    @experimental(as_of="0.4.0")
     def transpose(self):
         """Return the transpose of the dissimilarity matrix.
 
@@ -202,6 +255,7 @@ class DissimilarityMatrix(SkbioObject):
         """
         return self.__class__(self.data.T.copy(), deepcopy(self.ids))
 
+    @experimental(as_of="0.4.0")
     def index(self, lookup_id):
         """Return the index of the specified ID.
 
@@ -226,6 +280,7 @@ class DissimilarityMatrix(SkbioObject):
         else:
             raise MissingIDError(lookup_id)
 
+    @experimental(as_of="0.4.0")
     def redundant_form(self):
         """Return an array of dissimilarities in redundant format.
 
@@ -251,6 +306,7 @@ class DissimilarityMatrix(SkbioObject):
         """
         return self.data
 
+    @experimental(as_of="0.4.0")
     def copy(self):
         """Return a deep copy of the dissimilarity matrix.
 
@@ -265,6 +321,7 @@ class DissimilarityMatrix(SkbioObject):
         # point in the future.
         return self.__class__(self.data.copy(), deepcopy(self.ids))
 
+    @experimental(as_of="0.4.0")
     def filter(self, ids, strict=True):
         """Filter the dissimilarity matrix by IDs.
 
@@ -307,6 +364,7 @@ class DissimilarityMatrix(SkbioObject):
         filtered_data = self._data[idxs][:, idxs]
         return self.__class__(filtered_data, ids)
 
+    @experimental(as_of="0.4.0")
     def plot(self, cmap=None, title=""):
         """Creates a heatmap of the dissimilarity matrix
 
@@ -344,7 +402,6 @@ class DissimilarityMatrix(SkbioObject):
            >>> fig = dm.plot(cmap='Reds', title='Example heatmap')
 
         """
-
         import matplotlib.pyplot as plt
 
         # based on http://stackoverflow.com/q/14391959/3776794
@@ -359,12 +416,18 @@ class DissimilarityMatrix(SkbioObject):
         ax.set_xticks(ticks, minor=False)
         ax.set_yticks(ticks, minor=False)
 
+        # Ensure there is no white border around the heatmap by manually
+        # setting the limits
+        ax.set_ylim(0, len(self.ids))
+        ax.set_xlim(0, len(self.ids))
+
         # display data as it is stored in the dissimilarity matrix
         # (default is to have y-axis inverted)
         ax.invert_yaxis()
 
         ax.set_xticklabels(self.ids, rotation=90, minor=False)
         ax.set_yticklabels(self.ids, minor=False)
+
         ax.set_title(title)
 
         return fig
@@ -376,6 +439,7 @@ class DissimilarityMatrix(SkbioObject):
         return self._figure_data('svg')
 
     @property
+    @experimental(as_of="0.4.0")
     def png(self):
         """Display heatmap in IPython Notebook as PNG.
 
@@ -384,6 +448,7 @@ class DissimilarityMatrix(SkbioObject):
         return Image(self._repr_png_(), embed=True)
 
     @property
+    @experimental(as_of="0.4.0")
     def svg(self):
         """Display heatmap in IPython Notebook as SVG.
 
@@ -393,7 +458,6 @@ class DissimilarityMatrix(SkbioObject):
 
     def _figure_data(self, format):
         import matplotlib.pyplot as plt
-
         from IPython.core.pylabtools import print_figure
 
         fig = self.plot()
@@ -403,6 +467,32 @@ class DissimilarityMatrix(SkbioObject):
         plt.close(fig)
         return data
 
+    @experimental(as_of="0.4.1")
+    def to_data_frame(self):
+        """Create a ``pandas.DataFrame`` from this ``DissimilarityMatrix``.
+
+        Returns
+        -------
+        pd.DataFrame
+            ``pd.DataFrame`` with IDs on index and columns.
+
+        Examples
+        --------
+        >>> from skbio import DistanceMatrix
+        >>> dm = DistanceMatrix([[0, 1, 2],
+        ...                      [1, 0, 3],
+        ...                      [2, 3, 0]], ids=['a', 'b', 'c'])
+        >>> df = dm.to_data_frame()
+        >>> df
+             a    b    c
+        a  0.0  1.0  2.0
+        b  1.0  0.0  3.0
+        c  2.0  3.0  0.0
+
+        """
+        return pd.DataFrame(data=self.data, index=self.ids, columns=self.ids)
+
+    @experimental(as_of="0.4.0")
     def __str__(self):
         """Return a string representation of the dissimilarity matrix.
 
@@ -414,13 +504,12 @@ class DissimilarityMatrix(SkbioObject):
         str
             String representation of the dissimilarity matrix.
 
-        .. shownumpydoc
-
         """
         return '%dx%d %s matrix\nIDs:\n%s\nData:\n' % (
             self.shape[0], self.shape[1], self._matrix_element_name,
             _pprint_strs(self.ids)) + str(self.data)
 
+    @experimental(as_of="0.4.0")
     def __eq__(self, other):
         """Compare this dissimilarity matrix to another for equality.
 
@@ -439,8 +528,6 @@ class DissimilarityMatrix(SkbioObject):
         -------
         bool
             ``True`` if `self` is equal to `other`, ``False`` otherwise.
-
-        .. shownumpydoc
 
         """
         equal = True
@@ -463,6 +550,7 @@ class DissimilarityMatrix(SkbioObject):
 
         return equal
 
+    @experimental(as_of="0.4.0")
     def __ne__(self, other):
         """Determine whether two dissimilarity matrices are not equal.
 
@@ -480,11 +568,10 @@ class DissimilarityMatrix(SkbioObject):
         --------
         __eq__
 
-        .. shownumpydoc
-
         """
         return not self == other
 
+    @experimental(as_of="0.4.0")
     def __contains__(self, lookup_id):
         """Check if the specified ID is in the dissimilarity matrix.
 
@@ -503,11 +590,10 @@ class DissimilarityMatrix(SkbioObject):
         --------
         index
 
-        .. shownumpydoc
-
         """
         return lookup_id in self._id_index
 
+    @experimental(as_of="0.4.0")
     def __getitem__(self, index):
         """Slice into dissimilarity data by object ID or numpy indexing.
 
@@ -554,10 +640,8 @@ class DissimilarityMatrix(SkbioObject):
         -----
         The lookup based on ID(s) is quick.
 
-        .. shownumpydoc
-
         """
-        if isinstance(index, string_types):
+        if isinstance(index, str):
             return self.data[self.index(index)]
         elif self._is_id_pair(index):
             return self.data[self.index(index[0]), self.index(index[1])]
@@ -595,9 +679,6 @@ class DissimilarityMatrix(SkbioObject):
         if data.dtype != np.double:
             raise DissimilarityMatrixError("Data must contain only floating "
                                            "point values.")
-        if np.trace(data) != 0:
-            raise DissimilarityMatrixError("Data must be hollow (i.e., the "
-                                           "diagonal can only contain zeros).")
         duplicates = find_duplicates(ids)
         if duplicates:
             formatted_duplicates = ', '.join(repr(e) for e in duplicates)
@@ -616,7 +697,7 @@ class DissimilarityMatrix(SkbioObject):
     def _is_id_pair(self, index):
         return (isinstance(index, tuple) and
                 len(index) == 2 and
-                all(map(lambda e: isinstance(e, string_types), index)))
+                all(map(lambda e: isinstance(e, str), index)))
 
 
 class DistanceMatrix(DissimilarityMatrix):
@@ -653,6 +734,71 @@ class DistanceMatrix(DissimilarityMatrix):
     # Override here, used in superclass __str__
     _matrix_element_name = 'distance'
 
+    @classonlymethod
+    @experimental(as_of="0.4.1")
+    def from_iterable(cls, iterable, metric, key=None, keys=None,
+                      validate=True):
+        """Create DistanceMatrix from all pairs in an iterable given a metric.
+
+        Parameters
+        ----------
+        iterable : iterable
+            Iterable containing objects to compute pairwise distances on.
+        metric : callable
+            A function that takes two arguments and returns a float
+            representing the distance between the two arguments.
+        key : callable or metadata key, optional
+            A function that takes one argument and returns a string
+            representing the id of the element in the distance matrix.
+            Alternatively, a key to a `metadata` property if it exists for
+            each element in the `iterable`. If None, then default ids will be
+            used.
+        keys : iterable, optional
+            An iterable of the same length as `iterable`. Each element will be
+            used as the respective key.
+        validate : boolean, optional
+            If ``True``, all pairwise distances are computed, including upper
+            and lower triangles and the diagonal, and the resulting matrix is
+            validated for symmetry and hollowness. If ``False``, `metric` is
+            assumed to be hollow and symmetric and only the lower triangle
+            (excluding the diagonal) is computed. Pass ``validate=False`` if
+            you are sure `metric` is hollow and symmetric for improved
+            performance.
+
+        Returns
+        -------
+        DistanceMatrix
+            The `metric` applied to pairwise elements in the `iterable`.
+
+        Raises
+        ------
+        ValueError
+            If `key` and `keys` are both provided.
+
+        """
+        if validate:
+            return super(DistanceMatrix, cls).from_iterable(iterable, metric,
+                                                            key, keys)
+
+        iterable = list(iterable)
+        if key is not None and keys is not None:
+            raise ValueError("Cannot use both `key` and `keys` at the same"
+                             " time.")
+
+        keys_ = None
+        if key is not None:
+            keys_ = [resolve_key(e, key) for e in iterable]
+        elif keys is not None:
+            keys_ = keys
+
+        dm = np.zeros((len(iterable),) * 2)
+        for i, a in enumerate(iterable):
+            for j, b in enumerate(iterable[:i]):
+                dm[i, j] = dm[j, i] = metric(a, b)
+
+        return cls(dm, keys_)
+
+    @experimental(as_of="0.4.0")
     def condensed_form(self):
         """Return an array of distances in condensed format.
 
@@ -675,6 +821,7 @@ class DistanceMatrix(DissimilarityMatrix):
         """
         return squareform(self._data, force='tovector', checks=False)
 
+    @experimental(as_of="0.4.0")
     def permute(self, condensed=False):
         """Randomly permute both rows and columns in the matrix.
 
@@ -725,9 +872,65 @@ class DistanceMatrix(DissimilarityMatrix):
         super(DistanceMatrix, self)._validate(data, ids)
 
         if (data.T != data).any():
-            raise DistanceMatrixError("Data must be symmetric.")
+            raise DistanceMatrixError(
+                "Data must be symmetric and cannot contain NaNs.")
+
+        if np.trace(data) != 0:
+            raise DistanceMatrixError("Data must be hollow (i.e., the diagonal"
+                                      " can only contain zeros).")
+
+    @experimental(as_of="0.5.1")
+    def to_series(self):
+        """Create a ``pandas.Series`` from this ``DistanceMatrix``.
+
+        The series will contain distances in condensed form: only distances
+        from one matrix triangle are included, and the diagonal is excluded.
+        The series' index will be a ``pd.MultiIndex`` relating pairs of IDs to
+        distances. The pairs of IDs will be in row-major order with respect to
+        the upper matrix triangle.
+
+        To obtain all distances (i.e. both upper and lower matrix triangles and
+        the diagonal), use ``DistanceMatrix.to_data_frame``. To obtain *only*
+        the distances in condensed form (e.g. for use with SciPy), use
+        ``DistanceMatrix.condensed_form``.
+
+        Returns
+        -------
+        pd.Series
+            ``pd.Series`` with pairs of IDs on the index.
+
+        See Also
+        --------
+        to_data_frame
+        condensed_form
+        scipy.spatial.distance.squareform
+
+        Examples
+        --------
+        >>> from skbio import DistanceMatrix
+        >>> dm = DistanceMatrix([[0, 1, 2, 3],
+        ...                      [1, 0, 4, 5],
+        ...                      [2, 4, 0, 6],
+        ...                      [3, 5, 6, 0]], ids=['a', 'b', 'c', 'd'])
+        >>> dm.to_series()
+        a  b    1.0
+           c    2.0
+           d    3.0
+        b  c    4.0
+           d    5.0
+        c  d    6.0
+        dtype: float64
+
+        """
+        distances = self.condensed_form()
+        # `id_pairs` will not be interpreted as a `pd.MultiIndex` if it is an
+        # iterable returned by `itertools.combinations`.
+        id_pairs = list(itertools.combinations(self.ids, 2))
+        index = pd.Index(id_pairs, tupleize_cols=True)
+        return pd.Series(data=distances, index=index, dtype=float)
 
 
+@experimental(as_of="0.4.0")
 def randdm(num_objects, ids=None, constructor=None, random_fn=None):
     """Generate a distance matrix populated with random distances.
 
@@ -775,7 +978,7 @@ def randdm(num_objects, ids=None, constructor=None, random_fn=None):
         random_fn = np.random.rand
 
     data = np.tril(random_fn(num_objects, num_objects), -1)
-    data += data.T
+    data = data + data.T
 
     if not ids:
         ids = map(str, range(1, num_objects + 1))

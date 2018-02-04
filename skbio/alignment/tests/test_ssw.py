@@ -18,7 +18,8 @@
 
 from unittest import TestCase, main
 
-from skbio import local_pairwise_align_ssw
+from skbio import (local_pairwise_align_ssw, Sequence, DNA, RNA, Protein,
+                   TabularMSA)
 from skbio.alignment import StripedSmithWaterman, AlignmentStructure
 from skbio.alignment._pairwise import blosum50
 
@@ -556,15 +557,20 @@ class TestStripedSmithWaterman(TestSSW):
 
 
 class TestAlignStripedSmithWaterman(TestSSW):
-    def _check_Alignment_to_AlignmentStructure(self, alignment, structure):
-        self.assertEqual(alignment.score(), structure.optimal_alignment_score)
-        self.assertEqual(str(alignment[0]), structure.aligned_query_sequence)
-        self.assertEqual(str(alignment[1]), structure.aligned_target_sequence)
+    def _check_TabularMSA_to_AlignmentStructure(self, alignment, structure,
+                                                expected_dtype):
+        msa, score, start_end = alignment
+
+        self.assertEqual(score, structure.optimal_alignment_score)
+        self.assertEqual(
+            msa,
+            TabularMSA([expected_dtype(structure.aligned_query_sequence),
+                        expected_dtype(structure.aligned_target_sequence)]))
         if structure.query_begin == -1:
-            self.assertEqual(alignment.start_end_positions(), None)
+            self.assertEqual(start_end, None)
         else:
             for (start, end), (expected_start, expected_end) in \
-                zip(alignment.start_end_positions(),
+                zip(start_end,
                     [(structure.query_begin,
                       structure.query_end),
                      (structure.target_begin,
@@ -572,14 +578,26 @@ class TestAlignStripedSmithWaterman(TestSSW):
                 self.assertEqual(start, expected_start)
                 self.assertEqual(end, expected_end)
 
-    def test_same_as_using_StripedSmithWaterman_object(self):
+    def test_same_as_using_StripedSmithWaterman_object_DNA(self):
         query_sequence = 'ATGGAAGCTATAAGCGCGGGTGAG'
         target_sequence = 'AACTTATATAATAAAAATTATATATTCGTTGGGTTCTTTTGATATAAATC'
         query = StripedSmithWaterman(query_sequence)
         align1 = query(target_sequence)
-        align2 = local_pairwise_align_ssw(query_sequence,
-                                          target_sequence)
-        self._check_Alignment_to_AlignmentStructure(align2, align1)
+        align2 = local_pairwise_align_ssw(DNA(query_sequence),
+                                          DNA(target_sequence))
+        self._check_TabularMSA_to_AlignmentStructure(align2, align1, DNA)
+
+    def test_same_as_using_StripedSmithWaterman_object_Protein(self):
+        query_sequence = 'HEAGAWGHEE'
+        target_sequence = 'PAWHEAE'
+        query = StripedSmithWaterman(query_sequence,
+                                     protein=True,
+                                     substitution_matrix=blosum50)
+        align1 = query(target_sequence)
+        align2 = local_pairwise_align_ssw(Protein(query_sequence),
+                                          Protein(target_sequence),
+                                          substitution_matrix=blosum50)
+        self._check_TabularMSA_to_AlignmentStructure(align2, align1, Protein)
 
     def test_kwargs_are_usable(self):
         kwargs = {}
@@ -589,9 +607,20 @@ class TestAlignStripedSmithWaterman(TestSSW):
         target_sequence = 'TACTTATAAGATGTCTCAACGGCATGCGCAACTTGTGAAGTG'
         query = StripedSmithWaterman(query_sequence, **kwargs)
         align1 = query(target_sequence)
-        align2 = local_pairwise_align_ssw(query_sequence,
-                                          target_sequence, **kwargs)
-        self._check_Alignment_to_AlignmentStructure(align2, align1)
+        align2 = local_pairwise_align_ssw(DNA(query_sequence),
+                                          DNA(target_sequence), **kwargs)
+        self._check_TabularMSA_to_AlignmentStructure(align2, align1, DNA)
+
+    def test_invalid_type(self):
+        with self.assertRaisesRegex(TypeError, "not type 'Sequence'"):
+            local_pairwise_align_ssw(DNA('ACGT'), Sequence('ACGT'))
+
+        with self.assertRaisesRegex(TypeError, "not type 'str'"):
+            local_pairwise_align_ssw('ACGU', RNA('ACGU'))
+
+    def test_type_mismatch(self):
+        with self.assertRaisesRegex(TypeError, "same type: 'DNA' != 'RNA'"):
+            local_pairwise_align_ssw(DNA('ACGT'), RNA('ACGU'))
 
 
 class TestAlignmentStructure(TestSSW):
@@ -734,6 +763,7 @@ class TestAlignmentStructure(TestSSW):
         alignment = query("AGTCGAAGGGTAATATAGGCGTGTCACCTA")
         self.assertEqual(None, alignment.aligned_target_sequence)
         self.assertEqual(None, alignment.aligned_query_sequence)
+
 
 if __name__ == '__main__':
     main()

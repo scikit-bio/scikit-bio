@@ -6,21 +6,21 @@
 # The full license is in the file COPYING.txt, distributed with this software.
 # ----------------------------------------------------------------------------
 
-from __future__ import absolute_import, division, print_function
-
 import numpy as np
 
-from ._base import _validate
+from skbio.diversity._util import _validate_counts_vector
+from skbio.util._decorator import experimental
 
 
+@experimental(as_of="0.4.0")
 def gini_index(data, method='rectangles'):
-    """Calculate the Gini index.
+    r"""Calculate the Gini index.
 
     The Gini index is defined as
 
     .. math::
 
-       G=\\frac{A}{A+B}
+       G=\frac{A}{A+B}
 
     where :math:`A` is the area between :math:`y=x` and the Lorenz curve and
     :math:`B` is the area under the Lorenz curve. Simplifies to :math:`1-2B`
@@ -59,13 +59,13 @@ def gini_index(data, method='rectangles'):
 
     .. math::
 
-       dx\\sum_{i=1}^n h_i
+       dx\sum_{i=1}^n h_i
 
     The formula for ``method='trapezoids'`` is
 
     .. math::
 
-       dx(\\frac{h_0+h_n}{2}+\sum_{i=1}^{n-1} h_i)
+       dx(\frac{h_0+h_n}{2}+\sum_{i=1}^{n-1} h_i)
 
     References
     ----------
@@ -75,7 +75,7 @@ def gini_index(data, method='rectangles'):
 
     """
     # Suppress cast to int because this method supports ints and floats.
-    data = _validate(data, suppress_cast=True)
+    data = _validate_counts_vector(data, suppress_cast=True)
     lorenz_points = _lorenz_curve(data)
     B = _lorenz_curve_integrator(lorenz_points, method)
     return 1 - 2 * B

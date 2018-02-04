@@ -23,7 +23,7 @@ When considering contributing to scikit-bio, you should begin by posting an issu
 
 * For documentation additions, you should first post an issue describing what you propose to add, where you'd like to add it in the documentation, and a description of why you think it's an important addition. For documentation improvements and fixes, you should post an issue describing what is currently wrong or missing and how you propose to address it. For more information about building and contributing to scikit-bio's documentation, see our [documentation guide](doc/README.md).
 
-When you post your issue, the scikit-bio developers will respond to let you know if we agree with the addition or change. It's very important that you go through this step to avoid wasting time working on a feature that we are not interested in including in scikit-bio. **This initial discussion with the developers is particularly important prior to our beta (0.4.0) release, as scikit-bio is rapidly changing. This includes complete re-writes of some of the core objects, so if you don't get in touch first you could easily waste time by working on an object or interface that is deprecated.** You should review our [roadmap to beta](https://github.com/biocore/scikit-bio/wiki/beta-release-roadmap) to learn about the changes leading up to 0.4.0.
+When you post your issue, the scikit-bio developers will respond to let you know if we agree with the addition or change. It's very important that you go through this step to avoid wasting time working on a feature that we are not interested in including in scikit-bio. **This initial discussion with the developers is important because scikit-bio is rapidly changing, including complete re-writes of some of the core objects. If you don't get in touch first you could easily waste time by working on an object or interface that is deprecated.**
 
 Getting started
 ---------------
@@ -53,7 +53,7 @@ Particularly for big changes, if you'd like feedback on your code in the form of
 Submitting code to scikit-bio
 -----------------------------
 
-scikit-bio is hosted on [GitHub](http://www.github.com), and we use GitHub's [Pull Request](https://help.github.com/articles/using-pull-requests) mechanism for reviewing and accepting submissions. Once You should go through the following steps to submit code to scikit-bio.
+scikit-bio is hosted on [GitHub](http://www.github.com), and we use GitHub's [Pull Request](https://help.github.com/articles/using-pull-requests) mechanism for reviewing and accepting submissions. You should work through the following steps to submit code to scikit-bio.
 
 1. Begin by [creating an issue](https://github.com/biocore/scikit-bio/issues) describing your proposed change (see [Types of contributions](#types-of-contributions) for details).
 
@@ -69,11 +69,7 @@ scikit-bio is hosted on [GitHub](http://www.github.com), and we use GitHub's [Pu
  git pull upstream master
  ```
 
-5. Install scikit-bio in "development mode" so that your changes are reflected in the installed package without having to reinstall the package each time:
-
- ```
- pip install -e .
- ```
+5. Install scikit-bio for development. See [Setting up a development environment](#setting-up-a-development-environment).
 
 6. Create a new topic branch that you will make your changes in with ``git checkout -b``:
 
@@ -108,6 +104,61 @@ scikit-bio is hosted on [GitHub](http://www.github.com), and we use GitHub's [Pu
 
 13. Issue a [pull request](https://help.github.com/articles/using-pull-requests) on the GitHub website to request that we merge your branch's changes into scikit-bio's master branch. Be sure to include a description of your changes in the pull request, as well as any other information that will help the scikit-bio developers involved in reviewing your code. Please include ``fixes #<issue-number>`` in your pull request description or in one of your commit messages so that the corresponding issue will be closed when the pull request is merged (see [here](https://help.github.com/articles/closing-issues-via-commit-messages/) for more details). One of the scikit-bio developers will review your code at this stage. If we request changes (which is very common), *don't issue a new pull request*. You should make changes on your topic branch, and commit and push them to GitHub. Your pull request will update automatically.
 
+Setting up a development environment
+------------------------------------
+
+**Note:** scikit-bio must be developed in a Python 3.4 or later environment.
+
+The recommended way to set up a development environment for contributing to scikit-bio is using [Anaconda](https://store.continuum.io/cshop/anaconda/) by Continuum Analytics, with its associated command line utility `conda`. The primary benefit of `conda` over `pip` is that on some operating systems (ie Linux), `pip` installs packages from source. This can take a very long time to install Numpy, scipy, matplotlib, etc. `conda` installs these packages using pre-built binaries, so the installation is much faster. Another benefit of `conda` is that it provides both package and environment management, which removes the necessity of using `virtualenv` separately. Not all packages are available using `conda`, therefore our strategy is to install as many packages as possible using `conda`, then install any remaining packages using `pip`.
+
+1. Install Anaconda
+
+ See [Continuum's site](https://store.continuum.io/cshop/anaconda/) for instructions. [Miniconda](http://conda.pydata.org/docs/install/quick.html) provides a fast way to get conda up and running.
+
+2. Create a new conda environment
+ ```
+ conda create -n env_name python=3.4 pip
+ ```
+
+ Note that `env_name` can be any name desired, for example
+
+ ```
+ conda create -n skbio python=3.4 pip
+ ```
+
+3. Activate the environment
+
+ This may be slightly different depending on the operating system. Refer to the Continuum site to find instructions for your OS.
+ ```
+ source activate env_name
+ ```
+
+4. Navigate to the scikit-bio directory
+ See [the section on submitting code](#submitting-code-to-scikit-bio).
+ ```
+ cd /path/to/scikit-bio
+ ```
+
+5. Install `conda` requirements
+ ```
+ conda install --file ci/conda_requirements.txt
+ ```
+
+6. Install `pip` requirements
+ ```
+ pip install -r ci/pip_requirements.txt
+ ```
+
+7. Install scikit-bio
+ ```
+ pip install --no-deps -e .
+ ```
+
+8. Test the installation
+ ```
+ make test
+ ```
+
 Coding guidelines
 -----------------
 
@@ -118,18 +169,17 @@ Testing guidelines
 
 All code that is added to scikit-bio must be unit tested, and the unit test code must be submitted in the same pull request as the library code that you are submitting. We will only merge code that is unit tested and that passes the [continuous integration build](https://github.com/biocore/scikit-bio/blob/master/.travis.yml). This build includes, but is not limited to, the following checks:
 
-- Full unit test suite executes without errors in Python 2 and 3.
-- Doctests execute correctly (currently only for Python 2).
+- Full unit test suite and doctests execute without errors in supported versions of Python 3.
 - C code can be correctly compiled.
 - Cython code is correctly generated.
 - All tests import functionality from the appropriate minimally deep API.
 - Documentation can be built.
 - Current code coverage is maintained or improved.
-- Code passes ``pep8``/``flake8`` checks.
+- Code passes ``flake8`` checks.
 
 Running ``make test`` locally during development will include a subset of the full checks performed by Travis-CI.
 
-The scikit-bio coding guidelines describe our [expectations for unit tests](http://scikit-bio.org/development/coding_guidelines.html). You should review the unit test section before working on your test code.
+The scikit-bio coding guidelines describe our [expectations for unit tests](http://scikit-bio.org/docs/latest/development/coding_guidelines.html). You should review the unit test section before working on your test code.
 
 Tests can be executed by running ``make test`` from the base directory of the project or from within a Python or IPython session:
 

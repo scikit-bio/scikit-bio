@@ -6,36 +6,35 @@
 # The full license is in the file COPYING.txt, distributed with this software.
 # ----------------------------------------------------------------------------
 
-from __future__ import absolute_import, division, print_function
 
 from skbio.util import TestRunner
 
 # Add skbio.io to sys.modules to prevent cycles in our imports
 import skbio.io  # noqa
 # imports included for convenience
-from skbio.sequence import (
-    BiologicalSequence, NucleotideSequence, DNA, DNASequence, RNA, RNASequence,
-    Protein, ProteinSequence)
+from skbio.sequence import Sequence, DNA, RNA, Protein, GeneticCode
 from skbio.stats.distance import DistanceMatrix
-from skbio.alignment import (
-    local_pairwise_align_ssw, SequenceCollection, Alignment)
-from skbio.tree import (
-    TreeNode, nj)
+from skbio.alignment import local_pairwise_align_ssw, TabularMSA
+from skbio.tree import TreeNode, nj
 from skbio.io import read, write
+from skbio.stats.ordination import OrdinationResults
+import skbio.diversity  # noqa
+import skbio.stats.evolve  # noqa
 
-__all__ = ['BiologicalSequence', 'NucleotideSequence', 'DNA', 'DNASequence',
-           'RNA', 'RNASequence', 'Protein', 'ProteinSequence',
-           'DistanceMatrix', 'local_pairwise_align_ssw', 'SequenceCollection',
-           'Alignment', 'TreeNode', 'nj', 'read', 'write']
+__all__ = ['Sequence', 'DNA', 'RNA', 'Protein', 'GeneticCode',
+           'DistanceMatrix', 'local_pairwise_align_ssw', 'TabularMSA',
+           'TreeNode', 'nj', 'read', 'write', 'OrdinationResults']
 
 __credits__ = "https://github.com/biocore/scikit-bio/graphs/contributors"
-__version__ = "0.2.3-dev"
+__version__ = "0.5.1-dev"
 
 mottos = [
     # 03/15/2014
     "It's gonna get weird, bro.",
     # 05/14/2014
-    "no cog yay"
+    "no cog yay",
+    # 03/18/2015
+    "bincount!",
 ]
 motto = mottos[-1]
 

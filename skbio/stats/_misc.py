@@ -6,8 +6,6 @@
 # The full license is in the file COPYING.txt, distributed with this software.
 # ----------------------------------------------------------------------------
 
-from __future__ import absolute_import, division, print_function
-
 
 def _pprint_strs(strs, max_chars=80, delimiter=', ', suffix='...',):
     """Pretty-print an iterable of strings, truncating if necessary."""

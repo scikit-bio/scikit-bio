@@ -6,43 +6,29 @@
 # The full license is in the file COPYING.txt, distributed with this software.
 # ----------------------------------------------------------------------------
 
-from __future__ import absolute_import, division, print_function
-
 import numpy as np
 from scipy.special import gammaln
 from scipy.optimize import fmin_powell, minimize_scalar
 
 from skbio.stats import subsample_counts
+from skbio.util._decorator import experimental
+from skbio.diversity._util import _validate_counts_vector
 
 
-def _validate(counts, suppress_cast=False):
-    """Validate and convert input to an acceptable counts vector type.
-
-    Note: may not always return a copy of `counts`!
-
-    """
-    counts = np.asarray(counts)
-
-    if not suppress_cast:
-        counts = counts.astype(int, casting='safe', copy=False)
-
-    if counts.ndim != 1:
-        raise ValueError("Only 1-D vectors are supported.")
-    elif (counts < 0).any():
-        raise ValueError("Counts vector cannot contain negative values.")
-
-    return counts
-
-
+@experimental(as_of="0.4.0")
 def berger_parker_d(counts):
-    """Calculate Berger-Parker dominance.
+    r"""Calculate Berger-Parker dominance.
 
     Berger-Parker dominance is defined as the fraction of the sample that
-    belongs to the most abundant OTUs:
+    belongs to the most abundant OTU:
 
     .. math::
 
-       d = \\frac{N_{max}}{N}
+       d = \frac{N_{max}}{N}
+
+    where :math:`N_{max}` is defined as the number of individuals in the most
+    abundant OTU (or any of the most abundant OTUs in the case of ties), and
+    :math:`N` is defined as the total number of individuals in the sample.
 
     Parameters
     ----------
@@ -65,17 +51,23 @@ def berger_parker_d(counts):
     .. [2] http://www.pisces-conservation.com/sdrhelp/index.html
 
     """
-    counts = _validate(counts)
+    counts = _validate_counts_vector(counts)
     return counts.max() / counts.sum()
 
 
+@experimental(as_of="0.4.0")
 def brillouin_d(counts):
-    """Calculate Brillouin index of alpha diversity, which is defined as:
+    r"""Calculate Brillouin index of alpha diversity.
+
+    This is calculated as follows:
 
     .. math::
 
-       HB = \\frac{\\ln N!-\\sum^5_{i=1}{\\ln n_i!}}{N}
+       HB = \frac{\ln N!-\sum^s_{i=1}{\ln n_i!}}{N}
 
+    where :math:`N` is defined as the total number of individuals in the
+    sample, :math:`s` is the number of OTUs, and :math:`n_i` is defined as the
+    number of individuals in the :math:`i^{\text{th}}` OTU.
 
     Parameters
     ----------
@@ -97,20 +89,21 @@ def brillouin_d(counts):
     .. [1] http://www.pisces-conservation.com/sdrhelp/index.html
 
     """
-    counts = _validate(counts)
+    counts = _validate_counts_vector(counts)
     nz = counts[counts.nonzero()]
     n = nz.sum()
     return (gammaln(n + 1) - gammaln(nz + 1).sum()) / n
 
 
+@experimental(as_of="0.4.0")
 def dominance(counts):
-    """Calculate dominance.
+    r"""Calculate dominance.
 
     Dominance is defined as
 
     .. math::
 
-       \\sum{p_i^2}
+       \sum{p_i^2}
 
     where :math:`p_i` is the proportion of the entire community that OTU
     :math:`i` represents.
@@ -141,11 +134,12 @@ def dominance(counts):
     .. [1] http://folk.uio.no/ohammer/past/diversity.html
 
     """
-    counts = _validate(counts)
+    counts = _validate_counts_vector(counts)
     freqs = counts / counts.sum()
     return (freqs * freqs).sum()
 
 
+@experimental(as_of="0.4.0")
 def doubles(counts):
     """Calculate number of double occurrences (doubletons).
 
@@ -160,14 +154,22 @@ def doubles(counts):
         Doubleton count.
 
     """
-    counts = _validate(counts)
+    counts = _validate_counts_vector(counts)
     return (counts == 2).sum()
 
 
+@experimental(as_of="0.4.0")
 def enspie(counts):
-    """Calculate ENS_pie alpha diversity measure.
+    r"""Calculate ENS_pie alpha diversity measure.
 
-    ENS_pie is equivalent to ``1 / dominance``.
+    ENS_pie is equivalent to ``1 / dominance``:
+
+    .. math::
+
+       ENS_{pie} = \frac{1}{\sum_{i=1}^s{p_i^2}}
+
+    where :math:`s` is the number of OTUs and :math:`p_i` is the proportion of
+    the community represented by OTU :math:`i`.
 
     Parameters
     ----------
@@ -194,53 +196,19 @@ def enspie(counts):
        Ecology Letters, Volume 16, Issue Supplement s1, pgs 17-26.
 
     """
-    counts = _validate(counts)
+    counts = _validate_counts_vector(counts)
     return 1 / dominance(counts)
 
 
-def equitability(counts, base=2):
-    """Calculate equitability (Shannon index corrected for number of OTUs).
-
-    Parameters
-    ----------
-    counts : 1-D array_like, int
-        Vector of counts.
-    base : scalar, optional
-        Logarithm base to use in the calculations.
-
-    Returns
-    -------
-    double
-        Measure of equitability.
-
-    See Also
-    --------
-    shannon
-
-    Notes
-    -----
-    The implementation here is based on the description given in the SDR-IV
-    online manual [1]_.
-
-    References
-    ----------
-    .. [1] http://www.pisces-conservation.com/sdrhelp/index.html
-
-    """
-    counts = _validate(counts)
-    numerator = shannon(counts, base)
-    denominator = np.log(observed_otus(counts)) / np.log(base)
-    return numerator / denominator
-
-
+@experimental(as_of="0.4.0")
 def esty_ci(counts):
-    """Calculate Esty's CI.
+    r"""Calculate Esty's CI.
 
     Esty's CI is defined as
 
     .. math::
 
-       F_1/N \\pm z\\sqrt{W}
+       F_1/N \pm z\sqrt{W}
 
     where :math:`F_1` is the number of singleton OTUs, :math:`N` is the total
     number of individuals (sum of abundances for all OTUs), and :math:`z` is a
@@ -251,7 +219,7 @@ def esty_ci(counts):
 
     .. math::
 
-       \\frac{F_1(N-F_1)+2NF_2}{N^3}
+       \frac{F_1(N-F_1)+2NF_2}{N^3}
 
     where :math:`F_2` is the number of doubleton OTUs.
 
@@ -276,7 +244,7 @@ def esty_ci(counts):
        estimator of the coverage of a random sample". Ann Statist 11: 905-912.
 
     """
-    counts = _validate(counts)
+    counts = _validate_counts_vector(counts)
 
     f1 = singles(counts)
     f2 = doubles(counts)
@@ -287,8 +255,19 @@ def esty_ci(counts):
     return f1 / n - z * np.sqrt(W), f1 / n + z * np.sqrt(W)
 
 
+@experimental(as_of="0.4.0")
 def fisher_alpha(counts):
-    """Calculate Fisher's alpha.
+    r"""Calculate Fisher's alpha, a metric of diversity.
+
+    Fisher's alpha is estimated by solving the following equation for
+    :math:`\alpha`:
+
+    .. math::
+
+       S=\alpha\ln(1+\frac{N}{\alpha})
+
+    where :math:`S` is the number of OTUs and :math:`N` is the
+    total number of individuals in the sample.
 
     Parameters
     ----------
@@ -316,7 +295,7 @@ def fisher_alpha(counts):
     .. [1] http://www.pisces-conservation.com/sdrhelp/index.html
 
     """
-    counts = _validate(counts)
+    counts = _validate_counts_vector(counts)
     n = counts.sum()
     s = observed_otus(counts)
 
@@ -338,14 +317,15 @@ def fisher_alpha(counts):
     return alpha
 
 
+@experimental(as_of="0.4.0")
 def goods_coverage(counts):
-    """Calculate Good's coverage of counts.
+    r"""Calculate Good's coverage of counts.
 
     Good's coverage estimator is defined as
 
     .. math::
 
-       1-\\frac{F_1}{N}
+       1-\frac{F_1}{N}
 
     where :math:`F_1` is the number of singleton OTUs and :math:`N` is the
     total number of individuals (sum of abundances for all OTUs).
@@ -361,14 +341,24 @@ def goods_coverage(counts):
         Good's coverage estimator.
 
     """
-    counts = _validate(counts)
+    counts = _validate_counts_vector(counts)
     f1 = singles(counts)
     N = counts.sum()
     return 1 - (f1 / N)
 
 
+@experimental(as_of="0.4.0")
 def heip_e(counts):
-    """Calculate Heip's evenness measure.
+    r"""Calculate Heip's evenness measure.
+
+    Heip's evenness is defined as:
+
+    .. math::
+
+       \frac{(e^H-1)}{(S-1)}
+
+    where :math:`H` is the Shannon-Wiener entropy of counts (using logarithm
+    base :math:`e`) and :math:`S` is the number of OTUs in the sample.
 
     Parameters
     ----------
@@ -380,6 +370,11 @@ def heip_e(counts):
     double
         Heip's evenness measure.
 
+    See Also
+    --------
+    shannon
+    pielou_e
+
     Notes
     -----
     The implementation here is based on the description in [1]_.
@@ -390,11 +385,12 @@ def heip_e(counts):
        UK., 54, 555-557.
 
     """
-    counts = _validate(counts)
+    counts = _validate_counts_vector(counts)
     return ((np.exp(shannon(counts, base=np.e)) - 1) /
             (observed_otus(counts) - 1))
 
 
+@experimental(as_of="0.4.0")
 def kempton_taylor_q(counts, lower_quantile=0.25, upper_quantile=0.75):
     """Calculate Kempton-Taylor Q index of alpha diversity.
 
@@ -436,7 +432,7 @@ def kempton_taylor_q(counts, lower_quantile=0.25, upper_quantile=0.75):
     .. [2] http://www.pisces-conservation.com/sdrhelp/index.html
 
     """
-    counts = _validate(counts)
+    counts = _validate_counts_vector(counts)
     n = len(counts)
     lower = int(np.ceil(n * lower_quantile))
     upper = int(n * upper_quantile)
@@ -445,16 +441,18 @@ def kempton_taylor_q(counts, lower_quantile=0.25, upper_quantile=0.75):
                                     sorted_counts[lower])
 
 
+@experimental(as_of="0.4.0")
 def margalef(counts):
-    """Calculate Margalef's richness index, which is defined as:
+    r"""Calculate Margalef's richness index.
+
+    Margalef's D is defined as:
 
     .. math::
 
-       D = \\frac{(S - 1)}{\\ln N}
+       D = \frac{(S - 1)}{\ln N}
 
-    where :math:`S` is the species number and :math:`N` is the
-    total number of individuals (sum of abundances for all OTUs).
-
+    where :math:`S` is the number of OTUs and :math:`N` is the total number of
+    individuals in the sample.
 
     Assumes log accumulation.
 
@@ -478,26 +476,29 @@ def margalef(counts):
        76-77.
 
     """
-    counts = _validate(counts)
+    counts = _validate_counts_vector(counts)
     return (observed_otus(counts) - 1) / np.log(counts.sum())
 
 
+@experimental(as_of="0.4.0")
 def mcintosh_d(counts):
-    """Calculate McIntosh dominance index D, which is defined as:
+    r"""Calculate McIntosh dominance index D.
+
+    McIntosh dominance index D is defined as:
 
     .. math::
 
-       D = \\frac{N - U}{N - \\sqrt{N}}
+       D = \frac{N - U}{N - \sqrt{N}}
 
-    where :math:`N` is the total number of individuals (sum of abundances for
-    all OTUs) and :math:`U` is given as:
+    where :math:`N` is the total number of individuals in the sample and
+    :math:`U` is defined as:
 
     .. math::
 
-        U = \\sqrt{\\sum{{n_i}^2}}
+       U = \sqrt{\sum{{n_i}^2}}
 
-    where :math:`n_i` is the sum of abundances for all OTUs in the
-    :math:`i_{th}` species.
+    where :math:`n_i` is the number of individuals in the :math:`i^{\text{th}}`
+    OTU.
 
     Parameters
     ----------
@@ -525,14 +526,25 @@ def mcintosh_d(counts):
     .. [2] http://www.pisces-conservation.com/sdrhelp/index.html
 
     """
-    counts = _validate(counts)
+    counts = _validate_counts_vector(counts)
     u = np.sqrt((counts * counts).sum())
     n = counts.sum()
     return (n - u) / (n - np.sqrt(n))
 
 
+@experimental(as_of="0.4.0")
 def mcintosh_e(counts):
-    """Calculate McIntosh's evenness measure E.
+    r"""Calculate McIntosh's evenness measure E.
+
+    McIntosh evenness measure E is defined as:
+
+    .. math::
+
+       E = \frac{\sqrt{\sum{n_i^2}}}{\sqrt{((N-S+1)^2 + S -1}}
+
+    where :math:`n_i` is the number of individuals in the :math:`i^{\text{th}}`
+    OTU, :math:`N` is the total number of individuals, and :math:`S` is the
+    number of OTUs in the sample.
 
     Parameters
     ----------
@@ -550,15 +562,16 @@ def mcintosh_e(counts):
 
     Notes
     -----
-    The implementation here is based on the description given in [1]_, *NOT*
+    The implementation here is based on the description given in [1]_, **NOT**
     the one in the SDR-IV online manual, which is wrong.
 
     References
     ----------
-    .. [1] Heip & Engels 1974 p 560.
+    .. [1] Heip & Engels (1974) Comparing Species Diversity and Evenness
+       Indices. p 560.
 
     """
-    counts = _validate(counts)
+    counts = _validate_counts_vector(counts)
     numerator = np.sqrt((counts * counts).sum())
     n = counts.sum()
     s = observed_otus(counts)
@@ -566,8 +579,18 @@ def mcintosh_e(counts):
     return numerator / denominator
 
 
+@experimental(as_of="0.4.0")
 def menhinick(counts):
-    """Calculate Menhinick's richness index.
+    r"""Calculate Menhinick's richness index.
+
+    Menhinick's richness index is defined as:
+
+    .. math::
+
+       D_{Mn} = \frac{S}{\sqrt{N}}
+
+    where :math:`S` is the number of OTUs and :math:`N` is the total number of
+    individuals in the sample.
 
     Assumes square-root accumulation.
 
@@ -591,18 +614,19 @@ def menhinick(counts):
        76-77.
 
     """
-    counts = _validate(counts)
+    counts = _validate_counts_vector(counts)
     return observed_otus(counts) / np.sqrt(counts.sum())
 
 
+@experimental(as_of="0.4.0")
 def michaelis_menten_fit(counts, num_repeats=1, params_guess=None):
-    """Calculate Michaelis-Menten fit to rarefaction curve of observed OTUs.
+    r"""Calculate Michaelis-Menten fit to rarefaction curve of observed OTUs.
 
-    The Michaelis-Menten equation is defined as
+    The Michaelis-Menten equation is defined as:
 
     .. math::
 
-       S=\\frac{nS_{max}}{n+B}
+       S=\frac{nS_{max}}{n+B}
 
     where :math:`n` is the number of individuals and :math:`S` is the number of
     OTUs. This function estimates the :math:`S_{max}` parameter.
@@ -648,7 +672,7 @@ def michaelis_menten_fit(counts, num_repeats=1, params_guess=None):
        Michaelis-Menten equation. Biometrics 43, 793-803.
 
     """
-    counts = _validate(counts)
+    counts = _validate_counts_vector(counts)
 
     n_indiv = counts.sum()
     if params_guess is None:
@@ -673,6 +697,7 @@ def michaelis_menten_fit(counts, num_repeats=1, params_guess=None):
                        disp=False)[0]
 
 
+@experimental(as_of="0.4.0")
 def observed_otus(counts):
     """Calculate the number of distinct OTUs.
 
@@ -687,10 +712,11 @@ def observed_otus(counts):
         Distinct OTU count.
 
     """
-    counts = _validate(counts)
+    counts = _validate_counts_vector(counts)
     return (counts != 0).sum()
 
 
+@experimental(as_of="0.4.0")
 def osd(counts):
     """Calculate observed OTUs, singles, and doubles.
 
@@ -716,18 +742,66 @@ def osd(counts):
     on these three measures.
 
     """
-    counts = _validate(counts)
+    counts = _validate_counts_vector(counts)
     return observed_otus(counts), singles(counts), doubles(counts)
 
 
-def robbins(counts):
-    """Calculate Robbins' estimator for the probability of unobserved outcomes.
+@experimental(as_of="0.4.1")
+def pielou_e(counts):
+    r"""Calculate Pielou's Evenness index J'.
 
-    Robbins' estimator is defined as
+    Pielou's Evenness is defined as:
 
     .. math::
 
-       \\frac{F_1}{n+1}
+       J' = \frac{(H)}{\ln(S)}
+
+    where :math:`H` is the Shannon-Wiener entropy of counts and :math:`S` is
+    the number of OTUs in the sample.
+
+    Parameters
+    ----------
+    counts : 1-D array_like, int
+        Vector of counts.
+
+    Returns
+    -------
+    double
+        Pielou's Evenness.
+
+    See Also
+    --------
+    shannon
+    heip_e
+
+    Notes
+    -----
+    The implementation here is based on the description in Wikipedia [1]_.
+    It was first proposed by E. C. Pielou [2]_ and is similar to Heip's
+    evenness [3]_.
+
+    References
+    ----------
+    .. [1] https://en.wikipedia.org/wiki/Species_evenness
+    .. [2] Pielou, E. C., 1966. The measurement of diversity in different types
+       of biological collections. Journal of Theoretical Biology, 13, 131-44.
+    .. [3] Heip, C. 1974. A new index measuring evenness. J. Mar. Biol. Ass.
+       UK., 54, 555-557.
+
+    """
+    counts = _validate_counts_vector(counts)
+    return shannon(counts, base=np.e) / np.log(observed_otus(counts))
+
+
+@experimental(as_of="0.4.0")
+def robbins(counts):
+    r"""Calculate Robbins' estimator for the probability of unobserved outcomes.
+
+    Robbins' estimator is defined as:
+
+    .. math::
+
+       \frac{F_1}{n+1}
 
     where :math:`F_1` is the number of singleton OTUs.
 
@@ -751,12 +825,22 @@ def robbins(counts):
     .. [1] Robbins, H. E (1968). Ann. of Stats. Vol 36, pp. 256-257.
 
     """
-    counts = _validate(counts)
+    counts = _validate_counts_vector(counts)
     return singles(counts) / counts.sum()
 
 
+@experimental(as_of="0.4.0")
 def shannon(counts, base=2):
-    """Calculate Shannon entropy of counts (H), default in bits.
+    r"""Calculate Shannon entropy of counts, default in bits.
+
+    Shannon-Wiener diversity index is defined as:
+
+    .. math::
+
+       H = -\sum_{i=1}^s\left(p_i\log_2 p_i\right)
+
+    where :math:`s` is the number of OTUs and :math:`p_i` is the proportion of
+    the community represented by OTU :math:`i`.
 
     Parameters
     ----------
@@ -773,7 +857,7 @@ def shannon(counts, base=2):
     Notes
     -----
     The implementation here is based on the description given in the SDR-IV
-    online manual [1]_, except that the default logarithm base used here is 2
+    online manual [1]_ except that the default logarithm base used here is 2
     instead of :math:`e`.
 
     References
@@ -781,16 +865,24 @@ def shannon(counts, base=2):
     .. [1] http://www.pisces-conservation.com/sdrhelp/index.html
 
     """
-    counts = _validate(counts)
+    counts = _validate_counts_vector(counts)
     freqs = counts / counts.sum()
     nonzero_freqs = freqs[freqs.nonzero()]
     return -(nonzero_freqs * np.log(nonzero_freqs)).sum() / np.log(base)
 
 
+@experimental(as_of="0.4.0")
 def simpson(counts):
-    """Calculate Simpson's index.
+    r"""Calculate Simpson's index.
 
-    Simpson's index is defined as 1 - dominance.
+    Simpson's index is defined as ``1 - dominance``:
+
+    .. math::
+
+       1 - \sum{p_i^2}
+
+    where :math:`p_i` is the proportion of the community represented by OTU
+    :math:`i`.
 
     Parameters
     ----------
@@ -817,18 +909,19 @@ def simpson(counts):
     .. [2] http://www.pisces-conservation.com/sdrhelp/index.html
 
     """
-    counts = _validate(counts)
+    counts = _validate_counts_vector(counts)
     return 1 - dominance(counts)
 
 
+@experimental(as_of="0.4.0")
 def simpson_e(counts):
-    """Calculate Simpson's evenness measure E.
+    r"""Calculate Simpson's evenness measure E.
 
     Simpson's E is defined as
 
     .. math::
 
-       E=\\frac{1 / D}{S_{obs}}
+       E=\frac{1 / D}{S_{obs}}
 
     where :math:`D` is dominance and :math:`S_{obs}` is the number of observed
     OTUs.
@@ -858,10 +951,11 @@ def simpson_e(counts):
     .. [1] http://www.tiem.utk.edu/~gross/bioed/bealsmodules/simpsonDI.html
 
     """
-    counts = _validate(counts)
+    counts = _validate_counts_vector(counts)
     return enspie(counts) / observed_otus(counts)
 
 
+@experimental(as_of="0.4.0")
 def singles(counts):
     """Calculate number of single occurrences (singletons).
 
@@ -876,12 +970,26 @@ def singles(counts):
         Singleton count.
 
     """
-    counts = _validate(counts)
+    counts = _validate_counts_vector(counts)
     return (counts == 1).sum()
 
 
+@experimental(as_of="0.4.0")
 def strong(counts):
-    """Calculate Strong's dominance index (Dw).
+    r"""Calculate Strong's dominance index.
+
+    Strong's dominance index is defined as:
+
+    .. math::
+
+       D_w = max_i[(\frac{b_i}{N})-\frac{i}{S}]
+
+    where :math:`b_i` is the sequential cumulative totaling of the
+    :math:`i^{\text{th}}` OTU abundance values ranked from largest to smallest,
+    :math:`N` is the total number of individuals in the sample, and
+    :math:`S` is the number of OTUs in the sample. The expression in brackets
+    is computed for all OTUs, and :math:`max_i` denotes the maximum value in
+    brackets for any OTU.
 
     Parameters
     ----------
@@ -905,7 +1013,7 @@ def strong(counts):
     .. [2] http://www.pisces-conservation.com/sdrhelp/index.html
 
     """
-    counts = _validate(counts)
+    counts = _validate_counts_vector(counts)
     n = counts.sum()
     s = observed_otus(counts)
     i = np.arange(1, len(counts) + 1)

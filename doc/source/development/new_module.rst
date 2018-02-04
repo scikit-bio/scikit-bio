@@ -22,8 +22,6 @@ like this::
   # The full license is in the file COPYING.txt, distributed with this software.
   # ----------------------------------------------------------------------------
 
-  from __future__ import absolute_import, division, print_function
-
   from skbio.util import TestRunner
   test = TestRunner(__file__).test
 

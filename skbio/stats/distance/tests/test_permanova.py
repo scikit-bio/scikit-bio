@@ -6,9 +6,7 @@
 # The full license is in the file COPYING.txt, distributed with this software.
 # ----------------------------------------------------------------------------
 
-from __future__ import absolute_import, division, print_function
-from six import StringIO
-
+import io
 from functools import partial
 from unittest import TestCase, main
 
@@ -29,8 +27,8 @@ class TestPERMANOVA(TestCase):
         dm_ids = ['s1', 's2', 's3', 's4']
         self.grouping_equal = ['Control', 'Control', 'Fast', 'Fast']
         self.df = pd.read_csv(
-            StringIO('ID,Group\ns2,Control\ns3,Fast\ns4,Fast\ns5,Control\n'
-                     's1,Control'), index_col=0)
+            io.StringIO('ID,Group\ns2,Control\ns3,Fast\ns4,Fast\ns5,Control\n'
+                        's1,Control'), index_col=0)
 
         self.dm_ties = DistanceMatrix([[0, 1, 1, 4],
                                        [1, 0, 3, 2],
@@ -74,7 +72,8 @@ class TestPERMANOVA(TestCase):
         # inputs. Also ensure we get the same results if we run the method
         # using a grouping vector or a data frame with equivalent groupings.
         exp = pd.Series(index=self.exp_index,
-                        data=['PERMANOVA', 'pseudo-F', 4, 2, 2.0, 0.671, 999])
+                        data=['PERMANOVA', 'pseudo-F', 4, 2, 2.0, 0.671, 999],
+                        name='PERMANOVA results')
 
         for _ in range(2):
             np.random.seed(0)
@@ -88,21 +87,24 @@ class TestPERMANOVA(TestCase):
 
     def test_call_no_ties(self):
         exp = pd.Series(index=self.exp_index,
-                        data=['PERMANOVA', 'pseudo-F', 4, 2, 4.4, 0.332, 999])
+                        data=['PERMANOVA', 'pseudo-F', 4, 2, 4.4, 0.332, 999],
+                        name='PERMANOVA results')
         np.random.seed(0)
         obs = permanova(self.dm_no_ties, self.grouping_equal)
         self.assert_series_equal(obs, exp)
 
     def test_call_no_permutations(self):
         exp = pd.Series(index=self.exp_index,
-                        data=['PERMANOVA', 'pseudo-F', 4, 2, 4.4, np.nan, 0])
+                        data=['PERMANOVA', 'pseudo-F', 4, 2, 4.4, np.nan, 0],
+                        name='PERMANOVA results')
         obs = permanova(self.dm_no_ties, self.grouping_equal, permutations=0)
         self.assert_series_equal(obs, exp)
 
     def test_call_unequal_group_sizes(self):
-        exp = pd.Series(index=self.exp_index,
-                        data=['PERMANOVA', 'pseudo-F', 6, 3, 0.578848, 0.645,
-                              999])
+        exp = pd.Series(
+            index=self.exp_index,
+            data=['PERMANOVA', 'pseudo-F', 6, 3, 0.578848, 0.645, 999],
+            name='PERMANOVA results')
 
         np.random.seed(0)
         obs = permanova(self.dm_unequal, self.grouping_unequal)

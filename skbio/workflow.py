@@ -89,7 +89,7 @@ exciting on success.
 Now, lets process some data!
 
 >>> for result in wf(seqs, success_callback=success_f, fail_callback=fail_f):
-...     print result
+...     print(result)
 SUCCESS: AAAAAAATTTTTTT
 FAIL: ATAGACC
 SUCCESS: CCGGAC
@@ -108,12 +108,12 @@ to walk through an item at a time so we can examine the debug information.
 
 >>> wf = SequenceProcessor(state=None, options={'reverse':True}, debug=True)
 >>> gen = wf(seqs, fail_callback=lambda x: x.state)
->>> gen.next()
+>>> next(gen)
 'TTTTTTTAAAAAAA'
->>> print wf.failed
+>>> wf.failed
 False
->>> print wf.debug_trace
-set([('check_length', 0), ('reverse', 2)])
+>>> sorted(wf.debug_trace)
+[('check_length', 0), ('reverse', 2)]
 
 The ``debug_trace`` specifies the methods executed, and the order of their
 execution where closer to zero indicates earlier in the execution order. Gaps
@@ -125,12 +125,12 @@ this time through the workflow?
 Now, let's take a look at the next item, which on our prior run through the
 workflow was a failed item.
 
->>> gen.next()
+>>> next(gen)
 'ATAGACC'
->>> print wf.failed
+>>> wf.failed
 True
->>> print wf.debug_trace
-set([('check_length', 0)])
+>>> sorted(wf.debug_trace)
+[('check_length', 0)]
 
 What we can see is that the failed sequence only executed the check_length
 method. Since the sequence didn't pass our length filter of 10 nucleotides,
@@ -141,12 +141,12 @@ be disabled if desired).
 This third item previously matched our nucleotide pattern of interest for
 truncation. Let's see what that looks like in the debug output.
 
->>> gen.next() #
+>>> next(gen)
 'CAGGCC'
->>> print wf.failed
+>>> wf.failed
 False
->>> wf.debug_trace
-set([('check_length', 0), ('truncate', 1), ('reverse', 2)])
+>>> sorted(wf.debug_trace)
+[('check_length', 0), ('reverse', 2), ('truncate', 1)]
 
 In this last example, we can see that the ``truncate`` method was executed
 prior to the ``reverse`` method and following the ``check_length`` method. This
@@ -200,8 +200,6 @@ allow you to indicate ``anything`` as an option value, anything that is
 # The full license is in the file COPYING.txt, distributed with this software.
 # ----------------------------------------------------------------------------
 
-from future.utils import viewitems
-
 import sys
 from copy import deepcopy
 from time import time
@@ -209,35 +207,47 @@ from functools import update_wrapper
 from collections import Iterable
 from types import MethodType
 
+from skbio.util._decorator import experimental
 
-class NotExecuted(object):
+
+class NotExecuted:
     """Helper object to track if a method was executed"""
+    @experimental(as_of="0.4.0")
     def __init__(self):
         self.msg = None
 
+    @experimental(as_of="0.4.0")
     def __call__(self, msg):
         self.msg = msg
         return self
+
+
 _not_executed = NotExecuted()
 
 
-class Exists(object):
+class Exists:
     """Stub object to assist with ``requires`` when a value exists"""
+    @experimental(as_of="0.4.0")
     def __contains__(self, item):
         return True
+
+
 anything = Exists()  # external, for when a value can be anything
 
 
-class NotNone(object):
+class NotNone:
+    @experimental(as_of="0.4.0")
     def __contains__(self, item):
         if item is None:
             return False
         else:
             return True
+
+
 not_none = NotNone()
 
 
-class Workflow(object):
+class Workflow:
     """Arbitrary workflow support structure
 
     Methods that are considered to be directly part of the workflow must
@@ -268,16 +278,9 @@ class Workflow(object):
         This is handy if additional contextual information is needed by a
         workflow method (e.g., a lookup table).
 
-    Attributes
-    ----------
-    state
-    short_circuit
-    debug
-    options
-    failed
-
     """
 
+    @experimental(as_of="0.4.0")
     def __init__(self, state, short_circuit=True, debug=False, options=None,
                  **kwargs):
         r"""Build thy workflow of self"""
@@ -292,7 +295,7 @@ class Workflow(object):
         self.state = state
         self.iter_ = None
 
-        for k, v in viewitems(kwargs):
+        for k, v in kwargs.items():
             if hasattr(self, k):
                 raise AttributeError("'%s' already exists in self." % k)
             setattr(self, k, v)
@@ -300,6 +303,7 @@ class Workflow(object):
         if self.debug:
             self._setup_debug()
 
+    @experimental(as_of="0.4.0")
     def initialize_state(self, item):
         """Initialize state
 
@@ -374,6 +378,7 @@ class Workflow(object):
         self.debug_pre_state = {}
         self.debug_post_state = {}
 
+    @experimental(as_of="0.4.0")
     def __call__(self, iter_, success_callback=None, fail_callback=None):
         """Operate on all the data
 
@@ -391,7 +396,6 @@ class Workflow(object):
         fail_callback : method to call on a failed item prior to yielding. By
             default, failures are ignored.
 
-        .. shownumpydoc
         """
         if success_callback is None:
             def success_callback(x):
@@ -424,7 +428,7 @@ class Workflow(object):
             """Track debug information about a method execution"""
             if not hasattr(self, 'debug_trace'):
                 raise AttributeError(
-                    "%s doesn't have debug_trace!" % self.__class__)
+                    "%s doesn't have debug_trace." % self.__class__)
 
             exec_order = self.debug_counter
             name = func.__name__
@@ -445,7 +449,7 @@ class Workflow(object):
         return update_wrapper(wrapped, func)
 
 
-class method(object):
+class method:
     """Decorate a function to indicate it is a workflow method
 
     Parameters
@@ -457,15 +461,17 @@ class method(object):
     """
     highest_priority = sys.maxsize
 
+    @experimental(as_of="0.4.0")
     def __init__(self, priority=0):
         self.priority = priority
 
+    @experimental(as_of="0.4.0")
     def __call__(self, func):
         func.priority = self.priority
         return func
 
 
-class requires(object):
+class requires:
     """Decorator that executes a function if requirements are met
 
     Parameters
@@ -488,6 +494,7 @@ class requires(object):
         requirement is not satisfied. This method will be passed the
         containing ``Workflow``s' ``state`` member variable.
     """
+    @experimental(as_of="0.4.0")
     def __init__(self, option=None, values=anything, state=None):
         # self here is the requires object
         self.option = option
@@ -507,6 +514,7 @@ class requires(object):
             else:
                 self.values = set([values])
 
+    @experimental(as_of="0.4.0")
     def __call__(self, func):
         """Wrap a function
 

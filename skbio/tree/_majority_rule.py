@@ -6,14 +6,12 @@
 # The full license is in the file COPYING.txt, distributed with this software.
 # ----------------------------------------------------------------------------
 
-from __future__ import absolute_import, division, print_function
-
 from collections import defaultdict
-from future.builtins import zip
 
 import numpy as np
 
 from skbio.tree import TreeNode
+from skbio.util._decorator import experimental
 
 
 def _walk_clades(trees, weights):
@@ -115,7 +113,7 @@ def _filter_clades(clade_counts, cutoff_threshold):
     return accepted_clades
 
 
-def _build_trees(clade_counts, edge_lengths, support_attr):
+def _build_trees(clade_counts, edge_lengths, support_attr, tree_node_class):
     """Construct the trees with support
 
     Parameters
@@ -126,10 +124,14 @@ def _build_trees(clade_counts, edge_lengths, support_attr):
         Keyed by the frozenset of the clade and valued by the weighted length
     support_attr : str
         The name of the attribute to hold the support value
+    tree_node_class : type
+        Specifies type of consensus trees that are returned. Either
+        ``TreeNode`` or a type that implements the same interface (most
+        usefully, a subclass of ``TreeNode``).
 
     Returns
     -------
-    list of TreeNode
+    list of tree_node_class instances
         A list of the constructed trees
     """
     nodes = {}
@@ -168,7 +170,7 @@ def _build_trees(clade_counts, edge_lengths, support_attr):
         children = [nodes.pop(c) for c in clade if c in nodes]
         length = edge_lengths[clade]
 
-        node = TreeNode(children=children, length=length, name=name)
+        node = tree_node_class(children=children, length=length, name=name)
         setattr(node, support_attr, clade_counts[clade])
         nodes[clade] = node
 
@@ -177,7 +179,9 @@ def _build_trees(clade_counts, edge_lengths, support_attr):
     return list(nodes.values())
 
 
-def majority_rule(trees, weights=None, cutoff=0.5, support_attr='support'):
+@experimental(as_of="0.4.0")
+def majority_rule(trees, weights=None, cutoff=0.5, support_attr='support',
+                  tree_node_class=TreeNode):
     r"""Determines consensus trees from a list of rooted trees
 
     Parameters
@@ -188,19 +192,24 @@ def majority_rule(trees, weights=None, cutoff=0.5, support_attr='support'):
         If provided, the list must be in index order with `trees`. Each tree
         will receive the corresponding weight. If omitted, all trees will be
         equally weighted.
-    cutoff : float, 0.0 <= cutoff <= 1.0
+    cutoff : float, 0.0 <= cutoff <= 1.0, optional
         Any clade that has <= cutoff support will be dropped. If cutoff is
         < 0.5, then it is possible that ties will result. If so, ties are
         broken arbitrarily depending on list sort order.
-    support_attr : str
+    support_attr : str, optional
         The attribute to be decorated onto the resulting trees that contain the
         consensus support.
+    tree_node_class : type, optional
+        Specifies type of consensus trees that are returned. Either
+        ``TreeNode`` (the default) or a type that implements the same interface
+        (most usefully, a subclass of ``TreeNode``).
 
     Returns
     -------
-    list of TreeNode
-        Multiple trees can be returned in the case of two or more disjoint sets
-        of tips represented on input.
+    list of tree_node_class instances
+        Each tree will be of type `tree_node_class`. Multiple trees can be
+        returned in the case of two or more disjoint sets of tips represented
+        on input.
 
     Notes
     -----
@@ -229,69 +238,40 @@ def majority_rule(trees, weights=None, cutoff=0.5, support_attr='support'):
     >>> from skbio.tree import TreeNode
     >>> from io import StringIO
     >>> trees = [
-    ... TreeNode.read(StringIO(u"(A,(B,(H,(D,(J,(((G,E),(F,I)),C))))));")),
-    ... TreeNode.read(StringIO(u"(A,(B,(D,((J,H),(((G,E),(F,I)),C)))));")),
-    ... TreeNode.read(StringIO(u"(A,(B,(D,(H,(J,(((G,E),(F,I)),C))))));")),
-    ... TreeNode.read(StringIO(u"(A,(B,(E,(G,((F,I),((J,(H,D)),C))))));")),
-    ... TreeNode.read(StringIO(u"(A,(B,(E,(G,((F,I),(((J,H),D),C))))));")),
-    ... TreeNode.read(StringIO(u"(A,(B,(E,((F,I),(G,((J,(H,D)),C))))));")),
-    ... TreeNode.read(StringIO(u"(A,(B,(E,((F,I),(G,(((J,H),D),C))))));")),
-    ... TreeNode.read(StringIO(u"(A,(B,(E,((G,(F,I)),((J,(H,D)),C)))));")),
-    ... TreeNode.read(StringIO(u"(A,(B,(E,((G,(F,I)),(((J,H),D),C)))));"))]
+    ... TreeNode.read(StringIO("(A,(B,(H,(D,(J,(((G,E),(F,I)),C))))));")),
+    ... TreeNode.read(StringIO("(A,(B,(D,((J,H),(((G,E),(F,I)),C)))));")),
+    ... TreeNode.read(StringIO("(A,(B,(D,(H,(J,(((G,E),(F,I)),C))))));")),
+    ... TreeNode.read(StringIO("(A,(B,(E,(G,((F,I),((J,(H,D)),C))))));")),
+    ... TreeNode.read(StringIO("(A,(B,(E,(G,((F,I),(((J,H),D),C))))));")),
+    ... TreeNode.read(StringIO("(A,(B,(E,((F,I),(G,((J,(H,D)),C))))));")),
+    ... TreeNode.read(StringIO("(A,(B,(E,((F,I),(G,(((J,H),D),C))))));")),
+    ... TreeNode.read(StringIO("(A,(B,(E,((G,(F,I)),((J,(H,D)),C)))));")),
+    ... TreeNode.read(StringIO("(A,(B,(E,((G,(F,I)),(((J,H),D),C)))));"))]
     >>> consensus = majority_rule(trees, cutoff=0.5)[0]
-    >>> print(consensus.ascii_art())
-                                  /-E
-                                 |
-                                 |          /-G
-                        /--------|         |
-                       |         |         |          /-F
-                       |         |         |---------|
-                       |          \--------|          \-I
-                       |                   |
-                       |                   |          /-C
-              /--------|                   |         |
-             |         |                    \--------|          /-D
-             |         |                             |         |
-             |         |                              \--------|--J
-    ---------|         |                                       |
-             |         |                                        \-H
-             |         |
-             |          \-B
-             |
-              \-A
-    >>> for node in consensus.non_tips():
+    >>> for node in sorted(consensus.non_tips(),
+    ...                    key=lambda k: k.count(tips=True)):
     ...     support_value = node.support
-    ...     names = ' '.join([n.name for n in node.tips()])
+    ...     names = ' '.join(sorted(n.name for n in node.tips()))
     ...     print("Tips: %s, support: %s" % (names, support_value))
     Tips: F I, support: 9.0
-    Tips: D J H, support: 6.0
-    Tips: C D J H, support: 6.0
-    Tips: G F I C D J H, support: 6.0
-    Tips: E G F I C D J H, support: 9.0
-    Tips: E G F I C D J H B, support: 9.0
+    Tips: D H J, support: 6.0
+    Tips: C D H J, support: 6.0
+    Tips: C D F G H I J, support: 6.0
+    Tips: C D E F G H I J, support: 9.0
+    Tips: B C D E F G H I J, support: 9.0
 
     In the next example, multiple trees will be returned which can happen if
     clades are not well supported across the trees. In addition, this can arise
     if not all tips are present across all trees.
 
     >>> trees = [
-    ...     TreeNode.read(StringIO(u"((a,b),(c,d),(e,f));")),
-    ...     TreeNode.read(StringIO(u"(a,(c,d),b,(e,f));")),
-    ...     TreeNode.read(StringIO(u"((c,d),(e,f),b);")),
-    ...     TreeNode.read(StringIO(u"(a,(c,d),(e,f));"))]
+    ...     TreeNode.read(StringIO("((a,b),(c,d),(e,f));")),
+    ...     TreeNode.read(StringIO("(a,(c,d),b,(e,f));")),
+    ...     TreeNode.read(StringIO("((c,d),(e,f),b);")),
+    ...     TreeNode.read(StringIO("(a,(c,d),(e,f));"))]
     >>> consensus_trees = majority_rule(trees)
-    >>> print(len(consensus_trees))
+    >>> len(consensus_trees)
     4
-    >>> for tree in consensus_trees:
-    ...     print(tree.ascii_art())
-    --b
-    --a
-              /-f
-    ---------|
-              \-e
-              /-d
-    ---------|
-              \-c
 
     """
     if weights is None:
@@ -299,12 +279,13 @@ def majority_rule(trees, weights=None, cutoff=0.5, support_attr='support'):
     else:
         weights = np.asarray(weights)
         if len(weights) != len(trees):
-            raise ValueError("Number of weights and trees differ!")
+            raise ValueError("Number of weights and trees differ.")
 
     cutoff_threshold = cutoff * weights.sum()
 
     clade_counts, edge_lengths = _walk_clades(trees, weights)
     clade_counts = _filter_clades(clade_counts, cutoff_threshold)
-    trees = _build_trees(clade_counts, edge_lengths, support_attr)
+    trees = _build_trees(clade_counts, edge_lengths, support_attr,
+                         tree_node_class)
 
     return trees

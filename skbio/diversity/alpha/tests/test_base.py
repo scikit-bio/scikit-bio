@@ -6,75 +6,33 @@
 # The full license is in the file COPYING.txt, distributed with this software.
 # ----------------------------------------------------------------------------
 
-from __future__ import absolute_import, division, print_function
-
 from unittest import TestCase, main
+from io import StringIO
 
 import numpy as np
 import numpy.testing as npt
 
+from skbio import TreeNode
 from skbio.diversity.alpha import (
-    berger_parker_d, brillouin_d, dominance, doubles, enspie, equitability,
-    esty_ci, fisher_alpha, goods_coverage, heip_e, kempton_taylor_q, margalef,
-    mcintosh_d, mcintosh_e, menhinick, michaelis_menten_fit, observed_otus,
-    osd, robbins, shannon, simpson, simpson_e, singles, strong)
-from skbio.diversity.alpha._base import _validate
+    berger_parker_d, brillouin_d, dominance, doubles, enspie,
+    esty_ci, fisher_alpha, goods_coverage, heip_e, kempton_taylor_q,
+    margalef, mcintosh_d, mcintosh_e, menhinick, michaelis_menten_fit,
+    observed_otus, osd, pielou_e, robbins, shannon, simpson, simpson_e,
+    singles, strong)
 
 
 class BaseTests(TestCase):
     def setUp(self):
         self.counts = np.array([0, 1, 1, 4, 2, 5, 2, 4, 1, 2])
-
-    def test_validate(self):
-        # python list
-        obs = _validate([0, 2, 1, 3])
-        npt.assert_array_equal(obs, np.array([0, 2, 1, 3]))
-        self.assertEqual(obs.dtype, int)
-
-        # numpy array (no copy made)
-        data = np.array([0, 2, 1, 3])
-        obs = _validate(data)
-        npt.assert_array_equal(obs, data)
-        self.assertEqual(obs.dtype, int)
-        self.assertTrue(obs is data)
-
-        # single element
-        obs = _validate([42])
-        npt.assert_array_equal(obs, np.array([42]))
-        self.assertEqual(obs.dtype, int)
-        self.assertEqual(obs.shape, (1,))
-
-        # suppress casting to int
-        obs = _validate([42.2, 42.1, 0], suppress_cast=True)
-        npt.assert_array_equal(obs, np.array([42.2, 42.1, 0]))
-        self.assertEqual(obs.dtype, float)
-
-        # all zeros
-        obs = _validate([0, 0, 0])
-        npt.assert_array_equal(obs, np.array([0, 0, 0]))
-        self.assertEqual(obs.dtype, int)
-
-        # all zeros (single value)
-        obs = _validate([0])
-        npt.assert_array_equal(obs, np.array([0]))
-        self.assertEqual(obs.dtype, int)
-
-    def test_validate_invalid_input(self):
-        # wrong dtype
-        with self.assertRaises(TypeError):
-            _validate([0, 2, 1.2, 3])
-
-        # wrong number of dimensions (2-D)
-        with self.assertRaises(ValueError):
-            _validate([[0, 2, 1, 3], [4, 5, 6, 7]])
-
-        # wrong number of dimensions (scalar)
-        with self.assertRaises(ValueError):
-            _validate(1)
-
-        # negative values
-        with self.assertRaises(ValueError):
-            _validate([0, 0, 2, -1, 3])
+        self.sids1 = list('ABCD')
+        self.oids1 = ['OTU%d' % i for i in range(1, 6)]
+        self.t1 = TreeNode.read(StringIO(
+            '(((((OTU1:0.5,OTU2:0.5):0.5,OTU3:1.0):1.0):'
+            '0.0,(OTU4:0.75,OTU5:0.75):1.25):0.0)root;'))
+        self.t1_w_extra_tips = TreeNode.read(
+           StringIO('(((((OTU1:0.5,OTU2:0.5):0.5,OTU3:1.0):1.0):0.0,(OTU4:'
+                    '0.75,(OTU5:0.25,(OTU6:0.5,OTU7:0.5):0.5):0.5):1.25):0.0'
+                    ')root;'))
 
     def test_berger_parker_d(self):
         self.assertEqual(berger_parker_d(np.array([5])), 1)
@@ -113,10 +71,6 @@ class BaseTests(TestCase):
         arr = np.array([1, 0, 2, 5, 2])
         exp = 1 / dominance(arr)
         self.assertAlmostEqual(enspie(arr), exp)
-
-    def test_equitability(self):
-        self.assertAlmostEqual(equitability(np.array([5, 5])), 1)
-        self.assertAlmostEqual(equitability(np.array([1, 1, 1, 1, 0])), 1)
 
     def test_esty_ci(self):
         def _diversity(indices, f):
@@ -250,6 +204,26 @@ class BaseTests(TestCase):
 
     def test_osd(self):
         self.assertEqual(osd(self.counts), (9, 3, 3))
+
+    def test_pielou_e(self):
+        # Calculate "by hand".
+        arr = np.array([1, 2, 3, 1])
+        h = shannon(arr, np.e)
+        s = 4
+        expected = h / np.log(s)
+        self.assertAlmostEqual(pielou_e(arr), expected)
+
+        self.assertAlmostEqual(pielou_e(self.counts), 0.92485490560)
+
+        self.assertEqual(pielou_e([1, 1]), 1.0)
+        self.assertEqual(pielou_e([1, 1, 1, 1]), 1.0)
+        self.assertEqual(pielou_e([1, 1, 1, 1, 0, 0]), 1.0)
+
+        # Examples from
+        # http://ww2.mdsg.umd.edu/interactive_lessons/biofilm/diverse.htm#3
+        self.assertAlmostEqual(pielou_e([1, 1, 196, 1, 1]), 0.078, 3)
+        self.assertTrue(np.isnan(pielou_e([0, 0, 200, 0, 0])))
+        self.assertTrue(np.isnan(pielou_e([0, 0, 0, 0, 0])))
 
     def test_robbins(self):
         self.assertEqual(robbins(np.array([1, 2, 3, 0, 1])), 2 / 7)

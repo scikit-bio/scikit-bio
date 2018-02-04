@@ -1,16 +1,11 @@
 # Check on http://lint.travis-ci.org/ after modifying it!  Originally
 # modified from https://gist.github.com/dan-blanchard/7045057
+sudo: false
 language: python
 env:
-  # Test against latest versions of numpy and matplotlib. Also test against
-  # older versions of numpy and matplotlib (pre-1.4.0). matplotlib's boxplot
-  # functionality was largely rewritten/refactored in 1.4.0 and some of skbio's
-  # code had to be updated in the process, so it's worth testing against a
-  # pre-1.4.0 version and whatever the latest version is.
-  - PYTHON_VERSION=3.4 NUMPY_VERSION= MATPLOTLIB_VERSION= INSTALL_MATPLOTLIB=FALSE
-  - PYTHON_VERSION=3.4 NUMPY_VERSION= MATPLOTLIB_VERSION=
-  - PYTHON_VERSION=2.7 NUMPY_VERSION= MATPLOTLIB_VERSION= USE_CYTHON=TRUE
-  - PYTHON_VERSION=2.7 NUMPY_VERSION='=1.7' MATPLOTLIB_VERSION='=1.3.1'
+  - PYTHON_VERSION=3.6 MAKE_DOC=TRUE
+  - PYTHON_VERSION=3.5 MAKE_DOC=TRUE
+  - PYTHON_VERSION=3.4 USE_CYTHON=TRUE
 before_install:
   - "export DISPLAY=:99.0"
   - "sh -e /etc/init.d/xvfb start"
@@ -21,18 +16,18 @@ before_install:
   # Update conda itself
   - conda update --yes conda
 install:
-  - conda create --yes -n env_name python=$PYTHON_VERSION pip numpy$NUMPY_VERSION scipy pandas nose pep8 Sphinx=1.2.2 IPython
+  - conda create --yes -n env_name python=$PYTHON_VERSION
+  - conda install --yes -n env_name --file ci/conda_requirements.txt
   - if [ ${USE_CYTHON} ]; then conda install --yes -n env_name cython; fi
   - if [[ ${INSTALL_MATPLOTLIB} != "FALSE" ]]; then conda install --yes -n env_name matplotlib$MATPLOTLIB_VERSION; fi
   - source activate env_name
-  - pip install sphinx-bootstrap-theme future six coveralls natsort pyflakes flake8 python-dateutil
-  - pip install -e . --no-deps
+  - conda info --envs
+  - python --version
+  - pip install -r ci/pip_requirements.txt
+  - pip install . --no-deps
 script:
-  - PYTHONWARNINGS=ignore WITH_COVERAGE=TRUE make test
-  - pushd doc
-  - make clean
-  - if [[ ${INSTALL_MATPLOTLIB} != "FALSE" ]]; then make html; fi
-  - popd
+  - WITH_COVERAGE=TRUE make test
+  - if [ ${MAKE_DOC} ]; then make -C doc clean html; fi
 after_success:
   - coveralls
 notifications:

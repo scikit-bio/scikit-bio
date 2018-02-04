@@ -6,24 +6,18 @@
 # The full license is in the file COPYING.txt, distributed with this software.
 # ----------------------------------------------------------------------------
 
-from __future__ import absolute_import, division, print_function
-from future.utils import viewitems
-
 import sys
-from warnings import warn
 from heapq import heappush, heappop
 from collections import defaultdict
 from copy import copy
 
 import numpy as np
 
-from skbio.util import EfficiencyWarning
-try:
-    from .__subsample import _subsample_counts_without_replacement
-except ImportError:
-    pass
+from skbio.util._decorator import experimental
+from .__subsample import _subsample_counts_without_replacement
 
 
+@experimental(as_of="0.4.0")
 def isubsample(items, maximum, minimum=1, buf_size=1000, bin_f=None):
     """Randomly subsample items from bins, without replacement.
 
@@ -145,7 +139,7 @@ def isubsample(items, maximum, minimum=1, buf_size=1000, bin_f=None):
             heappop(heap)
 
     # yield items
-    for bin_, heap in viewitems(result):
+    for bin_, heap in result.items():
         if len(heap) < minimum:
             continue
 
@@ -153,6 +147,7 @@ def isubsample(items, maximum, minimum=1, buf_size=1000, bin_f=None):
             yield (bin_, item)
 
 
+@experimental(as_of="0.4.0")
 def subsample_counts(counts, n, replace=False):
     """Randomly subsample from a vector of counts, with or without replacement.
 
@@ -179,7 +174,8 @@ def subsample_counts(counts, n, replace=False):
     TypeError
         If `counts` cannot be safely converted to an integer datatype.
     ValueError
-        If `n` is less than zero or greater than the sum of `counts`.
+        If `n` is less than zero or greater than the sum of `counts`
+        when `replace=False`.
     EfficiencyWarning
         If the accelerated code isn't present or hasn't been compiled.
 
@@ -236,9 +232,9 @@ def subsample_counts(counts, n, replace=False):
         raise ValueError("Only 1-D vectors are supported.")
 
     counts_sum = counts.sum()
-    if n > counts_sum:
+    if n > counts_sum and not replace:
         raise ValueError("Cannot subsample more items than exist in input "
-                         "counts vector.")
+                         "counts vector when `replace=False`.")
 
     if replace:
         probs = counts / counts_sum
@@ -247,20 +243,6 @@ def subsample_counts(counts, n, replace=False):
         if counts_sum == n:
             result = counts
         else:
-            try:
-                result = _subsample_counts_without_replacement(counts, n,
-                                                               counts_sum)
-            except NameError:
-                warn("Accelerated subsampling without replacement isn't"
-                     " available.", EfficiencyWarning)
-
-                nz = counts.nonzero()[0]
-                unpacked = np.concatenate([np.repeat(np.array(i,), counts[i])
-                                           for i in nz])
-                permuted = np.random.permutation(unpacked)[:n]
-
-                result = np.zeros(len(counts), dtype=int)
-                for p in permuted:
-                    result[p] += 1
-
+            result = _subsample_counts_without_replacement(counts, n,
+                                                           counts_sum)
     return result

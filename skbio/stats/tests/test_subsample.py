@@ -6,26 +6,13 @@
 # The full license is in the file COPYING.txt, distributed with this software.
 # ----------------------------------------------------------------------------
 
-from __future__ import absolute_import, division, print_function
-try:
-    # future >= 0.12
-    from future.backports.test.support import import_fresh_module
-except ImportError:
-    from future.standard_library.test.support import import_fresh_module
-
 import unittest
 import warnings
 
 import numpy as np
 import numpy.testing as npt
 
-from skbio.stats import isubsample
-
-
-cy_subsample = import_fresh_module('skbio.stats._subsample',
-                                   fresh=['skbio.stats.__subsample'])
-py_subsample = import_fresh_module('skbio.stats._subsample',
-                                   blocked=['skbio.stats.__subsample'])
+from skbio.stats import subsample_counts, isubsample
 
 
 def setup():
@@ -38,25 +25,25 @@ def teardown():
     warnings.resetwarnings()
 
 
-class SubsampleCountsTests(object):
+class SubsampleCountsTests(unittest.TestCase):
     def test_subsample_counts_nonrandom(self):
         a = np.array([0, 5, 0])
 
         # Subsample same number of items that are in input (without
         # replacement).
-        npt.assert_equal(self.module.subsample_counts(a, 5), a)
+        npt.assert_equal(subsample_counts(a, 5), a)
 
         # Can only choose from one bin.
         exp = np.array([0, 2, 0])
-        npt.assert_equal(self.module.subsample_counts(a, 2), exp)
+        npt.assert_equal(subsample_counts(a, 2), exp)
         npt.assert_equal(
-            self.module.subsample_counts(a, 2, replace=True), exp)
+            subsample_counts(a, 2, replace=True), exp)
 
         # Subsample zero items.
         a = [3, 0, 1]
         exp = np.array([0, 0, 0])
-        npt.assert_equal(self.module.subsample_counts(a, 0), exp)
-        npt.assert_equal(self.module.subsample_counts(a, 0, replace=True), exp)
+        npt.assert_equal(subsample_counts(a, 0), exp)
+        npt.assert_equal(subsample_counts(a, 0, replace=True), exp)
 
     def test_subsample_counts_without_replacement(self):
         # Selecting 2 counts from the vector 1000 times yields each of the two
@@ -64,11 +51,11 @@ class SubsampleCountsTests(object):
         a = np.array([2, 0, 1])
         actual = set()
         for i in range(1000):
-            obs = self.module.subsample_counts(a, 2)
+            obs = subsample_counts(a, 2)
             actual.add(tuple(obs))
         self.assertEqual(actual, {(1, 0, 1), (2, 0, 0)})
 
-        obs = self.module.subsample_counts(a, 2)
+        obs = subsample_counts(a, 2)
         self.assertTrue(np.array_equal(obs, np.array([1, 0, 1])) or
                         np.array_equal(obs, np.array([2, 0, 0])))
 
@@ -78,7 +65,7 @@ class SubsampleCountsTests(object):
         a = np.array([2, 0, 1])
         actual = set()
         for i in range(1000):
-            obs = self.module.subsample_counts(a, 2, replace=True)
+            obs = subsample_counts(a, 2, replace=True)
             actual.add(tuple(obs))
         self.assertEqual(actual, {(1, 0, 1), (2, 0, 0), (0, 0, 2)})
 
@@ -90,7 +77,7 @@ class SubsampleCountsTests(object):
         a = np.array([2, 0, 1, 2, 1, 8, 6, 0, 3, 3, 5, 0, 0, 0, 5])
         actual = set()
         for i in range(1000):
-            obs = self.module.subsample_counts(a, 35, replace=True)
+            obs = subsample_counts(a, 35, replace=True)
             self.assertEqual(obs.sum(), 35)
             actual.add(tuple(obs))
         self.assertTrue(len(actual) > 10)
@@ -100,7 +87,7 @@ class SubsampleCountsTests(object):
         a = np.array([0, 0, 3, 4, 2, 1])
         actual = set()
         for i in range(1000):
-            obs = self.module.subsample_counts(a, 10, replace=True)
+            obs = subsample_counts(a, 10, replace=True)
             self.assertEqual(obs.sum(), 10)
             actual.add(tuple(obs))
         self.assertTrue(len(actual) > 1)
@@ -108,29 +95,22 @@ class SubsampleCountsTests(object):
     def test_subsample_counts_invalid_input(self):
         # Negative n.
         with self.assertRaises(ValueError):
-            self.module.subsample_counts([1, 2, 3], -1)
+            subsample_counts([1, 2, 3], -1)
 
         # Floats.
         with self.assertRaises(TypeError):
-            self.module.subsample_counts([1, 2.3, 3], 2)
+            subsample_counts([1, 2.3, 3], 2)
 
         # Wrong number of dimensions.
         with self.assertRaises(ValueError):
-            self.module.subsample_counts([[1, 2, 3], [4, 5, 6]], 2)
+            subsample_counts([[1, 2, 3], [4, 5, 6]], 2)
 
         # Input has too few counts.
         with self.assertRaises(ValueError):
-            self.module.subsample_counts([0, 5, 0], 6)
+            subsample_counts([0, 5, 0], 6, replace=False)
 
-
-class PySubsampleCountsTests(SubsampleCountsTests, unittest.TestCase):
-    module = py_subsample
-
-
-@unittest.skipIf(cy_subsample is None,
-                 "Accelerated subsample module unavailable.")
-class CySubsampleCountsTests(SubsampleCountsTests, unittest.TestCase):
-    module = cy_subsample
+        # Input has too counts, but should work with bootstrap
+        subsample_counts([0, 5, 0], 6, replace=True)
 
 
 class ISubsampleTests(unittest.TestCase):

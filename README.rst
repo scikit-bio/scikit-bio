@@ -3,29 +3,27 @@
    :target: http://scikit-bio.org
    :alt: scikit-bio logo
 
-|Build Status| |Coverage Status| |Gitter Badge|
+|Build Status| |Coverage Status| |ASV Benchmarks| |Gitter Badge| |Depsy Badge| |Anaconda Cloud Build| |Anaconda Cloud| |License| |Downloads| |Install|
 
-scikit-bio is an open-source, BSD-licensed Python package providing data structures, algorithms and educational resources for bioinformatics.
+scikit-bio is an open-source, BSD-licensed Python 3 package providing data structures, algorithms and educational resources for bioinformatics.
 
 To view scikit-bio's documentation, visit `scikit-bio.org
 <http://scikit-bio.org>`__.
 
-scikit-bio is currently in alpha. We are very actively developing it, and **backwards-incompatible interface changes can and will arise**. Once the API has started to solidify, we will strive to maintain backwards compatibility. We will provide deprecation warnings wherever possible in the scikit-bio code, documentation, and `CHANGELOG.md <https://github.com/biocore/scikit-bio/blob/master/CHANGELOG.md>`__.
+**Note:** scikit-bio is no longer compatible with Python 2. scikit-bio is compatible with Python 3.4 and later.
 
-**Note:** Deprecation warnings will be issued using Python's ``DeprecationWarning`` class. Since Python 2.7, these types of warnings are **silenced by default**. When developing a tool that uses scikit-bio, we recommend enabling the display of deprecation warnings to be informed of upcoming API changes. For details on how to display deprecation warnings, see `Python's deprecation warning docs <https://docs.python.org/3/whatsnew/2.7.html#changes-to-the-handling-of-deprecation-warnings>`_.
+scikit-bio is currently in beta. We are very actively developing it, and **backward-incompatible interface changes can and will arise**. To avoid these types of changes being a surprise to our users, our public APIs are decorated to make it clear to users when an API can be relied upon (stable) and when it may be subject to change (experimental). See the `API stability docs <https://github.com/biocore/scikit-bio/blob/master/doc/source/user/api_stability.rst>`_ for more details, including what we mean by *stable* and *experimental* in this context.
 
 Installing
 ----------
 
-To install the latest release of scikit-bio::
-
-    pip install scikit-bio
+The recommended way to install scikit-bio is via the ``conda`` package manager available in `Anaconda <http://continuum.io/downloads>`_ or `miniconda <http://conda.pydata.org/miniconda.html>`_.
 
 Some plotting features require extra dependencies, and an
 ``ImportError`` will be raised if you try to use them without them.
 Thus, you may want to install the following optional packages:
 
-    * matplotlib (>= 1.1.0)
+    * matplotlib (>= 1.5.0)
 
 for example, by running::
 
@@ -33,13 +31,22 @@ for example, by running::
 
 Equivalently, you can use the ``conda`` package manager available in `Anaconda <http://continuum.io/downloads>`_ or `miniconda <http://conda.pydata.org/miniconda.html>`_ to install scikit-bio and all its dependencies, without having to compile them::
 
-    conda install scikit-bio
+    conda install -c https://conda.anaconda.org/biocore scikit-bio
 
-Finally, most of scikit-bio's dependencies (in particular, the ones that are trickier to build) are also available, albeit only for Python 2, in `Canopy Express <https://www.enthought.com/canopy-express/>`_.
+Alternatively, you can install scikit-bio using ``pip``::
+
+    pip install numpy
+    pip install scikit-bio
 
 You can verify your installation by running the scikit-bio unit tests::
 
     python -m skbio.test
+
+For users of Debian, ``skbio`` is in the Debian software distribution and may
+be installed using::
+
+    sudo apt-get install python3-skbio python-skbio-doc
+
 
 Getting help
 ------------
@@ -114,6 +121,20 @@ scikit-bio's logo was created by `Alina Prassas <http://cargocollective.com/alin
    :target: https://travis-ci.org/biocore/scikit-bio
 .. |Coverage Status| image:: https://coveralls.io/repos/biocore/scikit-bio/badge.png
    :target: https://coveralls.io/r/biocore/scikit-bio
+.. |ASV Benchmarks| image:: http://img.shields.io/badge/benchmarked%20by-asv-green.svg?style=flat
+   :target: https://s3-us-west-2.amazonaws.com/scikit-bio.org/benchmarks/master/index.html
 .. |Gitter Badge| image:: https://badges.gitter.im/Join%20Chat.svg
    :alt: Join the chat at https://gitter.im/biocore/scikit-bio
    :target: https://gitter.im/biocore/scikit-bio?utm_source=badge&utm_medium=badge&utm_campaign=pr-badge&utm_content=badge
+.. |Depsy Badge| image:: http://depsy.org/api/package/pypi/scikit-bio/badge.svg
+   :target: http://depsy.org/package/python/scikit-bio
+.. |Anaconda Cloud Build| image:: https://anaconda.org/biocore/scikit-bio/badges/build.svg
+   :target: https://anaconda.org/biocore/scikit-bio/builds
+.. |Anaconda Cloud| image:: https://anaconda.org/biocore/scikit-bio/badges/version.svg
+   :target: https://anaconda.org/biocore/scikit-bio
+.. |License| image:: https://anaconda.org/biocore/scikit-bio/badges/license.svg
+   :target: https://anaconda.org/biocore/scikit-bio
+.. |Downloads| image:: https://anaconda.org/biocore/scikit-bio/badges/downloads.svg
+   :target: https://anaconda.org/biocore/scikit-bio
+.. |Install| image:: https://anaconda.org/biocore/scikit-bio/badges/installer/conda.svg
+   :target: https://conda.anaconda.org/biocore

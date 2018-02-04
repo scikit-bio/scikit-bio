@@ -6,377 +6,1885 @@
 # The full license is in the file COPYING.txt, distributed with this software.
 # ----------------------------------------------------------------------------
 
-from __future__ import absolute_import, division, print_function
-from future.standard_library import hooks
-
-from re import compile as re_compile
-from collections import Counter, defaultdict
+import copy
+import functools
+import itertools
+import re
+from types import GeneratorType
+from collections import Hashable
 from unittest import TestCase, main
 
 import numpy as np
 import numpy.testing as npt
-from scipy.spatial.distance import euclidean
+import pandas as pd
+import scipy.spatial.distance
 
-from skbio import (
-    BiologicalSequence, NucleotideSequence, DNASequence, RNASequence,
-    ProteinSequence)
-from skbio.sequence import BiologicalSequenceError
+import skbio.sequence.distance
+from skbio import Sequence, DNA
+from skbio.util import assert_data_frame_almost_equal
+from skbio.sequence._sequence import (_single_index_to_slice, _is_single_index,
+                                      _as_slice_if_single_index)
+from skbio.util._testing import ReallyEqualMixin
+from skbio.metadata._testing import (MetadataMixinTests,
+                                     IntervalMetadataMixinTests,
+                                     PositionalMetadataMixinTests)
+from skbio.metadata import IntervalMetadata
 
-with hooks():
-    from itertools import zip_longest
+
+class SequenceSubclass(Sequence):
+    """Used for testing purposes."""
+    pass
 
 
-class BiologicalSequenceTests(TestCase):
+class SequenceSubclassTwo(Sequence):
+    """Used for testing purposes."""
+    pass
 
+
+class TestSequenceMetadata(TestCase, ReallyEqualMixin, MetadataMixinTests):
     def setUp(self):
-        self.b1 = BiologicalSequence('GATTACA', quality=range(7))
-        self.b2 = BiologicalSequence(
-            'ACCGGTACC', id="test-seq-2",
-            description="A test sequence")
-        self.b3 = BiologicalSequence(
-            'GREG', id="test-seq-3", description="A protein sequence")
-        self.b4 = BiologicalSequence(
-            'PRTEIN', id="test-seq-4")
-        self.b5 = BiologicalSequence(
-            'LLPRTEIN', description="some description")
-        self.b6 = BiologicalSequence('ACGTACGTACGT')
-        self.b7 = BiologicalSequence('..--..', quality=range(6))
-        self.b8 = BiologicalSequence('HE..--..LLO', id='hello',
-                                     description='gapped hello',
-                                     quality=range(11))
+        self._metadata_constructor_ = functools.partial(Sequence, '')
 
-    def test_init_varied_input(self):
-        # init as string
-        b = BiologicalSequence('ACCGGXZY')
-        self.assertEqual(str(b), 'ACCGGXZY')
-        self.assertEqual(b.id, "")
-        self.assertEqual(b.description, "")
 
-        # init as string with optional values
-        b = BiologicalSequence(
-            'ACCGGXZY', 'test-seq-1', 'The first test sequence')
-        self.assertEqual(str(b), 'ACCGGXZY')
-        self.assertEqual(b.id, "test-seq-1")
-        self.assertEqual(b.description, "The first test sequence")
+class TestSequencePositionalMetadata(TestCase, ReallyEqualMixin,
+                                     PositionalMetadataMixinTests):
+    def setUp(self):
+        def factory(axis_len, positional_metadata=None):
+            return Sequence('Z' * axis_len,
+                            positional_metadata=positional_metadata)
+        self._positional_metadata_constructor_ = factory
 
-        # test init as a different string
-        b = BiologicalSequence('WRRTY')
-        self.assertEqual(str(b), 'WRRTY')
 
-        # init as list
-        b = BiologicalSequence(list('ACCGGXZY'))
-        self.assertEqual(str(b), 'ACCGGXZY')
-        self.assertEqual(b.id, "")
-        self.assertEqual(b.description, "")
+class TestSequenceIntervalMetadata(TestCase, ReallyEqualMixin,
+                                   IntervalMetadataMixinTests):
+    def setUp(self):
+        super()._set_up()
 
-        # init as tuple
-        b = BiologicalSequence(tuple('ACCGGXZY'))
-        self.assertEqual(str(b), 'ACCGGXZY')
-        self.assertEqual(b.id, "")
-        self.assertEqual(b.description, "")
+        def factory(axis_len, interval_metadata=None):
+            return Sequence('Z' * axis_len,
+                            interval_metadata=interval_metadata)
+        self._interval_metadata_constructor_ = factory
 
-    def test_init_with_validation(self):
-        self.assertRaises(BiologicalSequenceError, BiologicalSequence, "ACC",
-                          validate=True)
-        try:
-            # no error raised when only allow characters are passed
-            BiologicalSequence("..--..", validate=True)
-        except BiologicalSequenceError:
-            self.assertTrue(False)
 
-    def test_init_with_invalid_quality(self):
-        # invalid dtype
+class TestSequenceBase(TestCase):
+    def setUp(self):
+        self.sequence_kinds = frozenset([
+            str, Sequence, lambda s: np.fromstring(s, dtype='|S1'),
+            lambda s: np.fromstring(s, dtype=np.uint8)])
+
+
+class TestSequence(TestSequenceBase, ReallyEqualMixin):
+    def setUp(self):
+        super(TestSequence, self).setUp()
+
+        self.lowercase_seq = Sequence('AAAAaaaa', lowercase='key')
+
+        def empty_generator():
+            yield from ()
+
+        self.getitem_empty_indices = [
+            [],
+            (),
+            {},
+            empty_generator(),
+            # ndarray of implicit float dtype
+            np.array([]),
+            np.array([], dtype=int)]
+
+    def test_concat_bad_how(self):
+        seq1 = seq2 = Sequence("123")
+        with self.assertRaises(ValueError):
+            Sequence.concat([seq1, seq2], how='foo')
+
+    def test_concat_on_subclass(self):
+        seq1 = SequenceSubclass("123")
+        seq2 = Sequence("123")
+        result = SequenceSubclass.concat([seq1, seq2])
+        self.assertIs(type(result), SequenceSubclass)
+        self.assertEqual(result, SequenceSubclass("123123"))
+
+    def test_concat_on_empty_iterator(self):
+        result = SequenceSubclass.concat((_ for _ in []))
+        self.assertIs(type(result), SequenceSubclass)
+        self.assertEqual(result, SequenceSubclass(""))
+
+    def test_concat_on_bad_subclass(self):
+        seq1 = Sequence("123")
+        seq2 = SequenceSubclassTwo("123")
         with self.assertRaises(TypeError):
-            BiologicalSequence('ACGT', quality=[2, 3, 4.1, 5])
+            SequenceSubclass.concat([seq1, seq2])
 
-        # wrong number of dimensions (2-D)
-        with self.assertRaisesRegexp(BiologicalSequenceError, '1-D'):
-            BiologicalSequence('ACGT', quality=[[2, 3], [4, 5]])
+    def test_concat_interval_metadata(self):
+        seq1 = Sequence("1234")
+        seq1.interval_metadata.add(
+            [(0, 2)], [(True, False)], {'gene': 'sagA'})
+        seq2 = Sequence("5678")
+        seq2.interval_metadata.add(
+            [(1, 3)], [(False, True)], {'gene': 'sagB'})
+        obs = Sequence.concat([seq1, seq2])
+        exp = Sequence('12345678')
+        exp.interval_metadata.add(
+            [(0, 2)], [(True, False)], {'gene': 'sagA'})
+        exp.interval_metadata.add(
+            [(5, 7)], [(False, True)], {'gene': 'sagB'})
+        self.assertEqual(exp, obs)
 
-        # wrong number of elements
-        with self.assertRaisesRegexp(BiologicalSequenceError, '\(3\).*\(4\)'):
-            BiologicalSequence('ACGT', quality=[2, 3, 4])
+    def test_concat_one_seq_has_none_interval_metadata(self):
+        seq1 = Sequence("1234")
+        seq1.interval_metadata.add(
+            [(0, 2)], [(True, False)], {'gene': 'sagA'})
+        seq2 = Sequence("5678")
+        seq3 = Sequence("910")
+        seq3.interval_metadata.add(
+            [(1, 3)], [(False, True)], {'gene': 'sagB'})
+        obs = Sequence.concat([seq1, seq2, seq3])
+        exp = Sequence('12345678910')
+        exp.interval_metadata.add(
+            [(0, 2)], [(True, False)], {'gene': 'sagA'})
+        exp.interval_metadata.add(
+            [(9, 11)], [(False, True)], {'gene': 'sagB'})
+        self.assertEqual(exp, obs)
 
-        # negatives
-        with self.assertRaisesRegexp(BiologicalSequenceError,
-                                     'quality scores.*greater than.*zero'):
-            BiologicalSequence('ACGT', quality=[2, 3, -1, 4])
+    def test_concat_default_how(self):
+        seq1 = Sequence("1234", positional_metadata={'a': [1]*4})
+        seq2 = Sequence("5678", positional_metadata={'a': [2]*4})
+        seqbad = Sequence("9", positional_metadata={'b': [9]})
+        result1 = Sequence.concat([seq1, seq2])
+        result2 = Sequence.concat([seq1, seq2], how='strict')
+        self.assertEqual(result1, result2)
+        with self.assertRaisesRegex(ValueError,
+                                    '.*positional.*metadata.*inner.*outer.*'):
+            Sequence.concat([seq1, seq2, seqbad])
 
-    def test_contains(self):
-        self.assertTrue('G' in self.b1)
-        self.assertFalse('g' in self.b1)
+    def test_concat_strict_simple(self):
+        expected = Sequence(
+            "12345678", positional_metadata={'a': [1, 1, 1, 1, 2, 2, 2, 2]})
+        seq1 = Sequence("1234", positional_metadata={'a': [1]*4})
+        seq2 = Sequence("5678", positional_metadata={'a': [2]*4})
+        result = Sequence.concat([seq1, seq2], how='strict')
+        self.assertEqual(result, expected)
+        self.assertFalse(result.metadata)
+
+    def test_concat_strict_many(self):
+        odd_key = frozenset()
+        expected = Sequence("13579",
+                            positional_metadata={'a': list('skbio'),
+                                                 odd_key: [1, 2, 3, 4, 5]})
+        result = Sequence.concat([
+                Sequence("1", positional_metadata={'a': ['s'], odd_key: [1]}),
+                Sequence("3", positional_metadata={'a': ['k'], odd_key: [2]}),
+                Sequence("5", positional_metadata={'a': ['b'], odd_key: [3]}),
+                Sequence("7", positional_metadata={'a': ['i'], odd_key: [4]}),
+                Sequence("9", positional_metadata={'a': ['o'], odd_key: [5]})
+            ], how='strict')
+        self.assertEqual(result, expected)
+        self.assertFalse(result.metadata)
+
+    def test_concat_strict_fail(self):
+        seq1 = Sequence("1", positional_metadata={'a': [1]})
+        seq2 = Sequence("2", positional_metadata={'b': [2]})
+        with self.assertRaisesRegex(ValueError,
+                                    '.*positional.*metadata.*inner.*outer.*'):
+            Sequence.concat([seq1, seq2], how='strict')
+
+    def test_concat_outer_simple(self):
+        seq1 = Sequence("1234")
+        seq2 = Sequence("5678")
+        result = Sequence.concat([seq1, seq2], how='outer')
+        self.assertEqual(result, Sequence("12345678"))
+        self.assertFalse(result.metadata)
+
+    def test_concat_outer_missing(self):
+        a = {}
+        b = {}
+        seq1 = Sequence("12", positional_metadata={'a': ['1', '2']})
+        seq2 = Sequence("34", positional_metadata={'b': [3, 4], 'c': [a, b]})
+        seq3 = Sequence("56")
+        seq4 = Sequence("78", positional_metadata={'a': [7, 8]})
+        seq5 = Sequence("90", positional_metadata={'b': [9, 0]})
+
+        result = Sequence.concat([seq1, seq2, seq3, seq4, seq5], how='outer')
+        expected = Sequence("1234567890", positional_metadata={
+                                'a': ['1', '2', np.nan, np.nan, np.nan, np.nan,
+                                      7, 8, np.nan, np.nan],
+                                'b': [np.nan, np.nan, 3, 4, np.nan, np.nan,
+                                      np.nan, np.nan, 9, 0],
+                                'c': [np.nan, np.nan, a, b, np.nan, np.nan,
+                                      np.nan, np.nan, np.nan, np.nan]
+                            })
+        self.assertEqual(result, expected)
+        self.assertFalse(result.metadata)
+
+    def test_concat_inner_simple(self):
+        seq1 = Sequence("1234")
+        seq2 = Sequence("5678", positional_metadata={'discarded': [1] * 4})
+        result = Sequence.concat([seq1, seq2], how='inner')
+        self.assertEqual(result, Sequence("12345678"))
+        self.assertFalse(result.metadata)
+
+    def test_concat_inner_missing(self):
+        seq1 = Sequence("12", positional_metadata={'a': ['1', '2'],
+                                                   'c': [{}, {}]})
+        seq2 = Sequence("34", positional_metadata={'a': [3, 4], 'b': [3, 4]})
+        seq3 = Sequence("56", positional_metadata={'a': [5, 6], 'b': [5, 6]})
+
+        result = Sequence.concat([seq1, seq2, seq3], how='inner')
+        expected = Sequence("123456", positional_metadata={'a': ['1', '2', 3,
+                                                                 4, 5, 6]})
+        self.assertEqual(result, expected)
+        self.assertFalse(result.metadata)
+
+    def test_init_default_parameters(self):
+        seq = Sequence('.ABC123xyz-')
+
+        npt.assert_equal(seq.values, np.array('.ABC123xyz-', dtype='c'))
+        self.assertEqual('.ABC123xyz-', str(seq))
+        self.assertFalse(seq.metadata)
+        self.assertEqual(seq.metadata, {})
+        assert_data_frame_almost_equal(seq.positional_metadata,
+                                       pd.DataFrame(index=range(11)))
+        self.assertEqual(seq.interval_metadata,
+                         IntervalMetadata(len(seq)))
+
+    def test_init_nondefault_parameters(self):
+        s = '.ABC123xyz-'
+        im = IntervalMetadata(len(s))
+        im.add([(0, 1)], metadata={'gene': 'sagA'})
+        seq = Sequence(s,
+                       metadata={'id': 'foo', 'description': 'bar baz'},
+                       positional_metadata={'quality': range(11)},
+                       interval_metadata=im)
+
+        self.assertEqual(seq.interval_metadata, im)
+
+        npt.assert_equal(seq.values, np.array('.ABC123xyz-', dtype='c'))
+        self.assertEqual(s, str(seq))
+
+        self.assertTrue(seq.metadata)
+        self.assertEqual(seq.metadata, {'id': 'foo', 'description': 'bar baz'})
+
+        assert_data_frame_almost_equal(
+            seq.positional_metadata,
+            pd.DataFrame({'quality': range(11)}, index=range(11)))
+
+    def test_init_empty_sequence(self):
+        # Test constructing an empty sequence using each supported input type.
+        for s in (b'',  # bytes
+                  '',  # unicode
+                  np.array('', dtype='c'),  # char vector
+                  np.fromstring('', dtype=np.uint8),  # byte vec
+                  Sequence('')):  # another Sequence object
+            seq = Sequence(s)
+
+            self.assertIsInstance(seq.values, np.ndarray)
+            self.assertEqual(seq.values.dtype, '|S1')
+            self.assertEqual(seq.values.shape, (0, ))
+            npt.assert_equal(seq.values, np.array('', dtype='c'))
+            self.assertEqual(str(seq), '')
+            self.assertEqual(len(seq), 0)
+
+            self.assertFalse(seq.metadata)
+            self.assertEqual(seq.metadata, {})
+
+            self.assertEqual(seq.interval_metadata,
+                             IntervalMetadata(0))
+
+            assert_data_frame_almost_equal(seq.positional_metadata,
+                                           pd.DataFrame(index=range(0)))
+
+    def test_init_single_character_sequence(self):
+        for s in (b'A',
+                  'A',
+                  np.array('A', dtype='c'),
+                  np.fromstring('A', dtype=np.uint8),
+                  Sequence('A')):
+            seq = Sequence(s)
+
+            self.assertIsInstance(seq.values, np.ndarray)
+            self.assertEqual(seq.values.dtype, '|S1')
+            self.assertEqual(seq.values.shape, (1,))
+            npt.assert_equal(seq.values, np.array('A', dtype='c'))
+            self.assertEqual(str(seq), 'A')
+            self.assertEqual(len(seq), 1)
+
+            self.assertFalse(seq.metadata)
+            self.assertEqual(seq.metadata, {})
+
+            self.assertEqual(seq.interval_metadata,
+                             IntervalMetadata(1))
+            assert_data_frame_almost_equal(seq.positional_metadata,
+                                           pd.DataFrame(index=range(1)))
+
+    def test_init_multiple_character_sequence(self):
+        for s in (b'.ABC\t123  xyz-',
+                  '.ABC\t123  xyz-',
+                  np.array('.ABC\t123  xyz-', dtype='c'),
+                  np.fromstring('.ABC\t123  xyz-', dtype=np.uint8),
+                  Sequence('.ABC\t123  xyz-')):
+            seq = Sequence(s)
+
+            self.assertIsInstance(seq.values, np.ndarray)
+            self.assertEqual(seq.values.dtype, '|S1')
+            self.assertEqual(seq.values.shape, (14,))
+            npt.assert_equal(seq.values,
+                             np.array('.ABC\t123  xyz-', dtype='c'))
+            self.assertEqual(str(seq), '.ABC\t123  xyz-')
+            self.assertEqual(len(seq), 14)
+
+            self.assertFalse(seq.metadata)
+            self.assertEqual(seq.metadata, {})
+
+            self.assertEqual(seq.interval_metadata,
+                             IntervalMetadata(14))
+            assert_data_frame_almost_equal(seq.positional_metadata,
+                                           pd.DataFrame(index=range(14)))
+
+    def test_init_from_sequence_object(self):
+        # We're testing this in its simplest form in other tests. This test
+        # exercises more complicated cases of building a sequence from another
+        # sequence.
+
+        # just the sequence, no other metadata
+        seq = Sequence('ACGT')
+        self.assertEqual(Sequence(seq), seq)
+
+        # sequence with metadata should have everything propagated
+        seq = Sequence('ACGT',
+                       metadata={'id': 'foo', 'description': 'bar baz'},
+                       positional_metadata={'quality': range(4)})
+        seq.interval_metadata.add([(0, 1)], metadata={'gene': 'sagA'})
+        self.assertEqual(Sequence(seq), seq)
+
+        # should be able to override metadata
+        im = IntervalMetadata(4)
+        im.add([(0, 2)], metadata={'gene': 'sagB'})
+        self.assertEqual(
+            Sequence(seq, metadata={'id': 'abc', 'description': '123'},
+                     positional_metadata={'quality': [42] * 4},
+                     interval_metadata=im),
+            Sequence('ACGT', metadata={'id': 'abc', 'description': '123'},
+                     positional_metadata={'quality': [42] * 4},
+                     interval_metadata=im))
+
+        # subclasses work too
+        im = IntervalMetadata(4)
+        im.add([(0, 2)], metadata={'gene': 'sagB'})
+        seq = SequenceSubclass('ACGT',
+                               metadata={'id': 'foo',
+                                         'description': 'bar baz'},
+                               positional_metadata={'quality': range(4)},
+                               interval_metadata=im)
+
+        self.assertEqual(
+            Sequence(seq),
+            Sequence('ACGT', metadata={'id': 'foo', 'description': 'bar baz'},
+                     positional_metadata={'quality': range(4)},
+                     interval_metadata=im))
+
+    def test_init_from_non_descendant_sequence_object(self):
+        seq = SequenceSubclass('ACGT')
+        with self.assertRaises(TypeError) as cm:
+            SequenceSubclassTwo(seq)
+
+        error = str(cm.exception)
+        self.assertIn("SequenceSubclass", error)
+        self.assertIn("SequenceSubclassTwo", error)
+        self.assertIn("cast", error)
+
+    def test_init_from_contiguous_sequence_bytes_view(self):
+        bytes = np.array([65, 42, 66, 42, 65], dtype=np.uint8)
+        view = bytes[:3]
+        seq = Sequence(view)
+
+        # sequence should be what we'd expect
+        self.assertEqual(seq, Sequence('A*B'))
+
+        # we shouldn't own the memory because no copy should have been made
+        self.assertFalse(seq._owns_bytes)
+
+        # can't mutate view because it isn't writeable anymore
+        with self.assertRaises(ValueError):
+            view[1] = 100
+
+        # sequence shouldn't have changed
+        self.assertEqual(seq, Sequence('A*B'))
+
+        # mutate bytes (*not* the view)
+        bytes[0] = 99
+
+        # Sequence changed because we are only able to make the view read-only,
+        # not its source (bytes). This is somewhat inconsistent behavior that
+        # is (to the best of our knowledge) outside our control.
+        self.assertEqual(seq, Sequence('c*B'))
+
+    def test_init_from_noncontiguous_sequence_bytes_view(self):
+        bytes = np.array([65, 42, 66, 42, 65], dtype=np.uint8)
+        view = bytes[::2]
+        seq = Sequence(view)
+
+        # sequence should be what we'd expect
+        self.assertEqual(seq, Sequence('ABA'))
+
+        # we should own the memory because a copy should have been made
+        self.assertTrue(seq._owns_bytes)
+
+        # mutate bytes and its view
+        bytes[0] = 99
+        view[1] = 100
+
+        # sequence shouldn't have changed
+        self.assertEqual(seq, Sequence('ABA'))
+
+    def test_init_no_copy_of_sequence(self):
+        bytes = np.array([65, 66, 65], dtype=np.uint8)
+        seq = Sequence(bytes)
+
+        # should share the same memory
+        self.assertIs(seq._bytes, bytes)
+
+        # shouldn't be able to mutate the Sequence object's internals by
+        # mutating the shared memory
+        with self.assertRaises(ValueError):
+            bytes[1] = 42
+
+    def test_init_invalid_sequence(self):
+        # invalid dtype (numpy.ndarray input)
+        with self.assertRaises(TypeError):
+            # int64
+            Sequence(np.array([1, 2, 3]))
+        with self.assertRaises(TypeError):
+            # |S21
+            Sequence(np.array([1, "23", 3]))
+        with self.assertRaises(TypeError):
+            # object
+            Sequence(np.array([1, {}, ()]))
+
+        # invalid input type (non-numpy.ndarray input)
+        with self.assertRaisesRegex(TypeError, 'tuple'):
+            Sequence(('a', 'b', 'c'))
+        with self.assertRaisesRegex(TypeError, 'list'):
+            Sequence(['a', 'b', 'c'])
+        with self.assertRaisesRegex(TypeError, 'set'):
+            Sequence({'a', 'b', 'c'})
+        with self.assertRaisesRegex(TypeError, 'dict'):
+            Sequence({'a': 42, 'b': 43, 'c': 44})
+        with self.assertRaisesRegex(TypeError, 'int'):
+            Sequence(42)
+        with self.assertRaisesRegex(TypeError, 'float'):
+            Sequence(4.2)
+        with self.assertRaisesRegex(TypeError, 'int64'):
+            Sequence(np.int_(50))
+        with self.assertRaisesRegex(TypeError, 'float64'):
+            Sequence(np.float_(50))
+        with self.assertRaisesRegex(TypeError, 'Foo'):
+            class Foo:
+                pass
+            Sequence(Foo())
+
+        # out of ASCII range
+        with self.assertRaises(UnicodeEncodeError):
+            Sequence('abc\u1F30')
+
+    def test_values_property(self):
+        # Property tests are only concerned with testing the interface
+        # provided by the property: that it can be accessed, can't be
+        # reassigned or mutated in place, and that the correct type is
+        # returned. More extensive testing of border cases (e.g., different
+        # sequence lengths or input types, odd characters, etc.) are performed
+        # in Sequence.__init__ tests.
+
+        seq = Sequence('ACGT')
+
+        # should get back a numpy.ndarray of '|S1' dtype
+        self.assertIsInstance(seq.values, np.ndarray)
+        self.assertEqual(seq.values.dtype, '|S1')
+        npt.assert_equal(seq.values, np.array('ACGT', dtype='c'))
+
+        # test that we can't mutate the property
+        with self.assertRaises(ValueError):
+            seq.values[1] = 'A'
+
+        # test that we can't set the property
+        with self.assertRaises(AttributeError):
+            seq.values = np.array("GGGG", dtype='c')
+
+    def test_sequence_numpy_compatibility(self):
+        seq = Sequence('abc123')
+
+        array = np.asarray(seq)
+
+        self.assertIsInstance(array, np.ndarray)
+        self.assertEqual(array.dtype, '|S1')
+        npt.assert_equal(array, np.array('abc123', dtype='c'))
+        npt.assert_equal(array, seq.values)
+
+        with self.assertRaises(ValueError):
+            array[1] = 'B'
+
+    def test_observed_chars_property(self):
+        self.assertEqual(Sequence('').observed_chars, set())
+        self.assertEqual(Sequence('x').observed_chars, {'x'})
+        self.assertEqual(Sequence('xYz').observed_chars, {'x', 'Y', 'z'})
+        self.assertEqual(Sequence('zzz').observed_chars, {'z'})
+        self.assertEqual(Sequence('xYzxxZz').observed_chars,
+                         {'x', 'Y', 'z', 'Z'})
+        self.assertEqual(Sequence('\t   ').observed_chars, {' ', '\t'})
+
+        im = IntervalMetadata(6)
+        im.add([(0, 2)], metadata={'gene': 'sagB'})
+        self.assertEqual(
+            Sequence('aabbcc', metadata={'foo': 'bar'},
+                     positional_metadata={'foo': range(6)},
+                     interval_metadata=im).observed_chars,
+            {'a', 'b', 'c'})
+
+        with self.assertRaises(AttributeError):
+            Sequence('ACGT').observed_chars = {'a', 'b', 'c'}
 
     def test_eq_and_ne(self):
-        self.assertTrue(self.b1 == self.b1)
-        self.assertTrue(self.b2 == self.b2)
-        self.assertTrue(self.b3 == self.b3)
+        seq_a = Sequence("A")
+        seq_b = Sequence("B")
 
-        self.assertTrue(self.b1 != self.b3)
-        self.assertTrue(self.b1 != self.b2)
-        self.assertTrue(self.b2 != self.b3)
+        im = IntervalMetadata(1)
+        im.add([(0, 1)], metadata={'gene': 'sagA'})
+        im2 = IntervalMetadata(1)
+        im.add([(0, 1)], metadata={'gene': 'sagB'})
 
-        # identicial sequences of the same type are equal, even if they have
-        # different ids, descriptions, and/or quality
+        self.assertTrue(seq_a == seq_a)
+        self.assertTrue(Sequence("a") == Sequence("a"))
+        self.assertTrue(Sequence("a", metadata={'id': 'b'}) ==
+                        Sequence("a", metadata={'id': 'b'}))
+        self.assertTrue(Sequence("a",
+                                 metadata={'id': 'b', 'description': 'c'}) ==
+                        Sequence("a",
+                                 metadata={'id': 'b', 'description': 'c'}))
+        self.assertTrue(Sequence("a", metadata={'id': 'b', 'description': 'c'},
+                                 positional_metadata={'quality': [1]},
+                                 interval_metadata=im) ==
+                        Sequence("a", metadata={'id': 'b', 'description': 'c'},
+                                 positional_metadata={'quality': [1]},
+                                 interval_metadata=im))
+
+        self.assertTrue(seq_a != seq_b)
+        self.assertTrue(SequenceSubclass("a") != Sequence("a"))
+        self.assertTrue(Sequence("a") != Sequence("b"))
+        self.assertTrue(Sequence("a") != Sequence("a", metadata={'id': 'b'}))
+        self.assertTrue(Sequence("a", metadata={'id': 'c'}) !=
+                        Sequence("a",
+                                 metadata={'id': 'c', 'description': 't'}))
+        self.assertTrue(Sequence("a", positional_metadata={'quality': [1]}) !=
+                        Sequence("a"))
+        self.assertTrue(Sequence("a", interval_metadata=im) !=
+                        Sequence("a"))
+
+        self.assertTrue(Sequence("a", positional_metadata={'quality': [1]}) !=
+                        Sequence("a", positional_metadata={'quality': [2]}))
+        self.assertTrue(Sequence("a", interval_metadata=im) !=
+                        Sequence("a", interval_metadata=im2))
+
+        self.assertTrue(Sequence("c", positional_metadata={'quality': [3]}) !=
+                        Sequence("b", positional_metadata={'quality': [3]}))
+        self.assertTrue(Sequence("c", interval_metadata=im) !=
+                        Sequence("b", interval_metadata=im))
+        self.assertTrue(Sequence("a", metadata={'id': 'b'}) !=
+                        Sequence("c", metadata={'id': 'b'}))
+
+    def test_eq_sequences_without_metadata_compare_equal(self):
+        self.assertTrue(Sequence('') == Sequence(''))
+        self.assertTrue(Sequence('z') == Sequence('z'))
         self.assertTrue(
-            BiologicalSequence('ACGT') == BiologicalSequence('ACGT'))
-        self.assertTrue(
-            BiologicalSequence('ACGT', id='a') ==
-            BiologicalSequence('ACGT', id='b'))
-        self.assertTrue(
-            BiologicalSequence('ACGT', description='c') ==
-            BiologicalSequence('ACGT', description='d'))
-        self.assertTrue(
-            BiologicalSequence('ACGT', id='a', description='c') ==
-            BiologicalSequence('ACGT', id='b', description='d'))
-        self.assertTrue(
-            BiologicalSequence('ACGT', id='a', description='c',
-                               quality=[1, 2, 3, 4]) ==
-            BiologicalSequence('ACGT', id='b', description='d',
-                               quality=[5, 6, 7, 8]))
+            Sequence('ACGT') == Sequence('ACGT'))
 
-        # different type causes sequences to not be equal
-        self.assertFalse(
-            BiologicalSequence('ACGT') == NucleotideSequence('ACGT'))
+    def test_eq_sequences_with_metadata_compare_equal(self):
+        seq1 = Sequence('ACGT', metadata={'id': 'foo', 'desc': 'abc'},
+                        positional_metadata={'qual': [1, 2, 3, 4]})
+        seq2 = Sequence('ACGT', metadata={'id': 'foo', 'desc': 'abc'},
+                        positional_metadata={'qual': [1, 2, 3, 4]})
+        self.assertTrue(seq1 == seq2)
 
-    def test_getitem(self):
-        # use equals method to ensure that id, description, and sliced
-        # quality are correctly propagated to the resulting sequence
-        self.assertTrue(self.b1[0].equals(
-            BiologicalSequence('G', quality=(0,))))
+        # order shouldn't matter
+        self.assertTrue(seq2 == seq1)
 
-        self.assertTrue(self.b1[:].equals(
-            BiologicalSequence('GATTACA', quality=range(7))))
+    def test_eq_sequences_from_different_sources_compare_equal(self):
+        # sequences that have the same data but are constructed from different
+        # types of data should compare equal
+        im = IntervalMetadata(4)
+        im.add([(0, 2)], metadata={'gene': 'sagB'})
+        seq1 = Sequence('ACGT', metadata={'id': 'foo', 'desc': 'abc'},
+                        positional_metadata={'quality': (1, 2, 3, 4)},
+                        interval_metadata=im)
+        seq2 = Sequence(np.array([65, 67, 71, 84], dtype=np.uint8),
+                        metadata={'id': 'foo', 'desc': 'abc'},
+                        positional_metadata={'quality': np.array([1, 2, 3,
+                                                                  4])},
+                        interval_metadata=im)
+        self.assertTrue(seq1 == seq2)
 
-        self.assertTrue(self.b1[::-1].equals(
-            BiologicalSequence('ACATTAG', quality=range(7)[::-1])))
+    def test_eq_type_mismatch(self):
+        seq1 = Sequence('ACGT')
+        seq2 = SequenceSubclass('ACGT')
+        self.assertFalse(seq1 == seq2)
 
-        # test a sequence without quality scores
-        b = BiologicalSequence('ACGT', id='foo', description='bar')
-        self.assertTrue(b[2:].equals(
-            BiologicalSequence('GT', id='foo', description='bar')))
-        self.assertTrue(b[2].equals(
-            BiologicalSequence('G', id='foo', description='bar')))
+    def test_eq_positional_metadata_mismatch(self):
+        # both provided
+        seq1 = Sequence('ACGT', positional_metadata={'quality': [1, 2, 3, 4]})
+        seq2 = Sequence('ACGT', positional_metadata={'quality': [1, 2, 3, 5]})
+        self.assertFalse(seq1 == seq2)
 
-    def test_getitem_indices(self):
-        # no ordering, repeated items
-        self.assertTrue(self.b1[[3, 5, 4, 0, 5, 0]].equals(
-            BiologicalSequence('TCAGCG', quality=(3, 5, 4, 0, 5, 0))))
+        # one provided
+        seq1 = Sequence('ACGT', positional_metadata={'quality': [1, 2, 3, 4]})
+        seq2 = Sequence('ACGT')
+        self.assertFalse(seq1 == seq2)
 
-        # empty list
-        self.assertTrue(self.b1[[]].equals(BiologicalSequence('', quality=())))
+    def test_eq_interval_metadata_mismatch(self):
+        im1 = IntervalMetadata(4)
+        im1.add([(0, 3)], metadata={'gene': 'sagA'})
+        im2 = IntervalMetadata(4)
+        im2.add([(0, 2)], metadata={'gene': 'sagA'})
+        # both provided
+        seq1 = Sequence('ACGT', interval_metadata=im1)
+        seq2 = Sequence('ACGT', interval_metadata=im2)
+        self.assertFalse(seq1 == seq2)
 
-        # empty tuple
-        self.assertTrue(self.b1[()].equals(BiologicalSequence('', quality=())))
+        # one provided
+        seq1 = Sequence('ACGT', interval_metadata=im1)
+        seq2 = Sequence('ACGT')
+        self.assertFalse(seq1 == seq2)
 
-        # single item
-        self.assertTrue(
-            self.b1[[2]].equals(BiologicalSequence('T', quality=(2,))))
+    def test_eq_sequence_mismatch(self):
+        seq1 = Sequence('ACGT')
+        seq2 = Sequence('TGCA')
+        self.assertFalse(seq1 == seq2)
 
-        # negatives
-        self.assertTrue(self.b1[[2, -2, 4]].equals(
-            BiologicalSequence('TCA', quality=(2, 5, 4))))
+    def test_getitem_gives_new_sequence(self):
+        seq = Sequence("Sequence string !1@2#3?.,")
+        self.assertFalse(seq is seq[:])
 
-        # tuple
-        self.assertTrue(self.b1[1, 2, 3].equals(
-            BiologicalSequence('ATT', quality=(1, 2, 3))))
-        self.assertTrue(self.b1[(1, 2, 3)].equals(
-            BiologicalSequence('ATT', quality=(1, 2, 3))))
+    def test_getitem_drops_interval_metadata(self):
+        s = "Sequence string !1@2#3?.,"
+        seq = Sequence(s, metadata={'id': 'id', 'description': 'dsc'})
+        seq.interval_metadata.add([(0, 3)], metadata={'gene': 'sagA'})
 
-        # test a sequence without quality scores
-        self.assertTrue(self.b2[5, 4, 1].equals(
-            BiologicalSequence('TGC', id='test-seq-2',
-                               description='A test sequence')))
+        eseq = Sequence('Se', metadata={'id': 'id', 'description': 'dsc'})
+        self.assertEqual(seq[:2], eseq)
 
-    def test_getitem_wrong_type(self):
+    def test_getitem_with_int_has_positional_metadata(self):
+        s = "Sequence string !1@2#3?.,"
+        length = len(s)
+        seq = Sequence(s, metadata={'id': 'id', 'description': 'dsc'},
+                       positional_metadata={'quality': np.arange(length)})
+
+        eseq = Sequence("S", {'id': 'id', 'description': 'dsc'},
+                        positional_metadata={'quality': np.array([0])})
+        self.assertEqual(seq[0], eseq)
+
+        eseq = Sequence(",", metadata={'id': 'id', 'description': 'dsc'},
+                        positional_metadata={'quality':
+                                             np.array([len(seq) - 1])})
+        self.assertEqual(seq[len(seq) - 1], eseq)
+
+        eseq = Sequence("t", metadata={'id': 'id', 'description': 'dsc'},
+                        positional_metadata={'quality': [10]})
+        self.assertEqual(seq[10], eseq)
+
+    def test_single_index_to_slice(self):
+        a = [1, 2, 3, 4]
+        self.assertEqual(slice(0, 1), _single_index_to_slice(0))
+        self.assertEqual([1], a[_single_index_to_slice(0)])
+        self.assertEqual(slice(-1, None),
+                         _single_index_to_slice(-1))
+        self.assertEqual([4], a[_single_index_to_slice(-1)])
+
+    def test_is_single_index(self):
+        self.assertTrue(_is_single_index(0))
+        self.assertFalse(_is_single_index(True))
+        self.assertFalse(_is_single_index(bool()))
+        self.assertFalse(_is_single_index('a'))
+
+    def test_as_slice_if_single_index(self):
+        self.assertEqual(slice(0, 1), _as_slice_if_single_index(0))
+        slice_obj = slice(2, 3)
+        self.assertIs(slice_obj,
+                      _as_slice_if_single_index(slice_obj))
+
+    def test_slice_positional_metadata(self):
+        seq = Sequence('ABCDEFGHIJ',
+                       positional_metadata={'foo': np.arange(10),
+                                            'bar': np.arange(100, 110)})
+        self.assertTrue(pd.DataFrame({'foo': [0], 'bar': [100]}).equals(
+                        seq._slice_positional_metadata(0)))
+        self.assertTrue(pd.DataFrame({'foo': [0], 'bar': [100]}).equals(
+                        seq._slice_positional_metadata(slice(0, 1))))
+        self.assertTrue(pd.DataFrame({'foo': [0, 1],
+                                      'bar': [100, 101]}).equals(
+                        seq._slice_positional_metadata(slice(0, 2))))
+        self.assertTrue(pd.DataFrame(
+            {'foo': [9], 'bar': [109]}, index=[9]).equals(
+                seq._slice_positional_metadata(9)))
+
+    def test_getitem_with_int_no_positional_metadata(self):
+        seq = Sequence("Sequence string !1@2#3?.,",
+                       metadata={'id': 'id2', 'description': 'no_qual'})
+
+        eseq = Sequence("t", metadata={'id': 'id2', 'description': 'no_qual'})
+        self.assertEqual(seq[10], eseq)
+
+    def test_getitem_with_slice_has_positional_metadata(self):
+        s = "0123456789abcdef"
+        length = len(s)
+        seq = Sequence(s, metadata={'id': 'id3', 'description': 'dsc3'},
+                       positional_metadata={'quality': np.arange(length)})
+
+        eseq = Sequence("012", metadata={'id': 'id3', 'description': 'dsc3'},
+                        positional_metadata={'quality': np.arange(3)})
+        self.assertEqual(seq[0:3], eseq)
+        self.assertEqual(seq[:3], eseq)
+        self.assertEqual(seq[:3:1], eseq)
+
+        eseq = Sequence("def", metadata={'id': 'id3', 'description': 'dsc3'},
+                        positional_metadata={'quality': [13, 14, 15]})
+        self.assertEqual(seq[-3:], eseq)
+        self.assertEqual(seq[-3::1], eseq)
+
+        eseq = Sequence("02468ace",
+                        metadata={'id': 'id3', 'description': 'dsc3'},
+                        positional_metadata={'quality': [0, 2, 4, 6, 8, 10,
+                                                         12, 14]})
+        self.assertEqual(seq[0:length:2], eseq)
+        self.assertEqual(seq[::2], eseq)
+
+        eseq = Sequence(s[::-1], metadata={'id': 'id3', 'description': 'dsc3'},
+                        positional_metadata={'quality':
+                                             np.arange(length)[::-1]})
+        self.assertEqual(seq[length::-1], eseq)
+        self.assertEqual(seq[::-1], eseq)
+
+        eseq = Sequence('fdb97531',
+                        metadata={'id': 'id3', 'description': 'dsc3'},
+                        positional_metadata={'quality': [15, 13, 11, 9, 7, 5,
+                                                         3, 1]})
+        self.assertEqual(seq[length::-2], eseq)
+        self.assertEqual(seq[::-2], eseq)
+
+        self.assertEqual(seq[0:500:], seq)
+
+        eseq = Sequence('', metadata={'id': 'id3', 'description': 'dsc3'},
+                        positional_metadata={'quality':
+                                             np.array([], dtype=np.int64)})
+        self.assertEqual(seq[length:0], eseq)
+        self.assertEqual(seq[-length:0], eseq)
+        self.assertEqual(seq[1:0], eseq)
+
+        eseq = Sequence("0", metadata={'id': 'id3', 'description': 'dsc3'},
+                        positional_metadata={'quality': [0]})
+        self.assertEqual(seq[0:1], eseq)
+        self.assertEqual(seq[0:1:1], eseq)
+        self.assertEqual(seq[-length::-1], eseq)
+
+    def test_getitem_with_slice_no_positional_metadata(self):
+        s = "0123456789abcdef"
+        length = len(s)
+        seq = Sequence(s, metadata={'id': 'id4', 'description': 'no_qual4'})
+
+        eseq = Sequence("02468ace",
+                        metadata={'id': 'id4', 'description': 'no_qual4'})
+        self.assertEqual(seq[0:length:2], eseq)
+        self.assertEqual(seq[::2], eseq)
+
+    def test_getitem_with_tuple_of_mixed_with_positional_metadata(self):
+        s = "0123456789abcdef"
+        length = len(s)
+        seq = Sequence(s, metadata={'id': 'id5', 'description': 'dsc5'},
+                       positional_metadata={'quality': np.arange(length)})
+
+        eseq = Sequence("00000", metadata={'id': 'id5', 'description': 'dsc5'},
+                        positional_metadata={'quality': [0, 0, 0, 0, 0]})
+        self.assertEqual(seq[0, 0, 0, 0, 0], eseq)
+        self.assertEqual(seq[0, 0:1, 0, 0, 0], eseq)
+        self.assertEqual(seq[0, 0:1, 0, -length::-1, 0, 1:0], eseq)
+        self.assertEqual(seq[0:1, 0:1, 0:1, 0:1, 0:1], eseq)
+        self.assertEqual(seq[0:1, 0, 0, 0, 0], eseq)
+
+        eseq = Sequence("0123fed9",
+                        metadata={'id': 'id5', 'description': 'dsc5'},
+                        positional_metadata={'quality': [0, 1, 2, 3, 15, 14,
+                                                         13, 9]})
+        self.assertEqual(seq[0, 1, 2, 3, 15, 14, 13, 9], eseq)
+        self.assertEqual(seq[0, 1, 2, 3, :-4:-1, 9], eseq)
+        self.assertEqual(seq[0:4, :-4:-1, 9, 1:0], eseq)
+        self.assertEqual(seq[0:4, :-4:-1, 9:10], eseq)
+
+    def test_getitem_with_tuple_of_mixed_no_positional_metadata(self):
+        seq = Sequence("0123456789abcdef",
+                       metadata={'id': 'id6', 'description': 'no_qual6'})
+        eseq = Sequence("0123fed9",
+                        metadata={'id': 'id6', 'description': 'no_qual6'})
+        self.assertEqual(seq[0, 1, 2, 3, 15, 14, 13, 9], eseq)
+        self.assertEqual(seq[0, 1, 2, 3, :-4:-1, 9], eseq)
+        self.assertEqual(seq[0:4, :-4:-1, 9], eseq)
+        self.assertEqual(seq[0:4, :-4:-1, 9:10], eseq)
+
+    def test_getitem_with_tuple_of_mixed_no_metadata(self):
+        seq = Sequence("0123456789abcdef")
+        eseq = Sequence("0123fed9")
+        self.assertEqual(seq[0, 1, 2, 3, 15, 14, 13, 9], eseq)
+        self.assertEqual(seq[0, 1, 2, 3, :-4:-1, 9], eseq)
+        self.assertEqual(seq[0:4, :-4:-1, 9], eseq)
+        self.assertEqual(seq[0:4, :-4:-1, 9:10], eseq)
+
+    def test_getitem_with_iterable_of_mixed_has_positional_metadata(self):
+        s = "0123456789abcdef"
+        length = len(s)
+        seq = Sequence(s, metadata={'id': 'id7', 'description': 'dsc7'},
+                       positional_metadata={'quality': np.arange(length)})
+
+        def generator():
+            yield slice(0, 4)
+            yield slice(200, 400)
+            yield -1
+            yield slice(-2, -4, -1)
+            yield 9
+
+        eseq = Sequence("0123fed9",
+                        metadata={'id': 'id7', 'description': 'dsc7'},
+                        positional_metadata={'quality': [0, 1, 2, 3, 15, 14,
+                                                         13, 9]})
+        self.assertEqual(seq[[0, 1, 2, 3, 15, 14, 13, 9]], eseq)
+        self.assertEqual(seq[generator()], eseq)
+        self.assertEqual(seq[[slice(0, 4), slice(None, -4, -1), 9]], eseq)
+        self.assertEqual(seq[
+            [slice(0, 4), slice(None, -4, -1), slice(9, 10)]], eseq)
+
+    def test_getitem_with_iterable_of_mixed_no_positional_metadata(self):
+        s = "0123456789abcdef"
+        seq = Sequence(s, metadata={'id': 'id7', 'description': 'dsc7'})
+
+        def generator():
+            yield slice(0, 4)
+            yield slice(200, 400)
+            yield slice(None, -4, -1)
+            yield 9
+
+        eseq = Sequence("0123fed9",
+                        metadata={'id': 'id7', 'description': 'dsc7'})
+        self.assertEqual(seq[[0, 1, 2, 3, 15, 14, 13, 9]], eseq)
+        self.assertEqual(seq[generator()], eseq)
+        self.assertEqual(seq[[slice(0, 4), slice(None, -4, -1), 9]], eseq)
+        self.assertEqual(seq[
+            [slice(0, 4), slice(None, -4, -1), slice(9, 10)]], eseq)
+
+    def test_getitem_with_numpy_index_has_positional_metadata(self):
+        s = "0123456789abcdef"
+        length = len(s)
+        seq = Sequence(s, metadata={'id': 'id9', 'description': 'dsc9'},
+                       positional_metadata={'quality': np.arange(length)})
+
+        eseq = Sequence("0123fed9",
+                        metadata={'id': 'id9', 'description': 'dsc9'},
+                        positional_metadata={'quality': [0, 1, 2, 3, 15, 14,
+                                                         13, 9]})
+        self.assertEqual(seq[np.array([0, 1, 2, 3, 15, 14, 13, 9])], eseq)
+
+    def test_getitem_with_numpy_index_no_positional_metadata(self):
+        s = "0123456789abcdef"
+        seq = Sequence(s, metadata={'id': 'id10', 'description': 'dsc10'})
+
+        eseq = Sequence("0123fed9",
+                        metadata={'id': 'id10', 'description': 'dsc10'})
+        self.assertEqual(seq[np.array([0, 1, 2, 3, 15, 14, 13, 9])], eseq)
+
+    def test_getitem_with_empty_indices_empty_seq_no_pos_metadata(self):
+        s = ""
+        seq = Sequence(s, metadata={'id': 'id10', 'description': 'dsc10'})
+
+        eseq = Sequence('', metadata={'id': 'id10', 'description': 'dsc10'})
+
+        tested = 0
+        for index in self.getitem_empty_indices:
+            tested += 1
+            self.assertEqual(seq[index], eseq)
+        self.assertEqual(tested, 6)
+
+    def test_getitem_with_empty_indices_non_empty_seq_no_pos_metadata(self):
+        s = "0123456789abcdef"
+        seq = Sequence(s, metadata={'id': 'id10', 'description': 'dsc10'})
+
+        eseq = Sequence('', metadata={'id': 'id10', 'description': 'dsc10'})
+
+        tested = 0
+        for index in self.getitem_empty_indices:
+            tested += 1
+            self.assertEqual(seq[index], eseq)
+        self.assertEqual(tested, 6)
+
+    def test_getitem_with_boolean_vector_has_qual(self):
+        s = "0123456789abcdef"
+        length = len(s)
+        seq = Sequence(s, metadata={'id': 'id11', 'description': 'dsc11'},
+                       positional_metadata={'quality': np.arange(length)})
+
+        eseq = Sequence("13579bdf",
+                        metadata={'id': 'id11', 'description': 'dsc11'},
+                        positional_metadata={'quality': [1, 3, 5, 7, 9, 11,
+                                                         13, 15]})
+
+        self.assertEqual(seq[np.array([False, True] * 8)], eseq)
+        self.assertEqual(seq[[False, True] * 8], eseq)
+
+    def test_getitem_with_boolean_vector_no_positional_metadata(self):
+        s = "0123456789abcdef"
+        seq = Sequence(s, metadata={'id': 'id11', 'description': 'dsc11'})
+
+        eseq = Sequence("13579bdf",
+                        metadata={'id': 'id11', 'description': 'dsc11'})
+
+        self.assertEqual(seq[np.array([False, True] * 8)], eseq)
+
+    def test_getitem_with_invalid(self):
+        seq = Sequence("123456",
+                       metadata={'id': 'idm', 'description': 'description'},
+                       positional_metadata={'quality': [1, 2, 3, 4, 5, 6]})
+
+        with self.assertRaises(IndexError):
+            seq['not an index']
+
+        with self.assertRaises(IndexError):
+            seq[['1', '2']]
+
+        with self.assertRaises(IndexError):
+            seq[[1, slice(1, 2), 'a']]
+
+        with self.assertRaises(IndexError):
+            seq[[1, slice(1, 2), True]]
+
+        with self.assertRaises(IndexError):
+            seq[True]
+
+        with self.assertRaises(IndexError):
+            seq[np.array([True, False])]
+
+        with self.assertRaises(IndexError):
+            seq[999]
+
+        with self.assertRaises(IndexError):
+            seq[0, 0, 999]
+
+        # numpy 1.8.1 and 1.9.2 raise different error types
+        # (ValueError, IndexError).
+        with self.assertRaises(Exception):
+            seq[100 * [True, False, True]]
+
+    def test_getitem_empty_positional_metadata(self):
+        seq = Sequence('ACGT')
+        seq.positional_metadata  # This will create empty positional_metadata
+        self.assertEqual(Sequence('A'), seq[0])
+
+    def test_len(self):
+        self.assertEqual(len(Sequence("")), 0)
+        self.assertEqual(len(Sequence("a")), 1)
+        self.assertEqual(len(Sequence("abcdef")), 6)
+
+    def test_nonzero(self):
+        # blank
+        self.assertFalse(Sequence(""))
+        self.assertFalse(Sequence("",
+                                  metadata={'id': 'foo'},
+                                  positional_metadata={'quality': range(0)}))
+        # single
+        self.assertTrue(Sequence("A"))
+        self.assertTrue(Sequence("A",
+                                 metadata={'id': 'foo'},
+                                 positional_metadata={'quality': range(1)}))
+        # multi
+        self.assertTrue(Sequence("ACGT"))
+        self.assertTrue(Sequence("ACGT",
+                                 metadata={'id': 'foo'},
+                                 positional_metadata={'quality': range(4)}))
+
+    def test_contains(self):
+        seq = Sequence("#@ACGT,24.13**02")
+        tested = 0
+        for c in self.sequence_kinds:
+            tested += 1
+            self.assertTrue(c(',24') in seq)
+            self.assertTrue(c('*') in seq)
+            self.assertTrue(c('') in seq)
+
+            self.assertFalse(c("$") in seq)
+            self.assertFalse(c("AGT") in seq)
+
+        self.assertEqual(tested, 4)
+
+    def test_contains_sequence_subclass(self):
         with self.assertRaises(TypeError):
-            self.b1['1']
+            SequenceSubclass("A") in Sequence("AAA")
 
-    def test_getitem_out_of_range(self):
-        # seq with quality
-        with self.assertRaises(IndexError):
-            self.b1[42]
-        with self.assertRaises(IndexError):
-            self.b1[[1, 0, 23, 3]]
-
-        # seq without quality
-        with self.assertRaises(IndexError):
-            self.b2[43]
-        with self.assertRaises(IndexError):
-            self.b2[[2, 3, 22, 1]]
+        self.assertTrue(SequenceSubclass("A").values in Sequence("AAA"))
 
     def test_hash(self):
-        self.assertTrue(isinstance(hash(self.b1), int))
+        with self.assertRaises(TypeError):
+            hash(Sequence("ABCDEFG"))
+        self.assertNotIsInstance(Sequence("ABCDEFG"), Hashable)
 
-    def test_iter(self):
-        b1_iter = iter(self.b1)
-        for actual, expected in zip(b1_iter, "GATTACA"):
-            self.assertEqual(actual, expected)
+    def test_iter_has_positional_metadata(self):
+        tested = False
+        seq = Sequence("0123456789", metadata={'id': 'a', 'desc': 'b'},
+                       positional_metadata={'qual': np.arange(10)})
+        for i, s in enumerate(seq):
+            tested = True
+            self.assertEqual(s, Sequence(str(i),
+                                         metadata={'id': 'a', 'desc': 'b'},
+                                         positional_metadata={'qual': [i]}))
+        self.assertTrue(tested)
 
-        self.assertRaises(StopIteration, lambda: next(b1_iter))
+    def test_iter_no_positional_metadata(self):
+        tested = False
+        seq = Sequence("0123456789", metadata={'id': 'a', 'desc': 'b'})
+        for i, s in enumerate(seq):
+            tested = True
+            self.assertEqual(s, Sequence(str(i),
+                                         metadata={'id': 'a', 'desc': 'b'}))
+        self.assertTrue(tested)
 
-    def _compare_k_words_results(self, observed, expected):
-        for obs, exp in zip_longest(observed, expected, fillvalue=None):
-            # use equals to compare quality, id, description, sequence, and
-            # type
-            self.assertTrue(obs.equals(exp))
+    def test_reversed_has_positional_metadata(self):
+        tested = False
+        seq = Sequence("0123456789", metadata={'id': 'a', 'desc': 'b'},
+                       positional_metadata={'qual': np.arange(10)})
+        for i, s in enumerate(reversed(seq)):
+            tested = True
+            self.assertEqual(s, Sequence(str(9 - i),
+                                         metadata={'id': 'a', 'desc': 'b'},
+                                         positional_metadata={'qual':
+                                                              [9 - i]}))
+        self.assertTrue(tested)
 
-    def test_k_words_overlapping_true(self):
-        expected = [
-            BiologicalSequence('G', quality=[0]),
-            BiologicalSequence('A', quality=[1]),
-            BiologicalSequence('T', quality=[2]),
-            BiologicalSequence('T', quality=[3]),
-            BiologicalSequence('A', quality=[4]),
-            BiologicalSequence('C', quality=[5]),
-            BiologicalSequence('A', quality=[6])
-        ]
-        self._compare_k_words_results(
-            self.b1.k_words(1, overlapping=True), expected)
+    def test_reversed_no_positional_metadata(self):
+        tested = False
+        seq = Sequence("0123456789", metadata={'id': 'a', 'desc': 'b'})
+        for i, s in enumerate(reversed(seq)):
+            tested = True
+            self.assertEqual(s, Sequence(str(9 - i),
+                                         metadata={'id': 'a', 'desc': 'b'}))
+        self.assertTrue(tested)
 
-        expected = [
-            BiologicalSequence('GA', quality=[0, 1]),
-            BiologicalSequence('AT', quality=[1, 2]),
-            BiologicalSequence('TT', quality=[2, 3]),
-            BiologicalSequence('TA', quality=[3, 4]),
-            BiologicalSequence('AC', quality=[4, 5]),
-            BiologicalSequence('CA', quality=[5, 6])
-        ]
-        self._compare_k_words_results(
-            self.b1.k_words(2, overlapping=True), expected)
+    def test_repr(self):
+        # basic sanity checks -- more extensive testing of formatting and
+        # special cases is performed in SequenceReprDoctests below. here we
+        # only test that pieces of the repr are present. these tests also
+        # exercise coverage in case doctests stop counting towards coverage in
+        # the future
 
-        expected = [
-            BiologicalSequence('GAT', quality=[0, 1, 2]),
-            BiologicalSequence('ATT', quality=[1, 2, 3]),
-            BiologicalSequence('TTA', quality=[2, 3, 4]),
-            BiologicalSequence('TAC', quality=[3, 4, 5]),
-            BiologicalSequence('ACA', quality=[4, 5, 6])
-        ]
-        self._compare_k_words_results(
-            self.b1.k_words(3, overlapping=True), expected)
+        # minimal
+        obs = repr(Sequence(''))
+        self.assertEqual(obs.count('\n'), 4)
+        self.assertTrue(obs.startswith('Sequence'))
+        self.assertIn('length: 0', obs)
+        self.assertTrue(obs.endswith('-'))
 
-        expected = [
-            BiologicalSequence('GATTACA', quality=[0, 1, 2, 3, 4, 5, 6])
-        ]
-        self._compare_k_words_results(
-            self.b1.k_words(7, overlapping=True), expected)
+        # no metadata
+        obs = repr(Sequence('ACGT'))
+        self.assertEqual(obs.count('\n'), 5)
+        self.assertTrue(obs.startswith('Sequence'))
+        self.assertIn('length: 4', obs)
+        self.assertTrue(obs.endswith('0 ACGT'))
 
-        self.assertEqual(list(self.b1.k_words(8, overlapping=True)), [])
+        # metadata and positional metadata of mixed types
+        obs = repr(
+            Sequence(
+                'ACGT',
+                metadata={'foo': 'bar', b'bar': 33.33, None: True, False: {},
+                          (1, 2): 3, 'acb' * 100: "'", 10: 11},
+                positional_metadata={'foo': range(4),
+                                     42: ['a', 'b', [], 'c']}))
+        self.assertEqual(obs.count('\n'), 16)
+        self.assertTrue(obs.startswith('Sequence'))
+        self.assertIn('None: True', obs)
+        self.assertIn('\'foo\': \'bar\'', obs)
+        self.assertIn('42: <dtype: object>', obs)
+        self.assertIn('\'foo\': <dtype: int64>', obs)
+        self.assertIn('length: 4', obs)
+        self.assertTrue(obs.endswith('0 ACGT'))
 
-    def test_k_words_overlapping_false(self):
-        expected = [
-            BiologicalSequence('G', quality=[0]),
-            BiologicalSequence('A', quality=[1]),
-            BiologicalSequence('T', quality=[2]),
-            BiologicalSequence('T', quality=[3]),
-            BiologicalSequence('A', quality=[4]),
-            BiologicalSequence('C', quality=[5]),
-            BiologicalSequence('A', quality=[6])
-        ]
-        self._compare_k_words_results(
-            self.b1.k_words(1, overlapping=False), expected)
+        # sequence spanning > 5 lines
+        obs = repr(Sequence('A' * 301))
+        self.assertEqual(obs.count('\n'), 9)
+        self.assertTrue(obs.startswith('Sequence'))
+        self.assertIn('length: 301', obs)
+        self.assertIn('...', obs)
+        self.assertTrue(obs.endswith('300 A'))
 
-        expected = [
-            BiologicalSequence('GA', quality=[0, 1]),
-            BiologicalSequence('TT', quality=[2, 3]),
-            BiologicalSequence('AC', quality=[4, 5])
-        ]
-        self._compare_k_words_results(
-            self.b1.k_words(2, overlapping=False), expected)
+    def test_str(self):
+        self.assertEqual(str(Sequence("GATTACA")), "GATTACA")
+        self.assertEqual(str(Sequence("ACCGGTACC")), "ACCGGTACC")
+        self.assertEqual(str(Sequence("GREG")), "GREG")
+        self.assertEqual(
+            str(Sequence("ABC",
+                         positional_metadata={'quality': [1, 2, 3]})),
+            "ABC")
+        self.assertIs(type(str(Sequence("A"))), str)
 
-        expected = [
-            BiologicalSequence('GAT', quality=[0, 1, 2]),
-            BiologicalSequence('TAC', quality=[3, 4, 5])
-        ]
-        self._compare_k_words_results(
-            self.b1.k_words(3, overlapping=False), expected)
+    def test_count(self):
+        def construct_char_array(s):
+            return np.fromstring(s, dtype='|S1')
 
-        expected = [
-            BiologicalSequence('GATTACA', quality=[0, 1, 2, 3, 4, 5, 6])
-        ]
-        self._compare_k_words_results(
-            self.b1.k_words(7, overlapping=False), expected)
+        def construct_uint8_array(s):
+            return np.fromstring(s, dtype=np.uint8)
 
-        self.assertEqual(list(self.b1.k_words(8, overlapping=False)), [])
+        seq = Sequence("1234567899876555")
+        tested = 0
+        for c in self.sequence_kinds:
+            tested += 1
+            self.assertEqual(seq.count(c('4')), 1)
+            self.assertEqual(seq.count(c('8')), 2)
+            self.assertEqual(seq.count(c('5')), 4)
+            self.assertEqual(seq.count(c('555')), 1)
+            self.assertEqual(seq.count(c('555'), 0, 4), 0)
+            self.assertEqual(seq.count(c('555'), start=0, end=4), 0)
+            self.assertEqual(seq.count(c('5'), start=10), 3)
+            self.assertEqual(seq.count(c('5'), end=10), 1)
 
-    def test_k_words_invalid_k(self):
+            with self.assertRaises(ValueError):
+                seq.count(c(''))
+
+        self.assertEqual(tested, 4)
+
+    def test_count_on_subclass(self):
+        with self.assertRaises(TypeError) as cm:
+            Sequence("abcd").count(SequenceSubclass("a"))
+
+        self.assertIn("Sequence", str(cm.exception))
+        self.assertIn("SequenceSubclass", str(cm.exception))
+
+    def test_replace_sanity(self):
+        seq = Sequence('AAGCATGCCCTTTACATTTG')
+        index = self._make_index('10011011001111110111')
+        obs = seq.replace(index, '_')
+        exp = Sequence('_AG__T__CC______T___')
+        self.assertEqual(obs, exp)
+
+    def test_replace_index_array(self):
+        seq = Sequence('TCGGGTGTTGTGCAACCACC')
+        for _type in list, tuple, np.array, pd.Series:
+            index = _type([0, 2, 5, 8, 9])
+            obs = seq.replace(index, '-')
+            exp = Sequence('-C-GG-GT--TGCAACCACC')
+            self.assertEqual(obs, exp)
+
+    def test_replace_iterable_slices(self):
+        seq = Sequence('CATTATGGACCCAGCGTGCC')
+        slices = (slice(0, 5), slice(8, 12), slice(15, 17))
+        mixed_slices = (0, 1, 2, 3, 4, slice(8, 12), 15, 16)
+        for _type in (lambda x: x, list, tuple, lambda x: np.array(tuple(x)),
+                      lambda x: pd.Series(tuple(x))):
+            index = (_type(slices), _type(mixed_slices))
+            obs_slices = seq.replace(index[0], '-')
+            obs_mixed = seq.replace(index[1], '-')
+            exp = Sequence('-----TGG----AGC--GCC')
+            self.assertEqual(obs_slices, exp)
+            self.assertEqual(obs_mixed, exp)
+
+    def test_replace_index_in_positional_metadata(self):
+        positional_metadata = {'where': self._make_index('001110110'
+                                                         '10001110000')}
+        seq = Sequence('AAGATTGATACCACAGTTGT',
+                       positional_metadata=positional_metadata)
+        obs = seq.replace('where', '-')
+        exp = Sequence('AA---T--T-CCA---TTGT',
+                       positional_metadata=positional_metadata)
+        self.assertEqual(obs, exp)
+
+    def test_replace_does_not_mutate_original(self):
+        seq = Sequence('ATCG')
+        index = self._make_index('0011')
+        seq.replace(index, '-')
+        obs = seq
+        exp = Sequence('ATCG')
+        self.assertEqual(obs, exp)
+
+    def test_replace_with_metadata(self):
+        seq = Sequence('GCACGGCAAGAAGCGCCCCA',
+                       metadata={'NM': 'Kestrel Gorlick'},
+                       positional_metadata={'diff':
+                                            list('01100001110010001100')})
+        seq.interval_metadata.add([(0, 1)], metadata={'gene': 'sagA'})
+
+        index = self._make_index('01100001110010001100')
+        obs = seq.replace(index, '-')
+        exp = Sequence('G--CGGC---AA-CGC--CA',
+                       metadata={'NM': 'Kestrel Gorlick'},
+                       positional_metadata={'diff':
+                                            list('01100001110010001100')})
+        exp.interval_metadata.add([(0, 1)], metadata={'gene': 'sagA'})
+
+        self.assertEqual(obs, exp)
+
+    def test_replace_with_subclass(self):
+        seq = DNA('CGACAACCGATGTGCTGTAA')
+        index = self._make_index('10101000111111110011')
+        obs = seq.replace(index, '-')
+        exp = DNA('-G-C-ACC--------GT--')
+        self.assertEqual(obs, exp)
+
+    def test_replace_with_bytes(self):
+        seq = Sequence('ABC123')
+
+        obs = seq.replace([1, 3, 5], b'*')
+
+        self.assertEqual(obs, Sequence('A*C*2*'))
+
+    def test_replace_invalid_char_for_type_error(self):
+        seq = DNA('TAAACGGAACGCTACGTCTG')
+        index = self._make_index('01000001101011001001')
+        with self.assertRaisesRegex(ValueError, "Invalid character.*'F'"):
+            seq.replace(index, 'F')
+
+    def test_replace_invalid_char_error(self):
+        seq = Sequence('GGGAGCTAGA')
+        index = self._make_index('1000101110')
+        with self.assertRaisesRegex(UnicodeEncodeError,
+                                    "can't encode character.*not in "
+                                    "range\(128\)"):
+            seq.replace(index, '\uFFFF')
+
+    def test_replace_non_single_character_error(self):
+        seq = Sequence('CCGAACTGTC')
+        index = self._make_index('1100110011')
+        with self.assertRaisesRegex(TypeError, 'string of length 2 found'):
+            seq.replace(index, 'AB')
+
+    def _make_index(self, bools):
+        return [bool(int(char)) for char in bools]
+
+    def test_lowercase_mungeable_key(self):
+        # NOTE: This test relies on Sequence._munge_to_index_array working
+        # properly. If the internal implementation of the lowercase method
+        # changes to no longer use _munge_to_index_array, this test may need
+        # to be updated to cover cases currently covered by
+        # _munge_to_index_array
+        self.assertEqual('AAAAaaaa', self.lowercase_seq.lowercase('key'))
+
+    def test_lowercase_array_key(self):
+        # NOTE: This test relies on Sequence._munge_to_index_array working
+        # properly. If the internal implementation of the lowercase method
+        # changes to no longer use _munge_to_index_array, this test may need
+        # to be updated to cover cases currently covered by
+        # _munge_to_index_array
+        self.assertEqual('aaAAaaaa',
+                         self.lowercase_seq.lowercase(
+                             np.array([True, True, False, False, True, True,
+                                       True, True])))
+        self.assertEqual('AaAAaAAA',
+                         self.lowercase_seq.lowercase([1, 4]))
+
+    def test_matches(self):
+        tested = 0
+        for constructor in self.sequence_kinds:
+            tested += 1
+            seq1 = Sequence("AACCEEGG")
+            seq2 = constructor("ABCDEFGH")
+            expected = np.array([True, False] * 4)
+            npt.assert_equal(seq1.matches(seq2), expected)
+
+        self.assertEqual(tested, 4)
+
+    def test_matches_on_subclass(self):
+        seq1 = Sequence("AACCEEGG")
+        seq2 = SequenceSubclass("ABCDEFGH")
+
+        with self.assertRaises(TypeError):
+            seq1.matches(seq2)
+
+    def test_matches_unequal_length(self):
+        seq1 = Sequence("AACCEEGG")
+        seq2 = Sequence("TOOLONGTOCOMPARE")
+
         with self.assertRaises(ValueError):
-            list(self.b1.k_words(0))
+            seq1.matches(seq2)
+
+    def test_mismatches(self):
+        tested = 0
+        for constructor in self.sequence_kinds:
+            tested += 1
+            seq1 = Sequence("AACCEEGG")
+            seq2 = constructor("ABCDEFGH")
+            expected = np.array([False, True] * 4)
+            npt.assert_equal(seq1.mismatches(seq2), expected)
+
+        self.assertEqual(tested, 4)
+
+    def test_mismatches_on_subclass(self):
+        seq1 = Sequence("AACCEEGG")
+        seq2 = SequenceSubclass("ABCDEFGH")
+
+        with self.assertRaises(TypeError):
+            seq1.mismatches(seq2)
+
+    def test_mismatches_unequal_length(self):
+        seq1 = Sequence("AACCEEGG")
+        seq2 = Sequence("TOOLONGTOCOMPARE")
 
         with self.assertRaises(ValueError):
-            list(self.b1.k_words(-42))
+            seq1.mismatches(seq2)
 
-    def test_k_words_different_sequences(self):
+    def test_mismatch_frequency(self):
+        seq1 = Sequence("AACCEEGG")
+        seq2 = Sequence("ABCDEFGH")
+        seq3 = Sequence("TTTTTTTT")
+
+        self.assertIs(type(seq1.mismatch_frequency(seq1)), int)
+        self.assertEqual(seq1.mismatch_frequency(seq1), 0)
+        self.assertEqual(seq1.mismatch_frequency(seq2), 4)
+        self.assertEqual(seq1.mismatch_frequency(seq3), 8)
+
+    def test_mismatch_frequency_relative(self):
+        seq1 = Sequence("AACCEEGG")
+        seq2 = Sequence("ABCDEFGH")
+        seq3 = Sequence("TTTTTTTT")
+
+        self.assertIs(type(seq1.mismatch_frequency(seq1, relative=True)),
+                      float)
+        self.assertEqual(seq1.mismatch_frequency(seq1, relative=True), 0.0)
+        self.assertEqual(seq1.mismatch_frequency(seq2, relative=True), 0.5)
+        self.assertEqual(seq1.mismatch_frequency(seq3, relative=True), 1.0)
+
+    def test_mismatch_frequency_unequal_length(self):
+        seq1 = Sequence("AACCEEGG")
+        seq2 = Sequence("TOOLONGTOCOMPARE")
+
+        with self.assertRaises(ValueError):
+            seq1.mismatch_frequency(seq2)
+
+    def test_mismatch_frequence_on_subclass(self):
+        seq1 = Sequence("AACCEEGG")
+        seq2 = SequenceSubclass("ABCDEFGH")
+
+        with self.assertRaises(TypeError):
+            seq1.mismatch_frequency(seq2)
+
+    def test_match_frequency(self):
+        seq1 = Sequence("AACCEEGG")
+        seq2 = Sequence("ABCDEFGH")
+        seq3 = Sequence("TTTTTTTT")
+
+        self.assertIs(type(seq1.match_frequency(seq1)), int)
+        self.assertEqual(seq1.match_frequency(seq1), 8)
+        self.assertEqual(seq1.match_frequency(seq2), 4)
+        self.assertEqual(seq1.match_frequency(seq3), 0)
+
+    def test_match_frequency_relative(self):
+        seq1 = Sequence("AACCEEGG")
+        seq2 = Sequence("ABCDEFGH")
+        seq3 = Sequence("TTTTTTTT")
+
+        self.assertIs(type(seq1.match_frequency(seq1, relative=True)),
+                      float)
+        self.assertEqual(seq1.match_frequency(seq1, relative=True), 1.0)
+        self.assertEqual(seq1.match_frequency(seq2, relative=True), 0.5)
+        self.assertEqual(seq1.match_frequency(seq3, relative=True), 0.0)
+
+    def test_match_frequency_unequal_length(self):
+        seq1 = Sequence("AACCEEGG")
+        seq2 = Sequence("TOOLONGTOCOMPARE")
+
+        with self.assertRaises(ValueError):
+            seq1.match_frequency(seq2)
+
+    def test_match_frequency_on_subclass(self):
+        seq1 = Sequence("AACCEEGG")
+        seq2 = SequenceSubclass("ABCDEFGH")
+
+        with self.assertRaises(TypeError):
+            seq1.match_frequency(seq2)
+
+    def test_index(self):
+        tested = 0
+        for c in self.sequence_kinds:
+            tested += 1
+            seq = Sequence("ABCDEFG@@ABCDFOO")
+            self.assertEqual(seq.index(c("A")), 0)
+            self.assertEqual(seq.index(c("@")), 7)
+            self.assertEqual(seq.index(c("@@")), 7)
+
+            with self.assertRaises(ValueError):
+                seq.index("A", start=1, end=5)
+
+        self.assertEqual(tested, 4)
+
+    def test_index_on_subclass(self):
+        with self.assertRaises(TypeError):
+            Sequence("ABCDEFG").index(SequenceSubclass("A"))
+
+        self.assertEqual(
+            SequenceSubclass("ABCDEFG").index(SequenceSubclass("A")), 0)
+
+    def test_frequencies_empty_sequence(self):
+        seq = Sequence('')
+
+        self.assertEqual(seq.frequencies(), {})
+        self.assertEqual(seq.frequencies(relative=True), {})
+
+        self.assertEqual(seq.frequencies(chars=set()), {})
+        self.assertEqual(seq.frequencies(chars=set(), relative=True), {})
+
+        self.assertEqual(seq.frequencies(chars={'a', 'b'}), {'a': 0, 'b': 0})
+
+        # use npt.assert_equal to explicitly handle nan comparisons
+        npt.assert_equal(seq.frequencies(chars={'a', 'b'}, relative=True),
+                         {'a': np.nan, 'b': np.nan})
+
+    def test_frequencies_observed_chars(self):
+        seq = Sequence('x')
+        self.assertEqual(seq.frequencies(), {'x': 1})
+        self.assertEqual(seq.frequencies(relative=True), {'x': 1.0})
+
+        seq = Sequence('xYz')
+        self.assertEqual(seq.frequencies(), {'x': 1, 'Y': 1, 'z': 1})
+        self.assertEqual(seq.frequencies(relative=True),
+                         {'x': 1/3, 'Y': 1/3, 'z': 1/3})
+
+        seq = Sequence('zzz')
+        self.assertEqual(seq.frequencies(), {'z': 3})
+        self.assertEqual(seq.frequencies(relative=True), {'z': 1.0})
+
+        seq = Sequence('xYzxxZz')
+        self.assertEqual(seq.frequencies(), {'x': 3, 'Y': 1, 'Z': 1, 'z': 2})
+        self.assertEqual(seq.frequencies(relative=True),
+                         {'x': 3/7, 'Y': 1/7, 'Z': 1/7, 'z': 2/7})
+
+        seq = Sequence('\t   ')
+        self.assertEqual(seq.frequencies(), {'\t': 1, ' ': 3})
+        self.assertEqual(seq.frequencies(relative=True), {'\t': 1/4, ' ': 3/4})
+
+        seq = Sequence('aabbcc', metadata={'foo': 'bar'},
+                       positional_metadata={'foo': range(6)})
+        self.assertEqual(seq.frequencies(), {'a': 2, 'b': 2, 'c': 2})
+        self.assertEqual(seq.frequencies(relative=True),
+                         {'a': 2/6, 'b': 2/6, 'c': 2/6})
+
+    def test_frequencies_specified_chars(self):
+        seq = Sequence('abcbca')
+
+        self.assertEqual(seq.frequencies(chars=set()), {})
+        self.assertEqual(seq.frequencies(chars=set(), relative=True), {})
+
+        self.assertEqual(seq.frequencies(chars='a'), {'a': 2})
+        self.assertEqual(seq.frequencies(chars='a', relative=True), {'a': 2/6})
+
+        self.assertEqual(seq.frequencies(chars={'a'}), {'a': 2})
+        self.assertEqual(seq.frequencies(chars={'a'}, relative=True),
+                         {'a': 2/6})
+
+        self.assertEqual(seq.frequencies(chars={'a', 'b'}), {'a': 2, 'b': 2})
+        self.assertEqual(seq.frequencies(chars={'a', 'b'}, relative=True),
+                         {'a': 2/6, 'b': 2/6})
+
+        self.assertEqual(seq.frequencies(chars={'a', 'b', 'd'}),
+                         {'a': 2, 'b': 2, 'd': 0})
+        self.assertEqual(seq.frequencies(chars={'a', 'b', 'd'}, relative=True),
+                         {'a': 2/6, 'b': 2/6, 'd': 0.0})
+
+        self.assertEqual(seq.frequencies(chars={'x', 'y', 'z'}),
+                         {'x': 0, 'y': 0, 'z': 0})
+        self.assertEqual(seq.frequencies(chars={'x', 'y', 'z'}, relative=True),
+                         {'x': 0.0, 'y': 0.0, 'z': 0.0})
+
+    def test_frequencies_chars_varied_type(self):
+        seq = Sequence('zabczzzabcz')
+
+        # single character case (shortcut)
+        chars = b'z'
+        self.assertEqual(seq.frequencies(chars=chars), {b'z': 5})
+        self.assertEqual(seq.frequencies(chars=chars, relative=True),
+                         {b'z': 5/11})
+
+        chars = 'z'
+        self.assertEqual(seq.frequencies(chars=chars), {'z': 5})
+        self.assertEqual(seq.frequencies(chars=chars, relative=True),
+                         {'z': 5/11})
+
+        chars = np.fromstring('z', dtype='|S1')[0]
+        self.assertEqual(seq.frequencies(chars=chars), {b'z': 5})
+        self.assertEqual(seq.frequencies(chars=chars, relative=True),
+                         {b'z': 5/11})
+
+        # set of characters, some present, some not
+        chars = {b'x', b'z'}
+        self.assertEqual(seq.frequencies(chars=chars), {b'x': 0, b'z': 5})
+        self.assertEqual(seq.frequencies(chars=chars, relative=True),
+                         {b'x': 0.0, b'z': 5/11})
+
+        chars = {'x', 'z'}
+        self.assertEqual(seq.frequencies(chars=chars), {'x': 0, 'z': 5})
+        self.assertEqual(seq.frequencies(chars=chars, relative=True),
+                         {'x': 0.0, 'z': 5/11})
+
+        chars = {
+            np.fromstring('x', dtype='|S1')[0],
+            np.fromstring('z', dtype='|S1')[0]
+        }
+        self.assertEqual(seq.frequencies(chars=chars), {b'x': 0, b'z': 5})
+        self.assertEqual(seq.frequencies(chars=chars, relative=True),
+                         {b'x': 0.0, b'z': 5/11})
+
+    def test_frequencies_equivalent_to_kmer_frequencies_k_of_1(self):
+        seq = Sequence('abcabc')
+
+        exp = {'a': 2, 'b': 2, 'c': 2}
+        self.assertEqual(seq.frequencies(chars=None), exp)
+        self.assertEqual(seq.kmer_frequencies(k=1), exp)
+
+        exp = {'a': 2/6, 'b': 2/6, 'c': 2/6}
+        self.assertEqual(seq.frequencies(chars=None, relative=True), exp)
+        self.assertEqual(seq.kmer_frequencies(k=1, relative=True), exp)
+
+    def test_frequencies_passing_observed_chars_equivalent_to_default(self):
+        seq = Sequence('abcabc')
+
+        exp = {'a': 2, 'b': 2, 'c': 2}
+        self.assertEqual(seq.frequencies(chars=None), exp)
+        self.assertEqual(seq.frequencies(chars=seq.observed_chars), exp)
+
+        exp = {'a': 2/6, 'b': 2/6, 'c': 2/6}
+        self.assertEqual(seq.frequencies(chars=None, relative=True), exp)
+        self.assertEqual(
+            seq.frequencies(chars=seq.observed_chars, relative=True),
+            exp)
+
+    def test_frequencies_invalid_chars(self):
+        seq = Sequence('abcabc')
+
+        with self.assertRaisesRegex(ValueError, '0 characters'):
+            seq.frequencies(chars='')
+
+        with self.assertRaisesRegex(ValueError, '0 characters'):
+            seq.frequencies(chars={''})
+
+        with self.assertRaisesRegex(ValueError, '2 characters'):
+            seq.frequencies(chars='ab')
+
+        with self.assertRaisesRegex(ValueError, '2 characters'):
+            seq.frequencies(chars={'b', 'ab'})
+
+        with self.assertRaisesRegex(TypeError, 'string.*NoneType'):
+            seq.frequencies(chars={'a', None})
+
+        with self.assertRaisesRegex(ValueError, 'outside the range'):
+            seq.frequencies(chars='\u1F30')
+
+        with self.assertRaisesRegex(ValueError, 'outside the range'):
+            seq.frequencies(chars={'c', '\u1F30'})
+
+        with self.assertRaisesRegex(TypeError, 'set.*int'):
+            seq.frequencies(chars=42)
+
+    def _compare_kmers_results(self, observed, expected):
+        for obs, exp in itertools.zip_longest(observed, expected,
+                                              fillvalue=None):
+            self.assertEqual(obs, exp)
+
+    def test_iter_kmers(self):
+        seq = Sequence('GATTACA', positional_metadata={'quality': range(7)})
+
         expected = [
-            BiologicalSequence('HE.', quality=[0, 1, 2], id='hello',
-                               description='gapped hello'),
-            BiologicalSequence('.--', quality=[3, 4, 5], id='hello',
-                               description='gapped hello'),
-            BiologicalSequence('..L', quality=[6, 7, 8], id='hello',
-                               description='gapped hello')
+            Sequence('G', positional_metadata={'quality': [0]}),
+            Sequence('A', positional_metadata={'quality': [1]}),
+            Sequence('T', positional_metadata={'quality': [2]}),
+            Sequence('T', positional_metadata={'quality': [3]}),
+            Sequence('A', positional_metadata={'quality': [4]}),
+            Sequence('C', positional_metadata={'quality': [5]}),
+            Sequence('A', positional_metadata={'quality': [6]})
         ]
-        self._compare_k_words_results(
-            self.b8.k_words(3, overlapping=False), expected)
+        self._compare_kmers_results(
+            seq.iter_kmers(1, overlap=False), expected)
 
-        b = BiologicalSequence('')
-        self.assertEqual(list(b.k_words(3)), [])
+        expected = [
+            Sequence('GA', positional_metadata={'quality': [0, 1]}),
+            Sequence('TT', positional_metadata={'quality': [2, 3]}),
+            Sequence('AC', positional_metadata={'quality': [4, 5]})
+        ]
+        self._compare_kmers_results(
+            seq.iter_kmers(2, overlap=False), expected)
 
-    def test_k_word_counts(self):
-        # overlapping = True
-        expected = Counter('GATTACA')
-        self.assertEqual(self.b1.k_word_counts(1, overlapping=True),
-                         expected)
-        expected = Counter(['GAT', 'ATT', 'TTA', 'TAC', 'ACA'])
-        self.assertEqual(self.b1.k_word_counts(3, overlapping=True),
+        expected = [
+            Sequence('GAT', positional_metadata={'quality': [0, 1, 2]}),
+            Sequence('TAC', positional_metadata={'quality': [3, 4, 5]})
+        ]
+        self._compare_kmers_results(
+            seq.iter_kmers(3, overlap=False), expected)
+
+        expected = [
+            Sequence('GATTACA',
+                     positional_metadata={'quality': [0, 1, 2, 3, 4, 5, 6]})
+        ]
+        self._compare_kmers_results(
+            seq.iter_kmers(7, overlap=False), expected)
+
+        expected = []
+        self._compare_kmers_results(
+            seq.iter_kmers(8, overlap=False), expected)
+
+        self.assertIs(type(seq.iter_kmers(1)), GeneratorType)
+
+    def test_iter_kmers_no_positional_metadata(self):
+        seq = Sequence('GATTACA')
+
+        expected = [
+            Sequence('G'),
+            Sequence('A'),
+            Sequence('T'),
+            Sequence('T'),
+            Sequence('A'),
+            Sequence('C'),
+            Sequence('A')
+        ]
+        self._compare_kmers_results(
+            seq.iter_kmers(1, overlap=False), expected)
+
+        expected = [
+            Sequence('GA'),
+            Sequence('TT'),
+            Sequence('AC')
+        ]
+        self._compare_kmers_results(
+            seq.iter_kmers(2, overlap=False), expected)
+
+        expected = [
+            Sequence('GAT'),
+            Sequence('TAC')
+        ]
+        self._compare_kmers_results(
+            seq.iter_kmers(3, overlap=False), expected)
+
+        expected = [
+            Sequence('GATTACA')
+        ]
+        self._compare_kmers_results(
+            seq.iter_kmers(7, overlap=False), expected)
+
+        expected = []
+        self._compare_kmers_results(
+            seq.iter_kmers(8, overlap=False), expected)
+
+        self.assertIs(type(seq.iter_kmers(1)), GeneratorType)
+
+    def test_iter_kmers_with_overlap(self):
+        seq = Sequence('GATTACA', positional_metadata={'quality': range(7)})
+        expected = [
+            Sequence('G', positional_metadata={'quality': [0]}),
+            Sequence('A', positional_metadata={'quality': [1]}),
+            Sequence('T', positional_metadata={'quality': [2]}),
+            Sequence('T', positional_metadata={'quality': [3]}),
+            Sequence('A', positional_metadata={'quality': [4]}),
+            Sequence('C', positional_metadata={'quality': [5]}),
+            Sequence('A', positional_metadata={'quality': [6]})
+        ]
+        self._compare_kmers_results(
+            seq.iter_kmers(1, overlap=True), expected)
+
+        expected = [
+            Sequence('GA', positional_metadata={'quality': [0, 1]}),
+            Sequence('AT', positional_metadata={'quality': [1, 2]}),
+            Sequence('TT', positional_metadata={'quality': [2, 3]}),
+            Sequence('TA', positional_metadata={'quality': [3, 4]}),
+            Sequence('AC', positional_metadata={'quality': [4, 5]}),
+            Sequence('CA', positional_metadata={'quality': [5, 6]})
+        ]
+        self._compare_kmers_results(
+            seq.iter_kmers(2, overlap=True), expected)
+
+        expected = [
+            Sequence('GAT', positional_metadata={'quality': [0, 1, 2]}),
+            Sequence('ATT', positional_metadata={'quality': [1, 2, 3]}),
+            Sequence('TTA', positional_metadata={'quality': [2, 3, 4]}),
+            Sequence('TAC', positional_metadata={'quality': [3, 4, 5]}),
+            Sequence('ACA', positional_metadata={'quality': [4, 5, 6]})
+        ]
+        self._compare_kmers_results(
+            seq.iter_kmers(3, overlap=True), expected)
+
+        expected = [
+            Sequence('GATTACA',
+                     positional_metadata={'quality': [0, 1, 2, 3, 4, 5, 6]})
+        ]
+        self._compare_kmers_results(
+            seq.iter_kmers(7, overlap=True), expected)
+
+        expected = []
+        self._compare_kmers_results(
+            seq.iter_kmers(8, overlap=True), expected)
+
+        self.assertIs(type(seq.iter_kmers(1)), GeneratorType)
+
+    def test_iter_kmers_with_overlap_no_positional_metadata(self):
+        seq = Sequence('GATTACA')
+        expected = [
+            Sequence('G'),
+            Sequence('A'),
+            Sequence('T'),
+            Sequence('T'),
+            Sequence('A'),
+            Sequence('C'),
+            Sequence('A')
+        ]
+        self._compare_kmers_results(
+            seq.iter_kmers(1, overlap=True), expected)
+
+        expected = [
+            Sequence('GA'),
+            Sequence('AT'),
+            Sequence('TT'),
+            Sequence('TA'),
+            Sequence('AC'),
+            Sequence('CA')
+        ]
+        self._compare_kmers_results(
+            seq.iter_kmers(2, overlap=True), expected)
+
+        expected = [
+            Sequence('GAT'),
+            Sequence('ATT'),
+            Sequence('TTA'),
+            Sequence('TAC'),
+            Sequence('ACA')
+        ]
+        self._compare_kmers_results(
+            seq.iter_kmers(3, overlap=True), expected)
+
+        expected = [
+            Sequence('GATTACA')
+        ]
+        self._compare_kmers_results(
+            seq.iter_kmers(7, overlap=True), expected)
+
+        expected = []
+        self._compare_kmers_results(
+            seq.iter_kmers(8, overlap=True), expected)
+
+        self.assertIs(type(seq.iter_kmers(1)), GeneratorType)
+
+    def test_iter_kmers_invalid_k(self):
+        seq = Sequence('GATTACA', positional_metadata={'quality': range(7)})
+
+        with self.assertRaises(ValueError):
+            list(seq.iter_kmers(0))
+
+        with self.assertRaises(ValueError):
+            list(seq.iter_kmers(-42))
+
+    def test_iter_kmers_invalid_k_no_positional_metadata(self):
+        seq = Sequence('GATTACA')
+
+        with self.assertRaises(ValueError):
+            list(seq.iter_kmers(0))
+
+        with self.assertRaises(ValueError):
+            list(seq.iter_kmers(-42))
+
+    def test_iter_kmers_different_sequences(self):
+        seq = Sequence('HE..--..LLO',
+                       metadata={'id': 'hello', 'desc': 'gapped hello'},
+                       positional_metadata={'quality': range(11)})
+        expected = [
+            Sequence('HE.', positional_metadata={'quality': [0, 1, 2]},
+                     metadata={'id': 'hello', 'desc': 'gapped hello'}),
+            Sequence('.--', positional_metadata={'quality': [3, 4, 5]},
+                     metadata={'id': 'hello', 'desc': 'gapped hello'}),
+            Sequence('..L', positional_metadata={'quality': [6, 7, 8]},
+                     metadata={'id': 'hello', 'desc': 'gapped hello'})
+        ]
+        self._compare_kmers_results(seq.iter_kmers(3, overlap=False), expected)
+
+    def test_iter_kmers_different_sequences_no_positional_metadata(self):
+        seq = Sequence('HE..--..LLO',
+                       metadata={'id': 'hello', 'desc': 'gapped hello'})
+        expected = [
+            Sequence('HE.',
+                     metadata={'id': 'hello', 'desc': 'gapped hello'}),
+            Sequence('.--',
+                     metadata={'id': 'hello', 'desc': 'gapped hello'}),
+            Sequence('..L',
+                     metadata={'id': 'hello', 'desc': 'gapped hello'})
+        ]
+        self._compare_kmers_results(seq.iter_kmers(3, overlap=False), expected)
+
+    def test_iter_kmers_empty_sequence(self):
+        seq = Sequence('')
+        expected = []
+        self._compare_kmers_results(seq.iter_kmers(3, overlap=False), expected)
+
+    def test_iter_kmers_empty_sequence_with_positional_metadata(self):
+        seq = Sequence('', positional_metadata={'quality': []})
+        expected = []
+        self._compare_kmers_results(seq.iter_kmers(3, overlap=False), expected)
+
+    def test_kmer_frequencies_empty_sequence(self):
+        seq = Sequence('')
+
+        self.assertEqual(seq.kmer_frequencies(1), {})
+        self.assertEqual(seq.kmer_frequencies(1, overlap=False), {})
+        self.assertEqual(seq.kmer_frequencies(1, relative=True), {})
+        self.assertEqual(seq.kmer_frequencies(1, relative=True, overlap=False),
+                         {})
+
+    def test_kmer_frequencies(self):
+        seq = Sequence('GATTACA', positional_metadata={'quality': range(7)})
+
+        # overlap = True
+        expected = {'G': 1, 'A': 3, 'T': 2, 'C': 1}
+        self.assertEqual(seq.kmer_frequencies(1, overlap=True), expected)
+
+        expected = {'GAT': 1, 'ATT': 1, 'TTA': 1, 'TAC': 1, 'ACA': 1}
+        self.assertEqual(seq.kmer_frequencies(3, overlap=True), expected)
+
+        expected = {}
+        self.assertEqual(seq.kmer_frequencies(8, overlap=True), expected)
+
+        # overlap = False
+        expected = {'GAT': 1, 'TAC': 1}
+        self.assertEqual(seq.kmer_frequencies(3, overlap=False), expected)
+
+        expected = {'GATTACA': 1}
+        self.assertEqual(seq.kmer_frequencies(7, overlap=False), expected)
+
+        expected = {}
+        self.assertEqual(seq.kmer_frequencies(8, overlap=False), expected)
+
+    def test_kmer_frequencies_relative(self):
+        seq = Sequence('GATTACA', positional_metadata={'quality': range(7)})
+
+        # overlap = True
+        expected = {'A': 3/7, 'C': 1/7, 'G': 1/7, 'T': 2/7}
+        self.assertEqual(seq.kmer_frequencies(1, overlap=True, relative=True),
                          expected)
 
-        # overlapping = False
-        expected = Counter(['GAT', 'TAC'])
-        self.assertEqual(self.b1.k_word_counts(3, overlapping=False),
-                         expected)
-        expected = Counter(['GATTACA'])
-        self.assertEqual(self.b1.k_word_counts(7, overlapping=False),
+        expected = {'GAT': 1/5, 'ATT': 1/5, 'TTA': 1/5, 'TAC': 1/5, 'ACA': 1/5}
+        self.assertEqual(seq.kmer_frequencies(3, overlap=True, relative=True),
                          expected)
 
-    def test_k_word_frequencies(self):
-        # overlapping = True
-        expected = defaultdict(float)
-        expected['A'] = 3/7.
-        expected['C'] = 1/7.
-        expected['G'] = 1/7.
-        expected['T'] = 2/7.
-        self.assertEqual(self.b1.k_word_frequencies(1, overlapping=True),
-                         expected)
-        expected = defaultdict(float)
-        expected['GAT'] = 1/5.
-        expected['ATT'] = 1/5.
-        expected['TTA'] = 1/5.
-        expected['TAC'] = 1/5.
-        expected['ACA'] = 1/5.
-        self.assertEqual(self.b1.k_word_frequencies(3, overlapping=True),
+        expected = {}
+        self.assertEqual(seq.kmer_frequencies(8, overlap=True, relative=True),
                          expected)
 
-        # overlapping = False
-        expected = defaultdict(float)
-        expected['GAT'] = 1/2.
-        expected['TAC'] = 1/2.
-        self.assertEqual(self.b1.k_word_frequencies(3, overlapping=False),
-                         expected)
-        expected = defaultdict(float)
-        expected['GATTACA'] = 1.0
-        self.assertEqual(self.b1.k_word_frequencies(7, overlapping=False),
-                         expected)
-        expected = defaultdict(float)
-        empty = BiologicalSequence('')
-        self.assertEqual(empty.k_word_frequencies(1, overlapping=False),
+        # overlap = False
+        expected = {'GAT': 1/2, 'TAC': 1/2}
+        self.assertEqual(seq.kmer_frequencies(3, overlap=False, relative=True),
                          expected)
 
-    def test_k_word_frequencies_floating_point_precision(self):
+        expected = {'GATTACA': 1.0}
+        self.assertEqual(seq.kmer_frequencies(7, overlap=False, relative=True),
+                         expected)
+
+        expected = {}
+        self.assertEqual(seq.kmer_frequencies(8, overlap=False, relative=True),
+                         expected)
+
+    def test_kmer_frequencies_floating_point_precision(self):
         # Test that a sequence having no variation in k-words yields a
         # frequency of exactly 1.0. Note that it is important to use
         # self.assertEqual here instead of self.assertAlmostEqual because we
         # want to test for exactly 1.0. A previous implementation of
-        # BiologicalSequence.k_word_frequencies added (1 / num_words) for each
-        # occurrence of a k-word to compute the frequencies (see
+        # Sequence.kmer_frequencies(relative=True) added (1 / num_words) for
+        # each occurrence of a k-word to compute the frequencies (see
         # https://github.com/biocore/scikit-bio/issues/801). In certain cases,
         # this yielded a frequency slightly less than 1.0 due to roundoff
         # error. The test case here uses a sequence with 10 characters that are
@@ -386,1021 +1894,837 @@ class BiologicalSequenceTests(TestCase):
         # identical), so 1/10 added 10 times yields a number slightly less than
         # 1.0. This occurs because 1/10 cannot be represented exactly as a
         # floating point number.
-        seq = BiologicalSequence('AAAAAAAAAA')
-        self.assertEqual(seq.k_word_frequencies(1),
-                         defaultdict(float, {'A': 1.0}))
+        seq = Sequence('AAAAAAAAAA')
+        self.assertEqual(seq.kmer_frequencies(1, relative=True), {'A': 1.0})
 
-    def test_len(self):
-        self.assertEqual(len(self.b1), 7)
-        self.assertEqual(len(self.b2), 9)
-        self.assertEqual(len(self.b3), 4)
+    def test_find_with_regex(self):
+        seq = Sequence('GATTACA', positional_metadata={'quality': range(7)})
+        pat = re.compile('(T+A)(CA)')
 
-    def test_repr(self):
-        self.assertEqual(repr(self.b1),
-                         "<BiologicalSequence: GATTACA (length: 7)>")
-        self.assertEqual(repr(self.b6),
-                         "<BiologicalSequence: ACGTACGTAC... (length: 12)>")
+        obs = list(seq.find_with_regex(pat))
+        exp = [slice(2, 5), slice(5, 7)]
+        self.assertEqual(obs, exp)
 
-    def test_reversed(self):
-        b1_reversed = reversed(self.b1)
-        for actual, expected in zip(b1_reversed, "ACATTAG"):
-            self.assertEqual(actual, expected)
+        self.assertIs(type(seq.find_with_regex(pat)), GeneratorType)
 
-        self.assertRaises(StopIteration, lambda: next(b1_reversed))
+    def test_find_with_regex_string_as_input(self):
+        seq = Sequence('GATTACA', positional_metadata={'quality': range(7)})
+        pat = '(T+A)(CA)'
 
-    def test_str(self):
-        self.assertEqual(str(self.b1), "GATTACA")
-        self.assertEqual(str(self.b2), "ACCGGTACC")
-        self.assertEqual(str(self.b3), "GREG")
+        obs = list(seq.find_with_regex(pat))
+        exp = [slice(2, 5), slice(5, 7)]
+        self.assertEqual(obs, exp)
 
-    def test_alphabet(self):
-        self.assertEqual(self.b1.alphabet(), set())
+        self.assertIs(type(seq.find_with_regex(pat)), GeneratorType)
 
-    def test_gap_alphabet(self):
-        self.assertEqual(self.b1.gap_alphabet(), set('-.'))
+    def test_find_with_regex_no_groups(self):
+        seq = Sequence('GATTACA', positional_metadata={'quality': range(7)})
+        pat = re.compile('(FOO)')
+        self.assertEqual(list(seq.find_with_regex(pat)), [])
 
-    def test_sequence(self):
-        self.assertEqual(self.b1.sequence, "GATTACA")
-        self.assertEqual(self.b2.sequence, "ACCGGTACC")
-        self.assertEqual(self.b3.sequence, "GREG")
+    def test_find_with_regex_ignore_no_difference(self):
+        seq = Sequence('..ABCDEFG..')
+        pat = "([A-Z]+)"
+        exp = [slice(2, 9)]
+        self.assertEqual(list(seq.find_with_regex(pat)), exp)
 
-    def test_id(self):
-        self.assertEqual(self.b1.id, "")
-        self.assertEqual(self.b2.id, "test-seq-2")
-        self.assertEqual(self.b3.id, "test-seq-3")
+        obs = seq.find_with_regex(
+            pat, ignore=np.array([1, 1, 0, 0, 0, 0, 0, 0, 0, 1, 1],
+                                 dtype=bool))
+        self.assertEqual(list(obs), exp)
 
-    def test_description(self):
-        self.assertEqual(self.b1.description, "")
-        self.assertEqual(self.b2.description, "A test sequence")
-        self.assertEqual(self.b3.description, "A protein sequence")
+    def test_find_with_regex_ignore(self):
+        obs = Sequence('A..A..BBAAB.A..AB..A.').find_with_regex(
+            "(A+)", ignore=np.array([0, 1, 1, 0, 1, 1, 0, 0, 0, 0, 0, 1, 0, 1,
+                                     1, 0, 0, 1, 1, 0, 1], dtype=bool))
 
-    def test_quality(self):
-        a = BiologicalSequence('ACA', quality=(22, 22, 1))
+        self.assertEqual(list(obs), [slice(0, 4), slice(8, 10), slice(12, 16),
+                                     slice(19, 20)])
 
-        # should get back a read-only numpy array of int dtype
-        self.assertIsInstance(a.quality, np.ndarray)
-        self.assertEqual(a.quality.dtype, np.int)
-        npt.assert_equal(a.quality, np.array((22, 22, 1)))
+    def test_find_with_regex_ignore_index_array(self):
+        obs = Sequence('A..A..BBAAB.A..AB..A.').find_with_regex(
+            "(A+)", ignore=np.array([1, 2, 4, 5, 11, 13, 14, 17, 18, 20]))
 
-        # test that we can't mutate the quality scores
+        self.assertEqual(list(obs), [slice(0, 4), slice(8, 10), slice(12, 16),
+                                     slice(19, 20)])
+
+    def test_iter_contiguous_index_array(self):
+        s = Sequence("0123456789abcdef")
+        for c in list, tuple, np.array, pd.Series:
+            exp = [Sequence("0123"), Sequence("89ab")]
+            obs = s.iter_contiguous(c([0, 1, 2, 3, 8, 9, 10, 11]))
+            self.assertEqual(list(obs), exp)
+
+    def test_iter_contiguous_boolean_vector(self):
+        s = Sequence("0123456789abcdef")
+        for c in list, tuple, np.array, pd.Series:
+            exp = [Sequence("0123"), Sequence("89ab")]
+            obs = s.iter_contiguous(c(([True] * 4 + [False] * 4) * 2))
+            self.assertEqual(list(obs), exp)
+
+    def test_iter_contiguous_iterable_slices(self):
+        def spaced_out():
+            yield slice(0, 4)
+            yield slice(8, 12)
+
+        def contiguous():
+            yield slice(0, 4)
+            yield slice(4, 8)
+            yield slice(12, 16)
+
+        s = Sequence("0123456789abcdef")
+        for c in (lambda x: x, list, tuple, lambda x: np.array(tuple(x)),
+                  lambda x: pd.Series(tuple(x))):
+            exp = [Sequence("0123"), Sequence("89ab")]
+            obs = s.iter_contiguous(c(spaced_out()))
+            self.assertEqual(list(obs), exp)
+
+            exp = [Sequence("01234567"), Sequence("cdef")]
+            obs = s.iter_contiguous(c(contiguous()))
+            self.assertEqual(list(obs), exp)
+
+    def test_iter_contiguous_with_max_length(self):
+        s = Sequence("0123456789abcdef")
+        for c in list, tuple, np.array, pd.Series:
+            exp = [Sequence("234"), Sequence("678"), Sequence("abc")]
+            obs = s.iter_contiguous(c([True, False, True, True] * 4),
+                                    min_length=3)
+            self.assertEqual(list(obs), exp)
+
+            exp = [Sequence("0"), Sequence("234"), Sequence("678"),
+                   Sequence("abc"), Sequence("ef")]
+            obs1 = list(s.iter_contiguous(c([True, False, True, True] * 4),
+                                          min_length=1))
+
+            obs2 = list(s.iter_contiguous(c([True, False, True, True] * 4)))
+            self.assertEqual(obs1, obs2)
+            self.assertEqual(obs1, exp)
+
+    def test_iter_contiguous_with_invert(self):
+        def spaced_out():
+            yield slice(0, 4)
+            yield slice(8, 12)
+
+        def contiguous():
+            yield slice(0, 4)
+            yield slice(4, 8)
+            yield slice(12, 16)
+
+        s = Sequence("0123456789abcdef")
+        for c in (lambda x: x, list, tuple, lambda x: np.array(tuple(x)),
+                  lambda x: pd.Series(tuple(x))):
+            exp = [Sequence("4567"), Sequence("cdef")]
+            obs = s.iter_contiguous(c(spaced_out()), invert=True)
+            self.assertEqual(list(obs), exp)
+
+            exp = [Sequence("89ab")]
+            obs = s.iter_contiguous(c(contiguous()), invert=True)
+            self.assertEqual(list(obs), exp)
+
+    def test_copy_without_metadata(self):
+        # shallow vs deep copy with sequence only should be equivalent
+        for copy_method in copy.copy, copy.deepcopy:
+            seq = Sequence('ACGT')
+            seq_copy = copy_method(seq)
+
+            self.assertEqual(seq_copy, seq)
+            self.assertIsNot(seq_copy, seq)
+            self.assertIsNot(seq_copy._bytes, seq._bytes)
+
+    def test_copy_with_metadata_shallow(self):
+        seq = Sequence('ACGT', metadata={'foo': [1]},
+                       positional_metadata={'bar': [[], [], [], []],
+                                            'baz': [42, 42, 42, 42]})
+        seq.interval_metadata.add([(0, 3)], metadata={'gene': ['sagA']})
+
+        seq_copy = copy.copy(seq)
+
+        self.assertEqual(seq_copy, seq)
+        self.assertIsNot(seq_copy, seq)
+        self.assertIsNot(seq_copy._bytes, seq._bytes)
+        self.assertIsNot(seq_copy._metadata, seq._metadata)
+        self.assertIsNot(seq_copy._positional_metadata,
+                         seq._positional_metadata)
+        self.assertIsNot(seq_copy._positional_metadata.values,
+                         seq._positional_metadata.values)
+        self.assertIs(seq_copy._metadata['foo'], seq._metadata['foo'])
+        self.assertIs(seq_copy._positional_metadata.loc[0, 'bar'],
+                      seq._positional_metadata.loc[0, 'bar'])
+        self.assertIsNot(seq_copy.interval_metadata, seq.interval_metadata)
+        self.assertIsNot(seq_copy.interval_metadata._intervals[0],
+                         seq.interval_metadata._intervals[0])
+        self.assertIsNot(seq_copy.interval_metadata._intervals[0].metadata,
+                         seq.interval_metadata._intervals[0].metadata)
+        self.assertIs(
+            seq_copy.interval_metadata._intervals[0].metadata['gene'],
+            seq.interval_metadata._intervals[0].metadata['gene'])
+        seq_copy.metadata['foo'].append(2)
+        seq_copy.metadata['foo2'] = 42
+
+        self.assertEqual(seq_copy.metadata, {'foo': [1, 2], 'foo2': 42})
+        self.assertEqual(seq.metadata, {'foo': [1, 2]})
+
+        seq_copy.positional_metadata.loc[0, 'bar'].append(1)
+        seq_copy.positional_metadata.loc[0, 'baz'] = 43
+
+        assert_data_frame_almost_equal(
+            seq_copy.positional_metadata,
+            pd.DataFrame({'bar': [[1], [], [], []],
+                          'baz': [43, 42, 42, 42]}))
+        assert_data_frame_almost_equal(
+            seq.positional_metadata,
+            pd.DataFrame({'bar': [[1], [], [], []],
+                          'baz': [42, 42, 42, 42]}))
+
+    def test_copy_with_metadata_deep(self):
+        seq = Sequence('ACGT', metadata={'foo': [1]},
+                       positional_metadata={'bar': [[], [], [], []],
+                                            'baz': [42, 42, 42, 42]})
+        seq.interval_metadata.add([(0, 3)], metadata={'gene': ['sagA']})
+        seq_copy = copy.deepcopy(seq)
+
+        self.assertEqual(seq_copy, seq)
+        self.assertIsNot(seq_copy, seq)
+        self.assertIsNot(seq_copy._bytes, seq._bytes)
+        self.assertIsNot(seq_copy._metadata, seq._metadata)
+        self.assertIsNot(seq_copy._positional_metadata,
+                         seq._positional_metadata)
+        self.assertIsNot(seq_copy._positional_metadata.values,
+                         seq._positional_metadata.values)
+        self.assertIsNot(seq_copy._metadata['foo'], seq._metadata['foo'])
+        self.assertIsNot(seq_copy._positional_metadata.loc[0, 'bar'],
+                         seq._positional_metadata.loc[0, 'bar'])
+        self.assertIsNot(seq_copy.interval_metadata, seq.interval_metadata)
+        self.assertIsNot(seq_copy.interval_metadata._intervals[0],
+                         seq.interval_metadata._intervals[0])
+        self.assertIsNot(seq_copy.interval_metadata._intervals[0].metadata,
+                         seq.interval_metadata._intervals[0].metadata)
+        self.assertIsNot(
+            seq_copy.interval_metadata._intervals[0].metadata['gene'],
+            seq.interval_metadata._intervals[0].metadata['gene'])
+        seq_copy.metadata['foo'].append(2)
+        seq_copy.metadata['foo2'] = 42
+
+        self.assertEqual(seq_copy.metadata, {'foo': [1, 2], 'foo2': 42})
+        self.assertEqual(seq.metadata, {'foo': [1]})
+
+        seq_copy.positional_metadata.loc[0, 'bar'].append(1)
+        seq_copy.positional_metadata.loc[0, 'baz'] = 43
+
+        assert_data_frame_almost_equal(
+            seq_copy.positional_metadata,
+            pd.DataFrame({'bar': [[1], [], [], []],
+                          'baz': [43, 42, 42, 42]}))
+        assert_data_frame_almost_equal(
+            seq.positional_metadata,
+            pd.DataFrame({'bar': [[], [], [], []],
+                          'baz': [42, 42, 42, 42]}))
+
+    def test_copy_preserves_read_only_flag_on_bytes(self):
+        seq = Sequence('ACGT')
+        seq_copy = copy.copy(seq)
+
         with self.assertRaises(ValueError):
-            a.quality[1] = 42
+            seq_copy._bytes[0] = 'B'
 
-        # test that we can't set the property
-        with self.assertRaises(AttributeError):
-            a.quality = (22, 22, 42)
+    def test_deepcopy_memo_is_respected(self):
+        # basic test to ensure deepcopy's memo is passed through to recursive
+        # deepcopy calls
+        seq = Sequence('ACGT', metadata={'foo': 'bar'})
+        memo = {}
+        copy.deepcopy(seq, memo)
+        self.assertGreater(len(memo), 2)
 
-    def test_quality_not_provided(self):
-        b = BiologicalSequence('ACA')
-        self.assertIs(b.quality, None)
+    def test_munge_to_index_array_valid_index_array(self):
+        s = Sequence('123456')
 
-    def test_quality_scalar(self):
-        b = BiologicalSequence('G', quality=2)
+        for c in list, tuple, np.array, pd.Series:
+            exp = np.array([1, 2, 3], dtype=int)
+            obs = s._munge_to_index_array(c([1, 2, 3]))
+            npt.assert_equal(obs, exp)
 
-        self.assertIsInstance(b.quality, np.ndarray)
-        self.assertEqual(b.quality.dtype, np.int)
-        self.assertEqual(b.quality.shape, (1,))
-        npt.assert_equal(b.quality, np.array([2]))
+            exp = np.array([1, 3, 5], dtype=int)
+            obs = s._munge_to_index_array(c([1, 3, 5]))
+            npt.assert_equal(obs, exp)
 
-    def test_quality_empty(self):
-        b = BiologicalSequence('', quality=[])
+    def test_munge_to_index_array_invalid_index_array(self):
+        s = Sequence("12345678")
+        for c in list, tuple, np.array, pd.Series:
+            with self.assertRaises(ValueError):
+                s._munge_to_index_array(c([3, 2, 1]))
 
-        self.assertIsInstance(b.quality, np.ndarray)
-        self.assertEqual(b.quality.dtype, np.int)
-        self.assertEqual(b.quality.shape, (0,))
-        npt.assert_equal(b.quality, np.array([]))
+            with self.assertRaises(ValueError):
+                s._munge_to_index_array(c([5, 6, 7, 2]))
 
-    def test_quality_no_copy(self):
-        qual = np.array([22, 22, 1])
-        a = BiologicalSequence('ACA', quality=qual)
-        self.assertIs(a.quality, qual)
+            with self.assertRaises(ValueError):
+                s._munge_to_index_array(c([0, 1, 2, 1]))
 
-        with self.assertRaises(ValueError):
-            a.quality[1] = 42
+    def test_munge_to_index_array_valid_bool_array(self):
+        s = Sequence('123456')
 
-        with self.assertRaises(ValueError):
-            qual[1] = 42
+        for c in list, tuple, np.array, pd.Series:
+            exp = np.array([2, 3, 5], dtype=int)
+            obs = s._munge_to_index_array(
+                c([False, False, True, True, False, True]))
+            npt.assert_equal(obs, exp)
 
-    def test_has_quality(self):
-        a = BiologicalSequence('ACA', quality=(5, 4, 67))
-        self.assertTrue(a.has_quality())
+            exp = np.array([], dtype=int)
+            obs = s._munge_to_index_array(
+                c([False] * 6))
+            npt.assert_equal(obs, exp)
 
-        b = BiologicalSequence('ACA')
-        self.assertFalse(b.has_quality())
+            exp = np.arange(6)
+            obs = s._munge_to_index_array(
+                c([True] * 6))
+            npt.assert_equal(obs, exp)
 
-    def test_copy_default_behavior(self):
-        # minimal sequence, sequence with all optional attributes present, and
-        # a subclass of BiologicalSequence
-        for seq in self.b6, self.b8, RNASequence('ACGU', id='rna seq'):
-            copy = seq.copy()
-            self.assertTrue(seq.equals(copy))
-            self.assertFalse(seq is copy)
+    def test_munge_to_index_array_invalid_bool_array(self):
+        s = Sequence('123456')
 
-    def test_copy_update_single_attribute(self):
-        copy = self.b8.copy(id='new id')
-        self.assertFalse(self.b8 is copy)
+        for c in (list, tuple, lambda x: np.array(x, dtype=bool),
+                  lambda x: pd.Series(x, dtype=bool)):
 
-        # they don't compare equal when we compare all attributes...
-        self.assertFalse(self.b8.equals(copy))
+            with self.assertRaises(ValueError):
+                s._munge_to_index_array(c([]))
 
-        # ...but they *do* compare equal when we ignore id, as that was the
-        # only attribute that changed
-        self.assertTrue(self.b8.equals(copy, ignore=['id']))
+            with self.assertRaises(ValueError):
+                s._munge_to_index_array(c([True]))
 
-        # id should be what we specified in the copy call...
-        self.assertEqual(copy.id, 'new id')
+            with self.assertRaises(ValueError):
+                s._munge_to_index_array(c([True] * 10))
 
-        # ..and shouldn't have changed on the original sequence
-        self.assertEqual(self.b8.id, 'hello')
+    def test_munge_to_index_array_valid_iterable(self):
+        s = Sequence('')
 
-    def test_copy_update_multiple_attributes(self):
-        copy = self.b8.copy(id='new id', quality=range(20, 25),
-                            sequence='ACGTA', description='new desc')
-        self.assertFalse(self.b8 is copy)
-        self.assertFalse(self.b8.equals(copy))
+        def slices_only():
+            return (slice(i, i+1) for i in range(0, 10, 2))
 
-        # attributes should be what we specified in the copy call...
-        self.assertEqual(copy.id, 'new id')
-        npt.assert_equal(copy.quality, np.array([20, 21, 22, 23, 24]))
-        self.assertEqual(copy.sequence, 'ACGTA')
-        self.assertEqual(copy.description, 'new desc')
+        def mixed():
+            return (slice(i, i+1) if i % 2 == 0 else i for i in range(10))
 
-        # ..and shouldn't have changed on the original sequence
-        self.assertEqual(self.b8.id, 'hello')
-        npt.assert_equal(self.b8.quality, range(11))
-        self.assertEqual(self.b8.sequence, 'HE..--..LLO')
-        self.assertEqual(self.b8.description, 'gapped hello')
+        def unthinkable():
+            for i in range(10):
+                if i % 3 == 0:
+                    yield slice(i, i+1)
+                elif i % 3 == 1:
+                    yield i
+                else:
+                    yield np.array([i], dtype=int)
+        for c in (lambda x: x, list, tuple, lambda x: np.array(tuple(x)),
+                  lambda x: pd.Series(tuple(x))):
+            exp = np.arange(10, dtype=int)
+            obs = s._munge_to_index_array(c(mixed()))
+            npt.assert_equal(obs, exp)
 
-    def test_copy_invalid_kwargs(self):
+            exp = np.arange(10, dtype=int)
+            obs = s._munge_to_index_array(c(unthinkable()))
+            npt.assert_equal(obs, exp)
+
+            exp = np.arange(10, step=2, dtype=int)
+            obs = s._munge_to_index_array(c(slices_only()))
+            npt.assert_equal(obs, exp)
+
+    def test_munge_to_index_array_invalid_iterable(self):
+        s = Sequence('')
+
+        def bad1():
+            yield "r"
+            yield [1, 2, 3]
+
+        def bad2():
+            yield 1
+            yield 'str'
+
+        def bad3():
+            yield False
+            yield True
+            yield 2
+
+        def bad4():
+            yield np.array([False, True])
+            yield slice(2, 5)
+
+        for c in (lambda x: x, list, tuple, lambda x: np.array(tuple(x)),
+                  lambda x: pd.Series(tuple(x))):
+
+            with self.assertRaises(TypeError):
+                s._munge_to_index_array(bad1())
+
+            with self.assertRaises(TypeError):
+                s._munge_to_index_array(bad2())
+
+            with self.assertRaises(TypeError):
+                s._munge_to_index_array(bad3())
+
+            with self.assertRaises(TypeError):
+                s._munge_to_index_array(bad4())
+
+    def test_munge_to_index_array_valid_string(self):
+        seq = Sequence('ACGTACGT',
+                       positional_metadata={'introns': [False, True, True,
+                                                        False, False, True,
+                                                        False, False]})
+        npt.assert_equal(np.array([1, 2, 5]),
+                         seq._munge_to_index_array('introns'))
+
+        seq.positional_metadata['exons'] = ~seq.positional_metadata['introns']
+        npt.assert_equal(np.array([0, 3, 4, 6, 7]),
+                         seq._munge_to_index_array('exons'))
+
+    def test_munge_to_index_array_invalid_string(self):
+        seq_str = 'ACGT'
+        seq = Sequence(seq_str,
+                       positional_metadata={'quality': range(len(seq_str))})
+
+        with self.assertRaisesRegex(ValueError,
+                                    "No positional metadata associated with "
+                                    "key 'introns'"):
+            seq._munge_to_index_array('introns')
+
+        with self.assertRaisesRegex(TypeError,
+                                    "Column 'quality' in positional metadata "
+                                    "does not correspond to a boolean "
+                                    "vector"):
+            seq._munge_to_index_array('quality')
+
+    def test_munge_to_bytestring_return_bytes(self):
+        seq = Sequence('')
+        m = 'dummy_method'
+        str_inputs = ('', 'a', 'acgt')
+        unicode_inputs = ('', 'a', 'acgt')
+        byte_inputs = (b'', b'a', b'acgt')
+        seq_inputs = (Sequence(''), Sequence('a'), Sequence('acgt'))
+        all_inputs = str_inputs + unicode_inputs + byte_inputs + seq_inputs
+        all_expected = [b'', b'a', b'acgt'] * 4
+
+        for input_, expected in zip(all_inputs, all_expected):
+            observed = seq._munge_to_bytestring(input_, m)
+            self.assertEqual(observed, expected)
+            self.assertIs(type(observed), bytes)
+
+    def test_munge_to_bytestring_unicode_out_of_ascii_range(self):
+        seq = Sequence('')
+        all_inputs = ('\x80', 'abc\x80', '\x80abc')
+        for input_ in all_inputs:
+            with self.assertRaisesRegex(UnicodeEncodeError,
+                                        "'ascii' codec can't encode character"
+                                        ".*in position.*: ordinal not in"
+                                        " range\(128\)"):
+                seq._munge_to_bytestring(input_, 'dummy_method')
+
+
+class TestDistance(TestSequenceBase):
+    def test_mungeable_inputs_to_sequence(self):
+        def metric(a, b):
+            self.assertEqual(a, Sequence("abcdef"))
+            self.assertEqual(b, Sequence("12bcef"))
+            return 42.0
+
+        for constructor in self.sequence_kinds:
+            seq1 = Sequence("abcdef")
+            seq2 = constructor("12bcef")
+
+            distance = seq1.distance(seq2, metric=metric)
+
+            self.assertEqual(distance, 42.0)
+
+    def test_mungeable_inputs_to_sequence_subclass(self):
+        def metric(a, b):
+            self.assertEqual(a, SequenceSubclass("abcdef"))
+            self.assertEqual(b, SequenceSubclass("12bcef"))
+            return -42.0
+
+        sequence_kinds = frozenset([
+            str, SequenceSubclass, lambda s: np.fromstring(s, dtype='|S1'),
+            lambda s: np.fromstring(s, dtype=np.uint8)])
+
+        for constructor in sequence_kinds:
+            seq1 = SequenceSubclass("abcdef")
+            seq2 = constructor("12bcef")
+
+            distance = seq1.distance(seq2, metric=metric)
+
+            self.assertEqual(distance, -42.0)
+
+    def test_sequence_type_mismatch(self):
+        seq1 = SequenceSubclass("abcdef")
+        seq2 = Sequence("12bcef")
+
+        with self.assertRaisesRegex(TypeError,
+                                    'SequenceSubclass.*Sequence.*`distance`'):
+            seq1.distance(seq2)
+
+        with self.assertRaisesRegex(TypeError,
+                                    'Sequence.*SequenceSubclass.*`distance`'):
+            seq2.distance(seq1)
+
+    def test_munging_invalid_characters_to_self_type(self):
+        with self.assertRaisesRegex(ValueError, 'Invalid characters.*X'):
+            DNA("ACGT").distance("WXYZ")
+
+    def test_munging_invalid_type_to_self_type(self):
         with self.assertRaises(TypeError):
-            self.b2.copy(id='bar', unrecognized_kwarg='baz')
+            Sequence("ACGT").distance(42)
 
-    def test_copy_extra_non_attribute_kwargs(self):
-        # test that we can pass through additional kwargs to the constructor
-        # that aren't related to biological sequence attributes (i.e., they
-        # aren't state that has to be copied)
-
-        # create an invalid DNA sequence
-        a = DNASequence('FOO', description='foo')
-
-        # should be able to copy it b/c validate defaults to False
-        b = a.copy()
-        self.assertTrue(a.equals(b))
-        self.assertFalse(a is b)
-
-        # specifying validate should raise an error when the copy is
-        # instantiated
-        with self.assertRaises(BiologicalSequenceError):
-            a.copy(validate=True)
-
-    def test_equals_true(self):
-        # sequences match, all other attributes are not provided
-        self.assertTrue(
-            BiologicalSequence('ACGT').equals(BiologicalSequence('ACGT')))
-
-        # all attributes are provided and match
-        a = BiologicalSequence('ACGT', id='foo', description='abc',
-                               quality=[1, 2, 3, 4])
-        b = BiologicalSequence('ACGT', id='foo', description='abc',
-                               quality=[1, 2, 3, 4])
-        self.assertTrue(a.equals(b))
-
-        # ignore type
-        a = BiologicalSequence('ACGT')
-        b = DNASequence('ACGT')
-        self.assertTrue(a.equals(b, ignore=['type']))
-
-        # ignore id
-        a = BiologicalSequence('ACGT', id='foo')
-        b = BiologicalSequence('ACGT', id='bar')
-        self.assertTrue(a.equals(b, ignore=['id']))
-
-        # ignore description
-        a = BiologicalSequence('ACGT', description='foo')
-        b = BiologicalSequence('ACGT', description='bar')
-        self.assertTrue(a.equals(b, ignore=['description']))
-
-        # ignore quality
-        a = BiologicalSequence('ACGT', quality=[1, 2, 3, 4])
-        b = BiologicalSequence('ACGT', quality=[5, 6, 7, 8])
-        self.assertTrue(a.equals(b, ignore=['quality']))
-
-        # ignore sequence
-        a = BiologicalSequence('ACGA')
-        b = BiologicalSequence('ACGT')
-        self.assertTrue(a.equals(b, ignore=['sequence']))
-
-        # ignore everything
-        a = BiologicalSequence('ACGA', id='foo', description='abc',
-                               quality=[1, 2, 3, 4])
-        b = DNASequence('ACGT', id='bar', description='def',
-                        quality=[5, 6, 7, 8])
-        self.assertTrue(a.equals(b, ignore=['quality', 'description', 'id',
-                                            'sequence', 'type']))
-
-    def test_equals_false(self):
-        # type mismatch
-        a = BiologicalSequence('ACGT', id='foo', description='abc',
-                               quality=[1, 2, 3, 4])
-        b = NucleotideSequence('ACGT', id='bar', description='def',
-                               quality=[5, 6, 7, 8])
-        self.assertFalse(a.equals(b, ignore=['quality', 'description', 'id']))
-
-        # id mismatch
-        a = BiologicalSequence('ACGT', id='foo')
-        b = BiologicalSequence('ACGT', id='bar')
-        self.assertFalse(a.equals(b))
-
-        # description mismatch
-        a = BiologicalSequence('ACGT', description='foo')
-        b = BiologicalSequence('ACGT', description='bar')
-        self.assertFalse(a.equals(b))
-
-        # quality mismatch (both provided)
-        a = BiologicalSequence('ACGT', quality=[1, 2, 3, 4])
-        b = BiologicalSequence('ACGT', quality=[1, 2, 3, 5])
-        self.assertFalse(a.equals(b))
-
-        # quality mismatch (one provided)
-        a = BiologicalSequence('ACGT', quality=[1, 2, 3, 4])
-        b = BiologicalSequence('ACGT')
-        self.assertFalse(a.equals(b))
-
-        # sequence mismatch
-        a = BiologicalSequence('ACGT')
-        b = BiologicalSequence('TGCA')
-        self.assertFalse(a.equals(b))
-
-    def test_count(self):
-        self.assertEqual(self.b1.count('A'), 3)
-        self.assertEqual(self.b1.count('T'), 2)
-        self.assertEqual(self.b1.count('TT'), 1)
-
-    def test_degap(self):
-        # use equals method to ensure that id, description, and filtered
-        # quality are correctly propagated to the resulting sequence
-
-        # no filtering, has quality
-        self.assertTrue(self.b1.degap().equals(self.b1))
-
-        # no filtering, doesn't have quality
-        self.assertTrue(self.b2.degap().equals(self.b2))
-
-        # everything is filtered, has quality
-        self.assertTrue(self.b7.degap().equals(
-            BiologicalSequence('', quality=[])))
-
-        # some filtering, has quality
-        self.assertTrue(self.b8.degap().equals(
-            BiologicalSequence('HELLO', id='hello', description='gapped hello',
-                               quality=[0, 1, 8, 9, 10])))
-
-    def test_distance(self):
-        # note that test_hamming_distance covers default behavior more
-        # extensively
-        self.assertEqual(self.b1.distance(self.b1), 0.0)
-        self.assertEqual(self.b1.distance(BiologicalSequence('GATTACC')), 1./7)
-
-        def dumb_distance(x, y):
+    def test_return_type_coercion(self):
+        def metric(a, b):
             return 42
 
-        self.assertEqual(
-            self.b1.distance(self.b1, distance_fn=dumb_distance), 42)
+        distance = Sequence('abc').distance('cba', metric=metric)
 
-    def test_distance_unequal_length(self):
-        # distance requires sequences to be of equal length
-        # While some functions passed to distance may throw an error not all
-        # will. Therefore an error will be raised for sequences of unequal
-        # length regardless of the function being passed.
-        # With default hamming distance function
-        with self.assertRaises(BiologicalSequenceError):
-            self.b1.distance(self.b2)
+        self.assertIsInstance(distance, float)
 
-        # Alternate functions should also raise an error
-        # Another distance function from scipy:
-        with self.assertRaises(BiologicalSequenceError):
-            self.b1.distance(self.b2, distance_fn=euclidean)
+    def test_invalid_return_type(self):
+        def metric(a, b):
+            return 'too far'
 
-        # Any other function should raise an error as well
-        def dumb_distance(x, y):
-            return 42
+        with self.assertRaisesRegex(ValueError, 'string.*float'):
+            Sequence('abc').distance('cba', metric=metric)
 
-        with self.assertRaises(BiologicalSequenceError):
-            self.b1.distance(self.b2, distance_fn=dumb_distance)
+    def test_arbitrary_metric(self):
+        def metric(x, y):
+            return len(x) ** 2 + len(y) ** 2
 
-    def test_fraction_diff(self):
-        self.assertEqual(self.b1.fraction_diff(self.b1), 0., 5)
-        self.assertEqual(
-            self.b1.fraction_diff(BiologicalSequence('GATTACC')), 1. / 7., 5)
+        seq1 = Sequence("12345678")
+        seq2 = Sequence("1234")
 
-    def test_fraction_same(self):
-        self.assertAlmostEqual(self.b1.fraction_same(self.b1), 1., 5)
-        self.assertAlmostEqual(
-            self.b1.fraction_same(BiologicalSequence('GATTACC')), 6. / 7., 5)
+        distance = seq1.distance(seq2, metric=metric)
 
-    def test_gap_maps(self):
-        # in sequence with no gaps, the gap_maps are identical
-        self.assertEqual(self.b1.gap_maps(),
-                         ([0, 1, 2, 3, 4, 5, 6], [0, 1, 2, 3, 4, 5, 6]))
-        # in sequence with all gaps, the map of degapped to gapped is the empty
-        # list (bc its length is 0), and the map of gapped to degapped is all
-        # None
-        self.assertEqual(self.b7.gap_maps(),
-                         ([], [None, None, None, None, None, None]))
+        self.assertEqual(distance, 80.0)
 
-        self.assertEqual(self.b8.gap_maps(),
-                         ([0, 1, 8, 9, 10],
-                          [0, 1, None, None, None, None, None, None, 2, 3, 4]))
-
-        # example from the gap_maps doc string
-        self.assertEqual(BiologicalSequence('-ACCGA-TA-').gap_maps(),
-                         ([1, 2, 3, 4, 5, 7, 8],
-                          [None, 0, 1, 2, 3, 4, None, 5, 6, None]))
-
-    def test_gap_vector(self):
-        self.assertEqual(self.b1.gap_vector(),
-                         [False] * len(self.b1))
-        self.assertEqual(self.b7.gap_vector(),
-                         [True] * len(self.b7))
-        self.assertEqual(self.b8.gap_vector(),
-                         [False, False, True, True, True, True,
-                          True, True, False, False, False])
-
-    def test_unsupported_characters(self):
-        self.assertEqual(self.b1.unsupported_characters(), set('GATC'))
-        self.assertEqual(self.b7.unsupported_characters(), set())
-
-    def test_has_unsupported_characters(self):
-        self.assertTrue(self.b1.has_unsupported_characters())
-        self.assertFalse(self.b7.has_unsupported_characters())
-
-    def test_index(self):
-        self.assertEqual(self.b1.index('G'), 0)
-        self.assertEqual(self.b1.index('A'), 1)
-        self.assertEqual(self.b1.index('AC'), 4)
-        self.assertRaises(ValueError, self.b1.index, 'x')
-
-    def test_is_gap(self):
-        self.assertTrue(self.b1.is_gap('.'))
-        self.assertTrue(self.b1.is_gap('-'))
-        self.assertFalse(self.b1.is_gap('A'))
-        self.assertFalse(self.b1.is_gap('x'))
-        self.assertFalse(self.b1.is_gap(' '))
-        self.assertFalse(self.b1.is_gap(''))
-
-    def test_is_gapped(self):
-        self.assertFalse(self.b1.is_gapped())
-        self.assertFalse(self.b2.is_gapped())
-        self.assertTrue(self.b7.is_gapped())
-        self.assertTrue(self.b8.is_gapped())
-
-    def test_is_valid(self):
-        self.assertFalse(self.b1.is_valid())
-        self.assertTrue(self.b7.is_valid())
-
-    def test_upper(self):
-        b = NucleotideSequence('GAt.ACa-', id='x', description='42',
-                               quality=range(8))
-        expected = NucleotideSequence('GAT.ACA-', id='x',
-                                      description='42', quality=range(8))
-        # use equals method to ensure that id, description, and quality are
-        # correctly propagated to the resulting sequence
-        self.assertTrue(b.upper().equals(expected))
-
-    def test_lower(self):
-        b = NucleotideSequence('GAt.ACa-', id='x', description='42',
-                               quality=range(8))
-        expected = NucleotideSequence('gat.aca-', id='x',
-                                      description='42', quality=range(8))
-        # use equals method to ensure that id, description, and quality are
-        # correctly propagated to the resulting sequence
-        self.assertTrue(b.lower().equals(expected))
-
-    def test_regex_iter(self):
-        pat = re_compile('(T+A)(CA)')
-
-        obs = list(self.b1.regex_iter(pat))
-        exp = [(2, 5, 'TTA'), (5, 7, 'CA')]
-        self.assertEqual(obs, exp)
-
-        obs = list(self.b1.regex_iter(pat, retrieve_group_0=True))
-        exp = [(2, 7, 'TTACA'), (2, 5, 'TTA'), (5, 7, 'CA')]
-        self.assertEqual(obs, exp)
-
-
-class NucelotideSequenceTests(TestCase):
-
-    def setUp(self):
-        self.empty = NucleotideSequence('')
-        self.b1 = NucleotideSequence('GATTACA')
-        self.b2 = NucleotideSequence(
-            'ACCGGUACC', id="test-seq-2",
-            description="A test sequence")
-        self.b3 = NucleotideSequence('G-AT-TG.AT.T')
-
-    def test_alphabet(self):
-        exp = {
-            'A', 'C', 'B', 'D', 'G', 'H', 'K', 'M', 'N', 'S', 'R', 'U', 'T',
-            'W', 'V', 'Y', 'a', 'c', 'b', 'd', 'g', 'h', 'k', 'm', 'n', 's',
-            'r', 'u', 't', 'w', 'v', 'y'
-        }
-
-        # Test calling from an instance and purely static context.
-        self.assertEqual(self.b1.alphabet(), exp)
-        self.assertEqual(NucleotideSequence.alphabet(), exp)
-
-    def test_gap_alphabet(self):
-        self.assertEqual(self.b1.gap_alphabet(), set('-.'))
-
-    def test_complement_map(self):
-        exp = {}
-        self.assertEqual(self.b1.complement_map(), exp)
-        self.assertEqual(NucleotideSequence.complement_map(), exp)
-
-    def test_iupac_standard_characters(self):
-        exp = set("ACGTUacgtu")
-        self.assertEqual(self.b1.iupac_standard_characters(), exp)
-        self.assertEqual(NucleotideSequence.iupac_standard_characters(), exp)
-
-    def test_iupac_degeneracies(self):
-        exp = {
-            # upper
-            'B': set(['C', 'U', 'T', 'G']), 'D': set(['A', 'U', 'T', 'G']),
-            'H': set(['A', 'C', 'U', 'T']), 'K': set(['U', 'T', 'G']),
-            'M': set(['A', 'C']), 'N': set(['A', 'C', 'U', 'T', 'G']),
-            'S': set(['C', 'G']), 'R': set(['A', 'G']),
-            'W': set(['A', 'U', 'T']), 'V': set(['A', 'C', 'G']),
-            'Y': set(['C', 'U', 'T']),
-            # lower
-            'b': set(['c', 'u', 't', 'g']), 'd': set(['a', 'u', 't', 'g']),
-            'h': set(['a', 'c', 'u', 't']), 'k': set(['u', 't', 'g']),
-            'm': set(['a', 'c']), 'n': set(['a', 'c', 'u', 't', 'g']),
-            's': set(['c', 'g']), 'r': set(['a', 'g']),
-            'w': set(['a', 'u', 't']), 'v': set(['a', 'c', 'g']),
-            'y': set(['c', 'u', 't'])
-        }
-        self.assertEqual(self.b1.iupac_degeneracies(), exp)
-        self.assertEqual(NucleotideSequence.iupac_degeneracies(), exp)
-
-        # Test that we can modify a copy of the mapping without altering the
-        # canonical representation.
-        degen = NucleotideSequence.iupac_degeneracies()
-        degen.update({'V': set("BRO"), 'Z': set("ZORRO")})
-        self.assertNotEqual(degen, exp)
-        self.assertEqual(NucleotideSequence.iupac_degeneracies(), exp)
-
-    def test_iupac_degenerate_characters(self):
-        exp = set(['B', 'D', 'H', 'K', 'M', 'N', 'S', 'R', 'W', 'V', 'Y',
-                   'b', 'd', 'h', 'k', 'm', 'n', 's', 'r', 'w', 'v', 'y'])
-        self.assertEqual(self.b1.iupac_degenerate_characters(), exp)
-        self.assertEqual(NucleotideSequence.iupac_degenerate_characters(), exp)
-
-    def test_iupac_characters(self):
-        exp = {
-            'A', 'C', 'B', 'D', 'G', 'H', 'K', 'M', 'N', 'S', 'R', 'U', 'T',
-            'W', 'V', 'Y', 'a', 'c', 'b', 'd', 'g', 'h', 'k', 'm', 'n', 's',
-            'r', 'u', 't', 'w', 'v', 'y'
-        }
-
-        self.assertEqual(self.b1.iupac_characters(), exp)
-        self.assertEqual(NucleotideSequence.iupac_characters(), exp)
-
-    def test_complement(self):
-        self.assertRaises(BiologicalSequenceError,
-                          self.b1.complement)
-
-    def test_reverse_complement(self):
-        self.assertRaises(BiologicalSequenceError,
-                          self.b1.reverse_complement)
-
-    def test_is_reverse_complement(self):
-        self.assertRaises(BiologicalSequenceError,
-                          self.b1.is_reverse_complement, self.b1)
-
-    def test_nondegenerates_invalid(self):
-        with self.assertRaises(BiologicalSequenceError):
-            list(NucleotideSequence('AZA').nondegenerates())
-
-    def test_nondegenerates_empty(self):
-        self.assertEqual(list(self.empty.nondegenerates()), [self.empty])
-
-    def test_nondegenerates_no_degens(self):
-        self.assertEqual(list(self.b1.nondegenerates()), [self.b1])
-
-    def test_nondegenerates_all_degens(self):
-        # Same chars.
-        exp = [NucleotideSequence('CC'), NucleotideSequence('CG'),
-               NucleotideSequence('GC'), NucleotideSequence('GG')]
-        # Sort based on sequence string, as order is not guaranteed.
-        obs = sorted(NucleotideSequence('SS').nondegenerates(), key=str)
-        self.assertEqual(obs, exp)
-
-        # Different chars.
-        exp = [NucleotideSequence('AC'), NucleotideSequence('AG'),
-               NucleotideSequence('GC'), NucleotideSequence('GG')]
-        obs = sorted(NucleotideSequence('RS').nondegenerates(), key=str)
-        self.assertEqual(obs, exp)
-
-        # Odd number of chars.
-        obs = list(NucleotideSequence('NNN').nondegenerates())
-        self.assertEqual(len(obs), 5**3)
-
-    def test_nondegenerates_mixed_degens(self):
-        exp = [NucleotideSequence('AGC'), NucleotideSequence('AGT'),
-               NucleotideSequence('AGU'), NucleotideSequence('GGC'),
-               NucleotideSequence('GGT'), NucleotideSequence('GGU')]
-        obs = sorted(NucleotideSequence('RGY').nondegenerates(), key=str)
-        self.assertEqual(obs, exp)
-
-    def test_nondegenerates_gap_mixed_case(self):
-        exp = [NucleotideSequence('-A.a'), NucleotideSequence('-A.c'),
-               NucleotideSequence('-C.a'), NucleotideSequence('-C.c')]
-        obs = sorted(NucleotideSequence('-M.m').nondegenerates(), key=str)
-        self.assertEqual(obs, exp)
-
-    def test_find_features(self):
-        exp = [(0, 2, 'GA'), (4, 5, 'A'), (6, 7, 'A')]
-        obs = list(self.b1.find_features('purine_run'))
-        self.assertEqual(obs, exp)
-
-        exp = [(2, 4, 'TT'), (5, 6, 'C')]
-        obs = list(self.b1.find_features('pyrimidine_run'))
-        self.assertEqual(obs, exp)
-
-        exp = [(0, 1, 'A'), (3, 5, 'GG'), (6, 7, 'A')]
-        obs = list(self.b2.find_features('purine_run'))
-        self.assertEqual(obs, exp)
-
-        exp = [(1, 3, 'CC'), (5, 6, 'U'), (7, 9, 'CC')]
-        obs = list(self.b2.find_features('pyrimidine_run'))
-        self.assertEqual(obs, exp)
-
-    def test_find_features_min_length(self):
-        exp = [(0, 2, 'GA')]
-        obs = list(self.b1.find_features('purine_run', 2))
-        self.assertEqual(obs, exp)
-
-        exp = [(2, 4, 'TT')]
-        obs = list(self.b1.find_features('pyrimidine_run', 2))
-        self.assertEqual(obs, exp)
-
-        exp = [(3, 5, 'GG')]
-        obs = list(self.b2.find_features('purine_run', 2))
-        self.assertEqual(obs, exp)
-
-        exp = [(1, 3, 'CC'), (7, 9, 'CC')]
-        obs = list(self.b2.find_features('pyrimidine_run', 2))
-        self.assertEqual(obs, exp)
-
-    def test_find_features_no_feature_type(self):
-        with self.assertRaises(ValueError):
-            list(self.b1.find_features('nonexistent_feature_type'))
-
-    def test_find_features_allow_gaps(self):
-        exp = [(0, 3, 'G-A'), (6, 9, 'G.A')]
-        obs = list(self.b3.find_features('purine_run', 2, True))
-        self.assertEqual(obs, exp)
-
-        exp = [(3, 6, 'T-T'), (9, 12, 'T.T')]
-        obs = list(self.b3.find_features('pyrimidine_run', 2, True))
-        self.assertEqual(obs, exp)
-
-    def test_nondegenerates_propagate_optional_properties(self):
-        seq = NucleotideSequence('RS', id='foo', description='bar',
-                                 quality=[42, 999])
-
-        exp = [
-            NucleotideSequence('AC', id='foo', description='bar',
-                               quality=[42, 999]),
-            NucleotideSequence('AG', id='foo', description='bar',
-                               quality=[42, 999]),
-            NucleotideSequence('GC', id='foo', description='bar',
-                               quality=[42, 999]),
-            NucleotideSequence('GG', id='foo', description='bar',
-                               quality=[42, 999])
+    def test_scipy_hamming_metric_with_metadata(self):
+        # test for #1254
+        seqs1 = [
+            Sequence("ACGT"),
+            Sequence("ACGT", metadata={'id': 'abc'}),
+            Sequence("ACGT", positional_metadata={'qual': range(4)})
+        ]
+        seqs2 = [
+            Sequence("AAAA"),
+            Sequence("AAAA", metadata={'id': 'def'}),
+            Sequence("AAAA", positional_metadata={'qual': range(4, 8)})
         ]
 
-        obs = sorted(seq.nondegenerates(), key=str)
-
-        for o, e in zip(obs, exp):
-            # use equals method to ensure that id, description, and quality are
-            # correctly propagated to the resulting sequence
-            self.assertTrue(o.equals(e))
-
-
-class DNASequenceTests(TestCase):
-
-    def setUp(self):
-        self.empty = DNASequence('')
-        self.b1 = DNASequence('GATTACA')
-        self.b2 = DNASequence('ACCGGTACC', id="test-seq-2",
-                              description="A test sequence", quality=range(9))
-        self.b3 = DNASequence(
-            'ACCGGUACC', id="bad-seq-1",
-            description="Not a DNA sequence")
-        self.b4 = DNASequence(
-            'MRWSYKVHDBN', id="degen",
-            description="All of the degenerate bases")
-        self.b5 = DNASequence('.G--ATTAC-A...')
-
-    def test_alphabet(self):
-        exp = {
-            'A', 'C', 'B', 'D', 'G', 'H', 'K', 'M', 'N', 'S', 'R', 'T', 'W',
-            'V', 'Y', 'a', 'c', 'b', 'd', 'g', 'h', 'k', 'm', 'n', 's', 'r',
-            't', 'w', 'v', 'y'
-        }
-
-        self.assertEqual(self.b1.alphabet(), exp)
-        self.assertEqual(DNASequence.alphabet(), exp)
-
-    def test_gap_alphabet(self):
-        self.assertEqual(self.b1.gap_alphabet(), set('-.'))
-
-    def test_complement_map(self):
-        exp = {
-            '-': '-', '.': '.', 'A': 'T', 'C': 'G', 'B': 'V', 'D': 'H',
-            'G': 'C', 'H': 'D', 'K': 'M', 'M': 'K', 'N': 'N', 'S': 'S',
-            'R': 'Y', 'T': 'A', 'W': 'W', 'V': 'B', 'Y': 'R', 'a': 't',
-            'c': 'g', 'b': 'v', 'd': 'h', 'g': 'c', 'h': 'd', 'k': 'm',
-            'm': 'k', 'n': 'n', 's': 's', 'r': 'y', 't': 'a', 'w': 'w',
-            'v': 'b', 'y': 'r'
-        }
-        self.assertEqual(self.b1.complement_map(), exp)
-        self.assertEqual(DNASequence.complement_map(), exp)
-
-    def test_iupac_standard_characters(self):
-        exp = set("ACGTacgt")
-        self.assertEqual(self.b1.iupac_standard_characters(), exp)
-        self.assertEqual(DNASequence.iupac_standard_characters(), exp)
-
-    def test_iupac_degeneracies(self):
-        exp = {
-            'B': set(['C', 'T', 'G']), 'D': set(['A', 'T', 'G']),
-            'H': set(['A', 'C', 'T']), 'K': set(['T', 'G']),
-            'M': set(['A', 'C']), 'N': set(['A', 'C', 'T', 'G']),
-            'S': set(['C', 'G']), 'R': set(['A', 'G']), 'W': set(['A', 'T']),
-            'V': set(['A', 'C', 'G']), 'Y': set(['C', 'T']),
-            'b': set(['c', 't', 'g']), 'd': set(['a', 't', 'g']),
-            'h': set(['a', 'c', 't']), 'k': set(['t', 'g']),
-            'm': set(['a', 'c']), 'n': set(['a', 'c', 't', 'g']),
-            's': set(['c', 'g']), 'r': set(['a', 'g']), 'w': set(['a', 't']),
-            'v': set(['a', 'c', 'g']), 'y': set(['c', 't'])
-        }
-        self.assertEqual(self.b1.iupac_degeneracies(), exp)
-        self.assertEqual(DNASequence.iupac_degeneracies(), exp)
-
-    def test_iupac_degenerate_characters(self):
-        exp = set(['B', 'D', 'H', 'K', 'M', 'N', 'S', 'R', 'W', 'V', 'Y',
-                   'b', 'd', 'h', 'k', 'm', 'n', 's', 'r', 'w', 'v', 'y'])
-        self.assertEqual(self.b1.iupac_degenerate_characters(), exp)
-        self.assertEqual(DNASequence.iupac_degenerate_characters(), exp)
-
-    def test_iupac_characters(self):
-        exp = {
-            'A', 'C', 'B', 'D', 'G', 'H', 'K', 'M', 'N', 'S', 'R', 'T', 'W',
-            'V', 'Y', 'a', 'c', 'b', 'd', 'g', 'h', 'k', 'm', 'n', 's', 'r',
-            't', 'w', 'v', 'y'
-        }
-        self.assertEqual(self.b1.iupac_characters(), exp)
-        self.assertEqual(DNASequence.iupac_characters(), exp)
-
-    def test_complement(self):
-        # use equals method to ensure that id, description, and quality are
-        # correctly propagated to the resulting sequence
-        self.assertTrue(self.b1.complement().equals(DNASequence("CTAATGT")))
-
-        self.assertTrue(self.b2.complement().equals(
-            DNASequence("TGGCCATGG", id="test-seq-2",
-                        description="A test sequence", quality=range(9))))
-
-        self.assertRaises(BiologicalSequenceError, self.b3.complement)
-
-        self.assertTrue(self.b4.complement().equals(
-            DNASequence("KYWSRMBDHVN", id="degen",
-                        description="All of the degenerate bases")))
-
-        self.assertTrue(self.b5.complement().equals(
-            DNASequence(".C--TAATG-T...")))
-
-    def test_reverse_complement(self):
-        # use equals method to ensure that id, description, and (reversed)
-        # quality scores are correctly propagated to the resulting sequence
-        self.assertTrue(self.b1.reverse_complement().equals(
-            DNASequence("TGTAATC")))
-
-        self.assertTrue(self.b2.reverse_complement().equals(
-            DNASequence("GGTACCGGT", id="test-seq-2",
-                        description="A test sequence",
-                        quality=range(9)[::-1])))
-
-        self.assertRaises(BiologicalSequenceError, self.b3.reverse_complement)
-
-        self.assertTrue(self.b4.reverse_complement().equals(
-            DNASequence("NVHDBMRSWYK", id="degen",
-                        description="All of the degenerate bases")))
-
-    def test_unsupported_characters(self):
-        self.assertEqual(self.b1.unsupported_characters(), set())
-        self.assertEqual(self.b2.unsupported_characters(), set())
-        self.assertEqual(self.b3.unsupported_characters(), set('U'))
-        self.assertEqual(self.b4.unsupported_characters(), set())
-
-    def test_has_unsupported_characters(self):
-        self.assertFalse(self.b1.has_unsupported_characters())
-        self.assertFalse(self.b2.has_unsupported_characters())
-        self.assertTrue(self.b3.has_unsupported_characters())
-        self.assertFalse(self.b4.has_unsupported_characters())
-
-    def test_is_reverse_complement(self):
-        self.assertFalse(self.b1.is_reverse_complement(self.b1))
-
-        # id, description, and quality scores should be ignored (only sequence
-        # data and type should be compared)
-        self.assertTrue(self.b1.is_reverse_complement(
-            DNASequence('TGTAATC', quality=range(7))))
-
-        self.assertTrue(
-            self.b4.is_reverse_complement(DNASequence('NVHDBMRSWYK')))
-
-    def test_nondegenerates_invalid(self):
-        with self.assertRaises(BiologicalSequenceError):
-            list(DNASequence('AZA').nondegenerates())
-
-    def test_nondegenerates_empty(self):
-        self.assertEqual(list(self.empty.nondegenerates()), [self.empty])
-
-    def test_nondegenerates_no_degens(self):
-        self.assertEqual(list(self.b1.nondegenerates()), [self.b1])
-
-    def test_nondegenerates_all_degens(self):
-        # Same chars.
-        exp = [DNASequence('CC'), DNASequence('CG'), DNASequence('GC'),
-               DNASequence('GG')]
-        # Sort based on sequence string, as order is not guaranteed.
-        obs = sorted(DNASequence('SS').nondegenerates(), key=str)
-        self.assertEqual(obs, exp)
-
-        # Different chars.
-        exp = [DNASequence('AC'), DNASequence('AG'), DNASequence('GC'),
-               DNASequence('GG')]
-        obs = sorted(DNASequence('RS').nondegenerates(), key=str)
-        self.assertEqual(obs, exp)
-
-        # Odd number of chars.
-        obs = list(DNASequence('NNN').nondegenerates())
-        self.assertEqual(len(obs), 4**3)
-
-    def test_nondegenerates_mixed_degens(self):
-        exp = [DNASequence('AGC'), DNASequence('AGT'), DNASequence('GGC'),
-               DNASequence('GGT')]
-        obs = sorted(DNASequence('RGY').nondegenerates(), key=str)
-        self.assertEqual(obs, exp)
-
-    def test_nondegenerates_gap_mixed_case(self):
-        exp = [DNASequence('-A.a'), DNASequence('-A.c'),
-               DNASequence('-C.a'), DNASequence('-C.c')]
-        obs = sorted(DNASequence('-M.m').nondegenerates(), key=str)
-        self.assertEqual(obs, exp)
-
-
-class RNASequenceTests(TestCase):
-
-    def setUp(self):
-        self.empty = RNASequence('')
-        self.b1 = RNASequence('GAUUACA')
-        self.b2 = RNASequence('ACCGGUACC', id="test-seq-2",
-                              description="A test sequence", quality=range(9))
-        self.b3 = RNASequence(
-            'ACCGGTACC', id="bad-seq-1",
-            description="Not a RNA sequence")
-        self.b4 = RNASequence(
-            'MRWSYKVHDBN', id="degen",
-            description="All of the degenerate bases")
-        self.b5 = RNASequence('.G--AUUAC-A...')
-
-    def test_alphabet(self):
-        exp = {
-            'A', 'C', 'B', 'D', 'G', 'H', 'K', 'M', 'N', 'S', 'R', 'U', 'W',
-            'V', 'Y', 'a', 'c', 'b', 'd', 'g', 'h', 'k', 'm', 'n', 's', 'r',
-            'u', 'w', 'v', 'y'
-        }
-
-        self.assertEqual(self.b1.alphabet(), exp)
-        self.assertEqual(RNASequence.alphabet(), exp)
-
-    def test_gap_alphabet(self):
-        self.assertEqual(self.b1.gap_alphabet(), set('-.'))
-
-    def test_complement_map(self):
-        exp = {
-            '-': '-', '.': '.', 'A': 'U', 'C': 'G', 'B': 'V', 'D': 'H',
-            'G': 'C', 'H': 'D', 'K': 'M', 'M': 'K', 'N': 'N', 'S': 'S',
-            'R': 'Y', 'U': 'A', 'W': 'W', 'V': 'B', 'Y': 'R', 'a': 'u',
-            'c': 'g', 'b': 'v', 'd': 'h', 'g': 'c', 'h': 'd', 'k': 'm',
-            'm': 'k', 'n': 'n', 's': 's', 'r': 'y', 'u': 'a', 'w': 'w',
-            'v': 'b', 'y': 'r'
-        }
-        self.assertEqual(self.b1.complement_map(), exp)
-        self.assertEqual(RNASequence.complement_map(), exp)
-
-    def test_iupac_standard_characters(self):
-        exp = set("ACGUacgu")
-        self.assertEqual(self.b1.iupac_standard_characters(), exp)
-        self.assertEqual(RNASequence.iupac_standard_characters(), exp)
-
-    def test_iupac_degeneracies(self):
-        exp = {
-            'B': set(['C', 'U', 'G']), 'D': set(['A', 'U', 'G']),
-            'H': set(['A', 'C', 'U']), 'K': set(['U', 'G']),
-            'M': set(['A', 'C']), 'N': set(['A', 'C', 'U', 'G']),
-            'S': set(['C', 'G']), 'R': set(['A', 'G']), 'W': set(['A', 'U']),
-            'V': set(['A', 'C', 'G']), 'Y': set(['C', 'U']),
-            'b': set(['c', 'u', 'g']), 'd': set(['a', 'u', 'g']),
-            'h': set(['a', 'c', 'u']), 'k': set(['u', 'g']),
-            'm': set(['a', 'c']), 'n': set(['a', 'c', 'u', 'g']),
-            's': set(['c', 'g']), 'r': set(['a', 'g']), 'w': set(['a', 'u']),
-            'v': set(['a', 'c', 'g']), 'y': set(['c', 'u'])
-        }
-        self.assertEqual(self.b1.iupac_degeneracies(), exp)
-        self.assertEqual(RNASequence.iupac_degeneracies(), exp)
-
-    def test_iupac_degenerate_characters(self):
-        exp = set(['B', 'D', 'H', 'K', 'M', 'N', 'S', 'R', 'W', 'V', 'Y',
-                   'b', 'd', 'h', 'k', 'm', 'n', 's', 'r', 'w', 'v', 'y'])
-        self.assertEqual(self.b1.iupac_degenerate_characters(), exp)
-        self.assertEqual(RNASequence.iupac_degenerate_characters(), exp)
-
-    def test_iupac_characters(self):
-        exp = {
-            'A', 'C', 'B', 'D', 'G', 'H', 'K', 'M', 'N', 'S', 'R', 'U', 'W',
-            'V', 'Y', 'a', 'c', 'b', 'd', 'g', 'h', 'k', 'm', 'n', 's', 'r',
-            'u', 'w', 'v', 'y'
-        }
-        self.assertEqual(self.b1.iupac_characters(), exp)
-        self.assertEqual(RNASequence.iupac_characters(), exp)
-
-    def test_complement(self):
-        # use equals method to ensure that id, description, and quality are
-        # correctly propagated to the resulting sequence
-        self.assertTrue(self.b1.complement().equals(RNASequence("CUAAUGU")))
-
-        self.assertTrue(self.b2.complement().equals(
-            RNASequence("UGGCCAUGG", id="test-seq-2",
-                        description="A test sequence", quality=range(9))))
-
-        self.assertRaises(BiologicalSequenceError, self.b3.complement)
-
-        self.assertTrue(self.b4.complement().equals(
-            RNASequence("KYWSRMBDHVN", id="degen",
-                        description="All of the degenerate bases")))
-
-        self.assertTrue(self.b5.complement().equals(
-            RNASequence(".C--UAAUG-U...")))
-
-    def test_reverse_complement(self):
-        # use equals method to ensure that id, description, and (reversed)
-        # quality scores are correctly propagated to the resulting sequence
-        self.assertTrue(self.b1.reverse_complement().equals(
-            RNASequence("UGUAAUC")))
-
-        self.assertTrue(self.b2.reverse_complement().equals(
-            RNASequence("GGUACCGGU", id="test-seq-2",
-                        description="A test sequence",
-                        quality=range(9)[::-1])))
-
-        self.assertRaises(BiologicalSequenceError, self.b3.reverse_complement)
-
-        self.assertTrue(self.b4.reverse_complement().equals(
-            RNASequence("NVHDBMRSWYK", id="degen",
-                        description="All of the degenerate bases")))
-
-    def test_unsupported_characters(self):
-        self.assertEqual(self.b1.unsupported_characters(), set())
-        self.assertEqual(self.b2.unsupported_characters(), set())
-        self.assertEqual(self.b3.unsupported_characters(), set('T'))
-        self.assertEqual(self.b4.unsupported_characters(), set())
-
-    def test_has_unsupported_characters(self):
-        self.assertFalse(self.b1.has_unsupported_characters())
-        self.assertFalse(self.b2.has_unsupported_characters())
-        self.assertTrue(self.b3.has_unsupported_characters())
-        self.assertFalse(self.b4.has_unsupported_characters())
-
-    def test_is_reverse_complement(self):
-        self.assertFalse(self.b1.is_reverse_complement(self.b1))
-
-        # id, description, and quality scores should be ignored (only sequence
-        # data and type should be compared)
-        self.assertTrue(self.b1.is_reverse_complement(
-            RNASequence('UGUAAUC', quality=range(7))))
-
-        self.assertTrue(
-            self.b4.is_reverse_complement(RNASequence('NVHDBMRSWYK')))
-
-    def test_nondegenerates_invalid(self):
-        with self.assertRaises(BiologicalSequenceError):
-            list(RNASequence('AZA').nondegenerates())
-
-    def test_nondegenerates_empty(self):
-        self.assertEqual(list(self.empty.nondegenerates()), [self.empty])
-
-    def test_nondegenerates_no_degens(self):
-        self.assertEqual(list(self.b1.nondegenerates()), [self.b1])
-
-    def test_nondegenerates_all_degens(self):
-        # Same chars.
-        exp = [RNASequence('CC'), RNASequence('CG'), RNASequence('GC'),
-               RNASequence('GG')]
-        # Sort based on sequence string, as order is not guaranteed.
-        obs = sorted(RNASequence('SS').nondegenerates(), key=str)
-        self.assertEqual(obs, exp)
-
-        # Different chars.
-        exp = [RNASequence('AC'), RNASequence('AG'), RNASequence('GC'),
-               RNASequence('GG')]
-        obs = sorted(RNASequence('RS').nondegenerates(), key=str)
-        self.assertEqual(obs, exp)
-
-        # Odd number of chars.
-        obs = list(RNASequence('NNN').nondegenerates())
-        self.assertEqual(len(obs), 4**3)
-
-    def test_nondegenerates_mixed_degens(self):
-        exp = [RNASequence('AGC'), RNASequence('AGU'), RNASequence('GGC'),
-               RNASequence('GGU')]
-        obs = sorted(RNASequence('RGY').nondegenerates(), key=str)
-        self.assertEqual(obs, exp)
-
-    def test_nondegenerates_gap_mixed_case(self):
-        exp = [RNASequence('-A.a'), RNASequence('-A.c'),
-               RNASequence('-C.a'), RNASequence('-C.c')]
-        obs = sorted(RNASequence('-M.m').nondegenerates(), key=str)
-        self.assertEqual(obs, exp)
-
-
-class ProteinSequenceTests(TestCase):
-
-    def setUp(self):
-        self.empty = ProteinSequence('')
-        self.p1 = ProteinSequence('GREG')
-        self.p2 = ProteinSequence(
-            'PRTEINSEQNCE', id="test-seq-2",
-            description="A test sequence")
-        self.p3 = ProteinSequence(
-            'PROTEIN', id="bad-seq-1",
-            description="Not a protein sequence")
-
-    def test_alphabet(self):
-        exp = {
-            'A', 'B', 'C', 'D', 'E', 'F', 'G', 'H', 'I', 'K', 'L', 'M', 'N',
-            'P', 'Q', 'R', 'S', 'T', 'V', 'W', 'X', 'Y', 'Z', 'a', 'b', 'c',
-            'd', 'e', 'f', 'g', 'h', 'i', 'k', 'l', 'm', 'n', 'p', 'q', 'r',
-            's', 't', 'v', 'w', 'x', 'y', 'z'
-        }
-
-        self.assertEqual(self.p1.alphabet(), exp)
-        self.assertEqual(ProteinSequence.alphabet(), exp)
-
-    def test_gap_alphabet(self):
-        self.assertEqual(self.p1.gap_alphabet(), set('-.'))
-
-    def test_iupac_standard_characters(self):
-        exp = set("ACDEFGHIKLMNPQRSTVWYacdefghiklmnpqrstvwy")
-        self.assertEqual(self.p1.iupac_standard_characters(), exp)
-        self.assertEqual(ProteinSequence.iupac_standard_characters(), exp)
-
-    def test_iupac_degeneracies(self):
-        exp = {
-            'B': set(['D', 'N']), 'Z': set(['E', 'Q']),
-            'X': set(['A', 'C', 'D', 'E', 'F', 'G', 'H', 'I', 'K', 'L', 'M',
-                      'N', 'P', 'Q', 'R', 'S', 'T', 'V', 'W', 'Y']),
-            'b': set(['d', 'n']), 'z': set(['e', 'q']),
-            'x': set(['a', 'c', 'd', 'e', 'f', 'g', 'h', 'i', 'k', 'l', 'm',
-                      'n', 'p', 'q', 'r', 's', 't', 'v', 'w', 'y']),
-        }
-        self.assertEqual(self.p1.iupac_degeneracies(), exp)
-        self.assertEqual(ProteinSequence.iupac_degeneracies(), exp)
-
-    def test_iupac_degenerate_characters(self):
-        exp = set(['B', 'X', 'Z', 'b', 'x', 'z'])
-        self.assertEqual(self.p1.iupac_degenerate_characters(), exp)
-        self.assertEqual(ProteinSequence.iupac_degenerate_characters(), exp)
-
-    def test_iupac_characters(self):
-        exp = {
-            'A', 'B', 'C', 'D', 'E', 'F', 'G', 'H', 'I', 'K', 'L', 'M', 'N',
-            'P', 'Q', 'R', 'S', 'T', 'V', 'W', 'X', 'Y', 'Z', 'a', 'b',
-            'c', 'd', 'e', 'f', 'g', 'h', 'i', 'k', 'l', 'm', 'n', 'p', 'q',
-            'r', 's', 't', 'v', 'w', 'x', 'y', 'z'
-        }
-        self.assertEqual(self.p1.iupac_characters(), exp)
-        self.assertEqual(ProteinSequence.iupac_characters(), exp)
-
-    def test_nondegenerates(self):
-        exp = [ProteinSequence('AD'), ProteinSequence('AN')]
-        # Sort based on sequence string, as order is not guaranteed.
-        obs = sorted(ProteinSequence('AB').nondegenerates(), key=str)
-        self.assertEqual(obs, exp)
+        for seqs in seqs1, seqs2:
+            for seq1, seq2 in itertools.product(seqs, repeat=2):
+                distance = seq1.distance(seq2,
+                                         metric=scipy.spatial.distance.hamming)
+                self.assertEqual(distance, 0.0)
+
+        for seq1, seq2 in itertools.product(seqs1, seqs2):
+            distance = seq1.distance(seq2,
+                                     metric=scipy.spatial.distance.hamming)
+            self.assertEqual(distance, 0.75)
+
+    def test_default_metric_with_metadata(self):
+        # test for #1254
+        seqs1 = [
+            Sequence("ACGT"),
+            Sequence("ACGT", metadata={'id': 'abc'}),
+            Sequence("ACGT", positional_metadata={'qual': range(4)})
+        ]
+        seqs2 = [
+            Sequence("AAAA"),
+            Sequence("AAAA", metadata={'id': 'def'}),
+            Sequence("AAAA", positional_metadata={'qual': range(4, 8)})
+        ]
+
+        for seqs in seqs1, seqs2:
+            for seq1, seq2 in itertools.product(seqs, repeat=2):
+                distance = seq1.distance(seq2)
+                self.assertEqual(distance, 0.0)
+
+        for seq1, seq2 in itertools.product(seqs1, seqs2):
+            distance = seq1.distance(seq2)
+            self.assertEqual(distance, 0.75)
+
+    def test_default_metric_matches_hamming(self):
+        seq1 = Sequence("abcdef")
+        seq2 = Sequence("12bcef")
+        seq_wrong = Sequence("abcdefghijklmnop")
+
+        distance1 = seq1.distance(seq2)
+        distance2 = skbio.sequence.distance.hamming(seq1, seq2)
+
+        self.assertEqual(distance1, distance2)
+
+        with self.assertRaises(ValueError):
+            seq1.distance(seq_wrong)
+
+        with self.assertRaises(ValueError):
+            seq_wrong.distance(seq1)
+
+
+# NOTE: this must be a *separate* class for doctests only (no unit tests). nose
+# will not run the unit tests otherwise
+#
+# these doctests exercise the correct formatting of Sequence's repr in a
+# variety of situations. they are more extensive than the unit tests above
+# (TestSequence.test_repr) but cannot be relied upon for coverage (the unit
+# tests take care of this)
+class SequenceReprDoctests:
+    r""">>> import pandas as pd
+    >>> from skbio import Sequence
+
+    Empty (minimal) sequence:
+
+    >>> Sequence('')
+    Sequence
+    -------------
+    Stats:
+        length: 0
+    -------------
+
+    Single character sequence:
+
+    >>> Sequence('G')
+    Sequence
+    -------------
+    Stats:
+        length: 1
+    -------------
+    0 G
+
+    Multicharacter sequence:
+
+    >>> Sequence('ACGT')
+    Sequence
+    -------------
+    Stats:
+        length: 4
+    -------------
+    0 ACGT
+
+    Full single line:
+
+    >>> Sequence('A' * 60)
+    Sequence
+    -------------------------------------------------------------------
+    Stats:
+        length: 60
+    -------------------------------------------------------------------
+    0 AAAAAAAAAA AAAAAAAAAA AAAAAAAAAA AAAAAAAAAA AAAAAAAAAA AAAAAAAAAA
+
+    Full single line with 1 character overflow:
+
+    >>> Sequence('A' * 61)
+    Sequence
+    --------------------------------------------------------------------
+    Stats:
+        length: 61
+    --------------------------------------------------------------------
+    0  AAAAAAAAAA AAAAAAAAAA AAAAAAAAAA AAAAAAAAAA AAAAAAAAAA AAAAAAAAAA
+    60 A
+
+    Two full lines:
+
+    >>> Sequence('T' * 120)
+    Sequence
+    --------------------------------------------------------------------
+    Stats:
+        length: 120
+    --------------------------------------------------------------------
+    0  TTTTTTTTTT TTTTTTTTTT TTTTTTTTTT TTTTTTTTTT TTTTTTTTTT TTTTTTTTTT
+    60 TTTTTTTTTT TTTTTTTTTT TTTTTTTTTT TTTTTTTTTT TTTTTTTTTT TTTTTTTTTT
+
+    Two full lines with 1 character overflow:
+
+    >>> Sequence('T' * 121)
+    Sequence
+    ---------------------------------------------------------------------
+    Stats:
+        length: 121
+    ---------------------------------------------------------------------
+    0   TTTTTTTTTT TTTTTTTTTT TTTTTTTTTT TTTTTTTTTT TTTTTTTTTT TTTTTTTTTT
+    60  TTTTTTTTTT TTTTTTTTTT TTTTTTTTTT TTTTTTTTTT TTTTTTTTTT TTTTTTTTTT
+    120 T
+
+    Five full lines (maximum amount of information):
+
+    >>> Sequence('A' * 300)
+    Sequence
+    ---------------------------------------------------------------------
+    Stats:
+        length: 300
+    ---------------------------------------------------------------------
+    0   AAAAAAAAAA AAAAAAAAAA AAAAAAAAAA AAAAAAAAAA AAAAAAAAAA AAAAAAAAAA
+    60  AAAAAAAAAA AAAAAAAAAA AAAAAAAAAA AAAAAAAAAA AAAAAAAAAA AAAAAAAAAA
+    120 AAAAAAAAAA AAAAAAAAAA AAAAAAAAAA AAAAAAAAAA AAAAAAAAAA AAAAAAAAAA
+    180 AAAAAAAAAA AAAAAAAAAA AAAAAAAAAA AAAAAAAAAA AAAAAAAAAA AAAAAAAAAA
+    240 AAAAAAAAAA AAAAAAAAAA AAAAAAAAAA AAAAAAAAAA AAAAAAAAAA AAAAAAAAAA
+
+    Six lines starts "summarized" output:
+
+    >>> Sequence('A' * 301)
+    Sequence
+    ---------------------------------------------------------------------
+    Stats:
+        length: 301
+    ---------------------------------------------------------------------
+    0   AAAAAAAAAA AAAAAAAAAA AAAAAAAAAA AAAAAAAAAA AAAAAAAAAA AAAAAAAAAA
+    60  AAAAAAAAAA AAAAAAAAAA AAAAAAAAAA AAAAAAAAAA AAAAAAAAAA AAAAAAAAAA
+    ...
+    240 AAAAAAAAAA AAAAAAAAAA AAAAAAAAAA AAAAAAAAAA AAAAAAAAAA AAAAAAAAAA
+    300 A
+
+    A naive algorithm would assume the width of the first column (noting
+    position) based on the sequence's length alone. This can be off by one if
+    the last position (in the last line) has a shorter width than the width
+    calculated from the sequence's length. This test case ensures that only a
+    single space is inserted between position 99960 and the first sequence
+    chunk:
+
+    >>> Sequence('A' * 100000)
+    Sequence
+    -----------------------------------------------------------------------
+    Stats:
+        length: 100000
+    -----------------------------------------------------------------------
+    0     AAAAAAAAAA AAAAAAAAAA AAAAAAAAAA AAAAAAAAAA AAAAAAAAAA AAAAAAAAAA
+    60    AAAAAAAAAA AAAAAAAAAA AAAAAAAAAA AAAAAAAAAA AAAAAAAAAA AAAAAAAAAA
+    ...
+    99900 AAAAAAAAAA AAAAAAAAAA AAAAAAAAAA AAAAAAAAAA AAAAAAAAAA AAAAAAAAAA
+    99960 AAAAAAAAAA AAAAAAAAAA AAAAAAAAAA AAAAAAAAAA
+
+    The largest sequence that can be displayed using six chunks per line:
+
+    >>> Sequence('A' * 100020)
+    Sequence
+    -----------------------------------------------------------------------
+    Stats:
+        length: 100020
+    -----------------------------------------------------------------------
+    0     AAAAAAAAAA AAAAAAAAAA AAAAAAAAAA AAAAAAAAAA AAAAAAAAAA AAAAAAAAAA
+    60    AAAAAAAAAA AAAAAAAAAA AAAAAAAAAA AAAAAAAAAA AAAAAAAAAA AAAAAAAAAA
+    ...
+    99900 AAAAAAAAAA AAAAAAAAAA AAAAAAAAAA AAAAAAAAAA AAAAAAAAAA AAAAAAAAAA
+    99960 AAAAAAAAAA AAAAAAAAAA AAAAAAAAAA AAAAAAAAAA AAAAAAAAAA AAAAAAAAAA
+
+    A single character longer than the previous sequence causes the optimal
+    number of chunks per line to be 5:
+
+    >>> Sequence('A' * 100021)
+    Sequence
+    -------------------------------------------------------------
+    Stats:
+        length: 100021
+    -------------------------------------------------------------
+    0      AAAAAAAAAA AAAAAAAAAA AAAAAAAAAA AAAAAAAAAA AAAAAAAAAA
+    50     AAAAAAAAAA AAAAAAAAAA AAAAAAAAAA AAAAAAAAAA AAAAAAAAAA
+    ...
+    99950  AAAAAAAAAA AAAAAAAAAA AAAAAAAAAA AAAAAAAAAA AAAAAAAAAA
+    100000 AAAAAAAAAA AAAAAAAAAA A
+
+    Wide range of characters (locale-independent):
+
+    >>> import string
+    >>> Sequence((string.ascii_letters + string.punctuation + string.digits +
+    ...          'a space') * 567)
+    Sequence
+    -----------------------------------------------------------------------
+    Stats:
+        length: 57267
+    -----------------------------------------------------------------------
+    0     abcdefghij klmnopqrst uvwxyzABCD EFGHIJKLMN OPQRSTUVWX YZ!"#$%&'(
+    60    )*+,-./:;< =>?@[\]^_` {|}~012345 6789a spac eabcdefghi jklmnopqrs
+    ...
+    57180 opqrstuvwx yzABCDEFGH IJKLMNOPQR STUVWXYZ!" #$%&'()*+, -./:;<=>?@
+    57240 [\]^_`{|}~ 0123456789 a space
+
+    Supply horrendous metadata, positional, and interval metadata to
+    exercise a variety of metadata formatting cases and rules. Sorting
+    should be by type, then by value within each type (Python 3
+    doesn't allow sorting of mixed types):
+
+    >>> metadata = {
+    ...     # str key, str value
+    ...     'abc': 'some description',
+    ...     # int value
+    ...     'foo': 42,
+    ...     # unsupported type (dict) value
+    ...     'bar': {},
+    ...     # int key, wrapped str (single line)
+    ...     42: 'some words to test text wrapping and such... yada yada yada '
+    ...         'yada yada yada yada yada.',
+    ...     # bool key, wrapped str (multi-line)
+    ...     True: 'abc ' * 34,
+    ...     # float key, truncated str (too long)
+    ...     42.5: 'abc ' * 200,
+    ...     # unsupported type (tuple) key, unsupported type (list) value
+    ...     ('foo', 'bar'): [1, 2, 3],
+    ...     # bytes key, single long word that wraps
+    ...     b'long word': 'abc' * 30,
+    ...     # truncated key (too long), None value
+    ...     'too long of a key name to display in repr': None,
+    ...     # wrapped bytes value (has b'' prefix)
+    ...     'bytes wrapped value': b'abcd' * 25,
+    ...     # float value
+    ...     0.1: 99.9999,
+    ...     # bool value
+    ...     43: False,
+    ...     # None key, complex value
+    ...     None: complex(-1.0, 0.0),
+    ...     # nested quotes
+    ...     10: '"\''
+    ... }
+    >>> positional_metadata = pd.DataFrame.from_items([
+    ...     # str key, int list value
+    ...     ('foo', [1, 2, 3, 4]),
+    ...     # float key, float list value
+    ...     (42.5, [2.5, 3.0, 4.2, -0.00001]),
+    ...     # int key, object list value
+    ...     (42, [[], 4, 5, {}]),
+    ...     # truncated key (too long), bool list value
+    ...     ('abc' * 90, [True, False, False, True]),
+    ...     # None key
+    ...     (None, range(4))])
+    >>> interval_metadata = IntervalMetadata(4)
+    >>> _ = interval_metadata.add([(0, 2), (1, 3)],
+    ...                           [(False, True), (False, False)],
+    ...                           {'gene': 'p53'})
+    >>> _ = interval_metadata.add([(1, 4)])
+    >>> Sequence('ACGT', metadata=metadata,
+    ...          positional_metadata=positional_metadata,
+    ...          interval_metadata=interval_metadata)
+    Sequence
+    -----------------------------------------------------------------------
+    Metadata:
+        None: (-1+0j)
+        True: 'abc abc abc abc abc abc abc abc abc abc abc abc abc abc abc
+               abc abc abc abc abc abc abc abc abc abc abc abc abc abc abc
+               abc abc abc abc '
+        b'long word': 'abcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabca
+                       bcabcabcabcabcabcabcabcabcabcabcabcabc'
+        0.1: 99.9999
+        42.5: <class 'str'>
+        10: '"\''
+        42: 'some words to test text wrapping and such... yada yada yada
+             yada yada yada yada yada.'
+        43: False
+        'abc': 'some description'
+        'bar': <class 'dict'>
+        'bytes wrapped value': b'abcdabcdabcdabcdabcdabcdabcdabcdabcdabcdab
+                                 cdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcd
+                                 abcdabcdabcdabcd'
+        'foo': 42
+        <class 'str'>: None
+        <class 'tuple'>: <class 'list'>
+    Positional metadata:
+        'foo': <dtype: int64>
+        42.5: <dtype: float64>
+        42: <dtype: object>
+        <class 'str'>: <dtype: bool>
+        None: <dtype: int64>
+    Interval metadata:
+        2 interval features
+    Stats:
+        length: 4
+    -----------------------------------------------------------------------
+    0 ACGT
+
+    """
+    pass
+
 
 if __name__ == "__main__":
     main()

@@ -1,0 +1,9 @@
+HTTPretty >= 0.8.14
+coveralls
+natsort
+lockfile
+CacheControl
+Sphinx
+sphinx-bootstrap-theme
+numpydoc
+check-manifest

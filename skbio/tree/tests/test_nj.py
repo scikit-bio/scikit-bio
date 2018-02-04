@@ -6,14 +6,12 @@
 # The full license is in the file COPYING.txt, distributed with this software.
 # ----------------------------------------------------------------------------
 
-from __future__ import absolute_import, division, print_function
-
-from six import StringIO
+import io
 from unittest import TestCase, main
 
 from skbio import DistanceMatrix, TreeNode, nj
 from skbio.tree._nj import (
-    _compute_q, _compute_collapsed_dm, _lowest_index, _otu_to_new_node,
+    _compute_q, _compute_collapsed_dm, _lowest_index,
     _pair_members_to_new_node)
 
 
@@ -32,7 +30,8 @@ class NjTests(TestCase):
         # (d:2.0000,e:1.0000,(c:4.0000,(a:2.0000,b:3.0000):3.0000):2.0000);
         self.expected1_str = ("(d:2.000000, (c:4.000000, (b:3.000000,"
                               " a:2.000000):3.000000):2.000000, e:1.000000);")
-        self.expected1_TreeNode = TreeNode.read(StringIO(self.expected1_str))
+        self.expected1_TreeNode = TreeNode.read(
+                io.StringIO(self.expected1_str))
 
         # this example was pulled from the Phylip manual
         # http://evolution.genetics.washington.edu/phylip/doc/neighbor.html
@@ -50,7 +49,8 @@ class NjTests(TestCase):
                               ", (Gorilla:0.15393, (Chimp:0.15167, Human:0.117"
                               "53):0.03982):0.02696):0.04648):0.42027, Bovine:"
                               "0.91769);")
-        self.expected2_TreeNode = TreeNode.read(StringIO(self.expected2_str))
+        self.expected2_TreeNode = TreeNode.read(
+                io.StringIO(self.expected2_str))
 
         data3 = [[0, 5, 4, 7, 6, 8],
                  [5, 0, 7, 10, 9, 11],
@@ -63,7 +63,8 @@ class NjTests(TestCase):
         self.expected3_str = ("((((0:1.000000,1:4.000000):1.000000,2:2.000000"
                               "):1.250000,5:4.750000):0.750000,3:2.750000,4:2."
                               "250000);")
-        self.expected3_TreeNode = TreeNode.read(StringIO(self.expected3_str))
+        self.expected3_TreeNode = TreeNode.read(
+                io.StringIO(self.expected3_str))
 
         # this dm can yield negative branch lengths
         data4 = [[0,  5,  9,  9,  800],
@@ -166,20 +167,6 @@ class NjTests(TestCase):
         self.assertEqual(_lowest_index(self.dm1), (4, 3))
         self.assertEqual(_lowest_index(_compute_q(self.dm1)), (1, 0))
 
-    def test_otu_to_new_node(self):
-        self.assertEqual(_otu_to_new_node(self.dm1, 'a', 'b', 'c', True), 7)
-        self.assertEqual(_otu_to_new_node(self.dm1, 'a', 'b', 'd', True), 7)
-        self.assertEqual(_otu_to_new_node(self.dm1, 'a', 'b', 'e', True), 6)
-
-    def test_otu_to_new_node_zero_branch_length(self):
-        data = [[0, 40, 3],
-                [40, 0, 3],
-                [3, 3, 0]]
-        ids = ['a', 'b', 'c']
-        dm = DistanceMatrix(data, ids)
-        self.assertEqual(_otu_to_new_node(dm, 'a', 'b', 'c', True), 0)
-        self.assertEqual(_otu_to_new_node(dm, 'a', 'b', 'c', False), -17)
-
     def test_pair_members_to_new_node(self):
         self.assertEqual(_pair_members_to_new_node(self.dm1, 'a', 'b', True),
                          (2, 3))
@@ -202,6 +189,7 @@ class NjTests(TestCase):
         # this makes it clear why negative branch lengths don't make sense...
         self.assertEqual(
             _pair_members_to_new_node(dm, 'a', 'b', False), (-16, 20))
+
 
 if __name__ == "__main__":
     main()

@@ -75,7 +75,7 @@ three objects with IDs ``a``, ``b``, and ``c``::
 
 Load a distance matrix from the file:
 
->>> from StringIO import StringIO
+>>> from io import StringIO
 >>> from skbio import DistanceMatrix
 >>> dm_fh = StringIO("\\ta\\tb\\tc\\n"
 ...                  "a\\t0.0\\t0.5\\t1.0\\n"
@@ -109,7 +109,7 @@ array([ 1.  ,  0.75,  0.  ])
 Serialize the distance matrix to delimited text file:
 
 >>> out_fh = StringIO()
->>> dm.write(out_fh)
+>>> _ = dm.write(out_fh)
 >>> out_fh.getvalue() == dm_fh.getvalue()
 True
 

@@ -9,8 +9,7 @@
 from cpython cimport bool
 import numpy as np
 cimport numpy as cnp
-from skbio.alignment import Alignment
-from skbio.sequence import ProteinSequence, NucleotideSequence
+from skbio.sequence import Protein, Sequence
 
 cdef extern from "_lib/ssw.h":
 
@@ -73,21 +72,6 @@ mid_table = np.array(['M', 'I', 'D'])
 
 cdef class AlignmentStructure:
     """Wraps the result of an alignment c struct so it is accessible to Python
-
-    Attributes
-    ----------
-    optimal_alignment_score
-    suboptimal_alignment_score
-    target_begin
-    target_end_optimal
-    target_end_suboptimal
-    query_begin
-    query_end
-    cigar
-    query_sequence
-    target_sequence
-    aligned_query_sequence
-    aligned_target_sequence
 
     Notes
     -----
@@ -521,7 +505,7 @@ cdef class StripedSmithWaterman:
     Notes
     -----
     This is a wrapper for the SSW package [1]_.
-    
+
     `mask_length` has to be >= 15, otherwise the suboptimal alignment
     information will NOT be returned.
 
@@ -532,7 +516,7 @@ cdef class StripedSmithWaterman:
     nucleotide sequences.
 
     A substitution matrix must be provided when working with protein sequences.
-    
+
     References
     ----------
     .. [1] Zhao, Mengyao, Wan-Ping Lee, Erik P. Garrison, & Gabor T.
@@ -726,79 +710,3 @@ cdef class StripedSmithWaterman:
                 py_list_matrix[i] = dict2d[row][column]
                 i += 1
         return py_list_matrix
-
-
-def local_pairwise_align_ssw(sequence1, sequence2,
-                             **kwargs):
-    """Align query and target sequences with Striped Smith-Waterman.
-
-    Parameters
-    ----------
-    sequence1 : str or BiologicalSequence
-        The first unaligned sequence
-    sequence2 : str or BiologicalSequence
-        The second unaligned sequence
-
-    Returns
-    -------
-    ``skbio.alignment.Alignment``
-        The resulting alignment as an Alignment object
-
-    Notes
-    -----
-    This is a wrapper for the SSW package [1]_.
-
-    For a complete list of optional keyword-arguments that can be provided,
-    see ``skbio.alignment.StripedSmithWaterman``.
-
-    The following kwargs will not have any effect: `suppress_sequences` and
-    `zero_index`
-
-    If an alignment does not meet a provided filter, `None` will be returned.
-    
-    References
-    ----------
-    .. [1] Zhao, Mengyao, Wan-Ping Lee, Erik P. Garrison, & Gabor T.
-       Marth. "SSW Library: An SIMD Smith-Waterman C/C++ Library for
-       Applications". PLOS ONE (2013). Web. 11 July 2014.
-       http://www.plosone.org/article/info:doi/10.1371/journal.pone.0082138
-     
-    See Also
-    --------
-    skbio.alignment.StripedSmithWaterman
-
-    """
-    # We need the sequences for `Alignment` to make sense, so don't let the
-    # user suppress them.
-    kwargs['suppress_sequences'] = False
-    kwargs['zero_index'] = True
-
-    if isinstance(sequence1, ProteinSequence):
-        kwargs['protein'] = True
-
-    query = StripedSmithWaterman(str(sequence1), **kwargs)
-    alignment = query(str(sequence2))
-
-    # If there is no cigar, then it has failed a filter. Return None.
-    if not alignment.cigar:
-        return None
-
-    start_end = None
-    if alignment.query_begin != -1:
-        start_end = [
-            (alignment.query_begin, alignment.query_end),
-            (alignment.target_begin, alignment.target_end_optimal)
-        ]
-    if kwargs.get('protein', False):
-        seqs = [
-            ProteinSequence(alignment.aligned_query_sequence, id='query'),
-            ProteinSequence(alignment.aligned_target_sequence, id='target')
-        ]
-    else:
-        seqs = [
-            NucleotideSequence(alignment.aligned_query_sequence, id='query'),
-            NucleotideSequence(alignment.aligned_target_sequence, id='target')
-        ]
-
-    return Alignment(seqs, score=alignment.optimal_alignment_score,
-                     start_end_positions=start_end)

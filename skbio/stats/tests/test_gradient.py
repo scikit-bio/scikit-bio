@@ -6,10 +6,7 @@
 # The full license is in the file COPYING.txt, distributed with this software.
 # ----------------------------------------------------------------------------
 
-from __future__ import absolute_import, division, print_function
-from six import StringIO
-from future.builtins import zip
-
+import io
 from operator import attrgetter
 from unittest import TestCase, main
 
@@ -18,7 +15,7 @@ import pandas as pd
 import numpy.testing as npt
 import pandas.util.testing as pdt
 
-from skbio.util import get_data_path
+from skbio.util import get_data_path, assert_data_frame_almost_equal
 from skbio.stats.gradient import (GradientANOVA, AverageGradientANOVA,
                                   TrajectoryGradientANOVA,
                                   FirstDifferenceGradientANOVA,
@@ -228,7 +225,7 @@ class GradientTests(BaseTests):
                                              's7': np.array([7]),
                                              's8': np.array([8])},
                                             orient='index')
-        trajectory.sort(columns=0, inplace=True)
+        trajectory.sort_values(by=0, inplace=True)
         w_vector = pd.Series(np.array([1, 5, 8, 12, 45, 80, 85, 90]),
                              ['s1', 's2', 's3', 's4',
                               's5', 's6', 's7', 's8']).astype(np.float64)
@@ -242,7 +239,7 @@ class GradientTests(BaseTests):
                                       's8': np.array([20.3428571428])},
                                      orient='index')
         obs = _weight_by_vector(trajectory, w_vector)
-        pdt.assert_frame_equal(obs.sort(axis=0), exp.sort(axis=0))
+        assert_data_frame_almost_equal(obs.sort_index(), exp.sort_index())
 
         trajectory = pd.DataFrame.from_dict({'s1': np.array([1]),
                                              's2': np.array([2]),
@@ -253,18 +250,22 @@ class GradientTests(BaseTests):
                                              's7': np.array([7]),
                                              's8': np.array([8])},
                                             orient='index')
-        trajectory.sort(columns=0, inplace=True)
+        trajectory.sort_values(by=0, inplace=True)
         w_vector = pd.Series(np.array([1, 2, 3, 4, 5, 6, 7, 8]),
                              ['s1', 's2', 's3', 's4',
                               's5', 's6', 's7', 's8']).astype(np.float64)
-        exp = pd.DataFrame.from_dict({'s1': np.array([1]), 's2': np.array([2]),
-                                      's3': np.array([3]), 's4': np.array([4]),
-                                      's5': np.array([5]), 's6': np.array([6]),
-                                      's7': np.array([7]), 's8': np.array([8])
+        exp = pd.DataFrame.from_dict({'s1': np.array([1.0]),
+                                      's2': np.array([2.0]),
+                                      's3': np.array([3.0]),
+                                      's4': np.array([4.0]),
+                                      's5': np.array([5.0]),
+                                      's6': np.array([6.0]),
+                                      's7': np.array([7.0]),
+                                      's8': np.array([8.0])
                                       },
                                      orient='index')
         obs = _weight_by_vector(trajectory, w_vector)
-        pdt.assert_frame_equal(obs.sort(axis=0), exp.sort(axis=0))
+        assert_data_frame_almost_equal(obs.sort_index(), exp.sort_index())
 
         trajectory = pd.DataFrame.from_dict({'s2': np.array([2]),
                                              's3': np.array([3]),
@@ -272,30 +273,32 @@ class GradientTests(BaseTests):
                                              's5': np.array([5]),
                                              's6': np.array([6])},
                                             orient='index')
-        trajectory.sort(columns=0, inplace=True)
+        trajectory.sort_values(by=0, inplace=True)
         w_vector = pd.Series(np.array([25, 30, 35, 40, 45]),
                              ['s2', 's3', 's4', 's5', 's6']).astype(np.float64)
-        exp = pd.DataFrame.from_dict({'s2': np.array([2]), 's3': np.array([3]),
-                                      's4': np.array([4]), 's5': np.array([5]),
-                                      's6': np.array([6])}, orient='index')
+        exp = pd.DataFrame.from_dict({'s2': np.array([2.0]),
+                                      's3': np.array([3.0]),
+                                      's4': np.array([4.0]),
+                                      's5': np.array([5.0]),
+                                      's6': np.array([6.0])}, orient='index')
         obs = _weight_by_vector(trajectory, w_vector)
-        pdt.assert_frame_equal(obs.sort(axis=0), exp.sort(axis=0))
+        assert_data_frame_almost_equal(obs.sort_index(), exp.sort_index())
 
         trajectory = pd.DataFrame.from_dict({'s1': np.array([1, 2, 3]),
                                              's2': np.array([2, 3, 4]),
                                              's3': np.array([5, 6, 7]),
                                              's4': np.array([8, 9, 10])},
                                             orient='index')
-        trajectory.sort(columns=0, inplace=True)
+        trajectory.sort_values(by=0, inplace=True)
         w_vector = pd.Series(np.array([1, 2, 3, 4]),
                              ['s1', 's2', 's3', 's4']).astype(np.float64)
         exp = pd.DataFrame.from_dict({'s1': np.array([1, 2, 3]),
                                       's2': np.array([2, 3, 4]),
                                       's3': np.array([5, 6, 7]),
                                       's4': np.array([8, 9, 10])},
-                                     orient='index')
+                                     orient='index').astype(np.float64)
         obs = _weight_by_vector(trajectory, w_vector)
-        pdt.assert_frame_equal(obs.sort(axis=0), exp.sort(axis=0))
+        assert_data_frame_almost_equal(obs.sort_index(), exp.sort_index())
 
         sample_ids = ['PC.356', 'PC.481', 'PC.355', 'PC.593', 'PC.354']
         trajectory = pd.DataFrame.from_dict({'PC.356': np.array([5.65948525,
@@ -332,9 +335,9 @@ class GradientTests(BaseTests):
                                                           -0.44931561,
                                                           0.74490965])
                                       }, orient='index')
-        obs = _weight_by_vector(trajectory.ix[sample_ids],
+        obs = _weight_by_vector(trajectory.loc[sample_ids],
                                 w_vector[sample_ids])
-        pdt.assert_frame_equal(obs.sort(axis=0), exp.sort(axis=0))
+        assert_data_frame_almost_equal(obs.sort_index(), exp.sort_index())
 
     def test_weight_by_vector_single_element(self):
         trajectory = pd.DataFrame.from_dict({'s1': np.array([42])},
@@ -342,7 +345,7 @@ class GradientTests(BaseTests):
         w_vector = pd.Series(np.array([5]), ['s1']).astype(np.float64)
 
         obs = _weight_by_vector(trajectory, w_vector)
-        pdt.assert_frame_equal(obs, trajectory)
+        assert_data_frame_almost_equal(obs, trajectory)
 
     def test_weight_by_vector_error(self):
         """Raises an error with erroneous inputs"""
@@ -401,18 +404,18 @@ class GroupResultsTests(BaseTests):
         raw_paths = ['gr_wo_msg_raw', 'gr_w_msg_raw']
 
         for gr, out_fp, raw_fp in zip(self.groups, out_paths, raw_paths):
-            obs_out_f = StringIO()
-            obs_raw_f = StringIO()
+            obs_out_f = io.StringIO()
+            obs_raw_f = io.StringIO()
             gr.to_files(obs_out_f, obs_raw_f)
             obs_out = obs_out_f.getvalue()
             obs_raw = obs_raw_f.getvalue()
             obs_out_f.close()
             obs_raw_f.close()
 
-            with open(get_data_path(out_fp), 'U') as f:
+            with open(get_data_path(out_fp)) as f:
                 exp_out = f.read()
 
-            with open(get_data_path(raw_fp), 'U') as f:
+            with open(get_data_path(raw_fp)) as f:
                 exp_raw = f.read()
 
             self.assertEqual(obs_out, exp_out)
@@ -425,18 +428,18 @@ class CategoryResultsTests(BaseTests):
         raw_paths = ['cr_no_data_raw', 'cr_data_raw']
 
         for cat, out_fp, raw_fp in zip(self.categories, out_paths, raw_paths):
-            obs_out_f = StringIO()
-            obs_raw_f = StringIO()
+            obs_out_f = io.StringIO()
+            obs_raw_f = io.StringIO()
             cat.to_files(obs_out_f, obs_raw_f)
             obs_out = obs_out_f.getvalue()
             obs_raw = obs_raw_f.getvalue()
             obs_out_f.close()
             obs_raw_f.close()
 
-            with open(get_data_path(out_fp), 'U') as f:
+            with open(get_data_path(out_fp)) as f:
                 exp_out = f.read()
 
-            with open(get_data_path(raw_fp), 'U') as f:
+            with open(get_data_path(raw_fp)) as f:
                 exp_raw = f.read()
 
             self.assertEqual(obs_out, exp_out)
@@ -449,18 +452,18 @@ class GradientANOVAResultsTests(BaseTests):
         raw_paths = ['vr_raw']
 
         for vr, out_fp, raw_fp in zip(self.vec_results, out_paths, raw_paths):
-            obs_out_f = StringIO()
-            obs_raw_f = StringIO()
+            obs_out_f = io.StringIO()
+            obs_raw_f = io.StringIO()
             vr.to_files(obs_out_f, obs_raw_f)
             obs_out = obs_out_f.getvalue()
             obs_raw = obs_raw_f.getvalue()
             obs_out_f.close()
             obs_raw_f.close()
 
-            with open(get_data_path(out_fp), 'U') as f:
+            with open(get_data_path(out_fp)) as f:
                 exp_out = f.read()
 
-            with open(get_data_path(raw_fp), 'U') as f:
+            with open(get_data_path(raw_fp)) as f:
                 exp_raw = f.read()
 
             self.assertEqual(obs_out, exp_out)
@@ -476,11 +479,11 @@ class GradientANOVATests(BaseTests):
         # Test with weighted = False
         bv = GradientANOVA(self.coords, self.prop_expl, self.metadata_map)
 
-        pdt.assert_frame_equal(bv._coords, self.coords_3axes)
+        assert_data_frame_almost_equal(bv._coords, self.coords_3axes)
         exp_prop_expl = np.array([25.6216900347, 15.7715955926,
                                   14.1215046787])
         npt.assert_equal(bv._prop_expl, exp_prop_expl)
-        pdt.assert_frame_equal(bv._metadata_map, self.metadata_map)
+        assert_data_frame_almost_equal(bv._metadata_map, self.metadata_map)
         self.assertTrue(bv._weighting_vector is None)
         self.assertFalse(bv._weighted)
 
@@ -488,13 +491,13 @@ class GradientANOVATests(BaseTests):
         bv = GradientANOVA(self.coords, self.prop_expl, self.metadata_map,
                            sort_category='Weight', weighted=True)
 
-        pdt.assert_frame_equal(bv._coords, self.coords_3axes)
+        assert_data_frame_almost_equal(bv._coords, self.coords_3axes)
         npt.assert_equal(bv._prop_expl, exp_prop_expl)
-        pdt.assert_frame_equal(bv._metadata_map, self.metadata_map)
+        assert_data_frame_almost_equal(bv._metadata_map, self.metadata_map)
         exp_weighting_vector = pd.Series(
             np.array([60, 55, 50, 52, 57, 65, 68, 70, 72]),
             ['PC.354', 'PC.355', 'PC.356', 'PC.481', 'PC.593', 'PC.607',
-             'PC.634', 'PC.635', 'PC.636']
+             'PC.634', 'PC.635', 'PC.636'], name='Weight'
             ).astype(np.float64)
         pdt.assert_series_equal(bv._weighting_vector, exp_weighting_vector)
         self.assertTrue(bv._weighted)
@@ -577,17 +580,21 @@ class GradientANOVATests(BaseTests):
 
         # Takes a subset from metadata_map
         bv = GradientANOVA(subset_coords, self.prop_expl, self.metadata_map)
-        pdt.assert_frame_equal(bv._coords.sort(axis=0),
-                               subset_coords.sort(axis=0))
-        pdt.assert_frame_equal(bv._metadata_map.sort(axis=0),
-                               subset_metadata_map.sort(axis=0))
+        assert_data_frame_almost_equal(
+            bv._coords.sort_index(),
+            subset_coords.sort_index())
+        assert_data_frame_almost_equal(
+            bv._metadata_map.sort_index(),
+            subset_metadata_map.sort_index())
 
         # Takes a subset from coords
         bv = GradientANOVA(self.coords, self.prop_expl, subset_metadata_map)
-        pdt.assert_frame_equal(bv._coords.sort(axis=0),
-                               subset_coords.sort(axis=0))
-        pdt.assert_frame_equal(bv._metadata_map.sort(axis=0),
-                               subset_metadata_map.sort(axis=0))
+        assert_data_frame_almost_equal(
+            bv._coords.sort_index(),
+            subset_coords.sort_index())
+        assert_data_frame_almost_equal(
+            bv._metadata_map.sort_index(),
+            subset_metadata_map.sort_index())
 
         # Takes a subset from metadata_map and coords at the same time
         coord_data = {
@@ -620,16 +627,18 @@ class GradientANOVATests(BaseTests):
             {'PC.355': np.array([0.236467470907, 0.21863434374,
                                  -0.0301637746424])},
             orient='index')
-        pdt.assert_frame_equal(bv._coords.sort(axis=0),
-                               exp_coords.sort(axis=0))
+        assert_data_frame_almost_equal(
+            bv._coords.sort_index(),
+            exp_coords.sort_index())
         exp_metadata_map = pd.DataFrame.from_dict(
             {'PC.355': {'Treatment': 'Control',
                         'DOB': '20061218',
                         'Weight': '55',
                         'Description': 'Control_mouse_I.D._355'}},
             orient='index')
-        pdt.assert_frame_equal(bv._metadata_map.sort(axis=0),
-                               exp_metadata_map.sort(axis=0))
+        assert_data_frame_almost_equal(
+            bv._metadata_map.sort_index(),
+            exp_metadata_map.sort_index())
 
     def test_normalize_samples_error(self):
         """Raises an error if coords and metadata_map does not have samples in
@@ -770,7 +779,7 @@ class GradientANOVATests(BaseTests):
         """Should raise a RuntimeError if the user call _get_group_trajectories
         with erroneous inputs"""
         bv = GradientANOVA(self.coords, self.prop_expl, self.metadata_map)
-        with self.assertRaises(RuntimeError):
+        with self.assertRaises(KeyError):
             bv._get_group_trajectories("foo", ['foo'])
         with self.assertRaises(RuntimeError):
             bv._get_group_trajectories("bar", [])

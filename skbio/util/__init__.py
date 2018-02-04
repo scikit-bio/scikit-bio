@@ -19,30 +19,21 @@ Common functionality to support testing in skbio.
    get_data_path
    _not_has_matplotlib
    TestRunner
+   assert_ordination_results_equal
+   assert_data_frame_almost_equal
 
 Miscellaneous functionality
 ---------------------------
 
-Generally useful functions that don't fit in more specific locations.
+Generally useful functionality that doesn't fit in more specific locations.
 
 .. autosummary::
    :toctree: generated/
 
    cardinal_to_ordinal
-   create_dir
    find_duplicates
-   flatten
-   is_casava_v180_or_later
-   remove_files
    safe_md5
-
-Exceptions
-----------
-
-.. autosummary::
-   :toctree: generated/
-
-   TestingUtilError
+   classproperty
 
 Warnings
 --------
@@ -51,6 +42,7 @@ Warnings
    :toctree: generated/
 
    EfficiencyWarning
+   RepresentationWarning
 
 """
 
@@ -62,15 +54,17 @@ Warnings
 # The full license is in the file COPYING.txt, distributed with this software.
 # ----------------------------------------------------------------------------
 
-from ._warning import EfficiencyWarning
-from ._exception import TestingUtilError
-from ._misc import (cardinal_to_ordinal, create_dir, find_duplicates, flatten,
-                    is_casava_v180_or_later, remove_files, safe_md5)
-from ._testing import get_data_path, _not_has_matplotlib, TestRunner
+from ._warning import EfficiencyWarning, RepresentationWarning, SkbioWarning
+from ._misc import cardinal_to_ordinal, find_duplicates, safe_md5
+from ._testing import (_not_has_matplotlib, get_data_path, TestRunner,
+                       assert_ordination_results_equal,
+                       assert_data_frame_almost_equal)
+from ._decorator import classproperty
 
-__all__ = ['EfficiencyWarning', 'TestingUtilError',
-           'cardinal_to_ordinal', 'create_dir', 'find_duplicates', 'flatten',
-           'is_casava_v180_or_later', 'remove_files', 'safe_md5',
-           'get_data_path', 'TestRunner', '_not_has_matplotlib']
+__all__ = ['SkbioWarning', 'EfficiencyWarning', 'RepresentationWarning',
+           'cardinal_to_ordinal', 'find_duplicates', 'safe_md5',
+           'get_data_path', 'TestRunner', 'assert_ordination_results_equal',
+           'assert_data_frame_almost_equal', 'classproperty',
+           '_not_has_matplotlib']
 
 test = TestRunner(__file__).test

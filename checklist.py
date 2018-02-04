@@ -8,8 +8,6 @@
 # The full license is in the file COPYING.txt, distributed with this software.
 # ----------------------------------------------------------------------------
 
-from __future__ import absolute_import, division, print_function
-
 import collections
 import os
 import os.path
@@ -17,8 +15,18 @@ import subprocess
 import sys
 import ast
 import tokenize
+import warnings
 
 import dateutil.parser
+
+if sys.version_info.major != 3:
+    sys.exit("scikit-bio can only be used with Python 3. You are currently "
+             "running Python %d." % sys.version_info.major)
+
+
+class ChecklistWarning(Warning):
+    """General warning class for warnings raised by checklist.py."""
+    pass
 
 
 def main():
@@ -53,7 +61,7 @@ def main():
     return return_code
 
 
-class RepoValidator(object):
+class RepoValidator:
     """Abstract base class representing a repository validator.
 
     Subclasses must override and implement ``_validate`` (see its docstring for
@@ -93,7 +101,7 @@ class RepoValidator(object):
         msg = []
         if invalids:
             success = False
-            msg.append(self.reason + ':')
+            msg.append(self.reason)
 
             for invalid in invalids:
                 msg.append("    %s" % invalid)
@@ -152,6 +160,12 @@ class CopyrightHeadersValidator(RepoValidator):
     See the current standard for scikit-bio's copyright headers at
     ``http://scikit-bio.org/docs/latest/development/new_module.html``
 
+    Individual files are ignored if the first line in the file is exactly:
+
+    # checklist.py:CopyrightHeadersValidator IGNORE
+
+    If a file is ignored, a ``ChecklistWarning`` is raised.
+
     Parameters
     ----------
     skip_dirs : iterable of str, optional
@@ -161,8 +175,8 @@ class CopyrightHeadersValidator(RepoValidator):
 
     """
 
-    reason = ("Files non-conforming to standard headers as described in:\n"
-              "http://scikit-bio.org/docs/latest/development/new_module.html")
+    reason = ("Files non-conforming to standard headers as described in\n"
+              "http://scikit-bio.org/docs/latest/development/new_module.html:")
 
     COPYRIGHT_HEADER = """\
 # ----------------------------------------------------------------------------
@@ -188,8 +202,20 @@ class CopyrightHeadersValidator(RepoValidator):
         for _file in files:
             if not _file.endswith('.py'):
                 continue
+
             pos = 0
-            f = open(os.path.join(root, _file))
+            filepath = os.path.join(root, _file)
+            f = open(filepath)
+
+            first_line = f.readline().rstrip('\n')
+            if first_line == '# checklist.py:CopyrightHeadersValidator IGNORE':
+                warnings.warn(
+                    "File %s has IGNORE directive. Ignoring scikit-bio "
+                    "copyright header validation." % filepath,
+                    ChecklistWarning)
+                continue
+
+            f.seek(0)
             tokens = list(tokenize.generate_tokens(f.readline))
 
             # A module docstring is fully described using just two tokens: the
@@ -228,7 +254,7 @@ class InitValidator(RepoValidator):
         contained within them).
 
     """
-    reason = "Directories missing init files"
+    reason = "Directories missing init files:"
 
     def __init__(self, skip_dirs=None):
         if skip_dirs is None:
@@ -260,7 +286,7 @@ class ExecPermissionValidator(RepoValidator):
         C files (header and source files).
 
     """
-    reason = "Library code with execute permissions"
+    reason = "Library code with execute permissions:"
 
     def __init__(self, extensions=None):
         if extensions is None:
@@ -297,7 +323,7 @@ class GeneratedCythonValidator(RepoValidator):
         File extension for generated C files.
 
     """
-    reason = "Cython code with missing or outdated generated C code"
+    reason = "Cython code with missing or outdated generated C code:"
 
     def __init__(self, cython_ext='.pyx', c_ext='.c'):
         self.cython_ext = cython_ext
@@ -347,14 +373,14 @@ class APIRegressionValidator(RepoValidator):
     """Flag tests that import from a non-minimized subpackage hierarchy.
 
     Flags tests that aren't imported from a minimally deep API target. (e.g.
-    skbio.Alignment vs skbio.alignment.Alignment). This should prevent
+    skbio.TabularMSA vs skbio.alignment.TabularMSA). This should prevent
     accidental regression in our API because tests will fail if any alias is
     removed, and this checklist will fail if any test doesn't import from the
     least deep API target.
 
     """
     reason = ("The following tests import `A` but should import `B`"
-              " (file: A => B)")
+              " (file: A => B):")
 
     def __init__(self):
         self._imports = {}

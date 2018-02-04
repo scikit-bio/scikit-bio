@@ -6,13 +6,13 @@
 # The full license is in the file COPYING.txt, distributed with this software.
 # ----------------------------------------------------------------------------
 
-from __future__ import absolute_import, division, print_function
-
 import numpy as np
 
-from ._base import _validate
+from skbio.diversity._util import _validate_counts_vector
+from skbio.util._decorator import experimental
 
 
+@experimental(as_of="0.4.0")
 def lladser_pe(counts, r=10):
     """Calculate single point estimate of conditional uncovered probability.
 
@@ -37,7 +37,8 @@ def lladser_pe(counts, r=10):
     -----
     This function is just a wrapper around the full point estimator described
     in Theorem 2 (i) in [1]_, intended to be called for a single best estimate
-    on a complete sample.
+    on a complete sample. This function is not guaranteed to return estimated
+    uncovered probabilities less than 1 if the coverage is too low.
 
     References
     ----------
@@ -46,7 +47,7 @@ def lladser_pe(counts, r=10):
        2011.
 
     """
-    counts = _validate(counts)
+    counts = _validate_counts_vector(counts)
     sample = _expand_counts(counts)
     np.random.shuffle(sample)
 
@@ -58,6 +59,7 @@ def lladser_pe(counts, r=10):
     return pe
 
 
+@experimental(as_of="0.4.0")
 def lladser_ci(counts, r, alpha=0.95, f=10, ci_type='ULCL'):
     """Calculate single CI of the conditional uncovered probability.
 
@@ -99,7 +101,7 @@ def lladser_ci(counts, r, alpha=0.95, f=10, ci_type='ULCL'):
        2011.
 
     """
-    counts = _validate(counts)
+    counts = _validate_counts_vector(counts)
     sample = _expand_counts(counts)
     np.random.shuffle(sample)
 
@@ -209,7 +211,7 @@ def _get_interval_for_r_new_otus(seq, r):
 
         # bail out if not enough unseen
         if not count or (unseen < r):
-            raise StopIteration
+            return
 
         # make a copy of seen before yielding, as we'll continue to add to the
         # set in subsequent iterations

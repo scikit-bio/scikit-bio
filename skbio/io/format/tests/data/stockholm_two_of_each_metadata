@@ -1,0 +1,11 @@
+# STOCKHOLM 1.0
+#=GF NM Kestrel Gorlick
+#=GF DT February 5th, 2016
+#=GS seq1 AL ABCD
+#=GS seq1 NS 1234
+seq1         ACTGACCATGTTCA
+#=GR seq1 SS CACTACTTGTGACG
+#=GR seq1 AS TCACATCGGCGATG
+#=GC SS_cons ______1____2__
+#=GC AS_cons __1___1___3___
+//

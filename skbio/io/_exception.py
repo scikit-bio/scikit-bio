@@ -6,7 +6,10 @@
 # The full license is in the file COPYING.txt, distributed with this software.
 # ----------------------------------------------------------------------------
 
-from __future__ import absolute_import, division, print_function
+
+class IOSourceError(Exception):
+    """Raised when a file source cannot be resolved."""
+    pass
 
 
 class FileFormatError(Exception):
@@ -14,18 +17,23 @@ class FileFormatError(Exception):
     pass
 
 
-class RecordError(FileFormatError):
-    """Raised when a record is bad."""
-    pass
-
-
-class FieldError(RecordError):
-    """Raised when a field within a record is bad."""
-    pass
-
-
 class UnrecognizedFormatError(FileFormatError):
     """Raised when a file's format is unknown, ambiguous, or unidentifiable."""
+    pass
+
+
+class GenBankFormatError(FileFormatError):
+    """Raised when a ``genbank`` formatted file cannot be parsed."""
+    pass
+
+
+class GFF3FormatError(FileFormatError):
+    """Raised when a ``GFF3`` formatted file cannot be parsed."""
+    pass
+
+
+class BLAST7FormatError(FileFormatError):
+    """Raised when a ``blast7`` formatted file cannot be parsed."""
     pass
 
 
@@ -36,6 +44,11 @@ class ClustalFormatError(FileFormatError):
 
 class FASTAFormatError(FileFormatError):
     """Raised when a ``fasta`` formatted file cannot be parsed."""
+    pass
+
+
+class QUALFormatError(FASTAFormatError):
+    """Raised when a ``qual`` formatted file cannot be parsed."""
     pass
 
 
@@ -62,7 +75,7 @@ class FASTQFormatError(FileFormatError):
 class PhylipFormatError(FileFormatError):
     """Raised when a ``phylip`` formatted file cannot be parsed.
 
-    May also be raised when an object (e.g., ``Alignment``) cannot be written
+    May also be raised when an object (e.g., ``TabularMSA``) cannot be written
     in ``phylip`` format.
 
     """
@@ -74,6 +87,11 @@ class QSeqFormatError(FileFormatError):
     pass
 
 
+class StockholmFormatError(FileFormatError):
+    """Raised when a ``stockholm`` formatted file cannot be parsed."""
+    pass
+
+
 class InvalidRegistrationError(Exception):
     """Raised if function doesn't meet the expected API of its registration."""
     pass
@@ -81,15 +99,4 @@ class InvalidRegistrationError(Exception):
 
 class DuplicateRegistrationError(Exception):
     """Raised when a function is already registered in skbio.io"""
-
-    def __init__(self, name=None, fmt=None, cls=None, msg=None):
-        super(DuplicateRegistrationError, self).__init__()
-        if msg:
-            self.args = (msg,)
-        else:
-            if hasattr(cls, '__name__'):
-                classname = cls.__name__
-            else:
-                classname = 'generator'
-            self.args = ("'%s' already has a %s for %s."
-                         % (fmt, name, classname),)
+    pass

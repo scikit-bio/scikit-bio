@@ -1,23 +1,112 @@
-import glob
-import sys
-import os
-
-import sphinx_bootstrap_theme
-
-import skbio
-
 # NOTE: parts of this file were taken from scipy's doc/source/conf.py. See
 # scikit-bio/licenses/scipy.txt for scipy's license.
 
+import glob
+import sys
+import os
+import types
+import re
+
+if sys.version_info.major != 3:
+    raise RuntimeError("scikit-bio can only be used with Python 3. You are "
+                       "currently running Python %d." % sys.version_info.major)
+
+# Force matplotlib to not use any Xwindows backend.
+import matplotlib
+matplotlib.use('Agg')
+
+import sphinx
+import sphinx.ext.autosummary as autosummary
+
+class NewAuto(autosummary.Autosummary):
+    def get_items(self, names):
+        # Camel to snake case from http://stackoverflow.com/a/1176023/579416
+        first_cap_re = re.compile('(.)([A-Z][a-z]+)')
+        all_cap_re = re.compile('([a-z0-9])([A-Z])')
+        def fix_item(display_name, sig, summary, real_name):
+            class_names = {
+                'TreeNode': 'tree',
+                'TabularMSA': 'msa'
+            }
+
+            class_name = real_name.split('.')[-2]
+            if class_name in class_names:
+                nice_name = class_names[class_name]
+            else:
+                s1 = first_cap_re.sub(r'\1_\2', class_name)
+                nice_name = all_cap_re.sub(r'\1_\2', s1).lower()
+                if len(nice_name) > 10:
+                    nice_name = ''.join([e[0] for e in nice_name.split('_')])
+            def fmt(string):
+                count = string.count('%s')
+                return string % tuple([nice_name] * count)
+
+            specials = {
+                '__eq__': fmt('%s1 == %s2'),
+                '__ne__': fmt('%s1 != %s2'),
+                '__gt__': fmt('%s1 > %s2'),
+                '__lt__': fmt('%s1 < %s2'),
+                '__ge__': fmt('%s1 >= %s2'),
+                '__le__': fmt('%s1 <= %s2'),
+                '__getitem__': fmt('%s[x]'),
+                '__iter__': fmt('iter(%s)'),
+                '__contains__': fmt('x in %s'),
+                '__bool__': fmt('bool(%s)'),
+                '__str__': fmt('str(%s)'),
+                '__reversed__': fmt('reversed(%s)'),
+                '__len__': fmt('len(%s)'),
+                '__copy__': fmt('copy.copy(%s)'),
+                '__deepcopy__': fmt('copy.deepcopy(%s)'),
+            }
+            if display_name in specials:
+                return specials[display_name], '', summary, real_name
+            return display_name, sig, summary, real_name
+
+        skip = []
+
+        return [fix_item(*e) for e in super(NewAuto, self).get_items(names)
+                if e[0] not in skip]
+
+autosummary.Autosummary = NewAuto
+
+import sphinx_bootstrap_theme
+import numpydoc
+
+@property
+def _extras(self):
+    # This will be accessed in a for-loop, so memoize to prevent quadratic
+    # behavior.
+    if not hasattr(self, '__memoized_extras'):
+        # We want every dunder that has a function type (not class slot),
+        # meaning we created the dunder, not Python.
+        # We don't ever care about __init__ and the user will see plenty of
+        # __repr__ calls, so why waste space.
+        self.__memoized_extras = [
+            a for a, v in inspect.getmembers(self._cls)
+            if type(v) == types.FunctionType and a.startswith('__')
+            and a not in ['__init__', '__repr__']
+        ]
+    return self.__memoized_extras
+
+# The extra_public_methods depends on what class we are looking at.
+numpydoc.docscrape.ClassDoc.extra_public_methods = _extras
+
+
+import skbio
+from skbio.util._decorator import classproperty
+
 # If extensions (or modules to document with autodoc) are in another directory,
 # add these directories to sys.path here. If the directory is relative to the
-# documentation root, use os.path.abspath to make it absolute, like shown here.
-sys.path.insert(0, os.path.abspath('../sphinxext/numpydoc'))
+# documentation root, use os.path.abspath to make it absolute, like shown here:
+#
+#    sys.path.insert(0, os.path.abspath('../sphinxext/foo'))
 
 # -- General configuration ------------------------------------------------
 
 # If your documentation needs a minimal Sphinx version, state it here.
-needs_sphinx = '1.1'
+# Using `sphinx_version` doesn't work, likely because Sphinx is expecting a
+# version string of the form X.Y, not X.Y.Z.
+needs_sphinx = '1.6'
 
 # Add any Sphinx extension module names here, as strings. They can be
 # extensions coming with Sphinx (named 'sphinx.ext.*') or your custom
@@ -34,6 +123,7 @@ extensions = [
 
 # Determine if the matplotlib has a recent enough version of the
 # plot_directive.
+
 try:
     from matplotlib.sphinxext import plot_directive
 except ImportError:
@@ -279,8 +369,8 @@ man_pages = [
 texinfo_documents = [
   ('index', 'scikit-bio', u'scikit-bio Documentation',
    u'scikit-bio development team', 'scikit-bio',
-   'Core objects, functions and statistics for working with biological data '
-   'in Python.', 'Miscellaneous'),
+   'Data structures, algorithms, and educational resources for working with '
+   'biological data in Python.', 'Miscellaneous'),
 ]
 
 # Documents to append as an appendix to all manuals.
@@ -301,6 +391,10 @@ autosummary_generate = glob.glob('*.rst')
 # -- Options for numpydoc -------------------------------------------------
 # Generate plots for example sections
 numpydoc_use_plots = True
+# If we don't turn numpydoc's toctree generation off, Sphinx will warn about
+# the toctree referencing missing document(s). This appears to be related to
+# generating docs for classes with a __call__ method.
+numpydoc_class_members_toctree = False
 
 #------------------------------------------------------------------------------
 # Plot
@@ -311,11 +405,8 @@ import scipy as sp
 np.random.seed(123)
 """
 plot_include_source = True
-#plot_formats = [('png', 96), 'pdf']
+plot_formats = [('png', 96), ]
 #plot_html_show_formats = False
-
-import math
-phi = (math.sqrt(5) + 1)/2
 
 font_size = 13*72/96.0  # 13 px
 
@@ -326,12 +417,11 @@ plot_rcparams = {
     'xtick.labelsize': font_size,
     'ytick.labelsize': font_size,
     'legend.fontsize': font_size,
-    'figure.figsize': (3*phi, 3),
     'figure.subplot.bottom': 0.2,
     'figure.subplot.left': 0.2,
     'figure.subplot.right': 0.9,
-    'figure.subplot.top': 0.85,
-    'figure.subplot.wspace': 0.4,
+    'figure.subplot.top': 0.9,
+    'figure.subplot.wspace': 0.2,
     'text.usetex': False,
 
     # Some of our figures have legends outside the axes area. When they're
@@ -342,9 +432,7 @@ plot_rcparams = {
     'savefig.bbox': 'tight'
 }
 
-if not use_matplotlib_plot_directive:
-    import matplotlib
-    matplotlib.rcParams.update(plot_rcparams)
+matplotlib.rcParams.update(plot_rcparams)
 
 # -----------------------------------------------------------------------------
 # Intersphinx configuration
@@ -354,7 +442,7 @@ intersphinx_mapping = {
         'http://docs.scipy.org/doc/numpy': None,
         'http://docs.scipy.org/doc/scipy/reference': None,
         'http://matplotlib.org': None,
-        'http://pandas.pydata.org': None,
+        'http://pandas.pydata.org/pandas-docs/stable': None,
         'http://www.biom-format.org':None
 }
 
@@ -434,9 +522,24 @@ def linkcode_resolve(domain, info):
 # Link-checking on Travis sometimes times out.
 linkcheck_timeout = 30
 
+# This is so that our docs build.
+def _closure():
+    def __get__(self, cls, owner):
+        return self
+
+    classproperty.__get__ = __get__
+
+_closure()
+
+def autodoc_skip_member(app, what, name, obj, skip, options):
+    if what == "method":
+        if isinstance(obj, classproperty):
+            return True
+    return skip
 
 # Add the 'copybutton' javascript, to hide/show the prompt in code
 # examples, originally taken from scikit-learn's doc/conf.py
 def setup(app):
     app.add_javascript('copybutton.js')
     app.add_stylesheet('style.css')
+    app.connect('autodoc-skip-member', autodoc_skip_member)

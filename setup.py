@@ -10,36 +10,38 @@
 
 import os
 import platform
+import re
+import ast
+import sys
+
 from setuptools import find_packages, setup
 from setuptools.extension import Extension
-from setuptools.command.build_ext import build_ext as _build_ext
+
+import numpy as np
 
 
-# Bootstrap setup.py with numpy
-# Huge thanks to coldfix's solution
-# http://stackoverflow.com/a/21621689/579416
-class build_ext(_build_ext):
-    def finalize_options(self):
-        _build_ext.finalize_options(self)
-        # Prevent numpy from thinking it is still in its setup process:
-        __builtins__.__NUMPY_SETUP__ = False
-        import numpy
-        self.include_dirs.append(numpy.get_include())
+if sys.version_info.major != 3:
+    sys.exit("scikit-bio can only be used with Python 3. You are currently "
+             "running Python %d." % sys.version_info.major)
 
-__version__ = "0.2.3-dev"
+# version parsing from __init__ pulled from Flask's setup.py
+# https://github.com/mitsuhiko/flask/blob/master/setup.py
+_version_re = re.compile(r'__version__\s+=\s+(.*)')
+
+with open('skbio/__init__.py', 'rb') as f:
+    hit = _version_re.search(f.read().decode('utf-8')).group(1)
+    version = str(ast.literal_eval(hit))
 
 classes = """
-    Development Status :: 1 - Planning
+    Development Status :: 4 - Beta
     License :: OSI Approved :: BSD License
     Topic :: Software Development :: Libraries
     Topic :: Scientific/Engineering
     Topic :: Scientific/Engineering :: Bio-Informatics
-    Programming Language :: Python
-    Programming Language :: Python :: 2
-    Programming Language :: Python :: 2.7
     Programming Language :: Python :: 3
-    Programming Language :: Python :: 3.3
+    Programming Language :: Python :: 3 :: Only
     Programming Language :: Python :: 3.4
+    Programming Language :: Python :: 3.5
     Operating System :: Unix
     Operating System :: POSIX
     Operating System :: MacOS :: MacOS X
@@ -62,6 +64,8 @@ ext = '.pyx' if USE_CYTHON else '.c'
 # details. This acts as a workaround until the next Python 3 release -- thanks
 # Wolfgang Maier (wolma) for the workaround!
 ssw_extra_compile_args = ['-Wno-error=declaration-after-statement']
+if sys.platform == 'win32':
+    ssw_extra_compile_args = []
 
 # Users with i686 architectures have reported that adding this flag allows
 # SSW to be compiled. See https://github.com/biocore/scikit-bio/issues/409 and
@@ -70,12 +74,19 @@ if platform.machine() == 'i686':
     ssw_extra_compile_args.append('-msse2')
 
 extensions = [
+    Extension("skbio.metadata._intersection",
+              ["skbio/metadata/_intersection" + ext]),
     Extension("skbio.stats.__subsample",
-              ["skbio/stats/__subsample" + ext]),
+              ["skbio/stats/__subsample" + ext],
+              include_dirs=[np.get_include()]),
     Extension("skbio.alignment._ssw_wrapper",
               ["skbio/alignment/_ssw_wrapper" + ext,
                "skbio/alignment/_lib/ssw.c"],
-              extra_compile_args=ssw_extra_compile_args)
+              extra_compile_args=ssw_extra_compile_args,
+              include_dirs=[np.get_include()]),
+    Extension("skbio.diversity._phylogenetic",
+              ["skbio/diversity/_phylogenetic" + ext],
+              include_dirs=[np.get_include()])
 ]
 
 if USE_CYTHON:
@@ -83,8 +94,8 @@ if USE_CYTHON:
     extensions = cythonize(extensions)
 
 setup(name='scikit-bio',
-      version=__version__,
-      license='BSD',
+      version=version,
+      license='BSD-3-Clause',
       description=description,
       long_description=long_description,
       author="scikit-bio development team",
@@ -92,20 +103,34 @@ setup(name='scikit-bio',
       maintainer="scikit-bio development team",
       maintainer_email="gregcaporaso@gmail.com",
       url='http://scikit-bio.org',
-      test_suite='nose.collector',
       packages=find_packages(),
       ext_modules=extensions,
-      cmdclass={'build_ext': build_ext},
-      setup_requires=['numpy >= 1.7'],
-      install_requires=['numpy >= 1.7', 'scipy >= 0.13.0', 'pandas', 'future',
-                        'six', 'natsort', 'IPython'],
-      extras_require={'test': ["nose >= 0.10.1", "pep8", "flake8",
-                               "python-dateutil"],
-                      'doc': ["Sphinx == 1.2.2", "sphinx-bootstrap-theme"],
-                      'plot': ['matplotlib >= 1.1.0']},
+      include_dirs=[np.get_include()],
+      setup_requires=['nose >= 1.3.7'],
+      install_requires=[
+          'lockfile >= 0.10.2',  # req'd for our usage of CacheControl
+          'CacheControl >= 0.11.5',
+          'decorator >= 3.4.2',
+          'IPython >= 3.2.0',
+          # 'matplotlib >= 1.4.3',
+          'natsort >= 4.0.3',
+          # numpy array repr changed in 1.14.0 to use less whitespace, which
+          # breaks the doctests. The doctests can't be updated to match the new
+          # arrray repr because we still support Python 3.4, which doesn't have
+          # a numpy 1.14.0 conda package on `defaults` or `conda-forge`
+          # channels.
+          'numpy >= 1.9.2, < 1.14.0',
+          'pandas >= 0.19.2',
+          'scipy >= 0.15.1',
+          'nose >= 1.3.7'
+      ],
+      test_suite='nose.collector',
       classifiers=classifiers,
       package_data={
+          'skbio.diversity.alpha.tests': ['data/qiime-191-tt/*'],
+          'skbio.diversity.beta.tests': ['data/qiime-191-tt/*'],
           'skbio.io.tests': ['data/*'],
+          'skbio.io.format.tests': ['data/*'],
           'skbio.stats.tests': ['data/*'],
           'skbio.stats.distance.tests': ['data/*'],
           'skbio.stats.ordination.tests': ['data/*']

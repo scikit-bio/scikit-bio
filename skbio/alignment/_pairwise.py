@@ -6,17 +6,17 @@
 # The full license is in the file COPYING.txt, distributed with this software.
 # ----------------------------------------------------------------------------
 
-from __future__ import absolute_import, division, print_function
 from warnings import warn
 from itertools import product
 
 import numpy as np
-from future.builtins import range, zip
-from six import string_types
 
-from skbio.alignment import Alignment
-from skbio.sequence import BiologicalSequence
+from skbio.alignment import TabularMSA
+from skbio.alignment._ssw_wrapper import StripedSmithWaterman
+from skbio.sequence import DNA, RNA, Protein
+from skbio.sequence import GrammaredSequence
 from skbio.util import EfficiencyWarning
+from skbio.util._decorator import experimental, deprecated
 
 # This is temporary: blosum50 does not exist in skbio yet as per
 # issue 161. When the issue is resolved, this should be removed in favor
@@ -121,6 +121,7 @@ blosum50 = \
               'Y': -2, 'X': -1, 'Z': 5}}
 
 
+@experimental(as_of="0.4.0")
 def local_pairwise_align_nucleotide(seq1, seq2, gap_open_penalty=5,
                                     gap_extend_penalty=2,
                                     match_score=2, mismatch_score=-3,
@@ -129,9 +130,9 @@ def local_pairwise_align_nucleotide(seq1, seq2, gap_open_penalty=5,
 
     Parameters
     ----------
-    seq1 : str or BiologicalSequence
+    seq1 : DNA or RNA
         The first unaligned sequence.
-    seq2 : str or BiologicalSequence
+    seq2 : DNA or RNA
         The second unaligned sequence.
     gap_open_penalty : int or float, optional
         Penalty for opening a gap (this is substracted from previous best
@@ -153,9 +154,11 @@ def local_pairwise_align_nucleotide(seq1, seq2, gap_open_penalty=5,
 
     Returns
     -------
-    skbio.Alignment
-        ``Alignment`` object containing the aligned sequences as well as
-        details about the alignment.
+    tuple
+        ``TabularMSA`` object containing the aligned sequences, alignment score
+        (float), and start/end positions of each input sequence (iterable
+        of two-item tuples). Note that start/end positions are indexes into the
+        unaligned sequences.
 
     See Also
     --------
@@ -177,18 +180,23 @@ def local_pairwise_align_nucleotide(seq1, seq2, gap_open_penalty=5,
     .. [1] http://blast.ncbi.nlm.nih.gov/Blast.cgi
 
     """
+    for seq in seq1, seq2:
+        if not isinstance(seq, (DNA, RNA)):
+            raise TypeError(
+                "`seq1` and `seq2` must be DNA or RNA, not type %r"
+                % type(seq).__name__)
+
     # use the substitution matrix provided by the user, or compute from
     # match_score and mismatch_score if a substitution matrix was not provided
     if substitution_matrix is None:
         substitution_matrix = \
             make_identity_substitution_matrix(match_score, mismatch_score)
-    else:
-        pass
 
     return local_pairwise_align(seq1, seq2, gap_open_penalty,
                                 gap_extend_penalty, substitution_matrix)
 
 
+@experimental(as_of="0.4.0")
 def local_pairwise_align_protein(seq1, seq2, gap_open_penalty=11,
                                  gap_extend_penalty=1,
                                  substitution_matrix=None):
@@ -196,9 +204,9 @@ def local_pairwise_align_protein(seq1, seq2, gap_open_penalty=11,
 
     Parameters
     ----------
-    seq1 : str or BiologicalSequence
+    seq1 : Protein
         The first unaligned sequence.
-    seq2 : str or BiologicalSequence
+    seq2 : Protein
         The second unaligned sequence.
     gap_open_penalty : int or float, optional
         Penalty for opening a gap (this is substracted from previous best
@@ -212,9 +220,11 @@ def local_pairwise_align_protein(seq1, seq2, gap_open_penalty=11,
 
     Returns
     -------
-    skbio.Alignment
-        ``Alignment`` object containing the aligned sequences as well as
-        details about the alignment.
+    tuple
+        ``TabularMSA`` object containing the aligned sequences, alignment score
+        (float), and start/end positions of each input sequence (iterable
+        of two-item tuples). Note that start/end positions are indexes into the
+        unaligned sequences.
 
     See Also
     --------
@@ -241,6 +251,12 @@ def local_pairwise_align_protein(seq1, seq2, gap_open_penalty=11,
        Proc Natl Acad Sci U S A. Nov 15, 1992; 89(22): 10915-10919.
 
     """
+    for seq in seq1, seq2:
+        if not isinstance(seq, Protein):
+            raise TypeError(
+                "`seq1` and `seq2` must be Protein, not type %r"
+                % type(seq).__name__)
+
     if substitution_matrix is None:
         substitution_matrix = blosum50
 
@@ -248,15 +264,16 @@ def local_pairwise_align_protein(seq1, seq2, gap_open_penalty=11,
                                 gap_extend_penalty, substitution_matrix)
 
 
+@experimental(as_of="0.4.0")
 def local_pairwise_align(seq1, seq2, gap_open_penalty,
                          gap_extend_penalty, substitution_matrix):
     """Locally align exactly two seqs with Smith-Waterman
 
     Parameters
     ----------
-    seq1 : str or BiologicalSequence
+    seq1 : GrammaredSequence
         The first unaligned sequence.
-    seq2 : str or BiologicalSequence
+    seq2 : GrammaredSequence
         The second unaligned sequence.
     gap_open_penalty : int or float
         Penalty for opening a gap (this is substracted from previous best
@@ -270,9 +287,11 @@ def local_pairwise_align(seq1, seq2, gap_open_penalty,
 
     Returns
     -------
-    skbio.Alignment
-       ``Alignment`` object containing the aligned sequences as well as
-        details about the alignment.
+    tuple
+        ``TabularMSA`` object containing the aligned sequences, alignment score
+        (float), and start/end positions of each input sequence (iterable
+        of two-item tuples). Note that start/end positions are indexes into the
+        unaligned sequences.
 
     See Also
     --------
@@ -301,8 +320,19 @@ def local_pairwise_align(seq1, seq2, gap_open_penalty,
          "than skbio.alignment.local_pairwise_align_ssw.",
          EfficiencyWarning)
 
-    seq1 = _coerce_alignment_input_type(seq1, disallow_alignment=True)
-    seq2 = _coerce_alignment_input_type(seq2, disallow_alignment=True)
+    for seq in seq1, seq2:
+        if not isinstance(seq, GrammaredSequence):
+            raise TypeError(
+                "`seq1` and `seq2` must be %r subclasses, not type %r" %
+                (GrammaredSequence.__name__, type(seq).__name__))
+
+    if type(seq1) is not type(seq2):
+        raise TypeError(
+            "`seq1` and `seq2` must be the same type: %r != %r"
+            % (type(seq1).__name__, type(seq2).__name__))
+
+    seq1 = _coerce_alignment_input_type(seq1)
+    seq2 = _coerce_alignment_input_type(seq2)
 
     score_matrix, traceback_matrix = _compute_score_and_traceback_matrices(
         seq1, seq2, gap_open_penalty, gap_extend_penalty,
@@ -318,22 +348,24 @@ def local_pairwise_align(seq1, seq2, gap_open_penalty,
     start_end_positions = [(seq1_start_position, end_col_position-1),
                            (seq2_start_position, end_row_position-1)]
 
-    return Alignment(aligned1 + aligned2, score=score,
-                     start_end_positions=start_end_positions)
+    msa = TabularMSA(aligned1 + aligned2)
+
+    return msa, score, start_end_positions
 
 
+@experimental(as_of="0.4.0")
 def global_pairwise_align_nucleotide(seq1, seq2, gap_open_penalty=5,
                                      gap_extend_penalty=2,
                                      match_score=1, mismatch_score=-2,
                                      substitution_matrix=None,
                                      penalize_terminal_gaps=False):
-    """Globally align pair of nuc. seqs or alignments with Needleman-Wunsch
+    """Globally align nucleotide seqs or alignments with Needleman-Wunsch
 
     Parameters
     ----------
-    seq1 : str, BiologicalSequence, or Alignment
+    seq1 : DNA, RNA, or TabularMSA[DNA|RNA]
         The first unaligned sequence(s).
-    seq2 : str, BiologicalSequence, or Alignment
+    seq2 : DNA, RNA, or TabularMSA[DNA|RNA]
         The second unaligned sequence(s).
     gap_open_penalty : int or float, optional
         Penalty for opening a gap (this is substracted from previous best
@@ -362,9 +394,11 @@ def global_pairwise_align_nucleotide(seq1, seq2, gap_open_penalty=5,
 
     Returns
     -------
-    skbio.Alignment
-        ``Alignment`` object containing the aligned sequences as well as
-        details about the alignment.
+    tuple
+        ``TabularMSA`` object containing the aligned sequences, alignment score
+        (float), and start/end positions of each input sequence (iterable
+        of two-item tuples). Note that start/end positions are indexes into the
+        unaligned sequences.
 
     See Also
     --------
@@ -389,19 +423,29 @@ def global_pairwise_align_nucleotide(seq1, seq2, gap_open_penalty=5,
     .. [1] http://blast.ncbi.nlm.nih.gov/Blast.cgi
 
     """
+    for seq in seq1, seq2:
+        if not isinstance(seq, (DNA, RNA, TabularMSA)):
+            raise TypeError(
+                "`seq1` and `seq2` must be DNA, RNA, or TabularMSA, not type "
+                "%r" % type(seq).__name__)
+        if isinstance(seq, TabularMSA) and not issubclass(seq.dtype,
+                                                          (DNA, RNA)):
+            raise TypeError(
+                "`seq1` and `seq2` must be TabularMSA with DNA or RNA dtype, "
+                "not dtype %r" % seq.dtype.__name__)
+
     # use the substitution matrix provided by the user, or compute from
     # match_score and mismatch_score if a substitution matrix was not provided
     if substitution_matrix is None:
         substitution_matrix = \
             make_identity_substitution_matrix(match_score, mismatch_score)
-    else:
-        pass
 
     return global_pairwise_align(seq1, seq2, gap_open_penalty,
                                  gap_extend_penalty, substitution_matrix,
                                  penalize_terminal_gaps=penalize_terminal_gaps)
 
 
+@experimental(as_of="0.4.0")
 def global_pairwise_align_protein(seq1, seq2, gap_open_penalty=11,
                                   gap_extend_penalty=1,
                                   substitution_matrix=None,
@@ -410,9 +454,9 @@ def global_pairwise_align_protein(seq1, seq2, gap_open_penalty=11,
 
     Parameters
     ----------
-    seq1 : str, BiologicalSequence, or Alignment
+    seq1 : Protein or TabularMSA[Protein]
         The first unaligned sequence(s).
-    seq2 : str, BiologicalSequence, or Alignment
+    seq2 : Protein or TabularMSA[Protein]
         The second unaligned sequence(s).
     gap_open_penalty : int or float, optional
         Penalty for opening a gap (this is substracted from previous best
@@ -433,9 +477,11 @@ def global_pairwise_align_protein(seq1, seq2, gap_open_penalty=11,
 
     Returns
     -------
-    skbio.Alignment
-        ``Alignment`` object containing the aligned sequences as well as
-        details about the alignment.
+    tuple
+        ``TabularMSA`` object containing the aligned sequences, alignment score
+        (float), and start/end positions of each input sequence (iterable
+        of two-item tuples). Note that start/end positions are indexes into the
+        unaligned sequences.
 
     See Also
     --------
@@ -465,6 +511,16 @@ def global_pairwise_align_protein(seq1, seq2, gap_open_penalty=11,
        Proc Natl Acad Sci U S A. Nov 15, 1992; 89(22): 10915-10919.
 
     """
+    for seq in seq1, seq2:
+        if not isinstance(seq, (Protein, TabularMSA)):
+            raise TypeError(
+                "`seq1` and `seq2` must be Protein or TabularMSA, not type %r"
+                % type(seq).__name__)
+        if isinstance(seq, TabularMSA) and not issubclass(seq.dtype, Protein):
+            raise TypeError(
+                "`seq1` and `seq2` must be TabularMSA with Protein dtype, "
+                "not dtype %r" % seq.dtype.__name__)
+
     if substitution_matrix is None:
         substitution_matrix = blosum50
 
@@ -473,15 +529,16 @@ def global_pairwise_align_protein(seq1, seq2, gap_open_penalty=11,
                                  penalize_terminal_gaps=penalize_terminal_gaps)
 
 
+@experimental(as_of="0.4.0")
 def global_pairwise_align(seq1, seq2, gap_open_penalty, gap_extend_penalty,
                           substitution_matrix, penalize_terminal_gaps=False):
     """Globally align a pair of seqs or alignments with Needleman-Wunsch
 
     Parameters
     ----------
-    seq1 : str, BiologicalSequence, or Alignment
+    seq1 : GrammaredSequence or TabularMSA
         The first unaligned sequence(s).
-    seq2 : str, BiologicalSequence, or Alignment
+    seq2 : GrammaredSequence or TabularMSA
         The second unaligned sequence(s).
     gap_open_penalty : int or float
         Penalty for opening a gap (this is substracted from previous best
@@ -502,9 +559,11 @@ def global_pairwise_align(seq1, seq2, gap_open_penalty, gap_extend_penalty,
 
     Returns
     -------
-    skbio.Alignment
-        ``Alignment`` object containing the aligned sequences as well as
-        details about the alignment.
+    tuple
+        ``TabularMSA`` object containing the aligned sequences, alignment score
+        (float), and start/end positions of each input sequence (iterable
+        of two-item tuples). Note that start/end positions are indexes into the
+        unaligned sequences.
 
     See Also
     --------
@@ -539,8 +598,22 @@ def global_pairwise_align(seq1, seq2, gap_open_penalty, gap_extend_penalty,
          "version soon (see https://github.com/biocore/scikit-bio/issues/254 "
          "to track progress on this).", EfficiencyWarning)
 
-    seq1 = _coerce_alignment_input_type(seq1, disallow_alignment=False)
-    seq2 = _coerce_alignment_input_type(seq2, disallow_alignment=False)
+    for seq in seq1, seq2:
+        # We don't need to check the case where `seq` is a `TabularMSA` with a
+        # dtype that isn't a subclass of `GrammaredSequence`, this is
+        # guaranteed by `TabularMSA`.
+        if not isinstance(seq, (GrammaredSequence, TabularMSA)):
+            raise TypeError(
+                "`seq1` and `seq2` must be GrammaredSequence subclasses or "
+                "TabularMSA, not type %r" % type(seq).__name__)
+
+    seq1 = _coerce_alignment_input_type(seq1)
+    seq2 = _coerce_alignment_input_type(seq2)
+
+    if seq1.dtype is not seq2.dtype:
+        raise TypeError(
+            "`seq1` and `seq2` must have the same dtype: %r != %r"
+            % (seq1.dtype.__name__, seq2.dtype.__name__))
 
     if penalize_terminal_gaps:
         init_matrices_f = _init_matrices_nw
@@ -563,10 +636,109 @@ def global_pairwise_align(seq1, seq2, gap_open_penalty, gap_extend_penalty,
     start_end_positions = [(seq1_start_position, end_col_position-1),
                            (seq2_start_position, end_row_position-1)]
 
-    return Alignment(aligned1 + aligned2, score=score,
-                     start_end_positions=start_end_positions)
+    msa = TabularMSA(aligned1 + aligned2)
+
+    return msa, score, start_end_positions
 
 
+@experimental(as_of="0.4.0")
+def local_pairwise_align_ssw(sequence1, sequence2, **kwargs):
+    """Align query and target sequences with Striped Smith-Waterman.
+
+    Parameters
+    ----------
+    sequence1 : DNA, RNA, or Protein
+        The first unaligned sequence
+    sequence2 : DNA, RNA, or Protein
+        The second unaligned sequence
+
+    Returns
+    -------
+    tuple
+        ``TabularMSA`` object containing the aligned sequences, alignment score
+        (float), and start/end positions of each input sequence (iterable
+        of two-item tuples). Note that start/end positions are indexes into the
+        unaligned sequences.
+
+    Notes
+    -----
+    This is a wrapper for the SSW package [1]_.
+
+    For a complete list of optional keyword-arguments that can be provided,
+    see ``skbio.alignment.StripedSmithWaterman``.
+
+    The following kwargs will not have any effect: `suppress_sequences`,
+    `zero_index`, and `protein`
+
+    If an alignment does not meet a provided filter, `None` will be returned.
+
+    References
+    ----------
+    .. [1] Zhao, Mengyao, Wan-Ping Lee, Erik P. Garrison, & Gabor T.
+       Marth. "SSW Library: An SIMD Smith-Waterman C/C++ Library for
+       Applications". PLOS ONE (2013). Web. 11 July 2014.
+       http://www.plosone.org/article/info:doi/10.1371/journal.pone.0082138
+
+    See Also
+    --------
+    skbio.alignment.StripedSmithWaterman
+
+    """
+    for seq in sequence1, sequence2:
+        if not isinstance(seq, (DNA, RNA, Protein)):
+            raise TypeError(
+                "`sequence1` and `sequence2` must be DNA, RNA, or Protein, "
+                "not type %r" % type(seq).__name__)
+
+    if type(sequence1) is not type(sequence2):
+        raise TypeError(
+            "`sequence1` and `sequence2` must be the same type: %r != %r"
+            % (type(sequence1).__name__, type(sequence2).__name__))
+
+    # We need the sequences for `TabularMSA` to make sense, so don't let the
+    # user suppress them.
+    kwargs['suppress_sequences'] = False
+    kwargs['zero_index'] = True
+
+    kwargs['protein'] = False
+    if isinstance(sequence1, Protein):
+        kwargs['protein'] = True
+
+    query = StripedSmithWaterman(str(sequence1), **kwargs)
+    alignment = query(str(sequence2))
+
+    # If there is no cigar, then it has failed a filter. Return None.
+    if not alignment.cigar:
+        return None
+
+    start_end = None
+    if alignment.query_begin != -1:
+        start_end = [
+            (alignment.query_begin, alignment.query_end),
+            (alignment.target_begin, alignment.target_end_optimal)
+        ]
+
+    metadata1 = metadata2 = None
+    if sequence1.has_metadata():
+        metadata1 = sequence1.metadata
+    if sequence2.has_metadata():
+        metadata2 = sequence2.metadata
+
+    constructor = type(sequence1)
+    msa = TabularMSA([
+        constructor(alignment.aligned_query_sequence, metadata=metadata1,
+                    validate=False),
+        constructor(alignment.aligned_target_sequence, metadata=metadata2,
+                    validate=False)
+    ])
+
+    return msa, alignment.optimal_alignment_score, start_end
+
+
+@deprecated(as_of="0.4.0", until="0.5.2",
+            reason="Will be replaced by a SubstitutionMatrix class. To track "
+                   "progress, see [#161]"
+                   "(https://github.com/biocore/scikit-bio/issues/161).")
 def make_identity_substitution_matrix(match_score, mismatch_score,
                                       alphabet='ACGTU'):
     """Generate substitution matrix where all matches are scored equally
@@ -590,13 +762,6 @@ def make_identity_substitution_matrix(match_score, mismatch_score,
         score.
 
     """
-
-    warn("make_identity_substitution_matrix is deprecated and will soon be "
-         "replaced, though at the time of this writing the new name has not "
-         "been finalized. Updates will be posted to issue #161: "
-         "https://github.com/biocore/scikit-bio/issues/161",
-         DeprecationWarning)
-
     result = {}
     for c1 in alphabet:
         row = {}
@@ -614,45 +779,19 @@ def make_identity_substitution_matrix(match_score, mismatch_score,
 # less clunky.
 
 
-def _coerce_alignment_input_type(seq, disallow_alignment):
-    """ Converts variety of types into an skbio.Alignment object
-    """
-    if isinstance(seq, string_types):
-        return Alignment([BiologicalSequence(seq)])
-    elif isinstance(seq, BiologicalSequence):
-        return Alignment([seq])
-    elif isinstance(seq, Alignment):
-        if disallow_alignment:
-            # This will disallow aligning either a pair of alignments, or an
-            # alignment and a sequence. We don't currently support this for
-            # local alignment as there is not a clear usecase, and it's also
-            # not exactly clear how this would work.
-            raise TypeError("Aligning alignments is not currently supported "
-                            "with the aligner function that you're calling.")
-        else:
-            return seq
+def _coerce_alignment_input_type(seq):
+    if isinstance(seq, GrammaredSequence):
+        return TabularMSA([seq])
     else:
-        raise TypeError(
-            "Unsupported type provided to aligner: %r." % type(seq))
+        return seq
 
 
 _traceback_encoding = {'match': 1, 'vertical-gap': 2, 'horizontal-gap': 3,
                        'uninitialized': -1, 'alignment-end': 0}
 
 
-def _get_seq_id(seq, default_id):
-    try:
-        result = seq.id
-    except AttributeError:
-        result = default_id
-    else:
-        if result is None or result.strip() == "":
-            result = default_id
-    return result
-
-
 def _init_matrices_sw(aln1, aln2, gap_open_penalty, gap_extend_penalty):
-    shape = (aln2.sequence_length()+1, aln1.sequence_length()+1)
+    shape = (aln2.shape.position+1, aln1.shape.position+1)
     score_matrix = np.zeros(shape)
     traceback_matrix = np.zeros(shape, dtype=np.int)
     traceback_matrix += _traceback_encoding['uninitialized']
@@ -662,7 +801,7 @@ def _init_matrices_sw(aln1, aln2, gap_open_penalty, gap_extend_penalty):
 
 
 def _init_matrices_nw(aln1, aln2, gap_open_penalty, gap_extend_penalty):
-    shape = (aln2.sequence_length()+1, aln1.sequence_length()+1)
+    shape = (aln2.shape.position+1, aln1.shape.position+1)
     score_matrix = np.zeros(shape)
     traceback_matrix = np.zeros(shape, dtype=np.int)
     traceback_matrix += _traceback_encoding['uninitialized']
@@ -685,7 +824,7 @@ def _init_matrices_nw(aln1, aln2, gap_open_penalty, gap_extend_penalty):
 
 def _init_matrices_nw_no_terminal_gap_penalty(
         aln1, aln2, gap_open_penalty, gap_extend_penalty):
-    shape = (aln2.sequence_length()+1, aln1.sequence_length()+1)
+    shape = (aln2.shape.position+1, aln1.shape.position+1)
     score_matrix = np.zeros(shape)
     traceback_matrix = np.zeros(shape, dtype=np.int)
     traceback_matrix += _traceback_encoding['uninitialized']
@@ -705,11 +844,10 @@ def _init_matrices_nw_no_terminal_gap_penalty(
 
 
 def _compute_substitution_score(aln1_chars, aln2_chars, substitution_matrix,
-                                gap_substitution_score):
+                                gap_substitution_score, gap_chars):
     substitution_score = 0
     for aln1_char, aln2_char in product(aln1_chars, aln2_chars):
-        if BiologicalSequence.is_gap(aln1_char) or\
-           BiologicalSequence.is_gap(aln2_char):
+        if aln1_char in gap_chars or aln2_char in gap_chars:
                 substitution_score += gap_substitution_score
         else:
             try:
@@ -751,8 +889,8 @@ def _compute_score_and_traceback_matrices(
     that users are most likely to be looking for.
 
     """
-    aln1_length = aln1.sequence_length()
-    aln2_length = aln2.sequence_length()
+    aln1_length = aln1.shape.position
+    aln2_length = aln2.shape.position
     # cache some values for quicker/simpler access
     aend = _traceback_encoding['alignment-end']
     match = _traceback_encoding['match']
@@ -768,14 +906,20 @@ def _compute_score_and_traceback_matrices(
 
     # Iterate over the characters in aln2 (which corresponds to the vertical
     # sequence in the matrix)
-    for aln2_pos, aln2_chars in enumerate(aln2.iter_positions(str), 1):
+    for aln2_pos, aln2_chars in enumerate(aln2.iter_positions(
+            ignore_metadata=True), 1):
+        aln2_chars = str(aln2_chars)
+
         # Iterate over the characters in aln1 (which corresponds to the
         # horizontal sequence in the matrix)
-        for aln1_pos, aln1_chars in enumerate(aln1.iter_positions(str), 1):
+        for aln1_pos, aln1_chars in enumerate(aln1.iter_positions(
+                ignore_metadata=True), 1):
+            aln1_chars = str(aln1_chars)
+
             # compute the score for a match/mismatch
             substitution_score = _compute_substitution_score(
                 aln1_chars, aln2_chars, substitution_matrix,
-                gap_substitution_score)
+                gap_substitution_score, aln1.dtype.gap_chars)
 
             diag_score = \
                 (score_matrix[aln2_pos-1, aln1_pos-1] + substitution_score,
@@ -826,18 +970,19 @@ def _compute_score_and_traceback_matrices(
 
 
 def _traceback(traceback_matrix, score_matrix, aln1, aln2, start_row,
-               start_col, gap_character='-'):
-    # cache some values for simpler
+               start_col):
+    # cache some values for simpler reference
     aend = _traceback_encoding['alignment-end']
     match = _traceback_encoding['match']
     vgap = _traceback_encoding['vertical-gap']
     hgap = _traceback_encoding['horizontal-gap']
+    gap_character = aln1.dtype.default_gap_char
 
     # initialize the result alignments
-    aln1_sequence_count = aln1.sequence_count()
+    aln1_sequence_count = aln1.shape.sequence
     aligned_seqs1 = [[] for e in range(aln1_sequence_count)]
 
-    aln2_sequence_count = aln2.sequence_count()
+    aln2_sequence_count = aln2.shape.sequence
     aligned_seqs2 = [[] for e in range(aln2_sequence_count)]
 
     current_row = start_row
@@ -858,7 +1003,7 @@ def _traceback(traceback_matrix, score_matrix, aln1, aln2, start_row,
             current_col -= 1
         elif current_value == vgap:
             for aligned_seq in aligned_seqs1:
-                aligned_seq.append('-')
+                aligned_seq.append(gap_character)
             for aligned_seq, input_seq in zip(aligned_seqs2, aln2):
                 aligned_seq.append(str(input_seq[current_row-1]))
             current_row -= 1
@@ -866,7 +1011,7 @@ def _traceback(traceback_matrix, score_matrix, aln1, aln2, start_row,
             for aligned_seq, input_seq in zip(aligned_seqs1, aln1):
                 aligned_seq.append(str(input_seq[current_col-1]))
             for aligned_seq in aligned_seqs2:
-                aligned_seq.append('-')
+                aligned_seq.append(gap_character)
             current_col -= 1
         elif current_value == aend:
             continue
@@ -874,18 +1019,25 @@ def _traceback(traceback_matrix, score_matrix, aln1, aln2, start_row,
             raise ValueError(
                 "Invalid value in traceback matrix: %s" % current_value)
 
-    for i in range(aln1_sequence_count):
-        aligned_seq = ''.join(aligned_seqs1[i][::-1])
-        seq_id = _get_seq_id(aln1[i], str(i))
-        aligned_seqs1[i] = BiologicalSequence(aligned_seq, id=seq_id)
+    for i, (aligned_seq, original) in enumerate(zip(aligned_seqs1, aln1)):
+        aligned_seq = ''.join(aligned_seq)[::-1]
+        constructor = aln1.dtype
+        metadata = None
+        if original.has_metadata():
+            metadata = original.metadata
+        aligned_seqs1[i] = constructor(aligned_seq, metadata=metadata,
+                                       validate=False)
 
-    for i in range(aln2_sequence_count):
-        aligned_seq = ''.join(aligned_seqs2[i][::-1])
-        seq_id = _get_seq_id(aln2[i], str(i + aln1_sequence_count))
-        aligned_seqs2[i] = BiologicalSequence(aligned_seq, id=seq_id)
+    for i, (aligned_seq, original) in enumerate(zip(aligned_seqs2, aln2)):
+        aligned_seq = ''.join(aligned_seq)[::-1]
+        constructor = aln2.dtype
+        metadata = None
+        if original.has_metadata():
+            metadata = original.metadata
+        aligned_seqs2[i] = constructor(aligned_seq, metadata=metadata,
+                                       validate=False)
 
-    return (aligned_seqs1, aligned_seqs2, best_score,
-            current_col, current_row)
+    return aligned_seqs1, aligned_seqs2, best_score, current_col, current_row
 
 
 def _first_largest(scores):
