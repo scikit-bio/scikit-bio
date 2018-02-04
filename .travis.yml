@@ -28,7 +28,7 @@ install:
   - pip install . --no-deps
 script:
   - WITH_COVERAGE=TRUE make test
-  - if [ ${MAKE_DOC} ]; then make -C doc clean html; fi
+  - if [ ${MAKE_DOC} != "FALSE" ]; then make -C doc clean html; fi
 after_success:
   - coveralls
 notifications:
