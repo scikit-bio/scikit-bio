@@ -13,7 +13,6 @@ import numpy as np
 import numpy.testing as npt
 import pandas as pd
 import scipy.spatial.distance
-from IPython.core.display import Image, SVG
 
 import skbio.sequence.distance
 from skbio import DistanceMatrix, Sequence
@@ -449,11 +448,13 @@ class DissimilarityMatrixTests(DissimilarityMatrixTestData):
 
     @npt.decorators.skipif(_not_has_matplotlib)
     def test_png(self):
+        from IPython.core.display import Image
         dm = self.dm_1x1
         self.assertIsInstance(dm.png, Image)
 
     @npt.decorators.skipif(_not_has_matplotlib)
     def test_svg(self):
+        from IPython.core.display import SVG
         dm = self.dm_1x1
         self.assertIsInstance(dm.svg, SVG)
 
