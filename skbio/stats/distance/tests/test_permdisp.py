@@ -14,6 +14,7 @@ import numpy.testing as npt
 import pandas as pd
 from pandas.util.testing import assert_series_equal
 from scipy.stats import f_oneway
+import hdmedians as hd
 
 from skbio import DistanceMatrix
 from skbio.stats.ordination import pcoa
@@ -214,6 +215,17 @@ class testPERMDISP(TestCase):
         # fix this to test both are significant or not significant
         pval = obs['p-value']
         np.isnan(pval)
+
+    def test_hdmedians(self):
+        exp = np.array([ 2.01956244,  1.53164546,  2.60571752,  0.91424179,  
+                        1.76214416, 1.69943057])
+        obs = np.array(hd.geomedian(self.eq_mat.data))
+        npt.assert_almost_equal(obs, exp, decimal=6)
+    
+    #def test_confirm_betadispr_results(self):
+        
+
+
 
 
 if __name__ == '__main__':

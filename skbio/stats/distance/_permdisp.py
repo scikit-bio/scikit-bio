@@ -27,7 +27,7 @@ def permdisp(distance_matrix, grouping, column=None, test='median',
     Anderson's PERMDISP2 procedure.
 
     PERMDISP is a multivariate analogue of Levene's test for homogeneity of
-    multivariate variances. Non-euclidean distances are handled by reducing the
+    multivariate variances. Distances are handled by reducing the
     original distances to principle coordinates. PERMDISP calculates an
     F-statistic to assess whether the dispersions between groups is significant
 
@@ -77,7 +77,7 @@ def permdisp(distance_matrix, grouping, column=None, test='median',
     ValueError
         If the test is not centroid or median. test is set to median by default
     TypeError
-        If the distance matrix is not an instance of a distance matrix
+        If the distance matrix is not an instance of a skbio.DistanceMatrix
 
     See Also
     --------
@@ -115,7 +115,7 @@ def permdisp(distance_matrix, grouping, column=None, test='median',
 
     >>> from skbio.stats.distance import permdisp
     >>> import numpy as np
-    >>> #make output deterministic; not necessary for normal use
+    >>> #make output deterministic, should not be included during normal use
     >>> np.random.seed(0)
     >>> permdisp(dm, grouping, permutations=99)
     method name               PERMDISP
@@ -144,13 +144,13 @@ def permdisp(distance_matrix, grouping, column=None, test='median',
     Name: PERMDISP results, dtype: object
 
     PERMDISP computes variances based on two types of tests, using either
-    centroids or spatial medians, also commonly reffered to as a geometric
-    median or mediancentre. The spatial median is thought to yeild a more
-    robust test statistic, and this test is used by default. Spatial medians
-    are computed using an iterative algorithm to find the optimally minimum
-    point from all other points in a group while centroids are computed
-    using a deterministic formula. As such the two different tests yeild
-    slightly different F statistics.
+    centroids or spatial medians, also commonly referred to as a geometric
+    median. The spatial median is thought to yield a more robust test 
+    statistic, and this test is used by default. Spatial medians are computed 
+    using an iterative algorithm to find the optimally minimum point from all 
+    other points in a group while centroids are computed using a deterministic 
+    formula. As such the two different tests yeild slightly different F 
+    statistics.
 
     >>> np.random.seed(0)
     >>> permdisp(dm, grouping, test='centroid', permutations=99)
@@ -199,7 +199,7 @@ def permdisp(distance_matrix, grouping, column=None, test='median',
     PERMDISP should be used to determine wether the dispersions between the
     groups in your distance matrix are significantly separated.
     A non-significant test result indicates that group dispersions are similar
-    to eachother. PERMANOVA or ANOSIM should then be used in conjunction to
+    to each other. PERMANOVA or ANOSIM should then be used in conjunction to
     determine wether clustering within groups is significant.
 
     """
@@ -242,7 +242,7 @@ def _compute_centroid_groups(samples, grouping):
     return stat
 
 
-def _config_med(x):  # not explicitly tested by permdisp test suite
+def _config_med(x):
     """
     slice the vector up to the last value to exclude grouping column
     and transpose the vector to be compatible with hd.geomedian
