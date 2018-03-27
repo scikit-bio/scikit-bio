@@ -75,9 +75,20 @@ def permdisp(distance_matrix, grouping, column=None, test='median',
         type np.float32 or np.float64, the spatial median function will fail
         and the centroid test should be used instead
     ValueError
-        If the test is not centroid or median. test is set to median by default
+        If the test is not centroid or median. 
     TypeError
         If the distance matrix is not an instance of a skbio.DistanceMatrix
+    ValueError
+        If there is only one group
+    ValueError
+        If a list and a column name are both provided
+    ValueError
+        If a list is provided for `grouping` and it's length does not match
+        the number of ids in distance_matrix
+    ValueError
+        If all of the values in the grouping vector are unique
+    KeyError
+        If there are ids in grouping that are not in distance_matrix
 
     See Also
     --------
