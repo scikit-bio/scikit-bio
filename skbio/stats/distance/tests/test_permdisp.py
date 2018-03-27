@@ -217,33 +217,33 @@ class testPERMDISP(TestCase):
         np.isnan(pval)
 
     def test_hdmedians(self):
-        exp = np.array([ 2.01956244,  1.53164546,  2.60571752,  0.91424179,  
+        exp = np.array([2.01956244, 1.53164546, 2.60571752, 0.91424179,
                         1.76214416, 1.69943057])
         obs = np.array(hd.geomedian(self.eq_mat.data))
         npt.assert_almost_equal(obs, exp, decimal=6)
-    
+
     def test_confirm_betadispr_results(self):
         mp_dm = DistanceMatrix.read('data/moving_pictures_dm.tsv')
         mp_mf = pd.read_csv('data/moving_pictures_mf.tsv', sep='\t')
         mp_mf.set_index('#SampleID', inplace=True)
 
-        exp_med_mp = 10.4105 
+        exp_med_mp = 10.4105
         exp_cen_mp = 17.727
-        obs_med_mp = permdisp(mp_dm, mp_mf, \
-                column='BodySite')['test statistic']
-        obs_cen_mp = permdisp(mp_dm, mp_mf, column='BodySite', \
-                test='centroid')['test statistic']
-        
+        obs_med_mp = permdisp(mp_dm, mp_mf,
+                              column='BodySite')['test statistic']
+        obs_cen_mp = permdisp(mp_dm, mp_mf, column='BodySite',
+                              test='centroid')['test statistic']
+
         self.assertAlmostEqual(exp_med_mp, obs_med_mp, places=0)
         self.assertAlmostEqual(exp_cen_mp, obs_cen_mp, places=0)
 
         exp_med_mp = 0.02202
         exp_cen_mp = 0.04549
 
-        obs_med_mp = permdisp(mp_dm, mp_mf, \
-                column='Subject')['test statistic']
-        obs_cen_mp = permdisp(mp_dm, mp_mf, column='Subject', \
-                test='centroid')['test statistic']
+        obs_med_mp = permdisp(mp_dm, mp_mf,
+                              column='Subject')['test statistic']
+        obs_cen_mp = permdisp(mp_dm, mp_mf, column='Subject',
+                              test='centroid')['test statistic']
 
         self.assertAlmostEqual(exp_med_mp, obs_med_mp, places=2)
         self.assertAlmostEqual(exp_cen_mp, obs_cen_mp, places=2)

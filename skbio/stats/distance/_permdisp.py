@@ -75,7 +75,7 @@ def permdisp(distance_matrix, grouping, column=None, test='median',
         type np.float32 or np.float64, the spatial median function will fail
         and the centroid test should be used instead
     ValueError
-        If the test is not centroid or median. 
+        If the test is not centroid or median.
     TypeError
         If the distance matrix is not an instance of a skbio.DistanceMatrix
     ValueError
@@ -156,11 +156,11 @@ def permdisp(distance_matrix, grouping, column=None, test='median',
 
     PERMDISP computes variances based on two types of tests, using either
     centroids or spatial medians, also commonly referred to as a geometric
-    median. The spatial median is thought to yield a more robust test 
-    statistic, and this test is used by default. Spatial medians are computed 
-    using an iterative algorithm to find the optimally minimum point from all 
-    other points in a group while centroids are computed using a deterministic 
-    formula. As such the two different tests yeild slightly different F 
+    median. The spatial median is thought to yield a more robust test
+    statistic, and this test is used by default. Spatial medians are computed
+    using an iterative algorithm to find the optimally minimum point from all
+    other points in a group while centroids are computed using a deterministic
+    formula. As such the two different tests yeild slightly different F
     statistics.
 
     >>> np.random.seed(0)
@@ -245,7 +245,7 @@ def _compute_centroid_groups(samples, grouping):
 
     for label, df in samples.groupby('grouping'):
         groups.append(cdist(df.values[:, :-1], [centroids.loc[label].values],
-                      metric='euclidean'))
+                            metric='euclidean'))
 
     stat, _ = f_oneway(*groups)
     stat = stat[0]
@@ -272,7 +272,7 @@ def _compute_median_groups(samples, grouping):
 
     for label, df in samples.groupby('grouping'):
         groups.append(cdist(df.values[:, :-1], [medians.loc[label].values],
-                      metric='euclidean'))
+                            metric='euclidean'))
 
     stat, _ = f_oneway(*groups)
     stat = stat[0]
