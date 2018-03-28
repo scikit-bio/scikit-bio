@@ -1,0 +1,21 @@
+Analysis of Variance Table
+
+Response: Distances
+          Df        Sum Sq        Mean Sq F value Pr(>F)
+Groups     1 0.00587360776 0.005873607762  0.9901 0.3355
+Residuals 15 0.08898536798 0.005932357866               
+
+Permutation test for homogeneity of multivariate dispersions
+Permutation: free
+Number of permutations: 999
+
+Response: Distances
+          Df        Sum Sq        Mean Sq      F N.Perm Pr(>F)
+Groups     1 0.00587360776 0.005873607762 0.9901    999  0.351
+Residuals 15 0.08898536798 0.005932357866                     
+
+Pairwise comparisons:
+(Observed p-value below diagonal, permuted p-value above diagonal)
+               computer mouse right palm
+computer mouse                     0.338
+right palm       0.3355002904           

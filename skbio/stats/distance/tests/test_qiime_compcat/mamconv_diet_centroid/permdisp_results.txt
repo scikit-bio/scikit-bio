@@ -1,0 +1,22 @@
+Analysis of Variance Table
+
+Response: Distances
+          Df        Sum Sq        Mean Sq F value  Pr(>F)
+Groups     2 0.01443531975 0.007217659874 2.08823 0.13866
+Residuals 36 0.12442878050 0.003456355014                
+
+Permutation test for homogeneity of multivariate dispersions
+Permutation: free
+Number of permutations: 999
+
+Response: Distances
+          Df        Sum Sq        Mean Sq       F N.Perm Pr(>F)
+Groups     2 0.01443531975 0.007217659874 2.08823    999  0.135
+Residuals 36 0.12442878050 0.003456355014                      
+
+Pairwise comparisons:
+(Observed p-value below diagonal, permuted p-value above diagonal)
+              Carnivore     Herbivore Omnivore
+Carnivore               0.06800000000    0.143
+Herbivore 0.07427546102                  0.672
+Omnivore  0.13217340216 0.65775065316         

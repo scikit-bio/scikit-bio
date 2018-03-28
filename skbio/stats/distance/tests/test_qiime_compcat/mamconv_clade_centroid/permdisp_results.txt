@@ -1,0 +1,36 @@
+Analysis of Variance Table
+
+Response: Distances
+          Df       Sum Sq       Mean Sq  F value     Pr(>F)    
+Groups     5 0.8345067579 0.16690135159 47.55598 3.8713e-14 ***
+Residuals 33 0.1158160221 0.00350957643                        
+---
+Signif. codes:  0 ‘***’ 0.001 ‘**’ 0.01 ‘*’ 0.05 ‘.’ 0.1 ‘ ’ 1
+
+Permutation test for homogeneity of multivariate dispersions
+Permutation: free
+Number of permutations: 999
+
+Response: Distances
+          Df       Sum Sq       Mean Sq        F N.Perm Pr(>F)    
+Groups     5 0.8345067579 0.16690135159 47.55598    999  0.001 ***
+Residuals 33 0.1158160221 0.00350957643                           
+---
+Signif. codes:  0 ‘***’ 0.001 ‘**’ 0.01 ‘*’ 0.05 ‘.’ 0.1 ‘ ’ 1
+
+Pairwise comparisons:
+(Observed p-value below diagonal, permuted p-value above diagonal)
+                     Afrotheria Euarchontoglires Laurasiatheria Marsupialia
+Afrotheria                        0.067000000000 0.010000000000            
+Euarchontoglires 0.052471358566                  0.080000000000            
+Laurasiatheria   0.001521005668   0.079391822520                           
+Marsupialia                                                                
+Monotremata                                                                
+Xenarthra                                                                  
+                 Monotremata Xenarthra
+Afrotheria                            
+Euarchontoglires                      
+Laurasiatheria                        
+Marsupialia                           
+Monotremata                           
+Xenarthra                             

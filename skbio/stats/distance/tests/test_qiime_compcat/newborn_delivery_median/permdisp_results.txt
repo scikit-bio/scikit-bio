@@ -1,0 +1,30 @@
+Analysis of Variance Table
+
+Response: Distances
+          Df       Sum Sq       Mean Sq F value     Pr(>F)    
+Groups     2 0.1062927949 0.05314639743  10.808 7.3981e-05 ***
+Residuals 76 0.3737163909 0.00491732093                       
+---
+Signif. codes:  0 ‘***’ 0.001 ‘**’ 0.01 ‘*’ 0.05 ‘.’ 0.1 ‘ ’ 1
+
+Permutation test for homogeneity of multivariate dispersions
+Permutation: free
+Number of permutations: 999
+
+Response: Distances
+          Df       Sum Sq       Mean Sq      F N.Perm Pr(>F)    
+Groups     2 0.1062927949 0.05314639743 10.808    999  0.001 ***
+Residuals 76 0.3737163909 0.00491732093                         
+---
+Signif. codes:  0 ‘***’ 0.001 ‘**’ 0.01 ‘*’ 0.05 ‘.’ 0.1 ‘ ’ 1
+
+Pairwise comparisons:
+(Observed p-value below diagonal, permuted p-value above diagonal)
+                       cesarean delivery Missing: Not collected
+cesarean delivery                               1.000000000e-03
+Missing: Not collected   4.548897480e-06                       
+vaginal delivery         1.251997072e-01        3.820942511e-02
+                       vaginal delivery
+cesarean delivery                 0.110
+Missing: Not collected            0.038
+vaginal delivery                       

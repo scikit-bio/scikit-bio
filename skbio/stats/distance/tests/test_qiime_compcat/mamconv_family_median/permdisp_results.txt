@@ -1,0 +1,137 @@
+Analysis of Variance Table
+
+Response: Distances
+          Df       Sum Sq       Mean Sq  F value     Pr(>F)    
+Groups    21 1.1645409108 0.05545432909 21.19901 2.2156e-08 ***
+Residuals 17 0.0444701605 0.00261589180                        
+---
+Signif. codes:  0 ‘***’ 0.001 ‘**’ 0.01 ‘*’ 0.05 ‘.’ 0.1 ‘ ’ 1
+
+Permutation test for homogeneity of multivariate dispersions
+Permutation: free
+Number of permutations: 999
+
+Response: Distances
+          Df       Sum Sq       Mean Sq        F N.Perm Pr(>F)    
+Groups    21 1.1645409108 0.05545432909 21.19901    999  0.001 ***
+Residuals 17 0.0444701605 0.00261589180                           
+---
+Signif. codes:  0 ‘***’ 0.001 ‘**’ 0.01 ‘*’ 0.05 ‘.’ 0.1 ‘ ’ 1
+
+Pairwise comparisons:
+(Observed p-value below diagonal, permuted p-value above diagonal)
+                        Bovidae Canidae Caviidae Cebidae Cercopithecidae
+Bovidae                                                  5.810000000e-01
+Canidae                                                                 
+Caviidae                                                                
+Cebidae                                                                 
+Cercopithecidae 5.950780125e-01                                         
+Dasypodidae                                                             
+Elephantidae                                                            
+Equidae         2.188688471e-02                          1.115871172e-01
+Felidae         6.569494579e-04                          1.933528849e-02
+Giraffidae      4.970848588e-02                          1.208318691e-01
+Hominidae       2.209764807e-02                          6.323473355e-02
+Hyaenidae                                                               
+Lemuridae       7.127179256e-01                          5.786356156e-01
+Leporidae                                                               
+Macropodidae                                                            
+Pitheciidae                                                             
+Procaviidae     4.591413857e-02                          1.572902889e-01
+Rhinocerotidae                                                          
+Sciuridae                                                               
+Suidae                                                                  
+Tachyglossidae                                                          
+Ursidae         6.389272279e-01                          5.889767040e-01
+                Dasypodidae Elephantidae         Equidae         Felidae
+Bovidae                                  2.800000000e-02 1.100000000e-02
+Canidae                                                                 
+Caviidae                                                                
+Cebidae                                                                 
+Cercopithecidae                          9.400000000e-02                
+Dasypodidae                                                             
+Elephantidae                                                            
+Equidae                                                                 
+Felidae                                  1.698173497e-31                
+Giraffidae                               5.275756878e-01 2.023652125e-02
+Hominidae                                4.885109924e-01 6.318599873e-03
+Hyaenidae                                                               
+Lemuridae                                5.836199591e-31 6.000211868e-32
+Leporidae                                                               
+Macropodidae                                                            
+Pitheciidae                                                             
+Procaviidae                              1.186291913e-29 1.281074765e-31
+Rhinocerotidae                                                          
+Sciuridae                                                               
+Suidae                                                                  
+Tachyglossidae                                                          
+Ursidae                                  5.602794294e-01 1.556762729e-01
+                     Giraffidae       Hominidae Hyaenidae       Lemuridae
+Bovidae         4.900000000e-02 3.100000000e-02           7.410000000e-01
+Canidae                                                                  
+Caviidae                                                                 
+Cebidae                                                                  
+Cercopithecidae                 7.700000000e-02                          
+Dasypodidae                                                              
+Elephantidae                                                             
+Equidae         5.480000000e-01                                          
+Felidae         5.600000000e-02 2.700000000e-02                          
+Giraffidae                      9.570000000e-01                          
+Hominidae       9.469925238e-01                           7.700000000e-02
+Hyaenidae                                                                
+Lemuridae       1.557598754e-01 8.322891864e-02                          
+Leporidae                                                                
+Macropodidae                                                             
+Pitheciidae                                                              
+Procaviidae     9.003446088e-01 9.374326858e-01           9.637227155e-31
+Rhinocerotidae                                                           
+Sciuridae                                                                
+Suidae                                                                   
+Tachyglossidae                                                           
+Ursidae         6.313438341e-01 5.450755622e-01           8.624878844e-01
+                Leporidae Macropodidae Pitheciidae     Procaviidae
+Bovidae                                            3.600000000e-02
+Canidae                                                           
+Caviidae                                                          
+Cebidae                                                           
+Cercopithecidae                                                   
+Dasypodidae                                                       
+Elephantidae                                                      
+Equidae                                                           
+Felidae                                                           
+Giraffidae                                                        
+Hominidae                                                         
+Hyaenidae                                                         
+Lemuridae                                                         
+Leporidae                                                         
+Macropodidae                                                      
+Pitheciidae                                                       
+Procaviidae                                                       
+Rhinocerotidae                                                    
+Sciuridae                                                         
+Suidae                                                            
+Tachyglossidae                                                    
+Ursidae                                            6.726950773e-01
+                Rhinocerotidae Sciuridae Suidae Tachyglossidae Ursidae
+Bovidae                                                          0.647
+Canidae                                                               
+Caviidae                                                              
+Cebidae                                                               
+Cercopithecidae                                                  0.583
+Dasypodidae                                                           
+Elephantidae                                                          
+Equidae                                                               
+Felidae                                                          0.116
+Giraffidae                                                       0.618
+Hominidae                                                        0.518
+Hyaenidae                                                             
+Lemuridae                                                             
+Leporidae                                                             
+Macropodidae                                                          
+Pitheciidae                                                           
+Procaviidae                                                           
+Rhinocerotidae                                                        
+Sciuridae                                                             
+Suidae                                                                
+Tachyglossidae                                                        
+Ursidae                                                               
