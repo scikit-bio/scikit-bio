@@ -2,6 +2,8 @@
 
 ## Version 0.5.1-dev (changes since 0.5.1 go here)
 
+* Added ``skbio.io.format.embl`` for reading and writing EMBL files for ``DNA``, ``RNA`` and ``Sequence`` classes.
+
 ### Features
 * Removing ValueError check in `skbio.stats._subsample.subsample_counts` when `replace=True` and `n` is greater than the number of items in counts.  [#1527](https://github.com/biocore/scikit-bio/pull/1527)
 

@@ -1,0 +1,48 @@
+ID   001R_FRG3G              Reviewed;         256 AA.
+AC   Q6GZX4;
+DT   28-JUN-2011, integrated into UniProtKB/Swiss-Prot.
+DT   19-JUL-2004, sequence version 1.
+DT   17-FEB-2016, entry version 31.
+DE   RecName: Full=Putative transcription factor 001R;
+GN   ORFNames=FV3-001R;
+OS   Frog virus 3 (isolate Goorha) (FV-3).
+OC   Viruses; dsDNA viruses, no RNA stage; Iridoviridae; Ranavirus.
+OX   NCBI_TaxID=654924;
+OH   NCBI_TaxID=8295; Ambystoma (mole salamanders).
+OH   NCBI_TaxID=30343; Hyla versicolor (chameleon treefrog).
+OH   NCBI_TaxID=8404; Lithobates pipiens (Northern leopard frog) (Rana pipiens).
+OH   NCBI_TaxID=8316; Notophthalmus viridescens (Eastern newt) (Triturus viridescens).
+OH   NCBI_TaxID=45438; Rana sylvatica (Wood frog).
+RN   [1]
+RP   NUCLEOTIDE SEQUENCE [LARGE SCALE GENOMIC DNA].
+RX   PubMed=15165820; DOI=10.1016/j.virol.2004.02.019;
+RA   Tan W.G., Barkman T.J., Gregory Chinchar V., Essani K.;
+RT   "Comparative genomic analyses of frog virus 3, type species of the
+RT   genus Ranavirus (family Iridoviridae).";
+RL   Virology 323:70-84(2004).
+CC   -!- FUNCTION: Transcription activation. {ECO:0000305}.
+DR   EMBL; AY548484; AAT09660.1; -; Genomic_DNA.
+DR   RefSeq; YP_031579.1; NC_005946.1.
+DR   ProteinModelPortal; Q6GZX4; -.
+DR   SwissPalm; Q6GZX4; -.
+DR   GeneID; 2947773; -.
+DR   KEGG; vg:2947773; -.
+DR   Proteomes; UP000008770; Genome.
+DR   GO; GO:0006355; P:regulation of transcription, DNA-templated; IEA:UniProtKB-KW.
+DR   GO; GO:0046782; P:regulation of viral transcription; IEA:InterPro.
+DR   GO; GO:0006351; P:transcription, DNA-templated; IEA:UniProtKB-KW.
+DR   InterPro; IPR007031; Poxvirus_VLTF3.
+DR   Pfam; PF04947; Pox_VLTF3; 1.
+PE   4: Predicted;
+KW   Activator; Complete proteome; Reference proteome; Transcription;
+KW   Transcription regulation.
+FT   CHAIN         1    256       Putative transcription factor 001R.
+FT                                /FTId=PRO_0000410512.
+FT   COMPBIAS     14     17       Poly-Arg.
+SQ   SEQUENCE   256 AA;  29735 MW;  B4840739BF7D4121 CRC64;
+     MAFSAEDVLK EYDRRRRMEA LLLSLYYPND RKLLDYKEWS PPRVQVECPK APVEWNNPPS
+     EKGLIVGHFS GIKYKGEKAQ ASEVDVNKMC CWVSKFKDAM RRYQGIQTCK IPGKVLSDLD
+     AKIKAYNLTV EGVEGFVRYS RVTKQHVAAF LKELRHSKQY ENVNLIHYIL TDKRVDIQHL
+     EKDLVKDFKA LVESAHRMRQ GHMINVKYIL YQLLKKHGHG PDGPDILTVK TGSKGVLYDD
+     SFRKIYTDLG WKFTPL
+//

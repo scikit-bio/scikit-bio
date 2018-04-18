@@ -96,7 +96,7 @@ class GenBankIOTests(TestCase):
         imd.add([(0, 63)],
                 [(False, True)],
                 {'phase': 0,
-                 'db_xref': ['"GI:145230"', '"taxon:562"', '"taxon:561"'],
+                 'db_xref': ['"taxon:562"', '"taxon:561"'],
                  '__location': '1..>63',
                  'strand': '+',
                  'note': '"alkaline phosphatase signal peptide"',
@@ -121,7 +121,7 @@ class GenBankIOTests(TestCase):
                         'taxonomy': 'Bacteria; Proteobacteria; '
                         'Gammaproteobacteria; Enterobacteriales; '
                         'Enterobacteriaceae; Escherichia.'},
-             'VERSION': 'M14399.1  GI:145229'},
+             'VERSION': 'M14399.1'},
             imd,
             RNA)
 
