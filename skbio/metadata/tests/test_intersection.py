@@ -132,8 +132,8 @@ class LotsaTestCase(unittest.TestCase):
         r = iv.right(1, n=33)
         self.assertEqual(len(r), 33)
 
-        l = iv.left(1, n=33)
-        self.assertEqual(len(l), 1)
+        left = iv.left(1, n=33)
+        self.assertEqual(len(left), 1)
 
         u = iv.right(1, n=9999)
         self.assertEqual(len(u), 250)

@@ -114,7 +114,12 @@ setup(name='scikit-bio',
           'IPython >= 3.2.0',
           'matplotlib >= 1.4.3',
           'natsort >= 4.0.3',
-          'numpy >= 1.9.2',
+          # numpy array repr changed in 1.14.0 to use less whitespace, which
+          # breaks the doctests. The doctests can't be updated to match the new
+          # arrray repr because we still support Python 3.4, which doesn't have
+          # a numpy 1.14.0 conda package on `defaults` or `conda-forge`
+          # channels.
+          'numpy >= 1.9.2, < 1.14.0',
           'pandas >= 0.19.2',
           'scipy >= 0.15.1',
           'nose >= 1.3.7'

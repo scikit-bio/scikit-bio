@@ -106,7 +106,7 @@ from skbio.util._decorator import classproperty
 # If your documentation needs a minimal Sphinx version, state it here.
 # Using `sphinx_version` doesn't work, likely because Sphinx is expecting a
 # version string of the form X.Y, not X.Y.Z.
-needs_sphinx = '1.2'
+needs_sphinx = '1.6'
 
 # Add any Sphinx extension module names here, as strings. They can be
 # extensions coming with Sphinx (named 'sphinx.ext.*') or your custom

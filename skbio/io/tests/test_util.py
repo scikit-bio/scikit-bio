@@ -588,10 +588,10 @@ class TestIterableReaderWriter(unittest.TestCase):
                 self.assertEqual(result.read(), 'abc')
 
     def test_open_with_newline(self):
-        l = ['a\r', 'b\r', 'c\r']
-        with skbio.io.open(l, newline='\r') as result:
+        lines = ['a\r', 'b\r', 'c\r']
+        with skbio.io.open(lines, newline='\r') as result:
             self.assertIsInstance(result, io.TextIOBase)
-            self.assertEqual(result.readlines(), l)
+            self.assertEqual(result.readlines(), lines)
 
     def test_open_invalid_iterable(self):
         with self.assertRaises(skbio.io.IOSourceError):
@@ -603,15 +603,15 @@ class TestIterableReaderWriter(unittest.TestCase):
             self.assertEqual(result.read(), '')
 
     def test_open_write_mode(self):
-        l = []
-        with skbio.io.open(l, mode='w') as fh:
+        lines = []
+        with skbio.io.open(lines, mode='w') as fh:
             fh.write('abc')
-        self.assertEqual(l, ['abc'])
+        self.assertEqual(lines, ['abc'])
 
-        l = []
-        with skbio.io.open(l, mode='w', newline='\r') as fh:
+        lines = []
+        with skbio.io.open(lines, mode='w', newline='\r') as fh:
             fh.write('ab\nc\n')
-        self.assertEqual(l, ['ab\r', 'c\r'])
+        self.assertEqual(lines, ['ab\r', 'c\r'])
 
         self.assertTrue(fh.closed)
         fh.close()

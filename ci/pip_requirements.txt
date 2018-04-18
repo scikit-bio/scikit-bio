@@ -3,7 +3,7 @@ coveralls
 natsort
 lockfile
 CacheControl
-git+git://github.com/sphinx-doc/sphinx.git
+Sphinx
 sphinx-bootstrap-theme
-numpydoc
+numpydoc < 0.8.0
 check-manifest
