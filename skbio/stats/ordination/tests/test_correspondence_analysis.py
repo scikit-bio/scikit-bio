@@ -156,7 +156,7 @@ class TestCAResults(TestCase):
                                          [0.51685, -0.09517]]),
                                self.sample_ids,
                                self.pc_ids)
-        proportion_explained = pd.Series(np.array([0.701318, 0.298682]), 
+        proportion_explained = pd.Series(np.array([0.701318, 0.298682]),
                                          self.pc_ids)
 
         exp = OrdinationResults('CA', 'Correspondance Analysis',
