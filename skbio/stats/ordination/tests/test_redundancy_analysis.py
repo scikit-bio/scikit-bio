@@ -9,6 +9,7 @@
 import numpy as np
 import numpy.testing as npt
 import pandas as pd
+import pandas.util.testing as pdt
 from unittest import TestCase, main
 
 from skbio import OrdinationResults
@@ -173,10 +174,10 @@ class TestRDAResults_biplot_score(TestCase):
     def setUp(self):
         """varespec and varechem from Väre etal. 1995 DOI: 10.2307/3236351"""
 
-        self.Y = pd.read_csv(get_data_path('varespec.csv'))
-        self.X = pd.read_csv(get_data_path('varechem.csv'))
-        self.X = self.X.drop(['ID'], axis=1)
-        self.Y = self.Y.drop(['ID'], axis=1)
+        self.Y = pd.read_csv(get_data_path('varespec.csv'), index_col=0)
+        self.X = pd.read_csv(get_data_path('varechem.csv'), index_col=0)
+        self.Y.index.name = None
+        self.X.index.name = None
 
     def test_biplot_score(self):
 
@@ -208,10 +209,13 @@ class TestRDAResults_biplot_score(TestCase):
         vegan_propexpl = vegan_eigvals/vegan_eigvals.sum()
 
         # transform the output of rda_ to match column selection of vegan
+        res_samples = rda_.samples.iloc[:,0:6]
+        res_features = rda_.features.iloc[:,0:6]
+
         rda_ = OrdinationResults(
             'RDA', 'Redundancy Analysis',
-            samples=rda_.samples.iloc[:,0:6],
-            features=rda_.features.iloc[:,0:6],
+            samples=res_samples,
+            features=res_features,
             sample_constraints=rda_.sample_constraints.iloc[:,0:6],
             biplot_scores=rda_.biplot_scores.iloc[:,0:6],
             proportion_explained=rda_.proportion_explained,
@@ -226,9 +230,14 @@ class TestRDAResults_biplot_score(TestCase):
             proportion_explained=vegan_propexpl,
             eigvals=vegan_eigvals)
 
+
+        pdt.assert_frame_equal(res_samples, vegan_samples)
+        # This scaling constant is required to make skbio comparable to vegan.
+        scaling = (rda_.eigvals[0] / rda_.eigvals[:6])
+        exp.biplot_scores *= scaling
         assert_ordination_results_equal(rda_, exp,
-                                        ignore_directionality=True,
-                                        decimal=6)
+                                        ignore_directionality=False,
+                                        decimal=3)
 
 if __name__ == '__main__':
     main()
