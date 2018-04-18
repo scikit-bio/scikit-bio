@@ -281,6 +281,16 @@ class BetaDiversityTests(TestCase):
                        [0, 0, 25, 35, 0, 19, 0]]
         self.sids2 = list('ABCDEF')
 
+    def test_qualitative_bug_issue_1549(self):
+        mat = np.array([[42, 0, 37, 99, 1],
+                        [12, 1, 22, 88, 0],
+                        [25, 3, 23, 86, 0],
+                        [0, 0, 87, 12, 0]])
+        as_presence_absence = mat > 0
+        obs_mat = beta_diversity('jaccard', mat)
+        obs_presence_absence = beta_diversity('jaccard', as_presence_absence)
+        self.assertEqual(obs_mat, obs_presence_absence)
+
     def test_invalid_input(self):
         # number of ids doesn't match the number of samples
         error_msg = ("Number of rows")
