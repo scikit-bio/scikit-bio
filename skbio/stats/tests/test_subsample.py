@@ -107,7 +107,10 @@ class SubsampleCountsTests(unittest.TestCase):
 
         # Input has too few counts.
         with self.assertRaises(ValueError):
-            subsample_counts([0, 5, 0], 6)
+            subsample_counts([0, 5, 0], 6, replace=False)
+
+        # Input has too counts, but should work with bootstrap
+        subsample_counts([0, 5, 0], 6, replace=True)
 
 
 class ISubsampleTests(unittest.TestCase):

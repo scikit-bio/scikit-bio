@@ -180,7 +180,7 @@ class TabularMSALoc(_Indexing):
         self._assert_tuple_rules(indexable)
         if (self._has_fancy_index() and
                 type(indexable) is not tuple and
-                pd.core.common.is_list_like(indexable) and
+                pd.api.types.is_list_like(indexable) and
                 len(indexable) > 0):
             if not self.is_scalar(indexable[0], axis=0):
                 raise TypeError("A list is used with complete labels, try"

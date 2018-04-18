@@ -174,7 +174,8 @@ def subsample_counts(counts, n, replace=False):
     TypeError
         If `counts` cannot be safely converted to an integer datatype.
     ValueError
-        If `n` is less than zero or greater than the sum of `counts`.
+        If `n` is less than zero or greater than the sum of `counts`
+        when `replace=False`.
     EfficiencyWarning
         If the accelerated code isn't present or hasn't been compiled.
 
@@ -231,9 +232,9 @@ def subsample_counts(counts, n, replace=False):
         raise ValueError("Only 1-D vectors are supported.")
 
     counts_sum = counts.sum()
-    if n > counts_sum:
+    if n > counts_sum and not replace:
         raise ValueError("Cannot subsample more items than exist in input "
-                         "counts vector.")
+                         "counts vector when `replace=False`.")
 
     if replace:
         probs = counts / counts_sum

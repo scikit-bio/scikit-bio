@@ -3,6 +3,8 @@
 ## Version 0.5.1-dev (changes since 0.5.1 go here)
 
 ### Features
+* Removing ValueError check in `skbio.stats._subsample.subsample_counts` when `replace=True` and `n` is greater than the number of items in counts.  [#1527](https://github.com/biocore/scikit-bio/pull/1527)
+
 * Added ``skbio.io.format.gff3`` for reading and writing GFF3 files for ``DNA``, ``Sequence``, and ``IntervalMetadata`` classes. ([#1450](https://github.com/biocore/scikit-bio/pull/1450))
 
 * `skbio.metadata.IntervalMetadata` constructor has a new keyword argument, `copy_from`, for creating an `IntervalMetadata` object from an existing `IntervalMetadata` object with specified `upper_bound`.
@@ -28,6 +30,8 @@
 ### Deprecated functionality [experimental]
 
 ### Miscellaneous
+* scikit-bio now depends on pandas >= 0.19.2, and is compatible with newer pandas versions (e.g. 0.20.3) that were previously incompatible.
+* scikit-bio now depends on `numpy >= 1.9.2, < 1.14.0` for compatibility with Python 3.4, 3.5, and 3.6 and the available numpy conda packages in `defaults` and `conda-forge` channels.
 * added support for running tests from `setup.py`. Both `python setup.py nosetests` and `python setup.py test` are now supported, however `python setup.py test` will only run a subset of the full test suite. ([#1341](https://github.com/biocore/scikit-bio/issues/1341))
 
 ## Version 0.5.1 (2016-11-12)
