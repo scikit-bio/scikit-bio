@@ -925,7 +925,7 @@ def _parse_id(lines):
             ['locus_name', 'version', 'shape', 'mol_type',
              'class', 'division', 'size', 'unit'],
             matches.groups()))
-    except:
+    except AttributeError:
         raise EMBLFormatError(
             "Could not parse the ID line:\n%s" % line)
 
