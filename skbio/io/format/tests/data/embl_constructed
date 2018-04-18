@@ -1,0 +1,39 @@
+ID   LT357133; SV 1; linear; genomic DNA; CON; INV; 140 BP.
+XX
+AC   LT357133;
+XX
+PR   Project:PRJEB12116;
+XX
+DT   18-SEP-2016 (Rel. 130, Created)
+DT   18-SEP-2016 (Rel. 130, Last updated, Version 1)
+XX
+DE   Spodoptera frugiperda genome assembly, scaffold: C262451
+XX
+KW   .
+XX
+OS   Spodoptera frugiperda (fall armyworm)
+OC   Eukaryota; Metazoa; Ecdysozoa; Arthropoda; Hexapoda; Insecta; Pterygota;
+OC   Neoptera; Endopterygota; Lepidoptera; Glossata; Ditrysia; Noctuoidea;
+OC   Noctuidae; Amphipyrinae; Spodoptera.
+XX
+RN   [1]
+RA   Landry J.;
+RT   ;
+RL   Submitted (16-MAR-2016) to the INSDC.
+RL   EMBL, Genemics Core Facility, Meyerhofstrasse 1,, 69117 Heidelberg, Germany
+XX
+DR   MD5; 90c05497c7cde972dc52b8d06097f88c.
+DR   ENA; FJUZ01000000; SET.
+DR   ENA; FJUZ00000000; SET.
+DR   BioSample; SAMEA3707213.
+XX
+FH   Key             Location/Qualifiers
+FH
+FT   source          1..140
+FT                   /organism="Spodoptera frugiperda"
+FT                   /mol_type="genomic DNA"
+FT                   /cell_line="SF21"
+FT                   /db_xref="taxon:7108"
+XX
+CO   join(FJUZ01138823.1:1..140)
+//
