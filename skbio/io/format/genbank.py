@@ -45,6 +45,8 @@ a pair of key and value in ``metadata``. For the ``REFERENCE``
 section, its value is stored as a list, as there are often multiple
 reference sections in one GenBank record.
 
+.. _genbank_feature_section:
+
 ``FEATURES`` section
 ^^^^^^^^^^^^^^^^^^^^
 The International Nucleotide Sequence Database Collaboration (INSDC
@@ -560,8 +562,7 @@ def _parse_locus(lines):
                ' +(bp|aa|rc)'
                ' +(.*DNA|.*RNA)?'
                ' +(linear|circular)?'
-               ' +(PRI|ROD|MAM|VRT|INV|PLN|BCT|VRL|PHG|'
-               'SYN|UNA|EST|PAT|STS|GSS|HTG|HTC|ENV|CON)'
+               ' +(?!.*DNA|.*RNA)([A-Z]{3})'
                ' +([0-9]{2}-[A-Z]{3}-[0-9]{4})')
     matches = re.match(pattern, line)
 

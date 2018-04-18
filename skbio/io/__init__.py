@@ -18,16 +18,17 @@ see the associated documentation.
    blast6
    blast7
    clustal
+   embl
    fasta
    fastq
+   genbank
+   gff3
    lsmat
    newick
    ordination
    phylip
    qseq
    stockholm
-   genbank
-   gff3
 
 .. currentmodule:: skbio.io.registry
 
@@ -57,8 +58,11 @@ User exceptions and warnings
    FileFormatError
    BLAST7FormatError
    ClustalFormatError
+   EMBLFormatError
    FASTAFormatError
    FASTQFormatError
+   GenBankFormatError
+   GFF3FormatError
    LSMatFormatError
    NewickFormatError
    OrdinationFormatError
@@ -66,6 +70,7 @@ User exceptions and warnings
    QSeqFormatError
    QUALFormatError
    StockholmFormatError
+
 
 Subpackages
 -----------
@@ -204,7 +209,8 @@ from ._exception import (UnrecognizedFormatError, FileFormatError,
                          FASTQFormatError, LSMatFormatError, NewickFormatError,
                          OrdinationFormatError, PhylipFormatError,
                          QSeqFormatError, QUALFormatError,
-                         StockholmFormatError, GFF3FormatError)
+                         StockholmFormatError, GFF3FormatError,
+                         EMBLFormatError)
 from .registry import write, read, sniff, create_format, io_registry
 from .util import open
 
@@ -216,6 +222,7 @@ __all__ = ['write', 'read', 'sniff', 'open', 'io_registry', 'create_format',
            'FileFormatError',
            'BLAST7FormatError',
            'ClustalFormatError',
+           'EMBLFormatError',
            'FASTAFormatError',
            'FASTQFormatError',
            'GenBankFormatError',
@@ -235,6 +242,7 @@ __all__ = ['write', 'read', 'sniff', 'open', 'io_registry', 'create_format',
 import_module('skbio.io.format.blast6')
 import_module('skbio.io.format.blast7')
 import_module('skbio.io.format.clustal')
+import_module('skbio.io.format.embl')
 import_module('skbio.io.format.fasta')
 import_module('skbio.io.format.fastq')
 import_module('skbio.io.format.lsmat')

@@ -1,0 +1,166 @@
+ID   M14399; SV 1; linear; mRNA; STD; PRO; 63 BP.
+XX
+AC   M14399;
+XX
+DT   16-JUL-1988 (Rel. 16, Created)
+DT   02-SEP-1999 (Rel. 60, Last updated, Version 3)
+XX
+DE   E.coli alkaline phosphatase signal mRNA, 5' end.
+XX
+KW   alkaline phosphatase; signal peptide.
+XX
+OS   Escherichia coli
+OC   Bacteria; Proteobacteria; Gammaproteobacteria; Enterobacterales;
+OC   Enterobacteriaceae; Escherichia.
+XX
+RN   [1]
+RP   1-63
+RX   DOI; 10.1016/0378-1119(85)90319-1.
+RX   PUBMED; 3912261.
+RA   Gray G.L., Baldridge J.S., McKeown K.S., Heyneker H.L., Chang C.N.;
+RT   "Periplasmic production of correctly processed human growth hormone in
+RT   Escherichia coli: natural and bacterial signal sequences are
+RT   interchangeable";
+RL   Gene 39(2-3):247-254(1985).
+XX
+DR   MD5; c9b40131b8622946b5aafdf5473b3d43.
+XX
+FH   Key             Location/Qualifiers
+FH
+FT   source          1..63
+FT                   /db_xref="taxon:562"
+FT                   /mol_type="mRNA"
+FT                   /organism="Escherichia coli"
+FT   CDS             1..>63
+FT                   /db_xref="GOA:P00634"
+FT                   /db_xref="InterPro:IPR001952"
+FT                   /db_xref="InterPro:IPR017849"
+FT                   /db_xref="InterPro:IPR017850"
+FT                   /db_xref="InterPro:IPR018299"
+FT                   /db_xref="PDB:1AJA"
+FT                   /db_xref="PDB:1AJB"
+FT                   /db_xref="PDB:1AJC"
+FT                   /db_xref="PDB:1AJD"
+FT                   /db_xref="PDB:1ALH"
+FT                   /db_xref="PDB:1ALI"
+FT                   /db_xref="PDB:1ALJ"
+FT                   /db_xref="PDB:1ALK"
+FT                   /db_xref="PDB:1ANI"
+FT                   /db_xref="PDB:1ANJ"
+FT                   /db_xref="PDB:1B8J"
+FT                   /db_xref="PDB:1ED8"
+FT                   /db_xref="PDB:1ED9"
+FT                   /db_xref="PDB:1ELX"
+FT                   /db_xref="PDB:1ELY"
+FT                   /db_xref="PDB:1ELZ"
+FT                   /db_xref="PDB:1EW8"
+FT                   /db_xref="PDB:1EW9"
+FT                   /db_xref="PDB:1HJK"
+FT                   /db_xref="PDB:1HQA"
+FT                   /db_xref="PDB:1KH4"
+FT                   /db_xref="PDB:1KH5"
+FT                   /db_xref="PDB:1KH7"
+FT                   /db_xref="PDB:1KH9"
+FT                   /db_xref="PDB:1KHJ"
+FT                   /db_xref="PDB:1KHK"
+FT                   /db_xref="PDB:1KHL"
+FT                   /db_xref="PDB:1KHN"
+FT                   /db_xref="PDB:1URA"
+FT                   /db_xref="PDB:1URB"
+FT                   /db_xref="PDB:1Y6V"
+FT                   /db_xref="PDB:1Y7A"
+FT                   /db_xref="PDB:2ANH"
+FT                   /db_xref="PDB:2G9Y"
+FT                   /db_xref="PDB:2GA3"
+FT                   /db_xref="PDB:2MLX"
+FT                   /db_xref="PDB:2MLY"
+FT                   /db_xref="PDB:2MLZ"
+FT                   /db_xref="PDB:3BDF"
+FT                   /db_xref="PDB:3BDG"
+FT                   /db_xref="PDB:3BDH"
+FT                   /db_xref="PDB:3CMR"
+FT                   /db_xref="PDB:3DPC"
+FT                   /db_xref="PDB:3DYC"
+FT                   /db_xref="PDB:3TG0"
+FT                   /db_xref="PDB:4KM4"
+FT                   /db_xref="PDB:4YR1"
+FT                   /db_xref="PDB:5C66"
+FT                   /db_xref="PDB:5GAD"
+FT                   /db_xref="PDB:5GAF"
+FT                   /db_xref="PDB:5GAG"
+FT                   /db_xref="PDB:5GAH"
+FT                   /db_xref="PDB:5JTL"
+FT                   /db_xref="PDB:5JTM"
+FT                   /db_xref="PDB:5JTN"
+FT                   /db_xref="PDB:5JTO"
+FT                   /db_xref="PDB:5JTP"
+FT                   /db_xref="UniProtKB/Swiss-Prot:P00634"
+FT                   /note="alkaline phosphatase signal peptide"
+FT                   /codon_start=1
+FT                   /protein_id="AAA23431.1"
+FT                   /transl_table=11
+FT                   /translation="MKQSTIALAVLPLLFTPVTKA"
+XX
+SQ   Sequence 63 BP; 17 A; 17 C; 12 G; 17 T; 0 other;
+     gtgaaacaaa gcactattgc actggctgtc ttaccgttac tgtttacccc tgtgacaaaa        60
+     gcc                                                                      63
+//
+ID   KX454487; SV 1; linear; mRNA; STD; INV; 743 BP.
+XX
+AC   KX454487;
+XX
+DT   02-FEB-2017 (Rel. 131, Created)
+DT   02-FEB-2017 (Rel. 131, Last updated, Version 1)
+XX
+DE   Ruditapes philippinarum histone mRNA, complete cds.
+XX
+KW   .
+XX
+OS   Ruditapes philippinarum
+OC   Eukaryota; Metazoa; Lophotrochozoa; Mollusca; Bivalvia; Heteroconchia;
+OC   Euheterodonta; Veneroida; Veneroidea; Veneridae; Ruditapes.
+XX
+RN   [1]
+RP   1-743
+RA   Yang D., Zhao J., Wang Q.;
+RT   ;
+RL   Submitted (27-JUN-2016) to the INSDC. Key Laboratory of Coastal Zone
+RL   Environment Processes and Ecological Remediation, Yantai Institute of
+RL   Coastal Zone Research (YIC), Chinese Academy of Sciences (CAS), 17 Chunhui
+RL   Road, Laishan District, Yantai, Shandong 264003, China
+XX
+DR   MD5; cbc730cf7a8d694b50fb7dd6b993ae0d.
+XX
+CC   ##Assembly-Data-START##
+CC   Sequencing Technology :: Sanger dideoxy sequencing
+CC   ##Assembly-Data-END##
+XX
+FH   Key             Location/Qualifiers
+FH
+FT   source          1..743
+FT                   /db_xref="taxon:129788"
+FT                   /mol_type="mRNA"
+FT                   /organism="Ruditapes philippinarum"
+FT   CDS             58..444
+FT                   /codon_start=1
+FT                   /product="histone"
+FT                   /protein_id="APY18893.1"
+FT                   /translation="MPGGKAGKDSGKAKAKAVSRSARAGLQFPVGRIHRHLKNRTTSHG
+FT                   RVGATAAVYSAAILEYLTAEVLELAGNASKDLKVKRITPRHLQLAIRGDEELDSLIKAT
+FT                   IAGGGVIPHIHKSLIGKKGGQQAK"
+XX
+SQ   Sequence 743 BP; 241 A; 147 C; 145 G; 210 T; 0 other;
+     tgtgcacagt ctacgcgtca tcttgaaaga aagaactaca ctactccaaa aataatcatg        60
+     cctggtggaa aagctggtaa agattccgga aaggccaagg ctaaggcagt gtcaaggtcc       120
+     gcaagagctg gcttacagtt tccagtcgga cgtattcaca ggcatttgaa gaacagaacc       180
+     actagccacg gtcgtgttgg agctacagca gccgtttaca gtgcagcaat ccttgaatac       240
+     ctgaccgccg aagtgcttga gttggctgga aacgcaagta aagatctcaa agtaaagaga       300
+     atcaccccac gtcacttgca gttggcaatc agaggagatg aagagttgga ttccctaatt       360
+     aaagccacaa tcgctggtgg tggtgttatt ccacatatcc acaagtcact tattggcaag       420
+     aagggaggtc agcaagccaa ataaattgga catactcatt catcagggaa caatgtgtag       480
+     tgaatgtgtt aaaaagaaca atctcattgt gtagctcttt agttttatat gaatgtgtta       540
+     acatggtcat tcacatcgta tgactcatag aatcatctgt gtatcatttc atcctctcat       600
+     tttatagctc ctcattttcc ttagactcat taaaattttt atctcggaaa aatgtttttt       660
+     ctacaatttt agcattcatt tatcttcatc ttgcttttat gtttaataaa acgaacttat       720
+     aataccaaaa aaaaaaaaaa aaa                                               743
+//

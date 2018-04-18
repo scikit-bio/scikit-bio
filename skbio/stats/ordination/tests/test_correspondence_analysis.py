@@ -129,9 +129,14 @@ class TestCAResults(TestCase):
                                          [1.66697, -0.47032]]),
                                self.sample_ids,
                                self.pc_ids)
+
+        proportion_explained = pd.Series(np.array([0.701318, 0.298682]),
+                                         self.pc_ids)
+
         exp = OrdinationResults('CA', 'Correspondance Analysis',
                                 eigvals=eigvals, features=features,
-                                samples=samples)
+                                samples=samples,
+                                proportion_explained=proportion_explained)
 
         scores = ca(self.contingency, 2)
 
@@ -151,9 +156,13 @@ class TestCAResults(TestCase):
                                          [0.51685, -0.09517]]),
                                self.sample_ids,
                                self.pc_ids)
+        proportion_explained = pd.Series(np.array([0.701318, 0.298682]),
+                                         self.pc_ids)
+
         exp = OrdinationResults('CA', 'Correspondance Analysis',
                                 eigvals=eigvals, features=features,
-                                samples=samples)
+                                samples=samples,
+                                proportion_explained=proportion_explained)
         scores = ca(self.contingency, 1)
 
         assert_ordination_results_equal(exp, scores, decimal=5,

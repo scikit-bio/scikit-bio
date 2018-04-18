@@ -9,6 +9,7 @@
 import numpy as np
 import numpy.testing as npt
 import pandas as pd
+import pandas.util.testing as pdt
 from unittest import TestCase, main
 
 from skbio import OrdinationResults
@@ -164,6 +165,94 @@ class TestRDAResults(TestCase):
         assert_ordination_results_equal(scores, exp,
                                         ignore_directionality=True,
                                         decimal=6)
+
+
+class TestRDAResults_biplot_score(TestCase):
+    # STATUS: L&L only shows results with scaling 1, and they agree
+    # with vegan's (module multiplying by a constant). I can also
+    # compute scaling 2, agreeing with vegan, but there are no written
+    # results in L&L.
+    def setUp(self):
+        """varespec and varechem from Väre etal. 1995 DOI: 10.2307/3236351"""
+
+        self.Y = pd.read_csv(get_data_path('varespec.csv'), index_col=0)
+        self.X = pd.read_csv(get_data_path('varechem.csv'), index_col=0)
+        self.Y.index.name = None
+        self.X.index.name = None
+
+    def test_biplot_score(self):
+
+        rda_ = rda(y=self.Y, x=self.X, scale_Y=False, scaling=1)
+
+        # Load data as computed with vegan 2.4-3:
+        # library(vegan)
+        # data(varechem)
+        # data(varespec)
+        # rda_ = rda(X=varespec, Y=varechem, scale=FALSE)
+        # write.table(summary(rda_, scaling=1)$biplot,
+        #             'vare_rda_biplot_from_vegan.csv', sep=',')
+        # write.table(summary(rda_, scaling=1)$sites,
+        #                     'vare_rda_sites_from_vegan.csv', sep=',')
+        # write.table(summary(rda_, scaling=1)$species,
+        #                     'vare_rda_species_from_vegan.csv', sep=',')
+        # write.table(summary(rda_, scaling=1)$constraints, #
+        #                     'vare_rda_constraints_from_vegan.csv', sep=',')
+        # write.table(summary(rda_, scaling=1)$cont$importance[2, ],
+        #                     'vare_rda_propexpl_from_vegan.csv', sep=',')
+        # write.table(summary(rda_, scaling=1)$cont$importance[1, ],
+        #                     'vare_rda_eigvals_from_vegan.csv', sep=',')
+
+        vegan_features = pd.read_csv(
+            get_data_path('vare_rda_species_from_vegan.csv'))
+        vegan_samples = pd.read_csv(
+            get_data_path('vare_rda_sites_from_vegan.csv'))
+        vegan_biplot = pd.read_csv(
+            get_data_path('vare_rda_biplot_from_vegan.csv'))
+        vegan_constraints = pd.read_csv(
+            get_data_path('vare_rda_constraints_from_vegan.csv'))
+        vegan_propexpl = pd.read_csv(
+            get_data_path('vare_rda_propexpl_from_vegan.csv'))
+        vegan_propexpl = pd.Series(
+            vegan_propexpl.x.values, index=rda_.eigvals.index)
+        vegan_eigvals = pd.read_csv(
+            get_data_path('vare_rda_eigvals_from_vegan.csv'))
+        vegan_eigvals = pd.Series(
+            vegan_eigvals.x.values, index=rda_.eigvals.index)
+
+        # scikit-bio returns singular values, whereas vegan returns eigenvalues
+        vegan_eigvals = np.sqrt(vegan_eigvals*vegan_eigvals.shape[0])
+        vegan_propexpl = vegan_eigvals/vegan_eigvals.sum()
+
+        # transform the output of rda_ to match column selection of vegan
+        res_samples = rda_.samples.iloc[:, 0:6]
+        res_features = rda_.features.iloc[:, 0:6]
+
+        rda_ = OrdinationResults(
+            'RDA', 'Redundancy Analysis',
+            samples=res_samples,
+            features=res_features,
+            sample_constraints=rda_.sample_constraints.iloc[:, 0:6],
+            biplot_scores=rda_.biplot_scores.iloc[:, 0:6],
+            proportion_explained=rda_.proportion_explained,
+            eigvals=rda_.eigvals)
+
+        exp = OrdinationResults(
+            'RDA', 'Redundancy Analysis',
+            samples=vegan_samples,
+            features=vegan_features,
+            sample_constraints=vegan_constraints,
+            biplot_scores=vegan_biplot,
+            proportion_explained=vegan_propexpl,
+            eigvals=vegan_eigvals)
+
+        pdt.assert_frame_equal(res_samples, vegan_samples)
+        # This scaling constant is required to make skbio comparable to vegan.
+        scaling = (rda_.eigvals[0] / rda_.eigvals[:6])
+        exp.biplot_scores *= scaling
+        assert_ordination_results_equal(
+            rda_, exp,
+            ignore_directionality=False,
+            decimal=6)
 
 
 if __name__ == '__main__':

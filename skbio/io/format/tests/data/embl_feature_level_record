@@ -1,0 +1,83 @@
+ID   LK021130.1:74067..75610:rRNA; SV 1; linear; genomic DNA; STD; PRO; 1544 BP.
+XX
+PA   LK021130.1
+XX
+PR   Project:PRJEB5701;
+XX
+DT   02-JUN-2014 (Rel. 121, Created)
+DT   04-FEB-2016 (Rel. 127, Last updated, Version 5)
+XX
+DE   Vibrio anguillarum 16S rRNA
+XX
+KW   .
+XX
+OS   Vibrio anguillarum
+OC   Bacteria; Proteobacteria; Gammaproteobacteria; Vibrionales; Vibrionaceae;
+OC   Vibrio.
+XX
+RN   [1]
+RA   Holm K.;
+RT   ;
+RL   Submitted (26-MAR-2014) to the INSDC.
+RL   Norstruct, Dept of Chemistry, University of Tromso, Science Park 3, NO-9037
+RL   Tromso, NORWAY.
+XX
+RN   [2]
+RX   DOI; 10.1186/s40793-015-0060-7.
+RX   PUBMED; 26380645.
+RA   Holm K.O., Nilsson K., Hjerde E., Willassen N.P., Milton D.L.;
+RT   "Complete genome sequence of Vibrio anguillarum strain NB10, a virulent
+RT   isolate from the Gulf of Bothnia";
+RL   Stand Genomic Sci. 10:60-60(2015).
+XX
+DR   SILVA-LSU; LK021130.
+DR   SILVA-SSU; LK021130.
+DR   MD5; afd116bf2c1a13acbf40d63d82f0218c.
+DR   BioSample; SAMEA3865288.
+XX
+FH   Key             Location/Qualifiers
+FH
+FT   source          1..1544
+FT                   /organism="Vibrio anguillarum"
+FT                   /chromosome="1"
+FT                   /host="Rainbow trout"
+FT                   /strain="NB10"
+FT                   /mol_type="genomic DNA"
+FT                   /country="Sweden:Baltic Sea, Norrbyn Umeaa"
+FT                   /isolation_source="clinical isolate, Rainbow trout"
+FT                   /serovar="O1"
+FT                   /db_xref="taxon:55601"
+FT   rRNA            LK021130.1:74067..75610
+FT                   /gene="16S"
+FT                   /product="16S rRNA"
+FT                   /note="16S rRNA subunit (checked and believed to be
+FT                   right,based on 454- and PacBio-sequencing)"
+XX
+SQ   Sequence 1544 BP; 386 A; 344 C; 493 G; 321 T; 0 other;
+     aattgaagag tttgatcatg gctcagattg aacgctggcg gcaggcctaa cacatgcaag        60
+     tcgagcggca gcacagagga acttgttcct tgggtggcga gcggcggacg ggtgagtaat       120
+     gcctaggaaa ttgccctgat gtgggggata accattggaa acgatggcta ataccgcatg       180
+     atgcctacgg gccaaagagg gggaccttct ggcctctcgc gtcaggatat gcctaggtgg       240
+     gattagctag ttggtgaggt aatggctcac caaggcgacg atccctagct ggtctgagag       300
+     gatgatcagc cacactggaa ctgagacacg gtccagactc ctacgggagg cagcagtggg       360
+     gaatattgca caatgggcgc aagcctgatg cagccatgcc gcgtgtatga agaaggcctt       420
+     cgggttgtaa agtactttca gtcgtgagga aggtggtgtt gttaatagca gcatcatttg       480
+     acgttagcga cagaagaagc accggctaac tccgtgccag cagccgcggt aatacggagg       540
+     gtgcgagcgt taatcggaat tactgggcgt aaagcgcatg caggtggtgg attaagtcag       600
+     atgtgaaagc ccggggctca acctcggaac cgcatttgaa actggttcac tagagtactg       660
+     tagagggggg tagaatttca ggtgtagcgg tgaaatgcgt agagatctga aggaataccg       720
+     gtggcgaagg cggccccctg gacagatact gacactcaga tgcgaaagcg tggggagcaa       780
+     acaggattag ataccctggt agtccacgcc gtaaacgatg tctacttgga ggttgtggcc       840
+     ttgagccgtg gctttcggag ctaacgcgtt aagtagaccg cctggggagt acggtcgcaa       900
+     gattaaaact caaatgaatt gacgggggcc cgcacaagcg gtggagcatg tggtttaatt       960
+     cgatgcaacg cgaagaacct tacctactct tgacatccag agaagccagc ggagacgcag      1020
+     gtgtgccttc gggagctctg agacaggtgc tgcatggctg tcgtcagctc gtgttgtgaa      1080
+     atgttgggtt aagtcccgca acgagcgcaa cccttatcct tgtttgccag cgagtcatgt      1140
+     cgggaactcc agggagactg ccggtgataa accggaggaa ggtggggacg acgtcaagtc      1200
+     atcatggccc ttacgagtag ggctacacac gtgctacaat ggcgcataca gagggcagca      1260
+     agctagcgat agtgagcgaa tcccaaaaag tgcgtcgtag tccggattgg agtctgcaac      1320
+     tcgactccat gaagtcggaa tcgctagtaa tcgtagatca gaatgctacg gtgaatacgt      1380
+     tcccgggcct tgtacacacc gcccgtcaca ccatgggagt gggctgcaaa agaagtgggt      1440
+     agtttaacct ttcggggagg acgctcacca ctttgtggtt catgactggg gtgaagtcgt      1500
+     aacaaggtag cgctagggga acctggcgct ggatcacctc ctta                       1544
+//

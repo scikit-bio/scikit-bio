@@ -1,0 +1,105 @@
+ID   M14399; SV 1; linear; mRNA; ; PRO; 63 BP.
+XX
+AC   M14399;
+XX
+DT   02-SEP-1999
+XX
+DE   E.coli alkaline phosphatase signal mRNA, 5' end.
+XX
+KW   alkaline phosphatase; signal peptide.
+XX
+OS   Escherichia coli
+OC   Bacteria; Proteobacteria; Gammaproteobacteria; Enterobacterales;
+OC   Enterobacteriaceae; Escherichia.
+XX
+RN   [1]
+RP   1-63
+RX   PUBMED; 3912261.
+RA   Gray G.L., Baldridge J.S., McKeown K.S., Heyneker H.L., Chang C.N.;
+RT   "Periplasmic production of correctly processed human growth hormone in
+RT   Escherichia coli: natural and bacterial signal sequences are
+RT   interchangeable";
+RL   Gene 39(2-3):247-254(1985).
+XX
+DR   MD5; c9b40131b8622946b5aafdf5473b3d43.
+XX
+FH   Key             Location/Qualifiers
+FH
+FT   source          1..63
+FT                   /db_xref="taxon:562"
+FT                   /mol_type="mRNA"
+FT                   /organism="Escherichia coli"
+FT   CDS             1..>63
+FT                   /db_xref="GOA:P00634"
+FT                   /db_xref="InterPro:IPR001952"
+FT                   /db_xref="InterPro:IPR017849"
+FT                   /db_xref="InterPro:IPR017850"
+FT                   /db_xref="InterPro:IPR018299"
+FT                   /db_xref="PDB:1AJA"
+FT                   /db_xref="PDB:1AJB"
+FT                   /db_xref="PDB:1AJC"
+FT                   /db_xref="PDB:1AJD"
+FT                   /db_xref="PDB:1ALH"
+FT                   /db_xref="PDB:1ALI"
+FT                   /db_xref="PDB:1ALJ"
+FT                   /db_xref="PDB:1ALK"
+FT                   /db_xref="PDB:1ANI"
+FT                   /db_xref="PDB:1ANJ"
+FT                   /db_xref="PDB:1B8J"
+FT                   /db_xref="PDB:1ED8"
+FT                   /db_xref="PDB:1ED9"
+FT                   /db_xref="PDB:1ELX"
+FT                   /db_xref="PDB:1ELY"
+FT                   /db_xref="PDB:1ELZ"
+FT                   /db_xref="PDB:1EW8"
+FT                   /db_xref="PDB:1EW9"
+FT                   /db_xref="PDB:1HJK"
+FT                   /db_xref="PDB:1HQA"
+FT                   /db_xref="PDB:1KH4"
+FT                   /db_xref="PDB:1KH5"
+FT                   /db_xref="PDB:1KH7"
+FT                   /db_xref="PDB:1KH9"
+FT                   /db_xref="PDB:1KHJ"
+FT                   /db_xref="PDB:1KHK"
+FT                   /db_xref="PDB:1KHL"
+FT                   /db_xref="PDB:1KHN"
+FT                   /db_xref="PDB:1URA"
+FT                   /db_xref="PDB:1URB"
+FT                   /db_xref="PDB:1Y6V"
+FT                   /db_xref="PDB:1Y7A"
+FT                   /db_xref="PDB:2ANH"
+FT                   /db_xref="PDB:2G9Y"
+FT                   /db_xref="PDB:2GA3"
+FT                   /db_xref="PDB:2MLX"
+FT                   /db_xref="PDB:2MLY"
+FT                   /db_xref="PDB:2MLZ"
+FT                   /db_xref="PDB:3BDF"
+FT                   /db_xref="PDB:3BDG"
+FT                   /db_xref="PDB:3BDH"
+FT                   /db_xref="PDB:3CMR"
+FT                   /db_xref="PDB:3DPC"
+FT                   /db_xref="PDB:3DYC"
+FT                   /db_xref="PDB:3TG0"
+FT                   /db_xref="PDB:4KM4"
+FT                   /db_xref="PDB:4YR1"
+FT                   /db_xref="PDB:5C66"
+FT                   /db_xref="PDB:5GAD"
+FT                   /db_xref="PDB:5GAF"
+FT                   /db_xref="PDB:5GAG"
+FT                   /db_xref="PDB:5GAH"
+FT                   /db_xref="PDB:5JTL"
+FT                   /db_xref="PDB:5JTM"
+FT                   /db_xref="PDB:5JTN"
+FT                   /db_xref="PDB:5JTO"
+FT                   /db_xref="PDB:5JTP"
+FT                   /db_xref="UniProtKB/Swiss-Prot:P00634"
+FT                   /note="alkaline phosphatase signal peptide"
+FT                   /codon_start=1
+FT                   /protein_id="AAA23431.1"
+FT                   /transl_table=11
+FT                   /translation="MKQSTIALAVLPLLFTPVTKA"
+XX
+SQ   Sequence 63 BP; 17 A; 17 C; 12 G; 17 T; 0 other;
+     gtgaaacaaa gcactattgc actggctgtc ttaccgttac tgtttacccc tgtgacaaaa        60
+     gcc                                                                      63
+//
