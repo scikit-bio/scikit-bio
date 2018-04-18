@@ -29,6 +29,8 @@
 
 * `skbio.diversity.beta_diversity` now handles qualitative metrics as expected such that `beta_diversity('jaccard', mat) == beta_diversity('jaccard', mat > 0)`. Please see [#1549](https://github.com/biocore/scikit-bio/issues/1549) for further detail.
 
+* `skbio.stats.ordination.rda` The occasional column mismatch in output `biplot_scores` is fixed ([#1519](https://github.com/biocore/scikit-bio/issues/1519)).
+
 ### Deprecated functionality [stable]
 
 ### Deprecated functionality [experimental]
