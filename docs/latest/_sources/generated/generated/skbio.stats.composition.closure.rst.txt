@@ -1,5 +1,5 @@
-skbio.stats.composition.closure
-===============================
+skbio\.stats\.composition\.closure
+==================================
 
 .. currentmodule:: skbio.stats.composition
 

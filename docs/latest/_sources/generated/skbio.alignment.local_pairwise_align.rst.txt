@@ -1,5 +1,5 @@
-skbio.alignment.local_pairwise_align
-====================================
+skbio\.alignment\.local\_pairwise\_align
+========================================
 
 .. currentmodule:: skbio.alignment
 

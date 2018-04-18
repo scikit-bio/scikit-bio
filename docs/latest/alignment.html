@@ -1,22 +1,16 @@
 <!DOCTYPE html>
 
-
 <html xmlns="http://www.w3.org/1999/xhtml">
   <head>
     <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
-    
-    <title>Alignments (skbio.alignment) &#8212; scikit-bio 0.5.1 documentation</title>
-    
-    <link rel="stylesheet" href="_static/basic.css" type="text/css" />
+    <title>Alignments (skbio.alignment) &#8212; scikit-bio 0.5.2 documentation</title>
+    <link rel="stylesheet" href="_static/bootstrap-sphinx.css" type="text/css" />
     <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
     <link rel="stylesheet" href="_static/style.css" type="text/css" />
-    <link rel="stylesheet" href="_static/bootswatch-3.3.6/united/bootstrap.min.css" type="text/css" />
-    <link rel="stylesheet" href="_static/bootstrap-sphinx.css" type="text/css" />
-    
     <script type="text/javascript">
       var DOCUMENTATION_OPTIONS = {
         URL_ROOT:    './',
-        VERSION:     '0.5.1',
+        VERSION:     '0.5.2',
         COLLAPSE_INDEX: false,
         FILE_SUFFIX: '.html',
         HAS_SOURCE:  true,
@@ -27,14 +21,13 @@
     <script type="text/javascript" src="_static/underscore.js"></script>
     <script type="text/javascript" src="_static/doctools.js"></script>
     <script type="text/javascript" src="_static/copybutton.js"></script>
-    <script type="text/javascript" src="https://cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
+    <script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.1/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
     <script type="text/javascript" src="_static/js/jquery-1.11.0.min.js"></script>
     <script type="text/javascript" src="_static/js/jquery-fix.js"></script>
-    <script type="text/javascript" src="_static/bootstrap-3.3.6/js/bootstrap.min.js"></script>
+    <script type="text/javascript" src="_static/bootstrap-3.3.7/js/bootstrap.min.js"></script>
     <script type="text/javascript" src="_static/bootstrap-sphinx.js"></script>
     <link rel="index" title="Index" href="genindex.html" />
     <link rel="search" title="Search" href="search.html" />
-    <link rel="top" title="scikit-bio 0.5.1 documentation" href="index.html" />
     <link rel="next" title="skbio.alignment.TabularMSA" href="generated/skbio.alignment.TabularMSA.html" />
     <link rel="prev" title="skbio.sequence.distance.kmer_distance" href="generated/generated/skbio.sequence.distance.kmer_distance.html" />
 <meta charset='utf-8'>
@@ -43,7 +36,7 @@
 <meta name="apple-mobile-web-app-capable" content="yes">
 
   </head>
-  <body role="document">
+  <body>
   
   <a href="https://github.com/biocore/scikit-bio"
      class="visible-desktop hidden-xs"><img
@@ -71,7 +64,7 @@
         </button>
         <a class="navbar-brand" href="index.html">
           scikit-bio docs</a>
-        <span class="navbar-text navbar-version pull-left"><b>0.5.1</b></span>
+        <span class="navbar-text navbar-version pull-left"><b>0.5.2</b></span>
       </div>
 
         <div class="collapse navbar-collapse nav-collapse">
@@ -169,7 +162,7 @@ sequences with custom alphabets.</p>
 <col width="90%" />
 </colgroup>
 <tbody valign="top">
-<tr class="row-odd"><td><a class="reference internal" href="generated/skbio.alignment.TabularMSA.html#skbio.alignment.TabularMSA" title="skbio.alignment.TabularMSA"><code class="xref py py-obj docutils literal"><span class="pre">TabularMSA</span></code></a>(sequences[,&nbsp;metadata,&nbsp;...])</td>
+<tr class="row-odd"><td><a class="reference internal" href="generated/skbio.alignment.TabularMSA.html#skbio.alignment.TabularMSA" title="skbio.alignment.TabularMSA"><code class="xref py py-obj docutils literal"><span class="pre">TabularMSA</span></code></a>(sequences[,&nbsp;metadata,&nbsp;…])</td>
 <td>Store a multiple sequence alignment in tabular (row/column) form.</td>
 </tr>
 </tbody>
@@ -189,7 +182,7 @@ sequences with custom alphabets.</p>
 <tr class="row-even"><td><a class="reference internal" href="generated/skbio.alignment.AlignmentStructure.html#skbio.alignment.AlignmentStructure" title="skbio.alignment.AlignmentStructure"><code class="xref py py-obj docutils literal"><span class="pre">AlignmentStructure</span></code></a></td>
 <td>Wraps the result of an alignment c struct so it is accessible to Python</td>
 </tr>
-<tr class="row-odd"><td><a class="reference internal" href="generated/skbio.alignment.local_pairwise_align_ssw.html#skbio.alignment.local_pairwise_align_ssw" title="skbio.alignment.local_pairwise_align_ssw"><code class="xref py py-obj docutils literal"><span class="pre">local_pairwise_align_ssw</span></code></a>(sequence1,&nbsp;...)</td>
+<tr class="row-odd"><td><a class="reference internal" href="generated/skbio.alignment.local_pairwise_align_ssw.html#skbio.alignment.local_pairwise_align_ssw" title="skbio.alignment.local_pairwise_align_ssw"><code class="xref py py-obj docutils literal"><span class="pre">local_pairwise_align_ssw</span></code></a>(sequence1,&nbsp;…)</td>
 <td>Align query and target sequences with Striped Smith-Waterman.</td>
 </tr>
 </tbody>
@@ -206,19 +199,19 @@ sequences with custom alphabets.</p>
 <tr class="row-odd"><td><a class="reference internal" href="generated/skbio.alignment.global_pairwise_align_nucleotide.html#skbio.alignment.global_pairwise_align_nucleotide" title="skbio.alignment.global_pairwise_align_nucleotide"><code class="xref py py-obj docutils literal"><span class="pre">global_pairwise_align_nucleotide</span></code></a>(seq1,&nbsp;seq2)</td>
 <td>Globally align nucleotide seqs or alignments with Needleman-Wunsch</td>
 </tr>
-<tr class="row-even"><td><a class="reference internal" href="generated/skbio.alignment.global_pairwise_align_protein.html#skbio.alignment.global_pairwise_align_protein" title="skbio.alignment.global_pairwise_align_protein"><code class="xref py py-obj docutils literal"><span class="pre">global_pairwise_align_protein</span></code></a>(seq1,&nbsp;seq2[,&nbsp;...])</td>
+<tr class="row-even"><td><a class="reference internal" href="generated/skbio.alignment.global_pairwise_align_protein.html#skbio.alignment.global_pairwise_align_protein" title="skbio.alignment.global_pairwise_align_protein"><code class="xref py py-obj docutils literal"><span class="pre">global_pairwise_align_protein</span></code></a>(seq1,&nbsp;seq2[,&nbsp;…])</td>
 <td>Globally align pair of protein seqs or alignments with Needleman-Wunsch</td>
 </tr>
-<tr class="row-odd"><td><a class="reference internal" href="generated/skbio.alignment.global_pairwise_align.html#skbio.alignment.global_pairwise_align" title="skbio.alignment.global_pairwise_align"><code class="xref py py-obj docutils literal"><span class="pre">global_pairwise_align</span></code></a>(seq1,&nbsp;seq2,&nbsp;...[,&nbsp;...])</td>
+<tr class="row-odd"><td><a class="reference internal" href="generated/skbio.alignment.global_pairwise_align.html#skbio.alignment.global_pairwise_align" title="skbio.alignment.global_pairwise_align"><code class="xref py py-obj docutils literal"><span class="pre">global_pairwise_align</span></code></a>(seq1,&nbsp;seq2,&nbsp;…[,&nbsp;…])</td>
 <td>Globally align a pair of seqs or alignments with Needleman-Wunsch</td>
 </tr>
 <tr class="row-even"><td><a class="reference internal" href="generated/skbio.alignment.local_pairwise_align_nucleotide.html#skbio.alignment.local_pairwise_align_nucleotide" title="skbio.alignment.local_pairwise_align_nucleotide"><code class="xref py py-obj docutils literal"><span class="pre">local_pairwise_align_nucleotide</span></code></a>(seq1,&nbsp;seq2)</td>
 <td>Locally align exactly two nucleotide seqs with Smith-Waterman</td>
 </tr>
-<tr class="row-odd"><td><a class="reference internal" href="generated/skbio.alignment.local_pairwise_align_protein.html#skbio.alignment.local_pairwise_align_protein" title="skbio.alignment.local_pairwise_align_protein"><code class="xref py py-obj docutils literal"><span class="pre">local_pairwise_align_protein</span></code></a>(seq1,&nbsp;seq2[,&nbsp;...])</td>
+<tr class="row-odd"><td><a class="reference internal" href="generated/skbio.alignment.local_pairwise_align_protein.html#skbio.alignment.local_pairwise_align_protein" title="skbio.alignment.local_pairwise_align_protein"><code class="xref py py-obj docutils literal"><span class="pre">local_pairwise_align_protein</span></code></a>(seq1,&nbsp;seq2[,&nbsp;…])</td>
 <td>Locally align exactly two protein seqs with Smith-Waterman</td>
 </tr>
-<tr class="row-even"><td><a class="reference internal" href="generated/skbio.alignment.local_pairwise_align.html#skbio.alignment.local_pairwise_align" title="skbio.alignment.local_pairwise_align"><code class="xref py py-obj docutils literal"><span class="pre">local_pairwise_align</span></code></a>(seq1,&nbsp;seq2,&nbsp;...)</td>
+<tr class="row-even"><td><a class="reference internal" href="generated/skbio.alignment.local_pairwise_align.html#skbio.alignment.local_pairwise_align" title="skbio.alignment.local_pairwise_align"><code class="xref py py-obj docutils literal"><span class="pre">local_pairwise_align</span></code></a>(seq1,&nbsp;seq2,&nbsp;…)</td>
 <td>Locally align exactly two seqs with Smith-Waterman</td>
 </tr>
 </tbody>
@@ -232,7 +225,7 @@ sequences with custom alphabets.</p>
 <col width="90%" />
 </colgroup>
 <tbody valign="top">
-<tr class="row-odd"><td><a class="reference internal" href="generated/skbio.alignment.make_identity_substitution_matrix.html#skbio.alignment.make_identity_substitution_matrix" title="skbio.alignment.make_identity_substitution_matrix"><code class="xref py py-obj docutils literal"><span class="pre">make_identity_substitution_matrix</span></code></a>(...[,&nbsp;...])</td>
+<tr class="row-odd"><td><a class="reference internal" href="generated/skbio.alignment.make_identity_substitution_matrix.html#skbio.alignment.make_identity_substitution_matrix" title="skbio.alignment.make_identity_substitution_matrix"><code class="xref py py-obj docutils literal"><span class="pre">make_identity_substitution_matrix</span></code></a>(…[,&nbsp;…])</td>
 <td>Generate substitution matrix where all matches are scored equally</td>
 </tr>
 </tbody>
@@ -241,7 +234,7 @@ sequences with custom alphabets.</p>
 <div class="section" id="data-structure-examples">
 <h2>Data Structure Examples<a class="headerlink" href="#data-structure-examples" title="Permalink to this headline">¶</a></h2>
 <p>Load two DNA sequences that have been previously aligned into a <code class="docutils literal"><span class="pre">TabularMSA</span></code>
-object, using sequence IDs as the MSA&#8217;s index:</p>
+object, using sequence IDs as the MSA’s index:</p>
 <div class="highlight-default"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">skbio</span> <span class="k">import</span> <span class="n">TabularMSA</span><span class="p">,</span> <span class="n">DNA</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">seqs</span> <span class="o">=</span> <span class="p">[</span><span class="n">DNA</span><span class="p">(</span><span class="s2">&quot;ACC--G-GGTA..&quot;</span><span class="p">,</span> <span class="n">metadata</span><span class="o">=</span><span class="p">{</span><span class="s1">&#39;id&#39;</span><span class="p">:</span> <span class="s2">&quot;seq1&quot;</span><span class="p">}),</span>
 <span class="gp">... </span>        <span class="n">DNA</span><span class="p">(</span><span class="s2">&quot;TCC--G-GGCA..&quot;</span><span class="p">,</span> <span class="n">metadata</span><span class="o">=</span><span class="p">{</span><span class="s1">&#39;id&#39;</span><span class="p">:</span> <span class="s2">&quot;seq2&quot;</span><span class="p">})]</span>
@@ -329,7 +322,7 @@ way and finding the aligned sequence representations:</p>
 <h2>Slow Alignment Algorithm Examples<a class="headerlink" href="#slow-alignment-algorithm-examples" title="Permalink to this headline">¶</a></h2>
 <p>scikit-bio also provides pure-Python implementations of Smith-Waterman and
 Needleman-Wunsch alignment. These are much slower than the methods described
-above, but serve as useful educational examples as they&#8217;re simpler to
+above, but serve as useful educational examples as they’re simpler to
 experiment with. Functions are provided for local and global alignment of
 protein and nucleotide sequences. The <code class="docutils literal"><span class="pre">global*</span></code> and <code class="docutils literal"><span class="pre">local*</span></code> functions
 differ in the underlying algorithm that is applied (<code class="docutils literal"><span class="pre">global*</span></code> uses Needleman-
@@ -399,7 +392,7 @@ positions of each aligned sequence:</p>
     </p>
     <p>
         &copy; Copyright 2014--, scikit-bio development team.<br/>
-      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 1.5a0.<br/>
+      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 1.6.5.<br/>
     </p>
   </div>
 </footer>

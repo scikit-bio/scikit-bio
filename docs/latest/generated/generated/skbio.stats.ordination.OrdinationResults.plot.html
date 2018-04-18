@@ -1,22 +1,16 @@
 <!DOCTYPE html>
 
-
 <html xmlns="http://www.w3.org/1999/xhtml">
   <head>
     <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
-    
-    <title>skbio.stats.ordination.OrdinationResults.plot &#8212; scikit-bio 0.5.1 documentation</title>
-    
-    <link rel="stylesheet" href="../../_static/basic.css" type="text/css" />
+    <title>skbio.stats.ordination.OrdinationResults.plot &#8212; scikit-bio 0.5.2 documentation</title>
+    <link rel="stylesheet" href="../../_static/bootstrap-sphinx.css" type="text/css" />
     <link rel="stylesheet" href="../../_static/pygments.css" type="text/css" />
     <link rel="stylesheet" href="../../_static/style.css" type="text/css" />
-    <link rel="stylesheet" href="../../_static/bootswatch-3.3.6/united/bootstrap.min.css" type="text/css" />
-    <link rel="stylesheet" href="../../_static/bootstrap-sphinx.css" type="text/css" />
-    
     <script type="text/javascript">
       var DOCUMENTATION_OPTIONS = {
         URL_ROOT:    '../../',
-        VERSION:     '0.5.1',
+        VERSION:     '0.5.2',
         COLLAPSE_INDEX: false,
         FILE_SUFFIX: '.html',
         HAS_SOURCE:  true,
@@ -27,21 +21,20 @@
     <script type="text/javascript" src="../../_static/underscore.js"></script>
     <script type="text/javascript" src="../../_static/doctools.js"></script>
     <script type="text/javascript" src="../../_static/copybutton.js"></script>
-    <script type="text/javascript" src="https://cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
+    <script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.1/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
     <script type="text/javascript" src="../../_static/js/jquery-1.11.0.min.js"></script>
     <script type="text/javascript" src="../../_static/js/jquery-fix.js"></script>
-    <script type="text/javascript" src="../../_static/bootstrap-3.3.6/js/bootstrap.min.js"></script>
+    <script type="text/javascript" src="../../_static/bootstrap-3.3.7/js/bootstrap.min.js"></script>
     <script type="text/javascript" src="../../_static/bootstrap-sphinx.js"></script>
     <link rel="index" title="Index" href="../../genindex.html" />
     <link rel="search" title="Search" href="../../search.html" />
-    <link rel="top" title="scikit-bio 0.5.1 documentation" href="../../index.html" />
 <meta charset='utf-8'>
 <meta http-equiv='X-UA-Compatible' content='IE=edge,chrome=1'>
 <meta name='viewport' content='width=device-width, initial-scale=1.0, maximum-scale=1'>
 <meta name="apple-mobile-web-app-capable" content="yes">
 
   </head>
-  <body role="document">
+  <body>
   
   <a href="https://github.com/biocore/scikit-bio"
      class="visible-desktop hidden-xs"><img
@@ -69,7 +62,7 @@
         </button>
         <a class="navbar-brand" href="../../index.html">
           scikit-bio docs</a>
-        <span class="navbar-text navbar-version pull-left"><b>0.5.1</b></span>
+        <span class="navbar-text navbar-version pull-left"><b>0.5.2</b></span>
       </div>
 
         <div class="collapse navbar-collapse nav-collapse">
@@ -148,7 +141,7 @@
 <h1>skbio.stats.ordination.OrdinationResults.plot<a class="headerlink" href="#skbio-stats-ordination-ordinationresults-plot" title="Permalink to this headline">¶</a></h1>
 <dl class="method">
 <dt id="skbio.stats.ordination.OrdinationResults.plot">
-<code class="descclassname">OrdinationResults.</code><code class="descname">plot</code><span class="sig-paren">(</span><em>df=None</em>, <em>column=None</em>, <em>axes=(0</em>, <em>1</em>, <em>2)</em>, <em>axis_labels=None</em>, <em>title=''</em>, <em>cmap=None</em>, <em>s=20</em><span class="sig-paren">)</span><a class="reference external" href="http://github.com/biocore/scikit-bio/blob/0.5.1/skbio/stats/ordination/_ordination_results.py#L124"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#skbio.stats.ordination.OrdinationResults.plot" title="Permalink to this definition">¶</a></dt>
+<code class="descclassname">OrdinationResults.</code><code class="descname">plot</code><span class="sig-paren">(</span><em>df=None</em>, <em>column=None</em>, <em>axes=(0</em>, <em>1</em>, <em>2)</em>, <em>axis_labels=None</em>, <em>title=''</em>, <em>cmap=None</em>, <em>s=20</em><span class="sig-paren">)</span><a class="reference external" href="http://github.com/biocore/scikit-bio/blob/0.5.2/skbio/stats/ordination/_ordination_results.py#L119"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#skbio.stats.ordination.OrdinationResults.plot" title="Permalink to this definition">¶</a></dt>
 <dd><p>Create a 3-D scatterplot of ordination results colored by metadata.</p>
 <p>State: Experimental as of 0.4.0.</p>
 <p>Creates a 3-D scatterplot of the ordination results, where each point
@@ -199,12 +192,12 @@ values of <cite>axes</cite> cast as strings.</p>
 values to colors. If <code class="docutils literal"><span class="pre">None</span></code>, defaults to the colormap specified
 in the matplotlib rc file. Qualitative colormaps (e.g., <code class="docutils literal"><span class="pre">Set1</span></code>)
 are recommended for categorical data, while sequential colormaps
-(e.g., <code class="docutils literal"><span class="pre">Greys</span></code>) are recommended for numeric data. See <a class="reference internal" href="#r85" id="id1">[R85]</a> for
+(e.g., <code class="docutils literal"><span class="pre">Greys</span></code>) are recommended for numeric data. See <a class="reference internal" href="#r169170" id="id1">[R169170]</a> for
 these colormap classifications.</p>
 </div></blockquote>
 <p><strong>s</strong> : scalar or iterable of scalars, optional</p>
 <blockquote>
-<div><p>Size of points. See matplotlib&#8217;s <code class="docutils literal"><span class="pre">Axes3D.scatter</span></code> documentation
+<div><p>Size of points. See matplotlib’s <code class="docutils literal"><span class="pre">Axes3D.scatter</span></code> documentation
 for more details.</p>
 </div></blockquote>
 </td>
@@ -236,24 +229,24 @@ missing data in <cite>column</cite></li>
 </table>
 <div class="admonition seealso">
 <p class="first admonition-title">See also</p>
-<p class="last"><a class="reference external" href="http://matplotlib.org/mpl_toolkits/mplot3d/tutorial.html#mpl_toolkits.mplot3d.Axes3D.scatter" title="(in Matplotlib v1.5.3)"><code class="xref py py-obj docutils literal"><span class="pre">mpl_toolkits.mplot3d.Axes3D.scatter</span></code></a></p>
+<p class="last"><a class="reference external" href="https://matplotlib.org/tutorials/toolkits/mplot3d.html#mpl_toolkits.mplot3d.Axes3D.scatter" title="(in Matplotlib v2.2.2)"><code class="xref py py-obj docutils literal"><span class="pre">mpl_toolkits.mplot3d.Axes3D.scatter</span></code></a></p>
 </div>
 <p class="rubric">Notes</p>
 <p>This method creates basic plots of ordination results, and is intended
 to provide a quick look at the results in the context of metadata
 (e.g., from within the IPython Notebook). For more customization and to
-generate publication-quality figures, we recommend EMPeror <a class="reference internal" href="#r86" id="id2">[R86]</a>.</p>
+generate publication-quality figures, we recommend EMPeror <a class="reference internal" href="#r170170" id="id2">[R170170]</a>.</p>
 <p class="rubric">References</p>
-<table class="docutils citation" frame="void" id="r85" rules="none">
+<table class="docutils citation" frame="void" id="r169170" rules="none">
 <colgroup><col class="label" /><col /></colgroup>
 <tbody valign="top">
-<tr><td class="label">[R85]</td><td><em>(<a class="fn-backref" href="#id1">1</a>, <a class="fn-backref" href="#id3">2</a>)</em> <a class="reference external" href="http://matplotlib.org/examples/color/colormaps_reference.html">http://matplotlib.org/examples/color/colormaps_reference.html</a></td></tr>
+<tr><td class="label">[R169170]</td><td><em>(<a class="fn-backref" href="#id1">1</a>, <a class="fn-backref" href="#id3">2</a>)</em> <a class="reference external" href="http://matplotlib.org/examples/color/colormaps_reference.html">http://matplotlib.org/examples/color/colormaps_reference.html</a></td></tr>
 </tbody>
 </table>
-<table class="docutils citation" frame="void" id="r86" rules="none">
+<table class="docutils citation" frame="void" id="r170170" rules="none">
 <colgroup><col class="label" /><col /></colgroup>
 <tbody valign="top">
-<tr><td class="label">[R86]</td><td><em>(<a class="fn-backref" href="#id2">1</a>, <a class="fn-backref" href="#id4">2</a>)</em> EMPeror: a tool for visualizing high-throughput microbial
+<tr><td class="label">[R170170]</td><td><em>(<a class="fn-backref" href="#id2">1</a>, <a class="fn-backref" href="#id4">2</a>)</em> EMPeror: a tool for visualizing high-throughput microbial
 community data. Vazquez-Baeza Y, Pirrung M, Gonzalez A, Knight R.
 Gigascience. 2013 Nov 26;2(1):16. <a class="reference external" href="http://biocore.github.io/emperor/">http://biocore.github.io/emperor/</a></td></tr>
 </tbody>
@@ -312,7 +305,7 @@ site (a categorical variable):</p>
     </p>
     <p>
         &copy; Copyright 2014--, scikit-bio development team.<br/>
-      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 1.5a0.<br/>
+      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 1.6.5.<br/>
     </p>
   </div>
 </footer>

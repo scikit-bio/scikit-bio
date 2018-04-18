@@ -1,5 +1,5 @@
-skbio.stats.gradient.WindowDifferenceGradientANOVA
-==================================================
+skbio\.stats\.gradient\.WindowDifferenceGradientANOVA
+=====================================================
 
 .. currentmodule:: skbio.stats.gradient
 

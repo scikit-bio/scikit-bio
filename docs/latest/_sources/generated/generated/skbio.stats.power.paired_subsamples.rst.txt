@@ -1,5 +1,5 @@
-skbio.stats.power.paired_subsamples
-===================================
+skbio\.stats\.power\.paired\_subsamples
+=======================================
 
 .. currentmodule:: skbio.stats.power
 

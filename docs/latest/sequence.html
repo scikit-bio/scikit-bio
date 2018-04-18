@@ -1,22 +1,16 @@
 <!DOCTYPE html>
 
-
 <html xmlns="http://www.w3.org/1999/xhtml">
   <head>
     <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
-    
-    <title>Sequences (skbio.sequence) &#8212; scikit-bio 0.5.1 documentation</title>
-    
-    <link rel="stylesheet" href="_static/basic.css" type="text/css" />
+    <title>Sequences (skbio.sequence) &#8212; scikit-bio 0.5.2 documentation</title>
+    <link rel="stylesheet" href="_static/bootstrap-sphinx.css" type="text/css" />
     <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
     <link rel="stylesheet" href="_static/style.css" type="text/css" />
-    <link rel="stylesheet" href="_static/bootswatch-3.3.6/united/bootstrap.min.css" type="text/css" />
-    <link rel="stylesheet" href="_static/bootstrap-sphinx.css" type="text/css" />
-    
     <script type="text/javascript">
       var DOCUMENTATION_OPTIONS = {
         URL_ROOT:    './',
-        VERSION:     '0.5.1',
+        VERSION:     '0.5.2',
         COLLAPSE_INDEX: false,
         FILE_SUFFIX: '.html',
         HAS_SOURCE:  true,
@@ -27,14 +21,13 @@
     <script type="text/javascript" src="_static/underscore.js"></script>
     <script type="text/javascript" src="_static/doctools.js"></script>
     <script type="text/javascript" src="_static/copybutton.js"></script>
-    <script type="text/javascript" src="https://cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
+    <script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.1/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
     <script type="text/javascript" src="_static/js/jquery-1.11.0.min.js"></script>
     <script type="text/javascript" src="_static/js/jquery-fix.js"></script>
-    <script type="text/javascript" src="_static/bootstrap-3.3.6/js/bootstrap.min.js"></script>
+    <script type="text/javascript" src="_static/bootstrap-3.3.7/js/bootstrap.min.js"></script>
     <script type="text/javascript" src="_static/bootstrap-sphinx.js"></script>
     <link rel="index" title="Index" href="genindex.html" />
     <link rel="search" title="Search" href="search.html" />
-    <link rel="top" title="scikit-bio 0.5.1 documentation" href="index.html" />
     <link rel="next" title="skbio.sequence.Sequence" href="generated/skbio.sequence.Sequence.html" />
     <link rel="prev" title="skbio.io.util.open_files" href="generated/generated/skbio.io.util.open_files.html" />
 <meta charset='utf-8'>
@@ -43,7 +36,7 @@
 <meta name="apple-mobile-web-app-capable" content="yes">
 
   </head>
-  <body role="document">
+  <body>
   
   <a href="https://github.com/biocore/scikit-bio"
      class="visible-desktop hidden-xs"><img
@@ -71,7 +64,7 @@
         </button>
         <a class="navbar-brand" href="index.html">
           scikit-bio docs</a>
-        <span class="navbar-text navbar-version pull-left"><b>0.5.1</b></span>
+        <span class="navbar-text navbar-version pull-left"><b>0.5.2</b></span>
       </div>
 
         <div class="collapse navbar-collapse nav-collapse">
@@ -176,19 +169,19 @@ mutable.</p>
 <col width="90%" />
 </colgroup>
 <tbody valign="top">
-<tr class="row-odd"><td><a class="reference internal" href="generated/skbio.sequence.Sequence.html#skbio.sequence.Sequence" title="skbio.sequence.Sequence"><code class="xref py py-obj docutils literal"><span class="pre">Sequence</span></code></a>(sequence[,&nbsp;metadata,&nbsp;...])</td>
+<tr class="row-odd"><td><a class="reference internal" href="generated/skbio.sequence.Sequence.html#skbio.sequence.Sequence" title="skbio.sequence.Sequence"><code class="xref py py-obj docutils literal"><span class="pre">Sequence</span></code></a>(sequence[,&nbsp;metadata,&nbsp;…])</td>
 <td>Store generic sequence data and optional associated metadata.</td>
 </tr>
-<tr class="row-even"><td><a class="reference internal" href="generated/skbio.sequence.GrammaredSequence.html#skbio.sequence.GrammaredSequence" title="skbio.sequence.GrammaredSequence"><code class="xref py py-obj docutils literal"><span class="pre">GrammaredSequence</span></code></a>(sequence[,&nbsp;metadata,&nbsp;...])</td>
+<tr class="row-even"><td><a class="reference internal" href="generated/skbio.sequence.GrammaredSequence.html#skbio.sequence.GrammaredSequence" title="skbio.sequence.GrammaredSequence"><code class="xref py py-obj docutils literal"><span class="pre">GrammaredSequence</span></code></a>(sequence[,&nbsp;metadata,&nbsp;…])</td>
 <td>Store sequence data conforming to a character set.</td>
 </tr>
-<tr class="row-odd"><td><a class="reference internal" href="generated/skbio.sequence.DNA.html#skbio.sequence.DNA" title="skbio.sequence.DNA"><code class="xref py py-obj docutils literal"><span class="pre">DNA</span></code></a>(sequence[,&nbsp;metadata,&nbsp;...])</td>
+<tr class="row-odd"><td><a class="reference internal" href="generated/skbio.sequence.DNA.html#skbio.sequence.DNA" title="skbio.sequence.DNA"><code class="xref py py-obj docutils literal"><span class="pre">DNA</span></code></a>(sequence[,&nbsp;metadata,&nbsp;…])</td>
 <td>Store DNA sequence data and optional associated metadata.</td>
 </tr>
-<tr class="row-even"><td><a class="reference internal" href="generated/skbio.sequence.RNA.html#skbio.sequence.RNA" title="skbio.sequence.RNA"><code class="xref py py-obj docutils literal"><span class="pre">RNA</span></code></a>(sequence[,&nbsp;metadata,&nbsp;...])</td>
+<tr class="row-even"><td><a class="reference internal" href="generated/skbio.sequence.RNA.html#skbio.sequence.RNA" title="skbio.sequence.RNA"><code class="xref py py-obj docutils literal"><span class="pre">RNA</span></code></a>(sequence[,&nbsp;metadata,&nbsp;…])</td>
 <td>Store RNA sequence data and optional associated metadata.</td>
 </tr>
-<tr class="row-odd"><td><a class="reference internal" href="generated/skbio.sequence.Protein.html#skbio.sequence.Protein" title="skbio.sequence.Protein"><code class="xref py py-obj docutils literal"><span class="pre">Protein</span></code></a>(sequence[,&nbsp;metadata,&nbsp;...])</td>
+<tr class="row-odd"><td><a class="reference internal" href="generated/skbio.sequence.Protein.html#skbio.sequence.Protein" title="skbio.sequence.Protein"><code class="xref py py-obj docutils literal"><span class="pre">Protein</span></code></a>(sequence[,&nbsp;metadata,&nbsp;…])</td>
 <td>Store protein sequence data and optional associated metadata.</td>
 </tr>
 <tr class="row-even"><td><a class="reference internal" href="generated/skbio.sequence.GeneticCode.html#skbio.sequence.GeneticCode" title="skbio.sequence.GeneticCode"><code class="xref py py-obj docutils literal"><span class="pre">GeneticCode</span></code></a>(amino_acids,&nbsp;starts[,&nbsp;name])</td>
@@ -270,7 +263,7 @@ reverse complement or degapped (i.e., unaligned) version.</p>
 <span class="go">0 TACCCGGT</span>
 </pre></div>
 </div>
-<p>It&#8217;s also straightforward to compute distances between sequences (optionally
+<p>It’s also straightforward to compute distances between sequences (optionally
 using user-defined distance metrics, the default is Hamming distance which
 requires that the sequences being compared are the same length) for use in
 sequence clustering, phylogenetic reconstruction, etc.</p>
@@ -418,8 +411,8 @@ expressions.</p>
 <span class="go">0 AUGUGUAUUU GA</span>
 </pre></div>
 </div>
-<p>Both DNA and RNA can be translated into a protein sequence. For example, let&#8217;s
-translate our DNA and RNA sequences using NCBI&#8217;s standard genetic code (table
+<p>Both DNA and RNA can be translated into a protein sequence. For example, let’s
+translate our DNA and RNA sequences using NCBI’s standard genetic code (table
 ID 1, the default genetic code in scikit-bio):</p>
 <div class="highlight-default"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">protein_from_dna</span> <span class="o">=</span> <span class="n">dna</span><span class="o">.</span><span class="n">translate</span><span class="p">()</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">protein_from_dna</span>
@@ -478,7 +471,7 @@ ID 1, the default genetic code in scikit-bio):</p>
     </p>
     <p>
         &copy; Copyright 2014--, scikit-bio development team.<br/>
-      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 1.5a0.<br/>
+      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 1.6.5.<br/>
     </p>
   </div>
 </footer>

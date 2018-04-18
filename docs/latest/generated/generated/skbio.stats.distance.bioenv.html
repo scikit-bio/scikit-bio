@@ -1,22 +1,16 @@
 <!DOCTYPE html>
 
-
 <html xmlns="http://www.w3.org/1999/xhtml">
   <head>
     <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
-    
-    <title>skbio.stats.distance.bioenv &#8212; scikit-bio 0.5.1 documentation</title>
-    
-    <link rel="stylesheet" href="../../_static/basic.css" type="text/css" />
+    <title>skbio.stats.distance.bioenv &#8212; scikit-bio 0.5.2 documentation</title>
+    <link rel="stylesheet" href="../../_static/bootstrap-sphinx.css" type="text/css" />
     <link rel="stylesheet" href="../../_static/pygments.css" type="text/css" />
     <link rel="stylesheet" href="../../_static/style.css" type="text/css" />
-    <link rel="stylesheet" href="../../_static/bootswatch-3.3.6/united/bootstrap.min.css" type="text/css" />
-    <link rel="stylesheet" href="../../_static/bootstrap-sphinx.css" type="text/css" />
-    
     <script type="text/javascript">
       var DOCUMENTATION_OPTIONS = {
         URL_ROOT:    '../../',
-        VERSION:     '0.5.1',
+        VERSION:     '0.5.2',
         COLLAPSE_INDEX: false,
         FILE_SUFFIX: '.html',
         HAS_SOURCE:  true,
@@ -27,15 +21,13 @@
     <script type="text/javascript" src="../../_static/underscore.js"></script>
     <script type="text/javascript" src="../../_static/doctools.js"></script>
     <script type="text/javascript" src="../../_static/copybutton.js"></script>
-    <script type="text/javascript" src="https://cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
+    <script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.1/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
     <script type="text/javascript" src="../../_static/js/jquery-1.11.0.min.js"></script>
     <script type="text/javascript" src="../../_static/js/jquery-fix.js"></script>
-    <script type="text/javascript" src="../../_static/bootstrap-3.3.6/js/bootstrap.min.js"></script>
+    <script type="text/javascript" src="../../_static/bootstrap-3.3.7/js/bootstrap.min.js"></script>
     <script type="text/javascript" src="../../_static/bootstrap-sphinx.js"></script>
     <link rel="index" title="Index" href="../../genindex.html" />
     <link rel="search" title="Search" href="../../search.html" />
-    <link rel="top" title="scikit-bio 0.5.1 documentation" href="../../index.html" />
-    <link rel="up" title="Distance matrices and distance-based statistics (skbio.stats.distance)" href="../skbio.stats.distance.html" />
     <link rel="next" title="skbio.stats.distance.mantel" href="skbio.stats.distance.mantel.html" />
     <link rel="prev" title="skbio.stats.distance.permanova" href="skbio.stats.distance.permanova.html" />
 <meta charset='utf-8'>
@@ -44,7 +36,7 @@
 <meta name="apple-mobile-web-app-capable" content="yes">
 
   </head>
-  <body role="document">
+  <body>
   
   <a href="https://github.com/biocore/scikit-bio"
      class="visible-desktop hidden-xs"><img
@@ -72,7 +64,7 @@
         </button>
         <a class="navbar-brand" href="../../index.html">
           scikit-bio docs</a>
-        <span class="navbar-text navbar-version pull-left"><b>0.5.1</b></span>
+        <span class="navbar-text navbar-version pull-left"><b>0.5.2</b></span>
       </div>
 
         <div class="collapse navbar-collapse nav-collapse">
@@ -151,7 +143,7 @@
 <h1>skbio.stats.distance.bioenv<a class="headerlink" href="#skbio-stats-distance-bioenv" title="Permalink to this headline">¶</a></h1>
 <dl class="function">
 <dt id="skbio.stats.distance.bioenv">
-<code class="descclassname">skbio.stats.distance.</code><code class="descname">bioenv</code><span class="sig-paren">(</span><em>distance_matrix</em>, <em>data_frame</em>, <em>columns=None</em><span class="sig-paren">)</span><a class="reference external" href="http://github.com/biocore/scikit-bio/blob/0.5.1/skbio/stats/distance/_bioenv.py#L20"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#skbio.stats.distance.bioenv" title="Permalink to this definition">¶</a></dt>
+<code class="descclassname">skbio.stats.distance.</code><code class="descname">bioenv</code><span class="sig-paren">(</span><em>distance_matrix</em>, <em>data_frame</em>, <em>columns=None</em><span class="sig-paren">)</span><a class="reference external" href="http://github.com/biocore/scikit-bio/blob/0.5.2/skbio/stats/distance/_bioenv.py#L20"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#skbio.stats.distance.bioenv" title="Permalink to this definition">¶</a></dt>
 <dd><p>Find subset of variables maximally correlated with distances.</p>
 <p>State: Experimental as of 0.4.0.</p>
 <p>Finds subsets of variables whose Euclidean distances (after scaling the
@@ -160,14 +152,14 @@ rank-correlated with the distance matrix. For example, the distance matrix
 might contain distances between communities, and the variables might be
 numeric environmental variables (e.g., pH). Correlation between the
 community distance matrix and Euclidean environmental distance matrix is
-computed using Spearman&#8217;s rank correlation coefficient (<span class="math">\(\rho\)</span>).</p>
+computed using Spearman’s rank correlation coefficient (<span class="math">\(\rho\)</span>).</p>
 <p>Subsets of environmental variables range in size from 1 to the total number
-of variables (inclusive). For example, if there are 3 variables, the &#8220;best&#8221;
+of variables (inclusive). For example, if there are 3 variables, the “best”
 variable subsets will be computed for subset sizes 1, 2, and 3.</p>
-<p>The &#8220;best&#8221; subset is chosen by computing the correlation between the
+<p>The “best” subset is chosen by computing the correlation between the
 community distance matrix and all possible Euclidean environmental distance
 matrices at the given subset size. The combination of environmental
-variables with maximum correlation is chosen as the &#8220;best&#8221; subset.</p>
+variables with maximum correlation is chosen as the “best” subset.</p>
 <table class="docutils field-list" frame="void" rules="none">
 <col class="field-name" />
 <col class="field-body" />
@@ -198,7 +190,7 @@ type.</p>
 </tr>
 <tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first">pandas.DataFrame</p>
 <blockquote>
-<div><p>Data frame containing the &#8220;best&#8221; subset of variables at each subset
+<div><p>Data frame containing the “best” subset of variables at each subset
 size, as well as the correlation coefficient of each.</p>
 </div></blockquote>
 </td>
@@ -221,13 +213,13 @@ due to zero variance).</p>
 </table>
 <div class="admonition seealso">
 <p class="first admonition-title">See also</p>
-<p class="last"><a class="reference external" href="https://docs.scipy.org/doc/scipy/reference/generated/scipy.stats.spearmanr.html#scipy.stats.spearmanr" title="(in SciPy v0.18.1)"><code class="xref py py-obj docutils literal"><span class="pre">scipy.stats.spearmanr</span></code></a></p>
+<p class="last"><a class="reference external" href="https://docs.scipy.org/doc/scipy/reference/generated/scipy.stats.spearmanr.html#scipy.stats.spearmanr" title="(in SciPy v1.0.0)"><code class="xref py py-obj docutils literal"><span class="pre">scipy.stats.spearmanr</span></code></a></p>
 </div>
 <p class="rubric">Notes</p>
-<p>See <a class="reference internal" href="#r74" id="id1">[R74]</a> for the original method reference (originally called BIO-ENV).
+<p>See <a class="reference internal" href="#r147149" id="id1">[R147149]</a> for the original method reference (originally called BIO-ENV).
 The general algorithm and interface are similar to <code class="docutils literal"><span class="pre">vegan::bioenv</span></code>,
-available in R&#8217;s vegan package <a class="reference internal" href="#r75" id="id2">[R75]</a>. This method can also be found in
-PRIMER-E <a class="reference internal" href="#r76" id="id3">[R76]</a> (originally called BIO-ENV, but is now called BEST).</p>
+available in R’s vegan package <a class="reference internal" href="#r148149" id="id2">[R148149]</a>. This method can also be found in
+PRIMER-E <a class="reference internal" href="#r149149" id="id3">[R149149]</a> (originally called BIO-ENV, but is now called BEST).</p>
 <div class="admonition warning">
 <p class="first admonition-title">Warning</p>
 <p class="last">This method can take a <em>long</em> time to run if a large number of
@@ -237,28 +229,28 @@ subset size.</p>
 <p>The variables are scaled before computing the Euclidean distance: each
 column is centered and then scaled by its standard deviation.</p>
 <p class="rubric">References</p>
-<table class="docutils citation" frame="void" id="r74" rules="none">
+<table class="docutils citation" frame="void" id="r147149" rules="none">
 <colgroup><col class="label" /><col /></colgroup>
 <tbody valign="top">
-<tr><td class="label">[R74]</td><td><em>(<a class="fn-backref" href="#id1">1</a>, <a class="fn-backref" href="#id4">2</a>)</em> Clarke, K. R &amp; Ainsworth, M. 1993. &#8220;A method of linking multivariate
-community structure to environmental variables&#8221;. Marine Ecology Progress
+<tr><td class="label">[R147149]</td><td><em>(<a class="fn-backref" href="#id1">1</a>, <a class="fn-backref" href="#id4">2</a>)</em> Clarke, K. R &amp; Ainsworth, M. 1993. “A method of linking multivariate
+community structure to environmental variables”. Marine Ecology Progress
 Series, 92, 205-219.</td></tr>
 </tbody>
 </table>
-<table class="docutils citation" frame="void" id="r75" rules="none">
+<table class="docutils citation" frame="void" id="r148149" rules="none">
 <colgroup><col class="label" /><col /></colgroup>
 <tbody valign="top">
-<tr><td class="label">[R75]</td><td><em>(<a class="fn-backref" href="#id2">1</a>, <a class="fn-backref" href="#id5">2</a>)</em> <a class="reference external" href="http://cran.r-project.org/web/packages/vegan/index.html">http://cran.r-project.org/web/packages/vegan/index.html</a></td></tr>
+<tr><td class="label">[R148149]</td><td><em>(<a class="fn-backref" href="#id2">1</a>, <a class="fn-backref" href="#id5">2</a>)</em> <a class="reference external" href="http://cran.r-project.org/web/packages/vegan/index.html">http://cran.r-project.org/web/packages/vegan/index.html</a></td></tr>
 </tbody>
 </table>
-<table class="docutils citation" frame="void" id="r76" rules="none">
+<table class="docutils citation" frame="void" id="r149149" rules="none">
 <colgroup><col class="label" /><col /></colgroup>
 <tbody valign="top">
-<tr><td class="label">[R76]</td><td><em>(<a class="fn-backref" href="#id3">1</a>, <a class="fn-backref" href="#id6">2</a>)</em> <a class="reference external" href="http://www.primer-e.com/primer.htm">http://www.primer-e.com/primer.htm</a></td></tr>
+<tr><td class="label">[R149149]</td><td><em>(<a class="fn-backref" href="#id3">1</a>, <a class="fn-backref" href="#id6">2</a>)</em> <a class="reference external" href="http://www.primer-e.com/primer.htm">http://www.primer-e.com/primer.htm</a></td></tr>
 </tbody>
 </table>
 <p class="rubric">Examples</p>
-<p>Import the functionality we&#8217;ll use in the following examples:</p>
+<p>Import the functionality we’ll use in the following examples:</p>
 <div class="highlight-default"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="kn">import</span> <span class="nn">pandas</span> <span class="k">as</span> <span class="nn">pd</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">skbio</span> <span class="k">import</span> <span class="n">DistanceMatrix</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">skbio.stats.distance</span> <span class="k">import</span> <span class="n">bioenv</span>
@@ -316,7 +308,7 @@ with the community distances (<span class="math">\(\rho=0.771517\)</span>).</p>
     </p>
     <p>
         &copy; Copyright 2014--, scikit-bio development team.<br/>
-      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 1.5a0.<br/>
+      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 1.6.5.<br/>
     </p>
   </div>
 </footer>

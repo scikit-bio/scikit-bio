@@ -1,5 +1,5 @@
-skbio.sequence.GeneticCode
-==========================
+skbio\.sequence\.GeneticCode
+============================
 
 .. currentmodule:: skbio.sequence
 
@@ -43,11 +43,4 @@ skbio.sequence.GeneticCode
 
 
    
-
-   .. HACK -- the point here is that we don't want this to appear in the output, but the autosummary should still generate the pages.
-      .. autosummary::
-         :toctree:
-      
-         GeneticCode.name
-         GeneticCode.reading_frames
 

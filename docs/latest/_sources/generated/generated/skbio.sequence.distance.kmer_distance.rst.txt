@@ -1,5 +1,5 @@
-skbio.sequence.distance.kmer_distance
-=====================================
+skbio\.sequence\.distance\.kmer\_distance
+=========================================
 
 .. currentmodule:: skbio.sequence.distance
 

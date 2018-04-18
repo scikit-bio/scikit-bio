@@ -1,5 +1,5 @@
-skbio.util.RepresentationWarning
-================================
+skbio\.util\.RepresentationWarning
+==================================
 
 .. currentmodule:: skbio.util
 

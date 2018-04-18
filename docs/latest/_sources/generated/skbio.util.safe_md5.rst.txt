@@ -1,5 +1,5 @@
-skbio.util.safe_md5
-===================
+skbio\.util\.safe\_md5
+======================
 
 .. currentmodule:: skbio.util
 

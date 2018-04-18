@@ -1,22 +1,16 @@
 <!DOCTYPE html>
 
-
 <html xmlns="http://www.w3.org/1999/xhtml">
   <head>
     <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
-    
-    <title>skbio.stats.distance.DistanceMatrix &#8212; scikit-bio 0.5.1 documentation</title>
-    
-    <link rel="stylesheet" href="../../_static/basic.css" type="text/css" />
+    <title>skbio.stats.distance.DistanceMatrix &#8212; scikit-bio 0.5.2 documentation</title>
+    <link rel="stylesheet" href="../../_static/bootstrap-sphinx.css" type="text/css" />
     <link rel="stylesheet" href="../../_static/pygments.css" type="text/css" />
     <link rel="stylesheet" href="../../_static/style.css" type="text/css" />
-    <link rel="stylesheet" href="../../_static/bootswatch-3.3.6/united/bootstrap.min.css" type="text/css" />
-    <link rel="stylesheet" href="../../_static/bootstrap-sphinx.css" type="text/css" />
-    
     <script type="text/javascript">
       var DOCUMENTATION_OPTIONS = {
         URL_ROOT:    '../../',
-        VERSION:     '0.5.1',
+        VERSION:     '0.5.2',
         COLLAPSE_INDEX: false,
         FILE_SUFFIX: '.html',
         HAS_SOURCE:  true,
@@ -27,15 +21,13 @@
     <script type="text/javascript" src="../../_static/underscore.js"></script>
     <script type="text/javascript" src="../../_static/doctools.js"></script>
     <script type="text/javascript" src="../../_static/copybutton.js"></script>
-    <script type="text/javascript" src="https://cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
+    <script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.1/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
     <script type="text/javascript" src="../../_static/js/jquery-1.11.0.min.js"></script>
     <script type="text/javascript" src="../../_static/js/jquery-fix.js"></script>
-    <script type="text/javascript" src="../../_static/bootstrap-3.3.6/js/bootstrap.min.js"></script>
+    <script type="text/javascript" src="../../_static/bootstrap-3.3.7/js/bootstrap.min.js"></script>
     <script type="text/javascript" src="../../_static/bootstrap-sphinx.js"></script>
     <link rel="index" title="Index" href="../../genindex.html" />
     <link rel="search" title="Search" href="../../search.html" />
-    <link rel="top" title="scikit-bio 0.5.1 documentation" href="../../index.html" />
-    <link rel="up" title="Distance matrices and distance-based statistics (skbio.stats.distance)" href="../skbio.stats.distance.html" />
     <link rel="next" title="skbio.stats.distance.randdm" href="skbio.stats.distance.randdm.html" />
     <link rel="prev" title="skbio.stats.distance.DissimilarityMatrix" href="skbio.stats.distance.DissimilarityMatrix.html" />
 <meta charset='utf-8'>
@@ -44,7 +36,7 @@
 <meta name="apple-mobile-web-app-capable" content="yes">
 
   </head>
-  <body role="document">
+  <body>
   
   <a href="https://github.com/biocore/scikit-bio"
      class="visible-desktop hidden-xs"><img
@@ -72,7 +64,7 @@
         </button>
         <a class="navbar-brand" href="../../index.html">
           scikit-bio docs</a>
-        <span class="navbar-text navbar-version pull-left"><b>0.5.1</b></span>
+        <span class="navbar-text navbar-version pull-left"><b>0.5.2</b></span>
       </div>
 
         <div class="collapse navbar-collapse nav-collapse">
@@ -151,7 +143,7 @@
 <h1>skbio.stats.distance.DistanceMatrix<a class="headerlink" href="#skbio-stats-distance-distancematrix" title="Permalink to this headline">¶</a></h1>
 <dl class="class">
 <dt id="skbio.stats.distance.DistanceMatrix">
-<em class="property">class </em><code class="descclassname">skbio.stats.distance.</code><code class="descname">DistanceMatrix</code><span class="sig-paren">(</span><em>data</em>, <em>ids=None</em><span class="sig-paren">)</span><a class="reference external" href="http://github.com/biocore/scikit-bio/blob/0.5.1/skbio/stats/distance/_base.py#L699"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#skbio.stats.distance.DistanceMatrix" title="Permalink to this definition">¶</a></dt>
+<em class="property">class </em><code class="descclassname">skbio.stats.distance.</code><code class="descname">DistanceMatrix</code><span class="sig-paren">(</span><em>data</em>, <em>ids=None</em><span class="sig-paren">)</span><a class="reference external" href="http://github.com/biocore/scikit-bio/blob/0.5.2/skbio/stats/distance/_base.py#L700"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#skbio.stats.distance.DistanceMatrix" title="Permalink to this definition">¶</a></dt>
 <dd><p>Store distances between objects.</p>
 <p>A <cite>DistanceMatrix</cite> is a <cite>DissimilarityMatrix</cite> with the additional
 requirement that the matrix data is symmetric. There are additional methods
@@ -161,26 +153,26 @@ made available that take advantage of this symmetry.</p>
 <p class="last"><a class="reference internal" href="skbio.stats.distance.DissimilarityMatrix.html#skbio.stats.distance.DissimilarityMatrix" title="skbio.stats.distance.DissimilarityMatrix"><code class="xref py py-obj docutils literal"><span class="pre">DissimilarityMatrix</span></code></a></p>
 </div>
 <p class="rubric">Notes</p>
-<p>The distances are stored in redundant (square-form) format <a class="reference internal" href="#r66" id="id1">[R66]</a>. To
+<p>The distances are stored in redundant (square-form) format <a class="reference internal" href="#r131132" id="id1">[R131132]</a>. To
 facilitate use with other scientific Python routines (e.g., scipy), the
 distances can be retrieved in condensed (vector-form) format using
 <cite>condensed_form</cite>.</p>
 <p><cite>DistanceMatrix</cite> only requires that the distances it stores are symmetric.
 Checks are <em>not</em> performed to ensure the other three metric properties
 hold (non-negativity, identity of indiscernibles, and triangle inequality)
-<a class="reference internal" href="#r67" id="id2">[R67]</a>. Thus, a <cite>DistanceMatrix</cite> instance can store distances that are not
+<a class="reference internal" href="#r132132" id="id2">[R132132]</a>. Thus, a <cite>DistanceMatrix</cite> instance can store distances that are not
 metric.</p>
 <p class="rubric">References</p>
-<table class="docutils citation" frame="void" id="r66" rules="none">
+<table class="docutils citation" frame="void" id="r131132" rules="none">
 <colgroup><col class="label" /><col /></colgroup>
 <tbody valign="top">
-<tr><td class="label">[R66]</td><td><em>(<a class="fn-backref" href="#id1">1</a>, <a class="fn-backref" href="#id3">2</a>)</em> <a class="reference external" href="http://docs.scipy.org/doc/scipy/reference/spatial.distance.html">http://docs.scipy.org/doc/scipy/reference/spatial.distance.html</a></td></tr>
+<tr><td class="label">[R131132]</td><td><em>(<a class="fn-backref" href="#id1">1</a>, <a class="fn-backref" href="#id3">2</a>)</em> <a class="reference external" href="http://docs.scipy.org/doc/scipy/reference/spatial.distance.html">http://docs.scipy.org/doc/scipy/reference/spatial.distance.html</a></td></tr>
 </tbody>
 </table>
-<table class="docutils citation" frame="void" id="r67" rules="none">
+<table class="docutils citation" frame="void" id="r132132" rules="none">
 <colgroup><col class="label" /><col /></colgroup>
 <tbody valign="top">
-<tr><td class="label">[R67]</td><td><em>(<a class="fn-backref" href="#id2">1</a>, <a class="fn-backref" href="#id4">2</a>)</em> <a class="reference external" href="http://planetmath.org/metricspace">http://planetmath.org/metricspace</a></td></tr>
+<tr><td class="label">[R132132]</td><td><em>(<a class="fn-backref" href="#id2">1</a>, <a class="fn-backref" href="#id4">2</a>)</em> <a class="reference external" href="http://planetmath.org/metricspace">http://planetmath.org/metricspace</a></td></tr>
 </tbody>
 </table>
 <p class="rubric">Attributes</p>
@@ -190,28 +182,28 @@ metric.</p>
 <col width="90%" />
 </colgroup>
 <tbody valign="top">
-<tr class="row-odd"><td><a class="reference internal" href="skbio.stats.distance.DistanceMatrix.T.html#skbio.stats.distance.DistanceMatrix.T" title="skbio.stats.distance.DistanceMatrix.T"><code class="xref py py-obj docutils literal"><span class="pre">T</span></code></a></td>
+<tr class="row-odd"><td><code class="xref py py-obj docutils literal"><span class="pre">T</span></code></td>
 <td>Transpose of the dissimilarity matrix.</td>
 </tr>
-<tr class="row-even"><td><a class="reference internal" href="skbio.stats.distance.DistanceMatrix.data.html#skbio.stats.distance.DistanceMatrix.data" title="skbio.stats.distance.DistanceMatrix.data"><code class="xref py py-obj docutils literal"><span class="pre">data</span></code></a></td>
+<tr class="row-even"><td><code class="xref py py-obj docutils literal"><span class="pre">data</span></code></td>
 <td>Array of dissimilarities.</td>
 </tr>
-<tr class="row-odd"><td><a class="reference internal" href="skbio.stats.distance.DistanceMatrix.dtype.html#skbio.stats.distance.DistanceMatrix.dtype" title="skbio.stats.distance.DistanceMatrix.dtype"><code class="xref py py-obj docutils literal"><span class="pre">dtype</span></code></a></td>
+<tr class="row-odd"><td><code class="xref py py-obj docutils literal"><span class="pre">dtype</span></code></td>
 <td>Data type of the dissimilarities.</td>
 </tr>
-<tr class="row-even"><td><a class="reference internal" href="skbio.stats.distance.DistanceMatrix.ids.html#skbio.stats.distance.DistanceMatrix.ids" title="skbio.stats.distance.DistanceMatrix.ids"><code class="xref py py-obj docutils literal"><span class="pre">ids</span></code></a></td>
+<tr class="row-even"><td><code class="xref py py-obj docutils literal"><span class="pre">ids</span></code></td>
 <td>Tuple of object IDs.</td>
 </tr>
-<tr class="row-odd"><td><a class="reference internal" href="skbio.stats.distance.DistanceMatrix.png.html#skbio.stats.distance.DistanceMatrix.png" title="skbio.stats.distance.DistanceMatrix.png"><code class="xref py py-obj docutils literal"><span class="pre">png</span></code></a></td>
+<tr class="row-odd"><td><code class="xref py py-obj docutils literal"><span class="pre">png</span></code></td>
 <td>Display heatmap in IPython Notebook as PNG.</td>
 </tr>
-<tr class="row-even"><td><a class="reference internal" href="skbio.stats.distance.DistanceMatrix.shape.html#skbio.stats.distance.DistanceMatrix.shape" title="skbio.stats.distance.DistanceMatrix.shape"><code class="xref py py-obj docutils literal"><span class="pre">shape</span></code></a></td>
+<tr class="row-even"><td><code class="xref py py-obj docutils literal"><span class="pre">shape</span></code></td>
 <td>Two-element tuple containing the dissimilarity matrix dimensions.</td>
 </tr>
-<tr class="row-odd"><td><a class="reference internal" href="skbio.stats.distance.DistanceMatrix.size.html#skbio.stats.distance.DistanceMatrix.size" title="skbio.stats.distance.DistanceMatrix.size"><code class="xref py py-obj docutils literal"><span class="pre">size</span></code></a></td>
+<tr class="row-odd"><td><code class="xref py py-obj docutils literal"><span class="pre">size</span></code></td>
 <td>Total number of elements in the dissimilarity matrix.</td>
 </tr>
-<tr class="row-even"><td><a class="reference internal" href="skbio.stats.distance.DistanceMatrix.svg.html#skbio.stats.distance.DistanceMatrix.svg" title="skbio.stats.distance.DistanceMatrix.svg"><code class="xref py py-obj docutils literal"><span class="pre">svg</span></code></a></td>
+<tr class="row-even"><td><code class="xref py py-obj docutils literal"><span class="pre">svg</span></code></td>
 <td>Display heatmap in IPython Notebook as SVG.</td>
 </tr>
 </tbody>
@@ -247,7 +239,7 @@ metric.</p>
 <tr class="row-even"><td><a class="reference internal" href="skbio.stats.distance.DistanceMatrix.filter.html#skbio.stats.distance.DistanceMatrix.filter" title="skbio.stats.distance.DistanceMatrix.filter"><code class="xref py py-obj docutils literal"><span class="pre">filter</span></code></a>(ids[,&nbsp;strict])</td>
 <td>Filter the dissimilarity matrix by IDs.</td>
 </tr>
-<tr class="row-odd"><td><a class="reference internal" href="skbio.stats.distance.DistanceMatrix.from_iterable.html#skbio.stats.distance.DistanceMatrix.from_iterable" title="skbio.stats.distance.DistanceMatrix.from_iterable"><code class="xref py py-obj docutils literal"><span class="pre">from_iterable</span></code></a>(iterable,&nbsp;metric[,&nbsp;key,&nbsp;keys,&nbsp;...])</td>
+<tr class="row-odd"><td><a class="reference internal" href="skbio.stats.distance.DistanceMatrix.from_iterable.html#skbio.stats.distance.DistanceMatrix.from_iterable" title="skbio.stats.distance.DistanceMatrix.from_iterable"><code class="xref py py-obj docutils literal"><span class="pre">from_iterable</span></code></a>(iterable,&nbsp;metric[,&nbsp;key,&nbsp;keys,&nbsp;…])</td>
 <td>Create DistanceMatrix from all pairs in an iterable given a metric.</td>
 </tr>
 <tr class="row-even"><td><a class="reference internal" href="skbio.stats.distance.DistanceMatrix.index.html#skbio.stats.distance.DistanceMatrix.index" title="skbio.stats.distance.DistanceMatrix.index"><code class="xref py py-obj docutils literal"><span class="pre">index</span></code></a>(lookup_id)</td>
@@ -297,7 +289,7 @@ metric.</p>
     </p>
     <p>
         &copy; Copyright 2014--, scikit-bio development team.<br/>
-      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 1.5a0.<br/>
+      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 1.6.5.<br/>
     </p>
   </div>
 </footer>

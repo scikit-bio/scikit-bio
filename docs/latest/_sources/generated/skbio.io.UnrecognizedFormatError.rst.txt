@@ -1,5 +1,5 @@
-skbio.io.UnrecognizedFormatError
-================================
+skbio\.io\.UnrecognizedFormatError
+==================================
 
 .. currentmodule:: skbio.io
 

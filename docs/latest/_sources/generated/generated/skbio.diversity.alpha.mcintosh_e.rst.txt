@@ -1,5 +1,5 @@
-skbio.diversity.alpha.mcintosh_e
-================================
+skbio\.diversity\.alpha\.mcintosh\_e
+====================================
 
 .. currentmodule:: skbio.diversity.alpha
 

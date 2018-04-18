@@ -1,22 +1,16 @@
 <!DOCTYPE html>
 
-
 <html xmlns="http://www.w3.org/1999/xhtml">
   <head>
     <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
-    
-    <title>Newick format (skbio.io.format.newick) &#8212; scikit-bio 0.5.1 documentation</title>
-    
-    <link rel="stylesheet" href="../_static/basic.css" type="text/css" />
+    <title>Newick format (skbio.io.format.newick) &#8212; scikit-bio 0.5.2 documentation</title>
+    <link rel="stylesheet" href="../_static/bootstrap-sphinx.css" type="text/css" />
     <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
     <link rel="stylesheet" href="../_static/style.css" type="text/css" />
-    <link rel="stylesheet" href="../_static/bootswatch-3.3.6/united/bootstrap.min.css" type="text/css" />
-    <link rel="stylesheet" href="../_static/bootstrap-sphinx.css" type="text/css" />
-    
     <script type="text/javascript">
       var DOCUMENTATION_OPTIONS = {
         URL_ROOT:    '../',
-        VERSION:     '0.5.1',
+        VERSION:     '0.5.2',
         COLLAPSE_INDEX: false,
         FILE_SUFFIX: '.html',
         HAS_SOURCE:  true,
@@ -27,15 +21,13 @@
     <script type="text/javascript" src="../_static/underscore.js"></script>
     <script type="text/javascript" src="../_static/doctools.js"></script>
     <script type="text/javascript" src="../_static/copybutton.js"></script>
-    <script type="text/javascript" src="https://cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
+    <script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.1/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
     <script type="text/javascript" src="../_static/js/jquery-1.11.0.min.js"></script>
     <script type="text/javascript" src="../_static/js/jquery-fix.js"></script>
-    <script type="text/javascript" src="../_static/bootstrap-3.3.6/js/bootstrap.min.js"></script>
+    <script type="text/javascript" src="../_static/bootstrap-3.3.7/js/bootstrap.min.js"></script>
     <script type="text/javascript" src="../_static/bootstrap-sphinx.js"></script>
     <link rel="index" title="Index" href="../genindex.html" />
     <link rel="search" title="Search" href="../search.html" />
-    <link rel="top" title="scikit-bio 0.5.1 documentation" href="../index.html" />
-    <link rel="up" title="File I/O (skbio.io)" href="../io.html" />
     <link rel="next" title="Ordination results format (skbio.io.format.ordination)" href="skbio.io.format.ordination.html" />
     <link rel="prev" title="Labeled square matrix format (skbio.io.format.lsmat)" href="skbio.io.format.lsmat.html" />
 <meta charset='utf-8'>
@@ -44,7 +36,7 @@
 <meta name="apple-mobile-web-app-capable" content="yes">
 
   </head>
-  <body role="document">
+  <body>
   
   <a href="https://github.com/biocore/scikit-bio"
      class="visible-desktop hidden-xs"><img
@@ -72,7 +64,7 @@
         </button>
         <a class="navbar-brand" href="../index.html">
           scikit-bio docs</a>
-        <span class="navbar-text navbar-version pull-left"><b>0.5.1</b></span>
+        <span class="navbar-text navbar-version pull-left"><b>0.5.2</b></span>
       </div>
 
         <div class="collapse navbar-collapse nav-collapse">
@@ -170,9 +162,9 @@
   <span class="target" id="module-skbio.io.format.newick"></span><div class="section" id="newick-format-skbio-io-format-newick">
 <h1>Newick format (<a class="reference internal" href="#module-skbio.io.format.newick" title="skbio.io.format.newick"><code class="xref py py-mod docutils literal"><span class="pre">skbio.io.format.newick</span></code></a>)<a class="headerlink" href="#newick-format-skbio-io-format-newick" title="Permalink to this headline">¶</a></h1>
 <p>Newick format (<code class="docutils literal"><span class="pre">newick</span></code>) stores spanning-trees with weighted edges and node
-names in a minimal file format <a class="reference internal" href="#r181" id="id1">[R181]</a>. This is useful for representing
+names in a minimal file format <a class="reference internal" href="#r340" id="id1">[R340]</a>. This is useful for representing
 phylogenetic trees and taxonomies. Newick was created as an informal
-specification on June 26, 1986 <a class="reference internal" href="#r182" id="id2">[R182]</a>.</p>
+specification on June 26, 1986 <a class="reference internal" href="#r341" id="id2">[R341]</a>.</p>
 <div class="section" id="format-support">
 <h2>Format Support<a class="headerlink" href="#format-support" title="Permalink to this headline">¶</a></h2>
 <p><strong>Has Sniffer: Yes</strong></p>
@@ -242,7 +234,7 @@ defined by commas, have no relationship. For this reason, it is not a valid
 Newick string to have more than one node at the root level.</p>
 <p>To provide these relationships, there is another structure:
 paired parenthesis (<code class="docutils literal"><span class="pre">(</span> <span class="pre">)</span></code>). These are inserted at the location of an existing
-node and give it the ability to have children. Placing <code class="docutils literal"><span class="pre">(</span> <span class="pre">)</span></code> in a node&#8217;s
+node and give it the ability to have children. Placing <code class="docutils literal"><span class="pre">(</span> <span class="pre">)</span></code> in a node’s
 location will create a child inside the parenthesis on the left-most
 inner edge.</p>
 </div>
@@ -263,9 +255,9 @@ ad. infinitum: <code class="docutils literal"><span class="pre">((</span> <span 
 <h4>Adding Node Information<a class="headerlink" href="#adding-node-information" title="Permalink to this headline">¶</a></h4>
 <p>Information about a node can be added to improve the clarity and meaning of a
 tree. Each node may have a label and/or a length (to the parent). Newick always
-places the node information at the right-most edge of a node&#8217;s position.</p>
+places the node information at the right-most edge of a node’s position.</p>
 <p>Starting with labels, <code class="docutils literal"><span class="pre">((</span> <span class="pre">,</span> <span class="pre">),</span> <span class="pre">(</span> <span class="pre">,</span> <span class="pre">));</span></code> would become
-<code class="docutils literal"><span class="pre">((D,</span> <span class="pre">E)B,</span> <span class="pre">(F,</span> <span class="pre">G)C)A;</span></code>. There is a named root <code class="docutils literal"><span class="pre">A</span></code> and the root&#8217;s children
+<code class="docutils literal"><span class="pre">((D,</span> <span class="pre">E)B,</span> <span class="pre">(F,</span> <span class="pre">G)C)A;</span></code>. There is a named root <code class="docutils literal"><span class="pre">A</span></code> and the root’s children
 (from left to right) are <code class="docutils literal"><span class="pre">B</span></code> and <code class="docutils literal"><span class="pre">C</span></code>. <code class="docutils literal"><span class="pre">B</span></code> has the children <code class="docutils literal"><span class="pre">D</span></code> and
 <code class="docutils literal"><span class="pre">E</span></code>, and <code class="docutils literal"><span class="pre">C</span></code> has the children <code class="docutils literal"><span class="pre">F</span></code> and <code class="docutils literal"><span class="pre">G</span></code>.</p>
 <p>Length represents the distance (or weight of the edge) that connects a node to
@@ -374,20 +366,20 @@ properly escape underscores.</p>
 </pre></div>
 </div>
 <p>Notice that the node originally labeled <code class="docutils literal"><span class="pre">d_d</span></code> became <code class="docutils literal"><span class="pre">d</span> <span class="pre">d</span></code>. Additionally
-<code class="docutils literal"><span class="pre">'b_b'''</span></code> became <code class="docutils literal"><span class="pre">b_b'</span></code>. Note that the underscore was preserved in <cite>b_b&#8217;</cite>.</p>
+<code class="docutils literal"><span class="pre">'b_b'''</span></code> became <code class="docutils literal"><span class="pre">b_b'</span></code>. Note that the underscore was preserved in <cite>b_b’</cite>.</p>
 </div>
 <div class="section" id="references">
 <h2>References<a class="headerlink" href="#references" title="Permalink to this headline">¶</a></h2>
-<table class="docutils citation" frame="void" id="r181" rules="none">
+<table class="docutils citation" frame="void" id="r340" rules="none">
 <colgroup><col class="label" /><col /></colgroup>
 <tbody valign="top">
-<tr><td class="label"><a class="fn-backref" href="#id1">[R181]</a></td><td><a class="reference external" href="http://evolution.genetics.washington.edu/phylip/newick_doc.html">http://evolution.genetics.washington.edu/phylip/newick_doc.html</a></td></tr>
+<tr><td class="label"><a class="fn-backref" href="#id1">[R340]</a></td><td><a class="reference external" href="http://evolution.genetics.washington.edu/phylip/newick_doc.html">http://evolution.genetics.washington.edu/phylip/newick_doc.html</a></td></tr>
 </tbody>
 </table>
-<table class="docutils citation" frame="void" id="r182" rules="none">
+<table class="docutils citation" frame="void" id="r341" rules="none">
 <colgroup><col class="label" /><col /></colgroup>
 <tbody valign="top">
-<tr><td class="label"><a class="fn-backref" href="#id2">[R182]</a></td><td><a class="reference external" href="http://evolution.genetics.washington.edu/phylip/newicktree.html">http://evolution.genetics.washington.edu/phylip/newicktree.html</a></td></tr>
+<tr><td class="label"><a class="fn-backref" href="#id2">[R341]</a></td><td><a class="reference external" href="http://evolution.genetics.washington.edu/phylip/newicktree.html">http://evolution.genetics.washington.edu/phylip/newicktree.html</a></td></tr>
 </tbody>
 </table>
 </div>
@@ -407,7 +399,7 @@ properly escape underscores.</p>
     </p>
     <p>
         &copy; Copyright 2014--, scikit-bio development team.<br/>
-      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 1.5a0.<br/>
+      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 1.6.5.<br/>
     </p>
   </div>
 </footer>

@@ -1,5 +1,5 @@
-skbio.alignment.TabularMSA
-==========================
+skbio\.alignment\.TabularMSA
+============================
 
 .. currentmodule:: skbio.alignment
 
@@ -98,17 +98,4 @@ skbio.alignment.TabularMSA
 
 
    
-
-   .. HACK -- the point here is that we don't want this to appear in the output, but the autosummary should still generate the pages.
-      .. autosummary::
-         :toctree:
-      
-         TabularMSA.default_write_format
-         TabularMSA.dtype
-         TabularMSA.iloc
-         TabularMSA.index
-         TabularMSA.loc
-         TabularMSA.metadata
-         TabularMSA.positional_metadata
-         TabularMSA.shape
 

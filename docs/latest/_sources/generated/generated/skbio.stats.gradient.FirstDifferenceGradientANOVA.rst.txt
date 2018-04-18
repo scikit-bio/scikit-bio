@@ -1,5 +1,5 @@
-skbio.stats.gradient.FirstDifferenceGradientANOVA
-=================================================
+skbio\.stats\.gradient\.FirstDifferenceGradientANOVA
+====================================================
 
 .. currentmodule:: skbio.stats.gradient
 

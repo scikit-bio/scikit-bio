@@ -1,5 +1,5 @@
-skbio.io.registry.InvalidRegistrationError
-==========================================
+skbio\.io\.registry\.InvalidRegistrationError
+=============================================
 
 .. currentmodule:: skbio.io.registry
 

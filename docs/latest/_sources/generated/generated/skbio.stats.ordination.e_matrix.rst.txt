@@ -1,5 +1,5 @@
-skbio.stats.ordination.e_matrix
-===============================
+skbio\.stats\.ordination\.e\_matrix
+===================================
 
 .. currentmodule:: skbio.stats.ordination
 

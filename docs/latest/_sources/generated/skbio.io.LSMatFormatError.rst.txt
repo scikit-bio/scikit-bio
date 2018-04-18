@@ -1,5 +1,5 @@
-skbio.io.LSMatFormatError
-=========================
+skbio\.io\.LSMatFormatError
+===========================
 
 .. currentmodule:: skbio.io
 

@@ -1,22 +1,16 @@
 <!DOCTYPE html>
 
-
 <html xmlns="http://www.w3.org/1999/xhtml">
   <head>
     <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
-    
-    <title>skbio.alignment.TabularMSA.consensus &#8212; scikit-bio 0.5.1 documentation</title>
-    
-    <link rel="stylesheet" href="../_static/basic.css" type="text/css" />
+    <title>skbio.alignment.TabularMSA.consensus &#8212; scikit-bio 0.5.2 documentation</title>
+    <link rel="stylesheet" href="../_static/bootstrap-sphinx.css" type="text/css" />
     <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
     <link rel="stylesheet" href="../_static/style.css" type="text/css" />
-    <link rel="stylesheet" href="../_static/bootswatch-3.3.6/united/bootstrap.min.css" type="text/css" />
-    <link rel="stylesheet" href="../_static/bootstrap-sphinx.css" type="text/css" />
-    
     <script type="text/javascript">
       var DOCUMENTATION_OPTIONS = {
         URL_ROOT:    '../',
-        VERSION:     '0.5.1',
+        VERSION:     '0.5.2',
         COLLAPSE_INDEX: false,
         FILE_SUFFIX: '.html',
         HAS_SOURCE:  true,
@@ -27,21 +21,20 @@
     <script type="text/javascript" src="../_static/underscore.js"></script>
     <script type="text/javascript" src="../_static/doctools.js"></script>
     <script type="text/javascript" src="../_static/copybutton.js"></script>
-    <script type="text/javascript" src="https://cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
+    <script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.1/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
     <script type="text/javascript" src="../_static/js/jquery-1.11.0.min.js"></script>
     <script type="text/javascript" src="../_static/js/jquery-fix.js"></script>
-    <script type="text/javascript" src="../_static/bootstrap-3.3.6/js/bootstrap.min.js"></script>
+    <script type="text/javascript" src="../_static/bootstrap-3.3.7/js/bootstrap.min.js"></script>
     <script type="text/javascript" src="../_static/bootstrap-sphinx.js"></script>
     <link rel="index" title="Index" href="../genindex.html" />
     <link rel="search" title="Search" href="../search.html" />
-    <link rel="top" title="scikit-bio 0.5.1 documentation" href="../index.html" />
 <meta charset='utf-8'>
 <meta http-equiv='X-UA-Compatible' content='IE=edge,chrome=1'>
 <meta name='viewport' content='width=device-width, initial-scale=1.0, maximum-scale=1'>
 <meta name="apple-mobile-web-app-capable" content="yes">
 
   </head>
-  <body role="document">
+  <body>
   
   <a href="https://github.com/biocore/scikit-bio"
      class="visible-desktop hidden-xs"><img
@@ -69,7 +62,7 @@
         </button>
         <a class="navbar-brand" href="../index.html">
           scikit-bio docs</a>
-        <span class="navbar-text navbar-version pull-left"><b>0.5.1</b></span>
+        <span class="navbar-text navbar-version pull-left"><b>0.5.2</b></span>
       </div>
 
         <div class="collapse navbar-collapse nav-collapse">
@@ -148,7 +141,7 @@
 <h1>skbio.alignment.TabularMSA.consensus<a class="headerlink" href="#skbio-alignment-tabularmsa-consensus" title="Permalink to this headline">¶</a></h1>
 <dl class="method">
 <dt id="skbio.alignment.TabularMSA.consensus">
-<code class="descclassname">TabularMSA.</code><code class="descname">consensus</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference external" href="http://github.com/biocore/scikit-bio/blob/0.5.1/skbio/alignment/_tabular_msa.py#L1345"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#skbio.alignment.TabularMSA.consensus" title="Permalink to this definition">¶</a></dt>
+<code class="descclassname">TabularMSA.</code><code class="descname">consensus</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference external" href="http://github.com/biocore/scikit-bio/blob/0.5.2/skbio/alignment/_tabular_msa.py#L1345"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#skbio.alignment.TabularMSA.consensus" title="Permalink to this definition">¶</a></dt>
 <dd><p>Compute the majority consensus sequence for this MSA.</p>
 <p>State: Experimental as of 0.4.1.</p>
 <p>The majority consensus sequence contains the most common character at
@@ -160,9 +153,9 @@ each position in this MSA. Ties will be broken in an arbitrary manner.</p>
 <tr class="field-odd field"><th class="field-name">Returns:</th><td class="field-body"><p class="first">Sequence</p>
 <blockquote class="last">
 <div><p>The majority consensus sequence for this MSA. The type of sequence
-returned will be the same as this MSA&#8217;s <code class="docutils literal"><span class="pre">dtype</span></code> or <code class="docutils literal"><span class="pre">Sequence</span></code>
+returned will be the same as this MSA’s <code class="docutils literal"><span class="pre">dtype</span></code> or <code class="docutils literal"><span class="pre">Sequence</span></code>
 if this MSA does not contain any sequences. The majority consensus
-sequence will have its positional metadata set to this MSA&#8217;s
+sequence will have its positional metadata set to this MSA’s
 positional metadata if present.</p>
 </div></blockquote>
 </td>
@@ -170,12 +163,12 @@ positional metadata if present.</p>
 </tbody>
 </table>
 <p class="rubric">Notes</p>
-<p>The majority consensus sequence will use this MSA&#8217;s default gap
+<p>The majority consensus sequence will use this MSA’s default gap
 character (<code class="docutils literal"><span class="pre">dtype.default_gap_char</span></code>) to represent gap majority at a
 position, regardless of the gap characters present at that position.</p>
 <p>Different gap characters at a position are <strong>not</strong> treated as distinct
 characters. All gap characters at a position contribute to that
-position&#8217;s gap consensus.</p>
+position’s gap consensus.</p>
 <p class="rubric">Examples</p>
 <div class="highlight-default"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">skbio</span> <span class="k">import</span> <span class="n">DNA</span><span class="p">,</span> <span class="n">TabularMSA</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">sequences</span> <span class="o">=</span> <span class="p">[</span><span class="n">DNA</span><span class="p">(</span><span class="s1">&#39;AC---&#39;</span><span class="p">),</span>
@@ -200,7 +193,7 @@ position&#8217;s gap consensus.</p>
 </div>
 <p>Note that the last position in the MSA has more than one type of gap
 character. These are not treated as distinct characters; both types of
-gap characters contribute to the position&#8217;s consensus. Also note that
+gap characters contribute to the position’s consensus. Also note that
 <code class="docutils literal"><span class="pre">DNA.default_gap_char</span></code> is used to represent gap majority at a
 position (<code class="docutils literal"><span class="pre">'-'</span></code>).</p>
 </dd></dl>
@@ -221,7 +214,7 @@ position (<code class="docutils literal"><span class="pre">'-'</span></code>).</
     </p>
     <p>
         &copy; Copyright 2014--, scikit-bio development team.<br/>
-      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 1.5a0.<br/>
+      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 1.6.5.<br/>
     </p>
   </div>
 </footer>

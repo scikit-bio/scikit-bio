@@ -1,5 +1,5 @@
-skbio.tree.NoParentError
-========================
+skbio\.tree\.NoParentError
+==========================
 
 .. currentmodule:: skbio.tree
 

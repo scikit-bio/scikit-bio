@@ -1,5 +1,5 @@
-skbio.stats.composition.perturb_inv
-===================================
+skbio\.stats\.composition\.perturb\_inv
+=======================================
 
 .. currentmodule:: skbio.stats.composition
 

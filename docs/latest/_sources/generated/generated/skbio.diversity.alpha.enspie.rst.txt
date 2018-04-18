@@ -1,5 +1,5 @@
-skbio.diversity.alpha.enspie
-============================
+skbio\.diversity\.alpha\.enspie
+===============================
 
 .. currentmodule:: skbio.diversity.alpha
 

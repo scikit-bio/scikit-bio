@@ -1,22 +1,16 @@
 <!DOCTYPE html>
 
-
 <html xmlns="http://www.w3.org/1999/xhtml">
   <head>
     <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
-    
-    <title>skbio.sequence.GeneticCode &#8212; scikit-bio 0.5.1 documentation</title>
-    
-    <link rel="stylesheet" href="../_static/basic.css" type="text/css" />
+    <title>skbio.sequence.GeneticCode &#8212; scikit-bio 0.5.2 documentation</title>
+    <link rel="stylesheet" href="../_static/bootstrap-sphinx.css" type="text/css" />
     <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
     <link rel="stylesheet" href="../_static/style.css" type="text/css" />
-    <link rel="stylesheet" href="../_static/bootswatch-3.3.6/united/bootstrap.min.css" type="text/css" />
-    <link rel="stylesheet" href="../_static/bootstrap-sphinx.css" type="text/css" />
-    
     <script type="text/javascript">
       var DOCUMENTATION_OPTIONS = {
         URL_ROOT:    '../',
-        VERSION:     '0.5.1',
+        VERSION:     '0.5.2',
         COLLAPSE_INDEX: false,
         FILE_SUFFIX: '.html',
         HAS_SOURCE:  true,
@@ -27,15 +21,13 @@
     <script type="text/javascript" src="../_static/underscore.js"></script>
     <script type="text/javascript" src="../_static/doctools.js"></script>
     <script type="text/javascript" src="../_static/copybutton.js"></script>
-    <script type="text/javascript" src="https://cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
+    <script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.1/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
     <script type="text/javascript" src="../_static/js/jquery-1.11.0.min.js"></script>
     <script type="text/javascript" src="../_static/js/jquery-fix.js"></script>
-    <script type="text/javascript" src="../_static/bootstrap-3.3.6/js/bootstrap.min.js"></script>
+    <script type="text/javascript" src="../_static/bootstrap-3.3.7/js/bootstrap.min.js"></script>
     <script type="text/javascript" src="../_static/bootstrap-sphinx.js"></script>
     <link rel="index" title="Index" href="../genindex.html" />
     <link rel="search" title="Search" href="../search.html" />
-    <link rel="top" title="scikit-bio 0.5.1 documentation" href="../index.html" />
-    <link rel="up" title="Sequences (skbio.sequence)" href="../sequence.html" />
     <link rel="next" title="Sequence distance metrics (skbio.sequence.distance)" href="skbio.sequence.distance.html" />
     <link rel="prev" title="skbio.sequence.Protein" href="skbio.sequence.Protein.html" />
 <meta charset='utf-8'>
@@ -44,7 +36,7 @@
 <meta name="apple-mobile-web-app-capable" content="yes">
 
   </head>
-  <body role="document">
+  <body>
   
   <a href="https://github.com/biocore/scikit-bio"
      class="visible-desktop hidden-xs"><img
@@ -72,7 +64,7 @@
         </button>
         <a class="navbar-brand" href="../index.html">
           scikit-bio docs</a>
-        <span class="navbar-text navbar-version pull-left"><b>0.5.1</b></span>
+        <span class="navbar-text navbar-version pull-left"><b>0.5.2</b></span>
       </div>
 
         <div class="collapse navbar-collapse nav-collapse">
@@ -151,7 +143,7 @@
 <h1>skbio.sequence.GeneticCode<a class="headerlink" href="#skbio-sequence-geneticcode" title="Permalink to this headline">¶</a></h1>
 <dl class="class">
 <dt id="skbio.sequence.GeneticCode">
-<em class="property">class </em><code class="descclassname">skbio.sequence.</code><code class="descname">GeneticCode</code><span class="sig-paren">(</span><em>amino_acids</em>, <em>starts</em>, <em>name=''</em><span class="sig-paren">)</span><a class="reference external" href="http://github.com/biocore/scikit-bio/blob/0.5.1/skbio/sequence/_genetic_code.py#L17"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#skbio.sequence.GeneticCode" title="Permalink to this definition">¶</a></dt>
+<em class="property">class </em><code class="descclassname">skbio.sequence.</code><code class="descname">GeneticCode</code><span class="sig-paren">(</span><em>amino_acids</em>, <em>starts</em>, <em>name=''</em><span class="sig-paren">)</span><a class="reference external" href="http://github.com/biocore/scikit-bio/blob/0.5.2/skbio/sequence/_genetic_code.py#L17"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#skbio.sequence.GeneticCode" title="Permalink to this definition">¶</a></dt>
 <dd><p>Genetic code for translating codons to amino acids.</p>
 <table class="docutils field-list" frame="void" rules="none">
 <col class="field-name" />
@@ -160,16 +152,16 @@
 <tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><p class="first"><strong>amino_acids</strong> : consumable by <code class="docutils literal"><span class="pre">skbio.Protein</span></code> constructor</p>
 <blockquote>
 <div><p>64-character vector containing IUPAC amino acid characters. The order
-of the amino acids should correspond to NCBI&#8217;s codon order (see <em>Notes</em>
-section below). <cite>amino_acids</cite> is the &#8220;AAs&#8221; field in NCBI&#8217;s genetic
-code format <a class="reference internal" href="#r195" id="id1">[R195]</a>.</p>
+of the amino acids should correspond to NCBI’s codon order (see <em>Notes</em>
+section below). <cite>amino_acids</cite> is the “AAs” field in NCBI’s genetic
+code format <a class="reference internal" href="#r356356" id="id1">[R356356]</a>.</p>
 </div></blockquote>
 <p><strong>starts</strong> : consumable by <code class="docutils literal"><span class="pre">skbio.Protein</span></code> constructor</p>
 <blockquote>
 <div><p>64-character vector containing only M and - characters, with start
 codons indicated by M. The order of the amino acids should correspond
-to NCBI&#8217;s codon order (see <em>Notes</em> section below). <cite>starts</cite> is the
-&#8220;Starts&#8221; field in NCBI&#8217;s genetic code format <a class="reference internal" href="#r195" id="id2">[R195]</a>.</p>
+to NCBI’s codon order (see <em>Notes</em> section below). <cite>starts</cite> is the
+“Starts” field in NCBI’s genetic code format <a class="reference internal" href="#r356356" id="id2">[R356356]</a>.</p>
 </div></blockquote>
 <p><strong>name</strong> : str, optional</p>
 <blockquote class="last">
@@ -186,10 +178,10 @@ functionality of the genetic code itself.</p>
 </div>
 <p class="rubric">Notes</p>
 <p>The genetic codes available via <code class="docutils literal"><span class="pre">GeneticCode.from_ncbi</span></code> and used
-throughout the examples are defined in <a class="reference internal" href="#r195" id="id3">[R195]</a>. The genetic code strings
+throughout the examples are defined in <a class="reference internal" href="#r356356" id="id3">[R356356]</a>. The genetic code strings
 defined there are directly compatible with the <code class="docutils literal"><span class="pre">GeneticCode</span></code> constructor.</p>
-<p>The order of <cite>amino_acids</cite> and <cite>starts</cite> should correspond to NCBI&#8217;s codon
-order, defined in <a class="reference internal" href="#r195" id="id4">[R195]</a>:</p>
+<p>The order of <cite>amino_acids</cite> and <cite>starts</cite> should correspond to NCBI’s codon
+order, defined in <a class="reference internal" href="#r356356" id="id4">[R356356]</a>:</p>
 <div class="highlight-default"><div class="highlight"><pre><span></span><span class="n">UUUUUUUUUUUUUUUUCCCCCCCCCCCCCCCCAAAAAAAAAAAAAAAAGGGGGGGGGGGGGGGG</span>
 <span class="n">UUUUCCCCAAAAGGGGUUUUCCCCAAAAGGGGUUUUCCCCAAAAGGGGUUUUCCCCAAAAGGGG</span>
 <span class="n">UCAGUCAGUCAGUCAGUCAGUCAGUCAGUCAGUCAGUCAGUCAGUCAGUCAGUCAGUCAGUCAG</span>
@@ -199,14 +191,14 @@ order, defined in <a class="reference internal" href="#r195" id="id4">[R195]</a>
 while NCBI displays this same ordering using the IUPAC DNA alphabet (for
 historical purposes).</p>
 <p class="rubric">References</p>
-<table class="docutils citation" frame="void" id="r195" rules="none">
+<table class="docutils citation" frame="void" id="r356356" rules="none">
 <colgroup><col class="label" /><col /></colgroup>
 <tbody valign="top">
-<tr><td class="label">[R195]</td><td><em>(<a class="fn-backref" href="#id1">1</a>, <a class="fn-backref" href="#id2">2</a>, <a class="fn-backref" href="#id3">3</a>, <a class="fn-backref" href="#id4">4</a>, <a class="fn-backref" href="#id5">5</a>)</em> <a class="reference external" href="http://www.ncbi.nlm.nih.gov/Taxonomy/Utils/wprintgc.cgi">http://www.ncbi.nlm.nih.gov/Taxonomy/Utils/wprintgc.cgi</a></td></tr>
+<tr><td class="label">[R356356]</td><td><em>(<a class="fn-backref" href="#id1">1</a>, <a class="fn-backref" href="#id2">2</a>, <a class="fn-backref" href="#id3">3</a>, <a class="fn-backref" href="#id4">4</a>, <a class="fn-backref" href="#id5">5</a>)</em> <a class="reference external" href="http://www.ncbi.nlm.nih.gov/Taxonomy/Utils/wprintgc.cgi">http://www.ncbi.nlm.nih.gov/Taxonomy/Utils/wprintgc.cgi</a></td></tr>
 </tbody>
 </table>
 <p class="rubric">Examples</p>
-<p>Get NCBI&#8217;s standard genetic code (table ID 1, the default genetic code
+<p>Get NCBI’s standard genetic code (table ID 1, the default genetic code
 in scikit-bio):</p>
 <div class="highlight-default"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">skbio</span> <span class="k">import</span> <span class="n">GeneticCode</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">GeneticCode</span><span class="o">.</span><span class="n">from_ncbi</span><span class="p">()</span>
@@ -241,7 +233,7 @@ in scikit-bio):</p>
 <span class="go">Base3  = UCAGUCAGUCAGUCAGUCAGUCAGUCAGUCAGUCAGUCAGUCAGUCAGUCAGUCAGUCAGUCAG</span>
 </pre></div>
 </div>
-<p>Translate an RNA sequence to protein using NCBI&#8217;s standard genetic code:</p>
+<p>Translate an RNA sequence to protein using NCBI’s standard genetic code:</p>
 <div class="highlight-default"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">skbio</span> <span class="k">import</span> <span class="n">RNA</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">rna</span> <span class="o">=</span> <span class="n">RNA</span><span class="p">(</span><span class="s1">&#39;AUGCCACUUUAA&#39;</span><span class="p">)</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">GeneticCode</span><span class="o">.</span><span class="n">from_ncbi</span><span class="p">()</span><span class="o">.</span><span class="n">translate</span><span class="p">(</span><span class="n">rna</span><span class="p">)</span>
@@ -264,10 +256,10 @@ in scikit-bio):</p>
 <col width="90%" />
 </colgroup>
 <tbody valign="top">
-<tr class="row-odd"><td><a class="reference internal" href="skbio.sequence.GeneticCode.name.html#skbio.sequence.GeneticCode.name" title="skbio.sequence.GeneticCode.name"><code class="xref py py-obj docutils literal"><span class="pre">name</span></code></a></td>
+<tr class="row-odd"><td><code class="xref py py-obj docutils literal"><span class="pre">name</span></code></td>
 <td>Genetic code name.</td>
 </tr>
-<tr class="row-even"><td><a class="reference internal" href="skbio.sequence.GeneticCode.reading_frames.html#skbio.sequence.GeneticCode.reading_frames" title="skbio.sequence.GeneticCode.reading_frames"><code class="xref py py-obj docutils literal"><span class="pre">reading_frames</span></code></a></td>
+<tr class="row-even"><td><code class="xref py py-obj docutils literal"><span class="pre">reading_frames</span></code></td>
 <td>Six possible reading frames.</td>
 </tr>
 </tbody>
@@ -317,7 +309,7 @@ in scikit-bio):</p>
     </p>
     <p>
         &copy; Copyright 2014--, scikit-bio development team.<br/>
-      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 1.5a0.<br/>
+      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 1.6.5.<br/>
     </p>
   </div>
 </footer>

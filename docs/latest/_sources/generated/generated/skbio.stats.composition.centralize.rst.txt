@@ -1,5 +1,5 @@
-skbio.stats.composition.centralize
-==================================
+skbio\.stats\.composition\.centralize
+=====================================
 
 .. currentmodule:: skbio.stats.composition
 

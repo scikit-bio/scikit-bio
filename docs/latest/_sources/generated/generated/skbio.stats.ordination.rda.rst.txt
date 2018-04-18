@@ -1,5 +1,5 @@
-skbio.stats.ordination.rda
-==========================
+skbio\.stats\.ordination\.rda
+=============================
 
 .. currentmodule:: skbio.stats.ordination
 

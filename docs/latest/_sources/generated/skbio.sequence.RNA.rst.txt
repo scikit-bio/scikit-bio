@@ -1,5 +1,5 @@
-skbio.sequence.RNA
-==================
+skbio\.sequence\.RNA
+====================
 
 .. currentmodule:: skbio.sequence
 
@@ -150,23 +150,4 @@ skbio.sequence.RNA
 
 
    
-
-   .. HACK -- the point here is that we don't want this to appear in the output, but the autosummary should still generate the pages.
-      .. autosummary::
-         :toctree:
-      
-         RNA.alphabet
-         RNA.complement_map
-         RNA.default_gap_char
-         RNA.default_write_format
-         RNA.definite_chars
-         RNA.degenerate_chars
-         RNA.degenerate_map
-         RNA.gap_chars
-         RNA.interval_metadata
-         RNA.metadata
-         RNA.nondegenerate_chars
-         RNA.observed_chars
-         RNA.positional_metadata
-         RNA.values
 

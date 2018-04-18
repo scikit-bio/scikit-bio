@@ -1,5 +1,5 @@
-skbio.stats.distance.bioenv
-===========================
+skbio\.stats\.distance\.bioenv
+==============================
 
 .. currentmodule:: skbio.stats.distance
 

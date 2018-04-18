@@ -1,22 +1,16 @@
 <!DOCTYPE html>
 
-
 <html xmlns="http://www.w3.org/1999/xhtml">
   <head>
     <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
-    
-    <title>skbio.diversity.alpha.faith_pd &#8212; scikit-bio 0.5.1 documentation</title>
-    
-    <link rel="stylesheet" href="../../_static/basic.css" type="text/css" />
+    <title>skbio.diversity.alpha.faith_pd &#8212; scikit-bio 0.5.2 documentation</title>
+    <link rel="stylesheet" href="../../_static/bootstrap-sphinx.css" type="text/css" />
     <link rel="stylesheet" href="../../_static/pygments.css" type="text/css" />
     <link rel="stylesheet" href="../../_static/style.css" type="text/css" />
-    <link rel="stylesheet" href="../../_static/bootswatch-3.3.6/united/bootstrap.min.css" type="text/css" />
-    <link rel="stylesheet" href="../../_static/bootstrap-sphinx.css" type="text/css" />
-    
     <script type="text/javascript">
       var DOCUMENTATION_OPTIONS = {
         URL_ROOT:    '../../',
-        VERSION:     '0.5.1',
+        VERSION:     '0.5.2',
         COLLAPSE_INDEX: false,
         FILE_SUFFIX: '.html',
         HAS_SOURCE:  true,
@@ -27,15 +21,13 @@
     <script type="text/javascript" src="../../_static/underscore.js"></script>
     <script type="text/javascript" src="../../_static/doctools.js"></script>
     <script type="text/javascript" src="../../_static/copybutton.js"></script>
-    <script type="text/javascript" src="https://cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
+    <script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.1/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
     <script type="text/javascript" src="../../_static/js/jquery-1.11.0.min.js"></script>
     <script type="text/javascript" src="../../_static/js/jquery-fix.js"></script>
-    <script type="text/javascript" src="../../_static/bootstrap-3.3.6/js/bootstrap.min.js"></script>
+    <script type="text/javascript" src="../../_static/bootstrap-3.3.7/js/bootstrap.min.js"></script>
     <script type="text/javascript" src="../../_static/bootstrap-sphinx.js"></script>
     <link rel="index" title="Index" href="../../genindex.html" />
     <link rel="search" title="Search" href="../../search.html" />
-    <link rel="top" title="scikit-bio 0.5.1 documentation" href="../../index.html" />
-    <link rel="up" title="Alpha diversity measures (skbio.diversity.alpha)" href="../skbio.diversity.alpha.html" />
     <link rel="next" title="skbio.diversity.alpha.fisher_alpha" href="skbio.diversity.alpha.fisher_alpha.html" />
     <link rel="prev" title="skbio.diversity.alpha.esty_ci" href="skbio.diversity.alpha.esty_ci.html" />
 <meta charset='utf-8'>
@@ -44,7 +36,7 @@
 <meta name="apple-mobile-web-app-capable" content="yes">
 
   </head>
-  <body role="document">
+  <body>
   
   <a href="https://github.com/biocore/scikit-bio"
      class="visible-desktop hidden-xs"><img
@@ -72,7 +64,7 @@
         </button>
         <a class="navbar-brand" href="../../index.html">
           scikit-bio docs</a>
-        <span class="navbar-text navbar-version pull-left"><b>0.5.1</b></span>
+        <span class="navbar-text navbar-version pull-left"><b>0.5.2</b></span>
       </div>
 
         <div class="collapse navbar-collapse nav-collapse">
@@ -151,8 +143,8 @@
 <h1>skbio.diversity.alpha.faith_pd<a class="headerlink" href="#skbio-diversity-alpha-faith-pd" title="Permalink to this headline">¶</a></h1>
 <dl class="function">
 <dt id="skbio.diversity.alpha.faith_pd">
-<code class="descclassname">skbio.diversity.alpha.</code><code class="descname">faith_pd</code><span class="sig-paren">(</span><em>counts</em>, <em>otu_ids</em>, <em>tree</em>, <em>validate=True</em><span class="sig-paren">)</span><a class="reference external" href="http://github.com/biocore/scikit-bio/blob/0.5.1/skbio/diversity/alpha/_faith_pd.py#L19"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#skbio.diversity.alpha.faith_pd" title="Permalink to this definition">¶</a></dt>
-<dd><p>Compute Faith&#8217;s phylogenetic diversity metric (PD)</p>
+<code class="descclassname">skbio.diversity.alpha.</code><code class="descname">faith_pd</code><span class="sig-paren">(</span><em>counts</em>, <em>otu_ids</em>, <em>tree</em>, <em>validate=True</em><span class="sig-paren">)</span><a class="reference external" href="http://github.com/biocore/scikit-bio/blob/0.5.2/skbio/diversity/alpha/_faith_pd.py#L19"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#skbio.diversity.alpha.faith_pd" title="Permalink to this definition">¶</a></dt>
+<dd><p>Compute Faith’s phylogenetic diversity metric (PD)</p>
 <p>State: Experimental as of 0.4.1.</p>
 <table class="docutils field-list" frame="void" rules="none">
 <col class="field-name" />
@@ -174,11 +166,11 @@ be a superset of <code class="docutils literal"><span class="pre">otu_ids</span>
 </div></blockquote>
 <p><strong>validate: bool, optional</strong></p>
 <blockquote>
-<div><p>If <cite>False</cite>, validation of the input won&#8217;t be performed. This step can
+<div><p>If <cite>False</cite>, validation of the input won’t be performed. This step can
 be slow, so if validation is run elsewhere it can be disabled here.
 However, invalid input data can lead to invalid results or error
 messages that are hard to interpret, so this step should not be
-bypassed if you&#8217;re not certain that your input data are valid. See
+bypassed if you’re not certain that your input data are valid. See
 <a class="reference internal" href="../../diversity.html#module-skbio.diversity" title="skbio.diversity"><code class="xref py py-mod docutils literal"><span class="pre">skbio.diversity</span></code></a> for the description of what validation entails
 so you can determine if you can safely disable validation.</p>
 </div></blockquote>
@@ -203,9 +195,9 @@ so you can determine if you can safely disable validation.</p>
 <p class="last"><a class="reference internal" href="../../diversity.html#module-skbio.diversity" title="skbio.diversity"><code class="xref py py-obj docutils literal"><span class="pre">skbio.diversity</span></code></a>, <a class="reference internal" href="../skbio.diversity.alpha_diversity.html#skbio.diversity.alpha_diversity" title="skbio.diversity.alpha_diversity"><code class="xref py py-obj docutils literal"><span class="pre">skbio.diversity.alpha_diversity</span></code></a></p>
 </div>
 <p class="rubric">Notes</p>
-<p>Faith&#8217;s phylogenetic diversity, often referred to as PD, was originally
-described in <a class="reference internal" href="#r27" id="id1">[R27]</a>.</p>
-<p>If computing Faith&#8217;s PD for multiple samples, using
+<p>Faith’s phylogenetic diversity, often referred to as PD, was originally
+described in <a class="reference internal" href="#r5354" id="id1">[R5354]</a>.</p>
+<p>If computing Faith’s PD for multiple samples, using
 <code class="docutils literal"><span class="pre">skbio.diversity.alpha_diversity</span></code> will be much faster than calling this
 function individually on each sample.</p>
 <p>This implementation differs from that in PyCogent (and therefore QIIME
@@ -218,20 +210,20 @@ IDs that were not present the tree. To reproduce Faith PD results from
 PyCogent with scikit-bio, ensure that your PyCogent Faith PD calculations
 are performed on a rooted tree and that all OTU IDs are present in the
 tree.</p>
-<p>This implementation of Faith&#8217;s PD is based on the array-based
-implementation of UniFrac described in <a class="reference internal" href="#r28" id="id2">[R28]</a>.</p>
+<p>This implementation of Faith’s PD is based on the array-based
+implementation of UniFrac described in <a class="reference internal" href="#r5454" id="id2">[R5454]</a>.</p>
 <p class="rubric">References</p>
-<table class="docutils citation" frame="void" id="r27" rules="none">
+<table class="docutils citation" frame="void" id="r5354" rules="none">
 <colgroup><col class="label" /><col /></colgroup>
 <tbody valign="top">
-<tr><td class="label">[R27]</td><td><em>(<a class="fn-backref" href="#id1">1</a>, <a class="fn-backref" href="#id3">2</a>)</em> Faith, D. P. Conservation evaluation and phylogenetic diversity.
+<tr><td class="label">[R5354]</td><td><em>(<a class="fn-backref" href="#id1">1</a>, <a class="fn-backref" href="#id3">2</a>)</em> Faith, D. P. Conservation evaluation and phylogenetic diversity.
 Biol. Conserv. (1992).</td></tr>
 </tbody>
 </table>
-<table class="docutils citation" frame="void" id="r28" rules="none">
+<table class="docutils citation" frame="void" id="r5454" rules="none">
 <colgroup><col class="label" /><col /></colgroup>
 <tbody valign="top">
-<tr><td class="label">[R28]</td><td><em>(<a class="fn-backref" href="#id2">1</a>, <a class="fn-backref" href="#id4">2</a>)</em> Hamady M, Lozupone C, Knight R. Fast UniFrac: facilitating high-
+<tr><td class="label">[R5454]</td><td><em>(<a class="fn-backref" href="#id2">1</a>, <a class="fn-backref" href="#id4">2</a>)</em> Hamady M, Lozupone C, Knight R. Fast UniFrac: facilitating high-
 throughput phylogenetic analyses of microbial communities including
 analysis of pyrosequencing and PhyloChip data.  ISME J. 4(1):17-27
 (2010).</td></tr>
@@ -246,7 +238,7 @@ observed in the sample.</p>
 </pre></div>
 </div>
 <p>Because Faith PD is a phylogenetic diversity metric, we need to know which
-OTU each count corresponds to, which we&#8217;ll provide as <code class="docutils literal"><span class="pre">otu_ids</span></code>.</p>
+OTU each count corresponds to, which we’ll provide as <code class="docutils literal"><span class="pre">otu_ids</span></code>.</p>
 <div class="highlight-default"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">otu_ids</span> <span class="o">=</span> <span class="p">[</span><span class="s1">&#39;OTU1&#39;</span><span class="p">,</span> <span class="s1">&#39;OTU2&#39;</span><span class="p">,</span> <span class="s1">&#39;OTU3&#39;</span><span class="p">,</span> <span class="s1">&#39;OTU4&#39;</span><span class="p">,</span> <span class="s1">&#39;OTU5&#39;</span><span class="p">,</span> <span class="s1">&#39;OTU6&#39;</span><span class="p">,</span> <span class="s1">&#39;OTU7&#39;</span><span class="p">,</span>
 <span class="gp">... </span>           <span class="s1">&#39;OTU8&#39;</span><span class="p">]</span>
 </pre></div>
@@ -285,7 +277,7 @@ OTU each count corresponds to, which we&#8217;ll provide as <code class="docutil
     </p>
     <p>
         &copy; Copyright 2014--, scikit-bio development team.<br/>
-      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 1.5a0.<br/>
+      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 1.6.5.<br/>
     </p>
   </div>
 </footer>

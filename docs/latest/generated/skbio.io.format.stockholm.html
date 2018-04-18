@@ -1,22 +1,16 @@
 <!DOCTYPE html>
 
-
 <html xmlns="http://www.w3.org/1999/xhtml">
   <head>
     <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
-    
-    <title>Stockholm format (skbio.io.format.stockholm) &#8212; scikit-bio 0.5.1 documentation</title>
-    
-    <link rel="stylesheet" href="../_static/basic.css" type="text/css" />
+    <title>Stockholm format (skbio.io.format.stockholm) &#8212; scikit-bio 0.5.2 documentation</title>
+    <link rel="stylesheet" href="../_static/bootstrap-sphinx.css" type="text/css" />
     <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
     <link rel="stylesheet" href="../_static/style.css" type="text/css" />
-    <link rel="stylesheet" href="../_static/bootswatch-3.3.6/united/bootstrap.min.css" type="text/css" />
-    <link rel="stylesheet" href="../_static/bootstrap-sphinx.css" type="text/css" />
-    
     <script type="text/javascript">
       var DOCUMENTATION_OPTIONS = {
         URL_ROOT:    '../',
-        VERSION:     '0.5.1',
+        VERSION:     '0.5.2',
         COLLAPSE_INDEX: false,
         FILE_SUFFIX: '.html',
         HAS_SOURCE:  true,
@@ -27,16 +21,14 @@
     <script type="text/javascript" src="../_static/underscore.js"></script>
     <script type="text/javascript" src="../_static/doctools.js"></script>
     <script type="text/javascript" src="../_static/copybutton.js"></script>
-    <script type="text/javascript" src="https://cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
+    <script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.1/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
     <script type="text/javascript" src="../_static/js/jquery-1.11.0.min.js"></script>
     <script type="text/javascript" src="../_static/js/jquery-fix.js"></script>
-    <script type="text/javascript" src="../_static/bootstrap-3.3.6/js/bootstrap.min.js"></script>
+    <script type="text/javascript" src="../_static/bootstrap-3.3.7/js/bootstrap.min.js"></script>
     <script type="text/javascript" src="../_static/bootstrap-sphinx.js"></script>
     <link rel="index" title="Index" href="../genindex.html" />
     <link rel="search" title="Search" href="../search.html" />
-    <link rel="top" title="scikit-bio 0.5.1 documentation" href="../index.html" />
-    <link rel="up" title="File I/O (skbio.io)" href="../io.html" />
-    <link rel="next" title="GenBank format (skbio.io.format.genbank)" href="skbio.io.format.genbank.html" />
+    <link rel="next" title="skbio.io.registry.write" href="skbio.io.registry.write.html" />
     <link rel="prev" title="QSeq format (skbio.io.format.qseq)" href="skbio.io.format.qseq.html" />
 <meta charset='utf-8'>
 <meta http-equiv='X-UA-Compatible' content='IE=edge,chrome=1'>
@@ -44,7 +36,7 @@
 <meta name="apple-mobile-web-app-capable" content="yes">
 
   </head>
-  <body role="document">
+  <body>
   
   <a href="https://github.com/biocore/scikit-bio"
      class="visible-desktop hidden-xs"><img
@@ -72,7 +64,7 @@
         </button>
         <a class="navbar-brand" href="../index.html">
           scikit-bio docs</a>
-        <span class="navbar-text navbar-version pull-left"><b>0.5.1</b></span>
+        <span class="navbar-text navbar-version pull-left"><b>0.5.2</b></span>
       </div>
 
         <div class="collapse navbar-collapse nav-collapse">
@@ -172,7 +164,7 @@
 optionally supports storing arbitrary alignment features (metadata). Features
 can be placed into four different categories: GF, GS, GR, and GC (described in
 more detail below).</p>
-<p>An example Stockholm file, taken from <a class="reference internal" href="#r189" id="id1">[R189]</a>:</p>
+<p>An example Stockholm file, taken from <a class="reference internal" href="#r348" id="id1">[R348]</a>:</p>
 <div class="highlight-none"><div class="highlight"><pre><span></span># STOCKHOLM 1.0
 #=GF ID    UPSK
 #=GF SE    Predicted; Infernal
@@ -254,12 +246,12 @@ when writing from a <code class="docutils literal"><span class="pre">TabularMSA<
 <h3>Metadata<a class="headerlink" href="#metadata" title="Permalink to this headline">¶</a></h3>
 <p>Stockholm files support storing arbitrary metadata (features) about the MSA.
 All metadata described in the following sections are optional and may appear in
-any order. Metadata &#8220;mark-up&#8221; lines begin with either <code class="docutils literal"><span class="pre">#=GF</span></code>, <code class="docutils literal"><span class="pre">#=GS</span></code>,
+any order. Metadata “mark-up” lines begin with either <code class="docutils literal"><span class="pre">#=GF</span></code>, <code class="docutils literal"><span class="pre">#=GS</span></code>,
 <code class="docutils literal"><span class="pre">#=GR</span></code>, or <code class="docutils literal"><span class="pre">#=GC</span></code>, and each line describes a single feature of the
 alignment.</p>
 <div class="admonition note">
 <p class="first admonition-title">Note</p>
-<p class="last">Stockholm format supports generic features. <a class="reference internal" href="#r189" id="id2">[R189]</a> and <a class="reference internal" href="#r190" id="id3">[R190]</a> provide a
+<p class="last">Stockholm format supports generic features. <a class="reference internal" href="#r348" id="id2">[R348]</a> and <a class="reference internal" href="#r349" id="id3">[R349]</a> provide a
 list of common features output by Pfam/Rfam. scikit-bio does not
 require that these features are present. These features are processed in the
 same way as any arbitrary feature would be, as a simple key-value pair of
@@ -269,7 +261,7 @@ converted to type <code class="docutils literal"><span class="pre">str</span></c
 <div class="admonition note">
 <p class="first admonition-title">Note</p>
 <p>When writing a Stockholm file, scikit-bio will place the metadata in
-the format&#8217;s recommended order:</p>
+the format’s recommended order:</p>
 <ul class="last simple">
 <li>GF: Above the alignment</li>
 <li>GS: Above the alignment (after GF)</li>
@@ -283,7 +275,7 @@ the format&#8217;s recommended order:</p>
 number of sequences in the alignment. Starts with <code class="docutils literal"><span class="pre">#=GF</span></code> followed by a
 feature name and data relating to the feature. Typically comes first in a
 Stockholm file.</p>
-<p>For example (taken from <a class="reference internal" href="#r190" id="id4">[R190]</a>):</p>
+<p>For example (taken from <a class="reference internal" href="#r349" id="id4">[R349]</a>):</p>
 <div class="highlight-none"><div class="highlight"><pre><span></span>#=GF DE CBS domain
 </pre></div>
 </div>
@@ -293,7 +285,7 @@ Stockholm file.</p>
 <p class="first admonition-title">Note</p>
 <p class="last">When reading, duplicate GF feature names will have their values
 concatenated in the order they appear in the file. Concatenation will
-also add a space between lines if one isn&#8217;t already there in order to avoid
+also add a space between lines if one isn’t already there in order to avoid
 joining words together. When writing, each GF feature will be placed on its
 own line, regardless of length.</p>
 </div>
@@ -301,7 +293,7 @@ own line, regardless of length.</p>
 <p class="first admonition-title">Note</p>
 <p>Trees labelled with <code class="docutils literal"><span class="pre">NH</span></code>/<code class="docutils literal"><span class="pre">TN</span></code> are handled differently than other
 GF features. When reading a Stockholm file with these features, the reader
-follows the rules described in <a class="reference internal" href="#r190" id="id5">[R190]</a>. Trees split over multiple lines will
+follows the rules described in <a class="reference internal" href="#r349" id="id5">[R349]</a>. Trees split over multiple lines will
 have their values concatenated. Unlike other GF features, trees will never
 have a space added when they are concatenated.</p>
 <p>A single tree without an identifier will be stored as:</p>
@@ -369,7 +361,7 @@ reference number (<code class="docutils literal"><span class="pre">RN</span></co
 Starts with <code class="docutils literal"><span class="pre">#=GS</span></code> followed by the sequence name followed by a feature name
 and data relating to the feature. Typically comes after GF metadata in a
 Stockholm file.</p>
-<p>For example (taken from <a class="reference internal" href="#r190" id="id6">[R190]</a>):</p>
+<p>For example (taken from <a class="reference internal" href="#r349" id="id6">[R349]</a>):</p>
 <div class="highlight-none"><div class="highlight"><pre><span></span>#=GS O83071/259-312 AC O83071
 </pre></div>
 </div>
@@ -380,7 +372,7 @@ Stockholm file.</p>
 <p class="first admonition-title">Note</p>
 <p class="last">When reading, duplicate GS feature names will have their values
 concatenated in the order they appear in the file. Concatenation will
-also add a space between lines if one isn&#8217;t already there in order to avoid
+also add a space between lines if one isn’t already there in order to avoid
 joining words together. When writing, each GS feature will be placed on its
 own line, regardless of length.</p>
 </div>
@@ -391,7 +383,7 @@ own line, regardless of length.</p>
 alignment. Starts with <code class="docutils literal"><span class="pre">#=GR</span></code> followed by the sequence name followed by a
 feature name and data relating to the feature, one character per column.
 Typically comes after the sequence line it relates to.</p>
-<p>For example (taken from <a class="reference internal" href="#r190" id="id7">[R190]</a>):</p>
+<p>For example (taken from <a class="reference internal" href="#r349" id="id7">[R349]</a>):</p>
 <div class="highlight-none"><div class="highlight"><pre><span></span>#=GR O31698/18-71 SS    CCCHHHHHHHHHHHHHHH..EEEEEEEE....EEEEEEEEHHH
 </pre></div>
 </div>
@@ -410,7 +402,7 @@ disallowed.</p>
 Starts with <code class="docutils literal"><span class="pre">#=GC</span></code> followed by a feature name and data relating to the
 feature, one character per column. Typically comes at the end of the multiple
 sequence alignment.</p>
-<p>For example (taken from <a class="reference internal" href="#r190" id="id8">[R190]</a>):</p>
+<p>For example (taken from <a class="reference internal" href="#r349" id="id8">[R349]</a>):</p>
 <div class="highlight-none"><div class="highlight"><pre><span></span>#=GC SS_cons            CCCCCHHHHHHHHHHHHH..EEEEEEEE....EEEEEEEEEEH
 </pre></div>
 </div>
@@ -443,13 +435,13 @@ be read into a <code class="docutils literal"><span class="pre">TabularMSA</span
 type of in-memory sequence object to read each aligned sequence into. This must
 be a subclass of <code class="docutils literal"><span class="pre">GrammaredSequence</span></code> (e.g., <code class="docutils literal"><span class="pre">DNA</span></code>, <code class="docutils literal"><span class="pre">RNA</span></code>, <code class="docutils literal"><span class="pre">Protein</span></code>)
 and is a required format parameter. For example, if you know that the Stockholm
-file you&#8217;re reading contains DNA sequences, you would pass <code class="docutils literal"><span class="pre">constructor=DNA</span></code>
+file you’re reading contains DNA sequences, you would pass <code class="docutils literal"><span class="pre">constructor=DNA</span></code>
 to the reader call.</p>
 </div>
 <div class="section" id="examples">
 <h2>Examples<a class="headerlink" href="#examples" title="Permalink to this headline">¶</a></h2>
 <p>Suppose we have a Stockholm file containing an MSA of protein sequences
-(modified from <a class="reference internal" href="#r190" id="id9">[R190]</a>):</p>
+(modified from <a class="reference internal" href="#r349" id="id9">[R349]</a>):</p>
 <div class="highlight-default"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="kn">import</span> <span class="nn">skbio.io</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">io</span> <span class="k">import</span> <span class="n">StringIO</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">skbio</span> <span class="k">import</span> <span class="n">Protein</span><span class="p">,</span> <span class="n">TabularMSA</span>
@@ -541,7 +533,7 @@ to the reader call.</p>
 <span class="gp">...</span>
 </pre></div>
 </div>
-<p>Let&#8217;s write this <code class="docutils literal"><span class="pre">TabularMSA</span></code> in Stockholm format:</p>
+<p>Let’s write this <code class="docutils literal"><span class="pre">TabularMSA</span></code> in Stockholm format:</p>
 <div class="highlight-default"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">fh</span> <span class="o">=</span> <span class="n">StringIO</span><span class="p">()</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">_</span> <span class="o">=</span> <span class="n">msa</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="n">fh</span><span class="p">,</span> <span class="nb">format</span><span class="o">=</span><span class="s1">&#39;stockholm&#39;</span><span class="p">)</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="nb">print</span><span class="p">(</span><span class="n">fh</span><span class="o">.</span><span class="n">getvalue</span><span class="p">())</span>
@@ -567,16 +559,16 @@ to the reader call.</p>
 </div>
 <div class="section" id="references">
 <h1>References<a class="headerlink" href="#references" title="Permalink to this headline">¶</a></h1>
-<table class="docutils citation" frame="void" id="r189" rules="none">
+<table class="docutils citation" frame="void" id="r348" rules="none">
 <colgroup><col class="label" /><col /></colgroup>
 <tbody valign="top">
-<tr><td class="label">[R189]</td><td><em>(<a class="fn-backref" href="#id1">1</a>, <a class="fn-backref" href="#id2">2</a>)</em> <a class="reference external" href="https://en.wikipedia.org/wiki/Stockholm_format">https://en.wikipedia.org/wiki/Stockholm_format</a></td></tr>
+<tr><td class="label">[R348]</td><td><em>(<a class="fn-backref" href="#id1">1</a>, <a class="fn-backref" href="#id2">2</a>)</em> <a class="reference external" href="https://en.wikipedia.org/wiki/Stockholm_format">https://en.wikipedia.org/wiki/Stockholm_format</a></td></tr>
 </tbody>
 </table>
-<table class="docutils citation" frame="void" id="r190" rules="none">
+<table class="docutils citation" frame="void" id="r349" rules="none">
 <colgroup><col class="label" /><col /></colgroup>
 <tbody valign="top">
-<tr><td class="label">[R190]</td><td><em>(<a class="fn-backref" href="#id3">1</a>, <a class="fn-backref" href="#id4">2</a>, <a class="fn-backref" href="#id5">3</a>, <a class="fn-backref" href="#id6">4</a>, <a class="fn-backref" href="#id7">5</a>, <a class="fn-backref" href="#id8">6</a>, <a class="fn-backref" href="#id9">7</a>)</em> <a class="reference external" href="http://sonnhammer.sbc.su.se/Stockholm.html">http://sonnhammer.sbc.su.se/Stockholm.html</a></td></tr>
+<tr><td class="label">[R349]</td><td><em>(<a class="fn-backref" href="#id3">1</a>, <a class="fn-backref" href="#id4">2</a>, <a class="fn-backref" href="#id5">3</a>, <a class="fn-backref" href="#id6">4</a>, <a class="fn-backref" href="#id7">5</a>, <a class="fn-backref" href="#id8">6</a>, <a class="fn-backref" href="#id9">7</a>)</em> <a class="reference external" href="http://sonnhammer.sbc.su.se/Stockholm.html">http://sonnhammer.sbc.su.se/Stockholm.html</a></td></tr>
 </tbody>
 </table>
 </div>
@@ -595,7 +587,7 @@ to the reader call.</p>
     </p>
     <p>
         &copy; Copyright 2014--, scikit-bio development team.<br/>
-      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 1.5a0.<br/>
+      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 1.6.5.<br/>
     </p>
   </div>
 </footer>

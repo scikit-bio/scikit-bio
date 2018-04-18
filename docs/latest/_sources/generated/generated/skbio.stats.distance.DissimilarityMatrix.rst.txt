@@ -1,5 +1,5 @@
-skbio.stats.distance.DissimilarityMatrix
-========================================
+skbio\.stats\.distance\.DissimilarityMatrix
+===========================================
 
 .. currentmodule:: skbio.stats.distance
 
@@ -60,18 +60,4 @@ skbio.stats.distance.DissimilarityMatrix
 
 
    
-
-   .. HACK -- the point here is that we don't want this to appear in the output, but the autosummary should still generate the pages.
-      .. autosummary::
-         :toctree:
-      
-         DissimilarityMatrix.T
-         DissimilarityMatrix.data
-         DissimilarityMatrix.default_write_format
-         DissimilarityMatrix.dtype
-         DissimilarityMatrix.ids
-         DissimilarityMatrix.png
-         DissimilarityMatrix.shape
-         DissimilarityMatrix.size
-         DissimilarityMatrix.svg
 

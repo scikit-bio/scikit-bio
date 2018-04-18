@@ -1,22 +1,16 @@
 <!DOCTYPE html>
 
-
 <html xmlns="http://www.w3.org/1999/xhtml">
   <head>
     <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
-    
-    <title>skbio.stats.power.subsample_power &#8212; scikit-bio 0.5.1 documentation</title>
-    
-    <link rel="stylesheet" href="../../_static/basic.css" type="text/css" />
+    <title>skbio.stats.power.subsample_power &#8212; scikit-bio 0.5.2 documentation</title>
+    <link rel="stylesheet" href="../../_static/bootstrap-sphinx.css" type="text/css" />
     <link rel="stylesheet" href="../../_static/pygments.css" type="text/css" />
     <link rel="stylesheet" href="../../_static/style.css" type="text/css" />
-    <link rel="stylesheet" href="../../_static/bootswatch-3.3.6/united/bootstrap.min.css" type="text/css" />
-    <link rel="stylesheet" href="../../_static/bootstrap-sphinx.css" type="text/css" />
-    
     <script type="text/javascript">
       var DOCUMENTATION_OPTIONS = {
         URL_ROOT:    '../../',
-        VERSION:     '0.5.1',
+        VERSION:     '0.5.2',
         COLLAPSE_INDEX: false,
         FILE_SUFFIX: '.html',
         HAS_SOURCE:  true,
@@ -27,15 +21,13 @@
     <script type="text/javascript" src="../../_static/underscore.js"></script>
     <script type="text/javascript" src="../../_static/doctools.js"></script>
     <script type="text/javascript" src="../../_static/copybutton.js"></script>
-    <script type="text/javascript" src="https://cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
+    <script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.1/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
     <script type="text/javascript" src="../../_static/js/jquery-1.11.0.min.js"></script>
     <script type="text/javascript" src="../../_static/js/jquery-fix.js"></script>
-    <script type="text/javascript" src="../../_static/bootstrap-3.3.6/js/bootstrap.min.js"></script>
+    <script type="text/javascript" src="../../_static/bootstrap-3.3.7/js/bootstrap.min.js"></script>
     <script type="text/javascript" src="../../_static/bootstrap-sphinx.js"></script>
     <link rel="index" title="Index" href="../../genindex.html" />
     <link rel="search" title="Search" href="../../search.html" />
-    <link rel="top" title="scikit-bio 0.5.1 documentation" href="../../index.html" />
-    <link rel="up" title="Empirical Power Estimation (skbio.stats.power)" href="../skbio.stats.power.html" />
     <link rel="next" title="skbio.stats.power.subsample_paired_power" href="skbio.stats.power.subsample_paired_power.html" />
     <link rel="prev" title="Empirical Power Estimation (skbio.stats.power)" href="../skbio.stats.power.html" />
 <meta charset='utf-8'>
@@ -44,7 +36,7 @@
 <meta name="apple-mobile-web-app-capable" content="yes">
 
   </head>
-  <body role="document">
+  <body>
   
   <a href="https://github.com/biocore/scikit-bio"
      class="visible-desktop hidden-xs"><img
@@ -72,7 +64,7 @@
         </button>
         <a class="navbar-brand" href="../../index.html">
           scikit-bio docs</a>
-        <span class="navbar-text navbar-version pull-left"><b>0.5.1</b></span>
+        <span class="navbar-text navbar-version pull-left"><b>0.5.2</b></span>
       </div>
 
         <div class="collapse navbar-collapse nav-collapse">
@@ -151,7 +143,7 @@
 <h1>skbio.stats.power.subsample_power<a class="headerlink" href="#skbio-stats-power-subsample-power" title="Permalink to this headline">¶</a></h1>
 <dl class="function">
 <dt id="skbio.stats.power.subsample_power">
-<code class="descclassname">skbio.stats.power.</code><code class="descname">subsample_power</code><span class="sig-paren">(</span><em>test</em>, <em>samples</em>, <em>draw_mode='ind'</em>, <em>alpha_pwr=0.05</em>, <em>ratio=None</em>, <em>max_counts=50</em>, <em>counts_interval=10</em>, <em>min_counts=None</em>, <em>num_iter=500</em>, <em>num_runs=10</em><span class="sig-paren">)</span><a class="reference external" href="http://github.com/biocore/scikit-bio/blob/0.5.1/skbio/stats/power.py#L152"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#skbio.stats.power.subsample_power" title="Permalink to this definition">¶</a></dt>
+<code class="descclassname">skbio.stats.power.</code><code class="descname">subsample_power</code><span class="sig-paren">(</span><em>test</em>, <em>samples</em>, <em>draw_mode='ind'</em>, <em>alpha_pwr=0.05</em>, <em>ratio=None</em>, <em>max_counts=50</em>, <em>counts_interval=10</em>, <em>min_counts=None</em>, <em>num_iter=500</em>, <em>num_runs=10</em><span class="sig-paren">)</span><a class="reference external" href="http://github.com/biocore/scikit-bio/blob/0.5.2/skbio/stats/power.py#L152"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#skbio.stats.power.subsample_power" title="Permalink to this definition">¶</a></dt>
 <dd><p>Subsamples data to iteratively calculate power</p>
 <p>State: Experimental as of 0.4.0.</p>
 <table class="docutils field-list" frame="void" rules="none">
@@ -169,16 +161,16 @@ array of p values.</p>
 <div><p><cite>samples</cite> can be a list of lists or a list of arrays where each
 sublist or row in the array corresponds to a sampled group.</p>
 </div></blockquote>
-<p><strong>draw_mode</strong> : {&#8220;ind&#8221;, &#8220;matched&#8221;}, optional</p>
+<p><strong>draw_mode</strong> : {“ind”, “matched”}, optional</p>
 <blockquote>
-<div><p>&#8220;matched&#8221; samples should be used when observations in
+<div><p>“matched” samples should be used when observations in
 samples have corresponding observations in other groups. For instance,
 this may be useful when working with regression data where
 <span class="math">\(x_{1}, x_{2}, ..., x_{n}\)</span> maps to
 <span class="math">\(y_{1}, y_{2}, ..., y_{n}\)</span>. Sample vectors must be the same
-length in &#8220;matched&#8221; mode.
+length in “matched” mode.
 If there is no reciprocal relationship between samples, then
-&#8220;ind&#8221; mode should be used.</p>
+“ind” mode should be used.</p>
 </div></blockquote>
 <p><strong>alpha_pwr</strong> : float, optional</p>
 <blockquote>
@@ -233,7 +225,7 @@ two-dimensional instead of three.</p>
 </tr>
 <tr class="field-odd field"><th class="field-name">Raises:</th><td class="field-body"><p class="first"><strong>ValueError</strong></p>
 <blockquote>
-<div><p>If the <cite>mode</cite> is &#8220;matched&#8221;, an error will occur if the arrays in
+<div><p>If the <cite>mode</cite> is “matched”, an error will occur if the arrays in
 <cite>samples</cite> are not the same length.</p>
 </div></blockquote>
 <p><strong>ValueError</strong></p>
@@ -259,7 +251,7 @@ sample start and the max value, the function raises a ValueError.</p>
 </tbody>
 </table>
 <p class="rubric">Examples</p>
-<p>Let&#8217;s say we wanted to look at the relationship between the presence of a
+<p>Let’s say we wanted to look at the relationship between the presence of a
 specific bacteria, <em>Gardnerella vaginalis</em> in the vaginal community, and
 the probability of a pre or post menopausal woman experiencing a urinary
 tract infection (UTI). Healthy women were enrolled in the study either
@@ -283,8 +275,8 @@ these samples using a binomial model. (<em>Note that this is a simulation.</em>)
 <span class="go">21</span>
 </pre></div>
 </div>
-<p>Let&#8217;s set up a test function, so we can test the probability of
-finding a difference in frequency between the two groups. We&#8217;ll use
+<p>Let’s set up a test function, so we can test the probability of
+finding a difference in frequency between the two groups. We’ll use
 <cite>scipy.stats.chisquare</cite> to look for the difference in frequency between
 groups.</p>
 <div class="highlight-default"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">scipy.stats</span> <span class="k">import</span> <span class="n">chisquare</span>
@@ -292,18 +284,18 @@ groups.</p>
 <span class="gp">... </span>    <span class="nb">range</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">x</span><span class="p">))]))[</span><span class="mi">1</span><span class="p">]</span>
 </pre></div>
 </div>
-<p>Let&#8217;s make sure that our two distributions are different.</p>
+<p>Let’s make sure that our two distributions are different.</p>
 <div class="highlight-default"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="nb">print</span><span class="p">(</span><span class="nb">round</span><span class="p">(</span><span class="n">test</span><span class="p">([</span><span class="n">pre_rate</span><span class="p">,</span> <span class="n">pos_rate</span><span class="p">]),</span> <span class="mi">3</span><span class="p">))</span>
 <span class="go">0.003</span>
 </pre></div>
 </div>
-<p>Since there are an even number of samples, and we don&#8217;t have enough
-information to try controlling the data, we&#8217;ll use
+<p>Since there are an even number of samples, and we don’t have enough
+information to try controlling the data, we’ll use
 <cite>skbio.stats.power.subsample_power</cite> to compare the two groups. If we had
 metadata about other risk factors, like a reproductive history, BMI,
 tobacco use, we might want to use
 <cite>skbio.stats.power.subsample_paired_power</cite>.
-We&#8217;ll also use &#8220;ind&#8221; <cite>draw_mode</cite>, since there is no linkage between the
+We’ll also use “ind” <cite>draw_mode</cite>, since there is no linkage between the
 two groups of samples.</p>
 <div class="highlight-default"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">skbio.stats.power</span> <span class="k">import</span> <span class="n">subsample_power</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">pwr_est</span><span class="p">,</span> <span class="n">counts</span> <span class="o">=</span> <span class="n">subsample_power</span><span class="p">(</span><span class="n">test</span><span class="o">=</span><span class="n">test</span><span class="p">,</span>
@@ -338,8 +330,8 @@ can model the abundance of the metabolite as a normal distribution.</p>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">met_neg</span><span class="p">[</span><span class="n">met_neg</span> <span class="o">&lt;</span> <span class="mi">0</span><span class="p">]</span> <span class="o">=</span> <span class="mi">0</span>
 </pre></div>
 </div>
-<p>Let&#8217;s compare the populations with a kruskal-wallis test. Physically, there
-cannot be a negative concentration of a chemical, so we&#8217;ve set the lower
+<p>Let’s compare the populations with a kruskal-wallis test. Physically, there
+cannot be a negative concentration of a chemical, so we’ve set the lower
 bound at 0. This means that we can no longer assume our distribution is
 normal.</p>
 <div class="highlight-default"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">scipy.stats</span> <span class="k">import</span> <span class="n">kruskal</span>
@@ -352,7 +344,7 @@ normal.</p>
 <p>When we go to perform the statistical test on all the data, you might
 notice that there are twice as many samples from women with <em>G. vaginalis</em>
 than those without. It might make sense to account for this difference when
-we&#8217;re testing power. So, we&#8217;re going to set the <cite>ratio</cite> parameter, which
+we’re testing power. So, we’re going to set the <cite>ratio</cite> parameter, which
 lets us draw twice as many samples from women with <em>G. vaginalis</em>.</p>
 <div class="highlight-default"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">pwr_est2</span><span class="p">,</span> <span class="n">counts2</span> <span class="o">=</span> <span class="n">subsample_power</span><span class="p">(</span><span class="n">test</span><span class="o">=</span><span class="n">metabolite_test</span><span class="p">,</span>
 <span class="gp">... </span>                                    <span class="n">samples</span><span class="o">=</span><span class="p">[</span><span class="n">met_pos</span><span class="p">,</span> <span class="n">met_neg</span><span class="p">],</span>
@@ -392,7 +384,7 @@ power.</p>
     </p>
     <p>
         &copy; Copyright 2014--, scikit-bio development team.<br/>
-      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 1.5a0.<br/>
+      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 1.6.5.<br/>
     </p>
   </div>
 </footer>

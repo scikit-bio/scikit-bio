@@ -1,5 +1,5 @@
-skbio.stats.ordination.svd_rank
-===============================
+skbio\.stats\.ordination\.svd\_rank
+===================================
 
 .. currentmodule:: skbio.stats.ordination
 

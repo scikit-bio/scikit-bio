@@ -1,5 +1,5 @@
-skbio.io.ArgumentOverrideWarning
-================================
+skbio\.io\.ArgumentOverrideWarning
+==================================
 
 .. currentmodule:: skbio.io
 

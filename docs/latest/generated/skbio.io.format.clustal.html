@@ -1,22 +1,16 @@
 <!DOCTYPE html>
 
-
 <html xmlns="http://www.w3.org/1999/xhtml">
   <head>
     <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
-    
-    <title>Clustal format (skbio.io.format.clustal) &#8212; scikit-bio 0.5.1 documentation</title>
-    
-    <link rel="stylesheet" href="../_static/basic.css" type="text/css" />
+    <title>Clustal format (skbio.io.format.clustal) &#8212; scikit-bio 0.5.2 documentation</title>
+    <link rel="stylesheet" href="../_static/bootstrap-sphinx.css" type="text/css" />
     <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
     <link rel="stylesheet" href="../_static/style.css" type="text/css" />
-    <link rel="stylesheet" href="../_static/bootswatch-3.3.6/united/bootstrap.min.css" type="text/css" />
-    <link rel="stylesheet" href="../_static/bootstrap-sphinx.css" type="text/css" />
-    
     <script type="text/javascript">
       var DOCUMENTATION_OPTIONS = {
         URL_ROOT:    '../',
-        VERSION:     '0.5.1',
+        VERSION:     '0.5.2',
         COLLAPSE_INDEX: false,
         FILE_SUFFIX: '.html',
         HAS_SOURCE:  true,
@@ -27,16 +21,14 @@
     <script type="text/javascript" src="../_static/underscore.js"></script>
     <script type="text/javascript" src="../_static/doctools.js"></script>
     <script type="text/javascript" src="../_static/copybutton.js"></script>
-    <script type="text/javascript" src="https://cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
+    <script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.1/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
     <script type="text/javascript" src="../_static/js/jquery-1.11.0.min.js"></script>
     <script type="text/javascript" src="../_static/js/jquery-fix.js"></script>
-    <script type="text/javascript" src="../_static/bootstrap-3.3.6/js/bootstrap.min.js"></script>
+    <script type="text/javascript" src="../_static/bootstrap-3.3.7/js/bootstrap.min.js"></script>
     <script type="text/javascript" src="../_static/bootstrap-sphinx.js"></script>
     <link rel="index" title="Index" href="../genindex.html" />
     <link rel="search" title="Search" href="../search.html" />
-    <link rel="top" title="scikit-bio 0.5.1 documentation" href="../index.html" />
-    <link rel="up" title="File I/O (skbio.io)" href="../io.html" />
-    <link rel="next" title="FASTA/QUAL format (skbio.io.format.fasta)" href="skbio.io.format.fasta.html" />
+    <link rel="next" title="EMBL format (skbio.io.format.embl)" href="skbio.io.format.embl.html" />
     <link rel="prev" title="BLAST+7 format (skbio.io.format.blast7)" href="skbio.io.format.blast7.html" />
 <meta charset='utf-8'>
 <meta http-equiv='X-UA-Compatible' content='IE=edge,chrome=1'>
@@ -44,7 +36,7 @@
 <meta name="apple-mobile-web-app-capable" content="yes">
 
   </head>
-  <body role="document">
+  <body>
   
   <a href="https://github.com/biocore/scikit-bio"
      class="visible-desktop hidden-xs"><img
@@ -72,7 +64,7 @@
         </button>
         <a class="navbar-brand" href="../index.html">
           scikit-bio docs</a>
-        <span class="navbar-text navbar-version pull-left"><b>0.5.1</b></span>
+        <span class="navbar-text navbar-version pull-left"><b>0.5.2</b></span>
       </div>
 
         <div class="collapse navbar-collapse nav-collapse">
@@ -160,7 +152,7 @@
   <span class="target" id="module-skbio.io.format.clustal"></span><div class="section" id="clustal-format-skbio-io-format-clustal">
 <h1>Clustal format (<a class="reference internal" href="#module-skbio.io.format.clustal" title="skbio.io.format.clustal"><code class="xref py py-mod docutils literal"><span class="pre">skbio.io.format.clustal</span></code></a>)<a class="headerlink" href="#clustal-format-skbio-io-format-clustal" title="Permalink to this headline">¶</a></h1>
 <p>Clustal format (<code class="docutils literal"><span class="pre">clustal</span></code>) stores multiple sequence alignments. This format
-was originally introduced in the Clustal package <a class="reference internal" href="#r164" id="id1">[R164]</a>.</p>
+was originally introduced in the Clustal package <a class="reference internal" href="#r318" id="id1">[R318]</a>.</p>
 <div class="section" id="format-support">
 <h2>Format Support<a class="headerlink" href="#format-support" title="Permalink to this headline">¶</a></h2>
 <p><strong>Has Sniffer: Yes</strong></p>
@@ -189,7 +181,7 @@ was originally introduced in the Clustal package <a class="reference internal" h
 <p>A clustal-formatted file is a plain text format. It can optionally have a
 header, which states the clustal version number. This is followed by the
 multiple sequence alignment, and optional information about the degree of
-conservation at each position in the alignment <a class="reference internal" href="#r165" id="id2">[R165]</a>.</p>
+conservation at each position in the alignment <a class="reference internal" href="#r319" id="id2">[R319]</a>.</p>
 <div class="section" id="alignment-section">
 <h3>Alignment Section<a class="headerlink" href="#alignment-section" title="Permalink to this headline">¶</a></h3>
 <p>Each sequence in the alignment is divided into subsequences each at most
@@ -221,7 +213,7 @@ as sequence identifiers/labels.</p>
 type of in-memory sequence object to read each aligned sequence into. This must
 be a subclass of <code class="docutils literal"><span class="pre">GrammaredSequence</span></code> (e.g., <code class="docutils literal"><span class="pre">DNA</span></code>, <code class="docutils literal"><span class="pre">RNA</span></code>, <code class="docutils literal"><span class="pre">Protein</span></code>)
 and is a required format parameter. For example, if you know that the clustal
-file you&#8217;re reading contains DNA sequences, you would pass <code class="docutils literal"><span class="pre">constructor=DNA</span></code>
+file you’re reading contains DNA sequences, you would pass <code class="docutils literal"><span class="pre">constructor=DNA</span></code>
 to the reader call.</p>
 </div>
 <div class="section" id="examples">
@@ -299,16 +291,16 @@ file:</p>
 </div>
 <div class="section" id="references">
 <h2>References<a class="headerlink" href="#references" title="Permalink to this headline">¶</a></h2>
-<table class="docutils citation" frame="void" id="r164" rules="none">
+<table class="docutils citation" frame="void" id="r318" rules="none">
 <colgroup><col class="label" /><col /></colgroup>
 <tbody valign="top">
-<tr><td class="label"><a class="fn-backref" href="#id1">[R164]</a></td><td><a class="reference external" href="http://www.sciencedirect.com/science/article/pii/0378111988903307">http://www.sciencedirect.com/science/article/pii/0378111988903307</a></td></tr>
+<tr><td class="label"><a class="fn-backref" href="#id1">[R318]</a></td><td><a class="reference external" href="http://www.sciencedirect.com/science/article/pii/0378111988903307">http://www.sciencedirect.com/science/article/pii/0378111988903307</a></td></tr>
 </tbody>
 </table>
-<table class="docutils citation" frame="void" id="r165" rules="none">
+<table class="docutils citation" frame="void" id="r319" rules="none">
 <colgroup><col class="label" /><col /></colgroup>
 <tbody valign="top">
-<tr><td class="label"><a class="fn-backref" href="#id2">[R165]</a></td><td><a class="reference external" href="http://web.mit.edu/meme_v4.9.0/doc/clustalw-format.html">http://web.mit.edu/meme_v4.9.0/doc/clustalw-format.html</a></td></tr>
+<tr><td class="label"><a class="fn-backref" href="#id2">[R319]</a></td><td><a class="reference external" href="http://web.mit.edu/meme_v4.9.0/doc/clustalw-format.html">http://web.mit.edu/meme_v4.9.0/doc/clustalw-format.html</a></td></tr>
 </tbody>
 </table>
 </div>
@@ -328,7 +320,7 @@ file:</p>
     </p>
     <p>
         &copy; Copyright 2014--, scikit-bio development team.<br/>
-      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 1.5a0.<br/>
+      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 1.6.5.<br/>
     </p>
   </div>
 </footer>

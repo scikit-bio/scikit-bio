@@ -1,22 +1,16 @@
 <!DOCTYPE html>
 
-
 <html xmlns="http://www.w3.org/1999/xhtml">
   <head>
     <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
-    
-    <title>GenBank format (skbio.io.format.genbank) &#8212; scikit-bio 0.5.1 documentation</title>
-    
-    <link rel="stylesheet" href="../_static/basic.css" type="text/css" />
+    <title>GenBank format (skbio.io.format.genbank) &#8212; scikit-bio 0.5.2 documentation</title>
+    <link rel="stylesheet" href="../_static/bootstrap-sphinx.css" type="text/css" />
     <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
     <link rel="stylesheet" href="../_static/style.css" type="text/css" />
-    <link rel="stylesheet" href="../_static/bootswatch-3.3.6/united/bootstrap.min.css" type="text/css" />
-    <link rel="stylesheet" href="../_static/bootstrap-sphinx.css" type="text/css" />
-    
     <script type="text/javascript">
       var DOCUMENTATION_OPTIONS = {
         URL_ROOT:    '../',
-        VERSION:     '0.5.1',
+        VERSION:     '0.5.2',
         COLLAPSE_INDEX: false,
         FILE_SUFFIX: '.html',
         HAS_SOURCE:  true,
@@ -27,24 +21,22 @@
     <script type="text/javascript" src="../_static/underscore.js"></script>
     <script type="text/javascript" src="../_static/doctools.js"></script>
     <script type="text/javascript" src="../_static/copybutton.js"></script>
-    <script type="text/javascript" src="https://cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
+    <script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.1/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
     <script type="text/javascript" src="../_static/js/jquery-1.11.0.min.js"></script>
     <script type="text/javascript" src="../_static/js/jquery-fix.js"></script>
-    <script type="text/javascript" src="../_static/bootstrap-3.3.6/js/bootstrap.min.js"></script>
+    <script type="text/javascript" src="../_static/bootstrap-3.3.7/js/bootstrap.min.js"></script>
     <script type="text/javascript" src="../_static/bootstrap-sphinx.js"></script>
     <link rel="index" title="Index" href="../genindex.html" />
     <link rel="search" title="Search" href="../search.html" />
-    <link rel="top" title="scikit-bio 0.5.1 documentation" href="../index.html" />
-    <link rel="up" title="File I/O (skbio.io)" href="../io.html" />
-    <link rel="next" title="skbio.io.registry.write" href="skbio.io.registry.write.html" />
-    <link rel="prev" title="Stockholm format (skbio.io.format.stockholm)" href="skbio.io.format.stockholm.html" />
+    <link rel="next" title="GFF3 format (skbio.io.format.gff3)" href="skbio.io.format.gff3.html" />
+    <link rel="prev" title="FASTQ format (skbio.io.format.fastq)" href="skbio.io.format.fastq.html" />
 <meta charset='utf-8'>
 <meta http-equiv='X-UA-Compatible' content='IE=edge,chrome=1'>
 <meta name='viewport' content='width=device-width, initial-scale=1.0, maximum-scale=1'>
 <meta name="apple-mobile-web-app-capable" content="yes">
 
   </head>
-  <body role="document">
+  <body>
   
   <a href="https://github.com/biocore/scikit-bio"
      class="visible-desktop hidden-xs"><img
@@ -72,7 +64,7 @@
         </button>
         <a class="navbar-brand" href="../index.html">
           scikit-bio docs</a>
-        <span class="navbar-text navbar-version pull-left"><b>0.5.1</b></span>
+        <span class="navbar-text navbar-version pull-left"><b>0.5.2</b></span>
       </div>
 
         <div class="collapse navbar-collapse nav-collapse">
@@ -172,13 +164,13 @@
 <h1>GenBank format (<a class="reference internal" href="#module-skbio.io.format.genbank" title="skbio.io.format.genbank"><code class="xref py py-mod docutils literal"><span class="pre">skbio.io.format.genbank</span></code></a>)<a class="headerlink" href="#genbank-format-skbio-io-format-genbank" title="Permalink to this headline">¶</a></h1>
 <p>GenBank format (GenBank Flat File Format) stores sequence and its
 annotation together. The start of the annotation section is marked by
-a line beginning with the word &#8220;LOCUS&#8221;. The start of sequence section
-is marked by a line beginning with the word &#8220;ORIGIN&#8221; and the end of
-the section is marked by a line with only &#8220;//&#8221;.</p>
+a line beginning with the word “LOCUS”. The start of sequence section
+is marked by a line beginning with the word “ORIGIN” and the end of
+the section is marked by a line with only “//”.</p>
 <p>The GenBank file usually ends with .gb or sometimes .gbk. The GenBank
 format for protein has been renamed to GenPept. The GenBank (for
 nucleotide) and Genpept are essentially the same format. An example of
-a GenBank file can be seen here <a class="reference internal" href="#r176" id="id1">[R176]</a>.</p>
+a GenBank file can be seen here <a class="reference internal" href="#r334" id="id1">[R334]</a>.</p>
 <div class="section" id="format-support">
 <h2>Format Support<a class="headerlink" href="#format-support" title="Permalink to this headline">¶</a></h2>
 <p><strong>Has Sniffer: Yes</strong></p>
@@ -230,13 +222,13 @@ section, its value is stored as a list, as there are often multiple
 reference sections in one GenBank record.</p>
 </div>
 <div class="section" id="features-section">
-<h3><code class="docutils literal"><span class="pre">FEATURES</span></code> section<a class="headerlink" href="#features-section" title="Permalink to this headline">¶</a></h3>
+<span id="genbank-feature-section"></span><h3><code class="docutils literal"><span class="pre">FEATURES</span></code> section<a class="headerlink" href="#features-section" title="Permalink to this headline">¶</a></h3>
 <p>The International Nucleotide Sequence Database Collaboration (INSDC
-<a class="reference internal" href="#r177" id="id2">[R177]</a>) is a joint effort among the DDBJ, EMBL, and GenBank. These
-organisations all use the same &#8220;Feature Table&#8221; layout in their plain
-text flat file formats, which are documented in detail <a class="reference internal" href="#r178" id="id3">[R178]</a>. The
+<a class="reference internal" href="#r335" id="id2">[R335]</a>) is a joint effort among the DDBJ, EMBL, and GenBank. These
+organisations all use the same “Feature Table” layout in their plain
+text flat file formats, which are documented in detail <a class="reference internal" href="#r336" id="id3">[R336]</a>. The
 feature keys and their qualifiers are also described in this webpage
-<a class="reference internal" href="#r179" id="id4">[R179]</a>.</p>
+<a class="reference internal" href="#r337" id="id4">[R337]</a>.</p>
 <p>The <code class="docutils literal"><span class="pre">FEATURES</span></code> section will be stored in <code class="docutils literal"><span class="pre">interval_metadata</span></code> of
 <code class="docutils literal"><span class="pre">Sequence</span></code> or its sub-class. Each sub-section is stored as an
 <code class="docutils literal"><span class="pre">Interval</span></code> object in <code class="docutils literal"><span class="pre">interval_metadata</span></code>. Each <code class="docutils literal"><span class="pre">Interval</span></code> object
@@ -373,7 +365,7 @@ local part will be kept to be <code class="docutils literal"><span class="pre">(
 <div class="admonition note">
 <p class="first admonition-title">Note</p>
 <p class="last">The Location string is fully stored in <code class="docutils literal"><span class="pre">Interval.metadata</span></code>
-with key <code class="docutils literal"><span class="pre">__location</span></code>.  The key starting with <code class="docutils literal"><span class="pre">__</span></code> is &#8220;private&#8221;
+with key <code class="docutils literal"><span class="pre">__location</span></code>.  The key starting with <code class="docutils literal"><span class="pre">__</span></code> is “private”
 and should be modified with care.</p>
 </div>
 </div>
@@ -410,7 +402,7 @@ a GenBank file with multiple records in it.</p>
 <h2>Examples<a class="headerlink" href="#examples" title="Permalink to this headline">¶</a></h2>
 <div class="section" id="reading-and-writing-genbank-files">
 <h3>Reading and Writing GenBank Files<a class="headerlink" href="#reading-and-writing-genbank-files" title="Permalink to this headline">¶</a></h3>
-<p>Suppose we have the following GenBank file example modified from <a class="reference internal" href="#r180" id="id5">[R180]</a>:</p>
+<p>Suppose we have the following GenBank file example modified from <a class="reference internal" href="#r338" id="id5">[R338]</a>:</p>
 <div class="highlight-default"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">gb_str</span> <span class="o">=</span> <span class="s1">&#39;&#39;&#39;</span>
 <span class="gp">... </span><span class="s1">LOCUS       3K1V_A       34 bp    RNA     linear   SYN 10-OCT-2012</span>
 <span class="gp">... </span><span class="s1">DEFINITION  Chain A, Structure Of A Mutant Class-I Preq1.</span>
@@ -535,34 +527,34 @@ the sequence, we can read it as <code class="docutils literal"><span class="pre"
 </div>
 <div class="section" id="references">
 <h2>References<a class="headerlink" href="#references" title="Permalink to this headline">¶</a></h2>
-<table class="docutils citation" frame="void" id="r176" rules="none">
+<table class="docutils citation" frame="void" id="r334" rules="none">
 <colgroup><col class="label" /><col /></colgroup>
 <tbody valign="top">
-<tr><td class="label"><a class="fn-backref" href="#id1">[R176]</a></td><td><a class="reference external" href="http://www.ncbi.nlm.nih.gov/Sitemap/samplerecord.html">http://www.ncbi.nlm.nih.gov/Sitemap/samplerecord.html</a></td></tr>
+<tr><td class="label"><a class="fn-backref" href="#id1">[R334]</a></td><td><a class="reference external" href="http://www.ncbi.nlm.nih.gov/Sitemap/samplerecord.html">http://www.ncbi.nlm.nih.gov/Sitemap/samplerecord.html</a></td></tr>
 </tbody>
 </table>
-<table class="docutils citation" frame="void" id="r177" rules="none">
+<table class="docutils citation" frame="void" id="r335" rules="none">
 <colgroup><col class="label" /><col /></colgroup>
 <tbody valign="top">
-<tr><td class="label"><a class="fn-backref" href="#id2">[R177]</a></td><td><a class="reference external" href="http://www.insdc.org/">http://www.insdc.org/</a></td></tr>
+<tr><td class="label"><a class="fn-backref" href="#id2">[R335]</a></td><td><a class="reference external" href="http://www.insdc.org/">http://www.insdc.org/</a></td></tr>
 </tbody>
 </table>
-<table class="docutils citation" frame="void" id="r178" rules="none">
+<table class="docutils citation" frame="void" id="r336" rules="none">
 <colgroup><col class="label" /><col /></colgroup>
 <tbody valign="top">
-<tr><td class="label"><a class="fn-backref" href="#id3">[R178]</a></td><td><a class="reference external" href="http://www.insdc.org/files/feature_table.html">http://www.insdc.org/files/feature_table.html</a></td></tr>
+<tr><td class="label"><a class="fn-backref" href="#id3">[R336]</a></td><td><a class="reference external" href="http://www.insdc.org/files/feature_table.html">http://www.insdc.org/files/feature_table.html</a></td></tr>
 </tbody>
 </table>
-<table class="docutils citation" frame="void" id="r179" rules="none">
+<table class="docutils citation" frame="void" id="r337" rules="none">
 <colgroup><col class="label" /><col /></colgroup>
 <tbody valign="top">
-<tr><td class="label"><a class="fn-backref" href="#id4">[R179]</a></td><td><a class="reference external" href="http://www.ebi.ac.uk/ena/WebFeat/">http://www.ebi.ac.uk/ena/WebFeat/</a></td></tr>
+<tr><td class="label"><a class="fn-backref" href="#id4">[R337]</a></td><td><a class="reference external" href="http://www.ebi.ac.uk/ena/WebFeat/">http://www.ebi.ac.uk/ena/WebFeat/</a></td></tr>
 </tbody>
 </table>
-<table class="docutils citation" frame="void" id="r180" rules="none">
+<table class="docutils citation" frame="void" id="r338" rules="none">
 <colgroup><col class="label" /><col /></colgroup>
 <tbody valign="top">
-<tr><td class="label"><a class="fn-backref" href="#id5">[R180]</a></td><td><a class="reference external" href="http://www.ncbi.nlm.nih.gov/nuccore/3K1V_A">http://www.ncbi.nlm.nih.gov/nuccore/3K1V_A</a></td></tr>
+<tr><td class="label"><a class="fn-backref" href="#id5">[R338]</a></td><td><a class="reference external" href="http://www.ncbi.nlm.nih.gov/nuccore/3K1V_A">http://www.ncbi.nlm.nih.gov/nuccore/3K1V_A</a></td></tr>
 </tbody>
 </table>
 </div>
@@ -582,7 +574,7 @@ the sequence, we can read it as <code class="docutils literal"><span class="pre"
     </p>
     <p>
         &copy; Copyright 2014--, scikit-bio development team.<br/>
-      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 1.5a0.<br/>
+      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 1.6.5.<br/>
     </p>
   </div>
 </footer>

@@ -1,5 +1,5 @@
-skbio.workflow.method
-=====================
+skbio\.workflow\.method
+=======================
 
 .. currentmodule:: skbio.workflow
 
@@ -26,10 +26,4 @@ skbio.workflow.method
 
 
    
-
-   .. HACK -- the point here is that we don't want this to appear in the output, but the autosummary should still generate the pages.
-      .. autosummary::
-         :toctree:
-      
-         method.highest_priority
 

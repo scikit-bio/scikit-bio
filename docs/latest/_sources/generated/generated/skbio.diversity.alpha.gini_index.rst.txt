@@ -1,5 +1,5 @@
-skbio.diversity.alpha.gini_index
-================================
+skbio\.diversity\.alpha\.gini\_index
+====================================
 
 .. currentmodule:: skbio.diversity.alpha
 

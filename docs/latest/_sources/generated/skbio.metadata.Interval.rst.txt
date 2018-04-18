@@ -1,5 +1,5 @@
-skbio.metadata.Interval
-=======================
+skbio\.metadata\.Interval
+=========================
 
 .. currentmodule:: skbio.metadata
 
@@ -34,13 +34,4 @@ skbio.metadata.Interval
 
 
    
-
-   .. HACK -- the point here is that we don't want this to appear in the output, but the autosummary should still generate the pages.
-      .. autosummary::
-         :toctree:
-      
-         Interval.bounds
-         Interval.dropped
-         Interval.fuzzy
-         Interval.metadata
 

@@ -1,22 +1,16 @@
 <!DOCTYPE html>
 
-
 <html xmlns="http://www.w3.org/1999/xhtml">
   <head>
     <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
-    
-    <title>skbio.sequence.Protein &#8212; scikit-bio 0.5.1 documentation</title>
-    
-    <link rel="stylesheet" href="../_static/basic.css" type="text/css" />
+    <title>skbio.sequence.Protein &#8212; scikit-bio 0.5.2 documentation</title>
+    <link rel="stylesheet" href="../_static/bootstrap-sphinx.css" type="text/css" />
     <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
     <link rel="stylesheet" href="../_static/style.css" type="text/css" />
-    <link rel="stylesheet" href="../_static/bootswatch-3.3.6/united/bootstrap.min.css" type="text/css" />
-    <link rel="stylesheet" href="../_static/bootstrap-sphinx.css" type="text/css" />
-    
     <script type="text/javascript">
       var DOCUMENTATION_OPTIONS = {
         URL_ROOT:    '../',
-        VERSION:     '0.5.1',
+        VERSION:     '0.5.2',
         COLLAPSE_INDEX: false,
         FILE_SUFFIX: '.html',
         HAS_SOURCE:  true,
@@ -27,15 +21,13 @@
     <script type="text/javascript" src="../_static/underscore.js"></script>
     <script type="text/javascript" src="../_static/doctools.js"></script>
     <script type="text/javascript" src="../_static/copybutton.js"></script>
-    <script type="text/javascript" src="https://cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
+    <script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.1/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
     <script type="text/javascript" src="../_static/js/jquery-1.11.0.min.js"></script>
     <script type="text/javascript" src="../_static/js/jquery-fix.js"></script>
-    <script type="text/javascript" src="../_static/bootstrap-3.3.6/js/bootstrap.min.js"></script>
+    <script type="text/javascript" src="../_static/bootstrap-3.3.7/js/bootstrap.min.js"></script>
     <script type="text/javascript" src="../_static/bootstrap-sphinx.js"></script>
     <link rel="index" title="Index" href="../genindex.html" />
     <link rel="search" title="Search" href="../search.html" />
-    <link rel="top" title="scikit-bio 0.5.1 documentation" href="../index.html" />
-    <link rel="up" title="Sequences (skbio.sequence)" href="../sequence.html" />
     <link rel="next" title="skbio.sequence.GeneticCode" href="skbio.sequence.GeneticCode.html" />
     <link rel="prev" title="skbio.sequence.RNA" href="skbio.sequence.RNA.html" />
 <meta charset='utf-8'>
@@ -44,7 +36,7 @@
 <meta name="apple-mobile-web-app-capable" content="yes">
 
   </head>
-  <body role="document">
+  <body>
   
   <a href="https://github.com/biocore/scikit-bio"
      class="visible-desktop hidden-xs"><img
@@ -72,7 +64,7 @@
         </button>
         <a class="navbar-brand" href="../index.html">
           scikit-bio docs</a>
-        <span class="navbar-text navbar-version pull-left"><b>0.5.1</b></span>
+        <span class="navbar-text navbar-version pull-left"><b>0.5.2</b></span>
       </div>
 
         <div class="collapse navbar-collapse nav-collapse">
@@ -151,14 +143,14 @@
 <h1>skbio.sequence.Protein<a class="headerlink" href="#skbio-sequence-protein" title="Permalink to this headline">¶</a></h1>
 <dl class="class">
 <dt id="skbio.sequence.Protein">
-<em class="property">class </em><code class="descclassname">skbio.sequence.</code><code class="descname">Protein</code><span class="sig-paren">(</span><em>sequence</em>, <em>metadata=None</em>, <em>positional_metadata=None</em>, <em>interval_metadata=None</em>, <em>lowercase=False</em>, <em>validate=True</em><span class="sig-paren">)</span><a class="reference external" href="http://github.com/biocore/scikit-bio/blob/0.5.1/skbio/sequence/_protein.py#L17"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#skbio.sequence.Protein" title="Permalink to this definition">¶</a></dt>
+<em class="property">class </em><code class="descclassname">skbio.sequence.</code><code class="descname">Protein</code><span class="sig-paren">(</span><em>sequence</em>, <em>metadata=None</em>, <em>positional_metadata=None</em>, <em>interval_metadata=None</em>, <em>lowercase=False</em>, <em>validate=True</em><span class="sig-paren">)</span><a class="reference external" href="http://github.com/biocore/scikit-bio/blob/0.5.2/skbio/sequence/_protein.py#L17"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#skbio.sequence.Protein" title="Permalink to this definition">¶</a></dt>
 <dd><p>Store protein sequence data and optional associated metadata.</p>
-<p>Only characters in the IUPAC protein character set <a class="reference internal" href="#r201" id="id1">[R201]</a> are supported.</p>
+<p>Only characters in the IUPAC protein character set <a class="reference internal" href="#r368368" id="id1">[R368368]</a> are supported.</p>
 <table class="docutils field-list" frame="void" rules="none">
 <col class="field-name" />
 <col class="field-body" />
 <tbody valign="top">
-<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><p class="first"><strong>sequence</strong> : str, Sequence, or 1D np.ndarray (np.uint8 or &#8216;|S1&#8217;)</p>
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><p class="first"><strong>sequence</strong> : str, Sequence, or 1D np.ndarray (np.uint8 or ‘|S1’)</p>
 <blockquote>
 <div><p>Characters representing the protein sequence itself.</p>
 </div></blockquote>
@@ -212,10 +204,10 @@ it possible to change the alphabet, and certain methods rely on the
 IUPAC alphabet. If a custom sequence alphabet is needed, inherit directly
 from <code class="docutils literal"><span class="pre">GrammaredSequence</span></code>.</p>
 <p class="rubric">References</p>
-<table class="docutils citation" frame="void" id="r201" rules="none">
+<table class="docutils citation" frame="void" id="r368368" rules="none">
 <colgroup><col class="label" /><col /></colgroup>
 <tbody valign="top">
-<tr><td class="label">[R201]</td><td><em>(<a class="fn-backref" href="#id1">1</a>, <a class="fn-backref" href="#id2">2</a>)</em> Nomenclature for incompletely specified bases in nucleic acid
+<tr><td class="label">[R368368]</td><td><em>(<a class="fn-backref" href="#id1">1</a>, <a class="fn-backref" href="#id2">2</a>)</em> Nomenclature for incompletely specified bases in nucleic acid
 sequences: recommendations 1984.
 Nucleic Acids Res. May 10, 1985; 13(9): 3021-3030.
 A Cornish-Bowden</td></tr>
@@ -257,37 +249,37 @@ A Cornish-Bowden</td></tr>
 <col width="90%" />
 </colgroup>
 <tbody valign="top">
-<tr class="row-odd"><td><a class="reference internal" href="skbio.sequence.Protein.values.html#skbio.sequence.Protein.values" title="skbio.sequence.Protein.values"><code class="xref py py-obj docutils literal"><span class="pre">values</span></code></a></td>
+<tr class="row-odd"><td><code class="xref py py-obj docutils literal"><span class="pre">values</span></code></td>
 <td>Array containing underlying sequence characters.</td>
 </tr>
-<tr class="row-even"><td><a class="reference internal" href="skbio.sequence.Protein.metadata.html#skbio.sequence.Protein.metadata" title="skbio.sequence.Protein.metadata"><code class="xref py py-obj docutils literal"><span class="pre">metadata</span></code></a></td>
+<tr class="row-even"><td><code class="xref py py-obj docutils literal"><span class="pre">metadata</span></code></td>
 <td><code class="docutils literal"><span class="pre">dict</span></code> containing metadata which applies to the entire object.</td>
 </tr>
-<tr class="row-odd"><td><a class="reference internal" href="skbio.sequence.Protein.interval_metadata.html#skbio.sequence.Protein.interval_metadata" title="skbio.sequence.Protein.interval_metadata"><code class="xref py py-obj docutils literal"><span class="pre">interval_metadata</span></code></a></td>
+<tr class="row-odd"><td><code class="xref py py-obj docutils literal"><span class="pre">interval_metadata</span></code></td>
 <td><code class="docutils literal"><span class="pre">IntervalMetadata</span></code> object containing info about interval features.</td>
 </tr>
-<tr class="row-even"><td><a class="reference internal" href="skbio.sequence.Protein.positional_metadata.html#skbio.sequence.Protein.positional_metadata" title="skbio.sequence.Protein.positional_metadata"><code class="xref py py-obj docutils literal"><span class="pre">positional_metadata</span></code></a></td>
+<tr class="row-even"><td><code class="xref py py-obj docutils literal"><span class="pre">positional_metadata</span></code></td>
 <td><code class="docutils literal"><span class="pre">pd.DataFrame</span></code> containing metadata along an axis.</td>
 </tr>
-<tr class="row-odd"><td><a class="reference internal" href="skbio.sequence.Protein.alphabet.html#skbio.sequence.Protein.alphabet" title="skbio.sequence.Protein.alphabet"><code class="xref py py-obj docutils literal"><span class="pre">alphabet</span></code></a></td>
+<tr class="row-odd"><td><code class="xref py py-obj docutils literal"><span class="pre">alphabet</span></code></td>
 <td>Return valid characters.</td>
 </tr>
-<tr class="row-even"><td><a class="reference internal" href="skbio.sequence.Protein.gap_chars.html#skbio.sequence.Protein.gap_chars" title="skbio.sequence.Protein.gap_chars"><code class="xref py py-obj docutils literal"><span class="pre">gap_chars</span></code></a></td>
+<tr class="row-even"><td><code class="xref py py-obj docutils literal"><span class="pre">gap_chars</span></code></td>
 <td>Return characters defined as gaps.</td>
 </tr>
-<tr class="row-odd"><td><a class="reference internal" href="skbio.sequence.Protein.default_gap_char.html#skbio.sequence.Protein.default_gap_char" title="skbio.sequence.Protein.default_gap_char"><code class="xref py py-obj docutils literal"><span class="pre">default_gap_char</span></code></a></td>
+<tr class="row-odd"><td><code class="xref py py-obj docutils literal"><span class="pre">default_gap_char</span></code></td>
 <td>Gap character to use when constructing a new gapped sequence.</td>
 </tr>
-<tr class="row-even"><td><a class="reference internal" href="skbio.sequence.Protein.stop_chars.html#skbio.sequence.Protein.stop_chars" title="skbio.sequence.Protein.stop_chars"><code class="xref py py-obj docutils literal"><span class="pre">stop_chars</span></code></a></td>
+<tr class="row-even"><td><code class="xref py py-obj docutils literal"><span class="pre">stop_chars</span></code></td>
 <td>Return characters representing translation stop codons.</td>
 </tr>
-<tr class="row-odd"><td><a class="reference internal" href="skbio.sequence.Protein.definite_chars.html#skbio.sequence.Protein.definite_chars" title="skbio.sequence.Protein.definite_chars"><code class="xref py py-obj docutils literal"><span class="pre">definite_chars</span></code></a></td>
+<tr class="row-odd"><td><code class="xref py py-obj docutils literal"><span class="pre">definite_chars</span></code></td>
 <td>Return definite characters.</td>
 </tr>
-<tr class="row-even"><td><a class="reference internal" href="skbio.sequence.Protein.degenerate_chars.html#skbio.sequence.Protein.degenerate_chars" title="skbio.sequence.Protein.degenerate_chars"><code class="xref py py-obj docutils literal"><span class="pre">degenerate_chars</span></code></a></td>
+<tr class="row-even"><td><code class="xref py py-obj docutils literal"><span class="pre">degenerate_chars</span></code></td>
 <td>Return degenerate characters.</td>
 </tr>
-<tr class="row-odd"><td><a class="reference internal" href="skbio.sequence.Protein.degenerate_map.html#skbio.sequence.Protein.degenerate_map" title="skbio.sequence.Protein.degenerate_map"><code class="xref py py-obj docutils literal"><span class="pre">degenerate_map</span></code></a></td>
+<tr class="row-odd"><td><code class="xref py py-obj docutils literal"><span class="pre">degenerate_map</span></code></td>
 <td>Return mapping of degenerate to definite characters.</td>
 </tr>
 </tbody>
@@ -454,7 +446,7 @@ A Cornish-Bowden</td></tr>
     </p>
     <p>
         &copy; Copyright 2014--, scikit-bio development team.<br/>
-      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 1.5a0.<br/>
+      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 1.6.5.<br/>
     </p>
   </div>
 </footer>

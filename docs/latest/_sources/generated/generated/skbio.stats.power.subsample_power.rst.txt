@@ -1,5 +1,5 @@
-skbio.stats.power.subsample_power
-=================================
+skbio\.stats\.power\.subsample\_power
+=====================================
 
 .. currentmodule:: skbio.stats.power
 

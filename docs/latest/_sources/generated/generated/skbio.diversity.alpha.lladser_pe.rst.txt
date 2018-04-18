@@ -1,5 +1,5 @@
-skbio.diversity.alpha.lladser_pe
-================================
+skbio\.diversity\.alpha\.lladser\_pe
+====================================
 
 .. currentmodule:: skbio.diversity.alpha
 

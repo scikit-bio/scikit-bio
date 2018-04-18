@@ -1,5 +1,5 @@
-skbio.io.registry.IORegistry
-============================
+skbio\.io\.registry\.IORegistry
+===============================
 
 .. currentmodule:: skbio.io.registry
 

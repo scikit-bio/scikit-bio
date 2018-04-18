@@ -1,5 +1,5 @@
-skbio.diversity.alpha.dominance
-===============================
+skbio\.diversity\.alpha\.dominance
+==================================
 
 .. currentmodule:: skbio.diversity.alpha
 

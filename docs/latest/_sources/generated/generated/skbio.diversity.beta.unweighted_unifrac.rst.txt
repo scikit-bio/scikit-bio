@@ -1,5 +1,5 @@
-skbio.diversity.beta.unweighted_unifrac
-=======================================
+skbio\.diversity\.beta\.unweighted\_unifrac
+===========================================
 
 .. currentmodule:: skbio.diversity.beta
 

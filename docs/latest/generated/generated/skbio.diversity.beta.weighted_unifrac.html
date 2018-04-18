@@ -1,22 +1,16 @@
 <!DOCTYPE html>
 
-
 <html xmlns="http://www.w3.org/1999/xhtml">
   <head>
     <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
-    
-    <title>skbio.diversity.beta.weighted_unifrac &#8212; scikit-bio 0.5.1 documentation</title>
-    
-    <link rel="stylesheet" href="../../_static/basic.css" type="text/css" />
+    <title>skbio.diversity.beta.weighted_unifrac &#8212; scikit-bio 0.5.2 documentation</title>
+    <link rel="stylesheet" href="../../_static/bootstrap-sphinx.css" type="text/css" />
     <link rel="stylesheet" href="../../_static/pygments.css" type="text/css" />
     <link rel="stylesheet" href="../../_static/style.css" type="text/css" />
-    <link rel="stylesheet" href="../../_static/bootswatch-3.3.6/united/bootstrap.min.css" type="text/css" />
-    <link rel="stylesheet" href="../../_static/bootstrap-sphinx.css" type="text/css" />
-    
     <script type="text/javascript">
       var DOCUMENTATION_OPTIONS = {
         URL_ROOT:    '../../',
-        VERSION:     '0.5.1',
+        VERSION:     '0.5.2',
         COLLAPSE_INDEX: false,
         FILE_SUFFIX: '.html',
         HAS_SOURCE:  true,
@@ -27,15 +21,13 @@
     <script type="text/javascript" src="../../_static/underscore.js"></script>
     <script type="text/javascript" src="../../_static/doctools.js"></script>
     <script type="text/javascript" src="../../_static/copybutton.js"></script>
-    <script type="text/javascript" src="https://cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
+    <script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.1/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
     <script type="text/javascript" src="../../_static/js/jquery-1.11.0.min.js"></script>
     <script type="text/javascript" src="../../_static/js/jquery-fix.js"></script>
-    <script type="text/javascript" src="../../_static/bootstrap-3.3.6/js/bootstrap.min.js"></script>
+    <script type="text/javascript" src="../../_static/bootstrap-3.3.7/js/bootstrap.min.js"></script>
     <script type="text/javascript" src="../../_static/bootstrap-sphinx.js"></script>
     <link rel="index" title="Index" href="../../genindex.html" />
     <link rel="search" title="Search" href="../../search.html" />
-    <link rel="top" title="scikit-bio 0.5.1 documentation" href="../../index.html" />
-    <link rel="up" title="Beta diversity measures (skbio.diversity.beta)" href="../skbio.diversity.beta.html" />
     <link rel="next" title="skbio.diversity.alpha_diversity" href="../skbio.diversity.alpha_diversity.html" />
     <link rel="prev" title="skbio.diversity.beta.unweighted_unifrac" href="skbio.diversity.beta.unweighted_unifrac.html" />
 <meta charset='utf-8'>
@@ -44,7 +36,7 @@
 <meta name="apple-mobile-web-app-capable" content="yes">
 
   </head>
-  <body role="document">
+  <body>
   
   <a href="https://github.com/biocore/scikit-bio"
      class="visible-desktop hidden-xs"><img
@@ -72,7 +64,7 @@
         </button>
         <a class="navbar-brand" href="../../index.html">
           scikit-bio docs</a>
-        <span class="navbar-text navbar-version pull-left"><b>0.5.1</b></span>
+        <span class="navbar-text navbar-version pull-left"><b>0.5.2</b></span>
       </div>
 
         <div class="collapse navbar-collapse nav-collapse">
@@ -151,7 +143,7 @@
 <h1>skbio.diversity.beta.weighted_unifrac<a class="headerlink" href="#skbio-diversity-beta-weighted-unifrac" title="Permalink to this headline">¶</a></h1>
 <dl class="function">
 <dt id="skbio.diversity.beta.weighted_unifrac">
-<code class="descclassname">skbio.diversity.beta.</code><code class="descname">weighted_unifrac</code><span class="sig-paren">(</span><em>u_counts</em>, <em>v_counts</em>, <em>otu_ids</em>, <em>tree</em>, <em>normalized=False</em>, <em>validate=True</em><span class="sig-paren">)</span><a class="reference external" href="http://github.com/biocore/scikit-bio/blob/0.5.1/skbio/diversity/beta/_unifrac.py#L152"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#skbio.diversity.beta.weighted_unifrac" title="Permalink to this definition">¶</a></dt>
+<code class="descclassname">skbio.diversity.beta.</code><code class="descname">weighted_unifrac</code><span class="sig-paren">(</span><em>u_counts</em>, <em>v_counts</em>, <em>otu_ids</em>, <em>tree</em>, <em>normalized=False</em>, <em>validate=True</em><span class="sig-paren">)</span><a class="reference external" href="http://github.com/biocore/scikit-bio/blob/0.5.2/skbio/diversity/beta/_unifrac.py#L152"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#skbio.diversity.beta.weighted_unifrac" title="Permalink to this definition">¶</a></dt>
 <dd><p>Compute weighted UniFrac with or without branch length normalization</p>
 <p>State: Experimental as of 0.4.1.</p>
 <table class="docutils field-list" frame="void" rules="none">
@@ -176,15 +168,15 @@ be a superset of <code class="docutils literal"><span class="pre">otu_ids</span>
 <p><strong>normalized: boolean, optional</strong></p>
 <blockquote>
 <div><p>If <code class="docutils literal"><span class="pre">True</span></code>, apply branch length normalization, which is described in
-<a class="reference internal" href="#r57" id="id1">[R57]</a>. Resulting distances will then be in the range <code class="docutils literal"><span class="pre">[0,</span> <span class="pre">1]</span></code>.</p>
+<a class="reference internal" href="#r113115" id="id1">[R113115]</a>. Resulting distances will then be in the range <code class="docutils literal"><span class="pre">[0,</span> <span class="pre">1]</span></code>.</p>
 </div></blockquote>
 <p><strong>validate: bool, optional</strong></p>
 <blockquote>
-<div><p>If <cite>False</cite>, validation of the input won&#8217;t be performed. This step can
+<div><p>If <cite>False</cite>, validation of the input won’t be performed. This step can
 be slow, so if validation is run elsewhere it can be disabled here.
 However, invalid input data can lead to invalid results or error
 messages that are hard to interpret, so this step should not be
-bypassed if you&#8217;re not certain that your input data are valid. See
+bypassed if you’re not certain that your input data are valid. See
 <a class="reference internal" href="../../diversity.html#module-skbio.diversity" title="skbio.diversity"><code class="xref py py-mod docutils literal"><span class="pre">skbio.diversity</span></code></a> for the description of what validation entails
 so you can determine if you can safely disable validation.</p>
 </div></blockquote>
@@ -209,10 +201,10 @@ so you can determine if you can safely disable validation.</p>
 <p class="last"><a class="reference internal" href="skbio.diversity.beta.unweighted_unifrac.html#skbio.diversity.beta.unweighted_unifrac" title="skbio.diversity.beta.unweighted_unifrac"><code class="xref py py-obj docutils literal"><span class="pre">unweighted_unifrac</span></code></a>, <a class="reference internal" href="../../diversity.html#module-skbio.diversity" title="skbio.diversity"><code class="xref py py-obj docutils literal"><span class="pre">skbio.diversity</span></code></a>, <a class="reference internal" href="../skbio.diversity.beta_diversity.html#skbio.diversity.beta_diversity" title="skbio.diversity.beta_diversity"><code class="xref py py-obj docutils literal"><span class="pre">skbio.diversity.beta_diversity</span></code></a></p>
 </div>
 <p class="rubric">Notes</p>
-<p>Weighted UniFrac was originally described in <a class="reference internal" href="#r57" id="id2">[R57]</a>, which includes a
+<p>Weighted UniFrac was originally described in <a class="reference internal" href="#r113115" id="id2">[R113115]</a>, which includes a
 discussion of unweighted (qualitative) versus weighted (quantitiative)
 diversity metrics. Deeper mathemtical discussions of this metric is
-presented in <a class="reference internal" href="#r58" id="id3">[R58]</a>.</p>
+presented in <a class="reference internal" href="#r114115" id="id3">[R114115]</a>.</p>
 <p>If computing weighted UniFrac for multiple pairs of samples, using
 <code class="docutils literal"><span class="pre">skbio.diversity.beta_diversity</span></code> will be much faster than calling this
 function individually on each sample.</p>
@@ -227,29 +219,29 @@ PyCogent with scikit-bio, ensure that your PyCogent UniFrac calculations
 are performed on a rooted tree and that all OTU IDs are present in the
 tree.</p>
 <p>This implementation of weighted UniFrac is the array-based implementation
-described in <a class="reference internal" href="#r59" id="id4">[R59]</a>.</p>
+described in <a class="reference internal" href="#r115115" id="id4">[R115115]</a>.</p>
 <p class="rubric">References</p>
-<table class="docutils citation" frame="void" id="r57" rules="none">
+<table class="docutils citation" frame="void" id="r113115" rules="none">
 <colgroup><col class="label" /><col /></colgroup>
 <tbody valign="top">
-<tr><td class="label">[R57]</td><td><em>(<a class="fn-backref" href="#id1">1</a>, <a class="fn-backref" href="#id2">2</a>, <a class="fn-backref" href="#id5">3</a>)</em> Lozupone, C. A., Hamady, M., Kelley, S. T. &amp; Knight, R. Quantitative
+<tr><td class="label">[R113115]</td><td><em>(<a class="fn-backref" href="#id1">1</a>, <a class="fn-backref" href="#id2">2</a>, <a class="fn-backref" href="#id5">3</a>)</em> Lozupone, C. A., Hamady, M., Kelley, S. T. &amp; Knight, R. Quantitative
 and qualitative beta diversity measures lead to different insights into
 factors that structure microbial communities. Appl. Environ. Microbiol.
 73, 1576-1585 (2007).</td></tr>
 </tbody>
 </table>
-<table class="docutils citation" frame="void" id="r58" rules="none">
+<table class="docutils citation" frame="void" id="r114115" rules="none">
 <colgroup><col class="label" /><col /></colgroup>
 <tbody valign="top">
-<tr><td class="label">[R58]</td><td><em>(<a class="fn-backref" href="#id3">1</a>, <a class="fn-backref" href="#id6">2</a>)</em> Lozupone, C., Lladser, M. E., Knights, D., Stombaugh, J. &amp; Knight,
+<tr><td class="label">[R114115]</td><td><em>(<a class="fn-backref" href="#id3">1</a>, <a class="fn-backref" href="#id6">2</a>)</em> Lozupone, C., Lladser, M. E., Knights, D., Stombaugh, J. &amp; Knight,
 R. UniFrac: an effective distance metric for microbial community
 comparison. ISME J. 5, 169-172 (2011).</td></tr>
 </tbody>
 </table>
-<table class="docutils citation" frame="void" id="r59" rules="none">
+<table class="docutils citation" frame="void" id="r115115" rules="none">
 <colgroup><col class="label" /><col /></colgroup>
 <tbody valign="top">
-<tr><td class="label">[R59]</td><td><em>(<a class="fn-backref" href="#id4">1</a>, <a class="fn-backref" href="#id7">2</a>)</em> Hamady M, Lozupone C, Knight R. Fast UniFrac: facilitating high-
+<tr><td class="label">[R115115]</td><td><em>(<a class="fn-backref" href="#id4">1</a>, <a class="fn-backref" href="#id7">2</a>)</em> Hamady M, Lozupone C, Knight R. Fast UniFrac: facilitating high-
 throughput phylogenetic analyses of microbial communities including
 analysis of pyrosequencing and PhyloChip data.  ISME J. 4(1):17-27
 (2010).</td></tr>
@@ -265,7 +257,7 @@ observed in each of the samples.</p>
 </pre></div>
 </div>
 <p>Because UniFrac is a phylogenetic diversity metric, we need to know which
-OTU each count corresponds to, which we&#8217;ll provide as <code class="docutils literal"><span class="pre">otu_ids</span></code>.</p>
+OTU each count corresponds to, which we’ll provide as <code class="docutils literal"><span class="pre">otu_ids</span></code>.</p>
 <div class="highlight-default"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">otu_ids</span> <span class="o">=</span> <span class="p">[</span><span class="s1">&#39;OTU1&#39;</span><span class="p">,</span> <span class="s1">&#39;OTU2&#39;</span><span class="p">,</span> <span class="s1">&#39;OTU3&#39;</span><span class="p">,</span> <span class="s1">&#39;OTU4&#39;</span><span class="p">,</span> <span class="s1">&#39;OTU5&#39;</span><span class="p">,</span> <span class="s1">&#39;OTU6&#39;</span><span class="p">,</span> <span class="s1">&#39;OTU7&#39;</span><span class="p">,</span>
 <span class="gp">... </span>           <span class="s1">&#39;OTU8&#39;</span><span class="p">]</span>
 </pre></div>
@@ -312,7 +304,7 @@ branch length normalization so the value falls in the range <code class="docutil
     </p>
     <p>
         &copy; Copyright 2014--, scikit-bio development team.<br/>
-      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 1.5a0.<br/>
+      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 1.6.5.<br/>
     </p>
   </div>
 </footer>

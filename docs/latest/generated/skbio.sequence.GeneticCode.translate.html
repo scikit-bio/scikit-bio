@@ -1,22 +1,16 @@
 <!DOCTYPE html>
 
-
 <html xmlns="http://www.w3.org/1999/xhtml">
   <head>
     <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
-    
-    <title>skbio.sequence.GeneticCode.translate &#8212; scikit-bio 0.5.1 documentation</title>
-    
-    <link rel="stylesheet" href="../_static/basic.css" type="text/css" />
+    <title>skbio.sequence.GeneticCode.translate &#8212; scikit-bio 0.5.2 documentation</title>
+    <link rel="stylesheet" href="../_static/bootstrap-sphinx.css" type="text/css" />
     <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
     <link rel="stylesheet" href="../_static/style.css" type="text/css" />
-    <link rel="stylesheet" href="../_static/bootswatch-3.3.6/united/bootstrap.min.css" type="text/css" />
-    <link rel="stylesheet" href="../_static/bootstrap-sphinx.css" type="text/css" />
-    
     <script type="text/javascript">
       var DOCUMENTATION_OPTIONS = {
         URL_ROOT:    '../',
-        VERSION:     '0.5.1',
+        VERSION:     '0.5.2',
         COLLAPSE_INDEX: false,
         FILE_SUFFIX: '.html',
         HAS_SOURCE:  true,
@@ -27,21 +21,20 @@
     <script type="text/javascript" src="../_static/underscore.js"></script>
     <script type="text/javascript" src="../_static/doctools.js"></script>
     <script type="text/javascript" src="../_static/copybutton.js"></script>
-    <script type="text/javascript" src="https://cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
+    <script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.1/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
     <script type="text/javascript" src="../_static/js/jquery-1.11.0.min.js"></script>
     <script type="text/javascript" src="../_static/js/jquery-fix.js"></script>
-    <script type="text/javascript" src="../_static/bootstrap-3.3.6/js/bootstrap.min.js"></script>
+    <script type="text/javascript" src="../_static/bootstrap-3.3.7/js/bootstrap.min.js"></script>
     <script type="text/javascript" src="../_static/bootstrap-sphinx.js"></script>
     <link rel="index" title="Index" href="../genindex.html" />
     <link rel="search" title="Search" href="../search.html" />
-    <link rel="top" title="scikit-bio 0.5.1 documentation" href="../index.html" />
 <meta charset='utf-8'>
 <meta http-equiv='X-UA-Compatible' content='IE=edge,chrome=1'>
 <meta name='viewport' content='width=device-width, initial-scale=1.0, maximum-scale=1'>
 <meta name="apple-mobile-web-app-capable" content="yes">
 
   </head>
-  <body role="document">
+  <body>
   
   <a href="https://github.com/biocore/scikit-bio"
      class="visible-desktop hidden-xs"><img
@@ -69,7 +62,7 @@
         </button>
         <a class="navbar-brand" href="../index.html">
           scikit-bio docs</a>
-        <span class="navbar-text navbar-version pull-left"><b>0.5.1</b></span>
+        <span class="navbar-text navbar-version pull-left"><b>0.5.2</b></span>
       </div>
 
         <div class="collapse navbar-collapse nav-collapse">
@@ -148,7 +141,7 @@
 <h1>skbio.sequence.GeneticCode.translate<a class="headerlink" href="#skbio-sequence-geneticcode-translate" title="Permalink to this headline">¶</a></h1>
 <dl class="method">
 <dt id="skbio.sequence.GeneticCode.translate">
-<code class="descclassname">GeneticCode.</code><code class="descname">translate</code><span class="sig-paren">(</span><em>sequence</em>, <em>reading_frame=1</em>, <em>start='ignore'</em>, <em>stop='ignore'</em><span class="sig-paren">)</span><a class="reference external" href="http://github.com/biocore/scikit-bio/blob/0.5.1/skbio/sequence/_genetic_code.py#L400"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#skbio.sequence.GeneticCode.translate" title="Permalink to this definition">¶</a></dt>
+<code class="descclassname">GeneticCode.</code><code class="descname">translate</code><span class="sig-paren">(</span><em>sequence</em>, <em>reading_frame=1</em>, <em>start='ignore'</em>, <em>stop='ignore'</em><span class="sig-paren">)</span><a class="reference external" href="http://github.com/biocore/scikit-bio/blob/0.5.2/skbio/sequence/_genetic_code.py#L400"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#skbio.sequence.GeneticCode.translate" title="Permalink to this definition">¶</a></dt>
 <dd><p>Translate RNA sequence into protein sequence.</p>
 <p>State: Stable as of 0.4.0.</p>
 <table class="docutils field-list" frame="void" rules="none">
@@ -165,36 +158,36 @@
 and -1, -2, and -3 are reverse frames. If reverse (negative), will
 reverse complement the sequence before translation.</p>
 </div></blockquote>
-<p><strong>start</strong> : {&#8216;ignore&#8217;, &#8216;require&#8217;, &#8216;optional&#8217;}</p>
+<p><strong>start</strong> : {‘ignore’, ‘require’, ‘optional’}</p>
 <blockquote>
 <div><p>How to handle start codons:</p>
 <ul class="simple">
-<li>&#8220;ignore&#8221;: translation will start from the beginning of the
+<li>“ignore”: translation will start from the beginning of the
 reading frame, regardless of the presence of a start codon.</li>
-<li>&#8220;require&#8221;: translation will start at the first start codon in
+<li>“require”: translation will start at the first start codon in
 the reading frame, ignoring all prior positions. The first amino
 acid in the translated sequence will <em>always</em> be methionine
 (M character), even if an alternative start codon was used in
 translation. This behavior most closely matches the underlying
-biology since fMet doesn&#8217;t have a corresponding IUPAC character.
+biology since fMet doesn’t have a corresponding IUPAC character.
 If a start codon does not exist, a <code class="docutils literal"><span class="pre">ValueError</span></code> is raised.</li>
-<li>&#8220;optional&#8221;: if a start codon exists in the reading frame, matches
-the behavior of &#8220;require&#8221;. If a start codon does not exist,
-matches the behavior of &#8220;ignore&#8221;.</li>
+<li>“optional”: if a start codon exists in the reading frame, matches
+the behavior of “require”. If a start codon does not exist,
+matches the behavior of “ignore”.</li>
 </ul>
 </div></blockquote>
-<p><strong>stop</strong> : {&#8216;ignore&#8217;, &#8216;require&#8217;, &#8216;optional&#8217;}</p>
+<p><strong>stop</strong> : {‘ignore’, ‘require’, ‘optional’}</p>
 <blockquote>
 <div><p>How to handle stop codons:</p>
 <ul class="simple">
-<li>&#8220;ignore&#8221;: translation will ignore the presence of stop codons and
+<li>“ignore”: translation will ignore the presence of stop codons and
 translate to the end of the reading frame.</li>
-<li>&#8220;require&#8221;: translation will terminate at the first stop codon.
+<li>“require”: translation will terminate at the first stop codon.
 The stop codon will not be included in the translated sequence.
 If a stop codon does not exist, a <code class="docutils literal"><span class="pre">ValueError</span></code> is raised.</li>
-<li>&#8220;optional&#8221;: if a stop codon exists in the reading frame, matches
-the behavior of &#8220;require&#8221;. If a stop codon does not exist,
-matches the behavior of &#8220;ignore&#8221;.</li>
+<li>“optional”: if a stop codon exists in the reading frame, matches
+the behavior of “require”. If a stop codon does not exist,
+matches the behavior of “ignore”.</li>
 </ul>
 </div></blockquote>
 </td>
@@ -215,7 +208,7 @@ matches the behavior of &#8220;ignore&#8221;.</li>
 <p>Input RNA sequence metadata are included in the translated protein
 sequence. Positional metadata are not included.</p>
 <p class="rubric">Examples</p>
-<p>Translate RNA into protein using NCBI&#8217;s standard genetic code (table ID
+<p>Translate RNA into protein using NCBI’s standard genetic code (table ID
 1, the default genetic code in scikit-bio):</p>
 <div class="highlight-default"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">skbio</span> <span class="k">import</span> <span class="n">RNA</span><span class="p">,</span> <span class="n">GeneticCode</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">rna</span> <span class="o">=</span> <span class="n">RNA</span><span class="p">(</span><span class="s1">&#39;AGUAUUCUGCCACUGUAAGAA&#39;</span><span class="p">)</span>
@@ -235,7 +228,7 @@ sequence. Positional metadata are not included.</p>
 </div>
 <p>In this command, we used the default <code class="docutils literal"><span class="pre">start</span></code> behavior, which starts
 translation at the beginning of the reading frame, regardless of the
-presence of a start codon. If we specify &#8220;require&#8221;, translation will
+presence of a start codon. If we specify “require”, translation will
 start at the first start codon in the reading frame (in this example,
 CUG), ignoring all prior positions:</p>
 <div class="highlight-default"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">sgc</span><span class="o">.</span><span class="n">translate</span><span class="p">(</span><span class="n">rna</span><span class="p">,</span> <span class="n">start</span><span class="o">=</span><span class="s1">&#39;require&#39;</span><span class="p">)</span>
@@ -252,9 +245,9 @@ CUG), ignoring all prior positions:</p>
 </pre></div>
 </div>
 <p>Note that the codon coding for L (CUG) is an alternative start codon in
-this genetic code. Since we specified &#8220;require&#8221; mode, methionine (M)
+this genetic code. Since we specified “require” mode, methionine (M)
 was used in place of the alternative start codon (L). This behavior
-most closely matches the underlying biology since fMet doesn&#8217;t have a
+most closely matches the underlying biology since fMet doesn’t have a
 corresponding IUPAC character.</p>
 <p>Translate the same RNA sequence, also specifying that translation
 terminate at the first stop codon in the reading frame:</p>
@@ -271,10 +264,10 @@ terminate at the first stop codon in the reading frame:</p>
 <span class="go">0 MPL</span>
 </pre></div>
 </div>
-<p>Passing &#8220;require&#8221; to both <code class="docutils literal"><span class="pre">start</span></code> and <code class="docutils literal"><span class="pre">stop</span></code> trims the translation
+<p>Passing “require” to both <code class="docutils literal"><span class="pre">start</span></code> and <code class="docutils literal"><span class="pre">stop</span></code> trims the translation
 to the CDS (and in fact requires that one is present in the reading
 frame). Changing the reading frame to 2 causes an exception to be
-raised because a start codon doesn&#8217;t exist in the reading frame:</p>
+raised because a start codon doesn’t exist in the reading frame:</p>
 <div class="highlight-default"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">sgc</span><span class="o">.</span><span class="n">translate</span><span class="p">(</span><span class="n">rna</span><span class="p">,</span> <span class="n">start</span><span class="o">=</span><span class="s1">&#39;require&#39;</span><span class="p">,</span> <span class="n">stop</span><span class="o">=</span><span class="s1">&#39;require&#39;</span><span class="p">,</span>
 <span class="gp">... </span>              <span class="n">reading_frame</span><span class="o">=</span><span class="mi">2</span><span class="p">)</span> 
 <span class="gt">Traceback (most recent call last):</span>
@@ -300,7 +293,7 @@ raised because a start codon doesn&#8217;t exist in the reading frame:</p>
     </p>
     <p>
         &copy; Copyright 2014--, scikit-bio development team.<br/>
-      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 1.5a0.<br/>
+      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 1.6.5.<br/>
     </p>
   </div>
 </footer>

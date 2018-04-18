@@ -1,5 +1,5 @@
-skbio.stats.distance.permanova
-==============================
+skbio\.stats\.distance\.permanova
+=================================
 
 .. currentmodule:: skbio.stats.distance
 

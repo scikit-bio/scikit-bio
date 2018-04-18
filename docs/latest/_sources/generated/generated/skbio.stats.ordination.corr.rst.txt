@@ -1,5 +1,5 @@
-skbio.stats.ordination.corr
-===========================
+skbio\.stats\.ordination\.corr
+==============================
 
 .. currentmodule:: skbio.stats.ordination
 

@@ -1,5 +1,5 @@
-skbio.stats.composition.ancom
-=============================
+skbio\.stats\.composition\.ancom
+================================
 
 .. currentmodule:: skbio.stats.composition
 

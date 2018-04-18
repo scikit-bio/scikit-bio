@@ -1,5 +1,5 @@
-skbio.sequence.Sequence
-=======================
+skbio\.sequence\.Sequence
+=========================
 
 .. currentmodule:: skbio.sequence
 
@@ -109,15 +109,4 @@ skbio.sequence.Sequence
 
 
    
-
-   .. HACK -- the point here is that we don't want this to appear in the output, but the autosummary should still generate the pages.
-      .. autosummary::
-         :toctree:
-      
-         Sequence.default_write_format
-         Sequence.interval_metadata
-         Sequence.metadata
-         Sequence.observed_chars
-         Sequence.positional_metadata
-         Sequence.values
 

@@ -1,5 +1,5 @@
-skbio.diversity.alpha.robbins
-=============================
+skbio\.diversity\.alpha\.robbins
+================================
 
 .. currentmodule:: skbio.diversity.alpha
 

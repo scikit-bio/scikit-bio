@@ -1,22 +1,16 @@
 <!DOCTYPE html>
 
-
 <html xmlns="http://www.w3.org/1999/xhtml">
   <head>
     <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
-    
-    <title>skbio.tree.TreeNode &#8212; scikit-bio 0.5.1 documentation</title>
-    
-    <link rel="stylesheet" href="../_static/basic.css" type="text/css" />
+    <title>skbio.tree.TreeNode &#8212; scikit-bio 0.5.2 documentation</title>
+    <link rel="stylesheet" href="../_static/bootstrap-sphinx.css" type="text/css" />
     <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
     <link rel="stylesheet" href="../_static/style.css" type="text/css" />
-    <link rel="stylesheet" href="../_static/bootswatch-3.3.6/united/bootstrap.min.css" type="text/css" />
-    <link rel="stylesheet" href="../_static/bootstrap-sphinx.css" type="text/css" />
-    
     <script type="text/javascript">
       var DOCUMENTATION_OPTIONS = {
         URL_ROOT:    '../',
-        VERSION:     '0.5.1',
+        VERSION:     '0.5.2',
         COLLAPSE_INDEX: false,
         FILE_SUFFIX: '.html',
         HAS_SOURCE:  true,
@@ -27,15 +21,13 @@
     <script type="text/javascript" src="../_static/underscore.js"></script>
     <script type="text/javascript" src="../_static/doctools.js"></script>
     <script type="text/javascript" src="../_static/copybutton.js"></script>
-    <script type="text/javascript" src="https://cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
+    <script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.1/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
     <script type="text/javascript" src="../_static/js/jquery-1.11.0.min.js"></script>
     <script type="text/javascript" src="../_static/js/jquery-fix.js"></script>
-    <script type="text/javascript" src="../_static/bootstrap-3.3.6/js/bootstrap.min.js"></script>
+    <script type="text/javascript" src="../_static/bootstrap-3.3.7/js/bootstrap.min.js"></script>
     <script type="text/javascript" src="../_static/bootstrap-sphinx.js"></script>
     <link rel="index" title="Index" href="../genindex.html" />
     <link rel="search" title="Search" href="../search.html" />
-    <link rel="top" title="scikit-bio 0.5.1 documentation" href="../index.html" />
-    <link rel="up" title="Tree representations (skbio.tree)" href="../tree.html" />
     <link rel="next" title="skbio.tree.nj" href="skbio.tree.nj.html" />
     <link rel="prev" title="Tree representations (skbio.tree)" href="../tree.html" />
 <meta charset='utf-8'>
@@ -44,7 +36,7 @@
 <meta name="apple-mobile-web-app-capable" content="yes">
 
   </head>
-  <body role="document">
+  <body>
   
   <a href="https://github.com/biocore/scikit-bio"
      class="visible-desktop hidden-xs"><img
@@ -72,7 +64,7 @@
         </button>
         <a class="navbar-brand" href="../index.html">
           scikit-bio docs</a>
-        <span class="navbar-text navbar-version pull-left"><b>0.5.1</b></span>
+        <span class="navbar-text navbar-version pull-left"><b>0.5.2</b></span>
       </div>
 
         <div class="collapse navbar-collapse nav-collapse">
@@ -151,12 +143,12 @@
 <h1>skbio.tree.TreeNode<a class="headerlink" href="#skbio-tree-treenode" title="Permalink to this headline">¶</a></h1>
 <dl class="class">
 <dt id="skbio.tree.TreeNode">
-<em class="property">class </em><code class="descclassname">skbio.tree.</code><code class="descname">TreeNode</code><span class="sig-paren">(</span><em>name=None</em>, <em>length=None</em>, <em>parent=None</em>, <em>children=None</em><span class="sig-paren">)</span><a class="reference external" href="http://github.com/biocore/scikit-bio/blob/0.5.1/skbio/tree/_tree.py#L46"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#skbio.tree.TreeNode" title="Permalink to this definition">¶</a></dt>
+<em class="property">class </em><code class="descclassname">skbio.tree.</code><code class="descname">TreeNode</code><span class="sig-paren">(</span><em>name=None</em>, <em>length=None</em>, <em>parent=None</em>, <em>children=None</em><span class="sig-paren">)</span><a class="reference external" href="http://github.com/biocore/scikit-bio/blob/0.5.2/skbio/tree/_tree.py#L46"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#skbio.tree.TreeNode" title="Permalink to this definition">¶</a></dt>
 <dd><p>Representation of a node within a tree</p>
 <p>A <cite>TreeNode</cite> instance stores links to its parent and optional children
 nodes. In addition, the <cite>TreeNode</cite> can represent a <cite>length</cite> (e.g., a
 branch length) between itself and its parent. Within this object, the use
-of &#8220;children&#8221; and &#8220;descendants&#8221; is frequent in the documentation. A child
+of “children” and “descendants” is frequent in the documentation. A child
 is a direct descendant of a node, while descendants are all nodes that are
 below a given node (e.g., grand-children, etc).</p>
 <table class="docutils field-list" frame="void" rules="none">
@@ -189,24 +181,24 @@ distances, time, etc.</p>
 <p class="rubric">Attributes</p>
 <table border="1" class="docutils">
 <colgroup>
-<col width="44%" />
-<col width="56%" />
+<col width="55%" />
+<col width="45%" />
 </colgroup>
 <tbody valign="top">
-<tr class="row-odd"><td>name</td>
-<td>&nbsp;</td>
+<tr class="row-odd"><td><strong>name</strong></td>
+<td>&#160;</td>
 </tr>
-<tr class="row-even"><td>length</td>
-<td>&nbsp;</td>
+<tr class="row-even"><td><strong>length</strong></td>
+<td>&#160;</td>
 </tr>
-<tr class="row-odd"><td>parent</td>
-<td>&nbsp;</td>
+<tr class="row-odd"><td><strong>parent</strong></td>
+<td>&#160;</td>
 </tr>
-<tr class="row-even"><td>children</td>
-<td>&nbsp;</td>
+<tr class="row-even"><td><strong>children</strong></td>
+<td>&#160;</td>
 </tr>
-<tr class="row-odd"><td>id</td>
-<td>&nbsp;</td>
+<tr class="row-odd"><td><strong>id</strong></td>
+<td>&#160;</td>
 </tr>
 </tbody>
 </table>
@@ -262,7 +254,7 @@ distances, time, etc.</p>
 <tr class="row-odd"><td><a class="reference internal" href="skbio.tree.TreeNode.compare_subsets.html#skbio.tree.TreeNode.compare_subsets" title="skbio.tree.TreeNode.compare_subsets"><code class="xref py py-obj docutils literal"><span class="pre">compare_subsets</span></code></a>(other[,&nbsp;exclude_absent_taxa])</td>
 <td>Returns fraction of overlapping subsets where self and other differ.</td>
 </tr>
-<tr class="row-even"><td><a class="reference internal" href="skbio.tree.TreeNode.compare_tip_distances.html#skbio.tree.TreeNode.compare_tip_distances" title="skbio.tree.TreeNode.compare_tip_distances"><code class="xref py py-obj docutils literal"><span class="pre">compare_tip_distances</span></code></a>(other[,&nbsp;sample,&nbsp;...])</td>
+<tr class="row-even"><td><a class="reference internal" href="skbio.tree.TreeNode.compare_tip_distances.html#skbio.tree.TreeNode.compare_tip_distances" title="skbio.tree.TreeNode.compare_tip_distances"><code class="xref py py-obj docutils literal"><span class="pre">compare_tip_distances</span></code></a>(other[,&nbsp;sample,&nbsp;…])</td>
 <td>Compares self to other using tip-to-tip distance matrices.</td>
 </tr>
 <tr class="row-odd"><td><a class="reference internal" href="skbio.tree.TreeNode.copy.html#skbio.tree.TreeNode.copy" title="skbio.tree.TreeNode.copy"><code class="xref py py-obj docutils literal"><span class="pre">copy</span></code></a>()</td>
@@ -435,7 +427,7 @@ distances, time, etc.</p>
     </p>
     <p>
         &copy; Copyright 2014--, scikit-bio development team.<br/>
-      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 1.5a0.<br/>
+      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 1.6.5.<br/>
     </p>
   </div>
 </footer>

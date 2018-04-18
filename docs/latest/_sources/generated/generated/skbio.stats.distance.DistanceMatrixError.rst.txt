@@ -1,5 +1,5 @@
-skbio.stats.distance.DistanceMatrixError
-========================================
+skbio\.stats\.distance\.DistanceMatrixError
+===========================================
 
 .. currentmodule:: skbio.stats.distance
 

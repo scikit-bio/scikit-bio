@@ -1,22 +1,16 @@
 <!DOCTYPE html>
 
-
 <html xmlns="http://www.w3.org/1999/xhtml">
   <head>
     <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
-    
-    <title>skbio.stats.distance.mantel &#8212; scikit-bio 0.5.1 documentation</title>
-    
-    <link rel="stylesheet" href="../../_static/basic.css" type="text/css" />
+    <title>skbio.stats.distance.mantel &#8212; scikit-bio 0.5.2 documentation</title>
+    <link rel="stylesheet" href="../../_static/bootstrap-sphinx.css" type="text/css" />
     <link rel="stylesheet" href="../../_static/pygments.css" type="text/css" />
     <link rel="stylesheet" href="../../_static/style.css" type="text/css" />
-    <link rel="stylesheet" href="../../_static/bootswatch-3.3.6/united/bootstrap.min.css" type="text/css" />
-    <link rel="stylesheet" href="../../_static/bootstrap-sphinx.css" type="text/css" />
-    
     <script type="text/javascript">
       var DOCUMENTATION_OPTIONS = {
         URL_ROOT:    '../../',
-        VERSION:     '0.5.1',
+        VERSION:     '0.5.2',
         COLLAPSE_INDEX: false,
         FILE_SUFFIX: '.html',
         HAS_SOURCE:  true,
@@ -27,15 +21,13 @@
     <script type="text/javascript" src="../../_static/underscore.js"></script>
     <script type="text/javascript" src="../../_static/doctools.js"></script>
     <script type="text/javascript" src="../../_static/copybutton.js"></script>
-    <script type="text/javascript" src="https://cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
+    <script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.1/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
     <script type="text/javascript" src="../../_static/js/jquery-1.11.0.min.js"></script>
     <script type="text/javascript" src="../../_static/js/jquery-fix.js"></script>
-    <script type="text/javascript" src="../../_static/bootstrap-3.3.6/js/bootstrap.min.js"></script>
+    <script type="text/javascript" src="../../_static/bootstrap-3.3.7/js/bootstrap.min.js"></script>
     <script type="text/javascript" src="../../_static/bootstrap-sphinx.js"></script>
     <link rel="index" title="Index" href="../../genindex.html" />
     <link rel="search" title="Search" href="../../search.html" />
-    <link rel="top" title="scikit-bio 0.5.1 documentation" href="../../index.html" />
-    <link rel="up" title="Distance matrices and distance-based statistics (skbio.stats.distance)" href="../skbio.stats.distance.html" />
     <link rel="next" title="skbio.stats.distance.pwmantel" href="skbio.stats.distance.pwmantel.html" />
     <link rel="prev" title="skbio.stats.distance.bioenv" href="skbio.stats.distance.bioenv.html" />
 <meta charset='utf-8'>
@@ -44,7 +36,7 @@
 <meta name="apple-mobile-web-app-capable" content="yes">
 
   </head>
-  <body role="document">
+  <body>
   
   <a href="https://github.com/biocore/scikit-bio"
      class="visible-desktop hidden-xs"><img
@@ -72,7 +64,7 @@
         </button>
         <a class="navbar-brand" href="../../index.html">
           scikit-bio docs</a>
-        <span class="navbar-text navbar-version pull-left"><b>0.5.1</b></span>
+        <span class="navbar-text navbar-version pull-left"><b>0.5.2</b></span>
       </div>
 
         <div class="collapse navbar-collapse nav-collapse">
@@ -151,15 +143,15 @@
 <h1>skbio.stats.distance.mantel<a class="headerlink" href="#skbio-stats-distance-mantel" title="Permalink to this headline">¶</a></h1>
 <dl class="function">
 <dt id="skbio.stats.distance.mantel">
-<code class="descclassname">skbio.stats.distance.</code><code class="descname">mantel</code><span class="sig-paren">(</span><em>x</em>, <em>y</em>, <em>method='pearson'</em>, <em>permutations=999</em>, <em>alternative='two-sided'</em>, <em>strict=True</em>, <em>lookup=None</em><span class="sig-paren">)</span><a class="reference external" href="http://github.com/biocore/scikit-bio/blob/0.5.1/skbio/stats/distance/_mantel.py#L20"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#skbio.stats.distance.mantel" title="Permalink to this definition">¶</a></dt>
+<code class="descclassname">skbio.stats.distance.</code><code class="descname">mantel</code><span class="sig-paren">(</span><em>x</em>, <em>y</em>, <em>method='pearson'</em>, <em>permutations=999</em>, <em>alternative='two-sided'</em>, <em>strict=True</em>, <em>lookup=None</em><span class="sig-paren">)</span><a class="reference external" href="http://github.com/biocore/scikit-bio/blob/0.5.2/skbio/stats/distance/_mantel.py#L20"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#skbio.stats.distance.mantel" title="Permalink to this definition">¶</a></dt>
 <dd><p>Compute correlation between distance matrices using the Mantel test.</p>
 <p>State: Experimental as of 0.4.0.</p>
 <p>The Mantel test compares two distance matrices by computing the correlation
 between the distances in the lower (or upper) triangular portions of the
-symmetric distance matrices. Correlation can be computed using Pearson&#8217;s
-product-moment correlation coefficient or Spearman&#8217;s rank correlation
+symmetric distance matrices. Correlation can be computed using Pearson’s
+product-moment correlation coefficient or Spearman’s rank correlation
 coefficient.</p>
-<p>As defined in <a class="reference internal" href="#r77" id="id1">[R77]</a>, the Mantel test computes a test statistic <span class="math">\(r_M\)</span>
+<p>As defined in <a class="reference internal" href="#r153155" id="id1">[R153155]</a>, the Mantel test computes a test statistic <span class="math">\(r_M\)</span>
 given two symmetric distance matrices <span class="math">\(D_X\)</span> and <span class="math">\(D_Y\)</span>.
 <span class="math">\(r_M\)</span> is defined as</p>
 <div class="math">
@@ -182,7 +174,7 @@ number of times (controlled via <cite>permutations</cite>). A correlation coeffi
 is computed for each permutation and the p-value is the proportion of
 permuted correlation coefficients that are equal to or more extreme
 than the original (unpermuted) correlation coefficient. Whether a permuted
-correlation coefficient is &#8220;more extreme&#8221; than the original correlation
+correlation coefficient is “more extreme” than the original correlation
 coefficient depends on the alternative hypothesis (controlled via
 <cite>alternative</cite>).</p>
 <table class="docutils field-list" frame="void" rules="none">
@@ -199,7 +191,7 @@ IDs); thus they are not required to be in the same ID order. If <cite>x</cite> a
 have the same shape. In either case, <cite>x</cite> and <cite>y</cite> must be at least 3x3
 in size <em>after</em> reordering and matching of IDs.</p>
 </div></blockquote>
-<p><strong>method</strong> : {&#8216;pearson&#8217;, &#8216;spearman&#8217;}</p>
+<p><strong>method</strong> : {‘pearson’, ‘spearman’}</p>
 <blockquote>
 <div><p>Method used to compute the correlation between distance matrices.</p>
 </div></blockquote>
@@ -210,7 +202,7 @@ significance. Must be greater than or equal to zero. If zero,
 statistical significance calculations will be skipped and the p-value
 will be <code class="docutils literal"><span class="pre">np.nan</span></code>.</p>
 </div></blockquote>
-<p><strong>alternative</strong> : {&#8216;two-sided&#8217;, &#8216;greater&#8217;, &#8216;less&#8217;}</p>
+<p><strong>alternative</strong> : {‘two-sided’, ‘greater’, ‘less’}</p>
 <blockquote>
 <div><p>Alternative hypothesis to use when calculating statistical
 significance. The default <code class="docutils literal"><span class="pre">'two-sided'</span></code> alternative hypothesis
@@ -275,40 +267,40 @@ of IDs, or an invalid <cite>method</cite>, number of <cite>permutations</cite>, 
 </table>
 <div class="admonition seealso">
 <p class="first admonition-title">See also</p>
-<p class="last"><a class="reference internal" href="skbio.stats.distance.DistanceMatrix.html#skbio.stats.distance.DistanceMatrix" title="skbio.stats.distance.DistanceMatrix"><code class="xref py py-obj docutils literal"><span class="pre">DistanceMatrix</span></code></a>, <a class="reference external" href="https://docs.scipy.org/doc/scipy/reference/generated/scipy.stats.pearsonr.html#scipy.stats.pearsonr" title="(in SciPy v0.18.1)"><code class="xref py py-obj docutils literal"><span class="pre">scipy.stats.pearsonr</span></code></a>, <a class="reference external" href="https://docs.scipy.org/doc/scipy/reference/generated/scipy.stats.spearmanr.html#scipy.stats.spearmanr" title="(in SciPy v0.18.1)"><code class="xref py py-obj docutils literal"><span class="pre">scipy.stats.spearmanr</span></code></a>, <a class="reference internal" href="skbio.stats.distance.pwmantel.html#skbio.stats.distance.pwmantel" title="skbio.stats.distance.pwmantel"><code class="xref py py-obj docutils literal"><span class="pre">pwmantel</span></code></a></p>
+<p class="last"><a class="reference internal" href="skbio.stats.distance.DistanceMatrix.html#skbio.stats.distance.DistanceMatrix" title="skbio.stats.distance.DistanceMatrix"><code class="xref py py-obj docutils literal"><span class="pre">DistanceMatrix</span></code></a>, <a class="reference external" href="https://docs.scipy.org/doc/scipy/reference/generated/scipy.stats.pearsonr.html#scipy.stats.pearsonr" title="(in SciPy v1.0.0)"><code class="xref py py-obj docutils literal"><span class="pre">scipy.stats.pearsonr</span></code></a>, <a class="reference external" href="https://docs.scipy.org/doc/scipy/reference/generated/scipy.stats.spearmanr.html#scipy.stats.spearmanr" title="(in SciPy v1.0.0)"><code class="xref py py-obj docutils literal"><span class="pre">scipy.stats.spearmanr</span></code></a>, <a class="reference internal" href="skbio.stats.distance.pwmantel.html#skbio.stats.distance.pwmantel" title="skbio.stats.distance.pwmantel"><code class="xref py py-obj docutils literal"><span class="pre">pwmantel</span></code></a></p>
 </div>
 <p class="rubric">Notes</p>
-<p>The Mantel test was first described in <a class="reference internal" href="#r78" id="id2">[R78]</a>. The general algorithm and
-interface are similar to <code class="docutils literal"><span class="pre">vegan::mantel</span></code>, available in R&#8217;s vegan
-package <a class="reference internal" href="#r79" id="id3">[R79]</a>.</p>
+<p>The Mantel test was first described in <a class="reference internal" href="#r154155" id="id2">[R154155]</a>. The general algorithm and
+interface are similar to <code class="docutils literal"><span class="pre">vegan::mantel</span></code>, available in R’s vegan
+package <a class="reference internal" href="#r155155" id="id3">[R155155]</a>.</p>
 <p><code class="docutils literal"><span class="pre">np.nan</span></code> will be returned for the p-value if <cite>permutations</cite> is zero or if
 the correlation coefficient is <code class="docutils literal"><span class="pre">np.nan</span></code>. The correlation coefficient will
 be <code class="docutils literal"><span class="pre">np.nan</span></code> if one or both of the inputs does not have any variation
 (i.e. the distances are all constant) and <code class="docutils literal"><span class="pre">method='spearman'</span></code>.</p>
 <p class="rubric">References</p>
-<table class="docutils citation" frame="void" id="r77" rules="none">
+<table class="docutils citation" frame="void" id="r153155" rules="none">
 <colgroup><col class="label" /><col /></colgroup>
 <tbody valign="top">
-<tr><td class="label">[R77]</td><td><em>(<a class="fn-backref" href="#id1">1</a>, <a class="fn-backref" href="#id4">2</a>)</em> Legendre, P. and Legendre, L. (2012) Numerical Ecology. 3rd English
+<tr><td class="label">[R153155]</td><td><em>(<a class="fn-backref" href="#id1">1</a>, <a class="fn-backref" href="#id4">2</a>)</em> Legendre, P. and Legendre, L. (2012) Numerical Ecology. 3rd English
 Edition. Elsevier.</td></tr>
 </tbody>
 </table>
-<table class="docutils citation" frame="void" id="r78" rules="none">
+<table class="docutils citation" frame="void" id="r154155" rules="none">
 <colgroup><col class="label" /><col /></colgroup>
 <tbody valign="top">
-<tr><td class="label">[R78]</td><td><em>(<a class="fn-backref" href="#id2">1</a>, <a class="fn-backref" href="#id5">2</a>)</em> Mantel, N. (1967). &#8220;The detection of disease clustering and a
-generalized regression approach&#8221;. Cancer Research 27 (2): 209-220. PMID
+<tr><td class="label">[R154155]</td><td><em>(<a class="fn-backref" href="#id2">1</a>, <a class="fn-backref" href="#id5">2</a>)</em> Mantel, N. (1967). “The detection of disease clustering and a
+generalized regression approach”. Cancer Research 27 (2): 209-220. PMID
 6018555.</td></tr>
 </tbody>
 </table>
-<table class="docutils citation" frame="void" id="r79" rules="none">
+<table class="docutils citation" frame="void" id="r155155" rules="none">
 <colgroup><col class="label" /><col /></colgroup>
 <tbody valign="top">
-<tr><td class="label">[R79]</td><td><em>(<a class="fn-backref" href="#id3">1</a>, <a class="fn-backref" href="#id6">2</a>)</em> <a class="reference external" href="http://cran.r-project.org/web/packages/vegan/index.html">http://cran.r-project.org/web/packages/vegan/index.html</a></td></tr>
+<tr><td class="label">[R155155]</td><td><em>(<a class="fn-backref" href="#id3">1</a>, <a class="fn-backref" href="#id6">2</a>)</em> <a class="reference external" href="http://cran.r-project.org/web/packages/vegan/index.html">http://cran.r-project.org/web/packages/vegan/index.html</a></td></tr>
 </tbody>
 </table>
 <p class="rubric">Examples</p>
-<p>Import the functionality we&#8217;ll use in the following examples:</p>
+<p>Import the functionality we’ll use in the following examples:</p>
 <div class="highlight-default"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">skbio</span> <span class="k">import</span> <span class="n">DistanceMatrix</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">skbio.stats.distance</span> <span class="k">import</span> <span class="n">mantel</span>
 </pre></div>
@@ -343,7 +335,7 @@ same IDs, in the same order:</p>
 running the test. The function also supports a <code class="docutils literal"><span class="pre">lookup</span></code> dictionary that
 maps distance matrix IDs to new IDs, providing a way to match IDs between
 distance matrices prior to running the Mantel test.</p>
-<p>For example, let&#8217;s reassign the distance matrices&#8217; IDs so that there are no
+<p>For example, let’s reassign the distance matrices’ IDs so that there are no
 matching IDs between them:</p>
 <div class="highlight-default"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">x</span><span class="o">.</span><span class="n">ids</span> <span class="o">=</span> <span class="p">(</span><span class="s1">&#39;a&#39;</span><span class="p">,</span> <span class="s1">&#39;b&#39;</span><span class="p">,</span> <span class="s1">&#39;c&#39;</span><span class="p">)</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">y</span><span class="o">.</span><span class="n">ids</span> <span class="o">=</span> <span class="p">(</span><span class="s1">&#39;d&#39;</span><span class="p">,</span> <span class="s1">&#39;e&#39;</span><span class="p">,</span> <span class="s1">&#39;f&#39;</span><span class="p">)</span>
@@ -415,7 +407,7 @@ instances, we obtain the same result:</p>
     </p>
     <p>
         &copy; Copyright 2014--, scikit-bio development team.<br/>
-      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 1.5a0.<br/>
+      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 1.6.5.<br/>
     </p>
   </div>
 </footer>

@@ -1,5 +1,5 @@
-skbio.sequence.distance.hamming
-===============================
+skbio\.sequence\.distance\.hamming
+==================================
 
 .. currentmodule:: skbio.sequence.distance
 

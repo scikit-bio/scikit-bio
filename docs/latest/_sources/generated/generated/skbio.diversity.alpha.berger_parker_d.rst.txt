@@ -1,5 +1,5 @@
-skbio.diversity.alpha.berger_parker_d
-=====================================
+skbio\.diversity\.alpha\.berger\_parker\_d
+==========================================
 
 .. currentmodule:: skbio.diversity.alpha
 

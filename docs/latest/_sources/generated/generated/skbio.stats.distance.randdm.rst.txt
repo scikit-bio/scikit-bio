@@ -1,5 +1,5 @@
-skbio.stats.distance.randdm
-===========================
+skbio\.stats\.distance\.randdm
+==============================
 
 .. currentmodule:: skbio.stats.distance
 

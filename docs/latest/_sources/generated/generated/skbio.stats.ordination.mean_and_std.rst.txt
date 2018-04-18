@@ -1,5 +1,5 @@
-skbio.stats.ordination.mean_and_std
-===================================
+skbio\.stats\.ordination\.mean\_and\_std
+========================================
 
 .. currentmodule:: skbio.stats.ordination
 

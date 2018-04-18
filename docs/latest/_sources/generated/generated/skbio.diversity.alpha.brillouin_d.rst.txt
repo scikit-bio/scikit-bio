@@ -1,5 +1,5 @@
-skbio.diversity.alpha.brillouin_d
-=================================
+skbio\.diversity\.alpha\.brillouin\_d
+=====================================
 
 .. currentmodule:: skbio.diversity.alpha
 

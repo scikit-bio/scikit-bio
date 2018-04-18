@@ -1,5 +1,5 @@
-skbio.diversity.alpha.menhinick
-===============================
+skbio\.diversity\.alpha\.menhinick
+==================================
 
 .. currentmodule:: skbio.diversity.alpha
 

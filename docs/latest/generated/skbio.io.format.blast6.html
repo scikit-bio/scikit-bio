@@ -1,22 +1,16 @@
 <!DOCTYPE html>
 
-
 <html xmlns="http://www.w3.org/1999/xhtml">
   <head>
     <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
-    
-    <title>BLAST+6 format (skbio.io.format.blast6) &#8212; scikit-bio 0.5.1 documentation</title>
-    
-    <link rel="stylesheet" href="../_static/basic.css" type="text/css" />
+    <title>BLAST+6 format (skbio.io.format.blast6) &#8212; scikit-bio 0.5.2 documentation</title>
+    <link rel="stylesheet" href="../_static/bootstrap-sphinx.css" type="text/css" />
     <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
     <link rel="stylesheet" href="../_static/style.css" type="text/css" />
-    <link rel="stylesheet" href="../_static/bootswatch-3.3.6/united/bootstrap.min.css" type="text/css" />
-    <link rel="stylesheet" href="../_static/bootstrap-sphinx.css" type="text/css" />
-    
     <script type="text/javascript">
       var DOCUMENTATION_OPTIONS = {
         URL_ROOT:    '../',
-        VERSION:     '0.5.1',
+        VERSION:     '0.5.2',
         COLLAPSE_INDEX: false,
         FILE_SUFFIX: '.html',
         HAS_SOURCE:  true,
@@ -27,15 +21,13 @@
     <script type="text/javascript" src="../_static/underscore.js"></script>
     <script type="text/javascript" src="../_static/doctools.js"></script>
     <script type="text/javascript" src="../_static/copybutton.js"></script>
-    <script type="text/javascript" src="https://cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
+    <script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.1/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
     <script type="text/javascript" src="../_static/js/jquery-1.11.0.min.js"></script>
     <script type="text/javascript" src="../_static/js/jquery-fix.js"></script>
-    <script type="text/javascript" src="../_static/bootstrap-3.3.6/js/bootstrap.min.js"></script>
+    <script type="text/javascript" src="../_static/bootstrap-3.3.7/js/bootstrap.min.js"></script>
     <script type="text/javascript" src="../_static/bootstrap-sphinx.js"></script>
     <link rel="index" title="Index" href="../genindex.html" />
     <link rel="search" title="Search" href="../search.html" />
-    <link rel="top" title="scikit-bio 0.5.1 documentation" href="../index.html" />
-    <link rel="up" title="File I/O (skbio.io)" href="../io.html" />
     <link rel="next" title="BLAST+7 format (skbio.io.format.blast7)" href="skbio.io.format.blast7.html" />
     <link rel="prev" title="File I/O (skbio.io)" href="../io.html" />
 <meta charset='utf-8'>
@@ -44,7 +36,7 @@
 <meta name="apple-mobile-web-app-capable" content="yes">
 
   </head>
-  <body role="document">
+  <body>
   
   <a href="https://github.com/biocore/scikit-bio"
      class="visible-desktop hidden-xs"><img
@@ -72,7 +64,7 @@
         </button>
         <a class="navbar-brand" href="../index.html">
           scikit-bio docs</a>
-        <span class="navbar-text navbar-version pull-left"><b>0.5.1</b></span>
+        <span class="navbar-text navbar-version pull-left"><b>0.5.2</b></span>
       </div>
 
         <div class="collapse navbar-collapse nav-collapse">
@@ -159,13 +151,13 @@
       
   <span class="target" id="module-skbio.io.format.blast6"></span><div class="section" id="blast-6-format-skbio-io-format-blast6">
 <h1>BLAST+6 format (<a class="reference internal" href="#module-skbio.io.format.blast6" title="skbio.io.format.blast6"><code class="xref py py-mod docutils literal"><span class="pre">skbio.io.format.blast6</span></code></a>)<a class="headerlink" href="#blast-6-format-skbio-io-format-blast6" title="Permalink to this headline">¶</a></h1>
-<p>The BLAST+6 format (<code class="docutils literal"><span class="pre">blast+6</span></code>) stores the results of a BLAST <a class="reference internal" href="#r159" id="id1">[R159]</a> database
+<p>The BLAST+6 format (<code class="docutils literal"><span class="pre">blast+6</span></code>) stores the results of a BLAST <a class="reference internal" href="#r313" id="id1">[R313]</a> database
 search. The results are stored in a simple tabular format with no column
 headers. Values are separated by the tab character.</p>
 <p>An example BLAST+6-formatted file comparing two protein sequences, taken
-from <a class="reference internal" href="#r160" id="id2">[R160]</a> (tab characters represented by <code class="docutils literal"><span class="pre">&lt;tab&gt;</span></code>):</p>
-<div class="highlight-default"><div class="highlight"><pre><span></span><span class="n">moaC</span><span class="o">&lt;</span><span class="n">tab</span><span class="o">&gt;</span><span class="n">gi</span><span class="o">|</span><span class="mi">15800534</span><span class="o">|</span><span class="n">ref</span><span class="o">|</span><span class="n">NP_286546</span><span class="o">.</span><span class="mi">1</span><span class="o">|&lt;</span><span class="n">tab</span><span class="o">&gt;</span><span class="mf">100.00</span><span class="o">&lt;</span><span class="n">tab</span><span class="o">&gt;</span><span class="mi">161</span><span class="o">&lt;</span><span class="n">tab</span><span class="o">&gt;</span><span class="mi">0</span><span class="o">&lt;</span><span class="n">tab</span><span class="o">&gt;</span><span class="mi">0</span><span class="o">&lt;</span><span class="n">tab</span><span class="o">&gt;</span><span class="mi">1</span><span class="o">&lt;</span><span class="n">tab</span><span class="o">&gt;</span><span class="mi">161</span><span class="o">&lt;</span><span class="n">tab</span><span class="o">&gt;</span><span class="mi">1</span><span class="o">&lt;</span><span class="n">tab</span><span class="o">&gt;</span><span class="mi">161</span><span class="o">&lt;</span><span class="n">tab</span><span class="o">&gt;</span><span class="mi">3</span><span class="n">e</span><span class="o">-</span><span class="mi">114</span><span class="o">&lt;</span><span class="n">tab</span><span class="o">&gt;</span><span class="mi">330</span>
-<span class="n">moaC</span><span class="o">&lt;</span><span class="n">tab</span><span class="o">&gt;</span><span class="n">gi</span><span class="o">|</span><span class="mi">170768970</span><span class="o">|</span><span class="n">ref</span><span class="o">|</span><span class="n">ZP_02903423</span><span class="o">.</span><span class="mi">1</span><span class="o">|&lt;</span><span class="n">tab</span><span class="o">&gt;</span><span class="mf">99.38</span><span class="o">&lt;</span><span class="n">tab</span><span class="o">&gt;</span><span class="mi">161</span><span class="o">&lt;</span><span class="n">tab</span><span class="o">&gt;</span><span class="mi">1</span><span class="o">&lt;</span><span class="n">tab</span><span class="o">&gt;</span><span class="mi">0</span><span class="o">&lt;</span><span class="n">tab</span><span class="o">&gt;</span><span class="mi">1</span><span class="o">&lt;</span><span class="n">tab</span><span class="o">&gt;</span><span class="mi">161</span><span class="o">&lt;</span><span class="n">tab</span><span class="o">&gt;</span><span class="mi">1</span><span class="o">&lt;</span><span class="n">tab</span><span class="o">&gt;</span><span class="mi">161</span><span class="o">&lt;</span><span class="n">tab</span><span class="o">&gt;</span><span class="mi">9</span><span class="n">e</span><span class="o">-</span><span class="mi">114</span><span class="o">&lt;</span><span class="n">tab</span><span class="o">&gt;</span><span class="mi">329</span>
+from <a class="reference internal" href="#r314" id="id2">[R314]</a> (tab characters represented by <code class="docutils literal"><span class="pre">&lt;tab&gt;</span></code>):</p>
+<div class="highlight-default"><div class="highlight"><pre><span></span><span class="n">moaC</span><span class="o">&lt;</span><span class="n">tab</span><span class="o">&gt;</span><span class="n">gi</span><span class="o">|</span><span class="mi">15800534</span><span class="o">|</span><span class="n">ref</span><span class="o">|</span><span class="n">NP_286546</span><span class="o">.</span><span class="mi">1</span><span class="o">|&lt;</span><span class="n">tab</span><span class="o">&gt;</span><span class="mf">100.00</span><span class="o">&lt;</span><span class="n">tab</span><span class="o">&gt;</span><span class="mi">161</span><span class="o">&lt;</span><span class="n">tab</span><span class="o">&gt;</span><span class="mi">0</span><span class="o">&lt;</span><span class="n">tab</span><span class="o">&gt;</span><span class="mi">0</span><span class="o">&lt;</span><span class="n">tab</span><span class="o">&gt;</span><span class="mi">1</span><span class="o">&lt;</span><span class="n">tab</span><span class="o">&gt;</span><span class="mi">161</span><span class="o">&lt;</span><span class="n">tab</span><span class="o">&gt;</span><span class="mi">1</span><span class="o">&lt;</span><span class="n">tab</span><span class="o">&gt;</span><span class="mi">161</span><span class="o">&lt;</span><span class="n">tab</span><span class="o">&gt;</span><span class="mf">3e-114</span><span class="o">&lt;</span><span class="n">tab</span><span class="o">&gt;</span><span class="mi">330</span>
+<span class="n">moaC</span><span class="o">&lt;</span><span class="n">tab</span><span class="o">&gt;</span><span class="n">gi</span><span class="o">|</span><span class="mi">170768970</span><span class="o">|</span><span class="n">ref</span><span class="o">|</span><span class="n">ZP_02903423</span><span class="o">.</span><span class="mi">1</span><span class="o">|&lt;</span><span class="n">tab</span><span class="o">&gt;</span><span class="mf">99.38</span><span class="o">&lt;</span><span class="n">tab</span><span class="o">&gt;</span><span class="mi">161</span><span class="o">&lt;</span><span class="n">tab</span><span class="o">&gt;</span><span class="mi">1</span><span class="o">&lt;</span><span class="n">tab</span><span class="o">&gt;</span><span class="mi">0</span><span class="o">&lt;</span><span class="n">tab</span><span class="o">&gt;</span><span class="mi">1</span><span class="o">&lt;</span><span class="n">tab</span><span class="o">&gt;</span><span class="mi">161</span><span class="o">&lt;</span><span class="n">tab</span><span class="o">&gt;</span><span class="mi">1</span><span class="o">&lt;</span><span class="n">tab</span><span class="o">&gt;</span><span class="mi">161</span><span class="o">&lt;</span><span class="n">tab</span><span class="o">&gt;</span><span class="mf">9e-114</span><span class="o">&lt;</span><span class="n">tab</span><span class="o">&gt;</span><span class="mi">329</span>
 </pre></div>
 </div>
 <div class="section" id="format-support">
@@ -203,7 +195,7 @@ columns output by BLAST are not desired.</p>
 <div class="section" id="blast-column-types">
 <h3>BLAST Column Types<a class="headerlink" href="#blast-column-types" title="Permalink to this headline">¶</a></h3>
 <p>The following column types are output by BLAST and supported by scikit-bio.
-This information is taken from <a class="reference internal" href="#r161" id="id3">[R161]</a>.</p>
+This information is taken from <a class="reference internal" href="#r315" id="id3">[R315]</a>.</p>
 <table border="1" class="docutils">
 <colgroup>
 <col width="21%" />
@@ -243,7 +235,7 @@ This information is taken from <a class="reference internal" href="#r161" id="id
 </tr>
 <tr class="row-even"><td>sallseqid</td>
 <td>All subject Seq-id(s), separated by
-a &#8216;;&#8217;</td>
+a ‘;’</td>
 <td>str</td>
 </tr>
 <tr class="row-odd"><td>sgi</td>
@@ -340,7 +332,7 @@ a &#8216;;&#8217;</td>
 </tr>
 <tr class="row-even"><td>frames</td>
 <td>Query and subject frames separated
-by a &#8216;/&#8217;</td>
+by a ‘/’</td>
 <td>str</td>
 </tr>
 <tr class="row-odd"><td>qframe</td>
@@ -356,25 +348,25 @@ by a &#8216;/&#8217;</td>
 <td>int</td>
 </tr>
 <tr class="row-even"><td>staxids</td>
-<td>Unique Subject Taxonomy ID(s), separated by a &#8216;;&#8217; (in numerical order)</td>
+<td>Unique Subject Taxonomy ID(s), separated by a ‘;’ (in numerical order)</td>
 <td>str</td>
 </tr>
 <tr class="row-odd"><td>sscinames</td>
 <td>Unique Subject Scientific Name(s),
-separated by a &#8216;;&#8217;</td>
+separated by a ‘;’</td>
 <td>str</td>
 </tr>
 <tr class="row-even"><td>scomnames</td>
-<td>Unique Subject Common Name(s), separated by a &#8216;;&#8217;</td>
+<td>Unique Subject Common Name(s), separated by a ‘;’</td>
 <td>str</td>
 </tr>
 <tr class="row-odd"><td>sblastnames</td>
-<td>unique Subject Blast Name(s), separated by a &#8216;;&#8217; (in alphabetical
+<td>unique Subject Blast Name(s), separated by a ‘;’ (in alphabetical
 order)</td>
 <td>str</td>
 </tr>
 <tr class="row-even"><td>sskingdoms</td>
-<td>unique Subject Super Kingdom(s), separated by a &#8216;;&#8217; (in alphabetical
+<td>unique Subject Super Kingdom(s), separated by a ‘;’ (in alphabetical
 order)</td>
 <td>str</td>
 </tr>
@@ -388,7 +380,7 @@ order)</td>
 </tr>
 <tr class="row-odd"><td>salltitles</td>
 <td>All Subject Title(s), separated by
-a &#8216;&lt;&gt;&#8217;</td>
+a ‘&lt;&gt;’</td>
 <td>str</td>
 </tr>
 <tr class="row-even"><td>qcovs</td>
@@ -404,7 +396,7 @@ a &#8216;&lt;&gt;&#8217;</td>
 <div class="admonition note">
 <p class="first admonition-title">Note</p>
 <p class="last">When a BLAST+6-formatted file contains <code class="docutils literal"><span class="pre">N/A</span></code> values, scikit-bio
-will convert these values into <code class="docutils literal"><span class="pre">np.nan</span></code>, matching pandas&#8217; convention for
+will convert these values into <code class="docutils literal"><span class="pre">np.nan</span></code>, matching pandas’ convention for
 representing missing data.</p>
 </div>
 <div class="admonition note">
@@ -491,23 +483,23 @@ in the file:</p>
 </div>
 <div class="section" id="references">
 <h2>References<a class="headerlink" href="#references" title="Permalink to this headline">¶</a></h2>
-<table class="docutils citation" frame="void" id="r159" rules="none">
+<table class="docutils citation" frame="void" id="r313" rules="none">
 <colgroup><col class="label" /><col /></colgroup>
 <tbody valign="top">
-<tr><td class="label"><a class="fn-backref" href="#id1">[R159]</a></td><td>Altschul, S.F., Gish, W., Miller, W., Myers, E.W. &amp; Lipman, D.J. (1990)
-&#8220;Basic local alignment search tool.&#8221; J. Mol. Biol. 215:403-410.</td></tr>
+<tr><td class="label"><a class="fn-backref" href="#id1">[R313]</a></td><td>Altschul, S.F., Gish, W., Miller, W., Myers, E.W. &amp; Lipman, D.J. (1990)
+“Basic local alignment search tool.” J. Mol. Biol. 215:403-410.</td></tr>
 </tbody>
 </table>
-<table class="docutils citation" frame="void" id="r160" rules="none">
+<table class="docutils citation" frame="void" id="r314" rules="none">
 <colgroup><col class="label" /><col /></colgroup>
 <tbody valign="top">
-<tr><td class="label"><a class="fn-backref" href="#id2">[R160]</a></td><td><a class="reference external" href="http://blastedbio.blogspot.com/2014/11/column-headers-in-blast-tabular-and-csv.html">http://blastedbio.blogspot.com/2014/11/column-headers-in-blast-tabular-and-csv.html</a></td></tr>
+<tr><td class="label"><a class="fn-backref" href="#id2">[R314]</a></td><td><a class="reference external" href="http://blastedbio.blogspot.com/2014/11/column-headers-in-blast-tabular-and-csv.html">http://blastedbio.blogspot.com/2014/11/column-headers-in-blast-tabular-and-csv.html</a></td></tr>
 </tbody>
 </table>
-<table class="docutils citation" frame="void" id="r161" rules="none">
+<table class="docutils citation" frame="void" id="r315" rules="none">
 <colgroup><col class="label" /><col /></colgroup>
 <tbody valign="top">
-<tr><td class="label"><a class="fn-backref" href="#id3">[R161]</a></td><td><a class="reference external" href="http://www.ncbi.nlm.nih.gov/books/NBK279675/">http://www.ncbi.nlm.nih.gov/books/NBK279675/</a></td></tr>
+<tr><td class="label"><a class="fn-backref" href="#id3">[R315]</a></td><td><a class="reference external" href="http://www.ncbi.nlm.nih.gov/books/NBK279675/">http://www.ncbi.nlm.nih.gov/books/NBK279675/</a></td></tr>
 </tbody>
 </table>
 </div>
@@ -527,7 +519,7 @@ in the file:</p>
     </p>
     <p>
         &copy; Copyright 2014--, scikit-bio development team.<br/>
-      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 1.5a0.<br/>
+      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 1.6.5.<br/>
     </p>
   </div>
 </footer>

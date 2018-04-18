@@ -1,5 +1,5 @@
-skbio.diversity.alpha.observed_otus
-===================================
+skbio\.diversity\.alpha\.observed\_otus
+=======================================
 
 .. currentmodule:: skbio.diversity.alpha
 

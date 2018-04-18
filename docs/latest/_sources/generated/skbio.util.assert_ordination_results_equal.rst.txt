@@ -1,5 +1,5 @@
-skbio.util.assert_ordination_results_equal
-==========================================
+skbio\.util\.assert\_ordination\_results\_equal
+===============================================
 
 .. currentmodule:: skbio.util
 

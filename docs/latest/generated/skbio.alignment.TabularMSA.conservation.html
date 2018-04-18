@@ -1,22 +1,16 @@
 <!DOCTYPE html>
 
-
 <html xmlns="http://www.w3.org/1999/xhtml">
   <head>
     <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
-    
-    <title>skbio.alignment.TabularMSA.conservation &#8212; scikit-bio 0.5.1 documentation</title>
-    
-    <link rel="stylesheet" href="../_static/basic.css" type="text/css" />
+    <title>skbio.alignment.TabularMSA.conservation &#8212; scikit-bio 0.5.2 documentation</title>
+    <link rel="stylesheet" href="../_static/bootstrap-sphinx.css" type="text/css" />
     <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
     <link rel="stylesheet" href="../_static/style.css" type="text/css" />
-    <link rel="stylesheet" href="../_static/bootswatch-3.3.6/united/bootstrap.min.css" type="text/css" />
-    <link rel="stylesheet" href="../_static/bootstrap-sphinx.css" type="text/css" />
-    
     <script type="text/javascript">
       var DOCUMENTATION_OPTIONS = {
         URL_ROOT:    '../',
-        VERSION:     '0.5.1',
+        VERSION:     '0.5.2',
         COLLAPSE_INDEX: false,
         FILE_SUFFIX: '.html',
         HAS_SOURCE:  true,
@@ -27,21 +21,20 @@
     <script type="text/javascript" src="../_static/underscore.js"></script>
     <script type="text/javascript" src="../_static/doctools.js"></script>
     <script type="text/javascript" src="../_static/copybutton.js"></script>
-    <script type="text/javascript" src="https://cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
+    <script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.1/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
     <script type="text/javascript" src="../_static/js/jquery-1.11.0.min.js"></script>
     <script type="text/javascript" src="../_static/js/jquery-fix.js"></script>
-    <script type="text/javascript" src="../_static/bootstrap-3.3.6/js/bootstrap.min.js"></script>
+    <script type="text/javascript" src="../_static/bootstrap-3.3.7/js/bootstrap.min.js"></script>
     <script type="text/javascript" src="../_static/bootstrap-sphinx.js"></script>
     <link rel="index" title="Index" href="../genindex.html" />
     <link rel="search" title="Search" href="../search.html" />
-    <link rel="top" title="scikit-bio 0.5.1 documentation" href="../index.html" />
 <meta charset='utf-8'>
 <meta http-equiv='X-UA-Compatible' content='IE=edge,chrome=1'>
 <meta name='viewport' content='width=device-width, initial-scale=1.0, maximum-scale=1'>
 <meta name="apple-mobile-web-app-capable" content="yes">
 
   </head>
-  <body role="document">
+  <body>
   
   <a href="https://github.com/biocore/scikit-bio"
      class="visible-desktop hidden-xs"><img
@@ -69,7 +62,7 @@
         </button>
         <a class="navbar-brand" href="../index.html">
           scikit-bio docs</a>
-        <span class="navbar-text navbar-version pull-left"><b>0.5.1</b></span>
+        <span class="navbar-text navbar-version pull-left"><b>0.5.2</b></span>
       </div>
 
         <div class="collapse navbar-collapse nav-collapse">
@@ -148,19 +141,19 @@
 <h1>skbio.alignment.TabularMSA.conservation<a class="headerlink" href="#skbio-alignment-tabularmsa-conservation" title="Permalink to this headline">¶</a></h1>
 <dl class="method">
 <dt id="skbio.alignment.TabularMSA.conservation">
-<code class="descclassname">TabularMSA.</code><code class="descname">conservation</code><span class="sig-paren">(</span><em>metric='inverse_shannon_uncertainty'</em>, <em>degenerate_mode='error'</em>, <em>gap_mode='nan'</em><span class="sig-paren">)</span><a class="reference external" href="http://github.com/biocore/scikit-bio/blob/0.5.1/skbio/alignment/_tabular_msa.py#L1436"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#skbio.alignment.TabularMSA.conservation" title="Permalink to this definition">¶</a></dt>
+<code class="descclassname">TabularMSA.</code><code class="descname">conservation</code><span class="sig-paren">(</span><em>metric='inverse_shannon_uncertainty'</em>, <em>degenerate_mode='error'</em>, <em>gap_mode='nan'</em><span class="sig-paren">)</span><a class="reference external" href="http://github.com/biocore/scikit-bio/blob/0.5.2/skbio/alignment/_tabular_msa.py#L1436"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#skbio.alignment.TabularMSA.conservation" title="Permalink to this definition">¶</a></dt>
 <dd><p>Apply metric to compute conservation for all alignment positions</p>
 <p>State: Experimental as of 0.4.1.</p>
 <table class="docutils field-list" frame="void" rules="none">
 <col class="field-name" />
 <col class="field-body" />
 <tbody valign="top">
-<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><p class="first"><strong>metric</strong> : {&#8216;inverse_shannon_uncertainty&#8217;}, optional</p>
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><p class="first"><strong>metric</strong> : {‘inverse_shannon_uncertainty’}, optional</p>
 <blockquote>
 <div><p>Metric that should be applied for computing conservation. Resulting
 values should be larger when a position is more conserved.</p>
 </div></blockquote>
-<p><strong>degenerate_mode</strong> : {&#8216;nan&#8217;, &#8216;error&#8217;}, optional</p>
+<p><strong>degenerate_mode</strong> : {‘nan’, ‘error’}, optional</p>
 <blockquote>
 <div><p>Mode for handling positions with degenerate characters. If
 <code class="docutils literal"><span class="pre">&quot;nan&quot;</span></code>, positions with degenerate characters will be assigned a
@@ -168,7 +161,7 @@ conservation score of <code class="docutils literal"><span class="pre">np.nan</s
 error will be raised if one or more degenerate characters are
 present.</p>
 </div></blockquote>
-<p><strong>gap_mode</strong> : {&#8216;nan&#8217;, &#8216;ignore&#8217;, &#8216;error&#8217;, &#8216;include&#8217;}, optional</p>
+<p><strong>gap_mode</strong> : {‘nan’, ‘ignore’, ‘error’, ‘include’}, optional</p>
 <blockquote>
 <div><p>Mode for handling positions with gap characters. If <code class="docutils literal"><span class="pre">&quot;nan&quot;</span></code>,
 positions with gaps will be assigned a conservation score of
@@ -211,32 +204,32 @@ provided.</p>
 <p class="rubric">Notes</p>
 <p>Users should be careful interpreting results when
 <code class="docutils literal"><span class="pre">gap_mode</span> <span class="pre">=</span> <span class="pre">&quot;include&quot;</span></code> as the results may be misleading. For example,
-as pointed out in <a class="reference internal" href="#r99" id="id1">[R99]</a>, a protein alignment position composed of 90%
+as pointed out in <a class="reference internal" href="#r193194" id="id1">[R193194]</a>, a protein alignment position composed of 90%
 gaps and 10% tryptophans would score as more highly conserved than a
 position composed of alanine and glycine in equal frequencies with the
 <code class="docutils literal"><span class="pre">&quot;inverse_shannon_uncertainty&quot;</span></code> metric.</p>
 <p><code class="docutils literal"><span class="pre">gap_mode</span> <span class="pre">=</span> <span class="pre">&quot;include&quot;</span></code> will result in all gap characters being
 recoded to <code class="docutils literal"><span class="pre">TabularMSA.dtype.default_gap_char</span></code>. Because no
 conservation metrics that we are aware of consider different gap
-characters differently (e.g., none of the metrics described in <a class="reference internal" href="#r99" id="id2">[R99]</a>),
+characters differently (e.g., none of the metrics described in <a class="reference internal" href="#r193194" id="id2">[R193194]</a>),
 they are all treated the same within this method.</p>
 <p>The <code class="docutils literal"><span class="pre">inverse_shannon_uncertainty</span></code> metric is simply one minus
-Shannon&#8217;s uncertainty metric. This method uses the inverse of Shannon&#8217;s
-uncertainty so that larger values imply higher conservation. Shannon&#8217;s
-uncertainty is also referred to as Shannon&#8217;s entropy, but when making
-computations from symbols, as is done here, &#8220;uncertainty&#8221; is the
-preferred term (<a class="reference internal" href="#r100" id="id3">[R100]</a>).</p>
+Shannon’s uncertainty metric. This method uses the inverse of Shannon’s
+uncertainty so that larger values imply higher conservation. Shannon’s
+uncertainty is also referred to as Shannon’s entropy, but when making
+computations from symbols, as is done here, “uncertainty” is the
+preferred term (<a class="reference internal" href="#r194194" id="id3">[R194194]</a>).</p>
 <p class="rubric">References</p>
-<table class="docutils citation" frame="void" id="r99" rules="none">
+<table class="docutils citation" frame="void" id="r193194" rules="none">
 <colgroup><col class="label" /><col /></colgroup>
 <tbody valign="top">
-<tr><td class="label">[R99]</td><td><em>(<a class="fn-backref" href="#id1">1</a>, <a class="fn-backref" href="#id2">2</a>, <a class="fn-backref" href="#id4">3</a>)</em> Valdar WS. Scoring residue conservation. Proteins. (2002)</td></tr>
+<tr><td class="label">[R193194]</td><td><em>(<a class="fn-backref" href="#id1">1</a>, <a class="fn-backref" href="#id2">2</a>, <a class="fn-backref" href="#id4">3</a>)</em> Valdar WS. Scoring residue conservation. Proteins. (2002)</td></tr>
 </tbody>
 </table>
-<table class="docutils citation" frame="void" id="r100" rules="none">
+<table class="docutils citation" frame="void" id="r194194" rules="none">
 <colgroup><col class="label" /><col /></colgroup>
 <tbody valign="top">
-<tr><td class="label">[R100]</td><td><em>(<a class="fn-backref" href="#id3">1</a>, <a class="fn-backref" href="#id5">2</a>)</em> Schneider T. Pitfalls in information theory (website, ca. 2015).
+<tr><td class="label">[R194194]</td><td><em>(<a class="fn-backref" href="#id3">1</a>, <a class="fn-backref" href="#id5">2</a>)</em> Schneider T. Pitfalls in information theory (website, ca. 2015).
 <a class="reference external" href="https://schneider.ncifcrf.gov/glossary.html#Shannon_entropy">https://schneider.ncifcrf.gov/glossary.html#Shannon_entropy</a></td></tr>
 </tbody>
 </table>
@@ -258,7 +251,7 @@ preferred term (<a class="reference internal" href="#r100" id="id3">[R100]</a>).
     </p>
     <p>
         &copy; Copyright 2014--, scikit-bio development team.<br/>
-      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 1.5a0.<br/>
+      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 1.6.5.<br/>
     </p>
   </div>
 </footer>

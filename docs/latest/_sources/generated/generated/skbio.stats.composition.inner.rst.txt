@@ -1,5 +1,5 @@
-skbio.stats.composition.inner
-=============================
+skbio\.stats\.composition\.inner
+================================
 
 .. currentmodule:: skbio.stats.composition
 

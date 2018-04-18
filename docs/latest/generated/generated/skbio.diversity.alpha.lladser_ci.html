@@ -1,22 +1,16 @@
 <!DOCTYPE html>
 
-
 <html xmlns="http://www.w3.org/1999/xhtml">
   <head>
     <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
-    
-    <title>skbio.diversity.alpha.lladser_ci &#8212; scikit-bio 0.5.1 documentation</title>
-    
-    <link rel="stylesheet" href="../../_static/basic.css" type="text/css" />
+    <title>skbio.diversity.alpha.lladser_ci &#8212; scikit-bio 0.5.2 documentation</title>
+    <link rel="stylesheet" href="../../_static/bootstrap-sphinx.css" type="text/css" />
     <link rel="stylesheet" href="../../_static/pygments.css" type="text/css" />
     <link rel="stylesheet" href="../../_static/style.css" type="text/css" />
-    <link rel="stylesheet" href="../../_static/bootswatch-3.3.6/united/bootstrap.min.css" type="text/css" />
-    <link rel="stylesheet" href="../../_static/bootstrap-sphinx.css" type="text/css" />
-    
     <script type="text/javascript">
       var DOCUMENTATION_OPTIONS = {
         URL_ROOT:    '../../',
-        VERSION:     '0.5.1',
+        VERSION:     '0.5.2',
         COLLAPSE_INDEX: false,
         FILE_SUFFIX: '.html',
         HAS_SOURCE:  true,
@@ -27,15 +21,13 @@
     <script type="text/javascript" src="../../_static/underscore.js"></script>
     <script type="text/javascript" src="../../_static/doctools.js"></script>
     <script type="text/javascript" src="../../_static/copybutton.js"></script>
-    <script type="text/javascript" src="https://cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
+    <script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.1/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
     <script type="text/javascript" src="../../_static/js/jquery-1.11.0.min.js"></script>
     <script type="text/javascript" src="../../_static/js/jquery-fix.js"></script>
-    <script type="text/javascript" src="../../_static/bootstrap-3.3.6/js/bootstrap.min.js"></script>
+    <script type="text/javascript" src="../../_static/bootstrap-3.3.7/js/bootstrap.min.js"></script>
     <script type="text/javascript" src="../../_static/bootstrap-sphinx.js"></script>
     <link rel="index" title="Index" href="../../genindex.html" />
     <link rel="search" title="Search" href="../../search.html" />
-    <link rel="top" title="scikit-bio 0.5.1 documentation" href="../../index.html" />
-    <link rel="up" title="Alpha diversity measures (skbio.diversity.alpha)" href="../skbio.diversity.alpha.html" />
     <link rel="next" title="skbio.diversity.alpha.lladser_pe" href="skbio.diversity.alpha.lladser_pe.html" />
     <link rel="prev" title="skbio.diversity.alpha.kempton_taylor_q" href="skbio.diversity.alpha.kempton_taylor_q.html" />
 <meta charset='utf-8'>
@@ -44,7 +36,7 @@
 <meta name="apple-mobile-web-app-capable" content="yes">
 
   </head>
-  <body role="document">
+  <body>
   
   <a href="https://github.com/biocore/scikit-bio"
      class="visible-desktop hidden-xs"><img
@@ -72,7 +64,7 @@
         </button>
         <a class="navbar-brand" href="../../index.html">
           scikit-bio docs</a>
-        <span class="navbar-text navbar-version pull-left"><b>0.5.1</b></span>
+        <span class="navbar-text navbar-version pull-left"><b>0.5.2</b></span>
       </div>
 
         <div class="collapse navbar-collapse nav-collapse">
@@ -151,7 +143,7 @@
 <h1>skbio.diversity.alpha.lladser_ci<a class="headerlink" href="#skbio-diversity-alpha-lladser-ci" title="Permalink to this headline">¶</a></h1>
 <dl class="function">
 <dt id="skbio.diversity.alpha.lladser_ci">
-<code class="descclassname">skbio.diversity.alpha.</code><code class="descname">lladser_ci</code><span class="sig-paren">(</span><em>counts</em>, <em>r</em>, <em>alpha=0.95</em>, <em>f=10</em>, <em>ci_type='ULCL'</em><span class="sig-paren">)</span><a class="reference external" href="http://github.com/biocore/scikit-bio/blob/0.5.1/skbio/diversity/alpha/_lladser.py#L62"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#skbio.diversity.alpha.lladser_ci" title="Permalink to this definition">¶</a></dt>
+<code class="descclassname">skbio.diversity.alpha.</code><code class="descname">lladser_ci</code><span class="sig-paren">(</span><em>counts</em>, <em>r</em>, <em>alpha=0.95</em>, <em>f=10</em>, <em>ci_type='ULCL'</em><span class="sig-paren">)</span><a class="reference external" href="http://github.com/biocore/scikit-bio/blob/0.5.2/skbio/diversity/alpha/_lladser.py#L62"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#skbio.diversity.alpha.lladser_ci" title="Permalink to this definition">¶</a></dt>
 <dd><p>Calculate single CI of the conditional uncovered probability.</p>
 <p>State: Experimental as of 0.4.0.</p>
 <table class="docutils field-list" frame="void" rules="none">
@@ -174,7 +166,7 @@
 <blockquote>
 <div><p>Ratio between upper and lower bound.</p>
 </div></blockquote>
-<p><strong>ci_type</strong> : {&#8216;ULCL&#8217;, &#8216;ULCU&#8217;, &#8216;U&#8217;, &#8216;L&#8217;}</p>
+<p><strong>ci_type</strong> : {‘ULCL’, ‘ULCU’, ‘U’, ‘L’}</p>
 <blockquote>
 <div><p>Type of confidence interval. If <code class="docutils literal"><span class="pre">'ULCL'</span></code>, upper and lower bounds with
 conservative lower bound. If <code class="docutils literal"><span class="pre">'ULCU'</span></code>, upper and lower bounds with
@@ -197,14 +189,14 @@ fixed to 0.0. If <code class="docutils literal"><span class="pre">'L'</span></co
 </div>
 <p class="rubric">Notes</p>
 <p>This function is just a wrapper around the full CI estimator described
-in Theorem 2 (iii) in <a class="reference internal" href="#r34" id="id1">[R34]</a>, intended to be called for a single best CI
+in Theorem 2 (iii) in <a class="reference internal" href="#r6767" id="id1">[R6767]</a>, intended to be called for a single best CI
 estimate on a complete sample.</p>
 <p class="rubric">References</p>
-<table class="docutils citation" frame="void" id="r34" rules="none">
+<table class="docutils citation" frame="void" id="r6767" rules="none">
 <colgroup><col class="label" /><col /></colgroup>
 <tbody valign="top">
-<tr><td class="label">[R34]</td><td><em>(<a class="fn-backref" href="#id1">1</a>, <a class="fn-backref" href="#id2">2</a>)</em> Lladser, Gouet, and Reeder, &#8220;Extrapolation of Urn Models via
-Poissonization: Accurate Measurements of the Microbial Unknown&#8221; PLoS
+<tr><td class="label">[R6767]</td><td><em>(<a class="fn-backref" href="#id1">1</a>, <a class="fn-backref" href="#id2">2</a>)</em> Lladser, Gouet, and Reeder, “Extrapolation of Urn Models via
+Poissonization: Accurate Measurements of the Microbial Unknown” PLoS
 2011.</td></tr>
 </tbody>
 </table>
@@ -226,7 +218,7 @@ Poissonization: Accurate Measurements of the Microbial Unknown&#8221; PLoS
     </p>
     <p>
         &copy; Copyright 2014--, scikit-bio development team.<br/>
-      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 1.5a0.<br/>
+      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 1.6.5.<br/>
     </p>
   </div>
 </footer>

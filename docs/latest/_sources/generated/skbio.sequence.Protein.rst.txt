@@ -1,5 +1,5 @@
-skbio.sequence.Protein
-======================
+skbio\.sequence\.Protein
+========================
 
 .. currentmodule:: skbio.sequence
 
@@ -138,23 +138,4 @@ skbio.sequence.Protein
 
 
    
-
-   .. HACK -- the point here is that we don't want this to appear in the output, but the autosummary should still generate the pages.
-      .. autosummary::
-         :toctree:
-      
-         Protein.alphabet
-         Protein.default_gap_char
-         Protein.default_write_format
-         Protein.definite_chars
-         Protein.degenerate_chars
-         Protein.degenerate_map
-         Protein.gap_chars
-         Protein.interval_metadata
-         Protein.metadata
-         Protein.nondegenerate_chars
-         Protein.observed_chars
-         Protein.positional_metadata
-         Protein.stop_chars
-         Protein.values
 

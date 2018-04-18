@@ -1,5 +1,5 @@
-skbio.stats.composition.power
-=============================
+skbio\.stats\.composition\.power
+================================
 
 .. currentmodule:: skbio.stats.composition
 

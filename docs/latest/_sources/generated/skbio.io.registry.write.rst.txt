@@ -1,5 +1,5 @@
-skbio.io.registry.write
-=======================
+skbio\.io\.registry\.write
+==========================
 
 .. currentmodule:: skbio.io.registry
 

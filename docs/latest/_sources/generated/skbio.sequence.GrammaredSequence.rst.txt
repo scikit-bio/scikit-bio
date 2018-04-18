@@ -1,5 +1,5 @@
-skbio.sequence.GrammaredSequence
-================================
+skbio\.sequence\.GrammaredSequence
+==================================
 
 .. currentmodule:: skbio.sequence
 
@@ -134,22 +134,4 @@ skbio.sequence.GrammaredSequence
 
 
    
-
-   .. HACK -- the point here is that we don't want this to appear in the output, but the autosummary should still generate the pages.
-      .. autosummary::
-         :toctree:
-      
-         GrammaredSequence.alphabet
-         GrammaredSequence.default_gap_char
-         GrammaredSequence.default_write_format
-         GrammaredSequence.definite_chars
-         GrammaredSequence.degenerate_chars
-         GrammaredSequence.degenerate_map
-         GrammaredSequence.gap_chars
-         GrammaredSequence.interval_metadata
-         GrammaredSequence.metadata
-         GrammaredSequence.nondegenerate_chars
-         GrammaredSequence.observed_chars
-         GrammaredSequence.positional_metadata
-         GrammaredSequence.values
 

@@ -1,22 +1,16 @@
 <!DOCTYPE html>
 
-
 <html xmlns="http://www.w3.org/1999/xhtml">
   <head>
     <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
-    
-    <title>File I/O (skbio.io) &#8212; scikit-bio 0.5.1 documentation</title>
-    
-    <link rel="stylesheet" href="_static/basic.css" type="text/css" />
+    <title>File I/O (skbio.io) &#8212; scikit-bio 0.5.2 documentation</title>
+    <link rel="stylesheet" href="_static/bootstrap-sphinx.css" type="text/css" />
     <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
     <link rel="stylesheet" href="_static/style.css" type="text/css" />
-    <link rel="stylesheet" href="_static/bootswatch-3.3.6/united/bootstrap.min.css" type="text/css" />
-    <link rel="stylesheet" href="_static/bootstrap-sphinx.css" type="text/css" />
-    
     <script type="text/javascript">
       var DOCUMENTATION_OPTIONS = {
         URL_ROOT:    './',
-        VERSION:     '0.5.1',
+        VERSION:     '0.5.2',
         COLLAPSE_INDEX: false,
         FILE_SUFFIX: '.html',
         HAS_SOURCE:  true,
@@ -27,14 +21,13 @@
     <script type="text/javascript" src="_static/underscore.js"></script>
     <script type="text/javascript" src="_static/doctools.js"></script>
     <script type="text/javascript" src="_static/copybutton.js"></script>
-    <script type="text/javascript" src="https://cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
+    <script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.1/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
     <script type="text/javascript" src="_static/js/jquery-1.11.0.min.js"></script>
     <script type="text/javascript" src="_static/js/jquery-fix.js"></script>
-    <script type="text/javascript" src="_static/bootstrap-3.3.6/js/bootstrap.min.js"></script>
+    <script type="text/javascript" src="_static/bootstrap-3.3.7/js/bootstrap.min.js"></script>
     <script type="text/javascript" src="_static/bootstrap-sphinx.js"></script>
     <link rel="index" title="Index" href="genindex.html" />
     <link rel="search" title="Search" href="search.html" />
-    <link rel="top" title="scikit-bio 0.5.1 documentation" href="index.html" />
     <link rel="next" title="BLAST+6 format (skbio.io.format.blast6)" href="generated/skbio.io.format.blast6.html" />
     <link rel="prev" title="scikit-bio" href="index.html" />
 <meta charset='utf-8'>
@@ -43,7 +36,7 @@
 <meta name="apple-mobile-web-app-capable" content="yes">
 
   </head>
-  <body role="document">
+  <body>
   
   <a href="https://github.com/biocore/scikit-bio"
      class="visible-desktop hidden-xs"><img
@@ -71,7 +64,7 @@
         </button>
         <a class="navbar-brand" href="index.html">
           scikit-bio docs</a>
-        <span class="navbar-text navbar-version pull-left"><b>0.5.1</b></span>
+        <span class="navbar-text navbar-version pull-left"><b>0.5.2</b></span>
       </div>
 
         <div class="collapse navbar-collapse nav-collapse">
@@ -180,32 +173,38 @@ see the associated documentation.</p>
 <tr class="row-odd"><td><a class="reference internal" href="generated/skbio.io.format.clustal.html#module-skbio.io.format.clustal" title="skbio.io.format.clustal"><code class="xref py py-obj docutils literal"><span class="pre">clustal</span></code></a></td>
 <td>Clustal format (<a class="reference internal" href="generated/skbio.io.format.clustal.html#module-skbio.io.format.clustal" title="skbio.io.format.clustal"><code class="xref py py-mod docutils literal"><span class="pre">skbio.io.format.clustal</span></code></a>)</td>
 </tr>
-<tr class="row-even"><td><a class="reference internal" href="generated/skbio.io.format.fasta.html#module-skbio.io.format.fasta" title="skbio.io.format.fasta"><code class="xref py py-obj docutils literal"><span class="pre">fasta</span></code></a></td>
+<tr class="row-even"><td><a class="reference internal" href="generated/skbio.io.format.embl.html#module-skbio.io.format.embl" title="skbio.io.format.embl"><code class="xref py py-obj docutils literal"><span class="pre">embl</span></code></a></td>
+<td>EMBL format (<a class="reference internal" href="generated/skbio.io.format.embl.html#module-skbio.io.format.embl" title="skbio.io.format.embl"><code class="xref py py-mod docutils literal"><span class="pre">skbio.io.format.embl</span></code></a>)</td>
+</tr>
+<tr class="row-odd"><td><a class="reference internal" href="generated/skbio.io.format.fasta.html#module-skbio.io.format.fasta" title="skbio.io.format.fasta"><code class="xref py py-obj docutils literal"><span class="pre">fasta</span></code></a></td>
 <td>FASTA/QUAL format (<a class="reference internal" href="generated/skbio.io.format.fasta.html#module-skbio.io.format.fasta" title="skbio.io.format.fasta"><code class="xref py py-mod docutils literal"><span class="pre">skbio.io.format.fasta</span></code></a>)</td>
 </tr>
-<tr class="row-odd"><td><a class="reference internal" href="generated/skbio.io.format.fastq.html#module-skbio.io.format.fastq" title="skbio.io.format.fastq"><code class="xref py py-obj docutils literal"><span class="pre">fastq</span></code></a></td>
+<tr class="row-even"><td><a class="reference internal" href="generated/skbio.io.format.fastq.html#module-skbio.io.format.fastq" title="skbio.io.format.fastq"><code class="xref py py-obj docutils literal"><span class="pre">fastq</span></code></a></td>
 <td>FASTQ format (<a class="reference internal" href="generated/skbio.io.format.fastq.html#module-skbio.io.format.fastq" title="skbio.io.format.fastq"><code class="xref py py-mod docutils literal"><span class="pre">skbio.io.format.fastq</span></code></a>)</td>
 </tr>
-<tr class="row-even"><td><a class="reference internal" href="generated/skbio.io.format.lsmat.html#module-skbio.io.format.lsmat" title="skbio.io.format.lsmat"><code class="xref py py-obj docutils literal"><span class="pre">lsmat</span></code></a></td>
+<tr class="row-odd"><td><a class="reference internal" href="generated/skbio.io.format.genbank.html#module-skbio.io.format.genbank" title="skbio.io.format.genbank"><code class="xref py py-obj docutils literal"><span class="pre">genbank</span></code></a></td>
+<td>GenBank format (<a class="reference internal" href="generated/skbio.io.format.genbank.html#module-skbio.io.format.genbank" title="skbio.io.format.genbank"><code class="xref py py-mod docutils literal"><span class="pre">skbio.io.format.genbank</span></code></a>)</td>
+</tr>
+<tr class="row-even"><td><a class="reference internal" href="generated/skbio.io.format.gff3.html#module-skbio.io.format.gff3" title="skbio.io.format.gff3"><code class="xref py py-obj docutils literal"><span class="pre">gff3</span></code></a></td>
+<td>GFF3 format (<a class="reference internal" href="generated/skbio.io.format.gff3.html#module-skbio.io.format.gff3" title="skbio.io.format.gff3"><code class="xref py py-mod docutils literal"><span class="pre">skbio.io.format.gff3</span></code></a>)</td>
+</tr>
+<tr class="row-odd"><td><a class="reference internal" href="generated/skbio.io.format.lsmat.html#module-skbio.io.format.lsmat" title="skbio.io.format.lsmat"><code class="xref py py-obj docutils literal"><span class="pre">lsmat</span></code></a></td>
 <td>Labeled square matrix format (<a class="reference internal" href="generated/skbio.io.format.lsmat.html#module-skbio.io.format.lsmat" title="skbio.io.format.lsmat"><code class="xref py py-mod docutils literal"><span class="pre">skbio.io.format.lsmat</span></code></a>)</td>
 </tr>
-<tr class="row-odd"><td><a class="reference internal" href="generated/skbio.io.format.newick.html#module-skbio.io.format.newick" title="skbio.io.format.newick"><code class="xref py py-obj docutils literal"><span class="pre">newick</span></code></a></td>
+<tr class="row-even"><td><a class="reference internal" href="generated/skbio.io.format.newick.html#module-skbio.io.format.newick" title="skbio.io.format.newick"><code class="xref py py-obj docutils literal"><span class="pre">newick</span></code></a></td>
 <td>Newick format (<a class="reference internal" href="generated/skbio.io.format.newick.html#module-skbio.io.format.newick" title="skbio.io.format.newick"><code class="xref py py-mod docutils literal"><span class="pre">skbio.io.format.newick</span></code></a>)</td>
 </tr>
-<tr class="row-even"><td><a class="reference internal" href="generated/skbio.io.format.ordination.html#module-skbio.io.format.ordination" title="skbio.io.format.ordination"><code class="xref py py-obj docutils literal"><span class="pre">ordination</span></code></a></td>
+<tr class="row-odd"><td><a class="reference internal" href="generated/skbio.io.format.ordination.html#module-skbio.io.format.ordination" title="skbio.io.format.ordination"><code class="xref py py-obj docutils literal"><span class="pre">ordination</span></code></a></td>
 <td>Ordination results format (<a class="reference internal" href="generated/skbio.io.format.ordination.html#module-skbio.io.format.ordination" title="skbio.io.format.ordination"><code class="xref py py-mod docutils literal"><span class="pre">skbio.io.format.ordination</span></code></a>)</td>
 </tr>
-<tr class="row-odd"><td><a class="reference internal" href="generated/skbio.io.format.phylip.html#module-skbio.io.format.phylip" title="skbio.io.format.phylip"><code class="xref py py-obj docutils literal"><span class="pre">phylip</span></code></a></td>
+<tr class="row-even"><td><a class="reference internal" href="generated/skbio.io.format.phylip.html#module-skbio.io.format.phylip" title="skbio.io.format.phylip"><code class="xref py py-obj docutils literal"><span class="pre">phylip</span></code></a></td>
 <td>PHYLIP multiple sequence alignment format (<a class="reference internal" href="generated/skbio.io.format.phylip.html#module-skbio.io.format.phylip" title="skbio.io.format.phylip"><code class="xref py py-mod docutils literal"><span class="pre">skbio.io.format.phylip</span></code></a>)</td>
 </tr>
-<tr class="row-even"><td><a class="reference internal" href="generated/skbio.io.format.qseq.html#module-skbio.io.format.qseq" title="skbio.io.format.qseq"><code class="xref py py-obj docutils literal"><span class="pre">qseq</span></code></a></td>
+<tr class="row-odd"><td><a class="reference internal" href="generated/skbio.io.format.qseq.html#module-skbio.io.format.qseq" title="skbio.io.format.qseq"><code class="xref py py-obj docutils literal"><span class="pre">qseq</span></code></a></td>
 <td>QSeq format (<a class="reference internal" href="generated/skbio.io.format.qseq.html#module-skbio.io.format.qseq" title="skbio.io.format.qseq"><code class="xref py py-mod docutils literal"><span class="pre">skbio.io.format.qseq</span></code></a>)</td>
 </tr>
-<tr class="row-odd"><td><a class="reference internal" href="generated/skbio.io.format.stockholm.html#module-skbio.io.format.stockholm" title="skbio.io.format.stockholm"><code class="xref py py-obj docutils literal"><span class="pre">stockholm</span></code></a></td>
+<tr class="row-even"><td><a class="reference internal" href="generated/skbio.io.format.stockholm.html#module-skbio.io.format.stockholm" title="skbio.io.format.stockholm"><code class="xref py py-obj docutils literal"><span class="pre">stockholm</span></code></a></td>
 <td>Stockholm format (<a class="reference internal" href="generated/skbio.io.format.stockholm.html#module-skbio.io.format.stockholm" title="skbio.io.format.stockholm"><code class="xref py py-mod docutils literal"><span class="pre">skbio.io.format.stockholm</span></code></a>)</td>
-</tr>
-<tr class="row-even"><td><a class="reference internal" href="generated/skbio.io.format.genbank.html#module-skbio.io.format.genbank" title="skbio.io.format.genbank"><code class="xref py py-obj docutils literal"><span class="pre">genbank</span></code></a></td>
-<td>GenBank format (<a class="reference internal" href="generated/skbio.io.format.genbank.html#module-skbio.io.format.genbank" title="skbio.io.format.genbank"><code class="xref py py-mod docutils literal"><span class="pre">skbio.io.format.genbank</span></code></a>)</td>
 </tr>
 </tbody>
 </table>
@@ -218,13 +217,13 @@ see the associated documentation.</p>
 <col width="90%" />
 </colgroup>
 <tbody valign="top">
-<tr class="row-odd"><td><a class="reference internal" href="generated/skbio.io.registry.write.html#skbio.io.registry.write" title="skbio.io.registry.write"><code class="xref py py-obj docutils literal"><span class="pre">write</span></code></a>(self,&nbsp;obj,&nbsp;format,&nbsp;into,&nbsp;\*\*kwargs)</td>
+<tr class="row-odd"><td><a class="reference internal" href="generated/skbio.io.registry.write.html#skbio.io.registry.write" title="skbio.io.registry.write"><code class="xref py py-obj docutils literal"><span class="pre">write</span></code></a>(self,&nbsp;obj,&nbsp;format,&nbsp;into,&nbsp;**kwargs)</td>
 <td>Write <cite>obj</cite> as <cite>format</cite> into a file.</td>
 </tr>
 <tr class="row-even"><td><a class="reference internal" href="generated/skbio.io.registry.read.html#skbio.io.registry.read" title="skbio.io.registry.read"><code class="xref py py-obj docutils literal"><span class="pre">read</span></code></a>(self,&nbsp;file[,&nbsp;format,&nbsp;into,&nbsp;verify])</td>
 <td>Read <cite>file</cite> as <cite>format</cite> into an object.</td>
 </tr>
-<tr class="row-odd"><td><a class="reference internal" href="generated/skbio.io.registry.sniff.html#skbio.io.registry.sniff" title="skbio.io.registry.sniff"><code class="xref py py-obj docutils literal"><span class="pre">sniff</span></code></a>(self,&nbsp;file,&nbsp;\*\*kwargs)</td>
+<tr class="row-odd"><td><a class="reference internal" href="generated/skbio.io.registry.sniff.html#skbio.io.registry.sniff" title="skbio.io.registry.sniff"><code class="xref py py-obj docutils literal"><span class="pre">sniff</span></code></a>(self,&nbsp;file,&nbsp;**kwargs)</td>
 <td>Detect the format of a given <cite>file</cite> and suggest kwargs for reading.</td>
 </tr>
 </tbody>
@@ -245,7 +244,7 @@ see the associated documentation.</p>
 <td>Warn when a user provided kwarg differs from a guessed kwarg.</td>
 </tr>
 <tr class="row-odd"><td><a class="reference internal" href="generated/skbio.io.UnrecognizedFormatError.html#skbio.io.UnrecognizedFormatError" title="skbio.io.UnrecognizedFormatError"><code class="xref py py-obj docutils literal"><span class="pre">UnrecognizedFormatError</span></code></a></td>
-<td>Raised when a file&#8217;s format is unknown, ambiguous, or unidentifiable.</td>
+<td>Raised when a file’s format is unknown, ambiguous, or unidentifiable.</td>
 </tr>
 <tr class="row-even"><td><a class="reference internal" href="generated/skbio.io.IOSourceError.html#skbio.io.IOSourceError" title="skbio.io.IOSourceError"><code class="xref py py-obj docutils literal"><span class="pre">IOSourceError</span></code></a></td>
 <td>Raised when a file source cannot be resolved.</td>
@@ -259,31 +258,40 @@ see the associated documentation.</p>
 <tr class="row-odd"><td><a class="reference internal" href="generated/skbio.io.ClustalFormatError.html#skbio.io.ClustalFormatError" title="skbio.io.ClustalFormatError"><code class="xref py py-obj docutils literal"><span class="pre">ClustalFormatError</span></code></a></td>
 <td>Raised when a <code class="docutils literal"><span class="pre">clustal</span></code> formatted file cannot be parsed.</td>
 </tr>
-<tr class="row-even"><td><a class="reference internal" href="generated/skbio.io.FASTAFormatError.html#skbio.io.FASTAFormatError" title="skbio.io.FASTAFormatError"><code class="xref py py-obj docutils literal"><span class="pre">FASTAFormatError</span></code></a></td>
+<tr class="row-even"><td><a class="reference internal" href="generated/skbio.io.EMBLFormatError.html#skbio.io.EMBLFormatError" title="skbio.io.EMBLFormatError"><code class="xref py py-obj docutils literal"><span class="pre">EMBLFormatError</span></code></a></td>
+<td>Raised when a <code class="docutils literal"><span class="pre">EMBL</span></code> formatted file cannot be parsed.</td>
+</tr>
+<tr class="row-odd"><td><a class="reference internal" href="generated/skbio.io.FASTAFormatError.html#skbio.io.FASTAFormatError" title="skbio.io.FASTAFormatError"><code class="xref py py-obj docutils literal"><span class="pre">FASTAFormatError</span></code></a></td>
 <td>Raised when a <code class="docutils literal"><span class="pre">fasta</span></code> formatted file cannot be parsed.</td>
 </tr>
-<tr class="row-odd"><td><a class="reference internal" href="generated/skbio.io.FASTQFormatError.html#skbio.io.FASTQFormatError" title="skbio.io.FASTQFormatError"><code class="xref py py-obj docutils literal"><span class="pre">FASTQFormatError</span></code></a></td>
+<tr class="row-even"><td><a class="reference internal" href="generated/skbio.io.FASTQFormatError.html#skbio.io.FASTQFormatError" title="skbio.io.FASTQFormatError"><code class="xref py py-obj docutils literal"><span class="pre">FASTQFormatError</span></code></a></td>
 <td>Raised when a <code class="docutils literal"><span class="pre">fastq</span></code> formatted file cannot be parsed.</td>
 </tr>
-<tr class="row-even"><td><a class="reference internal" href="generated/skbio.io.LSMatFormatError.html#skbio.io.LSMatFormatError" title="skbio.io.LSMatFormatError"><code class="xref py py-obj docutils literal"><span class="pre">LSMatFormatError</span></code></a></td>
+<tr class="row-odd"><td><a class="reference internal" href="generated/skbio.io.GenBankFormatError.html#skbio.io.GenBankFormatError" title="skbio.io.GenBankFormatError"><code class="xref py py-obj docutils literal"><span class="pre">GenBankFormatError</span></code></a></td>
+<td>Raised when a <code class="docutils literal"><span class="pre">genbank</span></code> formatted file cannot be parsed.</td>
+</tr>
+<tr class="row-even"><td><a class="reference internal" href="generated/skbio.io.GFF3FormatError.html#skbio.io.GFF3FormatError" title="skbio.io.GFF3FormatError"><code class="xref py py-obj docutils literal"><span class="pre">GFF3FormatError</span></code></a></td>
+<td>Raised when a <code class="docutils literal"><span class="pre">GFF3</span></code> formatted file cannot be parsed.</td>
+</tr>
+<tr class="row-odd"><td><a class="reference internal" href="generated/skbio.io.LSMatFormatError.html#skbio.io.LSMatFormatError" title="skbio.io.LSMatFormatError"><code class="xref py py-obj docutils literal"><span class="pre">LSMatFormatError</span></code></a></td>
 <td>Raised when a <code class="docutils literal"><span class="pre">lsmat</span></code> formatted file cannot be parsed.</td>
 </tr>
-<tr class="row-odd"><td><a class="reference internal" href="generated/skbio.io.NewickFormatError.html#skbio.io.NewickFormatError" title="skbio.io.NewickFormatError"><code class="xref py py-obj docutils literal"><span class="pre">NewickFormatError</span></code></a></td>
+<tr class="row-even"><td><a class="reference internal" href="generated/skbio.io.NewickFormatError.html#skbio.io.NewickFormatError" title="skbio.io.NewickFormatError"><code class="xref py py-obj docutils literal"><span class="pre">NewickFormatError</span></code></a></td>
 <td>Raised when a <code class="docutils literal"><span class="pre">newick</span></code> formatted file cannot be parsed.</td>
 </tr>
-<tr class="row-even"><td><a class="reference internal" href="generated/skbio.io.OrdinationFormatError.html#skbio.io.OrdinationFormatError" title="skbio.io.OrdinationFormatError"><code class="xref py py-obj docutils literal"><span class="pre">OrdinationFormatError</span></code></a></td>
+<tr class="row-odd"><td><a class="reference internal" href="generated/skbio.io.OrdinationFormatError.html#skbio.io.OrdinationFormatError" title="skbio.io.OrdinationFormatError"><code class="xref py py-obj docutils literal"><span class="pre">OrdinationFormatError</span></code></a></td>
 <td>Raised when an <code class="docutils literal"><span class="pre">ordination</span></code> formatted file cannot be parsed.</td>
 </tr>
-<tr class="row-odd"><td><a class="reference internal" href="generated/skbio.io.PhylipFormatError.html#skbio.io.PhylipFormatError" title="skbio.io.PhylipFormatError"><code class="xref py py-obj docutils literal"><span class="pre">PhylipFormatError</span></code></a></td>
+<tr class="row-even"><td><a class="reference internal" href="generated/skbio.io.PhylipFormatError.html#skbio.io.PhylipFormatError" title="skbio.io.PhylipFormatError"><code class="xref py py-obj docutils literal"><span class="pre">PhylipFormatError</span></code></a></td>
 <td>Raised when a <code class="docutils literal"><span class="pre">phylip</span></code> formatted file cannot be parsed.</td>
 </tr>
-<tr class="row-even"><td><a class="reference internal" href="generated/skbio.io.QSeqFormatError.html#skbio.io.QSeqFormatError" title="skbio.io.QSeqFormatError"><code class="xref py py-obj docutils literal"><span class="pre">QSeqFormatError</span></code></a></td>
+<tr class="row-odd"><td><a class="reference internal" href="generated/skbio.io.QSeqFormatError.html#skbio.io.QSeqFormatError" title="skbio.io.QSeqFormatError"><code class="xref py py-obj docutils literal"><span class="pre">QSeqFormatError</span></code></a></td>
 <td>Raised when a <code class="docutils literal"><span class="pre">qseq</span></code> formatted file cannot be parsed.</td>
 </tr>
-<tr class="row-odd"><td><a class="reference internal" href="generated/skbio.io.QUALFormatError.html#skbio.io.QUALFormatError" title="skbio.io.QUALFormatError"><code class="xref py py-obj docutils literal"><span class="pre">QUALFormatError</span></code></a></td>
+<tr class="row-even"><td><a class="reference internal" href="generated/skbio.io.QUALFormatError.html#skbio.io.QUALFormatError" title="skbio.io.QUALFormatError"><code class="xref py py-obj docutils literal"><span class="pre">QUALFormatError</span></code></a></td>
 <td>Raised when a <code class="docutils literal"><span class="pre">qual</span></code> formatted file cannot be parsed.</td>
 </tr>
-<tr class="row-even"><td><a class="reference internal" href="generated/skbio.io.StockholmFormatError.html#skbio.io.StockholmFormatError" title="skbio.io.StockholmFormatError"><code class="xref py py-obj docutils literal"><span class="pre">StockholmFormatError</span></code></a></td>
+<tr class="row-odd"><td><a class="reference internal" href="generated/skbio.io.StockholmFormatError.html#skbio.io.StockholmFormatError" title="skbio.io.StockholmFormatError"><code class="xref py py-obj docutils literal"><span class="pre">StockholmFormatError</span></code></a></td>
 <td>Raised when a <code class="docutils literal"><span class="pre">stockholm</span></code> formatted file cannot be parsed.</td>
 </tr>
 </tbody>
@@ -314,7 +322,7 @@ see the associated documentation.</p>
 <li>A file format can sometimes be read into more than one in-memory
 representation (i.e., object). For example, a FASTA file can be read into an
 <a class="reference internal" href="generated/skbio.alignment.TabularMSA.html#skbio.alignment.TabularMSA" title="skbio.alignment.TabularMSA"><code class="xref py py-mod docutils literal"><span class="pre">skbio.alignment.TabularMSA</span></code></a> or <a class="reference internal" href="generated/skbio.sequence.DNA.html#skbio.sequence.DNA" title="skbio.sequence.DNA"><code class="xref py py-mod docutils literal"><span class="pre">skbio.sequence.DNA</span></code></a> depending on
-what operations you&#8217;d like to perform on your data.</li>
+what operations you’d like to perform on your data.</li>
 <li>A single object might be writeable to more than one file format. For example,
 an <a class="reference internal" href="generated/skbio.alignment.TabularMSA.html#skbio.alignment.TabularMSA" title="skbio.alignment.TabularMSA"><code class="xref py py-mod docutils literal"><span class="pre">skbio.alignment.TabularMSA</span></code></a> object could be written to FASTA, FASTQ,
 CLUSTAL, or PHYLIP formats, just to name a few.</li>
@@ -376,8 +384,8 @@ that <cite>format</cite> may be omitted there as well.</p>
 <span class="go">&lt;TreeNode, name: unnamed, internal node count: 0, tips count: 2&gt;</span>
 </pre></div>
 </div>
-<p>We call format inference <cite>sniffing</cite>, much like the <a class="reference external" href="https://docs.python.org/dev/library/csv.html#csv.Sniffer" title="(in Python v3.6)"><code class="xref py py-class docutils literal"><span class="pre">csv.Sniffer</span></code></a>
-class of Python&#8217;s standard library. The goal of a <cite>sniffer</cite> is twofold: to
+<p>We call format inference <cite>sniffing</cite>, much like the <a class="reference external" href="https://docs.python.org/dev/library/csv.html#csv.Sniffer" title="(in Python v3.8)"><code class="xref py py-class docutils literal"><span class="pre">csv.Sniffer</span></code></a>
+class of Python’s standard library. The goal of a <cite>sniffer</cite> is twofold: to
 identify if a file is a specific format, and if it is, to provide <cite>**kwargs</cite>
 which can be used to better parse the file.</p>
 <div class="admonition note">
@@ -418,7 +426,7 @@ not know how you want to serialize an object. OO interfaces define a default
     </p>
     <p>
         &copy; Copyright 2014--, scikit-bio development team.<br/>
-      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 1.5a0.<br/>
+      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 1.6.5.<br/>
     </p>
   </div>
 </footer>

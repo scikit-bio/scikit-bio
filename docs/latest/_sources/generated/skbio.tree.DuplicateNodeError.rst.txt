@@ -1,5 +1,5 @@
-skbio.tree.DuplicateNodeError
-=============================
+skbio\.tree\.DuplicateNodeError
+===============================
 
 .. currentmodule:: skbio.tree
 

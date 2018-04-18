@@ -1,5 +1,5 @@
-skbio.io.FileFormatError
-========================
+skbio\.io\.FileFormatError
+==========================
 
 .. currentmodule:: skbio.io
 

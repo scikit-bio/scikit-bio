@@ -1,22 +1,16 @@
 <!DOCTYPE html>
 
-
 <html xmlns="http://www.w3.org/1999/xhtml">
   <head>
     <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
-    
-    <title>skbio.stats.power.subsample_paired_power &#8212; scikit-bio 0.5.1 documentation</title>
-    
-    <link rel="stylesheet" href="../../_static/basic.css" type="text/css" />
+    <title>skbio.stats.power.subsample_paired_power &#8212; scikit-bio 0.5.2 documentation</title>
+    <link rel="stylesheet" href="../../_static/bootstrap-sphinx.css" type="text/css" />
     <link rel="stylesheet" href="../../_static/pygments.css" type="text/css" />
     <link rel="stylesheet" href="../../_static/style.css" type="text/css" />
-    <link rel="stylesheet" href="../../_static/bootswatch-3.3.6/united/bootstrap.min.css" type="text/css" />
-    <link rel="stylesheet" href="../../_static/bootstrap-sphinx.css" type="text/css" />
-    
     <script type="text/javascript">
       var DOCUMENTATION_OPTIONS = {
         URL_ROOT:    '../../',
-        VERSION:     '0.5.1',
+        VERSION:     '0.5.2',
         COLLAPSE_INDEX: false,
         FILE_SUFFIX: '.html',
         HAS_SOURCE:  true,
@@ -27,15 +21,13 @@
     <script type="text/javascript" src="../../_static/underscore.js"></script>
     <script type="text/javascript" src="../../_static/doctools.js"></script>
     <script type="text/javascript" src="../../_static/copybutton.js"></script>
-    <script type="text/javascript" src="https://cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
+    <script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.1/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
     <script type="text/javascript" src="../../_static/js/jquery-1.11.0.min.js"></script>
     <script type="text/javascript" src="../../_static/js/jquery-fix.js"></script>
-    <script type="text/javascript" src="../../_static/bootstrap-3.3.6/js/bootstrap.min.js"></script>
+    <script type="text/javascript" src="../../_static/bootstrap-3.3.7/js/bootstrap.min.js"></script>
     <script type="text/javascript" src="../../_static/bootstrap-sphinx.js"></script>
     <link rel="index" title="Index" href="../../genindex.html" />
     <link rel="search" title="Search" href="../../search.html" />
-    <link rel="top" title="scikit-bio 0.5.1 documentation" href="../../index.html" />
-    <link rel="up" title="Empirical Power Estimation (skbio.stats.power)" href="../skbio.stats.power.html" />
     <link rel="next" title="skbio.stats.power.confidence_bound" href="skbio.stats.power.confidence_bound.html" />
     <link rel="prev" title="skbio.stats.power.subsample_power" href="skbio.stats.power.subsample_power.html" />
 <meta charset='utf-8'>
@@ -44,7 +36,7 @@
 <meta name="apple-mobile-web-app-capable" content="yes">
 
   </head>
-  <body role="document">
+  <body>
   
   <a href="https://github.com/biocore/scikit-bio"
      class="visible-desktop hidden-xs"><img
@@ -72,7 +64,7 @@
         </button>
         <a class="navbar-brand" href="../../index.html">
           scikit-bio docs</a>
-        <span class="navbar-text navbar-version pull-left"><b>0.5.1</b></span>
+        <span class="navbar-text navbar-version pull-left"><b>0.5.2</b></span>
       </div>
 
         <div class="collapse navbar-collapse nav-collapse">
@@ -151,7 +143,7 @@
 <h1>skbio.stats.power.subsample_paired_power<a class="headerlink" href="#skbio-stats-power-subsample-paired-power" title="Permalink to this headline">¶</a></h1>
 <dl class="function">
 <dt id="skbio.stats.power.subsample_paired_power">
-<code class="descclassname">skbio.stats.power.</code><code class="descname">subsample_paired_power</code><span class="sig-paren">(</span><em>test</em>, <em>meta</em>, <em>cat</em>, <em>control_cats</em>, <em>order=None</em>, <em>strict_match=True</em>, <em>alpha_pwr=0.05</em>, <em>max_counts=50</em>, <em>counts_interval=10</em>, <em>min_counts=None</em>, <em>num_iter=500</em>, <em>num_runs=10</em><span class="sig-paren">)</span><a class="reference external" href="http://github.com/biocore/scikit-bio/blob/0.5.1/skbio/stats/power.py#L380"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#skbio.stats.power.subsample_paired_power" title="Permalink to this definition">¶</a></dt>
+<code class="descclassname">skbio.stats.power.</code><code class="descname">subsample_paired_power</code><span class="sig-paren">(</span><em>test</em>, <em>meta</em>, <em>cat</em>, <em>control_cats</em>, <em>order=None</em>, <em>strict_match=True</em>, <em>alpha_pwr=0.05</em>, <em>max_counts=50</em>, <em>counts_interval=10</em>, <em>min_counts=None</em>, <em>num_iter=500</em>, <em>num_runs=10</em><span class="sig-paren">)</span><a class="reference external" href="http://github.com/biocore/scikit-bio/blob/0.5.2/skbio/stats/power.py#L380"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#skbio.stats.power.subsample_paired_power" title="Permalink to this definition">¶</a></dt>
 <dd><p>Estimates power iteratively using samples with matching metadata</p>
 <p>State: Experimental as of 0.4.0.</p>
 <table class="docutils field-list" frame="void" rules="none">
@@ -174,16 +166,16 @@ returns a p value.</p>
 <p><strong>control_cats</strong> : list</p>
 <blockquote>
 <div><p>The metadata categories to be used as controls. For example, if
-you wanted to vary age (<cite>cat</cite> = &#8220;AGE&#8221;), you might want to control
-for gender and health status (i.e. <cite>control_cats</cite> = [&#8220;SEX&#8221;,
-&#8220;HEALTHY&#8221;]).</p>
+you wanted to vary age (<cite>cat</cite> = “AGE”), you might want to control
+for gender and health status (i.e. <cite>control_cats</cite> = [“SEX”,
+“HEALTHY”]).</p>
 </div></blockquote>
 <p><strong>order</strong> : list, optional</p>
 <blockquote>
 <div><p>The order of groups in the category. This can be used
-to limit the groups selected. For example, if there&#8217;s a category with
-groups &#8216;A&#8217;, &#8216;B&#8217; and &#8216;C&#8217;, and you only want to look at A vs B, <cite>order</cite>
-would be set to [&#8216;A&#8217;, &#8216;B&#8217;].</p>
+to limit the groups selected. For example, if there’s a category with
+groups ‘A’, ‘B’ and ‘C’, and you only want to look at A vs B, <cite>order</cite>
+would be set to [‘A’, ‘B’].</p>
 </div></blockquote>
 <p><strong>strict_match</strong> : bool, optional</p>
 <blockquote>
@@ -261,9 +253,9 @@ macrophage lineages (bone marrow derived phagocytes and
 peritoneally-derived macrophages). Due to unfortunate circumstances, your
 growth media must be acquired from multiple sources (lab, company A,
 company B). Also unfortunate, you must use labor-intensive low throughput
-assays. You have some preliminary measurements, and you&#8217;d like to
+assays. You have some preliminary measurements, and you’d like to
 predict how many (more) cells you need to analyze for 80% power.</p>
-<p>You have information about 60 cells, which we&#8217;ll simulate below. Note
+<p>You have information about 60 cells, which we’ll simulate below. Note
 that we are setting a random seed value for consistency.</p>
 <div class="highlight-default"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="kn">import</span> <span class="nn">pandas</span> <span class="k">as</span> <span class="nn">pd</span>
@@ -286,21 +278,21 @@ between the cytokine treated and untreated cells.</p>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">f</span> <span class="o">=</span> <span class="k">lambda</span> <span class="n">x</span><span class="p">:</span> <span class="n">kruskal</span><span class="p">(</span><span class="o">*</span><span class="p">[</span><span class="n">data</span><span class="o">.</span><span class="n">loc</span><span class="p">[</span><span class="n">i</span><span class="p">,</span> <span class="s1">&#39;OUTCOME&#39;</span><span class="p">]</span> <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="n">x</span><span class="p">])[</span><span class="mi">1</span><span class="p">]</span>
 </pre></div>
 </div>
-<p>Let&#8217;s check that cytokine treatment has a significant effect across all
+<p>Let’s check that cytokine treatment has a significant effect across all
 the cells.</p>
 <div class="highlight-default"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">treatment_stat</span> <span class="o">=</span> <span class="p">[</span><span class="n">g</span> <span class="k">for</span> <span class="n">g</span> <span class="ow">in</span> <span class="n">data</span><span class="o">.</span><span class="n">groupby</span><span class="p">(</span><span class="s1">&#39;TREATMENT&#39;</span><span class="p">)</span><span class="o">.</span><span class="n">groups</span><span class="o">.</span><span class="n">values</span><span class="p">()]</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">f</span><span class="p">(</span><span class="n">treatment_stat</span><span class="p">)</span>
 <span class="go">0.0019386336266250209</span>
 </pre></div>
 </div>
-<p>Now, let&#8217;s pick the control categories. It seems reasonable to assume there
+<p>Now, let’s pick the control categories. It seems reasonable to assume there
 may be an effect of cell line on the treatment outcome, which may be
 attributed to differences in receptor expression. It may also be possible
 that there are differences due cytokine source. Incubators were maintained
 under the same conditions throughout the experiment, within one degree of
 temperature difference at any given time, and the same level of CO2.
-So, at least initially, let&#8217;s ignore differences due to the incubator.</p>
-<p>It&#8217;s recommended that as a first pass analysis, control variables be
+So, at least initially, let’s ignore differences due to the incubator.</p>
+<p>It’s recommended that as a first pass analysis, control variables be
 selected based on an idea of what may be biologically relevant to the
 system, although further iteration might encourage the consideration of
 variable with effect sizes similar, or larger than the variable of
@@ -344,7 +336,7 @@ samples per group.</p>
     </p>
     <p>
         &copy; Copyright 2014--, scikit-bio development team.<br/>
-      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 1.5a0.<br/>
+      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 1.6.5.<br/>
     </p>
   </div>
 </footer>

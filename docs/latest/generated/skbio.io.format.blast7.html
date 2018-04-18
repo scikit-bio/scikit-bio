@@ -1,22 +1,16 @@
 <!DOCTYPE html>
 
-
 <html xmlns="http://www.w3.org/1999/xhtml">
   <head>
     <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
-    
-    <title>BLAST+7 format (skbio.io.format.blast7) &#8212; scikit-bio 0.5.1 documentation</title>
-    
-    <link rel="stylesheet" href="../_static/basic.css" type="text/css" />
+    <title>BLAST+7 format (skbio.io.format.blast7) &#8212; scikit-bio 0.5.2 documentation</title>
+    <link rel="stylesheet" href="../_static/bootstrap-sphinx.css" type="text/css" />
     <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
     <link rel="stylesheet" href="../_static/style.css" type="text/css" />
-    <link rel="stylesheet" href="../_static/bootswatch-3.3.6/united/bootstrap.min.css" type="text/css" />
-    <link rel="stylesheet" href="../_static/bootstrap-sphinx.css" type="text/css" />
-    
     <script type="text/javascript">
       var DOCUMENTATION_OPTIONS = {
         URL_ROOT:    '../',
-        VERSION:     '0.5.1',
+        VERSION:     '0.5.2',
         COLLAPSE_INDEX: false,
         FILE_SUFFIX: '.html',
         HAS_SOURCE:  true,
@@ -27,15 +21,13 @@
     <script type="text/javascript" src="../_static/underscore.js"></script>
     <script type="text/javascript" src="../_static/doctools.js"></script>
     <script type="text/javascript" src="../_static/copybutton.js"></script>
-    <script type="text/javascript" src="https://cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
+    <script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.1/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
     <script type="text/javascript" src="../_static/js/jquery-1.11.0.min.js"></script>
     <script type="text/javascript" src="../_static/js/jquery-fix.js"></script>
-    <script type="text/javascript" src="../_static/bootstrap-3.3.6/js/bootstrap.min.js"></script>
+    <script type="text/javascript" src="../_static/bootstrap-3.3.7/js/bootstrap.min.js"></script>
     <script type="text/javascript" src="../_static/bootstrap-sphinx.js"></script>
     <link rel="index" title="Index" href="../genindex.html" />
     <link rel="search" title="Search" href="../search.html" />
-    <link rel="top" title="scikit-bio 0.5.1 documentation" href="../index.html" />
-    <link rel="up" title="File I/O (skbio.io)" href="../io.html" />
     <link rel="next" title="Clustal format (skbio.io.format.clustal)" href="skbio.io.format.clustal.html" />
     <link rel="prev" title="BLAST+6 format (skbio.io.format.blast6)" href="skbio.io.format.blast6.html" />
 <meta charset='utf-8'>
@@ -44,7 +36,7 @@
 <meta name="apple-mobile-web-app-capable" content="yes">
 
   </head>
-  <body role="document">
+  <body>
   
   <a href="https://github.com/biocore/scikit-bio"
      class="visible-desktop hidden-xs"><img
@@ -72,7 +64,7 @@
         </button>
         <a class="navbar-brand" href="../index.html">
           scikit-bio docs</a>
-        <span class="navbar-text navbar-version pull-left"><b>0.5.1</b></span>
+        <span class="navbar-text navbar-version pull-left"><b>0.5.2</b></span>
       </div>
 
         <div class="collapse navbar-collapse nav-collapse">
@@ -156,13 +148,13 @@
       
   <span class="target" id="module-skbio.io.format.blast7"></span><div class="section" id="blast-7-format-skbio-io-format-blast7">
 <h1>BLAST+7 format (<a class="reference internal" href="#module-skbio.io.format.blast7" title="skbio.io.format.blast7"><code class="xref py py-mod docutils literal"><span class="pre">skbio.io.format.blast7</span></code></a>)<a class="headerlink" href="#blast-7-format-skbio-io-format-blast7" title="Permalink to this headline">¶</a></h1>
-<p>The BLAST+7 format (<code class="docutils literal"><span class="pre">blast+7</span></code>) stores the results of a BLAST <a class="reference internal" href="#r162" id="id1">[R162]</a> database
+<p>The BLAST+7 format (<code class="docutils literal"><span class="pre">blast+7</span></code>) stores the results of a BLAST <a class="reference internal" href="#r316" id="id1">[R316]</a> database
 search. This format is produced by both BLAST+ output
 format 7 and legacy BLAST output format 9. The results
 are stored in a simple tabular format with headers. Values are separated by the
 tab character.</p>
 <p>An example BLAST+7-formatted file comparing two nucleotide sequences, taken
-from <a class="reference internal" href="#r163" id="id2">[R163]</a> (tab characters represented by <code class="docutils literal"><span class="pre">&lt;tab&gt;</span></code>):</p>
+from <a class="reference internal" href="#r317" id="id2">[R317]</a> (tab characters represented by <code class="docutils literal"><span class="pre">&lt;tab&gt;</span></code>):</p>
 <div class="highlight-none"><div class="highlight"><pre><span></span># BLASTN 2.2.18+
 # Query: gi|1786181|gb|AE000111.1|AE000111
 # Subject: ecoli
@@ -218,7 +210,7 @@ formats are structurally similar, with minor differences.</p>
 <div class="admonition note">
 <p class="first admonition-title">Note</p>
 <p>Database searches without hits may occur in BLAST+ output format 7
-files. scikit-bio ignores these &#8220;empty&#8221; records:</p>
+files. scikit-bio ignores these “empty” records:</p>
 <div class="last highlight-none"><div class="highlight"><pre><span></span># BLASTP 2.2.31+
 # Query: query1
 # Subject: subject1
@@ -455,17 +447,17 @@ For more information on these column types, see <a class="reference internal" hr
 </div>
 <div class="section" id="references">
 <h1>References<a class="headerlink" href="#references" title="Permalink to this headline">¶</a></h1>
-<table class="docutils citation" frame="void" id="r162" rules="none">
+<table class="docutils citation" frame="void" id="r316" rules="none">
 <colgroup><col class="label" /><col /></colgroup>
 <tbody valign="top">
-<tr><td class="label"><a class="fn-backref" href="#id1">[R162]</a></td><td>Altschul, S.F., Gish, W., Miller, W., Myers, E.W. &amp; Lipman, D.J. (1990)
-&#8220;Basic local alignment search tool.&#8221; J. Mol. Biol. 215:403-410.</td></tr>
+<tr><td class="label"><a class="fn-backref" href="#id1">[R316]</a></td><td>Altschul, S.F., Gish, W., Miller, W., Myers, E.W. &amp; Lipman, D.J. (1990)
+“Basic local alignment search tool.” J. Mol. Biol. 215:403-410.</td></tr>
 </tbody>
 </table>
-<table class="docutils citation" frame="void" id="r163" rules="none">
+<table class="docutils citation" frame="void" id="r317" rules="none">
 <colgroup><col class="label" /><col /></colgroup>
 <tbody valign="top">
-<tr><td class="label"><a class="fn-backref" href="#id2">[R163]</a></td><td><a class="reference external" href="http://www.ncbi.nlm.nih.gov/books/NBK279682/">http://www.ncbi.nlm.nih.gov/books/NBK279682/</a></td></tr>
+<tr><td class="label"><a class="fn-backref" href="#id2">[R317]</a></td><td><a class="reference external" href="http://www.ncbi.nlm.nih.gov/books/NBK279682/">http://www.ncbi.nlm.nih.gov/books/NBK279682/</a></td></tr>
 </tbody>
 </table>
 </div>
@@ -484,7 +476,7 @@ For more information on these column types, see <a class="reference internal" hr
     </p>
     <p>
         &copy; Copyright 2014--, scikit-bio development team.<br/>
-      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 1.5a0.<br/>
+      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 1.6.5.<br/>
     </p>
   </div>
 </footer>

@@ -1,5 +1,5 @@
-skbio.stats.composition.ilr
-===========================
+skbio\.stats\.composition\.ilr
+==============================
 
 .. currentmodule:: skbio.stats.composition
 

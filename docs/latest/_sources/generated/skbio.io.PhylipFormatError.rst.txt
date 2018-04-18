@@ -1,5 +1,5 @@
-skbio.io.PhylipFormatError
-==========================
+skbio\.io\.PhylipFormatError
+============================
 
 .. currentmodule:: skbio.io
 

@@ -1,5 +1,5 @@
-skbio.stats.power.confidence_bound
-==================================
+skbio\.stats\.power\.confidence\_bound
+======================================
 
 .. currentmodule:: skbio.stats.power
 

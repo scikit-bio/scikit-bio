@@ -1,5 +1,5 @@
-skbio.io.ClustalFormatError
-===========================
+skbio\.io\.ClustalFormatError
+=============================
 
 .. currentmodule:: skbio.io
 

@@ -1,22 +1,16 @@
 <!DOCTYPE html>
 
-
 <html xmlns="http://www.w3.org/1999/xhtml">
   <head>
     <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
-    
-    <title>skbio.stats.distance.DissimilarityMatrix.__getitem__ &#8212; scikit-bio 0.5.1 documentation</title>
-    
-    <link rel="stylesheet" href="../../_static/basic.css" type="text/css" />
+    <title>skbio.stats.distance.DissimilarityMatrix.__getitem__ &#8212; scikit-bio 0.5.2 documentation</title>
+    <link rel="stylesheet" href="../../_static/bootstrap-sphinx.css" type="text/css" />
     <link rel="stylesheet" href="../../_static/pygments.css" type="text/css" />
     <link rel="stylesheet" href="../../_static/style.css" type="text/css" />
-    <link rel="stylesheet" href="../../_static/bootswatch-3.3.6/united/bootstrap.min.css" type="text/css" />
-    <link rel="stylesheet" href="../../_static/bootstrap-sphinx.css" type="text/css" />
-    
     <script type="text/javascript">
       var DOCUMENTATION_OPTIONS = {
         URL_ROOT:    '../../',
-        VERSION:     '0.5.1',
+        VERSION:     '0.5.2',
         COLLAPSE_INDEX: false,
         FILE_SUFFIX: '.html',
         HAS_SOURCE:  true,
@@ -27,21 +21,20 @@
     <script type="text/javascript" src="../../_static/underscore.js"></script>
     <script type="text/javascript" src="../../_static/doctools.js"></script>
     <script type="text/javascript" src="../../_static/copybutton.js"></script>
-    <script type="text/javascript" src="https://cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
+    <script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.1/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
     <script type="text/javascript" src="../../_static/js/jquery-1.11.0.min.js"></script>
     <script type="text/javascript" src="../../_static/js/jquery-fix.js"></script>
-    <script type="text/javascript" src="../../_static/bootstrap-3.3.6/js/bootstrap.min.js"></script>
+    <script type="text/javascript" src="../../_static/bootstrap-3.3.7/js/bootstrap.min.js"></script>
     <script type="text/javascript" src="../../_static/bootstrap-sphinx.js"></script>
     <link rel="index" title="Index" href="../../genindex.html" />
     <link rel="search" title="Search" href="../../search.html" />
-    <link rel="top" title="scikit-bio 0.5.1 documentation" href="../../index.html" />
 <meta charset='utf-8'>
 <meta http-equiv='X-UA-Compatible' content='IE=edge,chrome=1'>
 <meta name='viewport' content='width=device-width, initial-scale=1.0, maximum-scale=1'>
 <meta name="apple-mobile-web-app-capable" content="yes">
 
   </head>
-  <body role="document">
+  <body>
   
   <a href="https://github.com/biocore/scikit-bio"
      class="visible-desktop hidden-xs"><img
@@ -69,7 +62,7 @@
         </button>
         <a class="navbar-brand" href="../../index.html">
           scikit-bio docs</a>
-        <span class="navbar-text navbar-version pull-left"><b>0.5.1</b></span>
+        <span class="navbar-text navbar-version pull-left"><b>0.5.2</b></span>
       </div>
 
         <div class="collapse navbar-collapse nav-collapse">
@@ -148,7 +141,7 @@
 <h1>skbio.stats.distance.DissimilarityMatrix.__getitem__<a class="headerlink" href="#skbio-stats-distance-dissimilaritymatrix-getitem" title="Permalink to this headline">¶</a></h1>
 <dl class="method">
 <dt id="skbio.stats.distance.DissimilarityMatrix.__getitem__">
-<code class="descclassname">DissimilarityMatrix.</code><code class="descname">__getitem__</code><span class="sig-paren">(</span><em>index</em><span class="sig-paren">)</span><a class="reference external" href="http://github.com/biocore/scikit-bio/blob/0.5.1/skbio/stats/distance/_base.py#L592"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#skbio.stats.distance.DissimilarityMatrix.__getitem__" title="Permalink to this definition">¶</a></dt>
+<code class="descclassname">DissimilarityMatrix.</code><code class="descname">__getitem__</code><span class="sig-paren">(</span><em>index</em><span class="sig-paren">)</span><a class="reference external" href="http://github.com/biocore/scikit-bio/blob/0.5.2/skbio/stats/distance/_base.py#L593"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#skbio.stats.distance.DissimilarityMatrix.__getitem__" title="Permalink to this definition">¶</a></dt>
 <dd><p>Slice into dissimilarity data by object ID or numpy indexing.</p>
 <p>State: Experimental as of 0.4.0.</p>
 <p>Extracts data from the dissimilarity matrix by object ID, a pair of
@@ -163,7 +156,7 @@ IDs, or numpy indexing/slicing.</p>
 a numpy index.</p>
 <p>If <cite>index</cite> is a string, it is assumed to be an ID and a
 <code class="docutils literal"><span class="pre">numpy.ndarray</span></code> row vector is returned for the corresponding ID.
-Note that the ID&#8217;s row of dissimilarities is returned, <em>not</em> its
+Note that the ID’s row of dissimilarities is returned, <em>not</em> its
 column. If the matrix is symmetric, the two will be identical, but
 this makes a difference if the matrix is asymmetric.</p>
 <p>If <cite>index</cite> is a two-tuple of strings, each string is assumed to be
@@ -215,7 +208,7 @@ matrix.</p>
     </p>
     <p>
         &copy; Copyright 2014--, scikit-bio development team.<br/>
-      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 1.5a0.<br/>
+      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 1.6.5.<br/>
     </p>
   </div>
 </footer>

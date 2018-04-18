@@ -1,5 +1,5 @@
-skbio.diversity.alpha.singles
-=============================
+skbio\.diversity\.alpha\.singles
+================================
 
 .. currentmodule:: skbio.diversity.alpha
 

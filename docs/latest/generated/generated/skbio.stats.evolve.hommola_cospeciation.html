@@ -1,22 +1,16 @@
 <!DOCTYPE html>
 
-
 <html xmlns="http://www.w3.org/1999/xhtml">
   <head>
     <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
-    
-    <title>skbio.stats.evolve.hommola_cospeciation &#8212; scikit-bio 0.5.1 documentation</title>
-    
-    <link rel="stylesheet" href="../../_static/basic.css" type="text/css" />
+    <title>skbio.stats.evolve.hommola_cospeciation &#8212; scikit-bio 0.5.2 documentation</title>
+    <link rel="stylesheet" href="../../_static/bootstrap-sphinx.css" type="text/css" />
     <link rel="stylesheet" href="../../_static/pygments.css" type="text/css" />
     <link rel="stylesheet" href="../../_static/style.css" type="text/css" />
-    <link rel="stylesheet" href="../../_static/bootswatch-3.3.6/united/bootstrap.min.css" type="text/css" />
-    <link rel="stylesheet" href="../../_static/bootstrap-sphinx.css" type="text/css" />
-    
     <script type="text/javascript">
       var DOCUMENTATION_OPTIONS = {
         URL_ROOT:    '../../',
-        VERSION:     '0.5.1',
+        VERSION:     '0.5.2',
         COLLAPSE_INDEX: false,
         FILE_SUFFIX: '.html',
         HAS_SOURCE:  true,
@@ -27,15 +21,13 @@
     <script type="text/javascript" src="../../_static/underscore.js"></script>
     <script type="text/javascript" src="../../_static/doctools.js"></script>
     <script type="text/javascript" src="../../_static/copybutton.js"></script>
-    <script type="text/javascript" src="https://cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
+    <script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.1/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
     <script type="text/javascript" src="../../_static/js/jquery-1.11.0.min.js"></script>
     <script type="text/javascript" src="../../_static/js/jquery-fix.js"></script>
-    <script type="text/javascript" src="../../_static/bootstrap-3.3.6/js/bootstrap.min.js"></script>
+    <script type="text/javascript" src="../../_static/bootstrap-3.3.7/js/bootstrap.min.js"></script>
     <script type="text/javascript" src="../../_static/bootstrap-sphinx.js"></script>
     <link rel="index" title="Index" href="../../genindex.html" />
     <link rel="search" title="Search" href="../../search.html" />
-    <link rel="top" title="scikit-bio 0.5.1 documentation" href="../../index.html" />
-    <link rel="up" title="Evolutionary statistics (skbio.stats.evolve)" href="../skbio.stats.evolve.html" />
     <link rel="next" title="Ordination methods (skbio.stats.ordination)" href="../skbio.stats.ordination.html" />
     <link rel="prev" title="Evolutionary statistics (skbio.stats.evolve)" href="../skbio.stats.evolve.html" />
 <meta charset='utf-8'>
@@ -44,7 +36,7 @@
 <meta name="apple-mobile-web-app-capable" content="yes">
 
   </head>
-  <body role="document">
+  <body>
   
   <a href="https://github.com/biocore/scikit-bio"
      class="visible-desktop hidden-xs"><img
@@ -72,7 +64,7 @@
         </button>
         <a class="navbar-brand" href="../../index.html">
           scikit-bio docs</a>
-        <span class="navbar-text navbar-version pull-left"><b>0.5.1</b></span>
+        <span class="navbar-text navbar-version pull-left"><b>0.5.2</b></span>
       </div>
 
         <div class="collapse navbar-collapse nav-collapse">
@@ -151,10 +143,10 @@
 <h1>skbio.stats.evolve.hommola_cospeciation<a class="headerlink" href="#skbio-stats-evolve-hommola-cospeciation" title="Permalink to this headline">¶</a></h1>
 <dl class="function">
 <dt id="skbio.stats.evolve.hommola_cospeciation">
-<code class="descclassname">skbio.stats.evolve.</code><code class="descname">hommola_cospeciation</code><span class="sig-paren">(</span><em>host_dist</em>, <em>par_dist</em>, <em>interaction</em>, <em>permutations=999</em><span class="sig-paren">)</span><a class="reference external" href="http://github.com/biocore/scikit-bio/blob/0.5.1/skbio/stats/evolve/_hommola.py#L16"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#skbio.stats.evolve.hommola_cospeciation" title="Permalink to this definition">¶</a></dt>
+<code class="descclassname">skbio.stats.evolve.</code><code class="descname">hommola_cospeciation</code><span class="sig-paren">(</span><em>host_dist</em>, <em>par_dist</em>, <em>interaction</em>, <em>permutations=999</em><span class="sig-paren">)</span><a class="reference external" href="http://github.com/biocore/scikit-bio/blob/0.5.2/skbio/stats/evolve/_hommola.py#L16"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#skbio.stats.evolve.hommola_cospeciation" title="Permalink to this definition">¶</a></dt>
 <dd><p>Perform Hommola et al (2009) host/parasite cospeciation test.</p>
 <p>State: Experimental as of 0.4.0.</p>
-<p>This test for host/parasite cospeciation is as described in <a class="reference internal" href="#r82" id="id1">[R82]</a>. This test
+<p>This test for host/parasite cospeciation is as described in <a class="reference internal" href="#r163163" id="id1">[R163163]</a>. This test
 is a modification of a Mantel test, expanded to accept the case where
 multiple hosts map to a single parasite (and vice versa).</p>
 <p>For a basic Mantel test, the distance matrices being compared must have the
@@ -175,7 +167,7 @@ the host-symbiont interaction links.</p>
 <p>Note that the null hypothesis being tested here is that the hosts and
 parasites have evolved independently of one another. The alternative to
 this is a somewhat weaker case than what is often implied with the term
-&#8216;cospeciation,&#8217; which is that each incidence of host speciation is
+‘cospeciation,’ which is that each incidence of host speciation is
 recapitulated in an incidence of symbiont speciation (strict
 co-cladogenesis). Although there may be many factors that could contribute
 to non-independence of host and symbiont phylogenies, this loss of
@@ -239,18 +231,18 @@ to compute p-value (see <cite>permutations</cite> parameter above).</p>
 </table>
 <div class="admonition seealso">
 <p class="first admonition-title">See also</p>
-<p class="last"><a class="reference internal" href="skbio.stats.distance.mantel.html#skbio.stats.distance.mantel" title="skbio.stats.distance.mantel"><code class="xref py py-obj docutils literal"><span class="pre">skbio.stats.distance.mantel</span></code></a>, <a class="reference external" href="https://docs.scipy.org/doc/scipy/reference/generated/scipy.stats.pearsonr.html#scipy.stats.pearsonr" title="(in SciPy v0.18.1)"><code class="xref py py-obj docutils literal"><span class="pre">scipy.stats.pearsonr</span></code></a></p>
+<p class="last"><a class="reference internal" href="skbio.stats.distance.mantel.html#skbio.stats.distance.mantel" title="skbio.stats.distance.mantel"><code class="xref py py-obj docutils literal"><span class="pre">skbio.stats.distance.mantel</span></code></a>, <a class="reference external" href="https://docs.scipy.org/doc/scipy/reference/generated/scipy.stats.pearsonr.html#scipy.stats.pearsonr" title="(in SciPy v1.0.0)"><code class="xref py py-obj docutils literal"><span class="pre">scipy.stats.pearsonr</span></code></a></p>
 </div>
 <p class="rubric">Notes</p>
 <p>It is assumed that the ordering of parasites in <cite>par_dist</cite> and hosts in
 <cite>host_dist</cite> are identical to their ordering in the rows and columns,
 respectively, of the interaction matrix.</p>
-<p>This code is loosely based on the original R code from <a class="reference internal" href="#r82" id="id2">[R82]</a>.</p>
+<p>This code is loosely based on the original R code from <a class="reference internal" href="#r163163" id="id2">[R163163]</a>.</p>
 <p class="rubric">References</p>
-<table class="docutils citation" frame="void" id="r82" rules="none">
+<table class="docutils citation" frame="void" id="r163163" rules="none">
 <colgroup><col class="label" /><col /></colgroup>
 <tbody valign="top">
-<tr><td class="label">[R82]</td><td><em>(<a class="fn-backref" href="#id1">1</a>, <a class="fn-backref" href="#id2">2</a>, <a class="fn-backref" href="#id3">3</a>, <a class="fn-backref" href="#id4">4</a>)</em> Hommola K, Smith JE, Qiu Y, Gilks WR (2009) A Permutation Test of
+<tr><td class="label">[R163163]</td><td><em>(<a class="fn-backref" href="#id1">1</a>, <a class="fn-backref" href="#id2">2</a>, <a class="fn-backref" href="#id3">3</a>, <a class="fn-backref" href="#id4">4</a>)</em> Hommola K, Smith JE, Qiu Y, Gilks WR (2009) A Permutation Test of
 Host-Parasite Cospeciation. Molecular Biology and Evolution, 26,
 1457-1468.</td></tr>
 </tbody>
@@ -260,7 +252,7 @@ Host-Parasite Cospeciation. Molecular Biology and Evolution, 26,
 </pre></div>
 </div>
 <p>Create arrays for host distances, parasite distances, and their
-interactions (data taken from example in <a class="reference internal" href="#r82" id="id4">[R82]</a>):</p>
+interactions (data taken from example in <a class="reference internal" href="#r163163" id="id4">[R163163]</a>):</p>
 <div class="highlight-default"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">hdist</span> <span class="o">=</span> <span class="p">[[</span><span class="mi">0</span><span class="p">,</span><span class="mi">3</span><span class="p">,</span><span class="mi">8</span><span class="p">,</span><span class="mi">8</span><span class="p">,</span><span class="mi">9</span><span class="p">],</span> <span class="p">[</span><span class="mi">3</span><span class="p">,</span><span class="mi">0</span><span class="p">,</span><span class="mi">7</span><span class="p">,</span><span class="mi">7</span><span class="p">,</span><span class="mi">8</span><span class="p">],</span> <span class="p">[</span><span class="mi">8</span><span class="p">,</span><span class="mi">7</span><span class="p">,</span><span class="mi">0</span><span class="p">,</span><span class="mi">6</span><span class="p">,</span><span class="mi">7</span><span class="p">],</span> <span class="p">[</span><span class="mi">8</span><span class="p">,</span><span class="mi">7</span><span class="p">,</span><span class="mi">6</span><span class="p">,</span><span class="mi">0</span><span class="p">,</span><span class="mi">3</span><span class="p">],</span>
 <span class="gp">... </span>         <span class="p">[</span><span class="mi">9</span><span class="p">,</span><span class="mi">8</span><span class="p">,</span><span class="mi">7</span><span class="p">,</span><span class="mi">3</span><span class="p">,</span><span class="mi">0</span><span class="p">]]</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">pdist</span> <span class="o">=</span> <span class="p">[[</span><span class="mi">0</span><span class="p">,</span><span class="mi">5</span><span class="p">,</span><span class="mi">8</span><span class="p">,</span><span class="mi">8</span><span class="p">,</span><span class="mi">8</span><span class="p">],</span> <span class="p">[</span><span class="mi">5</span><span class="p">,</span><span class="mi">0</span><span class="p">,</span><span class="mi">7</span><span class="p">,</span><span class="mi">7</span><span class="p">,</span><span class="mi">7</span><span class="p">],</span> <span class="p">[</span><span class="mi">8</span><span class="p">,</span><span class="mi">7</span><span class="p">,</span><span class="mi">0</span><span class="p">,</span><span class="mi">4</span><span class="p">,</span><span class="mi">4</span><span class="p">],</span> <span class="p">[</span><span class="mi">8</span><span class="p">,</span><span class="mi">7</span><span class="p">,</span><span class="mi">4</span><span class="p">,</span><span class="mi">0</span><span class="p">,</span><span class="mi">2</span><span class="p">],</span>
@@ -305,7 +297,7 @@ correlation is indeed greater than we would expect by chance.</p>
     </p>
     <p>
         &copy; Copyright 2014--, scikit-bio development team.<br/>
-      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 1.5a0.<br/>
+      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 1.6.5.<br/>
     </p>
   </div>
 </footer>

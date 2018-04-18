@@ -1,5 +1,5 @@
-skbio.tree.nj
-=============
+skbio\.tree\.nj
+===============
 
 .. currentmodule:: skbio.tree
 

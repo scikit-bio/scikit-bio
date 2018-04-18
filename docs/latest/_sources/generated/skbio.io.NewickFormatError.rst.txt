@@ -1,5 +1,5 @@
-skbio.io.NewickFormatError
-==========================
+skbio\.io\.NewickFormatError
+============================
 
 .. currentmodule:: skbio.io
 

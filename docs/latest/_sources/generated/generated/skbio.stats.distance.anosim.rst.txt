@@ -1,5 +1,5 @@
-skbio.stats.distance.anosim
-===========================
+skbio\.stats\.distance\.anosim
+==============================
 
 .. currentmodule:: skbio.stats.distance
 

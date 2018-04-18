@@ -1,5 +1,5 @@
-skbio.alignment.StripedSmithWaterman
-====================================
+skbio\.alignment\.StripedSmithWaterman
+======================================
 
 .. currentmodule:: skbio.alignment
 

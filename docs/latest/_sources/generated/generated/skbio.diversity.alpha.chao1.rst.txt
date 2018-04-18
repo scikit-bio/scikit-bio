@@ -1,5 +1,5 @@
-skbio.diversity.alpha.chao1
-===========================
+skbio\.diversity\.alpha\.chao1
+==============================
 
 .. currentmodule:: skbio.diversity.alpha
 

@@ -1,5 +1,5 @@
-skbio.io.QSeqFormatError
-========================
+skbio\.io\.QSeqFormatError
+==========================
 
 .. currentmodule:: skbio.io
 

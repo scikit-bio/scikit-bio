@@ -1,22 +1,16 @@
 <!DOCTYPE html>
 
-
 <html xmlns="http://www.w3.org/1999/xhtml">
   <head>
     <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
-    
-    <title>skbio.io.util.open_file &#8212; scikit-bio 0.5.1 documentation</title>
-    
-    <link rel="stylesheet" href="../../_static/basic.css" type="text/css" />
+    <title>skbio.io.util.open_file &#8212; scikit-bio 0.5.2 documentation</title>
+    <link rel="stylesheet" href="../../_static/bootstrap-sphinx.css" type="text/css" />
     <link rel="stylesheet" href="../../_static/pygments.css" type="text/css" />
     <link rel="stylesheet" href="../../_static/style.css" type="text/css" />
-    <link rel="stylesheet" href="../../_static/bootswatch-3.3.6/united/bootstrap.min.css" type="text/css" />
-    <link rel="stylesheet" href="../../_static/bootstrap-sphinx.css" type="text/css" />
-    
     <script type="text/javascript">
       var DOCUMENTATION_OPTIONS = {
         URL_ROOT:    '../../',
-        VERSION:     '0.5.1',
+        VERSION:     '0.5.2',
         COLLAPSE_INDEX: false,
         FILE_SUFFIX: '.html',
         HAS_SOURCE:  true,
@@ -27,15 +21,13 @@
     <script type="text/javascript" src="../../_static/underscore.js"></script>
     <script type="text/javascript" src="../../_static/doctools.js"></script>
     <script type="text/javascript" src="../../_static/copybutton.js"></script>
-    <script type="text/javascript" src="https://cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
+    <script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.1/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
     <script type="text/javascript" src="../../_static/js/jquery-1.11.0.min.js"></script>
     <script type="text/javascript" src="../../_static/js/jquery-fix.js"></script>
-    <script type="text/javascript" src="../../_static/bootstrap-3.3.6/js/bootstrap.min.js"></script>
+    <script type="text/javascript" src="../../_static/bootstrap-3.3.7/js/bootstrap.min.js"></script>
     <script type="text/javascript" src="../../_static/bootstrap-sphinx.js"></script>
     <link rel="index" title="Index" href="../../genindex.html" />
     <link rel="search" title="Search" href="../../search.html" />
-    <link rel="top" title="scikit-bio 0.5.1 documentation" href="../../index.html" />
-    <link rel="up" title="I/O utils (skbio.io.util)" href="../skbio.io.util.html" />
     <link rel="next" title="skbio.io.util.open_files" href="skbio.io.util.open_files.html" />
     <link rel="prev" title="skbio.io.util.open" href="skbio.io.util.open.html" />
 <meta charset='utf-8'>
@@ -44,7 +36,7 @@
 <meta name="apple-mobile-web-app-capable" content="yes">
 
   </head>
-  <body role="document">
+  <body>
   
   <a href="https://github.com/biocore/scikit-bio"
      class="visible-desktop hidden-xs"><img
@@ -72,7 +64,7 @@
         </button>
         <a class="navbar-brand" href="../../index.html">
           scikit-bio docs</a>
-        <span class="navbar-text navbar-version pull-left"><b>0.5.1</b></span>
+        <span class="navbar-text navbar-version pull-left"><b>0.5.2</b></span>
       </div>
 
         <div class="collapse navbar-collapse nav-collapse">
@@ -151,13 +143,13 @@
 <h1>skbio.io.util.open_file<a class="headerlink" href="#skbio-io-util-open-file" title="Permalink to this headline">¶</a></h1>
 <dl class="function">
 <dt id="skbio.io.util.open_file">
-<code class="descclassname">skbio.io.util.</code><code class="descname">open_file</code><span class="sig-paren">(</span><em>file</em>, <em>**kwargs</em><span class="sig-paren">)</span><a class="reference external" href="http://github.com/biocore/scikit-bio/blob/0.5.1/skbio/../../../miniconda3/envs/scikit-bio/lib/python3.5/contextlib.py#L131"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#skbio.io.util.open_file" title="Permalink to this definition">¶</a></dt>
+<code class="descclassname">skbio.io.util.</code><code class="descname">open_file</code><span class="sig-paren">(</span><em>file</em>, <em>**kwargs</em><span class="sig-paren">)</span><a class="reference external" href="http://github.com/biocore/scikit-bio/blob/0.5.2/skbio/../../../../../../miniconda3/envs/skbio/lib/python3.5/contextlib.py#L134"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#skbio.io.util.open_file" title="Permalink to this definition">¶</a></dt>
 <dd><p>Context manager for <a class="reference internal" href="skbio.io.util.open.html#skbio.io.util.open" title="skbio.io.util.open"><code class="xref py py-func docutils literal"><span class="pre">skbio.io.util.open()</span></code></a>.</p>
 <p>State: Stable as of 0.4.0.</p>
 <p>The signature matches <a class="reference internal" href="skbio.io.util.open.html#skbio.io.util.open" title="skbio.io.util.open"><code class="xref py py-func docutils literal"><span class="pre">open()</span></code></a>. This context manager will not close
 filehandles that it did not create itself.</p>
 <p class="rubric">Examples</p>
-<p>Here our input isn&#8217;t a filehandle and so <cite>f</cite> will get closed.</p>
+<p>Here our input isn’t a filehandle and so <cite>f</cite> will get closed.</p>
 <div class="highlight-default"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="k">with</span> <span class="n">open_file</span><span class="p">([</span><span class="s1">&#39;a</span><span class="se">\n</span><span class="s1">&#39;</span><span class="p">])</span> <span class="k">as</span> <span class="n">f</span><span class="p">:</span>
 <span class="gp">... </span>    <span class="n">f</span><span class="o">.</span><span class="n">read</span><span class="p">()</span>
 <span class="gp">...</span>
@@ -168,9 +160,9 @@ filehandles that it did not create itself.</p>
 </div>
 <p>Here we provide an open file and so <cite>f</cite> will not get closed and neither
 will <cite>file</cite>.</p>
-<div class="highlight-default"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">file</span> <span class="o">=</span> <span class="n">io</span><span class="o">.</span><span class="n">BytesIO</span><span class="p">(</span><span class="n">b</span><span class="s1">&#39;BZh91AY&amp;SY</span><span class="se">\x03\x89\x0c\xa6\x00\x00\x01\xc1\x00\x00</span><span class="s1">&#39;</span>
-<span class="gp">... </span>                  <span class="n">b</span><span class="s1">&#39;</span><span class="se">\x10</span><span class="s1">8</span><span class="se">\x00</span><span class="s1"> </span><span class="se">\x00</span><span class="s1">!</span><span class="se">\x9a</span><span class="s1">h3M</span><span class="se">\x1c\xb7\x8b\xb9</span><span class="s1">&quot;</span><span class="se">\x9c</span><span class="s1">(H</span><span class="se">\x01</span><span class="s1">&#39;</span>
-<span class="gp">... </span>                  <span class="n">b</span><span class="s1">&#39;</span><span class="se">\xc4\x86</span><span class="s1">S</span><span class="se">\x00</span><span class="s1">&#39;</span><span class="p">)</span>
+<div class="highlight-default"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">file</span> <span class="o">=</span> <span class="n">io</span><span class="o">.</span><span class="n">BytesIO</span><span class="p">(</span><span class="sa">b</span><span class="s1">&#39;BZh91AY&amp;SY</span><span class="se">\x03\x89\x0c\xa6\x00\x00\x01\xc1\x00\x00</span><span class="s1">&#39;</span>
+<span class="gp">... </span>                  <span class="sa">b</span><span class="s1">&#39;</span><span class="se">\x10</span><span class="s1">8</span><span class="se">\x00</span><span class="s1"> </span><span class="se">\x00</span><span class="s1">!</span><span class="se">\x9a</span><span class="s1">h3M</span><span class="se">\x1c\xb7\x8b\xb9</span><span class="s1">&quot;</span><span class="se">\x9c</span><span class="s1">(H</span><span class="se">\x01</span><span class="s1">&#39;</span>
+<span class="gp">... </span>                  <span class="sa">b</span><span class="s1">&#39;</span><span class="se">\xc4\x86</span><span class="s1">S</span><span class="se">\x00</span><span class="s1">&#39;</span><span class="p">)</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="k">with</span> <span class="n">open_file</span><span class="p">(</span><span class="n">file</span><span class="p">)</span> <span class="k">as</span> <span class="n">f</span><span class="p">:</span>
 <span class="gp">... </span>    <span class="n">f</span><span class="o">.</span><span class="n">read</span><span class="p">()</span>
 <span class="gp">...</span>
@@ -199,7 +191,7 @@ will <cite>file</cite>.</p>
     </p>
     <p>
         &copy; Copyright 2014--, scikit-bio development team.<br/>
-      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 1.5a0.<br/>
+      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 1.6.5.<br/>
     </p>
   </div>
 </footer>

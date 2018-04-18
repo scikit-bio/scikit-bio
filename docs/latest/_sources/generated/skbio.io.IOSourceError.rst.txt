@@ -1,5 +1,5 @@
-skbio.io.IOSourceError
-======================
+skbio\.io\.IOSourceError
+========================
 
 .. currentmodule:: skbio.io
 

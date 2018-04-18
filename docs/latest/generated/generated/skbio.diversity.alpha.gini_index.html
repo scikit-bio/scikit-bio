@@ -1,22 +1,16 @@
 <!DOCTYPE html>
 
-
 <html xmlns="http://www.w3.org/1999/xhtml">
   <head>
     <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
-    
-    <title>skbio.diversity.alpha.gini_index &#8212; scikit-bio 0.5.1 documentation</title>
-    
-    <link rel="stylesheet" href="../../_static/basic.css" type="text/css" />
+    <title>skbio.diversity.alpha.gini_index &#8212; scikit-bio 0.5.2 documentation</title>
+    <link rel="stylesheet" href="../../_static/bootstrap-sphinx.css" type="text/css" />
     <link rel="stylesheet" href="../../_static/pygments.css" type="text/css" />
     <link rel="stylesheet" href="../../_static/style.css" type="text/css" />
-    <link rel="stylesheet" href="../../_static/bootswatch-3.3.6/united/bootstrap.min.css" type="text/css" />
-    <link rel="stylesheet" href="../../_static/bootstrap-sphinx.css" type="text/css" />
-    
     <script type="text/javascript">
       var DOCUMENTATION_OPTIONS = {
         URL_ROOT:    '../../',
-        VERSION:     '0.5.1',
+        VERSION:     '0.5.2',
         COLLAPSE_INDEX: false,
         FILE_SUFFIX: '.html',
         HAS_SOURCE:  true,
@@ -27,15 +21,13 @@
     <script type="text/javascript" src="../../_static/underscore.js"></script>
     <script type="text/javascript" src="../../_static/doctools.js"></script>
     <script type="text/javascript" src="../../_static/copybutton.js"></script>
-    <script type="text/javascript" src="https://cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
+    <script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.1/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
     <script type="text/javascript" src="../../_static/js/jquery-1.11.0.min.js"></script>
     <script type="text/javascript" src="../../_static/js/jquery-fix.js"></script>
-    <script type="text/javascript" src="../../_static/bootstrap-3.3.6/js/bootstrap.min.js"></script>
+    <script type="text/javascript" src="../../_static/bootstrap-3.3.7/js/bootstrap.min.js"></script>
     <script type="text/javascript" src="../../_static/bootstrap-sphinx.js"></script>
     <link rel="index" title="Index" href="../../genindex.html" />
     <link rel="search" title="Search" href="../../search.html" />
-    <link rel="top" title="scikit-bio 0.5.1 documentation" href="../../index.html" />
-    <link rel="up" title="Alpha diversity measures (skbio.diversity.alpha)" href="../skbio.diversity.alpha.html" />
     <link rel="next" title="skbio.diversity.alpha.goods_coverage" href="skbio.diversity.alpha.goods_coverage.html" />
     <link rel="prev" title="skbio.diversity.alpha.fisher_alpha" href="skbio.diversity.alpha.fisher_alpha.html" />
 <meta charset='utf-8'>
@@ -44,7 +36,7 @@
 <meta name="apple-mobile-web-app-capable" content="yes">
 
   </head>
-  <body role="document">
+  <body>
   
   <a href="https://github.com/biocore/scikit-bio"
      class="visible-desktop hidden-xs"><img
@@ -72,7 +64,7 @@
         </button>
         <a class="navbar-brand" href="../../index.html">
           scikit-bio docs</a>
-        <span class="navbar-text navbar-version pull-left"><b>0.5.1</b></span>
+        <span class="navbar-text navbar-version pull-left"><b>0.5.2</b></span>
       </div>
 
         <div class="collapse navbar-collapse nav-collapse">
@@ -151,7 +143,7 @@
 <h1>skbio.diversity.alpha.gini_index<a class="headerlink" href="#skbio-diversity-alpha-gini-index" title="Permalink to this headline">¶</a></h1>
 <dl class="function">
 <dt id="skbio.diversity.alpha.gini_index">
-<code class="descclassname">skbio.diversity.alpha.</code><code class="descname">gini_index</code><span class="sig-paren">(</span><em>data</em>, <em>method='rectangles'</em><span class="sig-paren">)</span><a class="reference external" href="http://github.com/biocore/scikit-bio/blob/0.5.1/skbio/diversity/alpha/_gini.py#L15"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#skbio.diversity.alpha.gini_index" title="Permalink to this definition">¶</a></dt>
+<code class="descclassname">skbio.diversity.alpha.</code><code class="descname">gini_index</code><span class="sig-paren">(</span><em>data</em>, <em>method='rectangles'</em><span class="sig-paren">)</span><a class="reference external" href="http://github.com/biocore/scikit-bio/blob/0.5.2/skbio/diversity/alpha/_gini.py#L15"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#skbio.diversity.alpha.gini_index" title="Permalink to this definition">¶</a></dt>
 <dd><p>Calculate the Gini index.</p>
 <p>State: Experimental as of 0.4.0.</p>
 <p>The Gini index is defined as</p>
@@ -169,7 +161,7 @@ since <span class="math">\(A+B=0.5\)</span>.</p>
 <div><p>Vector of counts, abundances, proportions, etc. All entries must be
 non-negative.</p>
 </div></blockquote>
-<p><strong>method</strong> : {&#8216;rectangles&#8217;, &#8216;trapezoids&#8217;}</p>
+<p><strong>method</strong> : {‘rectangles’, ‘trapezoids’}</p>
 <blockquote>
 <div><p>Method for calculating the area under the Lorenz curve. If
 <code class="docutils literal"><span class="pre">'rectangles'</span></code>, connects the Lorenz curve points by lines parallel to
@@ -190,7 +182,7 @@ the values of this data.</p>
 </tr>
 <tr class="field-odd field"><th class="field-name">Raises:</th><td class="field-body"><p class="first"><strong>ValueError</strong></p>
 <blockquote class="last">
-<div><p>If <cite>method</cite> isn&#8217;t one of the supported methods for calculating the area
+<div><p>If <cite>method</cite> isn’t one of the supported methods for calculating the area
 under the curve.</p>
 </div></blockquote>
 </td>
@@ -198,7 +190,7 @@ under the curve.</p>
 </tbody>
 </table>
 <p class="rubric">Notes</p>
-<p>The Gini index was introduced in <a class="reference internal" href="#r30" id="id1">[R30]</a>. The formula for
+<p>The Gini index was introduced in <a class="reference internal" href="#r5959" id="id1">[R5959]</a>. The formula for
 <code class="docutils literal"><span class="pre">method='rectangles'</span></code> is</p>
 <div class="math">
 \[dx\sum_{i=1}^n h_i\]</div>
@@ -206,10 +198,10 @@ under the curve.</p>
 <div class="math">
 \[dx(\frac{h_0+h_n}{2}+\sum_{i=1}^{n-1} h_i)\]</div>
 <p class="rubric">References</p>
-<table class="docutils citation" frame="void" id="r30" rules="none">
+<table class="docutils citation" frame="void" id="r5959" rules="none">
 <colgroup><col class="label" /><col /></colgroup>
 <tbody valign="top">
-<tr><td class="label">[R30]</td><td><em>(<a class="fn-backref" href="#id1">1</a>, <a class="fn-backref" href="#id2">2</a>)</em> Gini, C. (1912). &#8220;Variability and Mutability&#8221;, C. Cuppini, Bologna,
+<tr><td class="label">[R5959]</td><td><em>(<a class="fn-backref" href="#id1">1</a>, <a class="fn-backref" href="#id2">2</a>)</em> Gini, C. (1912). “Variability and Mutability”, C. Cuppini, Bologna,
 156 pages. Reprinted in Memorie di metodologica statistica (Ed. Pizetti
 E, Salvemini, T). Rome: Libreria Eredi Virgilio Veschi (1955).</td></tr>
 </tbody>
@@ -232,7 +224,7 @@ E, Salvemini, T). Rome: Libreria Eredi Virgilio Veschi (1955).</td></tr>
     </p>
     <p>
         &copy; Copyright 2014--, scikit-bio development team.<br/>
-      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 1.5a0.<br/>
+      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 1.6.5.<br/>
     </p>
   </div>
 </footer>

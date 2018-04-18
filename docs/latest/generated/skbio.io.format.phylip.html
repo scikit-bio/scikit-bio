@@ -1,22 +1,16 @@
 <!DOCTYPE html>
 
-
 <html xmlns="http://www.w3.org/1999/xhtml">
   <head>
     <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
-    
-    <title>PHYLIP multiple sequence alignment format (skbio.io.format.phylip) &#8212; scikit-bio 0.5.1 documentation</title>
-    
-    <link rel="stylesheet" href="../_static/basic.css" type="text/css" />
+    <title>PHYLIP multiple sequence alignment format (skbio.io.format.phylip) &#8212; scikit-bio 0.5.2 documentation</title>
+    <link rel="stylesheet" href="../_static/bootstrap-sphinx.css" type="text/css" />
     <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
     <link rel="stylesheet" href="../_static/style.css" type="text/css" />
-    <link rel="stylesheet" href="../_static/bootswatch-3.3.6/united/bootstrap.min.css" type="text/css" />
-    <link rel="stylesheet" href="../_static/bootstrap-sphinx.css" type="text/css" />
-    
     <script type="text/javascript">
       var DOCUMENTATION_OPTIONS = {
         URL_ROOT:    '../',
-        VERSION:     '0.5.1',
+        VERSION:     '0.5.2',
         COLLAPSE_INDEX: false,
         FILE_SUFFIX: '.html',
         HAS_SOURCE:  true,
@@ -27,15 +21,13 @@
     <script type="text/javascript" src="../_static/underscore.js"></script>
     <script type="text/javascript" src="../_static/doctools.js"></script>
     <script type="text/javascript" src="../_static/copybutton.js"></script>
-    <script type="text/javascript" src="https://cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
+    <script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.1/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
     <script type="text/javascript" src="../_static/js/jquery-1.11.0.min.js"></script>
     <script type="text/javascript" src="../_static/js/jquery-fix.js"></script>
-    <script type="text/javascript" src="../_static/bootstrap-3.3.6/js/bootstrap.min.js"></script>
+    <script type="text/javascript" src="../_static/bootstrap-3.3.7/js/bootstrap.min.js"></script>
     <script type="text/javascript" src="../_static/bootstrap-sphinx.js"></script>
     <link rel="index" title="Index" href="../genindex.html" />
     <link rel="search" title="Search" href="../search.html" />
-    <link rel="top" title="scikit-bio 0.5.1 documentation" href="../index.html" />
-    <link rel="up" title="File I/O (skbio.io)" href="../io.html" />
     <link rel="next" title="QSeq format (skbio.io.format.qseq)" href="skbio.io.format.qseq.html" />
     <link rel="prev" title="Ordination results format (skbio.io.format.ordination)" href="skbio.io.format.ordination.html" />
 <meta charset='utf-8'>
@@ -44,7 +36,7 @@
 <meta name="apple-mobile-web-app-capable" content="yes">
 
   </head>
-  <body role="document">
+  <body>
   
   <a href="https://github.com/biocore/scikit-bio"
      class="visible-desktop hidden-xs"><img
@@ -72,7 +64,7 @@
         </button>
         <a class="navbar-brand" href="../index.html">
           scikit-bio docs</a>
-        <span class="navbar-text navbar-version pull-left"><b>0.5.1</b></span>
+        <span class="navbar-text navbar-version pull-left"><b>0.5.2</b></span>
       </div>
 
         <div class="collapse navbar-collapse nav-collapse">
@@ -161,11 +153,11 @@
   <span class="target" id="module-skbio.io.format.phylip"></span><div class="section" id="phylip-multiple-sequence-alignment-format-skbio-io-format-phylip">
 <h1>PHYLIP multiple sequence alignment format (<a class="reference internal" href="#module-skbio.io.format.phylip" title="skbio.io.format.phylip"><code class="xref py py-mod docutils literal"><span class="pre">skbio.io.format.phylip</span></code></a>)<a class="headerlink" href="#phylip-multiple-sequence-alignment-format-skbio-io-format-phylip" title="Permalink to this headline">¶</a></h1>
 <p>The PHYLIP file format stores a multiple sequence alignment. The format was
-originally defined and used in Joe Felsenstein&#8217;s PHYLIP package <a class="reference internal" href="#r183" id="id1">[R183]</a>, and has
-since been supported by several other bioinformatics tools (e.g., RAxML <a class="reference internal" href="#r184" id="id2">[R184]</a>).
-See <a class="reference internal" href="#r185" id="id3">[R185]</a> for the original format description, and <a class="reference internal" href="#r186" id="id4">[R186]</a> and <a class="reference internal" href="#r187" id="id5">[R187]</a> for additional
+originally defined and used in Joe Felsenstein’s PHYLIP package <a class="reference internal" href="#r342" id="id1">[R342]</a>, and has
+since been supported by several other bioinformatics tools (e.g., RAxML <a class="reference internal" href="#r343" id="id2">[R343]</a>).
+See <a class="reference internal" href="#r344" id="id3">[R344]</a> for the original format description, and <a class="reference internal" href="#r345" id="id4">[R345]</a> and <a class="reference internal" href="#r346" id="id5">[R346]</a> for additional
 descriptions.</p>
-<p>An example PHYLIP-formatted file taken from <a class="reference internal" href="#r185" id="id6">[R185]</a>:</p>
+<p>An example PHYLIP-formatted file taken from <a class="reference internal" href="#r344" id="id6">[R344]</a>:</p>
 <div class="highlight-default"><div class="highlight"><pre><span></span>      <span class="mi">5</span>    <span class="mi">42</span>
 <span class="n">Turkey</span>    <span class="n">AAGCTNGGGC</span> <span class="n">ATTTCAGGGT</span> <span class="n">GAGCCCGGGC</span> <span class="n">AATACAGGGT</span> <span class="n">AT</span>
 <span class="n">Salmo</span> <span class="n">gairAAGCCTTGGC</span> <span class="n">AGTGCAGGGT</span> <span class="n">GAGCCGTGGC</span> <span class="n">CGGGCACGGT</span> <span class="n">AT</span>
@@ -209,13 +201,13 @@ fee is charged for it and that this copyright notice is not removed.</em></p>
 <p>PHYLIP format is a plain text format containing exactly two sections: a header
 describing the dimensions of the alignment, followed by the multiple sequence
 alignment itself.</p>
-<p>The format described here is &#8220;strict&#8221; PHYLIP, as described in <a class="reference internal" href="#r186" id="id7">[R186]</a>. Strict
+<p>The format described here is “strict” PHYLIP, as described in <a class="reference internal" href="#r345" id="id7">[R345]</a>. Strict
 PHYLIP requires that each sequence identifier is exactly 10 characters long
 (padded with spaces as necessary). Other bioinformatics tools (e.g., RAxML) may
 relax this rule to allow for longer sequence identifiers. See the
 <strong>Alignment Section</strong> below for more details.</p>
-<p>The format described here is &#8220;sequential&#8221; format. The original PHYLIP format
-specification <a class="reference internal" href="#r185" id="id8">[R185]</a> describes both sequential and interleaved formats.</p>
+<p>The format described here is “sequential” format. The original PHYLIP format
+specification <a class="reference internal" href="#r344" id="id8">[R344]</a> describes both sequential and interleaved formats.</p>
 <div class="admonition note">
 <p class="first admonition-title">Note</p>
 <p class="last">scikit-bio currently supports reading and writing strict, sequential
@@ -263,7 +255,7 @@ empty ID will be padded with 10 spaces when writing.</p>
 the 11th character in the line, as the first 10 characters are reserved for the
 sequence ID. While PHYLIP format does not explicitly restrict the set of
 supported characters that may be used to represent a sequence, the original
-format description <a class="reference internal" href="#r185" id="id9">[R185]</a> specifies the IUPAC nucleic acid lexicon for DNA or RNA
+format description <a class="reference internal" href="#r344" id="id9">[R344]</a> specifies the IUPAC nucleic acid lexicon for DNA or RNA
 sequences, and the IUPAC protein lexicon for protein sequences. The original
 PHYLIP specification uses <code class="docutils literal"><span class="pre">-</span></code> as a gap character, though older versions also
 supported <code class="docutils literal"><span class="pre">.</span></code>. The sequence characters may contain optional spaces (e.g., to
@@ -271,7 +263,7 @@ improve readability), and both upper and lower case characters are supported.</p
 <div class="admonition note">
 <p class="first admonition-title">Note</p>
 <p>scikit-bio will read/write a PHYLIP-formatted file as long as the
-alignment&#8217;s sequence characters are valid for the type of in-memory sequence
+alignment’s sequence characters are valid for the type of in-memory sequence
 object being read into or written from. This differs from the PHYLIP
 specification, which states that a PHYLIP-formatted file can only contain
 valid IUPAC characters. See the <code class="docutils literal"><span class="pre">constructor</span></code> format parameter below for
@@ -296,12 +288,12 @@ PHYLIP-formatted files, nor by the PHYLIP format specification itself.</p>
 type of in-memory sequence object to read each aligned sequence into. This must
 be a subclass of <code class="docutils literal"><span class="pre">GrammaredSequence</span></code> (e.g., <code class="docutils literal"><span class="pre">DNA</span></code>, <code class="docutils literal"><span class="pre">RNA</span></code>, <code class="docutils literal"><span class="pre">Protein</span></code>)
 and is a required format parameter. For example, if you know that the PHYLIP
-file you&#8217;re reading contains DNA sequences, you would pass <code class="docutils literal"><span class="pre">constructor=DNA</span></code>
+file you’re reading contains DNA sequences, you would pass <code class="docutils literal"><span class="pre">constructor=DNA</span></code>
 to the reader call.</p>
 </div>
 <div class="section" id="examples">
 <h2>Examples<a class="headerlink" href="#examples" title="Permalink to this headline">¶</a></h2>
-<p>Let&#8217;s create a <code class="docutils literal"><span class="pre">TabularMSA</span></code> with three DNA sequences:</p>
+<p>Let’s create a <code class="docutils literal"><span class="pre">TabularMSA</span></code> with three DNA sequences:</p>
 <div class="highlight-default"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">skbio</span> <span class="k">import</span> <span class="n">TabularMSA</span><span class="p">,</span> <span class="n">DNA</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">seqs</span> <span class="o">=</span> <span class="p">[</span><span class="n">DNA</span><span class="p">(</span><span class="s1">&#39;ACCGTTGTA-GTAGCT&#39;</span><span class="p">,</span> <span class="n">metadata</span><span class="o">=</span><span class="p">{</span><span class="s1">&#39;id&#39;</span><span class="p">:</span><span class="s1">&#39;seq1&#39;</span><span class="p">}),</span>
 <span class="gp">... </span>        <span class="n">DNA</span><span class="p">(</span><span class="s1">&#39;A--GTCGAA-GTACCT&#39;</span><span class="p">,</span> <span class="n">metadata</span><span class="o">=</span><span class="p">{</span><span class="s1">&#39;id&#39;</span><span class="p">:</span><span class="s1">&#39;sequence-2&#39;</span><span class="p">}),</span>
@@ -321,7 +313,7 @@ to the reader call.</p>
 <span class="go">Index([&#39;seq1&#39;, &#39;sequence-2&#39;, &#39;3&#39;], dtype=&#39;object&#39;)</span>
 </pre></div>
 </div>
-<p>Now let&#8217;s write the <code class="docutils literal"><span class="pre">TabularMSA</span></code> to file in PHYLIP format and take a look at
+<p>Now let’s write the <code class="docutils literal"><span class="pre">TabularMSA</span></code> to file in PHYLIP format and take a look at
 the output:</p>
 <div class="highlight-default"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">io</span> <span class="k">import</span> <span class="n">StringIO</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">fh</span> <span class="o">=</span> <span class="n">StringIO</span><span class="p">()</span>
@@ -371,35 +363,35 @@ default integer index labels:</p>
 </div>
 <div class="section" id="references">
 <h2>References<a class="headerlink" href="#references" title="Permalink to this headline">¶</a></h2>
-<table class="docutils citation" frame="void" id="r183" rules="none">
+<table class="docutils citation" frame="void" id="r342" rules="none">
 <colgroup><col class="label" /><col /></colgroup>
 <tbody valign="top">
-<tr><td class="label"><a class="fn-backref" href="#id1">[R183]</a></td><td><a class="reference external" href="http://evolution.genetics.washington.edu/phylip.html">http://evolution.genetics.washington.edu/phylip.html</a></td></tr>
+<tr><td class="label"><a class="fn-backref" href="#id1">[R342]</a></td><td><a class="reference external" href="http://evolution.genetics.washington.edu/phylip.html">http://evolution.genetics.washington.edu/phylip.html</a></td></tr>
 </tbody>
 </table>
-<table class="docutils citation" frame="void" id="r184" rules="none">
+<table class="docutils citation" frame="void" id="r343" rules="none">
 <colgroup><col class="label" /><col /></colgroup>
 <tbody valign="top">
-<tr><td class="label"><a class="fn-backref" href="#id2">[R184]</a></td><td>RAxML Version 8: A tool for Phylogenetic Analysis and
-Post-Analysis of Large Phylogenies&#8221;. In Bioinformatics, 2014</td></tr>
+<tr><td class="label"><a class="fn-backref" href="#id2">[R343]</a></td><td>RAxML Version 8: A tool for Phylogenetic Analysis and
+Post-Analysis of Large Phylogenies”. In Bioinformatics, 2014</td></tr>
 </tbody>
 </table>
-<table class="docutils citation" frame="void" id="r185" rules="none">
+<table class="docutils citation" frame="void" id="r344" rules="none">
 <colgroup><col class="label" /><col /></colgroup>
 <tbody valign="top">
-<tr><td class="label">[R185]</td><td><em>(<a class="fn-backref" href="#id3">1</a>, <a class="fn-backref" href="#id6">2</a>, <a class="fn-backref" href="#id8">3</a>, <a class="fn-backref" href="#id9">4</a>)</em> <a class="reference external" href="http://evolution.genetics.washington.edu/phylip/doc/sequence.html">http://evolution.genetics.washington.edu/phylip/doc/sequence.html</a></td></tr>
+<tr><td class="label">[R344]</td><td><em>(<a class="fn-backref" href="#id3">1</a>, <a class="fn-backref" href="#id6">2</a>, <a class="fn-backref" href="#id8">3</a>, <a class="fn-backref" href="#id9">4</a>)</em> <a class="reference external" href="http://evolution.genetics.washington.edu/phylip/doc/sequence.html">http://evolution.genetics.washington.edu/phylip/doc/sequence.html</a></td></tr>
 </tbody>
 </table>
-<table class="docutils citation" frame="void" id="r186" rules="none">
+<table class="docutils citation" frame="void" id="r345" rules="none">
 <colgroup><col class="label" /><col /></colgroup>
 <tbody valign="top">
-<tr><td class="label">[R186]</td><td><em>(<a class="fn-backref" href="#id4">1</a>, <a class="fn-backref" href="#id7">2</a>)</em> <a class="reference external" href="http://www.phylo.org/tools/obsolete/phylip.html">http://www.phylo.org/tools/obsolete/phylip.html</a></td></tr>
+<tr><td class="label">[R345]</td><td><em>(<a class="fn-backref" href="#id4">1</a>, <a class="fn-backref" href="#id7">2</a>)</em> <a class="reference external" href="http://www.phylo.org/tools/obsolete/phylip.html">http://www.phylo.org/tools/obsolete/phylip.html</a></td></tr>
 </tbody>
 </table>
-<table class="docutils citation" frame="void" id="r187" rules="none">
+<table class="docutils citation" frame="void" id="r346" rules="none">
 <colgroup><col class="label" /><col /></colgroup>
 <tbody valign="top">
-<tr><td class="label"><a class="fn-backref" href="#id5">[R187]</a></td><td><a class="reference external" href="http://www.bioperl.org/wiki/PHYLIP_multiple_alignment_format">http://www.bioperl.org/wiki/PHYLIP_multiple_alignment_format</a></td></tr>
+<tr><td class="label"><a class="fn-backref" href="#id5">[R346]</a></td><td><a class="reference external" href="http://www.bioperl.org/wiki/PHYLIP_multiple_alignment_format">http://www.bioperl.org/wiki/PHYLIP_multiple_alignment_format</a></td></tr>
 </tbody>
 </table>
 </div>
@@ -419,7 +411,7 @@ Post-Analysis of Large Phylogenies&#8221;. In Bioinformatics, 2014</td></tr>
     </p>
     <p>
         &copy; Copyright 2014--, scikit-bio development team.<br/>
-      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 1.5a0.<br/>
+      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 1.6.5.<br/>
     </p>
   </div>
 </footer>

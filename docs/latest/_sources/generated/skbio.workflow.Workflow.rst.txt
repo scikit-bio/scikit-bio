@@ -1,5 +1,5 @@
-skbio.workflow.Workflow
-=======================
+skbio\.workflow\.Workflow
+=========================
 
 .. currentmodule:: skbio.workflow
 

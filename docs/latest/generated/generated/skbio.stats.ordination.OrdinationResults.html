@@ -1,22 +1,16 @@
 <!DOCTYPE html>
 
-
 <html xmlns="http://www.w3.org/1999/xhtml">
   <head>
     <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
-    
-    <title>skbio.stats.ordination.OrdinationResults &#8212; scikit-bio 0.5.1 documentation</title>
-    
-    <link rel="stylesheet" href="../../_static/basic.css" type="text/css" />
+    <title>skbio.stats.ordination.OrdinationResults &#8212; scikit-bio 0.5.2 documentation</title>
+    <link rel="stylesheet" href="../../_static/bootstrap-sphinx.css" type="text/css" />
     <link rel="stylesheet" href="../../_static/pygments.css" type="text/css" />
     <link rel="stylesheet" href="../../_static/style.css" type="text/css" />
-    <link rel="stylesheet" href="../../_static/bootswatch-3.3.6/united/bootstrap.min.css" type="text/css" />
-    <link rel="stylesheet" href="../../_static/bootstrap-sphinx.css" type="text/css" />
-    
     <script type="text/javascript">
       var DOCUMENTATION_OPTIONS = {
         URL_ROOT:    '../../',
-        VERSION:     '0.5.1',
+        VERSION:     '0.5.2',
         COLLAPSE_INDEX: false,
         FILE_SUFFIX: '.html',
         HAS_SOURCE:  true,
@@ -27,15 +21,13 @@
     <script type="text/javascript" src="../../_static/underscore.js"></script>
     <script type="text/javascript" src="../../_static/doctools.js"></script>
     <script type="text/javascript" src="../../_static/copybutton.js"></script>
-    <script type="text/javascript" src="https://cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
+    <script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.1/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
     <script type="text/javascript" src="../../_static/js/jquery-1.11.0.min.js"></script>
     <script type="text/javascript" src="../../_static/js/jquery-fix.js"></script>
-    <script type="text/javascript" src="../../_static/bootstrap-3.3.6/js/bootstrap.min.js"></script>
+    <script type="text/javascript" src="../../_static/bootstrap-3.3.7/js/bootstrap.min.js"></script>
     <script type="text/javascript" src="../../_static/bootstrap-sphinx.js"></script>
     <link rel="index" title="Index" href="../../genindex.html" />
     <link rel="search" title="Search" href="../../search.html" />
-    <link rel="top" title="scikit-bio 0.5.1 documentation" href="../../index.html" />
-    <link rel="up" title="Ordination methods (skbio.stats.ordination)" href="../skbio.stats.ordination.html" />
     <link rel="next" title="Gradient analyses (skbio.stats.gradient)" href="../skbio.stats.gradient.html" />
     <link rel="prev" title="skbio.stats.ordination.f_matrix" href="skbio.stats.ordination.f_matrix.html" />
 <meta charset='utf-8'>
@@ -44,7 +36,7 @@
 <meta name="apple-mobile-web-app-capable" content="yes">
 
   </head>
-  <body role="document">
+  <body>
   
   <a href="https://github.com/biocore/scikit-bio"
      class="visible-desktop hidden-xs"><img
@@ -72,7 +64,7 @@
         </button>
         <a class="navbar-brand" href="../../index.html">
           scikit-bio docs</a>
-        <span class="navbar-text navbar-version pull-left"><b>0.5.1</b></span>
+        <span class="navbar-text navbar-version pull-left"><b>0.5.2</b></span>
       </div>
 
         <div class="collapse navbar-collapse nav-collapse">
@@ -151,7 +143,7 @@
 <h1>skbio.stats.ordination.OrdinationResults<a class="headerlink" href="#skbio-stats-ordination-ordinationresults" title="Permalink to this headline">¶</a></h1>
 <dl class="class">
 <dt id="skbio.stats.ordination.OrdinationResults">
-<em class="property">class </em><code class="descclassname">skbio.stats.ordination.</code><code class="descname">OrdinationResults</code><span class="sig-paren">(</span><em>short_method_name</em>, <em>long_method_name</em>, <em>eigvals</em>, <em>samples</em>, <em>features=None</em>, <em>biplot_scores=None</em>, <em>sample_constraints=None</em>, <em>proportion_explained=None</em><span class="sig-paren">)</span><a class="reference external" href="http://github.com/biocore/scikit-bio/blob/0.5.1/skbio/stats/ordination/_ordination_results.py#L23"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#skbio.stats.ordination.OrdinationResults" title="Permalink to this definition">¶</a></dt>
+<em class="property">class </em><code class="descclassname">skbio.stats.ordination.</code><code class="descname">OrdinationResults</code><span class="sig-paren">(</span><em>short_method_name</em>, <em>long_method_name</em>, <em>eigvals</em>, <em>samples</em>, <em>features=None</em>, <em>biplot_scores=None</em>, <em>sample_constraints=None</em>, <em>proportion_explained=None</em><span class="sig-paren">)</span><a class="reference external" href="http://github.com/biocore/scikit-bio/blob/0.5.2/skbio/stats/ordination/_ordination_results.py#L20"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#skbio.stats.ordination.OrdinationResults" title="Permalink to this definition">¶</a></dt>
 <dd><p>Store ordination results, providing serialization and plotting support.</p>
 <p>Stores various components of ordination results. Provides methods for
 serializing/deserializing results, as well as generation of basic
@@ -168,42 +160,42 @@ representations of itself within the IPython Notebook.</p>
 <col width="90%" />
 </colgroup>
 <tbody valign="top">
-<tr class="row-odd"><td><a class="reference internal" href="skbio.stats.ordination.OrdinationResults.png.html#skbio.stats.ordination.OrdinationResults.png" title="skbio.stats.ordination.OrdinationResults.png"><code class="xref py py-obj docutils literal"><span class="pre">png</span></code></a></td>
+<tr class="row-odd"><td><code class="xref py py-obj docutils literal"><span class="pre">png</span></code></td>
 <td>Display basic 3-D scatterplot in IPython Notebook as PNG.</td>
 </tr>
-<tr class="row-even"><td><a class="reference internal" href="skbio.stats.ordination.OrdinationResults.svg.html#skbio.stats.ordination.OrdinationResults.svg" title="skbio.stats.ordination.OrdinationResults.svg"><code class="xref py py-obj docutils literal"><span class="pre">svg</span></code></a></td>
+<tr class="row-even"><td><code class="xref py py-obj docutils literal"><span class="pre">svg</span></code></td>
 <td>Display basic 3-D scatterplot in IPython Notebook as SVG.</td>
 </tr>
 </tbody>
 </table>
 <table border="1" class="docutils">
 <colgroup>
-<col width="10%" />
-<col width="90%" />
+<col width="12%" />
+<col width="88%" />
 </colgroup>
 <tbody valign="top">
-<tr class="row-odd"><td>short_method_name</td>
+<tr class="row-odd"><td><strong>short_method_name</strong></td>
 <td>(str) Abbreviated ordination method name.</td>
 </tr>
-<tr class="row-even"><td>long_method_name</td>
+<tr class="row-even"><td><strong>long_method_name</strong></td>
 <td>(str) Ordination method name.</td>
 </tr>
-<tr class="row-odd"><td>eigvals</td>
+<tr class="row-odd"><td><strong>eigvals</strong></td>
 <td>(pd.Series) The resulting eigenvalues.  The index corresponds to the ordination axis labels</td>
 </tr>
-<tr class="row-even"><td>samples</td>
+<tr class="row-even"><td><strong>samples</strong></td>
 <td>(pd.DataFrame) The position of the samples in the ordination space, row-indexed by the sample id.</td>
 </tr>
-<tr class="row-odd"><td>features</td>
+<tr class="row-odd"><td><strong>features</strong></td>
 <td>(pd.DataFrame) The position of the features in the ordination space, row-indexed by the feature id.</td>
 </tr>
-<tr class="row-even"><td>biplot_scores</td>
+<tr class="row-even"><td><strong>biplot_scores</strong></td>
 <td>(pd.DataFrame) Correlation coefficients of the samples with respect to the features.</td>
 </tr>
-<tr class="row-odd"><td>sample_constraints</td>
+<tr class="row-odd"><td><strong>sample_constraints</strong></td>
 <td>(pd.DataFrame) Site constraints (linear combinations of constraining variables): coordinates of the sites in the space of the explanatory variables X. These are the fitted site scores</td>
 </tr>
-<tr class="row-even"><td>proportion_explained</td>
+<tr class="row-even"><td><strong>proportion_explained</strong></td>
 <td>(pd.Series) Proportion explained by each of the dimensions in the ordination space. The index corresponds to the ordination axis labels</td>
 </tr>
 </tbody>
@@ -218,7 +210,7 @@ representations of itself within the IPython Notebook.</p>
 <tr class="row-odd"><td><a class="reference internal" href="skbio.stats.ordination.OrdinationResults.__str__.html#skbio.stats.ordination.OrdinationResults.__str__" title="skbio.stats.ordination.OrdinationResults.__str__"><code class="xref py py-obj docutils literal"><span class="pre">str(or)</span></code></a></td>
 <td>Return a string representation of the ordination results.</td>
 </tr>
-<tr class="row-even"><td><a class="reference internal" href="skbio.stats.ordination.OrdinationResults.plot.html#skbio.stats.ordination.OrdinationResults.plot" title="skbio.stats.ordination.OrdinationResults.plot"><code class="xref py py-obj docutils literal"><span class="pre">plot</span></code></a>([df,&nbsp;column,&nbsp;axes,&nbsp;axis_labels,&nbsp;title,&nbsp;...])</td>
+<tr class="row-even"><td><a class="reference internal" href="skbio.stats.ordination.OrdinationResults.plot.html#skbio.stats.ordination.OrdinationResults.plot" title="skbio.stats.ordination.OrdinationResults.plot"><code class="xref py py-obj docutils literal"><span class="pre">plot</span></code></a>([df,&nbsp;column,&nbsp;axes,&nbsp;axis_labels,&nbsp;title,&nbsp;…])</td>
 <td>Create a 3-D scatterplot of ordination results colored by metadata.</td>
 </tr>
 <tr class="row-odd"><td><a class="reference internal" href="skbio.stats.ordination.OrdinationResults.read.html#skbio.stats.ordination.OrdinationResults.read" title="skbio.stats.ordination.OrdinationResults.read"><code class="xref py py-obj docutils literal"><span class="pre">read</span></code></a>(file[,&nbsp;format])</td>
@@ -247,7 +239,7 @@ representations of itself within the IPython Notebook.</p>
     </p>
     <p>
         &copy; Copyright 2014--, scikit-bio development team.<br/>
-      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 1.5a0.<br/>
+      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 1.6.5.<br/>
     </p>
   </div>
 </footer>

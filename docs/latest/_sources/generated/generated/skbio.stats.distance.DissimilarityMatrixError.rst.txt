@@ -1,5 +1,5 @@
-skbio.stats.distance.DissimilarityMatrixError
-=============================================
+skbio\.stats\.distance\.DissimilarityMatrixError
+================================================
 
 .. currentmodule:: skbio.stats.distance
 

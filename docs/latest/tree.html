@@ -1,22 +1,16 @@
 <!DOCTYPE html>
 
-
 <html xmlns="http://www.w3.org/1999/xhtml">
   <head>
     <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
-    
-    <title>Tree representations (skbio.tree) &#8212; scikit-bio 0.5.1 documentation</title>
-    
-    <link rel="stylesheet" href="_static/basic.css" type="text/css" />
+    <title>Tree representations (skbio.tree) &#8212; scikit-bio 0.5.2 documentation</title>
+    <link rel="stylesheet" href="_static/bootstrap-sphinx.css" type="text/css" />
     <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
     <link rel="stylesheet" href="_static/style.css" type="text/css" />
-    <link rel="stylesheet" href="_static/bootswatch-3.3.6/united/bootstrap.min.css" type="text/css" />
-    <link rel="stylesheet" href="_static/bootstrap-sphinx.css" type="text/css" />
-    
     <script type="text/javascript">
       var DOCUMENTATION_OPTIONS = {
         URL_ROOT:    './',
-        VERSION:     '0.5.1',
+        VERSION:     '0.5.2',
         COLLAPSE_INDEX: false,
         FILE_SUFFIX: '.html',
         HAS_SOURCE:  true,
@@ -27,14 +21,13 @@
     <script type="text/javascript" src="_static/underscore.js"></script>
     <script type="text/javascript" src="_static/doctools.js"></script>
     <script type="text/javascript" src="_static/copybutton.js"></script>
-    <script type="text/javascript" src="https://cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
+    <script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.1/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
     <script type="text/javascript" src="_static/js/jquery-1.11.0.min.js"></script>
     <script type="text/javascript" src="_static/js/jquery-fix.js"></script>
-    <script type="text/javascript" src="_static/bootstrap-3.3.6/js/bootstrap.min.js"></script>
+    <script type="text/javascript" src="_static/bootstrap-3.3.7/js/bootstrap.min.js"></script>
     <script type="text/javascript" src="_static/bootstrap-sphinx.js"></script>
     <link rel="index" title="Index" href="genindex.html" />
     <link rel="search" title="Search" href="search.html" />
-    <link rel="top" title="scikit-bio 0.5.1 documentation" href="index.html" />
     <link rel="next" title="skbio.tree.TreeNode" href="generated/skbio.tree.TreeNode.html" />
     <link rel="prev" title="skbio.alignment.make_identity_substitution_matrix" href="generated/skbio.alignment.make_identity_substitution_matrix.html" />
 <meta charset='utf-8'>
@@ -43,7 +36,7 @@
 <meta name="apple-mobile-web-app-capable" content="yes">
 
   </head>
-  <body role="document">
+  <body>
   
   <a href="https://github.com/biocore/scikit-bio"
      class="visible-desktop hidden-xs"><img
@@ -71,7 +64,7 @@
         </button>
         <a class="navbar-brand" href="index.html">
           scikit-bio docs</a>
-        <span class="navbar-text navbar-version pull-left"><b>0.5.1</b></span>
+        <span class="navbar-text navbar-version pull-left"><b>0.5.2</b></span>
       </div>
 
         <div class="collapse navbar-collapse nav-collapse">
@@ -182,7 +175,7 @@ single descendants.</p>
 <col width="90%" />
 </colgroup>
 <tbody valign="top">
-<tr class="row-odd"><td><a class="reference internal" href="generated/skbio.tree.nj.html#skbio.tree.nj" title="skbio.tree.nj"><code class="xref py py-obj docutils literal"><span class="pre">nj</span></code></a>(dm[,&nbsp;disallow_negative_branch_length,&nbsp;...])</td>
+<tr class="row-odd"><td><a class="reference internal" href="generated/skbio.tree.nj.html#skbio.tree.nj" title="skbio.tree.nj"><code class="xref py py-obj docutils literal"><span class="pre">nj</span></code></a>(dm[,&nbsp;disallow_negative_branch_length,&nbsp;…])</td>
 <td>Apply neighbor joining for phylogenetic reconstruction.</td>
 </tr>
 </tbody>
@@ -196,7 +189,7 @@ single descendants.</p>
 <col width="90%" />
 </colgroup>
 <tbody valign="top">
-<tr class="row-odd"><td><a class="reference internal" href="generated/skbio.tree.majority_rule.html#skbio.tree.majority_rule" title="skbio.tree.majority_rule"><code class="xref py py-obj docutils literal"><span class="pre">majority_rule</span></code></a>(trees[,&nbsp;weights,&nbsp;cutoff,&nbsp;...])</td>
+<tr class="row-odd"><td><a class="reference internal" href="generated/skbio.tree.majority_rule.html#skbio.tree.majority_rule" title="skbio.tree.majority_rule"><code class="xref py py-obj docutils literal"><span class="pre">majority_rule</span></code></a>(trees[,&nbsp;weights,&nbsp;cutoff,&nbsp;…])</td>
 <td>Determines consensus trees from a list of rooted trees</td>
 </tr>
 </tbody>
@@ -236,14 +229,14 @@ single descendants.</p>
 </div>
 <p>A new tree can be constructed from a Newick string. Newick is a common format
 used to represent tree objects within a file. Newick was part of the original
-PHYLIP package from Joseph Felsenstein&#8217;s group (defined <a class="reference external" href="http://goo.gl/fIY1Iq">here</a>), and is based around representing nesting with
+PHYLIP package from Joseph Felsenstein’s group (defined <a class="reference external" href="http://goo.gl/fIY1Iq">here</a>), and is based around representing nesting with
 parentheses. For instance, the following string describes a 3 taxon tree, with
 one internal node:</p>
 <blockquote>
 <div>((A, B)C, D)root;</div></blockquote>
 <p>Where A, B, and D are tips of the tree, and C is an internal node that covers
 tips A and B.</p>
-<p>Now let&#8217;s construct a simple tree and dump an ASCII representation:</p>
+<p>Now let’s construct a simple tree and dump an ASCII representation:</p>
 <div class="highlight-default"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">tree</span> <span class="o">=</span> <span class="n">TreeNode</span><span class="o">.</span><span class="n">read</span><span class="p">(</span><span class="n">StringIO</span><span class="p">(</span><span class="s2">&quot;((A, B)C, D)root;&quot;</span><span class="p">))</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="nb">print</span><span class="p">(</span><span class="n">tree</span><span class="o">.</span><span class="n">is_root</span><span class="p">())</span> <span class="c1"># is this the root of the tree?</span>
 <span class="go">True</span>
@@ -260,11 +253,11 @@ tips A and B.</p>
 <p>There are a few common ways to traverse a tree, and depending on your use,
 some methods are more appropriate than others. Wikipedia has a well written
 page on tree <a class="reference external" href="http://goo.gl/K4Ufl">traversal methods</a>, and will go into
-further depth than what we&#8217;ll cover here. We&#8217;re only going to cover two of the
+further depth than what we’ll cover here. We’re only going to cover two of the
 commonly used traversals here, preorder and postorder, but we will show
 examples of two other common helper traversal methods to gather tips or
 internal nodes.</p>
-<p>The first traversal we&#8217;ll cover is a preorder traversal in which you evaluate
+<p>The first traversal we’ll cover is a preorder traversal in which you evaluate
 from root to tips, looking at the left most child first. For instance:</p>
 <div class="highlight-default"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="k">for</span> <span class="n">node</span> <span class="ow">in</span> <span class="n">tree</span><span class="o">.</span><span class="n">preorder</span><span class="p">():</span>
 <span class="gp">... </span>   <span class="nb">print</span><span class="p">(</span><span class="n">node</span><span class="o">.</span><span class="n">name</span><span class="p">)</span>
@@ -275,7 +268,7 @@ from root to tips, looking at the left most child first. For instance:</p>
 <span class="go">D</span>
 </pre></div>
 </div>
-<p>The next method we&#8217;ll look at is a postorder traveral which will evaluate the
+<p>The next method we’ll look at is a postorder traveral which will evaluate the
 left subtree tips first before walking back up the tree:</p>
 <div class="highlight-default"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="k">for</span> <span class="n">node</span> <span class="ow">in</span> <span class="n">tree</span><span class="o">.</span><span class="n">postorder</span><span class="p">():</span>
 <span class="gp">... </span>   <span class="nb">print</span><span class="p">(</span><span class="n">node</span><span class="o">.</span><span class="n">name</span><span class="p">)</span>
@@ -303,7 +296,7 @@ or for iterating over just the internal nodes.</p>
 <p>Note, by default, <cite>non_tips</cite> will ignore <cite>self</cite> (which is the root in this
 case).  You can pass the <cite>include_self</cite> flag to <cite>non_tips</cite> if you wish to
 include <cite>self</cite>.</p>
-<p>The <cite>TreeNode</cite> provides a few ways to compare trees. First, let&#8217;s create two
+<p>The <cite>TreeNode</cite> provides a few ways to compare trees. First, let’s create two
 similar trees and compare their topologies using <cite>compare_subsets</cite>. This
 distance is the fraction of common clades present in the two trees, where a
 distance of 0 means the trees contain identical clades, and a distance of 1
@@ -320,7 +313,7 @@ indicates the trees do not share any common clades:</p>
 </pre></div>
 </div>
 <p>We can additionally take into account branch length when computing distances
-between trees. First, we&#8217;re going to construct two new trees with described
+between trees. First, we’re going to construct two new trees with described
 branch length, note the difference in the Newick strings:</p>
 <div class="highlight-default"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">tree1</span> <span class="o">=</span> \
 <span class="gp">... </span>    <span class="n">TreeNode</span><span class="o">.</span><span class="n">read</span><span class="p">(</span><span class="n">StringIO</span><span class="p">(</span><span class="s2">&quot;((A:0.1, B:0.2)C:0.3, D:0.4, E:0.5)root;&quot;</span><span class="p">))</span>
@@ -328,7 +321,7 @@ branch length, note the difference in the Newick strings:</p>
 <span class="gp">... </span>    <span class="n">TreeNode</span><span class="o">.</span><span class="n">read</span><span class="p">(</span><span class="n">StringIO</span><span class="p">(</span><span class="s2">&quot;((A:0.4, B:0.8)C:0.3, D:0.1, E:0.5)root;&quot;</span><span class="p">))</span>
 </pre></div>
 </div>
-<p>In these two trees, we&#8217;ve added on a description of length from the node to
+<p>In these two trees, we’ve added on a description of length from the node to
 its parent, so for instance:</p>
 <div class="highlight-default"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="k">for</span> <span class="n">node</span> <span class="ow">in</span> <span class="n">tree1</span><span class="o">.</span><span class="n">postorder</span><span class="p">():</span>
 <span class="gp">... </span>    <span class="nb">print</span><span class="p">(</span><span class="n">node</span><span class="o">.</span><span class="n">name</span><span class="p">,</span> <span class="n">node</span><span class="o">.</span><span class="n">length</span><span class="p">)</span>
@@ -340,7 +333,7 @@ its parent, so for instance:</p>
 <span class="go">root None</span>
 </pre></div>
 </div>
-<p>Now let&#8217;s compare two trees using the distances computed pairwise between tips
+<p>Now let’s compare two trees using the distances computed pairwise between tips
 in the trees. The distance computed, by default, is the correlation of all
 pairwise tip-to-tip distances between trees:</p>
 <div class="highlight-default"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="nb">print</span><span class="p">(</span><span class="n">tree1</span><span class="o">.</span><span class="n">compare_tip_distances</span><span class="p">(</span><span class="n">tree1</span><span class="p">))</span>  <span class="c1"># identity case</span>
@@ -366,7 +359,7 @@ pairwise tip-to-tip distances between trees:</p>
     </p>
     <p>
         &copy; Copyright 2014--, scikit-bio development team.<br/>
-      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 1.5a0.<br/>
+      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 1.6.5.<br/>
     </p>
   </div>
 </footer>

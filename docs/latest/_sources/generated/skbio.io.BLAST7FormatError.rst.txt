@@ -1,5 +1,5 @@
-skbio.io.BLAST7FormatError
-==========================
+skbio\.io\.BLAST7FormatError
+============================
 
 .. currentmodule:: skbio.io
 

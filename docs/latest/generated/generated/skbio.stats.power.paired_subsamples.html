@@ -1,22 +1,16 @@
 <!DOCTYPE html>
 
-
 <html xmlns="http://www.w3.org/1999/xhtml">
   <head>
     <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
-    
-    <title>skbio.stats.power.paired_subsamples &#8212; scikit-bio 0.5.1 documentation</title>
-    
-    <link rel="stylesheet" href="../../_static/basic.css" type="text/css" />
+    <title>skbio.stats.power.paired_subsamples &#8212; scikit-bio 0.5.2 documentation</title>
+    <link rel="stylesheet" href="../../_static/bootstrap-sphinx.css" type="text/css" />
     <link rel="stylesheet" href="../../_static/pygments.css" type="text/css" />
     <link rel="stylesheet" href="../../_static/style.css" type="text/css" />
-    <link rel="stylesheet" href="../../_static/bootswatch-3.3.6/united/bootstrap.min.css" type="text/css" />
-    <link rel="stylesheet" href="../../_static/bootstrap-sphinx.css" type="text/css" />
-    
     <script type="text/javascript">
       var DOCUMENTATION_OPTIONS = {
         URL_ROOT:    '../../',
-        VERSION:     '0.5.1',
+        VERSION:     '0.5.2',
         COLLAPSE_INDEX: false,
         FILE_SUFFIX: '.html',
         HAS_SOURCE:  true,
@@ -27,15 +21,13 @@
     <script type="text/javascript" src="../../_static/underscore.js"></script>
     <script type="text/javascript" src="../../_static/doctools.js"></script>
     <script type="text/javascript" src="../../_static/copybutton.js"></script>
-    <script type="text/javascript" src="https://cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
+    <script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.1/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
     <script type="text/javascript" src="../../_static/js/jquery-1.11.0.min.js"></script>
     <script type="text/javascript" src="../../_static/js/jquery-fix.js"></script>
-    <script type="text/javascript" src="../../_static/bootstrap-3.3.6/js/bootstrap.min.js"></script>
+    <script type="text/javascript" src="../../_static/bootstrap-3.3.7/js/bootstrap.min.js"></script>
     <script type="text/javascript" src="../../_static/bootstrap-sphinx.js"></script>
     <link rel="index" title="Index" href="../../genindex.html" />
     <link rel="search" title="Search" href="../../search.html" />
-    <link rel="top" title="scikit-bio 0.5.1 documentation" href="../../index.html" />
-    <link rel="up" title="Empirical Power Estimation (skbio.stats.power)" href="../skbio.stats.power.html" />
     <link rel="next" title="Composition Statistics (skbio.stats.composition)" href="../skbio.stats.composition.html" />
     <link rel="prev" title="skbio.stats.power.confidence_bound" href="skbio.stats.power.confidence_bound.html" />
 <meta charset='utf-8'>
@@ -44,7 +36,7 @@
 <meta name="apple-mobile-web-app-capable" content="yes">
 
   </head>
-  <body role="document">
+  <body>
   
   <a href="https://github.com/biocore/scikit-bio"
      class="visible-desktop hidden-xs"><img
@@ -72,7 +64,7 @@
         </button>
         <a class="navbar-brand" href="../../index.html">
           scikit-bio docs</a>
-        <span class="navbar-text navbar-version pull-left"><b>0.5.1</b></span>
+        <span class="navbar-text navbar-version pull-left"><b>0.5.2</b></span>
       </div>
 
         <div class="collapse navbar-collapse nav-collapse">
@@ -151,7 +143,7 @@
 <h1>skbio.stats.power.paired_subsamples<a class="headerlink" href="#skbio-stats-power-paired-subsamples" title="Permalink to this headline">¶</a></h1>
 <dl class="function">
 <dt id="skbio.stats.power.paired_subsamples">
-<code class="descclassname">skbio.stats.power.</code><code class="descname">paired_subsamples</code><span class="sig-paren">(</span><em>meta</em>, <em>cat</em>, <em>control_cats</em>, <em>order=None</em>, <em>strict_match=True</em><span class="sig-paren">)</span><a class="reference external" href="http://github.com/biocore/scikit-bio/blob/0.5.1/skbio/stats/power.py#L616"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#skbio.stats.power.paired_subsamples" title="Permalink to this definition">¶</a></dt>
+<code class="descclassname">skbio.stats.power.</code><code class="descname">paired_subsamples</code><span class="sig-paren">(</span><em>meta</em>, <em>cat</em>, <em>control_cats</em>, <em>order=None</em>, <em>strict_match=True</em><span class="sig-paren">)</span><a class="reference external" href="http://github.com/biocore/scikit-bio/blob/0.5.2/skbio/stats/power.py#L616"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#skbio.stats.power.paired_subsamples" title="Permalink to this definition">¶</a></dt>
 <dd><p>Draws a list of samples varied by <cite>cat</cite> and matched for <cite>control_cats</cite></p>
 <p>State: Experimental as of 0.4.0.</p>
 <p>This function is designed to provide controlled samples, based on a
@@ -172,15 +164,15 @@ level, and diet type while measuring exercise frequency.</p>
 <p><strong>control_cats</strong> : list</p>
 <blockquote>
 <div><p>The metadata categories to be used as controls. For example, if you
-wanted to vary age (<cite>cat</cite> = &#8220;AGE&#8221;), you might want to control for
-gender and health status (i.e. <cite>control_cats</cite> = [&#8220;SEX&#8221;, &#8220;HEALTHY&#8221;])</p>
+wanted to vary age (<cite>cat</cite> = “AGE”), you might want to control for
+gender and health status (i.e. <cite>control_cats</cite> = [“SEX”, “HEALTHY”])</p>
 </div></blockquote>
 <p><strong>order</strong> : list, optional</p>
 <blockquote>
 <div><p>The order of groups in the category. This can be used
-to limit the groups selected. For example, if there&#8217;s a category with
-groups &#8216;A&#8217;, &#8216;B&#8217; and &#8216;C&#8217;, and you only want to look at A vs B, <cite>order</cite>
-would be set to [&#8216;A&#8217;, &#8216;B&#8217;].</p>
+to limit the groups selected. For example, if there’s a category with
+groups ‘A’, ‘B’ and ‘C’, and you only want to look at A vs B, <cite>order</cite>
+would be set to [‘A’, ‘B’].</p>
 </div></blockquote>
 <p><strong>strict_match: bool, optional</strong></p>
 <blockquote>
@@ -221,7 +213,7 @@ housing, sex, age and antibiotic use.</p>
 <span class="go">TS   Y       2  40s   M</span>
 </pre></div>
 </div>
-<p>We may want to vary an individual&#8217;s housing situation, while holding
+<p>We may want to vary an individual’s housing situation, while holding
 constant their age, sex and antibiotic use so we can estimate the effect
 size for housing, and later compare it to the effects of other variables.</p>
 <div class="highlight-default"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">skbio.stats.power</span> <span class="k">import</span> <span class="n">paired_subsamples</span>
@@ -251,7 +243,7 @@ sex, and antibiotic use. SW cannot be matched in either group because
     </p>
     <p>
         &copy; Copyright 2014--, scikit-bio development team.<br/>
-      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 1.5a0.<br/>
+      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 1.6.5.<br/>
     </p>
   </div>
 </footer>

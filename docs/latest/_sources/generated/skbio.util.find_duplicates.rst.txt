@@ -1,5 +1,5 @@
-skbio.util.find_duplicates
-==========================
+skbio\.util\.find\_duplicates
+=============================
 
 .. currentmodule:: skbio.util
 

@@ -1,5 +1,5 @@
-skbio.stats.gradient.AverageGradientANOVA
-=========================================
+skbio\.stats\.gradient\.AverageGradientANOVA
+============================================
 
 .. currentmodule:: skbio.stats.gradient
 

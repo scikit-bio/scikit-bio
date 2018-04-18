@@ -1,5 +1,5 @@
-skbio.diversity.alpha.kempton_taylor_q
-======================================
+skbio\.diversity\.alpha\.kempton\_taylor\_q
+===========================================
 
 .. currentmodule:: skbio.diversity.alpha
 

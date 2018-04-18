@@ -1,5 +1,5 @@
-skbio.io.util.open_file
-=======================
+skbio\.io\.util\.open\_file
+===========================
 
 .. currentmodule:: skbio.io.util
 

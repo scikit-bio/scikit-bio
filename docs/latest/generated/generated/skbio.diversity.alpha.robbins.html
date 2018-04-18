@@ -1,22 +1,16 @@
 <!DOCTYPE html>
 
-
 <html xmlns="http://www.w3.org/1999/xhtml">
   <head>
     <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
-    
-    <title>skbio.diversity.alpha.robbins &#8212; scikit-bio 0.5.1 documentation</title>
-    
-    <link rel="stylesheet" href="../../_static/basic.css" type="text/css" />
+    <title>skbio.diversity.alpha.robbins &#8212; scikit-bio 0.5.2 documentation</title>
+    <link rel="stylesheet" href="../../_static/bootstrap-sphinx.css" type="text/css" />
     <link rel="stylesheet" href="../../_static/pygments.css" type="text/css" />
     <link rel="stylesheet" href="../../_static/style.css" type="text/css" />
-    <link rel="stylesheet" href="../../_static/bootswatch-3.3.6/united/bootstrap.min.css" type="text/css" />
-    <link rel="stylesheet" href="../../_static/bootstrap-sphinx.css" type="text/css" />
-    
     <script type="text/javascript">
       var DOCUMENTATION_OPTIONS = {
         URL_ROOT:    '../../',
-        VERSION:     '0.5.1',
+        VERSION:     '0.5.2',
         COLLAPSE_INDEX: false,
         FILE_SUFFIX: '.html',
         HAS_SOURCE:  true,
@@ -27,15 +21,13 @@
     <script type="text/javascript" src="../../_static/underscore.js"></script>
     <script type="text/javascript" src="../../_static/doctools.js"></script>
     <script type="text/javascript" src="../../_static/copybutton.js"></script>
-    <script type="text/javascript" src="https://cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
+    <script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.1/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
     <script type="text/javascript" src="../../_static/js/jquery-1.11.0.min.js"></script>
     <script type="text/javascript" src="../../_static/js/jquery-fix.js"></script>
-    <script type="text/javascript" src="../../_static/bootstrap-3.3.6/js/bootstrap.min.js"></script>
+    <script type="text/javascript" src="../../_static/bootstrap-3.3.7/js/bootstrap.min.js"></script>
     <script type="text/javascript" src="../../_static/bootstrap-sphinx.js"></script>
     <link rel="index" title="Index" href="../../genindex.html" />
     <link rel="search" title="Search" href="../../search.html" />
-    <link rel="top" title="scikit-bio 0.5.1 documentation" href="../../index.html" />
-    <link rel="up" title="Alpha diversity measures (skbio.diversity.alpha)" href="../skbio.diversity.alpha.html" />
     <link rel="next" title="skbio.diversity.alpha.shannon" href="skbio.diversity.alpha.shannon.html" />
     <link rel="prev" title="skbio.diversity.alpha.pielou_e" href="skbio.diversity.alpha.pielou_e.html" />
 <meta charset='utf-8'>
@@ -44,7 +36,7 @@
 <meta name="apple-mobile-web-app-capable" content="yes">
 
   </head>
-  <body role="document">
+  <body>
   
   <a href="https://github.com/biocore/scikit-bio"
      class="visible-desktop hidden-xs"><img
@@ -72,7 +64,7 @@
         </button>
         <a class="navbar-brand" href="../../index.html">
           scikit-bio docs</a>
-        <span class="navbar-text navbar-version pull-left"><b>0.5.1</b></span>
+        <span class="navbar-text navbar-version pull-left"><b>0.5.2</b></span>
       </div>
 
         <div class="collapse navbar-collapse nav-collapse">
@@ -151,10 +143,10 @@
 <h1>skbio.diversity.alpha.robbins<a class="headerlink" href="#skbio-diversity-alpha-robbins" title="Permalink to this headline">¶</a></h1>
 <dl class="function">
 <dt id="skbio.diversity.alpha.robbins">
-<code class="descclassname">skbio.diversity.alpha.</code><code class="descname">robbins</code><span class="sig-paren">(</span><em>counts</em><span class="sig-paren">)</span><a class="reference external" href="http://github.com/biocore/scikit-bio/blob/0.5.1/skbio/diversity/alpha/_base.py#L796"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#skbio.diversity.alpha.robbins" title="Permalink to this definition">¶</a></dt>
-<dd><p>Calculate Robbins&#8217; estimator for the probability of unobserved outcomes.</p>
+<code class="descclassname">skbio.diversity.alpha.</code><code class="descname">robbins</code><span class="sig-paren">(</span><em>counts</em><span class="sig-paren">)</span><a class="reference external" href="http://github.com/biocore/scikit-bio/blob/0.5.2/skbio/diversity/alpha/_base.py#L796"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#skbio.diversity.alpha.robbins" title="Permalink to this definition">¶</a></dt>
+<dd><p>Calculate Robbins’ estimator for the probability of unobserved outcomes.</p>
 <p>State: Experimental as of 0.4.0.</p>
-<p>Robbins&#8217; estimator is defined as:</p>
+<p>Robbins’ estimator is defined as:</p>
 <div class="math">
 \[\frac{F_1}{n+1}\]</div>
 <p>where <span class="math">\(F_1\)</span> is the number of singleton OTUs.</p>
@@ -170,20 +162,20 @@
 </tr>
 <tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first">double</p>
 <blockquote class="last">
-<div><p>Robbins&#8217; estimate.</p>
+<div><p>Robbins’ estimate.</p>
 </div></blockquote>
 </td>
 </tr>
 </tbody>
 </table>
 <p class="rubric">Notes</p>
-<p>Robbins&#8217; estimator is defined in <a class="reference internal" href="#r46" id="id1">[R46]</a>. The estimate computed here is for
+<p>Robbins’ estimator is defined in <a class="reference internal" href="#r9191" id="id1">[R9191]</a>. The estimate computed here is for
 <span class="math">\(n-1\)</span> counts, i.e. the x-axis is off by 1.</p>
 <p class="rubric">References</p>
-<table class="docutils citation" frame="void" id="r46" rules="none">
+<table class="docutils citation" frame="void" id="r9191" rules="none">
 <colgroup><col class="label" /><col /></colgroup>
 <tbody valign="top">
-<tr><td class="label">[R46]</td><td><em>(<a class="fn-backref" href="#id1">1</a>, <a class="fn-backref" href="#id2">2</a>)</em> Robbins, H. E (1968). Ann. of Stats. Vol 36, pp. 256-257.</td></tr>
+<tr><td class="label">[R9191]</td><td><em>(<a class="fn-backref" href="#id1">1</a>, <a class="fn-backref" href="#id2">2</a>)</em> Robbins, H. E (1968). Ann. of Stats. Vol 36, pp. 256-257.</td></tr>
 </tbody>
 </table>
 </dd></dl>
@@ -204,7 +196,7 @@
     </p>
     <p>
         &copy; Copyright 2014--, scikit-bio development team.<br/>
-      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 1.5a0.<br/>
+      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 1.6.5.<br/>
     </p>
   </div>
 </footer>

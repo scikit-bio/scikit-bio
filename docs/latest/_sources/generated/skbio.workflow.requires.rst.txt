@@ -1,5 +1,5 @@
-skbio.workflow.requires
-=======================
+skbio\.workflow\.requires
+=========================
 
 .. currentmodule:: skbio.workflow
 

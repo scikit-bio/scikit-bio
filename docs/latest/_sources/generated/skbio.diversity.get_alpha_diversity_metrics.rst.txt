@@ -1,5 +1,5 @@
-skbio.diversity.get_alpha_diversity_metrics
-===========================================
+skbio\.diversity\.get\_alpha\_diversity\_metrics
+================================================
 
 .. currentmodule:: skbio.diversity
 

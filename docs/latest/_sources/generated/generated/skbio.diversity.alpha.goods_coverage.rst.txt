@@ -1,5 +1,5 @@
-skbio.diversity.alpha.goods_coverage
-====================================
+skbio\.diversity\.alpha\.goods\_coverage
+========================================
 
 .. currentmodule:: skbio.diversity.alpha
 

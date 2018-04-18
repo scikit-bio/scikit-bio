@@ -1,22 +1,16 @@
 <!DOCTYPE html>
 
-
 <html xmlns="http://www.w3.org/1999/xhtml">
   <head>
     <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
-    
-    <title>skbio.diversity.beta_diversity &#8212; scikit-bio 0.5.1 documentation</title>
-    
-    <link rel="stylesheet" href="../_static/basic.css" type="text/css" />
+    <title>skbio.diversity.beta_diversity &#8212; scikit-bio 0.5.2 documentation</title>
+    <link rel="stylesheet" href="../_static/bootstrap-sphinx.css" type="text/css" />
     <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
     <link rel="stylesheet" href="../_static/style.css" type="text/css" />
-    <link rel="stylesheet" href="../_static/bootswatch-3.3.6/united/bootstrap.min.css" type="text/css" />
-    <link rel="stylesheet" href="../_static/bootstrap-sphinx.css" type="text/css" />
-    
     <script type="text/javascript">
       var DOCUMENTATION_OPTIONS = {
         URL_ROOT:    '../',
-        VERSION:     '0.5.1',
+        VERSION:     '0.5.2',
         COLLAPSE_INDEX: false,
         FILE_SUFFIX: '.html',
         HAS_SOURCE:  true,
@@ -27,15 +21,13 @@
     <script type="text/javascript" src="../_static/underscore.js"></script>
     <script type="text/javascript" src="../_static/doctools.js"></script>
     <script type="text/javascript" src="../_static/copybutton.js"></script>
-    <script type="text/javascript" src="https://cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
+    <script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.1/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
     <script type="text/javascript" src="../_static/js/jquery-1.11.0.min.js"></script>
     <script type="text/javascript" src="../_static/js/jquery-fix.js"></script>
-    <script type="text/javascript" src="../_static/bootstrap-3.3.6/js/bootstrap.min.js"></script>
+    <script type="text/javascript" src="../_static/bootstrap-3.3.7/js/bootstrap.min.js"></script>
     <script type="text/javascript" src="../_static/bootstrap-sphinx.js"></script>
     <link rel="index" title="Index" href="../genindex.html" />
     <link rel="search" title="Search" href="../search.html" />
-    <link rel="top" title="scikit-bio 0.5.1 documentation" href="../index.html" />
-    <link rel="up" title="Diversity calculations (skbio.diversity)" href="../diversity.html" />
     <link rel="next" title="skbio.diversity.partial_beta_diversity" href="skbio.diversity.partial_beta_diversity.html" />
     <link rel="prev" title="skbio.diversity.alpha_diversity" href="skbio.diversity.alpha_diversity.html" />
 <meta charset='utf-8'>
@@ -44,7 +36,7 @@
 <meta name="apple-mobile-web-app-capable" content="yes">
 
   </head>
-  <body role="document">
+  <body>
   
   <a href="https://github.com/biocore/scikit-bio"
      class="visible-desktop hidden-xs"><img
@@ -72,7 +64,7 @@
         </button>
         <a class="navbar-brand" href="../index.html">
           scikit-bio docs</a>
-        <span class="navbar-text navbar-version pull-left"><b>0.5.1</b></span>
+        <span class="navbar-text navbar-version pull-left"><b>0.5.2</b></span>
       </div>
 
         <div class="collapse navbar-collapse nav-collapse">
@@ -151,7 +143,7 @@
 <h1>skbio.diversity.beta_diversity<a class="headerlink" href="#skbio-diversity-beta-diversity" title="Permalink to this headline">¶</a></h1>
 <dl class="function">
 <dt id="skbio.diversity.beta_diversity">
-<code class="descclassname">skbio.diversity.</code><code class="descname">beta_diversity</code><span class="sig-paren">(</span><em>metric</em>, <em>counts</em>, <em>ids=None</em>, <em>validate=True</em>, <em>pairwise_func=None</em>, <em>**kwargs</em><span class="sig-paren">)</span><a class="reference external" href="http://github.com/biocore/scikit-bio/blob/0.5.1/skbio/diversity/_driver.py#L282"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#skbio.diversity.beta_diversity" title="Permalink to this definition">¶</a></dt>
+<code class="descclassname">skbio.diversity.</code><code class="descname">beta_diversity</code><span class="sig-paren">(</span><em>metric</em>, <em>counts</em>, <em>ids=None</em>, <em>validate=True</em>, <em>pairwise_func=None</em>, <em>**kwargs</em><span class="sig-paren">)</span><a class="reference external" href="http://github.com/biocore/scikit-bio/blob/0.5.2/skbio/diversity/_driver.py#L282"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#skbio.diversity.beta_diversity" title="Permalink to this definition">¶</a></dt>
 <dd><p>Compute distances between all pairs of samples</p>
 <p>State: Experimental as of 0.4.0.</p>
 <table class="docutils field-list" frame="void" rules="none">
@@ -178,11 +170,11 @@ assigned integer identifiers in the order that they were provided
 </div></blockquote>
 <p><strong>validate</strong> : bool, optional</p>
 <blockquote>
-<div><p>If <cite>False</cite>, validation of the input won&#8217;t be performed. This step can
+<div><p>If <cite>False</cite>, validation of the input won’t be performed. This step can
 be slow, so if validation is run elsewhere it can be disabled here.
 However, invalid input data can lead to invalid results or error
 messages that are hard to interpret, so this step should not be
-bypassed if you&#8217;re not certain that your input data are valid. See
+bypassed if you’re not certain that your input data are valid. See
 <a class="reference internal" href="../diversity.html#module-skbio.diversity" title="skbio.diversity"><code class="xref py py-mod docutils literal"><span class="pre">skbio.diversity</span></code></a> for the description of what validation entails
 so you can determine if you can safely disable validation.</p>
 </div></blockquote>
@@ -193,7 +185,7 @@ must take <code class="docutils literal"><span class="pre">counts</span></code> 
 <code class="docutils literal"><span class="pre">numpy.ndarray</span></code> of dissimilarities (floats). Examples of functions
 that can be provided are <code class="docutils literal"><span class="pre">scipy.spatial.distance.pdist</span></code> and
 <code class="docutils literal"><span class="pre">sklearn.metrics.pairwise_distances</span></code>. By default,
-<code class="docutils literal"><span class="pre">scipy.spatial.distance.pdist</span></code> will be used.</p>
+<code class="docutils literal"><span class="pre">sklearn.metrics.pairwise_distances</span></code> will be used.</p>
 </div></blockquote>
 <p><strong>kwargs</strong> : kwargs, optional</p>
 <blockquote>
@@ -222,7 +214,7 @@ rows and columns will be equal to the number of rows in <code class="docutils li
 </table>
 <div class="admonition seealso">
 <p class="first admonition-title">See also</p>
-<p class="last"><a class="reference internal" href="../diversity.html#module-skbio.diversity" title="skbio.diversity"><code class="xref py py-obj docutils literal"><span class="pre">skbio.diversity</span></code></a>, <a class="reference internal" href="skbio.diversity.beta.html#module-skbio.diversity.beta" title="skbio.diversity.beta"><code class="xref py py-obj docutils literal"><span class="pre">skbio.diversity.beta</span></code></a>, <a class="reference internal" href="skbio.diversity.get_beta_diversity_metrics.html#skbio.diversity.get_beta_diversity_metrics" title="skbio.diversity.get_beta_diversity_metrics"><code class="xref py py-obj docutils literal"><span class="pre">skbio.diversity.get_beta_diversity_metrics</span></code></a>, <a class="reference internal" href="skbio.diversity.alpha_diversity.html#skbio.diversity.alpha_diversity" title="skbio.diversity.alpha_diversity"><code class="xref py py-obj docutils literal"><span class="pre">skbio.diversity.alpha_diversity</span></code></a>, <a class="reference external" href="https://docs.scipy.org/doc/scipy/reference/generated/scipy.spatial.distance.pdist.html#scipy.spatial.distance.pdist" title="(in SciPy v0.18.1)"><code class="xref py py-obj docutils literal"><span class="pre">scipy.spatial.distance.pdist</span></code></a>, <code class="xref py py-obj docutils literal"><span class="pre">sklearn.metrics.pairwise_distances</span></code></p>
+<p class="last"><a class="reference internal" href="../diversity.html#module-skbio.diversity" title="skbio.diversity"><code class="xref py py-obj docutils literal"><span class="pre">skbio.diversity</span></code></a>, <a class="reference internal" href="skbio.diversity.beta.html#module-skbio.diversity.beta" title="skbio.diversity.beta"><code class="xref py py-obj docutils literal"><span class="pre">skbio.diversity.beta</span></code></a>, <a class="reference internal" href="skbio.diversity.get_beta_diversity_metrics.html#skbio.diversity.get_beta_diversity_metrics" title="skbio.diversity.get_beta_diversity_metrics"><code class="xref py py-obj docutils literal"><span class="pre">skbio.diversity.get_beta_diversity_metrics</span></code></a>, <a class="reference internal" href="skbio.diversity.alpha_diversity.html#skbio.diversity.alpha_diversity" title="skbio.diversity.alpha_diversity"><code class="xref py py-obj docutils literal"><span class="pre">skbio.diversity.alpha_diversity</span></code></a>, <a class="reference external" href="https://docs.scipy.org/doc/scipy/reference/generated/scipy.spatial.distance.pdist.html#scipy.spatial.distance.pdist" title="(in SciPy v1.0.0)"><code class="xref py py-obj docutils literal"><span class="pre">scipy.spatial.distance.pdist</span></code></a>, <code class="xref py py-obj docutils literal"><span class="pre">sklearn.metrics.pairwise_distances</span></code></p>
 </div>
 </dd></dl>
 
@@ -242,7 +234,7 @@ rows and columns will be equal to the number of rows in <code class="docutils li
     </p>
     <p>
         &copy; Copyright 2014--, scikit-bio development team.<br/>
-      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 1.5a0.<br/>
+      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 1.6.5.<br/>
     </p>
   </div>
 </footer>

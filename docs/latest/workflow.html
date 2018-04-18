@@ -1,22 +1,16 @@
 <!DOCTYPE html>
 
-
 <html xmlns="http://www.w3.org/1999/xhtml">
   <head>
     <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
-    
-    <title>Constructing workflows (skbio.workflow) &#8212; scikit-bio 0.5.1 documentation</title>
-    
-    <link rel="stylesheet" href="_static/basic.css" type="text/css" />
+    <title>Constructing workflows (skbio.workflow) &#8212; scikit-bio 0.5.2 documentation</title>
+    <link rel="stylesheet" href="_static/bootstrap-sphinx.css" type="text/css" />
     <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
     <link rel="stylesheet" href="_static/style.css" type="text/css" />
-    <link rel="stylesheet" href="_static/bootswatch-3.3.6/united/bootstrap.min.css" type="text/css" />
-    <link rel="stylesheet" href="_static/bootstrap-sphinx.css" type="text/css" />
-    
     <script type="text/javascript">
       var DOCUMENTATION_OPTIONS = {
         URL_ROOT:    './',
-        VERSION:     '0.5.1',
+        VERSION:     '0.5.2',
         COLLAPSE_INDEX: false,
         FILE_SUFFIX: '.html',
         HAS_SOURCE:  true,
@@ -27,14 +21,13 @@
     <script type="text/javascript" src="_static/underscore.js"></script>
     <script type="text/javascript" src="_static/doctools.js"></script>
     <script type="text/javascript" src="_static/copybutton.js"></script>
-    <script type="text/javascript" src="https://cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
+    <script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.1/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
     <script type="text/javascript" src="_static/js/jquery-1.11.0.min.js"></script>
     <script type="text/javascript" src="_static/js/jquery-fix.js"></script>
-    <script type="text/javascript" src="_static/bootstrap-3.3.6/js/bootstrap.min.js"></script>
+    <script type="text/javascript" src="_static/bootstrap-3.3.7/js/bootstrap.min.js"></script>
     <script type="text/javascript" src="_static/bootstrap-sphinx.js"></script>
     <link rel="index" title="Index" href="genindex.html" />
     <link rel="search" title="Search" href="search.html" />
-    <link rel="top" title="scikit-bio 0.5.1 documentation" href="index.html" />
     <link rel="next" title="skbio.workflow.Workflow" href="generated/skbio.workflow.Workflow.html" />
     <link rel="prev" title="skbio.tree.NoParentError" href="generated/skbio.tree.NoParentError.html" />
 <meta charset='utf-8'>
@@ -43,7 +36,7 @@
 <meta name="apple-mobile-web-app-capable" content="yes">
 
   </head>
-  <body role="document">
+  <body>
   
   <a href="https://github.com/biocore/scikit-bio"
      class="visible-desktop hidden-xs"><img
@@ -71,7 +64,7 @@
         </button>
         <a class="navbar-brand" href="index.html">
           scikit-bio docs</a>
-        <span class="navbar-text navbar-version pull-left"><b>0.5.1</b></span>
+        <span class="navbar-text navbar-version pull-left"><b>0.5.2</b></span>
       </div>
 
         <div class="collapse navbar-collapse nav-collapse">
@@ -193,12 +186,12 @@ deciding what methods are executed based on state or runtime options.</p>
 <div class="highlight-default"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">skbio.workflow</span> <span class="k">import</span> <span class="n">Workflow</span>
 </pre></div>
 </div>
-<p>As an example of the <code class="docutils literal"><span class="pre">Workflow</span></code> object, let&#8217;s construct a sequence processor
+<p>As an example of the <code class="docutils literal"><span class="pre">Workflow</span></code> object, let’s construct a sequence processor
 that will filter sequences that are &lt; 10 nucleotides, reverse the sequence
 if the runtime options indicate to, and truncate if a specific nucleotide
 pattern is observed. The <code class="docutils literal"><span class="pre">Workflow</span></code> object will only short circuit, and
 evaluate requirements on methods decorated by <code class="docutils literal"><span class="pre">method</span></code>. Developers are free
-to define as many methods as they&#8217;d like within the object definition, and
+to define as many methods as they’d like within the object definition, and
 which can be called from workflow methods, but they will not be subjected
 directly to workflow checks.</p>
 <div class="highlight-default"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">nuc_pattern</span> <span class="o">=</span> <span class="s1">&#39;AATTG&#39;</span>
@@ -228,7 +221,7 @@ directly to workflow checks.</p>
 options. There are a few other useful parameters that can be specfied but are
 out of scope for the purposes of this example. We also do not need to provide
 a state object as our <code class="docutils literal"><span class="pre">initialize_state</span></code> method overrides <code class="docutils literal"><span class="pre">self.state</span></code>.
-Now, let&#8217;s create the instance.</p>
+Now, let’s create the instance.</p>
 <div class="highlight-default"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">wf</span> <span class="o">=</span> <span class="n">SequenceProcessor</span><span class="p">(</span><span class="n">state</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">options</span><span class="o">=</span><span class="p">{</span><span class="s1">&#39;reverse=&#39;</span><span class="p">:</span> <span class="kc">False</span><span class="p">})</span>
 </pre></div>
 </div>
@@ -237,10 +230,10 @@ iterable. So, lets create a <code class="docutils literal"><span class="pre">lis
 <div class="highlight-default"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">seqs</span> <span class="o">=</span> <span class="p">[</span><span class="s1">&#39;AAAAAAATTTTTTT&#39;</span><span class="p">,</span> <span class="s1">&#39;ATAGACC&#39;</span><span class="p">,</span> <span class="s1">&#39;AATTGCCGGAC&#39;</span><span class="p">,</span> <span class="s1">&#39;ATATGAACAAA&#39;</span><span class="p">]</span>
 </pre></div>
 </div>
-<p>Before we run these sequences through, we&#8217;re going to also define callbacks
+<p>Before we run these sequences through, we’re going to also define callbacks
 that are applied to the result of an single pass through the <code class="docutils literal"><span class="pre">Workflow</span></code>.
-Callbacks are optional &#8211; by default, a success will simply yield the state
-member variable while failures are ignored &#8211; but, depending on your workflow,
+Callbacks are optional – by default, a success will simply yield the state
+member variable while failures are ignored – but, depending on your workflow,
 it can be useful to handle failures or potentially do something fun and
 exciting on success.</p>
 <div class="highlight-default"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="k">def</span> <span class="nf">success_f</span><span class="p">(</span><span class="n">obj</span><span class="p">):</span>
@@ -259,12 +252,12 @@ exciting on success.</p>
 </pre></div>
 </div>
 <p>A few things of note just happened. First off, none of the sequences were
-reversed as the <code class="docutils literal"><span class="pre">SequenceProcessor</span></code> did not have option &#8220;reverse&#8221;
-set to <code class="docutils literal"><span class="pre">True</span></code>. Second, you&#8217;ll notice that the 3rd sequence was truncated,
+reversed as the <code class="docutils literal"><span class="pre">SequenceProcessor</span></code> did not have option “reverse”
+set to <code class="docutils literal"><span class="pre">True</span></code>. Second, you’ll notice that the 3rd sequence was truncated,
 which is expected as it matched our nucleotide pattern of interest. Finally,
 of the sequences we processed, only a single sequence failed.</p>
 <p>To assist in constructing workflows, debug information is available but it
-must be turned on at instantiation. Let&#8217;s do that, and while we&#8217;re at it, let&#8217;s
+must be turned on at instantiation. Let’s do that, and while we’re at it, let’s
 go ahead and enable the reversal method. This time through though, were going
 to walk through an item at a time so we can examine the debug information.</p>
 <div class="highlight-default"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">wf</span> <span class="o">=</span> <span class="n">SequenceProcessor</span><span class="p">(</span><span class="n">state</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">options</span><span class="o">=</span><span class="p">{</span><span class="s1">&#39;reverse&#39;</span><span class="p">:</span><span class="kc">True</span><span class="p">},</span> <span class="n">debug</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
@@ -281,9 +274,9 @@ to walk through an item at a time so we can examine the debug information.</p>
 execution where closer to zero indicates earlier in the execution order. Gaps
 indicate there was a method evaluated but not executed. Each of the items in
 the <code class="docutils literal"><span class="pre">debug_trace</span></code> is a key into a few other <code class="docutils literal"><span class="pre">dict</span></code> of debug information
-which we&#8217;ll discuss in a moment. Did you see that the sequence was reversed
+which we’ll discuss in a moment. Did you see that the sequence was reversed
 this time through the workflow?</p>
-<p>Now, let&#8217;s take a look at the next item, which on our prior run through the
+<p>Now, let’s take a look at the next item, which on our prior run through the
 workflow was a failed item.</p>
 <div class="highlight-default"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="nb">next</span><span class="p">(</span><span class="n">gen</span><span class="p">)</span>
 <span class="go">&#39;ATAGACC&#39;</span>
@@ -294,12 +287,12 @@ workflow was a failed item.</p>
 </pre></div>
 </div>
 <p>What we can see is that the failed sequence only executed the check_length
-method. Since the sequence didn&#8217;t pass our length filter of 10 nucleotides,
+method. Since the sequence didn’t pass our length filter of 10 nucleotides,
 it was marked as failed within the <code class="docutils literal"><span class="pre">check_length</span></code> method. As a result, none
 of the other methods were evaluated (note: this short circuiting behavior can
 be disabled if desired).</p>
 <p>This third item previously matched our nucleotide pattern of interest for
-truncation. Let&#8217;s see what that looks like in the debug output.</p>
+truncation. Let’s see what that looks like in the debug output.</p>
 <div class="highlight-default"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="nb">next</span><span class="p">(</span><span class="n">gen</span><span class="p">)</span>
 <span class="go">&#39;CAGGCC&#39;</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">wf</span><span class="o">.</span><span class="n">failed</span>
@@ -311,9 +304,9 @@ truncation. Let&#8217;s see what that looks like in the debug output.</p>
 <p>In this last example, we can see that the <code class="docutils literal"><span class="pre">truncate</span></code> method was executed
 prior to the <code class="docutils literal"><span class="pre">reverse</span></code> method and following the <code class="docutils literal"><span class="pre">check_length</span></code> method. This
 is as anticipated given the priorities we specified for these methods. Since
-the <code class="docutils literal"><span class="pre">truncate</span></code> method is doing something interesting, let&#8217;s take a closer
-look at how the <code class="docutils literal"><span class="pre">state</span></code> is changing. First, we&#8217;re going to dump out the
-state of the workflow prior to the call to <code class="docutils literal"><span class="pre">truncate</span></code> and then we&#8217;re going
+the <code class="docutils literal"><span class="pre">truncate</span></code> method is doing something interesting, let’s take a closer
+look at how the <code class="docutils literal"><span class="pre">state</span></code> is changing. First, we’re going to dump out the
+state of the workflow prior to the call to <code class="docutils literal"><span class="pre">truncate</span></code> and then we’re going
 to dump out the <code class="docutils literal"><span class="pre">state</span></code> following the call to <code class="docutils literal"><span class="pre">truncate</span></code>, which will allow
 us to rapidly what is going on.</p>
 <div class="highlight-default"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">wf</span><span class="o">.</span><span class="n">debug_pre_state</span><span class="p">[(</span><span class="s1">&#39;truncate&#39;</span><span class="p">,</span> <span class="mi">1</span><span class="p">)]</span>
@@ -366,7 +359,7 @@ allow you to indicate <code class="docutils literal"><span class="pre">anything<
     </p>
     <p>
         &copy; Copyright 2014--, scikit-bio development team.<br/>
-      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 1.5a0.<br/>
+      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 1.6.5.<br/>
     </p>
   </div>
 </footer>

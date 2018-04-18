@@ -1,5 +1,5 @@
-skbio.util.TestRunner
-=====================
+skbio\.util\.TestRunner
+=======================
 
 .. currentmodule:: skbio.util
 

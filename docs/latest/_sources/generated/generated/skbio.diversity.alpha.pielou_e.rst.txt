@@ -1,5 +1,5 @@
-skbio.diversity.alpha.pielou_e
-==============================
+skbio\.diversity\.alpha\.pielou\_e
+==================================
 
 .. currentmodule:: skbio.diversity.alpha
 

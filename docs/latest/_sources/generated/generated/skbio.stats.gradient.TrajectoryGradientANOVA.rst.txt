@@ -1,5 +1,5 @@
-skbio.stats.gradient.TrajectoryGradientANOVA
-============================================
+skbio\.stats\.gradient\.TrajectoryGradientANOVA
+===============================================
 
 .. currentmodule:: skbio.stats.gradient
 

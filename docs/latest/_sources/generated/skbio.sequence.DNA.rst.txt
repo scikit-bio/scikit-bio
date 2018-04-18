@@ -1,5 +1,5 @@
-skbio.sequence.DNA
-==================
+skbio\.sequence\.DNA
+====================
 
 .. currentmodule:: skbio.sequence
 
@@ -150,23 +150,4 @@ skbio.sequence.DNA
 
 
    
-
-   .. HACK -- the point here is that we don't want this to appear in the output, but the autosummary should still generate the pages.
-      .. autosummary::
-         :toctree:
-      
-         DNA.alphabet
-         DNA.complement_map
-         DNA.default_gap_char
-         DNA.default_write_format
-         DNA.definite_chars
-         DNA.degenerate_chars
-         DNA.degenerate_map
-         DNA.gap_chars
-         DNA.interval_metadata
-         DNA.metadata
-         DNA.nondegenerate_chars
-         DNA.observed_chars
-         DNA.positional_metadata
-         DNA.values
 

@@ -1,5 +1,5 @@
-skbio.diversity.beta_diversity
-==============================
+skbio\.diversity\.beta\_diversity
+=================================
 
 .. currentmodule:: skbio.diversity
 

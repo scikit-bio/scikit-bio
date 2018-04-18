@@ -1,5 +1,5 @@
-skbio.stats.isubsample
-======================
+skbio\.stats\.isubsample
+========================
 
 .. currentmodule:: skbio.stats
 

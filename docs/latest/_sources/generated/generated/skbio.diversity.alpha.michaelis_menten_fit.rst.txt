@@ -1,5 +1,5 @@
-skbio.diversity.alpha.michaelis_menten_fit
-==========================================
+skbio\.diversity\.alpha\.michaelis\_menten\_fit
+===============================================
 
 .. currentmodule:: skbio.diversity.alpha
 

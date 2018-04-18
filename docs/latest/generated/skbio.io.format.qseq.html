@@ -1,22 +1,16 @@
 <!DOCTYPE html>
 
-
 <html xmlns="http://www.w3.org/1999/xhtml">
   <head>
     <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
-    
-    <title>QSeq format (skbio.io.format.qseq) &#8212; scikit-bio 0.5.1 documentation</title>
-    
-    <link rel="stylesheet" href="../_static/basic.css" type="text/css" />
+    <title>QSeq format (skbio.io.format.qseq) &#8212; scikit-bio 0.5.2 documentation</title>
+    <link rel="stylesheet" href="../_static/bootstrap-sphinx.css" type="text/css" />
     <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
     <link rel="stylesheet" href="../_static/style.css" type="text/css" />
-    <link rel="stylesheet" href="../_static/bootswatch-3.3.6/united/bootstrap.min.css" type="text/css" />
-    <link rel="stylesheet" href="../_static/bootstrap-sphinx.css" type="text/css" />
-    
     <script type="text/javascript">
       var DOCUMENTATION_OPTIONS = {
         URL_ROOT:    '../',
-        VERSION:     '0.5.1',
+        VERSION:     '0.5.2',
         COLLAPSE_INDEX: false,
         FILE_SUFFIX: '.html',
         HAS_SOURCE:  true,
@@ -27,15 +21,13 @@
     <script type="text/javascript" src="../_static/underscore.js"></script>
     <script type="text/javascript" src="../_static/doctools.js"></script>
     <script type="text/javascript" src="../_static/copybutton.js"></script>
-    <script type="text/javascript" src="https://cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
+    <script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.1/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
     <script type="text/javascript" src="../_static/js/jquery-1.11.0.min.js"></script>
     <script type="text/javascript" src="../_static/js/jquery-fix.js"></script>
-    <script type="text/javascript" src="../_static/bootstrap-3.3.6/js/bootstrap.min.js"></script>
+    <script type="text/javascript" src="../_static/bootstrap-3.3.7/js/bootstrap.min.js"></script>
     <script type="text/javascript" src="../_static/bootstrap-sphinx.js"></script>
     <link rel="index" title="Index" href="../genindex.html" />
     <link rel="search" title="Search" href="../search.html" />
-    <link rel="top" title="scikit-bio 0.5.1 documentation" href="../index.html" />
-    <link rel="up" title="File I/O (skbio.io)" href="../io.html" />
     <link rel="next" title="Stockholm format (skbio.io.format.stockholm)" href="skbio.io.format.stockholm.html" />
     <link rel="prev" title="PHYLIP multiple sequence alignment format (skbio.io.format.phylip)" href="skbio.io.format.phylip.html" />
 <meta charset='utf-8'>
@@ -44,7 +36,7 @@
 <meta name="apple-mobile-web-app-capable" content="yes">
 
   </head>
-  <body role="document">
+  <body>
   
   <a href="https://github.com/biocore/scikit-bio"
      class="visible-desktop hidden-xs"><img
@@ -72,7 +64,7 @@
         </button>
         <a class="navbar-brand" href="../index.html">
           scikit-bio docs</a>
-        <span class="navbar-text navbar-version pull-left"><b>0.5.1</b></span>
+        <span class="navbar-text navbar-version pull-left"><b>0.5.2</b></span>
       </div>
 
         <div class="collapse navbar-collapse nav-collapse">
@@ -216,12 +208,12 @@ per-sequence filtering information, and run-specific metadata.</p>
 <li>Read number (1-3)</li>
 <li>Sequence data (typically IUPAC characters)</li>
 <li>Quality scores (quality scores encoded as printable ASCII)</li>
-<li>Filter boolean (1 if sequence has passed CASAVA&#8217;s filter, 0 otherwise)</li>
+<li>Filter boolean (1 if sequence has passed CASAVA’s filter, 0 otherwise)</li>
 </ul>
-<p>For more details please refer to the CASAVA documentation <a class="reference internal" href="#r188" id="id1">[R188]</a>.</p>
+<p>For more details please refer to the CASAVA documentation <a class="reference internal" href="#r347" id="id1">[R347]</a>.</p>
 <div class="admonition note">
 <p class="first admonition-title">Note</p>
-<p class="last">When a QSeq file is read into a scikit-bio object, the object&#8217;s
+<p class="last">When a QSeq file is read into a scikit-bio object, the object’s
 <cite>metadata</cite> attribute is automatically populated with data corresponding
 to the names above.</p>
 </div>
@@ -267,8 +259,8 @@ clear if this is part of the original format specification.</p>
 <span class="n">illumina</span>    <span class="mi">1</span>       <span class="mi">3</span>       <span class="mi">35</span>      <span class="mi">30</span>      <span class="o">-</span><span class="mi">30</span>     <span class="mi">0</span>       <span class="mi">3</span>       <span class="n">CATTTAGGA</span><span class="o">.</span><span class="n">TGCA</span>  <span class="n">tjflkAFnkKghvM</span>  <span class="mi">0</span>
 </pre></div>
 </div>
-<p>Let&#8217;s define this file in-memory as a <code class="docutils literal"><span class="pre">StringIO</span></code>, though this could be a real
-file path, file handle, or anything that&#8217;s supported by scikit-bio&#8217;s I/O
+<p>Let’s define this file in-memory as a <code class="docutils literal"><span class="pre">StringIO</span></code>, though this could be a real
+file path, file handle, or anything that’s supported by scikit-bio’s I/O
 registry in practice:</p>
 <div class="highlight-default"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">io</span> <span class="k">import</span> <span class="n">StringIO</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">fs</span> <span class="o">=</span> <span class="s1">&#39;</span><span class="se">\n</span><span class="s1">&#39;</span><span class="o">.</span><span class="n">join</span><span class="p">([</span>
@@ -329,10 +321,10 @@ sequences whose filter field is 0 (unless <code class="docutils literal"><span c
 </div>
 <div class="section" id="references">
 <h2>References<a class="headerlink" href="#references" title="Permalink to this headline">¶</a></h2>
-<table class="docutils citation" frame="void" id="r188" rules="none">
+<table class="docutils citation" frame="void" id="r347" rules="none">
 <colgroup><col class="label" /><col /></colgroup>
 <tbody valign="top">
-<tr><td class="label"><a class="fn-backref" href="#id1">[R188]</a></td><td><a class="reference external" href="http://biowulf.nih.gov/apps/CASAVA_UG_15011196B.pdf">http://biowulf.nih.gov/apps/CASAVA_UG_15011196B.pdf</a></td></tr>
+<tr><td class="label"><a class="fn-backref" href="#id1">[R347]</a></td><td><a class="reference external" href="http://biowulf.nih.gov/apps/CASAVA_UG_15011196B.pdf">http://biowulf.nih.gov/apps/CASAVA_UG_15011196B.pdf</a></td></tr>
 </tbody>
 </table>
 </div>
@@ -352,7 +344,7 @@ sequences whose filter field is 0 (unless <code class="docutils literal"><span c
     </p>
     <p>
         &copy; Copyright 2014--, scikit-bio development team.<br/>
-      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 1.5a0.<br/>
+      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 1.6.5.<br/>
     </p>
   </div>
 </footer>

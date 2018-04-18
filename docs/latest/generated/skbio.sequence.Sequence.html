@@ -1,22 +1,16 @@
 <!DOCTYPE html>
 
-
 <html xmlns="http://www.w3.org/1999/xhtml">
   <head>
     <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
-    
-    <title>skbio.sequence.Sequence &#8212; scikit-bio 0.5.1 documentation</title>
-    
-    <link rel="stylesheet" href="../_static/basic.css" type="text/css" />
+    <title>skbio.sequence.Sequence &#8212; scikit-bio 0.5.2 documentation</title>
+    <link rel="stylesheet" href="../_static/bootstrap-sphinx.css" type="text/css" />
     <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
     <link rel="stylesheet" href="../_static/style.css" type="text/css" />
-    <link rel="stylesheet" href="../_static/bootswatch-3.3.6/united/bootstrap.min.css" type="text/css" />
-    <link rel="stylesheet" href="../_static/bootstrap-sphinx.css" type="text/css" />
-    
     <script type="text/javascript">
       var DOCUMENTATION_OPTIONS = {
         URL_ROOT:    '../',
-        VERSION:     '0.5.1',
+        VERSION:     '0.5.2',
         COLLAPSE_INDEX: false,
         FILE_SUFFIX: '.html',
         HAS_SOURCE:  true,
@@ -27,15 +21,13 @@
     <script type="text/javascript" src="../_static/underscore.js"></script>
     <script type="text/javascript" src="../_static/doctools.js"></script>
     <script type="text/javascript" src="../_static/copybutton.js"></script>
-    <script type="text/javascript" src="https://cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
+    <script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.1/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
     <script type="text/javascript" src="../_static/js/jquery-1.11.0.min.js"></script>
     <script type="text/javascript" src="../_static/js/jquery-fix.js"></script>
-    <script type="text/javascript" src="../_static/bootstrap-3.3.6/js/bootstrap.min.js"></script>
+    <script type="text/javascript" src="../_static/bootstrap-3.3.7/js/bootstrap.min.js"></script>
     <script type="text/javascript" src="../_static/bootstrap-sphinx.js"></script>
     <link rel="index" title="Index" href="../genindex.html" />
     <link rel="search" title="Search" href="../search.html" />
-    <link rel="top" title="scikit-bio 0.5.1 documentation" href="../index.html" />
-    <link rel="up" title="Sequences (skbio.sequence)" href="../sequence.html" />
     <link rel="next" title="skbio.sequence.GrammaredSequence" href="skbio.sequence.GrammaredSequence.html" />
     <link rel="prev" title="Sequences (skbio.sequence)" href="../sequence.html" />
 <meta charset='utf-8'>
@@ -44,7 +36,7 @@
 <meta name="apple-mobile-web-app-capable" content="yes">
 
   </head>
-  <body role="document">
+  <body>
   
   <a href="https://github.com/biocore/scikit-bio"
      class="visible-desktop hidden-xs"><img
@@ -72,7 +64,7 @@
         </button>
         <a class="navbar-brand" href="../index.html">
           scikit-bio docs</a>
-        <span class="navbar-text navbar-version pull-left"><b>0.5.1</b></span>
+        <span class="navbar-text navbar-version pull-left"><b>0.5.2</b></span>
       </div>
 
         <div class="collapse navbar-collapse nav-collapse">
@@ -151,14 +143,14 @@
 <h1>skbio.sequence.Sequence<a class="headerlink" href="#skbio-sequence-sequence" title="Permalink to this headline">¶</a></h1>
 <dl class="class">
 <dt id="skbio.sequence.Sequence">
-<em class="property">class </em><code class="descclassname">skbio.sequence.</code><code class="descname">Sequence</code><span class="sig-paren">(</span><em>sequence</em>, <em>metadata=None</em>, <em>positional_metadata=None</em>, <em>interval_metadata=None</em>, <em>lowercase=False</em><span class="sig-paren">)</span><a class="reference external" href="http://github.com/biocore/scikit-bio/blob/0.5.1/skbio/sequence/_sequence.py#L27"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#skbio.sequence.Sequence" title="Permalink to this definition">¶</a></dt>
+<em class="property">class </em><code class="descclassname">skbio.sequence.</code><code class="descname">Sequence</code><span class="sig-paren">(</span><em>sequence</em>, <em>metadata=None</em>, <em>positional_metadata=None</em>, <em>interval_metadata=None</em>, <em>lowercase=False</em><span class="sig-paren">)</span><a class="reference external" href="http://github.com/biocore/scikit-bio/blob/0.5.2/skbio/sequence/_sequence.py#L27"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#skbio.sequence.Sequence" title="Permalink to this definition">¶</a></dt>
 <dd><p>Store generic sequence data and optional associated metadata.</p>
 <p><code class="docutils literal"><span class="pre">Sequence</span></code> objects do not enforce an alphabet or grammar and are thus the
 most generic objects for storing sequence data. <code class="docutils literal"><span class="pre">Sequence</span></code> objects do not
 necessarily represent biological sequences. For example, <code class="docutils literal"><span class="pre">Sequence</span></code> can
 be used to represent a position in a multiple sequence alignment.
 Subclasses <code class="docutils literal"><span class="pre">DNA</span></code>, <code class="docutils literal"><span class="pre">RNA</span></code>, and <code class="docutils literal"><span class="pre">Protein</span></code> enforce the IUPAC character
-set <a class="reference internal" href="#r203" id="id1">[R203]</a> for, and provide operations specific to, each respective molecule
+set <a class="reference internal" href="#r372375" id="id1">[R372375]</a> for, and provide operations specific to, each respective molecule
 type.</p>
 <p><code class="docutils literal"><span class="pre">Sequence</span></code> objects consist of the underlying sequence data, as well
 as optional metadata and positional metadata. The underlying sequence
@@ -167,7 +159,7 @@ is immutable, while the metdata and positional metadata are mutable.</p>
 <col class="field-name" />
 <col class="field-body" />
 <tbody valign="top">
-<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><p class="first"><strong>sequence</strong> : str, Sequence, or 1D np.ndarray (np.uint8 or &#8216;|S1&#8217;)</p>
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><p class="first"><strong>sequence</strong> : str, Sequence, or 1D np.ndarray (np.uint8 or ‘|S1’)</p>
 <blockquote>
 <div><p>Characters representing the sequence itself.</p>
 </div></blockquote>
@@ -207,10 +199,10 @@ positional metadata under the key.</p>
 <p class="last"><a class="reference internal" href="skbio.sequence.DNA.html#skbio.sequence.DNA" title="skbio.sequence.DNA"><code class="xref py py-obj docutils literal"><span class="pre">DNA</span></code></a>, <a class="reference internal" href="skbio.sequence.RNA.html#skbio.sequence.RNA" title="skbio.sequence.RNA"><code class="xref py py-obj docutils literal"><span class="pre">RNA</span></code></a>, <a class="reference internal" href="skbio.sequence.Protein.html#skbio.sequence.Protein" title="skbio.sequence.Protein"><code class="xref py py-obj docutils literal"><span class="pre">Protein</span></code></a></p>
 </div>
 <p class="rubric">References</p>
-<table class="docutils citation" frame="void" id="r203" rules="none">
+<table class="docutils citation" frame="void" id="r372375" rules="none">
 <colgroup><col class="label" /><col /></colgroup>
 <tbody valign="top">
-<tr><td class="label">[R203]</td><td><em>(<a class="fn-backref" href="#id1">1</a>, <a class="fn-backref" href="#id2">2</a>)</em> Nomenclature for incompletely specified bases in nucleic acid
+<tr><td class="label">[R372375]</td><td><em>(<a class="fn-backref" href="#id1">1</a>, <a class="fn-backref" href="#id2">2</a>)</em> Nomenclature for incompletely specified bases in nucleic acid
 sequences: recommendations 1984.
 Nucleic Acids Res. May 10, 1985; 13(9): 3021-3030.
 A Cornish-Bowden</td></tr>
@@ -269,13 +261,13 @@ A Cornish-Bowden</td></tr>
 </pre></div>
 </div>
 <p>Underlying sequence immutable:</p>
-<div class="highlight-default"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">seq</span><span class="o">.</span><span class="n">values</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([</span><span class="n">b</span><span class="s1">&#39;T&#39;</span><span class="p">,</span> <span class="n">b</span><span class="s1">&#39;C&#39;</span><span class="p">,</span> <span class="n">b</span><span class="s1">&#39;G&#39;</span><span class="p">,</span> <span class="n">b</span><span class="s1">&#39;A&#39;</span><span class="p">],</span> <span class="n">dtype</span><span class="o">=</span><span class="s1">&#39;|S1&#39;</span><span class="p">)</span>
+<div class="highlight-default"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">seq</span><span class="o">.</span><span class="n">values</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([</span><span class="sa">b</span><span class="s1">&#39;T&#39;</span><span class="p">,</span> <span class="sa">b</span><span class="s1">&#39;C&#39;</span><span class="p">,</span> <span class="sa">b</span><span class="s1">&#39;G&#39;</span><span class="p">,</span> <span class="sa">b</span><span class="s1">&#39;A&#39;</span><span class="p">],</span> <span class="n">dtype</span><span class="o">=</span><span class="s1">&#39;|S1&#39;</span><span class="p">)</span>
 <span class="gt">Traceback (most recent call last):</span>
     <span class="o">...</span>
 <span class="gr">AttributeError</span>: <span class="n">can&#39;t set attribute</span>
 </pre></div>
 </div>
-<div class="highlight-default"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">seq</span><span class="o">.</span><span class="n">values</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">=</span> <span class="n">b</span><span class="s1">&#39;T&#39;</span>
+<div class="highlight-default"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">seq</span><span class="o">.</span><span class="n">values</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">=</span> <span class="sa">b</span><span class="s1">&#39;T&#39;</span>
 <span class="gt">Traceback (most recent call last):</span>
     <span class="o">...</span>
 <span class="gr">ValueError</span>: <span class="n">assignment destination is read-only</span>
@@ -313,7 +305,7 @@ affect the metadata of other <code class="docutils literal"><span class="pre">Se
 shares a reference to the object. The following examples illustrate this
 behavior.</p>
 </div>
-<p>First, let&#8217;s create a sequence and update its metadata:</p>
+<p>First, let’s create a sequence and update its metadata:</p>
 <div class="highlight-default"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">metadata</span> <span class="o">=</span> <span class="p">{</span><span class="s1">&#39;id&#39;</span><span class="p">:</span><span class="s1">&#39;seq-id&#39;</span><span class="p">,</span> <span class="s1">&#39;desc&#39;</span><span class="p">:</span><span class="s1">&#39;seq desc&#39;</span><span class="p">,</span> <span class="s1">&#39;authors&#39;</span><span class="p">:</span> <span class="p">[</span><span class="s1">&#39;Alice&#39;</span><span class="p">]}</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">seq</span> <span class="o">=</span> <span class="n">Sequence</span><span class="p">(</span><span class="s1">&#39;ACGT&#39;</span><span class="p">,</span> <span class="n">metadata</span><span class="o">=</span><span class="n">metadata</span><span class="p">)</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">seq</span><span class="o">.</span><span class="n">metadata</span><span class="p">[</span><span class="s1">&#39;id&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="s1">&#39;new-id&#39;</span>
@@ -323,7 +315,7 @@ behavior.</p>
 </pre></div>
 </div>
 <p>Note that the original metadata dictionary (stored in variable
-<code class="docutils literal"><span class="pre">metadata</span></code>) hasn&#8217;t changed because a shallow copy was made:</p>
+<code class="docutils literal"><span class="pre">metadata</span></code>) hasn’t changed because a shallow copy was made:</p>
 <div class="highlight-default"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">pprint</span><span class="p">(</span><span class="n">metadata</span><span class="p">)</span>
 <span class="go">{&#39;authors&#39;: [&#39;Alice&#39;], &#39;desc&#39;: &#39;seq desc&#39;, &#39;id&#39;: &#39;seq-id&#39;}</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">seq</span><span class="o">.</span><span class="n">metadata</span> <span class="o">==</span> <span class="n">metadata</span>
@@ -362,7 +354,7 @@ derived from another sequence:</p>
 </pre></div>
 </div>
 <p>The subsequence has inherited the metadata of its parent sequence. If we
-update the subsequence&#8217;s author list, we see the changes propagated in the
+update the subsequence’s author list, we see the changes propagated in the
 parent sequence and original metadata dictionary:</p>
 <div class="highlight-default"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">subseq</span><span class="o">.</span><span class="n">metadata</span><span class="p">[</span><span class="s1">&#39;authors&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="s1">&#39;Carol&#39;</span><span class="p">)</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">subseq</span><span class="o">.</span><span class="n">metadata</span><span class="p">[</span><span class="s1">&#39;authors&#39;</span><span class="p">]</span>
@@ -373,7 +365,7 @@ parent sequence and original metadata dictionary:</p>
 <span class="go">[&#39;Alice&#39;, &#39;Bob&#39;, &#39;Carol&#39;]</span>
 </pre></div>
 </div>
-<p>The behavior for updating positional metadata is similar. Let&#8217;s create a
+<p>The behavior for updating positional metadata is similar. Let’s create a
 new sequence with positional metadata that is already stored in a
 <code class="docutils literal"><span class="pre">pd.DataFrame</span></code>:</p>
 <div class="highlight-default"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">positional_metadata</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">(</span>
@@ -397,7 +389,7 @@ new sequence with positional metadata that is already stored in a
 <span class="go">3   []       10</span>
 </pre></div>
 </div>
-<p>Now let&#8217;s update the sequence&#8217;s positional metadata by adding a new column
+<p>Now let’s update the sequence’s positional metadata by adding a new column
 and changing a value in another column:</p>
 <div class="highlight-default"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">seq</span><span class="o">.</span><span class="n">positional_metadata</span><span class="p">[</span><span class="s1">&#39;gaps&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="p">[</span><span class="kc">False</span><span class="p">,</span> <span class="kc">False</span><span class="p">,</span> <span class="kc">False</span><span class="p">,</span> <span class="kc">False</span><span class="p">]</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">seq</span><span class="o">.</span><span class="n">positional_metadata</span><span class="o">.</span><span class="n">loc</span><span class="p">[</span><span class="mi">0</span><span class="p">,</span> <span class="s1">&#39;quality&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="mi">999</span>
@@ -410,7 +402,7 @@ and changing a value in another column:</p>
 </pre></div>
 </div>
 <p>Note that the original positional metadata (stored in variable
-<code class="docutils literal"><span class="pre">positional_metadata</span></code>) hasn&#8217;t changed because a shallow copy was made:</p>
+<code class="docutils literal"><span class="pre">positional_metadata</span></code>) hasn’t changed because a shallow copy was made:</p>
 <div class="highlight-default"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">positional_metadata</span>
 <span class="go">  list  quality</span>
 <span class="go">0   []        3</span>
@@ -421,7 +413,7 @@ and changing a value in another column:</p>
 <span class="go">False</span>
 </pre></div>
 </div>
-<p>Next let&#8217;s create a sequence that has been derived from another sequence:</p>
+<p>Next let’s create a sequence that has been derived from another sequence:</p>
 <div class="highlight-default"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">subseq</span> <span class="o">=</span> <span class="n">seq</span><span class="p">[</span><span class="mi">1</span><span class="p">:</span><span class="mi">3</span><span class="p">]</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">subseq</span>
 <span class="go">Sequence</span>
@@ -442,7 +434,7 @@ and changing a value in another column:</p>
 </div>
 <p>As described above for metadata, since only a <em>shallow</em> copy was made of
 the positional metadata, updates to mutable objects will also change the
-parent sequence&#8217;s positional metadata and the original positional metadata
+parent sequence’s positional metadata and the original positional metadata
 <code class="docutils literal"><span class="pre">pd.DataFrame</span></code>:</p>
 <div class="highlight-default"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">subseq</span><span class="o">.</span><span class="n">positional_metadata</span><span class="o">.</span><span class="n">loc</span><span class="p">[</span><span class="mi">0</span><span class="p">,</span> <span class="s1">&#39;list&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="s1">&#39;item&#39;</span><span class="p">)</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">subseq</span><span class="o">.</span><span class="n">positional_metadata</span>
@@ -463,7 +455,7 @@ parent sequence&#8217;s positional metadata and the original positional metadata
 <span class="go">3      []       10</span>
 </pre></div>
 </div>
-<p>You can also update the interval metadata. Let&#8217;s re-create a
+<p>You can also update the interval metadata. Let’s re-create a
 <code class="docutils literal"><span class="pre">Sequence</span></code> object with interval metadata at first:</p>
 <div class="highlight-default"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">seq</span> <span class="o">=</span> <span class="n">Sequence</span><span class="p">(</span><span class="s1">&#39;ACGT&#39;</span><span class="p">)</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">interval</span> <span class="o">=</span> <span class="n">seq</span><span class="o">.</span><span class="n">interval_metadata</span><span class="o">.</span><span class="n">add</span><span class="p">(</span>
@@ -493,19 +485,19 @@ interested and then modify them:</p>
 <col width="90%" />
 </colgroup>
 <tbody valign="top">
-<tr class="row-odd"><td><a class="reference internal" href="skbio.sequence.Sequence.values.html#skbio.sequence.Sequence.values" title="skbio.sequence.Sequence.values"><code class="xref py py-obj docutils literal"><span class="pre">values</span></code></a></td>
+<tr class="row-odd"><td><code class="xref py py-obj docutils literal"><span class="pre">values</span></code></td>
 <td>Array containing underlying sequence characters.</td>
 </tr>
-<tr class="row-even"><td><a class="reference internal" href="skbio.sequence.Sequence.metadata.html#skbio.sequence.Sequence.metadata" title="skbio.sequence.Sequence.metadata"><code class="xref py py-obj docutils literal"><span class="pre">metadata</span></code></a></td>
+<tr class="row-even"><td><code class="xref py py-obj docutils literal"><span class="pre">metadata</span></code></td>
 <td><code class="docutils literal"><span class="pre">dict</span></code> containing metadata which applies to the entire object.</td>
 </tr>
-<tr class="row-odd"><td><a class="reference internal" href="skbio.sequence.Sequence.positional_metadata.html#skbio.sequence.Sequence.positional_metadata" title="skbio.sequence.Sequence.positional_metadata"><code class="xref py py-obj docutils literal"><span class="pre">positional_metadata</span></code></a></td>
+<tr class="row-odd"><td><code class="xref py py-obj docutils literal"><span class="pre">positional_metadata</span></code></td>
 <td><code class="docutils literal"><span class="pre">pd.DataFrame</span></code> containing metadata along an axis.</td>
 </tr>
-<tr class="row-even"><td><a class="reference internal" href="skbio.sequence.Sequence.interval_metadata.html#skbio.sequence.Sequence.interval_metadata" title="skbio.sequence.Sequence.interval_metadata"><code class="xref py py-obj docutils literal"><span class="pre">interval_metadata</span></code></a></td>
+<tr class="row-even"><td><code class="xref py py-obj docutils literal"><span class="pre">interval_metadata</span></code></td>
 <td><code class="docutils literal"><span class="pre">IntervalMetadata</span></code> object containing info about interval features.</td>
 </tr>
-<tr class="row-odd"><td><a class="reference internal" href="skbio.sequence.Sequence.observed_chars.html#skbio.sequence.Sequence.observed_chars" title="skbio.sequence.Sequence.observed_chars"><code class="xref py py-obj docutils literal"><span class="pre">observed_chars</span></code></a></td>
+<tr class="row-odd"><td><code class="xref py py-obj docutils literal"><span class="pre">observed_chars</span></code></td>
 <td>Set of observed characters in the sequence.</td>
 </tr>
 </tbody>
@@ -630,7 +622,7 @@ interested and then modify them:</p>
     </p>
     <p>
         &copy; Copyright 2014--, scikit-bio development team.<br/>
-      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 1.5a0.<br/>
+      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 1.6.5.<br/>
     </p>
   </div>
 </footer>

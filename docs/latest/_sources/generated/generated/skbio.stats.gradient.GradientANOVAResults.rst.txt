@@ -1,5 +1,5 @@
-skbio.stats.gradient.GradientANOVAResults
-=========================================
+skbio\.stats\.gradient\.GradientANOVAResults
+============================================
 
 .. currentmodule:: skbio.stats.gradient
 

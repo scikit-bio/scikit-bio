@@ -1,5 +1,5 @@
-skbio.stats.gradient.GroupResults
-=================================
+skbio\.stats\.gradient\.GroupResults
+====================================
 
 .. currentmodule:: skbio.stats.gradient
 

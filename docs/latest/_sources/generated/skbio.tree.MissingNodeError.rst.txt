@@ -1,5 +1,5 @@
-skbio.tree.MissingNodeError
-===========================
+skbio\.tree\.MissingNodeError
+=============================
 
 .. currentmodule:: skbio.tree
 

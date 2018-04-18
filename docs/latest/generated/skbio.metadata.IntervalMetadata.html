@@ -1,22 +1,16 @@
 <!DOCTYPE html>
 
-
 <html xmlns="http://www.w3.org/1999/xhtml">
   <head>
     <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
-    
-    <title>skbio.metadata.IntervalMetadata &#8212; scikit-bio 0.5.1 documentation</title>
-    
-    <link rel="stylesheet" href="../_static/basic.css" type="text/css" />
+    <title>skbio.metadata.IntervalMetadata &#8212; scikit-bio 0.5.2 documentation</title>
+    <link rel="stylesheet" href="../_static/bootstrap-sphinx.css" type="text/css" />
     <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
     <link rel="stylesheet" href="../_static/style.css" type="text/css" />
-    <link rel="stylesheet" href="../_static/bootswatch-3.3.6/united/bootstrap.min.css" type="text/css" />
-    <link rel="stylesheet" href="../_static/bootstrap-sphinx.css" type="text/css" />
-    
     <script type="text/javascript">
       var DOCUMENTATION_OPTIONS = {
         URL_ROOT:    '../',
-        VERSION:     '0.5.1',
+        VERSION:     '0.5.2',
         COLLAPSE_INDEX: false,
         FILE_SUFFIX: '.html',
         HAS_SOURCE:  true,
@@ -27,15 +21,13 @@
     <script type="text/javascript" src="../_static/underscore.js"></script>
     <script type="text/javascript" src="../_static/doctools.js"></script>
     <script type="text/javascript" src="../_static/copybutton.js"></script>
-    <script type="text/javascript" src="https://cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
+    <script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.1/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
     <script type="text/javascript" src="../_static/js/jquery-1.11.0.min.js"></script>
     <script type="text/javascript" src="../_static/js/jquery-fix.js"></script>
-    <script type="text/javascript" src="../_static/bootstrap-3.3.6/js/bootstrap.min.js"></script>
+    <script type="text/javascript" src="../_static/bootstrap-3.3.7/js/bootstrap.min.js"></script>
     <script type="text/javascript" src="../_static/bootstrap-sphinx.js"></script>
     <link rel="index" title="Index" href="../genindex.html" />
     <link rel="search" title="Search" href="../search.html" />
-    <link rel="top" title="scikit-bio 0.5.1 documentation" href="../index.html" />
-    <link rel="up" title="Metadata (skbio.metadata)" href="../metadata.html" />
     <link rel="next" title="Utility functionality (skbio.util)" href="../util.html" />
     <link rel="prev" title="skbio.metadata.Interval" href="skbio.metadata.Interval.html" />
 <meta charset='utf-8'>
@@ -44,7 +36,7 @@
 <meta name="apple-mobile-web-app-capable" content="yes">
 
   </head>
-  <body role="document">
+  <body>
   
   <a href="https://github.com/biocore/scikit-bio"
      class="visible-desktop hidden-xs"><img
@@ -72,7 +64,7 @@
         </button>
         <a class="navbar-brand" href="../index.html">
           scikit-bio docs</a>
-        <span class="navbar-text navbar-version pull-left"><b>0.5.1</b></span>
+        <span class="navbar-text navbar-version pull-left"><b>0.5.2</b></span>
       </div>
 
         <div class="collapse navbar-collapse nav-collapse">
@@ -151,7 +143,7 @@
 <h1>skbio.metadata.IntervalMetadata<a class="headerlink" href="#skbio-metadata-intervalmetadata" title="Permalink to this headline">¶</a></h1>
 <dl class="class">
 <dt id="skbio.metadata.IntervalMetadata">
-<em class="property">class </em><code class="descclassname">skbio.metadata.</code><code class="descname">IntervalMetadata</code><span class="sig-paren">(</span><em>upper_bound</em><span class="sig-paren">)</span><a class="reference external" href="http://github.com/biocore/scikit-bio/blob/0.5.1/skbio/metadata/_interval.py#L385"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#skbio.metadata.IntervalMetadata" title="Permalink to this definition">¶</a></dt>
+<em class="property">class </em><code class="descclassname">skbio.metadata.</code><code class="descname">IntervalMetadata</code><span class="sig-paren">(</span><em>upper_bound</em>, <em>copy_from=None</em><span class="sig-paren">)</span><a class="reference external" href="http://github.com/biocore/scikit-bio/blob/0.5.2/skbio/metadata/_interval.py#L389"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#skbio.metadata.IntervalMetadata" title="Permalink to this definition">¶</a></dt>
 <dd><p>Stores the interval features.</p>
 <p><code class="docutils literal"><span class="pre">IntervalMetadata</span></code> object allows storage, modification, and
 querying of interval features covering a region of a single coordinate
@@ -164,10 +156,17 @@ alignment.</p>
 <col class="field-name" />
 <col class="field-body" />
 <tbody valign="top">
-<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><p class="first"><strong>upper_bound</strong> : int</p>
-<blockquote class="last">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><p class="first"><strong>upper_bound</strong> : int or None</p>
+<blockquote>
 <div><p>Defines the exclusive upper bound of the interval features. No
-coordinate can be greater than it.</p>
+coordinate can be greater than it. <code class="docutils literal"><span class="pre">None</span></code>
+means that the coordinate space is unbounded.</p>
+</div></blockquote>
+<p><strong>copy_from</strong> : IntervalMetadata or None, optional</p>
+<blockquote class="last">
+<div><p>Create a new object from the input <code class="docutils literal"><span class="pre">IntervalMetadata</span></code> object by
+shallow copying if it is not <code class="docutils literal"><span class="pre">None</span></code>. The upper bound of the new
+object will be updated with the <code class="docutils literal"><span class="pre">upper_bound</span></code> parameter specified.</p>
 </div></blockquote>
 </td>
 </tr>
@@ -191,13 +190,13 @@ delete, or changes the coordinates of any interval features, you should
 set <code class="docutils literal"><span class="pre">self._is_stale_tree</span></code> to <code class="docutils literal"><span class="pre">True</span></code> at the end of your method to
 indicate the interval tree becomes stale.</p>
 <p class="rubric">Examples</p>
-<p>Let&#8217;s say we have a sequence of length 10 and want to add annotation
+<p>Let’s say we have a sequence of length 10 and want to add annotation
 to it. Create an <code class="docutils literal"><span class="pre">IntervalMetadata</span></code> object:</p>
 <div class="highlight-default"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">skbio.metadata</span> <span class="k">import</span> <span class="n">Interval</span><span class="p">,</span> <span class="n">IntervalMetadata</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">im</span> <span class="o">=</span> <span class="n">IntervalMetadata</span><span class="p">(</span><span class="mi">10</span><span class="p">)</span>
 </pre></div>
 </div>
-<p>Let&#8217;s add annotations of 3 genes:</p>
+<p>Let’s add annotations of 3 genes:</p>
 <div class="highlight-default"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">im</span><span class="o">.</span><span class="n">add</span><span class="p">(</span><span class="n">bounds</span><span class="o">=</span><span class="p">[(</span><span class="mi">3</span><span class="p">,</span> <span class="mi">9</span><span class="p">)],</span>
 <span class="gp">... </span>       <span class="n">metadata</span><span class="o">=</span><span class="p">{</span><span class="s1">&#39;gene&#39;</span><span class="p">:</span> <span class="s1">&#39;sagB&#39;</span><span class="p">})</span>  
 <span class="go">Interval(interval_metadata=..., bounds=[(3, 9)], fuzzy=[(False, False)], metadata={&#39;gene&#39;: &#39;sagB&#39;})</span>
@@ -258,13 +257,13 @@ to it. Create an <code class="docutils literal"><span class="pre">IntervalMetada
 <col width="90%" />
 </colgroup>
 <tbody valign="top">
-<tr class="row-odd"><td><a class="reference internal" href="skbio.metadata.IntervalMetadata.lower_bound.html#skbio.metadata.IntervalMetadata.lower_bound" title="skbio.metadata.IntervalMetadata.lower_bound"><code class="xref py py-obj docutils literal"><span class="pre">lower_bound</span></code></a></td>
+<tr class="row-odd"><td><code class="xref py py-obj docutils literal"><span class="pre">lower_bound</span></code></td>
 <td>The inclusive lower bound of interval features.</td>
 </tr>
-<tr class="row-even"><td><a class="reference internal" href="skbio.metadata.IntervalMetadata.num_interval_features.html#skbio.metadata.IntervalMetadata.num_interval_features" title="skbio.metadata.IntervalMetadata.num_interval_features"><code class="xref py py-obj docutils literal"><span class="pre">num_interval_features</span></code></a></td>
+<tr class="row-even"><td><code class="xref py py-obj docutils literal"><span class="pre">num_interval_features</span></code></td>
 <td>The total number of interval features.</td>
 </tr>
-<tr class="row-odd"><td><a class="reference internal" href="skbio.metadata.IntervalMetadata.upper_bound.html#skbio.metadata.IntervalMetadata.upper_bound" title="skbio.metadata.IntervalMetadata.upper_bound"><code class="xref py py-obj docutils literal"><span class="pre">upper_bound</span></code></a></td>
+<tr class="row-odd"><td><code class="xref py py-obj docutils literal"><span class="pre">upper_bound</span></code></td>
 <td>The exclusive upper bound of interval features.</td>
 </tr>
 </tbody>
@@ -294,7 +293,7 @@ to it. Create an <code class="docutils literal"><span class="pre">IntervalMetada
 <tr class="row-even"><td><a class="reference internal" href="skbio.metadata.IntervalMetadata.concat.html#skbio.metadata.IntervalMetadata.concat" title="skbio.metadata.IntervalMetadata.concat"><code class="xref py py-obj docutils literal"><span class="pre">concat</span></code></a>(interval_metadata)</td>
 <td>Concatenate an iterable of <code class="docutils literal"><span class="pre">IntervalMetadata</span></code> objects.</td>
 </tr>
-<tr class="row-odd"><td><a class="reference internal" href="skbio.metadata.IntervalMetadata.drop.html#skbio.metadata.IntervalMetadata.drop" title="skbio.metadata.IntervalMetadata.drop"><code class="xref py py-obj docutils literal"><span class="pre">drop</span></code></a>(intervals)</td>
+<tr class="row-odd"><td><a class="reference internal" href="skbio.metadata.IntervalMetadata.drop.html#skbio.metadata.IntervalMetadata.drop" title="skbio.metadata.IntervalMetadata.drop"><code class="xref py py-obj docutils literal"><span class="pre">drop</span></code></a>(intervals[,&nbsp;negate])</td>
 <td>Drops Interval objects.</td>
 </tr>
 <tr class="row-even"><td><a class="reference internal" href="skbio.metadata.IntervalMetadata.merge.html#skbio.metadata.IntervalMetadata.merge" title="skbio.metadata.IntervalMetadata.merge"><code class="xref py py-obj docutils literal"><span class="pre">merge</span></code></a>(other)</td>
@@ -303,8 +302,14 @@ to it. Create an <code class="docutils literal"><span class="pre">IntervalMetada
 <tr class="row-odd"><td><a class="reference internal" href="skbio.metadata.IntervalMetadata.query.html#skbio.metadata.IntervalMetadata.query" title="skbio.metadata.IntervalMetadata.query"><code class="xref py py-obj docutils literal"><span class="pre">query</span></code></a>([bounds,&nbsp;metadata])</td>
 <td>Yield <code class="docutils literal"><span class="pre">Interval</span></code> object with the bounds and attributes.</td>
 </tr>
-<tr class="row-even"><td><a class="reference internal" href="skbio.metadata.IntervalMetadata.sort.html#skbio.metadata.IntervalMetadata.sort" title="skbio.metadata.IntervalMetadata.sort"><code class="xref py py-obj docutils literal"><span class="pre">sort</span></code></a>([ascending])</td>
+<tr class="row-even"><td><a class="reference internal" href="skbio.metadata.IntervalMetadata.read.html#skbio.metadata.IntervalMetadata.read" title="skbio.metadata.IntervalMetadata.read"><code class="xref py py-obj docutils literal"><span class="pre">read</span></code></a>(file[,&nbsp;format])</td>
+<td>Create a new <code class="docutils literal"><span class="pre">IntervalMetadata</span></code> instance from a file.</td>
+</tr>
+<tr class="row-odd"><td><a class="reference internal" href="skbio.metadata.IntervalMetadata.sort.html#skbio.metadata.IntervalMetadata.sort" title="skbio.metadata.IntervalMetadata.sort"><code class="xref py py-obj docutils literal"><span class="pre">sort</span></code></a>([ascending])</td>
 <td>Sort interval features by their coordinates.</td>
+</tr>
+<tr class="row-even"><td><a class="reference internal" href="skbio.metadata.IntervalMetadata.write.html#skbio.metadata.IntervalMetadata.write" title="skbio.metadata.IntervalMetadata.write"><code class="xref py py-obj docutils literal"><span class="pre">write</span></code></a>(file[,&nbsp;format])</td>
+<td>Write an instance of <code class="docutils literal"><span class="pre">IntervalMetadata</span></code> to a file.</td>
 </tr>
 </tbody>
 </table>
@@ -326,7 +331,7 @@ to it. Create an <code class="docutils literal"><span class="pre">IntervalMetada
     </p>
     <p>
         &copy; Copyright 2014--, scikit-bio development team.<br/>
-      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 1.5a0.<br/>
+      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 1.6.5.<br/>
     </p>
   </div>
 </footer>

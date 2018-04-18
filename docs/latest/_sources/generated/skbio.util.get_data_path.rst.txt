@@ -1,5 +1,5 @@
-skbio.util.get_data_path
-========================
+skbio\.util\.get\_data\_path
+============================
 
 .. currentmodule:: skbio.util
 

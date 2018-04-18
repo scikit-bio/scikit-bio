@@ -1,5 +1,5 @@
-skbio.io.registry.Format
-========================
+skbio\.io\.registry\.Format
+===========================
 
 .. currentmodule:: skbio.io.registry
 
@@ -37,16 +37,4 @@ skbio.io.registry.Format
 
 
    
-
-   .. HACK -- the point here is that we don't want this to appear in the output, but the autosummary should still generate the pages.
-      .. autosummary::
-         :toctree:
-      
-         Format.is_binary_format
-         Format.monkey_patched_readers
-         Format.monkey_patched_writers
-         Format.name
-         Format.readers
-         Format.sniffer_function
-         Format.writers
 

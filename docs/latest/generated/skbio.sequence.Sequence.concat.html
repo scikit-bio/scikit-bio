@@ -1,22 +1,16 @@
 <!DOCTYPE html>
 
-
 <html xmlns="http://www.w3.org/1999/xhtml">
   <head>
     <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
-    
-    <title>skbio.sequence.Sequence.concat &#8212; scikit-bio 0.5.1 documentation</title>
-    
-    <link rel="stylesheet" href="../_static/basic.css" type="text/css" />
+    <title>skbio.sequence.Sequence.concat &#8212; scikit-bio 0.5.2 documentation</title>
+    <link rel="stylesheet" href="../_static/bootstrap-sphinx.css" type="text/css" />
     <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
     <link rel="stylesheet" href="../_static/style.css" type="text/css" />
-    <link rel="stylesheet" href="../_static/bootswatch-3.3.6/united/bootstrap.min.css" type="text/css" />
-    <link rel="stylesheet" href="../_static/bootstrap-sphinx.css" type="text/css" />
-    
     <script type="text/javascript">
       var DOCUMENTATION_OPTIONS = {
         URL_ROOT:    '../',
-        VERSION:     '0.5.1',
+        VERSION:     '0.5.2',
         COLLAPSE_INDEX: false,
         FILE_SUFFIX: '.html',
         HAS_SOURCE:  true,
@@ -27,21 +21,20 @@
     <script type="text/javascript" src="../_static/underscore.js"></script>
     <script type="text/javascript" src="../_static/doctools.js"></script>
     <script type="text/javascript" src="../_static/copybutton.js"></script>
-    <script type="text/javascript" src="https://cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
+    <script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.1/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
     <script type="text/javascript" src="../_static/js/jquery-1.11.0.min.js"></script>
     <script type="text/javascript" src="../_static/js/jquery-fix.js"></script>
-    <script type="text/javascript" src="../_static/bootstrap-3.3.6/js/bootstrap.min.js"></script>
+    <script type="text/javascript" src="../_static/bootstrap-3.3.7/js/bootstrap.min.js"></script>
     <script type="text/javascript" src="../_static/bootstrap-sphinx.js"></script>
     <link rel="index" title="Index" href="../genindex.html" />
     <link rel="search" title="Search" href="../search.html" />
-    <link rel="top" title="scikit-bio 0.5.1 documentation" href="../index.html" />
 <meta charset='utf-8'>
 <meta http-equiv='X-UA-Compatible' content='IE=edge,chrome=1'>
 <meta name='viewport' content='width=device-width, initial-scale=1.0, maximum-scale=1'>
 <meta name="apple-mobile-web-app-capable" content="yes">
 
   </head>
-  <body role="document">
+  <body>
   
   <a href="https://github.com/biocore/scikit-bio"
      class="visible-desktop hidden-xs"><img
@@ -69,7 +62,7 @@
         </button>
         <a class="navbar-brand" href="../index.html">
           scikit-bio docs</a>
-        <span class="navbar-text navbar-version pull-left"><b>0.5.1</b></span>
+        <span class="navbar-text navbar-version pull-left"><b>0.5.2</b></span>
       </div>
 
         <div class="collapse navbar-collapse nav-collapse">
@@ -148,7 +141,7 @@
 <h1>skbio.sequence.Sequence.concat<a class="headerlink" href="#skbio-sequence-sequence-concat" title="Permalink to this headline">¶</a></h1>
 <dl class="classmethod">
 <dt id="skbio.sequence.Sequence.concat">
-<em class="property">classmethod </em><code class="descclassname">Sequence.</code><code class="descname">concat</code><span class="sig-paren">(</span><em>sequences</em>, <em>how='strict'</em><span class="sig-paren">)</span><a class="reference external" href="http://github.com/biocore/scikit-bio/blob/0.5.1/skbio/sequence/_sequence.py#L438"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#skbio.sequence.Sequence.concat" title="Permalink to this definition">¶</a></dt>
+<em class="property">classmethod </em><code class="descclassname">Sequence.</code><code class="descname">concat</code><span class="sig-paren">(</span><em>sequences</em>, <em>how='strict'</em><span class="sig-paren">)</span><a class="reference external" href="http://github.com/biocore/scikit-bio/blob/0.5.2/skbio/sequence/_sequence.py#L438"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#skbio.sequence.Sequence.concat" title="Permalink to this definition">¶</a></dt>
 <dd><p>Concatenate an iterable of <code class="docutils literal"><span class="pre">Sequence</span></code> objects.</p>
 <p>State: Experimental as of 0.4.1.</p>
 <table class="docutils field-list" frame="void" rules="none">
@@ -159,12 +152,12 @@
 <blockquote>
 <div><p>An iterable of <code class="docutils literal"><span class="pre">Sequence</span></code> objects or appropriate subclasses.</p>
 </div></blockquote>
-<p><strong>how</strong> : {&#8216;strict&#8217;, &#8216;inner&#8217;, &#8216;outer&#8217;}, optional</p>
+<p><strong>how</strong> : {‘strict’, ‘inner’, ‘outer’}, optional</p>
 <blockquote>
 <div><p>How to intersect the <cite>positional_metadata</cite> of the sequences.
-If &#8216;strict&#8217;: the <cite>positional_metadata</cite> must have the exact same
-columns; &#8216;inner&#8217;: an inner-join of the columns (only the shared set
-of columns are used); &#8216;outer&#8217;: an outer-join of the columns
+If ‘strict’: the <cite>positional_metadata</cite> must have the exact same
+columns; ‘inner’: an inner-join of the columns (only the shared set
+of columns are used); ‘outer’: an outer-join of the columns
 (all columns are used: missing values will be padded with NaN).</p>
 </div></blockquote>
 </td>
@@ -178,11 +171,11 @@ called this class-method.</p>
 </tr>
 <tr class="field-odd field"><th class="field-name">Raises:</th><td class="field-body"><p class="first"><strong>ValueError</strong></p>
 <blockquote>
-<div><p>If <cite>how</cite> is not one of: &#8216;strict&#8217;, &#8216;inner&#8217;, or &#8216;outer&#8217;.</p>
+<div><p>If <cite>how</cite> is not one of: ‘strict’, ‘inner’, or ‘outer’.</p>
 </div></blockquote>
 <p><strong>ValueError</strong></p>
 <blockquote>
-<div><p>If <cite>how</cite> is &#8216;strict&#8217; and the <cite>positional_metadata</cite> of each sequence
+<div><p>If <cite>how</cite> is ‘strict’ and the <cite>positional_metadata</cite> of each sequence
 does not have the same columns.</p>
 </div></blockquote>
 <p><strong>TypeError</strong></p>
@@ -278,7 +271,7 @@ would be.</p>
     </p>
     <p>
         &copy; Copyright 2014--, scikit-bio development team.<br/>
-      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 1.5a0.<br/>
+      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 1.6.5.<br/>
     </p>
   </div>
 </footer>

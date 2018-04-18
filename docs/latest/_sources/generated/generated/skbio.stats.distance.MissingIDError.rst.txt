@@ -1,5 +1,5 @@
-skbio.stats.distance.MissingIDError
-===================================
+skbio\.stats\.distance\.MissingIDError
+======================================
 
 .. currentmodule:: skbio.stats.distance
 

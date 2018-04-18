@@ -1,22 +1,16 @@
 <!DOCTYPE html>
 
-
 <html xmlns="http://www.w3.org/1999/xhtml">
   <head>
     <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
-    
-    <title>skbio.stats.composition.ancom &#8212; scikit-bio 0.5.1 documentation</title>
-    
-    <link rel="stylesheet" href="../../_static/basic.css" type="text/css" />
+    <title>skbio.stats.composition.ancom &#8212; scikit-bio 0.5.2 documentation</title>
+    <link rel="stylesheet" href="../../_static/bootstrap-sphinx.css" type="text/css" />
     <link rel="stylesheet" href="../../_static/pygments.css" type="text/css" />
     <link rel="stylesheet" href="../../_static/style.css" type="text/css" />
-    <link rel="stylesheet" href="../../_static/bootswatch-3.3.6/united/bootstrap.min.css" type="text/css" />
-    <link rel="stylesheet" href="../../_static/bootstrap-sphinx.css" type="text/css" />
-    
     <script type="text/javascript">
       var DOCUMENTATION_OPTIONS = {
         URL_ROOT:    '../../',
-        VERSION:     '0.5.1',
+        VERSION:     '0.5.2',
         COLLAPSE_INDEX: false,
         FILE_SUFFIX: '.html',
         HAS_SOURCE:  true,
@@ -27,15 +21,13 @@
     <script type="text/javascript" src="../../_static/underscore.js"></script>
     <script type="text/javascript" src="../../_static/doctools.js"></script>
     <script type="text/javascript" src="../../_static/copybutton.js"></script>
-    <script type="text/javascript" src="https://cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
+    <script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.1/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
     <script type="text/javascript" src="../../_static/js/jquery-1.11.0.min.js"></script>
     <script type="text/javascript" src="../../_static/js/jquery-fix.js"></script>
-    <script type="text/javascript" src="../../_static/bootstrap-3.3.6/js/bootstrap.min.js"></script>
+    <script type="text/javascript" src="../../_static/bootstrap-3.3.7/js/bootstrap.min.js"></script>
     <script type="text/javascript" src="../../_static/bootstrap-sphinx.js"></script>
     <link rel="index" title="Index" href="../../genindex.html" />
     <link rel="search" title="Search" href="../../search.html" />
-    <link rel="top" title="scikit-bio 0.5.1 documentation" href="../../index.html" />
-    <link rel="up" title="Composition Statistics (skbio.stats.composition)" href="../skbio.stats.composition.html" />
     <link rel="next" title="skbio.stats.subsample_counts" href="../skbio.stats.subsample_counts.html" />
     <link rel="prev" title="skbio.stats.composition.centralize" href="skbio.stats.composition.centralize.html" />
 <meta charset='utf-8'>
@@ -44,7 +36,7 @@
 <meta name="apple-mobile-web-app-capable" content="yes">
 
   </head>
-  <body role="document">
+  <body>
   
   <a href="https://github.com/biocore/scikit-bio"
      class="visible-desktop hidden-xs"><img
@@ -72,7 +64,7 @@
         </button>
         <a class="navbar-brand" href="../../index.html">
           scikit-bio docs</a>
-        <span class="navbar-text navbar-version pull-left"><b>0.5.1</b></span>
+        <span class="navbar-text navbar-version pull-left"><b>0.5.2</b></span>
       </div>
 
         <div class="collapse navbar-collapse nav-collapse">
@@ -151,7 +143,7 @@
 <h1>skbio.stats.composition.ancom<a class="headerlink" href="#skbio-stats-composition-ancom" title="Permalink to this headline">¶</a></h1>
 <dl class="function">
 <dt id="skbio.stats.composition.ancom">
-<code class="descclassname">skbio.stats.composition.</code><code class="descname">ancom</code><span class="sig-paren">(</span><em>table</em>, <em>grouping</em>, <em>alpha=0.05</em>, <em>tau=0.02</em>, <em>theta=0.1</em>, <em>multiple_comparisons_correction='holm-bonferroni'</em>, <em>significance_test=None</em>, <em>percentiles=(0.0</em>, <em>25.0</em>, <em>50.0</em>, <em>75.0</em>, <em>100.0)</em><span class="sig-paren">)</span><a class="reference external" href="http://github.com/biocore/scikit-bio/blob/0.5.1/skbio/stats/composition.py#L676"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#skbio.stats.composition.ancom" title="Permalink to this definition">¶</a></dt>
+<code class="descclassname">skbio.stats.composition.</code><code class="descname">ancom</code><span class="sig-paren">(</span><em>table</em>, <em>grouping</em>, <em>alpha=0.05</em>, <em>tau=0.02</em>, <em>theta=0.1</em>, <em>multiple_comparisons_correction='holm-bonferroni'</em>, <em>significance_test=None</em>, <em>percentiles=(0.0</em>, <em>25.0</em>, <em>50.0</em>, <em>75.0</em>, <em>100.0)</em><span class="sig-paren">)</span><a class="reference external" href="http://github.com/biocore/scikit-bio/blob/0.5.2/skbio/stats/composition.py#L676"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#skbio.stats.composition.ancom" title="Permalink to this definition">¶</a></dt>
 <dd><p>Performs a differential abundance test using ANCOM.</p>
 <p>State: Experimental as of 0.4.1.</p>
 <p>This is done by calculating pairwise log ratios between all features
@@ -200,12 +192,12 @@ If all W-statistics are lower than theta, then no features
 will be detected to be differentially significant.
 This can can be anywhere between 0 and 1 exclusive.</p>
 </div></blockquote>
-<p><strong>multiple_comparisons_correction</strong> : {None, &#8216;holm-bonferroni&#8217;}, optional</p>
+<p><strong>multiple_comparisons_correction</strong> : {None, ‘holm-bonferroni’}, optional</p>
 <blockquote>
 <div><p>The multiple comparison correction procedure to run.  If None,
 then no multiple comparison correction procedure will be run.
-If &#8216;holm-boniferroni&#8217; is specified, then the Holm-Boniferroni
-procedure <a class="reference internal" href="#r60" id="id1">[R60]</a> will be run.</p>
+If ‘holm-boniferroni’ is specified, then the Holm-Boniferroni
+procedure <a class="reference internal" href="#r119120" id="id1">[R119120]</a> will be run.</p>
 </div></blockquote>
 <p><strong>significance_test</strong> : function, optional</p>
 <blockquote>
@@ -226,9 +218,9 @@ percentile, and maximum abundances for each feature in each group.</p>
 <blockquote>
 <div><p>A table of features, their W-statistics and whether the null hypothesis
 is rejected.</p>
-<p><cite>&#8220;W&#8221;</cite> is the W-statistic, or number of features that a single feature
+<p><cite>“W”</cite> is the W-statistic, or number of features that a single feature
 is tested to be significantly different against.</p>
-<p><cite>&#8220;Reject null hypothesis&#8221;</cite> indicates if feature is differentially
+<p><cite>“Reject null hypothesis”</cite> indicates if feature is differentially
 abundant across groups (<cite>True</cite>) or not (<cite>False</cite>).</p>
 </div></blockquote>
 <p>pd.DataFrame</p>
@@ -245,11 +237,11 @@ index is the group.</p>
 </table>
 <div class="admonition seealso">
 <p class="first admonition-title">See also</p>
-<p class="last"><a class="reference internal" href="skbio.stats.composition.multiplicative_replacement.html#skbio.stats.composition.multiplicative_replacement" title="skbio.stats.composition.multiplicative_replacement"><code class="xref py py-obj docutils literal"><span class="pre">multiplicative_replacement</span></code></a>, <a class="reference external" href="https://docs.scipy.org/doc/scipy/reference/generated/scipy.stats.ttest_ind.html#scipy.stats.ttest_ind" title="(in SciPy v0.18.1)"><code class="xref py py-obj docutils literal"><span class="pre">scipy.stats.ttest_ind</span></code></a>, <a class="reference external" href="https://docs.scipy.org/doc/scipy/reference/generated/scipy.stats.f_oneway.html#scipy.stats.f_oneway" title="(in SciPy v0.18.1)"><code class="xref py py-obj docutils literal"><span class="pre">scipy.stats.f_oneway</span></code></a>, <a class="reference external" href="https://docs.scipy.org/doc/scipy/reference/generated/scipy.stats.wilcoxon.html#scipy.stats.wilcoxon" title="(in SciPy v0.18.1)"><code class="xref py py-obj docutils literal"><span class="pre">scipy.stats.wilcoxon</span></code></a>, <a class="reference external" href="https://docs.scipy.org/doc/scipy/reference/generated/scipy.stats.kruskal.html#scipy.stats.kruskal" title="(in SciPy v0.18.1)"><code class="xref py py-obj docutils literal"><span class="pre">scipy.stats.kruskal</span></code></a></p>
+<p class="last"><a class="reference internal" href="skbio.stats.composition.multiplicative_replacement.html#skbio.stats.composition.multiplicative_replacement" title="skbio.stats.composition.multiplicative_replacement"><code class="xref py py-obj docutils literal"><span class="pre">multiplicative_replacement</span></code></a>, <a class="reference external" href="https://docs.scipy.org/doc/scipy/reference/generated/scipy.stats.ttest_ind.html#scipy.stats.ttest_ind" title="(in SciPy v1.0.0)"><code class="xref py py-obj docutils literal"><span class="pre">scipy.stats.ttest_ind</span></code></a>, <a class="reference external" href="https://docs.scipy.org/doc/scipy/reference/generated/scipy.stats.f_oneway.html#scipy.stats.f_oneway" title="(in SciPy v1.0.0)"><code class="xref py py-obj docutils literal"><span class="pre">scipy.stats.f_oneway</span></code></a>, <a class="reference external" href="https://docs.scipy.org/doc/scipy/reference/generated/scipy.stats.wilcoxon.html#scipy.stats.wilcoxon" title="(in SciPy v1.0.0)"><code class="xref py py-obj docutils literal"><span class="pre">scipy.stats.wilcoxon</span></code></a>, <a class="reference external" href="https://docs.scipy.org/doc/scipy/reference/generated/scipy.stats.kruskal.html#scipy.stats.kruskal" title="(in SciPy v1.0.0)"><code class="xref py py-obj docutils literal"><span class="pre">scipy.stats.kruskal</span></code></a></p>
 </div>
 <p class="rubric">Notes</p>
 <p>The developers of this method recommend the following significance tests
-(<a class="reference internal" href="#r61" id="id2">[R61]</a>, Supplementary File 1, top of page 11): if there are 2 groups, use
+(<a class="reference internal" href="#r120120" id="id2">[R120120]</a>, Supplementary File 1, top of page 11): if there are 2 groups, use
 the standard parametric t-test (<code class="docutils literal"><span class="pre">scipy.stats.ttest_ind</span></code>) or
 non-parametric Wilcoxon rank sum test (<code class="docutils literal"><span class="pre">scipy.stats.wilcoxon</span></code>).
 If there are more than 2 groups, use parametric one-way ANOVA
@@ -261,24 +253,24 @@ more groups.  Users should refer to the documentation of these tests in
 SciPy to understand the assumptions made by each test.</p>
 <p>This method cannot handle any zero counts as input, since the logarithm
 of zero cannot be computed.  While this is an unsolved problem, many
-studies, including <a class="reference internal" href="#r61" id="id3">[R61]</a>, have shown promising results by adding
-pseudocounts to all values in the matrix. In <a class="reference internal" href="#r61" id="id4">[R61]</a>, a pseudocount of 0.001
+studies, including <a class="reference internal" href="#r120120" id="id3">[R120120]</a>, have shown promising results by adding
+pseudocounts to all values in the matrix. In <a class="reference internal" href="#r120120" id="id4">[R120120]</a>, a pseudocount of 0.001
 was used, though the authors note that a pseudocount of 1.0 may also be
 useful. Zero counts can also be addressed using the
 <code class="docutils literal"><span class="pre">multiplicative_replacement</span></code> method.</p>
 <p class="rubric">References</p>
-<table class="docutils citation" frame="void" id="r60" rules="none">
+<table class="docutils citation" frame="void" id="r119120" rules="none">
 <colgroup><col class="label" /><col /></colgroup>
 <tbody valign="top">
-<tr><td class="label">[R60]</td><td><em>(<a class="fn-backref" href="#id1">1</a>, <a class="fn-backref" href="#id5">2</a>)</em> Holm, S. &#8220;A simple sequentially rejective multiple test procedure&#8221;.
+<tr><td class="label">[R119120]</td><td><em>(<a class="fn-backref" href="#id1">1</a>, <a class="fn-backref" href="#id5">2</a>)</em> Holm, S. “A simple sequentially rejective multiple test procedure”.
 Scandinavian Journal of Statistics (1979), 6.</td></tr>
 </tbody>
 </table>
-<table class="docutils citation" frame="void" id="r61" rules="none">
+<table class="docutils citation" frame="void" id="r120120" rules="none">
 <colgroup><col class="label" /><col /></colgroup>
 <tbody valign="top">
-<tr><td class="label">[R61]</td><td><em>(<a class="fn-backref" href="#id2">1</a>, <a class="fn-backref" href="#id3">2</a>, <a class="fn-backref" href="#id4">3</a>, <a class="fn-backref" href="#id6">4</a>)</em> Mandal et al. &#8220;Analysis of composition of microbiomes: a novel
-method for studying microbial composition&#8221;, Microbial Ecology in Health
+<tr><td class="label">[R120120]</td><td><em>(<a class="fn-backref" href="#id2">1</a>, <a class="fn-backref" href="#id3">2</a>, <a class="fn-backref" href="#id4">3</a>, <a class="fn-backref" href="#id6">4</a>)</em> Mandal et al. “Analysis of composition of microbiomes: a novel
+method for studying microbial composition”, Microbial Ecology in Health
 &amp; Disease, (2015), 26.</td></tr>
 </tbody>
 </table>
@@ -288,7 +280,7 @@ method for studying microbial composition&#8221;, Microbial Ecology in Health
 <span class="gp">&gt;&gt;&gt; </span><span class="kn">import</span> <span class="nn">pandas</span> <span class="k">as</span> <span class="nn">pd</span>
 </pre></div>
 </div>
-<p>Now let&#8217;s load in a DataFrame with 6 samples and 7 features (e.g.,
+<p>Now let’s load in a DataFrame with 6 samples and 7 features (e.g.,
 these may be bacterial OTUs):</p>
 <div class="highlight-default"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">table</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">([[</span><span class="mi">12</span><span class="p">,</span> <span class="mi">11</span><span class="p">,</span> <span class="mi">10</span><span class="p">,</span> <span class="mi">10</span><span class="p">,</span> <span class="mi">10</span><span class="p">,</span> <span class="mi">10</span><span class="p">,</span> <span class="mi">10</span><span class="p">],</span>
 <span class="gp">... </span>                      <span class="p">[</span><span class="mi">9</span><span class="p">,</span>  <span class="mi">11</span><span class="p">,</span> <span class="mi">12</span><span class="p">,</span> <span class="mi">10</span><span class="p">,</span> <span class="mi">10</span><span class="p">,</span> <span class="mi">10</span><span class="p">,</span> <span class="mi">10</span><span class="p">],</span>
@@ -328,7 +320,7 @@ feature in each group.</p>
 <p>The W-statistic is the number of features that a single feature is tested
 to be significantly different against.  In this scenario, <cite>b2</cite> was detected
 to have significantly different abundances compared to four of the other
-features. To summarize the results from the W-statistic, let&#8217;s take a look
+features. To summarize the results from the W-statistic, let’s take a look
 at the results from the hypothesis test. The <cite>Reject null hypothesis</cite>
 column in the table indicates whether the null hypothesis was rejected,
 and that a feature was therefore observed to be differentially abundant
@@ -345,7 +337,7 @@ across the groups.</p>
 </pre></div>
 </div>
 <p>From this we can conclude that only <cite>b2</cite> was significantly different in
-abundance between the treatment and the placebo. We still don&#8217;t know, for
+abundance between the treatment and the placebo. We still don’t know, for
 example, in which group <cite>b2</cite> was more abundant. We therefore may next be
 interested in comparing the abundance of <cite>b2</cite> across the two groups.
 We can do that using the second DataFrame that was returned. Here we
@@ -396,7 +388,7 @@ samples.</p>
     </p>
     <p>
         &copy; Copyright 2014--, scikit-bio development team.<br/>
-      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 1.5a0.<br/>
+      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 1.6.5.<br/>
     </p>
   </div>
 </footer>

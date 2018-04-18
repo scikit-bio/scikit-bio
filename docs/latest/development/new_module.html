@@ -1,22 +1,16 @@
 <!DOCTYPE html>
 
-
 <html xmlns="http://www.w3.org/1999/xhtml">
   <head>
     <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
-    
-    <title>Adding a new module to skbio &#8212; scikit-bio 0.5.1 documentation</title>
-    
-    <link rel="stylesheet" href="../_static/basic.css" type="text/css" />
+    <title>Adding a new module to skbio &#8212; scikit-bio 0.5.2 documentation</title>
+    <link rel="stylesheet" href="../_static/bootstrap-sphinx.css" type="text/css" />
     <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
     <link rel="stylesheet" href="../_static/style.css" type="text/css" />
-    <link rel="stylesheet" href="../_static/bootswatch-3.3.6/united/bootstrap.min.css" type="text/css" />
-    <link rel="stylesheet" href="../_static/bootstrap-sphinx.css" type="text/css" />
-    
     <script type="text/javascript">
       var DOCUMENTATION_OPTIONS = {
         URL_ROOT:    '../',
-        VERSION:     '0.5.1',
+        VERSION:     '0.5.2',
         COLLAPSE_INDEX: false,
         FILE_SUFFIX: '.html',
         HAS_SOURCE:  true,
@@ -27,14 +21,13 @@
     <script type="text/javascript" src="../_static/underscore.js"></script>
     <script type="text/javascript" src="../_static/doctools.js"></script>
     <script type="text/javascript" src="../_static/copybutton.js"></script>
-    <script type="text/javascript" src="https://cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
+    <script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.1/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
     <script type="text/javascript" src="../_static/js/jquery-1.11.0.min.js"></script>
     <script type="text/javascript" src="../_static/js/jquery-fix.js"></script>
-    <script type="text/javascript" src="../_static/bootstrap-3.3.6/js/bootstrap.min.js"></script>
+    <script type="text/javascript" src="../_static/bootstrap-3.3.7/js/bootstrap.min.js"></script>
     <script type="text/javascript" src="../_static/bootstrap-sphinx.js"></script>
     <link rel="index" title="Index" href="../genindex.html" />
     <link rel="search" title="Search" href="../search.html" />
-    <link rel="top" title="scikit-bio 0.5.1 documentation" href="../index.html" />
     <link rel="prev" title="Coding guidelines" href="coding_guidelines.html" />
 <meta charset='utf-8'>
 <meta http-equiv='X-UA-Compatible' content='IE=edge,chrome=1'>
@@ -42,7 +35,7 @@
 <meta name="apple-mobile-web-app-capable" content="yes">
 
   </head>
-  <body role="document">
+  <body>
   
   <a href="https://github.com/biocore/scikit-bio"
      class="visible-desktop hidden-xs"><img
@@ -70,7 +63,7 @@
         </button>
         <a class="navbar-brand" href="../index.html">
           scikit-bio docs</a>
-        <span class="navbar-text navbar-version pull-left"><b>0.5.1</b></span>
+        <span class="navbar-text navbar-version pull-left"><b>0.5.2</b></span>
       </div>
 
         <div class="collapse navbar-collapse nav-collapse">
@@ -150,7 +143,7 @@
 <p>Each module needs an <cite>__init__.py</cite> file and a <cite>tests</cite> folder that also
 contains an <cite>__init__.py</cite> file. For a module, a simple one may look
 like this:</p>
-<div class="highlight-default"><div class="highlight"><pre><span></span><span class="sd">r&quot;&quot;&quot;</span>
+<div class="highlight-default"><div class="highlight"><pre><span></span><span class="sa">r</span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">A module (:mod:`skbio.module`)</span>
 <span class="sd">==============================</span>
 
@@ -168,14 +161,14 @@ like this:</p>
 <span class="c1"># ----------------------------------------------------------------------------</span>
 
 <span class="kn">from</span> <span class="nn">skbio.util</span> <span class="k">import</span> <span class="n">TestRunner</span>
-<span class="n">test</span> <span class="o">=</span> <span class="n">TestRunner</span><span class="p">(</span><span class="n">__file__</span><span class="p">)</span><span class="o">.</span><span class="n">test</span>
+<span class="n">test</span> <span class="o">=</span> <span class="n">TestRunner</span><span class="p">(</span><span class="vm">__file__</span><span class="p">)</span><span class="o">.</span><span class="n">test</span>
 </pre></div>
 </div>
 <p>Usually, some functionality from the module will be made accessible by
-importing it in <cite>__init__.py</cite>. It&#8217;s convenient to use explicit
+importing it in <cite>__init__.py</cite>. It’s convenient to use explicit
 relative imports (<cite>from .implementation import compute</cite>), so that
 functionality can be neatly separated in different files but the user
-doesn&#8217;t face a deeply nested package: <cite>from skbio.module import
+doesn’t face a deeply nested package: <cite>from skbio.module import
 compute</cite> instead of <cite>from skbio.module.implementation import compute</cite>.</p>
 <p>Inside the tests folder, a simpler <cite>__init__.py</cite> works fine (it is
 necessary so that all tests can be run after installation):</p>
@@ -205,7 +198,7 @@ necessary so that all tests can be run after installation):</p>
     </p>
     <p>
         &copy; Copyright 2014--, scikit-bio development team.<br/>
-      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 1.5a0.<br/>
+      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 1.6.5.<br/>
     </p>
   </div>
 </footer>

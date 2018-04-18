@@ -1,5 +1,5 @@
-skbio.io.OrdinationFormatError
-==============================
+skbio\.io\.OrdinationFormatError
+================================
 
 .. currentmodule:: skbio.io
 

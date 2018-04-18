@@ -1,5 +1,5 @@
-skbio.alignment.global_pairwise_align
-=====================================
+skbio\.alignment\.global\_pairwise\_align
+=========================================
 
 .. currentmodule:: skbio.alignment
 

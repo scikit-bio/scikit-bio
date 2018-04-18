@@ -1,5 +1,5 @@
-skbio.io.FASTAFormatError
-=========================
+skbio\.io\.FASTAFormatError
+===========================
 
 .. currentmodule:: skbio.io
 

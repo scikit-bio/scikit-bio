@@ -1,5 +1,5 @@
-skbio.stats.ordination.pcoa
-===========================
+skbio\.stats\.ordination\.pcoa
+==============================
 
 .. currentmodule:: skbio.stats.ordination
 

@@ -1,22 +1,16 @@
 <!DOCTYPE html>
 
-
 <html xmlns="http://www.w3.org/1999/xhtml">
   <head>
     <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
-    
-    <title>skbio.metadata.Interval &#8212; scikit-bio 0.5.1 documentation</title>
-    
-    <link rel="stylesheet" href="../_static/basic.css" type="text/css" />
+    <title>skbio.metadata.Interval &#8212; scikit-bio 0.5.2 documentation</title>
+    <link rel="stylesheet" href="../_static/bootstrap-sphinx.css" type="text/css" />
     <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
     <link rel="stylesheet" href="../_static/style.css" type="text/css" />
-    <link rel="stylesheet" href="../_static/bootswatch-3.3.6/united/bootstrap.min.css" type="text/css" />
-    <link rel="stylesheet" href="../_static/bootstrap-sphinx.css" type="text/css" />
-    
     <script type="text/javascript">
       var DOCUMENTATION_OPTIONS = {
         URL_ROOT:    '../',
-        VERSION:     '0.5.1',
+        VERSION:     '0.5.2',
         COLLAPSE_INDEX: false,
         FILE_SUFFIX: '.html',
         HAS_SOURCE:  true,
@@ -27,15 +21,13 @@
     <script type="text/javascript" src="../_static/underscore.js"></script>
     <script type="text/javascript" src="../_static/doctools.js"></script>
     <script type="text/javascript" src="../_static/copybutton.js"></script>
-    <script type="text/javascript" src="https://cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
+    <script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.1/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
     <script type="text/javascript" src="../_static/js/jquery-1.11.0.min.js"></script>
     <script type="text/javascript" src="../_static/js/jquery-fix.js"></script>
-    <script type="text/javascript" src="../_static/bootstrap-3.3.6/js/bootstrap.min.js"></script>
+    <script type="text/javascript" src="../_static/bootstrap-3.3.7/js/bootstrap.min.js"></script>
     <script type="text/javascript" src="../_static/bootstrap-sphinx.js"></script>
     <link rel="index" title="Index" href="../genindex.html" />
     <link rel="search" title="Search" href="../search.html" />
-    <link rel="top" title="scikit-bio 0.5.1 documentation" href="../index.html" />
-    <link rel="up" title="Metadata (skbio.metadata)" href="../metadata.html" />
     <link rel="next" title="skbio.metadata.IntervalMetadata" href="skbio.metadata.IntervalMetadata.html" />
     <link rel="prev" title="Metadata (skbio.metadata)" href="../metadata.html" />
 <meta charset='utf-8'>
@@ -44,7 +36,7 @@
 <meta name="apple-mobile-web-app-capable" content="yes">
 
   </head>
-  <body role="document">
+  <body>
   
   <a href="https://github.com/biocore/scikit-bio"
      class="visible-desktop hidden-xs"><img
@@ -72,7 +64,7 @@
         </button>
         <a class="navbar-brand" href="../index.html">
           scikit-bio docs</a>
-        <span class="navbar-text navbar-version pull-left"><b>0.5.1</b></span>
+        <span class="navbar-text navbar-version pull-left"><b>0.5.2</b></span>
       </div>
 
         <div class="collapse navbar-collapse nav-collapse">
@@ -151,7 +143,7 @@
 <h1>skbio.metadata.Interval<a class="headerlink" href="#skbio-metadata-interval" title="Permalink to this headline">¶</a></h1>
 <dl class="class">
 <dt id="skbio.metadata.Interval">
-<em class="property">class </em><code class="descclassname">skbio.metadata.</code><code class="descname">Interval</code><span class="sig-paren">(</span><em>interval_metadata</em>, <em>bounds</em>, <em>fuzzy=None</em>, <em>metadata=None</em><span class="sig-paren">)</span><a class="reference external" href="http://github.com/biocore/scikit-bio/blob/0.5.1/skbio/metadata/_interval.py#L17"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#skbio.metadata.Interval" title="Permalink to this definition">¶</a></dt>
+<em class="property">class </em><code class="descclassname">skbio.metadata.</code><code class="descname">Interval</code><span class="sig-paren">(</span><em>interval_metadata</em>, <em>bounds</em>, <em>fuzzy=None</em>, <em>metadata=None</em><span class="sig-paren">)</span><a class="reference external" href="http://github.com/biocore/scikit-bio/blob/0.5.2/skbio/metadata/_interval.py#L17"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#skbio.metadata.Interval" title="Permalink to this definition">¶</a></dt>
 <dd><p>Stores the bounds and metadata of an interval feature.</p>
 <p>This class stores an interval feature. An interval feature
 is defined as a sub-region of a biological sequence or sequence
@@ -177,17 +169,17 @@ end bound.</p>
 <p><strong>fuzzy</strong> : iterable of tuple of bool, optional</p>
 <blockquote>
 <div><p>Tuples representing the fuzziness of each bound coordinates.
-If this isn&#8217;t specified, then the fuzziness of all bound
+If this isn’t specified, then the fuzziness of all bound
 coordinates are <code class="docutils literal"><span class="pre">False</span></code>. If any of the coordinate fuzziness
 is <code class="docutils literal"><span class="pre">True</span></code>, it indicates that the exact bound point of a
 interval feature is unknown. The bound may begin or end at
 some points outside the specified coordinates. This
-accommodates the location format <a class="reference internal" href="#r191" id="id1">[R191]</a> of INSDC.</p>
+accommodates the location format <a class="reference internal" href="#r350350" id="id1">[R350350]</a> of INSDC.</p>
 </div></blockquote>
 <p><strong>metadata</strong> : dict, optional</p>
 <blockquote class="last">
 <div><p>Dictionary of attributes storing information of the feature
-such as &#8220;strand&#8221;, &#8220;gene_name&#8221;, or &#8220;product&#8221;.</p>
+such as “strand”, “gene_name”, or “product”.</p>
 </div></blockquote>
 </td>
 </tr>
@@ -203,16 +195,16 @@ itself to its associated <code class="docutils literal"><span class="pre">Interv
 <code class="docutils literal"><span class="pre">IntervalMetadata.add</span></code> is the typical/easier way to
 create and add it to <code class="docutils literal"><span class="pre">IntervalMetadata</span></code>.</p>
 <p class="rubric">References</p>
-<table class="docutils citation" frame="void" id="r191" rules="none">
+<table class="docutils citation" frame="void" id="r350350" rules="none">
 <colgroup><col class="label" /><col /></colgroup>
 <tbody valign="top">
-<tr><td class="label">[R191]</td><td><em>(<a class="fn-backref" href="#id1">1</a>, <a class="fn-backref" href="#id2">2</a>)</em> <a class="reference external" href="ftp://ftp.ebi.ac.uk/pub/databases/embl/doc/FT_current.html#3.4.3">ftp://ftp.ebi.ac.uk/pub/databases/embl/doc/FT_current.html#3.4.3</a></td></tr>
+<tr><td class="label">[R350350]</td><td><em>(<a class="fn-backref" href="#id1">1</a>, <a class="fn-backref" href="#id2">2</a>)</em> <a class="reference external" href="ftp://ftp.ebi.ac.uk/pub/databases/embl/doc/FT_current.html#3.4.3">ftp://ftp.ebi.ac.uk/pub/databases/embl/doc/FT_current.html#3.4.3</a></td></tr>
 </tbody>
 </table>
 <p class="rubric">Examples</p>
-<p>Hypothetically, let&#8217;s say we have a gene called &#8220;genA&#8221; with 10 nt
+<p>Hypothetically, let’s say we have a gene called “genA” with 10 nt
 as shown in the following diagram.  The second row represents the
-two exons (indicated by &#8220;=&#8221;) on this gene:</p>
+two exons (indicated by “=”) on this gene:</p>
 <div class="highlight-default"><div class="highlight"><pre><span></span><span class="n">TGGATTCTGC</span>
 <span class="o">-====--==-</span>
 <span class="mi">0123456789</span>
@@ -239,16 +231,16 @@ upper bound:</p>
 <col width="90%" />
 </colgroup>
 <tbody valign="top">
-<tr class="row-odd"><td><a class="reference internal" href="skbio.metadata.Interval.bounds.html#skbio.metadata.Interval.bounds" title="skbio.metadata.Interval.bounds"><code class="xref py py-obj docutils literal"><span class="pre">bounds</span></code></a></td>
+<tr class="row-odd"><td><code class="xref py py-obj docutils literal"><span class="pre">bounds</span></code></td>
 <td>The coordinates of the interval feature.</td>
 </tr>
-<tr class="row-even"><td><a class="reference internal" href="skbio.metadata.Interval.dropped.html#skbio.metadata.Interval.dropped" title="skbio.metadata.Interval.dropped"><code class="xref py py-obj docutils literal"><span class="pre">dropped</span></code></a></td>
+<tr class="row-even"><td><code class="xref py py-obj docutils literal"><span class="pre">dropped</span></code></td>
 <td>Boolean value indicating if the <code class="docutils literal"><span class="pre">Interval</span></code> object is dropped.</td>
 </tr>
-<tr class="row-odd"><td><a class="reference internal" href="skbio.metadata.Interval.fuzzy.html#skbio.metadata.Interval.fuzzy" title="skbio.metadata.Interval.fuzzy"><code class="xref py py-obj docutils literal"><span class="pre">fuzzy</span></code></a></td>
+<tr class="row-odd"><td><code class="xref py py-obj docutils literal"><span class="pre">fuzzy</span></code></td>
 <td>The openness of each coordinate.</td>
 </tr>
-<tr class="row-even"><td><a class="reference internal" href="skbio.metadata.Interval.metadata.html#skbio.metadata.Interval.metadata" title="skbio.metadata.Interval.metadata"><code class="xref py py-obj docutils literal"><span class="pre">metadata</span></code></a></td>
+<tr class="row-even"><td><code class="xref py py-obj docutils literal"><span class="pre">metadata</span></code></td>
 <td>The metadata of the interval feature.</td>
 </tr>
 </tbody>
@@ -289,7 +281,7 @@ upper bound:</p>
     </p>
     <p>
         &copy; Copyright 2014--, scikit-bio development team.<br/>
-      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 1.5a0.<br/>
+      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 1.6.5.<br/>
     </p>
   </div>
 </footer>

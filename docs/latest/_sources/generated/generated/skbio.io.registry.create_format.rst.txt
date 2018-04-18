@@ -1,5 +1,5 @@
-skbio.io.registry.create_format
-===============================
+skbio\.io\.registry\.create\_format
+===================================
 
 .. currentmodule:: skbio.io.registry
 

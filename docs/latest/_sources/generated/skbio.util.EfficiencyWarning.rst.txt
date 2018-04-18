@@ -1,5 +1,5 @@
-skbio.util.EfficiencyWarning
-============================
+skbio\.util\.EfficiencyWarning
+==============================
 
 .. currentmodule:: skbio.util
 

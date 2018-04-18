@@ -1,22 +1,16 @@
 <!DOCTYPE html>
 
-
 <html xmlns="http://www.w3.org/1999/xhtml">
   <head>
     <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
-    
-    <title>skbio.alignment.TabularMSA.join &#8212; scikit-bio 0.5.1 documentation</title>
-    
-    <link rel="stylesheet" href="../_static/basic.css" type="text/css" />
+    <title>skbio.alignment.TabularMSA.join &#8212; scikit-bio 0.5.2 documentation</title>
+    <link rel="stylesheet" href="../_static/bootstrap-sphinx.css" type="text/css" />
     <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
     <link rel="stylesheet" href="../_static/style.css" type="text/css" />
-    <link rel="stylesheet" href="../_static/bootswatch-3.3.6/united/bootstrap.min.css" type="text/css" />
-    <link rel="stylesheet" href="../_static/bootstrap-sphinx.css" type="text/css" />
-    
     <script type="text/javascript">
       var DOCUMENTATION_OPTIONS = {
         URL_ROOT:    '../',
-        VERSION:     '0.5.1',
+        VERSION:     '0.5.2',
         COLLAPSE_INDEX: false,
         FILE_SUFFIX: '.html',
         HAS_SOURCE:  true,
@@ -27,21 +21,20 @@
     <script type="text/javascript" src="../_static/underscore.js"></script>
     <script type="text/javascript" src="../_static/doctools.js"></script>
     <script type="text/javascript" src="../_static/copybutton.js"></script>
-    <script type="text/javascript" src="https://cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
+    <script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.1/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
     <script type="text/javascript" src="../_static/js/jquery-1.11.0.min.js"></script>
     <script type="text/javascript" src="../_static/js/jquery-fix.js"></script>
-    <script type="text/javascript" src="../_static/bootstrap-3.3.6/js/bootstrap.min.js"></script>
+    <script type="text/javascript" src="../_static/bootstrap-3.3.7/js/bootstrap.min.js"></script>
     <script type="text/javascript" src="../_static/bootstrap-sphinx.js"></script>
     <link rel="index" title="Index" href="../genindex.html" />
     <link rel="search" title="Search" href="../search.html" />
-    <link rel="top" title="scikit-bio 0.5.1 documentation" href="../index.html" />
 <meta charset='utf-8'>
 <meta http-equiv='X-UA-Compatible' content='IE=edge,chrome=1'>
 <meta name='viewport' content='width=device-width, initial-scale=1.0, maximum-scale=1'>
 <meta name="apple-mobile-web-app-capable" content="yes">
 
   </head>
-  <body role="document">
+  <body>
   
   <a href="https://github.com/biocore/scikit-bio"
      class="visible-desktop hidden-xs"><img
@@ -69,7 +62,7 @@
         </button>
         <a class="navbar-brand" href="../index.html">
           scikit-bio docs</a>
-        <span class="navbar-text navbar-version pull-left"><b>0.5.1</b></span>
+        <span class="navbar-text navbar-version pull-left"><b>0.5.2</b></span>
       </div>
 
         <div class="collapse navbar-collapse nav-collapse">
@@ -148,7 +141,7 @@
 <h1>skbio.alignment.TabularMSA.join<a class="headerlink" href="#skbio-alignment-tabularmsa-join" title="Permalink to this headline">¶</a></h1>
 <dl class="method">
 <dt id="skbio.alignment.TabularMSA.join">
-<code class="descclassname">TabularMSA.</code><code class="descname">join</code><span class="sig-paren">(</span><em>other</em>, <em>how='strict'</em><span class="sig-paren">)</span><a class="reference external" href="http://github.com/biocore/scikit-bio/blob/0.5.1/skbio/alignment/_tabular_msa.py#L2037"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#skbio.alignment.TabularMSA.join" title="Permalink to this definition">¶</a></dt>
+<code class="descclassname">TabularMSA.</code><code class="descname">join</code><span class="sig-paren">(</span><em>other</em>, <em>how='strict'</em><span class="sig-paren">)</span><a class="reference external" href="http://github.com/biocore/scikit-bio/blob/0.5.2/skbio/alignment/_tabular_msa.py#L2037"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#skbio.alignment.TabularMSA.join" title="Permalink to this definition">¶</a></dt>
 <dd><p>Join this MSA with another by sequence (horizontally).</p>
 <p>Sequences will be joined by index labels. MSA <code class="docutils literal"><span class="pre">positional_metadata</span></code>
 will be joined by columns. Use <cite>how</cite> to control join behavior.</p>
@@ -162,7 +155,7 @@ section for details).</p>
 <blockquote>
 <div><p>MSA to join with. Must have same <code class="docutils literal"><span class="pre">dtype</span></code> as this MSA.</p>
 </div></blockquote>
-<p><strong>how</strong> : {&#8216;strict&#8217;, &#8216;inner&#8217;, &#8216;outer&#8217;, &#8216;left&#8217;, &#8216;right&#8217;}, optional</p>
+<p><strong>how</strong> : {‘strict’, ‘inner’, ‘outer’, ‘left’, ‘right’}, optional</p>
 <blockquote>
 <div><p>How to join the sequences and MSA <cite>positional_metadata</cite>:</p>
 <ul class="simple">
@@ -173,11 +166,11 @@ match</li>
 labels and columns are used)</li>
 <li><code class="docutils literal"><span class="pre">'outer'</span></code>: an outer-join of the MSA indexes and
 <code class="docutils literal"><span class="pre">positional_metadata</span></code> columns (all index labels and columns are
-used). Unshared sequences will be padded with the MSA&#8217;s default
+used). Unshared sequences will be padded with the MSA’s default
 gap character (<code class="docutils literal"><span class="pre">TabularMSA.dtype.default_gap_char</span></code>). Unshared
 columns will be padded with NaN.</li>
 <li><code class="docutils literal"><span class="pre">'left'</span></code>: a left-outer-join of the MSA indexes and
-<code class="docutils literal"><span class="pre">positional_metadata</span></code> columns (this MSA&#8217;s index labels and
+<code class="docutils literal"><span class="pre">positional_metadata</span></code> columns (this MSA’s index labels and
 columns are used). Padding of unshared data is handled the same
 as <code class="docutils literal"><span class="pre">'outer'</span></code>.</li>
 <li><code class="docutils literal"><span class="pre">'right'</span></code>: a right-outer-join of the MSA indexes and
@@ -206,13 +199,13 @@ duplicates.</p>
 </div></blockquote>
 <p><strong>ValueError</strong></p>
 <blockquote>
-<div><p>If <code class="docutils literal"><span class="pre">how='strict'</span></code> and this MSA&#8217;s index doesn&#8217;t match with
+<div><p>If <code class="docutils literal"><span class="pre">how='strict'</span></code> and this MSA’s index doesn’t match with
 <cite>other</cite>.</p>
 </div></blockquote>
 <p><strong>ValueError</strong></p>
 <blockquote>
-<div><p>If <code class="docutils literal"><span class="pre">how='strict'</span></code> and this MSA&#8217;s <code class="docutils literal"><span class="pre">positional_metadata</span></code> columns
-don&#8217;t match with <cite>other</cite>.</p>
+<div><p>If <code class="docutils literal"><span class="pre">how='strict'</span></code> and this MSA’s <code class="docutils literal"><span class="pre">positional_metadata</span></code> columns
+don’t match with <cite>other</cite>.</p>
 </div></blockquote>
 <p><strong>TypeError</strong></p>
 <blockquote>
@@ -220,7 +213,7 @@ don&#8217;t match with <cite>other</cite>.</p>
 </div></blockquote>
 <p><strong>TypeError</strong></p>
 <blockquote class="last">
-<div><p>If the <code class="docutils literal"><span class="pre">dtype</span></code> of <cite>other</cite> does not match this MSA&#8217;s <code class="docutils literal"><span class="pre">dtype</span></code>.</p>
+<div><p>If the <code class="docutils literal"><span class="pre">dtype</span></code> of <cite>other</cite> does not match this MSA’s <code class="docutils literal"><span class="pre">dtype</span></code>.</p>
 </div></blockquote>
 </td>
 </tr>
@@ -241,8 +234,16 @@ of <cite>other</cite> must be unique.</p>
 <p>The positional metadata of the sequences will be outer-joined,
 regardless of <cite>how</cite> (using <code class="docutils literal"><span class="pre">Sequence.concat(how='outer')</span></code>).</p>
 <p>If the join operation results in a <code class="docutils literal"><span class="pre">TabularMSA</span></code> without any
-sequences, the MSA&#8217;s <code class="docutils literal"><span class="pre">positional_metadata</span></code> will not be set.</p>
+sequences, the MSA’s <code class="docutils literal"><span class="pre">positional_metadata</span></code> will not be set.</p>
 <p class="rubric">Examples</p>
+<div class="admonition note">
+<p class="first admonition-title">Note</p>
+<p class="last">The following examples call <cite>.sort()</cite> on the joined MSA
+because there isn’t a guaranteed ordering to the index. The joined
+MSA is sorted in these examples to make the output reproducible.
+When using this method with your own data, sorting the joined MSA is
+not necessary.</p>
+</div>
 <p>Join MSAs by sequence:</p>
 <div class="highlight-default"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">skbio</span> <span class="k">import</span> <span class="n">DNA</span><span class="p">,</span> <span class="n">TabularMSA</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">msa1</span> <span class="o">=</span> <span class="n">TabularMSA</span><span class="p">([</span><span class="n">DNA</span><span class="p">(</span><span class="s1">&#39;AC&#39;</span><span class="p">),</span>
@@ -250,6 +251,7 @@ sequences, the MSA&#8217;s <code class="docutils literal"><span class="pre">posi
 <span class="gp">&gt;&gt;&gt; </span><span class="n">msa2</span> <span class="o">=</span> <span class="n">TabularMSA</span><span class="p">([</span><span class="n">DNA</span><span class="p">(</span><span class="s1">&#39;G-T&#39;</span><span class="p">),</span>
 <span class="gp">... </span>                   <span class="n">DNA</span><span class="p">(</span><span class="s1">&#39;T--&#39;</span><span class="p">)])</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">joined</span> <span class="o">=</span> <span class="n">msa1</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">msa2</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">joined</span><span class="o">.</span><span class="n">sort</span><span class="p">()</span>  <span class="c1"># unnecessary in practice, see note above</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">joined</span>
 <span class="go">TabularMSA[DNA]</span>
 <span class="go">---------------------</span>
@@ -267,6 +269,7 @@ sequences, the MSA&#8217;s <code class="docutils literal"><span class="pre">posi
 <span class="gp">&gt;&gt;&gt; </span><span class="n">msa2</span> <span class="o">=</span> <span class="n">TabularMSA</span><span class="p">([</span><span class="n">DNA</span><span class="p">(</span><span class="s1">&#39;G-T&#39;</span><span class="p">),</span>
 <span class="gp">... </span>                   <span class="n">DNA</span><span class="p">(</span><span class="s1">&#39;T--&#39;</span><span class="p">)],</span> <span class="n">index</span><span class="o">=</span><span class="p">[</span><span class="s1">&#39;b&#39;</span><span class="p">,</span> <span class="s1">&#39;a&#39;</span><span class="p">])</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">joined</span> <span class="o">=</span> <span class="n">msa1</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">msa2</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">joined</span><span class="o">.</span><span class="n">sort</span><span class="p">()</span>  <span class="c1"># unnecessary in practice, see note above</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">joined</span>
 <span class="go">TabularMSA[DNA]</span>
 <span class="go">---------------------</span>
@@ -293,6 +296,7 @@ join:</p>
 <span class="gp">... </span>                  <span class="n">positional_metadata</span><span class="o">=</span><span class="p">{</span><span class="s1">&#39;col2&#39;</span><span class="p">:</span> <span class="p">[</span><span class="mi">3</span><span class="p">,</span> <span class="mi">4</span><span class="p">,</span> <span class="mi">5</span><span class="p">],</span>
 <span class="gp">... </span>                                       <span class="s1">&#39;col3&#39;</span><span class="p">:</span> <span class="p">[</span><span class="s1">&#39;f&#39;</span><span class="p">,</span> <span class="s1">&#39;o&#39;</span><span class="p">,</span> <span class="s1">&#39;o&#39;</span><span class="p">]})</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">joined</span> <span class="o">=</span> <span class="n">msa1</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">msa2</span><span class="p">,</span> <span class="n">how</span><span class="o">=</span><span class="s1">&#39;inner&#39;</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">joined</span><span class="o">.</span><span class="n">sort</span><span class="p">()</span>  <span class="c1"># unnecessary in practice, see note above</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">joined</span>
 <span class="go">TabularMSA[DNA]</span>
 <span class="go">--------------------------</span>
@@ -302,10 +306,10 @@ join:</p>
 <span class="go">    sequence count: 2</span>
 <span class="go">    position count: 5</span>
 <span class="go">--------------------------</span>
-<span class="go">A-G-T</span>
 <span class="go">ACT--</span>
+<span class="go">A-G-T</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">joined</span><span class="o">.</span><span class="n">index</span>
-<span class="go">Index([&#39;b&#39;, &#39;a&#39;], dtype=&#39;object&#39;)</span>
+<span class="go">Index([&#39;a&#39;, &#39;b&#39;], dtype=&#39;object&#39;)</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">joined</span><span class="o">.</span><span class="n">positional_metadata</span>
 <span class="go">   col2</span>
 <span class="go">0     1</span>
@@ -319,6 +323,7 @@ join:</p>
 <code class="docutils literal"><span class="pre">'right'</span></code>), unshared sequences are padded with gaps and unshared
 <code class="docutils literal"><span class="pre">positional_metadata</span></code> columns are padded with NaN:</p>
 <div class="highlight-default"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">joined</span> <span class="o">=</span> <span class="n">msa1</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">msa2</span><span class="p">,</span> <span class="n">how</span><span class="o">=</span><span class="s1">&#39;outer&#39;</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">joined</span><span class="o">.</span><span class="n">sort</span><span class="p">()</span>  <span class="c1"># unnecessary in practice, see note above</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">joined</span>
 <span class="go">TabularMSA[DNA]</span>
 <span class="go">----------------------------</span>
@@ -363,7 +368,7 @@ join:</p>
     </p>
     <p>
         &copy; Copyright 2014--, scikit-bio development team.<br/>
-      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 1.5a0.<br/>
+      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 1.6.5.<br/>
     </p>
   </div>
 </footer>

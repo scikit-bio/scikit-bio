@@ -1,5 +1,5 @@
-skbio.tree.majority_rule
-========================
+skbio\.tree\.majority\_rule
+===========================
 
 .. currentmodule:: skbio.tree
 
