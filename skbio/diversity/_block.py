@@ -185,8 +185,8 @@ def _block_compute(**kwargs):
 def _map(func, kw_gen):
     """Map a function over arguments
 
-    Note
-    ----
+    Notes
+    -----
     builtin map does not allow for mapping with kwargs.
 
     Parallel uses of block decomposition will likely replace this method with
@@ -276,8 +276,8 @@ def block_beta_diversity(metric, counts, ids, validate=True, k=64,
         A distance matrix relating all samples represented by counts to each
         other.
 
-    Note
-    ----
+    Notes
+    -----
     This method is designed to facilitate computing beta diversity in parallel.
     In general, if you are processing a few hundred samples or less, then it is
     likely the case that `skbio.diversity.beta_diversity` will be faster. The

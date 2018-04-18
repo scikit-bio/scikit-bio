@@ -70,20 +70,7 @@ class NewAuto(autosummary.Autosummary):
 autosummary.Autosummary = NewAuto
 
 import sphinx_bootstrap_theme
-
-# We currently rely on the latest version of numpydoc available on GitHub:
-#   git+git://github.com/numpy/numpydoc.git
-#
-# There isn't a way to specify this in setup.py as a dependency since this
-# feature is being removed from pip. We also can't check the version of
-# numpydoc installed because there isn't a numpydoc.__version__ defined.
-try:
-    import numpydoc
-except ImportError:
-    raise RuntimeError(
-        "numpydoc v0.6 or later required. Install it with:\n"
-        "  pip install git+git://github.com/numpy/numpydoc.git@1a848331c2cf53"
-        "d4fe356f4607799524bcc577ed")
+import numpydoc
 
 @property
 def _extras(self):
@@ -119,7 +106,7 @@ from skbio.util._decorator import classproperty
 # If your documentation needs a minimal Sphinx version, state it here.
 # Using `sphinx_version` doesn't work, likely because Sphinx is expecting a
 # version string of the form X.Y, not X.Y.Z.
-needs_sphinx = '1.2'
+needs_sphinx = '1.6'
 
 # Add any Sphinx extension module names here, as strings. They can be
 # extensions coming with Sphinx (named 'sphinx.ext.*') or your custom
