@@ -10,7 +10,7 @@ import functools
 import itertools
 
 import numpy as np
-import scipy.spatial.distance
+import sklearn.metrics
 import pandas as pd
 
 import skbio
@@ -312,7 +312,7 @@ def beta_diversity(metric, counts, ids=None, validate=True, pairwise_func=None,
         ``numpy.ndarray`` of dissimilarities (floats). Examples of functions
         that can be provided are ``scipy.spatial.distance.pdist`` and
         ``sklearn.metrics.pairwise_distances``. By default,
-        ``scipy.spatial.distance.pdist`` will be used.
+        ``sklearn.metrics.pairwise_distances`` will be used.
     kwargs : kwargs, optional
         Metric-specific parameters.
 
@@ -368,7 +368,7 @@ def beta_diversity(metric, counts, ids=None, validate=True, pairwise_func=None,
         pass
 
     if pairwise_func is None:
-        pairwise_func = scipy.spatial.distance.pdist
+        pairwise_func = sklearn.metrics.pairwise_distances
 
     distances = pairwise_func(counts, metric=metric, **kwargs)
     return DistanceMatrix(distances, ids)
