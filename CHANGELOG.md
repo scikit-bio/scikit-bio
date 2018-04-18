@@ -23,6 +23,8 @@
 ### Bug fixes
 * The `include_self` parameter was not being honored in `skbio.TreeNode.tips`. The scope of this bug was that if `TreeNode.tips` was called on a tip, it would always result in an empty `list` when unrolled.
 
+* `skbio.diversity.beta_diversity` now handles qualitative metrics as expected such that `beta_diversity('jaccard', mat) == beta_diversity('jaccard', mat > 0)`. Please see [#1549](https://github.com/biocore/scikit-bio/issues/1549) for further detail.
+
 ### Deprecated functionality [stable]
 
 ### Deprecated functionality [experimental]
