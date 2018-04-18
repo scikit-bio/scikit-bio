@@ -181,8 +181,7 @@ def rda(y, x, scale_Y=False, scaling=1):
     # According to the vegan-FAQ.pdf, the scaling factor for scores
     # is (notice that L&L 1998 says in p. 586 that such scaling
     # doesn't affect the interpretation of a biplot):
-    pc_ids = ['RDA%d' % (i+1) for i in range(len(eigenvalues))]
-    eigvals = pd.Series(eigenvalues, index=pc_ids)
+    eigvals = pd.Series(eigenvalues, index=['RDA%d' % (i+1) for i in range(len(eigenvalues))])
     const = np.sum(eigenvalues**2)**0.25
     if scaling == 1:
         scaling_factor = const
@@ -193,14 +192,15 @@ def rda(y, x, scale_Y=False, scaling=1):
 
     feature_scores = pd.DataFrame(feature_scores,
                                   index=feature_ids,
-                                  columns=pc_ids)
+                                  columns=['RDA%d' % (i+1) for i in range(feature_scores.shape[1])])
     sample_scores = pd.DataFrame(sample_scores,
                                  index=sample_ids,
-                                 columns=pc_ids)
+                                 columns=['RDA%d' % (i+1) for i in range(sample_scores.shape[1])])
     # TODO not yet used/displayed
-    sample_constraints = pd.DataFrame(np.hstack((Z, F_res)) / scaling_factor,
+    sample_constraints = np.hstack((Z, F_res)) / scaling_factor
+    sample_constraints = pd.DataFrame(sample_constraints,
                                       index=sample_ids,
-                                      columns=pc_ids)
+                                      columns=['RDA%d' % (i+1) for i in range(sample_constraints.shape[1])])
     # Vegan seems to compute them as corr(X[:, :rank_X],
     # u) but I don't think that's a good idea. In fact, if
     # you take the example shown in Figure 11.3 in L&L 1998 you
@@ -210,12 +210,12 @@ def rda(y, x, scale_Y=False, scaling=1):
     biplot_scores = corr(X, u)
     biplot_scores = pd.DataFrame(biplot_scores,
                                  index=x.columns,
-                                 columns=pc_ids[:biplot_scores.shape[1]])
+                                 columns=['RDA%d' % (i+1) for i in range(biplot_scores.shape[1])])
     # The "Correlations of environmental variables with sample
     # scores" from table 11.4 are quite similar to vegan's biplot
     # scores, but they're computed like this:
     # corr(X, F))
-    p_explained = pd.Series(eigenvalues / eigenvalues.sum(), index=pc_ids)
+    p_explained = pd.Series(eigenvalues / eigenvalues.sum(), index=['RDA%d' % (i+1) for i in range(len(eigenvalues))])
     return OrdinationResults('RDA', 'Redundancy Analysis',
                              eigvals=eigvals,
                              proportion_explained=p_explained,
