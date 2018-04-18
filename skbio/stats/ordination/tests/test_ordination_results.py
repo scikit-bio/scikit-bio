@@ -196,7 +196,7 @@ class TestOrdinationResults(unittest.TestCase):
                                                         ['B', 'C'], 'jet')
 
         # id not in df
-        with self.assertRaisesRegex(ValueError, 'numeric'):
+        with self.assertRaisesRegex(ValueError, 'missingid'):
             self.min_ord_results._get_plot_point_colors(
                 self.df, 'numeric', ['B', 'C', 'missingid', 'A'], 'jet')
 
