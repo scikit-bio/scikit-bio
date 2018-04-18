@@ -122,7 +122,8 @@ setup(name='scikit-bio',
           'numpy >= 1.9.2, < 1.14.0',
           'pandas >= 0.19.2',
           'scipy >= 0.15.1',
-          'nose >= 1.3.7'
+          'nose >= 1.3.7',
+          'scikit-learn >= 0.19.1'
       ],
       test_suite='nose.collector',
       classifiers=classifiers,

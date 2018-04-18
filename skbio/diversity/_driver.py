@@ -10,7 +10,7 @@ import functools
 import itertools
 
 import numpy as np
-import scipy.spatial.distance
+import sklearn.metrics
 import pandas as pd
 
 import skbio
@@ -312,7 +312,7 @@ def beta_diversity(metric, counts, ids=None, validate=True, pairwise_func=None,
         ``numpy.ndarray`` of dissimilarities (floats). Examples of functions
         that can be provided are ``scipy.spatial.distance.pdist`` and
         ``sklearn.metrics.pairwise_distances``. By default,
-        ``scipy.spatial.distance.pdist`` will be used.
+        ``sklearn.metrics.pairwise_distances`` will be used.
     kwargs : kwargs, optional
         Metric-specific parameters.
 
@@ -342,6 +342,13 @@ def beta_diversity(metric, counts, ids=None, validate=True, pairwise_func=None,
     if validate:
         counts = _validate_counts_matrix(counts, ids=ids)
 
+    if 0 in counts.shape:
+        # if the input counts are empty, return an empty DistanceMatrix.
+        # this check is not necessary for scipy.spatial.distance.pdist but
+        # it is necessary for sklearn.metrics.pairwise_distances where the
+        # latter raises an exception over empty data.
+        return DistanceMatrix(np.zeros((len(ids), len(ids))), ids)
+
     if metric == 'unweighted_unifrac':
         otu_ids, tree, kwargs = _get_phylogenetic_kwargs(counts, **kwargs)
         metric, counts_by_node = _setup_multiple_unweighted_unifrac(
@@ -368,7 +375,7 @@ def beta_diversity(metric, counts, ids=None, validate=True, pairwise_func=None,
         pass
 
     if pairwise_func is None:
-        pairwise_func = scipy.spatial.distance.pdist
+        pairwise_func = sklearn.metrics.pairwise_distances
 
     distances = pairwise_func(counts, metric=metric, **kwargs)
     return DistanceMatrix(distances, ids)
