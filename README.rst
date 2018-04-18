@@ -21,7 +21,7 @@ The recommended way to install scikit-bio is via the ``conda`` package manager a
 
 To install the latest release of scikit-bio::
 
-    conda install -c https://conda.anaconda.org/biocore scikit-bio
+    conda install -c conda-forge scikit-bio
 
 Alternatively, you can install scikit-bio using ``pip``::
 
@@ -118,13 +118,13 @@ scikit-bio's logo was created by `Alina Prassas <http://cargocollective.com/alin
    :target: https://gitter.im/biocore/scikit-bio?utm_source=badge&utm_medium=badge&utm_campaign=pr-badge&utm_content=badge
 .. |Depsy Badge| image:: http://depsy.org/api/package/pypi/scikit-bio/badge.svg
    :target: http://depsy.org/package/python/scikit-bio
-.. |Anaconda Cloud Build| image:: https://anaconda.org/biocore/scikit-bio/badges/build.svg
+.. |Anaconda Cloud Build| image:: https://anaconda.org/conda-forge/scikit-bio/badges/build.svg
    :target: https://anaconda.org/biocore/scikit-bio/builds
-.. |Anaconda Cloud| image:: https://anaconda.org/biocore/scikit-bio/badges/version.svg
-   :target: https://anaconda.org/biocore/scikit-bio
-.. |License| image:: https://anaconda.org/biocore/scikit-bio/badges/license.svg
-   :target: https://anaconda.org/biocore/scikit-bio
-.. |Downloads| image:: https://anaconda.org/biocore/scikit-bio/badges/downloads.svg
-   :target: https://anaconda.org/biocore/scikit-bio
-.. |Install| image:: https://anaconda.org/biocore/scikit-bio/badges/installer/conda.svg
-   :target: https://conda.anaconda.org/biocore
+.. |Anaconda Cloud| image:: https://anaconda.org/conda-forge/scikit-bio/badges/version.svg
+   :target: https://anaconda.org/conda-forge/scikit-bio
+.. |License| image:: https://anaconda.org/conda-forge/scikit-bio/badges/license.svg
+   :target: https://anaconda.org/conda-forge/scikit-bio
+.. |Downloads| image:: https://anaconda.org/conda-forge/scikit-bio/badges/downloads.svg
+   :target: https://anaconda.org/conda-forge/scikit-bio
+.. |Install| image:: https://anaconda.org/conda-forge/scikit-bio/badges/installer/conda.svg
+   :target: https://conda.anaconda.org/conda-forge
