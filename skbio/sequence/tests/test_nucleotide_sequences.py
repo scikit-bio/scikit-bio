@@ -326,11 +326,11 @@ class TestNucleotideSequence(unittest.TestCase):
             rc = constructor(seq_str).complement(reverse=True)
             self.assertEqual(rc, constructor(rev_comp_str))
 
-            l = len(seq_str)
-            im = IntervalMetadata(l)
+            length = len(seq_str)
+            im = IntervalMetadata(length)
             im.add([(0, 1)], metadata={'gene': 'p53'})
-            im_rc = IntervalMetadata(l)
-            im_rc.add([(l-1, l)], metadata={'gene': 'p53'})
+            im_rc = IntervalMetadata(length)
+            im_rc.add([(length-1, length)], metadata={'gene': 'p53'})
             original = constructor(
                 seq_str,
                 metadata={'id': 'foo', 'description': 'bar'},

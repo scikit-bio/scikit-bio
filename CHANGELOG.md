@@ -2,6 +2,8 @@
 
 ## Version 0.5.1-dev (changes since 0.5.1 go here)
 
+* Added ``skbio.io.format.embl`` for reading and writing EMBL files for ``DNA``, ``RNA`` and ``Sequence`` classes.
+
 ### Features
 * Removing ValueError check in `skbio.stats._subsample.subsample_counts` when `replace=True` and `n` is greater than the number of items in counts.  [#1527](https://github.com/biocore/scikit-bio/pull/1527)
 
@@ -24,11 +26,19 @@
 ### Bug fixes
 * The `include_self` parameter was not being honored in `skbio.TreeNode.tips`. The scope of this bug was that if `TreeNode.tips` was called on a tip, it would always result in an empty `list` when unrolled.
 
+* In `skbio.stats.ordination.ca`, `proportion_explained` was missing in the returned `OrdinationResults` object. ([#1345](https://github.com/biocore/scikit-bio/issues/1345))
+
+* `skbio.diversity.beta_diversity` now handles qualitative metrics as expected such that `beta_diversity('jaccard', mat) == beta_diversity('jaccard', mat > 0)`. Please see [#1549](https://github.com/biocore/scikit-bio/issues/1549) for further detail.
+
+* `skbio.stats.ordination.rda` The occasional column mismatch in output `biplot_scores` is fixed ([#1519](https://github.com/biocore/scikit-bio/issues/1519)).
+
 ### Deprecated functionality [stable]
 
 ### Deprecated functionality [experimental]
 
 ### Miscellaneous
+* scikit-bio now depends on pandas >= 0.19.2, and is compatible with newer pandas versions (e.g. 0.20.3) that were previously incompatible.
+* scikit-bio now depends on `numpy >= 1.9.2, < 1.14.0` for compatibility with Python 3.4, 3.5, and 3.6 and the available numpy conda packages in `defaults` and `conda-forge` channels.
 * added support for running tests from `setup.py`. Both `python setup.py nosetests` and `python setup.py test` are now supported, however `python setup.py test` will only run a subset of the full test suite. ([#1341](https://github.com/biocore/scikit-bio/issues/1341))
 
 ## Version 0.5.1 (2016-11-12)
