@@ -1,0 +1,592 @@
+<!DOCTYPE html>
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    <title>GenBank format (skbio.io.format.genbank) &#8212; scikit-bio 0.5.2 documentation</title>
+    <link rel="stylesheet" href="../_static/bootstrap-sphinx.css" type="text/css" />
+    <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
+    <link rel="stylesheet" href="../_static/style.css" type="text/css" />
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    '../',
+        VERSION:     '0.5.2',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true,
+        SOURCELINK_SUFFIX: '.txt'
+      };
+    </script>
+    <script type="text/javascript" src="../_static/jquery.js"></script>
+    <script type="text/javascript" src="../_static/underscore.js"></script>
+    <script type="text/javascript" src="../_static/doctools.js"></script>
+    <script type="text/javascript" src="../_static/copybutton.js"></script>
+    <script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.1/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
+    <script type="text/javascript" src="../_static/js/jquery-1.11.0.min.js"></script>
+    <script type="text/javascript" src="../_static/js/jquery-fix.js"></script>
+    <script type="text/javascript" src="../_static/bootstrap-3.3.7/js/bootstrap.min.js"></script>
+    <script type="text/javascript" src="../_static/bootstrap-sphinx.js"></script>
+    <link rel="index" title="Index" href="../genindex.html" />
+    <link rel="search" title="Search" href="../search.html" />
+    <link rel="next" title="GFF3 format (skbio.io.format.gff3)" href="skbio.io.format.gff3.html" />
+    <link rel="prev" title="FASTQ format (skbio.io.format.fastq)" href="skbio.io.format.fastq.html" />
+<meta charset='utf-8'>
+<meta http-equiv='X-UA-Compatible' content='IE=edge,chrome=1'>
+<meta name='viewport' content='width=device-width, initial-scale=1.0, maximum-scale=1'>
+<meta name="apple-mobile-web-app-capable" content="yes">
+
+  </head>
+  <body>
+  
+  <a href="https://github.com/biocore/scikit-bio"
+     class="visible-desktop hidden-xs"><img
+    id="gh-banner"
+    style="position: absolute; top: 50px; right: 0; border: 0;"
+    src="https://s3.amazonaws.com/github/ribbons/forkme_right_darkblue_121621.png"
+    alt="Fork me on GitHub"></a>
+  <script>
+    // Adjust banner height.
+    $(function () {
+      var navHeight = $(".navbar .container").css("height");
+      $("#gh-banner").css("top", navHeight);
+    });
+  </script>
+
+
+  <div id="navbar" class="navbar navbar-default navbar-fixed-top">
+    <div class="container">
+      <div class="navbar-header">
+        <!-- .btn-navbar is used as the toggle for collapsed navbar content -->
+        <button type="button" class="navbar-toggle" data-toggle="collapse" data-target=".nav-collapse">
+          <span class="icon-bar"></span>
+          <span class="icon-bar"></span>
+          <span class="icon-bar"></span>
+        </button>
+        <a class="navbar-brand" href="../index.html">
+          scikit-bio docs</a>
+        <span class="navbar-text navbar-version pull-left"><b>0.5.2</b></span>
+      </div>
+
+        <div class="collapse navbar-collapse nav-collapse">
+          <ul class="nav navbar-nav">
+            
+            
+              <li class="dropdown globaltoc-container">
+  <a role="button"
+     id="dLabelGlobalToc"
+     data-toggle="dropdown"
+     data-target="#"
+     href="../index.html">Site <b class="caret"></b></a>
+  <ul class="dropdown-menu globaltoc"
+      role="menu"
+      aria-labelledby="dLabelGlobalToc"><ul class="current">
+<li class="toctree-l1 current"><a class="reference internal" href="../io.html">File I/O (<code class="docutils literal"><span class="pre">skbio.io</span></code>)</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../sequence.html">Sequences (<code class="docutils literal"><span class="pre">skbio.sequence</span></code>)</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../alignment.html">Alignments (<code class="docutils literal"><span class="pre">skbio.alignment</span></code>)</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../tree.html">Tree representations (<code class="docutils literal"><span class="pre">skbio.tree</span></code>)</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../workflow.html">Constructing workflows (<code class="docutils literal"><span class="pre">skbio.workflow</span></code>)</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../diversity.html">Diversity calculations (<code class="docutils literal"><span class="pre">skbio.diversity</span></code>)</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../stats.html">Statistics (<code class="docutils literal"><span class="pre">skbio.stats</span></code>)</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../metadata.html">Metadata (<code class="docutils literal"><span class="pre">skbio.metadata</span></code>)</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../util.html">Utility functionality (<code class="docutils literal"><span class="pre">skbio.util</span></code>)</a></li>
+</ul>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../user/api_stability.html">API Stability</a></li>
+</ul>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../development/coding_guidelines.html">Coding guidelines</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../development/new_module.html">Adding a new module to skbio</a></li>
+</ul>
+</ul>
+</li>
+              
+                <li class="dropdown">
+  <a role="button"
+     id="dLabelLocalToc"
+     data-toggle="dropdown"
+     data-target="#"
+     href="#">Page <b class="caret"></b></a>
+  <ul class="dropdown-menu localtoc"
+      role="menu"
+      aria-labelledby="dLabelLocalToc"><ul>
+<li><a class="reference internal" href="#">GenBank format (<code class="docutils literal"><span class="pre">skbio.io.format.genbank</span></code>)</a><ul>
+<li><a class="reference internal" href="#format-support">Format Support</a></li>
+<li><a class="reference internal" href="#format-specification">Format Specification</a><ul>
+<li><a class="reference internal" href="#sections-before-features">Sections before <code class="docutils literal"><span class="pre">FEATURES</span></code></a></li>
+<li><a class="reference internal" href="#features-section"><code class="docutils literal"><span class="pre">FEATURES</span></code> section</a><ul>
+<li><a class="reference internal" href="#location-string"><code class="docutils literal"><span class="pre">Location</span></code> string</a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#origin-section"><code class="docutils literal"><span class="pre">ORIGIN</span></code> section</a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#format-parameters">Format Parameters</a><ul>
+<li><a class="reference internal" href="#reader-specific-parameters">Reader-specific Parameters</a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#examples">Examples</a><ul>
+<li><a class="reference internal" href="#reading-and-writing-genbank-files">Reading and Writing GenBank Files</a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#references">References</a></li>
+</ul>
+</li>
+</ul>
+</ul>
+</li>
+              
+            
+            
+            
+            
+            
+          </ul>
+
+          
+            
+<form class="navbar-form navbar-right" action="../search.html" method="get">
+ <div class="form-group">
+  <input type="text" name="q" class="form-control" placeholder="Search" />
+ </div>
+  <input type="hidden" name="check_keywords" value="yes" />
+  <input type="hidden" name="area" value="default" />
+</form>
+          
+        </div>
+    </div>
+  </div>
+
+<div class="container">
+  <div class="row">
+    <div class="col-md-12 content">
+      
+  <span class="target" id="module-skbio.io.format.genbank"></span><div class="section" id="genbank-format-skbio-io-format-genbank">
+<h1>GenBank format (<a class="reference internal" href="#module-skbio.io.format.genbank" title="skbio.io.format.genbank"><code class="xref py py-mod docutils literal"><span class="pre">skbio.io.format.genbank</span></code></a>)<a class="headerlink" href="#genbank-format-skbio-io-format-genbank" title="Permalink to this headline">¶</a></h1>
+<p>GenBank format (GenBank Flat File Format) stores sequence and its
+annotation together. The start of the annotation section is marked by
+a line beginning with the word “LOCUS”. The start of sequence section
+is marked by a line beginning with the word “ORIGIN” and the end of
+the section is marked by a line with only “//”.</p>
+<p>The GenBank file usually ends with .gb or sometimes .gbk. The GenBank
+format for protein has been renamed to GenPept. The GenBank (for
+nucleotide) and Genpept are essentially the same format. An example of
+a GenBank file can be seen here <a class="reference internal" href="#r334" id="id1">[R334]</a>.</p>
+<div class="section" id="format-support">
+<h2>Format Support<a class="headerlink" href="#format-support" title="Permalink to this headline">¶</a></h2>
+<p><strong>Has Sniffer: Yes</strong></p>
+<table border="1" class="docutils">
+<colgroup>
+<col width="8%" />
+<col width="8%" />
+<col width="84%" />
+</colgroup>
+<thead valign="bottom">
+<tr class="row-odd"><th class="head">Reader</th>
+<th class="head">Writer</th>
+<th class="head">Object Class</th>
+</tr>
+</thead>
+<tbody valign="top">
+<tr class="row-even"><td>Yes</td>
+<td>Yes</td>
+<td><a class="reference internal" href="skbio.sequence.Sequence.html#skbio.sequence.Sequence" title="skbio.sequence.Sequence"><code class="xref py py-mod docutils literal"><span class="pre">skbio.sequence.Sequence</span></code></a></td>
+</tr>
+<tr class="row-odd"><td>Yes</td>
+<td>Yes</td>
+<td><a class="reference internal" href="skbio.sequence.DNA.html#skbio.sequence.DNA" title="skbio.sequence.DNA"><code class="xref py py-mod docutils literal"><span class="pre">skbio.sequence.DNA</span></code></a></td>
+</tr>
+<tr class="row-even"><td>Yes</td>
+<td>Yes</td>
+<td><a class="reference internal" href="skbio.sequence.RNA.html#skbio.sequence.RNA" title="skbio.sequence.RNA"><code class="xref py py-mod docutils literal"><span class="pre">skbio.sequence.RNA</span></code></a></td>
+</tr>
+<tr class="row-odd"><td>Yes</td>
+<td>Yes</td>
+<td><a class="reference internal" href="skbio.sequence.Protein.html#skbio.sequence.Protein" title="skbio.sequence.Protein"><code class="xref py py-mod docutils literal"><span class="pre">skbio.sequence.Protein</span></code></a></td>
+</tr>
+<tr class="row-even"><td>Yes</td>
+<td>Yes</td>
+<td>generator of <a class="reference internal" href="skbio.sequence.Sequence.html#skbio.sequence.Sequence" title="skbio.sequence.Sequence"><code class="xref py py-mod docutils literal"><span class="pre">skbio.sequence.Sequence</span></code></a> objects</td>
+</tr>
+</tbody>
+</table>
+</div>
+<div class="section" id="format-specification">
+<h2>Format Specification<a class="headerlink" href="#format-specification" title="Permalink to this headline">¶</a></h2>
+<p><strong>State: Experimental as of 0.4.1.</strong></p>
+<div class="section" id="sections-before-features">
+<h3>Sections before <code class="docutils literal"><span class="pre">FEATURES</span></code><a class="headerlink" href="#sections-before-features" title="Permalink to this headline">¶</a></h3>
+<p>All the sections before <code class="docutils literal"><span class="pre">FEATURES</span></code> will be read into the attribute
+of <code class="docutils literal"><span class="pre">metadata</span></code>. The header and its content of a section is stored as
+a pair of key and value in <code class="docutils literal"><span class="pre">metadata</span></code>. For the <code class="docutils literal"><span class="pre">REFERENCE</span></code>
+section, its value is stored as a list, as there are often multiple
+reference sections in one GenBank record.</p>
+</div>
+<div class="section" id="features-section">
+<span id="genbank-feature-section"></span><h3><code class="docutils literal"><span class="pre">FEATURES</span></code> section<a class="headerlink" href="#features-section" title="Permalink to this headline">¶</a></h3>
+<p>The International Nucleotide Sequence Database Collaboration (INSDC
+<a class="reference internal" href="#r335" id="id2">[R335]</a>) is a joint effort among the DDBJ, EMBL, and GenBank. These
+organisations all use the same “Feature Table” layout in their plain
+text flat file formats, which are documented in detail <a class="reference internal" href="#r336" id="id3">[R336]</a>. The
+feature keys and their qualifiers are also described in this webpage
+<a class="reference internal" href="#r337" id="id4">[R337]</a>.</p>
+<p>The <code class="docutils literal"><span class="pre">FEATURES</span></code> section will be stored in <code class="docutils literal"><span class="pre">interval_metadata</span></code> of
+<code class="docutils literal"><span class="pre">Sequence</span></code> or its sub-class. Each sub-section is stored as an
+<code class="docutils literal"><span class="pre">Interval</span></code> object in <code class="docutils literal"><span class="pre">interval_metadata</span></code>. Each <code class="docutils literal"><span class="pre">Interval</span></code> object
+has <code class="docutils literal"><span class="pre">metadata</span></code> keeping the information of this feature in the
+sub-section.</p>
+<p>To normalize the vocabulary between multiple formats (currently only
+the INSDC Feature Table and GFF3) to store metadata of interval
+features, we rename some terms in some formats to the same common name
+when parsing them into memory, as described in this table:</p>
+<table border="1" class="docutils">
+<colgroup>
+<col width="15%" />
+<col width="15%" />
+<col width="15%" />
+<col width="13%" />
+<col width="42%" />
+</colgroup>
+<thead valign="bottom">
+<tr class="row-odd"><th class="head">INSDC
+feature
+table</th>
+<th class="head">GFF3
+columns or
+attributes</th>
+<th class="head">Key stored</th>
+<th class="head">Value
+type
+stored</th>
+<th class="head">Description</th>
+</tr>
+</thead>
+<tbody valign="top">
+<tr class="row-even"><td>inference</td>
+<td>source
+(column 2)</td>
+<td>source</td>
+<td>str</td>
+<td>the algorithm or experiment
+used to generate this feature</td>
+</tr>
+<tr class="row-odd"><td>feature key</td>
+<td>type
+(column 3)</td>
+<td>type</td>
+<td>str</td>
+<td>the type of the feature</td>
+</tr>
+<tr class="row-even"><td>N/A</td>
+<td>score
+(column 6)</td>
+<td>score</td>
+<td>float</td>
+<td>the score of the feature</td>
+</tr>
+<tr class="row-odd"><td>N/A</td>
+<td>strand
+(column 7)</td>
+<td>strand</td>
+<td>str</td>
+<td>the strand of the feature. +
+for positive strand, - for
+minus strand, and . for
+features that are not
+stranded. In addition, ?  can
+be used for features whose
+strandedness is relevant, but
+unknown.</td>
+</tr>
+<tr class="row-even"><td>codon_start</td>
+<td>phase
+(column 8)</td>
+<td>phase</td>
+<td>int</td>
+<td>the offset at which the first
+complete codon of a coding
+feature can be found, relative
+to the first base of that
+feature. It is 0, 1, or 2 in
+GFF3 or 1, 2, or 3 in GenBank.
+The stored value is 0, 1, or
+2, following in GFF3 format.</td>
+</tr>
+<tr class="row-odd"><td>db_xref</td>
+<td>Dbxref</td>
+<td>db_xref</td>
+<td>list of
+str</td>
+<td>A database cross reference</td>
+</tr>
+<tr class="row-even"><td>N/A</td>
+<td>ID</td>
+<td>ID</td>
+<td>str</td>
+<td>feature ID</td>
+</tr>
+<tr class="row-odd"><td>note</td>
+<td>Note</td>
+<td>note</td>
+<td>str</td>
+<td>any comment or additional
+information</td>
+</tr>
+<tr class="row-even"><td>translation</td>
+<td>N/A</td>
+<td>translation</td>
+<td>str</td>
+<td>the protein sequence for CDS
+features</td>
+</tr>
+</tbody>
+</table>
+<div class="section" id="location-string">
+<h4><code class="docutils literal"><span class="pre">Location</span></code> string<a class="headerlink" href="#location-string" title="Permalink to this headline">¶</a></h4>
+<p>There are 5 types of location descriptors defined in Feature
+Table. This explains how they will be parsed into the bounds of
+<code class="docutils literal"><span class="pre">Interval</span></code> object (note it converts the 1-based coordinate to
+0-based):</p>
+<blockquote>
+<div><ol class="arabic simple">
+<li>a single base number. e.g. 67. This is parsed to <code class="docutils literal"><span class="pre">(66,</span> <span class="pre">67)</span></code>.</li>
+<li>a site between two neighboring bases. e.g. 67^68. This
+is parsed to <code class="docutils literal"><span class="pre">(66,</span> <span class="pre">67)</span></code>.</li>
+<li>a single base from inside a range. e.g. 67.89. This is parsed to
+<code class="docutils literal"><span class="pre">(66,</span> <span class="pre">89)</span></code>.</li>
+<li>a pair of base numbers defining a sequence span. e.g. 67..89. This
+is parsed to <code class="docutils literal"><span class="pre">(66,</span> <span class="pre">89)</span></code>.</li>
+<li>a remote sequence identifier followed by a location descriptor
+defined above. e.g. J00123.1:67..89. This will be discarded
+because it is not on the current sequence. When it is combined
+with local descriptor like J00123.1:67..89,200..209, the
+local part will be kept to be <code class="docutils literal"><span class="pre">(199,</span> <span class="pre">209)</span></code>.</li>
+</ol>
+</div></blockquote>
+<div class="admonition note">
+<p class="first admonition-title">Note</p>
+<p class="last">The Location string is fully stored in <code class="docutils literal"><span class="pre">Interval.metadata</span></code>
+with key <code class="docutils literal"><span class="pre">__location</span></code>.  The key starting with <code class="docutils literal"><span class="pre">__</span></code> is “private”
+and should be modified with care.</p>
+</div>
+</div>
+</div>
+<div class="section" id="origin-section">
+<h3><code class="docutils literal"><span class="pre">ORIGIN</span></code> section<a class="headerlink" href="#origin-section" title="Permalink to this headline">¶</a></h3>
+<p>The sequence in the <code class="docutils literal"><span class="pre">ORIGIN</span></code> section is always in lowercase for
+the GenBank files downloaded from NCBI. For the RNA molecules, <code class="docutils literal"><span class="pre">t</span></code>
+(thymine), instead of <code class="docutils literal"><span class="pre">u</span></code> (uracil) is used in the sequence. All
+GenBank writers follow these conventions while writing GenBank files.</p>
+</div>
+</div>
+<div class="section" id="format-parameters">
+<h2>Format Parameters<a class="headerlink" href="#format-parameters" title="Permalink to this headline">¶</a></h2>
+<div class="section" id="reader-specific-parameters">
+<h3>Reader-specific Parameters<a class="headerlink" href="#reader-specific-parameters" title="Permalink to this headline">¶</a></h3>
+<p>The <code class="docutils literal"><span class="pre">constructor</span></code> parameter can be used with the <code class="docutils literal"><span class="pre">Sequence</span></code> generator
+to specify the in-memory type of each GenBank record that is parsed.
+<code class="docutils literal"><span class="pre">constructor</span></code> should be <code class="docutils literal"><span class="pre">Sequence</span></code> or a sub-class of <code class="docutils literal"><span class="pre">Sequence</span></code>.
+It is also detected by the unit label on the LOCUS line. For example, if it
+is <code class="docutils literal"><span class="pre">bp</span></code>, it will be read into <code class="docutils literal"><span class="pre">DNA</span></code>; if it is <code class="docutils literal"><span class="pre">aa</span></code>, it will be read
+into <code class="docutils literal"><span class="pre">Protein</span></code>. Otherwise, it will be read into <code class="docutils literal"><span class="pre">Sequence</span></code>. This default
+behavior is overridden by setting <code class="docutils literal"><span class="pre">constructor</span></code>.</p>
+<p><code class="docutils literal"><span class="pre">lowercase</span></code> is another parameter available for all GenBank readers.
+By default, it is set to <code class="docutils literal"><span class="pre">True</span></code> to read in the <code class="docutils literal"><span class="pre">ORIGIN</span></code> sequence
+as lowercase letters. This parameter is passed to <code class="docutils literal"><span class="pre">Sequence</span></code> or
+its sub-class constructor.</p>
+<p><code class="docutils literal"><span class="pre">seq_num</span></code> is a parameter used with the <code class="docutils literal"><span class="pre">Sequence</span></code>, <code class="docutils literal"><span class="pre">DNA</span></code>, <code class="docutils literal"><span class="pre">RNA</span></code>, and
+<code class="docutils literal"><span class="pre">Protein</span></code> GenBank readers. It specifies which GenBank record to read from
+a GenBank file with multiple records in it.</p>
+</div>
+</div>
+<div class="section" id="examples">
+<h2>Examples<a class="headerlink" href="#examples" title="Permalink to this headline">¶</a></h2>
+<div class="section" id="reading-and-writing-genbank-files">
+<h3>Reading and Writing GenBank Files<a class="headerlink" href="#reading-and-writing-genbank-files" title="Permalink to this headline">¶</a></h3>
+<p>Suppose we have the following GenBank file example modified from <a class="reference internal" href="#r338" id="id5">[R338]</a>:</p>
+<div class="highlight-default"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">gb_str</span> <span class="o">=</span> <span class="s1">&#39;&#39;&#39;</span>
+<span class="gp">... </span><span class="s1">LOCUS       3K1V_A       34 bp    RNA     linear   SYN 10-OCT-2012</span>
+<span class="gp">... </span><span class="s1">DEFINITION  Chain A, Structure Of A Mutant Class-I Preq1.</span>
+<span class="gp">... </span><span class="s1">ACCESSION   3K1V_A</span>
+<span class="gp">... </span><span class="s1">VERSION     3K1V_A  GI:260656459</span>
+<span class="gp">... </span><span class="s1">KEYWORDS    .</span>
+<span class="gp">... </span><span class="s1">SOURCE      synthetic construct</span>
+<span class="gp">... </span><span class="s1">  ORGANISM  synthetic construct</span>
+<span class="gp">... </span><span class="s1">            other sequences; artificial sequences.</span>
+<span class="gp">... </span><span class="s1">REFERENCE   1  (bases 1 to 34)</span>
+<span class="gp">... </span><span class="s1">  AUTHORS   Klein,D.J., Edwards,T.E. and Ferre-D&#39;Amare,A.R.</span>
+<span class="gp">... </span><span class="s1">  TITLE     Cocrystal structure of a class I preQ1 riboswitch</span>
+<span class="gp">... </span><span class="s1">  JOURNAL   Nat. Struct. Mol. Biol. 16 (3), 343-344 (2009)</span>
+<span class="gp">... </span><span class="s1">   PUBMED   19234468</span>
+<span class="gp">... </span><span class="s1">COMMENT     SEQRES.</span>
+<span class="gp">... </span><span class="s1">FEATURES             Location/Qualifiers</span>
+<span class="gp">... </span><span class="s1">     source          1..34</span>
+<span class="gp">... </span><span class="s1">                     /organism=&quot;synthetic construct&quot;</span>
+<span class="gp">... </span><span class="s1">                     /mol_type=&quot;other RNA&quot;</span>
+<span class="gp">... </span><span class="s1">                     /db_xref=&quot;taxon:32630&quot;</span>
+<span class="gp">... </span><span class="s1">     misc_binding    1..30</span>
+<span class="gp">... </span><span class="s1">                     /note=&quot;Preq1 riboswitch&quot;</span>
+<span class="gp">... </span><span class="s1">                     /bound_moiety=&quot;preQ1&quot;</span>
+<span class="gp">... </span><span class="s1">ORIGIN</span>
+<span class="gp">... </span><span class="s1">        1 agaggttcta gcacatccct ctataaaaaa ctaa</span>
+<span class="gp">... </span><span class="s1">//</span>
+<span class="gp">... </span><span class="s1">&#39;&#39;&#39;</span>
+</pre></div>
+</div>
+<p>Now we can read it as <code class="docutils literal"><span class="pre">DNA</span></code> object:</p>
+<div class="highlight-default"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="kn">import</span> <span class="nn">io</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">skbio</span> <span class="k">import</span> <span class="n">DNA</span><span class="p">,</span> <span class="n">RNA</span><span class="p">,</span> <span class="n">Sequence</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">gb</span> <span class="o">=</span> <span class="n">io</span><span class="o">.</span><span class="n">StringIO</span><span class="p">(</span><span class="n">gb_str</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">dna_seq</span> <span class="o">=</span> <span class="n">DNA</span><span class="o">.</span><span class="n">read</span><span class="p">(</span><span class="n">gb</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">dna_seq</span>
+<span class="go">DNA</span>
+<span class="go">-----------------------------------------------------------------</span>
+<span class="go">Metadata:</span>
+<span class="go">    &#39;ACCESSION&#39;: &#39;3K1V_A&#39;</span>
+<span class="go">    &#39;COMMENT&#39;: &#39;SEQRES.&#39;</span>
+<span class="go">    &#39;DEFINITION&#39;: &#39;Chain A, Structure Of A Mutant Class-I Preq1.&#39;</span>
+<span class="go">    &#39;KEYWORDS&#39;: &#39;.&#39;</span>
+<span class="go">    &#39;LOCUS&#39;: &lt;class &#39;dict&#39;&gt;</span>
+<span class="go">    &#39;REFERENCE&#39;: &lt;class &#39;list&#39;&gt;</span>
+<span class="go">    &#39;SOURCE&#39;: &lt;class &#39;dict&#39;&gt;</span>
+<span class="go">    &#39;VERSION&#39;: &#39;3K1V_A  GI:260656459&#39;</span>
+<span class="go">Interval metadata:</span>
+<span class="go">    2 interval features</span>
+<span class="go">Stats:</span>
+<span class="go">    length: 34</span>
+<span class="go">    has gaps: False</span>
+<span class="go">    has degenerates: False</span>
+<span class="go">    has definites: True</span>
+<span class="go">    GC-content: 35.29%</span>
+<span class="go">-----------------------------------------------------------------</span>
+<span class="go">0 AGAGGTTCTA GCACATCCCT CTATAAAAAA CTAA</span>
+</pre></div>
+</div>
+<p>Since this is a riboswitch molecule, we may want to read it as
+<code class="docutils literal"><span class="pre">RNA</span></code>.  As the GenBank file usually have <code class="docutils literal"><span class="pre">t</span></code> instead of <code class="docutils literal"><span class="pre">u</span></code> in
+the sequence, we can read it as <code class="docutils literal"><span class="pre">RNA</span></code> by converting <code class="docutils literal"><span class="pre">t</span></code> to <code class="docutils literal"><span class="pre">u</span></code>:</p>
+<div class="highlight-default"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">gb</span> <span class="o">=</span> <span class="n">io</span><span class="o">.</span><span class="n">StringIO</span><span class="p">(</span><span class="n">gb_str</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">rna_seq</span> <span class="o">=</span> <span class="n">RNA</span><span class="o">.</span><span class="n">read</span><span class="p">(</span><span class="n">gb</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">rna_seq</span>
+<span class="go">RNA</span>
+<span class="go">-----------------------------------------------------------------</span>
+<span class="go">Metadata:</span>
+<span class="go">    &#39;ACCESSION&#39;: &#39;3K1V_A&#39;</span>
+<span class="go">    &#39;COMMENT&#39;: &#39;SEQRES.&#39;</span>
+<span class="go">    &#39;DEFINITION&#39;: &#39;Chain A, Structure Of A Mutant Class-I Preq1.&#39;</span>
+<span class="go">    &#39;KEYWORDS&#39;: &#39;.&#39;</span>
+<span class="go">    &#39;LOCUS&#39;: &lt;class &#39;dict&#39;&gt;</span>
+<span class="go">    &#39;REFERENCE&#39;: &lt;class &#39;list&#39;&gt;</span>
+<span class="go">    &#39;SOURCE&#39;: &lt;class &#39;dict&#39;&gt;</span>
+<span class="go">    &#39;VERSION&#39;: &#39;3K1V_A  GI:260656459&#39;</span>
+<span class="go">Interval metadata:</span>
+<span class="go">    2 interval features</span>
+<span class="go">Stats:</span>
+<span class="go">    length: 34</span>
+<span class="go">    has gaps: False</span>
+<span class="go">    has degenerates: False</span>
+<span class="go">    has definites: True</span>
+<span class="go">    GC-content: 35.29%</span>
+<span class="go">-----------------------------------------------------------------</span>
+<span class="go">0 AGAGGUUCUA GCACAUCCCU CUAUAAAAAA CUAA</span>
+</pre></div>
+</div>
+<div class="highlight-default"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">rna_seq</span> <span class="o">==</span> <span class="n">dna_seq</span><span class="o">.</span><span class="n">transcribe</span><span class="p">()</span>
+<span class="go">True</span>
+</pre></div>
+</div>
+<div class="highlight-default"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="k">with</span> <span class="n">io</span><span class="o">.</span><span class="n">StringIO</span><span class="p">()</span> <span class="k">as</span> <span class="n">fh</span><span class="p">:</span>
+<span class="gp">... </span>    <span class="nb">print</span><span class="p">(</span><span class="n">dna_seq</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="n">fh</span><span class="p">,</span> <span class="nb">format</span><span class="o">=</span><span class="s1">&#39;genbank&#39;</span><span class="p">)</span><span class="o">.</span><span class="n">getvalue</span><span class="p">())</span>
+<span class="go">LOCUS       3K1V_A   34 bp   RNA   linear   SYN   10-OCT-2012</span>
+<span class="go">DEFINITION  Chain A, Structure Of A Mutant Class-I Preq1.</span>
+<span class="go">ACCESSION   3K1V_A</span>
+<span class="go">VERSION     3K1V_A  GI:260656459</span>
+<span class="go">KEYWORDS    .</span>
+<span class="go">SOURCE      synthetic construct</span>
+<span class="go">  ORGANISM  synthetic construct</span>
+<span class="go">            other sequences; artificial sequences.</span>
+<span class="go">REFERENCE   1  (bases 1 to 34)</span>
+<span class="go">  AUTHORS   Klein,D.J., Edwards,T.E. and Ferre-D&#39;Amare,A.R.</span>
+<span class="go">  TITLE     Cocrystal structure of a class I preQ1 riboswitch</span>
+<span class="go">  JOURNAL   Nat. Struct. Mol. Biol. 16 (3), 343-344 (2009)</span>
+<span class="go">  PUBMED    19234468</span>
+<span class="go">COMMENT     SEQRES.</span>
+<span class="go">FEATURES             Location/Qualifiers</span>
+<span class="go">     source          1..34</span>
+<span class="go">                     /db_xref=&quot;taxon:32630&quot;</span>
+<span class="go">                     /mol_type=&quot;other RNA&quot;</span>
+<span class="go">                     /organism=&quot;synthetic construct&quot;</span>
+<span class="go">     misc_binding    1..30</span>
+<span class="go">                     /bound_moiety=&quot;preQ1&quot;</span>
+<span class="go">                     /note=&quot;Preq1 riboswitch&quot;</span>
+<span class="go">ORIGIN</span>
+<span class="go">        1 agaggttcta gcacatccct ctataaaaaa ctaa</span>
+<span class="go">//</span>
+</pre></div>
+</div>
+</div>
+</div>
+<div class="section" id="references">
+<h2>References<a class="headerlink" href="#references" title="Permalink to this headline">¶</a></h2>
+<table class="docutils citation" frame="void" id="r334" rules="none">
+<colgroup><col class="label" /><col /></colgroup>
+<tbody valign="top">
+<tr><td class="label"><a class="fn-backref" href="#id1">[R334]</a></td><td><a class="reference external" href="http://www.ncbi.nlm.nih.gov/Sitemap/samplerecord.html">http://www.ncbi.nlm.nih.gov/Sitemap/samplerecord.html</a></td></tr>
+</tbody>
+</table>
+<table class="docutils citation" frame="void" id="r335" rules="none">
+<colgroup><col class="label" /><col /></colgroup>
+<tbody valign="top">
+<tr><td class="label"><a class="fn-backref" href="#id2">[R335]</a></td><td><a class="reference external" href="http://www.insdc.org/">http://www.insdc.org/</a></td></tr>
+</tbody>
+</table>
+<table class="docutils citation" frame="void" id="r336" rules="none">
+<colgroup><col class="label" /><col /></colgroup>
+<tbody valign="top">
+<tr><td class="label"><a class="fn-backref" href="#id3">[R336]</a></td><td><a class="reference external" href="http://www.insdc.org/files/feature_table.html">http://www.insdc.org/files/feature_table.html</a></td></tr>
+</tbody>
+</table>
+<table class="docutils citation" frame="void" id="r337" rules="none">
+<colgroup><col class="label" /><col /></colgroup>
+<tbody valign="top">
+<tr><td class="label"><a class="fn-backref" href="#id4">[R337]</a></td><td><a class="reference external" href="http://www.ebi.ac.uk/ena/WebFeat/">http://www.ebi.ac.uk/ena/WebFeat/</a></td></tr>
+</tbody>
+</table>
+<table class="docutils citation" frame="void" id="r338" rules="none">
+<colgroup><col class="label" /><col /></colgroup>
+<tbody valign="top">
+<tr><td class="label"><a class="fn-backref" href="#id5">[R338]</a></td><td><a class="reference external" href="http://www.ncbi.nlm.nih.gov/nuccore/3K1V_A">http://www.ncbi.nlm.nih.gov/nuccore/3K1V_A</a></td></tr>
+</tbody>
+</table>
+</div>
+</div>
+
+
+    </div>
+      
+  </div>
+</div>
+  
+<footer class="footer">
+  <div class="container">
+    <p class="pull-right">
+      <a href="#">Back to top</a>
+      
+    </p>
+    <p>
+        &copy; Copyright 2014--, scikit-bio development team.<br/>
+      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 1.6.5.<br/>
+    </p>
+  </div>
+</footer>
+  <script>
+    (function(i,s,o,g,r,a,m){i['GoogleAnalyticsObject']=r;i[r]=i[r]||function(){
+    (i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),
+    m=s.getElementsByTagName(o)[0];a.async=1;a.src=g;m.parentNode.insertBefore(a,m)
+    })(window,document,'script','//www.google-analytics.com/analytics.js','ga');
+
+    ga('create', 'UA-6636235-9', 'scikit-bio.org');
+    ga('send', 'pageview');
+  </script>
+
+  </body>
+</html>

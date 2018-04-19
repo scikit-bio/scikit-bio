@@ -1,0 +1,537 @@
+<!DOCTYPE html>
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    <title>BLAST+6 format (skbio.io.format.blast6) &#8212; scikit-bio 0.5.2 documentation</title>
+    <link rel="stylesheet" href="../_static/bootstrap-sphinx.css" type="text/css" />
+    <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
+    <link rel="stylesheet" href="../_static/style.css" type="text/css" />
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    '../',
+        VERSION:     '0.5.2',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true,
+        SOURCELINK_SUFFIX: '.txt'
+      };
+    </script>
+    <script type="text/javascript" src="../_static/jquery.js"></script>
+    <script type="text/javascript" src="../_static/underscore.js"></script>
+    <script type="text/javascript" src="../_static/doctools.js"></script>
+    <script type="text/javascript" src="../_static/copybutton.js"></script>
+    <script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.1/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
+    <script type="text/javascript" src="../_static/js/jquery-1.11.0.min.js"></script>
+    <script type="text/javascript" src="../_static/js/jquery-fix.js"></script>
+    <script type="text/javascript" src="../_static/bootstrap-3.3.7/js/bootstrap.min.js"></script>
+    <script type="text/javascript" src="../_static/bootstrap-sphinx.js"></script>
+    <link rel="index" title="Index" href="../genindex.html" />
+    <link rel="search" title="Search" href="../search.html" />
+    <link rel="next" title="BLAST+7 format (skbio.io.format.blast7)" href="skbio.io.format.blast7.html" />
+    <link rel="prev" title="File I/O (skbio.io)" href="../io.html" />
+<meta charset='utf-8'>
+<meta http-equiv='X-UA-Compatible' content='IE=edge,chrome=1'>
+<meta name='viewport' content='width=device-width, initial-scale=1.0, maximum-scale=1'>
+<meta name="apple-mobile-web-app-capable" content="yes">
+
+  </head>
+  <body>
+  
+  <a href="https://github.com/biocore/scikit-bio"
+     class="visible-desktop hidden-xs"><img
+    id="gh-banner"
+    style="position: absolute; top: 50px; right: 0; border: 0;"
+    src="https://s3.amazonaws.com/github/ribbons/forkme_right_darkblue_121621.png"
+    alt="Fork me on GitHub"></a>
+  <script>
+    // Adjust banner height.
+    $(function () {
+      var navHeight = $(".navbar .container").css("height");
+      $("#gh-banner").css("top", navHeight);
+    });
+  </script>
+
+
+  <div id="navbar" class="navbar navbar-default navbar-fixed-top">
+    <div class="container">
+      <div class="navbar-header">
+        <!-- .btn-navbar is used as the toggle for collapsed navbar content -->
+        <button type="button" class="navbar-toggle" data-toggle="collapse" data-target=".nav-collapse">
+          <span class="icon-bar"></span>
+          <span class="icon-bar"></span>
+          <span class="icon-bar"></span>
+        </button>
+        <a class="navbar-brand" href="../index.html">
+          scikit-bio docs</a>
+        <span class="navbar-text navbar-version pull-left"><b>0.5.2</b></span>
+      </div>
+
+        <div class="collapse navbar-collapse nav-collapse">
+          <ul class="nav navbar-nav">
+            
+            
+              <li class="dropdown globaltoc-container">
+  <a role="button"
+     id="dLabelGlobalToc"
+     data-toggle="dropdown"
+     data-target="#"
+     href="../index.html">Site <b class="caret"></b></a>
+  <ul class="dropdown-menu globaltoc"
+      role="menu"
+      aria-labelledby="dLabelGlobalToc"><ul class="current">
+<li class="toctree-l1 current"><a class="reference internal" href="../io.html">File I/O (<code class="docutils literal"><span class="pre">skbio.io</span></code>)</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../sequence.html">Sequences (<code class="docutils literal"><span class="pre">skbio.sequence</span></code>)</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../alignment.html">Alignments (<code class="docutils literal"><span class="pre">skbio.alignment</span></code>)</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../tree.html">Tree representations (<code class="docutils literal"><span class="pre">skbio.tree</span></code>)</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../workflow.html">Constructing workflows (<code class="docutils literal"><span class="pre">skbio.workflow</span></code>)</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../diversity.html">Diversity calculations (<code class="docutils literal"><span class="pre">skbio.diversity</span></code>)</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../stats.html">Statistics (<code class="docutils literal"><span class="pre">skbio.stats</span></code>)</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../metadata.html">Metadata (<code class="docutils literal"><span class="pre">skbio.metadata</span></code>)</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../util.html">Utility functionality (<code class="docutils literal"><span class="pre">skbio.util</span></code>)</a></li>
+</ul>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../user/api_stability.html">API Stability</a></li>
+</ul>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../development/coding_guidelines.html">Coding guidelines</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../development/new_module.html">Adding a new module to skbio</a></li>
+</ul>
+</ul>
+</li>
+              
+                <li class="dropdown">
+  <a role="button"
+     id="dLabelLocalToc"
+     data-toggle="dropdown"
+     data-target="#"
+     href="#">Page <b class="caret"></b></a>
+  <ul class="dropdown-menu localtoc"
+      role="menu"
+      aria-labelledby="dLabelLocalToc"><ul>
+<li><a class="reference internal" href="#">BLAST+6 format (<code class="docutils literal"><span class="pre">skbio.io.format.blast6</span></code>)</a><ul>
+<li><a class="reference internal" href="#format-support">Format Support</a></li>
+<li><a class="reference internal" href="#format-specification">Format Specification</a><ul>
+<li><a class="reference internal" href="#blast-column-types">BLAST Column Types</a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#format-parameters">Format Parameters</a></li>
+<li><a class="reference internal" href="#examples">Examples</a></li>
+<li><a class="reference internal" href="#references">References</a></li>
+</ul>
+</li>
+</ul>
+</ul>
+</li>
+              
+            
+            
+            
+            
+            
+          </ul>
+
+          
+            
+<form class="navbar-form navbar-right" action="../search.html" method="get">
+ <div class="form-group">
+  <input type="text" name="q" class="form-control" placeholder="Search" />
+ </div>
+  <input type="hidden" name="check_keywords" value="yes" />
+  <input type="hidden" name="area" value="default" />
+</form>
+          
+        </div>
+    </div>
+  </div>
+
+<div class="container">
+  <div class="row">
+    <div class="col-md-12 content">
+      
+  <span class="target" id="module-skbio.io.format.blast6"></span><div class="section" id="blast-6-format-skbio-io-format-blast6">
+<h1>BLAST+6 format (<a class="reference internal" href="#module-skbio.io.format.blast6" title="skbio.io.format.blast6"><code class="xref py py-mod docutils literal"><span class="pre">skbio.io.format.blast6</span></code></a>)<a class="headerlink" href="#blast-6-format-skbio-io-format-blast6" title="Permalink to this headline">¶</a></h1>
+<p>The BLAST+6 format (<code class="docutils literal"><span class="pre">blast+6</span></code>) stores the results of a BLAST <a class="reference internal" href="#r313" id="id1">[R313]</a> database
+search. The results are stored in a simple tabular format with no column
+headers. Values are separated by the tab character.</p>
+<p>An example BLAST+6-formatted file comparing two protein sequences, taken
+from <a class="reference internal" href="#r314" id="id2">[R314]</a> (tab characters represented by <code class="docutils literal"><span class="pre">&lt;tab&gt;</span></code>):</p>
+<div class="highlight-default"><div class="highlight"><pre><span></span><span class="n">moaC</span><span class="o">&lt;</span><span class="n">tab</span><span class="o">&gt;</span><span class="n">gi</span><span class="o">|</span><span class="mi">15800534</span><span class="o">|</span><span class="n">ref</span><span class="o">|</span><span class="n">NP_286546</span><span class="o">.</span><span class="mi">1</span><span class="o">|&lt;</span><span class="n">tab</span><span class="o">&gt;</span><span class="mf">100.00</span><span class="o">&lt;</span><span class="n">tab</span><span class="o">&gt;</span><span class="mi">161</span><span class="o">&lt;</span><span class="n">tab</span><span class="o">&gt;</span><span class="mi">0</span><span class="o">&lt;</span><span class="n">tab</span><span class="o">&gt;</span><span class="mi">0</span><span class="o">&lt;</span><span class="n">tab</span><span class="o">&gt;</span><span class="mi">1</span><span class="o">&lt;</span><span class="n">tab</span><span class="o">&gt;</span><span class="mi">161</span><span class="o">&lt;</span><span class="n">tab</span><span class="o">&gt;</span><span class="mi">1</span><span class="o">&lt;</span><span class="n">tab</span><span class="o">&gt;</span><span class="mi">161</span><span class="o">&lt;</span><span class="n">tab</span><span class="o">&gt;</span><span class="mf">3e-114</span><span class="o">&lt;</span><span class="n">tab</span><span class="o">&gt;</span><span class="mi">330</span>
+<span class="n">moaC</span><span class="o">&lt;</span><span class="n">tab</span><span class="o">&gt;</span><span class="n">gi</span><span class="o">|</span><span class="mi">170768970</span><span class="o">|</span><span class="n">ref</span><span class="o">|</span><span class="n">ZP_02903423</span><span class="o">.</span><span class="mi">1</span><span class="o">|&lt;</span><span class="n">tab</span><span class="o">&gt;</span><span class="mf">99.38</span><span class="o">&lt;</span><span class="n">tab</span><span class="o">&gt;</span><span class="mi">161</span><span class="o">&lt;</span><span class="n">tab</span><span class="o">&gt;</span><span class="mi">1</span><span class="o">&lt;</span><span class="n">tab</span><span class="o">&gt;</span><span class="mi">0</span><span class="o">&lt;</span><span class="n">tab</span><span class="o">&gt;</span><span class="mi">1</span><span class="o">&lt;</span><span class="n">tab</span><span class="o">&gt;</span><span class="mi">161</span><span class="o">&lt;</span><span class="n">tab</span><span class="o">&gt;</span><span class="mi">1</span><span class="o">&lt;</span><span class="n">tab</span><span class="o">&gt;</span><span class="mi">161</span><span class="o">&lt;</span><span class="n">tab</span><span class="o">&gt;</span><span class="mf">9e-114</span><span class="o">&lt;</span><span class="n">tab</span><span class="o">&gt;</span><span class="mi">329</span>
+</pre></div>
+</div>
+<div class="section" id="format-support">
+<h2>Format Support<a class="headerlink" href="#format-support" title="Permalink to this headline">¶</a></h2>
+<p><strong>Has Sniffer: No</strong></p>
+<p><strong>State: Experimental as of 0.4.1.</strong></p>
+<table border="1" class="docutils">
+<colgroup>
+<col width="8%" />
+<col width="8%" />
+<col width="84%" />
+</colgroup>
+<thead valign="bottom">
+<tr class="row-odd"><th class="head">Reader</th>
+<th class="head">Writer</th>
+<th class="head">Object Class</th>
+</tr>
+</thead>
+<tbody valign="top">
+<tr class="row-even"><td>Yes</td>
+<td>No</td>
+<td><code class="xref py py-mod docutils literal"><span class="pre">pandas.DataFrame</span></code></td>
+</tr>
+</tbody>
+</table>
+</div>
+<div class="section" id="format-specification">
+<h2>Format Specification<a class="headerlink" href="#format-specification" title="Permalink to this headline">¶</a></h2>
+<p>BLAST+6 format is a tabular text-based format produced by both BLAST+ output
+format 6 (<code class="docutils literal"><span class="pre">-outfmt</span> <span class="pre">6</span></code>) and legacy BLAST output format 8 (<code class="docutils literal"><span class="pre">-m</span> <span class="pre">8</span></code>). It is
+tab-separated and has no column headers. With BLAST+, users can specify the
+columns that are present in their BLAST output file by specifying column names
+(e.g., <code class="docutils literal"><span class="pre">-outfmt</span> <span class="pre">&quot;6</span> <span class="pre">qseqid</span> <span class="pre">sseqid</span> <span class="pre">bitscore</span> <span class="pre">qstart</span> <span class="pre">sstart&quot;</span></code>), if the default
+columns output by BLAST are not desired.</p>
+<div class="section" id="blast-column-types">
+<h3>BLAST Column Types<a class="headerlink" href="#blast-column-types" title="Permalink to this headline">¶</a></h3>
+<p>The following column types are output by BLAST and supported by scikit-bio.
+This information is taken from <a class="reference internal" href="#r315" id="id3">[R315]</a>.</p>
+<table border="1" class="docutils">
+<colgroup>
+<col width="21%" />
+<col width="69%" />
+<col width="10%" />
+</colgroup>
+<thead valign="bottom">
+<tr class="row-odd"><th class="head">Name</th>
+<th class="head">Description</th>
+<th class="head">Type</th>
+</tr>
+</thead>
+<tbody valign="top">
+<tr class="row-even"><td>qseqid</td>
+<td>Query Seq-id</td>
+<td>str</td>
+</tr>
+<tr class="row-odd"><td>qgi</td>
+<td>Query GI</td>
+<td>int</td>
+</tr>
+<tr class="row-even"><td>qacc</td>
+<td>Query accesion</td>
+<td>str</td>
+</tr>
+<tr class="row-odd"><td>qaccver</td>
+<td>Query accesion.version</td>
+<td>str</td>
+</tr>
+<tr class="row-even"><td>qlen</td>
+<td>Query sequence length</td>
+<td>int</td>
+</tr>
+<tr class="row-odd"><td>sseqid</td>
+<td>Subject Seq-id</td>
+<td>str</td>
+</tr>
+<tr class="row-even"><td>sallseqid</td>
+<td>All subject Seq-id(s), separated by
+a ‘;’</td>
+<td>str</td>
+</tr>
+<tr class="row-odd"><td>sgi</td>
+<td>Subject GI</td>
+<td>int</td>
+</tr>
+<tr class="row-even"><td>sallgi</td>
+<td>All subject GIs</td>
+<td>int</td>
+</tr>
+<tr class="row-odd"><td>sacc</td>
+<td>Subject accesion</td>
+<td>str</td>
+</tr>
+<tr class="row-even"><td>saccver</td>
+<td>Subject accesion.version</td>
+<td>str</td>
+</tr>
+<tr class="row-odd"><td>sallacc</td>
+<td>All subject accesions</td>
+<td>str</td>
+</tr>
+<tr class="row-even"><td>slen</td>
+<td>Subject sequence length</td>
+<td>int</td>
+</tr>
+<tr class="row-odd"><td>qstart</td>
+<td>Start of alignment in query</td>
+<td>int</td>
+</tr>
+<tr class="row-even"><td>qend</td>
+<td>End of alignment in query</td>
+<td>int</td>
+</tr>
+<tr class="row-odd"><td>sstart</td>
+<td>Start of alignment in subject</td>
+<td>int</td>
+</tr>
+<tr class="row-even"><td>send</td>
+<td>End of alignment in subject</td>
+<td>int</td>
+</tr>
+<tr class="row-odd"><td>qseq</td>
+<td>Aligned part of query sequence</td>
+<td>str</td>
+</tr>
+<tr class="row-even"><td>sseq</td>
+<td>Aligned part of subject sequence</td>
+<td>str</td>
+</tr>
+<tr class="row-odd"><td>evalue</td>
+<td>Expect value</td>
+<td>float</td>
+</tr>
+<tr class="row-even"><td>bitscore</td>
+<td>Bit score</td>
+<td>float</td>
+</tr>
+<tr class="row-odd"><td>score</td>
+<td>Raw score</td>
+<td>int</td>
+</tr>
+<tr class="row-even"><td>length</td>
+<td>Alignment length</td>
+<td>int</td>
+</tr>
+<tr class="row-odd"><td>pident</td>
+<td>Percent of identical matches</td>
+<td>float</td>
+</tr>
+<tr class="row-even"><td>nident</td>
+<td>Number of identical matches</td>
+<td>int</td>
+</tr>
+<tr class="row-odd"><td>mismatch</td>
+<td>Number of mismatches</td>
+<td>int</td>
+</tr>
+<tr class="row-even"><td>positive</td>
+<td>Number of positive-scoring matches</td>
+<td>int</td>
+</tr>
+<tr class="row-odd"><td>gapopen</td>
+<td>Number of gap openings</td>
+<td>int</td>
+</tr>
+<tr class="row-even"><td>gaps</td>
+<td>Total number of gaps</td>
+<td>int</td>
+</tr>
+<tr class="row-odd"><td>ppos</td>
+<td>Percentage of positive-scoring matches</td>
+<td>float</td>
+</tr>
+<tr class="row-even"><td>frames</td>
+<td>Query and subject frames separated
+by a ‘/’</td>
+<td>str</td>
+</tr>
+<tr class="row-odd"><td>qframe</td>
+<td>Query frame</td>
+<td>int</td>
+</tr>
+<tr class="row-even"><td>sframe</td>
+<td>Subject frame</td>
+<td>int</td>
+</tr>
+<tr class="row-odd"><td>btop</td>
+<td>Blast traceback operations (BTOP)</td>
+<td>int</td>
+</tr>
+<tr class="row-even"><td>staxids</td>
+<td>Unique Subject Taxonomy ID(s), separated by a ‘;’ (in numerical order)</td>
+<td>str</td>
+</tr>
+<tr class="row-odd"><td>sscinames</td>
+<td>Unique Subject Scientific Name(s),
+separated by a ‘;’</td>
+<td>str</td>
+</tr>
+<tr class="row-even"><td>scomnames</td>
+<td>Unique Subject Common Name(s), separated by a ‘;’</td>
+<td>str</td>
+</tr>
+<tr class="row-odd"><td>sblastnames</td>
+<td>unique Subject Blast Name(s), separated by a ‘;’ (in alphabetical
+order)</td>
+<td>str</td>
+</tr>
+<tr class="row-even"><td>sskingdoms</td>
+<td>unique Subject Super Kingdom(s), separated by a ‘;’ (in alphabetical
+order)</td>
+<td>str</td>
+</tr>
+<tr class="row-odd"><td>stitle</td>
+<td>Subject Title</td>
+<td>str</td>
+</tr>
+<tr class="row-even"><td>sstrand</td>
+<td>Subject Strand</td>
+<td>str</td>
+</tr>
+<tr class="row-odd"><td>salltitles</td>
+<td>All Subject Title(s), separated by
+a ‘&lt;&gt;’</td>
+<td>str</td>
+</tr>
+<tr class="row-even"><td>qcovs</td>
+<td>Query Coverage Per Subject</td>
+<td>int</td>
+</tr>
+<tr class="row-odd"><td>qcovhsp</td>
+<td>Query Coverage Per HSP</td>
+<td>int</td>
+</tr>
+</tbody>
+</table>
+<div class="admonition note">
+<p class="first admonition-title">Note</p>
+<p class="last">When a BLAST+6-formatted file contains <code class="docutils literal"><span class="pre">N/A</span></code> values, scikit-bio
+will convert these values into <code class="docutils literal"><span class="pre">np.nan</span></code>, matching pandas’ convention for
+representing missing data.</p>
+</div>
+<div class="admonition note">
+<p class="first admonition-title">Note</p>
+<p class="last">scikit-bio stores columns of type <code class="docutils literal"><span class="pre">int</span></code> as type <code class="docutils literal"><span class="pre">float</span></code> in the
+returned <code class="docutils literal"><span class="pre">pd.DataFrame</span></code>. This is necessary in order to allow <code class="docutils literal"><span class="pre">N/A</span></code>
+values in integer columns (this is currently a limitation of pandas).</p>
+</div>
+</div>
+</div>
+<div class="section" id="format-parameters">
+<h2>Format Parameters<a class="headerlink" href="#format-parameters" title="Permalink to this headline">¶</a></h2>
+<p>The following format parameters are available in <code class="docutils literal"><span class="pre">blast+6</span></code> format:</p>
+<ul>
+<li><p class="first"><code class="docutils literal"><span class="pre">default_columns</span></code>: <code class="docutils literal"><span class="pre">False</span></code> by default. If <code class="docutils literal"><span class="pre">True</span></code>, will use the default
+columns output by BLAST, which are qseqid, sseqid, pident, length, mismatch,
+gapopen, qstart, qend, sstart, send, evalue, and bitscore.</p>
+<div class="admonition warning">
+<p class="first admonition-title">Warning</p>
+<p class="last">When reading legacy BLAST files, you must pass
+<code class="docutils literal"><span class="pre">default_columns=True</span></code> because legacy BLAST does not allow users to
+specify which columns are present in the output file.</p>
+</div>
+</li>
+<li><p class="first"><code class="docutils literal"><span class="pre">columns</span></code>: <code class="docutils literal"><span class="pre">None</span></code> by default. If provided, must be a list of column names
+in the order they will appear in the file.</p>
+</li>
+</ul>
+<div class="admonition note">
+<p class="first admonition-title">Note</p>
+<p class="last">Either <code class="docutils literal"><span class="pre">default_columns</span></code> or <code class="docutils literal"><span class="pre">columns</span></code> must be provided, as
+<code class="docutils literal"><span class="pre">blast+6</span></code> does not contain column headers.</p>
+</div>
+</div>
+<div class="section" id="examples">
+<h2>Examples<a class="headerlink" href="#examples" title="Permalink to this headline">¶</a></h2>
+<p>Suppose we have a <code class="docutils literal"><span class="pre">blast+6</span></code> file with default columns:</p>
+<div class="highlight-default"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">io</span> <span class="k">import</span> <span class="n">StringIO</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="kn">import</span> <span class="nn">skbio.io</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="kn">import</span> <span class="nn">pandas</span> <span class="k">as</span> <span class="nn">pd</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">fs</span> <span class="o">=</span> <span class="s1">&#39;</span><span class="se">\n</span><span class="s1">&#39;</span><span class="o">.</span><span class="n">join</span><span class="p">([</span>
+<span class="gp">... </span>    <span class="s1">&#39;moaC</span><span class="se">\t</span><span class="s1">gi|15800534|ref|NP_286546.1|</span><span class="se">\t</span><span class="s1">100.00</span><span class="se">\t</span><span class="s1">161</span><span class="se">\t</span><span class="s1">0</span><span class="se">\t</span><span class="s1">0</span><span class="se">\t</span><span class="s1">1</span><span class="se">\t</span><span class="s1">161</span><span class="se">\t</span><span class="s1">1</span><span class="se">\t</span><span class="s1">161</span><span class="se">\t</span><span class="s1">3e-114</span><span class="se">\t</span><span class="s1">330&#39;</span><span class="p">,</span>
+<span class="gp">... </span>    <span class="s1">&#39;moaC</span><span class="se">\t</span><span class="s1">gi|170768970|ref|ZP_02903423.1|</span><span class="se">\t</span><span class="s1">99.38</span><span class="se">\t</span><span class="s1">161</span><span class="se">\t</span><span class="s1">1</span><span class="se">\t</span><span class="s1">0</span><span class="se">\t</span><span class="s1">1</span><span class="se">\t</span><span class="s1">161</span><span class="se">\t</span><span class="s1">1</span><span class="se">\t</span><span class="s1">161</span><span class="se">\t</span><span class="s1">9e-114</span><span class="se">\t</span><span class="s1">329&#39;</span>
+<span class="gp">... </span><span class="p">])</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">fh</span> <span class="o">=</span> <span class="n">StringIO</span><span class="p">(</span><span class="n">fs</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>Read the file into a <code class="docutils literal"><span class="pre">pd.DataFrame</span></code> and specify that default columns should
+be used:</p>
+<div class="highlight-default"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">df</span> <span class="o">=</span> <span class="n">skbio</span><span class="o">.</span><span class="n">io</span><span class="o">.</span><span class="n">read</span><span class="p">(</span><span class="n">fh</span><span class="p">,</span> <span class="nb">format</span><span class="o">=</span><span class="s2">&quot;blast+6&quot;</span><span class="p">,</span> <span class="n">into</span><span class="o">=</span><span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">,</span>
+<span class="gp">... </span>                   <span class="n">default_columns</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">df</span> 
+<span class="go">  qseqid                           sseqid  pident  length  mismatch  gapopen \</span>
+<span class="go">0   moaC     gi|15800534|ref|NP_286546.1|  100.00   161.0       0.0      0.0</span>
+<span class="go">1   moaC  gi|170768970|ref|ZP_02903423.1|   99.38   161.0       1.0      0.0</span>
+
+<span class="go">   qstart   qend  sstart   send         evalue  bitscore</span>
+<span class="go">0     1.0  161.0     1.0  161.0  3.000000e-114     330.0</span>
+<span class="go">1     1.0  161.0     1.0  161.0  9.000000e-114     329.0</span>
+</pre></div>
+</div>
+<p>Suppose we have a <code class="docutils literal"><span class="pre">blast+6</span></code> file with user-supplied (non-default) columns:</p>
+<div class="highlight-default"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">io</span> <span class="k">import</span> <span class="n">StringIO</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="kn">import</span> <span class="nn">skbio.io</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="kn">import</span> <span class="nn">pandas</span> <span class="k">as</span> <span class="nn">pd</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">fs</span> <span class="o">=</span> <span class="s1">&#39;</span><span class="se">\n</span><span class="s1">&#39;</span><span class="o">.</span><span class="n">join</span><span class="p">([</span>
+<span class="gp">... </span>    <span class="s1">&#39;moaC</span><span class="se">\t</span><span class="s1">100.00</span><span class="se">\t</span><span class="s1">0</span><span class="se">\t</span><span class="s1">161</span><span class="se">\t</span><span class="s1">0</span><span class="se">\t</span><span class="s1">161</span><span class="se">\t</span><span class="s1">330</span><span class="se">\t</span><span class="s1">1&#39;</span><span class="p">,</span>
+<span class="gp">... </span>    <span class="s1">&#39;moaC</span><span class="se">\t</span><span class="s1">99.38</span><span class="se">\t</span><span class="s1">1</span><span class="se">\t</span><span class="s1">161</span><span class="se">\t</span><span class="s1">0</span><span class="se">\t</span><span class="s1">161</span><span class="se">\t</span><span class="s1">329</span><span class="se">\t</span><span class="s1">1&#39;</span>
+<span class="gp">... </span><span class="p">])</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">fh</span> <span class="o">=</span> <span class="n">StringIO</span><span class="p">(</span><span class="n">fs</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>Read the file into a <code class="docutils literal"><span class="pre">pd.DataFrame</span></code> and specify which columns are present
+in the file:</p>
+<div class="highlight-default"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">df</span> <span class="o">=</span> <span class="n">skbio</span><span class="o">.</span><span class="n">io</span><span class="o">.</span><span class="n">read</span><span class="p">(</span><span class="n">fh</span><span class="p">,</span> <span class="nb">format</span><span class="o">=</span><span class="s2">&quot;blast+6&quot;</span><span class="p">,</span> <span class="n">into</span><span class="o">=</span><span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">,</span>
+<span class="gp">... </span>                   <span class="n">columns</span><span class="o">=</span><span class="p">[</span><span class="s1">&#39;qseqid&#39;</span><span class="p">,</span> <span class="s1">&#39;pident&#39;</span><span class="p">,</span> <span class="s1">&#39;mismatch&#39;</span><span class="p">,</span> <span class="s1">&#39;length&#39;</span><span class="p">,</span>
+<span class="gp">... </span>                            <span class="s1">&#39;gapopen&#39;</span><span class="p">,</span> <span class="s1">&#39;qend&#39;</span><span class="p">,</span> <span class="s1">&#39;bitscore&#39;</span><span class="p">,</span> <span class="s1">&#39;sstart&#39;</span><span class="p">])</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">df</span> 
+<span class="go">  qseqid  pident  mismatch  length  gapopen   qend  bitscore  sstart</span>
+<span class="go">0   moaC  100.00       0.0   161.0      0.0  161.0     330.0     1.0</span>
+<span class="go">1   moaC   99.38       1.0   161.0      0.0  161.0     329.0     1.0</span>
+</pre></div>
+</div>
+</div>
+<div class="section" id="references">
+<h2>References<a class="headerlink" href="#references" title="Permalink to this headline">¶</a></h2>
+<table class="docutils citation" frame="void" id="r313" rules="none">
+<colgroup><col class="label" /><col /></colgroup>
+<tbody valign="top">
+<tr><td class="label"><a class="fn-backref" href="#id1">[R313]</a></td><td>Altschul, S.F., Gish, W., Miller, W., Myers, E.W. &amp; Lipman, D.J. (1990)
+“Basic local alignment search tool.” J. Mol. Biol. 215:403-410.</td></tr>
+</tbody>
+</table>
+<table class="docutils citation" frame="void" id="r314" rules="none">
+<colgroup><col class="label" /><col /></colgroup>
+<tbody valign="top">
+<tr><td class="label"><a class="fn-backref" href="#id2">[R314]</a></td><td><a class="reference external" href="http://blastedbio.blogspot.com/2014/11/column-headers-in-blast-tabular-and-csv.html">http://blastedbio.blogspot.com/2014/11/column-headers-in-blast-tabular-and-csv.html</a></td></tr>
+</tbody>
+</table>
+<table class="docutils citation" frame="void" id="r315" rules="none">
+<colgroup><col class="label" /><col /></colgroup>
+<tbody valign="top">
+<tr><td class="label"><a class="fn-backref" href="#id3">[R315]</a></td><td><a class="reference external" href="http://www.ncbi.nlm.nih.gov/books/NBK279675/">http://www.ncbi.nlm.nih.gov/books/NBK279675/</a></td></tr>
+</tbody>
+</table>
+</div>
+</div>
+
+
+    </div>
+      
+  </div>
+</div>
+  
+<footer class="footer">
+  <div class="container">
+    <p class="pull-right">
+      <a href="#">Back to top</a>
+      
+    </p>
+    <p>
+        &copy; Copyright 2014--, scikit-bio development team.<br/>
+      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 1.6.5.<br/>
+    </p>
+  </div>
+</footer>
+  <script>
+    (function(i,s,o,g,r,a,m){i['GoogleAnalyticsObject']=r;i[r]=i[r]||function(){
+    (i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),
+    m=s.getElementsByTagName(o)[0];a.async=1;a.src=g;m.parentNode.insertBefore(a,m)
+    })(window,document,'script','//www.google-analytics.com/analytics.js','ga');
+
+    ga('create', 'UA-6636235-9', 'scikit-bio.org');
+    ga('send', 'pageview');
+  </script>
+
+  </body>
+</html>

@@ -1,0 +1,509 @@
+<!DOCTYPE html>
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    <title>EMBL format (skbio.io.format.embl) &#8212; scikit-bio 0.5.2 documentation</title>
+    <link rel="stylesheet" href="../_static/bootstrap-sphinx.css" type="text/css" />
+    <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
+    <link rel="stylesheet" href="../_static/style.css" type="text/css" />
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    '../',
+        VERSION:     '0.5.2',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true,
+        SOURCELINK_SUFFIX: '.txt'
+      };
+    </script>
+    <script type="text/javascript" src="../_static/jquery.js"></script>
+    <script type="text/javascript" src="../_static/underscore.js"></script>
+    <script type="text/javascript" src="../_static/doctools.js"></script>
+    <script type="text/javascript" src="../_static/copybutton.js"></script>
+    <script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.1/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
+    <script type="text/javascript" src="../_static/js/jquery-1.11.0.min.js"></script>
+    <script type="text/javascript" src="../_static/js/jquery-fix.js"></script>
+    <script type="text/javascript" src="../_static/bootstrap-3.3.7/js/bootstrap.min.js"></script>
+    <script type="text/javascript" src="../_static/bootstrap-sphinx.js"></script>
+    <link rel="index" title="Index" href="../genindex.html" />
+    <link rel="search" title="Search" href="../search.html" />
+    <link rel="next" title="FASTA/QUAL format (skbio.io.format.fasta)" href="skbio.io.format.fasta.html" />
+    <link rel="prev" title="Clustal format (skbio.io.format.clustal)" href="skbio.io.format.clustal.html" />
+<meta charset='utf-8'>
+<meta http-equiv='X-UA-Compatible' content='IE=edge,chrome=1'>
+<meta name='viewport' content='width=device-width, initial-scale=1.0, maximum-scale=1'>
+<meta name="apple-mobile-web-app-capable" content="yes">
+
+  </head>
+  <body>
+  
+  <a href="https://github.com/biocore/scikit-bio"
+     class="visible-desktop hidden-xs"><img
+    id="gh-banner"
+    style="position: absolute; top: 50px; right: 0; border: 0;"
+    src="https://s3.amazonaws.com/github/ribbons/forkme_right_darkblue_121621.png"
+    alt="Fork me on GitHub"></a>
+  <script>
+    // Adjust banner height.
+    $(function () {
+      var navHeight = $(".navbar .container").css("height");
+      $("#gh-banner").css("top", navHeight);
+    });
+  </script>
+
+
+  <div id="navbar" class="navbar navbar-default navbar-fixed-top">
+    <div class="container">
+      <div class="navbar-header">
+        <!-- .btn-navbar is used as the toggle for collapsed navbar content -->
+        <button type="button" class="navbar-toggle" data-toggle="collapse" data-target=".nav-collapse">
+          <span class="icon-bar"></span>
+          <span class="icon-bar"></span>
+          <span class="icon-bar"></span>
+        </button>
+        <a class="navbar-brand" href="../index.html">
+          scikit-bio docs</a>
+        <span class="navbar-text navbar-version pull-left"><b>0.5.2</b></span>
+      </div>
+
+        <div class="collapse navbar-collapse nav-collapse">
+          <ul class="nav navbar-nav">
+            
+            
+              <li class="dropdown globaltoc-container">
+  <a role="button"
+     id="dLabelGlobalToc"
+     data-toggle="dropdown"
+     data-target="#"
+     href="../index.html">Site <b class="caret"></b></a>
+  <ul class="dropdown-menu globaltoc"
+      role="menu"
+      aria-labelledby="dLabelGlobalToc"><ul class="current">
+<li class="toctree-l1 current"><a class="reference internal" href="../io.html">File I/O (<code class="docutils literal"><span class="pre">skbio.io</span></code>)</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../sequence.html">Sequences (<code class="docutils literal"><span class="pre">skbio.sequence</span></code>)</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../alignment.html">Alignments (<code class="docutils literal"><span class="pre">skbio.alignment</span></code>)</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../tree.html">Tree representations (<code class="docutils literal"><span class="pre">skbio.tree</span></code>)</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../workflow.html">Constructing workflows (<code class="docutils literal"><span class="pre">skbio.workflow</span></code>)</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../diversity.html">Diversity calculations (<code class="docutils literal"><span class="pre">skbio.diversity</span></code>)</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../stats.html">Statistics (<code class="docutils literal"><span class="pre">skbio.stats</span></code>)</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../metadata.html">Metadata (<code class="docutils literal"><span class="pre">skbio.metadata</span></code>)</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../util.html">Utility functionality (<code class="docutils literal"><span class="pre">skbio.util</span></code>)</a></li>
+</ul>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../user/api_stability.html">API Stability</a></li>
+</ul>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../development/coding_guidelines.html">Coding guidelines</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../development/new_module.html">Adding a new module to skbio</a></li>
+</ul>
+</ul>
+</li>
+              
+                <li class="dropdown">
+  <a role="button"
+     id="dLabelLocalToc"
+     data-toggle="dropdown"
+     data-target="#"
+     href="#">Page <b class="caret"></b></a>
+  <ul class="dropdown-menu localtoc"
+      role="menu"
+      aria-labelledby="dLabelLocalToc"><ul>
+<li><a class="reference internal" href="#">EMBL format (<code class="docutils literal"><span class="pre">skbio.io.format.embl</span></code>)</a><ul>
+<li><a class="reference internal" href="#feature-level-products">Feature Level Products</a><ul>
+<li><a class="reference internal" href="#format-support">Format Support</a></li>
+<li><a class="reference internal" href="#format-specification">Format Specification</a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#sections-before-fh-feature-header">Sections before <code class="docutils literal"><span class="pre">FH</span> <span class="pre">(Feature</span> <span class="pre">Header)</span></code></a></li>
+<li><a class="reference internal" href="#ft-section"><code class="docutils literal"><span class="pre">FT</span></code> section</a></li>
+<li><a class="reference internal" href="#sq-section"><code class="docutils literal"><span class="pre">SQ</span></code> section</a><ul>
+<li><a class="reference internal" href="#examples">Examples</a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#reading-embl-files">Reading EMBL Files</a></li>
+<li><a class="reference internal" href="#reading-embl-files-using-generators">Reading EMBL Files using generators</a><ul>
+<li><a class="reference internal" href="#references">References</a></li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+</ul>
+</li>
+              
+            
+            
+            
+            
+            
+          </ul>
+
+          
+            
+<form class="navbar-form navbar-right" action="../search.html" method="get">
+ <div class="form-group">
+  <input type="text" name="q" class="form-control" placeholder="Search" />
+ </div>
+  <input type="hidden" name="check_keywords" value="yes" />
+  <input type="hidden" name="area" value="default" />
+</form>
+          
+        </div>
+    </div>
+  </div>
+
+<div class="container">
+  <div class="row">
+    <div class="col-md-12 content">
+      
+  <span class="target" id="module-skbio.io.format.embl"></span><div class="section" id="embl-format-skbio-io-format-embl">
+<h1>EMBL format (<a class="reference internal" href="#module-skbio.io.format.embl" title="skbio.io.format.embl"><code class="xref py py-mod docutils literal"><span class="pre">skbio.io.format.embl</span></code></a>)<a class="headerlink" href="#embl-format-skbio-io-format-embl" title="Permalink to this headline">¶</a></h1>
+<p>EMBL format stores sequence and its annotation together. The start of the
+annotation section is marked by a line beginning with the word “ID”. The start
+of sequence section is marked by a line beginning with the word “SQ”.
+The “//” (terminator) line also contains no data or comments and designates
+the end of an entry. More information on EMBL file format can be found
+here <a class="reference internal" href="#r320" id="id1">[R320]</a>.</p>
+<p>The EMBL file may end with .embl or .txt extension. An example of EMBL file
+can be seen here <a class="reference internal" href="#r321" id="id2">[R321]</a>.</p>
+<div class="section" id="feature-level-products">
+<h2>Feature Level Products<a class="headerlink" href="#feature-level-products" title="Permalink to this headline">¶</a></h2>
+<p>As described in <a class="reference internal" href="#r322" id="id3">[R322]</a> <em>“Feature-level products contain nucleotide sequence
+and related annotations derived from submitted ENA assembled and annotated
+sequences. Data are distributed in flatfile format, similar to that of parent
+ENA records, with each flatfile representing a single feature”</em>.
+While only the sequence of the feature is included in such entries, features
+are derived from the parent entry, and can’t be applied as interval metadata.
+For such reason, interval metatdata are ignored from Feature-level products,
+as they will be ignored by subsetting a generic Sequence object.</p>
+<div class="section" id="format-support">
+<h3>Format Support<a class="headerlink" href="#format-support" title="Permalink to this headline">¶</a></h3>
+<p><strong>Has Sniffer: Yes</strong></p>
+<p><strong>NOTE: No protein support at the moment</strong></p>
+<p>Current protein support development is tracked in issue-1499 <a class="reference internal" href="#r323" id="id4">[R323]</a></p>
+<table border="1" class="docutils">
+<colgroup>
+<col width="8%" />
+<col width="8%" />
+<col width="84%" />
+</colgroup>
+<thead valign="bottom">
+<tr class="row-odd"><th class="head">Reader</th>
+<th class="head">Writer</th>
+<th class="head">Object Class</th>
+</tr>
+</thead>
+<tbody valign="top">
+<tr class="row-even"><td>Yes</td>
+<td>Yes</td>
+<td><a class="reference internal" href="skbio.sequence.Sequence.html#skbio.sequence.Sequence" title="skbio.sequence.Sequence"><code class="xref py py-mod docutils literal"><span class="pre">skbio.sequence.Sequence</span></code></a></td>
+</tr>
+<tr class="row-odd"><td>Yes</td>
+<td>Yes</td>
+<td><a class="reference internal" href="skbio.sequence.DNA.html#skbio.sequence.DNA" title="skbio.sequence.DNA"><code class="xref py py-mod docutils literal"><span class="pre">skbio.sequence.DNA</span></code></a></td>
+</tr>
+<tr class="row-even"><td>Yes</td>
+<td>Yes</td>
+<td><a class="reference internal" href="skbio.sequence.RNA.html#skbio.sequence.RNA" title="skbio.sequence.RNA"><code class="xref py py-mod docutils literal"><span class="pre">skbio.sequence.RNA</span></code></a></td>
+</tr>
+<tr class="row-odd"><td>No</td>
+<td>No</td>
+<td><a class="reference internal" href="skbio.sequence.Protein.html#skbio.sequence.Protein" title="skbio.sequence.Protein"><code class="xref py py-mod docutils literal"><span class="pre">skbio.sequence.Protein</span></code></a></td>
+</tr>
+<tr class="row-even"><td>Yes</td>
+<td>Yes</td>
+<td>generator of <a class="reference internal" href="skbio.sequence.Sequence.html#skbio.sequence.Sequence" title="skbio.sequence.Sequence"><code class="xref py py-mod docutils literal"><span class="pre">skbio.sequence.Sequence</span></code></a> objects</td>
+</tr>
+</tbody>
+</table>
+</div>
+<div class="section" id="format-specification">
+<h3>Format Specification<a class="headerlink" href="#format-specification" title="Permalink to this headline">¶</a></h3>
+<p><strong>State: Experimental as of 0.5.1-dev.</strong></p>
+</div>
+</div>
+<div class="section" id="sections-before-fh-feature-header">
+<h2>Sections before <code class="docutils literal"><span class="pre">FH</span> <span class="pre">(Feature</span> <span class="pre">Header)</span></code><a class="headerlink" href="#sections-before-fh-feature-header" title="Permalink to this headline">¶</a></h2>
+<p>All the sections before <code class="docutils literal"><span class="pre">FH</span> <span class="pre">(Feature</span> <span class="pre">Header)</span></code> will be read into the attribute
+of <code class="docutils literal"><span class="pre">metadata</span></code>. The header and its content of a section are stored as
+key-value pairs in <code class="docutils literal"><span class="pre">metadata</span></code>. For the <code class="docutils literal"><span class="pre">RN</span> <span class="pre">(Reference</span> <span class="pre">Number)</span></code>
+section, its value is stored as a list, as there are often multiple
+reference sections in one EMBL record.</p>
+</div>
+<div class="section" id="ft-section">
+<h2><code class="docutils literal"><span class="pre">FT</span></code> section<a class="headerlink" href="#ft-section" title="Permalink to this headline">¶</a></h2>
+<p>See <a class="reference internal" href="skbio.io.format.genbank.html#genbank-feature-section"><span class="std std-ref">Genbank FEATURES section</span></a></p>
+</div>
+<div class="section" id="sq-section">
+<h2><code class="docutils literal"><span class="pre">SQ</span></code> section<a class="headerlink" href="#sq-section" title="Permalink to this headline">¶</a></h2>
+<p>The sequence in the <code class="docutils literal"><span class="pre">SQ</span></code> section is always in lowercase for
+the EMBL files downloaded from ENA. For the RNA molecules, <code class="docutils literal"><span class="pre">t</span></code>
+(thymine), instead of <code class="docutils literal"><span class="pre">u</span></code> (uracil) is used in the sequence. All
+EMBL writers follow these conventions while writing EMBL files.</p>
+<div class="section" id="examples">
+<h3>Examples<a class="headerlink" href="#examples" title="Permalink to this headline">¶</a></h3>
+</div>
+</div>
+<div class="section" id="reading-embl-files">
+<h2>Reading EMBL Files<a class="headerlink" href="#reading-embl-files" title="Permalink to this headline">¶</a></h2>
+<p>Suppose we have the following EMBL file example:</p>
+<div class="highlight-default"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">embl_str</span> <span class="o">=</span> <span class="s1">&#39;&#39;&#39;</span>
+<span class="gp">... </span><span class="s1">ID   X56734; SV 1; linear; mRNA; STD; PLN; 1859 BP.</span>
+<span class="gp">... </span><span class="s1">XX</span>
+<span class="gp">... </span><span class="s1">AC   X56734; S46826;</span>
+<span class="gp">... </span><span class="s1">XX</span>
+<span class="gp">... </span><span class="s1">DT   12-SEP-1991 (Rel. 29, Created)</span>
+<span class="gp">... </span><span class="s1">DT   25-NOV-2005 (Rel. 85, Last updated, Version 11)</span>
+<span class="gp">... </span><span class="s1">XX</span>
+<span class="gp">... </span><span class="s1">DE   Trifolium repens mRNA for non-cyanogenic beta-glucosidase</span>
+<span class="gp">... </span><span class="s1">XX</span>
+<span class="gp">... </span><span class="s1">KW   beta-glucosidase.</span>
+<span class="gp">... </span><span class="s1">XX</span>
+<span class="gp">... </span><span class="s1">OS   Trifolium repens (white clover)</span>
+<span class="gp">... </span><span class="s1">OC   Eukaryota; Viridiplantae; Streptophyta; Embryophyta; Tracheophyta;</span>
+<span class="gp">... </span><span class="s1">OC   Spermatophyta; Magnoliophyta; eudicotyledons; Gunneridae;</span>
+<span class="gp">... </span><span class="s1">OC   Pentapetalae; rosids; fabids; Fabales; Fabaceae; Papilionoideae;</span>
+<span class="gp">... </span><span class="s1">OC   Trifolieae; Trifolium.</span>
+<span class="gp">... </span><span class="s1">XX</span>
+<span class="gp">... </span><span class="s1">RN   [5]</span>
+<span class="gp">... </span><span class="s1">RP   1-1859</span>
+<span class="gp">... </span><span class="s1">RX   DOI; 10.1007/BF00039495.</span>
+<span class="gp">... </span><span class="s1">RX   PUBMED; 1907511.</span>
+<span class="gp">... </span><span class="s1">RA   Oxtoby E., Dunn M.A., Pancoro A., Hughes M.A.;</span>
+<span class="gp">... </span><span class="s1">RT   &quot;Nucleotide and derived amino acid sequence of the cyanogenic</span>
+<span class="gp">... </span><span class="s1">RT   beta-glucosidase (linamarase) from white clover</span>
+<span class="gp">... </span><span class="s1">RT   (Trifolium repens L.)&quot;;</span>
+<span class="gp">... </span><span class="s1">RL   Plant Mol. Biol. 17(2):209-219(1991).</span>
+<span class="gp">... </span><span class="s1">XX</span>
+<span class="gp">... </span><span class="s1">RN   [6]</span>
+<span class="gp">... </span><span class="s1">RP   1-1859</span>
+<span class="gp">... </span><span class="s1">RA   Hughes M.A.;</span>
+<span class="gp">... </span><span class="s1">RT   ;</span>
+<span class="gp">... </span><span class="s1">RL   Submitted (19-NOV-1990) to the INSDC.</span>
+<span class="gp">... </span><span class="s1">RL   Hughes M.A., University of Newcastle Upon Tyne, Medical School,</span>
+<span class="gp">... </span><span class="s1">RL   Newcastle</span>
+<span class="gp">... </span><span class="s1">RL   Upon Tyne, NE2 4HH, UK</span>
+<span class="gp">... </span><span class="s1">XX</span>
+<span class="gp">... </span><span class="s1">DR   MD5; 1e51ca3a5450c43524b9185c236cc5cc.</span>
+<span class="gp">... </span><span class="s1">XX</span>
+<span class="gp">... </span><span class="s1">FH   Key             Location/Qualifiers</span>
+<span class="gp">... </span><span class="s1">FH</span>
+<span class="gp">... </span><span class="s1">FT   source          1..1859</span>
+<span class="gp">... </span><span class="s1">FT                   /organism=&quot;Trifolium repens&quot;</span>
+<span class="gp">... </span><span class="s1">FT                   /mol_type=&quot;mRNA&quot;</span>
+<span class="gp">... </span><span class="s1">FT                   /clone_lib=&quot;lambda gt10&quot;</span>
+<span class="gp">... </span><span class="s1">FT                   /clone=&quot;TRE361&quot;</span>
+<span class="gp">... </span><span class="s1">FT                   /tissue_type=&quot;leaves&quot;</span>
+<span class="gp">... </span><span class="s1">FT                   /db_xref=&quot;taxon:3899&quot;</span>
+<span class="gp">... </span><span class="s1">FT   mRNA            1..1859</span>
+<span class="gp">... </span><span class="s1">FT                   /experiment=&quot;experimental evidence, no additional</span>
+<span class="gp">... </span><span class="s1">FT                   details recorded&quot;</span>
+<span class="gp">... </span><span class="s1">FT   CDS             14..1495</span>
+<span class="gp">... </span><span class="s1">FT                   /product=&quot;beta-glucosidase&quot;</span>
+<span class="gp">... </span><span class="s1">FT                   /EC_number=&quot;3.2.1.21&quot;</span>
+<span class="gp">... </span><span class="s1">FT                   /note=&quot;non-cyanogenic&quot;</span>
+<span class="gp">... </span><span class="s1">FT                   /db_xref=&quot;GOA:P26204&quot;</span>
+<span class="gp">... </span><span class="s1">FT                   /db_xref=&quot;InterPro:IPR001360&quot;</span>
+<span class="gp">... </span><span class="s1">FT                   /db_xref=&quot;InterPro:IPR013781&quot;</span>
+<span class="gp">... </span><span class="s1">FT                   /db_xref=&quot;InterPro:IPR017853&quot;</span>
+<span class="gp">... </span><span class="s1">FT                   /db_xref=&quot;InterPro:IPR033132&quot;</span>
+<span class="gp">... </span><span class="s1">FT                   /db_xref=&quot;UniProtKB/Swiss-Prot:P26204&quot;</span>
+<span class="gp">... </span><span class="s1">FT                   /protein_id=&quot;CAA40058.1&quot;</span>
+<span class="gp">... </span><span class="s1">FT                   /translation=&quot;MDFIVAIFALFVISSFTITSTNAVEASTLLDIGNLSRS</span>
+<span class="gp">... </span><span class="s1">FT                   SFPRGFIFGAGSSAYQFEGAVNEGGRGPSIWDTFTHKYPEKIRDGSNADITV</span>
+<span class="gp">... </span><span class="s1">FT                   DQYHRYKEDVGIMKDQNMDSYRFSISWPRILPKGKLSGGINHEGIKYYNNLI</span>
+<span class="gp">... </span><span class="s1">FT                   NELLANGIQPFVTLFHWDLPQVLEDEYGGFLNSGVINDFRDYTDLCFKEFGD</span>
+<span class="gp">... </span><span class="s1">FT                   RVRYWSTLNEPWVFSNSGYALGTNAPGRCSASNVAKPGDSGTGPYIVTHNQI</span>
+<span class="gp">... </span><span class="s1">FT                   LAHAEAVHVYKTKYQAYQKGKIGITLVSNWLMPLDDNSIPDIKAAERSLDFQ</span>
+<span class="gp">... </span><span class="s1">FT                   FGLFMEQLTTGDYSKSMRRIVKNRLPKFSKFESSLVNGSFDFIGINYYSSSY</span>
+<span class="gp">... </span><span class="s1">FT                   ISNAPSHGNAKPSYSTNPMTNISFEKHGIPLGPRAASIWIYVYPYMFIQEDF</span>
+<span class="gp">... </span><span class="s1">FT                   EIFCYILKINITILQFSITENGMNEFNDATLPVEEALLNTYRIDYYYRHLYY</span>
+<span class="gp">... </span><span class="s1">FT                   IRSAIRAGSNVKGFYAWSFLDCNEWFAGFTVRFGLNFVD&quot;</span>
+<span class="gp">... </span><span class="s1">XX</span>
+<span class="gp">... </span><span class="s1">SQ   Sequence 1859 BP; 609 A; 314 C; 355 G; 581 T; 0 other;</span>
+<span class="gp">... </span><span class="s1">     aaacaaacca aatatggatt ttattgtagc catatttgct ctgtttgtta ttagctcatt</span>
+<span class="gp">... </span><span class="s1">     cacaattact tccacaaatg cagttgaagc ttctactctt cttgacatag gtaacctgag</span>
+<span class="gp">... </span><span class="s1">     tcggagcagt tttcctcgtg gcttcatctt tggtgctgga tcttcagcat accaatttga</span>
+<span class="gp">... </span><span class="s1">     aggtgcagta aacgaaggcg gtagaggacc aagtatttgg gataccttca cccataaata</span>
+<span class="gp">... </span><span class="s1">     tccagaaaaa ataagggatg gaagcaatgc agacatcacg gttgaccaat atcaccgcta</span>
+<span class="gp">... </span><span class="s1">     caaggaagat gttgggatta tgaaggatca aaatatggat tcgtatagat tctcaatctc</span>
+<span class="gp">... </span><span class="s1">     ttggccaaga atactcccaa agggaaagtt gagcggaggc ataaatcacg aaggaatcaa</span>
+<span class="gp">... </span><span class="s1">     atattacaac aaccttatca acgaactatt ggctaacggt atacaaccat ttgtaactct</span>
+<span class="gp">... </span><span class="s1">     ttttcattgg gatcttcccc aagtcttaga agatgagtat ggtggtttct taaactccgg</span>
+<span class="gp">... </span><span class="s1">     tgtaataaat gattttcgag actatacgga tctttgcttc aaggaatttg gagatagagt</span>
+<span class="gp">... </span><span class="s1">     gaggtattgg agtactctaa atgagccatg ggtgtttagc aattctggat atgcactagg</span>
+<span class="gp">... </span><span class="s1">     aacaaatgca ccaggtcgat gttcggcctc caacgtggcc aagcctggtg attctggaac</span>
+<span class="gp">... </span><span class="s1">     aggaccttat atagttacac acaatcaaat tcttgctcat gcagaagctg tacatgtgta</span>
+<span class="gp">... </span><span class="s1">     taagactaaa taccaggcat atcaaaaggg aaagataggc ataacgttgg tatctaactg</span>
+<span class="gp">... </span><span class="s1">     gttaatgcca cttgatgata atagcatacc agatataaag gctgccgaga gatcacttga</span>
+<span class="gp">... </span><span class="s1">     cttccaattt ggattgttta tggaacaatt aacaacagga gattattcta agagcatgcg</span>
+<span class="gp">... </span><span class="s1">     gcgtatagtt aaaaaccgat tacctaagtt ctcaaaattc gaatcaagcc tagtgaatgg</span>
+<span class="gp">... </span><span class="s1">     ttcatttgat tttattggta taaactatta ctcttctagt tatattagca atgccccttc</span>
+<span class="gp">... </span><span class="s1">     acatggcaat gccaaaccca gttactcaac aaatcctatg accaatattt catttgaaaa</span>
+<span class="gp">... </span><span class="s1">     acatgggata cccttaggtc caagggctgc ttcaatttgg atatatgttt atccatatat</span>
+<span class="gp">... </span><span class="s1">     gtttatccaa gaggacttcg agatcttttg ttacatatta aaaataaata taacaatcct</span>
+<span class="gp">... </span><span class="s1">     gcaattttca atcactgaaa atggtatgaa tgaattcaac gatgcaacac ttccagtaga</span>
+<span class="gp">... </span><span class="s1">     agaagctctt ttgaatactt acagaattga ttactattac cgtcacttat actacattcg</span>
+<span class="gp">... </span><span class="s1">     ttctgcaatc agggctggct caaatgtgaa gggtttttac gcatggtcat ttttggactg</span>
+<span class="gp">... </span><span class="s1">     taatgaatgg tttgcaggct ttactgttcg ttttggatta aactttgtag attagaaaga</span>
+<span class="gp">... </span><span class="s1">     tggattaaaa aggtacccta agctttctgc ccaatggtac aagaactttc tcaaaagaaa</span>
+<span class="gp">... </span><span class="s1">     ctagctagta ttattaaaag aactttgtag tagattacag tacatcgttt gaagttgagt</span>
+<span class="gp">... </span><span class="s1">     tggtgcacct aattaaataa aagaggttac tcttaacata tttttaggcc attcgttgtg</span>
+<span class="gp">... </span><span class="s1">     aagttgttag gctgttattt ctattatact atgttgtagt aataagtgca ttgttgtacc</span>
+<span class="gp">... </span><span class="s1">     agaagctatg atcataacta taggttgatc cttcatgtat cagtttgatg ttgagaatac</span>
+<span class="gp">... </span><span class="s1">     tttgaattaa aagtcttttt ttattttttt aaaaaaaaaa aaaaaaaaaa aaaaaaaaa</span>
+<span class="gp">... </span><span class="s1">//</span>
+<span class="gp">... </span><span class="s1">&#39;&#39;&#39;</span>
+</pre></div>
+</div>
+<p>Now we can read it as <code class="docutils literal"><span class="pre">DNA</span></code> object:</p>
+<div class="highlight-default"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="kn">import</span> <span class="nn">io</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">skbio</span> <span class="k">import</span> <span class="n">DNA</span><span class="p">,</span> <span class="n">RNA</span><span class="p">,</span> <span class="n">Sequence</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">embl</span> <span class="o">=</span> <span class="n">io</span><span class="o">.</span><span class="n">StringIO</span><span class="p">(</span><span class="n">embl_str</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">dna_seq</span> <span class="o">=</span> <span class="n">DNA</span><span class="o">.</span><span class="n">read</span><span class="p">(</span><span class="n">embl</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">dna_seq</span>
+<span class="go">DNA</span>
+<span class="go">----------------------------------------------------------------------</span>
+<span class="go">Metadata:</span>
+<span class="go">    &#39;ACCESSION&#39;: &#39;X56734; S46826;&#39;</span>
+<span class="go">    &#39;CROSS_REFERENCE&#39;: &lt;class &#39;list&#39;&gt;</span>
+<span class="go">    &#39;DATE&#39;: &lt;class &#39;list&#39;&gt;</span>
+<span class="go">    &#39;DBSOURCE&#39;: &#39;MD5; 1e51ca3a5450c43524b9185c236cc5cc.&#39;</span>
+<span class="go">    &#39;DEFINITION&#39;: &#39;Trifolium repens mRNA for non-cyanogenic beta-</span>
+<span class="go">                   glucosidase&#39;</span>
+<span class="go">    &#39;KEYWORDS&#39;: &#39;beta-glucosidase.&#39;</span>
+<span class="go">    &#39;LOCUS&#39;: &lt;class &#39;dict&#39;&gt;</span>
+<span class="go">    &#39;REFERENCE&#39;: &lt;class &#39;list&#39;&gt;</span>
+<span class="go">    &#39;SOURCE&#39;: &lt;class &#39;dict&#39;&gt;</span>
+<span class="go">    &#39;VERSION&#39;: &#39;X56734.1&#39;</span>
+<span class="go">Interval metadata:</span>
+<span class="go">    3 interval features</span>
+<span class="go">Stats:</span>
+<span class="go">    length: 1859</span>
+<span class="go">    has gaps: False</span>
+<span class="go">    has degenerates: False</span>
+<span class="go">    has definites: True</span>
+<span class="go">    GC-content: 35.99%</span>
+<span class="go">----------------------------------------------------------------------</span>
+<span class="go">0    AAACAAACCA AATATGGATT TTATTGTAGC CATATTTGCT CTGTTTGTTA TTAGCTCATT</span>
+<span class="go">60   CACAATTACT TCCACAAATG CAGTTGAAGC TTCTACTCTT CTTGACATAG GTAACCTGAG</span>
+<span class="gp">...</span>
+<span class="go">1740 AGAAGCTATG ATCATAACTA TAGGTTGATC CTTCATGTAT CAGTTTGATG TTGAGAATAC</span>
+<span class="go">1800 TTTGAATTAA AAGTCTTTTT TTATTTTTTT AAAAAAAAAA AAAAAAAAAA AAAAAAAAA</span>
+</pre></div>
+</div>
+<p>Since this is a mRNA molecule, we may want to read it as <code class="docutils literal"><span class="pre">RNA</span></code>.
+As the EMBL file usually have <code class="docutils literal"><span class="pre">t</span></code> instead of <code class="docutils literal"><span class="pre">u</span></code> in
+the sequence, we can read it as <code class="docutils literal"><span class="pre">RNA</span></code> by converting <code class="docutils literal"><span class="pre">t</span></code> to <code class="docutils literal"><span class="pre">u</span></code>:</p>
+<div class="highlight-default"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">embl</span> <span class="o">=</span> <span class="n">io</span><span class="o">.</span><span class="n">StringIO</span><span class="p">(</span><span class="n">embl_str</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">rna_seq</span> <span class="o">=</span> <span class="n">RNA</span><span class="o">.</span><span class="n">read</span><span class="p">(</span><span class="n">embl</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">rna_seq</span>
+<span class="go">RNA</span>
+<span class="go">----------------------------------------------------------------------</span>
+<span class="go">Metadata:</span>
+<span class="go">    &#39;ACCESSION&#39;: &#39;X56734; S46826;&#39;</span>
+<span class="go">    &#39;CROSS_REFERENCE&#39;: &lt;class &#39;list&#39;&gt;</span>
+<span class="go">    &#39;DATE&#39;: &lt;class &#39;list&#39;&gt;</span>
+<span class="go">    &#39;DBSOURCE&#39;: &#39;MD5; 1e51ca3a5450c43524b9185c236cc5cc.&#39;</span>
+<span class="go">    &#39;DEFINITION&#39;: &#39;Trifolium repens mRNA for non-cyanogenic beta-</span>
+<span class="go">                   glucosidase&#39;</span>
+<span class="go">    &#39;KEYWORDS&#39;: &#39;beta-glucosidase.&#39;</span>
+<span class="go">    &#39;LOCUS&#39;: &lt;class &#39;dict&#39;&gt;</span>
+<span class="go">    &#39;REFERENCE&#39;: &lt;class &#39;list&#39;&gt;</span>
+<span class="go">    &#39;SOURCE&#39;: &lt;class &#39;dict&#39;&gt;</span>
+<span class="go">    &#39;VERSION&#39;: &#39;X56734.1&#39;</span>
+<span class="go">Interval metadata:</span>
+<span class="go">    3 interval features</span>
+<span class="go">Stats:</span>
+<span class="go">    length: 1859</span>
+<span class="go">    has gaps: False</span>
+<span class="go">    has degenerates: False</span>
+<span class="go">    has definites: True</span>
+<span class="go">    GC-content: 35.99%</span>
+<span class="go">----------------------------------------------------------------------</span>
+<span class="go">0    AAACAAACCA AAUAUGGAUU UUAUUGUAGC CAUAUUUGCU CUGUUUGUUA UUAGCUCAUU</span>
+<span class="go">60   CACAAUUACU UCCACAAAUG CAGUUGAAGC UUCUACUCUU CUUGACAUAG GUAACCUGAG</span>
+<span class="gp">...</span>
+<span class="go">1740 AGAAGCUAUG AUCAUAACUA UAGGUUGAUC CUUCAUGUAU CAGUUUGAUG UUGAGAAUAC</span>
+<span class="go">1800 UUUGAAUUAA AAGUCUUUUU UUAUUUUUUU AAAAAAAAAA AAAAAAAAAA AAAAAAAAA</span>
+</pre></div>
+</div>
+<p>We can also <code class="docutils literal"><span class="pre">trascribe</span></code> a sequence and verify that it will be a <code class="docutils literal"><span class="pre">RNA</span></code>
+sequence</p>
+<div class="highlight-default"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">rna_seq</span> <span class="o">==</span> <span class="n">dna_seq</span><span class="o">.</span><span class="n">transcribe</span><span class="p">()</span>
+<span class="go">True</span>
+</pre></div>
+</div>
+</div>
+<div class="section" id="reading-embl-files-using-generators">
+<h2>Reading EMBL Files using generators<a class="headerlink" href="#reading-embl-files-using-generators" title="Permalink to this headline">¶</a></h2>
+<p>Soppose we have an EMBL file with multiple records: we can instantiate a
+generator object to deal with multiple records</p>
+<div class="highlight-default"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="kn">import</span> <span class="nn">skbio</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">embl</span> <span class="o">=</span> <span class="n">io</span><span class="o">.</span><span class="n">StringIO</span><span class="p">(</span><span class="n">embl_str</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">embl_gen</span> <span class="o">=</span> <span class="n">skbio</span><span class="o">.</span><span class="n">io</span><span class="o">.</span><span class="n">read</span><span class="p">(</span><span class="n">embl</span><span class="p">,</span> <span class="nb">format</span><span class="o">=</span><span class="s2">&quot;embl&quot;</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">dna_seq</span> <span class="o">=</span> <span class="nb">next</span><span class="p">(</span><span class="n">embl_gen</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>For more informations, see <a class="reference internal" href="../io.html#module-skbio.io" title="skbio.io"><code class="xref py py-mod docutils literal"><span class="pre">skbio.io</span></code></a></p>
+<div class="section" id="references">
+<h3>References<a class="headerlink" href="#references" title="Permalink to this headline">¶</a></h3>
+<table class="docutils citation" frame="void" id="r320" rules="none">
+<colgroup><col class="label" /><col /></colgroup>
+<tbody valign="top">
+<tr><td class="label"><a class="fn-backref" href="#id1">[R320]</a></td><td><a class="reference external" href="ftp://ftp.ebi.ac.uk/pub/databases/embl/release/doc/usrman.txt">ftp://ftp.ebi.ac.uk/pub/databases/embl/release/doc/usrman.txt</a></td></tr>
+</tbody>
+</table>
+<table class="docutils citation" frame="void" id="r321" rules="none">
+<colgroup><col class="label" /><col /></colgroup>
+<tbody valign="top">
+<tr><td class="label"><a class="fn-backref" href="#id2">[R321]</a></td><td><a class="reference external" href="http://www.ebi.ac.uk/ena/data/view/X56734&amp;display=text">http://www.ebi.ac.uk/ena/data/view/X56734&amp;display=text</a></td></tr>
+</tbody>
+</table>
+<table class="docutils citation" frame="void" id="r322" rules="none">
+<colgroup><col class="label" /><col /></colgroup>
+<tbody valign="top">
+<tr><td class="label"><a class="fn-backref" href="#id3">[R322]</a></td><td><a class="reference external" href="http://www.ebi.ac.uk/ena/browse/feature-level-products">http://www.ebi.ac.uk/ena/browse/feature-level-products</a></td></tr>
+</tbody>
+</table>
+<table class="docutils citation" frame="void" id="r323" rules="none">
+<colgroup><col class="label" /><col /></colgroup>
+<tbody valign="top">
+<tr><td class="label"><a class="fn-backref" href="#id4">[R323]</a></td><td><a class="reference external" href="https://github.com/biocore/scikit-bio/issues/1499">https://github.com/biocore/scikit-bio/issues/1499</a></td></tr>
+</tbody>
+</table>
+</div>
+</div>
+</div>
+
+
+    </div>
+      
+  </div>
+</div>
+  
+<footer class="footer">
+  <div class="container">
+    <p class="pull-right">
+      <a href="#">Back to top</a>
+      
+    </p>
+    <p>
+        &copy; Copyright 2014--, scikit-bio development team.<br/>
+      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 1.6.5.<br/>
+    </p>
+  </div>
+</footer>
+  <script>
+    (function(i,s,o,g,r,a,m){i['GoogleAnalyticsObject']=r;i[r]=i[r]||function(){
+    (i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),
+    m=s.getElementsByTagName(o)[0];a.async=1;a.src=g;m.parentNode.insertBefore(a,m)
+    })(window,document,'script','//www.google-analytics.com/analytics.js','ga');
+
+    ga('create', 'UA-6636235-9', 'scikit-bio.org');
+    ga('send', 'pageview');
+  </script>
+
+  </body>
+</html>

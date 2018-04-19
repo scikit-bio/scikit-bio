@@ -1,0 +1,421 @@
+<!DOCTYPE html>
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    <title>skbio.alignment.TabularMSA &#8212; scikit-bio 0.5.2 documentation</title>
+    <link rel="stylesheet" href="../_static/bootstrap-sphinx.css" type="text/css" />
+    <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
+    <link rel="stylesheet" href="../_static/style.css" type="text/css" />
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    '../',
+        VERSION:     '0.5.2',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true,
+        SOURCELINK_SUFFIX: '.txt'
+      };
+    </script>
+    <script type="text/javascript" src="../_static/jquery.js"></script>
+    <script type="text/javascript" src="../_static/underscore.js"></script>
+    <script type="text/javascript" src="../_static/doctools.js"></script>
+    <script type="text/javascript" src="../_static/copybutton.js"></script>
+    <script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.1/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
+    <script type="text/javascript" src="../_static/js/jquery-1.11.0.min.js"></script>
+    <script type="text/javascript" src="../_static/js/jquery-fix.js"></script>
+    <script type="text/javascript" src="../_static/bootstrap-3.3.7/js/bootstrap.min.js"></script>
+    <script type="text/javascript" src="../_static/bootstrap-sphinx.js"></script>
+    <link rel="index" title="Index" href="../genindex.html" />
+    <link rel="search" title="Search" href="../search.html" />
+    <link rel="next" title="skbio.alignment.StripedSmithWaterman" href="skbio.alignment.StripedSmithWaterman.html" />
+    <link rel="prev" title="Alignments (skbio.alignment)" href="../alignment.html" />
+<meta charset='utf-8'>
+<meta http-equiv='X-UA-Compatible' content='IE=edge,chrome=1'>
+<meta name='viewport' content='width=device-width, initial-scale=1.0, maximum-scale=1'>
+<meta name="apple-mobile-web-app-capable" content="yes">
+
+  </head>
+  <body>
+  
+  <a href="https://github.com/biocore/scikit-bio"
+     class="visible-desktop hidden-xs"><img
+    id="gh-banner"
+    style="position: absolute; top: 50px; right: 0; border: 0;"
+    src="https://s3.amazonaws.com/github/ribbons/forkme_right_darkblue_121621.png"
+    alt="Fork me on GitHub"></a>
+  <script>
+    // Adjust banner height.
+    $(function () {
+      var navHeight = $(".navbar .container").css("height");
+      $("#gh-banner").css("top", navHeight);
+    });
+  </script>
+
+
+  <div id="navbar" class="navbar navbar-default navbar-fixed-top">
+    <div class="container">
+      <div class="navbar-header">
+        <!-- .btn-navbar is used as the toggle for collapsed navbar content -->
+        <button type="button" class="navbar-toggle" data-toggle="collapse" data-target=".nav-collapse">
+          <span class="icon-bar"></span>
+          <span class="icon-bar"></span>
+          <span class="icon-bar"></span>
+        </button>
+        <a class="navbar-brand" href="../index.html">
+          scikit-bio docs</a>
+        <span class="navbar-text navbar-version pull-left"><b>0.5.2</b></span>
+      </div>
+
+        <div class="collapse navbar-collapse nav-collapse">
+          <ul class="nav navbar-nav">
+            
+            
+              <li class="dropdown globaltoc-container">
+  <a role="button"
+     id="dLabelGlobalToc"
+     data-toggle="dropdown"
+     data-target="#"
+     href="../index.html">Site <b class="caret"></b></a>
+  <ul class="dropdown-menu globaltoc"
+      role="menu"
+      aria-labelledby="dLabelGlobalToc"><ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="../io.html">File I/O (<code class="docutils literal"><span class="pre">skbio.io</span></code>)</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../sequence.html">Sequences (<code class="docutils literal"><span class="pre">skbio.sequence</span></code>)</a></li>
+<li class="toctree-l1 current"><a class="reference internal" href="../alignment.html">Alignments (<code class="docutils literal"><span class="pre">skbio.alignment</span></code>)</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../tree.html">Tree representations (<code class="docutils literal"><span class="pre">skbio.tree</span></code>)</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../workflow.html">Constructing workflows (<code class="docutils literal"><span class="pre">skbio.workflow</span></code>)</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../diversity.html">Diversity calculations (<code class="docutils literal"><span class="pre">skbio.diversity</span></code>)</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../stats.html">Statistics (<code class="docutils literal"><span class="pre">skbio.stats</span></code>)</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../metadata.html">Metadata (<code class="docutils literal"><span class="pre">skbio.metadata</span></code>)</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../util.html">Utility functionality (<code class="docutils literal"><span class="pre">skbio.util</span></code>)</a></li>
+</ul>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../user/api_stability.html">API Stability</a></li>
+</ul>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../development/coding_guidelines.html">Coding guidelines</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../development/new_module.html">Adding a new module to skbio</a></li>
+</ul>
+</ul>
+</li>
+              
+                <li class="dropdown">
+  <a role="button"
+     id="dLabelLocalToc"
+     data-toggle="dropdown"
+     data-target="#"
+     href="#">Page <b class="caret"></b></a>
+  <ul class="dropdown-menu localtoc"
+      role="menu"
+      aria-labelledby="dLabelLocalToc"><ul>
+<li><a class="reference internal" href="#">skbio.alignment.TabularMSA</a></li>
+</ul>
+</ul>
+</li>
+              
+            
+            
+            
+            
+            
+          </ul>
+
+          
+            
+<form class="navbar-form navbar-right" action="../search.html" method="get">
+ <div class="form-group">
+  <input type="text" name="q" class="form-control" placeholder="Search" />
+ </div>
+  <input type="hidden" name="check_keywords" value="yes" />
+  <input type="hidden" name="area" value="default" />
+</form>
+          
+        </div>
+    </div>
+  </div>
+
+<div class="container">
+  <div class="row">
+    <div class="col-md-12 content">
+      
+  <div class="section" id="skbio-alignment-tabularmsa">
+<h1>skbio.alignment.TabularMSA<a class="headerlink" href="#skbio-alignment-tabularmsa" title="Permalink to this headline">¶</a></h1>
+<dl class="class">
+<dt id="skbio.alignment.TabularMSA">
+<em class="property">class </em><code class="descclassname">skbio.alignment.</code><code class="descname">TabularMSA</code><span class="sig-paren">(</span><em>sequences</em>, <em>metadata=None</em>, <em>positional_metadata=None</em>, <em>minter=None</em>, <em>index=None</em><span class="sig-paren">)</span><a class="reference external" href="http://github.com/biocore/scikit-bio/blob/0.5.2/skbio/alignment/_tabular_msa.py#L30"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#skbio.alignment.TabularMSA" title="Permalink to this definition">¶</a></dt>
+<dd><p>Store a multiple sequence alignment in tabular (row/column) form.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><p class="first"><strong>sequences</strong> : iterable of GrammaredSequence, TabularMSA</p>
+<blockquote>
+<div><p>Aligned sequences in the MSA. Sequences must all be the same type and
+length. For example, <cite>sequences</cite> could be an iterable of <code class="docutils literal"><span class="pre">DNA</span></code>,
+<code class="docutils literal"><span class="pre">RNA</span></code>, or <code class="docutils literal"><span class="pre">Protein</span></code> sequences. If <cite>sequences</cite> is a <code class="docutils literal"><span class="pre">TabularMSA</span></code>,
+its <cite>metadata</cite>, <cite>positional_metadata</cite>, and <cite>index</cite> will be used unless
+overridden by parameters <cite>metadata</cite>, <cite>positional_metadata</cite>, and
+<cite>minter</cite>/<cite>index</cite>, respectively.</p>
+</div></blockquote>
+<p><strong>metadata</strong> : dict, optional</p>
+<blockquote>
+<div><p>Arbitrary metadata which applies to the entire MSA. A shallow copy of
+the <code class="docutils literal"><span class="pre">dict</span></code> will be made.</p>
+</div></blockquote>
+<p><strong>positional_metadata</strong> : pd.DataFrame consumable, optional</p>
+<blockquote>
+<div><p>Arbitrary metadata which applies to each position in the MSA. Must be
+able to be passed directly to <code class="docutils literal"><span class="pre">pd.DataFrame</span></code> constructor. Each column
+of metadata must be the same length as the number of positions in the
+MSA. A shallow copy of the positional metadata will be made.</p>
+</div></blockquote>
+<p><strong>minter</strong> : callable or metadata key, optional</p>
+<blockquote>
+<div><p>If provided, defines an index label for each sequence in <cite>sequences</cite>.
+Can either be a callable accepting a single argument (each sequence) or
+a key into each sequence’s <code class="docutils literal"><span class="pre">metadata</span></code> attribute. Note that <cite>minter</cite>
+cannot be combined with <cite>index</cite>.</p>
+</div></blockquote>
+<p><strong>index</strong> : pd.Index consumable, optional</p>
+<blockquote>
+<div><p>Index containing labels for <cite>sequences</cite>. Must be the same length as
+<cite>sequences</cite>. Must be able to be passed directly to <code class="docutils literal"><span class="pre">pd.Index</span></code>
+constructor. Note that <cite>index</cite> cannot be combined with <cite>minter</cite>.</p>
+</div></blockquote>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Raises:</th><td class="field-body"><p class="first"><strong>ValueError</strong></p>
+<blockquote>
+<div><p>If <cite>minter</cite> and <cite>index</cite> are both provided.</p>
+</div></blockquote>
+<p><strong>ValueError</strong></p>
+<blockquote>
+<div><p>If <cite>index</cite> is not the same length as <cite>sequences</cite>.</p>
+</div></blockquote>
+<p><strong>TypeError</strong></p>
+<blockquote>
+<div><p>If <cite>sequences</cite> contains an object that isn’t a <code class="docutils literal"><span class="pre">GrammaredSequence</span></code>.</p>
+</div></blockquote>
+<p><strong>TypeError</strong></p>
+<blockquote>
+<div><p>If <cite>sequences</cite> does not contain exactly the same type of
+<code class="docutils literal"><span class="pre">GrammaredSequence</span></code> objects.</p>
+</div></blockquote>
+<p><strong>ValueError</strong></p>
+<blockquote class="last">
+<div><p>If <cite>sequences</cite> does not contain <code class="docutils literal"><span class="pre">GrammaredSequence</span></code> objects of the
+same length.</p>
+</div></blockquote>
+</td>
+</tr>
+</tbody>
+</table>
+<div class="admonition seealso">
+<p class="first admonition-title">See also</p>
+<p class="last"><a class="reference internal" href="skbio.sequence.DNA.html#skbio.sequence.DNA" title="skbio.sequence.DNA"><code class="xref py py-obj docutils literal"><span class="pre">skbio.sequence.DNA</span></code></a>, <a class="reference internal" href="skbio.sequence.RNA.html#skbio.sequence.RNA" title="skbio.sequence.RNA"><code class="xref py py-obj docutils literal"><span class="pre">skbio.sequence.RNA</span></code></a>, <a class="reference internal" href="skbio.sequence.Protein.html#skbio.sequence.Protein" title="skbio.sequence.Protein"><code class="xref py py-obj docutils literal"><span class="pre">skbio.sequence.Protein</span></code></a>, <a class="reference external" href="http://pandas.pydata.org/pandas-docs/stable/generated/pandas.DataFrame.html#pandas.DataFrame" title="(in pandas v0.22.0)"><code class="xref py py-obj docutils literal"><span class="pre">pandas.DataFrame</span></code></a>, <a class="reference external" href="http://pandas.pydata.org/pandas-docs/stable/generated/pandas.Index.html#pandas.Index" title="(in pandas v0.22.0)"><code class="xref py py-obj docutils literal"><span class="pre">pandas.Index</span></code></a>, <a class="reference internal" href="skbio.alignment.TabularMSA.reassign_index.html#skbio.alignment.TabularMSA.reassign_index" title="skbio.alignment.TabularMSA.reassign_index"><code class="xref py py-obj docutils literal"><span class="pre">reassign_index</span></code></a></p>
+</div>
+<p class="rubric">Notes</p>
+<p>If neither <cite>minter</cite> nor <cite>index</cite> are provided, default index labels will be
+used: <code class="docutils literal"><span class="pre">pd.RangeIndex(start=0,</span> <span class="pre">stop=len(sequences),</span> <span class="pre">step=1)</span></code>.</p>
+<p class="rubric">Examples</p>
+<p>Create a <code class="docutils literal"><span class="pre">TabularMSA</span></code> object with three DNA sequences and four positions:</p>
+<div class="highlight-default"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">skbio</span> <span class="k">import</span> <span class="n">DNA</span><span class="p">,</span> <span class="n">TabularMSA</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">seqs</span> <span class="o">=</span> <span class="p">[</span>
+<span class="gp">... </span>    <span class="n">DNA</span><span class="p">(</span><span class="s1">&#39;ACGT&#39;</span><span class="p">),</span>
+<span class="gp">... </span>    <span class="n">DNA</span><span class="p">(</span><span class="s1">&#39;AG-T&#39;</span><span class="p">),</span>
+<span class="gp">... </span>    <span class="n">DNA</span><span class="p">(</span><span class="s1">&#39;-C-T&#39;</span><span class="p">)</span>
+<span class="gp">... </span><span class="p">]</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">msa</span> <span class="o">=</span> <span class="n">TabularMSA</span><span class="p">(</span><span class="n">seqs</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">msa</span>
+<span class="go">TabularMSA[DNA]</span>
+<span class="go">---------------------</span>
+<span class="go">Stats:</span>
+<span class="go">    sequence count: 3</span>
+<span class="go">    position count: 4</span>
+<span class="go">---------------------</span>
+<span class="go">ACGT</span>
+<span class="go">AG-T</span>
+<span class="go">-C-T</span>
+</pre></div>
+</div>
+<p>Since <cite>minter</cite> or <cite>index</cite> wasn’t provided, the MSA has default index
+labels:</p>
+<div class="highlight-default"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">msa</span><span class="o">.</span><span class="n">index</span>
+<span class="go">RangeIndex(start=0, stop=3, step=1)</span>
+</pre></div>
+</div>
+<p>Create an MSA with metadata, positional metadata, and non-default index
+labels:</p>
+<div class="highlight-default"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">msa</span> <span class="o">=</span> <span class="n">TabularMSA</span><span class="p">(</span><span class="n">seqs</span><span class="p">,</span> <span class="n">index</span><span class="o">=</span><span class="p">[</span><span class="s1">&#39;seq1&#39;</span><span class="p">,</span> <span class="s1">&#39;seq2&#39;</span><span class="p">,</span> <span class="s1">&#39;seq3&#39;</span><span class="p">],</span>
+<span class="gp">... </span>                 <span class="n">metadata</span><span class="o">=</span><span class="p">{</span><span class="s1">&#39;id&#39;</span><span class="p">:</span> <span class="s1">&#39;msa-id&#39;</span><span class="p">},</span>
+<span class="gp">... </span>                 <span class="n">positional_metadata</span><span class="o">=</span><span class="p">{</span><span class="s1">&#39;prob&#39;</span><span class="p">:</span> <span class="p">[</span><span class="mi">3</span><span class="p">,</span> <span class="mi">4</span><span class="p">,</span> <span class="mi">2</span><span class="p">,</span> <span class="mi">2</span><span class="p">]})</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">msa</span>
+<span class="go">TabularMSA[DNA]</span>
+<span class="go">--------------------------</span>
+<span class="go">Metadata:</span>
+<span class="go">    &#39;id&#39;: &#39;msa-id&#39;</span>
+<span class="go">Positional metadata:</span>
+<span class="go">    &#39;prob&#39;: &lt;dtype: int64&gt;</span>
+<span class="go">Stats:</span>
+<span class="go">    sequence count: 3</span>
+<span class="go">    position count: 4</span>
+<span class="go">--------------------------</span>
+<span class="go">ACGT</span>
+<span class="go">AG-T</span>
+<span class="go">-C-T</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">msa</span><span class="o">.</span><span class="n">index</span>
+<span class="go">Index([&#39;seq1&#39;, &#39;seq2&#39;, &#39;seq3&#39;], dtype=&#39;object&#39;)</span>
+</pre></div>
+</div>
+<p class="rubric">Attributes</p>
+<table border="1" class="longtable docutils">
+<colgroup>
+<col width="10%" />
+<col width="90%" />
+</colgroup>
+<tbody valign="top">
+<tr class="row-odd"><td><code class="xref py py-obj docutils literal"><span class="pre">dtype</span></code></td>
+<td>Data type of the stored sequences.</td>
+</tr>
+<tr class="row-even"><td><code class="xref py py-obj docutils literal"><span class="pre">iloc</span></code></td>
+<td>Slice the MSA on either axis by index position.</td>
+</tr>
+<tr class="row-odd"><td><code class="xref py py-obj docutils literal"><span class="pre">index</span></code></td>
+<td>Index containing labels along the sequence axis.</td>
+</tr>
+<tr class="row-even"><td><code class="xref py py-obj docutils literal"><span class="pre">loc</span></code></td>
+<td>Slice the MSA on first axis by index label, second axis by position.</td>
+</tr>
+<tr class="row-odd"><td><code class="xref py py-obj docutils literal"><span class="pre">metadata</span></code></td>
+<td><code class="docutils literal"><span class="pre">dict</span></code> containing metadata which applies to the entire object.</td>
+</tr>
+<tr class="row-even"><td><code class="xref py py-obj docutils literal"><span class="pre">positional_metadata</span></code></td>
+<td><code class="docutils literal"><span class="pre">pd.DataFrame</span></code> containing metadata along an axis.</td>
+</tr>
+<tr class="row-odd"><td><code class="xref py py-obj docutils literal"><span class="pre">shape</span></code></td>
+<td>Number of sequences (rows) and positions (columns).</td>
+</tr>
+</tbody>
+</table>
+<p class="rubric">Methods</p>
+<table border="1" class="longtable docutils">
+<colgroup>
+<col width="10%" />
+<col width="90%" />
+</colgroup>
+<tbody valign="top">
+<tr class="row-odd"><td><a class="reference internal" href="skbio.alignment.TabularMSA.__bool__.html#skbio.alignment.TabularMSA.__bool__" title="skbio.alignment.TabularMSA.__bool__"><code class="xref py py-obj docutils literal"><span class="pre">bool(msa)</span></code></a></td>
+<td>Boolean indicating whether the MSA is empty or not.</td>
+</tr>
+<tr class="row-even"><td><a class="reference internal" href="skbio.alignment.TabularMSA.__contains__.html#skbio.alignment.TabularMSA.__contains__" title="skbio.alignment.TabularMSA.__contains__"><code class="xref py py-obj docutils literal"><span class="pre">x</span> <span class="pre">in</span> <span class="pre">msa</span></code></a></td>
+<td>Determine if an index label is in this MSA.</td>
+</tr>
+<tr class="row-odd"><td><a class="reference internal" href="skbio.alignment.TabularMSA.__copy__.html#skbio.alignment.TabularMSA.__copy__" title="skbio.alignment.TabularMSA.__copy__"><code class="xref py py-obj docutils literal"><span class="pre">copy.copy(msa)</span></code></a></td>
+<td>Return a shallow copy of this MSA.</td>
+</tr>
+<tr class="row-even"><td><a class="reference internal" href="skbio.alignment.TabularMSA.__deepcopy__.html#skbio.alignment.TabularMSA.__deepcopy__" title="skbio.alignment.TabularMSA.__deepcopy__"><code class="xref py py-obj docutils literal"><span class="pre">copy.deepcopy(msa)</span></code></a></td>
+<td>Return a deep copy of this MSA.</td>
+</tr>
+<tr class="row-odd"><td><a class="reference internal" href="skbio.alignment.TabularMSA.__eq__.html#skbio.alignment.TabularMSA.__eq__" title="skbio.alignment.TabularMSA.__eq__"><code class="xref py py-obj docutils literal"><span class="pre">msa1</span> <span class="pre">==</span> <span class="pre">msa2</span></code></a></td>
+<td>Determine if this MSA is equal to another.</td>
+</tr>
+<tr class="row-even"><td><a class="reference internal" href="skbio.alignment.TabularMSA.__getitem__.html#skbio.alignment.TabularMSA.__getitem__" title="skbio.alignment.TabularMSA.__getitem__"><code class="xref py py-obj docutils literal"><span class="pre">msa[x]</span></code></a></td>
+<td>Slice the MSA on either axis.</td>
+</tr>
+<tr class="row-odd"><td><a class="reference internal" href="skbio.alignment.TabularMSA.__iter__.html#skbio.alignment.TabularMSA.__iter__" title="skbio.alignment.TabularMSA.__iter__"><code class="xref py py-obj docutils literal"><span class="pre">iter(msa)</span></code></a></td>
+<td>Iterate over sequences in the MSA.</td>
+</tr>
+<tr class="row-even"><td><a class="reference internal" href="skbio.alignment.TabularMSA.__len__.html#skbio.alignment.TabularMSA.__len__" title="skbio.alignment.TabularMSA.__len__"><code class="xref py py-obj docutils literal"><span class="pre">len(msa)</span></code></a></td>
+<td>Number of sequences in the MSA.</td>
+</tr>
+<tr class="row-odd"><td><a class="reference internal" href="skbio.alignment.TabularMSA.__ne__.html#skbio.alignment.TabularMSA.__ne__" title="skbio.alignment.TabularMSA.__ne__"><code class="xref py py-obj docutils literal"><span class="pre">msa1</span> <span class="pre">!=</span> <span class="pre">msa2</span></code></a></td>
+<td>Determine if this MSA is not equal to another.</td>
+</tr>
+<tr class="row-even"><td><a class="reference internal" href="skbio.alignment.TabularMSA.__reversed__.html#skbio.alignment.TabularMSA.__reversed__" title="skbio.alignment.TabularMSA.__reversed__"><code class="xref py py-obj docutils literal"><span class="pre">reversed(msa)</span></code></a></td>
+<td>Iterate in reverse order over sequences in the MSA.</td>
+</tr>
+<tr class="row-odd"><td><a class="reference internal" href="skbio.alignment.TabularMSA.__str__.html#skbio.alignment.TabularMSA.__str__" title="skbio.alignment.TabularMSA.__str__"><code class="xref py py-obj docutils literal"><span class="pre">str(msa)</span></code></a></td>
+<td>String summary of this MSA.</td>
+</tr>
+<tr class="row-even"><td><a class="reference internal" href="skbio.alignment.TabularMSA.append.html#skbio.alignment.TabularMSA.append" title="skbio.alignment.TabularMSA.append"><code class="xref py py-obj docutils literal"><span class="pre">append</span></code></a>(sequence[,&nbsp;minter,&nbsp;index,&nbsp;reset_index])</td>
+<td>Append a sequence to the MSA without recomputing alignment.</td>
+</tr>
+<tr class="row-odd"><td><a class="reference internal" href="skbio.alignment.TabularMSA.consensus.html#skbio.alignment.TabularMSA.consensus" title="skbio.alignment.TabularMSA.consensus"><code class="xref py py-obj docutils literal"><span class="pre">consensus</span></code></a>()</td>
+<td>Compute the majority consensus sequence for this MSA.</td>
+</tr>
+<tr class="row-even"><td><a class="reference internal" href="skbio.alignment.TabularMSA.conservation.html#skbio.alignment.TabularMSA.conservation" title="skbio.alignment.TabularMSA.conservation"><code class="xref py py-obj docutils literal"><span class="pre">conservation</span></code></a>([metric,&nbsp;degenerate_mode,&nbsp;gap_mode])</td>
+<td>Apply metric to compute conservation for all alignment positions</td>
+</tr>
+<tr class="row-odd"><td><a class="reference internal" href="skbio.alignment.TabularMSA.extend.html#skbio.alignment.TabularMSA.extend" title="skbio.alignment.TabularMSA.extend"><code class="xref py py-obj docutils literal"><span class="pre">extend</span></code></a>(sequences[,&nbsp;minter,&nbsp;index,&nbsp;reset_index])</td>
+<td>Extend this MSA with sequences without recomputing alignment.</td>
+</tr>
+<tr class="row-even"><td><a class="reference internal" href="skbio.alignment.TabularMSA.from_dict.html#skbio.alignment.TabularMSA.from_dict" title="skbio.alignment.TabularMSA.from_dict"><code class="xref py py-obj docutils literal"><span class="pre">from_dict</span></code></a>(dictionary)</td>
+<td>Create a <code class="docutils literal"><span class="pre">TabularMSA</span></code> from a <code class="docutils literal"><span class="pre">dict</span></code>.</td>
+</tr>
+<tr class="row-odd"><td><a class="reference internal" href="skbio.alignment.TabularMSA.gap_frequencies.html#skbio.alignment.TabularMSA.gap_frequencies" title="skbio.alignment.TabularMSA.gap_frequencies"><code class="xref py py-obj docutils literal"><span class="pre">gap_frequencies</span></code></a>([axis,&nbsp;relative])</td>
+<td>Compute frequency of gap characters across an axis.</td>
+</tr>
+<tr class="row-even"><td><a class="reference internal" href="skbio.alignment.TabularMSA.has_metadata.html#skbio.alignment.TabularMSA.has_metadata" title="skbio.alignment.TabularMSA.has_metadata"><code class="xref py py-obj docutils literal"><span class="pre">has_metadata</span></code></a>()</td>
+<td>Determine if the object has metadata.</td>
+</tr>
+<tr class="row-odd"><td><a class="reference internal" href="skbio.alignment.TabularMSA.has_positional_metadata.html#skbio.alignment.TabularMSA.has_positional_metadata" title="skbio.alignment.TabularMSA.has_positional_metadata"><code class="xref py py-obj docutils literal"><span class="pre">has_positional_metadata</span></code></a>()</td>
+<td>Determine if the object has positional metadata.</td>
+</tr>
+<tr class="row-even"><td><a class="reference internal" href="skbio.alignment.TabularMSA.iter_positions.html#skbio.alignment.TabularMSA.iter_positions" title="skbio.alignment.TabularMSA.iter_positions"><code class="xref py py-obj docutils literal"><span class="pre">iter_positions</span></code></a>([reverse,&nbsp;ignore_metadata])</td>
+<td>Iterate over positions (columns) in the MSA.</td>
+</tr>
+<tr class="row-odd"><td><a class="reference internal" href="skbio.alignment.TabularMSA.join.html#skbio.alignment.TabularMSA.join" title="skbio.alignment.TabularMSA.join"><code class="xref py py-obj docutils literal"><span class="pre">join</span></code></a>(other[,&nbsp;how])</td>
+<td>Join this MSA with another by sequence (horizontally).</td>
+</tr>
+<tr class="row-even"><td><a class="reference internal" href="skbio.alignment.TabularMSA.read.html#skbio.alignment.TabularMSA.read" title="skbio.alignment.TabularMSA.read"><code class="xref py py-obj docutils literal"><span class="pre">read</span></code></a>(file[,&nbsp;format])</td>
+<td>Create a new <code class="docutils literal"><span class="pre">TabularMSA</span></code> instance from a file.</td>
+</tr>
+<tr class="row-odd"><td><a class="reference internal" href="skbio.alignment.TabularMSA.reassign_index.html#skbio.alignment.TabularMSA.reassign_index" title="skbio.alignment.TabularMSA.reassign_index"><code class="xref py py-obj docutils literal"><span class="pre">reassign_index</span></code></a>([mapping,&nbsp;minter])</td>
+<td>Reassign index labels to sequences in this MSA.</td>
+</tr>
+<tr class="row-even"><td><a class="reference internal" href="skbio.alignment.TabularMSA.sort.html#skbio.alignment.TabularMSA.sort" title="skbio.alignment.TabularMSA.sort"><code class="xref py py-obj docutils literal"><span class="pre">sort</span></code></a>([level,&nbsp;ascending])</td>
+<td>Sort sequences by index label in-place.</td>
+</tr>
+<tr class="row-odd"><td><a class="reference internal" href="skbio.alignment.TabularMSA.to_dict.html#skbio.alignment.TabularMSA.to_dict" title="skbio.alignment.TabularMSA.to_dict"><code class="xref py py-obj docutils literal"><span class="pre">to_dict</span></code></a>()</td>
+<td>Create a <code class="docutils literal"><span class="pre">dict</span></code> from this <code class="docutils literal"><span class="pre">TabularMSA</span></code>.</td>
+</tr>
+<tr class="row-even"><td><a class="reference internal" href="skbio.alignment.TabularMSA.write.html#skbio.alignment.TabularMSA.write" title="skbio.alignment.TabularMSA.write"><code class="xref py py-obj docutils literal"><span class="pre">write</span></code></a>(file[,&nbsp;format])</td>
+<td>Write an instance of <code class="docutils literal"><span class="pre">TabularMSA</span></code> to a file.</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+</div>
+
+
+    </div>
+      
+  </div>
+</div>
+  
+<footer class="footer">
+  <div class="container">
+    <p class="pull-right">
+      <a href="#">Back to top</a>
+      
+    </p>
+    <p>
+        &copy; Copyright 2014--, scikit-bio development team.<br/>
+      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 1.6.5.<br/>
+    </p>
+  </div>
+</footer>
+  <script>
+    (function(i,s,o,g,r,a,m){i['GoogleAnalyticsObject']=r;i[r]=i[r]||function(){
+    (i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),
+    m=s.getElementsByTagName(o)[0];a.async=1;a.src=g;m.parentNode.insertBefore(a,m)
+    })(window,document,'script','//www.google-analytics.com/analytics.js','ga');
+
+    ga('create', 'UA-6636235-9', 'scikit-bio.org');
+    ga('send', 'pageview');
+  </script>
+
+  </body>
+</html>

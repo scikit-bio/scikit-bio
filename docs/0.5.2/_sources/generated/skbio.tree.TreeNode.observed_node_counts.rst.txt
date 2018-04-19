@@ -1,0 +1,8 @@
+:orphan:
+
+skbio.tree.TreeNode.observed_node_counts
+========================================
+
+.. currentmodule:: skbio.tree
+
+.. automethod:: TreeNode.observed_node_counts

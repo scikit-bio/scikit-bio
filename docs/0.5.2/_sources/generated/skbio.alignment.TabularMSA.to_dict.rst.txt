@@ -1,0 +1,8 @@
+:orphan:
+
+skbio.alignment.TabularMSA.to_dict
+==================================
+
+.. currentmodule:: skbio.alignment
+
+.. automethod:: TabularMSA.to_dict

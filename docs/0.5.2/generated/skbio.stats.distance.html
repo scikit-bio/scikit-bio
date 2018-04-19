@@ -1,0 +1,413 @@
+<!DOCTYPE html>
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    <title>Distance matrices and distance-based statistics (skbio.stats.distance) &#8212; scikit-bio 0.5.2 documentation</title>
+    <link rel="stylesheet" href="../_static/bootstrap-sphinx.css" type="text/css" />
+    <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
+    <link rel="stylesheet" href="../_static/style.css" type="text/css" />
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    '../',
+        VERSION:     '0.5.2',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true,
+        SOURCELINK_SUFFIX: '.txt'
+      };
+    </script>
+    <script type="text/javascript" src="../_static/jquery.js"></script>
+    <script type="text/javascript" src="../_static/underscore.js"></script>
+    <script type="text/javascript" src="../_static/doctools.js"></script>
+    <script type="text/javascript" src="../_static/copybutton.js"></script>
+    <script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.1/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
+    <script type="text/javascript" src="../_static/js/jquery-1.11.0.min.js"></script>
+    <script type="text/javascript" src="../_static/js/jquery-fix.js"></script>
+    <script type="text/javascript" src="../_static/bootstrap-3.3.7/js/bootstrap.min.js"></script>
+    <script type="text/javascript" src="../_static/bootstrap-sphinx.js"></script>
+    <link rel="index" title="Index" href="../genindex.html" />
+    <link rel="search" title="Search" href="../search.html" />
+    <link rel="next" title="skbio.stats.distance.DissimilarityMatrix" href="generated/skbio.stats.distance.DissimilarityMatrix.html" />
+    <link rel="prev" title="Statistics (skbio.stats)" href="../stats.html" />
+<meta charset='utf-8'>
+<meta http-equiv='X-UA-Compatible' content='IE=edge,chrome=1'>
+<meta name='viewport' content='width=device-width, initial-scale=1.0, maximum-scale=1'>
+<meta name="apple-mobile-web-app-capable" content="yes">
+
+  </head>
+  <body>
+  
+  <a href="https://github.com/biocore/scikit-bio"
+     class="visible-desktop hidden-xs"><img
+    id="gh-banner"
+    style="position: absolute; top: 50px; right: 0; border: 0;"
+    src="https://s3.amazonaws.com/github/ribbons/forkme_right_darkblue_121621.png"
+    alt="Fork me on GitHub"></a>
+  <script>
+    // Adjust banner height.
+    $(function () {
+      var navHeight = $(".navbar .container").css("height");
+      $("#gh-banner").css("top", navHeight);
+    });
+  </script>
+
+
+  <div id="navbar" class="navbar navbar-default navbar-fixed-top">
+    <div class="container">
+      <div class="navbar-header">
+        <!-- .btn-navbar is used as the toggle for collapsed navbar content -->
+        <button type="button" class="navbar-toggle" data-toggle="collapse" data-target=".nav-collapse">
+          <span class="icon-bar"></span>
+          <span class="icon-bar"></span>
+          <span class="icon-bar"></span>
+        </button>
+        <a class="navbar-brand" href="../index.html">
+          scikit-bio docs</a>
+        <span class="navbar-text navbar-version pull-left"><b>0.5.2</b></span>
+      </div>
+
+        <div class="collapse navbar-collapse nav-collapse">
+          <ul class="nav navbar-nav">
+            
+            
+              <li class="dropdown globaltoc-container">
+  <a role="button"
+     id="dLabelGlobalToc"
+     data-toggle="dropdown"
+     data-target="#"
+     href="../index.html">Site <b class="caret"></b></a>
+  <ul class="dropdown-menu globaltoc"
+      role="menu"
+      aria-labelledby="dLabelGlobalToc"><ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="../io.html">File I/O (<code class="docutils literal"><span class="pre">skbio.io</span></code>)</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../sequence.html">Sequences (<code class="docutils literal"><span class="pre">skbio.sequence</span></code>)</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../alignment.html">Alignments (<code class="docutils literal"><span class="pre">skbio.alignment</span></code>)</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../tree.html">Tree representations (<code class="docutils literal"><span class="pre">skbio.tree</span></code>)</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../workflow.html">Constructing workflows (<code class="docutils literal"><span class="pre">skbio.workflow</span></code>)</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../diversity.html">Diversity calculations (<code class="docutils literal"><span class="pre">skbio.diversity</span></code>)</a></li>
+<li class="toctree-l1 current"><a class="reference internal" href="../stats.html">Statistics (<code class="docutils literal"><span class="pre">skbio.stats</span></code>)</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../metadata.html">Metadata (<code class="docutils literal"><span class="pre">skbio.metadata</span></code>)</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../util.html">Utility functionality (<code class="docutils literal"><span class="pre">skbio.util</span></code>)</a></li>
+</ul>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../user/api_stability.html">API Stability</a></li>
+</ul>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../development/coding_guidelines.html">Coding guidelines</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../development/new_module.html">Adding a new module to skbio</a></li>
+</ul>
+</ul>
+</li>
+              
+                <li class="dropdown">
+  <a role="button"
+     id="dLabelLocalToc"
+     data-toggle="dropdown"
+     data-target="#"
+     href="#">Page <b class="caret"></b></a>
+  <ul class="dropdown-menu localtoc"
+      role="menu"
+      aria-labelledby="dLabelLocalToc"><ul>
+<li><a class="reference internal" href="#">Distance matrices and distance-based statistics (<code class="docutils literal"><span class="pre">skbio.stats.distance</span></code>)</a><ul>
+<li><a class="reference internal" href="#data-structures-dissimilaritymatrix-and-distancematrix">Data Structures: DissimilarityMatrix and DistanceMatrix</a><ul>
+<li><a class="reference internal" href="#classes">Classes</a></li>
+<li><a class="reference internal" href="#functions">Functions</a></li>
+<li><a class="reference internal" href="#exceptions">Exceptions</a></li>
+<li><a class="reference internal" href="#examples">Examples</a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#distance-based-statistics">Distance-based statistics</a><ul>
+<li><a class="reference internal" href="#categorical-variable-stats">Categorical Variable Stats</a></li>
+<li><a class="reference internal" href="#continuous-variable-stats">Continuous Variable Stats</a></li>
+<li><a class="reference internal" href="#distance-matrix-comparisons">Distance Matrix Comparisons</a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#references">References</a></li>
+</ul>
+</li>
+</ul>
+</ul>
+</li>
+              
+            
+            
+            
+            
+            
+          </ul>
+
+          
+            
+<form class="navbar-form navbar-right" action="../search.html" method="get">
+ <div class="form-group">
+  <input type="text" name="q" class="form-control" placeholder="Search" />
+ </div>
+  <input type="hidden" name="check_keywords" value="yes" />
+  <input type="hidden" name="area" value="default" />
+</form>
+          
+        </div>
+    </div>
+  </div>
+
+<div class="container">
+  <div class="row">
+    <div class="col-md-12 content">
+      
+  <span class="target" id="module-skbio.stats.distance"></span><div class="section" id="distance-matrices-and-distance-based-statistics-skbio-stats-distance">
+<h1>Distance matrices and distance-based statistics (<a class="reference internal" href="#module-skbio.stats.distance" title="skbio.stats.distance"><code class="xref py py-mod docutils literal"><span class="pre">skbio.stats.distance</span></code></a>)<a class="headerlink" href="#distance-matrices-and-distance-based-statistics-skbio-stats-distance" title="Permalink to this headline">¶</a></h1>
+<p>This subpackage provides functionality for serializing, deserializing, and
+manipulating dissimilarity and distance matrices in memory. It also contains
+various statistical methods that operate on distance matrices, often relating
+distances (e.g., community distances) to categorical and/or continuous
+variables of interest (e.g., gender or age). Methods are also provided for
+comparing distance matrices (e.g., computing the correlation between two or
+more distance matrices using the Mantel test).</p>
+<div class="section" id="data-structures-dissimilaritymatrix-and-distancematrix">
+<h2>Data Structures: DissimilarityMatrix and DistanceMatrix<a class="headerlink" href="#data-structures-dissimilaritymatrix-and-distancematrix" title="Permalink to this headline">¶</a></h2>
+<p>This package provides two matrix classes, <cite>DissimilarityMatrix</cite> and
+<cite>DistanceMatrix</cite>. Both classes can store measures of difference/distinction
+between objects. A dissimilarity/distance matrix includes both a matrix of
+dissimilarities/distances (floats) between objects, as well as unique IDs
+(object labels; strings) identifying each object in the matrix.</p>
+<p><cite>DissimilarityMatrix</cite> can be used to store measures of dissimilarity between
+objects, and does not require that the dissimilarities are symmetric (e.g.,
+dissimilarities obtained using the <em>Gain in PD</em> measure <a class="reference internal" href="#r389" id="id1">[R389]</a>).
+<cite>DissimilarityMatrix</cite> is a more general container to store differences than
+<cite>DistanceMatrix</cite>.</p>
+<p><cite>DistanceMatrix</cite> has the additional requirement that the differences it
+stores are symmetric (e.g., Euclidean or Hamming distances).</p>
+<div class="admonition note">
+<p class="first admonition-title">Note</p>
+<p class="last"><cite>DissimilarityMatrix</cite> can be used to store distances, but it is
+recommended to use <cite>DistanceMatrix</cite> to store this type of data as it
+provides an additional check for symmetry. A distance matrix <em>is a</em>
+dissimilarity matrix; this is modeled in the class design by having
+<cite>DistanceMatrix</cite> subclass <cite>DissimilarityMatrix</cite>.</p>
+</div>
+<div class="section" id="classes">
+<h3>Classes<a class="headerlink" href="#classes" title="Permalink to this headline">¶</a></h3>
+<table border="1" class="longtable docutils">
+<colgroup>
+<col width="10%" />
+<col width="90%" />
+</colgroup>
+<tbody valign="top">
+<tr class="row-odd"><td><a class="reference internal" href="generated/skbio.stats.distance.DissimilarityMatrix.html#skbio.stats.distance.DissimilarityMatrix" title="skbio.stats.distance.DissimilarityMatrix"><code class="xref py py-obj docutils literal"><span class="pre">DissimilarityMatrix</span></code></a>(data[,&nbsp;ids])</td>
+<td>Store dissimilarities between objects.</td>
+</tr>
+<tr class="row-even"><td><a class="reference internal" href="generated/skbio.stats.distance.DistanceMatrix.html#skbio.stats.distance.DistanceMatrix" title="skbio.stats.distance.DistanceMatrix"><code class="xref py py-obj docutils literal"><span class="pre">DistanceMatrix</span></code></a>(data[,&nbsp;ids])</td>
+<td>Store distances between objects.</td>
+</tr>
+</tbody>
+</table>
+</div>
+<div class="section" id="functions">
+<h3>Functions<a class="headerlink" href="#functions" title="Permalink to this headline">¶</a></h3>
+<table border="1" class="longtable docutils">
+<colgroup>
+<col width="10%" />
+<col width="90%" />
+</colgroup>
+<tbody valign="top">
+<tr class="row-odd"><td><a class="reference internal" href="generated/skbio.stats.distance.randdm.html#skbio.stats.distance.randdm" title="skbio.stats.distance.randdm"><code class="xref py py-obj docutils literal"><span class="pre">randdm</span></code></a>(num_objects[,&nbsp;ids,&nbsp;constructor,&nbsp;…])</td>
+<td>Generate a distance matrix populated with random distances.</td>
+</tr>
+</tbody>
+</table>
+</div>
+<div class="section" id="exceptions">
+<h3>Exceptions<a class="headerlink" href="#exceptions" title="Permalink to this headline">¶</a></h3>
+<table border="1" class="longtable docutils">
+<colgroup>
+<col width="10%" />
+<col width="90%" />
+</colgroup>
+<tbody valign="top">
+<tr class="row-odd"><td><a class="reference internal" href="generated/skbio.stats.distance.DissimilarityMatrixError.html#skbio.stats.distance.DissimilarityMatrixError" title="skbio.stats.distance.DissimilarityMatrixError"><code class="xref py py-obj docutils literal"><span class="pre">DissimilarityMatrixError</span></code></a></td>
+<td>General error for dissimilarity matrix validation failures.</td>
+</tr>
+<tr class="row-even"><td><a class="reference internal" href="generated/skbio.stats.distance.DistanceMatrixError.html#skbio.stats.distance.DistanceMatrixError" title="skbio.stats.distance.DistanceMatrixError"><code class="xref py py-obj docutils literal"><span class="pre">DistanceMatrixError</span></code></a></td>
+<td>General error for distance matrix validation failures.</td>
+</tr>
+<tr class="row-odd"><td><a class="reference internal" href="generated/skbio.stats.distance.MissingIDError.html#skbio.stats.distance.MissingIDError" title="skbio.stats.distance.MissingIDError"><code class="xref py py-obj docutils literal"><span class="pre">MissingIDError</span></code></a>(missing_id)</td>
+<td>Error for ID lookup that doesn’t exist in the dissimilarity matrix.</td>
+</tr>
+</tbody>
+</table>
+</div>
+<div class="section" id="examples">
+<h3>Examples<a class="headerlink" href="#examples" title="Permalink to this headline">¶</a></h3>
+<p>Assume we have the following delimited text file storing distances between
+three objects with IDs <code class="docutils literal"><span class="pre">a</span></code>, <code class="docutils literal"><span class="pre">b</span></code>, and <code class="docutils literal"><span class="pre">c</span></code>:</p>
+<div class="highlight-default"><div class="highlight"><pre><span></span>\<span class="n">ta</span>\<span class="n">tb</span>\<span class="n">tc</span>
+<span class="n">a</span>\<span class="n">t0</span><span class="o">.</span><span class="mi">0</span>\<span class="n">t0</span><span class="o">.</span><span class="mi">5</span>\<span class="n">t1</span><span class="o">.</span><span class="mi">0</span>
+<span class="n">b</span>\<span class="n">t0</span><span class="o">.</span><span class="mi">5</span>\<span class="n">t0</span><span class="o">.</span><span class="mi">0</span>\<span class="n">t0</span><span class="o">.</span><span class="mi">75</span>
+<span class="n">c</span>\<span class="n">t1</span><span class="o">.</span><span class="mi">0</span>\<span class="n">t0</span><span class="o">.</span><span class="mi">75</span>\<span class="n">t0</span><span class="o">.</span><span class="mi">0</span>
+</pre></div>
+</div>
+<p>Load a distance matrix from the file:</p>
+<div class="highlight-default"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">io</span> <span class="k">import</span> <span class="n">StringIO</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">skbio</span> <span class="k">import</span> <span class="n">DistanceMatrix</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">dm_fh</span> <span class="o">=</span> <span class="n">StringIO</span><span class="p">(</span><span class="s2">&quot;</span><span class="se">\t</span><span class="s2">a</span><span class="se">\t</span><span class="s2">b</span><span class="se">\t</span><span class="s2">c</span><span class="se">\n</span><span class="s2">&quot;</span>
+<span class="gp">... </span>                 <span class="s2">&quot;a</span><span class="se">\t</span><span class="s2">0.0</span><span class="se">\t</span><span class="s2">0.5</span><span class="se">\t</span><span class="s2">1.0</span><span class="se">\n</span><span class="s2">&quot;</span>
+<span class="gp">... </span>                 <span class="s2">&quot;b</span><span class="se">\t</span><span class="s2">0.5</span><span class="se">\t</span><span class="s2">0.0</span><span class="se">\t</span><span class="s2">0.75</span><span class="se">\n</span><span class="s2">&quot;</span>
+<span class="gp">... </span>                 <span class="s2">&quot;c</span><span class="se">\t</span><span class="s2">1.0</span><span class="se">\t</span><span class="s2">0.75</span><span class="se">\t</span><span class="s2">0.0</span><span class="se">\n</span><span class="s2">&quot;</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">dm</span> <span class="o">=</span> <span class="n">DistanceMatrix</span><span class="o">.</span><span class="n">read</span><span class="p">(</span><span class="n">dm_fh</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="nb">print</span><span class="p">(</span><span class="n">dm</span><span class="p">)</span>
+<span class="go">3x3 distance matrix</span>
+<span class="go">IDs:</span>
+<span class="go">&#39;a&#39;, &#39;b&#39;, &#39;c&#39;</span>
+<span class="go">Data:</span>
+<span class="go">[[ 0.    0.5   1.  ]</span>
+<span class="go"> [ 0.5   0.    0.75]</span>
+<span class="go"> [ 1.    0.75  0.  ]]</span>
+</pre></div>
+</div>
+<p>Access the distance (scalar) between objects <code class="docutils literal"><span class="pre">'a'</span></code> and <code class="docutils literal"><span class="pre">'c'</span></code>:</p>
+<div class="highlight-default"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">dm</span><span class="p">[</span><span class="s1">&#39;a&#39;</span><span class="p">,</span> <span class="s1">&#39;c&#39;</span><span class="p">]</span>
+<span class="go">1.0</span>
+</pre></div>
+</div>
+<p>Get a row vector of distances between object <code class="docutils literal"><span class="pre">'b'</span></code> and all other objects:</p>
+<div class="highlight-default"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">dm</span><span class="p">[</span><span class="s1">&#39;b&#39;</span><span class="p">]</span>
+<span class="go">array([ 0.5 ,  0.  ,  0.75])</span>
+</pre></div>
+</div>
+<p>numpy indexing/slicing also works as expected. Extract the third column:</p>
+<div class="highlight-default"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">dm</span><span class="p">[:,</span> <span class="mi">2</span><span class="p">]</span>
+<span class="go">array([ 1.  ,  0.75,  0.  ])</span>
+</pre></div>
+</div>
+<p>Serialize the distance matrix to delimited text file:</p>
+<div class="highlight-default"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">out_fh</span> <span class="o">=</span> <span class="n">StringIO</span><span class="p">()</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">_</span> <span class="o">=</span> <span class="n">dm</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="n">out_fh</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">out_fh</span><span class="o">.</span><span class="n">getvalue</span><span class="p">()</span> <span class="o">==</span> <span class="n">dm_fh</span><span class="o">.</span><span class="n">getvalue</span><span class="p">()</span>
+<span class="go">True</span>
+</pre></div>
+</div>
+<p>A distance matrix object can also be created from an existing <code class="docutils literal"><span class="pre">numpy.array</span></code>
+(or an array-like object, such as a nested Python list):</p>
+<div class="highlight-default"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">data</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([[</span><span class="mf">0.0</span><span class="p">,</span> <span class="mf">0.5</span><span class="p">,</span> <span class="mf">1.0</span><span class="p">],</span>
+<span class="gp">... </span>                 <span class="p">[</span><span class="mf">0.5</span><span class="p">,</span> <span class="mf">0.0</span><span class="p">,</span> <span class="mf">0.75</span><span class="p">],</span>
+<span class="gp">... </span>                 <span class="p">[</span><span class="mf">1.0</span><span class="p">,</span> <span class="mf">0.75</span><span class="p">,</span> <span class="mf">0.0</span><span class="p">]])</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">ids</span> <span class="o">=</span> <span class="p">[</span><span class="s2">&quot;a&quot;</span><span class="p">,</span> <span class="s2">&quot;b&quot;</span><span class="p">,</span> <span class="s2">&quot;c&quot;</span><span class="p">]</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">dm_from_np</span> <span class="o">=</span> <span class="n">DistanceMatrix</span><span class="p">(</span><span class="n">data</span><span class="p">,</span> <span class="n">ids</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="nb">print</span><span class="p">(</span><span class="n">dm_from_np</span><span class="p">)</span>
+<span class="go">3x3 distance matrix</span>
+<span class="go">IDs:</span>
+<span class="go">&#39;a&#39;, &#39;b&#39;, &#39;c&#39;</span>
+<span class="go">Data:</span>
+<span class="go">[[ 0.    0.5   1.  ]</span>
+<span class="go"> [ 0.5   0.    0.75]</span>
+<span class="go"> [ 1.    0.75  0.  ]]</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">dm_from_np</span> <span class="o">==</span> <span class="n">dm</span>
+<span class="go">True</span>
+</pre></div>
+</div>
+<p>IDs may be omitted when constructing a dissimilarity/distance matrix.
+Monotonically-increasing integers (cast as strings) will be automatically used:</p>
+<div class="highlight-default"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">dm</span> <span class="o">=</span> <span class="n">DistanceMatrix</span><span class="p">(</span><span class="n">data</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">dm</span><span class="o">.</span><span class="n">ids</span>
+<span class="go">(&#39;0&#39;, &#39;1&#39;, &#39;2&#39;)</span>
+</pre></div>
+</div>
+</div>
+</div>
+<div class="section" id="distance-based-statistics">
+<h2>Distance-based statistics<a class="headerlink" href="#distance-based-statistics" title="Permalink to this headline">¶</a></h2>
+<p>In addition to the data structures described above, this package provides the
+following distance-based statistical methods.</p>
+<div class="section" id="categorical-variable-stats">
+<h3>Categorical Variable Stats<a class="headerlink" href="#categorical-variable-stats" title="Permalink to this headline">¶</a></h3>
+<table border="1" class="longtable docutils">
+<colgroup>
+<col width="10%" />
+<col width="90%" />
+</colgroup>
+<tbody valign="top">
+<tr class="row-odd"><td><a class="reference internal" href="generated/skbio.stats.distance.anosim.html#skbio.stats.distance.anosim" title="skbio.stats.distance.anosim"><code class="xref py py-obj docutils literal"><span class="pre">anosim</span></code></a>(distance_matrix,&nbsp;grouping[,&nbsp;column,&nbsp;…])</td>
+<td>Test for significant differences between groups using ANOSIM.</td>
+</tr>
+<tr class="row-even"><td><a class="reference internal" href="generated/skbio.stats.distance.permanova.html#skbio.stats.distance.permanova" title="skbio.stats.distance.permanova"><code class="xref py py-obj docutils literal"><span class="pre">permanova</span></code></a>(distance_matrix,&nbsp;grouping[,&nbsp;…])</td>
+<td>Test for significant differences between groups using PERMANOVA.</td>
+</tr>
+</tbody>
+</table>
+</div>
+<div class="section" id="continuous-variable-stats">
+<h3>Continuous Variable Stats<a class="headerlink" href="#continuous-variable-stats" title="Permalink to this headline">¶</a></h3>
+<table border="1" class="longtable docutils">
+<colgroup>
+<col width="10%" />
+<col width="90%" />
+</colgroup>
+<tbody valign="top">
+<tr class="row-odd"><td><a class="reference internal" href="generated/skbio.stats.distance.bioenv.html#skbio.stats.distance.bioenv" title="skbio.stats.distance.bioenv"><code class="xref py py-obj docutils literal"><span class="pre">bioenv</span></code></a>(distance_matrix,&nbsp;data_frame[,&nbsp;columns])</td>
+<td>Find subset of variables maximally correlated with distances.</td>
+</tr>
+</tbody>
+</table>
+</div>
+<div class="section" id="distance-matrix-comparisons">
+<h3>Distance Matrix Comparisons<a class="headerlink" href="#distance-matrix-comparisons" title="Permalink to this headline">¶</a></h3>
+<table border="1" class="longtable docutils">
+<colgroup>
+<col width="10%" />
+<col width="90%" />
+</colgroup>
+<tbody valign="top">
+<tr class="row-odd"><td><a class="reference internal" href="generated/skbio.stats.distance.mantel.html#skbio.stats.distance.mantel" title="skbio.stats.distance.mantel"><code class="xref py py-obj docutils literal"><span class="pre">mantel</span></code></a>(x,&nbsp;y[,&nbsp;method,&nbsp;permutations,&nbsp;…])</td>
+<td>Compute correlation between distance matrices using the Mantel test.</td>
+</tr>
+<tr class="row-even"><td><a class="reference internal" href="generated/skbio.stats.distance.pwmantel.html#skbio.stats.distance.pwmantel" title="skbio.stats.distance.pwmantel"><code class="xref py py-obj docutils literal"><span class="pre">pwmantel</span></code></a>(dms[,&nbsp;labels,&nbsp;method,&nbsp;…])</td>
+<td>Run Mantel tests for every pair of given distance matrices.</td>
+</tr>
+</tbody>
+</table>
+</div>
+</div>
+<div class="section" id="references">
+<h2>References<a class="headerlink" href="#references" title="Permalink to this headline">¶</a></h2>
+<table class="docutils citation" frame="void" id="r389" rules="none">
+<colgroup><col class="label" /><col /></colgroup>
+<tbody valign="top">
+<tr><td class="label"><a class="fn-backref" href="#id1">[R389]</a></td><td>Faith, D. P. (1992). “Conservation evaluation and phylogenetic
+diversity”.</td></tr>
+</tbody>
+</table>
+</div>
+</div>
+
+
+    </div>
+      
+  </div>
+</div>
+  
+<footer class="footer">
+  <div class="container">
+    <p class="pull-right">
+      <a href="#">Back to top</a>
+      
+    </p>
+    <p>
+        &copy; Copyright 2014--, scikit-bio development team.<br/>
+      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 1.6.5.<br/>
+    </p>
+  </div>
+</footer>
+  <script>
+    (function(i,s,o,g,r,a,m){i['GoogleAnalyticsObject']=r;i[r]=i[r]||function(){
+    (i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),
+    m=s.getElementsByTagName(o)[0];a.async=1;a.src=g;m.parentNode.insertBefore(a,m)
+    })(window,document,'script','//www.google-analytics.com/analytics.js','ga');
+
+    ga('create', 'UA-6636235-9', 'scikit-bio.org');
+    ga('send', 'pageview');
+  </script>
+
+  </body>
+</html>

@@ -1,0 +1,35 @@
+skbio\.workflow\.Workflow
+=========================
+
+.. currentmodule:: skbio.workflow
+
+.. autoclass:: Workflow
+
+   
+
+   .. HACK -- the point here is that we don't want this to appear in the output, but the autosummary should still generate the pages.
+      .. autosummary::
+         :toctree:
+      
+         
+         Workflow.__call__
+         
+         
+         Workflow.__format__
+         
+         
+         
+         
+         
+         
+         
+         
+         
+         
+         
+         Workflow.initialize_state
+
+
+
+   
+

@@ -1,0 +1,8 @@
+:orphan:
+
+skbio.tree.TreeNode.cache_attr
+==============================
+
+.. currentmodule:: skbio.tree
+
+.. automethod:: TreeNode.cache_attr

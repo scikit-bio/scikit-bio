@@ -1,0 +1,444 @@
+<!DOCTYPE html>
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    <title>File I/O (skbio.io) &#8212; scikit-bio 0.5.2 documentation</title>
+    <link rel="stylesheet" href="_static/bootstrap-sphinx.css" type="text/css" />
+    <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+    <link rel="stylesheet" href="_static/style.css" type="text/css" />
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    './',
+        VERSION:     '0.5.2',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true,
+        SOURCELINK_SUFFIX: '.txt'
+      };
+    </script>
+    <script type="text/javascript" src="_static/jquery.js"></script>
+    <script type="text/javascript" src="_static/underscore.js"></script>
+    <script type="text/javascript" src="_static/doctools.js"></script>
+    <script type="text/javascript" src="_static/copybutton.js"></script>
+    <script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.1/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
+    <script type="text/javascript" src="_static/js/jquery-1.11.0.min.js"></script>
+    <script type="text/javascript" src="_static/js/jquery-fix.js"></script>
+    <script type="text/javascript" src="_static/bootstrap-3.3.7/js/bootstrap.min.js"></script>
+    <script type="text/javascript" src="_static/bootstrap-sphinx.js"></script>
+    <link rel="index" title="Index" href="genindex.html" />
+    <link rel="search" title="Search" href="search.html" />
+    <link rel="next" title="BLAST+6 format (skbio.io.format.blast6)" href="generated/skbio.io.format.blast6.html" />
+    <link rel="prev" title="scikit-bio" href="index.html" />
+<meta charset='utf-8'>
+<meta http-equiv='X-UA-Compatible' content='IE=edge,chrome=1'>
+<meta name='viewport' content='width=device-width, initial-scale=1.0, maximum-scale=1'>
+<meta name="apple-mobile-web-app-capable" content="yes">
+
+  </head>
+  <body>
+  
+  <a href="https://github.com/biocore/scikit-bio"
+     class="visible-desktop hidden-xs"><img
+    id="gh-banner"
+    style="position: absolute; top: 50px; right: 0; border: 0;"
+    src="https://s3.amazonaws.com/github/ribbons/forkme_right_darkblue_121621.png"
+    alt="Fork me on GitHub"></a>
+  <script>
+    // Adjust banner height.
+    $(function () {
+      var navHeight = $(".navbar .container").css("height");
+      $("#gh-banner").css("top", navHeight);
+    });
+  </script>
+
+
+  <div id="navbar" class="navbar navbar-default navbar-fixed-top">
+    <div class="container">
+      <div class="navbar-header">
+        <!-- .btn-navbar is used as the toggle for collapsed navbar content -->
+        <button type="button" class="navbar-toggle" data-toggle="collapse" data-target=".nav-collapse">
+          <span class="icon-bar"></span>
+          <span class="icon-bar"></span>
+          <span class="icon-bar"></span>
+        </button>
+        <a class="navbar-brand" href="index.html">
+          scikit-bio docs</a>
+        <span class="navbar-text navbar-version pull-left"><b>0.5.2</b></span>
+      </div>
+
+        <div class="collapse navbar-collapse nav-collapse">
+          <ul class="nav navbar-nav">
+            
+            
+              <li class="dropdown globaltoc-container">
+  <a role="button"
+     id="dLabelGlobalToc"
+     data-toggle="dropdown"
+     data-target="#"
+     href="index.html">Site <b class="caret"></b></a>
+  <ul class="dropdown-menu globaltoc"
+      role="menu"
+      aria-labelledby="dLabelGlobalToc"><ul class="current">
+<li class="toctree-l1 current"><a class="current reference internal" href="#">File I/O (<code class="docutils literal"><span class="pre">skbio.io</span></code>)</a></li>
+<li class="toctree-l1"><a class="reference internal" href="sequence.html">Sequences (<code class="docutils literal"><span class="pre">skbio.sequence</span></code>)</a></li>
+<li class="toctree-l1"><a class="reference internal" href="alignment.html">Alignments (<code class="docutils literal"><span class="pre">skbio.alignment</span></code>)</a></li>
+<li class="toctree-l1"><a class="reference internal" href="tree.html">Tree representations (<code class="docutils literal"><span class="pre">skbio.tree</span></code>)</a></li>
+<li class="toctree-l1"><a class="reference internal" href="workflow.html">Constructing workflows (<code class="docutils literal"><span class="pre">skbio.workflow</span></code>)</a></li>
+<li class="toctree-l1"><a class="reference internal" href="diversity.html">Diversity calculations (<code class="docutils literal"><span class="pre">skbio.diversity</span></code>)</a></li>
+<li class="toctree-l1"><a class="reference internal" href="stats.html">Statistics (<code class="docutils literal"><span class="pre">skbio.stats</span></code>)</a></li>
+<li class="toctree-l1"><a class="reference internal" href="metadata.html">Metadata (<code class="docutils literal"><span class="pre">skbio.metadata</span></code>)</a></li>
+<li class="toctree-l1"><a class="reference internal" href="util.html">Utility functionality (<code class="docutils literal"><span class="pre">skbio.util</span></code>)</a></li>
+</ul>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="user/api_stability.html">API Stability</a></li>
+</ul>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="development/coding_guidelines.html">Coding guidelines</a></li>
+<li class="toctree-l1"><a class="reference internal" href="development/new_module.html">Adding a new module to skbio</a></li>
+</ul>
+</ul>
+</li>
+              
+                <li class="dropdown">
+  <a role="button"
+     id="dLabelLocalToc"
+     data-toggle="dropdown"
+     data-target="#"
+     href="#">Page <b class="caret"></b></a>
+  <ul class="dropdown-menu localtoc"
+      role="menu"
+      aria-labelledby="dLabelLocalToc"><ul>
+<li><a class="reference internal" href="#">File I/O (<code class="docutils literal"><span class="pre">skbio.io</span></code>)</a><ul>
+<li><a class="reference internal" href="#supported-file-formats">Supported file formats</a></li>
+<li><a class="reference internal" href="#user-functions">User functions</a></li>
+<li><a class="reference internal" href="#user-exceptions-and-warnings">User exceptions and warnings</a></li>
+<li><a class="reference internal" href="#subpackages">Subpackages</a></li>
+<li><a class="reference internal" href="#introduction-to-i-o">Introduction to I/O</a><ul>
+<li><a class="reference internal" href="#what-kinds-of-files-scikit-bio-can-use">What kinds of files scikit-bio can use</a></li>
+<li><a class="reference internal" href="#reading-files-into-scikit-bio">Reading files into scikit-bio</a></li>
+<li><a class="reference internal" href="#writing-files-from-scikit-bio">Writing files from scikit-bio</a></li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+</ul>
+</li>
+              
+            
+            
+            
+            
+            
+          </ul>
+
+          
+            
+<form class="navbar-form navbar-right" action="search.html" method="get">
+ <div class="form-group">
+  <input type="text" name="q" class="form-control" placeholder="Search" />
+ </div>
+  <input type="hidden" name="check_keywords" value="yes" />
+  <input type="hidden" name="area" value="default" />
+</form>
+          
+        </div>
+    </div>
+  </div>
+
+<div class="container">
+  <div class="row">
+    <div class="col-md-12 content">
+      
+  <span class="target" id="module-skbio.io"></span><div class="section" id="file-i-o-skbio-io">
+<h1>File I/O (<a class="reference internal" href="#module-skbio.io" title="skbio.io"><code class="xref py py-mod docutils literal"><span class="pre">skbio.io</span></code></a>)<a class="headerlink" href="#file-i-o-skbio-io" title="Permalink to this headline">¶</a></h1>
+<p>This package provides I/O functionality for skbio.</p>
+<div class="section" id="supported-file-formats">
+<h2>Supported file formats<a class="headerlink" href="#supported-file-formats" title="Permalink to this headline">¶</a></h2>
+<p>For details on what objects are supported by each format,
+see the associated documentation.</p>
+<table border="1" class="longtable docutils">
+<colgroup>
+<col width="10%" />
+<col width="90%" />
+</colgroup>
+<tbody valign="top">
+<tr class="row-odd"><td><a class="reference internal" href="generated/skbio.io.format.blast6.html#module-skbio.io.format.blast6" title="skbio.io.format.blast6"><code class="xref py py-obj docutils literal"><span class="pre">blast6</span></code></a></td>
+<td>BLAST+6 format (<a class="reference internal" href="generated/skbio.io.format.blast6.html#module-skbio.io.format.blast6" title="skbio.io.format.blast6"><code class="xref py py-mod docutils literal"><span class="pre">skbio.io.format.blast6</span></code></a>)</td>
+</tr>
+<tr class="row-even"><td><a class="reference internal" href="generated/skbio.io.format.blast7.html#module-skbio.io.format.blast7" title="skbio.io.format.blast7"><code class="xref py py-obj docutils literal"><span class="pre">blast7</span></code></a></td>
+<td>BLAST+7 format (<a class="reference internal" href="generated/skbio.io.format.blast7.html#module-skbio.io.format.blast7" title="skbio.io.format.blast7"><code class="xref py py-mod docutils literal"><span class="pre">skbio.io.format.blast7</span></code></a>)</td>
+</tr>
+<tr class="row-odd"><td><a class="reference internal" href="generated/skbio.io.format.clustal.html#module-skbio.io.format.clustal" title="skbio.io.format.clustal"><code class="xref py py-obj docutils literal"><span class="pre">clustal</span></code></a></td>
+<td>Clustal format (<a class="reference internal" href="generated/skbio.io.format.clustal.html#module-skbio.io.format.clustal" title="skbio.io.format.clustal"><code class="xref py py-mod docutils literal"><span class="pre">skbio.io.format.clustal</span></code></a>)</td>
+</tr>
+<tr class="row-even"><td><a class="reference internal" href="generated/skbio.io.format.embl.html#module-skbio.io.format.embl" title="skbio.io.format.embl"><code class="xref py py-obj docutils literal"><span class="pre">embl</span></code></a></td>
+<td>EMBL format (<a class="reference internal" href="generated/skbio.io.format.embl.html#module-skbio.io.format.embl" title="skbio.io.format.embl"><code class="xref py py-mod docutils literal"><span class="pre">skbio.io.format.embl</span></code></a>)</td>
+</tr>
+<tr class="row-odd"><td><a class="reference internal" href="generated/skbio.io.format.fasta.html#module-skbio.io.format.fasta" title="skbio.io.format.fasta"><code class="xref py py-obj docutils literal"><span class="pre">fasta</span></code></a></td>
+<td>FASTA/QUAL format (<a class="reference internal" href="generated/skbio.io.format.fasta.html#module-skbio.io.format.fasta" title="skbio.io.format.fasta"><code class="xref py py-mod docutils literal"><span class="pre">skbio.io.format.fasta</span></code></a>)</td>
+</tr>
+<tr class="row-even"><td><a class="reference internal" href="generated/skbio.io.format.fastq.html#module-skbio.io.format.fastq" title="skbio.io.format.fastq"><code class="xref py py-obj docutils literal"><span class="pre">fastq</span></code></a></td>
+<td>FASTQ format (<a class="reference internal" href="generated/skbio.io.format.fastq.html#module-skbio.io.format.fastq" title="skbio.io.format.fastq"><code class="xref py py-mod docutils literal"><span class="pre">skbio.io.format.fastq</span></code></a>)</td>
+</tr>
+<tr class="row-odd"><td><a class="reference internal" href="generated/skbio.io.format.genbank.html#module-skbio.io.format.genbank" title="skbio.io.format.genbank"><code class="xref py py-obj docutils literal"><span class="pre">genbank</span></code></a></td>
+<td>GenBank format (<a class="reference internal" href="generated/skbio.io.format.genbank.html#module-skbio.io.format.genbank" title="skbio.io.format.genbank"><code class="xref py py-mod docutils literal"><span class="pre">skbio.io.format.genbank</span></code></a>)</td>
+</tr>
+<tr class="row-even"><td><a class="reference internal" href="generated/skbio.io.format.gff3.html#module-skbio.io.format.gff3" title="skbio.io.format.gff3"><code class="xref py py-obj docutils literal"><span class="pre">gff3</span></code></a></td>
+<td>GFF3 format (<a class="reference internal" href="generated/skbio.io.format.gff3.html#module-skbio.io.format.gff3" title="skbio.io.format.gff3"><code class="xref py py-mod docutils literal"><span class="pre">skbio.io.format.gff3</span></code></a>)</td>
+</tr>
+<tr class="row-odd"><td><a class="reference internal" href="generated/skbio.io.format.lsmat.html#module-skbio.io.format.lsmat" title="skbio.io.format.lsmat"><code class="xref py py-obj docutils literal"><span class="pre">lsmat</span></code></a></td>
+<td>Labeled square matrix format (<a class="reference internal" href="generated/skbio.io.format.lsmat.html#module-skbio.io.format.lsmat" title="skbio.io.format.lsmat"><code class="xref py py-mod docutils literal"><span class="pre">skbio.io.format.lsmat</span></code></a>)</td>
+</tr>
+<tr class="row-even"><td><a class="reference internal" href="generated/skbio.io.format.newick.html#module-skbio.io.format.newick" title="skbio.io.format.newick"><code class="xref py py-obj docutils literal"><span class="pre">newick</span></code></a></td>
+<td>Newick format (<a class="reference internal" href="generated/skbio.io.format.newick.html#module-skbio.io.format.newick" title="skbio.io.format.newick"><code class="xref py py-mod docutils literal"><span class="pre">skbio.io.format.newick</span></code></a>)</td>
+</tr>
+<tr class="row-odd"><td><a class="reference internal" href="generated/skbio.io.format.ordination.html#module-skbio.io.format.ordination" title="skbio.io.format.ordination"><code class="xref py py-obj docutils literal"><span class="pre">ordination</span></code></a></td>
+<td>Ordination results format (<a class="reference internal" href="generated/skbio.io.format.ordination.html#module-skbio.io.format.ordination" title="skbio.io.format.ordination"><code class="xref py py-mod docutils literal"><span class="pre">skbio.io.format.ordination</span></code></a>)</td>
+</tr>
+<tr class="row-even"><td><a class="reference internal" href="generated/skbio.io.format.phylip.html#module-skbio.io.format.phylip" title="skbio.io.format.phylip"><code class="xref py py-obj docutils literal"><span class="pre">phylip</span></code></a></td>
+<td>PHYLIP multiple sequence alignment format (<a class="reference internal" href="generated/skbio.io.format.phylip.html#module-skbio.io.format.phylip" title="skbio.io.format.phylip"><code class="xref py py-mod docutils literal"><span class="pre">skbio.io.format.phylip</span></code></a>)</td>
+</tr>
+<tr class="row-odd"><td><a class="reference internal" href="generated/skbio.io.format.qseq.html#module-skbio.io.format.qseq" title="skbio.io.format.qseq"><code class="xref py py-obj docutils literal"><span class="pre">qseq</span></code></a></td>
+<td>QSeq format (<a class="reference internal" href="generated/skbio.io.format.qseq.html#module-skbio.io.format.qseq" title="skbio.io.format.qseq"><code class="xref py py-mod docutils literal"><span class="pre">skbio.io.format.qseq</span></code></a>)</td>
+</tr>
+<tr class="row-even"><td><a class="reference internal" href="generated/skbio.io.format.stockholm.html#module-skbio.io.format.stockholm" title="skbio.io.format.stockholm"><code class="xref py py-obj docutils literal"><span class="pre">stockholm</span></code></a></td>
+<td>Stockholm format (<a class="reference internal" href="generated/skbio.io.format.stockholm.html#module-skbio.io.format.stockholm" title="skbio.io.format.stockholm"><code class="xref py py-mod docutils literal"><span class="pre">skbio.io.format.stockholm</span></code></a>)</td>
+</tr>
+</tbody>
+</table>
+</div>
+<div class="section" id="user-functions">
+<h2>User functions<a class="headerlink" href="#user-functions" title="Permalink to this headline">¶</a></h2>
+<table border="1" class="longtable docutils">
+<colgroup>
+<col width="10%" />
+<col width="90%" />
+</colgroup>
+<tbody valign="top">
+<tr class="row-odd"><td><a class="reference internal" href="generated/skbio.io.registry.write.html#skbio.io.registry.write" title="skbio.io.registry.write"><code class="xref py py-obj docutils literal"><span class="pre">write</span></code></a>(self,&nbsp;obj,&nbsp;format,&nbsp;into,&nbsp;**kwargs)</td>
+<td>Write <cite>obj</cite> as <cite>format</cite> into a file.</td>
+</tr>
+<tr class="row-even"><td><a class="reference internal" href="generated/skbio.io.registry.read.html#skbio.io.registry.read" title="skbio.io.registry.read"><code class="xref py py-obj docutils literal"><span class="pre">read</span></code></a>(self,&nbsp;file[,&nbsp;format,&nbsp;into,&nbsp;verify])</td>
+<td>Read <cite>file</cite> as <cite>format</cite> into an object.</td>
+</tr>
+<tr class="row-odd"><td><a class="reference internal" href="generated/skbio.io.registry.sniff.html#skbio.io.registry.sniff" title="skbio.io.registry.sniff"><code class="xref py py-obj docutils literal"><span class="pre">sniff</span></code></a>(self,&nbsp;file,&nbsp;**kwargs)</td>
+<td>Detect the format of a given <cite>file</cite> and suggest kwargs for reading.</td>
+</tr>
+</tbody>
+</table>
+</div>
+<div class="section" id="user-exceptions-and-warnings">
+<h2>User exceptions and warnings<a class="headerlink" href="#user-exceptions-and-warnings" title="Permalink to this headline">¶</a></h2>
+<table border="1" class="longtable docutils">
+<colgroup>
+<col width="10%" />
+<col width="90%" />
+</colgroup>
+<tbody valign="top">
+<tr class="row-odd"><td><a class="reference internal" href="generated/skbio.io.FormatIdentificationWarning.html#skbio.io.FormatIdentificationWarning" title="skbio.io.FormatIdentificationWarning"><code class="xref py py-obj docutils literal"><span class="pre">FormatIdentificationWarning</span></code></a></td>
+<td>Warn when the sniffer of a format cannot confirm the format.</td>
+</tr>
+<tr class="row-even"><td><a class="reference internal" href="generated/skbio.io.ArgumentOverrideWarning.html#skbio.io.ArgumentOverrideWarning" title="skbio.io.ArgumentOverrideWarning"><code class="xref py py-obj docutils literal"><span class="pre">ArgumentOverrideWarning</span></code></a></td>
+<td>Warn when a user provided kwarg differs from a guessed kwarg.</td>
+</tr>
+<tr class="row-odd"><td><a class="reference internal" href="generated/skbio.io.UnrecognizedFormatError.html#skbio.io.UnrecognizedFormatError" title="skbio.io.UnrecognizedFormatError"><code class="xref py py-obj docutils literal"><span class="pre">UnrecognizedFormatError</span></code></a></td>
+<td>Raised when a file’s format is unknown, ambiguous, or unidentifiable.</td>
+</tr>
+<tr class="row-even"><td><a class="reference internal" href="generated/skbio.io.IOSourceError.html#skbio.io.IOSourceError" title="skbio.io.IOSourceError"><code class="xref py py-obj docutils literal"><span class="pre">IOSourceError</span></code></a></td>
+<td>Raised when a file source cannot be resolved.</td>
+</tr>
+<tr class="row-odd"><td><a class="reference internal" href="generated/skbio.io.FileFormatError.html#skbio.io.FileFormatError" title="skbio.io.FileFormatError"><code class="xref py py-obj docutils literal"><span class="pre">FileFormatError</span></code></a></td>
+<td>Raised when a file cannot be parsed.</td>
+</tr>
+<tr class="row-even"><td><a class="reference internal" href="generated/skbio.io.BLAST7FormatError.html#skbio.io.BLAST7FormatError" title="skbio.io.BLAST7FormatError"><code class="xref py py-obj docutils literal"><span class="pre">BLAST7FormatError</span></code></a></td>
+<td>Raised when a <code class="docutils literal"><span class="pre">blast7</span></code> formatted file cannot be parsed.</td>
+</tr>
+<tr class="row-odd"><td><a class="reference internal" href="generated/skbio.io.ClustalFormatError.html#skbio.io.ClustalFormatError" title="skbio.io.ClustalFormatError"><code class="xref py py-obj docutils literal"><span class="pre">ClustalFormatError</span></code></a></td>
+<td>Raised when a <code class="docutils literal"><span class="pre">clustal</span></code> formatted file cannot be parsed.</td>
+</tr>
+<tr class="row-even"><td><a class="reference internal" href="generated/skbio.io.EMBLFormatError.html#skbio.io.EMBLFormatError" title="skbio.io.EMBLFormatError"><code class="xref py py-obj docutils literal"><span class="pre">EMBLFormatError</span></code></a></td>
+<td>Raised when a <code class="docutils literal"><span class="pre">EMBL</span></code> formatted file cannot be parsed.</td>
+</tr>
+<tr class="row-odd"><td><a class="reference internal" href="generated/skbio.io.FASTAFormatError.html#skbio.io.FASTAFormatError" title="skbio.io.FASTAFormatError"><code class="xref py py-obj docutils literal"><span class="pre">FASTAFormatError</span></code></a></td>
+<td>Raised when a <code class="docutils literal"><span class="pre">fasta</span></code> formatted file cannot be parsed.</td>
+</tr>
+<tr class="row-even"><td><a class="reference internal" href="generated/skbio.io.FASTQFormatError.html#skbio.io.FASTQFormatError" title="skbio.io.FASTQFormatError"><code class="xref py py-obj docutils literal"><span class="pre">FASTQFormatError</span></code></a></td>
+<td>Raised when a <code class="docutils literal"><span class="pre">fastq</span></code> formatted file cannot be parsed.</td>
+</tr>
+<tr class="row-odd"><td><a class="reference internal" href="generated/skbio.io.GenBankFormatError.html#skbio.io.GenBankFormatError" title="skbio.io.GenBankFormatError"><code class="xref py py-obj docutils literal"><span class="pre">GenBankFormatError</span></code></a></td>
+<td>Raised when a <code class="docutils literal"><span class="pre">genbank</span></code> formatted file cannot be parsed.</td>
+</tr>
+<tr class="row-even"><td><a class="reference internal" href="generated/skbio.io.GFF3FormatError.html#skbio.io.GFF3FormatError" title="skbio.io.GFF3FormatError"><code class="xref py py-obj docutils literal"><span class="pre">GFF3FormatError</span></code></a></td>
+<td>Raised when a <code class="docutils literal"><span class="pre">GFF3</span></code> formatted file cannot be parsed.</td>
+</tr>
+<tr class="row-odd"><td><a class="reference internal" href="generated/skbio.io.LSMatFormatError.html#skbio.io.LSMatFormatError" title="skbio.io.LSMatFormatError"><code class="xref py py-obj docutils literal"><span class="pre">LSMatFormatError</span></code></a></td>
+<td>Raised when a <code class="docutils literal"><span class="pre">lsmat</span></code> formatted file cannot be parsed.</td>
+</tr>
+<tr class="row-even"><td><a class="reference internal" href="generated/skbio.io.NewickFormatError.html#skbio.io.NewickFormatError" title="skbio.io.NewickFormatError"><code class="xref py py-obj docutils literal"><span class="pre">NewickFormatError</span></code></a></td>
+<td>Raised when a <code class="docutils literal"><span class="pre">newick</span></code> formatted file cannot be parsed.</td>
+</tr>
+<tr class="row-odd"><td><a class="reference internal" href="generated/skbio.io.OrdinationFormatError.html#skbio.io.OrdinationFormatError" title="skbio.io.OrdinationFormatError"><code class="xref py py-obj docutils literal"><span class="pre">OrdinationFormatError</span></code></a></td>
+<td>Raised when an <code class="docutils literal"><span class="pre">ordination</span></code> formatted file cannot be parsed.</td>
+</tr>
+<tr class="row-even"><td><a class="reference internal" href="generated/skbio.io.PhylipFormatError.html#skbio.io.PhylipFormatError" title="skbio.io.PhylipFormatError"><code class="xref py py-obj docutils literal"><span class="pre">PhylipFormatError</span></code></a></td>
+<td>Raised when a <code class="docutils literal"><span class="pre">phylip</span></code> formatted file cannot be parsed.</td>
+</tr>
+<tr class="row-odd"><td><a class="reference internal" href="generated/skbio.io.QSeqFormatError.html#skbio.io.QSeqFormatError" title="skbio.io.QSeqFormatError"><code class="xref py py-obj docutils literal"><span class="pre">QSeqFormatError</span></code></a></td>
+<td>Raised when a <code class="docutils literal"><span class="pre">qseq</span></code> formatted file cannot be parsed.</td>
+</tr>
+<tr class="row-even"><td><a class="reference internal" href="generated/skbio.io.QUALFormatError.html#skbio.io.QUALFormatError" title="skbio.io.QUALFormatError"><code class="xref py py-obj docutils literal"><span class="pre">QUALFormatError</span></code></a></td>
+<td>Raised when a <code class="docutils literal"><span class="pre">qual</span></code> formatted file cannot be parsed.</td>
+</tr>
+<tr class="row-odd"><td><a class="reference internal" href="generated/skbio.io.StockholmFormatError.html#skbio.io.StockholmFormatError" title="skbio.io.StockholmFormatError"><code class="xref py py-obj docutils literal"><span class="pre">StockholmFormatError</span></code></a></td>
+<td>Raised when a <code class="docutils literal"><span class="pre">stockholm</span></code> formatted file cannot be parsed.</td>
+</tr>
+</tbody>
+</table>
+</div>
+<div class="section" id="subpackages">
+<h2>Subpackages<a class="headerlink" href="#subpackages" title="Permalink to this headline">¶</a></h2>
+<table border="1" class="longtable docutils">
+<colgroup>
+<col width="10%" />
+<col width="90%" />
+</colgroup>
+<tbody valign="top">
+<tr class="row-odd"><td><a class="reference internal" href="generated/skbio.io.registry.html#module-skbio.io.registry" title="skbio.io.registry"><code class="xref py py-obj docutils literal"><span class="pre">registry</span></code></a></td>
+<td>I/O Registry (<a class="reference internal" href="generated/skbio.io.registry.html#module-skbio.io.registry" title="skbio.io.registry"><code class="xref py py-mod docutils literal"><span class="pre">skbio.io.registry</span></code></a>)</td>
+</tr>
+<tr class="row-even"><td><a class="reference internal" href="generated/skbio.io.util.html#module-skbio.io.util" title="skbio.io.util"><code class="xref py py-obj docutils literal"><span class="pre">util</span></code></a></td>
+<td>I/O utils (<a class="reference internal" href="generated/skbio.io.util.html#module-skbio.io.util" title="skbio.io.util"><code class="xref py py-mod docutils literal"><span class="pre">skbio.io.util</span></code></a>)</td>
+</tr>
+</tbody>
+</table>
+<p>For developer documentation on extending I/O, see <a class="reference internal" href="generated/skbio.io.registry.html#module-skbio.io.registry" title="skbio.io.registry"><code class="xref py py-mod docutils literal"><span class="pre">skbio.io.registry</span></code></a>.</p>
+</div>
+<div class="section" id="introduction-to-i-o">
+<h2>Introduction to I/O<a class="headerlink" href="#introduction-to-i-o" title="Permalink to this headline">¶</a></h2>
+<p>Reading and writing files (I/O) can be a complicated task:</p>
+<ul class="simple">
+<li>A file format can sometimes be read into more than one in-memory
+representation (i.e., object). For example, a FASTA file can be read into an
+<a class="reference internal" href="generated/skbio.alignment.TabularMSA.html#skbio.alignment.TabularMSA" title="skbio.alignment.TabularMSA"><code class="xref py py-mod docutils literal"><span class="pre">skbio.alignment.TabularMSA</span></code></a> or <a class="reference internal" href="generated/skbio.sequence.DNA.html#skbio.sequence.DNA" title="skbio.sequence.DNA"><code class="xref py py-mod docutils literal"><span class="pre">skbio.sequence.DNA</span></code></a> depending on
+what operations you’d like to perform on your data.</li>
+<li>A single object might be writeable to more than one file format. For example,
+an <a class="reference internal" href="generated/skbio.alignment.TabularMSA.html#skbio.alignment.TabularMSA" title="skbio.alignment.TabularMSA"><code class="xref py py-mod docutils literal"><span class="pre">skbio.alignment.TabularMSA</span></code></a> object could be written to FASTA, FASTQ,
+CLUSTAL, or PHYLIP formats, just to name a few.</li>
+<li>You might not know the exact file format of your file, but you want to read
+it into an appropriate object.</li>
+<li>You might want to read multiple files into a single object, or write an
+object to multiple files.</li>
+<li>Instead of reading a file into an object, you might want to stream the file
+using a generator (e.g., if the file cannot be fully loaded into memory).</li>
+</ul>
+<p>To address these issues (and others), scikit-bio provides a simple, powerful
+interface for dealing with I/O. We accomplish this by using a single I/O
+registry.</p>
+<div class="section" id="what-kinds-of-files-scikit-bio-can-use">
+<h3>What kinds of files scikit-bio can use<a class="headerlink" href="#what-kinds-of-files-scikit-bio-can-use" title="Permalink to this headline">¶</a></h3>
+<p>To see a complete list of file-like inputs that can be used for reading,
+writing, and sniffing, see the documentation for <a class="reference internal" href="generated/generated/skbio.io.util.open.html#skbio.io.util.open" title="skbio.io.util.open"><code class="xref py py-func docutils literal"><span class="pre">skbio.io.util.open()</span></code></a>.</p>
+</div>
+<div class="section" id="reading-files-into-scikit-bio">
+<h3>Reading files into scikit-bio<a class="headerlink" href="#reading-files-into-scikit-bio" title="Permalink to this headline">¶</a></h3>
+<p>There are two ways to read files. The first way is to use the
+procedural interface:</p>
+<div class="highlight-python"><div class="highlight"><pre><span></span><span class="n">my_obj</span> <span class="o">=</span> <span class="n">skbio</span><span class="o">.</span><span class="n">io</span><span class="o">.</span><span class="n">read</span><span class="p">(</span><span class="nb">file</span><span class="p">,</span> <span class="n">format</span><span class="o">=</span><span class="s1">&#39;someformat&#39;</span><span class="p">,</span> <span class="n">into</span><span class="o">=</span><span class="n">SomeSkbioClass</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>The second is to use the object-oriented (OO) interface which is automatically
+constructed from the procedural interface:</p>
+<div class="highlight-python"><div class="highlight"><pre><span></span><span class="n">my_obj</span> <span class="o">=</span> <span class="n">SomeSkbioClass</span><span class="o">.</span><span class="n">read</span><span class="p">(</span><span class="nb">file</span><span class="p">,</span> <span class="n">format</span><span class="o">=</span><span class="s1">&#39;someformat&#39;</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>For example, to read a <cite>newick</cite> file using both interfaces you would type:</p>
+<div class="highlight-default"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">skbio</span> <span class="k">import</span> <span class="n">read</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">skbio</span> <span class="k">import</span> <span class="n">TreeNode</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">io</span> <span class="k">import</span> <span class="n">StringIO</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">open_filehandle</span> <span class="o">=</span> <span class="n">StringIO</span><span class="p">(</span><span class="s1">&#39;(a, b);&#39;</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">tree</span> <span class="o">=</span> <span class="n">read</span><span class="p">(</span><span class="n">open_filehandle</span><span class="p">,</span> <span class="nb">format</span><span class="o">=</span><span class="s1">&#39;newick&#39;</span><span class="p">,</span> <span class="n">into</span><span class="o">=</span><span class="n">TreeNode</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">tree</span>
+<span class="go">&lt;TreeNode, name: unnamed, internal node count: 0, tips count: 2&gt;</span>
+</pre></div>
+</div>
+<p>For the OO interface:</p>
+<div class="highlight-default"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">open_filehandle</span> <span class="o">=</span> <span class="n">StringIO</span><span class="p">(</span><span class="s1">&#39;(a, b);&#39;</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">tree</span> <span class="o">=</span> <span class="n">TreeNode</span><span class="o">.</span><span class="n">read</span><span class="p">(</span><span class="n">open_filehandle</span><span class="p">,</span> <span class="nb">format</span><span class="o">=</span><span class="s1">&#39;newick&#39;</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">tree</span>
+<span class="go">&lt;TreeNode, name: unnamed, internal node count: 0, tips count: 2&gt;</span>
+</pre></div>
+</div>
+<p>In the case of <a class="reference internal" href="generated/skbio.io.registry.read.html#skbio.io.registry.read" title="skbio.io.registry.read"><code class="xref py py-func docutils literal"><span class="pre">skbio.io.registry.read()</span></code></a> if <cite>into</cite> is not provided, then a
+generator will be returned. What the generator yields will depend on what
+format is being read.</p>
+<p>When <cite>into</cite> is provided, format may be omitted and the registry will use its
+knowledge of the available formats for the requested class to infer the correct
+format. This format inference is also available in the OO interface, meaning
+that <cite>format</cite> may be omitted there as well.</p>
+<p>As an example:</p>
+<div class="highlight-default"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">open_filehandle</span> <span class="o">=</span> <span class="n">StringIO</span><span class="p">(</span><span class="s1">&#39;(a, b);&#39;</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">tree</span> <span class="o">=</span> <span class="n">TreeNode</span><span class="o">.</span><span class="n">read</span><span class="p">(</span><span class="n">open_filehandle</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">tree</span>
+<span class="go">&lt;TreeNode, name: unnamed, internal node count: 0, tips count: 2&gt;</span>
+</pre></div>
+</div>
+<p>We call format inference <cite>sniffing</cite>, much like the <a class="reference external" href="https://docs.python.org/dev/library/csv.html#csv.Sniffer" title="(in Python v3.8)"><code class="xref py py-class docutils literal"><span class="pre">csv.Sniffer</span></code></a>
+class of Python’s standard library. The goal of a <cite>sniffer</cite> is twofold: to
+identify if a file is a specific format, and if it is, to provide <cite>**kwargs</cite>
+which can be used to better parse the file.</p>
+<div class="admonition note">
+<p class="first admonition-title">Note</p>
+<p class="last">There is a built-in <cite>sniffer</cite> which results in a useful error message
+if an empty file is provided as input and the format was omitted.</p>
+</div>
+</div>
+<div class="section" id="writing-files-from-scikit-bio">
+<h3>Writing files from scikit-bio<a class="headerlink" href="#writing-files-from-scikit-bio" title="Permalink to this headline">¶</a></h3>
+<p>Just as when reading files, there are two ways to write files.</p>
+<p>Procedural Interface:</p>
+<div class="highlight-python"><div class="highlight"><pre><span></span><span class="n">skbio</span><span class="o">.</span><span class="n">io</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="n">my_obj</span><span class="p">,</span> <span class="n">format</span><span class="o">=</span><span class="s1">&#39;someformat&#39;</span><span class="p">,</span> <span class="n">into</span><span class="o">=</span><span class="nb">file</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>OO Interface:</p>
+<div class="highlight-python"><div class="highlight"><pre><span></span><span class="n">my_obj</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="nb">file</span><span class="p">,</span> <span class="n">format</span><span class="o">=</span><span class="s1">&#39;someformat&#39;</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>In the procedural interface, <cite>format</cite> is required. Without it, scikit-bio does
+not know how you want to serialize an object. OO interfaces define a default
+<cite>format</cite>, so it may not be necessary to include it.</p>
+</div>
+</div>
+</div>
+
+
+    </div>
+      
+  </div>
+</div>
+  
+<footer class="footer">
+  <div class="container">
+    <p class="pull-right">
+      <a href="#">Back to top</a>
+      
+    </p>
+    <p>
+        &copy; Copyright 2014--, scikit-bio development team.<br/>
+      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 1.6.5.<br/>
+    </p>
+  </div>
+</footer>
+  <script>
+    (function(i,s,o,g,r,a,m){i['GoogleAnalyticsObject']=r;i[r]=i[r]||function(){
+    (i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),
+    m=s.getElementsByTagName(o)[0];a.async=1;a.src=g;m.parentNode.insertBefore(a,m)
+    })(window,document,'script','//www.google-analytics.com/analytics.js','ga');
+
+    ga('create', 'UA-6636235-9', 'scikit-bio.org');
+    ga('send', 'pageview');
+  </script>
+
+  </body>
+</html>

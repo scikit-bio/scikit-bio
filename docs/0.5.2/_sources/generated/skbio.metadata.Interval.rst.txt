@@ -1,0 +1,37 @@
+skbio\.metadata\.Interval
+=========================
+
+.. currentmodule:: skbio.metadata
+
+.. autoclass:: Interval
+
+   
+
+   .. HACK -- the point here is that we don't want this to appear in the output, but the autosummary should still generate the pages.
+      .. autosummary::
+         :toctree:
+      
+         
+         
+         Interval.__eq__
+         
+         Interval.__format__
+         
+         
+         Interval.__ne__
+         
+         
+         
+         
+         
+         
+         
+         
+         
+         
+         Interval.drop
+
+
+
+   
+
