@@ -3,6 +3,7 @@
 sudo: false
 language: python
 env:
+  - PYTHON_VERSION=3.6 MAKE_DOC=FALSE INSTALL_MATPLOTLIB=FALSE
   - PYTHON_VERSION=3.6 MAKE_DOC=TRUE
   - PYTHON_VERSION=3.5 MAKE_DOC=TRUE
   - PYTHON_VERSION=3.4 USE_CYTHON=TRUE
@@ -19,6 +20,7 @@ install:
   - conda create --yes -n env_name python=$PYTHON_VERSION
   - conda install --yes -n env_name --file ci/conda_requirements.txt
   - if [ ${USE_CYTHON} ]; then conda install --yes -n env_name cython; fi
+  - if [[ ${INSTALL_MATPLOTLIB} != "FALSE" ]]; then conda install --yes -n env_name matplotlib; fi
   - source activate env_name
   - conda info --envs
   - python --version
@@ -26,7 +28,7 @@ install:
   - pip install . --no-deps
 script:
   - WITH_COVERAGE=TRUE make test
-  - if [ ${MAKE_DOC} ]; then make -C doc clean html; fi
+  - if [ ${MAKE_DOC} != "FALSE" ]; then make -C doc clean html; fi
 after_success:
   - coveralls
 notifications:

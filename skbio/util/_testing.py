@@ -102,8 +102,10 @@ class TestRunner:
         # NOTE: it doesn't seem to matter what the first element of the argv
         # list is, there just needs to be something there.
         # changes to argv made here should also be made in setup.cfg
-        argv = [self._filename, '-I DO_NOT_IGNORE_ANYTHING', '--with-doctest',
-                '--doctest-tests', '--doctest-extension=pyx']
+        argv = [self._filename, '-I DO_NOT_IGNORE_ANYTHING']
+        if not _not_has_matplotlib():
+            argv += ['--with-doctest', '--doctest-tests',
+                     '--doctest-extension=pyx']
         if verbose:
             argv.append('-v')
         return nose.core.run(argv=argv, defaultTest=self._test_dir,
@@ -383,3 +385,12 @@ def assert_index_equal(a, b):
                            exact=True,
                            check_names=True,
                            check_exact=True)
+
+
+def _not_has_matplotlib():
+    """Return whether matplotib is available or not."""
+    try:
+        import matplotlib  # noqa
+    except ImportError:
+        return True
+    return False

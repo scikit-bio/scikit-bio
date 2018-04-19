@@ -19,7 +19,17 @@ Installing
 
 The recommended way to install scikit-bio is via the ``conda`` package manager available in `Anaconda <http://continuum.io/downloads>`_ or `miniconda <http://conda.pydata.org/miniconda.html>`_.
 
-To install the latest release of scikit-bio::
+Some plotting features require extra dependencies, and an
+``ImportError`` will be raised if you try to use them without them.
+Thus, you may want to install the following optional packages:
+
+    * matplotlib (>= 1.5.0)
+
+for example, by running::
+
+    pip install scikit-bio[plot]
+
+Equivalently, you can use the ``conda`` package manager available in `Anaconda <http://continuum.io/downloads>`_ or `miniconda <http://conda.pydata.org/miniconda.html>`_ to install scikit-bio and all its dependencies, without having to compile them::
 
     conda install -c conda-forge scikit-bio
 

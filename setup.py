@@ -111,8 +111,6 @@ setup(name='scikit-bio',
           'lockfile >= 0.10.2',  # req'd for our usage of CacheControl
           'CacheControl >= 0.11.5',
           'decorator >= 3.4.2',
-          'IPython >= 3.2.0',
-          'matplotlib >= 1.4.3',
           'natsort >= 4.0.3',
           # numpy array repr changed in 1.14.0 to use less whitespace, which
           # breaks the doctests. The doctests can't be updated to match the new
@@ -125,6 +123,12 @@ setup(name='scikit-bio',
           'nose >= 1.3.7',
           'scikit-learn >= 0.19.1'
       ],
+      extras_require={
+          'matplotlib': [
+              'IPython >= 3.2.0',
+              'matplotlib >= 1.4.3',
+          ]
+      },
       test_suite='nose.collector',
       classifiers=classifiers,
       package_data={
