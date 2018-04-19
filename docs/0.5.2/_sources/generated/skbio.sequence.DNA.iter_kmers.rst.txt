@@ -1,0 +1,8 @@
+:orphan:
+
+skbio.sequence.DNA.iter_kmers
+=============================
+
+.. currentmodule:: skbio.sequence
+
+.. automethod:: DNA.iter_kmers
