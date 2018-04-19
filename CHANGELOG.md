@@ -1,6 +1,6 @@
 # scikit-bio changelog
 
-## Version 0.5.2
+## Version 0.5.2 (2018-04-18)
 
 ### Features
 * Added ``skbio.io.format.embl`` for reading and writing EMBL files for ``DNA``, ``RNA`` and ``Sequence`` classes.
