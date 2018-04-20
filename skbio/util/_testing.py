@@ -191,7 +191,6 @@ def assert_ordination_results_equal(left, right, ignore_method_names=False,
                         ignore_columns=ignore_axis_labels,
                         ignore_directionality=ignore_directionality,
                         decimal=decimal)
-
     _assert_frame_equal(left.biplot_scores, right.biplot_scores,
                         ignore_columns=ignore_axis_labels,
                         ignore_directionality=ignore_directionality,
@@ -230,7 +229,6 @@ def _assert_frame_equal(left_df, right_df, ignore_index=False,
     else:
         left_values = left_df.values
         right_values = right_df.values
-
         if ignore_directionality:
             left_values, right_values = _normalize_signs(left_values,
                                                          right_values)

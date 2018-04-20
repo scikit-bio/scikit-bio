@@ -1138,7 +1138,7 @@ class SharedIndexTests:
     def test_bad_fancy_index(self):
         msa = TabularMSA([DNA("ABCD"), DNA("GHKM"), DNA("NRST")])
 
-        with self.assertRaises((KeyError, TypeError)):
+        with self.assertRaises((KeyError, TypeError, ValueError)):
             self.get(msa, [0, "foo"])
 
         with self.assertRaises(IndexError):
@@ -2507,6 +2507,19 @@ class TestExtend(unittest.TestCase):
 
 
 class TestJoin(unittest.TestCase):
+    def assertEqualJoinedMSA(self, msa1, msa2):
+        # `TabularMSA.join` doesn't guarantee index order in the joined MSA.
+        # The order differs across pandas versions, so sort each MSA before
+        # comparing for equality.
+
+        # copy because `TabularMSA.sort` is in-place.
+        msa1 = copy.copy(msa1)
+        msa2 = copy.copy(msa2)
+        msa1.sort()
+        msa2.sort()
+
+        self.assertEqual(msa1, msa2)
+
     def test_invalid_how(self):
         with self.assertRaisesRegex(ValueError, '`how`'):
             TabularMSA([]).join(TabularMSA([]), how='really')
@@ -2544,7 +2557,7 @@ class TestJoin(unittest.TestCase):
 
         joined = msa1.join(msa2)
 
-        self.assertEqual(
+        self.assertEqualJoinedMSA(
             joined,
             TabularMSA([DNA('AC-C'),
                         DNA('G..G')]))
@@ -2561,7 +2574,7 @@ class TestJoin(unittest.TestCase):
 
         joined = msa1.join(msa2)
 
-        self.assertEqual(
+        self.assertEqualJoinedMSA(
             joined,
             TabularMSA([DNA('ACCA'),
                         DNA('G..G'),
@@ -2577,7 +2590,7 @@ class TestJoin(unittest.TestCase):
 
         joined = msa1.join(msa2)
 
-        self.assertEqual(
+        self.assertEqualJoinedMSA(
             joined,
             TabularMSA([
                 DNA('ACCA',
@@ -2595,7 +2608,7 @@ class TestJoin(unittest.TestCase):
 
         joined = msa1.join(msa2)
 
-        self.assertEqual(joined, TabularMSA([]))
+        self.assertEqualJoinedMSA(joined, TabularMSA([]))
 
     def test_no_positions(self):
         msa1 = TabularMSA([DNA('', positional_metadata={'1': []}),
@@ -2607,7 +2620,7 @@ class TestJoin(unittest.TestCase):
 
         joined = msa1.join(msa2)
 
-        self.assertEqual(
+        self.assertEqualJoinedMSA(
             joined,
             TabularMSA([DNA('', positional_metadata={'1': [], '3': []}),
                         DNA('', positional_metadata={'2': [], '4': []})],
@@ -2623,7 +2636,7 @@ class TestJoin(unittest.TestCase):
 
         joined = msa1.join(msa2)
 
-        self.assertEqual(
+        self.assertEqualJoinedMSA(
             joined,
             TabularMSA([DNA('A', positional_metadata={'1': ['a'],
                                                       '3': [np.nan]}),
@@ -2645,7 +2658,7 @@ class TestJoin(unittest.TestCase):
 
         joined = msa1.join(msa2)
 
-        self.assertEqual(
+        self.assertEqualJoinedMSA(
             joined,
             TabularMSA([DNA('ACCA'),
                         DNA('G..G'),
@@ -2694,7 +2707,7 @@ class TestJoin(unittest.TestCase):
 
         joined = msa1.join(msa2, how='inner')
 
-        self.assertEqual(
+        self.assertEqualJoinedMSA(
             joined,
             TabularMSA([DNA('C--C'),
                         DNA('G..G'),
@@ -2711,7 +2724,7 @@ class TestJoin(unittest.TestCase):
 
         joined = msa1.join(msa2, how='inner')
 
-        self.assertEqual(
+        self.assertEqualJoinedMSA(
             joined,
             TabularMSA([DNA('G.-C'),
                         DNA('AC.G')], index=['a', 'b']))
@@ -2726,7 +2739,7 @@ class TestJoin(unittest.TestCase):
 
         joined = msa1.join(msa2, how='inner')
 
-        self.assertEqual(joined, TabularMSA([]))
+        self.assertEqualJoinedMSA(joined, TabularMSA([]))
 
     def test_how_outer(self):
         msa1 = TabularMSA([DNA('AC'),
@@ -2744,7 +2757,7 @@ class TestJoin(unittest.TestCase):
 
         joined = msa1.join(msa2, how='outer')
 
-        self.assertEqual(
+        self.assertEqualJoinedMSA(
             joined,
             TabularMSA([DNA('--...'),
                         DNA('ACCAA'),
@@ -2772,7 +2785,7 @@ class TestJoin(unittest.TestCase):
 
         joined = msa1.join(msa2, how='left')
 
-        self.assertEqual(
+        self.assertEqualJoinedMSA(
             joined,
             TabularMSA([DNA('ACCAA'),
                         DNA('G..GG'),
@@ -2798,7 +2811,7 @@ class TestJoin(unittest.TestCase):
 
         joined = msa1.join(msa2, how='right')
 
-        self.assertEqual(
+        self.assertEqualJoinedMSA(
             joined,
             TabularMSA([DNA('C--CC'),
                         DNA('G..GG'),

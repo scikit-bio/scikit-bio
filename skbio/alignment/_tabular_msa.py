@@ -2123,6 +2123,12 @@ class TabularMSA(MetadataMixin, PositionalMetadataMixin, SkbioObject):
 
         Examples
         --------
+        .. note:: The following examples call `.sort()` on the joined MSA
+           because there isn't a guaranteed ordering to the index. The joined
+           MSA is sorted in these examples to make the output reproducible.
+           When using this method with your own data, sorting the joined MSA is
+           not necessary.
+
         Join MSAs by sequence:
 
         >>> from skbio import DNA, TabularMSA
@@ -2131,6 +2137,7 @@ class TabularMSA(MetadataMixin, PositionalMetadataMixin, SkbioObject):
         >>> msa2 = TabularMSA([DNA('G-T'),
         ...                    DNA('T--')])
         >>> joined = msa1.join(msa2)
+        >>> joined.sort()  # unnecessary in practice, see note above
         >>> joined
         TabularMSA[DNA]
         ---------------------
@@ -2148,6 +2155,7 @@ class TabularMSA(MetadataMixin, PositionalMetadataMixin, SkbioObject):
         >>> msa2 = TabularMSA([DNA('G-T'),
         ...                    DNA('T--')], index=['b', 'a'])
         >>> joined = msa1.join(msa2)
+        >>> joined.sort()  # unnecessary in practice, see note above
         >>> joined
         TabularMSA[DNA]
         ---------------------
@@ -2174,6 +2182,7 @@ class TabularMSA(MetadataMixin, PositionalMetadataMixin, SkbioObject):
         ...                   positional_metadata={'col2': [3, 4, 5],
         ...                                        'col3': ['f', 'o', 'o']})
         >>> joined = msa1.join(msa2, how='inner')
+        >>> joined.sort()  # unnecessary in practice, see note above
         >>> joined
         TabularMSA[DNA]
         --------------------------
@@ -2183,10 +2192,10 @@ class TabularMSA(MetadataMixin, PositionalMetadataMixin, SkbioObject):
             sequence count: 2
             position count: 5
         --------------------------
-        A-G-T
         ACT--
+        A-G-T
         >>> joined.index
-        Index(['b', 'a'], dtype='object')
+        Index(['a', 'b'], dtype='object')
         >>> joined.positional_metadata
            col2
         0     1
@@ -2200,6 +2209,7 @@ class TabularMSA(MetadataMixin, PositionalMetadataMixin, SkbioObject):
         ``positional_metadata`` columns are padded with NaN:
 
         >>> joined = msa1.join(msa2, how='outer')
+        >>> joined.sort()  # unnecessary in practice, see note above
         >>> joined
         TabularMSA[DNA]
         ----------------------------
@@ -2284,12 +2294,12 @@ class TabularMSA(MetadataMixin, PositionalMetadataMixin, SkbioObject):
 
     def _get_join_index(self, other, how):
         if how == 'strict':
-            diff = self.index.sym_diff(other.index)
+            diff = self.index.symmetric_difference(other.index)
             if len(diff) > 0:
                 raise ValueError(
                     "Index labels must all match with `how='strict'`")
 
-            diff = self.positional_metadata.columns.sym_diff(
+            diff = self.positional_metadata.columns.symmetric_difference(
                 other.positional_metadata.columns)
 
             if not self.has_positional_metadata():
