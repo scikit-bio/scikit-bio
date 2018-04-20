@@ -20,6 +20,7 @@ from skbio import DistanceMatrix
 from skbio.stats.ordination import pcoa
 from skbio.stats.distance import permdisp
 from skbio.stats.distance._permdisp import _compute_centroid_groups
+from skbio.util import get_data_path
 
 
 class testPERMDISP(TestCase):
@@ -212,7 +213,6 @@ class testPERMDISP(TestCase):
     def test_no_permuations(self):
         obs = permdisp(self.eq_mat, self.grouping_eq, permutations=0)
 
-        # fix this to test both are significant or not significant
         pval = obs['p-value']
         np.isnan(pval)
 
@@ -223,30 +223,30 @@ class testPERMDISP(TestCase):
         npt.assert_almost_equal(obs, exp, decimal=6)
 
     def test_confirm_betadispr_results(self):
-        mp_dm = DistanceMatrix.read('data/moving_pictures_dm.tsv')
-        mp_mf = pd.read_csv('data/moving_pictures_mf.tsv', sep='\t')
+        mp_dm = DistanceMatrix.read(get_data_path('moving_pictures_dm.tsv'))
+        mp_mf = pd.read_csv(get_data_path('moving_pictures_mf.tsv'), sep='\t')
         mp_mf.set_index('#SampleID', inplace=True)
 
-        exp_med_mp = 10.4105
-        exp_cen_mp = 17.727
         obs_med_mp = permdisp(mp_dm, mp_mf,
-                              column='BodySite')['test statistic']
+                              column='BodySite')
         obs_cen_mp = permdisp(mp_dm, mp_mf, column='BodySite',
-                              test='centroid')['test statistic']
+                              test='centroid')
 
-        self.assertAlmostEqual(exp_med_mp, obs_med_mp, places=0)
-        self.assertAlmostEqual(exp_cen_mp, obs_cen_mp, places=0)
+        exp_data_m = ['PERMDISP', 'F-value', 33, 4, 10.1956, 0.001, 999]
+        exp_data_c = ['PERMDISP', 'F-value', 33, 4, 17.4242, 0.001, 999]
+        exp_ind = ['method name', 'test statistic name', 'sample size',
+                   'number of groups', 'test statistic', 'p-value',
+                   'number of permutations']
 
-        exp_med_mp = 0.02202
-        exp_cen_mp = 0.04549
+        exp_med_mp = pd.Series(data=exp_data_m, index=exp_ind, dtype='object',
+                               name='PERMDISP results')
 
-        obs_med_mp = permdisp(mp_dm, mp_mf,
-                              column='Subject')['test statistic']
-        obs_cen_mp = permdisp(mp_dm, mp_mf, column='Subject',
-                              test='centroid')['test statistic']
+        exp_cen_mp = pd.Series(data=exp_data_c, index=exp_ind, dtype='object',
+                               name='PERMDISP results')
 
-        self.assertAlmostEqual(exp_med_mp, obs_med_mp, places=2)
-        self.assertAlmostEqual(exp_cen_mp, obs_cen_mp, places=2)
+        self.assert_series_equal(exp_med_mp, obs_med_mp)
+
+        self.assert_series_equal(exp_cen_mp, obs_cen_mp)
 
 
 if __name__ == '__main__':
