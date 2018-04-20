@@ -1,0 +1,46 @@
+environment:
+  matrix:
+    # For Python versions available on Appveyor, see
+    # http://www.appveyor.com/docs/installed-software#python
+    - PYTHON: "C:\\Python35-x64"
+      PYTHON_VERSION: "3.5"
+      CONDA_PY: "35"
+      CONDA_INSTALL_LOCN: C:\\Miniconda35-x64
+    - PYTHON: "C:\\Python36-x64"
+      PYTHON_VERSION: "3.6"
+      CONDA_PY: "36"
+      CONDA_INSTALL_LOCN: C:\\Miniconda36-x64
+
+init:
+  - "ECHO %PYTHON% %PYTHON_VERSION% %MINICONDA%"
+
+install:
+  # We need wheel installed to build wheels
+  - "%PYTHON%\\python.exe -m pip install wheel"
+  - "set PATH=%CONDA_INSTALL_LOCN%;%CONDA_INSTALL_LOCN%\\Scripts;%PATH%"
+  - conda config --set always_yes true
+  - conda config --add channels conda-forge
+  - conda config --add channels bioconda
+  - conda update -q conda
+  # Useful for debugging any issues with conda
+  - conda info -a
+  - conda create --yes -n env_name python=%PYTHON_VERSION%
+  - activate calour
+  - conda install --verbose --yes --file ci/conda_requirements.txt
+  - conda install --verbose --yes cython
+  # - pip install --upgrade pip
+  - pip install -r ci/pip_requirements.txt
+  - pip install . --no-deps
+
+build: off
+
+test_script:
+  # Put your test command here.
+  # If you don't need to build C extensions on 64-bit Python 3.3 or 3.4,
+  # you can remove "build.cmd" from the front of the command, as it's
+  # only needed to support those cases.
+  # Note that you must use the environment variable %PYTHON% to refer to
+  # the interpreter you're using - Appveyor does not do anything special
+  # to put the Python version you want to use on PATH.
+  - cd ci && python -m skbio.test
+
