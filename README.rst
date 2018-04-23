@@ -119,7 +119,7 @@ scikit-bio's logo was created by `Alina Prassas <http://cargocollective.com/alin
 .. |Depsy Badge| image:: http://depsy.org/api/package/pypi/scikit-bio/badge.svg
    :target: http://depsy.org/package/python/scikit-bio
 .. |Anaconda Build Platforms| image:: https://anaconda.org/conda-forge/scikit-bio/badges/platforms.svg
-   :target: https://anaconda.org/biocore/scikit-bio/builds
+   :target: https://anaconda.org/conda-forge/scikit-bio
 .. |Anaconda Build Version| image:: https://anaconda.org/conda-forge/scikit-bio/badges/version.svg
    :target: https://anaconda.org/conda-forge/scikit-bio
 .. |License| image:: https://anaconda.org/conda-forge/scikit-bio/badges/license.svg
