@@ -1,5 +1,24 @@
 # scikit-bio changelog
 
+## Version 0.5.2-dev (changes since 0.5.2 go here)
+
+### Features
+
+### Backward-incompatible changes [stable]
+
+### Backward-incompatible changes [experimental]
+
+### Performance enhancements
+
+### Bug fixes
+
+### Deprecated functionality [stable]
+
+### Deprecated functionality [experimental]
+
+### Miscellaneous
+
+
 ## Version 0.5.2 (2018-04-18)
 
 ### Features
