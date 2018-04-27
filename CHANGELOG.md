@@ -3,6 +3,7 @@
 ## Version 0.5.2-dev (changes since 0.5.2 go here)
 
 ### Features
+* Added `permdisp` to `skbio.stats.distance` to test for the homogeniety of groups. ([#1228](https://github.com/biocore/scikit-bio/issues/1228)).
 
 ### Backward-incompatible changes [stable]
 
@@ -34,7 +35,6 @@
 
 * `skbio.metadata.IntervalMetadata.drop` has a new boolean parameter `negate` to indicate whether to drop or keep the specified `Interval` objects.
 
-* `skbio.stats.distance` adding function permdisp. This fixes issue 1228
 ### Backward-incompatible changes [stable]
 
 ### Backward-incompatible changes [experimental]

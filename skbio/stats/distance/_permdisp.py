@@ -98,6 +98,10 @@ def permdisp(distance_matrix, grouping, column=None, test='median',
 
     Notes
     -----
+    The significance of the results from this function will be the same as the
+    results found in vegan's betadisper, however due to floating point
+    variability the F-statistic results may vary slightly.
+
     See [1]_ for the original method reference, as well as
     ``vegan::betadisper``, available in R's vegan package [2]_.
 
