@@ -20,7 +20,7 @@ from skbio.stats.ordination import pcoa
 from skbio.util._decorator import experimental
 
 
-@experimental(as_of="0.5.1")
+@experimental(as_of="0.5.2")
 def permdisp(distance_matrix, grouping, column=None, test='median',
              permutations=999):
     """Test for Homogeneity of Multivariate Groups Disperisons using Marti
@@ -28,7 +28,7 @@ def permdisp(distance_matrix, grouping, column=None, test='median',
 
     PERMDISP is a multivariate analogue of Levene's test for homogeneity of
     multivariate variances. Distances are handled by reducing the
-    original distances to principle coordinates. PERMDISP calculates an
+    original distances to principal coordinates. PERMDISP calculates an
     F-statistic to assess whether the dispersions between groups is significant
 
 
@@ -208,13 +208,15 @@ def permdisp(distance_matrix, grouping, column=None, test='median',
     matrix IDs. Note that the reverse is not true: IDs in the distance matrix
     *must* be present in the ``DataFrame`` or an error will be raised.
 
-    PERMDISP should be used to determine wether the dispersions between the
+    PERMDISP should be used to determine whether the dispersions between the
     groups in your distance matrix are significantly separated.
     A non-significant test result indicates that group dispersions are similar
     to each other. PERMANOVA or ANOSIM should then be used in conjunction to
-    determine wether clustering within groups is significant.
+    determine whether clustering within groups is significant.
 
     """
+    if test not in ['centroid', 'median']:
+        raise ValueError('Test must be centroid or median')
 
     ordination = pcoa(distance_matrix)
     samples = ordination.samples
@@ -222,12 +224,7 @@ def permdisp(distance_matrix, grouping, column=None, test='median',
     sample_size, num_groups, grouping, tri_idxs, distances = _preprocess_input(
         distance_matrix, grouping, column)
 
-    if test == 'centroid':
-        test_stat_function = partial(_compute_centroid_groups, samples)
-    elif test == 'median':
-        test_stat_function = partial(_compute_median_groups, samples)
-    else:
-        raise ValueError('Test must be centroid or median')
+    test_stat_function = partial(_compute_groups, samples, test)
 
     stat, p_value = _run_monte_carlo_stats(test_stat_function, grouping,
                                            permutations)
@@ -236,13 +233,15 @@ def permdisp(distance_matrix, grouping, column=None, test='median',
                           stat, p_value, permutations)
 
 
-def _compute_centroid_groups(samples, grouping):
+def _compute_groups(samples, test_type, grouping):
 
     groups = []
 
     samples['grouping'] = grouping
-
-    centroids = samples.groupby('grouping').aggregate('mean')
+    if test_type == 'centroid':
+        centroids = samples.groupby('grouping').aggregate('mean')
+    elif test_type == 'median':
+        centroids = samples.groupby('grouping').aggregate(_config_med)
 
     for label, df in samples.groupby('grouping'):
         groups.append(cdist(df.values[:, :-1], [centroids.loc[label].values],
@@ -261,21 +260,3 @@ def _config_med(x):
     """
     X = x.values[:, :-1]
     return np.array(hd.geomedian(X.T))
-
-
-def _compute_median_groups(samples, grouping):
-
-    groups = []
-
-    samples['grouping'] = grouping
-
-    medians = samples.groupby('grouping').aggregate(_config_med)
-
-    for label, df in samples.groupby('grouping'):
-        groups.append(cdist(df.values[:, :-1], [medians.loc[label].values],
-                            metric='euclidean'))
-
-    stat, _ = f_oneway(*groups)
-    stat = stat[0]
-
-    return stat

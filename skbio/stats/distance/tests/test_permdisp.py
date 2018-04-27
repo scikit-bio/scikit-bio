@@ -19,7 +19,7 @@ import hdmedians as hd
 from skbio import DistanceMatrix
 from skbio.stats.ordination import pcoa
 from skbio.stats.distance import permdisp
-from skbio.stats.distance._permdisp import _compute_centroid_groups
+from skbio.stats.distance._permdisp import _compute_groups
 from skbio.util import get_data_path
 
 
@@ -118,10 +118,10 @@ class testPERMDISP(TestCase):
         dm = pcoa(self.eq_mat)
         dm = dm.samples
 
-        obs = _compute_centroid_groups(dm, self.grouping_eq)
+        obs = _compute_groups(dm, 'centroid', self.grouping_eq)
         self.assertAlmostEqual(obs, exp_stat, places=6)
 
-        obs_relab = _compute_centroid_groups(dm, self.grouping_eq_relab)
+        obs_relab = _compute_groups(dm, 'centroid', self.grouping_eq_relab)
         self.assertAlmostEqual(obs_relab, obs, places=6)
 
     def test_centroids_uneq_groups(self):
@@ -138,10 +138,10 @@ class testPERMDISP(TestCase):
         dm = pcoa(self.uneq_mat)
         dm = dm.samples
 
-        obs = _compute_centroid_groups(dm, self.grouping_uneq)
+        obs = _compute_groups(dm, 'centroid', self.grouping_uneq)
         self.assertAlmostEqual(obs, exp_stat, places=6)
 
-        obs_relab = _compute_centroid_groups(dm, self.grouping_uneq_relab)
+        obs_relab = _compute_groups(dm, 'centroid', self.grouping_uneq_relab)
         self.assertAlmostEqual(obs, obs_relab, places=6)
 
     def test_centroids_mixedgroups(self):
@@ -155,14 +155,14 @@ class testPERMDISP(TestCase):
 
         exp_stat, _ = f_oneway(*exp)
 
-        obs_mixed = _compute_centroid_groups(dm, self.grouping_un_mixed)
+        obs_mixed = _compute_groups(dm, 'centroid', self.grouping_un_mixed)
         self.assertAlmostEqual(exp_stat, obs_mixed, places=6)
 
     def test_centroids_null(self):
         dm = pcoa(self.null_mat)
         dm = dm.samples
 
-        obs_null = _compute_centroid_groups(dm, self.grouping_eq)
+        obs_null = _compute_groups(dm, 'centroid', self.grouping_eq)
         np.isnan(obs_null)
 
     def test_centroid_normal(self):
