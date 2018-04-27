@@ -154,6 +154,7 @@ Categorical Variable Stats
 
    anosim
    permanova
+   permdisp
 
 Continuous Variable Stats
 ^^^^^^^^^^^^^^^^^^^^^^^^^
@@ -196,9 +197,10 @@ from ._bioenv import bioenv
 from ._anosim import anosim
 from ._permanova import permanova
 from ._mantel import mantel, pwmantel
+from ._permdisp import permdisp
 
 __all__ = ['DissimilarityMatrixError', 'DistanceMatrixError', 'MissingIDError',
            'DissimilarityMatrix', 'DistanceMatrix', 'randdm', 'anosim',
-           'permanova', 'bioenv', 'mantel', 'pwmantel']
+           'permanova', 'bioenv', 'mantel', 'pwmantel', 'permdisp']
 
 test = TestRunner(__file__).test
