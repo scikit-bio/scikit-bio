@@ -3,6 +3,7 @@
 ## Version 0.5.2-dev (changes since 0.5.2 go here)
 
 ### Features
+* Added `permdisp` to `skbio.stats.distance` to test for the homogeniety of groups. ([#1228](https://github.com/biocore/scikit-bio/issues/1228)).
 
 ### Backward-incompatible changes [stable]
 
