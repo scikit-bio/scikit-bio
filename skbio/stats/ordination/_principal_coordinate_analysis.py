@@ -8,31 +8,27 @@
 
 from warnings import warn
 
-import pandas as pd
 import numpy as np
+import pandas as pd
+from numpy import dot, hstack
+from numpy.linalg import qr, svd
+from numpy.random import standard_normal
 from scipy.linalg import eigh
 
 from skbio.stats.distance import DistanceMatrix
 from skbio.util._decorator import experimental
 from ._ordination_results import OrdinationResults
-from ._utils import e_matrix, f_matrix, scale
-
-# - In cogent, after computing eigenvalues/vectors, the imaginary part
-#   is dropped, if any. We know for a fact that the eigenvalues are
-#   real, so that's not necessary, but eigenvectors can in principle
-#   be complex (see for example
-#   http://math.stackexchange.com/a/47807/109129 for details) and in
-#   that case dropping the imaginary part means they'd no longer be
-#   so, so I'm not doing that.
-
+from ._utils import center_distance_matrix_optimized, scale
 
 @experimental(as_of="0.4.0")
-def pcoa(distance_matrix):
+def pcoa(distance_matrix, method="eigh", to_dimension=None,
+         normalize_eigenvectors=False):
     r"""Perform Principal Coordinate Analysis.
 
-    Principal Coordinate Analysis (PCoA) is a method similar to PCA
-    that works from distance matrices, and so it can be used with
-    ecologically meaningful distances like UniFrac for bacteria.
+    Principal Coordinate Analysis (PCoA) is a method similar in principle
+    to Principle Components Analysis (PCA) with the difference that PCoA
+    operates on distance matrices, typically with non-euclidian and thus
+    ecologically meaningful distances like UniFrac in microbiome research.
 
     In ecology, the euclidean distance preserved by Principal
     Component Analysis (PCA) is often not a good choice because it
@@ -48,6 +44,23 @@ def pcoa(distance_matrix):
     ----------
     distance_matrix : DistanceMatrix
         A distance matrix.
+    method : str
+        Eigendecomposition method to use in performing PCoA.
+        By default, uses SciPy's "eigh", which computes exact
+        eigenvectors and eigenvalues for all dimensions. The alternate
+        method, "fsvd", uses faster heuristic eigendecomposition but loses
+        accuracy. The magnitude of accuracy lost is dependent on dataset.
+    to_dimension : number
+        Dimensions to reduce the distance matrix to. This number determines
+        how many eigenvectors and eigenvalues will be returned.
+        By default, equal to the number of dimensions of the distance matrix,
+        as default eigendecompsition using SciPy's "eigh" method computes
+        all eigenvectors and eigenvalues. If using fast heuristic
+        eigendecomposition through "fsvd", a desired dimension should be
+        specified.
+    normalize_eigenvectors : bool
+        False by default. If True, normalizes eigenvectors into
+        unit vectors.
 
     Returns
     -------
@@ -77,22 +90,31 @@ def pcoa(distance_matrix):
        appear, allowing the user to decide if they can be safely
        ignored.
     """
-    distance_matrix = DistanceMatrix(distance_matrix)
+    distance_matrix_obj = DistanceMatrix(distance_matrix)
 
-    E_matrix = e_matrix(distance_matrix.data)
+    # Center distance matrix, a requirement for PCoA here
+    distance_matrix = center_distance_matrix_optimized(
+        distance_matrix_obj.data)
 
-    # If the used distance was euclidean, pairwise distances
-    # needn't be computed from the data table Y because F_matrix =
-    # Y.dot(Y.T) (if Y has been centred).
-    F_matrix = f_matrix(E_matrix)
+    # If no dimension specified, by default will compute all eigenvectors
+    # and eigenvalues
+    if to_dimension is None:
+        # distance_matrix is guaranteed to be square
+        to_dimension = distance_matrix.shape[0]
 
-    # If the eigendecomposition ever became a bottleneck, it could
-    # be replaced with an iterative version that computes the
-    # largest k eigenvectors.
-    eigvals, eigvecs = eigh(F_matrix)
+    # Perform eigendecomposition
+    if method == "eigh":
+        eigvals, eigvecs = eigh(distance_matrix)
+        long_method_name = "Principal Coordinate Analysis"
+    elif method == "fsvd":
+        eigvals, eigvecs = _fsvd(distance_matrix, to_dimension)
+        long_method_name = "Approximate Principal Coordinate Analysis " \
+                           "using FSVD"
+    else:
+        raise ValueError(
+            "PCoA eigendecomposition method {} not supported.".format(method))
 
-    # eigvals might not be ordered, so we order them (at least one
-    # is zero). cogent makes eigenvalues positive by taking the
+    # cogent makes eigenvalues positive by taking the
     # abs value, but that doesn't seem to be an approach accepted
     # by L&L to deal with negative eigenvalues. We raise a warning
     # in that case. First, we make values close to 0 equal to 0.
@@ -109,17 +131,13 @@ def pcoa(distance_matrix):
             " {0} and the largest is {1}.".format(eigvals.min(),
                                                   eigvals.max()),
             RuntimeWarning
-            )
+        )
+
+    # eigvals might not be ordered, so we first sort them, then analogously
+    # sort the eigenvectors by the ordering of the eigenvalues too
     idxs_descending = eigvals.argsort()[::-1]
     eigvals = eigvals[idxs_descending]
     eigvecs = eigvecs[:, idxs_descending]
-
-    # Scale eigenvalues to have lenght = sqrt(eigenvalue). This
-    # works because np.linalg.eigh returns normalized
-    # eigenvectors. Each row contains the coordinates of the
-    # objects in the space of principal coordinates. Note that at
-    # least one eigenvalue is zero because only n-1 axes are
-    # needed to represent n points in an euclidean space.
 
     # If we return only the coordinates that make sense (i.e., that have a
     # corresponding positive eigenvalue), then Jackknifed Beta Diversity
@@ -130,18 +148,160 @@ def pcoa(distance_matrix):
     eigvecs[:, num_positive:] = np.zeros(eigvecs[:, num_positive:].shape)
     eigvals[num_positive:] = np.zeros(eigvals[num_positive:].shape)
 
+    # Normalize eigenvectors to unit length
+    if normalize_eigenvectors:
+        eigvecs = np.apply_along_axis(lambda vec: vec / np.linalg.norm(vec),
+                                      axis=1, arr=eigvecs)
+
+    # Scale eigenvalues to have length = sqrt(eigenvalue). This
+    # works because np.linalg.eigh returns normalized
+    # eigenvectors. Each row contains the coordinates of the
+    # objects in the space of principal coordinates. Note that at
+    # least one eigenvalue is zero because only n-1 axes are
+    # needed to represent n points in an euclidean space.
     coordinates = eigvecs * np.sqrt(eigvals)
+
+    # Calculate the array of proportion of variance explained
     proportion_explained = eigvals / eigvals.sum()
 
-    axis_labels = ['PC%d' % i for i in range(1, eigvals.size + 1)]
+    axis_labels = list(["PC%d" % i for i in range(1, to_dimension + 1)])
     return OrdinationResults(
-        short_method_name='PCoA',
-        long_method_name='Principal Coordinate Analysis',
+        short_method_name="PCoA",
+        long_method_name=long_method_name,
         eigvals=pd.Series(eigvals, index=axis_labels),
-        samples=pd.DataFrame(coordinates, index=distance_matrix.ids,
+        samples=pd.DataFrame(coordinates, index=distance_matrix_obj.ids,
                              columns=axis_labels),
         proportion_explained=pd.Series(proportion_explained,
                                        index=axis_labels))
+
+
+def _fsvd(centered_distance_matrix, dimension=3,
+          use_power_method=False, num_levels=1):
+    """
+           Performs singular value decomposition, or more specifically in
+           this case eigendecomposition, using fast heuristic algorithm
+           nicknamed "FSVD" (FastSVD), adapted and optimized from the algorithm
+           described by Halko et al (2011).
+
+           Parameters
+           ----------
+           centered_distance_matrix: np.array
+               Numpy matrix representing the distance matrix for which the
+               eigenvectors and eigenvalues shall be computed
+           dimension: int
+               Number of dimensions to keep. Must be lower than or equal to the
+               rank of the given distance_matrix.
+           num_levels: int
+               Number of levels of the Krylov method to use (see paper).
+               For most applications, num_levels=1 or num_levels=2 is
+               sufficient.
+           use_power_method: bool
+               Changes the power of the spectral norm, thus minimizing
+               the error). See paper p11/eq8.1 DOI = {10.1137/100804139}
+
+           Returns
+           -------
+           np.array
+               Array of eigenvectors, each with num_dimensions_out length.
+           np.array
+               Array of eigenvalues, a total number of num_dimensions_out.
+
+           Notes
+           -----
+           The algorithm is based on 'An Algorithm for the Principal
+           Component analysis of Large Data Sets'
+           by N. Halko, P.G. Martinsson, Y. Shkolnisky, and M. Tygert.
+           Original Paper: https://arxiv.org/abs/1007.5510
+
+           Ported from reference MATLAB implementation: https://goo.gl/JkcxQ2
+           """
+
+    m, n = centered_distance_matrix.shape
+
+    # Note: this transpose is removed for performance, since we
+    # only expect square matrices.
+    # Take (conjugate) transpose if necessary, because it makes H smaller,
+    # leading to faster computations
+    # if m < n:
+    #     distance_matrix = distance_matrix.transpose()
+    #     m, n = distance_matrix.shape
+    if m != n:
+        raise ValueError('FSVD.run(...) expects square distance matrix')
+
+    k = dimension + 2
+
+    # Form a real nxl matrix G whose entries are independent,
+    # identically distributed
+    # Gaussian random variables of
+    # zero mean and unit variance
+    G = standard_normal(size=(n, k))
+
+    if use_power_method:
+        # use only the given exponent
+        H = dot(centered_distance_matrix, G)
+
+        for x in range(2, num_levels + 2):
+            # enhance decay of singular values
+            # note: distance_matrix is no longer transposed, saves work
+            # since we're expecting symmetric, square matrices anyway
+            # (Daniel McDonald's changes)
+            H = dot(centered_distance_matrix, dot(centered_distance_matrix, H))
+
+    else:
+        # compute the m x l matrices H^{(0)}, ..., H^{(i)}
+        # Note that this is done implicitly in each iteration below.
+        H = dot(centered_distance_matrix, G)
+        # Again, removed transpose: dot(distance_matrix.transpose(), H)
+        # to enhance performance
+        H = hstack(
+            (H,
+             dot(centered_distance_matrix, dot(centered_distance_matrix, H))))
+        for x in range(3, num_levels + 2):
+            # Removed this transpose: dot(distance_matrix.transpose(), H)
+            tmp = dot(centered_distance_matrix,
+                      dot(centered_distance_matrix, H))
+
+            # Removed this transpose: dot(distance_matrix.transpose(), tmp)
+            H = hstack(
+                (H, dot(centered_distance_matrix,
+                        dot(centered_distance_matrix, tmp))))
+
+    # Using the pivoted QR-decomposition, form a real m * ((i+1)l) matrix Q
+    # whose columns are orthonormal, s.t. there exists a real
+    # ((i+1)l) * ((i+1)l) matrix R for which H = QR
+    Q, R = qr(H)
+
+    # Compute the n * ((i+1)l) product matrix T = A^T Q
+    # Removed transpose of distance_matrix for performance
+    T = dot(centered_distance_matrix, Q)  # step 3
+
+    # Form an SVD of T
+    Vt, St, W = svd(T, full_matrices=False)
+    W = W.transpose()
+
+    # Compute the m * ((i+1)l) product matrix
+    Ut = dot(Q, W)
+
+    if m < n:
+        # V_fsvd = Ut[:, :num_dimensions_out] # unused
+        U_fsvd = Vt[:, :dimension]
+    else:
+        # V_fsvd = Vt[:, :num_dimensions_out] # unused
+        U_fsvd = Ut[:, :dimension]
+
+    S = St[:dimension] ** 2
+
+    # drop imaginary component, if we got one
+    # Note:
+    # - In cogent, after computing eigenvalues/vectors, the imaginary part
+    #   is dropped, if any. We know for a fact that the eigenvalues are
+    #   real, so that's not necessary, but eigenvectors can in principle
+    #   be complex (see for example
+    #   http://math.stackexchange.com/a/47807/109129 for details)
+    eigenvalues = S.real
+    eigenvectors = U_fsvd.real
+
+    return eigenvalues, eigenvectors
 
 
 @experimental(as_of="0.5.3")

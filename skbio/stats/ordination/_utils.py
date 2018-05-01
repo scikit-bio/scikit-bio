@@ -217,6 +217,7 @@ def e_matrix_optimized(distance_matrix):
     Squares and divides by -2 the input elementwise. Eq. 9.20 in
     Legendre & Legendre 1998.
     """
+    distance_matrix = np.array(distance_matrix).astype(np.float)
 
     # modified from skbio e_matrix function,
     # performing row-wise to avoid excessive memory allocations
@@ -232,6 +233,7 @@ def f_matrix_optimized(e_matrix):
     row and column are substracted, and the mean of the whole
     matrix is added. Eq. 9.21 in Legendre & Legendre 1998.
     """
+    e_matrix = np.array(e_matrix).astype(np.float)
 
     # modified from skbio f_matrix function,
     # performing rowwise to avoid excessive memory allocations
