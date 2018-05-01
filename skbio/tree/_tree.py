@@ -3113,12 +3113,11 @@ class TreeNode(SkbioObject):
         A "support value" is defined as the numeric form of a whole node label
         without ":", or the part preceding the first ":" in the node label.
 
-        - For examples: "(a,b)1.0", "(a,b)1.0:2.5", and "(a,b)'1.0:species_A'".
+        For examples: "(a,b)1.0", "(a,b)1.0:2.5", and "(a,b)'1.0:species_A'".
         In these cases the support values are all 1.0.
 
-        - For examples: "(a,b):1.0" and "(a,b)species_A". In these cases there
+        For examples: "(a,b):1.0" and "(a,b)species_A". In these cases there
         are no support values.
-
 
         Examples
         --------
