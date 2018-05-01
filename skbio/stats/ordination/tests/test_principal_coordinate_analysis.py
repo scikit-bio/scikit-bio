@@ -9,6 +9,7 @@
 import pandas as pd
 import numpy as np
 import numpy.testing as npt
+import pandas as pd
 from copy import deepcopy
 from unittest import TestCase, main
 
@@ -27,7 +28,7 @@ class TestPCoA(TestCase):
 
     def test_simple(self):
         eigvals = [0.51236726, 0.30071909, 0.26791207, 0.20898868,
-                   0.19169895, 0.16054235,  0.15017696,  0.12245775,
+                   0.19169895, 0.16054235, 0.15017696, 0.12245775,
                    0.0]
         proportion_explained = [0.2675738328, 0.157044696, 0.1399118638,
                                 0.1091402725, 0.1001110485,
@@ -52,6 +53,36 @@ class TestPCoA(TestCase):
 
         assert_ordination_results_equal(results, expected_results,
                                         ignore_directionality=True)
+
+    def test_fsvd(self):
+        ref_results = OrdinationResults.read(
+            get_data_path('PCoA_sample_data_3_fsvd_3d_ref'))
+
+        # OrdinationResults does not serialize axis labels, so for this test
+        # we need to reconstruct an OrdinationResults object with axis labels
+        # so the assert_ordination_results_equal method can compare the
+        # reference results to the expected ordination results
+
+        axis_labels = ['PC%d' % i for i in
+                       range(1, len(ref_results.eigvals) + 1)]
+
+        expected_results = OrdinationResults(
+            short_method_name='PCoA',
+            long_method_name='Principal Coordinate Analysis',
+            eigvals=pd.Series(ref_results.eigvals.tolist(), index=axis_labels),
+            samples=pd.DataFrame(ref_results.samples.values,
+                                 index=ref_results.samples.index,
+                                 columns=axis_labels),
+            proportion_explained=pd.Series(
+                ref_results.proportion_explained.tolist(),
+                index=axis_labels))
+
+        dm = DistanceMatrix.read(get_data_path('PCoA_sample_data_3'))
+        results = pcoa(dm, method="fsvd", to_dimension=3)
+
+        assert_ordination_results_equal(results, expected_results,
+                                        ignore_directionality=True, decimal=7,
+                                        ignore_method_names=True)
 
     def test_extensive(self):
         eigvals = [0.3984635, 0.36405689, 0.28804535, 0.27479983,

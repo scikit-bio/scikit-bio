@@ -8,7 +8,6 @@
 
 import numpy as np
 import numpy.testing as npt
-
 from unittest import TestCase, main
 
 from skbio.stats.ordination import corr, mean_and_std, e_matrix, f_matrix, \
