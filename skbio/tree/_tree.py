@@ -3128,7 +3128,10 @@ class TreeNode(SkbioObject):
         >>> tree.lca(['c', 'd']).support() is None
         True
         """
-        try:
-            return float(self.name.split(':')[0])
-        except (ValueError, AttributeError):
-            return None
+        support = None
+        if self.name is not None:
+            try:
+                support = float(self.name.partition(':')[0])
+            except ValueError:
+                pass
+        return support
