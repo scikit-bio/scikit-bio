@@ -20,6 +20,7 @@ from skbio.util._decorator import experimental
 from ._ordination_results import OrdinationResults
 from ._utils import center_distance_matrix_optimized, scale
 
+
 @experimental(as_of="0.4.0")
 def pcoa(distance_matrix, method="eigh", to_dimension=None,
          normalize_eigenvectors=False):
