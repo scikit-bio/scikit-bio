@@ -3119,6 +3119,7 @@ class TreeNode(SkbioObject):
         - For examples: "(a,b):1.0" and "(a,b)species_A". In these cases there
         are no support values.
 
+
         Examples
         --------
         >>> from skbio import TreeNode
