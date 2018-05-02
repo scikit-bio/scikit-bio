@@ -1317,6 +1317,13 @@ class TreeTests(TestCase):
         self.assertEqual(node1.support(), 0.85)
         self.assertEqual(node2.support(), 0.95)
 
+        # test support values that are negative or scientific notation (not a
+        # common scenario but can happen)
+        tree = TreeNode.read(['((a,b)-1.23,(c,d)1.23e-4);'])
+        node1, node2 = tree.children
+        self.assertEqual(node1.support(), -1.23)
+        self.assertEqual(node2.support(), 0.000123)
+
         # test nodes with support and extra label (not a common scenario but
         # can happen)
         tree = TreeNode.read(['((a,b)\'80:X\',(c,d)\'60:Y\');'])

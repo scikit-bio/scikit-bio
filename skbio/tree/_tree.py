@@ -3130,8 +3130,9 @@ class TreeNode(SkbioObject):
         """
         support = None
         if self.name is not None:
+            left, _, _ = self.name.partition(':')
             try:
-                support = float(self.name.partition(':')[0])
+                support = float(left)
             except ValueError:
                 pass
         return support
