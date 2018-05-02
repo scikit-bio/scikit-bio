@@ -97,16 +97,18 @@ def pcoa(distance_matrix, method="eigh", to_dimension=None,
     distance_matrix = center_distance_matrix_optimized(
         distance_matrix_obj.data)
 
-    # If no dimension specified, by default will compute all eigenvectors
-    # and eigenvalues
-    if to_dimension is None:
-        # distance_matrix is guaranteed to be square
-        to_dimension = distance_matrix.shape[0]
-
     # Perform eigendecomposition
     if method == "eigh":
         eigvals, eigvecs = eigh(distance_matrix)
         long_method_name = "Principal Coordinate Analysis"
+
+        if to_dimension is not None:
+            warn("The eigendecomposition algorithm eigh for PCoA does not "
+                 "natively support a to_dimension parameter, so all "
+                 "eigenvectors and eigenvalues will be computed, but"
+                 "only the number specified by to_dimension will be returned."
+                 "There are no gains in speed."
+                 , RuntimeWarning)
     elif method == "fsvd":
         eigvals, eigvecs = _fsvd(distance_matrix, to_dimension)
         long_method_name = "Approximate Principal Coordinate Analysis " \
@@ -114,6 +116,12 @@ def pcoa(distance_matrix, method="eigh", to_dimension=None,
     else:
         raise ValueError(
             "PCoA eigendecomposition method {} not supported.".format(method))
+
+    # If no dimension specified, by default will compute all eigenvectors
+    # and eigenvalues
+    if to_dimension is None:
+        # distance_matrix is guaranteed to be square
+        to_dimension = distance_matrix.shape[0]
 
     # cogent makes eigenvalues positive by taking the
     # abs value, but that doesn't seem to be an approach accepted
@@ -153,6 +161,14 @@ def pcoa(distance_matrix, method="eigh", to_dimension=None,
     if normalize_eigenvectors:
         eigvecs = np.apply_along_axis(lambda vec: vec / np.linalg.norm(vec),
                                       axis=1, arr=eigvecs)
+
+    # In case eigh is used, eigh computes all eigenvectors and -values.
+    # So if to_dimension was specified, we manually need to ensure only the
+    # requested number of dimensions (number of eigenvectors and
+    # eigenvalues,
+    # respectively) are returned.
+    eigvecs = eigvecs[:, :to_dimension]
+    eigvals = eigvals[:to_dimension]
 
     # Scale eigenvalues to have length = sqrt(eigenvalue). This
     # works because np.linalg.eigh returns normalized
