@@ -4,6 +4,8 @@
 
 ### Features
 
+* Added `unpack` and `unpack_by_func` to `skbio.tree.TreeNode` to unpack one or multiple internal nodes.
+
 * Added `support` to `skbio.tree.TreeNode` to return the support value of a node.
 
 * Added `permdisp` to `skbio.stats.distance` to test for the homogeniety of groups. ([#1228](https://github.com/biocore/scikit-bio/issues/1228)).
