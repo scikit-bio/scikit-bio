@@ -3098,3 +3098,41 @@ class TreeNode(SkbioObject):
 
             yield self
             counter += 1
+
+    @experimental(as_of="0.5.2-dev")
+    def support(self):
+        """Return support value of a node if available
+
+        Returns
+        -------
+        float or None
+            support value of the node, or None if not available
+
+        Notes
+        -----
+        A "support value" is defined as the numeric form of a whole node label
+        without ":", or the part preceding the first ":" in the node label.
+
+        For examples: "(a,b)1.0", "(a,b)1.0:2.5", and "(a,b)'1.0:species_A'".
+        In these cases the support values are all 1.0.
+
+        For examples: "(a,b):1.0" and "(a,b)species_A". In these cases there
+        are no support values.
+
+        Examples
+        --------
+        >>> from skbio import TreeNode
+        >>> tree = TreeNode.read(['((a,b)99,(c,d):1.0);'])
+        >>> tree.lca(['a', 'b']).support()
+        99.0
+        >>> tree.lca(['c', 'd']).support() is None
+        True
+        """
+        support = None
+        if self.name is not None:
+            left, _, _ = self.name.partition(':')
+            try:
+                support = float(left)
+            except ValueError:
+                pass
+        return support

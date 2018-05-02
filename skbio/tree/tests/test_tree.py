@@ -1303,6 +1303,40 @@ class TreeTests(TestCase):
         with self.assertRaises(MissingNodeError):
             next(self.simple_t.shuffle(names=['x', 'y']))
 
+    def test_support(self):
+        """Get support value of a node."""
+        # test nodes with support alone as label
+        tree = TreeNode.read(['((a,b)75,(c,d)90);'])
+        node1, node2 = tree.children
+        self.assertEqual(node1.support(), 75.0)
+        self.assertEqual(node2.support(), 90.0)
+
+        # test nodes with support and branch length
+        tree = TreeNode.read(['((a,b)0.85:1.23,(c,d)0.95:4.56);'])
+        node1, node2 = tree.children
+        self.assertEqual(node1.support(), 0.85)
+        self.assertEqual(node2.support(), 0.95)
+
+        # test support values that are negative or scientific notation (not a
+        # common scenario but can happen)
+        tree = TreeNode.read(['((a,b)-1.23,(c,d)1.23e-4);'])
+        node1, node2 = tree.children
+        self.assertEqual(node1.support(), -1.23)
+        self.assertEqual(node2.support(), 0.000123)
+
+        # test nodes with support and extra label (not a common scenario but
+        # can happen)
+        tree = TreeNode.read(['((a,b)\'80:X\',(c,d)\'60:Y\');'])
+        node1, node2 = tree.children
+        self.assertEqual(node1.support(), 80.0)
+        self.assertEqual(node2.support(), 60.0)
+
+        # test nodes without label, with non-numeric label, and with branch
+        # length only
+        tree = TreeNode.read(['((a,b),(c,d)x,(e,f):1.0);'])
+        for node in tree.children:
+            self.assertIsNone(node.support())
+
 
 sample = """
 (
