@@ -3148,6 +3148,8 @@ class TreeNode(SkbioObject):
         parent node, and 3) grafts child nodes to parent node.
 
         Here is an illustration of the `unpack` operation:
+
+        ```
                     /----a
               /c---|
              |      \--b
@@ -3155,8 +3157,11 @@ class TreeNode(SkbioObject):
              |        /---d
               \f-----|
                       \-e
+        ```
 
         Unpack node "c" and the tree becomes:
+
+        ```
               /---------a
              |
         -----|--------b
@@ -3164,6 +3169,7 @@ class TreeNode(SkbioObject):
              |        /---d
               \f-----|
                       \-e
+        ```
 
         Raises
         ------
