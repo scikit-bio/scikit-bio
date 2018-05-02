@@ -3147,30 +3147,6 @@ class TreeNode(SkbioObject):
         of self (omit if there is no branch length), 2) removes self from
         parent node, and 3) grafts child nodes to parent node.
 
-        Here is an illustration of the `unpack` operation:
-
-        ```
-                    /----a
-              /c---|
-             |      \--b
-        -----|
-             |        /---d
-              \f-----|
-                      \-e
-        ```
-
-        Unpack node "c" and the tree becomes:
-
-        ```
-              /---------a
-             |
-        -----|--------b
-             |
-             |        /---d
-              \f-----|
-                      \-e
-        ```
-
         Raises
         ------
         ValueError
@@ -3180,7 +3156,7 @@ class TreeNode(SkbioObject):
         --------
         >>> from skbio import TreeNode
         >>> tree = TreeNode.read(['((c:2.0,d:3.0)a:1.0,(e:2.0,f:1.0)b:2.0);'])
-        >>> unpack(tree.find('b'))
+        >>> tree.find('b').unpack()
         >>> print(tree)
         ((c:2.0,d:3.0)a:1.0,e:4.0,f:3.0);
         <BLANKLINE>
@@ -3221,7 +3197,7 @@ class TreeNode(SkbioObject):
         ((e:1.0,f:2.0)b:2.0,c:3.0,d:4.0);
         <BLANKLINE>
         >>> tree = TreeNode.read(['(((a,b)85,(c,d)78)75,(e,(f,g)64)80);'])
-        >>> tree_unpacked = tree.unpack_by_func(lambda x: support(x) < 75)
+        >>> tree_unpacked = tree.unpack_by_func(lambda x: x.support() < 75)
         >>> print(tree_unpacked)
         (((a,b)85,(c,d)78)75,(e,f,g)80);
         <BLANKLINE>
