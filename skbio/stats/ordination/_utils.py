@@ -198,45 +198,64 @@ def f_matrix(E_matrix):
     return E_matrix - row_means - col_means + matrix_mean
 
 
-def center_distance_matrix_optimized(distance_matrix):
+def center_distance_matrix_inplace(distance_matrix):
     """
-    # FYI: If the used distance was euclidean, pairwise distances
-    # needn't be computed from the data table Y because F_matrix =
-    # Y.dot(Y.T) (if Y has been centred).
-    # But since we're expecting distance_matrix to be non-euclidian,
-    # we do the following computation as per
-    # Numerical Ecology (Legendre & Legendre 1998)
+    Centers a distance matrix inplace.
+
+    FYI: If the used distance was euclidean, pairwise distances
+    needn't be computed from the data table Y because F_matrix =
+    Y.dot(Y.T) (if Y has been centred).
+    But since we're expecting distance_matrix to be non-euclidian,
+    we do the following computation as per
+    Numerical Ecology (Legendre & Legendre 1998).
+
+    Parameters
+    ----------
+    distance_matrix : 2D array_like
+        Distance matrix.
     """
 
-    return f_matrix_optimized(e_matrix_optimized(distance_matrix))
+    return f_matrix_inplace(e_matrix_inplace(distance_matrix))
 
 
-def e_matrix_optimized(distance_matrix):
+def e_matrix_inplace(distance_matrix):
     """
-    Compute E matrix from a distance matrix.
-    Squares and divides by -2 the input elementwise. Eq. 9.20 in
+    Compute E matrix from a distance matrix inplace.
+    Squares and divides by -2 the input element-wise. Eq. 9.20 in
     Legendre & Legendre 1998.
+
+    Modified from skbio e_matrix function,
+    performing row-wise to avoid excessive memory allocations.
+
+    Parameters
+    ----------
+    distance_matrix : 2D array_like
+        Distance matrix.
     """
     distance_matrix = np.array(distance_matrix).astype(np.float)
 
-    # modified from skbio e_matrix function,
-    # performing row-wise to avoid excessive memory allocations
     for i in np.arange(len(distance_matrix)):
         distance_matrix[i] = (distance_matrix[i] * distance_matrix[i]) / -2
     return distance_matrix
 
 
-def f_matrix_optimized(e_matrix):
+def f_matrix_inplace(e_matrix):
     """
-    Compute F matrix from E matrix.
-    Centring step: for each element, the mean of the corresponding
-    row and column are substracted, and the mean of the whole
+    Compute F matrix from E matrix inplace.
+    Centering step: for each element, the mean of the corresponding
+    row and column are subtracted, and the mean of the whole
     matrix is added. Eq. 9.21 in Legendre & Legendre 1998.
+
+    Modified from skbio e_matrix function,
+    performing row-wise to avoid excessive memory allocations.
+
+    Parameters
+    ----------
+    e_matrix : 2D array_like
+        A matrix representing the "E matrix" as described above.
     """
     e_matrix = np.array(e_matrix).astype(np.float)
 
-    # modified from skbio f_matrix function,
-    # performing rowwise to avoid excessive memory allocations
     row_means = np.zeros(len(e_matrix), dtype=float)
     col_means = np.zeros(len(e_matrix), dtype=float)
     matrix_mean = 0.0

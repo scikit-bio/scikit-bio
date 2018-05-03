@@ -130,12 +130,12 @@ from ._canonical_correspondence_analysis import cca
 from ._principal_coordinate_analysis import pcoa, pcoa_biplot
 from ._ordination_results import OrdinationResults
 from ._utils import (mean_and_std, scale, svd_rank, corr, e_matrix, f_matrix,
-                     e_matrix_optimized, f_matrix_optimized,
-                     center_distance_matrix_optimized)
+                     e_matrix_inplace, f_matrix_inplace,
+                     center_distance_matrix_inplace)
 
 __all__ = ['ca', 'rda', 'cca', 'pcoa', 'pcoa_biplot', 'OrdinationResults',
            'mean_and_std', 'scale', 'svd_rank', 'corr',
-           'e_matrix', 'f_matrix', 'e_matrix_optimized', 'f_matrix_optimized',
-           'center_distance_matrix_optimized']
+           'e_matrix', 'f_matrix', 'e_matrix_inplace', 'f_matrix_inplace',
+           'center_distance_matrix_inplace']
 
 test = TestRunner(__file__).test

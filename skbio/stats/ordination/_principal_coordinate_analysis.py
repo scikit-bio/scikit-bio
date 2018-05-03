@@ -18,7 +18,7 @@ from scipy.linalg import eigh
 from skbio.stats.distance import DistanceMatrix
 from skbio.util._decorator import experimental
 from ._ordination_results import OrdinationResults
-from ._utils import center_distance_matrix_optimized, scale
+from ._utils import center_distance_matrix_inplace, scale
 
 
 @experimental(as_of="0.4.0")
@@ -94,7 +94,7 @@ def pcoa(distance_matrix, method="eigh", to_dimension=None,
     distance_matrix_obj = DistanceMatrix(distance_matrix)
 
     # Center distance matrix, a requirement for PCoA here
-    distance_matrix = center_distance_matrix_optimized(
+    distance_matrix = center_distance_matrix_inplace(
         distance_matrix_obj.data)
 
     # Perform eigendecomposition
