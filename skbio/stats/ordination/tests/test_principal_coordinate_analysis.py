@@ -78,7 +78,7 @@ class TestPCoA(TestCase):
                 index=axis_labels))
 
         dm = DistanceMatrix.read(get_data_path('PCoA_sample_data_3'))
-        results = pcoa(dm, method="fsvd", to_dimension=3)
+        results = pcoa(dm, method="fsvd", number_of_dimensions=3)
 
         assert_ordination_results_equal(results, expected_results,
                                         ignore_directionality=True, decimal=7,

@@ -22,7 +22,7 @@ from ._utils import center_distance_matrix_inplace, scale
 
 
 @experimental(as_of="0.4.0")
-def pcoa(distance_matrix, method="eigh", to_dimension=None,
+def pcoa(distance_matrix, method="eigh", number_of_dimensions=None,
          normalize_eigenvectors=False):
     r"""Perform Principal Coordinate Analysis.
 
@@ -51,7 +51,7 @@ def pcoa(distance_matrix, method="eigh", to_dimension=None,
         eigenvectors and eigenvalues for all dimensions. The alternate
         method, "fsvd", uses faster heuristic eigendecomposition but loses
         accuracy. The magnitude of accuracy lost is dependent on dataset.
-    to_dimension : number
+    number_of_dimensions : number
         Dimensions to reduce the distance matrix to. This number determines
         how many eigenvectors and eigenvalues will be returned.
         By default, equal to the number of dimensions of the distance matrix,
@@ -102,7 +102,7 @@ def pcoa(distance_matrix, method="eigh", to_dimension=None,
         eigvals, eigvecs = eigh(distance_matrix)
         long_method_name = "Principal Coordinate Analysis"
 
-        if to_dimension is not None:
+        if number_of_dimensions is not None:
             warn("The eigendecomposition algorithm eigh for PCoA does not "
                  "natively support a to_dimension parameter, so all "
                  "eigenvectors and eigenvalues will be computed, but"
@@ -110,7 +110,7 @@ def pcoa(distance_matrix, method="eigh", to_dimension=None,
                  "There are no gains in speed."
                  , RuntimeWarning)
     elif method == "fsvd":
-        eigvals, eigvecs = _fsvd(distance_matrix, to_dimension)
+        eigvals, eigvecs = _fsvd(distance_matrix, number_of_dimensions)
         long_method_name = "Approximate Principal Coordinate Analysis " \
                            "using FSVD"
     else:
@@ -119,9 +119,9 @@ def pcoa(distance_matrix, method="eigh", to_dimension=None,
 
     # If no dimension specified, by default will compute all eigenvectors
     # and eigenvalues
-    if to_dimension is None:
+    if number_of_dimensions is None:
         # distance_matrix is guaranteed to be square
-        to_dimension = distance_matrix.shape[0]
+        number_of_dimensions = distance_matrix.shape[0]
 
     # cogent makes eigenvalues positive by taking the
     # abs value, but that doesn't seem to be an approach accepted
@@ -167,8 +167,8 @@ def pcoa(distance_matrix, method="eigh", to_dimension=None,
     # requested number of dimensions (number of eigenvectors and
     # eigenvalues,
     # respectively) are returned.
-    eigvecs = eigvecs[:, :to_dimension]
-    eigvals = eigvals[:to_dimension]
+    eigvecs = eigvecs[:, :number_of_dimensions]
+    eigvals = eigvals[:number_of_dimensions]
 
     # Scale eigenvalues to have length = sqrt(eigenvalue). This
     # works because np.linalg.eigh returns normalized
@@ -181,7 +181,7 @@ def pcoa(distance_matrix, method="eigh", to_dimension=None,
     # Calculate the array of proportion of variance explained
     proportion_explained = eigvals / eigvals.sum()
 
-    axis_labels = list(["PC%d" % i for i in range(1, to_dimension + 1)])
+    axis_labels = list(["PC%d" % i for i in range(1, number_of_dimensions + 1)])
     return OrdinationResults(
         short_method_name="PCoA",
         long_method_name=long_method_name,
@@ -235,15 +235,10 @@ def _fsvd(centered_distance_matrix, dimension=3,
 
     m, n = centered_distance_matrix.shape
 
-    # Note: this transpose is removed for performance, since we
+    # Note: a (conjugate) transpose is removed for performance, since we
     # only expect square matrices.
-    # Take (conjugate) transpose if necessary, because it makes H smaller,
-    # leading to faster computations
-    # if m < n:
-    #     distance_matrix = distance_matrix.transpose()
-    #     m, n = distance_matrix.shape
     if m != n:
-        raise ValueError('FSVD.run(...) expects square distance matrix')
+        raise ValueError('FSVD expects square distance matrix')
 
     k = dimension + 2
 
@@ -299,12 +294,8 @@ def _fsvd(centered_distance_matrix, dimension=3,
     # Compute the m * ((i+1)l) product matrix
     Ut = dot(Q, W)
 
-    if m < n:
-        # V_fsvd = Ut[:, :num_dimensions_out] # unused
-        U_fsvd = Vt[:, :dimension]
-    else:
-        # V_fsvd = Vt[:, :num_dimensions_out] # unused
-        U_fsvd = Ut[:, :dimension]
+    # V_fsvd = Vt[:, :num_dimensions_out] # unused
+    U_fsvd = Ut[:, :dimension]
 
     S = St[:dimension] ** 2
 
