@@ -202,17 +202,17 @@ def _fsvd(centered_distance_matrix, dimension=3,
 
            Parameters
            ----------
-           centered_distance_matrix: np.array
+           centered_distance_matrix : np.array
                Numpy matrix representing the distance matrix for which the
                eigenvectors and eigenvalues shall be computed
-           dimension: int
+           dimension : int
                Number of dimensions to keep. Must be lower than or equal to the
                rank of the given distance_matrix.
-           num_levels: int
+           num_levels : int
                Number of levels of the Krylov method to use (see paper).
                For most applications, num_levels=1 or num_levels=2 is
                sufficient.
-           use_power_method: bool
+           use_power_method : bool
                Changes the power of the spectral norm, thus minimizing
                the error). See paper p11/eq8.1 DOI = {10.1137/100804139}
 
