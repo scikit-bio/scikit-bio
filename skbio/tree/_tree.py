@@ -3180,18 +3180,13 @@ class TreeNode(SkbioObject):
 
     @experimental(as_of="0.5.2-dev")
     def unpack_by_func(self, func):
-        """Unpack internal nodes that meet certain criteria.
+        """Unpack internal nodes of a tree that meet certain criteria.
 
         Parameters
         ----------
         func : function
             a function that accepts a TreeNode and returns `True` or `False`,
             where `True` indicates the node is to be unpacked
-
-        Returns
-        -------
-        skbio.TreeNode
-            resulting tree with nodes meeting criteria unpacked
 
         See also
         --------
@@ -3202,21 +3197,19 @@ class TreeNode(SkbioObject):
         --------
         >>> from skbio import TreeNode
         >>> tree = TreeNode.read(['((c:2,d:3)a:1,(e:1,f:2)b:2);'])
-        >>> tree_unpacked = tree.unpack_by_func(lambda x: x.length <= 1)
-        >>> print(tree_unpacked)
+        >>> tree.unpack_by_func(lambda x: x.length <= 1)
+        >>> print(tree)
         ((e:1.0,f:2.0)b:2.0,c:3.0,d:4.0);
         <BLANKLINE>
         >>> tree = TreeNode.read(['(((a,b)85,(c,d)78)75,(e,(f,g)64)80);'])
-        >>> tree_unpacked = tree.unpack_by_func(lambda x: x.support() < 75)
-        >>> print(tree_unpacked)
+        >>> tree.unpack_by_func(lambda x: x.support() < 75)
+        >>> print(tree)
         (((a,b)85,(c,d)78)75,(e,f,g)80);
         <BLANKLINE>
         """
-        tcopy = self.copy()
         nodes_to_unpack = []
-        for node in tcopy.non_tips(include_self=False):
+        for node in self.non_tips(include_self=False):
             if func(node):
                 nodes_to_unpack.append(node)
         for node in nodes_to_unpack:
             node.unpack()
-        return tcopy
