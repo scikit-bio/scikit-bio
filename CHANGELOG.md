@@ -4,7 +4,7 @@
 
 ### Features
 
-* Added `unpack` and `unpack_by_func` to `skbio.tree.TreeNode` to unpack one or multiple internal nodes.
+* Added `unpack` and `unpack_by_func` to `skbio.tree.TreeNode` to unpack one or multiple internal nodes. The "unpack" operation removes an internal node and regrafts its children to its parent while retaining the overall length.
 
 * Added `support` to `skbio.tree.TreeNode` to return the support value of a node.
 

@@ -3139,7 +3139,7 @@ class TreeNode(SkbioObject):
 
     @experimental(as_of="0.5.2-dev")
     def unpack(self):
-        """Unpack an internal node of a tree.
+        """Unpack an internal node in place.
 
         Notes
         -----
@@ -3151,6 +3151,11 @@ class TreeNode(SkbioObject):
         ------
         ValueError
             if input node is root or tip
+
+        See also
+        --------
+        unpack_by_func
+        prune
 
         Examples
         --------
@@ -3188,6 +3193,11 @@ class TreeNode(SkbioObject):
         skbio.TreeNode
             resulting tree with nodes meeting criteria unpacked
 
+        See also
+        --------
+        unpack
+        prune
+
         Examples
         --------
         >>> from skbio import TreeNode
@@ -3204,7 +3214,7 @@ class TreeNode(SkbioObject):
         """
         tcopy = self.copy()
         nodes_to_unpack = []
-        for node in tcopy.non_tips():
+        for node in tcopy.non_tips(include_self=False):
             if func(node):
                 nodes_to_unpack.append(node)
         for node in nodes_to_unpack:
