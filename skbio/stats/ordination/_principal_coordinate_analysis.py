@@ -22,11 +22,11 @@ from ._utils import center_distance_matrix_inplace, scale
 
 
 @experimental(as_of="0.4.0")
-def pcoa(distance_matrix, method="eigh", number_of_dimensions=None,
+def pcoa(matrix_data, method="eigh", number_of_dimensions=None,
          normalize_eigenvectors=False):
     r"""Perform Principal Coordinate Analysis.
 
-    Principal Coordinate Analysis (PCoA) is a method similar in principle
+    Principal Coordinate Analysis (PCoA) is a method similar
     to Principle Components Analysis (PCA) with the difference that PCoA
     operates on distance matrices, typically with non-euclidian and thus
     ecologically meaningful distances like UniFrac in microbiome research.
@@ -43,7 +43,7 @@ def pcoa(distance_matrix, method="eigh", number_of_dimensions=None,
 
     Parameters
     ----------
-    distance_matrix : DistanceMatrix
+    matrix_data : DistanceMatrix
         A distance matrix.
     method : str
         Eigendecomposition method to use in performing PCoA.
@@ -91,15 +91,15 @@ def pcoa(distance_matrix, method="eigh", number_of_dimensions=None,
        appear, allowing the user to decide if they can be safely
        ignored.
     """
-    distance_matrix_obj = DistanceMatrix(distance_matrix)
+    distance_matrix = DistanceMatrix(matrix_data)
 
     # Center distance matrix, a requirement for PCoA here
-    distance_matrix = center_distance_matrix_inplace(
-        distance_matrix_obj.data)
+    matrix_data = center_distance_matrix_inplace(
+        distance_matrix.data)
 
     # Perform eigendecomposition
     if method == "eigh":
-        eigvals, eigvecs = eigh(distance_matrix)
+        eigvals, eigvecs = eigh(matrix_data)
         long_method_name = "Principal Coordinate Analysis"
 
         if number_of_dimensions is not None:
@@ -110,7 +110,7 @@ def pcoa(distance_matrix, method="eigh", number_of_dimensions=None,
                  "There are no gains in speed."
                  , RuntimeWarning)
     elif method == "fsvd":
-        eigvals, eigvecs = _fsvd(distance_matrix, number_of_dimensions)
+        eigvals, eigvecs = _fsvd(matrix_data, number_of_dimensions)
         long_method_name = "Approximate Principal Coordinate Analysis " \
                            "using FSVD"
     else:
@@ -121,7 +121,7 @@ def pcoa(distance_matrix, method="eigh", number_of_dimensions=None,
     # and eigenvalues
     if number_of_dimensions is None:
         # distance_matrix is guaranteed to be square
-        number_of_dimensions = distance_matrix.shape[0]
+        number_of_dimensions = matrix_data.shape[0]
 
     # cogent makes eigenvalues positive by taking the
     # abs value, but that doesn't seem to be an approach accepted
@@ -186,7 +186,7 @@ def pcoa(distance_matrix, method="eigh", number_of_dimensions=None,
         short_method_name="PCoA",
         long_method_name=long_method_name,
         eigvals=pd.Series(eigvals, index=axis_labels),
-        samples=pd.DataFrame(coordinates, index=distance_matrix_obj.ids,
+        samples=pd.DataFrame(coordinates, index=distance_matrix.ids,
                              columns=axis_labels),
         proportion_explained=pd.Series(proportion_explained,
                                        index=axis_labels))
