@@ -22,8 +22,7 @@ from ._utils import center_distance_matrix_inplace, scale
 
 
 @experimental(as_of="0.4.0")
-def pcoa(matrix_data, method="eigh", number_of_dimensions=None,
-         normalize_eigenvectors=False):
+def pcoa(matrix_data, method="eigh", number_of_dimensions=None):
     r"""Perform Principal Coordinate Analysis.
 
     Principal Coordinate Analysis (PCoA) is a method similar
@@ -40,6 +39,8 @@ def pcoa(matrix_data, method="eigh", number_of_dimensions=None,
     the other, or too low in both, etc. On the other hand, if an
     species is present in two sites, that means that the sites are
     similar.).
+
+    Note that the returned eigenvectors are not normalized to unit length.
 
     Parameters
     ----------
@@ -59,9 +60,6 @@ def pcoa(matrix_data, method="eigh", number_of_dimensions=None,
         all eigenvectors and eigenvalues. If using fast heuristic
         eigendecomposition through "fsvd", a desired dimension should be
         specified.
-    normalize_eigenvectors : bool
-        False by default. If True, normalizes eigenvectors into
-        unit vectors.
 
     Returns
     -------
@@ -107,8 +105,7 @@ def pcoa(matrix_data, method="eigh", number_of_dimensions=None,
                  "natively support a to_dimension parameter, so all "
                  "eigenvectors and eigenvalues will be computed, but"
                  "only the number specified by to_dimension will be returned."
-                 "There are no gains in speed."
-                 , RuntimeWarning)
+                 "There are no gains in speed.", RuntimeWarning)
     elif method == "fsvd":
         eigvals, eigvecs = _fsvd(matrix_data, number_of_dimensions)
         long_method_name = "Approximate Principal Coordinate Analysis " \
@@ -157,10 +154,26 @@ def pcoa(matrix_data, method="eigh", number_of_dimensions=None,
     eigvecs[:, num_positive:] = np.zeros(eigvecs[:, num_positive:].shape)
     eigvals[num_positive:] = np.zeros(eigvals[num_positive:].shape)
 
-    # Normalize eigenvectors to unit length
-    if normalize_eigenvectors:
-        eigvecs = np.apply_along_axis(lambda vec: vec / np.linalg.norm(vec),
-                                      axis=1, arr=eigvecs)
+    if method == "fsvd":
+        # Since the dimension parameter, hereafter referred to as 'd',
+        # restricts the number of eigenvalues and
+        # eigenvectors that FSVD computes, we need to use an alternative method
+        # to compute the sum of all eigenvalues, used to compute the array of
+        # proportions explained. Otherwise, the proportions calculated will
+        # only be relative to d number of dimensions computed; whereas we want
+        # it to be relative to the entire dimesnionality of the
+        # centered distance matrix
+        
+        # An alternative method of calculating th sum of eigenvalues is by
+        # computing the trace of a matrix.
+        # See proof outlined here: https://goo.gl/VAYiXx
+        sum_eigenvalues = np.trace(matrix_data)
+
+        # Calculate the array of proportion of variance explained
+        proportion_explained = eigvals / sum_eigenvalues
+    else:
+        # Calculate proportions the usual way
+        proportion_explained = eigvals / np.sum(eigvals)
 
     # In case eigh is used, eigh computes all eigenvectors and -values.
     # So if to_dimension was specified, we manually need to ensure only the
@@ -169,6 +182,7 @@ def pcoa(matrix_data, method="eigh", number_of_dimensions=None,
     # respectively) are returned.
     eigvecs = eigvecs[:, :number_of_dimensions]
     eigvals = eigvals[:number_of_dimensions]
+    proportion_explained = proportion_explained[:number_of_dimensions]
 
     # Scale eigenvalues to have length = sqrt(eigenvalue). This
     # works because np.linalg.eigh returns normalized
@@ -178,10 +192,8 @@ def pcoa(matrix_data, method="eigh", number_of_dimensions=None,
     # needed to represent n points in an euclidean space.
     coordinates = eigvecs * np.sqrt(eigvals)
 
-    # Calculate the array of proportion of variance explained
-    proportion_explained = eigvals / eigvals.sum()
-
-    axis_labels = list(["PC%d" % i for i in range(1, number_of_dimensions + 1)])
+    axis_labels = list(
+        ["PC%d" % i for i in range(1, number_of_dimensions + 1)])
     return OrdinationResults(
         short_method_name="PCoA",
         long_method_name=long_method_name,
