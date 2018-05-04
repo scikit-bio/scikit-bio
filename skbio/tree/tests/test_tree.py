@@ -1354,12 +1354,12 @@ class TreeTests(TestCase):
         # test attempting to unpack root
         tree = TreeNode.read(['((d,e)b,(f,g)c)a;'])
         msg = 'Cannot unpack root.'
-        with self.assertRaisesRegex(ValueError, msg):
+        with self.assertRaisesRegex(TreeError, msg):
             tree.find('a').unpack()
 
         # test attempting to unpack tip
         msg = 'Cannot unpack tip.'
-        with self.assertRaisesRegex(ValueError, msg):
+        with self.assertRaisesRegex(TreeError, msg):
             tree.find('d').unpack()
 
     def test_unpack_by_func(self):

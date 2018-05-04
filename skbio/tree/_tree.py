@@ -3167,9 +3167,9 @@ class TreeNode(SkbioObject):
         <BLANKLINE>
         """
         if self.is_root():
-            raise ValueError('Cannot unpack root.')
+            raise TreeError('Cannot unpack root.')
         if self.is_tip():
-            raise ValueError('Cannot unpack tip.')
+            raise TreeError('Cannot unpack tip.')
         parent = self.parent
         blen = (self.length or 0.0)
         for child in self.children:
