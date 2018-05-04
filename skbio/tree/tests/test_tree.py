@@ -1337,6 +1337,101 @@ class TreeTests(TestCase):
         for node in tree.children:
             self.assertIsNone(node.support())
 
+    def test_unpack(self):
+        """Unpack an internal node."""
+        # test unpacking a node without branch length
+        tree = TreeNode.read(['((c,d)a,(e,f)b);'])
+        tree.find('b').unpack()
+        exp = '((c,d)a,e,f);\n'
+        self.assertEqual(str(tree), exp)
+
+        # test unpacking a node with branch length
+        tree = TreeNode.read(['((c:2.0,d:3.0)a:1.0,(e:2.0,f:1.0)b:2.0);'])
+        tree.find('b').unpack()
+        exp = '((c:2.0,d:3.0)a:1.0,e:4.0,f:3.0);'
+        self.assertEqual(str(tree).rstrip(), exp)
+
+        # test attempting to unpack root
+        tree = TreeNode.read(['((d,e)b,(f,g)c)a;'])
+        msg = 'Cannot unpack root.'
+        with self.assertRaisesRegex(TreeError, msg):
+            tree.find('a').unpack()
+
+        # test attempting to unpack tip
+        msg = 'Cannot unpack tip.'
+        with self.assertRaisesRegex(TreeError, msg):
+            tree.find('d').unpack()
+
+    def test_unpack_by_func(self):
+        """Unpack internal nodes of a tree by a function."""
+        # unpack internal nodes with branch length <= 1.0
+        def func(x):
+            return x.length <= 1.0
+
+        # will unpack node 'a', but not tip 'e'
+        # will add the branch length of 'a' to its child nodes 'c' and 'd'
+        tree = TreeNode.read(['((c:2,d:3)a:1,(e:1,f:2)b:2);'])
+        tree.unpack_by_func(func)
+        exp = '((e:1.0,f:2.0)b:2.0,c:3.0,d:4.0);'
+        self.assertEqual(str(tree).rstrip(), exp)
+
+        # unpack internal nodes with branch length < 2.01
+        # will unpack both 'a' and 'b'
+        tree = TreeNode.read(['((c:2,d:3)a:1,(e:1,f:2)b:2);'])
+        tree.unpack_by_func(lambda x: x.length <= 2.0)
+        exp = '(c:3.0,d:4.0,e:3.0,f:4.0);'
+        self.assertEqual(str(tree).rstrip(), exp)
+
+        # unpack two nested nodes 'a' and 'c' simultaneously
+        tree = TreeNode.read(['(((e:3,f:2)c:1,d:3)a:1,b:4);'])
+        tree.unpack_by_func(lambda x: x.length <= 2.0)
+        exp = '(b:4.0,d:4.0,e:5.0,f:4.0);'
+        self.assertEqual(str(tree).rstrip(), exp)
+
+        # test a complicated scenario (unpacking nodes 'g', 'h' and 'm')
+        def func(x):
+            return x.length < 2.0
+        tree = TreeNode.read(['(((a:1.04,b:2.32,c:1.44)d:3.20,'
+                              '(e:3.91,f:2.47)g:1.21)h:1.75,'
+                              '(i:4.14,(j:2.06,k:1.58)l:3.32)m:0.77);'])
+        tree.unpack_by_func(func)
+        exp = ('((a:1.04,b:2.32,c:1.44)d:4.95,e:6.87,f:5.43,i:4.91,'
+               '(j:2.06,k:1.58)l:4.09);')
+        self.assertEqual(str(tree).rstrip(), exp)
+
+        # unpack nodes with support < 75
+        def func(x):
+            return x.support() < 75
+        tree = TreeNode.read(['(((a,b)85,(c,d)78)75,(e,(f,g)64)80);'])
+        tree.unpack_by_func(func)
+        exp = '(((a,b)85,(c,d)78)75,(e,f,g)80);'
+        self.assertEqual(str(tree).rstrip(), exp)
+
+        # unpack nodes with support < 85
+        tree = TreeNode.read(['(((a,b)85,(c,d)78)75,(e,(f,g)64)80);'])
+        tree.unpack_by_func(lambda x: x.support() < 85)
+        exp = '((a,b)85,c,d,e,f,g);'
+        self.assertEqual(str(tree).rstrip(), exp)
+
+        # unpack nodes with support < 0.95
+        tree = TreeNode.read(['(((a,b)0.97,(c,d)0.98)1.0,(e,(f,g)0.88)0.96);'])
+        tree.unpack_by_func(lambda x: x.support() < 0.95)
+        exp = '(((a,b)0.97,(c,d)0.98)1.0,(e,f,g)0.96);'
+        self.assertEqual(str(tree).rstrip(), exp)
+
+        # test a case where there are branch lengths, none support values and
+        # node labels
+        def func(x):
+            sup = x.support()
+            return sup is not None and sup < 75
+        tree = TreeNode.read(['(((a:1.02,b:0.33)85:0.12,(c:0.86,d:2.23)'
+                              '70:3.02)75:0.95,(e:1.43,(f:1.69,g:1.92)64:0.20)'
+                              'node:0.35)root;'])
+        tree.unpack_by_func(func)
+        exp = ('(((a:1.02,b:0.33)85:0.12,c:3.88,d:5.25)75:0.95,'
+               '(e:1.43,f:1.89,g:2.12)node:0.35)root;')
+        self.assertEqual(str(tree).rstrip(), exp)
+
 
 sample = """
 (
