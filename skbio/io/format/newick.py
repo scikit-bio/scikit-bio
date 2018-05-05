@@ -351,9 +351,10 @@ def _tree_node_to_newick(obj, fh):
             # Note we don't check for None because there is no way to represent
             # an empty string as a label in Newick. Therefore, both None and ''
             # are considered to be the absence of a label.
-            if node.name:
-                escaped = "%s" % node.name.replace("'", "''")
-                if any(t in operators for t in node.name):
+            label = node._node_label()
+            if label:
+                escaped = "%s" % label.replace("'", "''")
+                if any(t in operators for t in label):
                     fh.write("'")
                     fh.write(escaped)
                     fh.write("'")
