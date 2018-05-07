@@ -305,7 +305,6 @@ def _fsvd(centered_distance_matrix, dimension=3,
     # Compute the m * ((i+1)l) product matrix
     Ut = dot(Q, W)
 
-    # V_fsvd = Vt[:, :num_dimensions_out] # unused
     U_fsvd = Ut[:, :dimension]
 
     S = St[:dimension] ** 2

@@ -81,7 +81,7 @@ class TestPCoA(TestCase):
         results = pcoa(dm, method="fsvd", number_of_dimensions=3)
 
         assert_ordination_results_equal(results, expected_results,
-                                        ignore_directionality=True, decimal=7,
+                                        ignore_directionality=True,
                                         ignore_method_names=True)
 
     def test_extensive(self):
