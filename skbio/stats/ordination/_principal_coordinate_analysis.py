@@ -203,7 +203,7 @@ def pcoa(matrix_data, method="eigh", number_of_dimensions=None):
                                        index=axis_labels))
 
 
-def _fsvd(centered_distance_matrix, dimension=3,
+def _fsvd(centered_distance_matrix, dimension=10,
           use_power_method=False, num_levels=1):
     """
            Performs singular value decomposition, or more specifically in
