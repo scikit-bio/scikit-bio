@@ -163,7 +163,6 @@ def pcoa(matrix_data, method="eigh", number_of_dimensions=None):
         # only be relative to d number of dimensions computed; whereas we want
         # it to be relative to the entire dimesnionality of the
         # centered distance matrix
-        
         # An alternative method of calculating th sum of eigenvalues is by
         # computing the trace of a matrix.
         # See proof outlined here: https://goo.gl/VAYiXx
