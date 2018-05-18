@@ -48,17 +48,19 @@ def pcoa(matrix_data, method="eigh", number_of_dimensions=None):
         A distance matrix.
     method : str
         Eigendecomposition method to use in performing PCoA.
-        By default, uses SciPy's "eigh", which computes exact
+        By default, uses SciPy's `eigh`, which computes exact
         eigenvectors and eigenvalues for all dimensions. The alternate
-        method, "fsvd", uses faster heuristic eigendecomposition but loses
+        method, `fsvd`, uses faster heuristic eigendecomposition but loses
         accuracy. The magnitude of accuracy lost is dependent on dataset.
+        For implementation details of FSVD, see the private method:
+        :func:`skbio.stats.ordination._principal_coordinate_analysis._fsvd`
     number_of_dimensions : number
         Dimensions to reduce the distance matrix to. This number determines
         how many eigenvectors and eigenvalues will be returned.
         By default, equal to the number of dimensions of the distance matrix,
-        as default eigendecompsition using SciPy's "eigh" method computes
+        as default eigendecompsition using SciPy's `eigh` method computes
         all eigenvectors and eigenvalues. If using fast heuristic
-        eigendecomposition through "fsvd", a desired dimension should be
+        eigendecomposition through `fsvd`, a desired dimension should be
         specified.
 
     Returns
@@ -74,8 +76,9 @@ def pcoa(matrix_data, method="eigh", number_of_dimensions=None):
 
     Notes
     -----
-    It is sometimes known as metric multidimensional scaling or
-    classical scaling.
+    .. note::
+        Principal Coordinate Analysis is sometimes known as
+        metric multidimensional scaling or classical scaling.
 
     .. note::
 
@@ -191,8 +194,7 @@ def pcoa(matrix_data, method="eigh", number_of_dimensions=None):
     # needed to represent n points in an euclidean space.
     coordinates = eigvecs * np.sqrt(eigvals)
 
-    axis_labels = list(
-        ["PC%d" % i for i in range(1, number_of_dimensions + 1)])
+    axis_labels = ["PC%d" % i for i in range(1, number_of_dimensions + 1)]
     return OrdinationResults(
         short_method_name="PCoA",
         long_method_name=long_method_name,
@@ -236,6 +238,7 @@ def _fsvd(centered_distance_matrix, dimension=10,
 
            Notes
            -----
+
            The algorithm is based on 'An Algorithm for the Principal
            Component analysis of Large Data Sets'
            by N. Halko, P.G. Martinsson, Y. Shkolnisky, and M. Tygert.

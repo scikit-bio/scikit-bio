@@ -6,13 +6,14 @@
 # The full license is in the file COPYING.txt, distributed with this software.
 # ----------------------------------------------------------------------------
 
+import warnings
 import inspect
+import os
+
 import nose
 import numpy as np
 import numpy.testing as npt
-import os
 import pandas.util.testing as pdt
-import warnings
 
 from skbio.util import SkbioWarning
 from ._decorator import experimental
