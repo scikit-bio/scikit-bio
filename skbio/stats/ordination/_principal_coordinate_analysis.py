@@ -15,7 +15,7 @@ from scipy.linalg import eigh
 from skbio.stats.distance import DistanceMatrix
 from skbio.util._decorator import experimental
 from ._ordination_results import OrdinationResults
-from ._utils import e_matrix, f_matrix
+from ._utils import e_matrix, f_matrix, scale
 
 # - In cogent, after computing eigenvalues/vectors, the imaginary part
 #   is dropped, if any. We know for a fact that the eigenvalues are
@@ -142,3 +142,59 @@ def pcoa(distance_matrix):
                              columns=axis_labels),
         proportion_explained=pd.Series(proportion_explained,
                                        index=axis_labels))
+
+def pcoa_biplot(ordination, y):
+    """Compute the projection of descriptors into a a PCoA matrix
+
+    This implementation is as described in Chapter 9 of Legendre & Legendre,
+    Numerical Ecology 3rd edition.
+
+    Parameters
+    ----------
+    ordination: OrdinationResults
+        The computed principal coordinates analysis of dimensions (n, c) where
+        the matrix ``y`` will be projected onto.
+    y: DataFrame
+        Samples by features table of dimensions (n, m). These can be
+        environmental features or abundance counts.
+
+    Returns
+    -------
+    OrdinationResults
+        The modified input object that includes projected features onto the
+        ordination space in the ``features`` attribute.
+    """
+
+    # TODO: needs to acknowledge that most saved ordinations lack a name
+    if ordination.short_method_name != 'PCoA':
+        raise ValueError('This biplot computation can only be performed in a '
+                         'PCoA matrix.')
+
+    if ordination.eigvals.shape[0] != ordination.samples.shape[0]:
+        raise ValueError('The eigenvectors and eigenvalues must span the same'
+                         ' number of dimensions.')
+
+    eigvals = ordination.eigvals
+    coordinates = ordination.samples
+
+    N = eigvals.size
+
+    # S_pc as described in equation 9.44
+    # This computation represents the covariance matrix between the centered
+    # features matrix and the column-centered eigenvectors of the pcoa
+    spc = (1 / (N - 1) ) * np.dot(f_matrix(y.values).T, scale(coordinates))
+
+    # TODO: is setting infinite to zero OK? Otherwise further computations
+    # might fail, we could also just remove that dimension :L
+    eigvals = np.power(eigvals, -0.5)
+    eigvals[np.isinf(eigvals)] = 0.0
+
+    # U_proj as described in equation 9.55
+    # the matrix of descriptors to be added to the PCoA
+    Uproj = np.sqrt(N - 1) * np.dot(spc, np.diag(eigvals))
+
+    ordination.features = pd.DataFrame(data=Uproj,
+                                       index=y.columns.copy(),
+                                       columns=coordinates.columns.copy())
+
+    return ordination
