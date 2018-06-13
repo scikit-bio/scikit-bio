@@ -229,6 +229,12 @@ class TestPCoABiplot(TestCase):
         serialized = pcoa_biplot(results, self.descriptors).features
         in_memory = pcoa_biplot(self.ordination, self.descriptors).features
 
+        # make the order comparable
+        in_memory = in_memory.reindex(serialized.index)
+
+        print(serialized)
+        print(in_memory)
+
         # test only the array because of the lost column names
         np.testing.assert_array_almost_equal(serialized.values,
                                              in_memory.values)
