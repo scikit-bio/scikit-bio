@@ -169,14 +169,14 @@ def pcoa_biplot(ordination, y):
 
     # acknowledge that most saved ordinations lack a name, however if they have
     # a name, it should be PCoA
-    if (ordination.short_method_name is not None and
+    if (ordination.short_method_name is not '' and
        ordination.short_method_name != 'PCoA'):
         raise ValueError('This biplot computation can only be performed in a '
                          'PCoA matrix.')
 
     if set(y.index) != set(ordination.samples.index):
         raise ValueError('The eigenvectors and the descriptors must describe '
-                         ' the same samples.')
+                         'the same samples.')
 
     eigvals = ordination.eigvals
     coordinates = ordination.samples
@@ -188,7 +188,7 @@ def pcoa_biplot(ordination, y):
     # S_pc from equation 9.44
     # Represents the covariance matrix between the features matrix and the
     # column-centered eigenvectors of the pcoa.
-    spc = (1 / (N - 1)) * y.T.dot(scale(coordinates))
+    spc = (1 / (N - 1)) * y.values.T.dot(scale(coordinates))
 
     # U_proj from equation 9.55, is the matrix of descriptors to be projected.
     #
