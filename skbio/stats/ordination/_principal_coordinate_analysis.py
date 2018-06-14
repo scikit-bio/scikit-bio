@@ -188,7 +188,7 @@ def pcoa_biplot(ordination, y):
     # S_pc from equation 9.44
     # Represents the covariance matrix between the features matrix and the
     # column-centered eigenvectors of the pcoa.
-    spc = (1 / (N - 1)) * y.values.T.dot(scale(coordinates))
+    spc = (1 / (N - 1)) * y.values.T.dot(scale(coordinates, ddof=1))
 
     # U_proj from equation 9.55, is the matrix of descriptors to be projected.
     #

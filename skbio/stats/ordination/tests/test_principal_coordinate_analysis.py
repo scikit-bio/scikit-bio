@@ -136,9 +136,6 @@ class TestPCoABiplot(TestCase):
         fp = get_data_path('PCoA_biplot_descriptors')
         self.descriptors = pd.read_table(fp, index_col='Taxon').T
 
-    def mean_squared_error(self, a, b):
-        return ((a - b) ** 2).mean()
-
     def test_pcoa_biplot_from_ape(self):
         """Test against a reference implementation from R's ape package
 
@@ -168,27 +165,23 @@ class TestPCoABiplot(TestCase):
         }
         write.csv(acc, file='PCoA_biplot_projected_descriptors')
         """
-        observed = pcoa_biplot(self.ordination, self.descriptors)
+        obs = pcoa_biplot(self.ordination, self.descriptors)
 
+        # we'll build a dummy ordination results object based on the expected
+        # the main thing we'll compare and modify is the features dataframe
+        exp = deepcopy(obs)
+
+        fp = get_data_path('PCoA_biplot_projected_descriptors')
         # R won't calculate the last dimension, so pad with zeros to make the
         # arrays comparable
-        fp = get_data_path('PCoA_biplot_projected_descriptors')
-        expected = pd.read_table(fp, sep=',', index_col=0)
-        expected['Axis.9'] = np.zeros_like(expected['Axis.8'])
+        exp.features = pd.read_table(fp, sep=',', index_col=0)
+        exp.features['Axis.9'] = np.zeros_like(exp.features['Axis.8'])
 
         # make the order comparable
-        expected = expected.reindex(observed.features.index)
+        exp.features = exp.features.reindex(obs.features.index)
 
-        mse = self.mean_squared_error(expected.values.flatten(),
-                                      observed.features.values.flatten())
-
-        # TODO: Find a better way to test between R and Python.
-        #
-        # I can't check for equal values because the test wouldn't pass.
-        # assert_all_close can't quite handle the differences in some
-        # dimensions (this is likely a precision problem between platforms).
-        # What I check for instead is that the mean squared error is small.
-        self.assertTrue(mse < 0.005)
+        assert_ordination_results_equal(obs, exp, ignore_directionality=True,
+                                        ignore_axis_labels=True)
 
     def test_pcoa_biplot_subset_input(self):
         # create a 2D copy of the full ordination
@@ -226,18 +219,13 @@ class TestPCoABiplot(TestCase):
         # information, test that pcoa_biplot works fine regardless
         results = OrdinationResults.read(get_data_path('PCoA_skbio'))
 
-        serialized = pcoa_biplot(results, self.descriptors).features
-        in_memory = pcoa_biplot(self.ordination, self.descriptors).features
+        serialized = pcoa_biplot(results, self.descriptors)
+        in_memory = pcoa_biplot(self.ordination, self.descriptors)
 
-        # make the order comparable
-        in_memory = in_memory.reindex(serialized.index)
-
-        print(serialized)
-        print(in_memory)
-
-        # test only the array because of the lost column names
-        np.testing.assert_array_almost_equal(serialized.values,
-                                             in_memory.values)
+        assert_ordination_results_equal(serialized, in_memory,
+                                        ignore_directionality=True,
+                                        ignore_axis_labels=True,
+                                        ignore_method_names=True)
 
 
 if __name__ == "__main__":
