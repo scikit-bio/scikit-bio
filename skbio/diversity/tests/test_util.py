@@ -57,9 +57,6 @@ class ValidationTests(TestCase):
         self.assertEqual(obs.dtype, int)
 
     def test_validate_counts_vector_invalid_input(self):
-        # wrong dtype
-        with self.assertRaises(TypeError):
-            _validate_counts_vector([0, 2, 1.2, 3])
 
         # wrong number of dimensions (2-D)
         with self.assertRaises(ValueError):
@@ -101,8 +98,6 @@ class ValidationTests(TestCase):
         npt.assert_array_equal(obs[1], np.array([42.2, 42.1, 1.0]))
         self.assertEqual(obs[0].dtype, float)
         self.assertEqual(obs[1].dtype, float)
-        with self.assertRaises(TypeError):
-            _validate_counts_matrix([[0.0], [1]], suppress_cast=False)
 
     def test_validate_counts_matrix_negative_counts(self):
         with self.assertRaises(ValueError):
