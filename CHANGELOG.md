@@ -12,6 +12,8 @@
 
 * Added `pcoa_biplot` to `skbio.stats.ordination` to project descriptors into a PCoA plot.
 
+* Fixed pandas to 0.22.0 due to this: https://github.com/pandas-dev/pandas/issues/20527
+
 ### Backward-incompatible changes [stable]
 
 ### Backward-incompatible changes [experimental]
