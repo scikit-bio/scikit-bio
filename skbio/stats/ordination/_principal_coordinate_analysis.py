@@ -169,7 +169,7 @@ def pcoa_biplot(ordination, y):
 
     # acknowledge that most saved ordinations lack a name, however if they have
     # a name, it should be PCoA
-    if (ordination.short_method_name is not '' and
+    if (ordination.short_method_name != '' and
        ordination.short_method_name != 'PCoA'):
         raise ValueError('This biplot computation can only be performed in a '
                          'PCoA matrix.')
