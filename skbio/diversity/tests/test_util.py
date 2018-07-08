@@ -70,6 +70,10 @@ class ValidationTests(TestCase):
         with self.assertRaises(ValueError):
             _validate_counts_vector([0, 0, 2, -1, 3])
 
+        # strings
+        with self.assertRaises(ValueError):
+            _validate_counts_vector([0, 0, 'a', -1, 3])
+
     def test_validate_counts_matrix(self):
         # basic valid input (n=2)
         obs = _validate_counts_matrix([[0, 1, 1, 0, 2],
