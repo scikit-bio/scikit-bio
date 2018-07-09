@@ -21,10 +21,8 @@ def _validate_counts_vector(counts, suppress_cast=False):
 
     """
     counts = np.asarray(counts)
-
-    if not suppress_cast:
-        counts = counts.astype(int, casting='safe', copy=False)
-
+    if not np.all(np.isreal(counts)):
+        raise ValueError("Counts vector must contain real-valued entries.")
     if counts.ndim != 1:
         raise ValueError("Only 1-D vectors are supported.")
     elif (counts < 0).any():
