@@ -20,6 +20,8 @@
 
 ### Bug fixes
 
+* Relaxing type checking in diversity calculations.  ([#1583](https://github.com/biocore/scikit-bio/issues/1583)).
+
 ### Deprecated functionality [stable]
 
 ### Deprecated functionality [experimental]
