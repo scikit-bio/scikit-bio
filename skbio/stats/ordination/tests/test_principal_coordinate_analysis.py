@@ -9,11 +9,12 @@
 import pandas as pd
 import numpy as np
 import numpy.testing as npt
+from copy import deepcopy
 from unittest import TestCase, main
 
 from skbio import DistanceMatrix, OrdinationResults
 from skbio.stats.distance import DissimilarityMatrixError
-from skbio.stats.ordination import pcoa
+from skbio.stats.ordination import pcoa, pcoa_biplot
 from skbio.util import get_data_path, assert_ordination_results_equal
 
 
@@ -124,6 +125,107 @@ class TestPCoA(TestCase):
     def test_invalid_input(self):
         with npt.assert_raises(DissimilarityMatrixError):
             pcoa([[1, 2], [3, 4]])
+
+
+class TestPCoABiplot(TestCase):
+    def setUp(self):
+        # Crawford dataset for unweighted UniFrac
+        fp = get_data_path('PCoA_sample_data_3')
+        self.ordination = pcoa(DistanceMatrix.read(fp))
+
+        fp = get_data_path('PCoA_biplot_descriptors')
+        self.descriptors = pd.read_table(fp, index_col='Taxon').T
+
+    def test_pcoa_biplot_from_ape(self):
+        """Test against a reference implementation from R's ape package
+
+        The test data was generated with the R script below and using a
+        modified version of pcoa.biplot that returns the U matrix.
+
+        library(ape)
+        # files can be found in the test data folder of the ordination module
+        y = t(read.table('PCoA_biplot_descriptors', row.names = 1, header = 1))
+        dm = read.table('PCoA_sample_data_3', row.names = 1, header = 1)
+
+        h = pcoa(dm)
+
+        # biplot.pcoa will only calculate the biplot for two axes at a time
+        acc = NULL
+        for (axes in c(1, 3, 5, 7)) {
+            new = biplot.pcoa(h, y, plot.axes=c(axes, axes+1),
+                              rn = rep('.', length(colnames(dm))) )
+
+            if(is.null(acc)) {
+                acc = new
+            }
+            else {
+                b = acc
+                acc <- cbind(acc, new)
+            }
+        }
+        write.csv(acc, file='PCoA_biplot_projected_descriptors')
+        """
+        obs = pcoa_biplot(self.ordination, self.descriptors)
+
+        # we'll build a dummy ordination results object based on the expected
+        # the main thing we'll compare and modify is the features dataframe
+        exp = deepcopy(obs)
+
+        fp = get_data_path('PCoA_biplot_projected_descriptors')
+        # R won't calculate the last dimension, so pad with zeros to make the
+        # arrays comparable
+        exp.features = pd.read_table(fp, sep=',', index_col=0)
+        exp.features['Axis.9'] = np.zeros_like(exp.features['Axis.8'])
+
+        # make the order comparable
+        exp.features = exp.features.reindex(obs.features.index)
+
+        assert_ordination_results_equal(obs, exp, ignore_directionality=True,
+                                        ignore_axis_labels=True)
+
+    def test_pcoa_biplot_subset_input(self):
+        # create a 2D copy of the full ordination
+        two_dims = deepcopy(self.ordination)
+        two_dims.eigvals = two_dims.eigvals[:2]
+        two_dims.samples = two_dims.samples.iloc[:, :2]
+        two_dims.proportion_explained = two_dims.proportion_explained[:2]
+
+        # only look at the features
+        subset = pcoa_biplot(two_dims, self.descriptors).features
+        full = pcoa_biplot(self.ordination, self.descriptors).features
+
+        # the biplot should be identical regardless of the number of axes used
+        pd.util.testing.assert_almost_equal(subset, full.iloc[:, :2])
+
+    def test_mismatching_samples(self):
+        new_index = self.descriptors.index.tolist()
+        new_index[3] = 'Not.an.id'
+        self.descriptors.index = pd.Index(new_index)
+
+        with self.assertRaisesRegex(ValueError, 'The eigenvectors and the '
+                                    'descriptors must describe the same '
+                                    'samples.'):
+            pcoa_biplot(self.ordination, self.descriptors)
+
+    def test_not_a_pcoa(self):
+        self.ordination.short_method_name = 'RDA'
+        self.ordination.long_method_name = 'Redundancy Analysis'
+        with self.assertRaisesRegex(ValueError, 'This biplot computation can'
+                                    ' only be performed in a PCoA matrix.'):
+            pcoa_biplot(self.ordination, self.descriptors)
+
+    def test_from_seralized_results(self):
+        # the current implementation of ordination results loses some
+        # information, test that pcoa_biplot works fine regardless
+        results = OrdinationResults.read(get_data_path('PCoA_skbio'))
+
+        serialized = pcoa_biplot(results, self.descriptors)
+        in_memory = pcoa_biplot(self.ordination, self.descriptors)
+
+        assert_ordination_results_equal(serialized, in_memory,
+                                        ignore_directionality=True,
+                                        ignore_axis_labels=True,
+                                        ignore_method_names=True)
 
 
 if __name__ == "__main__":
