@@ -15,7 +15,7 @@ from scipy.linalg import eigh
 from skbio.stats.distance import DistanceMatrix
 from skbio.util._decorator import experimental
 from ._ordination_results import OrdinationResults
-from ._utils import e_matrix, f_matrix
+from ._utils import e_matrix, f_matrix, scale
 
 # - In cogent, after computing eigenvalues/vectors, the imaginary part
 #   is dropped, if any. We know for a fact that the eigenvalues are
@@ -142,3 +142,63 @@ def pcoa(distance_matrix):
                              columns=axis_labels),
         proportion_explained=pd.Series(proportion_explained,
                                        index=axis_labels))
+
+
+def pcoa_biplot(ordination, y):
+    """Compute the projection of descriptors into a PCoA matrix
+
+    This implementation is as described in Chapter 9 of Legendre & Legendre,
+    Numerical Ecology 3rd edition.
+
+    Parameters
+    ----------
+    ordination: OrdinationResults
+        The computed principal coordinates analysis of dimensions (n, c) where
+        the matrix ``y`` will be projected onto.
+    y: DataFrame
+        Samples by features table of dimensions (n, m). These can be
+        environmental features or abundance counts. This table should be
+        normalized in cases of dimensionally heterogenous physical variables.
+
+    Returns
+    -------
+    OrdinationResults
+        The modified input object that includes projected features onto the
+        ordination space in the ``features`` attribute.
+    """
+
+    # acknowledge that most saved ordinations lack a name, however if they have
+    # a name, it should be PCoA
+    if (ordination.short_method_name != '' and
+       ordination.short_method_name != 'PCoA'):
+        raise ValueError('This biplot computation can only be performed in a '
+                         'PCoA matrix.')
+
+    if set(y.index) != set(ordination.samples.index):
+        raise ValueError('The eigenvectors and the descriptors must describe '
+                         'the same samples.')
+
+    eigvals = ordination.eigvals
+    coordinates = ordination.samples
+    N = coordinates.shape[0]
+
+    # align the descriptors and eigenvectors in a sample-wise fashion
+    y = y.reindex(coordinates.index)
+
+    # S_pc from equation 9.44
+    # Represents the covariance matrix between the features matrix and the
+    # column-centered eigenvectors of the pcoa.
+    spc = (1 / (N - 1)) * y.values.T.dot(scale(coordinates, ddof=1))
+
+    # U_proj from equation 9.55, is the matrix of descriptors to be projected.
+    #
+    # Only get the power of non-zero values, otherwise this will raise a
+    # divide by zero warning. There shouldn't be negative eigenvalues(?)
+    Uproj = np.sqrt(N - 1) * spc.dot(np.diag(np.power(eigvals, -0.5,
+                                                      where=eigvals > 0)))
+
+    ordination.features = pd.DataFrame(data=Uproj,
+                                       index=y.columns.copy(),
+                                       columns=coordinates.columns.copy())
+
+    return ordination

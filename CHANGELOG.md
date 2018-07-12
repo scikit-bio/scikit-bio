@@ -10,6 +10,8 @@
 
 * Added `permdisp` to `skbio.stats.distance` to test for the homogeniety of groups. ([#1228](https://github.com/biocore/scikit-bio/issues/1228)).
 
+* Added `pcoa_biplot` to `skbio.stats.ordination` to project descriptors into a PCoA plot.
+
 * Fixed pandas to 0.22.0 due to this: https://github.com/pandas-dev/pandas/issues/20527
 
 ### Backward-incompatible changes [stable]
