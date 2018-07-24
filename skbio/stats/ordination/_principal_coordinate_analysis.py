@@ -144,6 +144,7 @@ def pcoa(distance_matrix):
                                        index=axis_labels))
 
 
+@experimental(as_of="0.5.3")
 def pcoa_biplot(ordination, y):
     """Compute the projection of descriptors into a PCoA matrix
 
