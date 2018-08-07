@@ -120,7 +120,7 @@ setup(name='scikit-bio',
           # a numpy 1.14.0 conda package on `defaults` or `conda-forge`
           # channels.
           'numpy >= 1.9.2, < 1.14.0',
-          'pandas >= 0.19.2',
+          'pandas >= 0.19.2, < 0.23.0',
           'scipy >= 0.15.1',
           'nose >= 1.3.7',
           'hdmedians >= 0.13',
