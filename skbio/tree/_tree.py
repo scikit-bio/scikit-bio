@@ -3099,7 +3099,7 @@ class TreeNode(SkbioObject):
             yield self
             counter += 1
 
-    @experimental(as_of="0.5.2-dev")
+    @experimental(as_of="0.5.3")
     def support(self):
         """Return support value of a node if available.
 
@@ -3137,7 +3137,7 @@ class TreeNode(SkbioObject):
                 pass
         return support
 
-    @experimental(as_of="0.5.2-dev")
+    @experimental(as_of="0.5.3")
     def unpack(self):
         """Unpack an internal node in place.
 
@@ -3178,7 +3178,7 @@ class TreeNode(SkbioObject):
         parent.remove(self)
         parent.extend(self.children)
 
-    @experimental(as_of="0.5.2-dev")
+    @experimental(as_of="0.5.3")
     def unpack_by_func(self, func):
         """Unpack internal nodes of a tree that meet certain criteria.
 
