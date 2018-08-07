@@ -1,0 +1,8 @@
+:orphan:
+
+skbio.tree.TreeNode.compare_tip_distances
+=========================================
+
+.. currentmodule:: skbio.tree
+
+.. automethod:: TreeNode.compare_tip_distances

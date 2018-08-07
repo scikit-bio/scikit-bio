@@ -1,0 +1,8 @@
+:orphan:
+
+skbio.sequence.Protein.definite_chars
+=====================================
+
+.. currentmodule:: skbio.sequence
+
+.. autoattribute:: Protein.definite_chars

@@ -1,0 +1,8 @@
+:orphan:
+
+skbio.sequence.DNA.observed_chars
+=================================
+
+.. currentmodule:: skbio.sequence
+
+.. autoattribute:: DNA.observed_chars

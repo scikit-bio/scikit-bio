@@ -1,0 +1,8 @@
+:orphan:
+
+skbio.metadata.Interval.__format__
+==================================
+
+.. currentmodule:: skbio.metadata
+
+.. automethod:: Interval.__format__

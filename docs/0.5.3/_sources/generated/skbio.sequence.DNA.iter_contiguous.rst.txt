@@ -1,0 +1,8 @@
+:orphan:
+
+skbio.sequence.DNA.iter_contiguous
+==================================
+
+.. currentmodule:: skbio.sequence
+
+.. automethod:: DNA.iter_contiguous
