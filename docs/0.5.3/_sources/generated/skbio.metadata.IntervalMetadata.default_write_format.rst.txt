@@ -1,0 +1,8 @@
+:orphan:
+
+skbio.metadata.IntervalMetadata.default_write_format
+====================================================
+
+.. currentmodule:: skbio.metadata
+
+.. autoattribute:: IntervalMetadata.default_write_format

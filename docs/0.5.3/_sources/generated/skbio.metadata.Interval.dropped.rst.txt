@@ -1,0 +1,8 @@
+:orphan:
+
+skbio.metadata.Interval.dropped
+===============================
+
+.. currentmodule:: skbio.metadata
+
+.. autoattribute:: Interval.dropped

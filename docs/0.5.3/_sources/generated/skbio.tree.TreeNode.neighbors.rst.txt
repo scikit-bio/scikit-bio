@@ -1,0 +1,8 @@
+:orphan:
+
+skbio.tree.TreeNode.neighbors
+=============================
+
+.. currentmodule:: skbio.tree
+
+.. automethod:: TreeNode.neighbors

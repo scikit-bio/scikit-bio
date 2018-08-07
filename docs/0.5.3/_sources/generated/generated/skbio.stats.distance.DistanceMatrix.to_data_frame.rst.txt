@@ -1,0 +1,8 @@
+:orphan:
+
+skbio.stats.distance.DistanceMatrix.to_data_frame
+=================================================
+
+.. currentmodule:: skbio.stats.distance
+
+.. automethod:: DistanceMatrix.to_data_frame

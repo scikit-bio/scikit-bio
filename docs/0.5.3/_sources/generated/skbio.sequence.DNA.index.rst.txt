@@ -1,0 +1,8 @@
+:orphan:
+
+skbio.sequence.DNA.index
+========================
+
+.. currentmodule:: skbio.sequence
+
+.. automethod:: DNA.index
