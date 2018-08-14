@@ -9,7 +9,6 @@
 import pandas as pd
 import numpy as np
 import numpy.testing as npt
-import pandas as pd
 from copy import deepcopy
 from unittest import TestCase, main
 
