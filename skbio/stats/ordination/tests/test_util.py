@@ -6,12 +6,14 @@
 # The full license is in the file COPYING.txt, distributed with this software.
 # ----------------------------------------------------------------------------
 
+from unittest import TestCase, main
+import copy
+
 import numpy as np
 import numpy.testing as npt
-from unittest import TestCase, main
 
 from skbio.stats.ordination import corr, mean_and_std, e_matrix, f_matrix, \
-    e_matrix_inplace, f_matrix_inplace
+    e_matrix_inplace, f_matrix_inplace, center_distance_matrix
 
 
 class TestUtils(TestCase):
@@ -71,6 +73,26 @@ class TestUtils(TestCase):
         F = f_matrix_inplace(self.matrix2)
         expected_F = np.zeros((3, 3))
         npt.assert_almost_equal(F, expected_F)
+
+    def test_center_distance_matrix_inplace(self):
+        dm_expected = f_matrix(e_matrix(self.small_mat))
+
+        # make copy of matrix to test inplace centering
+        matrix_copy = copy.deepcopy(self.small_mat)
+        dm_centered = center_distance_matrix(matrix_copy, inplace=False)
+
+        # ensure that matrix_copy was NOT modified inplace
+        self.assertTrue(np.array_equal(matrix_copy, self.small_mat))
+
+        # and ensure that the result of centering was correct
+        npt.assert_almost_equal(dm_expected, dm_centered)
+
+        # next, sort same matrix inplace
+        matrix_copy2 = copy.deepcopy(self.small_mat)
+        dm_centered_inp = center_distance_matrix(matrix_copy2, inplace=True)
+
+        # and ensure that the result of inplace centering was correct
+        npt.assert_almost_equal(dm_expected, dm_centered_inp)
 
 
 if __name__ == '__main__':

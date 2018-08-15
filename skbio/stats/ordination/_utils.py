@@ -198,11 +198,11 @@ def f_matrix(E_matrix):
     return E_matrix - row_means - col_means + matrix_mean
 
 
-def center_distance_matrix_inplace(distance_matrix):
+def center_distance_matrix(distance_matrix, inplace=False):
     """
-    Centers a distance matrix inplace.
+    Centers a distance matrix.
 
-    FYI: If the used distance was euclidean, pairwise distances
+    Note: If the used distance was euclidean, pairwise distances
     needn't be computed from the data table Y because F_matrix =
     Y.dot(Y.T) (if Y has been centred).
     But since we're expecting distance_matrix to be non-euclidian,
@@ -213,9 +213,14 @@ def center_distance_matrix_inplace(distance_matrix):
     ----------
     distance_matrix : 2D array_like
         Distance matrix.
+    inplace : bool
+        Whether or not to center the given distance matrix in-place, which
+        is more efficient in terms of memory and computation.
     """
-
-    return f_matrix_inplace(e_matrix_inplace(distance_matrix))
+    if inplace:
+        return f_matrix_inplace(e_matrix_inplace(distance_matrix))
+    else:
+        return f_matrix(e_matrix(distance_matrix))
 
 
 def e_matrix_inplace(distance_matrix):

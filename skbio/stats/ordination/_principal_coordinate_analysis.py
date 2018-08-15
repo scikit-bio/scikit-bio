@@ -18,11 +18,11 @@ from scipy.linalg import eigh
 from skbio.stats.distance import DistanceMatrix
 from skbio.util._decorator import experimental
 from ._ordination_results import OrdinationResults
-from ._utils import center_distance_matrix_inplace, scale
+from ._utils import center_distance_matrix, scale
 
 
 @experimental(as_of="0.4.0")
-def pcoa(matrix_data, method="eigh", number_of_dimensions=None):
+def pcoa(matrix_data, method="eigh", number_of_dimensions=None, inplace=False):
     r"""Perform Principal Coordinate Analysis.
 
     Principal Coordinate Analysis (PCoA) is a method similar
@@ -62,6 +62,9 @@ def pcoa(matrix_data, method="eigh", number_of_dimensions=None):
         all eigenvectors and eigenvalues. If using fast heuristic
         eigendecomposition through `fsvd`, a desired dimension should be
         specified.
+    inplace : bool
+        If true, centers a distance matrix in-place in a manner that reduces
+        computational and memory cost.
 
     Returns
     -------
@@ -95,8 +98,7 @@ def pcoa(matrix_data, method="eigh", number_of_dimensions=None):
     distance_matrix = DistanceMatrix(matrix_data)
 
     # Center distance matrix, a requirement for PCoA here
-    matrix_data = center_distance_matrix_inplace(
-        distance_matrix.data)
+    matrix_data = center_distance_matrix(distance_matrix.data, inplace=inplace)
 
     # Perform eigendecomposition
     if method == "eigh":
