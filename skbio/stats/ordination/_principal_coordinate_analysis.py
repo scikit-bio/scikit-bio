@@ -6,14 +6,13 @@
 # The full license is in the file COPYING.txt, distributed with this software.
 # ----------------------------------------------------------------------------
 
-from warnings import warn
-
 import numpy as np
 import pandas as pd
 from numpy import dot, hstack
 from numpy.linalg import qr, svd
 from numpy.random import standard_normal
 from scipy.linalg import eigh
+from warnings import warn
 
 from skbio.stats.distance import DistanceMatrix
 from skbio.util._decorator import experimental
@@ -312,7 +311,7 @@ def _fsvd(centered_distance_matrix, dimension=10,
 
     U_fsvd = Ut[:, :dimension]
 
-    S = St[:dimension] ** 2
+    S = St[:dimension]
 
     # drop imaginary component, if we got one
     # Note:
@@ -354,7 +353,7 @@ def pcoa_biplot(ordination, y):
     # acknowledge that most saved ordinations lack a name, however if they have
     # a name, it should be PCoA
     if (ordination.short_method_name != '' and
-       ordination.short_method_name != 'PCoA'):
+            ordination.short_method_name != 'PCoA'):
         raise ValueError('This biplot computation can only be performed in a '
                          'PCoA matrix.')
 

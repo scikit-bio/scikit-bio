@@ -6,9 +6,9 @@
 # The full license is in the file COPYING.txt, distributed with this software.
 # ----------------------------------------------------------------------------
 
-import pandas as pd
 import numpy as np
 import numpy.testing as npt
+import pandas as pd
 from copy import deepcopy
 from unittest import TestCase, main
 
@@ -53,31 +53,29 @@ class TestPCoA(TestCase):
         assert_ordination_results_equal(results, expected_results,
                                         ignore_directionality=True)
 
+    def test_fsvd_inplace(self):
+        dm1 = DistanceMatrix.read(get_data_path('PCoA_sample_data_3'))
+        dm2 = DistanceMatrix.read(get_data_path('PCoA_sample_data_3'))
+
+        expected_results = pcoa(dm1, method="eigh", number_of_dimensions=3,
+                                inplace=True)
+
+        results = pcoa(dm2, method="fsvd", number_of_dimensions=3,
+                       inplace=True)
+
+        assert_ordination_results_equal(results, expected_results,
+                                        ignore_directionality=True,
+                                        ignore_method_names=True)
+
     def test_fsvd(self):
-        ref_results = OrdinationResults.read(
-            get_data_path('PCoA_sample_data_3_fsvd_3d_ref'))
+        dm1 = DistanceMatrix.read(get_data_path('PCoA_sample_data_3'))
+        dm2 = DistanceMatrix.read(get_data_path('PCoA_sample_data_3'))
 
-        # OrdinationResults does not serialize axis labels, so for this test
-        # we need to reconstruct an OrdinationResults object with axis labels
-        # so the assert_ordination_results_equal method can compare the
-        # reference results to the expected ordination results
+        expected_results = pcoa(dm1, method="eigh", number_of_dimensions=3,
+                                inplace=False)
 
-        axis_labels = ['PC%d' % i for i in
-                       range(1, len(ref_results.eigvals) + 1)]
-
-        expected_results = OrdinationResults(
-            short_method_name='PCoA',
-            long_method_name='Principal Coordinate Analysis',
-            eigvals=pd.Series(ref_results.eigvals.tolist(), index=axis_labels),
-            samples=pd.DataFrame(ref_results.samples.values,
-                                 index=ref_results.samples.index,
-                                 columns=axis_labels),
-            proportion_explained=pd.Series(
-                ref_results.proportion_explained.tolist(),
-                index=axis_labels))
-
-        dm = DistanceMatrix.read(get_data_path('PCoA_sample_data_3'))
-        results = pcoa(dm, method="fsvd", number_of_dimensions=3)
+        results = pcoa(dm2, method="fsvd", number_of_dimensions=3,
+                       inplace=False)
 
         assert_ordination_results_equal(results, expected_results,
                                         ignore_directionality=True,
@@ -233,15 +231,17 @@ class TestPCoABiplot(TestCase):
         self.descriptors.index = pd.Index(new_index)
 
         with self.assertRaisesRegex(ValueError, 'The eigenvectors and the '
-                                    'descriptors must describe the same '
-                                    'samples.'):
+                                                'descriptors must describe '
+                                                'the same '
+                                                'samples.'):
             pcoa_biplot(self.ordination, self.descriptors)
 
     def test_not_a_pcoa(self):
         self.ordination.short_method_name = 'RDA'
         self.ordination.long_method_name = 'Redundancy Analysis'
         with self.assertRaisesRegex(ValueError, 'This biplot computation can'
-                                    ' only be performed in a PCoA matrix.'):
+                                                ' only be performed in a '
+                                                'PCoA matrix.'):
             pcoa_biplot(self.ordination, self.descriptors)
 
     def test_from_seralized_results(self):
