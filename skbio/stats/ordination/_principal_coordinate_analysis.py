@@ -60,7 +60,12 @@ def pcoa(matrix_data, method="eigh", number_of_dimensions=None, inplace=False):
         as default eigendecompsition using SciPy's `eigh` method computes
         all eigenvectors and eigenvalues. If using fast heuristic
         eigendecomposition through `fsvd`, a desired dimension should be
-        specified.
+        specified. Note that the default eigendecomposition method eigh
+        does not natively support a specifying number of dimensions to reduce
+        a matrix to, so if this parameter is specified,
+        all eigenvectors and eigenvalues will be simply be computed with no
+        speed gain, and only the number specified by number_of_dimensions
+        will be returned.
     inplace : bool
         If true, centers a distance matrix in-place in a manner that reduces
         computational and memory cost.
@@ -101,15 +106,13 @@ def pcoa(matrix_data, method="eigh", number_of_dimensions=None, inplace=False):
 
     # Perform eigendecomposition
     if method == "eigh":
+        # eigh does not natively support specifying number_of_dimensions, i.e.
+        # there are no speed gains unlike in FSVD. Later, we slice off unwanted
+        # dimensions to conform the result of eigh
+        # to the specified number_of_dimensions.
+
         eigvals, eigvecs = eigh(matrix_data)
         long_method_name = "Principal Coordinate Analysis"
-
-        if number_of_dimensions is not None:
-            warn("The eigendecomposition algorithm eigh for PCoA does not "
-                 "natively support a to_dimension parameter, so all "
-                 "eigenvectors and eigenvalues will be computed, but"
-                 "only the number specified by to_dimension will be returned."
-                 "There are no gains in speed.", RuntimeWarning)
     elif method == "fsvd":
         eigvals, eigvecs = _fsvd(matrix_data, number_of_dimensions)
         long_method_name = "Approximate Principal Coordinate Analysis " \
