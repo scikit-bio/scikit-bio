@@ -21,7 +21,7 @@ from ._utils import center_distance_matrix, scale
 
 
 @experimental(as_of="0.4.0")
-def pcoa(matrix_data, method="eigh", number_of_dimensions=None, inplace=False):
+def pcoa(distance_matrix, method="eigh", number_of_dimensions=None, inplace=False):
     r"""Perform Principal Coordinate Analysis.
 
     Principal Coordinate Analysis (PCoA) is a method similar
@@ -43,7 +43,7 @@ def pcoa(matrix_data, method="eigh", number_of_dimensions=None, inplace=False):
 
     Parameters
     ----------
-    matrix_data : DistanceMatrix
+    distance_matrix : DistanceMatrix
         A distance matrix.
     method : str
         Eigendecomposition method to use in performing PCoA.
@@ -99,7 +99,7 @@ def pcoa(matrix_data, method="eigh", number_of_dimensions=None, inplace=False):
        appear, allowing the user to decide if they can be safely
        ignored.
     """
-    distance_matrix = DistanceMatrix(matrix_data)
+    distance_matrix = DistanceMatrix(distance_matrix)
 
     # Center distance matrix, a requirement for PCoA here
     matrix_data = center_distance_matrix(distance_matrix.data, inplace=inplace)
