@@ -21,7 +21,8 @@ from ._utils import center_distance_matrix, scale
 
 
 @experimental(as_of="0.4.0")
-def pcoa(distance_matrix, method="eigh", number_of_dimensions=None, inplace=False):
+def pcoa(distance_matrix, method="eigh", number_of_dimensions=None,
+         inplace=False):
     r"""Perform Principal Coordinate Analysis.
 
     Principal Coordinate Analysis (PCoA) is a method similar
