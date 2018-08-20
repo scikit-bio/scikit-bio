@@ -282,17 +282,14 @@ def _fsvd(centered_distance_matrix, dimension=10,
         # compute the m x l matrices H^{(0)}, ..., H^{(i)}
         # Note that this is done implicitly in each iteration below.
         H = dot(centered_distance_matrix, G)
-        # Again, removed transpose: dot(distance_matrix.transpose(), H)
         # to enhance performance
         H = hstack(
             (H,
              dot(centered_distance_matrix, dot(centered_distance_matrix, H))))
         for x in range(3, num_levels + 2):
-            # Removed this transpose: dot(distance_matrix.transpose(), H)
             tmp = dot(centered_distance_matrix,
                       dot(centered_distance_matrix, H))
 
-            # Removed this transpose: dot(distance_matrix.transpose(), tmp)
             H = hstack(
                 (H, dot(centered_distance_matrix,
                         dot(centered_distance_matrix, tmp))))
@@ -303,7 +300,6 @@ def _fsvd(centered_distance_matrix, dimension=10,
     Q, R = qr(H)
 
     # Compute the n * ((i+1)l) product matrix T = A^T Q
-    # Removed transpose of distance_matrix for performance
     T = dot(centered_distance_matrix, Q)  # step 3
 
     # Form an SVD of T
