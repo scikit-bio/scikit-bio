@@ -52,8 +52,6 @@ def pcoa(distance_matrix, method="eigh", number_of_dimensions=None,
         eigenvectors and eigenvalues for all dimensions. The alternate
         method, `fsvd`, uses faster heuristic eigendecomposition but loses
         accuracy. The magnitude of accuracy lost is dependent on dataset.
-        For implementation details of FSVD, see the private method:
-        :func:`skbio.stats.ordination._principal_coordinate_analysis._fsvd`
     number_of_dimensions : int, optional
         Dimensions to reduce the distance matrix to. This number determines
         how many eigenvectors and eigenvalues will be returned.
@@ -61,7 +59,7 @@ def pcoa(distance_matrix, method="eigh", number_of_dimensions=None,
         as default eigendecompsition using SciPy's `eigh` method computes
         all eigenvectors and eigenvalues. If using fast heuristic
         eigendecomposition through `fsvd`, a desired dimension should be
-        specified. Note that the default eigendecomposition method eigh
+        specified. Note that the default eigendecomposition method `eigh`
         does not natively support a specifying number of dimensions to reduce
         a matrix to, so if this parameter is specified,
         all eigenvectors and eigenvalues will be simply be computed with no
@@ -84,21 +82,18 @@ def pcoa(distance_matrix, method="eigh", number_of_dimensions=None,
 
     Notes
     -----
-    .. note::
-        Principal Coordinate Analysis is sometimes known as
-        metric multidimensional scaling or classical scaling.
+    Principal Coordinate Analysis is sometimes known as
+    metric multidimensional scaling or classical scaling.
 
-    .. note::
+    If the distance is not euclidean (for example if it is a
+    semimetric and the triangle inequality doesn't hold),
+    negative eigenvalues can appear. There are different ways
+    to deal with that problem (see Legendre & Legendre 1998, \S
+    9.2.3), but none are currently implemented here.
 
-       If the distance is not euclidean (for example if it is a
-       semimetric and the triangle inequality doesn't hold),
-       negative eigenvalues can appear. There are different ways
-       to deal with that problem (see Legendre & Legendre 1998, \S
-       9.2.3), but none are currently implemented here.
-
-       However, a warning is raised whenever negative eigenvalues
-       appear, allowing the user to decide if they can be safely
-       ignored.
+    However, a warning is raised whenever negative eigenvalues
+    appear, allowing the user to decide if they can be safely
+    ignored.
     """
     distance_matrix = DistanceMatrix(distance_matrix)
 
@@ -169,24 +164,22 @@ def pcoa(distance_matrix, method="eigh", number_of_dimensions=None,
         # to compute the sum of all eigenvalues, used to compute the array of
         # proportions explained. Otherwise, the proportions calculated will
         # only be relative to d number of dimensions computed; whereas we want
-        # it to be relative to the entire dimesnionality of the
+        # it to be relative to the entire dimensionality of the
         # centered distance matrix
         # An alternative method of calculating th sum of eigenvalues is by
-        # computing the trace of a matrix.
+        # computing the trace of the centered distance matrix.
         # See proof outlined here: https://goo.gl/VAYiXx
         sum_eigenvalues = np.trace(matrix_data)
 
-        # Calculate the array of proportion of variance explained
         proportion_explained = eigvals / sum_eigenvalues
     else:
         # Calculate proportions the usual way
         proportion_explained = eigvals / np.sum(eigvals)
 
     # In case eigh is used, eigh computes all eigenvectors and -values.
-    # So if to_dimension was specified, we manually need to ensure only the
-    # requested number of dimensions (number of eigenvectors and
-    # eigenvalues,
-    # respectively) are returned.
+    # So if number_of_dimensions was specified, we manually need to ensure
+    # only the requested number of dimensions
+    # (number of eigenvectors and eigenvalues, respectively) are returned.
     eigvecs = eigvecs[:, :number_of_dimensions]
     eigvals = eigvals[:number_of_dimensions]
     proportion_explained = proportion_explained[:number_of_dimensions]
@@ -196,7 +189,7 @@ def pcoa(distance_matrix, method="eigh", number_of_dimensions=None,
     # eigenvectors. Each row contains the coordinates of the
     # objects in the space of principal coordinates. Note that at
     # least one eigenvalue is zero because only n-1 axes are
-    # needed to represent n points in an euclidean space.
+    # needed to represent n points in a euclidean space.
     coordinates = eigvecs * np.sqrt(eigvals)
 
     axis_labels = ["PC%d" % i for i in range(1, number_of_dimensions + 1)]

@@ -213,7 +213,7 @@ def center_distance_matrix(distance_matrix, inplace=False):
     ----------
     distance_matrix : 2D array_like
         Distance matrix.
-    inplace : bool
+    inplace : bool, optional
         Whether or not to center the given distance matrix in-place, which
         is more efficient in terms of memory and computation.
     """
@@ -229,8 +229,8 @@ def _e_matrix_inplace(distance_matrix):
     Squares and divides by -2 the input element-wise. Eq. 9.20 in
     Legendre & Legendre 1998.
 
-    Modified from :func:`skbio.stats.ordination._utils.e_matrix` function,
-    performing row-wise to avoid excessive memory allocations.
+    Modified from :func:`skbio.stats.ordination.e_matrix` function,
+    performing row-wise operations to avoid excessive memory allocations.
 
     Parameters
     ----------
@@ -251,8 +251,8 @@ def _f_matrix_inplace(e_matrix):
     row and column are subtracted, and the mean of the whole
     matrix is added. Eq. 9.21 in Legendre & Legendre 1998.
 
-    Modified from :func:`skbio.stats.ordination._utils.f_matrix` function,
-    performing row-wise to avoid excessive memory allocations.
+    Modified from :func:`skbio.stats.ordination.f_matrix` function,
+    performing row-wise operations to avoid excessive memory allocations.
 
     Parameters
     ----------
