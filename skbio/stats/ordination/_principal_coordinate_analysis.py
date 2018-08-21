@@ -100,6 +100,12 @@ def pcoa(distance_matrix, method="eigh", number_of_dimensions=None,
     # Center distance matrix, a requirement for PCoA here
     matrix_data = center_distance_matrix(distance_matrix.data, inplace=inplace)
 
+    # If no dimension specified, by default will compute all eigenvectors
+    # and eigenvalues
+    if number_of_dimensions is None:
+        # distance_matrix is guaranteed to be square
+        number_of_dimensions = matrix_data.shape[0]
+
     # Perform eigendecomposition
     if method == "eigh":
         # eigh does not natively support specifying number_of_dimensions, i.e.
@@ -116,12 +122,6 @@ def pcoa(distance_matrix, method="eigh", number_of_dimensions=None,
     else:
         raise ValueError(
             "PCoA eigendecomposition method {} not supported.".format(method))
-
-    # If no dimension specified, by default will compute all eigenvectors
-    # and eigenvalues
-    if number_of_dimensions is None:
-        # distance_matrix is guaranteed to be square
-        number_of_dimensions = matrix_data.shape[0]
 
     # cogent makes eigenvalues positive by taking the
     # abs value, but that doesn't seem to be an approach accepted
