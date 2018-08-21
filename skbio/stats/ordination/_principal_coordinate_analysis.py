@@ -261,6 +261,10 @@ def _fsvd(centered_distance_matrix, number_of_dimensions=10):
     if m != n:
         raise ValueError('FSVD expects square distance matrix')
 
+    if number_of_dimensions > m or number_of_dimensions > n:
+        raise ValueError('FSVD: number_of_dimensions cannot be larger than'
+                         ' the dimensionality of the given distance matrix.')
+
     k = number_of_dimensions + 2
 
     # Form a real nxl matrix G whose entries are independent,
