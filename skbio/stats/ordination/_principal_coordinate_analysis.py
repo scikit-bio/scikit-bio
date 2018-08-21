@@ -210,8 +210,7 @@ def pcoa(distance_matrix, method="eigh", number_of_dimensions=None,
                                        index=axis_labels))
 
 
-def _fsvd(centered_distance_matrix, dimension=10,
-          use_power_method=False, num_levels=1):
+def _fsvd(centered_distance_matrix, dimension=10):
     """
     Performs singular value decomposition, or more specifically in
     this case eigendecomposition, using fast heuristic algorithm
@@ -226,13 +225,6 @@ def _fsvd(centered_distance_matrix, dimension=10,
     dimension : int
        Number of dimensions to keep. Must be lower than or equal to the
        rank of the given distance_matrix.
-    num_levels : int
-       Number of levels of the Krylov method to use (see paper).
-       For most applications, num_levels=1 or num_levels=2 is
-       sufficient.
-    use_power_method : bool
-       Changes the power of the spectral norm, thus minimizing
-       the error). See paper p11/eq8.1 DOI = {10.1137/100804139}
 
     Returns
     -------
@@ -254,6 +246,15 @@ def _fsvd(centered_distance_matrix, dimension=10,
     """
 
     m, n = centered_distance_matrix.shape
+
+    # Number of levels of the Krylov method to use.
+    # For most applications, num_levels=1 or num_levels=2 is
+    # sufficient.
+    num_levels = 1
+
+    # Changes the power of the spectral norm, thus minimizing
+    # the error).
+    use_power_method = False
 
     # Note: a (conjugate) transpose is removed for performance, since we
     # only expect square matrices.
