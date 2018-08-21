@@ -218,12 +218,12 @@ def center_distance_matrix(distance_matrix, inplace=False):
         is more efficient in terms of memory and computation.
     """
     if inplace:
-        return f_matrix_inplace(e_matrix_inplace(distance_matrix))
+        return _f_matrix_inplace(_e_matrix_inplace(distance_matrix))
     else:
         return f_matrix(e_matrix(distance_matrix))
 
 
-def e_matrix_inplace(distance_matrix):
+def _e_matrix_inplace(distance_matrix):
     """
     Compute E matrix from a distance matrix inplace.
     Squares and divides by -2 the input element-wise. Eq. 9.20 in
@@ -244,7 +244,7 @@ def e_matrix_inplace(distance_matrix):
     return distance_matrix
 
 
-def f_matrix_inplace(e_matrix):
+def _f_matrix_inplace(e_matrix):
     """
     Compute F matrix from E matrix inplace.
     Centering step: for each element, the mean of the corresponding
