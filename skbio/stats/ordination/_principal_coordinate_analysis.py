@@ -26,7 +26,7 @@ def pcoa(distance_matrix, method="eigh", number_of_dimensions=None,
     r"""Perform Principal Coordinate Analysis.
 
     Principal Coordinate Analysis (PCoA) is a method similar
-    to Principle Components Analysis (PCA) with the difference that PCoA
+    to Principal Components Analysis (PCA) with the difference that PCoA
     operates on distance matrices, typically with non-euclidian and thus
     ecologically meaningful distances like UniFrac in microbiome research.
 
@@ -46,7 +46,7 @@ def pcoa(distance_matrix, method="eigh", number_of_dimensions=None,
     ----------
     distance_matrix : DistanceMatrix
         A distance matrix.
-    method : str
+    method : str, optional
         Eigendecomposition method to use in performing PCoA.
         By default, uses SciPy's `eigh`, which computes exact
         eigenvectors and eigenvalues for all dimensions. The alternate
@@ -54,7 +54,7 @@ def pcoa(distance_matrix, method="eigh", number_of_dimensions=None,
         accuracy. The magnitude of accuracy lost is dependent on dataset.
         For implementation details of FSVD, see the private method:
         :func:`skbio.stats.ordination._principal_coordinate_analysis._fsvd`
-    number_of_dimensions : number
+    number_of_dimensions : int, optional
         Dimensions to reduce the distance matrix to. This number determines
         how many eigenvectors and eigenvalues will be returned.
         By default, equal to the number of dimensions of the distance matrix,
@@ -67,7 +67,7 @@ def pcoa(distance_matrix, method="eigh", number_of_dimensions=None,
         all eigenvectors and eigenvalues will be simply be computed with no
         speed gain, and only the number specified by number_of_dimensions
         will be returned.
-    inplace : bool
+    inplace : bool, optional
         If true, centers a distance matrix in-place in a manner that reduces
         computational and memory cost.
 
@@ -213,44 +213,45 @@ def pcoa(distance_matrix, method="eigh", number_of_dimensions=None,
 def _fsvd(centered_distance_matrix, dimension=10,
           use_power_method=False, num_levels=1):
     """
-           Performs singular value decomposition, or more specifically in
-           this case eigendecomposition, using fast heuristic algorithm
-           nicknamed "FSVD" (FastSVD), adapted and optimized from the algorithm
-           described by Halko et al (2011).
+    Performs singular value decomposition, or more specifically in
+    this case eigendecomposition, using fast heuristic algorithm
+    nicknamed "FSVD" (FastSVD), adapted and optimized from the algorithm
+    described by Halko et al (2011).
 
-           Parameters
-           ----------
-           centered_distance_matrix : np.array
-               Numpy matrix representing the distance matrix for which the
-               eigenvectors and eigenvalues shall be computed
-           dimension : int
-               Number of dimensions to keep. Must be lower than or equal to the
-               rank of the given distance_matrix.
-           num_levels : int
-               Number of levels of the Krylov method to use (see paper).
-               For most applications, num_levels=1 or num_levels=2 is
-               sufficient.
-           use_power_method : bool
-               Changes the power of the spectral norm, thus minimizing
-               the error). See paper p11/eq8.1 DOI = {10.1137/100804139}
+    Parameters
+    ----------
+    centered_distance_matrix : np.array
+       Numpy matrix representing the distance matrix for which the
+       eigenvectors and eigenvalues shall be computed
+    dimension : int
+       Number of dimensions to keep. Must be lower than or equal to the
+       rank of the given distance_matrix.
+    num_levels : int
+       Number of levels of the Krylov method to use (see paper).
+       For most applications, num_levels=1 or num_levels=2 is
+       sufficient.
+    use_power_method : bool
+       Changes the power of the spectral norm, thus minimizing
+       the error). See paper p11/eq8.1 DOI = {10.1137/100804139}
 
-           Returns
-           -------
-           np.array
-               Array of eigenvectors, each with num_dimensions_out length.
-           np.array
-               Array of eigenvalues, a total number of num_dimensions_out.
+    Returns
+    -------
+    np.array
+       Array of eigenvectors, each with num_dimensions_out length.
+    np.array
+       Array of eigenvalues, a total number of num_dimensions_out.
 
-           Notes
-           -----
+    Notes
+    -----
 
-           The algorithm is based on 'An Algorithm for the Principal
-           Component analysis of Large Data Sets'
-           by N. Halko, P.G. Martinsson, Y. Shkolnisky, and M. Tygert.
-           Original Paper: https://arxiv.org/abs/1007.5510
+    The algorithm is based on 'An Algorithm for the Principal
+    Component analysis of Large Data Sets'
+    by N. Halko, P.G. Martinsson, Y. Shkolnisky, and M. Tygert.
+    Original Paper: https://arxiv.org/abs/1007.5510
 
-           Ported from reference MATLAB implementation: https://goo.gl/JkcxQ2
-           """
+    Ported from MATLAB implementation described here:
+    https://stats.stackexchange.com/a/11934/211065
+    """
 
     m, n = centered_distance_matrix.shape
 
