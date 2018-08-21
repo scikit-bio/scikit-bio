@@ -210,7 +210,7 @@ def pcoa(distance_matrix, method="eigh", number_of_dimensions=None,
                                        index=axis_labels))
 
 
-def _fsvd(centered_distance_matrix, dimension=10):
+def _fsvd(centered_distance_matrix, number_of_dimensions=10):
     """
     Performs singular value decomposition, or more specifically in
     this case eigendecomposition, using fast heuristic algorithm
@@ -222,16 +222,16 @@ def _fsvd(centered_distance_matrix, dimension=10):
     centered_distance_matrix : np.array
        Numpy matrix representing the distance matrix for which the
        eigenvectors and eigenvalues shall be computed
-    dimension : int
+    number_of_dimensions : int
        Number of dimensions to keep. Must be lower than or equal to the
        rank of the given distance_matrix.
 
     Returns
     -------
     np.array
-       Array of eigenvectors, each with num_dimensions_out length.
+       Array of eigenvectors, each with number_of_dimensions length.
     np.array
-       Array of eigenvalues, a total number of num_dimensions_out.
+       Array of eigenvalues, a total number of number_of_dimensions.
 
     Notes
     -----
@@ -261,7 +261,7 @@ def _fsvd(centered_distance_matrix, dimension=10):
     if m != n:
         raise ValueError('FSVD expects square distance matrix')
 
-    k = dimension + 2
+    k = number_of_dimensions + 2
 
     # Form a real nxl matrix G whose entries are independent,
     # identically distributed
@@ -311,9 +311,9 @@ def _fsvd(centered_distance_matrix, dimension=10):
     # Compute the m * ((i+1)l) product matrix
     Ut = dot(Q, W)
 
-    U_fsvd = Ut[:, :dimension]
+    U_fsvd = Ut[:, :number_of_dimensions]
 
-    S = St[:dimension]
+    S = St[:number_of_dimensions]
 
     # drop imaginary component, if we got one
     # Note:
