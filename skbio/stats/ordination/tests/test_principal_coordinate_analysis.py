@@ -71,15 +71,45 @@ class TestPCoA(TestCase):
         dm1 = DistanceMatrix.read(get_data_path('PCoA_sample_data_3'))
         dm2 = DistanceMatrix.read(get_data_path('PCoA_sample_data_3'))
 
+        # Test eigh vs. fsvd pcoa and inplace parameter
         expected_results = pcoa(dm1, method="eigh", number_of_dimensions=3,
                                 inplace=False)
 
         results = pcoa(dm2, method="fsvd", number_of_dimensions=3,
                        inplace=False)
 
+        results_inplace = pcoa(dm2, method="fsvd", number_of_dimensions=3,
+                               inplace=True)
+
         assert_ordination_results_equal(results, expected_results,
                                         ignore_directionality=True,
                                         ignore_method_names=True)
+
+        assert_ordination_results_equal(results, results_inplace,
+                                        ignore_directionality=True,
+                                        ignore_method_names=True)
+
+        # Test number_of_dimensions edge cases
+        with self.assertRaises(Exception):
+            pcoa(dm2, method="fsvd", number_of_dimensions=0)
+
+        with self.assertRaises(Exception):
+            dim_too_large = dm1.data.shape[0] + 10
+            pcoa(dm2, method="fsvd", number_of_dimensions=dim_too_large)
+
+        with self.assertRaises(Exception):
+            pcoa(dm2, method="fsvd", number_of_dimensions=-1)
+
+        # Test number_of_dimensions edge cases
+        with self.assertRaises(Exception):
+            pcoa(dm2, method="eigh", number_of_dimensions=0)
+
+        with self.assertRaises(Exception):
+            dim_too_large = dm1.data.shape[0] + 10
+            pcoa(dm2, method="eigh", number_of_dimensions=dim_too_large)
+
+        with self.assertRaises(Exception):
+            pcoa(dm2, method="eigh", number_of_dimensions=-1)
 
     def test_extensive(self):
         eigvals = [0.3984635, 0.36405689, 0.28804535, 0.27479983,
