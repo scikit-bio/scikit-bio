@@ -170,11 +170,11 @@ def pcoa(distance_matrix, method="eigh", number_of_dimensions=None,
         # computing the trace of the centered distance matrix.
         # See proof outlined here: https://goo.gl/VAYiXx
         sum_eigenvalues = np.trace(matrix_data)
-
-        proportion_explained = eigvals / sum_eigenvalues
     else:
         # Calculate proportions the usual way
-        proportion_explained = eigvals / np.sum(eigvals)
+        sum_eigenvalues = np.sum(eigvals)
+
+    proportion_explained = eigvals / sum_eigenvalues
 
     # In case eigh is used, eigh computes all eigenvectors and -values.
     # So if number_of_dimensions was specified, we manually need to ensure
