@@ -204,7 +204,7 @@ def center_distance_matrix(distance_matrix, inplace=False):
 
     Note: If the used distance was euclidean, pairwise distances
     needn't be computed from the data table Y because F_matrix =
-    Y.dot(Y.T) (if Y has been centred).
+    Y.dot(Y.T) (if Y has been centered).
     But since we're expecting distance_matrix to be non-euclidian,
     we do the following computation as per
     Numerical Ecology (Legendre & Legendre 1998).
