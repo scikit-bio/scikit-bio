@@ -103,6 +103,12 @@ def pcoa(distance_matrix, method="eigh", number_of_dimensions=None,
     # If no dimension specified, by default will compute all eigenvectors
     # and eigenvalues
     if number_of_dimensions is None:
+        if method == "fsvd" and matrix_data.shape[0] > 10:
+            warn("FSVD: since no value for number_of_dimensions is specified, "
+                 "PCoA for all dimensions will be computed, which may "
+                 "result in long computation time if the original "
+                 "distance matrix is large.", RuntimeWarning)
+
         # distance_matrix is guaranteed to be square
         number_of_dimensions = matrix_data.shape[0]
     elif number_of_dimensions <= 0:
