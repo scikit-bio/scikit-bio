@@ -21,7 +21,7 @@ from ._utils import center_distance_matrix, scale
 
 
 @experimental(as_of="0.4.0")
-def pcoa(distance_matrix, method="eigh", number_of_dimensions=None,
+def pcoa(distance_matrix, method="eigh", number_of_dimensions=0,
          inplace=False):
     r"""Perform Principal Coordinate Analysis.
 
@@ -63,8 +63,10 @@ def pcoa(distance_matrix, method="eigh", number_of_dimensions=None,
         does not natively support a specifying number of dimensions to reduce
         a matrix to, so if this parameter is specified,
         all eigenvectors and eigenvalues will be simply be computed with no
-        speed gain, and only the number specified by number_of_dimensions
-        will be returned.
+        speed gain, and only the number specified by `number_of_dimensions`
+        will be returned. Specifying a value of `0`, the default, will
+        set `number_of_dimensions` equal to the number of dimensions of the
+        specified `distance_matrix`.
     inplace : bool, optional
         If true, centers a distance matrix in-place in a manner that reduces
         computational and memory cost.
@@ -102,7 +104,7 @@ def pcoa(distance_matrix, method="eigh", number_of_dimensions=None,
 
     # If no dimension specified, by default will compute all eigenvectors
     # and eigenvalues
-    if number_of_dimensions is None:
+    if number_of_dimensions == 0:
         if method == "fsvd" and matrix_data.shape[0] > 10:
             warn("FSVD: since no value for number_of_dimensions is specified, "
                  "PCoA for all dimensions will be computed, which may "
@@ -111,10 +113,12 @@ def pcoa(distance_matrix, method="eigh", number_of_dimensions=None,
 
         # distance_matrix is guaranteed to be square
         number_of_dimensions = matrix_data.shape[0]
-    elif number_of_dimensions <= 0:
+    elif number_of_dimensions < 0:
         raise ValueError('Invalid operation: cannot reduce distance matrix '
-                         'to zero or negative dimensions using PCoA, '
-                         'must reduce to a minimum of 1.')
+                         'to negative dimensions using PCoA. Did you intend '
+                         'to specify the default value "0", which sets '
+                         'the number_of_dimensions equal to the '
+                         'dimensionality of the given distance matrix?')
 
     # Perform eigendecomposition
     if method == "eigh":
@@ -268,10 +272,12 @@ def _fsvd(centered_distance_matrix, number_of_dimensions=10):
         raise ValueError('FSVD: number_of_dimensions cannot be larger than'
                          ' the dimensionality of the given distance matrix.')
 
-    if number_of_dimensions <= 0:
+    if number_of_dimensions < 0:
         raise ValueError('Invalid operation: cannot reduce distance matrix '
-                         'to zero or negative dimensions using PCoA, '
-                         'must reduce to a minimum of 1.')
+                         'to negative dimensions using PCoA. Did you intend '
+                         'to specify the default value "0", which sets '
+                         'the number_of_dimensions equal to the '
+                         'dimensionality of the given distance matrix?')
 
     k = number_of_dimensions + 2
 

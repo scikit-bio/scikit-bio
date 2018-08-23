@@ -70,6 +70,7 @@ class TestPCoA(TestCase):
     def test_fsvd(self):
         dm1 = DistanceMatrix.read(get_data_path('PCoA_sample_data_3'))
         dm2 = DistanceMatrix.read(get_data_path('PCoA_sample_data_3'))
+        dm3 = DistanceMatrix.read(get_data_path('PCoA_sample_data_3'))
 
         # Test eigh vs. fsvd pcoa and inplace parameter
         expected_results = pcoa(dm1, method="eigh", number_of_dimensions=3,
@@ -90,25 +91,28 @@ class TestPCoA(TestCase):
                                         ignore_method_names=True)
 
         # Test number_of_dimensions edge cases
-        with self.assertRaises(Exception):
-            pcoa(dm2, method="fsvd", number_of_dimensions=0)
+        results2 = pcoa(dm3, method="fsvd", number_of_dimensions=0,
+                        inplace=False)
+        expected_results2 = pcoa(dm3, method="fsvd",
+                                 number_of_dimensions=dm3.data.shape[0],
+                                 inplace=False)
 
-        with self.assertRaises(Exception):
+        assert_ordination_results_equal(results2, expected_results2,
+                                        ignore_directionality=True,
+                                        ignore_method_names=True)
+
+        with self.assertRaises(ValueError):
             dim_too_large = dm1.data.shape[0] + 10
             pcoa(dm2, method="fsvd", number_of_dimensions=dim_too_large)
 
-        with self.assertRaises(Exception):
+        with self.assertRaises(ValueError):
             pcoa(dm2, method="fsvd", number_of_dimensions=-1)
 
-        # Test number_of_dimensions edge cases
-        with self.assertRaises(Exception):
-            pcoa(dm2, method="eigh", number_of_dimensions=0)
-
-        with self.assertRaises(Exception):
+        with self.assertRaises(ValueError):
             dim_too_large = dm1.data.shape[0] + 10
             pcoa(dm2, method="eigh", number_of_dimensions=dim_too_large)
 
-        with self.assertRaises(Exception):
+        with self.assertRaises(ValueError):
             pcoa(dm2, method="eigh", number_of_dimensions=-1)
 
     def test_extensive(self):
