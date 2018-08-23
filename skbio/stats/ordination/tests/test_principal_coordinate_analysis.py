@@ -115,6 +115,11 @@ class TestPCoA(TestCase):
         with self.assertRaises(ValueError):
             pcoa(dm2, method="eigh", number_of_dimensions=-1)
 
+        dm_big = DistanceMatrix.read(get_data_path('PCoA_sample_data_12dim'))
+        with self.assertWarnsRegex(RuntimeWarning,
+                                   "no value for number_of_dimensions"):
+            pcoa(dm_big, method="fsvd", number_of_dimensions=0)
+
     def test_extensive(self):
         eigvals = [0.3984635, 0.36405689, 0.28804535, 0.27479983,
                    0.19165361, 0.0]
