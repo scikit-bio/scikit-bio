@@ -56,12 +56,12 @@ def pcoa(distance_matrix, method="eigh", number_of_dimensions=0,
         Dimensions to reduce the distance matrix to. This number determines
         how many eigenvectors and eigenvalues will be returned.
         By default, equal to the number of dimensions of the distance matrix,
-        as default eigendecompsition using SciPy's `eigh` method computes
+        as default eigendecomposition using SciPy's `eigh` method computes
         all eigenvectors and eigenvalues. If using fast heuristic
-        eigendecomposition through `fsvd`, a desired dimension should be
-        specified. Note that the default eigendecomposition method `eigh`
-        does not natively support a specifying number of dimensions to reduce
-        a matrix to, so if this parameter is specified,
+        eigendecomposition through `fsvd`, a desired number of dimensions
+        should be specified. Note that the default eigendecomposition
+        method `eigh` does not natively support a specifying number of
+        dimensions to reduce a matrix to, so if this parameter is specified,
         all eigenvectors and eigenvalues will be simply be computed with no
         speed gain, and only the number specified by `number_of_dimensions`
         will be returned. Specifying a value of `0`, the default, will
@@ -69,7 +69,7 @@ def pcoa(distance_matrix, method="eigh", number_of_dimensions=0,
         specified `distance_matrix`.
     inplace : bool, optional
         If true, centers a distance matrix in-place in a manner that reduces
-        computational and memory cost.
+        memory consumption.
 
     Returns
     -------
@@ -84,18 +84,14 @@ def pcoa(distance_matrix, method="eigh", number_of_dimensions=0,
 
     Notes
     -----
-    Principal Coordinate Analysis is sometimes known as
-    metric multidimensional scaling or classical scaling.
-
-    If the distance is not euclidean (for example if it is a
-    semimetric and the triangle inequality doesn't hold),
-    negative eigenvalues can appear. There are different ways
-    to deal with that problem (see Legendre & Legendre 1998, \S
-    9.2.3), but none are currently implemented here.
-
-    However, a warning is raised whenever negative eigenvalues
-    appear, allowing the user to decide if they can be safely
-    ignored.
+    .. note:: If the distance is not euclidean (for example if it is a
+        semimetric and the triangle inequality doesn't hold),
+        negative eigenvalues can appear. There are different ways
+        to deal with that problem (see Legendre & Legendre 1998, \S
+        9.2.3), but none are currently implemented here.
+        However, a warning is raised whenever negative eigenvalues
+        appear, allowing the user to decide if they can be safely
+        ignored.
     """
     distance_matrix = DistanceMatrix(distance_matrix)
 
@@ -124,8 +120,8 @@ def pcoa(distance_matrix, method="eigh", number_of_dimensions=0,
     if method == "eigh":
         # eigh does not natively support specifying number_of_dimensions, i.e.
         # there are no speed gains unlike in FSVD. Later, we slice off unwanted
-        # dimensions to conform the result of eigh
-        # to the specified number_of_dimensions.
+        # dimensions to conform the result of eigh to the specified
+        # number_of_dimensions.
 
         eigvals, eigvecs = eigh(matrix_data)
         long_method_name = "Principal Coordinate Analysis"
@@ -173,13 +169,14 @@ def pcoa(distance_matrix, method="eigh", number_of_dimensions=0,
 
     if method == "fsvd":
         # Since the dimension parameter, hereafter referred to as 'd',
-        # restricts the number of eigenvalues and
-        # eigenvectors that FSVD computes, we need to use an alternative method
-        # to compute the sum of all eigenvalues, used to compute the array of
-        # proportions explained. Otherwise, the proportions calculated will
-        # only be relative to d number of dimensions computed; whereas we want
+        # restricts the number of eigenvalues and eigenvectors that FSVD
+        # computes, we need to use an alternative method to compute the sum
+        # of all eigenvalues, used to compute the array of proportions
+        # explained. Otherwise, the proportions calculated will only be
+        # relative to d number of dimensions computed; whereas we want
         # it to be relative to the entire dimensionality of the
-        # centered distance matrix
+        # centered distance matrix.
+
         # An alternative method of calculating th sum of eigenvalues is by
         # computing the trace of the centered distance matrix.
         # See proof outlined here: https://goo.gl/VAYiXx
@@ -242,7 +239,6 @@ def _fsvd(centered_distance_matrix, number_of_dimensions=10):
 
     Notes
     -----
-
     The algorithm is based on 'An Algorithm for the Principal
     Component analysis of Large Data Sets'
     by N. Halko, P.G. Martinsson, Y. Shkolnisky, and M. Tygert.
@@ -255,12 +251,10 @@ def _fsvd(centered_distance_matrix, number_of_dimensions=10):
     m, n = centered_distance_matrix.shape
 
     # Number of levels of the Krylov method to use.
-    # For most applications, num_levels=1 or num_levels=2 is
-    # sufficient.
+    # For most applications, num_levels=1 or num_levels=2 is sufficient.
     num_levels = 1
 
-    # Changes the power of the spectral norm, thus minimizing
-    # the error).
+    # Changes the power of the spectral norm, thus minimizing the error).
     use_power_method = False
 
     # Note: a (conjugate) transpose is removed for performance, since we
@@ -281,10 +275,8 @@ def _fsvd(centered_distance_matrix, number_of_dimensions=10):
 
     k = number_of_dimensions + 2
 
-    # Form a real nxl matrix G whose entries are independent,
-    # identically distributed
-    # Gaussian random variables of
-    # zero mean and unit variance
+    # Form a real nxl matrix G whose entries are independent, identically
+    # distributed Gaussian random variables of zero mean and unit variance
     G = standard_normal(size=(n, k))
 
     if use_power_method:
@@ -335,7 +327,7 @@ def _fsvd(centered_distance_matrix, number_of_dimensions=10):
 
     # drop imaginary component, if we got one
     # Note:
-    # - In cogent, after computing eigenvalues/vectors, the imaginary part
+    #   In cogent, after computing eigenvalues/vectors, the imaginary part
     #   is dropped, if any. We know for a fact that the eigenvalues are
     #   real, so that's not necessary, but eigenvectors can in principle
     #   be complex (see for example
