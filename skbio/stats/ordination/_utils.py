@@ -196,3 +196,86 @@ def f_matrix(E_matrix):
     col_means = E_matrix.mean(axis=0, keepdims=True)
     matrix_mean = E_matrix.mean()
     return E_matrix - row_means - col_means + matrix_mean
+
+
+def center_distance_matrix(distance_matrix, inplace=False):
+    """
+    Centers a distance matrix.
+
+    Note: If the used distance was euclidean, pairwise distances
+    needn't be computed from the data table Y because F_matrix =
+    Y.dot(Y.T) (if Y has been centered).
+    But since we're expecting distance_matrix to be non-euclidian,
+    we do the following computation as per
+    Numerical Ecology (Legendre & Legendre 1998).
+
+    Parameters
+    ----------
+    distance_matrix : 2D array_like
+        Distance matrix.
+    inplace : bool, optional
+        Whether or not to center the given distance matrix in-place, which
+        is more efficient in terms of memory and computation.
+    """
+    if inplace:
+        return _f_matrix_inplace(_e_matrix_inplace(distance_matrix))
+    else:
+        return f_matrix(e_matrix(distance_matrix))
+
+
+def _e_matrix_inplace(distance_matrix):
+    """
+    Compute E matrix from a distance matrix inplace.
+    Squares and divides by -2 the input element-wise. Eq. 9.20 in
+    Legendre & Legendre 1998.
+
+    Modified from :func:`skbio.stats.ordination.e_matrix` function,
+    performing row-wise operations to avoid excessive memory allocations.
+
+    Parameters
+    ----------
+    distance_matrix : 2D array_like
+        Distance matrix.
+    """
+    distance_matrix = distance_matrix.astype(np.float)
+
+    for i in np.arange(len(distance_matrix)):
+        distance_matrix[i] = (distance_matrix[i] * distance_matrix[i]) / -2
+    return distance_matrix
+
+
+def _f_matrix_inplace(e_matrix):
+    """
+    Compute F matrix from E matrix inplace.
+    Centering step: for each element, the mean of the corresponding
+    row and column are subtracted, and the mean of the whole
+    matrix is added. Eq. 9.21 in Legendre & Legendre 1998.
+
+    Modified from :func:`skbio.stats.ordination.f_matrix` function,
+    performing row-wise operations to avoid excessive memory allocations.
+
+    Parameters
+    ----------
+    e_matrix : 2D array_like
+        A matrix representing the "E matrix" as described above.
+    """
+    e_matrix = e_matrix.astype(np.float)
+
+    row_means = np.zeros(len(e_matrix), dtype=float)
+    col_means = np.zeros(len(e_matrix), dtype=float)
+    matrix_mean = 0.0
+
+    for i in np.arange(len(e_matrix)):
+        row_means[i] = e_matrix[i].mean()
+        matrix_mean += e_matrix[i].sum()
+        col_means += e_matrix[i]
+    matrix_mean /= len(e_matrix) ** 2
+    col_means /= len(e_matrix)
+
+    for i in np.arange(len(e_matrix)):
+        v = e_matrix[i]
+        v -= row_means[i]
+        v -= col_means
+        v += matrix_mean
+        e_matrix[i] = v
+    return e_matrix
