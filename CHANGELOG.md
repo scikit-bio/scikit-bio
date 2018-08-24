@@ -1,6 +1,6 @@
 # scikit-bio changelog
 
-## Version 0.5.3-dev (changes since 0.5.3 go here)
+## Version 0.5.4 (2018-08-23)
 
 ### Features
 
