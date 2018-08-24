@@ -6,9 +6,9 @@
 # The full license is in the file COPYING.txt, distributed with this software.
 # ----------------------------------------------------------------------------
 
-import os
-import inspect
 import warnings
+import inspect
+import os
 
 import nose
 import numpy as np
@@ -80,6 +80,7 @@ class TestRunner:
     and ugly. This class invokes nose with the required options.
 
     """
+
     @experimental(as_of="0.4.0")
     def __init__(self, filename):
         self._filename = filename
@@ -279,7 +280,7 @@ def _normalize_signs(arr1, arr2):
         raise ValueError(
             "Arrays must have the same shape ({0} vs {1}).".format(arr1.shape,
                                                                    arr2.shape)
-            )
+        )
 
     # To avoid issues around zero, we'll compare signs of the values
     # with highest absolute value

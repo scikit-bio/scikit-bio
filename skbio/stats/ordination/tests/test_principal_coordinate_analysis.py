@@ -6,9 +6,9 @@
 # The full license is in the file COPYING.txt, distributed with this software.
 # ----------------------------------------------------------------------------
 
-import pandas as pd
 import numpy as np
 import numpy.testing as npt
+import pandas as pd
 from copy import deepcopy
 from unittest import TestCase, main
 
@@ -27,7 +27,7 @@ class TestPCoA(TestCase):
 
     def test_simple(self):
         eigvals = [0.51236726, 0.30071909, 0.26791207, 0.20898868,
-                   0.19169895, 0.16054235,  0.15017696,  0.12245775,
+                   0.19169895, 0.16054235, 0.15017696, 0.12245775,
                    0.0]
         proportion_explained = [0.2675738328, 0.157044696, 0.1399118638,
                                 0.1091402725, 0.1001110485,
@@ -52,6 +52,73 @@ class TestPCoA(TestCase):
 
         assert_ordination_results_equal(results, expected_results,
                                         ignore_directionality=True)
+
+    def test_fsvd_inplace(self):
+        dm1 = DistanceMatrix.read(get_data_path('PCoA_sample_data_3'))
+        dm2 = DistanceMatrix.read(get_data_path('PCoA_sample_data_3'))
+
+        expected_results = pcoa(dm1, method="eigh", number_of_dimensions=3,
+                                inplace=True)
+
+        results = pcoa(dm2, method="fsvd", number_of_dimensions=3,
+                       inplace=True)
+
+        assert_ordination_results_equal(results, expected_results,
+                                        ignore_directionality=True,
+                                        ignore_method_names=True)
+
+    def test_fsvd(self):
+        dm1 = DistanceMatrix.read(get_data_path('PCoA_sample_data_3'))
+        dm2 = DistanceMatrix.read(get_data_path('PCoA_sample_data_3'))
+        dm3 = DistanceMatrix.read(get_data_path('PCoA_sample_data_3'))
+
+        # Test eigh vs. fsvd pcoa and inplace parameter
+        expected_results = pcoa(dm1, method="eigh", number_of_dimensions=3,
+                                inplace=False)
+
+        results = pcoa(dm2, method="fsvd", number_of_dimensions=3,
+                       inplace=False)
+
+        results_inplace = pcoa(dm2, method="fsvd", number_of_dimensions=3,
+                               inplace=True)
+
+        assert_ordination_results_equal(results, expected_results,
+                                        ignore_directionality=True,
+                                        ignore_method_names=True)
+
+        assert_ordination_results_equal(results, results_inplace,
+                                        ignore_directionality=True,
+                                        ignore_method_names=True)
+
+        # Test number_of_dimensions edge cases
+        results2 = pcoa(dm3, method="fsvd", number_of_dimensions=0,
+                        inplace=False)
+        expected_results2 = pcoa(dm3, method="fsvd",
+                                 number_of_dimensions=dm3.data.shape[0],
+                                 inplace=False)
+
+        assert_ordination_results_equal(results2, expected_results2,
+                                        ignore_directionality=True,
+                                        ignore_method_names=True)
+
+        with self.assertRaises(ValueError):
+            dim_too_large = dm1.data.shape[0] + 10
+            pcoa(dm2, method="fsvd", number_of_dimensions=dim_too_large)
+
+        with self.assertRaises(ValueError):
+            pcoa(dm2, method="fsvd", number_of_dimensions=-1)
+
+        with self.assertRaises(ValueError):
+            dim_too_large = dm1.data.shape[0] + 10
+            pcoa(dm2, method="eigh", number_of_dimensions=dim_too_large)
+
+        with self.assertRaises(ValueError):
+            pcoa(dm2, method="eigh", number_of_dimensions=-1)
+
+        dm_big = DistanceMatrix.read(get_data_path('PCoA_sample_data_12dim'))
+        with self.assertWarnsRegex(RuntimeWarning,
+                                   "no value for number_of_dimensions"):
+            pcoa(dm_big, method="fsvd", number_of_dimensions=0)
 
     def test_extensive(self):
         eigvals = [0.3984635, 0.36405689, 0.28804535, 0.27479983,
@@ -203,15 +270,17 @@ class TestPCoABiplot(TestCase):
         self.descriptors.index = pd.Index(new_index)
 
         with self.assertRaisesRegex(ValueError, 'The eigenvectors and the '
-                                    'descriptors must describe the same '
-                                    'samples.'):
+                                                'descriptors must describe '
+                                                'the same '
+                                                'samples.'):
             pcoa_biplot(self.ordination, self.descriptors)
 
     def test_not_a_pcoa(self):
         self.ordination.short_method_name = 'RDA'
         self.ordination.long_method_name = 'Redundancy Analysis'
         with self.assertRaisesRegex(ValueError, 'This biplot computation can'
-                                    ' only be performed in a PCoA matrix.'):
+                                                ' only be performed in a '
+                                                'PCoA matrix.'):
             pcoa_biplot(self.ordination, self.descriptors)
 
     def test_from_seralized_results(self):

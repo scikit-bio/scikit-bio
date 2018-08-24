@@ -4,11 +4,15 @@
 
 ### Features
 
+* Added `FSVD`, an alternative fast heuristic method to perform Principal Coordinates Analysis, to `skbio.stats.ordination.pcoa`.
+
 ### Backward-incompatible changes [stable]
 
 ### Backward-incompatible changes [experimental]
 
 ### Performance enhancements
+
+* Added optimized utility methods `f_matrix_inplace` and `e_matrix_inplace` which perform `f_matrix` and `e_matrix` computations in-place and are used by the new `center_distance_matrix` method in `skbio.stats.ordination`.
 
 ### Bug fixes
 
@@ -17,7 +21,6 @@
 ### Deprecated functionality [experimental]
 
 ### Miscellaneous
-
 
 ## Version 0.5.3 (2018-08-07)
 
