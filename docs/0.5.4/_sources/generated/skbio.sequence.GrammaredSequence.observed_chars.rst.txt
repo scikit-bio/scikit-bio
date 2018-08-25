@@ -1,0 +1,8 @@
+:orphan:
+
+skbio.sequence.GrammaredSequence.observed_chars
+===============================================
+
+.. currentmodule:: skbio.sequence
+
+.. autoattribute:: GrammaredSequence.observed_chars

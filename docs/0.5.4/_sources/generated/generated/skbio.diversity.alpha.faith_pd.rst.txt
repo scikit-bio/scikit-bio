@@ -1,0 +1,6 @@
+skbio.diversity.alpha.faith\_pd
+===============================
+
+.. currentmodule:: skbio.diversity.alpha
+
+.. autofunction:: faith_pd

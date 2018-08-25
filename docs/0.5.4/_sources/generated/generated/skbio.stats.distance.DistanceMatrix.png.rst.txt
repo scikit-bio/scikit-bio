@@ -1,0 +1,8 @@
+:orphan:
+
+skbio.stats.distance.DistanceMatrix.png
+=======================================
+
+.. currentmodule:: skbio.stats.distance
+
+.. autoattribute:: DistanceMatrix.png

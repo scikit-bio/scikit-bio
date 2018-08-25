@@ -1,0 +1,8 @@
+:orphan:
+
+skbio.stats.distance.DistanceMatrix.__init_subclass__
+=====================================================
+
+.. currentmodule:: skbio.stats.distance
+
+.. automethod:: DistanceMatrix.__init_subclass__

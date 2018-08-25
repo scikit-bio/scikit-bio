@@ -1,0 +1,8 @@
+:orphan:
+
+skbio.util.TestRunner.__init_subclass__
+=======================================
+
+.. currentmodule:: skbio.util
+
+.. automethod:: TestRunner.__init_subclass__

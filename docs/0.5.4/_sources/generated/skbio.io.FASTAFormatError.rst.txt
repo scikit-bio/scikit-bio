@@ -1,0 +1,6 @@
+skbio.io.FASTAFormatError
+=========================
+
+.. currentmodule:: skbio.io
+
+.. autoexception:: FASTAFormatError

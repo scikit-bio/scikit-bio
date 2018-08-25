@@ -1,0 +1,6 @@
+skbio.io.BLAST7FormatError
+==========================
+
+.. currentmodule:: skbio.io
+
+.. autoexception:: BLAST7FormatError

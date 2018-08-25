@@ -1,0 +1,8 @@
+:orphan:
+
+skbio.metadata.IntervalMetadata.upper_bound
+===========================================
+
+.. currentmodule:: skbio.metadata
+
+.. autoattribute:: IntervalMetadata.upper_bound

@@ -1,0 +1,8 @@
+:orphan:
+
+skbio.sequence.GrammaredSequence.read
+=====================================
+
+.. currentmodule:: skbio.sequence
+
+.. automethod:: GrammaredSequence.read
