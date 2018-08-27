@@ -1,0 +1,8 @@
+:orphan:
+
+skbio.metadata.Interval.__init_subclass__
+=========================================
+
+.. currentmodule:: skbio.metadata
+
+.. automethod:: Interval.__init_subclass__

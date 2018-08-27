@@ -1,0 +1,8 @@
+:orphan:
+
+skbio.tree.TreeNode.create_caches
+=================================
+
+.. currentmodule:: skbio.tree
+
+.. automethod:: TreeNode.create_caches

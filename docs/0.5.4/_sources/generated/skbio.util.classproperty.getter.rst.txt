@@ -1,0 +1,8 @@
+:orphan:
+
+skbio.util.classproperty.getter
+===============================
+
+.. currentmodule:: skbio.util
+
+.. automethod:: classproperty.getter

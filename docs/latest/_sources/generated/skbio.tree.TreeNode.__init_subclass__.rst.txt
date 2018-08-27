@@ -1,0 +1,8 @@
+:orphan:
+
+skbio.tree.TreeNode.__init_subclass__
+=====================================
+
+.. currentmodule:: skbio.tree
+
+.. automethod:: TreeNode.__init_subclass__

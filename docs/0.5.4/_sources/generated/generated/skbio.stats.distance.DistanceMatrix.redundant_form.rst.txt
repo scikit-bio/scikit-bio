@@ -1,0 +1,8 @@
+:orphan:
+
+skbio.stats.distance.DistanceMatrix.redundant_form
+==================================================
+
+.. currentmodule:: skbio.stats.distance
+
+.. automethod:: DistanceMatrix.redundant_form

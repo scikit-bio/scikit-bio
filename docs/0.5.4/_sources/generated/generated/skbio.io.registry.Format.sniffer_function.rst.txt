@@ -1,0 +1,8 @@
+:orphan:
+
+skbio.io.registry.Format.sniffer_function
+=========================================
+
+.. currentmodule:: skbio.io.registry
+
+.. autoattribute:: Format.sniffer_function
