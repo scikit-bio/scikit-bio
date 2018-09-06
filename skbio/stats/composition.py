@@ -645,7 +645,7 @@ def ilr_inv(mat, basis=None, check=True):
     return clr_inv(np.dot(mat, basis))
 
 
-@experimental(as_of="0.5.1-dev")
+@experimental(as_of="0.5.3-dev")
 def alr(mat, denominator_idx=0):
     r"""
     Performs additive log ratio transformation.
@@ -693,12 +693,12 @@ def alr(mat, denominator_idx=0):
     array([ 1.09861229,  1.38629436,  0.69314718])
     """
     mat = closure(mat)
-    if len(mat.shape) == 2:
+    if mat.ndim == 2:
         mat_t = mat.T
         numerator_idx = list(range(0, mat_t.shape[0]))
         del numerator_idx[denominator_idx]
         lr = np.log(mat_t[numerator_idx, :]/mat_t[denominator_idx, :]).T
-    elif len(mat.shape) == 1:
+    elif mat.ndim == 1:
         numerator_idx = list(range(0, mat.shape[0]))
         del numerator_idx[denominator_idx]
         lr = np.log(mat[numerator_idx]/mat[denominator_idx])
@@ -707,7 +707,7 @@ def alr(mat, denominator_idx=0):
     return lr
 
 
-@experimental(as_of="0.5.1-dev")
+@experimental(as_of="0.5.3-dev")
 def alr_inv(mat, denominator_idx=0):
     r"""
     Performs inverse additive log ratio transform.
@@ -1239,16 +1239,17 @@ def _gram_schmidt_basis(n):
     return basis.T
 
 
+@experimental(as_of="0.5.3-dev")
 def sbp_basis(sbp):
     r"""
     Builds an orthogonal basis from a sequential binary partition (SBP). As
     explained in [1]_, the SBP is a hierarchical collection of binary
     divisions of compositional parts. The child groups are divided again until
     all groups contain a single part. The SBP can be encoded in a
-    :math:`(D - 1) \times D` matrix where, for each row, parts can be grouped by
-    -1 and +1 tags, and 0 for excluded parts. The `sbp_basis` method was
-    originally derived from function `gsi.buildilrBase()` found in the R package
-    `compositions` [2]_. The ith balance is computed as follows
+    :math:`(D - 1) \times D` matrix where, for each row, parts can be grouped
+    by -1 and +1 tags, and 0 for excluded parts. The `sbp_basis` method was
+    originally derived from function `gsi.buildilrBase()` found in the R
+    package `compositions` [2]_. The ith balance is computed as follows
 
     .. math::
         b_i = \sqrt{ \frac{r_i s_i}{r_i+s_i} }
@@ -1264,15 +1265,15 @@ def sbp_basis(sbp):
     sbp: np.array, int
         A contrast matrix, also known as a sequential binary partition, where
         every row represents a partition between two groups of features. A part
-        labelled `+1` would correspond to that feature being in the numerator of
-        the given row partition, a part labelled `-1` would correspond to
+        labelled `+1` would correspond to that feature being in the numerator
+        of the given row partition, a part labelled `-1` would correspond to
         features being in the denominator of that given row partition, and `0`
         would correspond to features excluded in the row partition.
 
     Returns
     -------
     numpy.array
-      Am orthonormal basis in the Aitchison simplex
+      An orthonormal basis in the Aitchison simplex
 
     Examples
     --------
