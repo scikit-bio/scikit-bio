@@ -3098,3 +3098,118 @@ class TreeNode(SkbioObject):
 
             yield self
             counter += 1
+
+    @experimental(as_of="0.5.3")
+    def support(self):
+        """Return support value of a node if available.
+
+        Returns
+        -------
+        float or None
+            support value of the node, or None if not available
+
+        Notes
+        -----
+        A "support value" is defined as the numeric form of a whole node label
+        without ":", or the part preceding the first ":" in the node label.
+
+        For examples: "(a,b)1.0", "(a,b)1.0:2.5", and "(a,b)'1.0:species_A'".
+        In these cases the support values are all 1.0.
+
+        For examples: "(a,b):1.0" and "(a,b)species_A". In these cases there
+        are no support values.
+
+        Examples
+        --------
+        >>> from skbio import TreeNode
+        >>> tree = TreeNode.read(['((a,b)99,(c,d):1.0);'])
+        >>> tree.lca(['a', 'b']).support()
+        99.0
+        >>> tree.lca(['c', 'd']).support() is None
+        True
+        """
+        support = None
+        if self.name is not None:
+            left, _, _ = self.name.partition(':')
+            try:
+                support = float(left)
+            except ValueError:
+                pass
+        return support
+
+    @experimental(as_of="0.5.3")
+    def unpack(self):
+        """Unpack an internal node in place.
+
+        Notes
+        -----
+        This function sequentially: 1) elongates child nodes by branch length
+        of self (omit if there is no branch length), 2) removes self from
+        parent node, and 3) grafts child nodes to parent node.
+
+        Raises
+        ------
+        ValueError
+            if input node is root or tip
+
+        See also
+        --------
+        unpack_by_func
+        prune
+
+        Examples
+        --------
+        >>> from skbio import TreeNode
+        >>> tree = TreeNode.read(['((c:2.0,d:3.0)a:1.0,(e:2.0,f:1.0)b:2.0);'])
+        >>> tree.find('b').unpack()
+        >>> print(tree)
+        ((c:2.0,d:3.0)a:1.0,e:4.0,f:3.0);
+        <BLANKLINE>
+        """
+        if self.is_root():
+            raise TreeError('Cannot unpack root.')
+        if self.is_tip():
+            raise TreeError('Cannot unpack tip.')
+        parent = self.parent
+        blen = (self.length or 0.0)
+        for child in self.children:
+            clen = (child.length or 0.0)
+            child.length = (clen + blen or None)
+        parent.remove(self)
+        parent.extend(self.children)
+
+    @experimental(as_of="0.5.3")
+    def unpack_by_func(self, func):
+        """Unpack internal nodes of a tree that meet certain criteria.
+
+        Parameters
+        ----------
+        func : function
+            a function that accepts a TreeNode and returns `True` or `False`,
+            where `True` indicates the node is to be unpacked
+
+        See also
+        --------
+        unpack
+        prune
+
+        Examples
+        --------
+        >>> from skbio import TreeNode
+        >>> tree = TreeNode.read(['((c:2,d:3)a:1,(e:1,f:2)b:2);'])
+        >>> tree.unpack_by_func(lambda x: x.length <= 1)
+        >>> print(tree)
+        ((e:1.0,f:2.0)b:2.0,c:3.0,d:4.0);
+        <BLANKLINE>
+        >>> tree = TreeNode.read(['(((a,b)85,(c,d)78)75,(e,(f,g)64)80);'])
+        >>> tree.unpack_by_func(lambda x: x.support() < 75)
+        >>> print(tree)
+        (((a,b)85,(c,d)78)75,(e,f,g)80);
+        <BLANKLINE>
+        """
+        nodes_to_unpack = []
+        for node in self.non_tips(include_self=False):
+            if func(node):
+                nodes_to_unpack.append(node)
+        for node in nodes_to_unpack:
+            node.unpack()

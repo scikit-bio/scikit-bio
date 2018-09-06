@@ -17,6 +17,7 @@ Functions
 
    ca
    pcoa
+   pcoa_biplot
    cca
    rda
    mean_and_std
@@ -126,12 +127,13 @@ from skbio.util import TestRunner
 from ._redundancy_analysis import rda
 from ._correspondence_analysis import ca
 from ._canonical_correspondence_analysis import cca
-from ._principal_coordinate_analysis import pcoa
+from ._principal_coordinate_analysis import pcoa, pcoa_biplot
 from ._ordination_results import OrdinationResults
-from ._utils import (mean_and_std, scale, svd_rank, corr, e_matrix, f_matrix)
+from ._utils import (mean_and_std, scale, svd_rank, corr, e_matrix, f_matrix,
+                     center_distance_matrix)
 
-__all__ = ['ca', 'rda', 'cca', 'pcoa', 'OrdinationResults',
+__all__ = ['ca', 'rda', 'cca', 'pcoa', 'pcoa_biplot', 'OrdinationResults',
            'mean_and_std', 'scale', 'svd_rank', 'corr',
-           'e_matrix', 'f_matrix']
+           'e_matrix', 'f_matrix', 'center_distance_matrix']
 
 test = TestRunner(__file__).test

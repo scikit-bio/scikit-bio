@@ -281,7 +281,7 @@ class GrammaredSequence(Sequence, metaclass=GrammaredSequenceMeta):
         return set(cls.degenerate_map)
 
     @classproperty
-    @deprecated(as_of='0.5.0', until='0.5.2',
+    @deprecated(as_of='0.5.0', until='0.6.0',
                 reason='Renamed to definite_chars')
     def nondegenerate_chars(cls):
         """Return non-degenerate characters.
@@ -492,7 +492,7 @@ class GrammaredSequence(Sequence, metaclass=GrammaredSequenceMeta):
         """
         return np.in1d(self._bytes, self._definite_char_codes)
 
-    @deprecated(as_of='0.5.0', until='0.5.2',
+    @deprecated(as_of='0.5.0', until='0.6.0',
                 reason='Renamed to definites')
     def nondegenerates(self):
         """Find positions containing non-degenerate characters in the sequence.
@@ -548,7 +548,7 @@ class GrammaredSequence(Sequence, metaclass=GrammaredSequenceMeta):
         # TODO: cache results
         return bool(self.definites().any())
 
-    @deprecated(as_of='0.5.0', until='0.5.2',
+    @deprecated(as_of='0.5.0', until='0.6.0',
                 reason='Renamed to has_definites')
     def has_nondegenerates(self):
         """Determine if sequence contains one or more non-degenerate characters
