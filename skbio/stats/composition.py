@@ -1258,7 +1258,7 @@ def sbp_basis(sbp):
     where :math:`b_i` is the ith balance corresponding to the ith row in the
     SBP, :math:`r_i` and :math:`s_i` and the number of respectively `+1` and
     `-1` labels in the ith row of the SBP and where :math:`g(x) =
-     (\prod\limits_{i=1}^{D} x_i)^{1/D}` is the geometric mean of :math:`x`.
+    (\prod\limits_{i=1}^{D} x_i)^{1/D}` is the geometric mean of :math:`x`.
 
     Parameters
     ----------
@@ -1273,7 +1273,7 @@ def sbp_basis(sbp):
     Returns
     -------
     numpy.array
-      An orthonormal basis in the Aitchison simplex
+        An orthonormal basis in the Aitchison simplex
 
     Examples
     --------
