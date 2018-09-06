@@ -645,7 +645,7 @@ def ilr_inv(mat, basis=None, check=True):
     return clr_inv(np.dot(mat, basis))
 
 
-@experimental(as_of="0.5.3-dev")
+@experimental(as_of="0.5.4-dev")
 def alr(mat, denominator_idx=0):
     r"""
     Performs additive log ratio transformation.
@@ -707,7 +707,7 @@ def alr(mat, denominator_idx=0):
     return lr
 
 
-@experimental(as_of="0.5.3-dev")
+@experimental(as_of="0.5.4-dev")
 def alr_inv(mat, denominator_idx=0):
     r"""
     Performs inverse additive log ratio transform.
@@ -1239,7 +1239,7 @@ def _gram_schmidt_basis(n):
     return basis.T
 
 
-@experimental(as_of="0.5.3-dev")
+@experimental(as_of="0.5.4-dev")
 def sbp_basis(sbp):
     r"""
     Builds an orthogonal basis from a sequential binary partition (SBP). As
