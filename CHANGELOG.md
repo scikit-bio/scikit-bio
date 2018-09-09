@@ -4,6 +4,8 @@
 
 ### Features
 
+* `skbio.stats.composition` now has methods to compute additive log-ratio transformation and inverse additive log-ratio transformation (`alr`, `alr_inv`) as well as a method to build a basis from a sequential binary partition (`sbp_basis`).
+
 ### Backward-incompatible changes [stable]
 
 ### Backward-incompatible changes [experimental]
