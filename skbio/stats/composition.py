@@ -754,7 +754,7 @@ def alr_inv(mat, denominator_idx=0):
     array([ 0.1,  0.3,  0.4,  0.2])
     """
     mat = np.array(mat)
-    if len(mat.shape) == 2:
+    if mat.ndim == 2:
         mat_idx = np.insert(mat, denominator_idx,
                             np.repeat(0, mat.shape[0]), axis=1)
         comp = np.zeros(mat_idx.shape)
@@ -763,7 +763,7 @@ def alr_inv(mat, denominator_idx=0):
         del numerator_idx[denominator_idx]
         for i in numerator_idx:
             comp[:, i] = comp[:, denominator_idx] * np.exp(mat_idx[:, i])
-    elif len(mat.shape) == 1:
+    elif mat.ndim == 1:
         mat_idx = np.insert(mat, denominator_idx, 0, axis=0)
         comp = np.zeros(mat_idx.shape)
         comp[denominator_idx] = 1 / (np.exp(mat).sum(axis=0) + 1)

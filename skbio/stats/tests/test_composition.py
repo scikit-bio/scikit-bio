@@ -431,7 +431,7 @@ class CompositionTests(TestCase):
         alrinv2d_method = alr_inv(alr2d_method, denominator_idx=1)
         npt.assert_allclose(alrinv2d_byhand, alrinv2d_method)
 
-        # 2d-composition
+        # 1d-composition
         comp2 = closure(self.cdata2)
         alr1d_byhand = np.array([np.log(comp2[0]/comp2[1]),
                                  np.log(comp2[2]/comp2[1])]).T
