@@ -380,7 +380,7 @@ class GrammaredSequence(Sequence, metaclass=GrammaredSequenceMeta):
         >>> from skbio import DNA
         >>> s = DNA('AC-G-')
         >>> s.gaps()
-        array([False, False,  True, False,  True], dtype=bool)
+        array([False, False,  True, False,  True])
 
         """
         return np.in1d(self._bytes, self._gap_codes)
@@ -431,7 +431,7 @@ class GrammaredSequence(Sequence, metaclass=GrammaredSequenceMeta):
         >>> from skbio import DNA
         >>> s = DNA('ACWGN')
         >>> s.degenerates()
-        array([False, False,  True, False,  True], dtype=bool)
+        array([False, False,  True, False,  True])
 
         """
         return np.in1d(self._bytes, self._degenerate_codes)
@@ -487,7 +487,7 @@ class GrammaredSequence(Sequence, metaclass=GrammaredSequenceMeta):
         >>> from skbio import DNA
         >>> s = DNA('ACWGN')
         >>> s.definites()
-        array([ True,  True, False,  True, False], dtype=bool)
+        array([ True,  True, False,  True, False])
 
         """
         return np.in1d(self._bytes, self._definite_char_codes)
@@ -513,7 +513,7 @@ class GrammaredSequence(Sequence, metaclass=GrammaredSequenceMeta):
         >>> from skbio import DNA
         >>> s = DNA('ACWGN')
         >>> s.nondegenerates()
-        array([ True,  True, False,  True, False], dtype=bool)
+        array([ True,  True, False,  True, False])
 
         """
         return self.definites()
