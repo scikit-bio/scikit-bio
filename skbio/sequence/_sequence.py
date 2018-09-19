@@ -1583,7 +1583,7 @@ fuzzy=[(True, False)], metadata={'gene': 'foo'})
         >>> s = Sequence('GGUC')
         >>> t = Sequence('GAUU')
         >>> s.matches(t)
-        array([ True, False,  True, False])
+        array([ True, False,  True, False], dtype=bool)
 
         """
         other = self._munge_to_sequence(other, 'matches/mismatches')
@@ -1625,7 +1625,7 @@ fuzzy=[(True, False)], metadata={'gene': 'foo'})
         >>> s = Sequence('GGUC')
         >>> t = Sequence('GAUU')
         >>> s.mismatches(t)
-        array([False,  True, False,  True])
+        array([False,  True, False,  True], dtype=bool)
 
         """
         return np.invert(self.matches(other))
