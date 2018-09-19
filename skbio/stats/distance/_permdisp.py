@@ -169,14 +169,14 @@ def permdisp(distance_matrix, grouping, column=None, test='median',
     statistics.
 
     >>> np.random.seed(0)
-    >>> permdisp(dm, grouping, test='centroid', permutations=99)
+    >>> permdisp(dm, grouping, test='centroid', permutations=6)
     method name               PERMDISP
     test statistic name        F-value
     sample size                      6
     number of groups                 2
     test statistic             3.67082
-    p-value                       0.29
-    number of permutations          99
+    p-value                   0.428571
+    number of permutations           6
     Name: PERMDISP results, dtype: object
 
     You can also provide a ``pandas.DataFrame`` and a column denoting the
@@ -187,16 +187,14 @@ def permdisp(distance_matrix, grouping, column=None, test='median',
     >>> df = pd.DataFrame.from_dict(
     ...      {'Grouping': {'s1': 'G1', 's2': 'G1', 's3': 'G1', 's4': 'G2',
     ...                    's5': 'G2', 's6': 'G2'}})
-    >>> # make output deterministic; should not be included during normal use
-    >>> np.random.seed(0)
-    >>> permdisp(dm, df, 'Grouping', permutations=99, test='centroid')
+    >>> permdisp(dm, df, 'Grouping', permutations=6, test='centroid')
     method name               PERMDISP
     test statistic name        F-value
     sample size                      6
     number of groups                 2
     test statistic             3.67082
-    p-value                       0.29
-    number of permutations          99
+    p-value                   0.428571
+    number of permutations           6
     Name: PERMDISP results, dtype: object
 
     Note that when providing a ``DataFrame``, the ordering of rows and/or

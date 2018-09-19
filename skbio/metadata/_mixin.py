@@ -38,8 +38,8 @@ class MetadataMixin(metaclass=abc.ABCMeta):
 
         >>> from pprint import pprint
         >>> from skbio import Sequence
-        >>> seq = Sequence('ACGT', metadata={'id': 'seq-id',
-        ...                                  'description': 'seq description'})
+        >>> seq = Sequence('ACGT', metadata={'description': 'seq description',
+        ...                                  'id': 'seq-id'})
 
         Retrieve metadata:
 
@@ -215,8 +215,8 @@ class PositionalMetadataMixin(metaclass=abc.ABCMeta):
         >>> from skbio import DNA
         >>> seq = DNA(
         ...     'ACGT',
-        ...     positional_metadata={'quality': [3, 3, 20, 11],
-        ...                          'exons': [True, True, False, True]})
+        ...     positional_metadata={'exons': [True, True, False, True],
+        ...                          'quality': [3, 3, 20, 11]})
         >>> seq
         DNA
         -----------------------------

@@ -169,19 +169,18 @@ class TestNormalizeSigns(unittest.TestCase):
 
 class TestAssertDataFrameAlmostEqual(unittest.TestCase):
     def setUp(self):
-        self.df = pd.DataFrame(
-            {'foo': [42, 42.0, np.nan, 0],
-             'bar': ['a', 'b', 'cd', 'e']})
+        self.df = pd.DataFrame({'bar': ['a', 'b', 'cd', 'e'],
+                                'foo': [42, 42.0, np.nan, 0]})
 
     def test_not_equal(self):
         unequal_dfs = [
             self.df,
             # floating point error too large to be "almost equal"
-            pd.DataFrame({'foo': [42, 42.001, np.nan, 0],
-                          'bar': ['a', 'b', 'cd', 'e']}),
+            pd.DataFrame({'bar': ['a', 'b', 'cd', 'e'],
+                          'foo': [42, 42.001, np.nan, 0]}),
             # extra NaN
-            pd.DataFrame({'foo': [42, np.nan, np.nan, 0],
-                          'bar': ['a', 'b', 'cd', 'e']}),
+            pd.DataFrame({'bar': ['a', 'b', 'cd', 'e'],
+                          'foo': [42, np.nan, np.nan, 0]}),
             # different column order
             pd.DataFrame(self.df, columns=['foo', 'bar']),
             # different index order
@@ -214,8 +213,8 @@ class TestAssertDataFrameAlmostEqual(unittest.TestCase):
         equal_dfs = [
             self.df,
             # floating point error small enough to be "almost equal"
-            pd.DataFrame({'foo': [42, 42.00001, np.nan, 0],
-                          'bar': ['a', 'b', 'cd', 'e']})
+            pd.DataFrame({'bar': ['a', 'b', 'cd', 'e'],
+                          'foo': [42, 42.00001, np.nan, 0]})
         ]
 
         for df in equal_dfs:
