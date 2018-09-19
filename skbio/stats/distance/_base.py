@@ -1093,6 +1093,8 @@ def _run_monte_carlo_stats(test_stat_function, grouping, permutations):
             perm_stats[i] = test_stat_function(perm_grouping)
 
         p_value = ((perm_stats >= stat).sum() + 1) / (permutations + 1)
+        print('shenanigans')
+        print(perm_stats)
 
     return stat, p_value
 
