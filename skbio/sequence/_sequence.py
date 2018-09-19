@@ -1152,8 +1152,8 @@ fuzzy=[(True, False)], metadata={'gene': 'foo'})
         ...     'published': True
         ... }
         >>> positional_metadata = {
-        ...     'quality': [3, 10, 11, 10],
-        ...     'exons': [True, True, False, True]
+        ...     'exons': [True, True, False, True],
+        ...     'quality': [3, 10, 11, 10]
         ... }
         >>> seq = Sequence('ACGT', metadata=metadata,
         ...          positional_metadata=positional_metadata)

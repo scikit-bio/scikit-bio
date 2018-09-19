@@ -1,5 +1,25 @@
 # scikit-bio changelog
 
+## Version 0.5.4-dev
+
+### Features
+
+* `skbio.stats.composition` now has methods to compute additive log-ratio transformation and inverse additive log-ratio transformation (`alr`, `alr_inv`) as well as a method to build a basis from a sequential binary partition (`sbp_basis`).
+
+### Backward-incompatible changes [stable]
+
+### Backward-incompatible changes [experimental]
+
+### Performance enhancements
+
+### Bug fixes
+
+### Deprecated functionality [stable]
+
+### Deprecated functionality [experimental]
+
+### Miscellaneous
+
 ## Version 0.5.4 (2018-08-23)
 
 ### Features
