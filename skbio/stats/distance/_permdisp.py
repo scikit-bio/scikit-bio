@@ -149,6 +149,8 @@ def permdisp(distance_matrix, grouping, column=None, test='median',
     To suppress calculation of the p-value and only obtain the F statistic,
     specify zero permutations:
 
+    >>> # make output deterministic; should not be included during normal use
+    >>> np.random.seed(0)
     >>> permdisp(dm, grouping, permutations=0)
     method name               PERMDISP
     test statistic name        F-value
@@ -168,6 +170,7 @@ def permdisp(distance_matrix, grouping, column=None, test='median',
     formula. As such the two different tests yeild slightly different F
     statistics.
 
+    >>> # make output deterministic; should not be included during normal use
     >>> np.random.seed(0)
     >>> permdisp(dm, grouping, test='centroid', permutations=99)
     method name               PERMDISP
@@ -175,7 +178,7 @@ def permdisp(distance_matrix, grouping, column=None, test='median',
     sample size                      6
     number of groups                 2
     test statistic             3.67082
-    p-value                       0.29
+    p-value                       0.35
     number of permutations          99
     Name: PERMDISP results, dtype: object
 
@@ -183,6 +186,7 @@ def permdisp(distance_matrix, grouping, column=None, test='median',
     grouping instead of a grouping vector. The following DataFrame's
     Grouping column specifies the same grouping as the vector we used in the
     previous examples.:
+
     >>> import pandas as pd
     >>> df = pd.DataFrame.from_dict(
     ...      {'Grouping': {'s1': 'G1', 's2': 'G1', 's3': 'G1', 's4': 'G2',
@@ -195,7 +199,7 @@ def permdisp(distance_matrix, grouping, column=None, test='median',
     sample size                      6
     number of groups                 2
     test statistic             3.67082
-    p-value                       0.29
+    p-value                       0.35
     number of permutations          99
     Name: PERMDISP results, dtype: object
 
