@@ -1086,13 +1086,15 @@ def _run_monte_carlo_stats(test_stat_function, grouping, permutations):
 
     p_value = np.nan
     if permutations > 0:
-        perm_stats = np.empty(permutations, dtype=np.float64)
+        perm_stats = np.zeros(permutations, dtype=np.float64)
 
         for i in range(permutations):
             perm_grouping = np.random.permutation(grouping)
             perm_stats[i] = test_stat_function(perm_grouping)
 
         p_value = ((perm_stats >= stat).sum() + 1) / (permutations + 1)
+        print('shenanigans')
+        print(perm_stats)
 
     return stat, p_value
 
