@@ -2723,9 +2723,9 @@ class TestJoin(unittest.TestCase):
                         DNA('C--CC'),
                         DNA('-----')], index=range(-1, 4),
                        positional_metadata={
-                           'foo': [1, 2, 3, 4, 5],
                            'bar': ['a', 'b', np.nan, np.nan, np.nan],
-                           'baz': [np.nan, np.nan, 'c', 'd', 'e']}))
+                           'baz': [np.nan, np.nan, 'c', 'd', 'e'],
+                           'foo': [1, 2, 3, 4, 5]}))
 
     def test_how_left(self):
         msa1 = TabularMSA([DNA('AC'),
