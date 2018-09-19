@@ -2951,11 +2951,11 @@ class TestIterPositions(unittest.TestCase):
         self.assertEqual(
             obs,
             [Sequence('AA-', metadata={'pm1': 0.5, 'foo': 9},
-                      positional_metadata={'foo': [42, np.nan, -1],
-                                           'bar': [np.nan, np.nan, 'baz']}),
+                      positional_metadata={'bar': [np.nan, np.nan, 'baz'],
+                                           'foo': [42, np.nan, -1]}),
              Sequence('C--', metadata={'pm1': 1.5, 'foo': 99},
-                      positional_metadata={'foo': [43, np.nan, -2],
-                                           'bar': [np.nan, np.nan, 'bazz']})])
+                      positional_metadata={'bar': [np.nan, np.nan, 'bazz'],
+                                           'foo': [43, np.nan, -2]})])
 
     def test_with_positional_metadata_reverse(self):
         # MSA *and* sequence positional metadata.
@@ -2972,11 +2972,11 @@ class TestIterPositions(unittest.TestCase):
         self.assertEqual(
             obs,
             [Sequence('C--', metadata={'pm1': 1.5, 'foo': 99},
-                      positional_metadata={'foo': [43, np.nan, -2],
-                                           'bar': [np.nan, np.nan, 'bazz']}),
+                      positional_metadata={'bar': [np.nan, np.nan, 'bazz'],
+                                           'foo': [43, np.nan, -2]}),
              Sequence('AA-', metadata={'pm1': 0.5, 'foo': 9},
-                      positional_metadata={'foo': [42, np.nan, -1],
-                                           'bar': [np.nan, np.nan, 'baz']})])
+                      positional_metadata={'bar': [np.nan, np.nan, 'baz'],
+                                           'foo': [42, np.nan, -1]})])
 
     def test_with_positional_metadata_ignore_metadata(self):
         # MSA *and* sequence positional metadata.
