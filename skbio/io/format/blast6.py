@@ -192,13 +192,12 @@ be used:
 >>> df = skbio.io.read(fh, format="blast+6", into=pd.DataFrame,
 ...                    default_columns=True)
 >>> df # doctest: +NORMALIZE_WHITESPACE
-  qseqid                           sseqid  pident  length  mismatch  gapopen \\
+  qseqid                           sseqid  pident  length  mismatch  gapopen
+  qstart   qend  sstart   send         evalue  bitscore
 0   moaC     gi|15800534|ref|NP_286546.1|  100.00   161.0       0.0      0.0
+     1.0  161.0     1.0  161.0  3.000000e-114     330.0
 1   moaC  gi|170768970|ref|ZP_02903423.1|   99.38   161.0       1.0      0.0
-<BLANKLINE>
-   qstart   qend  sstart   send         evalue  bitscore
-0     1.0  161.0     1.0  161.0  3.000000e-114     330.0
-1     1.0  161.0     1.0  161.0  9.000000e-114     329.0
+     1.0  161.0     1.0  161.0  9.000000e-114     329.0
 
 Suppose we have a ``blast+6`` file with user-supplied (non-default) columns:
 
