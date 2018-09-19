@@ -187,12 +187,12 @@ def permdisp(distance_matrix, grouping, column=None, test='median',
     Grouping column specifies the same grouping as the vector we used in the
     previous examples.:
 
+    >>> # make output deterministic; should not be included during normal use
+    >>> np.random.seed(0)
     >>> import pandas as pd
     >>> df = pd.DataFrame.from_dict(
     ...      {'Grouping': {'s1': 'G1', 's2': 'G1', 's3': 'G1', 's4': 'G2',
     ...                    's5': 'G2', 's6': 'G2'}})
-    >>> # make output deterministic; should not be included during normal use
-    >>> np.random.seed(0)
     >>> permdisp(dm, df, 'Grouping', permutations=99, test='centroid')
     method name               PERMDISP
     test statistic name        F-value
