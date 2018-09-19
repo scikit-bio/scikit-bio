@@ -249,7 +249,7 @@ fuzzy=[(False, False)], metadata={'gene': 'sagA'})
     ``pd.DataFrame``:
 
     >>> positional_metadata = pd.DataFrame(
-    ...     {'quality': [3, 3, 4, 10], 'list': [[], [], [], []]})
+    ...     {'list': [[], [], [], []]}, 'quality': [3, 3, 4, 10])
     >>> seq = Sequence('ACGT', positional_metadata=positional_metadata)
     >>> seq
     Sequence
