@@ -100,6 +100,20 @@ class TestRunner:
         bool
             test run success status
         """
+        try:
+            import numpy
+            try:
+                # NumPy 1.14 changed repr output breaking our doctests,
+                # request the legacy 1.13 style
+                numpy.set_printoptions(legacy="1.13")
+            except TypeError:
+                # Old Numpy, output should be fine as it is :)
+                # TypeError: set_printoptions() got an unexpected
+                # keyword argument 'legacy'
+                pass
+        except ImportError:
+            numpy = None
+
         # NOTE: it doesn't seem to matter what the first element of the argv
         # list is, there just needs to be something there.
         # changes to argv made here should also be made in setup.cfg
@@ -107,6 +121,7 @@ class TestRunner:
                 '--doctest-tests', '--doctest-extension=pyx']
         if verbose:
             argv.append('-v')
+
         return nose.core.run(argv=argv, defaultTest=self._test_dir,
                              addplugins=[SuppressSkbioWarnings()])
 

@@ -1421,48 +1421,6 @@ class TestLoc(SharedPropertyIndexTests, unittest.TestCase):
                                     positional_metadata={'z': [1, 2, 3, 4]},
                                     index=[True, True]))
 
-    def test_unhashable_index_first_axis(self):
-        s = slice(0, 1)
-        msa = TabularMSA([Protein(""), Protein(""), Protein("")],
-                         index=[s, slice(1, 2), slice(2, 3)])
-
-        with self.assertRaisesRegex(TypeError, 'unhashable'):
-            self.get(msa, Ellipsis, axis=0)
-
-        with self.assertRaisesRegex(TypeError, 'unhashable'):
-            self.get(msa, s, axis=0)
-
-        with self.assertRaisesRegex(TypeError, 'unhashable'):
-            self.get(msa, 0, axis=0)
-
-    def test_unhashable_index_second_axis(self):
-        msa = TabularMSA([Protein("AA"), Protein("CC"), Protein("AA")],
-                         index=[slice(0, 1), slice(1, 2), slice(2, 3)])
-
-        with self.assertRaisesRegex(TypeError, 'unhashable'):
-            self.get(msa, Ellipsis, axis=1)
-
-        with self.assertRaisesRegex(TypeError, 'unhashable'):
-            self.get(msa, [0, 1], axis=1)
-
-        with self.assertRaisesRegex(TypeError, 'unhashable'):
-            self.get(msa, 0, axis=1)
-
-    def test_unhashable_index_both_axes(self):
-        s = [0, 1]
-        msa = TabularMSA([RNA("AA"), RNA("CC"), RNA("AA")],
-                         index=[s, [1, 2], [2, 3]])
-
-        with self.assertRaisesRegex(TypeError, 'unhashable.*list'):
-            # This implies copy cannot be derived from getitem
-            self.get(msa, (Ellipsis, Ellipsis))
-
-        with self.assertRaisesRegex(TypeError, 'unhashable.*list'):
-            self.get(msa, (s, 0))
-
-        with self.assertRaisesRegex(TypeError, 'unhashable.*list'):
-            self.get(msa, ('x', 10))
-
     def test_categorical_index_scalar_label(self):
         msa = TabularMSA([RNA("ACUG"), RNA("ACUA"), RNA("AAUG"), RNA("AC-G")],
                          index=pd.CategoricalIndex(['a', 'b', 'b', 'c']))
@@ -2765,9 +2723,9 @@ class TestJoin(unittest.TestCase):
                         DNA('C--CC'),
                         DNA('-----')], index=range(-1, 4),
                        positional_metadata={
-                           'foo': [1, 2, 3, 4, 5],
                            'bar': ['a', 'b', np.nan, np.nan, np.nan],
-                           'baz': [np.nan, np.nan, 'c', 'd', 'e']}))
+                           'baz': [np.nan, np.nan, 'c', 'd', 'e'],
+                           'foo': [1, 2, 3, 4, 5]}))
 
     def test_how_left(self):
         msa1 = TabularMSA([DNA('AC'),
