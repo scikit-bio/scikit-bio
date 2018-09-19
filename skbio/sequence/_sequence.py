@@ -106,9 +106,9 @@ class Sequence(MetadataMixin, PositionalMetadataMixin, IntervalMetadataMixin,
 
     Create a sequence with metadata and positional metadata:
 
-    >>> metadata = {'id':'seq-id', 'desc':'seq desc', 'authors': ['Alice']}
-    >>> positional_metadata = {'quality': [3, 3, 4, 10],
-    ...                        'exons': [True, True, False, True]}
+    >>> metadata = {'authors': ['Alice'], 'desc':'seq desc', 'id':'seq-id'}
+    >>> positional_metadata = {'exons': [True, True, False, True],
+    ...                        'quality': [3, 3, 4, 10]}
     >>> interval_metadata = IntervalMetadata(4)
     >>> interval = interval_metadata.add([(1, 3)], metadata={'gene': 'sagA'})
     >>> seq = Sequence('ACGT', metadata=metadata,
@@ -249,7 +249,7 @@ fuzzy=[(False, False)], metadata={'gene': 'sagA'})
     ``pd.DataFrame``:
 
     >>> positional_metadata = pd.DataFrame(
-    ...     {'list': [[], [], [], []]}, 'quality': [3, 3, 4, 10])
+    ...     {'list': [[], [], [], []], 'quality': [3, 3, 4, 10]})
     >>> seq = Sequence('ACGT', positional_metadata=positional_metadata)
     >>> seq
     Sequence
