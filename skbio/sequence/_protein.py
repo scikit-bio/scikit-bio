@@ -185,10 +185,10 @@ class Protein(GrammaredSequence, metaclass=DisableSubclassingMeta):
         >>> from skbio import Protein
         >>> s = Protein('PAW')
         >>> s.stops()
-        array([False, False, False], dtype=bool)
+        array([False, False, False])
         >>> s = Protein('PAW*E*')
         >>> s.stops()
-        array([False, False, False,  True, False,  True], dtype=bool)
+        array([False, False, False,  True, False,  True])
 
         """
         return np.in1d(self._bytes, self._stop_codes)
