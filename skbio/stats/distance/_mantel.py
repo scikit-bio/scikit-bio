@@ -10,7 +10,7 @@ from itertools import combinations
 
 import numpy as np
 import pandas as pd
-import scipy.misc
+import scipy.special
 from scipy.stats import pearsonr, spearmanr
 
 from skbio.stats.distance import DistanceMatrix
@@ -398,7 +398,7 @@ def pwmantel(dms, labels=None, method='pearson', permutations=999,
         if len(set(labels)) != len(labels):
             raise ValueError("Labels must be unique.")
 
-    num_combs = scipy.misc.comb(num_dms, 2, exact=True)
+    num_combs = scipy.special.comb(num_dms, 2, exact=True)
     results_dtype = [('dm1', object), ('dm2', object), ('statistic', float),
                      ('p-value', float), ('n', int), ('method', object),
                      ('permutations', int), ('alternative', object)]
