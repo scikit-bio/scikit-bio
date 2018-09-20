@@ -2621,8 +2621,8 @@ class TestJoin(unittest.TestCase):
             TabularMSA([DNA('ACCA'),
                         DNA('G..G'),
                         DNA('C--C')],
-                       positional_metadata={'foo': [1, 2, 3, 4],
-                                            'bar': ['a', 'b', 'c', 'd']}))
+                       positional_metadata={'bar': ['a', 'b', 'c', 'd'],
+                                            'foo': [1, 2, 3, 4]}))
 
     def test_how_strict_failure_index_mismatch(self):
         msa1 = TabularMSA([DNA('AC'),
