@@ -569,7 +569,7 @@ fuzzy=[(True, False)], metadata={'gene': 'foo'})
             if not seq.has_positional_metadata():
                 del seq.positional_metadata
 
-        pm = pd.concat(pm_data, join=how, ignore_index=True)
+        pm = pd.concat(pm_data, join=how, ignore_index=True, sort=True)
         bytes_ = np.concatenate(seq_data)
 
         im = IntervalMetadata.concat(i.interval_metadata for i in seqs)
@@ -922,7 +922,8 @@ fuzzy=[(True, False)], metadata={'gene': 'foo'})
                     if self.has_positional_metadata():
                         pos_md_slices = list(_slices_from_iter(
                                              self.positional_metadata, index))
-                        positional_metadata = pd.concat(pos_md_slices)
+                        positional_metadata = pd.concat(pos_md_slices,
+                                                        sort=True)
 
                     metadata = None
                     if self.has_metadata():
