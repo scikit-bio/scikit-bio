@@ -70,27 +70,8 @@ class NewAuto(autosummary.Autosummary):
 autosummary.Autosummary = NewAuto
 
 import sphinx_bootstrap_theme
-import numpydoc
-
-@property
-def _extras(self):
-    # This will be accessed in a for-loop, so memoize to prevent quadratic
-    # behavior.
-    if not hasattr(self, '__memoized_extras'):
-        # We want every dunder that has a function type (not class slot),
-        # meaning we created the dunder, not Python.
-        # We don't ever care about __init__ and the user will see plenty of
-        # __repr__ calls, so why waste space.
-        self.__memoized_extras = [
-            a for a, v in inspect.getmembers(self._cls)
-            if type(v) == types.FunctionType and a.startswith('__')
-            and a not in ['__init__', '__repr__']
-        ]
-    return self.__memoized_extras
 
 # The extra_public_methods depends on what class we are looking at.
-numpydoc.docscrape.ClassDoc.extra_public_methods = _extras
-
 
 import skbio
 from skbio.util._decorator import classproperty
@@ -114,7 +95,7 @@ needs_sphinx = '1.6'
 extensions = [
     'sphinx.ext.autodoc',
     'sphinx.ext.mathjax',
-    'numpydoc',
+    'sphinx.ext.napoleon',
     'sphinx.ext.coverage',
     'sphinx.ext.doctest',
     'sphinx.ext.autosummary',
@@ -388,14 +369,6 @@ texinfo_documents = [
 # -- Options for autosummary ----------------------------------------------
 autosummary_generate = glob.glob('*.rst')
 
-# -- Options for numpydoc -------------------------------------------------
-# Generate plots for example sections
-numpydoc_use_plots = True
-# If we don't turn numpydoc's toctree generation off, Sphinx will warn about
-# the toctree referencing missing document(s). This appears to be related to
-# generating docs for classes with a __call__ method.
-numpydoc_class_members_toctree = False
-
 #------------------------------------------------------------------------------
 # Plot
 #------------------------------------------------------------------------------
@@ -450,71 +423,6 @@ intersphinx_mapping = {
 # Source code links
 # -----------------------------------------------------------------------------
 
-import inspect
-from os.path import relpath, dirname
-
-for name in ['sphinx.ext.linkcode', 'linkcode', 'numpydoc.linkcode']:
-    try:
-        __import__(name)
-        extensions.append(name)
-        break
-    except ImportError:
-        pass
-else:
-    print "NOTE: linkcode extension not found -- no links to source generated"
-
-def linkcode_resolve(domain, info):
-    """
-    Determine the URL corresponding to Python object
-    """
-    if domain != 'py':
-        return None
-
-    modname = info['module']
-    fullname = info['fullname']
-
-    submod = sys.modules.get(modname)
-    if submod is None:
-        return None
-
-    obj = submod
-    for part in fullname.split('.'):
-        try:
-            obj = getattr(obj, part)
-        except:
-            return None
-
-    try:
-        fn = inspect.getsourcefile(obj)
-    except:
-        fn = None
-    if not fn:
-        try:
-            fn = inspect.getsourcefile(sys.modules[obj.__module__])
-        except:
-            fn = None
-    if not fn:
-        return None
-
-    try:
-        source, lineno = inspect.findsource(obj)
-    except:
-        lineno = None
-
-    if lineno:
-        linespec = "#L%d" % (lineno + 1)
-    else:
-        linespec = ""
-
-    fn = relpath(fn, start=dirname(skbio.__file__))
-
-    if 'dev' in skbio.__version__:
-        return "http://github.com/biocore/scikit-bio/blob/master/skbio/%s%s" % (
-           fn, linespec)
-    else:
-        return "http://github.com/biocore/scikit-bio/blob/%s/skbio/%s%s" % (
-           skbio.__version__, fn, linespec)
-
 #------------------------------------------------------------------------------
 # linkcheck
 #------------------------------------------------------------------------------
@@ -531,15 +439,7 @@ def _closure():
 
 _closure()
 
-def autodoc_skip_member(app, what, name, obj, skip, options):
-    if what == "method":
-        if isinstance(obj, classproperty):
-            return True
-    return skip
-
 # Add the 'copybutton' javascript, to hide/show the prompt in code
 # examples, originally taken from scikit-learn's doc/conf.py
 def setup(app):
     app.add_javascript('copybutton.js')
-    app.add_stylesheet('style.css')
-    app.connect('autodoc-skip-member', autodoc_skip_member)

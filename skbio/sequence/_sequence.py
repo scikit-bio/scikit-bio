@@ -64,14 +64,6 @@ class Sequence(MetadataMixin, PositionalMetadataMixin, IntervalMetadataMixin,
         and a ``True`` value will be stored in a boolean array in the
         positional metadata under the key.
 
-    Attributes
-    ----------
-    values
-    metadata
-    positional_metadata
-    interval_metadata
-    observed_chars
-
     See Also
     --------
     DNA

@@ -13,7 +13,7 @@ see the associated documentation.
 
 .. currentmodule:: skbio.io.format
 .. autosummary::
-   :toctree: generated/
+   :toctree:
 
    blast6
    blast7
@@ -37,7 +37,7 @@ User functions
 --------------
 
 .. autosummary::
-   :toctree: generated/
+   :toctree:
 
    write
    read
@@ -49,7 +49,7 @@ User exceptions and warnings
 ----------------------------
 
 .. autosummary::
-   :toctree: generated/
+   :toctree:
 
    FormatIdentificationWarning
    ArgumentOverrideWarning
@@ -76,7 +76,7 @@ Subpackages
 -----------
 
 .. autosummary::
-   :toctree: generated/
+   :toctree:
 
    registry
    util
