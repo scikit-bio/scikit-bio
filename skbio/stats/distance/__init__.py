@@ -188,8 +188,6 @@ References
 # The full license is in the file COPYING.txt, distributed with this software.
 # ----------------------------------------------------------------------------
 
-from skbio.util import TestRunner
-
 from ._base import (DissimilarityMatrixError, DistanceMatrixError,
                     MissingIDError, DissimilarityMatrix, DistanceMatrix,
                     randdm)
@@ -202,5 +200,3 @@ from ._permdisp import permdisp
 __all__ = ['DissimilarityMatrixError', 'DistanceMatrixError', 'MissingIDError',
            'DissimilarityMatrix', 'DistanceMatrix', 'randdm', 'anosim',
            'permanova', 'bioenv', 'mantel', 'pwmantel', 'permdisp']
-
-test = TestRunner(__file__).test

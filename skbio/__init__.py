@@ -7,8 +7,6 @@
 # ----------------------------------------------------------------------------
 
 
-from skbio.util import TestRunner
-
 # Add skbio.io to sys.modules to prevent cycles in our imports
 import skbio.io  # noqa
 # imports included for convenience
@@ -79,7 +77,6 @@ if __doc__ is None:
 else:
     __doc__ = title + art + __doc__
 
-test = TestRunner(__file__).test
 
 if __name__ == '__main__':
     test()

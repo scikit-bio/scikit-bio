@@ -10,7 +10,6 @@ import warnings
 import inspect
 import os
 
-import nose
 import numpy as np
 import numpy.testing as npt
 import pandas.util.testing as pdt
@@ -46,93 +45,6 @@ class ReallyEqualMixin:
         self.assertFalse(b == a)
         self.assertTrue(a != b)
         self.assertTrue(b != a)
-
-
-@nose.tools.nottest
-class SuppressSkbioWarnings(nose.plugins.Plugin):
-    def configure(self, options, conf):
-        super(SuppressSkbioWarnings, self).configure(options, conf)
-        self.enabled = True
-
-    def beforeTest(self, test):
-        warnings.simplefilter("ignore", category=SkbioWarning)
-
-    def afterTest(self, test):
-        warnings.resetwarnings()
-
-
-@nose.tools.nottest
-class TestRunner:
-    """Simple wrapper class around nosetests functionality.
-
-    Parameters
-    ----------
-    filename : str
-        __file__ attribute passed in from the caller. This tells the
-        tester where to start looking for tests.
-
-    Notes
-    -----
-    The primary purpose of this class is to create an interface which users
-    of scikit-bio can use to run all of the built in tests. Normally this
-    would be done by invoking nosetests directly from the command line, but
-    scikit-bio needs several additional options which make the command long
-    and ugly. This class invokes nose with the required options.
-
-    """
-
-    @experimental(as_of="0.4.0")
-    def __init__(self, filename):
-        self._filename = filename
-        self._test_dir = os.path.dirname(filename)
-
-    @experimental(as_of="0.4.0")
-    def test(self, verbose=False):
-        """Performs the actual running of the tests.
-
-        Parameters
-        ----------
-        verbose : bool
-            flag for running in verbose mode.
-
-        Returns
-        -------
-        bool
-            test run success status
-        """
-        try:
-            import numpy
-            try:
-                # NumPy 1.14 changed repr output breaking our doctests,
-                # request the legacy 1.13 style
-                numpy.set_printoptions(legacy="1.13")
-            except TypeError:
-                # Old Numpy, output should be fine as it is :)
-                # TypeError: set_printoptions() got an unexpected
-                # keyword argument 'legacy'
-                pass
-        except ImportError:
-            numpy = None
-
-        try:
-            import pandas
-            # Max columns is automatically set by pandas based on terminal
-            # width, so set columns to unlimited to prevent the test suite
-            # from passing/failing based on terminal size.
-            pandas.options.display.max_columns = None
-        except ImportError:
-            pandas = None
-
-        # NOTE: it doesn't seem to matter what the first element of the argv
-        # list is, there just needs to be something there.
-        # changes to argv made here should also be made in setup.cfg
-        argv = [self._filename, '-I DO_NOT_IGNORE_ANYTHING', '--with-doctest',
-                '--doctest-tests', '--doctest-extension=pyx']
-        if verbose:
-            argv.append('-v')
-
-        return nose.core.run(argv=argv, defaultTest=self._test_dir,
-                             addplugins=[SuppressSkbioWarnings()])
 
 
 @experimental(as_of="0.4.0")

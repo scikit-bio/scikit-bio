@@ -28,10 +28,6 @@ Functions
 # The full license is in the file COPYING.txt, distributed with this software.
 # ----------------------------------------------------------------------------
 
-from skbio.util import TestRunner
-
 from ._unifrac import unweighted_unifrac, weighted_unifrac
 
 __all__ = ["unweighted_unifrac", "weighted_unifrac"]
-
-test = TestRunner(__file__).test
