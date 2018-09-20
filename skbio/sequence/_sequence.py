@@ -632,7 +632,7 @@ fuzzy=[(True, False)], metadata={'gene': 'foo'})
 
             # There are two possibilities (to our knowledge) at this point:
             # Either the sequence we were given was something string-like,
-            # (else it would not have made it past fromstring), or it was a
+            # (else it would not have made it past frombuffer), or it was a
             # numpy scalar, and so our length must be 1.
             if isinstance(sequence, np.generic) and len(s) != 1:
                 raise TypeError("Can cannot create a sequence with %r" %
