@@ -7,8 +7,8 @@
 # ----------------------------------------------------------------------------
 
 ifeq ($(WITH_COVERAGE), TRUE)
-	TEST_COMMAND = COVERAGE_FILE=../.coverage coverage run \
-	--rcfile ../.coveragerc -m skbio.test
+	# TODO: actually add coverage back in
+	TEST_COMMAND = python setup.py test
 else
 	TEST_COMMAND = python setup.py test
 endif
