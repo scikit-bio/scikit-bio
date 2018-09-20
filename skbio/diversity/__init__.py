@@ -289,7 +289,7 @@ Create a matrix containing 6 samples (rows) and 7 OTUs (columns):
    ...    ('E', ['tongue', 's2']),
    ...    ('F', ['skin', 's2'])]
    >>> sample_md = pd.DataFrame.from_items(
-   ...     sample_md, columns=['body_site', 'subject'], orient='index')
+   ...     dict(sample_md), columns=['body_site', 'subject'], orient='index')
    >>> sample_md
      body_site subject
    A       gut      s1
