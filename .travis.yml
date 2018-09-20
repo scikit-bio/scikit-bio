@@ -28,6 +28,8 @@ install:
   - python --version
   - pip install -r ci/pip_requirements.txt
   - pip install . --no-deps
+  - mkdir -p .config/matplotlib
+  - echo "backend : Agg" >> .config/matplotlib/matplotlibrc
 
 script:
   - WITH_COVERAGE=TRUE make test
