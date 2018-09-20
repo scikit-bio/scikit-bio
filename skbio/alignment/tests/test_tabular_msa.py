@@ -3873,17 +3873,19 @@ class TabularMSAReprDoctests:
     ...     # nested quotes
     ...     10: '"\''
     ... }
-    >>> positional_metadata = pd.DataFrame.from_items([
+    >>> positional_metadata = pd.DataFrame({
     ...     # str key, int list value
-    ...     ('foo', [1, 2, 3, 4]),
+    ...     'foo': [1, 2, 3, 4],
     ...     # float key, float list value
-    ...     (42.5, [2.5, 3.0, 4.2, -0.00001]),
+    ...     42.5: [2.5, 3.0, 4.2, -0.00001],
     ...     # int key, object list value
-    ...     (42, [[], 4, 5, {}]),
+    ...     42: [[], 4, 5, {}],
     ...     # truncated key (too long), bool list value
-    ...     ('abc' * 90, [True, False, False, True]),
+    ...     'abc' * 90: [True, False, False, True],
     ...     # None key
-    ...     (None, range(4))])
+    ...     None: range(4)})
+    >>> positional_metadata = positional_metadata.reindex(
+    ...     columns=['foo', 42.5, 42, 'abc' * 90, None])
     >>> TabularMSA([DNA('ACGT')], metadata=metadata,
     ...            positional_metadata=positional_metadata)
     TabularMSA[DNA]
