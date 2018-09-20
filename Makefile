@@ -10,7 +10,7 @@ ifeq ($(WITH_COVERAGE), TRUE)
 	TEST_COMMAND = COVERAGE_FILE=../.coverage coverage run \
 	--rcfile ../.coveragerc -m skbio.test
 else
-	TEST_COMMAND = python -m skbio.test
+	TEST_COMMAND = python setup.py test
 endif
 
 # cd into a directory that is different from scikit-bio root directory to

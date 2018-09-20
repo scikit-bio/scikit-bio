@@ -16,6 +16,7 @@ import sys
 
 from setuptools import find_packages, setup
 from setuptools.extension import Extension
+from setuptools.command.test import test as TestCommand
 
 import numpy as np
 
@@ -23,6 +24,24 @@ import numpy as np
 if sys.version_info.major != 3:
     sys.exit("scikit-bio can only be used with Python 3. You are currently "
              "running Python %d." % sys.version_info.major)
+
+
+# derived from https://docs.pytest.org/en/3.8.0/goodpractices.html
+class PyTest(TestCommand):
+    user_options = [] #("pytest-args=", "a", "Arguments to pass to pytest")]
+
+    def initialize_options(self):
+        TestCommand.initialize_options(self)
+        self.pytest_args = ""
+
+    def run_tests(self):
+        import shlex
+
+        # import here, cause outside the eggs aren't loaded
+        import pytest
+
+        errno = pytest.main(shlex.split(self.pytest_args))
+        sys.exit(errno)
 
 # version parsing from __init__ pulled from Flask's setup.py
 # https://github.com/mitsuhiko/flask/blob/master/setup.py
@@ -106,7 +125,7 @@ setup(name='scikit-bio',
       packages=find_packages(),
       ext_modules=extensions,
       include_dirs=[np.get_include()],
-      setup_requires=['nose >= 1.3.7'],
+      tests_require=['pytest'],
       install_requires=[
           'lockfile >= 0.10.2',  # req'd for our usage of CacheControl
           'CacheControl >= 0.11.5',
@@ -117,11 +136,9 @@ setup(name='scikit-bio',
           'numpy >= 1.9.2',
           'pandas >= 0.23',
           'scipy >= 0.15.1',
-          'nose >= 1.3.7',
           'hdmedians >= 0.13',
           'scikit-learn >= 0.19.1'
       ],
-      test_suite='nose.collector',
       classifiers=classifiers,
       package_data={
           'skbio.diversity.alpha.tests': ['data/qiime-191-tt/*'],
@@ -131,5 +148,6 @@ setup(name='scikit-bio',
           'skbio.stats.tests': ['data/*'],
           'skbio.stats.distance.tests': ['data/*'],
           'skbio.stats.ordination.tests': ['data/*']
-          }
+          },
+      cmdclass={"pytest": PyTest}
       )
