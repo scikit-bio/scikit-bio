@@ -15,7 +15,7 @@ from ._grammared_sequence import GrammaredSequence, DisableSubclassingMeta
 
 class DNA(GrammaredSequence, NucleotideMixin,
           metaclass=DisableSubclassingMeta):
-    """Store DNA sequence data and optional associated metadata.
+    r"""Store DNA sequence data and optional associated metadata.
 
     Only characters in the IUPAC DNA character set [1]_ are supported.
 

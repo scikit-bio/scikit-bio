@@ -190,108 +190,109 @@ class TestReaders(unittest.TestCase):
 
         self.invalid_files = [(get_data_path(e[0]), e[1], e[2]) for e in [
             ('fastq_invalid_blank_after_header', FASTQFormatError,
-             'blank or whitespace-only line.*after header.*in FASTQ'),
+             r'blank or whitespace-only line.*after header.*in FASTQ'),
 
             ('fastq_invalid_blank_after_seq', FASTQFormatError,
-             "blank or whitespace-only line.*before '\+' in FASTQ"),
+             r"blank or whitespace-only line.*before '\+' in FASTQ"),
 
             ('fastq_invalid_blank_after_plus', FASTQFormatError,
-             "blank or whitespace-only line.*after '\+'.*in FASTQ"),
+             r"blank or whitespace-only line.*after '\+'.*in FASTQ"),
 
             ('fastq_invalid_blank_within_seq', FASTQFormatError,
-             'blank or whitespace-only line.*within sequence.*FASTQ'),
+             r'blank or whitespace-only line.*within sequence.*FASTQ'),
 
             ('fastq_invalid_blank_within_qual', FASTQFormatError,
-             "blank or whitespace-only line.*within quality scores.*in FASTQ"),
+             r"blank or whitespace-only line.*within quality scores.*in "
+             "FASTQ"),
 
             ('fastq_invalid_ws_line_after_header', FASTQFormatError,
-             'blank or whitespace-only line.*after header.*in FASTQ'),
+             r'blank or whitespace-only line.*after header.*in FASTQ'),
 
             ('fastq_invalid_ws_line_after_seq', FASTQFormatError,
-             "blank or whitespace-only line.*before '\+' in FASTQ"),
+             r"blank or whitespace-only line.*before '\+' in FASTQ"),
 
             ('fastq_invalid_ws_line_after_plus', FASTQFormatError,
-             "blank or whitespace-only line.*after '\+'.*in FASTQ"),
+             r"blank or whitespace-only line.*after '\+'.*in FASTQ"),
 
             ('fastq_invalid_ws_line_within_seq', FASTQFormatError,
-             'blank or whitespace-only line.*within sequence.*FASTQ'),
+             r'blank or whitespace-only line.*within sequence.*FASTQ'),
 
             ('fastq_invalid_ws_line_within_qual', FASTQFormatError,
-             "blank or whitespace-only line.*within quality scores.*in FASTQ"),
+             r"blank or whitespace-only line.*within quality scores.*in FASTQ"),
 
             ('fastq_invalid_missing_header', FASTQFormatError,
-             "sequence.*header.*start of file: 'seq1 desc1'"),
+             r"sequence.*header.*start of file: 'seq1 desc1'"),
 
             ('fastq_invalid_missing_seq_data', FASTQFormatError,
-             'without sequence data'),
+             r'without sequence data'),
 
             ('error_diff_ids.fastq', FASTQFormatError,
-             "header lines do not match: "
+             r"header lines do not match: "
              "'SLXA-B3_649_FC8437_R1_1_1_850_123' != "
              "'SLXA-B3_649_FC8437_R1_1_1_850_124'"),
 
             ('error_double_qual.fastq', FASTQFormatError,
-             "Extra quality.*'\+SLXA-B3_649_FC8437_R1_1_1_850_123'"),
+             r"Extra quality.*'\+SLXA-B3_649_FC8437_R1_1_1_850_123'"),
 
             ('error_double_seq.fastq', FASTQFormatError,
-             'FASTQ record that is missing a quality \(\+\) header line'),
+             r'FASTQ record that is missing a quality \(\+\) header line'),
 
-            ('error_long_qual.fastq', FASTQFormatError, "Extra quality.*'Y'"),
+            ('error_long_qual.fastq', FASTQFormatError, r"Extra quality.*'Y'"),
 
             ('error_no_qual.fastq', FASTQFormatError,
-             "blank or whitespace-only line.*after '\+'.*in FASTQ"),
+             r"blank or whitespace-only line.*after '\+'.*in FASTQ"),
 
             ('error_qual_del.fastq', ValueError,
-             'Decoded Phred score.*out of range'),
+             r'Decoded Phred score.*out of range'),
 
             ('error_qual_escape.fastq', ValueError,
-             'Decoded Phred score.*out of range'),
+             r'Decoded Phred score.*out of range'),
 
             ('error_qual_null.fastq', ValueError,
-             'Decoded Phred score.*out of range'),
+             r'Decoded Phred score.*out of range'),
 
             ('error_qual_space.fastq', ValueError,
-             'Decoded Phred score.*out of range'),
+             r'Decoded Phred score.*out of range'),
 
             ('error_qual_tab.fastq', ValueError,
-             'Decoded Phred score.*out of range'),
+             r'Decoded Phred score.*out of range'),
 
             ('error_qual_unit_sep.fastq', ValueError,
-             'Decoded Phred score.*out of range'),
+             r'Decoded Phred score.*out of range'),
 
             ('error_qual_vtab.fastq', ValueError,
-             'Decoded Phred score.*out of range'),
+             r'Decoded Phred score.*out of range'),
 
             ('error_short_qual.fastq', FASTQFormatError,
-             "Extra quality.*'SLXA-B3_649_FC8437_R1_1_1_362_549'"),
+             r"Extra quality.*'SLXA-B3_649_FC8437_R1_1_1_362_549'"),
 
             ('error_spaces.fastq', FASTQFormatError,
-             "whitespace.*sequence data: 'GATGTGCAA TACCTTTGTA GAGGAA'"),
+             r"whitespace.*sequence data: 'GATGTGCAA TACCTTTGTA GAGGAA'"),
 
             ('error_tabs.fastq', FASTQFormatError,
              r"whitespace.*sequence data: 'GATGTGCAA\\tTACCTTTGTA\\tGAGGAA'"),
 
             ('error_trunc_at_seq.fastq', FASTQFormatError,
-             'incomplete/truncated.*FASTQ'),
+             r'incomplete/truncated.*FASTQ'),
 
             ('error_trunc_at_plus.fastq', FASTQFormatError,
-             'incomplete/truncated.*FASTQ'),
+             r'incomplete/truncated.*FASTQ'),
 
             ('error_trunc_at_qual.fastq', FASTQFormatError,
-             'incomplete/truncated.*end of file'),
+             r'incomplete/truncated.*end of file'),
 
             ('error_trunc_in_title.fastq', FASTQFormatError,
-             'incomplete/truncated.*end of file'),
+             r'incomplete/truncated.*end of file'),
 
             ('error_trunc_in_seq.fastq', FASTQFormatError,
-             'incomplete/truncated.*end of file'),
+             r'incomplete/truncated.*end of file'),
 
             ('error_trunc_in_plus.fastq', FASTQFormatError,
-             "header lines do not match: "
+             r"header lines do not match: "
              "'SLXA-B3_649_FC8437_R1_1_1_183_714' != 'SLXA-B3_649_FC'"),
 
             ('error_trunc_in_qual.fastq', FASTQFormatError,
-             'incomplete/truncated.*end of file')
+             r'incomplete/truncated.*end of file')
         ]]
 
     def test_fastq_to_generator_valid_files(self):
@@ -338,15 +339,15 @@ class TestReaders(unittest.TestCase):
                'solexa_full_range_original_solexa.fastq']]
 
         for fp in fps:
-            with self.assertRaisesRegex(ValueError, 'out of range \[0, 62\]'):
+            with self.assertRaisesRegex(ValueError, r'out of range \[0, 62\]'):
                 list(_fastq_to_generator(fp, variant='illumina1.3'))
-            with self.assertRaisesRegex(ValueError, 'out of range \[0, 62\]'):
+            with self.assertRaisesRegex(ValueError, r'out of range \[0, 62\]'):
                 list(_fastq_to_generator(fp, variant='illumina1.8'))
 
     def test_fastq_to_generator_solexa(self):
         # solexa support isn't implemented yet. should raise error even with
         # valid solexa file
-        with self.assertRaisesRegex(ValueError, 'Solexa'):
+        with self.assertRaisesRegex(ValueError, r'Solexa'):
             list(_fastq_to_generator(
                 get_data_path('solexa_full_range_original_solexa.fastq'),
                 variant='solexa'))
@@ -438,7 +439,7 @@ class TestReaders(unittest.TestCase):
                     self.assertEqual(observed, expected)
 
     def test_fastq_to_tabular_msa_no_constructor(self):
-        with self.assertRaisesRegex(ValueError, '`constructor`'):
+        with self.assertRaisesRegex(ValueError, r'`constructor`'):
             _fastq_to_tabular_msa(get_data_path('fastq_multi_seq_sanger'))
 
 
@@ -546,7 +547,7 @@ class TestWriters(unittest.TestCase):
                            positional_metadata={'quality': range(4)})
             yield Sequence('ACG', metadata={'id': 'foo', 'description': 'bar'})
 
-        with self.assertRaisesRegex(ValueError, '2nd.*quality scores'):
+        with self.assertRaisesRegex(ValueError, r'2nd.*quality scores'):
             _generator_to_fastq(gen(), io.StringIO(), variant='illumina1.8')
 
 

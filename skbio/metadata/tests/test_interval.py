@@ -452,10 +452,10 @@ class TestIntervalMetadata(unittest.TestCase, ReallyEqualMixin):
         im.add([(0, 1000000000)])
         self.assertIsNone(im.upper_bound)
         with self.assertRaisesRegex(
-                TypeError, 'upper bound is `None`'):
+                TypeError, r'upper bound is `None`'):
             im._reverse()
         with self.assertRaisesRegex(
-                TypeError, 'upper bound is `None`'):
+                TypeError, r'upper bound is `None`'):
             IntervalMetadata.concat([self.im_1, im])
 
     def test_init_copy_from(self):
@@ -578,7 +578,7 @@ class TestIntervalMetadata(unittest.TestCase, ReallyEqualMixin):
         im = IntervalMetadata(None)
         with self.assertRaisesRegex(
                 ValueError,
-                'Cannot merge an unbound IntervalMetadata object '
+                r'Cannot merge an unbound IntervalMetadata object '
                 'to a bounded one'):
             self.im_1.merge(im)
         # original im is not changed

@@ -293,29 +293,29 @@ class BetaDiversityTests(TestCase):
 
     def test_invalid_input(self):
         # number of ids doesn't match the number of samples
-        error_msg = ("Number of rows")
+        error_msg = (r"Number of rows")
         with self.assertRaisesRegex(ValueError, error_msg):
             beta_diversity(self.table1, list('AB'), 'euclidean')
 
         # unknown metric provided
-        error_msg = "not-a-metric"
+        error_msg = r"not-a-metric"
         with self.assertRaisesRegex(ValueError, error_msg):
             beta_diversity('not-a-metric', self.table1)
 
         # 3-D list provided as input
-        error_msg = ("Only 1-D and 2-D")
+        error_msg = (r"Only 1-D and 2-D")
         with self.assertRaisesRegex(ValueError, error_msg):
             beta_diversity('euclidean', [[[43]]])
 
         # negative counts
-        error_msg = "negative values."
+        error_msg = r"negative values."
         with self.assertRaisesRegex(ValueError, error_msg):
             beta_diversity('euclidean', [[0, 1, 3, 4], [0, 3, -12, 42]])
         with self.assertRaisesRegex(ValueError, error_msg):
             beta_diversity('euclidean', [[0, 1, 3, -4], [0, 3, 12, 42]])
 
         # additional kwargs
-        error_msg = "keyword argument"
+        error_msg = r"keyword argument"
         with self.assertRaisesRegex(TypeError, error_msg):
             beta_diversity('euclidean', [[0, 1, 3], [0, 3, 12]],
                            not_a_real_kwarg=42.0)
@@ -724,7 +724,7 @@ class TestPartialBetaDiversity(TestCase):
                                         expected_dm[id1, id2], 6)
 
     def test_self_self_pair(self):
-        error_msg = ("A duplicate or a self-self pair was observed.")
+        error_msg = (r"A duplicate or a self-self pair was observed.")
         with self.assertRaisesRegex(ValueError, error_msg):
             partial_beta_diversity((lambda x, y: x + y), self.table1,
                                    self.sids1, id_pairs=[('A', 'B'),
@@ -733,7 +733,7 @@ class TestPartialBetaDiversity(TestCase):
     def test_duplicate_pairs(self):
         # confirm that partial pairwise execution fails if duplicate pairs are
         # observed
-        error_msg = ("A duplicate or a self-self pair was observed.")
+        error_msg = (r"A duplicate or a self-self pair was observed.")
         with self.assertRaisesRegex(ValueError, error_msg):
             partial_beta_diversity((lambda x, y: x + y), self.table1,
                                    self.sids1, id_pairs=[('A', 'B'),
@@ -742,7 +742,7 @@ class TestPartialBetaDiversity(TestCase):
     def test_duplicate_transpose_pairs(self):
         # confirm that partial pairwise execution fails if a transpose
         # duplicate is observed
-        error_msg = ("A duplicate or a self-self pair was observed.")
+        error_msg = (r"A duplicate or a self-self pair was observed.")
         with self.assertRaisesRegex(ValueError, error_msg):
             partial_beta_diversity((lambda x, y: x + y), self.table1,
                                    self.sids1, id_pairs=[('A', 'B'),
@@ -750,7 +750,7 @@ class TestPartialBetaDiversity(TestCase):
 
     def test_pairs_not_subset(self):
         # confirm raise when pairs are not a subset of IDs
-        error_msg = ("`id_pairs` are not a subset of `ids`")
+        error_msg = (r"`id_pairs` are not a subset of `ids`")
         with self.assertRaisesRegex(ValueError, error_msg):
             partial_beta_diversity((lambda x, y: x + y), self.table1,
                                    self.sids1, id_pairs=[('x', 'b'), ])
@@ -781,7 +781,7 @@ class TestPartialBetaDiversity(TestCase):
 
     def test_unusable_metric(self):
         id_pairs = [('A', 'B'), ('B', 'F'), ('D', 'E')]
-        error_msg = "partial_beta_diversity is only compatible"
+        error_msg = r"partial_beta_diversity is only compatible"
         with self.assertRaisesRegex(ValueError, error_msg):
             partial_beta_diversity('hamming', self.table2, self.sids2,
                                    id_pairs=id_pairs)

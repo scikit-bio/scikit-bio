@@ -612,14 +612,14 @@ class TestAlignStripedSmithWaterman(TestSSW):
         self._check_TabularMSA_to_AlignmentStructure(align2, align1, DNA)
 
     def test_invalid_type(self):
-        with self.assertRaisesRegex(TypeError, "not type 'Sequence'"):
+        with self.assertRaisesRegex(TypeError, r"not type 'Sequence'"):
             local_pairwise_align_ssw(DNA('ACGT'), Sequence('ACGT'))
 
-        with self.assertRaisesRegex(TypeError, "not type 'str'"):
+        with self.assertRaisesRegex(TypeError, r"not type 'str'"):
             local_pairwise_align_ssw('ACGU', RNA('ACGU'))
 
     def test_type_mismatch(self):
-        with self.assertRaisesRegex(TypeError, "same type: 'DNA' != 'RNA'"):
+        with self.assertRaisesRegex(TypeError, r"same type: 'DNA' != 'RNA'"):
             local_pairwise_align_ssw(DNA('ACGT'), RNA('ACGU'))
 
 

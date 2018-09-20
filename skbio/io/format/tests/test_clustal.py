@@ -270,14 +270,14 @@ UGCUGCAUCA---------------- 33
         self.assertEqual(_clustal_sniffer(StringIO()), (False, {}))
 
     def test_no_constructor(self):
-        with self.assertRaisesRegex(ValueError, "`constructor`"):
+        with self.assertRaisesRegex(ValueError, r"`constructor`"):
             _clustal_to_tabular_msa(self.valid_clustal_out[0])
 
     def test_duplicate_labels(self):
         msa = TabularMSA([CustomSequence('foo'),
                           CustomSequence('bar')], index=['a', 'a'])
 
-        with self.assertRaisesRegex(ClustalFormatError, "index.*unique"):
+        with self.assertRaisesRegex(ClustalFormatError, r"index.*unique"):
             with StringIO() as fh:
                 _tabular_msa_to_clustal(msa, fh)
 
@@ -288,7 +288,7 @@ UGCUGCAUCA---------------- 33
             "abc             GCAU\n"
             "def             -----\n")
 
-        with self.assertRaisesRegex(ClustalFormatError, "not aligned"):
+        with self.assertRaisesRegex(ClustalFormatError, r"not aligned"):
             _clustal_to_tabular_msa(fh, constructor=CustomSequence)
 
 

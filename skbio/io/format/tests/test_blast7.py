@@ -164,13 +164,13 @@ class TestBlast7Reader(unittest.TestCase):
         fp = get_data_path("blast7_invalid_differing_fields")
         with self.assertRaisesRegex(
                 BLAST7FormatError,
-                "Fields \[.*'qseqid', .*'sseqid', .*'qstart'\]"
+                r"Fields \[.*'qseqid', .*'sseqid', .*'qstart'\]"
                 " do.*\[.*'qseqid', .*'sseqid', .*'score'\]"):
             _blast7_to_data_frame(fp)
         fp = get_data_path("legacy9_invalid_differing_fields")
         with self.assertRaisesRegex(
                 BLAST7FormatError,
-                "Fields \[.*'qseqid', .*'sseqid', .*'qstart'\]"
+                r"Fields \[.*'qseqid', .*'sseqid', .*'qstart'\]"
                 " do.*\[.*'qseqid', .*'sseqid', "
                 ".*'sallseqid'\]"):
             _blast7_to_data_frame(fp)
@@ -178,31 +178,31 @@ class TestBlast7Reader(unittest.TestCase):
     def test_no_data_error(self):
         fp = get_data_path("blast7_invalid_gibberish")
         with self.assertRaisesRegex(BLAST7FormatError,
-                                    "File contains no"):
+                                    r"File contains no"):
             _blast7_to_data_frame(fp)
         fp = get_data_path("blast7_invalid_no_data")
         with self.assertRaisesRegex(BLAST7FormatError,
-                                    "File contains no"):
+                                    r"File contains no"):
             _blast7_to_data_frame(fp)
         fp = get_data_path("empty")
         with self.assertRaisesRegex(BLAST7FormatError,
-                                    "File contains no"):
+                                    r"File contains no"):
             _blast7_to_data_frame(fp)
 
     def test_wrong_amount_of_columns_error(self):
         fp = get_data_path("blast7_invalid_too_many_columns")
         with self.assertRaisesRegex(BLAST7FormatError,
-                                    "Number of fields.*\(2\)"):
+                                    r"Number of fields.*\(2\)"):
             _blast7_to_data_frame(fp)
         fp = get_data_path("legacy9_invalid_too_many_columns")
         with self.assertRaisesRegex(BLAST7FormatError,
-                                    "Number of fields.*\(12\)"):
+                                    r"Number of fields.*\(12\)"):
             _blast7_to_data_frame(fp)
 
     def test_unrecognized_field_error(self):
         fp = get_data_path("blast7_invalid_unrecognized_field")
         with self.assertRaisesRegex(BLAST7FormatError,
-                                    "Unrecognized field \(.*'sallid'\)"):
+                                    r"Unrecognized field \(.*'sallid'\)"):
             _blast7_to_data_frame(fp)
 
 

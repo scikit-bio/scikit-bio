@@ -51,7 +51,7 @@ class LladserTests(unittest.TestCase):
 
         # Estimator has variance of (1-p)^2/(r-2),
         # which for r=30 and p~=0.9 is 0.0289
-        npt.assert_almost_equal(obs, exp_p)
+        npt.assert_almost_equal(obs, exp_p, decimal=2)
 
 
     def test_lladser_ci_nan(self):

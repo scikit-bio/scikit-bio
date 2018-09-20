@@ -86,19 +86,19 @@ class TestBlast6Reader(unittest.TestCase):
     def test_custom_and_default_passed_error(self):
         fp = get_data_path('blast6_default_single_line')
         with self.assertRaisesRegex(ValueError,
-                                    "`columns` and `default_columns`"):
+                                    r"`columns` and `default_columns`"):
             _blast6_to_data_frame(fp, columns=['qseqid'], default_columns=True)
 
     def test_no_columns_passed_error(self):
         fp = get_data_path('blast6_default_single_line')
         with self.assertRaisesRegex(ValueError,
-                                    "Either `columns` or `default_columns`"):
+                                    r"Either `columns` or `default_columns`"):
             _blast6_to_data_frame(fp)
 
     def test_wrong_amount_of_columns_error(self):
         fp = get_data_path('blast6_invalid_number_of_columns')
         with self.assertRaisesRegex(
-                ValueError, "Specified number of columns \(12\).*\(10\)"):
+                ValueError, r"Specified number of columns \(12\).*\(10\)"):
             _blast6_to_data_frame(fp, default_columns=True)
 
     def test_different_data_in_same_column(self):
@@ -109,7 +109,7 @@ class TestBlast6Reader(unittest.TestCase):
     def test_wrong_column_name_error(self):
         fp = get_data_path('blast6_default_single_line')
         with self.assertRaisesRegex(ValueError,
-                                    "Unrecognized column.*'abcd'"):
+                                    r"Unrecognized column.*'abcd'"):
             _blast6_to_data_frame(fp, columns=['qseqid', 'sseqid', 'pident',
                                                'length', 'mismatch', 'gapopen',
                                                'qstart', 'qend', 'sstart',

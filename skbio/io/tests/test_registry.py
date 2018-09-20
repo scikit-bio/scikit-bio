@@ -597,7 +597,7 @@ class TestSniff(RegistryTest):
         def sniffer(fh):
             return True, {}
 
-        with self.assertRaisesRegex(TypeError, '`newline`'):
+        with self.assertRaisesRegex(TypeError, r'`newline`'):
             self.registry.sniff(fp, newline='\r')
 
     def test_non_default_encoding(self):
@@ -883,7 +883,7 @@ class TestRead(RegistryTest):
             return
 
         with self.assertRaisesRegex(UnrecognizedFormatError,
-                                    "Cannot read 'format1'.*Possible.*include"
+                                    r"Cannot read 'format1'.*Possible.*include"
                                     ": TestClass"):
             self.registry.read(fh, format='format1')
 
@@ -1164,10 +1164,10 @@ class TestRead(RegistryTest):
         def reader_gen(fh):
             yield TestClass(fh.readlines())
 
-        with self.assertRaisesRegex(TypeError, '`newline`'):
+        with self.assertRaisesRegex(TypeError, r'`newline`'):
             self.registry.read(fp, into=TestClass, newline='\r')
 
-        with self.assertRaisesRegex(TypeError, '`newline`'):
+        with self.assertRaisesRegex(TypeError, r'`newline`'):
             self.registry.read(fp, format='formatx', newline='\r')
 
     def test_non_default_newline(self):

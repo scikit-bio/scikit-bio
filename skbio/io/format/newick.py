@@ -1,4 +1,4 @@
-"""
+r"""
 Newick format (:mod:`skbio.io.format.newick`)
 =============================================
 

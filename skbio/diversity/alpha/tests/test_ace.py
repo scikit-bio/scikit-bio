@@ -6,7 +6,7 @@
 # The full license is in the file COPYING.txt, distributed with this software.
 # ----------------------------------------------------------------------------
 
-import unittest, main
+import unittest
 
 import numpy as np
 import numpy.testing as npt
@@ -38,4 +38,4 @@ class AceTests(unittest.TestCase):
 
 
 if __name__ == '__main__':
-    main()
+    unittest.main()

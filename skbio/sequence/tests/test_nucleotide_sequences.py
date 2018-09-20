@@ -174,7 +174,7 @@ class TestNucleotideSequence(unittest.TestCase):
 
     def test_translate_invalid_id(self):
         for seq in RNA('AUG'), DNA('ATG'):
-            with self.assertRaisesRegex(ValueError, 'table_id.*42'):
+            with self.assertRaisesRegex(ValueError, r'table_id.*42'):
                 seq.translate(42)
 
     def test_translate_six_frames_ncbi_table_id(self):
@@ -229,7 +229,7 @@ class TestNucleotideSequence(unittest.TestCase):
 
     def test_translate_six_frames_invalid_id(self):
         for seq in RNA('AUG'), DNA('ATG'):
-            with self.assertRaisesRegex(ValueError, 'table_id.*42'):
+            with self.assertRaisesRegex(ValueError, r'table_id.*42'):
                 seq.translate_six_frames(42)
 
     def test_repr(self):
@@ -456,7 +456,7 @@ class TestNucleotideSequence(unittest.TestCase):
             seq2 = DifferentSequenceClass('ABC')
 
             with self.assertRaisesRegex(TypeError,
-                                        "Cannot use.*and "
+                                        r"Cannot use.*and "
                                         "DifferentSequenceClass together"):
                 seq1.is_reverse_complement(seq2)
 
