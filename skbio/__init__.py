@@ -76,7 +76,3 @@ if __doc__ is None:
     __doc__ = title + art
 else:
     __doc__ = title + art + __doc__
-
-
-if __name__ == '__main__':
-    test()
