@@ -17,7 +17,6 @@ from skbio.metadata._intersection import IntervalTree
 # Note: More bounds checking on input parameters are performed
 # within test_interval.py
 class NeighborTestCase(unittest.TestCase):
-
     def setUp(self):
         iv = IntervalNode(50, 59, IntervalObj(50, 59))
         for i in range(0, 110, 10):
@@ -29,12 +28,13 @@ class NeighborTestCase(unittest.TestCase):
 
     def test_left(self):
         iv = self.intervals
-        self.assertEqual(str(iv.left(60, n=2)),
-                         str([IntervalObj(50, 59), IntervalObj(40, 49)]))
+        self.assertEqual(
+            str(iv.left(60, n=2)), str([IntervalObj(50, 59), IntervalObj(40, 49)])
+        )
 
         for i in range(10, 100, 10):
             r = iv.left(i, max_dist=10, n=1)
-            self.assertEqual(r[0].end,  i - 1)
+            self.assertEqual(r[0].end, i - 1)
 
     def test_toomany(self):
         iv = self.intervals
@@ -42,11 +42,12 @@ class NeighborTestCase(unittest.TestCase):
 
     def test_right(self):
         iv = self.intervals
-        self.assertEqual(str(iv.left(60, n=2)),
-                         str([IntervalObj(50, 59), IntervalObj(40, 49)]))
+        self.assertEqual(
+            str(iv.left(60, n=2)), str([IntervalObj(50, 59), IntervalObj(40, 49)])
+        )
 
         def get_right_start(b10):
-            r = iv.right(b10+1, n=1)
+            r = iv.right(b10 + 1, n=1)
             assert len(r) == 1
             return r[0].start
 
@@ -54,12 +55,11 @@ class NeighborTestCase(unittest.TestCase):
             self.assertEqual(get_right_start(i), i + 10)
 
         for i in range(0, 100, 10):
-            r = iv.right(i-1, max_dist=10, n=1)
+            r = iv.right(i - 1, max_dist=10, n=1)
             self.assertEqual(r[0].start, i)
 
 
 class UpDownStreamTestCase(unittest.TestCase):
-
     def setUp(self):
         iv = IntervalTree()
         iv.add_interval(IntervalObj(50, 59))
@@ -72,31 +72,32 @@ class UpDownStreamTestCase(unittest.TestCase):
 
     def test_upstream(self):
         iv = self.intervals
-        upstreams = iv.upstream_of_interval(IntervalObj(59, 60),
-                                            num_intervals=200)
+        upstreams = iv.upstream_of_interval(IntervalObj(59, 60), num_intervals=200)
 
         for u in upstreams:
             self.assertTrue(u.end < 59)
 
-        upstreams = iv.upstream_of_interval(IntervalObj(60, 70, strand=-1),
-                                            num_intervals=200)
+        upstreams = iv.upstream_of_interval(
+            IntervalObj(60, 70, strand=-1), num_intervals=200
+        )
         for u in upstreams:
             self.assertTrue(u.start > 70)
 
-        upstreams = iv.upstream_of_interval(IntervalObj(58, 58, strand=-1),
-                                            num_intervals=200)
+        upstreams = iv.upstream_of_interval(
+            IntervalObj(58, 58, strand=-1), num_intervals=200
+        )
         for u in upstreams:
             self.assertTrue(u.start > 59)
 
     def test_downstream(self):
         iv = self.intervals
-        downstreams = iv.downstream_of_interval(IntervalObj(59, 60),
-                                                num_intervals=200)
+        downstreams = iv.downstream_of_interval(IntervalObj(59, 60), num_intervals=200)
         for d in downstreams:
             self.assertTrue(d.start > 60)
 
-        downstreams = iv.downstream_of_interval(IntervalObj(59, 60, strand=-1),
-                                                num_intervals=200)
+        downstreams = iv.downstream_of_interval(
+            IntervalObj(59, 60, strand=-1), num_intervals=200
+        )
         for d in downstreams:
             self.assertTrue(d.start < 59)
 
@@ -107,14 +108,14 @@ class UpDownStreamTestCase(unittest.TestCase):
             self.assertEqual(r[0].start, i + 10)
             self.assertEqual(r[1].start, i + 20)
 
-            r = iv.after_interval(IntervalObj(i, i),
-                                  max_dist=20, num_intervals=2)
+            r = iv.after_interval(IntervalObj(i, i), max_dist=20, num_intervals=2)
             self.assertEqual(r[0].start, i + 10)
             self.assertEqual(r[1].start, i + 20)
 
 
 class LotsaTestCase(unittest.TestCase):
     """ put lotsa data in the tree and make sure it works"""
+
     def setUp(self):
         iv = IntervalNode(1, 2, IntervalObj(1, 2))
         self.max = 1000000
@@ -162,8 +163,9 @@ class LotsaTestCase(unittest.TestCase):
             results = iv.find(start, end)
             for feat in results:
                 self.assertTrue(
-                        (feat.end >= start and feat.end <= end) or
-                        (feat.start <= end and feat.start >= start))
+                    (feat.end >= start and feat.end <= end)
+                    or (feat.start <= end and feat.start >= start)
+                )
 
 
 class IntervalTreeTest(unittest.TestCase):
@@ -171,15 +173,13 @@ class IntervalTreeTest(unittest.TestCase):
         iv = IntervalTree()
         n = 0
         for i in range(1, 1000, 80):
-            iv.insert(i, i + 10, dict(value=i*i))
+            iv.insert(i, i + 10, dict(value=i * i))
             # add is synonym for insert.
-            iv.add(i + 20, i + 30, dict(astr=str(i*i)))
+            iv.add(i + 20, i + 30, dict(astr=str(i * i)))
 
             # or insert/add an interval object with start, end attrs.
-            iv.insert_interval(IntervalObj(i + 40, i + 50,
-                                           value=dict(astr=str(i*i))))
-            iv.add_interval(IntervalObj(i + 60, i + 70,
-                                        value=dict(astr=str(i*i))))
+            iv.insert_interval(IntervalObj(i + 40, i + 50, value=dict(astr=str(i * i))))
+            iv.add_interval(IntervalObj(i + 60, i + 70, value=dict(astr=str(i * i))))
 
             n += 4
         self.intervals = self.iv = iv
@@ -191,24 +191,24 @@ class IntervalTreeTest(unittest.TestCase):
 
     def test_edge_cases(self):
         iv = IntervalTree()
-        iv.insert(1, 1, 'foo')
-        iv.insert(3, 7, 'spam')
-        iv.insert(8, 8, 'abc')
+        iv.insert(1, 1, "foo")
+        iv.insert(3, 7, "spam")
+        iv.insert(8, 8, "abc")
         self.assertEqual(iv.find(0, 1), [])
-        self.assertEqual(iv.find(1, 1), ['foo'])
-        self.assertEqual(iv.find(1, 2), ['foo'])
+        self.assertEqual(iv.find(1, 1), ["foo"])
+        self.assertEqual(iv.find(1, 2), ["foo"])
         self.assertEqual(iv.find(2, 3), [])
-        self.assertEqual(iv.find(3, 3), ['spam'])
-        self.assertEqual(iv.find(3, 4), ['spam'])
-        self.assertEqual(iv.find(6, 7), ['spam'])
+        self.assertEqual(iv.find(3, 3), ["spam"])
+        self.assertEqual(iv.find(3, 4), ["spam"])
+        self.assertEqual(iv.find(6, 7), ["spam"])
         self.assertEqual(iv.find(7, 7), [])
-        self.assertEqual(iv.find(0, 8), ['foo', 'spam'])
-        self.assertEqual(iv.find(8, 8), ['abc'])
-        self.assertEqual(iv.find(8, 9), ['abc'])
+        self.assertEqual(iv.find(0, 8), ["foo", "spam"])
+        self.assertEqual(iv.find(8, 8), ["abc"])
+        self.assertEqual(iv.find(8, 9), ["abc"])
         self.assertEqual(iv.find(9, 9), [])
-        self.assertEqual(iv.find(0, 10), ['foo', 'spam', 'abc'])
-        self.assertEqual(iv.find(6, 10), ['spam', 'abc'])
-        self.assertEqual(iv.find(7, 9), ['abc'])
+        self.assertEqual(iv.find(0, 10), ["foo", "spam", "abc"])
+        self.assertEqual(iv.find(6, 10), ["spam", "abc"])
+        self.assertEqual(iv.find(7, 9), ["abc"])
 
     def test_traverse(self):
         a = []
@@ -233,8 +233,8 @@ class IntervalTreeTest(unittest.TestCase):
 
     def test_update(self):
         i = 1
-        self.iv.update(i, i + 10, dict(value=i*i), dict(value=-1))
-        self.assertEqual([dict(value=-1)], self.iv.find(i, i+10))
+        self.iv.update(i, i + 10, dict(value=i * i), dict(value=-1))
+        self.assertEqual([dict(value=-1)], self.iv.find(i, i + 10))
 
 
 if __name__ == "__main__":

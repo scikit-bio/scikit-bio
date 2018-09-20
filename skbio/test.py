@@ -12,7 +12,7 @@ from skbio.util import TestRunner
 
 test = TestRunner(__file__).test
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     if test():
         sys.exit(0)
     else:

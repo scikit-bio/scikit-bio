@@ -7,9 +7,11 @@
 # ----------------------------------------------------------------------------
 
 from skbio.util._decorator import experimental
-from skbio.diversity._util import (_validate_counts_vector,
-                                   _validate_otu_ids_and_tree,
-                                   _vectorize_counts_and_tree)
+from skbio.diversity._util import (
+    _validate_counts_vector,
+    _validate_otu_ids_and_tree,
+    _vectorize_counts_and_tree,
+)
 
 
 def _faith_pd(counts_by_node, branch_lengths):
@@ -120,7 +122,8 @@ def faith_pd(counts, otu_ids, tree, validate=True):
 
     """
     counts_by_node, branch_lengths = _setup_faith_pd(
-        counts, otu_ids, tree, validate, single_sample=True)
+        counts, otu_ids, tree, validate, single_sample=True
+    )
 
     return _faith_pd(counts_by_node, branch_lengths)
 
@@ -135,7 +138,8 @@ def _setup_faith_pd(counts, otu_ids, tree, validate, single_sample):
         else:
             _validate_otu_ids_and_tree(counts[0], otu_ids, tree)
 
-    counts_by_node, tree_index, branch_lengths = \
-        _vectorize_counts_and_tree(counts, otu_ids, tree)
+    counts_by_node, tree_index, branch_lengths = _vectorize_counts_and_tree(
+        counts, otu_ids, tree
+    )
 
     return counts_by_node, branch_lengths

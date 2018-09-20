@@ -138,8 +138,10 @@ def _weight_by_vector(trajectories, w_vector):
     """
     try:
         if len(trajectories) != len(w_vector):
-            raise ValueError("trajectories (%d) & w_vector (%d) must be equal "
-                             "lengths" % (len(trajectories), len(w_vector)))
+            raise ValueError(
+                "trajectories (%d) & w_vector (%d) must be equal "
+                "lengths" % (len(trajectories), len(w_vector))
+            )
     except TypeError:
         raise TypeError("trajectories and w_vector must be iterables")
 
@@ -157,15 +159,16 @@ def _weight_by_vector(trajectories, w_vector):
     # Reflects the expected gradient between subsequent values in w_vector
     # the first value isn't weighted so subtract one from the number of
     # elements
-    optimal_gradient = total_length/(len(w_vector)-1)
+    optimal_gradient = total_length / (len(w_vector) - 1)
 
     # for all elements apply the weighting function
     for i, idx in enumerate(trajectories.index):
         # Skipping the first element is it doesn't need to be weighted
         if i != 0:
             trajectories.loc[idx] = (
-                trajectories.loc[idx] * optimal_gradient /
-                np.abs((w_vector[i] - w_vector[i-1]))
+                trajectories.loc[idx]
+                * optimal_gradient
+                / np.abs((w_vector[i] - w_vector[i - 1]))
             )
 
     return trajectories
@@ -187,15 +190,18 @@ def _ANOVA_trajectories(category, res_by_group):
     """
     # If there is only one group under category we cannot run ANOVA
     if len(res_by_group) == 1:
-        return CategoryResults(category, None, None,
-                               'Only one value in the group.')
+        return CategoryResults(category, None, None, "Only one value in the group.")
     # Check if groups can be tested using ANOVA. ANOVA testing requires
     # all elements to have at least size greater to one.
     values = [res.trajectory.astype(float) for res in res_by_group]
     if any([len(value) == 1 for value in values]):
-        return CategoryResults(category, None, None,
-                               'This group can not be used. All groups '
-                               'should have more than 1 element.')
+        return CategoryResults(
+            category,
+            None,
+            None,
+            "This group can not be used. All groups "
+            "should have more than 1 element.",
+        )
     # We are ok to run ANOVA
     _, p_val = f_oneway(*values)
     return CategoryResults(category, p_val, res_by_group, None)
@@ -244,18 +250,17 @@ class GroupResults:
             a `write` method. It is the caller's responsibility to close
             `out_f` when done (if necessary)
         """
-        out_f.write('For group "%s", the group means is: %f\n'
-                    % (self.name, self.mean))
+        out_f.write('For group "%s", the group means is: %f\n' % (self.name, self.mean))
         raw_f.write('For group "%s":\n' % self.name)
 
         if self.message:
-            out_f.write('%s\n' % self.message)
-            raw_f.write('%s\n' % self.message)
+            out_f.write("%s\n" % self.message)
+            raw_f.write("%s\n" % self.message)
 
-        out_f.write('The info is: %s\n'
-                    % sorted(((k, v) for k, v in self.info.items())))
-        raw_f.write('The trajectory is:\n[%s]\n'
-                    % ", ".join(map(str, self.trajectory)))
+        out_f.write(
+            "The info is: %s\n" % sorted(((k, v) for k, v in self.info.items()))
+        )
+        raw_f.write("The trajectory is:\n[%s]\n" % ", ".join(map(str, self.trajectory)))
 
 
 class CategoryResults:
@@ -298,11 +303,11 @@ class CategoryResults:
             when done (if necessary)
         """
         if self.probability is None:
-            out_f.write('Grouped by "%s": %s\n'
-                        % (self.category, self.message))
+            out_f.write('Grouped by "%s": %s\n' % (self.category, self.message))
         else:
-            out_f.write('Grouped by "%s", probability: %f\n'
-                        % (self.category, self.probability))
+            out_f.write(
+                'Grouped by "%s", probability: %f\n' % (self.category, self.probability)
+            )
             raw_f.write('Grouped by "%s"\n' % self.category)
             for group in self.groups:
                 group.to_files(out_f, raw_f)
@@ -343,20 +348,20 @@ class GradientANOVAResults:
             `write` method. It is the caller's responsibility to close `out_f`
             when done (if necessary)
         """
-        out_f.write('Trajectory algorithm: %s\n' % self.algorithm)
-        raw_f.write('Trajectory algorithm: %s\n' % self.algorithm)
+        out_f.write("Trajectory algorithm: %s\n" % self.algorithm)
+        raw_f.write("Trajectory algorithm: %s\n" % self.algorithm)
 
         if self.weighted:
-            out_f.write('** This output is weighted **\n')
-            raw_f.write('** This output is weighted **\n')
+            out_f.write("** This output is weighted **\n")
+            raw_f.write("** This output is weighted **\n")
 
-        out_f.write('\n')
-        raw_f.write('\n')
+        out_f.write("\n")
+        raw_f.write("\n")
 
         for cat_results in self.categories:
             cat_results.to_files(out_f, raw_f)
-            out_f.write('\n')
-            raw_f.write('\n')
+            out_f.write("\n")
+            raw_f.write("\n")
 
 
 class GradientANOVA:
@@ -401,9 +406,16 @@ class GradientANOVA:
     _alg_name = None
 
     @experimental(as_of="0.4.0")
-    def __init__(self, coords, prop_expl, metadata_map,
-                 trajectory_categories=None, sort_category=None, axes=3,
-                 weighted=False):
+    def __init__(
+        self,
+        coords,
+        prop_expl,
+        metadata_map,
+        trajectory_categories=None,
+        sort_category=None,
+        axes=3,
+        weighted=False,
+    ):
         if not trajectory_categories:
             # If trajectory_categories is not provided, use all the categories
             # present in the metadata map
@@ -412,25 +424,26 @@ class GradientANOVA:
             # Check that trajectory_categories are in metadata_map
             for category in trajectory_categories:
                 if category not in metadata_map:
-                    raise ValueError("Category %s not present in metadata."
-                                     % category)
+                    raise ValueError("Category %s not present in metadata." % category)
 
         # Check that sort_categories is in metadata_map
         if sort_category and sort_category not in metadata_map:
-            raise ValueError("Sort category %s not present in metadata."
-                             % sort_category)
+            raise ValueError(
+                "Sort category %s not present in metadata." % sort_category
+            )
 
         if axes == 0:
             # If axes == 0, we should compute the trajectories for all axes
             axes = len(prop_expl)
         elif axes > len(prop_expl) or axes < 0:
             # Axes should be 0 <= axes <= len(prop_expl)
-            raise ValueError("axes should be between 0 and the max number of "
-                             "axes available (%d), found: %d "
-                             % (len(prop_expl), axes))
+            raise ValueError(
+                "axes should be between 0 and the max number of "
+                "axes available (%d), found: %d " % (len(prop_expl), axes)
+            )
 
         # Restrict coordinates to those axes that we actually need to compute
-        self._coords = coords.loc[:, :axes-1]
+        self._coords = coords.loc[:, : axes - 1]
         self._prop_expl = prop_expl[:axes]
         self._metadata_map = metadata_map
         self._weighted = weighted
@@ -446,11 +459,14 @@ class GradientANOVA:
         self._weighting_vector = None
         if weighted:
             if not sort_category:
-                raise ValueError("You should provide a sort category if you "
-                                 "want to weight the trajectories")
+                raise ValueError(
+                    "You should provide a sort category if you "
+                    "want to weight the trajectories"
+                )
             try:
-                self._weighting_vector = \
-                    self._metadata_map[sort_category].astype(np.float64)
+                self._weighting_vector = self._metadata_map[sort_category].astype(
+                    np.float64
+                )
             except ValueError:
                 raise ValueError("The sorting category must be numeric")
 
@@ -476,7 +492,8 @@ class GradientANOVA:
             res_by_group = []
             for group in sorted(cat_groups, key=lambda k: str(k)):
                 res_by_group.append(
-                    self._get_group_trajectories(group, cat_groups[group]))
+                    self._get_group_trajectories(group, cat_groups[group])
+                )
 
             result.categories.append(_ANOVA_trajectories(cat, res_by_group))
 
@@ -498,8 +515,7 @@ class GradientANOVA:
 
         # Check if they actually have sample ids in common
         if not sample_ids:
-            raise ValueError("Coordinates and metadata map had no samples "
-                             "in common")
+            raise ValueError("Coordinates and metadata map had no samples " "in common")
 
         # Need to take a subset of coords
         if coords_sample_ids != sample_ids:
@@ -531,9 +547,12 @@ class GradientANOVA:
         # If sort_category is provided, we used the value of such category to
         # sort. Otherwise, we use the sample id.
         if sort_category:
+
             def sort_val(sid):
                 return self._metadata_map[sort_category][sid]
+
         else:
+
             def sort_val(sid):
                 return sid
 
@@ -575,24 +594,27 @@ class GradientANOVA:
             # never happen. The only way this can happen is if the user
             # directly calls this method, which shouldn't be done
             # (that's why the method is private)
-            raise RuntimeError("No samples to process, an empty list cannot "
-                               "be processed")
+            raise RuntimeError(
+                "No samples to process, an empty list cannot " "be processed"
+            )
 
         # The weighting can only be done over trajectories with a length
         # greater than 1
         if self._weighted and len(sids) > 1:
             trajectories_copy = deepcopy(trajectories)
             try:
-                trajectories = _weight_by_vector(trajectories_copy,
-                                                 self._weighting_vector[sids])
+                trajectories = _weight_by_vector(
+                    trajectories_copy, self._weighting_vector[sids]
+                )
             except (FloatingPointError, ValueError):
-                self._message_buffer.append("Could not weight group, no "
-                                            "gradient in the the "
-                                            "weighting vector.\n")
+                self._message_buffer.append(
+                    "Could not weight group, no "
+                    "gradient in the the "
+                    "weighting vector.\n"
+                )
                 trajectories = trajectories_copy
 
-        return self._compute_trajectories_results(group_name,
-                                                  trajectories.loc[sids])
+        return self._compute_trajectories_results(group_name, trajectories.loc[sids])
 
     def _compute_trajectories_results(self, group_name, trajectories):
         r"""Do the actual trajectories computation over trajectories
@@ -609,8 +631,7 @@ class GradientANOVA:
         NotImplementedError
             This is the base class
         """
-        raise NotImplementedError("No algorithm is implemented on the base "
-                                  "class.")
+        raise NotImplementedError("No algorithm is implemented on the base " "class.")
 
 
 class AverageGradientANOVA(GradientANOVA):
@@ -625,7 +646,7 @@ class AverageGradientANOVA(GradientANOVA):
     GradientANOVA
     """
 
-    _alg_name = 'avg'
+    _alg_name = "avg"
 
     def _compute_trajectories_results(self, group_name, trajectories):
         r"""Do the actual trajectory computation over trajectories
@@ -646,17 +667,20 @@ class AverageGradientANOVA(GradientANOVA):
         center = np.average(trajectories, axis=0)
         if len(trajectories) == 1:
             trajectory = np.array([np.linalg.norm(center)])
-            calc = {'avg': trajectory[0]}
+            calc = {"avg": trajectory[0]}
         else:
-            trajectory = np.array([np.linalg.norm(row[1].get_values() - center)
-                                   for row in trajectories.iterrows()])
-            calc = {'avg': np.average(trajectory)}
+            trajectory = np.array(
+                [
+                    np.linalg.norm(row[1].get_values() - center)
+                    for row in trajectories.iterrows()
+                ]
+            )
+            calc = {"avg": np.average(trajectory)}
 
-        msg = ''.join(self._message_buffer) if self._message_buffer else None
+        msg = "".join(self._message_buffer) if self._message_buffer else None
         # Reset the message buffer
         self._message_buffer = []
-        return GroupResults(group_name, trajectory, np.mean(trajectory),
-                            calc, msg)
+        return GroupResults(group_name, trajectory, np.mean(trajectory), calc, msg)
 
 
 class TrajectoryGradientANOVA(GradientANOVA):
@@ -672,7 +696,7 @@ class TrajectoryGradientANOVA(GradientANOVA):
     GradientANOVA
     """
 
-    _alg_name = 'trajectory'
+    _alg_name = "trajectory"
 
     def _compute_trajectories_results(self, group_name, trajectories):
         r"""Do the actual trajectory computation over trajectories
@@ -692,21 +716,25 @@ class TrajectoryGradientANOVA(GradientANOVA):
         """
         if len(trajectories) == 1:
             trajectory = np.array([np.linalg.norm(trajectories)])
-            calc = {'2-norm': trajectory[0]}
+            calc = {"2-norm": trajectory[0]}
         else:
             # Loop through all the rows in trajectories and create '2-norm'
             # by taking the norm of the 2nd row - 1st row, 3rd row - 2nd row...
-            trajectory = \
-                np.array([np.linalg.norm(trajectories.iloc[i+1].get_values() -
-                                         trajectories.iloc[i].get_values())
-                          for i in range(len(trajectories) - 1)])
-            calc = {'2-norm': np.linalg.norm(trajectory)}
+            trajectory = np.array(
+                [
+                    np.linalg.norm(
+                        trajectories.iloc[i + 1].get_values()
+                        - trajectories.iloc[i].get_values()
+                    )
+                    for i in range(len(trajectories) - 1)
+                ]
+            )
+            calc = {"2-norm": np.linalg.norm(trajectory)}
 
-        msg = ''.join(self._message_buffer) if self._message_buffer else None
+        msg = "".join(self._message_buffer) if self._message_buffer else None
         # Reset the message buffer
         self._message_buffer = []
-        return GroupResults(group_name, trajectory, np.mean(trajectory),
-                            calc, msg)
+        return GroupResults(group_name, trajectory, np.mean(trajectory), calc, msg)
 
 
 class FirstDifferenceGradientANOVA(GradientANOVA):
@@ -720,7 +748,7 @@ class FirstDifferenceGradientANOVA(GradientANOVA):
     GradientANOVA
     """
 
-    _alg_name = 'diff'
+    _alg_name = "diff"
 
     def _compute_trajectories_results(self, group_name, trajectories):
         r"""Do the actual trajectory computation over trajectories
@@ -740,24 +768,27 @@ class FirstDifferenceGradientANOVA(GradientANOVA):
         """
         if len(trajectories) == 1:
             trajectory = np.array([np.linalg.norm(trajectories)])
-            calc = {'mean': trajectory[0], 'std': 0}
+            calc = {"mean": trajectory[0], "std": 0}
         elif len(trajectories) == 2:
-            trajectory = np.array([np.linalg.norm(trajectories[1] -
-                                                  trajectories[0])])
-            calc = {'mean': trajectory[0], 'std': 0}
+            trajectory = np.array([np.linalg.norm(trajectories[1] - trajectories[0])])
+            calc = {"mean": trajectory[0], "std": 0}
         else:
-            vec_norm = \
-                np.array([np.linalg.norm(trajectories.iloc[i+1].get_values() -
-                                         trajectories.iloc[i].get_values())
-                          for i in range(len(trajectories) - 1)])
+            vec_norm = np.array(
+                [
+                    np.linalg.norm(
+                        trajectories.iloc[i + 1].get_values()
+                        - trajectories.iloc[i].get_values()
+                    )
+                    for i in range(len(trajectories) - 1)
+                ]
+            )
             trajectory = np.diff(vec_norm)
-            calc = {'mean': np.mean(trajectory), 'std': np.std(trajectory)}
+            calc = {"mean": np.mean(trajectory), "std": np.std(trajectory)}
 
-        msg = ''.join(self._message_buffer) if self._message_buffer else None
+        msg = "".join(self._message_buffer) if self._message_buffer else None
         # Reset the message buffer
         self._message_buffer = []
-        return GroupResults(group_name, trajectory, np.mean(trajectory),
-                            calc, msg)
+        return GroupResults(group_name, trajectory, np.mean(trajectory), calc, msg)
 
 
 class WindowDifferenceGradientANOVA(GradientANOVA):
@@ -791,13 +822,13 @@ class WindowDifferenceGradientANOVA(GradientANOVA):
     GradientANOVA
     """
 
-    _alg_name = 'wdiff'
+    _alg_name = "wdiff"
 
     @experimental(as_of="0.4.0")
     def __init__(self, coords, prop_expl, metadata_map, window_size, **kwargs):
-        super(WindowDifferenceGradientANOVA, self).__init__(coords, prop_expl,
-                                                            metadata_map,
-                                                            **kwargs)
+        super(WindowDifferenceGradientANOVA, self).__init__(
+            coords, prop_expl, metadata_map, **kwargs
+        )
 
         if not isinstance(window_size, Integral) or window_size < 1:
             raise ValueError("The window_size must be a positive integer")
@@ -825,24 +856,30 @@ class WindowDifferenceGradientANOVA(GradientANOVA):
         """
         if len(trajectories) == 1:
             trajectory = np.array([np.linalg.norm(trajectories)])
-            calc = {'mean': trajectory, 'std': 0}
+            calc = {"mean": trajectory, "std": 0}
         elif len(trajectories) == 2:
-            trajectory = np.array([np.linalg.norm(trajectories[1] -
-                                                  trajectories[0])])
-            calc = {'mean': trajectory, 'std': 0}
+            trajectory = np.array([np.linalg.norm(trajectories[1] - trajectories[0])])
+            calc = {"mean": trajectory, "std": 0}
         else:
-            vec_norm = \
-                np.array([np.linalg.norm(trajectories.iloc[i+1].get_values() -
-                                         trajectories.iloc[i].get_values())
-                          for i in range(len(trajectories) - 1)])
+            vec_norm = np.array(
+                [
+                    np.linalg.norm(
+                        trajectories.iloc[i + 1].get_values()
+                        - trajectories.iloc[i].get_values()
+                    )
+                    for i in range(len(trajectories) - 1)
+                ]
+            )
             # windowed first differences won't be able on every group,
             # specially given the variation of size that a trajectory tends
             # to have
             if len(vec_norm) <= self._window_size:
                 trajectory = vec_norm
-                self._message_buffer.append("Cannot calculate the first "
-                                            "difference with a window of size "
-                                            "(%d)." % self._window_size)
+                self._message_buffer.append(
+                    "Cannot calculate the first "
+                    "difference with a window of size "
+                    "(%d)." % self._window_size
+                )
             else:
                 # Replicate the last element as many times as required
                 for idx in range(0, self._window_size):
@@ -850,16 +887,15 @@ class WindowDifferenceGradientANOVA(GradientANOVA):
                 trajectory = []
                 for idx in range(0, len(vec_norm) - self._window_size):
                     # Meas has to be over axis 0 so it handles arrays of arrays
-                    element = np.mean(vec_norm[(idx + 1):
-                                               (idx + 1 + self._window_size)],
-                                      axis=0)
+                    element = np.mean(
+                        vec_norm[(idx + 1) : (idx + 1 + self._window_size)], axis=0
+                    )
                     trajectory.append(element - vec_norm[idx])
                 trajectory = np.array(trajectory)
 
-            calc = {'mean': np.mean(trajectory), 'std': np.std(trajectory)}
+            calc = {"mean": np.mean(trajectory), "std": np.std(trajectory)}
 
-        msg = ''.join(self._message_buffer) if self._message_buffer else None
+        msg = "".join(self._message_buffer) if self._message_buffer else None
         # Reset the message buffer
         self._message_buffer = []
-        return GroupResults(group_name, trajectory, np.mean(trajectory),
-                            calc, msg)
+        return GroupResults(group_name, trajectory, np.mean(trajectory), calc, msg)

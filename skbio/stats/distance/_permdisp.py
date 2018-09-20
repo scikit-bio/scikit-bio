@@ -14,15 +14,14 @@ from scipy.spatial.distance import cdist
 
 import hdmedians as hd
 
-from ._base import (_preprocess_input, _run_monte_carlo_stats, _build_results)
+from ._base import _preprocess_input, _run_monte_carlo_stats, _build_results
 
 from skbio.stats.ordination import pcoa
 from skbio.util._decorator import experimental
 
 
 @experimental(as_of="0.5.2")
-def permdisp(distance_matrix, grouping, column=None, test='median',
-             permutations=999):
+def permdisp(distance_matrix, grouping, column=None, test="median", permutations=999):
     """Test for Homogeneity of Multivariate Groups Disperisons using Marti
     Anderson's PERMDISP2 procedure.
 
@@ -217,37 +216,39 @@ def permdisp(distance_matrix, grouping, column=None, test='median',
     determine whether clustering within groups is significant.
 
     """
-    if test not in ['centroid', 'median']:
-        raise ValueError('Test must be centroid or median')
+    if test not in ["centroid", "median"]:
+        raise ValueError("Test must be centroid or median")
 
     ordination = pcoa(distance_matrix)
     samples = ordination.samples
 
     sample_size, num_groups, grouping, tri_idxs, distances = _preprocess_input(
-        distance_matrix, grouping, column)
+        distance_matrix, grouping, column
+    )
 
     test_stat_function = partial(_compute_groups, samples, test)
 
-    stat, p_value = _run_monte_carlo_stats(test_stat_function, grouping,
-                                           permutations)
+    stat, p_value = _run_monte_carlo_stats(test_stat_function, grouping, permutations)
 
-    return _build_results('PERMDISP', 'F-value', sample_size, num_groups,
-                          stat, p_value, permutations)
+    return _build_results(
+        "PERMDISP", "F-value", sample_size, num_groups, stat, p_value, permutations
+    )
 
 
 def _compute_groups(samples, test_type, grouping):
 
     groups = []
 
-    samples['grouping'] = grouping
-    if test_type == 'centroid':
-        centroids = samples.groupby('grouping').aggregate('mean')
-    elif test_type == 'median':
-        centroids = samples.groupby('grouping').aggregate(_config_med)
+    samples["grouping"] = grouping
+    if test_type == "centroid":
+        centroids = samples.groupby("grouping").aggregate("mean")
+    elif test_type == "median":
+        centroids = samples.groupby("grouping").aggregate(_config_med)
 
-    for label, df in samples.groupby('grouping'):
-        groups.append(cdist(df.values[:, :-1], [centroids.loc[label].values],
-                            metric='euclidean'))
+    for label, df in samples.groupby("grouping"):
+        groups.append(
+            cdist(df.values[:, :-1], [centroids.loc[label].values], metric="euclidean")
+        )
 
     stat, _ = f_oneway(*groups)
     stat = stat[0]

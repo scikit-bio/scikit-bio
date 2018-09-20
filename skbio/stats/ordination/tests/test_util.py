@@ -12,8 +12,13 @@ import copy
 import numpy as np
 import numpy.testing as npt
 
-from skbio.stats.ordination import corr, mean_and_std, e_matrix, f_matrix, \
-    center_distance_matrix
+from skbio.stats.ordination import (
+    corr,
+    mean_and_std,
+    e_matrix,
+    f_matrix,
+    center_distance_matrix,
+)
 
 from skbio.stats.ordination._utils import _e_matrix_inplace, _f_matrix_inplace
 
@@ -44,10 +49,16 @@ class TestUtils(TestCase):
 
     def test_corr(self):
         obs = corr(self.small_mat)
-        npt.assert_almost_equal(np.array([[1, 1, -0.94491118],
-                                          [1, 1, -0.94491118],
-                                          [-0.94491118, -0.94491118, 1]]),
-                                obs)
+        npt.assert_almost_equal(
+            np.array(
+                [
+                    [1, 1, -0.94491118],
+                    [1, 1, -0.94491118],
+                    [-0.94491118, -0.94491118, 1],
+                ]
+            ),
+            obs,
+        )
 
     def test_corr_shape_mismatch(self):
         with npt.assert_raises(ValueError):
@@ -55,8 +66,7 @@ class TestUtils(TestCase):
 
     def test_e_matrix(self):
         E = e_matrix(self.matrix)
-        expected_E = np.array([[-0.5, -2., -4.5],
-                               [-8., -12.5, -18.]])
+        expected_E = np.array([[-0.5, -2., -4.5], [-8., -12.5, -18.]])
         npt.assert_almost_equal(E, expected_E)
 
     def test_f_matrix(self):
@@ -67,8 +77,7 @@ class TestUtils(TestCase):
 
     def test_e_matrix_inplace(self):
         E = _e_matrix_inplace(self.matrix)
-        expected_E = np.array([[-0.5, -2., -4.5],
-                               [-8., -12.5, -18.]])
+        expected_E = np.array([[-0.5, -2., -4.5], [-8., -12.5, -18.]])
         npt.assert_almost_equal(E, expected_E)
 
     def test_f_matrix_inplace(self):
@@ -97,5 +106,5 @@ class TestUtils(TestCase):
         npt.assert_almost_equal(dm_expected, dm_centered_inp)
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     main()

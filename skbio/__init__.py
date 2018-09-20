@@ -11,6 +11,7 @@ from skbio.util import TestRunner
 
 # Add skbio.io to sys.modules to prevent cycles in our imports
 import skbio.io  # noqa
+
 # imports included for convenience
 from skbio.sequence import Sequence, DNA, RNA, Protein, GeneticCode
 from skbio.stats.distance import DistanceMatrix
@@ -21,9 +22,21 @@ from skbio.stats.ordination import OrdinationResults
 import skbio.diversity  # noqa
 import skbio.stats.evolve  # noqa
 
-__all__ = ['Sequence', 'DNA', 'RNA', 'Protein', 'GeneticCode',
-           'DistanceMatrix', 'local_pairwise_align_ssw', 'TabularMSA',
-           'TreeNode', 'nj', 'read', 'write', 'OrdinationResults']
+__all__ = [
+    "Sequence",
+    "DNA",
+    "RNA",
+    "Protein",
+    "GeneticCode",
+    "DistanceMatrix",
+    "local_pairwise_align_ssw",
+    "TabularMSA",
+    "TreeNode",
+    "nj",
+    "read",
+    "write",
+    "OrdinationResults",
+]
 
 __credits__ = "https://github.com/biocore/scikit-bio/graphs/contributors"
 __version__ = "0.5.4-dev"
@@ -81,5 +94,5 @@ else:
 
 test = TestRunner(__file__).test
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     test()

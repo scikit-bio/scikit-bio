@@ -21,9 +21,12 @@ class _state_decorator:
 
     _required_kwargs = ()
 
-    def _get_indentation_level(self, docstring_lines,
-                               default_existing_docstring=4,
-                               default_no_existing_docstring=0):
+    def _get_indentation_level(
+        self,
+        docstring_lines,
+        default_existing_docstring=4,
+        default_no_existing_docstring=0,
+    ):
         """ Determine the level of indentation of the docstring to match it.
 
             The indented content after the first line of a docstring can
@@ -56,15 +59,13 @@ class _state_decorator:
         # line, return the corresponding default
         return default_existing_docstring
 
-    def _update_docstring(self, docstring, state_desc,
-                          state_desc_prefix='State: '):
+    def _update_docstring(self, docstring, state_desc, state_desc_prefix="State: "):
         # Hande the case of no initial docstring
         if docstring is None:
             return "%s%s" % (state_desc_prefix, state_desc)
 
-        docstring_lines = docstring.split('\n')
-        docstring_content_indentation = \
-            self._get_indentation_level(docstring_lines)
+        docstring_lines = docstring.split("\n")
+        docstring_content_indentation = self._get_indentation_level(docstring_lines)
 
         # wrap lines at 79 characters, accounting for the length of
         # docstring_content_indentation and start_desc_prefix
@@ -76,23 +77,26 @@ class _state_decorator:
         # the text in this section. This is for consistency with numpydoc
         # formatting of deprecation notices, which are done using the note
         # Sphinx directive.
-        state_desc_lines[0] = '%s%s%s' % (' ' * docstring_content_indentation,
-                                          state_desc_prefix,
-                                          state_desc_lines[0])
-        header_spaces = ' ' * (docstring_content_indentation +
-                               len_state_desc_prefix)
+        state_desc_lines[0] = "%s%s%s" % (
+            " " * docstring_content_indentation,
+            state_desc_prefix,
+            state_desc_lines[0],
+        )
+        header_spaces = " " * (docstring_content_indentation + len_state_desc_prefix)
         for i, line in enumerate(state_desc_lines[1:], 1):
-            state_desc_lines[i] = '%s%s' % (header_spaces, line)
+            state_desc_lines[i] = "%s%s" % (header_spaces, line)
 
-        new_doc_lines = '\n'.join(state_desc_lines)
-        docstring_lines[0] = '%s\n\n%s' % (docstring_lines[0], new_doc_lines)
-        return '\n'.join(docstring_lines)
+        new_doc_lines = "\n".join(state_desc_lines)
+        docstring_lines[0] = "%s\n\n%s" % (docstring_lines[0], new_doc_lines)
+        return "\n".join(docstring_lines)
 
     def _validate_kwargs(self, **kwargs):
         for required_kwarg in self._required_kwargs:
             if required_kwarg not in kwargs:
-                raise ValueError('%s decorator requires parameter: %s' %
-                                 (self.__class__, required_kwarg))
+                raise ValueError(
+                    "%s decorator requires parameter: %s"
+                    % (self.__class__, required_kwarg)
+                )
 
 
 class stable(_state_decorator):
@@ -131,14 +135,14 @@ class stable(_state_decorator):
     <BLANKLINE>
     """
 
-    _required_kwargs = ('as_of', )
+    _required_kwargs = ("as_of",)
 
     def __init__(self, *args, **kwargs):
         self._validate_kwargs(**kwargs)
-        self.as_of = kwargs['as_of']
+        self.as_of = kwargs["as_of"]
 
     def __call__(self, func):
-        state_desc = 'Stable as of %s.' % self.as_of
+        state_desc = "Stable as of %s." % self.as_of
         func.__doc__ = self._update_docstring(func.__doc__, state_desc)
         return func
 
@@ -180,14 +184,14 @@ class experimental(_state_decorator):
 
     """
 
-    _required_kwargs = ('as_of', )
+    _required_kwargs = ("as_of",)
 
     def __init__(self, *args, **kwargs):
         self._validate_kwargs(**kwargs)
-        self.as_of = kwargs['as_of']
+        self.as_of = kwargs["as_of"]
 
     def __call__(self, func):
-        state_desc = 'Experimental as of %s.' % self.as_of
+        state_desc = "Experimental as of %s." % self.as_of
         func.__doc__ = self._update_docstring(func.__doc__, state_desc)
         return func
 
@@ -236,25 +240,31 @@ class deprecated(_state_decorator):
 
     """
 
-    _required_kwargs = ('as_of', 'until', 'reason')
+    _required_kwargs = ("as_of", "until", "reason")
 
     def __init__(self, *args, **kwargs):
         self._validate_kwargs(**kwargs)
-        self.as_of = kwargs['as_of']
-        self.until = kwargs['until']
-        self.reason = kwargs['reason']
+        self.as_of = kwargs["as_of"]
+        self.until = kwargs["until"]
+        self.reason = kwargs["reason"]
 
     def __call__(self, func, *args, **kwargs):
-        state_desc = 'Deprecated as of %s for removal in %s. %s' %\
-            (self.as_of, self.until, self.reason)
-        func.__doc__ = self._update_docstring(func.__doc__, state_desc,
-                                              state_desc_prefix='.. note:: ')
+        state_desc = "Deprecated as of %s for removal in %s. %s" % (
+            self.as_of,
+            self.until,
+            self.reason,
+        )
+        func.__doc__ = self._update_docstring(
+            func.__doc__, state_desc, state_desc_prefix=".. note:: "
+        )
 
         def wrapped_f(*args, **kwargs):
-            warnings.warn('%s is deprecated as of scikit-bio version %s, and '
-                          'will be removed in version %s. %s' %
-                          (func.__name__, self.as_of, self.until, self.reason),
-                          SkbioDeprecationWarning)
+            warnings.warn(
+                "%s is deprecated as of scikit-bio version %s, and "
+                "will be removed in version %s. %s"
+                % (func.__name__, self.as_of, self.until, self.reason),
+                SkbioDeprecationWarning,
+            )
             # args[0] is the function being wrapped when this is called
             # after wrapping with decorator.decorator, but why???
             return func(*args[1:], **kwargs)
@@ -288,16 +298,20 @@ def overrides(interface_class):
         as the decorated member.
 
     """
+
     def overrider(method):
         if method.__name__ not in dir(interface_class):
-            raise OverrideError("%r is not present in parent class: %r." %
-                                (method.__name__, interface_class.__name__))
+            raise OverrideError(
+                "%r is not present in parent class: %r."
+                % (method.__name__, interface_class.__name__)
+            )
         backup = classproperty.__get__
         classproperty.__get__ = lambda x, y, z: x
         if method.__doc__ is None:
             method.__doc__ = getattr(interface_class, method.__name__).__doc__
         classproperty.__get__ = backup
         return method
+
     return overrider
 
 
@@ -324,6 +338,7 @@ class classproperty(property):
         If the property is set on an instance.
 
     """
+
     def __init__(self, func):
         name = func.__name__
         doc = func.__doc__
@@ -343,7 +358,8 @@ class classonlymethod(classmethod):
 
     def __get__(self, obj, cls=None):
         if obj is not None:
-            raise TypeError("Class-only method called on an instance. Use"
-                            " '%s.%s' instead."
-                            % (cls.__name__, self.__func__.__name__))
+            raise TypeError(
+                "Class-only method called on an instance. Use"
+                " '%s.%s' instead." % (cls.__name__, self.__func__.__name__)
+            )
         return super().__get__(obj, cls)

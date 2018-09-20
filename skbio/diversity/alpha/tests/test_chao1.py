@@ -74,5 +74,5 @@ class Chao1Tests(TestCase):
         self.assertAlmostEqual(obs, 2.17 ** 2, delta=0.01)
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     main()

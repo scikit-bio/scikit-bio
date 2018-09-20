@@ -614,16 +614,19 @@ import numpy as np
 
 from skbio.io import create_format, FASTAFormatError, QUALFormatError
 from skbio.io.registry import FileSentinel
-from skbio.io.format._base import (_get_nth_sequence,
-                                   _parse_fasta_like_header,
-                                   _format_fasta_like_records, _line_generator,
-                                   _too_many_blanks)
+from skbio.io.format._base import (
+    _get_nth_sequence,
+    _parse_fasta_like_header,
+    _format_fasta_like_records,
+    _line_generator,
+    _too_many_blanks,
+)
 from skbio.util._misc import chunk_str
 from skbio.alignment import TabularMSA
 from skbio.sequence import Sequence, DNA, RNA, Protein
 
 
-fasta = create_format('fasta')
+fasta = create_format("fasta")
 
 
 @fasta.sniffer()
@@ -665,30 +668,27 @@ def _sniffer_data_parser(chunks):
     else:
         # used for flow control within sniffer, user should never see this
         # message
-        raise FASTAFormatError('Data appear to be quality scores.')
+        raise FASTAFormatError("Data appear to be quality scores.")
 
 
 @fasta.reader(None)
 def _fasta_to_generator(fh, qual=FileSentinel, constructor=Sequence, **kwargs):
     if qual is None:
-        for seq, id_, desc in _parse_fasta_raw(fh, _parse_sequence_data,
-                                               FASTAFormatError):
-            yield constructor(seq, metadata={'id': id_, 'description': desc},
-                              **kwargs)
+        for seq, id_, desc in _parse_fasta_raw(
+            fh, _parse_sequence_data, FASTAFormatError
+        ):
+            yield constructor(seq, metadata={"id": id_, "description": desc}, **kwargs)
     else:
-        fasta_gen = _parse_fasta_raw(fh, _parse_sequence_data,
-                                     FASTAFormatError)
-        qual_gen = _parse_fasta_raw(qual, _parse_quality_scores,
-                                    QUALFormatError)
+        fasta_gen = _parse_fasta_raw(fh, _parse_sequence_data, FASTAFormatError)
+        qual_gen = _parse_fasta_raw(qual, _parse_quality_scores, QUALFormatError)
 
-        for fasta_rec, qual_rec in itertools.zip_longest(fasta_gen, qual_gen,
-                                                         fillvalue=None):
+        for fasta_rec, qual_rec in itertools.zip_longest(
+            fasta_gen, qual_gen, fillvalue=None
+        ):
             if fasta_rec is None:
-                raise FASTAFormatError(
-                    "QUAL file has more records than FASTA file.")
+                raise FASTAFormatError("QUAL file has more records than FASTA file.")
             if qual_rec is None:
-                raise FASTAFormatError(
-                    "FASTA file has more records than QUAL file.")
+                raise FASTAFormatError("FASTA file has more records than QUAL file.")
 
             fasta_seq, fasta_id, fasta_desc = fasta_rec
             qual_scores, qual_id, qual_desc = qual_rec
@@ -696,48 +696,49 @@ def _fasta_to_generator(fh, qual=FileSentinel, constructor=Sequence, **kwargs):
             if fasta_id != qual_id:
                 raise FASTAFormatError(
                     "IDs do not match between FASTA and QUAL records: %r != %r"
-                    % (str(fasta_id), str(qual_id)))
+                    % (str(fasta_id), str(qual_id))
+                )
             if fasta_desc != qual_desc:
                 raise FASTAFormatError(
                     "Descriptions do not match between FASTA and QUAL "
-                    "records: %r != %r" % (str(fasta_desc), str(qual_desc)))
+                    "records: %r != %r" % (str(fasta_desc), str(qual_desc))
+                )
 
             # sequence and quality scores lengths are checked in constructor
             yield constructor(
                 fasta_seq,
-                metadata={'id': fasta_id, 'description': fasta_desc},
-                positional_metadata={'quality': qual_scores}, **kwargs)
+                metadata={"id": fasta_id, "description": fasta_desc},
+                positional_metadata={"quality": qual_scores},
+                **kwargs
+            )
 
 
 @fasta.reader(Sequence)
 def _fasta_to_sequence(fh, qual=FileSentinel, seq_num=1, **kwargs):
     return _get_nth_sequence(
-        _fasta_to_generator(fh, qual=qual, constructor=Sequence, **kwargs),
-        seq_num)
+        _fasta_to_generator(fh, qual=qual, constructor=Sequence, **kwargs), seq_num
+    )
 
 
 @fasta.reader(DNA)
 def _fasta_to_dna(fh, qual=FileSentinel, seq_num=1, **kwargs):
     return _get_nth_sequence(
-        _fasta_to_generator(fh, qual=qual,
-                            constructor=DNA, **kwargs),
-        seq_num)
+        _fasta_to_generator(fh, qual=qual, constructor=DNA, **kwargs), seq_num
+    )
 
 
 @fasta.reader(RNA)
 def _fasta_to_rna(fh, qual=FileSentinel, seq_num=1, **kwargs):
     return _get_nth_sequence(
-        _fasta_to_generator(fh, qual=qual,
-                            constructor=RNA, **kwargs),
-        seq_num)
+        _fasta_to_generator(fh, qual=qual, constructor=RNA, **kwargs), seq_num
+    )
 
 
 @fasta.reader(Protein)
 def _fasta_to_protein(fh, qual=FileSentinel, seq_num=1, **kwargs):
     return _get_nth_sequence(
-        _fasta_to_generator(fh, qual=qual,
-                            constructor=Protein, **kwargs),
-        seq_num)
+        _fasta_to_generator(fh, qual=qual, constructor=Protein, **kwargs), seq_num
+    )
 
 
 @fasta.reader(TabularMSA)
@@ -746,85 +747,158 @@ def _fasta_to_tabular_msa(fh, qual=FileSentinel, constructor=None, **kwargs):
         raise ValueError("Must provide `constructor`.")
 
     return TabularMSA(
-        _fasta_to_generator(fh, qual=qual, constructor=constructor, **kwargs))
+        _fasta_to_generator(fh, qual=qual, constructor=constructor, **kwargs)
+    )
 
 
 @fasta.writer(None)
-def _generator_to_fasta(obj, fh, qual=FileSentinel,
-                        id_whitespace_replacement='_',
-                        description_newline_replacement=' ', max_width=None,
-                        lowercase=None):
+def _generator_to_fasta(
+    obj,
+    fh,
+    qual=FileSentinel,
+    id_whitespace_replacement="_",
+    description_newline_replacement=" ",
+    max_width=None,
+    lowercase=None,
+):
     if max_width is not None:
         if max_width < 1:
             raise ValueError(
                 "Maximum line width must be greater than zero (max_width=%d)."
-                % max_width)
+                % max_width
+            )
         if qual is not None:
             # define text wrapper for splitting quality scores here for
             # efficiency. textwrap docs recommend reusing a TextWrapper
             # instance when it is used many times. configure text wrapper to
             # never break "words" (i.e., integer quality scores) across lines
             qual_wrapper = textwrap.TextWrapper(
-                width=max_width, break_long_words=False,
-                break_on_hyphens=False)
+                width=max_width, break_long_words=False, break_on_hyphens=False
+            )
 
     formatted_records = _format_fasta_like_records(
-        obj, id_whitespace_replacement, description_newline_replacement,
-        qual is not None, lowercase)
+        obj,
+        id_whitespace_replacement,
+        description_newline_replacement,
+        qual is not None,
+        lowercase,
+    )
     for header, seq_str, qual_scores in formatted_records:
         if max_width is not None:
-            seq_str = chunk_str(seq_str, max_width, '\n')
+            seq_str = chunk_str(seq_str, max_width, "\n")
 
-        fh.write('>%s\n%s\n' % (header, seq_str))
+        fh.write(">%s\n%s\n" % (header, seq_str))
 
         if qual is not None:
-            qual_str = ' '.join(np.asarray(qual_scores, dtype=np.str))
+            qual_str = " ".join(np.asarray(qual_scores, dtype=np.str))
             if max_width is not None:
                 qual_str = qual_wrapper.fill(qual_str)
-            qual.write('>%s\n%s\n' % (header, qual_str))
+            qual.write(">%s\n%s\n" % (header, qual_str))
 
 
 @fasta.writer(Sequence)
-def _sequence_to_fasta(obj, fh, qual=FileSentinel,
-                       id_whitespace_replacement='_',
-                       description_newline_replacement=' ', max_width=None,
-                       lowercase=None):
-    _sequences_to_fasta([obj], fh, qual, id_whitespace_replacement,
-                        description_newline_replacement, max_width, lowercase)
+def _sequence_to_fasta(
+    obj,
+    fh,
+    qual=FileSentinel,
+    id_whitespace_replacement="_",
+    description_newline_replacement=" ",
+    max_width=None,
+    lowercase=None,
+):
+    _sequences_to_fasta(
+        [obj],
+        fh,
+        qual,
+        id_whitespace_replacement,
+        description_newline_replacement,
+        max_width,
+        lowercase,
+    )
 
 
 @fasta.writer(DNA)
-def _dna_to_fasta(obj, fh, qual=FileSentinel, id_whitespace_replacement='_',
-                  description_newline_replacement=' ', max_width=None,
-                  lowercase=None):
-    _sequences_to_fasta([obj], fh, qual, id_whitespace_replacement,
-                        description_newline_replacement, max_width, lowercase)
+def _dna_to_fasta(
+    obj,
+    fh,
+    qual=FileSentinel,
+    id_whitespace_replacement="_",
+    description_newline_replacement=" ",
+    max_width=None,
+    lowercase=None,
+):
+    _sequences_to_fasta(
+        [obj],
+        fh,
+        qual,
+        id_whitespace_replacement,
+        description_newline_replacement,
+        max_width,
+        lowercase,
+    )
 
 
 @fasta.writer(RNA)
-def _rna_to_fasta(obj, fh, qual=FileSentinel, id_whitespace_replacement='_',
-                  description_newline_replacement=' ', max_width=None,
-                  lowercase=None):
-    _sequences_to_fasta([obj], fh, qual, id_whitespace_replacement,
-                        description_newline_replacement, max_width, lowercase)
+def _rna_to_fasta(
+    obj,
+    fh,
+    qual=FileSentinel,
+    id_whitespace_replacement="_",
+    description_newline_replacement=" ",
+    max_width=None,
+    lowercase=None,
+):
+    _sequences_to_fasta(
+        [obj],
+        fh,
+        qual,
+        id_whitespace_replacement,
+        description_newline_replacement,
+        max_width,
+        lowercase,
+    )
 
 
 @fasta.writer(Protein)
-def _protein_to_fasta(obj, fh, qual=FileSentinel,
-                      id_whitespace_replacement='_',
-                      description_newline_replacement=' ', max_width=None,
-                      lowercase=None):
-    _sequences_to_fasta([obj], fh, qual, id_whitespace_replacement,
-                        description_newline_replacement, max_width, lowercase)
+def _protein_to_fasta(
+    obj,
+    fh,
+    qual=FileSentinel,
+    id_whitespace_replacement="_",
+    description_newline_replacement=" ",
+    max_width=None,
+    lowercase=None,
+):
+    _sequences_to_fasta(
+        [obj],
+        fh,
+        qual,
+        id_whitespace_replacement,
+        description_newline_replacement,
+        max_width,
+        lowercase,
+    )
 
 
 @fasta.writer(TabularMSA)
-def _tabular_msa_to_fasta(obj, fh, qual=FileSentinel,
-                          id_whitespace_replacement='_',
-                          description_newline_replacement=' ', max_width=None,
-                          lowercase=None):
-    _sequences_to_fasta(obj, fh, qual, id_whitespace_replacement,
-                        description_newline_replacement, max_width, lowercase)
+def _tabular_msa_to_fasta(
+    obj,
+    fh,
+    qual=FileSentinel,
+    id_whitespace_replacement="_",
+    description_newline_replacement=" ",
+    max_width=None,
+    lowercase=None,
+):
+    _sequences_to_fasta(
+        obj,
+        fh,
+        qual,
+        id_whitespace_replacement,
+        description_newline_replacement,
+        max_width,
+        lowercase,
+    )
 
 
 def _parse_fasta_raw(fh, data_parser, error_type):
@@ -841,17 +915,18 @@ def _parse_fasta_raw(fh, data_parser, error_type):
         return
 
     # header check inlined here and below for performance
-    if seq_header.startswith('>'):
+    if seq_header.startswith(">"):
         id_, desc = _parse_fasta_like_header(seq_header)
     else:
         raise error_type(
             "Found non-header line when attempting to read the 1st record:"
-            "\n%s" % seq_header)
+            "\n%s" % seq_header
+        )
 
     data_chunks = []
     prev = seq_header
     for line in _line_generator(fh, skip_blanks=False):
-        if line.startswith('>'):
+        if line.startswith(">"):
             # new header, so yield current record and reset state
             yield data_parser(data_chunks), id_, desc
             data_chunks = []
@@ -861,7 +936,8 @@ def _parse_fasta_raw(fh, data_parser, error_type):
                 # ensure no blank lines within a single record
                 if not prev:
                     raise error_type(
-                        "Found blank or whitespace-only line within record.")
+                        "Found blank or whitespace-only line within record."
+                    )
                 data_chunks.append(line)
         prev = line
     # yield last record in file
@@ -871,41 +947,53 @@ def _parse_fasta_raw(fh, data_parser, error_type):
 def _parse_sequence_data(chunks):
     if not chunks:
         raise FASTAFormatError("Found header without sequence data.")
-    return ''.join(chunks)
+    return "".join(chunks)
 
 
 def _parse_quality_scores(chunks):
     if not chunks:
         raise QUALFormatError("Found header without quality scores.")
 
-    qual_str = ' '.join(chunks)
+    qual_str = " ".join(chunks)
     try:
         quality = np.asarray(qual_str.split(), dtype=int)
     except ValueError:
         raise QUALFormatError(
-            "Could not convert quality scores to integers:\n%s"
-            % str(qual_str))
+            "Could not convert quality scores to integers:\n%s" % str(qual_str)
+        )
 
     if (quality < 0).any():
         raise QUALFormatError(
             "Encountered negative quality score(s). Quality scores must be "
-            "greater than or equal to zero.")
+            "greater than or equal to zero."
+        )
     if (quality > 255).any():
         raise QUALFormatError(
             "Encountered quality score(s) greater than 255. scikit-bio only "
             "supports quality scores in the range 0-255 (inclusive) when "
-            "reading QUAL files.")
-    return quality.astype(np.uint8, casting='unsafe', copy=False)
+            "reading QUAL files."
+        )
+    return quality.astype(np.uint8, casting="unsafe", copy=False)
 
 
-def _sequences_to_fasta(obj, fh, qual, id_whitespace_replacement,
-                        description_newline_replacement, max_width,
-                        lowercase=None):
+def _sequences_to_fasta(
+    obj,
+    fh,
+    qual,
+    id_whitespace_replacement,
+    description_newline_replacement,
+    max_width,
+    lowercase=None,
+):
     def seq_gen():
         yield from obj
 
     _generator_to_fasta(
-        seq_gen(), fh, qual=qual,
+        seq_gen(),
+        fh,
+        qual=qual,
         id_whitespace_replacement=id_whitespace_replacement,
         description_newline_replacement=description_newline_replacement,
-        max_width=max_width, lowercase=lowercase)
+        max_width=max_width,
+        lowercase=lowercase,
+    )
