@@ -55,7 +55,8 @@ class TabularMSA(MetadataMixin, PositionalMetadataMixin, SkbioObject):
     index : pd.Index consumable, optional
         Index containing labels for `sequences`. Must be the same length as
         `sequences`. Must be able to be passed directly to ``pd.Index``
-        constructor. Note that `index` cannot be combined with `minter`.
+        constructor. Note that `index` cannot be combined with `minter` and the
+        contents of `index` must be hashable.
 
     Raises
     ------
