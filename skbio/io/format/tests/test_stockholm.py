@@ -833,7 +833,6 @@ class TestStockholmWriter(unittest.TestCase):
 
         ).T
 
-
         msa = TabularMSA([DNA('CCCCTGCTTTCGTAG')],
                          positional_metadata=pos_metadata_dataframe)
         with self.assertRaisesRegex(StockholmFormatError,
