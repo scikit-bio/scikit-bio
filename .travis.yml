@@ -6,6 +6,7 @@ os:
   - linux
   - osx
 env:
+  - CONDA_PY=3.7 MAKE_DOC=TRUE
   - CONDA_PY=3.6 MAKE_DOC=TRUE
   - CONDA_PY=3.5 MAKE_DOC=TRUE USE_CYTHON=TRUE
 
