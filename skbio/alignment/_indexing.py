@@ -7,6 +7,7 @@
 # ----------------------------------------------------------------------------
 
 from abc import ABCMeta, abstractmethod
+import collections
 
 import numpy as np
 import pandas as pd
@@ -159,6 +160,8 @@ class TabularMSALoc(_Indexing):
         complete_key = False
         partial_key = False
         duplicated_key = False
+        if not isinstance(indexable, collections.Hashable):
+            return False
         if axis == 0 and self._has_fancy_index():
             try:
                 if type(indexable) is tuple:
