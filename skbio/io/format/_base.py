@@ -27,7 +27,8 @@ def _decode_qual_to_phred(qual_str, variant=None, phred_offset=None):
          "scikit-bio. Please see the following scikit-bio issue to "
          "track progress on this:\n\t"
          "https://github.com/biocore/scikit-bio/issues/719"])
-    qual = np.fromstring(qual_str, dtype=np.uint8) - phred_offset
+    qual = np.frombuffer(qual_str.encode('ascii'),
+                         dtype=np.uint8) - phred_offset
 
     if np.any((qual > phred_range[1]) | (qual < phred_range[0])):
         raise ValueError("Decoded Phred score is out of range [%d, %d]."

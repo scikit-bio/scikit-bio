@@ -89,8 +89,8 @@ def rda(y, x, scale_Y=False, scaling=1):
        Ecology. Elsevier, Amsterdam.
 
     """
-    Y = y.as_matrix()
-    X = x.as_matrix()
+    Y = y.values
+    X = x.values
 
     n, p = y.shape
     n_, m = x.shape
