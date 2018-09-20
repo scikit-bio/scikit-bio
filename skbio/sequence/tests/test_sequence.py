@@ -69,8 +69,9 @@ class TestSequenceIntervalMetadata(TestCase, ReallyEqualMixin,
 class TestSequenceBase(TestCase):
     def setUp(self):
         self.sequence_kinds = frozenset([
-            str, Sequence, lambda s: np.fromstring(s, dtype='|S1'),
-            lambda s: np.fromstring(s, dtype=np.uint8)])
+            str, Sequence,
+            lambda s: np.frombuffer(s.encode('ascii'), dtype='|S1'),
+            lambda s: np.frombuffer(s.encode('ascii'), dtype=np.uint8)])
 
 
 class TestSequence(TestSequenceBase, ReallyEqualMixin):
@@ -272,7 +273,7 @@ class TestSequence(TestSequenceBase, ReallyEqualMixin):
         for s in (b'',  # bytes
                   '',  # unicode
                   np.array('', dtype='c'),  # char vector
-                  np.fromstring('', dtype=np.uint8),  # byte vec
+                  np.frombuffer(b'', dtype=np.uint8),  # byte vec
                   Sequence('')):  # another Sequence object
             seq = Sequence(s)
 
@@ -296,7 +297,7 @@ class TestSequence(TestSequenceBase, ReallyEqualMixin):
         for s in (b'A',
                   'A',
                   np.array('A', dtype='c'),
-                  np.fromstring('A', dtype=np.uint8),
+                  np.frombuffer(b'A', dtype=np.uint8),
                   Sequence('A')):
             seq = Sequence(s)
 
@@ -319,7 +320,7 @@ class TestSequence(TestSequenceBase, ReallyEqualMixin):
         for s in (b'.ABC\t123  xyz-',
                   '.ABC\t123  xyz-',
                   np.array('.ABC\t123  xyz-', dtype='c'),
-                  np.fromstring('.ABC\t123  xyz-', dtype=np.uint8),
+                  np.frombuffer(b'.ABC\t123  xyz-', dtype=np.uint8),
                   Sequence('.ABC\t123  xyz-')):
             seq = Sequence(s)
 
@@ -460,23 +461,23 @@ class TestSequence(TestSequenceBase, ReallyEqualMixin):
             Sequence(np.array([1, {}, ()]))
 
         # invalid input type (non-numpy.ndarray input)
-        with self.assertRaisesRegex(TypeError, 'tuple'):
+        with self.assertRaisesRegex(AttributeError, 'tuple'):
             Sequence(('a', 'b', 'c'))
-        with self.assertRaisesRegex(TypeError, 'list'):
+        with self.assertRaisesRegex(AttributeError, 'list'):
             Sequence(['a', 'b', 'c'])
-        with self.assertRaisesRegex(TypeError, 'set'):
+        with self.assertRaisesRegex(AttributeError, 'set'):
             Sequence({'a', 'b', 'c'})
-        with self.assertRaisesRegex(TypeError, 'dict'):
+        with self.assertRaisesRegex(AttributeError, 'dict'):
             Sequence({'a': 42, 'b': 43, 'c': 44})
-        with self.assertRaisesRegex(TypeError, 'int'):
+        with self.assertRaisesRegex(AttributeError, 'int'):
             Sequence(42)
-        with self.assertRaisesRegex(TypeError, 'float'):
+        with self.assertRaisesRegex(AttributeError, 'float'):
             Sequence(4.2)
         with self.assertRaisesRegex(TypeError, 'int64'):
             Sequence(np.int_(50))
         with self.assertRaisesRegex(TypeError, 'float64'):
             Sequence(np.float_(50))
-        with self.assertRaisesRegex(TypeError, 'Foo'):
+        with self.assertRaisesRegex(AttributeError, 'Foo'):
             class Foo:
                 pass
             Sequence(Foo())
@@ -1125,10 +1126,10 @@ class TestSequence(TestSequenceBase, ReallyEqualMixin):
 
     def test_count(self):
         def construct_char_array(s):
-            return np.fromstring(s, dtype='|S1')
+            return np.frombuffer(s.encode('ascii'), dtype='|S1')
 
         def construct_uint8_array(s):
-            return np.fromstring(s, dtype=np.uint8)
+            return np.frombuffer(s.encode('ascii'), dtype=np.uint8)
 
         seq = Sequence("1234567899876555")
         tested = 0
@@ -1502,7 +1503,7 @@ class TestSequence(TestSequenceBase, ReallyEqualMixin):
         self.assertEqual(seq.frequencies(chars=chars, relative=True),
                          {'z': 5/11})
 
-        chars = np.fromstring('z', dtype='|S1')[0]
+        chars = np.frombuffer('z'.encode('ascii'), dtype='|S1')[0]
         self.assertEqual(seq.frequencies(chars=chars), {b'z': 5})
         self.assertEqual(seq.frequencies(chars=chars, relative=True),
                          {b'z': 5/11})
@@ -1519,8 +1520,8 @@ class TestSequence(TestSequenceBase, ReallyEqualMixin):
                          {'x': 0.0, 'z': 5/11})
 
         chars = {
-            np.fromstring('x', dtype='|S1')[0],
-            np.fromstring('z', dtype='|S1')[0]
+            np.frombuffer('x'.encode('ascii'), dtype='|S1')[0],
+            np.frombuffer('z'.encode('ascii'), dtype='|S1')[0]
         }
         self.assertEqual(seq.frequencies(chars=chars), {b'x': 0, b'z': 5})
         self.assertEqual(seq.frequencies(chars=chars, relative=True),
@@ -2335,8 +2336,9 @@ class TestDistance(TestSequenceBase):
             return -42.0
 
         sequence_kinds = frozenset([
-            str, SequenceSubclass, lambda s: np.fromstring(s, dtype='|S1'),
-            lambda s: np.fromstring(s, dtype=np.uint8)])
+            str, SequenceSubclass,
+            lambda s: np.frombuffer(s.encode('ascii'), dtype='|S1'),
+            lambda s: np.frombuffer(s.encode('ascii'), dtype=np.uint8)])
 
         for constructor in sequence_kinds:
             seq1 = SequenceSubclass("abcdef")
@@ -2363,7 +2365,7 @@ class TestDistance(TestSequenceBase):
             DNA("ACGT").distance("WXYZ")
 
     def test_munging_invalid_type_to_self_type(self):
-        with self.assertRaises(TypeError):
+        with self.assertRaises(AttributeError):
             Sequence("ACGT").distance(42)
 
     def test_return_type_coercion(self):
@@ -2667,17 +2669,19 @@ class SequenceReprDoctests:
     ...     # nested quotes
     ...     10: '"\''
     ... }
-    >>> positional_metadata = pd.DataFrame.from_items([
+    >>> positional_metadata = pd.DataFrame({
     ...     # str key, int list value
-    ...     ('foo', [1, 2, 3, 4]),
+    ...     'foo': [1, 2, 3, 4],
     ...     # float key, float list value
-    ...     (42.5, [2.5, 3.0, 4.2, -0.00001]),
+    ...     42.5: [2.5, 3.0, 4.2, -0.00001],
     ...     # int key, object list value
-    ...     (42, [[], 4, 5, {}]),
+    ...     42: [[], 4, 5, {}],
     ...     # truncated key (too long), bool list value
-    ...     ('abc' * 90, [True, False, False, True]),
+    ...     'abc' * 90: [True, False, False, True],
     ...     # None key
-    ...     (None, range(4))])
+    ...     None: range(4)})
+    >>> positional_metadata = positional_metadata.reindex(
+    ...     columns=['foo', 42.5, 42, 'abc' * 90, None])
     >>> interval_metadata = IntervalMetadata(4)
     >>> _ = interval_metadata.add([(0, 2), (1, 3)],
     ...                           [(False, True), (False, False)],

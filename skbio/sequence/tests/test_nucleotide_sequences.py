@@ -26,8 +26,8 @@ class TestNucleotideSequence(unittest.TestCase):
     def setUp(self):
         self.sequence_kinds = frozenset([
             str,
-            lambda s: np.fromstring(s, dtype='|S1'),
-            lambda s: np.fromstring(s, dtype=np.uint8)])
+            lambda s: np.frombuffer(s.encode('ascii'), dtype='|S1'),
+            lambda s: np.frombuffer(s.encode('ascii'), dtype=np.uint8)])
 
         dna_str = 'ACGTMRWSYKVHDBN.-'
         dna_comp_str = 'TGCAKYWSRMBDHVN.-'

@@ -569,7 +569,7 @@ fuzzy=[(True, False)], metadata={'gene': 'foo'})
             if not seq.has_positional_metadata():
                 del seq.positional_metadata
 
-        pm = pd.concat(pm_data, join=how, ignore_index=True)
+        pm = pd.concat(pm_data, join=how, ignore_index=True, sort=True)
         bytes_ = np.concatenate(seq_data)
 
         im = IntervalMetadata.concat(i.interval_metadata for i in seqs)
@@ -628,11 +628,11 @@ fuzzy=[(True, False)], metadata={'gene': 'foo'})
             # Encode as ascii to raise UnicodeEncodeError if necessary.
             if isinstance(sequence, str):
                 sequence = sequence.encode("ascii")
-            s = np.fromstring(sequence, dtype=np.uint8)
+            s = np.frombuffer(sequence, dtype=np.uint8)
 
             # There are two possibilities (to our knowledge) at this point:
             # Either the sequence we were given was something string-like,
-            # (else it would not have made it past fromstring), or it was a
+            # (else it would not have made it past frombuffer), or it was a
             # numpy scalar, and so our length must be 1.
             if isinstance(sequence, np.generic) and len(s) != 1:
                 raise TypeError("Can cannot create a sequence with %r" %
@@ -922,7 +922,8 @@ fuzzy=[(True, False)], metadata={'gene': 'foo'})
                     if self.has_positional_metadata():
                         pos_md_slices = list(_slices_from_iter(
                                              self.positional_metadata, index))
-                        positional_metadata = pd.concat(pos_md_slices)
+                        positional_metadata = pd.concat(pos_md_slices,
+                                                        sort=True)
 
                     metadata = None
                     if self.has_metadata():
