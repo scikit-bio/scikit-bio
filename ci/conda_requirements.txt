@@ -6,8 +6,6 @@ pandas
 nose
 pep8
 ipython
-pyflakes
-flake8
 python-dateutil
 decorator
 scikit-learn
