@@ -114,6 +114,12 @@ class TestRunner:
         except ImportError:
             numpy = None
 
+        try:
+            import pandas
+            pandas.options.display.max_columns = None
+        except ImportError:
+            pandas = None
+
         # NOTE: it doesn't seem to matter what the first element of the argv
         # list is, there just needs to be something there.
         # changes to argv made here should also be made in setup.cfg
