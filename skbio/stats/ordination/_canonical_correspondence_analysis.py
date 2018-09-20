@@ -100,8 +100,8 @@ def cca(y, x, scaling=1):
        Ecology. Elsevier, Amsterdam.
 
     """
-    Y = y.as_matrix()
-    X = x.as_matrix()
+    Y = y.values
+    X = x.values
 
     # Perform parameter sanity checks
     if X.shape[0] != Y.shape[0]:
