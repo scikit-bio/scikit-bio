@@ -10,7 +10,7 @@ from functools import partial
 
 import numpy as np
 
-from ._base import (_preprocess_input, _run_monte_carlo_stats, _build_results)
+from ._base import _preprocess_input, _run_monte_carlo_stats, _build_results
 from skbio.util._decorator import experimental
 
 
@@ -90,31 +90,33 @@ def permanova(distance_matrix, grouping, column=None, permutations=999):
 
     """
     sample_size, num_groups, grouping, tri_idxs, distances = _preprocess_input(
-        distance_matrix, grouping, column)
+        distance_matrix, grouping, column
+    )
 
     # Calculate number of objects in each group.
     group_sizes = np.bincount(grouping)
     s_T = (distances ** 2).sum() / sample_size
 
-    test_stat_function = partial(_compute_f_stat, sample_size, num_groups,
-                                 tri_idxs, distances, group_sizes, s_T)
-    stat, p_value = _run_monte_carlo_stats(test_stat_function, grouping,
-                                           permutations)
+    test_stat_function = partial(
+        _compute_f_stat, sample_size, num_groups, tri_idxs, distances, group_sizes, s_T
+    )
+    stat, p_value = _run_monte_carlo_stats(test_stat_function, grouping, permutations)
 
-    return _build_results('PERMANOVA', 'pseudo-F', sample_size, num_groups,
-                          stat, p_value, permutations)
+    return _build_results(
+        "PERMANOVA", "pseudo-F", sample_size, num_groups, stat, p_value, permutations
+    )
 
 
-def _compute_f_stat(sample_size, num_groups, tri_idxs, distances, group_sizes,
-                    s_T, grouping):
+def _compute_f_stat(
+    sample_size, num_groups, tri_idxs, distances, group_sizes, s_T, grouping
+):
     """Compute PERMANOVA pseudo-F statistic."""
     # Create a matrix where objects in the same group are marked with the group
     # index (e.g. 0, 1, 2, etc.). objects that are not in the same group are
     # marked with -1.
     grouping_matrix = -1 * np.ones((sample_size, sample_size), dtype=int)
     for group_idx in range(num_groups):
-        within_indices = _index_combinations(
-            np.where(grouping == group_idx)[0])
+        within_indices = _index_combinations(np.where(grouping == group_idx)[0])
         grouping_matrix[within_indices] = group_idx
 
     # Extract upper triangle (in same order as distances were extracted

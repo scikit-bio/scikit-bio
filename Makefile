@@ -21,6 +21,6 @@ endif
 # not install correctly (for example).
 test:
 	cd ci && $(TEST_COMMAND)
-	flake8 skbio setup.py checklist.py
+	black --check --diff skbio setup.py checklist.py
 	./checklist.py
 	check-manifest

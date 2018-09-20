@@ -29,7 +29,7 @@ An empty file consists of only whitespace characters.
 
 from skbio.io import create_format
 
-emptyfile = create_format('<emptyfile>')
+emptyfile = create_format("<emptyfile>")
 
 
 @emptyfile.sniffer()

@@ -59,12 +59,21 @@ class OrdinationResults(SkbioObject):
     pcoa
     rda
     """
-    default_write_format = 'ordination'
+
+    default_write_format = "ordination"
 
     @experimental(as_of="0.4.0")
-    def __init__(self, short_method_name, long_method_name, eigvals,
-                 samples, features=None, biplot_scores=None,
-                 sample_constraints=None, proportion_explained=None):
+    def __init__(
+        self,
+        short_method_name,
+        long_method_name,
+        eigvals,
+        samples,
+        features=None,
+        biplot_scores=None,
+        sample_constraints=None,
+        proportion_explained=None,
+    ):
 
         self.short_method_name = short_method_name
         self.long_method_name = long_method_name
@@ -91,34 +100,49 @@ class OrdinationResults(SkbioObject):
             String representation of the ordination results.
 
         """
-        lines = ['Ordination results:']
-        method = '%s (%s)' % (self.long_method_name, self.short_method_name)
-        lines.append(self._format_attribute(method, 'Method', str))
+        lines = ["Ordination results:"]
+        method = "%s (%s)" % (self.long_method_name, self.short_method_name)
+        lines.append(self._format_attribute(method, "Method", str))
 
-        attrs = [(self.eigvals, 'Eigvals'),
-                 (self.proportion_explained, 'Proportion explained'),
-                 (self.features, 'Features'),
-                 (self.samples, 'Samples'),
-                 (self.biplot_scores, 'Biplot Scores'),
-                 (self.sample_constraints, 'Sample constraints')]
+        attrs = [
+            (self.eigvals, "Eigvals"),
+            (self.proportion_explained, "Proportion explained"),
+            (self.features, "Features"),
+            (self.samples, "Samples"),
+            (self.biplot_scores, "Biplot Scores"),
+            (self.sample_constraints, "Sample constraints"),
+        ]
         for attr, attr_label in attrs:
+
             def formatter(e):
-                return 'x'.join(['%d' % s for s in e.shape])
+                return "x".join(["%d" % s for s in e.shape])
 
             lines.append(self._format_attribute(attr, attr_label, formatter))
 
-        lines.append(self._format_attribute(
-            self.features, 'Feature IDs',
-            lambda e: _pprint_strs(e.index.tolist())))
-        lines.append(self._format_attribute(
-            self.samples, 'Sample IDs',
-            lambda e: _pprint_strs(e.index.tolist())))
+        lines.append(
+            self._format_attribute(
+                self.features, "Feature IDs", lambda e: _pprint_strs(e.index.tolist())
+            )
+        )
+        lines.append(
+            self._format_attribute(
+                self.samples, "Sample IDs", lambda e: _pprint_strs(e.index.tolist())
+            )
+        )
 
-        return '\n'.join(lines)
+        return "\n".join(lines)
 
     @experimental(as_of="0.4.0")
-    def plot(self, df=None, column=None, axes=(0, 1, 2), axis_labels=None,
-             title='', cmap=None, s=20):
+    def plot(
+        self,
+        df=None,
+        column=None,
+        axes=(0, 1, 2),
+        axis_labels=None,
+        title="",
+        cmap=None,
+        s=20,
+    ):
         """Create a 3-D scatterplot of ordination results colored by metadata.
 
         Creates a 3-D scatterplot of the ordination results, where each point
@@ -248,15 +272,17 @@ class OrdinationResults(SkbioObject):
         # http://matplotlib.org/examples/mplot3d/scatter3d_demo.html
         import matplotlib.pyplot as plt
         from mpl_toolkits.mplot3d import Axes3D  # noqa
+
         fig = plt.figure()
-        ax = fig.add_subplot(111, projection='3d')
+        ax = fig.add_subplot(111, projection="3d")
 
         xs = coord_matrix[axes[0]]
         ys = coord_matrix[axes[1]]
         zs = coord_matrix[axes[2]]
 
         point_colors, category_to_color = self._get_plot_point_colors(
-            df, column, self.samples.index, cmap)
+            df, column, self.samples.index, cmap
+        )
 
         scatter_fn = functools.partial(ax.scatter, xs, ys, zs, s=s)
         if point_colors is None:
@@ -265,10 +291,12 @@ class OrdinationResults(SkbioObject):
             plot = scatter_fn(c=point_colors, cmap=cmap)
 
         if axis_labels is None:
-            axis_labels = ['%d' % axis for axis in axes]
+            axis_labels = ["%d" % axis for axis in axes]
         elif len(axis_labels) != 3:
-            raise ValueError("axis_labels must contain exactly three elements "
-                             "(found %d elements)." % len(axis_labels))
+            raise ValueError(
+                "axis_labels must contain exactly three elements "
+                "(found %d elements)." % len(axis_labels)
+            )
 
         ax.set_xlabel(axis_labels[0])
         ax.set_ylabel(axis_labels[1])
@@ -291,19 +319,22 @@ class OrdinationResults(SkbioObject):
         """Validate `axes` against coordinates matrix."""
         num_dims = coord_matrix.shape[0]
         if num_dims < 3:
-            raise ValueError("At least three dimensions are required to plot "
-                             "ordination results. There are only %d "
-                             "dimension(s)." % num_dims)
+            raise ValueError(
+                "At least three dimensions are required to plot "
+                "ordination results. There are only %d "
+                "dimension(s)." % num_dims
+            )
         if len(axes) != 3:
-            raise ValueError("`axes` must contain exactly three elements "
-                             "(found %d elements)." % len(axes))
+            raise ValueError(
+                "`axes` must contain exactly three elements "
+                "(found %d elements)." % len(axes)
+            )
         if len(set(axes)) != 3:
             raise ValueError("The values provided for `axes` must be unique.")
 
         for idx, axis in enumerate(axes):
             if axis < 0 or axis >= num_dims:
-                raise ValueError("`axes[%d]` must be >= 0 and < %d." %
-                                 (idx, num_dims))
+                raise ValueError("`axes[%d]` must be >= 0 and < %d." % (idx, num_dims))
 
     def _get_plot_point_colors(self, df, column, ids, cmap):
         """Return a list of colors for each plot point given a metadata column.
@@ -313,10 +344,11 @@ class OrdinationResults(SkbioObject):
 
         """
         import matplotlib.pyplot as plt
-        if ((df is None and column is not None) or (df is not None and
-                                                    column is None)):
-            raise ValueError("Both df and column must be provided, or both "
-                             "must be None.")
+
+        if (df is None and column is not None) or (df is not None and column is None):
+            raise ValueError(
+                "Both df and column must be provided, or both " "must be None."
+            )
         elif df is None and column is None:
             point_colors, category_to_color = None, None
         else:
@@ -326,10 +358,12 @@ class OrdinationResults(SkbioObject):
             col_vals = df.loc[ids, column]
 
             if col_vals.isnull().any():
-                raise ValueError("One or more IDs in the ordination results "
-                                 "are not in the data frame, or there is "
-                                 "missing data in the data frame's '%s' "
-                                 "column." % column)
+                raise ValueError(
+                    "One or more IDs in the ordination results "
+                    "are not in the data frame, or there is "
+                    "missing data in the data frame's '%s' "
+                    "column." % column
+                )
 
             category_to_color = None
             try:
@@ -354,18 +388,26 @@ class OrdinationResults(SkbioObject):
         """Add legend to plot using specified mapping of category to color."""
         # derived from http://stackoverflow.com/a/20505720
         import matplotlib as mpl
+
         proxies = []
         labels = []
         for category in color_dict:
-            proxy = mpl.lines.Line2D([0], [0], linestyle='none',
-                                     c=color_dict[category], marker='o')
+            proxy = mpl.lines.Line2D(
+                [0], [0], linestyle="none", c=color_dict[category], marker="o"
+            )
             proxies.append(proxy)
             labels.append(category)
 
         # place legend outside of the axes (centered)
         # derived from http://matplotlib.org/users/legend_guide.html
-        ax.legend(proxies, labels, numpoints=1, loc=6,
-                  bbox_to_anchor=(1.05, 0.5), borderaxespad=0.)
+        ax.legend(
+            proxies,
+            labels,
+            numpoints=1,
+            loc=6,
+            bbox_to_anchor=(1.05, 0.5),
+            borderaxespad=0.,
+        )
 
     # Here we define the special repr methods that provide the IPython display
     # protocol. Code derived from:
@@ -374,10 +416,10 @@ class OrdinationResults(SkbioObject):
     # See licenses/ipython.txt for more details.
 
     def _repr_png_(self):
-        return self._figure_data('png')
+        return self._figure_data("png")
 
     def _repr_svg_(self):
-        return self._figure_data('svg')
+        return self._figure_data("svg")
 
     # We expose the above reprs as properties, so that the user can see them
     # directly (since otherwise the client dictates which one it shows by
@@ -396,6 +438,7 @@ class OrdinationResults(SkbioObject):
 
     def _figure_data(self, format):
         import matplotlib.pyplot as plt
+
         fig = self.plot()
         data = print_figure(fig, format)
         # We MUST close the figure, otherwise IPython's display machinery
@@ -405,7 +448,7 @@ class OrdinationResults(SkbioObject):
 
     def _format_attribute(self, attr, attr_label, formatter):
         if attr is None:
-            formatted_attr = 'N/A'
+            formatted_attr = "N/A"
         else:
             formatted_attr = formatter(attr)
-        return '\t%s: %s' % (attr_label, formatted_attr)
+        return "\t%s: %s" % (attr_label, formatted_attr)

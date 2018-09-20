@@ -33,6 +33,7 @@ def test_ace_only_rare_singletons():
         ace([0, 0, 43, 0, 1, 0, 1, 42, 1, 43])
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     import nose
+
     nose.runmodule()

@@ -101,24 +101,32 @@ class TestMiniRegistry(unittest.TestCase):
         self.registry.interpolate(SomethingToInterpolate, "interpolate_me")
         subclass_registry.interpolate(Subclass, "interpolate_me")
 
-        self.assertEqual(SomethingToInterpolate.interpolate_me.__doc__,
-                         "First line\n\n                Some description of th"
-                         "ings, also this:\n\n\t'a'\n\t  x\n\t'b'\n\t  y\n\t'c"
-                         "'\n\t  z\n\n                Other things are happeni"
-                         "ng now.\n                ")
-        self.assertEqual(SomethingToInterpolate.dont_interpolate_me.__doc__,
-                         "First line\n\n                Some description of th"
-                         "ings, also this:\n\n                Other things are"
-                         " happening now.\n                ")
-        self.assertEqual(Subclass.interpolate_me.__doc__,
-                         "First line\n\n                Some description of th"
-                         "ings, also this:\n\n\t'a'\n\t  x\n\t'b'\n\t  y\n\t'c"
-                         "'\n\t  z\n\t'o'\n\t  p\n\n                Other thin"
-                         "gs are happening now.\n                ")
-        self.assertEqual(Subclass.dont_interpolate_me.__doc__,
-                         "First line\n\n                Some description of th"
-                         "ings, also this:\n\n                Other things are"
-                         " happening now.\n                ")
+        self.assertEqual(
+            SomethingToInterpolate.interpolate_me.__doc__,
+            "First line\n\n                Some description of th"
+            "ings, also this:\n\n\t'a'\n\t  x\n\t'b'\n\t  y\n\t'c"
+            "'\n\t  z\n\n                Other things are happeni"
+            "ng now.\n                ",
+        )
+        self.assertEqual(
+            SomethingToInterpolate.dont_interpolate_me.__doc__,
+            "First line\n\n                Some description of th"
+            "ings, also this:\n\n                Other things are"
+            " happening now.\n                ",
+        )
+        self.assertEqual(
+            Subclass.interpolate_me.__doc__,
+            "First line\n\n                Some description of th"
+            "ings, also this:\n\n\t'a'\n\t  x\n\t'b'\n\t  y\n\t'c"
+            "'\n\t  z\n\t'o'\n\t  p\n\n                Other thin"
+            "gs are happening now.\n                ",
+        )
+        self.assertEqual(
+            Subclass.dont_interpolate_me.__doc__,
+            "First line\n\n                Some description of th"
+            "ings, also this:\n\n                Other things are"
+            " happening now.\n                ",
+        )
 
 
 class ResolveKeyTests(unittest.TestCase):
@@ -137,49 +145,49 @@ class ResolveKeyTests(unittest.TestCase):
             def metadata(self):
                 return self
 
-        obj = MetadataHaver({'foo': 123})
-        self.assertEqual(resolve_key(obj, 'foo'), 123)
+        obj = MetadataHaver({"foo": 123})
+        self.assertEqual(resolve_key(obj, "foo"), 123)
 
-        obj = MetadataHaver({'foo': 123, 'bar': 'baz'})
-        self.assertEqual(resolve_key(obj, 'bar'), 'baz')
+        obj = MetadataHaver({"foo": 123, "bar": "baz"})
+        self.assertEqual(resolve_key(obj, "bar"), "baz")
 
     def test_wrong_type(self):
         with self.assertRaises(TypeError):
-            resolve_key({'foo': 1}, 'foo')
+            resolve_key({"foo": 1}, "foo")
 
 
 class ChunkStrTests(unittest.TestCase):
     def test_even_split(self):
-        self.assertEqual(chunk_str('abcdef', 6, ' '), 'abcdef')
-        self.assertEqual(chunk_str('abcdef', 3, ' '), 'abc def')
-        self.assertEqual(chunk_str('abcdef', 2, ' '), 'ab cd ef')
-        self.assertEqual(chunk_str('abcdef', 1, ' '), 'a b c d e f')
-        self.assertEqual(chunk_str('a', 1, ' '), 'a')
-        self.assertEqual(chunk_str('abcdef', 2, ''), 'abcdef')
+        self.assertEqual(chunk_str("abcdef", 6, " "), "abcdef")
+        self.assertEqual(chunk_str("abcdef", 3, " "), "abc def")
+        self.assertEqual(chunk_str("abcdef", 2, " "), "ab cd ef")
+        self.assertEqual(chunk_str("abcdef", 1, " "), "a b c d e f")
+        self.assertEqual(chunk_str("a", 1, " "), "a")
+        self.assertEqual(chunk_str("abcdef", 2, ""), "abcdef")
 
     def test_no_split(self):
-        self.assertEqual(chunk_str('', 2, '\n'), '')
-        self.assertEqual(chunk_str('a', 100, '\n'), 'a')
-        self.assertEqual(chunk_str('abcdef', 42, '|'), 'abcdef')
+        self.assertEqual(chunk_str("", 2, "\n"), "")
+        self.assertEqual(chunk_str("a", 100, "\n"), "a")
+        self.assertEqual(chunk_str("abcdef", 42, "|"), "abcdef")
 
     def test_uneven_split(self):
-        self.assertEqual(chunk_str('abcdef', 5, '|'), 'abcde|f')
-        self.assertEqual(chunk_str('abcdef', 4, '|'), 'abcd|ef')
-        self.assertEqual(chunk_str('abcdefg', 3, ' - '), 'abc - def - g')
+        self.assertEqual(chunk_str("abcdef", 5, "|"), "abcde|f")
+        self.assertEqual(chunk_str("abcdef", 4, "|"), "abcd|ef")
+        self.assertEqual(chunk_str("abcdefg", 3, " - "), "abc - def - g")
 
     def test_invalid_n(self):
-        with self.assertRaisesRegex(ValueError, 'n=0'):
-            chunk_str('abcdef', 0, ' ')
+        with self.assertRaisesRegex(ValueError, "n=0"):
+            chunk_str("abcdef", 0, " ")
 
-        with self.assertRaisesRegex(ValueError, 'n=-42'):
-            chunk_str('abcdef', -42, ' ')
+        with self.assertRaisesRegex(ValueError, "n=-42"):
+            chunk_str("abcdef", -42, " ")
 
 
 class SafeMD5Tests(unittest.TestCase):
     def test_safe_md5(self):
-        exp = 'ab07acbb1e496801937adfa772424bf7'
+        exp = "ab07acbb1e496801937adfa772424bf7"
 
-        fd = io.BytesIO(b'foo bar baz')
+        fd = io.BytesIO(b"foo bar baz")
         obs = safe_md5(fd)
         self.assertEqual(obs.hexdigest(), exp)
 
@@ -189,17 +197,49 @@ class SafeMD5Tests(unittest.TestCase):
 class CardinalToOrdinalTests(unittest.TestCase):
     def test_valid_range(self):
         # taken and modified from http://stackoverflow.com/a/20007730/3776794
-        exp = ['0th', '1st', '2nd', '3rd', '4th', '5th', '6th', '7th', '8th',
-               '9th', '10th', '11th', '12th', '13th', '14th', '15th', '16th',
-               '17th', '18th', '19th', '20th', '21st', '22nd', '23rd', '24th',
-               '25th', '26th', '27th', '28th', '29th', '30th', '31st', '32nd',
-               '100th', '101st', '42042nd']
-        obs = [cardinal_to_ordinal(n) for n in
-               list(range(0, 33)) + [100, 101, 42042]]
+        exp = [
+            "0th",
+            "1st",
+            "2nd",
+            "3rd",
+            "4th",
+            "5th",
+            "6th",
+            "7th",
+            "8th",
+            "9th",
+            "10th",
+            "11th",
+            "12th",
+            "13th",
+            "14th",
+            "15th",
+            "16th",
+            "17th",
+            "18th",
+            "19th",
+            "20th",
+            "21st",
+            "22nd",
+            "23rd",
+            "24th",
+            "25th",
+            "26th",
+            "27th",
+            "28th",
+            "29th",
+            "30th",
+            "31st",
+            "32nd",
+            "100th",
+            "101st",
+            "42042nd",
+        ]
+        obs = [cardinal_to_ordinal(n) for n in list(range(0, 33)) + [100, 101, 42042]]
         self.assertEqual(obs, exp)
 
     def test_invalid_n(self):
-        with self.assertRaisesRegex(ValueError, '-1'):
+        with self.assertRaisesRegex(ValueError, "-1"):
             cardinal_to_ordinal(-1)
 
 
@@ -208,30 +248,32 @@ class TestFindDuplicates(unittest.TestCase):
         def empty_gen():
             yield from ()
 
-        for empty in [], (), '', set(), {}, empty_gen():
+        for empty in [], (), "", set(), {}, empty_gen():
             self.assertEqual(find_duplicates(empty), set())
 
     def test_no_duplicates(self):
-        self.assertEqual(find_duplicates(['a', 'bc', 'def', 'A']), set())
+        self.assertEqual(find_duplicates(["a", "bc", "def", "A"]), set())
 
     def test_one_duplicate(self):
-        self.assertEqual(find_duplicates(['a', 'bc', 'def', 'a']), set(['a']))
+        self.assertEqual(find_duplicates(["a", "bc", "def", "a"]), set(["a"]))
 
     def test_many_duplicates(self):
-        self.assertEqual(find_duplicates(['a', 'bc', 'bc', 'def', 'a']),
-                         set(['a', 'bc']))
+        self.assertEqual(
+            find_duplicates(["a", "bc", "bc", "def", "a"]), set(["a", "bc"])
+        )
 
     def test_all_duplicates(self):
         self.assertEqual(
-            find_duplicates(('a', 'bc', 'bc', 'def', 'a', 'def', 'def')),
-            set(['a', 'bc', 'def']))
+            find_duplicates(("a", "bc", "bc", "def", "a", "def", "def")),
+            set(["a", "bc", "def"]),
+        )
 
     def test_mixed_types(self):
         def gen():
-            yield from ('a', 1, 'bc', 2, 'a', 2, 2, 3.0)
+            yield from ("a", 1, "bc", 2, "a", 2, 2, 3.0)
 
-        self.assertEqual(find_duplicates(gen()), set(['a', 2]))
+        self.assertEqual(find_duplicates(gen()), set(["a", 2]))
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     unittest.main()

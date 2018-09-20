@@ -160,9 +160,11 @@ def _chao1_var_bias_corrected(s, d):
     From EstimateS manual, equation 6.
 
     """
-    return (s * (s - 1) / (2 * (d + 1)) + (s * (2 * s - 1) ** 2) /
-            (4 * (d + 1) ** 2) + (s ** 2 * d * (s - 1) ** 2) /
-            (4 * (d + 1) ** 4))
+    return (
+        s * (s - 1) / (2 * (d + 1))
+        + (s * (2 * s - 1) ** 2) / (4 * (d + 1) ** 2)
+        + (s ** 2 * d * (s - 1) ** 2) / (4 * (d + 1) ** 4)
+    )
 
 
 def _chao1_var_no_doubletons(s, chao1):
@@ -215,5 +217,7 @@ def _chao_confidence_no_singletons(n, s, zscore=1.96):
 
     """
     P = np.exp(-n / s)
-    return (max(s, s / (1 - P) - zscore * np.sqrt((s * P / (1 - P)))),
-            s / (1 - P) + zscore * np.sqrt(s * P / (1 - P)))
+    return (
+        max(s, s / (1 - P) - zscore * np.sqrt((s * P / (1 - P)))),
+        s / (1 - P) + zscore * np.sqrt(s * P / (1 - P)),
+    )

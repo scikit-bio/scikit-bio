@@ -7,4 +7,5 @@
 # ----------------------------------------------------------------------------
 
 from skbio.util import TestRunner
+
 test = TestRunner(__file__).test

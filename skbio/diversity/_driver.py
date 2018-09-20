@@ -16,47 +16,49 @@ import pandas as pd
 import skbio
 from skbio.diversity.alpha._faith_pd import _faith_pd, _setup_faith_pd
 from skbio.diversity.beta._unifrac import (
-    _setup_multiple_unweighted_unifrac, _setup_multiple_weighted_unifrac,
-    _normalize_weighted_unifrac_by_default)
+    _setup_multiple_unweighted_unifrac,
+    _setup_multiple_weighted_unifrac,
+    _normalize_weighted_unifrac_by_default,
+)
 from skbio.util._decorator import experimental, deprecated
 from skbio.stats.distance import DistanceMatrix
-from skbio.diversity._util import (_validate_counts_matrix,
-                                   _get_phylogenetic_kwargs)
+from skbio.diversity._util import _validate_counts_matrix, _get_phylogenetic_kwargs
 
 
 def _get_alpha_diversity_metric_map():
     return {
-        'ace': skbio.diversity.alpha.ace,
-        'chao1': skbio.diversity.alpha.chao1,
-        'chao1_ci': skbio.diversity.alpha.chao1_ci,
-        'berger_parker_d': skbio.diversity.alpha.berger_parker_d,
-        'brillouin_d': skbio.diversity.alpha.brillouin_d,
-        'dominance': skbio.diversity.alpha.dominance,
-        'doubles': skbio.diversity.alpha.doubles,
-        'enspie': skbio.diversity.alpha.enspie,
-        'esty_ci': skbio.diversity.alpha.esty_ci,
-        'faith_pd': skbio.diversity.alpha.faith_pd,
-        'fisher_alpha': skbio.diversity.alpha.fisher_alpha,
-        'goods_coverage': skbio.diversity.alpha.goods_coverage,
-        'heip_e': skbio.diversity.alpha.heip_e,
-        'kempton_taylor_q': skbio.diversity.alpha.kempton_taylor_q,
-        'margalef': skbio.diversity.alpha.margalef,
-        'mcintosh_d': skbio.diversity.alpha.mcintosh_d,
-        'mcintosh_e': skbio.diversity.alpha.mcintosh_e,
-        'menhinick': skbio.diversity.alpha.menhinick,
-        'michaelis_menten_fit': skbio.diversity.alpha.michaelis_menten_fit,
-        'observed_otus': skbio.diversity.alpha.observed_otus,
-        'osd': skbio.diversity.alpha.osd,
-        'pielou_e': skbio.diversity.alpha.pielou_e,
-        'robbins': skbio.diversity.alpha.robbins,
-        'shannon': skbio.diversity.alpha.shannon,
-        'simpson': skbio.diversity.alpha.simpson,
-        'simpson_e': skbio.diversity.alpha.simpson_e,
-        'singles': skbio.diversity.alpha.singles,
-        'strong': skbio.diversity.alpha.strong,
-        'gini_index': skbio.diversity.alpha.gini_index,
-        'lladser_pe': skbio.diversity.alpha.lladser_pe,
-        'lladser_ci': skbio.diversity.alpha.lladser_ci}
+        "ace": skbio.diversity.alpha.ace,
+        "chao1": skbio.diversity.alpha.chao1,
+        "chao1_ci": skbio.diversity.alpha.chao1_ci,
+        "berger_parker_d": skbio.diversity.alpha.berger_parker_d,
+        "brillouin_d": skbio.diversity.alpha.brillouin_d,
+        "dominance": skbio.diversity.alpha.dominance,
+        "doubles": skbio.diversity.alpha.doubles,
+        "enspie": skbio.diversity.alpha.enspie,
+        "esty_ci": skbio.diversity.alpha.esty_ci,
+        "faith_pd": skbio.diversity.alpha.faith_pd,
+        "fisher_alpha": skbio.diversity.alpha.fisher_alpha,
+        "goods_coverage": skbio.diversity.alpha.goods_coverage,
+        "heip_e": skbio.diversity.alpha.heip_e,
+        "kempton_taylor_q": skbio.diversity.alpha.kempton_taylor_q,
+        "margalef": skbio.diversity.alpha.margalef,
+        "mcintosh_d": skbio.diversity.alpha.mcintosh_d,
+        "mcintosh_e": skbio.diversity.alpha.mcintosh_e,
+        "menhinick": skbio.diversity.alpha.menhinick,
+        "michaelis_menten_fit": skbio.diversity.alpha.michaelis_menten_fit,
+        "observed_otus": skbio.diversity.alpha.observed_otus,
+        "osd": skbio.diversity.alpha.osd,
+        "pielou_e": skbio.diversity.alpha.pielou_e,
+        "robbins": skbio.diversity.alpha.robbins,
+        "shannon": skbio.diversity.alpha.shannon,
+        "simpson": skbio.diversity.alpha.simpson,
+        "simpson_e": skbio.diversity.alpha.simpson_e,
+        "singles": skbio.diversity.alpha.singles,
+        "strong": skbio.diversity.alpha.strong,
+        "gini_index": skbio.diversity.alpha.gini_index,
+        "lladser_pe": skbio.diversity.alpha.lladser_pe,
+        "lladser_ci": skbio.diversity.alpha.lladser_ci,
+    }
 
 
 @experimental(as_of="0.4.1")
@@ -108,7 +110,7 @@ def get_beta_diversity_metrics():
     ``scipy.spatial.distance.pdist`` for more details.
 
     """
-    return sorted(['unweighted_unifrac', 'weighted_unifrac'])
+    return sorted(["unweighted_unifrac", "weighted_unifrac"])
 
 
 @experimental(as_of="0.4.1")
@@ -164,10 +166,11 @@ def alpha_diversity(metric, counts, ids=None, validate=True, **kwargs):
     if validate:
         counts = _validate_counts_matrix(counts, ids=ids)
 
-    if metric == 'faith_pd':
+    if metric == "faith_pd":
         otu_ids, tree, kwargs = _get_phylogenetic_kwargs(counts, **kwargs)
         counts_by_node, branch_lengths = _setup_faith_pd(
-            counts, otu_ids, tree, validate, single_sample=False)
+            counts, otu_ids, tree, validate, single_sample=False
+        )
         counts = counts_by_node
         metric = functools.partial(_faith_pd, branch_lengths=branch_lengths)
     elif callable(metric):
@@ -175,20 +178,24 @@ def alpha_diversity(metric, counts, ids=None, validate=True, **kwargs):
     elif metric in metric_map:
         metric = functools.partial(metric_map[metric], **kwargs)
     else:
-        raise ValueError('Unknown metric provided: %r.' % metric)
+        raise ValueError("Unknown metric provided: %r." % metric)
 
     # kwargs is provided here so an error is raised on extra kwargs
     results = [metric(c, **kwargs) for c in counts]
     return pd.Series(results, index=ids)
 
 
-@deprecated(as_of='0.5.0', until='0.6.0',
-            reason=('The return type is unstable. Developer caution is '
-                    'advised. The resulting DistanceMatrix object will '
-                    'include zeros when distance has not been calculated, and '
-                    'therefore can be misleading.'))
-def partial_beta_diversity(metric, counts, ids, id_pairs, validate=True,
-                           **kwargs):
+@deprecated(
+    as_of="0.5.0",
+    until="0.6.0",
+    reason=(
+        "The return type is unstable. Developer caution is "
+        "advised. The resulting DistanceMatrix object will "
+        "include zeros when distance has not been calculated, and "
+        "therefore can be misleading."
+    ),
+)
+def partial_beta_diversity(metric, counts, ids, id_pairs, validate=True, **kwargs):
     """Compute distances only between specified ID pairs
 
     Parameters
@@ -245,20 +252,20 @@ def partial_beta_diversity(metric, counts, ids, id_pairs, validate=True,
     if len(hashes) != len(id_pairs) * 2:
         raise ValueError("A duplicate or a self-self pair was observed.")
 
-    if metric == 'unweighted_unifrac':
+    if metric == "unweighted_unifrac":
         otu_ids, tree, kwargs = _get_phylogenetic_kwargs(counts, **kwargs)
         metric, counts_by_node = _setup_multiple_unweighted_unifrac(
-                counts, otu_ids=otu_ids, tree=tree, validate=validate)
+            counts, otu_ids=otu_ids, tree=tree, validate=validate
+        )
         counts = counts_by_node
-    elif metric == 'weighted_unifrac':
+    elif metric == "weighted_unifrac":
         # get the value for normalized. if it was not provided, it will fall
         # back to the default value inside of _weighted_unifrac_pdist_f
-        normalized = kwargs.pop('normalized',
-                                _normalize_weighted_unifrac_by_default)
+        normalized = kwargs.pop("normalized", _normalize_weighted_unifrac_by_default)
         otu_ids, tree, kwargs = _get_phylogenetic_kwargs(counts, **kwargs)
         metric, counts_by_node = _setup_multiple_weighted_unifrac(
-                counts, otu_ids=otu_ids, tree=tree, normalized=normalized,
-                validate=validate)
+            counts, otu_ids=otu_ids, tree=tree, normalized=normalized, validate=validate
+        )
         counts = counts_by_node
     elif callable(metric):
         metric = functools.partial(metric, **kwargs)
@@ -266,8 +273,10 @@ def partial_beta_diversity(metric, counts, ids, id_pairs, validate=True,
         # through the partial
         kwargs = {}
     else:
-        raise ValueError("partial_beta_diversity is only compatible with "
-                         "optimized unifrac methods and callable functions.")
+        raise ValueError(
+            "partial_beta_diversity is only compatible with "
+            "optimized unifrac methods and callable functions."
+        )
 
     dm = np.zeros((len(ids), len(ids)), dtype=float)
     id_index = {id_: idx for idx, id_ in enumerate(ids)}
@@ -280,8 +289,9 @@ def partial_beta_diversity(metric, counts, ids, id_pairs, validate=True,
 
 
 @experimental(as_of="0.4.0")
-def beta_diversity(metric, counts, ids=None, validate=True, pairwise_func=None,
-                   **kwargs):
+def beta_diversity(
+    metric, counts, ids=None, validate=True, pairwise_func=None, **kwargs
+):
     """Compute distances between all pairs of samples
 
     Parameters
@@ -349,20 +359,20 @@ def beta_diversity(metric, counts, ids=None, validate=True, pairwise_func=None,
         # latter raises an exception over empty data.
         return DistanceMatrix(np.zeros((len(ids), len(ids))), ids)
 
-    if metric == 'unweighted_unifrac':
+    if metric == "unweighted_unifrac":
         otu_ids, tree, kwargs = _get_phylogenetic_kwargs(counts, **kwargs)
         metric, counts_by_node = _setup_multiple_unweighted_unifrac(
-                counts, otu_ids=otu_ids, tree=tree, validate=validate)
+            counts, otu_ids=otu_ids, tree=tree, validate=validate
+        )
         counts = counts_by_node
-    elif metric == 'weighted_unifrac':
+    elif metric == "weighted_unifrac":
         # get the value for normalized. if it was not provided, it will fall
         # back to the default value inside of _weighted_unifrac_pdist_f
-        normalized = kwargs.pop('normalized',
-                                _normalize_weighted_unifrac_by_default)
+        normalized = kwargs.pop("normalized", _normalize_weighted_unifrac_by_default)
         otu_ids, tree, kwargs = _get_phylogenetic_kwargs(counts, **kwargs)
         metric, counts_by_node = _setup_multiple_weighted_unifrac(
-                counts, otu_ids=otu_ids, tree=tree, normalized=normalized,
-                validate=validate)
+            counts, otu_ids=otu_ids, tree=tree, normalized=normalized, validate=validate
+        )
         counts = counts_by_node
     elif callable(metric):
         metric = functools.partial(metric, **kwargs)

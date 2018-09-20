@@ -204,18 +204,29 @@ from skbio.util import TestRunner
 
 from ._tabular_msa import TabularMSA
 from ._pairwise import (
-    local_pairwise_align_nucleotide, local_pairwise_align_protein,
-    local_pairwise_align, global_pairwise_align_nucleotide,
-    global_pairwise_align_protein, global_pairwise_align,
-    make_identity_substitution_matrix, local_pairwise_align_ssw
+    local_pairwise_align_nucleotide,
+    local_pairwise_align_protein,
+    local_pairwise_align,
+    global_pairwise_align_nucleotide,
+    global_pairwise_align_protein,
+    global_pairwise_align,
+    make_identity_substitution_matrix,
+    local_pairwise_align_ssw,
 )
-from skbio.alignment._ssw_wrapper import (
-    StripedSmithWaterman, AlignmentStructure)
+from skbio.alignment._ssw_wrapper import StripedSmithWaterman, AlignmentStructure
 
-__all__ = ['TabularMSA', 'StripedSmithWaterman', 'AlignmentStructure',
-           'local_pairwise_align_ssw', 'global_pairwise_align',
-           'global_pairwise_align_nucleotide', 'global_pairwise_align_protein',
-           'local_pairwise_align', 'local_pairwise_align_nucleotide',
-           'local_pairwise_align_protein', 'make_identity_substitution_matrix']
+__all__ = [
+    "TabularMSA",
+    "StripedSmithWaterman",
+    "AlignmentStructure",
+    "local_pairwise_align_ssw",
+    "global_pairwise_align",
+    "global_pairwise_align_nucleotide",
+    "global_pairwise_align_protein",
+    "local_pairwise_align",
+    "local_pairwise_align_nucleotide",
+    "local_pairwise_align_protein",
+    "make_identity_substitution_matrix",
+]
 
 test = TestRunner(__file__).test

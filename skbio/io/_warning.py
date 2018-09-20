@@ -9,9 +9,11 @@
 
 class FormatIdentificationWarning(Warning):
     """Warn when the sniffer of a format cannot confirm the format."""
+
     pass
 
 
 class ArgumentOverrideWarning(Warning):
     """Warn when a user provided kwarg differs from a guessed kwarg."""
+
     pass

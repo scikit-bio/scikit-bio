@@ -211,18 +211,20 @@ def multiplicative_replacement(mat, delta=None):
 
     """
     mat = closure(mat)
-    z_mat = (mat == 0)
+    z_mat = mat == 0
 
     num_feats = mat.shape[-1]
     tot = z_mat.sum(axis=-1, keepdims=True)
 
     if delta is None:
-        delta = (1. / num_feats)**2
+        delta = (1. / num_feats) ** 2
 
     zcnts = 1 - tot * delta
     if np.any(zcnts) < 0:
-        raise ValueError('The multiplicative replacement created negative '
-                         'proportions. Consider using a smaller `delta`.')
+        raise ValueError(
+            "The multiplicative replacement created negative "
+            "proportions. Consider using a smaller `delta`."
+        )
     mat = np.where(z_mat, delta, zcnts * mat)
     return mat.squeeze()
 
@@ -371,7 +373,7 @@ def power(x, a):
 
     """
     x = closure(x)
-    return closure(x**a).squeeze()
+    return closure(x ** a).squeeze()
 
 
 @experimental(as_of="0.4.0")
@@ -566,9 +568,10 @@ def ilr(mat, basis=None, check=True):
         basis = clr_inv(_gram_schmidt_basis(mat.shape[-1]))
     else:
         if len(basis.shape) != 2:
-            raise ValueError("Basis needs to be a 2D matrix, "
-                             "not a %dD matrix." %
-                             (len(basis.shape)))
+            raise ValueError(
+                "Basis needs to be a 2D matrix, "
+                "not a %dD matrix." % (len(basis.shape))
+            )
         if check:
             _check_orthogonality(basis)
 
@@ -633,9 +636,10 @@ def ilr_inv(mat, basis=None, check=True):
         basis = _gram_schmidt_basis(mat.shape[-1] + 1)
     else:
         if len(basis.shape) != 2:
-            raise ValueError("Basis needs to be a 2D matrix, "
-                             "not a %dD matrix." %
-                             (len(basis.shape)))
+            raise ValueError(
+                "Basis needs to be a 2D matrix, "
+                "not a %dD matrix." % (len(basis.shape))
+            )
         if check:
             _check_orthogonality(basis)
         # this is necessary, since the clr function
@@ -697,11 +701,11 @@ def alr(mat, denominator_idx=0):
         mat_t = mat.T
         numerator_idx = list(range(0, mat_t.shape[0]))
         del numerator_idx[denominator_idx]
-        lr = np.log(mat_t[numerator_idx, :]/mat_t[denominator_idx, :]).T
+        lr = np.log(mat_t[numerator_idx, :] / mat_t[denominator_idx, :]).T
     elif mat.ndim == 1:
         numerator_idx = list(range(0, mat.shape[0]))
         del numerator_idx[denominator_idx]
-        lr = np.log(mat[numerator_idx]/mat[denominator_idx])
+        lr = np.log(mat[numerator_idx] / mat[denominator_idx])
     else:
         raise ValueError("mat must be either 1D or 2D")
     return lr
@@ -755,8 +759,7 @@ def alr_inv(mat, denominator_idx=0):
     """
     mat = np.array(mat)
     if mat.ndim == 2:
-        mat_idx = np.insert(mat, denominator_idx,
-                            np.repeat(0, mat.shape[0]), axis=1)
+        mat_idx = np.insert(mat, denominator_idx, np.repeat(0, mat.shape[0]), axis=1)
         comp = np.zeros(mat_idx.shape)
         comp[:, denominator_idx] = 1 / (np.exp(mat).sum(axis=1) + 1)
         numerator_idx = list(range(0, comp.shape[1]))
@@ -808,13 +811,16 @@ def centralize(mat):
 
 
 @experimental(as_of="0.4.1")
-def ancom(table, grouping,
-          alpha=0.05,
-          tau=0.02,
-          theta=0.1,
-          multiple_comparisons_correction='holm-bonferroni',
-          significance_test=None,
-          percentiles=(0.0, 25.0, 50.0, 75.0, 100.0)):
+def ancom(
+    table,
+    grouping,
+    alpha=0.05,
+    tau=0.02,
+    theta=0.1,
+    multiple_comparisons_correction="holm-bonferroni",
+    significance_test=None,
+    percentiles=(0.0, 25.0, 50.0, 75.0, 100.0),
+):
     r""" Performs a differential abundance test using ANCOM.
 
     This is done by calculating pairwise log ratios between all features
@@ -1028,50 +1034,57 @@ def ancom(table, grouping,
 
     """
     if not isinstance(table, pd.DataFrame):
-        raise TypeError('`table` must be a `pd.DataFrame`, '
-                        'not %r.' % type(table).__name__)
+        raise TypeError(
+            "`table` must be a `pd.DataFrame`, " "not %r." % type(table).__name__
+        )
     if not isinstance(grouping, pd.Series):
-        raise TypeError('`grouping` must be a `pd.Series`,'
-                        ' not %r.' % type(grouping).__name__)
+        raise TypeError(
+            "`grouping` must be a `pd.Series`," " not %r." % type(grouping).__name__
+        )
 
     if np.any(table <= 0):
-        raise ValueError('Cannot handle zeros or negative values in `table`. '
-                         'Use pseudocounts or ``multiplicative_replacement``.'
-                         )
+        raise ValueError(
+            "Cannot handle zeros or negative values in `table`. "
+            "Use pseudocounts or ``multiplicative_replacement``."
+        )
 
     if not 0 < alpha < 1:
-        raise ValueError('`alpha`=%f is not within 0 and 1.' % alpha)
+        raise ValueError("`alpha`=%f is not within 0 and 1." % alpha)
 
     if not 0 < tau < 1:
-        raise ValueError('`tau`=%f is not within 0 and 1.' % tau)
+        raise ValueError("`tau`=%f is not within 0 and 1." % tau)
 
     if not 0 < theta < 1:
-        raise ValueError('`theta`=%f is not within 0 and 1.' % theta)
+        raise ValueError("`theta`=%f is not within 0 and 1." % theta)
 
     if multiple_comparisons_correction is not None:
-        if multiple_comparisons_correction != 'holm-bonferroni':
-            raise ValueError('%r is not an available option for '
-                             '`multiple_comparisons_correction`.'
-                             % multiple_comparisons_correction)
+        if multiple_comparisons_correction != "holm-bonferroni":
+            raise ValueError(
+                "%r is not an available option for "
+                "`multiple_comparisons_correction`." % multiple_comparisons_correction
+            )
 
     if (grouping.isnull()).any():
-        raise ValueError('Cannot handle missing values in `grouping`.')
+        raise ValueError("Cannot handle missing values in `grouping`.")
 
     if (table.isnull()).any().any():
-        raise ValueError('Cannot handle missing values in `table`.')
+        raise ValueError("Cannot handle missing values in `table`.")
 
     percentiles = list(percentiles)
     for percentile in percentiles:
         if not 0.0 <= percentile <= 100.0:
-            raise ValueError('Percentiles must be in the range [0, 100], %r '
-                             'was provided.' % percentile)
+            raise ValueError(
+                "Percentiles must be in the range [0, 100], %r "
+                "was provided." % percentile
+            )
 
     duplicates = skbio.util.find_duplicates(percentiles)
     if duplicates:
-        formatted_duplicates = ', '.join(repr(e) for e in duplicates)
-        raise ValueError('Percentile values must be unique. The following'
-                         ' value(s) were duplicated: %s.' %
-                         formatted_duplicates)
+        formatted_duplicates = ", ".join(repr(e) for e in duplicates)
+        raise ValueError(
+            "Percentile values must be unique. The following"
+            " value(s) were duplicated: %s." % formatted_duplicates
+        )
 
     groups = np.unique(grouping)
     num_groups = len(groups)
@@ -1081,24 +1094,25 @@ def ancom(table, grouping,
             "All values in `grouping` are unique. This method cannot "
             "operate on a grouping vector with only unique values (e.g., "
             "there are no 'within' variance because each group of samples "
-            "contains only a single sample).")
+            "contains only a single sample)."
+        )
 
     if num_groups == 1:
         raise ValueError(
             "All values the `grouping` are the same. This method cannot "
             "operate on a grouping vector with only a single group of samples"
             "(e.g., there are no 'between' variance because there is only a "
-            "single group).")
+            "single group)."
+        )
 
     if significance_test is None:
         significance_test = scipy.stats.f_oneway
 
     table_index_len = len(table.index)
     grouping_index_len = len(grouping.index)
-    mat, cats = table.align(grouping, axis=0, join='inner')
-    if (len(mat) != table_index_len or len(cats) != grouping_index_len):
-        raise ValueError('`table` index and `grouping` '
-                         'index must be consistent.')
+    mat, cats = table.align(grouping, axis=0, join="inner")
+    if len(mat) != table_index_len or len(cats) != grouping_index_len:
+        raise ValueError("`table` index and `grouping` " "index must be consistent.")
 
     n_feat = mat.shape[1]
 
@@ -1106,9 +1120,8 @@ def ancom(table, grouping,
     logratio_mat = _logratio_mat + _logratio_mat.T
 
     # Multiple comparisons
-    if multiple_comparisons_correction == 'holm-bonferroni':
-        logratio_mat = np.apply_along_axis(_holm_bonferroni,
-                                           1, logratio_mat)
+    if multiple_comparisons_correction == "holm-bonferroni":
+        logratio_mat = np.apply_along_axis(_holm_bonferroni, 1, logratio_mat)
     np.fill_diagonal(logratio_mat, 1)
     W = (logratio_mat < alpha).sum(axis=1)
     c_start = W.max() / n_feat
@@ -1117,7 +1130,7 @@ def ancom(table, grouping,
     else:
         # Select appropriate cutoff
         cutoff = c_start - np.linspace(0.05, 0.25, 5)
-        prop_cut = np.array([(W > n_feat*cut).mean() for cut in cutoff])
+        prop_cut = np.array([(W > n_feat * cut).mean() for cut in cutoff])
         dels = np.abs(prop_cut - np.roll(prop_cut, -1))
         dels[-1] = 0
 
@@ -1129,12 +1142,15 @@ def ancom(table, grouping,
             nu = cutoff[3]
         else:
             nu = cutoff[4]
-        reject = (W >= nu*n_feat)
+        reject = W >= nu * n_feat
 
     feat_ids = mat.columns
     ancom_df = pd.DataFrame(
-        {'W': pd.Series(W, index=feat_ids),
-         'Reject null hypothesis': pd.Series(reject, index=feat_ids)})
+        {
+            "W": pd.Series(W, index=feat_ids),
+            "Reject null hypothesis": pd.Series(reject, index=feat_ids),
+        }
+    )
 
     if len(percentiles) == 0:
         return ancom_df, pd.DataFrame()
@@ -1146,10 +1162,10 @@ def ancom(table, grouping,
             for percentile in percentiles:
                 columns.append((percentile, group))
                 data.append(np.percentile(feat_dists, percentile, axis=0))
-        columns = pd.MultiIndex.from_tuples(columns,
-                                            names=['Percentile', 'Group'])
+        columns = pd.MultiIndex.from_tuples(columns, names=["Percentile", "Group"])
         percentile_df = pd.DataFrame(
-            np.asarray(data).T, columns=columns, index=feat_ids)
+            np.asarray(data).T, columns=columns, index=feat_ids
+        )
         return ancom_df, percentile_df
 
 
@@ -1170,20 +1186,18 @@ def _holm_bonferroni(p):
     K = len(p)
     sort_index = -np.ones(K, dtype=np.int64)
     sorted_p = np.sort(p)
-    sorted_p_adj = sorted_p*(K-np.arange(K))
+    sorted_p_adj = sorted_p * (K - np.arange(K))
     for j in range(K):
         idx = (p == sorted_p[j]) & (sort_index < 0)
         num_ties = len(sort_index[idx])
-        sort_index[idx] = np.arange(j, (j+num_ties), dtype=np.int64)
+        sort_index[idx] = np.arange(j, (j + num_ties), dtype=np.int64)
 
-    sorted_holm_p = [min([max(sorted_p_adj[:k]), 1])
-                     for k in range(1, K+1)]
+    sorted_holm_p = [min([max(sorted_p_adj[:k]), 1]) for k in range(1, K + 1)]
     holm_p = [sorted_holm_p[sort_index[k]] for k in range(K)]
     return holm_p
 
 
-def _log_compare(mat, cats,
-                 significance_test=scipy.stats.ttest_ind):
+def _log_compare(mat, cats, significance_test=scipy.stats.ttest_ind):
     """ Calculates pairwise log ratios between all features and performs a
     significiance test (i.e. t-test) to determine if there is a significant
     difference in feature ratios with respect to the variable of interest.
@@ -1211,12 +1225,10 @@ def _log_compare(mat, cats,
     def func(x):
         return significance_test(*[x[cats == k] for k in cs])
 
-    for i in range(c-1):
-        ratio = (log_mat[:, i].T - log_mat[:, i+1:].T).T
-        m, p = np.apply_along_axis(func,
-                                   axis=0,
-                                   arr=ratio)
-        log_ratio[i, i+1:] = np.squeeze(np.array(p.T))
+    for i in range(c - 1):
+        ratio = (log_mat[:, i].T - log_mat[:, i + 1 :].T).T
+        m, p = np.apply_along_axis(func, axis=0, arr=ratio)
+        log_ratio[i, i + 1 :] = np.squeeze(np.array(p.T))
     return log_ratio
 
 
@@ -1230,11 +1242,10 @@ def _gram_schmidt_basis(n):
     n : int
         Dimension of the Aitchison simplex
     """
-    basis = np.zeros((n, n-1))
-    for j in range(n-1):
+    basis = np.zeros((n, n - 1))
+    for j in range(n - 1):
         i = j + 1
-        e = np.array([(1/i)]*i + [-1] +
-                     [0]*(n-i-1))*np.sqrt(i/(i+1))
+        e = np.array([(1 / i)] * i + [-1] + [0] * (n - i - 1)) * np.sqrt(i / (i + 1))
         basis[:, j] = e
     return basis.T
 
@@ -1305,8 +1316,9 @@ def sbp_basis(sbp):
     n_neg = (sbp == -1).sum(axis=1)
     psi = np.zeros(sbp.shape)
     for i in range(0, sbp.shape[0]):
-        psi[i, :] = sbp[i, :] * np.sqrt((n_neg[i] / n_pos[i])**sbp[i, :] /
-                                        np.sum(np.abs(sbp[i, :])))
+        psi[i, :] = sbp[i, :] * np.sqrt(
+            (n_neg[i] / n_pos[i]) ** sbp[i, :] / np.sum(np.abs(sbp[i, :]))
+        )
     return clr_inv(psi)
 
 
@@ -1321,6 +1333,7 @@ def _check_orthogonality(basis):
         basis in the Aitchison simplex
     """
     basis = np.atleast_2d(basis)
-    if not np.allclose(inner(basis, basis), np.identity(len(basis)),
-                       rtol=1e-4, atol=1e-6):
+    if not np.allclose(
+        inner(basis, basis), np.identity(len(basis)), rtol=1e-4, atol=1e-6
+    ):
         raise ValueError("Aitchison basis is not orthonormal")

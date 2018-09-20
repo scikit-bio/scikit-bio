@@ -305,15 +305,17 @@ def fisher_alpha(counts):
     # Temporarily silence RuntimeWarnings (invalid and division by zero) during
     # optimization in case invalid input is provided to the objective function
     # (e.g. alpha=0).
-    orig_settings = np.seterr(divide='ignore', invalid='ignore')
+    orig_settings = np.seterr(divide="ignore", invalid="ignore")
     try:
         alpha = minimize_scalar(f).x
     finally:
         np.seterr(**orig_settings)
 
     if f(alpha) > 1.0:
-        raise RuntimeError("Optimizer failed to converge (error > 1.0), so "
-                           "could not compute Fisher's alpha.")
+        raise RuntimeError(
+            "Optimizer failed to converge (error > 1.0), so "
+            "could not compute Fisher's alpha."
+        )
     return alpha
 
 
@@ -386,8 +388,7 @@ def heip_e(counts):
 
     """
     counts = _validate_counts_vector(counts)
-    return ((np.exp(shannon(counts, base=np.e)) - 1) /
-            (observed_otus(counts) - 1))
+    return (np.exp(shannon(counts, base=np.e)) - 1) / (observed_otus(counts) - 1)
 
 
 @experimental(as_of="0.4.0")
@@ -437,8 +438,7 @@ def kempton_taylor_q(counts, lower_quantile=0.25, upper_quantile=0.75):
     lower = int(np.ceil(n * lower_quantile))
     upper = int(n * upper_quantile)
     sorted_counts = np.sort(counts)
-    return (upper - lower) / np.log(sorted_counts[upper] /
-                                    sorted_counts[lower])
+    return (upper - lower) / np.log(sorted_counts[upper] / sorted_counts[lower])
 
 
 @experimental(as_of="0.4.0")
@@ -684,8 +684,9 @@ def michaelis_menten_fit(counts, num_repeats=1, params_guess=None):
     xvals = np.arange(1, n_indiv + 1)
     ymtx = np.empty((num_repeats, len(xvals)), dtype=int)
     for i in range(num_repeats):
-        ymtx[i] = np.asarray([observed_otus(subsample_counts(counts, n))
-                              for n in xvals], dtype=int)
+        ymtx[i] = np.asarray(
+            [observed_otus(subsample_counts(counts, n)) for n in xvals], dtype=int
+        )
     yvals = ymtx.mean(0)
 
     # Vectors of actual vals y and number of individuals n.
@@ -693,8 +694,9 @@ def michaelis_menten_fit(counts, num_repeats=1, params_guess=None):
         return (((p[0] * n / (p[1] + n)) - y) ** 2).sum()
 
     # Return S_max.
-    return fmin_powell(errfn, params_guess, ftol=1e-5, args=(xvals, yvals),
-                       disp=False)[0]
+    return fmin_powell(errfn, params_guess, ftol=1e-5, args=(xvals, yvals), disp=False)[
+        0
+    ]
 
 
 @experimental(as_of="0.4.0")

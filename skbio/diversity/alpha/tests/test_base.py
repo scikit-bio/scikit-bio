@@ -14,25 +14,51 @@ import numpy.testing as npt
 
 from skbio import TreeNode
 from skbio.diversity.alpha import (
-    berger_parker_d, brillouin_d, dominance, doubles, enspie,
-    esty_ci, fisher_alpha, goods_coverage, heip_e, kempton_taylor_q,
-    margalef, mcintosh_d, mcintosh_e, menhinick, michaelis_menten_fit,
-    observed_otus, osd, pielou_e, robbins, shannon, simpson, simpson_e,
-    singles, strong)
+    berger_parker_d,
+    brillouin_d,
+    dominance,
+    doubles,
+    enspie,
+    esty_ci,
+    fisher_alpha,
+    goods_coverage,
+    heip_e,
+    kempton_taylor_q,
+    margalef,
+    mcintosh_d,
+    mcintosh_e,
+    menhinick,
+    michaelis_menten_fit,
+    observed_otus,
+    osd,
+    pielou_e,
+    robbins,
+    shannon,
+    simpson,
+    simpson_e,
+    singles,
+    strong,
+)
 
 
 class BaseTests(TestCase):
     def setUp(self):
         self.counts = np.array([0, 1, 1, 4, 2, 5, 2, 4, 1, 2])
-        self.sids1 = list('ABCD')
-        self.oids1 = ['OTU%d' % i for i in range(1, 6)]
-        self.t1 = TreeNode.read(StringIO(
-            '(((((OTU1:0.5,OTU2:0.5):0.5,OTU3:1.0):1.0):'
-            '0.0,(OTU4:0.75,OTU5:0.75):1.25):0.0)root;'))
+        self.sids1 = list("ABCD")
+        self.oids1 = ["OTU%d" % i for i in range(1, 6)]
+        self.t1 = TreeNode.read(
+            StringIO(
+                "(((((OTU1:0.5,OTU2:0.5):0.5,OTU3:1.0):1.0):"
+                "0.0,(OTU4:0.75,OTU5:0.75):1.25):0.0)root;"
+            )
+        )
         self.t1_w_extra_tips = TreeNode.read(
-           StringIO('(((((OTU1:0.5,OTU2:0.5):0.5,OTU3:1.0):1.0):0.0,(OTU4:'
-                    '0.75,(OTU5:0.25,(OTU6:0.5,OTU7:0.5):0.5):0.5):1.25):0.0'
-                    ')root;'))
+            StringIO(
+                "(((((OTU1:0.5,OTU2:0.5):0.5,OTU3:1.0):1.0):0.0,(OTU4:"
+                "0.75,(OTU5:0.25,(OTU6:0.5,OTU7:0.5):0.5):0.5):1.25):0.0"
+                ")root;"
+            )
+        )
 
     def test_berger_parker_d(self):
         self.assertEqual(berger_parker_d(np.array([5])), 1)
@@ -41,8 +67,9 @@ class BaseTests(TestCase):
         self.assertEqual(berger_parker_d(self.counts), 5 / 22)
 
     def test_brillouin_d(self):
-        self.assertAlmostEqual(brillouin_d(np.array([1, 2, 0, 0, 3, 1])),
-                               0.86289353018248782)
+        self.assertAlmostEqual(
+            brillouin_d(np.array([1, 2, 0, 0, 3, 1])), 0.86289353018248782
+        )
 
     def test_dominance(self):
         self.assertEqual(dominance(np.array([5])), 1)
@@ -84,7 +111,7 @@ class BaseTests(TestCase):
             max_size = max(indices) + 1
             freqs = np.zeros(max_size, dtype=int)
             for i in range(len(indices)):
-                freqs += np.bincount(indices[i:i + 1], minlength=max_size)
+                freqs += np.bincount(indices[i : i + 1], minlength=max_size)
                 try:
                     curr = f(freqs)
                 except (ZeroDivisionError, FloatingPointError):
@@ -96,12 +123,34 @@ class BaseTests(TestCase):
 
         observed_lower, observed_upper = zip(*_diversity(data, esty_ci))
 
-        expected_lower = np.array([1, -1.38590382, -0.73353593, -0.17434465,
-                                   -0.15060902, -0.04386191, -0.33042054,
-                                   -0.29041008, -0.43554755, -0.33385652])
-        expected_upper = np.array([1, 1.38590382, 1.40020259, 0.67434465,
-                                   0.55060902, 0.71052858, 0.61613483,
-                                   0.54041008, 0.43554755, 0.53385652])
+        expected_lower = np.array(
+            [
+                1,
+                -1.38590382,
+                -0.73353593,
+                -0.17434465,
+                -0.15060902,
+                -0.04386191,
+                -0.33042054,
+                -0.29041008,
+                -0.43554755,
+                -0.33385652,
+            ]
+        )
+        expected_upper = np.array(
+            [
+                1,
+                1.38590382,
+                1.40020259,
+                0.67434465,
+                0.55060902,
+                0.71052858,
+                0.61613483,
+                0.54041008,
+                0.43554755,
+                0.53385652,
+            ]
+        )
 
         npt.assert_array_almost_equal(observed_lower, expected_lower)
         npt.assert_array_almost_equal(observed_upper, expected_upper)
@@ -146,8 +195,40 @@ class BaseTests(TestCase):
 
     def test_kempton_taylor_q(self):
         # Approximate Magurran 1998 calculation p143.
-        arr = np.array([2, 3, 3, 3, 3, 3, 4, 4, 4, 6, 6, 7, 7, 9, 9, 11, 14,
-                        15, 15, 20, 29, 33, 34, 36, 37, 53, 57, 138, 146, 170])
+        arr = np.array(
+            [
+                2,
+                3,
+                3,
+                3,
+                3,
+                3,
+                4,
+                4,
+                4,
+                6,
+                6,
+                7,
+                7,
+                9,
+                9,
+                11,
+                14,
+                15,
+                15,
+                20,
+                29,
+                33,
+                34,
+                36,
+                37,
+                53,
+                57,
+                138,
+                146,
+                170,
+            ]
+        )
         exp = 14 / np.log(34 / 4)
         self.assertAlmostEqual(kempton_taylor_q(arr), exp)
 
@@ -159,8 +240,7 @@ class BaseTests(TestCase):
         self.assertEqual(margalef(self.counts), 8 / np.log(22))
 
     def test_mcintosh_d(self):
-        self.assertAlmostEqual(mcintosh_d(np.array([1, 2, 3])),
-                               0.636061424871458)
+        self.assertAlmostEqual(mcintosh_d(np.array([1, 2, 3])), 0.636061424871458)
 
     def test_mcintosh_e(self):
         num = np.sqrt(15)
@@ -266,5 +346,5 @@ class BaseTests(TestCase):
         self.assertAlmostEqual(strong(np.array([1, 2, 3, 1])), 0.214285714)
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     main()

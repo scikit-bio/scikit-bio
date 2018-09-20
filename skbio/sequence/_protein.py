@@ -10,8 +10,11 @@ import numpy as np
 
 from skbio.util._decorator import classproperty, overrides
 from skbio.util._decorator import stable
-from ._grammared_sequence import (GrammaredSequence, DisableSubclassingMeta,
-                                  _motifs as parent_motifs)
+from ._grammared_sequence import (
+    GrammaredSequence,
+    DisableSubclassingMeta,
+    _motifs as parent_motifs,
+)
 
 
 class Protein(GrammaredSequence, metaclass=DisableSubclassingMeta):
@@ -112,6 +115,7 @@ class Protein(GrammaredSequence, metaclass=DisableSubclassingMeta):
     0 PAW
 
     """
+
     __stop_codes = None
 
     @classproperty
@@ -134,10 +138,7 @@ class Protein(GrammaredSequence, metaclass=DisableSubclassingMeta):
     @classproperty
     @overrides(GrammaredSequence)
     def degenerate_map(cls):
-        return {
-            "B": set("DN"), "Z": set("EQ"),
-            "X": set("ACDEFGHIKLMNPQRSTVWY")
-        }
+        return {"B": set("DN"), "Z": set("EQ"), "X": set("ACDEFGHIKLMNPQRSTVWY")}
 
     @classproperty
     @stable(as_of="0.4.0")
@@ -150,17 +151,17 @@ class Protein(GrammaredSequence, metaclass=DisableSubclassingMeta):
             Characters representing translation stop codons.
 
         """
-        return set('*')
+        return set("*")
 
     @classproperty
     @overrides(GrammaredSequence)
     def gap_chars(cls):
-        return set('-.')
+        return set("-.")
 
     @classproperty
     @overrides(GrammaredSequence)
     def default_gap_char(cls):
-        return '-'
+        return "-"
 
     @property
     def _motifs(self):
@@ -220,7 +221,7 @@ class Protein(GrammaredSequence, metaclass=DisableSubclassingMeta):
     def _repr_stats(self):
         """Define custom statistics to display in the sequence's repr."""
         stats = super(Protein, self)._repr_stats()
-        stats.append(('has stops', '%r' % self.has_stops()))
+        stats.append(("has stops", "%r" % self.has_stops()))
         return stats
 
 

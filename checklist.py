@@ -20,12 +20,15 @@ import warnings
 import dateutil.parser
 
 if sys.version_info.major != 3:
-    sys.exit("scikit-bio can only be used with Python 3. You are currently "
-             "running Python %d." % sys.version_info.major)
+    sys.exit(
+        "scikit-bio can only be used with Python 3. You are currently "
+        "running Python %d." % sys.version_info.major
+    )
 
 
 class ChecklistWarning(Warning):
     """General warning class for warnings raised by checklist.py."""
+
     pass
 
 
@@ -44,10 +47,14 @@ def main():
         as an exit code (e.g. for use with ``sys.exit``).
 
     """
-    root = 'skbio'
-    validators = [InitValidator(), CopyrightHeadersValidator(),
-                  ExecPermissionValidator(), GeneratedCythonValidator(),
-                  APIRegressionValidator()]
+    root = "skbio"
+    validators = [
+        InitValidator(),
+        CopyrightHeadersValidator(),
+        ExecPermissionValidator(),
+        GeneratedCythonValidator(),
+        APIRegressionValidator(),
+    ]
 
     return_code = 0
     for validator in validators:
@@ -55,8 +62,8 @@ def main():
 
         if not success:
             return_code = 1
-            sys.stderr.write('\n'.join(msg))
-            sys.stderr.write('\n\n')
+            sys.stderr.write("\n".join(msg))
+            sys.stderr.write("\n\n")
 
     return return_code
 
@@ -73,7 +80,8 @@ class RepoValidator:
     created by ``validate``.
 
     """
-    reason = ''
+
+    reason = ""
 
     def validate(self, root):
         """Validate a directory tree recursively.
@@ -144,8 +152,13 @@ class RepoValidator:
         https://github.com/biocore/verman for more details.
 
         """
-        proc = subprocess.Popen(cmd, shell=True, universal_newlines=True,
-                                stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+        proc = subprocess.Popen(
+            cmd,
+            shell=True,
+            universal_newlines=True,
+            stdout=subprocess.PIPE,
+            stderr=subprocess.PIPE,
+        )
 
         # communicate pulls all stdout/stderr from the PIPEs to
         # avoid blocking -- don't remove this line!
@@ -175,8 +188,10 @@ class CopyrightHeadersValidator(RepoValidator):
 
     """
 
-    reason = ("Files non-conforming to standard headers as described in\n"
-              "http://scikit-bio.org/docs/latest/development/new_module.html:")
+    reason = (
+        "Files non-conforming to standard headers as described in\n"
+        "http://scikit-bio.org/docs/latest/development/new_module.html:"
+    )
 
     COPYRIGHT_HEADER = """\
 # ----------------------------------------------------------------------------
@@ -190,7 +205,7 @@ class CopyrightHeadersValidator(RepoValidator):
 
     def __init__(self, skip_dirs=None):
         if skip_dirs is None:
-            skip_dirs = {'data', '__pycache__'}
+            skip_dirs = {"data", "__pycache__"}
         self.skip_dirs = set(skip_dirs)
 
     def _validate(self, root, dirs, files):
@@ -200,19 +215,20 @@ class CopyrightHeadersValidator(RepoValidator):
 
         invalid_files = []
         for _file in files:
-            if not _file.endswith('.py'):
+            if not _file.endswith(".py"):
                 continue
 
             pos = 0
             filepath = os.path.join(root, _file)
             f = open(filepath)
 
-            first_line = f.readline().rstrip('\n')
-            if first_line == '# checklist.py:CopyrightHeadersValidator IGNORE':
+            first_line = f.readline().rstrip("\n")
+            if first_line == "# checklist.py:CopyrightHeadersValidator IGNORE":
                 warnings.warn(
                     "File %s has IGNORE directive. Ignoring scikit-bio "
                     "copyright header validation." % filepath,
-                    ChecklistWarning)
+                    ChecklistWarning,
+                )
                 continue
 
             f.seek(0)
@@ -226,11 +242,12 @@ class CopyrightHeadersValidator(RepoValidator):
                 pos += 3
             # copyright header consists of 7 lines, and by discussion in
             # preceding comment, spans through 14 tokens.
-            cheader = ''.join(map(lambda x: x[1], tokens[pos:pos + 14]))
+            cheader = "".join(map(lambda x: x[1], tokens[pos : pos + 14]))
             # Ensure that there is no blank line at the end of the file
-            if (cheader != self.COPYRIGHT_HEADER or
-                    (tokens[pos + 14][0] != tokenize.NL and
-                     tokens[pos + 14][0] != tokenize.ENDMARKER)):
+            if cheader != self.COPYRIGHT_HEADER or (
+                tokens[pos + 14][0] != tokenize.NL
+                and tokens[pos + 14][0] != tokenize.ENDMARKER
+            ):
                 invalid_files.append(f.name)
             f.close()
 
@@ -254,11 +271,12 @@ class InitValidator(RepoValidator):
         contained within them).
 
     """
+
     reason = "Directories missing init files:"
 
     def __init__(self, skip_dirs=None):
         if skip_dirs is None:
-            skip_dirs = {'data', '__pycache__'}
+            skip_dirs = {"data", "__pycache__"}
         self.skip_dirs = set(skip_dirs)
 
     def _validate(self, root, dirs, files):
@@ -271,7 +289,7 @@ class InitValidator(RepoValidator):
                 dirs.remove(skip_dir)
 
         invalid_dirs = []
-        if '__init__.py' not in files:
+        if "__init__.py" not in files:
             invalid_dirs.append(root)
         return invalid_dirs
 
@@ -286,11 +304,12 @@ class ExecPermissionValidator(RepoValidator):
         C files (header and source files).
 
     """
+
     reason = "Library code with execute permissions:"
 
     def __init__(self, extensions=None):
         if extensions is None:
-            extensions = {'.py', '.pyx', '.h', '.c'}
+            extensions = {".py", ".pyx", ".h", ".c"}
         self.extensions = set(extensions)
 
     def _validate(self, root, dirs, files):
@@ -323,9 +342,10 @@ class GeneratedCythonValidator(RepoValidator):
         File extension for generated C files.
 
     """
+
     reason = "Cython code with missing or outdated generated C code:"
 
-    def __init__(self, cython_ext='.pyx', c_ext='.c'):
+    def __init__(self, cython_ext=".pyx", c_ext=".c"):
         self.cython_ext = cython_ext
         self.c_ext = c_ext
 
@@ -364,8 +384,9 @@ class GeneratedCythonValidator(RepoValidator):
         stdout, stderr, retval = self._system_call(cmd)
 
         if retval != 0:
-            raise RuntimeError("Could not execute 'git log' command to "
-                               "determine file timestamp.")
+            raise RuntimeError(
+                "Could not execute 'git log' command to " "determine file timestamp."
+            )
         return dateutil.parser.parse(stdout.strip())
 
 
@@ -379,8 +400,8 @@ class APIRegressionValidator(RepoValidator):
     least deep API target.
 
     """
-    reason = ("The following tests import `A` but should import `B`"
-              " (file: A => B):")
+
+    reason = "The following tests import `A` but should import `B`" " (file: A => B):"
 
     def __init__(self):
         self._imports = {}
@@ -406,8 +427,7 @@ class APIRegressionValidator(RepoValidator):
             for import_ in imports:
                 substitute = self._minimal_import(import_)
                 if substitute is not None:
-                    errors.append("%s: %s => %s" %
-                                  (fp, import_, substitute))
+                    errors.append("%s: %s => %s" % (fp, import_, substitute))
 
         return errors
 
@@ -418,12 +438,12 @@ class APIRegressionValidator(RepoValidator):
             # The actual object imported will be the key.
             key = import_.split(".")[-1]
             # If package importing the behavior is shorter than its import:
-            if len(package.split('.')) + 1 < len(import_.split('.')):
+            if len(package.split(".")) + 1 < len(import_.split(".")):
                 value = ".".join([package, key])
 
             if key in self._imports:
                 sub = self._imports[key]
-                if len(sub.split('.')) > len(value.split('.')):
+                if len(sub.split(".")) > len(value.split(".")):
                     self._imports[key] = value
             else:
                 self._imports[key] = value
@@ -434,7 +454,7 @@ class APIRegressionValidator(RepoValidator):
         if key not in self._imports:
             return None
         substitute = self._imports[key]
-        if len(substitute.split('.')) == len(import_.split('.')):
+        if len(substitute.split(".")) == len(import_.split(".")):
             return None
         else:
             return substitute
@@ -442,7 +462,7 @@ class APIRegressionValidator(RepoValidator):
     def _parse_file(self, fp, root):
         """Parse a file and return all normalized skbio imports."""
         imports = []
-        with open(fp, 'U') as f:
+        with open(fp, "U") as f:
             # Read the file and run it through AST
             source = ast.parse(f.read())
             # Get each top-level element, this is where API imports should be.
@@ -457,7 +477,7 @@ class APIRegressionValidator(RepoValidator):
                     if node.level > 0:
                         prefix = root
                         extra = node.level - 1
-                        while(extra > 0):
+                        while extra > 0:
                             # Keep dropping...
                             prefix = os.path.split(prefix)[0]
                             extra -= 1
@@ -466,8 +486,9 @@ class APIRegressionValidator(RepoValidator):
                     # Prefix should be empty unless node.level > 0
                     if node.module is None:
                         node.module = ""
-                    imports += [".".join([prefix + node.module, x.name])
-                                for x in node.names]
+                    imports += [
+                        ".".join([prefix + node.module, x.name]) for x in node.names
+                    ]
         skbio_imports = []
         for import_ in imports:
             # Filter by skbio
@@ -476,5 +497,5 @@ class APIRegressionValidator(RepoValidator):
         return skbio_imports
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     sys.exit(main())

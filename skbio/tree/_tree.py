@@ -18,8 +18,13 @@ from scipy.stats import pearsonr
 
 from skbio._base import SkbioObject
 from skbio.stats.distance import DistanceMatrix
-from ._exception import (NoLengthError, DuplicateNodeError, NoParentError,
-                         MissingNodeError, TreeError)
+from ._exception import (
+    NoLengthError,
+    DuplicateNodeError,
+    NoParentError,
+    MissingNodeError,
+    TreeError,
+)
 from skbio.util import RepresentationWarning
 from skbio.util._decorator import experimental, classonlymethod
 
@@ -40,7 +45,7 @@ def distance_from_r(m1, m2):
         The distance between m1 and m2
 
     """
-    return (1-pearsonr(m1.data.flat, m2.data.flat)[0])/2
+    return (1 - pearsonr(m1.data.flat, m2.data.flat)[0]) / 2
 
 
 class TreeNode(SkbioObject):
@@ -76,9 +81,8 @@ class TreeNode(SkbioObject):
     id
 
     """
-    default_write_format = 'newick'
-    _exclude_from_copy = set(['parent', 'children', '_tip_cache',
-                              '_non_tip_cache'])
+    default_write_format = "newick"
+    _exclude_from_copy = set(["parent", "children", "_tip_cache", "_non_tip_cache"])
 
     @experimental(as_of="0.4.0")
     def __init__(self, name=None, length=None, parent=None, children=None):
@@ -123,8 +127,12 @@ class TreeNode(SkbioObject):
         classname = self.__class__.__name__
         name = self.name if self.name is not None else "unnamed"
 
-        return "<%s, name: %s, internal node count: %d, tips count: %d>" % \
-               (classname, name, n_nontips, n_tips)
+        return "<%s, name: %s, internal node count: %d, tips count: %d>" % (
+            classname,
+            name,
+            n_nontips,
+            n_tips,
+        )
 
     @experimental(as_of="0.4.0")
     def __str__(self):
@@ -148,7 +156,7 @@ class TreeNode(SkbioObject):
         '((a,b)c);\n'
 
         """
-        return str(''.join(self.write([])))
+        return str("".join(self.write([])))
 
     @experimental(as_of="0.4.0")
     def __iter__(self):
@@ -500,6 +508,7 @@ class TreeNode(SkbioObject):
         0
 
         """
+
         def __copy_node(node_to_copy):
             r"""Helper method to copy a node"""
             # this is _possibly_ dangerous, we're assuming the node to copy is
@@ -526,8 +535,7 @@ class TreeNode(SkbioObject):
                 old_child = old_top_node.children[-unvisited_children]
                 new_child = __copy_node(old_child)
                 new_top_node.append(new_child)
-                nodes_stack.append([new_child, old_child,
-                                    len(old_child.children)])
+                nodes_stack.append([new_child, old_child, len(old_child.children)])
             else:  # no unvisited children
                 nodes_stack.pop()
         return root
@@ -635,8 +643,7 @@ class TreeNode(SkbioObject):
             edgename = self.name
             length = self.length
 
-        result = self.__class__(name=edgename, children=children,
-                                length=length)
+        result = self.__class__(name=edgename, children=children, length=length)
 
         if parent is None:
             result.name = "root"
@@ -706,7 +713,8 @@ class TreeNode(SkbioObject):
                 if not t.is_tip():
                     raise MissingNodeError(
                         "Counts can only be for tips in the tree. %s is an "
-                        "internal node." % t.name)
+                        "internal node." % t.name
+                    )
                 result[t] += count
                 for internal_node in t.ancestors():
                     result[internal_node] += count
@@ -819,8 +827,7 @@ class TreeNode(SkbioObject):
             node = self.find(node)
 
         if not node.children:
-            raise TreeError("Can't use a tip (%s) as the root" %
-                            repr(node.name))
+            raise TreeError("Can't use a tip (%s) as the root" % repr(node.name))
         return node.unrooted_deepcopy()
 
     @experimental(as_of="0.4.0")
@@ -885,7 +892,7 @@ class TreeNode(SkbioObject):
             # climb to midpoint spot
             climb_node = climb_node.parent
             if climb_node.is_tip():
-                raise TreeError('error trying to root tree at tip')
+                raise TreeError("error trying to root tree at tip")
             else:
                 return climb_node.unrooted_copy()
 
@@ -1431,8 +1438,9 @@ class TreeNode(SkbioObject):
 
                 if node.is_tip():
                     if name in tip_cache:
-                        raise DuplicateNodeError("Tip with name '%s' already "
-                                                 "exists." % name)
+                        raise DuplicateNodeError(
+                            "Tip with name '%s' already " "exists." % name
+                        )
 
                     tip_cache[name] = node
                 else:
@@ -1821,8 +1829,8 @@ class TreeNode(SkbioObject):
             prev = t
             curr = t.parent
 
-            while curr and not hasattr(curr, 'black'):
-                setattr(curr, 'black', [prev])
+            while curr and not hasattr(curr, "black"):
+                setattr(curr, "black", [prev])
                 nodes_to_scrub.append(curr)
                 prev = curr
                 curr = curr.parent
@@ -1837,7 +1845,7 @@ class TreeNode(SkbioObject):
 
         # clean up tree
         for n in nodes_to_scrub:
-            delattr(n, 'black')
+            delattr(n, "black")
 
         return curr
 
@@ -2045,6 +2053,7 @@ class TreeNode(SkbioObject):
 
         """
         if filter_f is None:
+
             def filter_f(a, b):
                 return True
 
@@ -2141,7 +2150,7 @@ class TreeNode(SkbioObject):
 
         """
         if attrs is None:
-            attrs = [('name', object), ('length', float), ('id', int)]
+            attrs = [("name", object), ("length", float), ("id", int)]
         else:
             for attr, dtype in attrs:
                 if not hasattr(self, attr):
@@ -2156,47 +2165,48 @@ class TreeNode(SkbioObject):
             for idx, (attr, dtype) in enumerate(attrs):
                 tmp[idx][n_id] = getattr(node, attr)
 
-        results = {'id_index': id_index, 'child_index': child_index}
+        results = {"id_index": id_index, "child_index": child_index}
         results.update({attr: arr for (attr, dtype), arr in zip(attrs, tmp)})
         if nan_length_value is not None:
-            length_v = results['length']
+            length_v = results["length"]
             length_v[np.isnan(length_v)] = nan_length_value
         return results
 
-    def _ascii_art(self, char1='-', show_internal=True, compact=False):
+    def _ascii_art(self, char1="-", show_internal=True, compact=False):
         LEN = 10
-        PAD = ' ' * LEN
-        PA = ' ' * (LEN - 1)
-        namestr = self.name or ''  # prevents name of NoneType
+        PAD = " " * LEN
+        PA = " " * (LEN - 1)
+        namestr = self.name or ""  # prevents name of NoneType
         if self.children:
             mids = []
             result = []
             for c in self.children:
                 if c is self.children[0]:
-                    char2 = '/'
+                    char2 = "/"
                 elif c is self.children[-1]:
-                    char2 = '\\'
+                    char2 = "\\"
                 else:
-                    char2 = '-'
+                    char2 = "-"
                 (clines, mid) = c._ascii_art(char2, show_internal, compact)
                 mids.append(mid + len(result))
                 result.extend(clines)
                 if not compact:
-                    result.append('')
+                    result.append("")
             if not compact:
                 result.pop()
             (lo, hi, end) = (mids[0], mids[-1], len(result))
-            prefixes = [PAD] * (lo + 1) + [PA + '|'] * \
-                (hi - lo - 1) + [PAD] * (end - hi)
+            prefixes = (
+                [PAD] * (lo + 1) + [PA + "|"] * (hi - lo - 1) + [PAD] * (end - hi)
+            )
             mid = np.int(np.trunc((lo + hi) / 2))
-            prefixes[mid] = char1 + '-' * (LEN - 2) + prefixes[mid][-1]
+            prefixes[mid] = char1 + "-" * (LEN - 2) + prefixes[mid][-1]
             result = [p + l for (p, l) in zip(prefixes, result)]
             if show_internal:
                 stem = result[mid]
-                result[mid] = stem[0] + namestr + stem[len(namestr) + 1:]
+                result[mid] = stem[0] + namestr + stem[len(namestr) + 1 :]
             return (result, mid)
         else:
-            return ([char1 + '-' + namestr], 0)
+            return ([char1 + "-" + namestr], 0)
 
     @experimental(as_of="0.4.0")
     def ascii_art(self, show_internal=True, compact=False):
@@ -2230,9 +2240,8 @@ class TreeNode(SkbioObject):
                   \f-------|
                             \-e
         """
-        (lines, mid) = self._ascii_art(show_internal=show_internal,
-                                       compact=compact)
-        return '\n'.join(lines)
+        (lines, mid) = self._ascii_art(show_internal=show_internal, compact=compact)
+        return "\n".join(lines)
 
     @experimental(as_of="0.4.0")
     def accumulate_to_ancestor(self, ancestor):
@@ -2276,8 +2285,9 @@ class TreeNode(SkbioObject):
                 raise NoParentError("Provided ancestor is not in the path")
 
             if curr.length is None:
-                raise NoLengthError("No length on node %s found." %
-                                    curr.name or "unnamed")
+                raise NoLengthError(
+                    "No length on node %s found." % curr.name or "unnamed"
+                )
 
             accum += curr.length
             curr = curr.parent
@@ -2358,8 +2368,7 @@ class TreeNode(SkbioObject):
                 if len(n.children) == 1:
                     raise TreeError("No support for single descedent nodes")
                 else:
-                    tip_info = [(max(c.MaxDistTips, key=maxkey), c)
-                                for c in n.children]
+                    tip_info = [(max(c.MaxDistTips, key=maxkey), c) for c in n.children]
 
                     dists = [i[0][0] for i in tip_info]
                     best_idx = np.argsort(dists)[-2:]
@@ -2411,7 +2420,7 @@ class TreeNode(SkbioObject):
         >>> [n.name for n in tips]
         ['b', 'e']
         """
-        if not hasattr(self, 'MaxDistTips'):
+        if not hasattr(self, "MaxDistTips"):
             # _set_max_distance will throw a TreeError if a node with a single
             # child is encountered
             try:
@@ -2423,7 +2432,7 @@ class TreeNode(SkbioObject):
         tips = [None, None]
         for n in self.non_tips(include_self=True):
             tip_a, tip_b = n.MaxDistTips
-            dist = (tip_a[0] + tip_b[0])
+            dist = tip_a[0] + tip_b[0]
 
             if dist > longest:
                 longest = dist
@@ -2486,8 +2495,7 @@ class TreeNode(SkbioObject):
             tip_order = [self.find(n) for n in endpoints]
             for n in tip_order:
                 if not n.is_tip():
-                    raise ValueError("Node with name '%s' is not a tip." %
-                                     n.name)
+                    raise ValueError("Node with name '%s' is not a tip." % n.name)
 
         # linearize all tips in postorder
         # .__start, .__stop compose the slice in tip_order.
@@ -2512,8 +2520,7 @@ class TreeNode(SkbioObject):
                         if tip2 not in result_map:
                             continue
                         t2idx = result_map[tip2]
-                        result[t1idx, t2idx] = distances[
-                            tip1] + distances[tip2]
+                        result[t1idx, t2idx] = distances[tip1] + distances[tip2]
 
         for node in self.postorder():
             if not node.children:
@@ -2527,9 +2534,11 @@ class TreeNode(SkbioObject):
                     warnings.warn(
                         "`TreeNode.tip_tip_distances`: Node with name %r does "
                         "not have an associated length, so a length of 0.0 "
-                        "will be used." % child.name, RepresentationWarning)
+                        "will be used." % child.name,
+                        RepresentationWarning,
+                    )
                     length = 0.0
-                distances[child.__start:child.__stop] += length
+                distances[child.__start : child.__stop] += length
 
                 starts.append(child.__start)
                 stops.append(child.__stop)
@@ -2665,8 +2674,9 @@ class TreeNode(SkbioObject):
         return 1 - (2 * intersection_length / float(total_subsets))
 
     @experimental(as_of="0.4.0")
-    def compare_tip_distances(self, other, sample=None, dist_f=distance_from_r,
-                              shuffle_f=np.random.shuffle):
+    def compare_tip_distances(
+        self, other, sample=None, dist_f=distance_from_r, shuffle_f=np.random.shuffle
+    ):
         """Compares self to other using tip-to-tip distance matrices.
 
         Value returned is `dist_f(m1, m2)` for the two matrices. Default is
@@ -2838,18 +2848,14 @@ class TreeNode(SkbioObject):
 
                 if c:
                     # c has children itself, so need to add to result
-                    child_index.append((c.id,
-                                        c.children[0].id,
-                                        c.children[-1].id))
+                    child_index.append((c.id, c.children[0].id, c.children[-1].id))
 
         # handle root, which should be t itself
         id_index[self.id] = self
 
         # only want to add to the child_index if self has children...
         if self.children:
-            child_index.append((self.id,
-                                self.children[0].id,
-                                self.children[-1].id))
+            child_index.append((self.id, self.children[0].id, self.children[-1].id))
         child_index = np.asarray(child_index)
         child_index = np.atleast_2d(child_index)
 
@@ -2918,22 +2924,23 @@ class TreeNode(SkbioObject):
         if tip_subset is not None:
             all_tips = self.subset()
             if not set(tip_subset).issubset(all_tips):
-                raise ValueError('tip_subset contains ids that aren\'t tip '
-                                 'names.')
+                raise ValueError("tip_subset contains ids that aren't tip " "names.")
 
             lca = self.lowest_common_ancestor(tip_subset)
             ancestors = {}
             for tip in tip_subset:
                 curr = self.find(tip)
                 while curr is not lca:
-                    ancestors[curr.id] = curr.length if curr.length is not \
-                        None else 0.0
+                    ancestors[curr.id] = curr.length if curr.length is not None else 0.0
                     curr = curr.parent
             return sum(ancestors.values())
 
         else:
-            return sum(n.length for n in self.postorder(include_self=True) if
-                       n.length is not None)
+            return sum(
+                n.length
+                for n in self.postorder(include_self=True)
+                if n.length is not None
+            )
 
     @experimental(as_of="0.4.0")
     def cache_attr(self, func, cache_attrname, cache_type=list):
@@ -2987,10 +2994,12 @@ class TreeNode(SkbioObject):
 
         """
         if cache_type in [set, frozenset]:
+
             def reduce_f(a, b):
                 return a | b
 
         elif cache_type == list:
+
             def reduce_f(a, b):
                 return a + b
 
@@ -3130,7 +3139,7 @@ class TreeNode(SkbioObject):
         """
         support = None
         if self.name is not None:
-            left, _, _ = self.name.partition(':')
+            left, _, _ = self.name.partition(":")
             try:
                 support = float(left)
             except ValueError:
@@ -3167,14 +3176,14 @@ class TreeNode(SkbioObject):
         <BLANKLINE>
         """
         if self.is_root():
-            raise TreeError('Cannot unpack root.')
+            raise TreeError("Cannot unpack root.")
         if self.is_tip():
-            raise TreeError('Cannot unpack tip.')
+            raise TreeError("Cannot unpack tip.")
         parent = self.parent
-        blen = (self.length or 0.0)
+        blen = self.length or 0.0
         for child in self.children:
-            clen = (child.length or 0.0)
-            child.length = (clen + blen or None)
+            clen = child.length or 0.0
+            child.length = clen + blen or None
         parent.remove(self)
         parent.extend(self.children)
 
