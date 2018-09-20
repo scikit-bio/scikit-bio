@@ -800,18 +800,18 @@ class TestStockholmWriter(unittest.TestCase):
             _tabular_msa_to_stockholm(msa, fh)
 
     def test_unoriginal_gr_feature_names_error(self):
-        pos_metadata_dataframe = pd.DataFrame.from_items([('AC',
-                                                           list('GAGCAAGCCACTA'
-                                                                'GA')),
-                                                          ('SS',
-                                                           list('TCCTTGAACTACC'
-                                                                'CG')),
-                                                          ('AS',
-                                                           list('TCAGCTCTGCAGC'
-                                                                'GT')),
-                                                          ('SS',
-                                                           list('GTCAGGCGCTCGG'
-                                                                'TG'))])
+
+        pos_metadata_dataframe = pd.DataFrame(
+            [
+                list('GAGCAAGCCACTAGA'),
+                list('TCCTTGAACTACCCG'),
+                list('TCAGCTCTGCAGCGT'),
+                list('GTCAGGCGCTCGGTG')
+            ],
+            index=['AC', 'SS', 'AS', 'AC']
+
+        ).T
+
         msa = TabularMSA([DNA('CGTCAATCTCGAACT',
                           positional_metadata=pos_metadata_dataframe)],
                          index=['seq1'])
@@ -822,18 +822,17 @@ class TestStockholmWriter(unittest.TestCase):
             _tabular_msa_to_stockholm(msa, fh)
 
     def test_unoriginal_gc_feature_names_error(self):
-        pos_metadata_dataframe = pd.DataFrame.from_items([('AC',
-                                                           list('GAGCAAGCCACTA'
-                                                                'GA')),
-                                                          ('SS',
-                                                           list('TCCTTGAACTACC'
-                                                                'CG')),
-                                                          ('SS',
-                                                           list('TCAGCTCTGCAGC'
-                                                                'GT')),
-                                                          ('AC',
-                                                           list('GTCAGGCGCTCGG'
-                                                                'TG'))])
+        pos_metadata_dataframe = pd.DataFrame(
+            [
+                list('GAGCAAGCCACTAGA'),
+                list('TCCTTGAACTACCCG'),
+                list('TCAGCTCTGCAGCGT'),
+                list('GTCAGGCGCTCGGTG')
+            ],
+            index=['AC', 'SS', 'SS', 'AC']
+
+        ).T
+
         msa = TabularMSA([DNA('CCCCTGCTTTCGTAG')],
                          positional_metadata=pos_metadata_dataframe)
         with self.assertRaisesRegex(StockholmFormatError,

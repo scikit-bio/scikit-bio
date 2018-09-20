@@ -2259,7 +2259,7 @@ class TabularMSA(MetadataMixin, PositionalMetadataMixin, SkbioObject):
         if joined_seqs:
             joined_positional_metadata = pd.concat(
                 [self.positional_metadata, other.positional_metadata],
-                ignore_index=True, **concat_kwargs)
+                ignore_index=True, sort=True, **concat_kwargs)
 
             if not self.has_positional_metadata():
                 del self.positional_metadata

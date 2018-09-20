@@ -193,8 +193,9 @@ class GrammaredSequence(Sequence, metaclass=GrammaredSequenceMeta):
         # TODO These masks could be defined (as literals) on each concrete
         # object. For now, memoize!
         if cls.__validation_mask is None:
+            as_bytes = ''.join(cls.alphabet).encode('ascii')
             cls.__validation_mask = np.invert(np.bincount(
-                np.fromstring(''.join(cls.alphabet), dtype=np.uint8),
+                np.frombuffer(as_bytes, dtype=np.uint8),
                 minlength=cls._number_of_extended_ascii_codes).astype(bool))
         return cls.__validation_mask
 
