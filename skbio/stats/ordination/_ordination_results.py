@@ -323,13 +323,18 @@ class OrdinationResults(SkbioObject):
             if column not in df:
                 raise ValueError("Column '%s' not in data frame." % column)
 
+            missing_ids = set(ids) - set(df.index)
+
+            if missing_ids:
+                raise ValueError("One or more IDs in the ordination results "
+                                 "are not in the data frame: "
+                                 "%s" % missing_ids)
+
             col_vals = df.loc[ids, column]
 
             if col_vals.isnull().any():
-                raise ValueError("One or more IDs in the ordination results "
-                                 "are not in the data frame, or there is "
-                                 "missing data in the data frame's '%s' "
-                                 "column." % column)
+                raise ValueError("There are missing data in the data "
+                                 "frame's '%s' column." % column)
 
             category_to_color = None
             try:
