@@ -2667,7 +2667,7 @@ class SequenceReprDoctests:
     ...     # nested quotes
     ...     10: '"\''
     ... }
-    >>> positional_metadata = pd.DataFrame.from_items([
+    >>> positional_metadata = pd.DataFrame.from_dict(dict([
     ...     # str key, int list value
     ...     ('foo', [1, 2, 3, 4]),
     ...     # float key, float list value
@@ -2677,7 +2677,7 @@ class SequenceReprDoctests:
     ...     # truncated key (too long), bool list value
     ...     ('abc' * 90, [True, False, False, True]),
     ...     # None key
-    ...     (None, range(4))])
+    ...     (None, range(4))]))
     >>> interval_metadata = IntervalMetadata(4)
     >>> _ = interval_metadata.add([(0, 2), (1, 3)],
     ...                           [(False, True), (False, False)],
