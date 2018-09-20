@@ -194,7 +194,7 @@ class GrammaredSequence(Sequence, metaclass=GrammaredSequenceMeta):
         # object. For now, memoize!
         if cls.__validation_mask is None:
             cls.__validation_mask = np.invert(np.bincount(
-                np.fromstring(''.join(cls.alphabet), dtype=np.uint8),
+                np.frombuffer(''.join(cls.alphabet), dtype=np.uint8),
                 minlength=cls._number_of_extended_ascii_codes).astype(bool))
         return cls.__validation_mask
 
