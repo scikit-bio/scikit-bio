@@ -11,6 +11,7 @@ env:
   - CONDA_PY=3.5 MAKE_DOC=TRUE USE_CYTHON=TRUE
 
 before_install:
+  - export MPLBACKEND='Agg'
   - if [[ "$TRAVIS_OS_NAME" == "linux" ]]; then wget https://repo.continuum.io/miniconda/Miniconda3-latest-Linux-x86_64.sh -O miniconda.sh; fi
   - if [[ "$TRAVIS_OS_NAME" == "osx" ]]; then wget https://repo.continuum.io/miniconda/Miniconda3-latest-MacOSX-x86_64.sh -O miniconda.sh; fi
   - bash miniconda.sh -b -p $HOME/miniconda
@@ -28,10 +29,8 @@ install:
   - python --version
   - pip install -r ci/pip_requirements.txt
   - pip install . --no-deps
-  - mkdir -p $HOME/.config/matplotlib
 
 script:
-  - echo 'backend : Agg' > $HOME/.config/matplotlib/matplotlibrc
   - WITH_COVERAGE=TRUE make test
   - if [ ${MAKE_DOC} ]; then make -C doc clean html; fi
 
