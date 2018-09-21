@@ -28,7 +28,7 @@ if sys.version_info.major != 3:
 
 # derived from https://docs.pytest.org/en/3.8.0/goodpractices.html
 class PyTest(TestCommand):
-    user_options = []  # ("pytest-args=", "a", "Arguments to pass to pytest")]
+    user_options = [("pytest-args=", "a", "Arguments to pass to pytest")]
 
     def initialize_options(self):
         TestCommand.initialize_options(self)

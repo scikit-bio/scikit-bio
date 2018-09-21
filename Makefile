@@ -7,8 +7,7 @@
 # ----------------------------------------------------------------------------
 
 ifeq ($(WITH_COVERAGE), TRUE)
-	# TODO: actually add coverage back in
-	TEST_COMMAND = python setup.py test
+	TEST_COMMAND = python setup.py test -a "--cov=skbio"
 else
 	TEST_COMMAND = python setup.py test
 endif

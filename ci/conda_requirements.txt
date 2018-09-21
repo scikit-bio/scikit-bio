@@ -10,4 +10,4 @@ flake8
 python-dateutil
 decorator
 scikit-learn
-pytest
+pytest-cov
