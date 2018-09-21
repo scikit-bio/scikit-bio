@@ -8,7 +8,7 @@ Classes
 -------
 
 .. autosummary::
-   :toctree: generated/
+   :toctree:
 
    IORegistry
    Format
@@ -17,7 +17,7 @@ Functions
 ---------
 
 .. autosummary::
-   :toctree: generated/
+   :toctree:
 
    create_format
 
@@ -25,7 +25,7 @@ Exceptions
 ----------
 
 .. autosummary::
-   :toctree: generated/
+   :toctree:
 
    DuplicateRegistrationError
    InvalidRegistrationError

@@ -183,6 +183,7 @@ def permdisp(distance_matrix, grouping, column=None, test='median',
     grouping instead of a grouping vector. The following DataFrame's
     Grouping column specifies the same grouping as the vector we used in the
     previous examples.:
+
     >>> import pandas as pd
     >>> df = pd.DataFrame.from_dict(
     ...      {'Grouping': {'s1': 'G1', 's2': 'G1', 's3': 'G1', 's4': 'G2',

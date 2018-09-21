@@ -19,10 +19,6 @@ class NucleotideMixin(metaclass=ABCMeta):
 
     This is an abstract base class (ABC) that cannot be instantiated.
 
-    Attributes
-    ----------
-    complement_map
-
     See Also
     --------
     DNA

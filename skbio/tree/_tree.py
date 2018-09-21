@@ -66,15 +66,6 @@ class TreeNode(SkbioObject):
         Connect this node to a parent
     children : list of TreeNode or None
         Connect this node to existing children
-
-    Attributes
-    ----------
-    name
-    length
-    parent
-    children
-    id
-
     """
     default_write_format = 'newick'
     _exclude_from_copy = set(['parent', 'children', '_tip_cache',
