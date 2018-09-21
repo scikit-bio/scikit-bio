@@ -39,7 +39,7 @@ Functions
 ---------
 
 .. autosummary::
-   :toctree: generated/
+   :toctree:
 
    closure
    multiplicative_replacement

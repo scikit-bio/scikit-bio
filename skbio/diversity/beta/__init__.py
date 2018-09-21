@@ -13,7 +13,7 @@ Functions
 ---------
 
 .. autosummary::
-   :toctree: generated/
+   :toctree:
 
     unweighted_unifrac
     weighted_unifrac
