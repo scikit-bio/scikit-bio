@@ -165,14 +165,14 @@ class TestBlast7Reader(unittest.TestCase):
         with self.assertRaisesRegex(
                 BLAST7FormatError,
                 r"Fields \[.*'qseqid', .*'sseqid', .*'qstart'\]"
-                " do.*\[.*'qseqid', .*'sseqid', .*'score'\]"):
+                r" do.*\[.*'qseqid', .*'sseqid', .*'score'\]"):
             _blast7_to_data_frame(fp)
         fp = get_data_path("legacy9_invalid_differing_fields")
         with self.assertRaisesRegex(
                 BLAST7FormatError,
                 r"Fields \[.*'qseqid', .*'sseqid', .*'qstart'\]"
-                " do.*\[.*'qseqid', .*'sseqid', "
-                ".*'sallseqid'\]"):
+                r" do.*\[.*'qseqid', .*'sseqid', "
+                r".*'sallseqid'\]"):
             _blast7_to_data_frame(fp)
 
     def test_no_data_error(self):

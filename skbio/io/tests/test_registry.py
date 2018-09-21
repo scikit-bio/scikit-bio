@@ -26,7 +26,7 @@ from skbio.util._exception import TestingUtilError
 from skbio import DNA, read, write
 
 
-class TestClass:
+class MockClass:
     def __init__(self, l):
         self.list = l
 
@@ -39,11 +39,11 @@ class TestClass:
         return "%s(%s)" % (str(self.__class__.__name__), str(self.list))
 
 
-class TestClassA(TestClass):
+class MockClassA(MockClass):
     pass
 
 
-class TestClassB(TestClass):
+class MockClassB(MockClass):
     pass
 
 
@@ -72,16 +72,16 @@ class RegistryTest(unittest.TestCase):
 class TestRegisterAndGetReader(RegistryTest):
     def test_get_reader_no_match(self):
         self.assertIs(None, self.registry.get_reader('not_a_format',
-                                                     TestClass))
+                                                     MockClass))
 
     def test_get_reader_when_only_writer_exists(self):
         format1 = self.registry.create_format('format1')
 
-        @format1.writer(TestClass)
+        @format1.writer(MockClass)
         def format_writer(fh):
             return
 
-        self.assertEqual(None, self.registry.get_reader('format', TestClass))
+        self.assertEqual(None, self.registry.get_reader('format', MockClass))
 
     def test_register_reader_on_many(self):
         format1 = self.registry.create_format('format1')
@@ -90,27 +90,27 @@ class TestRegisterAndGetReader(RegistryTest):
         format4 = self.registry.create_format('format4', encoding='binary')
         format5 = self.registry.create_format('format5', encoding='binary')
 
-        @format1.reader(TestClassA)
+        @format1.reader(MockClassA)
         def format1_reader(fh):
             return
 
-        @format1.reader(TestClassB)
+        @format1.reader(MockClassB)
         def format1_reader_b(fh):
             return
 
-        @format2.reader(TestClassA)
+        @format2.reader(MockClassA)
         def format2_reader(fh):
             return
 
-        @format3.reader(TestClassB)
+        @format3.reader(MockClassB)
         def format3_reader(fh):
             return
 
-        @format4.reader(TestClassA)
+        @format4.reader(MockClassA)
         def format4_reader(fh):
             return
 
-        @format4.reader(TestClassB)
+        @format4.reader(MockClassB)
         def format4_reader_b(fh):
             return
 
@@ -119,65 +119,65 @@ class TestRegisterAndGetReader(RegistryTest):
             return
 
         self.assertIs(format1_reader,
-                      self.registry.get_reader('format1', TestClassA))
+                      self.registry.get_reader('format1', MockClassA))
 
         self.assertIs(format1_reader_b,
-                      self.registry.get_reader('format1', TestClassB))
+                      self.registry.get_reader('format1', MockClassB))
 
         self.assertIs(format2_reader,
-                      self.registry.get_reader('format2', TestClassA))
+                      self.registry.get_reader('format2', MockClassA))
 
-        self.assertIs(None, self.registry.get_reader('format2', TestClassB))
+        self.assertIs(None, self.registry.get_reader('format2', MockClassB))
 
-        self.assertIs(None, self.registry.get_reader('format3', TestClassA))
+        self.assertIs(None, self.registry.get_reader('format3', MockClassA))
 
         self.assertIs(format3_reader,
-                      self.registry.get_reader('format3', TestClassB))
+                      self.registry.get_reader('format3', MockClassB))
 
         self.assertIs(format4_reader,
-                      self.registry.get_reader('format4', TestClassA))
+                      self.registry.get_reader('format4', MockClassA))
 
         self.assertIs(format4_reader_b,
-                      self.registry.get_reader('format4', TestClassB))
+                      self.registry.get_reader('format4', MockClassB))
 
         self.assertIs(format5_reader,
                       self.registry.get_reader('format5', None))
 
-        self.assertIs(None, self.registry.get_reader('format5', TestClassA))
+        self.assertIs(None, self.registry.get_reader('format5', MockClassA))
 
-        self.assertIs(None, self.registry.get_reader('format5', TestClassB))
+        self.assertIs(None, self.registry.get_reader('format5', MockClassB))
 
     def test_register_reader_over_existing(self):
         format1 = self.registry.create_format('format1')
         with self.assertRaises(DuplicateRegistrationError) as cm:
-            @format1.reader(TestClassA)
+            @format1.reader(MockClassA)
             def format1_reader(fh):
                 return
 
-            @format1.reader(TestClassA)
+            @format1.reader(MockClassA)
             def duplicate_format1_reader(fh):
                 return
 
         self.assertTrue('format1' in str(cm.exception))
         self.assertTrue('reader' in str(cm.exception))
-        self.assertTrue(TestClassA.__name__ in str(cm.exception))
+        self.assertTrue(MockClassA.__name__ in str(cm.exception))
 
     def test_register_reader_over_existing_override(self):
         format1 = self.registry.create_format('format1')
 
-        @format1.reader(TestClassA)
+        @format1.reader(MockClassA)
         def format1_reader(fh):
             return
 
         self.assertIs(format1_reader,
-                      self.registry.get_reader('format1', TestClassA))
+                      self.registry.get_reader('format1', MockClassA))
 
-        @format1.reader(TestClassA, override=True)
+        @format1.reader(MockClassA, override=True)
         def duplicate_format1_reader(fh):
             return
 
         self.assertIs(duplicate_format1_reader,
-                      self.registry.get_reader('format1', TestClassA))
+                      self.registry.get_reader('format1', MockClassA))
 
     def test_mistype_reader_registration(self):
         format1 = self.registry.create_format('format1')
@@ -191,16 +191,16 @@ class TestRegisterAndGetReader(RegistryTest):
 class TestRegisterAndGetWriter(RegistryTest):
     def test_get_writer_no_match(self):
         self.assertEqual(None, self.registry.get_writer('not_a_format',
-                                                        TestClass))
+                                                        MockClass))
 
     def test_get_writer_when_only_reader_exists(self):
         format = self.registry.create_format('format')
 
-        @format.reader(TestClass)
+        @format.reader(MockClass)
         def format_reader(fh):
             return
 
-        self.assertEqual(None, self.registry.get_writer('format', TestClass))
+        self.assertEqual(None, self.registry.get_writer('format', MockClass))
 
     def test_register_writer_on_many(self):
         format1 = self.registry.create_format('format1')
@@ -209,27 +209,27 @@ class TestRegisterAndGetWriter(RegistryTest):
         format4 = self.registry.create_format('format4', encoding='binary')
         format5 = self.registry.create_format('format5', encoding='binary')
 
-        @format1.writer(TestClassA)
+        @format1.writer(MockClassA)
         def format1_writer(obj, fh):
             return
 
-        @format1.writer(TestClassB)
+        @format1.writer(MockClassB)
         def format1_writer_b(obj, fh):
             return
 
-        @format2.writer(TestClassA)
+        @format2.writer(MockClassA)
         def format2_writer(obj, fh):
             return
 
-        @format3.writer(TestClassB)
+        @format3.writer(MockClassB)
         def format3_writer(obj, fh):
             return
 
-        @format4.writer(TestClassA)
+        @format4.writer(MockClassA)
         def format4_writer(fh):
             return
 
-        @format4.writer(TestClassB)
+        @format4.writer(MockClassB)
         def format4_writer_b(fh):
             return
 
@@ -238,67 +238,67 @@ class TestRegisterAndGetWriter(RegistryTest):
             return
 
         self.assertEqual(format1_writer,
-                         self.registry.get_writer('format1', TestClassA))
+                         self.registry.get_writer('format1', MockClassA))
 
         self.assertEqual(format1_writer_b,
-                         self.registry.get_writer('format1', TestClassB))
+                         self.registry.get_writer('format1', MockClassB))
 
         self.assertEqual(format2_writer,
-                         self.registry.get_writer('format2', TestClassA))
+                         self.registry.get_writer('format2', MockClassA))
 
         self.assertEqual(None,
-                         self.registry.get_writer('format2', TestClassB))
+                         self.registry.get_writer('format2', MockClassB))
 
         self.assertEqual(None,
-                         self.registry.get_writer('format3', TestClassA))
+                         self.registry.get_writer('format3', MockClassA))
 
         self.assertEqual(format3_writer,
-                         self.registry.get_writer('format3', TestClassB))
+                         self.registry.get_writer('format3', MockClassB))
 
         self.assertIs(format4_writer,
-                      self.registry.get_writer('format4', TestClassA))
+                      self.registry.get_writer('format4', MockClassA))
 
         self.assertIs(format4_writer_b,
-                      self.registry.get_writer('format4', TestClassB))
+                      self.registry.get_writer('format4', MockClassB))
 
         self.assertIs(format5_writer,
                       self.registry.get_writer('format5', None))
 
-        self.assertIs(None, self.registry.get_writer('format5', TestClassA))
+        self.assertIs(None, self.registry.get_writer('format5', MockClassA))
 
-        self.assertIs(None, self.registry.get_writer('format5', TestClassB))
+        self.assertIs(None, self.registry.get_writer('format5', MockClassB))
 
     def test_register_writer_over_existing(self):
         format1 = self.registry.create_format('format1')
         with self.assertRaises(DuplicateRegistrationError) as cm:
-            @format1.writer(TestClassA)
+            @format1.writer(MockClassA)
             def format1_writer(obj, fh):
                 return
 
-            @format1.writer(TestClassA)
+            @format1.writer(MockClassA)
             def duplicate_format1_writer(obj, fh):
                 return
 
         self.assertTrue('format1' in str(cm.exception))
         self.assertTrue('writer' in str(cm.exception))
-        self.assertTrue(TestClassA.__name__ in str(cm.exception))
+        self.assertTrue(MockClassA.__name__ in str(cm.exception))
 
     def test_register_writer_over_existing_override(self):
         format1 = self.registry.create_format('format1')
 
-        @format1.writer(TestClassA)
+        @format1.writer(MockClassA)
         def format1_writer(obj, fh):
             return
 
         self.assertIs(format1_writer,
-                      self.registry.get_writer('format1', TestClassA))
+                      self.registry.get_writer('format1', MockClassA))
 
-        @format1.writer(TestClassA, override=True)
+        @format1.writer(MockClassA, override=True)
         def duplicate_format1_writer(obj, fh):
             return
 
         self.assertIs(duplicate_format1_writer,
-                      self.registry.get_writer('format1', TestClassA))
+                      self.registry.get_writer('format1', MockClassA))
 
     def test_mistype_writer_registration(self):
         format1 = self.registry.create_format('format1')
@@ -404,21 +404,21 @@ class TestListReadFormats(RegistryTest):
     def test_no_read_formats(self):
         format1 = self.registry.create_format('format1')
 
-        @format1.reader(TestClassA)
+        @format1.reader(MockClassA)
         def this_isnt_on_clsB(fh):
             return
 
-        self.assertEqual([], self.registry.list_read_formats(TestClassB))
+        self.assertEqual([], self.registry.list_read_formats(MockClassB))
 
     def test_one_read_format(self):
         format1 = self.registry.create_format('format1')
 
-        @format1.reader(TestClass)
+        @format1.reader(MockClass)
         def format1_cls(fh):
             return
 
         self.assertEqual(['format1'],
-                         self.registry.list_read_formats(TestClass))
+                         self.registry.list_read_formats(MockClass))
 
     def test_many_read_formats(self):
         format1 = self.registry.create_format('format1')
@@ -427,31 +427,31 @@ class TestListReadFormats(RegistryTest):
         format4 = self.registry.create_format('format4')
         format5 = self.registry.create_format('format5', encoding='binary')
 
-        @format1.reader(TestClassA)
+        @format1.reader(MockClassA)
         def format1_clsA(fh):
             return
 
-        @format2.reader(TestClassA)
+        @format2.reader(MockClassA)
         def format2_clsA(fh):
             return
 
-        @format3.reader(TestClassA)
+        @format3.reader(MockClassA)
         def format3_clsA(fh):
             return
 
-        @format3.reader(TestClassB)
+        @format3.reader(MockClassB)
         def format3_clsB(fh):
             return
 
-        @format4.reader(TestClassB)
+        @format4.reader(MockClassB)
         def format4_clsB(fh):
             return
 
-        @format5.writer(TestClassA)
+        @format5.writer(MockClassA)
         def format5_clsA(fh):
             return
 
-        formats = self.registry.list_read_formats(TestClassA)
+        formats = self.registry.list_read_formats(MockClassA)
         self.assertTrue('format1' in formats)
         self.assertTrue('format2' in formats)
         self.assertTrue('format3' in formats)
@@ -463,21 +463,21 @@ class TestListWriteFormats(RegistryTest):
     def test_no_write_formats(self):
         format1 = self.registry.create_format('format1')
 
-        @format1.writer(TestClassA)
+        @format1.writer(MockClassA)
         def this_isnt_on_clsB(fh):
             return
 
-        self.assertEqual([], self.registry.list_write_formats(TestClassB))
+        self.assertEqual([], self.registry.list_write_formats(MockClassB))
 
     def test_one_write_format(self):
         format1 = self.registry.create_format('format1')
 
-        @format1.writer(TestClass)
+        @format1.writer(MockClass)
         def format1_cls(fh):
             return
 
         self.assertEqual(['format1'],
-                         self.registry.list_write_formats(TestClass))
+                         self.registry.list_write_formats(MockClass))
 
     def test_many_write_formats(self):
         format1 = self.registry.create_format('format1')
@@ -486,31 +486,31 @@ class TestListWriteFormats(RegistryTest):
         format4 = self.registry.create_format('format4')
         format5 = self.registry.create_format('format5', encoding='binary')
 
-        @format1.writer(TestClassA)
+        @format1.writer(MockClassA)
         def format1_clsA(fh):
             return
 
-        @format2.writer(TestClassA)
+        @format2.writer(MockClassA)
         def format2_clsA(fh):
             return
 
-        @format3.writer(TestClassA)
+        @format3.writer(MockClassA)
         def format3_clsA(fh):
             return
 
-        @format3.writer(TestClassB)
+        @format3.writer(MockClassB)
         def format3_clsB(fh):
             return
 
-        @format4.writer(TestClassB)
+        @format4.writer(MockClassB)
         def format4_clsB(fh):
             return
 
-        @format5.reader(TestClassA)
+        @format5.reader(MockClassA)
         def format5_clsA(fh):
             return
 
-        formats = self.registry.list_write_formats(TestClassA)
+        formats = self.registry.list_write_formats(MockClassA)
 
         self.assertTrue('format1' in formats)
         self.assertTrue('format2' in formats)
@@ -545,11 +545,11 @@ class TestSniff(RegistryTest):
         def format4_sniffer(fh):
             return '4' in fh.readline(), {}
 
-        @format3.reader(TestClass)
+        @format3.reader(MockClass)
         def reader3(fh):
             return
 
-        @format4.reader(TestClass)
+        @format4.reader(MockClass)
         def reader4(fh):
             return
 
@@ -863,13 +863,13 @@ class TestRead(RegistryTest):
         def sniffer(fh):
             return '1' in fh.readline(), {}
 
-        @format1.reader(TestClass)
+        @format1.reader(MockClass)
         def reader(fh):
             self.assertIsInstance(fh, io.TextIOBase)
-            return TestClass([int(x) for x in fh.read().split('\n')])
+            return MockClass([int(x) for x in fh.read().split('\n')])
 
-        instance = self.registry.read(fh, into=TestClass)
-        self.assertEqual(TestClass([1, 2, 3, 4]), instance)
+        instance = self.registry.read(fh, into=MockClass)
+        self.assertEqual(MockClass([1, 2, 3, 4]), instance)
         fh.close()
 
     def test_into_is_none_and_no_generator_reader(self):
@@ -877,14 +877,14 @@ class TestRead(RegistryTest):
 
         fh = StringIO('1\n2\n3\n4')
 
-        @format1.reader(TestClass)
+        @format1.reader(MockClass)
         def reader(fh):
             self.assertIsInstance(fh, io.TextIOBase)
             return
 
         with self.assertRaisesRegex(UnrecognizedFormatError,
                                     r"Cannot read 'format1'.*Possible.*include"
-                                    ": TestClass"):
+                                    ": MockClass"):
             self.registry.read(fh, format='format1')
 
     def test_into_is_none(self):
@@ -930,9 +930,9 @@ class TestRead(RegistryTest):
     def test_reader_does_not_exist(self):
         fh = StringIO()
         with self.assertRaises(UnrecognizedFormatError) as cm:
-            self.registry.read(fh, format='not_a_format', into=TestClass)
+            self.registry.read(fh, format='not_a_format', into=MockClass)
 
-        self.assertTrue(TestClass.__name__ in str(cm.exception))
+        self.assertTrue(MockClass.__name__ in str(cm.exception))
         self.assertTrue('not_a_format' in str(cm.exception))
 
         with self.assertRaises(UnrecognizedFormatError) as cm:
@@ -951,22 +951,22 @@ class TestRead(RegistryTest):
             self.was_verified = True
             return '1' in fh.readline(), {}
 
-        @format1.reader(TestClass)
+        @format1.reader(MockClass)
         def reader(fh):
-            return TestClass([int(x) for x in fh.read().split('\n')])
+            return MockClass([int(x) for x in fh.read().split('\n')])
 
         self.was_verified = False
-        instance = self.registry.read(fh, format='format1', into=TestClass,
+        instance = self.registry.read(fh, format='format1', into=MockClass,
                                       verify=True)
-        self.assertEqual(TestClass([1, 2, 3, 4]), instance)
+        self.assertEqual(MockClass([1, 2, 3, 4]), instance)
         self.assertTrue(self.was_verified)
 
         # Remove if read-context management is support in the future.
         fh.seek(0)
 
         self.was_verified = False
-        instance = self.registry.read(fh, format='format1', into=TestClass)
-        self.assertEqual(TestClass([1, 2, 3, 4]), instance)
+        instance = self.registry.read(fh, format='format1', into=MockClass)
+        self.assertEqual(MockClass([1, 2, 3, 4]), instance)
         self.assertTrue(self.was_verified)
 
         fh.close()
@@ -981,17 +981,17 @@ class TestRead(RegistryTest):
             self.was_verified = True
             return False, {}
 
-        @format1.reader(TestClass)
+        @format1.reader(MockClass)
         def reader(fh):
-            return TestClass([int(x) for x in fh.read().split('\n')])
+            return MockClass([int(x) for x in fh.read().split('\n')])
 
         with warnings.catch_warnings(record=True):
             warnings.simplefilter("error")
             with self.assertRaises(FormatIdentificationWarning):
                 self.was_verified = False
                 instance = self.registry.read(fh, format='format1',
-                                              into=TestClass, verify=True)
-                self.assertEqual(TestClass([1, 2, 3, 4]), instance)
+                                              into=MockClass, verify=True)
+                self.assertEqual(MockClass([1, 2, 3, 4]), instance)
                 self.assertTrue(self.was_verified)
 
         with warnings.catch_warnings(record=True):
@@ -999,8 +999,8 @@ class TestRead(RegistryTest):
             with self.assertRaises(FormatIdentificationWarning):
                 self.was_verified = False
                 instance = self.registry.read(fh, format='format1',
-                                              into=TestClass)
-                self.assertEqual(TestClass([1, 2, 3, 4]), instance)
+                                              into=MockClass)
+                self.assertEqual(MockClass([1, 2, 3, 4]), instance)
                 self.assertTrue(self.was_verified)
 
         fh.close()
@@ -1015,14 +1015,14 @@ class TestRead(RegistryTest):
             self.was_verified = True
             return '1' in fh.readline(), {}
 
-        @format1.reader(TestClass)
+        @format1.reader(MockClass)
         def reader(fh):
-            return TestClass([int(x) for x in fh.read().split('\n')])
+            return MockClass([int(x) for x in fh.read().split('\n')])
 
         self.was_verified = False
-        instance = self.registry.read(fh, format='format1', into=TestClass,
+        instance = self.registry.read(fh, format='format1', into=MockClass,
                                       verify=False)
-        self.assertEqual(TestClass([1, 2, 3, 4]), instance)
+        self.assertEqual(MockClass([1, 2, 3, 4]), instance)
         self.assertFalse(self.was_verified)
         fh.close()
 
@@ -1037,12 +1037,12 @@ class TestRead(RegistryTest):
         def sniffer(fh):
             return '1' in fh.readline(), {}
 
-        @format1.reader(TestClass)
+        @format1.reader(MockClass)
         def reader(fh):
-            return TestClass([int(x) for x in fh.read().split('\n')])
+            return MockClass([int(x) for x in fh.read().split('\n')])
 
-        instance = self.registry.read(fp, format='format1', into=TestClass)
-        self.assertEqual(TestClass([1, 2, 3, 4]), instance)
+        instance = self.registry.read(fp, format='format1', into=MockClass)
+        self.assertEqual(MockClass([1, 2, 3, 4]), instance)
 
     def test_read_kwargs_passed_generator(self):
         format1 = self.registry.create_format('format1')
@@ -1067,23 +1067,23 @@ class TestRead(RegistryTest):
         def sniffer(fh):
             return True, {'arg1': 15, 'arg2': 'abc', 'override': 30}
 
-        @format1.reader(TestClass)
+        @format1.reader(MockClass)
         def reader(fh, **kwargs):
             self.assertEqual(kwargs['arg1'], 15)
             self.assertEqual(kwargs['arg2'], 'abc')
             self.assertEqual(kwargs['arg3'], [1])
             return
 
-        self.registry.read(StringIO('notempty'), into=TestClass, arg3=[1])
+        self.registry.read(StringIO('notempty'), into=MockClass, arg3=[1])
 
         with warnings.catch_warnings(record=True):
             warnings.simplefilter("error")
             # Should raise no warning and thus no error.
-            self.registry.read(StringIO('notempty'), into=TestClass, arg3=[1],
+            self.registry.read(StringIO('notempty'), into=MockClass, arg3=[1],
                                override=30)
             # Should raise a warning and thus an error.
             with self.assertRaises(ArgumentOverrideWarning):
-                self.registry.read(StringIO('notempty'), into=TestClass,
+                self.registry.read(StringIO('notempty'), into=MockClass,
                                    arg3=[1], override=100)
 
     def test_that_encoding_is_used(self):
@@ -1095,23 +1095,23 @@ class TestRead(RegistryTest):
         def sniffer(fh):
             return '\u4f60' in fh.readline(), {}
 
-        @format1.reader(TestClass)
+        @format1.reader(MockClass)
         def reader(fh):
             self.assertEqual(self._expected_enc, fh.encoding)
-            return TestClass(fh.readlines())
+            return MockClass(fh.readlines())
 
         @format1.reader(None)
         def reader_gen(fh):
             self.assertEqual(self._expected_enc, fh.encoding)
-            yield TestClass(fh.readlines())
+            yield MockClass(fh.readlines())
 
         self._expected_enc = 'big5'
-        instance = self.registry.read(fp, into=TestClass, encoding='big5')
-        self.assertEqual(TestClass(['\u4f60\u597d\n']), instance)
+        instance = self.registry.read(fp, into=MockClass, encoding='big5')
+        self.assertEqual(MockClass(['\u4f60\u597d\n']), instance)
 
         self._expected_enc = 'big5'
         gen = self.registry.read(fp, format='format1', encoding='big5')
-        self.assertEqual(TestClass(['\u4f60\u597d\n']), next(gen))
+        self.assertEqual(MockClass(['\u4f60\u597d\n']), next(gen))
 
     def test_non_default_encoding(self):
         format1 = self.registry.create_format('format1', encoding='big5')
@@ -1122,27 +1122,27 @@ class TestRead(RegistryTest):
         def sniffer(fh):
             return True, {}
 
-        @format1.reader(TestClass)
+        @format1.reader(MockClass)
         def reader(fh):
             self.assertEqual(self._expected_enc, fh.encoding)
-            return TestClass(fh.readlines())
+            return MockClass(fh.readlines())
 
         @format1.reader(None)
         def reader_gen(fh):
             self.assertEqual(self._expected_enc, fh.encoding)
-            yield TestClass(fh.readlines())
+            yield MockClass(fh.readlines())
 
         self._expected_enc = 'big5'
-        instance = self.registry.read(fp, into=TestClass)
-        self.assertEqual(TestClass(['\u4f60\u597d\n']), instance)
+        instance = self.registry.read(fp, into=MockClass)
+        self.assertEqual(MockClass(['\u4f60\u597d\n']), instance)
 
         gen = self.registry.read(fp, format='format1')
-        self.assertEqual(TestClass(['\u4f60\u597d\n']), next(gen))
+        self.assertEqual(MockClass(['\u4f60\u597d\n']), next(gen))
         gen.close()
 
         self._expected_enc = 'utf8'
         with self.assertRaises(UnicodeDecodeError):
-            self.registry.read(fp, into=TestClass, encoding='utf8')
+            self.registry.read(fp, into=MockClass, encoding='utf8')
 
         with self.assertRaises(UnicodeDecodeError):
             self.registry.read(fp, format='format1', encoding='utf8')
@@ -1156,16 +1156,16 @@ class TestRead(RegistryTest):
         def sniffer(fh):
             return True, {}
 
-        @formatx.reader(TestClass)
+        @formatx.reader(MockClass)
         def reader(fh):
-            return TestClass(fh.readlines())
+            return MockClass(fh.readlines())
 
         @formatx.reader(None)
         def reader_gen(fh):
-            yield TestClass(fh.readlines())
+            yield MockClass(fh.readlines())
 
         with self.assertRaisesRegex(TypeError, r'`newline`'):
-            self.registry.read(fp, into=TestClass, newline='\r')
+            self.registry.read(fp, into=MockClass, newline='\r')
 
         with self.assertRaisesRegex(TypeError, r'`newline`'):
             self.registry.read(fp, format='formatx', newline='\r')
@@ -1179,19 +1179,19 @@ class TestRead(RegistryTest):
         def sniffer(fh):
             return True, {}
 
-        @formatx.reader(TestClass)
+        @formatx.reader(MockClass)
         def reader(fh):
-            return TestClass(fh.readlines())
+            return MockClass(fh.readlines())
 
         @formatx.reader(None)
         def reader_gen(fh):
-            yield TestClass(fh.readlines())
+            yield MockClass(fh.readlines())
 
-        instance = self.registry.read(fp, into=TestClass)
-        self.assertEqual(instance, TestClass(['a\nb\nc\nd\ne\n']))
+        instance = self.registry.read(fp, into=MockClass)
+        self.assertEqual(instance, MockClass(['a\nb\nc\nd\ne\n']))
 
         gen = self.registry.read(fp, format='formatx')
-        self.assertEqual(next(gen), TestClass(['a\nb\nc\nd\ne\n']))
+        self.assertEqual(next(gen), MockClass(['a\nb\nc\nd\ne\n']))
         gen.close()
 
     def test_file_sentinel_many(self):
@@ -1205,15 +1205,15 @@ class TestRead(RegistryTest):
         def sniffer(fh):
             return '1' in fh.readline(), {}
 
-        @format1.reader(TestClass)
+        @format1.reader(MockClass)
         def reader(fh, extra=FileSentinel, other=2, extra_2=FileSentinel):
             self.assertEqual('a\nb\nc\nd\ne\n', extra.read())
             self.assertEqual('!\n@\n#\n$\n%\nThe realest.\n', extra_2.read())
-            return TestClass([int(x) for x in fh.read().split('\n')])
+            return MockClass([int(x) for x in fh.read().split('\n')])
 
-        instance = self.registry.read(fh, format='format1', into=TestClass,
+        instance = self.registry.read(fh, format='format1', into=MockClass,
                                       extra=extra, extra_2=extra_2)
-        self.assertEqual(TestClass([1, 2, 3, 4]), instance)
+        self.assertEqual(MockClass([1, 2, 3, 4]), instance)
 
         fh.close()
 
@@ -1226,14 +1226,14 @@ class TestRead(RegistryTest):
         def sniffer(fh):
             return '1' in fh.readline(), {}
 
-        @format1.reader(TestClass)
+        @format1.reader(MockClass)
         def reader(fh, extra=FileSentinel, other=2, extra_2=FileSentinel):
             self.assertIsNone(extra)
             self.assertIsNone(extra_2)
-            return TestClass([int(x) for x in fh.read().split('\n')])
+            return MockClass([int(x) for x in fh.read().split('\n')])
 
-        instance = self.registry.read(fh, format='format1', into=TestClass)
-        self.assertEqual(TestClass([1, 2, 3, 4]), instance)
+        instance = self.registry.read(fh, format='format1', into=MockClass)
+        self.assertEqual(MockClass([1, 2, 3, 4]), instance)
 
         fh.close()
 
@@ -1246,15 +1246,15 @@ class TestRead(RegistryTest):
         def sniffer(fh):
             return '1' in fh.readline(), {}
 
-        @format1.reader(TestClass)
+        @format1.reader(MockClass)
         def reader(fh, extra=FileSentinel, other=2, extra_2=FileSentinel):
             self.assertIsNone(extra)
             self.assertIsNone(extra_2)
-            return TestClass([int(x) for x in fh.read().split('\n')])
+            return MockClass([int(x) for x in fh.read().split('\n')])
 
-        instance = self.registry.read(fh, format='format1', into=TestClass,
+        instance = self.registry.read(fh, format='format1', into=MockClass,
                                       extra=None)
-        self.assertEqual(TestClass([1, 2, 3, 4]), instance)
+        self.assertEqual(MockClass([1, 2, 3, 4]), instance)
 
         fh.close()
 
@@ -1273,11 +1273,11 @@ class TestRead(RegistryTest):
         def reader(fh, extra=FileSentinel, other=2, extra_2=FileSentinel):
             self.assertEqual('a\nb\nc\nd\ne\n', extra.read())
             self.assertEqual('!\n@\n#\n$\n%\nThe realest.\n', extra_2.read())
-            yield TestClass([int(x) for x in fh.read().split('\n')])
+            yield MockClass([int(x) for x in fh.read().split('\n')])
 
         gen = self.registry.read(fh, format='format1', extra=extra,
                                  extra_2=extra_2)
-        self.assertEqual(TestClass([1, 2, 3, 4]), next(gen))
+        self.assertEqual(MockClass([1, 2, 3, 4]), next(gen))
 
         fh.close()
 
@@ -1294,10 +1294,10 @@ class TestRead(RegistryTest):
         def reader(fh, extra=FileSentinel, other=2, extra_2=FileSentinel):
             self.assertIsNone(extra)
             self.assertIsNone(extra_2)
-            yield TestClass([int(x) for x in fh.read().split('\n')])
+            yield MockClass([int(x) for x in fh.read().split('\n')])
 
         gen = self.registry.read(fh, format='format1')
-        self.assertEqual(TestClass([1, 2, 3, 4]), next(gen))
+        self.assertEqual(MockClass([1, 2, 3, 4]), next(gen))
 
         fh.close()
 
@@ -1314,10 +1314,10 @@ class TestRead(RegistryTest):
         def reader(fh, extra=FileSentinel, other=2, extra_2=FileSentinel):
             self.assertIsNone(extra)
             self.assertIsNone(extra_2)
-            yield TestClass([int(x) for x in fh.read().split('\n')])
+            yield MockClass([int(x) for x in fh.read().split('\n')])
 
         gen = self.registry.read(fh, format='format1', extra=None)
-        self.assertEqual(TestClass([1, 2, 3, 4]), next(gen))
+        self.assertEqual(MockClass([1, 2, 3, 4]), next(gen))
 
         fh.close()
 
@@ -1329,51 +1329,51 @@ class TestRead(RegistryTest):
         def binf_sniffer(fh):
             return True, {}
 
-        @binf.reader(TestClass)
+        @binf.reader(MockClass)
         def binf_reader(fh):
-            return TestClass(['bin'])
+            return MockClass(['bin'])
 
         @binf.reader(None)
         def binf_reader_gen(fh):
-            yield TestClass(['bin'])
+            yield MockClass(['bin'])
 
         @textf.sniffer()
         def textf_sniffer(fh):
             return True, {}
 
-        @textf.reader(TestClass)
+        @textf.reader(MockClass)
         def textf_reader(fh):
-            return TestClass(['text'])
+            return MockClass(['text'])
 
         @textf.reader(None)
         def textf_reader_gen(fh):
-            yield TestClass(['text'])
+            yield MockClass(['text'])
 
         # Should skip binary sniffers
-        instance = self.registry.read(self.fp1, encoding=None, into=TestClass)
-        self.assertEqual(instance, TestClass(['text']))
+        instance = self.registry.read(self.fp1, encoding=None, into=MockClass)
+        self.assertEqual(instance, MockClass(['text']))
         gen = self.registry.read(self.fp1, encoding=None, format='textf')
-        self.assertEqual(next(gen), TestClass(['text']))
+        self.assertEqual(next(gen), MockClass(['text']))
         gen.close()
         # Should skip text sniffers
         instance = self.registry.read(self.fp1, encoding='binary',
-                                      into=TestClass)
-        self.assertEqual(instance, TestClass(['bin']))
+                                      into=MockClass)
+        self.assertEqual(instance, MockClass(['bin']))
         gen = self.registry.read(self.fp1, encoding='binary', format='binf')
-        self.assertEqual(next(gen), TestClass(['bin']))
+        self.assertEqual(next(gen), MockClass(['bin']))
         gen.close()
 
         with self.assertRaises(ValueError):
             self.registry.read(['some content\n'], encoding='binary',
-                               into=TestClass)
+                               into=MockClass)
 
         with self.assertRaises(ValueError):
             self.registry.read(['some content\n'], format='textf',
-                               encoding='binary', into=TestClass)
+                               encoding='binary', into=MockClass)
 
         with self.assertRaises(ValueError):
             self.registry.read(['some content\n'], format='textf',
-                               encoding='binary', verify=False, into=TestClass)
+                               encoding='binary', verify=False, into=MockClass)
 
         with self.assertRaises(ValueError):
             self.registry.read(['some content\n'], format='textf',
@@ -1385,11 +1385,11 @@ class TestRead(RegistryTest):
 
         with self.assertRaises(ValueError):
             self.registry.read(self.fp1, format='binf',
-                               encoding=None, into=TestClass)
+                               encoding=None, into=MockClass)
 
         with self.assertRaises(ValueError):
             self.registry.read(self.fp1, format='binf',
-                               encoding=None, verify=False, into=TestClass)
+                               encoding=None, verify=False, into=MockClass)
 
         with self.assertRaises(ValueError):
             self.registry.read(self.fp1, format='binf',
@@ -1402,23 +1402,23 @@ class TestRead(RegistryTest):
     def test_read_with_binary_encoding(self):
         binf = self.registry.create_format('binf', encoding='binary')
 
-        @binf.reader(TestClass)
+        @binf.reader(MockClass)
         def reader1(fh):
             self.assertIsInstance(fh, (io.BufferedReader, io.BufferedRandom))
-            return TestClass(['woo'])
+            return MockClass(['woo'])
 
         @binf.reader(None)
         def reader2(fh):
             self.assertIsInstance(fh, (io.BufferedReader, io.BufferedRandom))
-            yield TestClass(['woo'])
+            yield MockClass(['woo'])
 
         instance = self.registry.read(self.fp1, format='binf', verify=False,
-                                      into=TestClass)
-        self.assertEqual(TestClass(['woo']), instance)
+                                      into=MockClass)
+        self.assertEqual(MockClass(['woo']), instance)
 
         gen = self.registry.read(self.fp1, format='binf', verify=False,
                                  into=None)
-        self.assertEqual(TestClass(['woo']), next(gen))
+        self.assertEqual(MockClass(['woo']), next(gen))
         gen.close()
 
     def test_io_kwargs_passed(self):
@@ -1428,20 +1428,20 @@ class TestRead(RegistryTest):
         def sniffer(fh):
             return True, {}
 
-        @format1.reader(TestClass)
+        @format1.reader(MockClass)
         def reader1(fh):
             self.assertEqual(fh.errors, 'replace')
-            return TestClass(['woo'])
+            return MockClass(['woo'])
 
         @format1.reader(None)
         def reader1_gen(fh):
             self.assertEqual(fh.errors, 'replace')
-            yield TestClass(['woo'])
+            yield MockClass(['woo'])
 
-        obj = self.registry.read(self.fp1, into=TestClass, errors='replace')
-        self.assertEqual(obj, TestClass(['woo']))
+        obj = self.registry.read(self.fp1, into=MockClass, errors='replace')
+        self.assertEqual(obj, MockClass(['woo']))
         gen = self.registry.read(self.fp1, format='format1', errors='replace')
-        self.assertEqual(next(gen), TestClass(['woo']))
+        self.assertEqual(next(gen), MockClass(['woo']))
         gen.close()
 
     def test_read_empty_file_gen_with_format(self):
@@ -1475,10 +1475,10 @@ class TestWrite(RegistryTest):
     def test_writer_exists(self):
         format1 = self.registry.create_format('format1')
 
-        obj = TestClass(['1', '2', '3', '4'])
+        obj = MockClass(['1', '2', '3', '4'])
         fh = StringIO()
 
-        @format1.writer(TestClass)
+        @format1.writer(MockClass)
         def writer(obj, fh):
             self.assertIsInstance(fh, io.TextIOBase)
             fh.write('\n'.join(obj.list))
@@ -1491,10 +1491,10 @@ class TestWrite(RegistryTest):
     def test_writer_exists_real_file(self):
         format1 = self.registry.create_format('format1')
 
-        obj = TestClass(['1', '2', '3', '4'])
+        obj = MockClass(['1', '2', '3', '4'])
         fp = self.fp1
 
-        @format1.writer(TestClass)
+        @format1.writer(MockClass)
         def writer(obj, fh):
             self.assertIsInstance(fh, io.TextIOBase)
             fh.write('\n'.join(obj.list))
@@ -1522,10 +1522,10 @@ class TestWrite(RegistryTest):
     def test_that_encoding_is_used(self):
         format1 = self.registry.create_format('format1')
 
-        obj = TestClass(['\u4f60\u597d\n'])  # Ni Hau
+        obj = MockClass(['\u4f60\u597d\n'])  # Ni Hau
         fp = self.fp1
 
-        @format1.writer(TestClass)
+        @format1.writer(MockClass)
         def writer(obj, fh):
             fh.write(''.join(obj.list))
             self.assertEqual(self._expected_encoding, fh.encoding)
@@ -1540,10 +1540,10 @@ class TestWrite(RegistryTest):
     def test_non_default_encoding(self):
         format1 = self.registry.create_format('format1', encoding='big5')
 
-        obj = TestClass(['\u4f60\u597d\n'])  # Ni Hau
+        obj = MockClass(['\u4f60\u597d\n'])  # Ni Hau
         fp = self.fp1
 
-        @format1.writer(TestClass)
+        @format1.writer(MockClass)
         def writer(obj, fh):
             fh.write(''.join(obj.list))
             self.assertEqual(self._expected_encoding, fh.encoding)
@@ -1563,10 +1563,10 @@ class TestWrite(RegistryTest):
     def test_that_newline_is_used(self):
         format1 = self.registry.create_format('format1')
 
-        obj = TestClass(['a\n', 'b\n', 'c\n'])
+        obj = MockClass(['a\n', 'b\n', 'c\n'])
         fp = self.fp1
 
-        @format1.writer(TestClass)
+        @format1.writer(MockClass)
         def writer(obj, fh):
             fh.write(''.join(obj.list))
 
@@ -1578,10 +1578,10 @@ class TestWrite(RegistryTest):
     def test_non_default_newline(self):
         format1 = self.registry.create_format('format1', newline='\r')
 
-        obj = TestClass(['a\n', 'b\n', 'c\n'])
+        obj = MockClass(['a\n', 'b\n', 'c\n'])
         fp = self.fp1
 
-        @format1.writer(TestClass)
+        @format1.writer(MockClass)
         def writer(obj, fh):
             fh.write(''.join(obj.list))
 
@@ -1600,12 +1600,12 @@ class TestWrite(RegistryTest):
 
         fh = StringIO()
 
-        @format1.writer(TestClass)
+        @format1.writer(MockClass)
         def writer(obj, fh, extra=FileSentinel, other=2, extra_2=FileSentinel):
             extra.write('oh yeah...')
             extra_2.write('oh no...')
 
-        self.registry.write(TestClass([]), format='format1', into=fh,
+        self.registry.write(MockClass([]), format='format1', into=fh,
                             extra=self.fp1, extra_2=self.fp2)
         with open(self.fp1) as f1:
             self.assertEqual('oh yeah...', f1.read())
@@ -1620,12 +1620,12 @@ class TestWrite(RegistryTest):
 
         fh = StringIO()
 
-        @format1.writer(TestClass)
+        @format1.writer(MockClass)
         def writer(obj, fh, extra=FileSentinel, other=2, extra_2=FileSentinel):
             self.assertIsNone(extra)
             self.assertIsNone(extra_2)
 
-        self.registry.write(TestClass([]), format='format1', into=fh)
+        self.registry.write(MockClass([]), format='format1', into=fh)
 
         fh.close()
 
@@ -1634,12 +1634,12 @@ class TestWrite(RegistryTest):
 
         fh = StringIO()
 
-        @format1.writer(TestClass)
+        @format1.writer(MockClass)
         def writer(obj, fh, extra=FileSentinel, other=2, extra_2=FileSentinel):
             self.assertIsNone(extra)
             self.assertIsNone(extra_2)
 
-        self.registry.write(TestClass([]), format='format1', into=fh,
+        self.registry.write(MockClass([]), format='format1', into=fh,
                             extra=None)
 
         fh.close()
@@ -1648,29 +1648,29 @@ class TestWrite(RegistryTest):
         binf = self.registry.create_format('binf', encoding='binary')
         textf = self.registry.create_format('textf', encoding=None)
 
-        @binf.writer(TestClass)
+        @binf.writer(MockClass)
         def writer(obj, fh):
             pass
 
-        @textf.writer(TestClass)
+        @textf.writer(MockClass)
         def writer2(obj, fh):
             pass
 
         with self.assertRaises(ValueError):
-            self.registry.write(TestClass([]), into=self.fp1, format='binf',
+            self.registry.write(MockClass([]), into=self.fp1, format='binf',
                                 encoding=None)
 
         with self.assertRaises(ValueError):
-            self.registry.write(TestClass([]), into=self.fp1, format='textf',
+            self.registry.write(MockClass([]), into=self.fp1, format='textf',
                                 encoding='binary')
 
     def test_write_binary_format(self):
         format1 = self.registry.create_format('format1', encoding='binary')
 
-        obj = TestClass([b'a\n', b'b\n', b'c\n'])
+        obj = MockClass([b'a\n', b'b\n', b'c\n'])
         fp = self.fp1
 
-        @format1.writer(TestClass)
+        @format1.writer(MockClass)
         def writer(obj, fh):
             self.assertIsInstance(fh, (io.BufferedWriter, io.BufferedRandom))
             fh.write(b''.join(obj.list))
@@ -1683,11 +1683,11 @@ class TestWrite(RegistryTest):
     def test_io_kwargs_passed(self):
         format1 = self.registry.create_format('format1', encoding='ascii')
 
-        obj = TestClass(['a\n', 'b\n', 'c\n'])
+        obj = MockClass(['a\n', 'b\n', 'c\n'])
         fp = self.fp1
         f = io.BytesIO()
 
-        @format1.writer(TestClass)
+        @format1.writer(MockClass)
         def writer(obj, fh):
             iterator = iter(obj.list)
             fh.write(next(iterator))
