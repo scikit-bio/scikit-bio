@@ -6,6 +6,7 @@
                         '__getattribute__',
                         '__init__',
                         '__dir__',
+                        '__format__',
                         '__new__',
                         '__reduce__',
                         '__reduce_ex__',
@@ -46,6 +47,8 @@
    .. autosummary::
       :toctree:
    {% for item in methods %}
+      {% if item != '__init__' %}
       ~{{ name }}.{{ item }}
+      {% endif %}
    {%- endfor %}
    {% endif %}

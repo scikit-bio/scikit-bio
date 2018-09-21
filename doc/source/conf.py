@@ -96,6 +96,7 @@ extensions = [
     'sphinx.ext.autodoc',
     'sphinx.ext.mathjax',
     'sphinx.ext.napoleon',
+    'sphinx.ext.linkcode',
     'sphinx.ext.coverage',
     'sphinx.ext.doctest',
     'sphinx.ext.autosummary',
@@ -423,6 +424,61 @@ intersphinx_mapping = {
 # Source code links
 # -----------------------------------------------------------------------------
 
+import inspect
+from os.path import relpath, dirname
+
+def linkcode_resolve(domain, info):
+    """
+    Determine the URL corresponding to Python object
+    """
+    if domain != 'py':
+        return None
+
+    modname = info['module']
+    fullname = info['fullname']
+
+    submod = sys.modules.get(modname)
+    if submod is None:
+        return None
+
+    obj = submod
+    for part in fullname.split('.'):
+        try:
+            obj = getattr(obj, part)
+        except:
+            return None
+
+    try:
+        fn = inspect.getsourcefile(obj)
+    except:
+        fn = None
+    if not fn:
+        try:
+            fn = inspect.getsourcefile(sys.modules[obj.__module__])
+        except:
+            fn = None
+    if not fn:
+        return None
+
+    try:
+        source, lineno = inspect.findsource(obj)
+    except:
+        lineno = None
+
+    if lineno:
+        linespec = "#L%d" % (lineno + 1)
+    else:
+        linespec = ""
+
+    fn = relpath(fn, start=dirname(skbio.__file__))
+
+    if 'dev' in skbio.__version__:
+        return "http://github.com/biocore/scikit-bio/blob/master/skbio/%s%s" % (
+           fn, linespec)
+    else:
+        return "http://github.com/biocore/scikit-bio/blob/%s/skbio/%s%s" % (
+           skbio.__version__, fn, linespec)
+
 #------------------------------------------------------------------------------
 # linkcheck
 #------------------------------------------------------------------------------
@@ -430,16 +486,17 @@ intersphinx_mapping = {
 # Link-checking on Travis sometimes times out.
 linkcheck_timeout = 30
 
-# This is so that our docs build.
+# You might see the following exception when building the documentation:
+# TypeError: 'abstractproperty' object is not iterable
 def _closure():
     def __get__(self, cls, owner):
         return self
 
     classproperty.__get__ = __get__
-
 _closure()
 
 # Add the 'copybutton' javascript, to hide/show the prompt in code
 # examples, originally taken from scikit-learn's doc/conf.py
 def setup(app):
     app.add_javascript('copybutton.js')
+    app.add_stylesheet('style.css')
