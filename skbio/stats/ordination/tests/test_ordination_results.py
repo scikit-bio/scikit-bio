@@ -144,7 +144,7 @@ class TestOrdinationResults(unittest.TestCase):
         self.check_basic_figure_sanity(fig, 1, 'a title', True, '2', '0', '1')
 
     def test_plot_with_invalid_axis_labels(self):
-        with self.assertRaisesRegex(ValueError, 'axis_labels.*4'):
+        with self.assertRaisesRegex(ValueError, r'axis_labels.*4'):
             self.min_ord_results.plot(axes=[2, 0, 1],
                                       axis_labels=('a', 'b', 'c', 'd'))
 
@@ -156,27 +156,27 @@ class TestOrdinationResults(unittest.TestCase):
 
     def test_validate_plot_axes_invalid_input(self):
         # not enough dimensions
-        with self.assertRaisesRegex(ValueError, '2 dimension\(s\)'):
+        with self.assertRaisesRegex(ValueError, r'2 dimension\(s\)'):
             self.min_ord_results._validate_plot_axes(
                 np.asarray([[0.1, 0.2, 0.3], [0.2, 0.3, 0.4]]), (0, 1, 2))
 
         coord_matrix = self.min_ord_results.samples.values.T
 
         # wrong number of axes
-        with self.assertRaisesRegex(ValueError, 'exactly three.*found 0'):
+        with self.assertRaisesRegex(ValueError, r'exactly three.*found 0'):
             self.min_ord_results._validate_plot_axes(coord_matrix, [])
-        with self.assertRaisesRegex(ValueError, 'exactly three.*found 4'):
+        with self.assertRaisesRegex(ValueError, r'exactly three.*found 4'):
             self.min_ord_results._validate_plot_axes(coord_matrix,
                                                      (0, 1, 2, 3))
 
         # duplicate axes
-        with self.assertRaisesRegex(ValueError, 'must be unique'):
+        with self.assertRaisesRegex(ValueError, r'must be unique'):
             self.min_ord_results._validate_plot_axes(coord_matrix, (0, 1, 0))
 
         # out of range axes
-        with self.assertRaisesRegex(ValueError, 'axes\[1\].*3'):
+        with self.assertRaisesRegex(ValueError, r'axes\[1\].*3'):
             self.min_ord_results._validate_plot_axes(coord_matrix, (0, -1, 2))
-        with self.assertRaisesRegex(ValueError, 'axes\[2\].*3'):
+        with self.assertRaisesRegex(ValueError, r'axes\[2\].*3'):
             self.min_ord_results._validate_plot_axes(coord_matrix, (0, 2, 3))
 
     def test_get_plot_point_colors_invalid_input(self):
@@ -191,17 +191,17 @@ class TestOrdinationResults(unittest.TestCase):
                                                         ['B', 'C'], 'jet')
 
         # column not in df
-        with self.assertRaisesRegex(ValueError, 'missingcol'):
+        with self.assertRaisesRegex(ValueError, r'missingcol'):
             self.min_ord_results._get_plot_point_colors(self.df, 'missingcol',
                                                         ['B', 'C'], 'jet')
 
         # id not in df
-        with self.assertRaisesRegex(ValueError, 'numeric'):
+        with self.assertRaisesRegex(ValueError, r'numeric'):
             self.min_ord_results._get_plot_point_colors(
                 self.df, 'numeric', ['B', 'C', 'missingid', 'A'], 'jet')
 
         # missing data in df
-        with self.assertRaisesRegex(ValueError, 'nancolumn'):
+        with self.assertRaisesRegex(ValueError, r'nancolumn'):
             self.min_ord_results._get_plot_point_colors(self.df, 'nancolumn',
                                                         ['B', 'C', 'A'], 'jet')
 

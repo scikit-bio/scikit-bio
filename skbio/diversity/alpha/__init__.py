@@ -56,8 +56,6 @@ Functions
 # The full license is in the file COPYING.txt, distributed with this software.
 # ----------------------------------------------------------------------------
 
-from skbio.util import TestRunner
-
 from ._ace import ace
 from ._chao1 import chao1, chao1_ci
 from ._faith_pd import faith_pd
@@ -78,5 +76,3 @@ __all__ = ['ace', 'chao1', 'chao1_ci', 'berger_parker_d',
            'mcintosh_e', 'menhinick', 'michaelis_menten_fit', 'observed_otus',
            'osd', 'pielou_e', 'robbins', 'shannon', 'simpson', 'simpson_e',
            'singles', 'strong', 'lladser_pe', 'lladser_ci']
-
-test = TestRunner(__file__).test

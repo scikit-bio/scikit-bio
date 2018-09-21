@@ -42,7 +42,7 @@ class Sequence(MetadataMixin, PositionalMetadataMixin, IntervalMetadataMixin,
 
     Parameters
     ----------
-    sequence : str, Sequence, or 1D np.ndarray (np.uint8 or '\|S1')
+    sequence : str, Sequence, or 1D np.ndarray (np.uint8 or '\\|S1')
         Characters representing the sequence itself.
     metadata : dict, optional
         Arbitrary metadata which applies to the entire sequence. A shallow copy
@@ -351,7 +351,6 @@ fuzzy=[(False, False)], metadata={'gene': 'foo'})
     >>> print(intervals[0])  # doctest: +ELLIPSIS
     Interval(interval_metadata=<...>, bounds=[(0, 2)], \
 fuzzy=[(True, False)], metadata={'gene': 'foo'})
-
     """
     _number_of_extended_ascii_codes = 256
     # ASCII is built such that the difference between uppercase and lowercase
@@ -364,7 +363,7 @@ fuzzy=[(True, False)], metadata={'gene': 'foo'})
     @property
     @stable(as_of="0.4.0")
     def values(self):
-        """Array containing underlying sequence characters.
+        r"""Array containing underlying sequence characters.
 
         Notes
         -----
@@ -383,7 +382,7 @@ fuzzy=[(True, False)], metadata={'gene': 'foo'})
 
     @property
     def __array_interface__(self):
-        """Array interface for compatibility with numpy.
+        r"""Array interface for compatibility with numpy.
 
         This property allows a ``Sequence`` object to share its underlying data
         buffer (``Sequence.values``) with numpy. See [1]_ for more details.
@@ -407,7 +406,7 @@ fuzzy=[(True, False)], metadata={'gene': 'foo'})
     @property
     @experimental(as_of="0.4.1")
     def observed_chars(self):
-        """Set of observed characters in the sequence.
+        r"""Set of observed characters in the sequence.
 
         Notes
         -----
@@ -430,7 +429,7 @@ fuzzy=[(True, False)], metadata={'gene': 'foo'})
     @classonlymethod
     @experimental(as_of="0.4.1")
     def concat(cls, sequences, how='strict'):
-        """Concatenate an iterable of ``Sequence`` objects.
+        r"""Concatenate an iterable of ``Sequence`` objects.
 
         Parameters
         ----------
@@ -655,7 +654,7 @@ fuzzy=[(True, False)], metadata={'gene': 'foo'})
                             "string, but got %s" % type(lowercase))
 
     def _set_bytes_contiguous(self, sequence):
-        """Munge the sequence data into a numpy array of dtype uint8."""
+        r"""Munge the sequence data into a numpy array of dtype uint8."""
         if not sequence.flags['C_CONTIGUOUS']:
             # numpy doesn't support views of non-contiguous arrays. Since we're
             # making heavy use of views internally, and users may also supply
@@ -679,7 +678,7 @@ fuzzy=[(True, False)], metadata={'gene': 'foo'})
 
     @stable(as_of="0.4.0")
     def __contains__(self, subsequence):
-        """Determine if a subsequence is contained in this sequence.
+        r"""Determine if a subsequence is contained in this sequence.
 
         Parameters
         ----------
@@ -705,13 +704,12 @@ fuzzy=[(True, False)], metadata={'gene': 'foo'})
         True
         >>> 'CCC' in s
         False
-
         """
         return self._munge_to_bytestring(subsequence, "in") in self._string
 
     @stable(as_of="0.4.0")
     def __eq__(self, other):
-        """Determine if this sequence is equal to another.
+        r"""Determine if this sequence is equal to another.
 
         Sequences are equal if they are *exactly* the same type and their
         sequence characters, metadata, and positional metadata are the same.
@@ -786,7 +784,7 @@ fuzzy=[(True, False)], metadata={'gene': 'foo'})
 
     @stable(as_of="0.4.0")
     def __ne__(self, other):
-        """Determine if this sequence is not equal to another.
+        r"""Determine if this sequence is not equal to another.
 
         Sequences are not equal if they are not *exactly* the same type, or
         their sequence characters, metadata, or positional metadata differ.
@@ -820,7 +818,7 @@ fuzzy=[(True, False)], metadata={'gene': 'foo'})
 
     @stable(as_of="0.4.0")
     def __getitem__(self, indexable):
-        """Slice this sequence.
+        r"""Slice this sequence.
 
         Notes
         -----
@@ -966,7 +964,7 @@ fuzzy=[(True, False)], metadata={'gene': 'foo'})
 
     @stable(as_of="0.4.0")
     def __len__(self):
-        """Return the number of characters in this sequence.
+        r"""Return the number of characters in this sequence.
 
         Returns
         -------
@@ -985,7 +983,7 @@ fuzzy=[(True, False)], metadata={'gene': 'foo'})
 
     @stable(as_of="0.4.0")
     def __bool__(self):
-        """Returns truth value (truthiness) of sequence.
+        r"""Returns truth value (truthiness) of sequence.
 
         Returns
         -------
@@ -1005,7 +1003,7 @@ fuzzy=[(True, False)], metadata={'gene': 'foo'})
 
     @stable(as_of="0.4.0")
     def __iter__(self):
-        """Iterate over positions in this sequence.
+        r"""Iterate over positions in this sequence.
 
         Yields
         ------
@@ -1030,7 +1028,7 @@ fuzzy=[(True, False)], metadata={'gene': 'foo'})
 
     @stable(as_of="0.4.0")
     def __reversed__(self):
-        """Iterate over positions in this sequence in reverse order.
+        r"""Iterate over positions in this sequence in reverse order.
 
         Yields
         ------
@@ -1054,7 +1052,7 @@ fuzzy=[(True, False)], metadata={'gene': 'foo'})
 
     @stable(as_of="0.4.0")
     def __str__(self):
-        """Return sequence characters as a string.
+        r"""Return sequence characters as a string.
 
         Returns
         -------
@@ -1179,7 +1177,7 @@ fuzzy=[(True, False)], metadata={'gene': 'foo'})
             chunk_size=10).build()
 
     def _repr_stats(self):
-        """Define statistics to display in the sequence's repr.
+        r"""Define statistics to display in the sequence's repr.
 
         Subclasses can override this method to provide type-specific
         statistics.
@@ -1200,7 +1198,7 @@ fuzzy=[(True, False)], metadata={'gene': 'foo'})
 
     @stable(as_of="0.4.0")
     def __copy__(self):
-        """Return a shallow copy of this sequence.
+        r"""Return a shallow copy of this sequence.
 
         See Also
         --------
@@ -1215,7 +1213,7 @@ fuzzy=[(True, False)], metadata={'gene': 'foo'})
 
     @stable(as_of="0.4.0")
     def __deepcopy__(self, memo):
-        """Return a deep copy of this sequence.
+        r"""Return a deep copy of this sequence.
 
         See Also
         --------
@@ -1263,7 +1261,7 @@ fuzzy=[(True, False)], metadata={'gene': 'foo'})
 
     @stable(as_of='0.4.0')
     def lowercase(self, lowercase):
-        """Return a case-sensitive string representation of the sequence.
+        r"""Return a case-sensitive string representation of the sequence.
 
         Parameters
         ----------
@@ -1311,7 +1309,7 @@ fuzzy=[(True, False)], metadata={'gene': 'foo'})
 
     @stable(as_of="0.4.0")
     def count(self, subsequence, start=None, end=None):
-        """Count occurrences of a subsequence in this sequence.
+        r"""Count occurrences of a subsequence in this sequence.
 
         Parameters
         ----------
@@ -1357,7 +1355,7 @@ fuzzy=[(True, False)], metadata={'gene': 'foo'})
 
     @experimental(as_of="0.5.0")
     def replace(self, where, character):
-        """Replace values in this sequence with a different character.
+        r"""Replace values in this sequence with a different character.
 
         Parameters
         ----------
@@ -1442,7 +1440,7 @@ fuzzy=[(True, False)], metadata={'gene': 'foo'})
 
     @stable(as_of="0.4.0")
     def index(self, subsequence, start=None, end=None):
-        """Find position where subsequence first occurs in the sequence.
+        r"""Find position where subsequence first occurs in the sequence.
 
         Parameters
         ----------
@@ -1483,7 +1481,7 @@ fuzzy=[(True, False)], metadata={'gene': 'foo'})
 
     @experimental(as_of="0.4.0")
     def distance(self, other, metric=None):
-        """Compute the distance to another sequence.
+        r"""Compute the distance to another sequence.
 
         Parameters
         ----------
@@ -1545,7 +1543,7 @@ fuzzy=[(True, False)], metadata={'gene': 'foo'})
 
     @stable(as_of="0.4.0")
     def matches(self, other):
-        """Find positions that match with another sequence.
+        r"""Find positions that match with another sequence.
 
         Parameters
         ----------
@@ -1587,7 +1585,7 @@ fuzzy=[(True, False)], metadata={'gene': 'foo'})
 
     @stable(as_of="0.4.0")
     def mismatches(self, other):
-        """Find positions that do not match with another sequence.
+        r"""Find positions that do not match with another sequence.
 
         Parameters
         ----------
@@ -1625,7 +1623,7 @@ fuzzy=[(True, False)], metadata={'gene': 'foo'})
 
     @stable(as_of="0.4.0")
     def match_frequency(self, other, relative=False):
-        """Return count of positions that are the same between two sequences.
+        r"""Return count of positions that are the same between two sequences.
 
         Parameters
         ----------
@@ -1675,7 +1673,7 @@ fuzzy=[(True, False)], metadata={'gene': 'foo'})
 
     @stable(as_of="0.4.0")
     def mismatch_frequency(self, other, relative=False):
-        """Return count of positions that differ between two sequences.
+        r"""Return count of positions that differ between two sequences.
 
         Parameters
         ----------
@@ -1725,7 +1723,7 @@ fuzzy=[(True, False)], metadata={'gene': 'foo'})
 
     @experimental(as_of="0.4.1")
     def frequencies(self, chars=None, relative=False):
-        """Compute frequencies of characters in the sequence.
+        r"""Compute frequencies of characters in the sequence.
 
         Parameters
         ----------
@@ -1824,7 +1822,7 @@ fuzzy=[(True, False)], metadata={'gene': 'foo'})
         return dict(zip(chars, obs_counts.tolist()))
 
     def _chars_to_indices(self, chars):
-        """Helper for Sequence.frequencies."""
+        r"""Helper for Sequence.frequencies."""
         if isinstance(chars, (str, bytes)):
             chars = set([chars])
         elif not isinstance(chars, set):
@@ -1855,7 +1853,7 @@ fuzzy=[(True, False)], metadata={'gene': 'foo'})
 
     @stable(as_of="0.4.0")
     def iter_kmers(self, k, overlap=True):
-        """Generate kmers of length `k` from this sequence.
+        r"""Generate kmers of length `k` from this sequence.
 
         Parameters
         ----------
@@ -1926,7 +1924,7 @@ fuzzy=[(True, False)], metadata={'gene': 'foo'})
 
     @stable(as_of="0.4.0")
     def kmer_frequencies(self, k, overlap=True, relative=False):
-        """Return counts of words of length `k` from this sequence.
+        r"""Return counts of words of length `k` from this sequence.
 
         Parameters
         ----------
@@ -1979,7 +1977,7 @@ fuzzy=[(True, False)], metadata={'gene': 'foo'})
 
     @stable(as_of="0.4.0")
     def find_with_regex(self, regex, ignore=None):
-        """Generate slices for patterns matched by a regular expression.
+        r"""Generate slices for patterns matched by a regular expression.
 
         Parameters
         ----------
@@ -2028,7 +2026,7 @@ fuzzy=[(True, False)], metadata={'gene': 'foo'})
 
     @stable(as_of="0.4.0")
     def iter_contiguous(self, included, min_length=1, invert=False):
-        """Yield contiguous subsequences based on `included`.
+        r"""Yield contiguous subsequences based on `included`.
 
         Parameters
         ----------
@@ -2099,7 +2097,7 @@ fuzzy=[(True, False)], metadata={'gene': 'foo'})
         return self.__class__(**kwargs)
 
     def _munge_to_index_array(self, sliceable):
-        """Return an index array from something isomorphic to a boolean vector.
+        r"""Return an index array from something isomorphic to a boolean vector.
 
         """
         if isinstance(sliceable, str):

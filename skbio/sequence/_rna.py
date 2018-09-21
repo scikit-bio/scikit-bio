@@ -15,7 +15,7 @@ from ._grammared_sequence import GrammaredSequence, DisableSubclassingMeta
 
 class RNA(GrammaredSequence, NucleotideMixin,
           metaclass=DisableSubclassingMeta):
-    """Store RNA sequence data and optional associated metadata.
+    r"""Store RNA sequence data and optional associated metadata.
 
     Only characters in the IUPAC RNA character set [1]_ are supported.
 

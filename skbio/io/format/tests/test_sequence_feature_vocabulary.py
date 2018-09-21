@@ -69,7 +69,7 @@ class Tests(TestCase):
             '3-8']
         for example in examples:
             with self.assertRaisesRegex(FileFormatError,
-                                        'Could not parse location string: '
+                                        r'Could not parse location string: '
                                         '"%s"' % example):
                 _parse_loc_str(example)
 

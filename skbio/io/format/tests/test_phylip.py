@@ -103,46 +103,46 @@ class TestReaders(unittest.TestCase):
 
         self.invalid_files = [(get_data_path(e[0]), e[1], e[2]) for e in [
             ('empty', PhylipFormatError,
-             'This file is empty.'),
+             r'This file is empty.'),
 
             ('whitespace_only', PhylipFormatError,
-             'Found non-header line .*: ""'),
+             r'Found non-header line .*: ""'),
 
             ('phylip_invalid_empty_line_after_header', PhylipFormatError,
-             'Empty lines are not allowed.'),
+             r'Empty lines are not allowed.'),
 
             ('phylip_invalid_empty_line_before_header', PhylipFormatError,
-             'Found non-header line .*: ""'),
+             r'Found non-header line .*: ""'),
 
             ('phylip_invalid_empty_line_between_seqs', PhylipFormatError,
-             'Empty lines are not allowed.'),
+             r'Empty lines are not allowed.'),
 
             ('phylip_invalid_header_too_long', PhylipFormatError,
-             'Found non-header line .*: "2 20 extra_text"'),
+             r'Found non-header line .*: "2 20 extra_text"'),
 
             ('phylip_invalid_header_too_short', PhylipFormatError,
-             'Found non-header line .*: " 20"'),
+             r'Found non-header line .*: " 20"'),
 
             ('phylip_invalid_no_header', PhylipFormatError,
-             'Found non-header line .*: "foo .*"'),
+             r'Found non-header line .*: "foo .*"'),
 
             ('phylip_invalid_seq_too_long', PhylipFormatError,
-             'The length of sequence foo is not 20 as specified .*.'),
+             r'The length of sequence foo is not 20 as specified .*.'),
 
             ('phylip_invalid_seq_too_short', PhylipFormatError,
-             'The length of sequence foo is not 20 as specified .*.'),
+             r'The length of sequence foo is not 20 as specified .*.'),
 
             ('phylip_invalid_too_few_seqs', PhylipFormatError,
-             'The number of sequences is not .* as specified .*.'),
+             r'The number of sequences is not .* as specified .*.'),
 
             ('phylip_invalid_too_many_seqs', PhylipFormatError,
-             'The number of sequences is not .* as specified in the header.'),
+             r'The number of sequences is not .* as specified in the header.'),
 
             ('phylip_invalid_zero_seq_len', PhylipFormatError,
-             'The number of sequences and the length must be positive.'),
+             r'The number of sequences and the length must be positive.'),
 
             ('phylip_invalid_zero_seqs', PhylipFormatError,
-             'The number of sequences and the length must be positive.'),
+             r'The number of sequences and the length must be positive.'),
         ]]
 
     def test_phylip_to_tabular_msa_invalid_files(self):

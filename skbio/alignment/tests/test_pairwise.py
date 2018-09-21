@@ -179,18 +179,18 @@ class PairwiseAlignmentTests(TestCase):
 
     def test_global_pairwise_align_invalid_type(self):
         with self.assertRaisesRegex(TypeError,
-                                    "GrammaredSequence.*"
+                                    r"GrammaredSequence.*"
                                     "TabularMSA.*'Sequence'"):
             global_pairwise_align(DNA('ACGT'), Sequence('ACGT'), 1.0, 1.0, {})
 
     def test_global_pairwise_align_dtype_mismatch(self):
         with self.assertRaisesRegex(TypeError,
-                                    "same dtype: 'DNA' != 'RNA'"):
+                                    r"same dtype: 'DNA' != 'RNA'"):
             global_pairwise_align(DNA('ACGT'), TabularMSA([RNA('ACGU')]),
                                   1.0, 1.0, {})
 
         with self.assertRaisesRegex(TypeError,
-                                    "same dtype: 'DNA' != 'RNA'"):
+                                    r"same dtype: 'DNA' != 'RNA'"):
             global_pairwise_align(TabularMSA([DNA('ACGT')]),
                                   TabularMSA([RNA('ACGU')]),
                                   1.0, 1.0, {})
@@ -268,7 +268,7 @@ class PairwiseAlignmentTests(TestCase):
 
     def test_global_pairwise_align_protein_invalid_dtype(self):
         with self.assertRaisesRegex(TypeError,
-                                    "TabularMSA with Protein dtype.*dtype "
+                                    r"TabularMSA with Protein dtype.*dtype "
                                     "'DNA'"):
             global_pairwise_align_protein(TabularMSA([Protein('PAW')]),
                                           TabularMSA([DNA('ACGT')]))
@@ -426,7 +426,7 @@ class PairwiseAlignmentTests(TestCase):
 
     def test_global_pairwise_align_nucleotide_invalid_dtype(self):
         with self.assertRaisesRegex(TypeError,
-                                    "TabularMSA with DNA or RNA dtype.*dtype "
+                                    r"TabularMSA with DNA or RNA dtype.*dtype "
                                     "'Protein'"):
             global_pairwise_align_nucleotide(TabularMSA([DNA('ACGT')]),
                                              TabularMSA([Protein('PAW')]))
@@ -527,12 +527,12 @@ class PairwiseAlignmentTests(TestCase):
 
     def test_local_pairwise_align_invalid_type(self):
         with self.assertRaisesRegex(TypeError,
-                                    'GrammaredSequence.*Sequence'):
+                                    r'GrammaredSequence.*Sequence'):
             local_pairwise_align(DNA('ACGT'), Sequence('ACGT'), 1.0, 1.0, {})
 
     def test_local_pairwise_align_type_mismatch(self):
         with self.assertRaisesRegex(TypeError,
-                                    "same type: 'DNA' != 'RNA'"):
+                                    r"same type: 'DNA' != 'RNA'"):
             local_pairwise_align(DNA('ACGT'), RNA('ACGU'), 1.0, 1.0, {})
 
     def test_init_matrices_sw(self):

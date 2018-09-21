@@ -557,13 +557,13 @@ def _parse_locus(lines):
     '''
     line = lines[0]
     pattern = (r'LOCUS'
-               ' +([^\s]+)'
-               ' +([0-9]+)'
-               ' +(bp|aa|rc)'
-               ' +(.*DNA|.*RNA)?'
-               ' +(linear|circular)?'
-               ' +(?!.*DNA|.*RNA)([A-Z]{3})'
-               ' +([0-9]{2}-[A-Z]{3}-[0-9]{4})')
+               r' +([^\s]+)'
+               r' +([0-9]+)'
+               r' +(bp|aa|rc)'
+               r' +(.*DNA|.*RNA)?'
+               r' +(linear|circular)?'
+               r' +(?!.*DNA|.*RNA)([A-Z]{3})'
+               r' +([0-9]{2}-[A-Z]{3}-[0-9]{4})')
     matches = re.match(pattern, line)
 
     try:

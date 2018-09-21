@@ -218,7 +218,7 @@ class NucleotideMixin(metaclass=ABCMeta):
 
     @stable(as_of='0.4.0')
     def is_reverse_complement(self, other):
-        """Determine if a sequence is the reverse complement of this sequence.
+        r"""Determine if a sequence is the reverse complement of this sequence.
 
         Parameters
         ----------

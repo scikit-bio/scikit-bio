@@ -9,6 +9,7 @@ include RELEASE.md
 include REVIEWING.md
 include checklist.py
 include asv.conf.json
+include pytest.ini
 
 graft assets
 graft ci

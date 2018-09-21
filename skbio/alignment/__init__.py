@@ -200,8 +200,6 @@ ACGTGCCTA-GGTACGCAAG
 # The full license is in the file COPYING.txt, distributed with this software.
 # ----------------------------------------------------------------------------
 
-from skbio.util import TestRunner
-
 from ._tabular_msa import TabularMSA
 from ._pairwise import (
     local_pairwise_align_nucleotide, local_pairwise_align_protein,
@@ -217,5 +215,3 @@ __all__ = ['TabularMSA', 'StripedSmithWaterman', 'AlignmentStructure',
            'global_pairwise_align_nucleotide', 'global_pairwise_align_protein',
            'local_pairwise_align', 'local_pairwise_align_nucleotide',
            'local_pairwise_align_protein', 'make_identity_substitution_matrix']
-
-test = TestRunner(__file__).test

@@ -1837,7 +1837,7 @@ class TreeNode(SkbioObject):
     @classonlymethod
     @experimental(as_of="0.4.0")
     def from_taxonomy(cls, lineage_map):
-        """Construct a tree from a taxonomy
+        r"""Construct a tree from a taxonomy
 
         Parameters
         ----------

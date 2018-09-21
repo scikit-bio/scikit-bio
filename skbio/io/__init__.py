@@ -200,8 +200,6 @@ not know how you want to serialize an object. OO interfaces define a default
 
 from importlib import import_module
 
-from skbio.util import TestRunner
-
 from ._warning import FormatIdentificationWarning, ArgumentOverrideWarning
 from ._exception import (UnrecognizedFormatError, FileFormatError,
                          BLAST7FormatError, ClustalFormatError,
@@ -261,5 +259,3 @@ import_module('skbio.io.format.emptyfile')
 # Now that all of our I/O has loaded, we can add the object oriented methods
 # (read and write) to each class which has registered I/O operations.
 io_registry.monkey_patch()
-
-test = TestRunner(__file__).test
