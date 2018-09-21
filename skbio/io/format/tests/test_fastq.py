@@ -218,7 +218,8 @@ class TestReaders(unittest.TestCase):
              r'blank or whitespace-only line.*within sequence.*FASTQ'),
 
             ('fastq_invalid_ws_line_within_qual', FASTQFormatError,
-             r"blank or whitespace-only line.*within quality scores.*in FASTQ"),
+             r"blank or whitespace-only line.*within quality scores.*in "
+             "FASTQ"),
 
             ('fastq_invalid_missing_header', FASTQFormatError,
              r"sequence.*header.*start of file: 'seq1 desc1'"),

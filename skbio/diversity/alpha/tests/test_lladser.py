@@ -53,14 +53,12 @@ class LladserTests(unittest.TestCase):
         # which for r=30 and p~=0.9 is 0.0289
         npt.assert_almost_equal(obs, exp_p, decimal=2)
 
-
     def test_lladser_ci_nan(self):
         """lladser_ci returns nan if sample is too short to make an estimate"""
         obs = lladser_ci([3], r=4)
-        self.assertTrue(len(obs) == 2 and \
-                        np.isnan(obs[0]) and \
+        self.assertTrue(len(obs) == 2 and
+                        np.isnan(obs[0]) and
                         np.isnan(obs[1]))
-
 
     def test_lladser_ci(self):
         """lladser_ci estimate using defaults contains p with 95% prob"""
@@ -74,7 +72,6 @@ class LladserTests(unittest.TestCase):
                 sum += 1
 
         self.assertTrue(sum/reps >= 0.95)
-
 
     def test_lladser_ci_f3(self):
         """lladser_ci estimate using f=3 contains p with 95% prob"""
@@ -97,11 +94,9 @@ class LladserTests(unittest.TestCase):
 
         self.assertTrue(sum/reps >= 0.95)
 
-
     def test_expand_counts(self):
         arr = np.array([2, 0, 1, 2])
         npt.assert_array_equal(_expand_counts(arr), np.array([0, 0, 2, 3, 3]))
-
 
     def test_lladser_point_estimates(self):
         s = [5, 1, 5, 1, 2, 3, 1, 5, 3, 2, 5, 3]
@@ -124,12 +119,10 @@ class LladserTests(unittest.TestCase):
             sum += p
         self.assertTrue(0.45 < sum / reps and sum / reps < 0.55)
 
-
     def test_lladser_point_estimates_invalid_r(self):
         with self.assertRaises(ValueError):
             list(_lladser_point_estimates([5, 1, 5, 1, 2, 3, 1, 5, 3, 2, 5, 3],
                                           2))
-
 
     def test_get_interval_for_r_new_otus(self):
         s = [5, 1, 5, 1, 2, 3, 1, 5, 3, 2, 5]
@@ -143,13 +136,11 @@ class LladserTests(unittest.TestCase):
         # never saw new one
         self.assertEqual(list(_get_interval_for_r_new_otus(s, 2)), [])
 
-
     def test_lladser_ci_series_exact(self):
         # have seen RWB
         urn_1 = 'RWBWWBWRRWRYWRPPZ'
         results = list(_lladser_ci_series(urn_1, r=4))
         self.assertEqual(len(results), 3)
-
 
     def test_lladser_ci_series_random(self):
         seq = "WBWBWBWBWBWB"
@@ -162,7 +153,6 @@ class LladserTests(unittest.TestCase):
         tps = list(filter(lambda a_b: a_b[0] < 0.5 and 0.5 < a_b[1],
                           observations))
         self.assertTrue(len(tps) >= alpha * reps)  # 100%-95%
-
 
     def test_lladser_ci_from_r(self):
         f = 10
@@ -210,7 +200,6 @@ class LladserTests(unittest.TestCase):
                                                ci_type=ci_type)
         npt.assert_almost_equal(obs_low, 0.0817691447)
         npt.assert_almost_equal(obs_high, 1)
-
 
     def test_lladser_ci_from_r_invalid_input(self):
         # unsupported alpha for ci_type='U'

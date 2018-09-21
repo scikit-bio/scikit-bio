@@ -77,8 +77,8 @@ class TestGrammaredSequence(TestCase):
     def test_gap_chars_and_degenerates_share(self):
         with self.assertRaisesRegex(
                 TypeError,
-                r"gap_chars and degenerate_chars must not share any characters "
-                "for class GrammaredSequenceGapInDegenerateMap"):
+                r"gap_chars and degenerate_chars must not share any characters"
+                " for class GrammaredSequenceGapInDegenerateMap"):
 
             class GrammaredSequenceGapInDegenerateMap(
                     ExampleGrammaredSequence):
