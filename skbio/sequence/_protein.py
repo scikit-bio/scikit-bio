@@ -50,20 +50,6 @@ class Protein(GrammaredSequence, metaclass=DisableSubclassingMeta):
         certain that the sequence characters are valid. To store sequence data
         that is not IUPAC-compliant, use ``Sequence``.
 
-    Attributes
-    ----------
-    values
-    metadata
-    interval_metadata
-    positional_metadata
-    alphabet
-    gap_chars
-    default_gap_char
-    stop_chars
-    definite_chars
-    degenerate_chars
-    degenerate_map
-
     See Also
     --------
     GrammaredSequence

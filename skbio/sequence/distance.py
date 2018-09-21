@@ -14,7 +14,7 @@ Functions
 ---------
 
 .. autosummary::
-   :toctree: generated/
+   :toctree:
 
    hamming
    kmer_distance

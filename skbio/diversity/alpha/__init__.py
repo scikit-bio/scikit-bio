@@ -12,7 +12,7 @@ Functions
 ---------
 
 .. autosummary::
-   :toctree: generated/
+   :toctree:
 
    ace
    berger_parker_d

@@ -11,7 +11,11 @@ Building the documentation
 --------------------------
 
 To build the documentation, you'll need a scikit-bio development environment
-set up. See [CONTRIBUTING.md](../CONTRIBUTING.md) for instructions.
+set up. See [CONTRIBUTING.md](../CONTRIBUTING.md) for instructions. In
+addition, you will also need to install Sphinx and the theme for the
+documentation, you can do that with:
+
+    pip install Sphinx sphinx-bootstrap-theme
 
 **Important:** The documentation will be built for whatever version of
 scikit-bio is *currently installed* on your system (i.e., the version imported

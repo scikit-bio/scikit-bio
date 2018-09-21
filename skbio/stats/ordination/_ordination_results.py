@@ -49,8 +49,6 @@ class OrdinationResults(SkbioObject):
     proportion_explained : pd.Series
         Proportion explained by each of the dimensions in the ordination space.
         The index corresponds to the ordination axis labels
-    png
-    svg
 
     See Also
     --------

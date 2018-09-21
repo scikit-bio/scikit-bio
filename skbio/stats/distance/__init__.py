@@ -40,7 +40,7 @@ Classes
 ^^^^^^^
 
 .. autosummary::
-   :toctree: generated/
+   :toctree:
 
    DissimilarityMatrix
    DistanceMatrix
@@ -49,7 +49,7 @@ Functions
 ^^^^^^^^^
 
 .. autosummary::
-   :toctree: generated/
+   :toctree:
 
    randdm
 
@@ -57,7 +57,7 @@ Exceptions
 ^^^^^^^^^^
 
 .. autosummary::
-   :toctree: generated/
+   :toctree:
 
    DissimilarityMatrixError
    DistanceMatrixError
@@ -150,7 +150,7 @@ Categorical Variable Stats
 ^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 .. autosummary::
-   :toctree: generated/
+   :toctree:
 
    anosim
    permanova
@@ -160,7 +160,7 @@ Continuous Variable Stats
 ^^^^^^^^^^^^^^^^^^^^^^^^^
 
 .. autosummary::
-   :toctree: generated/
+   :toctree:
 
    bioenv
 
@@ -168,7 +168,7 @@ Distance Matrix Comparisons
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 .. autosummary::
-   :toctree: generated/
+   :toctree:
 
    mantel
    pwmantel
