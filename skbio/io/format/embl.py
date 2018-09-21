@@ -908,14 +908,14 @@ def _parse_id(lines):
 
     # define a specific patter for EMBL
     pattern = re.compile(r'ID'
-                         ' +([^\s]+);'     # ie: CD789012
-                         ' +SV ([0-9]*);'  # 4
-                         ' +(\w+);'        # linear
-                         ' +([^;]+);'      # genomic DNA
-                         ' +(\w*);'        # HTG
-                         ' +(\w+);'        # MAM
-                         ' +(\d+)'         # 500
-                         ' +(\w+)\.$')     # BP
+                         r' +([^\s]+);'     # ie: CD789012
+                         r' +SV ([0-9]*);'  # 4
+                         r' +(\w+);'        # linear
+                         r' +([^;]+);'      # genomic DNA
+                         r' +(\w*);'        # HTG
+                         r' +(\w+);'        # MAM
+                         r' +(\d+)'         # 500
+                         r' +(\w+)\.$')     # BP
 
     # search it
     matches = re.match(pattern, line)
@@ -988,7 +988,7 @@ def _serialize_id(header, obj, metadata={}, indent=5):
 
         # could be a text like M14399.1
         except ValueError:
-            match = re.search("^\w+\.([0-9]+)", version)
+            match = re.search(r"^\w+\.([0-9]+)", version)
 
             if match:
                 kwargs["version"] = match.groups()[0]
@@ -1117,7 +1117,7 @@ def _parse_reference(lines):
 
     # search for pubmed record, and add the PUBMED key
     if "RX" in res:
-        match = re.search("PUBMED; (\d+)\.", res["RX"])
+        match = re.search(r"PUBMED; (\d+)\.", res["RX"])
 
         if match:
             # add pubmed notation
@@ -1125,7 +1125,7 @@ def _parse_reference(lines):
 
     # fix RP field like genbank (if exists), Ie: (bases 1 to 63)
     if "RP" in res:
-        match = re.search("(\d+)-(\d+)", res["RP"])
+        match = re.search(r"(\d+)-(\d+)", res["RP"])
 
         if match:
             # fix rp fields
@@ -1143,8 +1143,8 @@ def _serialize_reference(header, obj, cross_references, indent=5):
     sort_order = ["RC", "RP", "RX", "RG", "RA", "RT", "RL"]
 
     # deal with RX pattern and RP pattern
-    RX = re.compile("([^;\s]*); ([^\s]*)")
-    RP = re.compile("bases (\d+) to (\d+)")
+    RX = re.compile(r"([^;\s]*); ([^\s]*)")
+    RP = re.compile(r"bases (\d+) to (\d+)")
 
     # create a copy of obj, that can be changed. I need to delete values or
     # adding new ones
@@ -1493,7 +1493,7 @@ def _serialize_dbsource(embl_key, obj, indent=5):
     # I need to split string after final period (not AAT09660.1)
 
     # deal with re pattern. A pattern to find a period as end of sentence
-    DR = re.compile("\.\s")
+    DR = re.compile(r"\.\s")
 
     # splitting by this pattern, I will have
     # ["SILVA-LSU; LK021130", "SILVA-SSU; LK021130", ...]

@@ -294,18 +294,18 @@ class TestFormatFASTALikeRecords(unittest.TestCase):
             npt.assert_equal(o, e)
 
     def test_newline_character_in_id_whitespace_replacement(self):
-        with self.assertRaisesRegex(ValueError, 'Newline character'):
+        with self.assertRaisesRegex(ValueError, r'Newline character'):
             list(_format_fasta_like_records(self.gen, '-\n--', ' ', False))
 
     def test_newline_character_in_description_newline_replacement(self):
-        with self.assertRaisesRegex(ValueError, 'Newline character'):
+        with self.assertRaisesRegex(ValueError, r'Newline character'):
             list(_format_fasta_like_records(self.gen, None, 'a\nb', False))
 
     def test_empty_sequence(self):
         def blank_seq_gen():
             yield from (DNA('A'), Sequence(''), RNA('GG'))
 
-        with self.assertRaisesRegex(ValueError, '2nd.*empty'):
+        with self.assertRaisesRegex(ValueError, r'2nd.*empty'):
             list(_format_fasta_like_records(blank_seq_gen(), None, None,
                                             False))
 
@@ -316,7 +316,7 @@ class TestFormatFASTALikeRecords(unittest.TestCase):
                         DNA('GG', positional_metadata={'quality': [41, 40]}))
 
         with self.assertRaisesRegex(ValueError,
-                                    '2nd sequence.*quality scores'):
+                                    r'2nd sequence.*quality scores'):
             list(_format_fasta_like_records(missing_qual_gen(), '-', '-',
                                             True))
 

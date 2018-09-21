@@ -21,10 +21,10 @@ class TestHamming(unittest.TestCase):
         seq1 = Sequence('abc')
         seq2 = 'abc'
 
-        with self.assertRaisesRegex(TypeError, 'seq1.*seq2.*Sequence.*str'):
+        with self.assertRaisesRegex(TypeError, r'seq1.*seq2.*Sequence.*str'):
             hamming(seq1, seq2)
 
-        with self.assertRaisesRegex(TypeError, 'seq1.*seq2.*Sequence.*str'):
+        with self.assertRaisesRegex(TypeError, r'seq1.*seq2.*Sequence.*str'):
             hamming(seq2, seq1)
 
     def test_type_mismatch(self):
@@ -32,14 +32,14 @@ class TestHamming(unittest.TestCase):
         seq2 = DNA('ACG')
 
         with self.assertRaisesRegex(TypeError,
-                                    'Sequence.*does not match.*DNA'):
+                                    r'Sequence.*does not match.*DNA'):
             hamming(seq1, seq2)
 
     def test_length_mismatch(self):
         seq1 = Sequence('ABC')
         seq2 = Sequence('ABCD')
 
-        with self.assertRaisesRegex(ValueError, 'equal length.*3 != 4'):
+        with self.assertRaisesRegex(ValueError, r'equal length.*3 != 4'):
             hamming(seq1, seq2)
 
     def test_return_type(self):
@@ -214,19 +214,19 @@ class TestKmerDistance(unittest.TestCase):
     def test_k_less_than_one_error(self):
         seq1 = Sequence('ATCG')
         seq2 = Sequence('ACTG')
-        with self.assertRaisesRegex(ValueError, 'k must be greater than 0.'):
+        with self.assertRaisesRegex(ValueError, r'k must be greater than 0.'):
             kmer_distance(seq1, seq2, 0)
 
     def test_type_mismatch_error(self):
         seq1 = Sequence('ABC')
         seq2 = DNA('ATC')
-        with self.assertRaisesRegex(TypeError, "Type 'Sequence'.*type 'DNA'"):
+        with self.assertRaisesRegex(TypeError, r"Type 'Sequence'.*type 'DNA'"):
             kmer_distance(seq1, seq2, 3)
 
     def test_non_sequence_error(self):
         seq1 = Sequence('ATCG')
         seq2 = 'ATCG'
-        with self.assertRaisesRegex(TypeError, "not 'str'"):
+        with self.assertRaisesRegex(TypeError, r"not 'str'"):
             kmer_distance(seq1, seq2, 3)
 
 

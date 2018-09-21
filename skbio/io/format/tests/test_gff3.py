@@ -148,7 +148,7 @@ class ReaderTests(GFF3IOTests):
                 'ctg123\t.\tgene\t1000\t9000\t.\t+\t%s\tID=gene00001' % char]
             with self.assertRaisesRegex(
                     GFF3FormatError,
-                    "unknown value for phase column: '%s'" % char):
+                    r"unknown value for phase column: '%s'" % char):
                 _parse_record(lines, 10000)
 
     def test_yield_record_raise(self):
@@ -172,7 +172,7 @@ class ReaderTests(GFF3IOTests):
 
     def test_gff3_to_interval_metadata_bad(self):
         with self.assertRaisesRegex(GFF3FormatError,
-                                    'do not have 9 columns in this line'):
+                                    r'do not have 9 columns in this line'):
             _gff3_to_interval_metadata(
                 get_data_path('gff3_bad_wrong_columns'),
                 seq_id='Chromosome')

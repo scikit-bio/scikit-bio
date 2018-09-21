@@ -117,7 +117,7 @@ class TestPCoA(TestCase):
 
         dm_big = DistanceMatrix.read(get_data_path('PCoA_sample_data_12dim'))
         with self.assertWarnsRegex(RuntimeWarning,
-                                   "no value for number_of_dimensions"):
+                                   r"no value for number_of_dimensions"):
             pcoa(dm_big, method="fsvd", number_of_dimensions=0)
 
     def test_extensive(self):
@@ -269,7 +269,7 @@ class TestPCoABiplot(TestCase):
         new_index[3] = 'Not.an.id'
         self.descriptors.index = pd.Index(new_index)
 
-        with self.assertRaisesRegex(ValueError, 'The eigenvectors and the '
+        with self.assertRaisesRegex(ValueError, r'The eigenvectors and the '
                                                 'descriptors must describe '
                                                 'the same '
                                                 'samples.'):
@@ -278,7 +278,7 @@ class TestPCoABiplot(TestCase):
     def test_not_a_pcoa(self):
         self.ordination.short_method_name = 'RDA'
         self.ordination.long_method_name = 'Redundancy Analysis'
-        with self.assertRaisesRegex(ValueError, 'This biplot computation can'
+        with self.assertRaisesRegex(ValueError, r'This biplot computation can'
                                                 ' only be performed in a '
                                                 'PCoA matrix.'):
             pcoa_biplot(self.ordination, self.descriptors)

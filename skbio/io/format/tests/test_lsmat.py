@@ -43,12 +43,12 @@ class LSMatTestData(TestCase):
         self.invalid_6_fh = io.StringIO(INVALID_6)
 
         self.invalid_fhs = [
-            (self.empty_fh, 'empty'),
-            (self.invalid_1_fh, '1 value\(s\).*2.*\(2\)'),
-            (self.invalid_2_fh, "'b'.*'a'"),
-            (self.invalid_3_fh, 'extra row\(s\)'),
-            (self.invalid_4_fh, '2 row\(s\).*found 1'),
-            (self.invalid_5_fh, '2 row\(s\).*found 0'),
+            (self.empty_fh, r'empty'),
+            (self.invalid_1_fh, r'1 value\(s\).*2.*\(2\)'),
+            (self.invalid_2_fh, r"'b'.*'a'"),
+            (self.invalid_3_fh, r'extra row\(s\)'),
+            (self.invalid_4_fh, r'2 row\(s\).*found 1'),
+            (self.invalid_5_fh, r'2 row\(s\).*found 0'),
             (self.invalid_6_fh, r"delimiter '\\t'")
         ]
 

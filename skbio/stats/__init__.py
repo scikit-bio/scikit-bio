@@ -39,10 +39,6 @@ Functions
 # The full license is in the file COPYING.txt, distributed with this software.
 # ----------------------------------------------------------------------------
 
-from skbio.util import TestRunner
-
 from ._subsample import subsample_counts, isubsample
 
 __all__ = ['subsample_counts', 'isubsample']
-
-test = TestRunner(__file__).test

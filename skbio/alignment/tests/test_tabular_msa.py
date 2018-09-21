@@ -70,34 +70,34 @@ class TestTabularMSA(unittest.TestCase, ReallyEqualMixin):
         # Basic test to make sure error-checking in the TabularMSA constructor
         # is being invoked.
         with self.assertRaisesRegex(
-                ValueError, 'must match the number of positions'):
+                ValueError, r'must match the number of positions'):
             TabularMSA.from_dict({'a': DNA('ACG'), 'b': DNA('ACGT')})
 
     def test_constructor_invalid_dtype(self):
-        with self.assertRaisesRegex(TypeError, 'GrammaredSequence.*Sequence'):
+        with self.assertRaisesRegex(TypeError, r'GrammaredSequence.*Sequence'):
             TabularMSA([Sequence('')])
 
-        with self.assertRaisesRegex(TypeError, 'GrammaredSequence.*int'):
+        with self.assertRaisesRegex(TypeError, r'GrammaredSequence.*int'):
             TabularMSA([42, DNA('')])
 
     def test_constructor_not_monomorphic(self):
         with self.assertRaisesRegex(TypeError,
-                                    'matching type.*RNA.*DNA'):
+                                    r'matching type.*RNA.*DNA'):
             TabularMSA([DNA(''), RNA('')])
 
         with self.assertRaisesRegex(TypeError,
-                                    'matching type.*float.*Protein'):
+                                    r'matching type.*float.*Protein'):
             TabularMSA([Protein(''), Protein(''), 42.0, Protein('')])
 
     def test_constructor_unequal_length(self):
         with self.assertRaisesRegex(
                 ValueError,
-                'must match the number of positions.*1 != 0'):
+                r'must match the number of positions.*1 != 0'):
             TabularMSA([Protein(''), Protein('P')])
 
         with self.assertRaisesRegex(
                 ValueError,
-                'must match the number of positions.*1 != 3'):
+                r'must match the number of positions.*1 != 3'):
             TabularMSA([Protein('PAW'), Protein('ABC'), Protein('A')])
 
     def test_constructor_non_iterable(self):
@@ -105,7 +105,7 @@ class TestTabularMSA(unittest.TestCase, ReallyEqualMixin):
             TabularMSA(42)
 
     def test_constructor_minter_and_index_both_provided(self):
-        with self.assertRaisesRegex(ValueError, 'both.*minter.*index'):
+        with self.assertRaisesRegex(ValueError, r'both.*minter.*index'):
             TabularMSA([DNA('ACGT'), DNA('TGCA')], minter=str,
                        index=['a', 'b'])
 
@@ -124,12 +124,12 @@ class TestTabularMSA(unittest.TestCase, ReallyEqualMixin):
 
     def test_constructor_index_length_mismatch_iterable(self):
         with self.assertRaisesRegex(ValueError,
-                                    'sequences.*2.*index length.*0'):
+                                    r'sequences.*2.*index length.*0'):
             TabularMSA([DNA('ACGT'), DNA('TGCA')], index=iter([]))
 
     def test_constructor_index_length_mismatch_index_object(self):
         with self.assertRaisesRegex(ValueError,
-                                    'sequences.*2.*index length.*0'):
+                                    r'sequences.*2.*index length.*0'):
             TabularMSA([DNA('ACGT'), DNA('TGCA')], index=pd.Index([]))
 
     def test_constructor_invalid_index_scalar(self):
@@ -309,7 +309,7 @@ class TestTabularMSA(unittest.TestCase, ReallyEqualMixin):
     def test_copy_constructor_with_minter_and_index(self):
         msa = TabularMSA([DNA('ACGT'), DNA('----')], index=['idx1', 'idx2'])
 
-        with self.assertRaisesRegex(ValueError, 'both.*minter.*index'):
+        with self.assertRaisesRegex(ValueError, r'both.*minter.*index'):
             TabularMSA(msa, index=['a', 'b'], minter=str)
 
     def test_dtype(self):
@@ -381,7 +381,7 @@ class TestTabularMSA(unittest.TestCase, ReallyEqualMixin):
         index = pd.Index(['ACGT', 'TGCA'])
         assert_index_equal(msa.index, index)
 
-        with self.assertRaisesRegex(ValueError, 'Length mismatch.*2.*3'):
+        with self.assertRaisesRegex(ValueError, r'Length mismatch.*2.*3'):
             msa.index = iter(['ab', 'cd', 'ef'])
 
         # original state is maintained
@@ -597,7 +597,7 @@ class TestTabularMSA(unittest.TestCase, ReallyEqualMixin):
     def test_reassign_index_minter_and_mapping_both_provided(self):
         msa = TabularMSA([DNA('ACGT'), DNA('TGCA')], minter=str)
 
-        with self.assertRaisesRegex(ValueError, 'both.*mapping.*minter.*'):
+        with self.assertRaisesRegex(ValueError, r'both.*mapping.*minter.*'):
             msa.reassign_index(minter=str, mapping={"ACGT": "fleventy"})
 
         # original state is maintained
@@ -607,7 +607,7 @@ class TestTabularMSA(unittest.TestCase, ReallyEqualMixin):
         msa = TabularMSA([DNA('ACGT'), DNA('TGCA')], minter=str)
 
         with self.assertRaisesRegex(TypeError,
-                                    'mapping.*dict.*callable.*list'):
+                                    r'mapping.*dict.*callable.*list'):
             msa.reassign_index(mapping=['abc', 'def'])
 
         # original state is maintained
@@ -1456,7 +1456,7 @@ class TestLoc(SharedPropertyIndexTests, unittest.TestCase):
                          index=[('a', 0, 1), ('a', 1, 1), ('b', 0, 1)])
 
         with self.assertRaisesRegex(TypeError,
-                                    'tuple.*independent.*MultiIndex'):
+                                    r'tuple.*independent.*MultiIndex'):
             self.get(msa, ['a', 'b'])
 
     def test_missing_first_nonscalar_fancy_index(self):
@@ -1470,13 +1470,13 @@ class TestLoc(SharedPropertyIndexTests, unittest.TestCase):
         msa = TabularMSA([DNA('ACGT'), DNA('ACGT'), DNA('ACGT')],
                          index=[('a', 0, 1), ('a', 1, 1), ('b', 0, 1)])
 
-        with self.assertRaisesRegex(TypeError, 'tuple.*pd.MultiIndex.*label'):
+        with self.assertRaisesRegex(TypeError, r'tuple.*pd.MultiIndex.*label'):
             self.get(msa, ((('a', 0, 1), ('b', 0, 1)), Ellipsis))
 
     def test_non_multiindex_tuple(self):
         msa = TabularMSA([DNA('ACGT'), DNA('ACGT'), DNA('ACGT')])
 
-        with self.assertRaisesRegex(TypeError, 'tuple.*first axis'):
+        with self.assertRaisesRegex(TypeError, r'tuple.*first axis'):
             self.get(msa, ((0, 1), Ellipsis))
 
     def test_assertion_exists_for_future_failure_of_get_sequence_loc(self):
@@ -1872,7 +1872,7 @@ class TestAppend(unittest.TestCase):
 
         for params in param_combos:
             with self.assertRaisesRegex(ValueError,
-                                        "one of.*minter.*index.*reset_index"):
+                                        r"one of.*minter.*index.*reset_index"):
                 msa.append(DNA('ACGT'), **params)
 
             self.assertEqual(msa, TabularMSA([]))
@@ -1880,7 +1880,7 @@ class TestAppend(unittest.TestCase):
     def test_invalid_dtype(self):
         msa = TabularMSA([])
 
-        with self.assertRaisesRegex(TypeError, 'GrammaredSequence.*Sequence'):
+        with self.assertRaisesRegex(TypeError, r'GrammaredSequence.*Sequence'):
             msa.append(Sequence(''), reset_index=True)
 
         self.assertEqual(msa, TabularMSA([]))
@@ -1888,7 +1888,7 @@ class TestAppend(unittest.TestCase):
     def test_dtype_mismatch_rna(self):
         msa = TabularMSA([DNA('ACGT'), DNA('TGCA')])
 
-        with self.assertRaisesRegex(TypeError, 'matching type.*RNA.*DNA'):
+        with self.assertRaisesRegex(TypeError, r'matching type.*RNA.*DNA'):
             msa.append(RNA('UUUU'), reset_index=True)
 
         self.assertEqual(msa, TabularMSA([DNA('ACGT'), DNA('TGCA')]))
@@ -1896,7 +1896,7 @@ class TestAppend(unittest.TestCase):
     def test_dtype_mismatch_float(self):
         msa = TabularMSA([DNA('ACGT'), DNA('TGCA')])
 
-        with self.assertRaisesRegex(TypeError, 'matching type.*float.*DNA'):
+        with self.assertRaisesRegex(TypeError, r'matching type.*float.*DNA'):
             msa.append(42.0, reset_index=True)
 
         self.assertEqual(msa, TabularMSA([DNA('ACGT'), DNA('TGCA')]))
@@ -1905,7 +1905,7 @@ class TestAppend(unittest.TestCase):
         msa = TabularMSA([DNA('ACGT'), DNA('TGCA')])
 
         with self.assertRaisesRegex(
-                ValueError, 'must match the number of positions.*5 != 4'):
+                ValueError, r'must match the number of positions.*5 != 4'):
             msa.append(DNA('ACGTA'), reset_index=True)
 
         self.assertEqual(msa, TabularMSA([DNA('ACGT'), DNA('TGCA')]))
@@ -2112,7 +2112,7 @@ class TestExtend(unittest.TestCase):
 
         for params in param_combos:
             with self.assertRaisesRegex(ValueError,
-                                        "one of.*minter.*index.*reset_index"):
+                                        r"one of.*minter.*index.*reset_index"):
                 msa.extend([DNA('ACGT')], **params)
 
             self.assertEqual(msa, TabularMSA([]))
@@ -2121,7 +2121,7 @@ class TestExtend(unittest.TestCase):
         msa = TabularMSA([DNA('AC'), DNA('TG')])
 
         with self.assertRaisesRegex(ValueError,
-                                    "one of.*minter.*index.*reset_index"):
+                                    r"one of.*minter.*index.*reset_index"):
             msa.extend(TabularMSA([DNA('GG'), DNA('CC')]))
 
         self.assertEqual(msa, TabularMSA([DNA('AC'), DNA('TG')]))
@@ -2129,7 +2129,7 @@ class TestExtend(unittest.TestCase):
     def test_invalid_dtype(self):
         msa = TabularMSA([])
 
-        with self.assertRaisesRegex(TypeError, 'GrammaredSequence.*Sequence'):
+        with self.assertRaisesRegex(TypeError, r'GrammaredSequence.*Sequence'):
             msa.extend([Sequence('')], reset_index=True)
 
         self.assertEqual(msa, TabularMSA([]))
@@ -2137,7 +2137,7 @@ class TestExtend(unittest.TestCase):
     def test_dtype_mismatch_rna(self):
         msa = TabularMSA([DNA('ACGT'), DNA('TGCA')])
 
-        with self.assertRaisesRegex(TypeError, 'matching type.*RNA.*DNA'):
+        with self.assertRaisesRegex(TypeError, r'matching type.*RNA.*DNA'):
             msa.extend([DNA('----'), RNA('UUUU')], reset_index=True)
 
         self.assertEqual(msa, TabularMSA([DNA('ACGT'), DNA('TGCA')]))
@@ -2145,7 +2145,7 @@ class TestExtend(unittest.TestCase):
     def test_dtype_mismatch_float(self):
         msa = TabularMSA([DNA('ACGT'), DNA('TGCA')])
 
-        with self.assertRaisesRegex(TypeError, 'matching type.*float.*DNA'):
+        with self.assertRaisesRegex(TypeError, r'matching type.*float.*DNA'):
             msa.extend([DNA('GGGG'), 42.0], reset_index=True)
 
         self.assertEqual(msa, TabularMSA([DNA('ACGT'), DNA('TGCA')]))
@@ -2154,7 +2154,7 @@ class TestExtend(unittest.TestCase):
         msa = TabularMSA([DNA('ACGT'), DNA('TGCA')])
 
         with self.assertRaisesRegex(
-                ValueError, 'must match the number of positions.*5 != 4'):
+                ValueError, r'must match the number of positions.*5 != 4'):
             msa.extend([DNA('TTTT'), DNA('ACGTA')], reset_index=True)
 
         self.assertEqual(msa, TabularMSA([DNA('ACGT'), DNA('TGCA')]))
@@ -2180,7 +2180,7 @@ class TestExtend(unittest.TestCase):
         msa = TabularMSA([])
 
         with self.assertRaisesRegex(ValueError,
-                                    'sequences.*2.*index length.*3'):
+                                    r'sequences.*2.*index length.*3'):
             msa.extend([DNA('TTTT'), DNA('ACGT')], index=['a', 'b', 'c'])
 
         self.assertEqual(msa, TabularMSA([]))
@@ -2479,31 +2479,31 @@ class TestJoin(unittest.TestCase):
         self.assertEqual(msa1, msa2)
 
     def test_invalid_how(self):
-        with self.assertRaisesRegex(ValueError, '`how`'):
+        with self.assertRaisesRegex(ValueError, r'`how`'):
             TabularMSA([]).join(TabularMSA([]), how='really')
 
     def test_invalid_other_type(self):
-        with self.assertRaisesRegex(TypeError, 'TabularMSA.*DNA'):
+        with self.assertRaisesRegex(TypeError, r'TabularMSA.*DNA'):
             TabularMSA([]).join(DNA('ACGT'))
 
     def test_dtype_mismatch(self):
-        with self.assertRaisesRegex(TypeError, 'dtype.*RNA.*DNA'):
+        with self.assertRaisesRegex(TypeError, r'dtype.*RNA.*DNA'):
             TabularMSA([DNA('AC')]).join(TabularMSA([RNA('UG')]))
 
-        with self.assertRaisesRegex(TypeError, 'dtype.*None.*DNA'):
+        with self.assertRaisesRegex(TypeError, r'dtype.*None.*DNA'):
             TabularMSA([DNA('AC')]).join(TabularMSA([]))
 
-        with self.assertRaisesRegex(TypeError, 'dtype.*DNA.*None'):
+        with self.assertRaisesRegex(TypeError, r'dtype.*DNA.*None'):
             TabularMSA([]).join(TabularMSA([DNA('AC')]))
 
     def test_duplicate_index_labels(self):
         with self.assertRaisesRegex(ValueError,
-                                    "This MSA's index labels.*unique"):
+                                    r"This MSA's index labels.*unique"):
             TabularMSA([DNA('AC'), DNA('--')], index=[0, 0]).join(
                 TabularMSA([DNA('GT'), DNA('..')]))
 
         with self.assertRaisesRegex(ValueError,
-                                    "`other`'s index labels.*unique"):
+                                    r"`other`'s index labels.*unique"):
             TabularMSA([DNA('AC'), DNA('--')]).join(
                 TabularMSA([DNA('GT'), DNA('..')], index=[0, 0]))
 
@@ -2633,7 +2633,8 @@ class TestJoin(unittest.TestCase):
                            DNA('CA'),
                            DNA('--')])
 
-        with self.assertRaisesRegex(ValueError, 'Index labels must all match'):
+        with self.assertRaisesRegex(ValueError, r'Index labels must all '
+                                                'match'):
             msa1.join(msa2)
 
     def test_how_strict_failure_positional_metadata_mismatch(self):
@@ -2646,7 +2647,7 @@ class TestJoin(unittest.TestCase):
                           positional_metadata={'foo': [3, 4]})
 
         with self.assertRaisesRegex(ValueError,
-                                    'Positional metadata columns.*match'):
+                                    r'Positional metadata columns.*match'):
             msa1.join(msa2)
 
     def test_how_inner(self):
@@ -3317,31 +3318,31 @@ class TestConservation(unittest.TestCase):
     def test_bad_metric(self):
         msa = TabularMSA([DNA('AA'),
                           DNA('A-')])
-        with self.assertRaisesRegex(ValueError, 'xyz'):
+        with self.assertRaisesRegex(ValueError, r'xyz'):
             msa.conservation(metric='xyz')
 
         msa = TabularMSA([])
-        with self.assertRaisesRegex(ValueError, 'xyz'):
+        with self.assertRaisesRegex(ValueError, r'xyz'):
             msa.conservation(metric='xyz')
 
     def test_bad_gap_mode(self):
         msa = TabularMSA([DNA('AA'),
                           DNA('A-')])
-        with self.assertRaisesRegex(ValueError, 'xyz'):
+        with self.assertRaisesRegex(ValueError, r'xyz'):
             msa.conservation(gap_mode='xyz')
 
         msa = TabularMSA([])
-        with self.assertRaisesRegex(ValueError, 'xyz'):
+        with self.assertRaisesRegex(ValueError, r'xyz'):
             msa.conservation(gap_mode='xyz')
 
     def test_bad_degenerate_mode(self):
         msa = TabularMSA([DNA('AA'),
                           DNA('A-')])
-        with self.assertRaisesRegex(ValueError, 'xyz'):
+        with self.assertRaisesRegex(ValueError, r'xyz'):
             msa.conservation(degenerate_mode='xyz')
 
         msa = TabularMSA([])
-        with self.assertRaisesRegex(ValueError, 'xyz'):
+        with self.assertRaisesRegex(ValueError, r'xyz'):
             msa.conservation(degenerate_mode='xyz')
 
 
@@ -3355,11 +3356,11 @@ class TestGapFrequencies(unittest.TestCase):
         npt.assert_array_equal(np.array([1, 0, 2]), freqs)
 
     def test_invalid_axis_str(self):
-        with self.assertRaisesRegex(ValueError, "axis.*'foo'"):
+        with self.assertRaisesRegex(ValueError, r"axis.*'foo'"):
             TabularMSA([]).gap_frequencies(axis='foo')
 
     def test_invalid_axis_int(self):
-        with self.assertRaisesRegex(ValueError, "axis.*2"):
+        with self.assertRaisesRegex(ValueError, r"axis.*2"):
             TabularMSA([]).gap_frequencies(axis=2)
 
     def test_position_axis_str_and_int_equivalent(self):
@@ -3619,11 +3620,11 @@ class TestIsSequenceAxis(unittest.TestCase):
         self.msa = TabularMSA([])
 
     def test_invalid_str(self):
-        with self.assertRaisesRegex(ValueError, "axis.*'foo'"):
+        with self.assertRaisesRegex(ValueError, r"axis.*'foo'"):
             self.msa._is_sequence_axis('foo')
 
     def test_invalid_int(self):
-        with self.assertRaisesRegex(ValueError, "axis.*2"):
+        with self.assertRaisesRegex(ValueError, r"axis.*2"):
             self.msa._is_sequence_axis(2)
 
     def test_positive_str(self):
@@ -3644,7 +3645,7 @@ class TestHashable(unittest.TestCase):
         self.assertNotIsInstance(TabularMSA([]), collections.Hashable)
 
     def test_unhashable_object(self):
-        with self.assertRaisesRegex(TypeError, 'unhashable'):
+        with self.assertRaisesRegex(TypeError, r'unhashable'):
             hash(TabularMSA([]))
 
 
