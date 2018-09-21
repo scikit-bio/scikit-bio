@@ -1,4 +1,7 @@
+{% This template was modified from autosummaries default format %}
 {{ fullname | escape | underline}}
+
+{% We need a list of the built-ins that we implemented, not the default ones %}
 {% set built_in_methods = []  %}
 {% for item in all_methods %}
    {% if (item not in ['__class__',
