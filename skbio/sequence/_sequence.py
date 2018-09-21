@@ -42,7 +42,7 @@ class Sequence(MetadataMixin, PositionalMetadataMixin, IntervalMetadataMixin,
 
     Parameters
     ----------
-    sequence : str, Sequence, or 1D np.ndarray (np.uint8 or '|S1')
+    sequence : str, Sequence, or 1D np.ndarray (np.uint8 or '\\|S1')
         Characters representing the sequence itself.
     metadata : dict, optional
         Arbitrary metadata which applies to the entire sequence. A shallow copy
