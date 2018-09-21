@@ -6,9 +6,9 @@ os:
   - linux
   - osx
 env:
-  - CONDA_PY=3.7 MAKE_DOC=TRUE
-  - CONDA_PY=3.6 MAKE_DOC=TRUE
-  - CONDA_PY=3.5 MAKE_DOC=TRUE USE_CYTHON=TRUE
+  - CONDA_PY=3.7
+  - CONDA_PY=3.6
+  - CONDA_PY=3.5 USE_CYTHON=TRUE
 
 before_install:
   - if [[ "$TRAVIS_OS_NAME" == "linux" ]]; then wget https://repo.continuum.io/miniconda/Miniconda3-latest-Linux-x86_64.sh -O miniconda.sh; fi
@@ -31,7 +31,7 @@ install:
 
 script:
   - WITH_COVERAGE=TRUE make test
-  - if [ ${MAKE_DOC} ]; then make -C doc clean html; fi
+  - make -C doc clean html
 
 after_success:
   - coveralls
