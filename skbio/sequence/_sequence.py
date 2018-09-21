@@ -26,7 +26,7 @@ from skbio.util._decorator import (stable, experimental, classonlymethod,
 
 class Sequence(MetadataMixin, PositionalMetadataMixin, IntervalMetadataMixin,
                collections.Sequence, SkbioObject):
-    r"""Store generic sequence data and optional associated metadata.
+    """Store generic sequence data and optional associated metadata.
 
     ``Sequence`` objects do not enforce an alphabet or grammar and are thus the
     most generic objects for storing sequence data. ``Sequence`` objects do not
@@ -42,7 +42,7 @@ class Sequence(MetadataMixin, PositionalMetadataMixin, IntervalMetadataMixin,
 
     Parameters
     ----------
-    sequence : str, Sequence, or 1D np.ndarray (np.uint8 or '\|S1')
+    sequence : str, Sequence, or 1D np.ndarray (np.uint8 or '|S1')
         Characters representing the sequence itself.
     metadata : dict, optional
         Arbitrary metadata which applies to the entire sequence. A shallow copy

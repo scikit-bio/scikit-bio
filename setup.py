@@ -35,6 +35,28 @@ class PyTest(TestCommand):
         self.pytest_args = ""
 
     def run_tests(self):
+        try:
+            import numpy
+            try:
+                # NumPy 1.14 changed repr output breaking our doctests,
+                # request the legacy 1.13 style
+                numpy.set_printoptions(legacy="1.13")
+            except TypeError:
+                # Old Numpy, output should be fine as it is :)
+                # TypeError: set_printoptions() got an unexpected
+                # keyword argument 'legacy'
+                pass
+        except ImportError:
+            numpy = None
+        try:
+            import pandas
+            # Max columns is automatically set by pandas based on terminal
+            # width, so set columns to unlimited to prevent the test suite
+            # from passing/failing based on terminal size.
+            pandas.options.display.max_columns = None
+        except ImportError:
+            pandas = None
+
         import shlex
 
         # import here, cause outside the eggs aren't loaded
