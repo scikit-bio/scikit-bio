@@ -51,20 +51,6 @@ class DNA(GrammaredSequence, NucleotideMixin,
         certain that the sequence characters are valid. To store sequence data
         that is not IUPAC-compliant, use ``Sequence``.
 
-    Attributes
-    ----------
-    values
-    metadata
-    positional_metadata
-    interval_metadata
-    alphabet
-    gap_chars
-    default_gap_char
-    definite_chars
-    degenerate_chars
-    degenerate_map
-    complement_map
-
     See Also
     --------
     RNA

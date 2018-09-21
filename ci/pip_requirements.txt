@@ -5,6 +5,5 @@ lockfile
 CacheControl
 Sphinx
 sphinx-bootstrap-theme
-numpydoc < 0.8.0
 check-manifest
 hdmedians

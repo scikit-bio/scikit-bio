@@ -101,19 +101,6 @@ class GrammaredSequence(Sequence, metaclass=GrammaredSequenceMeta):
     This class is intended to be inherited from to create grammared sequences
     with custom alphabets.
 
-    Attributes
-    ----------
-    values
-    metadata
-    interval_metadata
-    positional_metadata
-    alphabet
-    gap_chars
-    default_gap_char
-    definite_chars
-    degenerate_chars
-    degenerate_map
-
     Raises
     ------
     ValueError

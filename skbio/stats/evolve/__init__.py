@@ -16,7 +16,7 @@ Functions
 ^^^^^^^^^
 
 .. autosummary::
-   :toctree: generated/
+   :toctree:
 
    hommola_cospeciation
 
