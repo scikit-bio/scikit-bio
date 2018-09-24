@@ -184,11 +184,9 @@ The scikit-bio coding guidelines describe our [expectations for unit tests](http
 Tests can be executed by running ``make test`` from the base directory of the project or from within a Python or IPython session:
 
 ``` python
->>> import skbio
->>> skbio.test()
+>>> from skbio.test import pytestrunner
+>>> pytestrunner()
 # full test suite is executed
->>> skbio.io.test()
-# tests for the io module are executed
 ```
 
 Documentation guidelines

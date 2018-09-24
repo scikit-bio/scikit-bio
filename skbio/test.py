@@ -6,14 +6,7 @@
 # The full license is in the file COPYING.txt, distributed with this software.
 # ----------------------------------------------------------------------------
 
-ifeq ($(WITH_COVERAGE), TRUE)
-	TEST_COMMAND = python -m skbio.test --cov skbio
-else
-	TEST_COMMAND = python -m skbio.test
-endif
+from skbio.util import pytestrunner
 
-test:
-	$(TEST_COMMAND)
-	flake8 skbio setup.py checklist.py
-	./checklist.py
-	check-manifest
+if __name__ == '__main__':
+    pytestrunner()
