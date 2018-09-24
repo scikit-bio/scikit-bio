@@ -31,7 +31,6 @@ install:
   - pip install . --no-deps
 
 script:
-  - pip show scikit-bio
   - WITH_COVERAGE=TRUE make test
   - make -C doc clean html
 
