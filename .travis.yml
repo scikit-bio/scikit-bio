@@ -32,10 +32,6 @@ install:
 
 script:
   - pip show scikit-bio
-  - which python
-  - cd
-  - python -m skbio.test
-  - cd -
   - WITH_COVERAGE=TRUE make test
   - make -C doc clean html
 
