@@ -31,8 +31,12 @@ install:
   - pip install . --no-deps
 
 script:
-  - WITH_COVERAGE=TRUE make test
+  - pip show scikit-bio
+  - which python
+  - cd
   - python -m skbio.test
+  - cd -
+  - WITH_COVERAGE=TRUE make test
   - make -C doc clean html
 
 after_success:
