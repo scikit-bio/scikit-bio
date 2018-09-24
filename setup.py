@@ -16,7 +16,6 @@ import sys
 
 from setuptools import find_packages, setup
 from setuptools.extension import Extension
-from setuptools.command.test import test as TestCommand
 
 import numpy as np
 

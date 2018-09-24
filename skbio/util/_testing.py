@@ -347,10 +347,9 @@ def pytestrunner():
     # import here, cause outside the eggs aren't loaded
     import pytest
 
-    # default arguments and anything specified through the CLI
-    # ini-options are set in the skbio.conftest.py file
     args = ['--pyargs', 'skbio', '--doctest-modules', '--doctest-glob',
-            '*.pyx'] + sys.argv[1:]
+            '*.pyx', '-o', '"doctest_optionflags=NORMALIZE_WHITESPACE'
+            ' IGNORE_EXCEPTION_DETAIL"'] + sys.argv[1:]
 
     errno = pytest.main(args=args)
     sys.exit(errno)
