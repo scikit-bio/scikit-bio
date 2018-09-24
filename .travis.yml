@@ -32,8 +32,8 @@ install:
 
 script:
   - WITH_COVERAGE=TRUE make test
-  - make -C doc clean html
   - python -m skbio.test
+  - make -C doc clean html
 
 after_success:
   - coveralls
