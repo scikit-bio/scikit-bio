@@ -16,7 +16,6 @@ import sys
 
 from setuptools import find_packages, setup
 from setuptools.extension import Extension
-from setuptools.command.test import test as TestCommand
 
 import numpy as np
 
@@ -24,47 +23,6 @@ import numpy as np
 if sys.version_info.major != 3:
     sys.exit("scikit-bio can only be used with Python 3. You are currently "
              "running Python %d." % sys.version_info.major)
-
-
-# derived from https://docs.pytest.org/en/3.8.0/goodpractices.html
-class PyTest(TestCommand):
-    user_options = [("pytest-args=", "a", "Arguments to pass to pytest")]
-
-    def initialize_options(self):
-        TestCommand.initialize_options(self)
-        self.pytest_args = ""
-
-    def run_tests(self):
-        try:
-            import numpy
-            try:
-                # NumPy 1.14 changed repr output breaking our doctests,
-                # request the legacy 1.13 style
-                numpy.set_printoptions(legacy="1.13")
-            except TypeError:
-                # Old Numpy, output should be fine as it is :)
-                # TypeError: set_printoptions() got an unexpected
-                # keyword argument 'legacy'
-                pass
-        except ImportError:
-            numpy = None
-        try:
-            import pandas
-            # Max columns is automatically set by pandas based on terminal
-            # width, so set columns to unlimited to prevent the test suite
-            # from passing/failing based on terminal size.
-            pandas.options.display.max_columns = None
-        except ImportError:
-            pandas = None
-
-        import shlex
-
-        # import here, cause outside the eggs aren't loaded
-        import pytest
-
-        errno = pytest.main(shlex.split(self.pytest_args))
-        sys.exit(errno)
-
 
 # version parsing from __init__ pulled from Flask's setup.py
 # https://github.com/mitsuhiko/flask/blob/master/setup.py
@@ -150,7 +108,7 @@ setup(name='scikit-bio',
       packages=find_packages(),
       ext_modules=extensions,
       include_dirs=[np.get_include()],
-      tests_require=['pytest'],
+      tests_require=['pytest', 'coverage'],
       install_requires=[
           'lockfile >= 0.10.2',  # req'd for our usage of CacheControl
           'CacheControl >= 0.11.5',
@@ -173,6 +131,5 @@ setup(name='scikit-bio',
           'skbio.stats.tests': ['data/*'],
           'skbio.stats.distance.tests': ['data/*'],
           'skbio.stats.ordination.tests': ['data/*']
-          },
-      cmdclass={"pytest": PyTest}
+          }
       )
