@@ -9,7 +9,6 @@ include RELEASE.md
 include REVIEWING.md
 include checklist.py
 include asv.conf.json
-include pytest.ini
 
 graft assets
 graft ci
@@ -25,3 +24,4 @@ global-exclude *.pyc
 global-exclude *.pyo
 global-exclude *.so
 global-exclude .*.swp
+global-exclude .coverage

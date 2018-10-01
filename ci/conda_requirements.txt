@@ -10,4 +10,5 @@ flake8
 python-dateutil
 decorator
 scikit-learn
-pytest-cov
+pytest
+coverage
