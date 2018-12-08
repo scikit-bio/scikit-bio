@@ -1,6 +1,8 @@
 # scikit-bio changelog
 
-## Version 0.5.4-dev
+
+
+## Version 0.5.5
 
 ### Features
 
@@ -19,6 +21,15 @@
 ### Deprecated functionality [experimental]
 
 ### Miscellaneous
+
+* A pytest runner is shipped with every installation ([#1633](https://github.com/biocore/scikit-bio/pull/1633))
+
+* The nosetest framework has has been replace in favor of pytest ([#1624](https://github.com/biocore/scikit-bio/pull/1624))
+
+* The numpy docs are deprecated in favor of napoleon ([#1629](https://github.com/biocore/scikit-bio/pull/1629))
+
+* This version is now compatiable with pandas 0.23 ([#1627](https://github.com/biocore/scikit-bio/pull/1627))
+
 
 ## Version 0.5.4 (2018-08-23)
 
