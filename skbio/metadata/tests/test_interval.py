@@ -124,7 +124,7 @@ class TestInterval(unittest.TestCase, ReallyEqualMixin):
                      bounds=[(1, 2)],
                      metadata={'name': 'sagA'})
         exp = (r"Interval\(interval_metadata=<[0-9]+>, bounds=\[\(1, 2\)\],"
-               " fuzzy=\[\(False, False\)\], metadata={'name': 'sagA'}\)")
+               r" fuzzy=\[\(False, False\)\], metadata={'name': 'sagA'}\)")
         obs = repr(f)
         self.assertRegex(obs, exp)
         # test for dropped
