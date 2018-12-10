@@ -2,7 +2,7 @@
 
 
 
-## Version 0.5.5
+## Version 0.5.5 (2018-12-10)
 
 ### Features
 
@@ -21,14 +21,15 @@
 ### Deprecated functionality [experimental]
 
 ### Miscellaneous
+* Python 3.6 and 3.7 compatibility is now supported
 
 * A pytest runner is shipped with every installation ([#1633](https://github.com/biocore/scikit-bio/pull/1633))
 
-* The nosetest framework has has been replace in favor of pytest ([#1624](https://github.com/biocore/scikit-bio/pull/1624))
+* The nosetest framework has been replaced in favor of pytest ([#1624](https://github.com/biocore/scikit-bio/pull/1624))
 
-* The numpy docs are deprecated in favor of napoleon ([#1629](https://github.com/biocore/scikit-bio/pull/1629))
+* The numpy docs are deprecated in favor of [Napoleon](http://www.sphinx-doc.org/en/master/usage/extensions/napoleon.html) ([#1629](https://github.com/biocore/scikit-bio/pull/1629))
 
-* This version is now compatiable with pandas 0.23 ([#1627](https://github.com/biocore/scikit-bio/pull/1627))
+* This version is now compatible with NumPy >= 1.9.2 and Pandas >= 0.23. ([#1627](https://github.com/biocore/scikit-bio/pull/1627))
 
 
 ## Version 0.5.4 (2018-08-23)
