@@ -178,11 +178,11 @@ Suppose we have a ``blast+6`` file with default columns:
 >>> from io import StringIO
 >>> import skbio.io
 >>> import pandas as pd
->>> fs = '\\n'.join([
-...     'moaC\\tgi|15800534|ref|NP_286546.1|\\t100.00\\t161\\t0\\t0\\t1\\t161\
-\\t1\\t161\\t3e-114\\t330',
-...     'moaC\\tgi|170768970|ref|ZP_02903423.1|\\t99.38\\t161\\t1\\t0\\t1\\t\
-161\\t1\\t161\\t9e-114\\t329'
+>>> fs = '\n'.join([
+...     'moaC\tgi|15800534|ref|NP_286546.1|\t100.00\t161\t0\t0\t1\t161\
+\t1\t161\t3e-114\t330',
+...     'moaC\tgi|170768970|ref|ZP_02903423.1|\t99.38\t161\t1\t0\t1\t\
+161\t1\t161\t9e-114\t329'
 ... ])
 >>> fh = StringIO(fs)
 

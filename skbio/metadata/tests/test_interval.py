@@ -130,7 +130,7 @@ class TestInterval(unittest.TestCase, ReallyEqualMixin):
         # test for dropped
         f.drop()
         exp = (r"Interval\(dropped=True, bounds=\[\(1, 2\)\],"
-               " fuzzy=\[\(False, False\)\], metadata={'name': 'sagA'}\)")
+               r" fuzzy=\[\(False, False\)\], metadata={'name': 'sagA'}\)")
         obs = repr(f)
         self.assertRegex(obs, exp)
 
@@ -766,7 +766,7 @@ class TestIntervalMetadata(unittest.TestCase, ReallyEqualMixin):
 
         self.im_empty.add([(1, 2)], metadata={'gene': 'sagA'})
 
-        exp = '''1 interval feature
+        exp = r'''1 interval feature
 ------------------
 Interval\(interval_metadata=<[0-9]+>, bounds=\[\(1, 2\)\], \
 fuzzy=\[\(False, False\)\], metadata={'gene': 'sagA'}\)'''
@@ -777,7 +777,7 @@ fuzzy=\[\(False, False\)\], metadata={'gene': 'sagA'}\)'''
         self.im_empty.add([(3, 4)], metadata={'gene': 'sagD'})
         self.im_empty.add([(3, 4)], metadata={'gene': 'sagE'})
         self.im_empty.add([(3, 4)], metadata={'gene': 'sagF'})
-        exp = '''6 interval features
+        exp = r'''6 interval features
 -------------------
 Interval\(interval_metadata=<[0-9]+>, bounds=\[\(1, 2\)\], \
 fuzzy=\[\(False, False\)\], metadata={'gene': 'sagA'}\)

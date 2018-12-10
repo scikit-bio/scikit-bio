@@ -560,15 +560,15 @@ class TreeTests(TestCase):
         # unlabeled internal node
         tr = TreeNode.read(io.StringIO("(B:0.2,(C:0.3,D:0.4):0.6)F;"))
         obs = tr.ascii_art(show_internal=True, compact=False)
-        exp = "          /-B\n-F-------|\n         |          /-C\n         "\
-              " \\--------|\n                    \\-D"
+        exp = r"          /-B\n-F-------|\n         |          /-C\n         "\
+              r" \\--------|\n                    \\-D"
         self.assertEqual(obs, exp)
         obs = tr.ascii_art(show_internal=True, compact=True)
-        exp = "-F------- /-B\n          \-------- /-C\n                    \-D"
+        exp = r"-F------- /-B\n          \-------- /-C\n                    \-D"
         self.assertEqual(obs, exp)
         obs = tr.ascii_art(show_internal=False, compact=False)
-        exp = "          /-B\n---------|\n         |          /-C\n         "\
-              " \\--------|\n                    \\-D"
+        exp = r"          /-B\n---------|\n         |          /-C\n         "\
+              r" \\--------|\n                    \\-D"
         self.assertEqual(obs, exp)
 
     def test_ascii_art_three_children(self):
@@ -1477,7 +1477,7 @@ double = '(abc:3, def:4);'
 onenest = '(abc:3, (def:4, ghi:5):6 );'
 nodedata = '(abc:3, (def:4, ghi:5)jkl:6 );'
 
-exp_ascii_art_three_children = """\
+exp_ascii_art_three_children = r"""\
           /-a
          |
 ---------|          /-b
