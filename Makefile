@@ -20,6 +20,6 @@ endif
 # not install correctly (for example).
 test:
 	cd ci && $(TEST_COMMAND); cd -
-	flake8 skbio setup.py checklist.py
+	flake8 skbio setup.py checklist.py --ignore=W605
 	./checklist.py
 	check-manifest
