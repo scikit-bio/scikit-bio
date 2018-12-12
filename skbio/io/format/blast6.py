@@ -104,8 +104,8 @@ This information is taken from [3]_.
 +-----------+------------------------------------+-----+
 |gaps       |Total number of gaps                |int  |
 +-----------+------------------------------------+-----+
-|ppos       |Percentage of positive-scoring matc\|float|
-|           |hes                                 |     |
+|ppos       |Percentage of positive-scoring      |float|
+|           |matches                             |     |
 +-----------+------------------------------------+-----+
 |frames     |Query and subject frames separated  |str  |
 |           |by a '/'                            |     |
@@ -116,21 +116,22 @@ This information is taken from [3]_.
 +-----------+------------------------------------+-----+
 |btop       |Blast traceback operations (BTOP)   |int  |
 +-----------+------------------------------------+-----+
-|staxids    |Unique Subject Taxonomy ID(s), sepa\|str  |
-|           |rated by a ';' (in numerical order) |     |
+|staxids    |Unique Subject Taxonomy ID(s),      |str  |
+|           |separated by a ';' (in numerical    |     |
+|           |order).                             |     |
 +-----------+------------------------------------+-----+
 |sscinames  |Unique Subject Scientific Name(s),  |str  |
 |           |separated by a ';'                  |     |
 +-----------+------------------------------------+-----+
-|scomnames  |Unique Subject Common Name(s), sepa\|str  |
-|           |rated by a ';'                      |     |
+|scomnames  |Unique Subject Common Name(s),      |str  |
+|           |separated by a ';'                  |     |
 +-----------+------------------------------------+-----+
-|sblastnames|unique Subject Blast Name(s), separ\|str  |
-|           |ated by a ';' (in alphabetical      |     |
+|sblastnames|unique Subject Blast Name(s),       |str  |
+|           |separated by a ';' (in alphabetical |     |
 |           |order)                              |     |
 +-----------+------------------------------------+-----+
-|sskingdoms |unique Subject Super Kingdom(s), se\|str  |
-|           |parated by a ';' (in alphabetical   |     |
+|sskingdoms |unique Subject Super Kingdom(s),    |str  |
+|           |separated by a ';' (in alphabetical |     |
 |           |order)                              |     |
 +-----------+------------------------------------+-----+
 |stitle     |Subject Title                       |str  |

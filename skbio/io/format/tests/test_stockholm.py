@@ -853,8 +853,8 @@ class TestStockholmWriter(unittest.TestCase):
                               positional_metadata=pos_metadata_dataframe)])
         with self.assertRaisesRegex(StockholmFormatError,
                                     r'Sequence-specific positional metadata.*'
-                                    'must contain a single character.*Found '
-                                    'value\(s\) in column AC'):
+                                    r'must contain a single character.*Found '
+                                    r'value\(s\) in column AC'):
             fh = io.StringIO()
             _tabular_msa_to_stockholm(msa, fh)
 
@@ -866,10 +866,11 @@ class TestStockholmWriter(unittest.TestCase):
                                                'AS': list('TCAGCTCTGCAGCGTT')})
         msa = TabularMSA([DNA('TCCTTGAACTACCCGA')],
                          positional_metadata=pos_metadata_dataframe)
-        with self.assertRaisesRegex(StockholmFormatError,
-                                    r'Multiple sequence alignment positional '
-                                    'metadata.*must contain a single character'
-                                    '.*Found value\(s\) in column AC'):
+
+        message = (r'Multiple sequence alignment positional metadata.*must '
+                   r'contain a single character.*Found value\(s\) in column '
+                   'AC')
+        with self.assertRaisesRegex(StockholmFormatError, message):
             fh = io.StringIO()
             _tabular_msa_to_stockholm(msa, fh)
 
