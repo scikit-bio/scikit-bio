@@ -124,13 +124,13 @@ class TestInterval(unittest.TestCase, ReallyEqualMixin):
                      bounds=[(1, 2)],
                      metadata={'name': 'sagA'})
         exp = (r"Interval\(interval_metadata=<[0-9]+>, bounds=\[\(1, 2\)\],"
-               " fuzzy=\[\(False, False\)\], metadata={'name': 'sagA'}\)")
+               r" fuzzy=\[\(False, False\)\], metadata={'name': 'sagA'}\)")
         obs = repr(f)
         self.assertRegex(obs, exp)
         # test for dropped
         f.drop()
         exp = (r"Interval\(dropped=True, bounds=\[\(1, 2\)\],"
-               " fuzzy=\[\(False, False\)\], metadata={'name': 'sagA'}\)")
+               r" fuzzy=\[\(False, False\)\], metadata={'name': 'sagA'}\)")
         obs = repr(f)
         self.assertRegex(obs, exp)
 
@@ -766,10 +766,10 @@ class TestIntervalMetadata(unittest.TestCase, ReallyEqualMixin):
 
         self.im_empty.add([(1, 2)], metadata={'gene': 'sagA'})
 
-        exp = '''1 interval feature
-------------------
-Interval\(interval_metadata=<[0-9]+>, bounds=\[\(1, 2\)\], \
-fuzzy=\[\(False, False\)\], metadata={'gene': 'sagA'}\)'''
+        exp = ("1 interval feature\n"
+               "------------------\n"
+               r"Interval\(interval_metadata=<[0-9]+>, bounds=\[\(1, 2\)\], "
+               r"fuzzy=\[\(False, False\)\], metadata={'gene': 'sagA'}\)")
         self.assertRegex(repr(self.im_empty), exp)
 
         self.im_empty.add([(3, 4)], metadata={'gene': 'sagB'})
@@ -777,17 +777,17 @@ fuzzy=\[\(False, False\)\], metadata={'gene': 'sagA'}\)'''
         self.im_empty.add([(3, 4)], metadata={'gene': 'sagD'})
         self.im_empty.add([(3, 4)], metadata={'gene': 'sagE'})
         self.im_empty.add([(3, 4)], metadata={'gene': 'sagF'})
-        exp = '''6 interval features
--------------------
-Interval\(interval_metadata=<[0-9]+>, bounds=\[\(1, 2\)\], \
-fuzzy=\[\(False, False\)\], metadata={'gene': 'sagA'}\)
-Interval\(interval_metadata=<[0-9]+>, bounds=\[\(3, 4\)\], \
-fuzzy=\[\(False, False\)\], metadata={'gene': 'sagB'}\)
-...
-Interval\(interval_metadata=<[0-9]+>, bounds=\[\(3, 4\)\], \
-fuzzy=\[\(False, False\)\], metadata={'gene': 'sagE'}\)
-Interval\(interval_metadata=<[0-9]+>, bounds=\[\(3, 4\)\], \
-fuzzy=\[\(False, False\)\], metadata={'gene': 'sagF'}\)'''
+        exp = ("6 interval features\n"
+               "-------------------\n"
+               r"Interval\(interval_metadata=<[0-9]+>, bounds=\[\(1, 2\)\], "
+               r"fuzzy=\[\(False, False\)\], metadata={'gene': 'sagA'}\)\n"
+               r"Interval\(interval_metadata=<[0-9]+>, bounds=\[\(3, 4\)\], "
+               r"fuzzy=\[\(False, False\)\], metadata={'gene': 'sagB'}\)\n"
+               r"...\n"
+               r"Interval\(interval_metadata=<[0-9]+>, bounds=\[\(3, 4\)\], "
+               r"fuzzy=\[\(False, False\)\], metadata={'gene': 'sagE'}\)\n"
+               r"Interval\(interval_metadata=<[0-9]+>, bounds=\[\(3, 4\)\], "
+               r"fuzzy=\[\(False, False\)\], metadata={'gene': 'sagF'}\)")
         self.assertRegex(repr(self.im_empty), exp)
 
 
