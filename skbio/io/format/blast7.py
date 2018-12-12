@@ -115,13 +115,13 @@ For more information on these column types, see :mod:`skbio.io.format.blast6`.
 +-------------------+----------------------+
 |subject length     |slen                  |
 +-------------------+----------------------+
-|q\. start          |qstart                |
+|q\\. start          |qstart                |
 +-------------------+----------------------+
-|q\. end            |qend                  |
+|q\\. end            |qend                  |
 +-------------------+----------------------+
-|s\. start          |sstart                |
+|s\\. start          |sstart                |
 +-------------------+----------------------+
-|s\. end            |send                  |
+|s\\. end            |send                  |
 +-------------------+----------------------+
 |query seq          |qseq                  |
 +-------------------+----------------------+
@@ -165,8 +165,8 @@ For more information on these column types, see :mod:`skbio.io.format.blast6`.
 +-------------------+----------------------+
 |subject blast names|sblastnames           |
 +-------------------+----------------------+
-|subject super king\|sskingdoms            |
-|doms               |                      |
+|subject super      |sskingdoms            |
+|kingdoms           |                      |
 +-------------------+----------------------+
 |subject title      |stitle                |
 +-------------------+----------------------+
@@ -174,11 +174,11 @@ For more information on these column types, see :mod:`skbio.io.format.blast6`.
 +-------------------+----------------------+
 |subject titles     |salltitles            |
 +-------------------+----------------------+
-|% query coverage p\|qcovs                 |
-|er subject         |                      |
+|% query coverage   |qcovs                 |
+|per subject        |                      |
 +-------------------+----------------------+
-|% query coverage p\|qcovhsp               |
-|er hsp             |                      |
+|% query coverage   |qcovhsp               |
+|per hsp            |                      |
 +-------------------+----------------------+
 
 Examples
