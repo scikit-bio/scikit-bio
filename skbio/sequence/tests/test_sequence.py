@@ -1244,7 +1244,7 @@ class TestSequence(TestSequenceBase, ReallyEqualMixin):
         index = self._make_index('1000101110')
         with self.assertRaisesRegex(UnicodeEncodeError,
                                     r"can't encode character.*not in "
-                                    "range\(128\)"):
+                                    r"range\(128\)"):
             seq.replace(index, '\uFFFF')
 
     def test_replace_non_single_character_error(self):
@@ -2309,8 +2309,8 @@ class TestSequence(TestSequenceBase, ReallyEqualMixin):
         for input_ in all_inputs:
             with self.assertRaisesRegex(UnicodeEncodeError,
                                         r"'ascii' codec can't encode character"
-                                        ".*in position.*: ordinal not in"
-                                        " range\(128\)"):
+                                        r".*in position.*: ordinal not in"
+                                        r" range\(128\)"):
                 seq._munge_to_bytestring(input_, 'dummy_method')
 
 
