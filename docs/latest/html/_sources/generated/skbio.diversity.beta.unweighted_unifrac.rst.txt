@@ -1,6 +1,0 @@
-skbio.diversity.beta.unweighted\_unifrac
-========================================
-
-.. currentmodule:: skbio.diversity.beta
-
-.. autofunction:: unweighted_unifrac

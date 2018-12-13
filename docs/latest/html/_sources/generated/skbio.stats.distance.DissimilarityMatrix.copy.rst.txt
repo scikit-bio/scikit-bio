@@ -1,8 +1,0 @@
-:orphan:
-
-skbio.stats.distance.DissimilarityMatrix.copy
-=============================================
-
-.. currentmodule:: skbio.stats.distance
-
-.. automethod:: DissimilarityMatrix.copy

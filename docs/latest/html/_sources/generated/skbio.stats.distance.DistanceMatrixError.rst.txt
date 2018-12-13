@@ -1,6 +1,0 @@
-skbio.stats.distance.DistanceMatrixError
-========================================
-
-.. currentmodule:: skbio.stats.distance
-
-.. autoexception:: DistanceMatrixError

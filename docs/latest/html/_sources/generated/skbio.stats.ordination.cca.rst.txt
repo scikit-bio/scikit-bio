@@ -1,6 +1,0 @@
-skbio.stats.ordination.cca
-==========================
-
-.. currentmodule:: skbio.stats.ordination
-
-.. autofunction:: cca

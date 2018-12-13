@@ -1,6 +1,0 @@
-skbio.stats.composition.multiplicative\_replacement
-===================================================
-
-.. currentmodule:: skbio.stats.composition
-
-.. autofunction:: multiplicative_replacement

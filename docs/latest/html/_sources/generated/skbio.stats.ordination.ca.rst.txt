@@ -1,6 +1,0 @@
-skbio.stats.ordination.ca
-=========================
-
-.. currentmodule:: skbio.stats.ordination
-
-.. autofunction:: ca

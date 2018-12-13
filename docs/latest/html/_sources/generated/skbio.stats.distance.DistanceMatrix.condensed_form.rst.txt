@@ -1,8 +1,0 @@
-:orphan:
-
-skbio.stats.distance.DistanceMatrix.condensed_form
-==================================================
-
-.. currentmodule:: skbio.stats.distance
-
-.. automethod:: DistanceMatrix.condensed_form

@@ -1,8 +1,0 @@
-:orphan:
-
-skbio.io.registry.Format.reader
-===============================
-
-.. currentmodule:: skbio.io.registry
-
-.. automethod:: Format.reader

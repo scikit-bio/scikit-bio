@@ -1,6 +1,0 @@
-skbio.diversity.alpha.enspie
-============================
-
-.. currentmodule:: skbio.diversity.alpha
-
-.. autofunction:: enspie

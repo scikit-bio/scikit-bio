@@ -1,6 +1,0 @@
-skbio.io.registry.create\_format
-================================
-
-.. currentmodule:: skbio.io.registry
-
-.. autofunction:: create_format

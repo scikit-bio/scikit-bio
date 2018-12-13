@@ -1,6 +1,0 @@
-skbio.diversity.alpha.kempton\_taylor\_q
-========================================
-
-.. currentmodule:: skbio.diversity.alpha
-
-.. autofunction:: kempton_taylor_q

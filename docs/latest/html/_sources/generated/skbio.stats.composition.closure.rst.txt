@@ -1,6 +1,0 @@
-skbio.stats.composition.closure
-===============================
-
-.. currentmodule:: skbio.stats.composition
-
-.. autofunction:: closure

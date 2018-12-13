@@ -1,6 +1,0 @@
-skbio.sequence.distance.hamming
-===============================
-
-.. currentmodule:: skbio.sequence.distance
-
-.. autofunction:: hamming

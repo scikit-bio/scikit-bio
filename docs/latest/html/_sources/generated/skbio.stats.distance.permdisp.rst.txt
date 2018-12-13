@@ -1,6 +1,0 @@
-skbio.stats.distance.permdisp
-=============================
-
-.. currentmodule:: skbio.stats.distance
-
-.. autofunction:: permdisp

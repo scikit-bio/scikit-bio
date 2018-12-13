@@ -1,6 +1,0 @@
-skbio.diversity.alpha.dominance
-===============================
-
-.. currentmodule:: skbio.diversity.alpha
-
-.. autofunction:: dominance

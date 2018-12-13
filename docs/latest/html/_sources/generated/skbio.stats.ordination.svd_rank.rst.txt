@@ -1,6 +1,0 @@
-skbio.stats.ordination.svd\_rank
-================================
-
-.. currentmodule:: skbio.stats.ordination
-
-.. autofunction:: svd_rank

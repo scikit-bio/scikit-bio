@@ -1,6 +1,0 @@
-skbio.diversity.alpha.chao1
-===========================
-
-.. currentmodule:: skbio.diversity.alpha
-
-.. autofunction:: chao1

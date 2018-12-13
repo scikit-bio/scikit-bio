@@ -1,6 +1,0 @@
-skbio.stats.ordination.pcoa
-===========================
-
-.. currentmodule:: skbio.stats.ordination
-
-.. autofunction:: pcoa

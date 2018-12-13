@@ -1,6 +1,0 @@
-skbio.diversity.alpha.ace
-=========================
-
-.. currentmodule:: skbio.diversity.alpha
-
-.. autofunction:: ace

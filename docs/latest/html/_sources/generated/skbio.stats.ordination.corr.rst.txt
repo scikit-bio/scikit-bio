@@ -1,6 +1,0 @@
-skbio.stats.ordination.corr
-===========================
-
-.. currentmodule:: skbio.stats.ordination
-
-.. autofunction:: corr

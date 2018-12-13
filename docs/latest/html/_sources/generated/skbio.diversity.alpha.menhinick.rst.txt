@@ -1,6 +1,0 @@
-skbio.diversity.alpha.menhinick
-===============================
-
-.. currentmodule:: skbio.diversity.alpha
-
-.. autofunction:: menhinick

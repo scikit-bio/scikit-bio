@@ -1,6 +1,0 @@
-skbio.diversity.alpha.shannon
-=============================
-
-.. currentmodule:: skbio.diversity.alpha
-
-.. autofunction:: shannon
