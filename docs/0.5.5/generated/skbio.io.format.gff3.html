@@ -1,0 +1,374 @@
+<!DOCTYPE html>
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="X-UA-Compatible" content="IE=Edge" />
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    <title>GFF3 format (skbio.io.format.gff3) &#8212; scikit-bio 0.5.5 documentation</title>
+    <link rel="stylesheet" href="../_static/bootstrap-sphinx.css" type="text/css" />
+    <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
+    <link rel="stylesheet" type="text/css" href="../_static/style.css" />
+    <script type="text/javascript" id="documentation_options" data-url_root="../" src="../_static/documentation_options.js"></script>
+    <script type="text/javascript" src="../_static/jquery.js"></script>
+    <script type="text/javascript" src="../_static/underscore.js"></script>
+    <script type="text/javascript" src="../_static/doctools.js"></script>
+    <script type="text/javascript" src="../_static/copybutton.js"></script>
+    <script async="async" type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.1/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
+    <script type="text/javascript" src="../_static/js/jquery-1.11.0.min.js"></script>
+    <script type="text/javascript" src="../_static/js/jquery-fix.js"></script>
+    <script type="text/javascript" src="../_static/bootstrap-3.3.7/js/bootstrap.min.js"></script>
+    <script type="text/javascript" src="../_static/bootstrap-sphinx.js"></script>
+    <link rel="index" title="Index" href="../genindex.html" />
+    <link rel="search" title="Search" href="../search.html" />
+    <link rel="next" title="Labeled square matrix format (skbio.io.format.lsmat)" href="skbio.io.format.lsmat.html" />
+    <link rel="prev" title="GenBank format (skbio.io.format.genbank)" href="skbio.io.format.genbank.html" />
+<meta charset='utf-8'>
+<meta http-equiv='X-UA-Compatible' content='IE=edge,chrome=1'>
+<meta name='viewport' content='width=device-width, initial-scale=1.0, maximum-scale=1'>
+<meta name="apple-mobile-web-app-capable" content="yes">
+
+  </head><body>
+  
+  <a href="https://github.com/biocore/scikit-bio"
+     class="visible-desktop hidden-xs"><img
+    id="gh-banner"
+    style="position: absolute; top: 50px; right: 0; border: 0;"
+    src="https://s3.amazonaws.com/github/ribbons/forkme_right_darkblue_121621.png"
+    alt="Fork me on GitHub"></a>
+  <script>
+    // Adjust banner height.
+    $(function () {
+      var navHeight = $(".navbar .container").css("height");
+      $("#gh-banner").css("top", navHeight);
+    });
+  </script>
+
+
+  <div id="navbar" class="navbar navbar-default navbar-fixed-top">
+    <div class="container">
+      <div class="navbar-header">
+        <!-- .btn-navbar is used as the toggle for collapsed navbar content -->
+        <button type="button" class="navbar-toggle" data-toggle="collapse" data-target=".nav-collapse">
+          <span class="icon-bar"></span>
+          <span class="icon-bar"></span>
+          <span class="icon-bar"></span>
+        </button>
+        <a class="navbar-brand" href="../index.html">
+          scikit-bio docs</a>
+        <span class="navbar-text navbar-version pull-left"><b>0.5.5</b></span>
+      </div>
+
+        <div class="collapse navbar-collapse nav-collapse">
+          <ul class="nav navbar-nav">
+            
+            
+              <li class="dropdown globaltoc-container">
+  <a role="button"
+     id="dLabelGlobalToc"
+     data-toggle="dropdown"
+     data-target="#"
+     href="../index.html">Site <b class="caret"></b></a>
+  <ul class="dropdown-menu globaltoc"
+      role="menu"
+      aria-labelledby="dLabelGlobalToc"><ul class="current">
+<li class="toctree-l1 current"><a class="reference internal" href="../io.html">File I/O (<code class="docutils literal notranslate"><span class="pre">skbio.io</span></code>)</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../sequence.html">Sequences (<code class="docutils literal notranslate"><span class="pre">skbio.sequence</span></code>)</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../alignment.html">Alignments (<code class="docutils literal notranslate"><span class="pre">skbio.alignment</span></code>)</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../tree.html">Tree representations (<code class="docutils literal notranslate"><span class="pre">skbio.tree</span></code>)</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../workflow.html">Constructing workflows (<code class="docutils literal notranslate"><span class="pre">skbio.workflow</span></code>)</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../diversity.html">Diversity calculations (<code class="docutils literal notranslate"><span class="pre">skbio.diversity</span></code>)</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../stats.html">Statistics (<code class="docutils literal notranslate"><span class="pre">skbio.stats</span></code>)</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../metadata.html">Metadata (<code class="docutils literal notranslate"><span class="pre">skbio.metadata</span></code>)</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../util.html">Utility functionality (<code class="docutils literal notranslate"><span class="pre">skbio.util</span></code>)</a></li>
+</ul>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../user/api_stability.html">API Stability</a></li>
+</ul>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../development/coding_guidelines.html">Coding guidelines</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../development/new_module.html">Adding a new module to skbio</a></li>
+</ul>
+</ul>
+</li>
+              
+                <li class="dropdown">
+  <a role="button"
+     id="dLabelLocalToc"
+     data-toggle="dropdown"
+     data-target="#"
+     href="#">Page <b class="caret"></b></a>
+  <ul class="dropdown-menu localtoc"
+      role="menu"
+      aria-labelledby="dLabelLocalToc"><ul>
+<li><a class="reference internal" href="#">GFF3 format (<code class="docutils literal notranslate"><span class="pre">skbio.io.format.gff3</span></code>)</a><ul>
+<li><a class="reference internal" href="#format-support">Format Support</a></li>
+<li><a class="reference internal" href="#format-specification">Format Specification</a></li>
+<li><a class="reference internal" href="#format-parameters">Format Parameters</a><ul>
+<li><a class="reference internal" href="#reader-specific-parameters">Reader-specific Parameters</a></li>
+<li><a class="reference internal" href="#writer-specific-parameters">Writer-specific Parameters</a></li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+</ul>
+</li>
+              
+            
+            
+            
+            
+            
+          </ul>
+
+          
+            
+<form class="navbar-form navbar-right" action="../search.html" method="get">
+ <div class="form-group">
+  <input type="text" name="q" class="form-control" placeholder="Search" />
+ </div>
+  <input type="hidden" name="check_keywords" value="yes" />
+  <input type="hidden" name="area" value="default" />
+</form>
+          
+        </div>
+    </div>
+  </div>
+
+<div class="container">
+  <div class="row">
+    <div class="col-md-12 content">
+      
+  <span class="target" id="module-skbio.io.format.gff3"></span><div class="section" id="gff3-format-skbio-io-format-gff3">
+<h1>GFF3 format (<a class="reference internal" href="#module-skbio.io.format.gff3" title="skbio.io.format.gff3"><code class="xref py py-mod docutils literal notranslate"><span class="pre">skbio.io.format.gff3</span></code></a>)<a class="headerlink" href="#gff3-format-skbio-io-format-gff3" title="Permalink to this headline">¶</a></h1>
+<p>GFF3 (Generic Feature Format version 3) is a standard file format for
+describing features for biological sequences. It contains lines of
+text, each consisting of 9 tab-delimited columns <a class="footnote-reference" href="#id3" id="id1">[1]</a>.</p>
+<div class="section" id="format-support">
+<h2>Format Support<a class="headerlink" href="#format-support" title="Permalink to this headline">¶</a></h2>
+<p><strong>Has Sniffer: Yes</strong></p>
+<table border="1" class="docutils">
+<colgroup>
+<col width="8%" />
+<col width="8%" />
+<col width="84%" />
+</colgroup>
+<thead valign="bottom">
+<tr class="row-odd"><th class="head">Reader</th>
+<th class="head">Writer</th>
+<th class="head">Object Class</th>
+</tr>
+</thead>
+<tbody valign="top">
+<tr class="row-even"><td>Yes</td>
+<td>Yes</td>
+<td><a class="reference internal" href="skbio.sequence.Sequence.html#skbio.sequence.Sequence" title="skbio.sequence.Sequence"><code class="xref py py-mod docutils literal notranslate"><span class="pre">skbio.sequence.Sequence</span></code></a></td>
+</tr>
+<tr class="row-odd"><td>Yes</td>
+<td>Yes</td>
+<td><a class="reference internal" href="skbio.sequence.DNA.html#skbio.sequence.DNA" title="skbio.sequence.DNA"><code class="xref py py-mod docutils literal notranslate"><span class="pre">skbio.sequence.DNA</span></code></a></td>
+</tr>
+<tr class="row-even"><td>Yes</td>
+<td>Yes</td>
+<td><a class="reference internal" href="skbio.metadata.IntervalMetadata.html#skbio.metadata.IntervalMetadata" title="skbio.metadata.IntervalMetadata"><code class="xref py py-mod docutils literal notranslate"><span class="pre">skbio.metadata.IntervalMetadata</span></code></a></td>
+</tr>
+<tr class="row-odd"><td>Yes</td>
+<td>Yes</td>
+<td>generator of tuple (seq_id of str type,
+<a class="reference internal" href="skbio.metadata.IntervalMetadata.html#skbio.metadata.IntervalMetadata" title="skbio.metadata.IntervalMetadata"><code class="xref py py-mod docutils literal notranslate"><span class="pre">skbio.metadata.IntervalMetadata</span></code></a>)</td>
+</tr>
+</tbody>
+</table>
+</div>
+<div class="section" id="format-specification">
+<h2>Format Specification<a class="headerlink" href="#format-specification" title="Permalink to this headline">¶</a></h2>
+<p><strong>State: Experimental as of 0.5.1.</strong></p>
+<p>The first line of the file is a comment that identifies the format and
+version. This is followed by a series of data lines. Each data line
+corresponds to an annotation and consists of 9 columns: SEQID, SOURCE,
+TYPE, START, END, SCORE, STRAND, PHASE, and ATTR.</p>
+<p>Column 9 (ATTR) is list of feature attributes in the format
+“tag=value”. Multiple “tag=value” pairs are delimited by
+semicolons. Multiple values of the same tag are separated with the
+comma “,”. The following tags have predefined meanings: ID, Name,
+Alias, Parent, Target, Gap, Derives_from, Note, Dbxref, Ontology_term,
+and Is_circular.</p>
+<p>The meaning and format of these columns and attributes are explained
+detail in the format specification <a class="footnote-reference" href="#id3" id="id2">[1]</a>. And they are read in as the
+vocabulary defined in GenBank parser (<a class="reference internal" href="skbio.io.format.genbank.html#module-skbio.io.format.genbank" title="skbio.io.format.genbank"><code class="xref py py-mod docutils literal notranslate"><span class="pre">skbio.io.format.genbank</span></code></a>).</p>
+</div>
+<div class="section" id="format-parameters">
+<h2>Format Parameters<a class="headerlink" href="#format-parameters" title="Permalink to this headline">¶</a></h2>
+<div class="section" id="reader-specific-parameters">
+<h3>Reader-specific Parameters<a class="headerlink" href="#reader-specific-parameters" title="Permalink to this headline">¶</a></h3>
+<p><code class="docutils literal notranslate"><span class="pre">IntervalMetadata</span></code> GFF3 reader requires 1 parameter: <code class="docutils literal notranslate"><span class="pre">seq_id</span></code>.
+It reads the annotation with the specified
+sequence ID from the GFF3 file into an <code class="docutils literal notranslate"><span class="pre">IntervalMetadata</span></code> object.</p>
+<p><code class="docutils literal notranslate"><span class="pre">DNA</span></code> and <code class="docutils literal notranslate"><span class="pre">Sequence</span></code> GFF3 readers require <code class="docutils literal notranslate"><span class="pre">seq_num</span></code> of int as
+parameter. It specifies which GFF3 record to read from a GFF3 file
+with annotations of multiple sequences in it.</p>
+</div>
+<div class="section" id="writer-specific-parameters">
+<h3>Writer-specific Parameters<a class="headerlink" href="#writer-specific-parameters" title="Permalink to this headline">¶</a></h3>
+<p><code class="docutils literal notranslate"><span class="pre">skip_subregion</span></code> is a boolean parameter used by all the GFF3 writers. It
+specifies whether you would like to write each non-contiguous
+sub-region for a feature annotation. For example, if there is
+interval feature for a gene with two exons in an <code class="docutils literal notranslate"><span class="pre">IntervalMetadata</span></code>
+object, it will write one line into the GFF3 file when <code class="docutils literal notranslate"><span class="pre">skip_subregion</span></code> is
+<code class="docutils literal notranslate"><span class="pre">True</span></code> and will write 3 lines (one for the gene and one for each
+exon, respectively) when <code class="docutils literal notranslate"><span class="pre">skip_subregion</span></code> is <code class="docutils literal notranslate"><span class="pre">False</span></code>. Default is <code class="docutils literal notranslate"><span class="pre">True</span></code>.</p>
+<p>In addition, <code class="docutils literal notranslate"><span class="pre">IntervalMetadata</span></code> GFF3 writer needs a parameter of
+<code class="docutils literal notranslate"><span class="pre">seq_id</span></code>. It specify the sequence ID (column 1 in GFF3 file) that
+the annotation belong to.</p>
+<p class="rubric">Examples</p>
+<p>Let’s create a file stream with following data in GFF3 format:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">skbio</span> <span class="k">import</span> <span class="n">Sequence</span><span class="p">,</span> <span class="n">DNA</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">gff_str</span> <span class="o">=</span> <span class="s2">&quot;&quot;&quot;</span>
+<span class="gp">... </span><span class="s2">##gff-version 3</span>
+<span class="gp">... </span><span class="s2">seq_1</span><span class="se">\t</span><span class="s2">.</span><span class="se">\t</span><span class="s2">gene</span><span class="se">\t</span><span class="s2">10</span><span class="se">\t</span><span class="s2">90</span><span class="se">\t</span><span class="s2">.</span><span class="se">\t</span><span class="s2">+</span><span class="se">\t</span><span class="s2">0</span><span class="se">\t</span><span class="s2">ID=gen1</span>
+<span class="gp">... </span><span class="s2">seq_1</span><span class="se">\t</span><span class="s2">.</span><span class="se">\t</span><span class="s2">exon</span><span class="se">\t</span><span class="s2">10</span><span class="se">\t</span><span class="s2">30</span><span class="se">\t</span><span class="s2">.</span><span class="se">\t</span><span class="s2">+</span><span class="se">\t</span><span class="s2">.</span><span class="se">\t</span><span class="s2">Parent=gen1</span>
+<span class="gp">... </span><span class="s2">seq_1</span><span class="se">\t</span><span class="s2">.</span><span class="se">\t</span><span class="s2">exon</span><span class="se">\t</span><span class="s2">50</span><span class="se">\t</span><span class="s2">90</span><span class="se">\t</span><span class="s2">.</span><span class="se">\t</span><span class="s2">+</span><span class="se">\t</span><span class="s2">.</span><span class="se">\t</span><span class="s2">Parent=gen1</span>
+<span class="gp">... </span><span class="s2">seq_2</span><span class="se">\t</span><span class="s2">.</span><span class="se">\t</span><span class="s2">gene</span><span class="se">\t</span><span class="s2">80</span><span class="se">\t</span><span class="s2">96</span><span class="se">\t</span><span class="s2">.</span><span class="se">\t</span><span class="s2">-</span><span class="se">\t</span><span class="s2">.</span><span class="se">\t</span><span class="s2">ID=gen2</span>
+<span class="gp">... </span><span class="s2">##FASTA</span>
+<span class="gp">... </span><span class="s2">&gt;seq_1</span>
+<span class="gp">... </span><span class="s2">ATGCATGCATGCATGCATGCATGCATGCATGCATGCATGCATGCATGCATGCATGCATGC</span>
+<span class="gp">... </span><span class="s2">ATGCATGCATGCATGCATGCATGCATGCATGCATGCATGC</span>
+<span class="gp">... </span><span class="s2">&gt;seq_2</span>
+<span class="gp">... </span><span class="s2">ATGCATGCATGCATGCATGCATGCATGCATGCATGCATGCATGCATGCATGCATGCATGC</span>
+<span class="gp">... </span><span class="s2">ATGCATGCATGCATGCATGCATGCATGCATGCATGCATGCATGCATGCATGCATGCATGC</span>
+<span class="gp">... </span><span class="s2">&quot;&quot;&quot;</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="kn">import</span> <span class="nn">io</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">skbio.metadata</span> <span class="k">import</span> <span class="n">IntervalMetadata</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">skbio.io</span> <span class="k">import</span> <span class="n">read</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">gff</span> <span class="o">=</span> <span class="n">io</span><span class="o">.</span><span class="n">StringIO</span><span class="p">(</span><span class="n">gff_str</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>We can read it into <code class="docutils literal notranslate"><span class="pre">IntervalMetadata</span></code>. Each line will be read into
+an interval feature in <code class="docutils literal notranslate"><span class="pre">IntervalMetadata</span></code> object:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">im</span> <span class="o">=</span> <span class="n">read</span><span class="p">(</span><span class="n">gff</span><span class="p">,</span> <span class="nb">format</span><span class="o">=</span><span class="s1">&#39;gff3&#39;</span><span class="p">,</span> <span class="n">into</span><span class="o">=</span><span class="n">IntervalMetadata</span><span class="p">,</span>
+<span class="gp">... </span>          <span class="n">seq_id</span><span class="o">=</span><span class="s1">&#39;seq_1&#39;</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">im</span>  <span class="c1"># doctest: +SKIP</span>
+<span class="go">3 interval features</span>
+<span class="go">-------------------</span>
+<span class="go">Interval(interval_metadata=&lt;4604421736&gt;, bounds=[(9, 90)], fuzzy=[(False, False)], metadata={&#39;type&#39;: &#39;gene&#39;, &#39;phase&#39;: 0, &#39;strand&#39;: &#39;+&#39;, &#39;source&#39;: &#39;.&#39;, &#39;score&#39;: &#39;.&#39;, &#39;ID&#39;: &#39;gen1&#39;})</span>
+<span class="go">Interval(interval_metadata=&lt;4604421736&gt;, bounds=[(9, 30)], fuzzy=[(False, False)], metadata={&#39;strand&#39;: &#39;+&#39;, &#39;source&#39;: &#39;.&#39;, &#39;type&#39;: &#39;exon&#39;, &#39;Parent&#39;: &#39;gen1&#39;, &#39;score&#39;: &#39;.&#39;})</span>
+<span class="go">Interval(interval_metadata=&lt;4604421736&gt;, bounds=[(49, 90)], fuzzy=[(False, False)], metadata={&#39;strand&#39;: &#39;+&#39;, &#39;source&#39;: &#39;.&#39;, &#39;type&#39;: &#39;exon&#39;, &#39;Parent&#39;: &#39;gen1&#39;, &#39;score&#39;: &#39;.&#39;})</span>
+</pre></div>
+</div>
+<p>We can write the <code class="docutils literal notranslate"><span class="pre">IntervalMetadata</span></code> object back to GFF3 file:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="k">with</span> <span class="n">io</span><span class="o">.</span><span class="n">StringIO</span><span class="p">()</span> <span class="k">as</span> <span class="n">fh</span><span class="p">:</span>    <span class="c1"># doctest: +NORMALIZE_WHITESPACE</span>
+<span class="gp">... </span>    <span class="nb">print</span><span class="p">(</span><span class="n">im</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="n">fh</span><span class="p">,</span> <span class="nb">format</span><span class="o">=</span><span class="s1">&#39;gff3&#39;</span><span class="p">,</span> <span class="n">seq_id</span><span class="o">=</span><span class="s1">&#39;seq_1&#39;</span><span class="p">)</span><span class="o">.</span><span class="n">getvalue</span><span class="p">())</span>
+<span class="go">##gff-version 3</span>
+<span class="go">seq_1   .       gene    10      90      .       +       0       ID=gen1</span>
+<span class="go">seq_1   .       exon    10      30      .       +       .       Parent=gen1</span>
+<span class="go">seq_1   .       exon    50      90      .       +       .       Parent=gen1</span>
+<span class="go">&lt;BLANKLINE&gt;</span>
+</pre></div>
+</div>
+<p>If the GFF3 file does not have the sequence ID, it will return an empty object:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">gff</span> <span class="o">=</span> <span class="n">io</span><span class="o">.</span><span class="n">StringIO</span><span class="p">(</span><span class="n">gff_str</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">im</span> <span class="o">=</span> <span class="n">read</span><span class="p">(</span><span class="n">gff</span><span class="p">,</span> <span class="nb">format</span><span class="o">=</span><span class="s1">&#39;gff3&#39;</span><span class="p">,</span> <span class="n">into</span><span class="o">=</span><span class="n">IntervalMetadata</span><span class="p">,</span>
+<span class="gp">... </span>          <span class="n">seq_id</span><span class="o">=</span><span class="s1">&#39;foo&#39;</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">im</span>
+<span class="go">0 interval features</span>
+<span class="go">-------------------</span>
+</pre></div>
+</div>
+<p>We can also read the GFF3 file into a generator:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">gff</span> <span class="o">=</span> <span class="n">io</span><span class="o">.</span><span class="n">StringIO</span><span class="p">(</span><span class="n">gff_str</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">gen</span> <span class="o">=</span> <span class="n">read</span><span class="p">(</span><span class="n">gff</span><span class="p">,</span> <span class="nb">format</span><span class="o">=</span><span class="s1">&#39;gff3&#39;</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="k">for</span> <span class="n">im</span> <span class="ow">in</span> <span class="n">gen</span><span class="p">:</span>   <span class="c1"># doctest: +SKIP</span>
+<span class="gp">... </span>    <span class="nb">print</span><span class="p">(</span><span class="n">im</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span>   <span class="c1"># the seq id</span>
+<span class="gp">... </span>    <span class="nb">print</span><span class="p">(</span><span class="n">im</span><span class="p">[</span><span class="mi">1</span><span class="p">])</span>   <span class="c1"># the interval metadata on this seq</span>
+<span class="go">seq_1</span>
+<span class="go">3 interval features</span>
+<span class="go">-------------------</span>
+<span class="go">Interval(interval_metadata=&lt;4603377592&gt;, bounds=[(9, 90)], fuzzy=[(False, False)], metadata={&#39;type&#39;: &#39;gene&#39;, &#39;ID&#39;: &#39;gen1&#39;, &#39;source&#39;: &#39;.&#39;, &#39;score&#39;: &#39;.&#39;, &#39;strand&#39;: &#39;+&#39;, &#39;phase&#39;: 0})</span>
+<span class="go">Interval(interval_metadata=&lt;4603377592&gt;, bounds=[(9, 30)], fuzzy=[(False, False)], metadata={&#39;strand&#39;: &#39;+&#39;, &#39;type&#39;: &#39;exon&#39;, &#39;Parent&#39;: &#39;gen1&#39;, &#39;source&#39;: &#39;.&#39;, &#39;score&#39;: &#39;.&#39;})</span>
+<span class="go">Interval(interval_metadata=&lt;4603377592&gt;, bounds=[(49, 90)], fuzzy=[(False, False)], metadata={&#39;strand&#39;: &#39;+&#39;, &#39;type&#39;: &#39;exon&#39;, &#39;Parent&#39;: &#39;gen1&#39;, &#39;source&#39;: &#39;.&#39;, &#39;score&#39;: &#39;.&#39;})</span>
+<span class="go">seq_2</span>
+<span class="go">1 interval feature</span>
+<span class="go">------------------</span>
+<span class="go">Interval(interval_metadata=&lt;4603378712&gt;, bounds=[(79, 96)], fuzzy=[(False, False)], metadata={&#39;strand&#39;: &#39;-&#39;, &#39;type&#39;: &#39;gene&#39;, &#39;ID&#39;: &#39;gen2&#39;, &#39;source&#39;: &#39;.&#39;, &#39;score&#39;: &#39;.&#39;})</span>
+</pre></div>
+</div>
+<p>For the GFF3 file with sequences, we can read it into <code class="docutils literal notranslate"><span class="pre">Sequence</span></code> or <code class="docutils literal notranslate"><span class="pre">DNA</span></code>:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">gff</span> <span class="o">=</span> <span class="n">io</span><span class="o">.</span><span class="n">StringIO</span><span class="p">(</span><span class="n">gff_str</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">seq</span> <span class="o">=</span> <span class="n">read</span><span class="p">(</span><span class="n">gff</span><span class="p">,</span> <span class="nb">format</span><span class="o">=</span><span class="s1">&#39;gff3&#39;</span><span class="p">,</span> <span class="n">into</span><span class="o">=</span><span class="n">Sequence</span><span class="p">,</span> <span class="n">seq_num</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">seq</span>
+<span class="go">Sequence</span>
+<span class="go">--------------------------------------------------------------------</span>
+<span class="go">Metadata:</span>
+<span class="go">    &#39;description&#39;: &#39;&#39;</span>
+<span class="go">    &#39;id&#39;: &#39;seq_1&#39;</span>
+<span class="go">Interval metadata:</span>
+<span class="go">    3 interval features</span>
+<span class="go">Stats:</span>
+<span class="go">    length: 100</span>
+<span class="go">--------------------------------------------------------------------</span>
+<span class="go">0  ATGCATGCAT GCATGCATGC ATGCATGCAT GCATGCATGC ATGCATGCAT GCATGCATGC</span>
+<span class="go">60 ATGCATGCAT GCATGCATGC ATGCATGCAT GCATGCATGC</span>
+</pre></div>
+</div>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">gff</span> <span class="o">=</span> <span class="n">io</span><span class="o">.</span><span class="n">StringIO</span><span class="p">(</span><span class="n">gff_str</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">seq</span> <span class="o">=</span> <span class="n">read</span><span class="p">(</span><span class="n">gff</span><span class="p">,</span> <span class="nb">format</span><span class="o">=</span><span class="s1">&#39;gff3&#39;</span><span class="p">,</span> <span class="n">into</span><span class="o">=</span><span class="n">DNA</span><span class="p">,</span> <span class="n">seq_num</span><span class="o">=</span><span class="mi">2</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">seq</span>
+<span class="go">DNA</span>
+<span class="go">--------------------------------------------------------------------</span>
+<span class="go">Metadata:</span>
+<span class="go">    &#39;description&#39;: &#39;&#39;</span>
+<span class="go">    &#39;id&#39;: &#39;seq_2&#39;</span>
+<span class="go">Interval metadata:</span>
+<span class="go">    1 interval feature</span>
+<span class="go">Stats:</span>
+<span class="go">    length: 120</span>
+<span class="go">    has gaps: False</span>
+<span class="go">    has degenerates: False</span>
+<span class="go">    has definites: True</span>
+<span class="go">    GC-content: 50.00%</span>
+<span class="go">--------------------------------------------------------------------</span>
+<span class="go">0  ATGCATGCAT GCATGCATGC ATGCATGCAT GCATGCATGC ATGCATGCAT GCATGCATGC</span>
+<span class="go">60 ATGCATGCAT GCATGCATGC ATGCATGCAT GCATGCATGC ATGCATGCAT GCATGCATGC</span>
+</pre></div>
+</div>
+<p class="rubric">References</p>
+<table class="docutils footnote" frame="void" id="id3" rules="none">
+<colgroup><col class="label" /><col /></colgroup>
+<tbody valign="top">
+<tr><td class="label">[1]</td><td><em>(<a class="fn-backref" href="#id1">1</a>, <a class="fn-backref" href="#id2">2</a>)</em> <a class="reference external" href="https://github.com/The-Sequence-Ontology/Specifications/blob/master/gff3.md">https://github.com/The-Sequence-Ontology/Specifications/blob/master/gff3.md</a></td></tr>
+</tbody>
+</table>
+</div>
+</div>
+</div>
+
+
+    </div>
+      
+  </div>
+</div>
+  
+<footer class="footer">
+  <div class="container">
+    <p class="pull-right">
+      <a href="#">Back to top</a>
+      
+    </p>
+    <p>
+        &copy; Copyright 2014--, scikit-bio development team.<br/>
+      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 1.8.2.<br/>
+    </p>
+  </div>
+</footer>
+  <script>
+    (function(i,s,o,g,r,a,m){i['GoogleAnalyticsObject']=r;i[r]=i[r]||function(){
+    (i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),
+    m=s.getElementsByTagName(o)[0];a.async=1;a.src=g;m.parentNode.insertBefore(a,m)
+    })(window,document,'script','//www.google-analytics.com/analytics.js','ga');
+
+    ga('create', 'UA-6636235-9', 'scikit-bio.org');
+    ga('send', 'pageview');
+  </script>
+
+  </body>
+</html>

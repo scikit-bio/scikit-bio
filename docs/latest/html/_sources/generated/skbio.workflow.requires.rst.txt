@@ -1,0 +1,56 @@
+
+skbio.workflow.requires
+=======================
+
+
+
+
+   
+      
+   
+
+   
+
+   
+
+   
+
+   
+      
+   
+
+   
+
+   
+
+   
+
+   
+
+   
+
+
+.. currentmodule:: skbio.workflow
+
+.. autoclass:: requires
+
+   
+
+   
+   .. rubric:: Built-ins
+
+   .. autosummary::
+      :toctree:
+   
+      ~requires.__call__
+      ~requires.__init_subclass__
+   
+
+   
+   .. rubric:: Methods
+
+   .. autosummary::
+      :toctree:
+   
+      
+   

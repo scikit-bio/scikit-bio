@@ -1,0 +1,373 @@
+
+skbio.sequence.DNA
+==================
+
+
+
+
+   
+      
+   
+
+   
+      
+   
+
+   
+      
+   
+
+   
+      
+   
+
+   
+
+   
+      
+   
+
+   
+
+   
+      
+   
+
+   
+
+   
+      
+   
+
+   
+      
+   
+
+   
+      
+   
+
+   
+      
+   
+
+   
+
+   
+
+   
+
+   
+
+   
+      
+   
+
+   
+
+   
+      
+   
+
+   
+
+   
+
+   
+
+   
+
+   
+
+   
+
+   
+
+   
+
+   
+
+   
+
+   
+
+   
+
+   
+
+   
+
+   
+
+   
+
+   
+
+   
+
+   
+
+   
+
+   
+
+   
+
+   
+
+   
+
+   
+
+   
+
+   
+
+   
+
+   
+
+   
+
+   
+
+   
+
+   
+
+   
+
+   
+
+   
+
+   
+
+   
+
+   
+
+   
+
+   
+
+   
+
+   
+
+   
+
+   
+
+   
+
+   
+
+   
+
+   
+
+   
+
+   
+
+   
+
+   
+
+   
+
+   
+
+   
+
+   
+
+   
+
+   
+
+   
+
+   
+
+   
+
+   
+
+   
+
+
+.. currentmodule:: skbio.sequence
+
+.. autoclass:: DNA
+
+   
+   .. rubric:: Attributes
+
+   .. autosummary::
+   
+      ~DNA.alphabet
+      ~DNA.complement_map
+      ~DNA.default_gap_char
+      ~DNA.default_write_format
+      ~DNA.definite_chars
+      ~DNA.degenerate_chars
+      ~DNA.degenerate_map
+      ~DNA.gap_chars
+      ~DNA.interval_metadata
+      ~DNA.metadata
+      ~DNA.nondegenerate_chars
+      ~DNA.observed_chars
+      ~DNA.positional_metadata
+      ~DNA.values
+   
+
+   
+   .. rubric:: Built-ins
+
+   .. autosummary::
+      :toctree:
+   
+      ~DNA.__bool__
+      ~DNA.__contains__
+      ~DNA.__copy__
+      ~DNA.__deepcopy__
+      ~DNA.__eq__
+      ~DNA.__getitem__
+      ~DNA.__init_subclass__
+      ~DNA.__iter__
+      ~DNA.__len__
+      ~DNA.__ne__
+      ~DNA.__reversed__
+      ~DNA.__str__
+   
+
+   
+   .. rubric:: Methods
+
+   .. autosummary::
+      :toctree:
+   
+      
+      
+      ~DNA.complement
+      
+      
+      ~DNA.concat
+      
+      
+      ~DNA.count
+      
+      
+      ~DNA.definites
+      
+      
+      ~DNA.degap
+      
+      
+      ~DNA.degenerates
+      
+      
+      ~DNA.distance
+      
+      
+      ~DNA.expand_degenerates
+      
+      
+      ~DNA.find_motifs
+      
+      
+      ~DNA.find_with_regex
+      
+      
+      ~DNA.frequencies
+      
+      
+      ~DNA.gaps
+      
+      
+      ~DNA.gc_content
+      
+      
+      ~DNA.gc_frequency
+      
+      
+      ~DNA.has_definites
+      
+      
+      ~DNA.has_degenerates
+      
+      
+      ~DNA.has_gaps
+      
+      
+      ~DNA.has_interval_metadata
+      
+      
+      ~DNA.has_metadata
+      
+      
+      ~DNA.has_nondegenerates
+      
+      
+      ~DNA.has_positional_metadata
+      
+      
+      ~DNA.index
+      
+      
+      ~DNA.is_reverse_complement
+      
+      
+      ~DNA.iter_contiguous
+      
+      
+      ~DNA.iter_kmers
+      
+      
+      ~DNA.kmer_frequencies
+      
+      
+      ~DNA.lowercase
+      
+      
+      ~DNA.match_frequency
+      
+      
+      ~DNA.matches
+      
+      
+      ~DNA.mismatch_frequency
+      
+      
+      ~DNA.mismatches
+      
+      
+      ~DNA.nondegenerates
+      
+      
+      ~DNA.read
+      
+      
+      ~DNA.replace
+      
+      
+      ~DNA.reverse_complement
+      
+      
+      ~DNA.to_regex
+      
+      
+      ~DNA.transcribe
+      
+      
+      ~DNA.translate
+      
+      
+      ~DNA.translate_six_frames
+      
+      
+      ~DNA.write
+      
+   

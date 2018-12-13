@@ -1,0 +1,84 @@
+
+skbio.util.classproperty
+========================
+
+
+
+
+   
+
+   
+
+   
+      
+   
+
+   
+
+   
+      
+   
+
+   
+
+   
+
+   
+
+   
+      
+   
+
+   
+
+   
+
+   
+
+   
+
+   
+
+
+.. currentmodule:: skbio.util
+
+.. autoclass:: classproperty
+
+   
+   .. rubric:: Attributes
+
+   .. autosummary::
+   
+      ~classproperty.fdel
+      ~classproperty.fget
+      ~classproperty.fset
+   
+
+   
+   .. rubric:: Built-ins
+
+   .. autosummary::
+      :toctree:
+   
+      ~classproperty.__get__
+      ~classproperty.__init_subclass__
+      ~classproperty.__set__
+   
+
+   
+   .. rubric:: Methods
+
+   .. autosummary::
+      :toctree:
+   
+      
+      
+      ~classproperty.deleter
+      
+      
+      ~classproperty.getter
+      
+      
+      ~classproperty.setter
+      
+   

@@ -1,0 +1,8 @@
+:orphan:
+
+skbio.sequence.GrammaredSequence.has_definites
+==============================================
+
+.. currentmodule:: skbio.sequence
+
+.. automethod:: GrammaredSequence.has_definites

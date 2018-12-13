@@ -1,0 +1,132 @@
+
+skbio.metadata.IntervalMetadata
+===============================
+
+
+
+
+   
+      
+   
+
+   
+      
+   
+
+   
+
+   
+      
+   
+
+   
+
+   
+
+   
+      
+   
+
+   
+      
+   
+
+   
+
+   
+
+   
+
+   
+
+   
+
+   
+
+   
+
+   
+
+   
+
+   
+
+   
+
+   
+
+   
+
+   
+
+   
+
+   
+
+   
+
+   
+
+   
+
+
+.. currentmodule:: skbio.metadata
+
+.. autoclass:: IntervalMetadata
+
+   
+   .. rubric:: Attributes
+
+   .. autosummary::
+   
+      ~IntervalMetadata.default_write_format
+      ~IntervalMetadata.lower_bound
+      ~IntervalMetadata.num_interval_features
+      ~IntervalMetadata.upper_bound
+   
+
+   
+   .. rubric:: Built-ins
+
+   .. autosummary::
+      :toctree:
+   
+      ~IntervalMetadata.__copy__
+      ~IntervalMetadata.__deepcopy__
+      ~IntervalMetadata.__eq__
+      ~IntervalMetadata.__init_subclass__
+      ~IntervalMetadata.__ne__
+   
+
+   
+   .. rubric:: Methods
+
+   .. autosummary::
+      :toctree:
+   
+      
+      
+      ~IntervalMetadata.add
+      
+      
+      ~IntervalMetadata.concat
+      
+      
+      ~IntervalMetadata.drop
+      
+      
+      ~IntervalMetadata.merge
+      
+      
+      ~IntervalMetadata.query
+      
+      
+      ~IntervalMetadata.read
+      
+      
+      ~IntervalMetadata.sort
+      
+      
+      ~IntervalMetadata.write
+      
+   

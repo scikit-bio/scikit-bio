@@ -1,0 +1,6 @@
+skbio.stats.composition.alr
+===========================
+
+.. currentmodule:: skbio.stats.composition
+
+.. autofunction:: alr

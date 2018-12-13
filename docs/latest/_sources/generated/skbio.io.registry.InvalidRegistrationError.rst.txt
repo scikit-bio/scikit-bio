@@ -1,0 +1,6 @@
+skbio.io.registry.InvalidRegistrationError
+==========================================
+
+.. currentmodule:: skbio.io.registry
+
+.. autoexception:: InvalidRegistrationError

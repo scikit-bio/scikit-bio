@@ -1,8 +1,0 @@
-:orphan:
-
-skbio.sequence.GrammaredSequence.definite_chars
-===============================================
-
-.. currentmodule:: skbio.sequence
-
-.. autoattribute:: GrammaredSequence.definite_chars

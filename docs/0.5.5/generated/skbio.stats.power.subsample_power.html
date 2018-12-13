@@ -1,0 +1,349 @@
+<!DOCTYPE html>
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="X-UA-Compatible" content="IE=Edge" />
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    <title>skbio.stats.power.subsample_power &#8212; scikit-bio 0.5.5 documentation</title>
+    <link rel="stylesheet" href="../_static/bootstrap-sphinx.css" type="text/css" />
+    <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
+    <link rel="stylesheet" type="text/css" href="../_static/style.css" />
+    <script type="text/javascript" id="documentation_options" data-url_root="../" src="../_static/documentation_options.js"></script>
+    <script type="text/javascript" src="../_static/jquery.js"></script>
+    <script type="text/javascript" src="../_static/underscore.js"></script>
+    <script type="text/javascript" src="../_static/doctools.js"></script>
+    <script type="text/javascript" src="../_static/copybutton.js"></script>
+    <script async="async" type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.1/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
+    <script type="text/javascript" src="../_static/js/jquery-1.11.0.min.js"></script>
+    <script type="text/javascript" src="../_static/js/jquery-fix.js"></script>
+    <script type="text/javascript" src="../_static/bootstrap-3.3.7/js/bootstrap.min.js"></script>
+    <script type="text/javascript" src="../_static/bootstrap-sphinx.js"></script>
+    <link rel="index" title="Index" href="../genindex.html" />
+    <link rel="search" title="Search" href="../search.html" />
+    <link rel="next" title="skbio.stats.power.subsample_paired_power" href="skbio.stats.power.subsample_paired_power.html" />
+    <link rel="prev" title="Empirical Power Estimation (skbio.stats.power)" href="skbio.stats.power.html" />
+<meta charset='utf-8'>
+<meta http-equiv='X-UA-Compatible' content='IE=edge,chrome=1'>
+<meta name='viewport' content='width=device-width, initial-scale=1.0, maximum-scale=1'>
+<meta name="apple-mobile-web-app-capable" content="yes">
+
+  </head><body>
+  
+  <a href="https://github.com/biocore/scikit-bio"
+     class="visible-desktop hidden-xs"><img
+    id="gh-banner"
+    style="position: absolute; top: 50px; right: 0; border: 0;"
+    src="https://s3.amazonaws.com/github/ribbons/forkme_right_darkblue_121621.png"
+    alt="Fork me on GitHub"></a>
+  <script>
+    // Adjust banner height.
+    $(function () {
+      var navHeight = $(".navbar .container").css("height");
+      $("#gh-banner").css("top", navHeight);
+    });
+  </script>
+
+
+  <div id="navbar" class="navbar navbar-default navbar-fixed-top">
+    <div class="container">
+      <div class="navbar-header">
+        <!-- .btn-navbar is used as the toggle for collapsed navbar content -->
+        <button type="button" class="navbar-toggle" data-toggle="collapse" data-target=".nav-collapse">
+          <span class="icon-bar"></span>
+          <span class="icon-bar"></span>
+          <span class="icon-bar"></span>
+        </button>
+        <a class="navbar-brand" href="../index.html">
+          scikit-bio docs</a>
+        <span class="navbar-text navbar-version pull-left"><b>0.5.5</b></span>
+      </div>
+
+        <div class="collapse navbar-collapse nav-collapse">
+          <ul class="nav navbar-nav">
+            
+            
+              <li class="dropdown globaltoc-container">
+  <a role="button"
+     id="dLabelGlobalToc"
+     data-toggle="dropdown"
+     data-target="#"
+     href="../index.html">Site <b class="caret"></b></a>
+  <ul class="dropdown-menu globaltoc"
+      role="menu"
+      aria-labelledby="dLabelGlobalToc"><ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="../io.html">File I/O (<code class="docutils literal notranslate"><span class="pre">skbio.io</span></code>)</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../sequence.html">Sequences (<code class="docutils literal notranslate"><span class="pre">skbio.sequence</span></code>)</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../alignment.html">Alignments (<code class="docutils literal notranslate"><span class="pre">skbio.alignment</span></code>)</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../tree.html">Tree representations (<code class="docutils literal notranslate"><span class="pre">skbio.tree</span></code>)</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../workflow.html">Constructing workflows (<code class="docutils literal notranslate"><span class="pre">skbio.workflow</span></code>)</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../diversity.html">Diversity calculations (<code class="docutils literal notranslate"><span class="pre">skbio.diversity</span></code>)</a></li>
+<li class="toctree-l1 current"><a class="reference internal" href="../stats.html">Statistics (<code class="docutils literal notranslate"><span class="pre">skbio.stats</span></code>)</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../metadata.html">Metadata (<code class="docutils literal notranslate"><span class="pre">skbio.metadata</span></code>)</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../util.html">Utility functionality (<code class="docutils literal notranslate"><span class="pre">skbio.util</span></code>)</a></li>
+</ul>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../user/api_stability.html">API Stability</a></li>
+</ul>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../development/coding_guidelines.html">Coding guidelines</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../development/new_module.html">Adding a new module to skbio</a></li>
+</ul>
+</ul>
+</li>
+              
+                <li class="dropdown">
+  <a role="button"
+     id="dLabelLocalToc"
+     data-toggle="dropdown"
+     data-target="#"
+     href="#">Page <b class="caret"></b></a>
+  <ul class="dropdown-menu localtoc"
+      role="menu"
+      aria-labelledby="dLabelLocalToc"><ul>
+<li><a class="reference internal" href="#">skbio.stats.power.subsample_power</a></li>
+</ul>
+</ul>
+</li>
+              
+            
+            
+            
+            
+            
+          </ul>
+
+          
+            
+<form class="navbar-form navbar-right" action="../search.html" method="get">
+ <div class="form-group">
+  <input type="text" name="q" class="form-control" placeholder="Search" />
+ </div>
+  <input type="hidden" name="check_keywords" value="yes" />
+  <input type="hidden" name="area" value="default" />
+</form>
+          
+        </div>
+    </div>
+  </div>
+
+<div class="container">
+  <div class="row">
+    <div class="col-md-12 content">
+      
+  <div class="section" id="skbio-stats-power-subsample-power">
+<h1>skbio.stats.power.subsample_power<a class="headerlink" href="#skbio-stats-power-subsample-power" title="Permalink to this headline">¶</a></h1>
+<dl class="function">
+<dt id="skbio.stats.power.subsample_power">
+<code class="descclassname">skbio.stats.power.</code><code class="descname">subsample_power</code><span class="sig-paren">(</span><em>test</em>, <em>samples</em>, <em>draw_mode='ind'</em>, <em>alpha_pwr=0.05</em>, <em>ratio=None</em>, <em>max_counts=50</em>, <em>counts_interval=10</em>, <em>min_counts=None</em>, <em>num_iter=500</em>, <em>num_runs=10</em><span class="sig-paren">)</span><a class="reference external" href="http://github.com/biocore/scikit-bio/blob/0.5.5/skbio/stats/power.py#L152"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#skbio.stats.power.subsample_power" title="Permalink to this definition">¶</a></dt>
+<dd><p>Subsamples data to iteratively calculate power</p>
+<p>State: Experimental as of 0.4.0.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
+<li><strong>test</strong> (<em>function</em>) – The statistical test which accepts a list of arrays of values
+(sample ids or numeric values) and returns a p value or one-dimensional
+array of p values.</li>
+<li><strong>samples</strong> (<em>array_like</em>) – <cite>samples</cite> can be a list of lists or a list of arrays where each
+sublist or row in the array corresponds to a sampled group.</li>
+<li><strong>draw_mode</strong> (<em>{&quot;ind&quot;</em><em>, </em><em>&quot;matched&quot;}</em><em>, </em><em>optional</em>) – “matched” samples should be used when observations in
+samples have corresponding observations in other groups. For instance,
+this may be useful when working with regression data where
+<span class="math notranslate nohighlight">\(x_{1}, x_{2}, ..., x_{n}\)</span> maps to
+<span class="math notranslate nohighlight">\(y_{1}, y_{2}, ..., y_{n}\)</span>. Sample vectors must be the same
+length in “matched” mode.
+If there is no reciprocal relationship between samples, then
+“ind” mode should be used.</li>
+<li><strong>alpha_pwr</strong> (<a class="reference external" href="https://docs.python.org/dev/library/functions.html#float" title="(in Python v3.8)"><em>float</em></a><em>, </em><em>optional</em>) – The critical value used to calculate the power.</li>
+<li><strong>ratio</strong> (<em>1-D array</em><em>, </em><em>optional</em>) – The fraction of the sample counts which should be
+assigned to each group. If this is a 1-D array, it must be the same
+length as <cite>samples</cite>. If no value is supplied (<cite>ratio</cite> is None),
+then an equal number of observations will be drawn for each sample. In
+<cite>matched</cite> mode, this will be set to one.</li>
+<li><strong>max_counts</strong> (<em>positive int</em><em>, </em><em>optional</em>) – The maximum number of samples per group to draw for effect size
+calculation.</li>
+<li><strong>counts_interval</strong> (<em>positive int</em><em>, </em><em>optional</em>) – The difference between each subsampling count.</li>
+<li><strong>min_counts</strong> (<em>positive int</em><em>, </em><em>optional</em>) – How many samples should be drawn for the smallest
+subsample. If this is None, the <cite>counts_interval</cite> will be used.</li>
+<li><strong>num_iter</strong> (<em>positive int</em><em>, </em><em>optional</em>) – The number of p-values to generate for each point
+on the curve.</li>
+<li><strong>num_runs</strong> (<em>positive int</em><em>, </em><em>optional</em>) – The number of times to calculate each curve.</li>
+</ul>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first"><ul class="simple">
+<li><strong>power</strong> (<em>array</em>) – The power calculated for each subsample at each count. The array has
+<cite>num_runs</cite> rows, a length with the same number of elements as
+<cite>sample_counts</cite> and a depth equal to the number of p values returned by
+<cite>test</cite>. If <cite>test</cite> returns a float, the returned array will be
+two-dimensional instead of three.</li>
+<li><strong>sample_counts</strong> (<em>array</em>) – The number of samples drawn at each power calculation.</li>
+</ul>
+</p>
+</td>
+</tr>
+<tr class="field-odd field"><th class="field-name">Raises:</th><td class="field-body"><ul class="first last simple">
+<li><a class="reference external" href="https://docs.python.org/dev/library/exceptions.html#ValueError" title="(in Python v3.8)"><code class="xref py py-exc docutils literal notranslate"><span class="pre">ValueError</span></code></a> – If the <cite>mode</cite> is “matched”, an error will occur if the arrays in
+<cite>samples</cite> are not the same length.</li>
+<li><a class="reference external" href="https://docs.python.org/dev/library/exceptions.html#ValueError" title="(in Python v3.8)"><code class="xref py py-exc docutils literal notranslate"><span class="pre">ValueError</span></code></a> – There is a ValueError if there are fewer samples than the minimum
+count.</li>
+<li><a class="reference external" href="https://docs.python.org/dev/library/exceptions.html#ValueError" title="(in Python v3.8)"><code class="xref py py-exc docutils literal notranslate"><span class="pre">ValueError</span></code></a> – If the <cite>counts_interval</cite> is greater than the difference between the
+sample start and the max value, the function raises a ValueError.</li>
+<li><a class="reference external" href="https://docs.python.org/dev/library/exceptions.html#ValueError" title="(in Python v3.8)"><code class="xref py py-exc docutils literal notranslate"><span class="pre">ValueError</span></code></a> – There are not an equal number of groups in <cite>samples</cite> and in <cite>ratios</cite>.</li>
+<li><a class="reference external" href="https://docs.python.org/dev/library/exceptions.html#TypeError" title="(in Python v3.8)"><code class="xref py py-exc docutils literal notranslate"><span class="pre">TypeError</span></code></a> – <cite>test</cite> does not return a float or a 1-dimensional numpy array.</li>
+</ul>
+</td>
+</tr>
+</tbody>
+</table>
+<p class="rubric">Examples</p>
+<p>Let’s say we wanted to look at the relationship between the presence of a
+specific bacteria, <em>Gardnerella vaginalis</em> in the vaginal community, and
+the probability of a pre or post menopausal woman experiencing a urinary
+tract infection (UTI). Healthy women were enrolled in the study either
+before or after menopause, and followed for eight weeks. Participants
+submitted fecal samples at the beginning of the study, and were then
+followed for clinical symptoms of a UTI. A confirmed UTI was an endpoint
+in the study.</p>
+<p>Using available literature and 16S sequencing, a set of candidate taxa were
+identified as correlated with UTIs, including <em>G. vaginalis</em>. In the 100
+women (50 premenopausal and 50 postmenopausal samples) who had UTIs, the
+presence or absence of <em>G. vaginalis</em> was confirmed with quantitative PCR.</p>
+<p>We can model the probability that detectable <em>G. vaginalis</em> was found in
+these samples using a binomial model. (<em>Note that this is a simulation.</em>)</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">np</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">seed</span><span class="p">(</span><span class="mi">25</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">pre_rate</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">binomial</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="mf">0.85</span><span class="p">,</span> <span class="n">size</span><span class="o">=</span><span class="p">(</span><span class="mi">50</span><span class="p">,))</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">pre_rate</span><span class="o">.</span><span class="n">sum</span><span class="p">()</span>
+<span class="go">45</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">pos_rate</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">binomial</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="mf">0.40</span><span class="p">,</span> <span class="n">size</span><span class="o">=</span><span class="p">(</span><span class="mi">50</span><span class="p">,))</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">pos_rate</span><span class="o">.</span><span class="n">sum</span><span class="p">()</span>
+<span class="go">21</span>
+</pre></div>
+</div>
+<p>Let’s set up a test function, so we can test the probability of
+finding a difference in frequency between the two groups. We’ll use
+<cite>scipy.stats.chisquare</cite> to look for the difference in frequency between
+groups.</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">scipy.stats</span> <span class="k">import</span> <span class="n">chisquare</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">test</span> <span class="o">=</span> <span class="k">lambda</span> <span class="n">x</span><span class="p">:</span> <span class="n">chisquare</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([</span><span class="n">x</span><span class="p">[</span><span class="n">i</span><span class="p">]</span><span class="o">.</span><span class="n">sum</span><span class="p">()</span> <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span>
+<span class="gp">... </span>    <span class="nb">range</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">x</span><span class="p">))]))[</span><span class="mi">1</span><span class="p">]</span>
+</pre></div>
+</div>
+<p>Let’s make sure that our two distributions are different.</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="nb">print</span><span class="p">(</span><span class="nb">round</span><span class="p">(</span><span class="n">test</span><span class="p">([</span><span class="n">pre_rate</span><span class="p">,</span> <span class="n">pos_rate</span><span class="p">]),</span> <span class="mi">3</span><span class="p">))</span>
+<span class="go">0.003</span>
+</pre></div>
+</div>
+<p>Since there are an even number of samples, and we don’t have enough
+information to try controlling the data, we’ll use
+<cite>skbio.stats.power.subsample_power</cite> to compare the two groups. If we had
+metadata about other risk factors, like a reproductive history, BMI,
+tobacco use, we might want to use
+<cite>skbio.stats.power.subsample_paired_power</cite>.
+We’ll also use “ind” <cite>draw_mode</cite>, since there is no linkage between the
+two groups of samples.</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">skbio.stats.power</span> <span class="k">import</span> <span class="n">subsample_power</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">pwr_est</span><span class="p">,</span> <span class="n">counts</span> <span class="o">=</span> <span class="n">subsample_power</span><span class="p">(</span><span class="n">test</span><span class="o">=</span><span class="n">test</span><span class="p">,</span>
+<span class="gp">... </span>                                  <span class="n">samples</span><span class="o">=</span><span class="p">[</span><span class="n">pre_rate</span><span class="p">,</span> <span class="n">pos_rate</span><span class="p">],</span>
+<span class="gp">... </span>                                  <span class="n">num_iter</span><span class="o">=</span><span class="mi">100</span><span class="p">,</span>
+<span class="gp">... </span>                                  <span class="n">num_runs</span><span class="o">=</span><span class="mi">5</span><span class="p">,</span>
+<span class="gp">... </span>                                  <span class="n">counts_interval</span><span class="o">=</span><span class="mi">5</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">counts</span>
+<span class="go">array([ 5, 10, 15, 20, 25, 30, 35, 40, 45])</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">np</span><span class="o">.</span><span class="n">nanmean</span><span class="p">(</span><span class="n">pwr_est</span><span class="p">,</span> <span class="n">axis</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span> <span class="c1"># doctest: +NORMALIZE_WHITESPACE</span>
+<span class="go">array([ 0.056,  0.074,  0.226,  0.46 ,  0.61 ,  0.806,  0.952,  1.   ,</span>
+<span class="go">        1.   ])</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">counts</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">nanmean</span><span class="p">(</span><span class="n">pwr_est</span><span class="p">,</span> <span class="n">axis</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span> <span class="o">&gt;</span> <span class="mf">0.8</span><span class="p">]</span><span class="o">.</span><span class="n">min</span><span class="p">()</span>
+<span class="go">30</span>
+</pre></div>
+</div>
+<p>So, we can estimate that we will see a significant difference in the
+presence of <em>G. vaginalis</em> in the stool of pre and post women with UTIs if
+we have at least 30 samples per group.</p>
+<p>If we wanted to test the relationship of a second candidate taxa which is
+more rare in the population, but may have a similar effect, based on
+available literature, we might also start by trying to identify 30
+samples per group where the second candidate taxa is present.</p>
+<p>Suppose, now, that we want to test that a secondary metabolite seen only in
+the presence of <em>G vaginalis</em> to see if it is also correlated with UTIs. We
+can model the abundance of the metabolite as a normal distribution.</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">met_pos</span> <span class="o">=</span> <span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">randn</span><span class="p">(</span><span class="n">pre_rate</span><span class="o">.</span><span class="n">sum</span><span class="p">()</span> <span class="o">+</span> <span class="n">pos_rate</span><span class="o">.</span><span class="n">sum</span><span class="p">())</span> <span class="o">*</span> <span class="mi">2000</span> <span class="o">+</span>
+<span class="gp">... </span>    <span class="mi">2500</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">met_pos</span><span class="p">[</span><span class="n">met_pos</span> <span class="o">&lt;</span> <span class="mi">0</span><span class="p">]</span> <span class="o">=</span> <span class="mi">0</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">met_neg</span> <span class="o">=</span> <span class="n">met_neg</span> <span class="o">=</span> <span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">randn</span><span class="p">(</span><span class="mi">100</span> <span class="o">-</span> <span class="p">(</span><span class="n">pre_rate</span><span class="o">.</span><span class="n">sum</span><span class="p">()</span> <span class="o">+</span>
+<span class="gp">... </span>    <span class="n">pos_rate</span><span class="o">.</span><span class="n">sum</span><span class="p">()))</span> <span class="o">*</span> <span class="mi">2000</span> <span class="o">+</span> <span class="mi">500</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">met_neg</span><span class="p">[</span><span class="n">met_neg</span> <span class="o">&lt;</span> <span class="mi">0</span><span class="p">]</span> <span class="o">=</span> <span class="mi">0</span>
+</pre></div>
+</div>
+<p>Let’s compare the populations with a kruskal-wallis test. Physically, there
+cannot be a negative concentration of a chemical, so we’ve set the lower
+bound at 0. This means that we can no longer assume our distribution is
+normal.</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">scipy.stats</span> <span class="k">import</span> <span class="n">kruskal</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="k">def</span> <span class="nf">metabolite_test</span><span class="p">(</span><span class="n">x</span><span class="p">):</span>
+<span class="gp">... </span>    <span class="k">return</span> <span class="n">kruskal</span><span class="p">(</span><span class="n">x</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="n">x</span><span class="p">[</span><span class="mi">1</span><span class="p">])[</span><span class="mi">1</span><span class="p">]</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="nb">print</span><span class="p">(</span><span class="nb">round</span><span class="p">(</span><span class="n">metabolite_test</span><span class="p">([</span><span class="n">met_pos</span><span class="p">,</span> <span class="n">met_neg</span><span class="p">]),</span> <span class="mi">3</span><span class="p">))</span>
+<span class="go">0.005</span>
+</pre></div>
+</div>
+<p>When we go to perform the statistical test on all the data, you might
+notice that there are twice as many samples from women with <em>G. vaginalis</em>
+than those without. It might make sense to account for this difference when
+we’re testing power. So, we’re going to set the <cite>ratio</cite> parameter, which
+lets us draw twice as many samples from women with <em>G. vaginalis</em>.</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">pwr_est2</span><span class="p">,</span> <span class="n">counts2</span> <span class="o">=</span> <span class="n">subsample_power</span><span class="p">(</span><span class="n">test</span><span class="o">=</span><span class="n">metabolite_test</span><span class="p">,</span>
+<span class="gp">... </span>                                    <span class="n">samples</span><span class="o">=</span><span class="p">[</span><span class="n">met_pos</span><span class="p">,</span> <span class="n">met_neg</span><span class="p">],</span>
+<span class="gp">... </span>                                    <span class="n">counts_interval</span><span class="o">=</span><span class="mi">5</span><span class="p">,</span>
+<span class="gp">... </span>                                    <span class="n">num_iter</span><span class="o">=</span><span class="mi">100</span><span class="p">,</span>
+<span class="gp">... </span>                                    <span class="n">num_runs</span><span class="o">=</span><span class="mi">5</span><span class="p">,</span>
+<span class="gp">... </span>                                    <span class="n">ratio</span><span class="o">=</span><span class="p">[</span><span class="mi">2</span><span class="p">,</span> <span class="mi">1</span><span class="p">])</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">counts2</span>
+<span class="go">array([  5.,  10.,  15.,  20.,  25.,  30.])</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">np</span><span class="o">.</span><span class="n">nanmean</span><span class="p">(</span><span class="n">pwr_est2</span><span class="p">,</span> <span class="n">axis</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span>
+<span class="go">array([ 0.14 ,  0.272,  0.426,  0.646,  0.824,  0.996])</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">counts2</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">nanmean</span><span class="p">(</span><span class="n">pwr_est2</span><span class="p">,</span> <span class="n">axis</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span> <span class="o">&gt;</span> <span class="mf">0.8</span><span class="p">]</span><span class="o">.</span><span class="n">min</span><span class="p">()</span>
+<span class="go">25.0</span>
+</pre></div>
+</div>
+<p>When we consider the number of samples per group needed in the power
+analysis, we need to look at the ratio. The analysis says that we need 25
+samples in the smallest group, in this case, the group of women without
+<em>G. vaginalis</em> and 50 samples from women with <em>G. vaginalis</em> to see a
+significant difference in the abundance of our secondary metabolite at 80%
+power.</p>
+</dd></dl>
+
+</div>
+
+
+    </div>
+      
+  </div>
+</div>
+  
+<footer class="footer">
+  <div class="container">
+    <p class="pull-right">
+      <a href="#">Back to top</a>
+      
+    </p>
+    <p>
+        &copy; Copyright 2014--, scikit-bio development team.<br/>
+      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 1.8.2.<br/>
+    </p>
+  </div>
+</footer>
+  <script>
+    (function(i,s,o,g,r,a,m){i['GoogleAnalyticsObject']=r;i[r]=i[r]||function(){
+    (i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),
+    m=s.getElementsByTagName(o)[0];a.async=1;a.src=g;m.parentNode.insertBefore(a,m)
+    })(window,document,'script','//www.google-analytics.com/analytics.js','ga');
+
+    ga('create', 'UA-6636235-9', 'scikit-bio.org');
+    ga('send', 'pageview');
+  </script>
+
+  </body>
+</html>

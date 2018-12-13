@@ -1,0 +1,44 @@
+
+skbio.alignment.StripedSmithWaterman
+====================================
+
+
+
+
+   
+
+   
+
+   
+      
+   
+
+   
+
+   
+
+   
+
+   
+
+   
+
+   
+
+
+.. currentmodule:: skbio.alignment
+
+.. autoclass:: StripedSmithWaterman
+
+   
+
+   
+   .. rubric:: Built-ins
+
+   .. autosummary::
+      :toctree:
+   
+      ~StripedSmithWaterman.__init_subclass__
+   
+
+   

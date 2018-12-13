@@ -1,0 +1,8 @@
+:orphan:
+
+skbio.sequence.Protein.iter_contiguous
+======================================
+
+.. currentmodule:: skbio.sequence
+
+.. automethod:: Protein.iter_contiguous

@@ -1,0 +1,6 @@
+skbio.stats.composition.sbp\_basis
+==================================
+
+.. currentmodule:: skbio.stats.composition
+
+.. autofunction:: sbp_basis

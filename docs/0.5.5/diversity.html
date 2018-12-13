@@ -1,0 +1,570 @@
+<!DOCTYPE html>
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="X-UA-Compatible" content="IE=Edge" />
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    <title>Diversity calculations (skbio.diversity) &#8212; scikit-bio 0.5.5 documentation</title>
+    <link rel="stylesheet" href="_static/bootstrap-sphinx.css" type="text/css" />
+    <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+    <link rel="stylesheet" type="text/css" href="_static/style.css" />
+    <script type="text/javascript" id="documentation_options" data-url_root="./" src="_static/documentation_options.js"></script>
+    <script type="text/javascript" src="_static/jquery.js"></script>
+    <script type="text/javascript" src="_static/underscore.js"></script>
+    <script type="text/javascript" src="_static/doctools.js"></script>
+    <script type="text/javascript" src="_static/copybutton.js"></script>
+    <script async="async" type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.1/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
+    <script type="text/javascript" src="_static/js/jquery-1.11.0.min.js"></script>
+    <script type="text/javascript" src="_static/js/jquery-fix.js"></script>
+    <script type="text/javascript" src="_static/bootstrap-3.3.7/js/bootstrap.min.js"></script>
+    <script type="text/javascript" src="_static/bootstrap-sphinx.js"></script>
+    <link rel="index" title="Index" href="genindex.html" />
+    <link rel="search" title="Search" href="search.html" />
+    <link rel="next" title="Alpha diversity measures (skbio.diversity.alpha)" href="generated/skbio.diversity.alpha.html" />
+    <link rel="prev" title="skbio.workflow.method.__init_subclass__" href="generated/skbio.workflow.method.__init_subclass__.html" />
+<meta charset='utf-8'>
+<meta http-equiv='X-UA-Compatible' content='IE=edge,chrome=1'>
+<meta name='viewport' content='width=device-width, initial-scale=1.0, maximum-scale=1'>
+<meta name="apple-mobile-web-app-capable" content="yes">
+
+  </head><body>
+  
+  <a href="https://github.com/biocore/scikit-bio"
+     class="visible-desktop hidden-xs"><img
+    id="gh-banner"
+    style="position: absolute; top: 50px; right: 0; border: 0;"
+    src="https://s3.amazonaws.com/github/ribbons/forkme_right_darkblue_121621.png"
+    alt="Fork me on GitHub"></a>
+  <script>
+    // Adjust banner height.
+    $(function () {
+      var navHeight = $(".navbar .container").css("height");
+      $("#gh-banner").css("top", navHeight);
+    });
+  </script>
+
+
+  <div id="navbar" class="navbar navbar-default navbar-fixed-top">
+    <div class="container">
+      <div class="navbar-header">
+        <!-- .btn-navbar is used as the toggle for collapsed navbar content -->
+        <button type="button" class="navbar-toggle" data-toggle="collapse" data-target=".nav-collapse">
+          <span class="icon-bar"></span>
+          <span class="icon-bar"></span>
+          <span class="icon-bar"></span>
+        </button>
+        <a class="navbar-brand" href="index.html">
+          scikit-bio docs</a>
+        <span class="navbar-text navbar-version pull-left"><b>0.5.5</b></span>
+      </div>
+
+        <div class="collapse navbar-collapse nav-collapse">
+          <ul class="nav navbar-nav">
+            
+            
+              <li class="dropdown globaltoc-container">
+  <a role="button"
+     id="dLabelGlobalToc"
+     data-toggle="dropdown"
+     data-target="#"
+     href="index.html">Site <b class="caret"></b></a>
+  <ul class="dropdown-menu globaltoc"
+      role="menu"
+      aria-labelledby="dLabelGlobalToc"><ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="io.html">File I/O (<code class="docutils literal notranslate"><span class="pre">skbio.io</span></code>)</a></li>
+<li class="toctree-l1"><a class="reference internal" href="sequence.html">Sequences (<code class="docutils literal notranslate"><span class="pre">skbio.sequence</span></code>)</a></li>
+<li class="toctree-l1"><a class="reference internal" href="alignment.html">Alignments (<code class="docutils literal notranslate"><span class="pre">skbio.alignment</span></code>)</a></li>
+<li class="toctree-l1"><a class="reference internal" href="tree.html">Tree representations (<code class="docutils literal notranslate"><span class="pre">skbio.tree</span></code>)</a></li>
+<li class="toctree-l1"><a class="reference internal" href="workflow.html">Constructing workflows (<code class="docutils literal notranslate"><span class="pre">skbio.workflow</span></code>)</a></li>
+<li class="toctree-l1 current"><a class="current reference internal" href="#">Diversity calculations (<code class="docutils literal notranslate"><span class="pre">skbio.diversity</span></code>)</a></li>
+<li class="toctree-l1"><a class="reference internal" href="stats.html">Statistics (<code class="docutils literal notranslate"><span class="pre">skbio.stats</span></code>)</a></li>
+<li class="toctree-l1"><a class="reference internal" href="metadata.html">Metadata (<code class="docutils literal notranslate"><span class="pre">skbio.metadata</span></code>)</a></li>
+<li class="toctree-l1"><a class="reference internal" href="util.html">Utility functionality (<code class="docutils literal notranslate"><span class="pre">skbio.util</span></code>)</a></li>
+</ul>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="user/api_stability.html">API Stability</a></li>
+</ul>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="development/coding_guidelines.html">Coding guidelines</a></li>
+<li class="toctree-l1"><a class="reference internal" href="development/new_module.html">Adding a new module to skbio</a></li>
+</ul>
+</ul>
+</li>
+              
+                <li class="dropdown">
+  <a role="button"
+     id="dLabelLocalToc"
+     data-toggle="dropdown"
+     data-target="#"
+     href="#">Page <b class="caret"></b></a>
+  <ul class="dropdown-menu localtoc"
+      role="menu"
+      aria-labelledby="dLabelLocalToc"><ul>
+<li><a class="reference internal" href="#">Diversity calculations (<code class="docutils literal notranslate"><span class="pre">skbio.diversity</span></code>)</a><ul>
+<li><a class="reference internal" href="#driver-functions">Driver functions</a></li>
+<li><a class="reference internal" href="#input-validation">Input validation</a></li>
+<li><a class="reference internal" href="#count-vectors">Count vectors</a></li>
+<li><a class="reference internal" href="#specifying-a-diversity-metric">Specifying a diversity metric</a></li>
+<li><a class="reference internal" href="#subpackages">Subpackages</a></li>
+<li><a class="reference internal" href="#functions">Functions</a></li>
+</ul>
+</li>
+</ul>
+</ul>
+</li>
+              
+            
+            
+            
+            
+            
+          </ul>
+
+          
+            
+<form class="navbar-form navbar-right" action="search.html" method="get">
+ <div class="form-group">
+  <input type="text" name="q" class="form-control" placeholder="Search" />
+ </div>
+  <input type="hidden" name="check_keywords" value="yes" />
+  <input type="hidden" name="area" value="default" />
+</form>
+          
+        </div>
+    </div>
+  </div>
+
+<div class="container">
+  <div class="row">
+    <div class="col-md-12 content">
+      
+  <span class="target" id="module-skbio.diversity"></span><div class="section" id="diversity-calculations-skbio-diversity">
+<h1>Diversity calculations (<a class="reference internal" href="#module-skbio.diversity" title="skbio.diversity"><code class="xref py py-mod docutils literal notranslate"><span class="pre">skbio.diversity</span></code></a>)<a class="headerlink" href="#diversity-calculations-skbio-diversity" title="Permalink to this headline">¶</a></h1>
+<p>This package provides functionality for analyzing biological diversity. It
+implements metrics of alpha and beta diversity, and provides two “driver
+functions” that are intended to be the primary interface for computing alpha
+and beta diversity with scikit-bio. Functions are additionally provided that
+support discovery of the available diversity metrics. This document provides a
+high-level discussion of how to work with the <code class="docutils literal notranslate"><span class="pre">skbio.diversity</span></code> module, and
+should be the first document you read before working with the module.</p>
+<div class="section" id="driver-functions">
+<h2>Driver functions<a class="headerlink" href="#driver-functions" title="Permalink to this headline">¶</a></h2>
+<p>The driver functions, <code class="docutils literal notranslate"><span class="pre">skbio.diversity.alpha_diversity</span></code> and
+<code class="docutils literal notranslate"><span class="pre">skbio.diversity.beta_diversity</span></code>, are designed to compute alpha diversity for
+one or more samples, or beta diversity for one or more pairs of samples. The
+diversity driver functions accept a matrix containing vectors of frequencies of
+OTUs within each sample.</p>
+<p>We use the term “OTU” here very loosely, as these can in practice represent
+diverse feature types including bacterial species, genes, and metabolites. The
+term “sample” is also loosely defined for these purposes. These are intended to
+represent a single unit of sampling, and as such what a single sample
+represents can vary widely. For example, in a microbiome survey, these could
+represent all 16S rRNA gene sequences from a single oral swab. In a comparative
+genomics study on the other hand, a sample could represent an individual
+organism’s genome.</p>
+<p>Each frequency in a given vector represents the number of individuals observed
+for a particular OTU. We will refer to the frequencies associated with a single
+sample as a <em>counts vector</em> or <code class="docutils literal notranslate"><span class="pre">counts</span></code> throughout the documentation. Counts
+vectors are <cite>array_like</cite>: anything that can be converted into a 1-D numpy array
+is acceptable input. For example, you can provide a numpy array or a native
+Python list and the results will be identical. As mentioned above, the driver
+functions accept one or more of these vectors (representing one or more
+samples) in a matrix which is also <cite>array_like</cite>. Each row in the matrix
+represents a single sample’s count vector, so that rows represent samples and
+columns represent OTUs.</p>
+<p>Some diversity metrics incorporate relationships between the OTUs in their
+computation through reference to a phylogenetic tree. These metrics
+additionally take a <code class="docutils literal notranslate"><span class="pre">skbio.TreeNode</span></code> object and a list of OTU identifiers
+mapping the values in the counts vector to tips in the tree.</p>
+<p>The driver functions are optimized so that computing a diversity metric more
+than one time (i.e., for more than one sample for alpha diversity metrics, or
+more than one pair of samples for beta diversity metrics) is often much faster
+than repeated calls to the metric. For this reason, the driver functions take
+matrices of counts vectors rather than a single counts vector for alpha
+diversity metrics or two counts vectors for beta diversity metrics. The
+<code class="docutils literal notranslate"><span class="pre">alpha_diversity</span></code> driver function will thus compute alpha diversity for all
+counts vectors in the matrix, and the <code class="docutils literal notranslate"><span class="pre">beta_diversity</span></code> driver function will
+compute beta diversity for all pairs of counts vectors in the matrix.</p>
+</div>
+<div class="section" id="input-validation">
+<h2>Input validation<a class="headerlink" href="#input-validation" title="Permalink to this headline">¶</a></h2>
+<p>The driver functions perform validation of input by default. Validation can be
+slow so it is possible to disable this step by passing <code class="docutils literal notranslate"><span class="pre">validate=False</span></code>. This
+can be dangerous however. If invalid input is encountered when validation is
+disabled it can result in difficult-to-interpret error messages or incorrect
+results. We therefore recommend that users are careful to ensure that their
+input data is valid before disabling validation.</p>
+<p>The conditions that the driver functions validate follow. If disabling
+validation, users should be confident that these conditions are met.</p>
+<ul class="simple">
+<li>the data in the counts vectors can be safely cast to integers</li>
+<li>there are no negative values in the counts vectors</li>
+<li>each counts vector is one dimensional</li>
+<li>the counts matrix is two dimensional</li>
+<li>all counts vectors are of equal length</li>
+</ul>
+<p>Additionally, if a phylogenetic diversity metric is being computed, the
+following conditions are also confirmed:</p>
+<ul class="simple">
+<li>the provided OTU identifiers are all unique</li>
+<li>the length of each counts vector is equal to the number of OTU identifiers</li>
+<li>the provided tree is rooted</li>
+<li>the tree has more than one node</li>
+<li>all nodes in the provided tree except for the root node have branch lengths</li>
+<li>all tip names in the provided tree are unique</li>
+<li>all provided OTU identifiers correspond to tip names in the provided tree</li>
+</ul>
+</div>
+<div class="section" id="count-vectors">
+<h2>Count vectors<a class="headerlink" href="#count-vectors" title="Permalink to this headline">¶</a></h2>
+<p>There are different ways that count vectors are represented in the ecological
+literature and in related software. The diversity measures provided here
+<em>always</em> assume that the input contains abundance data: each count represents
+the number of individuals observed for a particular OTU in the sample. For
+example, if you have two OTUs, where three individuals were observed from the
+first OTU and only a single individual was observed from the second OTU, you
+could represent this data in the following forms (among others).</p>
+<p>As a vector of counts. This is the expected type of input for the diversity
+measures in this module. There are 3 individuals from the OTU at index 0, and 1
+individual from the OTU at index 1:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">counts</span> <span class="o">=</span> <span class="p">[</span><span class="mi">3</span><span class="p">,</span> <span class="mi">1</span><span class="p">]</span>
+</pre></div>
+</div>
+<p>As a vector of indices. The OTU at index 0 is observed 3 times, while the
+OTU at index 1 is observed 1 time:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">indices</span> <span class="o">=</span> <span class="p">[</span><span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">]</span>
+</pre></div>
+</div>
+<p>As a vector of frequencies. We have 1 OTU that is a singleton and 1 OTU that
+is a tripleton. We do not have any 0-tons or doubletons:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">frequencies</span> <span class="o">=</span> <span class="p">[</span><span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">]</span>
+</pre></div>
+</div>
+<p>Always use the first representation (a counts vector) with this module.</p>
+</div>
+<div class="section" id="specifying-a-diversity-metric">
+<h2>Specifying a diversity metric<a class="headerlink" href="#specifying-a-diversity-metric" title="Permalink to this headline">¶</a></h2>
+<p>The driver functions take a parameter, <code class="docutils literal notranslate"><span class="pre">metric</span></code>, that specifies which
+diversity metric should be applied. The value that you provide for <code class="docutils literal notranslate"><span class="pre">metric</span></code>
+can be either a string (e.g., <code class="docutils literal notranslate"><span class="pre">&quot;faith_pd&quot;</span></code>) or a function (e.g.,
+<code class="docutils literal notranslate"><span class="pre">skbio.diversity.alpha.faith_pd</span></code>). The metric should generally be passed as a
+string, as this often uses an optimized version of the metric. For example,
+passing  <code class="docutils literal notranslate"><span class="pre">metric=&quot;faith_pd&quot;</span></code> (a string) to <code class="docutils literal notranslate"><span class="pre">alpha_diversity</span></code> will be tens
+of times faster than passing <code class="docutils literal notranslate"><span class="pre">metric=skbio.diversity.alpha.faith_pd</span></code> (a
+function) when computing Faith’s PD on about 100 samples.  Similarly, passing
+<code class="docutils literal notranslate"><span class="pre">metric=&quot;unweighted_unifrac&quot;</span></code> (a string) will be hundreds of times
+faster than passing <code class="docutils literal notranslate"><span class="pre">metric=skbio.diversity.beta.unweighted_unifrac</span></code> (a
+function) when computing unweighted UniFrac on about 100 samples. The latter
+may be faster if computing only one alpha or beta diversity value, but in
+these cases the run times will likely be so small that the difference will be
+negligible. <strong>We therefore recommend that you always pass the metric as a
+string when possible.</strong></p>
+<p>Passing a metric as a string will not be possible if the metric you’d like to
+run is not one that scikit-bio knows about. This might be the case, for
+example, if you’re applying a custom metric that you’ve developed. To discover
+the metric names that scikit-bio knows about as strings that can be passed as
+<code class="docutils literal notranslate"><span class="pre">metric</span></code> to <code class="docutils literal notranslate"><span class="pre">alpha_diversity</span></code> or <code class="docutils literal notranslate"><span class="pre">beta_diversity</span></code>, you can call
+<code class="docutils literal notranslate"><span class="pre">get_alpha_diversity_metrices</span></code> or <code class="docutils literal notranslate"><span class="pre">get_beta_diversity_metrics</span></code>,
+respectively. These functions return lists of alpha and beta diversity metrics
+that are implemented in scikit-bio. There may be additional metrics that can be
+passed as strings which won’t be listed here, such as those implemented in
+<code class="docutils literal notranslate"><span class="pre">scipy.spatial.distance.pdist</span></code>.</p>
+</div>
+<div class="section" id="subpackages">
+<h2>Subpackages<a class="headerlink" href="#subpackages" title="Permalink to this headline">¶</a></h2>
+<table border="1" class="longtable docutils">
+<colgroup>
+<col width="10%" />
+<col width="90%" />
+</colgroup>
+<tbody valign="top">
+<tr class="row-odd"><td><a class="reference internal" href="generated/skbio.diversity.alpha.html#module-skbio.diversity.alpha" title="skbio.diversity.alpha"><code class="xref py py-obj docutils literal notranslate"><span class="pre">alpha</span></code></a></td>
+<td>Alpha diversity measures (<a class="reference internal" href="generated/skbio.diversity.alpha.html#module-skbio.diversity.alpha" title="skbio.diversity.alpha"><code class="xref py py-mod docutils literal notranslate"><span class="pre">skbio.diversity.alpha</span></code></a>)</td>
+</tr>
+<tr class="row-even"><td><a class="reference internal" href="generated/skbio.diversity.beta.html#module-skbio.diversity.beta" title="skbio.diversity.beta"><code class="xref py py-obj docutils literal notranslate"><span class="pre">beta</span></code></a></td>
+<td>Beta diversity measures (<a class="reference internal" href="generated/skbio.diversity.beta.html#module-skbio.diversity.beta" title="skbio.diversity.beta"><code class="xref py py-mod docutils literal notranslate"><span class="pre">skbio.diversity.beta</span></code></a>)</td>
+</tr>
+</tbody>
+</table>
+</div>
+<div class="section" id="functions">
+<h2>Functions<a class="headerlink" href="#functions" title="Permalink to this headline">¶</a></h2>
+<table border="1" class="longtable docutils">
+<colgroup>
+<col width="10%" />
+<col width="90%" />
+</colgroup>
+<tbody valign="top">
+<tr class="row-odd"><td><a class="reference internal" href="generated/skbio.diversity.alpha_diversity.html#skbio.diversity.alpha_diversity" title="skbio.diversity.alpha_diversity"><code class="xref py py-obj docutils literal notranslate"><span class="pre">alpha_diversity</span></code></a>(metric,&nbsp;counts[,&nbsp;ids,&nbsp;validate])</td>
+<td>Compute alpha diversity for one or more samples</td>
+</tr>
+<tr class="row-even"><td><a class="reference internal" href="generated/skbio.diversity.beta_diversity.html#skbio.diversity.beta_diversity" title="skbio.diversity.beta_diversity"><code class="xref py py-obj docutils literal notranslate"><span class="pre">beta_diversity</span></code></a>(metric,&nbsp;counts[,&nbsp;ids,&nbsp;…])</td>
+<td>Compute distances between all pairs of samples</td>
+</tr>
+<tr class="row-odd"><td><a class="reference internal" href="generated/skbio.diversity.partial_beta_diversity.html#skbio.diversity.partial_beta_diversity" title="skbio.diversity.partial_beta_diversity"><code class="xref py py-obj docutils literal notranslate"><span class="pre">partial_beta_diversity</span></code></a>(metric,&nbsp;counts,&nbsp;ids,&nbsp;…)</td>
+<td>Compute distances only between specified ID pairs</td>
+</tr>
+<tr class="row-even"><td><a class="reference internal" href="generated/skbio.diversity.block_beta_diversity.html#skbio.diversity.block_beta_diversity" title="skbio.diversity.block_beta_diversity"><code class="xref py py-obj docutils literal notranslate"><span class="pre">block_beta_diversity</span></code></a>(metric,&nbsp;counts,&nbsp;ids[,&nbsp;…])</td>
+<td>Perform a block-decomposition beta diversity calculation</td>
+</tr>
+<tr class="row-odd"><td><a class="reference internal" href="generated/skbio.diversity.get_alpha_diversity_metrics.html#skbio.diversity.get_alpha_diversity_metrics" title="skbio.diversity.get_alpha_diversity_metrics"><code class="xref py py-obj docutils literal notranslate"><span class="pre">get_alpha_diversity_metrics</span></code></a>()</td>
+<td>List scikit-bio’s alpha diversity metrics</td>
+</tr>
+<tr class="row-even"><td><a class="reference internal" href="generated/skbio.diversity.get_beta_diversity_metrics.html#skbio.diversity.get_beta_diversity_metrics" title="skbio.diversity.get_beta_diversity_metrics"><code class="xref py py-obj docutils literal notranslate"><span class="pre">get_beta_diversity_metrics</span></code></a>()</td>
+<td>List scikit-bio’s beta diversity metrics</td>
+</tr>
+</tbody>
+</table>
+<p class="rubric">Examples</p>
+<p>Create a matrix containing 6 samples (rows) and 7 OTUs (columns):</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">data</span> <span class="o">=</span> <span class="p">[[</span><span class="mi">23</span><span class="p">,</span> <span class="mi">64</span><span class="p">,</span> <span class="mi">14</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">3</span><span class="p">,</span> <span class="mi">1</span><span class="p">],</span>
+<span class="gp">... </span>        <span class="p">[</span><span class="mi">0</span><span class="p">,</span> <span class="mi">3</span><span class="p">,</span> <span class="mi">35</span><span class="p">,</span> <span class="mi">42</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">12</span><span class="p">,</span> <span class="mi">1</span><span class="p">],</span>
+<span class="gp">... </span>        <span class="p">[</span><span class="mi">0</span><span class="p">,</span> <span class="mi">5</span><span class="p">,</span> <span class="mi">5</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">40</span><span class="p">,</span> <span class="mi">40</span><span class="p">,</span> <span class="mi">0</span><span class="p">],</span>
+<span class="gp">... </span>        <span class="p">[</span><span class="mi">44</span><span class="p">,</span> <span class="mi">35</span><span class="p">,</span> <span class="mi">9</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">],</span>
+<span class="gp">... </span>        <span class="p">[</span><span class="mi">0</span><span class="p">,</span> <span class="mi">2</span><span class="p">,</span> <span class="mi">8</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">35</span><span class="p">,</span> <span class="mi">45</span><span class="p">,</span> <span class="mi">1</span><span class="p">],</span>
+<span class="gp">... </span>        <span class="p">[</span><span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">25</span><span class="p">,</span> <span class="mi">35</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">19</span><span class="p">,</span> <span class="mi">0</span><span class="p">]]</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">ids</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="s1">&#39;ABCDEF&#39;</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>First, we’ll compute observed OTUs, an alpha diversity metric, for each
+sample using the <code class="docutils literal notranslate"><span class="pre">alpha_diversity</span></code> driver function:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">skbio.diversity</span> <span class="k">import</span> <span class="n">alpha_diversity</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">adiv_obs_otus</span> <span class="o">=</span> <span class="n">alpha_diversity</span><span class="p">(</span><span class="s1">&#39;observed_otus&#39;</span><span class="p">,</span> <span class="n">data</span><span class="p">,</span> <span class="n">ids</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">adiv_obs_otus</span>
+<span class="go">A    5</span>
+<span class="go">B    5</span>
+<span class="go">C    4</span>
+<span class="go">D    4</span>
+<span class="go">E    5</span>
+<span class="go">F    3</span>
+<span class="go">dtype: int64</span>
+</pre></div>
+</div>
+<p>Next we’ll compute Faith’s PD on the same samples. Since this is a
+phylogenetic diversity metric, we’ll first create a tree and an ordered
+list of OTU identifiers.</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">skbio</span> <span class="k">import</span> <span class="n">TreeNode</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">io</span> <span class="k">import</span> <span class="n">StringIO</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">tree</span> <span class="o">=</span> <span class="n">TreeNode</span><span class="o">.</span><span class="n">read</span><span class="p">(</span><span class="n">StringIO</span><span class="p">(</span>
+<span class="gp">... </span>                     <span class="s1">&#39;(((((OTU1:0.5,OTU2:0.5):0.5,OTU3:1.0):1.0):0.0,&#39;</span>
+<span class="gp">... </span>                     <span class="s1">&#39;(OTU4:0.75,(OTU5:0.5,(OTU6:0.5,OTU7:0.5):0.5):&#39;</span>
+<span class="gp">... </span>                     <span class="s1">&#39;0.5):1.25):0.0)root;&#39;</span><span class="p">))</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">otu_ids</span> <span class="o">=</span> <span class="p">[</span><span class="s1">&#39;OTU1&#39;</span><span class="p">,</span> <span class="s1">&#39;OTU2&#39;</span><span class="p">,</span> <span class="s1">&#39;OTU3&#39;</span><span class="p">,</span> <span class="s1">&#39;OTU4&#39;</span><span class="p">,</span> <span class="s1">&#39;OTU5&#39;</span><span class="p">,</span> <span class="s1">&#39;OTU6&#39;</span><span class="p">,</span> <span class="s1">&#39;OTU7&#39;</span><span class="p">]</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">adiv_faith_pd</span> <span class="o">=</span> <span class="n">alpha_diversity</span><span class="p">(</span><span class="s1">&#39;faith_pd&#39;</span><span class="p">,</span> <span class="n">data</span><span class="p">,</span> <span class="n">ids</span><span class="o">=</span><span class="n">ids</span><span class="p">,</span>
+<span class="gp">... </span>                                <span class="n">otu_ids</span><span class="o">=</span><span class="n">otu_ids</span><span class="p">,</span> <span class="n">tree</span><span class="o">=</span><span class="n">tree</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">adiv_faith_pd</span>
+<span class="go">A    6.75</span>
+<span class="go">B    7.00</span>
+<span class="go">C    6.25</span>
+<span class="go">D    5.75</span>
+<span class="go">E    6.75</span>
+<span class="go">F    5.50</span>
+<span class="go">dtype: float64</span>
+</pre></div>
+</div>
+<p>Now we’ll compute Bray-Curtis distances, a beta diversity metric, between
+all pairs of samples. Notice that the <code class="docutils literal notranslate"><span class="pre">data</span></code> and <code class="docutils literal notranslate"><span class="pre">ids</span></code> parameters
+provided to <code class="docutils literal notranslate"><span class="pre">beta_diversity</span></code> are the same as those provided to
+<code class="docutils literal notranslate"><span class="pre">alpha_diversity</span></code>.</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">skbio.diversity</span> <span class="k">import</span> <span class="n">beta_diversity</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">bc_dm</span> <span class="o">=</span> <span class="n">beta_diversity</span><span class="p">(</span><span class="s2">&quot;braycurtis&quot;</span><span class="p">,</span> <span class="n">data</span><span class="p">,</span> <span class="n">ids</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="nb">print</span><span class="p">(</span><span class="n">bc_dm</span><span class="p">)</span>
+<span class="go">6x6 distance matrix</span>
+<span class="go">IDs:</span>
+<span class="go">&#39;A&#39;, &#39;B&#39;, &#39;C&#39;, &#39;D&#39;, &#39;E&#39;, &#39;F&#39;</span>
+<span class="go">Data:</span>
+<span class="go">[[ 0.          0.78787879  0.86666667  0.30927835  0.85714286  0.81521739]</span>
+<span class="go"> [ 0.78787879  0.          0.78142077  0.86813187  0.75        0.1627907 ]</span>
+<span class="go"> [ 0.86666667  0.78142077  0.          0.87709497  0.09392265  0.71597633]</span>
+<span class="go"> [ 0.30927835  0.86813187  0.87709497  0.          0.87777778  0.89285714]</span>
+<span class="go"> [ 0.85714286  0.75        0.09392265  0.87777778  0.          0.68235294]</span>
+<span class="go"> [ 0.81521739  0.1627907   0.71597633  0.89285714  0.68235294  0.        ]]</span>
+</pre></div>
+</div>
+<p>Next, we’ll compute weighted UniFrac distances between all pairs of samples.
+Because weighted UniFrac is a phylogenetic beta diversity metric, we’ll need
+to pass the <code class="docutils literal notranslate"><span class="pre">skbio.TreeNode</span></code> and list of OTU ids that we created above.
+Again, these are the same values that were provided to <code class="docutils literal notranslate"><span class="pre">alpha_diversity</span></code>.</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">wu_dm</span> <span class="o">=</span> <span class="n">beta_diversity</span><span class="p">(</span><span class="s2">&quot;weighted_unifrac&quot;</span><span class="p">,</span> <span class="n">data</span><span class="p">,</span> <span class="n">ids</span><span class="p">,</span> <span class="n">tree</span><span class="o">=</span><span class="n">tree</span><span class="p">,</span>
+<span class="gp">... </span>                       <span class="n">otu_ids</span><span class="o">=</span><span class="n">otu_ids</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="nb">print</span><span class="p">(</span><span class="n">wu_dm</span><span class="p">)</span>
+<span class="go">6x6 distance matrix</span>
+<span class="go">IDs:</span>
+<span class="go">&#39;A&#39;, &#39;B&#39;, &#39;C&#39;, &#39;D&#39;, &#39;E&#39;, &#39;F&#39;</span>
+<span class="go">Data:</span>
+<span class="go">[[ 0.          2.77549923  3.82857143  0.42512039  3.8547619   3.10937312]</span>
+<span class="go"> [ 2.77549923  0.          2.26433692  2.98435423  2.24270353  0.46774194]</span>
+<span class="go"> [ 3.82857143  2.26433692  0.          3.95224719  0.16025641  1.86111111]</span>
+<span class="go"> [ 0.42512039  2.98435423  3.95224719  0.          3.98796148  3.30870431]</span>
+<span class="go"> [ 3.8547619   2.24270353  0.16025641  3.98796148  0.          1.82967033]</span>
+<span class="go"> [ 3.10937312  0.46774194  1.86111111  3.30870431  1.82967033  0.        ]]</span>
+</pre></div>
+</div>
+<p>Next we’ll do some work with these beta diversity distance matrices. First,
+we’ll determine if the UniFrac and Bray-Curtis distance matrices are
+significantly correlated by computing the Mantel correlation between them.
+Then we’ll determine if the p-value is significant based on an alpha of
+0.05.</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">skbio.stats.distance</span> <span class="k">import</span> <span class="n">mantel</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">r</span><span class="p">,</span> <span class="n">p_value</span><span class="p">,</span> <span class="n">n</span> <span class="o">=</span> <span class="n">mantel</span><span class="p">(</span><span class="n">wu_dm</span><span class="p">,</span> <span class="n">bc_dm</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="nb">print</span><span class="p">(</span><span class="n">r</span><span class="p">)</span>
+<span class="go">0.922404392093</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">alpha</span> <span class="o">=</span> <span class="mf">0.05</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="nb">print</span><span class="p">(</span><span class="n">p_value</span> <span class="o">&lt;</span> <span class="n">alpha</span><span class="p">)</span>
+<span class="go">True</span>
+</pre></div>
+</div>
+<p>Next, we’ll perform principal coordinates analysis (PCoA) on our weighted
+UniFrac distance matrix.</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">skbio.stats.ordination</span> <span class="k">import</span> <span class="n">pcoa</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">wu_pc</span> <span class="o">=</span> <span class="n">pcoa</span><span class="p">(</span><span class="n">wu_dm</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>PCoA plots are only really interesting in the context of sample metadata, so
+let’s define some before we visualize these results.</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="kn">import</span> <span class="nn">pandas</span> <span class="k">as</span> <span class="nn">pd</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">sample_md</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">([</span>
+<span class="gp">... </span>   <span class="p">[</span><span class="s1">&#39;gut&#39;</span><span class="p">,</span> <span class="s1">&#39;s1&#39;</span><span class="p">],</span>
+<span class="gp">... </span>   <span class="p">[</span><span class="s1">&#39;skin&#39;</span><span class="p">,</span> <span class="s1">&#39;s1&#39;</span><span class="p">],</span>
+<span class="gp">... </span>   <span class="p">[</span><span class="s1">&#39;tongue&#39;</span><span class="p">,</span> <span class="s1">&#39;s1&#39;</span><span class="p">],</span>
+<span class="gp">... </span>   <span class="p">[</span><span class="s1">&#39;gut&#39;</span><span class="p">,</span> <span class="s1">&#39;s2&#39;</span><span class="p">],</span>
+<span class="gp">... </span>   <span class="p">[</span><span class="s1">&#39;tongue&#39;</span><span class="p">,</span> <span class="s1">&#39;s2&#39;</span><span class="p">],</span>
+<span class="gp">... </span>   <span class="p">[</span><span class="s1">&#39;skin&#39;</span><span class="p">,</span> <span class="s1">&#39;s2&#39;</span><span class="p">]],</span>
+<span class="gp">... </span>   <span class="n">index</span><span class="o">=</span><span class="p">[</span><span class="s1">&#39;A&#39;</span><span class="p">,</span> <span class="s1">&#39;B&#39;</span><span class="p">,</span> <span class="s1">&#39;C&#39;</span><span class="p">,</span> <span class="s1">&#39;D&#39;</span><span class="p">,</span> <span class="s1">&#39;E&#39;</span><span class="p">,</span> <span class="s1">&#39;F&#39;</span><span class="p">],</span>
+<span class="gp">... </span>   <span class="n">columns</span><span class="o">=</span><span class="p">[</span><span class="s1">&#39;body_site&#39;</span><span class="p">,</span> <span class="s1">&#39;subject&#39;</span><span class="p">])</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">sample_md</span>
+<span class="go">  body_site subject</span>
+<span class="go">A       gut      s1</span>
+<span class="go">B      skin      s1</span>
+<span class="go">C    tongue      s1</span>
+<span class="go">D       gut      s2</span>
+<span class="go">E    tongue      s2</span>
+<span class="go">F      skin      s2</span>
+</pre></div>
+</div>
+<p>Now let’s plot our PCoA results, coloring each sample by the subject it
+was taken from:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">fig</span> <span class="o">=</span> <span class="n">wu_pc</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span><span class="n">sample_md</span><span class="p">,</span> <span class="s1">&#39;subject&#39;</span><span class="p">,</span>
+<span class="gp">... </span>                 <span class="n">axis_labels</span><span class="o">=</span><span class="p">(</span><span class="s1">&#39;PC 1&#39;</span><span class="p">,</span> <span class="s1">&#39;PC 2&#39;</span><span class="p">,</span> <span class="s1">&#39;PC 3&#39;</span><span class="p">),</span>
+<span class="gp">... </span>                 <span class="n">title</span><span class="o">=</span><span class="s1">&#39;Samples colored by subject&#39;</span><span class="p">,</span> <span class="n">cmap</span><span class="o">=</span><span class="s1">&#39;jet&#39;</span><span class="p">,</span> <span class="n">s</span><span class="o">=</span><span class="mi">50</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>(<a class="reference external" href=".//diversity-1.py">Source code</a>, <a class="reference external" href=".//diversity-1.png">png</a>)</p>
+<div class="figure">
+<img alt="_images/diversity-1.png" src="_images/diversity-1.png" />
+</div>
+<p>We don’t see any clustering/grouping of samples. If we were to instead color
+the samples by the body site they were taken from, we see that the samples
+from the same body site (those that are colored the same) appear to be
+closer to one another in the 3-D space then they are to samples from
+other body sites.</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="kn">import</span> <span class="nn">matplotlib.pyplot</span> <span class="k">as</span> <span class="nn">plt</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">plt</span><span class="o">.</span><span class="n">close</span><span class="p">(</span><span class="s1">&#39;all&#39;</span><span class="p">)</span> <span class="c1"># not necessary for normal use</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">fig</span> <span class="o">=</span> <span class="n">wu_pc</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span><span class="n">sample_md</span><span class="p">,</span> <span class="s1">&#39;body_site&#39;</span><span class="p">,</span>
+<span class="gp">... </span>                 <span class="n">axis_labels</span><span class="o">=</span><span class="p">(</span><span class="s1">&#39;PC 1&#39;</span><span class="p">,</span> <span class="s1">&#39;PC 2&#39;</span><span class="p">,</span> <span class="s1">&#39;PC 3&#39;</span><span class="p">),</span>
+<span class="gp">... </span>                 <span class="n">title</span><span class="o">=</span><span class="s1">&#39;Samples colored by body site&#39;</span><span class="p">,</span> <span class="n">cmap</span><span class="o">=</span><span class="s1">&#39;jet&#39;</span><span class="p">,</span> <span class="n">s</span><span class="o">=</span><span class="mi">50</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>(<a class="reference external" href=".//diversity-2.py">Source code</a>, <a class="reference external" href=".//diversity-2.png">png</a>)</p>
+<div class="figure">
+<img alt="_images/diversity-2.png" src="_images/diversity-2.png" />
+</div>
+<p>Ordination techniques, such as PCoA, are useful for exploratory analysis.
+The next step is to quantify the strength of the grouping/clustering that we
+see in ordination plots. There are many statistical methods available to
+accomplish this; many operate on distance matrices. Let’s use ANOSIM to
+quantify the strength of the clustering we see in the ordination plots
+above, using our weighted UniFrac distance matrix and sample metadata.</p>
+<p>First test the grouping of samples by subject:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">skbio.stats.distance</span> <span class="k">import</span> <span class="n">anosim</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">results</span> <span class="o">=</span> <span class="n">anosim</span><span class="p">(</span><span class="n">wu_dm</span><span class="p">,</span> <span class="n">sample_md</span><span class="p">,</span> <span class="n">column</span><span class="o">=</span><span class="s1">&#39;subject&#39;</span><span class="p">,</span> <span class="n">permutations</span><span class="o">=</span><span class="mi">999</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">results</span><span class="p">[</span><span class="s1">&#39;test statistic&#39;</span><span class="p">]</span>
+<span class="go">-0.33333333333333331</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">results</span><span class="p">[</span><span class="s1">&#39;p-value&#39;</span><span class="p">]</span> <span class="o">&lt;</span> <span class="mf">0.1</span>
+<span class="go">False</span>
+</pre></div>
+</div>
+<p>The negative value of ANOSIM’s R statistic indicates anti-clustering and the
+p-value is insignificant at an alpha of 0.1.</p>
+<p>Now let’s test the grouping of samples by body site:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">results</span> <span class="o">=</span> <span class="n">anosim</span><span class="p">(</span><span class="n">wu_dm</span><span class="p">,</span> <span class="n">sample_md</span><span class="p">,</span> <span class="n">column</span><span class="o">=</span><span class="s1">&#39;body_site&#39;</span><span class="p">,</span> <span class="n">permutations</span><span class="o">=</span><span class="mi">999</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">results</span><span class="p">[</span><span class="s1">&#39;test statistic&#39;</span><span class="p">]</span>
+<span class="go">1.0</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">results</span><span class="p">[</span><span class="s1">&#39;p-value&#39;</span><span class="p">]</span> <span class="o">&lt;</span> <span class="mf">0.1</span>
+<span class="go">True</span>
+</pre></div>
+</div>
+<p>The R statistic indicates strong separation of samples based on body site.
+The p-value is significant at an alpha of 0.1.</p>
+<p>We can also explore the alpha diversity in the context of sample metadata.
+To do this, let’s add the Observed OTU and Faith PD data to our sample
+metadata. This is straight-forward beause <code class="docutils literal notranslate"><span class="pre">alpha_diversity</span></code> returns a
+Pandas <code class="docutils literal notranslate"><span class="pre">Series</span></code> object, and we’re representing our sample metadata in a
+Pandas <code class="docutils literal notranslate"><span class="pre">DataFrame</span></code> object.</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">sample_md</span><span class="p">[</span><span class="s1">&#39;Observed OTUs&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">adiv_obs_otus</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">sample_md</span><span class="p">[</span><span class="s1">&#39;Faith PD&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">adiv_faith_pd</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">sample_md</span>
+<span class="go">  body_site subject  Observed OTUs  Faith PD</span>
+<span class="go">A       gut      s1              5      6.75</span>
+<span class="go">B      skin      s1              5      7.00</span>
+<span class="go">C    tongue      s1              4      6.25</span>
+<span class="go">D       gut      s2              4      5.75</span>
+<span class="go">E    tongue      s2              5      6.75</span>
+<span class="go">F      skin      s2              3      5.50</span>
+</pre></div>
+</div>
+<p>We can investigate these alpha diversity data in the context of our metadata
+categories. For example, we can generate boxplots showing Faith PD by body
+site.</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="kn">import</span> <span class="nn">matplotlib.pyplot</span> <span class="k">as</span> <span class="nn">plt</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">plt</span><span class="o">.</span><span class="n">close</span><span class="p">(</span><span class="s1">&#39;all&#39;</span><span class="p">)</span> <span class="c1"># not necessary for normal use</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">fig</span> <span class="o">=</span> <span class="n">sample_md</span><span class="o">.</span><span class="n">boxplot</span><span class="p">(</span><span class="n">column</span><span class="o">=</span><span class="s1">&#39;Faith PD&#39;</span><span class="p">,</span> <span class="n">by</span><span class="o">=</span><span class="s1">&#39;body_site&#39;</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>(<a class="reference external" href=".//diversity-3.py">Source code</a>, <a class="reference external" href=".//diversity-3.png">png</a>)</p>
+<div class="figure">
+<img alt="_images/diversity-3.png" src="_images/diversity-3.png" />
+</div>
+<p>We can also compute Spearman correlations between all pairs of columns in
+this <code class="docutils literal notranslate"><span class="pre">DataFrame</span></code>. Since our alpha diversity metrics are the only two
+numeric columns (and thus the only columns for which Spearman correlation
+is relevant), this will give us a symmetric 2x2 correlation matrix.</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">sample_md</span><span class="o">.</span><span class="n">corr</span><span class="p">(</span><span class="n">method</span><span class="o">=</span><span class="s2">&quot;spearman&quot;</span><span class="p">)</span>
+<span class="go">               Observed OTUs  Faith PD</span>
+<span class="go">Observed OTUs       1.000000  0.939336</span>
+<span class="go">Faith PD            0.939336  1.000000</span>
+</pre></div>
+</div>
+</div>
+</div>
+
+
+    </div>
+      
+  </div>
+</div>
+  
+<footer class="footer">
+  <div class="container">
+    <p class="pull-right">
+      <a href="#">Back to top</a>
+      
+    </p>
+    <p>
+        &copy; Copyright 2014--, scikit-bio development team.<br/>
+      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 1.8.2.<br/>
+    </p>
+  </div>
+</footer>
+  <script>
+    (function(i,s,o,g,r,a,m){i['GoogleAnalyticsObject']=r;i[r]=i[r]||function(){
+    (i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),
+    m=s.getElementsByTagName(o)[0];a.async=1;a.src=g;m.parentNode.insertBefore(a,m)
+    })(window,document,'script','//www.google-analytics.com/analytics.js','ga');
+
+    ga('create', 'UA-6636235-9', 'scikit-bio.org');
+    ga('send', 'pageview');
+  </script>
+
+  </body>
+</html>

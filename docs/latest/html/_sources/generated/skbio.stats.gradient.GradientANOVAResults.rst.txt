@@ -1,0 +1,56 @@
+
+skbio.stats.gradient.GradientANOVAResults
+=========================================
+
+
+
+
+   
+
+   
+
+   
+
+   
+      
+   
+
+   
+
+   
+
+   
+
+   
+
+   
+
+   
+
+
+.. currentmodule:: skbio.stats.gradient
+
+.. autoclass:: GradientANOVAResults
+
+   
+
+   
+   .. rubric:: Built-ins
+
+   .. autosummary::
+      :toctree:
+   
+      ~GradientANOVAResults.__init_subclass__
+   
+
+   
+   .. rubric:: Methods
+
+   .. autosummary::
+      :toctree:
+   
+      
+      
+      ~GradientANOVAResults.to_files
+      
+   

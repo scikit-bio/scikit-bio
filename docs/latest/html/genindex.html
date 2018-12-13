@@ -1,0 +1,1812 @@
+
+<!DOCTYPE html>
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="X-UA-Compatible" content="IE=Edge" />
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    <title>Index &#8212; scikit-bio 0.5.5 documentation</title>
+    <link rel="stylesheet" href="_static/bootstrap-sphinx.css" type="text/css" />
+    <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+    <link rel="stylesheet" type="text/css" href="_static/style.css" />
+    <script type="text/javascript" id="documentation_options" data-url_root="./" src="_static/documentation_options.js"></script>
+    <script type="text/javascript" src="_static/jquery.js"></script>
+    <script type="text/javascript" src="_static/underscore.js"></script>
+    <script type="text/javascript" src="_static/doctools.js"></script>
+    <script type="text/javascript" src="_static/copybutton.js"></script>
+    <script async="async" type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.1/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
+    <script type="text/javascript" src="_static/js/jquery-1.11.0.min.js"></script>
+    <script type="text/javascript" src="_static/js/jquery-fix.js"></script>
+    <script type="text/javascript" src="_static/bootstrap-3.3.7/js/bootstrap.min.js"></script>
+    <script type="text/javascript" src="_static/bootstrap-sphinx.js"></script>
+    <link rel="index" title="Index" href="#" />
+    <link rel="search" title="Search" href="search.html" />
+<meta charset='utf-8'>
+<meta http-equiv='X-UA-Compatible' content='IE=edge,chrome=1'>
+<meta name='viewport' content='width=device-width, initial-scale=1.0, maximum-scale=1'>
+<meta name="apple-mobile-web-app-capable" content="yes">
+
+  </head><body>
+  
+  <a href="https://github.com/biocore/scikit-bio"
+     class="visible-desktop hidden-xs"><img
+    id="gh-banner"
+    style="position: absolute; top: 50px; right: 0; border: 0;"
+    src="https://s3.amazonaws.com/github/ribbons/forkme_right_darkblue_121621.png"
+    alt="Fork me on GitHub"></a>
+  <script>
+    // Adjust banner height.
+    $(function () {
+      var navHeight = $(".navbar .container").css("height");
+      $("#gh-banner").css("top", navHeight);
+    });
+  </script>
+
+
+  <div id="navbar" class="navbar navbar-default navbar-fixed-top">
+    <div class="container">
+      <div class="navbar-header">
+        <!-- .btn-navbar is used as the toggle for collapsed navbar content -->
+        <button type="button" class="navbar-toggle" data-toggle="collapse" data-target=".nav-collapse">
+          <span class="icon-bar"></span>
+          <span class="icon-bar"></span>
+          <span class="icon-bar"></span>
+        </button>
+        <a class="navbar-brand" href="index.html">
+          scikit-bio docs</a>
+        <span class="navbar-text navbar-version pull-left"><b>0.5.5</b></span>
+      </div>
+
+        <div class="collapse navbar-collapse nav-collapse">
+          <ul class="nav navbar-nav">
+            
+            
+              <li class="dropdown globaltoc-container">
+  <a role="button"
+     id="dLabelGlobalToc"
+     data-toggle="dropdown"
+     data-target="#"
+     href="index.html">Site <b class="caret"></b></a>
+  <ul class="dropdown-menu globaltoc"
+      role="menu"
+      aria-labelledby="dLabelGlobalToc"><ul>
+<li class="toctree-l1"><a class="reference internal" href="io.html">File I/O (<code class="docutils literal notranslate"><span class="pre">skbio.io</span></code>)</a></li>
+<li class="toctree-l1"><a class="reference internal" href="sequence.html">Sequences (<code class="docutils literal notranslate"><span class="pre">skbio.sequence</span></code>)</a></li>
+<li class="toctree-l1"><a class="reference internal" href="alignment.html">Alignments (<code class="docutils literal notranslate"><span class="pre">skbio.alignment</span></code>)</a></li>
+<li class="toctree-l1"><a class="reference internal" href="tree.html">Tree representations (<code class="docutils literal notranslate"><span class="pre">skbio.tree</span></code>)</a></li>
+<li class="toctree-l1"><a class="reference internal" href="workflow.html">Constructing workflows (<code class="docutils literal notranslate"><span class="pre">skbio.workflow</span></code>)</a></li>
+<li class="toctree-l1"><a class="reference internal" href="diversity.html">Diversity calculations (<code class="docutils literal notranslate"><span class="pre">skbio.diversity</span></code>)</a></li>
+<li class="toctree-l1"><a class="reference internal" href="stats.html">Statistics (<code class="docutils literal notranslate"><span class="pre">skbio.stats</span></code>)</a></li>
+<li class="toctree-l1"><a class="reference internal" href="metadata.html">Metadata (<code class="docutils literal notranslate"><span class="pre">skbio.metadata</span></code>)</a></li>
+<li class="toctree-l1"><a class="reference internal" href="util.html">Utility functionality (<code class="docutils literal notranslate"><span class="pre">skbio.util</span></code>)</a></li>
+</ul>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="user/api_stability.html">API Stability</a></li>
+</ul>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="development/coding_guidelines.html">Coding guidelines</a></li>
+<li class="toctree-l1"><a class="reference internal" href="development/new_module.html">Adding a new module to skbio</a></li>
+</ul>
+</ul>
+</li>
+              
+                <li class="dropdown">
+  <a role="button"
+     id="dLabelLocalToc"
+     data-toggle="dropdown"
+     data-target="#"
+     href="#">Page <b class="caret"></b></a>
+  <ul class="dropdown-menu localtoc"
+      role="menu"
+      aria-labelledby="dLabelLocalToc"></ul>
+</li>
+              
+            
+            
+            
+            
+            
+          </ul>
+
+          
+            
+<form class="navbar-form navbar-right" action="search.html" method="get">
+ <div class="form-group">
+  <input type="text" name="q" class="form-control" placeholder="Search" />
+ </div>
+  <input type="hidden" name="check_keywords" value="yes" />
+  <input type="hidden" name="area" value="default" />
+</form>
+          
+        </div>
+    </div>
+  </div>
+
+<div class="container">
+  <div class="row">
+    <div class="col-md-12 content">
+      
+
+<h1 id="index">Index</h1>
+
+<div class="genindex-jumpbox">
+ <a href="#_"><strong>_</strong></a>
+ | <a href="#A"><strong>A</strong></a>
+ | <a href="#B"><strong>B</strong></a>
+ | <a href="#C"><strong>C</strong></a>
+ | <a href="#D"><strong>D</strong></a>
+ | <a href="#E"><strong>E</strong></a>
+ | <a href="#F"><strong>F</strong></a>
+ | <a href="#G"><strong>G</strong></a>
+ | <a href="#H"><strong>H</strong></a>
+ | <a href="#I"><strong>I</strong></a>
+ | <a href="#J"><strong>J</strong></a>
+ | <a href="#K"><strong>K</strong></a>
+ | <a href="#L"><strong>L</strong></a>
+ | <a href="#M"><strong>M</strong></a>
+ | <a href="#N"><strong>N</strong></a>
+ | <a href="#O"><strong>O</strong></a>
+ | <a href="#P"><strong>P</strong></a>
+ | <a href="#Q"><strong>Q</strong></a>
+ | <a href="#R"><strong>R</strong></a>
+ | <a href="#S"><strong>S</strong></a>
+ | <a href="#T"><strong>T</strong></a>
+ | <a href="#U"><strong>U</strong></a>
+ | <a href="#W"><strong>W</strong></a>
+ 
+</div>
+<h2 id="_">_</h2>
+<table style="width: 100%" class="indextable genindextable"><tr>
+  <td style="width: 33%; vertical-align: top;"><ul>
+      <li><a href="generated/skbio.alignment.TabularMSA.__bool__.html#skbio.alignment.TabularMSA.__bool__">__bool__() (skbio.alignment.TabularMSA method)</a>
+
+      <ul>
+        <li><a href="generated/skbio.sequence.DNA.__bool__.html#skbio.sequence.DNA.__bool__">(skbio.sequence.DNA method)</a>
+</li>
+        <li><a href="generated/skbio.sequence.GrammaredSequence.__bool__.html#skbio.sequence.GrammaredSequence.__bool__">(skbio.sequence.GrammaredSequence method)</a>
+</li>
+        <li><a href="generated/skbio.sequence.Protein.__bool__.html#skbio.sequence.Protein.__bool__">(skbio.sequence.Protein method)</a>
+</li>
+        <li><a href="generated/skbio.sequence.RNA.__bool__.html#skbio.sequence.RNA.__bool__">(skbio.sequence.RNA method)</a>
+</li>
+        <li><a href="generated/skbio.sequence.Sequence.__bool__.html#skbio.sequence.Sequence.__bool__">(skbio.sequence.Sequence method)</a>
+</li>
+      </ul></li>
+      <li><a href="generated/skbio.workflow.method.__call__.html#skbio.workflow.method.__call__">__call__() (skbio.workflow.method method)</a>
+
+      <ul>
+        <li><a href="generated/skbio.workflow.Workflow.__call__.html#skbio.workflow.Workflow.__call__">(skbio.workflow.Workflow method)</a>
+</li>
+        <li><a href="generated/skbio.workflow.requires.__call__.html#skbio.workflow.requires.__call__">(skbio.workflow.requires method)</a>
+</li>
+      </ul></li>
+      <li><a href="generated/skbio.alignment.TabularMSA.__contains__.html#skbio.alignment.TabularMSA.__contains__">__contains__() (skbio.alignment.TabularMSA method)</a>
+
+      <ul>
+        <li><a href="generated/skbio.sequence.DNA.__contains__.html#skbio.sequence.DNA.__contains__">(skbio.sequence.DNA method)</a>
+</li>
+        <li><a href="generated/skbio.sequence.GrammaredSequence.__contains__.html#skbio.sequence.GrammaredSequence.__contains__">(skbio.sequence.GrammaredSequence method)</a>
+</li>
+        <li><a href="generated/skbio.sequence.Protein.__contains__.html#skbio.sequence.Protein.__contains__">(skbio.sequence.Protein method)</a>
+</li>
+        <li><a href="generated/skbio.sequence.RNA.__contains__.html#skbio.sequence.RNA.__contains__">(skbio.sequence.RNA method)</a>
+</li>
+        <li><a href="generated/skbio.sequence.Sequence.__contains__.html#skbio.sequence.Sequence.__contains__">(skbio.sequence.Sequence method)</a>
+</li>
+        <li><a href="generated/skbio.stats.distance.DissimilarityMatrix.__contains__.html#skbio.stats.distance.DissimilarityMatrix.__contains__">(skbio.stats.distance.DissimilarityMatrix method)</a>
+</li>
+        <li><a href="generated/skbio.stats.distance.DistanceMatrix.__contains__.html#skbio.stats.distance.DistanceMatrix.__contains__">(skbio.stats.distance.DistanceMatrix method)</a>
+</li>
+      </ul></li>
+      <li><a href="generated/skbio.alignment.TabularMSA.__copy__.html#skbio.alignment.TabularMSA.__copy__">__copy__() (skbio.alignment.TabularMSA method)</a>
+
+      <ul>
+        <li><a href="generated/skbio.metadata.IntervalMetadata.__copy__.html#skbio.metadata.IntervalMetadata.__copy__">(skbio.metadata.IntervalMetadata method)</a>
+</li>
+        <li><a href="generated/skbio.sequence.DNA.__copy__.html#skbio.sequence.DNA.__copy__">(skbio.sequence.DNA method)</a>
+</li>
+        <li><a href="generated/skbio.sequence.GrammaredSequence.__copy__.html#skbio.sequence.GrammaredSequence.__copy__">(skbio.sequence.GrammaredSequence method)</a>
+</li>
+        <li><a href="generated/skbio.sequence.Protein.__copy__.html#skbio.sequence.Protein.__copy__">(skbio.sequence.Protein method)</a>
+</li>
+        <li><a href="generated/skbio.sequence.RNA.__copy__.html#skbio.sequence.RNA.__copy__">(skbio.sequence.RNA method)</a>
+</li>
+        <li><a href="generated/skbio.sequence.Sequence.__copy__.html#skbio.sequence.Sequence.__copy__">(skbio.sequence.Sequence method)</a>
+</li>
+        <li><a href="generated/skbio.tree.TreeNode.__copy__.html#skbio.tree.TreeNode.__copy__">(skbio.tree.TreeNode method)</a>
+</li>
+      </ul></li>
+      <li><a href="generated/skbio.alignment.TabularMSA.__deepcopy__.html#skbio.alignment.TabularMSA.__deepcopy__">__deepcopy__() (skbio.alignment.TabularMSA method)</a>
+
+      <ul>
+        <li><a href="generated/skbio.metadata.IntervalMetadata.__deepcopy__.html#skbio.metadata.IntervalMetadata.__deepcopy__">(skbio.metadata.IntervalMetadata method)</a>
+</li>
+        <li><a href="generated/skbio.sequence.DNA.__deepcopy__.html#skbio.sequence.DNA.__deepcopy__">(skbio.sequence.DNA method)</a>
+</li>
+        <li><a href="generated/skbio.sequence.GrammaredSequence.__deepcopy__.html#skbio.sequence.GrammaredSequence.__deepcopy__">(skbio.sequence.GrammaredSequence method)</a>
+</li>
+        <li><a href="generated/skbio.sequence.Protein.__deepcopy__.html#skbio.sequence.Protein.__deepcopy__">(skbio.sequence.Protein method)</a>
+</li>
+        <li><a href="generated/skbio.sequence.RNA.__deepcopy__.html#skbio.sequence.RNA.__deepcopy__">(skbio.sequence.RNA method)</a>
+</li>
+        <li><a href="generated/skbio.sequence.Sequence.__deepcopy__.html#skbio.sequence.Sequence.__deepcopy__">(skbio.sequence.Sequence method)</a>
+</li>
+        <li><a href="generated/skbio.tree.TreeNode.__deepcopy__.html#skbio.tree.TreeNode.__deepcopy__">(skbio.tree.TreeNode method)</a>
+</li>
+      </ul></li>
+      <li><a href="generated/skbio.alignment.TabularMSA.__eq__.html#skbio.alignment.TabularMSA.__eq__">__eq__() (skbio.alignment.TabularMSA method)</a>
+
+      <ul>
+        <li><a href="generated/skbio.metadata.Interval.__eq__.html#skbio.metadata.Interval.__eq__">(skbio.metadata.Interval method)</a>
+</li>
+        <li><a href="generated/skbio.metadata.IntervalMetadata.__eq__.html#skbio.metadata.IntervalMetadata.__eq__">(skbio.metadata.IntervalMetadata method)</a>
+</li>
+        <li><a href="generated/skbio.sequence.DNA.__eq__.html#skbio.sequence.DNA.__eq__">(skbio.sequence.DNA method)</a>
+</li>
+        <li><a href="generated/skbio.sequence.GeneticCode.__eq__.html#skbio.sequence.GeneticCode.__eq__">(skbio.sequence.GeneticCode method)</a>
+</li>
+        <li><a href="generated/skbio.sequence.GrammaredSequence.__eq__.html#skbio.sequence.GrammaredSequence.__eq__">(skbio.sequence.GrammaredSequence method)</a>
+</li>
+        <li><a href="generated/skbio.sequence.Protein.__eq__.html#skbio.sequence.Protein.__eq__">(skbio.sequence.Protein method)</a>
+</li>
+        <li><a href="generated/skbio.sequence.RNA.__eq__.html#skbio.sequence.RNA.__eq__">(skbio.sequence.RNA method)</a>
+</li>
+        <li><a href="generated/skbio.sequence.Sequence.__eq__.html#skbio.sequence.Sequence.__eq__">(skbio.sequence.Sequence method)</a>
+</li>
+        <li><a href="generated/skbio.stats.distance.DissimilarityMatrix.__eq__.html#skbio.stats.distance.DissimilarityMatrix.__eq__">(skbio.stats.distance.DissimilarityMatrix method)</a>
+</li>
+        <li><a href="generated/skbio.stats.distance.DistanceMatrix.__eq__.html#skbio.stats.distance.DistanceMatrix.__eq__">(skbio.stats.distance.DistanceMatrix method)</a>
+</li>
+      </ul></li>
+      <li><a href="generated/skbio.util.classproperty.__get__.html#skbio.util.classproperty.__get__">__get__() (skbio.util.classproperty method)</a>
+</li>
+      <li><a href="generated/skbio.alignment.TabularMSA.__getitem__.html#skbio.alignment.TabularMSA.__getitem__">__getitem__() (skbio.alignment.TabularMSA method)</a>
+
+      <ul>
+        <li><a href="generated/skbio.sequence.DNA.__getitem__.html#skbio.sequence.DNA.__getitem__">(skbio.sequence.DNA method)</a>
+</li>
+        <li><a href="generated/skbio.sequence.GrammaredSequence.__getitem__.html#skbio.sequence.GrammaredSequence.__getitem__">(skbio.sequence.GrammaredSequence method)</a>
+</li>
+        <li><a href="generated/skbio.sequence.Protein.__getitem__.html#skbio.sequence.Protein.__getitem__">(skbio.sequence.Protein method)</a>
+</li>
+        <li><a href="generated/skbio.sequence.RNA.__getitem__.html#skbio.sequence.RNA.__getitem__">(skbio.sequence.RNA method)</a>
+</li>
+        <li><a href="generated/skbio.sequence.Sequence.__getitem__.html#skbio.sequence.Sequence.__getitem__">(skbio.sequence.Sequence method)</a>
+</li>
+        <li><a href="generated/skbio.stats.distance.DissimilarityMatrix.__getitem__.html#skbio.stats.distance.DissimilarityMatrix.__getitem__">(skbio.stats.distance.DissimilarityMatrix method)</a>
+</li>
+        <li><a href="generated/skbio.stats.distance.DistanceMatrix.__getitem__.html#skbio.stats.distance.DistanceMatrix.__getitem__">(skbio.stats.distance.DistanceMatrix method)</a>
+</li>
+        <li><a href="generated/skbio.tree.TreeNode.__getitem__.html#skbio.tree.TreeNode.__getitem__">(skbio.tree.TreeNode method)</a>
+</li>
+      </ul></li>
+      <li><a href="generated/skbio.alignment.AlignmentStructure.__init_subclass__.html#skbio.alignment.AlignmentStructure.__init_subclass__">__init_subclass__() (skbio.alignment.AlignmentStructure method)</a>
+
+      <ul>
+        <li><a href="generated/skbio.alignment.StripedSmithWaterman.__init_subclass__.html#skbio.alignment.StripedSmithWaterman.__init_subclass__">(skbio.alignment.StripedSmithWaterman method)</a>
+</li>
+        <li><a href="generated/skbio.alignment.TabularMSA.__init_subclass__.html#skbio.alignment.TabularMSA.__init_subclass__">(skbio.alignment.TabularMSA method)</a>
+</li>
+        <li><a href="generated/skbio.io.registry.Format.__init_subclass__.html#skbio.io.registry.Format.__init_subclass__">(skbio.io.registry.Format method)</a>
+</li>
+        <li><a href="generated/skbio.io.registry.IORegistry.__init_subclass__.html#skbio.io.registry.IORegistry.__init_subclass__">(skbio.io.registry.IORegistry method)</a>
+</li>
+        <li><a href="generated/skbio.metadata.Interval.__init_subclass__.html#skbio.metadata.Interval.__init_subclass__">(skbio.metadata.Interval method)</a>
+</li>
+        <li><a href="generated/skbio.metadata.IntervalMetadata.__init_subclass__.html#skbio.metadata.IntervalMetadata.__init_subclass__">(skbio.metadata.IntervalMetadata method)</a>
+</li>
+        <li><a href="generated/skbio.sequence.DNA.__init_subclass__.html#skbio.sequence.DNA.__init_subclass__">(skbio.sequence.DNA method)</a>
+</li>
+        <li><a href="generated/skbio.sequence.GeneticCode.__init_subclass__.html#skbio.sequence.GeneticCode.__init_subclass__">(skbio.sequence.GeneticCode method)</a>
+</li>
+        <li><a href="generated/skbio.sequence.GrammaredSequence.__init_subclass__.html#skbio.sequence.GrammaredSequence.__init_subclass__">(skbio.sequence.GrammaredSequence method)</a>
+</li>
+        <li><a href="generated/skbio.sequence.Protein.__init_subclass__.html#skbio.sequence.Protein.__init_subclass__">(skbio.sequence.Protein method)</a>
+</li>
+        <li><a href="generated/skbio.sequence.RNA.__init_subclass__.html#skbio.sequence.RNA.__init_subclass__">(skbio.sequence.RNA method)</a>
+</li>
+        <li><a href="generated/skbio.sequence.Sequence.__init_subclass__.html#skbio.sequence.Sequence.__init_subclass__">(skbio.sequence.Sequence method)</a>
+</li>
+        <li><a href="generated/skbio.stats.distance.DissimilarityMatrix.__init_subclass__.html#skbio.stats.distance.DissimilarityMatrix.__init_subclass__">(skbio.stats.distance.DissimilarityMatrix method)</a>
+</li>
+        <li><a href="generated/skbio.stats.distance.DistanceMatrix.__init_subclass__.html#skbio.stats.distance.DistanceMatrix.__init_subclass__">(skbio.stats.distance.DistanceMatrix method)</a>
+</li>
+        <li><a href="generated/skbio.stats.gradient.AverageGradientANOVA.__init_subclass__.html#skbio.stats.gradient.AverageGradientANOVA.__init_subclass__">(skbio.stats.gradient.AverageGradientANOVA method)</a>
+</li>
+        <li><a href="generated/skbio.stats.gradient.CategoryResults.__init_subclass__.html#skbio.stats.gradient.CategoryResults.__init_subclass__">(skbio.stats.gradient.CategoryResults method)</a>
+</li>
+        <li><a href="generated/skbio.stats.gradient.FirstDifferenceGradientANOVA.__init_subclass__.html#skbio.stats.gradient.FirstDifferenceGradientANOVA.__init_subclass__">(skbio.stats.gradient.FirstDifferenceGradientANOVA method)</a>
+</li>
+        <li><a href="generated/skbio.stats.gradient.GradientANOVA.__init_subclass__.html#skbio.stats.gradient.GradientANOVA.__init_subclass__">(skbio.stats.gradient.GradientANOVA method)</a>
+</li>
+        <li><a href="generated/skbio.stats.gradient.GradientANOVAResults.__init_subclass__.html#skbio.stats.gradient.GradientANOVAResults.__init_subclass__">(skbio.stats.gradient.GradientANOVAResults method)</a>
+</li>
+        <li><a href="generated/skbio.stats.gradient.GroupResults.__init_subclass__.html#skbio.stats.gradient.GroupResults.__init_subclass__">(skbio.stats.gradient.GroupResults method)</a>
+</li>
+        <li><a href="generated/skbio.stats.gradient.TrajectoryGradientANOVA.__init_subclass__.html#skbio.stats.gradient.TrajectoryGradientANOVA.__init_subclass__">(skbio.stats.gradient.TrajectoryGradientANOVA method)</a>
+</li>
+        <li><a href="generated/skbio.stats.gradient.WindowDifferenceGradientANOVA.__init_subclass__.html#skbio.stats.gradient.WindowDifferenceGradientANOVA.__init_subclass__">(skbio.stats.gradient.WindowDifferenceGradientANOVA method)</a>
+</li>
+        <li><a href="generated/skbio.stats.ordination.OrdinationResults.__init_subclass__.html#skbio.stats.ordination.OrdinationResults.__init_subclass__">(skbio.stats.ordination.OrdinationResults method)</a>
+</li>
+        <li><a href="generated/skbio.tree.TreeNode.__init_subclass__.html#skbio.tree.TreeNode.__init_subclass__">(skbio.tree.TreeNode method)</a>
+</li>
+        <li><a href="generated/skbio.util.classproperty.__init_subclass__.html#skbio.util.classproperty.__init_subclass__">(skbio.util.classproperty method)</a>
+</li>
+        <li><a href="generated/skbio.workflow.Workflow.__init_subclass__.html#skbio.workflow.Workflow.__init_subclass__">(skbio.workflow.Workflow method)</a>
+</li>
+        <li><a href="generated/skbio.workflow.method.__init_subclass__.html#skbio.workflow.method.__init_subclass__">(skbio.workflow.method method)</a>
+</li>
+        <li><a href="generated/skbio.workflow.requires.__init_subclass__.html#skbio.workflow.requires.__init_subclass__">(skbio.workflow.requires method)</a>
+</li>
+      </ul></li>
+  </ul></td>
+  <td style="width: 33%; vertical-align: top;"><ul>
+      <li><a href="generated/skbio.alignment.TabularMSA.__iter__.html#skbio.alignment.TabularMSA.__iter__">__iter__() (skbio.alignment.TabularMSA method)</a>
+
+      <ul>
+        <li><a href="generated/skbio.sequence.DNA.__iter__.html#skbio.sequence.DNA.__iter__">(skbio.sequence.DNA method)</a>
+</li>
+        <li><a href="generated/skbio.sequence.GrammaredSequence.__iter__.html#skbio.sequence.GrammaredSequence.__iter__">(skbio.sequence.GrammaredSequence method)</a>
+</li>
+        <li><a href="generated/skbio.sequence.Protein.__iter__.html#skbio.sequence.Protein.__iter__">(skbio.sequence.Protein method)</a>
+</li>
+        <li><a href="generated/skbio.sequence.RNA.__iter__.html#skbio.sequence.RNA.__iter__">(skbio.sequence.RNA method)</a>
+</li>
+        <li><a href="generated/skbio.sequence.Sequence.__iter__.html#skbio.sequence.Sequence.__iter__">(skbio.sequence.Sequence method)</a>
+</li>
+        <li><a href="generated/skbio.tree.TreeNode.__iter__.html#skbio.tree.TreeNode.__iter__">(skbio.tree.TreeNode method)</a>
+</li>
+      </ul></li>
+      <li><a href="generated/skbio.alignment.TabularMSA.__len__.html#skbio.alignment.TabularMSA.__len__">__len__() (skbio.alignment.TabularMSA method)</a>
+
+      <ul>
+        <li><a href="generated/skbio.sequence.DNA.__len__.html#skbio.sequence.DNA.__len__">(skbio.sequence.DNA method)</a>
+</li>
+        <li><a href="generated/skbio.sequence.GrammaredSequence.__len__.html#skbio.sequence.GrammaredSequence.__len__">(skbio.sequence.GrammaredSequence method)</a>
+</li>
+        <li><a href="generated/skbio.sequence.Protein.__len__.html#skbio.sequence.Protein.__len__">(skbio.sequence.Protein method)</a>
+</li>
+        <li><a href="generated/skbio.sequence.RNA.__len__.html#skbio.sequence.RNA.__len__">(skbio.sequence.RNA method)</a>
+</li>
+        <li><a href="generated/skbio.sequence.Sequence.__len__.html#skbio.sequence.Sequence.__len__">(skbio.sequence.Sequence method)</a>
+</li>
+        <li><a href="generated/skbio.tree.TreeNode.__len__.html#skbio.tree.TreeNode.__len__">(skbio.tree.TreeNode method)</a>
+</li>
+      </ul></li>
+      <li><a href="generated/skbio.alignment.TabularMSA.__ne__.html#skbio.alignment.TabularMSA.__ne__">__ne__() (skbio.alignment.TabularMSA method)</a>
+
+      <ul>
+        <li><a href="generated/skbio.metadata.Interval.__ne__.html#skbio.metadata.Interval.__ne__">(skbio.metadata.Interval method)</a>
+</li>
+        <li><a href="generated/skbio.metadata.IntervalMetadata.__ne__.html#skbio.metadata.IntervalMetadata.__ne__">(skbio.metadata.IntervalMetadata method)</a>
+</li>
+        <li><a href="generated/skbio.sequence.DNA.__ne__.html#skbio.sequence.DNA.__ne__">(skbio.sequence.DNA method)</a>
+</li>
+        <li><a href="generated/skbio.sequence.GeneticCode.__ne__.html#skbio.sequence.GeneticCode.__ne__">(skbio.sequence.GeneticCode method)</a>
+</li>
+        <li><a href="generated/skbio.sequence.GrammaredSequence.__ne__.html#skbio.sequence.GrammaredSequence.__ne__">(skbio.sequence.GrammaredSequence method)</a>
+</li>
+        <li><a href="generated/skbio.sequence.Protein.__ne__.html#skbio.sequence.Protein.__ne__">(skbio.sequence.Protein method)</a>
+</li>
+        <li><a href="generated/skbio.sequence.RNA.__ne__.html#skbio.sequence.RNA.__ne__">(skbio.sequence.RNA method)</a>
+</li>
+        <li><a href="generated/skbio.sequence.Sequence.__ne__.html#skbio.sequence.Sequence.__ne__">(skbio.sequence.Sequence method)</a>
+</li>
+        <li><a href="generated/skbio.stats.distance.DissimilarityMatrix.__ne__.html#skbio.stats.distance.DissimilarityMatrix.__ne__">(skbio.stats.distance.DissimilarityMatrix method)</a>
+</li>
+        <li><a href="generated/skbio.stats.distance.DistanceMatrix.__ne__.html#skbio.stats.distance.DistanceMatrix.__ne__">(skbio.stats.distance.DistanceMatrix method)</a>
+</li>
+      </ul></li>
+      <li><a href="generated/skbio.alignment.TabularMSA.__reversed__.html#skbio.alignment.TabularMSA.__reversed__">__reversed__() (skbio.alignment.TabularMSA method)</a>
+
+      <ul>
+        <li><a href="generated/skbio.sequence.DNA.__reversed__.html#skbio.sequence.DNA.__reversed__">(skbio.sequence.DNA method)</a>
+</li>
+        <li><a href="generated/skbio.sequence.GrammaredSequence.__reversed__.html#skbio.sequence.GrammaredSequence.__reversed__">(skbio.sequence.GrammaredSequence method)</a>
+</li>
+        <li><a href="generated/skbio.sequence.Protein.__reversed__.html#skbio.sequence.Protein.__reversed__">(skbio.sequence.Protein method)</a>
+</li>
+        <li><a href="generated/skbio.sequence.RNA.__reversed__.html#skbio.sequence.RNA.__reversed__">(skbio.sequence.RNA method)</a>
+</li>
+        <li><a href="generated/skbio.sequence.Sequence.__reversed__.html#skbio.sequence.Sequence.__reversed__">(skbio.sequence.Sequence method)</a>
+</li>
+      </ul></li>
+      <li><a href="generated/skbio.util.classproperty.__set__.html#skbio.util.classproperty.__set__">__set__() (skbio.util.classproperty method)</a>
+</li>
+      <li><a href="generated/skbio.alignment.TabularMSA.__str__.html#skbio.alignment.TabularMSA.__str__">__str__() (skbio.alignment.TabularMSA method)</a>
+
+      <ul>
+        <li><a href="generated/skbio.sequence.DNA.__str__.html#skbio.sequence.DNA.__str__">(skbio.sequence.DNA method)</a>
+</li>
+        <li><a href="generated/skbio.sequence.GeneticCode.__str__.html#skbio.sequence.GeneticCode.__str__">(skbio.sequence.GeneticCode method)</a>
+</li>
+        <li><a href="generated/skbio.sequence.GrammaredSequence.__str__.html#skbio.sequence.GrammaredSequence.__str__">(skbio.sequence.GrammaredSequence method)</a>
+</li>
+        <li><a href="generated/skbio.sequence.Protein.__str__.html#skbio.sequence.Protein.__str__">(skbio.sequence.Protein method)</a>
+</li>
+        <li><a href="generated/skbio.sequence.RNA.__str__.html#skbio.sequence.RNA.__str__">(skbio.sequence.RNA method)</a>
+</li>
+        <li><a href="generated/skbio.sequence.Sequence.__str__.html#skbio.sequence.Sequence.__str__">(skbio.sequence.Sequence method)</a>
+</li>
+        <li><a href="generated/skbio.stats.distance.DissimilarityMatrix.__str__.html#skbio.stats.distance.DissimilarityMatrix.__str__">(skbio.stats.distance.DissimilarityMatrix method)</a>
+</li>
+        <li><a href="generated/skbio.stats.distance.DistanceMatrix.__str__.html#skbio.stats.distance.DistanceMatrix.__str__">(skbio.stats.distance.DistanceMatrix method)</a>
+</li>
+        <li><a href="generated/skbio.stats.ordination.OrdinationResults.__str__.html#skbio.stats.ordination.OrdinationResults.__str__">(skbio.stats.ordination.OrdinationResults method)</a>
+</li>
+        <li><a href="generated/skbio.tree.TreeNode.__str__.html#skbio.tree.TreeNode.__str__">(skbio.tree.TreeNode method)</a>
+</li>
+      </ul></li>
+  </ul></td>
+</tr></table>
+
+<h2 id="A">A</h2>
+<table style="width: 100%" class="indextable genindextable"><tr>
+  <td style="width: 33%; vertical-align: top;"><ul>
+      <li><a href="generated/skbio.tree.TreeNode.accumulate_to_ancestor.html#skbio.tree.TreeNode.accumulate_to_ancestor">accumulate_to_ancestor() (skbio.tree.TreeNode method)</a>
+</li>
+      <li><a href="generated/skbio.diversity.alpha.ace.html#skbio.diversity.alpha.ace">ace() (in module skbio.diversity.alpha)</a>
+</li>
+      <li><a href="generated/skbio.metadata.IntervalMetadata.add.html#skbio.metadata.IntervalMetadata.add">add() (skbio.metadata.IntervalMetadata method)</a>
+</li>
+      <li><a href="generated/skbio.io.registry.IORegistry.add_format.html#skbio.io.registry.IORegistry.add_format">add_format() (skbio.io.registry.IORegistry method)</a>
+</li>
+      <li><a href="generated/skbio.stats.gradient.GradientANOVAResults.html#skbio.stats.gradient.GradientANOVAResults.algorithm">algorithm (skbio.stats.gradient.GradientANOVAResults attribute)</a>
+</li>
+      <li><a href="generated/skbio.alignment.AlignmentStructure.html#skbio.alignment.AlignmentStructure">AlignmentStructure (class in skbio.alignment)</a>
+</li>
+      <li><a href="generated/skbio.diversity.alpha_diversity.html#skbio.diversity.alpha_diversity">alpha_diversity() (in module skbio.diversity)</a>
+</li>
+      <li><a href="generated/skbio.stats.composition.alr.html#skbio.stats.composition.alr">alr() (in module skbio.stats.composition)</a>
+</li>
+      <li><a href="generated/skbio.stats.composition.alr_inv.html#skbio.stats.composition.alr_inv">alr_inv() (in module skbio.stats.composition)</a>
+</li>
+      <li><a href="generated/skbio.tree.TreeNode.ancestors.html#skbio.tree.TreeNode.ancestors">ancestors() (skbio.tree.TreeNode method)</a>
+</li>
+  </ul></td>
+  <td style="width: 33%; vertical-align: top;"><ul>
+      <li><a href="generated/skbio.stats.composition.ancom.html#skbio.stats.composition.ancom">ancom() (in module skbio.stats.composition)</a>
+</li>
+      <li><a href="generated/skbio.stats.distance.anosim.html#skbio.stats.distance.anosim">anosim() (in module skbio.stats.distance)</a>
+</li>
+      <li><a href="generated/skbio.alignment.TabularMSA.append.html#skbio.alignment.TabularMSA.append">append() (skbio.alignment.TabularMSA method)</a>
+
+      <ul>
+        <li><a href="generated/skbio.tree.TreeNode.append.html#skbio.tree.TreeNode.append">(skbio.tree.TreeNode method)</a>
+</li>
+      </ul></li>
+      <li><a href="generated/skbio.io.ArgumentOverrideWarning.html#skbio.io.ArgumentOverrideWarning">ArgumentOverrideWarning</a>
+</li>
+      <li><a href="generated/skbio.tree.TreeNode.ascii_art.html#skbio.tree.TreeNode.ascii_art">ascii_art() (skbio.tree.TreeNode method)</a>
+</li>
+      <li><a href="generated/skbio.util.assert_data_frame_almost_equal.html#skbio.util.assert_data_frame_almost_equal">assert_data_frame_almost_equal() (in module skbio.util)</a>
+</li>
+      <li><a href="generated/skbio.util.assert_ordination_results_equal.html#skbio.util.assert_ordination_results_equal">assert_ordination_results_equal() (in module skbio.util)</a>
+</li>
+      <li><a href="generated/skbio.tree.TreeNode.assign_ids.html#skbio.tree.TreeNode.assign_ids">assign_ids() (skbio.tree.TreeNode method)</a>
+</li>
+      <li><a href="generated/skbio.stats.gradient.AverageGradientANOVA.html#skbio.stats.gradient.AverageGradientANOVA">AverageGradientANOVA (class in skbio.stats.gradient)</a>
+</li>
+  </ul></td>
+</tr></table>
+
+<h2 id="B">B</h2>
+<table style="width: 100%" class="indextable genindextable"><tr>
+  <td style="width: 33%; vertical-align: top;"><ul>
+      <li><a href="generated/skbio.diversity.alpha.berger_parker_d.html#skbio.diversity.alpha.berger_parker_d">berger_parker_d() (in module skbio.diversity.alpha)</a>
+</li>
+      <li><a href="generated/skbio.diversity.beta_diversity.html#skbio.diversity.beta_diversity">beta_diversity() (in module skbio.diversity)</a>
+</li>
+      <li><a href="generated/skbio.tree.TreeNode.bifurcate.html#skbio.tree.TreeNode.bifurcate">bifurcate() (skbio.tree.TreeNode method)</a>
+</li>
+      <li><a href="generated/skbio.stats.distance.bioenv.html#skbio.stats.distance.bioenv">bioenv() (in module skbio.stats.distance)</a>
+</li>
+  </ul></td>
+  <td style="width: 33%; vertical-align: top;"><ul>
+      <li><a href="generated/skbio.stats.ordination.OrdinationResults.html#skbio.stats.ordination.OrdinationResults.biplot_scores">biplot_scores (skbio.stats.ordination.OrdinationResults attribute)</a>
+</li>
+      <li><a href="generated/skbio.io.BLAST7FormatError.html#skbio.io.BLAST7FormatError">BLAST7FormatError</a>
+</li>
+      <li><a href="generated/skbio.diversity.block_beta_diversity.html#skbio.diversity.block_beta_diversity">block_beta_diversity() (in module skbio.diversity)</a>
+</li>
+      <li><a href="generated/skbio.diversity.alpha.brillouin_d.html#skbio.diversity.alpha.brillouin_d">brillouin_d() (in module skbio.diversity.alpha)</a>
+</li>
+  </ul></td>
+</tr></table>
+
+<h2 id="C">C</h2>
+<table style="width: 100%" class="indextable genindextable"><tr>
+  <td style="width: 33%; vertical-align: top;"><ul>
+      <li><a href="generated/skbio.stats.ordination.ca.html#skbio.stats.ordination.ca">ca() (in module skbio.stats.ordination)</a>
+</li>
+      <li><a href="generated/skbio.tree.TreeNode.cache_attr.html#skbio.tree.TreeNode.cache_attr">cache_attr() (skbio.tree.TreeNode method)</a>
+</li>
+      <li><a href="generated/skbio.util.cardinal_to_ordinal.html#skbio.util.cardinal_to_ordinal">cardinal_to_ordinal() (in module skbio.util)</a>
+</li>
+      <li><a href="generated/skbio.stats.gradient.GradientANOVAResults.html#skbio.stats.gradient.GradientANOVAResults.categories">categories (skbio.stats.gradient.GradientANOVAResults attribute)</a>
+</li>
+      <li><a href="generated/skbio.stats.gradient.CategoryResults.html#skbio.stats.gradient.CategoryResults.category">category (skbio.stats.gradient.CategoryResults attribute)</a>
+</li>
+      <li><a href="generated/skbio.stats.gradient.CategoryResults.html#skbio.stats.gradient.CategoryResults">CategoryResults (class in skbio.stats.gradient)</a>
+</li>
+      <li><a href="generated/skbio.stats.ordination.cca.html#skbio.stats.ordination.cca">cca() (in module skbio.stats.ordination)</a>
+</li>
+      <li><a href="generated/skbio.stats.composition.centralize.html#skbio.stats.composition.centralize">centralize() (in module skbio.stats.composition)</a>
+</li>
+      <li><a href="generated/skbio.diversity.alpha.chao1.html#skbio.diversity.alpha.chao1">chao1() (in module skbio.diversity.alpha)</a>
+</li>
+      <li><a href="generated/skbio.diversity.alpha.chao1_ci.html#skbio.diversity.alpha.chao1_ci">chao1_ci() (in module skbio.diversity.alpha)</a>
+</li>
+      <li><a href="generated/skbio.util.classproperty.html#skbio.util.classproperty">classproperty (class in skbio.util)</a>
+</li>
+      <li><a href="generated/skbio.stats.composition.closure.html#skbio.stats.composition.closure">closure() (in module skbio.stats.composition)</a>
+</li>
+      <li><a href="generated/skbio.stats.composition.clr.html#skbio.stats.composition.clr">clr() (in module skbio.stats.composition)</a>
+</li>
+      <li><a href="generated/skbio.stats.composition.clr_inv.html#skbio.stats.composition.clr_inv">clr_inv() (in module skbio.stats.composition)</a>
+</li>
+      <li><a href="generated/skbio.io.ClustalFormatError.html#skbio.io.ClustalFormatError">ClustalFormatError</a>
+</li>
+      <li><a href="generated/skbio.tree.TreeNode.compare_rfd.html#skbio.tree.TreeNode.compare_rfd">compare_rfd() (skbio.tree.TreeNode method)</a>
+</li>
+      <li><a href="generated/skbio.tree.TreeNode.compare_subsets.html#skbio.tree.TreeNode.compare_subsets">compare_subsets() (skbio.tree.TreeNode method)</a>
+</li>
+      <li><a href="generated/skbio.tree.TreeNode.compare_tip_distances.html#skbio.tree.TreeNode.compare_tip_distances">compare_tip_distances() (skbio.tree.TreeNode method)</a>
+</li>
+      <li><a href="generated/skbio.sequence.DNA.complement.html#skbio.sequence.DNA.complement">complement() (skbio.sequence.DNA method)</a>
+
+      <ul>
+        <li><a href="generated/skbio.sequence.RNA.complement.html#skbio.sequence.RNA.complement">(skbio.sequence.RNA method)</a>
+</li>
+      </ul></li>
+      <li><a href="generated/skbio.metadata.IntervalMetadata.concat.html#skbio.metadata.IntervalMetadata.concat">concat() (skbio.metadata.IntervalMetadata class method)</a>
+
+      <ul>
+        <li><a href="generated/skbio.sequence.DNA.concat.html#skbio.sequence.DNA.concat">(skbio.sequence.DNA class method)</a>
+</li>
+        <li><a href="generated/skbio.sequence.GrammaredSequence.concat.html#skbio.sequence.GrammaredSequence.concat">(skbio.sequence.GrammaredSequence class method)</a>
+</li>
+        <li><a href="generated/skbio.sequence.Protein.concat.html#skbio.sequence.Protein.concat">(skbio.sequence.Protein class method)</a>
+</li>
+        <li><a href="generated/skbio.sequence.RNA.concat.html#skbio.sequence.RNA.concat">(skbio.sequence.RNA class method)</a>
+</li>
+        <li><a href="generated/skbio.sequence.Sequence.concat.html#skbio.sequence.Sequence.concat">(skbio.sequence.Sequence class method)</a>
+</li>
+      </ul></li>
+  </ul></td>
+  <td style="width: 33%; vertical-align: top;"><ul>
+      <li><a href="generated/skbio.stats.distance.DistanceMatrix.condensed_form.html#skbio.stats.distance.DistanceMatrix.condensed_form">condensed_form() (skbio.stats.distance.DistanceMatrix method)</a>
+</li>
+      <li><a href="generated/skbio.stats.power.confidence_bound.html#skbio.stats.power.confidence_bound">confidence_bound() (in module skbio.stats.power)</a>
+</li>
+      <li><a href="generated/skbio.alignment.TabularMSA.consensus.html#skbio.alignment.TabularMSA.consensus">consensus() (skbio.alignment.TabularMSA method)</a>
+</li>
+      <li><a href="generated/skbio.alignment.TabularMSA.conservation.html#skbio.alignment.TabularMSA.conservation">conservation() (skbio.alignment.TabularMSA method)</a>
+</li>
+      <li><a href="generated/skbio.stats.distance.DissimilarityMatrix.copy.html#skbio.stats.distance.DissimilarityMatrix.copy">copy() (skbio.stats.distance.DissimilarityMatrix method)</a>
+
+      <ul>
+        <li><a href="generated/skbio.stats.distance.DistanceMatrix.copy.html#skbio.stats.distance.DistanceMatrix.copy">(skbio.stats.distance.DistanceMatrix method)</a>
+</li>
+        <li><a href="generated/skbio.tree.TreeNode.copy.html#skbio.tree.TreeNode.copy">(skbio.tree.TreeNode method)</a>
+</li>
+      </ul></li>
+      <li><a href="generated/skbio.stats.ordination.corr.html#skbio.stats.ordination.corr">corr() (in module skbio.stats.ordination)</a>
+</li>
+      <li><a href="generated/skbio.sequence.DNA.count.html#skbio.sequence.DNA.count">count() (skbio.sequence.DNA method)</a>
+
+      <ul>
+        <li><a href="generated/skbio.sequence.GrammaredSequence.count.html#skbio.sequence.GrammaredSequence.count">(skbio.sequence.GrammaredSequence method)</a>
+</li>
+        <li><a href="generated/skbio.sequence.Protein.count.html#skbio.sequence.Protein.count">(skbio.sequence.Protein method)</a>
+</li>
+        <li><a href="generated/skbio.sequence.RNA.count.html#skbio.sequence.RNA.count">(skbio.sequence.RNA method)</a>
+</li>
+        <li><a href="generated/skbio.sequence.Sequence.count.html#skbio.sequence.Sequence.count">(skbio.sequence.Sequence method)</a>
+</li>
+        <li><a href="generated/skbio.tree.TreeNode.count.html#skbio.tree.TreeNode.count">(skbio.tree.TreeNode method)</a>
+</li>
+      </ul></li>
+      <li><a href="generated/skbio.tree.TreeNode.create_caches.html#skbio.tree.TreeNode.create_caches">create_caches() (skbio.tree.TreeNode method)</a>
+</li>
+      <li><a href="generated/skbio.io.registry.create_format.html#skbio.io.registry.create_format">create_format() (in module skbio.io.registry)</a>
+
+      <ul>
+        <li><a href="generated/skbio.io.registry.IORegistry.create_format.html#skbio.io.registry.IORegistry.create_format">(skbio.io.registry.IORegistry method)</a>
+</li>
+      </ul></li>
+  </ul></td>
+</tr></table>
+
+<h2 id="D">D</h2>
+<table style="width: 100%" class="indextable genindextable"><tr>
+  <td style="width: 33%; vertical-align: top;"><ul>
+      <li><a href="generated/skbio.tree.TreeNode.deepcopy.html#skbio.tree.TreeNode.deepcopy">deepcopy() (skbio.tree.TreeNode method)</a>
+</li>
+      <li><a href="generated/skbio.sequence.DNA.definites.html#skbio.sequence.DNA.definites">definites() (skbio.sequence.DNA method)</a>
+
+      <ul>
+        <li><a href="generated/skbio.sequence.GrammaredSequence.definites.html#skbio.sequence.GrammaredSequence.definites">(skbio.sequence.GrammaredSequence method)</a>
+</li>
+        <li><a href="generated/skbio.sequence.Protein.definites.html#skbio.sequence.Protein.definites">(skbio.sequence.Protein method)</a>
+</li>
+        <li><a href="generated/skbio.sequence.RNA.definites.html#skbio.sequence.RNA.definites">(skbio.sequence.RNA method)</a>
+</li>
+      </ul></li>
+      <li><a href="generated/skbio.sequence.DNA.degap.html#skbio.sequence.DNA.degap">degap() (skbio.sequence.DNA method)</a>
+
+      <ul>
+        <li><a href="generated/skbio.sequence.GrammaredSequence.degap.html#skbio.sequence.GrammaredSequence.degap">(skbio.sequence.GrammaredSequence method)</a>
+</li>
+        <li><a href="generated/skbio.sequence.Protein.degap.html#skbio.sequence.Protein.degap">(skbio.sequence.Protein method)</a>
+</li>
+        <li><a href="generated/skbio.sequence.RNA.degap.html#skbio.sequence.RNA.degap">(skbio.sequence.RNA method)</a>
+</li>
+      </ul></li>
+      <li><a href="generated/skbio.sequence.DNA.degenerates.html#skbio.sequence.DNA.degenerates">degenerates() (skbio.sequence.DNA method)</a>
+
+      <ul>
+        <li><a href="generated/skbio.sequence.GrammaredSequence.degenerates.html#skbio.sequence.GrammaredSequence.degenerates">(skbio.sequence.GrammaredSequence method)</a>
+</li>
+        <li><a href="generated/skbio.sequence.Protein.degenerates.html#skbio.sequence.Protein.degenerates">(skbio.sequence.Protein method)</a>
+</li>
+        <li><a href="generated/skbio.sequence.RNA.degenerates.html#skbio.sequence.RNA.degenerates">(skbio.sequence.RNA method)</a>
+</li>
+      </ul></li>
+      <li><a href="generated/skbio.util.classproperty.deleter.html#skbio.util.classproperty.deleter">deleter() (skbio.util.classproperty method)</a>
+</li>
+      <li><a href="generated/skbio.tree.TreeNode.descending_branch_length.html#skbio.tree.TreeNode.descending_branch_length">descending_branch_length() (skbio.tree.TreeNode method)</a>
+</li>
+      <li><a href="generated/skbio.stats.distance.DissimilarityMatrix.html#skbio.stats.distance.DissimilarityMatrix">DissimilarityMatrix (class in skbio.stats.distance)</a>
+</li>
+  </ul></td>
+  <td style="width: 33%; vertical-align: top;"><ul>
+      <li><a href="generated/skbio.stats.distance.DissimilarityMatrixError.html#skbio.stats.distance.DissimilarityMatrixError">DissimilarityMatrixError</a>
+</li>
+      <li><a href="generated/skbio.sequence.DNA.distance.html#skbio.sequence.DNA.distance">distance() (skbio.sequence.DNA method)</a>
+
+      <ul>
+        <li><a href="generated/skbio.sequence.GrammaredSequence.distance.html#skbio.sequence.GrammaredSequence.distance">(skbio.sequence.GrammaredSequence method)</a>
+</li>
+        <li><a href="generated/skbio.sequence.Protein.distance.html#skbio.sequence.Protein.distance">(skbio.sequence.Protein method)</a>
+</li>
+        <li><a href="generated/skbio.sequence.RNA.distance.html#skbio.sequence.RNA.distance">(skbio.sequence.RNA method)</a>
+</li>
+        <li><a href="generated/skbio.sequence.Sequence.distance.html#skbio.sequence.Sequence.distance">(skbio.sequence.Sequence method)</a>
+</li>
+        <li><a href="generated/skbio.tree.TreeNode.distance.html#skbio.tree.TreeNode.distance">(skbio.tree.TreeNode method)</a>
+</li>
+      </ul></li>
+      <li><a href="generated/skbio.stats.distance.DistanceMatrix.html#skbio.stats.distance.DistanceMatrix">DistanceMatrix (class in skbio.stats.distance)</a>
+</li>
+      <li><a href="generated/skbio.stats.distance.DistanceMatrixError.html#skbio.stats.distance.DistanceMatrixError">DistanceMatrixError</a>
+</li>
+      <li><a href="generated/skbio.sequence.DNA.html#skbio.sequence.DNA">DNA (class in skbio.sequence)</a>
+</li>
+      <li><a href="generated/skbio.diversity.alpha.dominance.html#skbio.diversity.alpha.dominance">dominance() (in module skbio.diversity.alpha)</a>
+</li>
+      <li><a href="generated/skbio.diversity.alpha.doubles.html#skbio.diversity.alpha.doubles">doubles() (in module skbio.diversity.alpha)</a>
+</li>
+      <li><a href="generated/skbio.metadata.Interval.drop.html#skbio.metadata.Interval.drop">drop() (skbio.metadata.Interval method)</a>
+
+      <ul>
+        <li><a href="generated/skbio.metadata.IntervalMetadata.drop.html#skbio.metadata.IntervalMetadata.drop">(skbio.metadata.IntervalMetadata method)</a>
+</li>
+      </ul></li>
+      <li><a href="generated/skbio.tree.DuplicateNodeError.html#skbio.tree.DuplicateNodeError">DuplicateNodeError</a>
+</li>
+      <li><a href="generated/skbio.io.registry.DuplicateRegistrationError.html#skbio.io.registry.DuplicateRegistrationError">DuplicateRegistrationError</a>
+</li>
+  </ul></td>
+</tr></table>
+
+<h2 id="E">E</h2>
+<table style="width: 100%" class="indextable genindextable"><tr>
+  <td style="width: 33%; vertical-align: top;"><ul>
+      <li><a href="generated/skbio.stats.ordination.e_matrix.html#skbio.stats.ordination.e_matrix">e_matrix() (in module skbio.stats.ordination)</a>
+</li>
+      <li><a href="generated/skbio.util.EfficiencyWarning.html#skbio.util.EfficiencyWarning">EfficiencyWarning</a>
+</li>
+      <li><a href="generated/skbio.stats.ordination.OrdinationResults.html#skbio.stats.ordination.OrdinationResults.eigvals">eigvals (skbio.stats.ordination.OrdinationResults attribute)</a>
+</li>
+      <li><a href="generated/skbio.io.EMBLFormatError.html#skbio.io.EMBLFormatError">EMBLFormatError</a>
+</li>
+      <li><a href="generated/skbio.diversity.alpha.enspie.html#skbio.diversity.alpha.enspie">enspie() (in module skbio.diversity.alpha)</a>
+</li>
+      <li><a href="generated/skbio.diversity.alpha.esty_ci.html#skbio.diversity.alpha.esty_ci">esty_ci() (in module skbio.diversity.alpha)</a>
+</li>
+  </ul></td>
+  <td style="width: 33%; vertical-align: top;"><ul>
+      <li><a href="generated/skbio.sequence.DNA.expand_degenerates.html#skbio.sequence.DNA.expand_degenerates">expand_degenerates() (skbio.sequence.DNA method)</a>
+
+      <ul>
+        <li><a href="generated/skbio.sequence.GrammaredSequence.expand_degenerates.html#skbio.sequence.GrammaredSequence.expand_degenerates">(skbio.sequence.GrammaredSequence method)</a>
+</li>
+        <li><a href="generated/skbio.sequence.Protein.expand_degenerates.html#skbio.sequence.Protein.expand_degenerates">(skbio.sequence.Protein method)</a>
+</li>
+        <li><a href="generated/skbio.sequence.RNA.expand_degenerates.html#skbio.sequence.RNA.expand_degenerates">(skbio.sequence.RNA method)</a>
+</li>
+      </ul></li>
+      <li><a href="generated/skbio.alignment.TabularMSA.extend.html#skbio.alignment.TabularMSA.extend">extend() (skbio.alignment.TabularMSA method)</a>
+
+      <ul>
+        <li><a href="generated/skbio.tree.TreeNode.extend.html#skbio.tree.TreeNode.extend">(skbio.tree.TreeNode method)</a>
+</li>
+      </ul></li>
+  </ul></td>
+</tr></table>
+
+<h2 id="F">F</h2>
+<table style="width: 100%" class="indextable genindextable"><tr>
+  <td style="width: 33%; vertical-align: top;"><ul>
+      <li><a href="generated/skbio.stats.ordination.f_matrix.html#skbio.stats.ordination.f_matrix">f_matrix() (in module skbio.stats.ordination)</a>
+</li>
+      <li><a href="generated/skbio.diversity.alpha.faith_pd.html#skbio.diversity.alpha.faith_pd">faith_pd() (in module skbio.diversity.alpha)</a>
+</li>
+      <li><a href="generated/skbio.io.FASTAFormatError.html#skbio.io.FASTAFormatError">FASTAFormatError</a>
+</li>
+      <li><a href="generated/skbio.io.FASTQFormatError.html#skbio.io.FASTQFormatError">FASTQFormatError</a>
+</li>
+      <li><a href="generated/skbio.stats.ordination.OrdinationResults.html#skbio.stats.ordination.OrdinationResults.features">features (skbio.stats.ordination.OrdinationResults attribute)</a>
+</li>
+      <li><a href="generated/skbio.io.FileFormatError.html#skbio.io.FileFormatError">FileFormatError</a>
+</li>
+      <li><a href="generated/skbio.stats.distance.DissimilarityMatrix.filter.html#skbio.stats.distance.DissimilarityMatrix.filter">filter() (skbio.stats.distance.DissimilarityMatrix method)</a>
+
+      <ul>
+        <li><a href="generated/skbio.stats.distance.DistanceMatrix.filter.html#skbio.stats.distance.DistanceMatrix.filter">(skbio.stats.distance.DistanceMatrix method)</a>
+</li>
+      </ul></li>
+      <li><a href="generated/skbio.tree.TreeNode.find.html#skbio.tree.TreeNode.find">find() (skbio.tree.TreeNode method)</a>
+</li>
+      <li><a href="generated/skbio.tree.TreeNode.find_all.html#skbio.tree.TreeNode.find_all">find_all() (skbio.tree.TreeNode method)</a>
+</li>
+      <li><a href="generated/skbio.tree.TreeNode.find_by_func.html#skbio.tree.TreeNode.find_by_func">find_by_func() (skbio.tree.TreeNode method)</a>
+</li>
+      <li><a href="generated/skbio.tree.TreeNode.find_by_id.html#skbio.tree.TreeNode.find_by_id">find_by_id() (skbio.tree.TreeNode method)</a>
+</li>
+      <li><a href="generated/skbio.util.find_duplicates.html#skbio.util.find_duplicates">find_duplicates() (in module skbio.util)</a>
+</li>
+      <li><a href="generated/skbio.sequence.DNA.find_motifs.html#skbio.sequence.DNA.find_motifs">find_motifs() (skbio.sequence.DNA method)</a>
+
+      <ul>
+        <li><a href="generated/skbio.sequence.GrammaredSequence.find_motifs.html#skbio.sequence.GrammaredSequence.find_motifs">(skbio.sequence.GrammaredSequence method)</a>
+</li>
+        <li><a href="generated/skbio.sequence.Protein.find_motifs.html#skbio.sequence.Protein.find_motifs">(skbio.sequence.Protein method)</a>
+</li>
+        <li><a href="generated/skbio.sequence.RNA.find_motifs.html#skbio.sequence.RNA.find_motifs">(skbio.sequence.RNA method)</a>
+</li>
+      </ul></li>
+      <li><a href="generated/skbio.sequence.DNA.find_with_regex.html#skbio.sequence.DNA.find_with_regex">find_with_regex() (skbio.sequence.DNA method)</a>
+
+      <ul>
+        <li><a href="generated/skbio.sequence.GrammaredSequence.find_with_regex.html#skbio.sequence.GrammaredSequence.find_with_regex">(skbio.sequence.GrammaredSequence method)</a>
+</li>
+        <li><a href="generated/skbio.sequence.Protein.find_with_regex.html#skbio.sequence.Protein.find_with_regex">(skbio.sequence.Protein method)</a>
+</li>
+        <li><a href="generated/skbio.sequence.RNA.find_with_regex.html#skbio.sequence.RNA.find_with_regex">(skbio.sequence.RNA method)</a>
+</li>
+        <li><a href="generated/skbio.sequence.Sequence.find_with_regex.html#skbio.sequence.Sequence.find_with_regex">(skbio.sequence.Sequence method)</a>
+</li>
+      </ul></li>
+  </ul></td>
+  <td style="width: 33%; vertical-align: top;"><ul>
+      <li><a href="generated/skbio.stats.gradient.FirstDifferenceGradientANOVA.html#skbio.stats.gradient.FirstDifferenceGradientANOVA">FirstDifferenceGradientANOVA (class in skbio.stats.gradient)</a>
+</li>
+      <li><a href="generated/skbio.diversity.alpha.fisher_alpha.html#skbio.diversity.alpha.fisher_alpha">fisher_alpha() (in module skbio.diversity.alpha)</a>
+</li>
+      <li><a href="generated/skbio.io.registry.Format.html#skbio.io.registry.Format">Format (class in skbio.io.registry)</a>
+</li>
+      <li><a href="generated/skbio.io.FormatIdentificationWarning.html#skbio.io.FormatIdentificationWarning">FormatIdentificationWarning</a>
+</li>
+      <li><a href="generated/skbio.sequence.DNA.frequencies.html#skbio.sequence.DNA.frequencies">frequencies() (skbio.sequence.DNA method)</a>
+
+      <ul>
+        <li><a href="generated/skbio.sequence.GrammaredSequence.frequencies.html#skbio.sequence.GrammaredSequence.frequencies">(skbio.sequence.GrammaredSequence method)</a>
+</li>
+        <li><a href="generated/skbio.sequence.Protein.frequencies.html#skbio.sequence.Protein.frequencies">(skbio.sequence.Protein method)</a>
+</li>
+        <li><a href="generated/skbio.sequence.RNA.frequencies.html#skbio.sequence.RNA.frequencies">(skbio.sequence.RNA method)</a>
+</li>
+        <li><a href="generated/skbio.sequence.Sequence.frequencies.html#skbio.sequence.Sequence.frequencies">(skbio.sequence.Sequence method)</a>
+</li>
+      </ul></li>
+      <li><a href="generated/skbio.alignment.TabularMSA.from_dict.html#skbio.alignment.TabularMSA.from_dict">from_dict() (skbio.alignment.TabularMSA class method)</a>
+</li>
+      <li><a href="generated/skbio.stats.distance.DissimilarityMatrix.from_iterable.html#skbio.stats.distance.DissimilarityMatrix.from_iterable">from_iterable() (skbio.stats.distance.DissimilarityMatrix class method)</a>
+
+      <ul>
+        <li><a href="generated/skbio.stats.distance.DistanceMatrix.from_iterable.html#skbio.stats.distance.DistanceMatrix.from_iterable">(skbio.stats.distance.DistanceMatrix class method)</a>
+</li>
+      </ul></li>
+      <li><a href="generated/skbio.tree.TreeNode.from_linkage_matrix.html#skbio.tree.TreeNode.from_linkage_matrix">from_linkage_matrix() (skbio.tree.TreeNode class method)</a>
+</li>
+      <li><a href="generated/skbio.sequence.GeneticCode.from_ncbi.html#skbio.sequence.GeneticCode.from_ncbi">from_ncbi() (skbio.sequence.GeneticCode class method)</a>
+</li>
+      <li><a href="generated/skbio.tree.TreeNode.from_taxonomy.html#skbio.tree.TreeNode.from_taxonomy">from_taxonomy() (skbio.tree.TreeNode class method)</a>
+</li>
+  </ul></td>
+</tr></table>
+
+<h2 id="G">G</h2>
+<table style="width: 100%" class="indextable genindextable"><tr>
+  <td style="width: 33%; vertical-align: top;"><ul>
+      <li><a href="generated/skbio.alignment.TabularMSA.gap_frequencies.html#skbio.alignment.TabularMSA.gap_frequencies">gap_frequencies() (skbio.alignment.TabularMSA method)</a>
+</li>
+      <li><a href="generated/skbio.sequence.DNA.gaps.html#skbio.sequence.DNA.gaps">gaps() (skbio.sequence.DNA method)</a>
+
+      <ul>
+        <li><a href="generated/skbio.sequence.GrammaredSequence.gaps.html#skbio.sequence.GrammaredSequence.gaps">(skbio.sequence.GrammaredSequence method)</a>
+</li>
+        <li><a href="generated/skbio.sequence.Protein.gaps.html#skbio.sequence.Protein.gaps">(skbio.sequence.Protein method)</a>
+</li>
+        <li><a href="generated/skbio.sequence.RNA.gaps.html#skbio.sequence.RNA.gaps">(skbio.sequence.RNA method)</a>
+</li>
+      </ul></li>
+      <li><a href="generated/skbio.sequence.DNA.gc_content.html#skbio.sequence.DNA.gc_content">gc_content() (skbio.sequence.DNA method)</a>
+
+      <ul>
+        <li><a href="generated/skbio.sequence.RNA.gc_content.html#skbio.sequence.RNA.gc_content">(skbio.sequence.RNA method)</a>
+</li>
+      </ul></li>
+      <li><a href="generated/skbio.sequence.DNA.gc_frequency.html#skbio.sequence.DNA.gc_frequency">gc_frequency() (skbio.sequence.DNA method)</a>
+
+      <ul>
+        <li><a href="generated/skbio.sequence.RNA.gc_frequency.html#skbio.sequence.RNA.gc_frequency">(skbio.sequence.RNA method)</a>
+</li>
+      </ul></li>
+      <li><a href="generated/skbio.io.GenBankFormatError.html#skbio.io.GenBankFormatError">GenBankFormatError</a>
+</li>
+      <li><a href="generated/skbio.sequence.GeneticCode.html#skbio.sequence.GeneticCode">GeneticCode (class in skbio.sequence)</a>
+</li>
+      <li><a href="generated/skbio.diversity.get_alpha_diversity_metrics.html#skbio.diversity.get_alpha_diversity_metrics">get_alpha_diversity_metrics() (in module skbio.diversity)</a>
+</li>
+      <li><a href="generated/skbio.diversity.get_beta_diversity_metrics.html#skbio.diversity.get_beta_diversity_metrics">get_beta_diversity_metrics() (in module skbio.diversity)</a>
+</li>
+      <li><a href="generated/skbio.util.get_data_path.html#skbio.util.get_data_path">get_data_path() (in module skbio.util)</a>
+</li>
+      <li><a href="generated/skbio.tree.TreeNode.get_max_distance.html#skbio.tree.TreeNode.get_max_distance">get_max_distance() (skbio.tree.TreeNode method)</a>
+</li>
+      <li><a href="generated/skbio.io.registry.IORegistry.get_reader.html#skbio.io.registry.IORegistry.get_reader">get_reader() (skbio.io.registry.IORegistry method)</a>
+</li>
+      <li><a href="generated/skbio.io.registry.IORegistry.get_sniffer.html#skbio.io.registry.IORegistry.get_sniffer">get_sniffer() (skbio.io.registry.IORegistry method)</a>
+</li>
+  </ul></td>
+  <td style="width: 33%; vertical-align: top;"><ul>
+      <li><a href="generated/skbio.stats.gradient.AverageGradientANOVA.get_trajectories.html#skbio.stats.gradient.AverageGradientANOVA.get_trajectories">get_trajectories() (skbio.stats.gradient.AverageGradientANOVA method)</a>
+
+      <ul>
+        <li><a href="generated/skbio.stats.gradient.FirstDifferenceGradientANOVA.get_trajectories.html#skbio.stats.gradient.FirstDifferenceGradientANOVA.get_trajectories">(skbio.stats.gradient.FirstDifferenceGradientANOVA method)</a>
+</li>
+        <li><a href="generated/skbio.stats.gradient.GradientANOVA.get_trajectories.html#skbio.stats.gradient.GradientANOVA.get_trajectories">(skbio.stats.gradient.GradientANOVA method)</a>
+</li>
+        <li><a href="generated/skbio.stats.gradient.TrajectoryGradientANOVA.get_trajectories.html#skbio.stats.gradient.TrajectoryGradientANOVA.get_trajectories">(skbio.stats.gradient.TrajectoryGradientANOVA method)</a>
+</li>
+        <li><a href="generated/skbio.stats.gradient.WindowDifferenceGradientANOVA.get_trajectories.html#skbio.stats.gradient.WindowDifferenceGradientANOVA.get_trajectories">(skbio.stats.gradient.WindowDifferenceGradientANOVA method)</a>
+</li>
+      </ul></li>
+      <li><a href="generated/skbio.io.registry.IORegistry.get_writer.html#skbio.io.registry.IORegistry.get_writer">get_writer() (skbio.io.registry.IORegistry method)</a>
+</li>
+      <li><a href="generated/skbio.util.classproperty.getter.html#skbio.util.classproperty.getter">getter() (skbio.util.classproperty method)</a>
+</li>
+      <li><a href="generated/skbio.io.GFF3FormatError.html#skbio.io.GFF3FormatError">GFF3FormatError</a>
+</li>
+      <li><a href="generated/skbio.diversity.alpha.gini_index.html#skbio.diversity.alpha.gini_index">gini_index() (in module skbio.diversity.alpha)</a>
+</li>
+      <li><a href="generated/skbio.alignment.global_pairwise_align.html#skbio.alignment.global_pairwise_align">global_pairwise_align() (in module skbio.alignment)</a>
+</li>
+      <li><a href="generated/skbio.alignment.global_pairwise_align_nucleotide.html#skbio.alignment.global_pairwise_align_nucleotide">global_pairwise_align_nucleotide() (in module skbio.alignment)</a>
+</li>
+      <li><a href="generated/skbio.alignment.global_pairwise_align_protein.html#skbio.alignment.global_pairwise_align_protein">global_pairwise_align_protein() (in module skbio.alignment)</a>
+</li>
+      <li><a href="generated/skbio.diversity.alpha.goods_coverage.html#skbio.diversity.alpha.goods_coverage">goods_coverage() (in module skbio.diversity.alpha)</a>
+</li>
+      <li><a href="generated/skbio.stats.gradient.GradientANOVA.html#skbio.stats.gradient.GradientANOVA">GradientANOVA (class in skbio.stats.gradient)</a>
+</li>
+      <li><a href="generated/skbio.stats.gradient.GradientANOVAResults.html#skbio.stats.gradient.GradientANOVAResults">GradientANOVAResults (class in skbio.stats.gradient)</a>
+</li>
+      <li><a href="generated/skbio.sequence.GrammaredSequence.html#skbio.sequence.GrammaredSequence">GrammaredSequence (class in skbio.sequence)</a>
+</li>
+      <li><a href="generated/skbio.stats.gradient.GroupResults.html#skbio.stats.gradient.GroupResults">GroupResults (class in skbio.stats.gradient)</a>
+</li>
+      <li><a href="generated/skbio.stats.gradient.CategoryResults.html#skbio.stats.gradient.CategoryResults.groups">groups (skbio.stats.gradient.CategoryResults attribute)</a>
+</li>
+  </ul></td>
+</tr></table>
+
+<h2 id="H">H</h2>
+<table style="width: 100%" class="indextable genindextable"><tr>
+  <td style="width: 33%; vertical-align: top;"><ul>
+      <li><a href="generated/skbio.sequence.distance.hamming.html#skbio.sequence.distance.hamming">hamming() (in module skbio.sequence.distance)</a>
+</li>
+      <li><a href="generated/skbio.tree.TreeNode.has_children.html#skbio.tree.TreeNode.has_children">has_children() (skbio.tree.TreeNode method)</a>
+</li>
+      <li><a href="generated/skbio.sequence.DNA.has_definites.html#skbio.sequence.DNA.has_definites">has_definites() (skbio.sequence.DNA method)</a>
+
+      <ul>
+        <li><a href="generated/skbio.sequence.GrammaredSequence.has_definites.html#skbio.sequence.GrammaredSequence.has_definites">(skbio.sequence.GrammaredSequence method)</a>
+</li>
+        <li><a href="generated/skbio.sequence.Protein.has_definites.html#skbio.sequence.Protein.has_definites">(skbio.sequence.Protein method)</a>
+</li>
+        <li><a href="generated/skbio.sequence.RNA.has_definites.html#skbio.sequence.RNA.has_definites">(skbio.sequence.RNA method)</a>
+</li>
+      </ul></li>
+      <li><a href="generated/skbio.sequence.DNA.has_degenerates.html#skbio.sequence.DNA.has_degenerates">has_degenerates() (skbio.sequence.DNA method)</a>
+
+      <ul>
+        <li><a href="generated/skbio.sequence.GrammaredSequence.has_degenerates.html#skbio.sequence.GrammaredSequence.has_degenerates">(skbio.sequence.GrammaredSequence method)</a>
+</li>
+        <li><a href="generated/skbio.sequence.Protein.has_degenerates.html#skbio.sequence.Protein.has_degenerates">(skbio.sequence.Protein method)</a>
+</li>
+        <li><a href="generated/skbio.sequence.RNA.has_degenerates.html#skbio.sequence.RNA.has_degenerates">(skbio.sequence.RNA method)</a>
+</li>
+      </ul></li>
+      <li><a href="generated/skbio.sequence.DNA.has_gaps.html#skbio.sequence.DNA.has_gaps">has_gaps() (skbio.sequence.DNA method)</a>
+
+      <ul>
+        <li><a href="generated/skbio.sequence.GrammaredSequence.has_gaps.html#skbio.sequence.GrammaredSequence.has_gaps">(skbio.sequence.GrammaredSequence method)</a>
+</li>
+        <li><a href="generated/skbio.sequence.Protein.has_gaps.html#skbio.sequence.Protein.has_gaps">(skbio.sequence.Protein method)</a>
+</li>
+        <li><a href="generated/skbio.sequence.RNA.has_gaps.html#skbio.sequence.RNA.has_gaps">(skbio.sequence.RNA method)</a>
+</li>
+      </ul></li>
+      <li><a href="generated/skbio.sequence.DNA.has_interval_metadata.html#skbio.sequence.DNA.has_interval_metadata">has_interval_metadata() (skbio.sequence.DNA method)</a>
+
+      <ul>
+        <li><a href="generated/skbio.sequence.GrammaredSequence.has_interval_metadata.html#skbio.sequence.GrammaredSequence.has_interval_metadata">(skbio.sequence.GrammaredSequence method)</a>
+</li>
+        <li><a href="generated/skbio.sequence.Protein.has_interval_metadata.html#skbio.sequence.Protein.has_interval_metadata">(skbio.sequence.Protein method)</a>
+</li>
+        <li><a href="generated/skbio.sequence.RNA.has_interval_metadata.html#skbio.sequence.RNA.has_interval_metadata">(skbio.sequence.RNA method)</a>
+</li>
+        <li><a href="generated/skbio.sequence.Sequence.has_interval_metadata.html#skbio.sequence.Sequence.has_interval_metadata">(skbio.sequence.Sequence method)</a>
+</li>
+      </ul></li>
+  </ul></td>
+  <td style="width: 33%; vertical-align: top;"><ul>
+      <li><a href="generated/skbio.alignment.TabularMSA.has_metadata.html#skbio.alignment.TabularMSA.has_metadata">has_metadata() (skbio.alignment.TabularMSA method)</a>
+
+      <ul>
+        <li><a href="generated/skbio.sequence.DNA.has_metadata.html#skbio.sequence.DNA.has_metadata">(skbio.sequence.DNA method)</a>
+</li>
+        <li><a href="generated/skbio.sequence.GrammaredSequence.has_metadata.html#skbio.sequence.GrammaredSequence.has_metadata">(skbio.sequence.GrammaredSequence method)</a>
+</li>
+        <li><a href="generated/skbio.sequence.Protein.has_metadata.html#skbio.sequence.Protein.has_metadata">(skbio.sequence.Protein method)</a>
+</li>
+        <li><a href="generated/skbio.sequence.RNA.has_metadata.html#skbio.sequence.RNA.has_metadata">(skbio.sequence.RNA method)</a>
+</li>
+        <li><a href="generated/skbio.sequence.Sequence.has_metadata.html#skbio.sequence.Sequence.has_metadata">(skbio.sequence.Sequence method)</a>
+</li>
+      </ul></li>
+      <li><a href="generated/skbio.sequence.DNA.has_nondegenerates.html#skbio.sequence.DNA.has_nondegenerates">has_nondegenerates() (skbio.sequence.DNA method)</a>
+
+      <ul>
+        <li><a href="generated/skbio.sequence.GrammaredSequence.has_nondegenerates.html#skbio.sequence.GrammaredSequence.has_nondegenerates">(skbio.sequence.GrammaredSequence method)</a>
+</li>
+        <li><a href="generated/skbio.sequence.Protein.has_nondegenerates.html#skbio.sequence.Protein.has_nondegenerates">(skbio.sequence.Protein method)</a>
+</li>
+        <li><a href="generated/skbio.sequence.RNA.has_nondegenerates.html#skbio.sequence.RNA.has_nondegenerates">(skbio.sequence.RNA method)</a>
+</li>
+      </ul></li>
+      <li><a href="generated/skbio.alignment.TabularMSA.has_positional_metadata.html#skbio.alignment.TabularMSA.has_positional_metadata">has_positional_metadata() (skbio.alignment.TabularMSA method)</a>
+
+      <ul>
+        <li><a href="generated/skbio.sequence.DNA.has_positional_metadata.html#skbio.sequence.DNA.has_positional_metadata">(skbio.sequence.DNA method)</a>
+</li>
+        <li><a href="generated/skbio.sequence.GrammaredSequence.has_positional_metadata.html#skbio.sequence.GrammaredSequence.has_positional_metadata">(skbio.sequence.GrammaredSequence method)</a>
+</li>
+        <li><a href="generated/skbio.sequence.Protein.has_positional_metadata.html#skbio.sequence.Protein.has_positional_metadata">(skbio.sequence.Protein method)</a>
+</li>
+        <li><a href="generated/skbio.sequence.RNA.has_positional_metadata.html#skbio.sequence.RNA.has_positional_metadata">(skbio.sequence.RNA method)</a>
+</li>
+        <li><a href="generated/skbio.sequence.Sequence.has_positional_metadata.html#skbio.sequence.Sequence.has_positional_metadata">(skbio.sequence.Sequence method)</a>
+</li>
+      </ul></li>
+      <li><a href="generated/skbio.sequence.Protein.has_stops.html#skbio.sequence.Protein.has_stops">has_stops() (skbio.sequence.Protein method)</a>
+</li>
+      <li><a href="generated/skbio.diversity.alpha.heip_e.html#skbio.diversity.alpha.heip_e">heip_e() (in module skbio.diversity.alpha)</a>
+</li>
+      <li><a href="generated/skbio.stats.evolve.hommola_cospeciation.html#skbio.stats.evolve.hommola_cospeciation">hommola_cospeciation() (in module skbio.stats.evolve)</a>
+</li>
+  </ul></td>
+</tr></table>
+
+<h2 id="I">I</h2>
+<table style="width: 100%" class="indextable genindextable"><tr>
+  <td style="width: 33%; vertical-align: top;"><ul>
+      <li><a href="generated/skbio.stats.composition.ilr.html#skbio.stats.composition.ilr">ilr() (in module skbio.stats.composition)</a>
+</li>
+      <li><a href="generated/skbio.stats.composition.ilr_inv.html#skbio.stats.composition.ilr_inv">ilr_inv() (in module skbio.stats.composition)</a>
+</li>
+      <li><a href="generated/skbio.sequence.DNA.index.html#skbio.sequence.DNA.index">index() (skbio.sequence.DNA method)</a>
+
+      <ul>
+        <li><a href="generated/skbio.sequence.GrammaredSequence.index.html#skbio.sequence.GrammaredSequence.index">(skbio.sequence.GrammaredSequence method)</a>
+</li>
+        <li><a href="generated/skbio.sequence.Protein.index.html#skbio.sequence.Protein.index">(skbio.sequence.Protein method)</a>
+</li>
+        <li><a href="generated/skbio.sequence.RNA.index.html#skbio.sequence.RNA.index">(skbio.sequence.RNA method)</a>
+</li>
+        <li><a href="generated/skbio.sequence.Sequence.index.html#skbio.sequence.Sequence.index">(skbio.sequence.Sequence method)</a>
+</li>
+        <li><a href="generated/skbio.stats.distance.DissimilarityMatrix.index.html#skbio.stats.distance.DissimilarityMatrix.index">(skbio.stats.distance.DissimilarityMatrix method)</a>
+</li>
+        <li><a href="generated/skbio.stats.distance.DistanceMatrix.index.html#skbio.stats.distance.DistanceMatrix.index">(skbio.stats.distance.DistanceMatrix method)</a>
+</li>
+      </ul></li>
+      <li><a href="generated/skbio.tree.TreeNode.index_tree.html#skbio.tree.TreeNode.index_tree">index_tree() (skbio.tree.TreeNode method)</a>
+</li>
+      <li><a href="generated/skbio.stats.gradient.GroupResults.html#skbio.stats.gradient.GroupResults.info">info (skbio.stats.gradient.GroupResults attribute)</a>
+</li>
+      <li><a href="generated/skbio.workflow.Workflow.initialize_state.html#skbio.workflow.Workflow.initialize_state">initialize_state() (skbio.workflow.Workflow method)</a>
+</li>
+      <li><a href="generated/skbio.stats.composition.inner.html#skbio.stats.composition.inner">inner() (in module skbio.stats.composition)</a>
+</li>
+      <li><a href="generated/skbio.metadata.Interval.html#skbio.metadata.Interval">Interval (class in skbio.metadata)</a>
+</li>
+      <li><a href="generated/skbio.metadata.IntervalMetadata.html#skbio.metadata.IntervalMetadata">IntervalMetadata (class in skbio.metadata)</a>
+</li>
+      <li><a href="generated/skbio.tree.TreeNode.invalidate_caches.html#skbio.tree.TreeNode.invalidate_caches">invalidate_caches() (skbio.tree.TreeNode method)</a>
+</li>
+      <li><a href="generated/skbio.io.registry.InvalidRegistrationError.html#skbio.io.registry.InvalidRegistrationError">InvalidRegistrationError</a>
+</li>
+      <li><a href="generated/skbio.io.registry.IORegistry.html#skbio.io.registry.IORegistry">IORegistry (class in skbio.io.registry)</a>
+</li>
+  </ul></td>
+  <td style="width: 33%; vertical-align: top;"><ul>
+      <li><a href="generated/skbio.io.IOSourceError.html#skbio.io.IOSourceError">IOSourceError</a>
+</li>
+      <li><a href="generated/skbio.sequence.DNA.is_reverse_complement.html#skbio.sequence.DNA.is_reverse_complement">is_reverse_complement() (skbio.sequence.DNA method)</a>
+
+      <ul>
+        <li><a href="generated/skbio.sequence.RNA.is_reverse_complement.html#skbio.sequence.RNA.is_reverse_complement">(skbio.sequence.RNA method)</a>
+</li>
+      </ul></li>
+      <li><a href="generated/skbio.tree.TreeNode.is_root.html#skbio.tree.TreeNode.is_root">is_root() (skbio.tree.TreeNode method)</a>
+</li>
+      <li><a href="generated/skbio.tree.TreeNode.is_tip.html#skbio.tree.TreeNode.is_tip">is_tip() (skbio.tree.TreeNode method)</a>
+</li>
+      <li><a href="generated/skbio.alignment.AlignmentStructure.is_zero_based.html#skbio.alignment.AlignmentStructure.is_zero_based">is_zero_based() (skbio.alignment.AlignmentStructure method)</a>
+</li>
+      <li><a href="generated/skbio.stats.isubsample.html#skbio.stats.isubsample">isubsample() (in module skbio.stats)</a>
+</li>
+      <li><a href="generated/skbio.sequence.DNA.iter_contiguous.html#skbio.sequence.DNA.iter_contiguous">iter_contiguous() (skbio.sequence.DNA method)</a>
+
+      <ul>
+        <li><a href="generated/skbio.sequence.GrammaredSequence.iter_contiguous.html#skbio.sequence.GrammaredSequence.iter_contiguous">(skbio.sequence.GrammaredSequence method)</a>
+</li>
+        <li><a href="generated/skbio.sequence.Protein.iter_contiguous.html#skbio.sequence.Protein.iter_contiguous">(skbio.sequence.Protein method)</a>
+</li>
+        <li><a href="generated/skbio.sequence.RNA.iter_contiguous.html#skbio.sequence.RNA.iter_contiguous">(skbio.sequence.RNA method)</a>
+</li>
+        <li><a href="generated/skbio.sequence.Sequence.iter_contiguous.html#skbio.sequence.Sequence.iter_contiguous">(skbio.sequence.Sequence method)</a>
+</li>
+      </ul></li>
+      <li><a href="generated/skbio.sequence.DNA.iter_kmers.html#skbio.sequence.DNA.iter_kmers">iter_kmers() (skbio.sequence.DNA method)</a>
+
+      <ul>
+        <li><a href="generated/skbio.sequence.GrammaredSequence.iter_kmers.html#skbio.sequence.GrammaredSequence.iter_kmers">(skbio.sequence.GrammaredSequence method)</a>
+</li>
+        <li><a href="generated/skbio.sequence.Protein.iter_kmers.html#skbio.sequence.Protein.iter_kmers">(skbio.sequence.Protein method)</a>
+</li>
+        <li><a href="generated/skbio.sequence.RNA.iter_kmers.html#skbio.sequence.RNA.iter_kmers">(skbio.sequence.RNA method)</a>
+</li>
+        <li><a href="generated/skbio.sequence.Sequence.iter_kmers.html#skbio.sequence.Sequence.iter_kmers">(skbio.sequence.Sequence method)</a>
+</li>
+      </ul></li>
+      <li><a href="generated/skbio.alignment.TabularMSA.iter_positions.html#skbio.alignment.TabularMSA.iter_positions">iter_positions() (skbio.alignment.TabularMSA method)</a>
+</li>
+  </ul></td>
+</tr></table>
+
+<h2 id="J">J</h2>
+<table style="width: 100%" class="indextable genindextable"><tr>
+  <td style="width: 33%; vertical-align: top;"><ul>
+      <li><a href="generated/skbio.alignment.TabularMSA.join.html#skbio.alignment.TabularMSA.join">join() (skbio.alignment.TabularMSA method)</a>
+</li>
+  </ul></td>
+</tr></table>
+
+<h2 id="K">K</h2>
+<table style="width: 100%" class="indextable genindextable"><tr>
+  <td style="width: 33%; vertical-align: top;"><ul>
+      <li><a href="generated/skbio.diversity.alpha.kempton_taylor_q.html#skbio.diversity.alpha.kempton_taylor_q">kempton_taylor_q() (in module skbio.diversity.alpha)</a>
+</li>
+      <li><a href="generated/skbio.sequence.distance.kmer_distance.html#skbio.sequence.distance.kmer_distance">kmer_distance() (in module skbio.sequence.distance)</a>
+</li>
+      <li><a href="generated/skbio.sequence.DNA.kmer_frequencies.html#skbio.sequence.DNA.kmer_frequencies">kmer_frequencies() (skbio.sequence.DNA method)</a>
+
+      <ul>
+        <li><a href="generated/skbio.sequence.GrammaredSequence.kmer_frequencies.html#skbio.sequence.GrammaredSequence.kmer_frequencies">(skbio.sequence.GrammaredSequence method)</a>
+</li>
+        <li><a href="generated/skbio.sequence.Protein.kmer_frequencies.html#skbio.sequence.Protein.kmer_frequencies">(skbio.sequence.Protein method)</a>
+</li>
+        <li><a href="generated/skbio.sequence.RNA.kmer_frequencies.html#skbio.sequence.RNA.kmer_frequencies">(skbio.sequence.RNA method)</a>
+</li>
+        <li><a href="generated/skbio.sequence.Sequence.kmer_frequencies.html#skbio.sequence.Sequence.kmer_frequencies">(skbio.sequence.Sequence method)</a>
+</li>
+      </ul></li>
+  </ul></td>
+</tr></table>
+
+<h2 id="L">L</h2>
+<table style="width: 100%" class="indextable genindextable"><tr>
+  <td style="width: 33%; vertical-align: top;"><ul>
+      <li><a href="generated/skbio.tree.TreeNode.lca.html#skbio.tree.TreeNode.lca">lca() (skbio.tree.TreeNode method)</a>
+</li>
+      <li><a href="generated/skbio.tree.TreeNode.levelorder.html#skbio.tree.TreeNode.levelorder">levelorder() (skbio.tree.TreeNode method)</a>
+</li>
+      <li><a href="generated/skbio.io.registry.IORegistry.list_read_formats.html#skbio.io.registry.IORegistry.list_read_formats">list_read_formats() (skbio.io.registry.IORegistry method)</a>
+</li>
+      <li><a href="generated/skbio.io.registry.IORegistry.list_write_formats.html#skbio.io.registry.IORegistry.list_write_formats">list_write_formats() (skbio.io.registry.IORegistry method)</a>
+</li>
+      <li><a href="generated/skbio.diversity.alpha.lladser_ci.html#skbio.diversity.alpha.lladser_ci">lladser_ci() (in module skbio.diversity.alpha)</a>
+</li>
+      <li><a href="generated/skbio.diversity.alpha.lladser_pe.html#skbio.diversity.alpha.lladser_pe">lladser_pe() (in module skbio.diversity.alpha)</a>
+</li>
+      <li><a href="generated/skbio.alignment.local_pairwise_align.html#skbio.alignment.local_pairwise_align">local_pairwise_align() (in module skbio.alignment)</a>
+</li>
+      <li><a href="generated/skbio.alignment.local_pairwise_align_nucleotide.html#skbio.alignment.local_pairwise_align_nucleotide">local_pairwise_align_nucleotide() (in module skbio.alignment)</a>
+</li>
+      <li><a href="generated/skbio.alignment.local_pairwise_align_protein.html#skbio.alignment.local_pairwise_align_protein">local_pairwise_align_protein() (in module skbio.alignment)</a>
+</li>
+  </ul></td>
+  <td style="width: 33%; vertical-align: top;"><ul>
+      <li><a href="generated/skbio.alignment.local_pairwise_align_ssw.html#skbio.alignment.local_pairwise_align_ssw">local_pairwise_align_ssw() (in module skbio.alignment)</a>
+</li>
+      <li><a href="generated/skbio.stats.ordination.OrdinationResults.html#skbio.stats.ordination.OrdinationResults.long_method_name">long_method_name (skbio.stats.ordination.OrdinationResults attribute)</a>
+</li>
+      <li><a href="generated/skbio.sequence.DNA.lowercase.html#skbio.sequence.DNA.lowercase">lowercase() (skbio.sequence.DNA method)</a>
+
+      <ul>
+        <li><a href="generated/skbio.sequence.GrammaredSequence.lowercase.html#skbio.sequence.GrammaredSequence.lowercase">(skbio.sequence.GrammaredSequence method)</a>
+</li>
+        <li><a href="generated/skbio.sequence.Protein.lowercase.html#skbio.sequence.Protein.lowercase">(skbio.sequence.Protein method)</a>
+</li>
+        <li><a href="generated/skbio.sequence.RNA.lowercase.html#skbio.sequence.RNA.lowercase">(skbio.sequence.RNA method)</a>
+</li>
+        <li><a href="generated/skbio.sequence.Sequence.lowercase.html#skbio.sequence.Sequence.lowercase">(skbio.sequence.Sequence method)</a>
+</li>
+      </ul></li>
+      <li><a href="generated/skbio.tree.TreeNode.lowest_common_ancestor.html#skbio.tree.TreeNode.lowest_common_ancestor">lowest_common_ancestor() (skbio.tree.TreeNode method)</a>
+</li>
+      <li><a href="generated/skbio.io.LSMatFormatError.html#skbio.io.LSMatFormatError">LSMatFormatError</a>
+</li>
+  </ul></td>
+</tr></table>
+
+<h2 id="M">M</h2>
+<table style="width: 100%" class="indextable genindextable"><tr>
+  <td style="width: 33%; vertical-align: top;"><ul>
+      <li><a href="generated/skbio.tree.majority_rule.html#skbio.tree.majority_rule">majority_rule() (in module skbio.tree)</a>
+</li>
+      <li><a href="generated/skbio.alignment.make_identity_substitution_matrix.html#skbio.alignment.make_identity_substitution_matrix">make_identity_substitution_matrix() (in module skbio.alignment)</a>
+</li>
+      <li><a href="generated/skbio.stats.distance.mantel.html#skbio.stats.distance.mantel">mantel() (in module skbio.stats.distance)</a>
+</li>
+      <li><a href="generated/skbio.diversity.alpha.margalef.html#skbio.diversity.alpha.margalef">margalef() (in module skbio.diversity.alpha)</a>
+</li>
+      <li><a href="generated/skbio.sequence.DNA.match_frequency.html#skbio.sequence.DNA.match_frequency">match_frequency() (skbio.sequence.DNA method)</a>
+
+      <ul>
+        <li><a href="generated/skbio.sequence.GrammaredSequence.match_frequency.html#skbio.sequence.GrammaredSequence.match_frequency">(skbio.sequence.GrammaredSequence method)</a>
+</li>
+        <li><a href="generated/skbio.sequence.Protein.match_frequency.html#skbio.sequence.Protein.match_frequency">(skbio.sequence.Protein method)</a>
+</li>
+        <li><a href="generated/skbio.sequence.RNA.match_frequency.html#skbio.sequence.RNA.match_frequency">(skbio.sequence.RNA method)</a>
+</li>
+        <li><a href="generated/skbio.sequence.Sequence.match_frequency.html#skbio.sequence.Sequence.match_frequency">(skbio.sequence.Sequence method)</a>
+</li>
+      </ul></li>
+      <li><a href="generated/skbio.sequence.DNA.matches.html#skbio.sequence.DNA.matches">matches() (skbio.sequence.DNA method)</a>
+
+      <ul>
+        <li><a href="generated/skbio.sequence.GrammaredSequence.matches.html#skbio.sequence.GrammaredSequence.matches">(skbio.sequence.GrammaredSequence method)</a>
+</li>
+        <li><a href="generated/skbio.sequence.Protein.matches.html#skbio.sequence.Protein.matches">(skbio.sequence.Protein method)</a>
+</li>
+        <li><a href="generated/skbio.sequence.RNA.matches.html#skbio.sequence.RNA.matches">(skbio.sequence.RNA method)</a>
+</li>
+        <li><a href="generated/skbio.sequence.Sequence.matches.html#skbio.sequence.Sequence.matches">(skbio.sequence.Sequence method)</a>
+</li>
+      </ul></li>
+      <li><a href="generated/skbio.diversity.alpha.mcintosh_d.html#skbio.diversity.alpha.mcintosh_d">mcintosh_d() (in module skbio.diversity.alpha)</a>
+</li>
+      <li><a href="generated/skbio.diversity.alpha.mcintosh_e.html#skbio.diversity.alpha.mcintosh_e">mcintosh_e() (in module skbio.diversity.alpha)</a>
+</li>
+      <li><a href="generated/skbio.stats.gradient.GroupResults.html#skbio.stats.gradient.GroupResults.mean">mean (skbio.stats.gradient.GroupResults attribute)</a>
+</li>
+      <li><a href="generated/skbio.stats.ordination.mean_and_std.html#skbio.stats.ordination.mean_and_std">mean_and_std() (in module skbio.stats.ordination)</a>
+</li>
+      <li><a href="generated/skbio.diversity.alpha.menhinick.html#skbio.diversity.alpha.menhinick">menhinick() (in module skbio.diversity.alpha)</a>
+</li>
+  </ul></td>
+  <td style="width: 33%; vertical-align: top;"><ul>
+      <li><a href="generated/skbio.metadata.IntervalMetadata.merge.html#skbio.metadata.IntervalMetadata.merge">merge() (skbio.metadata.IntervalMetadata method)</a>
+</li>
+      <li><a href="generated/skbio.stats.gradient.CategoryResults.html#skbio.stats.gradient.CategoryResults.message">message (skbio.stats.gradient.CategoryResults attribute)</a>
+
+      <ul>
+        <li><a href="generated/skbio.stats.gradient.GroupResults.html#skbio.stats.gradient.GroupResults.message">(skbio.stats.gradient.GroupResults attribute)</a>
+</li>
+      </ul></li>
+      <li><a href="generated/skbio.workflow.method.html#skbio.workflow.method">method (class in skbio.workflow)</a>
+</li>
+      <li><a href="generated/skbio.diversity.alpha.michaelis_menten_fit.html#skbio.diversity.alpha.michaelis_menten_fit">michaelis_menten_fit() (in module skbio.diversity.alpha)</a>
+</li>
+      <li><a href="generated/skbio.sequence.DNA.mismatch_frequency.html#skbio.sequence.DNA.mismatch_frequency">mismatch_frequency() (skbio.sequence.DNA method)</a>
+
+      <ul>
+        <li><a href="generated/skbio.sequence.GrammaredSequence.mismatch_frequency.html#skbio.sequence.GrammaredSequence.mismatch_frequency">(skbio.sequence.GrammaredSequence method)</a>
+</li>
+        <li><a href="generated/skbio.sequence.Protein.mismatch_frequency.html#skbio.sequence.Protein.mismatch_frequency">(skbio.sequence.Protein method)</a>
+</li>
+        <li><a href="generated/skbio.sequence.RNA.mismatch_frequency.html#skbio.sequence.RNA.mismatch_frequency">(skbio.sequence.RNA method)</a>
+</li>
+        <li><a href="generated/skbio.sequence.Sequence.mismatch_frequency.html#skbio.sequence.Sequence.mismatch_frequency">(skbio.sequence.Sequence method)</a>
+</li>
+      </ul></li>
+      <li><a href="generated/skbio.sequence.DNA.mismatches.html#skbio.sequence.DNA.mismatches">mismatches() (skbio.sequence.DNA method)</a>
+
+      <ul>
+        <li><a href="generated/skbio.sequence.GrammaredSequence.mismatches.html#skbio.sequence.GrammaredSequence.mismatches">(skbio.sequence.GrammaredSequence method)</a>
+</li>
+        <li><a href="generated/skbio.sequence.Protein.mismatches.html#skbio.sequence.Protein.mismatches">(skbio.sequence.Protein method)</a>
+</li>
+        <li><a href="generated/skbio.sequence.RNA.mismatches.html#skbio.sequence.RNA.mismatches">(skbio.sequence.RNA method)</a>
+</li>
+        <li><a href="generated/skbio.sequence.Sequence.mismatches.html#skbio.sequence.Sequence.mismatches">(skbio.sequence.Sequence method)</a>
+</li>
+      </ul></li>
+      <li><a href="generated/skbio.stats.distance.MissingIDError.html#skbio.stats.distance.MissingIDError">MissingIDError</a>
+</li>
+      <li><a href="generated/skbio.tree.MissingNodeError.html#skbio.tree.MissingNodeError">MissingNodeError</a>
+</li>
+      <li><a href="generated/skbio.io.registry.IORegistry.monkey_patch.html#skbio.io.registry.IORegistry.monkey_patch">monkey_patch() (skbio.io.registry.IORegistry method)</a>
+</li>
+      <li><a href="generated/skbio.stats.composition.multiplicative_replacement.html#skbio.stats.composition.multiplicative_replacement">multiplicative_replacement() (in module skbio.stats.composition)</a>
+</li>
+  </ul></td>
+</tr></table>
+
+<h2 id="N">N</h2>
+<table style="width: 100%" class="indextable genindextable"><tr>
+  <td style="width: 33%; vertical-align: top;"><ul>
+      <li><a href="generated/skbio.stats.gradient.GroupResults.html#skbio.stats.gradient.GroupResults.name">name (skbio.stats.gradient.GroupResults attribute)</a>
+</li>
+      <li><a href="generated/skbio.tree.TreeNode.neighbors.html#skbio.tree.TreeNode.neighbors">neighbors() (skbio.tree.TreeNode method)</a>
+</li>
+      <li><a href="generated/skbio.io.NewickFormatError.html#skbio.io.NewickFormatError">NewickFormatError</a>
+</li>
+      <li><a href="generated/skbio.tree.nj.html#skbio.tree.nj">nj() (in module skbio.tree)</a>
+</li>
+      <li><a href="generated/skbio.tree.NoLengthError.html#skbio.tree.NoLengthError">NoLengthError</a>
+</li>
+  </ul></td>
+  <td style="width: 33%; vertical-align: top;"><ul>
+      <li><a href="generated/skbio.tree.TreeNode.non_tips.html#skbio.tree.TreeNode.non_tips">non_tips() (skbio.tree.TreeNode method)</a>
+</li>
+      <li><a href="generated/skbio.sequence.DNA.nondegenerates.html#skbio.sequence.DNA.nondegenerates">nondegenerates() (skbio.sequence.DNA method)</a>
+
+      <ul>
+        <li><a href="generated/skbio.sequence.GrammaredSequence.nondegenerates.html#skbio.sequence.GrammaredSequence.nondegenerates">(skbio.sequence.GrammaredSequence method)</a>
+</li>
+        <li><a href="generated/skbio.sequence.Protein.nondegenerates.html#skbio.sequence.Protein.nondegenerates">(skbio.sequence.Protein method)</a>
+</li>
+        <li><a href="generated/skbio.sequence.RNA.nondegenerates.html#skbio.sequence.RNA.nondegenerates">(skbio.sequence.RNA method)</a>
+</li>
+      </ul></li>
+      <li><a href="generated/skbio.tree.NoParentError.html#skbio.tree.NoParentError">NoParentError</a>
+</li>
+  </ul></td>
+</tr></table>
+
+<h2 id="O">O</h2>
+<table style="width: 100%" class="indextable genindextable"><tr>
+  <td style="width: 33%; vertical-align: top;"><ul>
+      <li><a href="generated/skbio.tree.TreeNode.observed_node_counts.html#skbio.tree.TreeNode.observed_node_counts">observed_node_counts() (skbio.tree.TreeNode method)</a>
+</li>
+      <li><a href="generated/skbio.diversity.alpha.observed_otus.html#skbio.diversity.alpha.observed_otus">observed_otus() (in module skbio.diversity.alpha)</a>
+</li>
+      <li><a href="generated/generated/skbio.io.util.open.html#skbio.io.util.open">open() (in module skbio.io.util)</a>
+</li>
+      <li><a href="generated/generated/skbio.io.util.open_file.html#skbio.io.util.open_file">open_file() (in module skbio.io.util)</a>
+</li>
+  </ul></td>
+  <td style="width: 33%; vertical-align: top;"><ul>
+      <li><a href="generated/generated/skbio.io.util.open_files.html#skbio.io.util.open_files">open_files() (in module skbio.io.util)</a>
+</li>
+      <li><a href="generated/skbio.io.OrdinationFormatError.html#skbio.io.OrdinationFormatError">OrdinationFormatError</a>
+</li>
+      <li><a href="generated/skbio.stats.ordination.OrdinationResults.html#skbio.stats.ordination.OrdinationResults">OrdinationResults (class in skbio.stats.ordination)</a>
+</li>
+      <li><a href="generated/skbio.diversity.alpha.osd.html#skbio.diversity.alpha.osd">osd() (in module skbio.diversity.alpha)</a>
+</li>
+  </ul></td>
+</tr></table>
+
+<h2 id="P">P</h2>
+<table style="width: 100%" class="indextable genindextable"><tr>
+  <td style="width: 33%; vertical-align: top;"><ul>
+      <li><a href="generated/skbio.stats.power.paired_subsamples.html#skbio.stats.power.paired_subsamples">paired_subsamples() (in module skbio.stats.power)</a>
+</li>
+      <li><a href="generated/skbio.diversity.partial_beta_diversity.html#skbio.diversity.partial_beta_diversity">partial_beta_diversity() (in module skbio.diversity)</a>
+</li>
+      <li><a href="generated/skbio.stats.ordination.pcoa.html#skbio.stats.ordination.pcoa">pcoa() (in module skbio.stats.ordination)</a>
+</li>
+      <li><a href="generated/skbio.stats.ordination.pcoa_biplot.html#skbio.stats.ordination.pcoa_biplot">pcoa_biplot() (in module skbio.stats.ordination)</a>
+</li>
+      <li><a href="generated/skbio.stats.distance.permanova.html#skbio.stats.distance.permanova">permanova() (in module skbio.stats.distance)</a>
+</li>
+      <li><a href="generated/skbio.stats.distance.permdisp.html#skbio.stats.distance.permdisp">permdisp() (in module skbio.stats.distance)</a>
+</li>
+      <li><a href="generated/skbio.stats.distance.DistanceMatrix.permute.html#skbio.stats.distance.DistanceMatrix.permute">permute() (skbio.stats.distance.DistanceMatrix method)</a>
+</li>
+      <li><a href="generated/skbio.stats.composition.perturb.html#skbio.stats.composition.perturb">perturb() (in module skbio.stats.composition)</a>
+</li>
+      <li><a href="generated/skbio.stats.composition.perturb_inv.html#skbio.stats.composition.perturb_inv">perturb_inv() (in module skbio.stats.composition)</a>
+</li>
+      <li><a href="generated/skbio.io.PhylipFormatError.html#skbio.io.PhylipFormatError">PhylipFormatError</a>
+</li>
+      <li><a href="generated/skbio.diversity.alpha.pielou_e.html#skbio.diversity.alpha.pielou_e">pielou_e() (in module skbio.diversity.alpha)</a>
+</li>
+      <li><a href="generated/skbio.stats.distance.DissimilarityMatrix.plot.html#skbio.stats.distance.DissimilarityMatrix.plot">plot() (skbio.stats.distance.DissimilarityMatrix method)</a>
+
+      <ul>
+        <li><a href="generated/skbio.stats.distance.DistanceMatrix.plot.html#skbio.stats.distance.DistanceMatrix.plot">(skbio.stats.distance.DistanceMatrix method)</a>
+</li>
+        <li><a href="generated/skbio.stats.ordination.OrdinationResults.plot.html#skbio.stats.ordination.OrdinationResults.plot">(skbio.stats.ordination.OrdinationResults method)</a>
+</li>
+      </ul></li>
+  </ul></td>
+  <td style="width: 33%; vertical-align: top;"><ul>
+      <li><a href="generated/skbio.tree.TreeNode.pop.html#skbio.tree.TreeNode.pop">pop() (skbio.tree.TreeNode method)</a>
+</li>
+      <li><a href="generated/skbio.tree.TreeNode.postorder.html#skbio.tree.TreeNode.postorder">postorder() (skbio.tree.TreeNode method)</a>
+</li>
+      <li><a href="generated/skbio.stats.composition.power.html#skbio.stats.composition.power">power() (in module skbio.stats.composition)</a>
+</li>
+      <li><a href="generated/skbio.tree.TreeNode.pre_and_postorder.html#skbio.tree.TreeNode.pre_and_postorder">pre_and_postorder() (skbio.tree.TreeNode method)</a>
+</li>
+      <li><a href="generated/skbio.tree.TreeNode.preorder.html#skbio.tree.TreeNode.preorder">preorder() (skbio.tree.TreeNode method)</a>
+</li>
+      <li><a href="generated/skbio.stats.gradient.CategoryResults.html#skbio.stats.gradient.CategoryResults.probability">probability (skbio.stats.gradient.CategoryResults attribute)</a>
+</li>
+      <li><a href="generated/skbio.stats.ordination.OrdinationResults.html#skbio.stats.ordination.OrdinationResults.proportion_explained">proportion_explained (skbio.stats.ordination.OrdinationResults attribute)</a>
+</li>
+      <li><a href="generated/skbio.sequence.Protein.html#skbio.sequence.Protein">Protein (class in skbio.sequence)</a>
+</li>
+      <li><a href="generated/skbio.tree.TreeNode.prune.html#skbio.tree.TreeNode.prune">prune() (skbio.tree.TreeNode method)</a>
+</li>
+      <li><a href="generated/skbio.stats.distance.pwmantel.html#skbio.stats.distance.pwmantel">pwmantel() (in module skbio.stats.distance)</a>
+</li>
+  </ul></td>
+</tr></table>
+
+<h2 id="Q">Q</h2>
+<table style="width: 100%" class="indextable genindextable"><tr>
+  <td style="width: 33%; vertical-align: top;"><ul>
+      <li><a href="generated/skbio.io.QSeqFormatError.html#skbio.io.QSeqFormatError">QSeqFormatError</a>
+</li>
+  </ul></td>
+  <td style="width: 33%; vertical-align: top;"><ul>
+      <li><a href="generated/skbio.io.QUALFormatError.html#skbio.io.QUALFormatError">QUALFormatError</a>
+</li>
+      <li><a href="generated/skbio.metadata.IntervalMetadata.query.html#skbio.metadata.IntervalMetadata.query">query() (skbio.metadata.IntervalMetadata method)</a>
+</li>
+  </ul></td>
+</tr></table>
+
+<h2 id="R">R</h2>
+<table style="width: 100%" class="indextable genindextable"><tr>
+  <td style="width: 33%; vertical-align: top;"><ul>
+      <li><a href="generated/skbio.stats.distance.randdm.html#skbio.stats.distance.randdm">randdm() (in module skbio.stats.distance)</a>
+</li>
+      <li><a href="generated/skbio.stats.ordination.rda.html#skbio.stats.ordination.rda">rda() (in module skbio.stats.ordination)</a>
+</li>
+      <li><a href="generated/skbio.io.registry.read.html#skbio.io.registry.read">read() (in module skbio.io.registry)</a>
+
+      <ul>
+        <li><a href="generated/skbio.alignment.TabularMSA.read.html#skbio.alignment.TabularMSA.read">(skbio.alignment.TabularMSA class method)</a>
+</li>
+        <li><a href="generated/skbio.io.registry.IORegistry.read.html#skbio.io.registry.IORegistry.read">(skbio.io.registry.IORegistry method)</a>
+</li>
+        <li><a href="generated/skbio.metadata.IntervalMetadata.read.html#skbio.metadata.IntervalMetadata.read">(skbio.metadata.IntervalMetadata class method)</a>
+</li>
+        <li><a href="generated/skbio.sequence.DNA.read.html#skbio.sequence.DNA.read">(skbio.sequence.DNA class method)</a>
+</li>
+        <li><a href="generated/skbio.sequence.GrammaredSequence.read.html#skbio.sequence.GrammaredSequence.read">(skbio.sequence.GrammaredSequence class method)</a>
+</li>
+        <li><a href="generated/skbio.sequence.Protein.read.html#skbio.sequence.Protein.read">(skbio.sequence.Protein class method)</a>
+</li>
+        <li><a href="generated/skbio.sequence.RNA.read.html#skbio.sequence.RNA.read">(skbio.sequence.RNA class method)</a>
+</li>
+        <li><a href="generated/skbio.sequence.Sequence.read.html#skbio.sequence.Sequence.read">(skbio.sequence.Sequence class method)</a>
+</li>
+        <li><a href="generated/skbio.stats.distance.DissimilarityMatrix.read.html#skbio.stats.distance.DissimilarityMatrix.read">(skbio.stats.distance.DissimilarityMatrix class method)</a>
+</li>
+        <li><a href="generated/skbio.stats.distance.DistanceMatrix.read.html#skbio.stats.distance.DistanceMatrix.read">(skbio.stats.distance.DistanceMatrix class method)</a>
+</li>
+        <li><a href="generated/skbio.stats.ordination.OrdinationResults.read.html#skbio.stats.ordination.OrdinationResults.read">(skbio.stats.ordination.OrdinationResults class method)</a>
+</li>
+        <li><a href="generated/skbio.tree.TreeNode.read.html#skbio.tree.TreeNode.read">(skbio.tree.TreeNode class method)</a>
+</li>
+      </ul></li>
+      <li><a href="generated/skbio.io.registry.Format.reader.html#skbio.io.registry.Format.reader">reader() (skbio.io.registry.Format method)</a>
+</li>
+      <li><a href="generated/skbio.alignment.TabularMSA.reassign_index.html#skbio.alignment.TabularMSA.reassign_index">reassign_index() (skbio.alignment.TabularMSA method)</a>
+</li>
+      <li><a href="generated/skbio.stats.distance.DissimilarityMatrix.redundant_form.html#skbio.stats.distance.DissimilarityMatrix.redundant_form">redundant_form() (skbio.stats.distance.DissimilarityMatrix method)</a>
+
+      <ul>
+        <li><a href="generated/skbio.stats.distance.DistanceMatrix.redundant_form.html#skbio.stats.distance.DistanceMatrix.redundant_form">(skbio.stats.distance.DistanceMatrix method)</a>
+</li>
+      </ul></li>
+  </ul></td>
+  <td style="width: 33%; vertical-align: top;"><ul>
+      <li><a href="generated/skbio.tree.TreeNode.remove.html#skbio.tree.TreeNode.remove">remove() (skbio.tree.TreeNode method)</a>
+</li>
+      <li><a href="generated/skbio.tree.TreeNode.remove_deleted.html#skbio.tree.TreeNode.remove_deleted">remove_deleted() (skbio.tree.TreeNode method)</a>
+</li>
+      <li><a href="generated/skbio.sequence.DNA.replace.html#skbio.sequence.DNA.replace">replace() (skbio.sequence.DNA method)</a>
+
+      <ul>
+        <li><a href="generated/skbio.sequence.GrammaredSequence.replace.html#skbio.sequence.GrammaredSequence.replace">(skbio.sequence.GrammaredSequence method)</a>
+</li>
+        <li><a href="generated/skbio.sequence.Protein.replace.html#skbio.sequence.Protein.replace">(skbio.sequence.Protein method)</a>
+</li>
+        <li><a href="generated/skbio.sequence.RNA.replace.html#skbio.sequence.RNA.replace">(skbio.sequence.RNA method)</a>
+</li>
+        <li><a href="generated/skbio.sequence.Sequence.replace.html#skbio.sequence.Sequence.replace">(skbio.sequence.Sequence method)</a>
+</li>
+      </ul></li>
+      <li><a href="generated/skbio.util.RepresentationWarning.html#skbio.util.RepresentationWarning">RepresentationWarning</a>
+</li>
+      <li><a href="generated/skbio.workflow.requires.html#skbio.workflow.requires">requires (class in skbio.workflow)</a>
+</li>
+      <li><a href="generated/skbio.sequence.DNA.reverse_complement.html#skbio.sequence.DNA.reverse_complement">reverse_complement() (skbio.sequence.DNA method)</a>
+
+      <ul>
+        <li><a href="generated/skbio.sequence.RNA.reverse_complement.html#skbio.sequence.RNA.reverse_complement">(skbio.sequence.RNA method)</a>
+</li>
+      </ul></li>
+      <li><a href="generated/skbio.sequence.RNA.reverse_transcribe.html#skbio.sequence.RNA.reverse_transcribe">reverse_transcribe() (skbio.sequence.RNA method)</a>
+</li>
+      <li><a href="generated/skbio.sequence.RNA.html#skbio.sequence.RNA">RNA (class in skbio.sequence)</a>
+</li>
+      <li><a href="generated/skbio.diversity.alpha.robbins.html#skbio.diversity.alpha.robbins">robbins() (in module skbio.diversity.alpha)</a>
+</li>
+      <li><a href="generated/skbio.tree.TreeNode.root.html#skbio.tree.TreeNode.root">root() (skbio.tree.TreeNode method)</a>
+</li>
+      <li><a href="generated/skbio.tree.TreeNode.root_at.html#skbio.tree.TreeNode.root_at">root_at() (skbio.tree.TreeNode method)</a>
+</li>
+      <li><a href="generated/skbio.tree.TreeNode.root_at_midpoint.html#skbio.tree.TreeNode.root_at_midpoint">root_at_midpoint() (skbio.tree.TreeNode method)</a>
+</li>
+  </ul></td>
+</tr></table>
+
+<h2 id="S">S</h2>
+<table style="width: 100%" class="indextable genindextable"><tr>
+  <td style="width: 33%; vertical-align: top;"><ul>
+      <li><a href="generated/skbio.util.safe_md5.html#skbio.util.safe_md5">safe_md5() (in module skbio.util)</a>
+</li>
+      <li><a href="generated/skbio.stats.ordination.OrdinationResults.html#skbio.stats.ordination.OrdinationResults.sample_constraints">sample_constraints (skbio.stats.ordination.OrdinationResults attribute)</a>
+</li>
+      <li><a href="generated/skbio.stats.ordination.OrdinationResults.html#skbio.stats.ordination.OrdinationResults.samples">samples (skbio.stats.ordination.OrdinationResults attribute)</a>
+</li>
+      <li><a href="generated/skbio.stats.composition.sbp_basis.html#skbio.stats.composition.sbp_basis">sbp_basis() (in module skbio.stats.composition)</a>
+</li>
+      <li><a href="generated/skbio.stats.ordination.scale.html#skbio.stats.ordination.scale">scale() (in module skbio.stats.ordination)</a>
+</li>
+      <li><a href="generated/skbio.sequence.Sequence.html#skbio.sequence.Sequence">Sequence (class in skbio.sequence)</a>
+</li>
+      <li><a href="generated/skbio.alignment.AlignmentStructure.set_zero_based.html#skbio.alignment.AlignmentStructure.set_zero_based">set_zero_based() (skbio.alignment.AlignmentStructure method)</a>
+</li>
+      <li><a href="generated/skbio.util.classproperty.setter.html#skbio.util.classproperty.setter">setter() (skbio.util.classproperty method)</a>
+</li>
+      <li><a href="generated/skbio.diversity.alpha.shannon.html#skbio.diversity.alpha.shannon">shannon() (in module skbio.diversity.alpha)</a>
+</li>
+      <li><a href="generated/skbio.tree.TreeNode.shear.html#skbio.tree.TreeNode.shear">shear() (skbio.tree.TreeNode method)</a>
+</li>
+      <li><a href="generated/skbio.stats.ordination.OrdinationResults.html#skbio.stats.ordination.OrdinationResults.short_method_name">short_method_name (skbio.stats.ordination.OrdinationResults attribute)</a>
+</li>
+      <li><a href="generated/skbio.tree.TreeNode.shuffle.html#skbio.tree.TreeNode.shuffle">shuffle() (skbio.tree.TreeNode method)</a>
+</li>
+      <li><a href="generated/skbio.tree.TreeNode.siblings.html#skbio.tree.TreeNode.siblings">siblings() (skbio.tree.TreeNode method)</a>
+</li>
+      <li><a href="generated/skbio.diversity.alpha.simpson.html#skbio.diversity.alpha.simpson">simpson() (in module skbio.diversity.alpha)</a>
+</li>
+      <li><a href="generated/skbio.diversity.alpha.simpson_e.html#skbio.diversity.alpha.simpson_e">simpson_e() (in module skbio.diversity.alpha)</a>
+</li>
+      <li><a href="generated/skbio.diversity.alpha.singles.html#skbio.diversity.alpha.singles">singles() (in module skbio.diversity.alpha)</a>
+</li>
+      <li><a href="alignment.html#module-skbio.alignment">skbio.alignment (module)</a>
+</li>
+      <li><a href="diversity.html#module-skbio.diversity">skbio.diversity (module)</a>
+</li>
+      <li><a href="generated/skbio.diversity.alpha.html#module-skbio.diversity.alpha">skbio.diversity.alpha (module)</a>
+</li>
+      <li><a href="generated/skbio.diversity.beta.html#module-skbio.diversity.beta">skbio.diversity.beta (module)</a>
+</li>
+      <li><a href="io.html#module-skbio.io">skbio.io (module)</a>
+</li>
+      <li><a href="generated/skbio.io.format.blast6.html#module-skbio.io.format.blast6">skbio.io.format.blast6 (module)</a>
+</li>
+      <li><a href="generated/skbio.io.format.blast7.html#module-skbio.io.format.blast7">skbio.io.format.blast7 (module)</a>
+</li>
+      <li><a href="generated/skbio.io.format.clustal.html#module-skbio.io.format.clustal">skbio.io.format.clustal (module)</a>
+</li>
+      <li><a href="generated/skbio.io.format.embl.html#module-skbio.io.format.embl">skbio.io.format.embl (module)</a>
+</li>
+      <li><a href="generated/skbio.io.format.fasta.html#module-skbio.io.format.fasta">skbio.io.format.fasta (module)</a>
+</li>
+      <li><a href="generated/skbio.io.format.fastq.html#module-skbio.io.format.fastq">skbio.io.format.fastq (module)</a>
+</li>
+      <li><a href="generated/skbio.io.format.genbank.html#module-skbio.io.format.genbank">skbio.io.format.genbank (module)</a>
+</li>
+      <li><a href="generated/skbio.io.format.gff3.html#module-skbio.io.format.gff3">skbio.io.format.gff3 (module)</a>
+</li>
+      <li><a href="generated/skbio.io.format.lsmat.html#module-skbio.io.format.lsmat">skbio.io.format.lsmat (module)</a>
+</li>
+      <li><a href="generated/skbio.io.format.newick.html#module-skbio.io.format.newick">skbio.io.format.newick (module)</a>
+</li>
+      <li><a href="generated/skbio.io.format.ordination.html#module-skbio.io.format.ordination">skbio.io.format.ordination (module)</a>
+</li>
+      <li><a href="generated/skbio.io.format.phylip.html#module-skbio.io.format.phylip">skbio.io.format.phylip (module)</a>
+</li>
+  </ul></td>
+  <td style="width: 33%; vertical-align: top;"><ul>
+      <li><a href="generated/skbio.io.format.qseq.html#module-skbio.io.format.qseq">skbio.io.format.qseq (module)</a>
+</li>
+      <li><a href="generated/skbio.io.format.stockholm.html#module-skbio.io.format.stockholm">skbio.io.format.stockholm (module)</a>
+</li>
+      <li><a href="generated/skbio.io.registry.html#module-skbio.io.registry">skbio.io.registry (module)</a>
+</li>
+      <li><a href="generated/skbio.io.util.html#module-skbio.io.util">skbio.io.util (module)</a>
+</li>
+      <li><a href="metadata.html#module-skbio.metadata">skbio.metadata (module)</a>
+</li>
+      <li><a href="sequence.html#module-skbio.sequence">skbio.sequence (module)</a>
+</li>
+      <li><a href="generated/skbio.sequence.distance.html#module-skbio.sequence.distance">skbio.sequence.distance (module)</a>
+</li>
+      <li><a href="stats.html#module-skbio.stats">skbio.stats (module)</a>
+</li>
+      <li><a href="generated/skbio.stats.composition.html#module-skbio.stats.composition">skbio.stats.composition (module)</a>
+</li>
+      <li><a href="generated/skbio.stats.distance.html#module-skbio.stats.distance">skbio.stats.distance (module)</a>
+</li>
+      <li><a href="generated/skbio.stats.evolve.html#module-skbio.stats.evolve">skbio.stats.evolve (module)</a>
+</li>
+      <li><a href="generated/skbio.stats.gradient.html#module-skbio.stats.gradient">skbio.stats.gradient (module)</a>
+</li>
+      <li><a href="generated/skbio.stats.ordination.html#module-skbio.stats.ordination">skbio.stats.ordination (module)</a>
+</li>
+      <li><a href="generated/skbio.stats.power.html#module-skbio.stats.power">skbio.stats.power (module)</a>
+</li>
+      <li><a href="tree.html#module-skbio.tree">skbio.tree (module)</a>
+</li>
+      <li><a href="util.html#module-skbio.util">skbio.util (module)</a>
+</li>
+      <li><a href="workflow.html#module-skbio.workflow">skbio.workflow (module)</a>
+</li>
+      <li><a href="generated/skbio.io.registry.sniff.html#skbio.io.registry.sniff">sniff() (in module skbio.io.registry)</a>
+
+      <ul>
+        <li><a href="generated/skbio.io.registry.IORegistry.sniff.html#skbio.io.registry.IORegistry.sniff">(skbio.io.registry.IORegistry method)</a>
+</li>
+      </ul></li>
+      <li><a href="generated/skbio.io.registry.Format.sniffer.html#skbio.io.registry.Format.sniffer">sniffer() (skbio.io.registry.Format method)</a>
+</li>
+      <li><a href="generated/skbio.alignment.TabularMSA.sort.html#skbio.alignment.TabularMSA.sort">sort() (skbio.alignment.TabularMSA method)</a>
+
+      <ul>
+        <li><a href="generated/skbio.metadata.IntervalMetadata.sort.html#skbio.metadata.IntervalMetadata.sort">(skbio.metadata.IntervalMetadata method)</a>
+</li>
+      </ul></li>
+      <li><a href="generated/skbio.io.StockholmFormatError.html#skbio.io.StockholmFormatError">StockholmFormatError</a>
+</li>
+      <li><a href="generated/skbio.sequence.Protein.stops.html#skbio.sequence.Protein.stops">stops() (skbio.sequence.Protein method)</a>
+</li>
+      <li><a href="generated/skbio.alignment.StripedSmithWaterman.html#skbio.alignment.StripedSmithWaterman">StripedSmithWaterman (class in skbio.alignment)</a>
+</li>
+      <li><a href="generated/skbio.diversity.alpha.strong.html#skbio.diversity.alpha.strong">strong() (in module skbio.diversity.alpha)</a>
+</li>
+      <li><a href="generated/skbio.stats.subsample_counts.html#skbio.stats.subsample_counts">subsample_counts() (in module skbio.stats)</a>
+</li>
+      <li><a href="generated/skbio.stats.power.subsample_paired_power.html#skbio.stats.power.subsample_paired_power">subsample_paired_power() (in module skbio.stats.power)</a>
+</li>
+      <li><a href="generated/skbio.stats.power.subsample_power.html#skbio.stats.power.subsample_power">subsample_power() (in module skbio.stats.power)</a>
+</li>
+      <li><a href="generated/skbio.tree.TreeNode.subset.html#skbio.tree.TreeNode.subset">subset() (skbio.tree.TreeNode method)</a>
+</li>
+      <li><a href="generated/skbio.tree.TreeNode.subsets.html#skbio.tree.TreeNode.subsets">subsets() (skbio.tree.TreeNode method)</a>
+</li>
+      <li><a href="generated/skbio.tree.TreeNode.subtree.html#skbio.tree.TreeNode.subtree">subtree() (skbio.tree.TreeNode method)</a>
+</li>
+      <li><a href="generated/skbio.tree.TreeNode.support.html#skbio.tree.TreeNode.support">support() (skbio.tree.TreeNode method)</a>
+</li>
+      <li><a href="generated/skbio.stats.ordination.svd_rank.html#skbio.stats.ordination.svd_rank">svd_rank() (in module skbio.stats.ordination)</a>
+</li>
+  </ul></td>
+</tr></table>
+
+<h2 id="T">T</h2>
+<table style="width: 100%" class="indextable genindextable"><tr>
+  <td style="width: 33%; vertical-align: top;"><ul>
+      <li><a href="generated/skbio.alignment.TabularMSA.html#skbio.alignment.TabularMSA">TabularMSA (class in skbio.alignment)</a>
+</li>
+      <li><a href="generated/skbio.tree.TreeNode.tip_tip_distances.html#skbio.tree.TreeNode.tip_tip_distances">tip_tip_distances() (skbio.tree.TreeNode method)</a>
+</li>
+      <li><a href="generated/skbio.tree.TreeNode.tips.html#skbio.tree.TreeNode.tips">tips() (skbio.tree.TreeNode method)</a>
+</li>
+      <li><a href="generated/skbio.tree.TreeNode.to_array.html#skbio.tree.TreeNode.to_array">to_array() (skbio.tree.TreeNode method)</a>
+</li>
+      <li><a href="generated/skbio.stats.distance.DissimilarityMatrix.to_data_frame.html#skbio.stats.distance.DissimilarityMatrix.to_data_frame">to_data_frame() (skbio.stats.distance.DissimilarityMatrix method)</a>
+
+      <ul>
+        <li><a href="generated/skbio.stats.distance.DistanceMatrix.to_data_frame.html#skbio.stats.distance.DistanceMatrix.to_data_frame">(skbio.stats.distance.DistanceMatrix method)</a>
+</li>
+      </ul></li>
+      <li><a href="generated/skbio.alignment.TabularMSA.to_dict.html#skbio.alignment.TabularMSA.to_dict">to_dict() (skbio.alignment.TabularMSA method)</a>
+</li>
+      <li><a href="generated/skbio.stats.gradient.CategoryResults.to_files.html#skbio.stats.gradient.CategoryResults.to_files">to_files() (skbio.stats.gradient.CategoryResults method)</a>
+
+      <ul>
+        <li><a href="generated/skbio.stats.gradient.GradientANOVAResults.to_files.html#skbio.stats.gradient.GradientANOVAResults.to_files">(skbio.stats.gradient.GradientANOVAResults method)</a>
+</li>
+        <li><a href="generated/skbio.stats.gradient.GroupResults.to_files.html#skbio.stats.gradient.GroupResults.to_files">(skbio.stats.gradient.GroupResults method)</a>
+</li>
+      </ul></li>
+      <li><a href="generated/skbio.sequence.DNA.to_regex.html#skbio.sequence.DNA.to_regex">to_regex() (skbio.sequence.DNA method)</a>
+
+      <ul>
+        <li><a href="generated/skbio.sequence.GrammaredSequence.to_regex.html#skbio.sequence.GrammaredSequence.to_regex">(skbio.sequence.GrammaredSequence method)</a>
+</li>
+        <li><a href="generated/skbio.sequence.Protein.to_regex.html#skbio.sequence.Protein.to_regex">(skbio.sequence.Protein method)</a>
+</li>
+        <li><a href="generated/skbio.sequence.RNA.to_regex.html#skbio.sequence.RNA.to_regex">(skbio.sequence.RNA method)</a>
+</li>
+      </ul></li>
+      <li><a href="generated/skbio.stats.distance.DistanceMatrix.to_series.html#skbio.stats.distance.DistanceMatrix.to_series">to_series() (skbio.stats.distance.DistanceMatrix method)</a>
+</li>
+  </ul></td>
+  <td style="width: 33%; vertical-align: top;"><ul>
+      <li><a href="generated/skbio.tree.TreeNode.to_taxonomy.html#skbio.tree.TreeNode.to_taxonomy">to_taxonomy() (skbio.tree.TreeNode method)</a>
+</li>
+      <li><a href="generated/skbio.stats.gradient.GroupResults.html#skbio.stats.gradient.GroupResults.trajectory">trajectory (skbio.stats.gradient.GroupResults attribute)</a>
+</li>
+      <li><a href="generated/skbio.stats.gradient.TrajectoryGradientANOVA.html#skbio.stats.gradient.TrajectoryGradientANOVA">TrajectoryGradientANOVA (class in skbio.stats.gradient)</a>
+</li>
+      <li><a href="generated/skbio.sequence.DNA.transcribe.html#skbio.sequence.DNA.transcribe">transcribe() (skbio.sequence.DNA method)</a>
+</li>
+      <li><a href="generated/skbio.sequence.DNA.translate.html#skbio.sequence.DNA.translate">translate() (skbio.sequence.DNA method)</a>
+
+      <ul>
+        <li><a href="generated/skbio.sequence.GeneticCode.translate.html#skbio.sequence.GeneticCode.translate">(skbio.sequence.GeneticCode method)</a>
+</li>
+        <li><a href="generated/skbio.sequence.RNA.translate.html#skbio.sequence.RNA.translate">(skbio.sequence.RNA method)</a>
+</li>
+      </ul></li>
+      <li><a href="generated/skbio.sequence.DNA.translate_six_frames.html#skbio.sequence.DNA.translate_six_frames">translate_six_frames() (skbio.sequence.DNA method)</a>
+
+      <ul>
+        <li><a href="generated/skbio.sequence.GeneticCode.translate_six_frames.html#skbio.sequence.GeneticCode.translate_six_frames">(skbio.sequence.GeneticCode method)</a>
+</li>
+        <li><a href="generated/skbio.sequence.RNA.translate_six_frames.html#skbio.sequence.RNA.translate_six_frames">(skbio.sequence.RNA method)</a>
+</li>
+      </ul></li>
+      <li><a href="generated/skbio.stats.distance.DissimilarityMatrix.transpose.html#skbio.stats.distance.DissimilarityMatrix.transpose">transpose() (skbio.stats.distance.DissimilarityMatrix method)</a>
+
+      <ul>
+        <li><a href="generated/skbio.stats.distance.DistanceMatrix.transpose.html#skbio.stats.distance.DistanceMatrix.transpose">(skbio.stats.distance.DistanceMatrix method)</a>
+</li>
+      </ul></li>
+      <li><a href="generated/skbio.tree.TreeNode.traverse.html#skbio.tree.TreeNode.traverse">traverse() (skbio.tree.TreeNode method)</a>
+</li>
+      <li><a href="generated/skbio.tree.TreeError.html#skbio.tree.TreeError">TreeError</a>
+</li>
+      <li><a href="generated/skbio.tree.TreeNode.html#skbio.tree.TreeNode">TreeNode (class in skbio.tree)</a>
+</li>
+  </ul></td>
+</tr></table>
+
+<h2 id="U">U</h2>
+<table style="width: 100%" class="indextable genindextable"><tr>
+  <td style="width: 33%; vertical-align: top;"><ul>
+      <li><a href="generated/skbio.tree.TreeNode.unpack.html#skbio.tree.TreeNode.unpack">unpack() (skbio.tree.TreeNode method)</a>
+</li>
+      <li><a href="generated/skbio.tree.TreeNode.unpack_by_func.html#skbio.tree.TreeNode.unpack_by_func">unpack_by_func() (skbio.tree.TreeNode method)</a>
+</li>
+      <li><a href="generated/skbio.io.UnrecognizedFormatError.html#skbio.io.UnrecognizedFormatError">UnrecognizedFormatError</a>
+</li>
+  </ul></td>
+  <td style="width: 33%; vertical-align: top;"><ul>
+      <li><a href="generated/skbio.tree.TreeNode.unrooted_copy.html#skbio.tree.TreeNode.unrooted_copy">unrooted_copy() (skbio.tree.TreeNode method)</a>
+</li>
+      <li><a href="generated/skbio.tree.TreeNode.unrooted_deepcopy.html#skbio.tree.TreeNode.unrooted_deepcopy">unrooted_deepcopy() (skbio.tree.TreeNode method)</a>
+</li>
+      <li><a href="generated/skbio.diversity.beta.unweighted_unifrac.html#skbio.diversity.beta.unweighted_unifrac">unweighted_unifrac() (in module skbio.diversity.beta)</a>
+</li>
+  </ul></td>
+</tr></table>
+
+<h2 id="W">W</h2>
+<table style="width: 100%" class="indextable genindextable"><tr>
+  <td style="width: 33%; vertical-align: top;"><ul>
+      <li><a href="generated/skbio.stats.gradient.GradientANOVAResults.html#skbio.stats.gradient.GradientANOVAResults.weighted">weighted (skbio.stats.gradient.GradientANOVAResults attribute)</a>
+</li>
+      <li><a href="generated/skbio.diversity.beta.weighted_unifrac.html#skbio.diversity.beta.weighted_unifrac">weighted_unifrac() (in module skbio.diversity.beta)</a>
+</li>
+      <li><a href="generated/skbio.stats.gradient.WindowDifferenceGradientANOVA.html#skbio.stats.gradient.WindowDifferenceGradientANOVA">WindowDifferenceGradientANOVA (class in skbio.stats.gradient)</a>
+</li>
+      <li><a href="generated/skbio.workflow.Workflow.html#skbio.workflow.Workflow">Workflow (class in skbio.workflow)</a>
+</li>
+      <li><a href="generated/skbio.io.registry.write.html#skbio.io.registry.write">write() (in module skbio.io.registry)</a>
+
+      <ul>
+        <li><a href="generated/skbio.alignment.TabularMSA.write.html#skbio.alignment.TabularMSA.write">(skbio.alignment.TabularMSA method)</a>
+</li>
+        <li><a href="generated/skbio.io.registry.IORegistry.write.html#skbio.io.registry.IORegistry.write">(skbio.io.registry.IORegistry method)</a>
+</li>
+        <li><a href="generated/skbio.metadata.IntervalMetadata.write.html#skbio.metadata.IntervalMetadata.write">(skbio.metadata.IntervalMetadata method)</a>
+</li>
+        <li><a href="generated/skbio.sequence.DNA.write.html#skbio.sequence.DNA.write">(skbio.sequence.DNA method)</a>
+</li>
+        <li><a href="generated/skbio.sequence.GrammaredSequence.write.html#skbio.sequence.GrammaredSequence.write">(skbio.sequence.GrammaredSequence method)</a>
+</li>
+        <li><a href="generated/skbio.sequence.Protein.write.html#skbio.sequence.Protein.write">(skbio.sequence.Protein method)</a>
+</li>
+        <li><a href="generated/skbio.sequence.RNA.write.html#skbio.sequence.RNA.write">(skbio.sequence.RNA method)</a>
+</li>
+        <li><a href="generated/skbio.sequence.Sequence.write.html#skbio.sequence.Sequence.write">(skbio.sequence.Sequence method)</a>
+</li>
+        <li><a href="generated/skbio.stats.distance.DissimilarityMatrix.write.html#skbio.stats.distance.DissimilarityMatrix.write">(skbio.stats.distance.DissimilarityMatrix method)</a>
+</li>
+        <li><a href="generated/skbio.stats.distance.DistanceMatrix.write.html#skbio.stats.distance.DistanceMatrix.write">(skbio.stats.distance.DistanceMatrix method)</a>
+</li>
+        <li><a href="generated/skbio.stats.ordination.OrdinationResults.write.html#skbio.stats.ordination.OrdinationResults.write">(skbio.stats.ordination.OrdinationResults method)</a>
+</li>
+        <li><a href="generated/skbio.tree.TreeNode.write.html#skbio.tree.TreeNode.write">(skbio.tree.TreeNode method)</a>
+</li>
+      </ul></li>
+  </ul></td>
+  <td style="width: 33%; vertical-align: top;"><ul>
+      <li><a href="generated/skbio.io.registry.Format.writer.html#skbio.io.registry.Format.writer">writer() (skbio.io.registry.Format method)</a>
+</li>
+  </ul></td>
+</tr></table>
+
+
+
+    </div>
+      
+  </div>
+</div>
+  
+<footer class="footer">
+  <div class="container">
+    <p class="pull-right">
+      <a href="#">Back to top</a>
+      
+    </p>
+    <p>
+        &copy; Copyright 2014--, scikit-bio development team.<br/>
+      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 1.8.2.<br/>
+    </p>
+  </div>
+</footer>
+  <script>
+    (function(i,s,o,g,r,a,m){i['GoogleAnalyticsObject']=r;i[r]=i[r]||function(){
+    (i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),
+    m=s.getElementsByTagName(o)[0];a.async=1;a.src=g;m.parentNode.insertBefore(a,m)
+    })(window,document,'script','//www.google-analytics.com/analytics.js','ga');
+
+    ga('create', 'UA-6636235-9', 'scikit-bio.org');
+    ga('send', 'pageview');
+  </script>
+
+  </body>
+</html>

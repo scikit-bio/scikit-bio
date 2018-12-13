@@ -1,0 +1,93 @@
+
+skbio.stats.ordination.OrdinationResults
+========================================
+
+
+
+
+   
+
+   
+
+   
+
+   
+      
+   
+
+   
+
+   
+
+   
+
+   
+
+   
+      
+   
+
+   
+
+   
+
+   
+
+   
+
+   
+
+   
+
+   
+
+   
+
+   
+
+   
+
+   
+
+
+.. currentmodule:: skbio.stats.ordination
+
+.. autoclass:: OrdinationResults
+
+   
+   .. rubric:: Attributes
+
+   .. autosummary::
+   
+      ~OrdinationResults.default_write_format
+      ~OrdinationResults.png
+      ~OrdinationResults.svg
+   
+
+   
+   .. rubric:: Built-ins
+
+   .. autosummary::
+      :toctree:
+   
+      ~OrdinationResults.__init_subclass__
+      ~OrdinationResults.__str__
+   
+
+   
+   .. rubric:: Methods
+
+   .. autosummary::
+      :toctree:
+   
+      
+      
+      ~OrdinationResults.plot
+      
+      
+      ~OrdinationResults.read
+      
+      
+      ~OrdinationResults.write
+      
+   

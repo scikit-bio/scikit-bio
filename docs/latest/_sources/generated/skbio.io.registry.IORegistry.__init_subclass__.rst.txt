@@ -1,0 +1,8 @@
+:orphan:
+
+skbio.io.registry.IORegistry.__init_subclass__
+==============================================
+
+.. currentmodule:: skbio.io.registry
+
+.. automethod:: IORegistry.__init_subclass__

@@ -1,8 +1,0 @@
-:orphan:
-
-skbio.workflow.method.__format__
-================================
-
-.. currentmodule:: skbio.workflow
-
-.. automethod:: method.__format__

@@ -1,0 +1,480 @@
+<!DOCTYPE html>
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="X-UA-Compatible" content="IE=Edge" />
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    <title>skbio.sequence.RNA &#8212; scikit-bio 0.5.5 documentation</title>
+    <link rel="stylesheet" href="../_static/bootstrap-sphinx.css" type="text/css" />
+    <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
+    <link rel="stylesheet" type="text/css" href="../_static/style.css" />
+    <script type="text/javascript" id="documentation_options" data-url_root="../" src="../_static/documentation_options.js"></script>
+    <script type="text/javascript" src="../_static/jquery.js"></script>
+    <script type="text/javascript" src="../_static/underscore.js"></script>
+    <script type="text/javascript" src="../_static/doctools.js"></script>
+    <script type="text/javascript" src="../_static/copybutton.js"></script>
+    <script async="async" type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.1/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
+    <script type="text/javascript" src="../_static/js/jquery-1.11.0.min.js"></script>
+    <script type="text/javascript" src="../_static/js/jquery-fix.js"></script>
+    <script type="text/javascript" src="../_static/bootstrap-3.3.7/js/bootstrap.min.js"></script>
+    <script type="text/javascript" src="../_static/bootstrap-sphinx.js"></script>
+    <link rel="index" title="Index" href="../genindex.html" />
+    <link rel="search" title="Search" href="../search.html" />
+    <link rel="next" title="skbio.sequence.RNA.__bool__" href="skbio.sequence.RNA.__bool__.html" />
+    <link rel="prev" title="skbio.sequence.DNA.write" href="skbio.sequence.DNA.write.html" />
+<meta charset='utf-8'>
+<meta http-equiv='X-UA-Compatible' content='IE=edge,chrome=1'>
+<meta name='viewport' content='width=device-width, initial-scale=1.0, maximum-scale=1'>
+<meta name="apple-mobile-web-app-capable" content="yes">
+
+  </head><body>
+  
+  <a href="https://github.com/biocore/scikit-bio"
+     class="visible-desktop hidden-xs"><img
+    id="gh-banner"
+    style="position: absolute; top: 50px; right: 0; border: 0;"
+    src="https://s3.amazonaws.com/github/ribbons/forkme_right_darkblue_121621.png"
+    alt="Fork me on GitHub"></a>
+  <script>
+    // Adjust banner height.
+    $(function () {
+      var navHeight = $(".navbar .container").css("height");
+      $("#gh-banner").css("top", navHeight);
+    });
+  </script>
+
+
+  <div id="navbar" class="navbar navbar-default navbar-fixed-top">
+    <div class="container">
+      <div class="navbar-header">
+        <!-- .btn-navbar is used as the toggle for collapsed navbar content -->
+        <button type="button" class="navbar-toggle" data-toggle="collapse" data-target=".nav-collapse">
+          <span class="icon-bar"></span>
+          <span class="icon-bar"></span>
+          <span class="icon-bar"></span>
+        </button>
+        <a class="navbar-brand" href="../index.html">
+          scikit-bio docs</a>
+        <span class="navbar-text navbar-version pull-left"><b>0.5.5</b></span>
+      </div>
+
+        <div class="collapse navbar-collapse nav-collapse">
+          <ul class="nav navbar-nav">
+            
+            
+              <li class="dropdown globaltoc-container">
+  <a role="button"
+     id="dLabelGlobalToc"
+     data-toggle="dropdown"
+     data-target="#"
+     href="../index.html">Site <b class="caret"></b></a>
+  <ul class="dropdown-menu globaltoc"
+      role="menu"
+      aria-labelledby="dLabelGlobalToc"><ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="../io.html">File I/O (<code class="docutils literal notranslate"><span class="pre">skbio.io</span></code>)</a></li>
+<li class="toctree-l1 current"><a class="reference internal" href="../sequence.html">Sequences (<code class="docutils literal notranslate"><span class="pre">skbio.sequence</span></code>)</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../alignment.html">Alignments (<code class="docutils literal notranslate"><span class="pre">skbio.alignment</span></code>)</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../tree.html">Tree representations (<code class="docutils literal notranslate"><span class="pre">skbio.tree</span></code>)</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../workflow.html">Constructing workflows (<code class="docutils literal notranslate"><span class="pre">skbio.workflow</span></code>)</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../diversity.html">Diversity calculations (<code class="docutils literal notranslate"><span class="pre">skbio.diversity</span></code>)</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../stats.html">Statistics (<code class="docutils literal notranslate"><span class="pre">skbio.stats</span></code>)</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../metadata.html">Metadata (<code class="docutils literal notranslate"><span class="pre">skbio.metadata</span></code>)</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../util.html">Utility functionality (<code class="docutils literal notranslate"><span class="pre">skbio.util</span></code>)</a></li>
+</ul>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../user/api_stability.html">API Stability</a></li>
+</ul>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../development/coding_guidelines.html">Coding guidelines</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../development/new_module.html">Adding a new module to skbio</a></li>
+</ul>
+</ul>
+</li>
+              
+                <li class="dropdown">
+  <a role="button"
+     id="dLabelLocalToc"
+     data-toggle="dropdown"
+     data-target="#"
+     href="#">Page <b class="caret"></b></a>
+  <ul class="dropdown-menu localtoc"
+      role="menu"
+      aria-labelledby="dLabelLocalToc"><ul>
+<li><a class="reference internal" href="#">skbio.sequence.RNA</a><ul>
+</ul>
+</li>
+</ul>
+</ul>
+</li>
+              
+            
+            
+            
+            
+            
+          </ul>
+
+          
+            
+<form class="navbar-form navbar-right" action="../search.html" method="get">
+ <div class="form-group">
+  <input type="text" name="q" class="form-control" placeholder="Search" />
+ </div>
+  <input type="hidden" name="check_keywords" value="yes" />
+  <input type="hidden" name="area" value="default" />
+</form>
+          
+        </div>
+    </div>
+  </div>
+
+<div class="container">
+  <div class="row">
+    <div class="col-md-12 content">
+      
+  <div class="section" id="skbio-sequence-rna">
+<h1>skbio.sequence.RNA<a class="headerlink" href="#skbio-sequence-rna" title="Permalink to this headline">¶</a></h1>
+<dl class="class">
+<dt id="skbio.sequence.RNA">
+<em class="property">class </em><code class="descclassname">skbio.sequence.</code><code class="descname">RNA</code><span class="sig-paren">(</span><em>sequence</em>, <em>metadata=None</em>, <em>positional_metadata=None</em>, <em>interval_metadata=None</em>, <em>lowercase=False</em>, <em>validate=True</em><span class="sig-paren">)</span><a class="reference external" href="http://github.com/biocore/scikit-bio/blob/0.5.5/skbio/sequence/_rna.py#L16"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#skbio.sequence.RNA" title="Permalink to this definition">¶</a></dt>
+<dd><p>Store RNA sequence data and optional associated metadata.</p>
+<p>Only characters in the IUPAC RNA character set <a class="footnote-reference" href="#id2" id="id1">[1]</a> are supported.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first last simple">
+<li><strong>sequence</strong> (<a class="reference external" href="https://docs.python.org/dev/library/stdtypes.html#str" title="(in Python v3.8)"><em>str</em></a><em>, </em><a class="reference internal" href="skbio.sequence.Sequence.html#skbio.sequence.Sequence" title="skbio.sequence.Sequence"><em>Sequence</em></a><em>, or </em><em>1D np.ndarray</em><em> (</em><em>np.uint8</em><em> or </em><em>'|S1'</em><em>)</em>) – Characters representing the RNA sequence itself.</li>
+<li><strong>metadata</strong> (<a class="reference external" href="https://docs.python.org/dev/library/stdtypes.html#dict" title="(in Python v3.8)"><em>dict</em></a><em>, </em><em>optional</em>) – Arbitrary metadata which applies to the entire sequence.</li>
+<li><strong>positional_metadata</strong> (<em>Pandas DataFrame consumable</em><em>, </em><em>optional</em>) – Arbitrary per-character metadata. For example, quality data from
+sequencing reads. Must be able to be passed directly to the Pandas
+DataFrame constructor.</li>
+<li><strong>interval_metadata</strong> (<a class="reference internal" href="skbio.metadata.IntervalMetadata.html#skbio.metadata.IntervalMetadata" title="skbio.metadata.IntervalMetadata"><em>IntervalMetadata</em></a>) – Arbitrary metadata which applies to intervals within a sequence to
+store interval features (such as exons or introns on the sequence).</li>
+<li><strong>lowercase</strong> (<a class="reference external" href="https://docs.python.org/dev/library/functions.html#bool" title="(in Python v3.8)"><em>bool</em></a><em> or </em><a class="reference external" href="https://docs.python.org/dev/library/stdtypes.html#str" title="(in Python v3.8)"><em>str</em></a><em>, </em><em>optional</em>) – If <code class="docutils literal notranslate"><span class="pre">True</span></code>, lowercase sequence characters will be converted to
+uppercase characters in order to be valid IUPAC RNA characters. If
+<code class="docutils literal notranslate"><span class="pre">False</span></code>, no characters will be converted. If a str, it will be
+treated as a key into the positional metadata of the object. All
+lowercase characters will be converted to uppercase, and a <code class="docutils literal notranslate"><span class="pre">True</span></code>
+value will be stored in a boolean array in the positional metadata
+under the key.</li>
+<li><strong>validate</strong> (<a class="reference external" href="https://docs.python.org/dev/library/functions.html#bool" title="(in Python v3.8)"><em>bool</em></a><em>, </em><em>optional</em>) – If <code class="docutils literal notranslate"><span class="pre">True</span></code>, validation will be performed to ensure that all sequence
+characters are in the IUPAC RNA character set. If <code class="docutils literal notranslate"><span class="pre">False</span></code>, validation
+will not be performed. Turning off validation will improve runtime
+performance. If invalid characters are present, however, there is
+<strong>no guarantee that operations performed on the resulting object will
+work or behave as expected.</strong> Only turn off validation if you are
+certain that the sequence characters are valid. To store sequence data
+that is not IUPAC-compliant, use <code class="docutils literal notranslate"><span class="pre">Sequence</span></code>.</li>
+</ul>
+</td>
+</tr>
+</tbody>
+</table>
+<div class="admonition seealso">
+<p class="first admonition-title">See also</p>
+<p class="last"><a class="reference internal" href="skbio.sequence.DNA.html#skbio.sequence.DNA" title="skbio.sequence.DNA"><code class="xref py py-class docutils literal notranslate"><span class="pre">DNA</span></code></a>, <a class="reference internal" href="skbio.sequence.GrammaredSequence.html#skbio.sequence.GrammaredSequence" title="skbio.sequence.GrammaredSequence"><code class="xref py py-class docutils literal notranslate"><span class="pre">GrammaredSequence</span></code></a></p>
+</div>
+<p class="rubric">Notes</p>
+<p>Subclassing is disabled for RNA, because subclassing makes
+it possible to change the alphabet, and certain methods rely on the
+IUPAC alphabet. If a custom sequence alphabet is needed, inherit directly
+from <code class="docutils literal notranslate"><span class="pre">GrammaredSequence</span></code>.</p>
+<p class="rubric">References</p>
+<table class="docutils footnote" frame="void" id="id2" rules="none">
+<colgroup><col class="label" /><col /></colgroup>
+<tbody valign="top">
+<tr><td class="label"><a class="fn-backref" href="#id1">[1]</a></td><td>Nomenclature for incompletely specified bases in nucleic acid
+sequences: recommendations 1984.
+Nucleic Acids Res. May 10, 1985; 13(9): 3021-3030.
+A Cornish-Bowden</td></tr>
+</tbody>
+</table>
+<p class="rubric">Examples</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">skbio</span> <span class="k">import</span> <span class="n">RNA</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">RNA</span><span class="p">(</span><span class="s1">&#39;ACCGAAU&#39;</span><span class="p">)</span>
+<span class="go">RNA</span>
+<span class="go">--------------------------</span>
+<span class="go">Stats:</span>
+<span class="go">    length: 7</span>
+<span class="go">    has gaps: False</span>
+<span class="go">    has degenerates: False</span>
+<span class="go">    has definites: True</span>
+<span class="go">    GC-content: 42.86%</span>
+<span class="go">--------------------------</span>
+<span class="go">0 ACCGAAU</span>
+</pre></div>
+</div>
+<p>Convert lowercase characters to uppercase:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">RNA</span><span class="p">(</span><span class="s1">&#39;AcCGaaU&#39;</span><span class="p">,</span> <span class="n">lowercase</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+<span class="go">RNA</span>
+<span class="go">--------------------------</span>
+<span class="go">Stats:</span>
+<span class="go">    length: 7</span>
+<span class="go">    has gaps: False</span>
+<span class="go">    has degenerates: False</span>
+<span class="go">    has definites: True</span>
+<span class="go">    GC-content: 42.86%</span>
+<span class="go">--------------------------</span>
+<span class="go">0 ACCGAAU</span>
+</pre></div>
+</div>
+<p class="rubric">Attributes</p>
+<table border="1" class="longtable docutils">
+<colgroup>
+<col width="10%" />
+<col width="90%" />
+</colgroup>
+<tbody valign="top">
+<tr class="row-odd"><td><code class="xref py py-obj docutils literal notranslate"><span class="pre">alphabet</span></code></td>
+<td>Return valid characters.</td>
+</tr>
+<tr class="row-even"><td><code class="xref py py-obj docutils literal notranslate"><span class="pre">complement_map</span></code></td>
+<td>Return mapping of nucleotide characters to their complements.</td>
+</tr>
+<tr class="row-odd"><td><code class="xref py py-obj docutils literal notranslate"><span class="pre">default_gap_char</span></code></td>
+<td>Gap character to use when constructing a new gapped sequence.</td>
+</tr>
+<tr class="row-even"><td><code class="xref py py-obj docutils literal notranslate"><span class="pre">default_write_format</span></code></td>
+<td></td>
+</tr>
+<tr class="row-odd"><td><code class="xref py py-obj docutils literal notranslate"><span class="pre">definite_chars</span></code></td>
+<td>Return definite characters.</td>
+</tr>
+<tr class="row-even"><td><code class="xref py py-obj docutils literal notranslate"><span class="pre">degenerate_chars</span></code></td>
+<td>Return degenerate characters.</td>
+</tr>
+<tr class="row-odd"><td><code class="xref py py-obj docutils literal notranslate"><span class="pre">degenerate_map</span></code></td>
+<td>Return mapping of degenerate to definite characters.</td>
+</tr>
+<tr class="row-even"><td><code class="xref py py-obj docutils literal notranslate"><span class="pre">gap_chars</span></code></td>
+<td>Return characters defined as gaps.</td>
+</tr>
+<tr class="row-odd"><td><code class="xref py py-obj docutils literal notranslate"><span class="pre">interval_metadata</span></code></td>
+<td><code class="docutils literal notranslate"><span class="pre">IntervalMetadata</span></code> object containing info about interval features.</td>
+</tr>
+<tr class="row-even"><td><code class="xref py py-obj docutils literal notranslate"><span class="pre">metadata</span></code></td>
+<td><code class="docutils literal notranslate"><span class="pre">dict</span></code> containing metadata which applies to the entire object.</td>
+</tr>
+<tr class="row-odd"><td><code class="xref py py-obj docutils literal notranslate"><span class="pre">nondegenerate_chars</span></code></td>
+<td>Return non-degenerate characters.</td>
+</tr>
+<tr class="row-even"><td><code class="xref py py-obj docutils literal notranslate"><span class="pre">observed_chars</span></code></td>
+<td>Set of observed characters in the sequence.</td>
+</tr>
+<tr class="row-odd"><td><code class="xref py py-obj docutils literal notranslate"><span class="pre">positional_metadata</span></code></td>
+<td><code class="docutils literal notranslate"><span class="pre">pd.DataFrame</span></code> containing metadata along an axis.</td>
+</tr>
+<tr class="row-even"><td><code class="xref py py-obj docutils literal notranslate"><span class="pre">values</span></code></td>
+<td>Array containing underlying sequence characters.</td>
+</tr>
+</tbody>
+</table>
+<p class="rubric">Built-ins</p>
+<table border="1" class="longtable docutils">
+<colgroup>
+<col width="10%" />
+<col width="90%" />
+</colgroup>
+<tbody valign="top">
+<tr class="row-odd"><td><a class="reference internal" href="skbio.sequence.RNA.__bool__.html#skbio.sequence.RNA.__bool__" title="skbio.sequence.RNA.__bool__"><code class="xref py py-obj docutils literal notranslate"><span class="pre">bool(rna)</span></code></a></td>
+<td>Returns truth value (truthiness) of sequence.</td>
+</tr>
+<tr class="row-even"><td><a class="reference internal" href="skbio.sequence.RNA.__contains__.html#skbio.sequence.RNA.__contains__" title="skbio.sequence.RNA.__contains__"><code class="xref py py-obj docutils literal notranslate"><span class="pre">x</span> <span class="pre">in</span> <span class="pre">rna</span></code></a></td>
+<td>Determine if a subsequence is contained in this sequence.</td>
+</tr>
+<tr class="row-odd"><td><a class="reference internal" href="skbio.sequence.RNA.__copy__.html#skbio.sequence.RNA.__copy__" title="skbio.sequence.RNA.__copy__"><code class="xref py py-obj docutils literal notranslate"><span class="pre">copy.copy(rna)</span></code></a></td>
+<td>Return a shallow copy of this sequence.</td>
+</tr>
+<tr class="row-even"><td><a class="reference internal" href="skbio.sequence.RNA.__deepcopy__.html#skbio.sequence.RNA.__deepcopy__" title="skbio.sequence.RNA.__deepcopy__"><code class="xref py py-obj docutils literal notranslate"><span class="pre">copy.deepcopy(rna)</span></code></a></td>
+<td>Return a deep copy of this sequence.</td>
+</tr>
+<tr class="row-odd"><td><a class="reference internal" href="skbio.sequence.RNA.__eq__.html#skbio.sequence.RNA.__eq__" title="skbio.sequence.RNA.__eq__"><code class="xref py py-obj docutils literal notranslate"><span class="pre">rna1</span> <span class="pre">==</span> <span class="pre">rna2</span></code></a></td>
+<td>Determine if this sequence is equal to another.</td>
+</tr>
+<tr class="row-even"><td><a class="reference internal" href="skbio.sequence.RNA.__getitem__.html#skbio.sequence.RNA.__getitem__" title="skbio.sequence.RNA.__getitem__"><code class="xref py py-obj docutils literal notranslate"><span class="pre">rna[x]</span></code></a></td>
+<td>Slice this sequence.</td>
+</tr>
+<tr class="row-odd"><td><a class="reference internal" href="skbio.sequence.RNA.__init_subclass__.html#skbio.sequence.RNA.__init_subclass__" title="skbio.sequence.RNA.__init_subclass__"><code class="xref py py-obj docutils literal notranslate"><span class="pre">__init_subclass__</span></code></a></td>
+<td>This method is called when a class is subclassed.</td>
+</tr>
+<tr class="row-even"><td><a class="reference internal" href="skbio.sequence.RNA.__iter__.html#skbio.sequence.RNA.__iter__" title="skbio.sequence.RNA.__iter__"><code class="xref py py-obj docutils literal notranslate"><span class="pre">iter(rna)</span></code></a></td>
+<td>Iterate over positions in this sequence.</td>
+</tr>
+<tr class="row-odd"><td><a class="reference internal" href="skbio.sequence.RNA.__len__.html#skbio.sequence.RNA.__len__" title="skbio.sequence.RNA.__len__"><code class="xref py py-obj docutils literal notranslate"><span class="pre">len(rna)</span></code></a></td>
+<td>Return the number of characters in this sequence.</td>
+</tr>
+<tr class="row-even"><td><a class="reference internal" href="skbio.sequence.RNA.__ne__.html#skbio.sequence.RNA.__ne__" title="skbio.sequence.RNA.__ne__"><code class="xref py py-obj docutils literal notranslate"><span class="pre">rna1</span> <span class="pre">!=</span> <span class="pre">rna2</span></code></a></td>
+<td>Determine if this sequence is not equal to another.</td>
+</tr>
+<tr class="row-odd"><td><a class="reference internal" href="skbio.sequence.RNA.__reversed__.html#skbio.sequence.RNA.__reversed__" title="skbio.sequence.RNA.__reversed__"><code class="xref py py-obj docutils literal notranslate"><span class="pre">reversed(rna)</span></code></a></td>
+<td>Iterate over positions in this sequence in reverse order.</td>
+</tr>
+<tr class="row-even"><td><a class="reference internal" href="skbio.sequence.RNA.__str__.html#skbio.sequence.RNA.__str__" title="skbio.sequence.RNA.__str__"><code class="xref py py-obj docutils literal notranslate"><span class="pre">str(rna)</span></code></a></td>
+<td>Return sequence characters as a string.</td>
+</tr>
+</tbody>
+</table>
+<p class="rubric">Methods</p>
+<table border="1" class="longtable docutils">
+<colgroup>
+<col width="10%" />
+<col width="90%" />
+</colgroup>
+<tbody valign="top">
+<tr class="row-odd"><td><a class="reference internal" href="skbio.sequence.RNA.complement.html#skbio.sequence.RNA.complement" title="skbio.sequence.RNA.complement"><code class="xref py py-obj docutils literal notranslate"><span class="pre">complement</span></code></a>([reverse])</td>
+<td>Return the complement of the nucleotide sequence.</td>
+</tr>
+<tr class="row-even"><td><a class="reference internal" href="skbio.sequence.RNA.concat.html#skbio.sequence.RNA.concat" title="skbio.sequence.RNA.concat"><code class="xref py py-obj docutils literal notranslate"><span class="pre">concat</span></code></a>(sequences[,&nbsp;how])</td>
+<td>Concatenate an iterable of <code class="docutils literal notranslate"><span class="pre">Sequence</span></code> objects.</td>
+</tr>
+<tr class="row-odd"><td><a class="reference internal" href="skbio.sequence.RNA.count.html#skbio.sequence.RNA.count" title="skbio.sequence.RNA.count"><code class="xref py py-obj docutils literal notranslate"><span class="pre">count</span></code></a>(subsequence[,&nbsp;start,&nbsp;end])</td>
+<td>Count occurrences of a subsequence in this sequence.</td>
+</tr>
+<tr class="row-even"><td><a class="reference internal" href="skbio.sequence.RNA.definites.html#skbio.sequence.RNA.definites" title="skbio.sequence.RNA.definites"><code class="xref py py-obj docutils literal notranslate"><span class="pre">definites</span></code></a>()</td>
+<td>Find positions containing definite characters in the sequence.</td>
+</tr>
+<tr class="row-odd"><td><a class="reference internal" href="skbio.sequence.RNA.degap.html#skbio.sequence.RNA.degap" title="skbio.sequence.RNA.degap"><code class="xref py py-obj docutils literal notranslate"><span class="pre">degap</span></code></a>()</td>
+<td>Return a new sequence with gap characters removed.</td>
+</tr>
+<tr class="row-even"><td><a class="reference internal" href="skbio.sequence.RNA.degenerates.html#skbio.sequence.RNA.degenerates" title="skbio.sequence.RNA.degenerates"><code class="xref py py-obj docutils literal notranslate"><span class="pre">degenerates</span></code></a>()</td>
+<td>Find positions containing degenerate characters in the sequence.</td>
+</tr>
+<tr class="row-odd"><td><a class="reference internal" href="skbio.sequence.RNA.distance.html#skbio.sequence.RNA.distance" title="skbio.sequence.RNA.distance"><code class="xref py py-obj docutils literal notranslate"><span class="pre">distance</span></code></a>(other[,&nbsp;metric])</td>
+<td>Compute the distance to another sequence.</td>
+</tr>
+<tr class="row-even"><td><a class="reference internal" href="skbio.sequence.RNA.expand_degenerates.html#skbio.sequence.RNA.expand_degenerates" title="skbio.sequence.RNA.expand_degenerates"><code class="xref py py-obj docutils literal notranslate"><span class="pre">expand_degenerates</span></code></a>()</td>
+<td>Yield all possible definite versions of the sequence.</td>
+</tr>
+<tr class="row-odd"><td><a class="reference internal" href="skbio.sequence.RNA.find_motifs.html#skbio.sequence.RNA.find_motifs" title="skbio.sequence.RNA.find_motifs"><code class="xref py py-obj docutils literal notranslate"><span class="pre">find_motifs</span></code></a>(motif_type[,&nbsp;min_length,&nbsp;ignore])</td>
+<td>Search the biological sequence for motifs.</td>
+</tr>
+<tr class="row-even"><td><a class="reference internal" href="skbio.sequence.RNA.find_with_regex.html#skbio.sequence.RNA.find_with_regex" title="skbio.sequence.RNA.find_with_regex"><code class="xref py py-obj docutils literal notranslate"><span class="pre">find_with_regex</span></code></a>(regex[,&nbsp;ignore])</td>
+<td>Generate slices for patterns matched by a regular expression.</td>
+</tr>
+<tr class="row-odd"><td><a class="reference internal" href="skbio.sequence.RNA.frequencies.html#skbio.sequence.RNA.frequencies" title="skbio.sequence.RNA.frequencies"><code class="xref py py-obj docutils literal notranslate"><span class="pre">frequencies</span></code></a>([chars,&nbsp;relative])</td>
+<td>Compute frequencies of characters in the sequence.</td>
+</tr>
+<tr class="row-even"><td><a class="reference internal" href="skbio.sequence.RNA.gaps.html#skbio.sequence.RNA.gaps" title="skbio.sequence.RNA.gaps"><code class="xref py py-obj docutils literal notranslate"><span class="pre">gaps</span></code></a>()</td>
+<td>Find positions containing gaps in the biological sequence.</td>
+</tr>
+<tr class="row-odd"><td><a class="reference internal" href="skbio.sequence.RNA.gc_content.html#skbio.sequence.RNA.gc_content" title="skbio.sequence.RNA.gc_content"><code class="xref py py-obj docutils literal notranslate"><span class="pre">gc_content</span></code></a>()</td>
+<td>Calculate the relative frequency of G’s and C’s in the sequence.</td>
+</tr>
+<tr class="row-even"><td><a class="reference internal" href="skbio.sequence.RNA.gc_frequency.html#skbio.sequence.RNA.gc_frequency" title="skbio.sequence.RNA.gc_frequency"><code class="xref py py-obj docutils literal notranslate"><span class="pre">gc_frequency</span></code></a>([relative])</td>
+<td>Calculate frequency of G’s and C’s in the sequence.</td>
+</tr>
+<tr class="row-odd"><td><a class="reference internal" href="skbio.sequence.RNA.has_definites.html#skbio.sequence.RNA.has_definites" title="skbio.sequence.RNA.has_definites"><code class="xref py py-obj docutils literal notranslate"><span class="pre">has_definites</span></code></a>()</td>
+<td>Determine if sequence contains one or more definite characters</td>
+</tr>
+<tr class="row-even"><td><a class="reference internal" href="skbio.sequence.RNA.has_degenerates.html#skbio.sequence.RNA.has_degenerates" title="skbio.sequence.RNA.has_degenerates"><code class="xref py py-obj docutils literal notranslate"><span class="pre">has_degenerates</span></code></a>()</td>
+<td>Determine if sequence contains one or more degenerate characters.</td>
+</tr>
+<tr class="row-odd"><td><a class="reference internal" href="skbio.sequence.RNA.has_gaps.html#skbio.sequence.RNA.has_gaps" title="skbio.sequence.RNA.has_gaps"><code class="xref py py-obj docutils literal notranslate"><span class="pre">has_gaps</span></code></a>()</td>
+<td>Determine if the sequence contains one or more gap characters.</td>
+</tr>
+<tr class="row-even"><td><a class="reference internal" href="skbio.sequence.RNA.has_interval_metadata.html#skbio.sequence.RNA.has_interval_metadata" title="skbio.sequence.RNA.has_interval_metadata"><code class="xref py py-obj docutils literal notranslate"><span class="pre">has_interval_metadata</span></code></a>()</td>
+<td>Determine if the object has interval metadata.</td>
+</tr>
+<tr class="row-odd"><td><a class="reference internal" href="skbio.sequence.RNA.has_metadata.html#skbio.sequence.RNA.has_metadata" title="skbio.sequence.RNA.has_metadata"><code class="xref py py-obj docutils literal notranslate"><span class="pre">has_metadata</span></code></a>()</td>
+<td>Determine if the object has metadata.</td>
+</tr>
+<tr class="row-even"><td><a class="reference internal" href="skbio.sequence.RNA.has_nondegenerates.html#skbio.sequence.RNA.has_nondegenerates" title="skbio.sequence.RNA.has_nondegenerates"><code class="xref py py-obj docutils literal notranslate"><span class="pre">has_nondegenerates</span></code></a>()</td>
+<td>Determine if sequence contains one or more non-degenerate characters</td>
+</tr>
+<tr class="row-odd"><td><a class="reference internal" href="skbio.sequence.RNA.has_positional_metadata.html#skbio.sequence.RNA.has_positional_metadata" title="skbio.sequence.RNA.has_positional_metadata"><code class="xref py py-obj docutils literal notranslate"><span class="pre">has_positional_metadata</span></code></a>()</td>
+<td>Determine if the object has positional metadata.</td>
+</tr>
+<tr class="row-even"><td><a class="reference internal" href="skbio.sequence.RNA.index.html#skbio.sequence.RNA.index" title="skbio.sequence.RNA.index"><code class="xref py py-obj docutils literal notranslate"><span class="pre">index</span></code></a>(subsequence[,&nbsp;start,&nbsp;end])</td>
+<td>Find position where subsequence first occurs in the sequence.</td>
+</tr>
+<tr class="row-odd"><td><a class="reference internal" href="skbio.sequence.RNA.is_reverse_complement.html#skbio.sequence.RNA.is_reverse_complement" title="skbio.sequence.RNA.is_reverse_complement"><code class="xref py py-obj docutils literal notranslate"><span class="pre">is_reverse_complement</span></code></a>(other)</td>
+<td>Determine if a sequence is the reverse complement of this sequence.</td>
+</tr>
+<tr class="row-even"><td><a class="reference internal" href="skbio.sequence.RNA.iter_contiguous.html#skbio.sequence.RNA.iter_contiguous" title="skbio.sequence.RNA.iter_contiguous"><code class="xref py py-obj docutils literal notranslate"><span class="pre">iter_contiguous</span></code></a>(included[,&nbsp;min_length,&nbsp;invert])</td>
+<td>Yield contiguous subsequences based on <cite>included</cite>.</td>
+</tr>
+<tr class="row-odd"><td><a class="reference internal" href="skbio.sequence.RNA.iter_kmers.html#skbio.sequence.RNA.iter_kmers" title="skbio.sequence.RNA.iter_kmers"><code class="xref py py-obj docutils literal notranslate"><span class="pre">iter_kmers</span></code></a>(k[,&nbsp;overlap])</td>
+<td>Generate kmers of length <cite>k</cite> from this sequence.</td>
+</tr>
+<tr class="row-even"><td><a class="reference internal" href="skbio.sequence.RNA.kmer_frequencies.html#skbio.sequence.RNA.kmer_frequencies" title="skbio.sequence.RNA.kmer_frequencies"><code class="xref py py-obj docutils literal notranslate"><span class="pre">kmer_frequencies</span></code></a>(k[,&nbsp;overlap,&nbsp;relative])</td>
+<td>Return counts of words of length <cite>k</cite> from this sequence.</td>
+</tr>
+<tr class="row-odd"><td><a class="reference internal" href="skbio.sequence.RNA.lowercase.html#skbio.sequence.RNA.lowercase" title="skbio.sequence.RNA.lowercase"><code class="xref py py-obj docutils literal notranslate"><span class="pre">lowercase</span></code></a>(lowercase)</td>
+<td>Return a case-sensitive string representation of the sequence.</td>
+</tr>
+<tr class="row-even"><td><a class="reference internal" href="skbio.sequence.RNA.match_frequency.html#skbio.sequence.RNA.match_frequency" title="skbio.sequence.RNA.match_frequency"><code class="xref py py-obj docutils literal notranslate"><span class="pre">match_frequency</span></code></a>(other[,&nbsp;relative])</td>
+<td>Return count of positions that are the same between two sequences.</td>
+</tr>
+<tr class="row-odd"><td><a class="reference internal" href="skbio.sequence.RNA.matches.html#skbio.sequence.RNA.matches" title="skbio.sequence.RNA.matches"><code class="xref py py-obj docutils literal notranslate"><span class="pre">matches</span></code></a>(other)</td>
+<td>Find positions that match with another sequence.</td>
+</tr>
+<tr class="row-even"><td><a class="reference internal" href="skbio.sequence.RNA.mismatch_frequency.html#skbio.sequence.RNA.mismatch_frequency" title="skbio.sequence.RNA.mismatch_frequency"><code class="xref py py-obj docutils literal notranslate"><span class="pre">mismatch_frequency</span></code></a>(other[,&nbsp;relative])</td>
+<td>Return count of positions that differ between two sequences.</td>
+</tr>
+<tr class="row-odd"><td><a class="reference internal" href="skbio.sequence.RNA.mismatches.html#skbio.sequence.RNA.mismatches" title="skbio.sequence.RNA.mismatches"><code class="xref py py-obj docutils literal notranslate"><span class="pre">mismatches</span></code></a>(other)</td>
+<td>Find positions that do not match with another sequence.</td>
+</tr>
+<tr class="row-even"><td><a class="reference internal" href="skbio.sequence.RNA.nondegenerates.html#skbio.sequence.RNA.nondegenerates" title="skbio.sequence.RNA.nondegenerates"><code class="xref py py-obj docutils literal notranslate"><span class="pre">nondegenerates</span></code></a>()</td>
+<td>Find positions containing non-degenerate characters in the sequence.</td>
+</tr>
+<tr class="row-odd"><td><a class="reference internal" href="skbio.sequence.RNA.read.html#skbio.sequence.RNA.read" title="skbio.sequence.RNA.read"><code class="xref py py-obj docutils literal notranslate"><span class="pre">read</span></code></a>(file[,&nbsp;format])</td>
+<td>Create a new <code class="docutils literal notranslate"><span class="pre">RNA</span></code> instance from a file.</td>
+</tr>
+<tr class="row-even"><td><a class="reference internal" href="skbio.sequence.RNA.replace.html#skbio.sequence.RNA.replace" title="skbio.sequence.RNA.replace"><code class="xref py py-obj docutils literal notranslate"><span class="pre">replace</span></code></a>(where,&nbsp;character)</td>
+<td>Replace values in this sequence with a different character.</td>
+</tr>
+<tr class="row-odd"><td><a class="reference internal" href="skbio.sequence.RNA.reverse_complement.html#skbio.sequence.RNA.reverse_complement" title="skbio.sequence.RNA.reverse_complement"><code class="xref py py-obj docutils literal notranslate"><span class="pre">reverse_complement</span></code></a>()</td>
+<td>Return the reverse complement of the nucleotide sequence.</td>
+</tr>
+<tr class="row-even"><td><a class="reference internal" href="skbio.sequence.RNA.reverse_transcribe.html#skbio.sequence.RNA.reverse_transcribe" title="skbio.sequence.RNA.reverse_transcribe"><code class="xref py py-obj docutils literal notranslate"><span class="pre">reverse_transcribe</span></code></a>()</td>
+<td>Reverse transcribe RNA into DNA.</td>
+</tr>
+<tr class="row-odd"><td><a class="reference internal" href="skbio.sequence.RNA.to_regex.html#skbio.sequence.RNA.to_regex" title="skbio.sequence.RNA.to_regex"><code class="xref py py-obj docutils literal notranslate"><span class="pre">to_regex</span></code></a>()</td>
+<td>Return regular expression object that accounts for degenerate chars.</td>
+</tr>
+<tr class="row-even"><td><a class="reference internal" href="skbio.sequence.RNA.translate.html#skbio.sequence.RNA.translate" title="skbio.sequence.RNA.translate"><code class="xref py py-obj docutils literal notranslate"><span class="pre">translate</span></code></a>([genetic_code])</td>
+<td>Translate RNA sequence into protein sequence.</td>
+</tr>
+<tr class="row-odd"><td><a class="reference internal" href="skbio.sequence.RNA.translate_six_frames.html#skbio.sequence.RNA.translate_six_frames" title="skbio.sequence.RNA.translate_six_frames"><code class="xref py py-obj docutils literal notranslate"><span class="pre">translate_six_frames</span></code></a>([genetic_code])</td>
+<td>Translate RNA into protein using six possible reading frames.</td>
+</tr>
+<tr class="row-even"><td><a class="reference internal" href="skbio.sequence.RNA.write.html#skbio.sequence.RNA.write" title="skbio.sequence.RNA.write"><code class="xref py py-obj docutils literal notranslate"><span class="pre">write</span></code></a>(file[,&nbsp;format])</td>
+<td>Write an instance of <code class="docutils literal notranslate"><span class="pre">RNA</span></code> to a file.</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+</div>
+
+
+    </div>
+      
+  </div>
+</div>
+  
+<footer class="footer">
+  <div class="container">
+    <p class="pull-right">
+      <a href="#">Back to top</a>
+      
+    </p>
+    <p>
+        &copy; Copyright 2014--, scikit-bio development team.<br/>
+      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 1.8.2.<br/>
+    </p>
+  </div>
+</footer>
+  <script>
+    (function(i,s,o,g,r,a,m){i['GoogleAnalyticsObject']=r;i[r]=i[r]||function(){
+    (i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),
+    m=s.getElementsByTagName(o)[0];a.async=1;a.src=g;m.parentNode.insertBefore(a,m)
+    })(window,document,'script','//www.google-analytics.com/analytics.js','ga');
+
+    ga('create', 'UA-6636235-9', 'scikit-bio.org');
+    ga('send', 'pageview');
+  </script>
+
+  </body>
+</html>

@@ -1,0 +1,343 @@
+
+skbio.sequence.Protein
+======================
+
+
+
+
+   
+      
+   
+
+   
+      
+   
+
+   
+      
+   
+
+   
+      
+   
+
+   
+
+   
+      
+   
+
+   
+
+   
+      
+   
+
+   
+
+   
+      
+   
+
+   
+      
+   
+
+   
+      
+   
+
+   
+      
+   
+
+   
+
+   
+
+   
+
+   
+
+   
+      
+   
+
+   
+
+   
+      
+   
+
+   
+
+   
+
+   
+
+   
+
+   
+
+   
+
+   
+
+   
+
+   
+
+   
+
+   
+
+   
+
+   
+
+   
+
+   
+
+   
+
+   
+
+   
+
+   
+
+   
+
+   
+
+   
+
+   
+
+   
+
+   
+
+   
+
+   
+
+   
+
+   
+
+   
+
+   
+
+   
+
+   
+
+   
+
+   
+
+   
+
+   
+
+   
+
+   
+
+   
+
+   
+
+   
+
+   
+
+   
+
+   
+
+   
+
+   
+
+   
+
+   
+
+   
+
+   
+
+   
+
+   
+
+   
+
+   
+
+   
+
+   
+
+   
+
+
+.. currentmodule:: skbio.sequence
+
+.. autoclass:: Protein
+
+   
+   .. rubric:: Attributes
+
+   .. autosummary::
+   
+      ~Protein.alphabet
+      ~Protein.default_gap_char
+      ~Protein.default_write_format
+      ~Protein.definite_chars
+      ~Protein.degenerate_chars
+      ~Protein.degenerate_map
+      ~Protein.gap_chars
+      ~Protein.interval_metadata
+      ~Protein.metadata
+      ~Protein.nondegenerate_chars
+      ~Protein.observed_chars
+      ~Protein.positional_metadata
+      ~Protein.stop_chars
+      ~Protein.values
+   
+
+   
+   .. rubric:: Built-ins
+
+   .. autosummary::
+      :toctree:
+   
+      ~Protein.__bool__
+      ~Protein.__contains__
+      ~Protein.__copy__
+      ~Protein.__deepcopy__
+      ~Protein.__eq__
+      ~Protein.__getitem__
+      ~Protein.__init_subclass__
+      ~Protein.__iter__
+      ~Protein.__len__
+      ~Protein.__ne__
+      ~Protein.__reversed__
+      ~Protein.__str__
+   
+
+   
+   .. rubric:: Methods
+
+   .. autosummary::
+      :toctree:
+   
+      
+      
+      ~Protein.concat
+      
+      
+      ~Protein.count
+      
+      
+      ~Protein.definites
+      
+      
+      ~Protein.degap
+      
+      
+      ~Protein.degenerates
+      
+      
+      ~Protein.distance
+      
+      
+      ~Protein.expand_degenerates
+      
+      
+      ~Protein.find_motifs
+      
+      
+      ~Protein.find_with_regex
+      
+      
+      ~Protein.frequencies
+      
+      
+      ~Protein.gaps
+      
+      
+      ~Protein.has_definites
+      
+      
+      ~Protein.has_degenerates
+      
+      
+      ~Protein.has_gaps
+      
+      
+      ~Protein.has_interval_metadata
+      
+      
+      ~Protein.has_metadata
+      
+      
+      ~Protein.has_nondegenerates
+      
+      
+      ~Protein.has_positional_metadata
+      
+      
+      ~Protein.has_stops
+      
+      
+      ~Protein.index
+      
+      
+      ~Protein.iter_contiguous
+      
+      
+      ~Protein.iter_kmers
+      
+      
+      ~Protein.kmer_frequencies
+      
+      
+      ~Protein.lowercase
+      
+      
+      ~Protein.match_frequency
+      
+      
+      ~Protein.matches
+      
+      
+      ~Protein.mismatch_frequency
+      
+      
+      ~Protein.mismatches
+      
+      
+      ~Protein.nondegenerates
+      
+      
+      ~Protein.read
+      
+      
+      ~Protein.replace
+      
+      
+      ~Protein.stops
+      
+      
+      ~Protein.to_regex
+      
+      
+      ~Protein.write
+      
+   

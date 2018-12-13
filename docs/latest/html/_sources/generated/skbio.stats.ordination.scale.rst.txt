@@ -1,0 +1,6 @@
+skbio.stats.ordination.scale
+============================
+
+.. currentmodule:: skbio.stats.ordination
+
+.. autofunction:: scale

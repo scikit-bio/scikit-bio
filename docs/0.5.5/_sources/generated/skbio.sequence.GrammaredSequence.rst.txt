@@ -1,0 +1,332 @@
+
+skbio.sequence.GrammaredSequence
+================================
+
+
+
+
+   
+      
+   
+
+   
+      
+   
+
+   
+      
+   
+
+   
+      
+   
+
+   
+
+   
+      
+   
+
+   
+
+   
+      
+   
+
+   
+
+   
+      
+   
+
+   
+      
+   
+
+   
+      
+   
+
+   
+      
+   
+
+   
+
+   
+
+   
+
+   
+
+   
+      
+   
+
+   
+
+   
+      
+   
+
+   
+
+   
+
+   
+
+   
+
+   
+
+   
+
+   
+
+   
+
+   
+
+   
+
+   
+
+   
+
+   
+
+   
+
+   
+
+   
+
+   
+
+   
+
+   
+
+   
+
+   
+
+   
+
+   
+
+   
+
+   
+
+   
+
+   
+
+   
+
+   
+
+   
+
+   
+
+   
+
+   
+
+   
+
+   
+
+   
+
+   
+
+   
+
+   
+
+   
+
+   
+
+   
+
+   
+
+   
+
+   
+
+   
+
+   
+
+   
+
+   
+
+   
+
+   
+
+   
+
+   
+
+   
+
+   
+
+   
+
+
+.. currentmodule:: skbio.sequence
+
+.. autoclass:: GrammaredSequence
+
+   
+   .. rubric:: Attributes
+
+   .. autosummary::
+   
+      ~GrammaredSequence.alphabet
+      ~GrammaredSequence.default_gap_char
+      ~GrammaredSequence.default_write_format
+      ~GrammaredSequence.definite_chars
+      ~GrammaredSequence.degenerate_chars
+      ~GrammaredSequence.degenerate_map
+      ~GrammaredSequence.gap_chars
+      ~GrammaredSequence.interval_metadata
+      ~GrammaredSequence.metadata
+      ~GrammaredSequence.nondegenerate_chars
+      ~GrammaredSequence.observed_chars
+      ~GrammaredSequence.positional_metadata
+      ~GrammaredSequence.values
+   
+
+   
+   .. rubric:: Built-ins
+
+   .. autosummary::
+      :toctree:
+   
+      ~GrammaredSequence.__bool__
+      ~GrammaredSequence.__contains__
+      ~GrammaredSequence.__copy__
+      ~GrammaredSequence.__deepcopy__
+      ~GrammaredSequence.__eq__
+      ~GrammaredSequence.__getitem__
+      ~GrammaredSequence.__init_subclass__
+      ~GrammaredSequence.__iter__
+      ~GrammaredSequence.__len__
+      ~GrammaredSequence.__ne__
+      ~GrammaredSequence.__reversed__
+      ~GrammaredSequence.__str__
+   
+
+   
+   .. rubric:: Methods
+
+   .. autosummary::
+      :toctree:
+   
+      
+      
+      ~GrammaredSequence.concat
+      
+      
+      ~GrammaredSequence.count
+      
+      
+      ~GrammaredSequence.definites
+      
+      
+      ~GrammaredSequence.degap
+      
+      
+      ~GrammaredSequence.degenerates
+      
+      
+      ~GrammaredSequence.distance
+      
+      
+      ~GrammaredSequence.expand_degenerates
+      
+      
+      ~GrammaredSequence.find_motifs
+      
+      
+      ~GrammaredSequence.find_with_regex
+      
+      
+      ~GrammaredSequence.frequencies
+      
+      
+      ~GrammaredSequence.gaps
+      
+      
+      ~GrammaredSequence.has_definites
+      
+      
+      ~GrammaredSequence.has_degenerates
+      
+      
+      ~GrammaredSequence.has_gaps
+      
+      
+      ~GrammaredSequence.has_interval_metadata
+      
+      
+      ~GrammaredSequence.has_metadata
+      
+      
+      ~GrammaredSequence.has_nondegenerates
+      
+      
+      ~GrammaredSequence.has_positional_metadata
+      
+      
+      ~GrammaredSequence.index
+      
+      
+      ~GrammaredSequence.iter_contiguous
+      
+      
+      ~GrammaredSequence.iter_kmers
+      
+      
+      ~GrammaredSequence.kmer_frequencies
+      
+      
+      ~GrammaredSequence.lowercase
+      
+      
+      ~GrammaredSequence.match_frequency
+      
+      
+      ~GrammaredSequence.matches
+      
+      
+      ~GrammaredSequence.mismatch_frequency
+      
+      
+      ~GrammaredSequence.mismatches
+      
+      
+      ~GrammaredSequence.nondegenerates
+      
+      
+      ~GrammaredSequence.read
+      
+      
+      ~GrammaredSequence.replace
+      
+      
+      ~GrammaredSequence.to_regex
+      
+      
+      ~GrammaredSequence.write
+      
+   

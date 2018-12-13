@@ -1,0 +1,8 @@
+:orphan:
+
+skbio.sequence.RNA.iter_kmers
+=============================
+
+.. currentmodule:: skbio.sequence
+
+.. automethod:: RNA.iter_kmers

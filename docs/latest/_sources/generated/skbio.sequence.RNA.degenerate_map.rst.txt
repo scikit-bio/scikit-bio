@@ -1,8 +1,0 @@
-:orphan:
-
-skbio.sequence.RNA.degenerate_map
-=================================
-
-.. currentmodule:: skbio.sequence
-
-.. autoattribute:: RNA.degenerate_map

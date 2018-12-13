@@ -1,0 +1,6 @@
+skbio.stats.ordination.pcoa\_biplot
+===================================
+
+.. currentmodule:: skbio.stats.ordination
+
+.. autofunction:: pcoa_biplot

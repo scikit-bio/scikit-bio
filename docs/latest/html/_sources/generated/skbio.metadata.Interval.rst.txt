@@ -1,0 +1,83 @@
+
+skbio.metadata.Interval
+=======================
+
+
+
+
+   
+
+   
+      
+   
+
+   
+
+   
+
+   
+      
+   
+
+   
+      
+   
+
+   
+
+   
+
+   
+
+   
+
+   
+
+   
+
+   
+
+   
+
+   
+
+   
+
+
+.. currentmodule:: skbio.metadata
+
+.. autoclass:: Interval
+
+   
+   .. rubric:: Attributes
+
+   .. autosummary::
+   
+      ~Interval.bounds
+      ~Interval.dropped
+      ~Interval.fuzzy
+      ~Interval.metadata
+   
+
+   
+   .. rubric:: Built-ins
+
+   .. autosummary::
+      :toctree:
+   
+      ~Interval.__eq__
+      ~Interval.__init_subclass__
+      ~Interval.__ne__
+   
+
+   
+   .. rubric:: Methods
+
+   .. autosummary::
+      :toctree:
+   
+      
+      
+      ~Interval.drop
+      
+   

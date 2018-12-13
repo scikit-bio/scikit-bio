@@ -1,8 +1,0 @@
-:orphan:
-
-skbio.util.classproperty.__format__
-===================================
-
-.. currentmodule:: skbio.util
-
-.. automethod:: classproperty.__format__

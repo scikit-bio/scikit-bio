@@ -1,0 +1,6 @@
+skbio.diversity.alpha.strong
+============================
+
+.. currentmodule:: skbio.diversity.alpha
+
+.. autofunction:: strong

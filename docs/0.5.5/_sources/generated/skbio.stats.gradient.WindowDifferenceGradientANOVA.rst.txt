@@ -1,0 +1,64 @@
+
+skbio.stats.gradient.WindowDifferenceGradientANOVA
+==================================================
+
+
+
+
+   
+
+   
+
+   
+
+   
+      
+   
+
+   
+
+   
+
+   
+
+   
+
+   
+
+   
+
+   
+
+   
+
+   
+
+   
+
+
+.. currentmodule:: skbio.stats.gradient
+
+.. autoclass:: WindowDifferenceGradientANOVA
+
+   
+
+   
+   .. rubric:: Built-ins
+
+   .. autosummary::
+      :toctree:
+   
+      ~WindowDifferenceGradientANOVA.__init_subclass__
+   
+
+   
+   .. rubric:: Methods
+
+   .. autosummary::
+      :toctree:
+   
+      
+      
+      ~WindowDifferenceGradientANOVA.get_trajectories
+      
+   

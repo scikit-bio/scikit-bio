@@ -1,0 +1,167 @@
+
+skbio.stats.distance.DistanceMatrix
+===================================
+
+
+
+
+   
+      
+   
+
+   
+
+   
+      
+   
+
+   
+
+   
+      
+   
+
+   
+
+   
+      
+   
+
+   
+      
+   
+
+   
+
+   
+
+   
+
+   
+
+   
+      
+   
+
+   
+
+   
+
+   
+
+   
+
+   
+
+   
+
+   
+
+   
+
+   
+
+   
+
+   
+
+   
+
+   
+
+   
+
+   
+
+   
+
+   
+
+   
+
+   
+
+   
+
+
+.. currentmodule:: skbio.stats.distance
+
+.. autoclass:: DistanceMatrix
+
+   
+   .. rubric:: Attributes
+
+   .. autosummary::
+   
+      ~DistanceMatrix.T
+      ~DistanceMatrix.data
+      ~DistanceMatrix.default_write_format
+      ~DistanceMatrix.dtype
+      ~DistanceMatrix.ids
+      ~DistanceMatrix.png
+      ~DistanceMatrix.shape
+      ~DistanceMatrix.size
+      ~DistanceMatrix.svg
+   
+
+   
+   .. rubric:: Built-ins
+
+   .. autosummary::
+      :toctree:
+   
+      ~DistanceMatrix.__contains__
+      ~DistanceMatrix.__eq__
+      ~DistanceMatrix.__getitem__
+      ~DistanceMatrix.__init_subclass__
+      ~DistanceMatrix.__ne__
+      ~DistanceMatrix.__str__
+   
+
+   
+   .. rubric:: Methods
+
+   .. autosummary::
+      :toctree:
+   
+      
+      
+      ~DistanceMatrix.condensed_form
+      
+      
+      ~DistanceMatrix.copy
+      
+      
+      ~DistanceMatrix.filter
+      
+      
+      ~DistanceMatrix.from_iterable
+      
+      
+      ~DistanceMatrix.index
+      
+      
+      ~DistanceMatrix.permute
+      
+      
+      ~DistanceMatrix.plot
+      
+      
+      ~DistanceMatrix.read
+      
+      
+      ~DistanceMatrix.redundant_form
+      
+      
+      ~DistanceMatrix.to_data_frame
+      
+      
+      ~DistanceMatrix.to_series
+      
+      
+      ~DistanceMatrix.transpose
+      
+      
+      ~DistanceMatrix.write
+      
+   

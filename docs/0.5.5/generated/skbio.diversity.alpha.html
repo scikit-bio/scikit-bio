@@ -1,0 +1,276 @@
+<!DOCTYPE html>
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="X-UA-Compatible" content="IE=Edge" />
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    <title>Alpha diversity measures (skbio.diversity.alpha) &#8212; scikit-bio 0.5.5 documentation</title>
+    <link rel="stylesheet" href="../_static/bootstrap-sphinx.css" type="text/css" />
+    <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
+    <link rel="stylesheet" type="text/css" href="../_static/style.css" />
+    <script type="text/javascript" id="documentation_options" data-url_root="../" src="../_static/documentation_options.js"></script>
+    <script type="text/javascript" src="../_static/jquery.js"></script>
+    <script type="text/javascript" src="../_static/underscore.js"></script>
+    <script type="text/javascript" src="../_static/doctools.js"></script>
+    <script type="text/javascript" src="../_static/copybutton.js"></script>
+    <script async="async" type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.1/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
+    <script type="text/javascript" src="../_static/js/jquery-1.11.0.min.js"></script>
+    <script type="text/javascript" src="../_static/js/jquery-fix.js"></script>
+    <script type="text/javascript" src="../_static/bootstrap-3.3.7/js/bootstrap.min.js"></script>
+    <script type="text/javascript" src="../_static/bootstrap-sphinx.js"></script>
+    <link rel="index" title="Index" href="../genindex.html" />
+    <link rel="search" title="Search" href="../search.html" />
+    <link rel="next" title="skbio.diversity.alpha.ace" href="skbio.diversity.alpha.ace.html" />
+    <link rel="prev" title="Diversity calculations (skbio.diversity)" href="../diversity.html" />
+<meta charset='utf-8'>
+<meta http-equiv='X-UA-Compatible' content='IE=edge,chrome=1'>
+<meta name='viewport' content='width=device-width, initial-scale=1.0, maximum-scale=1'>
+<meta name="apple-mobile-web-app-capable" content="yes">
+
+  </head><body>
+  
+  <a href="https://github.com/biocore/scikit-bio"
+     class="visible-desktop hidden-xs"><img
+    id="gh-banner"
+    style="position: absolute; top: 50px; right: 0; border: 0;"
+    src="https://s3.amazonaws.com/github/ribbons/forkme_right_darkblue_121621.png"
+    alt="Fork me on GitHub"></a>
+  <script>
+    // Adjust banner height.
+    $(function () {
+      var navHeight = $(".navbar .container").css("height");
+      $("#gh-banner").css("top", navHeight);
+    });
+  </script>
+
+
+  <div id="navbar" class="navbar navbar-default navbar-fixed-top">
+    <div class="container">
+      <div class="navbar-header">
+        <!-- .btn-navbar is used as the toggle for collapsed navbar content -->
+        <button type="button" class="navbar-toggle" data-toggle="collapse" data-target=".nav-collapse">
+          <span class="icon-bar"></span>
+          <span class="icon-bar"></span>
+          <span class="icon-bar"></span>
+        </button>
+        <a class="navbar-brand" href="../index.html">
+          scikit-bio docs</a>
+        <span class="navbar-text navbar-version pull-left"><b>0.5.5</b></span>
+      </div>
+
+        <div class="collapse navbar-collapse nav-collapse">
+          <ul class="nav navbar-nav">
+            
+            
+              <li class="dropdown globaltoc-container">
+  <a role="button"
+     id="dLabelGlobalToc"
+     data-toggle="dropdown"
+     data-target="#"
+     href="../index.html">Site <b class="caret"></b></a>
+  <ul class="dropdown-menu globaltoc"
+      role="menu"
+      aria-labelledby="dLabelGlobalToc"><ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="../io.html">File I/O (<code class="docutils literal notranslate"><span class="pre">skbio.io</span></code>)</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../sequence.html">Sequences (<code class="docutils literal notranslate"><span class="pre">skbio.sequence</span></code>)</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../alignment.html">Alignments (<code class="docutils literal notranslate"><span class="pre">skbio.alignment</span></code>)</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../tree.html">Tree representations (<code class="docutils literal notranslate"><span class="pre">skbio.tree</span></code>)</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../workflow.html">Constructing workflows (<code class="docutils literal notranslate"><span class="pre">skbio.workflow</span></code>)</a></li>
+<li class="toctree-l1 current"><a class="reference internal" href="../diversity.html">Diversity calculations (<code class="docutils literal notranslate"><span class="pre">skbio.diversity</span></code>)</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../stats.html">Statistics (<code class="docutils literal notranslate"><span class="pre">skbio.stats</span></code>)</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../metadata.html">Metadata (<code class="docutils literal notranslate"><span class="pre">skbio.metadata</span></code>)</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../util.html">Utility functionality (<code class="docutils literal notranslate"><span class="pre">skbio.util</span></code>)</a></li>
+</ul>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../user/api_stability.html">API Stability</a></li>
+</ul>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../development/coding_guidelines.html">Coding guidelines</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../development/new_module.html">Adding a new module to skbio</a></li>
+</ul>
+</ul>
+</li>
+              
+                <li class="dropdown">
+  <a role="button"
+     id="dLabelLocalToc"
+     data-toggle="dropdown"
+     data-target="#"
+     href="#">Page <b class="caret"></b></a>
+  <ul class="dropdown-menu localtoc"
+      role="menu"
+      aria-labelledby="dLabelLocalToc"><ul>
+<li><a class="reference internal" href="#">Alpha diversity measures (<code class="docutils literal notranslate"><span class="pre">skbio.diversity.alpha</span></code>)</a><ul>
+<li><a class="reference internal" href="#functions">Functions</a></li>
+</ul>
+</li>
+</ul>
+</ul>
+</li>
+              
+            
+            
+            
+            
+            
+          </ul>
+
+          
+            
+<form class="navbar-form navbar-right" action="../search.html" method="get">
+ <div class="form-group">
+  <input type="text" name="q" class="form-control" placeholder="Search" />
+ </div>
+  <input type="hidden" name="check_keywords" value="yes" />
+  <input type="hidden" name="area" value="default" />
+</form>
+          
+        </div>
+    </div>
+  </div>
+
+<div class="container">
+  <div class="row">
+    <div class="col-md-12 content">
+      
+  <span class="target" id="module-skbio.diversity.alpha"></span><div class="section" id="alpha-diversity-measures-skbio-diversity-alpha">
+<h1>Alpha diversity measures (<a class="reference internal" href="#module-skbio.diversity.alpha" title="skbio.diversity.alpha"><code class="xref py py-mod docutils literal notranslate"><span class="pre">skbio.diversity.alpha</span></code></a>)<a class="headerlink" href="#alpha-diversity-measures-skbio-diversity-alpha" title="Permalink to this headline">¶</a></h1>
+<p>This package provides implementations of alpha diversity measures, including
+measures of richness, dominance, and evenness. Some functions generate
+confidence intervals (CIs). These functions have the suffix <code class="docutils literal notranslate"><span class="pre">_ci</span></code>.</p>
+<div class="section" id="functions">
+<h2>Functions<a class="headerlink" href="#functions" title="Permalink to this headline">¶</a></h2>
+<table border="1" class="longtable docutils">
+<colgroup>
+<col width="10%" />
+<col width="90%" />
+</colgroup>
+<tbody valign="top">
+<tr class="row-odd"><td><a class="reference internal" href="skbio.diversity.alpha.ace.html#skbio.diversity.alpha.ace" title="skbio.diversity.alpha.ace"><code class="xref py py-obj docutils literal notranslate"><span class="pre">ace</span></code></a>(counts[,&nbsp;rare_threshold])</td>
+<td>Calculate the ACE metric (Abundance-based Coverage Estimator).</td>
+</tr>
+<tr class="row-even"><td><a class="reference internal" href="skbio.diversity.alpha.berger_parker_d.html#skbio.diversity.alpha.berger_parker_d" title="skbio.diversity.alpha.berger_parker_d"><code class="xref py py-obj docutils literal notranslate"><span class="pre">berger_parker_d</span></code></a>(counts)</td>
+<td>Calculate Berger-Parker dominance.</td>
+</tr>
+<tr class="row-odd"><td><a class="reference internal" href="skbio.diversity.alpha.brillouin_d.html#skbio.diversity.alpha.brillouin_d" title="skbio.diversity.alpha.brillouin_d"><code class="xref py py-obj docutils literal notranslate"><span class="pre">brillouin_d</span></code></a>(counts)</td>
+<td>Calculate Brillouin index of alpha diversity.</td>
+</tr>
+<tr class="row-even"><td><a class="reference internal" href="skbio.diversity.alpha.chao1.html#skbio.diversity.alpha.chao1" title="skbio.diversity.alpha.chao1"><code class="xref py py-obj docutils literal notranslate"><span class="pre">chao1</span></code></a>(counts[,&nbsp;bias_corrected])</td>
+<td>Calculate chao1 richness estimator.</td>
+</tr>
+<tr class="row-odd"><td><a class="reference internal" href="skbio.diversity.alpha.chao1_ci.html#skbio.diversity.alpha.chao1_ci" title="skbio.diversity.alpha.chao1_ci"><code class="xref py py-obj docutils literal notranslate"><span class="pre">chao1_ci</span></code></a>(counts[,&nbsp;bias_corrected,&nbsp;zscore])</td>
+<td>Calculate chao1 confidence interval.</td>
+</tr>
+<tr class="row-even"><td><a class="reference internal" href="skbio.diversity.alpha.dominance.html#skbio.diversity.alpha.dominance" title="skbio.diversity.alpha.dominance"><code class="xref py py-obj docutils literal notranslate"><span class="pre">dominance</span></code></a>(counts)</td>
+<td>Calculate dominance.</td>
+</tr>
+<tr class="row-odd"><td><a class="reference internal" href="skbio.diversity.alpha.doubles.html#skbio.diversity.alpha.doubles" title="skbio.diversity.alpha.doubles"><code class="xref py py-obj docutils literal notranslate"><span class="pre">doubles</span></code></a>(counts)</td>
+<td>Calculate number of double occurrences (doubletons).</td>
+</tr>
+<tr class="row-even"><td><a class="reference internal" href="skbio.diversity.alpha.enspie.html#skbio.diversity.alpha.enspie" title="skbio.diversity.alpha.enspie"><code class="xref py py-obj docutils literal notranslate"><span class="pre">enspie</span></code></a>(counts)</td>
+<td>Calculate ENS_pie alpha diversity measure.</td>
+</tr>
+<tr class="row-odd"><td><a class="reference internal" href="skbio.diversity.alpha.esty_ci.html#skbio.diversity.alpha.esty_ci" title="skbio.diversity.alpha.esty_ci"><code class="xref py py-obj docutils literal notranslate"><span class="pre">esty_ci</span></code></a>(counts)</td>
+<td>Calculate Esty’s CI.</td>
+</tr>
+<tr class="row-even"><td><a class="reference internal" href="skbio.diversity.alpha.faith_pd.html#skbio.diversity.alpha.faith_pd" title="skbio.diversity.alpha.faith_pd"><code class="xref py py-obj docutils literal notranslate"><span class="pre">faith_pd</span></code></a>(counts,&nbsp;otu_ids,&nbsp;tree[,&nbsp;validate])</td>
+<td>Compute Faith’s phylogenetic diversity metric (PD)</td>
+</tr>
+<tr class="row-odd"><td><a class="reference internal" href="skbio.diversity.alpha.fisher_alpha.html#skbio.diversity.alpha.fisher_alpha" title="skbio.diversity.alpha.fisher_alpha"><code class="xref py py-obj docutils literal notranslate"><span class="pre">fisher_alpha</span></code></a>(counts)</td>
+<td>Calculate Fisher’s alpha, a metric of diversity.</td>
+</tr>
+<tr class="row-even"><td><a class="reference internal" href="skbio.diversity.alpha.gini_index.html#skbio.diversity.alpha.gini_index" title="skbio.diversity.alpha.gini_index"><code class="xref py py-obj docutils literal notranslate"><span class="pre">gini_index</span></code></a>(data[,&nbsp;method])</td>
+<td>Calculate the Gini index.</td>
+</tr>
+<tr class="row-odd"><td><a class="reference internal" href="skbio.diversity.alpha.goods_coverage.html#skbio.diversity.alpha.goods_coverage" title="skbio.diversity.alpha.goods_coverage"><code class="xref py py-obj docutils literal notranslate"><span class="pre">goods_coverage</span></code></a>(counts)</td>
+<td>Calculate Good’s coverage of counts.</td>
+</tr>
+<tr class="row-even"><td><a class="reference internal" href="skbio.diversity.alpha.heip_e.html#skbio.diversity.alpha.heip_e" title="skbio.diversity.alpha.heip_e"><code class="xref py py-obj docutils literal notranslate"><span class="pre">heip_e</span></code></a>(counts)</td>
+<td>Calculate Heip’s evenness measure.</td>
+</tr>
+<tr class="row-odd"><td><a class="reference internal" href="skbio.diversity.alpha.kempton_taylor_q.html#skbio.diversity.alpha.kempton_taylor_q" title="skbio.diversity.alpha.kempton_taylor_q"><code class="xref py py-obj docutils literal notranslate"><span class="pre">kempton_taylor_q</span></code></a>(counts[,&nbsp;lower_quantile,&nbsp;…])</td>
+<td>Calculate Kempton-Taylor Q index of alpha diversity.</td>
+</tr>
+<tr class="row-even"><td><a class="reference internal" href="skbio.diversity.alpha.lladser_ci.html#skbio.diversity.alpha.lladser_ci" title="skbio.diversity.alpha.lladser_ci"><code class="xref py py-obj docutils literal notranslate"><span class="pre">lladser_ci</span></code></a>(counts,&nbsp;r[,&nbsp;alpha,&nbsp;f,&nbsp;ci_type])</td>
+<td>Calculate single CI of the conditional uncovered probability.</td>
+</tr>
+<tr class="row-odd"><td><a class="reference internal" href="skbio.diversity.alpha.lladser_pe.html#skbio.diversity.alpha.lladser_pe" title="skbio.diversity.alpha.lladser_pe"><code class="xref py py-obj docutils literal notranslate"><span class="pre">lladser_pe</span></code></a>(counts[,&nbsp;r])</td>
+<td>Calculate single point estimate of conditional uncovered probability.</td>
+</tr>
+<tr class="row-even"><td><a class="reference internal" href="skbio.diversity.alpha.margalef.html#skbio.diversity.alpha.margalef" title="skbio.diversity.alpha.margalef"><code class="xref py py-obj docutils literal notranslate"><span class="pre">margalef</span></code></a>(counts)</td>
+<td>Calculate Margalef’s richness index.</td>
+</tr>
+<tr class="row-odd"><td><a class="reference internal" href="skbio.diversity.alpha.mcintosh_d.html#skbio.diversity.alpha.mcintosh_d" title="skbio.diversity.alpha.mcintosh_d"><code class="xref py py-obj docutils literal notranslate"><span class="pre">mcintosh_d</span></code></a>(counts)</td>
+<td>Calculate McIntosh dominance index D.</td>
+</tr>
+<tr class="row-even"><td><a class="reference internal" href="skbio.diversity.alpha.mcintosh_e.html#skbio.diversity.alpha.mcintosh_e" title="skbio.diversity.alpha.mcintosh_e"><code class="xref py py-obj docutils literal notranslate"><span class="pre">mcintosh_e</span></code></a>(counts)</td>
+<td>Calculate McIntosh’s evenness measure E.</td>
+</tr>
+<tr class="row-odd"><td><a class="reference internal" href="skbio.diversity.alpha.menhinick.html#skbio.diversity.alpha.menhinick" title="skbio.diversity.alpha.menhinick"><code class="xref py py-obj docutils literal notranslate"><span class="pre">menhinick</span></code></a>(counts)</td>
+<td>Calculate Menhinick’s richness index.</td>
+</tr>
+<tr class="row-even"><td><a class="reference internal" href="skbio.diversity.alpha.michaelis_menten_fit.html#skbio.diversity.alpha.michaelis_menten_fit" title="skbio.diversity.alpha.michaelis_menten_fit"><code class="xref py py-obj docutils literal notranslate"><span class="pre">michaelis_menten_fit</span></code></a>(counts[,&nbsp;num_repeats,&nbsp;…])</td>
+<td>Calculate Michaelis-Menten fit to rarefaction curve of observed OTUs.</td>
+</tr>
+<tr class="row-odd"><td><a class="reference internal" href="skbio.diversity.alpha.observed_otus.html#skbio.diversity.alpha.observed_otus" title="skbio.diversity.alpha.observed_otus"><code class="xref py py-obj docutils literal notranslate"><span class="pre">observed_otus</span></code></a>(counts)</td>
+<td>Calculate the number of distinct OTUs.</td>
+</tr>
+<tr class="row-even"><td><a class="reference internal" href="skbio.diversity.alpha.osd.html#skbio.diversity.alpha.osd" title="skbio.diversity.alpha.osd"><code class="xref py py-obj docutils literal notranslate"><span class="pre">osd</span></code></a>(counts)</td>
+<td>Calculate observed OTUs, singles, and doubles.</td>
+</tr>
+<tr class="row-odd"><td><a class="reference internal" href="skbio.diversity.alpha.pielou_e.html#skbio.diversity.alpha.pielou_e" title="skbio.diversity.alpha.pielou_e"><code class="xref py py-obj docutils literal notranslate"><span class="pre">pielou_e</span></code></a>(counts)</td>
+<td>Calculate Pielou’s Evenness index J’.</td>
+</tr>
+<tr class="row-even"><td><a class="reference internal" href="skbio.diversity.alpha.robbins.html#skbio.diversity.alpha.robbins" title="skbio.diversity.alpha.robbins"><code class="xref py py-obj docutils literal notranslate"><span class="pre">robbins</span></code></a>(counts)</td>
+<td>Calculate Robbins’ estimator for the probability of unobserved outcomes.</td>
+</tr>
+<tr class="row-odd"><td><a class="reference internal" href="skbio.diversity.alpha.shannon.html#skbio.diversity.alpha.shannon" title="skbio.diversity.alpha.shannon"><code class="xref py py-obj docutils literal notranslate"><span class="pre">shannon</span></code></a>(counts[,&nbsp;base])</td>
+<td>Calculate Shannon entropy of counts, default in bits.</td>
+</tr>
+<tr class="row-even"><td><a class="reference internal" href="skbio.diversity.alpha.simpson.html#skbio.diversity.alpha.simpson" title="skbio.diversity.alpha.simpson"><code class="xref py py-obj docutils literal notranslate"><span class="pre">simpson</span></code></a>(counts)</td>
+<td>Calculate Simpson’s index.</td>
+</tr>
+<tr class="row-odd"><td><a class="reference internal" href="skbio.diversity.alpha.simpson_e.html#skbio.diversity.alpha.simpson_e" title="skbio.diversity.alpha.simpson_e"><code class="xref py py-obj docutils literal notranslate"><span class="pre">simpson_e</span></code></a>(counts)</td>
+<td>Calculate Simpson’s evenness measure E.</td>
+</tr>
+<tr class="row-even"><td><a class="reference internal" href="skbio.diversity.alpha.singles.html#skbio.diversity.alpha.singles" title="skbio.diversity.alpha.singles"><code class="xref py py-obj docutils literal notranslate"><span class="pre">singles</span></code></a>(counts)</td>
+<td>Calculate number of single occurrences (singletons).</td>
+</tr>
+<tr class="row-odd"><td><a class="reference internal" href="skbio.diversity.alpha.strong.html#skbio.diversity.alpha.strong" title="skbio.diversity.alpha.strong"><code class="xref py py-obj docutils literal notranslate"><span class="pre">strong</span></code></a>(counts)</td>
+<td>Calculate Strong’s dominance index.</td>
+</tr>
+</tbody>
+</table>
+</div>
+</div>
+
+
+    </div>
+      
+  </div>
+</div>
+  
+<footer class="footer">
+  <div class="container">
+    <p class="pull-right">
+      <a href="#">Back to top</a>
+      
+    </p>
+    <p>
+        &copy; Copyright 2014--, scikit-bio development team.<br/>
+      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 1.8.2.<br/>
+    </p>
+  </div>
+</footer>
+  <script>
+    (function(i,s,o,g,r,a,m){i['GoogleAnalyticsObject']=r;i[r]=i[r]||function(){
+    (i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),
+    m=s.getElementsByTagName(o)[0];a.async=1;a.src=g;m.parentNode.insertBefore(a,m)
+    })(window,document,'script','//www.google-analytics.com/analytics.js','ga');
+
+    ga('create', 'UA-6636235-9', 'scikit-bio.org');
+    ga('send', 'pageview');
+  </script>
+
+  </body>
+</html>

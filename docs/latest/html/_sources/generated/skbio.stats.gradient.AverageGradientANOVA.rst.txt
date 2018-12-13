@@ -1,0 +1,64 @@
+
+skbio.stats.gradient.AverageGradientANOVA
+=========================================
+
+
+
+
+   
+
+   
+
+   
+
+   
+      
+   
+
+   
+
+   
+
+   
+
+   
+
+   
+
+   
+
+   
+
+   
+
+   
+
+   
+
+
+.. currentmodule:: skbio.stats.gradient
+
+.. autoclass:: AverageGradientANOVA
+
+   
+
+   
+   .. rubric:: Built-ins
+
+   .. autosummary::
+      :toctree:
+   
+      ~AverageGradientANOVA.__init_subclass__
+   
+
+   
+   .. rubric:: Methods
+
+   .. autosummary::
+      :toctree:
+   
+      
+      
+      ~AverageGradientANOVA.get_trajectories
+      
+   

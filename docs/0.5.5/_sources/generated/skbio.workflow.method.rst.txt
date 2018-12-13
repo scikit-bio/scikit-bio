@@ -1,0 +1,62 @@
+
+skbio.workflow.method
+=====================
+
+
+
+
+   
+      
+   
+
+   
+
+   
+
+   
+
+   
+      
+   
+
+   
+
+   
+
+   
+
+   
+
+   
+
+
+.. currentmodule:: skbio.workflow
+
+.. autoclass:: method
+
+   
+   .. rubric:: Attributes
+
+   .. autosummary::
+   
+      ~method.highest_priority
+   
+
+   
+   .. rubric:: Built-ins
+
+   .. autosummary::
+      :toctree:
+   
+      ~method.__call__
+      ~method.__init_subclass__
+   
+
+   
+   .. rubric:: Methods
+
+   .. autosummary::
+      :toctree:
+   
+      
+   

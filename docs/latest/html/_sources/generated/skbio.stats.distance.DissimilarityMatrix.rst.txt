@@ -1,0 +1,152 @@
+
+skbio.stats.distance.DissimilarityMatrix
+========================================
+
+
+
+
+   
+      
+   
+
+   
+
+   
+      
+   
+
+   
+
+   
+      
+   
+
+   
+
+   
+      
+   
+
+   
+      
+   
+
+   
+
+   
+
+   
+
+   
+
+   
+      
+   
+
+   
+
+   
+
+   
+
+   
+
+   
+
+   
+
+   
+
+   
+
+   
+
+   
+
+   
+
+   
+
+   
+
+   
+
+   
+
+   
+
+   
+
+
+.. currentmodule:: skbio.stats.distance
+
+.. autoclass:: DissimilarityMatrix
+
+   
+   .. rubric:: Attributes
+
+   .. autosummary::
+   
+      ~DissimilarityMatrix.T
+      ~DissimilarityMatrix.data
+      ~DissimilarityMatrix.default_write_format
+      ~DissimilarityMatrix.dtype
+      ~DissimilarityMatrix.ids
+      ~DissimilarityMatrix.png
+      ~DissimilarityMatrix.shape
+      ~DissimilarityMatrix.size
+      ~DissimilarityMatrix.svg
+   
+
+   
+   .. rubric:: Built-ins
+
+   .. autosummary::
+      :toctree:
+   
+      ~DissimilarityMatrix.__contains__
+      ~DissimilarityMatrix.__eq__
+      ~DissimilarityMatrix.__getitem__
+      ~DissimilarityMatrix.__init_subclass__
+      ~DissimilarityMatrix.__ne__
+      ~DissimilarityMatrix.__str__
+   
+
+   
+   .. rubric:: Methods
+
+   .. autosummary::
+      :toctree:
+   
+      
+      
+      ~DissimilarityMatrix.copy
+      
+      
+      ~DissimilarityMatrix.filter
+      
+      
+      ~DissimilarityMatrix.from_iterable
+      
+      
+      ~DissimilarityMatrix.index
+      
+      
+      ~DissimilarityMatrix.plot
+      
+      
+      ~DissimilarityMatrix.read
+      
+      
+      ~DissimilarityMatrix.redundant_form
+      
+      
+      ~DissimilarityMatrix.to_data_frame
+      
+      
+      ~DissimilarityMatrix.transpose
+      
+      
+      ~DissimilarityMatrix.write
+      
+   

@@ -1,0 +1,64 @@
+
+skbio.stats.gradient.FirstDifferenceGradientANOVA
+=================================================
+
+
+
+
+   
+
+   
+
+   
+
+   
+      
+   
+
+   
+
+   
+
+   
+
+   
+
+   
+
+   
+
+   
+
+   
+
+   
+
+   
+
+
+.. currentmodule:: skbio.stats.gradient
+
+.. autoclass:: FirstDifferenceGradientANOVA
+
+   
+
+   
+   .. rubric:: Built-ins
+
+   .. autosummary::
+      :toctree:
+   
+      ~FirstDifferenceGradientANOVA.__init_subclass__
+   
+
+   
+   .. rubric:: Methods
+
+   .. autosummary::
+      :toctree:
+   
+      
+      
+      ~FirstDifferenceGradientANOVA.get_trajectories
+      
+   

@@ -1,0 +1,6 @@
+skbio.io.GenBankFormatError
+===========================
+
+.. currentmodule:: skbio.io
+
+.. autoexception:: GenBankFormatError

@@ -1,8 +1,0 @@
-:orphan:
-
-skbio.alignment.TabularMSA.iloc
-===============================
-
-.. currentmodule:: skbio.alignment
-
-.. autoattribute:: TabularMSA.iloc

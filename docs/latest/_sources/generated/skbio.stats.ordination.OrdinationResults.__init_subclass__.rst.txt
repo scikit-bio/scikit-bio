@@ -1,0 +1,8 @@
+:orphan:
+
+skbio.stats.ordination.OrdinationResults.__init_subclass__
+==========================================================
+
+.. currentmodule:: skbio.stats.ordination
+
+.. automethod:: OrdinationResults.__init_subclass__

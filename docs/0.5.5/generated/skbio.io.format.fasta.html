@@ -1,0 +1,837 @@
+<!DOCTYPE html>
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="X-UA-Compatible" content="IE=Edge" />
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    <title>FASTA/QUAL format (skbio.io.format.fasta) &#8212; scikit-bio 0.5.5 documentation</title>
+    <link rel="stylesheet" href="../_static/bootstrap-sphinx.css" type="text/css" />
+    <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
+    <link rel="stylesheet" type="text/css" href="../_static/style.css" />
+    <script type="text/javascript" id="documentation_options" data-url_root="../" src="../_static/documentation_options.js"></script>
+    <script type="text/javascript" src="../_static/jquery.js"></script>
+    <script type="text/javascript" src="../_static/underscore.js"></script>
+    <script type="text/javascript" src="../_static/doctools.js"></script>
+    <script type="text/javascript" src="../_static/copybutton.js"></script>
+    <script async="async" type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.1/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
+    <script type="text/javascript" src="../_static/js/jquery-1.11.0.min.js"></script>
+    <script type="text/javascript" src="../_static/js/jquery-fix.js"></script>
+    <script type="text/javascript" src="../_static/bootstrap-3.3.7/js/bootstrap.min.js"></script>
+    <script type="text/javascript" src="../_static/bootstrap-sphinx.js"></script>
+    <link rel="index" title="Index" href="../genindex.html" />
+    <link rel="search" title="Search" href="../search.html" />
+    <link rel="next" title="FASTQ format (skbio.io.format.fastq)" href="skbio.io.format.fastq.html" />
+    <link rel="prev" title="EMBL format (skbio.io.format.embl)" href="skbio.io.format.embl.html" />
+<meta charset='utf-8'>
+<meta http-equiv='X-UA-Compatible' content='IE=edge,chrome=1'>
+<meta name='viewport' content='width=device-width, initial-scale=1.0, maximum-scale=1'>
+<meta name="apple-mobile-web-app-capable" content="yes">
+
+  </head><body>
+  
+  <a href="https://github.com/biocore/scikit-bio"
+     class="visible-desktop hidden-xs"><img
+    id="gh-banner"
+    style="position: absolute; top: 50px; right: 0; border: 0;"
+    src="https://s3.amazonaws.com/github/ribbons/forkme_right_darkblue_121621.png"
+    alt="Fork me on GitHub"></a>
+  <script>
+    // Adjust banner height.
+    $(function () {
+      var navHeight = $(".navbar .container").css("height");
+      $("#gh-banner").css("top", navHeight);
+    });
+  </script>
+
+
+  <div id="navbar" class="navbar navbar-default navbar-fixed-top">
+    <div class="container">
+      <div class="navbar-header">
+        <!-- .btn-navbar is used as the toggle for collapsed navbar content -->
+        <button type="button" class="navbar-toggle" data-toggle="collapse" data-target=".nav-collapse">
+          <span class="icon-bar"></span>
+          <span class="icon-bar"></span>
+          <span class="icon-bar"></span>
+        </button>
+        <a class="navbar-brand" href="../index.html">
+          scikit-bio docs</a>
+        <span class="navbar-text navbar-version pull-left"><b>0.5.5</b></span>
+      </div>
+
+        <div class="collapse navbar-collapse nav-collapse">
+          <ul class="nav navbar-nav">
+            
+            
+              <li class="dropdown globaltoc-container">
+  <a role="button"
+     id="dLabelGlobalToc"
+     data-toggle="dropdown"
+     data-target="#"
+     href="../index.html">Site <b class="caret"></b></a>
+  <ul class="dropdown-menu globaltoc"
+      role="menu"
+      aria-labelledby="dLabelGlobalToc"><ul class="current">
+<li class="toctree-l1 current"><a class="reference internal" href="../io.html">File I/O (<code class="docutils literal notranslate"><span class="pre">skbio.io</span></code>)</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../sequence.html">Sequences (<code class="docutils literal notranslate"><span class="pre">skbio.sequence</span></code>)</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../alignment.html">Alignments (<code class="docutils literal notranslate"><span class="pre">skbio.alignment</span></code>)</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../tree.html">Tree representations (<code class="docutils literal notranslate"><span class="pre">skbio.tree</span></code>)</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../workflow.html">Constructing workflows (<code class="docutils literal notranslate"><span class="pre">skbio.workflow</span></code>)</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../diversity.html">Diversity calculations (<code class="docutils literal notranslate"><span class="pre">skbio.diversity</span></code>)</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../stats.html">Statistics (<code class="docutils literal notranslate"><span class="pre">skbio.stats</span></code>)</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../metadata.html">Metadata (<code class="docutils literal notranslate"><span class="pre">skbio.metadata</span></code>)</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../util.html">Utility functionality (<code class="docutils literal notranslate"><span class="pre">skbio.util</span></code>)</a></li>
+</ul>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../user/api_stability.html">API Stability</a></li>
+</ul>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../development/coding_guidelines.html">Coding guidelines</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../development/new_module.html">Adding a new module to skbio</a></li>
+</ul>
+</ul>
+</li>
+              
+                <li class="dropdown">
+  <a role="button"
+     id="dLabelLocalToc"
+     data-toggle="dropdown"
+     data-target="#"
+     href="#">Page <b class="caret"></b></a>
+  <ul class="dropdown-menu localtoc"
+      role="menu"
+      aria-labelledby="dLabelLocalToc"><ul>
+<li><a class="reference internal" href="#">FASTA/QUAL format (<code class="docutils literal notranslate"><span class="pre">skbio.io.format.fasta</span></code>)</a><ul>
+<li><a class="reference internal" href="#format-support">Format Support</a></li>
+<li><a class="reference internal" href="#format-specification">Format Specification</a><ul>
+<li><a class="reference internal" href="#fasta-format">FASTA Format</a><ul>
+<li><a class="reference internal" href="#sequence-header">Sequence Header</a></li>
+<li><a class="reference internal" href="#sequence-data">Sequence Data</a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#qual-format">QUAL Format</a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#format-parameters">Format Parameters</a><ul>
+<li><a class="reference internal" href="#qual-file-parameter-readers-and-writers">QUAL File Parameter (Readers and Writers)</a></li>
+<li><a class="reference internal" href="#reader-specific-parameters">Reader-specific Parameters</a><ul>
+<li><a class="reference internal" href="#generator-and-tabularmsa-reader-parameters">Generator and TabularMSA Reader Parameters</a></li>
+<li><a class="reference internal" href="#sequence-reader-parameters">Sequence Reader Parameters</a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#writer-specific-parameters">Writer-specific Parameters</a></li>
+<li><a class="reference internal" href="#reading-and-writing-fasta-files">Reading and Writing FASTA Files</a></li>
+<li><a class="reference internal" href="#reading-and-writing-fasta-qual-files">Reading and Writing FASTA/QUAL Files</a></li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+</ul>
+</li>
+              
+            
+            
+            
+            
+            
+          </ul>
+
+          
+            
+<form class="navbar-form navbar-right" action="../search.html" method="get">
+ <div class="form-group">
+  <input type="text" name="q" class="form-control" placeholder="Search" />
+ </div>
+  <input type="hidden" name="check_keywords" value="yes" />
+  <input type="hidden" name="area" value="default" />
+</form>
+          
+        </div>
+    </div>
+  </div>
+
+<div class="container">
+  <div class="row">
+    <div class="col-md-12 content">
+      
+  <span class="target" id="module-skbio.io.format.fasta"></span><div class="section" id="fasta-qual-format-skbio-io-format-fasta">
+<h1>FASTA/QUAL format (<a class="reference internal" href="#module-skbio.io.format.fasta" title="skbio.io.format.fasta"><code class="xref py py-mod docutils literal notranslate"><span class="pre">skbio.io.format.fasta</span></code></a>)<a class="headerlink" href="#fasta-qual-format-skbio-io-format-fasta" title="Permalink to this headline">¶</a></h1>
+<p>The FASTA file format (<code class="docutils literal notranslate"><span class="pre">fasta</span></code>) stores biological (i.e., nucleotide or
+protein) sequences in a simple plain text format that is both human-readable
+and easy to parse. The file format was first introduced and used in the FASTA
+software package <a class="footnote-reference" href="#id9" id="id1">[1]</a>. Additional descriptions of the file format can be found
+in <a class="footnote-reference" href="#id10" id="id2">[2]</a> and <a class="footnote-reference" href="#id11" id="id3">[3]</a>.</p>
+<p>An example of a FASTA-formatted file containing two DNA sequences:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="o">&gt;</span><span class="n">seq1</span> <span class="n">db</span><span class="o">-</span><span class="n">accession</span><span class="o">-</span><span class="mi">149855</span>
+<span class="n">CGATGTCGATCGATCGATCGATCAG</span>
+<span class="o">&gt;</span><span class="n">seq2</span> <span class="n">db</span><span class="o">-</span><span class="n">accession</span><span class="o">-</span><span class="mi">34989</span>
+<span class="n">CATCGATCGATCGATGCATGCATGCATG</span>
+</pre></div>
+</div>
+<p>The QUAL file format is an additional format related to FASTA. A FASTA file is
+sometimes accompanied by a QUAL file, particuarly when the FASTA file contains
+sequences generated on a high-throughput sequencing instrument. QUAL files
+store a Phred quality score (nonnegative integer) for each base in a sequence
+stored in FASTA format (see <a class="footnote-reference" href="#id12" id="id4">[4]</a> for more details). scikit-bio supports reading
+and writing FASTA (and optionally QUAL) file formats.</p>
+<div class="section" id="format-support">
+<h2>Format Support<a class="headerlink" href="#format-support" title="Permalink to this headline">¶</a></h2>
+<p><strong>Has Sniffer: Yes</strong></p>
+<table border="1" class="docutils">
+<colgroup>
+<col width="8%" />
+<col width="8%" />
+<col width="84%" />
+</colgroup>
+<thead valign="bottom">
+<tr class="row-odd"><th class="head">Reader</th>
+<th class="head">Writer</th>
+<th class="head">Object Class</th>
+</tr>
+</thead>
+<tbody valign="top">
+<tr class="row-even"><td>Yes</td>
+<td>Yes</td>
+<td>generator of <a class="reference internal" href="skbio.sequence.Sequence.html#skbio.sequence.Sequence" title="skbio.sequence.Sequence"><code class="xref py py-mod docutils literal notranslate"><span class="pre">skbio.sequence.Sequence</span></code></a> objects</td>
+</tr>
+<tr class="row-odd"><td>Yes</td>
+<td>Yes</td>
+<td><a class="reference internal" href="skbio.alignment.TabularMSA.html#skbio.alignment.TabularMSA" title="skbio.alignment.TabularMSA"><code class="xref py py-mod docutils literal notranslate"><span class="pre">skbio.alignment.TabularMSA</span></code></a></td>
+</tr>
+<tr class="row-even"><td>Yes</td>
+<td>Yes</td>
+<td><a class="reference internal" href="skbio.sequence.Sequence.html#skbio.sequence.Sequence" title="skbio.sequence.Sequence"><code class="xref py py-mod docutils literal notranslate"><span class="pre">skbio.sequence.Sequence</span></code></a></td>
+</tr>
+<tr class="row-odd"><td>Yes</td>
+<td>Yes</td>
+<td><a class="reference internal" href="skbio.sequence.DNA.html#skbio.sequence.DNA" title="skbio.sequence.DNA"><code class="xref py py-mod docutils literal notranslate"><span class="pre">skbio.sequence.DNA</span></code></a></td>
+</tr>
+<tr class="row-even"><td>Yes</td>
+<td>Yes</td>
+<td><a class="reference internal" href="skbio.sequence.RNA.html#skbio.sequence.RNA" title="skbio.sequence.RNA"><code class="xref py py-mod docutils literal notranslate"><span class="pre">skbio.sequence.RNA</span></code></a></td>
+</tr>
+<tr class="row-odd"><td>Yes</td>
+<td>Yes</td>
+<td><a class="reference internal" href="skbio.sequence.Protein.html#skbio.sequence.Protein" title="skbio.sequence.Protein"><code class="xref py py-mod docutils literal notranslate"><span class="pre">skbio.sequence.Protein</span></code></a></td>
+</tr>
+</tbody>
+</table>
+<div class="admonition note">
+<p class="first admonition-title">Note</p>
+<p class="last">All readers and writers support an optional QUAL file via the
+<code class="docutils literal notranslate"><span class="pre">qual</span></code> parameter. If one is provided, quality scores will be read/written
+in addition to FASTA sequence data.</p>
+</div>
+</div>
+<div class="section" id="format-specification">
+<h2>Format Specification<a class="headerlink" href="#format-specification" title="Permalink to this headline">¶</a></h2>
+<p>The following sections define the FASTA and QUAL file formats in detail.</p>
+<div class="section" id="fasta-format">
+<h3>FASTA Format<a class="headerlink" href="#fasta-format" title="Permalink to this headline">¶</a></h3>
+<p>A FASTA file contains one or more biological sequences. The sequences are
+stored sequentially, with a <em>record</em> for each sequence (also referred to as a
+<em>FASTA record</em>). Each <em>record</em> consists of a single-line <em>header</em> (sometimes
+referred to as a <em>defline</em>, <em>label</em>, <em>description</em>, or <em>comment</em>) followed by
+the sequence data, optionally split over multiple lines.</p>
+<div class="admonition note">
+<p class="first admonition-title">Note</p>
+<p>Blank or whitespace-only lines are only allowed at the beginning of
+the file, between FASTA records, or at the end of the file. A blank or
+whitespace-only line after the header line, within the sequence (for FASTA
+files), or within quality scores (for QUAL files) will raise an error.</p>
+<p class="last">scikit-bio will ignore leading and trailing whitespace characters on each
+line while reading.</p>
+</div>
+<div class="admonition note">
+<p class="first admonition-title">Note</p>
+<p class="last">scikit-bio does not currently support legacy FASTA format (i.e.,
+headers/comments denoted with a semicolon). The format supported by
+scikit-bio (described below in detail) most closely resembles the
+description given in NCBI’s BLAST documentation <a class="footnote-reference" href="#id11" id="id5">[3]</a>. See <a class="footnote-reference" href="#id10" id="id6">[2]</a> for more
+details on legacy FASTA format. If you would like legacy FASTA format
+support added to scikit-bio, please consider submitting a feature request on
+the
+<a class="reference external" href="https://github.com/biocore/scikit-bio/issues">scikit-bio issue tracker</a>
+(pull requests are also welcome!).</p>
+</div>
+<div class="section" id="sequence-header">
+<h4>Sequence Header<a class="headerlink" href="#sequence-header" title="Permalink to this headline">¶</a></h4>
+<p>Each sequence header consists of a single line beginning with a greater-than
+(<code class="docutils literal notranslate"><span class="pre">&gt;</span></code>) symbol. Immediately following this is a sequence identifier (ID) and
+description separated by one or more whitespace characters.</p>
+<div class="admonition note">
+<p class="first admonition-title">Note</p>
+<p>When reading a FASTA-formatted file, the sequence ID and description
+are stored in the sequence <cite>metadata</cite> attribute, under the <cite>‘id’</cite> and
+<cite>‘description’</cite> keys, repectively. Both are optional. Each will be
+represented as the empty string (<code class="docutils literal notranslate"><span class="pre">''</span></code>) in <cite>metadata</cite> if it is not present
+in the header.</p>
+<p class="last">When writing a FASTA-formatted file, sequence <cite>metadata</cite> identified by keys
+<cite>‘id’</cite> and <cite>‘description’</cite> will be converted to strings and written as the
+sequence identifier and description, respectively. Each will be written as
+the empty string if not present in sequence <cite>metadata</cite>.</p>
+</div>
+<p>A sequence ID consists of a single <em>word</em>: all characters after the greater-
+than symbol and before the first whitespace character (if any) are taken as the
+sequence ID. Unique sequence IDs are not strictly enforced by the FASTA format
+itself. A single standardized ID format is similarly not enforced by the FASTA
+format, though it is often common to use a unique library accession number for
+a sequence ID (e.g., NCBI’s FASTA defline format <a class="footnote-reference" href="#id13" id="id7">[5]</a>).</p>
+<p>If a description is present, it is taken as the remaining characters that
+follow the sequence ID and initial whitespace(s). The description is considered
+additional information about the sequence (e.g., comments about the source of
+the sequence or the molecule that it encodes).</p>
+<p>For example, consider the following header:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="o">&gt;</span><span class="n">seq1</span> <span class="n">db</span><span class="o">-</span><span class="n">accession</span><span class="o">-</span><span class="mi">149855</span>
+</pre></div>
+</div>
+<p><code class="docutils literal notranslate"><span class="pre">seq1</span></code> is the sequence ID and <code class="docutils literal notranslate"><span class="pre">db-accession-149855</span></code> is the sequence
+description.</p>
+<div class="admonition note">
+<p class="first admonition-title">Note</p>
+<p class="last">scikit-bio’s readers will remove all leading and trailing whitespace
+from the description. If a header line begins with whitespace following the
+<code class="docutils literal notranslate"><span class="pre">&gt;</span></code>, the ID is assumed to be missing and the remainder of the line is
+taken as the description.</p>
+</div>
+</div>
+<div class="section" id="sequence-data">
+<h4>Sequence Data<a class="headerlink" href="#sequence-data" title="Permalink to this headline">¶</a></h4>
+<p>Biological sequence data follows the header, and can be split over multiple
+lines. The sequence data (i.e., nucleotides or amino acids) are stored using
+the standard IUPAC lexicon (single-letter codes).</p>
+<div class="admonition note">
+<p class="first admonition-title">Note</p>
+<p>scikit-bio supports both upper and lower case characters.
+This functionality depends on the type of object the data is
+being read into. For <code class="docutils literal notranslate"><span class="pre">Sequence</span></code> objects, sciki-bio doesn’t care about the
+case. Other sequence objects do, but all provide the <cite>lowercase</cite> parameter
+to control case functionality. Refer to each class’s respective constructor
+documentation for details.</p>
+<p>Both <code class="docutils literal notranslate"><span class="pre">-</span></code> and <code class="docutils literal notranslate"><span class="pre">.</span></code> are supported as gap characters when reading into
+<code class="docutils literal notranslate"><span class="pre">DNA</span></code>, <code class="docutils literal notranslate"><span class="pre">RNA</span></code>, and <code class="docutils literal notranslate"><span class="pre">Protein</span></code> sequence objects.</p>
+<p class="last">Validation is performed when reading into scikit-bio sequence objects that
+enforce an alphabet (e.g., <code class="docutils literal notranslate"><span class="pre">DNA</span></code>, <code class="docutils literal notranslate"><span class="pre">RNA</span></code>, <code class="docutils literal notranslate"><span class="pre">Protein</span></code>). If any invalid
+characters are found while reading from the FASTA file, an exception is
+raised.</p>
+</div>
+</div>
+</div>
+<div class="section" id="qual-format">
+<h3>QUAL Format<a class="headerlink" href="#qual-format" title="Permalink to this headline">¶</a></h3>
+<p>A QUAL file contains quality scores for one or more biological sequences stored
+in a corresponding FASTA file. QUAL format is very similar to FASTA format: it
+stores records sequentially, with each record beginning with a header line
+containing a sequence ID and description. The same rules apply to QUAL headers
+as FASTA headers (see the above sections for details). scikit-bio processes
+FASTA and QUAL headers in exactly the same way.</p>
+<p>Instead of storing biological sequence data in each record, a QUAL file stores
+a Phred quality score for each base in the corresponding sequence. Quality
+scores are represented as nonnegative integers separated by whitespace
+(typically a single space or newline), and can span multiple lines.</p>
+<div class="admonition note">
+<p class="first admonition-title">Note</p>
+<p>When reading a QUAL-formatted file, quality scores are stored in the
+sequence’s <cite>positional_metadata</cite> attribute under the <cite>‘quality’</cite> column.</p>
+<p class="last">When writing a QUAL-formatted file, a sequence’s <cite>positional_metadata</cite>
+<cite>‘quality’</cite> column will be written as the quality scores.</p>
+</div>
+<div class="admonition note">
+<p class="first admonition-title">Note</p>
+<p>When reading FASTA and QUAL files, scikit-bio requires records to be
+in the same order in both files (i.e., each FASTA and QUAL record must have
+the same ID and description after being parsed). In addition to having the
+same order, the number of FASTA records must match the number of QUAL
+records (i.e., missing or additonal records are not allowed). scikit-bio
+also requires that the number of quality scores match the number of bases in
+the corresponding sequence.</p>
+<p class="last">When writing FASTA and QUAL files, scikit-bio will maintain the same
+ordering of records in both files (i.e., using the same ID and description
+in both records) to support future reading.</p>
+</div>
+</div>
+</div>
+<div class="section" id="format-parameters">
+<h2>Format Parameters<a class="headerlink" href="#format-parameters" title="Permalink to this headline">¶</a></h2>
+<p>The following parameters are available to change how FASTA/QUAL files are read
+or written in scikit-bio.</p>
+<div class="section" id="qual-file-parameter-readers-and-writers">
+<h3>QUAL File Parameter (Readers and Writers)<a class="headerlink" href="#qual-file-parameter-readers-and-writers" title="Permalink to this headline">¶</a></h3>
+<p>The <code class="docutils literal notranslate"><span class="pre">qual</span></code> parameter is available to all FASTA format readers and writers. It
+can be any file-like type supported by scikit-bio’s I/O registry (e.g., file
+handle, file path, etc.). If <code class="docutils literal notranslate"><span class="pre">qual</span></code> is provided when reading, quality scores
+will be included in each in-memory <code class="docutils literal notranslate"><span class="pre">Sequence</span></code> object, in addition
+to sequence data stored in the FASTA file. When writing, quality scores will be
+written in QUAL format in addition to the sequence data being written in FASTA
+format.</p>
+</div>
+<div class="section" id="reader-specific-parameters">
+<h3>Reader-specific Parameters<a class="headerlink" href="#reader-specific-parameters" title="Permalink to this headline">¶</a></h3>
+<p>The available reader parameters differ depending on which reader is used.</p>
+<div class="section" id="generator-and-tabularmsa-reader-parameters">
+<h4>Generator and TabularMSA Reader Parameters<a class="headerlink" href="#generator-and-tabularmsa-reader-parameters" title="Permalink to this headline">¶</a></h4>
+<p>The <code class="docutils literal notranslate"><span class="pre">constructor</span></code> parameter can be used with the <code class="docutils literal notranslate"><span class="pre">Sequence</span></code> generator and
+<code class="docutils literal notranslate"><span class="pre">TabularMSA</span></code> FASTA readers. <code class="docutils literal notranslate"><span class="pre">constructor</span></code> specifies the type of in-memory
+sequence object to read each sequence into. For example, if you know that the
+FASTA file you’re reading contains protein sequences, you would pass
+<code class="docutils literal notranslate"><span class="pre">constructor=Protein</span></code> to the reader call.</p>
+<p>When reading into a <code class="docutils literal notranslate"><span class="pre">Sequence</span></code> generator, <code class="docutils literal notranslate"><span class="pre">constructor</span></code> defaults to
+<code class="docutils literal notranslate"><span class="pre">Sequence</span></code> and must be a subclass of <code class="docutils literal notranslate"><span class="pre">Sequence</span></code> if supplied.</p>
+<p>When reading into a <code class="docutils literal notranslate"><span class="pre">TabularMSA</span></code>, <code class="docutils literal notranslate"><span class="pre">constructor</span></code> is a required format
+parameter and must be a subclass of <code class="docutils literal notranslate"><span class="pre">GrammaredSequence</span></code> (e.g., <code class="docutils literal notranslate"><span class="pre">DNA</span></code>,
+<code class="docutils literal notranslate"><span class="pre">RNA</span></code>, <code class="docutils literal notranslate"><span class="pre">Protein</span></code>).</p>
+<div class="admonition note">
+<p class="first admonition-title">Note</p>
+<p class="last">The FASTA sniffer will not attempt to guess the <code class="docutils literal notranslate"><span class="pre">constructor</span></code>
+parameter.</p>
+</div>
+</div>
+<div class="section" id="sequence-reader-parameters">
+<h4>Sequence Reader Parameters<a class="headerlink" href="#sequence-reader-parameters" title="Permalink to this headline">¶</a></h4>
+<p>The <code class="docutils literal notranslate"><span class="pre">seq_num</span></code> parameter can be used with the <code class="docutils literal notranslate"><span class="pre">Sequence</span></code>,
+<code class="docutils literal notranslate"><span class="pre">DNA</span></code>, <code class="docutils literal notranslate"><span class="pre">RNA</span></code>, and <code class="docutils literal notranslate"><span class="pre">Protein</span></code> FASTA readers. <code class="docutils literal notranslate"><span class="pre">seq_num</span></code> specifies which
+sequence to read from the FASTA file (and optional QUAL file), and defaults to
+1 (i.e., such that the first sequence is read). For example, to read the 50th
+sequence from a FASTA file, you would pass <code class="docutils literal notranslate"><span class="pre">seq_num=50</span></code> to the reader call.</p>
+</div>
+</div>
+<div class="section" id="writer-specific-parameters">
+<h3>Writer-specific Parameters<a class="headerlink" href="#writer-specific-parameters" title="Permalink to this headline">¶</a></h3>
+<p>The following parameters are available to all FASTA format writers:</p>
+<ul class="simple">
+<li><code class="docutils literal notranslate"><span class="pre">id_whitespace_replacement</span></code>: string to replace <strong>each</strong> whitespace
+character in a sequence ID. This parameter is useful for cases where an
+in-memory sequence ID contains whitespace, which would result in an on-disk
+representation that would not be read back into memory as the same ID (since
+IDs in FASTA format cannot contain whitespace). Defaults to <code class="docutils literal notranslate"><span class="pre">_</span></code>. If
+<code class="docutils literal notranslate"><span class="pre">None</span></code>, no whitespace replacement is performed and IDs are written as they
+are stored in memory (this has the potential to create an invalid
+FASTA-formatted file; see note below). This parameter also applies to a QUAL
+file if one is provided.</li>
+<li><code class="docutils literal notranslate"><span class="pre">description_newline_replacement</span></code>: string to replace <strong>each</strong> newline
+character in a sequence description. Since a FASTA header must be a single
+line, newlines are not allowed in sequence descriptions and must be replaced
+in order to write a valid FASTA file. Defaults to a single space. If
+<code class="docutils literal notranslate"><span class="pre">None</span></code>, no newline replacement is performed and descriptions are written as
+they are stored in memory (this has the potential to create an invalid
+FASTA-formatted file; see note below). This parameter also applies to a QUAL
+file if one is provided.</li>
+<li><code class="docutils literal notranslate"><span class="pre">max_width</span></code>: integer specifying the maximum line width (i.e., number of
+characters) for sequence data and/or quality scores. If a sequence or its
+quality scores are longer than <code class="docutils literal notranslate"><span class="pre">max_width</span></code>, it will be split across
+multiple lines, each with a maximum width of <code class="docutils literal notranslate"><span class="pre">max_width</span></code>. Note that there
+are some caveats when splitting quality scores. A single quality score will
+<em>never</em> be split across multiple lines, otherwise it would become two
+different quality scores when read again. Thus, splitting only occurs
+<em>between</em> quality scores. This makes it possible to have a single long
+quality score written on its own line that exceeds <code class="docutils literal notranslate"><span class="pre">max_width</span></code>. For
+example, the quality score <code class="docutils literal notranslate"><span class="pre">12345</span></code> would not be split across multiple lines
+even if <code class="docutils literal notranslate"><span class="pre">max_width=3</span></code>. Thus, a 5-character line would be written. Default
+behavior is to not split sequence data or quality scores across multiple
+lines.</li>
+<li><code class="docutils literal notranslate"><span class="pre">lowercase</span></code>: String or boolean array. If a string, it is treated as a key
+into the positional metadata of the object. If a boolean array, it
+indicates characters to write in lowercase. Characters in the sequence
+corresponding to <cite>True</cite> values will be written in lowercase. The boolean
+array must be the same length as the sequence.</li>
+</ul>
+<div class="admonition note">
+<p class="first admonition-title">Note</p>
+<p class="last">The FASTA format writers will have noticeably better runtime
+performance if <code class="docutils literal notranslate"><span class="pre">id_whitespace_replacement</span></code> and/or
+<code class="docutils literal notranslate"><span class="pre">description_newline_replacement</span></code> are set to <code class="docutils literal notranslate"><span class="pre">None</span></code> so that whitespace
+replacement is not performed during writing. However, this can potentially
+create invalid FASTA files, especially if there are newline characters in
+the IDs or descriptions. For IDs with whitespace, this can also affect how
+the IDs are read into memory in a subsequent read operation. For example, if
+an in-memory sequence ID is <code class="docutils literal notranslate"><span class="pre">'seq</span> <span class="pre">1'</span></code> and
+<code class="docutils literal notranslate"><span class="pre">id_whitespace_replacement=None</span></code>, reading the FASTA file back into memory
+would result in an ID of <code class="docutils literal notranslate"><span class="pre">'seq'</span></code>, and <code class="docutils literal notranslate"><span class="pre">'1'</span></code> would be part of the
+sequence description.</p>
+</div>
+<p class="rubric">Examples</p>
+</div>
+<div class="section" id="reading-and-writing-fasta-files">
+<h3>Reading and Writing FASTA Files<a class="headerlink" href="#reading-and-writing-fasta-files" title="Permalink to this headline">¶</a></h3>
+<p>Suppose we have the following FASTA file with five equal-length sequences
+(example modified from <a class="footnote-reference" href="#id14" id="id8">[6]</a>):</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="o">&gt;</span><span class="n">seq1</span> <span class="n">Turkey</span>
+<span class="n">AAGCTNGGGCATTTCAGGGTGAGCCCGGGCAATACAGGGTAT</span>
+<span class="o">&gt;</span><span class="n">seq2</span> <span class="n">Salmo</span> <span class="n">gair</span>
+<span class="n">AAGCCTTGGCAGTGCAGGGTGAGCCGTGG</span>
+<span class="n">CCGGGCACGGTAT</span>
+<span class="o">&gt;</span><span class="n">seq3</span> <span class="n">H</span><span class="o">.</span> <span class="n">Sapiens</span>
+<span class="n">ACCGGTTGGCCGTTCAGGGTACAGGTTGGCCGTTCAGGGTAA</span>
+<span class="o">&gt;</span><span class="n">seq4</span> <span class="n">Chimp</span>
+<span class="n">AAACCCTTGCCG</span>
+<span class="n">TTACGCTTAAAC</span>
+<span class="n">CGAGGCCGGGAC</span>
+<span class="n">ACTCAT</span>
+<span class="o">&gt;</span><span class="n">seq5</span> <span class="n">Gorilla</span>
+<span class="n">AAACCCTTGCCGGTACGCTTAAACCATTGCCGGTACGCTTAA</span>
+</pre></div>
+</div>
+<div class="admonition note">
+<p class="first admonition-title">Note</p>
+<p>Original copyright notice for the above example file:</p>
+<p class="last"><em>(c) Copyright 1986-2008 by The University of Washington. Written by Joseph
+Felsenstein. Permission is granted to copy this document provided that no
+fee is charged for it and that this copyright notice is not removed.</em></p>
+</div>
+<p>Note that the sequences are not required to be of equal length in order for the
+file to be a valid FASTA file (this depends on the object that you’re reading
+the file into). Also note that some of the sequences occur on a single line,
+while others are split across multiple lines.</p>
+<p>Let’s define this file in-memory as a <code class="docutils literal notranslate"><span class="pre">StringIO</span></code>, though this could be a real
+file path, file handle, or anything that’s supported by scikit-bio’s I/O
+registry in practice:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">fl</span> <span class="o">=</span> <span class="p">[</span><span class="s2">&quot;&gt;seq1 Turkey</span><span class="se">\n</span><span class="s2">&quot;</span><span class="p">,</span>
+<span class="gp">... </span>      <span class="s2">&quot;AAGCTNGGGCATTTCAGGGTGAGCCCGGGCAATACAGGGTAT</span><span class="se">\n</span><span class="s2">&quot;</span><span class="p">,</span>
+<span class="gp">... </span>      <span class="s2">&quot;&gt;seq2 Salmo gair</span><span class="se">\n</span><span class="s2">&quot;</span><span class="p">,</span>
+<span class="gp">... </span>      <span class="s2">&quot;AAGCCTTGGCAGTGCAGGGTGAGCCGTGG</span><span class="se">\n</span><span class="s2">&quot;</span><span class="p">,</span>
+<span class="gp">... </span>      <span class="s2">&quot;CCGGGCACGGTAT</span><span class="se">\n</span><span class="s2">&quot;</span><span class="p">,</span>
+<span class="gp">... </span>      <span class="s2">&quot;&gt;seq3 H. Sapiens</span><span class="se">\n</span><span class="s2">&quot;</span><span class="p">,</span>
+<span class="gp">... </span>      <span class="s2">&quot;ACCGGTTGGCCGTTCAGGGTACAGGTTGGCCGTTCAGGGTAA</span><span class="se">\n</span><span class="s2">&quot;</span><span class="p">,</span>
+<span class="gp">... </span>      <span class="s2">&quot;&gt;seq4 Chimp</span><span class="se">\n</span><span class="s2">&quot;</span><span class="p">,</span>
+<span class="gp">... </span>      <span class="s2">&quot;AAACCCTTGCCG</span><span class="se">\n</span><span class="s2">&quot;</span><span class="p">,</span>
+<span class="gp">... </span>      <span class="s2">&quot;TTACGCTTAAAC</span><span class="se">\n</span><span class="s2">&quot;</span><span class="p">,</span>
+<span class="gp">... </span>      <span class="s2">&quot;CGAGGCCGGGAC</span><span class="se">\n</span><span class="s2">&quot;</span><span class="p">,</span>
+<span class="gp">... </span>      <span class="s2">&quot;ACTCAT</span><span class="se">\n</span><span class="s2">&quot;</span><span class="p">,</span>
+<span class="gp">... </span>      <span class="s2">&quot;&gt;seq5 Gorilla</span><span class="se">\n</span><span class="s2">&quot;</span><span class="p">,</span>
+<span class="gp">... </span>      <span class="s2">&quot;AAACCCTTGCCGGTACGCTTAAACCATTGCCGGTACGCTTAA</span><span class="se">\n</span><span class="s2">&quot;</span><span class="p">]</span>
+</pre></div>
+</div>
+<p>Since these sequences are of equal length (presumably because they’ve been
+aligned), let’s read the FASTA file into a <code class="docutils literal notranslate"><span class="pre">TabularMSA</span></code> object:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">skbio</span> <span class="k">import</span> <span class="n">TabularMSA</span><span class="p">,</span> <span class="n">DNA</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">msa</span> <span class="o">=</span> <span class="n">TabularMSA</span><span class="o">.</span><span class="n">read</span><span class="p">(</span><span class="n">fl</span><span class="p">,</span> <span class="n">constructor</span><span class="o">=</span><span class="n">DNA</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">msa</span>
+<span class="go">TabularMSA[DNA]</span>
+<span class="go">------------------------------------------</span>
+<span class="go">Stats:</span>
+<span class="go">    sequence count: 5</span>
+<span class="go">    position count: 42</span>
+<span class="go">------------------------------------------</span>
+<span class="go">AAGCTNGGGCATTTCAGGGTGAGCCCGGGCAATACAGGGTAT</span>
+<span class="go">AAGCCTTGGCAGTGCAGGGTGAGCCGTGGCCGGGCACGGTAT</span>
+<span class="go">ACCGGTTGGCCGTTCAGGGTACAGGTTGGCCGTTCAGGGTAA</span>
+<span class="go">AAACCCTTGCCGTTACGCTTAAACCGAGGCCGGGACACTCAT</span>
+<span class="go">AAACCCTTGCCGGTACGCTTAAACCATTGCCGGTACGCTTAA</span>
+</pre></div>
+</div>
+<p>Note that we didn’t specify a file format in the <code class="docutils literal notranslate"><span class="pre">read</span></code> call. The FASTA
+sniffer detected the correct file format for us!</p>
+<p>To write the <code class="docutils literal notranslate"><span class="pre">TabularMSA</span></code> in FASTA format:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">io</span> <span class="k">import</span> <span class="n">StringIO</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="k">with</span> <span class="n">StringIO</span><span class="p">()</span> <span class="k">as</span> <span class="n">fh</span><span class="p">:</span>
+<span class="gp">... </span>    <span class="nb">print</span><span class="p">(</span><span class="n">msa</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="n">fh</span><span class="p">)</span><span class="o">.</span><span class="n">getvalue</span><span class="p">())</span>
+<span class="go">&gt;seq1 Turkey</span>
+<span class="go">AAGCTNGGGCATTTCAGGGTGAGCCCGGGCAATACAGGGTAT</span>
+<span class="go">&gt;seq2 Salmo gair</span>
+<span class="go">AAGCCTTGGCAGTGCAGGGTGAGCCGTGGCCGGGCACGGTAT</span>
+<span class="go">&gt;seq3 H. Sapiens</span>
+<span class="go">ACCGGTTGGCCGTTCAGGGTACAGGTTGGCCGTTCAGGGTAA</span>
+<span class="go">&gt;seq4 Chimp</span>
+<span class="go">AAACCCTTGCCGTTACGCTTAAACCGAGGCCGGGACACTCAT</span>
+<span class="go">&gt;seq5 Gorilla</span>
+<span class="go">AAACCCTTGCCGGTACGCTTAAACCATTGCCGGTACGCTTAA</span>
+<span class="go">&lt;BLANKLINE&gt;</span>
+</pre></div>
+</div>
+<p><code class="docutils literal notranslate"><span class="pre">TabularMSA</span></code> loads all of the sequences from the FASTA file into memory at
+once. If the FASTA file is large (which is often the case), this may be
+infeasible if you don’t have enough memory. To work around this issue, you can
+stream the sequences using scikit-bio’s generator-based FASTA reader and
+writer. The generator-based reader yields <code class="docutils literal notranslate"><span class="pre">Sequence</span></code> objects (or subclasses
+if <code class="docutils literal notranslate"><span class="pre">constructor</span></code> is supplied) one at a time, instead of loading all sequences
+into memory. For example, let’s use the generator-based reader to process a
+single sequence at a time in a <code class="docutils literal notranslate"><span class="pre">for</span></code> loop:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="kn">import</span> <span class="nn">skbio.io</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="k">for</span> <span class="n">seq</span> <span class="ow">in</span> <span class="n">skbio</span><span class="o">.</span><span class="n">io</span><span class="o">.</span><span class="n">read</span><span class="p">(</span><span class="n">fl</span><span class="p">,</span> <span class="nb">format</span><span class="o">=</span><span class="s1">&#39;fasta&#39;</span><span class="p">):</span>
+<span class="gp">... </span>    <span class="n">seq</span>
+<span class="gp">... </span>    <span class="nb">print</span><span class="p">(</span><span class="s1">&#39;&#39;</span><span class="p">)</span>
+<span class="go">Sequence</span>
+<span class="go">------------------------------------------------</span>
+<span class="go">Metadata:</span>
+<span class="go">    &#39;description&#39;: &#39;Turkey&#39;</span>
+<span class="go">    &#39;id&#39;: &#39;seq1&#39;</span>
+<span class="go">Stats:</span>
+<span class="go">    length: 42</span>
+<span class="go">------------------------------------------------</span>
+<span class="go">0 AAGCTNGGGC ATTTCAGGGT GAGCCCGGGC AATACAGGGT AT</span>
+<span class="go">&lt;BLANKLINE&gt;</span>
+<span class="go">Sequence</span>
+<span class="go">------------------------------------------------</span>
+<span class="go">Metadata:</span>
+<span class="go">    &#39;description&#39;: &#39;Salmo gair&#39;</span>
+<span class="go">    &#39;id&#39;: &#39;seq2&#39;</span>
+<span class="go">Stats:</span>
+<span class="go">    length: 42</span>
+<span class="go">------------------------------------------------</span>
+<span class="go">0 AAGCCTTGGC AGTGCAGGGT GAGCCGTGGC CGGGCACGGT AT</span>
+<span class="go">&lt;BLANKLINE&gt;</span>
+<span class="go">Sequence</span>
+<span class="go">------------------------------------------------</span>
+<span class="go">Metadata:</span>
+<span class="go">    &#39;description&#39;: &#39;H. Sapiens&#39;</span>
+<span class="go">    &#39;id&#39;: &#39;seq3&#39;</span>
+<span class="go">Stats:</span>
+<span class="go">    length: 42</span>
+<span class="go">------------------------------------------------</span>
+<span class="go">0 ACCGGTTGGC CGTTCAGGGT ACAGGTTGGC CGTTCAGGGT AA</span>
+<span class="go">&lt;BLANKLINE&gt;</span>
+<span class="go">Sequence</span>
+<span class="go">------------------------------------------------</span>
+<span class="go">Metadata:</span>
+<span class="go">    &#39;description&#39;: &#39;Chimp&#39;</span>
+<span class="go">    &#39;id&#39;: &#39;seq4&#39;</span>
+<span class="go">Stats:</span>
+<span class="go">    length: 42</span>
+<span class="go">------------------------------------------------</span>
+<span class="go">0 AAACCCTTGC CGTTACGCTT AAACCGAGGC CGGGACACTC AT</span>
+<span class="go">&lt;BLANKLINE&gt;</span>
+<span class="go">Sequence</span>
+<span class="go">------------------------------------------------</span>
+<span class="go">Metadata:</span>
+<span class="go">    &#39;description&#39;: &#39;Gorilla&#39;</span>
+<span class="go">    &#39;id&#39;: &#39;seq5&#39;</span>
+<span class="go">Stats:</span>
+<span class="go">    length: 42</span>
+<span class="go">------------------------------------------------</span>
+<span class="go">0 AAACCCTTGC CGGTACGCTT AAACCATTGC CGGTACGCTT AA</span>
+<span class="go">&lt;BLANKLINE&gt;</span>
+</pre></div>
+</div>
+<p>A single sequence can also be read into a <code class="docutils literal notranslate"><span class="pre">Sequence</span></code> (or subclass):</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">skbio</span> <span class="k">import</span> <span class="n">Sequence</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">seq</span> <span class="o">=</span> <span class="n">Sequence</span><span class="o">.</span><span class="n">read</span><span class="p">(</span><span class="n">fl</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">seq</span>
+<span class="go">Sequence</span>
+<span class="go">------------------------------------------------</span>
+<span class="go">Metadata:</span>
+<span class="go">    &#39;description&#39;: &#39;Turkey&#39;</span>
+<span class="go">    &#39;id&#39;: &#39;seq1&#39;</span>
+<span class="go">Stats:</span>
+<span class="go">    length: 42</span>
+<span class="go">------------------------------------------------</span>
+<span class="go">0 AAGCTNGGGC ATTTCAGGGT GAGCCCGGGC AATACAGGGT AT</span>
+</pre></div>
+</div>
+<p>By default, the first sequence in the FASTA file is read. This can be
+controlled with <code class="docutils literal notranslate"><span class="pre">seq_num</span></code>. For example, to read the fifth sequence:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">seq</span> <span class="o">=</span> <span class="n">Sequence</span><span class="o">.</span><span class="n">read</span><span class="p">(</span><span class="n">fl</span><span class="p">,</span> <span class="n">seq_num</span><span class="o">=</span><span class="mi">5</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">seq</span>
+<span class="go">Sequence</span>
+<span class="go">------------------------------------------------</span>
+<span class="go">Metadata:</span>
+<span class="go">    &#39;description&#39;: &#39;Gorilla&#39;</span>
+<span class="go">    &#39;id&#39;: &#39;seq5&#39;</span>
+<span class="go">Stats:</span>
+<span class="go">    length: 42</span>
+<span class="go">------------------------------------------------</span>
+<span class="go">0 AAACCCTTGC CGGTACGCTT AAACCATTGC CGGTACGCTT AA</span>
+</pre></div>
+</div>
+<p>We can use the same API to read the fifth sequence into a <code class="docutils literal notranslate"><span class="pre">DNA</span></code> sequence:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">dna_seq</span> <span class="o">=</span> <span class="n">DNA</span><span class="o">.</span><span class="n">read</span><span class="p">(</span><span class="n">fl</span><span class="p">,</span> <span class="n">seq_num</span><span class="o">=</span><span class="mi">5</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">dna_seq</span>
+<span class="go">DNA</span>
+<span class="go">------------------------------------------------</span>
+<span class="go">Metadata:</span>
+<span class="go">    &#39;description&#39;: &#39;Gorilla&#39;</span>
+<span class="go">    &#39;id&#39;: &#39;seq5&#39;</span>
+<span class="go">Stats:</span>
+<span class="go">    length: 42</span>
+<span class="go">    has gaps: False</span>
+<span class="go">    has degenerates: False</span>
+<span class="go">    has definites: True</span>
+<span class="go">    GC-content: 50.00%</span>
+<span class="go">------------------------------------------------</span>
+<span class="go">0 AAACCCTTGC CGGTACGCTT AAACCATTGC CGGTACGCTT AA</span>
+</pre></div>
+</div>
+<p>Individual sequence objects can also be written in FASTA format:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="k">with</span> <span class="n">StringIO</span><span class="p">()</span> <span class="k">as</span> <span class="n">fh</span><span class="p">:</span>
+<span class="gp">... </span>    <span class="nb">print</span><span class="p">(</span><span class="n">dna_seq</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="n">fh</span><span class="p">)</span><span class="o">.</span><span class="n">getvalue</span><span class="p">())</span>
+<span class="go">&gt;seq5 Gorilla</span>
+<span class="go">AAACCCTTGCCGGTACGCTTAAACCATTGCCGGTACGCTTAA</span>
+<span class="go">&lt;BLANKLINE&gt;</span>
+</pre></div>
+</div>
+</div>
+<div class="section" id="reading-and-writing-fasta-qual-files">
+<h3>Reading and Writing FASTA/QUAL Files<a class="headerlink" href="#reading-and-writing-fasta-qual-files" title="Permalink to this headline">¶</a></h3>
+<p>In addition to reading and writing standalone FASTA files, scikit-bio supports
+reading and writing FASTA and QUAL files together. Suppose we have the
+following FASTA file:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="o">&gt;</span><span class="n">seq1</span> <span class="n">db</span><span class="o">-</span><span class="n">accession</span><span class="o">-</span><span class="mi">149855</span>
+<span class="n">CGATGTC</span>
+<span class="o">&gt;</span><span class="n">seq2</span> <span class="n">db</span><span class="o">-</span><span class="n">accession</span><span class="o">-</span><span class="mi">34989</span>
+<span class="n">CATCGTC</span>
+</pre></div>
+</div>
+<p>Also suppose we have the following QUAL file:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="o">&gt;</span><span class="n">seq1</span> <span class="n">db</span><span class="o">-</span><span class="n">accession</span><span class="o">-</span><span class="mi">149855</span>
+<span class="mi">40</span> <span class="mi">39</span> <span class="mi">39</span> <span class="mi">4</span>
+<span class="mi">50</span> <span class="mi">1</span> <span class="mi">100</span>
+<span class="o">&gt;</span><span class="n">seq2</span> <span class="n">db</span><span class="o">-</span><span class="n">accession</span><span class="o">-</span><span class="mi">34989</span>
+<span class="mi">3</span> <span class="mi">3</span> <span class="mi">10</span> <span class="mi">42</span> <span class="mi">80</span> <span class="mi">80</span> <span class="mi">79</span>
+</pre></div>
+</div>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">fasta_fl</span> <span class="o">=</span> <span class="p">[</span>
+<span class="gp">... </span>    <span class="s2">&quot;&gt;seq1 db-accession-149855</span><span class="se">\n</span><span class="s2">&quot;</span><span class="p">,</span>
+<span class="gp">... </span>    <span class="s2">&quot;CGATGTC</span><span class="se">\n</span><span class="s2">&quot;</span><span class="p">,</span>
+<span class="gp">... </span>    <span class="s2">&quot;&gt;seq2 db-accession-34989</span><span class="se">\n</span><span class="s2">&quot;</span><span class="p">,</span>
+<span class="gp">... </span>    <span class="s2">&quot;CATCGTC</span><span class="se">\n</span><span class="s2">&quot;</span><span class="p">]</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">qual_fl</span> <span class="o">=</span> <span class="p">[</span>
+<span class="gp">... </span>    <span class="s2">&quot;&gt;seq1 db-accession-149855</span><span class="se">\n</span><span class="s2">&quot;</span><span class="p">,</span>
+<span class="gp">... </span>    <span class="s2">&quot;40 39 39 4</span><span class="se">\n</span><span class="s2">&quot;</span><span class="p">,</span>
+<span class="gp">... </span>    <span class="s2">&quot;50 1 100</span><span class="se">\n</span><span class="s2">&quot;</span><span class="p">,</span>
+<span class="gp">... </span>    <span class="s2">&quot;&gt;seq2 db-accession-34989</span><span class="se">\n</span><span class="s2">&quot;</span><span class="p">,</span>
+<span class="gp">... </span>    <span class="s2">&quot;3 3 10 42 80 80 79</span><span class="se">\n</span><span class="s2">&quot;</span><span class="p">]</span>
+</pre></div>
+</div>
+<p>To read in a single <code class="docutils literal notranslate"><span class="pre">Sequence</span></code> at a time, we can use the
+generator-based reader as we did above, providing both FASTA and QUAL files:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="k">for</span> <span class="n">seq</span> <span class="ow">in</span> <span class="n">skbio</span><span class="o">.</span><span class="n">io</span><span class="o">.</span><span class="n">read</span><span class="p">(</span><span class="n">fasta_fl</span><span class="p">,</span> <span class="n">qual</span><span class="o">=</span><span class="n">qual_fl</span><span class="p">,</span> <span class="nb">format</span><span class="o">=</span><span class="s1">&#39;fasta&#39;</span><span class="p">):</span>
+<span class="gp">... </span>    <span class="n">seq</span>
+<span class="gp">... </span>    <span class="nb">print</span><span class="p">(</span><span class="s1">&#39;&#39;</span><span class="p">)</span>
+<span class="go">Sequence</span>
+<span class="go">----------------------------------------</span>
+<span class="go">Metadata:</span>
+<span class="go">    &#39;description&#39;: &#39;db-accession-149855&#39;</span>
+<span class="go">    &#39;id&#39;: &#39;seq1&#39;</span>
+<span class="go">Positional metadata:</span>
+<span class="go">    &#39;quality&#39;: &lt;dtype: uint8&gt;</span>
+<span class="go">Stats:</span>
+<span class="go">    length: 7</span>
+<span class="go">----------------------------------------</span>
+<span class="go">0 CGATGTC</span>
+<span class="go">&lt;BLANKLINE&gt;</span>
+<span class="go">Sequence</span>
+<span class="go">---------------------------------------</span>
+<span class="go">Metadata:</span>
+<span class="go">    &#39;description&#39;: &#39;db-accession-34989&#39;</span>
+<span class="go">    &#39;id&#39;: &#39;seq2&#39;</span>
+<span class="go">Positional metadata:</span>
+<span class="go">    &#39;quality&#39;: &lt;dtype: uint8&gt;</span>
+<span class="go">Stats:</span>
+<span class="go">    length: 7</span>
+<span class="go">---------------------------------------</span>
+<span class="go">0 CATCGTC</span>
+<span class="go">&lt;BLANKLINE&gt;</span>
+</pre></div>
+</div>
+<p>Note that the sequence objects have quality scores stored as positional
+metadata since we provided a QUAL file. The other FASTA readers operate in a
+similar manner.</p>
+<p>Now let’s load the sequences and their quality scores into a <code class="docutils literal notranslate"><span class="pre">TabularMSA</span></code>:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">msa</span> <span class="o">=</span> <span class="n">TabularMSA</span><span class="o">.</span><span class="n">read</span><span class="p">(</span><span class="n">fasta_fl</span><span class="p">,</span> <span class="n">qual</span><span class="o">=</span><span class="n">qual_fl</span><span class="p">,</span> <span class="n">constructor</span><span class="o">=</span><span class="n">DNA</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">msa</span>
+<span class="go">TabularMSA[DNA]</span>
+<span class="go">---------------------</span>
+<span class="go">Stats:</span>
+<span class="go">    sequence count: 2</span>
+<span class="go">    position count: 7</span>
+<span class="go">---------------------</span>
+<span class="go">CGATGTC</span>
+<span class="go">CATCGTC</span>
+</pre></div>
+</div>
+<p>To write the sequence data and quality scores in the <code class="docutils literal notranslate"><span class="pre">TabularMSA</span></code> to FASTA
+and QUAL files, respectively:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">new_fasta_fh</span> <span class="o">=</span> <span class="n">StringIO</span><span class="p">()</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">new_qual_fh</span> <span class="o">=</span> <span class="n">StringIO</span><span class="p">()</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">_</span> <span class="o">=</span> <span class="n">msa</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="n">new_fasta_fh</span><span class="p">,</span> <span class="n">qual</span><span class="o">=</span><span class="n">new_qual_fh</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="nb">print</span><span class="p">(</span><span class="n">new_fasta_fh</span><span class="o">.</span><span class="n">getvalue</span><span class="p">())</span>
+<span class="go">&gt;seq1 db-accession-149855</span>
+<span class="go">CGATGTC</span>
+<span class="go">&gt;seq2 db-accession-34989</span>
+<span class="go">CATCGTC</span>
+<span class="go">&lt;BLANKLINE&gt;</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="nb">print</span><span class="p">(</span><span class="n">new_qual_fh</span><span class="o">.</span><span class="n">getvalue</span><span class="p">())</span>
+<span class="go">&gt;seq1 db-accession-149855</span>
+<span class="go">40 39 39 4 50 1 100</span>
+<span class="go">&gt;seq2 db-accession-34989</span>
+<span class="go">3 3 10 42 80 80 79</span>
+<span class="go">&lt;BLANKLINE&gt;</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">new_fasta_fh</span><span class="o">.</span><span class="n">close</span><span class="p">()</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">new_qual_fh</span><span class="o">.</span><span class="n">close</span><span class="p">()</span>
+</pre></div>
+</div>
+<p class="rubric">References</p>
+<table class="docutils footnote" frame="void" id="id9" rules="none">
+<colgroup><col class="label" /><col /></colgroup>
+<tbody valign="top">
+<tr><td class="label"><a class="fn-backref" href="#id1">[1]</a></td><td>Lipman, DJ; Pearson, WR (1985). “Rapid and sensitive protein similarity
+searches”. Science 227 (4693): 1435-41.</td></tr>
+</tbody>
+</table>
+<table class="docutils footnote" frame="void" id="id10" rules="none">
+<colgroup><col class="label" /><col /></colgroup>
+<tbody valign="top">
+<tr><td class="label">[2]</td><td><em>(<a class="fn-backref" href="#id2">1</a>, <a class="fn-backref" href="#id6">2</a>)</em> <a class="reference external" href="http://en.wikipedia.org/wiki/FASTA_format">http://en.wikipedia.org/wiki/FASTA_format</a></td></tr>
+</tbody>
+</table>
+<table class="docutils footnote" frame="void" id="id11" rules="none">
+<colgroup><col class="label" /><col /></colgroup>
+<tbody valign="top">
+<tr><td class="label">[3]</td><td><em>(<a class="fn-backref" href="#id3">1</a>, <a class="fn-backref" href="#id5">2</a>)</em> <a class="reference external" href="http://blast.ncbi.nlm.nih.gov/blastcgihelp.shtml">http://blast.ncbi.nlm.nih.gov/blastcgihelp.shtml</a></td></tr>
+</tbody>
+</table>
+<table class="docutils footnote" frame="void" id="id12" rules="none">
+<colgroup><col class="label" /><col /></colgroup>
+<tbody valign="top">
+<tr><td class="label"><a class="fn-backref" href="#id4">[4]</a></td><td><a class="reference external" href="https://www.broadinstitute.org/crd/wiki/index.php/Qual">https://www.broadinstitute.org/crd/wiki/index.php/Qual</a></td></tr>
+</tbody>
+</table>
+<table class="docutils footnote" frame="void" id="id13" rules="none">
+<colgroup><col class="label" /><col /></colgroup>
+<tbody valign="top">
+<tr><td class="label"><a class="fn-backref" href="#id7">[5]</a></td><td>Madden T. The BLAST Sequence Analysis Tool. 2002 Oct 9
+[Updated 2003 Aug 13]. In: McEntyre J, Ostell J, editors. The NCBI Handbook
+[Internet]. Bethesda (MD): National Center for Biotechnology Information
+(US); 2002-. Chapter 16. Available from:
+<a class="reference external" href="http://www.ncbi.nlm.nih.gov/books/NBK21097/">http://www.ncbi.nlm.nih.gov/books/NBK21097/</a></td></tr>
+</tbody>
+</table>
+<table class="docutils footnote" frame="void" id="id14" rules="none">
+<colgroup><col class="label" /><col /></colgroup>
+<tbody valign="top">
+<tr><td class="label"><a class="fn-backref" href="#id8">[6]</a></td><td><a class="reference external" href="http://evolution.genetics.washington.edu/phylip/doc/sequence.html">http://evolution.genetics.washington.edu/phylip/doc/sequence.html</a></td></tr>
+</tbody>
+</table>
+</div>
+</div>
+</div>
+
+
+    </div>
+      
+  </div>
+</div>
+  
+<footer class="footer">
+  <div class="container">
+    <p class="pull-right">
+      <a href="#">Back to top</a>
+      
+    </p>
+    <p>
+        &copy; Copyright 2014--, scikit-bio development team.<br/>
+      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 1.8.2.<br/>
+    </p>
+  </div>
+</footer>
+  <script>
+    (function(i,s,o,g,r,a,m){i['GoogleAnalyticsObject']=r;i[r]=i[r]||function(){
+    (i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),
+    m=s.getElementsByTagName(o)[0];a.async=1;a.src=g;m.parentNode.insertBefore(a,m)
+    })(window,document,'script','//www.google-analytics.com/analytics.js','ga');
+
+    ga('create', 'UA-6636235-9', 'scikit-bio.org');
+    ga('send', 'pageview');
+  </script>
+
+  </body>
+</html>

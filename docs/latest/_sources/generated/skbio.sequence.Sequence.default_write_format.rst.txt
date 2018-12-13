@@ -1,8 +1,0 @@
-:orphan:
-
-skbio.sequence.Sequence.default_write_format
-============================================
-
-.. currentmodule:: skbio.sequence
-
-.. autoattribute:: Sequence.default_write_format

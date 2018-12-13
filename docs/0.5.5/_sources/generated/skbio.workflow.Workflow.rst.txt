@@ -1,0 +1,69 @@
+
+skbio.workflow.Workflow
+=======================
+
+
+
+
+   
+      
+   
+
+   
+
+   
+
+   
+
+   
+      
+   
+
+   
+
+   
+
+   
+
+   
+
+   
+
+   
+
+   
+
+   
+
+   
+
+   
+
+
+.. currentmodule:: skbio.workflow
+
+.. autoclass:: Workflow
+
+   
+
+   
+   .. rubric:: Built-ins
+
+   .. autosummary::
+      :toctree:
+   
+      ~Workflow.__call__
+      ~Workflow.__init_subclass__
+   
+
+   
+   .. rubric:: Methods
+
+   .. autosummary::
+      :toctree:
+   
+      
+      
+      ~Workflow.initialize_state
+      
+   

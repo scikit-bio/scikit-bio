@@ -1,8 +1,0 @@
-:orphan:
-
-skbio.sequence.RNA.metadata
-===========================
-
-.. currentmodule:: skbio.sequence
-
-.. autoattribute:: RNA.metadata

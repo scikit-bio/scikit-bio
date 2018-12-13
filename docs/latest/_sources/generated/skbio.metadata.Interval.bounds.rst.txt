@@ -1,8 +1,0 @@
-:orphan:
-
-skbio.metadata.Interval.bounds
-==============================
-
-.. currentmodule:: skbio.metadata
-
-.. autoattribute:: Interval.bounds

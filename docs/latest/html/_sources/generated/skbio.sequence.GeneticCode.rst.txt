@@ -1,0 +1,102 @@
+
+skbio.sequence.GeneticCode
+==========================
+
+
+
+
+   
+
+   
+      
+   
+
+   
+
+   
+
+   
+      
+   
+
+   
+      
+   
+
+   
+
+   
+
+   
+
+   
+
+   
+
+   
+      
+   
+
+   
+
+   
+
+   
+
+   
+
+   
+
+   
+
+   
+
+   
+
+   
+
+   
+
+
+.. currentmodule:: skbio.sequence
+
+.. autoclass:: GeneticCode
+
+   
+   .. rubric:: Attributes
+
+   .. autosummary::
+   
+      ~GeneticCode.name
+      ~GeneticCode.reading_frames
+   
+
+   
+   .. rubric:: Built-ins
+
+   .. autosummary::
+      :toctree:
+   
+      ~GeneticCode.__eq__
+      ~GeneticCode.__init_subclass__
+      ~GeneticCode.__ne__
+      ~GeneticCode.__str__
+   
+
+   
+   .. rubric:: Methods
+
+   .. autosummary::
+      :toctree:
+   
+      
+      
+      ~GeneticCode.from_ncbi
+      
+      
+      ~GeneticCode.translate
+      
+      
+      ~GeneticCode.translate_six_frames
+      
+   
