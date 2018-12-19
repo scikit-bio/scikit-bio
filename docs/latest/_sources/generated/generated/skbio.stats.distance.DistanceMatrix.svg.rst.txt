@@ -1,8 +1,0 @@
-:orphan:
-
-skbio.stats.distance.DistanceMatrix.svg
-=======================================
-
-.. currentmodule:: skbio.stats.distance
-
-.. autoattribute:: DistanceMatrix.svg

@@ -1,8 +1,0 @@
-:orphan:
-
-skbio.sequence.Sequence.positional_metadata
-===========================================
-
-.. currentmodule:: skbio.sequence
-
-.. autoattribute:: Sequence.positional_metadata

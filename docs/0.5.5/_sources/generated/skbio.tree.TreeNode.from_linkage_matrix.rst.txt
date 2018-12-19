@@ -1,0 +1,8 @@
+:orphan:
+
+skbio.tree.TreeNode.from_linkage_matrix
+=======================================
+
+.. currentmodule:: skbio.tree
+
+.. automethod:: TreeNode.from_linkage_matrix

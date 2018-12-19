@@ -1,8 +1,0 @@
-:orphan:
-
-skbio.sequence.GrammaredSequence.default_gap_char
-=================================================
-
-.. currentmodule:: skbio.sequence
-
-.. autoattribute:: GrammaredSequence.default_gap_char

@@ -1,8 +1,0 @@
-:orphan:
-
-skbio.util.TestRunner.__format__
-================================
-
-.. currentmodule:: skbio.util
-
-.. automethod:: TestRunner.__format__

@@ -1,0 +1,6 @@
+skbio.alignment.local\_pairwise\_align\_nucleotide
+==================================================
+
+.. currentmodule:: skbio.alignment
+
+.. autofunction:: local_pairwise_align_nucleotide

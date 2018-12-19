@@ -1,0 +1,8 @@
+:orphan:
+
+skbio.sequence.DNA.gc_frequency
+===============================
+
+.. currentmodule:: skbio.sequence
+
+.. automethod:: DNA.gc_frequency

@@ -1,0 +1,6 @@
+skbio.stats.composition.power
+=============================
+
+.. currentmodule:: skbio.stats.composition
+
+.. autofunction:: power

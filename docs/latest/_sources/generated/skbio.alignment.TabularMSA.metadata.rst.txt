@@ -1,8 +1,0 @@
-:orphan:
-
-skbio.alignment.TabularMSA.metadata
-===================================
-
-.. currentmodule:: skbio.alignment
-
-.. autoattribute:: TabularMSA.metadata

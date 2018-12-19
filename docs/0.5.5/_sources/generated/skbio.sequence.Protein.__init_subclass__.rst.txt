@@ -1,0 +1,8 @@
+:orphan:
+
+skbio.sequence.Protein.__init_subclass__
+========================================
+
+.. currentmodule:: skbio.sequence
+
+.. automethod:: Protein.__init_subclass__

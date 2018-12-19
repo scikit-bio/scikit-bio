@@ -1,8 +1,0 @@
-:orphan:
-
-skbio.sequence.Protein.default_write_format
-===========================================
-
-.. currentmodule:: skbio.sequence
-
-.. autoattribute:: Protein.default_write_format

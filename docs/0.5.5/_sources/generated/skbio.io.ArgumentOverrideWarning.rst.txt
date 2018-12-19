@@ -1,0 +1,6 @@
+skbio.io.ArgumentOverrideWarning
+================================
+
+.. currentmodule:: skbio.io
+
+.. autoexception:: ArgumentOverrideWarning

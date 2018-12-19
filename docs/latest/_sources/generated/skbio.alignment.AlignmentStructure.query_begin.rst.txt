@@ -1,8 +1,0 @@
-:orphan:
-
-skbio.alignment.AlignmentStructure.query_begin
-==============================================
-
-.. currentmodule:: skbio.alignment
-
-.. autoattribute:: AlignmentStructure.query_begin

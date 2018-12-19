@@ -1,8 +1,0 @@
-:orphan:
-
-skbio.sequence.Protein.metadata
-===============================
-
-.. currentmodule:: skbio.sequence
-
-.. autoattribute:: Protein.metadata

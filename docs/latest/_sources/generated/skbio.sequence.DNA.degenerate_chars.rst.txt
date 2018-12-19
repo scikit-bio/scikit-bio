@@ -1,8 +1,0 @@
-:orphan:
-
-skbio.sequence.DNA.degenerate_chars
-===================================
-
-.. currentmodule:: skbio.sequence
-
-.. autoattribute:: DNA.degenerate_chars

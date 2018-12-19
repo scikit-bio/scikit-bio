@@ -1,8 +1,0 @@
-:orphan:
-
-skbio.sequence.Protein.values
-=============================
-
-.. currentmodule:: skbio.sequence
-
-.. autoattribute:: Protein.values

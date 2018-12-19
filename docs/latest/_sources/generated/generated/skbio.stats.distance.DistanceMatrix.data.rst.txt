@@ -1,8 +1,0 @@
-:orphan:
-
-skbio.stats.distance.DistanceMatrix.data
-========================================
-
-.. currentmodule:: skbio.stats.distance
-
-.. autoattribute:: DistanceMatrix.data

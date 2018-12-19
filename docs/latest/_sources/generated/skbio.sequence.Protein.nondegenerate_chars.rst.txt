@@ -1,8 +1,0 @@
-:orphan:
-
-skbio.sequence.Protein.nondegenerate_chars
-==========================================
-
-.. currentmodule:: skbio.sequence
-
-.. autoattribute:: Protein.nondegenerate_chars

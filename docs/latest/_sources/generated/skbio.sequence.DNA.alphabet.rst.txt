@@ -1,8 +1,0 @@
-:orphan:
-
-skbio.sequence.DNA.alphabet
-===========================
-
-.. currentmodule:: skbio.sequence
-
-.. autoattribute:: DNA.alphabet

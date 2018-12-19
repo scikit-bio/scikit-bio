@@ -1,8 +1,0 @@
-:orphan:
-
-skbio.alignment.TabularMSA.index
-================================
-
-.. currentmodule:: skbio.alignment
-
-.. autoattribute:: TabularMSA.index

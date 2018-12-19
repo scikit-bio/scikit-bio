@@ -1,0 +1,8 @@
+:orphan:
+
+skbio.workflow.requires.__call__
+================================
+
+.. currentmodule:: skbio.workflow
+
+.. automethod:: requires.__call__

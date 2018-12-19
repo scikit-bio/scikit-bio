@@ -1,0 +1,8 @@
+:orphan:
+
+skbio.util.classproperty.setter
+===============================
+
+.. currentmodule:: skbio.util
+
+.. automethod:: classproperty.setter

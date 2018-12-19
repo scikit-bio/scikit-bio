@@ -1,8 +1,0 @@
-:orphan:
-
-skbio.io.registry.Format.writers
-================================
-
-.. currentmodule:: skbio.io.registry
-
-.. autoattribute:: Format.writers

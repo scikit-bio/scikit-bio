@@ -1,0 +1,8 @@
+:orphan:
+
+skbio.sequence.DNA.__init_subclass__
+====================================
+
+.. currentmodule:: skbio.sequence
+
+.. automethod:: DNA.__init_subclass__

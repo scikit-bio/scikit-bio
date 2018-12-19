@@ -1,0 +1,390 @@
+<!DOCTYPE html>
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="X-UA-Compatible" content="IE=Edge" />
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    <title>skbio.stats.distance.mantel &#8212; scikit-bio 0.5.5 documentation</title>
+    <link rel="stylesheet" href="../_static/bootstrap-sphinx.css" type="text/css" />
+    <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
+    <link rel="stylesheet" type="text/css" href="../_static/style.css" />
+    <script type="text/javascript" id="documentation_options" data-url_root="../" src="../_static/documentation_options.js"></script>
+    <script type="text/javascript" src="../_static/jquery.js"></script>
+    <script type="text/javascript" src="../_static/underscore.js"></script>
+    <script type="text/javascript" src="../_static/doctools.js"></script>
+    <script type="text/javascript" src="../_static/copybutton.js"></script>
+    <script async="async" type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.1/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
+    <script type="text/javascript" src="../_static/js/jquery-1.11.0.min.js"></script>
+    <script type="text/javascript" src="../_static/js/jquery-fix.js"></script>
+    <script type="text/javascript" src="../_static/bootstrap-3.3.7/js/bootstrap.min.js"></script>
+    <script type="text/javascript" src="../_static/bootstrap-sphinx.js"></script>
+    <link rel="index" title="Index" href="../genindex.html" />
+    <link rel="search" title="Search" href="../search.html" />
+    <link rel="next" title="skbio.stats.distance.pwmantel" href="skbio.stats.distance.pwmantel.html" />
+    <link rel="prev" title="skbio.stats.distance.bioenv" href="skbio.stats.distance.bioenv.html" />
+<meta charset='utf-8'>
+<meta http-equiv='X-UA-Compatible' content='IE=edge,chrome=1'>
+<meta name='viewport' content='width=device-width, initial-scale=1.0, maximum-scale=1'>
+<meta name="apple-mobile-web-app-capable" content="yes">
+
+  </head><body>
+  
+  <a href="https://github.com/biocore/scikit-bio"
+     class="visible-desktop hidden-xs"><img
+    id="gh-banner"
+    style="position: absolute; top: 50px; right: 0; border: 0;"
+    src="https://s3.amazonaws.com/github/ribbons/forkme_right_darkblue_121621.png"
+    alt="Fork me on GitHub"></a>
+  <script>
+    // Adjust banner height.
+    $(function () {
+      var navHeight = $(".navbar .container").css("height");
+      $("#gh-banner").css("top", navHeight);
+    });
+  </script>
+
+
+  <div id="navbar" class="navbar navbar-default navbar-fixed-top">
+    <div class="container">
+      <div class="navbar-header">
+        <!-- .btn-navbar is used as the toggle for collapsed navbar content -->
+        <button type="button" class="navbar-toggle" data-toggle="collapse" data-target=".nav-collapse">
+          <span class="icon-bar"></span>
+          <span class="icon-bar"></span>
+          <span class="icon-bar"></span>
+        </button>
+        <a class="navbar-brand" href="../index.html">
+          scikit-bio docs</a>
+        <span class="navbar-text navbar-version pull-left"><b>0.5.5</b></span>
+      </div>
+
+        <div class="collapse navbar-collapse nav-collapse">
+          <ul class="nav navbar-nav">
+            
+            
+              <li class="dropdown globaltoc-container">
+  <a role="button"
+     id="dLabelGlobalToc"
+     data-toggle="dropdown"
+     data-target="#"
+     href="../index.html">Site <b class="caret"></b></a>
+  <ul class="dropdown-menu globaltoc"
+      role="menu"
+      aria-labelledby="dLabelGlobalToc"><ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="../io.html">File I/O (<code class="docutils literal notranslate"><span class="pre">skbio.io</span></code>)</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../sequence.html">Sequences (<code class="docutils literal notranslate"><span class="pre">skbio.sequence</span></code>)</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../alignment.html">Alignments (<code class="docutils literal notranslate"><span class="pre">skbio.alignment</span></code>)</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../tree.html">Tree representations (<code class="docutils literal notranslate"><span class="pre">skbio.tree</span></code>)</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../workflow.html">Constructing workflows (<code class="docutils literal notranslate"><span class="pre">skbio.workflow</span></code>)</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../diversity.html">Diversity calculations (<code class="docutils literal notranslate"><span class="pre">skbio.diversity</span></code>)</a></li>
+<li class="toctree-l1 current"><a class="reference internal" href="../stats.html">Statistics (<code class="docutils literal notranslate"><span class="pre">skbio.stats</span></code>)</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../metadata.html">Metadata (<code class="docutils literal notranslate"><span class="pre">skbio.metadata</span></code>)</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../util.html">Utility functionality (<code class="docutils literal notranslate"><span class="pre">skbio.util</span></code>)</a></li>
+</ul>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../user/api_stability.html">API Stability</a></li>
+</ul>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../development/coding_guidelines.html">Coding guidelines</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../development/new_module.html">Adding a new module to skbio</a></li>
+</ul>
+</ul>
+</li>
+              
+                <li class="dropdown">
+  <a role="button"
+     id="dLabelLocalToc"
+     data-toggle="dropdown"
+     data-target="#"
+     href="#">Page <b class="caret"></b></a>
+  <ul class="dropdown-menu localtoc"
+      role="menu"
+      aria-labelledby="dLabelLocalToc"><ul>
+<li><a class="reference internal" href="#">skbio.stats.distance.mantel</a></li>
+</ul>
+</ul>
+</li>
+              
+            
+            
+            
+            
+            
+          </ul>
+
+          
+            
+<form class="navbar-form navbar-right" action="../search.html" method="get">
+ <div class="form-group">
+  <input type="text" name="q" class="form-control" placeholder="Search" />
+ </div>
+  <input type="hidden" name="check_keywords" value="yes" />
+  <input type="hidden" name="area" value="default" />
+</form>
+          
+        </div>
+    </div>
+  </div>
+
+<div class="container">
+  <div class="row">
+    <div class="col-md-12 content">
+      
+  <div class="section" id="skbio-stats-distance-mantel">
+<h1>skbio.stats.distance.mantel<a class="headerlink" href="#skbio-stats-distance-mantel" title="Permalink to this headline">¶</a></h1>
+<dl class="function">
+<dt id="skbio.stats.distance.mantel">
+<code class="descclassname">skbio.stats.distance.</code><code class="descname">mantel</code><span class="sig-paren">(</span><em>x</em>, <em>y</em>, <em>method='pearson'</em>, <em>permutations=999</em>, <em>alternative='two-sided'</em>, <em>strict=True</em>, <em>lookup=None</em><span class="sig-paren">)</span><a class="reference external" href="http://github.com/biocore/scikit-bio/blob/0.5.5/skbio/stats/distance/_mantel.py#L20"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#skbio.stats.distance.mantel" title="Permalink to this definition">¶</a></dt>
+<dd><p>Compute correlation between distance matrices using the Mantel test.</p>
+<p>State: Experimental as of 0.4.0.</p>
+<p>The Mantel test compares two distance matrices by computing the correlation
+between the distances in the lower (or upper) triangular portions of the
+symmetric distance matrices. Correlation can be computed using Pearson’s
+product-moment correlation coefficient or Spearman’s rank correlation
+coefficient.</p>
+<p>As defined in <a class="footnote-reference" href="#id4" id="id1">[1]</a>, the Mantel test computes a test statistic <span class="math notranslate nohighlight">\(r_M\)</span>
+given two symmetric distance matrices <span class="math notranslate nohighlight">\(D_X\)</span> and <span class="math notranslate nohighlight">\(D_Y\)</span>.
+<span class="math notranslate nohighlight">\(r_M\)</span> is defined as</p>
+<div class="math notranslate nohighlight">
+\[r_M=\frac{1}{d-1}\sum_{i=1}^{n-1}\sum_{j=i+1}^{n}
+stand(D_X)_{ij}stand(D_Y)_{ij}\]</div>
+<p>where</p>
+<div class="math notranslate nohighlight">
+\[d=\frac{n(n-1)}{2}\]</div>
+<p>and <span class="math notranslate nohighlight">\(n\)</span> is the number of rows/columns in each of the distance
+matrices. <span class="math notranslate nohighlight">\(stand(D_X)\)</span> and <span class="math notranslate nohighlight">\(stand(D_Y)\)</span> are distance matrices
+with their upper triangles containing standardized distances. Note that
+since <span class="math notranslate nohighlight">\(D_X\)</span> and <span class="math notranslate nohighlight">\(D_Y\)</span> are symmetric, the lower triangular
+portions of the matrices could equivalently have been used instead of the
+upper triangular portions (the current function behaves in this manner).</p>
+<p>If <code class="docutils literal notranslate"><span class="pre">method='spearman'</span></code>, the above equation operates on ranked distances
+instead of the original distances.</p>
+<p>Statistical significance is assessed via a permutation test. The rows and
+columns of the first distance matrix (<cite>x</cite>) are randomly permuted a
+number of times (controlled via <cite>permutations</cite>). A correlation coefficient
+is computed for each permutation and the p-value is the proportion of
+permuted correlation coefficients that are equal to or more extreme
+than the original (unpermuted) correlation coefficient. Whether a permuted
+correlation coefficient is “more extreme” than the original correlation
+coefficient depends on the alternative hypothesis (controlled via
+<cite>alternative</cite>).</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
+<li><strong>y</strong> (<em>x</em><em>,</em>) – Input distance matrices to compare. If <cite>x</cite> and <cite>y</cite> are both
+<code class="docutils literal notranslate"><span class="pre">DistanceMatrix</span></code> instances, they will be reordered based on matching
+IDs (see <cite>strict</cite> and <cite>lookup</cite> below for handling matching/mismatching
+IDs); thus they are not required to be in the same ID order. If <cite>x</cite> and
+<cite>y</cite> are <code class="docutils literal notranslate"><span class="pre">array_like</span></code>, no reordering is applied and both matrices must
+have the same shape. In either case, <cite>x</cite> and <cite>y</cite> must be at least 3x3
+in size <em>after</em> reordering and matching of IDs.</li>
+<li><strong>method</strong> (<em>{'pearson'</em><em>, </em><em>'spearman'}</em>) – Method used to compute the correlation between distance matrices.</li>
+<li><strong>permutations</strong> (<a class="reference external" href="https://docs.python.org/dev/library/functions.html#int" title="(in Python v3.8)"><em>int</em></a><em>, </em><em>optional</em>) – Number of times to randomly permute <cite>x</cite> when assessing statistical
+significance. Must be greater than or equal to zero. If zero,
+statistical significance calculations will be skipped and the p-value
+will be <code class="docutils literal notranslate"><span class="pre">np.nan</span></code>.</li>
+<li><strong>alternative</strong> (<em>{'two-sided'</em><em>, </em><em>'greater'</em><em>, </em><em>'less'}</em>) – Alternative hypothesis to use when calculating statistical
+significance. The default <code class="docutils literal notranslate"><span class="pre">'two-sided'</span></code> alternative hypothesis
+calculates the proportion of permuted correlation coefficients whose
+magnitude (i.e. after taking the absolute value) is greater than or
+equal to the absolute value of the original correlation coefficient.
+<code class="docutils literal notranslate"><span class="pre">'greater'</span></code> calculates the proportion of permuted coefficients that
+are greater than or equal to the original coefficient. <code class="docutils literal notranslate"><span class="pre">'less'</span></code>
+calculates the proportion of permuted coefficients that are less than
+or equal to the original coefficient.</li>
+<li><strong>strict</strong> (<a class="reference external" href="https://docs.python.org/dev/library/functions.html#bool" title="(in Python v3.8)"><em>bool</em></a><em>, </em><em>optional</em>) – If <code class="docutils literal notranslate"><span class="pre">True</span></code>, raises a <code class="docutils literal notranslate"><span class="pre">ValueError</span></code> if IDs are found that do not exist
+in both distance matrices. If <code class="docutils literal notranslate"><span class="pre">False</span></code>, any nonmatching IDs are
+discarded before running the test. See <cite>n</cite> (in Returns section below)
+for the number of matching IDs that were used in the test. This
+parameter is ignored if <cite>x</cite> and <cite>y</cite> are <code class="docutils literal notranslate"><span class="pre">array_like</span></code>.</li>
+<li><strong>lookup</strong> (<a class="reference external" href="https://docs.python.org/dev/library/stdtypes.html#dict" title="(in Python v3.8)"><em>dict</em></a><em>, </em><em>optional</em>) – Maps each ID in the distance matrices to a new ID. Used to match up IDs
+across distance matrices prior to running the Mantel test. If the IDs
+already match between the distance matrices, this parameter is not
+necessary. This parameter is disallowed if <cite>x</cite> and <cite>y</cite> are
+<code class="docutils literal notranslate"><span class="pre">array_like</span></code>.</li>
+</ul>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first"><ul class="simple">
+<li><strong>corr_coeff</strong> (<em>float</em>) – Correlation coefficient of the test (depends on <cite>method</cite>).</li>
+<li><strong>p_value</strong> (<em>float</em>) – p-value of the test.</li>
+<li><strong>n</strong> (<em>int</em>) – Number of rows/columns in each of the distance matrices, after any
+reordering/matching of IDs. If <code class="docutils literal notranslate"><span class="pre">strict=False</span></code>, nonmatching IDs may
+have been discarded from one or both of the distance matrices prior to
+running the Mantel test, so this value may be important as it indicates
+the <em>actual</em> size of the matrices that were compared.</li>
+</ul>
+</p>
+</td>
+</tr>
+<tr class="field-odd field"><th class="field-name">Raises:</th><td class="field-body"><ul class="first last simple">
+<li><a class="reference external" href="https://docs.python.org/dev/library/exceptions.html#ValueError" title="(in Python v3.8)"><code class="xref py py-exc docutils literal notranslate"><span class="pre">ValueError</span></code></a> – If <cite>x</cite> and <cite>y</cite> are not at least 3x3 in size after reordering/matching
+of IDs, or an invalid <cite>method</cite>, number of <cite>permutations</cite>, or
+<cite>alternative</cite> are provided.</li>
+<li><a class="reference external" href="https://docs.python.org/dev/library/exceptions.html#TypeError" title="(in Python v3.8)"><code class="xref py py-exc docutils literal notranslate"><span class="pre">TypeError</span></code></a> – If <cite>x</cite> and <cite>y</cite> are not both <code class="docutils literal notranslate"><span class="pre">DistanceMatrix</span></code> instances or
+<code class="docutils literal notranslate"><span class="pre">array_like</span></code>.</li>
+</ul>
+</td>
+</tr>
+</tbody>
+</table>
+<div class="admonition seealso">
+<p class="first admonition-title">See also</p>
+<p class="last"><a class="reference internal" href="skbio.stats.distance.DistanceMatrix.html#skbio.stats.distance.DistanceMatrix" title="skbio.stats.distance.DistanceMatrix"><code class="xref py py-func docutils literal notranslate"><span class="pre">DistanceMatrix()</span></code></a>, <a class="reference external" href="https://docs.scipy.org/doc/scipy/reference/generated/scipy.stats.pearsonr.html#scipy.stats.pearsonr" title="(in SciPy v1.1.0)"><code class="xref py py-func docutils literal notranslate"><span class="pre">scipy.stats.pearsonr()</span></code></a>, <a class="reference external" href="https://docs.scipy.org/doc/scipy/reference/generated/scipy.stats.spearmanr.html#scipy.stats.spearmanr" title="(in SciPy v1.1.0)"><code class="xref py py-func docutils literal notranslate"><span class="pre">scipy.stats.spearmanr()</span></code></a>, <a class="reference internal" href="skbio.stats.distance.pwmantel.html#skbio.stats.distance.pwmantel" title="skbio.stats.distance.pwmantel"><code class="xref py py-func docutils literal notranslate"><span class="pre">pwmantel()</span></code></a></p>
+</div>
+<p class="rubric">Notes</p>
+<p>The Mantel test was first described in <a class="footnote-reference" href="#id5" id="id2">[2]</a>. The general algorithm and
+interface are similar to <code class="docutils literal notranslate"><span class="pre">vegan::mantel</span></code>, available in R’s vegan
+package <a class="footnote-reference" href="#id6" id="id3">[3]</a>.</p>
+<p><code class="docutils literal notranslate"><span class="pre">np.nan</span></code> will be returned for the p-value if <cite>permutations</cite> is zero or if
+the correlation coefficient is <code class="docutils literal notranslate"><span class="pre">np.nan</span></code>. The correlation coefficient will
+be <code class="docutils literal notranslate"><span class="pre">np.nan</span></code> if one or both of the inputs does not have any variation
+(i.e. the distances are all constant) and <code class="docutils literal notranslate"><span class="pre">method='spearman'</span></code>.</p>
+<p class="rubric">References</p>
+<table class="docutils footnote" frame="void" id="id4" rules="none">
+<colgroup><col class="label" /><col /></colgroup>
+<tbody valign="top">
+<tr><td class="label"><a class="fn-backref" href="#id1">[1]</a></td><td>Legendre, P. and Legendre, L. (2012) Numerical Ecology. 3rd English
+Edition. Elsevier.</td></tr>
+</tbody>
+</table>
+<table class="docutils footnote" frame="void" id="id5" rules="none">
+<colgroup><col class="label" /><col /></colgroup>
+<tbody valign="top">
+<tr><td class="label"><a class="fn-backref" href="#id2">[2]</a></td><td>Mantel, N. (1967). “The detection of disease clustering and a
+generalized regression approach”. Cancer Research 27 (2): 209-220. PMID
+6018555.</td></tr>
+</tbody>
+</table>
+<table class="docutils footnote" frame="void" id="id6" rules="none">
+<colgroup><col class="label" /><col /></colgroup>
+<tbody valign="top">
+<tr><td class="label"><a class="fn-backref" href="#id3">[3]</a></td><td><a class="reference external" href="http://cran.r-project.org/web/packages/vegan/index.html">http://cran.r-project.org/web/packages/vegan/index.html</a></td></tr>
+</tbody>
+</table>
+<p class="rubric">Examples</p>
+<p>Import the functionality we’ll use in the following examples:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">skbio</span> <span class="k">import</span> <span class="n">DistanceMatrix</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">skbio.stats.distance</span> <span class="k">import</span> <span class="n">mantel</span>
+</pre></div>
+</div>
+<p>Define two 3x3 distance matrices:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">x</span> <span class="o">=</span> <span class="n">DistanceMatrix</span><span class="p">([[</span><span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">2</span><span class="p">],</span>
+<span class="gp">... </span>                    <span class="p">[</span><span class="mi">1</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">3</span><span class="p">],</span>
+<span class="gp">... </span>                    <span class="p">[</span><span class="mi">2</span><span class="p">,</span> <span class="mi">3</span><span class="p">,</span> <span class="mi">0</span><span class="p">]])</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">y</span> <span class="o">=</span> <span class="n">DistanceMatrix</span><span class="p">([[</span><span class="mi">0</span><span class="p">,</span> <span class="mi">2</span><span class="p">,</span> <span class="mi">7</span><span class="p">],</span>
+<span class="gp">... </span>                    <span class="p">[</span><span class="mi">2</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">6</span><span class="p">],</span>
+<span class="gp">... </span>                    <span class="p">[</span><span class="mi">7</span><span class="p">,</span> <span class="mi">6</span><span class="p">,</span> <span class="mi">0</span><span class="p">]])</span>
+</pre></div>
+</div>
+<p>Compute the Pearson correlation between them and assess significance using
+a two-sided test with 999 permutations:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">coeff</span><span class="p">,</span> <span class="n">p_value</span><span class="p">,</span> <span class="n">n</span> <span class="o">=</span> <span class="n">mantel</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="n">y</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="nb">print</span><span class="p">(</span><span class="nb">round</span><span class="p">(</span><span class="n">coeff</span><span class="p">,</span> <span class="mi">4</span><span class="p">))</span>
+<span class="go">0.7559</span>
+</pre></div>
+</div>
+<p>Thus, we see a moderate-to-strong positive correlation (<span class="math notranslate nohighlight">\(r_M=0.7559\)</span>)
+between the two matrices.</p>
+<p>In the previous example, the distance matrices (<code class="docutils literal notranslate"><span class="pre">x</span></code> and <code class="docutils literal notranslate"><span class="pre">y</span></code>) have the
+same IDs, in the same order:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">x</span><span class="o">.</span><span class="n">ids</span>
+<span class="go">(&#39;0&#39;, &#39;1&#39;, &#39;2&#39;)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">y</span><span class="o">.</span><span class="n">ids</span>
+<span class="go">(&#39;0&#39;, &#39;1&#39;, &#39;2&#39;)</span>
+</pre></div>
+</div>
+<p>If necessary, <code class="docutils literal notranslate"><span class="pre">mantel</span></code> will reorder the distance matrices prior to
+running the test. The function also supports a <code class="docutils literal notranslate"><span class="pre">lookup</span></code> dictionary that
+maps distance matrix IDs to new IDs, providing a way to match IDs between
+distance matrices prior to running the Mantel test.</p>
+<p>For example, let’s reassign the distance matrices’ IDs so that there are no
+matching IDs between them:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">x</span><span class="o">.</span><span class="n">ids</span> <span class="o">=</span> <span class="p">(</span><span class="s1">&#39;a&#39;</span><span class="p">,</span> <span class="s1">&#39;b&#39;</span><span class="p">,</span> <span class="s1">&#39;c&#39;</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">y</span><span class="o">.</span><span class="n">ids</span> <span class="o">=</span> <span class="p">(</span><span class="s1">&#39;d&#39;</span><span class="p">,</span> <span class="s1">&#39;e&#39;</span><span class="p">,</span> <span class="s1">&#39;f&#39;</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>If we rerun <code class="docutils literal notranslate"><span class="pre">mantel</span></code>, we get the following error notifying us that there
+are nonmatching IDs (this is the default behavior with <code class="docutils literal notranslate"><span class="pre">strict=True</span></code>):</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">mantel</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="n">y</span><span class="p">)</span>
+<span class="gt">Traceback (most recent call last):</span>
+    <span class="o">...</span>
+<span class="gr">ValueError</span>: <span class="n">IDs exist that are not in both distance matrices.</span>
+</pre></div>
+</div>
+<p>If we pass <code class="docutils literal notranslate"><span class="pre">strict=False</span></code> to ignore/discard nonmatching IDs, we see that
+no matches exist between <cite>x</cite> and <cite>y</cite>, so the Mantel test still cannot be
+run:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">mantel</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="n">y</span><span class="p">,</span> <span class="n">strict</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
+<span class="gt">Traceback (most recent call last):</span>
+    <span class="o">...</span>
+<span class="gr">ValueError</span>: <span class="n">No matching IDs exist between the distance matrices.</span>
+</pre></div>
+</div>
+<p>To work around this, we can define a <code class="docutils literal notranslate"><span class="pre">lookup</span></code> dictionary to specify how
+the IDs should be matched between distance matrices:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">lookup</span> <span class="o">=</span> <span class="p">{</span><span class="s1">&#39;a&#39;</span><span class="p">:</span> <span class="s1">&#39;A&#39;</span><span class="p">,</span> <span class="s1">&#39;b&#39;</span><span class="p">:</span> <span class="s1">&#39;B&#39;</span><span class="p">,</span> <span class="s1">&#39;c&#39;</span><span class="p">:</span> <span class="s1">&#39;C&#39;</span><span class="p">,</span>
+<span class="gp">... </span>          <span class="s1">&#39;d&#39;</span><span class="p">:</span> <span class="s1">&#39;A&#39;</span><span class="p">,</span> <span class="s1">&#39;e&#39;</span><span class="p">:</span> <span class="s1">&#39;B&#39;</span><span class="p">,</span> <span class="s1">&#39;f&#39;</span><span class="p">:</span> <span class="s1">&#39;C&#39;</span><span class="p">}</span>
+</pre></div>
+</div>
+<p><code class="docutils literal notranslate"><span class="pre">lookup</span></code> maps each ID to <code class="docutils literal notranslate"><span class="pre">'A'</span></code>, <code class="docutils literal notranslate"><span class="pre">'B'</span></code>, or <code class="docutils literal notranslate"><span class="pre">'C'</span></code>. If we rerun
+<code class="docutils literal notranslate"><span class="pre">mantel</span></code> with <code class="docutils literal notranslate"><span class="pre">lookup</span></code>, we get the same results as the original
+example where all distance matrix IDs matched:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">coeff</span><span class="p">,</span> <span class="n">p_value</span><span class="p">,</span> <span class="n">n</span> <span class="o">=</span> <span class="n">mantel</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="n">y</span><span class="p">,</span> <span class="n">lookup</span><span class="o">=</span><span class="n">lookup</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="nb">print</span><span class="p">(</span><span class="nb">round</span><span class="p">(</span><span class="n">coeff</span><span class="p">,</span> <span class="mi">4</span><span class="p">))</span>
+<span class="go">0.7559</span>
+</pre></div>
+</div>
+<p><code class="docutils literal notranslate"><span class="pre">mantel</span></code> also accepts input that is <code class="docutils literal notranslate"><span class="pre">array_like</span></code>. For example, if we
+redefine <cite>x</cite> and <cite>y</cite> as nested Python lists instead of <code class="docutils literal notranslate"><span class="pre">DistanceMatrix</span></code>
+instances, we obtain the same result:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">x</span> <span class="o">=</span> <span class="p">[[</span><span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">2</span><span class="p">],</span>
+<span class="gp">... </span>     <span class="p">[</span><span class="mi">1</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">3</span><span class="p">],</span>
+<span class="gp">... </span>     <span class="p">[</span><span class="mi">2</span><span class="p">,</span> <span class="mi">3</span><span class="p">,</span> <span class="mi">0</span><span class="p">]]</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">y</span> <span class="o">=</span> <span class="p">[[</span><span class="mi">0</span><span class="p">,</span> <span class="mi">2</span><span class="p">,</span> <span class="mi">7</span><span class="p">],</span>
+<span class="gp">... </span>     <span class="p">[</span><span class="mi">2</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">6</span><span class="p">],</span>
+<span class="gp">... </span>     <span class="p">[</span><span class="mi">7</span><span class="p">,</span> <span class="mi">6</span><span class="p">,</span> <span class="mi">0</span><span class="p">]]</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">coeff</span><span class="p">,</span> <span class="n">p_value</span><span class="p">,</span> <span class="n">n</span> <span class="o">=</span> <span class="n">mantel</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="n">y</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="nb">print</span><span class="p">(</span><span class="nb">round</span><span class="p">(</span><span class="n">coeff</span><span class="p">,</span> <span class="mi">4</span><span class="p">))</span>
+<span class="go">0.7559</span>
+</pre></div>
+</div>
+<p>It is import to note that reordering/matching of IDs (and hence the
+<code class="docutils literal notranslate"><span class="pre">strict</span></code> and <code class="docutils literal notranslate"><span class="pre">lookup</span></code> parameters) do not apply when input is
+<code class="docutils literal notranslate"><span class="pre">array_like</span></code> because there is no notion of IDs.</p>
+</dd></dl>
+
+</div>
+
+
+    </div>
+      
+  </div>
+</div>
+  
+<footer class="footer">
+  <div class="container">
+    <p class="pull-right">
+      <a href="#">Back to top</a>
+      
+    </p>
+    <p>
+        &copy; Copyright 2014--, scikit-bio development team.<br/>
+      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 1.8.2.<br/>
+    </p>
+  </div>
+</footer>
+  <script>
+    (function(i,s,o,g,r,a,m){i['GoogleAnalyticsObject']=r;i[r]=i[r]||function(){
+    (i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),
+    m=s.getElementsByTagName(o)[0];a.async=1;a.src=g;m.parentNode.insertBefore(a,m)
+    })(window,document,'script','//www.google-analytics.com/analytics.js','ga');
+
+    ga('create', 'UA-6636235-9', 'scikit-bio.org');
+    ga('send', 'pageview');
+  </script>
+
+  </body>
+</html>

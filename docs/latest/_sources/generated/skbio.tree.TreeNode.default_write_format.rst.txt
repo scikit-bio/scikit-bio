@@ -1,8 +1,0 @@
-:orphan:
-
-skbio.tree.TreeNode.default_write_format
-========================================
-
-.. currentmodule:: skbio.tree
-
-.. autoattribute:: TreeNode.default_write_format
