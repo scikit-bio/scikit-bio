@@ -41,8 +41,9 @@ def _validate_counts_matrix(counts, ids=None, suppress_cast=False):
     if isinstance(counts, pd.core.frame.DataFrame):
         if ids is not None and len(counts.index) != len(ids):
             raise ValueError(
-                "Number of rows in ``counts`` must be equal to number of provided "
-                "``ids``.")
+                "Number of rows in ``counts``"
+                "must be equal to number of provided ``ids``."
+            )
         return np.asarray(counts)
     else:
 
@@ -50,21 +51,25 @@ def _validate_counts_matrix(counts, ids=None, suppress_cast=False):
             counts = [counts]
         counts = np.asarray(counts)
         if counts.ndim > 2:
-            raise ValueError("Only 1-D and 2-D array-like objects can be provided "
-                             "as input. Provided object has %d dimensions." %
-                             counts.ndim)
+            raise ValueError(
+                "Only 1-D and 2-D array-like objects can be provided "
+                "as input. Provided object has %d dimensions." %
+                counts.ndim)
 
         if ids is not None and len(counts) != len(ids):
             raise ValueError(
-                "Number of rows in ``counts`` must be equal to number of provided "
-                "``ids``.")
+                "Number of rows in ``counts`` must be equal "
+                "to number of provided ``ids``."
+            )
 
         lens = []
         for v in counts:
             results.append(_validate_counts_vector(v, suppress_cast))
             lens.append(len(v))
         if len(set(lens)) > 1:
-            raise ValueError("All rows in ``counts`` must be of equal length.")
+            raise ValueError(
+                "All rows in ``counts`` must be of equal length."
+            )
         return np.asarray(results)
 
 
