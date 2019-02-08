@@ -9,6 +9,7 @@
 import collections
 
 import numpy as np
+import pandas as pd
 
 from skbio.tree import DuplicateNodeError, MissingNodeError
 from skbio.diversity._phylogenetic import _nodes_by_counts
@@ -37,25 +38,33 @@ def _validate_counts_matrix(counts, ids=None, suppress_cast=False):
     # handle case of where counts is a single vector by making it a matrix.
     # this has to be done before forcing counts into an ndarray because we
     # don't yet know that all of the entries are of equal length
-    if len(counts) == 0 or not isinstance(counts[0], collections.Iterable):
-        counts = [counts]
-    counts = np.asarray(counts)
-    if counts.ndim > 2:
-        raise ValueError("Only 1-D and 2-D array-like objects can be provided "
-                         "as input. Provided object has %d dimensions." %
-                         counts.ndim)
+    if isinstance(counts, pd.core.frame.DataFrame):
+        if ids is not None and len(counts.index) != len(ids):
+            raise ValueError(
+                "Number of rows in ``counts`` must be equal to number of provided "
+                "``ids``.")
+        return np.asarray(counts)
+    else:
 
-    if ids is not None and len(counts) != len(ids):
-        raise ValueError(
-            "Number of rows in ``counts`` must be equal to number of provided "
-            "``ids``.")
+        if len(counts) == 0 or not isinstance(counts[0], collections.Iterable):
+            counts = [counts]
+        counts = np.asarray(counts)
+        if counts.ndim > 2:
+            raise ValueError("Only 1-D and 2-D array-like objects can be provided "
+                             "as input. Provided object has %d dimensions." %
+                             counts.ndim)
 
-    lens = []
-    for v in counts:
-        results.append(_validate_counts_vector(v, suppress_cast))
-        lens.append(len(v))
-    if len(set(lens)) > 1:
-        raise ValueError("All rows in ``counts`` must be of equal length.")
+        if ids is not None and len(counts) != len(ids):
+            raise ValueError(
+                "Number of rows in ``counts`` must be equal to number of provided "
+                "``ids``.")
+
+        lens = []
+        for v in counts:
+            results.append(_validate_counts_vector(v, suppress_cast))
+            lens.append(len(v))
+        if len(set(lens)) > 1:
+            raise ValueError("All rows in ``counts`` must be of equal length.")
 
     return np.asarray(results)
 
