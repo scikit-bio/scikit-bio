@@ -65,8 +65,7 @@ def _validate_counts_matrix(counts, ids=None, suppress_cast=False):
             lens.append(len(v))
         if len(set(lens)) > 1:
             raise ValueError("All rows in ``counts`` must be of equal length.")
-
-    return np.asarray(results)
+        return np.asarray(results)
 
 
 def _validate_otu_ids_and_tree(counts, otu_ids, tree):
