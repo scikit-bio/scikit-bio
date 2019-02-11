@@ -630,7 +630,7 @@ fuzzy=[(True, False)], metadata={'gene': 'foo'})
                                 type(sequence).__name__)
 
             sequence = s
-            self._owns_bytes = True
+            self._owns_bytes = False
 
             self._set_bytes(sequence)
 
