@@ -42,7 +42,7 @@ def _validate_counts_matrix(counts, ids=None, suppress_cast=False):
         if ids is not None and len(counts.index) != len(ids):
             raise ValueError(
                 "Number of rows in ``counts``"
-                "must be equal to number of provided ``ids``."
+                " must be equal to number of provided ``ids``."
             )
         return np.asarray(counts)
     else:
