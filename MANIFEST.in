@@ -24,3 +24,4 @@ global-exclude *.pyc
 global-exclude *.pyo
 global-exclude *.so
 global-exclude .*.swp
+global-exclude .coverage

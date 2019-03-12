@@ -45,7 +45,7 @@ class TestRNA(unittest.TestCase):
         self.assertEqual(seq, RNA('AUAU'))
 
     def test_cannot_subclass(self):
-        with self.assertRaisesRegex(TypeError, "Subclassing disabled"):
+        with self.assertRaisesRegex(TypeError, r"Subclassing disabled"):
             class CustomSequence(RNA):
                 pass
 

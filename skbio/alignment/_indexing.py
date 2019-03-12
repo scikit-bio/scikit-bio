@@ -7,6 +7,7 @@
 # ----------------------------------------------------------------------------
 
 from abc import ABCMeta, abstractmethod
+import collections
 
 import numpy as np
 import pandas as pd
@@ -159,6 +160,8 @@ class TabularMSALoc(_Indexing):
         complete_key = False
         partial_key = False
         duplicated_key = False
+        if not isinstance(indexable, collections.Hashable):
+            return False
         if axis == 0 and self._has_fancy_index():
             try:
                 if type(indexable) is tuple:
@@ -168,7 +171,10 @@ class TabularMSALoc(_Indexing):
             except TypeError:  # Unhashable type, no biggie
                 pass
         if index.has_duplicates:
-            duplicated_key = indexable in index.get_duplicates()
+            # for a given Index object index,
+            # index[index.duplicated()].unique() is pandas' recommended
+            # replacement for index.get_duplicates(), per the pandas 0.23 docs
+            duplicated_key = indexable in index[index.duplicated()].unique()
         return (not duplicated_key and
                 ((np.isscalar(indexable) and not partial_key) or complete_key))
 

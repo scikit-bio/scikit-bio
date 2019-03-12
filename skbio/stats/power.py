@@ -44,7 +44,7 @@ Functions
 ---------
 
 .. autosummary::
-    :toctree: generated/
+    :toctree:
 
     subsample_power
     subsample_paired_power

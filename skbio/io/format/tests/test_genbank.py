@@ -241,7 +241,7 @@ REFERENCE   1  (bases 1 to 154478)
              '            linear   PRI 2001-12-18']]
         for line in lines:
             with self.assertRaisesRegex(GenBankFormatError,
-                                        'Could not parse the LOCUS line:.*'):
+                                        r'Could not parse the LOCUS line:.*'):
                 _parse_locus(line)
 
     def test_genbank_to_generator_single(self):

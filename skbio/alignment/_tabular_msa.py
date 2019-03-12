@@ -55,7 +55,8 @@ class TabularMSA(MetadataMixin, PositionalMetadataMixin, SkbioObject):
     index : pd.Index consumable, optional
         Index containing labels for `sequences`. Must be the same length as
         `sequences`. Must be able to be passed directly to ``pd.Index``
-        constructor. Note that `index` cannot be combined with `minter`.
+        constructor. Note that `index` cannot be combined with `minter` and the
+        contents of `index` must be hashable.
 
     Raises
     ------
@@ -2258,7 +2259,7 @@ class TabularMSA(MetadataMixin, PositionalMetadataMixin, SkbioObject):
         if joined_seqs:
             joined_positional_metadata = pd.concat(
                 [self.positional_metadata, other.positional_metadata],
-                ignore_index=True, **concat_kwargs)
+                ignore_index=True, sort=True, **concat_kwargs)
 
             if not self.has_positional_metadata():
                 del self.positional_metadata

@@ -7,8 +7,6 @@
 # ----------------------------------------------------------------------------
 
 
-from skbio.util import TestRunner
-
 # Add skbio.io to sys.modules to prevent cycles in our imports
 import skbio.io  # noqa
 # imports included for convenience
@@ -26,7 +24,7 @@ __all__ = ['Sequence', 'DNA', 'RNA', 'Protein', 'GeneticCode',
            'TreeNode', 'nj', 'read', 'write', 'OrdinationResults']
 
 __credits__ = "https://github.com/biocore/scikit-bio/graphs/contributors"
-__version__ = "0.5.2-dev"
+__version__ = "0.5.5-dev"
 
 mottos = [
     # 03/15/2014
@@ -78,8 +76,3 @@ if __doc__ is None:
     __doc__ = title + art
 else:
     __doc__ = title + art + __doc__
-
-test = TestRunner(__file__).test
-
-if __name__ == '__main__':
-    test()

@@ -44,7 +44,7 @@ def cca(y, x, scaling=1):
         Samples by constraints table (n, q)
     scaling : int, {1, 2}, optional
         Scaling type 1 maintains :math:`\chi^2` distances between rows.
-        Scaling type 2 preserver :math:`\chi^2` distances between columns.
+        Scaling type 2 preserves :math:`\chi^2` distances between columns.
         For a more detailed explanation of the interpretation, check Legendre &
         Legendre 1998, section 9.4.3.
 
@@ -100,8 +100,8 @@ def cca(y, x, scaling=1):
        Ecology. Elsevier, Amsterdam.
 
     """
-    Y = y.as_matrix()
-    X = x.as_matrix()
+    Y = y.values
+    X = x.values
 
     # Perform parameter sanity checks
     if X.shape[0] != Y.shape[0]:

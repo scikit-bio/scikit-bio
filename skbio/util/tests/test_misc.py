@@ -168,10 +168,10 @@ class ChunkStrTests(unittest.TestCase):
         self.assertEqual(chunk_str('abcdefg', 3, ' - '), 'abc - def - g')
 
     def test_invalid_n(self):
-        with self.assertRaisesRegex(ValueError, 'n=0'):
+        with self.assertRaisesRegex(ValueError, r'n=0'):
             chunk_str('abcdef', 0, ' ')
 
-        with self.assertRaisesRegex(ValueError, 'n=-42'):
+        with self.assertRaisesRegex(ValueError, r'n=-42'):
             chunk_str('abcdef', -42, ' ')
 
 
@@ -199,7 +199,7 @@ class CardinalToOrdinalTests(unittest.TestCase):
         self.assertEqual(obs, exp)
 
     def test_invalid_n(self):
-        with self.assertRaisesRegex(ValueError, '-1'):
+        with self.assertRaisesRegex(ValueError, r'-1'):
             cardinal_to_ordinal(-1)
 
 

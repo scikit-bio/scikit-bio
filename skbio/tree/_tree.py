@@ -71,16 +71,6 @@ class TreeNode(SkbioObject):
         Connect this node to a parent
     children : list of TreeNode or None
         Connect this node to existing children
-
-    Attributes
-    ----------
-    name
-    length
-    support
-    parent
-    children
-    id
-
     """
     default_write_format = 'newick'
     _exclude_from_copy = set(['parent', 'children', '_tip_cache',
@@ -1854,7 +1844,7 @@ class TreeNode(SkbioObject):
     @classonlymethod
     @experimental(as_of="0.4.0")
     def from_taxonomy(cls, lineage_map):
-        """Construct a tree from a taxonomy
+        r"""Construct a tree from a taxonomy
 
         Parameters
         ----------
@@ -3107,7 +3097,7 @@ class TreeNode(SkbioObject):
             yield self
             counter += 1
 
-    @experimental(as_of="0.5.2-dev")
+    @experimental(as_of="0.5.6")
     def _extract_support(self):
         """Extract the support value from a node label, if available.
 
@@ -3134,7 +3124,7 @@ class TreeNode(SkbioObject):
             label = right or None if support is not None else self.name
         return support, label
 
-    @experimental(as_of="0.5.2-dev")
+    @experimental(as_of="0.5.6")
     def _node_label(self):
         """Generate a node label in the format of "support:name" if both exist,
         or "support" or "name" if either exists.
@@ -3151,7 +3141,7 @@ class TreeNode(SkbioObject):
             lblst.append(self.name)
         return ':'.join(lblst)
 
-    @experimental(as_of="0.5.2-dev")
+    @experimental(as_of="0.5.6")
     def assign_supports(self):
         """Extract support values from internal node labels of a tree.
 
@@ -3202,7 +3192,7 @@ class TreeNode(SkbioObject):
             else:
                 node.support, node.name = node._extract_support()
 
-    @experimental(as_of="0.5.2-dev")
+    @experimental(as_of="0.5.3")
     def unpack(self):
         """Unpack an internal node in place.
 
@@ -3243,7 +3233,7 @@ class TreeNode(SkbioObject):
         parent.remove(self)
         parent.extend(self.children)
 
-    @experimental(as_of="0.5.2-dev")
+    @experimental(as_of="0.5.3")
     def unpack_by_func(self, func):
         """Unpack internal nodes of a tree that meet certain criteria.
 

@@ -8,31 +8,38 @@ This module contains several ordination methods, including Principal
 Coordinate Analysis, Correspondence Analysis, Redundancy Analysis and
 Canonical Correspondence Analysis.
 
-
-Functions
----------
+Ordination Functions
+--------------------
 
 .. autosummary::
-   :toctree: generated/
+   :toctree:
 
    ca
    pcoa
+   pcoa_biplot
    cca
    rda
+
+Classes
+-------
+
+.. autosummary::
+   :toctree:
+
+   OrdinationResults
+
+Utility Functions
+-----------------
+
+.. autosummary::
+   :toctree:
+
    mean_and_std
    corr
    scale
    svd_rank
    e_matrix
    f_matrix
-
-Classes
--------
-
-.. autosummary::
-   :toctree: generated/
-
-   OrdinationResults
 
 Examples
 --------
@@ -82,6 +89,7 @@ observed at different sites.
 We can now perform canonical correspondence analysis. Matrix `X` contains a
 continuous variable (depth) and a categorical one (substrate type) encoded
 using a one-hot encoding.
+
 >>> from skbio.stats.ordination import cca
 
 We explicitly need to avoid perfect collinearity, so we'll drop one of the
@@ -121,17 +129,14 @@ References
 # The full license is in the file COPYING.txt, distributed with this software.
 # ----------------------------------------------------------------------------
 
-from skbio.util import TestRunner
-
 from ._redundancy_analysis import rda
 from ._correspondence_analysis import ca
 from ._canonical_correspondence_analysis import cca
-from ._principal_coordinate_analysis import pcoa
+from ._principal_coordinate_analysis import pcoa, pcoa_biplot
 from ._ordination_results import OrdinationResults
-from ._utils import (mean_and_std, scale, svd_rank, corr, e_matrix, f_matrix)
+from ._utils import (mean_and_std, scale, svd_rank, corr, e_matrix, f_matrix,
+                     center_distance_matrix)
 
-__all__ = ['ca', 'rda', 'cca', 'pcoa', 'OrdinationResults',
+__all__ = ['ca', 'rda', 'cca', 'pcoa', 'pcoa_biplot', 'OrdinationResults',
            'mean_and_std', 'scale', 'svd_rank', 'corr',
-           'e_matrix', 'f_matrix']
-
-test = TestRunner(__file__).test
+           'e_matrix', 'f_matrix', 'center_distance_matrix']

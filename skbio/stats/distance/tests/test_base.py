@@ -609,7 +609,7 @@ class DistanceMatrixTests(DissimilarityMatrixTestData):
             DistanceMatrix([[1, 2, 3]], ['a'])
 
     def test_init_nans(self):
-        with self.assertRaisesRegex(DistanceMatrixError, 'NaNs'):
+        with self.assertRaisesRegex(DistanceMatrixError, r'NaNs'):
             DistanceMatrix([[0.0, np.nan], [np.nan, 0.0]], ['a', 'b'])
 
     def test_from_iterable_no_key(self):

@@ -6,14 +6,7 @@
 # The full license is in the file COPYING.txt, distributed with this software.
 # ----------------------------------------------------------------------------
 
-import sys
-
-from skbio.util import TestRunner
-
-test = TestRunner(__file__).test
+from skbio.util import pytestrunner
 
 if __name__ == '__main__':
-    if test():
-        sys.exit(0)
-    else:
-        sys.exit(1)
+    pytestrunner()

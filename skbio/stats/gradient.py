@@ -13,7 +13,7 @@ Classes
 -------
 
 .. autosummary::
-   :toctree: generated/
+   :toctree:
 
    GradientANOVA
    AverageGradientANOVA

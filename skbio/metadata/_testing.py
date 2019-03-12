@@ -273,41 +273,41 @@ class PositionalMetadataMixinTests:
 
     def test_constructor_positional_metadata_len_mismatch(self):
         # Zero elements.
-        with self.assertRaisesRegex(ValueError, '\(0\).*\(4\)'):
+        with self.assertRaisesRegex(ValueError, r'\(0\).*\(4\)'):
             self._positional_metadata_constructor_(4, positional_metadata=[])
 
         # Not enough elements.
-        with self.assertRaisesRegex(ValueError, '\(3\).*\(4\)'):
+        with self.assertRaisesRegex(ValueError, r'\(3\).*\(4\)'):
             self._positional_metadata_constructor_(
                 4, positional_metadata=[2, 3, 4])
 
         # Too many elements.
-        with self.assertRaisesRegex(ValueError, '\(5\).*\(4\)'):
+        with self.assertRaisesRegex(ValueError, r'\(5\).*\(4\)'):
             self._positional_metadata_constructor_(
                 4, positional_metadata=[2, 3, 4, 5, 6])
 
         # Series not enough rows.
-        with self.assertRaisesRegex(ValueError, '\(3\).*\(4\)'):
+        with self.assertRaisesRegex(ValueError, r'\(3\).*\(4\)'):
             self._positional_metadata_constructor_(
                 4, positional_metadata=pd.Series(range(3)))
 
         # Series too many rows.
-        with self.assertRaisesRegex(ValueError, '\(5\).*\(4\)'):
+        with self.assertRaisesRegex(ValueError, r'\(5\).*\(4\)'):
             self._positional_metadata_constructor_(
                 4, positional_metadata=pd.Series(range(5)))
 
         # DataFrame not enough rows.
-        with self.assertRaisesRegex(ValueError, '\(3\).*\(4\)'):
+        with self.assertRaisesRegex(ValueError, r'\(3\).*\(4\)'):
             self._positional_metadata_constructor_(
                 4, positional_metadata=pd.DataFrame({'quality': range(3)}))
 
         # DataFrame too many rows.
-        with self.assertRaisesRegex(ValueError, '\(5\).*\(4\)'):
+        with self.assertRaisesRegex(ValueError, r'\(5\).*\(4\)'):
             self._positional_metadata_constructor_(
                 4, positional_metadata=pd.DataFrame({'quality': range(5)}))
 
         # Empty DataFrame wrong size.
-        with self.assertRaisesRegex(ValueError, '\(2\).*\(3\)'):
+        with self.assertRaisesRegex(ValueError, r'\(2\).*\(3\)'):
             self._positional_metadata_constructor_(
                 3, positional_metadata=pd.DataFrame(index=range(2)))
 
@@ -841,13 +841,13 @@ class PositionalMetadataMixinTests:
             3, positional_metadata={'foo': [1, 2, 42]})
 
         # `None` behavior differs from constructor.
-        with self.assertRaisesRegex(ValueError, '\(0\).*\(3\)'):
+        with self.assertRaisesRegex(ValueError, r'\(0\).*\(3\)'):
             obj.positional_metadata = None
 
         assert_data_frame_almost_equal(obj.positional_metadata,
                                        pd.DataFrame({'foo': [1, 2, 42]}))
 
-        with self.assertRaisesRegex(ValueError, '\(4\).*\(3\)'):
+        with self.assertRaisesRegex(ValueError, r'\(4\).*\(3\)'):
             obj.positional_metadata = [1, 2, 3, 4]
 
         assert_data_frame_almost_equal(obj.positional_metadata,
@@ -961,7 +961,7 @@ class IntervalMetadataMixinTests:
     def test_constructor_interval_metadata_len_mismatch(self):
         for i in [0, 1, 3, 100]:
             with self.assertRaisesRegex(
-                    ValueError, '\(%d\).*\(%d\)' % (self.upper_bound, i)):
+                    ValueError, r'\(%d\).*\(%d\)' % (self.upper_bound, i)):
                 self._interval_metadata_constructor_(i, self.im)
 
     def test_constructor_interval_metadata_len(self):
@@ -1208,7 +1208,7 @@ class IntervalMetadataMixinTests:
 
         for i in 0, 1, 3, 100:
             with self.assertRaisesRegex(
-                    ValueError, '\(%d\).*\(%d\)' % (i, self.upper_bound)):
+                    ValueError, r'\(%d\).*\(%d\)' % (i, self.upper_bound)):
                 obj.interval_metadata = IntervalMetadata(i)
 
         self.assertEqual(obj.interval_metadata, self.im)

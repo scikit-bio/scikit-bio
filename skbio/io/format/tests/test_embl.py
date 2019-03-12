@@ -463,7 +463,7 @@ class ReaderTests(EMBLIOTests):
 
         for line in lines:
             with self.assertRaisesRegex(EMBLFormatError,
-                                        'Could not parse the ID line:.*'):
+                                        r'Could not parse the ID line:.*'):
                 _parse_id(line)
 
     # current status of protein support is described in issue-1499
@@ -477,7 +477,7 @@ class ReaderTests(EMBLIOTests):
                              'PRO; 63 AA.\n//\n')
 
         with self.assertRaisesRegex(EMBLFormatError,
-                                    "There's no protein support for EMBL "
+                                    r"There's no protein support for EMBL "
                                     "record"):
             # read a protein record
             Protein.read(handle)
@@ -486,7 +486,7 @@ class ReaderTests(EMBLIOTests):
         handle.seek(0)
 
         with self.assertRaisesRegex(EMBLFormatError,
-                                    "There's no protein support for EMBL "
+                                    r"There's no protein support for EMBL "
                                     "record"):
             # read a generic record
             skbio.io.read(handle, format='embl')
@@ -576,7 +576,7 @@ AS   1-426          AC004528.1
         lines = [line+"\n" for line in lines if line != '']
 
         with self.assertRaisesRegex(EMBLFormatError,
-                                    "Can't parse assembly line"):
+                                    r"Can't parse assembly line"):
             # read a malformed assembly record
             _parse_assembly(lines)
 
@@ -650,7 +650,7 @@ AS   1-426          AC004528.1
         # self.assertEqual(exp, obs)
 
         with self.assertRaisesRegex(EMBLFormatError,
-                                    "There's no protein support for EMBL "
+                                    r"There's no protein support for EMBL "
                                     "record"):
             # read a generic record
             _embl_to_protein(self.multi_fp, seq_num=i+1)
@@ -668,7 +668,7 @@ AS   1-426          AC004528.1
     def test_constructed_sequences(self):
         with self.assertRaisesRegex(
                 EMBLFormatError,
-                "There's no support for embl CON record"):
+                r"There's no support for embl CON record"):
 
             _embl_to_dna(self.embl_constructed_fp)
 
@@ -752,7 +752,7 @@ DR   Proteomes; UP000008770; Genome.
 
         with io.StringIO() as fh:
             self.assertRaisesRegex(EMBLFormatError,
-                                   "There's no protein support for EMBL "
+                                   r"There's no protein support for EMBL "
                                    "record",
                                    _protein_to_embl, [obj], fh)
 

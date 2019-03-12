@@ -15,7 +15,7 @@ from ._grammared_sequence import (GrammaredSequence, DisableSubclassingMeta,
 
 
 class Protein(GrammaredSequence, metaclass=DisableSubclassingMeta):
-    """Store protein sequence data and optional associated metadata.
+    r"""Store protein sequence data and optional associated metadata.
 
     Only characters in the IUPAC protein character set [1]_ are supported.
 
@@ -49,20 +49,6 @@ class Protein(GrammaredSequence, metaclass=DisableSubclassingMeta):
         will work or behave as expected.** Only turn off validation if you are
         certain that the sequence characters are valid. To store sequence data
         that is not IUPAC-compliant, use ``Sequence``.
-
-    Attributes
-    ----------
-    values
-    metadata
-    interval_metadata
-    positional_metadata
-    alphabet
-    gap_chars
-    default_gap_char
-    stop_chars
-    definite_chars
-    degenerate_chars
-    degenerate_map
 
     See Also
     --------

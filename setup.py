@@ -42,6 +42,8 @@ classes = """
     Programming Language :: Python :: 3 :: Only
     Programming Language :: Python :: 3.4
     Programming Language :: Python :: 3.5
+    Programming Language :: Python :: 3.6
+    Programming Language :: Python :: 3.7
     Operating System :: Unix
     Operating System :: POSIX
     Operating System :: MacOS :: MacOS X
@@ -106,7 +108,7 @@ setup(name='scikit-bio',
       packages=find_packages(),
       ext_modules=extensions,
       include_dirs=[np.get_include()],
-      setup_requires=['nose >= 1.3.7'],
+      tests_require=['pytest', 'coverage'],
       install_requires=[
           'lockfile >= 0.10.2',  # req'd for our usage of CacheControl
           'CacheControl >= 0.11.5',
@@ -114,19 +116,12 @@ setup(name='scikit-bio',
           'IPython >= 3.2.0',
           'matplotlib >= 1.4.3',
           'natsort >= 4.0.3',
-          # numpy array repr changed in 1.14.0 to use less whitespace, which
-          # breaks the doctests. The doctests can't be updated to match the new
-          # arrray repr because we still support Python 3.4, which doesn't have
-          # a numpy 1.14.0 conda package on `defaults` or `conda-forge`
-          # channels.
-          'numpy >= 1.9.2, < 1.14.0',
-          'pandas >= 0.19.2',
+          'numpy >= 1.9.2',
+          'pandas >= 0.23',
           'scipy >= 0.15.1',
-          'nose >= 1.3.7',
           'hdmedians >= 0.13',
           'scikit-learn >= 0.19.1'
       ],
-      test_suite='nose.collector',
       classifiers=classifiers,
       package_data={
           'skbio.diversity.alpha.tests': ['data/qiime-191-tt/*'],

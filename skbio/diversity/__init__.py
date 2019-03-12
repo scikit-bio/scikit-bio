@@ -281,15 +281,15 @@ Create a matrix containing 6 samples (rows) and 7 OTUs (columns):
    let's define some before we visualize these results.
 
    >>> import pandas as pd
-   >>> sample_md = [
-   ...    ('A', ['gut', 's1']),
-   ...    ('B', ['skin', 's1']),
-   ...    ('C', ['tongue', 's1']),
-   ...    ('D', ['gut', 's2']),
-   ...    ('E', ['tongue', 's2']),
-   ...    ('F', ['skin', 's2'])]
-   >>> sample_md = pd.DataFrame.from_items(
-   ...     sample_md, columns=['body_site', 'subject'], orient='index')
+   >>> sample_md = pd.DataFrame([
+   ...    ['gut', 's1'],
+   ...    ['skin', 's1'],
+   ...    ['tongue', 's1'],
+   ...    ['gut', 's2'],
+   ...    ['tongue', 's2'],
+   ...    ['skin', 's2']],
+   ...    index=['A', 'B', 'C', 'D', 'E', 'F'],
+   ...    columns=['body_site', 'subject'])
    >>> sample_md
      body_site subject
    A       gut      s1
@@ -399,8 +399,6 @@ Faith PD            0.939336  1.000000
 # The full license is in the file COPYING.txt, distributed with this software.
 # ----------------------------------------------------------------------------
 
-from skbio.util import TestRunner
-
 from ._driver import (alpha_diversity, beta_diversity, partial_beta_diversity,
                       get_alpha_diversity_metrics, get_beta_diversity_metrics)
 from ._block import block_beta_diversity
@@ -408,5 +406,3 @@ from ._block import block_beta_diversity
 __all__ = ["alpha_diversity", "beta_diversity", "get_alpha_diversity_metrics",
            "get_beta_diversity_metrics", "partial_beta_diversity",
            "block_beta_diversity"]
-
-test = TestRunner(__file__).test

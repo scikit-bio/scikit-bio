@@ -7,8 +7,7 @@
 # ----------------------------------------------------------------------------
 
 ifeq ($(WITH_COVERAGE), TRUE)
-	TEST_COMMAND = COVERAGE_FILE=../.coverage coverage run \
-	--rcfile ../.coveragerc -m skbio.test
+	TEST_COMMAND = coverage run --rcfile ../.coveragerc -m skbio.test; coverage report --rcfile ../.coveragerc
 else
 	TEST_COMMAND = python -m skbio.test
 endif
@@ -20,7 +19,7 @@ endif
 # simulate a user's install/test process this way to find package data that did
 # not install correctly (for example).
 test:
-	cd ci && $(TEST_COMMAND)
+	cd ci && $(TEST_COMMAND); cd -
 	flake8 skbio setup.py checklist.py
 	./checklist.py
 	check-manifest
