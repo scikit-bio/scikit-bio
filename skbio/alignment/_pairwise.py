@@ -848,7 +848,7 @@ def _compute_substitution_score(aln1_chars, aln2_chars, substitution_matrix,
     substitution_score = 0
     for aln1_char, aln2_char in product(aln1_chars, aln2_chars):
         if aln1_char in gap_chars or aln2_char in gap_chars:
-                substitution_score += gap_substitution_score
+            substitution_score += gap_substitution_score
         else:
             try:
                 substitution_score += \

@@ -194,10 +194,10 @@ class OrdinationResultsReaderWriterTests(OrdinationTestData):
 
     def test_read_valid_files(self):
         for fp, obj in zip(self.valid_fps, self.ordination_results_objs):
-                obs = _ordination_to_ordination_results(fp)
-                assert_ordination_results_equal(
-                    obs, obj, ignore_method_names=True,
-                    ignore_axis_labels=True)
+            obs = _ordination_to_ordination_results(fp)
+            assert_ordination_results_equal(
+                obs, obj, ignore_method_names=True,
+                ignore_axis_labels=True)
 
     def test_read_invalid_files(self):
         for invalid_fp, error_msg_regexp, _ in self.invalid_fps:

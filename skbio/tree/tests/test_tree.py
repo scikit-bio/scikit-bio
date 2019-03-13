@@ -591,8 +591,8 @@ class TreeTests(TestCase):
         self.assertEqual(obs, exp)
         tr = TreeNode.read(io.StringIO("((A,B)75,(C,D)'80:spA');"))
         exp = "                    /-A\n          /75------|\n         |    "\
-              "      \-B\n---------|\n         |          /-C\n          \80"\
-              ":spA--|\n                    \-D"
+              "      \\-B\n---------|\n         |          /-C\n          \\"\
+              "80:spA--|\n                    \\-D"
         obs = tr.ascii_art(show_internal=True, compact=False)
         self.assertEqual(obs, exp)
         tr.assign_supports()
