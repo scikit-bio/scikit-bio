@@ -60,8 +60,13 @@ class TreeNode(SkbioObject):
         names, for instance, in a phylogenetic tree where the tips correspond
         to species.
     length : float, int, or None
-        Distances between nodes can be used to represent evolutionary
-        distances, time, etc.
+        Length of the branch connecting this node to its parent. Can represent
+        ellapsed time, amount of mutations, or other measures of evolutionary
+        distance.
+    support : float, int, or None
+        Support value of the branch connecting this node to its parent. Can be
+        bootstrap value, posterior probability, or other metrics measuring the
+        confidence or frequency of this branch.
     parent : TreeNode or None
         Connect this node to a parent
     children : list of TreeNode or None
@@ -72,9 +77,11 @@ class TreeNode(SkbioObject):
                               '_non_tip_cache'])
 
     @experimental(as_of="0.4.0")
-    def __init__(self, name=None, length=None, parent=None, children=None):
+    def __init__(self, name=None, length=None, support=None, parent=None,
+                 children=None):
         self.name = name
         self.length = length
+        self.support = support
         self.parent = parent
         self._tip_cache = {}
         self._non_tip_cache = {}
@@ -2158,7 +2165,7 @@ class TreeNode(SkbioObject):
         LEN = 10
         PAD = ' ' * LEN
         PA = ' ' * (LEN - 1)
-        namestr = self.name or ''  # prevents name of NoneType
+        namestr = self._node_label()
         if self.children:
             mids = []
             result = []
@@ -3090,19 +3097,61 @@ class TreeNode(SkbioObject):
             yield self
             counter += 1
 
-    @experimental(as_of="0.5.3")
-    def support(self):
-        """Return support value of a node if available.
+    @experimental(as_of="0.5.6")
+    def _extract_support(self):
+        """Extract the support value from a node label, if available.
 
         Returns
         -------
-        float or None
-            support value of the node, or None if not available
+        tuple of
+            int, float or None
+                The support value extracted from the node label
+            str or None
+                The node label with the support value stripped
+        """
+        support, label = None, None
+        if self.name:
+            # separate support value from node name by the first colon
+            left, _, right = self.name.partition(':')
+            try:
+                support = int(left)
+            except ValueError:
+                try:
+                    support = float(left)
+                except ValueError:
+                    pass
+            # strip support value from node name
+            label = right or None if support is not None else self.name
+        return support, label
+
+    @experimental(as_of="0.5.6")
+    def _node_label(self):
+        """Generate a node label in the format of "support:name" if both exist,
+        or "support" or "name" if either exists.
+
+        Returns
+        -------
+        str
+            Generated node label
+        """
+        lblst = []
+        if self.support is not None:  # prevents support of NoneType
+            lblst.append(str(self.support))
+        if self.name:  # prevents name of NoneType
+            lblst.append(self.name)
+        return ':'.join(lblst)
+
+    @experimental(as_of="0.5.6")
+    def assign_supports(self):
+        """Extract support values from internal node labels of a tree.
 
         Notes
         -----
-        A "support value" is defined as the numeric form of a whole node label
-        without ":", or the part preceding the first ":" in the node label.
+        A "support value" measures the confidence or frequency of the incoming
+        branch (the branch from parent to self) of an internal node in a tree.
+        Roots and tips do not have support values. To extract a support value
+        from a node label, this method reads from left and stops at the first
+        ":" (if any), and attempts to convert it to a number.
 
         For examples: "(a,b)1.0", "(a,b)1.0:2.5", and "(a,b)'1.0:species_A'".
         In these cases the support values are all 1.0.
@@ -3110,23 +3159,38 @@ class TreeNode(SkbioObject):
         For examples: "(a,b):1.0" and "(a,b)species_A". In these cases there
         are no support values.
 
+        If a support value is successfully extracted, it will be stripped from
+        the node label and assigned to the `support` property.
+
+        IMPORTANT: mathematically, "support value" is a property of a branch,
+        not a node. Because of historical reasons, support values are usually
+        attached to nodes in a typical tree file [1].
+
+        [1] Czech, Lucas, Jaime Huerta-Cepas, and Alexandros Stamatakis. "A
+            Critical Review on the Use of Support Values in Tree Viewers and
+            Bioinformatics Toolkits." Molecular biology and evolution 34.6
+            (2017): 1535-1542.
+
         Examples
         --------
         >>> from skbio import TreeNode
-        >>> tree = TreeNode.read(['((a,b)99,(c,d):1.0);'])
-        >>> tree.lca(['a', 'b']).support()
-        99.0
-        >>> tree.lca(['c', 'd']).support() is None
+        >>> newick = "((a,b)95,(c,d):1.1,(e,f)'80:speciesA':1.0);"
+        >>> tree = TreeNode.read([newick])
+        >>> tree.assign_supports()
+        >>> tree.lca(['a', 'b']).support
+        95
+        >>> tree.lca(['c', 'd']).support is None
         True
+        >>> tree.lca(['e', 'f']).support
+        80
+        >>> tree.lca(['e', 'f']).name
+        'speciesA'
         """
-        support = None
-        if self.name is not None:
-            left, _, _ = self.name.partition(':')
-            try:
-                support = float(left)
-            except ValueError:
-                pass
-        return support
+        for node in self.traverse():
+            if node.is_root() or node.is_tip():
+                node.support = None
+            else:
+                node.support, node.name = node._extract_support()
 
     @experimental(as_of="0.5.3")
     def unpack(self):
@@ -3193,7 +3257,8 @@ class TreeNode(SkbioObject):
         ((e:1.0,f:2.0)b:2.0,c:3.0,d:4.0);
         <BLANKLINE>
         >>> tree = TreeNode.read(['(((a,b)85,(c,d)78)75,(e,(f,g)64)80);'])
-        >>> tree.unpack_by_func(lambda x: x.support() < 75)
+        >>> tree.assign_supports()
+        >>> tree.unpack_by_func(lambda x: x.support < 75)
         >>> print(tree)
         (((a,b)85,(c,d)78)75,(e,f,g)80);
         <BLANKLINE>

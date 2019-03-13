@@ -74,11 +74,10 @@
 ## Version 0.5.3 (2018-08-07)
 
 ### Features
-
-* Added `unpack` and `unpack_by_func` to `skbio.tree.TreeNode` to unpack one or multiple internal nodes. The "unpack" operation removes an internal node and regrafts its children to its parent while retaining the overall length.
-
-* Added `support` to `skbio.tree.TreeNode` to return the support value of a node.
-
+* Added `support` property to `skbio.tree.TreeNode` to store the branch support value.
+* Added `assign_supports` method to `skbio.tree.TreeNode` to extract branch support values from node labels.
+* Modified the way a node label is printed. Now it is `support:name` if both exist, or `support` or `name` if either exists.
+* Added `unpack` and `unpack_by_func` methods to `skbio.tree.TreeNode` to unpack one or multiple internal nodes. The "unpack" operation removes an internal node and regrafts its children to its parent while retaining the overall length.
 * Added `permdisp` to `skbio.stats.distance` to test for the homogeniety of groups. ([#1228](https://github.com/biocore/scikit-bio/issues/1228)).
 
 * Added `pcoa_biplot` to `skbio.stats.ordination` to project descriptors into a PCoA plot.

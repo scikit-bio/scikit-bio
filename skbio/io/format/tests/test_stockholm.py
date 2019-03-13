@@ -899,8 +899,8 @@ class TestStockholmWriter(unittest.TestCase):
         with self.assertRaisesRegex(StockholmFormatError,
                                     r"Invalid reference.*foo' found "
                                     "in.*1.*Valid reference tags are:"):
-                fh = io.StringIO()
-                _tabular_msa_to_stockholm(msa, fh)
+            fh = io.StringIO()
+            _tabular_msa_to_stockholm(msa, fh)
 
 
 if __name__ == '__main__':
