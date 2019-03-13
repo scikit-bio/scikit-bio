@@ -579,6 +579,26 @@ class TreeTests(TestCase):
                "                    \\-D")
         self.assertEqual(obs, exp)
 
+    def test_ascii_art_with_support(self):
+        """Make some ascii trees with support values"""
+        tr = TreeNode.read(io.StringIO("(B:0.2,(C:0.3,D:0.4)90:0.6)F;"))
+        exp = "          /-B\n-F-------|\n         |          /-C\n         "\
+              " \\90------|\n                    \\-D"
+        obs = tr.ascii_art(show_internal=True, compact=False)
+        self.assertEqual(obs, exp)
+        tr.assign_supports()
+        obs = tr.ascii_art(show_internal=True, compact=False)
+        self.assertEqual(obs, exp)
+        tr = TreeNode.read(io.StringIO("((A,B)75,(C,D)'80:spA');"))
+        exp = "                    /-A\n          /75------|\n         |    "\
+              "      \\-B\n---------|\n         |          /-C\n          \\"\
+              "80:spA--|\n                    \\-D"
+        obs = tr.ascii_art(show_internal=True, compact=False)
+        self.assertEqual(obs, exp)
+        tr.assign_supports()
+        obs = tr.ascii_art(show_internal=True, compact=False)
+        self.assertEqual(obs, exp)
+
     def test_ascii_art_three_children(self):
         obs = TreeNode.read(io.StringIO('(a,(b,c,d));')).ascii_art()
         self.assertEqual(obs, exp_ascii_art_three_children)
@@ -1311,39 +1331,66 @@ class TreeTests(TestCase):
         with self.assertRaises(MissingNodeError):
             next(self.simple_t.shuffle(names=['x', 'y']))
 
-    def test_support(self):
-        """Get support value of a node."""
-        # test nodes with support alone as label
+    def test_assign_supports(self):
+        """Extract support values of internal nodes."""
+        # test nodes with support values alone as labels
         tree = TreeNode.read(['((a,b)75,(c,d)90);'])
+        tree.assign_supports()
         node1, node2 = tree.children
-        self.assertEqual(node1.support(), 75.0)
-        self.assertEqual(node2.support(), 90.0)
+        # check if internal nodes are assigned correct support values
+        self.assertEqual(node1.support, 75)
+        self.assertEqual(node2.support, 90)
+        # check if original node names are cleared
+        self.assertIsNone(node1.name)
+        self.assertIsNone(node2.name)
+        # check if support values are not assigned to root and tips
+        self.assertIsNone(tree.support)
+        for taxon in ('a', 'b', 'c', 'd'):
+            self.assertIsNone(tree.find(taxon).support)
 
-        # test nodes with support and branch length
+        # test nodes with support values and branch lengths
         tree = TreeNode.read(['((a,b)0.85:1.23,(c,d)0.95:4.56);'])
+        tree.assign_supports()
         node1, node2 = tree.children
-        self.assertEqual(node1.support(), 0.85)
-        self.assertEqual(node2.support(), 0.95)
+        self.assertEqual(node1.support, 0.85)
+        self.assertEqual(node2.support, 0.95)
+
+        # test whether integer or float support values can be correctly parsed
+        tree = TreeNode.read(['((a,b)75,(c,d)80.0,(e,f)97.5,(g,h)0.95);'])
+        tree.assign_supports()
+        node1, node2, node3, node4 = tree.children
+        self.assertTrue(isinstance(node1.support, int))
+        self.assertEqual(node1.support, 75)
+        self.assertTrue(isinstance(node2.support, float))
+        self.assertEqual(node2.support, 80.0)
+        self.assertTrue(isinstance(node3.support, float))
+        self.assertEqual(node3.support, 97.5)
+        self.assertTrue(isinstance(node4.support, float))
+        self.assertEqual(node4.support, 0.95)
 
         # test support values that are negative or scientific notation (not a
         # common scenario but can happen)
         tree = TreeNode.read(['((a,b)-1.23,(c,d)1.23e-4);'])
+        tree.assign_supports()
         node1, node2 = tree.children
-        self.assertEqual(node1.support(), -1.23)
-        self.assertEqual(node2.support(), 0.000123)
+        self.assertEqual(node1.support, -1.23)
+        self.assertEqual(node2.support, 0.000123)
 
-        # test nodes with support and extra label (not a common scenario but
-        # can happen)
+        # test nodes with support and extra label
         tree = TreeNode.read(['((a,b)\'80:X\',(c,d)\'60:Y\');'])
+        tree.assign_supports()
         node1, node2 = tree.children
-        self.assertEqual(node1.support(), 80.0)
-        self.assertEqual(node2.support(), 60.0)
+        self.assertEqual(node1.support, 80)
+        self.assertEqual(node1.name, 'X')
+        self.assertEqual(node2.support, 60)
+        self.assertEqual(node2.name, 'Y')
 
         # test nodes without label, with non-numeric label, and with branch
         # length only
         tree = TreeNode.read(['((a,b),(c,d)x,(e,f):1.0);'])
+        tree.assign_supports()
         for node in tree.children:
-            self.assertIsNone(node.support())
+            self.assertIsNone(node.support)
 
     def test_unpack(self):
         """Unpack an internal node."""
@@ -1409,33 +1456,34 @@ class TreeTests(TestCase):
 
         # unpack nodes with support < 75
         def func(x):
-            return x.support() < 75
+            return x.support < 75
         tree = TreeNode.read(['(((a,b)85,(c,d)78)75,(e,(f,g)64)80);'])
+        tree.assign_supports()
         tree.unpack_by_func(func)
         exp = '(((a,b)85,(c,d)78)75,(e,f,g)80);'
         self.assertEqual(str(tree).rstrip(), exp)
 
         # unpack nodes with support < 85
         tree = TreeNode.read(['(((a,b)85,(c,d)78)75,(e,(f,g)64)80);'])
-        tree.unpack_by_func(lambda x: x.support() < 85)
+        tree.assign_supports()
+        tree.unpack_by_func(lambda x: x.support < 85)
         exp = '((a,b)85,c,d,e,f,g);'
         self.assertEqual(str(tree).rstrip(), exp)
 
         # unpack nodes with support < 0.95
         tree = TreeNode.read(['(((a,b)0.97,(c,d)0.98)1.0,(e,(f,g)0.88)0.96);'])
-        tree.unpack_by_func(lambda x: x.support() < 0.95)
+        tree.assign_supports()
+        tree.unpack_by_func(lambda x: x.support < 0.95)
         exp = '(((a,b)0.97,(c,d)0.98)1.0,(e,f,g)0.96);'
         self.assertEqual(str(tree).rstrip(), exp)
 
         # test a case where there are branch lengths, none support values and
         # node labels
-        def func(x):
-            sup = x.support()
-            return sup is not None and sup < 75
         tree = TreeNode.read(['(((a:1.02,b:0.33)85:0.12,(c:0.86,d:2.23)'
                               '70:3.02)75:0.95,(e:1.43,(f:1.69,g:1.92)64:0.20)'
                               'node:0.35)root;'])
-        tree.unpack_by_func(func)
+        tree.assign_supports()
+        tree.unpack_by_func(lambda x: x.support is not None and x.support < 75)
         exp = ('(((a:1.02,b:0.33)85:0.12,c:3.88,d:5.25)75:0.95,'
                '(e:1.43,f:1.89,g:2.12)node:0.35)root;')
         self.assertEqual(str(tree).rstrip(), exp)
