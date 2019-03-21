@@ -689,8 +689,15 @@ class GrammaredSequence(Sequence, metaclass=GrammaredSequenceMeta):
                 interval_metadata=self.interval_metadata)
 
     @stable(as_of='0.4.1')
-    def to_regex(self):
+    def to_regex(self, within_capture=False):
         """Return regular expression object that accounts for degenerate chars.
+
+        Parameters
+        ----------
+        within_capture : bool
+            If ``True``, format the regex pattern for the sequence into a
+            single capture group. If ``False``, compile the regex pattern as-is
+            with no capture groups.
 
         Returns
         -------
@@ -710,16 +717,25 @@ class GrammaredSequence(Sequence, metaclass=GrammaredSequenceMeta):
         'TGG'
         >>> regex.match('TCG') is None
         True
+        >>> regex = seq.to_regex(within_capture=True)
+        >>> regex.match('TAG').groups(0)
+        ('TAG',)
 
         """
-        regex_string = []
+        regex_parts = []
         for base in str(self):
             if base in self.degenerate_chars:
-                regex_string.append('[{0}]'.format(
+                regex_parts.append('[{0}]'.format(
                     ''.join(self.degenerate_map[base])))
             else:
-                regex_string.append(base)
-        return re.compile(''.join(regex_string))
+                regex_parts.append(base)
+
+        regex_string = ''.join(regex_parts)
+
+        if within_capture:
+            regex_string = '({})'.format(regex_string)
+
+        return re.compile(regex_string)
 
     @stable(as_of='0.4.0')
     def find_motifs(self, motif_type, min_length=1, ignore=None):

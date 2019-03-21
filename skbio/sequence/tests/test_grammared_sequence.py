@@ -600,6 +600,18 @@ class TestGrammaredSequence(TestCase):
         self.assertTrue(all(regex.match(s) is None
                             for s in 'CBA BBA ABB AAA'.split()))
 
+    def test_to_regex_within_capture(self):
+        seq = ExampleGrammaredSequence('XYC')
+        regex = seq.to_regex(within_capture=True)
+
+        for ref in 'ABA BBB CCA'.split():
+            self.assertFalse(any(len(match.groups()) == 1
+                                 for match in regex.finditer(ref)))
+
+        for ref in 'ABC BBC ACC'.split():
+            self.assertTrue(all(len(match.groups()) == 1
+                                for match in regex.finditer(ref)))
+
     def test_find_motifs_no_motif(self):
         seq = ExampleMotifsTester("ABCABCABC")
         with self.assertRaises(ValueError) as cm:
