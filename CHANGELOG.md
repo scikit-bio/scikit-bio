@@ -48,7 +48,7 @@
 
 * This version is now compatible with NumPy >= 1.9.2 and Pandas >= 0.23. ([#1627](https://github.com/biocore/scikit-bio/pull/1627))
 
-* `skbio.diversity.beta.pw_distances` now accepts a pandas DataFrame as input
+* `skbio.diversity.beta_diversity` now accepts a pandas DataFrame as input.
 
 ## Version 0.5.4 (2018-08-23)
 
