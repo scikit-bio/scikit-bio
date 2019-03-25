@@ -313,7 +313,7 @@ class GrammaredSequence(Sequence, metaclass=GrammaredSequenceMeta):
 
     @property
     def _motifs(self):
-            return _motifs
+        return _motifs
 
     @overrides(Sequence)
     def __init__(self, sequence, metadata=None, positional_metadata=None,
