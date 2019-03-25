@@ -248,7 +248,7 @@ def partial_beta_diversity(metric, counts, ids, id_pairs, validate=True,
     if metric == 'unweighted_unifrac':
         otu_ids, tree, kwargs = _get_phylogenetic_kwargs(counts, **kwargs)
         metric, counts_by_node = _setup_multiple_unweighted_unifrac(
-                counts, otu_ids=otu_ids, tree=tree, validate=validate)
+            counts, otu_ids=otu_ids, tree=tree, validate=validate)
         counts = counts_by_node
     elif metric == 'weighted_unifrac':
         # get the value for normalized. if it was not provided, it will fall
@@ -257,8 +257,8 @@ def partial_beta_diversity(metric, counts, ids, id_pairs, validate=True,
                                 _normalize_weighted_unifrac_by_default)
         otu_ids, tree, kwargs = _get_phylogenetic_kwargs(counts, **kwargs)
         metric, counts_by_node = _setup_multiple_weighted_unifrac(
-                counts, otu_ids=otu_ids, tree=tree, normalized=normalized,
-                validate=validate)
+            counts, otu_ids=otu_ids, tree=tree, normalized=normalized,
+            validate=validate)
         counts = counts_by_node
     elif callable(metric):
         metric = functools.partial(metric, **kwargs)
@@ -291,7 +291,7 @@ def beta_diversity(metric, counts, ids=None, validate=True, pairwise_func=None,
         and the scikit-bio functions linked under *See Also* for available
         metrics. Passing metrics as a strings is preferable as this often
         results in an optimized version of the metric being used.
-    counts : 2D array_like of ints or floats
+    counts : 2D array_like of ints or floats or 2D pandas DataFrame
         Matrix containing count/abundance data where each row contains counts
         of OTUs in a given sample.
     ids : iterable of strs, optional
@@ -352,7 +352,7 @@ def beta_diversity(metric, counts, ids=None, validate=True, pairwise_func=None,
     if metric == 'unweighted_unifrac':
         otu_ids, tree, kwargs = _get_phylogenetic_kwargs(counts, **kwargs)
         metric, counts_by_node = _setup_multiple_unweighted_unifrac(
-                counts, otu_ids=otu_ids, tree=tree, validate=validate)
+            counts, otu_ids=otu_ids, tree=tree, validate=validate)
         counts = counts_by_node
     elif metric == 'weighted_unifrac':
         # get the value for normalized. if it was not provided, it will fall
@@ -361,8 +361,8 @@ def beta_diversity(metric, counts, ids=None, validate=True, pairwise_func=None,
                                 _normalize_weighted_unifrac_by_default)
         otu_ids, tree, kwargs = _get_phylogenetic_kwargs(counts, **kwargs)
         metric, counts_by_node = _setup_multiple_weighted_unifrac(
-                counts, otu_ids=otu_ids, tree=tree, normalized=normalized,
-                validate=validate)
+            counts, otu_ids=otu_ids, tree=tree, normalized=normalized,
+            validate=validate)
         counts = counts_by_node
     elif callable(metric):
         metric = functools.partial(metric, **kwargs)

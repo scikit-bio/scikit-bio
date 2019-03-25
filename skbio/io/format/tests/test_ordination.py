@@ -165,8 +165,8 @@ class OrdinationResultsReaderWriterTests(OrdinationTestData):
         site_ids = ['Site0', 'Site1', 'Site2', 'Site3', 'Site4', 'Site5',
                     'Site6', 'Site7', 'Site8', 'Site9']
         eigvals = pd.Series([25.8979540892, 14.9825779819, 8.93784077262,
-                            6.13995623072, 1.68070536498, 0.57735026919,
-                            0.275983624351], axes_ids)
+                             6.13995623072, 1.68070536498, 0.57735026919,
+                             0.275983624351], axes_ids)
         species = pd.DataFrame(np.loadtxt(
             get_data_path('ordination_exp_Ordination_RDA_species')),
             index=species_ids, columns=axes_ids)

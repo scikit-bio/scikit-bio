@@ -70,13 +70,13 @@ class TestStockholmSniffer(unittest.TestCase):
             'stockholm_multi_line_tree_no_id',
             'stockholm_multi_line_tree_with_id',
             'stockholm_multiple_multi_line_trees'
-            ]]
+        ]]
 
         self.negatives = [get_data_path(e) for e in [
             'stockholm_missing_header',
             'empty',
             'whitespace_only'
-            ]]
+        ]]
 
     def test_positives(self):
         for fp in self.positives:
@@ -529,8 +529,8 @@ class TestStockholmWriter(unittest.TestCase):
                                                                      'TGG'
                                                                      'C'))]))],
                          metadata=OrderedDict([('NM', 'Kestrel Gorlick'),
-                                              ('DT', 'February 11, 2016'),
-                                              ('FN', 'Writer test file')]),
+                                               ('DT', 'February 11, 2016'),
+                                               ('FN', 'Writer test file')]),
                          positional_metadata=OrderedDict([('AS_cons',
                                                            list('CGTTCGTTCTAAC'
                                                                 'AATTCCA')),
@@ -814,7 +814,7 @@ class TestStockholmWriter(unittest.TestCase):
         ).T
 
         msa = TabularMSA([DNA('CGTCAATCTCGAACT',
-                          positional_metadata=pos_metadata_dataframe)],
+                              positional_metadata=pos_metadata_dataframe)],
                          index=['seq1'])
         with self.assertRaisesRegex(StockholmFormatError,
                                     r'Sequence-specific positional metadata.*'
