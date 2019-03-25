@@ -18,6 +18,7 @@
 
 ### Miscellaneous
 
+* `skbio.diversity.beta_diversity` now accepts a pandas DataFrame as input.
 
 ## Version 0.5.5 (2018-12-10)
 
@@ -49,8 +50,6 @@
 * The numpy docs are deprecated in favor of [Napoleon](http://www.sphinx-doc.org/en/master/usage/extensions/napoleon.html) ([#1629](https://github.com/biocore/scikit-bio/pull/1629))
 
 * This version is now compatible with NumPy >= 1.9.2 and Pandas >= 0.23. ([#1627](https://github.com/biocore/scikit-bio/pull/1627))
-
-* `skbio.diversity.beta_diversity` now accepts a pandas DataFrame as input.
 
 ## Version 0.5.4 (2018-08-23)
 
