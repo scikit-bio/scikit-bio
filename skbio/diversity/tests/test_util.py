@@ -10,6 +10,7 @@ import io
 from unittest import TestCase, main
 
 import numpy as np
+import pandas as pd
 import numpy.testing as npt
 
 from skbio import TreeNode
@@ -93,6 +94,14 @@ class ValidationTests(TestCase):
         obs = _validate_counts_matrix(np.array([[], []], dtype=int))
         npt.assert_array_equal(obs[0], np.array([]))
         npt.assert_array_equal(obs[1], np.array([]))
+
+    def test_validate_counts_matrix_pandas(self):
+        obs = _validate_counts_matrix(pd.DataFrame([[0, 1, 1, 0, 2],
+                                                    [0, 0, 2, 1, 3],
+                                                    [1, 1, 1, 1, 1]]))
+        npt.assert_array_equal(obs[0], np.array([0, 1, 1, 0, 2]))
+        npt.assert_array_equal(obs[1], np.array([0, 0, 2, 1, 3]))
+        npt.assert_array_equal(obs[2], np.array([1, 1, 1, 1, 1]))
 
     def test_validate_counts_matrix_suppress_cast(self):
         # suppress_cast is passed through to _validate_counts_vector
