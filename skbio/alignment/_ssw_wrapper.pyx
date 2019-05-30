@@ -314,7 +314,6 @@ cdef class AlignmentStructure:
 
         """
         if self.query_sequence:
-         #   print (self.query_begin)
             return self._get_aligned_sequence(self.query_sequence,
                                               self._tuples_from_cigar(),
                                               self.query_begin, self.query_end,
@@ -337,7 +336,6 @@ cdef class AlignmentStructure:
 
         """
         if self.target_sequence:
-        #    print (self.target_begin)
             return self._get_aligned_sequence(self.target_sequence,
                                               self._tuples_from_cigar(),
                                               self.target_begin,
@@ -396,7 +394,6 @@ cdef class AlignmentStructure:
     def _tuples_from_cigar(self):
         tuples = []
         length_stack = []
-      #  print (self.cigar)
         for character in self.cigar:
             if character.isdigit():
                 length_stack.append(character)
