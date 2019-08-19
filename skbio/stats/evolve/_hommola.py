@@ -126,8 +126,8 @@ def hommola_cospeciation(host_dist, par_dist, interaction, permutations=999):
 
     >>> corr_coeff, p_value, perm_stats = hommola_cospeciation(
     ...     hdist, pdist, interaction, permutations=99)
-    >>> corr_coeff
-    0.83170965463247903
+    >>> round(corr_coeff, 8)
+    0.83171097
 
     In this case, the host distances have a fairly strong positive correlation
     with the symbiont distances. However, this may also reflect structure

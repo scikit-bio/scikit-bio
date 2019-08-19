@@ -84,8 +84,8 @@ Now, let's use random sampling to estimate the power of our test on
 the first distribution.
 
 >>> samples = [ind, dep]
->>> f(samples)
-3.6459452596563003e-08
+>>> round(f(samples), 6)
+3.645945e-08
 
 In `subsample_power`, we can maintain a paired relationship between samples
 by setting `draw_mode` to "matched". We can also set our critical value, so
