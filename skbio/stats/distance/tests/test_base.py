@@ -91,24 +91,24 @@ class DissimilarityMatrixTests(DissimilarityMatrixTestData):
             self.dm_3x3.within(['x', 'a'])
 
     def test_between(self):
-        exp = pd.DataFrame([['b', 'a', 5],
-                            ['b', 'c', 6],
-                            ['b', 'e', 8],
-                            ['d', 'a', 4],
-                            ['d', 'c', 6],
-                            ['d', 'e', 7]],
+        exp = pd.DataFrame([['b', 'a', 5.],
+                            ['b', 'c', 6.],
+                            ['b', 'e', 8.],
+                            ['d', 'a', 4.],
+                            ['d', 'c', 6.],
+                            ['d', 'e', 7.]],
                            columns=['i', 'j', 'value'])
 
         obs = self.dm_5x5.between(['b', 'd'], ['a', 'c', 'e'])
         pdt.assert_frame_equal(obs, exp)
 
     def test_between_order_stability(self):
-        exp = pd.DataFrame([['b', 'a', 5],
-                            ['b', 'c', 6],
-                            ['b', 'e', 8],
-                            ['d', 'a', 4],
-                            ['d', 'c', 6],
-                            ['d', 'e', 7]],
+        exp = pd.DataFrame([['b', 'a', 5.],
+                            ['b', 'c', 6.],
+                            ['b', 'e', 8.],
+                            ['d', 'a', 4.],
+                            ['d', 'c', 6.],
+                            ['d', 'e', 7.]],
                            columns=['i', 'j', 'value'])
 
         # varying the order of the "i" values, result remains consistent
@@ -122,12 +122,12 @@ class DissimilarityMatrixTests(DissimilarityMatrixTestData):
         pdt.assert_frame_equal(obs, exp)
 
     def test_between_overlap(self):
-        exp = pd.DataFrame([['b', 'a', 5],
-                            ['b', 'c', 6],
-                            ['b', 'e', 8],
-                            ['d', 'a', 4],
-                            ['d', 'c', 6],
-                            ['d', 'e', 7]],
+        exp = pd.DataFrame([['b', 'a', 5.],
+                            ['b', 'd', 7.],
+                            ['b', 'e', 8.],
+                            ['d', 'a', 4.],
+                            ['d', 'd', 0.],
+                            ['d', 'e', 7.]],
                            columns=['i', 'j', 'value'])
 
         # 'd' in i and j overlap
@@ -155,7 +155,10 @@ class DissimilarityMatrixTests(DissimilarityMatrixTestData):
                np.array([1, 3, 4], dtype=int),
                ('b', 'd', 'e'))
         obs = self.dm_5x5._stable_order(['d', 'e', 'b'])
-        self.assertEqual(obs, exp)
+
+        self.assertEqual(obs[0], exp[0])
+        self.assertEqual(obs[2], exp[2])
+        npt.assert_equal(obs[1], exp[1])
 
     def test_init_from_dm(self):
         ids = ['foo', 'bar', 'baz']
