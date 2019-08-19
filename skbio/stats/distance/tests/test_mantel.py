@@ -186,7 +186,7 @@ class MantelTests(MantelTestData):
         for method in self.methods:
             obs = mantel(self.minx, self.minx, method=method,
                          alternative='less')
-            self.assertEqual(obs, (1, 1, 3))
+            npt.assert_almost_equal(obs, (1, 1, 3))
 
         np.random.seed(0)
 
