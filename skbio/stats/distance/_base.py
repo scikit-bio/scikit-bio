@@ -384,7 +384,7 @@ class DissimilarityMatrix(SkbioObject):
         id_order = sorted((self._id_index[i] for i in ids))
         return np.array(id_order, dtype=int)
 
-    @experimental(as_of="0.5.4")
+    @experimental(as_of="0.5.5")
     def within(self, ids):
         """Obtain all the distances among the set of IDs
 
@@ -442,9 +442,9 @@ class DissimilarityMatrix(SkbioObject):
         i_order = self._stable_order(ids)
         return self._subset_to_dataframe(i_order, i_order)
 
-    @experimental(as_of="0.5.4")
+    @experimental(as_of="0.5.5")
     def between(self, from_, to_, allow_overlap=False):
-        """Obtain all the distances among the set of IDs
+        """Obtain the distances between the two groups of IDs
 
         Parameters
         ----------

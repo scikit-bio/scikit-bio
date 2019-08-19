@@ -85,6 +85,8 @@ class DissimilarityMatrixTests(DissimilarityMatrixTestData):
         # test_within
         obs = self.dm_3x3.within(['c', 'a'])
         pdt.assert_frame_equal(obs, exp)
+        obs = self.dm_3x3.within(['a', 'c'])
+        pdt.assert_frame_equal(obs, exp)
 
     def test_within_missing_id(self):
         with self.assertRaisesRegex(MissingIDError, "not found."):
