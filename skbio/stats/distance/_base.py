@@ -428,16 +428,16 @@ class DissimilarityMatrix(SkbioObject):
         ...                           [4, 3, 2, 1, 0]],
         ...                          ['A', 'B', 'C', 'D', 'E'])
         >>> dm.within(['A', 'B', 'C'])
-             i    j    value
-        0    A    A      0.0
-        1    A    B      1.0
-        2    A    C      2.0
-        3    B    A      1.0
-        4    B    B      0.0
-        5    B    C      1.0
-        6    C    A      2.0
-        7    C    B      1.0
-        8    C    C      0.0
+           i  j  value
+        0  A  A    0.0
+        1  A  B    1.0
+        2  A  C    2.0
+        3  B  A    1.0
+        4  B  B    0.0
+        5  B  C    1.0
+        6  C  A    2.0
+        7  C  B    1.0
+        8  C  C    0.0
         """
         ids = set(ids)
         n_ids = len(ids)
@@ -508,13 +508,13 @@ class DissimilarityMatrix(SkbioObject):
         ...                           [4, 3, 2, 1, 0]],
         ...                          ['A', 'B', 'C', 'D', 'E'])
         >>> dm.between(['A', 'B'], ['C', 'D', 'E'])
-             i    j    value
-        0    A    C      2.0
-        1    A    D      3.0
-        2    A    E      4.0
-        3    B    C      1.0
-        4    B    D      2.0
-        5    B    E      3.0
+           i  j  value
+        0  A  C    2.0
+        1  A  D    3.0
+        2  A  E    4.0
+        3  B  C    1.0
+        4  B  D    2.0
+        5  B  E    3.0
         """
         from_ = set(from_)
         to_ = set(to_)
