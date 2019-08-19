@@ -13,6 +13,7 @@ import matplotlib as mpl
 import numpy as np
 import numpy.testing as npt
 import pandas as pd
+import pandas.testing as pdt
 import scipy.spatial.distance
 from IPython.core.display import Image, SVG
 
@@ -130,7 +131,7 @@ class DissimilarityMatrixTests(DissimilarityMatrixTestData):
                            columns=['i', 'j', 'value'])
 
         # 'd' in i and j overlap
-        with self.assertRaisesRegex(KeyError, ("overlap. This constraint can "
+        with self.assertRaisesRegex(KeyError, ("This constraint can "
                                                "removed with "
                                                "allow_overlap=True.")):
             self.dm_5x5.between(['b', 'd'], ['a', 'd', 'e'])
@@ -148,6 +149,13 @@ class DissimilarityMatrixTests(DissimilarityMatrixTestData):
 
         with self.assertRaisesRegex(MissingIDError, "not found."):
             self.dm_3x3.between(['a', 'y'], ['a', 'x', 'c'])
+
+    def test_stable_order(self):
+        exp = ([(1, 'b'), (3, 'd'), (4, 'e')],
+               np.array([1, 3, 4], dtype=int),
+               ('b', 'd', 'e'))
+        obs = self.dm_5x5._stable_order(['d', 'e', 'b'])
+        self.assertEqual(obs, exp)
 
     def test_init_from_dm(self):
         ids = ['foo', 'bar', 'baz']
