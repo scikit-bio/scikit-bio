@@ -239,23 +239,20 @@ class MantelTests(MantelTestData):
         self.assertEqual(obs[2], 24)
 
     def test_no_variation_pearson(self):
-        # Output doesn't match vegan::mantel with method='pearson'. Consider
-        # revising output and this test depending on outcome of
-        # https://github.com/scipy/scipy/issues/3728
         for alt in self.alternatives:
             # test one or both inputs having no variation in their
             # distances
             obs = mantel(self.miny, self.no_variation, method='pearson',
                          alternative=alt)
-            npt.assert_equal(obs, (0.0, 1.0, 3))
+            npt.assert_equal(obs, (np.nan, np.nan, 3))
 
             obs = mantel(self.no_variation, self.miny, method='pearson',
                          alternative=alt)
-            npt.assert_equal(obs, (0.0, 1.0, 3))
+            npt.assert_equal(obs, (np.nan, np.nan, 3))
 
             obs = mantel(self.no_variation, self.no_variation,
                          method='pearson', alternative=alt)
-            npt.assert_equal(obs, (1.0, 1.0, 3))
+            npt.assert_equal(obs, (np.nan, np.nan, 3))
 
     def test_no_variation_spearman(self):
         exp = (np.nan, np.nan, 3)
