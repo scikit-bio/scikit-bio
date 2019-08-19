@@ -392,7 +392,8 @@ class DissimilarityMatrix(SkbioObject):
         Notes
         -----
         Order of the return items is stable, meaning that requesting IDs
-        ['a', 'b'] is equivalent to ['b', 'a'].
+        ['a', 'b'] is equivalent to ['b', 'a']. The order is with respect
+        to the order of the .ids attribute of self.
 
         Example
         -------
@@ -413,7 +414,36 @@ class DissimilarityMatrix(SkbioObject):
         7    C    B      1.0
         8    C    C      0.0
         """
-        pass
+        ids = set(ids)
+        n_ids = len(ids)
+
+        if ids - set(self._id_index):
+            missing = list(ids - set(self._id_index))
+            raise MissingIDError("At least one ID (e.g., '%s') was not "
+                                 "found." % missing[0])
+
+        # establish a stable ordering, and cache both the positions and label
+        # of each ID in the stable order.
+        id_order = sorted(((self._id_index[i], i) for i in ids))
+        id_indices = np.array([idx for idx, _ in id_order], dtype=int)
+        id_labels = [id_ for _, id_ in id_order]
+
+        i = []
+        j = []
+        values = []
+        for idx, id_ in id_order:
+            i.extend([id_] * n_ids)
+            j.extend(id_labels)
+
+            row = self._data[idx]
+            within = row[id_indices]
+            values.append(within)
+
+        i = pd.Series(i, name='i')
+        j = pd.Series(j, name='j')
+        values = pd.Series(np.hstack(values), name='value')
+
+        return pd.concat([i, j, values], axis=1)
 
     @experimental(as_of="0.5.4")
     def between(self, from_, to_, allow_overlap=False):
@@ -446,7 +476,8 @@ class DissimilarityMatrix(SkbioObject):
         Notes
         -----
         Order of the return items is stable, meaning that requesting IDs
-        ['a', 'b'] is equivalent to ['b', 'a'].
+        ['a', 'b'] is equivalent to ['b', 'a']. The order is with respect to
+        the .ids attribute of self.
 
         Example
         -------
