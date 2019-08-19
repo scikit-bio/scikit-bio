@@ -366,6 +366,31 @@ class DissimilarityMatrix(SkbioObject):
         filtered_data = self._data[idxs][:, idxs]
         return self.__class__(filtered_data, ids)
 
+    def _stable_order(self, ids):
+        """Obtain a stable ID order with respect to self
+
+        Parameters
+        ----------
+        ids : Iterable of ids
+            The IDs to establish a stable ordering for.
+
+        Returns
+        -------
+        list of tuple
+            [(index, id-label), ...] in ascending order by the index.
+        np.array, dtype=int
+            The corresponding index values
+        tuple of str
+            The corresponding id labels
+        """
+        # establish a stable ordering, and cache both the positions and label
+        # of each ID in the stable order.
+        id_order = sorted(((self._id_index[i], i) for i in ids))
+        id_indices = np.array([idx for idx, _ in id_order], dtype=int)
+        id_labels = tuple([id_ for _, id_ in id_order])
+
+        return id_order, id_indices, id_labels
+
     @experimental(as_of="0.5.4")
     def within(self, ids):
         """Obtain all the distances among the set of IDs
@@ -422,11 +447,7 @@ class DissimilarityMatrix(SkbioObject):
             raise MissingIDError("At least one ID (e.g., '%s') was not "
                                  "found." % missing[0])
 
-        # establish a stable ordering, and cache both the positions and label
-        # of each ID in the stable order.
-        id_order = sorted(((self._id_index[i], i) for i in ids))
-        id_indices = np.array([idx for idx, _ in id_order], dtype=int)
-        id_labels = [id_ for _, id_ in id_order]
+        id_order, id_indices, id_labels = self._stable_order(ids)
 
         i = []
         j = []
@@ -495,7 +516,40 @@ class DissimilarityMatrix(SkbioObject):
         4    B    D      2.0
         5    B    E      3.0
         """
-        pass
+        from_ = set(from_)
+        to_ = set(to_)
+        n_to = len(to_)
+
+        if (from_ | to_) - set(self._id_index):
+            missing = list((from_ | to_) - set(self._id_index))
+            raise MissingIDError("At least one ID (e.g., '%s') was not "
+                                 "found." % missing[0])
+
+        if not allow_overlap and (from_ & to_):
+            missing = list(from_ & to_)
+            raise KeyError("At least one ID overlaps in from_ and to_ "
+                           "(e.g., '%s'). This constraint can removed with "
+                           "allow_overlap=True." % missing[0])
+
+        from_order, _, _ = self._stable_order(from_)
+        _, to_indices, to_labels = self._stable_order(to_)
+
+        i = []
+        j = []
+        values = []
+        for from_idx, from_id in from_order:
+            i.extend([from_id] * n_to)
+            j.extend(to_labels)
+
+            row = self._data[from_idx]
+            between = row[to_indices]
+            values.append(between)
+
+        i = pd.Series(i, name='i')
+        j = pd.Series(j, name='j')
+        values = pd.Series(np.hstack(values), name='value')
+
+        return pd.concat([i, j, values], axis=1)
 
     @experimental(as_of="0.4.0")
     def plot(self, cmap=None, title=""):
