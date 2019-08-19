@@ -34,6 +34,11 @@ class DissimilarityMatrixTestData(TestCase):
         self.dm_2x2_asym_data = [[0.0, 1.0], [-2.0, 0.0]]
         self.dm_3x3_data = [[0.0, 0.01, 4.2], [0.01, 0.0, 12.0],
                             [4.2, 12.0, 0.0]]
+        self.dm_5x5_data = [[0, 1, 2, 3, 4],
+                            [5, 0, 6, 7, 8],
+                            [9, 1, 0, 2, 3],
+                            [4, 5, 6, 0, 7],
+                            [8, 9, 1, 2, 0]]
 
 
 class DissimilarityMatrixTests(DissimilarityMatrixTestData):
@@ -45,6 +50,7 @@ class DissimilarityMatrixTests(DissimilarityMatrixTestData):
         self.dm_2x2_asym = DissimilarityMatrix(self.dm_2x2_asym_data,
                                                ['a', 'b'])
         self.dm_3x3 = DissimilarityMatrix(self.dm_3x3_data, ['a', 'b', 'c'])
+        self.dm_5x5 = DissimilarityMatrix(self.dm_5x5_data, list('abcde'))
 
         self.dms = [self.dm_1x1, self.dm_2x2, self.dm_2x2_asym, self.dm_3x3]
         self.dm_shapes = [(1, 1), (2, 2), (2, 2), (3, 3)]
@@ -56,6 +62,92 @@ class DissimilarityMatrixTests(DissimilarityMatrixTestData):
                                    np.array(self.dm_2x2_data),
                                    np.array(self.dm_2x2_asym_data),
                                    np.array(self.dm_3x3_data)]
+
+    def test_within(self):
+        exp = pd.DataFrame([['a', 'a', 0.0],
+                            ['a', 'c', 4.2],
+                            ['c', 'a', 4.2],
+                            ['c', 'c', 0.0]],
+                           columns=['i', 'j', 'value'])
+        obs = self.dm_3x3.within(['a', 'c'])
+        pdt.assert_frame_equal(obs, exp)
+
+    def test_within_order_stability(self):
+        exp = pd.DataFrame([['a', 'a', 0.0],
+                            ['a', 'c', 4.2],
+                            ['c', 'a', 4.2],
+                            ['c', 'c', 0.0]],
+                           columns=['i', 'j', 'value'])
+
+        # NOTE: order was changed from ['a', 'c'] to ['c', 'a']
+        # but the output order in exp is consistent with
+        # test_within
+        obs = self.dm_3x3.within(['c', 'a'])
+        pdt.assert_frame_equal(obs, exp)
+
+    def test_within_missing_id(self):
+        with self.assertRaisesRegex(MissingIDError, "not found."):
+            self.dm_3x3.within(['x', 'a'])
+
+    def test_between(self):
+        exp = pd.DataFrame([['b', 'a', 5],
+                            ['b', 'c', 6],
+                            ['b', 'e', 8],
+                            ['d', 'a', 4],
+                            ['d', 'c', 6],
+                            ['d', 'e', 7]],
+                           columns=['i', 'j', 'value'])
+
+        obs = self.dm_5x5.between(['b', 'd'], ['a', 'c', 'e'])
+        pdt.assert_frame_equal(obs, exp)
+
+    def test_between_order_stability(self):
+        exp = pd.DataFrame([['b', 'a', 5],
+                            ['b', 'c', 6],
+                            ['b', 'e', 8],
+                            ['d', 'a', 4],
+                            ['d', 'c', 6],
+                            ['d', 'e', 7]],
+                           columns=['i', 'j', 'value'])
+
+        # varying the order of the "i" values, result remains consistent
+        # with the test_between result
+        obs = self.dm_5x5.between(['d', 'b'], ['a', 'c', 'e'])
+        pdt.assert_frame_equal(obs, exp)
+
+        # varying the order of the "j" values, result remains consistent
+        # with the test_between result
+        obs = self.dm_5x5.between(['b', 'd'], ['a', 'e', 'c'])
+        pdt.assert_frame_equal(obs, exp)
+
+    def test_between_overlap(self):
+        exp = pd.DataFrame([['b', 'a', 5],
+                            ['b', 'c', 6],
+                            ['b', 'e', 8],
+                            ['d', 'a', 4],
+                            ['d', 'c', 6],
+                            ['d', 'e', 7]],
+                           columns=['i', 'j', 'value'])
+
+        # 'd' in i and j overlap
+        with self.assertRaisesRegex(KeyError, ("overlap. This constraint can "
+                                               "removed with "
+                                               "allow_overlap=True.")):
+            self.dm_5x5.between(['b', 'd'], ['a', 'd', 'e'])
+
+        obs = self.dm_5x5.between(['b', 'd'], ['a', 'd', 'e'],
+                                  allow_overlap=True)
+        pdt.assert_frame_equal(obs, exp)
+
+    def test_between_missing_id(self):
+        with self.assertRaisesRegex(MissingIDError, "not found."):
+            self.dm_3x3.between(['x', 'a'], ['a', 'b', 'c'])
+
+        with self.assertRaisesRegex(MissingIDError, "not found."):
+            self.dm_3x3.between(['a', 'b'], ['a', 'x', 'c'])
+
+        with self.assertRaisesRegex(MissingIDError, "not found."):
+            self.dm_3x3.between(['a', 'y'], ['a', 'x', 'c'])
 
     def test_init_from_dm(self):
         ids = ['foo', 'bar', 'baz']
