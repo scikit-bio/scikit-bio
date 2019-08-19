@@ -28,6 +28,8 @@
 
 * Added option to return a capture group compiled regex pattern to any class inheriting ``GrammaredSequence`` through the ``to_regex`` method. ([#1431](https://github.com/biocore/scikit-bio/issues/1431))
 
+* Added `Dissimilarity.within` and `.between` to obtain the respective distances and express them as a `DataFrame`.
+
 ### Backward-incompatible changes [stable]
 
 ### Backward-incompatible changes [experimental]
