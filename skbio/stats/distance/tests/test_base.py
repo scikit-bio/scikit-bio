@@ -151,14 +151,22 @@ class DissimilarityMatrixTests(DissimilarityMatrixTestData):
             self.dm_3x3.between(['a', 'y'], ['a', 'x', 'c'])
 
     def test_stable_order(self):
-        exp = ([(1, 'b'), (3, 'd'), (4, 'e')],
-               np.array([1, 3, 4], dtype=int),
-               ('b', 'd', 'e'))
+        exp = np.array([1, 3, 4], dtype=int)
         obs = self.dm_5x5._stable_order(['d', 'e', 'b'])
 
-        self.assertEqual(obs[0], exp[0])
-        self.assertEqual(obs[2], exp[2])
-        npt.assert_equal(obs[1], exp[1])
+        npt.assert_equal(obs, exp)
+
+    def test_subset_to_dataframe(self):
+        exp = pd.DataFrame([['b', 'a', 5.],
+                            ['b', 'd', 7.],
+                            ['b', 'e', 8.],
+                            ['d', 'a', 4.],
+                            ['d', 'd', 0.],
+                            ['d', 'e', 7.]],
+                           columns=['i', 'j', 'value'])
+
+        obs = self.dm_5x5._subset_to_dataframe([1, 3], [0, 3, 4])
+        pdt.assert_frame_equal(obs, exp)
 
     def test_init_from_dm(self):
         ids = ['foo', 'bar', 'baz']

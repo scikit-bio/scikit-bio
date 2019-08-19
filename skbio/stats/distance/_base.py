@@ -376,20 +376,13 @@ class DissimilarityMatrix(SkbioObject):
 
         Returns
         -------
-        list of tuple
-            [(index, id-label), ...] in ascending order by the index.
         np.array, dtype=int
             The corresponding index values
-        tuple of str
-            The corresponding id labels
         """
         # establish a stable ordering, and cache both the positions and label
         # of each ID in the stable order.
-        id_order = sorted(((self._id_index[i], i) for i in ids))
-        id_indices = np.array([idx for idx, _ in id_order], dtype=int)
-        id_labels = tuple([id_ for _, id_ in id_order])
-
-        return id_order, id_indices, id_labels
+        id_order = sorted((self._id_index[i] for i in ids))
+        return np.array(id_order, dtype=int)
 
     @experimental(as_of="0.5.4")
     def within(self, ids):
@@ -440,31 +433,14 @@ class DissimilarityMatrix(SkbioObject):
         8  C  C    0.0
         """
         ids = set(ids)
-        n_ids = len(ids)
 
         if ids - set(self._id_index):
             missing = list(ids - set(self._id_index))
             raise MissingIDError("At least one ID (e.g., '%s') was not "
                                  "found." % missing[0])
 
-        id_order, id_indices, id_labels = self._stable_order(ids)
-
-        i = []
-        j = []
-        values = []
-        for idx, id_ in id_order:
-            i.extend([id_] * n_ids)
-            j.extend(id_labels)
-
-            row = self._data[idx]
-            within = row[id_indices]
-            values.append(within)
-
-        i = pd.Series(i, name='i')
-        j = pd.Series(j, name='j')
-        values = pd.Series(np.hstack(values), name='value')
-
-        return pd.concat([i, j, values], axis=1)
+        i_order = self._stable_order(ids)
+        return self._subset_to_dataframe(i_order, i_order)
 
     @experimental(as_of="0.5.4")
     def between(self, from_, to_, allow_overlap=False):
@@ -518,7 +494,6 @@ class DissimilarityMatrix(SkbioObject):
         """
         from_ = set(from_)
         to_ = set(to_)
-        n_to = len(to_)
 
         if (from_ | to_) - set(self._id_index):
             missing = list((from_ | to_) - set(self._id_index))
@@ -531,19 +506,40 @@ class DissimilarityMatrix(SkbioObject):
                            "(e.g., '%s'). This constraint can removed with "
                            "allow_overlap=True." % missing[0])
 
-        from_order, _, _ = self._stable_order(from_)
-        _, to_indices, to_labels = self._stable_order(to_)
+        i_order = self._stable_order(from_)
+        j_order = self._stable_order(to_)
+
+        return self._subset_to_dataframe(i_order, j_order)
+
+    def _subset_to_dataframe(self, i_indices, j_indices):
+        """Extract a subset of self and express as a DataFrame
+
+        Parameters
+        ----------
+        i_order : np.array of int
+            The matrix rows to extract
+        j_order : np.array of int
+            The matrix columns to extract
+
+        Returns
+        -------
+        pd.DataFrame
+            (i, j, value) representing the source ID ("i"), the target ID ("j")
+            and the distance ("value").
+        """
+        n_to = len(j_indices)
+        j_labels = tuple([self.ids[j] for j in j_indices])
 
         i = []
         j = []
         values = []
-        for from_idx, from_id in from_order:
-            i.extend([from_id] * n_to)
-            j.extend(to_labels)
+        for i_idx in i_indices:
+            i.extend([self.ids[i_idx]] * n_to)
+            j.extend(j_labels)
 
-            row = self._data[from_idx]
-            between = row[to_indices]
-            values.append(between)
+            row = self._data[i_idx]
+            subset = row[j_indices]
+            values.append(subset)
 
         i = pd.Series(i, name='i')
         j = pd.Series(j, name='j')
