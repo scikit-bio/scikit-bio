@@ -366,6 +366,106 @@ class DissimilarityMatrix(SkbioObject):
         filtered_data = self._data[idxs][:, idxs]
         return self.__class__(filtered_data, ids)
 
+    @experimental(as_of="0.5.4")
+    def within(self, ids):
+        """Obtain all the distances among the set of IDs
+
+        Parameters
+        ----------
+        ids : Iterable of str
+            The IDs to obtain distances for. All pairs of distances are
+            returned such that, if provided ['a', 'b', 'c'], the distances
+            for [('a', 'a'), ('a', 'b'), ('a', 'c'), ('b', 'a'), ('b', 'b'),
+            ('b', 'c'), ('c', 'a'), ('c', 'b'), ('c', 'c')] are gathered.
+
+        Returns
+        -------
+        pd.DataFrame
+            (i, j, value) representing the source ID ("i"), the target ID ("j")
+            and the distance ("value").
+
+        Raises
+        ------
+        MissingIDError
+            If an ID(s) specified is not in the dissimilarity matrix.
+
+        Notes
+        -----
+        Order of the return items is stable, meaning that requesting IDs
+        ['a', 'b'] is equivalent to ['b', 'a'].
+
+        Example
+        -------
+        >>> from skbio.stats.distance import DissimilarityMatrix
+        >>> dm = DissimilarityMatrix([[0, 1, 2, 3, 4], [1, 0, 1, 2, 3],
+        ...                           [2, 1, 0, 1, 2], [3, 2, 1, 0, 1],
+        ...                           [4, 3, 2, 1, 0]],
+        ...                          ['A', 'B', 'C', 'D', 'E'])
+        >>> dm.within(['A', 'B', 'C'])
+             i    j    value
+        0    A    A      0.0
+        1    A    B      1.0
+        2    A    C      2.0
+        3    B    A      1.0
+        4    B    B      0.0
+        5    B    C      1.0
+        6    C    A      2.0
+        7    C    B      1.0
+        8    C    C      0.0
+        """
+        pass
+
+    @experimental(as_of="0.5.4")
+    def between(self, from_, to_, allow_overlap=False):
+        """Obtain all the distances among the set of IDs
+
+        Parameters
+        ----------
+        from_ : Iterable of str
+            The IDs to obtain distances from. Distances from all pairs of IDs
+            in from and to will be obtained.
+        to_ : Iterable of str
+            The IDs to obtain distances to. Distances from all pairs of IDs
+            in to and from will be obtained.
+
+        allow_overlap : bool, optional
+            If True, allow overlap in the IDs of from_ and to_ (which would in
+            effect be collecting the within distances). Default is False.
+
+        Returns
+        -------
+        pd.DataFrame
+            (i, j, value) representing the source ID ("i"), the target ID ("j")
+            and the distance ("value").
+
+        Raises
+        ------
+        MissingIDError
+            If an ID(s) specified is not in the dissimilarity matrix.
+
+        Notes
+        -----
+        Order of the return items is stable, meaning that requesting IDs
+        ['a', 'b'] is equivalent to ['b', 'a'].
+
+        Example
+        -------
+        >>> from skbio.stats.distance import DissimilarityMatrix
+        >>> dm = DissimilarityMatrix([[0, 1, 2, 3, 4], [1, 0, 1, 2, 3],
+        ...                           [2, 1, 0, 1, 2], [3, 2, 1, 0, 1],
+        ...                           [4, 3, 2, 1, 0]],
+        ...                          ['A', 'B', 'C', 'D', 'E'])
+        >>> dm.between(['A', 'B'], ['C', 'D', 'E'])
+             i    j    value
+        0    A    C      2.0
+        1    A    D      3.0
+        2    A    E      4.0
+        3    B    C      1.0
+        4    B    D      2.0
+        5    B    E      3.0
+        """
+        pass
+
     @experimental(as_of="0.4.0")
     def plot(self, cmap=None, title=""):
         """Creates a heatmap of the dissimilarity matrix
