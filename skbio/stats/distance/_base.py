@@ -452,7 +452,7 @@ class DissimilarityMatrix(SkbioObject):
             in to and from will be obtained.
 
         allow_overlap : bool, optional
-            If True, allow overlap in the IDs of from_ and to_ (which would in
+            If True, allow overlap in the IDs of from and to (which would in
             effect be collecting the within distances). Default is False.
 
         Returns
