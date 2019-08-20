@@ -123,6 +123,11 @@ class DissimilarityMatrixTests(DissimilarityMatrixTestData):
         obs = self.dm_5x5.between(['b', 'd'], ['a', 'e', 'c'])
         pdt.assert_frame_equal(obs, exp)
 
+        # varying the order of the "i" and "j" values, result remains
+        # consistent with the test_between result
+        obs = self.dm_5x5.between(['d', 'b'], ['a', 'e', 'c'])
+        pdt.assert_frame_equal(obs, exp)
+
     def test_between_overlap(self):
         exp = pd.DataFrame([['b', 'a', 5.],
                             ['b', 'd', 7.],
@@ -167,8 +172,20 @@ class DissimilarityMatrixTests(DissimilarityMatrixTestData):
                             ['d', 'e', 7.]],
                            columns=['i', 'j', 'value'])
 
-        obs = self.dm_5x5._subset_to_dataframe([1, 3], [0, 3, 4])
+        obs = self.dm_5x5._subset_to_dataframe(['b', 'd'], ['a', 'd', 'e'])
         pdt.assert_frame_equal(obs, exp)
+
+        # and the empty edge cases
+        exp = pd.DataFrame([],
+                           columns=['i', 'j', 'value'],
+                           index=pd.RangeIndex(start=0, stop=0))
+
+        obs = self.dm_5x5._subset_to_dataframe([], ['a', 'd', 'e'])
+        pdt.assert_frame_equal(obs, exp, check_dtype=False)
+        obs = self.dm_5x5._subset_to_dataframe(['b', 'd'], [])
+        pdt.assert_frame_equal(obs, exp, check_dtype=False)
+        obs = self.dm_5x5._subset_to_dataframe([], [])
+        pdt.assert_frame_equal(obs, exp, check_dtype=False)
 
     def test_init_from_dm(self):
         ids = ['foo', 'bar', 'baz']

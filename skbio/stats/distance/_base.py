@@ -379,9 +379,7 @@ class DissimilarityMatrix(SkbioObject):
         np.array, dtype=int
             The corresponding index values
         """
-        # establish a stable ordering, and cache both the positions and label
-        # of each ID in the stable order.
-        id_order = sorted((self._id_index[i] for i in ids))
+        id_order = sorted(self._id_index[i] for i in ids)
         return np.array(id_order, dtype=int)
 
     @experimental(as_of="0.5.5")
@@ -433,14 +431,12 @@ class DissimilarityMatrix(SkbioObject):
         8  C  C    0.0
         """
         ids = set(ids)
-
-        if ids - set(self._id_index):
-            missing = list(ids - set(self._id_index))
+        not_present = ids - set(self._id_index)
+        if not_present:
             raise MissingIDError("At least one ID (e.g., '%s') was not "
-                                 "found." % missing[0])
+                                 "found." % not_present.pop())
 
-        i_order = self._stable_order(ids)
-        return self._subset_to_dataframe(i_order, i_order)
+        return self._subset_to_dataframe(ids, ids)
 
     @experimental(as_of="0.5.5")
     def between(self, from_, to_, allow_overlap=False):
@@ -495,31 +491,34 @@ class DissimilarityMatrix(SkbioObject):
         from_ = set(from_)
         to_ = set(to_)
 
-        if (from_ | to_) - set(self._id_index):
-            missing = list((from_ | to_) - set(self._id_index))
+        all_ids = from_ | to_
+        not_present = all_ids - set(self._id_index)
+        if not_present:
             raise MissingIDError("At least one ID (e.g., '%s') was not "
-                                 "found." % missing[0])
+                                 "found." % not_present.pop())
 
+        overlapping = from_ & to_
         if not allow_overlap and (from_ & to_):
-            missing = list(from_ & to_)
             raise KeyError("At least one ID overlaps in from_ and to_ "
                            "(e.g., '%s'). This constraint can removed with "
-                           "allow_overlap=True." % missing[0])
+                           "allow_overlap=True." % overlapping.pop())
 
-        i_order = self._stable_order(from_)
-        j_order = self._stable_order(to_)
+        return self._subset_to_dataframe(from_, to_)
 
-        return self._subset_to_dataframe(i_order, j_order)
-
-    def _subset_to_dataframe(self, i_indices, j_indices):
+    def _subset_to_dataframe(self, i_ids, j_ids):
         """Extract a subset of self and express as a DataFrame
 
         Parameters
         ----------
-        i_order : np.array of int
-            The matrix rows to extract
-        j_order : np.array of int
-            The matrix columns to extract
+        i_order : Iterable of str
+            The "from" IDs.
+        j_order : Iterable of str
+            The "to" IDs.
+
+        Notes
+        -----
+        ID membership is not tested by this private method, and it is assumed
+        the caller has asserted the IDs are present.
 
         Returns
         -------
@@ -527,18 +526,25 @@ class DissimilarityMatrix(SkbioObject):
             (i, j, value) representing the source ID ("i"), the target ID ("j")
             and the distance ("value").
         """
-        n_to = len(j_indices)
+        i_indices = self._stable_order(i_ids)
+        j_indices = self._stable_order(j_ids)
+
+        j_length = len(j_indices)
         j_labels = tuple([self.ids[j] for j in j_indices])
 
         i = []
         j = []
-        values = []
+
+        # np.hstack([]) throws a ValueError. However, np.hstack([np.array([])])
+        # is valid and returns an empty array. Accordingly, an empty array is
+        # included here so that np.hstack works in the event that either i_ids
+        # or j_ids is empty.
+        values = [np.array([])]
         for i_idx in i_indices:
-            i.extend([self.ids[i_idx]] * n_to)
+            i.extend([self.ids[i_idx]] * j_length)
             j.extend(j_labels)
 
-            row = self._data[i_idx]
-            subset = row[j_indices]
+            subset = self._data[i_idx, j_indices]
             values.append(subset)
 
         i = pd.Series(i, name='i')
