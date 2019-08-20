@@ -25,7 +25,6 @@ To install the latest release of scikit-bio::
 
 Alternatively, you can install scikit-bio using ``pip``::
 
-    pip install numpy
     pip install scikit-bio
 
 You can verify your installation by running the scikit-bio unit tests::
