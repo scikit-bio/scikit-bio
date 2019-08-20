@@ -498,7 +498,7 @@ class DissimilarityMatrix(SkbioObject):
                                  "found." % not_present.pop())
 
         overlapping = from_ & to_
-        if not allow_overlap and (from_ & to_):
+        if not allow_overlap and overlapping:
             raise KeyError("At least one ID overlaps in from_ and to_ "
                            "(e.g., '%s'). This constraint can removed with "
                            "allow_overlap=True." % overlapping.pop())
