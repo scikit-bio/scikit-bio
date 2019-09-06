@@ -84,8 +84,8 @@ Now, let's use random sampling to estimate the power of our test on
 the first distribution.
 
 >>> samples = [ind, dep]
->>> round(f(samples), 6)
-3.645945e-08
+>>> print("%.3e" % f(samples))
+3.646e-08
 
 In `subsample_power`, we can maintain a paired relationship between samples
 by setting `draw_mode` to "matched". We can also set our critical value, so
@@ -1017,7 +1017,7 @@ def _identify_sample_groups(meta, cat, control_cats, order, strict_match):
         m_ids = meta.loc[ids].groupby(cat).groups
         # Checks if samples from the cat groups are represented in those
         # Samples
-        id_vecs = [m_ids[o] for o in order if o in
+        id_vecs = [sorted(m_ids[o]) for o in order if o in
                    m_ids]
         # If all groups are represented, the index and results are retained
         if len(id_vecs) == len(order):

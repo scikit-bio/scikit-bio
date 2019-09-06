@@ -395,5 +395,6 @@ def pcoa_biplot(ordination, y):
     ordination.features = pd.DataFrame(data=Uproj,
                                        index=y.columns.copy(),
                                        columns=coordinates.columns.copy())
+    ordination.features.fillna(0.0, inplace=True)
 
     return ordination
