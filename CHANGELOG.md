@@ -30,6 +30,8 @@
 
 * Added `Dissimilarity.within` and `.between` to obtain the respective distances and express them as a `DataFrame`.
 
+* Added Kendall Tau as possible correlation method in the _mantel.py function.
+
 ### Backward-incompatible changes [stable]
 
 ### Backward-incompatible changes [experimental]
