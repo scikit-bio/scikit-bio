@@ -4,6 +4,8 @@
 
 ### Features
 
+* Added `Dissimilarity.within` and `.between` to obtain the respective distances and express them as a `DataFrame`.
+
 ### Backward-incompatible changes [stable]
 
 ### Backward-incompatible changes [experimental]
