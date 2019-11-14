@@ -120,7 +120,8 @@ setup(name='scikit-bio',
           'pandas >= 0.23',
           'scipy >= 0.15.1',
           'hdmedians >= 0.13',
-          'scikit-learn >= 0.19.1'
+          'scikit-learn >= 0.19.1',
+          'h5py'
       ],
       classifiers=classifiers,
       package_data={
