@@ -17,7 +17,12 @@ from skbio.io.format.binary_dm import (_h5py_mat_to_skbio_mat,
                                        _parse_ids, _verify_dimensions,
                                        _bytes_decoder, _passthrough_decoder,
                                        _set_header, _format_header,
-                                       _soft_validate_symmetric, _vlen_dtype)
+                                       _soft_validate_symmetric, _vlen_dtype,
+                                       _binary_dm_sniffer,
+                                       _binary_dm_to_dissimiarlity,
+                                       _binary_dm_to_distance,
+                                       _distance_to_binary_dm,
+                                       _dissimilarity_to_binary_dm)
 
 
 class BinaryMatrixTests(unittest.TestCase):
@@ -73,6 +78,21 @@ class BinaryMatrixTests(unittest.TestCase):
     def tearDown(self):
         for f in self.fh:
             f.close()
+
+    def test_binary_dm_sniffer(fh):
+        pass
+
+    def test_binary_dm_to_dissimilarity(fh):
+        pass
+
+    def test_binary_dm_to_distance(fh):
+        pass
+
+    def test_dissimilarity_to_binary_dm(obj, fh):
+        pass
+
+    def test__distance_to_binary_dm(obj, fh):
+        pass
 
     def test_h5py_mat_to_skbio_mat(self):
         exp = DistanceMatrix(self.mat, self.ids)
