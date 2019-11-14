@@ -105,3 +105,8 @@ class InvalidRegistrationError(Exception):
 class DuplicateRegistrationError(Exception):
     """Raised when a function is already registered in skbio.io"""
     pass
+
+
+class BinaryFormatSymmetryError(FileFormatError):
+    """Raised when symmetry doesn't match object type"""
+    pass
