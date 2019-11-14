@@ -78,22 +78,22 @@ def _binary_dm_sniffer(fh):
 
 @binary_dm.reader(DissimilarityMatrix)
 def _binary_dm_to_dissimilarity(fh):
-    pass
+    return _h5py_mat_to_skbio_mat(fh)
 
 
 @binary_dm.reader(DistanceMatrix)
 def _binary_dm_to_distance(fh):
-    pass
+    return _h5py_mat_to_skbio_mat(fh)
 
 
 @binary_dm.writer(DissimilarityMatrix)
 def _dissimilarity_to_binary_dm(obj, fh):
-    pass
+    return _skbio_mat_to_h5py_mat(fh)
 
 
 @binary_dm.writer(DistanceMatrix)
 def _distance_to_binary_dm(obj, fh):
-    pass
+    return _skbio_mat_to_h5py_mat(fh)
 
 
 def _h5py_mat_to_skbio_mat(cls, fh):

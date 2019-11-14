@@ -121,7 +121,7 @@ setup(name='scikit-bio',
           'scipy >= 0.15.1',
           'hdmedians >= 0.13',
           'scikit-learn >= 0.19.1',
-          'h5py'
+          'h5py >= 2.9.0'
       ],
       classifiers=classifiers,
       package_data={
