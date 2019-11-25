@@ -694,7 +694,7 @@ class TestAlignmentStructure(TestSSW):
                 'begin': 4,
                 'end_after_cigar': 2,
                 'gap_type': 'I',
-                'expected': "5678---9abcdefghijklmnop"
+                'expected': "5678---9abcdefghijklmnopq"
             },
             {
                 'cigar_tuples': [
@@ -712,7 +712,7 @@ class TestAlignmentStructure(TestSSW):
                 'begin': 0,
                 'end_after_cigar': 5,
                 'gap_type': 'I',
-                'expected': "1---2345678"
+                'expected': "123456789ab---cdefghi"
             },
             {
                 'cigar_tuples': [
@@ -721,7 +721,7 @@ class TestAlignmentStructure(TestSSW):
                 'begin': 3,
                 'end_after_cigar': 0,
                 'gap_type': 'D',
-                'expected': "----------456"
+                'expected': "----------456789"
             },
             {
                 'cigar_tuples': [
@@ -731,7 +731,7 @@ class TestAlignmentStructure(TestSSW):
                 'begin': 4,
                 'end_after_cigar': 3,
                 'gap_type': 'I',
-                'expected': "-5678---9abcdefg--hijklm-nop"
+                'expected': "-5678---9abcdefghijklmnop--qrstuv-wxy"
             }
         ]
         for test in tests:
@@ -742,7 +742,8 @@ class TestAlignmentStructure(TestSSW):
             # verify interface of `end_after_cigar` to cancel this range effect
             # out.
             end = test['end_after_cigar'] - 1 + test['begin'] + \
-                sum([le if t == 'M' else 0 for le, t in test['cigar_tuples']])
+                sum(le if t != test['gap_type'] else 0
+                    for le, t in test['cigar_tuples'])
             self.assertEqual(test['expected'],
                              AlignmentStructure._get_aligned_sequence(
                                  mock_object, generic_sequence,
@@ -752,7 +753,7 @@ class TestAlignmentStructure(TestSSW):
     def test_aligned_query_target_sequence(self):
         query = StripedSmithWaterman("AGGGTAATTAGGCGTGTTCACCTA")
         alignment = query("AGTCGAAGGGTAATATAGGCGTGTCACCTA")
-        self.assertEqual("AGGGTAATATAGGCGT-GTCACCTA",
+        self.assertEqual("AGGGTAATATAGGCGTG-TCACCTA",
                          alignment.aligned_target_sequence)
         self.assertEqual("AGGGTAAT-TAGGCGTGTTCACCTA",
                          alignment.aligned_query_sequence)

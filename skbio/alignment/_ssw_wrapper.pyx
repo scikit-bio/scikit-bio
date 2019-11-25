@@ -372,16 +372,13 @@ cdef class AlignmentStructure:
         seq = sequence[begin:end + 1]
         index = 0
         for length, mid in tuple_cigar:
-            if mid == 'M':
-                aligned_sequence += [seq[i]
-                                     for i in range(index, length + index)]
-                index += length
-            elif mid == gap_type:
-                aligned_sequence += (['-'] * length)
+            if mid == gap_type:
+                aligned_sequence += ['-' * length]
             else:
-                pass
+                aligned_sequence += [seq[index:index + length]]
+                index += length
         # Our sequence end is sometimes beyond the cigar:
-        aligned_sequence += [seq[i] for i in range(index, end - begin + 1)]
+        aligned_sequence += [seq[index:end - begin + 1]]
         # Revert our index scheme to the original (2/2)
         self.set_zero_based(orig_z_base)
         return "".join(aligned_sequence)

@@ -4,6 +4,8 @@
 
 ### Features
 
+* Added `Dissimilarity.within` and `.between` to obtain the respective distances and express them as a `DataFrame`.
+
 ### Backward-incompatible changes [stable]
 
 ### Backward-incompatible changes [experimental]
@@ -11,6 +13,8 @@
 ### Performance enhancements
 
 ### Bug fixes
+
+* Corrected a criticial bug in `skbio.alignment.StripedSmithWaterman`/`skbio.alignment.local_pairwise_align_ssw` which would cause the formatting of the aligned sequences to misplace gap characters by the number of gap characters present in the opposing aligned sequence up to that point. This was caused by a faulty implementation of CIGAR string parsing, see [#1679](https://github.com/biocore/scikit-bio/pull/1679) for full details.
 
 ### Deprecated functionality [stable]
 
@@ -30,7 +34,7 @@
 
 * Added `Dissimilarity.within` and `.between` to obtain the respective distances and express them as a `DataFrame`.
 
-* Added Kendall Tau as possible correlation method in the _mantel.py function.
+* Added Kendall Tau as possible correlation method in the _mantel.py function and to the list of tested methods in the test_mantel.py script.
 
 ### Backward-incompatible changes [stable]
 
