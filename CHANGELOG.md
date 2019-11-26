@@ -4,15 +4,23 @@
 
 ### Features
 
-* Added `Dissimilarity.within` and `.between` to obtain the respective distances and express them as a `DataFrame`.
+* Added option to return a capture group compiled regex pattern to any class inheriting ``GrammaredSequence`` through the ``to_regex`` method. ([#1431](https://github.com/biocore/scikit-bio/issues/1431))
+
+* Added `Dissimilarity.within` and `.between` to obtain the respective distances and express them as a `DataFrame`. ([#1662](https://github.com/biocore/scikit-bio/pull/1662))
 
 ### Backward-incompatible changes [stable]
 
 ### Backward-incompatible changes [experimental]
 
+* Changed `skbio.tree.TreeNode.support` from a method to a property.
+* Added `assign_supports` method to `skbio.tree.TreeNode` to extract branch support values from node labels.
+* Modified the way a node's label is printed: `support:name` if both exist, or `support` or `name` if either exists.
+
 ### Performance enhancements
 
 ### Bug fixes
+
+* Fixes build errors for newer versions of NumPy, Pandas, and SciPy.
 
 * Corrected a criticial bug in `skbio.alignment.StripedSmithWaterman`/`skbio.alignment.local_pairwise_align_ssw` which would cause the formatting of the aligned sequences to misplace gap characters by the number of gap characters present in the opposing aligned sequence up to that point. This was caused by a faulty implementation of CIGAR string parsing, see [#1679](https://github.com/biocore/scikit-bio/pull/1679) for full details.
 
@@ -29,8 +37,6 @@
 ### Features
 
 * `skbio.stats.composition` now has methods to compute additive log-ratio transformation and inverse additive log-ratio transformation (`alr`, `alr_inv`) as well as a method to build a basis from a sequential binary partition (`sbp_basis`).
-
-* Added option to return a capture group compiled regex pattern to any class inheriting ``GrammaredSequence`` through the ``to_regex`` method. ([#1431](https://github.com/biocore/scikit-bio/issues/1431))
 
 ### Backward-incompatible changes [stable]
 
@@ -80,10 +86,8 @@
 ## Version 0.5.3 (2018-08-07)
 
 ### Features
-* Added `support` property to `skbio.tree.TreeNode` to store the branch support value.
-* Added `assign_supports` method to `skbio.tree.TreeNode` to extract branch support values from node labels.
-* Modified the way a node label is printed. Now it is `support:name` if both exist, or `support` or `name` if either exists.
-* Added `unpack` and `unpack_by_func` methods to `skbio.tree.TreeNode` to unpack one or multiple internal nodes. The "unpack" operation removes an internal node and regrafts its children to its parent while retaining the overall length.
+* Added `unpack` and `unpack_by_func` methods to `skbio.tree.TreeNode` to unpack one or multiple internal nodes. The `unpack` operation removes an internal node and regrafts its children to its parent while retaining the overall length. ([#1572](https://github.com/biocore/scikit-bio/pull/1572))
+* Added `support` to `skbio.tree.TreeNode` to return the support value of a node.
 * Added `permdisp` to `skbio.stats.distance` to test for the homogeniety of groups. ([#1228](https://github.com/biocore/scikit-bio/issues/1228)).
 
 * Added `pcoa_biplot` to `skbio.stats.ordination` to project descriptors into a PCoA plot.
