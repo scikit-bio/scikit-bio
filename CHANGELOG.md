@@ -34,7 +34,7 @@
 
 * Added `Dissimilarity.within` and `.between` to obtain the respective distances and express them as a `DataFrame`.
 
-* Added Kendall Tau as possible correlation method in the _mantel.py function and to the list of tested methods in the test_mantel.py script.
+* Added Kendall Tau as possible correlation method in the `skbio.stats.distance.mantel` function ([#1675](https://github.com/biocore/scikit-bio/issues/1675)).
 
 ### Backward-incompatible changes [stable]
 
