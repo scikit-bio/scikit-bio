@@ -59,7 +59,7 @@ class MantelTests(MantelTestData):
     def setUp(self):
         super(MantelTests, self).setUp()
 
-        self.methods = ('pearson', 'spearman','kendalltau')
+        self.methods = ('pearson', 'spearman', 'kendalltau')
         self.alternatives = ('two-sided', 'greater', 'less')
 
         # No variation in distances. Taken from Figure 10.20(b), pg. 603 in L&L
