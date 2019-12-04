@@ -376,7 +376,7 @@ class TestStripedSmithWaterman(TestSSW):
         # The above is not a strict bound, so lets use an expected align
         # to plug the hole where every align is exactly equal to default
         expected = {
-            'optimal_alignment_score': 51,
+            'optimal_alignment_score': 47,
             'suboptimal_alignment_score': 20,
             'query_begin': 0,
             'query_end': 37,
