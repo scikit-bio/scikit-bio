@@ -8,6 +8,8 @@
 
 * Added `Dissimilarity.within` and `.between` to obtain the respective distances and express them as a `DataFrame`. ([#1662](https://github.com/biocore/scikit-bio/pull/1662))
 
+* Added support for IUPAC amino acid codes U (selenocysteine), O (pyrrolysine), and J (leucine or isoleucine). ([#1576](https://github.com/biocore/scikit-bio/issues/1576)
+
 ### Backward-incompatible changes [stable]
 
 ### Backward-incompatible changes [experimental]
