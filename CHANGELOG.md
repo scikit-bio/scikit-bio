@@ -8,6 +8,8 @@
 
 * Added `Dissimilarity.within` and `.between` to obtain the respective distances and express them as a `DataFrame`. ([#1662](https://github.com/biocore/scikit-bio/pull/1662))
 
+* Added Kendall Tau as possible correlation method in the `skbio.stats.distance.mantel` function ([#1675](https://github.com/biocore/scikit-bio/issues/1675)).
+
 ### Backward-incompatible changes [stable]
 
 ### Backward-incompatible changes [experimental]
@@ -41,8 +43,6 @@
 * Added option to return a capture group compiled regex pattern to any class inheriting ``GrammaredSequence`` through the ``to_regex`` method. ([#1431](https://github.com/biocore/scikit-bio/issues/1431))
 
 * Added `Dissimilarity.within` and `.between` to obtain the respective distances and express them as a `DataFrame`.
-
-* Added Kendall Tau as possible correlation method in the `skbio.stats.distance.mantel` function ([#1675](https://github.com/biocore/scikit-bio/issues/1675)).
 
 ### Backward-incompatible changes [stable]
 
