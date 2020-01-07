@@ -10,6 +10,9 @@
 
 * Added Kendall Tau as possible correlation method in the `skbio.stats.distance.mantel` function ([#1675](https://github.com/biocore/scikit-bio/issues/1675)).
 
+* Added support for IUPAC amino acid codes U (selenocysteine), O (pyrrolysine), and J (leucine or isoleucine). ([#1576](https://github.com/biocore/scikit-bio/issues/1576)
+
+
 ### Backward-incompatible changes [stable]
 
 ### Backward-incompatible changes [experimental]
