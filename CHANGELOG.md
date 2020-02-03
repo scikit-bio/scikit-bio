@@ -34,6 +34,8 @@
 
 * `skbio.diversity.beta_diversity` now accepts a pandas DataFrame as input.
 
+* Avoid pandas 1.0.0 import warning ([#1688](https://github.com/biocore/scikit-bio/issues/1688))
+
 ## Version 0.5.5 (2018-12-10)
 
 ### Features
