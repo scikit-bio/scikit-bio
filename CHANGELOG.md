@@ -12,7 +12,6 @@
 
 * Added support for IUPAC amino acid codes U (selenocysteine), O (pyrrolysine), and J (leucine or isoleucine). ([#1576](https://github.com/biocore/scikit-bio/issues/1576)
 
-
 ### Backward-incompatible changes [stable]
 
 ### Backward-incompatible changes [experimental]
@@ -42,10 +41,6 @@
 ### Features
 
 * `skbio.stats.composition` now has methods to compute additive log-ratio transformation and inverse additive log-ratio transformation (`alr`, `alr_inv`) as well as a method to build a basis from a sequential binary partition (`sbp_basis`).
-
-* Added option to return a capture group compiled regex pattern to any class inheriting ``GrammaredSequence`` through the ``to_regex`` method. ([#1431](https://github.com/biocore/scikit-bio/issues/1431))
-
-* Added `Dissimilarity.within` and `.between` to obtain the respective distances and express them as a `DataFrame`.
 
 ### Backward-incompatible changes [stable]
 
