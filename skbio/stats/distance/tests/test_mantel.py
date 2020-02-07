@@ -59,7 +59,7 @@ class MantelTests(MantelTestData):
     def setUp(self):
         super(MantelTests, self).setUp()
 
-        self.methods = ('pearson', 'spearman')
+        self.methods = ('pearson', 'spearman', 'kendalltau')
         self.alternatives = ('two-sided', 'greater', 'less')
 
         # No variation in distances. Taken from Figure 10.20(b), pg. 603 in L&L
@@ -91,7 +91,8 @@ class MantelTests(MantelTestData):
         for n in (0, 99, 999):
             for alt in self.alternatives:
                 for method, exp in (('pearson', self.exp_x_vs_y),
-                                    ('spearman', 0.5)):
+                                    ('spearman', 0.5),
+                                    ('kendalltau', 0.33333333333333337)):
                     obs = mantel(self.minx, self.miny, method=method,
                                  permutations=n, alternative=alt)[0]
                     self.assertAlmostEqual(obs, exp)
@@ -112,7 +113,8 @@ class MantelTests(MantelTestData):
     def test_zero_permutations(self):
         for alt in self.alternatives:
             for method, exp in (('pearson', self.exp_x_vs_y),
-                                ('spearman', 0.5)):
+                                ('spearman', 0.5),
+                                ('kendalltau', 0.33333333333333337)):
                 obs = mantel(self.minx, self.miny, permutations=0,
                              method=method, alternative=alt)
                 self.assertAlmostEqual(obs[0], exp)
