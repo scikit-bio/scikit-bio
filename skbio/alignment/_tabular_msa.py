@@ -2260,14 +2260,14 @@ class TabularMSA(MetadataMixin, PositionalMetadataMixin, SkbioObject):
             if how == 'left':
                 joined_positional_metadata = pd.concat(
                     [self.positional_metadata,
-                    other.positional_metadata.reindex(
+                     other.positional_metadata.reindex(
                         columns=self.positional_metadata.columns)],
                     ignore_index=True, sort=True)
             elif how == 'right':
                 joined_positional_metadata = pd.concat(
                     [self.positional_metadata.reindex(
                         columns=other.positional_metadata.columns),
-                    other.positional_metadata],
+                     other.positional_metadata],
                     ignore_index=True, sort=True)
             else:
                 joined_positional_metadata = pd.concat(
