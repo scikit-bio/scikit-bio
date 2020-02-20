@@ -167,7 +167,7 @@ def bioenv(distance_matrix, data_frame, columns=None):
 
     # Subset and order the vars data frame to match the IDs in the distance
     # matrix, only keeping the specified columns.
-    vars_df = data_frame.loc[distance_matrix.ids, columns]
+    vars_df = data_frame.reindex(distance_matrix.ids, axis=0).loc[:, columns]
 
     if vars_df.isnull().any().any():
         raise ValueError("One or more IDs in the distance matrix are not "
