@@ -1255,7 +1255,7 @@ def _df_to_vector(distance_matrix, df, column):
     if column not in df:
         raise ValueError("Column '%s' not in DataFrame." % column)
 
-    grouping = df.loc[distance_matrix.ids, column]
+    grouping = df.reindex(distance_matrix.ids, axis=0).loc[:, column]
     if grouping.isnull().any():
         raise ValueError(
             "One or more IDs in the distance matrix are not in the data "

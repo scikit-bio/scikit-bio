@@ -321,7 +321,7 @@ class OrdinationResults(SkbioObject):
             if column not in df:
                 raise ValueError("Column '%s' not in data frame." % column)
 
-            col_vals = df.loc[ids, column]
+            col_vals = df.reindex(ids, axis=0).loc[:, column]
 
             if col_vals.isnull().any():
                 raise ValueError("One or more IDs in the ordination results "
