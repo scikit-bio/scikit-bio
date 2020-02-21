@@ -38,6 +38,10 @@
 
 * Avoid pandas 1.0.0 import warning ([#1688](https://github.com/biocore/scikit-bio/issues/1688))
 
+* Added support for Python 3.8 and dropped support for Python 3.5.
+
+* This version now depends on `scipy >= 1.3` and `pandas >= 1.0`.
+
 ## Version 0.5.5 (2018-12-10)
 
 ### Features
