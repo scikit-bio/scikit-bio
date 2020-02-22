@@ -37,6 +37,7 @@ class NewAuto(autosummary.Autosummary):
                 nice_name = all_cap_re.sub(r'\1_\2', s1).lower()
                 if len(nice_name) > 10:
                     nice_name = ''.join([e[0] for e in nice_name.split('_')])
+
             def fmt(string):
                 count = string.count('%s')
                 return string % tuple([nice_name] * count)
@@ -59,13 +60,26 @@ class NewAuto(autosummary.Autosummary):
                 '__deepcopy__': fmt('copy.deepcopy(%s)'),
             }
             if display_name in specials:
+                prefixes = autosummary.get_import_prefixes_from_env(self.env)
+                obj = autosummary.import_by_name(display_name,
+                                                 prefixes=prefixes)
+                # Filter out any slot_wrappers that work their way in (more below)
+                if type(obj[1]).__name__ == 'wrapper_descriptor':
+                    return None
                 return specials[display_name], '', summary, real_name
             return display_name, sig, summary, real_name
 
-        skip = []
+        skip = ['__init_subclass__']
 
-        return [fix_item(*e) for e in super(NewAuto, self).get_items(names)
-                if e[0] not in skip]
+        items = []
+        for item in super(NewAuto, self).get_items(names):
+            if item[0] not in skip:
+                temp_item = fix_item(*item)
+                # Drop slot_wrappers (see above)
+                if temp_item is not None:
+                    items.append(temp_item)
+
+        return items
 
 autosummary.Autosummary = NewAuto
 
