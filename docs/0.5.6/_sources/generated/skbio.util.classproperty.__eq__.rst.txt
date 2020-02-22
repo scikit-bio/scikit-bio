@@ -1,0 +1,8 @@
+:orphan:
+
+skbio.util.classproperty.__eq__
+===============================
+
+.. currentmodule:: skbio.util
+
+.. automethod:: classproperty.__eq__

@@ -1,0 +1,8 @@
+:orphan:
+
+skbio.sequence.GrammaredSequence.iter_contiguous
+================================================
+
+.. currentmodule:: skbio.sequence
+
+.. automethod:: GrammaredSequence.iter_contiguous

@@ -1,0 +1,8 @@
+:orphan:
+
+skbio.workflow.method.__ne__
+============================
+
+.. currentmodule:: skbio.workflow
+
+.. automethod:: method.__ne__

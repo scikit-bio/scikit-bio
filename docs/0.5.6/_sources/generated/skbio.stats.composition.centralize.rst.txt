@@ -1,0 +1,6 @@
+skbio.stats.composition.centralize
+==================================
+
+.. currentmodule:: skbio.stats.composition
+
+.. autofunction:: centralize

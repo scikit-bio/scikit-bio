@@ -1,0 +1,6 @@
+skbio.io.IOSourceError
+======================
+
+.. currentmodule:: skbio.io
+
+.. autoexception:: IOSourceError

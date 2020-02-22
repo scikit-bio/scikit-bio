@@ -1,0 +1,8 @@
+:orphan:
+
+skbio.alignment.StripedSmithWaterman.__eq__
+===========================================
+
+.. currentmodule:: skbio.alignment
+
+.. automethod:: StripedSmithWaterman.__eq__

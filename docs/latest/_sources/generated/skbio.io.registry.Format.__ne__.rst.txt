@@ -1,0 +1,8 @@
+:orphan:
+
+skbio.io.registry.Format.__ne__
+===============================
+
+.. currentmodule:: skbio.io.registry
+
+.. automethod:: Format.__ne__
