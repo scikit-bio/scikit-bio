@@ -1,0 +1,6 @@
+skbio.diversity.partial\_beta\_diversity
+========================================
+
+.. currentmodule:: skbio.diversity
+
+.. autofunction:: partial_beta_diversity

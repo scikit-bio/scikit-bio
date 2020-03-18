@@ -1,0 +1,8 @@
+:orphan:
+
+skbio.sequence.DNA.concat
+=========================
+
+.. currentmodule:: skbio.sequence
+
+.. automethod:: DNA.concat

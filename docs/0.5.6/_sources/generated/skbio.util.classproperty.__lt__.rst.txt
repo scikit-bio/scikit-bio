@@ -1,0 +1,8 @@
+:orphan:
+
+skbio.util.classproperty.__lt__
+===============================
+
+.. currentmodule:: skbio.util
+
+.. automethod:: classproperty.__lt__

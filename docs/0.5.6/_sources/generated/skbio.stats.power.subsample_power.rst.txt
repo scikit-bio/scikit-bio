@@ -1,0 +1,6 @@
+skbio.stats.power.subsample\_power
+==================================
+
+.. currentmodule:: skbio.stats.power
+
+.. autofunction:: subsample_power

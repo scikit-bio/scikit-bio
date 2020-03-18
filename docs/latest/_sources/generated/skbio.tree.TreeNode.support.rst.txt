@@ -1,8 +1,0 @@
-:orphan:
-
-skbio.tree.TreeNode.support
-===========================
-
-.. currentmodule:: skbio.tree
-
-.. automethod:: TreeNode.support

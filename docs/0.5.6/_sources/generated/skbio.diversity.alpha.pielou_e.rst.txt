@@ -1,0 +1,6 @@
+skbio.diversity.alpha.pielou\_e
+===============================
+
+.. currentmodule:: skbio.diversity.alpha
+
+.. autofunction:: pielou_e

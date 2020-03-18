@@ -1,0 +1,8 @@
+:orphan:
+
+skbio.stats.gradient.CategoryResults.__ne__
+===========================================
+
+.. currentmodule:: skbio.stats.gradient
+
+.. automethod:: CategoryResults.__ne__

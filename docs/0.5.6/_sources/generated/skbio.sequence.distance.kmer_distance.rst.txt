@@ -1,0 +1,6 @@
+skbio.sequence.distance.kmer\_distance
+======================================
+
+.. currentmodule:: skbio.sequence.distance
+
+.. autofunction:: kmer_distance
