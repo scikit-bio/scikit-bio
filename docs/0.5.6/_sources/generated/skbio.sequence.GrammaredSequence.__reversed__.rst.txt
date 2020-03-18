@@ -1,0 +1,8 @@
+:orphan:
+
+skbio.sequence.GrammaredSequence.__reversed__
+=============================================
+
+.. currentmodule:: skbio.sequence
+
+.. automethod:: GrammaredSequence.__reversed__

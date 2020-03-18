@@ -1,0 +1,8 @@
+:orphan:
+
+skbio.sequence.RNA.distance
+===========================
+
+.. currentmodule:: skbio.sequence
+
+.. automethod:: RNA.distance

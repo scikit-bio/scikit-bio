@@ -1,0 +1,8 @@
+:orphan:
+
+skbio.sequence.GrammaredSequence.distance
+=========================================
+
+.. currentmodule:: skbio.sequence
+
+.. automethod:: GrammaredSequence.distance

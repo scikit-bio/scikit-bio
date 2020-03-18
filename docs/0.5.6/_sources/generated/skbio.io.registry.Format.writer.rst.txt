@@ -1,0 +1,8 @@
+:orphan:
+
+skbio.io.registry.Format.writer
+===============================
+
+.. currentmodule:: skbio.io.registry
+
+.. automethod:: Format.writer

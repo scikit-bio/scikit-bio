@@ -1,0 +1,8 @@
+:orphan:
+
+skbio.stats.gradient.GradientANOVA.__lt__
+=========================================
+
+.. currentmodule:: skbio.stats.gradient
+
+.. automethod:: GradientANOVA.__lt__

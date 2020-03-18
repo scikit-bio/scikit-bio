@@ -1,0 +1,8 @@
+:orphan:
+
+skbio.alignment.TabularMSA.__len__
+==================================
+
+.. currentmodule:: skbio.alignment
+
+.. automethod:: TabularMSA.__len__

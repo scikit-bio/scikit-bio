@@ -1,0 +1,8 @@
+:orphan:
+
+skbio.sequence.RNA.complement
+=============================
+
+.. currentmodule:: skbio.sequence
+
+.. automethod:: RNA.complement

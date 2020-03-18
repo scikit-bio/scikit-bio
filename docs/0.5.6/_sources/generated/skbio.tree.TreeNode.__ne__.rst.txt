@@ -1,0 +1,8 @@
+:orphan:
+
+skbio.tree.TreeNode.__ne__
+==========================
+
+.. currentmodule:: skbio.tree
+
+.. automethod:: TreeNode.__ne__

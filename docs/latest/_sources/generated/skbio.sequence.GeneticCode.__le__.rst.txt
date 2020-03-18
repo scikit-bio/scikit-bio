@@ -1,0 +1,8 @@
+:orphan:
+
+skbio.sequence.GeneticCode.__le__
+=================================
+
+.. currentmodule:: skbio.sequence
+
+.. automethod:: GeneticCode.__le__

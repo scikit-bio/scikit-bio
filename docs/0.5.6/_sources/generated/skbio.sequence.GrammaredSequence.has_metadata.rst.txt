@@ -1,0 +1,8 @@
+:orphan:
+
+skbio.sequence.GrammaredSequence.has_metadata
+=============================================
+
+.. currentmodule:: skbio.sequence
+
+.. automethod:: GrammaredSequence.has_metadata

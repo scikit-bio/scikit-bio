@@ -1,0 +1,6 @@
+skbio.io.EMBLFormatError
+========================
+
+.. currentmodule:: skbio.io
+
+.. autoexception:: EMBLFormatError
