@@ -3270,15 +3270,14 @@ class TreeNode(SkbioObject):
         for node in nodes_to_unpack:
             node.unpack()
 
-
     @experimental(as_of="0.5.5-dev")
     def to_networkx(self):
         import networkx as nx
 
-        edges = []
         def get_name(x, i):
             return x.name if hasattr(x, 'name') else f"unnamed_{i}"
 
+        edges = []
         for i, n in enumerate(self.postorder(include_self=False)):
             name = get_name(n, i)
             parent_name = get_name(n.parent, i)
@@ -3309,4 +3308,3 @@ class TreeNode(SkbioObject):
             p, c = e
             node_dict[p].append(node_dict[c])
         return node_dict[root]
-

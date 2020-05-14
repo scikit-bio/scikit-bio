@@ -19,12 +19,6 @@ from skbio.tree import (DuplicateNodeError, NoLengthError,
                         TreeError, MissingNodeError, NoParentError)
 from skbio.util import RepresentationWarning
 
-try:
-    import networkx as nx
-    has_networkx = True
-except:
-    print('networkx not installed')
-    has_networkx = False
 
 class TreeNodeSubclass(TreeNode):
     pass
@@ -1495,7 +1489,6 @@ class TreeTests(TestCase):
         self.assertEqual(str(tree).rstrip(), exp)
 
     def test_to_networkx(self):
-        if not has_networkx: return
 
         tree = TreeNode.read(['(((a,b,f,g)j,c)i,d)r;'])
         # TODO : account for length
@@ -1515,7 +1508,8 @@ class TreeTests(TestCase):
         self.assertListEqual(exp_edges, res_edges)
 
     def test_from_networkx(self):
-        if not has_networkx: return
+        import networkx as nx
+
         edges = [
             ('a', 'j'),
             ('j', 'b'),
