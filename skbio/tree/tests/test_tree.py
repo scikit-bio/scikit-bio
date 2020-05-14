@@ -19,6 +19,12 @@ from skbio.tree import (DuplicateNodeError, NoLengthError,
                         TreeError, MissingNodeError, NoParentError)
 from skbio.util import RepresentationWarning
 
+try:
+    import networkx as nx
+    has_networkx = True
+except:
+    print('networkx not installed')
+    has_networkx = False
 
 class TreeNodeSubclass(TreeNode):
     pass
@@ -1487,6 +1493,43 @@ class TreeTests(TestCase):
         exp = ('(((a:1.02,b:0.33)85:0.12,c:3.88,d:5.25)75:0.95,'
                '(e:1.43,f:1.89,g:2.12)node:0.35)root;')
         self.assertEqual(str(tree).rstrip(), exp)
+
+    def test_to_networkx(self):
+        if not has_networkx: return
+
+        tree = TreeNode.read(['(((a,b,f,g)j,c)i,d)r;'])
+        # TODO : account for length
+        # TODO : account for nodes with missing names
+        exp_edges = [
+            ('a', 'j'),
+            ('j', 'b'),
+            ('j', 'f'),
+            ('j', 'g'),
+            ('j', 'i'),
+            ('i', 'c'),
+            ('i', 'r'),
+            ('r', 'd')
+        ]
+        G = tree.to_networkx()
+        res_edges = list(G.edges())
+        self.assertListEqual(exp_edges, res_edges)
+
+    def test_from_networkx(self):
+        if not has_networkx: return
+        edges = [
+            ('a', 'j'),
+            ('j', 'b'),
+            ('j', 'f'),
+            ('j', 'g'),
+            ('j', 'i'),
+            ('i', 'c'),
+            ('i', 'r'),
+            ('r', 'd')
+        ]
+        G = nx.Graph()
+        G.add_edges_from(edges)
+        tree = TreeNode.from_networkx(G, root='r')
+        self.assertEqual(str(tree), '(((a,b,f,g)j,c)i,d)r;\n')
 
 
 sample = """

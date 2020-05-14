@@ -3269,3 +3269,44 @@ class TreeNode(SkbioObject):
                 nodes_to_unpack.append(node)
         for node in nodes_to_unpack:
             node.unpack()
+
+
+    @experimental(as_of="0.5.5-dev")
+    def to_networkx(self):
+        import networkx as nx
+
+        edges = []
+        def get_name(x, i):
+            return x.name if hasattr(x, 'name') else f"unnamed_{i}"
+
+        for i, n in enumerate(self.postorder(include_self=False)):
+            name = get_name(n, i)
+            parent_name = get_name(n.parent, i)
+
+            # TODO add length
+            edges.append((name, parent_name))
+
+        G = nx.Graph()
+        G.add_edges_from(edges)
+        return G
+
+    @classonlymethod
+    @experimental(as_of="0.5.5-dev")
+    def from_networkx(self, G, root=None):
+        import networkx as nx
+        nodes = list(G.nodes())
+        if root is None:
+            root = nodes[0]
+        dfs = nx.dfs_tree(G, root)
+        if len(dfs.edges()) != len(G.edges()):
+            raise ValueError('Graph `G` cannot be represented as a tree.')
+        edges = list(dfs.edges())
+        # each edge element is of the form are (curr, parent)
+        node_dict = {n: TreeNode(n) for n in nodes}
+        node_dict[root].parent = None
+        # perform depth search traversal
+        for e in edges:
+            p, c = e
+            node_dict[p].append(node_dict[c])
+        return node_dict[root]
+
