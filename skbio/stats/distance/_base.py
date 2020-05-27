@@ -1055,7 +1055,7 @@ class DistanceMatrix(DissimilarityMatrix):
         """
         super(DistanceMatrix, self)._validate(data, ids)
 
-        if (data.T != data).any():
+        if not np.allclose(data.T, data):
             raise DistanceMatrixError(
                 "Data must be symmetric and cannot contain NaNs.")
 
