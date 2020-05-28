@@ -18,6 +18,7 @@ from skbio import DistanceMatrix, TreeNode
 from skbio.tree import (DuplicateNodeError, NoLengthError,
                         TreeError, MissingNodeError, NoParentError)
 from skbio.util import RepresentationWarning
+import networkx as nx
 
 
 class TreeNodeSubclass(TreeNode):
@@ -1489,10 +1490,7 @@ class TreeTests(TestCase):
         self.assertEqual(str(tree).rstrip(), exp)
 
     def test_to_networkx(self):
-
         tree = TreeNode.read(['(((a,b,f,g)j,c)i,d)r;'])
-        # TODO : account for length
-        # TODO : account for nodes with missing names
         exp_edges = [
             ('a', 'j'),
             ('j', 'b'),
@@ -1507,9 +1505,39 @@ class TreeTests(TestCase):
         res_edges = list(G.edges())
         self.assertListEqual(exp_edges, res_edges)
 
-    def test_from_networkx(self):
-        import networkx as nx
+    def test_to_networkx_lengths(self):
+        tree = TreeNode.read(['(((a,b,f,g)j:1,c)i:2,d)r;'])
+        exp_edges = [
+            ('a', 'j'),
+            ('j', 'b'),
+            ('j', 'f'),
+            ('j', 'g'),
+            ('j', 'i'),
+            ('i', 'c'),
+            ('i', 'r'),
+            ('r', 'd')
+        ]
+        G = tree.to_networkx()
+        res_edges = list(G.edges())
+        self.assertListEqual(exp_edges, res_edges)
+        self.assertEqual(G.nodes['j']['length'], 1)
+        self.assertEqual(G.nodes['i']['length'], 2)
 
+    def test_to_networkx_missing_names(self):
+        tree = TreeNode.read(['(((a,b,f,g),c),d);'])
+        exp_edges = [('a', 'unnamed_0'),
+                     ('unnamed_0', 'b'),
+                     ('unnamed_0', 'f'),
+                     ('unnamed_0', 'g'),
+                     ('unnamed_0', 'unnamed_1'),
+                     ('unnamed_1', 'c'),
+                     ('unnamed_1', 'unnamed_2'),
+                     ('unnamed_2', 'd')]
+        G = tree.to_networkx()
+        res_edges = list(G.edges())
+        self.assertListEqual(exp_edges, res_edges)
+
+    def test_from_networkx(self):
         edges = [
             ('a', 'j'),
             ('j', 'b'),
@@ -1524,6 +1552,59 @@ class TreeTests(TestCase):
         G.add_edges_from(edges)
         tree = TreeNode.from_networkx(G, root='r')
         self.assertEqual(str(tree), '(((a,b,f,g)j,c)i,d)r;\n')
+
+    def test_from_networkx_reroot(self):
+        edges = [
+            ('a', 'j'),
+            ('j', 'b'),
+            ('j', 'f'),
+            ('j', 'g'),
+            ('j', 'i'),
+            ('i', 'c'),
+            ('i', 'r'),
+            ('r', 'd')
+        ]
+        G = nx.Graph()
+        G.add_edges_from(edges)
+        tree = TreeNode.from_networkx(G, root='a')
+        self.assertEqual(str(tree), '((b,f,g,(c,(d)r)i)j)a;\n')
+
+    def test_from_networkx_lengths(self):
+        edges = [
+            ('a', 'j'),
+            ('j', 'b'),
+            ('j', 'f'),
+            ('j', 'g'),
+            ('j', 'i'),
+            ('i', 'c'),
+            ('i', 'r'),
+            ('r', 'd')
+        ]
+        G = nx.Graph()
+        G.add_edges_from(edges)
+        G.nodes['i']['length'] = 1
+        G.nodes['j']['length'] = 2
+        tree = TreeNode.from_networkx(G, root='r')
+        self.assertEqual(str(tree), '(((a,b,f,g)j:2,c)i:1,d)r;\n')
+        self.assertEqual(tree.find('i').length, 1)
+        self.assertEqual(tree.find('j').length, 2)
+
+    def test_from_networkx_dag(self):
+        edges = [
+            ('a', 'j'),
+            ('j', 'b'),
+            ('j', 'f'),
+            ('j', 'g'),
+            ('j', 'i'),
+            ('i', 'c'),
+            ('i', 'a'),
+            ('i', 'r'),
+            ('r', 'd')
+        ]
+        G = nx.Graph()
+        G.add_edges_from(edges)
+        with self.assertRaises(ValueError):
+            TreeNode.from_networkx(G, root='r')
 
 
 sample = """

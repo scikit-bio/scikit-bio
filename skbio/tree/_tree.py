@@ -22,6 +22,7 @@ from ._exception import (NoLengthError, DuplicateNodeError, NoParentError,
                          MissingNodeError, TreeError)
 from skbio.util import RepresentationWarning
 from skbio.util._decorator import experimental, classonlymethod
+import networkx as nx
 
 
 def distance_from_r(m1, m2):
@@ -3272,27 +3273,54 @@ class TreeNode(SkbioObject):
 
     @experimental(as_of="0.5.5-dev")
     def to_networkx(self):
-        import networkx as nx
+        """ Converts TreeNode object to a networkx graph object.
 
-        def get_name(x, i):
-            return x.name if hasattr(x, 'name') else f"unnamed_{i}"
+        Returns
+        -------
+        nx.Graph
+        """
+
+        # If there are nodes with missing labels, then give it to them
+        i = 0
+        for n in self.postorder(include_self=True):
+            if n.name is None:
+                n.name = f"unnamed_{i}"
+                i+=1
 
         edges = []
-        for i, n in enumerate(self.postorder(include_self=False)):
-            name = get_name(n, i)
-            parent_name = get_name(n.parent, i)
-
-            # TODO add length
+        for n in self.postorder(include_self=False):
+            name = n.name
+            parent_name = n.parent.name
             edges.append((name, parent_name))
 
         G = nx.Graph()
         G.add_edges_from(edges)
+
+        # add node lengths and supports
+        for n in self.postorder(include_self=False):
+            name = n.name
+            G.nodes[name]['length'] = n.length
+            G.nodes[name]['support'] = n.support
         return G
 
     @classonlymethod
     @experimental(as_of="0.5.5-dev")
     def from_networkx(self, G, root=None):
-        import networkx as nx
+        """ Converts a networkx graph representation to a TreeNode object
+
+        Parameters
+        ----------
+        G : nx.Graph
+            NetworkX graph object.
+        root : str
+            Specified root node.  If this is not specified, it will choose
+            the first node by default.
+
+        Returns
+        -------
+        TreeNode
+        """
+
         nodes = list(G.nodes())
         if root is None:
             root = nodes[0]
@@ -3307,4 +3335,15 @@ class TreeNode(SkbioObject):
         for e in edges:
             p, c = e
             node_dict[p].append(node_dict[c])
-        return node_dict[root]
+        tree = node_dict[root]
+
+        # add lengths / support to tree
+        for n in tree.postorder(include_self=False):
+            name = n.name
+            if 'length' in G.nodes[name]:
+                n.length = G.nodes[name]['length']
+            if 'support' in G.nodes[name]:
+                n.support = G.nodes[name]['support']
+        return tree
+
+
