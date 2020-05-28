@@ -3285,7 +3285,7 @@ class TreeNode(SkbioObject):
         for n in self.postorder(include_self=True):
             if n.name is None:
                 n.name = f"unnamed_{i}"
-                i+=1
+                i += 1
 
         edges = []
         for n in self.postorder(include_self=False):
@@ -3345,5 +3345,3 @@ class TreeNode(SkbioObject):
             if 'support' in G.nodes[name]:
                 n.support = G.nodes[name]['support']
         return tree
-
-
