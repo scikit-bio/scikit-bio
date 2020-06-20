@@ -13,6 +13,8 @@ import platform
 import re
 import ast
 import sys
+import sysconfig
+import subprocess
 
 from setuptools import find_packages, setup
 from setuptools.extension import Extension
@@ -23,6 +25,30 @@ import numpy as np
 if sys.version_info.major != 3:
     sys.exit("scikit-bio can only be used with Python 3. You are currently "
              "running Python %d." % sys.version_info.major)
+
+clang = False
+icc = False
+try:
+    if os.environ['CC'] == "clang":
+        clang = True
+except KeyError:
+    pass
+
+if not clang:
+    try:
+        if subprocess.check_output(
+                ["gcc", "--version"],
+                universal_newlines=True).find("clang") != -1:
+            clang = True
+    except subprocess.CalledProcessError:
+        pass
+
+
+try:
+    if os.environ['CC'] == "icc":
+        icc = True
+except KeyError:
+    pass
 
 # version parsing from __init__ pulled from Flask's setup.py
 # https://github.com/mitsuhiko/flask/blob/master/setup.py
@@ -65,9 +91,14 @@ ext = '.pyx' if USE_CYTHON else '.c'
 # the compilation of the interpreter. See http://bugs.python.org/issue21121 for
 # details. This acts as a workaround until the next Python 3 release -- thanks
 # Wolfgang Maier (wolma) for the workaround!
-ssw_extra_compile_args = ['-Wno-error=declaration-after-statement']
-if sys.platform == 'win32':
-    ssw_extra_compile_args = []
+ssw_extra_compile_args = ['-I.']
+if sys.platform != 'win32':
+    ssw_extra_compile_args.append('-Wno-error=declaration-after-statement')
+
+if icc or sysconfig.get_config_vars()['CC'] == 'icc':
+    ssw_extra_compile_args.extend(['-qopenmp-simd', '-DSIMDE_ENABLE_OPENMP'])
+elif not (clang or sysconfig.get_config_vars()['CC'] == 'clang'):
+    ssw_extra_compile_args.extend(['-fopenmp-simd', '-DSIMDE_ENABLE_OPENMP'])
 
 # Users with i686 architectures have reported that adding this flag allows
 # SSW to be compiled. See https://github.com/biocore/scikit-bio/issues/409 and
