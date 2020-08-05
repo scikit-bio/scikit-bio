@@ -64,6 +64,19 @@ class DissimilarityMatrixTests(DissimilarityMatrixTestData):
                                    np.array(self.dm_2x2_asym_data),
                                    np.array(self.dm_3x3_data)]
 
+    def test_avoid_copy_on_construction(self):
+        # ((data, expect_copy))
+        tests = (([[0, 1], [1, 0]], True),
+                 ([(0, 1), (1, 0)], True),
+                 (((0, 1), (1, 0)), True),
+                 (np.array([[0, 1], [1, 0]], dtype='int'), True),
+                 (np.array([[0, 1], [1, 0]], dtype='float'), False),
+                 (np.array([[0, 1], [1, 0]], dtype='double'), False))
+
+        for data, expect in tests:
+            obj = DissimilarityMatrix(data)
+            self.assertEqual(id(obj.data) != id(data), expect)
+
     def test_within(self):
         exp = pd.DataFrame([['a', 'a', 0.0],
                             ['a', 'c', 4.2],
