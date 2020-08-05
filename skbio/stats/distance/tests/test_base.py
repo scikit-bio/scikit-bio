@@ -71,6 +71,8 @@ class DissimilarityMatrixTests(DissimilarityMatrixTestData):
                  (((0, 1), (1, 0)), True),
                  (np.array([[0, 1], [1, 0]], dtype='int'), True),
                  (np.array([[0, 1], [1, 0]], dtype='float'), False),
+                 (np.array([[0, 1], [1, 0]], dtype=np.float32), False),
+                 (np.array([[0, 1], [1, 0]], dtype=np.float64), False),
                  (np.array([[0, 1], [1, 0]], dtype='double'), False))
 
         for data, expect in tests:
