@@ -75,7 +75,7 @@ References
 
 import h5py
 
-from skbio.io import create_format, BinaryFormatSymmetryError
+from skbio.io import create_format
 from skbio.stats.distance import DissimilarityMatrix, DistanceMatrix
 
 
@@ -130,9 +130,6 @@ def _distance_to_binary_dm(obj, fh):
 
 
 def _h5py_mat_to_skbio_mat(cls, fh):
-    if not issubclass(cls, DistanceMatrix):
-        raise BinaryFormatSymmetryError("Matrix is not symmetric, cannot "
-                                        "construct a DistanceMatrix")
     return cls(fh['matrix'], _parse_ids(fh['order']))
 
 
