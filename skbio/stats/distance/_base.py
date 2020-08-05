@@ -881,7 +881,7 @@ class DissimilarityMatrix(SkbioObject):
             raise DissimilarityMatrixError("Data must be square (i.e., have "
                                            "the same number of rows and "
                                            "columns).")
-        if data.dtype != np.double:
+        if data.dtype not in (np.float32, np.float64):
             raise DissimilarityMatrixError("Data must contain only floating "
                                            "point values.")
         duplicates = find_duplicates(ids)
