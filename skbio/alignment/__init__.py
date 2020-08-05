@@ -87,7 +87,7 @@ Stats:
     sequence count: 2
     position count: 30
 ------------------------------
-ACTAAGGCTCTC-TACCC----CTCTCAGA
+ACTAAGGCTCTCT-ACCCC----TCTCAGA
 ACTAAGGCTC-CTAACCCCCTTTTCTCAGA
 >>> score
 27
@@ -123,12 +123,12 @@ way and finding the aligned sequence representations:
 ...     alignments.append(alignment)
 ...
 >>> print(alignments[0])
-ACTAAGGCT-...
+ACTAAGGCTC...
 ACT-AGGCTC...
 Score: 38
 Length: 30
 >>> print(alignments[0].aligned_query_sequence)
-ACTAAGGCT---CTCTACCCCTCTCAGAGA
+ACTAAGGCTC---TCTACCCCTCTCAGAGA
 >>> print(alignments[0].aligned_target_sequence)
 ACT-AGGCTCCCTTCTACCCCTCTCAGAGA
 

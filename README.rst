@@ -10,7 +10,7 @@ scikit-bio is an open-source, BSD-licensed Python 3 package providing data struc
 To view scikit-bio's documentation, visit `scikit-bio.org
 <http://scikit-bio.org>`__.
 
-**Note:** scikit-bio is no longer compatible with Python 2. scikit-bio is compatible with Python 3.4 and later.
+**Note:** scikit-bio is no longer compatible with Python 2. scikit-bio is compatible with Python 3.6 and later.
 
 scikit-bio is currently in beta. We are very actively developing it, and **backward-incompatible interface changes can and will arise**. To avoid these types of changes being a surprise to our users, our public APIs are decorated to make it clear to users when an API can be relied upon (stable) and when it may be subject to change (experimental). See the `API stability docs <https://github.com/biocore/scikit-bio/blob/master/doc/source/user/api_stability.rst>`_ for more details, including what we mean by *stable* and *experimental* in this context.
 

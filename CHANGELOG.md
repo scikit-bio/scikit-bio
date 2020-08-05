@@ -1,16 +1,32 @@
 # scikit-bio changelog
 
-## Version 0.5.5-dev
+## Version 0.5.6
 
 ### Features
+
+* Added option to return a capture group compiled regex pattern to any class inheriting ``GrammaredSequence`` through the ``to_regex`` method. ([#1431](https://github.com/biocore/scikit-bio/issues/1431))
+
+* Added `Dissimilarity.within` and `.between` to obtain the respective distances and express them as a `DataFrame`. ([#1662](https://github.com/biocore/scikit-bio/pull/1662))
+
+* Added Kendall Tau as possible correlation method in the `skbio.stats.distance.mantel` function ([#1675](https://github.com/biocore/scikit-bio/issues/1675)).
+
+* Added support for IUPAC amino acid codes U (selenocysteine), O (pyrrolysine), and J (leucine or isoleucine). ([#1576](https://github.com/biocore/scikit-bio/issues/1576)
 
 ### Backward-incompatible changes [stable]
 
 ### Backward-incompatible changes [experimental]
 
+* Changed `skbio.tree.TreeNode.support` from a method to a property.
+* Added `assign_supports` method to `skbio.tree.TreeNode` to extract branch support values from node labels.
+* Modified the way a node's label is printed: `support:name` if both exist, or `support` or `name` if either exists.
+
 ### Performance enhancements
 
 ### Bug fixes
+
+* Fixes build errors for newer versions of NumPy, Pandas, and SciPy.
+
+* Corrected a criticial bug in `skbio.alignment.StripedSmithWaterman`/`skbio.alignment.local_pairwise_align_ssw` which would cause the formatting of the aligned sequences to misplace gap characters by the number of gap characters present in the opposing aligned sequence up to that point. This was caused by a faulty implementation of CIGAR string parsing, see [#1679](https://github.com/biocore/scikit-bio/pull/1679) for full details.
 
 ### Deprecated functionality [stable]
 
@@ -20,15 +36,17 @@
 
 * `skbio.diversity.beta_diversity` now accepts a pandas DataFrame as input.
 
+* Avoid pandas 1.0.0 import warning ([#1688](https://github.com/biocore/scikit-bio/issues/1688))
+
+* Added support for Python 3.8 and dropped support for Python 3.5.
+
+* This version now depends on `scipy >= 1.3` and `pandas >= 1.0`.
+
 ## Version 0.5.5 (2018-12-10)
 
 ### Features
 
 * `skbio.stats.composition` now has methods to compute additive log-ratio transformation and inverse additive log-ratio transformation (`alr`, `alr_inv`) as well as a method to build a basis from a sequential binary partition (`sbp_basis`).
-
-* Added option to return a capture group compiled regex pattern to any class inheriting ``GrammaredSequence`` through the ``to_regex`` method. ([#1431](https://github.com/biocore/scikit-bio/issues/1431))
-
-* Added `Dissimilarity.within` and `.between` to obtain the respective distances and express them as a `DataFrame`.
 
 ### Backward-incompatible changes [stable]
 
@@ -78,10 +96,8 @@
 ## Version 0.5.3 (2018-08-07)
 
 ### Features
-* Added `support` property to `skbio.tree.TreeNode` to store the branch support value.
-* Added `assign_supports` method to `skbio.tree.TreeNode` to extract branch support values from node labels.
-* Modified the way a node label is printed. Now it is `support:name` if both exist, or `support` or `name` if either exists.
-* Added `unpack` and `unpack_by_func` methods to `skbio.tree.TreeNode` to unpack one or multiple internal nodes. The "unpack" operation removes an internal node and regrafts its children to its parent while retaining the overall length.
+* Added `unpack` and `unpack_by_func` methods to `skbio.tree.TreeNode` to unpack one or multiple internal nodes. The `unpack` operation removes an internal node and regrafts its children to its parent while retaining the overall length. ([#1572](https://github.com/biocore/scikit-bio/pull/1572))
+* Added `support` to `skbio.tree.TreeNode` to return the support value of a node.
 * Added `permdisp` to `skbio.stats.distance` to test for the homogeniety of groups. ([#1228](https://github.com/biocore/scikit-bio/issues/1228)).
 
 * Added `pcoa_biplot` to `skbio.stats.ordination` to project descriptors into a PCoA plot.

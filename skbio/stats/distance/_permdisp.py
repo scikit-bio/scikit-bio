@@ -9,6 +9,7 @@
 from functools import partial
 
 import numpy as np
+import pandas as pd
 from scipy.stats import f_oneway
 from scipy.spatial.distance import cdist
 
@@ -244,7 +245,7 @@ def _compute_groups(samples, test_type, grouping):
     if test_type == 'centroid':
         centroids = samples.groupby('grouping').aggregate('mean')
     elif test_type == 'median':
-        centroids = samples.groupby('grouping').aggregate(_config_med)
+        centroids = samples.groupby('grouping').apply(_config_med)
 
     for label, df in samples.groupby('grouping'):
         groups.append(cdist(df.values[:, :-1], [centroids.loc[label].values],
@@ -262,4 +263,4 @@ def _config_med(x):
     and transpose the vector to be compatible with hd.geomedian
     """
     X = x.values[:, :-1]
-    return np.array(hd.geomedian(X.T))
+    return pd.Series(np.array(hd.geomedian(X.T)), index=x.columns[:-1])

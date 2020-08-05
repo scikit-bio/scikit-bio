@@ -11,7 +11,7 @@ from itertools import combinations
 import numpy as np
 import pandas as pd
 import scipy.special
-from scipy.stats import pearsonr, spearmanr
+from scipy.stats import pearsonr, spearmanr, kendalltau
 
 from skbio.stats.distance import DistanceMatrix
 from skbio.util._decorator import experimental
@@ -73,7 +73,7 @@ def mantel(x, y, method='pearson', permutations=999, alternative='two-sided',
         `y` are ``array_like``, no reordering is applied and both matrices must
         have the same shape. In either case, `x` and `y` must be at least 3x3
         in size *after* reordering and matching of IDs.
-    method : {'pearson', 'spearman'}
+    method : {'pearson', 'spearman','kendalltau'}
         Method used to compute the correlation between distance matrices.
     permutations : int, optional
         Number of times to randomly permute `x` when assessing statistical
@@ -254,6 +254,8 @@ def mantel(x, y, method='pearson', permutations=999, alternative='two-sided',
         corr_func = pearsonr
     elif method == 'spearman':
         corr_func = spearmanr
+    elif method == 'kendalltau':
+        corr_func = kendalltau
     else:
         raise ValueError("Invalid correlation method '%s'." % method)
 
