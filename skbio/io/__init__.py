@@ -71,7 +71,6 @@ User exceptions and warnings
    QSeqFormatError
    QUALFormatError
    StockholmFormatError
-   BinaryFormatSymmetryError
 
 
 Subpackages
@@ -210,7 +209,7 @@ from ._exception import (UnrecognizedFormatError, FileFormatError,
                          OrdinationFormatError, PhylipFormatError,
                          QSeqFormatError, QUALFormatError,
                          StockholmFormatError, GFF3FormatError,
-                         EMBLFormatError, BinaryFormatSymmetryError)
+                         EMBLFormatError)
 from .registry import write, read, sniff, create_format, io_registry
 from .util import open
 
@@ -233,7 +232,6 @@ __all__ = ['write', 'read', 'sniff', 'open', 'io_registry', 'create_format',
            'PhylipFormatError',
            'QSeqFormatError',
            'QUALFormatError',
-           'BinaryFormatSymmetryError',
            'StockholmFormatError']
 
 
