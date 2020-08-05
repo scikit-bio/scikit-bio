@@ -7,6 +7,9 @@
 # ----------------------------------------------------------------------------
 import unittest
 import io
+import tempfile
+import shutil
+import os
 
 import numpy as np
 import numpy.testing as npt
@@ -17,8 +20,8 @@ from skbio.io.format.binary_dm import (_h5py_mat_to_skbio_mat,
                                        _skbio_mat_to_h5py_mat, _get_header,
                                        _parse_ids, _verify_dimensions,
                                        _bytes_decoder, _passthrough_decoder,
-                                       _set_header, _format_header,
-                                       _soft_validate_symmetric, _vlen_dtype,
+                                       _set_header,
+                                       _vlen_dtype,
                                        _binary_dm_sniffer)
 
 
@@ -29,102 +32,60 @@ class BinaryMatrixTests(unittest.TestCase):
                              [0.2, 0.3, 0]])
         self.ids = ['a', 'b', 'c']
 
-        self.basic_fh = io.BytesIO()
-        self.basic = h5py.File(self.basic_fh)
-        ids = self.basic.create_dataset('ids', shape=(3, ), dtype=_vlen_dtype)
+        self.tempdir = tempfile.TemporaryDirectory()
+
+        self.basic_fname = os.path.join(self.tempdir.name, 'basic')
+        self.basic = h5py.File(self.basic_fname, 'a')
+        ids = self.basic.create_dataset('order', shape=(3, ), dtype=_vlen_dtype)
         ids[:] = self.ids
         self.basic.create_dataset('matrix', data=self.mat)
-        self.basic.attrs['symmetric'] = True
         _set_header(self.basic)
-        self.fh = [self.basic]
+        self.basic.close()
 
-        self.badids_fh = io.BytesIO()
-        self.badids = h5py.File(self.badids_fh)
-        ids = self.badids.create_dataset('ids', shape=(2, ), dtype=_vlen_dtype)
+        self.badids_fname = os.path.join(self.tempdir.name, 'badids')
+        self.badids = h5py.File(self.badids_fname, 'a')
+        ids = self.badids.create_dataset('order', shape=(2, ), dtype=_vlen_dtype)
         ids[:] = ['a', 'b']
         self.badids.create_dataset('matrix', data=self.mat)
-        self.basic.attrs['symmetric'] = True
         _set_header(self.badids)
-        self.fh.append(self.badids)
+        self.badids.close()
 
-        self.noheader = io.BytesIO()
-        self.noheader = h5py.File(self.noheader)
-        ids = self.noheader.create_dataset('ids', shape=(3, ),
+        self.noheader_fname = os.path.join(self.tempdir.name, 'noheader')
+        self.noheader = h5py.File(self.noheader_fname, 'a')
+        ids = self.noheader.create_dataset('order', shape=(3, ),
                                            dtype=_vlen_dtype)
         ids[:] = self.ids
         self.noheader.create_dataset('matrix', data=self.mat)
-        self.noheader.attrs['symmetric'] = True
-        self.fh.append(self.noheader)
-
-        self.matdis_fh = io.BytesIO()
-        self.matdis = np.array([[0, 0.1, 0.2],
-                                [0.2, 0, 0.3],
-                                [0.3, 0.4, 0]])
-        self.dis = h5py.File(self.matdis_fh)
-        ids = self.dis.create_dataset('ids', shape=(3, ), dtype=_vlen_dtype)
-        ids[:] = ['a', 'b', 'c']
-        self.dis.create_dataset('matrix', data=self.matdis)
-        self.dis.attrs['symmetric'] = False
-        _set_header(self.dis)
-        self.fh.append(self.dis)
-
-        self.baddis_fh = io.BytesIO()
-        self.baddis = h5py.File(self.baddis_fh)
-        self.baddis.create_dataset('ids', shape=(3, ), dtype=_vlen_dtype)
-        ids[:] = self.ids
-        self.baddis.create_dataset('matrix', data=self.matdis)
-        self.baddis.attrs['symmetric'] = True
-        _set_header(self.baddis)
-        self.fh.append(self.baddis)
 
     def tearDown(self):
-        for f in self.fh:
-            f.close()
+        shutil.rmtree(self.tempdir.name)     
 
     def test_binary_dm_sniffer(self):
-        self.assertEqual((True, {'symmetric': True}),
-                         _binary_dm_sniffer(self.basic_fh))
+        self.assertEqual((True, {}),
+                         _binary_dm_sniffer(open(self.basic_fname, 'rb')))
         self.assertEqual((False, {}),
-                         _binary_dm_sniffer(self.badids_fh))
+                         _binary_dm_sniffer(open(self.badids_fname, 'rb')))
         self.assertEqual((False, {}),
-                         _binary_dm_sniffer(self.noheader_fh))
-        self.assertEqual((True, {'symmetric': False}),
-                         _binary_dm_sniffer(self.dis_fh))
-        self.assertEqual((False, {}),
-                         _binary_dm_sniffer(self.baddis_fh))
+                         _binary_dm_sniffer(open(self.noheader_fname, 'rb')))
 
     def test_h5py_mat_to_skbio_mat(self):
         exp = DistanceMatrix(self.mat, self.ids)
-        obs = _h5py_mat_to_skbio_mat(DistanceMatrix, self.basic)
-        self.assertEqual(obs, exp)
-
-        exp = DissimilarityMatrix(self.matdis, self.ids)
-        obs = _h5py_mat_to_skbio_mat(DissimilarityMatrix, self.dis)
+        obs = _h5py_mat_to_skbio_mat(DistanceMatrix, 
+                                     h5py.File(self.basic_fname, 'r'))
         self.assertEqual(obs, exp)
 
     def test_skbio_mat_to_h5py_mat(self):
-        fh1 = h5py.File('f1', driver='core', backing_store=False)
-        fh2 = h5py.File('f2', driver='core', backing_store=False)
-        self.fh.append(fh1)
-        self.fh.append(fh2)
+        fh1 = h5py.File('f1', 'a', driver='core', backing_store=False)
 
         mat = DistanceMatrix(self.mat, self.ids)
         _skbio_mat_to_h5py_mat(mat, fh1)
-        npt.assert_equal(fh1['ids'][:], mat.ids)
+        npt.assert_equal(fh1['order'][:], mat.ids)
         npt.assert_equal(fh1['matrix'], mat.data)
 
-        mat = DissimilarityMatrix(self.matdis, self.ids)
-        _skbio_mat_to_h5py_mat(mat, fh2)
-        npt.assert_equal(fh2['ids'][:], mat.ids)
-        npt.assert_equal(fh2['matrix'], mat.data)
-
-    def test_soft_validate_symmetric(self):
-        self.assertTrue(_soft_validate_symmetric(self.basic))
-        self.assertFalse(_soft_validate_symmetric(self.dis))
-
     def test_get_header(self):
-        self.assertEqual(_get_header(self.basic), _format_header)
-        self.assertEqual(_get_header(self.noheader), None)
+        self.assertEqual(_get_header(h5py.File(self.basic_fname, 'r')), 
+                         {'format': b'BDSM', 'version': b'2020.06'})
+        self.assertEqual(_get_header(h5py.File(self.noheader_fname, 'r')), None)
 
     def test_parse_ids(self):
         tests = [(['a', 'b', 'c'], ['a', 'b', 'c']),
@@ -135,8 +96,8 @@ class BinaryMatrixTests(unittest.TestCase):
             self.assertEqual(_parse_ids(test), exp)
 
     def test_verify_dimensions(self):
-        self.assertTrue(_verify_dimensions(self.basic))
-        self.assertFalse(_verify_dimensions(self.badids))
+        self.assertTrue(_verify_dimensions(h5py.File(self.basic_fname, 'r')))
+        self.assertFalse(_verify_dimensions(h5py.File(self.badids_fname, 'r')))
 
     def test_bytes_decoder(self):
         test = [b'', b'a', b'\xc3\xa9\xc3\xb8asd']
@@ -150,14 +111,11 @@ class BinaryMatrixTests(unittest.TestCase):
 
     def test_set_header(self):
         def mock():
-            obj = h5py.File('bung', driver='core', backing_store=False)
+            obj = h5py.File('bung', 'a', driver='core', backing_store=False)
             return obj
 
         m = mock()
-        self.fh.append(m)
         _set_header(m)
-        obs = {k: m.attrs[k] for k in _format_header}
-        self.assertEqual(obs, _format_header)
 
 
 if __name__ == '__main__':

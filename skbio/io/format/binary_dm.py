@@ -4,10 +4,10 @@ Simple binary dissimilarity matrix format (:mod:`skbio.io.format.binary_dm`)
 
 .. currentmodule:: skbio.io.format.binary_dm
 
-The binary dissimlarity matrix format stores numeric square hollow matrix data.
-The values contained can be interpreted as dissimilarities or distances between
-pairs of samples. The format also stores identifiers for each position along
-an axis.
+The Binary DisSimilarity Matrix format (``binary_dm``) encodes a binary
+representation for dissimilarity and distance matrices. The format is
+designed to facilitate rapid random access to individual rows or columns of
+a hollow matrix.
 
 Format Support
 --------------
@@ -24,7 +24,7 @@ Format Support
 Format Specification
 --------------------
 The binary dissimilarity matrix and object identifiers are stored within an
-HDF5 file. Both datatypes are represented by their own datasets. The
+HDF5[1]_ file. Both datatypes are represented by their own datasets. The
 `ids` dataset is of a variable length unicode type, while the
 `matrix` dataset are floating point. The shape of the `ids` is
 `(N,)`, and the shape of the `dissimilarities` is `(N, N)`. The diagonal of
@@ -33,15 +33,36 @@ HDF5 file. Both datatypes are represented by their own datasets. The
 The dissimilarity between `ids[i]` and `ids[j]` is interpreted
 to be the value at `matrix[i, j]`. `i` and `j` are integer indices.
 
-.. note:: This file format is most useful for storing large matrices, or when
-   it is desirable to facilitate random access to the matrix data.
+Required attributes:
 
-Format Parameters
------------------
-The only supported format parameter is ``delimiter``, which defaults to the tab
-character (``'\\t'``). ``delimiter`` is used to separate elements in the file
-format. ``delimiter`` can be specified as a keyword argument when reading from
-or writing to a file.
++-----------+---------+------------------------------+
+|Attribute  |Value    |Description                   |
+|           |type     |                              |
++===========+=========+==============================+
+|format     |string   |A string identifying the file |
+|           |         |as Binary DM format           |
++-----------+---------+------------------------------+
+|version    |string   |The version of the current    |
+|           |         |Binary DM format              |
++-----------+---------+------------------------------+
+|matrix     |float64  |A (N, N) dataset containing   |
+|           |         |the values of the             |
+|           |         |dissimilarity matrix          |
++-----------+---------+------------------------------+
+|order      |string   |A (N,) dataset of the sample  |
+|           |         |IDs, where N is the total     |
+|           |         |number of IDs                 |
++-----------+---------+------------------------------+
+
+.. note:: This file format is most useful for storing large matrices that do
+   not need to be represented in a human-readable format. This format is
+   especially appropriate for facilitating random access to entries in the
+   distance matrix, such as when calculating within and between distances for a
+   subset of samples in a large matrix.
+
+References
+----------
+.. [1] http://www.hdfgroup.org/
 """
 
 # ----------------------------------------------------------------------------
@@ -60,20 +81,33 @@ from skbio.stats.distance import DissimilarityMatrix, DistanceMatrix
 
 
 binary_dm = create_format('binary_dm', encoding='binary')
-
-
-_format_header = {
-    'format': "Binary DisSimilarity Matrix",
-    'version': '2019.7',
-    'url': 'https://github.com/biocore/scikit-bio'
-    }
-
 _vlen_dtype = h5py.special_dtype(vlen=str)
 
 
 @binary_dm.sniffer()
 def _binary_dm_sniffer(fh):
-    pass
+    try:
+        f = h5py.File(fh, 'r')
+    except OSError:
+        return False, {}
+    
+    header = _get_header(f)
+    if header is None:
+        return False, {}
+
+    ids = f.get('order')
+    if ids is None:
+        return False, {}
+
+    mat = f.get('matrix')
+    if mat is None:
+        return False, {}
+
+    n = len(ids)
+    if mat.shape != (n, n):
+        return False, {}
+
+    return True, {}
 
 
 @binary_dm.reader(DissimilarityMatrix)
@@ -97,38 +131,26 @@ def _distance_to_binary_dm(obj, fh):
 
 
 def _h5py_mat_to_skbio_mat(cls, fh):
-    if issubclass(cls, DistanceMatrix):
-        if not fh.attrs['symmetric']:
-            raise BinaryFormatSymmetryError("Matrix is not symmetric, cannot "
-                                            "construct a DistanceMatrix")
-    # a symmetric DissimilarityMatrix is technically okay
-    return cls(fh['matrix'], _parse_ids(fh['ids']))
+    if not issubclass(cls, DistanceMatrix):
+        raise BinaryFormatSymmetryError("Matrix is not symmetric, cannot "
+                                        "construct a DistanceMatrix")
+    return cls(fh['matrix'], _parse_ids(fh['order']))
 
 
 def _skbio_mat_to_h5py_mat(obj, fh):
     _set_header(fh)
 
-    if isinstance(obj, DistanceMatrix):
-        fh.attrs['symmetric'] = True
-    else:
-        fh.attrs['symmetric'] = False
-
-    ids = fh.create_dataset('ids', shape=(len(obj.ids), ), dtype=_vlen_dtype)
+    ids = fh.create_dataset('order', shape=(len(obj.ids), ), dtype=_vlen_dtype)
     ids[:] = obj.ids
     fh.create_dataset('matrix', data=obj.data)
 
-
-def _soft_validate_symmetric(fh):
-    test = fh['matrix'][:5, :5]
-    return np.allclose(np.tril(test), np.tril(test.T))
-
-
 def _get_header(fh):
-    payload = {k: fh.attrs[k] for k in _format_header if k in fh.attrs}
-    if set(payload) != set(_format_header):
+    format_ = fh.get('format')
+    version = fh.get('version')
+    if format is None or version is None:
         return None
     else:
-        return payload
+        return {'format': format_[0], 'version': version[0]}
 
 
 def _parse_ids(ids):
@@ -139,7 +161,9 @@ def _parse_ids(ids):
 
 
 def _verify_dimensions(fh):
-    n = len(fh['ids'])
+    if 'order' not in fh or 'matrix' not in fh:
+        return False
+    n = len(fh['order'])
     return fh['matrix'].shape == (n, n)
 
 
@@ -153,6 +177,5 @@ def _passthrough_decoder(x):
 
 def _set_header(h5grp):
     """Set format spec header information"""
-    for k, v in _format_header.items():
-        h5grp.attrs[k] = v
-
+    h5grp['format'] = [b'BDSM', ]
+    h5grp['version'] = [b'2020.06', ]
