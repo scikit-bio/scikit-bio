@@ -1,5 +1,25 @@
 # scikit-bio changelog
 
+## Version 0.5.6-dev
+
+### Features
+
+* Added support for reading and writing a binary distance matrix object format. ([#1716](https://github.com/biocore/scikit-bio/pull/1716))
+
+### Backward-incompatible changes [stable]
+
+### Backward-incompatible changes [experimental]
+
+### Performance enhancements
+
+### Bug fixes
+
+### Deprecated functionality [stable]
+
+### Deprecated functionality [experimental]
+
+### Miscellaneous
+
 ## Version 0.5.6
 
 ### Features
