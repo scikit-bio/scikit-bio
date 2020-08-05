@@ -35,24 +35,24 @@ to be the value at `matrix[i, j]`. `i` and `j` are integer indices.
 
 Required attributes:
 
-+-----------+---------+------------------------------+
-|Attribute  |Value    |Description                   |
-|           |type     |                              |
-+===========+=========+==============================+
-|format     |string   |A string identifying the file |
-|           |         |as Binary DM format           |
-+-----------+---------+------------------------------+
-|version    |string   |The version of the current    |
-|           |         |Binary DM format              |
-+-----------+---------+------------------------------+
-|matrix     |float64  |A (N, N) dataset containing   |
-|           |         |the values of the             |
-|           |         |dissimilarity matrix          |
-+-----------+---------+------------------------------+
-|order      |string   |A (N,) dataset of the sample  |
-|           |         |IDs, where N is the total     |
-|           |         |number of IDs                 |
-+-----------+---------+------------------------------+
++-----------+---------------------+------------------------------+
+|Attribute  |Value                |Description                   |
+|           |type                 |                              |
++===========+=====================+==============================+
+|format     |string               |A string identifying the file |
+|           |                     |as Binary DM format           |
++-----------+---------------------+------------------------------+
+|version    |string               |The version of the current    |
+|           |                     |Binary DM format              |
++-----------+---------------------+------------------------------+
+|matrix     |float632 or float64  |A (N, N) dataset containing   |
+|           |                     |the values of the             |
+|           |                     |dissimilarity matrix          |
++-----------+---------------------+------------------------------+
+|order      |string               |A (N,) dataset of the sample  |
+|           |                     |IDs, where N is the total     |
+|           |                     |number of IDs                 |
++-----------+---------------------+------------------------------+
 
 .. note:: This file format is most useful for storing large matrices that do
    not need to be represented in a human-readable format. This format is
@@ -74,7 +74,6 @@ References
 # ----------------------------------------------------------------------------
 
 import h5py
-import numpy as np
 
 from skbio.io import create_format, BinaryFormatSymmetryError
 from skbio.stats.distance import DissimilarityMatrix, DistanceMatrix
@@ -90,7 +89,7 @@ def _binary_dm_sniffer(fh):
         f = h5py.File(fh, 'r')
     except OSError:
         return False, {}
-    
+
     header = _get_header(f)
     if header is None:
         return False, {}
@@ -143,6 +142,7 @@ def _skbio_mat_to_h5py_mat(obj, fh):
     ids = fh.create_dataset('order', shape=(len(obj.ids), ), dtype=_vlen_dtype)
     ids[:] = obj.ids
     fh.create_dataset('matrix', data=obj.data)
+
 
 def _get_header(fh):
     format_ = fh.get('format')
