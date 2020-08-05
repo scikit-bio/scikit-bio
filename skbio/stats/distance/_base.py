@@ -96,7 +96,28 @@ class DissimilarityMatrix(SkbioObject):
         if isinstance(data, DissimilarityMatrix):
             ids = data.ids if ids is None else ids
             data = data.data
-        data = np.asarray(data, dtype='float')
+
+        # It is necessary to standardize the representation of the .data
+        # attribute of this object. The input types might be list, tuple,
+        # np.array, or possibly some other object type. Generally, this
+        # normalization of type will require a copy of data. For example,
+        # moving from a Python type representation (e.g., [[0, 1], [1, 0]])
+        # requires casting all of the values to numpy types, which is handled
+        # as an implicit copy via np.asarray. However, these copies are
+        # unnecessary if the data object is already a numpy array. np.asarray
+        # is smart enough to not copy the data, however if a dtype change is
+        # requested it will. The following block of code limits the use of
+        # np.asarray to situations where the data are (a) not already a numpy
+        # array or (b) the data are not a single or double precision numpy
+        # data type.
+        _issue_copy = True
+        if isinstance(data, np.ndarray):
+            if data.dtype in (np.float32, np.float64):
+                _issue_copy = False
+
+        if _issue_copy:
+            data = np.asarray(data, dtype='float')
+
         if data.ndim == 1:
             data = squareform(data, force='tomatrix', checks=False)
         if ids is None:
