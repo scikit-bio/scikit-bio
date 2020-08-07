@@ -2,7 +2,7 @@ pip
 numpy
 scipy
 matplotlib
-pandas
+pandas < 1.0
 pep8
 ipython
 pyflakes
