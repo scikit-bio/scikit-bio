@@ -28,7 +28,7 @@ install:
   - conda info --envs
   - python --version
   - pip install -r ci/pip_requirements.txt
-  - pip install .
+  - pip install . --no-deps
 
 script:
   - WITH_COVERAGE=TRUE make test
