@@ -1,5 +1,27 @@
 # scikit-bio changelog
 
+## Version 0.5.6-dev
+
+### Features
+
+* Added support for `np.float32` with `DissimilarityMatrix` objects.
+
+### Backward-incompatible changes [stable]
+
+### Backward-incompatible changes [experimental]
+
+### Performance enhancements
+
+* Avoid an implicit data copy on construction of `DissimilarityMatrix` objects. 
+
+### Bug fixes
+
+### Deprecated functionality [stable]
+
+### Deprecated functionality [experimental]
+
+### Miscellaneous
+
 ## Version 0.5.6
 
 ### Features
