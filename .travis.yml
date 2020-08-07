@@ -9,7 +9,6 @@ env:
   - CONDA_PY=3.8
   - CONDA_PY=3.7
   - CONDA_PY=3.6 USE_CYTHON=TRUE
-
 before_install:
   - export MPLBACKEND='Agg'
   - if [[ "$TRAVIS_OS_NAME" == "linux" ]]; then wget https://repo.continuum.io/miniconda/Miniconda3-latest-Linux-x86_64.sh -O miniconda.sh; fi
