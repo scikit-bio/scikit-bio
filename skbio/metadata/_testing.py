@@ -715,10 +715,10 @@ class PositionalMetadataMixinTests:
         # array-like objects will fail if wrong size.
         for array_like in (np.array(range(length-1)), range(length-1),
                            np.array(range(length+1)), range(length+1)):
-            with self.assertRaisesRegex(ValueError,
-                                        "Length of values does not match "
-                                        "length of index"):
+            
+            with self.assertRaises(ValueError) as error:
                 obj.positional_metadata['bar'] = array_like
+            self.assertEqual(str(error.exception), 'Length of values ' +  '(' + str(len(array_like)) + ')'  + ' does not match length of index (8)')
 
     def test_positional_metadata_setter_pandas_consumable(self):
         obj = self._positional_metadata_constructor_(3)
