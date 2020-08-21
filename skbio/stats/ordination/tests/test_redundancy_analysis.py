@@ -182,7 +182,8 @@ class TestRDAResults_biplot_score(TestCase):
 
     def test_biplot_score(self):
 
-        rda_ = rda(y=self.Y, x=self.X, scale_Y=False, scaling=1)
+        #rda_ = rda(y=self.Y, x=self.X, scale_Y=False, scaling=1)
+        rda_ = rda(y=self.Y, x=self.X, scale_Y=True, scaling=1)
 
         # Load data as computed with vegan 2.4-3:
         # library(vegan)
