@@ -247,7 +247,7 @@ class TestRDAResults_biplot_score(TestCase):
             proportion_explained=vegan_propexpl,
             eigvals=vegan_eigvals)
 
-        pdt.assert_frame_equal(res_samples, vegan_samples, check_dtype=True)
+        pdt.assert_frame_equal(abs(res_samples), abs(vegan_samples))
         # This scaling constant is required to make skbio comparable to vegan.
         scaling = (rda_.eigvals[0] / rda_.eigvals[:6])
         exp.biplot_scores *= scaling
