@@ -182,8 +182,7 @@ class TestRDAResults_biplot_score(TestCase):
 
     def test_biplot_score(self):
 
-        #rda_ = rda(y=self.Y, x=self.X, scale_Y=False, scaling=1)
-        rda_ = rda(y=self.Y, x=self.X, scale_Y=True, scaling=1)
+        rda_ = rda(y=self.Y, x=self.X, scale_Y=False, scaling=1)
 
         # Load data as computed with vegan 2.4-3:
         # library(vegan)
@@ -228,6 +227,7 @@ class TestRDAResults_biplot_score(TestCase):
         res_samples = rda_.samples.iloc[:, 0:6]
         res_features = rda_.features.iloc[:, 0:6]
 
+
         rda_ = OrdinationResults(
             'RDA', 'Redundancy Analysis',
             samples=res_samples,
@@ -236,6 +236,7 @@ class TestRDAResults_biplot_score(TestCase):
             biplot_scores=rda_.biplot_scores.iloc[:, 0:6],
             proportion_explained=rda_.proportion_explained,
             eigvals=rda_.eigvals)
+
 
         exp = OrdinationResults(
             'RDA', 'Redundancy Analysis',
@@ -246,9 +247,7 @@ class TestRDAResults_biplot_score(TestCase):
             proportion_explained=vegan_propexpl,
             eigvals=vegan_eigvals)
 
-        print(res_samples)
-        print(vegan_samples)
-        pdt.assert_frame_equal(res_samples, vegan_samples)
+        pdt.assert_frame_equal(res_samples, vegan_samples, check_dtype=True)
         # This scaling constant is required to make skbio comparable to vegan.
         scaling = (rda_.eigvals[0] / rda_.eigvals[:6])
         exp.biplot_scores *= scaling
