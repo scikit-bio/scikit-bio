@@ -227,7 +227,6 @@ class TestRDAResults_biplot_score(TestCase):
         res_samples = rda_.samples.iloc[:, 0:6]
         res_features = rda_.features.iloc[:, 0:6]
 
-
         rda_ = OrdinationResults(
             'RDA', 'Redundancy Analysis',
             samples=res_samples,
@@ -253,7 +252,7 @@ class TestRDAResults_biplot_score(TestCase):
         exp.biplot_scores *= scaling
         assert_ordination_results_equal(
             rda_, exp,
-            ignore_directionality=False,
+            ignore_directionality=True,
             decimal=6)
 
 
