@@ -366,6 +366,193 @@ class DissimilarityMatrix(SkbioObject):
         filtered_data = self._data[idxs][:, idxs]
         return self.__class__(filtered_data, ids)
 
+    def _stable_order(self, ids):
+        """Obtain a stable ID order with respect to self
+
+        Parameters
+        ----------
+        ids : Iterable of ids
+            The IDs to establish a stable ordering for.
+
+        Returns
+        -------
+        np.array, dtype=int
+            The corresponding index values
+        """
+        id_order = sorted(self._id_index[i] for i in ids)
+        return np.array(id_order, dtype=int)
+
+    @experimental(as_of="0.5.5")
+    def within(self, ids):
+        """Obtain all the distances among the set of IDs
+
+        Parameters
+        ----------
+        ids : Iterable of str
+            The IDs to obtain distances for. All pairs of distances are
+            returned such that, if provided ['a', 'b', 'c'], the distances
+            for [('a', 'a'), ('a', 'b'), ('a', 'c'), ('b', 'a'), ('b', 'b'),
+            ('b', 'c'), ('c', 'a'), ('c', 'b'), ('c', 'c')] are gathered.
+
+        Returns
+        -------
+        pd.DataFrame
+            (i, j, value) representing the source ID ("i"), the target ID ("j")
+            and the distance ("value").
+
+        Raises
+        ------
+        MissingIDError
+            If an ID(s) specified is not in the dissimilarity matrix.
+
+        Notes
+        -----
+        Order of the return items is stable, meaning that requesting IDs
+        ['a', 'b'] is equivalent to ['b', 'a']. The order is with respect
+        to the order of the .ids attribute of self.
+
+        Example
+        -------
+        >>> from skbio.stats.distance import DissimilarityMatrix
+        >>> dm = DissimilarityMatrix([[0, 1, 2, 3, 4], [1, 0, 1, 2, 3],
+        ...                           [2, 1, 0, 1, 2], [3, 2, 1, 0, 1],
+        ...                           [4, 3, 2, 1, 0]],
+        ...                          ['A', 'B', 'C', 'D', 'E'])
+        >>> dm.within(['A', 'B', 'C'])
+           i  j  value
+        0  A  A    0.0
+        1  A  B    1.0
+        2  A  C    2.0
+        3  B  A    1.0
+        4  B  B    0.0
+        5  B  C    1.0
+        6  C  A    2.0
+        7  C  B    1.0
+        8  C  C    0.0
+        """
+        ids = set(ids)
+        not_present = ids - set(self._id_index)
+        if not_present:
+            raise MissingIDError("At least one ID (e.g., '%s') was not "
+                                 "found." % not_present.pop())
+
+        return self._subset_to_dataframe(ids, ids)
+
+    @experimental(as_of="0.5.5")
+    def between(self, from_, to_, allow_overlap=False):
+        """Obtain the distances between the two groups of IDs
+
+        Parameters
+        ----------
+        from_ : Iterable of str
+            The IDs to obtain distances from. Distances from all pairs of IDs
+            in from and to will be obtained.
+        to_ : Iterable of str
+            The IDs to obtain distances to. Distances from all pairs of IDs
+            in to and from will be obtained.
+
+        allow_overlap : bool, optional
+            If True, allow overlap in the IDs of from and to (which would in
+            effect be collecting the within distances). Default is False.
+
+        Returns
+        -------
+        pd.DataFrame
+            (i, j, value) representing the source ID ("i"), the target ID ("j")
+            and the distance ("value").
+
+        Raises
+        ------
+        MissingIDError
+            If an ID(s) specified is not in the dissimilarity matrix.
+
+        Notes
+        -----
+        Order of the return items is stable, meaning that requesting IDs
+        ['a', 'b'] is equivalent to ['b', 'a']. The order is with respect to
+        the .ids attribute of self.
+
+        Example
+        -------
+        >>> from skbio.stats.distance import DissimilarityMatrix
+        >>> dm = DissimilarityMatrix([[0, 1, 2, 3, 4], [1, 0, 1, 2, 3],
+        ...                           [2, 1, 0, 1, 2], [3, 2, 1, 0, 1],
+        ...                           [4, 3, 2, 1, 0]],
+        ...                          ['A', 'B', 'C', 'D', 'E'])
+        >>> dm.between(['A', 'B'], ['C', 'D', 'E'])
+           i  j  value
+        0  A  C    2.0
+        1  A  D    3.0
+        2  A  E    4.0
+        3  B  C    1.0
+        4  B  D    2.0
+        5  B  E    3.0
+        """
+        from_ = set(from_)
+        to_ = set(to_)
+
+        all_ids = from_ | to_
+        not_present = all_ids - set(self._id_index)
+        if not_present:
+            raise MissingIDError("At least one ID (e.g., '%s') was not "
+                                 "found." % not_present.pop())
+
+        overlapping = from_ & to_
+        if not allow_overlap and overlapping:
+            raise KeyError("At least one ID overlaps in from_ and to_ "
+                           "(e.g., '%s'). This constraint can removed with "
+                           "allow_overlap=True." % overlapping.pop())
+
+        return self._subset_to_dataframe(from_, to_)
+
+    def _subset_to_dataframe(self, i_ids, j_ids):
+        """Extract a subset of self and express as a DataFrame
+
+        Parameters
+        ----------
+        i_order : Iterable of str
+            The "from" IDs.
+        j_order : Iterable of str
+            The "to" IDs.
+
+        Notes
+        -----
+        ID membership is not tested by this private method, and it is assumed
+        the caller has asserted the IDs are present.
+
+        Returns
+        -------
+        pd.DataFrame
+            (i, j, value) representing the source ID ("i"), the target ID ("j")
+            and the distance ("value").
+        """
+        i_indices = self._stable_order(i_ids)
+        j_indices = self._stable_order(j_ids)
+
+        j_length = len(j_indices)
+        j_labels = tuple([self.ids[j] for j in j_indices])
+
+        i = []
+        j = []
+
+        # np.hstack([]) throws a ValueError. However, np.hstack([np.array([])])
+        # is valid and returns an empty array. Accordingly, an empty array is
+        # included here so that np.hstack works in the event that either i_ids
+        # or j_ids is empty.
+        values = [np.array([])]
+        for i_idx in i_indices:
+            i.extend([self.ids[i_idx]] * j_length)
+            j.extend(j_labels)
+
+            subset = self._data[i_idx, j_indices]
+            values.append(subset)
+
+        i = pd.Series(i, name='i')
+        j = pd.Series(j, name='j')
+        values = pd.Series(np.hstack(values), name='value')
+
+        return pd.concat([i, j, values], axis=1)
+
     @experimental(as_of="0.4.0")
     def plot(self, cmap=None, title=""):
         """Creates a heatmap of the dissimilarity matrix
@@ -1068,7 +1255,7 @@ def _df_to_vector(distance_matrix, df, column):
     if column not in df:
         raise ValueError("Column '%s' not in DataFrame." % column)
 
-    grouping = df.loc[distance_matrix.ids, column]
+    grouping = df.reindex(distance_matrix.ids, axis=0).loc[:, column]
     if grouping.isnull().any():
         raise ValueError(
             "One or more IDs in the distance matrix are not in the data "

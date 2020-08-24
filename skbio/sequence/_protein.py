@@ -115,14 +115,16 @@ class Protein(GrammaredSequence, metaclass=DisableSubclassingMeta):
     @classproperty
     @overrides(GrammaredSequence)
     def definite_chars(cls):
-        return set("ACDEFGHIKLMNPQRSTVWY")
+        return set("ACDEFGHIKLMNOPQRSTUVWY")
 
     @classproperty
     @overrides(GrammaredSequence)
     def degenerate_map(cls):
         return {
-            "B": set("DN"), "Z": set("EQ"),
-            "X": set("ACDEFGHIKLMNPQRSTVWY")
+            "B": set("DN"),
+            "Z": set("EQ"),
+            "J": set("IL"),
+            "X": set("ACDEFGHIKLMNOPQRSTUVWY")
         }
 
     @classproperty

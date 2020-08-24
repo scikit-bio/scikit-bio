@@ -461,23 +461,23 @@ class TestSequence(TestSequenceBase, ReallyEqualMixin):
             Sequence(np.array([1, {}, ()]))
 
         # invalid input type (non-numpy.ndarray input)
-        with self.assertRaisesRegex(AttributeError, r'tuple'):
+        with self.assertRaisesRegex(TypeError, r'tuple'):
             Sequence(('a', 'b', 'c'))
-        with self.assertRaisesRegex(AttributeError, r'list'):
+        with self.assertRaisesRegex(TypeError, r'list'):
             Sequence(['a', 'b', 'c'])
-        with self.assertRaisesRegex(AttributeError, r'set'):
+        with self.assertRaisesRegex(TypeError, r'set'):
             Sequence({'a', 'b', 'c'})
-        with self.assertRaisesRegex(AttributeError, r'dict'):
+        with self.assertRaisesRegex(TypeError, r'dict'):
             Sequence({'a': 42, 'b': 43, 'c': 44})
-        with self.assertRaisesRegex(AttributeError, r'int'):
+        with self.assertRaisesRegex(TypeError, r'int'):
             Sequence(42)
-        with self.assertRaisesRegex(AttributeError, r'float'):
+        with self.assertRaisesRegex(TypeError, r'float'):
             Sequence(4.2)
         with self.assertRaisesRegex(TypeError, r'int64'):
             Sequence(np.int_(50))
         with self.assertRaisesRegex(TypeError, r'float64'):
             Sequence(np.float_(50))
-        with self.assertRaisesRegex(AttributeError, r'Foo'):
+        with self.assertRaisesRegex(TypeError, r'Foo'):
             class Foo:
                 pass
             Sequence(Foo())
@@ -2365,7 +2365,7 @@ class TestDistance(TestSequenceBase):
             DNA("ACGT").distance("WXYZ")
 
     def test_munging_invalid_type_to_self_type(self):
-        with self.assertRaises(AttributeError):
+        with self.assertRaises(TypeError):
             Sequence("ACGT").distance(42)
 
     def test_return_type_coercion(self):
