@@ -13,7 +13,7 @@ import sys
 import numpy as np
 import numpy.testing as npt
 import pandas.util.testing as pdt
-
+from scipy.spatial.distance import pdist
 from ._decorator import experimental
 
 
@@ -118,15 +118,15 @@ def assert_ordination_results_equal(left, right, ignore_method_names=False,
         npt.assert_equal(left.short_method_name, right.short_method_name)
         npt.assert_equal(left.long_method_name, right.long_method_name)
 
-    _assert_frame_equal(left.samples, right.samples,
-                        ignore_columns=ignore_axis_labels,
-                        ignore_directionality=ignore_directionality,
-                        decimal=decimal)
+    _assert_frame_dists_equal(left.samples, right.samples,
+                              ignore_columns=ignore_axis_labels,
+                              ignore_directionality=ignore_directionality,
+                              decimal=decimal)
 
-    _assert_frame_equal(left.features, right.features,
-                        ignore_columns=ignore_axis_labels,
-                        ignore_directionality=ignore_directionality,
-                        decimal=decimal)
+    _assert_frame_dists_equal(left.features, right.features,
+                              ignore_columns=ignore_axis_labels,
+                              ignore_directionality=ignore_directionality,
+                              decimal=decimal)
     _assert_frame_equal(left.biplot_scores, right.biplot_scores,
                         ignore_columns=ignore_axis_labels,
                         ignore_directionality=ignore_directionality,
@@ -154,6 +154,24 @@ def _assert_series_equal(left_s, right_s, ignore_index=False, decimal=7):
                                 decimal=decimal)
         if not ignore_index:
             pdt.assert_index_equal(left_s.index, right_s.index)
+
+
+def _assert_frame_dists_equal(left_df, right_df, ignore_index=False,
+                              ignore_columns=False, ignore_directionality=False,
+                              decimal=7):
+    if left_df is None or right_df is None:
+        assert left_df is None and right_df is None
+    else:
+        left_values = left_df.values
+        right_values = right_df.values
+        left_dists = pdist(left_values)
+        right_dists = pdist(right_values)
+        npt.assert_almost_equal(left_dists, right_dists, decimal=decimal)
+
+        if not ignore_index:
+            pdt.assert_index_equal(left_df.index, right_df.index)
+        if not ignore_columns:
+            pdt.assert_index_equal(left_df.columns, right_df.columns)
 
 
 def _assert_frame_equal(left_df, right_df, ignore_index=False,
