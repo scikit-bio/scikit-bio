@@ -157,8 +157,8 @@ def _assert_series_equal(left_s, right_s, ignore_index=False, decimal=7):
 
 
 def _assert_frame_dists_equal(left_df, right_df, ignore_index=False,
-                              ignore_columns=False, ignore_directionality=False,
-                              decimal=7):
+                              ignore_columns=False,
+                              ignore_directionality=False, decimal=7):
     if left_df is None or right_df is None:
         assert left_df is None and right_df is None
     else:
