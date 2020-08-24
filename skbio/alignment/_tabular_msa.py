@@ -2257,9 +2257,22 @@ class TabularMSA(MetadataMixin, PositionalMetadataMixin, SkbioObject):
         # TODO: update when #1198 is implemented.
         joined_positional_metadata = None
         if joined_seqs:
-            joined_positional_metadata = pd.concat(
-                [self.positional_metadata, other.positional_metadata],
-                ignore_index=True, sort=True, **concat_kwargs)
+            if how == 'left':
+                joined_positional_metadata = pd.concat(
+                    [self.positional_metadata,
+                     other.positional_metadata.reindex(
+                        columns=self.positional_metadata.columns)],
+                    ignore_index=True, sort=True)
+            elif how == 'right':
+                joined_positional_metadata = pd.concat(
+                    [self.positional_metadata.reindex(
+                        columns=other.positional_metadata.columns),
+                     other.positional_metadata],
+                    ignore_index=True, sort=True)
+            else:
+                joined_positional_metadata = pd.concat(
+                    [self.positional_metadata, other.positional_metadata],
+                    ignore_index=True, sort=True, **concat_kwargs)
 
             if not self.has_positional_metadata():
                 del self.positional_metadata
@@ -2403,6 +2416,8 @@ class TabularMSA(MetadataMixin, PositionalMetadataMixin, SkbioObject):
         """
         series = self._seqs.sort_index(ascending=ascending, level=level)
         self._seqs = series
+        positional_metadata = self.positional_metadata.sort_index(axis=1)
+        self.positional_metadata = positional_metadata
 
     @experimental(as_of='0.4.1')
     def to_dict(self):

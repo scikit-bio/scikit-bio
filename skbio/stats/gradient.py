@@ -648,7 +648,7 @@ class AverageGradientANOVA(GradientANOVA):
             trajectory = np.array([np.linalg.norm(center)])
             calc = {'avg': trajectory[0]}
         else:
-            trajectory = np.array([np.linalg.norm(row[1].get_values() - center)
+            trajectory = np.array([np.linalg.norm(row[1].to_numpy() - center)
                                    for row in trajectories.iterrows()])
             calc = {'avg': np.average(trajectory)}
 
@@ -697,8 +697,8 @@ class TrajectoryGradientANOVA(GradientANOVA):
             # Loop through all the rows in trajectories and create '2-norm'
             # by taking the norm of the 2nd row - 1st row, 3rd row - 2nd row...
             trajectory = \
-                np.array([np.linalg.norm(trajectories.iloc[i+1].get_values() -
-                                         trajectories.iloc[i].get_values())
+                np.array([np.linalg.norm(trajectories.iloc[i+1].to_numpy() -
+                                         trajectories.iloc[i].to_numpy())
                           for i in range(len(trajectories) - 1)])
             calc = {'2-norm': np.linalg.norm(trajectory)}
 
@@ -747,8 +747,8 @@ class FirstDifferenceGradientANOVA(GradientANOVA):
             calc = {'mean': trajectory[0], 'std': 0}
         else:
             vec_norm = \
-                np.array([np.linalg.norm(trajectories.iloc[i+1].get_values() -
-                                         trajectories.iloc[i].get_values())
+                np.array([np.linalg.norm(trajectories.iloc[i+1].to_numpy() -
+                                         trajectories.iloc[i].to_numpy())
                           for i in range(len(trajectories) - 1)])
             trajectory = np.diff(vec_norm)
             calc = {'mean': np.mean(trajectory), 'std': np.std(trajectory)}
@@ -832,8 +832,8 @@ class WindowDifferenceGradientANOVA(GradientANOVA):
             calc = {'mean': trajectory, 'std': 0}
         else:
             vec_norm = \
-                np.array([np.linalg.norm(trajectories.iloc[i+1].get_values() -
-                                         trajectories.iloc[i].get_values())
+                np.array([np.linalg.norm(trajectories.iloc[i+1].to_numpy() -
+                                         trajectories.iloc[i].to_numpy())
                           for i in range(len(trajectories) - 1)])
             # windowed first differences won't be able on every group,
             # specially given the variation of size that a trajectory tends

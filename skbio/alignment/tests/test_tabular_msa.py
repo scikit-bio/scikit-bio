@@ -3139,7 +3139,7 @@ class TestConservation(unittest.TestCase):
         msa = TabularMSA([Protein('A'),
                           Protein('G')])
         actual = msa.conservation(metric='inverse_shannon_uncertainty')
-        expected = np.array([1. - scipy.stats.entropy([0.5, 0.5], base=20)])
+        expected = np.array([1. - scipy.stats.entropy([0.5, 0.5], base=22)])
         npt.assert_array_equal(actual, expected)
 
         msa = TabularMSA([Protein('A'),
@@ -3148,24 +3148,24 @@ class TestConservation(unittest.TestCase):
                           Protein('G')])
         actual = msa.conservation(metric='inverse_shannon_uncertainty')
         expected = np.array([1. - scipy.stats.entropy([0.5, 0.25, 0.25],
-                                                      base=20)])
+                                                      base=22)])
         npt.assert_array_equal(actual, expected)
 
         msa = TabularMSA([Protein('AAC'),
                           Protein('GAC')])
         actual = msa.conservation(metric='inverse_shannon_uncertainty')
-        expected = np.array([1. - scipy.stats.entropy([0.5, 0.5], base=20),
-                             1. - scipy.stats.entropy([1.0], base=20),
-                             1. - scipy.stats.entropy([1.0], base=20)])
+        expected = np.array([1. - scipy.stats.entropy([0.5, 0.5], base=22),
+                             1. - scipy.stats.entropy([1.0], base=22),
+                             1. - scipy.stats.entropy([1.0], base=22)])
         npt.assert_array_equal(actual, expected)
 
         msa = TabularMSA([Protein('AACT'),
                           Protein('GACA')])
         actual = msa.conservation(metric='inverse_shannon_uncertainty')
-        expected = np.array([1. - scipy.stats.entropy([0.5, 0.5], base=20),
-                             1. - scipy.stats.entropy([1.0], base=20),
-                             1. - scipy.stats.entropy([1.0], base=20),
-                             1. - scipy.stats.entropy([0.5, 0.5], base=20)])
+        expected = np.array([1. - scipy.stats.entropy([0.5, 0.5], base=22),
+                             1. - scipy.stats.entropy([1.0], base=22),
+                             1. - scipy.stats.entropy([1.0], base=22),
+                             1. - scipy.stats.entropy([0.5, 0.5], base=22)])
         npt.assert_array_equal(actual, expected)
 
     def test_degenerate_mode_nan(self):

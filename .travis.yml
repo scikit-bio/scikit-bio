@@ -6,9 +6,9 @@ os:
   - linux
   - osx
 env:
+  - CONDA_PY=3.8
   - CONDA_PY=3.7
-  - CONDA_PY=3.6
-  - CONDA_PY=3.5 USE_CYTHON=TRUE
+  - CONDA_PY=3.6 USE_CYTHON=TRUE
 
 before_install:
   - export MPLBACKEND='Agg'
@@ -28,7 +28,7 @@ install:
   - conda info --envs
   - python --version
   - pip install -r ci/pip_requirements.txt
-  - pip install . --no-deps
+  - pip install .
 
 script:
   - WITH_COVERAGE=TRUE make test
