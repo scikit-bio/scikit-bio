@@ -11,6 +11,7 @@
 ### Performance enhancements
 
 ### Bug fixes
+* `skbio.stats.ordination` tests have been relaxed. ([#1713](https://github.com/biocore/scikit-bio/issues/1713))
 
 ### Deprecated functionality [stable]
 
@@ -507,37 +508,37 @@ This is an alpha release of scikit-bio. At this stage, major backwards-incompati
 * Added ``skbio.util.cardinal_to_ordinal`` for converting a cardinal number to ordinal string (e.g., useful for error messages).
 * New I/O Registry: supports multiple file formats, automatic file format detection when reading, unified procedural ``skbio.io.read`` and ``skbio.io.write`` in addition to OOP interfaces (``read/write`` methods) on the below objects. See ``skbio.io`` for more details.
     - Added "clustal" format support:
-        * Has sniffer
-        * Readers: ``Alignment``
-        * Writers: ``Alignment``
+	* Has sniffer
+	* Readers: ``Alignment``
+	* Writers: ``Alignment``
     - Added "lsmat" format support:
-        * Has sniffer
-        * Readers: ``DissimilarityMatrix``, ``DistanceMatrix``
-        * Writers: ``DissimilarityMatrix``, ``DistanceMatrix``
+	* Has sniffer
+	* Readers: ``DissimilarityMatrix``, ``DistanceMatrix``
+	* Writers: ``DissimilarityMatrix``, ``DistanceMatrix``
     - Added "ordination" format support:
-        * Has sniffer
-        * Readers: ``OrdinationResults``
-        * Writers: ``OrdinationResults``
+	* Has sniffer
+	* Readers: ``OrdinationResults``
+	* Writers: ``OrdinationResults``
     - Added "newick" format support:
-        * Has sniffer
-        * Readers: ``TreeNode``
-        * Writers: ``TreeNode``
+	* Has sniffer
+	* Readers: ``TreeNode``
+	* Writers: ``TreeNode``
     - Added "phylip" format support:
-        * No sniffer
-        * Readers: None
-        * Writers: ``Alignment``
+	* No sniffer
+	* Readers: None
+	* Writers: ``Alignment``
     - Added "qseq" format support:
-        * Has sniffer
-        * Readers: generator of ``BiologicalSequence`` or its subclasses, ``SequenceCollection``, ``BiologicalSequence``, ``NucleotideSequence``, ``DNASequence``, ``RNASequence``, ``ProteinSequence``
-        * Writers: None
+	* Has sniffer
+	* Readers: generator of ``BiologicalSequence`` or its subclasses, ``SequenceCollection``, ``BiologicalSequence``, ``NucleotideSequence``, ``DNASequence``, ``RNASequence``, ``ProteinSequence``
+	* Writers: None
     - Added "fasta"/QUAL format support:
-        * Has sniffer
-        * Readers: generator of ``BiologicalSequence`` or its subclasses, ``SequenceCollection``, ``Alignment``, ``BiologicalSequence``, ``NucleotideSequence``, ``DNASequence``, ``RNASequence``, ``ProteinSequence``
-        * Writers: same as readers
+	* Has sniffer
+	* Readers: generator of ``BiologicalSequence`` or its subclasses, ``SequenceCollection``, ``Alignment``, ``BiologicalSequence``, ``NucleotideSequence``, ``DNASequence``, ``RNASequence``, ``ProteinSequence``
+	* Writers: same as readers
     - Added "fastq" format support:
-        * Has sniffer
-        * Readers: generator of ``BiologicalSequence`` or its subclasses, ``SequenceCollection``, ``Alignment``, ``BiologicalSequence``, ``NucleotideSequence``, ``DNASequence``, ``RNASequence``, ``ProteinSequence``
-        * Writers: same as readers
+	* Has sniffer
+	* Readers: generator of ``BiologicalSequence`` or its subclasses, ``SequenceCollection``, ``Alignment``, ``BiologicalSequence``, ``NucleotideSequence``, ``DNASequence``, ``RNASequence``, ``ProteinSequence``
+	* Writers: same as readers
 
 ### Bug fixes
 
@@ -549,39 +550,39 @@ This is an alpha release of scikit-bio. At this stage, major backwards-incompati
 
 * Existing I/O functionality deprecated in favor of I/O registry, old functionality will be removed in scikit-bio 0.3.0. All functionality can be found at ``skbio.io.read``, ``skbio.io.write``, and the methods listed below:
     * Deprecated the following "clustal" readers/writers:
-        - ``write_clustal`` -> ``Alignment.write``
-        - ``parse_clustal`` -> ``Alignment.read``
+	- ``write_clustal`` -> ``Alignment.write``
+	- ``parse_clustal`` -> ``Alignment.read``
 
     * Deprecated the following distance matrix format ("lsmat") readers/writers:
-        - ``DissimilarityMatrix.from_file`` -> ``DissimilarityMatrix.read``
-        - ``DissimilarityMatrix.to_file`` -> ``DissimilarityMatrix.write``
-        - ``DistanceMatrix.from_file`` -> ``DistanceMatrix.read``
-        - ``DistanceMatrix.to_file`` -> ``DistanceMatrix.write``
+	- ``DissimilarityMatrix.from_file`` -> ``DissimilarityMatrix.read``
+	- ``DissimilarityMatrix.to_file`` -> ``DissimilarityMatrix.write``
+	- ``DistanceMatrix.from_file`` -> ``DistanceMatrix.read``
+	- ``DistanceMatrix.to_file`` -> ``DistanceMatrix.write``
 
     * Deprecated the following ordination format ("ordination") readers/writers:
-        - ``OrdinationResults.from_file`` -> ``OrdinationResults.read``
-        - ``OrdinationResults.to_file`` -> ``OrdinationResults.write``
+	- ``OrdinationResults.from_file`` -> ``OrdinationResults.read``
+	- ``OrdinationResults.to_file`` -> ``OrdinationResults.write``
 
     * Deprecated the following "newick" readers/writers:
-        - ``TreeNode.from_file`` -> ``TreeNode.read``
-        - ``TreeNode.from_newick`` -> ``TreeNode.read``
-        - ``TreeNode.to_newick`` -> ``TreeNode.write``
+	- ``TreeNode.from_file`` -> ``TreeNode.read``
+	- ``TreeNode.from_newick`` -> ``TreeNode.read``
+	- ``TreeNode.to_newick`` -> ``TreeNode.write``
 
     * Deprecated the following "phylip" writers:
-        - ``Alignment.to_phylip`` -> ``Alignment.write``
+	- ``Alignment.to_phylip`` -> ``Alignment.write``
 
     * Deprecated the following "fasta"/QUAL readers/writers:
-        - ``SequenceCollection.from_fasta_records`` -> ``SequenceCollection.read``
-        - ``SequenceCollection.to_fasta`` -> ``SequenceCollection.write``
-        - ``fasta_from_sequences`` -> ``skbio.io.write(obj, into=<file>, format='fasta')``
-        - ``fasta_from_alignment`` -> ``Alignment.write``
-        - ``parse_fasta`` -> ``skbio.io.read(<fasta>, format='fasta')``
-        - ``parse_qual`` -> ``skbio.io.read(<fasta>, format='fasta', qual=<file>)``
-        - ``BiologicalSequence.to_fasta`` -> ``BiologicalSequence.write``
+	- ``SequenceCollection.from_fasta_records`` -> ``SequenceCollection.read``
+	- ``SequenceCollection.to_fasta`` -> ``SequenceCollection.write``
+	- ``fasta_from_sequences`` -> ``skbio.io.write(obj, into=<file>, format='fasta')``
+	- ``fasta_from_alignment`` -> ``Alignment.write``
+	- ``parse_fasta`` -> ``skbio.io.read(<fasta>, format='fasta')``
+	- ``parse_qual`` -> ``skbio.io.read(<fasta>, format='fasta', qual=<file>)``
+	- ``BiologicalSequence.to_fasta`` -> ``BiologicalSequence.write``
 
     * Deprecated the following "fastq" readers/writers:
-        - ``parse_fastq`` -> ``skbio.io.read(<fastq>, format='fastq')``
-        - ``format_fastq_record`` -> ``skbio.io.write(<fastq>, format='fastq')``
+	- ``parse_fastq`` -> ``skbio.io.read(<fastq>, format='fastq')``
+	- ``format_fastq_record`` -> ``skbio.io.write(<fastq>, format='fastq')``
 
 ### Backward-incompatible changes
 
