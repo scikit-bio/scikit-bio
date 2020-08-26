@@ -140,7 +140,7 @@ def permdisp(distance_matrix, grouping, column=None, test='median',
     sample size                      6
     number of groups                 2
     test statistic             1.03296
-    p-value                       0.29
+    p-value                       0.35
     number of permutations          99
     Name: PERMDISP results, dtype: object
 
