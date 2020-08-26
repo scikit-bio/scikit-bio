@@ -43,6 +43,11 @@
 ### Performance enhancements
 
 ### Bug fixes
+* * `skbio.stats.ordination` tests have been relaxed. ([#1713](https://github.com/biocore/scikit-bio/issues/1713))
+
+* Fixes build errors for newer versions of NumPy, Pandas, and SciPy.
+
+* Corrected a criticial bug in `skbio.alignment.StripedSmithWaterman`/`skbio.alignment.local_pairwise_align_ssw` which would cause the formatting of the aligned sequences to misplace gap characters by the number of gap characters present in the opposing aligned sequence up to that point. This was caused by a faulty implementation of CIGAR string parsing, see [#1679](https://github.com/biocore/scikit-bio/pull/1679) for full details.
 
 * Fixes build errors for newer versions of NumPy, Pandas, and SciPy.
 
