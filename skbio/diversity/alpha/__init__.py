@@ -14,7 +14,6 @@ Functions
 .. autosummary::
    :toctree:
 
-   ace
    berger_parker_d
    brillouin_d
    chao1
@@ -69,7 +68,7 @@ from ._gini import gini_index
 from ._lladser import lladser_pe, lladser_ci
 
 
-__all__ = ['ace', 'chao1', 'chao1_ci', 'berger_parker_d',
+__all__ = ['chao1', 'chao1_ci', 'berger_parker_d',
            'brillouin_d', 'dominance', 'doubles', 'enspie', 'esty_ci',
            'faith_pd', 'fisher_alpha', 'gini_index', 'goods_coverage',
            'heip_e', 'kempton_taylor_q', 'margalef', 'mcintosh_d',
