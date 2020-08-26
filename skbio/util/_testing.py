@@ -133,7 +133,8 @@ def assert_ordination_results_equal(left, right, ignore_method_names=False,
                               ignore_directionality=ignore_directionality,
                               decimal=decimal)
 
-    _assert_frame_dists_equal(left.sample_constraints, right.sample_constraints,
+    _assert_frame_dists_equal(left.sample_constraints, 
+                                right.sample_constraints,
                               ignore_columns=ignore_axis_labels,
                               ignore_directionality=ignore_directionality,
                               decimal=decimal)

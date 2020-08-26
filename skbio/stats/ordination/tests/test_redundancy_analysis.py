@@ -9,7 +9,6 @@
 import numpy as np
 import numpy.testing as npt
 import pandas as pd
-import pandas.util.testing as pdt
 from unittest import TestCase, main
 
 from skbio import OrdinationResults
@@ -235,7 +234,6 @@ class TestRDAResults_biplot_score(TestCase):
             biplot_scores=rda_.biplot_scores.iloc[:, 0:6],
             proportion_explained=rda_.proportion_explained,
             eigvals=rda_.eigvals)
-
 
         exp = OrdinationResults(
             'RDA', 'Redundancy Analysis',
