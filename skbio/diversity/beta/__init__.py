@@ -15,7 +15,8 @@ Functions
 .. autosummary::
    :toctree:
 
-    ...
+    unweighted_unifrac
+    weighted_unifrac
 
 """
 

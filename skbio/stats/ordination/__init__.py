@@ -14,7 +14,11 @@ Ordination Functions
 .. autosummary::
    :toctree:
 
-   ...
+   ca
+   pcoa
+   pcoa_biplot
+   cca
+   rda
 
 Classes
 -------
@@ -22,7 +26,7 @@ Classes
 .. autosummary::
    :toctree:
 
-   ...
+   OrdinationResults
 
 Utility Functions
 -----------------
@@ -30,7 +34,12 @@ Utility Functions
 .. autosummary::
    :toctree:
 
-   ...
+   mean_and_std
+   corr
+   scale
+   svd_rank
+   e_matrix
+   f_matrix
 
 Examples
 --------

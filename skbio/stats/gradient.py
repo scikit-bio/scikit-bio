@@ -15,7 +15,14 @@ Classes
 .. autosummary::
    :toctree:
 
-   ...
+   GradientANOVA
+   AverageGradientANOVA
+   TrajectoryGradientANOVA
+   FirstDifferenceGradientANOVA
+   WindowDifferenceGradientANOVA
+   GroupResults
+   CategoryResults
+   GradientANOVAResults
 
 Examples
 --------

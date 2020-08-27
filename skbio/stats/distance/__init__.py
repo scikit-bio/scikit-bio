@@ -42,7 +42,8 @@ Classes
 .. autosummary::
    :toctree:
 
-   ...
+   DissimilarityMatrix
+   DistanceMatrix
 
 Functions
 ^^^^^^^^^
@@ -50,7 +51,7 @@ Functions
 .. autosummary::
    :toctree:
 
-   ...
+   randdm
 
 Exceptions
 ^^^^^^^^^^
@@ -58,7 +59,9 @@ Exceptions
 .. autosummary::
    :toctree:
 
-   ...
+   DissimilarityMatrixError
+   DistanceMatrixError
+   MissingIDError
 
 Examples
 ^^^^^^^^
@@ -149,7 +152,9 @@ Categorical Variable Stats
 .. autosummary::
    :toctree:
 
-   ...
+   anosim
+   permanova
+   permdisp
 
 Continuous Variable Stats
 ^^^^^^^^^^^^^^^^^^^^^^^^^
@@ -157,7 +162,7 @@ Continuous Variable Stats
 .. autosummary::
    :toctree:
 
-   ...
+   bioenv
 
 Distance Matrix Comparisons
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^
@@ -165,7 +170,8 @@ Distance Matrix Comparisons
 .. autosummary::
    :toctree:
 
-   ...
+   mantel
+   pwmantel
 
 References
 ----------

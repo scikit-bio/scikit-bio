@@ -78,7 +78,8 @@ Subpackages
 .. autosummary::
    :toctree: generated/
 
-   ...
+   registry
+   util
 
 For developer documentation on extending I/O, see :mod:`skbio.io.registry`.
 
