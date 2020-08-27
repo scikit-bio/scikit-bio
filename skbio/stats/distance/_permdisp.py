@@ -170,7 +170,7 @@ def permdisp(distance_matrix, grouping, column=None, test='median',
     statistics.
 
     >>> np.random.seed(0)
-    >>> permdisp(dm,grouping,test='centroid',permutations=6) #doctest:+ELLIPSIS
+    >>> permdisp(dm,grouping,test='centroid',permutations=6)
     method name               PERMDISP
     test statistic name        F-value
     sample size                      6
