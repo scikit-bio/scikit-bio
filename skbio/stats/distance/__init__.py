@@ -149,7 +149,7 @@ Categorical Variable Stats
 .. autosummary::
    :toctree:
 
-   anosim
+   ...
    permanova
    permdisp
 
