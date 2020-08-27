@@ -165,8 +165,7 @@ Distance Matrix Comparisons
 .. autosummary::
    :toctree:
 
-   mantel
-   pwmantel
+   ...
 
 References
 ----------
