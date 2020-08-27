@@ -42,8 +42,7 @@ Classes
 .. autosummary::
    :toctree:
 
-   DissimilarityMatrix
-   DistanceMatrix
+   ...
 
 Functions
 ^^^^^^^^^
