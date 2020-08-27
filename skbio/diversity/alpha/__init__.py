@@ -2,7 +2,7 @@
 Alpha diversity measures (:mod:`skbio.diversity.alpha`)
 =======================================================
 
-.. currentmodule:: skbio.diversity.alpha # doctest: +ELLIPSIS
+.. currentmodule:: skbio.diversity.alpha
 
 This package provides implementations of alpha diversity measures, including
 measures of richness, dominance, and evenness. Some functions generate
