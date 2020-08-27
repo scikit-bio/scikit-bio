@@ -15,36 +15,6 @@ Functions
    :toctree:
 
    ...
-   berger_parker_d
-   brillouin_d
-   chao1
-   chao1_ci
-   dominance
-   doubles
-   enspie
-   esty_ci
-   faith_pd
-   fisher_alpha
-   gini_index
-   goods_coverage
-   heip_e
-   kempton_taylor_q
-   lladser_ci
-   lladser_pe
-   margalef
-   mcintosh_d
-   mcintosh_e
-   menhinick
-   michaelis_menten_fit
-   observed_otus
-   osd
-   pielou_e
-   robbins
-   shannon
-   simpson
-   simpson_e
-   singles
-   strong
 
 """
 
