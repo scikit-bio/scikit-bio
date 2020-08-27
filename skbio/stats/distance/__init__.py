@@ -150,8 +150,6 @@ Categorical Variable Stats
    :toctree:
 
    ...
-   permanova
-   permdisp
 
 Continuous Variable Stats
 ^^^^^^^^^^^^^^^^^^^^^^^^^
