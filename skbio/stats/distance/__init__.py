@@ -157,7 +157,7 @@ Continuous Variable Stats
 .. autosummary::
    :toctree:
 
-   bioenv
+   ...
 
 Distance Matrix Comparisons
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^
