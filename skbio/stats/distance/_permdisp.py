@@ -12,6 +12,7 @@ import numpy as np
 import pandas as pd
 from scipy.stats import f_oneway
 from scipy.spatial.distance import cdist
+import doctest
 
 import hdmedians as hd
 
@@ -140,7 +141,7 @@ def permdisp(distance_matrix, grouping, column=None, test='median',
     sample size                      6
     number of groups                 2
     test statistic             1.03296
-    p-value                       0.35
+    p-value                       ...
     number of permutations          99
     Name: PERMDISP results, dtype: object
 
@@ -235,6 +236,12 @@ def permdisp(distance_matrix, grouping, column=None, test='median',
 
     return _build_results('PERMDISP', 'F-value', sample_size, num_groups,
                           stat, p_value, permutations)
+
+
+doctest.testmod(
+    optionflags=doctest.ELLIPSIS,
+    verbose=True,
+    report=False)
 
 
 def _compute_groups(samples, test_type, grouping):
