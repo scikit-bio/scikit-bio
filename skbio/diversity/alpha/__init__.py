@@ -14,7 +14,7 @@ Functions
 .. autosummary::
    :toctree:
 
-   ace # doctest: +ELLIPSIS
+   ace
    berger_parker_d
    brillouin_d
    chao1
