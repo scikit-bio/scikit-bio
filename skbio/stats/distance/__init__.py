@@ -50,7 +50,7 @@ Functions
 .. autosummary::
    :toctree:
 
-   randdm
+   ...
 
 Exceptions
 ^^^^^^^^^^
