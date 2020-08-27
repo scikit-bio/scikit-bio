@@ -18,7 +18,7 @@ Subpackages
    ordination
    gradient
    power
-   composition
+   ...
 
 Functions
 ---------
