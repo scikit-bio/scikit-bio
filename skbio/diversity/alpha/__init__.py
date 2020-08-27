@@ -46,3 +46,4 @@ __all__ = ['ace', 'chao1', 'chao1_ci', 'berger_parker_d',
            'mcintosh_e', 'menhinick', 'michaelis_menten_fit', 'observed_otus',
            'osd', 'pielou_e', 'robbins', 'shannon', 'simpson', 'simpson_e',
            'singles', 'strong', 'lladser_pe', 'lladser_ci']
+           
