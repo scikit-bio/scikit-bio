@@ -382,10 +382,8 @@ texinfo_documents = [
 #texinfo_no_detailmenu = False
 
 # -- Options for autosummary ----------------------------------------------
-#autosummary_generate = glob.glob('*.rst')
 autosummary_generate =  glob.glob('*.rst')
 autosummary_generate_overwrite =  False
-source_suffix =  '.rst'
 
 #------------------------------------------------------------------------------
 # Plot
