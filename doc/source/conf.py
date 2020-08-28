@@ -383,7 +383,7 @@ texinfo_documents = [
 
 # -- Options for autosummary ----------------------------------------------
 autosummary_generate =  glob.glob('*.rst')
-autosummary_generate_overwrite =  False
+
 
 #------------------------------------------------------------------------------
 # Plot
