@@ -23,6 +23,8 @@
 ### Performance enhancements
 
 ### Bug fixes
+* Unpinned Sphinx to only install Sphinx <= 3.0 versions. Newer Sphinx versions caused build errors. [#1719](https://github.com/biocore/scikit-bio/pull/1719)
+
 * * `skbio.stats.ordination` tests have been relaxed. ([#1713](https://github.com/biocore/scikit-bio/issues/1713))
 
 * Fixes build errors for newer versions of NumPy, Pandas, and SciPy.
