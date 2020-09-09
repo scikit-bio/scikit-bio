@@ -1172,8 +1172,8 @@ class TabularMSA(MetadataMixin, PositionalMetadataMixin, SkbioObject):
             return self._constructor_(new_seqs, positional_metadata=None)
         return self._constructor_(new_seqs)
 
-    def _get_sequence_loc_(self, l):
-        new_seqs = self._seqs.loc[l]
+    def _get_sequence_loc_(self, x):
+        new_seqs = self._seqs.loc[x]
         if type(new_seqs) is self.dtype:
             return new_seqs
         else:
@@ -1186,10 +1186,10 @@ class TabularMSA(MetadataMixin, PositionalMetadataMixin, SkbioObject):
                 raise AssertionError(
                     "Something went wrong with the index %r provided to"
                     " `_get_sequence_loc_`, please report this stack trace to"
-                    "\nhttps://github.com/biocore/scikit-bio/issues" % l)
+                    "\nhttps://github.com/biocore/scikit-bio/issues" % x)
 
-    def _slice_sequences_loc_(self, l):
-        new_seqs = self._seqs.loc[l]
+    def _slice_sequences_loc_(self, x):
+        new_seqs = self._seqs.loc[x]
         try:
             # TODO: change for #1198
             if len(new_seqs) == 0:
