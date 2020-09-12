@@ -1,5 +1,25 @@
 # scikit-bio changelog
 
+## Version 0.5.7
+
+### Features
+
+### Backward-incompatible changes [stable]
+
+### Backward-incompatible changes [experimental]
+
+### Performance enhancements
+
+### Bug fixes
+
+### Deprecated functionality [stable]
+
+### Deprecated functionality [experimental]
+
+### Miscellaneous
+
+* Specify build dependencies in pyproject.toml. This allows the package to be installed without having to first manually install numpy.
+
 ## Version 0.5.6
 
 ### Features
