@@ -1,5 +1,25 @@
 # scikit-bio changelog
 
+## Version 0.5.8
+
+### Features
+
+### Backward-incompatible changes [stable]
+
+### Backward-incompatible changes [experimental]
+
+### Performance enhancements
+
+### Bug fixes
+
+### Deprecated functionality [stable]
+
+### Deprecated functionality [experimental]
+
+### Miscellaneous
+
+* Update hdmedians package to a version which doesn't require an initial manual numpy install.
+
 ## Version 0.5.7
 
 ### Features
