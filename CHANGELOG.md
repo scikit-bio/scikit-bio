@@ -19,6 +19,7 @@
 ### Miscellaneous
 
 * Specify build dependencies in pyproject.toml. This allows the package to be installed without having to first manually install numpy.
+* Update hdmedians package to a version which doesn't require an initial manual numpy install.
 
 ## Version 0.5.6
 
