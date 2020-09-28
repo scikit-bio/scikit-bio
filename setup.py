@@ -119,7 +119,7 @@ setup(name='scikit-bio',
           'numpy >= 1.9.2',
           'pandas >= 1.0.0',
           'scipy >= 1.3.0',
-          'hdmedians >= 0.13',
+          'hdmedians >= 0.14.1',
           'scikit-learn >= 0.19.1'
       ],
       classifiers=classifiers,
