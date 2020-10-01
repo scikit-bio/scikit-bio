@@ -5,6 +5,7 @@
 #
 # The full license is in the file COPYING.txt, distributed with this software.
 # ----------------------------------------------------------------------------
+
 import unittest
 import tempfile
 import shutil
@@ -14,7 +15,7 @@ import numpy as np
 import numpy.testing as npt
 import h5py
 
-from skbio.stats.distance import DistanceMatrix
+from skbio import DistanceMatrix
 from skbio.io.format.binary_dm import (_h5py_mat_to_skbio_mat,
                                        _skbio_mat_to_h5py_mat, _get_header,
                                        _parse_ids, _verify_dimensions,
