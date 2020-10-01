@@ -9,7 +9,6 @@
 import numpy as np
 import numpy.testing as npt
 import pandas as pd
-import pandas.util.testing as pdt
 from unittest import TestCase, main
 
 from skbio import OrdinationResults
@@ -250,7 +249,7 @@ class TestRDAResults_biplot_score(TestCase):
         exp.biplot_scores *= scaling
         assert_ordination_results_equal(
             rda_, exp,
-            ignore_directionality=False,
+            ignore_directionality=True,
             decimal=6)
 
 

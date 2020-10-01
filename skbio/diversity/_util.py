@@ -104,6 +104,7 @@ def _validate_otu_ids_and_tree(counts, otu_ids, tree):
     set_tip_names = set(tip_names)
     if len(tip_names) != len(set_tip_names):
         raise DuplicateNodeError("All tip names must be unique.")
+
     if np.array([branch is None for branch in branch_lengths]).any():
         raise ValueError("All non-root nodes in ``tree`` must have a branch "
                          "length.")

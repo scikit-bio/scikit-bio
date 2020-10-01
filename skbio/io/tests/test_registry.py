@@ -1692,6 +1692,7 @@ class TestWrite(RegistryTest):
             iterator = iter(obj.list)
             fh.write(next(iterator))
             fh.flush()  # Flush should be a noop for bz2
+
             for line in iterator:
                 fh.write(line)
 
