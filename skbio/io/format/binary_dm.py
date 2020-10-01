@@ -24,7 +24,7 @@ Format Support
 Format Specification
 --------------------
 The binary dissimilarity matrix and object identifiers are stored within an
-HDF5[1]_ file. Both datatypes are represented by their own datasets. The
+HDF5 [1]_ file. Both datatypes are represented by their own datasets. The
 `ids` dataset is of a variable length unicode type, while the
 `matrix` dataset are floating point. The shape of the `ids` is
 `(N,)`, and the shape of the `dissimilarities` is `(N, N)`. The diagonal of
@@ -63,6 +63,7 @@ Required attributes:
 References
 ----------
 .. [1] http://www.hdfgroup.org/
+
 """
 
 # ----------------------------------------------------------------------------
