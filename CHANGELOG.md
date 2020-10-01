@@ -1,6 +1,6 @@
 # scikit-bio changelog
 
-## Version 0.5.6-dev
+## Version 0.5.7
 
 ### Features
 
@@ -19,6 +19,10 @@
 ### Deprecated functionality [experimental]
 
 ### Miscellaneous
+
+* Specify build dependencies in pyproject.toml. This allows the package to be installed without having to first manually install numpy.
+
+* Update hdmedians package to a version which doesn't require an initial manual numpy install.
 
 ## Version 0.5.6
 
@@ -43,6 +47,8 @@
 ### Performance enhancements
 
 ### Bug fixes
+* Require `Sphinx <= 3.0`. Newer Sphinx versions caused build errors. [#1719](https://github.com/biocore/scikit-bio/pull/1719)
+
 * * `skbio.stats.ordination` tests have been relaxed. ([#1713](https://github.com/biocore/scikit-bio/issues/1713))
 
 * Fixes build errors for newer versions of NumPy, Pandas, and SciPy.
