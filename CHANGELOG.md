@@ -1,14 +1,18 @@
 # scikit-bio changelog
 
-## Version 0.5.7
+## Version 0.5.6-dev
 
 ### Features
+
+* Added support for `np.float32` with `DissimilarityMatrix` objects.
 
 ### Backward-incompatible changes [stable]
 
 ### Backward-incompatible changes [experimental]
 
 ### Performance enhancements
+
+* Avoid an implicit data copy on construction of `DissimilarityMatrix` objects. 
 
 ### Bug fixes
 
@@ -19,6 +23,7 @@
 ### Miscellaneous
 
 * Specify build dependencies in pyproject.toml. This allows the package to be installed without having to first manually install numpy.
+
 * Update hdmedians package to a version which doesn't require an initial manual numpy install.
 
 ## Version 0.5.6

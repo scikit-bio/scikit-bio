@@ -266,7 +266,7 @@ class TestOrdinationResults(unittest.TestCase):
         labels = [t.get_text() for t in legend.get_texts()]
         npt.assert_equal(sorted(labels), ['bar', 'foo'])
 
-        colors = [x.get_color() for x in legend.get_lines()]
+        colors = [line.get_color() for line in legend.get_lines()]
         npt.assert_equal(sorted(colors), ['green', 'red'])
 
     def test_repr_png(self):

@@ -1172,8 +1172,8 @@ class TabularMSA(MetadataMixin, PositionalMetadataMixin, SkbioObject):
             return self._constructor_(new_seqs, positional_metadata=None)
         return self._constructor_(new_seqs)
 
-    def _get_sequence_loc_(self, x):
-        new_seqs = self._seqs.loc[x]
+    def _get_sequence_loc_(self, ids):
+        new_seqs = self._seqs.loc[ids]
         if type(new_seqs) is self.dtype:
             return new_seqs
         else:
@@ -1186,17 +1186,17 @@ class TabularMSA(MetadataMixin, PositionalMetadataMixin, SkbioObject):
                 raise AssertionError(
                     "Something went wrong with the index %r provided to"
                     " `_get_sequence_loc_`, please report this stack trace to"
-                    "\nhttps://github.com/biocore/scikit-bio/issues" % x)
+                    "\nhttps://github.com/biocore/scikit-bio/issues" % ids)
 
-    def _slice_sequences_loc_(self, x):
-        new_seqs = self._seqs.loc[x]
+    def _slice_sequences_loc_(self, ids):
+        new_seqs = self._seqs.loc[ids]
         try:
             # TODO: change for #1198
             if len(new_seqs) == 0:
                 return self._constructor_(new_seqs, positional_metadata=None)
             return self._constructor_(new_seqs)
         except TypeError:  # NaN hit the constructor, key was bad... probably
-            raise KeyError("Part of `%r` was not in the index.")
+            raise KeyError("Part of `%r` was not in the index." % ids)
 
     def _get_position_(self, i, ignore_metadata=False):
         if ignore_metadata:
