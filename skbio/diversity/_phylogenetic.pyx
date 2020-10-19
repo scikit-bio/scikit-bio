@@ -177,7 +177,7 @@ def _nodes_by_counts(np.ndarray counts,
 
     # allow counts to be a vector
     counts = np.atleast_2d(counts)
-    counts = counts.astype(DTYPE)
+    counts = counts.astype(DTYPE, copy=False)
 
     # determine observed IDs. It may be possible to unroll these calls to
     # squeeze a little more performance
@@ -210,6 +210,7 @@ def _nodes_by_counts(np.ndarray counts,
         for j in range(n_count_vectors):
             count_array[otus_in_nodes[i], j] = counts_t[observed_indices[i], j]
 
-    _traverse_reduce(indexed['child_index'], count_array)
+    child_index = indexed['child_index'].astype(DTYPE, copy=False)
+    _traverse_reduce(child_index, count_array)
 
     return count_array
