@@ -16,6 +16,8 @@
 
 ### Bug fixes
 
+* Fix windows and 32bit incompatibility in `unweighted_unifrac`.
+
 ### Deprecated functionality [stable]
 
 ### Deprecated functionality [experimental]
