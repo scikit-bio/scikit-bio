@@ -1,5 +1,33 @@
 # scikit-bio changelog
 
+## Version 0.5.6-dev
+
+### Features
+
+* Added support for `np.float32` with `DissimilarityMatrix` objects.
+
+### Backward-incompatible changes [stable]
+
+### Backward-incompatible changes [experimental]
+
+### Performance enhancements
+
+* Avoid an implicit data copy on construction of `DissimilarityMatrix` objects. 
+
+### Bug fixes
+
+* Fix windows and 32bit incompatibility in `unweighted_unifrac`.
+
+### Deprecated functionality [stable]
+
+### Deprecated functionality [experimental]
+
+### Miscellaneous
+
+* Specify build dependencies in pyproject.toml. This allows the package to be installed without having to first manually install numpy.
+
+* Update hdmedians package to a version which doesn't require an initial manual numpy install.
+
 ## Version 0.5.6
 
 ### Features
@@ -23,6 +51,13 @@
 ### Performance enhancements
 
 ### Bug fixes
+* Require `Sphinx <= 3.0`. Newer Sphinx versions caused build errors. [#1719](https://github.com/biocore/scikit-bio/pull/1719)
+
+* * `skbio.stats.ordination` tests have been relaxed. ([#1713](https://github.com/biocore/scikit-bio/issues/1713))
+
+* Fixes build errors for newer versions of NumPy, Pandas, and SciPy.
+
+* Corrected a criticial bug in `skbio.alignment.StripedSmithWaterman`/`skbio.alignment.local_pairwise_align_ssw` which would cause the formatting of the aligned sequences to misplace gap characters by the number of gap characters present in the opposing aligned sequence up to that point. This was caused by a faulty implementation of CIGAR string parsing, see [#1679](https://github.com/biocore/scikit-bio/pull/1679) for full details.
 
 * Fixes build errors for newer versions of NumPy, Pandas, and SciPy.
 

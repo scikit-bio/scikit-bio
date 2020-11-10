@@ -27,8 +27,8 @@ from skbio import DNA, read, write
 
 
 class MockClass:
-    def __init__(self, l):
-        self.list = l
+    def __init__(self, list_):
+        self.list = list_
 
     def __eq__(self, other):
         # They are only equal when the class is EXACTLY the same. We don't want
@@ -1692,8 +1692,9 @@ class TestWrite(RegistryTest):
             iterator = iter(obj.list)
             fh.write(next(iterator))
             fh.flush()  # Flush should be a noop for bz2
-            for l in iterator:
-                fh.write(l)
+
+            for line in iterator:
+                fh.write(line)
 
         self.registry.write(obj, format='format1', into=fp, compression='bz2')
         self.registry.write(obj, format='format1', into=f, compression='bz2')
