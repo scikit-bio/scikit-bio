@@ -86,14 +86,7 @@ with open('README.rst') as f:
 USE_CYTHON = os.environ.get('USE_CYTHON', False)
 ext = '.pyx' if USE_CYTHON else '.c'
 
-# There's a bug in some versions of Python 3.4 that propagates
-# -Werror=declaration-after-statement to extensions, instead of just affecting
-# the compilation of the interpreter. See http://bugs.python.org/issue21121 for
-# details. This acts as a workaround until the next Python 3 release -- thanks
-# Wolfgang Maier (wolma) for the workaround!
 ssw_extra_compile_args = ['-I.']
-if sys.platform != 'win32':
-    ssw_extra_compile_args.append('-Wno-error=declaration-after-statement')
 
 if icc or sysconfig.get_config_vars()['CC'] == 'icc':
     ssw_extra_compile_args.extend(['-qopenmp-simd', '-DSIMDE_ENABLE_OPENMP'])
