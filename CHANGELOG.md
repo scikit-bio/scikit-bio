@@ -12,7 +12,7 @@
 
 ### Performance enhancements
 
-* Avoid an implicit data copy on construction of `DissimilarityMatrix` objects. 
+* Avoid an implicit data copy on construction of `DissimilarityMatrix` objects.
 
 ### Bug fixes
 
@@ -27,6 +27,8 @@
 * Specify build dependencies in pyproject.toml. This allows the package to be installed without having to first manually install numpy.
 
 * Update hdmedians package to a version which doesn't require an initial manual numpy install.
+
+* Update documentation for the `skbio.stats.composition.ancom` function. ([#1741](https://github.com/biocore/scikit-bio/pull/1741))
 
 ## Version 0.5.6
 
