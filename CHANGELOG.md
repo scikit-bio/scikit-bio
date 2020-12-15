@@ -24,6 +24,7 @@
 * Refactor pearson and spearman skbio.stats.distance.mantel implementations to drastically improve memory locality. Also cache intermediate results that are invariant across permutations, see [PR #1756](https://github.com/biocore/scikit-bio/pull/1756).
 * Refactor permanova to remove intermediate buffers and cythonize the internals, see [PR #1768](https://github.com/biocore/scikit-bio/pull/1768).
 
+
 ### Bug fixes
 
 * Fix windows and 32bit incompatibility in `unweighted_unifrac`.
@@ -35,12 +36,10 @@
 ### Miscellaneous
 
 * Specify build dependencies in pyproject.toml. This allows the package to be installed without having to first manually install numpy.
-
 * Update hdmedians package to a version which doesn't require an initial manual numpy install.
-
 * Now buildable on non-x86 platforms due to use of the [SIMD Everywhere](https://github.com/simd-everywhere/simde) library.
-
 * Regenerate Cython wrapper by default to avoid incompatibilities with installed CPython.
+* Update documentation for the `skbio.stats.composition.ancom` function. ([#1741](https://github.com/biocore/scikit-bio/pull/1741))
 
 ## Version 0.5.6
 
