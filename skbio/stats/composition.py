@@ -903,7 +903,7 @@ def ancom(table, grouping,
     The developers of this method recommend the following significance tests
     ([2]_, Supplementary File 1, top of page 11): if there are 2 groups, use
     the standard parametric t-test (``scipy.stats.ttest_ind``) or
-    non-parametric Wilcoxon rank sum test (``scipy.stats.mannwhitneyu``).
+    non-parametric Mann-Whitney rank test (``scipy.stats.mannwhitneyu``).
     For paired samples, use the parametric paired t-test
     (``scipy.stats.ttest_rel``) or nonparametric Wilcoxon signed-rank test
     (``scipy.stats.wilcoxon``). If there are more than 2 groups, use
