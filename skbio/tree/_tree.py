@@ -1575,7 +1575,7 @@ class TreeNode(SkbioObject):
         Returns
         -------
         TreeNode
-            The tree node with the matcing id
+            The tree node with the matching id
 
         Notes
         -----
