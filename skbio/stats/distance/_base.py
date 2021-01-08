@@ -102,7 +102,7 @@ class DissimilarityMatrix(SkbioObject):
                 # of the same type
                 # We should be able to assume it is already
                 # in a good state.
-                validate=False
+                validate = False
             ids = data.ids if ids is None else ids
             data = data.data
 
@@ -287,7 +287,9 @@ class DissimilarityMatrix(SkbioObject):
 
         """
         # Note: Skip validation, since we assume self was already validated
-        return self.__class__(self.data.T.copy(), deepcopy(self.ids), validate=False)
+        return self.__class__(self.data.T.copy(),
+                              deepcopy(self.ids),
+                              validate=False)
 
     @experimental(as_of="0.4.0")
     def index(self, lookup_id):
@@ -354,7 +356,9 @@ class DissimilarityMatrix(SkbioObject):
         # We deepcopy IDs in case the tuple contains mutable objects at some
         # point in the future.
         # Note: Skip validation, since we assume self was already validated
-        return self.__class__(self.data.copy(), deepcopy(self.ids), validate=False)
+        return self.__class__(self.data.copy(),
+                              deepcopy(self.ids),
+                              validate=False)
 
     @experimental(as_of="0.4.0")
     def filter(self, ids, strict=True):
