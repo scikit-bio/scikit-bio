@@ -926,7 +926,7 @@ class DissimilarityMatrix(SkbioObject):
         if data.dtype not in (np.float32, np.float64):
             raise DissimilarityMatrixError("Data must contain only floating "
                                            "point values.")
-        _validate_ids(data, ids)
+        self._validate_ids(data, ids)
 
     def _index_list(self, list_):
         return {id_: idx for idx, id_ in enumerate(list_)}
