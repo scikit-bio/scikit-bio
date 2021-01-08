@@ -69,6 +69,9 @@ class DissimilarityMatrix(SkbioObject):
         rows/cols in `data`. If ``None`` (the default), IDs will be
         monotonically-increasing integers cast as strings, with numbering
         starting from zero, e.g., ``('0', '1', '2', '3', ...)``.
+    validate : bool, optional
+        If `validate` is ``True`` (the default),
+        the input data will be validated.
 
     See Also
     --------
@@ -92,8 +95,14 @@ class DissimilarityMatrix(SkbioObject):
     _matrix_element_name = 'dissimilarity'
 
     @experimental(as_of="0.4.0")
-    def __init__(self, data, ids=None):
+    def __init__(self, data, ids=None, validate=True):
         if isinstance(data, DissimilarityMatrix):
+            if (ids is None) and isinstance(data, self.__class__):
+                # Never validate when copying from an object
+                # of the same type
+                # We should be able to assume it is already
+                # in a good state.
+                validate=False
             ids = data.ids if ids is None else ids
             data = data.data
 
@@ -124,7 +133,8 @@ class DissimilarityMatrix(SkbioObject):
             ids = (str(i) for i in range(data.shape[0]))
         ids = tuple(ids)
 
-        self._validate(data, ids)
+        if validate:
+            self._validate(data, ids)
 
         self._data = data
         self._ids = ids
@@ -214,7 +224,7 @@ class DissimilarityMatrix(SkbioObject):
     @ids.setter
     def ids(self, ids_):
         ids_ = tuple(ids_)
-        self._validate(self.data, ids_)
+        self._validate_ids(self.data, ids_)
         self._ids = ids_
         self._id_index = self._index_list(self._ids)
 
@@ -276,7 +286,8 @@ class DissimilarityMatrix(SkbioObject):
             `self`.
 
         """
-        return self.__class__(self.data.T.copy(), deepcopy(self.ids))
+        # Note: Skip validation, since we assume self was already validated
+        return self.__class__(self.data.T.copy(), deepcopy(self.ids), validate=False)
 
     @experimental(as_of="0.4.0")
     def index(self, lookup_id):
@@ -342,7 +353,8 @@ class DissimilarityMatrix(SkbioObject):
         """
         # We deepcopy IDs in case the tuple contains mutable objects at some
         # point in the future.
-        return self.__class__(self.data.copy(), deepcopy(self.ids))
+        # Note: Skip validation, since we assume self was already validated
+        return self.__class__(self.data.copy(), deepcopy(self.ids), validate=False)
 
     @experimental(as_of="0.4.0")
     def filter(self, ids, strict=True):
@@ -384,8 +396,9 @@ class DissimilarityMatrix(SkbioObject):
                     pass
             ids = found_ids
 
+        # Note: Skip validation, since we assume self was already validated
         filtered_data = self._data[idxs][:, idxs]
-        return self.__class__(filtered_data, ids)
+        return self.__class__(filtered_data, ids, validate=False)
 
     def _stable_order(self, ids):
         """Obtain a stable ID order with respect to self
@@ -853,6 +866,35 @@ class DissimilarityMatrix(SkbioObject):
         else:
             return self.data.__getitem__(index)
 
+    def _validate_ids(self, data, ids):
+        """Validate the IDs.
+
+        Checks that IDs are unique and that the
+        number of IDs matches the number of rows/cols in the data array.
+
+        Subclasses can override this method to perform different/more specific
+        validation.
+
+        Notes
+        -----
+        Accepts arguments instead of inspecting instance attributes to avoid
+        creating an invalid dissimilarity matrix before raising an error.
+        Otherwise, the invalid dissimilarity matrix could be used after the
+        exception is caught and handled.
+
+        """
+        duplicates = find_duplicates(ids)
+        if duplicates:
+            formatted_duplicates = ', '.join(repr(e) for e in duplicates)
+            raise DissimilarityMatrixError("IDs must be unique. Found the "
+                                           "following duplicate IDs: %s" %
+                                           formatted_duplicates)
+        if len(ids) != data.shape[0]:
+            raise DissimilarityMatrixError("The number of IDs (%d) must match "
+                                           "the number of rows/columns in the "
+                                           "data (%d)." %
+                                           (len(ids), data.shape[0]))
+
     def _validate(self, data, ids):
         """Validate the data array and IDs.
 
@@ -884,17 +926,7 @@ class DissimilarityMatrix(SkbioObject):
         if data.dtype not in (np.float32, np.float64):
             raise DissimilarityMatrixError("Data must contain only floating "
                                            "point values.")
-        duplicates = find_duplicates(ids)
-        if duplicates:
-            formatted_duplicates = ', '.join(repr(e) for e in duplicates)
-            raise DissimilarityMatrixError("IDs must be unique. Found the "
-                                           "following duplicate IDs: %s" %
-                                           formatted_duplicates)
-        if len(ids) != data.shape[0]:
-            raise DissimilarityMatrixError("The number of IDs (%d) must match "
-                                           "the number of rows/columns in the "
-                                           "data (%d)." %
-                                           (len(ids), data.shape[0]))
+        _validate_ids(data, ids)
 
     def _index_list(self, list_):
         return {id_: idx for idx, id_ in enumerate(list_)}
@@ -1065,7 +1097,8 @@ class DistanceMatrix(DissimilarityMatrix):
         if condensed:
             return squareform(permuted, force='tovector', checks=False)
         else:
-            return self.__class__(permuted, self.ids)
+            # Note: Skip validation, since we assume self was already validated
+            return self.__class__(permuted, self.ids, validate=False)
 
     def _validate(self, data, ids):
         """Validate the data array and IDs.
