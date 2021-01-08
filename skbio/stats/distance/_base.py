@@ -70,8 +70,8 @@ class DissimilarityMatrix(SkbioObject):
         monotonically-increasing integers cast as strings, with numbering
         starting from zero, e.g., ``('0', '1', '2', '3', ...)``.
     validate : bool, optional
-        If `validate` is ``True`` (the default),
-        the input data will be validated.
+        If `validate` is ``True`` (the default) and data is not a
+        DissimilarityMatrix object, the input data will be validated.
 
     See Also
     --------
