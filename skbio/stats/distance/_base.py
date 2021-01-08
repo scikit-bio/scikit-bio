@@ -397,7 +397,9 @@ class DissimilarityMatrix(SkbioObject):
             ids = found_ids
 
         # Note: Skip validation, since we assume self was already validated
+        # But ids are new, so validate them explicitly
         filtered_data = self._data[idxs][:, idxs]
+        self._validate_ids(filtered_data, ids)
         return self.__class__(filtered_data, ids, validate=False)
 
     def _stable_order(self, ids):
