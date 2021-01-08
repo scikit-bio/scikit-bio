@@ -891,6 +891,9 @@ class DissimilarityMatrix(SkbioObject):
             raise DissimilarityMatrixError("IDs must be unique. Found the "
                                            "following duplicate IDs: %s" %
                                            formatted_duplicates)
+        if 0 == len(ids):
+            raise DissimilarityMatrixError("IDs must be at least 1 in "
+                                           "size.")
         if len(ids) != data.shape[0]:
             raise DissimilarityMatrixError("The number of IDs (%d) must match "
                                            "the number of rows/columns in the "
