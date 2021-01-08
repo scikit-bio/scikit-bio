@@ -13,6 +13,7 @@
 ### Performance enhancements
 
 * Avoid an implicit data copy on construction of `DissimilarityMatrix` objects. 
+* Avoid validation on copy of `DissimilarityMatrix` and `DistanceMatrix` objects.
 
 ### Bug fixes
 
