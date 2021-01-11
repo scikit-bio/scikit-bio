@@ -9,6 +9,7 @@
 import numpy as np
 
 from skbio.util._decorator import experimental
+from ._cutils import center_distance_matrix_cy
 
 
 @experimental(as_of="0.4.0")
@@ -218,9 +219,12 @@ def center_distance_matrix(distance_matrix, inplace=False):
         is more efficient in terms of memory and computation.
     """
     if inplace:
-        return _f_matrix_inplace(_e_matrix_inplace(distance_matrix))
+        center_distance_matrix_cy(distance_matrix, distance_matrix)
+        return distance_matrix
     else:
-        return f_matrix(e_matrix(distance_matrix))
+        centered = np.zeros(distance_matrix.shape, distance_matrix.dtype)
+        center_distance_matrix_cy(distance_matrix, centered)
+        return centered
 
 
 def _e_matrix_inplace(distance_matrix):
