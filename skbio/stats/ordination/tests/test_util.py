@@ -29,10 +29,10 @@ class TestUtils(TestCase):
         self.small_mat = np.array([[7, 5, 5], [4, 4, 9], [7, 5, 3]])
         self.dist_mat = np.asarray([[0., 7., 5., 5.], [7., 0., 4., 9.],
                                     [5., 4., 0., 3.], [5., 9., 3., 0.]],
-                                    dtype=np.float64)
-        self.dist_mat_fp32 = np.asarray([[0., 7., 5., 5.], [7., 0., 4., 9.], 
+                                   dtype=np.float64)
+        self.dist_mat_fp32 = np.asarray([[0., 7., 5., 5.], [7., 0., 4., 9.],
                                          [5., 4., 0., 3.], [5., 9., 3., 0.]],
-                                         dtype=np.float32)
+                                        dtype=np.float32)
 
     def test_mean_and_std(self):
         obs = mean_and_std(self.x)
