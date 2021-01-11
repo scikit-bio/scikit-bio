@@ -13,6 +13,7 @@
 ### Performance enhancements
 
 * Avoid an implicit data copy on construction of `DissimilarityMatrix` objects. 
+* center_distance_matrix has been re-implemented in cython for both speed and memory use. Indirectly speeds up pcoa.
 
 ### Bug fixes
 
