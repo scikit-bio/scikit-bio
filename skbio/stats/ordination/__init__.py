@@ -136,10 +136,12 @@ from ._principal_coordinate_analysis import pcoa, pcoa_biplot
 from ._ordination_results import OrdinationResults
 from ._utils import (mean_and_std, scale, svd_rank, corr, e_matrix, f_matrix,
                      center_distance_matrix)
-from ._cutils import (e_matrix_means_cy,  f_matrix_inplace_cy, center_distance_matrix_cy)
+from ._cutils import (e_matrix_means_cy,  f_matrix_inplace_cy,
+                      center_distance_matrix_cy)
 
 
 __all__ = ['ca', 'rda', 'cca', 'pcoa', 'pcoa_biplot', 'OrdinationResults',
            'mean_and_std', 'scale', 'svd_rank', 'corr',
            'e_matrix', 'f_matrix', 'center_distance_matrix',
-           'E_matrix_means',  'F_matrix_inplace', 'center_distance_matrix_copy']
+           'e_matrix_means_cy',  'f_matrix_inplace_cy',
+           'center_distance_matrix_cy']
