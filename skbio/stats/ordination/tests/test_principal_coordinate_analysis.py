@@ -101,19 +101,21 @@ class TestPCoA(TestCase):
                                         ignore_directionality=True,
                                         ignore_method_names=True)
 
-        with self.assertRaises(ValueError):
-            dim_too_large = dm1.data.shape[0] + 10
-            pcoa(dm2, method="fsvd", number_of_dimensions=dim_too_large)
-
-        with self.assertRaises(ValueError):
-            pcoa(dm2, method="fsvd", number_of_dimensions=-1)
+        dm4 = DistanceMatrix.read(get_data_path('PCoA_sample_data_3'))
 
         with self.assertRaises(ValueError):
             dim_too_large = dm1.data.shape[0] + 10
-            pcoa(dm2, method="eigh", number_of_dimensions=dim_too_large)
+            pcoa(dm4, method="fsvd", number_of_dimensions=dim_too_large)
 
         with self.assertRaises(ValueError):
-            pcoa(dm2, method="eigh", number_of_dimensions=-1)
+            pcoa(dm4, method="fsvd", number_of_dimensions=-1)
+
+        with self.assertRaises(ValueError):
+            dim_too_large = dm1.data.shape[0] + 10
+            pcoa(dm4, method="eigh", number_of_dimensions=dim_too_large)
+
+        with self.assertRaises(ValueError):
+            pcoa(dm4, method="eigh", number_of_dimensions=-1)
 
         dm_big = DistanceMatrix.read(get_data_path('PCoA_sample_data_12dim'))
         with self.assertWarnsRegex(RuntimeWarning,
