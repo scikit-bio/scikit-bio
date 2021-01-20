@@ -37,7 +37,7 @@ def e_matrix_means_cy(TReal[:, ::1] mat, TReal[:, ::1] centered, TReal[::1] row_
         Output, E matrix. Must be pre-allocated and same shape as mat.
         Can point to mat (i.e. in-place)
     row_means : 1D_array_like
-        Outpuit, Mean values of each row in `centered`
+        Output, Mean values of each row in `centered`
     Returns
     -------
     global_mean : real
