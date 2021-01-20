@@ -717,6 +717,14 @@ class DissimilarityMatrixTests(DissimilarityMatrixTestData):
         with self.assertRaises(DissimilarityMatrixError):
             self.dm_3x3._validate(np.array([[0, 42], [42, 0]]), ['a', 'b'])
 
+    def test_validate_invalid_ids(self):
+        with self.assertRaises(DissimilarityMatrixError):
+            self.dm_3x3._validate_ids(self.dm_3x3.data, ['a', 'a'])
+        with self.assertRaises(DissimilarityMatrixError):
+            self.dm_3x3._validate_ids(self.dm_3x3.data, [])
+        with self.assertRaises(DissimilarityMatrixError):
+            self.dm_3x3._validate_ids(self.dm_3x3.data, ['a', 'b', 'c', 'd'])
+
 
 class DistanceMatrixTests(DissimilarityMatrixTestData):
     def setUp(self):
