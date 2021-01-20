@@ -13,7 +13,7 @@
 ### Performance enhancements
 
 * Avoid an implicit data copy on construction of `DissimilarityMatrix` objects. 
-* center_distance_matrix has been re-implemented in cython for both speed and memory use. Indirectly speeds up pcoa.
+* center_distance_matrix has been re-implemented in cython for both speed and memory use. Indirectly speeds up pcoa (PR #1749)[https://github.com/biocore/scikit-bio/pull/1749]
 
 ### Bug fixes
 
