@@ -11,7 +11,7 @@ import numpy as np
 from ._cutils import distmat_reorder_cy
 
 
-def distmat_reorder_buf(in_mat, reorder_vec, out_mat, validate = False):
+def distmat_reorder_buf(in_mat, reorder_vec, out_mat, validate=False):
     """
     Reorder the rows and columns of a distance matrix
     given a reorder vector.
@@ -33,11 +33,11 @@ def distmat_reorder_buf(in_mat, reorder_vec, out_mat, validate = False):
     Parameters
     ----------
     in_mat : 2D array_like
-        Distance matrix, must be in c_order
+        Distance matrix
     reorder_vec : 1D_array_like
         List of permutation indexes
     out_mat : 2D array_like
-        Output, Distance matrix, 
+        Output, Distance matrix,
         must be in c_order and same size as reorder_vec
     validate: boolean
         Optional, if True, validate reorder_vec content, detaults to False
@@ -49,9 +49,13 @@ def distmat_reorder_buf(in_mat, reorder_vec, out_mat, validate = False):
         if bad_cnt > 0:
             raise ValueError("Invalid reorder_vec")
 
+    if not in_mat.flags.c_contiguous:
+        in_mat = np.asarray(in_mat, order='C')
+
     distmat_reorder_cy(in_mat, np_reorder, out_mat)
 
-def distmat_reorder(in_mat, reorder_vec, validate = False):
+
+def distmat_reorder(in_mat, reorder_vec, validate=False):
     """
     Reorder the rows and columns of a distance matrix
     given a reorder vector.
@@ -91,7 +95,9 @@ def distmat_reorder(in_mat, reorder_vec, validate = False):
         if bad_cnt > 0:
             raise ValueError("Invalid reorder_vec")
 
+    if not in_mat.flags.c_contiguous:
+        in_mat = np.asarray(in_mat, order='C')
+
     out_mat = np.empty([np_reorder.size, np_reorder.size], in_mat.dtype)
     distmat_reorder_cy(in_mat, np_reorder, out_mat)
     return out_mat
-
