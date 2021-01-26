@@ -21,7 +21,7 @@ from skbio.util import find_duplicates
 from skbio.util._decorator import experimental, classonlymethod
 from skbio.util._misc import resolve_key
 
-from ._utils import distmat_reorder
+from ._utils import distmat_reorder, distmat_reorder_condensed
 
 
 class DissimilarityMatrixError(Exception):
@@ -1063,11 +1063,12 @@ class DistanceMatrix(DissimilarityMatrix):
 
         """
         order = np.random.permutation(self.shape[0])
-        permuted = distmat_reorder(self._data, order)
 
         if condensed:
-            return squareform(permuted, force='tovector', checks=False)
+            permuted_condensed = distmat_reorder_condensed(self._data, order)
+            return permuted_condensed
         else:
+            permuted = distmat_reorder(self._data, order)
             return self.__class__(permuted, self.ids)
 
     def _validate(self, data, ids):
