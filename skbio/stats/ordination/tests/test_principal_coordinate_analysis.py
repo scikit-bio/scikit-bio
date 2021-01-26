@@ -125,16 +125,15 @@ class TestPCoA(TestCase):
     def test_permutted(self):
         dm1 = DistanceMatrix.read(get_data_path('PCoA_sample_data_3'))
         # this should not throw
-        results1 = pcoa(dm1, method="fsvd", number_of_dimensions=3,
-                        inplace=False)
+        pcoa(dm1, method="fsvd", number_of_dimensions=3,
+             inplace=False)
 
         # some operations, like permute, will change memory structure
-        # we want to test that this does not break pcoa 
+        # we want to test that this does not break pcoa
         dm2 = dm1.permute()
         # we just want to assure it does not throw
-        results2 = pcoa(dm2, method="fsvd", number_of_dimensions=3,
-                        inplace=False)
-
+        pcoa(dm2, method="fsvd", number_of_dimensions=3,
+             inplace=False)
 
     def test_extensive(self):
         eigvals = [0.3984635, 0.36405689, 0.28804535, 0.27479983,
