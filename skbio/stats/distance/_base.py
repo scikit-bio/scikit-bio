@@ -369,6 +369,9 @@ class DissimilarityMatrix(SkbioObject):
         MissingIDError
             If an ID in `ids` is not in the object's list of IDs.
         """
+        if tuple(self._ids) == tuple(ids):
+            return self.__class__(self._data, self._ids)
+
         if strict:
             idxs = [self.index(id_) for id_ in ids]
         else:
