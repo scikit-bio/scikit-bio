@@ -11,7 +11,7 @@ import numpy as np
 from ._cutils import distmat_reorder_cy
 
 
-def distmat_reorder_buf(in_mat, reorder_vec, out_mat, validate = false):
+def distmat_reorder_buf(in_mat, reorder_vec, out_mat, validate = False):
     """
     Reorder the rows and columns of a distance matrix
     given a reorder vector.
@@ -40,7 +40,7 @@ def distmat_reorder_buf(in_mat, reorder_vec, out_mat, validate = false):
         Output, Distance matrix, 
         must be in c_order and same size as reorder_vec
     validate: boolean
-        Optional, if true, validate reorder_vec content, detaults to false
+        Optional, if True, validate reorder_vec content, detaults to False
     """
     np_reorder = np.asarray(reorder_vec, dtype=np.int)
     if validate:
@@ -51,7 +51,7 @@ def distmat_reorder_buf(in_mat, reorder_vec, out_mat, validate = false):
 
     distmat_reorder_cy(in_mat, np_reorder, out_mat)
 
-def distmat_reorder(in_mat, reorder_vec, validate = false):
+def distmat_reorder(in_mat, reorder_vec, validate = False):
     """
     Reorder the rows and columns of a distance matrix
     given a reorder vector.
@@ -77,7 +77,7 @@ def distmat_reorder(in_mat, reorder_vec, validate = false):
     reorder_vec : 1D_array_like
         List of permutation indexes
     validate: boolean
-        Optional, if true, validate reorder_vec content, detaults to false
+        Optional, if True, validate reorder_vec content, detaults to False
 
     Returns
     -------
