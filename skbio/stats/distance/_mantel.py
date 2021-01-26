@@ -438,6 +438,9 @@ def _order_dms(x, y, strict=True, lookup=None):
             x = _remap_ids(x, lookup, 'x', 'first')
             y = _remap_ids(y, lookup, 'y', 'second')
 
+        if tuple(x.ids)==tuple(y.ids):
+          return x, y
+
         id_order = [id_ for id_ in x.ids if id_ in y]
         num_matches = len(id_order)
 
