@@ -13,6 +13,7 @@
 ### Performance enhancements
 
 * Avoid an implicit data copy on construction of `DissimilarityMatrix` objects. 
+* Avoid performing filtering when ids are identical.
 
 ### Bug fixes
 
