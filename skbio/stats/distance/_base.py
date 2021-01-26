@@ -21,6 +21,8 @@ from skbio.util import find_duplicates
 from skbio.util._decorator import experimental, classonlymethod
 from skbio.util._misc import resolve_key
 
+from ._utils import distmat_reorder
+
 
 class DissimilarityMatrixError(Exception):
     """General error for dissimilarity matrix validation failures."""
@@ -384,7 +386,8 @@ class DissimilarityMatrix(SkbioObject):
                     pass
             ids = found_ids
 
-        filtered_data = self._data[idxs][:, idxs]
+        filtered_data = distmat_reorder(self._data, idxs)
+
         return self.__class__(filtered_data, ids)
 
     def _stable_order(self, ids):
@@ -1060,7 +1063,7 @@ class DistanceMatrix(DissimilarityMatrix):
 
         """
         order = np.random.permutation(self.shape[0])
-        permuted = self._data[order][:, order]
+        permuted = distmat_reorder(self._data, order)
 
         if condensed:
             return squareform(permuted, force='tovector', checks=False)
