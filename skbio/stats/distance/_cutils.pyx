@@ -114,7 +114,7 @@ def distmat_reorder_condensed_cy(TReal[:, ::1] in_mat, long[::1] reorder_vec,
 
     for row in prange(out_n-1, nogil=True):
         vrow = reorder_vec[row]
-        idx = row*out_n - ((row-1)*row)/2
+        idx = row*(out_n-1) - ((row-1)*row)/2
         for col in range(out_n-row-1):
            out_mat_condensed[idx+col] = in_mat[vrow,reorder_vec[col+row+1]]
 
