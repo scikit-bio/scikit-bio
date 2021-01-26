@@ -19,7 +19,7 @@ ctypedef fused TReal:
 
 @cython.boundscheck(False)
 @cython.wraparound(False)
-def distmat_reorder_cy(TReal[:, ::1] in_mat, int[::1] reorder_vec, 
+def distmat_reorder_cy(TReal[:, ::1] in_mat, long[::1] reorder_vec, 
                        TReal[:, ::1] out_mat):
     """
     Reorder the rows and columns of a distance matrix

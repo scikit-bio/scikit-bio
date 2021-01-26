@@ -1811,7 +1811,7 @@ static CYTHON_INLINE __Pyx_memviewslice __Pyx_PyObject_to_MemoryviewSlice_d_dc_f
 static CYTHON_INLINE __Pyx_memviewslice __Pyx_PyObject_to_MemoryviewSlice_d_dc_double(PyObject *, int writable_flag);
 
 /* ObjectToMemviewSlice.proto */
-static CYTHON_INLINE __Pyx_memviewslice __Pyx_PyObject_to_MemoryviewSlice_dc_int(PyObject *, int writable_flag);
+static CYTHON_INLINE __Pyx_memviewslice __Pyx_PyObject_to_MemoryviewSlice_dc_long(PyObject *, int writable_flag);
 
 /* CIntToPy.proto */
 static CYTHON_INLINE PyObject* __Pyx_PyInt_From_long(long value);
@@ -1910,7 +1910,7 @@ static void __pyx_memoryview__slice_assign_scalar(char *, Py_ssize_t *, Py_ssize
 static PyObject *__pyx_unpickle_Enum__set_state(struct __pyx_MemviewEnum_obj *, PyObject *); /*proto*/
 static __Pyx_TypeInfo __Pyx_TypeInfo_float = { "float", NULL, sizeof(float), { 0 }, 0, 'R', 0, 0 };
 static __Pyx_TypeInfo __Pyx_TypeInfo_double = { "double", NULL, sizeof(double), { 0 }, 0, 'R', 0, 0 };
-static __Pyx_TypeInfo __Pyx_TypeInfo_int = { "int", NULL, sizeof(int), { 0 }, 0, IS_UNSIGNED(int) ? 'U' : 'I', IS_UNSIGNED(int), 0 };
+static __Pyx_TypeInfo __Pyx_TypeInfo_long = { "long", NULL, sizeof(long), { 0 }, 0, IS_UNSIGNED(long) ? 'U' : 'I', IS_UNSIGNED(long), 0 };
 #define __Pyx_MODULE_NAME "skbio.stats.distance._cutils"
 extern int __pyx_module_is_main_skbio__stats__distance___cutils;
 int __pyx_module_is_main_skbio__stats__distance___cutils = 0;
@@ -2246,7 +2246,7 @@ static PyObject *__pyx_codeobj__31;
 /* "skbio/stats/distance/_cutils.pyx":22
  * @cython.boundscheck(False)
  * @cython.wraparound(False)
- * def distmat_reorder_cy(TReal[:, ::1] in_mat, int[::1] reorder_vec,             # <<<<<<<<<<<<<<
+ * def distmat_reorder_cy(TReal[:, ::1] in_mat, long[::1] reorder_vec,             # <<<<<<<<<<<<<<
  *                        TReal[:, ::1] out_mat):
  *     """
  */
@@ -2840,7 +2840,7 @@ static PyObject *__pyx_fuse_0__pyx_pw_5skbio_5stats_8distance_7_cutils_3distmat_
       values[2] = PyTuple_GET_ITEM(__pyx_args, 2);
     }
     __pyx_v_in_mat = __Pyx_PyObject_to_MemoryviewSlice_d_dc_float(values[0], PyBUF_WRITABLE); if (unlikely(!__pyx_v_in_mat.memview)) __PYX_ERR(0, 22, __pyx_L3_error)
-    __pyx_v_reorder_vec = __Pyx_PyObject_to_MemoryviewSlice_dc_int(values[1], PyBUF_WRITABLE); if (unlikely(!__pyx_v_reorder_vec.memview)) __PYX_ERR(0, 22, __pyx_L3_error)
+    __pyx_v_reorder_vec = __Pyx_PyObject_to_MemoryviewSlice_dc_long(values[1], PyBUF_WRITABLE); if (unlikely(!__pyx_v_reorder_vec.memview)) __PYX_ERR(0, 22, __pyx_L3_error)
     __pyx_v_out_mat = __Pyx_PyObject_to_MemoryviewSlice_d_dc_float(values[2], PyBUF_WRITABLE); if (unlikely(!__pyx_v_out_mat.memview)) __PYX_ERR(0, 23, __pyx_L3_error)
   }
   goto __pyx_L4_argument_unpacking_done;
@@ -3026,7 +3026,7 @@ static PyObject *__pyx_pf_5skbio_5stats_8distance_7_cutils_2distmat_reorder_cy(C
  *            out_mat[row,col] = in_mat[vrow,reorder_vec[col]]
  */
                             __pyx_t_4 = __pyx_v_row;
-                            __pyx_v_vrow = (*((int *) ( /* dim=0 */ ((char *) (((int *) __pyx_v_reorder_vec.data) + __pyx_t_4)) )));
+                            __pyx_v_vrow = (*((long *) ( /* dim=0 */ ((char *) (((long *) __pyx_v_reorder_vec.data) + __pyx_t_4)) )));
 
                             /* "skbio/stats/distance/_cutils.pyx":69
  *     for row in prange(out_n, nogil=True):
@@ -3048,7 +3048,7 @@ static PyObject *__pyx_pf_5skbio_5stats_8distance_7_cutils_2distmat_reorder_cy(C
  */
                               __pyx_t_4 = __pyx_v_col;
                               __pyx_t_8 = __pyx_v_vrow;
-                              __pyx_t_9 = (*((int *) ( /* dim=0 */ ((char *) (((int *) __pyx_v_reorder_vec.data) + __pyx_t_4)) )));
+                              __pyx_t_9 = (*((long *) ( /* dim=0 */ ((char *) (((long *) __pyx_v_reorder_vec.data) + __pyx_t_4)) )));
                               __pyx_t_10 = __pyx_v_row;
                               __pyx_t_11 = __pyx_v_col;
                               *((float *) ( /* dim=1 */ ((char *) (((float *) ( /* dim=0 */ (__pyx_v_out_mat.data + __pyx_t_10 * __pyx_v_out_mat.strides[0]) )) + __pyx_t_11)) )) = (*((float *) ( /* dim=1 */ ((char *) (((float *) ( /* dim=0 */ (__pyx_v_in_mat.data + __pyx_t_8 * __pyx_v_in_mat.strides[0]) )) + __pyx_t_9)) )));
@@ -3088,7 +3088,7 @@ static PyObject *__pyx_pf_5skbio_5stats_8distance_7_cutils_2distmat_reorder_cy(C
   /* "skbio/stats/distance/_cutils.pyx":22
  * @cython.boundscheck(False)
  * @cython.wraparound(False)
- * def distmat_reorder_cy(TReal[:, ::1] in_mat, int[::1] reorder_vec,             # <<<<<<<<<<<<<<
+ * def distmat_reorder_cy(TReal[:, ::1] in_mat, long[::1] reorder_vec,             # <<<<<<<<<<<<<<
  *                        TReal[:, ::1] out_mat):
  *     """
  */
@@ -3166,7 +3166,7 @@ static PyObject *__pyx_fuse_1__pyx_pw_5skbio_5stats_8distance_7_cutils_5distmat_
       values[2] = PyTuple_GET_ITEM(__pyx_args, 2);
     }
     __pyx_v_in_mat = __Pyx_PyObject_to_MemoryviewSlice_d_dc_double(values[0], PyBUF_WRITABLE); if (unlikely(!__pyx_v_in_mat.memview)) __PYX_ERR(0, 22, __pyx_L3_error)
-    __pyx_v_reorder_vec = __Pyx_PyObject_to_MemoryviewSlice_dc_int(values[1], PyBUF_WRITABLE); if (unlikely(!__pyx_v_reorder_vec.memview)) __PYX_ERR(0, 22, __pyx_L3_error)
+    __pyx_v_reorder_vec = __Pyx_PyObject_to_MemoryviewSlice_dc_long(values[1], PyBUF_WRITABLE); if (unlikely(!__pyx_v_reorder_vec.memview)) __PYX_ERR(0, 22, __pyx_L3_error)
     __pyx_v_out_mat = __Pyx_PyObject_to_MemoryviewSlice_d_dc_double(values[2], PyBUF_WRITABLE); if (unlikely(!__pyx_v_out_mat.memview)) __PYX_ERR(0, 23, __pyx_L3_error)
   }
   goto __pyx_L4_argument_unpacking_done;
@@ -3352,7 +3352,7 @@ static PyObject *__pyx_pf_5skbio_5stats_8distance_7_cutils_4distmat_reorder_cy(C
  *            out_mat[row,col] = in_mat[vrow,reorder_vec[col]]
  */
                             __pyx_t_4 = __pyx_v_row;
-                            __pyx_v_vrow = (*((int *) ( /* dim=0 */ ((char *) (((int *) __pyx_v_reorder_vec.data) + __pyx_t_4)) )));
+                            __pyx_v_vrow = (*((long *) ( /* dim=0 */ ((char *) (((long *) __pyx_v_reorder_vec.data) + __pyx_t_4)) )));
 
                             /* "skbio/stats/distance/_cutils.pyx":69
  *     for row in prange(out_n, nogil=True):
@@ -3374,7 +3374,7 @@ static PyObject *__pyx_pf_5skbio_5stats_8distance_7_cutils_4distmat_reorder_cy(C
  */
                               __pyx_t_4 = __pyx_v_col;
                               __pyx_t_8 = __pyx_v_vrow;
-                              __pyx_t_9 = (*((int *) ( /* dim=0 */ ((char *) (((int *) __pyx_v_reorder_vec.data) + __pyx_t_4)) )));
+                              __pyx_t_9 = (*((long *) ( /* dim=0 */ ((char *) (((long *) __pyx_v_reorder_vec.data) + __pyx_t_4)) )));
                               __pyx_t_10 = __pyx_v_row;
                               __pyx_t_11 = __pyx_v_col;
                               *((double *) ( /* dim=1 */ ((char *) (((double *) ( /* dim=0 */ (__pyx_v_out_mat.data + __pyx_t_10 * __pyx_v_out_mat.strides[0]) )) + __pyx_t_11)) )) = (*((double *) ( /* dim=1 */ ((char *) (((double *) ( /* dim=0 */ (__pyx_v_in_mat.data + __pyx_t_8 * __pyx_v_in_mat.strides[0]) )) + __pyx_t_9)) )));
@@ -3414,7 +3414,7 @@ static PyObject *__pyx_pf_5skbio_5stats_8distance_7_cutils_4distmat_reorder_cy(C
   /* "skbio/stats/distance/_cutils.pyx":22
  * @cython.boundscheck(False)
  * @cython.wraparound(False)
- * def distmat_reorder_cy(TReal[:, ::1] in_mat, int[::1] reorder_vec,             # <<<<<<<<<<<<<<
+ * def distmat_reorder_cy(TReal[:, ::1] in_mat, long[::1] reorder_vec,             # <<<<<<<<<<<<<<
  *                        TReal[:, ::1] out_mat):
  *     """
  */
@@ -17354,7 +17354,7 @@ static CYTHON_SMALL_CODE int __Pyx_InitCachedConstants(void) {
   /* "skbio/stats/distance/_cutils.pyx":22
  * @cython.boundscheck(False)
  * @cython.wraparound(False)
- * def distmat_reorder_cy(TReal[:, ::1] in_mat, int[::1] reorder_vec,             # <<<<<<<<<<<<<<
+ * def distmat_reorder_cy(TReal[:, ::1] in_mat, long[::1] reorder_vec,             # <<<<<<<<<<<<<<
  *                        TReal[:, ::1] out_mat):
  *     """
  */
@@ -17560,7 +17560,7 @@ static CYTHON_SMALL_CODE int __Pyx_InitCachedConstants(void) {
   /* "skbio/stats/distance/_cutils.pyx":22
  * @cython.boundscheck(False)
  * @cython.wraparound(False)
- * def distmat_reorder_cy(TReal[:, ::1] in_mat, int[::1] reorder_vec,             # <<<<<<<<<<<<<<
+ * def distmat_reorder_cy(TReal[:, ::1] in_mat, long[::1] reorder_vec,             # <<<<<<<<<<<<<<
  *                        TReal[:, ::1] out_mat):
  *     """
  */
@@ -18004,7 +18004,7 @@ if (!__Pyx_RefNanny) {
   /* "skbio/stats/distance/_cutils.pyx":22
  * @cython.boundscheck(False)
  * @cython.wraparound(False)
- * def distmat_reorder_cy(TReal[:, ::1] in_mat, int[::1] reorder_vec,             # <<<<<<<<<<<<<<
+ * def distmat_reorder_cy(TReal[:, ::1] in_mat, long[::1] reorder_vec,             # <<<<<<<<<<<<<<
  *                        TReal[:, ::1] out_mat):
  *     """
  */
@@ -22687,7 +22687,7 @@ __pyx_fail:
 }
 
 /* ObjectToMemviewSlice */
-  static CYTHON_INLINE __Pyx_memviewslice __Pyx_PyObject_to_MemoryviewSlice_dc_int(PyObject *obj, int writable_flag) {
+  static CYTHON_INLINE __Pyx_memviewslice __Pyx_PyObject_to_MemoryviewSlice_dc_long(PyObject *obj, int writable_flag) {
     __Pyx_memviewslice result = { 0, 0, { 0 }, { 0 }, { 0 } };
     __Pyx_BufFmt_StackElem stack[1];
     int axes_specs[] = { (__Pyx_MEMVIEW_DIRECT | __Pyx_MEMVIEW_CONTIG) };
@@ -22698,7 +22698,7 @@ __pyx_fail:
     }
     retcode = __Pyx_ValidateAndInit_memviewslice(axes_specs, __Pyx_IS_C_CONTIG,
                                                  (PyBUF_C_CONTIGUOUS | PyBUF_FORMAT) | writable_flag, 1,
-                                                 &__Pyx_TypeInfo_int, stack,
+                                                 &__Pyx_TypeInfo_long, stack,
                                                  &result, obj);
     if (unlikely(retcode == -1))
         goto __pyx_fail;

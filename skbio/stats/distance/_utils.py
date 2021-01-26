@@ -42,7 +42,7 @@ def distmat_reorder_buf(in_mat, reorder_vec, out_mat, validate = False):
     validate: boolean
         Optional, if True, validate reorder_vec content, detaults to False
     """
-    np_reorder = np.asarray(reorder_vec, dtype=np.int)
+    np_reorder = np.asarray(reorder_vec, dtype=np.long)
     if validate:
         maxsize = in_mat.shape[0]
         bad_cnt = np.where((np_reorder < 0) or (np_reorder >= maxsize))[0].size
@@ -84,7 +84,7 @@ def distmat_reorder(in_mat, reorder_vec, validate = False):
     out_mat : 2D array_like
         Distance matrix
     """
-    np_reorder = np.asarray(reorder_vec, dtype=np.int)
+    np_reorder = np.asarray(reorder_vec, dtype=np.long)
     if validate:
         maxsize = in_mat.shape[0]
         bad_cnt = np.where((np_reorder < 0) or (np_reorder >= maxsize))[0].size
