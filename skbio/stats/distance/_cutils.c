@@ -4167,7 +4167,7 @@ static PyObject *__pyx_pf_5skbio_5stats_8distance_7_cutils_10distmat_reorder_con
  * 
  *     for row in prange(out_n-1, nogil=True):             # <<<<<<<<<<<<<<
  *         vrow = reorder_vec[row]
- *         idx = (row+1)*out_n - ((row+1)*row)/2
+ *         idx = row*out_n - ((row-1)*row)/2
  */
   {
       #ifdef WITH_THREAD
@@ -4207,7 +4207,7 @@ static PyObject *__pyx_pf_5skbio_5stats_8distance_7_cutils_10distmat_reorder_con
  * 
  *     for row in prange(out_n-1, nogil=True):
  *         vrow = reorder_vec[row]             # <<<<<<<<<<<<<<
- *         idx = (row+1)*out_n - ((row+1)*row)/2
+ *         idx = row*out_n - ((row-1)*row)/2
  *         for col in range(out_n-row-1):
  */
                             __pyx_t_4 = __pyx_v_row;
@@ -4216,15 +4216,15 @@ static PyObject *__pyx_pf_5skbio_5stats_8distance_7_cutils_10distmat_reorder_con
                             /* "skbio/stats/distance/_cutils.pyx":117
  *     for row in prange(out_n-1, nogil=True):
  *         vrow = reorder_vec[row]
- *         idx = (row+1)*out_n - ((row+1)*row)/2             # <<<<<<<<<<<<<<
+ *         idx = row*out_n - ((row-1)*row)/2             # <<<<<<<<<<<<<<
  *         for col in range(out_n-row-1):
  *            out_mat_condensed[idx+col] = in_mat[vrow,reorder_vec[col+row+1]]
  */
-                            __pyx_v_idx = (((__pyx_v_row + 1) * __pyx_v_out_n) - __Pyx_div_Py_ssize_t(((__pyx_v_row + 1) * __pyx_v_row), 2));
+                            __pyx_v_idx = ((__pyx_v_row * __pyx_v_out_n) - __Pyx_div_Py_ssize_t(((__pyx_v_row - 1) * __pyx_v_row), 2));
 
                             /* "skbio/stats/distance/_cutils.pyx":118
  *         vrow = reorder_vec[row]
- *         idx = (row+1)*out_n - ((row+1)*row)/2
+ *         idx = row*out_n - ((row-1)*row)/2
  *         for col in range(out_n-row-1):             # <<<<<<<<<<<<<<
  *            out_mat_condensed[idx+col] = in_mat[vrow,reorder_vec[col+row+1]]
  * 
@@ -4235,7 +4235,7 @@ static PyObject *__pyx_pf_5skbio_5stats_8distance_7_cutils_10distmat_reorder_con
                               __pyx_v_col = __pyx_t_7;
 
                               /* "skbio/stats/distance/_cutils.pyx":119
- *         idx = (row+1)*out_n - ((row+1)*row)/2
+ *         idx = row*out_n - ((row-1)*row)/2
  *         for col in range(out_n-row-1):
  *            out_mat_condensed[idx+col] = in_mat[vrow,reorder_vec[col+row+1]]             # <<<<<<<<<<<<<<
  * 
@@ -4265,7 +4265,7 @@ static PyObject *__pyx_pf_5skbio_5stats_8distance_7_cutils_10distmat_reorder_con
  * 
  *     for row in prange(out_n-1, nogil=True):             # <<<<<<<<<<<<<<
  *         vrow = reorder_vec[row]
- *         idx = (row+1)*out_n - ((row+1)*row)/2
+ *         idx = row*out_n - ((row-1)*row)/2
  */
       /*finally:*/ {
         /*normal exit:*/{
@@ -4477,7 +4477,7 @@ static PyObject *__pyx_pf_5skbio_5stats_8distance_7_cutils_12distmat_reorder_con
  * 
  *     for row in prange(out_n-1, nogil=True):             # <<<<<<<<<<<<<<
  *         vrow = reorder_vec[row]
- *         idx = (row+1)*out_n - ((row+1)*row)/2
+ *         idx = row*out_n - ((row-1)*row)/2
  */
   {
       #ifdef WITH_THREAD
@@ -4517,7 +4517,7 @@ static PyObject *__pyx_pf_5skbio_5stats_8distance_7_cutils_12distmat_reorder_con
  * 
  *     for row in prange(out_n-1, nogil=True):
  *         vrow = reorder_vec[row]             # <<<<<<<<<<<<<<
- *         idx = (row+1)*out_n - ((row+1)*row)/2
+ *         idx = row*out_n - ((row-1)*row)/2
  *         for col in range(out_n-row-1):
  */
                             __pyx_t_4 = __pyx_v_row;
@@ -4526,15 +4526,15 @@ static PyObject *__pyx_pf_5skbio_5stats_8distance_7_cutils_12distmat_reorder_con
                             /* "skbio/stats/distance/_cutils.pyx":117
  *     for row in prange(out_n-1, nogil=True):
  *         vrow = reorder_vec[row]
- *         idx = (row+1)*out_n - ((row+1)*row)/2             # <<<<<<<<<<<<<<
+ *         idx = row*out_n - ((row-1)*row)/2             # <<<<<<<<<<<<<<
  *         for col in range(out_n-row-1):
  *            out_mat_condensed[idx+col] = in_mat[vrow,reorder_vec[col+row+1]]
  */
-                            __pyx_v_idx = (((__pyx_v_row + 1) * __pyx_v_out_n) - __Pyx_div_Py_ssize_t(((__pyx_v_row + 1) * __pyx_v_row), 2));
+                            __pyx_v_idx = ((__pyx_v_row * __pyx_v_out_n) - __Pyx_div_Py_ssize_t(((__pyx_v_row - 1) * __pyx_v_row), 2));
 
                             /* "skbio/stats/distance/_cutils.pyx":118
  *         vrow = reorder_vec[row]
- *         idx = (row+1)*out_n - ((row+1)*row)/2
+ *         idx = row*out_n - ((row-1)*row)/2
  *         for col in range(out_n-row-1):             # <<<<<<<<<<<<<<
  *            out_mat_condensed[idx+col] = in_mat[vrow,reorder_vec[col+row+1]]
  * 
@@ -4545,7 +4545,7 @@ static PyObject *__pyx_pf_5skbio_5stats_8distance_7_cutils_12distmat_reorder_con
                               __pyx_v_col = __pyx_t_7;
 
                               /* "skbio/stats/distance/_cutils.pyx":119
- *         idx = (row+1)*out_n - ((row+1)*row)/2
+ *         idx = row*out_n - ((row-1)*row)/2
  *         for col in range(out_n-row-1):
  *            out_mat_condensed[idx+col] = in_mat[vrow,reorder_vec[col+row+1]]             # <<<<<<<<<<<<<<
  * 
@@ -4575,7 +4575,7 @@ static PyObject *__pyx_pf_5skbio_5stats_8distance_7_cutils_12distmat_reorder_con
  * 
  *     for row in prange(out_n-1, nogil=True):             # <<<<<<<<<<<<<<
  *         vrow = reorder_vec[row]
- *         idx = (row+1)*out_n - ((row+1)*row)/2
+ *         idx = row*out_n - ((row-1)*row)/2
  */
       /*finally:*/ {
         /*normal exit:*/{
