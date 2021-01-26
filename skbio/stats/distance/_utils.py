@@ -8,7 +8,7 @@
 
 import numpy as np
 
-from ._cutils import distmat_reorder_cy
+from ._cutils import distmat_reorder_cy, distmat_reorder_condensed_cy
 
 
 def distmat_reorder_buf(in_mat, reorder_vec, out_mat, validate=False):
@@ -142,7 +142,7 @@ def distmat_reorder_condensed(in_mat, reorder_vec, validate=False):
     if not in_mat.flags.c_contiguous:
         in_mat = np.asarray(in_mat, order='C')
 
-    out_mat_condensed = np.empty(((np_reorder.size-1)*np_reorder.size)/2], in_mat.dtype)
+    out_mat_condensed = np.empty([np.long(((np_reorder.size-1)*np_reorder.size)/2)], in_mat.dtype)
     distmat_reorder_condensed_cy(in_mat, np_reorder, out_mat_condensed)
     return out_mat_condensed
 
