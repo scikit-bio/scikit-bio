@@ -18,6 +18,7 @@ from scipy.stats import PearsonRConstantInputWarning,PearsonRNearConstantInputWa
 from skbio.stats.distance import DistanceMatrix
 from skbio.util._decorator import experimental
 
+from ._utils import distmat_reorder_condensed
 
 @experimental(as_of="0.4.0")
 def mantel(x, y, method='pearson', permutations=999, alternative='two-sided',
@@ -310,9 +311,10 @@ def mantel(x, y, method='pearson', permutations=999, alternative='two-sided',
 
     return orig_stat, p_value, n
 
-def _mantel_perm_pearsonr_one(x, xmean, normxm, ym_normalized):
-    x_flat = x.permute(condensed=True)
+def _mantel_perm_pearsonr_one(x_flat, xmean, normxm, ym_normalized):
 
+    # inline pearsonr, condensed from scipy.stats.pearsonr
+    # and reusing some of the known values
     xm_normalized = (x_flat - xmean)/normxm
     del x_flat
 
@@ -382,12 +384,19 @@ def _mantel_stats_pearson(x, y, permutations):
     # floating point arithmetic.
     orig_stat = max(min(orig_stat, 1.0), -1.0)
 
-
+    mat_n =  y._data.shape[0]
     # note: xmean and normxmdo not change with permutations
     permuted_stats = []
     if not (permutations == 0 or np.isnan(orig_stat)):
-        perm_gen = (_mantel_perm_pearsonr_one(x,xmean,normxm,ym_normalized)
-                    for _ in range(permutations))
+        # inline DistanceMatrix.permute, groupping them together
+
+        perm_order = np.empty([permutations, mat_n], dtype=np.int)
+        for row in range(permutations):
+            perm_order[row,:] = np.random.permutation(mat_n)
+
+        perm_gen = (_mantel_perm_pearsonr_one(distmat_reorder_condensed(x._data, perm_order[p,:]),
+                                              xmean, normxm, ym_normalized)
+                    for p in range(permutations))
         permuted_stats = np.fromiter(perm_gen, np.float, count=permutations)
 
     return orig_stat, permuted_stats
