@@ -250,8 +250,9 @@ def mantel(x, y, method='pearson', permutations=999, alternative='two-sided',
     ``array_like`` because there is no notion of IDs.
 
     """
+    special = False # set to true, if we have a dedicated implementation
     if method == 'pearson':
-        corr_func = pearsonr
+        special = True
     elif method == 'spearman':
         corr_func = spearmanr
     elif method == 'kendalltau':
@@ -272,18 +273,29 @@ def mantel(x, y, method='pearson', permutations=999, alternative='two-sided',
         raise ValueError("Distance matrices must have at least 3 matching IDs "
                          "between them (i.e., minimum 3x3 in size).")
 
-    x_flat = x.condensed_form()
-    y_flat = y.condensed_form()
+    if special:
+        if method == 'pearson':
+            orig_stat, permuted_stats = _mantel_stats_pearson(x, y, permutations)
+        else:
+            raise ValueError("Invalid correlation method '%s'." % method)
+    else:
+        x_flat = x.condensed_form()
+        y_flat = y.condensed_form()
 
-    orig_stat = corr_func(x_flat, y_flat)[0]
+        orig_stat = corr_func(x_flat, y_flat)[0]
+        del x_flat
+
+        permuted_stats = []
+        if not (permutations == 0 or np.isnan(orig_stat)):
+            perm_gen = (corr_func(x.permute(condensed=True), y_flat)[0]
+                        for _ in range(permutations))
+            permuted_stats = np.fromiter(perm_gen, np.float, count=permutations)
+
+        del y_flat
 
     if permutations == 0 or np.isnan(orig_stat):
         p_value = np.nan
     else:
-        perm_gen = (corr_func(x.permute(condensed=True), y_flat)[0]
-                    for _ in range(permutations))
-        permuted_stats = np.fromiter(perm_gen, np.float, count=permutations)
-
         if alternative == 'two-sided':
             count_better = (np.absolute(permuted_stats) >=
                             np.absolute(orig_stat)).sum()
@@ -295,6 +307,41 @@ def mantel(x, y, method='pearson', permutations=999, alternative='two-sided',
         p_value = (count_better + 1) / (permutations + 1)
 
     return orig_stat, p_value, n
+
+def _mantel_stats_pearson(x, y, permutations):
+    """Compute original and permuted stats using pearsonr.
+
+    Parameters
+    ----------
+    x, y : DistanceMatrix
+        Input distance matrices to compare.
+    permutations : int
+        Number of times to randomly permute `x` when assessing statistical
+        significance. Must be greater than or equal to zero. If zero,
+        statistical significance calculations will be skipped and the p-value
+        will be ``np.nan``.
+
+    Returns
+    -------
+    orig_stat : 1D array_like
+        Correlation coefficient of the test.
+    permuted_stats : 1D array_like
+        Permutted correlation coefficients of the test.
+    """
+
+    x_flat = x.condensed_form()
+    y_flat = y.condensed_form()
+
+    orig_stat = pearsonr(x_flat, y_flat)[0]
+    del x_flat
+
+    permuted_stats = []
+    if not (permutations == 0 or np.isnan(orig_stat)):
+        perm_gen = (pearsonr(x.permute(condensed=True), y_flat)[0]
+                    for _ in range(permutations))
+        permuted_stats = np.fromiter(perm_gen, np.float, count=permutations)
+
+    return orig_stat, permuted_stats
 
 
 @experimental(as_of="0.4.0")
