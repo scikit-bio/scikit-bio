@@ -67,7 +67,7 @@ def distmat_reorder_cy(TReal[:, ::1] in_mat, long[::1] reorder_vec,
     for row in prange(out_n, nogil=True):
         vrow = reorder_vec[row]
         for col in range(out_n):
-           out_mat[row,col] = in_mat[vrow,reorder_vec[col]]
+           out_mat[row,col] = in_mat[vrow, reorder_vec[col]]
 
 @cython.boundscheck(False)
 @cython.wraparound(False)
@@ -116,6 +116,85 @@ def distmat_reorder_condensed_cy(TReal[:, ::1] in_mat, long[::1] reorder_vec,
         vrow = reorder_vec[row]
         idx = row*(out_n-1) - ((row-1)*row)/2
         for col in range(out_n-row-1):
-           out_mat_condensed[idx+col] = in_mat[vrow,reorder_vec[col+row+1]]
+           out_mat_condensed[idx+col] = in_mat[vrow, reorder_vec[col+row+1]]
 
 
+@cython.boundscheck(False)
+@cython.wraparound(False)
+def mantel_perm_pearsonr_cy(TReal[:, ::1] x_data, int[:, ::1] perm_order,
+                            TReal xmean, TReal normxm,
+                            TReal[::1] ym_normalized,
+                            TReal[::1] permuted_stats):
+    """
+    Fused permute, fma, pearsonr for mantel.
+
+    Replaces the following python code:
+    def _mantel_perm_pearsonr_one(x_flat, xmean, normxm, ym_normalized):
+        # inline pearsonr, condensed from scipy.stats.pearsonr
+        # and reusing some of the known values
+        xm_normalized = (x_flat - xmean)/normxm
+        one_stat = np.dot(xm_normalized, ym_normalized)
+        one_stat = max(min(one_stat, 1.0), -1.0)
+        return one_stat
+
+    perm_gen = (_mantel_perm_pearsonr_one(distmat_reorder_condensed(x._data, perm_order[p,:]),
+                                          xmean, normxm, ym_normalized)
+                for p in range(permutations))
+    permuted_stats = np.fromiter(perm_gen, np.float, count=permutations)
+
+    Parameters
+    ----------
+    x_data : 2D array_like
+        Distance matrix.
+    perm_order : 2D array_like
+        List of permutation orders.
+    xmean: real
+        Mean value of condensed x_data
+    normxm: real
+        Norm of pre-processed xm
+    ym_normalized : 1D_array_like
+        Normalized condensed y_data
+    permuted_stats : 1D array_like
+        Output, Distance matrix, must be same size as reorder_vec
+    """
+    cdef Py_ssize_t in_n = x_data.shape[0]
+    cdef Py_ssize_t in2 = x_data.shape[1]
+    cdef Py_ssize_t perms_n = perm_order.shape.shape[0]
+    cdef Py_ssize_t out_n = perm_order.shape[1]
+    cdef Py_ssize_t y_n = ym_normalized.shape[0]
+    cdef Py_ssize_t on2 = permuted_stats.shape[0]
+
+    assert in_n == in2
+    assert y_n == ((out_n-1)*out_n)/2
+    assert perms_n == on2
+
+    cdef Py_ssize_t p
+    cdef Py_ssize_t row,col
+    cdef Py_ssize_t vrow
+    cdef Py_ssize_t idx
+
+    cdef TReal mul = 1.0/normxm
+    cdef TReal add = -xmean/normxm
+
+    cdef TReal my_ps
+    cdef TReal yval
+    cdef TReal xval
+
+    for p in prange(perms_n, nogil=True):
+        my_ps = 0.0
+        for row in range(out_n-1):
+            vrow = perm_order[p, row]
+            idx = row*(out_n-1) - ((row-1)*row)/2
+            for col in range(out_n-row-1):
+               yval = ym_normalized[idx+col] 
+               xval = x_data[vrow, perm_order[p, col+row+1]]*mul + add
+               # do not use += to avoid having prange consider it for reduction
+               my_ps = yval*xval + my_ps
+
+        # Presumably, if abs(one_stat) > 1, then it is only some small artifact of
+        # floating point arithmetic.
+        if my_ps>1.0:
+            my_ps = 1.0
+        elif my_ps<-1.0:
+            my_ps = -1.0
+        permuted_stats[p] = my_ps
