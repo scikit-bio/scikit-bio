@@ -159,7 +159,7 @@ def mantel_perm_pearsonr_cy(TReal[:, ::1] x_data, long[:, ::1] perm_order,
     """
     cdef Py_ssize_t in_n = x_data.shape[0]
     cdef Py_ssize_t in2 = x_data.shape[1]
-    cdef Py_ssize_t perms_n = perm_order.shape.shape[0]
+    cdef Py_ssize_t perms_n = perm_order.shape[0]
     cdef Py_ssize_t out_n = perm_order.shape[1]
     cdef Py_ssize_t y_n = ym_normalized.shape[0]
     cdef Py_ssize_t on2 = permuted_stats.shape[0]
