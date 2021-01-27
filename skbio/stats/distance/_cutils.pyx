@@ -121,7 +121,7 @@ def distmat_reorder_condensed_cy(TReal[:, ::1] in_mat, long[::1] reorder_vec,
 
 @cython.boundscheck(False)
 @cython.wraparound(False)
-def mantel_perm_pearsonr_cy(TReal[:, ::1] x_data, int[:, ::1] perm_order,
+def mantel_perm_pearsonr_cy(TReal[:, ::1] x_data, long[:, ::1] perm_order,
                             TReal xmean, TReal normxm,
                             TReal[::1] ym_normalized,
                             TReal[::1] permuted_stats):
