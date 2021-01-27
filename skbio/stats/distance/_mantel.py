@@ -8,10 +8,12 @@
 
 from itertools import combinations
 
+import warnings
 import numpy as np
 import pandas as pd
 import scipy.special
-from scipy.stats import pearsonr, spearmanr, kendalltau
+from scipy.stats import spearmanr, kendalltau
+from scipy.stats import PearsonRConstantInputWarning,PearsonRNearConstantInputWarning
 
 from skbio.stats.distance import DistanceMatrix
 from skbio.util._decorator import experimental
@@ -308,6 +310,20 @@ def mantel(x, y, method='pearson', permutations=999, alternative='two-sided',
 
     return orig_stat, p_value, n
 
+def _mantel_perm_pearsonr_one(x, xmean, normxm, ym_normalized):
+    x_flat = x.permute(condensed=True)
+
+    xm_normalized = (x_flat - xmean)/normxm
+    del x_flat
+
+    one_stat = np.dot(xm_normalized, ym_normalized)
+
+    # Presumably, if abs(one_stat) > 1, then it is only some small artifact of
+    # floating point arithmetic.
+    one_stat = max(min(one_stat, 1.0), -1.0)
+
+    return one_stat
+
 def _mantel_stats_pearson(x, y, permutations):
     """Compute original and permuted stats using pearsonr.
 
@@ -332,12 +348,45 @@ def _mantel_stats_pearson(x, y, permutations):
     x_flat = x.condensed_form()
     y_flat = y.condensed_form()
 
-    orig_stat = pearsonr(x_flat, y_flat)[0]
+    # If an input is constant, the correlation coefficient is not defined.
+    if (x_flat == x_flat[0]).all() or (y_flat == y_flat[0]).all():
+        warnings.warn(PearsonRConstantInputWarning())
+        return np.nan, []
+
+    # inline pearsonr, condensed from scipy.stats.pearsonr
+    xmean = x_flat.mean()
+    xm = x_flat - xmean
+    normxm = np.linalg.norm(xm)
+    xm_normalized = xm/normxm
+    del xm
     del x_flat
 
+    ymean = y_flat.mean()
+    ym = y_flat - ymean
+    normym = np.linalg.norm(ym)
+    ym_normalized = ym/normym
+    del ym
+    del y_flat
+
+    threshold = 1e-13
+    if ((normxm < threshold*abs(xmean)) or
+        (normym < threshold*abs(ymean))):
+        # If all the values in x (likewise y) are very close to the mean,
+        # the loss of precision that occurs in the subtraction xm = x - xmean
+        # might result in large errors in r.
+        warnings.warn(PearsonRNearConstantInputWarning())
+
+    orig_stat = np.dot(xm_normalized, ym_normalized)
+
+    # Presumably, if abs(orig_stat) > 1, then it is only some small artifact of
+    # floating point arithmetic.
+    orig_stat = max(min(orig_stat, 1.0), -1.0)
+
+
+    # note: xmean and normxmdo not change with permutations
     permuted_stats = []
     if not (permutations == 0 or np.isnan(orig_stat)):
-        perm_gen = (pearsonr(x.permute(condensed=True), y_flat)[0]
+        perm_gen = (_mantel_perm_pearsonr_one(x,xmean,normxm,ym_normalized)
                     for _ in range(permutations))
         permuted_stats = np.fromiter(perm_gen, np.float, count=permutations)
 
