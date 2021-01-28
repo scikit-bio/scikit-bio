@@ -12,10 +12,15 @@ import numpy as np
 import numpy.testing as npt
 import pandas as pd
 
+import scipy
+from scipy.spatial.distance import squareform
+
 from skbio import DistanceMatrix
 from skbio.stats.distance import (DissimilarityMatrixError,
                                   DistanceMatrixError, mantel, pwmantel)
 from skbio.stats.distance._mantel import _order_dms
+from skbio.stats.distance._cutils import mantel_perm_pearsonr_cy
+from skbio.stats.distance._utils import distmat_reorder_condensed
 from skbio.util import get_data_path, assert_data_frame_almost_equal
 
 
@@ -45,6 +50,120 @@ class MantelTestData(TestCase):
                                              [3, 24, 5, 0]],
                                             ['0', '1', '2', 'bar'])
 
+
+
+class InternalMantelTests(MantelTestData):
+    def setUp(self):
+        super(InternalMantelTests, self).setUp()
+
+    def _compute_perf_one(self, x_data, order, xmean, normxm, ym_normalized):
+        x_flat = distmat_reorder_condensed(x_data, order)
+        xm_normalized = (x_flat - xmean)/normxm
+        one_stat = np.dot(xm_normalized, ym_normalized)
+        one_stat = max(min(one_stat, 1.0), -1.0)
+        return one_stat
+
+    def test_perm_pearsonr3(self):
+        # data pre-computed using released code
+        x_data = np.asarray([[0., 1., 3.],
+                             [1., 0., 2.],
+                             [3., 2., 0.]])
+
+        perm_order = np.asarray([[2, 1, 0],
+                                 [2, 0, 1],
+                                 [0, 2, 1],
+                                 [2, 0, 1]], dtype=np.int)
+        xmean = 2.0
+        normxm = 1.4142135623730951
+        ym_normalized = np.asarray([-0.80178373, 0.26726124, 0.53452248])
+
+        permuted_stats = np.empty(4, dtype=x_data.dtype)
+        mantel_perm_pearsonr_cy(x_data, perm_order, xmean, normxm, ym_normalized, permuted_stats)
+        for i in range(4):
+            exp_res = self._compute_perf_one(x_data, perm_order[i,:], xmean, normxm, ym_normalized)
+            self.assertAlmostEqual(permuted_stats[i], exp_res)
+
+    def test_perm_pearsonr6(self):
+        # data pre-computed using released code
+        x_data = np.asarray([[0.        , 0.62381864, 0.75001543, 0.58520119, 0.72902358, 0.65213559],
+                             [0.62381864, 0.        , 0.97488122, 0.6498224 , 0.73720314, 0.62950732],
+                             [0.75001543, 0.97488122, 0.        , 0.68884542, 0.65747031, 0.72170752],
+                             [0.58520119, 0.6498224 , 0.68884542, 0.        , 0.65885358, 0.66122362],
+                             [0.72902358, 0.73720314, 0.65747031, 0.65885358, 0.        , 0.71117341],
+                             [0.65213559, 0.62950732, 0.72170752, 0.66122362, 0.71117341, 0.        ]])
+
+        perm_order = np.asarray([[0, 2, 3, 4, 1, 5],
+                                 [4, 3, 2, 5, 0, 1],
+                                 [2, 5, 3, 1, 0, 4],
+                                 [3, 5, 4, 1, 2, 0],
+                                 [4, 3, 5, 2, 0, 1]], dtype=np.int)
+        xmean = 0.6953921578226
+        normxm = 0.3383126690576294
+        ym_normalized = np.asarray([-0.4999711 ,  0.24980825, -0.29650504,
+                                     0.18022614, -0.17407781,  0.33223145,
+                                    -0.08230374,  0.33992794, -0.14964257,
+                                     0.04340053, -0.35527798,  0.15597541,
+                                    -0.0523679 , -0.04451187,  0.35308828])
+
+        permuted_stats = np.empty(5, dtype=x_data.dtype)
+        mantel_perm_pearsonr_cy(x_data, perm_order, xmean, normxm, ym_normalized, permuted_stats)
+        for i in range(5):
+            exp_res = self._compute_perf_one(x_data, perm_order[i,:], xmean, normxm, ym_normalized)
+            self.assertAlmostEqual(permuted_stats[i], exp_res)
+
+    def test_perm_pearsonr_full(self):
+        x_data = np.asarray([[0.        , 0.62381864, 0.75001543, 0.58520119, 0.72902358, 0.65213559],
+                             [0.62381864, 0.        , 0.97488122, 0.6498224 , 0.73720314, 0.62950732],
+                             [0.75001543, 0.97488122, 0.        , 0.68884542, 0.65747031, 0.72170752],
+                             [0.58520119, 0.6498224 , 0.68884542, 0.        , 0.65885358, 0.66122362],
+                             [0.72902358, 0.73720314, 0.65747031, 0.65885358, 0.        , 0.71117341],
+                             [0.65213559, 0.62950732, 0.72170752, 0.66122362, 0.71117341, 0.        ]])
+        y_data = np.asarray([[0.        , 0.52381864, 0.75001543, 0.58520119, 0.72902358, 0.62213559],
+                             [0.52381864, 0.        , 0.77488122, 0.6498224 , 0.77720314, 0.62950732],
+                             [0.75001543, 0.77488122, 0.        , 0.68774542, 0.56747031, 0.72170752],
+                             [0.58520119, 0.6498224 , 0.68774542, 0.        , 0.65885358, 0.66122362],
+                             [0.72902358, 0.77720314, 0.56747031, 0.65885358, 0.        , 0.78117341],
+                             [0.62213559, 0.62950732, 0.72170752, 0.66122362, 0.78117341, 0.        ]])
+        x_flat = squareform(x_data, force='tovector', checks=False)
+        y_flat = squareform(y_data, force='tovector', checks=False)
+
+        xmean = x_flat.mean()
+        ymean = y_flat.mean()
+
+        xm = x_flat  - xmean
+        ym = y_flat - ymean
+
+        normxm_la = scipy.linalg.norm(xm)
+        normym_la = scipy.linalg.norm(ym)
+
+        normxm = np.linalg.norm(xm)
+        normym = np.linalg.norm(ym)
+
+        self.assertAlmostEqual(normxm,normxm_la)
+        self.assertAlmostEqual(normym,normym_la)
+
+        perm_order = np.asarray([[0, 2, 3, 4, 1, 5],
+                                 [4, 3, 2, 5, 0, 1],
+                                 [2, 5, 3, 1, 0, 4],
+                                 [3, 5, 4, 1, 2, 0],
+                                 [4, 3, 5, 2, 0, 1],
+                                 [4, 5, 1, 2, 0, 3],
+                                 [3, 5, 1, 0, 4, 2],
+                                 [4, 5, 3, 1, 2, 0],
+                                 [2, 1, 5, 4, 0, 3],
+                                 [4, 1, 0, 5, 2, 3],
+                                 [1, 2, 5, 4, 0, 3],
+                                 [5, 4, 0, 1, 3, 2],
+                                 [3, 0, 1, 5, 4, 2],
+                                 [5, 0, 2, 3, 1, 4]], dtype=np.int)
+
+        ym_normalized = ym/normym
+
+        permuted_stats = np.empty(14, dtype=x_data.dtype)
+        mantel_perm_pearsonr_cy(x_data, perm_order, xmean, normxm, ym_normalized, permuted_stats)
+        for i in range(14):
+            exp_res = self._compute_perf_one(x_data, perm_order[i,:], xmean, normxm, ym_normalized)
+            self.assertAlmostEqual(permuted_stats[i], exp_res)
 
 class MantelTests(MantelTestData):
     """Results were verified with R 3.1.0 and vegan 2.0-10 (vegan::mantel).
