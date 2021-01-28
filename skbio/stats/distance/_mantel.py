@@ -19,6 +19,7 @@ from skbio.stats.distance import DistanceMatrix
 from skbio.util._decorator import experimental
 
 from ._utils import distmat_reorder_condensed
+from ._cutils import mantel_perm_pearsonr_cy
 
 @experimental(as_of="0.4.0")
 def mantel(x, y, method='pearson', permutations=999, alternative='two-sided',
@@ -311,21 +312,6 @@ def mantel(x, y, method='pearson', permutations=999, alternative='two-sided',
 
     return orig_stat, p_value, n
 
-def _mantel_perm_pearsonr_one(x_flat, xmean, normxm, ym_normalized):
-
-    # inline pearsonr, condensed from scipy.stats.pearsonr
-    # and reusing some of the known values
-    xm_normalized = (x_flat - xmean)/normxm
-    del x_flat
-
-    one_stat = np.dot(xm_normalized, ym_normalized)
-
-    # Presumably, if abs(one_stat) > 1, then it is only some small artifact of
-    # floating point arithmetic.
-    one_stat = max(min(one_stat, 1.0), -1.0)
-
-    return one_stat
-
 def _mantel_stats_pearson(x, y, permutations):
     """Compute original and permuted stats using pearsonr.
 
@@ -389,18 +375,19 @@ def _mantel_stats_pearson(x, y, permutations):
     permuted_stats = []
     if not (permutations == 0 or np.isnan(orig_stat)):
         # inline DistanceMatrix.permute, groupping them together
+        x_data = x._data
+        if not x_data.flags.c_contiguous:
+            x_data = np.asarray(x_data, order='C')
 
         perm_order = np.empty([permutations, mat_n], dtype=np.int)
         for row in range(permutations):
             perm_order[row,:] = np.random.permutation(mat_n)
 
-        perm_gen = (_mantel_perm_pearsonr_one(distmat_reorder_condensed(x._data, perm_order[p,:]),
-                                              xmean, normxm, ym_normalized)
-                    for p in range(permutations))
-        permuted_stats = np.fromiter(perm_gen, np.float, count=permutations)
+        permuted_stats = np.empty([permutations],dtype=x_data.dtype)
+        mantel_perm_pearsonr_cy(x_data, perm_order, xmean, normxm,
+                                ym_normalized, permuted_stats)
 
     return orig_stat, permuted_stats
-
 
 @experimental(as_of="0.4.0")
 def pwmantel(dms, labels=None, method='pearson', permutations=999,
