@@ -102,6 +102,7 @@ def distmat_reorder(in_mat, reorder_vec, validate=False):
     distmat_reorder_cy(in_mat, np_reorder, out_mat)
     return out_mat
 
+
 def distmat_reorder_condensed(in_mat, reorder_vec, validate=False):
     """
     Reorder the rows and columns of a distance matrix
@@ -142,7 +143,7 @@ def distmat_reorder_condensed(in_mat, reorder_vec, validate=False):
     if not in_mat.flags.c_contiguous:
         in_mat = np.asarray(in_mat, order='C')
 
-    out_mat_condensed = np.empty([np.long(((np_reorder.size-1)*np_reorder.size)/2)], in_mat.dtype)
+    csize = np.long(((np_reorder.size-1)*np_reorder.size)/2)
+    out_mat_condensed = np.empty([csize], in_mat.dtype)
     distmat_reorder_condensed_cy(in_mat, np_reorder, out_mat_condensed)
     return out_mat_condensed
-

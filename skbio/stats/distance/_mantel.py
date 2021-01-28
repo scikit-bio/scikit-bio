@@ -13,13 +13,14 @@ import numpy as np
 import pandas as pd
 import scipy.special
 from scipy.stats import spearmanr, kendalltau
-from scipy.stats import PearsonRConstantInputWarning,PearsonRNearConstantInputWarning
+from scipy.stats import PearsonRConstantInputWarning
+from scipy.stats import PearsonRNearConstantInputWarning
 
 from skbio.stats.distance import DistanceMatrix
 from skbio.util._decorator import experimental
 
-from ._utils import distmat_reorder_condensed
 from ._cutils import mantel_perm_pearsonr_cy
+
 
 @experimental(as_of="0.4.0")
 def mantel(x, y, method='pearson', permutations=999, alternative='two-sided',
@@ -254,7 +255,7 @@ def mantel(x, y, method='pearson', permutations=999, alternative='two-sided',
     ``array_like`` because there is no notion of IDs.
 
     """
-    special = False # set to true, if we have a dedicated implementation
+    special = False  # set to true, if we have a dedicated implementation
     if method == 'pearson':
         special = True
     elif method == 'spearman':
@@ -279,7 +280,8 @@ def mantel(x, y, method='pearson', permutations=999, alternative='two-sided',
 
     if special:
         if method == 'pearson':
-            orig_stat, permuted_stats = _mantel_stats_pearson(x, y, permutations)
+            orig_stat, permuted_stats = _mantel_stats_pearson(x, y,
+                                                              permutations)
         else:
             raise ValueError("Invalid correlation method '%s'." % method)
     else:
@@ -293,7 +295,8 @@ def mantel(x, y, method='pearson', permutations=999, alternative='two-sided',
         if not (permutations == 0 or np.isnan(orig_stat)):
             perm_gen = (corr_func(x.permute(condensed=True), y_flat)[0]
                         for _ in range(permutations))
-            permuted_stats = np.fromiter(perm_gen, np.float, count=permutations)
+            permuted_stats = np.fromiter(perm_gen, np.float,
+                                         count=permutations)
 
         del y_flat
 
@@ -311,6 +314,7 @@ def mantel(x, y, method='pearson', permutations=999, alternative='two-sided',
         p_value = (count_better + 1) / (permutations + 1)
 
     return orig_stat, p_value, n
+
 
 def _mantel_stats_pearson(x, y, permutations):
     """Compute original and permuted stats using pearsonr.
@@ -357,8 +361,8 @@ def _mantel_stats_pearson(x, y, permutations):
     del y_flat
 
     threshold = 1e-13
-    if ((normxm < threshold*abs(xmean)) or
-        (normym < threshold*abs(ymean))):
+    if (((normxm < threshold*abs(xmean)) or
+         (normym < threshold*abs(ymean)))):
         # If all the values in x (likewise y) are very close to the mean,
         # the loss of precision that occurs in the subtraction xm = x - xmean
         # might result in large errors in r.
@@ -370,7 +374,7 @@ def _mantel_stats_pearson(x, y, permutations):
     # floating point arithmetic.
     orig_stat = max(min(orig_stat, 1.0), -1.0)
 
-    mat_n =  y._data.shape[0]
+    mat_n = y._data.shape[0]
     # note: xmean and normxmdo not change with permutations
     permuted_stats = []
     if not (permutations == 0 or np.isnan(orig_stat)):
@@ -381,13 +385,14 @@ def _mantel_stats_pearson(x, y, permutations):
 
         perm_order = np.empty([permutations, mat_n], dtype=np.int)
         for row in range(permutations):
-            perm_order[row,:] = np.random.permutation(mat_n)
+            perm_order[row, :] = np.random.permutation(mat_n)
 
-        permuted_stats = np.empty([permutations],dtype=x_data.dtype)
+        permuted_stats = np.empty([permutations], dtype=x_data.dtype)
         mantel_perm_pearsonr_cy(x_data, perm_order, xmean, normxm,
                                 ym_normalized, permuted_stats)
 
     return orig_stat, permuted_stats
+
 
 @experimental(as_of="0.4.0")
 def pwmantel(dms, labels=None, method='pearson', permutations=999,

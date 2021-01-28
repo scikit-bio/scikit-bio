@@ -51,7 +51,6 @@ class MantelTestData(TestCase):
                                             ['0', '1', '2', 'bar'])
 
 
-
 class InternalMantelTests(MantelTestData):
     def setUp(self):
         super(InternalMantelTests, self).setUp()
@@ -78,19 +77,27 @@ class InternalMantelTests(MantelTestData):
         ym_normalized = np.asarray([-0.80178373, 0.26726124, 0.53452248])
 
         permuted_stats = np.empty(4, dtype=x_data.dtype)
-        mantel_perm_pearsonr_cy(x_data, perm_order, xmean, normxm, ym_normalized, permuted_stats)
+        mantel_perm_pearsonr_cy(x_data, perm_order, xmean, normxm,
+                                ym_normalized, permuted_stats)
         for i in range(4):
-            exp_res = self._compute_perf_one(x_data, perm_order[i,:], xmean, normxm, ym_normalized)
+            exp_res = self._compute_perf_one(x_data, perm_order[i, :],
+                                             xmean, normxm, ym_normalized)
             self.assertAlmostEqual(permuted_stats[i], exp_res)
 
     def test_perm_pearsonr6(self):
         # data pre-computed using released code
-        x_data = np.asarray([[0.        , 0.62381864, 0.75001543, 0.58520119, 0.72902358, 0.65213559],
-                             [0.62381864, 0.        , 0.97488122, 0.6498224 , 0.73720314, 0.62950732],
-                             [0.75001543, 0.97488122, 0.        , 0.68884542, 0.65747031, 0.72170752],
-                             [0.58520119, 0.6498224 , 0.68884542, 0.        , 0.65885358, 0.66122362],
-                             [0.72902358, 0.73720314, 0.65747031, 0.65885358, 0.        , 0.71117341],
-                             [0.65213559, 0.62950732, 0.72170752, 0.66122362, 0.71117341, 0.        ]])
+        x_data = np.asarray([[0., 0.62381864, 0.75001543,
+                              0.58520119, 0.72902358, 0.65213559],
+                             [0.62381864, 0., 0.97488122,
+                              0.6498224, 0.73720314, 0.62950732],
+                             [0.75001543, 0.97488122, 0.,
+                              0.68884542, 0.65747031, 0.72170752],
+                             [0.58520119, 0.6498224, 0.68884542,
+                              0., 0.65885358, 0.66122362],
+                             [0.72902358, 0.73720314, 0.65747031,
+                              0.65885358, 0., 0.71117341],
+                             [0.65213559, 0.62950732, 0.72170752,
+                              0.66122362, 0.71117341, 0.]])
 
         perm_order = np.asarray([[0, 2, 3, 4, 1, 5],
                                  [4, 3, 2, 5, 0, 1],
@@ -99,16 +106,18 @@ class InternalMantelTests(MantelTestData):
                                  [4, 3, 5, 2, 0, 1]], dtype=np.int)
         xmean = 0.6953921578226
         normxm = 0.3383126690576294
-        ym_normalized = np.asarray([-0.4999711 ,  0.24980825, -0.29650504,
-                                     0.18022614, -0.17407781,  0.33223145,
-                                    -0.08230374,  0.33992794, -0.14964257,
-                                     0.04340053, -0.35527798,  0.15597541,
-                                    -0.0523679 , -0.04451187,  0.35308828])
+        ym_normalized = np.asarray([-0.4999711, 0.24980825, -0.29650504,
+                                    0.18022614, -0.17407781, 0.33223145,
+                                    -0.08230374, 0.33992794, -0.14964257,
+                                    0.04340053, -0.35527798, 0.15597541,
+                                    -0.0523679, -0.04451187, 0.35308828])
 
         permuted_stats = np.empty(5, dtype=x_data.dtype)
-        mantel_perm_pearsonr_cy(x_data, perm_order, xmean, normxm, ym_normalized, permuted_stats)
+        mantel_perm_pearsonr_cy(x_data, perm_order, xmean, normxm,
+                                ym_normalized, permuted_stats)
         for i in range(5):
-            exp_res = self._compute_perf_one(x_data, perm_order[i,:], xmean, normxm, ym_normalized)
+            exp_res = self._compute_perf_one(x_data, perm_order[i, :],
+                                             xmean, normxm, ym_normalized)
             self.assertAlmostEqual(permuted_stats[i], exp_res)
 
     def test_perm_pearsonr_full(self):
@@ -130,7 +139,7 @@ class InternalMantelTests(MantelTestData):
         xmean = x_flat.mean()
         ymean = y_flat.mean()
 
-        xm = x_flat  - xmean
+        xm = x_flat - xmean
         ym = y_flat - ymean
 
         normxm_la = scipy.linalg.norm(xm)
@@ -139,8 +148,8 @@ class InternalMantelTests(MantelTestData):
         normxm = np.linalg.norm(xm)
         normym = np.linalg.norm(ym)
 
-        self.assertAlmostEqual(normxm,normxm_la)
-        self.assertAlmostEqual(normym,normym_la)
+        self.assertAlmostEqual(normxm, normxm_la)
+        self.assertAlmostEqual(normym, normym_la)
 
         perm_order = np.asarray([[0, 2, 3, 4, 1, 5],
                                  [4, 3, 2, 5, 0, 1],
@@ -160,10 +169,13 @@ class InternalMantelTests(MantelTestData):
         ym_normalized = ym/normym
 
         permuted_stats = np.empty(14, dtype=x_data.dtype)
-        mantel_perm_pearsonr_cy(x_data, perm_order, xmean, normxm, ym_normalized, permuted_stats)
+        mantel_perm_pearsonr_cy(x_data, perm_order, xmean, normxm,
+                                ym_normalized, permuted_stats)
         for i in range(14):
-            exp_res = self._compute_perf_one(x_data, perm_order[i,:], xmean, normxm, ym_normalized)
+            exp_res = self._compute_perf_one(x_data, perm_order[i, :],
+                                             xmean, normxm, ym_normalized)
             self.assertAlmostEqual(permuted_stats[i], exp_res)
+
 
 class MantelTests(MantelTestData):
     """Results were verified with R 3.1.0 and vegan 2.0-10 (vegan::mantel).
