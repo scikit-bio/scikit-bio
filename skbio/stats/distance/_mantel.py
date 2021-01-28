@@ -259,7 +259,7 @@ def mantel(x, y, method='pearson', permutations=999, alternative='two-sided',
     if method == 'pearson':
         special = True
     elif method == 'spearman':
-        corr_func = spearmanr
+        special = True
     elif method == 'kendalltau':
         corr_func = kendalltau
     else:
@@ -282,6 +282,9 @@ def mantel(x, y, method='pearson', permutations=999, alternative='two-sided',
         if method == 'pearson':
             orig_stat, permuted_stats = _mantel_stats_pearson(x, y,
                                                               permutations)
+        elif method == 'spearman':
+            orig_stat, permuted_stats = _mantel_stats_spearman(x, y,
+                                                               permutations)
         else:
             raise ValueError("Invalid correlation method '%s'." % method)
     else:
@@ -326,8 +329,8 @@ def _mantel_stats_pearson(x, y, permutations):
     permutations : int
         Number of times to randomly permute `x` when assessing statistical
         significance. Must be greater than or equal to zero. If zero,
-        statistical significance calculations will be skipped and the p-value
-        will be ``np.nan``.
+        statistical significance calculations will be skipped and
+        permuted_stats will be an empty array.
 
     Returns
     -------
@@ -390,6 +393,44 @@ def _mantel_stats_pearson(x, y, permutations):
         permuted_stats = np.empty([permutations], dtype=x_data.dtype)
         mantel_perm_pearsonr_cy(x_data, perm_order, xmean, normxm,
                                 ym_normalized, permuted_stats)
+
+    return orig_stat, permuted_stats
+
+def _mantel_stats_spearman(x, y, permutations):
+    """Compute original and permuted stats using spearmanr.
+
+    Parameters
+    ----------
+    x, y : DistanceMatrix
+        Input distance matrices to compare.
+    permutations : int
+        Number of times to randomly permute `x` when assessing statistical
+        significance. Must be greater than or equal to zero. If zero,
+        statistical significance calculations will be skipped and
+        permuted_stats will be an empty array.
+
+    Returns
+    -------
+    orig_stat : 1D array_like
+        Correlation coefficient of the test.
+    permuted_stats : 1D array_like
+        Permutted correlation coefficients of the test.
+    """
+
+    x_flat = x.condensed_form()
+    y_flat = y.condensed_form()
+
+    orig_stat = spearmanr(x_flat, y_flat)[0]
+    del x_flat
+
+    permuted_stats = []
+    if not (permutations == 0 or np.isnan(orig_stat)):
+        perm_gen = (spearmanr(x.permute(condensed=True), y_flat)[0]
+                    for _ in range(permutations))
+        permuted_stats = np.fromiter(perm_gen, np.float,
+                                     count=permutations)
+
+    del y_flat
 
     return orig_stat, permuted_stats
 
