@@ -15,7 +15,6 @@ import scipy.special
 from scipy.stats import kendalltau, pearsonr
 from scipy.stats import PearsonRConstantInputWarning
 from scipy.stats import PearsonRNearConstantInputWarning
-from scipy.stats import rankdata
 from scipy.stats import SpearmanRConstantInputWarning
 
 from skbio.stats.distance import DistanceMatrix
@@ -397,6 +396,23 @@ def _mantel_stats_pearson(x, y, permutations):
                                 ym_normalized, permuted_stats)
 
     return orig_stat, permuted_stats
+
+def rankdata(arr):
+    # inline the essential part of scipy.stats.rankdata
+    sorter = np.argsort(arr, kind='quicksort')
+
+    inv = np.empty(sorter.size, dtype=np.intp)
+    inv[sorter] = np.arange(sorter.size, dtype=np.intp)
+
+    arr_s = arr[sorter]
+    obs = np.r_[True, arr_s[1:] != arr_s[:-1]]
+    dense = obs.cumsum()[inv]
+
+    # cumulative counts of each unique value
+    count = np.r_[np.nonzero(obs)[0], len(obs)]
+
+    # average method
+    return .5 * (count[dense] + count[dense - 1] + 1)
 
 
 def spearmanr_one(x_flat, y_rank):
