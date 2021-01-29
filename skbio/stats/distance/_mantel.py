@@ -397,7 +397,8 @@ def _mantel_stats_pearson(x, y, permutations):
 
     return orig_stat, permuted_stats
 
-def rankdata(arr):
+
+def rankdata_full(arr):
     # inline the essential part of scipy.stats.rankdata
     sorter = np.argsort(arr, kind='quicksort')
 
@@ -405,7 +406,20 @@ def rankdata(arr):
     inv[sorter] = np.arange(sorter.size, dtype=np.intp)
 
     arr_s = arr[sorter]
+
     obs = np.r_[True, arr_s[1:] != arr_s[:-1]]
+    dense = obs.cumsum()[inv]
+
+    # cumulative counts of each unique value
+    count = np.r_[np.nonzero(obs)[0], len(obs)]
+
+    # average method
+    return .5 * (count[dense] + count[dense - 1] + 1), obs, inv
+
+
+def rankdata_perm(obs, inv_org, order):
+    inv = inv_org[order]
+
     dense = obs.cumsum()[inv]
 
     # cumulative counts of each unique value
@@ -415,10 +429,18 @@ def rankdata(arr):
     return .5 * (count[dense] + count[dense - 1] + 1)
 
 
-def spearmanr_one(x_flat, y_rank):
+def spearmanr_one_full(x_rank, y_rank):
     # inline the essential part of spearmanr,
     # as defined in scipy.stats
-    x_rank = rankdata(x_flat)
+    stat = pearsonr(y_rank, x_rank)[0]
+    return stat
+
+
+def spearmanr_one_perm(xobs, xinv, y_rank):
+    # inline the essential part of spearmanr,
+    # as defined in scipy.stats
+    order = np.random.permutation(xinv.size)
+    x_rank = rankdata_perm(xobs, xinv, order)
     stat = pearsonr(y_rank, x_rank)[0]
     return stat
 
@@ -453,15 +475,17 @@ def _mantel_stats_spearman(x, y, permutations):
         return np.nan, []
 
     # inline spearmanr, condensed from scipy.stats.spearmanr
-    y_rank = rankdata(y_flat)
-    del y_flat
-    orig_stat = spearmanr_one(x_flat, y_rank)
-
+    x_rank, xobs, xinv = rankdata_full(x_flat)
     del x_flat
+    y_rank = rankdata_full(y_flat)[0]
+    del y_flat
+
+    orig_stat = spearmanr_one_full(x_rank, y_rank)
+    del x_rank
 
     permuted_stats = []
     if not (permutations == 0 or np.isnan(orig_stat)):
-        perm_gen = (spearmanr_one(x.permute(condensed=True), y_rank)
+        perm_gen = (spearmanr_one_perm(xobs, xinv, y_rank)
                     for _ in range(permutations))
         permuted_stats = np.fromiter(perm_gen, np.float,
                                      count=permutations)
