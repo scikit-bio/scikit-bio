@@ -12,9 +12,11 @@ import warnings
 import numpy as np
 import pandas as pd
 import scipy.special
-from scipy.stats import spearmanr, kendalltau
+from scipy.stats import kendalltau
 from scipy.stats import PearsonRConstantInputWarning
 from scipy.stats import PearsonRNearConstantInputWarning
+from scipy.stats import rankdata
+from scipy.stats import SpearmanRConstantInputWarning
 
 from skbio.stats.distance import DistanceMatrix
 from skbio.util._decorator import experimental
@@ -396,6 +398,15 @@ def _mantel_stats_pearson(x, y, permutations):
 
     return orig_stat, permuted_stats
 
+
+def spearmanr_one(x_flat, y_rank):
+    # inline the essential part of spearmanr,
+    # as defined in scipy.stats
+    x_rank = rankdata(x_flat)
+    rs = np.corrcoef(np.vstack((x_rank, y_rank)))
+    return rs[1, 0]
+
+
 def _mantel_stats_spearman(x, y, permutations):
     """Compute original and permuted stats using spearmanr.
 
@@ -420,17 +431,24 @@ def _mantel_stats_spearman(x, y, permutations):
     x_flat = x.condensed_form()
     y_flat = y.condensed_form()
 
-    orig_stat = spearmanr(x_flat, y_flat)[0]
+    # If an input is constant, the correlation coefficient is not defined.
+    if (x_flat == x_flat[0]).all() or (y_flat == y_flat[0]).all():
+        warnings.warn(SpearmanRConstantInputWarning())
+        return np.nan, []
+
+    # inline spearmanr, condensed from scipy.stats.spearmanr
+    y_rank = rankdata(y_flat)
+    del y_flat
+    orig_stat = spearmanr_one(x_flat, y_rank)
+
     del x_flat
 
     permuted_stats = []
     if not (permutations == 0 or np.isnan(orig_stat)):
-        perm_gen = (spearmanr(x.permute(condensed=True), y_flat)[0]
+        perm_gen = (spearmanr_one(x.permute(condensed=True), y_rank)
                     for _ in range(permutations))
         permuted_stats = np.fromiter(perm_gen, np.float,
                                      count=permutations)
-
-    del y_flat
 
     return orig_stat, permuted_stats
 
