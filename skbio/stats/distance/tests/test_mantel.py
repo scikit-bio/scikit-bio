@@ -330,7 +330,7 @@ class MantelTests(MantelTestData):
 
         obs = mantel(self.minx, self.minx, method='spearman',
                      alternative='two-sided')
-        self.assertEqual(obs[0], 1)
+        self.assertAlmostEqual(obs[0], 1.0)
         self.assertAlmostEqual(obs[1], 0.328)
         self.assertEqual(obs[2], 3)
 
