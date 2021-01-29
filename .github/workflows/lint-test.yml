@@ -1,6 +1,10 @@
 name: lint-test
 # build on every PR and commit to master
-on: [push, pull_request]
+on:
+  push:
+    branches: [ master ]
+  pull_request:
+    branches: [ master ]
 
 jobs:
   install-and-test:
