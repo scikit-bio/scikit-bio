@@ -12,7 +12,7 @@ import warnings
 import numpy as np
 import pandas as pd
 import scipy.special
-from scipy.stats import kendalltau
+from scipy.stats import kendalltau, pearsonr
 from scipy.stats import PearsonRConstantInputWarning
 from scipy.stats import PearsonRNearConstantInputWarning
 from scipy.stats import rankdata
@@ -403,8 +403,8 @@ def spearmanr_one(x_flat, y_rank):
     # inline the essential part of spearmanr,
     # as defined in scipy.stats
     x_rank = rankdata(x_flat)
-    rs = np.corrcoef(np.vstack((x_rank, y_rank)))
-    return rs[1, 0]
+    stat = pearsonr(y_rank, x_rank)[0]
+    return stat
 
 
 def _mantel_stats_spearman(x, y, permutations):
