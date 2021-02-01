@@ -14,6 +14,7 @@
 
 * Avoid an implicit data copy on construction of `DissimilarityMatrix` objects. 
 * Avoid validation on copy of `DissimilarityMatrix` and `DistanceMatrix` objects.
+* Use an optimized version of symmetry check in DistanceMatrix.
 
 ### Bug fixes
 
