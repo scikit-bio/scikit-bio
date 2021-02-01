@@ -21,6 +21,8 @@ from skbio.util import find_duplicates
 from skbio.util._decorator import experimental, classonlymethod
 from skbio.util._misc import resolve_key
 
+from ._utils import is_symmetric
+
 
 class DissimilarityMatrixError(Exception):
     """General error for dissimilarity matrix validation failures."""
@@ -1118,7 +1120,7 @@ class DistanceMatrix(DissimilarityMatrix):
         """
         super(DistanceMatrix, self)._validate(data, ids)
 
-        if (data.T != data).any():
+        if not is_symmetric(data):
             raise DistanceMatrixError(
                 "Data must be symmetric and cannot contain NaNs.")
 
