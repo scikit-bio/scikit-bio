@@ -169,7 +169,7 @@ def mantel_perm_pearsonr_cy(TReal[:, ::1] x_data, long[:, ::1] perm_order,
     assert perms_n == on2
 
     cdef Py_ssize_t p
-    cdef Py_ssize_t row,col
+    cdef Py_ssize_t row,col,icol
     cdef Py_ssize_t vrow
     cdef Py_ssize_t idx
 
@@ -185,9 +185,10 @@ def mantel_perm_pearsonr_cy(TReal[:, ::1] x_data, long[:, ::1] perm_order,
         for row in range(out_n-1):
             vrow = perm_order[p, row]
             idx = row*(out_n-1) - ((row-1)*row)/2
-            for col in range(out_n-row-1):
-               yval = ym_normalized[idx+col] 
-               xval = x_data[vrow, perm_order[p, col+row+1]]*mul + add
+            for icol in range(out_n-row-1):
+               col = icol+row+1
+               yval = ym_normalized[idx+icol]
+               xval = x_data[vrow, perm_order[p, col]]*mul + add
                # do not use += to avoid having prange consider it for reduction
                my_ps = yval*xval + my_ps
 

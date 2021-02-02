@@ -1955,6 +1955,7 @@ static const char __pyx_k_y_n[] = "y_n";
 static const char __pyx_k_args[] = "args";
 static const char __pyx_k_base[] = "base";
 static const char __pyx_k_dict[] = "__dict__";
+static const char __pyx_k_icol[] = "icol";
 static const char __pyx_k_in_n[] = "in_n";
 static const char __pyx_k_kind[] = "kind";
 static const char __pyx_k_main[] = "__main__";
@@ -2123,6 +2124,7 @@ static PyObject *__pyx_n_s_fortran;
 static PyObject *__pyx_n_u_fortran;
 static PyObject *__pyx_n_s_getstate;
 static PyObject *__pyx_kp_s_got_differing_extents_in_dimensi;
+static PyObject *__pyx_n_s_icol;
 static PyObject *__pyx_n_s_id;
 static PyObject *__pyx_n_s_idx;
 static PyObject *__pyx_n_s_import;
@@ -5309,6 +5311,7 @@ static PyObject *__pyx_pf_5skbio_5stats_8distance_7_cutils_18mantel_perm_pearson
   Py_ssize_t __pyx_v_p;
   Py_ssize_t __pyx_v_row;
   Py_ssize_t __pyx_v_col;
+  Py_ssize_t __pyx_v_icol;
   Py_ssize_t __pyx_v_vrow;
   Py_ssize_t __pyx_v_idx;
   float __pyx_v_mul;
@@ -5498,13 +5501,14 @@ static PyObject *__pyx_pf_5skbio_5stats_8distance_7_cutils_18mantel_perm_pearson
                 #endif /* _OPENMP */
                 {
                     #ifdef _OPENMP
-                    #pragma omp for lastprivate(__pyx_v_col) lastprivate(__pyx_v_idx) lastprivate(__pyx_v_my_ps) firstprivate(__pyx_v_p) lastprivate(__pyx_v_p) lastprivate(__pyx_v_row) lastprivate(__pyx_v_vrow) lastprivate(__pyx_v_xval) lastprivate(__pyx_v_yval)
+                    #pragma omp for lastprivate(__pyx_v_col) lastprivate(__pyx_v_icol) lastprivate(__pyx_v_idx) lastprivate(__pyx_v_my_ps) firstprivate(__pyx_v_p) lastprivate(__pyx_v_p) lastprivate(__pyx_v_row) lastprivate(__pyx_v_vrow) lastprivate(__pyx_v_xval) lastprivate(__pyx_v_yval)
                     #endif /* _OPENMP */
                     for (__pyx_t_3 = 0; __pyx_t_3 < __pyx_t_4; __pyx_t_3++){
                         {
                             __pyx_v_p = (Py_ssize_t)(0 + 1 * __pyx_t_3);
                             /* Initialize private variables to invalid values */
                             __pyx_v_col = ((Py_ssize_t)0xbad0bad0);
+                            __pyx_v_icol = ((Py_ssize_t)0xbad0bad0);
                             __pyx_v_idx = ((Py_ssize_t)0xbad0bad0);
                             __pyx_v_my_ps = ((float)__PYX_NAN());
                             __pyx_v_row = ((Py_ssize_t)0xbad0bad0);
@@ -5538,7 +5542,7 @@ static PyObject *__pyx_pf_5skbio_5stats_8distance_7_cutils_18mantel_perm_pearson
  *         for row in range(out_n-1):
  *             vrow = perm_order[p, row]             # <<<<<<<<<<<<<<
  *             idx = row*(out_n-1) - ((row-1)*row)/2
- *             for col in range(out_n-row-1):
+ *             for icol in range(out_n-row-1):
  */
                               __pyx_t_8 = __pyx_v_p;
                               __pyx_t_9 = __pyx_v_row;
@@ -5548,48 +5552,57 @@ static PyObject *__pyx_pf_5skbio_5stats_8distance_7_cutils_18mantel_perm_pearson
  *         for row in range(out_n-1):
  *             vrow = perm_order[p, row]
  *             idx = row*(out_n-1) - ((row-1)*row)/2             # <<<<<<<<<<<<<<
- *             for col in range(out_n-row-1):
- *                yval = ym_normalized[idx+col]
+ *             for icol in range(out_n-row-1):
+ *                col = icol+row+1
  */
                               __pyx_v_idx = ((__pyx_v_row * (__pyx_v_out_n - 1)) - __Pyx_div_Py_ssize_t(((__pyx_v_row - 1) * __pyx_v_row), 2));
 
                               /* "skbio/stats/distance/_cutils.pyx":188
  *             vrow = perm_order[p, row]
  *             idx = row*(out_n-1) - ((row-1)*row)/2
- *             for col in range(out_n-row-1):             # <<<<<<<<<<<<<<
- *                yval = ym_normalized[idx+col]
- *                xval = x_data[vrow, perm_order[p, col+row+1]]*mul + add
+ *             for icol in range(out_n-row-1):             # <<<<<<<<<<<<<<
+ *                col = icol+row+1
+ *                yval = ym_normalized[idx+icol]
  */
                               __pyx_t_10 = ((__pyx_v_out_n - __pyx_v_row) - 1);
                               __pyx_t_11 = __pyx_t_10;
                               for (__pyx_t_12 = 0; __pyx_t_12 < __pyx_t_11; __pyx_t_12+=1) {
-                                __pyx_v_col = __pyx_t_12;
+                                __pyx_v_icol = __pyx_t_12;
 
                                 /* "skbio/stats/distance/_cutils.pyx":189
  *             idx = row*(out_n-1) - ((row-1)*row)/2
- *             for col in range(out_n-row-1):
- *                yval = ym_normalized[idx+col]             # <<<<<<<<<<<<<<
- *                xval = x_data[vrow, perm_order[p, col+row+1]]*mul + add
- *                # do not use += to avoid having prange consider it for reduction
+ *             for icol in range(out_n-row-1):
+ *                col = icol+row+1             # <<<<<<<<<<<<<<
+ *                yval = ym_normalized[idx+icol]
+ *                xval = x_data[vrow, perm_order[p, col]]*mul + add
  */
-                                __pyx_t_9 = (__pyx_v_idx + __pyx_v_col);
-                                __pyx_v_yval = (*((float *) ( /* dim=0 */ ((char *) (((float *) __pyx_v_ym_normalized.data) + __pyx_t_9)) )));
+                                __pyx_v_col = ((__pyx_v_icol + __pyx_v_row) + 1);
 
                                 /* "skbio/stats/distance/_cutils.pyx":190
- *             for col in range(out_n-row-1):
- *                yval = ym_normalized[idx+col]
- *                xval = x_data[vrow, perm_order[p, col+row+1]]*mul + add             # <<<<<<<<<<<<<<
+ *             for icol in range(out_n-row-1):
+ *                col = icol+row+1
+ *                yval = ym_normalized[idx+icol]             # <<<<<<<<<<<<<<
+ *                xval = x_data[vrow, perm_order[p, col]]*mul + add
+ *                # do not use += to avoid having prange consider it for reduction
+ */
+                                __pyx_t_9 = (__pyx_v_idx + __pyx_v_icol);
+                                __pyx_v_yval = (*((float *) ( /* dim=0 */ ((char *) (((float *) __pyx_v_ym_normalized.data) + __pyx_t_9)) )));
+
+                                /* "skbio/stats/distance/_cutils.pyx":191
+ *                col = icol+row+1
+ *                yval = ym_normalized[idx+icol]
+ *                xval = x_data[vrow, perm_order[p, col]]*mul + add             # <<<<<<<<<<<<<<
  *                # do not use += to avoid having prange consider it for reduction
  *                my_ps = yval*xval + my_ps
  */
                                 __pyx_t_9 = __pyx_v_p;
-                                __pyx_t_8 = ((__pyx_v_col + __pyx_v_row) + 1);
+                                __pyx_t_8 = __pyx_v_col;
                                 __pyx_t_13 = __pyx_v_vrow;
                                 __pyx_t_14 = (*((long *) ( /* dim=1 */ ((char *) (((long *) ( /* dim=0 */ (__pyx_v_perm_order.data + __pyx_t_9 * __pyx_v_perm_order.strides[0]) )) + __pyx_t_8)) )));
                                 __pyx_v_xval = (((*((float *) ( /* dim=1 */ ((char *) (((float *) ( /* dim=0 */ (__pyx_v_x_data.data + __pyx_t_13 * __pyx_v_x_data.strides[0]) )) + __pyx_t_14)) ))) * __pyx_v_mul) + __pyx_v_add);
 
-                                /* "skbio/stats/distance/_cutils.pyx":192
- *                xval = x_data[vrow, perm_order[p, col+row+1]]*mul + add
+                                /* "skbio/stats/distance/_cutils.pyx":193
+ *                xval = x_data[vrow, perm_order[p, col]]*mul + add
  *                # do not use += to avoid having prange consider it for reduction
  *                my_ps = yval*xval + my_ps             # <<<<<<<<<<<<<<
  * 
@@ -5599,7 +5612,7 @@ static PyObject *__pyx_pf_5skbio_5stats_8distance_7_cutils_18mantel_perm_pearson
                               }
                             }
 
-                            /* "skbio/stats/distance/_cutils.pyx":196
+                            /* "skbio/stats/distance/_cutils.pyx":197
  *         # Presumably, if abs(one_stat) > 1, then it is only some small artifact of
  *         # floating point arithmetic.
  *         if my_ps>1.0:             # <<<<<<<<<<<<<<
@@ -5609,7 +5622,7 @@ static PyObject *__pyx_pf_5skbio_5stats_8distance_7_cutils_18mantel_perm_pearson
                             __pyx_t_15 = ((__pyx_v_my_ps > 1.0) != 0);
                             if (__pyx_t_15) {
 
-                              /* "skbio/stats/distance/_cutils.pyx":197
+                              /* "skbio/stats/distance/_cutils.pyx":198
  *         # floating point arithmetic.
  *         if my_ps>1.0:
  *             my_ps = 1.0             # <<<<<<<<<<<<<<
@@ -5618,7 +5631,7 @@ static PyObject *__pyx_pf_5skbio_5stats_8distance_7_cutils_18mantel_perm_pearson
  */
                               __pyx_v_my_ps = 1.0;
 
-                              /* "skbio/stats/distance/_cutils.pyx":196
+                              /* "skbio/stats/distance/_cutils.pyx":197
  *         # Presumably, if abs(one_stat) > 1, then it is only some small artifact of
  *         # floating point arithmetic.
  *         if my_ps>1.0:             # <<<<<<<<<<<<<<
@@ -5628,7 +5641,7 @@ static PyObject *__pyx_pf_5skbio_5stats_8distance_7_cutils_18mantel_perm_pearson
                               goto __pyx_L14;
                             }
 
-                            /* "skbio/stats/distance/_cutils.pyx":198
+                            /* "skbio/stats/distance/_cutils.pyx":199
  *         if my_ps>1.0:
  *             my_ps = 1.0
  *         elif my_ps<-1.0:             # <<<<<<<<<<<<<<
@@ -5638,7 +5651,7 @@ static PyObject *__pyx_pf_5skbio_5stats_8distance_7_cutils_18mantel_perm_pearson
                             __pyx_t_15 = ((__pyx_v_my_ps < -1.0) != 0);
                             if (__pyx_t_15) {
 
-                              /* "skbio/stats/distance/_cutils.pyx":199
+                              /* "skbio/stats/distance/_cutils.pyx":200
  *             my_ps = 1.0
  *         elif my_ps<-1.0:
  *             my_ps = -1.0             # <<<<<<<<<<<<<<
@@ -5646,7 +5659,7 @@ static PyObject *__pyx_pf_5skbio_5stats_8distance_7_cutils_18mantel_perm_pearson
  */
                               __pyx_v_my_ps = -1.0;
 
-                              /* "skbio/stats/distance/_cutils.pyx":198
+                              /* "skbio/stats/distance/_cutils.pyx":199
  *         if my_ps>1.0:
  *             my_ps = 1.0
  *         elif my_ps<-1.0:             # <<<<<<<<<<<<<<
@@ -5656,7 +5669,7 @@ static PyObject *__pyx_pf_5skbio_5stats_8distance_7_cutils_18mantel_perm_pearson
                             }
                             __pyx_L14:;
 
-                            /* "skbio/stats/distance/_cutils.pyx":200
+                            /* "skbio/stats/distance/_cutils.pyx":201
  *         elif my_ps<-1.0:
  *             my_ps = -1.0
  *         permuted_stats[p] = my_ps             # <<<<<<<<<<<<<<
@@ -5838,6 +5851,7 @@ static PyObject *__pyx_pf_5skbio_5stats_8distance_7_cutils_20mantel_perm_pearson
   Py_ssize_t __pyx_v_p;
   Py_ssize_t __pyx_v_row;
   Py_ssize_t __pyx_v_col;
+  Py_ssize_t __pyx_v_icol;
   Py_ssize_t __pyx_v_vrow;
   Py_ssize_t __pyx_v_idx;
   double __pyx_v_mul;
@@ -6027,13 +6041,14 @@ static PyObject *__pyx_pf_5skbio_5stats_8distance_7_cutils_20mantel_perm_pearson
                 #endif /* _OPENMP */
                 {
                     #ifdef _OPENMP
-                    #pragma omp for lastprivate(__pyx_v_col) lastprivate(__pyx_v_idx) lastprivate(__pyx_v_my_ps) firstprivate(__pyx_v_p) lastprivate(__pyx_v_p) lastprivate(__pyx_v_row) lastprivate(__pyx_v_vrow) lastprivate(__pyx_v_xval) lastprivate(__pyx_v_yval)
+                    #pragma omp for lastprivate(__pyx_v_col) lastprivate(__pyx_v_icol) lastprivate(__pyx_v_idx) lastprivate(__pyx_v_my_ps) firstprivate(__pyx_v_p) lastprivate(__pyx_v_p) lastprivate(__pyx_v_row) lastprivate(__pyx_v_vrow) lastprivate(__pyx_v_xval) lastprivate(__pyx_v_yval)
                     #endif /* _OPENMP */
                     for (__pyx_t_3 = 0; __pyx_t_3 < __pyx_t_4; __pyx_t_3++){
                         {
                             __pyx_v_p = (Py_ssize_t)(0 + 1 * __pyx_t_3);
                             /* Initialize private variables to invalid values */
                             __pyx_v_col = ((Py_ssize_t)0xbad0bad0);
+                            __pyx_v_icol = ((Py_ssize_t)0xbad0bad0);
                             __pyx_v_idx = ((Py_ssize_t)0xbad0bad0);
                             __pyx_v_my_ps = ((double)__PYX_NAN());
                             __pyx_v_row = ((Py_ssize_t)0xbad0bad0);
@@ -6067,7 +6082,7 @@ static PyObject *__pyx_pf_5skbio_5stats_8distance_7_cutils_20mantel_perm_pearson
  *         for row in range(out_n-1):
  *             vrow = perm_order[p, row]             # <<<<<<<<<<<<<<
  *             idx = row*(out_n-1) - ((row-1)*row)/2
- *             for col in range(out_n-row-1):
+ *             for icol in range(out_n-row-1):
  */
                               __pyx_t_8 = __pyx_v_p;
                               __pyx_t_9 = __pyx_v_row;
@@ -6077,48 +6092,57 @@ static PyObject *__pyx_pf_5skbio_5stats_8distance_7_cutils_20mantel_perm_pearson
  *         for row in range(out_n-1):
  *             vrow = perm_order[p, row]
  *             idx = row*(out_n-1) - ((row-1)*row)/2             # <<<<<<<<<<<<<<
- *             for col in range(out_n-row-1):
- *                yval = ym_normalized[idx+col]
+ *             for icol in range(out_n-row-1):
+ *                col = icol+row+1
  */
                               __pyx_v_idx = ((__pyx_v_row * (__pyx_v_out_n - 1)) - __Pyx_div_Py_ssize_t(((__pyx_v_row - 1) * __pyx_v_row), 2));
 
                               /* "skbio/stats/distance/_cutils.pyx":188
  *             vrow = perm_order[p, row]
  *             idx = row*(out_n-1) - ((row-1)*row)/2
- *             for col in range(out_n-row-1):             # <<<<<<<<<<<<<<
- *                yval = ym_normalized[idx+col]
- *                xval = x_data[vrow, perm_order[p, col+row+1]]*mul + add
+ *             for icol in range(out_n-row-1):             # <<<<<<<<<<<<<<
+ *                col = icol+row+1
+ *                yval = ym_normalized[idx+icol]
  */
                               __pyx_t_10 = ((__pyx_v_out_n - __pyx_v_row) - 1);
                               __pyx_t_11 = __pyx_t_10;
                               for (__pyx_t_12 = 0; __pyx_t_12 < __pyx_t_11; __pyx_t_12+=1) {
-                                __pyx_v_col = __pyx_t_12;
+                                __pyx_v_icol = __pyx_t_12;
 
                                 /* "skbio/stats/distance/_cutils.pyx":189
  *             idx = row*(out_n-1) - ((row-1)*row)/2
- *             for col in range(out_n-row-1):
- *                yval = ym_normalized[idx+col]             # <<<<<<<<<<<<<<
- *                xval = x_data[vrow, perm_order[p, col+row+1]]*mul + add
- *                # do not use += to avoid having prange consider it for reduction
+ *             for icol in range(out_n-row-1):
+ *                col = icol+row+1             # <<<<<<<<<<<<<<
+ *                yval = ym_normalized[idx+icol]
+ *                xval = x_data[vrow, perm_order[p, col]]*mul + add
  */
-                                __pyx_t_9 = (__pyx_v_idx + __pyx_v_col);
-                                __pyx_v_yval = (*((double *) ( /* dim=0 */ ((char *) (((double *) __pyx_v_ym_normalized.data) + __pyx_t_9)) )));
+                                __pyx_v_col = ((__pyx_v_icol + __pyx_v_row) + 1);
 
                                 /* "skbio/stats/distance/_cutils.pyx":190
- *             for col in range(out_n-row-1):
- *                yval = ym_normalized[idx+col]
- *                xval = x_data[vrow, perm_order[p, col+row+1]]*mul + add             # <<<<<<<<<<<<<<
+ *             for icol in range(out_n-row-1):
+ *                col = icol+row+1
+ *                yval = ym_normalized[idx+icol]             # <<<<<<<<<<<<<<
+ *                xval = x_data[vrow, perm_order[p, col]]*mul + add
+ *                # do not use += to avoid having prange consider it for reduction
+ */
+                                __pyx_t_9 = (__pyx_v_idx + __pyx_v_icol);
+                                __pyx_v_yval = (*((double *) ( /* dim=0 */ ((char *) (((double *) __pyx_v_ym_normalized.data) + __pyx_t_9)) )));
+
+                                /* "skbio/stats/distance/_cutils.pyx":191
+ *                col = icol+row+1
+ *                yval = ym_normalized[idx+icol]
+ *                xval = x_data[vrow, perm_order[p, col]]*mul + add             # <<<<<<<<<<<<<<
  *                # do not use += to avoid having prange consider it for reduction
  *                my_ps = yval*xval + my_ps
  */
                                 __pyx_t_9 = __pyx_v_p;
-                                __pyx_t_8 = ((__pyx_v_col + __pyx_v_row) + 1);
+                                __pyx_t_8 = __pyx_v_col;
                                 __pyx_t_13 = __pyx_v_vrow;
                                 __pyx_t_14 = (*((long *) ( /* dim=1 */ ((char *) (((long *) ( /* dim=0 */ (__pyx_v_perm_order.data + __pyx_t_9 * __pyx_v_perm_order.strides[0]) )) + __pyx_t_8)) )));
                                 __pyx_v_xval = (((*((double *) ( /* dim=1 */ ((char *) (((double *) ( /* dim=0 */ (__pyx_v_x_data.data + __pyx_t_13 * __pyx_v_x_data.strides[0]) )) + __pyx_t_14)) ))) * __pyx_v_mul) + __pyx_v_add);
 
-                                /* "skbio/stats/distance/_cutils.pyx":192
- *                xval = x_data[vrow, perm_order[p, col+row+1]]*mul + add
+                                /* "skbio/stats/distance/_cutils.pyx":193
+ *                xval = x_data[vrow, perm_order[p, col]]*mul + add
  *                # do not use += to avoid having prange consider it for reduction
  *                my_ps = yval*xval + my_ps             # <<<<<<<<<<<<<<
  * 
@@ -6128,7 +6152,7 @@ static PyObject *__pyx_pf_5skbio_5stats_8distance_7_cutils_20mantel_perm_pearson
                               }
                             }
 
-                            /* "skbio/stats/distance/_cutils.pyx":196
+                            /* "skbio/stats/distance/_cutils.pyx":197
  *         # Presumably, if abs(one_stat) > 1, then it is only some small artifact of
  *         # floating point arithmetic.
  *         if my_ps>1.0:             # <<<<<<<<<<<<<<
@@ -6138,7 +6162,7 @@ static PyObject *__pyx_pf_5skbio_5stats_8distance_7_cutils_20mantel_perm_pearson
                             __pyx_t_15 = ((__pyx_v_my_ps > 1.0) != 0);
                             if (__pyx_t_15) {
 
-                              /* "skbio/stats/distance/_cutils.pyx":197
+                              /* "skbio/stats/distance/_cutils.pyx":198
  *         # floating point arithmetic.
  *         if my_ps>1.0:
  *             my_ps = 1.0             # <<<<<<<<<<<<<<
@@ -6147,7 +6171,7 @@ static PyObject *__pyx_pf_5skbio_5stats_8distance_7_cutils_20mantel_perm_pearson
  */
                               __pyx_v_my_ps = 1.0;
 
-                              /* "skbio/stats/distance/_cutils.pyx":196
+                              /* "skbio/stats/distance/_cutils.pyx":197
  *         # Presumably, if abs(one_stat) > 1, then it is only some small artifact of
  *         # floating point arithmetic.
  *         if my_ps>1.0:             # <<<<<<<<<<<<<<
@@ -6157,7 +6181,7 @@ static PyObject *__pyx_pf_5skbio_5stats_8distance_7_cutils_20mantel_perm_pearson
                               goto __pyx_L14;
                             }
 
-                            /* "skbio/stats/distance/_cutils.pyx":198
+                            /* "skbio/stats/distance/_cutils.pyx":199
  *         if my_ps>1.0:
  *             my_ps = 1.0
  *         elif my_ps<-1.0:             # <<<<<<<<<<<<<<
@@ -6167,7 +6191,7 @@ static PyObject *__pyx_pf_5skbio_5stats_8distance_7_cutils_20mantel_perm_pearson
                             __pyx_t_15 = ((__pyx_v_my_ps < -1.0) != 0);
                             if (__pyx_t_15) {
 
-                              /* "skbio/stats/distance/_cutils.pyx":199
+                              /* "skbio/stats/distance/_cutils.pyx":200
  *             my_ps = 1.0
  *         elif my_ps<-1.0:
  *             my_ps = -1.0             # <<<<<<<<<<<<<<
@@ -6175,7 +6199,7 @@ static PyObject *__pyx_pf_5skbio_5stats_8distance_7_cutils_20mantel_perm_pearson
  */
                               __pyx_v_my_ps = -1.0;
 
-                              /* "skbio/stats/distance/_cutils.pyx":198
+                              /* "skbio/stats/distance/_cutils.pyx":199
  *         if my_ps>1.0:
  *             my_ps = 1.0
  *         elif my_ps<-1.0:             # <<<<<<<<<<<<<<
@@ -6185,7 +6209,7 @@ static PyObject *__pyx_pf_5skbio_5stats_8distance_7_cutils_20mantel_perm_pearson
                             }
                             __pyx_L14:;
 
-                            /* "skbio/stats/distance/_cutils.pyx":200
+                            /* "skbio/stats/distance/_cutils.pyx":201
  *         elif my_ps<-1.0:
  *             my_ps = -1.0
  *         permuted_stats[p] = my_ps             # <<<<<<<<<<<<<<
@@ -20083,6 +20107,7 @@ static __Pyx_StringTabEntry __pyx_string_tab[] = {
   {&__pyx_n_u_fortran, __pyx_k_fortran, sizeof(__pyx_k_fortran), 0, 1, 0, 1},
   {&__pyx_n_s_getstate, __pyx_k_getstate, sizeof(__pyx_k_getstate), 0, 0, 1, 1},
   {&__pyx_kp_s_got_differing_extents_in_dimensi, __pyx_k_got_differing_extents_in_dimensi, sizeof(__pyx_k_got_differing_extents_in_dimensi), 0, 0, 1, 0},
+  {&__pyx_n_s_icol, __pyx_k_icol, sizeof(__pyx_k_icol), 0, 0, 1, 1},
   {&__pyx_n_s_id, __pyx_k_id, sizeof(__pyx_k_id), 0, 0, 1, 1},
   {&__pyx_n_s_idx, __pyx_k_idx, sizeof(__pyx_k_idx), 0, 0, 1, 1},
   {&__pyx_n_s_import, __pyx_k_import, sizeof(__pyx_k_import), 0, 0, 1, 1},
@@ -20420,10 +20445,10 @@ static CYTHON_SMALL_CODE int __Pyx_InitCachedConstants(void) {
  *                             TReal xmean, TReal normxm,
  *                             TReal[::1] ym_normalized,
  */
-  __pyx_tuple__27 = PyTuple_Pack(22, __pyx_n_s_x_data, __pyx_n_s_perm_order, __pyx_n_s_xmean, __pyx_n_s_normxm, __pyx_n_s_ym_normalized, __pyx_n_s_permuted_stats, __pyx_n_s_in_n, __pyx_n_s_in2, __pyx_n_s_perms_n, __pyx_n_s_out_n, __pyx_n_s_y_n, __pyx_n_s_on2, __pyx_n_s_p, __pyx_n_s_row, __pyx_n_s_col, __pyx_n_s_vrow, __pyx_n_s_idx, __pyx_n_s_mul, __pyx_n_s_add, __pyx_n_s_my_ps, __pyx_n_s_yval, __pyx_n_s_xval); if (unlikely(!__pyx_tuple__27)) __PYX_ERR(0, 124, __pyx_L1_error)
+  __pyx_tuple__27 = PyTuple_Pack(23, __pyx_n_s_x_data, __pyx_n_s_perm_order, __pyx_n_s_xmean, __pyx_n_s_normxm, __pyx_n_s_ym_normalized, __pyx_n_s_permuted_stats, __pyx_n_s_in_n, __pyx_n_s_in2, __pyx_n_s_perms_n, __pyx_n_s_out_n, __pyx_n_s_y_n, __pyx_n_s_on2, __pyx_n_s_p, __pyx_n_s_row, __pyx_n_s_col, __pyx_n_s_icol, __pyx_n_s_vrow, __pyx_n_s_idx, __pyx_n_s_mul, __pyx_n_s_add, __pyx_n_s_my_ps, __pyx_n_s_yval, __pyx_n_s_xval); if (unlikely(!__pyx_tuple__27)) __PYX_ERR(0, 124, __pyx_L1_error)
   __Pyx_GOTREF(__pyx_tuple__27);
   __Pyx_GIVEREF(__pyx_tuple__27);
-  __pyx_codeobj__28 = (PyObject*)__Pyx_PyCode_New(6, 0, 22, 0, CO_OPTIMIZED|CO_NEWLOCALS, __pyx_empty_bytes, __pyx_empty_tuple, __pyx_empty_tuple, __pyx_tuple__27, __pyx_empty_tuple, __pyx_empty_tuple, __pyx_kp_s_skbio_stats_distance__cutils_pyx, __pyx_n_s_mantel_perm_pearsonr_cy, 124, __pyx_empty_bytes); if (unlikely(!__pyx_codeobj__28)) __PYX_ERR(0, 124, __pyx_L1_error)
+  __pyx_codeobj__28 = (PyObject*)__Pyx_PyCode_New(6, 0, 23, 0, CO_OPTIMIZED|CO_NEWLOCALS, __pyx_empty_bytes, __pyx_empty_tuple, __pyx_empty_tuple, __pyx_tuple__27, __pyx_empty_tuple, __pyx_empty_tuple, __pyx_kp_s_skbio_stats_distance__cutils_pyx, __pyx_n_s_mantel_perm_pearsonr_cy, 124, __pyx_empty_bytes); if (unlikely(!__pyx_codeobj__28)) __PYX_ERR(0, 124, __pyx_L1_error)
 
   /* "View.MemoryView":286
  *         return self.name
