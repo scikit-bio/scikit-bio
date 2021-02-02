@@ -397,7 +397,8 @@ def _mantel_stats_pearson(x, y, permutations):
 
     return orig_stat, permuted_stats
 
-def rankdata(arr):
+
+def rankdata_full(arr):
     # inline the essential part of scipy.stats.rankdata
     sorter = np.argsort(arr, kind='quicksort')
 
@@ -405,23 +406,59 @@ def rankdata(arr):
     inv[sorter] = np.arange(sorter.size, dtype=np.intp)
 
     arr_s = arr[sorter]
+
     obs = np.r_[True, arr_s[1:] != arr_s[:-1]]
-    dense = obs.cumsum()[inv]
+    dense_org = obs.cumsum()
+    dense = dense_org[inv]
 
     # cumulative counts of each unique value
     count = np.r_[np.nonzero(obs)[0], len(obs)]
 
     # average method
+    return .5 * (count[dense] + count[dense - 1] + 1), count, dense
+
+
+def rankdata_perm(count, dense_org, perm_order):
+    dense = np.empty(dense_org.shape,dtype=dense_org.dtype)
+    out_n = len(perm_order)
+    for row in range(out_n-1):
+            vrow = perm_order[row]
+            idx = row*(out_n-1) - np.long(((row-1)*row)/2)
+            for icol in range(out_n-row-1):
+               col = icol+row+1
+               vcol = perm_order[col]
+               #xval = dense_row[vrow, vcol]
+               if (vcol>vrow):
+                 xrow = vrow
+                 ixcol = vcol - (vrow+1)
+               else:
+                 xrow = vcol
+                 ixcol = vrow - (vcol+1)
+
+               xval = dense_org[xrow*(out_n-1) - np.long(((xrow-1)*xrow)/2) + ixcol]
+               dense[idx+icol] = xval
+
+    # average method
     return .5 * (count[dense] + count[dense - 1] + 1)
 
 
-def spearmanr_one(x_flat, y_rank):
+def spearmanr_one_full(x_rank, y_rank):
     # inline the essential part of spearmanr,
     # as defined in scipy.stats
-    x_rank = rankdata(x_flat)
     stat = pearsonr(y_rank, x_rank)[0]
     return stat
 
+
+def spearmanr_one_perm(xcount, xdense, y_rank, order):
+    # inline the essential part of spearmanr,
+    # as defined in scipy.stats
+    x_rank = rankdata_perm(xcount, xdense, order)
+    stat = pearsonr(y_rank, x_rank)[0]
+    return stat
+
+def spearmanr_one_rand(nout,xcount, xdense, y_rank):
+    order = np.random.permutation(nout)
+    return spearmanr_one_perm(xcount, xdense, y_rank, order)
 
 def _mantel_stats_spearman(x, y, permutations):
     """Compute original and permuted stats using spearmanr.
@@ -453,15 +490,17 @@ def _mantel_stats_spearman(x, y, permutations):
         return np.nan, []
 
     # inline spearmanr, condensed from scipy.stats.spearmanr
-    y_rank = rankdata(y_flat)
-    del y_flat
-    orig_stat = spearmanr_one(x_flat, y_rank)
-
+    x_rank, xcount, xdense = rankdata_full(x_flat)
     del x_flat
+    y_rank = rankdata_full(y_flat)[0]
+    del y_flat
+
+    orig_stat = spearmanr_one_full(x_rank, y_rank)
+    del x_rank
 
     permuted_stats = []
     if not (permutations == 0 or np.isnan(orig_stat)):
-        perm_gen = (spearmanr_one(x.permute(condensed=True), y_rank)
+        perm_gen = (spearmanr_one_rand(x._data.shape[0], xcount, xdense, y_rank)
                     for _ in range(permutations))
         permuted_stats = np.fromiter(perm_gen, np.float,
                                      count=permutations)
