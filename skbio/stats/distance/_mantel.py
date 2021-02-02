@@ -21,7 +21,7 @@ from skbio.stats.distance import DistanceMatrix
 from skbio.util._decorator import experimental
 
 from ._cutils import mantel_perm_pearsonr_cy
-
+from ._cutils import rankdata_perm_cy
 
 @experimental(as_of="0.4.0")
 def mantel(x, y, method='pearson', permutations=999, alternative='two-sided',
@@ -419,27 +419,10 @@ def rankdata_full(arr):
 
 
 def rankdata_perm(count, dense_org, perm_order):
-    dense = np.empty(dense_org.shape,dtype=dense_org.dtype)
-    out_n = len(perm_order)
-    for row in range(out_n-1):
-            vrow = perm_order[row]
-            idx = row*(out_n-1) - np.long(((row-1)*row)/2)
-            for icol in range(out_n-row-1):
-               col = icol+row+1
-               vcol = perm_order[col]
-               #xval = dense_row[vrow, vcol]
-               if (vcol>vrow):
-                 xrow = vrow
-                 ixcol = vcol - (vrow+1)
-               else:
-                 xrow = vcol
-                 ixcol = vrow - (vcol+1)
-
-               xval = dense_org[xrow*(out_n-1) - np.long(((xrow-1)*xrow)/2) + ixcol]
-               dense[idx+icol] = xval
-
-    # average method
-    return .5 * (count[dense] + count[dense - 1] + 1)
+    np_perm_order = np.asarray(perm_order, dtype=np.long)
+    stats = np.empty(dense_org.shape,dtype=np.float)
+    rankdata_perm_cy(count, dense_org, np_perm_order, stats)
+    return stats
 
 
 def spearmanr_one_full(x_rank, y_rank):

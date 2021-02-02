@@ -199,3 +199,43 @@ def mantel_perm_pearsonr_cy(TReal[:, ::1] x_data, long[:, ::1] perm_order,
         elif my_ps<-1.0:
             my_ps = -1.0
         permuted_stats[p] = my_ps
+
+@cython.boundscheck(False)
+@cython.wraparound(False)
+def rankdata_perm_cy(long[::1] count, long[::1] dense_org, long[::1] perm_order,
+                     TReal[::1] out_stats):
+    cdef Py_ssize_t cnt_n = count.shape[0]
+    cdef Py_ssize_t dn_n = dense_org.shape[0]
+    cdef Py_ssize_t ord_n = perm_order.shape[0]
+    cdef Py_ssize_t stats_n = out_stats.shape[0]
+
+    #print(cnt_n,dn_n, stats_n, ord_n, ((ord_n-1)*ord_n)/2)
+    assert dn_n == stats_n
+    assert stats_n == ((ord_n-1)*ord_n)/2
+
+    cdef Py_ssize_t row,col,icol
+    cdef Py_ssize_t vrow,vcol,
+    cdef Py_ssize_t xrow,xcol,ixcol
+    cdef Py_ssize_t idx
+
+    cdef Py_ssize_t dense_val
+
+    for row in prange(ord_n-1, nogil=True):
+            vrow = perm_order[row]
+            idx = row*(ord_n-1) - ((row-1)*row)/2
+            for icol in range(ord_n-row-1):
+               col = icol+row+1
+               vcol = perm_order[col]
+               #xval = dense_row[vrow, vcol]
+               if (vcol>vrow):
+                 xrow = vrow
+                 ixcol = vcol - (vrow+1)
+               else:
+                 xrow = vcol
+                 ixcol = vrow - (vcol+1)
+
+               dense_val = dense_org[xrow*(ord_n-1) - ((xrow-1)*xrow)/2 + ixcol]
+               # average method
+               out_stats[idx+icol] = .5 * (count[dense_val] + count[dense_val - 1] + 1)
+
+
