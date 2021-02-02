@@ -14,11 +14,14 @@ import pandas as pd
 
 import scipy
 from scipy.spatial.distance import squareform
+from scipy.stats import pearsonr, spearmanr
 
 from skbio import DistanceMatrix
 from skbio.stats.distance import (DissimilarityMatrixError,
                                   DistanceMatrixError, mantel, pwmantel)
 from skbio.stats.distance._mantel import _order_dms
+from skbio.stats.distance._mantel import _mantel_stats_pearson
+from skbio.stats.distance._mantel import _mantel_stats_spearman
 from skbio.stats.distance._cutils import mantel_perm_pearsonr_cy
 from skbio.stats.distance._utils import distmat_reorder_condensed
 from skbio.util import get_data_path, assert_data_frame_almost_equal
@@ -167,6 +170,62 @@ class InternalMantelTests(MantelTestData):
             exp_res = self._compute_perf_one(x_data, perm_order[i, :],
                                              xmean, normxm, ym_normalized)
             self.assertAlmostEqual(permuted_stats[i], exp_res)
+
+    def test_pearsonr_full(self):
+        """
+        Compare the optimized version of pearson mantel
+        with the naive loop implementation
+        """
+        x = DistanceMatrix.read(get_data_path('dm2.txt'))
+        y = DistanceMatrix.read(get_data_path('dm3.txt'))
+
+        np.random.seed(0)
+        orig_stat_fast, permuted_stats_fast = _mantel_stats_pearson(x, y, 12)
+
+        # compute the traditional way
+        np.random.seed(0)
+        x_flat = x.condensed_form()
+        y_flat = y.condensed_form()
+
+        orig_stat = pearsonr(x_flat, y_flat)[0]
+
+        perm_gen = (pearsonr(x.permute(condensed=True), y_flat)[0]
+                    for _ in range(12))
+        permuted_stats = np.fromiter(perm_gen, np.float,
+                                     count=12)
+
+        self.assertAlmostEqual(orig_stat_fast, orig_stat)
+        for i in range(12):
+            self.assertAlmostEqual(permuted_stats_fast[i],
+                                   permuted_stats[i])
+
+    def test_spearmanr_full(self):
+        """
+        Compare the optimized version of spearman mantel
+        with the naive loop implementation
+        """
+        x = DistanceMatrix.read(get_data_path('dm2.txt'))
+        y = DistanceMatrix.read(get_data_path('dm3.txt'))
+
+        np.random.seed(0)
+        orig_stat_fast, permuted_stats_fast = _mantel_stats_spearman(x, y, 12)
+
+        # compute the traditional way
+        np.random.seed(0)
+        x_flat = x.condensed_form()
+        y_flat = y.condensed_form()
+
+        orig_stat = spearmanr(x_flat, y_flat)[0]
+
+        perm_gen = (spearmanr(x.permute(condensed=True), y_flat)[0]
+                    for _ in range(12))
+        permuted_stats = np.fromiter(perm_gen, np.float,
+                                     count=12)
+
+        self.assertAlmostEqual(orig_stat_fast, orig_stat)
+        for i in range(12):
+            self.assertAlmostEqual(permuted_stats_fast[i],
+                                   permuted_stats[i])
 
 
 class MantelTests(MantelTestData):
