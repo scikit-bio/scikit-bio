@@ -12,7 +12,7 @@ import warnings
 import numpy as np
 import pandas as pd
 import scipy.special
-from scipy.stats import kendalltau, pearsonr
+from scipy.stats import kendalltau
 from scipy.stats import PearsonRConstantInputWarning
 from scipy.stats import PearsonRNearConstantInputWarning
 from scipy.stats import SpearmanRConstantInputWarning
@@ -21,7 +21,8 @@ from skbio.stats.distance import DistanceMatrix
 from skbio.util._decorator import experimental
 
 from ._cutils import mantel_perm_pearsonr_cy
-from ._cutils import rankdata_perm_cy
+from ._cutils import mantel_perm_spearmanr_cy
+
 
 @experimental(as_of="0.4.0")
 def mantel(x, y, method='pearson', permutations=999, alternative='two-sided',
@@ -418,31 +419,6 @@ def rankdata_full(arr):
     return .5 * (count[dense] + count[dense - 1] + 1), count, dense
 
 
-def rankdata_perm(count, dense_org, perm_order):
-    np_perm_order = np.asarray(perm_order, dtype=np.long)
-    stats = np.empty(dense_org.shape,dtype=np.float)
-    rankdata_perm_cy(count, dense_org, np_perm_order, stats)
-    return stats
-
-
-def spearmanr_one_full(x_rank, y_rank):
-    # inline the essential part of spearmanr,
-    # as defined in scipy.stats
-    stat = pearsonr(y_rank, x_rank)[0]
-    return stat
-
-
-def spearmanr_one_perm(xcount, xdense, y_rank, order):
-    # inline the essential part of spearmanr,
-    # as defined in scipy.stats
-    x_rank = rankdata_perm(xcount, xdense, order)
-    stat = pearsonr(y_rank, x_rank)[0]
-    return stat
-
-def spearmanr_one_rand(nout,xcount, xdense, y_rank):
-    order = np.random.permutation(nout)
-    return spearmanr_one_perm(xcount, xdense, y_rank, order)
-
 def _mantel_stats_spearman(x, y, permutations):
     """Compute original and permuted stats using spearmanr.
 
@@ -478,15 +454,44 @@ def _mantel_stats_spearman(x, y, permutations):
     y_rank = rankdata_full(y_flat)[0]
     del y_flat
 
-    orig_stat = spearmanr_one_full(x_rank, y_rank)
-    del x_rank
+    # inline pearsonr, condensed from scipy.stats.pearsonr(x_rank, y_rank)
+    xmean = x_rank.mean()
+    xm = x_rank - xmean
+    normxm = np.linalg.norm(xm)
+    xm_normalized = xm/normxm
+    del xm
 
+    ymean = y_rank.mean()
+    ym = y_rank - ymean
+    normym = np.linalg.norm(ym)
+    ym_normalized = ym/normym
+    del ym
+
+    threshold = 1e-13
+    if (((normxm < threshold*abs(xmean)) or
+         (normym < threshold*abs(ymean)))):
+        # If all the values in x (likewise y) are very close to the mean,
+        # the loss of precision that occurs in the subtraction xm = x - xmean
+        # might result in large errors in r.
+        warnings.warn(PearsonRNearConstantInputWarning())
+
+    orig_stat = np.dot(xm_normalized, ym_normalized)
+    del xm_normalized
+
+    mat_n = y._data.shape[0]
+    # note: xmean and normxmdo not change with permutations
     permuted_stats = []
     if not (permutations == 0 or np.isnan(orig_stat)):
-        perm_gen = (spearmanr_one_rand(x._data.shape[0], xcount, xdense, y_rank)
-                    for _ in range(permutations))
-        permuted_stats = np.fromiter(perm_gen, np.float,
-                                     count=permutations)
+        # inline DistanceMatrix.permute, groupping them together
+
+        perm_order = np.empty([permutations, mat_n], dtype=np.int)
+        for row in range(permutations):
+            perm_order[row, :] = np.random.permutation(mat_n)
+
+        permuted_stats = np.empty([permutations], dtype=ym_normalized.dtype)
+        mantel_perm_spearmanr_cy(xcount, xdense, perm_order,
+                                 xmean, normxm,
+                                 ym_normalized, permuted_stats)
 
     return orig_stat, permuted_stats
 

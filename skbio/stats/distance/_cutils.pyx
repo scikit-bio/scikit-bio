@@ -155,7 +155,7 @@ def mantel_perm_pearsonr_cy(TReal[:, ::1] x_data, long[:, ::1] perm_order,
     ym_normalized : 1D_array_like
         Normalized condensed y_data
     permuted_stats : 1D array_like
-        Output, Distance matrix, must be same size as reorder_vec
+        Output, Pearson stats
     """
     cdef Py_ssize_t in_n = x_data.shape[0]
     cdef Py_ssize_t in2 = x_data.shape[1]
@@ -202,31 +202,64 @@ def mantel_perm_pearsonr_cy(TReal[:, ::1] x_data, long[:, ::1] perm_order,
 
 @cython.boundscheck(False)
 @cython.wraparound(False)
-def rankdata_perm_cy(long[::1] count, long[::1] dense_org, long[::1] perm_order,
-                     TReal[::1] out_stats):
-    cdef Py_ssize_t cnt_n = count.shape[0]
+def mantel_perm_spearmanr_cy(long[::1] count, long[::1] dense_org, long[:, ::1] perm_order,
+                             TReal xmean, TReal normxm,
+                             TReal[::1] ym_normalized,
+                             TReal[::1] permuted_stats):
+    """
+    Fused permute, rank, pearson_fma, leading to 
+    spearmanr for mantel.
+
+    Parameters
+    ----------
+    count, dense_org : 1D array_like
+        Partial data obtaine from full rankdata.
+    perm_order : 2D array_like
+        List of permutation orders.
+    xmean: real
+        Mean value of rankdata
+    normxm: real
+        Norm of pre-processed xm
+    ym_normalized : 1D_array_like
+        Normalized ranked y_data
+    permuted_stats : 1D array_like
+        Output, Spearman stats
+    """
     cdef Py_ssize_t dn_n = dense_org.shape[0]
-    cdef Py_ssize_t ord_n = perm_order.shape[0]
-    cdef Py_ssize_t stats_n = out_stats.shape[0]
+    cdef Py_ssize_t perms_n = perm_order.shape[0]
+    cdef Py_ssize_t out_n = perm_order.shape[1]
+    cdef Py_ssize_t y_n = ym_normalized.shape[0]
+    cdef Py_ssize_t on2 = permuted_stats.shape[0]
 
-    #print(cnt_n,dn_n, stats_n, ord_n, ((ord_n-1)*ord_n)/2)
-    assert dn_n == stats_n
-    assert stats_n == ((ord_n-1)*ord_n)/2
+    assert dn_n == y_n
+    assert y_n == ((out_n-1)*out_n)/2
+    assert perms_n == on2
 
+    cdef Py_ssize_t p
     cdef Py_ssize_t row,col,icol
     cdef Py_ssize_t vrow,vcol,
-    cdef Py_ssize_t xrow,xcol,ixcol
+    cdef Py_ssize_t xrow,ixcol
     cdef Py_ssize_t idx
-
     cdef Py_ssize_t dense_val
 
-    for row in prange(ord_n-1, nogil=True):
-            vrow = perm_order[row]
-            idx = row*(ord_n-1) - ((row-1)*row)/2
-            for icol in range(ord_n-row-1):
+    cdef TReal mul = 1.0/normxm
+    cdef TReal add = -xmean/normxm
+
+    cdef TReal my_ps
+    cdef TReal yval
+    cdef TReal xval
+    cdef TReal rank_val
+
+    for p in prange(perms_n, nogil=True):
+        my_ps = 0.0
+        for row in range(out_n-1):
+            vrow = perm_order[p, row]
+            idx = row*(out_n-1) - ((row-1)*row)/2
+            for icol in range(out_n-row-1):
                col = icol+row+1
-               vcol = perm_order[col]
-               #xval = dense_row[vrow, vcol]
+               vcol = perm_order[p, col]
+
+               #since we operate on the upper triangle, use xcol>xrow
                if (vcol>vrow):
                  xrow = vrow
                  ixcol = vcol - (vrow+1)
@@ -234,8 +267,20 @@ def rankdata_perm_cy(long[::1] count, long[::1] dense_org, long[::1] perm_order,
                  xrow = vcol
                  ixcol = vrow - (vcol+1)
 
-               dense_val = dense_org[xrow*(ord_n-1) - ((xrow-1)*xrow)/2 + ixcol]
-               # average method
-               out_stats[idx+icol] = .5 * (count[dense_val] + count[dense_val - 1] + 1)
+               # reuse dense from original ranking algo
+               dense_val = dense_org[xrow*(out_n-1) - ((xrow-1)*xrow)/2 + ixcol]
+               # now compute rankdata using average method
+               rank_val = .5 * (count[dense_val] + count[dense_val - 1] + 1)
+               # now compute pearsonr step
+               xval = rank_val*mul + add
+               yval = ym_normalized[idx+icol]
+               # do not use += to avoid having prange consider it for reduction
+               my_ps = yval*xval + my_ps
 
-
+        # Presumably, if abs(one_stat) > 1, then it is only some small artifact of
+        # floating point arithmetic.
+        if my_ps>1.0:
+            my_ps = 1.0
+        elif my_ps<-1.0:
+            my_ps = -1.0
+        permuted_stats[p] = my_ps
