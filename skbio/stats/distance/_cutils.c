@@ -7163,7 +7163,7 @@ static PyObject *__pyx_pf_5skbio_5stats_8distance_7_cutils_26mantel_perm_spearma
  *                else:
  *                  xrow = vcol             # <<<<<<<<<<<<<<
  *                  ixcol = vrow - (vcol+1)
- *                  # no easy way yo cache any part of the index, just recompute
+ *                  # no easy way to cache any part of the index, just recompute
  */
                                 /*else*/ {
                                   __pyx_v_xrow = __pyx_v_vcol;
@@ -7172,14 +7172,14 @@ static PyObject *__pyx_pf_5skbio_5stats_8distance_7_cutils_26mantel_perm_spearma
  *                else:
  *                  xrow = vcol
  *                  ixcol = vrow - (vcol+1)             # <<<<<<<<<<<<<<
- *                  # no easy way yo cache any part of the index, just recompute
+ *                  # no easy way to cache any part of the index, just recompute
  *                  dense_val = dense_org[xrow*(out_n-1) - ((xrow-1)*xrow)/2 + ixcol]
  */
                                   __pyx_v_ixcol = (__pyx_v_vrow - (__pyx_v_vcol + 1));
 
                                   /* "skbio/stats/distance/_cutils.pyx":274
  *                  ixcol = vrow - (vcol+1)
- *                  # no easy way yo cache any part of the index, just recompute
+ *                  # no easy way to cache any part of the index, just recompute
  *                  dense_val = dense_org[xrow*(out_n-1) - ((xrow-1)*xrow)/2 + ixcol]             # <<<<<<<<<<<<<<
  * 
  *                # now compute rankdata using average method
@@ -7821,7 +7821,7 @@ static PyObject *__pyx_pf_5skbio_5stats_8distance_7_cutils_28mantel_perm_spearma
  *                else:
  *                  xrow = vcol             # <<<<<<<<<<<<<<
  *                  ixcol = vrow - (vcol+1)
- *                  # no easy way yo cache any part of the index, just recompute
+ *                  # no easy way to cache any part of the index, just recompute
  */
                                 /*else*/ {
                                   __pyx_v_xrow = __pyx_v_vcol;
@@ -7830,14 +7830,14 @@ static PyObject *__pyx_pf_5skbio_5stats_8distance_7_cutils_28mantel_perm_spearma
  *                else:
  *                  xrow = vcol
  *                  ixcol = vrow - (vcol+1)             # <<<<<<<<<<<<<<
- *                  # no easy way yo cache any part of the index, just recompute
+ *                  # no easy way to cache any part of the index, just recompute
  *                  dense_val = dense_org[xrow*(out_n-1) - ((xrow-1)*xrow)/2 + ixcol]
  */
                                   __pyx_v_ixcol = (__pyx_v_vrow - (__pyx_v_vcol + 1));
 
                                   /* "skbio/stats/distance/_cutils.pyx":274
  *                  ixcol = vrow - (vcol+1)
- *                  # no easy way yo cache any part of the index, just recompute
+ *                  # no easy way to cache any part of the index, just recompute
  *                  dense_val = dense_org[xrow*(out_n-1) - ((xrow-1)*xrow)/2 + ixcol]             # <<<<<<<<<<<<<<
  * 
  *                # now compute rankdata using average method

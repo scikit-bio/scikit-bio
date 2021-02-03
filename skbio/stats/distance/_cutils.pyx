@@ -270,7 +270,7 @@ def mantel_perm_spearmanr_cy(long[::1] count, long[::1] dense_org, long[:, ::1] 
                else:
                  xrow = vcol
                  ixcol = vrow - (vcol+1)
-                 # no easy way yo cache any part of the index, just recompute
+                 # no easy way to cache any part of the index, just recompute
                  dense_val = dense_org[xrow*(out_n-1) - ((xrow-1)*xrow)/2 + ixcol]
 
                # now compute rankdata using average method
