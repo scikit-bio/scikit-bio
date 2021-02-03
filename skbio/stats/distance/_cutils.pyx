@@ -213,7 +213,7 @@ def mantel_perm_spearmanr_cy(long[::1] count, long[::1] dense_org, long[:, ::1] 
     Parameters
     ----------
     count, dense_org : 1D array_like
-        Partial data obtaine from full rankdata.
+        Partial data obtained from full rankdata.
     perm_order : 2D array_like
         List of permutation orders.
     xmean: real

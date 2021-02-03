@@ -380,14 +380,16 @@ def _mantel_stats_pearson(x, y, permutations):
     orig_stat = max(min(orig_stat, 1.0), -1.0)
 
     mat_n = y._data.shape[0]
-    # note: xmean and normxmdo not change with permutations
+    # note: xmean and normxm do not change with permutations
     permuted_stats = []
     if not (permutations == 0 or np.isnan(orig_stat)):
-        # inline DistanceMatrix.permute, groupping them together
+        # inline DistanceMatrix.permute, grouping them together
         x_data = x._data
         if not x_data.flags.c_contiguous:
             x_data = np.asarray(x_data, order='C')
 
+        # compute all pearsonr permutations at once
+        # create first the list of permutations
         perm_order = np.empty([permutations, mat_n], dtype=np.int)
         for row in range(permutations):
             perm_order[row, :] = np.random.permutation(mat_n)
@@ -400,6 +402,26 @@ def _mantel_stats_pearson(x, y, permutations):
 
 
 def rankdata_full(arr):
+    """
+    Assign ranks to data.
+    A simplified version of scipy.stats.rankdata, using the average method.
+
+    Ranks begin at 1.
+
+    Parameters
+    ----------
+    arr : 1D array_like
+        The array of values to be ranked.
+
+    Returns
+    -------
+    stats : 1D array_like
+        An array of size equal to the size of `arr`, containing rank
+        scores.
+    count, dense_org : 1D array_like
+        Internal data to be used for permutated rankdata compute.
+    """
+
     # inline the essential part of scipy.stats.rankdata
     sorter = np.argsort(arr, kind='quicksort')
 
@@ -449,11 +471,15 @@ def _mantel_stats_spearman(x, y, permutations):
         return np.nan, []
 
     # inline spearmanr, condensed from scipy.stats.spearmanr
+
+    # first compute the ranks... they are actually what is used
+    # also keep the internal data needed for permutations
     x_rank, xcount, xdense = rankdata_full(x_flat)
     del x_flat
     y_rank = rankdata_full(y_flat)[0]
     del y_flat
 
+    # spearmanr interanlly uses pearsonr
     # inline pearsonr, condensed from scipy.stats.pearsonr(x_rank, y_rank)
     xmean = x_rank.mean()
     xm = x_rank - xmean
@@ -479,11 +505,13 @@ def _mantel_stats_spearman(x, y, permutations):
     del xm_normalized
 
     mat_n = y._data.shape[0]
-    # note: xmean and normxmdo not change with permutations
+    # note: xmean and normxm do not change with permutations
     permuted_stats = []
     if not (permutations == 0 or np.isnan(orig_stat)):
-        # inline DistanceMatrix.permute, groupping them together
+        # inline DistanceMatrix.permute, grouping them together
 
+        # compute all spearmanr permutations at once
+        # create first the list of permutations
         perm_order = np.empty([permutations, mat_n], dtype=np.int)
         for row in range(permutations):
             perm_order[row, :] = np.random.permutation(mat_n)
