@@ -12,7 +12,9 @@
 
 ### Performance enhancements
 
-* Avoid an implicit data copy on construction of `DissimilarityMatrix` objects. 
+* Avoid an implicit data copy on construction of `DissimilarityMatrix` objects.
+* Use a memory-optimized version of permute in DistanceMatrix.
+* Refactor pearson and spearman skbio.stats.distance.mantel implementations to drastically improve memory locality. Also cache intermediate results that are invariant across permutations.
 
 ### Bug fixes
 
