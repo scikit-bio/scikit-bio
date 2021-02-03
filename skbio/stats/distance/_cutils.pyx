@@ -239,7 +239,7 @@ def mantel_perm_spearmanr_cy(long[::1] count, long[::1] dense_org, long[:, ::1] 
     cdef Py_ssize_t row,col,icol
     cdef Py_ssize_t vrow,vcol,
     cdef Py_ssize_t xrow,ixcol
-    cdef Py_ssize_t idx
+    cdef Py_ssize_t idx,vidx
     cdef Py_ssize_t dense_val
 
     cdef TReal mul = 1.0/normxm
@@ -255,20 +255,24 @@ def mantel_perm_spearmanr_cy(long[::1] count, long[::1] dense_org, long[:, ::1] 
         for row in range(out_n-1):
             vrow = perm_order[p, row]
             idx = row*(out_n-1) - ((row-1)*row)/2
+            vidx = vrow*(out_n-1) - ((vrow-1)*vrow)/2
             for icol in range(out_n-row-1):
                col = icol+row+1
                vcol = perm_order[p, col]
 
-               #since we operate on the upper triangle, use xcol>xrow
+               # reuse dense from original ranking algo
+               # since we operate on the upper triangle, use xcol>xrow
                if (vcol>vrow):
-                 xrow = vrow
+                 xrow = vrow  # set just for consistency, not used
                  ixcol = vcol - (vrow+1)
+                 # can use the pre-computed vidx = xrow*(out_n-1) - ((xrow-1)*xrow)/2
+                 dense_val = dense_org[vidx + ixcol]
                else:
                  xrow = vcol
                  ixcol = vrow - (vcol+1)
+                 # no easy way yo cache any part of the index, just recompute
+                 dense_val = dense_org[xrow*(out_n-1) - ((xrow-1)*xrow)/2 + ixcol]
 
-               # reuse dense from original ranking algo
-               dense_val = dense_org[xrow*(out_n-1) - ((xrow-1)*xrow)/2 + ixcol]
                # now compute rankdata using average method
                rank_val = .5 * (count[dense_val] + count[dense_val - 1] + 1)
                # now compute pearsonr step
