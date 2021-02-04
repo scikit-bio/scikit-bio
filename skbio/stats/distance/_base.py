@@ -21,7 +21,7 @@ from skbio.util import find_duplicates
 from skbio.util._decorator import experimental, classonlymethod
 from skbio.util._misc import resolve_key
 
-from ._utils import is_symmetric
+from ._utils import is_symmetric_and_hollow
 
 
 class DissimilarityMatrixError(Exception):
@@ -1158,11 +1158,13 @@ class DistanceMatrix(DissimilarityMatrix):
         """
         super(DistanceMatrix, self)._validate(data, ids)
 
-        if not is_symmetric(data):
+        data_sym, data_hol = is_symmetric_and_hollow(data)
+
+        if not data_sym:
             raise DistanceMatrixError(
                 "Data must be symmetric and cannot contain NaNs.")
 
-        if np.trace(data) != 0:
+        if not data_hol:
             raise DistanceMatrixError("Data must be hollow (i.e., the diagonal"
                                       " can only contain zeros).")
 

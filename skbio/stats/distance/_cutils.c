@@ -1975,6 +1975,7 @@ static const char __pyx_k_unpack[] = "unpack";
 static const char __pyx_k_update[] = "update";
 static const char __pyx_k_fortran[] = "fortran";
 static const char __pyx_k_memview[] = "memview";
+static const char __pyx_k_testval[] = "testval";
 static const char __pyx_k_Ellipsis[] = "Ellipsis";
 static const char __pyx_k_defaults[] = "defaults";
 static const char __pyx_k_getstate[] = "__getstate__";
@@ -1985,6 +1986,7 @@ static const char __pyx_k_tcol_max[] = "tcol_max";
 static const char __pyx_k_trow_max[] = "trow_max";
 static const char __pyx_k_TypeError[] = "TypeError";
 static const char __pyx_k_enumerate[] = "enumerate";
+static const char __pyx_k_is_hollow[] = "is_hollow";
 static const char __pyx_k_pyx_state[] = "__pyx_state";
 static const char __pyx_k_reduce_ex[] = "__reduce_ex__";
 static const char __pyx_k_IndexError[] = "IndexError";
@@ -2001,7 +2003,6 @@ static const char __pyx_k_reduce_cython[] = "__reduce_cython__";
 static const char __pyx_k_View_MemoryView[] = "View.MemoryView";
 static const char __pyx_k_allocate_buffer[] = "allocate_buffer";
 static const char __pyx_k_dtype_is_object[] = "dtype_is_object";
-static const char __pyx_k_is_symmetric_cy[] = "is_symmetric_cy";
 static const char __pyx_k_pyx_PickleError[] = "__pyx_PickleError";
 static const char __pyx_k_setstate_cython[] = "__setstate_cython__";
 static const char __pyx_k_pyx_unpickle_Enum[] = "__pyx_unpickle_Enum";
@@ -2014,6 +2015,7 @@ static const char __pyx_k_MemoryView_of_r_at_0x_x[] = "<MemoryView of %r at 0x%x
 static const char __pyx_k_contiguous_and_indirect[] = "<contiguous and indirect>";
 static const char __pyx_k_Cannot_index_with_type_s[] = "Cannot index with type '%s'";
 static const char __pyx_k_Invalid_shape_in_axis_d_d[] = "Invalid shape in axis %d: %d.";
+static const char __pyx_k_is_symmetric_and_hollow_cy[] = "is_symmetric_and_hollow_cy";
 static const char __pyx_k_No_matching_signature_found[] = "No matching signature found";
 static const char __pyx_k_itemsize_0_for_cython_array[] = "itemsize <= 0 for cython.array";
 static const char __pyx_k_skbio_stats_distance__cutils[] = "skbio.stats.distance._cutils";
@@ -2093,8 +2095,9 @@ static PyObject *__pyx_n_s_id;
 static PyObject *__pyx_n_s_import;
 static PyObject *__pyx_n_s_in2;
 static PyObject *__pyx_n_s_in_n;
+static PyObject *__pyx_n_s_is_hollow;
 static PyObject *__pyx_n_s_is_sym;
-static PyObject *__pyx_n_s_is_symmetric_cy;
+static PyObject *__pyx_n_s_is_symmetric_and_hollow_cy;
 static PyObject *__pyx_n_s_itemsize;
 static PyObject *__pyx_kp_s_itemsize_0_for_cython_array;
 static PyObject *__pyx_n_s_kind;
@@ -2146,15 +2149,16 @@ static PyObject *__pyx_n_s_struct;
 static PyObject *__pyx_n_s_tcol;
 static PyObject *__pyx_n_s_tcol_max;
 static PyObject *__pyx_n_s_test;
+static PyObject *__pyx_n_s_testval;
 static PyObject *__pyx_n_s_trow;
 static PyObject *__pyx_n_s_trow_max;
 static PyObject *__pyx_kp_s_unable_to_allocate_array_data;
 static PyObject *__pyx_kp_s_unable_to_allocate_shape_and_str;
 static PyObject *__pyx_n_s_unpack;
 static PyObject *__pyx_n_s_update;
-static PyObject *__pyx_pf_5skbio_5stats_8distance_7_cutils_is_symmetric_cy(CYTHON_UNUSED PyObject *__pyx_self, PyObject *__pyx_v_signatures, PyObject *__pyx_v_args, PyObject *__pyx_v_kwargs, CYTHON_UNUSED PyObject *__pyx_v_defaults); /* proto */
-static PyObject *__pyx_pf_5skbio_5stats_8distance_7_cutils_2is_symmetric_cy(CYTHON_UNUSED PyObject *__pyx_self, __Pyx_memviewslice __pyx_v_mat); /* proto */
-static PyObject *__pyx_pf_5skbio_5stats_8distance_7_cutils_4is_symmetric_cy(CYTHON_UNUSED PyObject *__pyx_self, __Pyx_memviewslice __pyx_v_mat); /* proto */
+static PyObject *__pyx_pf_5skbio_5stats_8distance_7_cutils_is_symmetric_and_hollow_cy(CYTHON_UNUSED PyObject *__pyx_self, PyObject *__pyx_v_signatures, PyObject *__pyx_v_args, PyObject *__pyx_v_kwargs, CYTHON_UNUSED PyObject *__pyx_v_defaults); /* proto */
+static PyObject *__pyx_pf_5skbio_5stats_8distance_7_cutils_2is_symmetric_and_hollow_cy(CYTHON_UNUSED PyObject *__pyx_self, __Pyx_memviewslice __pyx_v_mat); /* proto */
+static PyObject *__pyx_pf_5skbio_5stats_8distance_7_cutils_4is_symmetric_and_hollow_cy(CYTHON_UNUSED PyObject *__pyx_self, __Pyx_memviewslice __pyx_v_mat); /* proto */
 static int __pyx_array___pyx_pf_15View_dot_MemoryView_5array___cinit__(struct __pyx_array_obj *__pyx_v_self, PyObject *__pyx_v_shape, Py_ssize_t __pyx_v_itemsize, PyObject *__pyx_v_format, PyObject *__pyx_v_mode, int __pyx_v_allocate_buffer); /* proto */
 static int __pyx_array___pyx_pf_15View_dot_MemoryView_5array_2__getbuffer__(struct __pyx_array_obj *__pyx_v_self, Py_buffer *__pyx_v_info, int __pyx_v_flags); /* proto */
 static void __pyx_array___pyx_pf_15View_dot_MemoryView_5array_4__dealloc__(struct __pyx_array_obj *__pyx_v_self); /* proto */
@@ -2239,16 +2243,16 @@ static PyObject *__pyx_codeobj__32;
 /* "skbio/stats/distance/_cutils.pyx":22
  * @cython.boundscheck(False)
  * @cython.wraparound(False)
- * def is_symmetric_cy(TReal[:, ::1] mat):             # <<<<<<<<<<<<<<
+ * def is_symmetric_and_hollow_cy(TReal[:, ::1] mat):             # <<<<<<<<<<<<<<
  *     """
- *     Check is is symmetric
+ *     Check if mat is symmetric and hollow.
  */
 
 /* Python wrapper */
-static PyObject *__pyx_pw_5skbio_5stats_8distance_7_cutils_1is_symmetric_cy(PyObject *__pyx_self, PyObject *__pyx_args, PyObject *__pyx_kwds); /*proto*/
-static char __pyx_doc_5skbio_5stats_8distance_7_cutils_is_symmetric_cy[] = "\n    Check is is symmetric\n    Equivalent to not (mat.T != mat).any()\n\n    Parameters\n    ----------\n    mat : 2D array_like\n        Distance matrix.\n\n    Result:\n    -------\n    is_symmetric: Boolean\n        not (mat.T != mat).any()\n    ";
-static PyMethodDef __pyx_mdef_5skbio_5stats_8distance_7_cutils_1is_symmetric_cy = {"is_symmetric_cy", (PyCFunction)(void*)(PyCFunctionWithKeywords)__pyx_pw_5skbio_5stats_8distance_7_cutils_1is_symmetric_cy, METH_VARARGS|METH_KEYWORDS, __pyx_doc_5skbio_5stats_8distance_7_cutils_is_symmetric_cy};
-static PyObject *__pyx_pw_5skbio_5stats_8distance_7_cutils_1is_symmetric_cy(PyObject *__pyx_self, PyObject *__pyx_args, PyObject *__pyx_kwds) {
+static PyObject *__pyx_pw_5skbio_5stats_8distance_7_cutils_1is_symmetric_and_hollow_cy(PyObject *__pyx_self, PyObject *__pyx_args, PyObject *__pyx_kwds); /*proto*/
+static char __pyx_doc_5skbio_5stats_8distance_7_cutils_is_symmetric_and_hollow_cy[] = "\n    Check if mat is symmetric and hollow.\n    Equivalent to [not (mat.T != mat).any(), np.trace(mat) == 0]\n\n    Parameters\n    ----------\n    mat : 2D array_like\n        Distance matrix.\n\n    Result:\n    -------\n    is_symmetric: Boolean\n        not (mat.T != mat).any()\n    is_hollow: Boolean\n        np.trace(mat) == 0\n    ";
+static PyMethodDef __pyx_mdef_5skbio_5stats_8distance_7_cutils_1is_symmetric_and_hollow_cy = {"is_symmetric_and_hollow_cy", (PyCFunction)(void*)(PyCFunctionWithKeywords)__pyx_pw_5skbio_5stats_8distance_7_cutils_1is_symmetric_and_hollow_cy, METH_VARARGS|METH_KEYWORDS, __pyx_doc_5skbio_5stats_8distance_7_cutils_is_symmetric_and_hollow_cy};
+static PyObject *__pyx_pw_5skbio_5stats_8distance_7_cutils_1is_symmetric_and_hollow_cy(PyObject *__pyx_self, PyObject *__pyx_args, PyObject *__pyx_kwds) {
   PyObject *__pyx_v_signatures = 0;
   PyObject *__pyx_v_args = 0;
   PyObject *__pyx_v_kwargs = 0;
@@ -2325,14 +2329,14 @@ static PyObject *__pyx_pw_5skbio_5stats_8distance_7_cutils_1is_symmetric_cy(PyOb
   __Pyx_RefNannyFinishContext();
   return NULL;
   __pyx_L4_argument_unpacking_done:;
-  __pyx_r = __pyx_pf_5skbio_5stats_8distance_7_cutils_is_symmetric_cy(__pyx_self, __pyx_v_signatures, __pyx_v_args, __pyx_v_kwargs, __pyx_v_defaults);
+  __pyx_r = __pyx_pf_5skbio_5stats_8distance_7_cutils_is_symmetric_and_hollow_cy(__pyx_self, __pyx_v_signatures, __pyx_v_args, __pyx_v_kwargs, __pyx_v_defaults);
 
   /* function exit code */
   __Pyx_RefNannyFinishContext();
   return __pyx_r;
 }
 
-static PyObject *__pyx_pf_5skbio_5stats_8distance_7_cutils_is_symmetric_cy(CYTHON_UNUSED PyObject *__pyx_self, PyObject *__pyx_v_signatures, PyObject *__pyx_v_args, PyObject *__pyx_v_kwargs, CYTHON_UNUSED PyObject *__pyx_v_defaults) {
+static PyObject *__pyx_pf_5skbio_5stats_8distance_7_cutils_is_symmetric_and_hollow_cy(CYTHON_UNUSED PyObject *__pyx_self, PyObject *__pyx_v_signatures, PyObject *__pyx_v_args, PyObject *__pyx_v_kwargs, CYTHON_UNUSED PyObject *__pyx_v_defaults) {
   PyObject *__pyx_v_dest_sig = NULL;
   Py_ssize_t __pyx_v_i;
   PyTypeObject *__pyx_v_ndarray = 0;
@@ -2371,7 +2375,7 @@ static PyObject *__pyx_pf_5skbio_5stats_8distance_7_cutils_is_symmetric_cy(CYTHO
   int __pyx_lineno = 0;
   const char *__pyx_filename = NULL;
   int __pyx_clineno = 0;
-  __Pyx_RefNannySetupContext("is_symmetric_cy", 0);
+  __Pyx_RefNannySetupContext("is_symmetric_and_hollow_cy", 0);
   __Pyx_INCREF(__pyx_v_kwargs);
   __pyx_t_1 = PyList_New(1); if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 22, __pyx_L1_error)
   __Pyx_GOTREF(__pyx_t_1);
@@ -2776,33 +2780,33 @@ static PyObject *__pyx_pf_5skbio_5stats_8distance_7_cutils_is_symmetric_cy(CYTHO
 }
 
 /* Python wrapper */
-static PyObject *__pyx_fuse_0__pyx_pw_5skbio_5stats_8distance_7_cutils_3is_symmetric_cy(PyObject *__pyx_self, PyObject *__pyx_arg_mat); /*proto*/
-static PyMethodDef __pyx_fuse_0__pyx_mdef_5skbio_5stats_8distance_7_cutils_3is_symmetric_cy = {"__pyx_fuse_0is_symmetric_cy", (PyCFunction)__pyx_fuse_0__pyx_pw_5skbio_5stats_8distance_7_cutils_3is_symmetric_cy, METH_O, __pyx_doc_5skbio_5stats_8distance_7_cutils_is_symmetric_cy};
-static PyObject *__pyx_fuse_0__pyx_pw_5skbio_5stats_8distance_7_cutils_3is_symmetric_cy(PyObject *__pyx_self, PyObject *__pyx_arg_mat) {
+static PyObject *__pyx_fuse_0__pyx_pw_5skbio_5stats_8distance_7_cutils_3is_symmetric_and_hollow_cy(PyObject *__pyx_self, PyObject *__pyx_arg_mat); /*proto*/
+static PyMethodDef __pyx_fuse_0__pyx_mdef_5skbio_5stats_8distance_7_cutils_3is_symmetric_and_hollow_cy = {"__pyx_fuse_0is_symmetric_and_hollow_cy", (PyCFunction)__pyx_fuse_0__pyx_pw_5skbio_5stats_8distance_7_cutils_3is_symmetric_and_hollow_cy, METH_O, __pyx_doc_5skbio_5stats_8distance_7_cutils_is_symmetric_and_hollow_cy};
+static PyObject *__pyx_fuse_0__pyx_pw_5skbio_5stats_8distance_7_cutils_3is_symmetric_and_hollow_cy(PyObject *__pyx_self, PyObject *__pyx_arg_mat) {
   __Pyx_memviewslice __pyx_v_mat = { 0, 0, { 0 }, { 0 }, { 0 } };
   int __pyx_lineno = 0;
   const char *__pyx_filename = NULL;
   int __pyx_clineno = 0;
   PyObject *__pyx_r = 0;
   __Pyx_RefNannyDeclarations
-  __Pyx_RefNannySetupContext("is_symmetric_cy (wrapper)", 0);
+  __Pyx_RefNannySetupContext("is_symmetric_and_hollow_cy (wrapper)", 0);
   assert(__pyx_arg_mat); {
     __pyx_v_mat = __Pyx_PyObject_to_MemoryviewSlice_d_dc_float(__pyx_arg_mat, PyBUF_WRITABLE); if (unlikely(!__pyx_v_mat.memview)) __PYX_ERR(0, 22, __pyx_L3_error)
   }
   goto __pyx_L4_argument_unpacking_done;
   __pyx_L3_error:;
-  __Pyx_AddTraceback("skbio.stats.distance._cutils.is_symmetric_cy", __pyx_clineno, __pyx_lineno, __pyx_filename);
+  __Pyx_AddTraceback("skbio.stats.distance._cutils.is_symmetric_and_hollow_cy", __pyx_clineno, __pyx_lineno, __pyx_filename);
   __Pyx_RefNannyFinishContext();
   return NULL;
   __pyx_L4_argument_unpacking_done:;
-  __pyx_r = __pyx_pf_5skbio_5stats_8distance_7_cutils_2is_symmetric_cy(__pyx_self, __pyx_v_mat);
+  __pyx_r = __pyx_pf_5skbio_5stats_8distance_7_cutils_2is_symmetric_and_hollow_cy(__pyx_self, __pyx_v_mat);
 
   /* function exit code */
   __Pyx_RefNannyFinishContext();
   return __pyx_r;
 }
 
-static PyObject *__pyx_pf_5skbio_5stats_8distance_7_cutils_2is_symmetric_cy(CYTHON_UNUSED PyObject *__pyx_self, __Pyx_memviewslice __pyx_v_mat) {
+static PyObject *__pyx_pf_5skbio_5stats_8distance_7_cutils_2is_symmetric_and_hollow_cy(CYTHON_UNUSED PyObject *__pyx_self, __Pyx_memviewslice __pyx_v_mat) {
   Py_ssize_t __pyx_v_in_n;
   Py_ssize_t __pyx_v_in2;
   Py_ssize_t __pyx_v_trow;
@@ -2811,7 +2815,9 @@ static PyObject *__pyx_pf_5skbio_5stats_8distance_7_cutils_2is_symmetric_cy(CYTH
   Py_ssize_t __pyx_v_tcol_max;
   Py_ssize_t __pyx_v_row;
   Py_ssize_t __pyx_v_col;
+  float __pyx_v_testval;
   int __pyx_v_is_sym;
+  int __pyx_v_is_hollow;
   PyObject *__pyx_r = NULL;
   __Pyx_RefNannyDeclarations
   Py_ssize_t __pyx_t_1;
@@ -2828,16 +2834,17 @@ static PyObject *__pyx_pf_5skbio_5stats_8distance_7_cutils_2is_symmetric_cy(CYTH
   Py_ssize_t __pyx_t_12;
   Py_ssize_t __pyx_t_13;
   Py_ssize_t __pyx_t_14;
-  Py_ssize_t __pyx_t_15;
-  Py_ssize_t __pyx_t_16;
+  int __pyx_t_15;
+  PyObject *__pyx_t_16 = NULL;
   PyObject *__pyx_t_17 = NULL;
+  PyObject *__pyx_t_18 = NULL;
   int __pyx_lineno = 0;
   const char *__pyx_filename = NULL;
   int __pyx_clineno = 0;
-  __Pyx_RefNannySetupContext("__pyx_fuse_0is_symmetric_cy", 0);
+  __Pyx_RefNannySetupContext("__pyx_fuse_0is_symmetric_and_hollow_cy", 0);
 
-  /* "skbio/stats/distance/_cutils.pyx":37
- *         not (mat.T != mat).any()
+  /* "skbio/stats/distance/_cutils.pyx":39
+ *         np.trace(mat) == 0
  *     """
  *     cdef Py_ssize_t in_n = mat.shape[0]             # <<<<<<<<<<<<<<
  *     cdef Py_ssize_t in2 = mat.shape[1]
@@ -2845,7 +2852,7 @@ static PyObject *__pyx_pf_5skbio_5stats_8distance_7_cutils_2is_symmetric_cy(CYTH
  */
   __pyx_v_in_n = (__pyx_v_mat.shape[0]);
 
-  /* "skbio/stats/distance/_cutils.pyx":38
+  /* "skbio/stats/distance/_cutils.pyx":40
  *     """
  *     cdef Py_ssize_t in_n = mat.shape[0]
  *     cdef Py_ssize_t in2 = mat.shape[1]             # <<<<<<<<<<<<<<
@@ -2854,7 +2861,7 @@ static PyObject *__pyx_pf_5skbio_5stats_8distance_7_cutils_2is_symmetric_cy(CYTH
  */
   __pyx_v_in2 = (__pyx_v_mat.shape[1]);
 
-  /* "skbio/stats/distance/_cutils.pyx":40
+  /* "skbio/stats/distance/_cutils.pyx":42
  *     cdef Py_ssize_t in2 = mat.shape[1]
  * 
  *     assert in_n == in2             # <<<<<<<<<<<<<<
@@ -2865,21 +2872,30 @@ static PyObject *__pyx_pf_5skbio_5stats_8distance_7_cutils_2is_symmetric_cy(CYTH
   if (unlikely(!Py_OptimizeFlag)) {
     if (unlikely(!((__pyx_v_in_n == __pyx_v_in2) != 0))) {
       PyErr_SetNone(PyExc_AssertionError);
-      __PYX_ERR(0, 40, __pyx_L1_error)
+      __PYX_ERR(0, 42, __pyx_L1_error)
     }
   }
   #endif
 
-  /* "skbio/stats/distance/_cutils.pyx":47
+  /* "skbio/stats/distance/_cutils.pyx":51
  * 
- *     # use int instead of bool for portabiltiy
+ *     # use int instead of bool for portability
  *     cdef int is_sym = True             # <<<<<<<<<<<<<<
+ *     cdef int is_hollow = True
  * 
- *     # use a tiled approach to maximize memory locality
  */
   __pyx_v_is_sym = 1;
 
-  /* "skbio/stats/distance/_cutils.pyx":50
+  /* "skbio/stats/distance/_cutils.pyx":52
+ *     # use int instead of bool for portability
+ *     cdef int is_sym = True
+ *     cdef int is_hollow = True             # <<<<<<<<<<<<<<
+ * 
+ *     # use a tiled approach to maximize memory locality
+ */
+  __pyx_v_is_hollow = 1;
+
+  /* "skbio/stats/distance/_cutils.pyx":55
  * 
  *     # use a tiled approach to maximize memory locality
  *     for trow in prange(0, in_n, 64, nogil=True):             # <<<<<<<<<<<<<<
@@ -2906,11 +2922,11 @@ static PyObject *__pyx_pf_5skbio_5stats_8distance_7_cutils_2is_symmetric_cy(CYTH
             if (__pyx_t_3 > 0)
             {
                 #ifdef _OPENMP
-                #pragma omp parallel reduction(&:__pyx_v_is_sym) private(__pyx_t_10, __pyx_t_11, __pyx_t_12, __pyx_t_13, __pyx_t_14, __pyx_t_15, __pyx_t_16, __pyx_t_4, __pyx_t_5, __pyx_t_6, __pyx_t_7, __pyx_t_8, __pyx_t_9)
+                #pragma omp parallel reduction(&:__pyx_v_is_hollow) reduction(&:__pyx_v_is_sym) private(__pyx_t_10, __pyx_t_11, __pyx_t_12, __pyx_t_13, __pyx_t_14, __pyx_t_15, __pyx_t_4, __pyx_t_5, __pyx_t_6, __pyx_t_7, __pyx_t_8, __pyx_t_9)
                 #endif /* _OPENMP */
                 {
                     #ifdef _OPENMP
-                    #pragma omp for lastprivate(__pyx_v_col) lastprivate(__pyx_v_row) lastprivate(__pyx_v_tcol) lastprivate(__pyx_v_tcol_max) firstprivate(__pyx_v_trow) lastprivate(__pyx_v_trow) lastprivate(__pyx_v_trow_max)
+                    #pragma omp for lastprivate(__pyx_v_col) lastprivate(__pyx_v_row) lastprivate(__pyx_v_tcol) lastprivate(__pyx_v_tcol_max) lastprivate(__pyx_v_testval) firstprivate(__pyx_v_trow) lastprivate(__pyx_v_trow) lastprivate(__pyx_v_trow_max)
                     #endif /* _OPENMP */
                     for (__pyx_t_2 = 0; __pyx_t_2 < __pyx_t_3; __pyx_t_2++){
                         {
@@ -2920,9 +2936,10 @@ static PyObject *__pyx_pf_5skbio_5stats_8distance_7_cutils_2is_symmetric_cy(CYTH
                             __pyx_v_row = ((Py_ssize_t)0xbad0bad0);
                             __pyx_v_tcol = ((Py_ssize_t)0xbad0bad0);
                             __pyx_v_tcol_max = ((Py_ssize_t)0xbad0bad0);
+                            __pyx_v_testval = ((float)__PYX_NAN());
                             __pyx_v_trow_max = ((Py_ssize_t)0xbad0bad0);
 
-                            /* "skbio/stats/distance/_cutils.pyx":51
+                            /* "skbio/stats/distance/_cutils.pyx":56
  *     # use a tiled approach to maximize memory locality
  *     for trow in prange(0, in_n, 64, nogil=True):
  *         trow_max = min(trow+64, in_n)             # <<<<<<<<<<<<<<
@@ -2938,7 +2955,7 @@ static PyObject *__pyx_pf_5skbio_5stats_8distance_7_cutils_2is_symmetric_cy(CYTH
                             }
                             __pyx_v_trow_max = __pyx_t_6;
 
-                            /* "skbio/stats/distance/_cutils.pyx":52
+                            /* "skbio/stats/distance/_cutils.pyx":57
  *     for trow in prange(0, in_n, 64, nogil=True):
  *         trow_max = min(trow+64, in_n)
  *         for tcol in range(0, in_n, 64):             # <<<<<<<<<<<<<<
@@ -2950,7 +2967,7 @@ static PyObject *__pyx_pf_5skbio_5stats_8distance_7_cutils_2is_symmetric_cy(CYTH
                             for (__pyx_t_5 = 0; __pyx_t_5 < __pyx_t_4; __pyx_t_5+=64) {
                               __pyx_v_tcol = __pyx_t_5;
 
-                              /* "skbio/stats/distance/_cutils.pyx":53
+                              /* "skbio/stats/distance/_cutils.pyx":58
  *         trow_max = min(trow+64, in_n)
  *         for tcol in range(0, in_n, 64):
  *             tcol_max = min(tcol+64, in_n)             # <<<<<<<<<<<<<<
@@ -2966,42 +2983,83 @@ static PyObject *__pyx_pf_5skbio_5stats_8distance_7_cutils_2is_symmetric_cy(CYTH
                               }
                               __pyx_v_tcol_max = __pyx_t_9;
 
-                              /* "skbio/stats/distance/_cutils.pyx":54
+                              /* "skbio/stats/distance/_cutils.pyx":59
  *         for tcol in range(0, in_n, 64):
  *             tcol_max = min(tcol+64, in_n)
  *             for row in range(trow, trow_max, 1):             # <<<<<<<<<<<<<<
  *                 for col in range(tcol, tcol_max, 1):
- *                    is_sym &= mat[row,col]==mat[col,row]
+ *                    testval = mat[row,col]
  */
                               __pyx_t_9 = __pyx_v_trow_max;
                               __pyx_t_7 = __pyx_t_9;
                               for (__pyx_t_8 = __pyx_v_trow; __pyx_t_8 < __pyx_t_7; __pyx_t_8+=1) {
                                 __pyx_v_row = __pyx_t_8;
 
-                                /* "skbio/stats/distance/_cutils.pyx":55
+                                /* "skbio/stats/distance/_cutils.pyx":60
  *             tcol_max = min(tcol+64, in_n)
  *             for row in range(trow, trow_max, 1):
  *                 for col in range(tcol, tcol_max, 1):             # <<<<<<<<<<<<<<
- *                    is_sym &= mat[row,col]==mat[col,row]
- * 
+ *                    testval = mat[row,col]
+ *                    if (row==col):
  */
                                 __pyx_t_10 = __pyx_v_tcol_max;
                                 __pyx_t_11 = __pyx_t_10;
                                 for (__pyx_t_12 = __pyx_v_tcol; __pyx_t_12 < __pyx_t_11; __pyx_t_12+=1) {
                                   __pyx_v_col = __pyx_t_12;
 
-                                  /* "skbio/stats/distance/_cutils.pyx":56
+                                  /* "skbio/stats/distance/_cutils.pyx":61
  *             for row in range(trow, trow_max, 1):
  *                 for col in range(tcol, tcol_max, 1):
- *                    is_sym &= mat[row,col]==mat[col,row]             # <<<<<<<<<<<<<<
- * 
- *     return (is_sym==True)
+ *                    testval = mat[row,col]             # <<<<<<<<<<<<<<
+ *                    if (row==col):
+ *                        # diagonal elements are always symmetric,
  */
                                   __pyx_t_13 = __pyx_v_row;
                                   __pyx_t_14 = __pyx_v_col;
-                                  __pyx_t_15 = __pyx_v_col;
-                                  __pyx_t_16 = __pyx_v_row;
-                                  __pyx_v_is_sym = (__pyx_v_is_sym & ((*((float *) ( /* dim=1 */ ((char *) (((float *) ( /* dim=0 */ (__pyx_v_mat.data + __pyx_t_13 * __pyx_v_mat.strides[0]) )) + __pyx_t_14)) ))) == (*((float *) ( /* dim=1 */ ((char *) (((float *) ( /* dim=0 */ (__pyx_v_mat.data + __pyx_t_15 * __pyx_v_mat.strides[0]) )) + __pyx_t_16)) )))));
+                                  __pyx_v_testval = (*((float *) ( /* dim=1 */ ((char *) (((float *) ( /* dim=0 */ (__pyx_v_mat.data + __pyx_t_13 * __pyx_v_mat.strides[0]) )) + __pyx_t_14)) )));
+
+                                  /* "skbio/stats/distance/_cutils.pyx":62
+ *                 for col in range(tcol, tcol_max, 1):
+ *                    testval = mat[row,col]
+ *                    if (row==col):             # <<<<<<<<<<<<<<
+ *                        # diagonal elements are always symmetric,
+ *                        # so no need to check
+ */
+                                  __pyx_t_15 = ((__pyx_v_row == __pyx_v_col) != 0);
+                                  if (__pyx_t_15) {
+
+                                    /* "skbio/stats/distance/_cutils.pyx":65
+ *                        # diagonal elements are always symmetric,
+ *                        # so no need to check
+ *                        is_hollow &= (testval==0)             # <<<<<<<<<<<<<<
+ *                    else:
+ *                        is_sym &= (testval==mat[col,row])
+ */
+                                    __pyx_v_is_hollow = (__pyx_v_is_hollow & (__pyx_v_testval == 0.0));
+
+                                    /* "skbio/stats/distance/_cutils.pyx":62
+ *                 for col in range(tcol, tcol_max, 1):
+ *                    testval = mat[row,col]
+ *                    if (row==col):             # <<<<<<<<<<<<<<
+ *                        # diagonal elements are always symmetric,
+ *                        # so no need to check
+ */
+                                    goto __pyx_L16;
+                                  }
+
+                                  /* "skbio/stats/distance/_cutils.pyx":67
+ *                        is_hollow &= (testval==0)
+ *                    else:
+ *                        is_sym &= (testval==mat[col,row])             # <<<<<<<<<<<<<<
+ * 
+ *     return [(is_sym==True), (is_hollow==True)]
+ */
+                                  /*else*/ {
+                                    __pyx_t_14 = __pyx_v_col;
+                                    __pyx_t_13 = __pyx_v_row;
+                                    __pyx_v_is_sym = (__pyx_v_is_sym & (__pyx_v_testval == (*((float *) ( /* dim=1 */ ((char *) (((float *) ( /* dim=0 */ (__pyx_v_mat.data + __pyx_t_14 * __pyx_v_mat.strides[0]) )) + __pyx_t_13)) )))));
+                                  }
+                                  __pyx_L16:;
                                 }
                               }
                             }
@@ -3018,7 +3076,7 @@ static PyObject *__pyx_pf_5skbio_5stats_8distance_7_cutils_2is_symmetric_cy(CYTH
         #endif
       }
 
-      /* "skbio/stats/distance/_cutils.pyx":50
+      /* "skbio/stats/distance/_cutils.pyx":55
  * 
  *     # use a tiled approach to maximize memory locality
  *     for trow in prange(0, in_n, 64, nogil=True):             # <<<<<<<<<<<<<<
@@ -3037,30 +3095,42 @@ static PyObject *__pyx_pf_5skbio_5stats_8distance_7_cutils_2is_symmetric_cy(CYTH
       }
   }
 
-  /* "skbio/stats/distance/_cutils.pyx":58
- *                    is_sym &= mat[row,col]==mat[col,row]
+  /* "skbio/stats/distance/_cutils.pyx":69
+ *                        is_sym &= (testval==mat[col,row])
  * 
- *     return (is_sym==True)             # <<<<<<<<<<<<<<
+ *     return [(is_sym==True), (is_hollow==True)]             # <<<<<<<<<<<<<<
  */
   __Pyx_XDECREF(__pyx_r);
-  __pyx_t_17 = __Pyx_PyBool_FromLong((__pyx_v_is_sym == 1)); if (unlikely(!__pyx_t_17)) __PYX_ERR(0, 58, __pyx_L1_error)
+  __pyx_t_16 = __Pyx_PyBool_FromLong((__pyx_v_is_sym == 1)); if (unlikely(!__pyx_t_16)) __PYX_ERR(0, 69, __pyx_L1_error)
+  __Pyx_GOTREF(__pyx_t_16);
+  __pyx_t_17 = __Pyx_PyBool_FromLong((__pyx_v_is_hollow == 1)); if (unlikely(!__pyx_t_17)) __PYX_ERR(0, 69, __pyx_L1_error)
   __Pyx_GOTREF(__pyx_t_17);
-  __pyx_r = __pyx_t_17;
+  __pyx_t_18 = PyList_New(2); if (unlikely(!__pyx_t_18)) __PYX_ERR(0, 69, __pyx_L1_error)
+  __Pyx_GOTREF(__pyx_t_18);
+  __Pyx_GIVEREF(__pyx_t_16);
+  PyList_SET_ITEM(__pyx_t_18, 0, __pyx_t_16);
+  __Pyx_GIVEREF(__pyx_t_17);
+  PyList_SET_ITEM(__pyx_t_18, 1, __pyx_t_17);
+  __pyx_t_16 = 0;
   __pyx_t_17 = 0;
+  __pyx_r = __pyx_t_18;
+  __pyx_t_18 = 0;
   goto __pyx_L0;
 
   /* "skbio/stats/distance/_cutils.pyx":22
  * @cython.boundscheck(False)
  * @cython.wraparound(False)
- * def is_symmetric_cy(TReal[:, ::1] mat):             # <<<<<<<<<<<<<<
+ * def is_symmetric_and_hollow_cy(TReal[:, ::1] mat):             # <<<<<<<<<<<<<<
  *     """
- *     Check is is symmetric
+ *     Check if mat is symmetric and hollow.
  */
 
   /* function exit code */
   __pyx_L1_error:;
+  __Pyx_XDECREF(__pyx_t_16);
   __Pyx_XDECREF(__pyx_t_17);
-  __Pyx_AddTraceback("skbio.stats.distance._cutils.is_symmetric_cy", __pyx_clineno, __pyx_lineno, __pyx_filename);
+  __Pyx_XDECREF(__pyx_t_18);
+  __Pyx_AddTraceback("skbio.stats.distance._cutils.is_symmetric_and_hollow_cy", __pyx_clineno, __pyx_lineno, __pyx_filename);
   __pyx_r = NULL;
   __pyx_L0:;
   __PYX_XDEC_MEMVIEW(&__pyx_v_mat, 1);
@@ -3070,33 +3140,33 @@ static PyObject *__pyx_pf_5skbio_5stats_8distance_7_cutils_2is_symmetric_cy(CYTH
 }
 
 /* Python wrapper */
-static PyObject *__pyx_fuse_1__pyx_pw_5skbio_5stats_8distance_7_cutils_5is_symmetric_cy(PyObject *__pyx_self, PyObject *__pyx_arg_mat); /*proto*/
-static PyMethodDef __pyx_fuse_1__pyx_mdef_5skbio_5stats_8distance_7_cutils_5is_symmetric_cy = {"__pyx_fuse_1is_symmetric_cy", (PyCFunction)__pyx_fuse_1__pyx_pw_5skbio_5stats_8distance_7_cutils_5is_symmetric_cy, METH_O, __pyx_doc_5skbio_5stats_8distance_7_cutils_is_symmetric_cy};
-static PyObject *__pyx_fuse_1__pyx_pw_5skbio_5stats_8distance_7_cutils_5is_symmetric_cy(PyObject *__pyx_self, PyObject *__pyx_arg_mat) {
+static PyObject *__pyx_fuse_1__pyx_pw_5skbio_5stats_8distance_7_cutils_5is_symmetric_and_hollow_cy(PyObject *__pyx_self, PyObject *__pyx_arg_mat); /*proto*/
+static PyMethodDef __pyx_fuse_1__pyx_mdef_5skbio_5stats_8distance_7_cutils_5is_symmetric_and_hollow_cy = {"__pyx_fuse_1is_symmetric_and_hollow_cy", (PyCFunction)__pyx_fuse_1__pyx_pw_5skbio_5stats_8distance_7_cutils_5is_symmetric_and_hollow_cy, METH_O, __pyx_doc_5skbio_5stats_8distance_7_cutils_is_symmetric_and_hollow_cy};
+static PyObject *__pyx_fuse_1__pyx_pw_5skbio_5stats_8distance_7_cutils_5is_symmetric_and_hollow_cy(PyObject *__pyx_self, PyObject *__pyx_arg_mat) {
   __Pyx_memviewslice __pyx_v_mat = { 0, 0, { 0 }, { 0 }, { 0 } };
   int __pyx_lineno = 0;
   const char *__pyx_filename = NULL;
   int __pyx_clineno = 0;
   PyObject *__pyx_r = 0;
   __Pyx_RefNannyDeclarations
-  __Pyx_RefNannySetupContext("is_symmetric_cy (wrapper)", 0);
+  __Pyx_RefNannySetupContext("is_symmetric_and_hollow_cy (wrapper)", 0);
   assert(__pyx_arg_mat); {
     __pyx_v_mat = __Pyx_PyObject_to_MemoryviewSlice_d_dc_double(__pyx_arg_mat, PyBUF_WRITABLE); if (unlikely(!__pyx_v_mat.memview)) __PYX_ERR(0, 22, __pyx_L3_error)
   }
   goto __pyx_L4_argument_unpacking_done;
   __pyx_L3_error:;
-  __Pyx_AddTraceback("skbio.stats.distance._cutils.is_symmetric_cy", __pyx_clineno, __pyx_lineno, __pyx_filename);
+  __Pyx_AddTraceback("skbio.stats.distance._cutils.is_symmetric_and_hollow_cy", __pyx_clineno, __pyx_lineno, __pyx_filename);
   __Pyx_RefNannyFinishContext();
   return NULL;
   __pyx_L4_argument_unpacking_done:;
-  __pyx_r = __pyx_pf_5skbio_5stats_8distance_7_cutils_4is_symmetric_cy(__pyx_self, __pyx_v_mat);
+  __pyx_r = __pyx_pf_5skbio_5stats_8distance_7_cutils_4is_symmetric_and_hollow_cy(__pyx_self, __pyx_v_mat);
 
   /* function exit code */
   __Pyx_RefNannyFinishContext();
   return __pyx_r;
 }
 
-static PyObject *__pyx_pf_5skbio_5stats_8distance_7_cutils_4is_symmetric_cy(CYTHON_UNUSED PyObject *__pyx_self, __Pyx_memviewslice __pyx_v_mat) {
+static PyObject *__pyx_pf_5skbio_5stats_8distance_7_cutils_4is_symmetric_and_hollow_cy(CYTHON_UNUSED PyObject *__pyx_self, __Pyx_memviewslice __pyx_v_mat) {
   Py_ssize_t __pyx_v_in_n;
   Py_ssize_t __pyx_v_in2;
   Py_ssize_t __pyx_v_trow;
@@ -3105,7 +3175,9 @@ static PyObject *__pyx_pf_5skbio_5stats_8distance_7_cutils_4is_symmetric_cy(CYTH
   Py_ssize_t __pyx_v_tcol_max;
   Py_ssize_t __pyx_v_row;
   Py_ssize_t __pyx_v_col;
+  double __pyx_v_testval;
   int __pyx_v_is_sym;
+  int __pyx_v_is_hollow;
   PyObject *__pyx_r = NULL;
   __Pyx_RefNannyDeclarations
   Py_ssize_t __pyx_t_1;
@@ -3122,16 +3194,17 @@ static PyObject *__pyx_pf_5skbio_5stats_8distance_7_cutils_4is_symmetric_cy(CYTH
   Py_ssize_t __pyx_t_12;
   Py_ssize_t __pyx_t_13;
   Py_ssize_t __pyx_t_14;
-  Py_ssize_t __pyx_t_15;
-  Py_ssize_t __pyx_t_16;
+  int __pyx_t_15;
+  PyObject *__pyx_t_16 = NULL;
   PyObject *__pyx_t_17 = NULL;
+  PyObject *__pyx_t_18 = NULL;
   int __pyx_lineno = 0;
   const char *__pyx_filename = NULL;
   int __pyx_clineno = 0;
-  __Pyx_RefNannySetupContext("__pyx_fuse_1is_symmetric_cy", 0);
+  __Pyx_RefNannySetupContext("__pyx_fuse_1is_symmetric_and_hollow_cy", 0);
 
-  /* "skbio/stats/distance/_cutils.pyx":37
- *         not (mat.T != mat).any()
+  /* "skbio/stats/distance/_cutils.pyx":39
+ *         np.trace(mat) == 0
  *     """
  *     cdef Py_ssize_t in_n = mat.shape[0]             # <<<<<<<<<<<<<<
  *     cdef Py_ssize_t in2 = mat.shape[1]
@@ -3139,7 +3212,7 @@ static PyObject *__pyx_pf_5skbio_5stats_8distance_7_cutils_4is_symmetric_cy(CYTH
  */
   __pyx_v_in_n = (__pyx_v_mat.shape[0]);
 
-  /* "skbio/stats/distance/_cutils.pyx":38
+  /* "skbio/stats/distance/_cutils.pyx":40
  *     """
  *     cdef Py_ssize_t in_n = mat.shape[0]
  *     cdef Py_ssize_t in2 = mat.shape[1]             # <<<<<<<<<<<<<<
@@ -3148,7 +3221,7 @@ static PyObject *__pyx_pf_5skbio_5stats_8distance_7_cutils_4is_symmetric_cy(CYTH
  */
   __pyx_v_in2 = (__pyx_v_mat.shape[1]);
 
-  /* "skbio/stats/distance/_cutils.pyx":40
+  /* "skbio/stats/distance/_cutils.pyx":42
  *     cdef Py_ssize_t in2 = mat.shape[1]
  * 
  *     assert in_n == in2             # <<<<<<<<<<<<<<
@@ -3159,21 +3232,30 @@ static PyObject *__pyx_pf_5skbio_5stats_8distance_7_cutils_4is_symmetric_cy(CYTH
   if (unlikely(!Py_OptimizeFlag)) {
     if (unlikely(!((__pyx_v_in_n == __pyx_v_in2) != 0))) {
       PyErr_SetNone(PyExc_AssertionError);
-      __PYX_ERR(0, 40, __pyx_L1_error)
+      __PYX_ERR(0, 42, __pyx_L1_error)
     }
   }
   #endif
 
-  /* "skbio/stats/distance/_cutils.pyx":47
+  /* "skbio/stats/distance/_cutils.pyx":51
  * 
- *     # use int instead of bool for portabiltiy
+ *     # use int instead of bool for portability
  *     cdef int is_sym = True             # <<<<<<<<<<<<<<
+ *     cdef int is_hollow = True
  * 
- *     # use a tiled approach to maximize memory locality
  */
   __pyx_v_is_sym = 1;
 
-  /* "skbio/stats/distance/_cutils.pyx":50
+  /* "skbio/stats/distance/_cutils.pyx":52
+ *     # use int instead of bool for portability
+ *     cdef int is_sym = True
+ *     cdef int is_hollow = True             # <<<<<<<<<<<<<<
+ * 
+ *     # use a tiled approach to maximize memory locality
+ */
+  __pyx_v_is_hollow = 1;
+
+  /* "skbio/stats/distance/_cutils.pyx":55
  * 
  *     # use a tiled approach to maximize memory locality
  *     for trow in prange(0, in_n, 64, nogil=True):             # <<<<<<<<<<<<<<
@@ -3200,11 +3282,11 @@ static PyObject *__pyx_pf_5skbio_5stats_8distance_7_cutils_4is_symmetric_cy(CYTH
             if (__pyx_t_3 > 0)
             {
                 #ifdef _OPENMP
-                #pragma omp parallel reduction(&:__pyx_v_is_sym) private(__pyx_t_10, __pyx_t_11, __pyx_t_12, __pyx_t_13, __pyx_t_14, __pyx_t_15, __pyx_t_16, __pyx_t_4, __pyx_t_5, __pyx_t_6, __pyx_t_7, __pyx_t_8, __pyx_t_9)
+                #pragma omp parallel reduction(&:__pyx_v_is_hollow) reduction(&:__pyx_v_is_sym) private(__pyx_t_10, __pyx_t_11, __pyx_t_12, __pyx_t_13, __pyx_t_14, __pyx_t_15, __pyx_t_4, __pyx_t_5, __pyx_t_6, __pyx_t_7, __pyx_t_8, __pyx_t_9)
                 #endif /* _OPENMP */
                 {
                     #ifdef _OPENMP
-                    #pragma omp for lastprivate(__pyx_v_col) lastprivate(__pyx_v_row) lastprivate(__pyx_v_tcol) lastprivate(__pyx_v_tcol_max) firstprivate(__pyx_v_trow) lastprivate(__pyx_v_trow) lastprivate(__pyx_v_trow_max)
+                    #pragma omp for lastprivate(__pyx_v_col) lastprivate(__pyx_v_row) lastprivate(__pyx_v_tcol) lastprivate(__pyx_v_tcol_max) lastprivate(__pyx_v_testval) firstprivate(__pyx_v_trow) lastprivate(__pyx_v_trow) lastprivate(__pyx_v_trow_max)
                     #endif /* _OPENMP */
                     for (__pyx_t_2 = 0; __pyx_t_2 < __pyx_t_3; __pyx_t_2++){
                         {
@@ -3214,9 +3296,10 @@ static PyObject *__pyx_pf_5skbio_5stats_8distance_7_cutils_4is_symmetric_cy(CYTH
                             __pyx_v_row = ((Py_ssize_t)0xbad0bad0);
                             __pyx_v_tcol = ((Py_ssize_t)0xbad0bad0);
                             __pyx_v_tcol_max = ((Py_ssize_t)0xbad0bad0);
+                            __pyx_v_testval = ((double)__PYX_NAN());
                             __pyx_v_trow_max = ((Py_ssize_t)0xbad0bad0);
 
-                            /* "skbio/stats/distance/_cutils.pyx":51
+                            /* "skbio/stats/distance/_cutils.pyx":56
  *     # use a tiled approach to maximize memory locality
  *     for trow in prange(0, in_n, 64, nogil=True):
  *         trow_max = min(trow+64, in_n)             # <<<<<<<<<<<<<<
@@ -3232,7 +3315,7 @@ static PyObject *__pyx_pf_5skbio_5stats_8distance_7_cutils_4is_symmetric_cy(CYTH
                             }
                             __pyx_v_trow_max = __pyx_t_6;
 
-                            /* "skbio/stats/distance/_cutils.pyx":52
+                            /* "skbio/stats/distance/_cutils.pyx":57
  *     for trow in prange(0, in_n, 64, nogil=True):
  *         trow_max = min(trow+64, in_n)
  *         for tcol in range(0, in_n, 64):             # <<<<<<<<<<<<<<
@@ -3244,7 +3327,7 @@ static PyObject *__pyx_pf_5skbio_5stats_8distance_7_cutils_4is_symmetric_cy(CYTH
                             for (__pyx_t_5 = 0; __pyx_t_5 < __pyx_t_4; __pyx_t_5+=64) {
                               __pyx_v_tcol = __pyx_t_5;
 
-                              /* "skbio/stats/distance/_cutils.pyx":53
+                              /* "skbio/stats/distance/_cutils.pyx":58
  *         trow_max = min(trow+64, in_n)
  *         for tcol in range(0, in_n, 64):
  *             tcol_max = min(tcol+64, in_n)             # <<<<<<<<<<<<<<
@@ -3260,42 +3343,83 @@ static PyObject *__pyx_pf_5skbio_5stats_8distance_7_cutils_4is_symmetric_cy(CYTH
                               }
                               __pyx_v_tcol_max = __pyx_t_9;
 
-                              /* "skbio/stats/distance/_cutils.pyx":54
+                              /* "skbio/stats/distance/_cutils.pyx":59
  *         for tcol in range(0, in_n, 64):
  *             tcol_max = min(tcol+64, in_n)
  *             for row in range(trow, trow_max, 1):             # <<<<<<<<<<<<<<
  *                 for col in range(tcol, tcol_max, 1):
- *                    is_sym &= mat[row,col]==mat[col,row]
+ *                    testval = mat[row,col]
  */
                               __pyx_t_9 = __pyx_v_trow_max;
                               __pyx_t_7 = __pyx_t_9;
                               for (__pyx_t_8 = __pyx_v_trow; __pyx_t_8 < __pyx_t_7; __pyx_t_8+=1) {
                                 __pyx_v_row = __pyx_t_8;
 
-                                /* "skbio/stats/distance/_cutils.pyx":55
+                                /* "skbio/stats/distance/_cutils.pyx":60
  *             tcol_max = min(tcol+64, in_n)
  *             for row in range(trow, trow_max, 1):
  *                 for col in range(tcol, tcol_max, 1):             # <<<<<<<<<<<<<<
- *                    is_sym &= mat[row,col]==mat[col,row]
- * 
+ *                    testval = mat[row,col]
+ *                    if (row==col):
  */
                                 __pyx_t_10 = __pyx_v_tcol_max;
                                 __pyx_t_11 = __pyx_t_10;
                                 for (__pyx_t_12 = __pyx_v_tcol; __pyx_t_12 < __pyx_t_11; __pyx_t_12+=1) {
                                   __pyx_v_col = __pyx_t_12;
 
-                                  /* "skbio/stats/distance/_cutils.pyx":56
+                                  /* "skbio/stats/distance/_cutils.pyx":61
  *             for row in range(trow, trow_max, 1):
  *                 for col in range(tcol, tcol_max, 1):
- *                    is_sym &= mat[row,col]==mat[col,row]             # <<<<<<<<<<<<<<
- * 
- *     return (is_sym==True)
+ *                    testval = mat[row,col]             # <<<<<<<<<<<<<<
+ *                    if (row==col):
+ *                        # diagonal elements are always symmetric,
  */
                                   __pyx_t_13 = __pyx_v_row;
                                   __pyx_t_14 = __pyx_v_col;
-                                  __pyx_t_15 = __pyx_v_col;
-                                  __pyx_t_16 = __pyx_v_row;
-                                  __pyx_v_is_sym = (__pyx_v_is_sym & ((*((double *) ( /* dim=1 */ ((char *) (((double *) ( /* dim=0 */ (__pyx_v_mat.data + __pyx_t_13 * __pyx_v_mat.strides[0]) )) + __pyx_t_14)) ))) == (*((double *) ( /* dim=1 */ ((char *) (((double *) ( /* dim=0 */ (__pyx_v_mat.data + __pyx_t_15 * __pyx_v_mat.strides[0]) )) + __pyx_t_16)) )))));
+                                  __pyx_v_testval = (*((double *) ( /* dim=1 */ ((char *) (((double *) ( /* dim=0 */ (__pyx_v_mat.data + __pyx_t_13 * __pyx_v_mat.strides[0]) )) + __pyx_t_14)) )));
+
+                                  /* "skbio/stats/distance/_cutils.pyx":62
+ *                 for col in range(tcol, tcol_max, 1):
+ *                    testval = mat[row,col]
+ *                    if (row==col):             # <<<<<<<<<<<<<<
+ *                        # diagonal elements are always symmetric,
+ *                        # so no need to check
+ */
+                                  __pyx_t_15 = ((__pyx_v_row == __pyx_v_col) != 0);
+                                  if (__pyx_t_15) {
+
+                                    /* "skbio/stats/distance/_cutils.pyx":65
+ *                        # diagonal elements are always symmetric,
+ *                        # so no need to check
+ *                        is_hollow &= (testval==0)             # <<<<<<<<<<<<<<
+ *                    else:
+ *                        is_sym &= (testval==mat[col,row])
+ */
+                                    __pyx_v_is_hollow = (__pyx_v_is_hollow & (__pyx_v_testval == 0.0));
+
+                                    /* "skbio/stats/distance/_cutils.pyx":62
+ *                 for col in range(tcol, tcol_max, 1):
+ *                    testval = mat[row,col]
+ *                    if (row==col):             # <<<<<<<<<<<<<<
+ *                        # diagonal elements are always symmetric,
+ *                        # so no need to check
+ */
+                                    goto __pyx_L16;
+                                  }
+
+                                  /* "skbio/stats/distance/_cutils.pyx":67
+ *                        is_hollow &= (testval==0)
+ *                    else:
+ *                        is_sym &= (testval==mat[col,row])             # <<<<<<<<<<<<<<
+ * 
+ *     return [(is_sym==True), (is_hollow==True)]
+ */
+                                  /*else*/ {
+                                    __pyx_t_14 = __pyx_v_col;
+                                    __pyx_t_13 = __pyx_v_row;
+                                    __pyx_v_is_sym = (__pyx_v_is_sym & (__pyx_v_testval == (*((double *) ( /* dim=1 */ ((char *) (((double *) ( /* dim=0 */ (__pyx_v_mat.data + __pyx_t_14 * __pyx_v_mat.strides[0]) )) + __pyx_t_13)) )))));
+                                  }
+                                  __pyx_L16:;
                                 }
                               }
                             }
@@ -3312,7 +3436,7 @@ static PyObject *__pyx_pf_5skbio_5stats_8distance_7_cutils_4is_symmetric_cy(CYTH
         #endif
       }
 
-      /* "skbio/stats/distance/_cutils.pyx":50
+      /* "skbio/stats/distance/_cutils.pyx":55
  * 
  *     # use a tiled approach to maximize memory locality
  *     for trow in prange(0, in_n, 64, nogil=True):             # <<<<<<<<<<<<<<
@@ -3331,30 +3455,42 @@ static PyObject *__pyx_pf_5skbio_5stats_8distance_7_cutils_4is_symmetric_cy(CYTH
       }
   }
 
-  /* "skbio/stats/distance/_cutils.pyx":58
- *                    is_sym &= mat[row,col]==mat[col,row]
+  /* "skbio/stats/distance/_cutils.pyx":69
+ *                        is_sym &= (testval==mat[col,row])
  * 
- *     return (is_sym==True)             # <<<<<<<<<<<<<<
+ *     return [(is_sym==True), (is_hollow==True)]             # <<<<<<<<<<<<<<
  */
   __Pyx_XDECREF(__pyx_r);
-  __pyx_t_17 = __Pyx_PyBool_FromLong((__pyx_v_is_sym == 1)); if (unlikely(!__pyx_t_17)) __PYX_ERR(0, 58, __pyx_L1_error)
+  __pyx_t_16 = __Pyx_PyBool_FromLong((__pyx_v_is_sym == 1)); if (unlikely(!__pyx_t_16)) __PYX_ERR(0, 69, __pyx_L1_error)
+  __Pyx_GOTREF(__pyx_t_16);
+  __pyx_t_17 = __Pyx_PyBool_FromLong((__pyx_v_is_hollow == 1)); if (unlikely(!__pyx_t_17)) __PYX_ERR(0, 69, __pyx_L1_error)
   __Pyx_GOTREF(__pyx_t_17);
-  __pyx_r = __pyx_t_17;
+  __pyx_t_18 = PyList_New(2); if (unlikely(!__pyx_t_18)) __PYX_ERR(0, 69, __pyx_L1_error)
+  __Pyx_GOTREF(__pyx_t_18);
+  __Pyx_GIVEREF(__pyx_t_16);
+  PyList_SET_ITEM(__pyx_t_18, 0, __pyx_t_16);
+  __Pyx_GIVEREF(__pyx_t_17);
+  PyList_SET_ITEM(__pyx_t_18, 1, __pyx_t_17);
+  __pyx_t_16 = 0;
   __pyx_t_17 = 0;
+  __pyx_r = __pyx_t_18;
+  __pyx_t_18 = 0;
   goto __pyx_L0;
 
   /* "skbio/stats/distance/_cutils.pyx":22
  * @cython.boundscheck(False)
  * @cython.wraparound(False)
- * def is_symmetric_cy(TReal[:, ::1] mat):             # <<<<<<<<<<<<<<
+ * def is_symmetric_and_hollow_cy(TReal[:, ::1] mat):             # <<<<<<<<<<<<<<
  *     """
- *     Check is is symmetric
+ *     Check if mat is symmetric and hollow.
  */
 
   /* function exit code */
   __pyx_L1_error:;
+  __Pyx_XDECREF(__pyx_t_16);
   __Pyx_XDECREF(__pyx_t_17);
-  __Pyx_AddTraceback("skbio.stats.distance._cutils.is_symmetric_cy", __pyx_clineno, __pyx_lineno, __pyx_filename);
+  __Pyx_XDECREF(__pyx_t_18);
+  __Pyx_AddTraceback("skbio.stats.distance._cutils.is_symmetric_and_hollow_cy", __pyx_clineno, __pyx_lineno, __pyx_filename);
   __pyx_r = NULL;
   __pyx_L0:;
   __PYX_XDEC_MEMVIEW(&__pyx_v_mat, 1);
@@ -17200,8 +17336,9 @@ static __Pyx_StringTabEntry __pyx_string_tab[] = {
   {&__pyx_n_s_import, __pyx_k_import, sizeof(__pyx_k_import), 0, 0, 1, 1},
   {&__pyx_n_s_in2, __pyx_k_in2, sizeof(__pyx_k_in2), 0, 0, 1, 1},
   {&__pyx_n_s_in_n, __pyx_k_in_n, sizeof(__pyx_k_in_n), 0, 0, 1, 1},
+  {&__pyx_n_s_is_hollow, __pyx_k_is_hollow, sizeof(__pyx_k_is_hollow), 0, 0, 1, 1},
   {&__pyx_n_s_is_sym, __pyx_k_is_sym, sizeof(__pyx_k_is_sym), 0, 0, 1, 1},
-  {&__pyx_n_s_is_symmetric_cy, __pyx_k_is_symmetric_cy, sizeof(__pyx_k_is_symmetric_cy), 0, 0, 1, 1},
+  {&__pyx_n_s_is_symmetric_and_hollow_cy, __pyx_k_is_symmetric_and_hollow_cy, sizeof(__pyx_k_is_symmetric_and_hollow_cy), 0, 0, 1, 1},
   {&__pyx_n_s_itemsize, __pyx_k_itemsize, sizeof(__pyx_k_itemsize), 0, 0, 1, 1},
   {&__pyx_kp_s_itemsize_0_for_cython_array, __pyx_k_itemsize_0_for_cython_array, sizeof(__pyx_k_itemsize_0_for_cython_array), 0, 0, 1, 0},
   {&__pyx_n_s_kind, __pyx_k_kind, sizeof(__pyx_k_kind), 0, 0, 1, 1},
@@ -17253,6 +17390,7 @@ static __Pyx_StringTabEntry __pyx_string_tab[] = {
   {&__pyx_n_s_tcol, __pyx_k_tcol, sizeof(__pyx_k_tcol), 0, 0, 1, 1},
   {&__pyx_n_s_tcol_max, __pyx_k_tcol_max, sizeof(__pyx_k_tcol_max), 0, 0, 1, 1},
   {&__pyx_n_s_test, __pyx_k_test, sizeof(__pyx_k_test), 0, 0, 1, 1},
+  {&__pyx_n_s_testval, __pyx_k_testval, sizeof(__pyx_k_testval), 0, 0, 1, 1},
   {&__pyx_n_s_trow, __pyx_k_trow, sizeof(__pyx_k_trow), 0, 0, 1, 1},
   {&__pyx_n_s_trow_max, __pyx_k_trow_max, sizeof(__pyx_k_trow_max), 0, 0, 1, 1},
   {&__pyx_kp_s_unable_to_allocate_array_data, __pyx_k_unable_to_allocate_array_data, sizeof(__pyx_k_unable_to_allocate_array_data), 0, 0, 1, 0},
@@ -17282,9 +17420,9 @@ static CYTHON_SMALL_CODE int __Pyx_InitCachedConstants(void) {
   /* "skbio/stats/distance/_cutils.pyx":22
  * @cython.boundscheck(False)
  * @cython.wraparound(False)
- * def is_symmetric_cy(TReal[:, ::1] mat):             # <<<<<<<<<<<<<<
+ * def is_symmetric_and_hollow_cy(TReal[:, ::1] mat):             # <<<<<<<<<<<<<<
  *     """
- *     Check is is symmetric
+ *     Check if mat is symmetric and hollow.
  */
   __pyx_tuple__4 = PyTuple_Pack(1, __pyx_kp_s_No_matching_signature_found); if (unlikely(!__pyx_tuple__4)) __PYX_ERR(0, 22, __pyx_L1_error)
   __Pyx_GOTREF(__pyx_tuple__4);
@@ -17488,14 +17626,14 @@ static CYTHON_SMALL_CODE int __Pyx_InitCachedConstants(void) {
   /* "skbio/stats/distance/_cutils.pyx":22
  * @cython.boundscheck(False)
  * @cython.wraparound(False)
- * def is_symmetric_cy(TReal[:, ::1] mat):             # <<<<<<<<<<<<<<
+ * def is_symmetric_and_hollow_cy(TReal[:, ::1] mat):             # <<<<<<<<<<<<<<
  *     """
- *     Check is is symmetric
+ *     Check if mat is symmetric and hollow.
  */
-  __pyx_tuple__24 = PyTuple_Pack(11, __pyx_n_s_mat, __pyx_n_s_mat, __pyx_n_s_in_n, __pyx_n_s_in2, __pyx_n_s_trow, __pyx_n_s_tcol, __pyx_n_s_trow_max, __pyx_n_s_tcol_max, __pyx_n_s_row, __pyx_n_s_col, __pyx_n_s_is_sym); if (unlikely(!__pyx_tuple__24)) __PYX_ERR(0, 22, __pyx_L1_error)
+  __pyx_tuple__24 = PyTuple_Pack(13, __pyx_n_s_mat, __pyx_n_s_mat, __pyx_n_s_in_n, __pyx_n_s_in2, __pyx_n_s_trow, __pyx_n_s_tcol, __pyx_n_s_trow_max, __pyx_n_s_tcol_max, __pyx_n_s_row, __pyx_n_s_col, __pyx_n_s_testval, __pyx_n_s_is_sym, __pyx_n_s_is_hollow); if (unlikely(!__pyx_tuple__24)) __PYX_ERR(0, 22, __pyx_L1_error)
   __Pyx_GOTREF(__pyx_tuple__24);
   __Pyx_GIVEREF(__pyx_tuple__24);
-  __pyx_codeobj__25 = (PyObject*)__Pyx_PyCode_New(1, 0, 11, 0, CO_OPTIMIZED|CO_NEWLOCALS, __pyx_empty_bytes, __pyx_empty_tuple, __pyx_empty_tuple, __pyx_tuple__24, __pyx_empty_tuple, __pyx_empty_tuple, __pyx_kp_s_skbio_stats_distance__cutils_pyx, __pyx_n_s_is_symmetric_cy, 22, __pyx_empty_bytes); if (unlikely(!__pyx_codeobj__25)) __PYX_ERR(0, 22, __pyx_L1_error)
+  __pyx_codeobj__25 = (PyObject*)__Pyx_PyCode_New(1, 0, 13, 0, CO_OPTIMIZED|CO_NEWLOCALS, __pyx_empty_bytes, __pyx_empty_tuple, __pyx_empty_tuple, __pyx_tuple__24, __pyx_empty_tuple, __pyx_empty_tuple, __pyx_kp_s_skbio_stats_distance__cutils_pyx, __pyx_n_s_is_symmetric_and_hollow_cy, 22, __pyx_empty_bytes); if (unlikely(!__pyx_codeobj__25)) __PYX_ERR(0, 22, __pyx_L1_error)
 
   /* "View.MemoryView":286
  *         return self.name
@@ -17931,29 +18069,29 @@ if (!__Pyx_RefNanny) {
   /* "skbio/stats/distance/_cutils.pyx":22
  * @cython.boundscheck(False)
  * @cython.wraparound(False)
- * def is_symmetric_cy(TReal[:, ::1] mat):             # <<<<<<<<<<<<<<
+ * def is_symmetric_and_hollow_cy(TReal[:, ::1] mat):             # <<<<<<<<<<<<<<
  *     """
- *     Check is is symmetric
+ *     Check if mat is symmetric and hollow.
  */
   __pyx_t_1 = __Pyx_PyDict_NewPresized(2); if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 22, __pyx_L1_error)
   __Pyx_GOTREF(__pyx_t_1);
-  __pyx_t_2 = __pyx_FusedFunction_New(&__pyx_fuse_0__pyx_mdef_5skbio_5stats_8distance_7_cutils_3is_symmetric_cy, 0, __pyx_n_s_is_symmetric_cy, NULL, __pyx_n_s_skbio_stats_distance__cutils, __pyx_d, ((PyObject *)__pyx_codeobj__25)); if (unlikely(!__pyx_t_2)) __PYX_ERR(0, 22, __pyx_L1_error)
+  __pyx_t_2 = __pyx_FusedFunction_New(&__pyx_fuse_0__pyx_mdef_5skbio_5stats_8distance_7_cutils_3is_symmetric_and_hollow_cy, 0, __pyx_n_s_is_symmetric_and_hollow_cy, NULL, __pyx_n_s_skbio_stats_distance__cutils, __pyx_d, ((PyObject *)__pyx_codeobj__25)); if (unlikely(!__pyx_t_2)) __PYX_ERR(0, 22, __pyx_L1_error)
   __Pyx_GOTREF(__pyx_t_2);
   __Pyx_CyFunction_SetDefaultsTuple(__pyx_t_2, __pyx_empty_tuple);
   if (PyDict_SetItem(__pyx_t_1, __pyx_n_s_float, __pyx_t_2) < 0) __PYX_ERR(0, 22, __pyx_L1_error)
   __Pyx_DECREF(__pyx_t_2); __pyx_t_2 = 0;
-  __pyx_t_2 = __pyx_FusedFunction_New(&__pyx_fuse_1__pyx_mdef_5skbio_5stats_8distance_7_cutils_5is_symmetric_cy, 0, __pyx_n_s_is_symmetric_cy, NULL, __pyx_n_s_skbio_stats_distance__cutils, __pyx_d, ((PyObject *)__pyx_codeobj__25)); if (unlikely(!__pyx_t_2)) __PYX_ERR(0, 22, __pyx_L1_error)
+  __pyx_t_2 = __pyx_FusedFunction_New(&__pyx_fuse_1__pyx_mdef_5skbio_5stats_8distance_7_cutils_5is_symmetric_and_hollow_cy, 0, __pyx_n_s_is_symmetric_and_hollow_cy, NULL, __pyx_n_s_skbio_stats_distance__cutils, __pyx_d, ((PyObject *)__pyx_codeobj__25)); if (unlikely(!__pyx_t_2)) __PYX_ERR(0, 22, __pyx_L1_error)
   __Pyx_GOTREF(__pyx_t_2);
   __Pyx_CyFunction_SetDefaultsTuple(__pyx_t_2, __pyx_empty_tuple);
   if (PyDict_SetItem(__pyx_t_1, __pyx_n_s_double, __pyx_t_2) < 0) __PYX_ERR(0, 22, __pyx_L1_error)
   __Pyx_DECREF(__pyx_t_2); __pyx_t_2 = 0;
-  __pyx_t_2 = __pyx_FusedFunction_New(&__pyx_mdef_5skbio_5stats_8distance_7_cutils_1is_symmetric_cy, 0, __pyx_n_s_is_symmetric_cy, NULL, __pyx_n_s_skbio_stats_distance__cutils, __pyx_d, ((PyObject *)__pyx_codeobj__25)); if (unlikely(!__pyx_t_2)) __PYX_ERR(0, 22, __pyx_L1_error)
+  __pyx_t_2 = __pyx_FusedFunction_New(&__pyx_mdef_5skbio_5stats_8distance_7_cutils_1is_symmetric_and_hollow_cy, 0, __pyx_n_s_is_symmetric_and_hollow_cy, NULL, __pyx_n_s_skbio_stats_distance__cutils, __pyx_d, ((PyObject *)__pyx_codeobj__25)); if (unlikely(!__pyx_t_2)) __PYX_ERR(0, 22, __pyx_L1_error)
   __Pyx_GOTREF(__pyx_t_2);
   __Pyx_CyFunction_SetDefaultsTuple(__pyx_t_2, __pyx_empty_tuple);
   ((__pyx_FusedFunctionObject *) __pyx_t_2)->__signatures__ = __pyx_t_1;
   __Pyx_GIVEREF(__pyx_t_1);
   __pyx_t_1 = 0;
-  if (PyDict_SetItem(__pyx_d, __pyx_n_s_is_symmetric_cy, __pyx_t_2) < 0) __PYX_ERR(0, 22, __pyx_L1_error)
+  if (PyDict_SetItem(__pyx_d, __pyx_n_s_is_symmetric_and_hollow_cy, __pyx_t_2) < 0) __PYX_ERR(0, 22, __pyx_L1_error)
   __Pyx_DECREF(__pyx_t_2); __pyx_t_2 = 0;
 
   /* "skbio/stats/distance/_cutils.pyx":1

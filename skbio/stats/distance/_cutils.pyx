@@ -19,10 +19,10 @@ ctypedef fused TReal:
 
 @cython.boundscheck(False)
 @cython.wraparound(False)
-def is_symmetric_cy(TReal[:, ::1] mat):
+def is_symmetric_and_hollow_cy(TReal[:, ::1] mat):
     """
-    Check is is symmetric
-    Equivalent to not (mat.T != mat).any()
+    Check if mat is symmetric and hollow.
+    Equivalent to [not (mat.T != mat).any(), np.trace(mat) == 0]
 
     Parameters
     ----------
@@ -33,6 +33,8 @@ def is_symmetric_cy(TReal[:, ::1] mat):
     -------
     is_symmetric: Boolean
         not (mat.T != mat).any()
+    is_hollow: Boolean
+        np.trace(mat) == 0
     """
     cdef Py_ssize_t in_n = mat.shape[0]
     cdef Py_ssize_t in2 = mat.shape[1]
@@ -43,8 +45,11 @@ def is_symmetric_cy(TReal[:, ::1] mat):
     cdef Py_ssize_t trow_max,tcol_max
     cdef Py_ssize_t row,col
 
-    # use int instead of bool for portabiltiy
+    cdef TReal testval
+
+    # use int instead of bool for portability
     cdef int is_sym = True
+    cdef int is_hollow = True
 
     # use a tiled approach to maximize memory locality
     for trow in prange(0, in_n, 64, nogil=True):
@@ -53,6 +58,12 @@ def is_symmetric_cy(TReal[:, ::1] mat):
             tcol_max = min(tcol+64, in_n)
             for row in range(trow, trow_max, 1):
                 for col in range(tcol, tcol_max, 1):
-                   is_sym &= mat[row,col]==mat[col,row]
+                   testval = mat[row,col]
+                   if (row==col):
+                       # diagonal elements are always symmetric,
+                       # so no need to check
+                       is_hollow &= (testval==0)
+                   else:
+                       is_sym &= (testval==mat[col,row])
 
-    return (is_sym==True)
+    return [(is_sym==True), (is_hollow==True)]
