@@ -21,7 +21,6 @@ from skbio.stats.distance import DistanceMatrix
 from skbio.util._decorator import experimental
 
 from ._cutils import mantel_perm_pearsonr_cy
-from ._cutils import mantel_perm_spearmanr_cy
 
 
 @experimental(as_of="0.4.0")
@@ -321,13 +320,15 @@ def mantel(x, y, method='pearson', permutations=999, alternative='two-sided',
     return orig_stat, p_value, n
 
 
-def _mantel_stats_pearson(x, y, permutations):
+def _mantel_stats_pearson_flat(x, y_flat, permutations):
     """Compute original and permuted stats using pearsonr.
 
     Parameters
     ----------
-    x, y : DistanceMatrix
-        Input distance matrices to compare.
+    x : DistanceMatrix
+        Input distance matrix.
+    y_flat: 1D array
+        Compact representation of a distance matrix.
     permutations : int
         Number of times to randomly permute `x` when assessing statistical
         significance. Must be greater than or equal to zero. If zero,
@@ -343,7 +344,6 @@ def _mantel_stats_pearson(x, y, permutations):
     """
 
     x_flat = x.condensed_form()
-    y_flat = y.condensed_form()
 
     # If an input is constant, the correlation coefficient is not defined.
     if (x_flat == x_flat[0]).all() or (y_flat == y_flat[0]).all():
@@ -363,7 +363,6 @@ def _mantel_stats_pearson(x, y, permutations):
     normym = np.linalg.norm(ym)
     ym_normalized = ym/normym
     del ym
-    del y_flat
 
     threshold = 1e-13
     if (((normxm < threshold*abs(xmean)) or
@@ -379,7 +378,7 @@ def _mantel_stats_pearson(x, y, permutations):
     # floating point arithmetic.
     orig_stat = max(min(orig_stat, 1.0), -1.0)
 
-    mat_n = y._data.shape[0]
+    mat_n = x._data.shape[0]
     # note: xmean and normxm do not change with permutations
     permuted_stats = []
     if not (permutations == 0 or np.isnan(orig_stat)):
@@ -401,44 +400,29 @@ def _mantel_stats_pearson(x, y, permutations):
     return orig_stat, permuted_stats
 
 
-def rankdata_full(arr):
-    """
-    Assign ranks to data.
-    A simplified version of scipy.stats.rankdata, using the average method.
-
-    Ranks begin at 1.
+def _mantel_stats_pearson(x, y, permutations):
+    """Compute original and permuted stats using pearsonr.
 
     Parameters
     ----------
-    arr : 1D array_like
-        The array of values to be ranked.
+    x, y : DistanceMatrix
+        Input distance matrices to compare.
+    permutations : int
+        Number of times to randomly permute `x` when assessing statistical
+        significance. Must be greater than or equal to zero. If zero,
+        statistical significance calculations will be skipped and
+        permuted_stats will be an empty array.
 
     Returns
     -------
-    stats : 1D array_like
-        An array of size equal to the size of `arr`, containing rank
-        scores.
-    count, dense_org : 1D array_like
-        Internal data to be used for permutated rankdata compute.
+    orig_stat : 1D array_like
+        Correlation coefficient of the test.
+    permuted_stats : 1D array_like
+        Permutted correlation coefficients of the test.
     """
 
-    # inline the essential part of scipy.stats.rankdata
-    sorter = np.argsort(arr, kind='quicksort')
-
-    inv = np.empty(sorter.size, dtype=np.intp)
-    inv[sorter] = np.arange(sorter.size, dtype=np.intp)
-
-    arr_s = arr[sorter]
-
-    obs = np.r_[True, arr_s[1:] != arr_s[:-1]]
-    dense_org = obs.cumsum()
-    dense = dense_org[inv]
-
-    # cumulative counts of each unique value
-    count = np.r_[np.nonzero(obs)[0], len(obs)]
-
-    # average method
-    return .5 * (count[dense] + count[dense - 1] + 1), count, dense
+    y_flat = y.condensed_form()
+    return _mantel_stats_pearson_flat(x, y_flat, permutations)
 
 
 def _mantel_stats_spearman(x, y, permutations):
@@ -470,58 +454,17 @@ def _mantel_stats_spearman(x, y, permutations):
         warnings.warn(SpearmanRConstantInputWarning())
         return np.nan, []
 
-    # inline spearmanr, condensed from scipy.stats.spearmanr
-
-    # first compute the ranks... they are actually what is used
-    # also keep the internal data needed for permutations
-    x_rank, xcount, xdense = rankdata_full(x_flat)
-    del x_flat
-    y_rank = rankdata_full(y_flat)[0]
+    y_rank = scipy.stats.rankdata(y_flat)
     del y_flat
 
-    # spearmanr interanlly uses pearsonr
-    # inline pearsonr, condensed from scipy.stats.pearsonr(x_rank, y_rank)
-    xmean = x_rank.mean()
-    xm = x_rank - xmean
-    normxm = np.linalg.norm(xm)
-    xm_normalized = xm/normxm
-    del xm
+    x_rank = scipy.stats.rankdata(x_flat)
+    del x_flat
 
-    ymean = y_rank.mean()
-    ym = y_rank - ymean
-    normym = np.linalg.norm(ym)
-    ym_normalized = ym/normym
-    del ym
+    x_rank_matrix = DistanceMatrix(x_rank, x.ids)
+    del x_rank
 
-    threshold = 1e-13
-    if (((normxm < threshold*abs(xmean)) or
-         (normym < threshold*abs(ymean)))):
-        # If all the values in x (likewise y) are very close to the mean,
-        # the loss of precision that occurs in the subtraction xm = x - xmean
-        # might result in large errors in r.
-        warnings.warn(PearsonRNearConstantInputWarning())
-
-    orig_stat = np.dot(xm_normalized, ym_normalized)
-    del xm_normalized
-
-    mat_n = y._data.shape[0]
-    # note: xmean and normxm do not change with permutations
-    permuted_stats = []
-    if not (permutations == 0 or np.isnan(orig_stat)):
-        # inline DistanceMatrix.permute, grouping them together
-
-        # compute all spearmanr permutations at once
-        # create first the list of permutations
-        perm_order = np.empty([permutations, mat_n], dtype=np.int)
-        for row in range(permutations):
-            perm_order[row, :] = np.random.permutation(mat_n)
-
-        permuted_stats = np.empty([permutations], dtype=ym_normalized.dtype)
-        mantel_perm_spearmanr_cy(xcount, xdense, perm_order,
-                                 xmean, normxm,
-                                 ym_normalized, permuted_stats)
-
-    return orig_stat, permuted_stats
+    # for our purposes, spearman is just pearson on rankdata
+    return _mantel_stats_pearson_flat(x_rank_matrix, y_rank, permutations)
 
 
 @experimental(as_of="0.4.0")
