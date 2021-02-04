@@ -1,0 +1,61 @@
+name: lint-test
+# build on every PR and commit to master
+on:
+  push:
+    branches: [ master ]
+  pull_request:
+    branches: [ master ]
+
+jobs:
+  install-and-test:
+    name: (${{ matrix.python-version }}, ${{ matrix.os }}, USE_CYTHON=${{matrix.use_cython}})
+    runs-on: ${{ matrix.os }}
+    env: 
+      MPLBACKEND: Agg
+      USE_CYTHON: ${{matrix.use_cython}}
+    strategy:
+      fail-fast: false
+      matrix:
+        os: ["ubuntu-latest", "macos-latest"]
+        python-version: ["3.6", "3.7", "3.8"]
+        use_cython: ["TRUE", "FALSE"]
+    steps:
+      - uses: actions/checkout@v2
+      - uses: conda-incubator/setup-miniconda@v2
+        with:
+          auto-update-conda: true
+          python-version: ${{ matrix.python-version }}
+      - name: Install dependencies
+        shell: bash -l {0}
+        run: |
+          conda install --yes --file ci/conda_requirements.txt
+          conda install --yes cython
+          conda install --yes pip
+          pip install -r ci/pip_requirements.txt
+          pip install . --no-deps
+      - name: Run unit tests
+        shell: bash -l {0}
+        env:
+          WITH_COVERAGE: "TRUE"
+        run: make test
+      - name: Build docs
+        shell: bash -l {0}
+        run: make -C doc clean html
+      - name: Run coveralls
+        uses: AndreMiras/coveralls-python-action@v20201129
+        with:
+          parallel: true
+          flag-name: Unit Test
+        # this action is currently only supported on Linux
+        if: ${{ matrix.os == 'ubuntu-latest' }}
+
+  coveralls_finish:
+    # haven't been able to test this yet, as the full build matrix 
+    # hasn't completed successfully
+    needs: install-and-test
+    runs-on: ubuntu-latest
+    steps:
+    - name: Coveralls Finished
+      uses: AndreMiras/coveralls-python-action@v20201129
+      with:
+        parallel-finished: true
