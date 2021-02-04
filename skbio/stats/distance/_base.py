@@ -1,5 +1,5 @@
 # ----------------------------------------------------------------------------
-# Copyright (c) 2013--, scikit-bio development team.
+# Copyright (c) 2013-2021, scikit-bio development team.
 #
 # Distributed under the terms of the Modified BSD License.
 #
@@ -98,13 +98,20 @@ class DissimilarityMatrix(SkbioObject):
 
     @experimental(as_of="0.4.0")
     def __init__(self, data, ids=None, validate=True):
+        validate_full = validate
+        validate_shape = False
+        validate_ids = False
+
         if isinstance(data, DissimilarityMatrix):
-            if (ids is None) and isinstance(data, self.__class__):
+            if isinstance(data, self.__class__):
                 # Never validate when copying from an object
                 # of the same type
                 # We should be able to assume it is already
                 # in a good state.
-                validate = False
+                validate_full = False
+                validate_shape = False
+                # but do validate ids, if redefining them
+                validate_ids = False if ids is None else True
             ids = data.ids if ids is None else ids
             data = data.data
 
@@ -130,13 +137,28 @@ class DissimilarityMatrix(SkbioObject):
             data = np.asarray(data, dtype='float')
 
         if data.ndim == 1:
+            # We can assume squareform will return a symmetric square matrix
+            # so no need for full validation.
+            # Still do basic checks (e.g. zero length)
+            # and id validation
             data = squareform(data, force='tomatrix', checks=False)
+            validate_full = False
+            validate_shape = True
+            validate_ids = True
+
         if ids is None:
             ids = (str(i) for i in range(data.shape[0]))
+            # I just created the ids, so no need to re-validate them
+            validate_ids = False
         ids = tuple(ids)
 
-        if validate:
+        if validate_full:
             self._validate(data, ids)
+        else:
+            if validate_shape:
+                self._validate_shape(data)
+            if validate_ids:
+                self._validate_ids(data, ids)
 
         self._data = data
         self._ids = ids
@@ -906,15 +928,11 @@ class DissimilarityMatrix(SkbioObject):
                                            "data (%d)." %
                                            (len(ids), data.shape[0]))
 
-    def _validate(self, data, ids):
-        """Validate the data array and IDs.
+    def _validate_shape(self, data):
+        """Validate the data array shape.
 
-        Checks that the data is at least 1x1 in size, 2D, square, hollow, and
-        contains only floats. Also checks that IDs are unique and that the
-        number of IDs matches the number of rows/cols in the data array.
-
-        Subclasses can override this method to perform different/more specific
-        validation (e.g., see `DistanceMatrix`).
+        Checks that the data is at least 1x1 in size, 2D, square, and
+        contains only floats.
 
         Notes
         -----
@@ -937,6 +955,26 @@ class DissimilarityMatrix(SkbioObject):
         if data.dtype not in (np.float32, np.float64):
             raise DissimilarityMatrixError("Data must contain only floating "
                                            "point values.")
+
+    def _validate(self, data, ids):
+        """Validate the data array and IDs.
+
+        Checks that the data is at least 1x1 in size, 2D, square, and
+        contains only floats. Also checks that IDs are unique and that the
+        number of IDs matches the number of rows/cols in the data array.
+
+        Subclasses can override this method to perform different/more specific
+        validation (e.g., see `DistanceMatrix`).
+
+        Notes
+        -----
+        Accepts arguments instead of inspecting instance attributes to avoid
+        creating an invalid dissimilarity matrix before raising an error.
+        Otherwise, the invalid dissimilarity matrix could be used after the
+        exception is caught and handled.
+
+        """
+        self._validate_shape(data)
         self._validate_ids(data, ids)
 
     def _index_list(self, list_):

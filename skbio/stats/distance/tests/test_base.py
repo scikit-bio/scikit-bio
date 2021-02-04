@@ -717,11 +717,31 @@ class DissimilarityMatrixTests(DissimilarityMatrixTestData):
         with self.assertRaises(DissimilarityMatrixError):
             self.dm_3x3._validate(np.array([[0, 42], [42, 0]]), ['a', 'b'])
 
+    def test_validate_invalid_shape(self):
+        # first check it actually likes good matrices
+        self.dm_3x3._validate_shape(np.array([[0., 42.], [42., 0.]]))
+        # it checks just the shape, not the content
+        self.dm_3x3._validate_shape(np.array([[1., 2.], [3., 4.]]))
+        # empty array
+        with self.assertRaises(DissimilarityMatrixError):
+            self.dm_3x3._validate_shape(np.array([]))
+        # invalid shape
+        with self.assertRaises(DissimilarityMatrixError):
+            self.dm_3x3._validate_shape(np.array([[0., 42.],
+                                                  [42., 0.],
+                                                  [22., 22.]]))
+        with self.assertRaises(DissimilarityMatrixError):
+            self.dm_3x3._validate_shape(np.array([[[0., 42.], [42., 0.]],
+                                                  [[0., 24.], [24., 0.]]]))
+
     def test_validate_invalid_ids(self):
+        # repeated ids
         with self.assertRaises(DissimilarityMatrixError):
             self.dm_3x3._validate_ids(self.dm_3x3.data, ['a', 'a'])
+        # empty ids
         with self.assertRaises(DissimilarityMatrixError):
             self.dm_3x3._validate_ids(self.dm_3x3.data, [])
+        # invalid shape
         with self.assertRaises(DissimilarityMatrixError):
             self.dm_3x3._validate_ids(self.dm_3x3.data, ['a', 'b', 'c', 'd'])
 
@@ -986,6 +1006,12 @@ class DistanceMatrixTests(DissimilarityMatrixTestData):
 
         exp = pd.Series([0.123], index=pd.Index([('0', '1')]))
         assert_series_almost_equal(series, exp)
+
+    def test_validate_asym_shape(self):
+        # first check it actually likes good matrices
+        self.dm_3x3._validate_shape(np.array([[0., 42.], [42., 0.]]))
+        # it checks just the shape, not the content
+        self.dm_3x3._validate_shape(np.array([[1., 2.], [3., 4.]]))
 
 
 class RandomDistanceMatrixTests(TestCase):
