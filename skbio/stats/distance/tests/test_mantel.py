@@ -163,7 +163,7 @@ class InternalMantelTests(MantelTestData):
 
         ym_normalized = ym/normym
 
-        permuted_stats = np.empty(14, dtype=x_data.dtype)
+        permuted_stats = np.empty(len(perm_order), dtype=x_data.dtype)
         mantel_perm_pearsonr_cy(x_data, perm_order, xmean, normxm,
                                 ym_normalized, permuted_stats)
         for i in range(14):
