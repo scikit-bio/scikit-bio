@@ -86,7 +86,7 @@ def distmat_reorder_condensed_cy(TReal[:, ::1] in_mat, long[::1] reorder_vec,
      with
      [1,0,3,2]
      will result in
-     [ 1, 5, 4 , 3, 2, 6 ]
+     [ 1, 5, 4, 3, 2, 6 ]
 
     Note: No error checking is performed.
           The caller must ensure that all values in reorder_vec are valid
