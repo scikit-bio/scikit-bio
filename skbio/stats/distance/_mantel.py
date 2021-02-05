@@ -418,7 +418,7 @@ def _mantel_stats_pearson(x, y, permutations):
     orig_stat : 1D array_like
         Correlation coefficient of the test.
     permuted_stats : 1D array_like
-        Permutted correlation coefficients of the test.
+        Permuted correlation coefficients of the test.
     """
 
     y_flat = y.condensed_form()
