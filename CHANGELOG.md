@@ -13,7 +13,7 @@
 ### Performance enhancements
 
 * Avoid an implicit data copy on construction of `DissimilarityMatrix` objects. 
-* Avoid performing filtering when ids are identical.
+* Avoid performing filtering when ids are identical, see [PR #1752](https://github.com/biocore/scikit-bio/pull/1752)
 
 ### Bug fixes
 
