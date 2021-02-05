@@ -79,10 +79,10 @@ class InternalMantelTests(MantelTestData):
         normxm = 1.4142135623730951
         ym_normalized = np.asarray([-0.80178373, 0.26726124, 0.53452248])
 
-        permuted_stats = np.empty(4, dtype=x_data.dtype)
+        permuted_stats = np.empty(len(perm_order), dtype=x_data.dtype)
         mantel_perm_pearsonr_cy(x_data, perm_order, xmean, normxm,
                                 ym_normalized, permuted_stats)
-        for i in range(4):
+        for i in range(len(perm_order)):
             exp_res = self._compute_perf_one(x_data, perm_order[i, :],
                                              xmean, normxm, ym_normalized)
             self.assertAlmostEqual(permuted_stats[i], exp_res)
@@ -115,10 +115,10 @@ class InternalMantelTests(MantelTestData):
                                     0.04340053, -0.35527798, 0.15597541,
                                     -0.0523679, -0.04451187, 0.35308828])
 
-        permuted_stats = np.empty(5, dtype=x_data.dtype)
+        permuted_stats = np.empty(len(perm_order), dtype=x_data.dtype)
         mantel_perm_pearsonr_cy(x_data, perm_order, xmean, normxm,
                                 ym_normalized, permuted_stats)
-        for i in range(5):
+        for i in range(len(perm_order)):
             exp_res = self._compute_perf_one(x_data, perm_order[i, :],
                                              xmean, normxm, ym_normalized)
             self.assertAlmostEqual(permuted_stats[i], exp_res)
@@ -179,8 +179,11 @@ class InternalMantelTests(MantelTestData):
         x = DistanceMatrix.read(get_data_path('dm2.txt'))
         y = DistanceMatrix.read(get_data_path('dm3.txt'))
 
+        num_perms = 12
+
         np.random.seed(0)
-        orig_stat_fast, permuted_stats_fast = _mantel_stats_pearson(x, y, 12)
+        orig_stat_fast, permuted_stats_fast = _mantel_stats_pearson(x, y,
+                                                                    num_perms)
 
         # compute the traditional way
         np.random.seed(0)
@@ -190,12 +193,12 @@ class InternalMantelTests(MantelTestData):
         orig_stat = pearsonr(x_flat, y_flat)[0]
 
         perm_gen = (pearsonr(x.permute(condensed=True), y_flat)[0]
-                    for _ in range(12))
+                    for _ in range(num_perms))
         permuted_stats = np.fromiter(perm_gen, np.float,
-                                     count=12)
+                                     count=num_perms)
 
         self.assertAlmostEqual(orig_stat_fast, orig_stat)
-        for i in range(12):
+        for i in range(num_perms):
             self.assertAlmostEqual(permuted_stats_fast[i],
                                    permuted_stats[i])
 
@@ -207,8 +210,11 @@ class InternalMantelTests(MantelTestData):
         x = DistanceMatrix.read(get_data_path('dm2.txt'))
         y = DistanceMatrix.read(get_data_path('dm3.txt'))
 
+        num_perms = 12
+
         np.random.seed(0)
-        orig_stat_fast, permuted_stats_fast = _mantel_stats_spearman(x, y, 12)
+        orig_stat_fast, permuted_stats_fast = _mantel_stats_spearman(x, y,
+                                                                     num_perms)
 
         # compute the traditional way
         np.random.seed(0)
@@ -218,12 +224,12 @@ class InternalMantelTests(MantelTestData):
         orig_stat = spearmanr(x_flat, y_flat)[0]
 
         perm_gen = (spearmanr(x.permute(condensed=True), y_flat)[0]
-                    for _ in range(12))
+                    for _ in range(num_perms))
         permuted_stats = np.fromiter(perm_gen, np.float,
-                                     count=12)
+                                     count=num_perms)
 
         self.assertAlmostEqual(orig_stat_fast, orig_stat)
-        for i in range(12):
+        for i in range(num_perms):
             self.assertAlmostEqual(permuted_stats_fast[i],
                                    permuted_stats[i])
 
