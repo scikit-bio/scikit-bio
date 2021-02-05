@@ -166,7 +166,7 @@ class InternalMantelTests(MantelTestData):
         permuted_stats = np.empty(len(perm_order), dtype=x_data.dtype)
         mantel_perm_pearsonr_cy(x_data, perm_order, xmean, normxm,
                                 ym_normalized, permuted_stats)
-        for i in range(14):
+        for i in range(len(perm_order)):
             exp_res = self._compute_perf_one(x_data, perm_order[i, :],
                                              xmean, normxm, ym_normalized)
             self.assertAlmostEqual(permuted_stats[i], exp_res)
