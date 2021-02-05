@@ -14,7 +14,7 @@
 
 * Avoid an implicit data copy on construction of `DissimilarityMatrix` objects. 
 * Avoid validation on copy of `DissimilarityMatrix` and `DistanceMatrix` objects, see [PR #1747](https://github.com/biocore/scikit-bio/pull/1747)
-* Use an optimized version of symmetry check in DistanceMatrix.
+* Use an optimized version of symmetry check in DistanceMatrix, see [PR #1747](https://github.com/biocore/scikit-bio/pull/1747)
 
 ### Bug fixes
 
