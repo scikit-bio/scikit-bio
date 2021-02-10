@@ -27,6 +27,12 @@ class TestUtils(TestCase):
         self.matrix2 = np.arange(1, 10).reshape(3, 3)
 
         self.small_mat = np.array([[7, 5, 5], [4, 4, 9], [7, 5, 3]])
+        self.dist_mat = np.asarray([[0., 7., 5., 5.], [7., 0., 4., 9.],
+                                    [5., 4., 0., 3.], [5., 9., 3., 0.]],
+                                   dtype=np.float64)
+        self.dist_mat_fp32 = np.asarray([[0., 7., 5., 5.], [7., 0., 4., 9.],
+                                         [5., 4., 0., 3.], [5., 9., 3., 0.]],
+                                        dtype=np.float32)
 
     def test_mean_and_std(self):
         obs = mean_and_std(self.x)
@@ -77,20 +83,40 @@ class TestUtils(TestCase):
         npt.assert_almost_equal(F, expected_F)
 
     def test_center_distance_matrix_inplace(self):
-        dm_expected = f_matrix(e_matrix(self.small_mat))
+        dm_expected = f_matrix(e_matrix(self.dist_mat))
 
         # make copy of matrix to test inplace centering
-        matrix_copy = copy.deepcopy(self.small_mat)
+        matrix_copy = copy.deepcopy(self.dist_mat)
         dm_centered = center_distance_matrix(matrix_copy, inplace=False)
 
         # ensure that matrix_copy was NOT modified inplace
-        self.assertTrue(np.array_equal(matrix_copy, self.small_mat))
+        self.assertTrue(np.array_equal(matrix_copy, self.dist_mat))
 
         # and ensure that the result of centering was correct
         npt.assert_almost_equal(dm_expected, dm_centered)
 
         # next, sort same matrix inplace
-        matrix_copy2 = copy.deepcopy(self.small_mat)
+        matrix_copy2 = copy.deepcopy(self.dist_mat)
+        dm_centered_inp = center_distance_matrix(matrix_copy2, inplace=True)
+
+        # and ensure that the result of inplace centering was correct
+        npt.assert_almost_equal(dm_expected, dm_centered_inp)
+
+    def test_center_distance_matrix_single(self):
+        dm_expected = f_matrix(e_matrix(self.dist_mat_fp32))
+
+        # make copy of matrix to test inplace centering
+        matrix_copy = copy.deepcopy(self.dist_mat_fp32)
+        dm_centered = center_distance_matrix(matrix_copy, inplace=False)
+
+        # ensure that matrix_copy was NOT modified inplace
+        self.assertTrue(np.array_equal(matrix_copy, self.dist_mat_fp32))
+
+        # and ensure that the result of centering was correct
+        npt.assert_almost_equal(dm_expected, dm_centered)
+
+        # next, sort same matrix inplace
+        matrix_copy2 = copy.deepcopy(self.dist_mat_fp32)
         dm_centered_inp = center_distance_matrix(matrix_copy2, inplace=True)
 
         # and ensure that the result of inplace centering was correct
