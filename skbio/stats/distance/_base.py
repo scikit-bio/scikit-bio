@@ -22,6 +22,7 @@ from skbio.util._decorator import experimental, classonlymethod
 from skbio.util._misc import resolve_key
 
 from ._utils import is_symmetric_and_hollow
+from ._utils import distmat_reorder, distmat_reorder_condensed
 
 
 class DissimilarityMatrixError(Exception):
@@ -426,7 +427,7 @@ class DissimilarityMatrix(SkbioObject):
 
         # Note: Skip validation, since we assume self was already validated
         # But ids are new, so validate them explicitly
-        filtered_data = self._data[idxs][:, idxs]
+        filtered_data = distmat_reorder(self._data, idxs)
         self._validate_ids(filtered_data, ids)
         return self.__class__(filtered_data, ids, validate=False)
 
@@ -1141,12 +1142,13 @@ class DistanceMatrix(DissimilarityMatrix):
 
         """
         order = np.random.permutation(self.shape[0])
-        permuted = self._data[order][:, order]
 
         if condensed:
-            return squareform(permuted, force='tovector', checks=False)
+            permuted_condensed = distmat_reorder_condensed(self._data, order)
+            return permuted_condensed
         else:
             # Note: Skip validation, since we assume self was already validated
+            permuted = distmat_reorder(self._data, order)
             return self.__class__(permuted, self.ids, validate=False)
 
     def _validate(self, data, ids):
