@@ -12,10 +12,18 @@ import numpy as np
 import numpy.testing as npt
 import pandas as pd
 
+import scipy
+from scipy.spatial.distance import squareform
+from scipy.stats import pearsonr, spearmanr
+
 from skbio import DistanceMatrix
 from skbio.stats.distance import (DissimilarityMatrixError,
                                   DistanceMatrixError, mantel, pwmantel)
 from skbio.stats.distance._mantel import _order_dms
+from skbio.stats.distance._mantel import _mantel_stats_pearson
+from skbio.stats.distance._mantel import _mantel_stats_spearman
+from skbio.stats.distance._cutils import mantel_perm_pearsonr_cy
+from skbio.stats.distance._utils import distmat_reorder_condensed
 from skbio.util import get_data_path, assert_data_frame_almost_equal
 
 
@@ -44,6 +52,186 @@ class MantelTestData(TestCase):
                                              [0.25, 0.1, 0, 5],
                                              [3, 24, 5, 0]],
                                             ['0', '1', '2', 'bar'])
+
+
+class InternalMantelTests(MantelTestData):
+    def setUp(self):
+        super(InternalMantelTests, self).setUp()
+
+    def _compute_perf_one(self, x_data, order, xmean, normxm, ym_normalized):
+        x_flat = distmat_reorder_condensed(x_data, order)
+        xm_normalized = (x_flat - xmean)/normxm
+        one_stat = np.dot(xm_normalized, ym_normalized)
+        one_stat = max(min(one_stat, 1.0), -1.0)
+        return one_stat
+
+    def test_perm_pearsonr3(self):
+        # data pre-computed using released code
+        x_data = np.asarray([[0., 1., 3.],
+                             [1., 0., 2.],
+                             [3., 2., 0.]])
+
+        perm_order = np.asarray([[2, 1, 0],
+                                 [2, 0, 1],
+                                 [0, 2, 1],
+                                 [2, 0, 1]], dtype=np.int)
+        xmean = 2.0
+        normxm = 1.4142135623730951
+        ym_normalized = np.asarray([-0.80178373, 0.26726124, 0.53452248])
+
+        permuted_stats = np.empty(len(perm_order), dtype=x_data.dtype)
+        mantel_perm_pearsonr_cy(x_data, perm_order, xmean, normxm,
+                                ym_normalized, permuted_stats)
+        for i in range(len(perm_order)):
+            exp_res = self._compute_perf_one(x_data, perm_order[i, :],
+                                             xmean, normxm, ym_normalized)
+            self.assertAlmostEqual(permuted_stats[i], exp_res)
+
+    def test_perm_pearsonr6(self):
+        # data pre-computed using released code
+        x_data = np.asarray([[0., 0.62381864, 0.75001543,
+                              0.58520119, 0.72902358, 0.65213559],
+                             [0.62381864, 0., 0.97488122,
+                              0.6498224, 0.73720314, 0.62950732],
+                             [0.75001543, 0.97488122, 0.,
+                              0.68884542, 0.65747031, 0.72170752],
+                             [0.58520119, 0.6498224, 0.68884542,
+                              0., 0.65885358, 0.66122362],
+                             [0.72902358, 0.73720314, 0.65747031,
+                              0.65885358, 0., 0.71117341],
+                             [0.65213559, 0.62950732, 0.72170752,
+                              0.66122362, 0.71117341, 0.]])
+
+        perm_order = np.asarray([[0, 2, 3, 4, 1, 5],
+                                 [4, 3, 2, 5, 0, 1],
+                                 [2, 5, 3, 1, 0, 4],
+                                 [3, 5, 4, 1, 2, 0],
+                                 [4, 3, 5, 2, 0, 1]], dtype=np.int)
+        xmean = 0.6953921578226
+        normxm = 0.3383126690576294
+        ym_normalized = np.asarray([-0.4999711, 0.24980825, -0.29650504,
+                                    0.18022614, -0.17407781, 0.33223145,
+                                    -0.08230374, 0.33992794, -0.14964257,
+                                    0.04340053, -0.35527798, 0.15597541,
+                                    -0.0523679, -0.04451187, 0.35308828])
+
+        permuted_stats = np.empty(len(perm_order), dtype=x_data.dtype)
+        mantel_perm_pearsonr_cy(x_data, perm_order, xmean, normxm,
+                                ym_normalized, permuted_stats)
+        for i in range(len(perm_order)):
+            exp_res = self._compute_perf_one(x_data, perm_order[i, :],
+                                             xmean, normxm, ym_normalized)
+            self.assertAlmostEqual(permuted_stats[i], exp_res)
+
+    def test_perm_pearsonr_full(self):
+        x = DistanceMatrix.read(get_data_path('dm2.txt'))
+        y = DistanceMatrix.read(get_data_path('dm3.txt'))
+        x_data = x._data
+        y_data = y._data
+        x_flat = squareform(x_data, force='tovector', checks=False)
+        y_flat = squareform(y_data, force='tovector', checks=False)
+
+        xmean = x_flat.mean()
+        ymean = y_flat.mean()
+
+        xm = x_flat - xmean
+        ym = y_flat - ymean
+
+        normxm_la = scipy.linalg.norm(xm)
+        normym_la = scipy.linalg.norm(ym)
+
+        normxm = np.linalg.norm(xm)
+        normym = np.linalg.norm(ym)
+
+        self.assertAlmostEqual(normxm, normxm_la)
+        self.assertAlmostEqual(normym, normym_la)
+
+        perm_order = np.asarray([[0, 2, 3, 4, 1, 5],
+                                 [4, 3, 2, 5, 0, 1],
+                                 [2, 5, 3, 1, 0, 4],
+                                 [3, 5, 4, 1, 2, 0],
+                                 [4, 3, 5, 2, 0, 1],
+                                 [4, 5, 1, 2, 0, 3],
+                                 [3, 5, 1, 0, 4, 2],
+                                 [4, 5, 3, 1, 2, 0],
+                                 [2, 1, 5, 4, 0, 3],
+                                 [4, 1, 0, 5, 2, 3],
+                                 [1, 2, 5, 4, 0, 3],
+                                 [5, 4, 0, 1, 3, 2],
+                                 [3, 0, 1, 5, 4, 2],
+                                 [5, 0, 2, 3, 1, 4]], dtype=np.int)
+
+        ym_normalized = ym/normym
+
+        permuted_stats = np.empty(len(perm_order), dtype=x_data.dtype)
+        mantel_perm_pearsonr_cy(x_data, perm_order, xmean, normxm,
+                                ym_normalized, permuted_stats)
+        for i in range(len(perm_order)):
+            exp_res = self._compute_perf_one(x_data, perm_order[i, :],
+                                             xmean, normxm, ym_normalized)
+            self.assertAlmostEqual(permuted_stats[i], exp_res)
+
+    def test_pearsonr_full(self):
+        """
+        Compare the optimized version of pearson mantel
+        with the naive loop implementation
+        """
+        x = DistanceMatrix.read(get_data_path('dm2.txt'))
+        y = DistanceMatrix.read(get_data_path('dm3.txt'))
+
+        num_perms = 12
+
+        np.random.seed(0)
+        orig_stat_fast, permuted_stats_fast = _mantel_stats_pearson(x, y,
+                                                                    num_perms)
+
+        # compute the traditional way
+        np.random.seed(0)
+        x_flat = x.condensed_form()
+        y_flat = y.condensed_form()
+
+        orig_stat = pearsonr(x_flat, y_flat)[0]
+
+        perm_gen = (pearsonr(x.permute(condensed=True), y_flat)[0]
+                    for _ in range(num_perms))
+        permuted_stats = np.fromiter(perm_gen, np.float,
+                                     count=num_perms)
+
+        self.assertAlmostEqual(orig_stat_fast, orig_stat)
+        for i in range(num_perms):
+            self.assertAlmostEqual(permuted_stats_fast[i],
+                                   permuted_stats[i])
+
+    def test_spearmanr_full(self):
+        """
+        Compare the optimized version of spearman mantel
+        with the naive loop implementation
+        """
+        x = DistanceMatrix.read(get_data_path('dm2.txt'))
+        y = DistanceMatrix.read(get_data_path('dm3.txt'))
+
+        num_perms = 12
+
+        np.random.seed(0)
+        orig_stat_fast, permuted_stats_fast = _mantel_stats_spearman(x, y,
+                                                                     num_perms)
+
+        # compute the traditional way
+        np.random.seed(0)
+        x_flat = x.condensed_form()
+        y_flat = y.condensed_form()
+
+        orig_stat = spearmanr(x_flat, y_flat)[0]
+
+        perm_gen = (spearmanr(x.permute(condensed=True), y_flat)[0]
+                    for _ in range(num_perms))
+        permuted_stats = np.fromiter(perm_gen, np.float,
+                                     count=num_perms)
+
+        self.assertAlmostEqual(orig_stat_fast, orig_stat)
+        for i in range(num_perms):
+            self.assertAlmostEqual(permuted_stats_fast[i],
+                                   permuted_stats[i])
 
 
 class MantelTests(MantelTestData):
@@ -84,6 +272,17 @@ class MantelTests(MantelTestData):
 
         # Expected test statistic when comparing x and z with method='pearson'.
         self.exp_x_vs_z = -0.9897433
+
+    def assert_mantel_almost_equal(self, left, right):
+        # p-value is a count based on comparing two real value
+        # it is thus very sensitive to minor rounding errors
+        # When counts are rare, that may make huge proportional error
+        # se we have to keep that number high for proper "almost" comparison
+        self.assertAlmostEqual(left[0], right[0])
+        npt.assert_almost_equal(left[1] + 0.5,
+                                right[1] + 0.5,
+                                decimal=2)
+        self.assertEqual(left[2], right[2])
 
     def test_statistic_same_across_alternatives_and_permutations(self):
         # Varying permutations and alternative hypotheses shouldn't affect the
@@ -134,9 +333,7 @@ class MantelTests(MantelTestData):
 
         obs = mantel(self.minx_dm, self.miny_dm, alternative='less')
 
-        self.assertAlmostEqual(obs[0], self.exp_x_vs_y)
-        self.assertAlmostEqual(obs[1], 0.843)
-        self.assertEqual(obs[2], 3)
+        self.assert_mantel_almost_equal(obs, [self.exp_x_vs_y, 0.843, 3])
 
     def test_distance_matrix_instances_with_reordering_and_nonmatching(self):
         x = self.minx_dm_extra.filter(['1', '0', 'foo', '2'])
@@ -151,9 +348,7 @@ class MantelTests(MantelTestData):
         # strict=False should ignore IDs that aren't found in both matrices
         obs = mantel(x, y, alternative='less', strict=False)
 
-        self.assertAlmostEqual(obs[0], self.exp_x_vs_y)
-        self.assertAlmostEqual(obs[1], 0.843)
-        self.assertEqual(obs[2], 3)
+        self.assert_mantel_almost_equal(obs, [self.exp_x_vs_y, 0.843, 3])
 
     def test_distance_matrix_instances_with_lookup(self):
         self.minx_dm.ids = ('a', 'b', 'c')
@@ -165,9 +360,7 @@ class MantelTests(MantelTestData):
 
         obs = mantel(self.minx_dm, self.miny_dm, alternative='less',
                      lookup=lookup)
-        self.assertAlmostEqual(obs[0], self.exp_x_vs_y)
-        self.assertAlmostEqual(obs[1], 0.843)
-        self.assertEqual(obs[2], 3)
+        self.assert_mantel_almost_equal(obs, [self.exp_x_vs_y, 0.843, 3])
 
     def test_one_sided_greater(self):
         np.random.seed(0)
@@ -178,9 +371,7 @@ class MantelTests(MantelTestData):
         self.assertEqual(obs[2], 3)
 
         obs = mantel(self.minx, self.minx, alternative='greater')
-        self.assertAlmostEqual(obs[0], 1)
-        self.assertAlmostEqual(obs[1], 0.172)
-        self.assertEqual(obs[2], 3)
+        self.assert_mantel_almost_equal(obs, [1, 0.172, 3])
 
     def test_one_sided_less(self):
         # no need to seed here as permuted test statistics will all be less
@@ -193,35 +384,25 @@ class MantelTests(MantelTestData):
         np.random.seed(0)
 
         obs = mantel(self.minx, self.miny, alternative='less')
-        self.assertAlmostEqual(obs[0], self.exp_x_vs_y)
-        self.assertAlmostEqual(obs[1], 0.843)
-        self.assertEqual(obs[2], 3)
+        self.assert_mantel_almost_equal(obs, [self.exp_x_vs_y, 0.843, 3])
 
         obs = mantel(self.minx, self.minz, alternative='less')
-        self.assertAlmostEqual(obs[0], self.exp_x_vs_z)
-        self.assertAlmostEqual(obs[1], 0.172)
-        self.assertEqual(obs[2], 3)
+        self.assert_mantel_almost_equal(obs, [self.exp_x_vs_z, 0.172, 3])
 
     def test_two_sided(self):
         np.random.seed(0)
 
         obs = mantel(self.minx, self.minx, method='spearman',
                      alternative='two-sided')
-        self.assertEqual(obs[0], 1)
-        self.assertAlmostEqual(obs[1], 0.328)
-        self.assertEqual(obs[2], 3)
+        self.assert_mantel_almost_equal(obs, [1.0, 0.328, 3])
 
         obs = mantel(self.minx, self.miny, method='spearman',
                      alternative='two-sided')
-        self.assertAlmostEqual(obs[0], 0.5)
-        self.assertAlmostEqual(obs[1], 1.0)
-        self.assertEqual(obs[2], 3)
+        self.assert_mantel_almost_equal(obs, [0.5, 1.0, 3])
 
         obs = mantel(self.minx, self.minz, method='spearman',
                      alternative='two-sided')
-        self.assertAlmostEqual(obs[0], -1)
-        self.assertAlmostEqual(obs[1], 0.322)
-        self.assertEqual(obs[2], 3)
+        self.assert_mantel_almost_equal(obs, [-1, 0.322, 3])
 
     def test_vegan_example(self):
         np.random.seed(0)
@@ -229,16 +410,12 @@ class MantelTests(MantelTestData):
         # pearson
         obs = mantel(self.veg_dm_vegan, self.env_dm_vegan,
                      alternative='greater')
-        self.assertAlmostEqual(obs[0], 0.3047454)
-        self.assertAlmostEqual(obs[1], 0.002)
-        self.assertEqual(obs[2], 24)
+        self.assert_mantel_almost_equal(obs, [0.3047454, 0.002, 24])
 
         # spearman
         obs = mantel(self.veg_dm_vegan, self.env_dm_vegan,
                      alternative='greater', method='spearman')
-        self.assertAlmostEqual(obs[0], 0.283791)
-        self.assertAlmostEqual(obs[1], 0.003)
-        self.assertEqual(obs[2], 24)
+        self.assert_mantel_almost_equal(obs, [0.283791, 0.003, 24])
 
     def test_no_variation_pearson(self):
         for alt in self.alternatives:
@@ -345,6 +522,19 @@ class PairwiseMantelTests(MantelTestData):
         self.exp_results_all_dms = pd.read_csv(
             get_data_path('pwmantel_exp_results_all_dms.txt'),
             sep='\t', index_col=(0, 1))
+
+    def assert_pwmantel_almost_equal(self, left, right):
+        # p-value is a count based on comparing two real value
+        # it is thus very sensitive to minor rounding errors
+        # When counts are rare, that may make huge proportional error
+        # se we have to keep that number high for proper "almost" comparison
+
+        # stats use the normal precision
+        npt.assert_almost_equal(left.values[:, 0], right.values[:, 0])
+        # p-values use modified check
+        npt.assert_almost_equal(left.values[:, 1] + 0.5,
+                                right.values[:, 1] + 0.5,
+                                decimal=2)
 
     def test_minimal_compatible_input(self):
         # Matrices are already in the correct order and have matching IDs.
@@ -462,7 +652,7 @@ class PairwiseMantelTests(MantelTestData):
         np.random.seed(0)
 
         obs = pwmantel(dms)
-        assert_data_frame_almost_equal(obs, self.exp_results_dm_dm2)
+        self.assert_pwmantel_almost_equal(obs, self.exp_results_dm_dm2)
 
     def test_many_filepaths_as_input(self):
         dms = [
@@ -474,7 +664,7 @@ class PairwiseMantelTests(MantelTestData):
         np.random.seed(0)
 
         obs = pwmantel(dms)
-        assert_data_frame_almost_equal(obs, self.exp_results_all_dms)
+        self.assert_pwmantel_almost_equal(obs, self.exp_results_all_dms)
 
 
 class OrderDistanceMatricesTests(MantelTestData):

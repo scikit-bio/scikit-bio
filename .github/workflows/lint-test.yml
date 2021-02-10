@@ -28,6 +28,18 @@ jobs:
       - name: Install dependencies
         shell: bash -l {0}
         run: |
+          if [[ "$(uname -s)" == "Linux" ]];
+          then
+            conda install --yes -c conda-forge gxx_linux-64=7.5.0
+          else
+            ls -l /Applications/
+            # conda clang does not like xcode 12
+            sudo xcode-select --switch /Applications/Xcode_11.7.app
+            # the system tools are unusable, hide them
+            sudo mv -f /Library/Developer/CommandLineTools /Library/Developer/CommandLineTools.org
+            # now we are ready to install clang
+            conda install --yes -c conda-forge clangxx_osx-64=10.0.0
+          fi
           conda install --yes --file ci/conda_requirements.txt
           conda install --yes cython
           conda install --yes pip

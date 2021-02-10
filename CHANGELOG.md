@@ -14,6 +14,8 @@
 
 * Avoid an implicit data copy on construction of `DissimilarityMatrix` objects. 
 * Avoid performing filtering when ids are identical, see [PR #1752](https://github.com/biocore/scikit-bio/pull/1752)
+* Use a memory-optimized version of permute in DistanceMatrix, see [PR #1756](https://github.com/biocore/scikit-bio/pull/1756).
+* Refactor pearson and spearman skbio.stats.distance.mantel implementations to drastically improve memory locality. Also cache intermediate results that are invariant across permutations, see [PR #1756](https://github.com/biocore/scikit-bio/pull/1756).
 
 ### Bug fixes
 
