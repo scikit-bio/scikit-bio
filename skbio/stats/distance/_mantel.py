@@ -8,13 +8,19 @@
 
 from itertools import combinations
 
+import warnings
 import numpy as np
 import pandas as pd
 import scipy.special
-from scipy.stats import pearsonr, spearmanr, kendalltau
+from scipy.stats import kendalltau
+from scipy.stats import PearsonRConstantInputWarning
+from scipy.stats import PearsonRNearConstantInputWarning
+from scipy.stats import SpearmanRConstantInputWarning
 
 from skbio.stats.distance import DistanceMatrix
 from skbio.util._decorator import experimental
+
+from ._cutils import mantel_perm_pearsonr_cy
 
 
 @experimental(as_of="0.4.0")
@@ -250,10 +256,11 @@ def mantel(x, y, method='pearson', permutations=999, alternative='two-sided',
     ``array_like`` because there is no notion of IDs.
 
     """
+    special = False  # set to true, if we have a dedicated implementation
     if method == 'pearson':
-        corr_func = pearsonr
+        special = True
     elif method == 'spearman':
-        corr_func = spearmanr
+        special = True
     elif method == 'kendalltau':
         corr_func = kendalltau
     else:
@@ -272,18 +279,34 @@ def mantel(x, y, method='pearson', permutations=999, alternative='two-sided',
         raise ValueError("Distance matrices must have at least 3 matching IDs "
                          "between them (i.e., minimum 3x3 in size).")
 
-    x_flat = x.condensed_form()
-    y_flat = y.condensed_form()
+    if special:
+        if method == 'pearson':
+            orig_stat, permuted_stats = _mantel_stats_pearson(x, y,
+                                                              permutations)
+        elif method == 'spearman':
+            orig_stat, permuted_stats = _mantel_stats_spearman(x, y,
+                                                               permutations)
+        else:
+            raise ValueError("Invalid correlation method '%s'." % method)
+    else:
+        x_flat = x.condensed_form()
+        y_flat = y.condensed_form()
 
-    orig_stat = corr_func(x_flat, y_flat)[0]
+        orig_stat = corr_func(x_flat, y_flat)[0]
+        del x_flat
+
+        permuted_stats = []
+        if not (permutations == 0 or np.isnan(orig_stat)):
+            perm_gen = (corr_func(x.permute(condensed=True), y_flat)[0]
+                        for _ in range(permutations))
+            permuted_stats = np.fromiter(perm_gen, np.float,
+                                         count=permutations)
+
+        del y_flat
 
     if permutations == 0 or np.isnan(orig_stat):
         p_value = np.nan
     else:
-        perm_gen = (corr_func(x.permute(condensed=True), y_flat)[0]
-                    for _ in range(permutations))
-        permuted_stats = np.fromiter(perm_gen, np.float, count=permutations)
-
         if alternative == 'two-sided':
             count_better = (np.absolute(permuted_stats) >=
                             np.absolute(orig_stat)).sum()
@@ -295,6 +318,153 @@ def mantel(x, y, method='pearson', permutations=999, alternative='two-sided',
         p_value = (count_better + 1) / (permutations + 1)
 
     return orig_stat, p_value, n
+
+
+def _mantel_stats_pearson_flat(x, y_flat, permutations):
+    """Compute original and permuted stats using pearsonr.
+
+    Parameters
+    ----------
+    x : DistanceMatrix
+        Input distance matrix.
+    y_flat: 1D array
+        Compact representation of a distance matrix.
+    permutations : int
+        Number of times to randomly permute `x` when assessing statistical
+        significance. Must be greater than or equal to zero. If zero,
+        statistical significance calculations will be skipped and
+        permuted_stats will be an empty array.
+
+    Returns
+    -------
+    orig_stat : 1D array_like
+        Correlation coefficient of the test.
+    permuted_stats : 1D array_like
+        Permuted correlation coefficients of the test.
+    """
+
+    x_flat = x.condensed_form()
+
+    # If an input is constant, the correlation coefficient is not defined.
+    if (x_flat == x_flat[0]).all() or (y_flat == y_flat[0]).all():
+        warnings.warn(PearsonRConstantInputWarning())
+        return np.nan, []
+
+    # inline pearsonr, condensed from scipy.stats.pearsonr
+    xmean = x_flat.mean()
+    xm = x_flat - xmean
+    normxm = np.linalg.norm(xm)
+    xm_normalized = xm/normxm
+    del xm
+    del x_flat
+
+    ymean = y_flat.mean()
+    ym = y_flat - ymean
+    normym = np.linalg.norm(ym)
+    ym_normalized = ym/normym
+    del ym
+
+    threshold = 1e-13
+    if (((normxm < threshold*abs(xmean)) or
+         (normym < threshold*abs(ymean)))):
+        # If all the values in x (likewise y) are very close to the mean,
+        # the loss of precision that occurs in the subtraction xm = x - xmean
+        # might result in large errors in r.
+        warnings.warn(PearsonRNearConstantInputWarning())
+
+    orig_stat = np.dot(xm_normalized, ym_normalized)
+
+    # Presumably, if abs(orig_stat) > 1, then it is only some small artifact of
+    # floating point arithmetic.
+    orig_stat = max(min(orig_stat, 1.0), -1.0)
+
+    mat_n = x._data.shape[0]
+    # note: xmean and normxm do not change with permutations
+    permuted_stats = []
+    if not (permutations == 0 or np.isnan(orig_stat)):
+        # inline DistanceMatrix.permute, grouping them together
+        x_data = x._data
+        if not x_data.flags.c_contiguous:
+            x_data = np.asarray(x_data, order='C')
+
+        # compute all pearsonr permutations at once
+        # create first the list of permutations
+        perm_order = np.empty([permutations, mat_n], dtype=np.int)
+        for row in range(permutations):
+            perm_order[row, :] = np.random.permutation(mat_n)
+
+        permuted_stats = np.empty([permutations], dtype=x_data.dtype)
+        mantel_perm_pearsonr_cy(x_data, perm_order, xmean, normxm,
+                                ym_normalized, permuted_stats)
+
+    return orig_stat, permuted_stats
+
+
+def _mantel_stats_pearson(x, y, permutations):
+    """Compute original and permuted stats using pearsonr.
+
+    Parameters
+    ----------
+    x, y : DistanceMatrix
+        Input distance matrices to compare.
+    permutations : int
+        Number of times to randomly permute `x` when assessing statistical
+        significance. Must be greater than or equal to zero. If zero,
+        statistical significance calculations will be skipped and
+        permuted_stats will be an empty array.
+
+    Returns
+    -------
+    orig_stat : 1D array_like
+        Correlation coefficient of the test.
+    permuted_stats : 1D array_like
+        Permuted correlation coefficients of the test.
+    """
+
+    y_flat = y.condensed_form()
+    return _mantel_stats_pearson_flat(x, y_flat, permutations)
+
+
+def _mantel_stats_spearman(x, y, permutations):
+    """Compute original and permuted stats using spearmanr.
+
+    Parameters
+    ----------
+    x, y : DistanceMatrix
+        Input distance matrices to compare.
+    permutations : int
+        Number of times to randomly permute `x` when assessing statistical
+        significance. Must be greater than or equal to zero. If zero,
+        statistical significance calculations will be skipped and
+        permuted_stats will be an empty array.
+
+    Returns
+    -------
+    orig_stat : 1D array_like
+        Correlation coefficient of the test.
+    permuted_stats : 1D array_like
+        Permuted correlation coefficients of the test.
+    """
+
+    x_flat = x.condensed_form()
+    y_flat = y.condensed_form()
+
+    # If an input is constant, the correlation coefficient is not defined.
+    if (x_flat == x_flat[0]).all() or (y_flat == y_flat[0]).all():
+        warnings.warn(SpearmanRConstantInputWarning())
+        return np.nan, []
+
+    y_rank = scipy.stats.rankdata(y_flat)
+    del y_flat
+
+    x_rank = scipy.stats.rankdata(x_flat)
+    del x_flat
+
+    x_rank_matrix = DistanceMatrix(x_rank, x.ids)
+    del x_rank
+
+    # for our purposes, spearman is just pearson on rankdata
+    return _mantel_stats_pearson_flat(x_rank_matrix, y_rank, permutations)
 
 
 @experimental(as_of="0.4.0")
