@@ -101,24 +101,39 @@ class TestPCoA(TestCase):
                                         ignore_directionality=True,
                                         ignore_method_names=True)
 
-        with self.assertRaises(ValueError):
-            dim_too_large = dm1.data.shape[0] + 10
-            pcoa(dm2, method="fsvd", number_of_dimensions=dim_too_large)
-
-        with self.assertRaises(ValueError):
-            pcoa(dm2, method="fsvd", number_of_dimensions=-1)
+        dm4 = DistanceMatrix.read(get_data_path('PCoA_sample_data_3'))
 
         with self.assertRaises(ValueError):
             dim_too_large = dm1.data.shape[0] + 10
-            pcoa(dm2, method="eigh", number_of_dimensions=dim_too_large)
+            pcoa(dm4, method="fsvd", number_of_dimensions=dim_too_large)
 
         with self.assertRaises(ValueError):
-            pcoa(dm2, method="eigh", number_of_dimensions=-1)
+            pcoa(dm4, method="fsvd", number_of_dimensions=-1)
+
+        with self.assertRaises(ValueError):
+            dim_too_large = dm1.data.shape[0] + 10
+            pcoa(dm4, method="eigh", number_of_dimensions=dim_too_large)
+
+        with self.assertRaises(ValueError):
+            pcoa(dm4, method="eigh", number_of_dimensions=-1)
 
         dm_big = DistanceMatrix.read(get_data_path('PCoA_sample_data_12dim'))
         with self.assertWarnsRegex(RuntimeWarning,
                                    r"no value for number_of_dimensions"):
             pcoa(dm_big, method="fsvd", number_of_dimensions=0)
+
+    def test_permutted(self):
+        dm1 = DistanceMatrix.read(get_data_path('PCoA_sample_data_3'))
+        # this should not throw
+        pcoa(dm1, method="fsvd", number_of_dimensions=3,
+             inplace=False)
+
+        # some operations, like permute, will change memory structure
+        # we want to test that this does not break pcoa
+        dm2 = dm1.permute()
+        # we just want to assure it does not throw
+        pcoa(dm2, method="fsvd", number_of_dimensions=3,
+             inplace=False)
 
     def test_extensive(self):
         eigvals = [0.3984635, 0.36405689, 0.28804535, 0.27479983,
