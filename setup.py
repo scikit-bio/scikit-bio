@@ -88,7 +88,9 @@ extensions = [
               include_dirs=[np.get_include()]),
     Extension("skbio.diversity._phylogenetic",
               ["skbio/diversity/_phylogenetic" + ext],
-              include_dirs=[np.get_include()])
+              include_dirs=[np.get_include()]),
+    Extension("skbio.stats.distance._cutils",
+              ["skbio/stats/distance/_cutils" + ext]),
 ]
 
 if USE_CYTHON:
