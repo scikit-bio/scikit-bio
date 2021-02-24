@@ -107,11 +107,11 @@ def f_matrix_inplace_cy(TReal[::1] row_means, TReal global_mean, TReal[:, ::1] c
     cdef TReal gr_mean
 
     # use a tiled pattern to maximize locality of row_means
-    for trow in prange(0, n_samples, 512, nogil=True):
-        trow_max = min(trow+512, n_samples)
+    for trow in prange(0, n_samples, 24, nogil=True):
+        trow_max = min(trow+24, n_samples)
 
-        for tcol in range(0, n_samples, 512):
-            tcol_max = min(tcol+512, n_samples)
+        for tcol in range(0, n_samples, 24):
+            tcol_max = min(tcol+24, n_samples)
 
             for row in range(trow, trow_max, 1):
                 gr_mean = global_mean - row_means[row]
