@@ -55,10 +55,10 @@ def e_matrix_means_cy(TReal[:, ::1] mat, TReal[:, ::1] centered, TReal[::1] row_
     assert n_samples == d5
 
     cdef Py_ssize_t row,col
-    cdef TReal row_sum
+    cdef long double row_sum
     cdef TReal el0
 
-    cdef TReal global_sum = 0.0
+    cdef long double global_sum = 0.0
     for row in prange(n_samples, nogil=True):
         row_sum = 0.0
 
@@ -72,7 +72,9 @@ def e_matrix_means_cy(TReal[:, ::1] mat, TReal[:, ::1] centered, TReal[::1] row_
         global_sum += row_sum
         row_means[row] = row_sum/n_samples
 
-    return (global_sum/n_samples)/n_samples
+    cdef TReal global_mean = (global_sum/n_samples)/n_samples
+
+    return global_mean
 
 @cython.boundscheck(False)
 @cython.wraparound(False)
