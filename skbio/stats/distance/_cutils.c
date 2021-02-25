@@ -2901,7 +2901,6 @@ static PyObject *__pyx_pf_5skbio_5stats_8distance_7_cutils_8is_symmetric_and_hol
   Py_ssize_t __pyx_v_tcol_max;
   Py_ssize_t __pyx_v_row;
   Py_ssize_t __pyx_v_col;
-  float __pyx_v_testval;
   int __pyx_v_is_sym;
   int __pyx_v_is_hollow;
   PyObject *__pyx_r = NULL;
@@ -2920,10 +2919,12 @@ static PyObject *__pyx_pf_5skbio_5stats_8distance_7_cutils_8is_symmetric_and_hol
   Py_ssize_t __pyx_t_12;
   Py_ssize_t __pyx_t_13;
   Py_ssize_t __pyx_t_14;
-  int __pyx_t_15;
-  PyObject *__pyx_t_16 = NULL;
-  PyObject *__pyx_t_17 = NULL;
+  Py_ssize_t __pyx_t_15;
+  Py_ssize_t __pyx_t_16;
+  int __pyx_t_17;
   PyObject *__pyx_t_18 = NULL;
+  PyObject *__pyx_t_19 = NULL;
+  PyObject *__pyx_t_20 = NULL;
   int __pyx_lineno = 0;
   const char *__pyx_filename = NULL;
   int __pyx_clineno = 0;
@@ -2984,9 +2985,9 @@ static PyObject *__pyx_pf_5skbio_5stats_8distance_7_cutils_8is_symmetric_and_hol
   /* "skbio/stats/distance/_cutils.pyx":55
  * 
  *     # use a tiled approach to maximize memory locality
- *     for trow in prange(0, in_n, 64, nogil=True):             # <<<<<<<<<<<<<<
- *         trow_max = min(trow+64, in_n)
- *         for tcol in range(0, in_n, 64):
+ *     for trow in prange(0, in_n, 24, nogil=True):             # <<<<<<<<<<<<<<
+ *         trow_max = min(trow+24, in_n)
+ *         for tcol in range(0, in_n, 24):
  */
   {
       #ifdef WITH_THREAD
@@ -2996,7 +2997,7 @@ static PyObject *__pyx_pf_5skbio_5stats_8distance_7_cutils_8is_symmetric_and_hol
       #endif
       /*try:*/ {
         __pyx_t_1 = __pyx_v_in_n;
-        if ((64 == 0)) abort();
+        if ((24 == 0)) abort();
         {
             #if ((defined(__APPLE__) || defined(__OSX__)) && (defined(__GNUC__) && (__GNUC__ > 2 || (__GNUC__ == 2 && (__GNUC_MINOR__ > 95)))))
                 #undef likely
@@ -3004,36 +3005,35 @@ static PyObject *__pyx_pf_5skbio_5stats_8distance_7_cutils_8is_symmetric_and_hol
                 #define likely(x)   (x)
                 #define unlikely(x) (x)
             #endif
-            __pyx_t_3 = (__pyx_t_1 - 0 + 64 - 64/abs(64)) / 64;
+            __pyx_t_3 = (__pyx_t_1 - 0 + 24 - 24/abs(24)) / 24;
             if (__pyx_t_3 > 0)
             {
                 #ifdef _OPENMP
-                #pragma omp parallel reduction(&:__pyx_v_is_hollow) reduction(&:__pyx_v_is_sym) private(__pyx_t_10, __pyx_t_11, __pyx_t_12, __pyx_t_13, __pyx_t_14, __pyx_t_15, __pyx_t_4, __pyx_t_5, __pyx_t_6, __pyx_t_7, __pyx_t_8, __pyx_t_9)
+                #pragma omp parallel reduction(&:__pyx_v_is_hollow) reduction(&:__pyx_v_is_sym) private(__pyx_t_10, __pyx_t_11, __pyx_t_12, __pyx_t_13, __pyx_t_14, __pyx_t_15, __pyx_t_16, __pyx_t_17, __pyx_t_4, __pyx_t_5, __pyx_t_6, __pyx_t_7, __pyx_t_8, __pyx_t_9)
                 #endif /* _OPENMP */
                 {
                     #ifdef _OPENMP
-                    #pragma omp for lastprivate(__pyx_v_col) lastprivate(__pyx_v_row) lastprivate(__pyx_v_tcol) lastprivate(__pyx_v_tcol_max) lastprivate(__pyx_v_testval) firstprivate(__pyx_v_trow) lastprivate(__pyx_v_trow) lastprivate(__pyx_v_trow_max)
+                    #pragma omp for lastprivate(__pyx_v_col) lastprivate(__pyx_v_row) lastprivate(__pyx_v_tcol) lastprivate(__pyx_v_tcol_max) firstprivate(__pyx_v_trow) lastprivate(__pyx_v_trow) lastprivate(__pyx_v_trow_max)
                     #endif /* _OPENMP */
                     for (__pyx_t_2 = 0; __pyx_t_2 < __pyx_t_3; __pyx_t_2++){
                         {
-                            __pyx_v_trow = (Py_ssize_t)(0 + 64 * __pyx_t_2);
+                            __pyx_v_trow = (Py_ssize_t)(0 + 24 * __pyx_t_2);
                             /* Initialize private variables to invalid values */
                             __pyx_v_col = ((Py_ssize_t)0xbad0bad0);
                             __pyx_v_row = ((Py_ssize_t)0xbad0bad0);
                             __pyx_v_tcol = ((Py_ssize_t)0xbad0bad0);
                             __pyx_v_tcol_max = ((Py_ssize_t)0xbad0bad0);
-                            __pyx_v_testval = ((float)__PYX_NAN());
                             __pyx_v_trow_max = ((Py_ssize_t)0xbad0bad0);
 
                             /* "skbio/stats/distance/_cutils.pyx":56
  *     # use a tiled approach to maximize memory locality
- *     for trow in prange(0, in_n, 64, nogil=True):
- *         trow_max = min(trow+64, in_n)             # <<<<<<<<<<<<<<
- *         for tcol in range(0, in_n, 64):
- *             tcol_max = min(tcol+64, in_n)
+ *     for trow in prange(0, in_n, 24, nogil=True):
+ *         trow_max = min(trow+24, in_n)             # <<<<<<<<<<<<<<
+ *         for tcol in range(0, in_n, 24):
+ *             tcol_max = min(tcol+24, in_n)
  */
                             __pyx_t_4 = __pyx_v_in_n;
-                            __pyx_t_5 = (__pyx_v_trow + 64);
+                            __pyx_t_5 = (__pyx_v_trow + 24);
                             if (((__pyx_t_4 < __pyx_t_5) != 0)) {
                               __pyx_t_6 = __pyx_t_4;
                             } else {
@@ -3042,26 +3042,26 @@ static PyObject *__pyx_pf_5skbio_5stats_8distance_7_cutils_8is_symmetric_and_hol
                             __pyx_v_trow_max = __pyx_t_6;
 
                             /* "skbio/stats/distance/_cutils.pyx":57
- *     for trow in prange(0, in_n, 64, nogil=True):
- *         trow_max = min(trow+64, in_n)
- *         for tcol in range(0, in_n, 64):             # <<<<<<<<<<<<<<
- *             tcol_max = min(tcol+64, in_n)
+ *     for trow in prange(0, in_n, 24, nogil=True):
+ *         trow_max = min(trow+24, in_n)
+ *         for tcol in range(0, in_n, 24):             # <<<<<<<<<<<<<<
+ *             tcol_max = min(tcol+24, in_n)
  *             for row in range(trow, trow_max, 1):
  */
                             __pyx_t_6 = __pyx_v_in_n;
                             __pyx_t_4 = __pyx_t_6;
-                            for (__pyx_t_5 = 0; __pyx_t_5 < __pyx_t_4; __pyx_t_5+=64) {
+                            for (__pyx_t_5 = 0; __pyx_t_5 < __pyx_t_4; __pyx_t_5+=24) {
                               __pyx_v_tcol = __pyx_t_5;
 
                               /* "skbio/stats/distance/_cutils.pyx":58
- *         trow_max = min(trow+64, in_n)
- *         for tcol in range(0, in_n, 64):
- *             tcol_max = min(tcol+64, in_n)             # <<<<<<<<<<<<<<
+ *         trow_max = min(trow+24, in_n)
+ *         for tcol in range(0, in_n, 24):
+ *             tcol_max = min(tcol+24, in_n)             # <<<<<<<<<<<<<<
  *             for row in range(trow, trow_max, 1):
  *                 for col in range(tcol, tcol_max, 1):
  */
                               __pyx_t_7 = __pyx_v_in_n;
-                              __pyx_t_8 = (__pyx_v_tcol + 64);
+                              __pyx_t_8 = (__pyx_v_tcol + 24);
                               if (((__pyx_t_7 < __pyx_t_8) != 0)) {
                                 __pyx_t_9 = __pyx_t_7;
                               } else {
@@ -3070,11 +3070,11 @@ static PyObject *__pyx_pf_5skbio_5stats_8distance_7_cutils_8is_symmetric_and_hol
                               __pyx_v_tcol_max = __pyx_t_9;
 
                               /* "skbio/stats/distance/_cutils.pyx":59
- *         for tcol in range(0, in_n, 64):
- *             tcol_max = min(tcol+64, in_n)
+ *         for tcol in range(0, in_n, 24):
+ *             tcol_max = min(tcol+24, in_n)
  *             for row in range(trow, trow_max, 1):             # <<<<<<<<<<<<<<
  *                 for col in range(tcol, tcol_max, 1):
- *                    testval = mat[row,col]
+ *                    is_sym &= (mat[row,col]==mat[col,row])
  */
                               __pyx_t_9 = __pyx_v_trow_max;
                               __pyx_t_7 = __pyx_t_9;
@@ -3082,11 +3082,11 @@ static PyObject *__pyx_pf_5skbio_5stats_8distance_7_cutils_8is_symmetric_and_hol
                                 __pyx_v_row = __pyx_t_8;
 
                                 /* "skbio/stats/distance/_cutils.pyx":60
- *             tcol_max = min(tcol+64, in_n)
+ *             tcol_max = min(tcol+24, in_n)
  *             for row in range(trow, trow_max, 1):
  *                 for col in range(tcol, tcol_max, 1):             # <<<<<<<<<<<<<<
- *                    testval = mat[row,col]
- *                    if (row==col):
+ *                    is_sym &= (mat[row,col]==mat[col,row])
+ *             if (trow==tcol): # diagonal block, only ones that can have col==row
  */
                                 __pyx_t_10 = __pyx_v_tcol_max;
                                 __pyx_t_11 = __pyx_t_10;
@@ -3096,57 +3096,59 @@ static PyObject *__pyx_pf_5skbio_5stats_8distance_7_cutils_8is_symmetric_and_hol
                                   /* "skbio/stats/distance/_cutils.pyx":61
  *             for row in range(trow, trow_max, 1):
  *                 for col in range(tcol, tcol_max, 1):
- *                    testval = mat[row,col]             # <<<<<<<<<<<<<<
- *                    if (row==col):
- *                        # diagonal elements are always symmetric,
+ *                    is_sym &= (mat[row,col]==mat[col,row])             # <<<<<<<<<<<<<<
+ *             if (trow==tcol): # diagonal block, only ones that can have col==row
+ *                 for col in range(tcol, tcol_max, 1):
  */
                                   __pyx_t_13 = __pyx_v_row;
                                   __pyx_t_14 = __pyx_v_col;
-                                  __pyx_v_testval = (*((float *) ( /* dim=1 */ ((char *) (((float *) ( /* dim=0 */ (__pyx_v_mat.data + __pyx_t_13 * __pyx_v_mat.strides[0]) )) + __pyx_t_14)) )));
+                                  __pyx_t_15 = __pyx_v_col;
+                                  __pyx_t_16 = __pyx_v_row;
+                                  __pyx_v_is_sym = (__pyx_v_is_sym & ((*((float *) ( /* dim=1 */ ((char *) (((float *) ( /* dim=0 */ (__pyx_v_mat.data + __pyx_t_13 * __pyx_v_mat.strides[0]) )) + __pyx_t_14)) ))) == (*((float *) ( /* dim=1 */ ((char *) (((float *) ( /* dim=0 */ (__pyx_v_mat.data + __pyx_t_15 * __pyx_v_mat.strides[0]) )) + __pyx_t_16)) )))));
+                                }
+                              }
 
-                                  /* "skbio/stats/distance/_cutils.pyx":62
+                              /* "skbio/stats/distance/_cutils.pyx":62
  *                 for col in range(tcol, tcol_max, 1):
- *                    testval = mat[row,col]
- *                    if (row==col):             # <<<<<<<<<<<<<<
- *                        # diagonal elements are always symmetric,
- *                        # so no need to check
- */
-                                  __pyx_t_15 = ((__pyx_v_row == __pyx_v_col) != 0);
-                                  if (__pyx_t_15) {
-
-                                    /* "skbio/stats/distance/_cutils.pyx":65
- *                        # diagonal elements are always symmetric,
- *                        # so no need to check
- *                        is_hollow &= (testval==0)             # <<<<<<<<<<<<<<
- *                    else:
- *                        is_sym &= (testval==mat[col,row])
- */
-                                    __pyx_v_is_hollow = (__pyx_v_is_hollow & (__pyx_v_testval == 0.0));
-
-                                    /* "skbio/stats/distance/_cutils.pyx":62
+ *                    is_sym &= (mat[row,col]==mat[col,row])
+ *             if (trow==tcol): # diagonal block, only ones that can have col==row             # <<<<<<<<<<<<<<
  *                 for col in range(tcol, tcol_max, 1):
- *                    testval = mat[row,col]
- *                    if (row==col):             # <<<<<<<<<<<<<<
- *                        # diagonal elements are always symmetric,
- *                        # so no need to check
+ *                    is_hollow &= (mat[col,col]==0)
  */
-                                    goto __pyx_L16;
-                                  }
+                              __pyx_t_17 = ((__pyx_v_trow == __pyx_v_tcol) != 0);
+                              if (__pyx_t_17) {
 
-                                  /* "skbio/stats/distance/_cutils.pyx":67
- *                        is_hollow &= (testval==0)
- *                    else:
- *                        is_sym &= (testval==mat[col,row])             # <<<<<<<<<<<<<<
+                                /* "skbio/stats/distance/_cutils.pyx":63
+ *                    is_sym &= (mat[row,col]==mat[col,row])
+ *             if (trow==tcol): # diagonal block, only ones that can have col==row
+ *                 for col in range(tcol, tcol_max, 1):             # <<<<<<<<<<<<<<
+ *                    is_hollow &= (mat[col,col]==0)
+ * 
+ */
+                                __pyx_t_9 = __pyx_v_tcol_max;
+                                __pyx_t_7 = __pyx_t_9;
+                                for (__pyx_t_8 = __pyx_v_tcol; __pyx_t_8 < __pyx_t_7; __pyx_t_8+=1) {
+                                  __pyx_v_col = __pyx_t_8;
+
+                                  /* "skbio/stats/distance/_cutils.pyx":64
+ *             if (trow==tcol): # diagonal block, only ones that can have col==row
+ *                 for col in range(tcol, tcol_max, 1):
+ *                    is_hollow &= (mat[col,col]==0)             # <<<<<<<<<<<<<<
  * 
  *     return [(is_sym==True), (is_hollow==True)]
  */
-                                  /*else*/ {
-                                    __pyx_t_14 = __pyx_v_col;
-                                    __pyx_t_13 = __pyx_v_row;
-                                    __pyx_v_is_sym = (__pyx_v_is_sym & (__pyx_v_testval == (*((float *) ( /* dim=1 */ ((char *) (((float *) ( /* dim=0 */ (__pyx_v_mat.data + __pyx_t_14 * __pyx_v_mat.strides[0]) )) + __pyx_t_13)) )))));
-                                  }
-                                  __pyx_L16:;
+                                  __pyx_t_16 = __pyx_v_col;
+                                  __pyx_t_15 = __pyx_v_col;
+                                  __pyx_v_is_hollow = (__pyx_v_is_hollow & ((*((float *) ( /* dim=1 */ ((char *) (((float *) ( /* dim=0 */ (__pyx_v_mat.data + __pyx_t_16 * __pyx_v_mat.strides[0]) )) + __pyx_t_15)) ))) == 0.0));
                                 }
+
+                                /* "skbio/stats/distance/_cutils.pyx":62
+ *                 for col in range(tcol, tcol_max, 1):
+ *                    is_sym &= (mat[row,col]==mat[col,row])
+ *             if (trow==tcol): # diagonal block, only ones that can have col==row             # <<<<<<<<<<<<<<
+ *                 for col in range(tcol, tcol_max, 1):
+ *                    is_hollow &= (mat[col,col]==0)
+ */
                               }
                             }
                         }
@@ -3165,9 +3167,9 @@ static PyObject *__pyx_pf_5skbio_5stats_8distance_7_cutils_8is_symmetric_and_hol
       /* "skbio/stats/distance/_cutils.pyx":55
  * 
  *     # use a tiled approach to maximize memory locality
- *     for trow in prange(0, in_n, 64, nogil=True):             # <<<<<<<<<<<<<<
- *         trow_max = min(trow+64, in_n)
- *         for tcol in range(0, in_n, 64):
+ *     for trow in prange(0, in_n, 24, nogil=True):             # <<<<<<<<<<<<<<
+ *         trow_max = min(trow+24, in_n)
+ *         for tcol in range(0, in_n, 24):
  */
       /*finally:*/ {
         /*normal exit:*/{
@@ -3181,28 +3183,28 @@ static PyObject *__pyx_pf_5skbio_5stats_8distance_7_cutils_8is_symmetric_and_hol
       }
   }
 
-  /* "skbio/stats/distance/_cutils.pyx":69
- *                        is_sym &= (testval==mat[col,row])
+  /* "skbio/stats/distance/_cutils.pyx":66
+ *                    is_hollow &= (mat[col,col]==0)
  * 
  *     return [(is_sym==True), (is_hollow==True)]             # <<<<<<<<<<<<<<
  * 
  * 
  */
   __Pyx_XDECREF(__pyx_r);
-  __pyx_t_16 = __Pyx_PyBool_FromLong((__pyx_v_is_sym == 1)); if (unlikely(!__pyx_t_16)) __PYX_ERR(0, 69, __pyx_L1_error)
-  __Pyx_GOTREF(__pyx_t_16);
-  __pyx_t_17 = __Pyx_PyBool_FromLong((__pyx_v_is_hollow == 1)); if (unlikely(!__pyx_t_17)) __PYX_ERR(0, 69, __pyx_L1_error)
-  __Pyx_GOTREF(__pyx_t_17);
-  __pyx_t_18 = PyList_New(2); if (unlikely(!__pyx_t_18)) __PYX_ERR(0, 69, __pyx_L1_error)
+  __pyx_t_18 = __Pyx_PyBool_FromLong((__pyx_v_is_sym == 1)); if (unlikely(!__pyx_t_18)) __PYX_ERR(0, 66, __pyx_L1_error)
   __Pyx_GOTREF(__pyx_t_18);
-  __Pyx_GIVEREF(__pyx_t_16);
-  PyList_SET_ITEM(__pyx_t_18, 0, __pyx_t_16);
-  __Pyx_GIVEREF(__pyx_t_17);
-  PyList_SET_ITEM(__pyx_t_18, 1, __pyx_t_17);
-  __pyx_t_16 = 0;
-  __pyx_t_17 = 0;
-  __pyx_r = __pyx_t_18;
+  __pyx_t_19 = __Pyx_PyBool_FromLong((__pyx_v_is_hollow == 1)); if (unlikely(!__pyx_t_19)) __PYX_ERR(0, 66, __pyx_L1_error)
+  __Pyx_GOTREF(__pyx_t_19);
+  __pyx_t_20 = PyList_New(2); if (unlikely(!__pyx_t_20)) __PYX_ERR(0, 66, __pyx_L1_error)
+  __Pyx_GOTREF(__pyx_t_20);
+  __Pyx_GIVEREF(__pyx_t_18);
+  PyList_SET_ITEM(__pyx_t_20, 0, __pyx_t_18);
+  __Pyx_GIVEREF(__pyx_t_19);
+  PyList_SET_ITEM(__pyx_t_20, 1, __pyx_t_19);
   __pyx_t_18 = 0;
+  __pyx_t_19 = 0;
+  __pyx_r = __pyx_t_20;
+  __pyx_t_20 = 0;
   goto __pyx_L0;
 
   /* "skbio/stats/distance/_cutils.pyx":22
@@ -3215,9 +3217,9 @@ static PyObject *__pyx_pf_5skbio_5stats_8distance_7_cutils_8is_symmetric_and_hol
 
   /* function exit code */
   __pyx_L1_error:;
-  __Pyx_XDECREF(__pyx_t_16);
-  __Pyx_XDECREF(__pyx_t_17);
   __Pyx_XDECREF(__pyx_t_18);
+  __Pyx_XDECREF(__pyx_t_19);
+  __Pyx_XDECREF(__pyx_t_20);
   __Pyx_AddTraceback("skbio.stats.distance._cutils.is_symmetric_and_hollow_cy", __pyx_clineno, __pyx_lineno, __pyx_filename);
   __pyx_r = NULL;
   __pyx_L0:;
@@ -3263,7 +3265,6 @@ static PyObject *__pyx_pf_5skbio_5stats_8distance_7_cutils_10is_symmetric_and_ho
   Py_ssize_t __pyx_v_tcol_max;
   Py_ssize_t __pyx_v_row;
   Py_ssize_t __pyx_v_col;
-  double __pyx_v_testval;
   int __pyx_v_is_sym;
   int __pyx_v_is_hollow;
   PyObject *__pyx_r = NULL;
@@ -3282,10 +3283,12 @@ static PyObject *__pyx_pf_5skbio_5stats_8distance_7_cutils_10is_symmetric_and_ho
   Py_ssize_t __pyx_t_12;
   Py_ssize_t __pyx_t_13;
   Py_ssize_t __pyx_t_14;
-  int __pyx_t_15;
-  PyObject *__pyx_t_16 = NULL;
-  PyObject *__pyx_t_17 = NULL;
+  Py_ssize_t __pyx_t_15;
+  Py_ssize_t __pyx_t_16;
+  int __pyx_t_17;
   PyObject *__pyx_t_18 = NULL;
+  PyObject *__pyx_t_19 = NULL;
+  PyObject *__pyx_t_20 = NULL;
   int __pyx_lineno = 0;
   const char *__pyx_filename = NULL;
   int __pyx_clineno = 0;
@@ -3346,9 +3349,9 @@ static PyObject *__pyx_pf_5skbio_5stats_8distance_7_cutils_10is_symmetric_and_ho
   /* "skbio/stats/distance/_cutils.pyx":55
  * 
  *     # use a tiled approach to maximize memory locality
- *     for trow in prange(0, in_n, 64, nogil=True):             # <<<<<<<<<<<<<<
- *         trow_max = min(trow+64, in_n)
- *         for tcol in range(0, in_n, 64):
+ *     for trow in prange(0, in_n, 24, nogil=True):             # <<<<<<<<<<<<<<
+ *         trow_max = min(trow+24, in_n)
+ *         for tcol in range(0, in_n, 24):
  */
   {
       #ifdef WITH_THREAD
@@ -3358,7 +3361,7 @@ static PyObject *__pyx_pf_5skbio_5stats_8distance_7_cutils_10is_symmetric_and_ho
       #endif
       /*try:*/ {
         __pyx_t_1 = __pyx_v_in_n;
-        if ((64 == 0)) abort();
+        if ((24 == 0)) abort();
         {
             #if ((defined(__APPLE__) || defined(__OSX__)) && (defined(__GNUC__) && (__GNUC__ > 2 || (__GNUC__ == 2 && (__GNUC_MINOR__ > 95)))))
                 #undef likely
@@ -3366,36 +3369,35 @@ static PyObject *__pyx_pf_5skbio_5stats_8distance_7_cutils_10is_symmetric_and_ho
                 #define likely(x)   (x)
                 #define unlikely(x) (x)
             #endif
-            __pyx_t_3 = (__pyx_t_1 - 0 + 64 - 64/abs(64)) / 64;
+            __pyx_t_3 = (__pyx_t_1 - 0 + 24 - 24/abs(24)) / 24;
             if (__pyx_t_3 > 0)
             {
                 #ifdef _OPENMP
-                #pragma omp parallel reduction(&:__pyx_v_is_hollow) reduction(&:__pyx_v_is_sym) private(__pyx_t_10, __pyx_t_11, __pyx_t_12, __pyx_t_13, __pyx_t_14, __pyx_t_15, __pyx_t_4, __pyx_t_5, __pyx_t_6, __pyx_t_7, __pyx_t_8, __pyx_t_9)
+                #pragma omp parallel reduction(&:__pyx_v_is_hollow) reduction(&:__pyx_v_is_sym) private(__pyx_t_10, __pyx_t_11, __pyx_t_12, __pyx_t_13, __pyx_t_14, __pyx_t_15, __pyx_t_16, __pyx_t_17, __pyx_t_4, __pyx_t_5, __pyx_t_6, __pyx_t_7, __pyx_t_8, __pyx_t_9)
                 #endif /* _OPENMP */
                 {
                     #ifdef _OPENMP
-                    #pragma omp for lastprivate(__pyx_v_col) lastprivate(__pyx_v_row) lastprivate(__pyx_v_tcol) lastprivate(__pyx_v_tcol_max) lastprivate(__pyx_v_testval) firstprivate(__pyx_v_trow) lastprivate(__pyx_v_trow) lastprivate(__pyx_v_trow_max)
+                    #pragma omp for lastprivate(__pyx_v_col) lastprivate(__pyx_v_row) lastprivate(__pyx_v_tcol) lastprivate(__pyx_v_tcol_max) firstprivate(__pyx_v_trow) lastprivate(__pyx_v_trow) lastprivate(__pyx_v_trow_max)
                     #endif /* _OPENMP */
                     for (__pyx_t_2 = 0; __pyx_t_2 < __pyx_t_3; __pyx_t_2++){
                         {
-                            __pyx_v_trow = (Py_ssize_t)(0 + 64 * __pyx_t_2);
+                            __pyx_v_trow = (Py_ssize_t)(0 + 24 * __pyx_t_2);
                             /* Initialize private variables to invalid values */
                             __pyx_v_col = ((Py_ssize_t)0xbad0bad0);
                             __pyx_v_row = ((Py_ssize_t)0xbad0bad0);
                             __pyx_v_tcol = ((Py_ssize_t)0xbad0bad0);
                             __pyx_v_tcol_max = ((Py_ssize_t)0xbad0bad0);
-                            __pyx_v_testval = ((double)__PYX_NAN());
                             __pyx_v_trow_max = ((Py_ssize_t)0xbad0bad0);
 
                             /* "skbio/stats/distance/_cutils.pyx":56
  *     # use a tiled approach to maximize memory locality
- *     for trow in prange(0, in_n, 64, nogil=True):
- *         trow_max = min(trow+64, in_n)             # <<<<<<<<<<<<<<
- *         for tcol in range(0, in_n, 64):
- *             tcol_max = min(tcol+64, in_n)
+ *     for trow in prange(0, in_n, 24, nogil=True):
+ *         trow_max = min(trow+24, in_n)             # <<<<<<<<<<<<<<
+ *         for tcol in range(0, in_n, 24):
+ *             tcol_max = min(tcol+24, in_n)
  */
                             __pyx_t_4 = __pyx_v_in_n;
-                            __pyx_t_5 = (__pyx_v_trow + 64);
+                            __pyx_t_5 = (__pyx_v_trow + 24);
                             if (((__pyx_t_4 < __pyx_t_5) != 0)) {
                               __pyx_t_6 = __pyx_t_4;
                             } else {
@@ -3404,26 +3406,26 @@ static PyObject *__pyx_pf_5skbio_5stats_8distance_7_cutils_10is_symmetric_and_ho
                             __pyx_v_trow_max = __pyx_t_6;
 
                             /* "skbio/stats/distance/_cutils.pyx":57
- *     for trow in prange(0, in_n, 64, nogil=True):
- *         trow_max = min(trow+64, in_n)
- *         for tcol in range(0, in_n, 64):             # <<<<<<<<<<<<<<
- *             tcol_max = min(tcol+64, in_n)
+ *     for trow in prange(0, in_n, 24, nogil=True):
+ *         trow_max = min(trow+24, in_n)
+ *         for tcol in range(0, in_n, 24):             # <<<<<<<<<<<<<<
+ *             tcol_max = min(tcol+24, in_n)
  *             for row in range(trow, trow_max, 1):
  */
                             __pyx_t_6 = __pyx_v_in_n;
                             __pyx_t_4 = __pyx_t_6;
-                            for (__pyx_t_5 = 0; __pyx_t_5 < __pyx_t_4; __pyx_t_5+=64) {
+                            for (__pyx_t_5 = 0; __pyx_t_5 < __pyx_t_4; __pyx_t_5+=24) {
                               __pyx_v_tcol = __pyx_t_5;
 
                               /* "skbio/stats/distance/_cutils.pyx":58
- *         trow_max = min(trow+64, in_n)
- *         for tcol in range(0, in_n, 64):
- *             tcol_max = min(tcol+64, in_n)             # <<<<<<<<<<<<<<
+ *         trow_max = min(trow+24, in_n)
+ *         for tcol in range(0, in_n, 24):
+ *             tcol_max = min(tcol+24, in_n)             # <<<<<<<<<<<<<<
  *             for row in range(trow, trow_max, 1):
  *                 for col in range(tcol, tcol_max, 1):
  */
                               __pyx_t_7 = __pyx_v_in_n;
-                              __pyx_t_8 = (__pyx_v_tcol + 64);
+                              __pyx_t_8 = (__pyx_v_tcol + 24);
                               if (((__pyx_t_7 < __pyx_t_8) != 0)) {
                                 __pyx_t_9 = __pyx_t_7;
                               } else {
@@ -3432,11 +3434,11 @@ static PyObject *__pyx_pf_5skbio_5stats_8distance_7_cutils_10is_symmetric_and_ho
                               __pyx_v_tcol_max = __pyx_t_9;
 
                               /* "skbio/stats/distance/_cutils.pyx":59
- *         for tcol in range(0, in_n, 64):
- *             tcol_max = min(tcol+64, in_n)
+ *         for tcol in range(0, in_n, 24):
+ *             tcol_max = min(tcol+24, in_n)
  *             for row in range(trow, trow_max, 1):             # <<<<<<<<<<<<<<
  *                 for col in range(tcol, tcol_max, 1):
- *                    testval = mat[row,col]
+ *                    is_sym &= (mat[row,col]==mat[col,row])
  */
                               __pyx_t_9 = __pyx_v_trow_max;
                               __pyx_t_7 = __pyx_t_9;
@@ -3444,11 +3446,11 @@ static PyObject *__pyx_pf_5skbio_5stats_8distance_7_cutils_10is_symmetric_and_ho
                                 __pyx_v_row = __pyx_t_8;
 
                                 /* "skbio/stats/distance/_cutils.pyx":60
- *             tcol_max = min(tcol+64, in_n)
+ *             tcol_max = min(tcol+24, in_n)
  *             for row in range(trow, trow_max, 1):
  *                 for col in range(tcol, tcol_max, 1):             # <<<<<<<<<<<<<<
- *                    testval = mat[row,col]
- *                    if (row==col):
+ *                    is_sym &= (mat[row,col]==mat[col,row])
+ *             if (trow==tcol): # diagonal block, only ones that can have col==row
  */
                                 __pyx_t_10 = __pyx_v_tcol_max;
                                 __pyx_t_11 = __pyx_t_10;
@@ -3458,57 +3460,59 @@ static PyObject *__pyx_pf_5skbio_5stats_8distance_7_cutils_10is_symmetric_and_ho
                                   /* "skbio/stats/distance/_cutils.pyx":61
  *             for row in range(trow, trow_max, 1):
  *                 for col in range(tcol, tcol_max, 1):
- *                    testval = mat[row,col]             # <<<<<<<<<<<<<<
- *                    if (row==col):
- *                        # diagonal elements are always symmetric,
+ *                    is_sym &= (mat[row,col]==mat[col,row])             # <<<<<<<<<<<<<<
+ *             if (trow==tcol): # diagonal block, only ones that can have col==row
+ *                 for col in range(tcol, tcol_max, 1):
  */
                                   __pyx_t_13 = __pyx_v_row;
                                   __pyx_t_14 = __pyx_v_col;
-                                  __pyx_v_testval = (*((double *) ( /* dim=1 */ ((char *) (((double *) ( /* dim=0 */ (__pyx_v_mat.data + __pyx_t_13 * __pyx_v_mat.strides[0]) )) + __pyx_t_14)) )));
+                                  __pyx_t_15 = __pyx_v_col;
+                                  __pyx_t_16 = __pyx_v_row;
+                                  __pyx_v_is_sym = (__pyx_v_is_sym & ((*((double *) ( /* dim=1 */ ((char *) (((double *) ( /* dim=0 */ (__pyx_v_mat.data + __pyx_t_13 * __pyx_v_mat.strides[0]) )) + __pyx_t_14)) ))) == (*((double *) ( /* dim=1 */ ((char *) (((double *) ( /* dim=0 */ (__pyx_v_mat.data + __pyx_t_15 * __pyx_v_mat.strides[0]) )) + __pyx_t_16)) )))));
+                                }
+                              }
 
-                                  /* "skbio/stats/distance/_cutils.pyx":62
+                              /* "skbio/stats/distance/_cutils.pyx":62
  *                 for col in range(tcol, tcol_max, 1):
- *                    testval = mat[row,col]
- *                    if (row==col):             # <<<<<<<<<<<<<<
- *                        # diagonal elements are always symmetric,
- *                        # so no need to check
- */
-                                  __pyx_t_15 = ((__pyx_v_row == __pyx_v_col) != 0);
-                                  if (__pyx_t_15) {
-
-                                    /* "skbio/stats/distance/_cutils.pyx":65
- *                        # diagonal elements are always symmetric,
- *                        # so no need to check
- *                        is_hollow &= (testval==0)             # <<<<<<<<<<<<<<
- *                    else:
- *                        is_sym &= (testval==mat[col,row])
- */
-                                    __pyx_v_is_hollow = (__pyx_v_is_hollow & (__pyx_v_testval == 0.0));
-
-                                    /* "skbio/stats/distance/_cutils.pyx":62
+ *                    is_sym &= (mat[row,col]==mat[col,row])
+ *             if (trow==tcol): # diagonal block, only ones that can have col==row             # <<<<<<<<<<<<<<
  *                 for col in range(tcol, tcol_max, 1):
- *                    testval = mat[row,col]
- *                    if (row==col):             # <<<<<<<<<<<<<<
- *                        # diagonal elements are always symmetric,
- *                        # so no need to check
+ *                    is_hollow &= (mat[col,col]==0)
  */
-                                    goto __pyx_L16;
-                                  }
+                              __pyx_t_17 = ((__pyx_v_trow == __pyx_v_tcol) != 0);
+                              if (__pyx_t_17) {
 
-                                  /* "skbio/stats/distance/_cutils.pyx":67
- *                        is_hollow &= (testval==0)
- *                    else:
- *                        is_sym &= (testval==mat[col,row])             # <<<<<<<<<<<<<<
+                                /* "skbio/stats/distance/_cutils.pyx":63
+ *                    is_sym &= (mat[row,col]==mat[col,row])
+ *             if (trow==tcol): # diagonal block, only ones that can have col==row
+ *                 for col in range(tcol, tcol_max, 1):             # <<<<<<<<<<<<<<
+ *                    is_hollow &= (mat[col,col]==0)
+ * 
+ */
+                                __pyx_t_9 = __pyx_v_tcol_max;
+                                __pyx_t_7 = __pyx_t_9;
+                                for (__pyx_t_8 = __pyx_v_tcol; __pyx_t_8 < __pyx_t_7; __pyx_t_8+=1) {
+                                  __pyx_v_col = __pyx_t_8;
+
+                                  /* "skbio/stats/distance/_cutils.pyx":64
+ *             if (trow==tcol): # diagonal block, only ones that can have col==row
+ *                 for col in range(tcol, tcol_max, 1):
+ *                    is_hollow &= (mat[col,col]==0)             # <<<<<<<<<<<<<<
  * 
  *     return [(is_sym==True), (is_hollow==True)]
  */
-                                  /*else*/ {
-                                    __pyx_t_14 = __pyx_v_col;
-                                    __pyx_t_13 = __pyx_v_row;
-                                    __pyx_v_is_sym = (__pyx_v_is_sym & (__pyx_v_testval == (*((double *) ( /* dim=1 */ ((char *) (((double *) ( /* dim=0 */ (__pyx_v_mat.data + __pyx_t_14 * __pyx_v_mat.strides[0]) )) + __pyx_t_13)) )))));
-                                  }
-                                  __pyx_L16:;
+                                  __pyx_t_16 = __pyx_v_col;
+                                  __pyx_t_15 = __pyx_v_col;
+                                  __pyx_v_is_hollow = (__pyx_v_is_hollow & ((*((double *) ( /* dim=1 */ ((char *) (((double *) ( /* dim=0 */ (__pyx_v_mat.data + __pyx_t_16 * __pyx_v_mat.strides[0]) )) + __pyx_t_15)) ))) == 0.0));
                                 }
+
+                                /* "skbio/stats/distance/_cutils.pyx":62
+ *                 for col in range(tcol, tcol_max, 1):
+ *                    is_sym &= (mat[row,col]==mat[col,row])
+ *             if (trow==tcol): # diagonal block, only ones that can have col==row             # <<<<<<<<<<<<<<
+ *                 for col in range(tcol, tcol_max, 1):
+ *                    is_hollow &= (mat[col,col]==0)
+ */
                               }
                             }
                         }
@@ -3527,9 +3531,9 @@ static PyObject *__pyx_pf_5skbio_5stats_8distance_7_cutils_10is_symmetric_and_ho
       /* "skbio/stats/distance/_cutils.pyx":55
  * 
  *     # use a tiled approach to maximize memory locality
- *     for trow in prange(0, in_n, 64, nogil=True):             # <<<<<<<<<<<<<<
- *         trow_max = min(trow+64, in_n)
- *         for tcol in range(0, in_n, 64):
+ *     for trow in prange(0, in_n, 24, nogil=True):             # <<<<<<<<<<<<<<
+ *         trow_max = min(trow+24, in_n)
+ *         for tcol in range(0, in_n, 24):
  */
       /*finally:*/ {
         /*normal exit:*/{
@@ -3543,28 +3547,28 @@ static PyObject *__pyx_pf_5skbio_5stats_8distance_7_cutils_10is_symmetric_and_ho
       }
   }
 
-  /* "skbio/stats/distance/_cutils.pyx":69
- *                        is_sym &= (testval==mat[col,row])
+  /* "skbio/stats/distance/_cutils.pyx":66
+ *                    is_hollow &= (mat[col,col]==0)
  * 
  *     return [(is_sym==True), (is_hollow==True)]             # <<<<<<<<<<<<<<
  * 
  * 
  */
   __Pyx_XDECREF(__pyx_r);
-  __pyx_t_16 = __Pyx_PyBool_FromLong((__pyx_v_is_sym == 1)); if (unlikely(!__pyx_t_16)) __PYX_ERR(0, 69, __pyx_L1_error)
-  __Pyx_GOTREF(__pyx_t_16);
-  __pyx_t_17 = __Pyx_PyBool_FromLong((__pyx_v_is_hollow == 1)); if (unlikely(!__pyx_t_17)) __PYX_ERR(0, 69, __pyx_L1_error)
-  __Pyx_GOTREF(__pyx_t_17);
-  __pyx_t_18 = PyList_New(2); if (unlikely(!__pyx_t_18)) __PYX_ERR(0, 69, __pyx_L1_error)
+  __pyx_t_18 = __Pyx_PyBool_FromLong((__pyx_v_is_sym == 1)); if (unlikely(!__pyx_t_18)) __PYX_ERR(0, 66, __pyx_L1_error)
   __Pyx_GOTREF(__pyx_t_18);
-  __Pyx_GIVEREF(__pyx_t_16);
-  PyList_SET_ITEM(__pyx_t_18, 0, __pyx_t_16);
-  __Pyx_GIVEREF(__pyx_t_17);
-  PyList_SET_ITEM(__pyx_t_18, 1, __pyx_t_17);
-  __pyx_t_16 = 0;
-  __pyx_t_17 = 0;
-  __pyx_r = __pyx_t_18;
+  __pyx_t_19 = __Pyx_PyBool_FromLong((__pyx_v_is_hollow == 1)); if (unlikely(!__pyx_t_19)) __PYX_ERR(0, 66, __pyx_L1_error)
+  __Pyx_GOTREF(__pyx_t_19);
+  __pyx_t_20 = PyList_New(2); if (unlikely(!__pyx_t_20)) __PYX_ERR(0, 66, __pyx_L1_error)
+  __Pyx_GOTREF(__pyx_t_20);
+  __Pyx_GIVEREF(__pyx_t_18);
+  PyList_SET_ITEM(__pyx_t_20, 0, __pyx_t_18);
+  __Pyx_GIVEREF(__pyx_t_19);
+  PyList_SET_ITEM(__pyx_t_20, 1, __pyx_t_19);
   __pyx_t_18 = 0;
+  __pyx_t_19 = 0;
+  __pyx_r = __pyx_t_20;
+  __pyx_t_20 = 0;
   goto __pyx_L0;
 
   /* "skbio/stats/distance/_cutils.pyx":22
@@ -3577,9 +3581,9 @@ static PyObject *__pyx_pf_5skbio_5stats_8distance_7_cutils_10is_symmetric_and_ho
 
   /* function exit code */
   __pyx_L1_error:;
-  __Pyx_XDECREF(__pyx_t_16);
-  __Pyx_XDECREF(__pyx_t_17);
   __Pyx_XDECREF(__pyx_t_18);
+  __Pyx_XDECREF(__pyx_t_19);
+  __Pyx_XDECREF(__pyx_t_20);
   __Pyx_AddTraceback("skbio.stats.distance._cutils.is_symmetric_and_hollow_cy", __pyx_clineno, __pyx_lineno, __pyx_filename);
   __pyx_r = NULL;
   __pyx_L0:;
@@ -3589,7 +3593,7 @@ static PyObject *__pyx_pf_5skbio_5stats_8distance_7_cutils_10is_symmetric_and_ho
   return __pyx_r;
 }
 
-/* "skbio/stats/distance/_cutils.pyx":74
+/* "skbio/stats/distance/_cutils.pyx":71
  * @cython.boundscheck(False)
  * @cython.wraparound(False)
  * def distmat_reorder_cy(TReal[:, ::1] in_mat, long[::1] reorder_vec,             # <<<<<<<<<<<<<<
@@ -3639,23 +3643,23 @@ static PyObject *__pyx_pw_5skbio_5stats_8distance_7_cutils_3distmat_reorder_cy(P
         case  1:
         if (likely((values[1] = __Pyx_PyDict_GetItemStr(__pyx_kwds, __pyx_n_s_args)) != 0)) kw_args--;
         else {
-          __Pyx_RaiseArgtupleInvalid("__pyx_fused_cpdef", 1, 4, 4, 1); __PYX_ERR(0, 74, __pyx_L3_error)
+          __Pyx_RaiseArgtupleInvalid("__pyx_fused_cpdef", 1, 4, 4, 1); __PYX_ERR(0, 71, __pyx_L3_error)
         }
         CYTHON_FALLTHROUGH;
         case  2:
         if (likely((values[2] = __Pyx_PyDict_GetItemStr(__pyx_kwds, __pyx_n_s_kwargs)) != 0)) kw_args--;
         else {
-          __Pyx_RaiseArgtupleInvalid("__pyx_fused_cpdef", 1, 4, 4, 2); __PYX_ERR(0, 74, __pyx_L3_error)
+          __Pyx_RaiseArgtupleInvalid("__pyx_fused_cpdef", 1, 4, 4, 2); __PYX_ERR(0, 71, __pyx_L3_error)
         }
         CYTHON_FALLTHROUGH;
         case  3:
         if (likely((values[3] = __Pyx_PyDict_GetItemStr(__pyx_kwds, __pyx_n_s_defaults)) != 0)) kw_args--;
         else {
-          __Pyx_RaiseArgtupleInvalid("__pyx_fused_cpdef", 1, 4, 4, 3); __PYX_ERR(0, 74, __pyx_L3_error)
+          __Pyx_RaiseArgtupleInvalid("__pyx_fused_cpdef", 1, 4, 4, 3); __PYX_ERR(0, 71, __pyx_L3_error)
         }
       }
       if (unlikely(kw_args > 0)) {
-        if (unlikely(__Pyx_ParseOptionalKeywords(__pyx_kwds, __pyx_pyargnames, 0, values, pos_args, "__pyx_fused_cpdef") < 0)) __PYX_ERR(0, 74, __pyx_L3_error)
+        if (unlikely(__Pyx_ParseOptionalKeywords(__pyx_kwds, __pyx_pyargnames, 0, values, pos_args, "__pyx_fused_cpdef") < 0)) __PYX_ERR(0, 71, __pyx_L3_error)
       }
     } else if (PyTuple_GET_SIZE(__pyx_args) != 4) {
       goto __pyx_L5_argtuple_error;
@@ -3672,7 +3676,7 @@ static PyObject *__pyx_pw_5skbio_5stats_8distance_7_cutils_3distmat_reorder_cy(P
   }
   goto __pyx_L4_argument_unpacking_done;
   __pyx_L5_argtuple_error:;
-  __Pyx_RaiseArgtupleInvalid("__pyx_fused_cpdef", 1, 4, 4, PyTuple_GET_SIZE(__pyx_args)); __PYX_ERR(0, 74, __pyx_L3_error)
+  __Pyx_RaiseArgtupleInvalid("__pyx_fused_cpdef", 1, 4, 4, PyTuple_GET_SIZE(__pyx_args)); __PYX_ERR(0, 71, __pyx_L3_error)
   __pyx_L3_error:;
   __Pyx_AddTraceback("skbio.stats.distance._cutils.__pyx_fused_cpdef", __pyx_clineno, __pyx_lineno, __pyx_filename);
   __Pyx_RefNannyFinishContext();
@@ -3726,7 +3730,7 @@ static PyObject *__pyx_pf_5skbio_5stats_8distance_7_cutils_2distmat_reorder_cy(C
   int __pyx_clineno = 0;
   __Pyx_RefNannySetupContext("distmat_reorder_cy", 0);
   __Pyx_INCREF(__pyx_v_kwargs);
-  __pyx_t_1 = PyList_New(1); if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 74, __pyx_L1_error)
+  __pyx_t_1 = PyList_New(1); if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 71, __pyx_L1_error)
   __Pyx_GOTREF(__pyx_t_1);
   __Pyx_INCREF(Py_None);
   __Pyx_GIVEREF(Py_None);
@@ -3740,7 +3744,7 @@ static PyObject *__pyx_pf_5skbio_5stats_8distance_7_cutils_2distmat_reorder_cy(C
     __pyx_t_2 = __pyx_t_4;
     goto __pyx_L4_bool_binop_done;
   }
-  __pyx_t_4 = __Pyx_PyObject_IsTrue(__pyx_v_kwargs); if (unlikely(__pyx_t_4 < 0)) __PYX_ERR(0, 74, __pyx_L1_error)
+  __pyx_t_4 = __Pyx_PyObject_IsTrue(__pyx_v_kwargs); if (unlikely(__pyx_t_4 < 0)) __PYX_ERR(0, 71, __pyx_L1_error)
   __pyx_t_3 = ((!__pyx_t_4) != 0);
   __pyx_t_2 = __pyx_t_3;
   __pyx_L4_bool_binop_done:;
@@ -3748,21 +3752,21 @@ static PyObject *__pyx_pf_5skbio_5stats_8distance_7_cutils_2distmat_reorder_cy(C
     __Pyx_INCREF(Py_None);
     __Pyx_DECREF_SET(__pyx_v_kwargs, Py_None);
   }
-  __pyx_t_1 = ((PyObject *)__Pyx_ImportNumPyArrayTypeIfAvailable()); if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 74, __pyx_L1_error)
+  __pyx_t_1 = ((PyObject *)__Pyx_ImportNumPyArrayTypeIfAvailable()); if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 71, __pyx_L1_error)
   __Pyx_GOTREF(__pyx_t_1);
   __pyx_v_ndarray = ((PyTypeObject*)__pyx_t_1);
   __pyx_t_1 = 0;
   __pyx_v_itemsize = -1L;
   if (unlikely(__pyx_v_args == Py_None)) {
     PyErr_SetString(PyExc_TypeError, "object of type 'NoneType' has no len()");
-    __PYX_ERR(0, 74, __pyx_L1_error)
+    __PYX_ERR(0, 71, __pyx_L1_error)
   }
-  __pyx_t_5 = PyTuple_GET_SIZE(((PyObject*)__pyx_v_args)); if (unlikely(__pyx_t_5 == ((Py_ssize_t)-1))) __PYX_ERR(0, 74, __pyx_L1_error)
+  __pyx_t_5 = PyTuple_GET_SIZE(((PyObject*)__pyx_v_args)); if (unlikely(__pyx_t_5 == ((Py_ssize_t)-1))) __PYX_ERR(0, 71, __pyx_L1_error)
   __pyx_t_2 = ((0 < __pyx_t_5) != 0);
   if (__pyx_t_2) {
     if (unlikely(__pyx_v_args == Py_None)) {
       PyErr_SetString(PyExc_TypeError, "'NoneType' object is not subscriptable");
-      __PYX_ERR(0, 74, __pyx_L1_error)
+      __PYX_ERR(0, 71, __pyx_L1_error)
     }
     __pyx_t_1 = PyTuple_GET_ITEM(((PyObject*)__pyx_v_args), 0);
     __Pyx_INCREF(__pyx_t_1);
@@ -3779,18 +3783,18 @@ static PyObject *__pyx_pf_5skbio_5stats_8distance_7_cutils_2distmat_reorder_cy(C
   }
   if (unlikely(__pyx_v_kwargs == Py_None)) {
     PyErr_SetString(PyExc_TypeError, "'NoneType' object is not iterable");
-    __PYX_ERR(0, 74, __pyx_L1_error)
+    __PYX_ERR(0, 71, __pyx_L1_error)
   }
-  __pyx_t_4 = (__Pyx_PyDict_ContainsTF(__pyx_n_s_in_mat, ((PyObject*)__pyx_v_kwargs), Py_EQ)); if (unlikely(__pyx_t_4 < 0)) __PYX_ERR(0, 74, __pyx_L1_error)
+  __pyx_t_4 = (__Pyx_PyDict_ContainsTF(__pyx_n_s_in_mat, ((PyObject*)__pyx_v_kwargs), Py_EQ)); if (unlikely(__pyx_t_4 < 0)) __PYX_ERR(0, 71, __pyx_L1_error)
   __pyx_t_3 = (__pyx_t_4 != 0);
   __pyx_t_2 = __pyx_t_3;
   __pyx_L7_bool_binop_done:;
   if (__pyx_t_2) {
     if (unlikely(__pyx_v_kwargs == Py_None)) {
       PyErr_SetString(PyExc_TypeError, "'NoneType' object is not subscriptable");
-      __PYX_ERR(0, 74, __pyx_L1_error)
+      __PYX_ERR(0, 71, __pyx_L1_error)
     }
-    __pyx_t_1 = __Pyx_PyDict_GetItem(((PyObject*)__pyx_v_kwargs), __pyx_n_s_in_mat); if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 74, __pyx_L1_error)
+    __pyx_t_1 = __Pyx_PyDict_GetItem(((PyObject*)__pyx_v_kwargs), __pyx_n_s_in_mat); if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 71, __pyx_L1_error)
     __Pyx_GOTREF(__pyx_t_1);
     __pyx_v_arg = __pyx_t_1;
     __pyx_t_1 = 0;
@@ -3799,12 +3803,12 @@ static PyObject *__pyx_pf_5skbio_5stats_8distance_7_cutils_2distmat_reorder_cy(C
   /*else*/ {
     if (unlikely(__pyx_v_args == Py_None)) {
       PyErr_SetString(PyExc_TypeError, "object of type 'NoneType' has no len()");
-      __PYX_ERR(0, 74, __pyx_L1_error)
+      __PYX_ERR(0, 71, __pyx_L1_error)
     }
-    __pyx_t_5 = PyTuple_GET_SIZE(((PyObject*)__pyx_v_args)); if (unlikely(__pyx_t_5 == ((Py_ssize_t)-1))) __PYX_ERR(0, 74, __pyx_L1_error)
-    __pyx_t_1 = PyInt_FromSsize_t(__pyx_t_5); if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 74, __pyx_L1_error)
+    __pyx_t_5 = PyTuple_GET_SIZE(((PyObject*)__pyx_v_args)); if (unlikely(__pyx_t_5 == ((Py_ssize_t)-1))) __PYX_ERR(0, 71, __pyx_L1_error)
+    __pyx_t_1 = PyInt_FromSsize_t(__pyx_t_5); if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 71, __pyx_L1_error)
     __Pyx_GOTREF(__pyx_t_1);
-    __pyx_t_6 = PyTuple_New(3); if (unlikely(!__pyx_t_6)) __PYX_ERR(0, 74, __pyx_L1_error)
+    __pyx_t_6 = PyTuple_New(3); if (unlikely(!__pyx_t_6)) __PYX_ERR(0, 71, __pyx_L1_error)
     __Pyx_GOTREF(__pyx_t_6);
     __Pyx_INCREF(__pyx_int_3);
     __Pyx_GIVEREF(__pyx_int_3);
@@ -3815,15 +3819,15 @@ static PyObject *__pyx_pf_5skbio_5stats_8distance_7_cutils_2distmat_reorder_cy(C
     __Pyx_GIVEREF(__pyx_t_1);
     PyTuple_SET_ITEM(__pyx_t_6, 2, __pyx_t_1);
     __pyx_t_1 = 0;
-    __pyx_t_1 = __Pyx_PyString_Format(__pyx_kp_s_Expected_at_least_d_argument_s_g, __pyx_t_6); if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 74, __pyx_L1_error)
+    __pyx_t_1 = __Pyx_PyString_Format(__pyx_kp_s_Expected_at_least_d_argument_s_g, __pyx_t_6); if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 71, __pyx_L1_error)
     __Pyx_GOTREF(__pyx_t_1);
     __Pyx_DECREF(__pyx_t_6); __pyx_t_6 = 0;
-    __pyx_t_6 = __Pyx_PyObject_CallOneArg(__pyx_builtin_TypeError, __pyx_t_1); if (unlikely(!__pyx_t_6)) __PYX_ERR(0, 74, __pyx_L1_error)
+    __pyx_t_6 = __Pyx_PyObject_CallOneArg(__pyx_builtin_TypeError, __pyx_t_1); if (unlikely(!__pyx_t_6)) __PYX_ERR(0, 71, __pyx_L1_error)
     __Pyx_GOTREF(__pyx_t_6);
     __Pyx_DECREF(__pyx_t_1); __pyx_t_1 = 0;
     __Pyx_Raise(__pyx_t_6, 0, 0, 0);
     __Pyx_DECREF(__pyx_t_6); __pyx_t_6 = 0;
-    __PYX_ERR(0, 74, __pyx_L1_error)
+    __PYX_ERR(0, 71, __pyx_L1_error)
   }
   __pyx_L6:;
   while (1) {
@@ -3833,7 +3837,7 @@ static PyObject *__pyx_pf_5skbio_5stats_8distance_7_cutils_2distmat_reorder_cy(C
       __pyx_t_3 = __Pyx_TypeCheck(__pyx_v_arg, __pyx_v_ndarray); 
       __pyx_t_2 = (__pyx_t_3 != 0);
       if (__pyx_t_2) {
-        __pyx_t_6 = __Pyx_PyObject_GetAttrStr(__pyx_v_arg, __pyx_n_s_dtype); if (unlikely(!__pyx_t_6)) __PYX_ERR(0, 74, __pyx_L1_error)
+        __pyx_t_6 = __Pyx_PyObject_GetAttrStr(__pyx_v_arg, __pyx_n_s_dtype); if (unlikely(!__pyx_t_6)) __PYX_ERR(0, 71, __pyx_L1_error)
         __Pyx_GOTREF(__pyx_t_6);
         __pyx_v_dtype = __pyx_t_6;
         __pyx_t_6 = 0;
@@ -3842,14 +3846,14 @@ static PyObject *__pyx_pf_5skbio_5stats_8distance_7_cutils_2distmat_reorder_cy(C
       __pyx_t_2 = __pyx_memoryview_check(__pyx_v_arg); 
       __pyx_t_3 = (__pyx_t_2 != 0);
       if (__pyx_t_3) {
-        __pyx_t_6 = __Pyx_PyObject_GetAttrStr(__pyx_v_arg, __pyx_n_s_base); if (unlikely(!__pyx_t_6)) __PYX_ERR(0, 74, __pyx_L1_error)
+        __pyx_t_6 = __Pyx_PyObject_GetAttrStr(__pyx_v_arg, __pyx_n_s_base); if (unlikely(!__pyx_t_6)) __PYX_ERR(0, 71, __pyx_L1_error)
         __Pyx_GOTREF(__pyx_t_6);
         __pyx_v_arg_base = __pyx_t_6;
         __pyx_t_6 = 0;
         __pyx_t_3 = __Pyx_TypeCheck(__pyx_v_arg_base, __pyx_v_ndarray); 
         __pyx_t_2 = (__pyx_t_3 != 0);
         if (__pyx_t_2) {
-          __pyx_t_6 = __Pyx_PyObject_GetAttrStr(__pyx_v_arg_base, __pyx_n_s_dtype); if (unlikely(!__pyx_t_6)) __PYX_ERR(0, 74, __pyx_L1_error)
+          __pyx_t_6 = __Pyx_PyObject_GetAttrStr(__pyx_v_arg_base, __pyx_n_s_dtype); if (unlikely(!__pyx_t_6)) __PYX_ERR(0, 71, __pyx_L1_error)
           __Pyx_GOTREF(__pyx_t_6);
           __pyx_v_dtype = __pyx_t_6;
           __pyx_t_6 = 0;
@@ -3871,14 +3875,14 @@ static PyObject *__pyx_pf_5skbio_5stats_8distance_7_cutils_2distmat_reorder_cy(C
       __pyx_t_2 = (__pyx_v_dtype != Py_None);
       __pyx_t_3 = (__pyx_t_2 != 0);
       if (__pyx_t_3) {
-        __pyx_t_6 = __Pyx_PyObject_GetAttrStr(__pyx_v_dtype, __pyx_n_s_itemsize); if (unlikely(!__pyx_t_6)) __PYX_ERR(0, 74, __pyx_L1_error)
+        __pyx_t_6 = __Pyx_PyObject_GetAttrStr(__pyx_v_dtype, __pyx_n_s_itemsize); if (unlikely(!__pyx_t_6)) __PYX_ERR(0, 71, __pyx_L1_error)
         __Pyx_GOTREF(__pyx_t_6);
-        __pyx_t_5 = __Pyx_PyIndex_AsSsize_t(__pyx_t_6); if (unlikely((__pyx_t_5 == (Py_ssize_t)-1) && PyErr_Occurred())) __PYX_ERR(0, 74, __pyx_L1_error)
+        __pyx_t_5 = __Pyx_PyIndex_AsSsize_t(__pyx_t_6); if (unlikely((__pyx_t_5 == (Py_ssize_t)-1) && PyErr_Occurred())) __PYX_ERR(0, 71, __pyx_L1_error)
         __Pyx_DECREF(__pyx_t_6); __pyx_t_6 = 0;
         __pyx_v_itemsize = __pyx_t_5;
-        __pyx_t_6 = __Pyx_PyObject_GetAttrStr(__pyx_v_dtype, __pyx_n_s_kind); if (unlikely(!__pyx_t_6)) __PYX_ERR(0, 74, __pyx_L1_error)
+        __pyx_t_6 = __Pyx_PyObject_GetAttrStr(__pyx_v_dtype, __pyx_n_s_kind); if (unlikely(!__pyx_t_6)) __PYX_ERR(0, 71, __pyx_L1_error)
         __Pyx_GOTREF(__pyx_t_6);
-        __pyx_t_7 = __Pyx_PyObject_Ord(__pyx_t_6); if (unlikely(__pyx_t_7 == ((long)(long)(Py_UCS4)-1))) __PYX_ERR(0, 74, __pyx_L1_error)
+        __pyx_t_7 = __Pyx_PyObject_Ord(__pyx_t_6); if (unlikely(__pyx_t_7 == ((long)(long)(Py_UCS4)-1))) __PYX_ERR(0, 71, __pyx_L1_error)
         __Pyx_DECREF(__pyx_t_6); __pyx_t_6 = 0;
         __pyx_v_kind = __pyx_t_7;
         __pyx_v_dtype_signed = (__pyx_v_kind == 'i');
@@ -3893,15 +3897,15 @@ static PyObject *__pyx_pf_5skbio_5stats_8distance_7_cutils_2distmat_reorder_cy(C
             __pyx_t_3 = __pyx_t_2;
             goto __pyx_L16_bool_binop_done;
           }
-          __pyx_t_6 = __Pyx_PyObject_GetAttrStr(__pyx_v_arg, __pyx_n_s_ndim); if (unlikely(!__pyx_t_6)) __PYX_ERR(0, 74, __pyx_L1_error)
+          __pyx_t_6 = __Pyx_PyObject_GetAttrStr(__pyx_v_arg, __pyx_n_s_ndim); if (unlikely(!__pyx_t_6)) __PYX_ERR(0, 71, __pyx_L1_error)
           __Pyx_GOTREF(__pyx_t_6);
-          __pyx_t_5 = __Pyx_PyIndex_AsSsize_t(__pyx_t_6); if (unlikely((__pyx_t_5 == (Py_ssize_t)-1) && PyErr_Occurred())) __PYX_ERR(0, 74, __pyx_L1_error)
+          __pyx_t_5 = __Pyx_PyIndex_AsSsize_t(__pyx_t_6); if (unlikely((__pyx_t_5 == (Py_ssize_t)-1) && PyErr_Occurred())) __PYX_ERR(0, 71, __pyx_L1_error)
           __Pyx_DECREF(__pyx_t_6); __pyx_t_6 = 0;
           __pyx_t_2 = ((((Py_ssize_t)__pyx_t_5) == 2) != 0);
           __pyx_t_3 = __pyx_t_2;
           __pyx_L16_bool_binop_done:;
           if (__pyx_t_3) {
-            if (unlikely(__Pyx_SetItemInt(__pyx_v_dest_sig, 0, __pyx_n_s_float, long, 1, __Pyx_PyInt_From_long, 1, 0, 0) < 0)) __PYX_ERR(0, 74, __pyx_L1_error)
+            if (unlikely(__Pyx_SetItemInt(__pyx_v_dest_sig, 0, __pyx_n_s_float, long, 1, __Pyx_PyInt_From_long, 1, 0, 0) < 0)) __PYX_ERR(0, 71, __pyx_L1_error)
             goto __pyx_L10_break;
           }
           __pyx_t_2 = (((sizeof(double)) == __pyx_v_itemsize) != 0);
@@ -3910,15 +3914,15 @@ static PyObject *__pyx_pf_5skbio_5stats_8distance_7_cutils_2distmat_reorder_cy(C
             __pyx_t_3 = __pyx_t_2;
             goto __pyx_L19_bool_binop_done;
           }
-          __pyx_t_6 = __Pyx_PyObject_GetAttrStr(__pyx_v_arg, __pyx_n_s_ndim); if (unlikely(!__pyx_t_6)) __PYX_ERR(0, 74, __pyx_L1_error)
+          __pyx_t_6 = __Pyx_PyObject_GetAttrStr(__pyx_v_arg, __pyx_n_s_ndim); if (unlikely(!__pyx_t_6)) __PYX_ERR(0, 71, __pyx_L1_error)
           __Pyx_GOTREF(__pyx_t_6);
-          __pyx_t_5 = __Pyx_PyIndex_AsSsize_t(__pyx_t_6); if (unlikely((__pyx_t_5 == (Py_ssize_t)-1) && PyErr_Occurred())) __PYX_ERR(0, 74, __pyx_L1_error)
+          __pyx_t_5 = __Pyx_PyIndex_AsSsize_t(__pyx_t_6); if (unlikely((__pyx_t_5 == (Py_ssize_t)-1) && PyErr_Occurred())) __PYX_ERR(0, 71, __pyx_L1_error)
           __Pyx_DECREF(__pyx_t_6); __pyx_t_6 = 0;
           __pyx_t_2 = ((((Py_ssize_t)__pyx_t_5) == 2) != 0);
           __pyx_t_3 = __pyx_t_2;
           __pyx_L19_bool_binop_done:;
           if (__pyx_t_3) {
-            if (unlikely(__Pyx_SetItemInt(__pyx_v_dest_sig, 0, __pyx_n_s_double, long, 1, __Pyx_PyInt_From_long, 1, 0, 0) < 0)) __PYX_ERR(0, 74, __pyx_L1_error)
+            if (unlikely(__Pyx_SetItemInt(__pyx_v_dest_sig, 0, __pyx_n_s_double, long, 1, __Pyx_PyInt_From_long, 1, 0, 0) < 0)) __PYX_ERR(0, 71, __pyx_L1_error)
             goto __pyx_L10_break;
           }
           break;
@@ -3945,7 +3949,7 @@ static PyObject *__pyx_pf_5skbio_5stats_8distance_7_cutils_2distmat_reorder_cy(C
       __pyx_t_3 = (__pyx_v_memslice.memview != 0);
       if (__pyx_t_3) {
         __PYX_XDEC_MEMVIEW((&__pyx_v_memslice), 1); 
-        if (unlikely(__Pyx_SetItemInt(__pyx_v_dest_sig, 0, __pyx_n_s_float, long, 1, __Pyx_PyInt_From_long, 1, 0, 0) < 0)) __PYX_ERR(0, 74, __pyx_L1_error)
+        if (unlikely(__Pyx_SetItemInt(__pyx_v_dest_sig, 0, __pyx_n_s_float, long, 1, __Pyx_PyInt_From_long, 1, 0, 0) < 0)) __PYX_ERR(0, 71, __pyx_L1_error)
         goto __pyx_L10_break;
       }
       /*else*/ {
@@ -3967,27 +3971,27 @@ static PyObject *__pyx_pf_5skbio_5stats_8distance_7_cutils_2distmat_reorder_cy(C
       __pyx_t_3 = (__pyx_v_memslice.memview != 0);
       if (__pyx_t_3) {
         __PYX_XDEC_MEMVIEW((&__pyx_v_memslice), 1); 
-        if (unlikely(__Pyx_SetItemInt(__pyx_v_dest_sig, 0, __pyx_n_s_double, long, 1, __Pyx_PyInt_From_long, 1, 0, 0) < 0)) __PYX_ERR(0, 74, __pyx_L1_error)
+        if (unlikely(__Pyx_SetItemInt(__pyx_v_dest_sig, 0, __pyx_n_s_double, long, 1, __Pyx_PyInt_From_long, 1, 0, 0) < 0)) __PYX_ERR(0, 71, __pyx_L1_error)
         goto __pyx_L10_break;
       }
       /*else*/ {
         PyErr_Clear(); 
       }
     }
-    if (unlikely(__Pyx_SetItemInt(__pyx_v_dest_sig, 0, Py_None, long, 1, __Pyx_PyInt_From_long, 1, 0, 0) < 0)) __PYX_ERR(0, 74, __pyx_L1_error)
+    if (unlikely(__Pyx_SetItemInt(__pyx_v_dest_sig, 0, Py_None, long, 1, __Pyx_PyInt_From_long, 1, 0, 0) < 0)) __PYX_ERR(0, 71, __pyx_L1_error)
     goto __pyx_L10_break;
   }
   __pyx_L10_break:;
-  __pyx_t_6 = PyList_New(0); if (unlikely(!__pyx_t_6)) __PYX_ERR(0, 74, __pyx_L1_error)
+  __pyx_t_6 = PyList_New(0); if (unlikely(!__pyx_t_6)) __PYX_ERR(0, 71, __pyx_L1_error)
   __Pyx_GOTREF(__pyx_t_6);
   __pyx_v_candidates = ((PyObject*)__pyx_t_6);
   __pyx_t_6 = 0;
   __pyx_t_5 = 0;
   if (unlikely(__pyx_v_signatures == Py_None)) {
     PyErr_SetString(PyExc_TypeError, "'NoneType' object is not iterable");
-    __PYX_ERR(0, 74, __pyx_L1_error)
+    __PYX_ERR(0, 71, __pyx_L1_error)
   }
-  __pyx_t_1 = __Pyx_dict_iterator(((PyObject*)__pyx_v_signatures), 1, ((PyObject *)NULL), (&__pyx_t_9), (&__pyx_t_10)); if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 74, __pyx_L1_error)
+  __pyx_t_1 = __Pyx_dict_iterator(((PyObject*)__pyx_v_signatures), 1, ((PyObject *)NULL), (&__pyx_t_9), (&__pyx_t_10)); if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 71, __pyx_L1_error)
   __Pyx_GOTREF(__pyx_t_1);
   __Pyx_XDECREF(__pyx_t_6);
   __pyx_t_6 = __pyx_t_1;
@@ -3995,12 +3999,12 @@ static PyObject *__pyx_pf_5skbio_5stats_8distance_7_cutils_2distmat_reorder_cy(C
   while (1) {
     __pyx_t_11 = __Pyx_dict_iter_next(__pyx_t_6, __pyx_t_9, &__pyx_t_5, &__pyx_t_1, NULL, NULL, __pyx_t_10);
     if (unlikely(__pyx_t_11 == 0)) break;
-    if (unlikely(__pyx_t_11 == -1)) __PYX_ERR(0, 74, __pyx_L1_error)
+    if (unlikely(__pyx_t_11 == -1)) __PYX_ERR(0, 71, __pyx_L1_error)
     __Pyx_GOTREF(__pyx_t_1);
     __Pyx_XDECREF_SET(__pyx_v_sig, __pyx_t_1);
     __pyx_t_1 = 0;
     __pyx_v_match_found = 0;
-    __pyx_t_13 = __Pyx_PyObject_GetAttrStr(__pyx_v_sig, __pyx_n_s_strip); if (unlikely(!__pyx_t_13)) __PYX_ERR(0, 74, __pyx_L1_error)
+    __pyx_t_13 = __Pyx_PyObject_GetAttrStr(__pyx_v_sig, __pyx_n_s_strip); if (unlikely(!__pyx_t_13)) __PYX_ERR(0, 71, __pyx_L1_error)
     __Pyx_GOTREF(__pyx_t_13);
     __pyx_t_14 = NULL;
     if (CYTHON_UNPACK_METHODS && likely(PyMethod_Check(__pyx_t_13))) {
@@ -4014,10 +4018,10 @@ static PyObject *__pyx_pf_5skbio_5stats_8distance_7_cutils_2distmat_reorder_cy(C
     }
     __pyx_t_12 = (__pyx_t_14) ? __Pyx_PyObject_Call2Args(__pyx_t_13, __pyx_t_14, __pyx_kp_s__2) : __Pyx_PyObject_CallOneArg(__pyx_t_13, __pyx_kp_s__2);
     __Pyx_XDECREF(__pyx_t_14); __pyx_t_14 = 0;
-    if (unlikely(!__pyx_t_12)) __PYX_ERR(0, 74, __pyx_L1_error)
+    if (unlikely(!__pyx_t_12)) __PYX_ERR(0, 71, __pyx_L1_error)
     __Pyx_GOTREF(__pyx_t_12);
     __Pyx_DECREF(__pyx_t_13); __pyx_t_13 = 0;
-    __pyx_t_13 = __Pyx_PyObject_GetAttrStr(__pyx_t_12, __pyx_n_s_split); if (unlikely(!__pyx_t_13)) __PYX_ERR(0, 74, __pyx_L1_error)
+    __pyx_t_13 = __Pyx_PyObject_GetAttrStr(__pyx_t_12, __pyx_n_s_split); if (unlikely(!__pyx_t_13)) __PYX_ERR(0, 71, __pyx_L1_error)
     __Pyx_GOTREF(__pyx_t_13);
     __Pyx_DECREF(__pyx_t_12); __pyx_t_12 = 0;
     __pyx_t_12 = NULL;
@@ -4032,12 +4036,12 @@ static PyObject *__pyx_pf_5skbio_5stats_8distance_7_cutils_2distmat_reorder_cy(C
     }
     __pyx_t_1 = (__pyx_t_12) ? __Pyx_PyObject_Call2Args(__pyx_t_13, __pyx_t_12, __pyx_kp_s__3) : __Pyx_PyObject_CallOneArg(__pyx_t_13, __pyx_kp_s__3);
     __Pyx_XDECREF(__pyx_t_12); __pyx_t_12 = 0;
-    if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 74, __pyx_L1_error)
+    if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 71, __pyx_L1_error)
     __Pyx_GOTREF(__pyx_t_1);
     __Pyx_DECREF(__pyx_t_13); __pyx_t_13 = 0;
     __Pyx_XDECREF_SET(__pyx_v_src_sig, __pyx_t_1);
     __pyx_t_1 = 0;
-    __pyx_t_15 = PyList_GET_SIZE(__pyx_v_dest_sig); if (unlikely(__pyx_t_15 == ((Py_ssize_t)-1))) __PYX_ERR(0, 74, __pyx_L1_error)
+    __pyx_t_15 = PyList_GET_SIZE(__pyx_v_dest_sig); if (unlikely(__pyx_t_15 == ((Py_ssize_t)-1))) __PYX_ERR(0, 71, __pyx_L1_error)
     __pyx_t_16 = __pyx_t_15;
     for (__pyx_t_17 = 0; __pyx_t_17 < __pyx_t_16; __pyx_t_17+=1) {
       __pyx_v_i = __pyx_t_17;
@@ -4048,11 +4052,11 @@ static PyObject *__pyx_pf_5skbio_5stats_8distance_7_cutils_2distmat_reorder_cy(C
       __pyx_t_3 = (__pyx_v_dst_type != Py_None);
       __pyx_t_2 = (__pyx_t_3 != 0);
       if (__pyx_t_2) {
-        __pyx_t_1 = __Pyx_GetItemInt(__pyx_v_src_sig, __pyx_v_i, Py_ssize_t, 1, PyInt_FromSsize_t, 0, 0, 0); if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 74, __pyx_L1_error)
+        __pyx_t_1 = __Pyx_GetItemInt(__pyx_v_src_sig, __pyx_v_i, Py_ssize_t, 1, PyInt_FromSsize_t, 0, 0, 0); if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 71, __pyx_L1_error)
         __Pyx_GOTREF(__pyx_t_1);
-        __pyx_t_13 = PyObject_RichCompare(__pyx_t_1, __pyx_v_dst_type, Py_EQ); __Pyx_XGOTREF(__pyx_t_13); if (unlikely(!__pyx_t_13)) __PYX_ERR(0, 74, __pyx_L1_error)
+        __pyx_t_13 = PyObject_RichCompare(__pyx_t_1, __pyx_v_dst_type, Py_EQ); __Pyx_XGOTREF(__pyx_t_13); if (unlikely(!__pyx_t_13)) __PYX_ERR(0, 71, __pyx_L1_error)
         __Pyx_DECREF(__pyx_t_1); __pyx_t_1 = 0;
-        __pyx_t_2 = __Pyx_PyObject_IsTrue(__pyx_t_13); if (unlikely(__pyx_t_2 < 0)) __PYX_ERR(0, 74, __pyx_L1_error)
+        __pyx_t_2 = __Pyx_PyObject_IsTrue(__pyx_t_13); if (unlikely(__pyx_t_2 < 0)) __PYX_ERR(0, 71, __pyx_L1_error)
         __Pyx_DECREF(__pyx_t_13); __pyx_t_13 = 0;
         if (__pyx_t_2) {
           __pyx_v_match_found = 1;
@@ -4068,35 +4072,35 @@ static PyObject *__pyx_pf_5skbio_5stats_8distance_7_cutils_2distmat_reorder_cy(C
     __pyx_L32_break:;
     __pyx_t_2 = (__pyx_v_match_found != 0);
     if (__pyx_t_2) {
-      __pyx_t_18 = __Pyx_PyList_Append(__pyx_v_candidates, __pyx_v_sig); if (unlikely(__pyx_t_18 == ((int)-1))) __PYX_ERR(0, 74, __pyx_L1_error)
+      __pyx_t_18 = __Pyx_PyList_Append(__pyx_v_candidates, __pyx_v_sig); if (unlikely(__pyx_t_18 == ((int)-1))) __PYX_ERR(0, 71, __pyx_L1_error)
     }
   }
   __Pyx_DECREF(__pyx_t_6); __pyx_t_6 = 0;
   __pyx_t_2 = (PyList_GET_SIZE(__pyx_v_candidates) != 0);
   __pyx_t_3 = ((!__pyx_t_2) != 0);
   if (__pyx_t_3) {
-    __pyx_t_6 = __Pyx_PyObject_Call(__pyx_builtin_TypeError, __pyx_tuple__4, NULL); if (unlikely(!__pyx_t_6)) __PYX_ERR(0, 74, __pyx_L1_error)
+    __pyx_t_6 = __Pyx_PyObject_Call(__pyx_builtin_TypeError, __pyx_tuple__4, NULL); if (unlikely(!__pyx_t_6)) __PYX_ERR(0, 71, __pyx_L1_error)
     __Pyx_GOTREF(__pyx_t_6);
     __Pyx_Raise(__pyx_t_6, 0, 0, 0);
     __Pyx_DECREF(__pyx_t_6); __pyx_t_6 = 0;
-    __PYX_ERR(0, 74, __pyx_L1_error)
+    __PYX_ERR(0, 71, __pyx_L1_error)
   }
-  __pyx_t_9 = PyList_GET_SIZE(__pyx_v_candidates); if (unlikely(__pyx_t_9 == ((Py_ssize_t)-1))) __PYX_ERR(0, 74, __pyx_L1_error)
+  __pyx_t_9 = PyList_GET_SIZE(__pyx_v_candidates); if (unlikely(__pyx_t_9 == ((Py_ssize_t)-1))) __PYX_ERR(0, 71, __pyx_L1_error)
   __pyx_t_3 = ((__pyx_t_9 > 1) != 0);
   if (__pyx_t_3) {
-    __pyx_t_6 = __Pyx_PyObject_Call(__pyx_builtin_TypeError, __pyx_tuple__5, NULL); if (unlikely(!__pyx_t_6)) __PYX_ERR(0, 74, __pyx_L1_error)
+    __pyx_t_6 = __Pyx_PyObject_Call(__pyx_builtin_TypeError, __pyx_tuple__5, NULL); if (unlikely(!__pyx_t_6)) __PYX_ERR(0, 71, __pyx_L1_error)
     __Pyx_GOTREF(__pyx_t_6);
     __Pyx_Raise(__pyx_t_6, 0, 0, 0);
     __Pyx_DECREF(__pyx_t_6); __pyx_t_6 = 0;
-    __PYX_ERR(0, 74, __pyx_L1_error)
+    __PYX_ERR(0, 71, __pyx_L1_error)
   }
   /*else*/ {
     __Pyx_XDECREF(__pyx_r);
     if (unlikely(__pyx_v_signatures == Py_None)) {
       PyErr_SetString(PyExc_TypeError, "'NoneType' object is not subscriptable");
-      __PYX_ERR(0, 74, __pyx_L1_error)
+      __PYX_ERR(0, 71, __pyx_L1_error)
     }
-    __pyx_t_6 = __Pyx_PyDict_GetItem(((PyObject*)__pyx_v_signatures), PyList_GET_ITEM(__pyx_v_candidates, 0)); if (unlikely(!__pyx_t_6)) __PYX_ERR(0, 74, __pyx_L1_error)
+    __pyx_t_6 = __Pyx_PyDict_GetItem(((PyObject*)__pyx_v_signatures), PyList_GET_ITEM(__pyx_v_candidates, 0)); if (unlikely(!__pyx_t_6)) __PYX_ERR(0, 71, __pyx_L1_error)
     __Pyx_GOTREF(__pyx_t_6);
     __pyx_r = __pyx_t_6;
     __pyx_t_6 = 0;
@@ -4166,17 +4170,17 @@ static PyObject *__pyx_fuse_0__pyx_pw_5skbio_5stats_8distance_7_cutils_15distmat
         case  1:
         if (likely((values[1] = __Pyx_PyDict_GetItemStr(__pyx_kwds, __pyx_n_s_reorder_vec)) != 0)) kw_args--;
         else {
-          __Pyx_RaiseArgtupleInvalid("distmat_reorder_cy", 1, 3, 3, 1); __PYX_ERR(0, 74, __pyx_L3_error)
+          __Pyx_RaiseArgtupleInvalid("distmat_reorder_cy", 1, 3, 3, 1); __PYX_ERR(0, 71, __pyx_L3_error)
         }
         CYTHON_FALLTHROUGH;
         case  2:
         if (likely((values[2] = __Pyx_PyDict_GetItemStr(__pyx_kwds, __pyx_n_s_out_mat)) != 0)) kw_args--;
         else {
-          __Pyx_RaiseArgtupleInvalid("distmat_reorder_cy", 1, 3, 3, 2); __PYX_ERR(0, 74, __pyx_L3_error)
+          __Pyx_RaiseArgtupleInvalid("distmat_reorder_cy", 1, 3, 3, 2); __PYX_ERR(0, 71, __pyx_L3_error)
         }
       }
       if (unlikely(kw_args > 0)) {
-        if (unlikely(__Pyx_ParseOptionalKeywords(__pyx_kwds, __pyx_pyargnames, 0, values, pos_args, "distmat_reorder_cy") < 0)) __PYX_ERR(0, 74, __pyx_L3_error)
+        if (unlikely(__Pyx_ParseOptionalKeywords(__pyx_kwds, __pyx_pyargnames, 0, values, pos_args, "distmat_reorder_cy") < 0)) __PYX_ERR(0, 71, __pyx_L3_error)
       }
     } else if (PyTuple_GET_SIZE(__pyx_args) != 3) {
       goto __pyx_L5_argtuple_error;
@@ -4185,13 +4189,13 @@ static PyObject *__pyx_fuse_0__pyx_pw_5skbio_5stats_8distance_7_cutils_15distmat
       values[1] = PyTuple_GET_ITEM(__pyx_args, 1);
       values[2] = PyTuple_GET_ITEM(__pyx_args, 2);
     }
-    __pyx_v_in_mat = __Pyx_PyObject_to_MemoryviewSlice_d_dc_float(values[0], PyBUF_WRITABLE); if (unlikely(!__pyx_v_in_mat.memview)) __PYX_ERR(0, 74, __pyx_L3_error)
-    __pyx_v_reorder_vec = __Pyx_PyObject_to_MemoryviewSlice_dc_long(values[1], PyBUF_WRITABLE); if (unlikely(!__pyx_v_reorder_vec.memview)) __PYX_ERR(0, 74, __pyx_L3_error)
-    __pyx_v_out_mat = __Pyx_PyObject_to_MemoryviewSlice_d_dc_float(values[2], PyBUF_WRITABLE); if (unlikely(!__pyx_v_out_mat.memview)) __PYX_ERR(0, 75, __pyx_L3_error)
+    __pyx_v_in_mat = __Pyx_PyObject_to_MemoryviewSlice_d_dc_float(values[0], PyBUF_WRITABLE); if (unlikely(!__pyx_v_in_mat.memview)) __PYX_ERR(0, 71, __pyx_L3_error)
+    __pyx_v_reorder_vec = __Pyx_PyObject_to_MemoryviewSlice_dc_long(values[1], PyBUF_WRITABLE); if (unlikely(!__pyx_v_reorder_vec.memview)) __PYX_ERR(0, 71, __pyx_L3_error)
+    __pyx_v_out_mat = __Pyx_PyObject_to_MemoryviewSlice_d_dc_float(values[2], PyBUF_WRITABLE); if (unlikely(!__pyx_v_out_mat.memview)) __PYX_ERR(0, 72, __pyx_L3_error)
   }
   goto __pyx_L4_argument_unpacking_done;
   __pyx_L5_argtuple_error:;
-  __Pyx_RaiseArgtupleInvalid("distmat_reorder_cy", 1, 3, 3, PyTuple_GET_SIZE(__pyx_args)); __PYX_ERR(0, 74, __pyx_L3_error)
+  __Pyx_RaiseArgtupleInvalid("distmat_reorder_cy", 1, 3, 3, PyTuple_GET_SIZE(__pyx_args)); __PYX_ERR(0, 71, __pyx_L3_error)
   __pyx_L3_error:;
   __Pyx_AddTraceback("skbio.stats.distance._cutils.distmat_reorder_cy", __pyx_clineno, __pyx_lineno, __pyx_filename);
   __Pyx_RefNannyFinishContext();
@@ -4231,7 +4235,7 @@ static PyObject *__pyx_pf_5skbio_5stats_8distance_7_cutils_14distmat_reorder_cy(
   int __pyx_clineno = 0;
   __Pyx_RefNannySetupContext("__pyx_fuse_0distmat_reorder_cy", 0);
 
-  /* "skbio/stats/distance/_cutils.pyx":106
+  /* "skbio/stats/distance/_cutils.pyx":103
  *         Output, Distance matrix, must be same size as reorder_vec
  *     """
  *     cdef Py_ssize_t in_n = in_mat.shape[0]             # <<<<<<<<<<<<<<
@@ -4240,7 +4244,7 @@ static PyObject *__pyx_pf_5skbio_5stats_8distance_7_cutils_14distmat_reorder_cy(
  */
   __pyx_v_in_n = (__pyx_v_in_mat.shape[0]);
 
-  /* "skbio/stats/distance/_cutils.pyx":107
+  /* "skbio/stats/distance/_cutils.pyx":104
  *     """
  *     cdef Py_ssize_t in_n = in_mat.shape[0]
  *     cdef Py_ssize_t in2 = in_mat.shape[1]             # <<<<<<<<<<<<<<
@@ -4249,7 +4253,7 @@ static PyObject *__pyx_pf_5skbio_5stats_8distance_7_cutils_14distmat_reorder_cy(
  */
   __pyx_v_in2 = (__pyx_v_in_mat.shape[1]);
 
-  /* "skbio/stats/distance/_cutils.pyx":108
+  /* "skbio/stats/distance/_cutils.pyx":105
  *     cdef Py_ssize_t in_n = in_mat.shape[0]
  *     cdef Py_ssize_t in2 = in_mat.shape[1]
  *     cdef Py_ssize_t out_n = reorder_vec.shape[0]             # <<<<<<<<<<<<<<
@@ -4258,7 +4262,7 @@ static PyObject *__pyx_pf_5skbio_5stats_8distance_7_cutils_14distmat_reorder_cy(
  */
   __pyx_v_out_n = (__pyx_v_reorder_vec.shape[0]);
 
-  /* "skbio/stats/distance/_cutils.pyx":109
+  /* "skbio/stats/distance/_cutils.pyx":106
  *     cdef Py_ssize_t in2 = in_mat.shape[1]
  *     cdef Py_ssize_t out_n = reorder_vec.shape[0]
  *     cdef Py_ssize_t on2 = out_mat.shape[0]             # <<<<<<<<<<<<<<
@@ -4267,7 +4271,7 @@ static PyObject *__pyx_pf_5skbio_5stats_8distance_7_cutils_14distmat_reorder_cy(
  */
   __pyx_v_on2 = (__pyx_v_out_mat.shape[0]);
 
-  /* "skbio/stats/distance/_cutils.pyx":110
+  /* "skbio/stats/distance/_cutils.pyx":107
  *     cdef Py_ssize_t out_n = reorder_vec.shape[0]
  *     cdef Py_ssize_t on2 = out_mat.shape[0]
  *     cdef Py_ssize_t on3 = out_mat.shape[1]             # <<<<<<<<<<<<<<
@@ -4276,7 +4280,7 @@ static PyObject *__pyx_pf_5skbio_5stats_8distance_7_cutils_14distmat_reorder_cy(
  */
   __pyx_v_on3 = (__pyx_v_out_mat.shape[1]);
 
-  /* "skbio/stats/distance/_cutils.pyx":112
+  /* "skbio/stats/distance/_cutils.pyx":109
  *     cdef Py_ssize_t on3 = out_mat.shape[1]
  * 
  *     assert in_n == in2             # <<<<<<<<<<<<<<
@@ -4287,12 +4291,12 @@ static PyObject *__pyx_pf_5skbio_5stats_8distance_7_cutils_14distmat_reorder_cy(
   if (unlikely(!Py_OptimizeFlag)) {
     if (unlikely(!((__pyx_v_in_n == __pyx_v_in2) != 0))) {
       PyErr_SetNone(PyExc_AssertionError);
-      __PYX_ERR(0, 112, __pyx_L1_error)
+      __PYX_ERR(0, 109, __pyx_L1_error)
     }
   }
   #endif
 
-  /* "skbio/stats/distance/_cutils.pyx":113
+  /* "skbio/stats/distance/_cutils.pyx":110
  * 
  *     assert in_n == in2
  *     assert out_n == on2             # <<<<<<<<<<<<<<
@@ -4303,12 +4307,12 @@ static PyObject *__pyx_pf_5skbio_5stats_8distance_7_cutils_14distmat_reorder_cy(
   if (unlikely(!Py_OptimizeFlag)) {
     if (unlikely(!((__pyx_v_out_n == __pyx_v_on2) != 0))) {
       PyErr_SetNone(PyExc_AssertionError);
-      __PYX_ERR(0, 113, __pyx_L1_error)
+      __PYX_ERR(0, 110, __pyx_L1_error)
     }
   }
   #endif
 
-  /* "skbio/stats/distance/_cutils.pyx":114
+  /* "skbio/stats/distance/_cutils.pyx":111
  *     assert in_n == in2
  *     assert out_n == on2
  *     assert out_n == on3             # <<<<<<<<<<<<<<
@@ -4319,12 +4323,12 @@ static PyObject *__pyx_pf_5skbio_5stats_8distance_7_cutils_14distmat_reorder_cy(
   if (unlikely(!Py_OptimizeFlag)) {
     if (unlikely(!((__pyx_v_out_n == __pyx_v_on3) != 0))) {
       PyErr_SetNone(PyExc_AssertionError);
-      __PYX_ERR(0, 114, __pyx_L1_error)
+      __PYX_ERR(0, 111, __pyx_L1_error)
     }
   }
   #endif
 
-  /* "skbio/stats/distance/_cutils.pyx":119
+  /* "skbio/stats/distance/_cutils.pyx":116
  *     cdef Py_ssize_t vrow
  * 
  *     for row in prange(out_n, nogil=True):             # <<<<<<<<<<<<<<
@@ -4364,7 +4368,7 @@ static PyObject *__pyx_pf_5skbio_5stats_8distance_7_cutils_14distmat_reorder_cy(
                             __pyx_v_col = ((Py_ssize_t)0xbad0bad0);
                             __pyx_v_vrow = ((Py_ssize_t)0xbad0bad0);
 
-                            /* "skbio/stats/distance/_cutils.pyx":120
+                            /* "skbio/stats/distance/_cutils.pyx":117
  * 
  *     for row in prange(out_n, nogil=True):
  *         vrow = reorder_vec[row]             # <<<<<<<<<<<<<<
@@ -4374,7 +4378,7 @@ static PyObject *__pyx_pf_5skbio_5stats_8distance_7_cutils_14distmat_reorder_cy(
                             __pyx_t_4 = __pyx_v_row;
                             __pyx_v_vrow = (*((long *) ( /* dim=0 */ ((char *) (((long *) __pyx_v_reorder_vec.data) + __pyx_t_4)) )));
 
-                            /* "skbio/stats/distance/_cutils.pyx":121
+                            /* "skbio/stats/distance/_cutils.pyx":118
  *     for row in prange(out_n, nogil=True):
  *         vrow = reorder_vec[row]
  *         for col in range(out_n):             # <<<<<<<<<<<<<<
@@ -4386,7 +4390,7 @@ static PyObject *__pyx_pf_5skbio_5stats_8distance_7_cutils_14distmat_reorder_cy(
                             for (__pyx_t_7 = 0; __pyx_t_7 < __pyx_t_6; __pyx_t_7+=1) {
                               __pyx_v_col = __pyx_t_7;
 
-                              /* "skbio/stats/distance/_cutils.pyx":122
+                              /* "skbio/stats/distance/_cutils.pyx":119
  *         vrow = reorder_vec[row]
  *         for col in range(out_n):
  *            out_mat[row,col] = in_mat[vrow, reorder_vec[col]]             # <<<<<<<<<<<<<<
@@ -4413,7 +4417,7 @@ static PyObject *__pyx_pf_5skbio_5stats_8distance_7_cutils_14distmat_reorder_cy(
         #endif
       }
 
-      /* "skbio/stats/distance/_cutils.pyx":119
+      /* "skbio/stats/distance/_cutils.pyx":116
  *     cdef Py_ssize_t vrow
  * 
  *     for row in prange(out_n, nogil=True):             # <<<<<<<<<<<<<<
@@ -4432,7 +4436,7 @@ static PyObject *__pyx_pf_5skbio_5stats_8distance_7_cutils_14distmat_reorder_cy(
       }
   }
 
-  /* "skbio/stats/distance/_cutils.pyx":74
+  /* "skbio/stats/distance/_cutils.pyx":71
  * @cython.boundscheck(False)
  * @cython.wraparound(False)
  * def distmat_reorder_cy(TReal[:, ::1] in_mat, long[::1] reorder_vec,             # <<<<<<<<<<<<<<
@@ -4493,17 +4497,17 @@ static PyObject *__pyx_fuse_1__pyx_pw_5skbio_5stats_8distance_7_cutils_17distmat
         case  1:
         if (likely((values[1] = __Pyx_PyDict_GetItemStr(__pyx_kwds, __pyx_n_s_reorder_vec)) != 0)) kw_args--;
         else {
-          __Pyx_RaiseArgtupleInvalid("distmat_reorder_cy", 1, 3, 3, 1); __PYX_ERR(0, 74, __pyx_L3_error)
+          __Pyx_RaiseArgtupleInvalid("distmat_reorder_cy", 1, 3, 3, 1); __PYX_ERR(0, 71, __pyx_L3_error)
         }
         CYTHON_FALLTHROUGH;
         case  2:
         if (likely((values[2] = __Pyx_PyDict_GetItemStr(__pyx_kwds, __pyx_n_s_out_mat)) != 0)) kw_args--;
         else {
-          __Pyx_RaiseArgtupleInvalid("distmat_reorder_cy", 1, 3, 3, 2); __PYX_ERR(0, 74, __pyx_L3_error)
+          __Pyx_RaiseArgtupleInvalid("distmat_reorder_cy", 1, 3, 3, 2); __PYX_ERR(0, 71, __pyx_L3_error)
         }
       }
       if (unlikely(kw_args > 0)) {
-        if (unlikely(__Pyx_ParseOptionalKeywords(__pyx_kwds, __pyx_pyargnames, 0, values, pos_args, "distmat_reorder_cy") < 0)) __PYX_ERR(0, 74, __pyx_L3_error)
+        if (unlikely(__Pyx_ParseOptionalKeywords(__pyx_kwds, __pyx_pyargnames, 0, values, pos_args, "distmat_reorder_cy") < 0)) __PYX_ERR(0, 71, __pyx_L3_error)
       }
     } else if (PyTuple_GET_SIZE(__pyx_args) != 3) {
       goto __pyx_L5_argtuple_error;
@@ -4512,13 +4516,13 @@ static PyObject *__pyx_fuse_1__pyx_pw_5skbio_5stats_8distance_7_cutils_17distmat
       values[1] = PyTuple_GET_ITEM(__pyx_args, 1);
       values[2] = PyTuple_GET_ITEM(__pyx_args, 2);
     }
-    __pyx_v_in_mat = __Pyx_PyObject_to_MemoryviewSlice_d_dc_double(values[0], PyBUF_WRITABLE); if (unlikely(!__pyx_v_in_mat.memview)) __PYX_ERR(0, 74, __pyx_L3_error)
-    __pyx_v_reorder_vec = __Pyx_PyObject_to_MemoryviewSlice_dc_long(values[1], PyBUF_WRITABLE); if (unlikely(!__pyx_v_reorder_vec.memview)) __PYX_ERR(0, 74, __pyx_L3_error)
-    __pyx_v_out_mat = __Pyx_PyObject_to_MemoryviewSlice_d_dc_double(values[2], PyBUF_WRITABLE); if (unlikely(!__pyx_v_out_mat.memview)) __PYX_ERR(0, 75, __pyx_L3_error)
+    __pyx_v_in_mat = __Pyx_PyObject_to_MemoryviewSlice_d_dc_double(values[0], PyBUF_WRITABLE); if (unlikely(!__pyx_v_in_mat.memview)) __PYX_ERR(0, 71, __pyx_L3_error)
+    __pyx_v_reorder_vec = __Pyx_PyObject_to_MemoryviewSlice_dc_long(values[1], PyBUF_WRITABLE); if (unlikely(!__pyx_v_reorder_vec.memview)) __PYX_ERR(0, 71, __pyx_L3_error)
+    __pyx_v_out_mat = __Pyx_PyObject_to_MemoryviewSlice_d_dc_double(values[2], PyBUF_WRITABLE); if (unlikely(!__pyx_v_out_mat.memview)) __PYX_ERR(0, 72, __pyx_L3_error)
   }
   goto __pyx_L4_argument_unpacking_done;
   __pyx_L5_argtuple_error:;
-  __Pyx_RaiseArgtupleInvalid("distmat_reorder_cy", 1, 3, 3, PyTuple_GET_SIZE(__pyx_args)); __PYX_ERR(0, 74, __pyx_L3_error)
+  __Pyx_RaiseArgtupleInvalid("distmat_reorder_cy", 1, 3, 3, PyTuple_GET_SIZE(__pyx_args)); __PYX_ERR(0, 71, __pyx_L3_error)
   __pyx_L3_error:;
   __Pyx_AddTraceback("skbio.stats.distance._cutils.distmat_reorder_cy", __pyx_clineno, __pyx_lineno, __pyx_filename);
   __Pyx_RefNannyFinishContext();
@@ -4558,7 +4562,7 @@ static PyObject *__pyx_pf_5skbio_5stats_8distance_7_cutils_16distmat_reorder_cy(
   int __pyx_clineno = 0;
   __Pyx_RefNannySetupContext("__pyx_fuse_1distmat_reorder_cy", 0);
 
-  /* "skbio/stats/distance/_cutils.pyx":106
+  /* "skbio/stats/distance/_cutils.pyx":103
  *         Output, Distance matrix, must be same size as reorder_vec
  *     """
  *     cdef Py_ssize_t in_n = in_mat.shape[0]             # <<<<<<<<<<<<<<
@@ -4567,7 +4571,7 @@ static PyObject *__pyx_pf_5skbio_5stats_8distance_7_cutils_16distmat_reorder_cy(
  */
   __pyx_v_in_n = (__pyx_v_in_mat.shape[0]);
 
-  /* "skbio/stats/distance/_cutils.pyx":107
+  /* "skbio/stats/distance/_cutils.pyx":104
  *     """
  *     cdef Py_ssize_t in_n = in_mat.shape[0]
  *     cdef Py_ssize_t in2 = in_mat.shape[1]             # <<<<<<<<<<<<<<
@@ -4576,7 +4580,7 @@ static PyObject *__pyx_pf_5skbio_5stats_8distance_7_cutils_16distmat_reorder_cy(
  */
   __pyx_v_in2 = (__pyx_v_in_mat.shape[1]);
 
-  /* "skbio/stats/distance/_cutils.pyx":108
+  /* "skbio/stats/distance/_cutils.pyx":105
  *     cdef Py_ssize_t in_n = in_mat.shape[0]
  *     cdef Py_ssize_t in2 = in_mat.shape[1]
  *     cdef Py_ssize_t out_n = reorder_vec.shape[0]             # <<<<<<<<<<<<<<
@@ -4585,7 +4589,7 @@ static PyObject *__pyx_pf_5skbio_5stats_8distance_7_cutils_16distmat_reorder_cy(
  */
   __pyx_v_out_n = (__pyx_v_reorder_vec.shape[0]);
 
-  /* "skbio/stats/distance/_cutils.pyx":109
+  /* "skbio/stats/distance/_cutils.pyx":106
  *     cdef Py_ssize_t in2 = in_mat.shape[1]
  *     cdef Py_ssize_t out_n = reorder_vec.shape[0]
  *     cdef Py_ssize_t on2 = out_mat.shape[0]             # <<<<<<<<<<<<<<
@@ -4594,7 +4598,7 @@ static PyObject *__pyx_pf_5skbio_5stats_8distance_7_cutils_16distmat_reorder_cy(
  */
   __pyx_v_on2 = (__pyx_v_out_mat.shape[0]);
 
-  /* "skbio/stats/distance/_cutils.pyx":110
+  /* "skbio/stats/distance/_cutils.pyx":107
  *     cdef Py_ssize_t out_n = reorder_vec.shape[0]
  *     cdef Py_ssize_t on2 = out_mat.shape[0]
  *     cdef Py_ssize_t on3 = out_mat.shape[1]             # <<<<<<<<<<<<<<
@@ -4603,7 +4607,7 @@ static PyObject *__pyx_pf_5skbio_5stats_8distance_7_cutils_16distmat_reorder_cy(
  */
   __pyx_v_on3 = (__pyx_v_out_mat.shape[1]);
 
-  /* "skbio/stats/distance/_cutils.pyx":112
+  /* "skbio/stats/distance/_cutils.pyx":109
  *     cdef Py_ssize_t on3 = out_mat.shape[1]
  * 
  *     assert in_n == in2             # <<<<<<<<<<<<<<
@@ -4614,12 +4618,12 @@ static PyObject *__pyx_pf_5skbio_5stats_8distance_7_cutils_16distmat_reorder_cy(
   if (unlikely(!Py_OptimizeFlag)) {
     if (unlikely(!((__pyx_v_in_n == __pyx_v_in2) != 0))) {
       PyErr_SetNone(PyExc_AssertionError);
-      __PYX_ERR(0, 112, __pyx_L1_error)
+      __PYX_ERR(0, 109, __pyx_L1_error)
     }
   }
   #endif
 
-  /* "skbio/stats/distance/_cutils.pyx":113
+  /* "skbio/stats/distance/_cutils.pyx":110
  * 
  *     assert in_n == in2
  *     assert out_n == on2             # <<<<<<<<<<<<<<
@@ -4630,12 +4634,12 @@ static PyObject *__pyx_pf_5skbio_5stats_8distance_7_cutils_16distmat_reorder_cy(
   if (unlikely(!Py_OptimizeFlag)) {
     if (unlikely(!((__pyx_v_out_n == __pyx_v_on2) != 0))) {
       PyErr_SetNone(PyExc_AssertionError);
-      __PYX_ERR(0, 113, __pyx_L1_error)
+      __PYX_ERR(0, 110, __pyx_L1_error)
     }
   }
   #endif
 
-  /* "skbio/stats/distance/_cutils.pyx":114
+  /* "skbio/stats/distance/_cutils.pyx":111
  *     assert in_n == in2
  *     assert out_n == on2
  *     assert out_n == on3             # <<<<<<<<<<<<<<
@@ -4646,12 +4650,12 @@ static PyObject *__pyx_pf_5skbio_5stats_8distance_7_cutils_16distmat_reorder_cy(
   if (unlikely(!Py_OptimizeFlag)) {
     if (unlikely(!((__pyx_v_out_n == __pyx_v_on3) != 0))) {
       PyErr_SetNone(PyExc_AssertionError);
-      __PYX_ERR(0, 114, __pyx_L1_error)
+      __PYX_ERR(0, 111, __pyx_L1_error)
     }
   }
   #endif
 
-  /* "skbio/stats/distance/_cutils.pyx":119
+  /* "skbio/stats/distance/_cutils.pyx":116
  *     cdef Py_ssize_t vrow
  * 
  *     for row in prange(out_n, nogil=True):             # <<<<<<<<<<<<<<
@@ -4691,7 +4695,7 @@ static PyObject *__pyx_pf_5skbio_5stats_8distance_7_cutils_16distmat_reorder_cy(
                             __pyx_v_col = ((Py_ssize_t)0xbad0bad0);
                             __pyx_v_vrow = ((Py_ssize_t)0xbad0bad0);
 
-                            /* "skbio/stats/distance/_cutils.pyx":120
+                            /* "skbio/stats/distance/_cutils.pyx":117
  * 
  *     for row in prange(out_n, nogil=True):
  *         vrow = reorder_vec[row]             # <<<<<<<<<<<<<<
@@ -4701,7 +4705,7 @@ static PyObject *__pyx_pf_5skbio_5stats_8distance_7_cutils_16distmat_reorder_cy(
                             __pyx_t_4 = __pyx_v_row;
                             __pyx_v_vrow = (*((long *) ( /* dim=0 */ ((char *) (((long *) __pyx_v_reorder_vec.data) + __pyx_t_4)) )));
 
-                            /* "skbio/stats/distance/_cutils.pyx":121
+                            /* "skbio/stats/distance/_cutils.pyx":118
  *     for row in prange(out_n, nogil=True):
  *         vrow = reorder_vec[row]
  *         for col in range(out_n):             # <<<<<<<<<<<<<<
@@ -4713,7 +4717,7 @@ static PyObject *__pyx_pf_5skbio_5stats_8distance_7_cutils_16distmat_reorder_cy(
                             for (__pyx_t_7 = 0; __pyx_t_7 < __pyx_t_6; __pyx_t_7+=1) {
                               __pyx_v_col = __pyx_t_7;
 
-                              /* "skbio/stats/distance/_cutils.pyx":122
+                              /* "skbio/stats/distance/_cutils.pyx":119
  *         vrow = reorder_vec[row]
  *         for col in range(out_n):
  *            out_mat[row,col] = in_mat[vrow, reorder_vec[col]]             # <<<<<<<<<<<<<<
@@ -4740,7 +4744,7 @@ static PyObject *__pyx_pf_5skbio_5stats_8distance_7_cutils_16distmat_reorder_cy(
         #endif
       }
 
-      /* "skbio/stats/distance/_cutils.pyx":119
+      /* "skbio/stats/distance/_cutils.pyx":116
  *     cdef Py_ssize_t vrow
  * 
  *     for row in prange(out_n, nogil=True):             # <<<<<<<<<<<<<<
@@ -4759,7 +4763,7 @@ static PyObject *__pyx_pf_5skbio_5stats_8distance_7_cutils_16distmat_reorder_cy(
       }
   }
 
-  /* "skbio/stats/distance/_cutils.pyx":74
+  /* "skbio/stats/distance/_cutils.pyx":71
  * @cython.boundscheck(False)
  * @cython.wraparound(False)
  * def distmat_reorder_cy(TReal[:, ::1] in_mat, long[::1] reorder_vec,             # <<<<<<<<<<<<<<
@@ -4782,7 +4786,7 @@ static PyObject *__pyx_pf_5skbio_5stats_8distance_7_cutils_16distmat_reorder_cy(
   return __pyx_r;
 }
 
-/* "skbio/stats/distance/_cutils.pyx":126
+/* "skbio/stats/distance/_cutils.pyx":123
  * @cython.boundscheck(False)
  * @cython.wraparound(False)
  * def distmat_reorder_condensed_cy(TReal[:, ::1] in_mat, long[::1] reorder_vec,             # <<<<<<<<<<<<<<
@@ -4832,23 +4836,23 @@ static PyObject *__pyx_pw_5skbio_5stats_8distance_7_cutils_5distmat_reorder_cond
         case  1:
         if (likely((values[1] = __Pyx_PyDict_GetItemStr(__pyx_kwds, __pyx_n_s_args)) != 0)) kw_args--;
         else {
-          __Pyx_RaiseArgtupleInvalid("__pyx_fused_cpdef", 1, 4, 4, 1); __PYX_ERR(0, 126, __pyx_L3_error)
+          __Pyx_RaiseArgtupleInvalid("__pyx_fused_cpdef", 1, 4, 4, 1); __PYX_ERR(0, 123, __pyx_L3_error)
         }
         CYTHON_FALLTHROUGH;
         case  2:
         if (likely((values[2] = __Pyx_PyDict_GetItemStr(__pyx_kwds, __pyx_n_s_kwargs)) != 0)) kw_args--;
         else {
-          __Pyx_RaiseArgtupleInvalid("__pyx_fused_cpdef", 1, 4, 4, 2); __PYX_ERR(0, 126, __pyx_L3_error)
+          __Pyx_RaiseArgtupleInvalid("__pyx_fused_cpdef", 1, 4, 4, 2); __PYX_ERR(0, 123, __pyx_L3_error)
         }
         CYTHON_FALLTHROUGH;
         case  3:
         if (likely((values[3] = __Pyx_PyDict_GetItemStr(__pyx_kwds, __pyx_n_s_defaults)) != 0)) kw_args--;
         else {
-          __Pyx_RaiseArgtupleInvalid("__pyx_fused_cpdef", 1, 4, 4, 3); __PYX_ERR(0, 126, __pyx_L3_error)
+          __Pyx_RaiseArgtupleInvalid("__pyx_fused_cpdef", 1, 4, 4, 3); __PYX_ERR(0, 123, __pyx_L3_error)
         }
       }
       if (unlikely(kw_args > 0)) {
-        if (unlikely(__Pyx_ParseOptionalKeywords(__pyx_kwds, __pyx_pyargnames, 0, values, pos_args, "__pyx_fused_cpdef") < 0)) __PYX_ERR(0, 126, __pyx_L3_error)
+        if (unlikely(__Pyx_ParseOptionalKeywords(__pyx_kwds, __pyx_pyargnames, 0, values, pos_args, "__pyx_fused_cpdef") < 0)) __PYX_ERR(0, 123, __pyx_L3_error)
       }
     } else if (PyTuple_GET_SIZE(__pyx_args) != 4) {
       goto __pyx_L5_argtuple_error;
@@ -4865,7 +4869,7 @@ static PyObject *__pyx_pw_5skbio_5stats_8distance_7_cutils_5distmat_reorder_cond
   }
   goto __pyx_L4_argument_unpacking_done;
   __pyx_L5_argtuple_error:;
-  __Pyx_RaiseArgtupleInvalid("__pyx_fused_cpdef", 1, 4, 4, PyTuple_GET_SIZE(__pyx_args)); __PYX_ERR(0, 126, __pyx_L3_error)
+  __Pyx_RaiseArgtupleInvalid("__pyx_fused_cpdef", 1, 4, 4, PyTuple_GET_SIZE(__pyx_args)); __PYX_ERR(0, 123, __pyx_L3_error)
   __pyx_L3_error:;
   __Pyx_AddTraceback("skbio.stats.distance._cutils.__pyx_fused_cpdef", __pyx_clineno, __pyx_lineno, __pyx_filename);
   __Pyx_RefNannyFinishContext();
@@ -4919,7 +4923,7 @@ static PyObject *__pyx_pf_5skbio_5stats_8distance_7_cutils_4distmat_reorder_cond
   int __pyx_clineno = 0;
   __Pyx_RefNannySetupContext("distmat_reorder_condensed_cy", 0);
   __Pyx_INCREF(__pyx_v_kwargs);
-  __pyx_t_1 = PyList_New(1); if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 126, __pyx_L1_error)
+  __pyx_t_1 = PyList_New(1); if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 123, __pyx_L1_error)
   __Pyx_GOTREF(__pyx_t_1);
   __Pyx_INCREF(Py_None);
   __Pyx_GIVEREF(Py_None);
@@ -4933,7 +4937,7 @@ static PyObject *__pyx_pf_5skbio_5stats_8distance_7_cutils_4distmat_reorder_cond
     __pyx_t_2 = __pyx_t_4;
     goto __pyx_L4_bool_binop_done;
   }
-  __pyx_t_4 = __Pyx_PyObject_IsTrue(__pyx_v_kwargs); if (unlikely(__pyx_t_4 < 0)) __PYX_ERR(0, 126, __pyx_L1_error)
+  __pyx_t_4 = __Pyx_PyObject_IsTrue(__pyx_v_kwargs); if (unlikely(__pyx_t_4 < 0)) __PYX_ERR(0, 123, __pyx_L1_error)
   __pyx_t_3 = ((!__pyx_t_4) != 0);
   __pyx_t_2 = __pyx_t_3;
   __pyx_L4_bool_binop_done:;
@@ -4941,21 +4945,21 @@ static PyObject *__pyx_pf_5skbio_5stats_8distance_7_cutils_4distmat_reorder_cond
     __Pyx_INCREF(Py_None);
     __Pyx_DECREF_SET(__pyx_v_kwargs, Py_None);
   }
-  __pyx_t_1 = ((PyObject *)__Pyx_ImportNumPyArrayTypeIfAvailable()); if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 126, __pyx_L1_error)
+  __pyx_t_1 = ((PyObject *)__Pyx_ImportNumPyArrayTypeIfAvailable()); if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 123, __pyx_L1_error)
   __Pyx_GOTREF(__pyx_t_1);
   __pyx_v_ndarray = ((PyTypeObject*)__pyx_t_1);
   __pyx_t_1 = 0;
   __pyx_v_itemsize = -1L;
   if (unlikely(__pyx_v_args == Py_None)) {
     PyErr_SetString(PyExc_TypeError, "object of type 'NoneType' has no len()");
-    __PYX_ERR(0, 126, __pyx_L1_error)
+    __PYX_ERR(0, 123, __pyx_L1_error)
   }
-  __pyx_t_5 = PyTuple_GET_SIZE(((PyObject*)__pyx_v_args)); if (unlikely(__pyx_t_5 == ((Py_ssize_t)-1))) __PYX_ERR(0, 126, __pyx_L1_error)
+  __pyx_t_5 = PyTuple_GET_SIZE(((PyObject*)__pyx_v_args)); if (unlikely(__pyx_t_5 == ((Py_ssize_t)-1))) __PYX_ERR(0, 123, __pyx_L1_error)
   __pyx_t_2 = ((0 < __pyx_t_5) != 0);
   if (__pyx_t_2) {
     if (unlikely(__pyx_v_args == Py_None)) {
       PyErr_SetString(PyExc_TypeError, "'NoneType' object is not subscriptable");
-      __PYX_ERR(0, 126, __pyx_L1_error)
+      __PYX_ERR(0, 123, __pyx_L1_error)
     }
     __pyx_t_1 = PyTuple_GET_ITEM(((PyObject*)__pyx_v_args), 0);
     __Pyx_INCREF(__pyx_t_1);
@@ -4972,18 +4976,18 @@ static PyObject *__pyx_pf_5skbio_5stats_8distance_7_cutils_4distmat_reorder_cond
   }
   if (unlikely(__pyx_v_kwargs == Py_None)) {
     PyErr_SetString(PyExc_TypeError, "'NoneType' object is not iterable");
-    __PYX_ERR(0, 126, __pyx_L1_error)
+    __PYX_ERR(0, 123, __pyx_L1_error)
   }
-  __pyx_t_4 = (__Pyx_PyDict_ContainsTF(__pyx_n_s_in_mat, ((PyObject*)__pyx_v_kwargs), Py_EQ)); if (unlikely(__pyx_t_4 < 0)) __PYX_ERR(0, 126, __pyx_L1_error)
+  __pyx_t_4 = (__Pyx_PyDict_ContainsTF(__pyx_n_s_in_mat, ((PyObject*)__pyx_v_kwargs), Py_EQ)); if (unlikely(__pyx_t_4 < 0)) __PYX_ERR(0, 123, __pyx_L1_error)
   __pyx_t_3 = (__pyx_t_4 != 0);
   __pyx_t_2 = __pyx_t_3;
   __pyx_L7_bool_binop_done:;
   if (__pyx_t_2) {
     if (unlikely(__pyx_v_kwargs == Py_None)) {
       PyErr_SetString(PyExc_TypeError, "'NoneType' object is not subscriptable");
-      __PYX_ERR(0, 126, __pyx_L1_error)
+      __PYX_ERR(0, 123, __pyx_L1_error)
     }
-    __pyx_t_1 = __Pyx_PyDict_GetItem(((PyObject*)__pyx_v_kwargs), __pyx_n_s_in_mat); if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 126, __pyx_L1_error)
+    __pyx_t_1 = __Pyx_PyDict_GetItem(((PyObject*)__pyx_v_kwargs), __pyx_n_s_in_mat); if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 123, __pyx_L1_error)
     __Pyx_GOTREF(__pyx_t_1);
     __pyx_v_arg = __pyx_t_1;
     __pyx_t_1 = 0;
@@ -4992,12 +4996,12 @@ static PyObject *__pyx_pf_5skbio_5stats_8distance_7_cutils_4distmat_reorder_cond
   /*else*/ {
     if (unlikely(__pyx_v_args == Py_None)) {
       PyErr_SetString(PyExc_TypeError, "object of type 'NoneType' has no len()");
-      __PYX_ERR(0, 126, __pyx_L1_error)
+      __PYX_ERR(0, 123, __pyx_L1_error)
     }
-    __pyx_t_5 = PyTuple_GET_SIZE(((PyObject*)__pyx_v_args)); if (unlikely(__pyx_t_5 == ((Py_ssize_t)-1))) __PYX_ERR(0, 126, __pyx_L1_error)
-    __pyx_t_1 = PyInt_FromSsize_t(__pyx_t_5); if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 126, __pyx_L1_error)
+    __pyx_t_5 = PyTuple_GET_SIZE(((PyObject*)__pyx_v_args)); if (unlikely(__pyx_t_5 == ((Py_ssize_t)-1))) __PYX_ERR(0, 123, __pyx_L1_error)
+    __pyx_t_1 = PyInt_FromSsize_t(__pyx_t_5); if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 123, __pyx_L1_error)
     __Pyx_GOTREF(__pyx_t_1);
-    __pyx_t_6 = PyTuple_New(3); if (unlikely(!__pyx_t_6)) __PYX_ERR(0, 126, __pyx_L1_error)
+    __pyx_t_6 = PyTuple_New(3); if (unlikely(!__pyx_t_6)) __PYX_ERR(0, 123, __pyx_L1_error)
     __Pyx_GOTREF(__pyx_t_6);
     __Pyx_INCREF(__pyx_int_3);
     __Pyx_GIVEREF(__pyx_int_3);
@@ -5008,15 +5012,15 @@ static PyObject *__pyx_pf_5skbio_5stats_8distance_7_cutils_4distmat_reorder_cond
     __Pyx_GIVEREF(__pyx_t_1);
     PyTuple_SET_ITEM(__pyx_t_6, 2, __pyx_t_1);
     __pyx_t_1 = 0;
-    __pyx_t_1 = __Pyx_PyString_Format(__pyx_kp_s_Expected_at_least_d_argument_s_g, __pyx_t_6); if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 126, __pyx_L1_error)
+    __pyx_t_1 = __Pyx_PyString_Format(__pyx_kp_s_Expected_at_least_d_argument_s_g, __pyx_t_6); if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 123, __pyx_L1_error)
     __Pyx_GOTREF(__pyx_t_1);
     __Pyx_DECREF(__pyx_t_6); __pyx_t_6 = 0;
-    __pyx_t_6 = __Pyx_PyObject_CallOneArg(__pyx_builtin_TypeError, __pyx_t_1); if (unlikely(!__pyx_t_6)) __PYX_ERR(0, 126, __pyx_L1_error)
+    __pyx_t_6 = __Pyx_PyObject_CallOneArg(__pyx_builtin_TypeError, __pyx_t_1); if (unlikely(!__pyx_t_6)) __PYX_ERR(0, 123, __pyx_L1_error)
     __Pyx_GOTREF(__pyx_t_6);
     __Pyx_DECREF(__pyx_t_1); __pyx_t_1 = 0;
     __Pyx_Raise(__pyx_t_6, 0, 0, 0);
     __Pyx_DECREF(__pyx_t_6); __pyx_t_6 = 0;
-    __PYX_ERR(0, 126, __pyx_L1_error)
+    __PYX_ERR(0, 123, __pyx_L1_error)
   }
   __pyx_L6:;
   while (1) {
@@ -5026,7 +5030,7 @@ static PyObject *__pyx_pf_5skbio_5stats_8distance_7_cutils_4distmat_reorder_cond
       __pyx_t_3 = __Pyx_TypeCheck(__pyx_v_arg, __pyx_v_ndarray); 
       __pyx_t_2 = (__pyx_t_3 != 0);
       if (__pyx_t_2) {
-        __pyx_t_6 = __Pyx_PyObject_GetAttrStr(__pyx_v_arg, __pyx_n_s_dtype); if (unlikely(!__pyx_t_6)) __PYX_ERR(0, 126, __pyx_L1_error)
+        __pyx_t_6 = __Pyx_PyObject_GetAttrStr(__pyx_v_arg, __pyx_n_s_dtype); if (unlikely(!__pyx_t_6)) __PYX_ERR(0, 123, __pyx_L1_error)
         __Pyx_GOTREF(__pyx_t_6);
         __pyx_v_dtype = __pyx_t_6;
         __pyx_t_6 = 0;
@@ -5035,14 +5039,14 @@ static PyObject *__pyx_pf_5skbio_5stats_8distance_7_cutils_4distmat_reorder_cond
       __pyx_t_2 = __pyx_memoryview_check(__pyx_v_arg); 
       __pyx_t_3 = (__pyx_t_2 != 0);
       if (__pyx_t_3) {
-        __pyx_t_6 = __Pyx_PyObject_GetAttrStr(__pyx_v_arg, __pyx_n_s_base); if (unlikely(!__pyx_t_6)) __PYX_ERR(0, 126, __pyx_L1_error)
+        __pyx_t_6 = __Pyx_PyObject_GetAttrStr(__pyx_v_arg, __pyx_n_s_base); if (unlikely(!__pyx_t_6)) __PYX_ERR(0, 123, __pyx_L1_error)
         __Pyx_GOTREF(__pyx_t_6);
         __pyx_v_arg_base = __pyx_t_6;
         __pyx_t_6 = 0;
         __pyx_t_3 = __Pyx_TypeCheck(__pyx_v_arg_base, __pyx_v_ndarray); 
         __pyx_t_2 = (__pyx_t_3 != 0);
         if (__pyx_t_2) {
-          __pyx_t_6 = __Pyx_PyObject_GetAttrStr(__pyx_v_arg_base, __pyx_n_s_dtype); if (unlikely(!__pyx_t_6)) __PYX_ERR(0, 126, __pyx_L1_error)
+          __pyx_t_6 = __Pyx_PyObject_GetAttrStr(__pyx_v_arg_base, __pyx_n_s_dtype); if (unlikely(!__pyx_t_6)) __PYX_ERR(0, 123, __pyx_L1_error)
           __Pyx_GOTREF(__pyx_t_6);
           __pyx_v_dtype = __pyx_t_6;
           __pyx_t_6 = 0;
@@ -5064,14 +5068,14 @@ static PyObject *__pyx_pf_5skbio_5stats_8distance_7_cutils_4distmat_reorder_cond
       __pyx_t_2 = (__pyx_v_dtype != Py_None);
       __pyx_t_3 = (__pyx_t_2 != 0);
       if (__pyx_t_3) {
-        __pyx_t_6 = __Pyx_PyObject_GetAttrStr(__pyx_v_dtype, __pyx_n_s_itemsize); if (unlikely(!__pyx_t_6)) __PYX_ERR(0, 126, __pyx_L1_error)
+        __pyx_t_6 = __Pyx_PyObject_GetAttrStr(__pyx_v_dtype, __pyx_n_s_itemsize); if (unlikely(!__pyx_t_6)) __PYX_ERR(0, 123, __pyx_L1_error)
         __Pyx_GOTREF(__pyx_t_6);
-        __pyx_t_5 = __Pyx_PyIndex_AsSsize_t(__pyx_t_6); if (unlikely((__pyx_t_5 == (Py_ssize_t)-1) && PyErr_Occurred())) __PYX_ERR(0, 126, __pyx_L1_error)
+        __pyx_t_5 = __Pyx_PyIndex_AsSsize_t(__pyx_t_6); if (unlikely((__pyx_t_5 == (Py_ssize_t)-1) && PyErr_Occurred())) __PYX_ERR(0, 123, __pyx_L1_error)
         __Pyx_DECREF(__pyx_t_6); __pyx_t_6 = 0;
         __pyx_v_itemsize = __pyx_t_5;
-        __pyx_t_6 = __Pyx_PyObject_GetAttrStr(__pyx_v_dtype, __pyx_n_s_kind); if (unlikely(!__pyx_t_6)) __PYX_ERR(0, 126, __pyx_L1_error)
+        __pyx_t_6 = __Pyx_PyObject_GetAttrStr(__pyx_v_dtype, __pyx_n_s_kind); if (unlikely(!__pyx_t_6)) __PYX_ERR(0, 123, __pyx_L1_error)
         __Pyx_GOTREF(__pyx_t_6);
-        __pyx_t_7 = __Pyx_PyObject_Ord(__pyx_t_6); if (unlikely(__pyx_t_7 == ((long)(long)(Py_UCS4)-1))) __PYX_ERR(0, 126, __pyx_L1_error)
+        __pyx_t_7 = __Pyx_PyObject_Ord(__pyx_t_6); if (unlikely(__pyx_t_7 == ((long)(long)(Py_UCS4)-1))) __PYX_ERR(0, 123, __pyx_L1_error)
         __Pyx_DECREF(__pyx_t_6); __pyx_t_6 = 0;
         __pyx_v_kind = __pyx_t_7;
         __pyx_v_dtype_signed = (__pyx_v_kind == 'i');
@@ -5086,15 +5090,15 @@ static PyObject *__pyx_pf_5skbio_5stats_8distance_7_cutils_4distmat_reorder_cond
             __pyx_t_3 = __pyx_t_2;
             goto __pyx_L16_bool_binop_done;
           }
-          __pyx_t_6 = __Pyx_PyObject_GetAttrStr(__pyx_v_arg, __pyx_n_s_ndim); if (unlikely(!__pyx_t_6)) __PYX_ERR(0, 126, __pyx_L1_error)
+          __pyx_t_6 = __Pyx_PyObject_GetAttrStr(__pyx_v_arg, __pyx_n_s_ndim); if (unlikely(!__pyx_t_6)) __PYX_ERR(0, 123, __pyx_L1_error)
           __Pyx_GOTREF(__pyx_t_6);
-          __pyx_t_5 = __Pyx_PyIndex_AsSsize_t(__pyx_t_6); if (unlikely((__pyx_t_5 == (Py_ssize_t)-1) && PyErr_Occurred())) __PYX_ERR(0, 126, __pyx_L1_error)
+          __pyx_t_5 = __Pyx_PyIndex_AsSsize_t(__pyx_t_6); if (unlikely((__pyx_t_5 == (Py_ssize_t)-1) && PyErr_Occurred())) __PYX_ERR(0, 123, __pyx_L1_error)
           __Pyx_DECREF(__pyx_t_6); __pyx_t_6 = 0;
           __pyx_t_2 = ((((Py_ssize_t)__pyx_t_5) == 2) != 0);
           __pyx_t_3 = __pyx_t_2;
           __pyx_L16_bool_binop_done:;
           if (__pyx_t_3) {
-            if (unlikely(__Pyx_SetItemInt(__pyx_v_dest_sig, 0, __pyx_n_s_float, long, 1, __Pyx_PyInt_From_long, 1, 0, 0) < 0)) __PYX_ERR(0, 126, __pyx_L1_error)
+            if (unlikely(__Pyx_SetItemInt(__pyx_v_dest_sig, 0, __pyx_n_s_float, long, 1, __Pyx_PyInt_From_long, 1, 0, 0) < 0)) __PYX_ERR(0, 123, __pyx_L1_error)
             goto __pyx_L10_break;
           }
           __pyx_t_2 = (((sizeof(double)) == __pyx_v_itemsize) != 0);
@@ -5103,15 +5107,15 @@ static PyObject *__pyx_pf_5skbio_5stats_8distance_7_cutils_4distmat_reorder_cond
             __pyx_t_3 = __pyx_t_2;
             goto __pyx_L19_bool_binop_done;
           }
-          __pyx_t_6 = __Pyx_PyObject_GetAttrStr(__pyx_v_arg, __pyx_n_s_ndim); if (unlikely(!__pyx_t_6)) __PYX_ERR(0, 126, __pyx_L1_error)
+          __pyx_t_6 = __Pyx_PyObject_GetAttrStr(__pyx_v_arg, __pyx_n_s_ndim); if (unlikely(!__pyx_t_6)) __PYX_ERR(0, 123, __pyx_L1_error)
           __Pyx_GOTREF(__pyx_t_6);
-          __pyx_t_5 = __Pyx_PyIndex_AsSsize_t(__pyx_t_6); if (unlikely((__pyx_t_5 == (Py_ssize_t)-1) && PyErr_Occurred())) __PYX_ERR(0, 126, __pyx_L1_error)
+          __pyx_t_5 = __Pyx_PyIndex_AsSsize_t(__pyx_t_6); if (unlikely((__pyx_t_5 == (Py_ssize_t)-1) && PyErr_Occurred())) __PYX_ERR(0, 123, __pyx_L1_error)
           __Pyx_DECREF(__pyx_t_6); __pyx_t_6 = 0;
           __pyx_t_2 = ((((Py_ssize_t)__pyx_t_5) == 2) != 0);
           __pyx_t_3 = __pyx_t_2;
           __pyx_L19_bool_binop_done:;
           if (__pyx_t_3) {
-            if (unlikely(__Pyx_SetItemInt(__pyx_v_dest_sig, 0, __pyx_n_s_double, long, 1, __Pyx_PyInt_From_long, 1, 0, 0) < 0)) __PYX_ERR(0, 126, __pyx_L1_error)
+            if (unlikely(__Pyx_SetItemInt(__pyx_v_dest_sig, 0, __pyx_n_s_double, long, 1, __Pyx_PyInt_From_long, 1, 0, 0) < 0)) __PYX_ERR(0, 123, __pyx_L1_error)
             goto __pyx_L10_break;
           }
           break;
@@ -5138,7 +5142,7 @@ static PyObject *__pyx_pf_5skbio_5stats_8distance_7_cutils_4distmat_reorder_cond
       __pyx_t_3 = (__pyx_v_memslice.memview != 0);
       if (__pyx_t_3) {
         __PYX_XDEC_MEMVIEW((&__pyx_v_memslice), 1); 
-        if (unlikely(__Pyx_SetItemInt(__pyx_v_dest_sig, 0, __pyx_n_s_float, long, 1, __Pyx_PyInt_From_long, 1, 0, 0) < 0)) __PYX_ERR(0, 126, __pyx_L1_error)
+        if (unlikely(__Pyx_SetItemInt(__pyx_v_dest_sig, 0, __pyx_n_s_float, long, 1, __Pyx_PyInt_From_long, 1, 0, 0) < 0)) __PYX_ERR(0, 123, __pyx_L1_error)
         goto __pyx_L10_break;
       }
       /*else*/ {
@@ -5160,27 +5164,27 @@ static PyObject *__pyx_pf_5skbio_5stats_8distance_7_cutils_4distmat_reorder_cond
       __pyx_t_3 = (__pyx_v_memslice.memview != 0);
       if (__pyx_t_3) {
         __PYX_XDEC_MEMVIEW((&__pyx_v_memslice), 1); 
-        if (unlikely(__Pyx_SetItemInt(__pyx_v_dest_sig, 0, __pyx_n_s_double, long, 1, __Pyx_PyInt_From_long, 1, 0, 0) < 0)) __PYX_ERR(0, 126, __pyx_L1_error)
+        if (unlikely(__Pyx_SetItemInt(__pyx_v_dest_sig, 0, __pyx_n_s_double, long, 1, __Pyx_PyInt_From_long, 1, 0, 0) < 0)) __PYX_ERR(0, 123, __pyx_L1_error)
         goto __pyx_L10_break;
       }
       /*else*/ {
         PyErr_Clear(); 
       }
     }
-    if (unlikely(__Pyx_SetItemInt(__pyx_v_dest_sig, 0, Py_None, long, 1, __Pyx_PyInt_From_long, 1, 0, 0) < 0)) __PYX_ERR(0, 126, __pyx_L1_error)
+    if (unlikely(__Pyx_SetItemInt(__pyx_v_dest_sig, 0, Py_None, long, 1, __Pyx_PyInt_From_long, 1, 0, 0) < 0)) __PYX_ERR(0, 123, __pyx_L1_error)
     goto __pyx_L10_break;
   }
   __pyx_L10_break:;
-  __pyx_t_6 = PyList_New(0); if (unlikely(!__pyx_t_6)) __PYX_ERR(0, 126, __pyx_L1_error)
+  __pyx_t_6 = PyList_New(0); if (unlikely(!__pyx_t_6)) __PYX_ERR(0, 123, __pyx_L1_error)
   __Pyx_GOTREF(__pyx_t_6);
   __pyx_v_candidates = ((PyObject*)__pyx_t_6);
   __pyx_t_6 = 0;
   __pyx_t_5 = 0;
   if (unlikely(__pyx_v_signatures == Py_None)) {
     PyErr_SetString(PyExc_TypeError, "'NoneType' object is not iterable");
-    __PYX_ERR(0, 126, __pyx_L1_error)
+    __PYX_ERR(0, 123, __pyx_L1_error)
   }
-  __pyx_t_1 = __Pyx_dict_iterator(((PyObject*)__pyx_v_signatures), 1, ((PyObject *)NULL), (&__pyx_t_9), (&__pyx_t_10)); if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 126, __pyx_L1_error)
+  __pyx_t_1 = __Pyx_dict_iterator(((PyObject*)__pyx_v_signatures), 1, ((PyObject *)NULL), (&__pyx_t_9), (&__pyx_t_10)); if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 123, __pyx_L1_error)
   __Pyx_GOTREF(__pyx_t_1);
   __Pyx_XDECREF(__pyx_t_6);
   __pyx_t_6 = __pyx_t_1;
@@ -5188,12 +5192,12 @@ static PyObject *__pyx_pf_5skbio_5stats_8distance_7_cutils_4distmat_reorder_cond
   while (1) {
     __pyx_t_11 = __Pyx_dict_iter_next(__pyx_t_6, __pyx_t_9, &__pyx_t_5, &__pyx_t_1, NULL, NULL, __pyx_t_10);
     if (unlikely(__pyx_t_11 == 0)) break;
-    if (unlikely(__pyx_t_11 == -1)) __PYX_ERR(0, 126, __pyx_L1_error)
+    if (unlikely(__pyx_t_11 == -1)) __PYX_ERR(0, 123, __pyx_L1_error)
     __Pyx_GOTREF(__pyx_t_1);
     __Pyx_XDECREF_SET(__pyx_v_sig, __pyx_t_1);
     __pyx_t_1 = 0;
     __pyx_v_match_found = 0;
-    __pyx_t_13 = __Pyx_PyObject_GetAttrStr(__pyx_v_sig, __pyx_n_s_strip); if (unlikely(!__pyx_t_13)) __PYX_ERR(0, 126, __pyx_L1_error)
+    __pyx_t_13 = __Pyx_PyObject_GetAttrStr(__pyx_v_sig, __pyx_n_s_strip); if (unlikely(!__pyx_t_13)) __PYX_ERR(0, 123, __pyx_L1_error)
     __Pyx_GOTREF(__pyx_t_13);
     __pyx_t_14 = NULL;
     if (CYTHON_UNPACK_METHODS && likely(PyMethod_Check(__pyx_t_13))) {
@@ -5207,10 +5211,10 @@ static PyObject *__pyx_pf_5skbio_5stats_8distance_7_cutils_4distmat_reorder_cond
     }
     __pyx_t_12 = (__pyx_t_14) ? __Pyx_PyObject_Call2Args(__pyx_t_13, __pyx_t_14, __pyx_kp_s__2) : __Pyx_PyObject_CallOneArg(__pyx_t_13, __pyx_kp_s__2);
     __Pyx_XDECREF(__pyx_t_14); __pyx_t_14 = 0;
-    if (unlikely(!__pyx_t_12)) __PYX_ERR(0, 126, __pyx_L1_error)
+    if (unlikely(!__pyx_t_12)) __PYX_ERR(0, 123, __pyx_L1_error)
     __Pyx_GOTREF(__pyx_t_12);
     __Pyx_DECREF(__pyx_t_13); __pyx_t_13 = 0;
-    __pyx_t_13 = __Pyx_PyObject_GetAttrStr(__pyx_t_12, __pyx_n_s_split); if (unlikely(!__pyx_t_13)) __PYX_ERR(0, 126, __pyx_L1_error)
+    __pyx_t_13 = __Pyx_PyObject_GetAttrStr(__pyx_t_12, __pyx_n_s_split); if (unlikely(!__pyx_t_13)) __PYX_ERR(0, 123, __pyx_L1_error)
     __Pyx_GOTREF(__pyx_t_13);
     __Pyx_DECREF(__pyx_t_12); __pyx_t_12 = 0;
     __pyx_t_12 = NULL;
@@ -5225,12 +5229,12 @@ static PyObject *__pyx_pf_5skbio_5stats_8distance_7_cutils_4distmat_reorder_cond
     }
     __pyx_t_1 = (__pyx_t_12) ? __Pyx_PyObject_Call2Args(__pyx_t_13, __pyx_t_12, __pyx_kp_s__3) : __Pyx_PyObject_CallOneArg(__pyx_t_13, __pyx_kp_s__3);
     __Pyx_XDECREF(__pyx_t_12); __pyx_t_12 = 0;
-    if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 126, __pyx_L1_error)
+    if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 123, __pyx_L1_error)
     __Pyx_GOTREF(__pyx_t_1);
     __Pyx_DECREF(__pyx_t_13); __pyx_t_13 = 0;
     __Pyx_XDECREF_SET(__pyx_v_src_sig, __pyx_t_1);
     __pyx_t_1 = 0;
-    __pyx_t_15 = PyList_GET_SIZE(__pyx_v_dest_sig); if (unlikely(__pyx_t_15 == ((Py_ssize_t)-1))) __PYX_ERR(0, 126, __pyx_L1_error)
+    __pyx_t_15 = PyList_GET_SIZE(__pyx_v_dest_sig); if (unlikely(__pyx_t_15 == ((Py_ssize_t)-1))) __PYX_ERR(0, 123, __pyx_L1_error)
     __pyx_t_16 = __pyx_t_15;
     for (__pyx_t_17 = 0; __pyx_t_17 < __pyx_t_16; __pyx_t_17+=1) {
       __pyx_v_i = __pyx_t_17;
@@ -5241,11 +5245,11 @@ static PyObject *__pyx_pf_5skbio_5stats_8distance_7_cutils_4distmat_reorder_cond
       __pyx_t_3 = (__pyx_v_dst_type != Py_None);
       __pyx_t_2 = (__pyx_t_3 != 0);
       if (__pyx_t_2) {
-        __pyx_t_1 = __Pyx_GetItemInt(__pyx_v_src_sig, __pyx_v_i, Py_ssize_t, 1, PyInt_FromSsize_t, 0, 0, 0); if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 126, __pyx_L1_error)
+        __pyx_t_1 = __Pyx_GetItemInt(__pyx_v_src_sig, __pyx_v_i, Py_ssize_t, 1, PyInt_FromSsize_t, 0, 0, 0); if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 123, __pyx_L1_error)
         __Pyx_GOTREF(__pyx_t_1);
-        __pyx_t_13 = PyObject_RichCompare(__pyx_t_1, __pyx_v_dst_type, Py_EQ); __Pyx_XGOTREF(__pyx_t_13); if (unlikely(!__pyx_t_13)) __PYX_ERR(0, 126, __pyx_L1_error)
+        __pyx_t_13 = PyObject_RichCompare(__pyx_t_1, __pyx_v_dst_type, Py_EQ); __Pyx_XGOTREF(__pyx_t_13); if (unlikely(!__pyx_t_13)) __PYX_ERR(0, 123, __pyx_L1_error)
         __Pyx_DECREF(__pyx_t_1); __pyx_t_1 = 0;
-        __pyx_t_2 = __Pyx_PyObject_IsTrue(__pyx_t_13); if (unlikely(__pyx_t_2 < 0)) __PYX_ERR(0, 126, __pyx_L1_error)
+        __pyx_t_2 = __Pyx_PyObject_IsTrue(__pyx_t_13); if (unlikely(__pyx_t_2 < 0)) __PYX_ERR(0, 123, __pyx_L1_error)
         __Pyx_DECREF(__pyx_t_13); __pyx_t_13 = 0;
         if (__pyx_t_2) {
           __pyx_v_match_found = 1;
@@ -5261,35 +5265,35 @@ static PyObject *__pyx_pf_5skbio_5stats_8distance_7_cutils_4distmat_reorder_cond
     __pyx_L32_break:;
     __pyx_t_2 = (__pyx_v_match_found != 0);
     if (__pyx_t_2) {
-      __pyx_t_18 = __Pyx_PyList_Append(__pyx_v_candidates, __pyx_v_sig); if (unlikely(__pyx_t_18 == ((int)-1))) __PYX_ERR(0, 126, __pyx_L1_error)
+      __pyx_t_18 = __Pyx_PyList_Append(__pyx_v_candidates, __pyx_v_sig); if (unlikely(__pyx_t_18 == ((int)-1))) __PYX_ERR(0, 123, __pyx_L1_error)
     }
   }
   __Pyx_DECREF(__pyx_t_6); __pyx_t_6 = 0;
   __pyx_t_2 = (PyList_GET_SIZE(__pyx_v_candidates) != 0);
   __pyx_t_3 = ((!__pyx_t_2) != 0);
   if (__pyx_t_3) {
-    __pyx_t_6 = __Pyx_PyObject_Call(__pyx_builtin_TypeError, __pyx_tuple__4, NULL); if (unlikely(!__pyx_t_6)) __PYX_ERR(0, 126, __pyx_L1_error)
+    __pyx_t_6 = __Pyx_PyObject_Call(__pyx_builtin_TypeError, __pyx_tuple__4, NULL); if (unlikely(!__pyx_t_6)) __PYX_ERR(0, 123, __pyx_L1_error)
     __Pyx_GOTREF(__pyx_t_6);
     __Pyx_Raise(__pyx_t_6, 0, 0, 0);
     __Pyx_DECREF(__pyx_t_6); __pyx_t_6 = 0;
-    __PYX_ERR(0, 126, __pyx_L1_error)
+    __PYX_ERR(0, 123, __pyx_L1_error)
   }
-  __pyx_t_9 = PyList_GET_SIZE(__pyx_v_candidates); if (unlikely(__pyx_t_9 == ((Py_ssize_t)-1))) __PYX_ERR(0, 126, __pyx_L1_error)
+  __pyx_t_9 = PyList_GET_SIZE(__pyx_v_candidates); if (unlikely(__pyx_t_9 == ((Py_ssize_t)-1))) __PYX_ERR(0, 123, __pyx_L1_error)
   __pyx_t_3 = ((__pyx_t_9 > 1) != 0);
   if (__pyx_t_3) {
-    __pyx_t_6 = __Pyx_PyObject_Call(__pyx_builtin_TypeError, __pyx_tuple__5, NULL); if (unlikely(!__pyx_t_6)) __PYX_ERR(0, 126, __pyx_L1_error)
+    __pyx_t_6 = __Pyx_PyObject_Call(__pyx_builtin_TypeError, __pyx_tuple__5, NULL); if (unlikely(!__pyx_t_6)) __PYX_ERR(0, 123, __pyx_L1_error)
     __Pyx_GOTREF(__pyx_t_6);
     __Pyx_Raise(__pyx_t_6, 0, 0, 0);
     __Pyx_DECREF(__pyx_t_6); __pyx_t_6 = 0;
-    __PYX_ERR(0, 126, __pyx_L1_error)
+    __PYX_ERR(0, 123, __pyx_L1_error)
   }
   /*else*/ {
     __Pyx_XDECREF(__pyx_r);
     if (unlikely(__pyx_v_signatures == Py_None)) {
       PyErr_SetString(PyExc_TypeError, "'NoneType' object is not subscriptable");
-      __PYX_ERR(0, 126, __pyx_L1_error)
+      __PYX_ERR(0, 123, __pyx_L1_error)
     }
-    __pyx_t_6 = __Pyx_PyDict_GetItem(((PyObject*)__pyx_v_signatures), PyList_GET_ITEM(__pyx_v_candidates, 0)); if (unlikely(!__pyx_t_6)) __PYX_ERR(0, 126, __pyx_L1_error)
+    __pyx_t_6 = __Pyx_PyDict_GetItem(((PyObject*)__pyx_v_signatures), PyList_GET_ITEM(__pyx_v_candidates, 0)); if (unlikely(!__pyx_t_6)) __PYX_ERR(0, 123, __pyx_L1_error)
     __Pyx_GOTREF(__pyx_t_6);
     __pyx_r = __pyx_t_6;
     __pyx_t_6 = 0;
@@ -5359,17 +5363,17 @@ static PyObject *__pyx_fuse_0__pyx_pw_5skbio_5stats_8distance_7_cutils_21distmat
         case  1:
         if (likely((values[1] = __Pyx_PyDict_GetItemStr(__pyx_kwds, __pyx_n_s_reorder_vec)) != 0)) kw_args--;
         else {
-          __Pyx_RaiseArgtupleInvalid("distmat_reorder_condensed_cy", 1, 3, 3, 1); __PYX_ERR(0, 126, __pyx_L3_error)
+          __Pyx_RaiseArgtupleInvalid("distmat_reorder_condensed_cy", 1, 3, 3, 1); __PYX_ERR(0, 123, __pyx_L3_error)
         }
         CYTHON_FALLTHROUGH;
         case  2:
         if (likely((values[2] = __Pyx_PyDict_GetItemStr(__pyx_kwds, __pyx_n_s_out_mat_condensed)) != 0)) kw_args--;
         else {
-          __Pyx_RaiseArgtupleInvalid("distmat_reorder_condensed_cy", 1, 3, 3, 2); __PYX_ERR(0, 126, __pyx_L3_error)
+          __Pyx_RaiseArgtupleInvalid("distmat_reorder_condensed_cy", 1, 3, 3, 2); __PYX_ERR(0, 123, __pyx_L3_error)
         }
       }
       if (unlikely(kw_args > 0)) {
-        if (unlikely(__Pyx_ParseOptionalKeywords(__pyx_kwds, __pyx_pyargnames, 0, values, pos_args, "distmat_reorder_condensed_cy") < 0)) __PYX_ERR(0, 126, __pyx_L3_error)
+        if (unlikely(__Pyx_ParseOptionalKeywords(__pyx_kwds, __pyx_pyargnames, 0, values, pos_args, "distmat_reorder_condensed_cy") < 0)) __PYX_ERR(0, 123, __pyx_L3_error)
       }
     } else if (PyTuple_GET_SIZE(__pyx_args) != 3) {
       goto __pyx_L5_argtuple_error;
@@ -5378,13 +5382,13 @@ static PyObject *__pyx_fuse_0__pyx_pw_5skbio_5stats_8distance_7_cutils_21distmat
       values[1] = PyTuple_GET_ITEM(__pyx_args, 1);
       values[2] = PyTuple_GET_ITEM(__pyx_args, 2);
     }
-    __pyx_v_in_mat = __Pyx_PyObject_to_MemoryviewSlice_d_dc_float(values[0], PyBUF_WRITABLE); if (unlikely(!__pyx_v_in_mat.memview)) __PYX_ERR(0, 126, __pyx_L3_error)
-    __pyx_v_reorder_vec = __Pyx_PyObject_to_MemoryviewSlice_dc_long(values[1], PyBUF_WRITABLE); if (unlikely(!__pyx_v_reorder_vec.memview)) __PYX_ERR(0, 126, __pyx_L3_error)
-    __pyx_v_out_mat_condensed = __Pyx_PyObject_to_MemoryviewSlice_dc_float(values[2], PyBUF_WRITABLE); if (unlikely(!__pyx_v_out_mat_condensed.memview)) __PYX_ERR(0, 127, __pyx_L3_error)
+    __pyx_v_in_mat = __Pyx_PyObject_to_MemoryviewSlice_d_dc_float(values[0], PyBUF_WRITABLE); if (unlikely(!__pyx_v_in_mat.memview)) __PYX_ERR(0, 123, __pyx_L3_error)
+    __pyx_v_reorder_vec = __Pyx_PyObject_to_MemoryviewSlice_dc_long(values[1], PyBUF_WRITABLE); if (unlikely(!__pyx_v_reorder_vec.memview)) __PYX_ERR(0, 123, __pyx_L3_error)
+    __pyx_v_out_mat_condensed = __Pyx_PyObject_to_MemoryviewSlice_dc_float(values[2], PyBUF_WRITABLE); if (unlikely(!__pyx_v_out_mat_condensed.memview)) __PYX_ERR(0, 124, __pyx_L3_error)
   }
   goto __pyx_L4_argument_unpacking_done;
   __pyx_L5_argtuple_error:;
-  __Pyx_RaiseArgtupleInvalid("distmat_reorder_condensed_cy", 1, 3, 3, PyTuple_GET_SIZE(__pyx_args)); __PYX_ERR(0, 126, __pyx_L3_error)
+  __Pyx_RaiseArgtupleInvalid("distmat_reorder_condensed_cy", 1, 3, 3, PyTuple_GET_SIZE(__pyx_args)); __PYX_ERR(0, 123, __pyx_L3_error)
   __pyx_L3_error:;
   __Pyx_AddTraceback("skbio.stats.distance._cutils.distmat_reorder_condensed_cy", __pyx_clineno, __pyx_lineno, __pyx_filename);
   __Pyx_RefNannyFinishContext();
@@ -5423,7 +5427,7 @@ static PyObject *__pyx_pf_5skbio_5stats_8distance_7_cutils_20distmat_reorder_con
   int __pyx_clineno = 0;
   __Pyx_RefNannySetupContext("__pyx_fuse_0distmat_reorder_condensed_cy", 0);
 
-  /* "skbio/stats/distance/_cutils.pyx":155
+  /* "skbio/stats/distance/_cutils.pyx":152
  *         Output, condensed distance matrix
  *     """
  *     cdef Py_ssize_t in_n = in_mat.shape[0]             # <<<<<<<<<<<<<<
@@ -5432,7 +5436,7 @@ static PyObject *__pyx_pf_5skbio_5stats_8distance_7_cutils_20distmat_reorder_con
  */
   __pyx_v_in_n = (__pyx_v_in_mat.shape[0]);
 
-  /* "skbio/stats/distance/_cutils.pyx":156
+  /* "skbio/stats/distance/_cutils.pyx":153
  *     """
  *     cdef Py_ssize_t in_n = in_mat.shape[0]
  *     cdef Py_ssize_t in2 = in_mat.shape[1]             # <<<<<<<<<<<<<<
@@ -5441,7 +5445,7 @@ static PyObject *__pyx_pf_5skbio_5stats_8distance_7_cutils_20distmat_reorder_con
  */
   __pyx_v_in2 = (__pyx_v_in_mat.shape[1]);
 
-  /* "skbio/stats/distance/_cutils.pyx":157
+  /* "skbio/stats/distance/_cutils.pyx":154
  *     cdef Py_ssize_t in_n = in_mat.shape[0]
  *     cdef Py_ssize_t in2 = in_mat.shape[1]
  *     cdef Py_ssize_t out_n = reorder_vec.shape[0]             # <<<<<<<<<<<<<<
@@ -5450,7 +5454,7 @@ static PyObject *__pyx_pf_5skbio_5stats_8distance_7_cutils_20distmat_reorder_con
  */
   __pyx_v_out_n = (__pyx_v_reorder_vec.shape[0]);
 
-  /* "skbio/stats/distance/_cutils.pyx":158
+  /* "skbio/stats/distance/_cutils.pyx":155
  *     cdef Py_ssize_t in2 = in_mat.shape[1]
  *     cdef Py_ssize_t out_n = reorder_vec.shape[0]
  *     cdef Py_ssize_t on2 = out_mat_condensed.shape[0]             # <<<<<<<<<<<<<<
@@ -5459,7 +5463,7 @@ static PyObject *__pyx_pf_5skbio_5stats_8distance_7_cutils_20distmat_reorder_con
  */
   __pyx_v_on2 = (__pyx_v_out_mat_condensed.shape[0]);
 
-  /* "skbio/stats/distance/_cutils.pyx":160
+  /* "skbio/stats/distance/_cutils.pyx":157
  *     cdef Py_ssize_t on2 = out_mat_condensed.shape[0]
  * 
  *     assert in_n == in2             # <<<<<<<<<<<<<<
@@ -5470,12 +5474,12 @@ static PyObject *__pyx_pf_5skbio_5stats_8distance_7_cutils_20distmat_reorder_con
   if (unlikely(!Py_OptimizeFlag)) {
     if (unlikely(!((__pyx_v_in_n == __pyx_v_in2) != 0))) {
       PyErr_SetNone(PyExc_AssertionError);
-      __PYX_ERR(0, 160, __pyx_L1_error)
+      __PYX_ERR(0, 157, __pyx_L1_error)
     }
   }
   #endif
 
-  /* "skbio/stats/distance/_cutils.pyx":161
+  /* "skbio/stats/distance/_cutils.pyx":158
  * 
  *     assert in_n == in2
  *     assert on2 == ((out_n-1)*out_n)/2             # <<<<<<<<<<<<<<
@@ -5486,12 +5490,12 @@ static PyObject *__pyx_pf_5skbio_5stats_8distance_7_cutils_20distmat_reorder_con
   if (unlikely(!Py_OptimizeFlag)) {
     if (unlikely(!((__pyx_v_on2 == __Pyx_div_Py_ssize_t(((__pyx_v_out_n - 1) * __pyx_v_out_n), 2)) != 0))) {
       PyErr_SetNone(PyExc_AssertionError);
-      __PYX_ERR(0, 161, __pyx_L1_error)
+      __PYX_ERR(0, 158, __pyx_L1_error)
     }
   }
   #endif
 
-  /* "skbio/stats/distance/_cutils.pyx":167
+  /* "skbio/stats/distance/_cutils.pyx":164
  *     cdef Py_ssize_t idx
  * 
  *     for row in prange(out_n-1, nogil=True):             # <<<<<<<<<<<<<<
@@ -5532,7 +5536,7 @@ static PyObject *__pyx_pf_5skbio_5stats_8distance_7_cutils_20distmat_reorder_con
                             __pyx_v_idx = ((Py_ssize_t)0xbad0bad0);
                             __pyx_v_vrow = ((Py_ssize_t)0xbad0bad0);
 
-                            /* "skbio/stats/distance/_cutils.pyx":168
+                            /* "skbio/stats/distance/_cutils.pyx":165
  * 
  *     for row in prange(out_n-1, nogil=True):
  *         vrow = reorder_vec[row]             # <<<<<<<<<<<<<<
@@ -5542,7 +5546,7 @@ static PyObject *__pyx_pf_5skbio_5stats_8distance_7_cutils_20distmat_reorder_con
                             __pyx_t_4 = __pyx_v_row;
                             __pyx_v_vrow = (*((long *) ( /* dim=0 */ ((char *) (((long *) __pyx_v_reorder_vec.data) + __pyx_t_4)) )));
 
-                            /* "skbio/stats/distance/_cutils.pyx":169
+                            /* "skbio/stats/distance/_cutils.pyx":166
  *     for row in prange(out_n-1, nogil=True):
  *         vrow = reorder_vec[row]
  *         idx = row*(out_n-1) - ((row-1)*row)/2             # <<<<<<<<<<<<<<
@@ -5551,7 +5555,7 @@ static PyObject *__pyx_pf_5skbio_5stats_8distance_7_cutils_20distmat_reorder_con
  */
                             __pyx_v_idx = ((__pyx_v_row * (__pyx_v_out_n - 1)) - __Pyx_div_Py_ssize_t(((__pyx_v_row - 1) * __pyx_v_row), 2));
 
-                            /* "skbio/stats/distance/_cutils.pyx":170
+                            /* "skbio/stats/distance/_cutils.pyx":167
  *         vrow = reorder_vec[row]
  *         idx = row*(out_n-1) - ((row-1)*row)/2
  *         for col in range(out_n-row-1):             # <<<<<<<<<<<<<<
@@ -5563,7 +5567,7 @@ static PyObject *__pyx_pf_5skbio_5stats_8distance_7_cutils_20distmat_reorder_con
                             for (__pyx_t_7 = 0; __pyx_t_7 < __pyx_t_6; __pyx_t_7+=1) {
                               __pyx_v_col = __pyx_t_7;
 
-                              /* "skbio/stats/distance/_cutils.pyx":171
+                              /* "skbio/stats/distance/_cutils.pyx":168
  *         idx = row*(out_n-1) - ((row-1)*row)/2
  *         for col in range(out_n-row-1):
  *            out_mat_condensed[idx+col] = in_mat[vrow, reorder_vec[col+row+1]]             # <<<<<<<<<<<<<<
@@ -5589,7 +5593,7 @@ static PyObject *__pyx_pf_5skbio_5stats_8distance_7_cutils_20distmat_reorder_con
         #endif
       }
 
-      /* "skbio/stats/distance/_cutils.pyx":167
+      /* "skbio/stats/distance/_cutils.pyx":164
  *     cdef Py_ssize_t idx
  * 
  *     for row in prange(out_n-1, nogil=True):             # <<<<<<<<<<<<<<
@@ -5608,7 +5612,7 @@ static PyObject *__pyx_pf_5skbio_5stats_8distance_7_cutils_20distmat_reorder_con
       }
   }
 
-  /* "skbio/stats/distance/_cutils.pyx":126
+  /* "skbio/stats/distance/_cutils.pyx":123
  * @cython.boundscheck(False)
  * @cython.wraparound(False)
  * def distmat_reorder_condensed_cy(TReal[:, ::1] in_mat, long[::1] reorder_vec,             # <<<<<<<<<<<<<<
@@ -5669,17 +5673,17 @@ static PyObject *__pyx_fuse_1__pyx_pw_5skbio_5stats_8distance_7_cutils_23distmat
         case  1:
         if (likely((values[1] = __Pyx_PyDict_GetItemStr(__pyx_kwds, __pyx_n_s_reorder_vec)) != 0)) kw_args--;
         else {
-          __Pyx_RaiseArgtupleInvalid("distmat_reorder_condensed_cy", 1, 3, 3, 1); __PYX_ERR(0, 126, __pyx_L3_error)
+          __Pyx_RaiseArgtupleInvalid("distmat_reorder_condensed_cy", 1, 3, 3, 1); __PYX_ERR(0, 123, __pyx_L3_error)
         }
         CYTHON_FALLTHROUGH;
         case  2:
         if (likely((values[2] = __Pyx_PyDict_GetItemStr(__pyx_kwds, __pyx_n_s_out_mat_condensed)) != 0)) kw_args--;
         else {
-          __Pyx_RaiseArgtupleInvalid("distmat_reorder_condensed_cy", 1, 3, 3, 2); __PYX_ERR(0, 126, __pyx_L3_error)
+          __Pyx_RaiseArgtupleInvalid("distmat_reorder_condensed_cy", 1, 3, 3, 2); __PYX_ERR(0, 123, __pyx_L3_error)
         }
       }
       if (unlikely(kw_args > 0)) {
-        if (unlikely(__Pyx_ParseOptionalKeywords(__pyx_kwds, __pyx_pyargnames, 0, values, pos_args, "distmat_reorder_condensed_cy") < 0)) __PYX_ERR(0, 126, __pyx_L3_error)
+        if (unlikely(__Pyx_ParseOptionalKeywords(__pyx_kwds, __pyx_pyargnames, 0, values, pos_args, "distmat_reorder_condensed_cy") < 0)) __PYX_ERR(0, 123, __pyx_L3_error)
       }
     } else if (PyTuple_GET_SIZE(__pyx_args) != 3) {
       goto __pyx_L5_argtuple_error;
@@ -5688,13 +5692,13 @@ static PyObject *__pyx_fuse_1__pyx_pw_5skbio_5stats_8distance_7_cutils_23distmat
       values[1] = PyTuple_GET_ITEM(__pyx_args, 1);
       values[2] = PyTuple_GET_ITEM(__pyx_args, 2);
     }
-    __pyx_v_in_mat = __Pyx_PyObject_to_MemoryviewSlice_d_dc_double(values[0], PyBUF_WRITABLE); if (unlikely(!__pyx_v_in_mat.memview)) __PYX_ERR(0, 126, __pyx_L3_error)
-    __pyx_v_reorder_vec = __Pyx_PyObject_to_MemoryviewSlice_dc_long(values[1], PyBUF_WRITABLE); if (unlikely(!__pyx_v_reorder_vec.memview)) __PYX_ERR(0, 126, __pyx_L3_error)
-    __pyx_v_out_mat_condensed = __Pyx_PyObject_to_MemoryviewSlice_dc_double(values[2], PyBUF_WRITABLE); if (unlikely(!__pyx_v_out_mat_condensed.memview)) __PYX_ERR(0, 127, __pyx_L3_error)
+    __pyx_v_in_mat = __Pyx_PyObject_to_MemoryviewSlice_d_dc_double(values[0], PyBUF_WRITABLE); if (unlikely(!__pyx_v_in_mat.memview)) __PYX_ERR(0, 123, __pyx_L3_error)
+    __pyx_v_reorder_vec = __Pyx_PyObject_to_MemoryviewSlice_dc_long(values[1], PyBUF_WRITABLE); if (unlikely(!__pyx_v_reorder_vec.memview)) __PYX_ERR(0, 123, __pyx_L3_error)
+    __pyx_v_out_mat_condensed = __Pyx_PyObject_to_MemoryviewSlice_dc_double(values[2], PyBUF_WRITABLE); if (unlikely(!__pyx_v_out_mat_condensed.memview)) __PYX_ERR(0, 124, __pyx_L3_error)
   }
   goto __pyx_L4_argument_unpacking_done;
   __pyx_L5_argtuple_error:;
-  __Pyx_RaiseArgtupleInvalid("distmat_reorder_condensed_cy", 1, 3, 3, PyTuple_GET_SIZE(__pyx_args)); __PYX_ERR(0, 126, __pyx_L3_error)
+  __Pyx_RaiseArgtupleInvalid("distmat_reorder_condensed_cy", 1, 3, 3, PyTuple_GET_SIZE(__pyx_args)); __PYX_ERR(0, 123, __pyx_L3_error)
   __pyx_L3_error:;
   __Pyx_AddTraceback("skbio.stats.distance._cutils.distmat_reorder_condensed_cy", __pyx_clineno, __pyx_lineno, __pyx_filename);
   __Pyx_RefNannyFinishContext();
@@ -5733,7 +5737,7 @@ static PyObject *__pyx_pf_5skbio_5stats_8distance_7_cutils_22distmat_reorder_con
   int __pyx_clineno = 0;
   __Pyx_RefNannySetupContext("__pyx_fuse_1distmat_reorder_condensed_cy", 0);
 
-  /* "skbio/stats/distance/_cutils.pyx":155
+  /* "skbio/stats/distance/_cutils.pyx":152
  *         Output, condensed distance matrix
  *     """
  *     cdef Py_ssize_t in_n = in_mat.shape[0]             # <<<<<<<<<<<<<<
@@ -5742,7 +5746,7 @@ static PyObject *__pyx_pf_5skbio_5stats_8distance_7_cutils_22distmat_reorder_con
  */
   __pyx_v_in_n = (__pyx_v_in_mat.shape[0]);
 
-  /* "skbio/stats/distance/_cutils.pyx":156
+  /* "skbio/stats/distance/_cutils.pyx":153
  *     """
  *     cdef Py_ssize_t in_n = in_mat.shape[0]
  *     cdef Py_ssize_t in2 = in_mat.shape[1]             # <<<<<<<<<<<<<<
@@ -5751,7 +5755,7 @@ static PyObject *__pyx_pf_5skbio_5stats_8distance_7_cutils_22distmat_reorder_con
  */
   __pyx_v_in2 = (__pyx_v_in_mat.shape[1]);
 
-  /* "skbio/stats/distance/_cutils.pyx":157
+  /* "skbio/stats/distance/_cutils.pyx":154
  *     cdef Py_ssize_t in_n = in_mat.shape[0]
  *     cdef Py_ssize_t in2 = in_mat.shape[1]
  *     cdef Py_ssize_t out_n = reorder_vec.shape[0]             # <<<<<<<<<<<<<<
@@ -5760,7 +5764,7 @@ static PyObject *__pyx_pf_5skbio_5stats_8distance_7_cutils_22distmat_reorder_con
  */
   __pyx_v_out_n = (__pyx_v_reorder_vec.shape[0]);
 
-  /* "skbio/stats/distance/_cutils.pyx":158
+  /* "skbio/stats/distance/_cutils.pyx":155
  *     cdef Py_ssize_t in2 = in_mat.shape[1]
  *     cdef Py_ssize_t out_n = reorder_vec.shape[0]
  *     cdef Py_ssize_t on2 = out_mat_condensed.shape[0]             # <<<<<<<<<<<<<<
@@ -5769,7 +5773,7 @@ static PyObject *__pyx_pf_5skbio_5stats_8distance_7_cutils_22distmat_reorder_con
  */
   __pyx_v_on2 = (__pyx_v_out_mat_condensed.shape[0]);
 
-  /* "skbio/stats/distance/_cutils.pyx":160
+  /* "skbio/stats/distance/_cutils.pyx":157
  *     cdef Py_ssize_t on2 = out_mat_condensed.shape[0]
  * 
  *     assert in_n == in2             # <<<<<<<<<<<<<<
@@ -5780,12 +5784,12 @@ static PyObject *__pyx_pf_5skbio_5stats_8distance_7_cutils_22distmat_reorder_con
   if (unlikely(!Py_OptimizeFlag)) {
     if (unlikely(!((__pyx_v_in_n == __pyx_v_in2) != 0))) {
       PyErr_SetNone(PyExc_AssertionError);
-      __PYX_ERR(0, 160, __pyx_L1_error)
+      __PYX_ERR(0, 157, __pyx_L1_error)
     }
   }
   #endif
 
-  /* "skbio/stats/distance/_cutils.pyx":161
+  /* "skbio/stats/distance/_cutils.pyx":158
  * 
  *     assert in_n == in2
  *     assert on2 == ((out_n-1)*out_n)/2             # <<<<<<<<<<<<<<
@@ -5796,12 +5800,12 @@ static PyObject *__pyx_pf_5skbio_5stats_8distance_7_cutils_22distmat_reorder_con
   if (unlikely(!Py_OptimizeFlag)) {
     if (unlikely(!((__pyx_v_on2 == __Pyx_div_Py_ssize_t(((__pyx_v_out_n - 1) * __pyx_v_out_n), 2)) != 0))) {
       PyErr_SetNone(PyExc_AssertionError);
-      __PYX_ERR(0, 161, __pyx_L1_error)
+      __PYX_ERR(0, 158, __pyx_L1_error)
     }
   }
   #endif
 
-  /* "skbio/stats/distance/_cutils.pyx":167
+  /* "skbio/stats/distance/_cutils.pyx":164
  *     cdef Py_ssize_t idx
  * 
  *     for row in prange(out_n-1, nogil=True):             # <<<<<<<<<<<<<<
@@ -5842,7 +5846,7 @@ static PyObject *__pyx_pf_5skbio_5stats_8distance_7_cutils_22distmat_reorder_con
                             __pyx_v_idx = ((Py_ssize_t)0xbad0bad0);
                             __pyx_v_vrow = ((Py_ssize_t)0xbad0bad0);
 
-                            /* "skbio/stats/distance/_cutils.pyx":168
+                            /* "skbio/stats/distance/_cutils.pyx":165
  * 
  *     for row in prange(out_n-1, nogil=True):
  *         vrow = reorder_vec[row]             # <<<<<<<<<<<<<<
@@ -5852,7 +5856,7 @@ static PyObject *__pyx_pf_5skbio_5stats_8distance_7_cutils_22distmat_reorder_con
                             __pyx_t_4 = __pyx_v_row;
                             __pyx_v_vrow = (*((long *) ( /* dim=0 */ ((char *) (((long *) __pyx_v_reorder_vec.data) + __pyx_t_4)) )));
 
-                            /* "skbio/stats/distance/_cutils.pyx":169
+                            /* "skbio/stats/distance/_cutils.pyx":166
  *     for row in prange(out_n-1, nogil=True):
  *         vrow = reorder_vec[row]
  *         idx = row*(out_n-1) - ((row-1)*row)/2             # <<<<<<<<<<<<<<
@@ -5861,7 +5865,7 @@ static PyObject *__pyx_pf_5skbio_5stats_8distance_7_cutils_22distmat_reorder_con
  */
                             __pyx_v_idx = ((__pyx_v_row * (__pyx_v_out_n - 1)) - __Pyx_div_Py_ssize_t(((__pyx_v_row - 1) * __pyx_v_row), 2));
 
-                            /* "skbio/stats/distance/_cutils.pyx":170
+                            /* "skbio/stats/distance/_cutils.pyx":167
  *         vrow = reorder_vec[row]
  *         idx = row*(out_n-1) - ((row-1)*row)/2
  *         for col in range(out_n-row-1):             # <<<<<<<<<<<<<<
@@ -5873,7 +5877,7 @@ static PyObject *__pyx_pf_5skbio_5stats_8distance_7_cutils_22distmat_reorder_con
                             for (__pyx_t_7 = 0; __pyx_t_7 < __pyx_t_6; __pyx_t_7+=1) {
                               __pyx_v_col = __pyx_t_7;
 
-                              /* "skbio/stats/distance/_cutils.pyx":171
+                              /* "skbio/stats/distance/_cutils.pyx":168
  *         idx = row*(out_n-1) - ((row-1)*row)/2
  *         for col in range(out_n-row-1):
  *            out_mat_condensed[idx+col] = in_mat[vrow, reorder_vec[col+row+1]]             # <<<<<<<<<<<<<<
@@ -5899,7 +5903,7 @@ static PyObject *__pyx_pf_5skbio_5stats_8distance_7_cutils_22distmat_reorder_con
         #endif
       }
 
-      /* "skbio/stats/distance/_cutils.pyx":167
+      /* "skbio/stats/distance/_cutils.pyx":164
  *     cdef Py_ssize_t idx
  * 
  *     for row in prange(out_n-1, nogil=True):             # <<<<<<<<<<<<<<
@@ -5918,7 +5922,7 @@ static PyObject *__pyx_pf_5skbio_5stats_8distance_7_cutils_22distmat_reorder_con
       }
   }
 
-  /* "skbio/stats/distance/_cutils.pyx":126
+  /* "skbio/stats/distance/_cutils.pyx":123
  * @cython.boundscheck(False)
  * @cython.wraparound(False)
  * def distmat_reorder_condensed_cy(TReal[:, ::1] in_mat, long[::1] reorder_vec,             # <<<<<<<<<<<<<<
@@ -5941,7 +5945,7 @@ static PyObject *__pyx_pf_5skbio_5stats_8distance_7_cutils_22distmat_reorder_con
   return __pyx_r;
 }
 
-/* "skbio/stats/distance/_cutils.pyx":176
+/* "skbio/stats/distance/_cutils.pyx":173
  * @cython.boundscheck(False)
  * @cython.wraparound(False)
  * def mantel_perm_pearsonr_cy(TReal[:, ::1] x_data, long[:, ::1] perm_order,             # <<<<<<<<<<<<<<
@@ -5991,23 +5995,23 @@ static PyObject *__pyx_pw_5skbio_5stats_8distance_7_cutils_7mantel_perm_pearsonr
         case  1:
         if (likely((values[1] = __Pyx_PyDict_GetItemStr(__pyx_kwds, __pyx_n_s_args)) != 0)) kw_args--;
         else {
-          __Pyx_RaiseArgtupleInvalid("__pyx_fused_cpdef", 1, 4, 4, 1); __PYX_ERR(0, 176, __pyx_L3_error)
+          __Pyx_RaiseArgtupleInvalid("__pyx_fused_cpdef", 1, 4, 4, 1); __PYX_ERR(0, 173, __pyx_L3_error)
         }
         CYTHON_FALLTHROUGH;
         case  2:
         if (likely((values[2] = __Pyx_PyDict_GetItemStr(__pyx_kwds, __pyx_n_s_kwargs)) != 0)) kw_args--;
         else {
-          __Pyx_RaiseArgtupleInvalid("__pyx_fused_cpdef", 1, 4, 4, 2); __PYX_ERR(0, 176, __pyx_L3_error)
+          __Pyx_RaiseArgtupleInvalid("__pyx_fused_cpdef", 1, 4, 4, 2); __PYX_ERR(0, 173, __pyx_L3_error)
         }
         CYTHON_FALLTHROUGH;
         case  3:
         if (likely((values[3] = __Pyx_PyDict_GetItemStr(__pyx_kwds, __pyx_n_s_defaults)) != 0)) kw_args--;
         else {
-          __Pyx_RaiseArgtupleInvalid("__pyx_fused_cpdef", 1, 4, 4, 3); __PYX_ERR(0, 176, __pyx_L3_error)
+          __Pyx_RaiseArgtupleInvalid("__pyx_fused_cpdef", 1, 4, 4, 3); __PYX_ERR(0, 173, __pyx_L3_error)
         }
       }
       if (unlikely(kw_args > 0)) {
-        if (unlikely(__Pyx_ParseOptionalKeywords(__pyx_kwds, __pyx_pyargnames, 0, values, pos_args, "__pyx_fused_cpdef") < 0)) __PYX_ERR(0, 176, __pyx_L3_error)
+        if (unlikely(__Pyx_ParseOptionalKeywords(__pyx_kwds, __pyx_pyargnames, 0, values, pos_args, "__pyx_fused_cpdef") < 0)) __PYX_ERR(0, 173, __pyx_L3_error)
       }
     } else if (PyTuple_GET_SIZE(__pyx_args) != 4) {
       goto __pyx_L5_argtuple_error;
@@ -6024,7 +6028,7 @@ static PyObject *__pyx_pw_5skbio_5stats_8distance_7_cutils_7mantel_perm_pearsonr
   }
   goto __pyx_L4_argument_unpacking_done;
   __pyx_L5_argtuple_error:;
-  __Pyx_RaiseArgtupleInvalid("__pyx_fused_cpdef", 1, 4, 4, PyTuple_GET_SIZE(__pyx_args)); __PYX_ERR(0, 176, __pyx_L3_error)
+  __Pyx_RaiseArgtupleInvalid("__pyx_fused_cpdef", 1, 4, 4, PyTuple_GET_SIZE(__pyx_args)); __PYX_ERR(0, 173, __pyx_L3_error)
   __pyx_L3_error:;
   __Pyx_AddTraceback("skbio.stats.distance._cutils.__pyx_fused_cpdef", __pyx_clineno, __pyx_lineno, __pyx_filename);
   __Pyx_RefNannyFinishContext();
@@ -6078,7 +6082,7 @@ static PyObject *__pyx_pf_5skbio_5stats_8distance_7_cutils_6mantel_perm_pearsonr
   int __pyx_clineno = 0;
   __Pyx_RefNannySetupContext("mantel_perm_pearsonr_cy", 0);
   __Pyx_INCREF(__pyx_v_kwargs);
-  __pyx_t_1 = PyList_New(1); if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 176, __pyx_L1_error)
+  __pyx_t_1 = PyList_New(1); if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 173, __pyx_L1_error)
   __Pyx_GOTREF(__pyx_t_1);
   __Pyx_INCREF(Py_None);
   __Pyx_GIVEREF(Py_None);
@@ -6092,7 +6096,7 @@ static PyObject *__pyx_pf_5skbio_5stats_8distance_7_cutils_6mantel_perm_pearsonr
     __pyx_t_2 = __pyx_t_4;
     goto __pyx_L4_bool_binop_done;
   }
-  __pyx_t_4 = __Pyx_PyObject_IsTrue(__pyx_v_kwargs); if (unlikely(__pyx_t_4 < 0)) __PYX_ERR(0, 176, __pyx_L1_error)
+  __pyx_t_4 = __Pyx_PyObject_IsTrue(__pyx_v_kwargs); if (unlikely(__pyx_t_4 < 0)) __PYX_ERR(0, 173, __pyx_L1_error)
   __pyx_t_3 = ((!__pyx_t_4) != 0);
   __pyx_t_2 = __pyx_t_3;
   __pyx_L4_bool_binop_done:;
@@ -6100,21 +6104,21 @@ static PyObject *__pyx_pf_5skbio_5stats_8distance_7_cutils_6mantel_perm_pearsonr
     __Pyx_INCREF(Py_None);
     __Pyx_DECREF_SET(__pyx_v_kwargs, Py_None);
   }
-  __pyx_t_1 = ((PyObject *)__Pyx_ImportNumPyArrayTypeIfAvailable()); if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 176, __pyx_L1_error)
+  __pyx_t_1 = ((PyObject *)__Pyx_ImportNumPyArrayTypeIfAvailable()); if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 173, __pyx_L1_error)
   __Pyx_GOTREF(__pyx_t_1);
   __pyx_v_ndarray = ((PyTypeObject*)__pyx_t_1);
   __pyx_t_1 = 0;
   __pyx_v_itemsize = -1L;
   if (unlikely(__pyx_v_args == Py_None)) {
     PyErr_SetString(PyExc_TypeError, "object of type 'NoneType' has no len()");
-    __PYX_ERR(0, 176, __pyx_L1_error)
+    __PYX_ERR(0, 173, __pyx_L1_error)
   }
-  __pyx_t_5 = PyTuple_GET_SIZE(((PyObject*)__pyx_v_args)); if (unlikely(__pyx_t_5 == ((Py_ssize_t)-1))) __PYX_ERR(0, 176, __pyx_L1_error)
+  __pyx_t_5 = PyTuple_GET_SIZE(((PyObject*)__pyx_v_args)); if (unlikely(__pyx_t_5 == ((Py_ssize_t)-1))) __PYX_ERR(0, 173, __pyx_L1_error)
   __pyx_t_2 = ((0 < __pyx_t_5) != 0);
   if (__pyx_t_2) {
     if (unlikely(__pyx_v_args == Py_None)) {
       PyErr_SetString(PyExc_TypeError, "'NoneType' object is not subscriptable");
-      __PYX_ERR(0, 176, __pyx_L1_error)
+      __PYX_ERR(0, 173, __pyx_L1_error)
     }
     __pyx_t_1 = PyTuple_GET_ITEM(((PyObject*)__pyx_v_args), 0);
     __Pyx_INCREF(__pyx_t_1);
@@ -6131,18 +6135,18 @@ static PyObject *__pyx_pf_5skbio_5stats_8distance_7_cutils_6mantel_perm_pearsonr
   }
   if (unlikely(__pyx_v_kwargs == Py_None)) {
     PyErr_SetString(PyExc_TypeError, "'NoneType' object is not iterable");
-    __PYX_ERR(0, 176, __pyx_L1_error)
+    __PYX_ERR(0, 173, __pyx_L1_error)
   }
-  __pyx_t_4 = (__Pyx_PyDict_ContainsTF(__pyx_n_s_x_data, ((PyObject*)__pyx_v_kwargs), Py_EQ)); if (unlikely(__pyx_t_4 < 0)) __PYX_ERR(0, 176, __pyx_L1_error)
+  __pyx_t_4 = (__Pyx_PyDict_ContainsTF(__pyx_n_s_x_data, ((PyObject*)__pyx_v_kwargs), Py_EQ)); if (unlikely(__pyx_t_4 < 0)) __PYX_ERR(0, 173, __pyx_L1_error)
   __pyx_t_3 = (__pyx_t_4 != 0);
   __pyx_t_2 = __pyx_t_3;
   __pyx_L7_bool_binop_done:;
   if (__pyx_t_2) {
     if (unlikely(__pyx_v_kwargs == Py_None)) {
       PyErr_SetString(PyExc_TypeError, "'NoneType' object is not subscriptable");
-      __PYX_ERR(0, 176, __pyx_L1_error)
+      __PYX_ERR(0, 173, __pyx_L1_error)
     }
-    __pyx_t_1 = __Pyx_PyDict_GetItem(((PyObject*)__pyx_v_kwargs), __pyx_n_s_x_data); if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 176, __pyx_L1_error)
+    __pyx_t_1 = __Pyx_PyDict_GetItem(((PyObject*)__pyx_v_kwargs), __pyx_n_s_x_data); if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 173, __pyx_L1_error)
     __Pyx_GOTREF(__pyx_t_1);
     __pyx_v_arg = __pyx_t_1;
     __pyx_t_1 = 0;
@@ -6151,12 +6155,12 @@ static PyObject *__pyx_pf_5skbio_5stats_8distance_7_cutils_6mantel_perm_pearsonr
   /*else*/ {
     if (unlikely(__pyx_v_args == Py_None)) {
       PyErr_SetString(PyExc_TypeError, "object of type 'NoneType' has no len()");
-      __PYX_ERR(0, 176, __pyx_L1_error)
+      __PYX_ERR(0, 173, __pyx_L1_error)
     }
-    __pyx_t_5 = PyTuple_GET_SIZE(((PyObject*)__pyx_v_args)); if (unlikely(__pyx_t_5 == ((Py_ssize_t)-1))) __PYX_ERR(0, 176, __pyx_L1_error)
-    __pyx_t_1 = PyInt_FromSsize_t(__pyx_t_5); if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 176, __pyx_L1_error)
+    __pyx_t_5 = PyTuple_GET_SIZE(((PyObject*)__pyx_v_args)); if (unlikely(__pyx_t_5 == ((Py_ssize_t)-1))) __PYX_ERR(0, 173, __pyx_L1_error)
+    __pyx_t_1 = PyInt_FromSsize_t(__pyx_t_5); if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 173, __pyx_L1_error)
     __Pyx_GOTREF(__pyx_t_1);
-    __pyx_t_6 = PyTuple_New(3); if (unlikely(!__pyx_t_6)) __PYX_ERR(0, 176, __pyx_L1_error)
+    __pyx_t_6 = PyTuple_New(3); if (unlikely(!__pyx_t_6)) __PYX_ERR(0, 173, __pyx_L1_error)
     __Pyx_GOTREF(__pyx_t_6);
     __Pyx_INCREF(__pyx_int_6);
     __Pyx_GIVEREF(__pyx_int_6);
@@ -6167,15 +6171,15 @@ static PyObject *__pyx_pf_5skbio_5stats_8distance_7_cutils_6mantel_perm_pearsonr
     __Pyx_GIVEREF(__pyx_t_1);
     PyTuple_SET_ITEM(__pyx_t_6, 2, __pyx_t_1);
     __pyx_t_1 = 0;
-    __pyx_t_1 = __Pyx_PyString_Format(__pyx_kp_s_Expected_at_least_d_argument_s_g, __pyx_t_6); if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 176, __pyx_L1_error)
+    __pyx_t_1 = __Pyx_PyString_Format(__pyx_kp_s_Expected_at_least_d_argument_s_g, __pyx_t_6); if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 173, __pyx_L1_error)
     __Pyx_GOTREF(__pyx_t_1);
     __Pyx_DECREF(__pyx_t_6); __pyx_t_6 = 0;
-    __pyx_t_6 = __Pyx_PyObject_CallOneArg(__pyx_builtin_TypeError, __pyx_t_1); if (unlikely(!__pyx_t_6)) __PYX_ERR(0, 176, __pyx_L1_error)
+    __pyx_t_6 = __Pyx_PyObject_CallOneArg(__pyx_builtin_TypeError, __pyx_t_1); if (unlikely(!__pyx_t_6)) __PYX_ERR(0, 173, __pyx_L1_error)
     __Pyx_GOTREF(__pyx_t_6);
     __Pyx_DECREF(__pyx_t_1); __pyx_t_1 = 0;
     __Pyx_Raise(__pyx_t_6, 0, 0, 0);
     __Pyx_DECREF(__pyx_t_6); __pyx_t_6 = 0;
-    __PYX_ERR(0, 176, __pyx_L1_error)
+    __PYX_ERR(0, 173, __pyx_L1_error)
   }
   __pyx_L6:;
   while (1) {
@@ -6185,7 +6189,7 @@ static PyObject *__pyx_pf_5skbio_5stats_8distance_7_cutils_6mantel_perm_pearsonr
       __pyx_t_3 = __Pyx_TypeCheck(__pyx_v_arg, __pyx_v_ndarray); 
       __pyx_t_2 = (__pyx_t_3 != 0);
       if (__pyx_t_2) {
-        __pyx_t_6 = __Pyx_PyObject_GetAttrStr(__pyx_v_arg, __pyx_n_s_dtype); if (unlikely(!__pyx_t_6)) __PYX_ERR(0, 176, __pyx_L1_error)
+        __pyx_t_6 = __Pyx_PyObject_GetAttrStr(__pyx_v_arg, __pyx_n_s_dtype); if (unlikely(!__pyx_t_6)) __PYX_ERR(0, 173, __pyx_L1_error)
         __Pyx_GOTREF(__pyx_t_6);
         __pyx_v_dtype = __pyx_t_6;
         __pyx_t_6 = 0;
@@ -6194,14 +6198,14 @@ static PyObject *__pyx_pf_5skbio_5stats_8distance_7_cutils_6mantel_perm_pearsonr
       __pyx_t_2 = __pyx_memoryview_check(__pyx_v_arg); 
       __pyx_t_3 = (__pyx_t_2 != 0);
       if (__pyx_t_3) {
-        __pyx_t_6 = __Pyx_PyObject_GetAttrStr(__pyx_v_arg, __pyx_n_s_base); if (unlikely(!__pyx_t_6)) __PYX_ERR(0, 176, __pyx_L1_error)
+        __pyx_t_6 = __Pyx_PyObject_GetAttrStr(__pyx_v_arg, __pyx_n_s_base); if (unlikely(!__pyx_t_6)) __PYX_ERR(0, 173, __pyx_L1_error)
         __Pyx_GOTREF(__pyx_t_6);
         __pyx_v_arg_base = __pyx_t_6;
         __pyx_t_6 = 0;
         __pyx_t_3 = __Pyx_TypeCheck(__pyx_v_arg_base, __pyx_v_ndarray); 
         __pyx_t_2 = (__pyx_t_3 != 0);
         if (__pyx_t_2) {
-          __pyx_t_6 = __Pyx_PyObject_GetAttrStr(__pyx_v_arg_base, __pyx_n_s_dtype); if (unlikely(!__pyx_t_6)) __PYX_ERR(0, 176, __pyx_L1_error)
+          __pyx_t_6 = __Pyx_PyObject_GetAttrStr(__pyx_v_arg_base, __pyx_n_s_dtype); if (unlikely(!__pyx_t_6)) __PYX_ERR(0, 173, __pyx_L1_error)
           __Pyx_GOTREF(__pyx_t_6);
           __pyx_v_dtype = __pyx_t_6;
           __pyx_t_6 = 0;
@@ -6223,14 +6227,14 @@ static PyObject *__pyx_pf_5skbio_5stats_8distance_7_cutils_6mantel_perm_pearsonr
       __pyx_t_2 = (__pyx_v_dtype != Py_None);
       __pyx_t_3 = (__pyx_t_2 != 0);
       if (__pyx_t_3) {
-        __pyx_t_6 = __Pyx_PyObject_GetAttrStr(__pyx_v_dtype, __pyx_n_s_itemsize); if (unlikely(!__pyx_t_6)) __PYX_ERR(0, 176, __pyx_L1_error)
+        __pyx_t_6 = __Pyx_PyObject_GetAttrStr(__pyx_v_dtype, __pyx_n_s_itemsize); if (unlikely(!__pyx_t_6)) __PYX_ERR(0, 173, __pyx_L1_error)
         __Pyx_GOTREF(__pyx_t_6);
-        __pyx_t_5 = __Pyx_PyIndex_AsSsize_t(__pyx_t_6); if (unlikely((__pyx_t_5 == (Py_ssize_t)-1) && PyErr_Occurred())) __PYX_ERR(0, 176, __pyx_L1_error)
+        __pyx_t_5 = __Pyx_PyIndex_AsSsize_t(__pyx_t_6); if (unlikely((__pyx_t_5 == (Py_ssize_t)-1) && PyErr_Occurred())) __PYX_ERR(0, 173, __pyx_L1_error)
         __Pyx_DECREF(__pyx_t_6); __pyx_t_6 = 0;
         __pyx_v_itemsize = __pyx_t_5;
-        __pyx_t_6 = __Pyx_PyObject_GetAttrStr(__pyx_v_dtype, __pyx_n_s_kind); if (unlikely(!__pyx_t_6)) __PYX_ERR(0, 176, __pyx_L1_error)
+        __pyx_t_6 = __Pyx_PyObject_GetAttrStr(__pyx_v_dtype, __pyx_n_s_kind); if (unlikely(!__pyx_t_6)) __PYX_ERR(0, 173, __pyx_L1_error)
         __Pyx_GOTREF(__pyx_t_6);
-        __pyx_t_7 = __Pyx_PyObject_Ord(__pyx_t_6); if (unlikely(__pyx_t_7 == ((long)(long)(Py_UCS4)-1))) __PYX_ERR(0, 176, __pyx_L1_error)
+        __pyx_t_7 = __Pyx_PyObject_Ord(__pyx_t_6); if (unlikely(__pyx_t_7 == ((long)(long)(Py_UCS4)-1))) __PYX_ERR(0, 173, __pyx_L1_error)
         __Pyx_DECREF(__pyx_t_6); __pyx_t_6 = 0;
         __pyx_v_kind = __pyx_t_7;
         __pyx_v_dtype_signed = (__pyx_v_kind == 'i');
@@ -6245,15 +6249,15 @@ static PyObject *__pyx_pf_5skbio_5stats_8distance_7_cutils_6mantel_perm_pearsonr
             __pyx_t_3 = __pyx_t_2;
             goto __pyx_L16_bool_binop_done;
           }
-          __pyx_t_6 = __Pyx_PyObject_GetAttrStr(__pyx_v_arg, __pyx_n_s_ndim); if (unlikely(!__pyx_t_6)) __PYX_ERR(0, 176, __pyx_L1_error)
+          __pyx_t_6 = __Pyx_PyObject_GetAttrStr(__pyx_v_arg, __pyx_n_s_ndim); if (unlikely(!__pyx_t_6)) __PYX_ERR(0, 173, __pyx_L1_error)
           __Pyx_GOTREF(__pyx_t_6);
-          __pyx_t_5 = __Pyx_PyIndex_AsSsize_t(__pyx_t_6); if (unlikely((__pyx_t_5 == (Py_ssize_t)-1) && PyErr_Occurred())) __PYX_ERR(0, 176, __pyx_L1_error)
+          __pyx_t_5 = __Pyx_PyIndex_AsSsize_t(__pyx_t_6); if (unlikely((__pyx_t_5 == (Py_ssize_t)-1) && PyErr_Occurred())) __PYX_ERR(0, 173, __pyx_L1_error)
           __Pyx_DECREF(__pyx_t_6); __pyx_t_6 = 0;
           __pyx_t_2 = ((((Py_ssize_t)__pyx_t_5) == 2) != 0);
           __pyx_t_3 = __pyx_t_2;
           __pyx_L16_bool_binop_done:;
           if (__pyx_t_3) {
-            if (unlikely(__Pyx_SetItemInt(__pyx_v_dest_sig, 0, __pyx_n_s_float, long, 1, __Pyx_PyInt_From_long, 1, 0, 0) < 0)) __PYX_ERR(0, 176, __pyx_L1_error)
+            if (unlikely(__Pyx_SetItemInt(__pyx_v_dest_sig, 0, __pyx_n_s_float, long, 1, __Pyx_PyInt_From_long, 1, 0, 0) < 0)) __PYX_ERR(0, 173, __pyx_L1_error)
             goto __pyx_L10_break;
           }
           __pyx_t_2 = (((sizeof(double)) == __pyx_v_itemsize) != 0);
@@ -6262,15 +6266,15 @@ static PyObject *__pyx_pf_5skbio_5stats_8distance_7_cutils_6mantel_perm_pearsonr
             __pyx_t_3 = __pyx_t_2;
             goto __pyx_L19_bool_binop_done;
           }
-          __pyx_t_6 = __Pyx_PyObject_GetAttrStr(__pyx_v_arg, __pyx_n_s_ndim); if (unlikely(!__pyx_t_6)) __PYX_ERR(0, 176, __pyx_L1_error)
+          __pyx_t_6 = __Pyx_PyObject_GetAttrStr(__pyx_v_arg, __pyx_n_s_ndim); if (unlikely(!__pyx_t_6)) __PYX_ERR(0, 173, __pyx_L1_error)
           __Pyx_GOTREF(__pyx_t_6);
-          __pyx_t_5 = __Pyx_PyIndex_AsSsize_t(__pyx_t_6); if (unlikely((__pyx_t_5 == (Py_ssize_t)-1) && PyErr_Occurred())) __PYX_ERR(0, 176, __pyx_L1_error)
+          __pyx_t_5 = __Pyx_PyIndex_AsSsize_t(__pyx_t_6); if (unlikely((__pyx_t_5 == (Py_ssize_t)-1) && PyErr_Occurred())) __PYX_ERR(0, 173, __pyx_L1_error)
           __Pyx_DECREF(__pyx_t_6); __pyx_t_6 = 0;
           __pyx_t_2 = ((((Py_ssize_t)__pyx_t_5) == 2) != 0);
           __pyx_t_3 = __pyx_t_2;
           __pyx_L19_bool_binop_done:;
           if (__pyx_t_3) {
-            if (unlikely(__Pyx_SetItemInt(__pyx_v_dest_sig, 0, __pyx_n_s_double, long, 1, __Pyx_PyInt_From_long, 1, 0, 0) < 0)) __PYX_ERR(0, 176, __pyx_L1_error)
+            if (unlikely(__Pyx_SetItemInt(__pyx_v_dest_sig, 0, __pyx_n_s_double, long, 1, __Pyx_PyInt_From_long, 1, 0, 0) < 0)) __PYX_ERR(0, 173, __pyx_L1_error)
             goto __pyx_L10_break;
           }
           break;
@@ -6297,7 +6301,7 @@ static PyObject *__pyx_pf_5skbio_5stats_8distance_7_cutils_6mantel_perm_pearsonr
       __pyx_t_3 = (__pyx_v_memslice.memview != 0);
       if (__pyx_t_3) {
         __PYX_XDEC_MEMVIEW((&__pyx_v_memslice), 1); 
-        if (unlikely(__Pyx_SetItemInt(__pyx_v_dest_sig, 0, __pyx_n_s_float, long, 1, __Pyx_PyInt_From_long, 1, 0, 0) < 0)) __PYX_ERR(0, 176, __pyx_L1_error)
+        if (unlikely(__Pyx_SetItemInt(__pyx_v_dest_sig, 0, __pyx_n_s_float, long, 1, __Pyx_PyInt_From_long, 1, 0, 0) < 0)) __PYX_ERR(0, 173, __pyx_L1_error)
         goto __pyx_L10_break;
       }
       /*else*/ {
@@ -6319,27 +6323,27 @@ static PyObject *__pyx_pf_5skbio_5stats_8distance_7_cutils_6mantel_perm_pearsonr
       __pyx_t_3 = (__pyx_v_memslice.memview != 0);
       if (__pyx_t_3) {
         __PYX_XDEC_MEMVIEW((&__pyx_v_memslice), 1); 
-        if (unlikely(__Pyx_SetItemInt(__pyx_v_dest_sig, 0, __pyx_n_s_double, long, 1, __Pyx_PyInt_From_long, 1, 0, 0) < 0)) __PYX_ERR(0, 176, __pyx_L1_error)
+        if (unlikely(__Pyx_SetItemInt(__pyx_v_dest_sig, 0, __pyx_n_s_double, long, 1, __Pyx_PyInt_From_long, 1, 0, 0) < 0)) __PYX_ERR(0, 173, __pyx_L1_error)
         goto __pyx_L10_break;
       }
       /*else*/ {
         PyErr_Clear(); 
       }
     }
-    if (unlikely(__Pyx_SetItemInt(__pyx_v_dest_sig, 0, Py_None, long, 1, __Pyx_PyInt_From_long, 1, 0, 0) < 0)) __PYX_ERR(0, 176, __pyx_L1_error)
+    if (unlikely(__Pyx_SetItemInt(__pyx_v_dest_sig, 0, Py_None, long, 1, __Pyx_PyInt_From_long, 1, 0, 0) < 0)) __PYX_ERR(0, 173, __pyx_L1_error)
     goto __pyx_L10_break;
   }
   __pyx_L10_break:;
-  __pyx_t_6 = PyList_New(0); if (unlikely(!__pyx_t_6)) __PYX_ERR(0, 176, __pyx_L1_error)
+  __pyx_t_6 = PyList_New(0); if (unlikely(!__pyx_t_6)) __PYX_ERR(0, 173, __pyx_L1_error)
   __Pyx_GOTREF(__pyx_t_6);
   __pyx_v_candidates = ((PyObject*)__pyx_t_6);
   __pyx_t_6 = 0;
   __pyx_t_5 = 0;
   if (unlikely(__pyx_v_signatures == Py_None)) {
     PyErr_SetString(PyExc_TypeError, "'NoneType' object is not iterable");
-    __PYX_ERR(0, 176, __pyx_L1_error)
+    __PYX_ERR(0, 173, __pyx_L1_error)
   }
-  __pyx_t_1 = __Pyx_dict_iterator(((PyObject*)__pyx_v_signatures), 1, ((PyObject *)NULL), (&__pyx_t_9), (&__pyx_t_10)); if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 176, __pyx_L1_error)
+  __pyx_t_1 = __Pyx_dict_iterator(((PyObject*)__pyx_v_signatures), 1, ((PyObject *)NULL), (&__pyx_t_9), (&__pyx_t_10)); if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 173, __pyx_L1_error)
   __Pyx_GOTREF(__pyx_t_1);
   __Pyx_XDECREF(__pyx_t_6);
   __pyx_t_6 = __pyx_t_1;
@@ -6347,12 +6351,12 @@ static PyObject *__pyx_pf_5skbio_5stats_8distance_7_cutils_6mantel_perm_pearsonr
   while (1) {
     __pyx_t_11 = __Pyx_dict_iter_next(__pyx_t_6, __pyx_t_9, &__pyx_t_5, &__pyx_t_1, NULL, NULL, __pyx_t_10);
     if (unlikely(__pyx_t_11 == 0)) break;
-    if (unlikely(__pyx_t_11 == -1)) __PYX_ERR(0, 176, __pyx_L1_error)
+    if (unlikely(__pyx_t_11 == -1)) __PYX_ERR(0, 173, __pyx_L1_error)
     __Pyx_GOTREF(__pyx_t_1);
     __Pyx_XDECREF_SET(__pyx_v_sig, __pyx_t_1);
     __pyx_t_1 = 0;
     __pyx_v_match_found = 0;
-    __pyx_t_13 = __Pyx_PyObject_GetAttrStr(__pyx_v_sig, __pyx_n_s_strip); if (unlikely(!__pyx_t_13)) __PYX_ERR(0, 176, __pyx_L1_error)
+    __pyx_t_13 = __Pyx_PyObject_GetAttrStr(__pyx_v_sig, __pyx_n_s_strip); if (unlikely(!__pyx_t_13)) __PYX_ERR(0, 173, __pyx_L1_error)
     __Pyx_GOTREF(__pyx_t_13);
     __pyx_t_14 = NULL;
     if (CYTHON_UNPACK_METHODS && likely(PyMethod_Check(__pyx_t_13))) {
@@ -6366,10 +6370,10 @@ static PyObject *__pyx_pf_5skbio_5stats_8distance_7_cutils_6mantel_perm_pearsonr
     }
     __pyx_t_12 = (__pyx_t_14) ? __Pyx_PyObject_Call2Args(__pyx_t_13, __pyx_t_14, __pyx_kp_s__2) : __Pyx_PyObject_CallOneArg(__pyx_t_13, __pyx_kp_s__2);
     __Pyx_XDECREF(__pyx_t_14); __pyx_t_14 = 0;
-    if (unlikely(!__pyx_t_12)) __PYX_ERR(0, 176, __pyx_L1_error)
+    if (unlikely(!__pyx_t_12)) __PYX_ERR(0, 173, __pyx_L1_error)
     __Pyx_GOTREF(__pyx_t_12);
     __Pyx_DECREF(__pyx_t_13); __pyx_t_13 = 0;
-    __pyx_t_13 = __Pyx_PyObject_GetAttrStr(__pyx_t_12, __pyx_n_s_split); if (unlikely(!__pyx_t_13)) __PYX_ERR(0, 176, __pyx_L1_error)
+    __pyx_t_13 = __Pyx_PyObject_GetAttrStr(__pyx_t_12, __pyx_n_s_split); if (unlikely(!__pyx_t_13)) __PYX_ERR(0, 173, __pyx_L1_error)
     __Pyx_GOTREF(__pyx_t_13);
     __Pyx_DECREF(__pyx_t_12); __pyx_t_12 = 0;
     __pyx_t_12 = NULL;
@@ -6384,12 +6388,12 @@ static PyObject *__pyx_pf_5skbio_5stats_8distance_7_cutils_6mantel_perm_pearsonr
     }
     __pyx_t_1 = (__pyx_t_12) ? __Pyx_PyObject_Call2Args(__pyx_t_13, __pyx_t_12, __pyx_kp_s__3) : __Pyx_PyObject_CallOneArg(__pyx_t_13, __pyx_kp_s__3);
     __Pyx_XDECREF(__pyx_t_12); __pyx_t_12 = 0;
-    if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 176, __pyx_L1_error)
+    if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 173, __pyx_L1_error)
     __Pyx_GOTREF(__pyx_t_1);
     __Pyx_DECREF(__pyx_t_13); __pyx_t_13 = 0;
     __Pyx_XDECREF_SET(__pyx_v_src_sig, __pyx_t_1);
     __pyx_t_1 = 0;
-    __pyx_t_15 = PyList_GET_SIZE(__pyx_v_dest_sig); if (unlikely(__pyx_t_15 == ((Py_ssize_t)-1))) __PYX_ERR(0, 176, __pyx_L1_error)
+    __pyx_t_15 = PyList_GET_SIZE(__pyx_v_dest_sig); if (unlikely(__pyx_t_15 == ((Py_ssize_t)-1))) __PYX_ERR(0, 173, __pyx_L1_error)
     __pyx_t_16 = __pyx_t_15;
     for (__pyx_t_17 = 0; __pyx_t_17 < __pyx_t_16; __pyx_t_17+=1) {
       __pyx_v_i = __pyx_t_17;
@@ -6400,11 +6404,11 @@ static PyObject *__pyx_pf_5skbio_5stats_8distance_7_cutils_6mantel_perm_pearsonr
       __pyx_t_3 = (__pyx_v_dst_type != Py_None);
       __pyx_t_2 = (__pyx_t_3 != 0);
       if (__pyx_t_2) {
-        __pyx_t_1 = __Pyx_GetItemInt(__pyx_v_src_sig, __pyx_v_i, Py_ssize_t, 1, PyInt_FromSsize_t, 0, 0, 0); if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 176, __pyx_L1_error)
+        __pyx_t_1 = __Pyx_GetItemInt(__pyx_v_src_sig, __pyx_v_i, Py_ssize_t, 1, PyInt_FromSsize_t, 0, 0, 0); if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 173, __pyx_L1_error)
         __Pyx_GOTREF(__pyx_t_1);
-        __pyx_t_13 = PyObject_RichCompare(__pyx_t_1, __pyx_v_dst_type, Py_EQ); __Pyx_XGOTREF(__pyx_t_13); if (unlikely(!__pyx_t_13)) __PYX_ERR(0, 176, __pyx_L1_error)
+        __pyx_t_13 = PyObject_RichCompare(__pyx_t_1, __pyx_v_dst_type, Py_EQ); __Pyx_XGOTREF(__pyx_t_13); if (unlikely(!__pyx_t_13)) __PYX_ERR(0, 173, __pyx_L1_error)
         __Pyx_DECREF(__pyx_t_1); __pyx_t_1 = 0;
-        __pyx_t_2 = __Pyx_PyObject_IsTrue(__pyx_t_13); if (unlikely(__pyx_t_2 < 0)) __PYX_ERR(0, 176, __pyx_L1_error)
+        __pyx_t_2 = __Pyx_PyObject_IsTrue(__pyx_t_13); if (unlikely(__pyx_t_2 < 0)) __PYX_ERR(0, 173, __pyx_L1_error)
         __Pyx_DECREF(__pyx_t_13); __pyx_t_13 = 0;
         if (__pyx_t_2) {
           __pyx_v_match_found = 1;
@@ -6420,35 +6424,35 @@ static PyObject *__pyx_pf_5skbio_5stats_8distance_7_cutils_6mantel_perm_pearsonr
     __pyx_L32_break:;
     __pyx_t_2 = (__pyx_v_match_found != 0);
     if (__pyx_t_2) {
-      __pyx_t_18 = __Pyx_PyList_Append(__pyx_v_candidates, __pyx_v_sig); if (unlikely(__pyx_t_18 == ((int)-1))) __PYX_ERR(0, 176, __pyx_L1_error)
+      __pyx_t_18 = __Pyx_PyList_Append(__pyx_v_candidates, __pyx_v_sig); if (unlikely(__pyx_t_18 == ((int)-1))) __PYX_ERR(0, 173, __pyx_L1_error)
     }
   }
   __Pyx_DECREF(__pyx_t_6); __pyx_t_6 = 0;
   __pyx_t_2 = (PyList_GET_SIZE(__pyx_v_candidates) != 0);
   __pyx_t_3 = ((!__pyx_t_2) != 0);
   if (__pyx_t_3) {
-    __pyx_t_6 = __Pyx_PyObject_Call(__pyx_builtin_TypeError, __pyx_tuple__4, NULL); if (unlikely(!__pyx_t_6)) __PYX_ERR(0, 176, __pyx_L1_error)
+    __pyx_t_6 = __Pyx_PyObject_Call(__pyx_builtin_TypeError, __pyx_tuple__4, NULL); if (unlikely(!__pyx_t_6)) __PYX_ERR(0, 173, __pyx_L1_error)
     __Pyx_GOTREF(__pyx_t_6);
     __Pyx_Raise(__pyx_t_6, 0, 0, 0);
     __Pyx_DECREF(__pyx_t_6); __pyx_t_6 = 0;
-    __PYX_ERR(0, 176, __pyx_L1_error)
+    __PYX_ERR(0, 173, __pyx_L1_error)
   }
-  __pyx_t_9 = PyList_GET_SIZE(__pyx_v_candidates); if (unlikely(__pyx_t_9 == ((Py_ssize_t)-1))) __PYX_ERR(0, 176, __pyx_L1_error)
+  __pyx_t_9 = PyList_GET_SIZE(__pyx_v_candidates); if (unlikely(__pyx_t_9 == ((Py_ssize_t)-1))) __PYX_ERR(0, 173, __pyx_L1_error)
   __pyx_t_3 = ((__pyx_t_9 > 1) != 0);
   if (__pyx_t_3) {
-    __pyx_t_6 = __Pyx_PyObject_Call(__pyx_builtin_TypeError, __pyx_tuple__5, NULL); if (unlikely(!__pyx_t_6)) __PYX_ERR(0, 176, __pyx_L1_error)
+    __pyx_t_6 = __Pyx_PyObject_Call(__pyx_builtin_TypeError, __pyx_tuple__5, NULL); if (unlikely(!__pyx_t_6)) __PYX_ERR(0, 173, __pyx_L1_error)
     __Pyx_GOTREF(__pyx_t_6);
     __Pyx_Raise(__pyx_t_6, 0, 0, 0);
     __Pyx_DECREF(__pyx_t_6); __pyx_t_6 = 0;
-    __PYX_ERR(0, 176, __pyx_L1_error)
+    __PYX_ERR(0, 173, __pyx_L1_error)
   }
   /*else*/ {
     __Pyx_XDECREF(__pyx_r);
     if (unlikely(__pyx_v_signatures == Py_None)) {
       PyErr_SetString(PyExc_TypeError, "'NoneType' object is not subscriptable");
-      __PYX_ERR(0, 176, __pyx_L1_error)
+      __PYX_ERR(0, 173, __pyx_L1_error)
     }
-    __pyx_t_6 = __Pyx_PyDict_GetItem(((PyObject*)__pyx_v_signatures), PyList_GET_ITEM(__pyx_v_candidates, 0)); if (unlikely(!__pyx_t_6)) __PYX_ERR(0, 176, __pyx_L1_error)
+    __pyx_t_6 = __Pyx_PyDict_GetItem(((PyObject*)__pyx_v_signatures), PyList_GET_ITEM(__pyx_v_candidates, 0)); if (unlikely(!__pyx_t_6)) __PYX_ERR(0, 173, __pyx_L1_error)
     __Pyx_GOTREF(__pyx_t_6);
     __pyx_r = __pyx_t_6;
     __pyx_t_6 = 0;
@@ -6527,35 +6531,35 @@ static PyObject *__pyx_fuse_0__pyx_pw_5skbio_5stats_8distance_7_cutils_27mantel_
         case  1:
         if (likely((values[1] = __Pyx_PyDict_GetItemStr(__pyx_kwds, __pyx_n_s_perm_order)) != 0)) kw_args--;
         else {
-          __Pyx_RaiseArgtupleInvalid("mantel_perm_pearsonr_cy", 1, 6, 6, 1); __PYX_ERR(0, 176, __pyx_L3_error)
+          __Pyx_RaiseArgtupleInvalid("mantel_perm_pearsonr_cy", 1, 6, 6, 1); __PYX_ERR(0, 173, __pyx_L3_error)
         }
         CYTHON_FALLTHROUGH;
         case  2:
         if (likely((values[2] = __Pyx_PyDict_GetItemStr(__pyx_kwds, __pyx_n_s_xmean)) != 0)) kw_args--;
         else {
-          __Pyx_RaiseArgtupleInvalid("mantel_perm_pearsonr_cy", 1, 6, 6, 2); __PYX_ERR(0, 176, __pyx_L3_error)
+          __Pyx_RaiseArgtupleInvalid("mantel_perm_pearsonr_cy", 1, 6, 6, 2); __PYX_ERR(0, 173, __pyx_L3_error)
         }
         CYTHON_FALLTHROUGH;
         case  3:
         if (likely((values[3] = __Pyx_PyDict_GetItemStr(__pyx_kwds, __pyx_n_s_normxm)) != 0)) kw_args--;
         else {
-          __Pyx_RaiseArgtupleInvalid("mantel_perm_pearsonr_cy", 1, 6, 6, 3); __PYX_ERR(0, 176, __pyx_L3_error)
+          __Pyx_RaiseArgtupleInvalid("mantel_perm_pearsonr_cy", 1, 6, 6, 3); __PYX_ERR(0, 173, __pyx_L3_error)
         }
         CYTHON_FALLTHROUGH;
         case  4:
         if (likely((values[4] = __Pyx_PyDict_GetItemStr(__pyx_kwds, __pyx_n_s_ym_normalized)) != 0)) kw_args--;
         else {
-          __Pyx_RaiseArgtupleInvalid("mantel_perm_pearsonr_cy", 1, 6, 6, 4); __PYX_ERR(0, 176, __pyx_L3_error)
+          __Pyx_RaiseArgtupleInvalid("mantel_perm_pearsonr_cy", 1, 6, 6, 4); __PYX_ERR(0, 173, __pyx_L3_error)
         }
         CYTHON_FALLTHROUGH;
         case  5:
         if (likely((values[5] = __Pyx_PyDict_GetItemStr(__pyx_kwds, __pyx_n_s_permuted_stats)) != 0)) kw_args--;
         else {
-          __Pyx_RaiseArgtupleInvalid("mantel_perm_pearsonr_cy", 1, 6, 6, 5); __PYX_ERR(0, 176, __pyx_L3_error)
+          __Pyx_RaiseArgtupleInvalid("mantel_perm_pearsonr_cy", 1, 6, 6, 5); __PYX_ERR(0, 173, __pyx_L3_error)
         }
       }
       if (unlikely(kw_args > 0)) {
-        if (unlikely(__Pyx_ParseOptionalKeywords(__pyx_kwds, __pyx_pyargnames, 0, values, pos_args, "mantel_perm_pearsonr_cy") < 0)) __PYX_ERR(0, 176, __pyx_L3_error)
+        if (unlikely(__Pyx_ParseOptionalKeywords(__pyx_kwds, __pyx_pyargnames, 0, values, pos_args, "mantel_perm_pearsonr_cy") < 0)) __PYX_ERR(0, 173, __pyx_L3_error)
       }
     } else if (PyTuple_GET_SIZE(__pyx_args) != 6) {
       goto __pyx_L5_argtuple_error;
@@ -6567,16 +6571,16 @@ static PyObject *__pyx_fuse_0__pyx_pw_5skbio_5stats_8distance_7_cutils_27mantel_
       values[4] = PyTuple_GET_ITEM(__pyx_args, 4);
       values[5] = PyTuple_GET_ITEM(__pyx_args, 5);
     }
-    __pyx_v_x_data = __Pyx_PyObject_to_MemoryviewSlice_d_dc_float(values[0], PyBUF_WRITABLE); if (unlikely(!__pyx_v_x_data.memview)) __PYX_ERR(0, 176, __pyx_L3_error)
-    __pyx_v_perm_order = __Pyx_PyObject_to_MemoryviewSlice_d_dc_long(values[1], PyBUF_WRITABLE); if (unlikely(!__pyx_v_perm_order.memview)) __PYX_ERR(0, 176, __pyx_L3_error)
-    __pyx_v_xmean = __pyx_PyFloat_AsFloat(values[2]); if (unlikely((__pyx_v_xmean == (float)-1) && PyErr_Occurred())) __PYX_ERR(0, 177, __pyx_L3_error)
-    __pyx_v_normxm = __pyx_PyFloat_AsFloat(values[3]); if (unlikely((__pyx_v_normxm == (float)-1) && PyErr_Occurred())) __PYX_ERR(0, 177, __pyx_L3_error)
-    __pyx_v_ym_normalized = __Pyx_PyObject_to_MemoryviewSlice_dc_float(values[4], PyBUF_WRITABLE); if (unlikely(!__pyx_v_ym_normalized.memview)) __PYX_ERR(0, 178, __pyx_L3_error)
-    __pyx_v_permuted_stats = __Pyx_PyObject_to_MemoryviewSlice_dc_float(values[5], PyBUF_WRITABLE); if (unlikely(!__pyx_v_permuted_stats.memview)) __PYX_ERR(0, 179, __pyx_L3_error)
+    __pyx_v_x_data = __Pyx_PyObject_to_MemoryviewSlice_d_dc_float(values[0], PyBUF_WRITABLE); if (unlikely(!__pyx_v_x_data.memview)) __PYX_ERR(0, 173, __pyx_L3_error)
+    __pyx_v_perm_order = __Pyx_PyObject_to_MemoryviewSlice_d_dc_long(values[1], PyBUF_WRITABLE); if (unlikely(!__pyx_v_perm_order.memview)) __PYX_ERR(0, 173, __pyx_L3_error)
+    __pyx_v_xmean = __pyx_PyFloat_AsFloat(values[2]); if (unlikely((__pyx_v_xmean == (float)-1) && PyErr_Occurred())) __PYX_ERR(0, 174, __pyx_L3_error)
+    __pyx_v_normxm = __pyx_PyFloat_AsFloat(values[3]); if (unlikely((__pyx_v_normxm == (float)-1) && PyErr_Occurred())) __PYX_ERR(0, 174, __pyx_L3_error)
+    __pyx_v_ym_normalized = __Pyx_PyObject_to_MemoryviewSlice_dc_float(values[4], PyBUF_WRITABLE); if (unlikely(!__pyx_v_ym_normalized.memview)) __PYX_ERR(0, 175, __pyx_L3_error)
+    __pyx_v_permuted_stats = __Pyx_PyObject_to_MemoryviewSlice_dc_float(values[5], PyBUF_WRITABLE); if (unlikely(!__pyx_v_permuted_stats.memview)) __PYX_ERR(0, 176, __pyx_L3_error)
   }
   goto __pyx_L4_argument_unpacking_done;
   __pyx_L5_argtuple_error:;
-  __Pyx_RaiseArgtupleInvalid("mantel_perm_pearsonr_cy", 1, 6, 6, PyTuple_GET_SIZE(__pyx_args)); __PYX_ERR(0, 176, __pyx_L3_error)
+  __Pyx_RaiseArgtupleInvalid("mantel_perm_pearsonr_cy", 1, 6, 6, PyTuple_GET_SIZE(__pyx_args)); __PYX_ERR(0, 173, __pyx_L3_error)
   __pyx_L3_error:;
   __Pyx_AddTraceback("skbio.stats.distance._cutils.mantel_perm_pearsonr_cy", __pyx_clineno, __pyx_lineno, __pyx_filename);
   __Pyx_RefNannyFinishContext();
@@ -6629,7 +6633,7 @@ static PyObject *__pyx_pf_5skbio_5stats_8distance_7_cutils_26mantel_perm_pearson
   int __pyx_clineno = 0;
   __Pyx_RefNannySetupContext("__pyx_fuse_0mantel_perm_pearsonr_cy", 0);
 
-  /* "skbio/stats/distance/_cutils.pyx":212
+  /* "skbio/stats/distance/_cutils.pyx":209
  *         Output, Pearson stats
  *     """
  *     cdef Py_ssize_t in_n = x_data.shape[0]             # <<<<<<<<<<<<<<
@@ -6638,7 +6642,7 @@ static PyObject *__pyx_pf_5skbio_5stats_8distance_7_cutils_26mantel_perm_pearson
  */
   __pyx_v_in_n = (__pyx_v_x_data.shape[0]);
 
-  /* "skbio/stats/distance/_cutils.pyx":213
+  /* "skbio/stats/distance/_cutils.pyx":210
  *     """
  *     cdef Py_ssize_t in_n = x_data.shape[0]
  *     cdef Py_ssize_t in2 = x_data.shape[1]             # <<<<<<<<<<<<<<
@@ -6647,7 +6651,7 @@ static PyObject *__pyx_pf_5skbio_5stats_8distance_7_cutils_26mantel_perm_pearson
  */
   __pyx_v_in2 = (__pyx_v_x_data.shape[1]);
 
-  /* "skbio/stats/distance/_cutils.pyx":214
+  /* "skbio/stats/distance/_cutils.pyx":211
  *     cdef Py_ssize_t in_n = x_data.shape[0]
  *     cdef Py_ssize_t in2 = x_data.shape[1]
  *     cdef Py_ssize_t perms_n = perm_order.shape[0]             # <<<<<<<<<<<<<<
@@ -6656,7 +6660,7 @@ static PyObject *__pyx_pf_5skbio_5stats_8distance_7_cutils_26mantel_perm_pearson
  */
   __pyx_v_perms_n = (__pyx_v_perm_order.shape[0]);
 
-  /* "skbio/stats/distance/_cutils.pyx":215
+  /* "skbio/stats/distance/_cutils.pyx":212
  *     cdef Py_ssize_t in2 = x_data.shape[1]
  *     cdef Py_ssize_t perms_n = perm_order.shape[0]
  *     cdef Py_ssize_t out_n = perm_order.shape[1]             # <<<<<<<<<<<<<<
@@ -6665,7 +6669,7 @@ static PyObject *__pyx_pf_5skbio_5stats_8distance_7_cutils_26mantel_perm_pearson
  */
   __pyx_v_out_n = (__pyx_v_perm_order.shape[1]);
 
-  /* "skbio/stats/distance/_cutils.pyx":216
+  /* "skbio/stats/distance/_cutils.pyx":213
  *     cdef Py_ssize_t perms_n = perm_order.shape[0]
  *     cdef Py_ssize_t out_n = perm_order.shape[1]
  *     cdef Py_ssize_t y_n = ym_normalized.shape[0]             # <<<<<<<<<<<<<<
@@ -6674,7 +6678,7 @@ static PyObject *__pyx_pf_5skbio_5stats_8distance_7_cutils_26mantel_perm_pearson
  */
   __pyx_v_y_n = (__pyx_v_ym_normalized.shape[0]);
 
-  /* "skbio/stats/distance/_cutils.pyx":217
+  /* "skbio/stats/distance/_cutils.pyx":214
  *     cdef Py_ssize_t out_n = perm_order.shape[1]
  *     cdef Py_ssize_t y_n = ym_normalized.shape[0]
  *     cdef Py_ssize_t on2 = permuted_stats.shape[0]             # <<<<<<<<<<<<<<
@@ -6683,7 +6687,7 @@ static PyObject *__pyx_pf_5skbio_5stats_8distance_7_cutils_26mantel_perm_pearson
  */
   __pyx_v_on2 = (__pyx_v_permuted_stats.shape[0]);
 
-  /* "skbio/stats/distance/_cutils.pyx":219
+  /* "skbio/stats/distance/_cutils.pyx":216
  *     cdef Py_ssize_t on2 = permuted_stats.shape[0]
  * 
  *     assert in_n == in2             # <<<<<<<<<<<<<<
@@ -6694,12 +6698,12 @@ static PyObject *__pyx_pf_5skbio_5stats_8distance_7_cutils_26mantel_perm_pearson
   if (unlikely(!Py_OptimizeFlag)) {
     if (unlikely(!((__pyx_v_in_n == __pyx_v_in2) != 0))) {
       PyErr_SetNone(PyExc_AssertionError);
-      __PYX_ERR(0, 219, __pyx_L1_error)
+      __PYX_ERR(0, 216, __pyx_L1_error)
     }
   }
   #endif
 
-  /* "skbio/stats/distance/_cutils.pyx":220
+  /* "skbio/stats/distance/_cutils.pyx":217
  * 
  *     assert in_n == in2
  *     assert y_n == ((out_n-1)*out_n)/2             # <<<<<<<<<<<<<<
@@ -6710,12 +6714,12 @@ static PyObject *__pyx_pf_5skbio_5stats_8distance_7_cutils_26mantel_perm_pearson
   if (unlikely(!Py_OptimizeFlag)) {
     if (unlikely(!((__pyx_v_y_n == __Pyx_div_Py_ssize_t(((__pyx_v_out_n - 1) * __pyx_v_out_n), 2)) != 0))) {
       PyErr_SetNone(PyExc_AssertionError);
-      __PYX_ERR(0, 220, __pyx_L1_error)
+      __PYX_ERR(0, 217, __pyx_L1_error)
     }
   }
   #endif
 
-  /* "skbio/stats/distance/_cutils.pyx":221
+  /* "skbio/stats/distance/_cutils.pyx":218
  *     assert in_n == in2
  *     assert y_n == ((out_n-1)*out_n)/2
  *     assert perms_n == on2             # <<<<<<<<<<<<<<
@@ -6726,12 +6730,12 @@ static PyObject *__pyx_pf_5skbio_5stats_8distance_7_cutils_26mantel_perm_pearson
   if (unlikely(!Py_OptimizeFlag)) {
     if (unlikely(!((__pyx_v_perms_n == __pyx_v_on2) != 0))) {
       PyErr_SetNone(PyExc_AssertionError);
-      __PYX_ERR(0, 221, __pyx_L1_error)
+      __PYX_ERR(0, 218, __pyx_L1_error)
     }
   }
   #endif
 
-  /* "skbio/stats/distance/_cutils.pyx":228
+  /* "skbio/stats/distance/_cutils.pyx":225
  *     cdef Py_ssize_t idx
  * 
  *     cdef TReal mul = 1.0/normxm             # <<<<<<<<<<<<<<
@@ -6740,11 +6744,11 @@ static PyObject *__pyx_pf_5skbio_5stats_8distance_7_cutils_26mantel_perm_pearson
  */
   if (unlikely(__pyx_v_normxm == 0)) {
     PyErr_SetString(PyExc_ZeroDivisionError, "float division");
-    __PYX_ERR(0, 228, __pyx_L1_error)
+    __PYX_ERR(0, 225, __pyx_L1_error)
   }
   __pyx_v_mul = (1.0 / __pyx_v_normxm);
 
-  /* "skbio/stats/distance/_cutils.pyx":229
+  /* "skbio/stats/distance/_cutils.pyx":226
  * 
  *     cdef TReal mul = 1.0/normxm
  *     cdef TReal add = -xmean/normxm             # <<<<<<<<<<<<<<
@@ -6754,11 +6758,11 @@ static PyObject *__pyx_pf_5skbio_5stats_8distance_7_cutils_26mantel_perm_pearson
   __pyx_t_1 = (-__pyx_v_xmean);
   if (unlikely(__pyx_v_normxm == 0)) {
     PyErr_SetString(PyExc_ZeroDivisionError, "float division");
-    __PYX_ERR(0, 229, __pyx_L1_error)
+    __PYX_ERR(0, 226, __pyx_L1_error)
   }
   __pyx_v_add = (__pyx_t_1 / __pyx_v_normxm);
 
-  /* "skbio/stats/distance/_cutils.pyx":235
+  /* "skbio/stats/distance/_cutils.pyx":232
  *     cdef TReal xval
  * 
  *     for p in prange(perms_n, nogil=True):             # <<<<<<<<<<<<<<
@@ -6804,7 +6808,7 @@ static PyObject *__pyx_pf_5skbio_5stats_8distance_7_cutils_26mantel_perm_pearson
                             __pyx_v_xval = ((float)__PYX_NAN());
                             __pyx_v_yval = ((float)__PYX_NAN());
 
-                            /* "skbio/stats/distance/_cutils.pyx":236
+                            /* "skbio/stats/distance/_cutils.pyx":233
  * 
  *     for p in prange(perms_n, nogil=True):
  *         my_ps = 0.0             # <<<<<<<<<<<<<<
@@ -6813,7 +6817,7 @@ static PyObject *__pyx_pf_5skbio_5stats_8distance_7_cutils_26mantel_perm_pearson
  */
                             __pyx_v_my_ps = 0.0;
 
-                            /* "skbio/stats/distance/_cutils.pyx":237
+                            /* "skbio/stats/distance/_cutils.pyx":234
  *     for p in prange(perms_n, nogil=True):
  *         my_ps = 0.0
  *         for row in range(out_n-1):             # <<<<<<<<<<<<<<
@@ -6825,7 +6829,7 @@ static PyObject *__pyx_pf_5skbio_5stats_8distance_7_cutils_26mantel_perm_pearson
                             for (__pyx_t_7 = 0; __pyx_t_7 < __pyx_t_6; __pyx_t_7+=1) {
                               __pyx_v_row = __pyx_t_7;
 
-                              /* "skbio/stats/distance/_cutils.pyx":238
+                              /* "skbio/stats/distance/_cutils.pyx":235
  *         my_ps = 0.0
  *         for row in range(out_n-1):
  *             vrow = perm_order[p, row]             # <<<<<<<<<<<<<<
@@ -6836,7 +6840,7 @@ static PyObject *__pyx_pf_5skbio_5stats_8distance_7_cutils_26mantel_perm_pearson
                               __pyx_t_9 = __pyx_v_row;
                               __pyx_v_vrow = (*((long *) ( /* dim=1 */ ((char *) (((long *) ( /* dim=0 */ (__pyx_v_perm_order.data + __pyx_t_8 * __pyx_v_perm_order.strides[0]) )) + __pyx_t_9)) )));
 
-                              /* "skbio/stats/distance/_cutils.pyx":239
+                              /* "skbio/stats/distance/_cutils.pyx":236
  *         for row in range(out_n-1):
  *             vrow = perm_order[p, row]
  *             idx = row*(out_n-1) - ((row-1)*row)/2             # <<<<<<<<<<<<<<
@@ -6845,7 +6849,7 @@ static PyObject *__pyx_pf_5skbio_5stats_8distance_7_cutils_26mantel_perm_pearson
  */
                               __pyx_v_idx = ((__pyx_v_row * (__pyx_v_out_n - 1)) - __Pyx_div_Py_ssize_t(((__pyx_v_row - 1) * __pyx_v_row), 2));
 
-                              /* "skbio/stats/distance/_cutils.pyx":240
+                              /* "skbio/stats/distance/_cutils.pyx":237
  *             vrow = perm_order[p, row]
  *             idx = row*(out_n-1) - ((row-1)*row)/2
  *             for icol in range(out_n-row-1):             # <<<<<<<<<<<<<<
@@ -6857,7 +6861,7 @@ static PyObject *__pyx_pf_5skbio_5stats_8distance_7_cutils_26mantel_perm_pearson
                               for (__pyx_t_12 = 0; __pyx_t_12 < __pyx_t_11; __pyx_t_12+=1) {
                                 __pyx_v_icol = __pyx_t_12;
 
-                                /* "skbio/stats/distance/_cutils.pyx":241
+                                /* "skbio/stats/distance/_cutils.pyx":238
  *             idx = row*(out_n-1) - ((row-1)*row)/2
  *             for icol in range(out_n-row-1):
  *                col = icol+row+1             # <<<<<<<<<<<<<<
@@ -6866,7 +6870,7 @@ static PyObject *__pyx_pf_5skbio_5stats_8distance_7_cutils_26mantel_perm_pearson
  */
                                 __pyx_v_col = ((__pyx_v_icol + __pyx_v_row) + 1);
 
-                                /* "skbio/stats/distance/_cutils.pyx":242
+                                /* "skbio/stats/distance/_cutils.pyx":239
  *             for icol in range(out_n-row-1):
  *                col = icol+row+1
  *                yval = ym_normalized[idx+icol]             # <<<<<<<<<<<<<<
@@ -6876,7 +6880,7 @@ static PyObject *__pyx_pf_5skbio_5stats_8distance_7_cutils_26mantel_perm_pearson
                                 __pyx_t_9 = (__pyx_v_idx + __pyx_v_icol);
                                 __pyx_v_yval = (*((float *) ( /* dim=0 */ ((char *) (((float *) __pyx_v_ym_normalized.data) + __pyx_t_9)) )));
 
-                                /* "skbio/stats/distance/_cutils.pyx":243
+                                /* "skbio/stats/distance/_cutils.pyx":240
  *                col = icol+row+1
  *                yval = ym_normalized[idx+icol]
  *                xval = x_data[vrow, perm_order[p, col]]*mul + add             # <<<<<<<<<<<<<<
@@ -6889,7 +6893,7 @@ static PyObject *__pyx_pf_5skbio_5stats_8distance_7_cutils_26mantel_perm_pearson
                                 __pyx_t_14 = (*((long *) ( /* dim=1 */ ((char *) (((long *) ( /* dim=0 */ (__pyx_v_perm_order.data + __pyx_t_9 * __pyx_v_perm_order.strides[0]) )) + __pyx_t_8)) )));
                                 __pyx_v_xval = (((*((float *) ( /* dim=1 */ ((char *) (((float *) ( /* dim=0 */ (__pyx_v_x_data.data + __pyx_t_13 * __pyx_v_x_data.strides[0]) )) + __pyx_t_14)) ))) * __pyx_v_mul) + __pyx_v_add);
 
-                                /* "skbio/stats/distance/_cutils.pyx":245
+                                /* "skbio/stats/distance/_cutils.pyx":242
  *                xval = x_data[vrow, perm_order[p, col]]*mul + add
  *                # do not use += to avoid having prange consider it for reduction
  *                my_ps = yval*xval + my_ps             # <<<<<<<<<<<<<<
@@ -6900,7 +6904,7 @@ static PyObject *__pyx_pf_5skbio_5stats_8distance_7_cutils_26mantel_perm_pearson
                               }
                             }
 
-                            /* "skbio/stats/distance/_cutils.pyx":249
+                            /* "skbio/stats/distance/_cutils.pyx":246
  *         # Presumably, if abs(one_stat) > 1, then it is only some small artifact of
  *         # floating point arithmetic.
  *         if my_ps>1.0:             # <<<<<<<<<<<<<<
@@ -6910,7 +6914,7 @@ static PyObject *__pyx_pf_5skbio_5stats_8distance_7_cutils_26mantel_perm_pearson
                             __pyx_t_15 = ((__pyx_v_my_ps > 1.0) != 0);
                             if (__pyx_t_15) {
 
-                              /* "skbio/stats/distance/_cutils.pyx":250
+                              /* "skbio/stats/distance/_cutils.pyx":247
  *         # floating point arithmetic.
  *         if my_ps>1.0:
  *             my_ps = 1.0             # <<<<<<<<<<<<<<
@@ -6919,7 +6923,7 @@ static PyObject *__pyx_pf_5skbio_5stats_8distance_7_cutils_26mantel_perm_pearson
  */
                               __pyx_v_my_ps = 1.0;
 
-                              /* "skbio/stats/distance/_cutils.pyx":249
+                              /* "skbio/stats/distance/_cutils.pyx":246
  *         # Presumably, if abs(one_stat) > 1, then it is only some small artifact of
  *         # floating point arithmetic.
  *         if my_ps>1.0:             # <<<<<<<<<<<<<<
@@ -6929,7 +6933,7 @@ static PyObject *__pyx_pf_5skbio_5stats_8distance_7_cutils_26mantel_perm_pearson
                               goto __pyx_L14;
                             }
 
-                            /* "skbio/stats/distance/_cutils.pyx":251
+                            /* "skbio/stats/distance/_cutils.pyx":248
  *         if my_ps>1.0:
  *             my_ps = 1.0
  *         elif my_ps<-1.0:             # <<<<<<<<<<<<<<
@@ -6939,7 +6943,7 @@ static PyObject *__pyx_pf_5skbio_5stats_8distance_7_cutils_26mantel_perm_pearson
                             __pyx_t_15 = ((__pyx_v_my_ps < -1.0) != 0);
                             if (__pyx_t_15) {
 
-                              /* "skbio/stats/distance/_cutils.pyx":252
+                              /* "skbio/stats/distance/_cutils.pyx":249
  *             my_ps = 1.0
  *         elif my_ps<-1.0:
  *             my_ps = -1.0             # <<<<<<<<<<<<<<
@@ -6947,7 +6951,7 @@ static PyObject *__pyx_pf_5skbio_5stats_8distance_7_cutils_26mantel_perm_pearson
  */
                               __pyx_v_my_ps = -1.0;
 
-                              /* "skbio/stats/distance/_cutils.pyx":251
+                              /* "skbio/stats/distance/_cutils.pyx":248
  *         if my_ps>1.0:
  *             my_ps = 1.0
  *         elif my_ps<-1.0:             # <<<<<<<<<<<<<<
@@ -6957,7 +6961,7 @@ static PyObject *__pyx_pf_5skbio_5stats_8distance_7_cutils_26mantel_perm_pearson
                             }
                             __pyx_L14:;
 
-                            /* "skbio/stats/distance/_cutils.pyx":253
+                            /* "skbio/stats/distance/_cutils.pyx":250
  *         elif my_ps<-1.0:
  *             my_ps = -1.0
  *         permuted_stats[p] = my_ps             # <<<<<<<<<<<<<<
@@ -6977,7 +6981,7 @@ static PyObject *__pyx_pf_5skbio_5stats_8distance_7_cutils_26mantel_perm_pearson
         #endif
       }
 
-      /* "skbio/stats/distance/_cutils.pyx":235
+      /* "skbio/stats/distance/_cutils.pyx":232
  *     cdef TReal xval
  * 
  *     for p in prange(perms_n, nogil=True):             # <<<<<<<<<<<<<<
@@ -6996,7 +7000,7 @@ static PyObject *__pyx_pf_5skbio_5stats_8distance_7_cutils_26mantel_perm_pearson
       }
   }
 
-  /* "skbio/stats/distance/_cutils.pyx":176
+  /* "skbio/stats/distance/_cutils.pyx":173
  * @cython.boundscheck(False)
  * @cython.wraparound(False)
  * def mantel_perm_pearsonr_cy(TReal[:, ::1] x_data, long[:, ::1] perm_order,             # <<<<<<<<<<<<<<
@@ -7067,35 +7071,35 @@ static PyObject *__pyx_fuse_1__pyx_pw_5skbio_5stats_8distance_7_cutils_29mantel_
         case  1:
         if (likely((values[1] = __Pyx_PyDict_GetItemStr(__pyx_kwds, __pyx_n_s_perm_order)) != 0)) kw_args--;
         else {
-          __Pyx_RaiseArgtupleInvalid("mantel_perm_pearsonr_cy", 1, 6, 6, 1); __PYX_ERR(0, 176, __pyx_L3_error)
+          __Pyx_RaiseArgtupleInvalid("mantel_perm_pearsonr_cy", 1, 6, 6, 1); __PYX_ERR(0, 173, __pyx_L3_error)
         }
         CYTHON_FALLTHROUGH;
         case  2:
         if (likely((values[2] = __Pyx_PyDict_GetItemStr(__pyx_kwds, __pyx_n_s_xmean)) != 0)) kw_args--;
         else {
-          __Pyx_RaiseArgtupleInvalid("mantel_perm_pearsonr_cy", 1, 6, 6, 2); __PYX_ERR(0, 176, __pyx_L3_error)
+          __Pyx_RaiseArgtupleInvalid("mantel_perm_pearsonr_cy", 1, 6, 6, 2); __PYX_ERR(0, 173, __pyx_L3_error)
         }
         CYTHON_FALLTHROUGH;
         case  3:
         if (likely((values[3] = __Pyx_PyDict_GetItemStr(__pyx_kwds, __pyx_n_s_normxm)) != 0)) kw_args--;
         else {
-          __Pyx_RaiseArgtupleInvalid("mantel_perm_pearsonr_cy", 1, 6, 6, 3); __PYX_ERR(0, 176, __pyx_L3_error)
+          __Pyx_RaiseArgtupleInvalid("mantel_perm_pearsonr_cy", 1, 6, 6, 3); __PYX_ERR(0, 173, __pyx_L3_error)
         }
         CYTHON_FALLTHROUGH;
         case  4:
         if (likely((values[4] = __Pyx_PyDict_GetItemStr(__pyx_kwds, __pyx_n_s_ym_normalized)) != 0)) kw_args--;
         else {
-          __Pyx_RaiseArgtupleInvalid("mantel_perm_pearsonr_cy", 1, 6, 6, 4); __PYX_ERR(0, 176, __pyx_L3_error)
+          __Pyx_RaiseArgtupleInvalid("mantel_perm_pearsonr_cy", 1, 6, 6, 4); __PYX_ERR(0, 173, __pyx_L3_error)
         }
         CYTHON_FALLTHROUGH;
         case  5:
         if (likely((values[5] = __Pyx_PyDict_GetItemStr(__pyx_kwds, __pyx_n_s_permuted_stats)) != 0)) kw_args--;
         else {
-          __Pyx_RaiseArgtupleInvalid("mantel_perm_pearsonr_cy", 1, 6, 6, 5); __PYX_ERR(0, 176, __pyx_L3_error)
+          __Pyx_RaiseArgtupleInvalid("mantel_perm_pearsonr_cy", 1, 6, 6, 5); __PYX_ERR(0, 173, __pyx_L3_error)
         }
       }
       if (unlikely(kw_args > 0)) {
-        if (unlikely(__Pyx_ParseOptionalKeywords(__pyx_kwds, __pyx_pyargnames, 0, values, pos_args, "mantel_perm_pearsonr_cy") < 0)) __PYX_ERR(0, 176, __pyx_L3_error)
+        if (unlikely(__Pyx_ParseOptionalKeywords(__pyx_kwds, __pyx_pyargnames, 0, values, pos_args, "mantel_perm_pearsonr_cy") < 0)) __PYX_ERR(0, 173, __pyx_L3_error)
       }
     } else if (PyTuple_GET_SIZE(__pyx_args) != 6) {
       goto __pyx_L5_argtuple_error;
@@ -7107,16 +7111,16 @@ static PyObject *__pyx_fuse_1__pyx_pw_5skbio_5stats_8distance_7_cutils_29mantel_
       values[4] = PyTuple_GET_ITEM(__pyx_args, 4);
       values[5] = PyTuple_GET_ITEM(__pyx_args, 5);
     }
-    __pyx_v_x_data = __Pyx_PyObject_to_MemoryviewSlice_d_dc_double(values[0], PyBUF_WRITABLE); if (unlikely(!__pyx_v_x_data.memview)) __PYX_ERR(0, 176, __pyx_L3_error)
-    __pyx_v_perm_order = __Pyx_PyObject_to_MemoryviewSlice_d_dc_long(values[1], PyBUF_WRITABLE); if (unlikely(!__pyx_v_perm_order.memview)) __PYX_ERR(0, 176, __pyx_L3_error)
-    __pyx_v_xmean = __pyx_PyFloat_AsDouble(values[2]); if (unlikely((__pyx_v_xmean == (double)-1) && PyErr_Occurred())) __PYX_ERR(0, 177, __pyx_L3_error)
-    __pyx_v_normxm = __pyx_PyFloat_AsDouble(values[3]); if (unlikely((__pyx_v_normxm == (double)-1) && PyErr_Occurred())) __PYX_ERR(0, 177, __pyx_L3_error)
-    __pyx_v_ym_normalized = __Pyx_PyObject_to_MemoryviewSlice_dc_double(values[4], PyBUF_WRITABLE); if (unlikely(!__pyx_v_ym_normalized.memview)) __PYX_ERR(0, 178, __pyx_L3_error)
-    __pyx_v_permuted_stats = __Pyx_PyObject_to_MemoryviewSlice_dc_double(values[5], PyBUF_WRITABLE); if (unlikely(!__pyx_v_permuted_stats.memview)) __PYX_ERR(0, 179, __pyx_L3_error)
+    __pyx_v_x_data = __Pyx_PyObject_to_MemoryviewSlice_d_dc_double(values[0], PyBUF_WRITABLE); if (unlikely(!__pyx_v_x_data.memview)) __PYX_ERR(0, 173, __pyx_L3_error)
+    __pyx_v_perm_order = __Pyx_PyObject_to_MemoryviewSlice_d_dc_long(values[1], PyBUF_WRITABLE); if (unlikely(!__pyx_v_perm_order.memview)) __PYX_ERR(0, 173, __pyx_L3_error)
+    __pyx_v_xmean = __pyx_PyFloat_AsDouble(values[2]); if (unlikely((__pyx_v_xmean == (double)-1) && PyErr_Occurred())) __PYX_ERR(0, 174, __pyx_L3_error)
+    __pyx_v_normxm = __pyx_PyFloat_AsDouble(values[3]); if (unlikely((__pyx_v_normxm == (double)-1) && PyErr_Occurred())) __PYX_ERR(0, 174, __pyx_L3_error)
+    __pyx_v_ym_normalized = __Pyx_PyObject_to_MemoryviewSlice_dc_double(values[4], PyBUF_WRITABLE); if (unlikely(!__pyx_v_ym_normalized.memview)) __PYX_ERR(0, 175, __pyx_L3_error)
+    __pyx_v_permuted_stats = __Pyx_PyObject_to_MemoryviewSlice_dc_double(values[5], PyBUF_WRITABLE); if (unlikely(!__pyx_v_permuted_stats.memview)) __PYX_ERR(0, 176, __pyx_L3_error)
   }
   goto __pyx_L4_argument_unpacking_done;
   __pyx_L5_argtuple_error:;
-  __Pyx_RaiseArgtupleInvalid("mantel_perm_pearsonr_cy", 1, 6, 6, PyTuple_GET_SIZE(__pyx_args)); __PYX_ERR(0, 176, __pyx_L3_error)
+  __Pyx_RaiseArgtupleInvalid("mantel_perm_pearsonr_cy", 1, 6, 6, PyTuple_GET_SIZE(__pyx_args)); __PYX_ERR(0, 173, __pyx_L3_error)
   __pyx_L3_error:;
   __Pyx_AddTraceback("skbio.stats.distance._cutils.mantel_perm_pearsonr_cy", __pyx_clineno, __pyx_lineno, __pyx_filename);
   __Pyx_RefNannyFinishContext();
@@ -7169,7 +7173,7 @@ static PyObject *__pyx_pf_5skbio_5stats_8distance_7_cutils_28mantel_perm_pearson
   int __pyx_clineno = 0;
   __Pyx_RefNannySetupContext("__pyx_fuse_1mantel_perm_pearsonr_cy", 0);
 
-  /* "skbio/stats/distance/_cutils.pyx":212
+  /* "skbio/stats/distance/_cutils.pyx":209
  *         Output, Pearson stats
  *     """
  *     cdef Py_ssize_t in_n = x_data.shape[0]             # <<<<<<<<<<<<<<
@@ -7178,7 +7182,7 @@ static PyObject *__pyx_pf_5skbio_5stats_8distance_7_cutils_28mantel_perm_pearson
  */
   __pyx_v_in_n = (__pyx_v_x_data.shape[0]);
 
-  /* "skbio/stats/distance/_cutils.pyx":213
+  /* "skbio/stats/distance/_cutils.pyx":210
  *     """
  *     cdef Py_ssize_t in_n = x_data.shape[0]
  *     cdef Py_ssize_t in2 = x_data.shape[1]             # <<<<<<<<<<<<<<
@@ -7187,7 +7191,7 @@ static PyObject *__pyx_pf_5skbio_5stats_8distance_7_cutils_28mantel_perm_pearson
  */
   __pyx_v_in2 = (__pyx_v_x_data.shape[1]);
 
-  /* "skbio/stats/distance/_cutils.pyx":214
+  /* "skbio/stats/distance/_cutils.pyx":211
  *     cdef Py_ssize_t in_n = x_data.shape[0]
  *     cdef Py_ssize_t in2 = x_data.shape[1]
  *     cdef Py_ssize_t perms_n = perm_order.shape[0]             # <<<<<<<<<<<<<<
@@ -7196,7 +7200,7 @@ static PyObject *__pyx_pf_5skbio_5stats_8distance_7_cutils_28mantel_perm_pearson
  */
   __pyx_v_perms_n = (__pyx_v_perm_order.shape[0]);
 
-  /* "skbio/stats/distance/_cutils.pyx":215
+  /* "skbio/stats/distance/_cutils.pyx":212
  *     cdef Py_ssize_t in2 = x_data.shape[1]
  *     cdef Py_ssize_t perms_n = perm_order.shape[0]
  *     cdef Py_ssize_t out_n = perm_order.shape[1]             # <<<<<<<<<<<<<<
@@ -7205,7 +7209,7 @@ static PyObject *__pyx_pf_5skbio_5stats_8distance_7_cutils_28mantel_perm_pearson
  */
   __pyx_v_out_n = (__pyx_v_perm_order.shape[1]);
 
-  /* "skbio/stats/distance/_cutils.pyx":216
+  /* "skbio/stats/distance/_cutils.pyx":213
  *     cdef Py_ssize_t perms_n = perm_order.shape[0]
  *     cdef Py_ssize_t out_n = perm_order.shape[1]
  *     cdef Py_ssize_t y_n = ym_normalized.shape[0]             # <<<<<<<<<<<<<<
@@ -7214,7 +7218,7 @@ static PyObject *__pyx_pf_5skbio_5stats_8distance_7_cutils_28mantel_perm_pearson
  */
   __pyx_v_y_n = (__pyx_v_ym_normalized.shape[0]);
 
-  /* "skbio/stats/distance/_cutils.pyx":217
+  /* "skbio/stats/distance/_cutils.pyx":214
  *     cdef Py_ssize_t out_n = perm_order.shape[1]
  *     cdef Py_ssize_t y_n = ym_normalized.shape[0]
  *     cdef Py_ssize_t on2 = permuted_stats.shape[0]             # <<<<<<<<<<<<<<
@@ -7223,7 +7227,7 @@ static PyObject *__pyx_pf_5skbio_5stats_8distance_7_cutils_28mantel_perm_pearson
  */
   __pyx_v_on2 = (__pyx_v_permuted_stats.shape[0]);
 
-  /* "skbio/stats/distance/_cutils.pyx":219
+  /* "skbio/stats/distance/_cutils.pyx":216
  *     cdef Py_ssize_t on2 = permuted_stats.shape[0]
  * 
  *     assert in_n == in2             # <<<<<<<<<<<<<<
@@ -7234,12 +7238,12 @@ static PyObject *__pyx_pf_5skbio_5stats_8distance_7_cutils_28mantel_perm_pearson
   if (unlikely(!Py_OptimizeFlag)) {
     if (unlikely(!((__pyx_v_in_n == __pyx_v_in2) != 0))) {
       PyErr_SetNone(PyExc_AssertionError);
-      __PYX_ERR(0, 219, __pyx_L1_error)
+      __PYX_ERR(0, 216, __pyx_L1_error)
     }
   }
   #endif
 
-  /* "skbio/stats/distance/_cutils.pyx":220
+  /* "skbio/stats/distance/_cutils.pyx":217
  * 
  *     assert in_n == in2
  *     assert y_n == ((out_n-1)*out_n)/2             # <<<<<<<<<<<<<<
@@ -7250,12 +7254,12 @@ static PyObject *__pyx_pf_5skbio_5stats_8distance_7_cutils_28mantel_perm_pearson
   if (unlikely(!Py_OptimizeFlag)) {
     if (unlikely(!((__pyx_v_y_n == __Pyx_div_Py_ssize_t(((__pyx_v_out_n - 1) * __pyx_v_out_n), 2)) != 0))) {
       PyErr_SetNone(PyExc_AssertionError);
-      __PYX_ERR(0, 220, __pyx_L1_error)
+      __PYX_ERR(0, 217, __pyx_L1_error)
     }
   }
   #endif
 
-  /* "skbio/stats/distance/_cutils.pyx":221
+  /* "skbio/stats/distance/_cutils.pyx":218
  *     assert in_n == in2
  *     assert y_n == ((out_n-1)*out_n)/2
  *     assert perms_n == on2             # <<<<<<<<<<<<<<
@@ -7266,12 +7270,12 @@ static PyObject *__pyx_pf_5skbio_5stats_8distance_7_cutils_28mantel_perm_pearson
   if (unlikely(!Py_OptimizeFlag)) {
     if (unlikely(!((__pyx_v_perms_n == __pyx_v_on2) != 0))) {
       PyErr_SetNone(PyExc_AssertionError);
-      __PYX_ERR(0, 221, __pyx_L1_error)
+      __PYX_ERR(0, 218, __pyx_L1_error)
     }
   }
   #endif
 
-  /* "skbio/stats/distance/_cutils.pyx":228
+  /* "skbio/stats/distance/_cutils.pyx":225
  *     cdef Py_ssize_t idx
  * 
  *     cdef TReal mul = 1.0/normxm             # <<<<<<<<<<<<<<
@@ -7280,11 +7284,11 @@ static PyObject *__pyx_pf_5skbio_5stats_8distance_7_cutils_28mantel_perm_pearson
  */
   if (unlikely(__pyx_v_normxm == 0)) {
     PyErr_SetString(PyExc_ZeroDivisionError, "float division");
-    __PYX_ERR(0, 228, __pyx_L1_error)
+    __PYX_ERR(0, 225, __pyx_L1_error)
   }
   __pyx_v_mul = (1.0 / __pyx_v_normxm);
 
-  /* "skbio/stats/distance/_cutils.pyx":229
+  /* "skbio/stats/distance/_cutils.pyx":226
  * 
  *     cdef TReal mul = 1.0/normxm
  *     cdef TReal add = -xmean/normxm             # <<<<<<<<<<<<<<
@@ -7294,11 +7298,11 @@ static PyObject *__pyx_pf_5skbio_5stats_8distance_7_cutils_28mantel_perm_pearson
   __pyx_t_1 = (-__pyx_v_xmean);
   if (unlikely(__pyx_v_normxm == 0)) {
     PyErr_SetString(PyExc_ZeroDivisionError, "float division");
-    __PYX_ERR(0, 229, __pyx_L1_error)
+    __PYX_ERR(0, 226, __pyx_L1_error)
   }
   __pyx_v_add = (__pyx_t_1 / __pyx_v_normxm);
 
-  /* "skbio/stats/distance/_cutils.pyx":235
+  /* "skbio/stats/distance/_cutils.pyx":232
  *     cdef TReal xval
  * 
  *     for p in prange(perms_n, nogil=True):             # <<<<<<<<<<<<<<
@@ -7344,7 +7348,7 @@ static PyObject *__pyx_pf_5skbio_5stats_8distance_7_cutils_28mantel_perm_pearson
                             __pyx_v_xval = ((double)__PYX_NAN());
                             __pyx_v_yval = ((double)__PYX_NAN());
 
-                            /* "skbio/stats/distance/_cutils.pyx":236
+                            /* "skbio/stats/distance/_cutils.pyx":233
  * 
  *     for p in prange(perms_n, nogil=True):
  *         my_ps = 0.0             # <<<<<<<<<<<<<<
@@ -7353,7 +7357,7 @@ static PyObject *__pyx_pf_5skbio_5stats_8distance_7_cutils_28mantel_perm_pearson
  */
                             __pyx_v_my_ps = 0.0;
 
-                            /* "skbio/stats/distance/_cutils.pyx":237
+                            /* "skbio/stats/distance/_cutils.pyx":234
  *     for p in prange(perms_n, nogil=True):
  *         my_ps = 0.0
  *         for row in range(out_n-1):             # <<<<<<<<<<<<<<
@@ -7365,7 +7369,7 @@ static PyObject *__pyx_pf_5skbio_5stats_8distance_7_cutils_28mantel_perm_pearson
                             for (__pyx_t_7 = 0; __pyx_t_7 < __pyx_t_6; __pyx_t_7+=1) {
                               __pyx_v_row = __pyx_t_7;
 
-                              /* "skbio/stats/distance/_cutils.pyx":238
+                              /* "skbio/stats/distance/_cutils.pyx":235
  *         my_ps = 0.0
  *         for row in range(out_n-1):
  *             vrow = perm_order[p, row]             # <<<<<<<<<<<<<<
@@ -7376,7 +7380,7 @@ static PyObject *__pyx_pf_5skbio_5stats_8distance_7_cutils_28mantel_perm_pearson
                               __pyx_t_9 = __pyx_v_row;
                               __pyx_v_vrow = (*((long *) ( /* dim=1 */ ((char *) (((long *) ( /* dim=0 */ (__pyx_v_perm_order.data + __pyx_t_8 * __pyx_v_perm_order.strides[0]) )) + __pyx_t_9)) )));
 
-                              /* "skbio/stats/distance/_cutils.pyx":239
+                              /* "skbio/stats/distance/_cutils.pyx":236
  *         for row in range(out_n-1):
  *             vrow = perm_order[p, row]
  *             idx = row*(out_n-1) - ((row-1)*row)/2             # <<<<<<<<<<<<<<
@@ -7385,7 +7389,7 @@ static PyObject *__pyx_pf_5skbio_5stats_8distance_7_cutils_28mantel_perm_pearson
  */
                               __pyx_v_idx = ((__pyx_v_row * (__pyx_v_out_n - 1)) - __Pyx_div_Py_ssize_t(((__pyx_v_row - 1) * __pyx_v_row), 2));
 
-                              /* "skbio/stats/distance/_cutils.pyx":240
+                              /* "skbio/stats/distance/_cutils.pyx":237
  *             vrow = perm_order[p, row]
  *             idx = row*(out_n-1) - ((row-1)*row)/2
  *             for icol in range(out_n-row-1):             # <<<<<<<<<<<<<<
@@ -7397,7 +7401,7 @@ static PyObject *__pyx_pf_5skbio_5stats_8distance_7_cutils_28mantel_perm_pearson
                               for (__pyx_t_12 = 0; __pyx_t_12 < __pyx_t_11; __pyx_t_12+=1) {
                                 __pyx_v_icol = __pyx_t_12;
 
-                                /* "skbio/stats/distance/_cutils.pyx":241
+                                /* "skbio/stats/distance/_cutils.pyx":238
  *             idx = row*(out_n-1) - ((row-1)*row)/2
  *             for icol in range(out_n-row-1):
  *                col = icol+row+1             # <<<<<<<<<<<<<<
@@ -7406,7 +7410,7 @@ static PyObject *__pyx_pf_5skbio_5stats_8distance_7_cutils_28mantel_perm_pearson
  */
                                 __pyx_v_col = ((__pyx_v_icol + __pyx_v_row) + 1);
 
-                                /* "skbio/stats/distance/_cutils.pyx":242
+                                /* "skbio/stats/distance/_cutils.pyx":239
  *             for icol in range(out_n-row-1):
  *                col = icol+row+1
  *                yval = ym_normalized[idx+icol]             # <<<<<<<<<<<<<<
@@ -7416,7 +7420,7 @@ static PyObject *__pyx_pf_5skbio_5stats_8distance_7_cutils_28mantel_perm_pearson
                                 __pyx_t_9 = (__pyx_v_idx + __pyx_v_icol);
                                 __pyx_v_yval = (*((double *) ( /* dim=0 */ ((char *) (((double *) __pyx_v_ym_normalized.data) + __pyx_t_9)) )));
 
-                                /* "skbio/stats/distance/_cutils.pyx":243
+                                /* "skbio/stats/distance/_cutils.pyx":240
  *                col = icol+row+1
  *                yval = ym_normalized[idx+icol]
  *                xval = x_data[vrow, perm_order[p, col]]*mul + add             # <<<<<<<<<<<<<<
@@ -7429,7 +7433,7 @@ static PyObject *__pyx_pf_5skbio_5stats_8distance_7_cutils_28mantel_perm_pearson
                                 __pyx_t_14 = (*((long *) ( /* dim=1 */ ((char *) (((long *) ( /* dim=0 */ (__pyx_v_perm_order.data + __pyx_t_9 * __pyx_v_perm_order.strides[0]) )) + __pyx_t_8)) )));
                                 __pyx_v_xval = (((*((double *) ( /* dim=1 */ ((char *) (((double *) ( /* dim=0 */ (__pyx_v_x_data.data + __pyx_t_13 * __pyx_v_x_data.strides[0]) )) + __pyx_t_14)) ))) * __pyx_v_mul) + __pyx_v_add);
 
-                                /* "skbio/stats/distance/_cutils.pyx":245
+                                /* "skbio/stats/distance/_cutils.pyx":242
  *                xval = x_data[vrow, perm_order[p, col]]*mul + add
  *                # do not use += to avoid having prange consider it for reduction
  *                my_ps = yval*xval + my_ps             # <<<<<<<<<<<<<<
@@ -7440,7 +7444,7 @@ static PyObject *__pyx_pf_5skbio_5stats_8distance_7_cutils_28mantel_perm_pearson
                               }
                             }
 
-                            /* "skbio/stats/distance/_cutils.pyx":249
+                            /* "skbio/stats/distance/_cutils.pyx":246
  *         # Presumably, if abs(one_stat) > 1, then it is only some small artifact of
  *         # floating point arithmetic.
  *         if my_ps>1.0:             # <<<<<<<<<<<<<<
@@ -7450,7 +7454,7 @@ static PyObject *__pyx_pf_5skbio_5stats_8distance_7_cutils_28mantel_perm_pearson
                             __pyx_t_15 = ((__pyx_v_my_ps > 1.0) != 0);
                             if (__pyx_t_15) {
 
-                              /* "skbio/stats/distance/_cutils.pyx":250
+                              /* "skbio/stats/distance/_cutils.pyx":247
  *         # floating point arithmetic.
  *         if my_ps>1.0:
  *             my_ps = 1.0             # <<<<<<<<<<<<<<
@@ -7459,7 +7463,7 @@ static PyObject *__pyx_pf_5skbio_5stats_8distance_7_cutils_28mantel_perm_pearson
  */
                               __pyx_v_my_ps = 1.0;
 
-                              /* "skbio/stats/distance/_cutils.pyx":249
+                              /* "skbio/stats/distance/_cutils.pyx":246
  *         # Presumably, if abs(one_stat) > 1, then it is only some small artifact of
  *         # floating point arithmetic.
  *         if my_ps>1.0:             # <<<<<<<<<<<<<<
@@ -7469,7 +7473,7 @@ static PyObject *__pyx_pf_5skbio_5stats_8distance_7_cutils_28mantel_perm_pearson
                               goto __pyx_L14;
                             }
 
-                            /* "skbio/stats/distance/_cutils.pyx":251
+                            /* "skbio/stats/distance/_cutils.pyx":248
  *         if my_ps>1.0:
  *             my_ps = 1.0
  *         elif my_ps<-1.0:             # <<<<<<<<<<<<<<
@@ -7479,7 +7483,7 @@ static PyObject *__pyx_pf_5skbio_5stats_8distance_7_cutils_28mantel_perm_pearson
                             __pyx_t_15 = ((__pyx_v_my_ps < -1.0) != 0);
                             if (__pyx_t_15) {
 
-                              /* "skbio/stats/distance/_cutils.pyx":252
+                              /* "skbio/stats/distance/_cutils.pyx":249
  *             my_ps = 1.0
  *         elif my_ps<-1.0:
  *             my_ps = -1.0             # <<<<<<<<<<<<<<
@@ -7487,7 +7491,7 @@ static PyObject *__pyx_pf_5skbio_5stats_8distance_7_cutils_28mantel_perm_pearson
  */
                               __pyx_v_my_ps = -1.0;
 
-                              /* "skbio/stats/distance/_cutils.pyx":251
+                              /* "skbio/stats/distance/_cutils.pyx":248
  *         if my_ps>1.0:
  *             my_ps = 1.0
  *         elif my_ps<-1.0:             # <<<<<<<<<<<<<<
@@ -7497,7 +7501,7 @@ static PyObject *__pyx_pf_5skbio_5stats_8distance_7_cutils_28mantel_perm_pearson
                             }
                             __pyx_L14:;
 
-                            /* "skbio/stats/distance/_cutils.pyx":253
+                            /* "skbio/stats/distance/_cutils.pyx":250
  *         elif my_ps<-1.0:
  *             my_ps = -1.0
  *         permuted_stats[p] = my_ps             # <<<<<<<<<<<<<<
@@ -7517,7 +7521,7 @@ static PyObject *__pyx_pf_5skbio_5stats_8distance_7_cutils_28mantel_perm_pearson
         #endif
       }
 
-      /* "skbio/stats/distance/_cutils.pyx":235
+      /* "skbio/stats/distance/_cutils.pyx":232
  *     cdef TReal xval
  * 
  *     for p in prange(perms_n, nogil=True):             # <<<<<<<<<<<<<<
@@ -7536,7 +7540,7 @@ static PyObject *__pyx_pf_5skbio_5stats_8distance_7_cutils_28mantel_perm_pearson
       }
   }
 
-  /* "skbio/stats/distance/_cutils.pyx":176
+  /* "skbio/stats/distance/_cutils.pyx":173
  * @cython.boundscheck(False)
  * @cython.wraparound(False)
  * def mantel_perm_pearsonr_cy(TReal[:, ::1] x_data, long[:, ::1] perm_order,             # <<<<<<<<<<<<<<
@@ -21724,41 +21728,41 @@ static CYTHON_SMALL_CODE int __Pyx_InitCachedConstants(void) {
   __Pyx_GIVEREF(__pyx_tuple__24);
   __pyx_codeobj__25 = (PyObject*)__Pyx_PyCode_New(1, 0, 13, 0, CO_OPTIMIZED|CO_NEWLOCALS, __pyx_empty_bytes, __pyx_empty_tuple, __pyx_empty_tuple, __pyx_tuple__24, __pyx_empty_tuple, __pyx_empty_tuple, __pyx_kp_s_skbio_stats_distance__cutils_pyx, __pyx_n_s_is_symmetric_and_hollow_cy, 22, __pyx_empty_bytes); if (unlikely(!__pyx_codeobj__25)) __PYX_ERR(0, 22, __pyx_L1_error)
 
-  /* "skbio/stats/distance/_cutils.pyx":74
+  /* "skbio/stats/distance/_cutils.pyx":71
  * @cython.boundscheck(False)
  * @cython.wraparound(False)
  * def distmat_reorder_cy(TReal[:, ::1] in_mat, long[::1] reorder_vec,             # <<<<<<<<<<<<<<
  *                        TReal[:, ::1] out_mat):
  *     """
  */
-  __pyx_tuple__26 = PyTuple_Pack(11, __pyx_n_s_in_mat, __pyx_n_s_reorder_vec, __pyx_n_s_out_mat, __pyx_n_s_in_n, __pyx_n_s_in2, __pyx_n_s_out_n, __pyx_n_s_on2, __pyx_n_s_on3, __pyx_n_s_row, __pyx_n_s_col, __pyx_n_s_vrow); if (unlikely(!__pyx_tuple__26)) __PYX_ERR(0, 74, __pyx_L1_error)
+  __pyx_tuple__26 = PyTuple_Pack(11, __pyx_n_s_in_mat, __pyx_n_s_reorder_vec, __pyx_n_s_out_mat, __pyx_n_s_in_n, __pyx_n_s_in2, __pyx_n_s_out_n, __pyx_n_s_on2, __pyx_n_s_on3, __pyx_n_s_row, __pyx_n_s_col, __pyx_n_s_vrow); if (unlikely(!__pyx_tuple__26)) __PYX_ERR(0, 71, __pyx_L1_error)
   __Pyx_GOTREF(__pyx_tuple__26);
   __Pyx_GIVEREF(__pyx_tuple__26);
-  __pyx_codeobj__27 = (PyObject*)__Pyx_PyCode_New(3, 0, 11, 0, CO_OPTIMIZED|CO_NEWLOCALS, __pyx_empty_bytes, __pyx_empty_tuple, __pyx_empty_tuple, __pyx_tuple__26, __pyx_empty_tuple, __pyx_empty_tuple, __pyx_kp_s_skbio_stats_distance__cutils_pyx, __pyx_n_s_distmat_reorder_cy, 74, __pyx_empty_bytes); if (unlikely(!__pyx_codeobj__27)) __PYX_ERR(0, 74, __pyx_L1_error)
+  __pyx_codeobj__27 = (PyObject*)__Pyx_PyCode_New(3, 0, 11, 0, CO_OPTIMIZED|CO_NEWLOCALS, __pyx_empty_bytes, __pyx_empty_tuple, __pyx_empty_tuple, __pyx_tuple__26, __pyx_empty_tuple, __pyx_empty_tuple, __pyx_kp_s_skbio_stats_distance__cutils_pyx, __pyx_n_s_distmat_reorder_cy, 71, __pyx_empty_bytes); if (unlikely(!__pyx_codeobj__27)) __PYX_ERR(0, 71, __pyx_L1_error)
 
-  /* "skbio/stats/distance/_cutils.pyx":126
+  /* "skbio/stats/distance/_cutils.pyx":123
  * @cython.boundscheck(False)
  * @cython.wraparound(False)
  * def distmat_reorder_condensed_cy(TReal[:, ::1] in_mat, long[::1] reorder_vec,             # <<<<<<<<<<<<<<
  *                                   TReal[::1] out_mat_condensed):
  *     """
  */
-  __pyx_tuple__28 = PyTuple_Pack(11, __pyx_n_s_in_mat, __pyx_n_s_reorder_vec, __pyx_n_s_out_mat_condensed, __pyx_n_s_in_n, __pyx_n_s_in2, __pyx_n_s_out_n, __pyx_n_s_on2, __pyx_n_s_row, __pyx_n_s_col, __pyx_n_s_vrow, __pyx_n_s_idx); if (unlikely(!__pyx_tuple__28)) __PYX_ERR(0, 126, __pyx_L1_error)
+  __pyx_tuple__28 = PyTuple_Pack(11, __pyx_n_s_in_mat, __pyx_n_s_reorder_vec, __pyx_n_s_out_mat_condensed, __pyx_n_s_in_n, __pyx_n_s_in2, __pyx_n_s_out_n, __pyx_n_s_on2, __pyx_n_s_row, __pyx_n_s_col, __pyx_n_s_vrow, __pyx_n_s_idx); if (unlikely(!__pyx_tuple__28)) __PYX_ERR(0, 123, __pyx_L1_error)
   __Pyx_GOTREF(__pyx_tuple__28);
   __Pyx_GIVEREF(__pyx_tuple__28);
-  __pyx_codeobj__29 = (PyObject*)__Pyx_PyCode_New(3, 0, 11, 0, CO_OPTIMIZED|CO_NEWLOCALS, __pyx_empty_bytes, __pyx_empty_tuple, __pyx_empty_tuple, __pyx_tuple__28, __pyx_empty_tuple, __pyx_empty_tuple, __pyx_kp_s_skbio_stats_distance__cutils_pyx, __pyx_n_s_distmat_reorder_condensed_cy, 126, __pyx_empty_bytes); if (unlikely(!__pyx_codeobj__29)) __PYX_ERR(0, 126, __pyx_L1_error)
+  __pyx_codeobj__29 = (PyObject*)__Pyx_PyCode_New(3, 0, 11, 0, CO_OPTIMIZED|CO_NEWLOCALS, __pyx_empty_bytes, __pyx_empty_tuple, __pyx_empty_tuple, __pyx_tuple__28, __pyx_empty_tuple, __pyx_empty_tuple, __pyx_kp_s_skbio_stats_distance__cutils_pyx, __pyx_n_s_distmat_reorder_condensed_cy, 123, __pyx_empty_bytes); if (unlikely(!__pyx_codeobj__29)) __PYX_ERR(0, 123, __pyx_L1_error)
 
-  /* "skbio/stats/distance/_cutils.pyx":176
+  /* "skbio/stats/distance/_cutils.pyx":173
  * @cython.boundscheck(False)
  * @cython.wraparound(False)
  * def mantel_perm_pearsonr_cy(TReal[:, ::1] x_data, long[:, ::1] perm_order,             # <<<<<<<<<<<<<<
  *                             TReal xmean, TReal normxm,
  *                             TReal[::1] ym_normalized,
  */
-  __pyx_tuple__30 = PyTuple_Pack(23, __pyx_n_s_x_data, __pyx_n_s_perm_order, __pyx_n_s_xmean, __pyx_n_s_normxm, __pyx_n_s_ym_normalized, __pyx_n_s_permuted_stats, __pyx_n_s_in_n, __pyx_n_s_in2, __pyx_n_s_perms_n, __pyx_n_s_out_n, __pyx_n_s_y_n, __pyx_n_s_on2, __pyx_n_s_p, __pyx_n_s_row, __pyx_n_s_col, __pyx_n_s_icol, __pyx_n_s_vrow, __pyx_n_s_idx, __pyx_n_s_mul, __pyx_n_s_add, __pyx_n_s_my_ps, __pyx_n_s_yval, __pyx_n_s_xval); if (unlikely(!__pyx_tuple__30)) __PYX_ERR(0, 176, __pyx_L1_error)
+  __pyx_tuple__30 = PyTuple_Pack(23, __pyx_n_s_x_data, __pyx_n_s_perm_order, __pyx_n_s_xmean, __pyx_n_s_normxm, __pyx_n_s_ym_normalized, __pyx_n_s_permuted_stats, __pyx_n_s_in_n, __pyx_n_s_in2, __pyx_n_s_perms_n, __pyx_n_s_out_n, __pyx_n_s_y_n, __pyx_n_s_on2, __pyx_n_s_p, __pyx_n_s_row, __pyx_n_s_col, __pyx_n_s_icol, __pyx_n_s_vrow, __pyx_n_s_idx, __pyx_n_s_mul, __pyx_n_s_add, __pyx_n_s_my_ps, __pyx_n_s_yval, __pyx_n_s_xval); if (unlikely(!__pyx_tuple__30)) __PYX_ERR(0, 173, __pyx_L1_error)
   __Pyx_GOTREF(__pyx_tuple__30);
   __Pyx_GIVEREF(__pyx_tuple__30);
-  __pyx_codeobj__31 = (PyObject*)__Pyx_PyCode_New(6, 0, 23, 0, CO_OPTIMIZED|CO_NEWLOCALS, __pyx_empty_bytes, __pyx_empty_tuple, __pyx_empty_tuple, __pyx_tuple__30, __pyx_empty_tuple, __pyx_empty_tuple, __pyx_kp_s_skbio_stats_distance__cutils_pyx, __pyx_n_s_mantel_perm_pearsonr_cy, 176, __pyx_empty_bytes); if (unlikely(!__pyx_codeobj__31)) __PYX_ERR(0, 176, __pyx_L1_error)
+  __pyx_codeobj__31 = (PyObject*)__Pyx_PyCode_New(6, 0, 23, 0, CO_OPTIMIZED|CO_NEWLOCALS, __pyx_empty_bytes, __pyx_empty_tuple, __pyx_empty_tuple, __pyx_tuple__30, __pyx_empty_tuple, __pyx_empty_tuple, __pyx_kp_s_skbio_stats_distance__cutils_pyx, __pyx_n_s_mantel_perm_pearsonr_cy, 173, __pyx_empty_bytes); if (unlikely(!__pyx_codeobj__31)) __PYX_ERR(0, 173, __pyx_L1_error)
 
   /* "View.MemoryView":286
  *         return self.name
@@ -22221,88 +22225,88 @@ if (!__Pyx_RefNanny) {
   if (PyDict_SetItem(__pyx_d, __pyx_n_s_is_symmetric_and_hollow_cy, __pyx_t_2) < 0) __PYX_ERR(0, 22, __pyx_L1_error)
   __Pyx_DECREF(__pyx_t_2); __pyx_t_2 = 0;
 
-  /* "skbio/stats/distance/_cutils.pyx":74
+  /* "skbio/stats/distance/_cutils.pyx":71
  * @cython.boundscheck(False)
  * @cython.wraparound(False)
  * def distmat_reorder_cy(TReal[:, ::1] in_mat, long[::1] reorder_vec,             # <<<<<<<<<<<<<<
  *                        TReal[:, ::1] out_mat):
  *     """
  */
-  __pyx_t_2 = __Pyx_PyDict_NewPresized(2); if (unlikely(!__pyx_t_2)) __PYX_ERR(0, 74, __pyx_L1_error)
+  __pyx_t_2 = __Pyx_PyDict_NewPresized(2); if (unlikely(!__pyx_t_2)) __PYX_ERR(0, 71, __pyx_L1_error)
   __Pyx_GOTREF(__pyx_t_2);
-  __pyx_t_1 = __pyx_FusedFunction_New(&__pyx_fuse_0__pyx_mdef_5skbio_5stats_8distance_7_cutils_15distmat_reorder_cy, 0, __pyx_n_s_distmat_reorder_cy, NULL, __pyx_n_s_skbio_stats_distance__cutils, __pyx_d, ((PyObject *)__pyx_codeobj__27)); if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 74, __pyx_L1_error)
+  __pyx_t_1 = __pyx_FusedFunction_New(&__pyx_fuse_0__pyx_mdef_5skbio_5stats_8distance_7_cutils_15distmat_reorder_cy, 0, __pyx_n_s_distmat_reorder_cy, NULL, __pyx_n_s_skbio_stats_distance__cutils, __pyx_d, ((PyObject *)__pyx_codeobj__27)); if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 71, __pyx_L1_error)
   __Pyx_GOTREF(__pyx_t_1);
   __Pyx_CyFunction_SetDefaultsTuple(__pyx_t_1, __pyx_empty_tuple);
-  if (PyDict_SetItem(__pyx_t_2, __pyx_n_s_float, __pyx_t_1) < 0) __PYX_ERR(0, 74, __pyx_L1_error)
+  if (PyDict_SetItem(__pyx_t_2, __pyx_n_s_float, __pyx_t_1) < 0) __PYX_ERR(0, 71, __pyx_L1_error)
   __Pyx_DECREF(__pyx_t_1); __pyx_t_1 = 0;
-  __pyx_t_1 = __pyx_FusedFunction_New(&__pyx_fuse_1__pyx_mdef_5skbio_5stats_8distance_7_cutils_17distmat_reorder_cy, 0, __pyx_n_s_distmat_reorder_cy, NULL, __pyx_n_s_skbio_stats_distance__cutils, __pyx_d, ((PyObject *)__pyx_codeobj__27)); if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 74, __pyx_L1_error)
+  __pyx_t_1 = __pyx_FusedFunction_New(&__pyx_fuse_1__pyx_mdef_5skbio_5stats_8distance_7_cutils_17distmat_reorder_cy, 0, __pyx_n_s_distmat_reorder_cy, NULL, __pyx_n_s_skbio_stats_distance__cutils, __pyx_d, ((PyObject *)__pyx_codeobj__27)); if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 71, __pyx_L1_error)
   __Pyx_GOTREF(__pyx_t_1);
   __Pyx_CyFunction_SetDefaultsTuple(__pyx_t_1, __pyx_empty_tuple);
-  if (PyDict_SetItem(__pyx_t_2, __pyx_n_s_double, __pyx_t_1) < 0) __PYX_ERR(0, 74, __pyx_L1_error)
+  if (PyDict_SetItem(__pyx_t_2, __pyx_n_s_double, __pyx_t_1) < 0) __PYX_ERR(0, 71, __pyx_L1_error)
   __Pyx_DECREF(__pyx_t_1); __pyx_t_1 = 0;
-  __pyx_t_1 = __pyx_FusedFunction_New(&__pyx_mdef_5skbio_5stats_8distance_7_cutils_3distmat_reorder_cy, 0, __pyx_n_s_distmat_reorder_cy, NULL, __pyx_n_s_skbio_stats_distance__cutils, __pyx_d, ((PyObject *)__pyx_codeobj__27)); if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 74, __pyx_L1_error)
+  __pyx_t_1 = __pyx_FusedFunction_New(&__pyx_mdef_5skbio_5stats_8distance_7_cutils_3distmat_reorder_cy, 0, __pyx_n_s_distmat_reorder_cy, NULL, __pyx_n_s_skbio_stats_distance__cutils, __pyx_d, ((PyObject *)__pyx_codeobj__27)); if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 71, __pyx_L1_error)
   __Pyx_GOTREF(__pyx_t_1);
   __Pyx_CyFunction_SetDefaultsTuple(__pyx_t_1, __pyx_empty_tuple);
   ((__pyx_FusedFunctionObject *) __pyx_t_1)->__signatures__ = __pyx_t_2;
   __Pyx_GIVEREF(__pyx_t_2);
   __pyx_t_2 = 0;
-  if (PyDict_SetItem(__pyx_d, __pyx_n_s_distmat_reorder_cy, __pyx_t_1) < 0) __PYX_ERR(0, 74, __pyx_L1_error)
+  if (PyDict_SetItem(__pyx_d, __pyx_n_s_distmat_reorder_cy, __pyx_t_1) < 0) __PYX_ERR(0, 71, __pyx_L1_error)
   __Pyx_DECREF(__pyx_t_1); __pyx_t_1 = 0;
 
-  /* "skbio/stats/distance/_cutils.pyx":126
+  /* "skbio/stats/distance/_cutils.pyx":123
  * @cython.boundscheck(False)
  * @cython.wraparound(False)
  * def distmat_reorder_condensed_cy(TReal[:, ::1] in_mat, long[::1] reorder_vec,             # <<<<<<<<<<<<<<
  *                                   TReal[::1] out_mat_condensed):
  *     """
  */
-  __pyx_t_1 = __Pyx_PyDict_NewPresized(2); if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 126, __pyx_L1_error)
+  __pyx_t_1 = __Pyx_PyDict_NewPresized(2); if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 123, __pyx_L1_error)
   __Pyx_GOTREF(__pyx_t_1);
-  __pyx_t_2 = __pyx_FusedFunction_New(&__pyx_fuse_0__pyx_mdef_5skbio_5stats_8distance_7_cutils_21distmat_reorder_condensed_cy, 0, __pyx_n_s_distmat_reorder_condensed_cy, NULL, __pyx_n_s_skbio_stats_distance__cutils, __pyx_d, ((PyObject *)__pyx_codeobj__29)); if (unlikely(!__pyx_t_2)) __PYX_ERR(0, 126, __pyx_L1_error)
+  __pyx_t_2 = __pyx_FusedFunction_New(&__pyx_fuse_0__pyx_mdef_5skbio_5stats_8distance_7_cutils_21distmat_reorder_condensed_cy, 0, __pyx_n_s_distmat_reorder_condensed_cy, NULL, __pyx_n_s_skbio_stats_distance__cutils, __pyx_d, ((PyObject *)__pyx_codeobj__29)); if (unlikely(!__pyx_t_2)) __PYX_ERR(0, 123, __pyx_L1_error)
   __Pyx_GOTREF(__pyx_t_2);
   __Pyx_CyFunction_SetDefaultsTuple(__pyx_t_2, __pyx_empty_tuple);
-  if (PyDict_SetItem(__pyx_t_1, __pyx_n_s_float, __pyx_t_2) < 0) __PYX_ERR(0, 126, __pyx_L1_error)
+  if (PyDict_SetItem(__pyx_t_1, __pyx_n_s_float, __pyx_t_2) < 0) __PYX_ERR(0, 123, __pyx_L1_error)
   __Pyx_DECREF(__pyx_t_2); __pyx_t_2 = 0;
-  __pyx_t_2 = __pyx_FusedFunction_New(&__pyx_fuse_1__pyx_mdef_5skbio_5stats_8distance_7_cutils_23distmat_reorder_condensed_cy, 0, __pyx_n_s_distmat_reorder_condensed_cy, NULL, __pyx_n_s_skbio_stats_distance__cutils, __pyx_d, ((PyObject *)__pyx_codeobj__29)); if (unlikely(!__pyx_t_2)) __PYX_ERR(0, 126, __pyx_L1_error)
+  __pyx_t_2 = __pyx_FusedFunction_New(&__pyx_fuse_1__pyx_mdef_5skbio_5stats_8distance_7_cutils_23distmat_reorder_condensed_cy, 0, __pyx_n_s_distmat_reorder_condensed_cy, NULL, __pyx_n_s_skbio_stats_distance__cutils, __pyx_d, ((PyObject *)__pyx_codeobj__29)); if (unlikely(!__pyx_t_2)) __PYX_ERR(0, 123, __pyx_L1_error)
   __Pyx_GOTREF(__pyx_t_2);
   __Pyx_CyFunction_SetDefaultsTuple(__pyx_t_2, __pyx_empty_tuple);
-  if (PyDict_SetItem(__pyx_t_1, __pyx_n_s_double, __pyx_t_2) < 0) __PYX_ERR(0, 126, __pyx_L1_error)
+  if (PyDict_SetItem(__pyx_t_1, __pyx_n_s_double, __pyx_t_2) < 0) __PYX_ERR(0, 123, __pyx_L1_error)
   __Pyx_DECREF(__pyx_t_2); __pyx_t_2 = 0;
-  __pyx_t_2 = __pyx_FusedFunction_New(&__pyx_mdef_5skbio_5stats_8distance_7_cutils_5distmat_reorder_condensed_cy, 0, __pyx_n_s_distmat_reorder_condensed_cy, NULL, __pyx_n_s_skbio_stats_distance__cutils, __pyx_d, ((PyObject *)__pyx_codeobj__29)); if (unlikely(!__pyx_t_2)) __PYX_ERR(0, 126, __pyx_L1_error)
+  __pyx_t_2 = __pyx_FusedFunction_New(&__pyx_mdef_5skbio_5stats_8distance_7_cutils_5distmat_reorder_condensed_cy, 0, __pyx_n_s_distmat_reorder_condensed_cy, NULL, __pyx_n_s_skbio_stats_distance__cutils, __pyx_d, ((PyObject *)__pyx_codeobj__29)); if (unlikely(!__pyx_t_2)) __PYX_ERR(0, 123, __pyx_L1_error)
   __Pyx_GOTREF(__pyx_t_2);
   __Pyx_CyFunction_SetDefaultsTuple(__pyx_t_2, __pyx_empty_tuple);
   ((__pyx_FusedFunctionObject *) __pyx_t_2)->__signatures__ = __pyx_t_1;
   __Pyx_GIVEREF(__pyx_t_1);
   __pyx_t_1 = 0;
-  if (PyDict_SetItem(__pyx_d, __pyx_n_s_distmat_reorder_condensed_cy, __pyx_t_2) < 0) __PYX_ERR(0, 126, __pyx_L1_error)
+  if (PyDict_SetItem(__pyx_d, __pyx_n_s_distmat_reorder_condensed_cy, __pyx_t_2) < 0) __PYX_ERR(0, 123, __pyx_L1_error)
   __Pyx_DECREF(__pyx_t_2); __pyx_t_2 = 0;
 
-  /* "skbio/stats/distance/_cutils.pyx":176
+  /* "skbio/stats/distance/_cutils.pyx":173
  * @cython.boundscheck(False)
  * @cython.wraparound(False)
  * def mantel_perm_pearsonr_cy(TReal[:, ::1] x_data, long[:, ::1] perm_order,             # <<<<<<<<<<<<<<
  *                             TReal xmean, TReal normxm,
  *                             TReal[::1] ym_normalized,
  */
-  __pyx_t_2 = __Pyx_PyDict_NewPresized(2); if (unlikely(!__pyx_t_2)) __PYX_ERR(0, 176, __pyx_L1_error)
+  __pyx_t_2 = __Pyx_PyDict_NewPresized(2); if (unlikely(!__pyx_t_2)) __PYX_ERR(0, 173, __pyx_L1_error)
   __Pyx_GOTREF(__pyx_t_2);
-  __pyx_t_1 = __pyx_FusedFunction_New(&__pyx_fuse_0__pyx_mdef_5skbio_5stats_8distance_7_cutils_27mantel_perm_pearsonr_cy, 0, __pyx_n_s_mantel_perm_pearsonr_cy, NULL, __pyx_n_s_skbio_stats_distance__cutils, __pyx_d, ((PyObject *)__pyx_codeobj__31)); if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 176, __pyx_L1_error)
+  __pyx_t_1 = __pyx_FusedFunction_New(&__pyx_fuse_0__pyx_mdef_5skbio_5stats_8distance_7_cutils_27mantel_perm_pearsonr_cy, 0, __pyx_n_s_mantel_perm_pearsonr_cy, NULL, __pyx_n_s_skbio_stats_distance__cutils, __pyx_d, ((PyObject *)__pyx_codeobj__31)); if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 173, __pyx_L1_error)
   __Pyx_GOTREF(__pyx_t_1);
   __Pyx_CyFunction_SetDefaultsTuple(__pyx_t_1, __pyx_empty_tuple);
-  if (PyDict_SetItem(__pyx_t_2, __pyx_n_s_float, __pyx_t_1) < 0) __PYX_ERR(0, 176, __pyx_L1_error)
+  if (PyDict_SetItem(__pyx_t_2, __pyx_n_s_float, __pyx_t_1) < 0) __PYX_ERR(0, 173, __pyx_L1_error)
   __Pyx_DECREF(__pyx_t_1); __pyx_t_1 = 0;
-  __pyx_t_1 = __pyx_FusedFunction_New(&__pyx_fuse_1__pyx_mdef_5skbio_5stats_8distance_7_cutils_29mantel_perm_pearsonr_cy, 0, __pyx_n_s_mantel_perm_pearsonr_cy, NULL, __pyx_n_s_skbio_stats_distance__cutils, __pyx_d, ((PyObject *)__pyx_codeobj__31)); if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 176, __pyx_L1_error)
+  __pyx_t_1 = __pyx_FusedFunction_New(&__pyx_fuse_1__pyx_mdef_5skbio_5stats_8distance_7_cutils_29mantel_perm_pearsonr_cy, 0, __pyx_n_s_mantel_perm_pearsonr_cy, NULL, __pyx_n_s_skbio_stats_distance__cutils, __pyx_d, ((PyObject *)__pyx_codeobj__31)); if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 173, __pyx_L1_error)
   __Pyx_GOTREF(__pyx_t_1);
   __Pyx_CyFunction_SetDefaultsTuple(__pyx_t_1, __pyx_empty_tuple);
-  if (PyDict_SetItem(__pyx_t_2, __pyx_n_s_double, __pyx_t_1) < 0) __PYX_ERR(0, 176, __pyx_L1_error)
+  if (PyDict_SetItem(__pyx_t_2, __pyx_n_s_double, __pyx_t_1) < 0) __PYX_ERR(0, 173, __pyx_L1_error)
   __Pyx_DECREF(__pyx_t_1); __pyx_t_1 = 0;
-  __pyx_t_1 = __pyx_FusedFunction_New(&__pyx_mdef_5skbio_5stats_8distance_7_cutils_7mantel_perm_pearsonr_cy, 0, __pyx_n_s_mantel_perm_pearsonr_cy, NULL, __pyx_n_s_skbio_stats_distance__cutils, __pyx_d, ((PyObject *)__pyx_codeobj__31)); if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 176, __pyx_L1_error)
+  __pyx_t_1 = __pyx_FusedFunction_New(&__pyx_mdef_5skbio_5stats_8distance_7_cutils_7mantel_perm_pearsonr_cy, 0, __pyx_n_s_mantel_perm_pearsonr_cy, NULL, __pyx_n_s_skbio_stats_distance__cutils, __pyx_d, ((PyObject *)__pyx_codeobj__31)); if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 173, __pyx_L1_error)
   __Pyx_GOTREF(__pyx_t_1);
   __Pyx_CyFunction_SetDefaultsTuple(__pyx_t_1, __pyx_empty_tuple);
   ((__pyx_FusedFunctionObject *) __pyx_t_1)->__signatures__ = __pyx_t_2;
   __Pyx_GIVEREF(__pyx_t_2);
   __pyx_t_2 = 0;
-  if (PyDict_SetItem(__pyx_d, __pyx_n_s_mantel_perm_pearsonr_cy, __pyx_t_1) < 0) __PYX_ERR(0, 176, __pyx_L1_error)
+  if (PyDict_SetItem(__pyx_d, __pyx_n_s_mantel_perm_pearsonr_cy, __pyx_t_1) < 0) __PYX_ERR(0, 173, __pyx_L1_error)
   __Pyx_DECREF(__pyx_t_1); __pyx_t_1 = 0;
 
   /* "skbio/stats/distance/_cutils.pyx":1
