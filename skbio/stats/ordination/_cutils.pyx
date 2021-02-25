@@ -55,10 +55,10 @@ def e_matrix_means_cy(TReal[:, ::1] mat, TReal[:, ::1] centered, TReal[::1] row_
     assert n_samples == d5
 
     cdef Py_ssize_t row,col
-    cdef TReal row_sum
+    cdef long double row_sum
     cdef TReal el0
 
-    cdef TReal global_sum = 0.0
+    cdef long double global_sum = 0.0
     for row in prange(n_samples, nogil=True):
         row_sum = 0.0
 
@@ -72,7 +72,9 @@ def e_matrix_means_cy(TReal[:, ::1] mat, TReal[:, ::1] centered, TReal[::1] row_
         global_sum += row_sum
         row_means[row] = row_sum/n_samples
 
-    return (global_sum/n_samples)/n_samples
+    cdef TReal global_mean = (global_sum/n_samples)/n_samples
+
+    return global_mean
 
 @cython.boundscheck(False)
 @cython.wraparound(False)
@@ -107,11 +109,11 @@ def f_matrix_inplace_cy(TReal[::1] row_means, TReal global_mean, TReal[:, ::1] c
     cdef TReal gr_mean
 
     # use a tiled pattern to maximize locality of row_means
-    for trow in prange(0, n_samples, 512, nogil=True):
-        trow_max = min(trow+512, n_samples)
+    for trow in prange(0, n_samples, 24, nogil=True):
+        trow_max = min(trow+24, n_samples)
 
-        for tcol in range(0, n_samples, 512):
-            tcol_max = min(tcol+512, n_samples)
+        for tcol in range(0, n_samples, 24):
+            tcol_max = min(tcol+24, n_samples)
 
             for row in range(trow, trow_max, 1):
                 gr_mean = global_mean - row_means[row]

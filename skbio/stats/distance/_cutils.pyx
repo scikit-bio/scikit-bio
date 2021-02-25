@@ -52,19 +52,16 @@ def is_symmetric_and_hollow_cy(TReal[:, ::1] mat):
     cdef int is_hollow = True
 
     # use a tiled approach to maximize memory locality
-    for trow in prange(0, in_n, 64, nogil=True):
-        trow_max = min(trow+64, in_n)
-        for tcol in range(0, in_n, 64):
-            tcol_max = min(tcol+64, in_n)
+    for trow in prange(0, in_n, 24, nogil=True):
+        trow_max = min(trow+24, in_n)
+        for tcol in range(0, in_n, 24):
+            tcol_max = min(tcol+24, in_n)
             for row in range(trow, trow_max, 1):
                 for col in range(tcol, tcol_max, 1):
-                   testval = mat[row,col]
-                   if (row==col):
-                       # diagonal elements are always symmetric,
-                       # so no need to check
-                       is_hollow &= (testval==0)
-                   else:
-                       is_sym &= (testval==mat[col,row])
+                   is_sym &= (mat[row,col]==mat[col,row])
+            if (trow==tcol): # diagonal block, only ones that can have col==row
+                for col in range(tcol, tcol_max, 1):
+                   is_hollow &= (mat[col,col]==0)
 
     return [(is_sym==True), (is_hollow==True)]
 
