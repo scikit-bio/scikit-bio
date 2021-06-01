@@ -1282,7 +1282,7 @@ def randdm(num_objects, ids=None, constructor=None, random_fn=None):
 
 # helper functions for anosim and permanova
 
-def _preprocess_input(distance_matrix, grouping, column):
+def _preprocess_input_sng(distance_matrix, grouping, column):
     """Compute intermediate results not affected by permutations.
 
     These intermediate results can be computed a single time for efficiency,
@@ -1329,6 +1329,22 @@ def _preprocess_input(distance_matrix, grouping, column):
             "cannot operate on a grouping vector with only a single group of "
             "objects (e.g., there are no 'between' distances because there is "
             "only a single group).")
+
+    return sample_size, num_groups, grouping
+
+
+def _preprocess_input(distance_matrix, grouping, column):
+    """Compute intermediate results not affected by permutations.
+
+    These intermediate results can be computed a single time for efficiency,
+    regardless of grouping vector permutations (i.e., when calculating the
+    p-value). These intermediate results are used by both ANOSIM and PERMANOVA.
+
+    Also validates and normalizes input (e.g., converting ``DataFrame`` column
+    into grouping vector).
+
+    """
+    sample_size, num_groups, grouping = _preprocess_input_sng(distance_matrix, grouping, column)
 
     tri_idxs = np.triu_indices(sample_size, k=1)
     distances = distance_matrix.condensed_form()
