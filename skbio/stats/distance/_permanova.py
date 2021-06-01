@@ -94,7 +94,7 @@ def permanova(distance_matrix, grouping, column=None, permutations=999):
 
     # Calculate number of objects in each group.
     group_sizes = np.bincount(grouping)
-    s_T = (distances ** 2).sum() / sample_size
+    s_T = (distance_matrix[:] ** 2).sum() / sample_size
     # we are going over the whole matrix, instead of just upper triangle
     # so cut in half
     s_T /= 2.0
@@ -114,7 +114,7 @@ def _compute_f_stat(sample_size, num_groups, distance_matrix, group_sizes,
 
     # Calculate s_W for each group, accounting for different group sizes.
     s_W = 0
-    for i in range(num_groups):
+    for group_idx in range(num_groups):
         within_indices = _index_combinations(
             np.where(grouping == group_idx)[0])
         s_W += (distance_matrix[within_indices] ** 2).sum() / group_sizes[group_idx]
