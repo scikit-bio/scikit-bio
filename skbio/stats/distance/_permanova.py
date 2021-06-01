@@ -12,7 +12,7 @@ import numpy as np
 
 from ._base import (_preprocess_input_sng, _run_monte_carlo_stats, _build_results)
 from skbio.util._decorator import experimental
-
+from ._cutils import permanova_f_stat_sW_cy
 
 @experimental(as_of="0.4.0")
 def permanova(distance_matrix, grouping, column=None, permutations=999):
@@ -113,14 +113,7 @@ def _compute_f_stat(sample_size, num_groups, distance_matrix, group_sizes,
     """Compute PERMANOVA pseudo-F statistic."""
 
     # Calculate s_W for each group, accounting for different group sizes.
-    s_W = 0
-    for group_idx in range(num_groups):
-        within_indices = _index_combinations(
-            np.where(grouping == group_idx)[0])
-        s_W += (distance_matrix[within_indices] ** 2).sum() / group_sizes[group_idx]
-
-    # since we added both upper and lower triangle, divide by two
-    s_W /= 2.0
+    s_W = permanova_f_stat_sW_cy(distance_matrix.data, group_sizes,grouping)
 
     s_A = s_T - s_W
     return (s_A / (num_groups - 1)) / (s_W / (sample_size - num_groups))
