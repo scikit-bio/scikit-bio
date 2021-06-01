@@ -249,6 +249,7 @@ def mantel_perm_pearsonr_cy(TReal[:, ::1] x_data, long[:, ::1] perm_order,
             my_ps = -1.0
         permuted_stats[p] = my_ps
 
+
 @cython.boundscheck(False)
 @cython.wraparound(False)
 def permanova_f_stat_sW_cy(TReal[:, ::1] distance_matrix,
@@ -257,8 +258,10 @@ def permanova_f_stat_sW_cy(TReal[:, ::1] distance_matrix,
     """Compute PERMANOVA pseudo-F partial statistic."""
     cdef Py_ssize_t in_n = distance_matrix.shape[0]
     cdef Py_ssize_t in2 = distance_matrix.shape[1]
+    cdef Py_ssize_t in3 = grouping.shape[0]
 
     assert in_n == in2
+    assert in_n == in3
 
     cdef TReal s_W = 0.0
 
