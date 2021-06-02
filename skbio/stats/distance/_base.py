@@ -1344,7 +1344,8 @@ def _preprocess_input(distance_matrix, grouping, column):
     into grouping vector).
 
     """
-    sample_size, num_groups, grouping = _preprocess_input_sng(distance_matrix, grouping, column)
+    sample_size, num_groups, grouping = _preprocess_input_sng(distance_matrix,
+                                                              grouping, column)
 
     tri_idxs = np.triu_indices(sample_size, k=1)
     distances = distance_matrix.condensed_form()
