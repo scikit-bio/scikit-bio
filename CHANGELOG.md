@@ -19,7 +19,7 @@
 * center_distance_matrix has been re-implemented in cython for both speed and memory use. Indirectly speeds up pcoa [PR #1749](https://github.com/biocore/scikit-bio/pull/1749)
 * Use a memory-optimized version of permute in DistanceMatrix, see [PR #1756](https://github.com/biocore/scikit-bio/pull/1756).
 * Refactor pearson and spearman skbio.stats.distance.mantel implementations to drastically improve memory locality. Also cache intermediate results that are invariant across permutations, see [PR #1756](https://github.com/biocore/scikit-bio/pull/1756).
-* Refactor permanova to remove intermediate buffers.
+* Refactor permanova to remove intermediate buffers, see [PR #1768](https://github.com/biocore/scikit-bio/pull/1768).
 
 ### Bug fixes
 
