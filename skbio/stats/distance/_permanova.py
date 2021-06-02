@@ -117,8 +117,3 @@ def _compute_f_stat(sample_size, num_groups, distance_matrix, group_sizes,
 
     s_A = s_T - s_W
     return (s_A / (num_groups - 1)) / (s_W / (sample_size - num_groups))
-
-
-def _index_combinations(indices):
-    # Modified from http://stackoverflow.com/a/11144716
-    return np.tile(indices, len(indices)), np.repeat(indices, len(indices))
