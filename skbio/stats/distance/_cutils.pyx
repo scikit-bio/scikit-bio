@@ -263,11 +263,11 @@ def permanova_f_stat_sW_cy(TReal[:, ::1] distance_matrix,
     assert in_n == in2
     assert in_n == in3
 
-    cdef TReal s_W = 0.0
+    cdef double s_W = 0.0
 
     cdef Py_ssize_t group_idx
-    cdef TReal local_s_W
-    cdef TReal val
+    cdef double local_s_W
+    cdef double val
 
     cdef Py_ssize_t row, col, rowi, coli
 
