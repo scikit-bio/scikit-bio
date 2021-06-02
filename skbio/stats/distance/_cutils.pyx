@@ -269,9 +269,11 @@ def permanova_f_stat_sW_cy(TReal[:, ::1] distance_matrix,
     cdef TReal local_s_W
     cdef TReal val
 
-    cdef Py_ssize_t row, col, coli
+    cdef Py_ssize_t row, col, rowi, coli
 
-    for row in prange(in_n, nogil=True):
+    for rowi in prange(in_n/2, nogil=True):
+        # since columns get shorter, combine first and last
+        row=rowi
         local_s_W = 0.0
         group_idx = grouping[row]
         for coli in range(in_n-row-1):
@@ -279,7 +281,17 @@ def permanova_f_stat_sW_cy(TReal[:, ::1] distance_matrix,
             if grouping[col] == group_idx:
                 val = distance_matrix[row,col]
                 local_s_W = local_s_W + val * val
-
         s_W += local_s_W/group_sizes[group_idx]
+
+        row = in_n-rowi-2
+        if row!=rowi: # don't double count
+            local_s_W = 0.0
+            group_idx = grouping[row]
+            for coli in range(in_n-row-1):
+                col = coli+row+1
+                if grouping[col] == group_idx:
+                    val = distance_matrix[row,col]
+                    local_s_W = local_s_W + val * val
+            s_W += local_s_W/group_sizes[group_idx]
 
     return s_W
