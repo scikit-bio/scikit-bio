@@ -193,6 +193,20 @@ class testPERMDISP(TestCase):
 
         self.assert_series_equal(obs, exp)
 
+    def test_median_fsvd(self):
+
+        exp = pd.Series(index=self.exp_index,
+                        data=['PERMDISP', 'F-value', 9, 2, 0.04078077215673714,
+                              0.8, 99],
+                        name='PERMDISP results')
+
+        np.random.seed(0)
+        obs = permdisp(self.unifrac_dm, self.unif_grouping, test='median',
+                       permutations=99,
+                       method='fsvd', number_of_dimensions=3)
+
+        self.assert_series_equal(obs, exp)
+
     def test_not_distance_matrix(self):
         dm = []
         grouping = ['Control', 'Control', 'Control', 'Control', 'Control',
