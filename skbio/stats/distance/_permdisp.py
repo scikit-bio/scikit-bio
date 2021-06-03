@@ -23,7 +23,7 @@ from skbio.util._decorator import experimental
 
 @experimental(as_of="0.5.2")
 def permdisp(distance_matrix, grouping, column=None, test='median',
-             permutations=999):
+             permutations=999, method="eigh", number_of_dimensions=10):
     """Test for Homogeneity of Multivariate Groups Disperisons using Marti
     Anderson's PERMDISP2 procedure.
 
@@ -62,6 +62,17 @@ def permdisp(distance_matrix, grouping, column=None, test='median',
         significance. Must be greater than or equal to zero. If zero,
         statistical significance calculations will be skipped and the p-value
         will be ``np.nan``.
+    method : str, optional
+        Eigendecomposition method to use in performing PCoA.
+        By default, uses SciPy's `eigh`, which computes exact
+        eigenvectors and eigenvalues for all dimensions. The alternate
+        method, `fsvd`, uses faster heuristic eigendecomposition but loses
+        accuracy. The magnitude of accuracy lost is dependent on dataset.
+        Note that using `fsvd` is still considered experimental and
+        should be used with care.
+    number_of_dimensions : int, optional
+        Dimensions to reduce the distance matrix to if using the `fsvd` method.
+        Not used if the `eigh` method is being selected.
 
     Returns
     -------
@@ -76,7 +87,8 @@ def permdisp(distance_matrix, grouping, column=None, test='median',
         type np.float32 or np.float64, the spatial median function will fail
         and the centroid test should be used instead
     ValueError
-        If the test is not centroid or median.
+        If the test is not centroid or median,
+        or if method is not eigh or fsvd
     TypeError
         If the distance matrix is not an instance of a
         ``skbio.DistanceMatrix``.
@@ -222,7 +234,15 @@ def permdisp(distance_matrix, grouping, column=None, test='median',
     if test not in ['centroid', 'median']:
         raise ValueError('Test must be centroid or median')
 
-    ordination = pcoa(distance_matrix)
+    if method == "eigh":
+        # eigh does not natively support specifying number_of_dimensions
+        # and pcoa expects it to be 0
+        number_of_dimensions = 0
+    elif method != "fsvd":
+        raise ValueError('Method must be eigh or fsvd')
+
+    ordination = pcoa(distance_matrix, method=method,
+                      number_of_dimensions=number_of_dimensions)
     samples = ordination.samples
 
     sample_size, num_groups, grouping, tri_idxs, distances = _preprocess_input(
