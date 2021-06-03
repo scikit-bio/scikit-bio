@@ -5,7 +5,7 @@
 ### Features
 
 * Added support for `np.float32` with `DissimilarityMatrix` objects.
-* Added support for method and number_of_dimensions to permdisp.
+* Added support for method and number_of_dimensions to permdisp reducing the runtime by over 10x at 2000 samples, [issue #1769](https://github.com/biocore/scikit-bio/pull/1769).
 
 ### Backward-incompatible changes [stable]
 
