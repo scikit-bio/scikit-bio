@@ -248,3 +248,50 @@ def mantel_perm_pearsonr_cy(TReal[:, ::1] x_data, long[:, ::1] perm_order,
         elif my_ps<-1.0:
             my_ps = -1.0
         permuted_stats[p] = my_ps
+
+
+@cython.boundscheck(False)
+@cython.wraparound(False)
+def permanova_f_stat_sW_cy(TReal[:, ::1] distance_matrix,
+                           Py_ssize_t[::1] group_sizes,
+                           Py_ssize_t[::1] grouping):
+    """Compute PERMANOVA pseudo-F partial statistic."""
+    cdef Py_ssize_t in_n = distance_matrix.shape[0]
+    cdef Py_ssize_t in2 = distance_matrix.shape[1]
+    cdef Py_ssize_t in3 = grouping.shape[0]
+
+    assert in_n == in2
+    assert in_n == in3
+
+    cdef double s_W = 0.0
+
+    cdef Py_ssize_t group_idx
+    cdef double local_s_W
+    cdef double val
+
+    cdef Py_ssize_t row, col, rowi, coli
+
+    for rowi in prange(in_n/2, nogil=True):
+        # since columns get shorter, combine first and last
+        row=rowi
+        local_s_W = 0.0
+        group_idx = grouping[row]
+        for coli in range(in_n-row-1):
+            col = coli+row+1
+            if grouping[col] == group_idx:
+                val = distance_matrix[row,col]
+                local_s_W = local_s_W + val * val
+        s_W += local_s_W/group_sizes[group_idx]
+
+        row = in_n-rowi-2
+        if row!=rowi: # don't double count
+            local_s_W = 0.0
+            group_idx = grouping[row]
+            for coli in range(in_n-row-1):
+                col = coli+row+1
+                if grouping[col] == group_idx:
+                    val = distance_matrix[row,col]
+                    local_s_W = local_s_W + val * val
+            s_W += local_s_W/group_sizes[group_idx]
+
+    return s_W
