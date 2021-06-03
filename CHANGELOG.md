@@ -5,6 +5,7 @@
 ### Features
 
 * Added support for `np.float32` with `DissimilarityMatrix` objects.
+* Added support for method and number_of_dimensions to permdisp.
 
 ### Backward-incompatible changes [stable]
 
