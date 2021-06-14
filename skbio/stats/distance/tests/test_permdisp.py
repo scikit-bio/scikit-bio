@@ -201,7 +201,6 @@ class testPERMDISP(TestCase):
 
         self.assert_series_equal(obs2, exp)
 
-
     def test_median_fsvd(self):
 
         exp = pd.Series(index=self.exp_index,

@@ -238,23 +238,23 @@ def permdisp(distance_matrix, grouping, column=None, test='median',
         raise ValueError('Test must be centroid or median')
 
     if isinstance(distance_matrix, OrdinationResults):
-      ordination = distance_matrix
-      ids = ordination.samples.axes[0].to_list()
-      sample_size = len(ids)
-      distance_matrix = None # not used anymore, make sure not used by mistake
+        ordination = distance_matrix
+        ids = ordination.samples.axes[0].to_list()
+        sample_size = len(ids)
+        distance_matrix = None  # not used anymore, avoid using by mistake
     elif isinstance(distance_matrix, DistanceMatrix):
-      if method == "eigh":
-          # eigh does not natively support specifying number_of_dimensions
-          # and pcoa expects it to be 0
-          number_of_dimensions = 0
-      elif method != "fsvd":
-          raise ValueError('Method must be eigh or fsvd')
+        if method == "eigh":
+            # eigh does not natively support specifying number_of_dimensions
+            # and pcoa expects it to be 0
+            number_of_dimensions = 0
+        elif method != "fsvd":
+            raise ValueError('Method must be eigh or fsvd')
 
-      ids = distance_matrix.ids
-      sample_size = distance_matrix.shape[0]
+        ids = distance_matrix.ids
+        sample_size = distance_matrix.shape[0]
 
-      ordination = pcoa(distance_matrix, method=method,
-                        number_of_dimensions=number_of_dimensions)
+        ordination = pcoa(distance_matrix, method=method,
+                          number_of_dimensions=number_of_dimensions)
     else:
         raise TypeError("Input must be a DistanceMatrix or OrdinationResults.")
 
