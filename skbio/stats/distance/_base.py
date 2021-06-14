@@ -1301,7 +1301,7 @@ def _preprocess_input_sng(distance_matrix, grouping, column):
             raise ValueError(
                 "Must provide a column name if supplying a DataFrame.")
         else:
-            grouping = _df_to_vector(distance_matrix, grouping, column)
+            grouping = _df_to_vector(distance_matrix.ids, grouping, column)
     elif column is not None:
         raise ValueError(
             "Must provide a DataFrame if supplying a column name.")
@@ -1353,13 +1353,13 @@ def _preprocess_input(distance_matrix, grouping, column):
     return sample_size, num_groups, grouping, tri_idxs, distances
 
 
-def _df_to_vector(distance_matrix, df, column):
+def _df_to_vector(ids, df, column):
     """Return a grouping vector from a ``DataFrame`` column.
 
     Parameters
     ----------
-    distance_marix : DistanceMatrix
-        Distance matrix whose IDs will be mapped to group labels.
+    ids : liat
+        IDs that will be mapped to group labels.
     df : pandas.DataFrame
         ``DataFrame`` (indexed by distance matrix ID).
     column : str
@@ -1369,7 +1369,7 @@ def _df_to_vector(distance_matrix, df, column):
     -------
     list
         Grouping vector (vector of labels) based on the IDs in
-        `distance_matrix`. Each ID's label is looked up in the ``DataFrame``
+        `ids`. Each ID's label is looked up in the ``DataFrame``
         under the column specified by `column`.
 
     Raises
@@ -1382,7 +1382,7 @@ def _df_to_vector(distance_matrix, df, column):
     if column not in df:
         raise ValueError("Column '%s' not in DataFrame." % column)
 
-    grouping = df.reindex(distance_matrix.ids, axis=0).loc[:, column]
+    grouping = df.reindex(ids, axis=0).loc[:, column]
     if grouping.isnull().any():
         raise ValueError(
             "One or more IDs in the distance matrix are not in the data "
