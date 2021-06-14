@@ -1282,7 +1282,7 @@ def randdm(num_objects, ids=None, constructor=None, random_fn=None):
 
 # helper functions for anosim and permanova
 
-def _preprocess_input_sng(distance_matrix, grouping, column):
+def _preprocess_input_sng(ids, sample_size, grouping, column):
     """Compute intermediate results not affected by permutations.
 
     These intermediate results can be computed a single time for efficiency,
@@ -1293,20 +1293,16 @@ def _preprocess_input_sng(distance_matrix, grouping, column):
     into grouping vector).
 
     """
-    if not isinstance(distance_matrix, DistanceMatrix):
-        raise TypeError("Input must be a DistanceMatrix.")
-
     if isinstance(grouping, pd.DataFrame):
         if column is None:
             raise ValueError(
                 "Must provide a column name if supplying a DataFrame.")
         else:
-            grouping = _df_to_vector(distance_matrix.ids, grouping, column)
+            grouping = _df_to_vector(ids, grouping, column)
     elif column is not None:
         raise ValueError(
             "Must provide a DataFrame if supplying a column name.")
 
-    sample_size = distance_matrix.shape[0]
     if len(grouping) != sample_size:
         raise ValueError(
             "Grouping vector size must match the number of IDs in the "
@@ -1330,7 +1326,7 @@ def _preprocess_input_sng(distance_matrix, grouping, column):
             "objects (e.g., there are no 'between' distances because there is "
             "only a single group).")
 
-    return sample_size, num_groups, grouping
+    return num_groups, grouping
 
 
 def _preprocess_input(distance_matrix, grouping, column):
@@ -1344,8 +1340,12 @@ def _preprocess_input(distance_matrix, grouping, column):
     into grouping vector).
 
     """
-    sample_size, num_groups, grouping = _preprocess_input_sng(distance_matrix,
-                                                              grouping, column)
+    if not isinstance(distance_matrix, DistanceMatrix):
+        raise TypeError("Input must be a DistanceMatrix.")
+    sample_size = distance_matrix.shape[0]
+
+    num_groups, grouping = _preprocess_input_sng(distance_matrix.ids,
+                                                 sample_size, grouping, column)
 
     tri_idxs = np.triu_indices(sample_size, k=1)
     distances = distance_matrix.condensed_form()
