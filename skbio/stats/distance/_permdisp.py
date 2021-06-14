@@ -15,9 +15,10 @@ from scipy.spatial.distance import cdist
 
 import hdmedians as hd
 
-from ._base import (_preprocess_input, _run_monte_carlo_stats, _build_results)
+from ._base import (_preprocess_input_sng, _run_monte_carlo_stats,
+                    _build_results, DistanceMatrix)
 
-from skbio.stats.ordination import pcoa
+from skbio.stats.ordination import pcoa, OrdinationResults
 from skbio.util._decorator import experimental
 
 
@@ -35,9 +36,10 @@ def permdisp(distance_matrix, grouping, column=None, test='median',
 
     Parameters
     ----------
-    distance_matrix : DistanceMatrix
+    distance_matrix : DistanceMatrix or OrdinationResults
         Distance matrix containing distances between objects (e.g., distances
-        between samples of microbial communities).
+        between samples of microbial communities) or
+        result of pcoa on such a matrix.
     grouping : 1-D array_like or pandas.DataFrame
         Vector indicating the assignment of objects to groups. For example,
         these could be strings or integers denoting which group an object
@@ -70,6 +72,7 @@ def permdisp(distance_matrix, grouping, column=None, test='median',
         accuracy. The magnitude of accuracy lost is dependent on dataset.
         Note that using `fsvd` is still considered experimental and
         should be used with care.
+        Not used if distance_matrix is a OrdinationResults object.
     number_of_dimensions : int, optional
         Dimensions to reduce the distance matrix to if using the `fsvd` method.
         Not used if the `eigh` method is being selected.
@@ -234,19 +237,31 @@ def permdisp(distance_matrix, grouping, column=None, test='median',
     if test not in ['centroid', 'median']:
         raise ValueError('Test must be centroid or median')
 
-    if method == "eigh":
-        # eigh does not natively support specifying number_of_dimensions
-        # and pcoa expects it to be 0
-        number_of_dimensions = 0
-    elif method != "fsvd":
-        raise ValueError('Method must be eigh or fsvd')
+    if isinstance(distance_matrix, OrdinationResults):
+      ordination = distance_matrix
+      ids = ordination.samples.axes[0].to_list()
+      sample_size = len(ids)
+      distance_matrix = None # not used anymore, make sure not used by mistake
+    elif isinstance(distance_matrix, DistanceMatrix):
+      if method == "eigh":
+          # eigh does not natively support specifying number_of_dimensions
+          # and pcoa expects it to be 0
+          number_of_dimensions = 0
+      elif method != "fsvd":
+          raise ValueError('Method must be eigh or fsvd')
 
-    ordination = pcoa(distance_matrix, method=method,
-                      number_of_dimensions=number_of_dimensions)
+      ids = distance_matrix.ids
+      sample_size = distance_matrix.shape[0]
+
+      ordination = pcoa(distance_matrix, method=method,
+                        number_of_dimensions=number_of_dimensions)
+    else:
+        raise TypeError("Input must be a DistanceMatrix or OrdinationResults.")
+
     samples = ordination.samples
 
-    sample_size, num_groups, grouping, tri_idxs, distances = _preprocess_input(
-        distance_matrix, grouping, column)
+    num_groups, grouping = _preprocess_input_sng(
+        ids, sample_size, grouping, column)
 
     test_stat_function = partial(_compute_groups, samples, test)
 
