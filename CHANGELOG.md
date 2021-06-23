@@ -36,6 +36,8 @@
 
 * Update hdmedians package to a version which doesn't require an initial manual numpy install.
 
+* Added genetic codes 26, 29, 30 and 33 from NCBI to `_ncbi_genetic_codes` ([#1659](https://github.com/biocore/scikit-bio/issues/1659)).
+
 ## Version 0.5.6
 
 ### Features
