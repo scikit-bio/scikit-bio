@@ -1282,7 +1282,7 @@ def randdm(num_objects, ids=None, constructor=None, random_fn=None):
 
 # helper functions for anosim and permanova
 
-def _preprocess_input_sng(distance_matrix, grouping, column):
+def _preprocess_input_sng(ids, sample_size, grouping, column):
     """Compute intermediate results not affected by permutations.
 
     These intermediate results can be computed a single time for efficiency,
@@ -1293,20 +1293,16 @@ def _preprocess_input_sng(distance_matrix, grouping, column):
     into grouping vector).
 
     """
-    if not isinstance(distance_matrix, DistanceMatrix):
-        raise TypeError("Input must be a DistanceMatrix.")
-
     if isinstance(grouping, pd.DataFrame):
         if column is None:
             raise ValueError(
                 "Must provide a column name if supplying a DataFrame.")
         else:
-            grouping = _df_to_vector(distance_matrix, grouping, column)
+            grouping = _df_to_vector(ids, grouping, column)
     elif column is not None:
         raise ValueError(
             "Must provide a DataFrame if supplying a column name.")
 
-    sample_size = distance_matrix.shape[0]
     if len(grouping) != sample_size:
         raise ValueError(
             "Grouping vector size must match the number of IDs in the "
@@ -1330,7 +1326,7 @@ def _preprocess_input_sng(distance_matrix, grouping, column):
             "objects (e.g., there are no 'between' distances because there is "
             "only a single group).")
 
-    return sample_size, num_groups, grouping
+    return num_groups, grouping
 
 
 def _preprocess_input(distance_matrix, grouping, column):
@@ -1344,8 +1340,12 @@ def _preprocess_input(distance_matrix, grouping, column):
     into grouping vector).
 
     """
-    sample_size, num_groups, grouping = _preprocess_input_sng(distance_matrix,
-                                                              grouping, column)
+    if not isinstance(distance_matrix, DistanceMatrix):
+        raise TypeError("Input must be a DistanceMatrix.")
+    sample_size = distance_matrix.shape[0]
+
+    num_groups, grouping = _preprocess_input_sng(distance_matrix.ids,
+                                                 sample_size, grouping, column)
 
     tri_idxs = np.triu_indices(sample_size, k=1)
     distances = distance_matrix.condensed_form()
@@ -1353,13 +1353,13 @@ def _preprocess_input(distance_matrix, grouping, column):
     return sample_size, num_groups, grouping, tri_idxs, distances
 
 
-def _df_to_vector(distance_matrix, df, column):
+def _df_to_vector(ids, df, column):
     """Return a grouping vector from a ``DataFrame`` column.
 
     Parameters
     ----------
-    distance_marix : DistanceMatrix
-        Distance matrix whose IDs will be mapped to group labels.
+    ids : liat
+        IDs that will be mapped to group labels.
     df : pandas.DataFrame
         ``DataFrame`` (indexed by distance matrix ID).
     column : str
@@ -1369,7 +1369,7 @@ def _df_to_vector(distance_matrix, df, column):
     -------
     list
         Grouping vector (vector of labels) based on the IDs in
-        `distance_matrix`. Each ID's label is looked up in the ``DataFrame``
+        `ids`. Each ID's label is looked up in the ``DataFrame``
         under the column specified by `column`.
 
     Raises
@@ -1382,7 +1382,7 @@ def _df_to_vector(distance_matrix, df, column):
     if column not in df:
         raise ValueError("Column '%s' not in DataFrame." % column)
 
-    grouping = df.reindex(distance_matrix.ids, axis=0).loc[:, column]
+    grouping = df.reindex(ids, axis=0).loc[:, column]
     if grouping.isnull().any():
         raise ValueError(
             "One or more IDs in the distance matrix are not in the data "

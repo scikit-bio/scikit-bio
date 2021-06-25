@@ -11,7 +11,7 @@ from functools import partial
 import numpy as np
 
 from ._base import (_preprocess_input_sng, _run_monte_carlo_stats,
-                    _build_results)
+                    _build_results, DistanceMatrix)
 from skbio.util._decorator import experimental
 from ._cutils import permanova_f_stat_sW_cy
 
@@ -91,8 +91,12 @@ def permanova(distance_matrix, grouping, column=None, permutations=999):
     provide similar interfaces).
 
     """
-    sample_size, num_groups, grouping = _preprocess_input_sng(
-        distance_matrix, grouping, column)
+    if not isinstance(distance_matrix, DistanceMatrix):
+        raise TypeError("Input must be a DistanceMatrix.")
+    sample_size = distance_matrix.shape[0]
+
+    num_groups, grouping = _preprocess_input_sng(
+        distance_matrix.ids, sample_size, grouping, column)
 
     # Calculate number of objects in each group.
     group_sizes = np.bincount(grouping)

@@ -193,6 +193,14 @@ class testPERMDISP(TestCase):
 
         self.assert_series_equal(obs, exp)
 
+        np.random.seed(0)
+        po = pcoa(self.unifrac_dm)
+
+        obs2 = permdisp(po, self.unif_grouping, test='median',
+                        permutations=99)
+
+        self.assert_series_equal(obs2, exp)
+
     def test_median_fsvd(self):
 
         exp = pd.Series(index=self.exp_index,
@@ -204,6 +212,13 @@ class testPERMDISP(TestCase):
         obs = permdisp(self.unifrac_dm, self.unif_grouping, test='median',
                        permutations=99,
                        method='fsvd', number_of_dimensions=3)
+
+        self.assert_series_equal(obs, exp)
+
+        np.random.seed(0)
+        po = pcoa(self.unifrac_dm, method='fsvd', number_of_dimensions=3)
+        obs = permdisp(po, self.unif_grouping, test='median',
+                       permutations=99)
 
         self.assert_series_equal(obs, exp)
 
