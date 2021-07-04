@@ -831,5 +831,25 @@ _ncbi_genetic_codes = {
     25: GeneticCode(
         'FFLLSSSSYY**CCGWLLLLPPPPHHQQRRRRIIIMTTTTNNKKSSRRVVVVAAAADDEEGGGG',
         '---M-------------------------------M---------------M------------',
-        'Candidate Division SR1 and Gracilibacteria')
+        'Candidate Division SR1 and Gracilibacteria'),
+    26: GeneticCode(
+        'FFLLSSSSYY**CC*WLLLAPPPPHHQQRRRRIIIMTTTTNNKKSSRRVVVVAAAADDEEGGGG',
+        '-------------------M---------------M----------------------------',
+        'Pachysolen tannophilus'
+    ),
+    29: GeneticCode(
+        'FFLLSSSSYYYYCC*WLLLLPPPPHHQQRRRRIIIMTTTTNNKKSSRRVVVVAAAADDEEGGGG',
+        '-----------------------------------M----------------------------',
+        'Mesodinium Nuclear'
+    ),
+    30: GeneticCode(
+        'FFLLSSSSYYEECC*WLLLLPPPPHHQQRRRRIIIMTTTTNNKKSSRRVVVVAAAADDEEGGGG',
+        '-----------------------------------M----------------------------',
+        'Peritrich Nuclear'
+    ),
+    33: GeneticCode(
+        'FFLLSSSSYYY*CCWWLLLLPPPPHHQQRRRRIIIMTTTTNNKKSSSKVVVVAAAADDEEGGGG',
+        '---M---------------M---------------M---------------M------------',
+        'Cephalodiscidae Mitochondrial UAA-Tyr'
+    )
 }
