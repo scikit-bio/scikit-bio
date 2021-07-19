@@ -1488,6 +1488,246 @@ class TreeTests(TestCase):
                '(e:1.43,f:1.89,g:2.12)node:0.35)root;')
         self.assertEqual(str(tree).rstrip(), exp)
 
+    def test_is_ultrametric(self):
+        """Checks if tree is ultrametric"""
+        # test ultrametric checking on node without branch length
+        tree = TreeNode.read(['((c,d)a,(e,f)b);'])
+        with self.assertRaises(NoLengthError):
+            tree.is_ultrametric()
+
+        # test ultrametric checking on node with a missing branch length
+        tree = TreeNode.read(['((c:1,d:2)a:3,(e:4,f:5)b);'])
+        with self.assertRaises(NoLengthError):
+            tree.is_ultrametric()
+
+        # test a tree that is ultrametric
+        tree = TreeNode.read(['((c:0.2,d:0.2)a:0.8,(e:0.4,f:0.4)b:0.6);'])
+        self.assertTrue(tree.is_ultrametric())
+
+        # test a tree that is not ultrametric
+        tree = TreeNode.read(['((c:0.8,d:0.8)a:0.8,(e:0.3,f:0.3)b:0.3);'])
+        self.assertFalse(tree.is_ultrametric())
+
+    def test_scale_length(self):
+        """Checks if tree is ultrametric"""
+        # test ultrametric checking on node without branch length
+        tree = TreeNode.read(['((c,d)a,(e,f)b);'])
+        with self.assertRaises(NoLengthError):
+            tree.scale_length()
+
+        # test ultrametric checking on node with a missing branch length
+        tree = TreeNode.read(['((c:1,d:2)a:3,(e:4,f:5)b);'])
+        with self.assertRaises(NoLengthError):
+            tree.scale_length()
+
+        # test a tree that is ultrametric
+        tree = TreeNode.read(['((c:2,d:2)a:8,(e:4,f:4)b:6);'])
+        exp = '((c:0.2,d:0.2)a:0.8,(e:0.4,f:0.4)b:0.6);'
+        self.assertEqual(str(tree.scale_length()).rstrip(), exp)
+
+        # test a tree that is not ultrametric
+        tree = TreeNode.read(['((c:2,d:2)a:5,(e:3,f:4)b:4);'])
+        # total branch length is 2+2+5+3+4+4=20,
+        # hence scale_length() divides each branch length per 20
+        exp = '((c:0.1,d:0.1)a:0.25,(e:0.15,f:0.2)b:0.2);'
+        self.assertEqual(str(tree.scale_length()).rstrip(), exp)
+
+    def test_get_nodes_degrees(self):
+        tree = TreeNode.read(['((c,d)a,(e,f)b)root;'])
+        # preorder here is: a, c, d, b, e, f
+        exp = [2, 1, 1, 2, 1, 1]
+        self.assertEqual(tree._get_nodes_degrees(), exp)
+
+        # it doe not consider the root with `include_self=False`
+        tree = TreeNode.read(['((c,d)a,(e,f)b);'])
+        # preorder here is: a, c, d, b, e, f
+        exp = [2, 1, 1, 2, 1, 1]
+        self.assertEqual(tree._get_nodes_degrees(), exp)
+
+        tree = TreeNode.read(['((c,d)a,(e,f,g,h,i)b)root;'])
+        # preorder here is: a, c, d, b, e, f, g, h, i
+        exp = [2, 1, 1, 5, 1, 1, 1, 1, 1]
+        self.assertEqual(tree._get_nodes_degrees(), exp)
+
+        tree = TreeNode.read((['(((a:8,b:2)g:2,c:9)f:5,d:8)e;']))
+        # preorder here is: f, g, a, b, c, d
+        exp = [2, 2, 1, 1, 1, 1]
+        self.assertEqual(tree._get_nodes_degrees(), exp)
+
+    def test_get_preorder_array(self):
+        tree = TreeNode.read(['((c,d)a:5,(e)b:3);'])
+        with self.assertRaises(NoLengthError):
+            tree._get_preorder_array(tree)
+
+        tree = TreeNode.read(['((c:2,d:1)a:5,(e:4)b:3)root;'])
+        tcopy = tree.deepcopy()
+        exp = [['root', 'a', '5.0', '2'],
+               ['a', 'c', '2.0', '1'],
+               ['a', 'd', '1.0', '1'],
+               ['root', 'b', '3.0', '1'],
+               ['b', 'e', '4.0', '1']]
+        self.assertEqual(tree._get_preorder_array(tcopy).tolist(), exp)
+
+        tree = TreeNode.read(['((c:2,d:1)a:5,(e:4)b:3)root;'])
+        tcopy = TreeNode.read(['((c:20,d:10)a:50,(e:4)b:3)root;'])
+        exp = [['root', 'a', '50.0', '2'],
+               ['a', 'c', '20.0', '1'],
+               ['a', 'd', '10.0', '1'],
+               ['root', 'b', '3.0', '1'],
+               ['b', 'e', '4.0', '1']]
+        self.assertEqual(tree._get_preorder_array(tcopy).tolist(), exp)
+
+    def test_name_unnamed_internal_nodes(self):
+        tree = TreeNode.read(['((c,d)a,(e)b)root;'])
+        tree.name_unnamed_internal_nodes()
+        self.assertEqual(str(tree).strip(), '((c,d)a,(e)b)root;')
+
+        tree = TreeNode.read(['((c,d),(e));'])
+        tree.name_unnamed_internal_nodes()
+        self.assertEqual(str(tree).strip(), '((c,d)N2,(e)N3)N1;')
+
+        tree = TreeNode.read(['((c,d),(e))root;'])
+        tree.name_unnamed_internal_nodes()
+        self.assertEqual(str(tree).strip(), '((c,d)N1,(e)N2)root;')
+
+        # name N2 already exists: won't be re-created
+        tree = TreeNode.read(['((c,d),(e)N2)root;'])
+        tree.name_unnamed_internal_nodes()
+        self.assertEqual(str(tree).strip(), '((c,d)N1,(e)N2)root;')
+
+        # name N2 already exists but at first visited node (i.e. incremented
+        # name would be N1, as above): N1 will occupy the next visited node
+        tree = TreeNode.read(['((c,d)N2,(e))root;'])
+        tree.name_unnamed_internal_nodes()
+        self.assertEqual(str(tree).strip(), '((c,d)N2,(e)N1)root;')
+
+    def test_calc_equal_splits(self):
+        # when this function is used, all nodes are named
+        tree = TreeNode.read(['((c:2,d:1)a:5,(e:4)b:3)root;'])
+        # this approach uses the out degree of each nodes,
+        # which here are `[2, 1, 1, 1, 1]`
+        # this tree corresponds to this table
+        tab = np.array([['root', 'a', '5.0', '2'],
+                        ['a',    'c', '2.0', '1'],
+                        ['a',    'd', '1.0', '1'],
+                        ['root', 'b', '3.0', '1'],
+                        ['b',    'e', '4.0', '1']])
+        exp = {'a': ((0.0 + 5.0) / 2),  # = 2.5; used for c and d
+               'c': ((2.5 + 2.0) / 1),  # = 4.5
+               'd': ((2.5 + 1.0) / 1),  # = 3.5
+               'b': ((0.0 + 3.0) / 1),  # = 3.0; used for e
+               'e': ((3.0 + 4.0) / 1)}  # = 7.0
+        self.assertEqual(tree._calc_equal_splits(tab), exp)
+
+        tree = TreeNode.read(["(((a:9,b:12)f:16,c:4)e:72,d:9)root;"])
+        # this approach uses the out degree of each nodes,
+        # which here are `[2, 2, 1, 1, 1, 1]`
+        tab = np.array([['root', 'e', '72.0', '3'],
+                        ['e',    'f', '16.0', '2'],
+                        ['f',    'a', '9.0',  '1'],
+                        ['f',    'b', '12.0', '1'],
+                        ['e',    'c', '4.0',  '1'],
+                        ['root', 'd', '9.0',  '1']])
+        exp = {'e': ((0.0 + 72.0) / 2),   # = 36.0; used for f and c
+               'f': ((36.0 + 16.0) / 2),  # = 26.0; used for a and b
+               'a': ((26.0 + 9.0) / 1),   # = 35.0
+               'b': ((26.0 + 12.0) / 1),  # = 38.0
+               'c': ((36.0 + 4.0) / 1),   # = 40.0
+               'd': ((0.0 + 9.0) / 1)}    # = 9.0
+        self.assertEqual(tree._calc_equal_splits(tab), exp)
+
+    def test_calc_fair_proportion(self):
+        # when this function is used, all nodes are named
+        tree = TreeNode.read(['((c:2,d:1)a:5,(e:4)b:3)root;'])
+        # this tree corresponds to this table
+        tab = np.array([['root', 'a', '5.0', '2'],
+                        ['a',    'c', '2.0', '1'],
+                        ['a',    'd', '1.0', '1'],
+                        ['root', 'b', '3.0', '1'],
+                        ['b',    'e', '4.0', '1']])
+        exp = {'a': (0.0 + (5.0 / 2)),  # = 2.5; used for c and d
+               'c': (2.5 + (2.0 / 1)),  # = 4.5
+               'd': (2.5 + (1.0 / 1)),  # = 3.5
+               'b': (0.0 + (3.0 / 1)),  # = 3.0; used for e
+               'e': (3.0 + (4.0 / 1))}  # = 7.0
+        self.assertEqual(tree._calc_fair_proportion(tab), exp)
+
+        # function only uses tree to get root name, i.e. this suffice:
+        tree = TreeNode.read(['((c:20,d:4)a:10,(e:5,f:3,g:2)b:3)root;'])
+        tab = np.array([['root', 'a', '10.0', '2'],
+                        ['a',    'c', '20.0', '1'],
+                        ['a',    'd', '4.0',  '1'],
+                        ['root', 'b', '3.0',  '3'],
+                        ['b',    'e', '5.0',  '1'],
+                        ['b',    'f', '3.0',  '1'],
+                        ['b',    'g', '2.0',  '1']])
+        exp = {'a': (0.0 + (10.0 / 2)),  # = 5.0; used for c and d
+               'c': (5.0 + (20.0 / 1)),  # = 25.0
+               'd': (5.0 + (4.0 / 1)),   # = 9.0
+               'b': (0.0 + (3.0 / 3)),   # = 1.0; used for e, f and g
+               'e': (1.0 + (5.0 / 1)),   # = 6.0
+               'f': (1.0 + (3.0 / 1)),   # = 4.0
+               'g': (1.0 + (2.0 / 1))}   # = 3.0
+        self.assertEqual(tree._calc_fair_proportion(tab), exp)
+
+        tree = TreeNode.read(["(((a:9,b:12)f:16,c:4)e:72,d:9)root;"])
+        tab = np.array([['root', 'e', '72.0', '3'],
+                        ['e',    'f', '16.0', '2'],
+                        ['f',    'a', '9.0',  '1'],
+                        ['f',    'b', '12.0', '1'],
+                        ['e',    'c', '4.0',  '1'],
+                        ['root', 'd', '9.0',  '1']])
+        exp = {'e': (0.0 + (72.0 / 3)),   # = 24.0; used for f and c
+               'f': (24.0 + (16.0 / 2)),  # = 32.0; used for a and b
+               'a': (32.0 + (9.0 / 1)),   # = 41.0
+               'b': (32.0 + (12.0 / 1)),  # = 44.0
+               'c': (24.0 + (4.0 / 1)),   # = 28.0
+               'd': (0.0 + (9.0 / 1))}    # = 9.0
+        self.assertEqual(tree._calc_fair_proportion(tab), exp)
+
+    def test_evol_distinct(self):
+        """The results from these trees were replicated using the R function
+        `phyloregion::evol_distinct`, for which this is just a python re-coding
+        https://rdrr.io/cran/phyloregion/src/R/evol_distinct.R
+        """
+        tree = TreeNode.read(["((c,d)a,(e)b);"])
+        with self.assertRaises(NoLengthError):
+            tree.evol_distinct()
+
+        tree = TreeNode.read(["(((a,b:12)f:16,c:4)e:72,d:9)root;"])
+        with self.assertRaises(NoLengthError):
+            tree.evol_distinct()
+
+        # internal node names can be missing as the result is only for the tips
+        tree = TreeNode.read(["(((a:9,b:12)f:16,c:4):72,d:9);"])
+        # from the tests above
+        obs = tree.evol_distinct(algorithm='equal_splits')
+        exp = {'a': 35.0, 'b': 38.0, 'c': 40.0, 'd': 9.0}
+        self.assertEqual(obs, exp)
+        obs = tree.evol_distinct(algorithm='fair_proportion')
+        exp = {'a': 41.0, 'b': 44.0, 'c': 28.0, 'd': 9.0}
+        self.assertEqual(obs, exp)
+
+        tree = TreeNode.read(["((a:1,b:2)c:3,d:4)root;"])
+        obs = tree.evol_distinct(algorithm='equal_splits', scale=True)
+        # scaling this non-ultrametric tree results in:
+        # "((a:0.1,b:0.2)c:0.3,d:0.4)root;", and the out degree of each node is
+        # the same as the number of children in the numpy array representation,
+        # tab = np.array([['root', 'c', '0.3', '2'],
+        #                 ['c',    'a', '0.1', '1'],
+        #                 ['c',    'b', '0.2', '1'],
+        #                 ['root', 'd', '0.4', '1']])
+        # thus the "equal_splits" calculation is:
+        # exp = {'c': ((0.0 + 0.3) / 2),   # = 0.15; used for a and b
+        #        'a': ((0.15 + 0.1) / 1),  # = 0.25
+        #        'b': ((0.15 + 0.2) / 1),  # = 0.35
+        #        'd': ((0 + 0.4) / 1)}     # = 0.4
+        exp = {'a': 0.25, 'b': 0.35, 'd': 0.4}
+        self.assertEqual(obs, exp)
+        # for this tree, the two algorithms yield the same result
+        obs = tree.evol_distinct(algorithm='fair_proportion', scale=True)
+        self.assertEqual(obs, exp)
+
 
 sample = """
 (
