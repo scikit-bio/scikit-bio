@@ -4,10 +4,8 @@
 
 ### Features
 
-* Added `evol_distinct` method to measure Evolutionary Distinctiveness (ED), [issue #1777](https://github.com/biocore/scikit-bio/issues/1777):
+* Added `evol_distinct` method to measure Evolutionary Distinctiveness (ED), [issue #1779](https://github.com/biocore/scikit-bio/issues/1779):
   * private methods `_calc_fair_proportion` and `_calc_equal_splits` to calculate ED under two different node furcation modes
-  * private method `_get_preorder_array` to make the table use under the hood for ED calculation
-  * private method `_get_nodes_degrees` to get the out degree per internal node
   * method `name_unnamed_internal_nodes` to name unnamed nodes (necessary for ED calculation)
   * method `is_ultrametric` to check is tree is ultrametric or not
   * method `scale_length` to normalize branch length
