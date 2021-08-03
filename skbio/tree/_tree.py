@@ -3381,90 +3381,6 @@ class TreeNode(SkbioObject):
         return tcopy
 
     @experimental(as_of="0.5.3")
-    def _get_nodes_degrees(self):
-        """Returns the out degree of each node.
-
-        Returns
-        -------
-        list
-            Number of nodes furcating out (degree) of each node along preorder.
-
-        Notes
-        -----
-        First collects the list of `[parent_node, current_node]` names in a
-        numpy array and crate a dict with count the number of times (values)
-        each parent occurs in the `parent_node` column of the array (keys).
-        Then, create the degree list for each node, with the dict for internal
-        nodes and 1 for tips.
-
-        Example
-        -------
-        >>> # preorder here is: a, c, d, b, e, f
-        >>> tree = TreeNode.read(['((c,d)a,(e,f)b);'])
-        >>> tree._get_nodes_degrees()
-        [2, 1, 1, 2, 1, 1]
-        """
-        parents_nodes = np.array(
-            [[n.parent.name, n.name] if n.parent.name else ['root', n.name]
-                for n in self.preorder(include_self=False)])
-        names, counts = np.unique(parents_nodes[:, 0], return_counts=True)
-        nparents = dict(zip(names, counts))  # degree of internal node
-        # make it a per node vector and set it to 1 for tips
-        degree = [nparents.get(x, 1) for x in parents_nodes[:, 1]]
-        return degree
-
-    @experimental(as_of="0.5.3")
-    def _get_preorder_array(self, tcopy):
-        """Create a numpy array version of the preorder tree with nodes as
-        rows and as columns: parent name, node name, branch length,
-        and number of children.
-
-        Parameters
-        ----------
-        tcopy : TreeNode or None
-            A copy of self with modified branch lengths (or not)
-
-        Returns
-        -------
-        numpy.array
-            for each node (incl. tips):
-                [0] name of the parent
-                [1] name of the node
-                [2] length of the parent->node branch
-                [3] number of children for the node (tips are given one child)
-
-        Notes
-        -----
-        The number of children for a tips is set to 1, because this is used
-        as denominator in the evolutionary distinctiveness calculation.
-
-        Raises
-        ------
-        NoLengthError
-            A NoLengthError will be thrown if a node without length is
-            encountered.
-
-        See Also
-        --------
-        scale_length
-        evol_distinct
-        """
-        tab = []
-        for n in self.preorder(include_self=False):
-
-            if n.length is None:
-                raise NoLengthError("No length on node %s found." %
-                                    n.name or "unnamed")
-
-            tab.append([
-                n.parent.name,
-                n.name,
-                tcopy.find(n.name).length,
-                ((1 * n.is_tip()) + n.count(tips=True))
-            ])
-        return np.array(tab)
-
-    @experimental(as_of="0.5.3")
     def name_unnamed_internal_nodes(self):
         """Name the internal nodes that do not have a name.
 
@@ -3502,116 +3418,94 @@ class TreeNode(SkbioObject):
             curr.name = name
 
     @experimental(as_of="0.5.3")
-    def _calc_equal_splits(self, tab):
-        """Returns the evolutionary distinctiveness per node for the case
-        where the node furcations on the path to a tip are weighted in terms
-        of number of direct children at that node, i.e. will always be `2`
-        for each node on a strictly bifurcating tree.
+    def _calc_equal_splits(self, tcopy):
+        """Node furcations on the path to a tip are weighted in terms of
+        number of direct children at that node, i.e. will always be `2` for
+        each node on a strictly bifurcating tree.
 
         Parameters
         ----------
-        tab : numpy.array
-            each node's parent name, name, branch length and number of children
-
-        Returns
-        -------
-        dict
-            Evolutionary distinctiveness (values) of nodes (keys)
+        tcopy : TreeNode
+            Copy of self which branch length may have been changed
 
         Notes
         -----
-        Collects the degree of each node (tips as having one child since
-        dividing per one for the ED calculation is needed to not have to
-        divide by zero), and increments a per-node zero-initialized list
-        with, along the preorder:
-          `(parent_node_ED + node_branch_length / number of children)`
-        Python re-coding of the R package `phyloregion::evol_distinct`
-        https://rdrr.io/cran/phyloregion/src/R/evol_distinct.R
+        ED is calculated as the tree is traversed along its preorder:
+          `parent_node_ED + (node_branch_length / number of children)`
+        Tree copy ED attributes are copied to self tree as ED attribute.
+        Tips as having one child since dividing per one for the ED
+        calculation is needed (to not have to divide by zero).
 
         See Also
         --------
         evol_distinct
         """
-        root_name = self.root().name
-        degree = self._get_nodes_degrees()
-        # evolutionary distinctiveness (ED) result vector (to be populated)
-        res = [0] * tab.shape[0]
-        # per each node along the tabulated preorder (cladewise)
-        for idx_node, row in enumerate(tab):
-            # update the ED result by adding the branch length
-            # and dividing the updated value by the descending
-            # degree (always `2` for a strictly bifurcating tree)
-            if row[0] == root_name:
-                base = 0  # because the root in not present in the ED vector
+        for n in tcopy.preorder(include_self=True):
+            if n.is_root():
+                n.ed = 0
             else:
-                base = res[list(tab[:, 1]).index(row[0])]
-            res[idx_node] = (float(base) + float(row[2])) / degree[idx_node]
-        return dict(zip(tab[:, 1], res))
+                if n.length is None:
+                    raise NoLengthError("No length on node %s found." %
+                                        n.name or "unnamed")
+                if n.is_tip():
+                    n.ed = n.parent.ed + n.length
+                else:
+                    n.ed = (n.parent.ed + n.length) / len(n.children)
+            # Copy the Tree copy ED attributes to self tree
+            self.find(str(n.name)).ed = round(n.ed, 7)
 
     @experimental(as_of="0.5.3")
-    def _calc_fair_proportion(self, tab):
-        """Returns the evolutionary distinctiveness per node for the case
-        where the node furcations on the path to a tip are weighted in terms
-        of total number of tips down that node.
+    def _calc_fair_proportion(self, tcopy):
+        """Node furcations on the path to a tip are weighted in terms of
+        total number of tips down that node.
 
         Parameters
         ----------
-        tab : numpy.array
-            each node's parent name, name, branch length and number of children
-
-        Returns
-        -------
-        dict
-            Evolutionary distinctiveness (values) of nodes (keys)
+        tcopy : TreeNode
+            Copy of self which branch length may have been changed
 
         Notes
         -----
-        Collects the degree of each node (tips as having one child since
-        dividing per one for the ED calculation is needed to not have to
-        divide by zero), and increments a per-node zero-initialized list
-        with, along the preorder:
+        ED is calculated as the tree copy is traversed along its preorder:
           `parent_node_ED + (node_branch_length / total number of tips)`
-        Python re-coding of the R package `phyloregion::evol_distinct`
-        https://rdrr.io/cran/phyloregion/src/R/evol_distinct.R
+        Tree copy ED attributes are copied to self tree as ED attribute.
+        Tips as having one child since dividing per one for the ED
+        calculation is needed (to not have to divide by zero).
 
         See Also
         --------
         evol_distinct
         """
-        root_name = self.root().name
-        # evolutionary distinctiveness (ED) result vector (to be populated)
-        res = [0] * tab.shape[0]
-        # per each node along the tabulated preorder (cladewise)
-        for idx_node, row in enumerate(tab):
-            # divide the node's branch length by its total number of tips and
-            # add this to update the ED result
-            if row[0] == root_name:
-                base = 0  # because the root in not present in the ED vector
+        for n in tcopy.preorder(include_self=True):
+            if n.is_root():
+                n.ed = 0
             else:
-                base = res[list(tab[:, 1]).index(row[0])]
-            res[idx_node] = float(base) + (float(row[2]) / float(row[3]))
-        return dict(zip(tab[:, 1], res))
+                if n.length is None:
+                    raise NoLengthError("No length on node %s found." %
+                                        n.name or "unnamed")
+                if n.is_tip():
+                    n.ed = n.parent.ed + n.length
+                else:
+                    n.ed = n.parent.ed + (n.length / len(list(n.tips())))
+            # Copy the Tree copy ED attributes to self tree
+            self.find(str(n.name)).ed = round(n.ed, 7)
 
     @experimental(as_of="0.5.3")
     def evol_distinct(self, algorithm="fair_proportion",
                       scale=False, use_branch_lengths=True):
-        """Returns the evolutionary distinctiveness (ED) of the tips of a tree.
+        """Add the Evolutionary Distinctiveness (ED) value as an attribute to
+        each node.
 
         Parameters
         ----------
         algorithm : str
-            Either of "fair_proportion" or "equal_splits", to control how the
+            Either of "fair_proportion" or "equal_splits" to control how the
             nodes furcations are used
         scale : bool
-            Whether to normalize branch length before ED calculation
-            (false by default)
+            Whether to normalize branch length before  ED calculation (false
+            by default)
         use_branch_lengths : bool
             Whether to use branch length for ED calculation (true by default)
-
-        Returns
-        -------
-        dict
-            Evolutionary distinctiveness (values) of tips (keys)
 
         Raises
         ------
@@ -3622,16 +3516,11 @@ class TreeNode(SkbioObject):
             A ValueError will be thrown if the algorithm name is neither
             "equal_splits" or "fair_proportion".
 
-        Notes
-        -----
-        Python re-coding of the R package `phyloregion::evol_distinct`
-        https://rdrr.io/cran/phyloregion/src/R/evol_distinct.R
-
         See Also
         --------
         name_unnamed_internal_nodes
-        calc_equal_splits
-        calc_fair_proportion
+        _calc_equal_splits
+        _calc_fair_proportion
         scale_length
 
         Examples
@@ -3649,8 +3538,10 @@ class TreeNode(SkbioObject):
                   \\-d
         >>> # the ED of a tip furcating from the root with be its branch length
         >>> tree.evol_distinct(algorithm='equal_splits')
+        >>> print(dict((x.name, x.ed) for x in tree.traverse()))
         {'a': 35.0, 'b': 38.0, 'c': 40.0, 'd': 9.0}
         >>> tree.evol_distinct(algorithm='fair_proportion')
+        >>> print(dict((x.name, x.ed) for x in tree.traverse()))
         {'a': 41.0, 'b': 44.0, 'c': 28.0, 'd': 9.0}
         """
         self.name_unnamed_internal_nodes()  # make sure all nodes have a name
@@ -3664,12 +3555,9 @@ class TreeNode(SkbioObject):
             for node in tcopy.levelorder(include_self=False):
                 node.length = 1
         # ED calculation involves laying the preorder tree in a numpy array
-        tab = self._get_preorder_array(tcopy)
         if algorithm == "equal_splits":
-            res = self._calc_equal_splits(tab)  # use out degree of nodes
+            self._calc_equal_splits(tcopy)  # use out degree of nodes
         elif algorithm == "fair_proportion":
-            res = self._calc_fair_proportion(tab)  # use tip numbers of nodes
+            self._calc_fair_proportion(tcopy)  # use tip numbers of nodes
         else:
             raise ValueError('Invalid algorithm name: "%s"' % algorithm)
-        res_d = dict((x.name, round(res[x.name], 8)) for x in tcopy.tips())
-        return res_d
