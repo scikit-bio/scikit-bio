@@ -3538,10 +3538,10 @@ class TreeNode(SkbioObject):
                   \\-d
         >>> # the ED of a tip furcating from the root with be its branch length
         >>> tree.evol_distinct(algorithm='equal_splits')
-        >>> print(['%s:%s' % (x.name, x.ed) for x in tree.traverse())])
+        >>> print(['%s:%s' % (x.name, x.ed) for x in tree.traverse()])
         ['root:0', 'e:36.0', 'f:26.0', 'a:35.0', 'b:38.0', 'c:40.0', 'd:9.0']
         >>> tree.evol_distinct(algorithm='fair_proportion')
-        >>> print(['%s:%s' % (x.name, x.ed) for x in tree.traverse())])
+        >>> print(['%s:%s' % (x.name, x.ed) for x in tree.traverse()])
         ['root:0', 'e:24.0', 'f:32.0', 'a:41.0', 'b:44.0', 'c:28.0', 'd:9.0']
         """
         self.name_unnamed_internal_nodes()  # make sure all nodes have a name
