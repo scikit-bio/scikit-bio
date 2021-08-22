@@ -40,7 +40,7 @@ if not clang:
                 ["gcc", "--version"],
                 universal_newlines=True).find("clang") != -1:
             clang = True
-    except subprocess.CalledProcessError:
+    except (subprocess.CalledProcessError, FileNotFoundError):
         pass
 
 
