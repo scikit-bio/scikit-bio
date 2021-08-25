@@ -37,6 +37,8 @@
 
 * Update hdmedians package to a version which doesn't require an initial manual numpy install.
 
+* Now buildable on non-x86 platforms due to use of the [SIMD Everywhere](https://github.com/simd-everywhere/simde) library.
+
 ## Version 0.5.6
 
 ### Features

@@ -1,0 +1,9 @@
+.pytest_cache
+build/
+dist/
+*.swp
+env*/
+__pycache__/
+*/__pycache__/
+**/__pycache__/
+*.egg-info/
