@@ -101,12 +101,13 @@ array([ 0.25,  0.25,  0.5 ])
 #
 # The full license is in the file COPYING.txt, distributed with this software.
 # ----------------------------------------------------------------------------
-
+from typing import Union
 import numpy as np
 import pandas as pd
 import scipy.stats
 import skbio.util
 from skbio.util._decorator import experimental
+from skbio.stats.distance import DistanceMatrix
 
 
 @experimental(as_of="0.4.0")
@@ -806,6 +807,163 @@ def centralize(mat):
     cen = scipy.stats.gmean(mat, axis=0)
     return perturb_inv(mat, cen)
 
+@experimental(as_of="0.5.7")
+def vlr(x,y, ddof=1, robust=False):
+    r"""
+    Calculates variance log ratio
+    
+    Parameters
+    ----------
+    x : array_like, float
+       a 1-dimensional vector of proportions
+    y : array_like, float
+       a 1-dimensional vector of proportions
+        
+    ddof: int
+        degrees of freedom
+        
+    robust: bool
+        mask zeros at the cost of performance
+       
+    Returns
+    -------
+    float
+         variance log ratio value
+         
+    Examples
+    --------
+    # No zeros
+    >>> x = [1,2,3]
+    >>> y = [5,8,13]
+    >>> %timeit vlr(x,y)
+    # 21.7 µs ± 979 ns per loop (mean ± std. dev. of 7 runs, 10000 loops each)
+    # 0.01277962183258352
+
+    # Zeros without robust
+    >>> x = [1,2,3,0]
+    >>> y = [5,8,13,21]
+    >>> %timeit vlr(x,y)
+    # 27.5 µs ± 2.48 µs per loop (mean ± std. dev. of 7 runs, 10000 loops each)
+    # nan
+
+    # Zeros with robust
+    >>> x = [1,2,3,0]
+    >>> y = [5,8,13,21]
+    >>> %timeit vlr(x,y, robust=True)
+    # 570 µs ± 21 µs per loop (mean ± std. dev. of 7 runs, 1000 loops each)
+    # 0.01277962183258352
+    
+    References
+    ----------
+    .. [1] V. Lovell D, Pawlowsky-Glahn V, Egozcue JJ, Marguerat S, Bähler J (2015) 
+           Proportionality: A Valid Alternative to Correlation for Relative Data. 
+           PLoS Comput Biol 11(3): e1004075. https://doi.org/10.1371/journal.pcbi.1004075
+    .. [2] Erb, I., Notredame, C. 
+           How should we measure proportionality on relative gene expression data?. 
+           Theory Biosci. 135, 21–36 (2016). https://doi.org/10.1007/s12064-015-0220-8
+    """
+    # Convert array_like to numpy array
+    x = np.asarray(x)
+    y = np.asarray(y)
+
+    # Mask zeros
+    if robust:
+        x = np.ma.masked_array(x, mask=x == 0)
+        y = np.ma.masked_array(y, mask=y == 0)
+    
+    # Log transformation
+    x = np.log(x)
+    y = np.log(y)
+    
+    #Variance log ratio
+    return np.var(x - y, ddof=ddof)
+
+@experimental(as_of="0.5.7")
+def pairwise_vlr(mat:Union[np.array, pd.DataFrame], ids:list=None, ddof:int=1, robust=False) -> DistanceMatrix:
+    r"""
+    Performs pairwise variance log ratio transformation.
+    
+    Parameters
+    ----------
+    mat : array_like, float
+       a matrix of proportions where
+       rows = compositions and
+       columns = components
+       
+    ids: array_like, str
+        component names
+        if pd.DataFrame is provided and `ids is None` then `mat.columns` are used for `ids`
+        
+    ddof: int
+        degrees of freedom
+        
+    robust: bool
+        mask zeros at the cost of performance
+       
+    Returns
+    -------
+    skbio.DistanceMatrix
+         distance matrix of variance log ratio values
+    Examples
+    --------
+    >>> # NumPy Array
+    >>> mat = np.asarray([
+        [1,2,3],
+        [5,8,13],
+        [21,34,55],
+    ])
+    >>> dism = pairwise_vlr(mat)
+    >>> dism.redundant_form()
+    # array([[0.        , 0.01576411, 0.00649553],
+    #        [0.01576411, 0.        , 0.00202147],
+    #        [0.00649553, 0.00202147, 0.        ]])
+
+    >>> # Pandas DataFrame
+    >>> df = pd.DataFrame(
+        mat, 
+        index=["sample_1", "sample_2", "sample_3"], 
+        columns=["component_1", "component_2", "component_3"],
+    )
+    >>> dism = pairwise_vlr(df)
+    >>> dism.to_data_frame()
+    # component_1	component_2	component_3
+    # component_1	0.000000	0.015764	0.006496
+    # component_2	0.015764	0.000000	0.002021
+    # component_3	0.006496	0.002021	0.000000
+    
+    References
+    ----------
+    .. [1] V. Lovell D, Pawlowsky-Glahn V, Egozcue JJ, Marguerat S, Bähler J (2015) 
+           Proportionality: A Valid Alternative to Correlation for Relative Data. 
+           PLoS Comput Biol 11(3): e1004075. https://doi.org/10.1371/journal.pcbi.1004075
+    .. [2] Erb, I., Notredame, C. 
+           How should we measure proportionality on relative gene expression data?. 
+           Theory Biosci. 135, 21–36 (2016). https://doi.org/10.1007/s12064-015-0220-8
+    """
+    # Identifiers
+    components = None
+    if isinstance(mat, pd.DataFrame):
+        components = mat.columns
+        mat = mat.values
+    if ids is None:
+        ids = components
+    
+    # Mask zeros
+    X = mat.astype(np.float64)
+    if robust:
+        X = np.ma.masked_array(X, mask=X == 0)
+        
+    # Log Transform
+    X_log = np.log(X)
+    
+    # Variance Log Ratio
+    covariance = np.cov(X_log.T, ddof=ddof) 
+    diagonal = np.diagonal(covariance)
+    vlr_data = -2*covariance + diagonal[:,np.newaxis] + diagonal 
+    
+    # Create distance matrix
+    return DistanceMatrix(vlr_data, ids=ids)
+
 
 @experimental(as_of="0.4.1")
 def ancom(table, grouping,
@@ -1153,6 +1311,7 @@ def ancom(table, grouping,
         return ancom_df, percentile_df
 
 
+
 def _holm_bonferroni(p):
     """ Performs Holm-Bonferroni correction for pvalues
     to account for multiple comparisons
@@ -1324,3 +1483,4 @@ def _check_orthogonality(basis):
     if not np.allclose(inner(basis, basis), np.identity(len(basis)),
                        rtol=1e-4, atol=1e-6):
         raise ValueError("Aitchison basis is not orthonormal")
+
