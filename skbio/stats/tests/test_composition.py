@@ -20,7 +20,7 @@ from skbio.stats.composition import (closure, multiplicative_replacement,
                                      perturb, perturb_inv, power, inner,
                                      clr, clr_inv, ilr, ilr_inv, alr, alr_inv,
                                      sbp_basis, _gram_schmidt_basis,
-                                     centralize, _holm_bonferroni, ancom)
+                                     centralize, _holm_bonferroni, ancom, vlr, pairwise_vlr)
 
 
 class CompositionTests(TestCase):
@@ -1193,7 +1193,7 @@ class TestVLR(unittest.TestCase):
             x=self.mat[0],
             y=self.mat[1], 
             ddof=1, 
-            robust=False,
+            robust=True,
         )
         assert abs(output - 0.0655828061998637) <= self.tol
         
