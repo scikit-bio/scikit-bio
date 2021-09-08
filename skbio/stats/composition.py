@@ -1482,4 +1482,3 @@ def _check_orthogonality(basis):
     if not np.allclose(inner(basis, basis), np.identity(len(basis)),
                        rtol=1e-4, atol=1e-6):
         raise ValueError("Aitchison basis is not orthonormal")
-
