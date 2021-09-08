@@ -808,7 +808,7 @@ def centralize(mat):
     return perturb_inv(mat, cen)
 
 @experimental(as_of="0.5.7")
-def vlr(x,y, ddof=1, robust=False):
+def vlr(x, y, ddof=1, robust=False):
     r"""
     Calculates variance log ratio
     
