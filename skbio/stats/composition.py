@@ -1311,7 +1311,6 @@ def ancom(table, grouping,
         return ancom_df, percentile_df
 
 
-
 def _holm_bonferroni(p):
     """ Performs Holm-Bonferroni correction for pvalues
     to account for multiple comparisons
