@@ -1100,7 +1100,7 @@ def pairwise_vlr(mat, ids=None, ddof=1, robust=False) -> DistanceMatrix:
 
     # Mask zeros
     mat = mat.astype(np.float64)
-    
+    mat = closure(mat)
     # Set up input and parameters
     kwargs = { 
         "mat":mat,
