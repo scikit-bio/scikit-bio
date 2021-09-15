@@ -106,7 +106,7 @@ import pandas as pd
 import scipy.stats
 import skbio.util
 from skbio.util._decorator import experimental
-from skbio.stats.distance import DistanceMatrix, DistanceMatrixError
+from skbio.stats.distance import DistanceMatrix
 
 
 @experimental(as_of="0.4.0")
