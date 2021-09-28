@@ -106,7 +106,7 @@ import pandas as pd
 import scipy.stats
 import skbio.util
 from skbio.util._decorator import experimental
-from skbio.stats.distance import DistanceMatrix
+from skbio.stats.distance import DistanceMatrix, DissimiliarityMatrix
 
 
 @experimental(as_of="0.4.0")
@@ -807,118 +807,120 @@ def centralize(mat):
     return perturb_inv(mat, cen)
 
 
-
 @experimental(as_of="0.5.7")
-def _vlr(x:np.array, y:np.array, ddof:int):
+def _vlr(x: np.array, y: np.array, ddof: int):
     r"""
     Calculates variance log ratio
-    
+
     Parameters
     ----------
     x : array_like, float
        a 1-dimensional vector of proportions
     y : array_like, float
        a 1-dimensional vector of proportions
-        
+
     ddof: int
         degrees of freedom
-        
-       
+
     Returns
     -------
     float
          variance log ratio value
-         
-    
+
     References
     ----------
-    .. [1] V. Lovell D, Pawlowsky-Glahn V, Egozcue JJ, Marguerat S, Bähler J (2015) 
-           Proportionality: A Valid Alternative to Correlation for Relative Data. 
-           PLoS Comput Biol 11(3): e1004075. https://doi.org/10.1371/journal.pcbi.1004075
-    .. [2] Erb, I., Notredame, C. 
-           How should we measure proportionality on relative gene expression data?. 
-           Theory Biosci. 135, 21–36 (2016). https://doi.org/10.1007/s12064-015-0220-8
+    .. [1] V. Lovell D, Pawlowsky-Glahn V, Egozcue JJ, Marguerat S,
+           Bähler J (2015) Proportionality: A Valid Alternative to
+           Correlation for Relative Data. PLoS Comput Biol 11(3): e1004075.
+           https://doi.org/10.1371/journal.pcbi.1004075
+    .. [2] Erb, I., Notredame, C.
+           How should we measure proportionality on relative gene
+           expression data?. Theory Biosci. 135, 21–36 (2016).
+           https://doi.org/10.1007/s12064-015-0220-8
     """
 
     # Log transformation
     x = np.log(x)
     y = np.log(y)
-    
-    #Variance log ratio
+
+    # Variance log ratio
     return np.var(x - y, ddof=ddof)
 
 
 @experimental(as_of="0.5.7")
-def _robust_vlr(x:np.array, y:np.array, ddof:int):
+def _robust_vlr(x: np.ndarray, y: np.ndarray, ddof: int):
     r"""
     Calculates variance log ratio while masking zeros
-    
+
     Parameters
     ----------
     x : array_like, float
        a 1-dimensional vector of proportions
     y : array_like, float
        a 1-dimensional vector of proportions
-        
+
     ddof: int
         degrees of freedom
-        
+
     Returns
     -------
     float
          variance log ratio value
-         
-    
+
+
     References
     ----------
-    .. [1] V. Lovell D, Pawlowsky-Glahn V, Egozcue JJ, Marguerat S, Bähler J (2015) 
-           Proportionality: A Valid Alternative to Correlation for Relative Data. 
-           PLoS Comput Biol 11(3): e1004075. https://doi.org/10.1371/journal.pcbi.1004075
-    .. [2] Erb, I., Notredame, C. 
-           How should we measure proportionality on relative gene expression data?. 
-           Theory Biosci. 135, 21–36 (2016). https://doi.org/10.1007/s12064-015-0220-8
+    .. [1] V. Lovell D, Pawlowsky-Glahn V, Egozcue JJ, Marguerat S,
+           Bähler J (2015) Proportionality: A Valid Alternative to
+           Correlation for Relative Data. PLoS Comput Biol 11(3): e1004075.
+           https://doi.org/10.1371/journal.pcbi.1004075
+    .. [2] Erb, I., Notredame, C.
+           How should we measure proportionality on relative gene
+           expression data?. Theory Biosci. 135, 21–36 (2016).
+           https://doi.org/10.1007/s12064-015-0220-8
     """
 
     # Mask zeros
     x = np.ma.masked_array(x, mask=x == 0)
     y = np.ma.masked_array(y, mask=y == 0)
-    
+
     # Log transformation
     x = np.ma.log(x)
     y = np.ma.log(y)
-    
-    #Variance log ratio
+
+    # Variance log ratio
     return np.ma.var(x - y, ddof=ddof)
 
+
 @experimental(as_of="0.5.7")
-def vlr(x:np.array, y:np.array, ddof:int=1, robust:bool=False):
+def vlr(x: np.ndarray, y: np.ndarray, ddof: int = 1, robust: bool = False):
     r"""
     Calculates variance log ratio
-    
+
     Parameters
     ----------
     x : array_like, float
        a 1-dimensional vector of proportions
     y : array_like, float
        a 1-dimensional vector of proportions
-        
+
     ddof: int
         degrees of freedom
-        
+
     robust: bool
         mask zeros at the cost of performance
-       
+
     Returns
     -------
     float
          variance log ratio value
-         
+
     Examples
     --------
     No zeros
     >>> x = [1,2,3]
     >>> y = [5,8,13]
-    >>> %timeit vlr(x,y)
+    >>> vlr(x,y)
     >>> 0.01277962183258352
 
     Zeros without robust
@@ -932,148 +934,163 @@ def vlr(x:np.array, y:np.array, ddof:int=1, robust:bool=False):
     >>> y = [5,8,13,21]
     >>> vlr(x,y, robust=True)
     >>> 0.01277962183258352
-    
+
     References
     ----------
-    .. [1] V. Lovell D, Pawlowsky-Glahn V, Egozcue JJ, Marguerat S, Bähler J (2015) 
-           Proportionality: A Valid Alternative to Correlation for Relative Data. 
-           PLoS Comput Biol 11(3): e1004075. https://doi.org/10.1371/journal.pcbi.1004075
-    .. [2] Erb, I., Notredame, C. 
-           How should we measure proportionality on relative gene expression data?. 
-           Theory Biosci. 135, 21–36 (2016). https://doi.org/10.1007/s12064-015-0220-8
+    .. [1] V. Lovell D, Pawlowsky-Glahn V, Egozcue JJ, Marguerat S,
+           Bähler J (2015) Proportionality: A Valid Alternative to
+           Correlation for Relative Data. PLoS Comput Biol 11(3): e1004075.
+           https://doi.org/10.1371/journal.pcbi.1004075
+    .. [2] Erb, I., Notredame, C.
+           How should we measure proportionality on relative gene
+           expression data?. Theory Biosci. 135, 21–36 (2016).
+           https://doi.org/10.1007/s12064-015-0220-8
     """
     # Convert array_like to numpy array
     x = np.asarray(x)
     y = np.asarray(y)
 
     # Set up input and parameters
-    kwargs = { 
-        "x":x,
-        "y":y,
-        "ddof":ddof,
+    kwargs = {
+        "x": x,
+        "y": y,
+        "ddof": ddof,
     }
 
-    # Run backend function 
+    # Run backend function
     if robust:
-        return _robust_vlr(**kwargs) 
+        return _robust_vlr(**kwargs)
     else:
         return _vlr(**kwargs)
-    
+
 
 @experimental(as_of="0.5.7")
-def _pairwise_vlr(mat:np.array, ddof:int):
+def _pairwise_vlr(mat: np.ndarray, ddof: int):
     r"""
     Performs pairwise variance log ratio transformation
-    
+
     Parameters
     ----------
     mat : array_like, float
        a matrix of proportions where
        rows = compositions and
        columns = components
-       
+
     ids: array_like, str
         component names
-        
+
     ddof: int
         degrees of freedom
-       
+
     Returns
     -------
     skbio.DistanceMatrix
          distance matrix of variance log ratio values
-         
-    
+
+
     References
     ----------
-    .. [1] V. Lovell D, Pawlowsky-Glahn V, Egozcue JJ, Marguerat S, Bähler J (2015) 
-           Proportionality: A Valid Alternative to Correlation for Relative Data. 
-           PLoS Comput Biol 11(3): e1004075. https://doi.org/10.1371/journal.pcbi.1004075
-    .. [2] Erb, I., Notredame, C. 
-           How should we measure proportionality on relative gene expression data?. 
-           Theory Biosci. 135, 21–36 (2016). https://doi.org/10.1007/s12064-015-0220-8
+    .. [1] V. Lovell D, Pawlowsky-Glahn V, Egozcue JJ, Marguerat S,
+           Bähler J (2015) Proportionality: A Valid Alternative to
+           Correlation for Relative Data. PLoS Comput Biol 11(3): e1004075.
+           https://doi.org/10.1371/journal.pcbi.1004075
+    .. [2] Erb, I., Notredame, C.
+           How should we measure proportionality on relative gene
+           expression data?. Theory Biosci. 135, 21–36 (2016).
+           https://doi.org/10.1007/s12064-015-0220-8
     """
-        
+
     # Log Transform
     X_log = np.log(mat)
-    
+
     # Variance Log Ratio
-    covariance = np.cov(X_log.T, ddof=ddof) 
+    covariance = np.cov(X_log.T, ddof=ddof)
     diagonal = np.diagonal(covariance)
-    vlr_data = -2*covariance + diagonal[:,np.newaxis] + diagonal 
+    vlr_data = -2*covariance + diagonal[:, np.newaxis] + diagonal
     return vlr_data
 
+
 @experimental(as_of="0.5.7")
-def _robust_pairwise_vlr(mat:np.array, ddof:int):
+def _robust_pairwise_vlr(mat: np.ndarray, ddof: int):
     r"""
     Performs pairwise variance log ratio transformation while masking zeros
-    
+
     Parameters
     ----------
     mat : array_like, float
        a matrix of proportions where
        rows = compositions and
        columns = components
-       
+
     ids: array_like, str
         component names
-        
+
     ddof: int
         degrees of freedom
-       
+
     Returns
     -------
     skbio.DistanceMatrix
          distance matrix of variance log ratio values
-         
-    
+
+
     References
     ----------
-    .. [1] V. Lovell D, Pawlowsky-Glahn V, Egozcue JJ, Marguerat S, Bähler J (2015) 
-           Proportionality: A Valid Alternative to Correlation for Relative Data. 
-           PLoS Comput Biol 11(3): e1004075. https://doi.org/10.1371/journal.pcbi.1004075
-    .. [2] Erb, I., Notredame, C. 
-           How should we measure proportionality on relative gene expression data?. 
-           Theory Biosci. 135, 21–36 (2016). https://doi.org/10.1007/s12064-015-0220-8
+    .. [1] V. Lovell D, Pawlowsky-Glahn V, Egozcue JJ, Marguerat S,
+           Bähler J (2015) Proportionality: A Valid Alternative to
+           Correlation for Relative Data. PLoS Comput Biol 11(3): e1004075.
+           https://doi.org/10.1371/journal.pcbi.1004075
+    .. [2] Erb, I., Notredame, C.
+           How should we measure proportionality on relative gene
+           expression data?. Theory Biosci. 135, 21–36 (2016).
+           https://doi.org/10.1007/s12064-015-0220-8
     """
     # Mask zeros
     X = np.ma.masked_array(mat, mask=mat == 0)
-    
+
     # Log Transform
     X_log = np.ma.log(X)
-    
+
     # Variance Log Ratio
-    covariance = np.ma.cov(X_log.T, ddof=ddof) 
+    covariance = np.ma.cov(X_log.T, ddof=ddof)
     diagonal = np.ma.diagonal(covariance)
-    vlr_data = -2*covariance + diagonal[:,np.newaxis] + diagonal 
+    vlr_data = -2 * covariance + diagonal[:, np.newaxis] + diagonal
     return vlr_data
 
+
 @experimental(as_of="0.5.7")
-def pairwise_vlr(mat, ids=None, ddof=1, robust=False) -> DistanceMatrix:
+def pairwise_vlr(mat,
+    ids=None,
+    ddof: int = 1,
+    robust: bool = False,
+    validate: bool = True):
+
     r"""
     Performs pairwise variance log ratio transformation
-    
+
     Parameters
     ----------
     mat : array_like, float
        a matrix of proportions where
        rows = compositions and
        columns = components
-       
+
     ids: array_like, str
         component names
-        
+
     ddof: int
         degrees of freedom
-        
+
     robust: bool
         mask zeros at the cost of performance
-       
+
     Returns
     -------
-    skbio.DistanceMatrix
+    skbio.DistanceMatrix if validate=True
          distance matrix of variance log ratio values
-         
+    skbio.DissimilarityMatrix if validate=False
+         dissimilarity matrix of variance log ratio values
+
     Examples
     --------
     >>> mat = np.asarray([
@@ -1087,37 +1104,41 @@ def pairwise_vlr(mat, ids=None, ddof=1, robust=False) -> DistanceMatrix:
            [0.01576411, 0.        , 0.00202147],
            [0.00649553, 0.00202147, 0.        ]])
 
-    
+
     References
     ----------
-    .. [1] V. Lovell D, Pawlowsky-Glahn V, Egozcue JJ, Marguerat S, Bähler J (2015) 
-           Proportionality: A Valid Alternative to Correlation for Relative Data. 
-           PLoS Comput Biol 11(3): e1004075. https://doi.org/10.1371/journal.pcbi.1004075
-    .. [2] Erb, I., Notredame, C. 
-           How should we measure proportionality on relative gene expression data?. 
-           Theory Biosci. 135, 21–36 (2016). https://doi.org/10.1007/s12064-015-0220-8
+    .. [1] V. Lovell D, Pawlowsky-Glahn V, Egozcue JJ, Marguerat S,
+           Bähler J (2015) Proportionality: A Valid Alternative to
+           Correlation for Relative Data. PLoS Comput Biol 11(3): e1004075.
+           https://doi.org/10.1371/journal.pcbi.1004075
+    .. [2] Erb, I., Notredame, C.
+           How should we measure proportionality on relative gene
+           expression data?. Theory Biosci. 135, 21–36 (2016).
+           https://doi.org/10.1007/s12064-015-0220-8
     """
 
     # Mask zeros
-    mat = mat.astype(np.float64)
-    mat = closure(mat)
+    mat = closure(mat.astype(np.float64))
+
     # Set up input and parameters
-    kwargs = { 
-        "mat":mat,
-        "ddof":ddof,
+    kwargs = {
+        "mat": mat,
+        "ddof": ddof,
     }
-    
+
     # Variance Log Ratio
     if robust:
         vlr_data = _robust_pairwise_vlr(**kwargs)
     else:
         vlr_data = _pairwise_vlr(**kwargs)
-    
-    # Force symmetry
-    vlr_data = (vlr_data + vlr_data.T)/2
-    
-    # Create distance matrix
-    return DistanceMatrix(vlr_data, ids=ids)
+
+    # Return distance matrix
+    if validate:
+        return DistanceMatrix(vlr_data, ids=ids)
+
+    # Return dissimilarity matrix
+    else:
+        return DissimiliarityMatrix(vlr_data, ids=ids)
 
 
 @experimental(as_of="0.4.1")
