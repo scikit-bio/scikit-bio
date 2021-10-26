@@ -237,7 +237,7 @@ class GradientTests(BaseTests):
                                       's6': np.array([2.1795918367]),
                                       's7': np.array([17.8]),
                                       's8': np.array([20.3428571428])},
-                                     orient='index')
+                                     orient='index').astype(np.float64)
         obs = _weight_by_vector(trajectory, w_vector)
         assert_data_frame_almost_equal(obs.sort_index(), exp.sort_index())
 
@@ -263,7 +263,7 @@ class GradientTests(BaseTests):
                                       's7': np.array([7]),
                                       's8': np.array([8])
                                       },
-                                     orient='index')
+                                     orient='index').astype(np.float64)
         obs = _weight_by_vector(trajectory, w_vector)
         assert_data_frame_almost_equal(obs.sort_index(), exp.sort_index())
 
@@ -280,7 +280,8 @@ class GradientTests(BaseTests):
                                       's3': np.array([3]),
                                       's4': np.array([4]),
                                       's5': np.array([5]),
-                                      's6': np.array([6])}, orient='index')
+                                      's6': np.array([6])},
+                                     orient='index').astype(np.float64)
         obs = _weight_by_vector(trajectory, w_vector)
         assert_data_frame_almost_equal(obs.sort_index(), exp.sort_index())
 
@@ -296,7 +297,7 @@ class GradientTests(BaseTests):
                                       's2': np.array([2, 3, 4]),
                                       's3': np.array([5, 6, 7]),
                                       's4': np.array([8, 9, 10])},
-                                     orient='index')
+                                     orient='index').astype(np.float64)
         obs = _weight_by_vector(trajectory, w_vector)
         assert_data_frame_almost_equal(obs.sort_index(), exp.sort_index())
 

@@ -168,7 +168,7 @@ def _weight_by_vector(trajectories, w_vector):
                 np.abs((w_vector[i] - w_vector[i-1]))
             )
 
-    return trajectories
+    return trajectories.astype('float64')
 
 
 def _ANOVA_trajectories(category, res_by_group):
