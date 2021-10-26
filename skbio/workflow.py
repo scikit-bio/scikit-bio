@@ -204,7 +204,7 @@ import sys
 from copy import deepcopy
 from time import time
 from functools import update_wrapper
-from collections import Iterable
+from collections.abc import Iterable
 from types import MethodType
 
 from skbio.util._decorator import experimental

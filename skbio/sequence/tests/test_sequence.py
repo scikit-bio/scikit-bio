@@ -11,7 +11,7 @@ import functools
 import itertools
 import re
 from types import GeneratorType
-from collections import Hashable
+from collections.abc import Hashable
 from unittest import TestCase, main
 
 import numpy as np

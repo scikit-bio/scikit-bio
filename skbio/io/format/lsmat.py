@@ -225,7 +225,7 @@ def _matrix_to_lsmat(obj, fh, delimiter):
     for id_, vals in zip(ids, obj.data):
         fh.write("%s" % id_)
         fh.write(delimiter)
-        fh.write(delimiter.join(np.asarray(vals, dtype=np.str)))
+        fh.write(delimiter.join(np.asarray(vals, dtype=str)))
         fh.write('\n')
 
 

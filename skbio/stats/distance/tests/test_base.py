@@ -981,7 +981,7 @@ class DistanceMatrixTests(DissimilarityMatrixTestData):
     def test_to_series_1x1(self):
         series = self.dm_1x1.to_series()
 
-        exp = pd.Series([], index=[])
+        exp = pd.Series([], index=[], dtype='float64')
         assert_series_almost_equal(series, exp)
 
     def test_to_series_2x2(self):

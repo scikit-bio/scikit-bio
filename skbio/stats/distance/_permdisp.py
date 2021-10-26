@@ -154,8 +154,8 @@ def permdisp(distance_matrix, grouping, column=None, test='median',
     test statistic name        F-value
     sample size                      6
     number of groups                 2
-    test statistic             1.03296
-    p-value                       ...
+    test statistic     ... 1.03...
+    p-value            ...
     number of permutations          99
     Name: PERMDISP results, dtype: object
 
@@ -170,7 +170,7 @@ def permdisp(distance_matrix, grouping, column=None, test='median',
     test statistic name        F-value
     sample size                      6
     number of groups                 2
-    test statistic             1.03296
+    test statistic      ... 1.03...
     p-value                        NaN
     number of permutations           0
     Name: PERMDISP results, dtype: object
@@ -190,8 +190,8 @@ def permdisp(distance_matrix, grouping, column=None, test='median',
     test statistic name        F-value
     sample size                      6
     number of groups                 2
-    test statistic             3.67082
-    p-value                   0.428571
+    test statistic     ... 3.67...
+    p-value            ... 0.42...
     number of permutations           6
     Name: PERMDISP results, dtype: object
 
@@ -209,8 +209,8 @@ def permdisp(distance_matrix, grouping, column=None, test='median',
     test statistic name        F-value
     sample size                      6
     number of groups                 2
-    test statistic             3.67082
-    p-value                   0.428571
+    test statistic      ... 3.67...
+    p-value             ... 0.42...
     number of permutations           6
     Name: PERMDISP results, dtype: object
 
@@ -283,7 +283,8 @@ def _compute_groups(samples, test_type, grouping):
         centroids = samples.groupby('grouping').apply(_config_med)
 
     for label, df in samples.groupby('grouping'):
-        groups.append(cdist(df.values[:, :-1], [centroids.loc[label].values],
+        groups.append(cdist(df.values[:, :-1].astype('float64'),
+                            [centroids.loc[label].values],
                             metric='euclidean'))
 
     stat, _ = f_oneway(*groups)

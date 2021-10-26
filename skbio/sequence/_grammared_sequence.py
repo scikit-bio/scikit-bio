@@ -345,7 +345,7 @@ class GrammaredSequence(Sequence, metaclass=GrammaredSequenceMeta):
                 "Note: Use `lowercase` if your sequence contains lowercase "
                 "characters not in the sequence's alphabet."
                 % ('s' if len(bad) > 1 else '',
-                   [str(b.tostring().decode("ascii")) for b in bad] if
+                   [str(b.tobytes().decode("ascii")) for b in bad] if
                    len(bad) > 1 else bad[0],
                    list(self.alphabet)))
 

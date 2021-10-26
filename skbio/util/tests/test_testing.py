@@ -228,7 +228,8 @@ class TestAssertSeriesAlmostEqual(unittest.TestCase):
 
     def setUp(self):
         self.series = [
-            pd.Series(),
+            pd.Series(dtype='float64'),
+            pd.Series(dtype=object),
             pd.Series(dtype='int64'),
             pd.Series([1, 2, 3]),
             pd.Series([3, 2, 1]),
