@@ -778,7 +778,7 @@ def _generator_to_fasta(obj, fh, qual=FileSentinel,
         fh.write('>%s\n%s\n' % (header, seq_str))
 
         if qual is not None:
-            qual_str = ' '.join(np.asarray(qual_scores, dtype=np.str))
+            qual_str = ' '.join(np.asarray(qual_scores, dtype=str))
             if max_width is not None:
                 qual_str = qual_wrapper.fill(qual_str)
             qual.write('>%s\n%s\n' % (header, qual_str))

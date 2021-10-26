@@ -12,7 +12,7 @@ import sys
 
 import numpy as np
 import numpy.testing as npt
-import pandas.util.testing as pdt
+import pandas.testing as pdt
 from scipy.spatial.distance import pdist
 from ._decorator import experimental
 
@@ -266,7 +266,7 @@ def _normalize_signs(arr1, arr2):
 
 
 @experimental(as_of="0.4.0")
-def assert_data_frame_almost_equal(left, right):
+def assert_data_frame_almost_equal(left, right, rtol=1e-5):
     """Raise AssertionError if ``pd.DataFrame`` objects are not "almost equal".
 
     Wrapper of ``pd.util.testing.assert_frame_equal``. Floating point values
@@ -307,10 +307,10 @@ def assert_data_frame_almost_equal(left, right):
                            check_index_type=True,
                            check_column_type=True,
                            check_frame_type=True,
-                           check_less_precise=False,
                            check_names=True,
                            by_blocks=False,
-                           check_exact=False)
+                           check_exact=False,
+                           rtol=rtol)
     # this check ensures that empty DataFrames with different indices do not
     # compare equal. exact=True specifies that the type of the indices must be
     # exactly the same
@@ -324,7 +324,6 @@ def assert_series_almost_equal(left, right):
                             check_dtype=True,
                             check_index_type=True,
                             check_series_type=True,
-                            check_less_precise=False,
                             check_names=True,
                             check_exact=False,
                             check_datetimelike_compat=False,

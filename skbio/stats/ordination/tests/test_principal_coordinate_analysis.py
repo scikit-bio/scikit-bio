@@ -15,7 +15,8 @@ from unittest import TestCase, main
 from skbio import DistanceMatrix, OrdinationResults
 from skbio.stats.distance import DissimilarityMatrixError
 from skbio.stats.ordination import pcoa, pcoa_biplot
-from skbio.util import get_data_path, assert_ordination_results_equal
+from skbio.util import (get_data_path, assert_ordination_results_equal,
+                        assert_data_frame_almost_equal)
 
 
 class TestPCoA(TestCase):
@@ -277,7 +278,7 @@ class TestPCoABiplot(TestCase):
         full = pcoa_biplot(self.ordination, self.descriptors).features
 
         # the biplot should be identical regardless of the number of axes used
-        pd.util.testing.assert_almost_equal(subset, full.iloc[:, :2])
+        assert_data_frame_almost_equal(subset, full.iloc[:, :2])
 
     def test_mismatching_samples(self):
         new_index = self.descriptors.index.tolist()

@@ -781,7 +781,7 @@ class TabularMSA(MetadataMixin, PositionalMetadataMixin, SkbioObject):
         if minter is not None and index is not None:
             raise ValueError(
                 "Cannot use both `minter` and `index` at the same time.")
-        self._seqs = pd.Series([])
+        self._seqs = pd.Series([], dtype=object)
         self.extend(sequences, minter=minter, index=index,
                     reset_index=minter is None and index is None)
 
@@ -1983,12 +1983,13 @@ class TabularMSA(MetadataMixin, PositionalMetadataMixin, SkbioObject):
                                   step=1)
 
         if len(self):
-            self._seqs = self._seqs.append(pd.Series(sequences, index=index))
+            self._seqs = self._seqs.append(pd.Series(sequences, index=index,
+                                                     dtype=object))
         else:
             # Not using Series.append to avoid turning a RangeIndex supplied
             # via `index` parameter into an Int64Index (this happens in pandas
             # 0.18.0).
-            self._seqs = pd.Series(sequences, index=index)
+            self._seqs = pd.Series(sequences, index=index, dtype=object)
 
             # When extending a TabularMSA without sequences, the number of
             # positions in the TabularMSA may change from zero to non-zero. If

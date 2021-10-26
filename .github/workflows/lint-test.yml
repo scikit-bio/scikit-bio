@@ -17,7 +17,7 @@ jobs:
       fail-fast: false
       matrix:
         os: ["ubuntu-latest", "macos-latest"]
-        python-version: ["3.6", "3.7", "3.8"]
+        python-version: ["3.6", "3.7", "3.8", "3.9"]
         use_cython: ["TRUE", "FALSE"]
     steps:
       - uses: actions/checkout@v2
@@ -30,7 +30,7 @@ jobs:
         run: |
           if [[ "$(uname -s)" == "Linux" ]];
           then
-            conda install --yes -c conda-forge gxx_linux-64=7.5.0
+            conda install --yes -c conda-forge gxx_linux-64
           else
             ls -l /Applications/
             # conda clang does not like xcode 12
@@ -38,13 +38,14 @@ jobs:
             # the system tools are unusable, hide them
             sudo mv -f /Library/Developer/CommandLineTools /Library/Developer/CommandLineTools.org
             # now we are ready to install clang
-            conda install --yes -c conda-forge clangxx_osx-64=10.0.0
+            conda install --yes -c conda-forge clangxx_osx-64
           fi
-          conda install --yes --file ci/conda_requirements.txt
-          conda install --yes cython
-          conda install --yes pip
-          pip install -r ci/pip_requirements.txt
+          conda install -q --yes -c conda-forge --file ci/conda_requirements.txt
+          conda install -q --yes -c conda-forge cython
+          conda install -q --yes -c conda-forge pip
+          pip install -r ci/pip_requirements.txt --ignore-installed
           pip install . --no-deps
+          conda list
       - name: Run unit tests
         shell: bash -l {0}
         env:

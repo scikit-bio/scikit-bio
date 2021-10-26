@@ -299,7 +299,7 @@ def mantel(x, y, method='pearson', permutations=999, alternative='two-sided',
         if not (permutations == 0 or np.isnan(orig_stat)):
             perm_gen = (corr_func(x.permute(condensed=True), y_flat)[0]
                         for _ in range(permutations))
-            permuted_stats = np.fromiter(perm_gen, np.float,
+            permuted_stats = np.fromiter(perm_gen, float,
                                          count=permutations)
 
         del y_flat
@@ -389,7 +389,7 @@ def _mantel_stats_pearson_flat(x, y_flat, permutations):
 
         # compute all pearsonr permutations at once
         # create first the list of permutations
-        perm_order = np.empty([permutations, mat_n], dtype=np.int)
+        perm_order = np.empty([permutations, mat_n], dtype=int)
         for row in range(permutations):
             perm_order[row, :] = np.random.permutation(mat_n)
 

@@ -615,8 +615,8 @@ class DissimilarityMatrix(SkbioObject):
             subset = self._data[i_idx, j_indices]
             values.append(subset)
 
-        i = pd.Series(i, name='i')
-        j = pd.Series(j, name='j')
+        i = pd.Series(i, name='i', dtype=str)
+        j = pd.Series(j, name='j', dtype=str)
         values = pd.Series(np.hstack(values), name='value')
 
         return pd.concat([i, j, values], axis=1)
