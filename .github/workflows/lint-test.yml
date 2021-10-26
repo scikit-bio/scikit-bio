@@ -42,7 +42,7 @@ jobs:
           fi
           conda install --yes -c conda-forge --file ci/conda_requirements.txt
           conda install --yes -c conda-forge cython
-          conda install --yes c -conda-forge pip
+          conda install --yes -c conda-forge pip
           pip install -r ci/pip_requirements.txt
           pip install . --no-deps
       - name: Run unit tests
