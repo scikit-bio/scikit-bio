@@ -109,7 +109,7 @@ def distmat_reorder_buf(in_mat, reorder_vec, out_mat, validate=False):
     validate: boolean
         Optional, if True, validate reorder_vec content, detaults to False
     """
-    np_reorder = np.asarray(reorder_vec, dtype=np.long)
+    np_reorder = np.asarray(reorder_vec, dtype=int)
     if validate:
         maxsize = in_mat.shape[0]
         bad_cnt = np.where((np_reorder < 0) or (np_reorder >= maxsize))[0].size
@@ -155,7 +155,7 @@ def distmat_reorder(in_mat, reorder_vec, validate=False):
     out_mat : 2D array_like
         Distance matrix
     """
-    np_reorder = np.asarray(reorder_vec, dtype=np.long)
+    np_reorder = np.asarray(reorder_vec, dtype=int)
     if validate:
         maxsize = in_mat.shape[0]
         bad_cnt = np.where((np_reorder < 0) or (np_reorder >= maxsize))[0].size
@@ -200,7 +200,7 @@ def distmat_reorder_condensed(in_mat, reorder_vec, validate=False):
     out_mat_condensed : 1D array_like
         Condensed distance matrix
     """
-    np_reorder = np.asarray(reorder_vec, dtype=np.long)
+    np_reorder = np.asarray(reorder_vec, dtype=int)
     if validate:
         maxsize = in_mat.shape[0]
         bad_cnt = np.where((np_reorder < 0) or (np_reorder >= maxsize))[0].size
@@ -210,7 +210,7 @@ def distmat_reorder_condensed(in_mat, reorder_vec, validate=False):
     if not in_mat.flags.c_contiguous:
         in_mat = np.asarray(in_mat, order='C')
 
-    csize = np.long(((np_reorder.size-1)*np_reorder.size)/2)
+    csize = ((np_reorder.size-1)*np_reorder.size) // 2
     out_mat_condensed = np.empty([csize], in_mat.dtype)
     distmat_reorder_condensed_cy(in_mat, np_reorder, out_mat_condensed)
     return out_mat_condensed

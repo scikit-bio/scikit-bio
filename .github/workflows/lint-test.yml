@@ -17,7 +17,7 @@ jobs:
       fail-fast: false
       matrix:
         os: ["ubuntu-latest", "macos-latest"]
-        python-version: ["3.6", "3.7", "3.8"]
+        python-version: ["3.6", "3.7", "3.8", "3.9"]
         use_cython: ["TRUE", "FALSE"]
     steps:
       - uses: actions/checkout@v2
@@ -40,9 +40,9 @@ jobs:
             # now we are ready to install clang
             conda install --yes -c conda-forge clangxx_osx-64=10.0.0
           fi
-          conda install --yes --file ci/conda_requirements.txt
-          conda install --yes cython
-          conda install --yes pip
+          conda install --yes -c conda-forge --file ci/conda_requirements.txt
+          conda install --yes -c conda-forge cython
+          conda install --yes c -conda-forge pip
           pip install -r ci/pip_requirements.txt
           pip install . --no-deps
       - name: Run unit tests

@@ -12,7 +12,7 @@ from unittest import TestCase, main
 import numpy as np
 import numpy.testing as npt
 import pandas as pd
-from pandas.util.testing import assert_series_equal
+from pandas.testing import assert_series_equal
 from scipy.stats import f_oneway
 import hdmedians as hd
 

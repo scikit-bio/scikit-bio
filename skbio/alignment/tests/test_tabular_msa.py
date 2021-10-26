@@ -6,7 +6,7 @@
 # The full license is in the file COPYING.txt, distributed with this software.
 # ----------------------------------------------------------------------------
 
-import collections
+import collections.abc
 import copy
 import unittest
 import functools
@@ -1386,13 +1386,12 @@ class TestLoc(SharedPropertyIndexTests, unittest.TestCase):
                          positional_metadata={'c': ['a', 'b', 'c', 'd']},
                          index=[('a', 'x', 0), ('a', 'x', 1), ('a', 'y', 2),
                                 ('b', 'x', 0)])
-
-        self.assertEqual(self.get(msa, (([False, True, False, True],
-                                         'x', 2), Ellipsis)),
-                         TabularMSA([], metadata={'x': 'y'},
-                                    # TODO: Change for #1198
-                                    positional_metadata=None,
-                                    index=[]))
+        # Pandas will KeyError when the intersection is empty
+        # change appears to have happened in:
+        # https://github.com/pandas-dev/pandas/pull/42245
+        # but this was not bisected to confirm
+        with self.assertRaises(KeyError):
+            self.get(msa, (([False, True, False, True], 'x', 2), Ellipsis))
 
     def test_bool_index_scalar_bool_label(self):
         a = DNA("ACGA", metadata={0: 0}, positional_metadata={0: [1, 2, 3, 4]})
@@ -3642,7 +3641,7 @@ class TestIsSequenceAxis(unittest.TestCase):
 
 class TestHashable(unittest.TestCase):
     def test_unhashable_type(self):
-        self.assertNotIsInstance(TabularMSA([]), collections.Hashable)
+        self.assertNotIsInstance(TabularMSA([]), collections.abc.Hashable)
 
     def test_unhashable_object(self):
         with self.assertRaisesRegex(TypeError, r'unhashable'):

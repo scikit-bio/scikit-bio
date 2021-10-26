@@ -74,7 +74,7 @@ class InternalMantelTests(MantelTestData):
         perm_order = np.asarray([[2, 1, 0],
                                  [2, 0, 1],
                                  [0, 2, 1],
-                                 [2, 0, 1]], dtype=np.int)
+                                 [2, 0, 1]], dtype=int)
         xmean = 2.0
         normxm = 1.4142135623730951
         ym_normalized = np.asarray([-0.80178373, 0.26726124, 0.53452248])
@@ -106,7 +106,7 @@ class InternalMantelTests(MantelTestData):
                                  [4, 3, 2, 5, 0, 1],
                                  [2, 5, 3, 1, 0, 4],
                                  [3, 5, 4, 1, 2, 0],
-                                 [4, 3, 5, 2, 0, 1]], dtype=np.int)
+                                 [4, 3, 5, 2, 0, 1]], dtype=int)
         xmean = 0.6953921578226
         normxm = 0.3383126690576294
         ym_normalized = np.asarray([-0.4999711, 0.24980825, -0.29650504,
@@ -159,7 +159,7 @@ class InternalMantelTests(MantelTestData):
                                  [1, 2, 5, 4, 0, 3],
                                  [5, 4, 0, 1, 3, 2],
                                  [3, 0, 1, 5, 4, 2],
-                                 [5, 0, 2, 3, 1, 4]], dtype=np.int)
+                                 [5, 0, 2, 3, 1, 4]], dtype=int)
 
         ym_normalized = ym/normym
 
@@ -194,7 +194,7 @@ class InternalMantelTests(MantelTestData):
 
         perm_gen = (pearsonr(x.permute(condensed=True), y_flat)[0]
                     for _ in range(num_perms))
-        permuted_stats = np.fromiter(perm_gen, np.float,
+        permuted_stats = np.fromiter(perm_gen, float,
                                      count=num_perms)
 
         self.assertAlmostEqual(orig_stat_fast, orig_stat)
@@ -225,7 +225,7 @@ class InternalMantelTests(MantelTestData):
 
         perm_gen = (spearmanr(x.permute(condensed=True), y_flat)[0]
                     for _ in range(num_perms))
-        permuted_stats = np.fromiter(perm_gen, np.float,
+        permuted_stats = np.fromiter(perm_gen, float,
                                      count=num_perms)
 
         self.assertAlmostEqual(orig_stat_fast, orig_stat)

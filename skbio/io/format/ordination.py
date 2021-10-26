@@ -411,7 +411,7 @@ def _write_array_section(fh, header_id, data, has_ids=True,
 
 
 def _format_vector(vector, id_=None):
-    formatted_vector = '\t'.join(np.asarray(vector, dtype=np.str))
+    formatted_vector = '\t'.join(np.asarray(vector, dtype=str))
 
     if id_ is None:
         return "%s\n" % formatted_vector

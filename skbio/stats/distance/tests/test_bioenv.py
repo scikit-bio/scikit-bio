@@ -146,7 +146,7 @@ class BIOENVTests(TestCase):
         # same distances yields *very* similar results. Thus, the discrepancy
         # seems to stem from differences when computing ranks/ties.
         obs = bioenv(self.dm_vegan, self.df_vegan)
-        assert_data_frame_almost_equal(obs, self.exp_results_vegan)
+        assert_data_frame_almost_equal(obs, self.exp_results_vegan, rtol=1e-3)
 
     def test_bioenv_no_distance_matrix(self):
         with self.assertRaises(TypeError):

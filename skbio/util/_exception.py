@@ -9,7 +9,7 @@
 
 class TestingUtilError(Exception):
     """Raised when an exception is needed to test exception handling."""
-    pass
+    __test__ = False  # prevent py-test from collecting it
 
 
 class OverrideError(AssertionError):
