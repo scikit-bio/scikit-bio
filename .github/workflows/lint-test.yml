@@ -54,14 +54,6 @@ jobs:
       - name: Build docs
         shell: bash -l {0}
         run: make -C doc clean html
-      - name: Run coveralls
-        uses: AndreMiras/coveralls-python-action@v20201129
-        with:
-          parallel: true
-          flag-name: Unit Test
-        # this action is currently only supported on Linux
-        if: ${{ matrix.os == 'ubuntu-latest' }}
-
 
   aarch64_install_and_test:
     runs-on: ubuntu-latest
@@ -83,14 +75,3 @@ jobs:
           file: aarch64_py36.Dockerfile
           cache-from: type=gha
           cache-to: type=gha,mode=max
-
-  coveralls_finish:
-    # haven't been able to test this yet, as the full build matrix 
-    # hasn't completed successfully
-    needs: install-and-test
-    runs-on: ubuntu-latest
-    steps:
-    - name: Coveralls Finished
-      uses: AndreMiras/coveralls-python-action@v20201129
-      with:
-        parallel-finished: true
