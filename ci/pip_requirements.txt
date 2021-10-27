@@ -3,7 +3,8 @@ coveralls
 natsort
 lockfile
 CacheControl
-Sphinx <= 3.0
+Sphinx < 3.0
+docutils < 0.15
 sphinx-bootstrap-theme
 check-manifest
 hdmedians
