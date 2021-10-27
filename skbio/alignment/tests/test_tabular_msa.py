@@ -1377,6 +1377,8 @@ class TestLoc(SharedPropertyIndexTests, unittest.TestCase):
                                                                'd']},
                                     index=[('b', 'x', 0)]))
 
+    @unittest.skipIf(tuple(map(int, pd.__version__.split('.'))) < (1, 2, 5),
+                     "Old pandas will return empty frame")
     def test_multiindex_complicated_axis_empty_selection(self):
         a = RNA("UUAG", metadata={0: 0}, positional_metadata={0: [1, 2, 3, 4]})
         b = RNA("UAAG", metadata={1: 0}, positional_metadata={1: [1, 2, 3, 4]})
