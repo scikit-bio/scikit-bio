@@ -12,7 +12,7 @@ import warnings
 import numpy as np
 import pandas as pd
 import scipy.special
-from scipy.stats import kendalltau
+from scipy.stats import kendalltau, pearsonr
 from scipy.stats import PearsonRConstantInputWarning
 from scipy.stats import PearsonRNearConstantInputWarning
 from scipy.stats import SpearmanRConstantInputWarning
@@ -258,7 +258,7 @@ def mantel(x, y, method='pearson', permutations=999, alternative='two-sided',
     """
     special = False  # set to true, if we have a dedicated implementation
     if method == 'pearson':
-        special = True
+        corr_func = pearsonr
     elif method == 'spearman':
         special = True
     elif method == 'kendalltau':
