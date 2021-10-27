@@ -256,7 +256,8 @@ class CompositionTests(TestCase):
 
     def test_clr_inv(self):
         npt.assert_allclose(clr_inv(self.rdata1), self.ortho1)
-        npt.assert_allclose(clr(clr_inv(self.rdata1)), self.rdata1, rtol=1e-4)
+        npt.assert_allclose(clr(clr_inv(self.rdata1)), self.rdata1,
+                            rtol=1e-4, atol=1e-5)
 
         # make sure that inplace modification is not occurring
         clr_inv(self.rdata1)
