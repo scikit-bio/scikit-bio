@@ -182,8 +182,8 @@ class InternalMantelTests(MantelTestData):
         num_perms = 12
 
         np.random.seed(0)
-        orig_stat_fast, permuted_stats_fast = _mantel_stats_pearson(x, y,
-                                                                    num_perms)
+        orig_stat_fast, comp_stat, permuted_stats_fast = \
+            _mantel_stats_pearson(x, y, num_perms)
 
         # compute the traditional way
         np.random.seed(0)
@@ -213,8 +213,8 @@ class InternalMantelTests(MantelTestData):
         num_perms = 12
 
         np.random.seed(0)
-        orig_stat_fast, permuted_stats_fast = _mantel_stats_spearman(x, y,
-                                                                     num_perms)
+        orig_stat_fast, comp_stat, permuted_stats_fast = \
+            _mantel_stats_spearman(x, y, num_perms)
 
         # compute the traditional way
         np.random.seed(0)
