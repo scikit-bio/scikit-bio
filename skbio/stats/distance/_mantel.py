@@ -386,7 +386,7 @@ def _mantel_stats_pearson_flat(x, y_flat, permutations):
     mat_n = x._data.shape[0]
     # note: xmean and normxm do not change with permutations
     permuted_stats = []
-    compared_stat = orig_stat
+    comp_stat = orig_stat
     if not (permutations == 0 or np.isnan(orig_stat)):
         # inline DistanceMatrix.permute, grouping them together
         x_data = x._data
@@ -395,24 +395,19 @@ def _mantel_stats_pearson_flat(x, y_flat, permutations):
 
         # compute all pearsonr permutations at once
         # create first the list of permutations
-        perm_order = np.empty((permutations, mat_n), dtype=int)
-        for row in range(permutations):
+        perm_order = np.empty((permutations + 1, mat_n), dtype=int)
+        # first row/statistic will be comp_stat
+        perm_order[0, :] = np.arange(mat_n)
+        for row in range(1, permutations + 1):
             perm_order[row, :] = np.random.permutation(mat_n)
 
-        permuted_stats = np.empty(permutations, dtype=x_data.dtype)
+        permuted_stats = np.empty(permutations + 1, dtype=x_data.dtype)
         mantel_perm_pearsonr_cy(x_data, perm_order, xmean, normxm,
                                 ym_normalized, permuted_stats)
+        comp_stat = permuted_stats[0]
+        permuted_stats = permuted_stats[1:]
 
-        # Use the same algorithm to calculate the stat to be compared against
-        # TODO: refactor this someday
-        compared_stat = np.empty(1, dtype=x_data.dtype)
-        self_permute = np.arange(mat_n)
-        self_permute.resize((1, mat_n))
-        mantel_perm_pearsonr_cy(x_data, self_permute, xmean, normxm,
-                                ym_normalized, compared_stat)
-        compared_stat = compared_stat[0]
-
-    return orig_stat, compared_stat, permuted_stats
+    return orig_stat, comp_stat, permuted_stats
 
 
 def _mantel_stats_pearson(x, y, permutations):
