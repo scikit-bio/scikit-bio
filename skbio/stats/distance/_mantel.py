@@ -12,7 +12,7 @@ import warnings
 import numpy as np
 import pandas as pd
 import scipy.special
-from scipy.stats import kendalltau, pearsonr
+from scipy.stats import kendalltau
 from scipy.stats import PearsonRConstantInputWarning
 from scipy.stats import PearsonRNearConstantInputWarning
 from scipy.stats import SpearmanRConstantInputWarning
@@ -258,7 +258,7 @@ def mantel(x, y, method='pearson', permutations=999, alternative='two-sided',
     """
     special = False  # set to true, if we have a dedicated implementation
     if method == 'pearson':
-        corr_func = pearsonr
+        special = True
     elif method == 'spearman':
         special = True
     elif method == 'kendalltau':
@@ -281,18 +281,18 @@ def mantel(x, y, method='pearson', permutations=999, alternative='two-sided',
 
     if special:
         if method == 'pearson':
-            orig_stat, permuted_stats = _mantel_stats_pearson(x, y,
-                                                              permutations)
+            orig_stat, comp_stat, permuted_stats = \
+                _mantel_stats_pearson(x, y, permutations)
         elif method == 'spearman':
-            orig_stat, permuted_stats = _mantel_stats_spearman(x, y,
-                                                               permutations)
+            orig_stat, comp_stat, permuted_stats = \
+                _mantel_stats_spearman(x, y, permutations)
         else:
             raise ValueError("Invalid correlation method '%s'." % method)
     else:
         x_flat = x.condensed_form()
         y_flat = y.condensed_form()
 
-        orig_stat = corr_func(x_flat, y_flat)[0]
+        orig_stat = comp_stat = corr_func(x_flat, y_flat)[0]
         del x_flat
 
         permuted_stats = []
@@ -309,11 +309,11 @@ def mantel(x, y, method='pearson', permutations=999, alternative='two-sided',
     else:
         if alternative == 'two-sided':
             count_better = (np.absolute(permuted_stats) >=
-                            np.absolute(orig_stat)).sum()
+                            np.absolute(comp_stat)).sum()
         elif alternative == 'greater':
-            count_better = (permuted_stats >= orig_stat).sum()
+            count_better = (permuted_stats >= comp_stat).sum()
         else:
-            count_better = (permuted_stats <= orig_stat).sum()
+            count_better = (permuted_stats <= comp_stat).sum()
 
         p_value = (count_better + 1) / (permutations + 1)
 
@@ -339,6 +339,11 @@ def _mantel_stats_pearson_flat(x, y_flat, permutations):
     -------
     orig_stat : 1D array_like
         Correlation coefficient of the test.
+    comp_stat : 1D array_like
+        Correlation coefficient to compare against permuted_stats, usually
+        the same as orig_stat, but on certain architectures it will differ.
+        This should be used for any p-value calculation as it will match the
+        values for any "self-permutations" in the permuted_stats.
     permuted_stats : 1D array_like
         Permuted correlation coefficients of the test.
     """
@@ -348,7 +353,7 @@ def _mantel_stats_pearson_flat(x, y_flat, permutations):
     # If an input is constant, the correlation coefficient is not defined.
     if (x_flat == x_flat[0]).all() or (y_flat == y_flat[0]).all():
         warnings.warn(PearsonRConstantInputWarning())
-        return np.nan, []
+        return np.nan, np.nan, []
 
     # inline pearsonr, condensed from scipy.stats.pearsonr
     xmean = x_flat.mean()
@@ -381,6 +386,7 @@ def _mantel_stats_pearson_flat(x, y_flat, permutations):
     mat_n = x._data.shape[0]
     # note: xmean and normxm do not change with permutations
     permuted_stats = []
+    comp_stat = orig_stat
     if not (permutations == 0 or np.isnan(orig_stat)):
         # inline DistanceMatrix.permute, grouping them together
         x_data = x._data
@@ -389,15 +395,19 @@ def _mantel_stats_pearson_flat(x, y_flat, permutations):
 
         # compute all pearsonr permutations at once
         # create first the list of permutations
-        perm_order = np.empty([permutations, mat_n], dtype=int)
-        for row in range(permutations):
+        perm_order = np.empty((permutations + 1, mat_n), dtype=int)
+        # first row/statistic will be comp_stat
+        perm_order[0, :] = np.arange(mat_n)
+        for row in range(1, permutations + 1):
             perm_order[row, :] = np.random.permutation(mat_n)
 
-        permuted_stats = np.empty([permutations], dtype=x_data.dtype)
+        permuted_stats = np.empty(permutations + 1, dtype=x_data.dtype)
         mantel_perm_pearsonr_cy(x_data, perm_order, xmean, normxm,
                                 ym_normalized, permuted_stats)
+        comp_stat = permuted_stats[0]
+        permuted_stats = permuted_stats[1:]
 
-    return orig_stat, permuted_stats
+    return orig_stat, comp_stat, permuted_stats
 
 
 def _mantel_stats_pearson(x, y, permutations):
@@ -417,6 +427,11 @@ def _mantel_stats_pearson(x, y, permutations):
     -------
     orig_stat : 1D array_like
         Correlation coefficient of the test.
+    comp_stat : 1D array_like
+        Correlation coefficient to compare against permuted_stats, usually
+        the same as orig_stat, but on certain architectures it will differ.
+        This should be used for any p-value calculation as it will match the
+        values for any "self-permutations" in the permuted_stats.
     permuted_stats : 1D array_like
         Permuted correlation coefficients of the test.
     """
@@ -442,6 +457,11 @@ def _mantel_stats_spearman(x, y, permutations):
     -------
     orig_stat : 1D array_like
         Correlation coefficient of the test.
+    comp_stat : 1D array_like
+        Correlation coefficient to compare against permuted_stats, usually
+        the same as orig_stat, but on certain architectures it will differ.
+        This should be used for any p-value calculation as it will match the
+        values for any "self-permutations" in the permuted_stats.
     permuted_stats : 1D array_like
         Permuted correlation coefficients of the test.
     """
@@ -452,7 +472,7 @@ def _mantel_stats_spearman(x, y, permutations):
     # If an input is constant, the correlation coefficient is not defined.
     if (x_flat == x_flat[0]).all() or (y_flat == y_flat[0]).all():
         warnings.warn(SpearmanRConstantInputWarning())
-        return np.nan, []
+        return np.nan, np.nan, []
 
     y_rank = scipy.stats.rankdata(y_flat)
     del y_flat
