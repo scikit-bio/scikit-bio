@@ -88,10 +88,15 @@ ext = '.pyx' if USE_CYTHON else '.c'
 
 ssw_extra_compile_args = ['-I.']
 
-if icc or sysconfig.get_config_vars()['CC'] == 'icc':
-    ssw_extra_compile_args.extend(['-qopenmp-simd', '-DSIMDE_ENABLE_OPENMP'])
-elif not (clang or sysconfig.get_config_vars()['CC'] == 'clang'):
-    ssw_extra_compile_args.extend(['-fopenmp-simd', '-DSIMDE_ENABLE_OPENMP'])
+if platform.system() != 'Windows':
+    if icc or sysconfig.get_config_vars()['CC'] == 'icc':
+        ssw_extra_compile_args.extend(['-qopenmp-simd',
+                                       '-DSIMDE_ENABLE_OPENMP'])
+    elif not (clang or sysconfig.get_config_vars()['CC'] == 'clang'):
+        ssw_extra_compile_args.extend(['-fopenmp-simd',
+                                       '-DSIMDE_ENABLE_OPENMP'])
+elif platform.system() == 'Windows':
+    ssw_extra_compile_args.extend(['-openmp:experimental'])
 
 # Users with i686 architectures have reported that adding this flag allows
 # SSW to be compiled. See https://github.com/biocore/scikit-bio/issues/409 and
