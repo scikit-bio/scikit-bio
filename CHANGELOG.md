@@ -39,6 +39,8 @@
 
 * Now buildable on non-x86 platforms due to use of the [SIMD Everywhere](https://github.com/simd-everywhere/simde) library.
 
+* Regenerate Cython wrapper by default to avoid incompatibilities with installed CPython.
+
 ## Version 0.5.6
 
 ### Features
