@@ -45,7 +45,7 @@ Required attributes:
 |version    |string               |The version of the current    |
 |           |                     |Binary DM format              |
 +-----------+---------------------+------------------------------+
-|matrix     |float632 or float64  |A (N, N) dataset containing   |
+|matrix     |float32 or float64   |A (N, N) dataset containing   |
 |           |                     |the values of the             |
 |           |                     |dissimilarity matrix          |
 +-----------+---------------------+------------------------------+
