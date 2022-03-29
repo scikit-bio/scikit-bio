@@ -24,6 +24,7 @@ from skbio.stats.distance import (
     DissimilarityMatrix, randdm)
 from skbio.stats.distance._base import (_preprocess_input,
                                         _run_monte_carlo_stats)
+from skbio.stats.distance._utils import is_symmetric_and_hollow
 from skbio.util import assert_data_frame_almost_equal
 from skbio.util._testing import assert_series_almost_equal
 
@@ -64,6 +65,21 @@ class DissimilarityMatrixTestBase(DissimilarityMatrixTestData):
                                    np.array(self.dm_2x2_data),
                                    np.array(self.dm_2x2_asym_data),
                                    np.array(self.dm_3x3_data)]
+
+    def test_avoid_copy_on_construction(self):
+        # ((data, expect_copy))
+        tests = (([[0, 1], [1, 0]], True),
+                 ([(0, 1), (1, 0)], True),
+                 (((0, 1), (1, 0)), True),
+                 (np.array([[0, 1], [1, 0]], dtype='int'), True),
+                 (np.array([[0, 1], [1, 0]], dtype='float'), False),
+                 (np.array([[0, 1], [1, 0]], dtype=np.float32), False),
+                 (np.array([[0, 1], [1, 0]], dtype=np.float64), False),
+                 (np.array([[0, 1], [1, 0]], dtype='double'), False))
+
+        for data, expect in tests:
+            obj = DissimilarityMatrix(data)
+            self.assertEqual(id(obj.data) != id(data), expect)
 
     def test_within(self):
         exp = pd.DataFrame([['a', 'a', 0.0],
@@ -214,6 +230,8 @@ class DissimilarityMatrixTestBase(DissimilarityMatrixTestData):
         data = [[1, 1], [1, 1]]
         obs = self.matobj(data, ['a', 'b'])
         self.assertTrue(np.array_equal(obs.data, data))
+        data_hollow = skbio.stats.distance._utils.is_hollow(obs.data)
+        self.assertEqual(data_hollow, False)
 
     def test_init_no_ids(self):
         exp = self.matobj(self.dm_3x3_data, ('0', '1', '2'))
@@ -703,6 +721,34 @@ class DissimilarityMatrixTestBase(DissimilarityMatrixTestData):
         with self.assertRaises(DissimilarityMatrixError):
             self.dm_3x3._validate(np.array([[0, 42], [42, 0]]), ['a', 'b'])
 
+    def test_validate_invalid_shape(self):
+        # first check it actually likes good matrices
+        self.dm_3x3._validate_shape(np.array([[0., 42.], [42., 0.]]))
+        # it checks just the shape, not the content
+        self.dm_3x3._validate_shape(np.array([[1., 2.], [3., 4.]]))
+        # empty array
+        with self.assertRaises(DissimilarityMatrixError):
+            self.dm_3x3._validate_shape(np.array([]))
+        # invalid shape
+        with self.assertRaises(DissimilarityMatrixError):
+            self.dm_3x3._validate_shape(np.array([[0., 42.],
+                                                  [42., 0.],
+                                                  [22., 22.]]))
+        with self.assertRaises(DissimilarityMatrixError):
+            self.dm_3x3._validate_shape(np.array([[[0., 42.], [42., 0.]],
+                                                  [[0., 24.], [24., 0.]]]))
+
+    def test_validate_invalid_ids(self):
+        # repeated ids
+        with self.assertRaises(DissimilarityMatrixError):
+            self.dm_3x3._validate_ids(self.dm_3x3.data, ['a', 'a'])
+        # empty ids
+        with self.assertRaises(DissimilarityMatrixError):
+            self.dm_3x3._validate_ids(self.dm_3x3.data, [])
+        # invalid shape
+        with self.assertRaises(DissimilarityMatrixError):
+            self.dm_3x3._validate_ids(self.dm_3x3.data, ['a', 'b', 'c', 'd'])
+
 
 class DistanceMatrixTestBase(DissimilarityMatrixTestData):
     matobj = None
@@ -938,7 +984,7 @@ class DistanceMatrixTestBase(DissimilarityMatrixTestData):
     def test_to_series_1x1(self):
         series = self.dm_1x1.to_series()
 
-        exp = pd.Series([], index=[])
+        exp = pd.Series([], index=[], dtype='float64')
         assert_series_almost_equal(series, exp)
 
     def test_to_series_2x2(self):
@@ -966,6 +1012,55 @@ class DistanceMatrixTestBase(DissimilarityMatrixTestData):
 
         exp = pd.Series([0.123], index=pd.Index([('0', '1')]))
         assert_series_almost_equal(series, exp)
+
+    def test_validate_asym_shape(self):
+        # first check it actually likes good matrices
+        data_good = np.array([[0., 42.], [42., 0.]])
+        data_sym, data_hollow = is_symmetric_and_hollow(data_good)
+        self.assertEqual(data_sym, True)
+        del data_sym
+        self.assertEqual(data_hollow, True)
+        del data_hollow
+        data_sym = skbio.stats.distance._utils.is_symmetric(data_good)
+        self.assertEqual(data_sym, True)
+        del data_sym
+        data_hollow = skbio.stats.distance._utils.is_hollow(data_good)
+        self.assertEqual(data_hollow, True)
+        del data_hollow
+        self.dm_3x3._validate_shape(data_good)
+        del data_good
+
+        # _validate_shap checks just the shape, not the content
+        bad_data = np.array([[1., 2.], [3., 4.]])
+        data_sym, data_hollow = is_symmetric_and_hollow(bad_data)
+        self.assertEqual(data_sym, False)
+        del data_sym
+        self.assertEqual(data_hollow, False)
+        del data_hollow
+        data_sym = skbio.stats.distance._utils.is_symmetric(bad_data)
+        self.assertEqual(data_sym, False)
+        del data_sym
+        data_hollow = skbio.stats.distance._utils.is_hollow(bad_data)
+        self.assertEqual(data_hollow, False)
+        del data_hollow
+        self.dm_3x3._validate_shape(bad_data)
+        del bad_data
+
+        # re-try with partially bad data
+        bad_data = np.array([[0., 2.], [3., 0.]])
+        data_sym, data_hollow = is_symmetric_and_hollow(bad_data)
+        self.assertEqual(data_sym, False)
+        del data_sym
+        self.assertEqual(data_hollow, True)
+        del data_hollow
+        data_sym = skbio.stats.distance._utils.is_symmetric(bad_data)
+        self.assertEqual(data_sym, False)
+        del data_sym
+        data_hollow = skbio.stats.distance._utils.is_hollow(bad_data)
+        self.assertEqual(data_hollow, True)
+        del data_hollow
+        self.dm_3x3._validate_shape(bad_data)
+        del bad_data
 
 
 class RandomDistanceMatrixTests(TestCase):

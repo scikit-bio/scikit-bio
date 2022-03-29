@@ -15,7 +15,8 @@ from unittest import TestCase, main
 from skbio import DistanceMatrix, OrdinationResults
 from skbio.stats.distance import DissimilarityMatrixError
 from skbio.stats.ordination import pcoa, pcoa_biplot
-from skbio.util import get_data_path, assert_ordination_results_equal
+from skbio.util import (get_data_path, assert_ordination_results_equal,
+                        assert_data_frame_almost_equal)
 
 
 class TestPCoA(TestCase):
@@ -101,24 +102,39 @@ class TestPCoA(TestCase):
                                         ignore_directionality=True,
                                         ignore_method_names=True)
 
-        with self.assertRaises(ValueError):
-            dim_too_large = dm1.data.shape[0] + 10
-            pcoa(dm2, method="fsvd", number_of_dimensions=dim_too_large)
-
-        with self.assertRaises(ValueError):
-            pcoa(dm2, method="fsvd", number_of_dimensions=-1)
+        dm4 = DistanceMatrix.read(get_data_path('PCoA_sample_data_3'))
 
         with self.assertRaises(ValueError):
             dim_too_large = dm1.data.shape[0] + 10
-            pcoa(dm2, method="eigh", number_of_dimensions=dim_too_large)
+            pcoa(dm4, method="fsvd", number_of_dimensions=dim_too_large)
 
         with self.assertRaises(ValueError):
-            pcoa(dm2, method="eigh", number_of_dimensions=-1)
+            pcoa(dm4, method="fsvd", number_of_dimensions=-1)
+
+        with self.assertRaises(ValueError):
+            dim_too_large = dm1.data.shape[0] + 10
+            pcoa(dm4, method="eigh", number_of_dimensions=dim_too_large)
+
+        with self.assertRaises(ValueError):
+            pcoa(dm4, method="eigh", number_of_dimensions=-1)
 
         dm_big = DistanceMatrix.read(get_data_path('PCoA_sample_data_12dim'))
         with self.assertWarnsRegex(RuntimeWarning,
                                    r"no value for number_of_dimensions"):
             pcoa(dm_big, method="fsvd", number_of_dimensions=0)
+
+    def test_permutted(self):
+        dm1 = DistanceMatrix.read(get_data_path('PCoA_sample_data_3'))
+        # this should not throw
+        pcoa(dm1, method="fsvd", number_of_dimensions=3,
+             inplace=False)
+
+        # some operations, like permute, will change memory structure
+        # we want to test that this does not break pcoa
+        dm2 = dm1.permute()
+        # we just want to assure it does not throw
+        pcoa(dm2, method="fsvd", number_of_dimensions=3,
+             inplace=False)
 
     def test_extensive(self):
         eigvals = [0.3984635, 0.36405689, 0.28804535, 0.27479983,
@@ -262,7 +278,7 @@ class TestPCoABiplot(TestCase):
         full = pcoa_biplot(self.ordination, self.descriptors).features
 
         # the biplot should be identical regardless of the number of axes used
-        pd.util.testing.assert_almost_equal(subset, full.iloc[:, :2])
+        assert_data_frame_almost_equal(subset, full.iloc[:, :2])
 
     def test_mismatching_samples(self):
         new_index = self.descriptors.index.tolist()

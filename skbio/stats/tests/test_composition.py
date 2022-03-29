@@ -10,7 +10,7 @@ import functools
 from unittest import TestCase, main
 import numpy as np
 import numpy.testing as npt
-import pandas.util.testing as pdt
+import pandas.testing as pdt
 from numpy.random import normal
 import pandas as pd
 import scipy
@@ -256,7 +256,8 @@ class CompositionTests(TestCase):
 
     def test_clr_inv(self):
         npt.assert_allclose(clr_inv(self.rdata1), self.ortho1)
-        npt.assert_allclose(clr(clr_inv(self.rdata1)), self.rdata1)
+        npt.assert_allclose(clr(clr_inv(self.rdata1)), self.rdata1,
+                            rtol=1e-4, atol=1e-5)
 
         # make sure that inplace modification is not occurring
         clr_inv(self.rdata1)
@@ -521,7 +522,7 @@ class AncomTests(TestCase):
                                  normal(10, 1, L),
                                  normal(10, 1, L)))
         self.table2 = np.absolute(self.table2)
-        self.table2 = pd.DataFrame(self.table2.astype(np.int).T)
+        self.table2 = pd.DataFrame(self.table2.astype(int).T)
         self.cats2 = pd.Series([0]*D + [1]*D)
 
         # Real valued data with 2 groupings and no significant difference
@@ -554,7 +555,7 @@ class AncomTests(TestCase):
                                  normal(10, 1, L),
                                  normal(10, 1, L)))
         self.table4 = np.absolute(self.table4)
-        self.table4 = pd.DataFrame(self.table4.astype(np.int).T)
+        self.table4 = pd.DataFrame(self.table4.astype(int).T)
         self.cats4 = pd.Series([0]*D + [1]*D + [2]*D)
 
         # Noncontiguous case
@@ -635,7 +636,7 @@ class AncomTests(TestCase):
                                  normal(10, 10, L),
                                  normal(10, 10, L)))
         self.table9 = np.absolute(self.table9)+1
-        self.table9 = pd.DataFrame(self.table9.astype(np.int).T)
+        self.table9 = pd.DataFrame(self.table9.astype(int).T)
         self.cats9 = pd.Series([0]*D + [1]*D + [2]*D)
 
         # Real valued data with 2 groupings
@@ -669,7 +670,7 @@ class AncomTests(TestCase):
                                   normal(10, 10, L),
                                   normal(10, 10, L)))
         self.table10 = np.absolute(self.table10) + 1
-        self.table10 = pd.DataFrame(self.table10.astype(np.int).T)
+        self.table10 = pd.DataFrame(self.table10.astype(int).T)
         self.cats10 = pd.Series([0]*D + [1]*D)
 
         # zero count

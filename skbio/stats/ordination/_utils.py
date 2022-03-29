@@ -9,6 +9,7 @@
 import numpy as np
 
 from skbio.util._decorator import experimental
+from ._cutils import center_distance_matrix_cy
 
 
 @experimental(as_of="0.4.0")
@@ -217,10 +218,17 @@ def center_distance_matrix(distance_matrix, inplace=False):
         Whether or not to center the given distance matrix in-place, which
         is more efficient in terms of memory and computation.
     """
+    if not distance_matrix.flags.c_contiguous:
+        # center_distance_matrix_cy requires c_contiguous, so make a copy
+        distance_matrix = np.asarray(distance_matrix, order='C')
+
     if inplace:
-        return _f_matrix_inplace(_e_matrix_inplace(distance_matrix))
+        center_distance_matrix_cy(distance_matrix, distance_matrix)
+        return distance_matrix
     else:
-        return f_matrix(e_matrix(distance_matrix))
+        centered = np.empty(distance_matrix.shape, distance_matrix.dtype)
+        center_distance_matrix_cy(distance_matrix, centered)
+        return centered
 
 
 def _e_matrix_inplace(distance_matrix):
@@ -237,7 +245,7 @@ def _e_matrix_inplace(distance_matrix):
     distance_matrix : 2D array_like
         Distance matrix.
     """
-    distance_matrix = distance_matrix.astype(np.float)
+    distance_matrix = distance_matrix.astype(float)
 
     for i in np.arange(len(distance_matrix)):
         distance_matrix[i] = (distance_matrix[i] * distance_matrix[i]) / -2
@@ -259,7 +267,7 @@ def _f_matrix_inplace(e_matrix):
     e_matrix : 2D array_like
         A matrix representing the "E matrix" as described above.
     """
-    e_matrix = e_matrix.astype(np.float)
+    e_matrix = e_matrix.astype(float)
 
     row_means = np.zeros(len(e_matrix), dtype=float)
     col_means = np.zeros(len(e_matrix), dtype=float)

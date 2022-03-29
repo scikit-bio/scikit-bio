@@ -12,7 +12,7 @@ from unittest import TestCase, main
 import numpy as np
 import numpy.testing as npt
 import pandas as pd
-from pandas.util.testing import assert_series_equal
+from pandas.testing import assert_series_equal
 from scipy.stats import f_oneway
 import hdmedians as hd
 
@@ -189,6 +189,35 @@ class testPERMDISP(TestCase):
 
         np.random.seed(0)
         obs = permdisp(self.unifrac_dm, self.unif_grouping, test='median',
+                       permutations=99)
+
+        self.assert_series_equal(obs, exp)
+
+        np.random.seed(0)
+        po = pcoa(self.unifrac_dm)
+
+        obs2 = permdisp(po, self.unif_grouping, test='median',
+                        permutations=99)
+
+        self.assert_series_equal(obs2, exp)
+
+    def test_median_fsvd(self):
+
+        exp = pd.Series(index=self.exp_index,
+                        data=['PERMDISP', 'F-value', 9, 2, 0.04078077215673714,
+                              0.8, 99],
+                        name='PERMDISP results')
+
+        np.random.seed(0)
+        obs = permdisp(self.unifrac_dm, self.unif_grouping, test='median',
+                       permutations=99,
+                       method='fsvd', number_of_dimensions=3)
+
+        self.assert_series_equal(obs, exp)
+
+        np.random.seed(0)
+        po = pcoa(self.unifrac_dm, method='fsvd', number_of_dimensions=3)
+        obs = permdisp(po, self.unif_grouping, test='median',
                        permutations=99)
 
         self.assert_series_equal(obs, exp)

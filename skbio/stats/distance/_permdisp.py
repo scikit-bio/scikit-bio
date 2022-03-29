@@ -15,15 +15,16 @@ from scipy.spatial.distance import cdist
 
 import hdmedians as hd
 
-from ._base import (_preprocess_input, _run_monte_carlo_stats, _build_results)
+from ._base import (_preprocess_input_sng, _run_monte_carlo_stats,
+                    _build_results, DistanceMatrix)
 
-from skbio.stats.ordination import pcoa
+from skbio.stats.ordination import pcoa, OrdinationResults
 from skbio.util._decorator import experimental
 
 
 @experimental(as_of="0.5.2")
 def permdisp(distance_matrix, grouping, column=None, test='median',
-             permutations=999):
+             permutations=999, method="eigh", number_of_dimensions=10):
     """Test for Homogeneity of Multivariate Groups Disperisons using Marti
     Anderson's PERMDISP2 procedure.
 
@@ -35,9 +36,10 @@ def permdisp(distance_matrix, grouping, column=None, test='median',
 
     Parameters
     ----------
-    distance_matrix : DistanceMatrix
+    distance_matrix : DistanceMatrix or OrdinationResults
         Distance matrix containing distances between objects (e.g., distances
-        between samples of microbial communities).
+        between samples of microbial communities) or
+        result of pcoa on such a matrix.
     grouping : 1-D array_like or pandas.DataFrame
         Vector indicating the assignment of objects to groups. For example,
         these could be strings or integers denoting which group an object
@@ -62,6 +64,18 @@ def permdisp(distance_matrix, grouping, column=None, test='median',
         significance. Must be greater than or equal to zero. If zero,
         statistical significance calculations will be skipped and the p-value
         will be ``np.nan``.
+    method : str, optional
+        Eigendecomposition method to use in performing PCoA.
+        By default, uses SciPy's `eigh`, which computes exact
+        eigenvectors and eigenvalues for all dimensions. The alternate
+        method, `fsvd`, uses faster heuristic eigendecomposition but loses
+        accuracy. The magnitude of accuracy lost is dependent on dataset.
+        Note that using `fsvd` is still considered experimental and
+        should be used with care.
+        Not used if distance_matrix is a OrdinationResults object.
+    number_of_dimensions : int, optional
+        Dimensions to reduce the distance matrix to if using the `fsvd` method.
+        Not used if the `eigh` method is being selected.
 
     Returns
     -------
@@ -76,7 +90,8 @@ def permdisp(distance_matrix, grouping, column=None, test='median',
         type np.float32 or np.float64, the spatial median function will fail
         and the centroid test should be used instead
     ValueError
-        If the test is not centroid or median.
+        If the test is not centroid or median,
+        or if method is not eigh or fsvd
     TypeError
         If the distance matrix is not an instance of a
         ``skbio.DistanceMatrix``.
@@ -139,8 +154,8 @@ def permdisp(distance_matrix, grouping, column=None, test='median',
     test statistic name        F-value
     sample size                      6
     number of groups                 2
-    test statistic             1.03296
-    p-value                       ...
+    test statistic     ... 1.03...
+    p-value            ...
     number of permutations          99
     Name: PERMDISP results, dtype: object
 
@@ -155,7 +170,7 @@ def permdisp(distance_matrix, grouping, column=None, test='median',
     test statistic name        F-value
     sample size                      6
     number of groups                 2
-    test statistic             1.03296
+    test statistic      ... 1.03...
     p-value                        NaN
     number of permutations           0
     Name: PERMDISP results, dtype: object
@@ -175,8 +190,8 @@ def permdisp(distance_matrix, grouping, column=None, test='median',
     test statistic name        F-value
     sample size                      6
     number of groups                 2
-    test statistic             3.67082
-    p-value                   0.428571
+    test statistic     ... 3.67...
+    p-value            ... 0.42...
     number of permutations           6
     Name: PERMDISP results, dtype: object
 
@@ -194,8 +209,8 @@ def permdisp(distance_matrix, grouping, column=None, test='median',
     test statistic name        F-value
     sample size                      6
     number of groups                 2
-    test statistic             3.67082
-    p-value                   0.428571
+    test statistic      ... 3.67...
+    p-value             ... 0.42...
     number of permutations           6
     Name: PERMDISP results, dtype: object
 
@@ -222,11 +237,31 @@ def permdisp(distance_matrix, grouping, column=None, test='median',
     if test not in ['centroid', 'median']:
         raise ValueError('Test must be centroid or median')
 
-    ordination = pcoa(distance_matrix)
+    if isinstance(distance_matrix, OrdinationResults):
+        ordination = distance_matrix
+        ids = ordination.samples.axes[0].to_list()
+        sample_size = len(ids)
+        distance_matrix = None  # not used anymore, avoid using by mistake
+    elif isinstance(distance_matrix, DistanceMatrix):
+        if method == "eigh":
+            # eigh does not natively support specifying number_of_dimensions
+            # and pcoa expects it to be 0
+            number_of_dimensions = 0
+        elif method != "fsvd":
+            raise ValueError('Method must be eigh or fsvd')
+
+        ids = distance_matrix.ids
+        sample_size = distance_matrix.shape[0]
+
+        ordination = pcoa(distance_matrix, method=method,
+                          number_of_dimensions=number_of_dimensions)
+    else:
+        raise TypeError("Input must be a DistanceMatrix or OrdinationResults.")
+
     samples = ordination.samples
 
-    sample_size, num_groups, grouping, tri_idxs, distances = _preprocess_input(
-        distance_matrix, grouping, column)
+    num_groups, grouping = _preprocess_input_sng(
+        ids, sample_size, grouping, column)
 
     test_stat_function = partial(_compute_groups, samples, test)
 
@@ -248,7 +283,8 @@ def _compute_groups(samples, test_type, grouping):
         centroids = samples.groupby('grouping').apply(_config_med)
 
     for label, df in samples.groupby('grouping'):
-        groups.append(cdist(df.values[:, :-1], [centroids.loc[label].values],
+        groups.append(cdist(df.values[:, :-1].astype('float64'),
+                            [centroids.loc[label].values],
                             metric='euclidean'))
 
     stat, _ = f_oneway(*groups)

@@ -781,7 +781,7 @@ class TabularMSA(MetadataMixin, PositionalMetadataMixin, SkbioObject):
         if minter is not None and index is not None:
             raise ValueError(
                 "Cannot use both `minter` and `index` at the same time.")
-        self._seqs = pd.Series([])
+        self._seqs = pd.Series([], dtype=object)
         self.extend(sequences, minter=minter, index=index,
                     reset_index=minter is None and index is None)
 
@@ -1172,8 +1172,8 @@ class TabularMSA(MetadataMixin, PositionalMetadataMixin, SkbioObject):
             return self._constructor_(new_seqs, positional_metadata=None)
         return self._constructor_(new_seqs)
 
-    def _get_sequence_loc_(self, x):
-        new_seqs = self._seqs.loc[x]
+    def _get_sequence_loc_(self, ids):
+        new_seqs = self._seqs.loc[ids]
         if type(new_seqs) is self.dtype:
             return new_seqs
         else:
@@ -1186,17 +1186,17 @@ class TabularMSA(MetadataMixin, PositionalMetadataMixin, SkbioObject):
                 raise AssertionError(
                     "Something went wrong with the index %r provided to"
                     " `_get_sequence_loc_`, please report this stack trace to"
-                    "\nhttps://github.com/biocore/scikit-bio/issues" % x)
+                    "\nhttps://github.com/biocore/scikit-bio/issues" % ids)
 
-    def _slice_sequences_loc_(self, x):
-        new_seqs = self._seqs.loc[x]
+    def _slice_sequences_loc_(self, ids):
+        new_seqs = self._seqs.loc[ids]
         try:
             # TODO: change for #1198
             if len(new_seqs) == 0:
                 return self._constructor_(new_seqs, positional_metadata=None)
             return self._constructor_(new_seqs)
         except TypeError:  # NaN hit the constructor, key was bad... probably
-            raise KeyError("Part of `%r` was not in the index.")
+            raise KeyError("Part of `%r` was not in the index." % ids)
 
     def _get_position_(self, i, ignore_metadata=False):
         if ignore_metadata:
@@ -1983,12 +1983,13 @@ class TabularMSA(MetadataMixin, PositionalMetadataMixin, SkbioObject):
                                   step=1)
 
         if len(self):
-            self._seqs = self._seqs.append(pd.Series(sequences, index=index))
+            self._seqs = self._seqs.append(pd.Series(sequences, index=index,
+                                                     dtype=object))
         else:
             # Not using Series.append to avoid turning a RangeIndex supplied
             # via `index` parameter into an Int64Index (this happens in pandas
             # 0.18.0).
-            self._seqs = pd.Series(sequences, index=index)
+            self._seqs = pd.Series(sequences, index=index, dtype=object)
 
             # When extending a TabularMSA without sequences, the number of
             # positions in the TabularMSA may change from zero to non-zero. If

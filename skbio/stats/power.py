@@ -486,8 +486,8 @@ def subsample_paired_power(test, meta, cat, control_cats, order=None,
     the cells.
 
     >>> treatment_stat = [g for g in data.groupby('TREATMENT').groups.values()]
-    >>> f(treatment_stat)
-    0.0019386336266250209
+    >>> round(f(treatment_stat), 17)
+    0.00193863362662502
 
     Now, let's pick the control categories. It seems reasonable to assume there
     may be an effect of cell line on the treatment outcome, which may be

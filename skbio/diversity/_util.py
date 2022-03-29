@@ -6,7 +6,7 @@
 # The full license is in the file COPYING.txt, distributed with this software.
 # ----------------------------------------------------------------------------
 
-import collections
+import collections.abc
 
 import numpy as np
 import pandas as pd
@@ -22,7 +22,10 @@ def _validate_counts_vector(counts, suppress_cast=False):
 
     """
     counts = np.asarray(counts)
-    if not np.all(np.isreal(counts)):
+    try:
+        if not np.all(np.isreal(counts)):
+            raise Exception
+    except Exception:
         raise ValueError("Counts vector must contain real-valued entries.")
     if counts.ndim != 1:
         raise ValueError("Only 1-D vectors are supported.")
@@ -47,7 +50,8 @@ def _validate_counts_matrix(counts, ids=None, suppress_cast=False):
         return np.asarray(counts)
     else:
 
-        if len(counts) == 0 or not isinstance(counts[0], collections.Iterable):
+        if len(counts) == 0 or not isinstance(counts[0],
+                                              collections.abc.Iterable):
             counts = [counts]
         counts = np.asarray(counts)
         if counts.ndim > 2:
@@ -104,7 +108,8 @@ def _validate_otu_ids_and_tree(counts, otu_ids, tree):
     set_tip_names = set(tip_names)
     if len(tip_names) != len(set_tip_names):
         raise DuplicateNodeError("All tip names must be unique.")
-    if np.array([x is None for x in branch_lengths]).any():
+
+    if np.array([branch is None for branch in branch_lengths]).any():
         raise ValueError("All non-root nodes in ``tree`` must have a branch "
                          "length.")
     missing_tip_names = set_otu_ids - set_tip_names

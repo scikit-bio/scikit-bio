@@ -25,7 +25,7 @@ from skbio.util._decorator import (stable, experimental, classonlymethod,
 
 
 class Sequence(MetadataMixin, PositionalMetadataMixin, IntervalMetadataMixin,
-               collections.Sequence, SkbioObject):
+               collections.abc.Sequence, SkbioObject):
     """Store generic sequence data and optional associated metadata.
 
     ``Sequence`` objects do not enforce an alphabet or grammar and are thus the
@@ -424,7 +424,7 @@ fuzzy=[(True, False)], metadata={'gene': 'foo'})
 
     @property
     def _string(self):
-        return self._bytes.tostring()
+        return self._bytes.tobytes()
 
     @classonlymethod
     @experimental(as_of="0.4.1")
@@ -1305,7 +1305,7 @@ fuzzy=[(True, False)], metadata={'gene': 'foo'})
         index = self._munge_to_index_array(lowercase)
         outbytes = self._bytes.copy()
         outbytes[index] ^= self._ascii_invert_case_bit_offset
-        return str(outbytes.tostring().decode('ascii'))
+        return str(outbytes.tobytes().decode('ascii'))
 
     @stable(as_of="0.4.0")
     def count(self, subsequence, start=None, end=None):
@@ -1812,7 +1812,7 @@ fuzzy=[(True, False)], metadata={'gene': 'foo'})
             # Downcast from int64 to uint8 then convert to str. This is safe
             # because we are guaranteed to have indices in the range 0 to 255
             # inclusive.
-            chars = indices.astype(np.uint8).tostring().decode('ascii')
+            chars = indices.astype(np.uint8).tobytes().decode('ascii')
 
         obs_counts = freqs[indices]
         if relative:
@@ -2102,7 +2102,7 @@ fuzzy=[(True, False)], metadata={'gene': 'foo'})
         """
         if isinstance(sliceable, str):
             if sliceable in self.positional_metadata:
-                if self.positional_metadata[sliceable].dtype == np.bool:
+                if self.positional_metadata[sliceable].dtype == bool:
                     sliceable = self.positional_metadata[sliceable]
                 else:
                     raise TypeError("Column '%s' in positional metadata does "
@@ -2121,7 +2121,7 @@ fuzzy=[(True, False)], metadata={'gene': 'foo'})
                 if isinstance(s, (bool, np.bool_)):
                     bool_mode = True
                 elif isinstance(s, (slice, int, np.signedinteger)) or (
-                        hasattr(s, 'dtype') and s.dtype != np.bool):
+                        hasattr(s, 'dtype') and s.dtype != bool):
                     int_mode = True
                 else:
                     raise TypeError("Invalid type in iterable: %s, must be one"
@@ -2132,7 +2132,7 @@ fuzzy=[(True, False)], metadata={'gene': 'foo'})
                                 " int.")
             sliceable = np.r_[sliceable]
 
-        if sliceable.dtype == np.bool:
+        if sliceable.dtype == bool:
             if sliceable.size != len(self):
                 raise ValueError("Boolean array (%d) does not match length of"
                                  " sequence (%d)."

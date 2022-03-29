@@ -16,7 +16,9 @@
                         '__repr__',
                         '__setattr__',
                         '__sizeof__',
-                        '__subclasshook__'] and item.startswith('__')) %}
+                        '__subclasshook__',
+                        '__init_subclass__',
+                        '__class_getitem__'] and item.startswith('__')) %}
       {{ built_in_methods.append(item) or '' }}
    {% endif %}
 {% endfor %}

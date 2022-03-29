@@ -7,7 +7,7 @@
 # ----------------------------------------------------------------------------
 
 from abc import ABCMeta, abstractmethod
-import collections
+import collections.abc
 
 import numpy as np
 import pandas as pd
@@ -160,7 +160,7 @@ class TabularMSALoc(_Indexing):
         complete_key = False
         partial_key = False
         duplicated_key = False
-        if not isinstance(indexable, collections.Hashable):
+        if not isinstance(indexable, collections.abc.Hashable):
             return False
         if axis == 0 and self._has_fancy_index():
             try:

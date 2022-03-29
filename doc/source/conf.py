@@ -69,16 +69,13 @@ class NewAuto(autosummary.Autosummary):
                 return specials[display_name], '', summary, real_name
             return display_name, sig, summary, real_name
 
-        skip = ['__init_subclass__']
 
         items = []
         for item in super(NewAuto, self).get_items(names):
-            if item[0] not in skip:
-                temp_item = fix_item(*item)
-                # Drop slot_wrappers (see above)
-                if temp_item is not None:
-                    items.append(temp_item)
-
+            temp_item = fix_item(*item)
+            # Drop slot_wrappers (see above)
+            if temp_item is not None:
+                items.append(temp_item)
         return items
 
 autosummary.Autosummary = NewAuto

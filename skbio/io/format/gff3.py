@@ -214,7 +214,7 @@ Specifications/blob/master/gff3.md
 # ----------------------------------------------------------------------------
 
 import re
-from collections import Iterable
+from collections.abc import Iterable
 
 from skbio.sequence import DNA, Sequence
 from skbio.io import create_format, GFF3FormatError

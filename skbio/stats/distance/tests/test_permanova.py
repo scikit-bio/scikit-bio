@@ -12,7 +12,7 @@ from unittest import TestCase, main
 
 import numpy as np
 import pandas as pd
-from pandas.util.testing import assert_series_equal
+from pandas.testing import assert_series_equal
 
 from skbio import DistanceMatrix
 from skbio.stats.distance import permanova
