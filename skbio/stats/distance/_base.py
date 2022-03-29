@@ -21,6 +21,9 @@ from skbio.util import find_duplicates
 from skbio.util._decorator import experimental, classonlymethod
 from skbio.util._misc import resolve_key
 
+from ._utils import is_symmetric_and_hollow
+from ._utils import distmat_reorder, distmat_reorder_condensed
+
 
 class DissimilarityMatrixError(Exception):
     """General error for dissimilarity matrix validation failures."""
@@ -69,6 +72,9 @@ class DissimilarityMatrix(SkbioObject):
         rows/cols in `data`. If ``None`` (the default), IDs will be
         monotonically-increasing integers cast as strings, with numbering
         starting from zero, e.g., ``('0', '1', '2', '3', ...)``.
+    validate : bool, optional
+        If `validate` is ``True`` (the default) and data is not a
+        DissimilarityMatrix object, the input data will be validated.
 
     See Also
     --------
@@ -92,8 +98,21 @@ class DissimilarityMatrix(SkbioObject):
     _matrix_element_name = 'dissimilarity'
 
     @experimental(as_of="0.4.0")
-    def __init__(self, data, ids=None):
+    def __init__(self, data, ids=None, validate=True):
+        validate_full = validate
+        validate_shape = False
+        validate_ids = False
+
         if isinstance(data, DissimilarityMatrix):
+            if isinstance(data, self.__class__):
+                # Never validate when copying from an object
+                # of the same type
+                # We should be able to assume it is already
+                # in a good state.
+                validate_full = False
+                validate_shape = False
+                # but do validate ids, if redefining them
+                validate_ids = False if ids is None else True
             ids = data.ids if ids is None else ids
             data = data.data
 
@@ -119,12 +138,28 @@ class DissimilarityMatrix(SkbioObject):
             data = np.asarray(data, dtype='float')
 
         if data.ndim == 1:
+            # We can assume squareform will return a symmetric square matrix
+            # so no need for full validation.
+            # Still do basic checks (e.g. zero length)
+            # and id validation
             data = squareform(data, force='tomatrix', checks=False)
+            validate_full = False
+            validate_shape = True
+            validate_ids = True
+
         if ids is None:
             ids = (str(i) for i in range(data.shape[0]))
+            # I just created the ids, so no need to re-validate them
+            validate_ids = False
         ids = tuple(ids)
 
-        self._validate(data, ids)
+        if validate_full:
+            self._validate(data, ids)
+        else:
+            if validate_shape:
+                self._validate_shape(data)
+            if validate_ids:
+                self._validate_ids(data, ids)
 
         self._data = data
         self._ids = ids
@@ -214,7 +249,7 @@ class DissimilarityMatrix(SkbioObject):
     @ids.setter
     def ids(self, ids_):
         ids_ = tuple(ids_)
-        self._validate(self.data, ids_)
+        self._validate_ids(self.data, ids_)
         self._ids = ids_
         self._id_index = self._index_list(self._ids)
 
@@ -276,7 +311,10 @@ class DissimilarityMatrix(SkbioObject):
             `self`.
 
         """
-        return self.__class__(self.data.T.copy(), deepcopy(self.ids))
+        # Note: Skip validation, since we assume self was already validated
+        return self.__class__(self.data.T.copy(),
+                              deepcopy(self.ids),
+                              validate=False)
 
     @experimental(as_of="0.4.0")
     def index(self, lookup_id):
@@ -342,7 +380,10 @@ class DissimilarityMatrix(SkbioObject):
         """
         # We deepcopy IDs in case the tuple contains mutable objects at some
         # point in the future.
-        return self.__class__(self.data.copy(), deepcopy(self.ids))
+        # Note: Skip validation, since we assume self was already validated
+        return self.__class__(self.data.copy(),
+                              deepcopy(self.ids),
+                              validate=False)
 
     @experimental(as_of="0.4.0")
     def filter(self, ids, strict=True):
@@ -369,6 +410,9 @@ class DissimilarityMatrix(SkbioObject):
         MissingIDError
             If an ID in `ids` is not in the object's list of IDs.
         """
+        if tuple(self._ids) == tuple(ids):
+            return self.__class__(self._data, self._ids)
+
         if strict:
             idxs = [self.index(id_) for id_ in ids]
         else:
@@ -384,8 +428,11 @@ class DissimilarityMatrix(SkbioObject):
                     pass
             ids = found_ids
 
-        filtered_data = self._data[idxs][:, idxs]
-        return self.__class__(filtered_data, ids)
+        # Note: Skip validation, since we assume self was already validated
+        # But ids are new, so validate them explicitly
+        filtered_data = distmat_reorder(self._data, idxs)
+        self._validate_ids(filtered_data, ids)
+        return self.__class__(filtered_data, ids, validate=False)
 
     def _stable_order(self, ids):
         """Obtain a stable ID order with respect to self
@@ -568,8 +615,8 @@ class DissimilarityMatrix(SkbioObject):
             subset = self._data[i_idx, j_indices]
             values.append(subset)
 
-        i = pd.Series(i, name='i')
-        j = pd.Series(j, name='j')
+        i = pd.Series(i, name='i', dtype=str)
+        j = pd.Series(j, name='j', dtype=str)
         values = pd.Series(np.hstack(values), name='value')
 
         return pd.concat([i, j, values], axis=1)
@@ -853,15 +900,43 @@ class DissimilarityMatrix(SkbioObject):
         else:
             return self.data.__getitem__(index)
 
-    def _validate(self, data, ids):
-        """Validate the data array and IDs.
+    def _validate_ids(self, data, ids):
+        """Validate the IDs.
 
-        Checks that the data is at least 1x1 in size, 2D, square, hollow, and
-        contains only floats. Also checks that IDs are unique and that the
+        Checks that IDs are unique and that the
         number of IDs matches the number of rows/cols in the data array.
 
         Subclasses can override this method to perform different/more specific
-        validation (e.g., see `DistanceMatrix`).
+        validation.
+
+        Notes
+        -----
+        Accepts arguments instead of inspecting instance attributes to avoid
+        creating an invalid dissimilarity matrix before raising an error.
+        Otherwise, the invalid dissimilarity matrix could be used after the
+        exception is caught and handled.
+
+        """
+        duplicates = find_duplicates(ids)
+        if duplicates:
+            formatted_duplicates = ', '.join(repr(e) for e in duplicates)
+            raise DissimilarityMatrixError("IDs must be unique. Found the "
+                                           "following duplicate IDs: %s" %
+                                           formatted_duplicates)
+        if 0 == len(ids):
+            raise DissimilarityMatrixError("IDs must be at least 1 in "
+                                           "size.")
+        if len(ids) != data.shape[0]:
+            raise DissimilarityMatrixError("The number of IDs (%d) must match "
+                                           "the number of rows/columns in the "
+                                           "data (%d)." %
+                                           (len(ids), data.shape[0]))
+
+    def _validate_shape(self, data):
+        """Validate the data array shape.
+
+        Checks that the data is at least 1x1 in size, 2D, square, and
+        contains only floats.
 
         Notes
         -----
@@ -884,17 +959,27 @@ class DissimilarityMatrix(SkbioObject):
         if data.dtype not in (np.float32, np.float64):
             raise DissimilarityMatrixError("Data must contain only floating "
                                            "point values.")
-        duplicates = find_duplicates(ids)
-        if duplicates:
-            formatted_duplicates = ', '.join(repr(e) for e in duplicates)
-            raise DissimilarityMatrixError("IDs must be unique. Found the "
-                                           "following duplicate IDs: %s" %
-                                           formatted_duplicates)
-        if len(ids) != data.shape[0]:
-            raise DissimilarityMatrixError("The number of IDs (%d) must match "
-                                           "the number of rows/columns in the "
-                                           "data (%d)." %
-                                           (len(ids), data.shape[0]))
+
+    def _validate(self, data, ids):
+        """Validate the data array and IDs.
+
+        Checks that the data is at least 1x1 in size, 2D, square, and
+        contains only floats. Also checks that IDs are unique and that the
+        number of IDs matches the number of rows/cols in the data array.
+
+        Subclasses can override this method to perform different/more specific
+        validation (e.g., see `DistanceMatrix`).
+
+        Notes
+        -----
+        Accepts arguments instead of inspecting instance attributes to avoid
+        creating an invalid dissimilarity matrix before raising an error.
+        Otherwise, the invalid dissimilarity matrix could be used after the
+        exception is caught and handled.
+
+        """
+        self._validate_shape(data)
+        self._validate_ids(data, ids)
 
     def _index_list(self, list_):
         return {id_: idx for idx, id_ in enumerate(list_)}
@@ -1060,12 +1145,14 @@ class DistanceMatrix(DissimilarityMatrix):
 
         """
         order = np.random.permutation(self.shape[0])
-        permuted = self._data[order][:, order]
 
         if condensed:
-            return squareform(permuted, force='tovector', checks=False)
+            permuted_condensed = distmat_reorder_condensed(self._data, order)
+            return permuted_condensed
         else:
-            return self.__class__(permuted, self.ids)
+            # Note: Skip validation, since we assume self was already validated
+            permuted = distmat_reorder(self._data, order)
+            return self.__class__(permuted, self.ids, validate=False)
 
     def _validate(self, data, ids):
         """Validate the data array and IDs.
@@ -1076,11 +1163,13 @@ class DistanceMatrix(DissimilarityMatrix):
         """
         super(DistanceMatrix, self)._validate(data, ids)
 
-        if (data.T != data).any():
+        data_sym, data_hol = is_symmetric_and_hollow(data)
+
+        if not data_sym:
             raise DistanceMatrixError(
                 "Data must be symmetric and cannot contain NaNs.")
 
-        if np.trace(data) != 0:
+        if not data_hol:
             raise DistanceMatrixError("Data must be hollow (i.e., the diagonal"
                                       " can only contain zeros).")
 
@@ -1193,7 +1282,7 @@ def randdm(num_objects, ids=None, constructor=None, random_fn=None):
 
 # helper functions for anosim and permanova
 
-def _preprocess_input(distance_matrix, grouping, column):
+def _preprocess_input_sng(ids, sample_size, grouping, column):
     """Compute intermediate results not affected by permutations.
 
     These intermediate results can be computed a single time for efficiency,
@@ -1204,20 +1293,16 @@ def _preprocess_input(distance_matrix, grouping, column):
     into grouping vector).
 
     """
-    if not isinstance(distance_matrix, DistanceMatrix):
-        raise TypeError("Input must be a DistanceMatrix.")
-
     if isinstance(grouping, pd.DataFrame):
         if column is None:
             raise ValueError(
                 "Must provide a column name if supplying a DataFrame.")
         else:
-            grouping = _df_to_vector(distance_matrix, grouping, column)
+            grouping = _df_to_vector(ids, grouping, column)
     elif column is not None:
         raise ValueError(
             "Must provide a DataFrame if supplying a column name.")
 
-    sample_size = distance_matrix.shape[0]
     if len(grouping) != sample_size:
         raise ValueError(
             "Grouping vector size must match the number of IDs in the "
@@ -1241,19 +1326,40 @@ def _preprocess_input(distance_matrix, grouping, column):
             "objects (e.g., there are no 'between' distances because there is "
             "only a single group).")
 
+    return num_groups, grouping
+
+
+def _preprocess_input(distance_matrix, grouping, column):
+    """Compute intermediate results not affected by permutations.
+
+    These intermediate results can be computed a single time for efficiency,
+    regardless of grouping vector permutations (i.e., when calculating the
+    p-value). These intermediate results are used by both ANOSIM and PERMANOVA.
+
+    Also validates and normalizes input (e.g., converting ``DataFrame`` column
+    into grouping vector).
+
+    """
+    if not isinstance(distance_matrix, DistanceMatrix):
+        raise TypeError("Input must be a DistanceMatrix.")
+    sample_size = distance_matrix.shape[0]
+
+    num_groups, grouping = _preprocess_input_sng(distance_matrix.ids,
+                                                 sample_size, grouping, column)
+
     tri_idxs = np.triu_indices(sample_size, k=1)
     distances = distance_matrix.condensed_form()
 
     return sample_size, num_groups, grouping, tri_idxs, distances
 
 
-def _df_to_vector(distance_matrix, df, column):
+def _df_to_vector(ids, df, column):
     """Return a grouping vector from a ``DataFrame`` column.
 
     Parameters
     ----------
-    distance_marix : DistanceMatrix
-        Distance matrix whose IDs will be mapped to group labels.
+    ids : liat
+        IDs that will be mapped to group labels.
     df : pandas.DataFrame
         ``DataFrame`` (indexed by distance matrix ID).
     column : str
@@ -1263,7 +1369,7 @@ def _df_to_vector(distance_matrix, df, column):
     -------
     list
         Grouping vector (vector of labels) based on the IDs in
-        `distance_matrix`. Each ID's label is looked up in the ``DataFrame``
+        `ids`. Each ID's label is looked up in the ``DataFrame``
         under the column specified by `column`.
 
     Raises
@@ -1276,7 +1382,7 @@ def _df_to_vector(distance_matrix, df, column):
     if column not in df:
         raise ValueError("Column '%s' not in DataFrame." % column)
 
-    grouping = df.reindex(distance_matrix.ids, axis=0).loc[:, column]
+    grouping = df.reindex(ids, axis=0).loc[:, column]
     if grouping.isnull().any():
         raise ValueError(
             "One or more IDs in the distance matrix are not in the data "

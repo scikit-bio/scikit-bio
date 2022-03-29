@@ -793,7 +793,7 @@ _traceback_encoding = {'match': 1, 'vertical-gap': 2, 'horizontal-gap': 3,
 def _init_matrices_sw(aln1, aln2, gap_open_penalty, gap_extend_penalty):
     shape = (aln2.shape.position+1, aln1.shape.position+1)
     score_matrix = np.zeros(shape)
-    traceback_matrix = np.zeros(shape, dtype=np.int)
+    traceback_matrix = np.zeros(shape, dtype=int)
     traceback_matrix += _traceback_encoding['uninitialized']
     traceback_matrix[0, :] = _traceback_encoding['alignment-end']
     traceback_matrix[:, 0] = _traceback_encoding['alignment-end']
@@ -803,7 +803,7 @@ def _init_matrices_sw(aln1, aln2, gap_open_penalty, gap_extend_penalty):
 def _init_matrices_nw(aln1, aln2, gap_open_penalty, gap_extend_penalty):
     shape = (aln2.shape.position+1, aln1.shape.position+1)
     score_matrix = np.zeros(shape)
-    traceback_matrix = np.zeros(shape, dtype=np.int)
+    traceback_matrix = np.zeros(shape, dtype=int)
     traceback_matrix += _traceback_encoding['uninitialized']
     traceback_matrix[0, 0] = _traceback_encoding['alignment-end']
 
@@ -826,7 +826,7 @@ def _init_matrices_nw_no_terminal_gap_penalty(
         aln1, aln2, gap_open_penalty, gap_extend_penalty):
     shape = (aln2.shape.position+1, aln1.shape.position+1)
     score_matrix = np.zeros(shape)
-    traceback_matrix = np.zeros(shape, dtype=np.int)
+    traceback_matrix = np.zeros(shape, dtype=int)
     traceback_matrix += _traceback_encoding['uninitialized']
     traceback_matrix[0, 0] = _traceback_encoding['alignment-end']
 

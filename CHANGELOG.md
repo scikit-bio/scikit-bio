@@ -5,6 +5,8 @@
 ### Features
 
 * Added support for `np.float32` with `DissimilarityMatrix` objects.
+* Added support for method and number_of_dimensions to permdisp reducing the runtime by 100x at 4000 samples, [issue #1769](https://github.com/biocore/scikit-bio/pull/1769).
+* OrdinationResults object is now accepted as input for permdisp.
 
 ### Backward-incompatible changes [stable]
 
@@ -12,7 +14,14 @@
 
 ### Performance enhancements
 
-* Avoid an implicit data copy on construction of `DissimilarityMatrix` objects. 
+* Avoid an implicit data copy on construction of `DissimilarityMatrix` objects.
+* Avoid validation on copy of `DissimilarityMatrix` and `DistanceMatrix` objects, see [PR #1747](https://github.com/biocore/scikit-bio/pull/1747)
+* Use an optimized version of symmetry check in DistanceMatrix, see [PR #1747](https://github.com/biocore/scikit-bio/pull/1747)
+* Avoid performing filtering when ids are identical, see [PR #1752](https://github.com/biocore/scikit-bio/pull/1752)
+* center_distance_matrix has been re-implemented in cython for both speed and memory use. Indirectly speeds up pcoa [PR #1749](https://github.com/biocore/scikit-bio/pull/1749)
+* Use a memory-optimized version of permute in DistanceMatrix, see [PR #1756](https://github.com/biocore/scikit-bio/pull/1756).
+* Refactor pearson and spearman skbio.stats.distance.mantel implementations to drastically improve memory locality. Also cache intermediate results that are invariant across permutations, see [PR #1756](https://github.com/biocore/scikit-bio/pull/1756).
+* Refactor permanova to remove intermediate buffers and cythonize the internals, see [PR #1768](https://github.com/biocore/scikit-bio/pull/1768).
 
 ### Bug fixes
 
@@ -27,6 +36,8 @@
 * Specify build dependencies in pyproject.toml. This allows the package to be installed without having to first manually install numpy.
 
 * Update hdmedians package to a version which doesn't require an initial manual numpy install.
+
+* Now buildable on non-x86 platforms due to use of the [SIMD Everywhere](https://github.com/simd-everywhere/simde) library.
 
 ## Version 0.5.6
 

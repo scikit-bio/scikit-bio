@@ -14,7 +14,8 @@
 #include <stdio.h>
 #include <stdint.h>
 #include <string.h>
-#include <emmintrin.h>
+#define SIMDE_ENABLE_NATIVE_ALIASES
+#include "simde-sse2.h"
 
 /*! @typedef    structure of the query profile  */
 struct _profile;

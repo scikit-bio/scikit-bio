@@ -1575,7 +1575,7 @@ class TreeNode(SkbioObject):
         Returns
         -------
         TreeNode
-            The tree node with the matcing id
+            The tree node with the matching id
 
         Notes
         -----
@@ -2186,7 +2186,7 @@ class TreeNode(SkbioObject):
             (lo, hi, end) = (mids[0], mids[-1], len(result))
             prefixes = [PAD] * (lo + 1) + [PA + '|'] * \
                 (hi - lo - 1) + [PAD] * (end - hi)
-            mid = np.int(np.trunc((lo + hi) / 2))
+            mid = int(np.trunc((lo + hi) / 2))
             prefixes[mid] = char1 + '-' * (LEN - 2) + prefixes[mid][-1]
             result = [p + l for (p, l) in zip(prefixes, result)]
             if show_internal:

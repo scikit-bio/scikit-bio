@@ -80,8 +80,9 @@ class NjTests(TestCase):
                          self.expected1_str)
         # what is the correct way to compare TreeNode objects for equality?
         actual_TreeNode = nj(self.dm1)
-        self.assertEqual(actual_TreeNode.compare_tip_distances(
-            self.expected1_TreeNode), 0.0)
+        # precision error on ARM: 1.6653345369377348e-16 != 0.0
+        self.assertAlmostEqual(actual_TreeNode.compare_tip_distances(
+            self.expected1_TreeNode), 0.0, places=10)
 
     def test_nj_dm2(self):
         actual_TreeNode = nj(self.dm2)
