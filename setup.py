@@ -83,15 +83,20 @@ with open('README.rst') as f:
     long_description = f.read()
 
 # Dealing with Cython
-USE_CYTHON = os.environ.get('USE_CYTHON', False)
+USE_CYTHON = os.environ.get('USE_CYTHON', True)
 ext = '.pyx' if USE_CYTHON else '.c'
 
 ssw_extra_compile_args = ['-I.']
 
-if icc or sysconfig.get_config_vars()['CC'] == 'icc':
-    ssw_extra_compile_args.extend(['-qopenmp-simd', '-DSIMDE_ENABLE_OPENMP'])
-elif not (clang or sysconfig.get_config_vars()['CC'] == 'clang'):
-    ssw_extra_compile_args.extend(['-fopenmp-simd', '-DSIMDE_ENABLE_OPENMP'])
+if platform.system() != 'Windows':
+    if icc or sysconfig.get_config_vars()['CC'] == 'icc':
+        ssw_extra_compile_args.extend(['-qopenmp-simd',
+                                       '-DSIMDE_ENABLE_OPENMP'])
+    elif not (clang or sysconfig.get_config_vars()['CC'] == 'clang'):
+        ssw_extra_compile_args.extend(['-fopenmp-simd',
+                                       '-DSIMDE_ENABLE_OPENMP'])
+elif platform.system() == 'Windows':
+    ssw_extra_compile_args.extend(['-openmp:experimental'])
 
 # Users with i686 architectures have reported that adding this flag allows
 # SSW to be compiled. See https://github.com/biocore/scikit-bio/issues/409 and
@@ -147,6 +152,7 @@ setup(name='scikit-bio',
           'numpy >= 1.9.2',
           'pandas >= 1.0.0',
           'scipy >= 1.3.0',
+          'h5py >= 2.9.0',
           'hdmedians >= 0.14.1',
           'scikit-learn >= 0.19.1'
       ],
