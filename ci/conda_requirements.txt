@@ -12,4 +12,4 @@ decorator
 scikit-learn
 pytest
 coverage
-h5py
+h5py<3.2  # see https://github.com/h5py/h5py/issues/1880#issuecomment-823241926
