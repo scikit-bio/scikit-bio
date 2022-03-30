@@ -5,10 +5,6 @@
 #
 #  The full license is in the file COPYING.txt, distributed with this software.
 # -----------------------------------------------------------------------------
-
-# distutils: extra_compile_args=-fopenmp
-# distutils: extra_link_args=-fopenmp
-
 import numpy as np
 cimport cython
 from cython.parallel import prange

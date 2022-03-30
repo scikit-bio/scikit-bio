@@ -43,7 +43,6 @@ if not clang:
     except (subprocess.CalledProcessError, FileNotFoundError):
         pass
 
-
 try:
     if os.environ['CC'] == "icc":
         icc = True
@@ -119,9 +118,11 @@ extensions = [
               ["skbio/diversity/_phylogenetic" + ext],
               include_dirs=[np.get_include()]),
     Extension("skbio.stats.ordination._cutils",
-              ["skbio/stats/ordination/_cutils" + ext]),
+              ["skbio/stats/ordination/_cutils" + ext],
+              extra_compile_args=ssw_extra_compile_args),
     Extension("skbio.stats.distance._cutils",
-              ["skbio/stats/distance/_cutils" + ext]),
+              ["skbio/stats/distance/_cutils" + ext],
+              extra_compile_args=ssw_extra_compile_args),
 ]
 
 if USE_CYTHON:
