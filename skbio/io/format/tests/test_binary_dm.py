@@ -81,7 +81,7 @@ class BinaryMatrixTests(unittest.TestCase):
 
         mat = DistanceMatrix(self.mat, self.ids)
         _skbio_mat_to_h5py_mat(mat, fh1)
-        npt.assert_equal(fh1['order'][:], mat.ids)
+        npt.assert_equal(np.asarray(fh1['order'][:], dtype=unicode), mat.ids)
         npt.assert_equal(fh1['matrix'], mat.data)
 
     def test_get_header(self):
