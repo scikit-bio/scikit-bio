@@ -4,6 +4,7 @@
 
 ### Features
 
+* Added support for reading and writing a binary distance matrix object format. ([#1716](https://github.com/biocore/scikit-bio/pull/1716))
 * Added support for `np.float32` with `DissimilarityMatrix` objects.
 * Added support for method and number_of_dimensions to permdisp reducing the runtime by 100x at 4000 samples, [issue #1769](https://github.com/biocore/scikit-bio/pull/1769).
 * OrdinationResults object is now accepted as input for permdisp.
