@@ -1185,7 +1185,7 @@ def _holm_bonferroni(p):
 def _log_compare(mat, cats,
                  significance_test=scipy.stats.ttest_ind):
     """ Calculates pairwise log ratios between all features and performs a
-    significiance test (i.e. t-test) to determine if there is a significant
+    significance test (i.e. t-test) to determine if there is a significant
     difference in feature ratios with respect to the variable of interest.
 
     Parameters

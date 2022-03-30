@@ -1008,8 +1008,8 @@ def strong(counts):
 
     References
     ----------
-    .. [1] Strong, W. L., 2002 Assessing species abundance uneveness within and
-       between plant communities. Community Ecology, 3, 237-246.
+    .. [1] Strong, W. L., 2002 Assessing species abundance unevenness within
+       and between plant communities. Community Ecology, 3, 237-246.
     .. [2] http://www.pisces-conservation.com/sdrhelp/index.html
 
     """
