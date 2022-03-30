@@ -52,6 +52,15 @@ class TreeTests(TestCase):
         self.complex_tree = TreeNode.read(io.StringIO(
             "(((a,b)int1,(x,y,(w,z)int2,(c,d)int3)int4),(e,f)int5);"))
 
+    def test_recursion_limit(self):
+        nodes = [skbio.TreeNode(name='s%d', length=1) for i in range(10000)]
+        tree = nodes[0]
+        last = tree
+        for node in nodes[1:]:
+            last.append(node)
+            last = node
+        tree.root_at(tree.children[0])
+
     def test_bug_issue_1416(self):
         tree = TreeNode.read(['(((a,b,f,g),c),d);'])
         new_tree = tree.shear(['a', 'b', 'c', 'f'])
