@@ -108,6 +108,7 @@ import skbio.util
 from skbio.util._decorator import experimental
 from skbio.stats.distance import DistanceMatrix, DissimilarityMatrix
 
+
 @experimental(as_of="0.4.0")
 def closure(mat):
     """
@@ -1128,7 +1129,8 @@ def pairwise_vlr(mat,
 
     # Variance Log Ratio
     if robust:
-        raise NotImplemented('Pairwise version of robust VLR not implemented.')
+        raise NotImplementedError(
+            'Pairwise version of robust VLR not implemented.')
     else:
         vlr_data = _pairwise_vlr(**kwargs)
 
@@ -1139,7 +1141,7 @@ def pairwise_vlr(mat,
 
     # Return dissimilarity matrix
     else:
-        return DissimiliarityMatrix(vlr_data, ids=ids)
+        return DissimilarityMatrix(vlr_data, ids=ids)
 
 
 @experimental(as_of="0.4.1")

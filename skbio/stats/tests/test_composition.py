@@ -1230,6 +1230,12 @@ class TestVLR(TestCase):
         with self.assertRaises(DistanceMatrixError):
             pairwise_vlr(self.mat_with_zero, ids=None, ddof=1, robust=False)
 
+        # no validation
+        dism = pairwise_vlr(self.mat, ids=None, ddof=1, robust=False,
+                            validate=False)
+        output = dism.data.sum() / 2
+        self.assertAlmostEqual(output, 0.2857382286903922)
+
 
 if __name__ == "__main__":
     main()
