@@ -908,8 +908,8 @@ def ancom(table, grouping,
     (``scipy.stats.ttest_rel``) or nonparametric Wilcoxon signed-rank test
     (``scipy.stats.wilcoxon``). If there are more than 2 groups, use
     parametric one-way ANOVA (``scipy.stats.f_oneway``) or nonparametric
-    Kruskal-Wallis (``scipy.stats.kruskal``). If there are multiple measurements 
-    obtained from the individuals, use a Friedman test 
+    Kruskal-Wallis (``scipy.stats.kruskal``). If there are multiple
+    measurements obtained from the individuals, use a Friedman test
     (``scipy.stats.friedmanchisquare``).  Because one-way ANOVA is
     equivalent to the standard t-test when the number of groups is two, we
     default to ``scipy.stats.f_oneway`` here, which can be used when there
