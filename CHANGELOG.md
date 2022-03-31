@@ -1,17 +1,15 @@
 # scikit-bio changelog
 
-## Version 0.5.6-dev
+## Version 0.5.7
 
 ### Features
 
+* Introduce support for Python 3.10 ([#1801](https://github.com/biocore/scikit-bio/pull/1801)).
+* Tentative support for Apple M1 ([#1709](https://github.com/biocore/scikit-bio/pull/1709)).
 * Added support for reading and writing a binary distance matrix object format. ([#1716](https://github.com/biocore/scikit-bio/pull/1716))
 * Added support for `np.float32` with `DissimilarityMatrix` objects.
 * Added support for method and number_of_dimensions to permdisp reducing the runtime by 100x at 4000 samples, [issue #1769](https://github.com/biocore/scikit-bio/pull/1769).
 * OrdinationResults object is now accepted as input for permdisp.
-
-### Backward-incompatible changes [stable]
-
-### Backward-incompatible changes [experimental]
 
 ### Performance enhancements
 
@@ -24,17 +22,13 @@
 * Refactor pearson and spearman skbio.stats.distance.mantel implementations to drastically improve memory locality. Also cache intermediate results that are invariant across permutations, see [PR #1756](https://github.com/biocore/scikit-bio/pull/1756).
 * Refactor permanova to remove intermediate buffers and cythonize the internals, see [PR #1768](https://github.com/biocore/scikit-bio/pull/1768).
 
-
 ### Bug fixes
 
 * Fix windows and 32bit incompatibility in `unweighted_unifrac`.
 
-### Deprecated functionality [stable]
-
-### Deprecated functionality [experimental]
-
 ### Miscellaneous
 
+* Python 3.6 has been removed from our testing matrix.
 * Specify build dependencies in pyproject.toml. This allows the package to be installed without having to first manually install numpy.
 * Update hdmedians package to a version which doesn't require an initial manual numpy install.
 * Now buildable on non-x86 platforms due to use of the [SIMD Everywhere](https://github.com/simd-everywhere/simde) library.
