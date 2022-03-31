@@ -9,8 +9,6 @@
 import itertools
 from copy import deepcopy
 
-from IPython.core.pylabtools import print_figure
-from IPython.core.display import Image, SVG
 import numpy as np
 import pandas as pd
 from scipy.spatial.distance import squareform
@@ -700,6 +698,7 @@ class DissimilarityMatrix(SkbioObject):
         """Display heatmap in IPython Notebook as PNG.
 
         """
+        from IPython.core.display import Image
         return Image(self._repr_png_(), embed=True)
 
     @property
@@ -708,10 +707,12 @@ class DissimilarityMatrix(SkbioObject):
         """Display heatmap in IPython Notebook as SVG.
 
         """
+        from IPython.core.display import SVG
         return SVG(self._repr_svg_())
 
     def _figure_data(self, format):
         import matplotlib.pyplot as plt
+        from IPython.core.pylabtools import print_figure
         fig = self.plot()
         data = print_figure(fig, format)
         # We MUST close the figure, otherwise IPython's display machinery

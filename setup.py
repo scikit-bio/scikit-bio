@@ -43,7 +43,6 @@ if not clang:
     except (subprocess.CalledProcessError, FileNotFoundError):
         pass
 
-
 try:
     if os.environ['CC'] == "icc":
         icc = True
@@ -119,9 +118,11 @@ extensions = [
               ["skbio/diversity/_phylogenetic" + ext],
               include_dirs=[np.get_include()]),
     Extension("skbio.stats.ordination._cutils",
-              ["skbio/stats/ordination/_cutils" + ext]),
+              ["skbio/stats/ordination/_cutils" + ext],
+              extra_compile_args=ssw_extra_compile_args),
     Extension("skbio.stats.distance._cutils",
-              ["skbio/stats/distance/_cutils" + ext]),
+              ["skbio/stats/distance/_cutils" + ext],
+              extra_compile_args=ssw_extra_compile_args),
 ]
 
 if USE_CYTHON:
@@ -154,7 +155,8 @@ setup(name='scikit-bio',
           'scipy >= 1.3.0',
           'h5py >= 2.9.0',
           'hdmedians >= 0.14.1',
-          'scikit-learn >= 0.19.1'
+          'scikit-learn >= 0.19.1',
+          'h5py'
       ],
       classifiers=classifiers,
       package_data={

@@ -89,6 +89,9 @@ def unweighted_unifrac(u_counts, v_counts, otu_ids, tree, validate=True):
     This implementation of unweighted UniFrac is the array-based implementation
     described in [4]_.
 
+    If using large number of samples or a large tree, we advise using the
+    optimized UniFrac library [5]_.
+
     References
     ----------
     .. [1] Lozupone, C. & Knight, R. UniFrac: a new phylogenetic method for
@@ -108,6 +111,8 @@ def unweighted_unifrac(u_counts, v_counts, otu_ids, tree, validate=True):
        throughput phylogenetic analyses of microbial communities including
        analysis of pyrosequencing and PhyloChip data.  ISME J. 4(1):17-27
        (2010).
+
+    .. [5] https://github.com/biocore/unifrac
 
     Examples
     --------
@@ -219,6 +224,9 @@ def weighted_unifrac(u_counts, v_counts, otu_ids, tree,
     This implementation of weighted UniFrac is the array-based implementation
     described in [3]_.
 
+    If using large number of samples or a large tree, we advise using the
+    optimized UniFrac library [4]_.
+
     References
     ----------
     .. [1] Lozupone, C. A., Hamady, M., Kelley, S. T. & Knight, R. Quantitative
@@ -234,6 +242,8 @@ def weighted_unifrac(u_counts, v_counts, otu_ids, tree,
        throughput phylogenetic analyses of microbial communities including
        analysis of pyrosequencing and PhyloChip data.  ISME J. 4(1):17-27
        (2010).
+
+    .. [4] https://github.com/biocore/unifrac
 
     Examples
     --------

@@ -29,10 +29,10 @@ class TestCCAErrors(TestCase):
 
     def test_Y_values(self):
         X, Y = self.X, self.Y
-        Y[0, 0] = -1
+        Y.iloc[0, 0] = -1
         with npt.assert_raises(ValueError):
             cca(Y, X)
-        Y[0] = 0
+        Y.iloc[0] = 0
         with npt.assert_raises(ValueError):
             cca(Y, X)
 

@@ -12,4 +12,5 @@ decorator
 scikit-learn
 pytest
 coverage
-h5py
+h5py >= 3.6.0
+cython
