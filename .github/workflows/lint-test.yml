@@ -41,8 +41,6 @@ jobs:
             conda install --yes -c conda-forge clangxx_osx-64
           fi
           conda install -q --yes -c conda-forge --file ci/conda_requirements.txt
-          conda install -q --yes -c conda-forge cython
-          conda install -q --yes -c conda-forge pip
           pip install -r ci/pip_requirements.txt --ignore-installed
           pip install . --no-deps
           conda list
