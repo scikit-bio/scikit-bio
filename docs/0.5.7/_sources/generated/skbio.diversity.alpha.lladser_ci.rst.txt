@@ -1,0 +1,6 @@
+skbio.diversity.alpha.lladser\_ci
+=================================
+
+.. currentmodule:: skbio.diversity.alpha
+
+.. autofunction:: lladser_ci

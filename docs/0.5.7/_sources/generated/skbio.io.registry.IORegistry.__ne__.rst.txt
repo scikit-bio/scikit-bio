@@ -1,0 +1,8 @@
+:orphan:
+
+skbio.io.registry.IORegistry.__ne__
+===================================
+
+.. currentmodule:: skbio.io.registry
+
+.. automethod:: IORegistry.__ne__

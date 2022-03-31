@@ -1,0 +1,267 @@
+<!DOCTYPE html>
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta charset="utf-8" /><meta name="generator" content="Docutils 0.17.1: http://docutils.sourceforge.net/" />
+
+    <title>Simple binary dissimilarity matrix format (skbio.io.format.binary_dm) &#8212; scikit-bio 0.5.7 documentation</title>
+    <link rel="stylesheet" href="../_static/bootstrap-sphinx.css" type="text/css" />
+    <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
+    <link rel="stylesheet" type="text/css" href="../_static/plot_directive.css" />
+    <link rel="stylesheet" type="text/css" href="../_static/style.css" />
+    <script id="documentation_options" data-url_root="../" src="../_static/documentation_options.js"></script>
+    <script src="../_static/jquery.js"></script>
+    <script src="../_static/underscore.js"></script>
+    <script src="../_static/doctools.js"></script>
+    <script src="../_static/language_data.js"></script>
+    <script src="../_static/copybutton.js"></script>
+    <script async="async" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.5/latest.js?config=TeX-AMS-MML_HTMLorMML"></script>
+    <link rel="index" title="Index" href="../genindex.html" />
+    <link rel="search" title="Search" href="../search.html" />
+    <link rel="next" title="BLAST+6 format (skbio.io.format.blast6)" href="skbio.io.format.blast6.html" />
+    <link rel="prev" title="File I/O (skbio.io)" href="../io.html" />
+<meta charset='utf-8'>
+<meta http-equiv='X-UA-Compatible' content='IE=edge,chrome=1'>
+<meta name='viewport' content='width=device-width, initial-scale=1.0, maximum-scale=1'>
+<meta name="apple-mobile-web-app-capable" content="yes">
+<script type="text/javascript" src="../_static/js/jquery-1.12.4.min.js"></script>
+<script type="text/javascript" src="../_static/js/jquery-fix.js"></script>
+<script type="text/javascript" src="../_static/bootstrap-3.4.1/js/bootstrap.min.js"></script>
+<script type="text/javascript" src="../_static/bootstrap-sphinx.js"></script>
+
+  </head><body>
+  
+  <a href="https://github.com/biocore/scikit-bio"
+     class="visible-desktop hidden-xs"><img
+    id="gh-banner"
+    style="position: absolute; top: 50px; right: 0; border: 0;"
+    src="https://s3.amazonaws.com/github/ribbons/forkme_right_darkblue_121621.png"
+    alt="Fork me on GitHub"></a>
+  <script>
+    // Adjust banner height.
+    $(function () {
+      var navHeight = $(".navbar .container").css("height");
+      $("#gh-banner").css("top", navHeight);
+    });
+  </script>
+
+
+  <div id="navbar" class="navbar navbar-default navbar-fixed-top">
+    <div class="container">
+      <div class="navbar-header">
+        <!-- .btn-navbar is used as the toggle for collapsed navbar content -->
+        <button type="button" class="navbar-toggle" data-toggle="collapse" data-target=".nav-collapse">
+          <span class="icon-bar"></span>
+          <span class="icon-bar"></span>
+          <span class="icon-bar"></span>
+        </button>
+        <a class="navbar-brand" href="../index.html">
+          scikit-bio docs</a>
+        <span class="navbar-text navbar-version pull-left"><b>0.5.7</b></span>
+      </div>
+
+        <div class="collapse navbar-collapse nav-collapse">
+          <ul class="nav navbar-nav">
+            
+            
+              <li class="dropdown globaltoc-container">
+  <a role="button"
+     id="dLabelGlobalToc"
+     data-toggle="dropdown"
+     data-target="#"
+     href="../index.html">Site <b class="caret"></b></a>
+  <ul class="dropdown-menu globaltoc"
+      role="menu"
+      aria-labelledby="dLabelGlobalToc"><ul class="current">
+<li class="toctree-l1 current"><a class="reference internal" href="../io.html">File I/O (<code class="xref py py-mod docutils literal notranslate"><span class="pre">skbio.io</span></code>)</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../sequence.html">Sequences (<code class="xref py py-mod docutils literal notranslate"><span class="pre">skbio.sequence</span></code>)</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../alignment.html">Alignments (<code class="xref py py-mod docutils literal notranslate"><span class="pre">skbio.alignment</span></code>)</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../tree.html">Tree representations (<code class="xref py py-mod docutils literal notranslate"><span class="pre">skbio.tree</span></code>)</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../workflow.html">Constructing workflows (<code class="xref py py-mod docutils literal notranslate"><span class="pre">skbio.workflow</span></code>)</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../diversity.html">Diversity calculations (<code class="xref py py-mod docutils literal notranslate"><span class="pre">skbio.diversity</span></code>)</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../stats.html">Statistics (<code class="xref py py-mod docutils literal notranslate"><span class="pre">skbio.stats</span></code>)</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../metadata.html">Metadata (<code class="xref py py-mod docutils literal notranslate"><span class="pre">skbio.metadata</span></code>)</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../util.html">Utility functionality (<code class="xref py py-mod docutils literal notranslate"><span class="pre">skbio.util</span></code>)</a></li>
+</ul>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../user/api_stability.html">API Stability</a></li>
+</ul>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../development/coding_guidelines.html">Coding guidelines</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../development/new_module.html">Adding a new module to skbio</a></li>
+</ul>
+</ul>
+</li>
+              
+                <li class="dropdown">
+  <a role="button"
+     id="dLabelLocalToc"
+     data-toggle="dropdown"
+     data-target="#"
+     href="#">Page <b class="caret"></b></a>
+  <ul class="dropdown-menu localtoc"
+      role="menu"
+      aria-labelledby="dLabelLocalToc"><ul>
+<li><a class="reference internal" href="#">Simple binary dissimilarity matrix format (<code class="xref py py-mod docutils literal notranslate"><span class="pre">skbio.io.format.binary_dm</span></code>)</a><ul>
+<li><a class="reference internal" href="#format-support">Format Support</a></li>
+<li><a class="reference internal" href="#format-specification">Format Specification</a></li>
+</ul>
+</li>
+</ul>
+</ul>
+</li>
+              
+            
+            
+            
+            
+            
+          </ul>
+
+          
+            
+<form class="navbar-form navbar-right" action="../search.html" method="get">
+ <div class="form-group">
+  <input type="text" name="q" class="form-control" placeholder="Search" />
+ </div>
+  <input type="hidden" name="check_keywords" value="yes" />
+  <input type="hidden" name="area" value="default" />
+</form>
+          
+        </div>
+    </div>
+  </div>
+
+<div class="container">
+  <div class="row">
+    <div class="body col-md-12 content" role="main">
+      
+  <span class="target" id="module-skbio.io.format.binary_dm"></span><section id="simple-binary-dissimilarity-matrix-format-skbio-io-format-binary-dm">
+<h1>Simple binary dissimilarity matrix format (<a class="reference internal" href="#module-skbio.io.format.binary_dm" title="skbio.io.format.binary_dm"><code class="xref py py-mod docutils literal notranslate"><span class="pre">skbio.io.format.binary_dm</span></code></a>)<a class="headerlink" href="#simple-binary-dissimilarity-matrix-format-skbio-io-format-binary-dm" title="Permalink to this headline">¶</a></h1>
+<p>The Binary DisSimilarity Matrix format (<code class="docutils literal notranslate"><span class="pre">binary_dm</span></code>) encodes a binary
+representation for dissimilarity and distance matrices. The format is
+designed to facilitate rapid random access to individual rows or columns of
+a hollow matrix.</p>
+<section id="format-support">
+<h2>Format Support<a class="headerlink" href="#format-support" title="Permalink to this headline">¶</a></h2>
+<p><strong>Has Sniffer: Yes</strong></p>
+<table class="docutils align-default">
+<colgroup>
+<col style="width: 8%" />
+<col style="width: 8%" />
+<col style="width: 84%" />
+</colgroup>
+<thead>
+<tr class="row-odd"><th class="head"><p>Reader</p></th>
+<th class="head"><p>Writer</p></th>
+<th class="head"><p>Object Class</p></th>
+</tr>
+</thead>
+<tbody>
+<tr class="row-even"><td><p>Yes</p></td>
+<td><p>Yes</p></td>
+<td><p><a class="reference internal" href="skbio.stats.distance.DissimilarityMatrix.html#skbio.stats.distance.DissimilarityMatrix" title="skbio.stats.distance.DissimilarityMatrix"><code class="xref py py-mod docutils literal notranslate"><span class="pre">skbio.stats.distance.DissimilarityMatrix</span></code></a></p></td>
+</tr>
+<tr class="row-odd"><td><p>Yes</p></td>
+<td><p>Yes</p></td>
+<td><p><a class="reference internal" href="skbio.stats.distance.DistanceMatrix.html#skbio.stats.distance.DistanceMatrix" title="skbio.stats.distance.DistanceMatrix"><code class="xref py py-mod docutils literal notranslate"><span class="pre">skbio.stats.distance.DistanceMatrix</span></code></a></p></td>
+</tr>
+</tbody>
+</table>
+</section>
+<section id="format-specification">
+<h2>Format Specification<a class="headerlink" href="#format-specification" title="Permalink to this headline">¶</a></h2>
+<p>The binary dissimilarity matrix and object identifiers are stored within an
+HDF5 <a class="footnote-reference brackets" href="#id2" id="id1">1</a> file. Both datatypes are represented by their own datasets. The
+<cite>ids</cite> dataset is of a variable length unicode type, while the
+<cite>matrix</cite> dataset are floating point. The shape of the <cite>ids</cite> is
+<cite>(N,)</cite>, and the shape of the <cite>dissimilarities</cite> is <cite>(N, N)</cite>. The diagonal of
+<cite>matrix</cite> are all zeros.</p>
+<p>The dissimilarity between <cite>ids[i]</cite> and <cite>ids[j]</cite> is interpreted
+to be the value at <cite>matrix[i, j]</cite>. <cite>i</cite> and <cite>j</cite> are integer indices.</p>
+<p>Required attributes:</p>
+<table class="docutils align-default">
+<colgroup>
+<col style="width: 18%" />
+<col style="width: 34%" />
+<col style="width: 48%" />
+</colgroup>
+<thead>
+<tr class="row-odd"><th class="head"><p>Attribute</p></th>
+<th class="head"><p>Value
+type</p></th>
+<th class="head"><p>Description</p></th>
+</tr>
+</thead>
+<tbody>
+<tr class="row-even"><td><p>format</p></td>
+<td><p>string</p></td>
+<td><p>A string identifying the file
+as Binary DM format</p></td>
+</tr>
+<tr class="row-odd"><td><p>version</p></td>
+<td><p>string</p></td>
+<td><p>The version of the current
+Binary DM format</p></td>
+</tr>
+<tr class="row-even"><td><p>matrix</p></td>
+<td><p>float32 or float64</p></td>
+<td><p>A (N, N) dataset containing
+the values of the
+dissimilarity matrix</p></td>
+</tr>
+<tr class="row-odd"><td><p>order</p></td>
+<td><p>string</p></td>
+<td><p>A (N,) dataset of the sample
+IDs, where N is the total
+number of IDs</p></td>
+</tr>
+</tbody>
+</table>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>This file format is most useful for storing large matrices that do
+not need to be represented in a human-readable format. This format is
+especially appropriate for facilitating random access to entries in the
+distance matrix, such as when calculating within and between distances for a
+subset of samples in a large matrix.</p>
+</div>
+<p class="rubric">References</p>
+<dl class="footnote brackets">
+<dt class="label" id="id2"><span class="brackets"><a class="fn-backref" href="#id1">1</a></span></dt>
+<dd><p><a class="reference external" href="http://www.hdfgroup.org/">http://www.hdfgroup.org/</a></p>
+</dd>
+</dl>
+</section>
+</section>
+
+
+    </div>
+      
+  </div>
+</div>
+  
+<footer class="footer">
+  <div class="container">
+    <p class="pull-right">
+      <a href="#">Back to top</a>
+      
+    </p>
+    <p>
+        &copy; Copyright 2014--, scikit-bio development team.<br/>
+      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 2.4.5.<br/>
+    </p>
+  </div>
+</footer>
+  <script>
+    (function(i,s,o,g,r,a,m){i['GoogleAnalyticsObject']=r;i[r]=i[r]||function(){
+    (i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),
+    m=s.getElementsByTagName(o)[0];a.async=1;a.src=g;m.parentNode.insertBefore(a,m)
+    })(window,document,'script','//www.google-analytics.com/analytics.js','ga');
+
+    ga('create', 'UA-6636235-9', 'scikit-bio.org');
+    ga('send', 'pageview');
+  </script>
+
+  </body>
+</html>

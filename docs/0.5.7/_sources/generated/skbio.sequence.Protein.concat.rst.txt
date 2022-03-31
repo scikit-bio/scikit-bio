@@ -1,0 +1,8 @@
+:orphan:
+
+skbio.sequence.Protein.concat
+=============================
+
+.. currentmodule:: skbio.sequence
+
+.. automethod:: Protein.concat

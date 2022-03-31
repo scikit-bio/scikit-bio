@@ -1,0 +1,8 @@
+:orphan:
+
+skbio.sequence.GrammaredSequence.matches
+========================================
+
+.. currentmodule:: skbio.sequence
+
+.. automethod:: GrammaredSequence.matches

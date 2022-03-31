@@ -1,0 +1,8 @@
+:orphan:
+
+skbio.sequence.Protein.__reversed__
+===================================
+
+.. currentmodule:: skbio.sequence
+
+.. automethod:: Protein.__reversed__
