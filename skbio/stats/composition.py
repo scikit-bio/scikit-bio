@@ -106,8 +106,7 @@ import pandas as pd
 import scipy.stats
 import skbio.util
 from skbio.util._decorator import experimental
-from skbio.stats.distance import DistanceMatrix, DissimiliarityMatrix
-
+from skbio.stats.distance import DistanceMatrix, DissimilarityMatrix
 
 @experimental(as_of="0.4.0")
 def closure(mat):
@@ -947,8 +946,8 @@ def vlr(x: np.ndarray, y: np.ndarray, ddof: int = 1, robust: bool = False):
            https://doi.org/10.1007/s12064-015-0220-8
     """
     # Convert array_like to numpy array
-    x = np.asarray(x)
-    y = np.asarray(y)
+    x = closure(x)
+    y = closure(y)
 
     # Set up input and parameters
     kwargs = {
@@ -984,7 +983,7 @@ def _pairwise_vlr(mat: np.ndarray, ddof: int):
 
     Returns
     -------
-    skbio.DistanceMatrix
+p    skbio.DistanceMatrix
          distance matrix of variance log ratio values
 
 
@@ -1045,6 +1044,7 @@ def _robust_pairwise_vlr(mat: np.ndarray, ddof: int):
            expression data?. Theory Biosci. 135, 21–36 (2016).
            https://doi.org/10.1007/s12064-015-0220-8
     """
+
     # Mask zeros
     X = np.ma.masked_array(mat, mask=mat == 0)
 
@@ -1060,10 +1060,10 @@ def _robust_pairwise_vlr(mat: np.ndarray, ddof: int):
 
 @experimental(as_of="0.5.7")
 def pairwise_vlr(mat,
-    ids=None,
-    ddof: int = 1,
-    robust: bool = False,
-    validate: bool = True):
+                 ids=None,
+                 ddof: int = 1,
+                 robust: bool = False,
+                 validate: bool = True):
 
     r"""
     Performs pairwise variance log ratio transformation
@@ -1128,12 +1128,13 @@ def pairwise_vlr(mat,
 
     # Variance Log Ratio
     if robust:
-        vlr_data = _robust_pairwise_vlr(**kwargs)
+        raise NotImplemented('Pairwise version of robust VLR not implemented.')
     else:
         vlr_data = _pairwise_vlr(**kwargs)
 
     # Return distance matrix
     if validate:
+        vlr_data = 0.5 * (vlr_data + vlr_data.T)
         return DistanceMatrix(vlr_data, ids=ids)
 
     # Return dissimilarity matrix

@@ -1167,10 +1167,10 @@ class AncomTests(TestCase):
 
 
 class TestVLR(TestCase):
-    def __init(self):
+    def setUp(self):
         self.mat = np.array([[1, 1, 2], [3, 5, 8], [13, 21, 55]])
+        self.mat_neg = np.array([[-1, 1, 2], [3, -5, 8], [13, 21, -55]])
         self.mat_with_zero = np.array([[0, 1, 2], [3, 5, 8], [13, 21, 55]])
-        self.tol = 1e-15
 
     def test_vlr(self):
         # No zeros
@@ -1180,7 +1180,7 @@ class TestVLR(TestCase):
             ddof=1,
             robust=False,
         )
-        assert abs(output - 0.0655828061998637) <= self.tol
+        self.assertAlmostEqual(output, 0.0655828061998637)
 
         # With zeros
         output = vlr(
@@ -1191,6 +1191,15 @@ class TestVLR(TestCase):
         )
         assert np.isnan(output)
 
+        # assert raises error
+        with self.assertRaises(ValueError):
+            vlr(
+                x=self.mat_neg[0],
+                y=self.mat_neg[1],
+                ddof=1,
+                robust=False,
+            )
+
     def test_robust_vlr(self):
         # No zeros
         output = vlr(
@@ -1199,7 +1208,7 @@ class TestVLR(TestCase):
             ddof=1,
             robust=True,
         )
-        assert abs(output - 0.0655828061998637) <= self.tol
+        self.assertAlmostEqual(output, 0.0655828061998637)
 
         # With zeros
         output = vlr(
@@ -1208,31 +1217,18 @@ class TestVLR(TestCase):
             ddof=1,
             robust=True,
         )
-        assert abs(output - 0.024896522246558722) <= self.tol
+        self.assertAlmostEqual(output, 0.024896522246558722)
 
     def test_pairwise_vlr(self):
 
         # No zeros
         dism = pairwise_vlr(self.mat, ids=None, ddof=1, robust=False)
         output = dism.condensed_form().sum()
-        assert abs(output - 0.2857382286903922) <= self.tol
+        self.assertAlmostEqual(output, 0.2857382286903922)
 
         # With zeros
-        self.assertRaises(
-            pairwise_vlr(self.mat_with_zero, ids=None, ddof=1, robust=False),
-            DistanceMatrixError,
-            )
-
-    def test_robust_pairwise_vlr(self):
-        # No zeros
-        dism = pairwise_vlr(self.mat, ids=None, ddof=1, robust=True)
-        output = dism.condensed_form().sum()
-        assert abs(output - 0.2857382286903922) <= self.tol
-
-        # With zeros
-        dism = pairwise_vlr(self.mat_with_zero, ids=None, ddof=1, robust=True)
-        output = dism.condensed_form().sum()
-        assert abs(output - 2.369996501587573) <= self.tol
+        with self.assertRaises(DistanceMatrixError):
+            pairwise_vlr(self.mat_with_zero, ids=None, ddof=1, robust=False)
 
 
 if __name__ == "__main__":
