@@ -552,7 +552,7 @@ cdef class StripedSmithWaterman:
                   substitution_matrix=None,
                   suppress_sequences=False,
                   zero_index=True):
-        # initalize our values
+        # initialize our values
         self.read_sequence = query_sequence
         if gap_open_penalty <= 0:
             raise ValueError("`gap_open_penalty` must be > 0")

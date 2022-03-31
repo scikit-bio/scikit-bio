@@ -17,7 +17,7 @@ jobs:
       fail-fast: false
       matrix:
         os: ["ubuntu-latest", "macos-latest"]
-        python-version: ["3.6", "3.7", "3.8", "3.9"]
+        python-version: ["3.7", "3.8", "3.9", "3.10"]
         use_cython: ["TRUE", "FALSE"]
     steps:
       - uses: actions/checkout@v2
@@ -41,8 +41,6 @@ jobs:
             conda install --yes -c conda-forge clangxx_osx-64
           fi
           conda install -q --yes -c conda-forge --file ci/conda_requirements.txt
-          conda install -q --yes -c conda-forge cython
-          conda install -q --yes -c conda-forge pip
           pip install -r ci/pip_requirements.txt --ignore-installed
           pip install . --no-deps
           conda list
@@ -72,6 +70,6 @@ jobs:
         with:
           context: .
           # ^ to use the local checkout, not the git context
-          file: aarch64_py36.Dockerfile
+          file: aarch64_py38.Dockerfile
           cache-from: type=gha
           cache-to: type=gha,mode=max
