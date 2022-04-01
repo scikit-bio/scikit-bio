@@ -1,0 +1,8 @@
+:orphan:
+
+skbio.io.registry.Format.__eq__
+===============================
+
+.. currentmodule:: skbio.io.registry
+
+.. automethod:: Format.__eq__

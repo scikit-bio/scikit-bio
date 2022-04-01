@@ -1,0 +1,8 @@
+:orphan:
+
+skbio.workflow.requires.__hash__
+================================
+
+.. currentmodule:: skbio.workflow
+
+.. automethod:: requires.__hash__

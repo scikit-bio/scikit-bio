@@ -1,0 +1,8 @@
+:orphan:
+
+skbio.metadata.IntervalMetadata.concat
+======================================
+
+.. currentmodule:: skbio.metadata
+
+.. automethod:: IntervalMetadata.concat

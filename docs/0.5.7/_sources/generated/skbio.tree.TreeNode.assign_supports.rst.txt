@@ -1,0 +1,8 @@
+:orphan:
+
+skbio.tree.TreeNode.assign_supports
+===================================
+
+.. currentmodule:: skbio.tree
+
+.. automethod:: TreeNode.assign_supports

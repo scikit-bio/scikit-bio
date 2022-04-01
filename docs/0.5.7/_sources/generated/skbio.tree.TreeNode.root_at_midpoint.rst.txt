@@ -1,0 +1,8 @@
+:orphan:
+
+skbio.tree.TreeNode.root_at_midpoint
+====================================
+
+.. currentmodule:: skbio.tree
+
+.. automethod:: TreeNode.root_at_midpoint

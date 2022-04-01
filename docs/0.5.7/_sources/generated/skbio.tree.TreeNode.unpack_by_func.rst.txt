@@ -1,0 +1,8 @@
+:orphan:
+
+skbio.tree.TreeNode.unpack_by_func
+==================================
+
+.. currentmodule:: skbio.tree
+
+.. automethod:: TreeNode.unpack_by_func

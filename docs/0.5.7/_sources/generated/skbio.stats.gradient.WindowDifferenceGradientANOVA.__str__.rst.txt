@@ -1,0 +1,8 @@
+:orphan:
+
+skbio.stats.gradient.WindowDifferenceGradientANOVA.__str__
+==========================================================
+
+.. currentmodule:: skbio.stats.gradient
+
+.. automethod:: WindowDifferenceGradientANOVA.__str__

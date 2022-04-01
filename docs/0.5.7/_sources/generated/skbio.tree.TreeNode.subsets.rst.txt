@@ -1,0 +1,8 @@
+:orphan:
+
+skbio.tree.TreeNode.subsets
+===========================
+
+.. currentmodule:: skbio.tree
+
+.. automethod:: TreeNode.subsets

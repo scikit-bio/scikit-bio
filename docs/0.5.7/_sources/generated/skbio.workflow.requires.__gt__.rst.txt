@@ -1,0 +1,8 @@
+:orphan:
+
+skbio.workflow.requires.__gt__
+==============================
+
+.. currentmodule:: skbio.workflow
+
+.. automethod:: requires.__gt__
