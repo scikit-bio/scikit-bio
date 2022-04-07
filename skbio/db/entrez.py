@@ -79,7 +79,7 @@ def einfo(db=None,
         "version": version,
         "retmode": retmode
     }
-    return _make_request("einfo.fcgi",
+    return _make_request("einfo.fcgi?",
                          parameters,
                          parse_mode=parse_mode,
                          max_tries=max_tries,
@@ -251,7 +251,7 @@ def esearch(db,
         "mindate": mindate,
         "maxdate": maxdate
     }
-    return _make_request("esearch.fcgi",
+    return _make_request("esearch.fcgi?",
                          parameters,
                          parse_mode=parse_mode,
                          max_tries=max_tries,
@@ -321,7 +321,7 @@ def epost(db,
         "id": id,
         "WebEnv": webenv
     }
-    return _make_request("epost.fcgi",
+    return _make_request("epost.fcgi?",
                          parameters,
                          parse_mode=parse_mode,
                          max_tries=max_tries,
@@ -421,7 +421,7 @@ def esummary(db,
         "retmode": retmode,
         "version": version
     }
-    return _make_request("esummary.fcgi",
+    return _make_request("esummary.fcgi?",
                          parameters,
                          parse_mode=parse_mode,
                          max_tries=max_tries,
@@ -527,8 +527,7 @@ def efetch(db,
 
     Fetch the first 100 bases of the plus strand of GI 21614549 in FASTA format:
 
-    >>> efetch_result = efetch("nuccore", id=21614549, strand=1, seq_start=1, seq_stop=100,
-        rettype="fasta", retmode="text")
+    >>> efetch_result = efetch("nuccore", id=21614549, strand=1, seq_start=1, seq_stop=100, rettype="fasta", retmode="text")
 
     Notes
     -----
@@ -554,7 +553,7 @@ def efetch(db,
         "seq_stop": seq_stop,
         "complexity": complexity
     }
-    return _make_request("efetch.fcgi",
+    return _make_request("efetch.fcgi?",
                          parameters,
                          parse_mode=parse_mode,
                          max_tries=max_tries,
@@ -720,7 +719,7 @@ def elink(db,
         "mindate": mindate,
         "maxdate": maxdate
     }
-    return _make_request("elink.fcgi",
+    return _make_request("elink.fcgi?",
                          parameters,
                          parse_mode=parse_mode,
                          max_tries=max_tries,
@@ -773,7 +772,7 @@ def egquery(term,
     .. [1] https://www.ncbi.nlm.nih.gov/books/NBK25499/#chapter4.EGQuery
     """
     parameters["term"] = term
-    return _make_request("gquery",
+    return _make_request("gquery?",
                          parameters,
                          parse_mode=parse_mode,
                          max_tries=max_tries,
@@ -826,7 +825,7 @@ def espell(db,
         "db": db,
         "term": term
     }
-    return _make_request("espell.fcgi",
+    return _make_request("espell.fcgi?",
                          parameters,
                          parse_mode=parse_mode,
                          max_tries=max_tries,
@@ -871,7 +870,7 @@ def ecitmatch(bdata,
     -------
     Search for a citation in PubMed:
 
-    >>> ecitmatch_result = ecitmatch("pubmed", bdata="proc+natl+acad+sci+u+s+a|1991|88|3248|mann+bj|Art1|%0Dscience|1987|235|182|palmenberg+ac|Art2|")
+    >>> ecitmatch_result = ecitmatch("proc+natl+acad+sci+u+s+a|1991|88|3248|mann+bj|Art1|%0Dscience|1987|235|182|palmenberg+ac|Art2|")
 
     Notes
     -----
@@ -887,7 +886,7 @@ def ecitmatch(bdata,
         "retmode": retmode,
         "bdata": bdata
     }
-    return _make_request("ecitmatch.cgi",
+    return _make_request("ecitmatch.cgi?",
                          parameters,
                          parse_mode=parse_mode,
                          max_tries=max_tries,
