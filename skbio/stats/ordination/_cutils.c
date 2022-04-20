@@ -5,9 +5,7 @@
     "distutils": {
         "depends": [],
         "extra_compile_args": [
-            "-I.",
-            "-fopenmp-simd",
-            "-DSIMDE_ENABLE_OPENMP"
+            "-I."
         ],
         "name": "skbio.stats.ordination._cutils",
         "sources": [
@@ -3312,7 +3310,7 @@ static PyObject *__pyx_pf_5skbio_5stats_10ordination_7_cutils_6e_matrix_means_cy
                             goto __pyx_L12;
                             __pyx_L12:;
                             #ifdef _OPENMP
-                            #pragma omp critical(__pyx_parallel_lastprivates0)
+                            #pragma omp critical(__pyx_parallel_lastprivates2)
                             #endif /* _OPENMP */
                             {
                                 __pyx_parallel_temp0 = __pyx_v_col;
@@ -3851,7 +3849,7 @@ static PyObject *__pyx_pf_5skbio_5stats_10ordination_7_cutils_8e_matrix_means_cy
                             goto __pyx_L12;
                             __pyx_L12:;
                             #ifdef _OPENMP
-                            #pragma omp critical(__pyx_parallel_lastprivates1)
+                            #pragma omp critical(__pyx_parallel_lastprivates3)
                             #endif /* _OPENMP */
                             {
                                 __pyx_parallel_temp0 = __pyx_v_col;
