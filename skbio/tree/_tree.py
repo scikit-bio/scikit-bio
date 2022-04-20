@@ -3349,7 +3349,7 @@ class TreeNode(SkbioObject):
 
         # get parent-to-child(ren) map
         to_children = {p: g.index.tolist() for p, g in nodes[
-            ~(nodes.index == root_id)].groupby('parent_tax_id')}
+            nodes.index != root_id].groupby('parent_tax_id')}
 
         # get rank map
         ranks = nodes['rank'].to_dict()
