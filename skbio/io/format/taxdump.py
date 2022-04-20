@@ -160,7 +160,7 @@ details.
 
 Format Parameters
 -----------------
-The following format parameters are available in ``blast+6`` format:
+The following format parameters are available in ``taxdump`` format:
 
 - ``scheme``: The column definition scheme name of the input .dmp file.
   Available options are listed below. Alternatively, one can provide a custom
