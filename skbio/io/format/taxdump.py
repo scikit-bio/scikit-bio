@@ -313,13 +313,14 @@ def _taxdump_to_data_frame(fh, scheme):
     pd.DataFrame
         Parsed table
     '''
-    if scheme not in _taxdump_column_schemes:
-        raise ValueError(f'Invalid taxdump column scheme: "{scheme}".')
-    dtype = _taxdump_column_schemes[scheme]
-    names = list(dtype.keys())
+    if isinstance(scheme, str):
+        if scheme not in _taxdump_column_schemes:
+            raise ValueError(f'Invalid taxdump column scheme: "{scheme}".')
+        scheme = _taxdump_column_schemes[scheme]
+    names = list(scheme.keys())
     try:
         return pd.read_csv(
             fh, sep='\t\\|(?:\t|$)', engine='python', index_col=0,
-            names=names, dtype=dtype, usecols=range(len(names)))
+            names=names, dtype=scheme, usecols=range(len(names)))
     except ValueError:
         raise ValueError('Invalid taxdump file format.')

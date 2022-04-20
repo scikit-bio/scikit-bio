@@ -132,6 +132,20 @@ class TestTaxdumpReader(unittest.TestCase):
             columns=['tax_id', 'parent_tax_id', 'rank']).set_index('tax_id')
         assert_data_frame_almost_equal(obs, exp)
 
+    def test_custom_scheme(self):
+        fs = StringIO('\n'.join(map('\t|\t'.join, [
+            ('a', 'a'),
+            ('b', 'a'),
+            ('c', 'a')
+        ])))
+        obs = _taxdump_to_data_frame(fs, scheme={'self': str, 'parent': str})
+        exp = pd.DataFrame([
+            ['a', 'a'],
+            ['b', 'a'],
+            ['c', 'a']],
+            columns=['self', 'parent']).set_index('self')
+        assert_data_frame_almost_equal(obs, exp)
+
     def test_invalid_scheme(self):
         fp = get_data_path('taxdump_names.dmp')
         with self.assertRaises(ValueError) as ctx:
@@ -140,13 +154,13 @@ class TestTaxdumpReader(unittest.TestCase):
                          'Invalid taxdump column scheme: "hello".')
 
     def test_invalid_id(self):
-        fh = StringIO('\n'.join(map('\t|\t'.join, [
+        fs = StringIO('\n'.join(map('\t|\t'.join, [
             ('1', '2', 'family'),
             ('3', '4', 'genus'),
             ('x', '6', 'species'),  # 'x' is not a number
         ])))
         with self.assertRaises(ValueError) as ctx:
-            _taxdump_to_data_frame(fh, scheme='nodes_slim')
+            _taxdump_to_data_frame(fs, scheme='nodes_slim')
         self.assertEqual(str(ctx.exception),
                          'Invalid taxdump file format.')
 
