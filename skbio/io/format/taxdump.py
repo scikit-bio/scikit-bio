@@ -169,7 +169,7 @@ The following format parameters are available in ``blast+6`` format:
   1. ``nodes``: The classical ``nodes.dmp`` scheme. It is also compatible with
      new ``nodes.dmp`` format, in which case only the columns defined by the
      classical format will be read.
-  
+
   2. ``nodes_new``: The new ``nodes.dmp`` scheme.
 
   3. ``nodes_slim``: Only the first three columns: tax_id, parent_tax_id and
@@ -207,7 +207,7 @@ should be used:
 ...                    scheme="nodes_slim")
 >>> df # doctest: +NORMALIZE_WHITESPACE
         parent_tax_id          rank
-tax_id                             
+tax_id
 1                   1       no rank
 2              131567  superkingdom
 6              335928         genus
@@ -307,7 +307,7 @@ def _taxdump_to_data_frame(fh, scheme):
         Input taxdump file
     scheme : str
         Name of column scheme
-    
+
     Returns
     -------
     pd.DataFrame
@@ -319,7 +319,7 @@ def _taxdump_to_data_frame(fh, scheme):
     names = list(dtype.keys())
     try:
         return pd.read_csv(
-            fh, sep='\t\|(?:\t|$)', engine='python', index_col=0,
-             names=names, dtype=dtype, usecols=range(len(names)))
+            fh, sep='\t\\|(?:\t|$)', engine='python', index_col=0,
+            names=names, dtype=dtype, usecols=range(len(names)))
     except ValueError:
         raise ValueError('Invalid taxdump file format.')

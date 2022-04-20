@@ -3275,7 +3275,6 @@ class TreeNode(SkbioObject):
         for node in nodes_to_unpack:
             node.unpack()
 
-
     @classonlymethod
     @experimental(as_of="0.5.8")
     def from_taxdump(cls, nodes, names=None):
@@ -3306,7 +3305,7 @@ class TreeNode(SkbioObject):
         ValueError
             If there is no top-level node
         ValueError
-            If there are more than one top-level node 
+            If there are more than one top-level node
 
         See Also
         --------
@@ -3330,9 +3329,9 @@ class TreeNode(SkbioObject):
         >>> print(tree.ascii_art())
                             /-Firmicutes
                   /Bacteria|
-        -root----|          \-Bacteroidetes
+        -root----|          \\-Bacteroidetes
                  |
-                  \-Archaea
+                  \\-Archaea
 
         """
         # identify top level of hierarchy
@@ -3359,7 +3358,7 @@ class TreeNode(SkbioObject):
         # if not provided, use tax_id as name
         if names is None:
             names = {x: str(x) for x in nodes.index}
-        
+
         # use "scientific name" as name
         elif isinstance(names, pd.DataFrame):
             names = names[names['name_class'] == 'scientific name'][
