@@ -94,7 +94,7 @@ columns after all aforementioned columns .
 |code id         |                                     |
 +----------------+-------------------------------------+
 |inherited PGC   |1 if node inherits plastid gencode   |
-|flag (1 or 0)  |from parent                          |
+|flag (1 or 0)   |from parent                          |
 +----------------+-------------------------------------+
 |specified_      |1 if species in the node's lineage   |
 |species         |has formal name                      |
