@@ -1,5 +1,5 @@
 """
-BLAST+6 format (:mod:`skbio.io.format.taxdump`)
+Taxdump format (:mod:`skbio.io.format.taxdump`)
 ==============================================
 
 .. currentmodule:: skbio.io.format.taxdump
