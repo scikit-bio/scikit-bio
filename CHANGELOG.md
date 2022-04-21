@@ -1,5 +1,12 @@
 # scikit-bio changelog
 
+## Version 0.5.8
+
+### Features
+
+* Added NCBI taxonomy database dump format (`taxdump`) ([#1810](https://github.com/biocore/scikit-bio/pull/1810)).
+* Added `TreeNode.from_taxdump` for converting taxdump into a tree ([#1810](https://github.com/biocore/scikit-bio/pull/1810)).
+
 ## Version 0.5.7
 
 ### Features
