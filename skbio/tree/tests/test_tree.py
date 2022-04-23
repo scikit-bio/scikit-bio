@@ -12,6 +12,7 @@ from collections import defaultdict
 
 import numpy as np
 import numpy.testing as npt
+import pandas as pd
 from scipy.stats import pearsonr
 
 from skbio import DistanceMatrix, TreeNode
@@ -1487,6 +1488,124 @@ class TreeTests(TestCase):
         exp = ('(((a:1.02,b:0.33)85:0.12,c:3.88,d:5.25)75:0.95,'
                '(e:1.43,f:1.89,g:2.12)node:0.35)root;')
         self.assertEqual(str(tree).rstrip(), exp)
+
+    def test_from_taxdump(self):
+        # same example as in skbio.io.format.taxdump
+        nodes = pd.DataFrame([
+            [1,       1,      'no rank'],
+            [2,       131567, 'superkingdom'],
+            [543,     91347,  'family'],
+            [548,     570,    'species'],
+            [561,     543,    'genus'],
+            [562,     561,    'species'],
+            [570,     543,    'genus'],
+            [620,     543,    'genus'],
+            [622,     620,    'species'],
+            [766,     28211,  'order'],
+            [1224,    2,      'phylum'],
+            [1236,    1224,   'class'],
+            [28211,   1224,   'class'],
+            [91347,   1236,   'order'],
+            [118884,  1236,   'no rank'],
+            [126792,  36549,  'species'],
+            [131567,  1,      'no rank'],
+            [585056,  562,    'no rank'],
+            [1038927, 562,    'no rank'],
+            [2580236, 488338, 'species']],
+            columns=['tax_id', 'parent_tax_id', 'rank']).set_index('tax_id')
+
+        names = pd.DataFrame([
+            [1, 'root', np.nan, 'scientific name'],
+            [2, 'Bacteria', 'Bacteria <bacteria>', 'scientific name'],
+            [2, 'eubacteria', np.nan, 'genbank common name'],
+            [543, 'Enterobacteriaceae', np.nan, 'scientific name'],
+            [548, 'Klebsiella aerogenes', np.nan, 'scientific name'],
+            [561, 'Escherichia', np.nan, 'scientific name'],
+            [562, '"Bacillus coli" Migula 1895', np.nan, 'authority'],
+            [562, 'Escherichia coli', np.nan, 'scientific name'],
+            [562, 'Escherichia/Shigella coli', np.nan, 'equivalent name'],
+            [570, 'Donovania', np.nan, 'synonym'],
+            [570, 'Klebsiella', np.nan, 'scientific name'],
+            [620, 'Shigella', np.nan, 'scientific name'],
+            [622, 'Shigella dysenteriae', np.nan, 'scientific name'],
+            [766, 'Rickettsiales', np.nan, 'scientific name'],
+            [1224, 'Proteobacteria', np.nan, 'scientific name'],
+            [1236, 'Gammaproteobacteria', np.nan, 'scientific name'],
+            [28211, 'Alphaproteobacteria', np.nan, 'scientific name'],
+            [91347, 'Enterobacterales', np.nan, 'scientific name'],
+            [118884, 'unclassified Gammaproteobacteria', np.nan,
+             'scientific name'],
+            [126792, 'Plasmid pPY113', np.nan, 'scientific name'],
+            [131567, 'cellular organisms', np.nan, 'scientific name'],
+            [585056, 'Escherichia coli UMN026', np.nan, 'scientific name'],
+            [1038927, 'Escherichia coli O104:H4', np.nan, 'scientific name'],
+            [2580236, 'synthetic Escherichia coli Syn61', np.nan,
+             'scientific name']],
+             columns=['tax_id', 'name_txt', 'unique_name',
+                      'name_class']).set_index('tax_id')
+
+        # nodes without names (use tax_id as name)
+        obs = TreeNode.from_taxdump(nodes)
+        exp = ('(((((((((585056,1038927)562)561,(548)570,(622)620)543)91347,'
+               '118884)1236,(766)28211)1224)2)131567)1;')
+        self.assertEqual(str(obs).rstrip(), exp)
+        self.assertEqual(obs.count(), 18)
+        self.assertEqual(obs.count(tips=True), 6)
+
+        # default scenario (nodes and names)
+        obs = TreeNode.from_taxdump(nodes, names)
+
+        # check tree is in same size
+        self.assertEqual(obs.count(), 18)
+        self.assertEqual(obs.count(tips=True), 6)
+
+        # check id, name and rank are correctly set at root
+        self.assertEqual(obs.id, 1)
+        self.assertEqual(obs.name, 'root')
+        self.assertEqual(obs.rank, 'no rank')
+
+        # check an internal node
+        node = obs.find('Enterobacteriaceae')
+        self.assertEqual(node.id, 543)
+        self.assertEqual(node.rank, 'family')
+
+        # check its children (which should preserve input order)
+        self.assertEqual(len(node.children), 3)
+        self.assertListEqual([x.name for x in node.children], [
+            'Escherichia', 'Klebsiella', 'Shigella'])
+
+        # check that non-scientific name isn't used
+        with self.assertRaises(MissingNodeError):
+            obs.find('Donovania')
+
+        # name as a dictionary
+        names = names[names['name_class'] == 'scientific name'][
+            'name_txt'].to_dict()
+        obs = TreeNode.from_taxdump(nodes, names)
+        self.assertEqual(obs.count(), 18)
+        self.assertEqual(obs.name, 'root')
+        self.assertEqual(obs.find('Enterobacteriaceae').id, 543)
+
+        # nodes has no top level
+        nodes = pd.DataFrame([
+            [2, 1, 'A'],
+            [3, 2, 'B'],
+            [1, 3, 'C']],
+            columns=['tax_id', 'parent_tax_id', 'rank']).set_index('tax_id')
+        with self.assertRaises(ValueError) as ctx:
+            TreeNode.from_taxdump(nodes)
+        self.assertEqual(str(ctx.exception), 'There is no top-level node.')
+
+        # nodes has more than one top level
+        nodes = pd.DataFrame([
+            [1, 1, 'A'],
+            [2, 2, 'B'],
+            [3, 3, 'C']],
+            columns=['tax_id', 'parent_tax_id', 'rank']).set_index('tax_id')
+        with self.assertRaises(ValueError) as ctx:
+            TreeNode.from_taxdump(nodes)
+        self.assertEqual(str(
+            ctx.exception), 'There are more than one top-level node.')
 
 
 sample = """
