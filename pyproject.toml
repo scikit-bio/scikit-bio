@@ -1,5 +1,6 @@
 [build-system]
-requires = ["Cython", "numpy>=1.9.2", "setuptools", "wheel"]
+# https://numpy.org/devdocs/user/depending_on_numpy.html?highlight=mean#build-time-dependency
+requires = ["Cython", "oldest-supported-numpy", "setuptools", "wheel"]
 
 [tool.pytest.ini_options]
 filterwarnings = [
