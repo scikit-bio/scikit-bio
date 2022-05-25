@@ -32,9 +32,6 @@ Exceptions
 
    EntrezServerError
 
-Examples
---------
-
 """
 
 # ----------------------------------------------------------------------------
@@ -53,10 +50,9 @@ from urllib.request import urlopen, Request
 from urllib.parse import urlencode
 from urllib.error import HTTPError
 from xml.etree import ElementTree
-
-# Identification parameters used by NCBI
 from skbio import Sequence, DNA, Protein, read
 
+# Identification parameters used by NCBI
 tool = None
 email = None
 api_key = None
