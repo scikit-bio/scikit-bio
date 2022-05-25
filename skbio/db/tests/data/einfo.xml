@@ -1,0 +1,50 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE eInfoResult PUBLIC "-//NLM//DTD einfo 20190110//EN" "https://eutils.ncbi.nlm.nih.gov/eutils/dtd/20190110/einfo.dtd">
+<eInfoResult>
+<DbList>
+
+	<DbName>pubmed</DbName>
+	<DbName>protein</DbName>
+	<DbName>nuccore</DbName>
+	<DbName>ipg</DbName>
+	<DbName>nucleotide</DbName>
+	<DbName>structure</DbName>
+	<DbName>genome</DbName>
+	<DbName>annotinfo</DbName>
+	<DbName>assembly</DbName>
+	<DbName>bioproject</DbName>
+	<DbName>biosample</DbName>
+	<DbName>blastdbinfo</DbName>
+	<DbName>books</DbName>
+	<DbName>cdd</DbName>
+	<DbName>clinvar</DbName>
+	<DbName>gap</DbName>
+	<DbName>gapplus</DbName>
+	<DbName>grasp</DbName>
+	<DbName>dbvar</DbName>
+	<DbName>gene</DbName>
+	<DbName>gds</DbName>
+	<DbName>geoprofiles</DbName>
+	<DbName>homologene</DbName>
+	<DbName>medgen</DbName>
+	<DbName>mesh</DbName>
+	<DbName>ncbisearch</DbName>
+	<DbName>nlmcatalog</DbName>
+	<DbName>omim</DbName>
+	<DbName>orgtrack</DbName>
+	<DbName>pmc</DbName>
+	<DbName>popset</DbName>
+	<DbName>proteinclusters</DbName>
+	<DbName>pcassay</DbName>
+	<DbName>protfam</DbName>
+	<DbName>pccompound</DbName>
+	<DbName>pcsubstance</DbName>
+	<DbName>seqannot</DbName>
+	<DbName>snp</DbName>
+	<DbName>sra</DbName>
+	<DbName>taxonomy</DbName>
+	<DbName>biocollections</DbName>
+	<DbName>gtr</DbName>
+</DbList>
+
+</eInfoResult>

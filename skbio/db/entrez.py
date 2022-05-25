@@ -29,7 +29,7 @@ Exceptions
 .. autosummary::
    :toctree: generated/
 
-   EntrezError
+   EntrezServerError
 
 Examples
 --------
@@ -63,7 +63,7 @@ api_key = None
 _latest_request_time = 0
 
 
-class EntrezError(Exception):
+class EntrezServerError(Exception):
     """Raised when the Entrez database throws an error in response to a request."""
 
     def __init__(self, msg):
@@ -74,7 +74,7 @@ class EntrezError(Exception):
 def einfo(db=None,
           version=None,
           retmode="xml",
-          parse_result=False,
+          parse=False,
           max_tries=2,
           interval=5):
     """Wrapper for Entrez's EInfo function.
@@ -96,9 +96,9 @@ def einfo(db=None,
     retmode : str, optional
         Retrieval type. Determines the format of the returned output. The default value is 'xml' for
         EInfo XML, but 'json' is also supported to return output in JSON format.
-    parse_result : bool, optional
+    parse : bool, optional
         Whether to parse the result of the API call or return it as a string. How the result is
-        parsed depends on the format of the data. The supportef data formats and respective return
+        parsed depends on the format of the data. The supported data formats and respective return
         type are as follows: JSON - ``dict``; XML - ``xml.etree.ElementTree.Element``; FASTA or
         GenBank - ``skbio.Sequence`` or ``generator`` of ``skbio.Sequence``.
     max_tries : int, optional
@@ -132,7 +132,7 @@ def einfo(db=None,
     }
     return _make_request("einfo.fcgi?",
                          parameters,
-                         parse_result=parse_result,
+                         parse=parse,
                          max_tries=max_tries,
                          interval=interval)
 
@@ -153,7 +153,7 @@ def esearch(db,
             reldate=None,
             mindate=None,
             maxdate=None,
-            parse_result=False,
+            parse=False,
             max_tries=2,
             interval=5):
     """Wrapper for Entrez's ESearch function.
@@ -240,9 +240,9 @@ def esearch(db,
         Maximum date of the range used to limit a search result by the date specified by `datetype`.
         The general date format is YYYY/MM/DD, and these variants are also allowed: YYYY, YYYY/MM.
         Musty be used along `mindate`.
-    parse_result : bool, optional
+    parse : bool, optional
         Whether to parse the result of the API call or return it as a string. How the result is
-        parsed depends on the format of the data. The supportef data formats and respective return
+        parsed depends on the format of the data. The supported data formats and respective return
         type are as follows: JSON - ``dict``; XML - ``xml.etree.ElementTree.Element``; FASTA or
         GenBank - ``skbio.Sequence`` or ``generator`` of ``skbio.Sequence``.
     max_tries : int, optional
@@ -305,7 +305,7 @@ def esearch(db,
     }
     return _make_request("esearch.fcgi?",
                          parameters,
-                         parse_result=parse_result,
+                         parse=parse,
                          max_tries=max_tries,
                          interval=interval)
 
@@ -313,7 +313,7 @@ def esearch(db,
 def epost(db,
           id,
           webenv=None,
-          parse_result=False,
+          parse=False,
           max_tries=2,
           interval=5):
     """Wrapper for Entrez's EPost function.
@@ -343,9 +343,9 @@ def epost(db,
         Environment. Usually this WebEnv value is obtained from the output of a previous ESearch,
         EPost or ELink call. If no `webenv` parameter is provided, EPost will create a new Web
         Environment and post the UID list to query key 1.
-    parse_result : bool, optional
+    parse : bool, optional
         Whether to parse the result of the API call or return it as a string. How the result is
-        parsed depends on the format of the data. The supportef data formats and respective return
+        parsed depends on the format of the data. The supported data formats and respective return
         type are as follows: JSON - ``dict``; XML - ``xml.etree.ElementTree.Element``; FASTA or
         GenBank - ``skbio.Sequence`` or ``generator`` of ``skbio.Sequence``.
     max_tries : int, optional
@@ -375,7 +375,7 @@ def epost(db,
     }
     return _make_request("epost.fcgi?",
                          parameters,
-                         parse_result=parse_result,
+                         parse=parse,
                          max_tries=max_tries,
                          interval=interval)
 
@@ -388,7 +388,7 @@ def esummary(db,
              retmax=None,
              retmode="xml",
              version=None,
-             parse_result=False,
+             parse=False,
              max_tries=2,
              interval=5):
     """Wrapper for Entrez's ESummary function.
@@ -434,9 +434,9 @@ def esummary(db,
         Used to specify version 2.0 ESummary XML. The only supported value is '2.0'. When present,
         ESummary will return version 2.0 DocSum XML that is unique to each Entrez database and that
         often contains more data than the default DocSum XML.
-    parse_result : bool, optional
+    parse : bool, optional
         Whether to parse the result of the API call or return it as a string. How the result is
-        parsed depends on the format of the data. The supportef data formats and respective return
+        parsed depends on the format of the data. The supported data formats and respective return
         type are as follows: JSON - ``dict``; XML - ``xml.etree.ElementTree.Element``; FASTA or
         GenBank - ``skbio.Sequence`` or ``generator`` of ``skbio.Sequence``.
     max_tries : int, optional
@@ -476,7 +476,7 @@ def esummary(db,
     }
     return _make_request("esummary.fcgi?",
                          parameters,
-                         parse_result=parse_result,
+                         parse=parse,
                          max_tries=max_tries,
                          interval=interval)
 
@@ -493,7 +493,7 @@ def efetch(db,
            seq_start=None,
            seq_stop=None,
            complexity=None,
-           parse_result=False,
+           parse=False,
            max_tries=2,
            interval=5):
     """Wrapper for Entrez's EFetch function.
@@ -562,9 +562,9 @@ def efetch(db,
         much of that blob to return. For example, an mRNA may be stored together with its protein
         product. The available values are as follows: 0 - entire blob; 1 - bioseq; 2 - minimal
         bioseq-set; 3 - minimal nuc-prot; 4 - minimal pub-set.
-    parse_result : bool, optional
+    parse : bool, optional
         Whether to parse the result of the API call or return it as a string. How the result is
-        parsed depends on the format of the data. The supportef data formats and respective return
+        parsed depends on the format of the data. The supported data formats and respective return
         type are as follows: JSON - ``dict``; XML - ``xml.etree.ElementTree.Element``; FASTA or
         GenBank - ``skbio.Sequence`` or ``generator`` of ``skbio.Sequence``.
     max_tries : int, optional
@@ -608,7 +608,7 @@ def efetch(db,
     }
     return _make_request("efetch.fcgi?",
                          parameters,
-                         parse_result=parse_result,
+                         parse=parse,
                          max_tries=max_tries,
                          interval=interval)
 
@@ -628,7 +628,7 @@ def elink(db,
           reldate=None,
           mindate=None,
           maxdate=None,
-          parse_result=False,
+          parse=False,
           max_tries=2,
           interval=5):
     """Wrapper for Entrez's ELink function.
@@ -722,9 +722,9 @@ def elink(db,
         Maximum date of the range used to limit a search result by the date specified by `datetype`.
         The general date format is YYYY/MM/DD, and these variants are also allowed: YYYY, YYYY/MM.
         Musty be used along `mindate`.
-    parse_result : bool, optional
+    parse : bool, optional
         Whether to parse the result of the API call or return it as a string. How the result is
-        parsed depends on the format of the data. The supportef data formats and respective return
+        parsed depends on the format of the data. The supported data formats and respective return
         type are as follows: JSON - ``dict``; XML - ``xml.etree.ElementTree.Element``; FASTA or
         GenBank - ``skbio.Sequence`` or ``generator`` of ``skbio.Sequence``.
     max_tries : int, optional
@@ -774,14 +774,14 @@ def elink(db,
     }
     return _make_request("elink.fcgi?",
                          parameters,
-                         parse_result=parse_result,
+                         parse=parse,
                          max_tries=max_tries,
                          interval=interval)
 
 
 def egquery(term,
             retmode="xml",
-            parse_result=False,
+            parse=False,
             max_tries=2,
             interval=5):
     """Wrapper for Entrez's EGQuery function.
@@ -797,9 +797,9 @@ def egquery(term,
         tags. Search fields and tags are database specific.
     retmode : str, optional
         Retrieval mode. The only supported value is 'xml'.
-    parse_result : bool, optional
+    parse : bool, optional
         Whether to parse the result of the API call or return it as a string. How the result is
-        parsed depends on the format of the data. The supportef data formats and respective return
+        parsed depends on the format of the data. The supported data formats and respective return
         type are as follows: JSON - ``dict``; XML - ``xml.etree.ElementTree.Element``; FASTA or
         GenBank - ``skbio.Sequence`` or ``generator`` of ``skbio.Sequence``.
     max_tries : int, optional
@@ -828,14 +828,14 @@ def egquery(term,
     }
     return _make_request("egquery?",
                          parameters,
-                         parse_result=parse_result,
+                         parse=parse,
                          max_tries=max_tries,
                          interval=interval)
 
 
 def espell(db,
            term,
-           parse_result=False,
+           parse=False,
            max_tries=2,
            interval=5):
     """Wrapper for Entrez's ESpell function.
@@ -851,9 +851,9 @@ def espell(db,
         Entrez text query. All special characters must be URL encoded. Spaces may be replaced by '+'
         signs. See the PubMed or Entrez help for information about search field descriptions and
         tags. Search fields and tags are database specific.
-    parse_result : bool, optional
+    parse : bool, optional
         Whether to parse the result of the API call or return it as a string. How the result is
-        parsed depends on the format of the data. The supportef data formats and respective return
+        parsed depends on the format of the data. The supported data formats and respective return
         type are as follows: JSON - ``dict``; XML - ``xml.etree.ElementTree.Element``; FASTA or
         GenBank - ``skbio.Sequence`` or ``generator`` of ``skbio.Sequence``.
     max_tries : int, optional
@@ -882,7 +882,7 @@ def espell(db,
     }
     return _make_request("espell.fcgi?",
                          parameters,
-                         parse_result=parse_result,
+                         parse=parse,
                          max_tries=max_tries,
                          interval=interval)
 
@@ -890,7 +890,7 @@ def espell(db,
 def ecitmatch(bdata,
               db="pubmed",
               retmode="xml",
-              parse_result=False,
+              parse=False,
               max_tries=2,
               interval=5):
     """Wrapper for Entrez's ECitMatch function.
@@ -912,9 +912,9 @@ def ecitmatch(bdata,
     retmode : str, optional
         Retrieval mode. The only supported value is 'xml', which currently returns data as plain
         text (rather than XML as one might expect).
-    parse_result : bool, optional
+    parse : bool, optional
         Whether to parse the result of the API call or return it as a string. How the result is
-        parsed depends on the format of the data. The supportef data formats and respective return
+        parsed depends on the format of the data. The supported data formats and respective return
         type are as follows: JSON - ``dict``; XML - ``xml.etree.ElementTree.Element``; FASTA or
         GenBank - ``skbio.Sequence`` or ``generator`` of ``skbio.Sequence``.
     max_tries : int, optional
@@ -945,13 +945,15 @@ def ecitmatch(bdata,
     }
     return _make_request("ecitmatch.cgi?",
                          parameters,
-                         parse_result=parse_result,
+                         parse=parse,
                          max_tries=max_tries,
                          interval=interval)
 
 
-def _parse_response(result: str, response: HTTPResponse, req_data: bytes):
+def _parse_response(response: HTTPResponse, request_data: bytes):
     """Parses the result from an Entrez function based on its headers."""
+    with response:
+        result = response.read().decode("utf8")
     content_header = response.getheader("Content-Type").lower()
     if "xml" in content_header:
         return ElementTree.fromstring(result)
@@ -959,7 +961,7 @@ def _parse_response(result: str, response: HTTPResponse, req_data: bytes):
         return json.loads(result)
     if "plain" in content_header:
         # Tests if content is actually a data file understood by skbio.io
-        params = req_data.decode("utf8")
+        params = request_data.decode("utf8")
         if "rettype=fasta" in params:
             content_format = "fasta"
             nr_seqs = result.count(">")
@@ -969,12 +971,13 @@ def _parse_response(result: str, response: HTTPResponse, req_data: bytes):
         else:
             return result
         # Infer the type of sequence from the url parameters
+        # These dbs can only return proteins
         if "rettype=fasta_cds_aa" in params or "db=protein" in params or "db=homologene" in params:
             seq_type = Protein
         # popset can return DNA or protein
         elif "db=popset" in params:
             seq_type = Sequence
-        # All other cases return DNA
+        # All other dbs return DNA
         else:
             seq_type = DNA
 
@@ -982,7 +985,7 @@ def _parse_response(result: str, response: HTTPResponse, req_data: bytes):
             return read(StringIO(result), format=content_format, into=seq_type)
         return read(StringIO(result), format=content_format, constructor=seq_type)
 
-    raise ValueError("format of data couldn't be inferred from content, set 'parse_result' to "
+    raise ValueError("format of data couldn't be inferred from content, set 'parse' to "
                      "False")
 
 
@@ -1008,7 +1011,7 @@ def _build_request(cgi, parameters):
     return Request(url, data=urlencode(parameters).encode("ascii"), method="POST")
 
 
-def _make_request(cgi, parameters, parse_result, max_tries, interval):
+def _make_request(cgi, parameters, parse, max_tries, interval):
     """Generic function to make requests to Entrez's servers."""
     global _latest_request_time
 
@@ -1021,29 +1024,29 @@ def _make_request(cgi, parameters, parse_result, max_tries, interval):
         time.sleep(min_delay - elapsed_time)
     for i in range(max_tries):
         try:
-            with urlopen(request) as response:
-                result = response.read().decode("utf8")
+            response = urlopen(request)
             break
         except HTTPError as e:
-            # Server-side error, search the content of the message for an explanation
-            if i == max_tries - 1:
-                raise EntrezError(e.read()) from e
             # Client-side error, just raise the exception
-            elif int(e.code) // 100 == 4:
+            if int(e.code) // 100 == 4:
                 raise e
+            # Server-side error, search the content of the message for an explanation
+            elif i == max_tries - 1:
+                raise EntrezServerError(e.read()) from e
             time.sleep(interval)
     # Updates the global request time tracker
     _latest_request_time = time.time()
 
-    # Parse results into a python object or returns the raw bytestring
-    if parse_result:
-        return _parse_response(result, response, request.data)
-    return result
+    # Parse results into a python object or returns the content as text
+    if parse:
+        return _parse_response(response, request.data)
+    with response:
+        return response.read().decode("utf8")
 
 
 def _ensure_single_input_source(id, query_key, webenv):
     """Logic to ensure a valid form of input was given (either from id or both webenv and
-    query_key)"""
+    query_key)."""
     webenv_input = sum((webenv is None, query_key is None))
     if id is None:
         if webenv_input == 2:

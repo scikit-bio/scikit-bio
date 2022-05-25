@@ -1,0 +1,24 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE eSearchResult PUBLIC "-//NLM//DTD esearch 20060628//EN" "https://eutils.ncbi.nlm.nih.gov/eutils/dtd/20060628/esearch.dtd">
+<eSearchResult><Count>49793750</Count><RetMax>20</RetMax><RetStart>0</RetStart><IdList>
+<Id>2240252582</Id>
+<Id>2240252298</Id>
+<Id>2240252232</Id>
+<Id>2240252149</Id>
+<Id>2240252002</Id>
+<Id>2240251737</Id>
+<Id>2240251681</Id>
+<Id>2240251656</Id>
+<Id>2240251652</Id>
+<Id>2240251585</Id>
+<Id>2240251402</Id>
+<Id>2240251096</Id>
+<Id>2240250979</Id>
+<Id>2240250586</Id>
+<Id>2240250562</Id>
+<Id>2240250552</Id>
+<Id>2240250542</Id>
+<Id>2240249507</Id>
+<Id>2240249109</Id>
+<Id>2240249104</Id>
+</IdList><TranslationSet/><TranslationStack>   <TermSet>    <Term>000070000[MOLWT]</Term>    <Field>MOLWT</Field>    <Count>0</Count>    <Explode>N</Explode>   </TermSet>   <TermSet>    <Term>000090000[MOLWT]</Term>    <Field>MOLWT</Field>    <Count>0</Count>    <Explode>N</Explode>   </TermSet>   <OP>RANGE</OP>  </TranslationStack><QueryTranslation>000070000[MOLWT] : 000090000[MOLWT]</QueryTranslation></eSearchResult>
