@@ -133,7 +133,8 @@ class Sequence(MetadataMixin, PositionalMetadataMixin, IntervalMetadataMixin,
 
     Underlying sequence immutable:
 
-    >>> seq.values = np.array([b'T', b'C', b'G', b'A'], dtype='|S1')
+    >>> values = np.array([b'T', b'C', b'G', b'A'], dtype='|S1')
+    >>> seq.values = values # doctest: +SKIP
     Traceback (most recent call last):
         ...
     AttributeError: can't set attribute

@@ -509,5 +509,10 @@ _closure()
 # Add the 'copybutton' javascript, to hide/show the prompt in code
 # examples, originally taken from scikit-learn's doc/conf.py
 def setup(app):
-    app.add_javascript('copybutton.js')
-    app.add_stylesheet('style.css')
+    try:
+        app.add_javascript('copybutton.js')
+        app.add_stylesheet('style.css')
+    except:
+        app.add_js_file('copybutton.js')
+        app.add_css_file('style.css')
+
