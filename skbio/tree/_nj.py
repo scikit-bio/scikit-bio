@@ -118,7 +118,7 @@ def nj(dm, disallow_negative_branch_length=True, result_constructor=None):
 
     # while there are still more than three distances in the distance matrix,
     # join neighboring nodes.
-    while(dm.shape[0] > 3):
+    while (dm.shape[0] > 3):
         # compute the Q matrix
         q = _compute_q(dm)
 
