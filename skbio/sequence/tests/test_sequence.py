@@ -167,7 +167,6 @@ class TestSequence(TestSequenceBase, ReallyEqualMixin):
         self.assertFalse(result.metadata)
 
     def test_concat_strict_many(self):
-        from collections import OrderedDict
         odd_key = frozenset()
         expected = Sequence("13579",
                             positional_metadata={odd_key: [1, 2, 3, 4, 5],
