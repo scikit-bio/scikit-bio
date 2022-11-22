@@ -15,7 +15,6 @@ import scipy.special
 from scipy.stats import kendalltau
 from scipy.stats import ConstantInputWarning
 from scipy.stats import NearConstantInputWarning
-from scipy.stats import ConstantInputWarning
 
 from skbio.stats.distance import DistanceMatrix
 from skbio.util._decorator import experimental

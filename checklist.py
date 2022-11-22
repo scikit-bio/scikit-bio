@@ -457,7 +457,7 @@ class APIRegressionValidator(RepoValidator):
                     if node.level > 0:
                         prefix = root
                         extra = node.level - 1
-                        while(extra > 0):
+                        while (extra > 0):
                             # Keep dropping...
                             prefix = os.path.split(prefix)[0]
                             extra -= 1
