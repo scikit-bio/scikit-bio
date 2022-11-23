@@ -215,9 +215,9 @@ class BaseTests(TestCase):
 
         self.assertAlmostEqual(pielou_e(self.counts), 0.92485490560)
 
-        self.assertEqual(pielou_e([1, 1]), 1.0)
-        self.assertEqual(pielou_e([1, 1, 1, 1]), 1.0)
-        self.assertEqual(pielou_e([1, 1, 1, 1, 0, 0]), 1.0)
+        self.assertAlmostEqual(pielou_e([1, 1]), 1.0)
+        self.assertAlmostEqual(pielou_e([1, 1, 1, 1]), 1.0)
+        self.assertAlmostEqual(pielou_e([1, 1, 1, 1, 0, 0]), 1.0)
 
         # Examples from
         # http://ww2.mdsg.umd.edu/interactive_lessons/biofilm/diverse.htm#3
