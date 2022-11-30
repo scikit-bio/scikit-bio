@@ -9,3 +9,4 @@ docutils < 0.15
 sphinx-bootstrap-theme
 check-manifest
 hdmedians
+h5py >= 3.6.0
