@@ -72,6 +72,6 @@ jobs:
         with:
           context: .
           # ^ to use the local checkout, not the git context
-          file: aarch64_py38.Dockerfile
+          file: aarch64.Dockerfile
           cache-from: type=gha
           cache-to: type=gha,mode=max
