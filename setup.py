@@ -84,7 +84,7 @@ with open('README.rst') as f:
 # Dealing with Cython
 USE_CYTHON = os.environ.get('USE_CYTHON', True)
 print("======================================")
-print(USE_CYTHON)
+e = Exception(USE_CYTHON)
 print("======================================", flush=True)
 ext = '.pyx' if USE_CYTHON else '.c'
 
@@ -132,7 +132,7 @@ if USE_CYTHON:
     from Cython.Build import cythonize
     extensions = cythonize(extensions)
 
-print(extensions, flush=True)
+raise Exception(repr(extensions)) from e
 
 setup(name='scikit-bio',
       version=version,
