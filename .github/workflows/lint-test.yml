@@ -25,6 +25,8 @@ jobs:
         with:
           auto-update-conda: true
           python-version: ${{ matrix.python-version }}
+          miniforge-version: "*"
+          miniforge-variant: "Mambaforge"
       - name: Install dependencies
         shell: bash -l {0}
         run: |
