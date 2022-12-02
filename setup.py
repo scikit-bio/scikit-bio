@@ -132,7 +132,7 @@ extensions = [
 
 if USE_CYTHON:
     from Cython.Build import cythonize
-    # Always recompile the pyx files if USE_CYTHON is set.
+    # Always recompile the pyx files to C if USE_CYTHON is set.
     extensions = cythonize(extensions, force=True)
 
 setup(name='scikit-bio',
