@@ -19,7 +19,9 @@ endif
 # simulate a user's install/test process this way to find package data that did
 # not install correctly (for example).
 test:
-	flake8 skbio setup.py checklist.py
-	./checklist.py
 	cd ci && $(TEST_COMMAND) && cd -
 	check-manifest
+
+lint:
+	flake8 skbio setup.py checklist.py
+	./checklist.py

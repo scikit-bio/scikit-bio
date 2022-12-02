@@ -10,7 +10,7 @@ jobs:
   install-and-test:
     name: (${{ matrix.python-version }}, ${{ matrix.os }}, USE_CYTHON=${{matrix.use_cython}})
     runs-on: ${{ matrix.os }}
-    env: 
+    env:
       MPLBACKEND: Agg
       USE_CYTHON: ${{matrix.use_cython}}
     strategy:
@@ -48,7 +48,9 @@ jobs:
         shell: bash -l {0}
         env:
           WITH_COVERAGE: "TRUE"
-        run: make test
+        run: |
+          make test
+          make lint
       - name: Build docs
         shell: bash -l {0}
         run: make -C doc clean html
