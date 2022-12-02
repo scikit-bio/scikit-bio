@@ -163,7 +163,6 @@ def local_pairwise_align_nucleotide(seq1, seq2, gap_open_penalty=5,
     --------
     local_pairwise_align
     local_pairwise_align_protein
-    skbio.alignment.local_pairwise_align_ssw
     global_pairwise_align
     global_pairwise_align_protein
     global_pairwise_align_nucelotide
@@ -229,7 +228,6 @@ def local_pairwise_align_protein(seq1, seq2, gap_open_penalty=11,
     --------
     local_pairwise_align
     local_pairwise_align_nucleotide
-    skbio.alignment.local_pairwise_align_ssw
     global_pairwise_align
     global_pairwise_align_protein
     global_pairwise_align_nucelotide
@@ -296,7 +294,6 @@ def local_pairwise_align(seq1, seq2, gap_open_penalty,
     --------
     local_pairwise_align_protein
     local_pairwise_align_nucleotide
-    skbio.alignment.local_pairwise_align_ssw
     global_pairwise_align
     global_pairwise_align_protein
     global_pairwise_align_nucelotide
@@ -316,7 +313,7 @@ def local_pairwise_align(seq1, seq2, gap_open_penalty,
     """
     warn("You're using skbio's python implementation of Smith-Waterman "
          "alignment. This will be very slow (e.g., thousands of times slower) "
-         "than skbio.alignment.local_pairwise_align_ssw.",
+         "than implementations in other languages.",
          EfficiencyWarning)
 
     for seq in seq1, seq2:
@@ -404,7 +401,6 @@ def global_pairwise_align_nucleotide(seq1, seq2, gap_open_penalty=5,
     local_pairwise_align
     local_pairwise_align_protein
     local_pairwise_align_nucleotide
-    skbio.alignment.local_pairwise_align_ssw
     global_pairwise_align
     global_pairwise_align_protein
 
@@ -487,7 +483,6 @@ def global_pairwise_align_protein(seq1, seq2, gap_open_penalty=11,
     local_pairwise_align
     local_pairwise_align_protein
     local_pairwise_align_nucleotide
-    skbio.alignment.local_pairwise_align_ssw
     global_pairwise_align
     global_pairwise_align_nucelotide
 
@@ -569,7 +564,6 @@ def global_pairwise_align(seq1, seq2, gap_open_penalty, gap_extend_penalty,
     local_pairwise_align
     local_pairwise_align_protein
     local_pairwise_align_nucleotide
-    skbio.alignment.local_pairwise_align_ssw
     global_pairwise_align_protein
     global_pairwise_align_nucelotide
 
@@ -638,100 +632,6 @@ def global_pairwise_align(seq1, seq2, gap_open_penalty, gap_extend_penalty,
     msa = TabularMSA(aligned1 + aligned2)
 
     return msa, score, start_end_positions
-
-
-@experimental(as_of="0.4.0")
-def local_pairwise_align_ssw(sequence1, sequence2, **kwargs):
-    """Align query and target sequences with Striped Smith-Waterman.
-
-    Parameters
-    ----------
-    sequence1 : DNA, RNA, or Protein
-        The first unaligned sequence
-    sequence2 : DNA, RNA, or Protein
-        The second unaligned sequence
-
-    Returns
-    -------
-    tuple
-        ``TabularMSA`` object containing the aligned sequences, alignment score
-        (float), and start/end positions of each input sequence (iterable
-        of two-item tuples). Note that start/end positions are indexes into the
-        unaligned sequences.
-
-    Notes
-    -----
-    This is a wrapper for the SSW package [1]_.
-
-    For a complete list of optional keyword-arguments that can be provided,
-    see ``skbio.alignment.StripedSmithWaterman``.
-
-    The following kwargs will not have any effect: `suppress_sequences`,
-    `zero_index`, and `protein`
-
-    If an alignment does not meet a provided filter, `None` will be returned.
-
-    References
-    ----------
-    .. [1] Zhao, Mengyao, Wan-Ping Lee, Erik P. Garrison, & Gabor T.
-       Marth. "SSW Library: An SIMD Smith-Waterman C/C++ Library for
-       Applications". PLOS ONE (2013). Web. 11 July 2014.
-       http://www.plosone.org/article/info:doi/10.1371/journal.pone.0082138
-
-    See Also
-    --------
-    skbio.alignment.StripedSmithWaterman
-
-    """
-    for seq in sequence1, sequence2:
-        if not isinstance(seq, (DNA, RNA, Protein)):
-            raise TypeError(
-                "`sequence1` and `sequence2` must be DNA, RNA, or Protein, "
-                "not type %r" % type(seq).__name__)
-
-    if type(sequence1) is not type(sequence2):
-        raise TypeError(
-            "`sequence1` and `sequence2` must be the same type: %r != %r"
-            % (type(sequence1).__name__, type(sequence2).__name__))
-
-    # We need the sequences for `TabularMSA` to make sense, so don't let the
-    # user suppress them.
-    kwargs['suppress_sequences'] = False
-    kwargs['zero_index'] = True
-
-    kwargs['protein'] = False
-    if isinstance(sequence1, Protein):
-        kwargs['protein'] = True
-
-    query = StripedSmithWaterman(str(sequence1), **kwargs)
-    alignment = query(str(sequence2))
-
-    # If there is no cigar, then it has failed a filter. Return None.
-    if not alignment.cigar:
-        return None
-
-    start_end = None
-    if alignment.query_begin != -1:
-        start_end = [
-            (alignment.query_begin, alignment.query_end),
-            (alignment.target_begin, alignment.target_end_optimal)
-        ]
-
-    metadata1 = metadata2 = None
-    if sequence1.has_metadata():
-        metadata1 = sequence1.metadata
-    if sequence2.has_metadata():
-        metadata2 = sequence2.metadata
-
-    constructor = type(sequence1)
-    msa = TabularMSA([
-        constructor(alignment.aligned_query_sequence, metadata=metadata1,
-                    validate=False),
-        constructor(alignment.aligned_target_sequence, metadata=metadata2,
-                    validate=False)
-    ])
-
-    return msa, alignment.optimal_alignment_score, start_end
 
 
 @deprecated(as_of="0.4.0", until="0.6.0",

@@ -99,7 +99,9 @@ elif platform.system() == 'Windows':
 
 # Users with i686 architectures have reported that adding this flag allows
 # SSW to be compiled. See https://github.com/biocore/scikit-bio/issues/409 and
-# http://stackoverflow.com/q/26211814/3776794 for details.
+# http://stackoverflow.com/q/26211814/3776794 for details. Retaining this
+# even after removal of SSW (https://github.com/biocore/scikit-bio/pull/1830)
+# as it's now being used in other compliation.
 if platform.machine() == 'i686':
     extra_compile_args.append('-msse2')
 
