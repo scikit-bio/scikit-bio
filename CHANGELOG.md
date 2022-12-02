@@ -7,6 +7,10 @@
 * Added NCBI taxonomy database dump format (`taxdump`) ([#1810](https://github.com/biocore/scikit-bio/pull/1810)).
 * Added `TreeNode.from_taxdump` for converting taxdump into a tree ([#1810](https://github.com/biocore/scikit-bio/pull/1810)).
 
+### Backward-incompatible changes [stable]
+
+* Support for SSW has been removed from scikit-bio ([#1814](https://github.com/biocore/scikit-bio/issues/1814)). This removes `skbio.local_pairwise_align_ssw`, `skbio.alignment.StripedSmithWaterman`, and `skbio.alignment.AlignmentStructure`. We recommend using other packages that provide production ready alignment algorithms, which are more fully featured than skbio's support had been. Some discussion of alternatives is available at ([#1814](https://github.com/biocore/scikit-bio/issues/1814)).
+
 ## Version 0.5.7
 
 ### Features

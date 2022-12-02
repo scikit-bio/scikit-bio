@@ -12,7 +12,6 @@ from itertools import product
 import numpy as np
 
 from skbio.alignment import TabularMSA
-from skbio.alignment._ssw_wrapper import StripedSmithWaterman
 from skbio.sequence import DNA, RNA, Protein
 from skbio.sequence import GrammaredSequence
 from skbio.util import EfficiencyWarning

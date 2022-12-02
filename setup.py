@@ -85,23 +85,23 @@ with open('README.rst') as f:
 USE_CYTHON = os.environ.get('USE_CYTHON', True)
 ext = '.pyx' if USE_CYTHON else '.c'
 
-ssw_extra_compile_args = ['-I.']
+extra_compile_args = ['-I.']
 
 if platform.system() != 'Windows':
     if icc or sysconfig.get_config_vars()['CC'] == 'icc':
-        ssw_extra_compile_args.extend(['-qopenmp-simd',
+        extra_compile_args.extend(['-qopenmp-simd',
                                        '-DSIMDE_ENABLE_OPENMP'])
     elif not (clang or sysconfig.get_config_vars()['CC'] == 'clang'):
-        ssw_extra_compile_args.extend(['-fopenmp-simd',
+        extra_compile_args.extend(['-fopenmp-simd',
                                        '-DSIMDE_ENABLE_OPENMP'])
 elif platform.system() == 'Windows':
-    ssw_extra_compile_args.extend(['-openmp:experimental'])
+    extra_compile_args.extend(['-openmp:experimental'])
 
 # Users with i686 architectures have reported that adding this flag allows
 # SSW to be compiled. See https://github.com/biocore/scikit-bio/issues/409 and
 # http://stackoverflow.com/q/26211814/3776794 for details.
 if platform.machine() == 'i686':
-    ssw_extra_compile_args.append('-msse2')
+    extra_compile_args.append('-msse2')
 
 extensions = [
     Extension("skbio.metadata._intersection",
@@ -109,20 +109,15 @@ extensions = [
     Extension("skbio.stats.__subsample",
               ["skbio/stats/__subsample" + ext],
               include_dirs=[np.get_include()]),
-    Extension("skbio.alignment._ssw_wrapper",
-              ["skbio/alignment/_ssw_wrapper" + ext,
-               "skbio/alignment/_lib/ssw.c"],
-              extra_compile_args=ssw_extra_compile_args,
-              include_dirs=[np.get_include()]),
     Extension("skbio.diversity._phylogenetic",
               ["skbio/diversity/_phylogenetic" + ext],
               include_dirs=[np.get_include()]),
     Extension("skbio.stats.ordination._cutils",
               ["skbio/stats/ordination/_cutils" + ext],
-              extra_compile_args=ssw_extra_compile_args),
+              extra_compile_args=extra_compile_args),
     Extension("skbio.stats.distance._cutils",
               ["skbio/stats/distance/_cutils" + ext],
-              extra_compile_args=ssw_extra_compile_args),
+              extra_compile_args=extra_compile_args),
 ]
 
 if USE_CYTHON:

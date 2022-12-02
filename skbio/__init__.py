@@ -12,7 +12,7 @@ import skbio.io  # noqa
 # imports included for convenience
 from skbio.sequence import Sequence, DNA, RNA, Protein, GeneticCode
 from skbio.stats.distance import DistanceMatrix
-from skbio.alignment import local_pairwise_align_ssw, TabularMSA
+from skbio.alignment import TabularMSA
 from skbio.tree import TreeNode, nj
 from skbio.io import read, write
 from skbio.stats.ordination import OrdinationResults
@@ -20,7 +20,7 @@ import skbio.diversity  # noqa
 import skbio.stats.evolve  # noqa
 
 __all__ = ['Sequence', 'DNA', 'RNA', 'Protein', 'GeneticCode',
-           'DistanceMatrix', 'local_pairwise_align_ssw', 'TabularMSA',
+           'DistanceMatrix', 'TabularMSA',
            'TreeNode', 'nj', 'read', 'write', 'OrdinationResults']
 
 __credits__ = "https://github.com/biocore/scikit-bio/graphs/contributors"
