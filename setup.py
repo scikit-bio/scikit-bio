@@ -82,7 +82,12 @@ with open('README.rst') as f:
     long_description = f.read()
 
 # Dealing with Cython
-USE_CYTHON = os.environ.get('USE_CYTHON', True)
+USE_CYTHON = os.environ.get('USE_CYTHON')
+if USE_CYTHON is None or USE_CYTHON.lower() in {'false', 'no'}:
+    USE_CYTHON = False
+else:
+    USE_CYTHON = True
+
 ext = '.pyx' if USE_CYTHON else '.c'
 
 ssw_extra_compile_args = ['-I.']
@@ -127,7 +132,8 @@ extensions = [
 
 if USE_CYTHON:
     from Cython.Build import cythonize
-    extensions = cythonize(extensions)
+    # Always recompile the pyx files if USE_CYTHON is set.
+    extensions = cythonize(extensions, force=True)
 
 setup(name='scikit-bio',
       version=version,
