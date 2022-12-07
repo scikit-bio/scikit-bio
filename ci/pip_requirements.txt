@@ -1,11 +1,11 @@
-HTTPretty >= 0.8.14
+HTTPretty
 coveralls
 natsort
 lockfile
 CacheControl
-Sphinx < 3.0
-Jinja2 < 3.1
-docutils < 0.15
+Sphinx
+Jinja2
+docutils
 sphinx-bootstrap-theme
 check-manifest
 hdmedians
