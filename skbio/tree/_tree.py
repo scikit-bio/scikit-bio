@@ -996,6 +996,7 @@ class TreeNode(SkbioObject):
         include_self : bool
             include the initial node if True
 
+
         `self_before` and `self_after` are independent. If neither is `True`,
         only terminal nodes will be returned.
 
