@@ -9,7 +9,15 @@
 * scikit-learn has been removed as a dependency. This was a fairly heavy-weight dependency that was providing minor functionality to scikit-bio. The critical components have been implemented in scikit-bio directly, and the non-criticial components are listed under "Backward-incompatible changes [experimental]".
 
 ### Backward-incompatible changes [experimental]
-* With the removal of the scikit-learn dependency, four beta diversity metrics are no longer available. These are `manhatten`, `wminkowski`, `nan_euclidean`, and `haversine`.
+* With the removal of the scikit-learn dependency, four beta diversity metrics are no longer available. These are `manhatten`, `wminkowski`, `nan_euclidean`, and `haversine`. These metrics can now be accessed fron scikit-learn directly. For example:
+
+    ```
+    from skbio import DistanceMatrix
+    from sklearn.metrics import pairwise_distances
+
+    sklearn_dm = pairwise_distances(counts, metric="manhattan")
+    skbio_dm = skbio.DistanceMatrix(sklearn_dm)
+    ```
 
 ## Version 0.5.7
 
