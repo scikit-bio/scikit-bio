@@ -95,10 +95,10 @@ extra_compile_args = ['-I.']
 if platform.system() != 'Windows':
     if icc or sysconfig.get_config_vars()['CC'] == 'icc':
         extra_compile_args.extend(['-qopenmp-simd',
-                                       '-DSIMDE_ENABLE_OPENMP'])
+                                   '-DSIMDE_ENABLE_OPENMP'])
     elif not (clang or sysconfig.get_config_vars()['CC'] == 'clang'):
         extra_compile_args.extend(['-fopenmp-simd',
-                                       '-DSIMDE_ENABLE_OPENMP'])
+                                   '-DSIMDE_ENABLE_OPENMP'])
 elif platform.system() == 'Windows':
     extra_compile_args.extend(['-openmp:experimental'])
 
