@@ -2098,7 +2098,7 @@ fuzzy=[(True, False)], metadata={'gene': 'foo'})
         return self.__class__(**kwargs)
 
     def _munge_to_index_array(self, sliceable):
-        r"""Return an index array from something isomorphic to a boolean vector.
+        r"""Return index array from something isomorphic to a boolean vector.
 
         """
         if isinstance(sliceable, str):

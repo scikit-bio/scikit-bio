@@ -1165,7 +1165,7 @@ def _serialize_reference(header, obj, cross_references, indent=5):
 
             # delete PUBMED key (already present in CROSS_REFERENCE)
             if "PUBMED" in data:
-                del(data["PUBMED"])
+                del (data["PUBMED"])
 
         else:
             # no cross reference, do I have PUBMED in data?

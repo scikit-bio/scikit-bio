@@ -442,7 +442,7 @@ class APIRegressionValidator(RepoValidator):
     def _parse_file(self, fp, root):
         """Parse a file and return all normalized skbio imports."""
         imports = []
-        with open(fp, 'U') as f:
+        with open(fp) as f:
             # Read the file and run it through AST
             source = ast.parse(f.read())
             # Get each top-level element, this is where API imports should be.
@@ -457,7 +457,7 @@ class APIRegressionValidator(RepoValidator):
                     if node.level > 0:
                         prefix = root
                         extra = node.level - 1
-                        while(extra > 0):
+                        while (extra > 0):
                             # Keep dropping...
                             prefix = os.path.split(prefix)[0]
                             extra -= 1

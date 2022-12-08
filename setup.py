@@ -82,7 +82,12 @@ with open('README.rst') as f:
     long_description = f.read()
 
 # Dealing with Cython
-USE_CYTHON = os.environ.get('USE_CYTHON', True)
+USE_CYTHON = os.environ.get('USE_CYTHON')
+if USE_CYTHON is None or USE_CYTHON.lower() in {'false', 'no'}:
+    USE_CYTHON = False
+else:
+    USE_CYTHON = True
+
 ext = '.pyx' if USE_CYTHON else '.c'
 
 extra_compile_args = ['-I.']
@@ -124,7 +129,8 @@ extensions = [
 
 if USE_CYTHON:
     from Cython.Build import cythonize
-    extensions = cythonize(extensions)
+    # Always recompile the pyx files to C if USE_CYTHON is set.
+    extensions = cythonize(extensions, force=True)
 
 setup(name='scikit-bio',
       version=version,
@@ -148,8 +154,8 @@ setup(name='scikit-bio',
           'matplotlib >= 1.4.3',
           'natsort >= 4.0.3',
           'numpy >= 1.9.2',
-          'pandas >= 1.0.0',
-          'scipy >= 1.3.0',
+          'pandas >= 1.5.0',
+          'scipy >= 1.9.0',
           'h5py >= 2.9.0',
           'hdmedians >= 0.14.1',
           'scikit-learn >= 0.19.1',

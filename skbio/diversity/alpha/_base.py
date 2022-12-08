@@ -795,7 +795,7 @@ def pielou_e(counts):
 
 @experimental(as_of="0.4.0")
 def robbins(counts):
-    r"""Calculate Robbins' estimator for the probability of unobserved outcomes.
+    r"""Calculate Robbins' estimator for probability of unobserved outcomes.
 
     Robbins' estimator is defined as:
 
