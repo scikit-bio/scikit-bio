@@ -6,11 +6,25 @@
 # The full license is in the file COPYING.txt, distributed with this software.
 # ----------------------------------------------------------------------------
 
+.PHONY: doc lint test dev install cython
+
 ifeq ($(WITH_COVERAGE), TRUE)
 	TEST_COMMAND = coverage run --rcfile ../.coveragerc -m skbio.test && coverage report --rcfile ../.coveragerc
 else
 	TEST_COMMAND = python -m skbio.test
 endif
+
+doc:
+	$(MAKE) -C doc clean html
+
+clean:
+	$(MAKE) -C doc clean
+	rm -rf build dist scikit_bio.egg-info
+
+lint:
+	flake8 skbio setup.py checklist.py
+	./checklist.py
+	check-manifest
 
 # cd into a directory that is different from scikit-bio root directory to
 # simulate a user's install and testing of scikit-bio. Running from the root
@@ -19,7 +33,14 @@ endif
 # simulate a user's install/test process this way to find package data that did
 # not install correctly (for example).
 test:
-	flake8 skbio setup.py checklist.py
-	./checklist.py
-	cd ci && $(TEST_COMMAND) && cd -
-	check-manifest
+	cd ci && $(TEST_COMMAND)
+
+cython:
+	USE_CYTHON=TRUE python setup.py build_ext --inplace
+
+
+install:
+	pip install .
+
+dev:
+	pip install -e .
