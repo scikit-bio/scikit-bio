@@ -24,6 +24,7 @@ jobs:
           python-version: ${{ env.latest_python }}
           miniforge-version: ${{ env.miniforge_version }}
           miniforge-variant: ${{ env.miniforge_variant }}
+          environment-file: ci/conda_host_env.yml
       - name: Install dependencies
         shell: bash -l {0}
         run: |
@@ -45,6 +46,7 @@ jobs:
           python-version: ${{ env.latest_python }}
           miniforge-version: ${{ env.miniforge_version }}
           miniforge-variant: ${{ env.miniforge_variant }}
+          environment-file: ci/conda_host_env.yml
       - name: Install dependencies
         shell: bash -l {0}
         run: |
@@ -73,6 +75,7 @@ jobs:
           python-version: ${{ env.latest_python }}
           miniforge-version: ${{ env.miniforge_version }}
           miniforge-variant: ${{ env.miniforge_variant }}
+          environment-file: ci/conda_host_env.yml
       - name: Install dependencies
         shell: bash -l {0}
         run: |
