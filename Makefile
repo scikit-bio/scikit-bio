@@ -6,13 +6,13 @@
 # The full license is in the file COPYING.txt, distributed with this software.
 # ----------------------------------------------------------------------------
 
-.PHONY: doc lint test dev install cython
-
 ifeq ($(WITH_COVERAGE), TRUE)
 	TEST_COMMAND = coverage run --rcfile ../.coveragerc -m skbio.test && coverage report --rcfile ../.coveragerc
 else
 	TEST_COMMAND = python -m skbio.test
 endif
+
+.PHONY: doc lint test dev install cython
 
 doc:
 	$(MAKE) -C doc clean html
@@ -37,7 +37,6 @@ test:
 
 cython:
 	USE_CYTHON=TRUE python setup.py build_ext --inplace
-
 
 install:
 	pip install .
