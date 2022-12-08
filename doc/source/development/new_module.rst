@@ -19,7 +19,7 @@ like this::
   #
   # Distributed under the terms of the Modified BSD License.
   #
-  # The full license is in the file COPYING.txt, distributed with this software.
+  # The full license is in the file LICENSE.txt, distributed with this software.
   # ----------------------------------------------------------------------------
 
   from skbio.util import TestRunner
@@ -40,7 +40,7 @@ necessary so that all tests can be run after installation)::
   #
   # Distributed under the terms of the Modified BSD License.
   #
-  # The full license is in the file COPYING.txt, distributed with this software.
+  # The full license is in the file LICENSE.txt, distributed with this software.
   # ----------------------------------------------------------------------------
 
 Finally, remember to also follow the `documentation guidelines
