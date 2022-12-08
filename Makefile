@@ -7,7 +7,7 @@
 # ----------------------------------------------------------------------------
 
 ifeq ($(WITH_COVERAGE), TRUE)
-	TEST_COMMAND = coverage run --rcfile ../.coveragerc -m skbio.test && coverage report --rcfile ../.coveragerc
+	TEST_COMMAND = coverage run -m skbio.test && coverage report
 else
 	TEST_COMMAND = python -m skbio.test
 endif
