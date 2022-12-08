@@ -161,7 +161,6 @@ setup(name='scikit-bio',
           'scipy >= 1.9.0',
           'h5py >= 2.9.0',
           'hdmedians >= 0.14.1',
-          'scikit-learn >= 0.19.1',
           'h5py'
       ],
       classifiers=classifiers,

@@ -149,3 +149,7 @@ def _get_phylogenetic_kwargs(counts, **kwargs):
                          "metrics.")
 
     return otu_ids, tree, kwargs
+
+
+def _quantitative_to_qualitative_counts(counts):
+    return counts > 0.0
