@@ -4,7 +4,8 @@ RUN sudo yum update -y && \
 	sudo yum clean all
 ENV MPLBACKEND=Agg
 ENV USE_CYTHON=TRUE
-RUN bash -c ". /opt/conda/etc/profile.d/conda.sh && conda activate base && conda create -n test -c conda-forge --yes python=3.10"
+ARG PYTHON_VERSION
+RUN bash -c ". /opt/conda/etc/profile.d/conda.sh && conda activate base && conda create -n test -c conda-forge --yes python=$PYTHON_VERSION"
 COPY . /work
 WORKDIR /work
 RUN bash -c ". /opt/conda/etc/profile.d/conda.sh && conda activate test && conda install -c conda-forge --yes --file ci/conda_requirements.txt"
