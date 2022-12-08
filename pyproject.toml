@@ -16,24 +16,3 @@ ignore = [
     "aarch64.Dockerfile",
     "checklist.py",
 ]
-
-[tool.coverage.run]
-omit =[
-    "*/tests*",
-    "*/__init__.py",
-]
-source = "skbio"
-branch = true
-include = "*/skbio/*"
-relative_files = true
-
-[tool.coverage.report]
-exclude_lines = [
-    "pragma: no cover",
-    "raise NotImplementedError",
-    "if __name__ == .__main__.:",
-]
-omit = [
-    "*/tests*",
-    "*/__init__.py",
-]

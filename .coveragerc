@@ -1,0 +1,19 @@
+# this file is based on the examples provided on scikit-learn's .coveragerc
+
+[run]
+omit =
+    */tests*
+    */__init__.py
+source = skbio
+branch = True
+include = */skbio/*
+relative_files = True
+
+[report]
+exclude_lines =
+    pragma: no cover
+    raise NotImplementedError
+    if __name__ == .__main__.:
+omit =
+    */tests*
+    */__init__.py
