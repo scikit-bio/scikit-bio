@@ -14,7 +14,7 @@ env:
 
 jobs:
   lint:
-    name: Lint code (python ${{ env.latest_python }}, ubuntu-latest)
+    name: Lint code (python-latest, ubuntu-latest)
     runs-on: "ubuntu-latest"
     steps:
       - uses: actions/checkout@v2
@@ -34,7 +34,7 @@ jobs:
         run: make lint
 
   doc:
-    name: Build Documentation (python ${{ env.latest_python }}, ubuntu-latest)
+    name: Build Documentation (python-latest, ubuntu-latest)
     needs: lint
     runs-on: "ubuntu-latest"
     steps:
@@ -56,7 +56,7 @@ jobs:
         run: make doc
 
   test-cython:
-    name: Test Cython (python ${{ env.latest_python }}, ${{ matrix.os }})
+    name: Test Cython (python-latest, ${{ matrix.os }})
     runs-on: ${{ matrix.os }}
     env:
       MPLBACKEND: Agg
@@ -85,7 +85,7 @@ jobs:
         run: make test
 
   test-cython-aarch64:
-    name: Test Cython (python ${{ env.latest_python }}, QEMU::aarch64)
+    name: Test Cython (python-latest, QEMU::aarch64)
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v2
