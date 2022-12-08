@@ -298,7 +298,7 @@ _valid_beta_metrics = [
     "jaccard",
     "kulsinski",
     "mahalanobis",
-    "manhattan", # aliases to "cityblock" in beta_diversity
+    "manhattan",  # aliases to "cityblock" in beta_diversity
     "matching",
     "minkowski",
     "rogerstanimoto",
