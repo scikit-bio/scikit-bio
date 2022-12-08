@@ -9,12 +9,9 @@
 * scikit-learn has been removed as a dependency. This was a fairly heavy-weight dependency that was providing minor functionality to scikit-bio. The critical components have been implemented in scikit-bio directly, and the non-criticial components are listed under "Backward-incompatible changes [experimental]".
 
 ### Backward-incompatible changes [experimental]
-* With the removal of the scikit-learn dependency, four beta diversity metric names can no longer be specified. These are `manhatten`, `wminkowski`, `nan_euclidean`, and `haversine`. On testing, `wminkowski` and `haversine` did not work through `skbio.diversity.beta_diversity` (or `sklearn.metrics.pairwise_distances`). The former was deprecated in favor of calling `minkowski` with a vector of weights provided as kwarg `w` (example below), and the latter does not work with data of this shape. `manhattan` distance is available as `cityblock`, which is what it's called in SciPy. `nan_euclidean` can still be accessed fron scikit-learn directly if needed, if a user installs scikit-learn in their environment (example below).
+* With the removal of the scikit-learn dependency, three beta diversity metric names can no longer be specified. These are `wminkowski`, `nan_euclidean`, and `haversine`. On testing, `wminkowski` and `haversine` did not work through `skbio.diversity.beta_diversity` (or `sklearn.metrics.pairwise_distances`). The former was deprecated in favor of calling `minkowski` with a vector of weights provided as kwarg `w` (example below), and the latter does not work with data of this shape. `nan_euclidean` can still be accessed fron scikit-learn directly if needed, if a user installs scikit-learn in their environment (example below).
 
     ```
-    # accessing nan_euclidean through scikit-learn directly
-    import skbio
-    from sklearn.metrics import pairwise_distances
     counts = [[23, 64, 14, 0, 0, 3, 1],
             [0, 3, 35, 42, 0, 12, 1],
             [0, 5, 5, 0, 40, 40, 0],
@@ -24,12 +21,15 @@
             [88, 31, 0, 5, 5, 5, 5],
             [44, 39, 0, 0, 0, 0, 0]]
 
-    sklearn_dm = pairwise_distances(counts, metric="nan_euclidean")
-    skbio_dm = skbio.DistanceMatrix(sklearn_dm)
-
     # new mechanism of accessing wminkowski
     from skbio.diversity import beta_diversity
     beta_diversity("minkowski", counts, w=[1,1,1,1,1,1,2])
+
+    # accessing nan_euclidean through scikit-learn directly
+    import skbio
+    from sklearn.metrics import pairwise_distances
+    sklearn_dm = pairwise_distances(counts, metric="nan_euclidean")
+    skbio_dm = skbio.DistanceMatrix(sklearn_dm)
     ```
 
 ## Version 0.5.7

@@ -298,6 +298,7 @@ _valid_beta_metrics = [
     "jaccard",
     "kulsinski",
     "mahalanobis",
+    "manhattan", # aliases to "cityblock" in beta_diversity
     "matching",
     "minkowski",
     "rogerstanimoto",
@@ -409,6 +410,8 @@ def beta_diversity(metric, counts, ids=None, validate=True, pairwise_func=None,
             counts, otu_ids=otu_ids, tree=tree, normalized=normalized,
             validate=validate)
         counts = counts_by_node
+    elif metric == "manhattan":
+        metric = "cityblock"
     elif callable(metric):
         metric = functools.partial(metric, **kwargs)
         # remove all values from kwargs, since they have already been provided
@@ -419,9 +422,10 @@ def beta_diversity(metric, counts, ids=None, validate=True, pairwise_func=None,
     elif metric not in _valid_beta_metrics:
         raise ValueError(
             "Metric %s is not available. "
-            "beta_diversity is only compatible with the following metrics as "
-            "we know whether each should be treated as a qualitative or "
-            "quantitative metric. Available metrics are: %s"
+            "Only the following metrics can be passed as strings to "
+            "beta_diversity as we know whether each of these should be "
+            "treated as a qualitative or quantitative metric. Other metrics "
+            "can be provided as functions.\n Available metrics are: %s"
             % (metric, ', '.join(_valid_beta_metrics)))
     else:
         # metric is a string that scikit-bio doesn't know about, for
