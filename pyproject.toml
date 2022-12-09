@@ -5,3 +5,14 @@ requires = ["Cython>=0.29.32", "numpy>=1.9.2", "setuptools", "wheel"]
 filterwarnings = [
     "ignore::skbio.util.SkbioWarning",
 ]
+
+[tool.check-manifest]
+ignore = [
+    ".coveragerc",
+    ".dockerignore",
+    ".editorconfig",
+    "RELEASE.md",
+    "REVIEWING.md",
+    "aarch64.Dockerfile",
+    "checklist.py",
+]

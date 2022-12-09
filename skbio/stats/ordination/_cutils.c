@@ -21330,7 +21330,7 @@ if (!__Pyx_RefNanny) {
   #endif
 
   /* "skbio/stats/ordination/_cutils.pyx":8
- * #  The full license is in the file COPYING.txt, distributed with this software.
+ * #  The full license is in the file LICENSE.txt, distributed with this software.
  * # -----------------------------------------------------------------------------
  * import numpy as np             # <<<<<<<<<<<<<<
  * cimport cython

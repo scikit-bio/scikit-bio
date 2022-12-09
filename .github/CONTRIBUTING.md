@@ -21,7 +21,7 @@ When considering contributing to scikit-bio, you should begin by posting an issu
  1. The exact command(s) necessary to reproduce the bug.
  2. A link to all necessary input files for reproducing the bug. These files should only be as large as necessary to create the bug. For example, if you have an input file with 10,000 FASTA-formatted sequences but the error only arises due to one of the sequences, create a new FASTA file with only that sequence, run the command that was giving you problems, and verify that you still get an error. Then post that command and link to the trimmed FASTA file. This is *extremely* useful to other developers and it is likely that if you don't provide this information you'll get a response asking for it. Often this process helps you to better understand the bug as well.
 
-* For documentation additions, you should first post an issue describing what you propose to add, where you'd like to add it in the documentation, and a description of why you think it's an important addition. For documentation improvements and fixes, you should post an issue describing what is currently wrong or missing and how you propose to address it. For more information about building and contributing to scikit-bio's documentation, see our [documentation guide](doc/README.md).
+* For documentation additions, you should first post an issue describing what you propose to add, where you'd like to add it in the documentation, and a description of why you think it's an important addition. For documentation improvements and fixes, you should post an issue describing what is currently wrong or missing and how you propose to address it. For more information about building and contributing to scikit-bio's documentation, see our [documentation guide](../doc/README.md).
 
 When you post your issue, the scikit-bio developers will respond to let you know if we agree with the addition or change. It's very important that you go through this step to avoid wasting time working on a feature that we are not interested in including in scikit-bio. **This initial discussion with the developers is important because scikit-bio is rapidly changing, including complete re-writes of some of the core objects. If you don't get in touch first you could easily waste time by working on an object or interface that is deprecated.**
 
@@ -83,7 +83,7 @@ scikit-bio is hosted on [GitHub](http://www.github.com), and we use GitHub's [Pu
 
 8. Make your changes, add them (with ``git add``), and commit them (with ``git commit``). Don't forget to update associated tests and documentation as necessary. Write descriptive commit messages to accompany each commit. We recommend following [NumPy's commit message guidelines](https://numpy.org/doc/stable/dev/development_workflow.html#writing-the-commit-message), including the usage of commit tags (i.e., starting commit messages with acronyms such ``ENH``, ``BUG``, etc.).
 
-9. Please mention your changes in [CHANGELOG.md](CHANGELOG.md). This file informs scikit-bio *users* of changes made in each release, so be sure to describe your changes with this audience in mind. It is especially important to note API additions and changes, particularly if they are backward-incompatible, as well as bug fixes. Be sure to make your updates under the section designated for the latest development version of scikit-bio (this will be at the top of the file). Describe your changes in detail under the most appropriate section heading(s). For example, if your pull request fixes a bug, describe the bug fix under the "Bug fixes" section of [CHANGELOG.md](CHANGELOG.md). Please also include a link to the issue(s) addressed by your changes. See [CHANGELOG.md](CHANGELOG.md) for examples of how we recommend formatting these descriptions.
+9. Please mention your changes in [CHANGELOG.md](../CHANGELOG.md). This file informs scikit-bio *users* of changes made in each release, so be sure to describe your changes with this audience in mind. It is especially important to note API additions and changes, particularly if they are backward-incompatible, as well as bug fixes. Be sure to make your updates under the section designated for the latest development version of scikit-bio (this will be at the top of the file). Describe your changes in detail under the most appropriate section heading(s). For example, if your pull request fixes a bug, describe the bug fix under the "Bug fixes" section of [CHANGELOG.md](../CHANGELOG.md). Please also include a link to the issue(s) addressed by your changes. See [CHANGELOG.md](../CHANGELOG.md) for examples of how we recommend formatting these descriptions.
 
 10. When you're ready to submit your code, ensure that you have the latest version of all files in case some changed while you were working on your edits. You can do this by merging master into your topic branch:
 
@@ -192,7 +192,7 @@ Tests can be executed by running ``make test`` from the base directory of the pr
 Documentation guidelines
 ------------------------
 
-We strive to keep scikit-bio well-documented, particularly its public-facing API. See our [documentation guide](doc/README.md) for more details.
+We strive to keep scikit-bio well-documented, particularly its public-facing API. See our [documentation guide](../doc/README.md) for more details.
 
 Getting help with git
 ---------------------

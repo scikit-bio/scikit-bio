@@ -194,7 +194,7 @@ The structure of your module should be similar to the example below. scikit-bio 
     #
     # Distributed under the terms of the Modified BSD License.
     #
-    # The full license is in the file COPYING.txt, distributed with this software.
+    # The full license is in the file LICENSE.txt, distributed with this software.
     # ----------------------------------------------------------------------------
 
     from random import choice, random
@@ -309,7 +309,7 @@ Example of a ``nose`` test module structure
     #
     # Distributed under the terms of the Modified BSD License.
     #
-    # The full license is in the file COPYING.txt, distributed with this software.
+    # The full license is in the file LICENSE.txt, distributed with this software.
     # ----------------------------------------------------------------------------
 
     import numpy as np
