@@ -5,9 +5,9 @@ RUN sudo yum update -y && \
 ENV MPLBACKEND=Agg
 ENV USE_CYTHON=TRUE
 ARG PYTHON_VERSION
-RUN bash -c ". /opt/conda/etc/profile.d/conda.sh && conda activate base && conda create -n test -c conda-forge --yes python=$PYTHON_VERSION gxx_linux-aarch64"
+RUN bash -c ". /opt/conda/etc/profile.d/conda.sh && conda activate base && conda create -n testing -c conda-forge --yes python=$PYTHON_VERSION gxx_linux-aarch64"
 COPY . /work
 WORKDIR /work
-RUN bash -c ". /opt/conda/etc/profile.d/conda.sh && conda activate test && conda env update -f ci/conda_host_env.yml"
-RUN bash -c ". /opt/conda/etc/profile.d/conda.sh && conda activate test && pip install ."
-RUN bash -c ". /opt/conda/etc/profile.d/conda.sh && conda activate test && make test"
+RUN bash -c ". /opt/conda/etc/profile.d/conda.sh && conda activate testing && conda env update -f ci/conda_host_env.yml"
+RUN bash -c ". /opt/conda/etc/profile.d/conda.sh && conda activate testing && pip install ."
+RUN bash -c ". /opt/conda/etc/profile.d/conda.sh && conda activate testing && make test"
