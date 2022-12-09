@@ -65,10 +65,10 @@ classes = """
     Topic :: Scientific/Engineering :: Bio-Informatics
     Programming Language :: Python :: 3
     Programming Language :: Python :: 3 :: Only
-    Programming Language :: Python :: 3.7
     Programming Language :: Python :: 3.8
     Programming Language :: Python :: 3.9
     Programming Language :: Python :: 3.10
+    Programming Language :: Python :: 3.11
     Operating System :: Unix
     Operating System :: POSIX
     Operating System :: MacOS :: MacOS X
@@ -159,9 +159,8 @@ setup(name='scikit-bio',
           'numpy >= 1.9.2',
           'pandas >= 1.5.0',
           'scipy >= 1.9.0',
-          'h5py >= 2.9.0',
+          'h5py >= 3.6.0',
           'hdmedians >= 0.14.1',
-          'h5py'
       ],
       classifiers=classifiers,
       package_data={
