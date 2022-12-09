@@ -1,3 +1,4 @@
 flake8
 check-manifest
 python-dateutil
+numpy
