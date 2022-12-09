@@ -104,7 +104,7 @@ jobs:
         run: make test
 
   test-cython-aarch64:
-    name: Test Cython (${{ needs.conf.outputs.latest_python }}, QEMU::aarch64)
+    name: Test Cython (${{ needs.conf.outputs.latest_python }}, qemu::aarch64-centos)
     needs: conf
     runs-on: ubuntu-latest
     steps:

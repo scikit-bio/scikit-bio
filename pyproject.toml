@@ -15,4 +15,6 @@ ignore = [
     "REVIEWING.md",
     "aarch64.Dockerfile",
     "checklist.py",
+    # created by conda-incubator/setup-miniconda@v2 action
+    "ci/setup-miniconda-patched-conda_host_env.yml",
 ]
