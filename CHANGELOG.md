@@ -32,6 +32,9 @@
     skbio_dm = skbio.DistanceMatrix(sklearn_dm)
     ```
 
+### Deprecated functionality [experimental]
+* `skbio.alignment.local_pairwise_align_ssw` has been deprecated ([#1814](https://github.com/biocore/scikit-bio/issues/1814)) and will be removed or replaced in scikit-bio 0.6.0.
+
 ## Version 0.5.7
 
 ### Features
