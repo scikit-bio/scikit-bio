@@ -1,12 +1,13 @@
 # scikit-bio changelog
 
-## Version 0.5.8-dev
+## Version 0.5.8
 
 ### Features
 
 * Added NCBI taxonomy database dump format (`taxdump`) ([#1810](https://github.com/biocore/scikit-bio/pull/1810)).
 * Added `TreeNode.from_taxdump` for converting taxdump into a tree ([#1810](https://github.com/biocore/scikit-bio/pull/1810)).
 * scikit-learn has been removed as a dependency. This was a fairly heavy-weight dependency that was providing minor functionality to scikit-bio. The critical components have been implemented in scikit-bio directly, and the non-criticial components are listed under "Backward-incompatible changes [experimental]".
+* Python 3.11 is now supported.
 
 ### Backward-incompatible changes [experimental]
 * With the removal of the scikit-learn dependency, three beta diversity metric names can no longer be specified. These are `wminkowski`, `nan_euclidean`, and `haversine`. On testing, `wminkowski` and `haversine` did not work through `skbio.diversity.beta_diversity` (or `sklearn.metrics.pairwise_distances`). The former was deprecated in favor of calling `minkowski` with a vector of weights provided as kwarg `w` (example below), and the latter does not work with data of this shape. `nan_euclidean` can still be accessed fron scikit-learn directly if needed, if a user installs scikit-learn in their environment (example below).

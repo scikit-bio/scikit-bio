@@ -24,7 +24,7 @@ __all__ = ['Sequence', 'DNA', 'RNA', 'Protein', 'GeneticCode',
            'TreeNode', 'nj', 'read', 'write', 'OrdinationResults']
 
 __credits__ = "https://github.com/biocore/scikit-bio/graphs/contributors"
-__version__ = "0.5.7"
+__version__ = "0.5.8"
 
 mottos = [
     # 03/15/2014
