@@ -30,6 +30,7 @@ see the associated documentation.
    phylip
    qseq
    stockholm
+   taxdump
 
 .. currentmodule:: skbio.io.registry
 

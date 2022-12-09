@@ -50,7 +50,7 @@ Current protein support development is tracked in issue-1499 [4]_
 
 Format Specification
 --------------------
-**State: Experimental as of 0.5.1-dev.**
+**State: Experimental as of 0.5.1**
 
 Sections before ``FH (Feature Header)``
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^

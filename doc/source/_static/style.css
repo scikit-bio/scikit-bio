@@ -53,6 +53,10 @@ a:focus code.docutils.literal:not(.xref) {
     color: #FFF !important;
 }
 
+aside > p {
+    margin: 1px;
+}
+
 .label {
     display: table-cell !important;
     color: #000 !important;
