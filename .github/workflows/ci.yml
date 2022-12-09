@@ -13,8 +13,23 @@ env:
   miniforge_variant: "Mambaforge"
 
 jobs:
+  conf:
+    # This job is needed to route the global environment variables into
+    # a context that's available for matrix (and name, but that's unimportant)
+    name: Prepare Test Plan
+    runs-on: "ubuntu-latest"
+    outputs:
+      latest_python: ${{ steps.set-vars.outputs.latest_python }}
+      supported_pythons: ${{ steps.set-vars.outputs.supported_pythons }}
+    steps:
+      - name: Report Plan
+        id: set-vars
+        shell: |
+          echo "::set-output name=latest_python::$latest_python"
+          echo "::set-output name=supported_pythons::$supported_pythons"
   lint:
-    name: Lint code (ubuntu-latest)
+    name: Lint code (${{ needs.conf.outputs.latest_python }}, ubuntu-latest)
+    needs: conf
     runs-on: "ubuntu-latest"
     steps:
       - uses: actions/checkout@v2
@@ -35,8 +50,8 @@ jobs:
         run: make lint
 
   doc:
-    name: Build Documentation (ubuntu-latest)
-    needs: lint
+    name: Build Documentation  (${{ needs.conf.outputs.latest_python }}, ubuntu-latest)
+    needs: ["conf", "lint"]
     runs-on: "ubuntu-latest"
     steps:
       - uses: actions/checkout@v2
@@ -58,7 +73,8 @@ jobs:
         run: make doc
 
   test-cython:
-    name: Test Cython (${{ matrix.os }})
+    name: Test Cython (${{ needs.conf.outputs.latest_python }}, ${{ matrix.os }})
+    needs: conf
     runs-on: ${{ matrix.os }}
     env:
       MPLBACKEND: Agg
@@ -88,7 +104,8 @@ jobs:
         run: make test
 
   test-cython-aarch64:
-    name: Test Cython (QEMU::aarch64)
+    name: Test Cython (${{ needs.conf.outputs.latest_python }}, QEMU::aarch64)
+    needs: conf
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v2
@@ -112,9 +129,9 @@ jobs:
             PYTHON_VERSION=${{ env.latest_python }}
 
   test-all:
-    name: Test (${{ matrix.os }}, ${{ matrix.python_version }}, ${{ ["pypi", "conda"][matrix.use_conda] }})
+    name: Test (${{ matrix.python_version }}, ${{ matrix.os }}, ${{ fromJSON('["pypi", "conda"]')[matrix.use_conda] }})
     runs-on: ${{ matrix.os }}
-    needs: ["test-cython", "lint"]
+    needs: ["conf", "test-cython", "lint"]
     env:
       # not testing Cython here, whether the Cython compiles to C is tested
       # above
@@ -123,7 +140,7 @@ jobs:
       fail-fast: false
       matrix:
         os: ["ubuntu-latest", "macos-latest"]
-        python_version: ${{ fromJSON(env.supported_pythons) }}
+        python_version: ${{ fromJSON(needs.conf.outputs.supported_pythons) }}
         use_conda: [true, false]
     steps:
       - uses: actions/checkout@v2
