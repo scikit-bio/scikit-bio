@@ -8,13 +8,13 @@ on:
 
 env:
   latest_python: "3.11"
-  supported_pythons: "3.8|3.9|3.10|3.11"
+  supported_pythons: '["3.8", "3.9", "3.10", "3.11"]'
   miniforge_version: "22.9.0-2"
   miniforge_variant: "Mambaforge"
 
 jobs:
   lint:
-    name: Lint code (python-latest, ubuntu-latest)
+    name: Lint code (ubuntu-latest)
     runs-on: "ubuntu-latest"
     steps:
       - uses: actions/checkout@v2
@@ -35,7 +35,7 @@ jobs:
         run: make lint
 
   doc:
-    name: Build Documentation (python-latest, ubuntu-latest)
+    name: Build Documentation (ubuntu-latest)
     needs: lint
     runs-on: "ubuntu-latest"
     steps:
@@ -58,7 +58,7 @@ jobs:
         run: make doc
 
   test-cython:
-    name: Test Cython (python-latest, ${{ matrix.os }})
+    name: Test Cython (${{ matrix.os }})
     runs-on: ${{ matrix.os }}
     env:
       MPLBACKEND: Agg
@@ -88,7 +88,7 @@ jobs:
         run: make test
 
   test-cython-aarch64:
-    name: Test Cython (python-latest, QEMU::aarch64)
+    name: Test Cython (QEMU::aarch64)
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v2
@@ -110,3 +110,45 @@ jobs:
           cache-to: type=gha,mode=max
           build-args: |
             PYTHON_VERSION=${{ env.latest_python }}
+
+  test-all:
+    name: Test (${{ matrix.os }}, ${{ matrix.python_version }}, ${{ ["pypi", "conda"][matrix.use_conda] }})
+    runs-on: ${{ matrix.os }}
+    needs: ["test-cython", "lint"]
+    env:
+      # not testing Cython here, whether the Cython compiles to C is tested
+      # above
+      MPLBACKEND: Agg
+    strategy:
+      fail-fast: false
+      matrix:
+        os: ["ubuntu-latest", "macos-latest"]
+        python_version: ${{ fromJSON(env.supported_pythons) }}
+        use_conda: [true, false]
+    steps:
+      - uses: actions/checkout@v2
+      - uses: conda-incubator/setup-miniconda@v2
+        with:
+          auto-update-conda: true
+          python-version: ${{ env.latest_python }}
+          miniforge-version: ${{ env.miniforge_version }}
+          miniforge-variant: ${{ env.miniforge_variant }}
+          environment-file: ci/conda_host_env.yml
+      - name: Install dependencies (conda)
+        if: ${{ use_conda }}
+        shell: bash -l {0}
+        run: |
+          conda install -q --yes -c conda-forge --file ci/conda_requirements.txt
+          pip install . --no-deps
+          conda list
+      - name: Install dependencies
+        if: ${{ !use_conda }}
+        shell: bash -l {0}
+        run: |
+          pip install .
+          conda list
+      - name: Run unit tests
+        shell: bash -l {0}
+        env:
+          WITH_COVERAGE: "TRUE"
+        run: make test
