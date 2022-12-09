@@ -1,0 +1,10 @@
+lockfile >= 0.10.2
+cachecontrol >= 0.11.5
+decorator >= 3.4.2
+ipython >= 3.2.0
+matplotlib >= 1.4.3
+natsort >= 4.0.3
+numpy >= 1.9.2
+pandas >= 1.5.0
+scipy >= 1.9.0
+h5py >= 3.6.0
