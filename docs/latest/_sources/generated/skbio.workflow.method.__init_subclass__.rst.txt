@@ -1,8 +1,0 @@
-:orphan:
-
-skbio.workflow.method.__init_subclass__
-=======================================
-
-.. currentmodule:: skbio.workflow
-
-.. automethod:: method.__init_subclass__

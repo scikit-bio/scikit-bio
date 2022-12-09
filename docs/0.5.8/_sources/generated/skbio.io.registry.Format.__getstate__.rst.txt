@@ -1,0 +1,8 @@
+:orphan:
+
+skbio.io.registry.Format.__getstate__
+=====================================
+
+.. currentmodule:: skbio.io.registry
+
+.. automethod:: Format.__getstate__

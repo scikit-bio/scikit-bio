@@ -1,0 +1,8 @@
+:orphan:
+
+skbio.sequence.Sequence.lowercase
+=================================
+
+.. currentmodule:: skbio.sequence
+
+.. automethod:: Sequence.lowercase

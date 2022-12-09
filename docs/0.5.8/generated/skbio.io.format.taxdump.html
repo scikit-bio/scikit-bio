@@ -1,0 +1,500 @@
+<!DOCTYPE html>
+
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="generator" content="Docutils 0.19: https://docutils.sourceforge.io/" />
+
+    <title>Taxdump format (skbio.io.format.taxdump) &#8212; scikit-bio 0.5.8 documentation</title>
+    <link rel="stylesheet" type="text/css" href="../_static/pygments.css" />
+    <link rel="stylesheet" type="text/css" href="../_static/bootstrap-sphinx.css" />
+    <link rel="stylesheet" type="text/css" href="../_static/plot_directive.css" />
+    <link rel="stylesheet" type="text/css" href="../_static/style.css" />
+    <script data-url_root="../" id="documentation_options" src="../_static/documentation_options.js"></script>
+    <script src="../_static/jquery.js"></script>
+    <script src="../_static/underscore.js"></script>
+    <script src="../_static/_sphinx_javascript_frameworks_compat.js"></script>
+    <script src="../_static/doctools.js"></script>
+    <script src="../_static/sphinx_highlight.js"></script>
+    <script src="../_static/copybutton.js"></script>
+    <link rel="index" title="Index" href="../genindex.html" />
+    <link rel="search" title="Search" href="../search.html" />
+    <link rel="next" title="skbio.io.registry.write" href="skbio.io.registry.write.html" />
+    <link rel="prev" title="Stockholm format (skbio.io.format.stockholm)" href="skbio.io.format.stockholm.html" />
+<meta charset='utf-8'>
+<meta http-equiv='X-UA-Compatible' content='IE=edge,chrome=1'>
+<meta name='viewport' content='width=device-width, initial-scale=1.0, maximum-scale=1'>
+<meta name="apple-mobile-web-app-capable" content="yes">
+<script type="text/javascript" src="../_static/js/jquery-1.12.4.min.js"></script>
+<script type="text/javascript" src="../_static/js/jquery-fix.js"></script>
+<script type="text/javascript" src="../_static/bootstrap-3.4.1/js/bootstrap.min.js"></script>
+<script type="text/javascript" src="../_static/bootstrap-sphinx.js"></script>
+
+  </head><body>
+  
+  <a href="https://github.com/biocore/scikit-bio"
+     class="visible-desktop hidden-xs"><img
+    id="gh-banner"
+    style="position: absolute; top: 50px; right: 0; border: 0;"
+    src="https://s3.amazonaws.com/github/ribbons/forkme_right_darkblue_121621.png"
+    alt="Fork me on GitHub"></a>
+  <script>
+    // Adjust banner height.
+    $(function () {
+      var navHeight = $(".navbar .container").css("height");
+      $("#gh-banner").css("top", navHeight);
+    });
+  </script>
+
+
+  <div id="navbar" class="navbar navbar-default navbar-fixed-top">
+    <div class="container">
+      <div class="navbar-header">
+        <!-- .btn-navbar is used as the toggle for collapsed navbar content -->
+        <button type="button" class="navbar-toggle" data-toggle="collapse" data-target=".nav-collapse">
+          <span class="icon-bar"></span>
+          <span class="icon-bar"></span>
+          <span class="icon-bar"></span>
+        </button>
+        <a class="navbar-brand" href="../index.html">
+          scikit-bio docs</a>
+        <span class="navbar-text navbar-version pull-left"><b>0.5.8</b></span>
+      </div>
+
+        <div class="collapse navbar-collapse nav-collapse">
+          <ul class="nav navbar-nav">
+            
+            
+              <li class="dropdown globaltoc-container">
+  <a role="button"
+     id="dLabelGlobalToc"
+     data-toggle="dropdown"
+     data-target="#"
+     href="../index.html">Site <b class="caret"></b></a>
+  <ul class="dropdown-menu globaltoc"
+      role="menu"
+      aria-labelledby="dLabelGlobalToc"><ul class="current">
+<li class="toctree-l1 current"><a class="reference internal" href="../io.html">File I/O (<code class="xref py py-mod docutils literal notranslate"><span class="pre">skbio.io</span></code>)</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../sequence.html">Sequences (<code class="xref py py-mod docutils literal notranslate"><span class="pre">skbio.sequence</span></code>)</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../alignment.html">Alignments (<code class="xref py py-mod docutils literal notranslate"><span class="pre">skbio.alignment</span></code>)</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../tree.html">Tree representations (<code class="xref py py-mod docutils literal notranslate"><span class="pre">skbio.tree</span></code>)</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../workflow.html">Constructing workflows (<code class="xref py py-mod docutils literal notranslate"><span class="pre">skbio.workflow</span></code>)</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../diversity.html">Diversity calculations (<code class="xref py py-mod docutils literal notranslate"><span class="pre">skbio.diversity</span></code>)</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../stats.html">Statistics (<code class="xref py py-mod docutils literal notranslate"><span class="pre">skbio.stats</span></code>)</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../metadata.html">Metadata (<code class="xref py py-mod docutils literal notranslate"><span class="pre">skbio.metadata</span></code>)</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../util.html">Utility functionality (<code class="xref py py-mod docutils literal notranslate"><span class="pre">skbio.util</span></code>)</a></li>
+</ul>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../user/api_stability.html">API Stability</a></li>
+</ul>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../development/coding_guidelines.html">Coding guidelines</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../development/new_module.html">Adding a new module to skbio</a></li>
+</ul>
+</ul>
+</li>
+              
+                <li class="dropdown">
+  <a role="button"
+     id="dLabelLocalToc"
+     data-toggle="dropdown"
+     data-target="#"
+     href="#">Page <b class="caret"></b></a>
+  <ul class="dropdown-menu localtoc"
+      role="menu"
+      aria-labelledby="dLabelLocalToc"><ul>
+<li><a class="reference internal" href="#">Taxdump format (<code class="xref py py-mod docutils literal notranslate"><span class="pre">skbio.io.format.taxdump</span></code>)</a><ul>
+<li><a class="reference internal" href="#format-support">Format Support</a></li>
+<li><a class="reference internal" href="#format-specification">Format Specification</a><ul>
+<li><a class="reference internal" href="#nodes-dmp"><code class="docutils literal notranslate"><span class="pre">nodes.dmp</span></code></a></li>
+<li><a class="reference internal" href="#names-dmp"><code class="docutils literal notranslate"><span class="pre">names.dmp</span></code></a></li>
+<li><a class="reference internal" href="#division-dmp"><code class="docutils literal notranslate"><span class="pre">division.dmp</span></code></a></li>
+<li><a class="reference internal" href="#gencode-dmp"><code class="docutils literal notranslate"><span class="pre">gencode.dmp</span></code></a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#format-parameters">Format Parameters</a></li>
+</ul>
+</li>
+</ul>
+</ul>
+</li>
+              
+            
+            
+            
+            
+            
+          </ul>
+
+          
+            
+<form class="navbar-form navbar-right" action="../search.html" method="get">
+ <div class="form-group">
+  <input type="text" name="q" class="form-control" placeholder="Search" />
+ </div>
+  <input type="hidden" name="check_keywords" value="yes" />
+  <input type="hidden" name="area" value="default" />
+</form>
+          
+        </div>
+    </div>
+  </div>
+
+<div class="container">
+  <div class="row">
+    <div class="body col-md-12 content" role="main">
+      
+  <span class="target" id="module-skbio.io.format.taxdump"></span><section id="taxdump-format-skbio-io-format-taxdump">
+<h1>Taxdump format (<a class="reference internal" href="#module-skbio.io.format.taxdump" title="skbio.io.format.taxdump"><code class="xref py py-mod docutils literal notranslate"><span class="pre">skbio.io.format.taxdump</span></code></a>)<a class="headerlink" href="#taxdump-format-skbio-io-format-taxdump" title="Permalink to this heading">¶</a></h1>
+<p>The NCBI Taxonomy database dump (<code class="docutils literal notranslate"><span class="pre">taxdump</span></code>) format stores information of
+organism names, classifications and other properties. It is a tabular format
+with a delimiter: <code class="docutils literal notranslate"><span class="pre">&lt;tab&gt;&lt;pipe&gt;&lt;tab&gt;</span></code> between columns, and a line end
+<code class="docutils literal notranslate"><span class="pre">&lt;tab&gt;&lt;pipe&gt;</span></code> after all columns. The file name usually ends with .dmp.</p>
+<section id="format-support">
+<h2>Format Support<a class="headerlink" href="#format-support" title="Permalink to this heading">¶</a></h2>
+<p><strong>Has Sniffer: No</strong></p>
+<table class="docutils align-default">
+<thead>
+<tr class="row-odd"><th class="head"><p>Reader</p></th>
+<th class="head"><p>Writer</p></th>
+<th class="head"><p>Object Class</p></th>
+</tr>
+</thead>
+<tbody>
+<tr class="row-even"><td><p>Yes</p></td>
+<td><p>No</p></td>
+<td><p><code class="xref py py-mod docutils literal notranslate"><span class="pre">pandas.DataFrame</span></code></p></td>
+</tr>
+</tbody>
+</table>
+</section>
+<section id="format-specification">
+<h2>Format Specification<a class="headerlink" href="#format-specification" title="Permalink to this heading">¶</a></h2>
+<p><strong>State: Experimental as of 0.5.8.</strong></p>
+<p>The NCBI taxonomy database <a class="footnote-reference brackets" href="#id9" id="id1" role="doc-noteref"><span class="fn-bracket">[</span>1<span class="fn-bracket">]</span></a> <a class="footnote-reference brackets" href="#id10" id="id2" role="doc-noteref"><span class="fn-bracket">[</span>2<span class="fn-bracket">]</span></a> hosts organism names and classifications.
+It has a web portal <a class="footnote-reference brackets" href="#id11" id="id3" role="doc-noteref"><span class="fn-bracket">[</span>3<span class="fn-bracket">]</span></a> and an FTP download server <a class="footnote-reference brackets" href="#id12" id="id4" role="doc-noteref"><span class="fn-bracket">[</span>4<span class="fn-bracket">]</span></a>. It is also accessible
+using E-utilities <a class="footnote-reference brackets" href="#id13" id="id5" role="doc-noteref"><span class="fn-bracket">[</span>5<span class="fn-bracket">]</span></a>. The database is being updated daily, and an archive is
+generated every month. The data release has the file name <code class="docutils literal notranslate"><span class="pre">taxdump</span></code>. It
+consists of multiple .dmp files. These files serve different purposes, but they
+follow a common format pattern:</p>
+<ul class="simple">
+<li><p>It is a tabular format.</p></li>
+<li><p>Column delimiter is <code class="docutils literal notranslate"><span class="pre">&lt;tab&gt;&lt;pipe&gt;&lt;tab&gt;</span></code>.</p></li>
+<li><p>Line end is <code class="docutils literal notranslate"><span class="pre">&lt;tab&gt;&lt;pipe&gt;</span></code>.</p></li>
+<li><p>The first column is a numeric identifier, which usually represent taxa (i.e.,
+“TaxID”), but can also be genetic codes, citations or other entries.</p></li>
+</ul>
+<p>The two most important files of the data release are <code class="docutils literal notranslate"><span class="pre">nodes.dmp</span></code> and
+<code class="docutils literal notranslate"><span class="pre">names.dmp</span></code>. They store the hierarchical structure of the classification
+system (i.e., taxonomy) and the names of organisms, respectively. They can be
+used to construct the taxonomy tree of organisms.</p>
+<p>The definition of columns of each .dmp file type are taken from <a class="footnote-reference brackets" href="#id14" id="id6" role="doc-noteref"><span class="fn-bracket">[</span>6<span class="fn-bracket">]</span></a> and <a class="footnote-reference brackets" href="#id15" id="id7" role="doc-noteref"><span class="fn-bracket">[</span>7<span class="fn-bracket">]</span></a>.</p>
+<section id="nodes-dmp">
+<h3><code class="docutils literal notranslate"><span class="pre">nodes.dmp</span></code><a class="headerlink" href="#nodes-dmp" title="Permalink to this heading">¶</a></h3>
+<table class="docutils align-default">
+<thead>
+<tr class="row-odd"><th class="head"><p>Name</p></th>
+<th class="head"><p>Description</p></th>
+</tr>
+</thead>
+<tbody>
+<tr class="row-even"><td><p>tax_id</p></td>
+<td><p>node id in GenBank taxonomy database</p></td>
+</tr>
+<tr class="row-odd"><td><p>parent tax_id</p></td>
+<td><p>parent node id in GenBank taxonomy
+database</p></td>
+</tr>
+<tr class="row-even"><td><p>rank</p></td>
+<td><p>rank of this node (superkingdom,
+kingdom, …)</p></td>
+</tr>
+<tr class="row-odd"><td><p>embl code</p></td>
+<td><p>locus-name prefix; not unique</p></td>
+</tr>
+<tr class="row-even"><td><p>division id</p></td>
+<td><p>see division.dmp file</p></td>
+</tr>
+<tr class="row-odd"><td><p>inherited div
+flag (1 or 0)</p></td>
+<td><p>1 if node inherits division from
+parent</p></td>
+</tr>
+<tr class="row-even"><td><p>genetic code id</p></td>
+<td><p>see gencode.dmp file</p></td>
+</tr>
+<tr class="row-odd"><td><p>inherited GC
+flag (1 or 0)</p></td>
+<td><p>1 if node inherits genetic code from
+parent</p></td>
+</tr>
+<tr class="row-even"><td><p>mitochondrial
+genetic code id</p></td>
+<td><p>see gencode.dmp file</p></td>
+</tr>
+<tr class="row-odd"><td><p>inherited MGC
+flag (1 or 0)</p></td>
+<td><p>1 if node inherits mitochondrial
+gencode from parent</p></td>
+</tr>
+<tr class="row-even"><td><p>GenBank hidden
+flag (1 or 0)</p></td>
+<td><p>1 if name is suppressed in GenBank
+entry lineage</p></td>
+</tr>
+<tr class="row-odd"><td><p>hidden subtree
+root flag
+(1 or 0)</p></td>
+<td><p>1 if this subtree has no sequence
+data yet</p></td>
+</tr>
+<tr class="row-even"><td><p>comments</p></td>
+<td><p>free-text comments and citations</p></td>
+</tr>
+</tbody>
+</table>
+<p>Since 2018, NCBI releases “new taxonomy files” <a class="footnote-reference brackets" href="#id16" id="id8" role="doc-noteref"><span class="fn-bracket">[</span>8<span class="fn-bracket">]</span></a> (<code class="docutils literal notranslate"><span class="pre">new_taxdump</span></code>). The new
+<code class="docutils literal notranslate"><span class="pre">nodes.dmp</span></code> format is compatible with the classical format, plus five extra
+columns after all aforementioned columns.</p>
+<table class="docutils align-default">
+<thead>
+<tr class="row-odd"><th class="head"><p>Name</p></th>
+<th class="head"><p>Description</p></th>
+</tr>
+</thead>
+<tbody>
+<tr class="row-even"><td><p>plastid genetic
+code id</p></td>
+<td><p>see gencode.dmp file</p></td>
+</tr>
+<tr class="row-odd"><td><p>inherited PGC
+flag (1 or 0)</p></td>
+<td><p>1 if node inherits plastid gencode
+from parent</p></td>
+</tr>
+<tr class="row-even"><td><p>specified_
+species</p></td>
+<td><p>1 if species in the node’s lineage
+has formal name</p></td>
+</tr>
+<tr class="row-odd"><td><p>hydrogenosome
+genetic code id</p></td>
+<td><p>see gencode.dmp file</p></td>
+</tr>
+<tr class="row-even"><td><p>inherited HGC
+flag (1 or 0)</p></td>
+<td><p>1 if node inherits hydrogenosome
+gencode from parent</p></td>
+</tr>
+</tbody>
+</table>
+</section>
+<section id="names-dmp">
+<h3><code class="docutils literal notranslate"><span class="pre">names.dmp</span></code><a class="headerlink" href="#names-dmp" title="Permalink to this heading">¶</a></h3>
+<table class="docutils align-default">
+<thead>
+<tr class="row-odd"><th class="head"><p>Name</p></th>
+<th class="head"><p>Description</p></th>
+</tr>
+</thead>
+<tbody>
+<tr class="row-even"><td><p>tax_id</p></td>
+<td><p>the id of node associated with this
+name</p></td>
+</tr>
+<tr class="row-odd"><td><p>name_txt</p></td>
+<td><p>name itself</p></td>
+</tr>
+<tr class="row-even"><td><p>unique name</p></td>
+<td><p>the unique variant of this name if
+name not unique</p></td>
+</tr>
+<tr class="row-odd"><td><p>name class</p></td>
+<td><p>(synonym, common name, …)</p></td>
+</tr>
+</tbody>
+</table>
+</section>
+<section id="division-dmp">
+<h3><code class="docutils literal notranslate"><span class="pre">division.dmp</span></code><a class="headerlink" href="#division-dmp" title="Permalink to this heading">¶</a></h3>
+<table class="docutils align-default">
+<thead>
+<tr class="row-odd"><th class="head"><p>Name</p></th>
+<th class="head"><p>Description</p></th>
+</tr>
+</thead>
+<tbody>
+<tr class="row-even"><td><p>division id</p></td>
+<td><p>taxonomy database division id</p></td>
+</tr>
+<tr class="row-odd"><td><p>division cde</p></td>
+<td><p>GenBank division code (three
+characters)</p></td>
+</tr>
+<tr class="row-even"><td><p>division name</p></td>
+<td><p>e.g. BCT, PLN, VRT, MAM, PRI…</p></td>
+</tr>
+<tr class="row-odd"><td><p>comments</p></td>
+<td></td>
+</tr>
+</tbody>
+</table>
+</section>
+<section id="gencode-dmp">
+<h3><code class="docutils literal notranslate"><span class="pre">gencode.dmp</span></code><a class="headerlink" href="#gencode-dmp" title="Permalink to this heading">¶</a></h3>
+<table class="docutils align-default">
+<thead>
+<tr class="row-odd"><th class="head"><p>Name</p></th>
+<th class="head"><p>Description</p></th>
+</tr>
+</thead>
+<tbody>
+<tr class="row-even"><td><p>genetic code id</p></td>
+<td><p>GenBank genetic code id</p></td>
+</tr>
+<tr class="row-odd"><td><p>abbreviation</p></td>
+<td><p>genetic code name abbreviation</p></td>
+</tr>
+<tr class="row-even"><td><p>name</p></td>
+<td><p>genetic code name</p></td>
+</tr>
+<tr class="row-odd"><td><p>cde</p></td>
+<td><p>translation table for this genetic
+code</p></td>
+</tr>
+<tr class="row-even"><td><p>starts</p></td>
+<td><p>start codons for this genetic code</p></td>
+</tr>
+</tbody>
+</table>
+<p>Other types of .dmp files are currently not supported by scikit-bio. However,
+the user may customize column definitions in using this utility. See below for
+details.</p>
+</section>
+</section>
+<section id="format-parameters">
+<h2>Format Parameters<a class="headerlink" href="#format-parameters" title="Permalink to this heading">¶</a></h2>
+<p>The following format parameters are available in <code class="docutils literal notranslate"><span class="pre">taxdump</span></code> format:</p>
+<ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">scheme</span></code>: The column definition scheme name of the input .dmp file.
+Available options are listed below. Alternatively, one can provide a custom
+scheme as defined in a name-to-data type dictionary.</p>
+<ol class="arabic simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">nodes</span></code>: The classical <code class="docutils literal notranslate"><span class="pre">nodes.dmp</span></code> scheme. It is also compatible with
+new <code class="docutils literal notranslate"><span class="pre">nodes.dmp</span></code> format, in which case only the columns defined by the
+classical format will be read.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">nodes_new</span></code>: The new <code class="docutils literal notranslate"><span class="pre">nodes.dmp</span></code> scheme.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">nodes_slim</span></code>: Only the first three columns: tax_id, parent_tax_id and
+rank, which are the minimum required information for constructing the
+taxonomy tree. It can be applied to both classical and new <code class="docutils literal notranslate"><span class="pre">nodes.dmp</span></code>
+files. It can also handle custom files which only contains these three
+columns.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">names</span></code>: The <code class="docutils literal notranslate"><span class="pre">names.dmp</span></code> scheme.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">division</span></code>: The <code class="docutils literal notranslate"><span class="pre">division.dmp</span></code> scheme.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">gencode</span></code>: The <code class="docutils literal notranslate"><span class="pre">gencode.dmp</span></code> scheme.</p></li>
+</ol>
+</li>
+</ul>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>scikit-bio will read columns from leftmost till the number of columns
+defined in the scheme. Extra columns will be cropped.</p>
+</div>
+<p class="rubric">Examples</p>
+<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">io</span> <span class="kn">import</span> <span class="n">StringIO</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="kn">import</span> <span class="nn">skbio.io</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="kn">import</span> <span class="nn">pandas</span> <span class="k">as</span> <span class="nn">pd</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">fs</span> <span class="o">=</span> <span class="s1">&#39;</span><span class="se">\n</span><span class="s1">&#39;</span><span class="o">.</span><span class="n">join</span><span class="p">([</span>
+<span class="gp">... </span>    <span class="s1">&#39;1</span><span class="se">\t</span><span class="s1">|</span><span class="se">\t</span><span class="s1">1</span><span class="se">\t</span><span class="s1">|</span><span class="se">\t</span><span class="s1">no rank</span><span class="se">\t</span><span class="s1">|&#39;</span><span class="p">,</span>
+<span class="gp">... </span>    <span class="s1">&#39;2</span><span class="se">\t</span><span class="s1">|</span><span class="se">\t</span><span class="s1">131567</span><span class="se">\t</span><span class="s1">|</span><span class="se">\t</span><span class="s1">superkingdom</span><span class="se">\t</span><span class="s1">|&#39;</span><span class="p">,</span>
+<span class="gp">... </span>    <span class="s1">&#39;6</span><span class="se">\t</span><span class="s1">|</span><span class="se">\t</span><span class="s1">335928</span><span class="se">\t</span><span class="s1">|</span><span class="se">\t</span><span class="s1">genus</span><span class="se">\t</span><span class="s1">|&#39;</span>
+<span class="gp">... </span><span class="p">])</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">fh</span> <span class="o">=</span> <span class="n">StringIO</span><span class="p">(</span><span class="n">fs</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>Read the file into a <code class="docutils literal notranslate"><span class="pre">pd.DataFrame</span></code> and specify that the “nodes_slim” scheme
+should be used:</p>
+<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">df</span> <span class="o">=</span> <span class="n">skbio</span><span class="o">.</span><span class="n">io</span><span class="o">.</span><span class="n">read</span><span class="p">(</span><span class="n">fh</span><span class="p">,</span> <span class="nb">format</span><span class="o">=</span><span class="s2">&quot;taxdump&quot;</span><span class="p">,</span> <span class="n">into</span><span class="o">=</span><span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">,</span>
+<span class="gp">... </span>                   <span class="n">scheme</span><span class="o">=</span><span class="s2">&quot;nodes_slim&quot;</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">df</span> 
+<span class="go">        parent_tax_id          rank</span>
+<span class="go">tax_id</span>
+<span class="go">1                   1       no rank</span>
+<span class="go">2              131567  superkingdom</span>
+<span class="go">6              335928         genus</span>
+</pre></div>
+</div>
+<p class="rubric">References</p>
+<aside class="footnote-list brackets">
+<aside class="footnote brackets" id="id9" role="note">
+<span class="label"><span class="fn-bracket">[</span><a role="doc-backlink" href="#id1">1</a><span class="fn-bracket">]</span></span>
+<p>Federhen, S. (2012). The NCBI taxonomy database. Nucleic acids
+research, 40(D1), D136-D143.</p>
+</aside>
+<aside class="footnote brackets" id="id10" role="note">
+<span class="label"><span class="fn-bracket">[</span><a role="doc-backlink" href="#id2">2</a><span class="fn-bracket">]</span></span>
+<p>Schoch, C. L., Ciufo, S., Domrachev, M., Hotton, C. L., Kannan, S.,
+Khovanskaya, R., … &amp; Karsch-Mizrachi, I. (2020). NCBI Taxonomy: a
+comprehensive update on curation, resources and tools. Database, 2020.</p>
+</aside>
+<aside class="footnote brackets" id="id11" role="note">
+<span class="label"><span class="fn-bracket">[</span><a role="doc-backlink" href="#id3">3</a><span class="fn-bracket">]</span></span>
+<p><a class="reference external" href="https://www.ncbi.nlm.nih.gov/taxonomy">https://www.ncbi.nlm.nih.gov/taxonomy</a></p>
+</aside>
+<aside class="footnote brackets" id="id12" role="note">
+<span class="label"><span class="fn-bracket">[</span><a role="doc-backlink" href="#id4">4</a><span class="fn-bracket">]</span></span>
+<p><a class="reference external" href="https://ftp.ncbi.nlm.nih.gov/pub/taxonomy/">https://ftp.ncbi.nlm.nih.gov/pub/taxonomy/</a></p>
+</aside>
+<aside class="footnote brackets" id="id13" role="note">
+<span class="label"><span class="fn-bracket">[</span><a role="doc-backlink" href="#id5">5</a><span class="fn-bracket">]</span></span>
+<p>Kans, J. (2022). Entrez direct: E-utilities on the UNIX command line.
+In Entrez Programming Utilities Help [Internet]. National Center for
+Biotechnology Information (US).</p>
+</aside>
+<aside class="footnote brackets" id="id14" role="note">
+<span class="label"><span class="fn-bracket">[</span><a role="doc-backlink" href="#id6">6</a><span class="fn-bracket">]</span></span>
+<p><a class="reference external" href="https://ftp.ncbi.nlm.nih.gov/pub/taxonomy/taxdump_readme.txt">https://ftp.ncbi.nlm.nih.gov/pub/taxonomy/taxdump_readme.txt</a></p>
+</aside>
+<aside class="footnote brackets" id="id15" role="note">
+<span class="label"><span class="fn-bracket">[</span><a role="doc-backlink" href="#id7">7</a><span class="fn-bracket">]</span></span>
+<p><a class="reference external" href="https://ftp.ncbi.nlm.nih.gov/pub/taxonomy/new_taxdump/taxdump_readme.txt">https://ftp.ncbi.nlm.nih.gov/pub/taxonomy/new_taxdump/taxdump_readme.txt</a></p>
+</aside>
+<aside class="footnote brackets" id="id16" role="note">
+<span class="label"><span class="fn-bracket">[</span><a role="doc-backlink" href="#id8">8</a><span class="fn-bracket">]</span></span>
+<p><a class="reference external" href="https://ncbiinsights.ncbi.nlm.nih.gov/2018/02/22/new-taxonomy-files">https://ncbiinsights.ncbi.nlm.nih.gov/2018/02/22/new-taxonomy-files</a>-
+available-with-lineage-type-and-host-information/</p>
+</aside>
+</aside>
+</section>
+</section>
+
+
+    </div>
+      
+  </div>
+</div>
+  
+<footer class="footer">
+  <div class="container">
+    <p class="pull-right">
+      <a href="#">Back to top</a>
+      
+    </p>
+    <p>
+        &copy; Copyright 2014--, scikit-bio development team.<br/>
+      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 5.3.0.<br/>
+    </p>
+  </div>
+</footer>
+  <script>
+    (function(i,s,o,g,r,a,m){i['GoogleAnalyticsObject']=r;i[r]=i[r]||function(){
+    (i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),
+    m=s.getElementsByTagName(o)[0];a.async=1;a.src=g;m.parentNode.insertBefore(a,m)
+    })(window,document,'script','//www.google-analytics.com/analytics.js','ga');
+
+    ga('create', 'UA-6636235-9', 'scikit-bio.org');
+    ga('send', 'pageview');
+  </script>
+
+  </body>
+</html>

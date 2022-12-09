@@ -1,0 +1,6 @@
+skbio.stats.evolve.hommola\_cospeciation
+========================================
+
+.. currentmodule:: skbio.stats.evolve
+
+.. autofunction:: hommola_cospeciation

@@ -1,0 +1,8 @@
+:orphan:
+
+skbio.sequence.GrammaredSequence.find_motifs
+============================================
+
+.. currentmodule:: skbio.sequence
+
+.. automethod:: GrammaredSequence.find_motifs

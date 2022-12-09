@@ -1,8 +1,0 @@
-:orphan:
-
-skbio.sequence.GeneticCode.__init_subclass__
-============================================
-
-.. currentmodule:: skbio.sequence
-
-.. automethod:: GeneticCode.__init_subclass__

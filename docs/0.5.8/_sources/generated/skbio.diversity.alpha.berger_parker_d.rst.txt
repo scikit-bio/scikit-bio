@@ -1,0 +1,6 @@
+skbio.diversity.alpha.berger\_parker\_d
+=======================================
+
+.. currentmodule:: skbio.diversity.alpha
+
+.. autofunction:: berger_parker_d

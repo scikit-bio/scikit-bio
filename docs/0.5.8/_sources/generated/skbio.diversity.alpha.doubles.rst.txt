@@ -1,0 +1,6 @@
+skbio.diversity.alpha.doubles
+=============================
+
+.. currentmodule:: skbio.diversity.alpha
+
+.. autofunction:: doubles
