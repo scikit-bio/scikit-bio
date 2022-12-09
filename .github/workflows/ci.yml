@@ -24,7 +24,7 @@ jobs:
     steps:
       - name: Report Plan
         id: set-vars
-        shell: |
+        run: |
           echo "::set-output name=latest_python::$latest_python"
           echo "::set-output name=supported_pythons::$supported_pythons"
   lint:
