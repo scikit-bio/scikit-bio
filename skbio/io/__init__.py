@@ -30,6 +30,7 @@ see the associated documentation.
    phylip
    qseq
    stockholm
+   taxdump
 
 .. currentmodule:: skbio.io.registry
 
@@ -196,7 +197,7 @@ not know how you want to serialize an object. OO interfaces define a default
 #
 # Distributed under the terms of the Modified BSD License.
 #
-# The full license is in the file COPYING.txt, distributed with this software.
+# The full license is in the file LICENSE.txt, distributed with this software.
 # ----------------------------------------------------------------------------
 
 from importlib import import_module

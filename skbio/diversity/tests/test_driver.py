@@ -3,7 +3,7 @@
 #
 # Distributed under the terms of the Modified BSD License.
 #
-# The full license is in the file COPYING.txt, distributed with this software.
+# The full license is in the file LICENSE.txt, distributed with this software.
 # ----------------------------------------------------------------------------
 
 import io
@@ -22,6 +22,8 @@ from skbio.diversity import (alpha_diversity, beta_diversity,
 from skbio.diversity.alpha import faith_pd, observed_otus
 from skbio.diversity.beta import unweighted_unifrac, weighted_unifrac
 from skbio.tree import DuplicateNodeError, MissingNodeError
+from skbio.diversity._driver import (_qualitative_beta_metrics,
+                                     _valid_beta_metrics)
 
 
 class AlphaDiversityTests(TestCase):
@@ -281,15 +283,34 @@ class BetaDiversityTests(TestCase):
                        [0, 0, 25, 35, 0, 19, 0]]
         self.sids2 = list('ABCDEF')
 
+        self.table3 = [[23, 64, 14, 0, 0, 3, 1],
+                       [0, 3, 35, 42, 0, 12, 1],
+                       [0, 5, 5, 0, 40, 40, 0],
+                       [44, 35, 9, 0, 1, 0, 0],
+                       [0, 2, 8, 0, 35, 45, 1],
+                       [0, 0, 25, 35, 0, 19, 0],
+                       [88, 31, 0, 5, 5, 5, 5],
+                       [44, 39, 0, 0, 0, 0, 0]]
+
+    def test_available_metrics(self):
+
+        for metric in _valid_beta_metrics:
+            try:
+                beta_diversity(metric, self.table3)
+            except Exception as exc:
+                raise ValueError(
+                    f'Metric {metric} failed with exception:\n {exc}')
+
     def test_qualitative_bug_issue_1549(self):
-        mat = np.array([[42, 0, 37, 99, 1],
-                        [12, 1, 22, 88, 0],
-                        [25, 3, 23, 86, 0],
-                        [0, 0, 87, 12, 0]])
-        as_presence_absence = mat > 0
-        obs_mat = beta_diversity('jaccard', mat)
-        obs_presence_absence = beta_diversity('jaccard', as_presence_absence)
-        self.assertEqual(obs_mat, obs_presence_absence)
+        as_presence_absence = np.asarray(self.table3) > 0
+
+        for metric in _valid_beta_metrics:
+            obs_mat = beta_diversity(metric, self.table3)
+            obs_presence_absence = beta_diversity(metric, as_presence_absence)
+            if metric in _qualitative_beta_metrics:
+                self.assertEqual(obs_mat, obs_presence_absence)
+            else:
+                self.assertNotEqual(obs_mat, obs_presence_absence)
 
     def test_invalid_input(self):
         # number of ids doesn't match the number of samples
@@ -315,7 +336,7 @@ class BetaDiversityTests(TestCase):
             beta_diversity('euclidean', [[0, 1, 3, -4], [0, 3, 12, 42]])
 
         # additional kwargs
-        error_msg = r"keyword argument"
+        error_msg = r"argument"
         with self.assertRaisesRegex(TypeError, error_msg):
             beta_diversity('euclidean', [[0, 1, 3], [0, 3, 12]],
                            not_a_real_kwarg=42.0)

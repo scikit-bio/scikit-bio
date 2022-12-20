@@ -3,7 +3,7 @@
 #
 # Distributed under the terms of the Modified BSD License.
 #
-# The full license is in the file COPYING.txt, distributed with this software.
+# The full license is in the file LICENSE.txt, distributed with this software.
 # ----------------------------------------------------------------------------
 
 import warnings
@@ -995,6 +995,7 @@ class TreeNode(SkbioObject):
             includes each node after its descendants if True
         include_self : bool
             include the initial node if True
+
 
         `self_before` and `self_after` are independent. If neither is `True`,
         only terminal nodes will be returned.

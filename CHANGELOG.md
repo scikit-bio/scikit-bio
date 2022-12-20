@@ -1,11 +1,40 @@
 # scikit-bio changelog
 
-## Version 0.5.8-dev
+## Version 0.5.8
 
 ### Features
 
 * Added NCBI taxonomy database dump format (`taxdump`) ([#1810](https://github.com/biocore/scikit-bio/pull/1810)).
 * Added `TreeNode.from_taxdump` for converting taxdump into a tree ([#1810](https://github.com/biocore/scikit-bio/pull/1810)).
+* scikit-learn has been removed as a dependency. This was a fairly heavy-weight dependency that was providing minor functionality to scikit-bio. The critical components have been implemented in scikit-bio directly, and the non-criticial components are listed under "Backward-incompatible changes [experimental]".
+* Python 3.11 is now supported.
+
+### Backward-incompatible changes [experimental]
+* With the removal of the scikit-learn dependency, three beta diversity metric names can no longer be specified. These are `wminkowski`, `nan_euclidean`, and `haversine`. On testing, `wminkowski` and `haversine` did not work through `skbio.diversity.beta_diversity` (or `sklearn.metrics.pairwise_distances`). The former was deprecated in favor of calling `minkowski` with a vector of weights provided as kwarg `w` (example below), and the latter does not work with data of this shape. `nan_euclidean` can still be accessed fron scikit-learn directly if needed, if a user installs scikit-learn in their environment (example below).
+
+    ```
+    counts = [[23, 64, 14, 0, 0, 3, 1],
+            [0, 3, 35, 42, 0, 12, 1],
+            [0, 5, 5, 0, 40, 40, 0],
+            [44, 35, 9, 0, 1, 0, 0],
+            [0, 2, 8, 0, 35, 45, 1],
+            [0, 0, 25, 35, 0, 19, 0],
+            [88, 31, 0, 5, 5, 5, 5],
+            [44, 39, 0, 0, 0, 0, 0]]
+
+    # new mechanism of accessing wminkowski
+    from skbio.diversity import beta_diversity
+    beta_diversity("minkowski", counts, w=[1,1,1,1,1,1,2])
+
+    # accessing nan_euclidean through scikit-learn directly
+    import skbio
+    from sklearn.metrics import pairwise_distances
+    sklearn_dm = pairwise_distances(counts, metric="nan_euclidean")
+    skbio_dm = skbio.DistanceMatrix(sklearn_dm)
+    ```
+
+### Deprecated functionality [experimental]
+* `skbio.alignment.local_pairwise_align_ssw` has been deprecated ([#1814](https://github.com/biocore/scikit-bio/issues/1814)) and will be removed or replaced in scikit-bio 0.6.0.
 
 ### Bug fixes
 * Use `oldest-supported-numpy` as build dependency. This fixes problems with environments that use an older version of numpy than the one used to build scikit-bio ([#1813](https://github.com/biocore/scikit-bio/pull/1813)).

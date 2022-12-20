@@ -1,0 +1,9 @@
+name: testing
+channels:
+  - conda-forge
+  - defaults
+dependencies:
+  - hdf5
+  - pip
+  - pip:
+      - "-r requirements.test.txt"

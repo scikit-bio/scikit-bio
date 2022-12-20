@@ -1,8 +1,21 @@
 [build-system]
-# https://numpy.org/devdocs/user/depending_on_numpy.html?highlight=mean#build-time-dependency
-requires = ["Cython", "oldest-supported-numpy", "setuptools", "wheel"]
+# https://numpy.org/doc/stable/dev/depending_on_numpy.html#adding-a-dependency-on-numpy
+requires = ["Cython>=0.29.32", "oldest-supported-numpy", "setuptools", "wheel"]
 
 [tool.pytest.ini_options]
 filterwarnings = [
     "ignore::skbio.util.SkbioWarning",
+]
+
+[tool.check-manifest]
+ignore = [
+    ".coveragerc",
+    ".dockerignore",
+    ".editorconfig",
+    "RELEASE.md",
+    "REVIEWING.md",
+    "aarch64.Dockerfile",
+    "checklist.py",
+    # created by conda-incubator/setup-miniconda@v2 action
+    "ci/setup-miniconda-patched-conda_host_env.yml",
 ]

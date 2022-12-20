@@ -1,23 +1,13 @@
-include .coveragerc
 include CHANGELOG.md
-include CONTRIBUTING.md
-include COPYING.txt
+include LICENSE.txt
 include Makefile
-include PULL_REQUEST_TEMPLATE.md
 include pyproject.toml
 include README.rst
-include RELEASE.md
-include REVIEWING.md
-include checklist.py
-include asv.conf.json
 include simde-sse2.h
-include *.Dockerfile .dockerignore
-include .editorconfig
 
 graft assets
 graft ci
 graft doc
-graft ipynbs
 graft licenses
 graft skbio
 

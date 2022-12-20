@@ -1,6 +1,6 @@
 """
 Taxdump format (:mod:`skbio.io.format.taxdump`)
-==============================================
+===============================================
 
 .. currentmodule:: skbio.io.format.taxdump
 
@@ -86,7 +86,8 @@ The definition of columns of each .dmp file type are taken from [6]_ and [7]_.
 
 Since 2018, NCBI releases "new taxonomy files" [8]_ (``new_taxdump``). The new
 ``nodes.dmp`` format is compatible with the classical format, plus five extra
-columns after all aforementioned columns .
+columns after all aforementioned columns.
+
 +----------------+-------------------------------------+
 |Name            |Description                          |
 +================+=====================================+
@@ -96,7 +97,7 @@ columns after all aforementioned columns .
 |inherited PGC   |1 if node inherits plastid gencode   |
 |flag (1 or 0)   |from parent                          |
 +----------------+-------------------------------------+
-|specified_      |1 if species in the node's lineage   |
+|specified\\_     |1 if species in the node's lineage   |
 |species         |has formal name                      |
 +----------------+-------------------------------------+
 |hydrogenosome   |see gencode.dmp file                 |
@@ -235,7 +236,7 @@ References
 #
 # Distributed under the terms of the Modified BSD License.
 #
-# The full license is in the file COPYING.txt, distributed with this software.
+# The full license is in the file LICENSE.txt, distributed with this software.
 # ----------------------------------------------------------------------------
 
 import pandas as pd

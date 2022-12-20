@@ -3,7 +3,7 @@
 #
 # Distributed under the terms of the Modified BSD License.
 #
-# The full license is in the file COPYING.txt, distributed with this software.
+# The full license is in the file LICENSE.txt, distributed with this software.
 # ----------------------------------------------------------------------------
 
 import copy
@@ -169,8 +169,8 @@ class TestSequence(TestSequenceBase, ReallyEqualMixin):
     def test_concat_strict_many(self):
         odd_key = frozenset()
         expected = Sequence("13579",
-                            positional_metadata={'a': list('skbio'),
-                                                 odd_key: [1, 2, 3, 4, 5]})
+                            positional_metadata={odd_key: [1, 2, 3, 4, 5],
+                                                 'a': list('skbio')})
         result = Sequence.concat([
                 Sequence("1", positional_metadata={'a': ['s'], odd_key: [1]}),
                 Sequence("3", positional_metadata={'a': ['k'], odd_key: [2]}),
