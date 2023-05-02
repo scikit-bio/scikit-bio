@@ -1,5 +1,13 @@
 # scikit-bio changelog
 
+## Version 0.5.8-dev
+
+### Features
+
+### Bug fixes
+
+* Fixed bug [#1847](https://github.com/biocore/scikit-bio/issues/1847) in which the edge from the root was inadvertantly included in the calculation for `descending_branch_length`
+
 ## Version 0.5.8
 
 ### Features
