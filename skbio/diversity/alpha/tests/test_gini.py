@@ -26,6 +26,11 @@ class GiniTests(TestCase):
                       0.34492350486787204, 0.541029207232267,
                       0.74965229485396379, 1.0]))
 
+    def test_gini_index_bug_1844(self):
+        exp = 0.0
+        obs = gini_index([2, 2, 2, 2, 2])
+        self.assertAlmostEqual(obs, exp)
+
     def test_gini_index(self):
         exp = 0.32771210013908214
         obs = gini_index(self.data, 'trapezoids')
