@@ -1,5 +1,11 @@
 # scikit-bio changelog
 
+## Version 0.5.8-dev
+
+### Bug fixes
+
+* Never let the Gini index go below 0.0, see [#1844](https://github.com/biocore/scikit-bio/issue/1844).
+
 ## Version 0.5.8
 
 ### Features
