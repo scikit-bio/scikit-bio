@@ -2936,7 +2936,7 @@ class TreeNode(SkbioObject):
             return sum(ancestors.values())
 
         else:
-            return sum(n.length for n in self.postorder(include_self=True) if
+            return sum(n.length for n in self.postorder(include_self=False) if
                        n.length is not None)
 
     @experimental(as_of="0.4.0")
