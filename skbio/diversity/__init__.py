@@ -384,7 +384,7 @@ this ``DataFrame``. Since our alpha diversity metrics are the only two
 numeric columns (and thus the only columns for which Spearman correlation
 is relevant), this will give us a symmetric 2x2 correlation matrix.
 
->>> sample_md.corr(method="spearman")
+>>> sample_md.corr(method="spearman", numeric_only=True)
                Observed OTUs  Faith PD
 Observed OTUs       1.000000  0.939336
 Faith PD            0.939336  1.000000

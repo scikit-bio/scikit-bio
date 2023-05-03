@@ -237,8 +237,8 @@ Read the file into a ``pd.DataFrame``:
 
 >>> df = skbio.io.read(fh, into=pd.DataFrame)
 >>> df # doctest: +NORMALIZE_WHITESPACE
-     qseqid          sseqid  pident  length  mismatch  gapopen  qstart  qend \\
-0  AF178033  EMORG:AF178033  100.00   811.0       0.0      0.0     1.0  811.0
+     qseqid          sseqid  pident  length  mismatch  gapopen  qstart  qend
+0  AF178033  EMORG:AF178033  100.00   811.0       0.0      0.0     1.0  811.0 \\
 1  AF178033  EMORG:AF178032   94.57   811.0      44.0      0.0     1.0  811.0
 2  AF178033  EMORG:AF178031   94.82   811.0      42.0      0.0     1.0  811.0
 <BLANKLINE>
