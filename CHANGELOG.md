@@ -1,5 +1,11 @@
 # scikit-bio changelog
 
+## Version 0.5.8-dev
+
+### Important
+
+* Complex multiple axis indexing operations with `TabularMSA` have been removed from testing due to incompatibilities with modern versions of Pandas [#1851](https://github.com/biocore/scikit-bio/pull/1851).
+
 ## Version 0.5.8
 
 ### Features
