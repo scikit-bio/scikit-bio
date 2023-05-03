@@ -139,7 +139,7 @@ class TestTabularMSA(unittest.TestCase, ReallyEqualMixin):
     def test_constructor_non_unique_labels(self):
         msa = TabularMSA([DNA('ACGT'), DNA('ACGT')], index=[1, 1])
 
-        assert_index_equal(msa.index, pd.Int64Index([1, 1]))
+        assert_index_equal(msa.index, pd.Index([1, 1], dtype=np.int64))
 
     def test_constructor_empty_no_index(self):
         # sequence empty
@@ -549,7 +549,7 @@ class TestTabularMSA(unittest.TestCase, ReallyEqualMixin):
 
         self.assertReallyEqual(msa1, msa2)
         assert_index_equal(msa1.index, pd.RangeIndex(3))
-        assert_index_equal(msa2.index, pd.Int64Index([0, 1, 2]))
+        assert_index_equal(msa2.index, pd.Index([0, 1, 2], dtype=np.int64))
 
     def test_reassign_index_empty(self):
         # sequence empty
