@@ -458,7 +458,7 @@ class TestSequence(TestSequenceBase, ReallyEqualMixin):
             Sequence(np.array([1, "23", 3]))
         with self.assertRaises(TypeError):
             # object
-            Sequence(np.array([1, {}, ()]))
+            Sequence(np.array([1, {}, ()], dtype=object))
 
         # invalid input type (non-numpy.ndarray input)
         with self.assertRaisesRegex(TypeError, r'tuple'):
