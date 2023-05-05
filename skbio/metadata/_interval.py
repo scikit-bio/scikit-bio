@@ -828,6 +828,9 @@ fuzzy=[(True, True)], metadata={'gene': 'sagB'})
         Interval
             ``Interval`` object satisfying the search criteria.
         """
+        if bounds is None and metadata is None:
+            metadata = {}
+
         if bounds is None:
             for intvl in self._query_attribute(metadata):
                 yield intvl
