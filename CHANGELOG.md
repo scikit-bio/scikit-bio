@@ -1,5 +1,11 @@
 # scikit-bio changelog
 
+## Version 0.5.8-dev
+
+###
+
+* `IntervalMetadata.query` now defaults to obtaining all results, see ([#1817](https://github.com/biocore/scikit-bio/issues/1817).
+
 ## Version 0.5.8
 
 ### Features
