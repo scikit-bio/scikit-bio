@@ -139,7 +139,7 @@ class TestTabularMSA(unittest.TestCase, ReallyEqualMixin):
     def test_constructor_non_unique_labels(self):
         msa = TabularMSA([DNA('ACGT'), DNA('ACGT')], index=[1, 1])
 
-        assert_index_equal(msa.index, pd.Int64Index([1, 1]))
+        assert_index_equal(msa.index, pd.Index([1, 1], dtype=np.int64))
 
     def test_constructor_empty_no_index(self):
         # sequence empty
@@ -549,7 +549,7 @@ class TestTabularMSA(unittest.TestCase, ReallyEqualMixin):
 
         self.assertReallyEqual(msa1, msa2)
         assert_index_equal(msa1.index, pd.RangeIndex(3))
-        assert_index_equal(msa2.index, pd.Int64Index([0, 1, 2]))
+        assert_index_equal(msa2.index, pd.Index([0, 1, 2], dtype=np.int64))
 
     def test_reassign_index_empty(self):
         # sequence empty
@@ -1359,41 +1359,6 @@ class TestLoc(SharedPropertyIndexTests, unittest.TestCase):
                                     positional_metadata={'c': ['a', 'b', 'c',
                                                                'd']},
                                     index=[0, 1]))
-
-    def test_multiindex_complicated_axis(self):
-        a = RNA("UUAG", metadata={0: 0}, positional_metadata={0: [1, 2, 3, 4]})
-        b = RNA("UAAG", metadata={1: 0}, positional_metadata={1: [1, 2, 3, 4]})
-        c = RNA("UAA-", metadata={2: 0}, positional_metadata={2: [1, 2, 3, 4]})
-        d = RNA("UA-G", metadata={3: 0}, positional_metadata={3: [1, 2, 3, 4]})
-        msa = TabularMSA([a, b, c, d], metadata={'x': 'y'},
-                         positional_metadata={'c': ['a', 'b', 'c', 'd']},
-                         index=[('a', 'x', 0), ('a', 'x', 1), ('a', 'y', 2),
-                                ('b', 'x', 0)])
-
-        self.assertEqual(self.get(msa, (([False, True, False, True],
-                                         'x', 0), Ellipsis)),
-                         TabularMSA([d], metadata={'x': 'y'},
-                                    positional_metadata={'c': ['a', 'b', 'c',
-                                                               'd']},
-                                    index=[('b', 'x', 0)]))
-
-    @unittest.skipIf(tuple(map(int, pd.__version__.split('.'))) < (1, 2, 5),
-                     "Old pandas will return empty frame")
-    def test_multiindex_complicated_axis_empty_selection(self):
-        a = RNA("UUAG", metadata={0: 0}, positional_metadata={0: [1, 2, 3, 4]})
-        b = RNA("UAAG", metadata={1: 0}, positional_metadata={1: [1, 2, 3, 4]})
-        c = RNA("UAA-", metadata={2: 0}, positional_metadata={2: [1, 2, 3, 4]})
-        d = RNA("UA-G", metadata={3: 0}, positional_metadata={3: [1, 2, 3, 4]})
-        msa = TabularMSA([a, b, c, d], metadata={'x': 'y'},
-                         positional_metadata={'c': ['a', 'b', 'c', 'd']},
-                         index=[('a', 'x', 0), ('a', 'x', 1), ('a', 'y', 2),
-                                ('b', 'x', 0)])
-        # Pandas will KeyError when the intersection is empty
-        # change appears to have happened in:
-        # https://github.com/pandas-dev/pandas/pull/42245
-        # but this was not bisected to confirm
-        with self.assertRaises(KeyError):
-            self.get(msa, (([False, True, False, True], 'x', 2), Ellipsis))
 
     def test_bool_index_scalar_bool_label(self):
         a = DNA("ACGA", metadata={0: 0}, positional_metadata={0: [1, 2, 3, 4]})

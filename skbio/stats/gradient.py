@@ -501,6 +501,9 @@ class GradientANOVA:
             raise ValueError("Coordinates and metadata map had no samples "
                              "in common")
 
+        # pandas no longer allows use of set with .loc
+        sample_ids = list(sample_ids)
+
         # Need to take a subset of coords
         if coords_sample_ids != sample_ids:
             self._coords = self._coords.loc[sample_ids]
