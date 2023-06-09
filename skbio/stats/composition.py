@@ -1033,9 +1033,9 @@ def pairwise_vlr(mat,
     ...                 np.exp([2,3,12])]).T
     >>> dism = pairwise_vlr(mat)
     >>> dism.redundant_form()
-    array([[ 0.,  3., 27.],
-           [ 3.,  0., 12.],
-           [27., 12.,  0.]])
+    array([[  0.,   3.,  27.],
+           [  3.,   0.,  12.],
+           [ 27.,  12.,   0.]])
 
 
     References
