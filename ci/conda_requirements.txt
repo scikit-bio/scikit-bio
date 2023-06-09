@@ -1,5 +1,4 @@
-filelock >= 3.8.0
-cachecontrol >= 0.13.0
+requests >= 2.20.0
 decorator >= 3.4.2
 ipython >= 3.2.0
 matplotlib >= 1.4.3
