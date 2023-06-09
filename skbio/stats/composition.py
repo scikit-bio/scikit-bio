@@ -859,7 +859,7 @@ def balance_basis(tree_node : skbio.TreeNode):
 
     """
     counts, n_tips = _count_matrix(tree_node)
-    counts = OrderedDict([(x, counts[x])
+    counts = dict([(x, counts[x])
                           for x in counts.keys() if not x.is_tip()])
     nds = counts.keys()
     r = np.array([counts[n]['r'] for n in nds])
