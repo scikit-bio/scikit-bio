@@ -886,7 +886,7 @@ def _count_matrix(treenode):
     # fill in the Ordered dictionary. Note that the
     # elements of this Ordered dictionary are
     # dictionaries.
-    counts = OrderedDict()
+    counts = dict()
     columns = ['k', 'r', 'l', 't', 'tips']
     for n in nodes:
         if n not in counts:
