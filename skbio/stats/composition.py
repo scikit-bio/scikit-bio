@@ -803,7 +803,7 @@ def centralize(mat):
 
 
 @experimental(as_of="0.5.8")
-def balance_basis(tree_node : skbio.TreeNode):
+def balance_basis(tree_node: skbio.TreeNode):
     r""" Determines the basis based on bifurcating tree.
 
     This is commonly referred to as sequential binary partition [1]_.
@@ -859,7 +859,7 @@ def balance_basis(tree_node : skbio.TreeNode):
     """
     counts, n_tips = _count_matrix(tree_node)
     counts = dict([(x, counts[x])
-                          for x in counts.keys() if not x.is_tip()])
+                   for x in counts.keys() if not x.is_tip()])
     nds = counts.keys()
     r = np.array([counts[n]['r'] for n in nds])
     s = np.array([counts[n]['l'] for n in nds])
