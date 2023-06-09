@@ -3,7 +3,7 @@
 #
 # Distributed under the terms of the Modified BSD License.
 #
-# The full license is in the file COPYING.txt, distributed with this software.
+# The full license is in the file LICENSE.txt, distributed with this software.
 # ----------------------------------------------------------------------------
 
 import collections
@@ -1983,8 +1983,9 @@ class TabularMSA(MetadataMixin, PositionalMetadataMixin, SkbioObject):
                                   step=1)
 
         if len(self):
-            self._seqs = self._seqs.append(pd.Series(sequences, index=index,
-                                                     dtype=object))
+            self._seqs = pd.concat([self._seqs,
+                                    pd.Series(sequences, index=index,
+                                              dtype=object)])
         else:
             # Not using Series.append to avoid turning a RangeIndex supplied
             # via `index` parameter into an Int64Index (this happens in pandas

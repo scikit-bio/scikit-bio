@@ -50,7 +50,7 @@ Current protein support development is tracked in issue-1499 [4]_
 
 Format Specification
 --------------------
-**State: Experimental as of 0.5.1-dev.**
+**State: Experimental as of 0.5.1**
 
 Sections before ``FH (Feature Header)``
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
@@ -293,7 +293,7 @@ References
 #
 # Distributed under the terms of the Modified BSD License.
 #
-# The full license is in the file COPYING.txt, distributed with this software.
+# The full license is in the file LICENSE.txt, distributed with this software.
 # ----------------------------------------------------------------------------
 
 # std modules
@@ -1165,7 +1165,7 @@ def _serialize_reference(header, obj, cross_references, indent=5):
 
             # delete PUBMED key (already present in CROSS_REFERENCE)
             if "PUBMED" in data:
-                del(data["PUBMED"])
+                del (data["PUBMED"])
 
         else:
             # no cross reference, do I have PUBMED in data?

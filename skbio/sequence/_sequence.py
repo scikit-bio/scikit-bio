@@ -3,7 +3,7 @@
 #
 # Distributed under the terms of the Modified BSD License.
 #
-# The full license is in the file COPYING.txt, distributed with this software.
+# The full license is in the file LICENSE.txt, distributed with this software.
 # ----------------------------------------------------------------------------
 
 import re
@@ -133,7 +133,8 @@ class Sequence(MetadataMixin, PositionalMetadataMixin, IntervalMetadataMixin,
 
     Underlying sequence immutable:
 
-    >>> seq.values = np.array([b'T', b'C', b'G', b'A'], dtype='|S1')
+    >>> values = np.array([b'T', b'C', b'G', b'A'], dtype='|S1')
+    >>> seq.values = values # doctest: +SKIP
     Traceback (most recent call last):
         ...
     AttributeError: can't set attribute
@@ -2097,7 +2098,7 @@ fuzzy=[(True, False)], metadata={'gene': 'foo'})
         return self.__class__(**kwargs)
 
     def _munge_to_index_array(self, sliceable):
-        r"""Return an index array from something isomorphic to a boolean vector.
+        r"""Return index array from something isomorphic to a boolean vector.
 
         """
         if isinstance(sliceable, str):

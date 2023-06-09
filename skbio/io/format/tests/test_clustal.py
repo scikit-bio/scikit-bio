@@ -3,7 +3,7 @@
 #
 # Distributed under the terms of the Modified BSD License.
 #
-# The full license is in the file COPYING.txt, distributed with this software.
+# The full license is in the file LICENSE.txt, distributed with this software.
 # ----------------------------------------------------------------------------
 
 import string
@@ -163,27 +163,22 @@ def             CGAUCAGUCAGUCGAU---------- 34
 xyz             UGCUGCAUCA---------------- 33
                 *     ***""")
             ]
-        self.invalid_clustal_out = [StringIO('\n'.join(['dshfjsdfhdfsj',
-                                                        'hfsdjksdfhjsdf'])),
-                                    StringIO('\n'.join(['hfsdjksdfhjsdf'])),
-                                    StringIO('\n'.join(['dshfjsdfhdfsj',
-                                                        'dshfjsdfhdfsj',
-                                                        'hfsdjksdfhjsdf'])),
-                                    StringIO('\n'.join(['dshfjsdfhdfsj',
-                                                        '\t',
-                                                        'hfsdjksdfhjsdf'])),
-                                    StringIO('\n'.join(['dshfj\tdfhdfsj',
-                                                        'hfsdjksdfhjsdf'])),
-                                    StringIO('\n'.join(['dshfjsdfhdfsj',
-                                                        'hfsdjk\tdfhjsdf'])),
-                                    StringIO("""CLUSTAL W (1.74) multiple sequence alignment
+        self.invalid_clustal_out = [
+            StringIO('\n'.join(['dshfjsdfhdfsj', 'hfsdjksdfhjsdf'])),
+            StringIO('\n'.join(['hfsdjksdfhjsdf'])),
+            StringIO('\n'.join(['dshfjsdfhdfsj', 'dshfjsdfhdfsj',
+                                'hfsdjksdfhjsdf'])),
+            StringIO('\n'.join(['dshfjsdfhdfsj', '\t', 'hfsdjksdfhjsdf'])),
+            StringIO('\n'.join(['dshfj\tdfhdfsj', 'hfsdjksdfhjsdf'])),
+            StringIO('\n'.join(['dshfjsdfhdfsj', 'hfsdjk\tdfhjsdf'])),
+            StringIO("""CLUSTAL W (1.74) multiple sequence alignment
 
 
 adj GCAUGCAUGCAUGAUCGUACGUCAGCAUGCUAGACUGCAUACGUACGUACGCAUGCAUCA
 ------------------------------------------------------------
 adk -----GGGGGGG------------------------------------------------
 """),
-                                    StringIO("""CLUSTAL W (1.74) multiple sequence alignment
+            StringIO("""CLUSTAL W (1.74) multiple sequence alignment
 
 
 adj GCAUGCAUGCAUGAUCGUACGUCAGCAUGCUAGACUGCAUACGUACGUACGCAUGCAUCA
@@ -193,7 +188,7 @@ adk -----GGGGGGG------------------------------------------------
 adj GCAUGCAUGCAUGAUCGUACGUCAGCAUGCUAGACUGCAUACGUACGUACGCAUGCAUCA
 adk -----GGGGGGG---------------------------------------------
 """),
-                                    StringIO("""CLUSTAL W (1.74) multiple sequence alignment
+            StringIO("""CLUSTAL W (1.74) multiple sequence alignment
 
 
 adj GCAUGCAUGCAUGAUCGUACGUCAGCAUGCUAGACUGCAUACGUACGUACGCAUGCAUCA
@@ -204,7 +199,7 @@ adj GCAUGCAUGCAUGAUCGUACGUCAGCAUGCUAGACUGCAUACGUACGUACGCAUGCA
 adk -----GGGGGGG---------------------------------------------
 """),
 
-                                    StringIO("""CLUSTAL W (1.74) multiple sequence alignment
+            StringIO("""CLUSTAL W (1.74) multiple sequence alignment
 
 
 adj GCAUGCAUGCAUGAUCGUACGUCAGCAUGCUAGACUGCAUACGUACGUACGCAUGCAUCA
@@ -212,7 +207,7 @@ adj GCAUGCAUGCAUGAUCGUACGUCAGCAUGCUAGACUGCAUACGUACGUACGCAUGCAUCA
 adk -----GGGGGGG------------------------------------------------
 """),
 
-                                    StringIO("""CLUSTAL W (1.74) multiple sequence alignment
+            StringIO("""CLUSTAL W (1.74) multiple sequence alignment
 
 
 GCAUGCAUGCAUGAUCGUACGUCAGCAUGCUAGACUGCAUACGUACGUACGCAUGCAUCA

@@ -3,7 +3,7 @@
 #
 # Distributed under the terms of the Modified BSD License.
 #
-# The full license is in the file COPYING.txt, distributed with this software.
+# The full license is in the file LICENSE.txt, distributed with this software.
 # ----------------------------------------------------------------------------
 
 from warnings import warn
@@ -641,7 +641,10 @@ def global_pairwise_align(seq1, seq2, gap_open_penalty, gap_extend_penalty,
     return msa, score, start_end_positions
 
 
-@experimental(as_of="0.4.0")
+@deprecated(as_of="0.5.8", until="0.6.0",
+            reason="This will be removed or replaced, in favor of more general"
+                   "-purpose performant aligners. Additional details at "
+                   "https://github.com/biocore/scikit-bio/issues/1814")
 def local_pairwise_align_ssw(sequence1, sequence2, **kwargs):
     """Align query and target sequences with Striped Smith-Waterman.
 

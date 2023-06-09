@@ -217,7 +217,7 @@ References
 #
 # Distributed under the terms of the Modified BSD License.
 #
-# The full license is in the file COPYING.txt, distributed with this software.
+# The full license is in the file LICENSE.txt, distributed with this software.
 # ----------------------------------------------------------------------------
 
 from skbio.io import create_format, NewickFormatError
@@ -234,7 +234,7 @@ def _newick_sniffer(fh):
     #       * There is whitespace inside of a label (handled by tokenizer)
     #       * : is followed by anything that is an operator
     #       * ( is not preceded immediately by , or another (
-    #       * The parens are unablanced when ; is found.
+    #       * The parens are unbalanced when ; is found.
     #   If 100 tokens (or less if EOF occurs earlier) then it is probably
     #   newick, or at least we can't prove it isn't.
     operators = set(",;:()")

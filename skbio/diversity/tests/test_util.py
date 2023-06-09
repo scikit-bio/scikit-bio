@@ -3,7 +3,7 @@
 #
 # Distributed under the terms of the Modified BSD License.
 #
-# The full license is in the file COPYING.txt, distributed with this software.
+# The full license is in the file LICENSE.txt, distributed with this software.
 # ----------------------------------------------------------------------------
 
 import io
@@ -17,7 +17,8 @@ from skbio import TreeNode
 from skbio.diversity._util import (_validate_counts_vector,
                                    _validate_counts_matrix,
                                    _validate_otu_ids_and_tree,
-                                   _vectorize_counts_and_tree)
+                                   _vectorize_counts_and_tree,
+                                   _quantitative_to_qualitative_counts)
 from skbio.tree import DuplicateNodeError, MissingNodeError
 
 
@@ -249,6 +250,17 @@ class ValidationTests(TestCase):
             _vectorize_counts_and_tree(counts, np.array(['a', 'b']), t)
         exp_counts = np.array([[0, 1, 10], [1, 5, 1], [1, 6, 11], [1, 6, 11]])
         npt.assert_equal(count_array, exp_counts.T)
+
+    def test_quantitative_to_qualitative_counts(self):
+        counts = np.array([[0, 1], [1, 5], [10, 1]])
+        exp = np.array([[False, True], [True, True], [True, True]])
+        obs = _quantitative_to_qualitative_counts(counts)
+        npt.assert_equal(obs, exp)
+
+        counts = np.array([[0, 0, 0], [1, 0, 42]])
+        exp = np.array([[False, False, False], [True, False, True]])
+        obs = _quantitative_to_qualitative_counts(counts)
+        npt.assert_equal(obs, exp)
 
 
 if __name__ == "__main__":

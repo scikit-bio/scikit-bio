@@ -5,7 +5,7 @@
 #
 # Distributed under the terms of the Modified BSD License.
 #
-# The full license is in the file COPYING.txt, distributed with this software.
+# The full license is in the file LICENSE.txt, distributed with this software.
 # ----------------------------------------------------------------------------
 
 import os
@@ -43,7 +43,6 @@ if not clang:
     except (subprocess.CalledProcessError, FileNotFoundError):
         pass
 
-
 try:
     if os.environ['CC'] == "icc":
         icc = True
@@ -66,10 +65,10 @@ classes = """
     Topic :: Scientific/Engineering :: Bio-Informatics
     Programming Language :: Python :: 3
     Programming Language :: Python :: 3 :: Only
-    Programming Language :: Python :: 3.4
-    Programming Language :: Python :: 3.5
-    Programming Language :: Python :: 3.6
-    Programming Language :: Python :: 3.7
+    Programming Language :: Python :: 3.8
+    Programming Language :: Python :: 3.9
+    Programming Language :: Python :: 3.10
+    Programming Language :: Python :: 3.11
     Operating System :: Unix
     Operating System :: POSIX
     Operating System :: MacOS :: MacOS X
@@ -83,7 +82,12 @@ with open('README.rst') as f:
     long_description = f.read()
 
 # Dealing with Cython
-USE_CYTHON = os.environ.get('USE_CYTHON', True)
+USE_CYTHON = os.environ.get('USE_CYTHON')
+if USE_CYTHON is None or USE_CYTHON.lower() in {'false', 'no'}:
+    USE_CYTHON = False
+else:
+    USE_CYTHON = True
+
 ext = '.pyx' if USE_CYTHON else '.c'
 
 ssw_extra_compile_args = ['-I.']
@@ -119,14 +123,17 @@ extensions = [
               ["skbio/diversity/_phylogenetic" + ext],
               include_dirs=[np.get_include()]),
     Extension("skbio.stats.ordination._cutils",
-              ["skbio/stats/ordination/_cutils" + ext]),
+              ["skbio/stats/ordination/_cutils" + ext],
+              extra_compile_args=ssw_extra_compile_args),
     Extension("skbio.stats.distance._cutils",
-              ["skbio/stats/distance/_cutils" + ext]),
+              ["skbio/stats/distance/_cutils" + ext],
+              extra_compile_args=ssw_extra_compile_args),
 ]
 
 if USE_CYTHON:
     from Cython.Build import cythonize
-    extensions = cythonize(extensions)
+    # Always recompile the pyx files to C if USE_CYTHON is set.
+    extensions = cythonize(extensions, force=True)
 
 setup(name='scikit-bio',
       version=version,
@@ -150,11 +157,10 @@ setup(name='scikit-bio',
           'matplotlib >= 1.4.3',
           'natsort >= 4.0.3',
           'numpy >= 1.9.2',
-          'pandas >= 1.0.0',
-          'scipy >= 1.3.0',
-          'h5py >= 2.9.0',
+          'pandas >= 1.5.0',
+          'scipy >= 1.9.0',
+          'h5py >= 3.6.0',
           'hdmedians >= 0.14.1',
-          'scikit-learn >= 0.19.1'
       ],
       classifiers=classifiers,
       package_data={

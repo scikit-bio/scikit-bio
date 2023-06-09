@@ -1,0 +1,171 @@
+name: CI
+
+on:
+  push:
+    branches: [ master ]
+  pull_request:
+    branches: [ master ]
+
+env:
+  latest_python: "3.11"
+  supported_pythons: '["3.8", "3.9", "3.10", "3.11"]'
+  miniforge_version: "22.9.0-2"
+  miniforge_variant: "Mambaforge"
+
+jobs:
+  conf:
+    # This job is needed to route the global environment variables into
+    # a context that's available for matrix (and name, but that's unimportant)
+    name: Prepare Test Plan
+    runs-on: "ubuntu-latest"
+    outputs:
+      latest_python: ${{ steps.set-vars.outputs.latest_python }}
+      supported_pythons: ${{ steps.set-vars.outputs.supported_pythons }}
+    steps:
+      - name: Report Plan
+        id: set-vars
+        run: |
+          echo "latest_python=$latest_python" >> $GITHUB_OUTPUT
+          echo "supported_pythons=$supported_pythons" >> $GITHUB_OUTPUT
+  lint:
+    name: Lint code (${{ needs.conf.outputs.latest_python }}, ubuntu-latest)
+    needs: conf
+    runs-on: "ubuntu-latest"
+    steps:
+      - uses: actions/checkout@v3
+      - uses: conda-incubator/setup-miniconda@v2
+        with:
+          auto-update-conda: true
+          python-version: ${{ env.latest_python }}
+          miniforge-version: ${{ env.miniforge_version }}
+          miniforge-variant: ${{ env.miniforge_variant }}
+          environment-file: ci/conda_host_env.yml
+      - name: Install dependencies
+        shell: bash -l {0}
+        run: |
+          pip install -r ci/requirements.lint.txt
+          conda list
+      - name: Run linter
+        shell: bash -l {0}
+        run: make lint
+
+  doc:
+    name: Build Documentation  (${{ needs.conf.outputs.latest_python }}, ubuntu-latest)
+    needs: ["conf", "lint"]
+    runs-on: "ubuntu-latest"
+    steps:
+      - uses: actions/checkout@v3
+      - uses: conda-incubator/setup-miniconda@v2
+        with:
+          auto-update-conda: true
+          python-version: ${{ env.latest_python }}
+          miniforge-version: ${{ env.miniforge_version }}
+          miniforge-variant: ${{ env.miniforge_variant }}
+          environment-file: ci/conda_host_env.yml
+      - name: Install dependencies
+        shell: bash -l {0}
+        run: |
+          pip install -r ci/requirements.doc.txt
+          pip install .
+          conda list
+      - name: Make docs
+        shell: bash -l {0}
+        run: make doc
+
+  test-cython:
+    name: Test Cython (${{ needs.conf.outputs.latest_python }}, ${{ matrix.os }})
+    needs: conf
+    runs-on: ${{ matrix.os }}
+    env:
+      MPLBACKEND: Agg
+      USE_CYTHON: TRUE
+    strategy:
+      fail-fast: true
+      matrix:
+        os: ["ubuntu-latest", "macos-latest"]
+    steps:
+      - uses: actions/checkout@v3
+      - uses: conda-incubator/setup-miniconda@v2
+        with:
+          auto-update-conda: true
+          python-version: ${{ env.latest_python }}
+          miniforge-version: ${{ env.miniforge_version }}
+          miniforge-variant: ${{ env.miniforge_variant }}
+          environment-file: ci/conda_host_env.yml
+      - name: Install dependencies
+        shell: bash -l {0}
+        run: |
+          pip install .
+          conda list
+      - name: Run unit tests
+        shell: bash -l {0}
+        env:
+          WITH_COVERAGE: "TRUE"
+        run: make test
+
+  test-cython-aarch64:
+    name: Test Cython (${{ needs.conf.outputs.latest_python }}, qemu::aarch64-centos)
+    needs: conf
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+        # setup-buildx-action uses the git context directly
+        # but checklist wants the .git directory
+      - name: Set up QEMU
+        id: qemu
+        uses: docker/setup-qemu-action@v1
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v1
+      - name: Build and test for linux-aarch64
+        id: docker_build
+        uses: docker/build-push-action@v2
+        with:
+          context: .
+          # ^ to use the local checkout, not the git context
+          file: aarch64.Dockerfile
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
+          build-args: |
+            PYTHON_VERSION=${{ env.latest_python }}
+
+  test-all:
+    name: Test (${{ matrix.python_version }}, ${{ matrix.os }}, ${{ fromJSON('["pypi", "conda"]')[matrix.use_conda] }})
+    runs-on: ${{ matrix.os }}
+    needs: ["conf", "test-cython", "lint"]
+    env:
+      # not testing Cython here, whether the Cython compiles to C is tested
+      # above
+      MPLBACKEND: Agg
+    strategy:
+      fail-fast: false
+      matrix:
+        os: ["ubuntu-latest", "macos-latest"]
+        python_version: ${{ fromJSON(needs.conf.outputs.supported_pythons) }}
+        use_conda: [true, false]
+    steps:
+      - uses: actions/checkout@v3
+      - uses: conda-incubator/setup-miniconda@v2
+        with:
+          auto-update-conda: true
+          python-version: ${{ env.latest_python }}
+          miniforge-version: ${{ env.miniforge_version }}
+          miniforge-variant: ${{ env.miniforge_variant }}
+          environment-file: ci/conda_host_env.yml
+      - name: Install dependencies (conda)
+        if: ${{ matrix.use_conda }}
+        shell: bash -l {0}
+        run: |
+          conda install -q --yes -c conda-forge --file ci/conda_requirements.txt
+          pip install . --no-deps
+          conda list
+      - name: Install dependencies
+        if: ${{ !matrix.use_conda }}
+        shell: bash -l {0}
+        run: |
+          pip install .
+          conda list
+      - name: Run unit tests
+        shell: bash -l {0}
+        env:
+          WITH_COVERAGE: "TRUE"
+        run: make test

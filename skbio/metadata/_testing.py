@@ -3,7 +3,7 @@
 #
 # Distributed under the terms of the Modified BSD License.
 #
-# The full license is in the file COPYING.txt, distributed with this software.
+# The full license is in the file LICENSE.txt, distributed with this software.
 # ----------------------------------------------------------------------------
 
 import copy
@@ -391,7 +391,7 @@ class PositionalMetadataMixinTests:
         # index.
         df = pd.DataFrame({'foo': np.arange(5), 'bar': np.arange(5)[::-1]},
                           index=np.arange(5))
-        self.assertIsInstance(df.index, pd.Int64Index)
+        self.assertEqual(df.index.dtype, np.int64)
 
         obj = self._positional_metadata_constructor_(
             5, positional_metadata=df)
@@ -777,7 +777,7 @@ class PositionalMetadataMixinTests:
 
         df = pd.DataFrame({'foo': np.arange(5), 'bar': np.arange(5)[::-1]},
                           index=np.arange(5))
-        self.assertIsInstance(df.index, pd.Int64Index)
+        self.assertEqual(df.index.dtype, np.int64)
 
         obj.positional_metadata = df
 

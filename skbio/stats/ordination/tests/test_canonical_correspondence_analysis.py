@@ -3,7 +3,7 @@
 #
 # Distributed under the terms of the Modified BSD License.
 #
-# The full license is in the file COPYING.txt, distributed with this software.
+# The full license is in the file LICENSE.txt, distributed with this software.
 # ----------------------------------------------------------------------------
 
 import numpy as np
@@ -29,10 +29,10 @@ class TestCCAErrors(TestCase):
 
     def test_Y_values(self):
         X, Y = self.X, self.Y
-        Y[0, 0] = -1
+        Y.iloc[0, 0] = -1
         with npt.assert_raises(ValueError):
             cca(Y, X)
-        Y[0] = 0
+        Y.iloc[0] = 0
         with npt.assert_raises(ValueError):
             cca(Y, X)
 

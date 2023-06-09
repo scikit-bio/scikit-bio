@@ -3,14 +3,14 @@
 #
 # Distributed under the terms of the Modified BSD License.
 #
-# The full license is in the file COPYING.txt, distributed with this software.
+# The full license is in the file LICENSE.txt, distributed with this software.
 # ----------------------------------------------------------------------------
 
 import functools
 import itertools
 
 import numpy as np
-import sklearn.metrics
+import scipy.spatial.distance
 import pandas as pd
 
 import skbio
@@ -21,7 +21,8 @@ from skbio.diversity.beta._unifrac import (
 from skbio.util._decorator import experimental, deprecated
 from skbio.stats.distance import DistanceMatrix
 from skbio.diversity._util import (_validate_counts_matrix,
-                                   _get_phylogenetic_kwargs)
+                                   _get_phylogenetic_kwargs,
+                                   _quantitative_to_qualitative_counts)
 
 
 def _get_alpha_diversity_metric_map():
@@ -246,6 +247,7 @@ def partial_beta_diversity(metric, counts, ids, id_pairs, validate=True,
         raise ValueError("A duplicate or a self-self pair was observed.")
 
     if metric == 'unweighted_unifrac':
+        counts = _quantitative_to_qualitative_counts(counts)
         otu_ids, tree, kwargs = _get_phylogenetic_kwargs(counts, **kwargs)
         metric, counts_by_node = _setup_multiple_unweighted_unifrac(
             counts, otu_ids=otu_ids, tree=tree, validate=validate)
@@ -277,6 +279,49 @@ def partial_beta_diversity(metric, counts, ids, id_pairs, validate=True,
         dm[u, v] = metric(counts[u], counts[v], **kwargs)
 
     return DistanceMatrix(dm + dm.T, ids)
+
+
+# The following two lists are adapted from sklearn.metrics.pairwise. Metrics
+# that are not available in SciPy (only in sklearn) have been removed from
+# the list of _valid_beta_metrics here (those are: manhatten, wminkowski,
+# nan_euclidean, and haversine)
+_valid_beta_metrics = [
+    "euclidean",
+    "cityblock",
+    "braycurtis",
+    "canberra",
+    "chebyshev",
+    "correlation",
+    "cosine",
+    "dice",
+    "hamming",
+    "jaccard",
+    "kulsinski",
+    "mahalanobis",
+    "manhattan",  # aliases to "cityblock" in beta_diversity
+    "matching",
+    "minkowski",
+    "rogerstanimoto",
+    "russellrao",
+    "seuclidean",
+    "sokalmichener",
+    "sokalsneath",
+    "sqeuclidean",
+    "yule",
+]
+
+
+_qualitative_beta_metrics = [
+    "dice",
+    "jaccard",
+    "kulsinski",
+    "matching",
+    "rogerstanimoto",
+    "russellrao",
+    "sokalmichener",
+    "sokalsneath",
+    "yule"
+]
 
 
 @experimental(as_of="0.4.0")
@@ -312,7 +357,7 @@ def beta_diversity(metric, counts, ids=None, validate=True, pairwise_func=None,
         ``numpy.ndarray`` of dissimilarities (floats). Examples of functions
         that can be provided are ``scipy.spatial.distance.pdist`` and
         ``sklearn.metrics.pairwise_distances``. By default,
-        ``sklearn.metrics.pairwise_distances`` will be used.
+        ``scipy.spatial.distance.pdist`` will be used.
     kwargs : kwargs, optional
         Metric-specific parameters.
 
@@ -350,6 +395,7 @@ def beta_diversity(metric, counts, ids=None, validate=True, pairwise_func=None,
         return DistanceMatrix(np.zeros((len(ids), len(ids))), ids)
 
     if metric == 'unweighted_unifrac':
+        counts = _quantitative_to_qualitative_counts(counts)
         otu_ids, tree, kwargs = _get_phylogenetic_kwargs(counts, **kwargs)
         metric, counts_by_node = _setup_multiple_unweighted_unifrac(
             counts, otu_ids=otu_ids, tree=tree, validate=validate)
@@ -364,18 +410,30 @@ def beta_diversity(metric, counts, ids=None, validate=True, pairwise_func=None,
             counts, otu_ids=otu_ids, tree=tree, normalized=normalized,
             validate=validate)
         counts = counts_by_node
+    elif metric == "manhattan":
+        metric = "cityblock"
     elif callable(metric):
         metric = functools.partial(metric, **kwargs)
         # remove all values from kwargs, since they have already been provided
         # through the partial
         kwargs = {}
+    elif metric in _qualitative_beta_metrics:
+        counts = _quantitative_to_qualitative_counts(counts)
+    elif metric not in _valid_beta_metrics:
+        raise ValueError(
+            "Metric %s is not available. "
+            "Only the following metrics can be passed as strings to "
+            "beta_diversity as we know whether each of these should be "
+            "treated as a qualitative or quantitative metric. Other metrics "
+            "can be provided as functions.\n Available metrics are: %s"
+            % (metric, ', '.join(_valid_beta_metrics)))
     else:
         # metric is a string that scikit-bio doesn't know about, for
         # example one of the SciPy metrics
         pass
 
     if pairwise_func is None:
-        pairwise_func = sklearn.metrics.pairwise_distances
+        pairwise_func = scipy.spatial.distance.pdist
 
     distances = pairwise_func(counts, metric=metric, **kwargs)
     return DistanceMatrix(distances, ids)

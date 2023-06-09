@@ -99,7 +99,7 @@ array([ 0.25,  0.25,  0.5 ])
 #
 # Distributed under the terms of the Modified BSD License.
 #
-# The full license is in the file COPYING.txt, distributed with this software.
+# The full license is in the file LICENSE.txt, distributed with this software.
 # ----------------------------------------------------------------------------
 
 import numpy as np
@@ -107,7 +107,7 @@ import pandas as pd
 import scipy.stats
 import skbio.util
 from skbio.util._decorator import experimental
-from skbio.stats.distance import DistanceMatrix, DissimilarityMatrix
+from skbio.stats.distance import DistanceMatrix
 
 
 @experimental(as_of="0.4.0")
@@ -810,8 +810,7 @@ def centralize(mat):
 
 @experimental(as_of="0.5.7")
 def _vlr(x: np.array, y: np.array, ddof: int):
-    r"""
-    Calculates variance log ratio
+    r""" Calculates variance log ratio
 
     Parameters
     ----------
@@ -819,7 +818,6 @@ def _vlr(x: np.array, y: np.array, ddof: int):
        a 1-dimensional vector of proportions
     y : array_like, float
        a 1-dimensional vector of proportions
-
     ddof: int
         degrees of freedom
 
@@ -850,8 +848,7 @@ def _vlr(x: np.array, y: np.array, ddof: int):
 
 @experimental(as_of="0.5.7")
 def _robust_vlr(x: np.ndarray, y: np.ndarray, ddof: int):
-    r"""
-    Calculates variance log ratio while masking zeros
+    r""" Calculates variance log ratio while masking zeros
 
     Parameters
     ----------
@@ -859,7 +856,6 @@ def _robust_vlr(x: np.ndarray, y: np.ndarray, ddof: int):
        a 1-dimensional vector of proportions
     y : array_like, float
        a 1-dimensional vector of proportions
-
     ddof: int
         degrees of freedom
 
@@ -895,8 +891,7 @@ def _robust_vlr(x: np.ndarray, y: np.ndarray, ddof: int):
 
 @experimental(as_of="0.5.7")
 def vlr(x: np.ndarray, y: np.ndarray, ddof: int = 1, robust: bool = False):
-    r"""
-    Calculates variance log ratio
+    r""" Calculates variance log ratio
 
     Parameters
     ----------
@@ -922,19 +917,19 @@ def vlr(x: np.ndarray, y: np.ndarray, ddof: int = 1, robust: bool = False):
     >>> x = [1,2,3]
     >>> y = [5,8,13]
     >>> vlr(x,y)
-    >>> 0.01277962183258352
+    0.01277962183258352
 
     Zeros without robust
     >>> x = [1,2,3,0]
     >>> y = [5,8,13,21]
     >>> vlr(x,y)
-    >>> nan
+    nan
 
     Zeros with robust
     >>> x = [1,2,3,0]
     >>> y = [5,8,13,21]
     >>> vlr(x,y, robust=True)
-    >>> 0.01277962183258352
+    0.01277962183258352
 
     References
     ----------
@@ -967,8 +962,7 @@ def vlr(x: np.ndarray, y: np.ndarray, ddof: int = 1, robust: bool = False):
 
 @experimental(as_of="0.5.7")
 def _pairwise_vlr(mat: np.ndarray, ddof: int):
-    r"""
-    Performs pairwise variance log ratio transformation
+    r""" Performs pairwise variance log ratio transformation
 
     Parameters
     ----------
@@ -976,16 +970,14 @@ def _pairwise_vlr(mat: np.ndarray, ddof: int):
        a matrix of proportions where
        rows = compositions and
        columns = components
-
-    ids: array_like, str
+    ids : array_like, str
         component names
-
-    ddof: int
+    ddof : int
         degrees of freedom
 
     Returns
     -------
-p    skbio.DistanceMatrix
+    skbio.DistanceMatrix
          distance matrix of variance log ratio values
 
 
@@ -1012,79 +1004,28 @@ p    skbio.DistanceMatrix
 
 
 @experimental(as_of="0.5.7")
-def _robust_pairwise_vlr(mat: np.ndarray, ddof: int):
-    r"""
-    Performs pairwise variance log ratio transformation while masking zeros
-
-    Parameters
-    ----------
-    mat : array_like, float
-       a matrix of proportions where
-       rows = compositions and
-       columns = components
-
-    ids: array_like, str
-        component names
-
-    ddof: int
-        degrees of freedom
-
-    Returns
-    -------
-    skbio.DistanceMatrix
-         distance matrix of variance log ratio values
-
-
-    References
-    ----------
-    .. [1] V. Lovell D, Pawlowsky-Glahn V, Egozcue JJ, Marguerat S,
-           Bähler J (2015) Proportionality: A Valid Alternative to
-           Correlation for Relative Data. PLoS Comput Biol 11(3): e1004075.
-           https://doi.org/10.1371/journal.pcbi.1004075
-    .. [2] Erb, I., Notredame, C.
-           How should we measure proportionality on relative gene
-           expression data?. Theory Biosci. 135, 21–36 (2016).
-           https://doi.org/10.1007/s12064-015-0220-8
-    """
-
-    # Mask zeros
-    X = np.ma.masked_array(mat, mask=mat == 0)
-
-    # Log Transform
-    X_log = np.ma.log(X)
-
-    # Variance Log Ratio
-    covariance = np.ma.cov(X_log.T, ddof=ddof)
-    diagonal = np.ma.diagonal(covariance)
-    vlr_data = -2 * covariance + diagonal[:, np.newaxis] + diagonal
-    return vlr_data
-
-
-@experimental(as_of="0.5.7")
 def pairwise_vlr(mat,
                  ids=None,
                  ddof: int = 1,
                  robust: bool = False,
                  validate: bool = True):
 
-    r"""
-    Performs pairwise variance log ratio transformation
+    r""" Performs pairwise variance log ratio transformation
 
     Parameters
     ----------
-    mat : array_like, float
+    mat: array_like, float
        a matrix of proportions where
        rows = compositions and
        columns = components
-
     ids: array_like, str
-        component names
-
+        Component names
     ddof: int
-        degrees of freedom
-
+        Degrees of freedom
     robust: bool
-        mask zeros at the cost of performance
+        Mask zeros at the cost of performance
+    validate: bool
+        Whether to validate the distance matrix after construction.
 
     Returns
     -------
@@ -1142,7 +1083,7 @@ def pairwise_vlr(mat,
 
     # Return dissimilarity matrix
     else:
-        return DissimilarityMatrix(vlr_data, ids=ids)
+        return DistanceMatrix(vlr_data, ids=ids, validate=False)
 
 
 @experimental(as_of="0.4.1")
@@ -1241,14 +1182,18 @@ def ancom(table, grouping,
     The developers of this method recommend the following significance tests
     ([2]_, Supplementary File 1, top of page 11): if there are 2 groups, use
     the standard parametric t-test (``scipy.stats.ttest_ind``) or
-    non-parametric Wilcoxon rank sum test (``scipy.stats.wilcoxon``).
-    If there are more than 2 groups, use parametric one-way ANOVA
-    (``scipy.stats.f_oneway``) or nonparametric Kruskal-Wallis
-    (``scipy.stats.kruskal``). Because one-way ANOVA is equivalent
-    to the standard t-test when the number of groups is two, we default to
-    ``scipy.stats.f_oneway`` here, which can be used when there are two or
-    more groups.  Users should refer to the documentation of these tests in
-    SciPy to understand the assumptions made by each test.
+    non-parametric Mann-Whitney rank test (``scipy.stats.mannwhitneyu``).
+    For paired samples, use the parametric paired t-test
+    (``scipy.stats.ttest_rel``) or nonparametric Wilcoxon signed-rank test
+    (``scipy.stats.wilcoxon``). If there are more than 2 groups, use
+    parametric one-way ANOVA (``scipy.stats.f_oneway``) or nonparametric
+    Kruskal-Wallis (``scipy.stats.kruskal``). If there are multiple
+    measurements obtained from the individuals, use a Friedman test
+    (``scipy.stats.friedmanchisquare``).  Because one-way ANOVA is
+    equivalent to the standard t-test when the number of groups is two, we
+    default to ``scipy.stats.f_oneway`` here, which can be used when there
+    are two or more groups. Users should refer to the documentation of these
+    tests in SciPy to understand the assumptions made by each test.
 
     This method cannot handle any zero counts as input, since the logarithm
     of zero cannot be computed.  While this is an unsolved problem, many
@@ -1523,7 +1468,7 @@ def _holm_bonferroni(p):
 def _log_compare(mat, cats,
                  significance_test=scipy.stats.ttest_ind):
     """ Calculates pairwise log ratios between all features and performs a
-    significiance test (i.e. t-test) to determine if there is a significant
+    significance test (i.e. t-test) to determine if there is a significant
     difference in feature ratios with respect to the variable of interest.
 
     Parameters

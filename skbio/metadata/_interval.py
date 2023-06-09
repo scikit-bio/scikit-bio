@@ -3,7 +3,7 @@
 #
 # Distributed under the terms of the Modified BSD License.
 #
-# The full license is in the file COPYING.txt, distributed with this software.
+# The full license is in the file LICENSE.txt, distributed with this software.
 # ----------------------------------------------------------------------------
 
 import operator
@@ -175,7 +175,7 @@ fuzzy=[(False, False), (False, False)], metadata={'name': 'genA'})
 
     @experimental(as_of='0.5.1')
     def drop(self):
-        '''Drop this ``Interval`` object from the interval metadata it links to.
+        '''Drop this ``Interval`` object from interval metadata it links to.
 
         If the ``Interval`` object is dropped, you can still get values of
         ``bounds``, ``fuzzy``, and ``metadata`` attributes, but you

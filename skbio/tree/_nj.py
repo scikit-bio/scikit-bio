@@ -3,7 +3,7 @@
 #
 # Distributed under the terms of the Modified BSD License.
 #
-# The full license is in the file COPYING.txt, distributed with this software.
+# The full license is in the file LICENSE.txt, distributed with this software.
 # ----------------------------------------------------------------------------
 
 import io
@@ -118,7 +118,7 @@ def nj(dm, disallow_negative_branch_length=True, result_constructor=None):
 
     # while there are still more than three distances in the distance matrix,
     # join neighboring nodes.
-    while(dm.shape[0] > 3):
+    while (dm.shape[0] > 3):
         # compute the Q matrix
         q = _compute_q(dm)
 

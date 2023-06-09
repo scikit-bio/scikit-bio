@@ -3,7 +3,7 @@
 #
 #  Distributed under the terms of the Modified BSD License.
 #
-#  The full license is in the file COPYING.txt, distributed with this software.
+#  The full license is in the file LICENSE.txt, distributed with this software.
 # -----------------------------------------------------------------------------
 
 from cpython cimport bool
@@ -552,7 +552,7 @@ cdef class StripedSmithWaterman:
                   substitution_matrix=None,
                   suppress_sequences=False,
                   zero_index=True):
-        # initalize our values
+        # initialize our values
         self.read_sequence = query_sequence
         if gap_open_penalty <= 0:
             raise ValueError("`gap_open_penalty` must be > 0")

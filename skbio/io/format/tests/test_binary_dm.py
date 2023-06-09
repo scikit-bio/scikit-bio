@@ -3,7 +3,7 @@
 #
 # Distributed under the terms of the Modified BSD License.
 #
-# The full license is in the file COPYING.txt, distributed with this software.
+# The full license is in the file LICENSE.txt, distributed with this software.
 # ----------------------------------------------------------------------------
 
 import unittest
@@ -81,7 +81,7 @@ class BinaryMatrixTests(unittest.TestCase):
 
         mat = DistanceMatrix(self.mat, self.ids)
         _skbio_mat_to_h5py_mat(mat, fh1)
-        npt.assert_equal(fh1['order'][:], mat.ids)
+        npt.assert_equal(np.asarray(fh1['order'][:], dtype=str), mat.ids)
         npt.assert_equal(fh1['matrix'], mat.data)
 
     def test_get_header(self):

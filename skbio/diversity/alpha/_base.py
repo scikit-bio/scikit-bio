@@ -3,7 +3,7 @@
 #
 # Distributed under the terms of the Modified BSD License.
 #
-# The full license is in the file COPYING.txt, distributed with this software.
+# The full license is in the file LICENSE.txt, distributed with this software.
 # ----------------------------------------------------------------------------
 
 import numpy as np
@@ -795,7 +795,7 @@ def pielou_e(counts):
 
 @experimental(as_of="0.4.0")
 def robbins(counts):
-    r"""Calculate Robbins' estimator for the probability of unobserved outcomes.
+    r"""Calculate Robbins' estimator for probability of unobserved outcomes.
 
     Robbins' estimator is defined as:
 
@@ -1008,8 +1008,8 @@ def strong(counts):
 
     References
     ----------
-    .. [1] Strong, W. L., 2002 Assessing species abundance uneveness within and
-       between plant communities. Community Ecology, 3, 237-246.
+    .. [1] Strong, W. L., 2002 Assessing species abundance unevenness within
+       and between plant communities. Community Ecology, 3, 237-246.
     .. [2] http://www.pisces-conservation.com/sdrhelp/index.html
 
     """

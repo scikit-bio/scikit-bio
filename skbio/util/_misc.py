@@ -3,7 +3,7 @@
 #
 # Distributed under the terms of the Modified BSD License.
 #
-# The full license is in the file COPYING.txt, distributed with this software.
+# The full license is in the file LICENSE.txt, distributed with this software.
 # ----------------------------------------------------------------------------
 
 import hashlib
@@ -66,7 +66,7 @@ class MiniRegistry(dict):
                           argdefs=f.__defaults__, closure=f.__closure__)
 
         # Conveniently the original docstring is on f2, not the new ones if
-        # inheritence is happening. I have no idea why.
+        # inheritance is happening. I have no idea why.
         t = f2.__doc__.split("\n\n")
         t.insert(2, self.formatted_listing())
         f2.__doc__ = "\n\n".join(t)

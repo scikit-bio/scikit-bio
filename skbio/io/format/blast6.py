@@ -193,8 +193,8 @@ be used:
 >>> df = skbio.io.read(fh, format="blast+6", into=pd.DataFrame,
 ...                    default_columns=True)
 >>> df # doctest: +NORMALIZE_WHITESPACE
-  qseqid                           sseqid  pident  length  mismatch  gapopen \\
-0   moaC     gi|15800534|ref|NP_286546.1|  100.00   161.0       0.0      0.0
+  qseqid                           sseqid  pident  length  mismatch  gapopen
+0   moaC     gi|15800534|ref|NP_286546.1|  100.00   161.0       0.0      0.0 \\
 1   moaC  gi|170768970|ref|ZP_02903423.1|   99.38   161.0       1.0      0.0
 <BLANKLINE>
    qstart   qend  sstart   send         evalue  bitscore
@@ -237,7 +237,7 @@ and-csv.html
 #
 # Distributed under the terms of the Modified BSD License.
 #
-# The full license is in the file COPYING.txt, distributed with this software.
+# The full license is in the file LICENSE.txt, distributed with this software.
 # ----------------------------------------------------------------------------
 
 import pandas as pd

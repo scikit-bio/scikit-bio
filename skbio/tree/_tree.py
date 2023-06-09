@@ -3,7 +3,7 @@
 #
 # Distributed under the terms of the Modified BSD License.
 #
-# The full license is in the file COPYING.txt, distributed with this software.
+# The full license is in the file LICENSE.txt, distributed with this software.
 # ----------------------------------------------------------------------------
 
 import warnings
@@ -14,6 +14,7 @@ from functools import reduce
 from collections import defaultdict
 
 import numpy as np
+import pandas as pd
 from scipy.stats import pearsonr
 
 from skbio._base import SkbioObject
@@ -995,6 +996,7 @@ class TreeNode(SkbioObject):
         include_self : bool
             include the initial node if True
 
+
         `self_before` and `self_after` are independent. If neither is `True`,
         only terminal nodes will be returned.
 
@@ -1856,6 +1858,10 @@ class TreeNode(SkbioObject):
         -------
         TreeNode
             The constructed taxonomy
+
+        See Also
+        --------
+        from_taxdump
 
         Examples
         --------
@@ -3269,3 +3275,115 @@ class TreeNode(SkbioObject):
                 nodes_to_unpack.append(node)
         for node in nodes_to_unpack:
             node.unpack()
+
+    @classonlymethod
+    @experimental(as_of="0.5.8")
+    def from_taxdump(cls, nodes, names=None):
+        """Construct a tree from the NCBI taxonomy database.
+
+        Parameters
+        ----------
+        nodes : pd.DataFrame
+            Taxon hierarchy
+        names : pd.DataFrame or dict, optional
+            Taxon names
+
+        Returns
+        -------
+        TreeNode
+            The constructed tree
+
+        Notes
+        -----
+        ``nodes`` and ``names`` correspond to "nodes.dmp" and "names.dmp" of
+        the NCBI taxonomy database. The should be read into data frames using
+        ``skbio.io.read`` prior to this operation. Alternatively, ``names``
+        may be provided as a dictionary. If ``names`` is omitted, taxonomy IDs
+        be used as taxon names.
+
+        Raises
+        ------
+        ValueError
+            If there is no top-level node
+        ValueError
+            If there are more than one top-level node
+
+        See Also
+        --------
+        from_taxonomy
+        skbio.io.format.taxdump
+
+        Examples
+        --------
+        >>> import pandas as pd
+        >>> from skbio.tree import TreeNode
+        >>> nodes = pd.DataFrame([
+        ...             [1, 1, 'no rank'],
+        ...             [2, 1, 'domain'],
+        ...             [3, 1, 'domain'],
+        ...             [4, 2, 'phylum'],
+        ...             [5, 2, 'phylum']], columns=[
+        ...     'tax_id', 'parent_tax_id', 'rank']).set_index('tax_id')
+        >>> names = {1: 'root', 2: 'Bacteria', 3: 'Archaea',
+        ...          4: 'Firmicutes', 5: 'Bacteroidetes'}
+        >>> tree = TreeNode.from_taxdump(nodes, names)
+        >>> print(tree.ascii_art())
+                            /-Firmicutes
+                  /Bacteria|
+        -root----|          \\-Bacteroidetes
+                 |
+                  \\-Archaea
+
+        """
+        # identify top level of hierarchy
+        tops = nodes[nodes['parent_tax_id'] == nodes.index]
+
+        # validate root uniqueness
+        n_top = tops.shape[0]
+        if n_top == 0:
+            raise ValueError('There is no top-level node.')
+        elif n_top > 1:
+            raise ValueError('There are more than one top-level node.')
+
+        # get root taxid
+        root_id = tops.index[0]
+
+        # get parent-to-child(ren) map
+        to_children = {p: g.index.tolist() for p, g in nodes[
+            nodes.index != root_id].groupby('parent_tax_id')}
+
+        # get rank map
+        ranks = nodes['rank'].to_dict()
+
+        # get taxon-to-name map
+        # if not provided, use tax_id as name
+        if names is None:
+            names = {x: str(x) for x in nodes.index}
+
+        # use "scientific name" as name
+        elif isinstance(names, pd.DataFrame):
+            names = names[names['name_class'] == 'scientific name'][
+                'name_txt'].to_dict()
+
+        # initiate tree
+        tree = cls(names[root_id])
+        tree.id = root_id
+        tree.rank = ranks[root_id]
+
+        # helper for extending tree
+        def _extend_tree(node):
+            self_id = node.id
+            if self_id not in to_children:
+                return
+            children = []
+            for id_ in to_children[self_id]:
+                child = TreeNode(names[id_])
+                child.id = id_
+                child.rank = ranks[id_]
+                _extend_tree(child)
+                children.append(child)
+            node.extend(children)
+
+        # extend tree
+        _extend_tree(tree)
+        return tree
