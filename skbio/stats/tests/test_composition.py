@@ -1139,6 +1139,7 @@ class AncomTests(TestCase):
             ancom(self.table1, self.cats1, tau=-1)
         with self.assertRaises(ValueError):
             ancom(self.table1, self.cats1, tau=1.1)
+
     def test_ancom_fail_theta(self):
         with self.assertRaises(ValueError):
             ancom(self.table1, self.cats1, theta=-1)
