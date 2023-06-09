@@ -914,22 +914,24 @@ def vlr(x: np.ndarray, y: np.ndarray, ddof: int = 1, robust: bool = False):
     Examples
     --------
     No zeros
-    >>> x = [1,2,3]
-    >>> y = [5,8,13]
+    >>> import numpy as np
+    >>> from skbio.stats.composition import vlr
+    >>> x = np.exp([1,2,3])
+    >>> y = np.exp([2,3,4])
     >>> vlr(x,y)
-    0.01277962183258352
+    0.0
 
     Zeros without robust
-    >>> x = [1,2,3,0]
-    >>> y = [5,8,13,21]
+    >>> x = np.exp([1,2,3,0])
+    >>> y = np.exp([2,1,1,1])
     >>> vlr(x,y)
     nan
 
     Zeros with robust
-    >>> x = [1,2,3,0]
-    >>> y = [5,8,13,21]
+    >>> x = np.exp([1,2,3,0])
+    >>> y = np.exp([2,1,1,1])
     >>> vlr(x,y, robust=True)
-    0.01277962183258352
+    1.0
 
     References
     ----------
@@ -1036,16 +1038,18 @@ def pairwise_vlr(mat,
 
     Examples
     --------
+    import numpy as np
+    from skbio.stats.composition import pairwise_vlr
     >>> mat = np.asarray([
-        [1,2,3],
-        [5,8,13],
-        [21,34,55],
-    ])
+        np.exp([1,2,2]),
+        np.exp([2,3,6]),
+        np.exp([2,3,12]),
+    ]).T
     >>> dism = pairwise_vlr(mat)
     >>> dism.redundant_form()
-    array([[0.        , 0.01576411, 0.00649553],
-           [0.01576411, 0.        , 0.00202147],
-           [0.00649553, 0.00202147, 0.        ]])
+    array([[ 0.,  3., 27.],
+           [ 3.,  0., 12.],
+           [27., 12.,  0.]])
 
 
     References
