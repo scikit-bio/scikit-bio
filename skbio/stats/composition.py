@@ -231,8 +231,7 @@ def multiplicative_replacement(mat, delta=None):
 
 @experimental(as_of="0.4.0")
 def perturb(x, y):
-    r"""
-    Performs the perturbation operation.
+    r""" Performs the perturbation operation.
 
     This operation is defined as
 
@@ -281,8 +280,7 @@ def perturb(x, y):
 
 @experimental(as_of="0.4.0")
 def perturb_inv(x, y):
-    r"""
-    Performs the inverse perturbation operation.
+    r""" Performs the inverse perturbation operation.
 
     This operation is defined as
 
@@ -331,8 +329,7 @@ def perturb_inv(x, y):
 
 @experimental(as_of="0.4.0")
 def power(x, a):
-    r"""
-    Performs the power operation.
+    r""" Performs the power operation.
 
     This operation is defined as follows
 
@@ -378,8 +375,7 @@ def power(x, a):
 
 @experimental(as_of="0.4.0")
 def inner(x, y):
-    r"""
-    Calculates the Aitchson inner product.
+    r""" Calculates the Aitchson inner product.
 
     This inner product is defined as follows
 
@@ -421,8 +417,7 @@ def inner(x, y):
 
 @experimental(as_of="0.4.0")
 def clr(mat):
-    r"""
-    Performs centre log ratio transformation.
+    r""" Performs centre log ratio transformation.
 
     This function transforms compositions from Aitchison geometry to
     the real space. The :math:`clr` transform is both an isometry and an
@@ -470,8 +465,7 @@ def clr(mat):
 
 @experimental(as_of="0.4.0")
 def clr_inv(mat):
-    r"""
-    Performs inverse centre log ratio transformation.
+    r""" Performs inverse centre log ratio transformation.
 
     This function transforms compositions from the real space to
     Aitchison geometry. The :math:`clr^{-1}` transform is both an isometry,
@@ -515,8 +509,7 @@ def clr_inv(mat):
 
 @experimental(as_of="0.4.0")
 def ilr(mat, basis=None, check=True):
-    r"""
-    Performs isometric log ratio transformation.
+    r""" Performs isometric log ratio transformation.
 
     This function transforms compositions from Aitchison simplex to
     the real space. The :math: ilr` transform is both an isometry,
@@ -582,8 +575,7 @@ def ilr(mat, basis=None, check=True):
 
 @experimental(as_of="0.4.0")
 def ilr_inv(mat, basis=None, check=True):
-    r"""
-    Performs inverse isometric log ratio transform.
+    r""" Performs inverse isometric log ratio transform.
 
     This function transforms compositions from the real space to
     Aitchison geometry. The :math:`ilr^{-1}` transform is both an isometry,
@@ -653,8 +645,7 @@ def ilr_inv(mat, basis=None, check=True):
 
 @experimental(as_of="0.5.5")
 def alr(mat, denominator_idx=0):
-    r"""
-    Performs additive log ratio transformation.
+    r""" Performs additive log ratio transformation.
 
     This function transforms compositions from a D-part Aitchison simplex to
     a non-isometric real space of D-1 dimensions. The argument
@@ -715,8 +706,7 @@ def alr(mat, denominator_idx=0):
 
 @experimental(as_of="0.5.5")
 def alr_inv(mat, denominator_idx=0):
-    r"""
-    Performs inverse additive log ratio transform.
+    r""" Performs inverse additive log ratio transform.
 
     This function transforms compositions from the non-isometric real space of
     alrs to Aitchison geometry.
@@ -813,8 +803,9 @@ def centralize(mat):
     return perturb_inv(mat, cen)
 
 
-def balance_basis(tree_node):
-    """ Determines the basis based on bifurcating tree.
+@experimental(as_of="0.5.8")
+def balance_basis(tree_node : skbio.TreeNode):
+    r""" Determines the basis based on bifurcating tree.
 
     This is commonly referred to as sequential binary partition [1]_.
     Given a binary tree relating a list of features, this module can
@@ -833,7 +824,7 @@ def balance_basis(tree_node):
         Returns a set of orthonormal bases in the Aitchison simplex
         corresponding to the tree. The order of the
         basis is index by the level order of the internal nodes.
-    nodes : list, skbio.TreeNode
+    nodes : list, str
         List of tree nodes indicating the ordering in the basis.
 
     Raises
@@ -937,8 +928,9 @@ def _count_matrix(treenode):
     return counts, n_tips
 
 
+@experimental(as_of="0.5.8")
 def sparse_balance_basis(tree):
-    """ Calculates sparse representation of an ilr basis from a tree.
+    r""" Calculates sparse representation of an ilr basis from a tree.
 
     This computes an orthonormal basis specified from a bifurcating tree.
 
