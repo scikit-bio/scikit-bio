@@ -313,13 +313,13 @@ class CompositionTests(TestCase):
                           [1.28282828, 9.81818182],
                           [1.42424242, 9.72727273],
                           [1.56565657, 9.63636364]])
-        basis = np.array([[0.80442968, 0.19557032]])
+        basis = np.array([[0.70710677, -0.70710677]])
         res = ilr(table, basis=basis)
-        exp = np.array([np.log(1/10)*np.sqrt(1/2),
-                        np.log(1.14141414 / 9.90909091)*np.sqrt(1/2),
-                        np.log(1.28282828 / 9.81818182)*np.sqrt(1/2),
-                        np.log(1.42424242 / 9.72727273)*np.sqrt(1/2),
-                        np.log(1.56565657 / 9.63636364)*np.sqrt(1/2)])
+        exp = np.array([[np.log(1/10)*np.sqrt(1/2)],
+                        [np.log(1.14141414 / 9.90909091)*np.sqrt(1/2)],
+                        [np.log(1.28282828 / 9.81818182)*np.sqrt(1/2)],
+                        [np.log(1.42424242 / 9.72727273)*np.sqrt(1/2)],
+                        [np.log(1.56565657 / 9.63636364)*np.sqrt(1/2)]])
 
         npt.assert_allclose(res, exp)
 
@@ -352,14 +352,15 @@ class CompositionTests(TestCase):
     def test_ilr_basis_isomorphism(self):
         # tests to make sure that the isomorphism holds
         # with the introduction of the basis.
-        basis = np.array([[0.80442968, 0.19557032]])
+        basis = np.array([[0.70710677, -0.70710677]])
         table = np.array([[np.log(1/10)*np.sqrt(1/2),
                            np.log(1.14141414 / 9.90909091)*np.sqrt(1/2),
                            np.log(1.28282828 / 9.81818182)*np.sqrt(1/2),
                            np.log(1.42424242 / 9.72727273)*np.sqrt(1/2),
                            np.log(1.56565657 / 9.63636364)*np.sqrt(1/2)]]).T
-        res = ilr(ilr_inv(table, basis=basis), basis=basis)
-        npt.assert_allclose(res, table.squeeze())
+        lr = ilr_inv(table, basis=basis)
+        res = ilr(lr, basis=basis)
+        npt.assert_allclose(res, table)
 
         table = np.array([[1., 10.],
                           [1.14141414, 9.90909091],
@@ -367,7 +368,7 @@ class CompositionTests(TestCase):
                           [1.42424242, 9.72727273],
                           [1.56565657, 9.63636364]])
 
-        res = ilr_inv(np.atleast_2d(ilr(table, basis=basis)).T, basis=basis)
+        res = ilr_inv(ilr(table, basis=basis), basis=basis)
         npt.assert_allclose(res, closure(table.squeeze()))
 
     def test_ilr_inv_basis(self):
@@ -376,17 +377,18 @@ class CompositionTests(TestCase):
                                 [1.28282828, 9.81818182],
                                 [1.42424242, 9.72727273],
                                 [1.56565657, 9.63636364]]))
-        basis = np.array([[0.80442968, 0.19557032]])
+        basis = np.array([[0.70710677, -0.70710677]])
         table = np.array([[np.log(1/10)*np.sqrt(1/2),
                            np.log(1.14141414 / 9.90909091)*np.sqrt(1/2),
                            np.log(1.28282828 / 9.81818182)*np.sqrt(1/2),
                            np.log(1.42424242 / 9.72727273)*np.sqrt(1/2),
                            np.log(1.56565657 / 9.63636364)*np.sqrt(1/2)]]).T
+
         res = ilr_inv(table, basis=basis)
         npt.assert_allclose(res, exp)
 
     def test_ilr_inv_basis_one_dimension_error(self):
-        basis = clr(np.array([[0.80442968, 0.19557032]]))
+        basis = np.array([0.70710677, -0.70710677])
         table = np.array([[np.log(1/10)*np.sqrt(1/2),
                            np.log(1.14141414 / 9.90909091)*np.sqrt(1/2),
                            np.log(1.28282828 / 9.81818182)*np.sqrt(1/2),
@@ -457,7 +459,7 @@ class CompositionTests(TestCase):
             alr_inv(self.bad2)
 
     def test_sbp_basis_gram_schmidt(self):
-        gsbasis = clr_inv(_gram_schmidt_basis(5))
+        gsbasis = _gram_schmidt_basis(5)
         sbp = np.array([[1, -1, 0, 0, 0],
                         [1, 1, -1, 0, 0],
                         [1, 1, 1, -1, 0],
@@ -490,8 +492,7 @@ class CompositionTests(TestCase):
                     psi[i, j] = np.sqrt(s[i]/(r[i]*(r[i]+s[i])))
                 elif sbp[i, j] == -1:
                     psi[i, j] = -np.sqrt(r[i]/(s[i]*(r[i]+s[i])))
-        basis_byhand = clr_inv(psi)
-        npt.assert_allclose(basis_byhand, sbpbasis)
+        npt.assert_allclose(psi, sbpbasis)
 
 
 class AncomTests(TestCase):
@@ -1138,7 +1139,6 @@ class AncomTests(TestCase):
             ancom(self.table1, self.cats1, tau=-1)
         with self.assertRaises(ValueError):
             ancom(self.table1, self.cats1, tau=1.1)
-
     def test_ancom_fail_theta(self):
         with self.assertRaises(ValueError):
             ancom(self.table1, self.cats1, theta=-1)
