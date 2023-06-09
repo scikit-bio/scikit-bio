@@ -107,7 +107,6 @@ import pandas as pd
 import scipy.stats
 import skbio.util
 from skbio.util._decorator import experimental
-from collections import OrderedDict
 from scipy.sparse import coo_matrix
 
 
