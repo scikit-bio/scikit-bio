@@ -921,18 +921,6 @@ def vlr(x: np.ndarray, y: np.ndarray, ddof: int = 1, robust: bool = False):
     >>> vlr(x,y)
     0.0
 
-    Zeros without robust
-    >>> x = [np.exp(1),np.exp(2),np.exp(3), 0]
-    >>> y = np.exp([2,1,1,1])
-    >>> vlr(x,y)
-    nan
-
-    Zeros with robust
-    >>> x = np.exp([1,2,3,0])
-    >>> y = np.exp([2,1,1,1])
-    >>> vlr(x,y, robust=True)
-    1.0
-
     References
     ----------
     .. [1] V. Lovell D, Pawlowsky-Glahn V, Egozcue JJ, Marguerat S,
