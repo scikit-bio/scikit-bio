@@ -922,7 +922,7 @@ def vlr(x: np.ndarray, y: np.ndarray, ddof: int = 1, robust: bool = False):
     0.0
 
     Zeros without robust
-    >>> x = np.exp([1,2,3,0])
+    >>> x = [np.exp(1),np.exp(2),np.exp(3), 0]
     >>> y = np.exp([2,1,1,1])
     >>> vlr(x,y)
     nan
@@ -1040,11 +1040,9 @@ def pairwise_vlr(mat,
     --------
     import numpy as np
     from skbio.stats.composition import pairwise_vlr
-    >>> mat = np.asarray([
-        np.exp([1,2,2]),
-        np.exp([2,3,6]),
-        np.exp([2,3,12]),
-    ]).T
+    >>> mat = np.array([np.exp([1,2,2]),
+    ...                 np.exp([2,3,6]),
+    ...                 np.exp([2,3,12])]).T
     >>> dism = pairwise_vlr(mat)
     >>> dism.redundant_form()
     array([[ 0.,  3., 27.],
