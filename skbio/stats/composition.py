@@ -803,132 +803,7 @@ def centralize(mat):
 
 
 @experimental(as_of="0.5.8")
-def balance_basis(tree_node: skbio.TreeNode):
-    r""" Determines the basis based on bifurcating tree.
-
-    This is commonly referred to as sequential binary partition [1]_.
-    Given a binary tree relating a list of features, this module can
-    be used to calculate an orthonormal basis, which is used to
-    calculate the ilr transform.
-
-    Parameters
-    ----------
-    treenode : skbio.TreeNode
-        Input bifurcating tree.  Must be strictly bifurcating
-        (i.e. every internal node needs to have exactly 2 children).
-
-    Returns
-    -------
-    basis : np.array
-        Returns a set of orthonormal bases in the Aitchison simplex
-        corresponding to the tree. The order of the
-        basis is index by the level order of the internal nodes.
-    nodes : list, str
-        List of tree nodes indicating the ordering in the basis.
-
-    Raises
-    ------
-    ValueError
-        The tree doesn't contain two branches.
-
-    Examples
-    --------
-    >>> from skbio.stats.composition import balance_basis
-    >>> from skbio import TreeNode
-    >>> tree = u"((b,c)a, d)root;"
-    >>> t = TreeNode.read([tree])
-    >>> basis, nodes = balance_basis(t)
-    >>> basis
-    array([[-0.40824829, -0.40824829,  0.81649658],
-           [-0.70710678,  0.70710678,  0.        ]])
-
-    Notes
-    -----
-    The tree must be strictly bifurcating, meaning that
-    every internal node has exactly 2 children.
-
-    See Also
-    --------
-    skbio.stats.composition.ilr
-
-    References
-    ----------
-    .. [1] J.J. Egozcue and V. Pawlowsky-Glahn "Exploring Compositional Data
-        with the CoDa-Dendrogram" (2011)
-
-    """
-    counts, n_tips = _count_matrix(tree_node)
-    counts = dict([(x, counts[x])
-                   for x in counts.keys() if not x.is_tip()])
-    nds = counts.keys()
-    r = np.array([counts[n]['r'] for n in nds])
-    s = np.array([counts[n]['l'] for n in nds])
-    k = np.array([counts[n]['k'] for n in nds])
-    t = np.array([counts[n]['t'] for n in nds])
-
-    a = np.sqrt(s / (r * (r + s)))
-    b = -1 * np.sqrt(r / (s * (r + s)))
-
-    basis = np.zeros((n_tips - 1, n_tips))
-    for i in range(len(nds)):
-        basis[i, :] = np.array(
-            [0] * k[i] + [a[i]] * r[i] + [b[i]] * s[i] + [0] * t[i])
-    # Make sure that the basis is in level order
-    basis = basis[:, ::-1]
-    nds = [n.name for n in nds]
-    return basis, nds
-
-
-def _count_matrix(treenode):
-    n_tips = 0
-    nodes = list(treenode.levelorder(include_self=True))
-    # fill in the Ordered dictionary. Note that the
-    # elements of this Ordered dictionary are
-    # dictionaries.
-    counts = dict()
-    columns = ['k', 'r', 'l', 't', 'tips']
-    for n in nodes:
-        if n not in counts:
-            counts[n] = {}
-        for c in columns:
-            counts[n][c] = 0
-
-    # fill in r and l.  This is done in reverse level order.
-    for n in nodes[::-1]:
-        if n.is_tip():
-            counts[n]['tips'] = 1
-            n_tips += 1
-        elif len(n.children) == 2:
-            lchild = n.children[0]
-            rchild = n.children[1]
-            counts[n]['r'] = counts[rchild]['tips']
-            counts[n]['l'] = counts[lchild]['tips']
-            counts[n]['tips'] = counts[n]['r'] + counts[n]['l']
-        else:
-            raise ValueError("Not a strictly bifurcating tree!")
-
-    # fill in k and t
-    for n in nodes:
-        if n.parent is None:
-            counts[n]['k'] = 0
-            counts[n]['t'] = 0
-            continue
-        elif n.is_tip():
-            continue
-        # left or right child
-        # left = 0, right = 1
-        child_idx = 'l' if n.parent.children[0] != n else 'r'
-        if child_idx == 'l':
-            counts[n]['t'] = counts[n.parent]['t'] + counts[n.parent]['l']
-            counts[n]['k'] = counts[n.parent]['k']
-        else:
-            counts[n]['k'] = counts[n.parent]['k'] + counts[n.parent]['r']
-            counts[n]['t'] = counts[n.parent]['t']
-    return counts, n_tips
-
-
-@experimental(as_of="0.5.8")
-def sparse_balance_basis(tree):
+def tree_basis(tree):
     r""" Calculates sparse representation of an ilr basis from a tree.
 
     This computes an orthonormal basis specified from a bifurcating tree.
@@ -953,6 +828,14 @@ def sparse_balance_basis(tree):
     ------
     ValueError
         The tree doesn't contain two branches.
+
+    >>> from skbio import TreeNode
+    >>> tree = u"((b,c)a, d)root;"
+    >>> t = TreeNode.read([tree])
+    >>> basis, nodes = tree_basis(t)
+    >>> basis.toarray()
+    array([[-0.40824829, -0.40824829,  0.81649658],
+           [-0.70710678,  0.70710678,  0.        ]])
 
     """
     # Specifies which child is numerator and denominator

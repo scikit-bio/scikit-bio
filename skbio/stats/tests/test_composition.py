@@ -15,12 +15,27 @@ from numpy.random import normal
 import pandas as pd
 import scipy
 import copy
+from skbio import TreeNode
 from skbio.util import assert_data_frame_almost_equal
 from skbio.stats.composition import (closure, multiplicative_replacement,
                                      perturb, perturb_inv, power, inner,
                                      clr, clr_inv, ilr, ilr_inv, alr, alr_inv,
-                                     sbp_basis, _gram_schmidt_basis,
+                                     sbp_basis, _gram_schmidt_basis, tree_basis,
                                      centralize, _holm_bonferroni, ancom)
+
+from scipy.sparse import coo_matrix
+
+
+def assert_coo_allclose(res, exp, rtol=1e-7, atol=1e-7):
+    res_data = np.vstack((res.row, res.col, res.data)).T
+    exp_data = np.vstack((exp.row, exp.col, exp.data)).T
+
+    # sort by row and col
+    res_data = res_data[res_data[:, 1].argsort()]
+    res_data = res_data[res_data[:, 0].argsort()]
+    exp_data = exp_data[exp_data[:, 1].argsort()]
+    exp_data = exp_data[exp_data[:, 0].argsort()]
+    npt.assert_allclose(res_data, exp_data, rtol=rtol, atol=atol)
 
 
 class CompositionTests(TestCase):
@@ -313,7 +328,7 @@ class CompositionTests(TestCase):
                           [1.28282828, 9.81818182],
                           [1.42424242, 9.72727273],
                           [1.56565657, 9.63636364]])
-        basis = np.array([[0.70710677, -0.70710677]])
+        basis = np.atleast_2d(clr([[0.80442968, 0.19557032]]))
         res = ilr(table, basis=basis)
         exp = np.array([[np.log(1/10)*np.sqrt(1/2)],
                         [np.log(1.14141414 / 9.90909091)*np.sqrt(1/2)],
@@ -352,7 +367,7 @@ class CompositionTests(TestCase):
     def test_ilr_basis_isomorphism(self):
         # tests to make sure that the isomorphism holds
         # with the introduction of the basis.
-        basis = np.array([[0.70710677, -0.70710677]])
+        basis = np.atleast_2d(clr([[0.80442968, 0.19557032]]))
         table = np.array([[np.log(1/10)*np.sqrt(1/2),
                            np.log(1.14141414 / 9.90909091)*np.sqrt(1/2),
                            np.log(1.28282828 / 9.81818182)*np.sqrt(1/2),
@@ -377,7 +392,7 @@ class CompositionTests(TestCase):
                                 [1.28282828, 9.81818182],
                                 [1.42424242, 9.72727273],
                                 [1.56565657, 9.63636364]]))
-        basis = np.array([[0.70710677, -0.70710677]])
+        basis = np.atleast_2d(clr([[0.80442968, 0.19557032]]))
         table = np.array([[np.log(1/10)*np.sqrt(1/2),
                            np.log(1.14141414 / 9.90909091)*np.sqrt(1/2),
                            np.log(1.28282828 / 9.81818182)*np.sqrt(1/2),
@@ -388,7 +403,7 @@ class CompositionTests(TestCase):
         npt.assert_allclose(res, exp)
 
     def test_ilr_inv_basis_one_dimension_error(self):
-        basis = np.array([0.70710677, -0.70710677])
+        basis = clr([0.80442968, 0.19557032])
         table = np.array([[np.log(1/10)*np.sqrt(1/2),
                            np.log(1.14141414 / 9.90909091)*np.sqrt(1/2),
                            np.log(1.28282828 / 9.81818182)*np.sqrt(1/2),
@@ -493,6 +508,58 @@ class CompositionTests(TestCase):
                 elif sbp[i, j] == -1:
                     psi[i, j] = -np.sqrt(r[i]/(s[i]*(r[i]+s[i])))
         npt.assert_allclose(psi, sbpbasis)
+
+
+class TestTreeBasis(TestCase):
+
+    def test_tree_basis_base_case(self):
+        tree = u"(a,b);"
+        t = TreeNode.read([tree])
+
+        exp_basis = coo_matrix(
+            np.array([[-np.sqrt(1. / 2),
+                       np.sqrt(1. / 2)]]))
+        exp_keys = [t.name]
+        res_basis, res_keys = tree_basis(t)
+
+        assert_coo_allclose(exp_basis, res_basis)
+        self.assertListEqual(exp_keys, res_keys)
+
+    def test_tree_basis_invalid(self):
+        with self.assertRaises(ValueError):
+            tree = u"(a,b,c);"
+            t = TreeNode.read([tree])
+            tree_basis(t)
+
+    def test_tree_basis_unbalanced(self):
+        tree = u"((a,b)c, d);"
+        t = TreeNode.read([tree])
+        exp_basis = coo_matrix(np.array(
+            [[-np.sqrt(1. / 6), -np.sqrt(1. / 6), np.sqrt(2. / 3)],
+             [-np.sqrt(1. / 2), np.sqrt(1. / 2), 0]]
+        ))
+        exp_keys = [t.name, t[0].name]
+        res_basis, res_keys = tree_basis(t)
+
+        assert_coo_allclose(exp_basis, res_basis)
+        self.assertListEqual(exp_keys, res_keys)
+
+    def test_tree_basis_unbalanced2(self):
+        tree = u"(d, (a,b)c);"
+
+        t = TreeNode.read([tree])
+
+        exp_basis = coo_matrix(np.array(
+            [
+                [-np.sqrt(2. / 3), np.sqrt(1. / 6), np.sqrt(1. / 6)],
+                [0, -np.sqrt(1. / 2), np.sqrt(1. / 2)]
+            ]
+        ))
+
+        exp_keys = [t.name, t[1].name]
+        res_basis, res_keys = tree_basis(t)
+        assert_coo_allclose(exp_basis, res_basis, atol=1e-7, rtol=1e-7)
+        self.assertListEqual(exp_keys, res_keys)
 
 
 class AncomTests(TestCase):
