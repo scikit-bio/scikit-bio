@@ -17,11 +17,12 @@ import scipy
 import copy
 from skbio import TreeNode
 from skbio.util import assert_data_frame_almost_equal
-from skbio.stats.composition import (closure, multiplicative_replacement,
-                                     perturb, perturb_inv, power, inner,
-                                     clr, clr_inv, ilr, ilr_inv, alr, alr_inv,
-                                     sbp_basis, _gram_schmidt_basis, tree_basis,
-                                     centralize, _holm_bonferroni, ancom)
+from skbio.stats.composition import (
+    closure, multiplicative_replacement,
+    perturb, perturb_inv, power, inner,
+    clr, clr_inv, ilr, ilr_inv, alr, alr_inv,
+    sbp_basis, _gram_schmidt_basis, tree_basis,
+    centralize, _holm_bonferroni, ancom)
 
 from scipy.sparse import coo_matrix
 
