@@ -109,7 +109,6 @@ import skbio.util
 from skbio.util._decorator import experimental
 from skbio.stats.distance import DistanceMatrix
 from scipy.sparse import coo_matrix
->>>>>>> 8983c4e38aa2e581f82f87158561b09a7ee3e5a3
 
 
 @experimental(as_of="0.4.0")
