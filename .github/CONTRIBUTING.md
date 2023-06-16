@@ -12,7 +12,7 @@ We're interested in many different types of contributions, including feature add
 
 When considering contributing to scikit-bio, you should begin by posting an issue to the [scikit-bio issue tracker](https://github.com/biocore/scikit-bio/issues). The information that you include in that post will differ based on the type of contribution. Your contribution will also need to be fully tested where applicable (discussed further below).
 
-* For feature additions, please describe why the functionality that you are proposing to add is relevant. For it to be relevant, it should be demonstrably useful to scikit-bio users and it should also fit within the biology/bioinformatics domain. This typically means that a new analytic method is implemented (you should describe why it's useful, ideally including a link to a paper that uses this method), or an existing method is enhanced (e.g., improved performance). We will request benchmark results comparing your method to the pre-existing methods (which would also be required for publication of your method) so pointing to a paper or other document containing benchmark results, or including benchmark results in your issue, will speed up the process. Before contributing a new feature, it's also a good idea to check whether the functionality exists in other Python packages, or if the feature would fit better in another Python package. For example, low-level statistical methods/tests may fit better in a project that is focused on statistics (e.g., [SciPy](http://scipy.org/) or [statsmodels](http://statsmodels.sourceforge.net/)).
+* For feature additions, please describe why the functionality that you are proposing to add is relevant. For it to be relevant, it should be demonstrably useful to scikit-bio users and it should also fit within the biology/bioinformatics domain. This typically means that a new analytic method is implemented (you should describe why it's useful, ideally including a link to a paper that uses this method), or an existing method is enhanced (e.g., improved performance). We will request benchmark results comparing your method to the pre-existing methods (which would also be required for publication of your method) so pointing to a paper or other document containing benchmark results, or including benchmark results in your issue, will speed up the process. Before contributing a new feature, it's also a good idea to check whether the functionality exists in other Python packages, or if the feature would fit better in another Python package. For example, low-level statistical methods/tests may fit better in a project that is focused on statistics (e.g., [SciPy](https://scipy.org/) or [statsmodels](https://www.statsmodels.org/)).
 
 * For bug fixes, please provide a detailed description of the bug so other developers can reproduce it. We take bugs in scikit-bio very seriously. Bugs can be related to errors in code, documentation, or tests. Errors in documentation or tests are usually updated in the next scheduled release of scikit-bio. Errors in code that could result in incorrect results or inability to access certain functionality may result in a bug fix release of scikit-bio that is released ahead of schedule.
 
@@ -53,7 +53,7 @@ Particularly for big changes, if you'd like feedback on your code in the form of
 Submitting code to scikit-bio
 -----------------------------
 
-scikit-bio is hosted on [GitHub](http://www.github.com), and we use GitHub's [Pull Request](https://help.github.com/articles/using-pull-requests) mechanism for reviewing and accepting submissions. You should work through the following steps to submit code to scikit-bio.
+scikit-bio is hosted on [GitHub](https://github.com/), and we use GitHub's [Pull Request](https://help.github.com/articles/using-pull-requests) mechanism for reviewing and accepting submissions. You should work through the following steps to submit code to scikit-bio.
 
 1. Begin by [creating an issue](https://github.com/biocore/scikit-bio/issues) describing your proposed change (see [Types of contributions](#types-of-contributions) for details).
 
@@ -107,54 +107,40 @@ scikit-bio is hosted on [GitHub](http://www.github.com), and we use GitHub's [Pu
 Setting up a development environment
 ------------------------------------
 
-**Note:** scikit-bio must be developed in a Python 3.4 or later environment.
+**Note:** scikit-bio must be developed in a Python 3.8 or later environment.
 
-The recommended way to set up a development environment for contributing to scikit-bio is using [Anaconda](https://store.continuum.io/cshop/anaconda/) by Continuum Analytics, with its associated command line utility `conda`. The primary benefit of `conda` over `pip` is that on some operating systems (ie Linux), `pip` installs packages from source. This can take a very long time to install Numpy, scipy, matplotlib, etc. `conda` installs these packages using pre-built binaries, so the installation is much faster. Another benefit of `conda` is that it provides both package and environment management, which removes the necessity of using `virtualenv` separately. Not all packages are available using `conda`, therefore our strategy is to install as many packages as possible using `conda`, then install any remaining packages using `pip`.
+The recommended way to set up a development environment for contributing to scikit-bio is using [Conda](https://conda.io/). The primary benefit of `conda` over `pip` is that on some operating systems (ie Linux), `pip` installs packages from source. This can take a very long time to install Numpy, scipy, matplotlib, etc. `conda` installs these packages using pre-built binaries, so the installation is much faster. Another benefit of `conda` is that it provides both package and environment management, which removes the necessity of using `virtualenv` separately. Not all packages are available using `conda`, therefore our strategy is to install as many packages as possible using `conda`, then install any remaining packages using `pip`.
 
-1. Install Anaconda
+1. Install Conda
 
- See [Continuum's site](https://store.continuum.io/cshop/anaconda/) for instructions. [Miniconda](http://conda.pydata.org/docs/install/quick.html) provides a fast way to get conda up and running.
+ See [Conda's site](https://docs.conda.io/en/latest/) for instructions. [Miniconda](https://conda.io/miniconda.html) provides a fast way to get conda up and running.
 
-2. Create a new conda environment
- ```
- conda create -n env_name python=3.4 pip
- ```
-
- Note that `env_name` can be any name desired, for example
-
- ```
- conda create -n skbio python=3.4 pip
- ```
-
-3. Activate the environment
-
- This may be slightly different depending on the operating system. Refer to the Continuum site to find instructions for your OS.
- ```
- source activate env_name
- ```
-
-4. Navigate to the scikit-bio directory
+2. Navigate to the scikit-bio directory
  See [the section on submitting code](#submitting-code-to-scikit-bio).
  ```
  cd /path/to/scikit-bio
  ```
 
-5. Install `conda` requirements
+3. Create a new conda environment
  ```
- conda install --file ci/conda_requirements.txt
- ```
-
-6. Install `pip` requirements
- ```
- pip install -r ci/pip_requirements.txt
+ conda create -n skbio-dev -c conda-forge --file ci/conda_requirements.txt --file ci/requirements.test.txt
  ```
 
-7. Install scikit-bio
+ Note that `skbio-dev` can be any name desired.
+
+4. Activate the environment
+
+ This may be slightly different depending on the operating system. Refer to the Conda site to find instructions for your OS.
+ ```
+ conda activate skbio-dev
+ ```
+
+5. Install scikit-bio
  ```
  pip install --no-deps -e .
  ```
 
-8. Test the installation
+6. Test the installation
  ```
  make test
  ```
@@ -162,7 +148,7 @@ The recommended way to set up a development environment for contributing to scik
 Coding guidelines
 -----------------
 
-We adhere to the [PEP 8](http://www.python.org/dev/peps/pep-0008/) Python style guidelines. Please see scikit-bio's [coding guidelines](http://scikit-bio.org/docs/latest/development/coding_guidelines.html) for more details. Before submitting code to scikit-bio, you should read this document carefully and apply the guidelines in your code.
+We adhere to the [PEP 8](https://peps.python.org/pep-0008/) Python style guidelines. Please see scikit-bio's [coding guidelines](http://scikit-bio.org/docs/latest/development/coding_guidelines.html) for more details. Before submitting code to scikit-bio, you should read this document carefully and apply the guidelines in your code.
 
 Testing guidelines
 ------------------
@@ -197,4 +183,4 @@ We strive to keep scikit-bio well-documented, particularly its public-facing API
 Getting help with git
 ---------------------
 
-If you're new to ``git``, you'll probably find [gitref.org](http://gitref.org/) helpful.
+If you're new to GitHub, you'll probably find the [GitHub Docs](https://docs.github.com/) helpful.

@@ -108,6 +108,8 @@ import scipy.stats
 import skbio.util
 from skbio.util._decorator import experimental
 from skbio.stats.distance import DistanceMatrix
+from scipy.sparse import coo_matrix
+>>>>>>> 8983c4e38aa2e581f82f87158561b09a7ee3e5a3
 
 
 @experimental(as_of="0.4.0")
@@ -230,8 +232,7 @@ def multiplicative_replacement(mat, delta=None):
 
 @experimental(as_of="0.4.0")
 def perturb(x, y):
-    r"""
-    Performs the perturbation operation.
+    r""" Performs the perturbation operation.
 
     This operation is defined as
 
@@ -280,8 +281,7 @@ def perturb(x, y):
 
 @experimental(as_of="0.4.0")
 def perturb_inv(x, y):
-    r"""
-    Performs the inverse perturbation operation.
+    r""" Performs the inverse perturbation operation.
 
     This operation is defined as
 
@@ -330,8 +330,7 @@ def perturb_inv(x, y):
 
 @experimental(as_of="0.4.0")
 def power(x, a):
-    r"""
-    Performs the power operation.
+    r""" Performs the power operation.
 
     This operation is defined as follows
 
@@ -377,8 +376,7 @@ def power(x, a):
 
 @experimental(as_of="0.4.0")
 def inner(x, y):
-    r"""
-    Calculates the Aitchson inner product.
+    r""" Calculates the Aitchson inner product.
 
     This inner product is defined as follows
 
@@ -420,8 +418,7 @@ def inner(x, y):
 
 @experimental(as_of="0.4.0")
 def clr(mat):
-    r"""
-    Performs centre log ratio transformation.
+    r""" Performs centre log ratio transformation.
 
     This function transforms compositions from Aitchison geometry to
     the real space. The :math:`clr` transform is both an isometry and an
@@ -469,8 +466,7 @@ def clr(mat):
 
 @experimental(as_of="0.4.0")
 def clr_inv(mat):
-    r"""
-    Performs inverse centre log ratio transformation.
+    r""" Performs inverse centre log ratio transformation.
 
     This function transforms compositions from the real space to
     Aitchison geometry. The :math:`clr^{-1}` transform is both an isometry,
@@ -505,15 +501,16 @@ def clr_inv(mat):
     >>> x = np.array([.1, .3, .4, .2])
     >>> clr_inv(x)
     array([ 0.21383822,  0.26118259,  0.28865141,  0.23632778])
-
     """
-    return closure(np.exp(mat))
+    # for numerical stability (aka softmax trick)
+    mat = np.atleast_2d(mat)
+    emat = np.exp(mat - mat.max(axis=-1, keepdims=True))
+    return closure(emat)
 
 
 @experimental(as_of="0.4.0")
 def ilr(mat, basis=None, check=True):
-    r"""
-    Performs isometric log ratio transformation.
+    r""" Performs isometric log ratio transformation.
 
     This function transforms compositions from Aitchison simplex to
     the real space. The :math: ilr` transform is both an isometry,
@@ -540,7 +537,7 @@ def ilr(mat, basis=None, check=True):
        rows = compositions and
        columns = components
 
-    basis: numpy.ndarray, float, optional
+    basis: numpy.ndarray or scipy.sparse.matrix, optional
         orthonormal basis for Aitchison simplex
         defaults to J.J.Egozcue orthonormal basis.
 
@@ -564,7 +561,8 @@ def ilr(mat, basis=None, check=True):
     """
     mat = closure(mat)
     if basis is None:
-        basis = clr_inv(_gram_schmidt_basis(mat.shape[-1]))
+        d = mat.shape[-1]
+        basis = _gram_schmidt_basis(d)  # dimension (d-1) x d
     else:
         if len(basis.shape) != 2:
             raise ValueError("Basis needs to be a 2D matrix, "
@@ -573,13 +571,12 @@ def ilr(mat, basis=None, check=True):
         if check:
             _check_orthogonality(basis)
 
-    return inner(mat, basis)
+    return clr(mat) @ basis.T
 
 
 @experimental(as_of="0.4.0")
 def ilr_inv(mat, basis=None, check=True):
-    r"""
-    Performs inverse isometric log ratio transform.
+    r""" Performs inverse isometric log ratio transform.
 
     This function transforms compositions from the real space to
     Aitchison geometry. The :math:`ilr^{-1}` transform is both an isometry,
@@ -629,8 +626,9 @@ def ilr_inv(mat, basis=None, check=True):
     the dimensions of the basis needs be `D-1 x D`, where rows represent
     basis vectors, and the columns represent proportions.
     """
-
+    mat = np.atleast_2d(mat)
     if basis is None:
+        # dimension d-1 x d basis
         basis = _gram_schmidt_basis(mat.shape[-1] + 1)
     else:
         if len(basis.shape) != 2:
@@ -641,15 +639,14 @@ def ilr_inv(mat, basis=None, check=True):
             _check_orthogonality(basis)
         # this is necessary, since the clr function
         # performs np.squeeze()
-        basis = np.atleast_2d(clr(basis))
+        basis = np.atleast_2d(basis)
 
-    return clr_inv(np.dot(mat, basis))
+    return clr_inv(mat @ basis)
 
 
 @experimental(as_of="0.5.5")
 def alr(mat, denominator_idx=0):
-    r"""
-    Performs additive log ratio transformation.
+    r""" Performs additive log ratio transformation.
 
     This function transforms compositions from a D-part Aitchison simplex to
     a non-isometric real space of D-1 dimensions. The argument
@@ -710,8 +707,7 @@ def alr(mat, denominator_idx=0):
 
 @experimental(as_of="0.5.5")
 def alr_inv(mat, denominator_idx=0):
-    r"""
-    Performs inverse additive log ratio transform.
+    r""" Performs inverse additive log ratio transform.
 
     This function transforms compositions from the non-isometric real space of
     alrs to Aitchison geometry.
@@ -808,6 +804,7 @@ def centralize(mat):
     return perturb_inv(mat, cen)
 
 
+<<<<<<< HEAD
 @experimental(as_of="0.5.7")
 def _vlr(x: np.array, y: np.array, ddof: int):
     r""" Calculates variance log ratio
@@ -1074,6 +1071,115 @@ def pairwise_vlr(mat,
     # Return dissimilarity matrix
     else:
         return DistanceMatrix(vlr_data, ids=ids, validate=False)
+=======
+@experimental(as_of="0.5.8")
+def tree_basis(tree):
+    r""" Calculates sparse representation of an ilr basis from a tree.
+
+    This computes an orthonormal basis specified from a bifurcating tree.
+
+    Parameters
+    ----------
+    tree : skbio.TreeNode
+        Input bifurcating tree.  Must be strictly bifurcating
+        (i.e. every internal node needs to have exactly 2 children).
+        This is used to specify the ilr basis.
+
+    Returns
+    -------
+    scipy.sparse.coo_matrix
+       The ilr basis required to perform the ilr_inv transform.
+       This is also known as the sequential binary partition.
+       Note that this matrix is represented in clr coordinates.
+    nodes : list, str
+        List of tree nodes indicating the ordering in the basis.
+
+    Raises
+    ------
+    ValueError
+        The tree doesn't contain two branches.
+
+    >>> from skbio import TreeNode
+    >>> tree = u"((b,c)a, d)root;"
+    >>> t = TreeNode.read([tree])
+    >>> basis, nodes = tree_basis(t)
+    >>> basis.toarray()
+    array([[-0.40824829, -0.40824829,  0.81649658],
+           [-0.70710678,  0.70710678,  0.        ]])
+
+    """
+    # Specifies which child is numerator and denominator
+    # within any given node in a tree.
+    NUMERATOR = 1
+    DENOMINATOR = 0
+    # this is inspired by @wasade in
+    # https://github.com/biocore/gneiss/pull/8
+    t = tree.copy()
+    D = len(list(tree.tips()))
+    # calculate number of tips under each node
+    for n in t.postorder(include_self=True):
+        if n.is_tip():
+            n._tip_count = 1
+        else:
+            if len(n.children) == 2:
+                left, right = n.children[NUMERATOR], n.children[DENOMINATOR],
+            else:
+                raise ValueError("Not a strictly bifurcating tree.")
+            n._tip_count = left._tip_count + right._tip_count
+
+    # calculate k, r, s, t coordinate for each node
+    left, right = t.children[NUMERATOR], t.children[DENOMINATOR],
+    t._k, t._r, t._s, t._t = 0, left._tip_count, right._tip_count, 0
+    for n in t.preorder(include_self=False):
+        if n.is_tip():
+            n._k, n._r, n._s, n._t = 0, 0, 0, 0
+
+        elif n == n.parent.children[NUMERATOR]:
+            n._k = n.parent._k
+            n._r = n.children[NUMERATOR]._tip_count
+            n._s = n.children[DENOMINATOR]._tip_count
+            n._t = n.parent._s + n.parent._t
+        elif n == n.parent.children[DENOMINATOR]:
+            n._k = n.parent._r + n.parent._k
+            n._r = n.children[NUMERATOR]._tip_count
+            n._s = n.children[DENOMINATOR]._tip_count
+            n._t = n.parent._t
+        else:
+            raise ValueError("Tree topology is not correct.")
+
+    # navigate through tree to build the basis in a sparse matrix form
+    value = []
+    row, col = [], []
+    nodes = []
+    i = 0
+
+    for n in t.levelorder(include_self=True):
+
+        if n.is_tip():
+            continue
+
+        for j in range(n._k, n._k + n._r):
+            row.append(i)
+            # consider tips in reverse order. May want to rethink
+            # this orientation in the future.
+            col.append(D - 1 - j)
+            A = np.sqrt(n._s / (n._r * (n._s + n._r)))
+
+            value.append(A)
+
+        for j in range(n._k + n._r, n._k + n._r + n._s):
+            row.append(i)
+            col.append(D - 1 - j)
+            B = -np.sqrt(n._r / (n._s * (n._s + n._r)))
+
+            value.append(B)
+        i += 1
+        nodes.append(n.name)
+
+    basis = coo_matrix((value, (row, col)), shape=(D - 1, D))
+
+    return basis, nodes
+>>>>>>> 8983c4e38aa2e581f82f87158561b09a7ee3e5a3
 
 
 @experimental(as_of="0.4.1")
@@ -1502,6 +1608,11 @@ def _gram_schmidt_basis(n):
     ----------
     n : int
         Dimension of the Aitchison simplex
+
+    Returns
+    -------
+    basis : np.array
+        Dimension (n-1) x n basis matrix
     """
     basis = np.zeros((n, n-1))
     for j in range(n-1):
@@ -1557,10 +1668,10 @@ def sbp_basis(sbp):
     ...                 [0, 0, 0, 1,-1]])
     ...
     >>> sbp_basis(sbp)
-    array([[ 0.31209907,  0.31209907,  0.12526729,  0.12526729,  0.12526729],
-           [ 0.36733337,  0.08930489,  0.18112058,  0.18112058,  0.18112058],
-           [ 0.17882092,  0.17882092,  0.40459293,  0.11888261,  0.11888261],
-           [ 0.18112058,  0.18112058,  0.18112058,  0.36733337,  0.08930489]])
+    array([[ 0.54772256,  0.54772256, -0.36514837, -0.36514837, -0.36514837],
+           [ 0.70710678, -0.70710678,  0.        ,  0.        ,  0.        ],
+           [ 0.        ,  0.        ,  0.81649658, -0.40824829, -0.40824829],
+           [ 0.        ,  0.        ,  0.        ,  0.70710678, -0.70710678]])
 
     References
     ----------
@@ -1580,7 +1691,7 @@ def sbp_basis(sbp):
     for i in range(0, sbp.shape[0]):
         psi[i, :] = sbp[i, :] * np.sqrt((n_neg[i] / n_pos[i])**sbp[i, :] /
                                         np.sum(np.abs(sbp[i, :])))
-    return clr_inv(psi)
+    return psi
 
 
 def _check_orthogonality(basis):
@@ -1591,9 +1702,9 @@ def _check_orthogonality(basis):
     Parameters
     ----------
     basis: numpy.ndarray
-        basis in the Aitchison simplex
+        basis in the Aitchison simplex of dimension d-1 x d
     """
     basis = np.atleast_2d(basis)
-    if not np.allclose(inner(basis, basis), np.identity(len(basis)),
+    if not np.allclose(basis @ basis.T, np.identity(len(basis)),
                        rtol=1e-4, atol=1e-6):
-        raise ValueError("Aitchison basis is not orthonormal")
+        raise ValueError("Basis is not orthonormal")
