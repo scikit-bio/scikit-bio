@@ -1069,7 +1069,8 @@ def pairwise_vlr(mat,
     # Return dissimilarity matrix
     else:
         return DistanceMatrix(vlr_data, ids=ids, validate=False)
-=======
+
+
 @experimental(as_of="0.5.8")
 def tree_basis(tree):
     r""" Calculates sparse representation of an ilr basis from a tree.
