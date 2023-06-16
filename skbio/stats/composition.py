@@ -1178,7 +1178,6 @@ def tree_basis(tree):
     basis = coo_matrix((value, (row, col)), shape=(D - 1, D))
 
     return basis, nodes
->>>>>>> 8983c4e38aa2e581f82f87158561b09a7ee3e5a3
 
 
 @experimental(as_of="0.4.1")
