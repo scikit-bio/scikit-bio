@@ -2416,10 +2416,8 @@ class TabularMSA(MetadataMixin, PositionalMetadataMixin, SkbioObject):
         modified (a new object is *not* returned).
 
         """
-        series = self._seqs.sort_index(ascending=ascending, level=level)
-        self._seqs = series
-        positional_metadata = self.positional_metadata.sort_index(axis=1)
-        self.positional_metadata = positional_metadata
+        self._seqs.sort_index(ascending=ascending, level=level, inplace=True)
+        self.positional_metadata.sort_index(axis=1, inplace=True)
 
     @experimental(as_of='0.4.1')
     def to_dict(self):
