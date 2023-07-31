@@ -18,6 +18,7 @@ from skbio.io import read, write
 from skbio.stats.ordination import OrdinationResults
 import skbio.diversity  # noqa
 import skbio.stats.evolve  # noqa
+from sys import setrecursionlimit
 
 __all__ = ['Sequence', 'DNA', 'RNA', 'Protein', 'GeneticCode',
            'DistanceMatrix', 'local_pairwise_align_ssw', 'TabularMSA',
@@ -76,3 +77,5 @@ if __doc__ is None:
     __doc__ = title + art
 else:
     __doc__ = title + art + __doc__
+
+setrecursionlimit(2500)
