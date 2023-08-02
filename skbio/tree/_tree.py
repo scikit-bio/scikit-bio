@@ -15,7 +15,7 @@ from collections import defaultdict
 
 import numpy as np
 import pandas as pd
-from scipy.stats import pearsonr
+from scipy.spatial.distance import correlation
 
 from skbio._base import SkbioObject
 from skbio.stats.distance import DistanceMatrix
@@ -39,9 +39,8 @@ def distance_from_r(m1, m2):
     -------
     float
         The distance between m1 and m2
-
     """
-    return (1-pearsonr(m1.data.flat, m2.data.flat)[0])/2
+    return correlation(m1.data.flat, m2.data.flat) / 2
 
 
 class TreeNode(SkbioObject):

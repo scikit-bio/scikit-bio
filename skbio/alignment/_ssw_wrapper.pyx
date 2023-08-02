@@ -581,7 +581,7 @@ cdef class StripedSmithWaterman:
         # Set up our mask_length
         # Mask is recommended to be max(query_sequence/2, 15)
         if mask_auto:
-            self.mask_length = len(query_sequence) / 2
+            self.mask_length = len(query_sequence) // 2
             if self.mask_length < mask_length:
                 self.mask_length = mask_length
         else:

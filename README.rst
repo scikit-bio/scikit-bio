@@ -49,7 +49,7 @@ Projects using scikit-bio
 
 Some of the projects that we know of that are using scikit-bio are:
 
-- `QIIME <http://qiime.org/>`__
+- `QIIME 2 <http://qiime2.org/>`__
 - `Emperor <http://biocore.github.io/emperor/>`__
 - `An Introduction to Applied
   Bioinformatics <http://readIAB.org>`__
