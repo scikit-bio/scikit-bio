@@ -1099,6 +1099,13 @@ class TreeTests(TestCase):
 
         self.assertEqual(t_ids.intersection(obs_ids), set())
 
+    def test_descending_branch_length_bug_1847(self):
+        tr = TreeNode.read(io.StringIO(
+            "(((A:.1,B:1.2)C:.6,(D:.9,E:.6)F:.9)G:2.4,(H:.4,I:.5)J:1.3)K;"))
+        tr.length = 1
+        tdbl = tr.descending_branch_length()
+        npt.assert_almost_equal(tdbl, 8.9)
+
     def test_descending_branch_length(self):
         """Calculate descending branch_length"""
         tr = TreeNode.read(io.StringIO(

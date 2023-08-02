@@ -5,14 +5,27 @@
 ### Features
 
 * Adding Variance log ratio estimators in `skbio.stats.composition.vlr` and `skbio.stats.composition.pairwise_vlr` ([#1803](https://github.com/biocore/scikit-bio/pull/1803))
-# Added `skbio.stats.composition.tree_basis` to construct ILR bases from `TreeNode` objects. ([#1862](https://github.com/biocore/scikit-bio/pull/1862)).
+* Added `skbio.stats.composition.tree_basis` to construct ILR bases from `TreeNode` objects. ([#1862](https://github.com/biocore/scikit-bio/pull/1862))
+* `IntervalMetadata.query` now defaults to obtaining all results, see ([#1817](https://github.com/biocore/scikit-bio/issues/1817).
 
 ### Backward-incompatible changes [experimental]
-* With the introduction of the `tree_basis` object, the ILR bases are now represented in log-odds coordinates rather than in probabilities to minimize issues with numerical stability. Furthermore, the `ilr` and `ilr_inv` functions now takes the `basis` input parameter in terms of log-odds coordinates. This affects the `skbio.stats.composition.sbp_basis` as well. See [#1862](https://github.com/biocore/scikit-bio/pull/1862)
+* With the introduction of the `tree_basis` object, the ILR bases are now represented in log-odds coordinates rather than in probabilities to minimize issues with numerical stability. Furthermore, the `ilr` and `ilr_inv` functions now takes the `basis` input parameter in terms of log-odds coordinates. This affects the `skbio.stats.composition.sbp_basis` as well. ([#1862](https://github.com/biocore/scikit-bio/pull/1862))
 
 ### Important
 
-* Complex multiple axis indexing operations with `TabularMSA` have been removed from testing due to incompatibilities with modern versions of Pandas [#1851](https://github.com/biocore/scikit-bio/pull/1851).
+* Complex multiple axis indexing operations with `TabularMSA` have been removed from testing due to incompatibilities with modern versions of Pandas. ([#1851](https://github.com/biocore/scikit-bio/pull/1851))
+* Pinning `scipy <= 1.10.1` ([#1851](https://github.com/biocore/scikit-bio/pull/1867))
+
+### Bug fixes
+
+* Fixed a bug that caused build failure on the ARM64 microarchitecture due to floating-point number handling. ([#1859](https://github.com/biocore/scikit-bio/pull/1859))
+* Never let the Gini index go below 0.0, see [#1844](https://github.com/biocore/scikit-bio/issue/1844).
+* Fixed bug [#1847](https://github.com/biocore/scikit-bio/issues/1847) in which the edge from the root was inadvertantly included in the calculation for `descending_branch_length`
+
+### Miscellaneous
+
+* Replaced dependencies `CacheControl` and `lockfile` with `requests` to avoid a dependency inconsistency issue of the former. (See [#1863](https://github.com/biocore/scikit-bio/pull/1863), merged in [#1859](https://github.com/biocore/scikit-bio/pull/1859))
+* Updated installation instructions for developers in `CONTRIBUTING.md` ([#1860](https://github.com/biocore/scikit-bio/pull/1860))
 
 ## Version 0.5.8
 
@@ -49,6 +62,9 @@
 
 ### Deprecated functionality [experimental]
 * `skbio.alignment.local_pairwise_align_ssw` has been deprecated ([#1814](https://github.com/biocore/scikit-bio/issues/1814)) and will be removed or replaced in scikit-bio 0.6.0.
+
+### Bug fixes
+* Use `oldest-supported-numpy` as build dependency. This fixes problems with environments that use an older version of numpy than the one used to build scikit-bio ([#1813](https://github.com/biocore/scikit-bio/pull/1813)).
 
 ## Version 0.5.7
 
