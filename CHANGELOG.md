@@ -3,6 +3,7 @@
 ## Version 0.5.8-dev
 
 ### Features
+
 * Added `skbio.stats.composition.tree_basis` to construct ILR bases from `TreeNode` objects. ([#1862](https://github.com/biocore/scikit-bio/pull/1862))
 
 ### Backward-incompatible changes [experimental]
@@ -16,6 +17,7 @@
 ### Bug fixes
 
 * Fixed a bug that caused build failure on the ARM64 microarchitecture due to floating-point number handling. ([#1859](https://github.com/biocore/scikit-bio/pull/1859))
+* Fixed bug [#1847](https://github.com/biocore/scikit-bio/issues/1847) in which the edge from the root was inadvertantly included in the calculation for `descending_branch_length`
 
 ### Miscellaneous
 
