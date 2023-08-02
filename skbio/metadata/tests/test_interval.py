@@ -665,7 +665,7 @@ class TestIntervalMetadata(unittest.TestCase, ReallyEqualMixin):
 
     def test_query_empty(self):
         intervals = list(self.im_1.query())
-        self.assertEqual(len(intervals), 0)
+        self.assertEqual(len(intervals), 1)
 
     def test_query_no_hits(self):
         intervals = list(self.im_2.query(bounds=[(self.upper_bound, 200)]))

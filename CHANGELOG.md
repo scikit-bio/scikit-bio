@@ -5,6 +5,7 @@
 ### Features
 
 * Added `skbio.stats.composition.tree_basis` to construct ILR bases from `TreeNode` objects. ([#1862](https://github.com/biocore/scikit-bio/pull/1862))
+* `IntervalMetadata.query` now defaults to obtaining all results, see ([#1817](https://github.com/biocore/scikit-bio/issues/1817).
 
 ### Backward-incompatible changes [experimental]
 * With the introduction of the `tree_basis` object, the ILR bases are now represented in log-odds coordinates rather than in probabilities to minimize issues with numerical stability. Furthermore, the `ilr` and `ilr_inv` functions now takes the `basis` input parameter in terms of log-odds coordinates. This affects the `skbio.stats.composition.sbp_basis` as well. ([#1862](https://github.com/biocore/scikit-bio/pull/1862))
