@@ -2,8 +2,6 @@
 
 ## Version 0.5.8-dev
 
-### Bug fixes
-
 ### Features
 
 * Added `skbio.stats.composition.tree_basis` to construct ILR bases from `TreeNode` objects. ([#1862](https://github.com/biocore/scikit-bio/pull/1862))
