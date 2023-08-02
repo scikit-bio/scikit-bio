@@ -423,12 +423,12 @@ matplotlib.rcParams.update(plot_rcparams)
 # Intersphinx configuration
 # -----------------------------------------------------------------------------
 intersphinx_mapping = {
-        'http://docs.python.org/dev': None,
-        'http://docs.scipy.org/doc/numpy': None,
-        'http://docs.scipy.org/doc/scipy/reference': None,
-        'http://matplotlib.org': None,
-        'http://pandas.pydata.org/pandas-docs/stable': None,
-        'http://www.biom-format.org':None
+        'Python': ('http://docs.python.org/dev', None),
+        'NumPy': ('http://docs.scipy.org/doc/numpy', None),
+        'SciPy': ('http://docs.scipy.org/doc/scipy/reference', None),
+        'Matplotlib': ('http://matplotlib.org', None),
+        'Pandas': ('http://pandas.pydata.org/pandas-docs/stable', None),
+        'BIOM-Format': ('http://www.biom-format.org', None)
 }
 
 # -----------------------------------------------------------------------------

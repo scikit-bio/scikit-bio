@@ -480,11 +480,13 @@ class GradientANOVATests(BaseTests):
         # Test with weighted = False
         bv = GradientANOVA(self.coords, self.prop_expl, self.metadata_map)
 
-        assert_data_frame_almost_equal(bv._coords, self.coords_3axes)
+        assert_data_frame_almost_equal(bv._coords.loc[self.coords_3axes.index],
+                                       self.coords_3axes)
         exp_prop_expl = np.array([25.6216900347, 15.7715955926,
                                   14.1215046787])
         npt.assert_equal(bv._prop_expl, exp_prop_expl)
-        assert_data_frame_almost_equal(bv._metadata_map, self.metadata_map)
+        assert_data_frame_almost_equal(bv._metadata_map.loc[self.metadata_map.index],  # noqa
+                                       self.metadata_map)
         self.assertTrue(bv._weighting_vector is None)
         self.assertFalse(bv._weighted)
 
@@ -492,15 +494,18 @@ class GradientANOVATests(BaseTests):
         bv = GradientANOVA(self.coords, self.prop_expl, self.metadata_map,
                            sort_category='Weight', weighted=True)
 
-        assert_data_frame_almost_equal(bv._coords, self.coords_3axes)
+        assert_data_frame_almost_equal(bv._coords.loc[self.coords_3axes.index],
+                                       self.coords_3axes)
         npt.assert_equal(bv._prop_expl, exp_prop_expl)
-        assert_data_frame_almost_equal(bv._metadata_map, self.metadata_map)
+        assert_data_frame_almost_equal(bv._metadata_map.loc[self.metadata_map.index],  # noqa
+                                       self.metadata_map)
         exp_weighting_vector = pd.Series(
             np.array([60, 55, 50, 52, 57, 65, 68, 70, 72]),
             ['PC.354', 'PC.355', 'PC.356', 'PC.481', 'PC.593', 'PC.607',
              'PC.634', 'PC.635', 'PC.636'], name='Weight'
             ).astype(np.float64)
-        pdt.assert_series_equal(bv._weighting_vector, exp_weighting_vector)
+        pdt.assert_series_equal(bv._weighting_vector.loc[exp_weighting_vector.index],  # noqa
+                                exp_weighting_vector)
         self.assertTrue(bv._weighted)
 
     def test_init_error(self):
