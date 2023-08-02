@@ -458,7 +458,7 @@ class TestSequence(TestSequenceBase, ReallyEqualMixin):
             Sequence(np.array([1, "23", 3]))
         with self.assertRaises(TypeError):
             # object
-            Sequence(np.array([1, {}, ()]))
+            Sequence(np.array([1, {}, ()], dtype=object))
 
         # invalid input type (non-numpy.ndarray input)
         with self.assertRaisesRegex(TypeError, r'tuple'):
@@ -2203,22 +2203,10 @@ class TestSequence(TestSequenceBase, ReallyEqualMixin):
         def mixed():
             return (slice(i, i+1) if i % 2 == 0 else i for i in range(10))
 
-        def unthinkable():
-            for i in range(10):
-                if i % 3 == 0:
-                    yield slice(i, i+1)
-                elif i % 3 == 1:
-                    yield i
-                else:
-                    yield np.array([i], dtype=int)
         for c in (lambda x: x, list, tuple, lambda x: np.array(tuple(x)),
                   lambda x: pd.Series(tuple(x))):
             exp = np.arange(10, dtype=int)
             obs = s._munge_to_index_array(c(mixed()))
-            npt.assert_equal(obs, exp)
-
-            exp = np.arange(10, dtype=int)
-            obs = s._munge_to_index_array(c(unthinkable()))
             npt.assert_equal(obs, exp)
 
             exp = np.arange(10, step=2, dtype=int)

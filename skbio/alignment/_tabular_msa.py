@@ -1983,8 +1983,9 @@ class TabularMSA(MetadataMixin, PositionalMetadataMixin, SkbioObject):
                                   step=1)
 
         if len(self):
-            self._seqs = self._seqs.append(pd.Series(sequences, index=index,
-                                                     dtype=object))
+            self._seqs = pd.concat([self._seqs,
+                                    pd.Series(sequences, index=index,
+                                              dtype=object)])
         else:
             # Not using Series.append to avoid turning a RangeIndex supplied
             # via `index` parameter into an Int64Index (this happens in pandas
@@ -2415,10 +2416,8 @@ class TabularMSA(MetadataMixin, PositionalMetadataMixin, SkbioObject):
         modified (a new object is *not* returned).
 
         """
-        series = self._seqs.sort_index(ascending=ascending, level=level)
-        self._seqs = series
-        positional_metadata = self.positional_metadata.sort_index(axis=1)
-        self.positional_metadata = positional_metadata
+        self._seqs.sort_index(ascending=ascending, level=level, inplace=True)
+        self.positional_metadata.sort_index(axis=1, inplace=True)
 
     @experimental(as_of='0.4.1')
     def to_dict(self):

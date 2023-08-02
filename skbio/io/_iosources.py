@@ -13,8 +13,6 @@ import tempfile
 import itertools
 
 import requests
-from cachecontrol import CacheControl
-from cachecontrol.caches import FileCache
 
 from skbio.io import IOSourceError
 from ._fileobject import (IterableStringWriterIO, IterableStringReaderIO,
@@ -104,9 +102,7 @@ class HTTPSource(IOSource):
             requests.compat.urlparse(self.file).scheme in {'http', 'https'})
 
     def get_reader(self):
-        sess = CacheControl(requests.Session(),
-                            cache=FileCache(tempfile.gettempdir()))
-        req = sess.get(self.file)
+        req = requests.get(self.file)
 
         # if the response is not 200, an exception will be raised
         req.raise_for_status()

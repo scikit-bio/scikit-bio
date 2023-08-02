@@ -373,7 +373,7 @@ def pcoa_biplot(ordination, y):
         raise ValueError('The eigenvectors and the descriptors must describe '
                          'the same samples.')
 
-    eigvals = ordination.eigvals
+    eigvals = ordination.eigvals.values
     coordinates = ordination.samples
     N = coordinates.shape[0]
 
