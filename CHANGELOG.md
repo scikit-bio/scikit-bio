@@ -5,6 +5,7 @@
 ### Bug fixes
 
 ### Features
+
 * Added `skbio.stats.composition.tree_basis` to construct ILR bases from `TreeNode` objects. ([#1862](https://github.com/biocore/scikit-bio/pull/1862))
 
 ### Backward-incompatible changes [experimental]
@@ -19,6 +20,7 @@
 
 * Fixed a bug that caused build failure on the ARM64 microarchitecture due to floating-point number handling. ([#1859](https://github.com/biocore/scikit-bio/pull/1859))
 * Never let the Gini index go below 0.0, see [#1844](https://github.com/biocore/scikit-bio/issue/1844).
+* Fixed bug [#1847](https://github.com/biocore/scikit-bio/issues/1847) in which the edge from the root was inadvertantly included in the calculation for `descending_branch_length`
 
 ### Miscellaneous
 
@@ -60,6 +62,9 @@
 
 ### Deprecated functionality [experimental]
 * `skbio.alignment.local_pairwise_align_ssw` has been deprecated ([#1814](https://github.com/biocore/scikit-bio/issues/1814)) and will be removed or replaced in scikit-bio 0.6.0.
+
+### Bug fixes
+* Use `oldest-supported-numpy` as build dependency. This fixes problems with environments that use an older version of numpy than the one used to build scikit-bio ([#1813](https://github.com/biocore/scikit-bio/pull/1813)).
 
 ## Version 0.5.7
 
