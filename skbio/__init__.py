@@ -26,6 +26,7 @@ __all__ = ['Sequence', 'DNA', 'RNA', 'Protein', 'GeneticCode',
 __credits__ = "https://github.com/biocore/scikit-bio/graphs/contributors"
 __version__ = "0.5.8"
 
+
 mottos = [
     # 03/15/2014
     "It's gonna get weird, bro.",

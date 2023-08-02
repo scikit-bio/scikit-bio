@@ -4,6 +4,7 @@
 
 ### Features
 
+* Adding Variance log ratio estimators in `skbio.stats.composition.vlr` and `skbio.stats.composition.pairwise_vlr` ([#1803](https://github.com/biocore/scikit-bio/pull/1803))
 * Added `skbio.stats.composition.tree_basis` to construct ILR bases from `TreeNode` objects. ([#1862](https://github.com/biocore/scikit-bio/pull/1862))
 * `IntervalMetadata.query` now defaults to obtaining all results, see ([#1817](https://github.com/biocore/scikit-bio/issues/1817).
 
