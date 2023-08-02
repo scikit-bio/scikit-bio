@@ -11,6 +11,7 @@
 ### Important
 
 * Complex multiple axis indexing operations with `TabularMSA` have been removed from testing due to incompatibilities with modern versions of Pandas. ([#1851](https://github.com/biocore/scikit-bio/pull/1851))
+* Pinning `scipy <= 1.10.1` ([#1851](https://github.com/biocore/scikit-bio/pull/1867))
 
 ### Bug fixes
 
