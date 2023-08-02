@@ -65,7 +65,7 @@ def is_symmetric_and_hollow_cy(TReal[:, ::1] mat):
 
 @cython.boundscheck(False)
 @cython.wraparound(False)
-def distmat_reorder_cy(TReal[:, ::1] in_mat, long[::1] reorder_vec, 
+def distmat_reorder_cy(TReal[:, ::1] in_mat, long[::1] reorder_vec,
                        TReal[:, ::1] out_mat):
     """
     Reorder the rows and columns of a distance matrix
@@ -160,7 +160,7 @@ def distmat_reorder_condensed_cy(TReal[:, ::1] in_mat, long[::1] reorder_vec,
 
     for row in prange(out_n-1, nogil=True):
         vrow = reorder_vec[row]
-        idx = row*(out_n-1) - ((row-1)*row)/2
+        idx = row*(out_n-1) - ((row-1)*row)//2
         for col in range(out_n-row-1):
            out_mat_condensed[idx+col] = in_mat[vrow, reorder_vec[col+row+1]]
 
@@ -230,7 +230,7 @@ def mantel_perm_pearsonr_cy(TReal[:, ::1] x_data, long[:, ::1] perm_order,
         my_ps = 0.0
         for row in range(out_n-1):
             vrow = perm_order[p, row]
-            idx = row*(out_n-1) - ((row-1)*row)/2
+            idx = row*(out_n-1) - ((row-1)*row)//2
             for icol in range(out_n-row-1):
                col = icol+row+1
                yval = ym_normalized[idx+icol]

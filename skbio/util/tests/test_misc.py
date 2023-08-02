@@ -131,8 +131,6 @@ class ResolveKeyTests(unittest.TestCase):
 
     def test_index(self):
         class MetadataHaver(dict):
-            metadata = {}
-
             @property
             def metadata(self):
                 return self

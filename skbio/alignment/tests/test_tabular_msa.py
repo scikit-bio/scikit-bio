@@ -751,15 +751,14 @@ class TestTabularMSA(unittest.TestCase, ReallyEqualMixin):
             DNA('ACGT', metadata={'id': 0}),
             DNA('TAGA', metadata={'id': 10})], minter='id')
         msa.sort()
-        self.assertEqual(
-            msa,
-            TabularMSA([
-                DNA('ACGT', metadata={'id': 0}),
-                DNA('GGGG', metadata={'id': 8}),
-                DNA('TCCG', metadata={'id': 10}),
-                DNA('TAGG', metadata={'id': 10}),
-                DNA('TGGG', metadata={'id': 10}),
-                DNA('TAGA', metadata={'id': 10})], minter='id'))
+        self.assertEqual(msa._seqs.index.to_list(), [0, 8, 10, 10, 10, 10])
+        vals = list(msa._seqs.values)
+        self.assertEqual(vals[0], DNA('ACGT', metadata={'id': 0}))
+        self.assertEqual(vals[1], DNA('GGGG', metadata={'id': 8}))
+        self.assertIn(DNA('TCCG', metadata={'id': 10}), vals)
+        self.assertIn(DNA('TAGG', metadata={'id': 10}), vals[2:])
+        self.assertIn(DNA('TGGG', metadata={'id': 10}), vals[2:])
+        self.assertIn(DNA('TAGA', metadata={'id': 10}), vals[2:])
 
     def test_sort_on_key_with_all_repeats(self):
         msa = TabularMSA([

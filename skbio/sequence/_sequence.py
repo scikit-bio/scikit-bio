@@ -2152,7 +2152,7 @@ fuzzy=[(True, False)], metadata={'gene': 'foo'})
 
     def _munge_to_self_type(self, other, method):
         if isinstance(other, Sequence):
-            if type(other) != type(self):
+            if type(other) is not type(self):
                 raise TypeError("Cannot use %s and %s together with `%s`" %
                                 (self.__class__.__name__,
                                  other.__class__.__name__, method))
@@ -2163,7 +2163,7 @@ fuzzy=[(True, False)], metadata={'gene': 'foo'})
 
     def _munge_to_sequence(self, other, method):
         if isinstance(other, Sequence):
-            if type(other) != type(self):
+            if type(other) is not type(self):
                 raise TypeError("Cannot use %s and %s together with `%s`" %
                                 (self.__class__.__name__,
                                  other.__class__.__name__, method))
