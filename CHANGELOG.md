@@ -17,6 +17,7 @@
 ### Bug fixes
 
 * Fixed a bug that caused build failure on the ARM64 microarchitecture due to floating-point number handling. ([#1859](https://github.com/biocore/scikit-bio/pull/1859))
+* Never let the Gini index go below 0.0, see [#1844](https://github.com/biocore/scikit-bio/issue/1844).
 * Fixed bug [#1847](https://github.com/biocore/scikit-bio/issues/1847) in which the edge from the root was inadvertantly included in the calculation for `descending_branch_length`
 
 ### Miscellaneous

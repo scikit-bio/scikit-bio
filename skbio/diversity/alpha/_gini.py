@@ -78,7 +78,7 @@ def gini_index(data, method='rectangles'):
     data = _validate_counts_vector(data, suppress_cast=True)
     lorenz_points = _lorenz_curve(data)
     B = _lorenz_curve_integrator(lorenz_points, method)
-    return 1 - 2 * B
+    return max(0.0, 1 - 2 * B)
 
 
 def _lorenz_curve(data):
