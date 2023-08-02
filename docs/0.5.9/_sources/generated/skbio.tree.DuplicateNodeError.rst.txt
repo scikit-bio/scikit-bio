@@ -1,0 +1,6 @@
+﻿skbio.tree.DuplicateNodeError
+=============================
+
+.. currentmodule:: skbio.tree
+
+.. autoexception:: DuplicateNodeError

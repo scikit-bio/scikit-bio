@@ -1,0 +1,8 @@
+:orphan:
+
+skbio.sequence.Protein.__copy__
+===============================
+
+.. currentmodule:: skbio.sequence
+
+.. automethod:: Protein.__copy__

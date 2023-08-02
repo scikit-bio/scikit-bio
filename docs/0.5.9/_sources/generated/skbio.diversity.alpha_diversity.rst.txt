@@ -1,0 +1,6 @@
+﻿skbio.diversity.alpha\_diversity
+================================
+
+.. currentmodule:: skbio.diversity
+
+.. autofunction:: alpha_diversity

@@ -1,0 +1,6 @@
+skbio.stats.ordination.e\_matrix
+================================
+
+.. currentmodule:: skbio.stats.ordination
+
+.. autofunction:: e_matrix

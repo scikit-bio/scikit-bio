@@ -1,0 +1,6 @@
+﻿skbio.io.QUALFormatError
+========================
+
+.. currentmodule:: skbio.io
+
+.. autoexception:: QUALFormatError

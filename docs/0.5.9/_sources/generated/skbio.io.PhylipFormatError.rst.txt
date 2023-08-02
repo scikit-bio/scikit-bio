@@ -1,0 +1,6 @@
+﻿skbio.io.PhylipFormatError
+==========================
+
+.. currentmodule:: skbio.io
+
+.. autoexception:: PhylipFormatError

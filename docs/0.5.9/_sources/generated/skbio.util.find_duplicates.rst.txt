@@ -1,0 +1,6 @@
+﻿skbio.util.find\_duplicates
+===========================
+
+.. currentmodule:: skbio.util
+
+.. autofunction:: find_duplicates

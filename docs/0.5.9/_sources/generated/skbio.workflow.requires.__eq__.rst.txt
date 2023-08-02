@@ -1,0 +1,8 @@
+:orphan:
+
+skbio.workflow.requires.__eq__
+==============================
+
+.. currentmodule:: skbio.workflow
+
+.. automethod:: requires.__eq__

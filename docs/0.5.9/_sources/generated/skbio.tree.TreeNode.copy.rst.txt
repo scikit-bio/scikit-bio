@@ -1,0 +1,8 @@
+:orphan:
+
+skbio.tree.TreeNode.copy
+========================
+
+.. currentmodule:: skbio.tree
+
+.. automethod:: TreeNode.copy

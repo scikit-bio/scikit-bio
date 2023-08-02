@@ -1,0 +1,6 @@
+﻿skbio.alignment.global\_pairwise\_align
+=======================================
+
+.. currentmodule:: skbio.alignment
+
+.. autofunction:: global_pairwise_align

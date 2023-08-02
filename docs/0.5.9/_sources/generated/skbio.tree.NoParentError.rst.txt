@@ -1,0 +1,6 @@
+﻿skbio.tree.NoParentError
+========================
+
+.. currentmodule:: skbio.tree
+
+.. autoexception:: NoParentError

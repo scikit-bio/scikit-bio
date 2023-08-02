@@ -1,0 +1,8 @@
+:orphan:
+
+skbio.stats.distance.DissimilarityMatrix.__ge__
+===============================================
+
+.. currentmodule:: skbio.stats.distance
+
+.. automethod:: DissimilarityMatrix.__ge__

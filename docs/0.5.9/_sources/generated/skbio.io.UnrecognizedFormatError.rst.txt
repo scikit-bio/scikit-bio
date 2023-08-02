@@ -1,0 +1,6 @@
+﻿skbio.io.UnrecognizedFormatError
+================================
+
+.. currentmodule:: skbio.io
+
+.. autoexception:: UnrecognizedFormatError

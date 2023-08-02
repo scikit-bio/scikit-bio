@@ -1,0 +1,6 @@
+﻿skbio.tree.TreeError
+====================
+
+.. currentmodule:: skbio.tree
+
+.. autoexception:: TreeError

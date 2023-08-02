@@ -1,0 +1,6 @@
+﻿skbio.diversity.block\_beta\_diversity
+======================================
+
+.. currentmodule:: skbio.diversity
+
+.. autofunction:: block_beta_diversity

@@ -1,0 +1,6 @@
+﻿skbio.io.NewickFormatError
+==========================
+
+.. currentmodule:: skbio.io
+
+.. autoexception:: NewickFormatError

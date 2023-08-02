@@ -1,0 +1,6 @@
+skbio.stats.composition.ilr\_inv
+================================
+
+.. currentmodule:: skbio.stats.composition
+
+.. autofunction:: ilr_inv

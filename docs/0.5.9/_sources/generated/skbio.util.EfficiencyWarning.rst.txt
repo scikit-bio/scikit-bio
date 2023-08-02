@@ -1,0 +1,6 @@
+﻿skbio.util.EfficiencyWarning
+============================
+
+.. currentmodule:: skbio.util
+
+.. autoexception:: EfficiencyWarning
