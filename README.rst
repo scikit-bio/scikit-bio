@@ -108,6 +108,20 @@ Logo
 
 scikit-bio's logo was created by `Alina Prassas <http://cargocollective.com/alinaprassas>`_.
 
+Citing scikit-bio
+-----------------
+
+If you use scikit-bio for any published research, please include the following
+citation:
+
+> @software{skbio2020,
+    author = {The scikit-bio development team},
+    title = {scikit-bio: A Bioinformatics Library for Data Scientists, Students, and Developers},
+    url = {http://scikit-bio.org},
+    version = {0.5.9},
+    year = {2023},
+  }
+
 .. |Build Status| image:: https://travis-ci.org/biocore/scikit-bio.svg?branch=master
    :target: https://travis-ci.org/biocore/scikit-bio
 .. |Coverage Status| image:: https://coveralls.io/repos/biocore/scikit-bio/badge.png
