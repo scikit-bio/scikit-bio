@@ -111,16 +111,8 @@ scikit-bio's logo was created by `Alina Prassas <http://cargocollective.com/alin
 Citing scikit-bio
 -----------------
 
-If you use scikit-bio for any published research, please include the following
-citation:
+If you use scikit-bio for any published research, please see our `Zenodo page` <https://zenodo.org/record/8209901> for how to cite."
 
-> @software{skbio2020,
-    author = {The scikit-bio development team},
-    title = {scikit-bio: A Bioinformatics Library for Data Scientists, Students, and Developers},
-    url = {http://scikit-bio.org},
-    version = {0.5.9},
-    year = {2023},
-  }
 
 .. |Build Status| image:: https://travis-ci.org/biocore/scikit-bio.svg?branch=master
    :target: https://travis-ci.org/biocore/scikit-bio
