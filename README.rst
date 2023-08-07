@@ -111,7 +111,7 @@ scikit-bio's logo was created by `Alina Prassas <http://cargocollective.com/alin
 Citing scikit-bio
 -----------------
 
-If you use scikit-bio for any published research, please see our `Zenodo page` <https://zenodo.org/record/8209901> for how to cite."
+If you use scikit-bio for any published research, please see our `Zenodo page` <https://zenodo.org/record/8209901> for how to cite.
 
 
 .. |Build Status| image:: https://travis-ci.org/biocore/scikit-bio.svg?branch=master
