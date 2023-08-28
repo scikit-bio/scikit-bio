@@ -267,8 +267,9 @@ def permanova_f_stat_sW_cy(TReal[:, ::1] distance_matrix,
     cdef double val
 
     cdef Py_ssize_t row, col, rowi, coli
+    cdef Py_ssize_t in_n_2 = in_n//2
 
-    for rowi in prange(in_n/2, nogil=True):
+    for rowi in prange(in_n_2, nogil=True):
         # since columns get shorter, combine first and last
         row=rowi
         local_s_W = 0.0
