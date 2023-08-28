@@ -1,5 +1,15 @@
 # scikit-bio changelog
 
+## Version 0.5.10
+
+### Bug fixes
+
+* Re-enabled OpenMP support, which has been mistakenly disabled in 0.5.8  ([#1874](https://github.com/biocore/scikit-bio/pull/1874))
+
+### Miscellaneous
+
+* Use CYTHON by default during build ([#1874](https://github.com/biocore/scikit-bio/pull/1874)) 
+
 ## Version 0.5.9
 
 ### Features
