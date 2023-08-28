@@ -28,13 +28,29 @@ if sys.version_info.major != 3:
 
 clang = False
 icc = False
+gcc = True
+
 try:
-    if os.environ['CC'] == "clang":
-        clang = True
+    if os.environ['CC'] == "gcc":
+        gcc = True
+    elif os.environ['CC'] != "":
+        gcc = False
 except KeyError:
     pass
 
-if not clang:
+
+if not gcc:
+    try:
+        if os.environ['CC'] == "clang":
+            # note, the conda provideed clang is not detected here
+            # and this is on purpose, as MacOS clang is very different
+            # than conda-provised one (which is llvm based)
+            clang = True
+        elif os.environ['CC'] == "icc":
+            icc = True
+    except KeyError:
+        pass
+else:
     try:
         if subprocess.check_output(
                 ["gcc", "--version"],
@@ -42,12 +58,6 @@ if not clang:
             clang = True
     except (subprocess.CalledProcessError, FileNotFoundError):
         pass
-
-try:
-    if os.environ['CC'] == "icc":
-        icc = True
-except KeyError:
-    pass
 
 # version parsing from __init__ pulled from Flask's setup.py
 # https://github.com/mitsuhiko/flask/blob/master/setup.py
@@ -102,6 +112,13 @@ if platform.system() != 'Windows':
 elif platform.system() == 'Windows':
     ssw_extra_compile_args.extend(['-openmp:experimental'])
 
+stats_extra_compile_args = []+ssw_extra_compile_args
+if platform.system() != 'Windows':
+    if icc or sysconfig.get_config_vars()['CC'] == 'icc':
+        stats_extra_compile_args.extend(['-qopenmp'])
+    elif not clang:
+        stats_extra_compile_args.extend(['-fopenmp'])
+
 # Users with i686 architectures have reported that adding this flag allows
 # SSW to be compiled. See https://github.com/biocore/scikit-bio/issues/409 and
 # http://stackoverflow.com/q/26211814/3776794 for details.
@@ -124,10 +141,10 @@ extensions = [
               include_dirs=[np.get_include()]),
     Extension("skbio.stats.ordination._cutils",
               ["skbio/stats/ordination/_cutils" + ext],
-              extra_compile_args=ssw_extra_compile_args),
+              extra_compile_args=stats_extra_compile_args.extend),
     Extension("skbio.stats.distance._cutils",
               ["skbio/stats/distance/_cutils" + ext],
-              extra_compile_args=ssw_extra_compile_args),
+              extra_compile_args=stats_extra_compile_args.extend),
 ]
 
 if USE_CYTHON:
