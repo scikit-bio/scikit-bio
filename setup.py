@@ -96,7 +96,7 @@ USE_CYTHON = os.environ.get('USE_CYTHON')
 if USE_CYTHON is None:
     # use CYTHON by default
     USE_CYTHON = True
-elif  USE_CYTHON.lower() in {'false', 'no'}:
+elif USE_CYTHON.lower() in {'false', 'no'}:
     USE_CYTHON = False
 else:
     USE_CYTHON = True
