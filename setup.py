@@ -113,11 +113,14 @@ elif platform.system() == 'Windows':
     ssw_extra_compile_args.extend(['-openmp:experimental'])
 
 stats_extra_compile_args = []+ssw_extra_compile_args
+stats_extra_link_args = []
 if platform.system() != 'Windows':
     if icc or sysconfig.get_config_vars()['CC'] == 'icc':
         stats_extra_compile_args.extend(['-qopenmp'])
+        stats_extra_link_args.extend(['-qopenmp'])
     elif not clang:
         stats_extra_compile_args.extend(['-fopenmp'])
+        stats_extra_link_args.extend(['-fopenmp'])
 
 # Users with i686 architectures have reported that adding this flag allows
 # SSW to be compiled. See https://github.com/biocore/scikit-bio/issues/409 and
@@ -141,10 +144,12 @@ extensions = [
               include_dirs=[np.get_include()]),
     Extension("skbio.stats.ordination._cutils",
               ["skbio/stats/ordination/_cutils" + ext],
-              extra_compile_args=stats_extra_compile_args.extend),
+              extra_compile_args=stats_extra_compile_args,
+              extra_link_args=stats_extra_link_args),
     Extension("skbio.stats.distance._cutils",
               ["skbio/stats/distance/_cutils" + ext],
-              extra_compile_args=stats_extra_compile_args.extend),
+              extra_compile_args=stats_extra_compile_args,
+              extra_link_args=stats_extra_link_args),
 ]
 
 if USE_CYTHON:
