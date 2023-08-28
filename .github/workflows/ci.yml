@@ -47,7 +47,7 @@ jobs:
           conda list
       - name: Run linter
         shell: bash -l {0}
-        run: make lint
+        run: USE_CYTHON=False make lint
 
   doc:
     name: Build Documentation  (${{ needs.conf.outputs.latest_python }}, ubuntu-latest)
