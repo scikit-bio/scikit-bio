@@ -26,7 +26,28 @@ if sys.version_info.major != 3:
     sys.exit("scikit-bio can only be used with Python 3. You are currently "
              "running Python %d." % sys.version_info.major)
 
+def check_bin(ccbin, source, allow_dash):
+    # remove any parameters (e.g. gcc -I /a/b/c -> gcc)
+    source0 = source.split()[0]
+    # remove any path
+    bsource = os.path.basename(source0)
+    # now let's go search for ccbin
+    if allow_dash:
+        found = False
+        # allow for the ccbin to be between - (e.g. gcc-1.2)
+        for el in bsource.split('-'):
+            if el==ccbin:
+                found = True
+                break
+    else:
+        found = (bsource==ccbin)
+    return found
+
+# Note: We are looking for Apple/MacOS clang, which does not support omp
+#       Will treat "real clang" (e.g. llvm based) same as gcc
 clang = False
+
+# icc uses slightly different omp cmdline arguments
 icc = False
 
 # Are we using the default gcc as the compiler?
@@ -42,18 +63,30 @@ except KeyError:
 
 if not gcc:
     try:
-        if os.environ['CC'] == "clang":
+        if check_bin('clang', os.environ['CC'], False):
             # note, the conda provideed clang is not detected here
             # and this is on purpose, as MacOS clang is very different
             # than conda-provised one (which is llvm based)
             # so do not look for substrings
             # (e.g. do not match x86_64-apple-darwin13.4.0-clang)
             clang = True
-        elif os.environ['CC'] == "icc":
+        elif check_bin('icc', os.environ['CC'], True):
             icc = True
     except KeyError:
         pass
 else:
+    try:
+        if check_bin('clang', sysconfig.get_config_vars()['CC'], False):
+            # as above
+            clang = True
+            gcc = False
+        elif check_bin('icc', sysconfig.get_config_vars()['CC'], True):
+            icc = True
+            gcc = False
+    except KeyError:
+        pass
+
+if gcc:
     # check if the default gcc is just a wrapper around clang
     try:
         if subprocess.check_output(
@@ -110,10 +143,10 @@ ext = '.pyx' if USE_CYTHON else '.c'
 ssw_extra_compile_args = ['-I.']
 
 if platform.system() != 'Windows':
-    if icc or sysconfig.get_config_vars()['CC'] == 'icc':
+    if icc:
         ssw_extra_compile_args.extend(['-qopenmp-simd',
                                        '-DSIMDE_ENABLE_OPENMP'])
-    elif not (clang or sysconfig.get_config_vars()['CC'] == 'clang'):
+    elif not clang:
         ssw_extra_compile_args.extend(['-fopenmp-simd',
                                        '-DSIMDE_ENABLE_OPENMP'])
 elif platform.system() == 'Windows':
@@ -122,7 +155,7 @@ elif platform.system() == 'Windows':
 stats_extra_compile_args = []+ssw_extra_compile_args
 stats_extra_link_args = []
 if platform.system() != 'Windows':
-    if icc or sysconfig.get_config_vars()['CC'] == 'icc':
+    if icc:
         stats_extra_compile_args.extend(['-qopenmp'])
         stats_extra_link_args.extend(['-qopenmp'])
     elif not clang:
