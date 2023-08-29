@@ -26,6 +26,7 @@ if sys.version_info.major != 3:
     sys.exit("scikit-bio can only be used with Python 3. You are currently "
              "running Python %d." % sys.version_info.major)
 
+
 def check_bin(ccbin, source, allow_dash):
     # remove any parameters (e.g. gcc -I /a/b/c -> gcc)
     source0 = source.split()[0]
@@ -36,12 +37,13 @@ def check_bin(ccbin, source, allow_dash):
         found = False
         # allow for the ccbin to be between - (e.g. gcc-1.2)
         for el in bsource.split('-'):
-            if el==ccbin:
+            if el == ccbin:
                 found = True
                 break
     else:
-        found = (bsource==ccbin)
+        found = (bsource == ccbin)
     return found
+
 
 # Note: We are looking for Apple/MacOS clang, which does not support omp
 #       Will treat "real clang" (e.g. llvm based) same as gcc
