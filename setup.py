@@ -28,8 +28,9 @@ if sys.version_info.major != 3:
 
 clang = False
 icc = False
-gcc = True
 
+# Are we using the default gcc as the compiler?
+gcc = True
 try:
     if os.environ['CC'] == "gcc":
         gcc = True
@@ -45,12 +46,15 @@ if not gcc:
             # note, the conda provideed clang is not detected here
             # and this is on purpose, as MacOS clang is very different
             # than conda-provised one (which is llvm based)
+            # so do not look for substrings
+            # (e.g. do not match x86_64-apple-darwin13.4.0-clang)
             clang = True
         elif os.environ['CC'] == "icc":
             icc = True
     except KeyError:
         pass
 else:
+    # check if the default gcc is just a wrapper around clang
     try:
         if subprocess.check_output(
                 ["gcc", "--version"],
