@@ -16,6 +16,8 @@ from pandas.testing import assert_series_equal
 
 from skbio import DistanceMatrix
 from skbio.stats.distance import permanova
+from skbio.util import get_data_path
+from skbio.stats.distance._base import _preprocess_input_sng
 
 
 class TestPERMANOVA(TestCase):
@@ -113,6 +115,56 @@ class TestPERMANOVA(TestCase):
         np.random.seed(0)
         obs = permanova(self.dm_unequal, self.grouping_unequal_relabeled)
         self.assert_series_equal(obs, exp)
+
+    def test_call_via_series(self):
+        # test https://github.com/biocore/scikit-bio/issues/1877
+        # permanova gives different results if grouping is either
+        # a pd.DataFrame or a pd.Series
+        dm = DistanceMatrix.read(get_data_path('frameSeries_dm.tsv'))
+        grouping = pd.read_csv(get_data_path("frameSeries_grouping.tsv"),
+                               sep="\t", index_col=0)
+
+        np.random.seed(0)
+        obs_frame = permanova(dm, grouping, column='tumor')
+
+        np.random.seed(0)
+        obs_series = permanova(dm, grouping['tumor'])
+
+        # in principle, both tests - if seed is the same - should return the
+        # exact same results. However, they don't for the current example ...
+        self.assert_series_equal(obs_frame, obs_series)
+
+        # ... which is due to different result in computing "unique" values for
+        # the grouping, which is illustrated with the following test
+        grp_frame = _preprocess_input_sng(
+            dm.ids, dm.shape[0],
+            grouping, 'tumor'  # grouping as a pd.DataFrame
+            )[-1]
+        grp_series = _preprocess_input_sng(
+            dm.ids, dm.shape[0],
+            grouping['tumor'], column=None  # grouping as a pd.Series, note
+                                            # that user of permanova do not
+                                            # have to explicitly set
+                                            # column=None
+            )[-1]
+        # convert np.array to tuple to ease comparison for equality
+        self.assertEqual(tuple(grp_frame), tuple(grp_series))
+
+        # to better illustrate what is going wrong, we compare the computed
+        # grouping labels (0 or 1) with the original user provided data, here
+        # "no-tumor mice" and "tumor-bearing mice". We expect a one-to-one
+        # correspondens, i.e. if we group on both columns at the same time, we
+        # expect exactly two groups, like
+        # tumor               series
+        # no-tumor mice       0          5
+        # tumor-bearing mice  1         37
+        # dtype: int64
+        # which is not the case of the pd.Series case
+        g = grouping.copy()
+        g['series'] = list(grp_series)
+        g['dataframe'] = list(grp_frame)
+        self.assertEqual(g.groupby(['tumor', 'dataframe']).size().shape[0], 2)
+        self.assertEqual(g.groupby(['tumor', 'series']).size().shape[0], 2)
 
 
 if __name__ == '__main__':
