@@ -1300,6 +1300,15 @@ def _preprocess_input_sng(ids, sample_size, grouping, column):
                 "Must provide a column name if supplying a DataFrame.")
         else:
             grouping = _df_to_vector(ids, grouping, column)
+    elif isinstance(grouping, pd.Series):
+        if (column is not None) and (column != grouping.name):
+            raise ValueError(
+                "Column name does not match your Series name. Try not"
+                " providing column at all."
+            )
+        else:
+            grouping = _df_to_vector(ids, grouping.to_frame(),
+                                     column=grouping.name)
     elif column is not None:
         raise ValueError(
             "Must provide a DataFrame if supplying a column name.")
