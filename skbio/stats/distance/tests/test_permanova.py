@@ -173,5 +173,6 @@ class TestPERMANOVA(TestCase):
             _preprocess_input_sng(dm.ids, dm.shape[0],
                                   grouping['tumor'], 'foo')
 
+
 if __name__ == '__main__':
     main()
