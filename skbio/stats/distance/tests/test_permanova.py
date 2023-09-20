@@ -160,9 +160,10 @@ class TestPERMANOVA(TestCase):
         # tumor-bearing mice  1         37
         # dtype: int64
         # which is not the case of the pd.Series case
-        g = grouping.copy()
-        g['series'] = list(grp_series)
-        g['dataframe'] = list(grp_frame)
+        g = pd.DataFrame(data={'series': list(grp_series),
+                               'dataframe': list(grp_frame),
+                               'tumor': grouping.loc[list(dm.ids),'tumor']},
+                         index=dm.ids)
         self.assertEqual(g.groupby(['tumor', 'dataframe']).size().shape[0], 2)
         self.assertEqual(g.groupby(['tumor', 'series']).size().shape[0], 2)
 
