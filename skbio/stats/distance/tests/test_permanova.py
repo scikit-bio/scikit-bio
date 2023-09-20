@@ -167,6 +167,11 @@ class TestPERMANOVA(TestCase):
         self.assertEqual(g.groupby(['tumor', 'dataframe']).size().shape[0], 2)
         self.assertEqual(g.groupby(['tumor', 'series']).size().shape[0], 2)
 
+        # test that ValueError is raised, if use provided column does not match
+        # the provided pd.Series name for grouping
+        with self.assertRaises(ValueError):
+            _preprocess_input_sng(dm.ids, dm.shape[0],
+                                  grouping['tumor'], 'foo')
 
 if __name__ == '__main__':
     main()
