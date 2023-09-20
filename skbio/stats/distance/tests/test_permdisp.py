@@ -277,6 +277,24 @@ class testPERMDISP(TestCase):
 
         self.assert_series_equal(exp_cen_mp, obs_cen_mp)
 
+    def test_call_via_series(self):
+        # test https://github.com/biocore/scikit-bio/issues/1877
+        # actual issue is with _base._preprocess_input_sng but permdisp is
+        # indirectly affected
+        dm = DistanceMatrix.read(get_data_path('frameSeries_dm.tsv'))
+        grouping = pd.read_csv(get_data_path("frameSeries_grouping.tsv"),
+                               sep="\t", index_col=0)
+
+        np.random.seed(0)
+        obs_frame = permdisp(dm, grouping, column='tumor')
+
+        np.random.seed(0)
+        obs_series = permdisp(dm, grouping['tumor'])
+
+        # in principle, both tests - if seed is the same - should return the
+        # exact same results. However, they don't for the current example ...
+        self.assert_series_equal(obs_frame, obs_series)
+
 
 if __name__ == '__main__':
     main()
