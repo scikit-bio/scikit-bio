@@ -5,10 +5,11 @@
 ### Bug fixes
 
 * Re-enabled OpenMP support, which has been mistakenly disabled in 0.5.8  ([#1874](https://github.com/biocore/scikit-bio/pull/1874))
+* `permanova` and `permdist` operate on a `DistanceMatrix` and a grouping object. Element IDs must be synchronized to compare correct sets of pairwise distances. This failed in case the grouping was provided as a `pandas.Series`, because it was interpreted as an ordered `list` and indices were ignored (see issue [#1877](https://github.com/biocore/scikit-bio/issues/1877) for an example). Note: `pandas.DataFrame` was handled correctly. This behavior has been fixed with PR [#1879](https://github.com/biocore/scikit-bio/pull/1879)
 
 ### Miscellaneous
 
-* Use CYTHON by default during build ([#1874](https://github.com/biocore/scikit-bio/pull/1874)) 
+* Use CYTHON by default during build ([#1874](https://github.com/biocore/scikit-bio/pull/1874))
 
 ## Version 0.5.9
 
