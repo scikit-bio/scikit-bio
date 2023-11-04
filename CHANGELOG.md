@@ -2,6 +2,12 @@
 
 ## Version 0.5.10
 
+### Features
+* SciPy 1.11+ is now supported.
+
+### Backward-incompatible changes [experimental]
+* Beta diversity metric `kulsinski` was removed. This was motivated by that SciPy replaced this distance metric with `kulczynski1` in version 1.11 (see SciPy issue [#2009](https://github.com/scipy/scipy/issues/2009)), and that both metrics do not return 0 on two identical vectors.
+
 ### Bug fixes
 
 * Re-enabled OpenMP support, which has been mistakenly disabled in 0.5.8  ([#1874](https://github.com/biocore/scikit-bio/pull/1874))
