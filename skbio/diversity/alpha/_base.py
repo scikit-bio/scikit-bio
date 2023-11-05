@@ -286,14 +286,19 @@ def fisher_alpha(counts):
 
     Notes
     -----
-    The implementation here is based on the description given in the SDR-IV
-    online manual [1]_. Uses ``scipy.optimize.minimize_scalar`` to find
-    Fisher's alpha.
+    Fisher's alpha is defined in [1]_. See also [2]_.
+
+    There is no analytical solution to Fisher's alpha. However, one can use an
+    optimization technique to approach it.
 
     References
     ----------
-    .. [1] http://www.pisces-conservation.com/sdrhelp/index.html
+    .. [1] Fisher, R.A., Corbet, A.S. and Williams, C.B., 1943. The relation
+       between the number of species and the number of individuals in a random
+       sample of an animal population. The Journal of Animal Ecology, pp.42-58.
 
+    .. [2] https://en.wikipedia.org/wiki/Relative_species_abundance#Logseries_
+       (Fisher_et_al_1943)
     """
     counts = _validate_counts_vector(counts)
     n = counts.sum()
