@@ -256,7 +256,14 @@ class TestGetRng(unittest.TestCase):
             get_rng('hello')
         self.assertEqual(str(cm.exception), msg)
 
-        # legacy numpy
+        # test if seeds are disjoint and results are reproducible
+        obs = [np.random.default_rng(i).integers(1e6)
+               for i in range(10)]
+        exp = [850624, 473188, 837575, 811504, 726442,
+               670790, 445045, 944904, 719549, 421547]
+        self.assertListEqual(obs, exp)
+
+        # mimic legacy numpy
         delattr(np.random, 'default_rng')
         delattr(np.random, 'Generator')
         msg = ('The installed NumPy version does not support '
