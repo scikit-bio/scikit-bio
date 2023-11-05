@@ -14,7 +14,6 @@ from copy import copy
 import numpy as np
 
 from skbio.util._decorator import experimental
-from .__subsample import _subsample_counts_without_replacement
 
 
 @experimental(as_of="0.4.0")
@@ -147,7 +146,7 @@ def isubsample(items, maximum, minimum=1, buf_size=1000, bin_f=None):
             yield (bin_, item)
 
 
-@experimental(as_of="0.4.0")
+@experimental(as_of="0.5.10")
 def subsample_counts(counts, n, replace=False):
     """Randomly subsample from a vector of counts, with or without replacement.
 
@@ -236,13 +235,17 @@ def subsample_counts(counts, n, replace=False):
         raise ValueError("Cannot subsample more items than exist in input "
                          "counts vector when `replace=False`.")
 
+    # subsample with replacement
     if replace:
         probs = counts / counts_sum
         result = np.random.multinomial(n, probs)
+
+    # subsample without replacement
     else:
-        if counts_sum == n:
-            result = counts
-        else:
-            result = _subsample_counts_without_replacement(counts, n,
-                                                           counts_sum)
+        unpacked = np.repeat(np.arange(counts.size), counts)
+        permuted = np.random.choice(unpacked, size=n, replace=False)
+        idx, freqs = np.unique(permuted, return_counts=True)
+        result = np.zeros_like(counts)
+        result[idx] = freqs
+
     return result
