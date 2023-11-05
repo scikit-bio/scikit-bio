@@ -257,8 +257,7 @@ class TestGetRng(unittest.TestCase):
         self.assertEqual(str(cm.exception), msg)
 
         # test if seeds are disjoint and results are reproducible
-        obs = [np.random.default_rng(i).integers(1e6)
-               for i in range(10)]
+        obs = [get_rng(i).integers(1e6) for i in range(10)]
         exp = [850624, 473188, 837575, 811504, 726442,
                670790, 445045, 944904, 719549, 421547]
         self.assertListEqual(obs, exp)
