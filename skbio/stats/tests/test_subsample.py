@@ -6,7 +6,7 @@
 # The full license is in the file LICENSE.txt, distributed with this software.
 # ----------------------------------------------------------------------------
 
-import unittest
+from unittest import TestCase, main
 import warnings
 
 import numpy as np
@@ -25,7 +25,7 @@ def teardown():
     warnings.resetwarnings()
 
 
-class SubsampleCountsTests(unittest.TestCase):
+class SubsampleCountsTests(TestCase):
     def test_subsample_counts_nonrandom(self):
         a = np.array([0, 5, 0])
 
@@ -113,7 +113,7 @@ class SubsampleCountsTests(unittest.TestCase):
         subsample_counts([0, 5, 0], 6, replace=True)
 
 
-class ISubsampleTests(unittest.TestCase):
+class ISubsampleTests(TestCase):
     def setUp(self):
         np.random.seed(123)
 
