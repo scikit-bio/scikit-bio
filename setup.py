@@ -173,9 +173,6 @@ if platform.machine() == 'i686':
 extensions = [
     Extension("skbio.metadata._intersection",
               ["skbio/metadata/_intersection" + ext]),
-    Extension("skbio.stats.__subsample",
-              ["skbio/stats/__subsample" + ext],
-              include_dirs=[np.get_include()]),
     Extension("skbio.alignment._ssw_wrapper",
               ["skbio/alignment/_ssw_wrapper" + ext,
                "skbio/alignment/_lib/ssw.c"],

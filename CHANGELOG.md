@@ -9,6 +9,7 @@
 
 ### Miscellaneous
 
+* Refactored `subsample_counts` such that it uses existing NumPy functions instead of Cython code from scratch.
 * Use CYTHON by default during build ([#1874](https://github.com/biocore/scikit-bio/pull/1874))
 
 ## Version 0.5.9
