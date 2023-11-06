@@ -242,9 +242,9 @@ def subsample_counts(counts, n, replace=False):
 
     # subsample without replacement
     else:
-        unpacked = np.repeat(np.arange(counts.size), counts)
-        permuted = np.random.choice(unpacked, size=n, replace=False)
-        idx, freqs = np.unique(permuted, return_counts=True)
+        permuted = np.random.choice(counts_sum, size=n, replace=False)
+        digitized = np.digitize(permuted, np.cumsum(counts))
+        idx, freqs = np.unique(digitized, return_counts=True)
         result = np.zeros_like(counts)
         result[idx] = freqs
 
