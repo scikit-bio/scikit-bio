@@ -107,25 +107,41 @@ class BaseTests(TestCase):
         npt.assert_array_almost_equal(observed_upper, expected_upper)
 
     def test_fisher_alpha(self):
-        exp = 2.7823795367398798
+        exp = 2.7823796
         arr = np.array([4, 3, 4, 0, 1, 0, 2])
         obs = fisher_alpha(arr)
-        self.assertAlmostEqual(obs, exp)
+        self.assertAlmostEqual(obs, exp, places=6)
 
         # Should depend only on S and N (number of OTUs, number of
         # individuals / seqs), so we should obtain the same output as above.
         obs = fisher_alpha([1, 6, 1, 0, 1, 0, 5])
-        self.assertAlmostEqual(obs, exp)
+        self.assertAlmostEqual(obs, exp, places=6)
 
         # Should match another by hand:
         # 2 OTUs, 62 seqs, alpha is 0.39509
         obs = fisher_alpha([61, 0, 0, 1])
-        self.assertAlmostEqual(obs, 0.39509, delta=0.0001)
+        self.assertAlmostEqual(obs, 0.3950909, places=6)
 
         # Test case where we have >1000 individuals (SDR-IV makes note of this
         # case). Verified against R's vegan::fisher.alpha.
         obs = fisher_alpha([999, 0, 10])
-        self.assertAlmostEqual(obs, 0.2396492)
+        self.assertAlmostEqual(obs, 0.2396492, places=6)
+
+        # Should be infinite when all species are singletons
+        obs = fisher_alpha([1, 1, 1, 1, 1])
+        self.assertEqual(obs, np.inf)
+
+        # Should be infinite when there is no individual
+        obs = fisher_alpha([0, 0, 0, 0, 0])
+        self.assertEqual(obs, 0)
+
+        # Should be large when most species are singletons
+        obs = fisher_alpha([1] * 99 + [2])
+        self.assertAlmostEqual(obs, 5033.278, places=3)
+
+        # Similar but even larger
+        obs = fisher_alpha([1] * 999 + [2])
+        TestCase().assertAlmostEqual(obs, 500333.3, places=1)
 
     def test_goods_coverage(self):
         counts = [1] * 75 + [2, 2, 2, 2, 2, 2, 3, 4, 4]

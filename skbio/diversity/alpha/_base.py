@@ -256,6 +256,7 @@ def esty_ci(counts):
 
 
 @experimental(as_of="0.4.0")
+@np.errstate(invalid='ignore')
 def fisher_alpha(counts):
     r"""Calculate Fisher's alpha, a metric of diversity.
 
@@ -282,14 +283,20 @@ def fisher_alpha(counts):
     Raises
     ------
     RuntimeError
-        If the optimizer fails to converge (error > 1.0).
+        If the optimizer fails to solve for Fisher's alpha.
 
     Notes
     -----
     Fisher's alpha is defined in [1]_. See also [2]_.
 
     There is no analytical solution to Fisher's alpha. However, one can use an
-    optimization technique to approach it.
+    optimization technique to obtain a numeric solution. This function uses
+    SciPy's ``minimize_scalar`` to find alpha.
+
+    Alpha can become large when there are many singletons (one individual per
+    species) in the community. When all species are singletons, alpha = +inf.
+
+    When the community is empty (i.e., all counts are zero), alpha = 0.
 
     References
     ----------
@@ -301,25 +308,31 @@ def fisher_alpha(counts):
        (Fisher_et_al_1943)
     """
     counts = _validate_counts_vector(counts)
+
+    # alpha = 0 when community has no individual
     n = counts.sum()
+    if n == 0:
+        return 0.0
+
+    # alpha = +inf when all species are singletons
     s = observed_otus(counts)
+    if n == s:
+        return np.inf
 
-    def f(alpha):
-        return (alpha * np.log(1 + (n / alpha)) - s) ** 2
+    # objective function to minimize
+    # S = alpha * ln (1 + N / alpha), where alpha > 0
+    # the term s ** 2 is to prevent alpha <= 0
+    def f(x):
+        return (x * np.log(1 + (n / x)) - s) ** 2 if x > 0 else np.inf
 
-    # Temporarily silence RuntimeWarnings (invalid and division by zero) during
-    # optimization in case invalid input is provided to the objective function
-    # (e.g. alpha=0).
-    orig_settings = np.seterr(divide='ignore', invalid='ignore')
-    try:
-        alpha = minimize_scalar(f).x
-    finally:
-        np.seterr(**orig_settings)
+    # minimize the function using the default method (Brent's algorithm)
+    res = minimize_scalar(f)
 
-    if f(alpha) > 1.0:
-        raise RuntimeError("Optimizer failed to converge (error > 1.0), so "
-                           "could not compute Fisher's alpha.")
-    return alpha
+    # there is a chance optimization could fail
+    if res.success is False:
+        raise RuntimeError("Optimizer failed to solve for Fisher's alpha.")
+
+    return res.x
 
 
 @experimental(as_of="0.4.0")
