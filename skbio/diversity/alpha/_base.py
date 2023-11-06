@@ -293,8 +293,8 @@ def fisher_alpha(counts):
     optimization technique to obtain a numeric solution. This function uses
     SciPy's ``minimize_scalar`` to find alpha.
 
-    Alpha can become large when there are many singletons (one individual per
-    species) in the community. When all species are singletons, alpha = +inf.
+    Alpha can become large when most species are singletons. Alpha = +inf when
+    all species are singletons.
 
     When the community is empty (i.e., all counts are zero), alpha = 0.
 
@@ -319,9 +319,8 @@ def fisher_alpha(counts):
     if n == s:
         return np.inf
 
-    # objective function to minimize
+    # objective function to minimize:
     # S = alpha * ln (1 + N / alpha), where alpha > 0
-    # the term s ** 2 is to prevent alpha <= 0
     def f(x):
         return (x * np.log(1 + (n / x)) - s) ** 2 if x > 0 else np.inf
 
