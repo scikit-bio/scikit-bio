@@ -2,6 +2,10 @@
 
 ## Version 0.5.10
 
+### Performance enhancements
+
+* Improved the calculation of Fisher's alpha diversity index (`fisher_alpha`). It is now compatible with optimizers in SciPy 1.11+. Edge cases such as all singletons can be handled correctly. Handling of errors and warnings was improved. Documentation was enriched.
+
 ### Bug fixes
 
 * Re-enabled OpenMP support, which has been mistakenly disabled in 0.5.8  ([#1874](https://github.com/biocore/scikit-bio/pull/1874))

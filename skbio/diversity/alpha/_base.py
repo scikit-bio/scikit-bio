@@ -289,9 +289,10 @@ def fisher_alpha(counts):
     -----
     Fisher's alpha is defined in [1]_. See also [2]_.
 
-    There is no analytical solution to Fisher's alpha. However, one can use an
-    optimization technique to obtain a numeric solution. This function uses
-    SciPy's ``minimize_scalar`` to find alpha.
+    There is no analytical solution to Fisher's alpha. However, one can use
+    optimization techniques to obtain a numeric solution. This function calls
+    SciPy's ``minimize_scalar`` to find alpha. It is deterministic. The result
+    should be reasonably close to the true alpha.
 
     Alpha can become large when most species are singletons. Alpha = +inf when
     all species are singletons.
