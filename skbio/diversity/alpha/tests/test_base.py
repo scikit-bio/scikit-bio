@@ -131,7 +131,7 @@ class BaseTests(TestCase):
         obs = fisher_alpha([1, 1, 1, 1, 1])
         self.assertEqual(obs, np.inf)
 
-        # Should be infinite when there is no individual
+        # Should be zero when there is no individual
         obs = fisher_alpha([0, 0, 0, 0, 0])
         self.assertEqual(obs, 0)
 
