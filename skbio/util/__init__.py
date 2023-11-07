@@ -53,13 +53,13 @@ Warnings
 # ----------------------------------------------------------------------------
 
 from ._warning import EfficiencyWarning, RepresentationWarning, SkbioWarning
-from ._misc import cardinal_to_ordinal, find_duplicates, safe_md5
+from ._misc import cardinal_to_ordinal, find_duplicates, safe_md5, get_rng
 from ._testing import (get_data_path,
                        assert_ordination_results_equal,
                        assert_data_frame_almost_equal, pytestrunner)
 from ._decorator import classproperty
 
 __all__ = ['SkbioWarning', 'EfficiencyWarning', 'RepresentationWarning',
-           'cardinal_to_ordinal', 'find_duplicates', 'safe_md5',
+           'cardinal_to_ordinal', 'find_duplicates', 'safe_md5', 'get_rng',
            'get_data_path', 'assert_ordination_results_equal',
            'assert_data_frame_almost_equal', 'classproperty', 'pytestrunner']
