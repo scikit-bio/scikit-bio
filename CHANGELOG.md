@@ -2,9 +2,15 @@
 
 ## Version 0.5.10
 
+
+### Performance enhancements
+
+* Improved the calculation of Fisher's alpha diversity index (`fisher_alpha`). It is now compatible with optimizers in SciPy 1.11+. Edge cases such as all singletons can be handled correctly. Handling of errors and warnings was improved. Documentation was enriched.
+
 ### Features
 
 * Adopted NumPy's new random generator `np.random.Generator` (see [NEP 19](https://numpy.org/neps/nep-0019-rng-policy.html)).
+
 
 ### Bug fixes
 
