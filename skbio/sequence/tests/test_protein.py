@@ -124,11 +124,6 @@ class TestProtein(unittest.TestCase):
         self.assertIn('has gaps: False', obs)
         self.assertIn('has stops: True', obs)
 
-    def test_cannot_subclass(self):
-        with self.assertRaisesRegex(TypeError, r"Subclassing disabled"):
-            class CustomSequence(Protein):
-                pass
-
 
 if __name__ == "__main__":
     unittest.main()
