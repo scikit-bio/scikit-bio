@@ -139,7 +139,7 @@ run is not one that scikit-bio knows about. This might be the case, for
 example, if you're applying a custom metric that you've developed. To discover
 the metric names that scikit-bio knows about as strings that can be passed as
 ``metric`` to ``alpha_diversity`` or ``beta_diversity``, you can call
-``get_alpha_diversity_metrices`` or ``get_beta_diversity_metrics``,
+``get_alpha_diversity_metrics`` or ``get_beta_diversity_metrics``,
 respectively. These functions return lists of alpha and beta diversity metrics
 that are implemented in scikit-bio. There may be additional metrics that can be
 passed as strings which won't be listed here, such as those implemented in
