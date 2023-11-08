@@ -2,7 +2,6 @@
 
 ## Version 0.5.10
 
-
 ### Performance enhancements
 
 * Improved the calculation of Fisher's alpha diversity index (`fisher_alpha`). It is now compatible with optimizers in SciPy 1.11+. Edge cases such as all singletons can be handled correctly. Handling of errors and warnings was improved. Documentation was enriched.
@@ -10,7 +9,11 @@
 ### Features
 
 * Adopted NumPy's new random generator `np.random.Generator` (see [NEP 19](https://numpy.org/neps/nep-0019-rng-policy.html)).
+* SciPy 1.11+ is now supported.
 
+### Backward-incompatible changes [experimental]
+
+* Beta diversity metric `kulsinski` was removed. This was motivated by that SciPy replaced this distance metric with `kulczynski1` in version 1.11 (see SciPy issue [#2009](https://github.com/scipy/scipy/issues/2009)), and that both metrics do not return 0 on two identical vectors.
 
 ### Bug fixes
 

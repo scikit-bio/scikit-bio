@@ -296,7 +296,6 @@ _valid_beta_metrics = [
     "dice",
     "hamming",
     "jaccard",
-    "kulsinski",
     "mahalanobis",
     "manhattan",  # aliases to "cityblock" in beta_diversity
     "matching",
@@ -314,7 +313,6 @@ _valid_beta_metrics = [
 _qualitative_beta_metrics = [
     "dice",
     "jaccard",
-    "kulsinski",
     "matching",
     "rogerstanimoto",
     "russellrao",
