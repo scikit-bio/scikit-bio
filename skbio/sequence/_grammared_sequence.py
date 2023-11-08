@@ -74,25 +74,6 @@ class GrammaredSequenceMeta(ABCMeta, type):
         return cls
 
 
-# Adapted from http://stackoverflow.com/a/16056691/943814
-# Note that inheriting from GrammaredSequenceMeta, rather than something
-# more general, is intentional. Multiple inheritance with metaclasses can be
-# tricky and is not handled automatically in Python. Since this class needs to
-# inherit both from ABCMeta and GrammaredSequenceMeta, the only way we could
-# find to make this work was to have GrammaredSequenceMeta inherit from ABCMeta
-# and then inherit from GrammaredSequenceMeta here.
-class DisableSubclassingMeta(GrammaredSequenceMeta):
-    def __new__(mcs, name, bases, dct):
-        for b in bases:
-            if isinstance(b, DisableSubclassingMeta):
-                raise TypeError("Subclassing disabled for class %s. To create"
-                                " a custom sequence class, inherit directly"
-                                " from skbio.sequence.%s" %
-                                (b.__name__, GrammaredSequence.__name__))
-        return super(DisableSubclassingMeta, mcs).__new__(mcs, name, bases,
-                                                          dict(dct))
-
-
 class GrammaredSequence(Sequence, metaclass=GrammaredSequenceMeta):
     """Store sequence data conforming to a character set.
 

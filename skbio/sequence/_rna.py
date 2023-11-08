@@ -10,11 +10,10 @@ import skbio
 from skbio.util._decorator import classproperty, overrides
 from skbio.util._decorator import stable
 from ._nucleotide_mixin import NucleotideMixin, _motifs as _parent_motifs
-from ._grammared_sequence import GrammaredSequence, DisableSubclassingMeta
+from ._grammared_sequence import GrammaredSequence
 
 
-class RNA(GrammaredSequence, NucleotideMixin,
-          metaclass=DisableSubclassingMeta):
+class RNA(GrammaredSequence, NucleotideMixin):
     r"""Store RNA sequence data and optional associated metadata.
 
     Only characters in the IUPAC RNA character set [1]_ are supported.

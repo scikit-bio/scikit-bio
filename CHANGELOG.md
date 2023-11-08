@@ -19,6 +19,7 @@
 
 ### Miscellaneous
 
+* Enabled subclassing of DNA, RNA and Protein classes to allow secondary development.
 * Dropped support for NumPy < 1.17.0 in order to utilize the new random generator.
 * Use CYTHON by default during build ([#1874](https://github.com/biocore/scikit-bio/pull/1874))
 
