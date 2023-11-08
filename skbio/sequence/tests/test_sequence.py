@@ -1583,6 +1583,17 @@ class TestSequence(TestSequenceBase, ReallyEqualMixin):
                                               fillvalue=None):
             self.assertEqual(obs, exp)
 
+    def test_iter_kmers_issue1723_positional_metadata(self):
+        seq = Sequence('GATTACA', positional_metadata={'quality': range(7)})
+        obs = list(seq.iter_kmers(10))
+        exp = []
+        self.assertEqual(obs, exp)
+        
+    def test_iter_kmers_issue1723_no_positional_metadata(self):
+        obs = list(skbio.Sequence('TATATA').iter_kmers(10))
+        exp = []
+        self.assertEqual(obs, exp)
+
     def test_iter_kmers(self):
         seq = Sequence('GATTACA', positional_metadata={'quality': range(7)})
 
