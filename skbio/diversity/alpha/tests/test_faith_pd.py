@@ -26,8 +26,9 @@ class FaithPDTests(TestCase):
         self.b1 = np.array([[1, 3, 0, 1, 0],
                             [0, 2, 0, 4, 4],
                             [0, 0, 6, 2, 1],
-                            [0, 0, 1, 1, 1]])
-        self.sids1 = list('ABCD')
+                            [0, 0, 1, 1, 1],
+                            [2, 0, 3, 0, 0]])
+        self.sids1 = list('ABCDE')
         self.oids1 = ['OTU%d' % i for i in range(1, 6)]
         self.t1 = TreeNode.read(StringIO(
             '(((((OTU1:0.5,OTU2:0.5):0.5,OTU3:1.0):1.0):'
@@ -74,6 +75,9 @@ class FaithPDTests(TestCase):
         actual = faith_pd(self.b1[3], self.oids1, self.t1)
         expected = 4.75
         self.assertAlmostEqual(actual, expected)
+        actual = faith_pd(self.b1[4], self.oids1, self.t1)
+        expected = 3.0
+        self.assertAlmostEqual(actual, expected)
 
     def test_faith_pd_extra_tips(self):
         # results are the same despite presences of unobserved tips in tree
@@ -88,6 +92,29 @@ class FaithPDTests(TestCase):
         self.assertAlmostEqual(actual, expected)
         actual = faith_pd(self.b1[3], self.oids1, self.t1_w_extra_tips)
         expected = faith_pd(self.b1[3], self.oids1, self.t1)
+        self.assertAlmostEqual(actual, expected)
+        actual = faith_pd(self.b1[4], self.oids1, self.t1_w_extra_tips)
+        expected = 3.0
+        self.assertAlmostEqual(actual, expected)
+
+    def test_faith_pd_no_base(self):
+        # basal branches are not included in calculation
+        actual = faith_pd(self.b1[0], self.oids1, self.t1,
+                          include_base=False)
+        expected = 4.5
+        self.assertAlmostEqual(actual, expected)
+        actual = faith_pd(self.b1[4], self.oids1, self.t1,
+                          include_base=False)
+        expected = 2.0
+        self.assertAlmostEqual(actual, expected)
+
+    def test_faith_pd_one_taxon(self):
+        actual = faith_pd([1, 0, 0, 0, 0], self.oids1, self.t1)
+        expected = 2.0
+        self.assertAlmostEqual(actual, expected)
+        actual = faith_pd([1, 0, 0, 0, 0], self.oids1, self.t1,
+                          include_base=False)
+        expected = 0.0
         self.assertAlmostEqual(actual, expected)
 
     def test_faith_pd_minimal(self):

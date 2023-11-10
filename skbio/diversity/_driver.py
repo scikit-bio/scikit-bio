@@ -170,7 +170,8 @@ def alpha_diversity(metric, counts, ids=None, validate=True, **kwargs):
         counts_by_node, branch_lengths = _setup_faith_pd(
             counts, otu_ids, tree, validate, single_sample=False)
         counts = counts_by_node
-        metric = functools.partial(_faith_pd, branch_lengths=branch_lengths)
+        metric = functools.partial(_faith_pd, branch_lengths=branch_lengths,
+                                   **kwargs)
     elif callable(metric):
         metric = functools.partial(metric, **kwargs)
     elif metric in metric_map:
