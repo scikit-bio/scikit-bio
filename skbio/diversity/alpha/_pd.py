@@ -27,7 +27,7 @@ def _setup_pd(counts, otu_ids, tree, validate, rooted, single_sample):
     counts_by_node, _, branch_lengths = \
         _vectorize_counts_and_tree(counts, otu_ids, tree)
 
-    return counts, counts_by_node, branch_lengths
+    return counts_by_node, branch_lengths
 
 
 def _faith_pd(counts_by_node, branch_lengths):
@@ -174,32 +174,35 @@ def faith_pd(counts, otu_ids, tree, validate=True):
     6.95
 
     """
-    _, counts_by_node, branch_lengths = _setup_pd(
+    counts_by_node, branch_lengths = _setup_pd(
         counts, otu_ids, tree, validate, rooted=True, single_sample=True)
 
     return _faith_pd(counts_by_node, branch_lengths)
 
 
-def _phydiv(counts_by_node, branch_lengths, rooted, weight, counts):
+def _phydiv(counts_by_node, branch_lengths, rooted, weight):
     """Calculate generalized phylogenetic diversity (PD) metrics.
     """
     # select branches connecting taxa
     included = counts_by_node > 0
 
+    # get total counts
+    counts_sum = counts_by_node.max()
+    if counts_sum == 0.0:
+        return 0.0
+
     # in unrooted mode, remove branches to root
     if rooted is False:
-        included &= counts_by_node < counts_by_node.max()
+        included &= counts_by_node < counts_sum
 
     # in unweighted mode, simply sum branch lengths
     if not weight:
         return (branch_lengths * included).sum()
 
-    # calculate relative abundances
-    if (counts_sum := counts.sum()) == 0.0:
-        return 0.0
+    # get relative abundances
     fracs_by_node = counts_by_node / counts_sum
 
-    # calculated balances in unrooted mode
+    # calculate balances in unrooted mode
     if rooted is False:
         fracs_by_node = 2 * np.minimum(fracs_by_node, 1 - fracs_by_node)
 
@@ -390,7 +393,7 @@ def phydiv(counts, otu_ids, tree, rooted=None, weight=False, validate=True):
     """
     # whether tree is rooted should not affect whether metric can be calculated
     # ; it is common unrooted PD is calculated on a rooted tree
-    counts, counts_by_node, branch_lengths = _setup_pd(
+    counts_by_node, branch_lengths = _setup_pd(
         counts, otu_ids, tree, validate, rooted=False, single_sample=True)
 
     # if not specified, determine whether metric should be calculated in rooted
@@ -403,4 +406,4 @@ def phydiv(counts, otu_ids, tree, rooted=None, weight=False, validate=True):
             < 0.0 or w_ > 1.0:
         raise ValueError('Weight parameter must be boolean or within [0, 1].')
 
-    return _phydiv(counts_by_node, branch_lengths, rooted, weight, counts)
+    return _phydiv(counts_by_node, branch_lengths, rooted, weight)
