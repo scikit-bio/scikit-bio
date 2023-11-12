@@ -223,7 +223,7 @@ class PhyDivTests(TestCase):
             '(((a:0.4,b:0.5):0.7,((c:0.1,d:0.2):0.6,(e:0.2,f:0.3):0.4):0.2)'
             ':0.1,g:1.2):0.2;'))
 
-        # each dash (-) represents branch length = 0.5
+        # each dash (-) represents branch length = 0.05
         #
         #                          /--------a
         #          /--------------|

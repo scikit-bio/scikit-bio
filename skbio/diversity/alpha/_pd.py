@@ -269,18 +269,17 @@ def phydiv(counts, otu_ids, tree, rooted=None, weight=False, validate=True):
 
        PD = \sum_{b \in T \sqcup R} l(b)
 
-    where :math:`T` is a set of branches (:math:`b`) in a rooted tree that
-    constitute the minimum spanning path connecting all taxa in a community.
-    :math:`R` is the path from the lowest common ancestor (LCA) of the taxa
-    to the root of the tree. :math:`PD` is the sum of lengths (:math:`l`) of
-    branches in the paths.
+    where :math:`T` is a minimum set of branches (:math:`b`) in a rooted tree
+    that connect all taxa in a community. :math:`R` is a set of branches from
+    the lowest common ancestor (LCA) of the taxa to the root of the tree.
+    :math:`PD` is the sum of lengths (:math:`l`) of branches in both sets.
 
     It is equivalent to ``pd(..., rooted=True, weight=False)``.
 
     A variant of PD, which does not include the root in the calculation, was
-    referred by some authors as unrooted phylogenetic diversity (uPD) [2]_, as
-    in contrast to rooted phylogenetic diversity (rPD, i.e., Faith's PD). uPD
-    is defined as:
+    referred to by some authors as unrooted phylogenetic diversity (uPD) [2]_,
+    as in contrast to rooted phylogenetic diversity (rPD, i.e., Faith's PD).
+    uPD is defined as:
 
     .. math::
 
@@ -348,18 +347,20 @@ def phydiv(counts, otu_ids, tree, rooted=None, weight=False, validate=True):
 
         PD = \sum_{b \in T \sqcup R} l(b) p(b)^\theta
 
+    It is equivalent to ``pd(..., rooted=True, weight=theta)``.
+
     It is important to report which metric is used. For practical perspective,
     we recommend the following denotions:
 
-    * :math:`{}_{r}PD`: rooted, unweighted PD (Faith's PD [1]_).
-    * :math:`{}_{u}PD`: unrooted, unweighted PD (uPD [2]_).
-    * :math:`{}_{r}PD_{w}`: rooted, weighted PD (analogous to
+    - :math:`rPD`: rooted, unweighted PD (Faith's PD [1]_).
+    - :math:`uPD`: unrooted, unweighted PD (uPD [2]_).
+    - :math:`rPD_{w}`: rooted, weighted PD (analogous to
       :math:`PD_{aw}` [3]_).
-    * :math:`{}_{u}PD_{w}`: unrooted, weighted PD (analogous to
+    - :math:`uPD_{w}`: unrooted, weighted PD (analogous to
       :math:`\delta nPD` [4]_).
-    * :math:`{}_{r}PD_{w\theta}`: rooted, weighted PD with parameter
+    - :math:`rPD_{w\theta}`: rooted, weighted PD with parameter
       :math:`\theta` (:math:`RBWPD_{\theta}` [5]_).
-    * :math:`{}_{u}PD_{w\theta}`: unrooted, weighted PD with parameter
+    - :math:`uPD_{w\theta}`: unrooted, weighted PD with parameter
       :math:`\theta` (:math:`BWPD_{\theta}` [5]_).
 
     References
