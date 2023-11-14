@@ -1273,7 +1273,7 @@ def randdm(num_objects, ids=None, constructor=None, random_fn=None):
         random_fn = np.random.rand
 
     data = np.tril(random_fn(num_objects, num_objects), -1)
-    data = data + data.T
+    data += data.T
 
     if not ids:
         ids = map(str, range(1, num_objects + 1))

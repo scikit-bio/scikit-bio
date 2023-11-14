@@ -2612,7 +2612,7 @@ class TreeNode(SkbioObject):
 
         if proportion:
             total_subsets = len(tree1_sets) + len(tree2_sets)
-            dist = dist / total_subsets
+            dist /= total_subsets
 
         return dist
 

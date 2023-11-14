@@ -155,7 +155,7 @@ def closure(mat):
         raise ValueError("Input matrix can only have two dimensions or less")
     if np.all(mat == 0, axis=1).sum() > 0:
         raise ValueError("Input matrix cannot have rows with all zeros")
-    mat = mat / mat.sum(axis=1, keepdims=True)
+    mat /= mat.sum(axis=1, keepdims=True)
     return mat.squeeze()
 
 

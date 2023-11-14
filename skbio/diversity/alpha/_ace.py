@@ -131,9 +131,9 @@ def _number_rare(freq_counts, rare_threshold, gamma=False):
 
     if gamma:
         for i, j in enumerate(freq_counts[:rare_threshold + 1]):
-            n_rare = n_rare + (i * j) * (i - 1)
+            n_rare += (i * j) * (i - 1)
     else:
         for i, j in enumerate(freq_counts[:rare_threshold + 1]):
-            n_rare = n_rare + (i * j)
+            n_rare += (i * j)
 
     return n_rare
