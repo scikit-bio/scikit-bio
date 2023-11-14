@@ -35,6 +35,8 @@ class BaseTests(TestCase):
                     ')root;'))
 
     def test_berger_parker_d(self):
+        self.assertEqual(berger_parker_d(np.array([])), 0)
+        self.assertEqual(berger_parker_d(np.array([0])), 0)
         self.assertEqual(berger_parker_d(np.array([5])), 1)
         self.assertEqual(berger_parker_d(np.array([5, 5])), 0.5)
         self.assertEqual(berger_parker_d(np.array([1, 1, 1, 1, 0])), 0.25)
@@ -238,13 +240,15 @@ class BaseTests(TestCase):
         # Examples from
         # http://ww2.mdsg.umd.edu/interactive_lessons/biofilm/diverse.htm#3
         self.assertAlmostEqual(pielou_e([1, 1, 196, 1, 1]), 0.078, 3)
-        self.assertTrue(np.isnan(pielou_e([0, 0, 200, 0, 0])))
-        self.assertTrue(np.isnan(pielou_e([0, 0, 0, 0, 0])))
+        self.assertEqual(pielou_e([0, 0, 200, 0, 0]), 0)
+        self.assertEqual(pielou_e([0, 0, 0, 0, 0]), 0)
+        self.assertEqual(pielou_e([]), 0)
 
     def test_robbins(self):
         self.assertEqual(robbins(np.array([1, 2, 3, 0, 1])), 2 / 7)
 
     def test_shannon(self):
+        self.assertEqual(shannon(np.array([])), 0)
         self.assertEqual(shannon(np.array([5])), 0)
         self.assertEqual(shannon(np.array([5, 5])), 1)
         self.assertEqual(shannon(np.array([1, 1, 1, 1, 0])), 2)

@@ -52,7 +52,9 @@ def berger_parker_d(counts):
 
     """
     counts = _validate_counts_vector(counts)
-    return counts.max() / counts.sum()
+    if (counts_sum := counts.sum()) == 0:
+        return 0.0
+    return counts.max() / counts_sum
 
 
 @experimental(as_of="0.4.0")
@@ -97,19 +99,26 @@ def brillouin_d(counts):
 
 @experimental(as_of="0.4.0")
 def dominance(counts):
-    r"""Calculate dominance.
+    r"""Calculate Simpson's dominance index.
 
-    Dominance is defined as
+    Simpson's dominance index, a.k.a. Simpson's :math:`D`, measures the degree
+    of concentration of species composition of a community. It is defined as
 
     .. math::
 
        \sum{p_i^2}
 
-    where :math:`p_i` is the proportion of the entire community that OTU
+    where :math:`p_i` is the proportion of the entire community that species
     :math:`i` represents.
 
-    Dominance can also be defined as 1 - Simpson's index. It ranges between
-    0 and 1.
+    Simpson's :math:`D` can be interpreted as the probability that two randomly
+    selected individuals belong to the same species. It ranges between 0 and 1.
+
+    Simpson's :math:`D` is sometimes referred to as "Simpson's index". It
+    should be noted that :math:`D` is not a measure of community diversity. It
+    is also important to distinguish :math:`D` from Simpson's diversity index
+    (:math:`1 - D`) and Simpson's reciprocal index (:math:`1 / D`), both of
+    which are measures of community diversity.
 
     Parameters
     ----------
@@ -119,7 +128,7 @@ def dominance(counts):
     Returns
     -------
     double
-        Dominance.
+        Simpson's dominance index.
 
     See Also
     --------
@@ -127,16 +136,18 @@ def dominance(counts):
 
     Notes
     -----
-    The implementation here is based on the description given in [1]_.
+    Simpson's dominance index was originally described in [1]_.
 
     References
     ----------
-    .. [1] http://folk.uio.no/ohammer/past/diversity.html
+    .. [1] Simpson, E. H. (1949). Measurement of diversity. nature, 163(4148),
+       688-688.
 
     """
     counts = _validate_counts_vector(counts)
-    freqs = counts / counts.sum()
-    return (freqs * freqs).sum()
+    if (counts_sum := counts.sum()) == 0:
+        return 0.0
+    return ((counts / counts_sum) ** 2).sum()
 
 
 @experimental(as_of="0.4.0")
@@ -395,7 +406,7 @@ def heip_e(counts):
 
     Notes
     -----
-    The implementation here is based on the description in [1]_.
+    Heip's evenness measure was originally described in [1]_.
 
     References
     ----------
@@ -766,16 +777,21 @@ def osd(counts):
 
 @experimental(as_of="0.4.1")
 def pielou_e(counts):
-    r"""Calculate Pielou's Evenness index J'.
+    r"""Calculate Pielou's evenness index.
 
-    Pielou's Evenness is defined as:
+    Pielou's evenness index (:math:`J'`), a.k.a., Shannon's equitability index
+    (:math:`E_H`), is defined as
 
     .. math::
 
        J' = \frac{(H)}{\ln(S)}
 
-    where :math:`H` is the Shannon-Wiener entropy of counts and :math:`S` is
-    the number of OTUs in the sample.
+    where :math:`H` is the Shannon index of the community and :math:`S` is the
+    number of species in the community.
+
+    That is, :math:`J'` is the ratio of the actual Shannon index of the
+    community versus the maximum-possible Shannon index when all species have
+    the same number of individuals. :math:`J'` ranges between 0 and 1.
 
     Parameters
     ----------
@@ -785,7 +801,7 @@ def pielou_e(counts):
     Returns
     -------
     double
-        Pielou's Evenness.
+        Pielou's evenness index.
 
     See Also
     --------
@@ -794,21 +810,17 @@ def pielou_e(counts):
 
     Notes
     -----
-    The implementation here is based on the description in Wikipedia [1]_.
-    It was first proposed by E. C. Pielou [2]_ and is similar to Heip's
-    evenness [3]_.
+    Pielou's evenness index was originally described in [1]_.
 
     References
     ----------
-    .. [1] https://en.wikipedia.org/wiki/Species_evenness
-    .. [2] Pielou, E. C., 1966. The measurement of diversity in different types
+    .. [1] Pielou, E. C., 1966. The measurement of diversity in different types
        of biological collections. Journal of Theoretical Biology, 13, 131-44.
-    .. [3] Heip, C. 1974. A new index measuring evenness. J. Mar. Biol. Ass.
-       UK., 54, 555-557.
 
     """
     counts = _validate_counts_vector(counts)
-    return shannon(counts, base=np.e) / np.log(observed_otus(counts))
+    return (0.0 if (H := shannon(counts, base=np.e)) == 0.0
+            else H / np.log(observed_otus(counts)))
 
 
 @experimental(as_of="0.4.0")
@@ -849,16 +861,17 @@ def robbins(counts):
 
 @experimental(as_of="0.4.0")
 def shannon(counts, base=2):
-    r"""Calculate Shannon entropy of counts, default in bits.
+    r"""Calculate Shannon index, default in bits.
 
-    Shannon-Wiener diversity index is defined as:
+    Shannon index (:math:`H`), a.k.a., Shannon's diversity index, or Shannon-
+    Wiener index, is defined as
 
     .. math::
 
        H = -\sum_{i=1}^s\left(p_i\log_2 p_i\right)
 
-    where :math:`s` is the number of OTUs and :math:`p_i` is the proportion of
-    the community represented by OTU :math:`i`.
+    where :math:`s` is the number of species and :math:`p_i` is the proportion
+    of the community represented by species :math:`i`.
 
     Parameters
     ----------
@@ -870,7 +883,7 @@ def shannon(counts, base=2):
     Returns
     -------
     double
-        Shannon diversity index H.
+        Shannon's diversity index.
 
     Notes
     -----
@@ -886,21 +899,26 @@ def shannon(counts, base=2):
     counts = _validate_counts_vector(counts)
     freqs = counts / counts.sum()
     nonzero_freqs = freqs[freqs.nonzero()]
+    if nonzero_freqs.size <= 1:
+        return 0.0
     return -(nonzero_freqs * np.log(nonzero_freqs)).sum() / np.log(base)
 
 
 @experimental(as_of="0.4.0")
 def simpson(counts):
-    r"""Calculate Simpson's index.
+    r"""Calculate Simpson's diversity index.
 
-    Simpson's index is defined as ``1 - dominance``:
+    Simpson's diversity index, a.k.a., Gini-Simpson index, is defined as
 
     .. math::
 
        1 - \sum{p_i^2}
 
-    where :math:`p_i` is the proportion of the community represented by OTU
+    where :math:`p_i` is the proportion of the community represented by species
     :math:`i`.
+
+    Therefore, Simpson's diversity index is also defined as :math:`1 - D`, in
+    which :math:`D` is the Simpson's dominance index.
 
     Parameters
     ----------
@@ -910,7 +928,7 @@ def simpson(counts):
     Returns
     -------
     double
-        Simpson's index.
+        Simpson's diversity index.
 
     See Also
     --------
@@ -918,13 +936,12 @@ def simpson(counts):
 
     Notes
     -----
-    The implementation here is ``1 - dominance`` as described in [1]_. Other
-    references (such as [2]_) define Simpson's index as ``1 / dominance``.
+    Simpson's diversity index was originally described in [1]_.
 
     References
     ----------
-    .. [1] http://folk.uio.no/ohammer/past/diversity.html
-    .. [2] http://www.pisces-conservation.com/sdrhelp/index.html
+    .. [1] Simpson, E. H. (1949). Measurement of diversity. nature, 163(4148),
+       688-688.
 
     """
     counts = _validate_counts_vector(counts)
@@ -933,16 +950,20 @@ def simpson(counts):
 
 @experimental(as_of="0.4.0")
 def simpson_e(counts):
-    r"""Calculate Simpson's evenness measure E.
+    r"""Calculate Simpson's evenness index.
 
-    Simpson's E is defined as
+    Simpson's evenness (a.k.a., equitability) index :math:`E_D` is defined as
 
     .. math::
 
-       E=\frac{1 / D}{S_{obs}}
+       E_D = \frac{D_min}{D} \frac{1}{D \times S}
 
-    where :math:`D` is dominance and :math:`S_{obs}` is the number of observed
-    OTUs.
+    where :math:`D` is Simpson's dominance index and :math:`S` is the number of
+    species in the community.
+
+    That is, :math:`E_D` is the ratio of the minimum-possible Simpson's
+    dominance index when all species have the same number of individuals,
+    versus the actual Simpson's dominance index of the community.
 
     Parameters
     ----------
@@ -952,7 +973,7 @@ def simpson_e(counts):
     Returns
     -------
     double
-        Simpson's evenness measure E.
+        Simpson's evenness index.
 
     See Also
     --------
@@ -996,7 +1017,7 @@ def singles(counts):
 def strong(counts):
     r"""Calculate Strong's dominance index.
 
-    Strong's dominance index is defined as:
+    Strong's dominance index (:math:`D_w`) is defined as
 
     .. math::
 
@@ -1017,7 +1038,7 @@ def strong(counts):
     Returns
     -------
     double
-        Strong's dominance index (Dw).
+        Strong's dominance index.
 
     Notes
     -----
