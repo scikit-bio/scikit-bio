@@ -35,20 +35,24 @@ class BaseTests(TestCase):
                     ')root;'))
 
     def test_berger_parker_d(self):
-        self.assertEqual(berger_parker_d(np.array([])), 0)
-        self.assertEqual(berger_parker_d(np.array([0])), 0)
-        self.assertEqual(berger_parker_d(np.array([5])), 1)
         self.assertEqual(berger_parker_d(np.array([5, 5])), 0.5)
         self.assertEqual(berger_parker_d(np.array([1, 1, 1, 1, 0])), 0.25)
         self.assertEqual(berger_parker_d(self.counts), 5 / 22)
+        self.assertEqual(berger_parker_d(np.array([5])), 1)
+        self.assertEqual(berger_parker_d([0, 0, 0]), 0)
+        self.assertEqual(berger_parker_d([]), 0)
 
     def test_brillouin_d(self):
         self.assertAlmostEqual(brillouin_d(np.array([1, 2, 0, 0, 3, 1])),
                                0.86289353018248782)
+        self.assertEqual(brillouin_d([0, 0, 0]), 0)
+        self.assertEqual(brillouin_d([]), 0)
 
     def test_dominance(self):
         self.assertEqual(dominance(np.array([5])), 1)
         self.assertAlmostEqual(dominance(np.array([1, 0, 2, 5, 2])), 0.34)
+        self.assertEqual(dominance([0, 0, 0]), 0)
+        self.assertEqual(dominance([]), 0)
 
     def test_doubles(self):
         self.assertEqual(doubles(self.counts), 3)
@@ -149,6 +153,8 @@ class BaseTests(TestCase):
         counts = [1] * 75 + [2, 2, 2, 2, 2, 2, 3, 4, 4]
         obs = goods_coverage(counts)
         self.assertAlmostEqual(obs, 0.23469387755)
+        self.assertEqual(goods_coverage([0, 0, 0]), 0)
+        self.assertEqual(goods_coverage([]), 0)
 
     def test_heip_e(self):
         # Calculate "by hand".
@@ -175,10 +181,14 @@ class BaseTests(TestCase):
 
     def test_margalef(self):
         self.assertEqual(margalef(self.counts), 8 / np.log(22))
+        self.assertEqual(margalef([0, 0, 0]), 0)
+        self.assertEqual(margalef([]), 0)
 
     def test_mcintosh_d(self):
         self.assertAlmostEqual(mcintosh_d(np.array([1, 2, 3])),
                                0.636061424871458)
+        self.assertEqual(mcintosh_d([0, 0, 0]), 0)
+        self.assertEqual(mcintosh_d([]), 0)
 
     def test_mcintosh_e(self):
         num = np.sqrt(15)
@@ -251,6 +261,7 @@ class BaseTests(TestCase):
         self.assertEqual(shannon(np.array([])), 0)
         self.assertEqual(shannon(np.array([5])), 0)
         self.assertEqual(shannon(np.array([5, 5])), 1)
+        self.assertEqual(shannon(np.array([0, 0, 0])), 0)
         self.assertEqual(shannon(np.array([1, 1, 1, 1, 0])), 2)
 
     def test_simpson(self):
@@ -284,6 +295,8 @@ class BaseTests(TestCase):
 
     def test_strong(self):
         self.assertAlmostEqual(strong(np.array([1, 2, 3, 1])), 0.214285714)
+        self.assertEqual(strong([0, 0, 0]), 0)
+        self.assertEqual(strong([]), 0)
 
 
 if __name__ == '__main__':
