@@ -44,11 +44,6 @@ class TestRNA(unittest.TestCase):
         self.assertEqual(seq.reverse_transcribe(), DNA('ATAT'))
         self.assertEqual(seq, RNA('AUAU'))
 
-    def test_cannot_subclass(self):
-        with self.assertRaisesRegex(TypeError, r"Subclassing disabled"):
-            class CustomSequence(RNA):
-                pass
-
 
 if __name__ == '__main__':
     unittest.main()

@@ -10,6 +10,8 @@ import hashlib
 import inspect
 from types import FunctionType
 
+import numpy as np
+
 from ._decorator import experimental
 
 
@@ -199,3 +201,43 @@ def find_duplicates(iterable):
         else:
             seen.add(e)
     return repeated
+
+
+@experimental(as_of="0.5.10")
+def get_rng(seed=None):
+    """Get a random generator.
+
+    Parameters
+    ----------
+    seed : int or np.random.Generator, optional
+        A user-provided random seed or random generator instance.
+
+    Returns
+    -------
+    np.random.Generator
+        Random generator instance.
+
+    Notes
+    -----
+    NumPy's new random generator [1]_ was introduced in version 1.17. It is not
+    backward compatible with ``RandomState``, the legacy random generator [2]_.
+    See NEP 19 [3]_ for an introduction to this change.
+
+    References
+    ----------
+    .. [1] https://numpy.org/devdocs/reference/random/generator.html
+
+    .. [2] https://numpy.org/doc/stable/reference/random/legacy.html
+
+    .. [3] https://numpy.org/neps/nep-0019-rng-policy.html
+    """
+    try:
+        if seed is None or isinstance(seed, int):
+            return np.random.default_rng(seed)
+        if isinstance(seed, np.random.Generator):
+            return seed
+        raise ValueError('Invalid seed. It must be an integer or an '
+                         'instance of np.random.Generator.')
+    except AttributeError:
+        raise ValueError('The installed NumPy version does not support '
+                         'random.Generator. Please use NumPy >= 1.17.')

@@ -2,6 +2,19 @@
 
 ## Version 0.5.10
 
+### Performance enhancements
+
+* Improved the calculation of Fisher's alpha diversity index (`fisher_alpha`). It is now compatible with optimizers in SciPy 1.11+. Edge cases such as all singletons can be handled correctly. Handling of errors and warnings was improved. Documentation was enriched.
+
+### Features
+
+* Adopted NumPy's new random generator `np.random.Generator` (see [NEP 19](https://numpy.org/neps/nep-0019-rng-policy.html)).
+* SciPy 1.11+ is now supported.
+
+### Backward-incompatible changes [experimental]
+
+* Beta diversity metric `kulsinski` was removed. This was motivated by that SciPy replaced this distance metric with `kulczynski1` in version 1.11 (see SciPy issue [#2009](https://github.com/scipy/scipy/issues/2009)), and that both metrics do not return 0 on two identical vectors.
+
 ### Bug fixes
 
 * Safely handle `Sequence.iter_kmers` where `k` is greater than the sequence length ([#1723](https://github.com/scikit-bio/scikit-bio/issues/1723))
@@ -10,6 +23,8 @@
 
 ### Miscellaneous
 
+* Enabled subclassing of DNA, RNA and Protein classes to allow secondary development.
+* Dropped support for NumPy < 1.17.0 in order to utilize the new random generator.
 * Use CYTHON by default during build ([#1874](https://github.com/biocore/scikit-bio/pull/1874))
 
 ## Version 0.5.9
@@ -189,7 +204,7 @@
 
 * The numpy docs are deprecated in favor of [Napoleon](http://www.sphinx-doc.org/en/master/usage/extensions/napoleon.html) ([#1629](https://github.com/biocore/scikit-bio/pull/1629))
 
-* This version is now compatible with NumPy >= 1.9.2 and Pandas >= 0.23. ([#1627](https://github.com/biocore/scikit-bio/pull/1627))
+* This version is now compatible with numpy >= 1.17.0 and Pandas >= 0.23. ([#1627](https://github.com/biocore/scikit-bio/pull/1627))
 
 ## Version 0.5.4 (2018-08-23)
 
@@ -278,7 +293,7 @@
 
 ### Miscellaneous
 * scikit-bio now depends on pandas >= 0.19.2, and is compatible with newer pandas versions (e.g. 0.20.3) that were previously incompatible.
-* scikit-bio now depends on `numpy >= 1.9.2, < 1.14.0` for compatibility with Python 3.4, 3.5, and 3.6 and the available numpy conda packages in `defaults` and `conda-forge` channels.
+* scikit-bio now depends on `numpy >= 1.17.0, < 1.14.0` for compatibility with Python 3.4, 3.5, and 3.6 and the available numpy conda packages in `defaults` and `conda-forge` channels.
 * added support for running tests from `setup.py`. Both `python setup.py nosetests` and `python setup.py test` are now supported, however `python setup.py test` will only run a subset of the full test suite. ([#1341](https://github.com/biocore/scikit-bio/issues/1341))
 
 ## Version 0.5.1 (2016-11-12)
