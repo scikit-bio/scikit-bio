@@ -1817,7 +1817,7 @@ fuzzy=[(True, False)], metadata={'gene': 'foo'})
 
         obs_counts = freqs[indices]
         if relative:
-            obs_counts /= len(self)
+            obs_counts = obs_counts / len(self)
 
         # Use tolist() for minor performance gain.
         return dict(zip(chars, obs_counts.tolist()))
