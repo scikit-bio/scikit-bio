@@ -14,7 +14,7 @@ import scipy.spatial.distance
 import pandas as pd
 
 import skbio
-from skbio.diversity.alpha._faith_pd import _faith_pd, _setup_faith_pd
+from skbio.diversity.alpha._pd import _faith_pd, _phydiv, _setup_pd
 from skbio.diversity.beta._unifrac import (
     _setup_multiple_unweighted_unifrac, _setup_multiple_weighted_unifrac,
     _normalize_weighted_unifrac_by_default)
@@ -167,10 +167,24 @@ def alpha_diversity(metric, counts, ids=None, validate=True, **kwargs):
 
     if metric == 'faith_pd':
         otu_ids, tree, kwargs = _get_phylogenetic_kwargs(counts, **kwargs)
-        counts_by_node, branch_lengths = _setup_faith_pd(
-            counts, otu_ids, tree, validate, single_sample=False)
+        counts_by_node, branch_lengths = _setup_pd(
+            counts, otu_ids, tree, validate, rooted=True, single_sample=False)
         counts = counts_by_node
-        metric = functools.partial(_faith_pd, branch_lengths=branch_lengths)
+        metric = functools.partial(_faith_pd, branch_lengths=branch_lengths,
+                                   **kwargs)
+
+    elif metric == 'phydiv':
+        otu_ids, tree, kwargs = _get_phylogenetic_kwargs(counts, **kwargs)
+        counts_by_node, branch_lengths = _setup_pd(
+            counts, otu_ids, tree, validate, rooted=False, single_sample=False)
+        counts = counts_by_node
+        if 'rooted' not in kwargs:
+            kwargs['rooted'] = len(tree.root().children) == 2
+        if 'weight' not in kwargs:
+            kwargs['weight'] = False
+        metric = functools.partial(_phydiv, branch_lengths=branch_lengths,
+                                   **kwargs)
+
     elif callable(metric):
         metric = functools.partial(metric, **kwargs)
     elif metric in metric_map:

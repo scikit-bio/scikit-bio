@@ -4,16 +4,17 @@
 
 ### Performance enhancements
 
-* Improved the calculation of Fisher's alpha diversity index (`fisher_alpha`). It is now compatible with optimizers in SciPy 1.11+. Edge cases such as all singletons can be handled correctly. Handling of errors and warnings was improved. Documentation was enriched.
+* Improved the calculation of Fisher's alpha diversity index (`fisher_alpha`). It is now compatible with optimizers in SciPy 1.11+. Edge cases such as all singletons can be handled correctly. Handling of errors and warnings was improved. Documentation was enriched ([#1890](https://github.com/scikit-bio/scikit-bio/pull/1890)).
 
 ### Features
 
-* Adopted NumPy's new random generator `np.random.Generator` (see [NEP 19](https://numpy.org/neps/nep-0019-rng-policy.html)).
-* SciPy 1.11+ is now supported.
+* Added alpha diversity metric `phydiv`, which is a generalized phylogenetic diversity (PD) framework permitting unrooted or rooted tree, unweighted or weighted by abundance, and an exponent parameter of the weight term ([#1893](https://github.com/scikit-bio/scikit-bio/pull/1893)).
+* Adopted NumPy's new random generator `np.random.Generator` (see [NEP 19](https://numpy.org/neps/nep-0019-rng-policy.html)) ([#1889](https://github.com/scikit-bio/scikit-bio/pull/1889)).
+* SciPy 1.11+ is now supported ([#1887](https://github.com/scikit-bio/scikit-bio/pull/1887)).
 
 ### Backward-incompatible changes [experimental]
 
-* Beta diversity metric `kulsinski` was removed. This was motivated by that SciPy replaced this distance metric with `kulczynski1` in version 1.11 (see SciPy issue [#2009](https://github.com/scipy/scipy/issues/2009)), and that both metrics do not return 0 on two identical vectors.
+* Beta diversity metric `kulsinski` was removed. This was motivated by that SciPy replaced this distance metric with `kulczynski1` in version 1.11 (see SciPy issue [#2009](https://github.com/scipy/scipy/issues/2009)), and that both metrics do not return 0 on two identical vectors ([#1887](https://github.com/scikit-bio/scikit-bio/pull/1887)).
 
 ### Bug fixes
 
@@ -33,7 +34,7 @@
 
 * Adding Variance log ratio estimators in `skbio.stats.composition.vlr` and `skbio.stats.composition.pairwise_vlr` ([#1803](https://github.com/biocore/scikit-bio/pull/1803))
 * Added `skbio.stats.composition.tree_basis` to construct ILR bases from `TreeNode` objects. ([#1862](https://github.com/biocore/scikit-bio/pull/1862))
-* `IntervalMetadata.query` now defaults to obtaining all results, see ([#1817](https://github.com/biocore/scikit-bio/issues/1817).
+* `IntervalMetadata.query` now defaults to obtaining all results, see [#1817](https://github.com/biocore/scikit-bio/issues/1817).
 
 ### Backward-incompatible changes [experimental]
 * With the introduction of the `tree_basis` object, the ILR bases are now represented in log-odds coordinates rather than in probabilities to minimize issues with numerical stability. Furthermore, the `ilr` and `ilr_inv` functions now takes the `basis` input parameter in terms of log-odds coordinates. This affects the `skbio.stats.composition.sbp_basis` as well. ([#1862](https://github.com/biocore/scikit-bio/pull/1862))
