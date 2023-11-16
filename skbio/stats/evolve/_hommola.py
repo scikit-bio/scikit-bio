@@ -261,5 +261,5 @@ def _gen_lists(labels):
 
     """
     i_array, j_array = np.transpose(np.tri(len(labels)-1)).nonzero()
-    j_array = j_array + 1
+    j_array += 1
     return labels[i_array], labels[j_array]
