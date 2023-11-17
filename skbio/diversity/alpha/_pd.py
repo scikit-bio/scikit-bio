@@ -345,6 +345,8 @@ def phydiv(counts, otu_ids, tree, rooted=None, weight=False, validate=True):
     :math:`RBWPD_{\theta}` [4]_ (although "balance" is not involved), is
     defined as:
 
+    .. math::
+
         PD = \sum_{b \in T \sqcup R} l(b) p(b)^\theta
 
     It is equivalent to ``pd(..., rooted=True, weight=theta)``.
