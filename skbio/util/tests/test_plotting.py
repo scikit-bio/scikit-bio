@@ -29,12 +29,12 @@ class TestPlottableMixin(unittest.TestCase):
         # hasn't imported yet
         self.assertFalse(hasattr(obj, 'mpl'))
 
-        # import matplotlib when available
+        # import Matplotlib if available
         obj._get_mpl_plt()
         self.assertEqual(obj.mpl.__name__, 'matplotlib')
         self.assertEqual(obj.plt.__name__, 'matplotlib.pyplot')
 
-        # make matplotlib unimportable
+        # make Matplotlib unimportable
         delattr(obj, 'mpl')
         backup = sys.modules['matplotlib']
         sys.modules['matplotlib'] = None
@@ -51,13 +51,22 @@ class TestPlottableMixin(unittest.TestCase):
         obj = PlottableMixin()
         obj._get_mpl_plt()
 
+        # PNG data are bytes
         obs = obj._figure_data('png')
         self.assertIsInstance(obs, bytes)
         self.assertTrue(len(obs) > 0)
 
+        # SVG data are string
         obs = obj._figure_data('svg')
         self.assertIsInstance(obs, str)
         self.assertTrue(len(obs) > 0)
+
+        # plotting backend not available
+        delattr(obj, 'mpl')
+        backup = sys.modules['matplotlib']
+        sys.modules['matplotlib'] = None
+        self.assertIsNone(obj._figure_data())
+        sys.modules['matplotlib'] = backup
 
     def test_repr_png(self):
         obj = PlottableMixin()

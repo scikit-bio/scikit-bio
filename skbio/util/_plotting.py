@@ -19,9 +19,9 @@ class PlottableMixin():
 
     @experimental(as_of="0.5.10")
     def _get_mpl_plt(self):
-        """Import matplotlib and its plotting interface.
+        """Import Matplotlib and its plotting interface.
         """
-        msg = 'Plotting requires matplotlib installed in the system.'
+        msg = 'Plotting requires Matplotlib installed in the system.'
         if hasattr(self, 'mpl'):
             if self.mpl is None:
                 raise ImportError(msg)
@@ -46,18 +46,23 @@ class PlottableMixin():
 
         Returns
         -------
-        str or bytes
-            Figure data.
+        str or bytes or None
+            Figure data, or None if the plotting backend is not available.
         """
-        self._get_mpl_plt()
+        try:
+            self._get_mpl_plt()
+        except ImportError:
+            return
 
         # call default plotting method
         fig = self.plot()
         fig.tight_layout()
 
         # get figure data
+        # formats such as SVG are string
         try:
             fig.savefig(f := StringIO(), format=format)
+        # formats such as PNG are bytes
         except TypeError:
             fig.savefig(f := BytesIO(), format=format)
 
