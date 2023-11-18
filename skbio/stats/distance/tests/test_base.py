@@ -15,7 +15,6 @@ import numpy.testing as npt
 import pandas as pd
 import pandas.testing as pdt
 import scipy.spatial.distance
-from IPython.core.display import Image, SVG
 
 import skbio.sequence.distance
 from skbio import DistanceMatrix, Sequence
@@ -577,25 +576,6 @@ class DissimilarityMatrixTestBase(DissimilarityMatrixTestData):
         for tick in ax.get_yticklabels():
             yticks.append(tick.get_text())
         self.assertEqual(yticks, ['0', 'one', '2', 'three', '4.000'])
-
-    def test_repr_png(self):
-        dm = self.dm_1x1
-        obs = dm._repr_png_()
-        self.assertIsInstance(obs, bytes)
-        self.assertTrue(len(obs) > 0)
-
-    def test_repr_svg(self):
-        obs = self.dm_1x1._repr_svg_()
-        self.assertIsInstance(obs, str)
-        self.assertTrue(len(obs) > 0)
-
-    def test_png(self):
-        dm = self.dm_1x1
-        self.assertIsInstance(dm.png, Image)
-
-    def test_svg(self):
-        dm = self.dm_1x1
-        self.assertIsInstance(dm.svg, SVG)
 
     def test_to_data_frame_1x1(self):
         df = self.dm_1x1.to_data_frame()

@@ -9,15 +9,14 @@
 import functools
 
 import numpy as np
-from IPython.core.pylabtools import print_figure
-from IPython.core.display import Image, SVG
 
 from skbio._base import SkbioObject
 from skbio.stats._misc import _pprint_strs
 from skbio.util._decorator import experimental
+from skbio.util._plotting import PlottableMixin
 
 
-class OrdinationResults(SkbioObject):
+class OrdinationResults(SkbioObject, PlottableMixin):
     """Store ordination results, providing serialization and plotting support.
 
     Stores various components of ordination results. Provides methods for
@@ -181,15 +180,11 @@ class OrdinationResults(SkbioObject):
             - sample IDs in the ordination results are not in `df` or have
               missing data in `column`
 
-        See Also
-        --------
-        mpl_toolkits.mplot3d.Axes3D.scatter
-
         Notes
         -----
         This method creates basic plots of ordination results, and is intended
         to provide a quick look at the results in the context of metadata
-        (e.g., from within the IPython Notebook). For more customization and to
+        (e.g., from within the Jupyter Lab). For more customization and to
         generate publication-quality figures, we recommend EMPeror [2]_.
 
         References
@@ -239,15 +234,13 @@ class OrdinationResults(SkbioObject):
         # instead be added to EMPeror (http://biocore.github.io/emperor/).
         # Only bug fixes and minor updates should be made to this method.
 
+        self._get_mpl_plt()
+
         coord_matrix = self.samples.values.T
         self._validate_plot_axes(coord_matrix, axes)
 
-        # derived from
-        # http://matplotlib.org/examples/mplot3d/scatter3d_demo.html
-        import matplotlib.pyplot as plt
-        from mpl_toolkits.mplot3d import Axes3D  # noqa
-        fig = plt.figure()
-        ax = fig.add_subplot(111, projection='3d')
+        fig = self.plt.figure()
+        ax = fig.add_subplot(projection='3d')
 
         xs = coord_matrix[axes[0]]
         ys = coord_matrix[axes[1]]
@@ -260,7 +253,7 @@ class OrdinationResults(SkbioObject):
         if point_colors is None:
             plot = scatter_fn()
         else:
-            plot = scatter_fn(c=point_colors, cmap=cmap)
+            plot = scatter_fn(c=point_colors)
 
         if axis_labels is None:
             axis_labels = ['%d' % axis for axis in axes]
@@ -282,7 +275,7 @@ class OrdinationResults(SkbioObject):
                 fig.colorbar(plot)
             else:
                 self._plot_categorical_legend(ax, category_to_color)
-        fig.tight_layout()
+
         return fig
 
     def _validate_plot_axes(self, coord_matrix, axes):
@@ -310,7 +303,7 @@ class OrdinationResults(SkbioObject):
         each category (str) to color (used for legend creation).
 
         """
-        import matplotlib.pyplot as plt
+
         if ((df is None and column is not None) or (df is not None and
                                                     column is None)):
             raise ValueError("Both df and column must be provided, or both "
@@ -338,7 +331,7 @@ class OrdinationResults(SkbioObject):
                 # colormap.
                 # derived from http://stackoverflow.com/a/14887119
                 categories = col_vals.unique()
-                cmap = plt.get_cmap(cmap)
+                cmap = self.plt.get_cmap(cmap)
                 category_colors = cmap(np.linspace(0, 1, len(categories)))
 
                 category_to_color = dict(zip(categories, category_colors))
@@ -351,11 +344,10 @@ class OrdinationResults(SkbioObject):
     def _plot_categorical_legend(self, ax, color_dict):
         """Add legend to plot using specified mapping of category to color."""
         # derived from http://stackoverflow.com/a/20505720
-        import matplotlib as mpl
         proxies = []
         labels = []
         for category in color_dict:
-            proxy = mpl.lines.Line2D([0], [0], linestyle='none',
+            proxy = self.mpl.lines.Line2D([0], [0], linestyle='none',
                                      c=color_dict[category], marker='o')
             proxies.append(proxy)
             labels.append(category)
@@ -364,42 +356,6 @@ class OrdinationResults(SkbioObject):
         # derived from http://matplotlib.org/users/legend_guide.html
         ax.legend(proxies, labels, numpoints=1, loc=6,
                   bbox_to_anchor=(1.05, 0.5), borderaxespad=0.)
-
-    # Here we define the special repr methods that provide the IPython display
-    # protocol. Code derived from:
-    #     https://github.com/ipython/ipython/blob/2.x/examples/Notebook/
-    #         Custom%20Display%20Logic.ipynb
-    # See licenses/ipython.txt for more details.
-
-    def _repr_png_(self):
-        return self._figure_data('png')
-
-    def _repr_svg_(self):
-        return self._figure_data('svg')
-
-    # We expose the above reprs as properties, so that the user can see them
-    # directly (since otherwise the client dictates which one it shows by
-    # default)
-    @property
-    @experimental(as_of="0.4.0")
-    def png(self):
-        """Display basic 3-D scatterplot in IPython Notebook as PNG."""
-        return Image(self._repr_png_(), embed=True)
-
-    @property
-    @experimental(as_of="0.4.0")
-    def svg(self):
-        """Display basic 3-D scatterplot in IPython Notebook as SVG."""
-        return SVG(self._repr_svg_())
-
-    def _figure_data(self, format):
-        import matplotlib.pyplot as plt
-        fig = self.plot()
-        data = print_figure(fig, format)
-        # We MUST close the figure, otherwise IPython's display machinery
-        # will pick it up and send it as output, resulting in a double display
-        plt.close(fig)
-        return data
 
     def _format_attribute(self, attr, attr_label, formatter):
         if attr is None:
