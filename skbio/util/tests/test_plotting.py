@@ -7,7 +7,6 @@
 # ----------------------------------------------------------------------------
 
 import sys
-import io
 import unittest
 
 from skbio.util._plotting import PlottableMixin
@@ -95,6 +94,7 @@ class TestPlottableMixin(unittest.TestCase):
         obs = obj.svg
         self.assertIsInstance(obs, str)
         self.assertTrue(len(obs) > 0)
+
 
 if __name__ == '__main__':
     unittest.main()

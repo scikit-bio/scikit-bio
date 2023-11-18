@@ -348,7 +348,7 @@ class OrdinationResults(SkbioObject, PlottableMixin):
         labels = []
         for category in color_dict:
             proxy = self.mpl.lines.Line2D([0], [0], linestyle='none',
-                                     c=color_dict[category], marker='o')
+                                          c=color_dict[category], marker='o')
             proxies.append(proxy)
             labels.append(category)
 
