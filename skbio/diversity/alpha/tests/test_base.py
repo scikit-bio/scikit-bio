@@ -197,7 +197,7 @@ class BaseTests(TestCase):
         self.assertEqual(mcintosh_e(np.array([1, 2, 3, 1])), exp)
 
     def test_menhinick(self):
-        # observed_richness = 9, total # of individuals = 22
+        # observed richness = 9, total # of individuals = 22
         self.assertEqual(menhinick(self.counts), 9 / np.sqrt(22))
 
     def test_michaelis_menten_fit(self):
@@ -221,16 +221,16 @@ class BaseTests(TestCase):
         self.assertTrue(obs_few > obs_many)
 
     def test_observed_features(self):
-        for obs in[np.array([4, 3, 4, 0, 1, 0, 2]),
-                   np.array([0, 0, 0]),
-                   self.counts]:
+        for obs in [np.array([4, 3, 4, 0, 1, 0, 2]),
+                    np.array([0, 0, 0]),
+                    self.counts]:
             self.assertEqual(observed_features(obs),
                              observed_richness(obs))
 
     def test_observed_otus(self):
-        for obs in[np.array([4, 3, 4, 0, 1, 0, 2]),
-                   np.array([0, 0, 0]),
-                   self.counts]:
+        for obs in [np.array([4, 3, 4, 0, 1, 0, 2]),
+                    np.array([0, 0, 0]),
+                    self.counts]:
             self.assertEqual(observed_otus(obs),
                              observed_richness(obs))
 
