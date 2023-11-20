@@ -17,8 +17,8 @@ from skbio.diversity.alpha import (
     berger_parker_d, brillouin_d, dominance, doubles, enspie,
     esty_ci, fisher_alpha, goods_coverage, heip_e, kempton_taylor_q,
     margalef, mcintosh_d, mcintosh_e, menhinick, michaelis_menten_fit,
-    observed_otus, osd, pielou_e, robbins, shannon, simpson, simpson_e,
-    singles, strong)
+    observed_features, observed_otus, observed_richness, osd, pielou_e,
+    robbins, shannon, simpson, simpson_e, singles, strong)
 
 
 class BaseTests(TestCase):
@@ -197,7 +197,7 @@ class BaseTests(TestCase):
         self.assertEqual(mcintosh_e(np.array([1, 2, 3, 1])), exp)
 
     def test_menhinick(self):
-        # observed_otus = 9, total # of individuals = 22
+        # observed_richness = 9, total # of individuals = 22
         self.assertEqual(menhinick(self.counts), 9 / np.sqrt(22))
 
     def test_michaelis_menten_fit(self):
@@ -220,14 +220,28 @@ class BaseTests(TestCase):
         # [0,2,4,6] looks like 3 OTUs with maybe more to be found.
         self.assertTrue(obs_few > obs_many)
 
+    def test_observed_features(self):
+        for obs in[np.array([4, 3, 4, 0, 1, 0, 2]),
+                   np.array([0, 0, 0]),
+                   self.counts]:
+            self.assertEqual(observed_features(obs),
+                             observed_richness(obs))
+
     def test_observed_otus(self):
-        obs = observed_otus(np.array([4, 3, 4, 0, 1, 0, 2]))
+        for obs in[np.array([4, 3, 4, 0, 1, 0, 2]),
+                   np.array([0, 0, 0]),
+                   self.counts]:
+            self.assertEqual(observed_otus(obs),
+                             observed_richness(obs))
+
+    def test_observed_richness(self):
+        obs = observed_richness(np.array([4, 3, 4, 0, 1, 0, 2]))
         self.assertEqual(obs, 5)
 
-        obs = observed_otus(np.array([0, 0, 0]))
+        obs = observed_richness(np.array([0, 0, 0]))
         self.assertEqual(obs, 0)
 
-        obs = observed_otus(self.counts)
+        obs = observed_richness(self.counts)
         self.assertEqual(obs, 9)
 
     def test_osd(self):

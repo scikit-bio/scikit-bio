@@ -37,6 +37,7 @@ Functions
    menhinick
    michaelis_menten_fit
    observed_otus
+   observed_richness
    osd
    phydiv
    pielou_e
@@ -64,16 +65,17 @@ from ._base import (
     berger_parker_d, brillouin_d, dominance, doubles, enspie,
     esty_ci, fisher_alpha, goods_coverage, heip_e, kempton_taylor_q,
     margalef, mcintosh_d, mcintosh_e, menhinick, michaelis_menten_fit,
-    observed_otus, osd, pielou_e, robbins, shannon, simpson, simpson_e,
-    singles, strong)
+    observed_features, observed_otus, observed_richness, osd, pielou_e,
+    robbins, shannon, simpson, simpson_e, singles, strong)
 from ._gini import gini_index
 from ._lladser import lladser_pe, lladser_ci
 
 
-__all__ = ['ace', 'chao1', 'chao1_ci', 'berger_parker_d',
-           'brillouin_d', 'dominance', 'doubles', 'enspie', 'esty_ci',
-           'faith_pd', 'fisher_alpha', 'gini_index', 'goods_coverage',
-           'heip_e', 'kempton_taylor_q', 'margalef', 'mcintosh_d',
-           'mcintosh_e', 'menhinick', 'michaelis_menten_fit', 'observed_otus',
-           'osd', 'phydiv', 'pielou_e', 'robbins', 'shannon', 'simpson',
-           'simpson_e', 'singles', 'strong', 'lladser_pe', 'lladser_ci']
+__all__ = ['ace', 'chao1', 'chao1_ci', 'berger_parker_d', 'brillouin_d',
+           'dominance', 'doubles', 'enspie', 'esty_ci', 'faith_pd',
+           'fisher_alpha', 'gini_index', 'goods_coverage', 'heip_e',
+           'kempton_taylor_q', 'margalef', 'mcintosh_d', 'mcintosh_e',
+           'menhinick', 'michaelis_menten_fit', 'observed_features',
+           'observed_otus', 'observed_richness', 'osd', 'phydiv', 'pielou_e',
+           'robbins', 'shannon', 'simpson', 'simpson_e', 'singles', 'strong',
+           'lladser_pe', 'lladser_ci']

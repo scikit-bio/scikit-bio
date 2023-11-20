@@ -19,7 +19,7 @@ from skbio.diversity import (alpha_diversity, beta_diversity,
                              partial_beta_diversity,
                              get_alpha_diversity_metrics,
                              get_beta_diversity_metrics)
-from skbio.diversity.alpha import faith_pd, phydiv, observed_otus
+from skbio.diversity.alpha import faith_pd, phydiv, observed_richness
 from skbio.diversity.beta import unweighted_unifrac, weighted_unifrac
 from skbio.tree import DuplicateNodeError, MissingNodeError
 from skbio.diversity._driver import (_qualitative_beta_metrics,
@@ -49,7 +49,7 @@ class AlphaDiversityTests(TestCase):
 
     def test_invalid_input(self):
         # number of ids doesn't match the number of samples
-        self.assertRaises(ValueError, alpha_diversity, 'observed_otus',
+        self.assertRaises(ValueError, alpha_diversity, 'observed_richness',
                           self.table1, list('ABC'))
 
         # unknown metric provided
@@ -57,15 +57,15 @@ class AlphaDiversityTests(TestCase):
                           self.table1)
 
         # 3-D list provided as input
-        self.assertRaises(ValueError, alpha_diversity, 'observed_otus',
+        self.assertRaises(ValueError, alpha_diversity, 'observed_richness',
                           [[[43]]])
 
         # negative counts
-        self.assertRaises(ValueError, alpha_diversity, 'observed_otus',
+        self.assertRaises(ValueError, alpha_diversity, 'observed_richness',
                           [0, 3, -12, 42])
 
         # additional kwargs
-        self.assertRaises(TypeError, alpha_diversity, 'observed_otus',
+        self.assertRaises(TypeError, alpha_diversity, 'observed_richness',
                           [0, 1], not_a_real_kwarg=42.0)
         self.assertRaises(TypeError, alpha_diversity, 'faith_pd',
                           [0, 1], tree=self.tree1, otu_ids=['OTU1', 'OTU2'],
@@ -157,18 +157,19 @@ class AlphaDiversityTests(TestCase):
 
     def test_empty(self):
         # empty vector
-        actual = alpha_diversity('observed_otus', np.array([], dtype=np.int64))
+        actual = alpha_diversity('observed_richness',
+                                 np.array([], dtype=np.int64))
         expected = pd.Series([0])
         assert_series_almost_equal(actual, expected)
 
         # array of empty vector
-        actual = alpha_diversity('observed_otus',
+        actual = alpha_diversity('observed_richness',
                                  np.array([[]], dtype=np.int64))
         expected = pd.Series([0])
         assert_series_almost_equal(actual, expected)
 
         # array of empty vectors
-        actual = alpha_diversity('observed_otus',
+        actual = alpha_diversity('observed_richness',
                                  np.array([[], []], dtype=np.int64))
         expected = pd.Series([0, 0])
         assert_series_almost_equal(actual, expected)
@@ -194,7 +195,7 @@ class AlphaDiversityTests(TestCase):
         assert_series_almost_equal(actual, expected)
 
     def test_single_count_vector(self):
-        actual = alpha_diversity('observed_otus', np.array([1, 0, 2]))
+        actual = alpha_diversity('observed_richness', np.array([1, 0, 2]))
         expected = pd.Series([2])
         assert_series_almost_equal(actual, expected)
 
@@ -203,8 +204,8 @@ class AlphaDiversityTests(TestCase):
         self.assertAlmostEqual(actual[0], 4.5)
 
     def test_input_types(self):
-        list_result = alpha_diversity('observed_otus', [1, 3, 0, 1, 0])
-        array_result = alpha_diversity('observed_otus',
+        list_result = alpha_diversity('observed_richness', [1, 3, 0, 1, 0])
+        array_result = alpha_diversity('observed_richness',
                                        np.array([1, 3, 0, 1, 0]))
         self.assertAlmostEqual(list_result[0], 3)
         assert_series_almost_equal(list_result, array_result)
@@ -216,17 +217,17 @@ class AlphaDiversityTests(TestCase):
         self.assertAlmostEqual(list_result[0], 4.5)
         assert_series_almost_equal(list_result, array_result)
 
-    def test_observed_otus(self):
+    def test_observed_richness(self):
         # expected values hand-calculated
         expected = pd.Series([3, 3, 3, 3], index=self.sids1)
-        actual = alpha_diversity('observed_otus', self.table1, self.sids1)
+        actual = alpha_diversity('observed_richness', self.table1, self.sids1)
         assert_series_almost_equal(actual, expected)
         # function passed instead of string
-        actual = alpha_diversity(observed_otus, self.table1, self.sids1)
+        actual = alpha_diversity(observed_richness, self.table1, self.sids1)
         assert_series_almost_equal(actual, expected)
         # alt input table
         expected = pd.Series([2, 1, 0], index=self.sids2)
-        actual = alpha_diversity('observed_otus', self.table2, self.sids2)
+        actual = alpha_diversity('observed_richness', self.table2, self.sids2)
         assert_series_almost_equal(actual, expected)
 
     def test_faith_pd(self):
@@ -279,7 +280,7 @@ class AlphaDiversityTests(TestCase):
     def test_no_ids(self):
         # expected values hand-calculated
         expected = pd.Series([3, 3, 3, 3])
-        actual = alpha_diversity('observed_otus', self.table1)
+        actual = alpha_diversity('observed_richness', self.table1)
         assert_series_almost_equal(actual, expected)
 
     def test_optimized(self):

@@ -25,6 +25,7 @@
 
 ### Miscellaneous
 
+* Added alpha diversity metric `observed_richness`, which is the observed species richness (S_{obs}) of a sample. It means to replace `observed_otus` which uses the outdated term "OTU". Also added metric `observed_features` to be compatible with the QIIME 2 terminology.
 * Enabled subclassing of DNA, RNA and Protein classes to allow secondary development.
 * Dropped support for NumPy < 1.17.0 in order to utilize the new random generator.
 * Use CYTHON by default during build ([#1874](https://github.com/biocore/scikit-bio/pull/1874))
