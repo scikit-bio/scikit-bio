@@ -794,6 +794,7 @@ def observed_features(counts):
     """
     return sobs(counts)
 
+
 @deprecated(as_of='0.5.10', until='0.6.0',
             reason='Historical term')
 def observed_otus(counts):
