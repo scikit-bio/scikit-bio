@@ -11,7 +11,7 @@ from scipy.special import gammaln
 from scipy.optimize import fmin_powell, minimize_scalar
 
 from skbio.stats import subsample_counts
-from skbio.util._decorator import experimental
+from skbio.util._decorator import experimental, deprecated
 from skbio.diversity._util import _validate_counts_vector
 
 
@@ -329,7 +329,7 @@ def fisher_alpha(counts):
         return 0.0
 
     # alpha = +inf when all species are singletons
-    if N == (S := observed_richness(counts)):
+    if N == (S := sobs(counts)):
         return np.inf
 
     # objective function to minimize:
@@ -427,8 +427,7 @@ def heip_e(counts):
 
     """
     counts = _validate_counts_vector(counts)
-    return ((np.exp(shannon(counts, base=np.e)) - 1) /
-            (observed_richness(counts) - 1))
+    return (np.exp(shannon(counts, base=np.e)) - 1) / (sobs(counts) - 1)
 
 
 @experimental(as_of="0.4.0")
@@ -520,7 +519,7 @@ def margalef(counts):
     counts = _validate_counts_vector(counts)
     if (N := counts.sum()) == 0:
         return 0.0
-    return (observed_richness(counts) - 1) / np.log(N)
+    return (sobs(counts) - 1) / np.log(N)
 
 
 @experimental(as_of="0.4.0")
@@ -615,9 +614,9 @@ def mcintosh_e(counts):
     """
     counts = _validate_counts_vector(counts)
     numerator = np.sqrt((counts * counts).sum())
-    n = counts.sum()
-    s = observed_richness(counts)
-    denominator = np.sqrt((n - s + 1) ** 2 + s - 1)
+    N = counts.sum()
+    S = sobs(counts)
+    denominator = np.sqrt((N - S + 1) ** 2 + S - 1)
     return numerator / denominator
 
 
@@ -657,7 +656,7 @@ def menhinick(counts):
 
     """
     counts = _validate_counts_vector(counts)
-    return observed_richness(counts) / np.sqrt(counts.sum())
+    return sobs(counts) / np.sqrt(counts.sum())
 
 
 @experimental(as_of="0.4.0")
@@ -718,7 +717,7 @@ def michaelis_menten_fit(counts, num_repeats=1, params_guess=None):
 
     n_indiv = counts.sum()
     if params_guess is None:
-        S_max_guess = observed_richness(counts)
+        S_max_guess = sobs(counts)
         B_guess = int(round(n_indiv / 2))
         params_guess = (S_max_guess, B_guess)
 
@@ -726,7 +725,7 @@ def michaelis_menten_fit(counts, num_repeats=1, params_guess=None):
     xvals = np.arange(1, n_indiv + 1)
     ymtx = np.empty((num_repeats, len(xvals)), dtype=int)
     for i in range(num_repeats):
-        ymtx[i] = np.asarray([observed_richness(subsample_counts(counts, n))
+        ymtx[i] = np.asarray([sobs(subsample_counts(counts, n))
                               for n in xvals], dtype=int)
     yvals = ymtx.mean(0)
 
@@ -740,7 +739,7 @@ def michaelis_menten_fit(counts, num_repeats=1, params_guess=None):
 
 
 @experimental(as_of="0.5.10")
-def observed_richness(counts):
+def sobs(counts):
     """Calculate the observed species richness of a sample.
 
     Observed species richness, usually denoted as :math:`S_{obs}` or simply
@@ -760,6 +759,10 @@ def observed_richness(counts):
     -------
     int
         Observed species richness.
+
+    See Also
+    --------
+    observed_features
 
     """
     counts = _validate_counts_vector(counts)
@@ -782,17 +785,17 @@ def observed_features(counts):
 
     See Also
     --------
-    observed_richness
+    sobs
 
     Notes
     -----
-    `observed_features` is an alias for `observed_richness`.
+    `observed_features` is an alias for `sobs`.
 
     """
-    return observed_richness(counts)
+    return sobs(counts)
 
-
-@experimental(as_of="0.4.0")
+@deprecated(as_of='0.5.10', until='0.6.0',
+            reason='Historical term')
 def observed_otus(counts):
     """Calculate the number of distinct OTUs.
 
@@ -808,14 +811,14 @@ def observed_otus(counts):
 
     See Also
     --------
-    observed_richness
+    sobs
 
     Notes
     -----
-    `observed_otus` is an alias for `observed_richness`.
+    `observed_otus` is an alias for `sobs`.
 
     """
-    return observed_richness(counts)
+    return sobs(counts)
 
 
 @experimental(as_of="0.4.0")
@@ -834,7 +837,7 @@ def osd(counts):
 
     See Also
     --------
-    observed_richness
+    sobs
     singles
     doubles
 
@@ -845,7 +848,7 @@ def osd(counts):
 
     """
     counts = _validate_counts_vector(counts)
-    return observed_richness(counts), singles(counts), doubles(counts)
+    return sobs(counts), singles(counts), doubles(counts)
 
 
 @experimental(as_of="0.4.1")
@@ -893,7 +896,7 @@ def pielou_e(counts):
     """
     counts = _validate_counts_vector(counts)
     return (0.0 if (H := shannon(counts, base=np.e)) == 0.0
-            else H / np.log(observed_richness(counts)))
+            else H / np.log(sobs(counts)))
 
 
 @experimental(as_of="0.4.0")
@@ -1070,7 +1073,7 @@ def simpson_e(counts):
 
     """
     counts = _validate_counts_vector(counts)
-    return enspie(counts) / observed_richness(counts)
+    return enspie(counts) / sobs(counts)
 
 
 @experimental(as_of="0.4.0")
@@ -1132,7 +1135,7 @@ def strong(counts):
     counts = _validate_counts_vector(counts)
     if (N := counts.sum()) == 0:
         return 0.0
-    S = observed_richness(counts)
+    S = sobs(counts)
     i = np.arange(1, len(counts) + 1)
     sorted_sum = np.sort(counts)[::-1].cumsum()
     return (sorted_sum / N - (i / S)).max()

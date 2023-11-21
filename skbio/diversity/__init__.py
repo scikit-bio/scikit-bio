@@ -187,7 +187,7 @@ Create a matrix containing 6 samples (rows) and 7 OTUs (columns):
    sample using the ``alpha_diversity`` driver function:
 
    >>> from skbio.diversity import alpha_diversity
-   >>> adiv_sobs = alpha_diversity('observed_richness', data, ids)
+   >>> adiv_sobs = alpha_diversity('sobs', data, ids)
    >>> adiv_sobs
    A    5
    B    5
