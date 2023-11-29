@@ -38,6 +38,7 @@ Functions
    michaelis_menten_fit
    observed_otus
    osd
+   phydiv
    pielou_e
    robbins
    shannon
@@ -58,7 +59,7 @@ Functions
 
 from ._ace import ace
 from ._chao1 import chao1, chao1_ci
-from ._faith_pd import faith_pd
+from ._pd import faith_pd, phydiv
 from ._base import (
     berger_parker_d, brillouin_d, dominance, doubles, enspie,
     esty_ci, fisher_alpha, goods_coverage, heip_e, kempton_taylor_q,
@@ -74,5 +75,5 @@ __all__ = ['ace', 'chao1', 'chao1_ci', 'berger_parker_d',
            'faith_pd', 'fisher_alpha', 'gini_index', 'goods_coverage',
            'heip_e', 'kempton_taylor_q', 'margalef', 'mcintosh_d',
            'mcintosh_e', 'menhinick', 'michaelis_menten_fit', 'observed_otus',
-           'osd', 'pielou_e', 'robbins', 'shannon', 'simpson', 'simpson_e',
-           'singles', 'strong', 'lladser_pe', 'lladser_ci']
+           'osd', 'phydiv', 'pielou_e', 'robbins', 'shannon', 'simpson',
+           'simpson_e', 'singles', 'strong', 'lladser_pe', 'lladser_ci']

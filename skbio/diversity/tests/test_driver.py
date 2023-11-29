@@ -19,7 +19,7 @@ from skbio.diversity import (alpha_diversity, beta_diversity,
                              partial_beta_diversity,
                              get_alpha_diversity_metrics,
                              get_beta_diversity_metrics)
-from skbio.diversity.alpha import faith_pd, observed_otus
+from skbio.diversity.alpha import faith_pd, phydiv, observed_otus
 from skbio.diversity.beta import unweighted_unifrac, weighted_unifrac
 from skbio.tree import DuplicateNodeError, MissingNodeError
 from skbio.diversity._driver import (_qualitative_beta_metrics,
@@ -247,6 +247,33 @@ class AlphaDiversityTests(TestCase):
         expected = pd.Series(expected)
         actual = alpha_diversity('faith_pd', self.table2, tree=self.tree2,
                                  otu_ids=self.oids2)
+        assert_series_almost_equal(actual, expected)
+
+    def test_phydiv(self):
+        expected = []
+        for e in self.table1:
+            expected.append(phydiv(e, tree=self.tree1, otu_ids=self.oids1))
+        expected = pd.Series(expected)
+        actual = alpha_diversity('phydiv', self.table1, tree=self.tree1,
+                                 otu_ids=self.oids1)
+        assert_series_almost_equal(actual, expected)
+
+        expected = []
+        for e in self.table1:
+            expected.append(phydiv(e, tree=self.tree1, otu_ids=self.oids1,
+                                   rooted=False))
+        expected = pd.Series(expected)
+        actual = alpha_diversity('phydiv', self.table1, tree=self.tree1,
+                                 otu_ids=self.oids1, rooted=False)
+        assert_series_almost_equal(actual, expected)
+
+        expected = []
+        for e in self.table1:
+            expected.append(phydiv(e, tree=self.tree1, otu_ids=self.oids1,
+                                   weight=True))
+        expected = pd.Series(expected)
+        actual = alpha_diversity('phydiv', self.table1, tree=self.tree1,
+                                 otu_ids=self.oids1, weight=True)
         assert_series_almost_equal(actual, expected)
 
     def test_no_ids(self):

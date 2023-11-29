@@ -13,8 +13,6 @@ import matplotlib.pyplot as plt
 import numpy as np
 import numpy.testing as npt
 import pandas as pd
-from IPython.core.display import Image, SVG
-from mpl_toolkits.mplot3d import Axes3D  # noqa: F401
 
 from skbio import OrdinationResults
 
@@ -40,6 +38,7 @@ class TestOrdinationResults(unittest.TestCase):
         self.ordination_results = OrdinationResults(
             'CA', 'Correspondance Analysis', eigvals=eigvals,
             samples=samples_df, features=features_df)
+        self.ordination_results._get_mpl_plt()
 
         # DataFrame for testing plot method. Has a categorical column with a
         # mix of numbers and strings. Has a numeric column with a mix of ints,
@@ -64,6 +63,7 @@ class TestOrdinationResults(unittest.TestCase):
 
         self.min_ord_results = OrdinationResults(
             'PCoA', 'Principal Coordinate Analysis', eigvals, samples_df)
+        self.min_ord_results._get_mpl_plt()
 
     def test_str(self):
         exp = ("Ordination results:\n"
@@ -268,22 +268,6 @@ class TestOrdinationResults(unittest.TestCase):
 
         colors = [line.get_color() for line in legend.get_lines()]
         npt.assert_equal(sorted(colors), ['green', 'red'])
-
-    def test_repr_png(self):
-        obs = self.min_ord_results._repr_png_()
-        self.assertIsInstance(obs, bytes)
-        self.assertTrue(len(obs) > 0)
-
-    def test_repr_svg(self):
-        obs = self.min_ord_results._repr_svg_()
-        self.assertIsInstance(obs, str)
-        self.assertTrue(len(obs) > 0)
-
-    def test_png(self):
-        self.assertIsInstance(self.min_ord_results.png, Image)
-
-    def test_svg(self):
-        self.assertIsInstance(self.min_ord_results.svg, SVG)
 
 
 if __name__ == '__main__':

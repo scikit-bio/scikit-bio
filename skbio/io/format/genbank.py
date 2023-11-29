@@ -697,7 +697,7 @@ def _serialize_origin(seq, indent=9):
             n=n, indent=indent, s=chunk_str(line, frag_size, ' '))
         if n == 1:
             s = 'ORIGIN\n' + s
-        n = n + line_size
+        n += line_size
         yield s
 
 

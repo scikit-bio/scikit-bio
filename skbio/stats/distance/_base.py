@@ -18,6 +18,7 @@ from skbio.stats._misc import _pprint_strs
 from skbio.util import find_duplicates
 from skbio.util._decorator import experimental, classonlymethod
 from skbio.util._misc import resolve_key
+from skbio.util._plotting import PlottableMixin
 
 from ._utils import is_symmetric_and_hollow
 from ._utils import distmat_reorder, distmat_reorder_condensed
@@ -42,7 +43,7 @@ class MissingIDError(DissimilarityMatrixError):
                      missing_id,)
 
 
-class DissimilarityMatrix(SkbioObject):
+class DissimilarityMatrix(SkbioObject, PlottableMixin):
     """Store dissimilarities between objects.
 
     A `DissimilarityMatrix` instance stores a square, hollow, two-dimensional
@@ -657,9 +658,10 @@ class DissimilarityMatrix(SkbioObject):
            >>> fig = dm.plot(cmap='Reds', title='Example heatmap')
 
         """
-        import matplotlib.pyplot as plt
+        self._get_mpl_plt()
+
         # based on http://stackoverflow.com/q/14391959/3776794
-        fig, ax = plt.subplots()
+        fig, ax = self.plt.subplots()
 
         # use pcolormesh instead of pcolor for performance
         heatmap = ax.pcolormesh(self.data, cmap=cmap)
@@ -685,40 +687,6 @@ class DissimilarityMatrix(SkbioObject):
         ax.set_title(title)
 
         return fig
-
-    def _repr_png_(self):
-        return self._figure_data('png')
-
-    def _repr_svg_(self):
-        return self._figure_data('svg')
-
-    @property
-    @experimental(as_of="0.4.0")
-    def png(self):
-        """Display heatmap in IPython Notebook as PNG.
-
-        """
-        from IPython.core.display import Image
-        return Image(self._repr_png_(), embed=True)
-
-    @property
-    @experimental(as_of="0.4.0")
-    def svg(self):
-        """Display heatmap in IPython Notebook as SVG.
-
-        """
-        from IPython.core.display import SVG
-        return SVG(self._repr_svg_())
-
-    def _figure_data(self, format):
-        import matplotlib.pyplot as plt
-        from IPython.core.pylabtools import print_figure
-        fig = self.plot()
-        data = print_figure(fig, format)
-        # We MUST close the figure, otherwise IPython's display machinery
-        # will pick it up and send it as output, resulting in a double display
-        plt.close(fig)
-        return data
 
     @experimental(as_of="0.4.1")
     def to_data_frame(self):
@@ -1273,7 +1241,7 @@ def randdm(num_objects, ids=None, constructor=None, random_fn=None):
         random_fn = np.random.rand
 
     data = np.tril(random_fn(num_objects, num_objects), -1)
-    data = data + data.T
+    data += data.T
 
     if not ids:
         ids = map(str, range(1, num_objects + 1))

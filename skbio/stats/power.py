@@ -1025,7 +1025,7 @@ def _identify_sample_groups(meta, cat, control_cats, order, strict_match):
             loc_vec = np.arange(0, min_vec.min())
             meta_pairs[i1] = id_vecs
             index.append(np.zeros(loc_vec.shape) + i1)
-            i1 = i1 + 1
+            i1 += 1
         # If the groups are not represented, an empty array gets passed
         else:
             index.append(np.array([]))
