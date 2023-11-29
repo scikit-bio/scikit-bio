@@ -10,6 +10,7 @@
 
 * Adopted NumPy's new random generator `np.random.Generator` (see [NEP 19](https://numpy.org/neps/nep-0019-rng-policy.html)).
 * SciPy 1.11+ is now supported.
+* `beta_diversity` now supports use of Pandas `DataFrame` index issue [#1808](https://github.com/scikit-bio/scikit-bio/issues/1808).
 
 ### Backward-incompatible changes [experimental]
 
