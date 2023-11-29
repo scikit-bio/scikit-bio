@@ -382,6 +382,9 @@ def beta_diversity(metric, counts, ids=None, validate=True, pairwise_func=None,
     sklearn.metrics.pairwise_distances
 
     """
+    if isinstance(counts, pd.core.frame.DataFrame) and ids is None:
+        ids = list(counts.index)
+
     if validate:
         counts = _validate_counts_matrix(counts, ids=ids)
 
