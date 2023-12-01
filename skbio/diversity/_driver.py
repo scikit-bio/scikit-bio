@@ -383,7 +383,7 @@ def beta_diversity(metric, counts, ids=None, validate=True, pairwise_func=None,
     ------
     ValueError, MissingNodeError, DuplicateNodeError
         If validation fails. Exact error will depend on what was invalid.
-    TypeError
+    iTypeError
         If invalid method-specific parameters are provided.
 
     See Also
