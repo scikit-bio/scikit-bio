@@ -327,7 +327,7 @@ class BetaDiversityTests(TestCase):
             except Exception as exc:
                 raise ValueError(
                     f'Metric {metric} failed with exception:\n {exc}')
-    
+
     def test_use_of_dataframe_index(self):
         '''reference to issue 1808'''
 
