@@ -328,6 +328,18 @@ class BetaDiversityTests(TestCase):
                 raise ValueError(
                     f'Metric {metric} failed with exception:\n {exc}')
 
+    def test_use_of_dataframe_index(self):
+        '''reference to issue 1808'''
+
+        df1 = pd.DataFrame(self.table1, index=self.sids1)
+        df2 = pd.DataFrame(self.table2, index=self.sids2)
+
+        matrix1 = beta_diversity('jaccard', df1)
+        matrix2 = beta_diversity('jaccard', df2)
+
+        self.assertEqual(self.sids1, list(matrix1.to_data_frame().index))
+        self.assertEqual(self.sids2, list(matrix2.to_data_frame().index))
+
     def test_qualitative_bug_issue_1549(self):
         as_presence_absence = np.asarray(self.table3) > 0
 
