@@ -1583,22 +1583,6 @@ class TestSequence(TestSequenceBase, ReallyEqualMixin):
                                               fillvalue=None):
             self.assertEqual(obs, exp)
 
-    def test_iter_kmers_issue1723_positional_metadata(self):
-        seq = Sequence('GATTACA', positional_metadata={'quality': range(7)})
-        obs = list(seq.iter_kmers(10))
-        exp = []
-        self.assertEqual(obs, exp)
-        
-    def test_iter_kmers_issue1723_no_positional_metadata(self):
-        obs = list(skbio.Sequence('TATATA').iter_kmers(10))
-        exp = []
-        self.assertEqual(obs, exp)
-    
-    def test_iter_kmers_issue1723_edgecase(self):
-        obs = list(skbio.Sequence('TATATA').iter_kmers(6))
-        exp = [Sequence('TATATA'), ]
-        self.assertEqual(obs, exp)
-
     def test_iter_kmers(self):
         seq = Sequence('GATTACA', positional_metadata={'quality': range(7)})
 
@@ -1778,6 +1762,23 @@ class TestSequence(TestSequenceBase, ReallyEqualMixin):
             seq.iter_kmers(8, overlap=True), expected)
 
         self.assertIs(type(seq.iter_kmers(1)), GeneratorType)
+
+    def test_iter_kmers_large_k(self):
+        """Addressing issue 1723."""
+
+        # k larger than sequence length
+        seq = Sequence('TATATA')
+        expected = []
+        self._compare_kmers_results(seq.iter_kmers(10), expected)
+
+        # k equal to sequence length
+        expected = [Sequence('TATATA'), ]
+        self._compare_kmers_results(seq.iter_kmers(6), expected)
+
+        # with positional metadata
+        seq = Sequence('GATTACA', positional_metadata={'quality': range(7)})
+        expected = []
+        self._compare_kmers_results(seq.iter_kmers(10), expected)
 
     def test_iter_kmers_invalid_k(self):
         seq = Sequence('GATTACA', positional_metadata={'quality': range(7)})
