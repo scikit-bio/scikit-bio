@@ -1896,6 +1896,9 @@ fuzzy=[(True, False)], metadata={'gene': 'foo'})
         if k < 1:
             raise ValueError("k must be greater than 0.")
 
+        if k > len(self):
+            return
+
         if overlap:
             step = 1
             count = len(self) - k + 1
