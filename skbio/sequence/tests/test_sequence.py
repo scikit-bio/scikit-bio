@@ -1763,6 +1763,23 @@ class TestSequence(TestSequenceBase, ReallyEqualMixin):
 
         self.assertIs(type(seq.iter_kmers(1)), GeneratorType)
 
+    def test_iter_kmers_large_k(self):
+        """Addressing issue 1723."""
+
+        # k larger than sequence length
+        seq = Sequence('TATATA')
+        expected = []
+        self._compare_kmers_results(seq.iter_kmers(10), expected)
+
+        # k equal to sequence length
+        expected = [Sequence('TATATA'), ]
+        self._compare_kmers_results(seq.iter_kmers(6), expected)
+
+        # with positional metadata
+        seq = Sequence('GATTACA', positional_metadata={'quality': range(7)})
+        expected = []
+        self._compare_kmers_results(seq.iter_kmers(10), expected)
+
     def test_iter_kmers_invalid_k(self):
         seq = Sequence('GATTACA', positional_metadata={'quality': range(7)})
 

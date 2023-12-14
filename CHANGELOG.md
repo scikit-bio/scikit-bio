@@ -9,6 +9,7 @@
 ### Features
 
 * Added alpha diversity metric `sobs`, which is the observed species richness (S_{obs}) of a sample. It means to replace `observed_otus` which uses the historical term "OTU". Also added metric `observed_features` to be compatible with the QIIME 2 terminology. All three metrics are equivalent ([#1902](https://github.com/biocore/scikit-bio/pull/1902)).
+* `beta_diversity` now supports use of Pandas a `DataFrame` index, issue [#1808](https://github.com/scikit-bio/scikit-bio/issues/1808).
 * Added alpha diversity metric `phydiv`, which is a generalized phylogenetic diversity (PD) framework permitting unrooted or rooted tree, unweighted or weighted by abundance, and an exponent parameter of the weight term ([#1893](https://github.com/scikit-bio/scikit-bio/pull/1893)).
 * Adopted NumPy's new random generator `np.random.Generator` (see [NEP 19](https://numpy.org/neps/nep-0019-rng-policy.html)) ([#1889](https://github.com/scikit-bio/scikit-bio/pull/1889)).
 * SciPy 1.11+ is now supported ([#1887](https://github.com/scikit-bio/scikit-bio/pull/1887)).
@@ -21,7 +22,8 @@
 
 ### Bug fixes
 
-* Re-enabled OpenMP support, which has been mistakenly disabled in 0.5.8 ([#1874](https://github.com/biocore/scikit-bio/pull/1874))
+* Safely handle `Sequence.iter_kmers` where `k` is greater than the sequence length ([#1723](https://github.com/scikit-bio/scikit-bio/issues/1723))
+* Re-enabled OpenMP support, which has been mistakenly disabled in 0.5.8  ([#1874](https://github.com/biocore/scikit-bio/pull/1874))
 * `permanova` and `permdist` operate on a `DistanceMatrix` and a grouping object. Element IDs must be synchronized to compare correct sets of pairwise distances. This failed in case the grouping was provided as a `pandas.Series`, because it was interpreted as an ordered `list` and indices were ignored (see issue [#1877](https://github.com/biocore/scikit-bio/issues/1877) for an example). Note: `pandas.DataFrame` was handled correctly. This behavior has been fixed with PR [#1879](https://github.com/biocore/scikit-bio/pull/1879)
 
 ### Miscellaneous

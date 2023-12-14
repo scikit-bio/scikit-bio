@@ -385,7 +385,7 @@ def beta_diversity(metric, counts, ids=None, validate=True, pairwise_func=None,
     ------
     ValueError, MissingNodeError, DuplicateNodeError
         If validation fails. Exact error will depend on what was invalid.
-    TypeError
+    iTypeError
         If invalid method-specific parameters are provided.
 
     See Also
@@ -398,6 +398,9 @@ def beta_diversity(metric, counts, ids=None, validate=True, pairwise_func=None,
     sklearn.metrics.pairwise_distances
 
     """
+    if isinstance(counts, pd.DataFrame) and ids is None:
+        ids = list(counts.index)
+
     if validate:
         counts = _validate_counts_matrix(counts, ids=ids)
 
