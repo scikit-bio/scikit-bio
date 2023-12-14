@@ -1,7 +1,6 @@
-**Important project update (April 2022):** scikit-bio is currently in maintenance mode. Due to limited developer bandwidth, we are focusing on keeping scikit-bio up-to-date with Python and Python scientific computing libraries. We plan to do this through two annual releases of scikit-bio. At this time, we have less availability for reviewing or adding new features. We realize that scikit-bio is an important tool for the bioinformatics community, and we hope to transition back to more active development in the future. If you're interested in helping by taking a leadership role in the project, please reach out.
 
-.. image:: http://scikit-bio.org/assets/logo.svg
-   :target: http://scikit-bio.org
+.. image:: https://scikit.bio/assets/logo.svg
+   :target: https://scikit.bio
    :alt: scikit-bio logo
 
 
@@ -9,8 +8,8 @@
 
 scikit-bio is an open-source, BSD-licensed Python 3 package providing data structures, algorithms and educational resources for bioinformatics.
 
-To view scikit-bio's documentation, visit `scikit-bio.org
-<http://scikit-bio.org>`__.
+To view scikit-bio's documentation, visit `scikit.bio
+<https://scikit.bio>`__.
 
 **Note:** scikit-bio is no longer compatible with Python 2. scikit-bio is compatible with Python 3.8 and later.
 
