@@ -187,8 +187,8 @@ Create a matrix containing 6 samples (rows) and 7 OTUs (columns):
    sample using the ``alpha_diversity`` driver function:
 
    >>> from skbio.diversity import alpha_diversity
-   >>> adiv_obs_otus = alpha_diversity('observed_otus', data, ids)
-   >>> adiv_obs_otus
+   >>> adiv_sobs = alpha_diversity('sobs', data, ids)
+   >>> adiv_sobs
    A    5
    B    5
    C    4
@@ -355,15 +355,15 @@ Create a matrix containing 6 samples (rows) and 7 OTUs (columns):
    The p-value is significant at an alpha of 0.1.
 
    We can also explore the alpha diversity in the context of sample metadata.
-   To do this, let's add the Observed OTU and Faith PD data to our sample
-   metadata. This is straight-forward beause ``alpha_diversity`` returns a
-   Pandas ``Series`` object, and we're representing our sample metadata in a
-   Pandas ``DataFrame`` object.
+   To do this, let's add the observed richness and Faith's PD metrics to our
+   sample metadata. This is straight-forward because ``alpha_diversity``
+   returns a Pandas ``Series`` object, and we're representing our sample
+   metadata in a Pandas ``DataFrame`` object.
 
-   >>> sample_md['Observed OTUs'] = adiv_obs_otus
+   >>> sample_md['Obs. richness'] = adiv_sobs
    >>> sample_md['Faith PD'] = adiv_faith_pd
    >>> sample_md
-     body_site subject  Observed OTUs  Faith PD
+     body_site subject  Obs. richness  Faith PD
    A       gut      s1              5      6.75
    B      skin      s1              5      7.00
    C    tongue      s1              4      6.25
@@ -385,8 +385,8 @@ numeric columns (and thus the only columns for which Spearman correlation
 is relevant), this will give us a symmetric 2x2 correlation matrix.
 
 >>> sample_md.corr(method="spearman", numeric_only=True)
-               Observed OTUs  Faith PD
-Observed OTUs       1.000000  0.939336
+               Obs. richness  Faith PD
+Obs. richness       1.000000  0.939336
 Faith PD            0.939336  1.000000
 
 """
