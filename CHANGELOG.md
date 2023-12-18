@@ -8,7 +8,7 @@
 
 ### Features
 
-* Added alpha diversity metric `sobs`, which is the observed species richness (S_{obs}) of a sample. It means to replace `observed_otus` which uses the historical term "OTU". Also added metric `observed_features` to be compatible with the QIIME 2 terminology. All three metrics are equivalent ([#1902](https://github.com/biocore/scikit-bio/pull/1902)).
+* Added alpha diversity metric `sobs`, which is the observed species richness (S_{obs}) of a sample. `sobs` will replace `observed_otus`, which uses the historical term "OTU". Also added metric `observed_features` to be compatible with the QIIME 2 terminology. All three metrics are equivalent ([#1902](https://github.com/biocore/scikit-bio/pull/1902)).
 * `beta_diversity` now supports use of Pandas a `DataFrame` index, issue [#1808](https://github.com/scikit-bio/scikit-bio/issues/1808).
 * Added alpha diversity metric `phydiv`, which is a generalized phylogenetic diversity (PD) framework permitting unrooted or rooted tree, unweighted or weighted by abundance, and an exponent parameter of the weight term ([#1893](https://github.com/scikit-bio/scikit-bio/pull/1893)).
 * Adopted NumPy's new random generator `np.random.Generator` (see [NEP 19](https://numpy.org/neps/nep-0019-rng-policy.html)) ([#1889](https://github.com/scikit-bio/scikit-bio/pull/1889)).
