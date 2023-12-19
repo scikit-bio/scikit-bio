@@ -137,7 +137,7 @@ class stable(_state_decorator):
         self.as_of = kwargs['as_of']
 
     def __call__(self, func):
-        state_desc = 'Stable as of %s.' % self.as_of
+        state_desc = f'Stable as of {self.as_of}.'
         func.__doc__ = self._update_docstring(func.__doc__, state_desc)
         return func
 
@@ -186,7 +186,7 @@ class experimental(_state_decorator):
         self.as_of = kwargs['as_of']
 
     def __call__(self, func):
-        state_desc = 'Experimental as of %s.' % self.as_of
+        state_desc = f'Experimental as of {self.as_of}.'
         func.__doc__ = self._update_docstring(func.__doc__, state_desc)
         return func
 
@@ -244,15 +244,15 @@ class deprecated(_state_decorator):
         self.reason = kwargs['reason']
 
     def __call__(self, func, *args, **kwargs):
-        state_desc = 'Deprecated as of %s for removal in %s. %s' %\
-            (self.as_of, self.until, self.reason)
+        state_desc = f'Deprecated as of {self.as_of} for removal in '\
+                     f'{self.until}. {self.reason}'
         func.__doc__ = self._update_docstring(func.__doc__, state_desc,
                                               state_desc_prefix='.. note:: ')
 
         def wrapped_f(*args, **kwargs):
-            warnings.warn('%s is deprecated as of scikit-bio version %s, and '
-                          'will be removed in version %s. %s' %
-                          (func.__name__, self.as_of, self.until, self.reason),
+            warnings.warn(f'{func.__name__} is deprecated as of scikit-bio '
+                          f'version {self.as_of}, and will be removed in '
+                          f'version {self.until}. {self.reason}',
                           SkbioDeprecationWarning)
             # args[0] is the function being wrapped when this is called
             # after wrapping with decorator.decorator, but why???
@@ -289,8 +289,8 @@ def overrides(interface_class):
     """
     def overrider(method):
         if method.__name__ not in dir(interface_class):
-            raise OverrideError("%r is not present in parent class: %r." %
-                                (method.__name__, interface_class.__name__))
+            raise OverrideError(f'{method.__name__} is not present in parent '
+                                f'class: {interface_class.__name__}.')
         backup = classproperty.__get__
         classproperty.__get__ = lambda x, y, z: x
         if method.__doc__ is None:
@@ -342,7 +342,8 @@ class classonlymethod(classmethod):
 
     def __get__(self, obj, cls=None):
         if obj is not None:
-            raise TypeError("Class-only method called on an instance. Use"
-                            " '%s.%s' instead."
-                            % (cls.__name__, self.__func__.__name__))
+            raise TypeError('Class-only method called on an instance. Use'
+                            f' {cls.__name__}.{self.__func__.__name__} '
+                            'instead.')
+
         return super().__get__(obj, cls)
