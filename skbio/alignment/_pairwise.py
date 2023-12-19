@@ -323,8 +323,7 @@ def local_pairwise_align(seq1, seq2, gap_open_penalty,
     for seq in seq1, seq2:
         if not isinstance(seq, GrammaredSequence):
             raise TypeError(
-                "`seq1` and `seq2` must be %r subclasses, not type %r" %
-                (GrammaredSequence.__name__, type(seq).__name__))
+                f"`seq1` and `seq2` must be {GrammaredSequence.__name__} subclasses, not type {type(seq).__name__)}")
 
     if type(seq1) is not type(seq2):
         raise TypeError(
