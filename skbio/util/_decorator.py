@@ -84,14 +84,14 @@ class _state_decorator:
             state_desc_lines[i] = f'{header_spaces}{line}'
 
         new_doc_lines = '\n'.join(state_desc_lines)
-        docstring_lines[0] = '%s\n\n%s' % (docstring_lines[0], new_doc_lines)
+        docstring_lines[0] = f'{docstring_lines[0]}\n\n{new_doc_lines}'
         return '\n'.join(docstring_lines)
 
     def _validate_kwargs(self, **kwargs):
         for required_kwarg in self._required_kwargs:
             if required_kwarg not in kwargs:
-                raise ValueError('%s decorator requires parameter: %s' %
-                                 (self.__class__, required_kwarg))
+                raise ValueError(f'{self.__class__} decorator requires \
+                                 parameter: {required_kwarg}')
 
 
 class stable(_state_decorator):
