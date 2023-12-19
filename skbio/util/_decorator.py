@@ -60,7 +60,7 @@ class _state_decorator:
                           state_desc_prefix='State: '):
         # Hande the case of no initial docstring
         if docstring is None:
-            return "%s%s" % (state_desc_prefix, state_desc)
+            return f'{state_desc_prefix}{state_desc}'
 
         docstring_lines = docstring.split('\n')
         docstring_content_indentation = \
@@ -76,13 +76,12 @@ class _state_decorator:
         # the text in this section. This is for consistency with numpydoc
         # formatting of deprecation notices, which are done using the note
         # Sphinx directive.
-        state_desc_lines[0] = '%s%s%s' % (' ' * docstring_content_indentation,
-                                          state_desc_prefix,
-                                          state_desc_lines[0])
+        state_desc_lines[0] = f'{' ' * docstring_content_indentation}\
+                                {state_desc_prefix}{state_desc_lines[0]}'
         header_spaces = ' ' * (docstring_content_indentation +
                                len_state_desc_prefix)
         for i, line in enumerate(state_desc_lines[1:], 1):
-            state_desc_lines[i] = '%s%s' % (header_spaces, line)
+            state_desc_lines[i] = f'{header_spaces}{line}'
 
         new_doc_lines = '\n'.join(state_desc_lines)
         docstring_lines[0] = '%s\n\n%s' % (docstring_lines[0], new_doc_lines)
