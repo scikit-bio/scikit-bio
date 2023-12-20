@@ -244,8 +244,8 @@ class deprecated(_state_decorator):
         self.reason = kwargs['reason']
 
     def __call__(self, func, *args, **kwargs):
-        state_desc = (f'Deprecated as of {self.as_of} for removal in \
-                      {self.until}. {self.reason}')
+        state_desc = (f'Deprecated as of {self.as_of} for removal in '
+                      f'{self.until}. {self.reason}')
         func.__doc__ = self._update_docstring(func.__doc__, state_desc,
                                               state_desc_prefix='.. note:: ')
 
