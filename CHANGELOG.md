@@ -32,6 +32,7 @@
 * Dropped support for NumPy < 1.17.0 in order to utilize the new random generator.
 * Use CYTHON by default during build ([#1874](https://github.com/biocore/scikit-bio/pull/1874))
 * Implemented augmented assignments proposed in issue [#1789](https://github.com/scikit-bio/scikit-bio/issues/1789)
+* Updated code style to reflect latest python standards.
 
 ## Version 0.5.9
 
