@@ -90,8 +90,8 @@ class _state_decorator:
     def _validate_kwargs(self, **kwargs):
         for required_kwarg in self._required_kwargs:
             if required_kwarg not in kwargs:
-                raise ValueError(f'{self.__class__} decorator requires \
-                                 parameter: {required_kwarg}')
+                raise ValueError(f'{self.__class__} decorator requires '
+                                 f'parameter: {required_kwarg}')
 
 
 class stable(_state_decorator):
@@ -289,8 +289,8 @@ def overrides(interface_class):
     """
     def overrider(method):
         if method.__name__ not in dir(interface_class):
-            raise OverrideError(f'{method.__name__} is not present in parent \
-                                class: {interface_class.__name__}.')
+            raise OverrideError(f'{method.__name__} is not present in parent '
+                                f'class: {interface_class.__name__}.')
         backup = classproperty.__get__
         classproperty.__get__ = lambda x, y, z: x
         if method.__doc__ is None:
@@ -342,6 +342,7 @@ class classonlymethod(classmethod):
 
     def __get__(self, obj, cls=None):
         if obj is not None:
-            raise TypeError(f'Class-only method called on an instance. Use \
-                            {cls.__name__}.{self.__func__.__name__} instead.')
+            raise TypeError(f'Class-only method called on an instance. Use '
+                            f'{cls.__name__}.{self.__func__.__name__} '
+                            'instead.')
         return super().__get__(obj, cls)
