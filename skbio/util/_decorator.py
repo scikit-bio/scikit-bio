@@ -76,7 +76,7 @@ class _state_decorator:
         # the text in this section. This is for consistency with numpydoc
         # formatting of deprecation notices, which are done using the note
         # Sphinx directive.
-        state_desc_lines[0] = (f'{' ' * docstring_content_indentation}\
+        state_desc_lines[0] = (f'{" " * docstring_content_indentation}\
                                {state_desc_prefix}{state_desc_lines[0]}')
         header_spaces = ' ' * (docstring_content_indentation +
                                len_state_desc_prefix)
