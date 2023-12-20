@@ -244,8 +244,8 @@ class deprecated(_state_decorator):
         self.reason = kwargs['reason']
 
     def __call__(self, func, *args, **kwargs):
-        state_desc = f'Deprecated as of {self.as_of} for removal in '\
-                     f'{self.until}. {self.reason}'
+        state_desc = (f'Deprecated as of {self.as_of} for removal in \
+                      {self.until}. {self.reason}')
         func.__doc__ = self._update_docstring(func.__doc__, state_desc,
                                               state_desc_prefix='.. note:: ')
 
@@ -289,8 +289,8 @@ def overrides(interface_class):
     """
     def overrider(method):
         if method.__name__ not in dir(interface_class):
-            raise OverrideError(f'{method.__name__} is not present in parent '
-                                f'class: {interface_class.__name__}.')
+            raise OverrideError(f'{method.__name__} is not present in parent \
+                                class: {interface_class.__name__}.')
         backup = classproperty.__get__
         classproperty.__get__ = lambda x, y, z: x
         if method.__doc__ is None:
@@ -342,8 +342,6 @@ class classonlymethod(classmethod):
 
     def __get__(self, obj, cls=None):
         if obj is not None:
-            raise TypeError('Class-only method called on an instance. Use'
-                            f' {cls.__name__}.{self.__func__.__name__} '
-                            'instead.')
-
+            raise TypeError(f'Class-only method called on an instance. Use \
+                            {cls.__name__}.{self.__func__.__name__} instead.')
         return super().__get__(obj, cls)
