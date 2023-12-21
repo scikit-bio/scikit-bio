@@ -853,7 +853,7 @@ class Format:
         .. note:: Keyword arguments are not permitted in `sniffers`.
            `Sniffers` may not raise exceptions; if an exception is thrown by a
            `sniffer`, the user will be asked to report it on our `issue tracker
-           <https://github.com/biocore/scikit-bio/issues/>`_.
+           <https://github.com/scikit-bio/scikit-bio/issues/>`_.
 
 
         Parameters
@@ -915,10 +915,11 @@ class Format:
                     except UnicodeDecodeError:
                         pass
                     except Exception:
-                        warn("'%s' has encountered a problem.\nPlease"
-                             " send the following to our issue tracker at\n"
-                             "https://github.com/biocore/scikit-bio/issues\n\n"
-                             "%s" % (sniffer.__name__, traceback.format_exc()),
+                        warn(f'\'{sniffer.__name__}\' has encountered a '
+                             'problem.\nPlease send the following to our '
+                             'issue tracker at\nhttps://github.com/scikit-'
+                             'bio/scikit-bio/issues\n\n'
+                             f'{traceback.format_exc()}',
                              FormatIdentificationWarning)
 
                     return False, {}
