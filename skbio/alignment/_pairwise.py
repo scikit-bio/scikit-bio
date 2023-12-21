@@ -595,7 +595,7 @@ def global_pairwise_align(seq1, seq2, gap_open_penalty, gap_extend_penalty,
     warn("You're using skbio's python implementation of Needleman-Wunsch "
          "alignment. This is known to be very slow (e.g., thousands of times "
          "slower than a native C implementation). We'll be adding a faster "
-         "version soon (see https://github.com/biocore/scikit-bio/issues/254 "
+         "version soon (see https://github.com/scikit-bio/scikit-bio/issues/254 "
          "to track progress on this).", EfficiencyWarning)
 
     for seq in seq1, seq2:
@@ -644,7 +644,7 @@ def global_pairwise_align(seq1, seq2, gap_open_penalty, gap_extend_penalty,
 @deprecated(as_of="0.5.8", until="0.6.0",
             reason="This will be removed or replaced, in favor of more general"
                    "-purpose performant aligners. Additional details at "
-                   "https://github.com/biocore/scikit-bio/issues/1814")
+                   "https://github.com/scikit-bio/scikit-bio/issues/1814")
 def local_pairwise_align_ssw(sequence1, sequence2, **kwargs):
     """Align query and target sequences with Striped Smith-Waterman.
 
@@ -741,7 +741,7 @@ def local_pairwise_align_ssw(sequence1, sequence2, **kwargs):
 @deprecated(as_of="0.4.0", until="0.6.0",
             reason="Will be replaced by a SubstitutionMatrix class. To track "
                    "progress, see [#161]"
-                   "(https://github.com/biocore/scikit-bio/issues/161).")
+                   "(https://github.com/scikit-bio/scikit-bio/issues/161).")
 def make_identity_substitution_matrix(match_score, mismatch_score,
                                       alphabet='ACGTU'):
     """Generate substitution matrix where all matches are scored equally

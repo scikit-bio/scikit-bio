@@ -52,7 +52,7 @@ When reviewing API changes/additions, look at them in the context of the rest of
 
 ## Commit messages and merging pull requests
 
-When merging pull requests, use GitHub's "Squash and merge" option to merge a single commit. See [this commit message](https://github.com/biocore/scikit-bio/commit/f3d736aabd717971332781b98d8fde861f354dc3) for an example.
+When merging pull requests, use GitHub's "Squash and merge" option to merge a single commit. See [this commit message](https://github.com/scikit-bio/scikit-bio/commit/f3d736aabd717971332781b98d8fde861f354dc3) for an example.
 
 - Rewrite commit message to describe all changes being merged. This usually involves deleting individual commit messages that GitHub includes in the text box.
 - Include "fixes #n" text if there's an associated issue to be closed.
@@ -65,7 +65,7 @@ When merging pull requests, use GitHub's "Squash and merge" option to merge a si
 
 ## Docs
 
-- Verify the docs follow the instructions in the scikit-bio [documentation guide](https://github.com/biocore/scikit-bio/blob/master/doc/README.md).
+- Verify the docs follow the instructions in the scikit-bio [documentation guide](https://github.com/scikit-bio/scikit-bio/blob/master/doc/README.md).
 - Verify the docs follow [this page](http://scikit-bio.org/docs/latest/development/new_module.html) when adding a new module or subpackage to scikit-bio.
 - Public API should have docstrings conforming to [numpydoc standards](https://github.com/numpy/numpy/blob/master/doc/HOWTO_DOCUMENT.rst.txt). Manual and careful verification of the numpydoc docstrings is currently necessary; they are easy to get wrong and building the docs won't always flag issues. Building the docs and inspecting the rendered output can help with this process.
 - Package-private and private APIs do not need to be extensively documented; numpydoc docstrings are not required. Document these APIs as appropriate to help other devs understand the code (code comments are usually better for this anyways).

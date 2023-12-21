@@ -13,7 +13,7 @@ To view scikit-bio's documentation, visit `scikit.bio
 
 **Note:** scikit-bio is no longer compatible with Python 2. scikit-bio is compatible with Python 3.8 and later.
 
-scikit-bio is currently in beta. We are very actively developing it, and **backward-incompatible interface changes can and will arise**. To avoid these types of changes being a surprise to our users, our public APIs are decorated to make it clear to users when an API can be relied upon (stable) and when it may be subject to change (experimental). See the `API stability docs <https://github.com/biocore/scikit-bio/blob/master/doc/source/user/api_stability.rst>`_ for more details, including what we mean by *stable* and *experimental* in this context.
+scikit-bio is currently in beta. We are very actively developing it, and **backward-incompatible interface changes can and will arise**. To avoid these types of changes being a surprise to our users, our public APIs are decorated to make it clear to users when an API can be relied upon (stable) and when it may be subject to change (experimental). See the `API stability docs <https://github.com/scikit-bio/scikit-bio/blob/master/doc/source/user/api_stability.rst>`_ for more details, including what we mean by *stable* and *experimental* in this context.
 
 Installing
 ----------
@@ -62,17 +62,17 @@ If you're using scikit-bio in your own projects, feel free to issue a pull reque
 scikit-bio development
 ----------------------
 
-If you're interested in getting involved in scikit-bio development, see `CONTRIBUTING.md <https://github.com/biocore/scikit-bio/blob/master/.github/CONTRIBUTING.md>`__.
+If you're interested in getting involved in scikit-bio development, see `CONTRIBUTING.md <https://github.com/scikit-bio/scikit-bio/blob/master/.github/CONTRIBUTING.md>`__.
 
 See the list of `scikit-bio's contributors
-<https://github.com/biocore/scikit-bio/graphs/contributors>`__.
+<https://github.com/scikit-bio/scikit-bio/graphs/contributors>`__.
 
 Licensing
 ---------
 
 scikit-bio is available under the new BSD license. See
-`LICENSE.txt <https://github.com/biocore/scikit-bio/blob/master/LICENSE.txt>`__ for scikit-bio's license, and the
-`licenses directory <https://github.com/biocore/scikit-bio/tree/master/licenses>`_ for the licenses of third-party software that is
+`LICENSE.txt <https://github.com/scikit-bio/scikit-bio/blob/master/LICENSE.txt>`__ for scikit-bio's license, and the
+`licenses directory <https://github.com/scikit-bio/scikit-bio/tree/master/licenses>`_ for the licenses of third-party software that is
 (either partially or entirely) distributed with scikit-bio.
 
 The pre-history of scikit-bio
