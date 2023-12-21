@@ -26,7 +26,7 @@ def _decode_qual_to_phred(qual_str, variant=None, phred_offset=None):
          "as quality scores are always stored as Phred scores in "
          "scikit-bio. Please see the following scikit-bio issue to "
          "track progress on this:\n\t"
-         "https://github.com/biocore/scikit-bio/issues/719"])
+         "https://github.com/scikit-bio/scikit-bio/issues/719"])
     qual = np.frombuffer(qual_str.encode('ascii'),
                          dtype=np.uint8) - phred_offset
 
@@ -45,7 +45,7 @@ def _encode_phred_to_qual(phred, variant=None, phred_offset=None):
          "Encoding Solexa quality scores is not currently supported. "
          "Please see the following scikit-bio issue to track progress "
          "on this:\n\t"
-         "https://github.com/biocore/scikit-bio/issues/719"])
+         "https://github.com/scikit-bio/scikit-bio/issues/719"])
 
     qual_chars = []
     for score in phred:

@@ -9,7 +9,7 @@ As project size increases, consistency of the code base and documentation become
 
 **As scikit-bio is in beta, our coding guidelines are presented here as a working draft. These guidelines are requirements for all code submitted to scikit-bio, but at this stage the guidelines themselves are malleable. If you disagree with something, or have a suggestion for something new to include, you should** `create an issue`_ **to initiate a discussion.**
 
-.. _`create an issue`: https://github.com/biocore/scikit-bio/issues
+.. _`create an issue`: https://github.com/scikit-bio/scikit-bio/issues
 
 What are the naming conventions? and How should I format my code?
 -----------------------------------------------------------------
@@ -163,7 +163,7 @@ Example of module structure
 The structure of your module should be similar to the example below. scikit-bio uses the `NumPy doc`_ standard for documentation. Our `doc/README.md`_ explains how to write your docstrings using the `NumPy doc`_ standards for scikit-bio:
 
 .. _`NumPy doc`: https://github.com/numpy/numpy/blob/master/doc/HOWTO_DOCUMENT.rst.txt
-.. _`doc/README.md`: https://github.com/biocore/scikit-bio/blob/master/doc/README.md
+.. _`doc/README.md`: https://github.com/scikit-bio/scikit-bio/blob/master/doc/README.md
 
 .. code-block:: python
 
@@ -251,7 +251,7 @@ Never treat prototypes as production code. It's fine to write prototype code wit
 
 Run the test suite when you change `anything`. Even if a change seems trivial, it will only take a couple of seconds to run the tests and then you'll be sure. This can eliminate long and frustrating debugging sessions where the change turned out to have been made long ago, but didn't seem significant at the time. **Note that tests are executed using Travis CI**, see `this document's section`_ for further discussion.
 
-.. _`this document's section`: https://github.com/biocore/scikit-bio/blob/master/CONTRIBUTING.md#testing-guidelines
+.. _`this document's section`: https://github.com/scikit-bio/scikit-bio/blob/master/CONTRIBUTING.md#testing-guidelines
 
 Some pointers
 ^^^^^^^^^^^^^
@@ -353,7 +353,7 @@ Authoring a commit message
 
 The most important metadata in a commit message is (arguably) the author's name and the author's e-mail. GitHub uses this information to attribute your contributions to a project, see for example the `scikit-bio list of contributors`_.
 
-.. _`scikit-bio list of contributors`: https://github.com/biocore/scikit-bio/graphs/contributors
+.. _`scikit-bio list of contributors`: https://github.com/scikit-bio/scikit-bio/graphs/contributors
 
 Follow `this guide`_ to set up your system and **make sure the e-mail you use in this step is the same e-mail associated to your GitHub account**.
 

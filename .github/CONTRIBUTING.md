@@ -1,7 +1,7 @@
 Contributing to scikit-bio
 ==========================
 
-[scikit-bio](http://scikit-bio.org) is an open source software package and we welcome community contributions. You can find the scikit-bio source code on GitHub [here](https://github.com/biocore/scikit-bio).
+[scikit-bio](http://scikit-bio.org) is an open source software package and we welcome community contributions. You can find the scikit-bio source code on GitHub [here](https://github.com/scikit-bio/scikit-bio).
 
 This document covers what you should do to get started with contributing to scikit-bio. You should read the entire document before contributing code to scikit-bio. This will save time for both you and the scikit-bio developers.
 
@@ -10,7 +10,7 @@ Types of contributions
 
 We're interested in many different types of contributions, including feature additions, bug fixes, continuous integration improvements, and documentation/website updates, additions, and fixes.
 
-When considering contributing to scikit-bio, you should begin by posting an issue to the [scikit-bio issue tracker](https://github.com/biocore/scikit-bio/issues). The information that you include in that post will differ based on the type of contribution. Your contribution will also need to be fully tested where applicable (discussed further below).
+When considering contributing to scikit-bio, you should begin by posting an issue to the [scikit-bio issue tracker](https://github.com/scikit-bio/scikit-bio/issues). The information that you include in that post will differ based on the type of contribution. Your contribution will also need to be fully tested where applicable (discussed further below).
 
 * For feature additions, please describe why the functionality that you are proposing to add is relevant. For it to be relevant, it should be demonstrably useful to scikit-bio users and it should also fit within the biology/bioinformatics domain. This typically means that a new analytic method is implemented (you should describe why it's useful, ideally including a link to a paper that uses this method), or an existing method is enhanced (e.g., improved performance). We will request benchmark results comparing your method to the pre-existing methods (which would also be required for publication of your method) so pointing to a paper or other document containing benchmark results, or including benchmark results in your issue, will speed up the process. Before contributing a new feature, it's also a good idea to check whether the functionality exists in other Python packages, or if the feature would fit better in another Python package. For example, low-level statistical methods/tests may fit better in a project that is focused on statistics (e.g., [SciPy](https://scipy.org/) or [statsmodels](https://www.statsmodels.org/)).
 
@@ -30,11 +30,11 @@ Getting started
 
 ### "quick fixes"
 
-Some of our issues are labeled as ``quick fix``. Working on [these issues](https://github.com/biocore/scikit-bio/issues?q=is%3Aopen+is%3Aissue+label%3A%22quick+fix%22) is a good way to get started with contributing to scikit-bio. These are usually small bugs or documentation errors that will only require one or a few lines of code to fix. Getting started by working on one of these issues will allow you to familiarize yourself with our development process before committing to a large amount of work (e.g., adding a new feature to scikit-bio). Please post a comment on the issue if you're interested in working on one of these "quick fixes".
+Some of our issues are labeled as ``quick fix``. Working on [these issues](https://github.com/scikit-bio/scikit-bio/issues?q=is%3Aopen+is%3Aissue+label%3A%22quick+fix%22) is a good way to get started with contributing to scikit-bio. These are usually small bugs or documentation errors that will only require one or a few lines of code to fix. Getting started by working on one of these issues will allow you to familiarize yourself with our development process before committing to a large amount of work (e.g., adding a new feature to scikit-bio). Please post a comment on the issue if you're interested in working on one of these "quick fixes".
 
 ### Joining development
 
-Once you are more comfortable with our development process, you can check out the [``on deck`` label](https://github.com/biocore/scikit-bio/labels/on%20deck) on our issue tracker. These issues represent what our current focus is in the project. As such, they are probably the best place to start if you are looking to join the conversation and contribute code.
+Once you are more comfortable with our development process, you can check out the [``on deck`` label](https://github.com/scikit-bio/scikit-bio/labels/on%20deck) on our issue tracker. These issues represent what our current focus is in the project. As such, they are probably the best place to start if you are looking to join the conversation and contribute code.
 
 Code review
 -----------
@@ -55,7 +55,7 @@ Submitting code to scikit-bio
 
 scikit-bio is hosted on [GitHub](https://github.com/), and we use GitHub's [Pull Request](https://help.github.com/articles/using-pull-requests) mechanism for reviewing and accepting submissions. You should work through the following steps to submit code to scikit-bio.
 
-1. Begin by [creating an issue](https://github.com/biocore/scikit-bio/issues) describing your proposed change (see [Types of contributions](#types-of-contributions) for details).
+1. Begin by [creating an issue](https://github.com/scikit-bio/scikit-bio/issues) describing your proposed change (see [Types of contributions](#types-of-contributions) for details).
 
 2. [Fork](https://help.github.com/articles/fork-a-repo) the scikit-bio repository on the GitHub website.
 
@@ -64,7 +64,7 @@ scikit-bio is hosted on [GitHub](https://github.com/), and we use GitHub's [Pull
 4. Ensure that you have the latest version of all files. This is especially important if you cloned a long time ago, but you'll need to do this before submitting changes regardless. You should do this by adding scikit-bio as a remote repository and then pulling from that repository. You'll only need to run the ``git remote`` command the first time you do this:
 
  ```
- git remote add upstream https://github.com/biocore/scikit-bio.git
+ git remote add upstream https://github.com/scikit-bio/scikit-bio.git
  git checkout master
  git pull upstream master
  ```
@@ -153,7 +153,7 @@ We adhere to the [PEP 8](https://peps.python.org/pep-0008/) Python style guideli
 Testing guidelines
 ------------------
 
-All code that is added to scikit-bio must be unit tested, and the unit test code must be submitted in the same pull request as the library code that you are submitting. We will only merge code that is unit tested and that passes the [continuous integration build](https://github.com/biocore/scikit-bio/blob/master/.travis.yml). This build includes, but is not limited to, the following checks:
+All code that is added to scikit-bio must be unit tested, and the unit test code must be submitted in the same pull request as the library code that you are submitting. We will only merge code that is unit tested and that passes the [continuous integration build](https://github.com/scikit-bio/scikit-bio/blob/master/.travis.yml). This build includes, but is not limited to, the following checks:
 
 - Full unit test suite and doctests execute without errors in supported versions of Python 3.
 - C code can be correctly compiled.

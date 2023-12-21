@@ -117,7 +117,7 @@ class TestPERMANOVA(TestCase):
         self.assert_series_equal(obs, exp)
 
     def test_call_via_series(self):
-        # test https://github.com/biocore/scikit-bio/issues/1877
+        # test https://github.com/scikit-bio/scikit-bio/issues/1877
         # permanova gives different results if grouping is either
         # a pd.DataFrame or a pd.Series
         dm = DistanceMatrix.read(get_data_path('frameSeries_dm.tsv'))

@@ -284,7 +284,7 @@ References
 .. [1] ftp://ftp.ebi.ac.uk/pub/databases/embl/release/doc/usrman.txt
 .. [2] http://www.ebi.ac.uk/ena/data/view/X56734&display=text
 .. [3] http://www.ebi.ac.uk/ena/browse/feature-level-products
-.. [4] https://github.com/biocore/scikit-bio/issues/1499
+.. [4] https://github.com/scikit-bio/scikit-bio/issues/1499
 
 """
 
@@ -935,7 +935,7 @@ def _parse_id(lines):
         # doesn't have sequence, so can't be read by skbio.sequence
         raise EMBLFormatError(
             "There's no support for embl CON record: for more information "
-            "see issue-1506 (https://github.com/biocore/scikit-bio/issues/"
+            "see issue-1506 (https://github.com/scikit-bio/scikit-bio/issues/"
             "1506)")
 
     # those values are integer
