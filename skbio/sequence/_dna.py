@@ -16,8 +16,6 @@ from ._grammared_sequence import GrammaredSequence
 class DNA(GrammaredSequence, NucleotideMixin):
     r"""Store DNA sequence data and optional associated metadata.
 
-    Only characters in the IUPAC DNA character set [1]_ are supported.
-
     Parameters
     ----------
     sequence : str, Sequence, or 1D np.ndarray (np.uint8 or '\|S1')
@@ -57,49 +55,61 @@ class DNA(GrammaredSequence, NucleotideMixin):
 
     Notes
     -----
-    According to the IUPAC DNA character set [1]_, a DNA sequence may contain
-    the following four definite characters (nucleotides):
+    According to the IUPAC DNA character set [1]_ , a DNA sequence may contain
+    the following four definite characters (canonical nucleotides):
 
     +-----+-----------+
     |Code |Nucleobase |
     +=====+===========+
-    |A    |Adenine    |
+    |`A`  |Adenine    |
     +-----+-----------+
-    |C    |Cytosine   |
+    |`C`  |Cytosine   |
     +-----+-----------+
-    |G    |Guanine    |
+    |`G`  |Guanine    |
     +-----+-----------+
-    |T    |Thymine    |
+    |`T`  |Thymine    |
     +-----+-----------+
 
     And the following 11 degenerate characters, each of which representing 2-4
-    nucleotides.
+    nucleotides:
 
     +-----+-------------+-----------+
     |Code |Nucleobases  |Meaning    |
-    +=====+=========================+
-    |R    |A or G       |Purine     |
+    +=====+=============+===========+
+    |`R`  |A or G       |Purine     |
     +-----+-------------+-----------+
-    |Y    |C or T       |Pyrimidine |
+    |`Y`  |C or T       |Pyrimidine |
     +-----+-------------+-----------+
-    |S    |G or C       |Strong     |
+    |`S`  |G or C       |Strong     |
     +-----+-------------+-----------+
-    |W    |A or T       |Weak       |
+    |`W`  |A or T       |Weak       |
     +-----+-------------+-----------+
-    |K    |G or T       |Keto       |
+    |`K`  |G or T       |Keto       |
     +-----+-------------+-----------+
-    |M    |A or C       |Amino      |
+    |`M`  |A or C       |Amino      |
     +-----+-------------+-----------+
-    |B    |C, G or T    |Not A      |
+    |`B`  |C, G or T    |Not A      |
     +-----+-------------+-----------+
-    |D    |A, G or T    |Not C      |
+    |`D`  |A, G or T    |Not C      |
     +-----+-------------+-----------+
-    |H    |A, C or T    |Not G      |
+    |`H`  |A, C or T    |Not G      |
     +-----+-------------+-----------+
-    |V    |A, C or G    |Not T      |
+    |`V`  |A, C or G    |Not T      |
     +-----+-------------+-----------+
-    |N    |A, C, G or T |Any        |
+    |`N`  |A, C, G or T |Any        |
     +-----+-------------+-----------+
+
+    Plus two gap characters: `-` and `.`.
+
+    Characters other than the above 17 are not allowed. If you intend to use
+    additional characters to represent non-canonical nucleobases, such as `I`
+    (Inosine), you may create a custom alphabet using ``GrammaredSequence``.
+    Directly modifying the alphabet of ``DNA`` may break methods that rely on
+    the IUPAC alphabet.
+
+    It should be noted that some functions do not support degenerate characters
+    characters. In such cases, they will be replaced with `N` to represent any
+    of the canonical nucleotides.
 
     References
     ----------
