@@ -23,7 +23,7 @@ __all__ = ['Sequence', 'DNA', 'RNA', 'Protein', 'GeneticCode',
            'DistanceMatrix', 'local_pairwise_align_ssw', 'TabularMSA',
            'TreeNode', 'nj', 'read', 'write', 'OrdinationResults']
 
-__credits__ = "https://github.com/scikit-bio/scikit-bio/graphs/contributors"
+__credits__ = "https://github.com/biocore/scikit-bio/graphs/contributors"
 __version__ = "0.5.9"
 
 

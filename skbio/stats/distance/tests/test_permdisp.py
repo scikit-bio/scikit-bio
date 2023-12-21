@@ -278,7 +278,7 @@ class testPERMDISP(TestCase):
         self.assert_series_equal(exp_cen_mp, obs_cen_mp)
 
     def test_call_via_series(self):
-        # test https://github.com/scikit-bio/scikit-bio/issues/1877
+        # test https://github.com/biocore/scikit-bio/issues/1877
         # actual issue is with _base._preprocess_input_sng but permdisp is
         # indirectly affected
         dm = DistanceMatrix.read(get_data_path('frameSeries_dm.tsv'))

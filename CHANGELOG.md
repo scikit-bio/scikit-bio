@@ -8,7 +8,7 @@
 
 ### Features
 
-* Added alpha diversity metric `sobs`, which is the observed species richness (S_{obs}) of a sample. `sobs` will replace `observed_otus`, which uses the historical term "OTU". Also added metric `observed_features` to be compatible with the QIIME 2 terminology. All three metrics are equivalent ([#1902](https://github.com/scikit-bio/scikit-bio/pull/1902)).
+* Added alpha diversity metric `sobs`, which is the observed species richness (S_{obs}) of a sample. `sobs` will replace `observed_otus`, which uses the historical term "OTU". Also added metric `observed_features` to be compatible with the QIIME 2 terminology. All three metrics are equivalent ([#1902](https://github.com/biocore/scikit-bio/pull/1902)).
 * `beta_diversity` now supports use of Pandas a `DataFrame` index, issue [#1808](https://github.com/scikit-bio/scikit-bio/issues/1808).
 * Added alpha diversity metric `phydiv`, which is a generalized phylogenetic diversity (PD) framework permitting unrooted or rooted tree, unweighted or weighted by abundance, and an exponent parameter of the weight term ([#1893](https://github.com/scikit-bio/scikit-bio/pull/1893)).
 * Adopted NumPy's new random generator `np.random.Generator` (see [NEP 19](https://numpy.org/neps/nep-0019-rng-policy.html)) ([#1889](https://github.com/scikit-bio/scikit-bio/pull/1889)).
@@ -23,14 +23,14 @@
 ### Bug fixes
 
 * Safely handle `Sequence.iter_kmers` where `k` is greater than the sequence length ([#1723](https://github.com/scikit-bio/scikit-bio/issues/1723))
-* Re-enabled OpenMP support, which has been mistakenly disabled in 0.5.8  ([#1874](https://github.com/scikit-bio/scikit-bio/pull/1874))
-* `permanova` and `permdist` operate on a `DistanceMatrix` and a grouping object. Element IDs must be synchronized to compare correct sets of pairwise distances. This failed in case the grouping was provided as a `pandas.Series`, because it was interpreted as an ordered `list` and indices were ignored (see issue [#1877](https://github.com/scikit-bio/scikit-bio/issues/1877) for an example). Note: `pandas.DataFrame` was handled correctly. This behavior has been fixed with PR [#1879](https://github.com/scikit-bio/scikit-bio/pull/1879)
+* Re-enabled OpenMP support, which has been mistakenly disabled in 0.5.8  ([#1874](https://github.com/biocore/scikit-bio/pull/1874))
+* `permanova` and `permdist` operate on a `DistanceMatrix` and a grouping object. Element IDs must be synchronized to compare correct sets of pairwise distances. This failed in case the grouping was provided as a `pandas.Series`, because it was interpreted as an ordered `list` and indices were ignored (see issue [#1877](https://github.com/biocore/scikit-bio/issues/1877) for an example). Note: `pandas.DataFrame` was handled correctly. This behavior has been fixed with PR [#1879](https://github.com/biocore/scikit-bio/pull/1879)
 
 ### Miscellaneous
 
 * Enabled subclassing of DNA, RNA and Protein classes to allow secondary development.
 * Dropped support for NumPy < 1.17.0 in order to utilize the new random generator.
-* Use CYTHON by default during build ([#1874](https://github.com/scikit-bio/scikit-bio/pull/1874))
+* Use CYTHON by default during build ([#1874](https://github.com/biocore/scikit-bio/pull/1874))
 * Implemented augmented assignments proposed in issue [#1789](https://github.com/scikit-bio/scikit-bio/issues/1789)
 * Updated code style to reflect latest python standards.
 
@@ -38,35 +38,35 @@
 
 ### Features
 
-* Adding Variance log ratio estimators in `skbio.stats.composition.vlr` and `skbio.stats.composition.pairwise_vlr` ([#1803](https://github.com/scikit-bio/scikit-bio/pull/1803))
-* Added `skbio.stats.composition.tree_basis` to construct ILR bases from `TreeNode` objects. ([#1862](https://github.com/scikit-bio/scikit-bio/pull/1862))
-* `IntervalMetadata.query` now defaults to obtaining all results, see [#1817](https://github.com/scikit-bio/scikit-bio/issues/1817).
+* Adding Variance log ratio estimators in `skbio.stats.composition.vlr` and `skbio.stats.composition.pairwise_vlr` ([#1803](https://github.com/biocore/scikit-bio/pull/1803))
+* Added `skbio.stats.composition.tree_basis` to construct ILR bases from `TreeNode` objects. ([#1862](https://github.com/biocore/scikit-bio/pull/1862))
+* `IntervalMetadata.query` now defaults to obtaining all results, see [#1817](https://github.com/biocore/scikit-bio/issues/1817).
 
 ### Backward-incompatible changes [experimental]
-* With the introduction of the `tree_basis` object, the ILR bases are now represented in log-odds coordinates rather than in probabilities to minimize issues with numerical stability. Furthermore, the `ilr` and `ilr_inv` functions now takes the `basis` input parameter in terms of log-odds coordinates. This affects the `skbio.stats.composition.sbp_basis` as well. ([#1862](https://github.com/scikit-bio/scikit-bio/pull/1862))
+* With the introduction of the `tree_basis` object, the ILR bases are now represented in log-odds coordinates rather than in probabilities to minimize issues with numerical stability. Furthermore, the `ilr` and `ilr_inv` functions now takes the `basis` input parameter in terms of log-odds coordinates. This affects the `skbio.stats.composition.sbp_basis` as well. ([#1862](https://github.com/biocore/scikit-bio/pull/1862))
 
 ### Important
 
-* Complex multiple axis indexing operations with `TabularMSA` have been removed from testing due to incompatibilities with modern versions of Pandas. ([#1851](https://github.com/scikit-bio/scikit-bio/pull/1851))
-* Pinning `scipy <= 1.10.1` ([#1851](https://github.com/scikit-bio/scikit-bio/pull/1867))
+* Complex multiple axis indexing operations with `TabularMSA` have been removed from testing due to incompatibilities with modern versions of Pandas. ([#1851](https://github.com/biocore/scikit-bio/pull/1851))
+* Pinning `scipy <= 1.10.1` ([#1851](https://github.com/biocore/scikit-bio/pull/1867))
 
 ### Bug fixes
 
-* Fixed a bug that caused build failure on the ARM64 microarchitecture due to floating-point number handling. ([#1859](https://github.com/scikit-bio/scikit-bio/pull/1859))
-* Never let the Gini index go below 0.0, see [#1844](https://github.com/scikit-bio/scikit-bio/issue/1844).
-* Fixed bug [#1847](https://github.com/scikit-bio/scikit-bio/issues/1847) in which the edge from the root was inadvertantly included in the calculation for `descending_branch_length`
+* Fixed a bug that caused build failure on the ARM64 microarchitecture due to floating-point number handling. ([#1859](https://github.com/biocore/scikit-bio/pull/1859))
+* Never let the Gini index go below 0.0, see [#1844](https://github.com/biocore/scikit-bio/issue/1844).
+* Fixed bug [#1847](https://github.com/biocore/scikit-bio/issues/1847) in which the edge from the root was inadvertantly included in the calculation for `descending_branch_length`
 
 ### Miscellaneous
 
-* Replaced dependencies `CacheControl` and `lockfile` with `requests` to avoid a dependency inconsistency issue of the former. (See [#1863](https://github.com/scikit-bio/scikit-bio/pull/1863), merged in [#1859](https://github.com/scikit-bio/scikit-bio/pull/1859))
-* Updated installation instructions for developers in `CONTRIBUTING.md` ([#1860](https://github.com/scikit-bio/scikit-bio/pull/1860))
+* Replaced dependencies `CacheControl` and `lockfile` with `requests` to avoid a dependency inconsistency issue of the former. (See [#1863](https://github.com/biocore/scikit-bio/pull/1863), merged in [#1859](https://github.com/biocore/scikit-bio/pull/1859))
+* Updated installation instructions for developers in `CONTRIBUTING.md` ([#1860](https://github.com/biocore/scikit-bio/pull/1860))
 
 ## Version 0.5.8
 
 ### Features
 
-* Added NCBI taxonomy database dump format (`taxdump`) ([#1810](https://github.com/scikit-bio/scikit-bio/pull/1810)).
-* Added `TreeNode.from_taxdump` for converting taxdump into a tree ([#1810](https://github.com/scikit-bio/scikit-bio/pull/1810)).
+* Added NCBI taxonomy database dump format (`taxdump`) ([#1810](https://github.com/biocore/scikit-bio/pull/1810)).
+* Added `TreeNode.from_taxdump` for converting taxdump into a tree ([#1810](https://github.com/biocore/scikit-bio/pull/1810)).
 * scikit-learn has been removed as a dependency. This was a fairly heavy-weight dependency that was providing minor functionality to scikit-bio. The critical components have been implemented in scikit-bio directly, and the non-criticial components are listed under "Backward-incompatible changes [experimental]".
 * Python 3.11 is now supported.
 
@@ -95,32 +95,32 @@
     ```
 
 ### Deprecated functionality [experimental]
-* `skbio.alignment.local_pairwise_align_ssw` has been deprecated ([#1814](https://github.com/scikit-bio/scikit-bio/issues/1814)) and will be removed or replaced in scikit-bio 0.6.0.
+* `skbio.alignment.local_pairwise_align_ssw` has been deprecated ([#1814](https://github.com/biocore/scikit-bio/issues/1814)) and will be removed or replaced in scikit-bio 0.6.0.
 
 ### Bug fixes
-* Use `oldest-supported-numpy` as build dependency. This fixes problems with environments that use an older version of numpy than the one used to build scikit-bio ([#1813](https://github.com/scikit-bio/scikit-bio/pull/1813)).
+* Use `oldest-supported-numpy` as build dependency. This fixes problems with environments that use an older version of numpy than the one used to build scikit-bio ([#1813](https://github.com/biocore/scikit-bio/pull/1813)).
 
 ## Version 0.5.7
 
 ### Features
 
-* Introduce support for Python 3.10 ([#1801](https://github.com/scikit-bio/scikit-bio/pull/1801)).
-* Tentative support for Apple M1 ([#1709](https://github.com/scikit-bio/scikit-bio/pull/1709)).
-* Added support for reading and writing a binary distance matrix object format. ([#1716](https://github.com/scikit-bio/scikit-bio/pull/1716))
+* Introduce support for Python 3.10 ([#1801](https://github.com/biocore/scikit-bio/pull/1801)).
+* Tentative support for Apple M1 ([#1709](https://github.com/biocore/scikit-bio/pull/1709)).
+* Added support for reading and writing a binary distance matrix object format. ([#1716](https://github.com/biocore/scikit-bio/pull/1716))
 * Added support for `np.float32` with `DissimilarityMatrix` objects.
-* Added support for method and number_of_dimensions to permdisp reducing the runtime by 100x at 4000 samples, [issue #1769](https://github.com/scikit-bio/scikit-bio/pull/1769).
+* Added support for method and number_of_dimensions to permdisp reducing the runtime by 100x at 4000 samples, [issue #1769](https://github.com/biocore/scikit-bio/pull/1769).
 * OrdinationResults object is now accepted as input for permdisp.
 
 ### Performance enhancements
 
 * Avoid an implicit data copy on construction of `DissimilarityMatrix` objects.
-* Avoid validation on copy of `DissimilarityMatrix` and `DistanceMatrix` objects, see [PR #1747](https://github.com/scikit-bio/scikit-bio/pull/1747)
-* Use an optimized version of symmetry check in DistanceMatrix, see [PR #1747](https://github.com/scikit-bio/scikit-bio/pull/1747)
-* Avoid performing filtering when ids are identical, see [PR #1752](https://github.com/scikit-bio/scikit-bio/pull/1752)
-* center_distance_matrix has been re-implemented in cython for both speed and memory use. Indirectly speeds up pcoa [PR #1749](https://github.com/scikit-bio/scikit-bio/pull/1749)
-* Use a memory-optimized version of permute in DistanceMatrix, see [PR #1756](https://github.com/scikit-bio/scikit-bio/pull/1756).
-* Refactor pearson and spearman skbio.stats.distance.mantel implementations to drastically improve memory locality. Also cache intermediate results that are invariant across permutations, see [PR #1756](https://github.com/scikit-bio/scikit-bio/pull/1756).
-* Refactor permanova to remove intermediate buffers and cythonize the internals, see [PR #1768](https://github.com/scikit-bio/scikit-bio/pull/1768).
+* Avoid validation on copy of `DissimilarityMatrix` and `DistanceMatrix` objects, see [PR #1747](https://github.com/biocore/scikit-bio/pull/1747)
+* Use an optimized version of symmetry check in DistanceMatrix, see [PR #1747](https://github.com/biocore/scikit-bio/pull/1747)
+* Avoid performing filtering when ids are identical, see [PR #1752](https://github.com/biocore/scikit-bio/pull/1752)
+* center_distance_matrix has been re-implemented in cython for both speed and memory use. Indirectly speeds up pcoa [PR #1749](https://github.com/biocore/scikit-bio/pull/1749)
+* Use a memory-optimized version of permute in DistanceMatrix, see [PR #1756](https://github.com/biocore/scikit-bio/pull/1756).
+* Refactor pearson and spearman skbio.stats.distance.mantel implementations to drastically improve memory locality. Also cache intermediate results that are invariant across permutations, see [PR #1756](https://github.com/biocore/scikit-bio/pull/1756).
+* Refactor permanova to remove intermediate buffers and cythonize the internals, see [PR #1768](https://github.com/biocore/scikit-bio/pull/1768).
 
 ### Bug fixes
 
@@ -133,19 +133,19 @@
 * Update hdmedians package to a version which doesn't require an initial manual numpy install.
 * Now buildable on non-x86 platforms due to use of the [SIMD Everywhere](https://github.com/simd-everywhere/simde) library.
 * Regenerate Cython wrapper by default to avoid incompatibilities with installed CPython.
-* Update documentation for the `skbio.stats.composition.ancom` function. ([#1741](https://github.com/scikit-bio/scikit-bio/pull/1741))
+* Update documentation for the `skbio.stats.composition.ancom` function. ([#1741](https://github.com/biocore/scikit-bio/pull/1741))
 
 ## Version 0.5.6
 
 ### Features
 
-* Added option to return a capture group compiled regex pattern to any class inheriting ``GrammaredSequence`` through the ``to_regex`` method. ([#1431](https://github.com/scikit-bio/scikit-bio/issues/1431))
+* Added option to return a capture group compiled regex pattern to any class inheriting ``GrammaredSequence`` through the ``to_regex`` method. ([#1431](https://github.com/biocore/scikit-bio/issues/1431))
 
-* Added `Dissimilarity.within` and `.between` to obtain the respective distances and express them as a `DataFrame`. ([#1662](https://github.com/scikit-bio/scikit-bio/pull/1662))
+* Added `Dissimilarity.within` and `.between` to obtain the respective distances and express them as a `DataFrame`. ([#1662](https://github.com/biocore/scikit-bio/pull/1662))
 
-* Added Kendall Tau as possible correlation method in the `skbio.stats.distance.mantel` function ([#1675](https://github.com/scikit-bio/scikit-bio/issues/1675)).
+* Added Kendall Tau as possible correlation method in the `skbio.stats.distance.mantel` function ([#1675](https://github.com/biocore/scikit-bio/issues/1675)).
 
-* Added support for IUPAC amino acid codes U (selenocysteine), O (pyrrolysine), and J (leucine or isoleucine). ([#1576](https://github.com/scikit-bio/scikit-bio/issues/1576)
+* Added support for IUPAC amino acid codes U (selenocysteine), O (pyrrolysine), and J (leucine or isoleucine). ([#1576](https://github.com/biocore/scikit-bio/issues/1576)
 
 ### Backward-incompatible changes [stable]
 
@@ -158,17 +158,17 @@
 ### Performance enhancements
 
 ### Bug fixes
-* Require `Sphinx <= 3.0`. Newer Sphinx versions caused build errors. [#1719](https://github.com/scikit-bio/scikit-bio/pull/1719)
+* Require `Sphinx <= 3.0`. Newer Sphinx versions caused build errors. [#1719](https://github.com/biocore/scikit-bio/pull/1719)
 
-* * `skbio.stats.ordination` tests have been relaxed. ([#1713](https://github.com/scikit-bio/scikit-bio/issues/1713))
-
-* Fixes build errors for newer versions of NumPy, Pandas, and SciPy.
-
-* Corrected a criticial bug in `skbio.alignment.StripedSmithWaterman`/`skbio.alignment.local_pairwise_align_ssw` which would cause the formatting of the aligned sequences to misplace gap characters by the number of gap characters present in the opposing aligned sequence up to that point. This was caused by a faulty implementation of CIGAR string parsing, see [#1679](https://github.com/scikit-bio/scikit-bio/pull/1679) for full details.
+* * `skbio.stats.ordination` tests have been relaxed. ([#1713](https://github.com/biocore/scikit-bio/issues/1713))
 
 * Fixes build errors for newer versions of NumPy, Pandas, and SciPy.
 
-* Corrected a criticial bug in `skbio.alignment.StripedSmithWaterman`/`skbio.alignment.local_pairwise_align_ssw` which would cause the formatting of the aligned sequences to misplace gap characters by the number of gap characters present in the opposing aligned sequence up to that point. This was caused by a faulty implementation of CIGAR string parsing, see [#1679](https://github.com/scikit-bio/scikit-bio/pull/1679) for full details.
+* Corrected a criticial bug in `skbio.alignment.StripedSmithWaterman`/`skbio.alignment.local_pairwise_align_ssw` which would cause the formatting of the aligned sequences to misplace gap characters by the number of gap characters present in the opposing aligned sequence up to that point. This was caused by a faulty implementation of CIGAR string parsing, see [#1679](https://github.com/biocore/scikit-bio/pull/1679) for full details.
+
+* Fixes build errors for newer versions of NumPy, Pandas, and SciPy.
+
+* Corrected a criticial bug in `skbio.alignment.StripedSmithWaterman`/`skbio.alignment.local_pairwise_align_ssw` which would cause the formatting of the aligned sequences to misplace gap characters by the number of gap characters present in the opposing aligned sequence up to that point. This was caused by a faulty implementation of CIGAR string parsing, see [#1679](https://github.com/biocore/scikit-bio/pull/1679) for full details.
 
 ### Deprecated functionality [stable]
 
@@ -178,7 +178,7 @@
 
 * `skbio.diversity.beta_diversity` now accepts a pandas DataFrame as input.
 
-* Avoid pandas 1.0.0 import warning ([#1688](https://github.com/scikit-bio/scikit-bio/issues/1688))
+* Avoid pandas 1.0.0 import warning ([#1688](https://github.com/biocore/scikit-bio/issues/1688))
 
 * Added support for Python 3.8 and dropped support for Python 3.5.
 
@@ -205,13 +205,13 @@
 ### Miscellaneous
 * Python 3.6 and 3.7 compatibility is now supported
 
-* A pytest runner is shipped with every installation ([#1633](https://github.com/scikit-bio/scikit-bio/pull/1633))
+* A pytest runner is shipped with every installation ([#1633](https://github.com/biocore/scikit-bio/pull/1633))
 
-* The nosetest framework has been replaced in favor of pytest ([#1624](https://github.com/scikit-bio/scikit-bio/pull/1624))
+* The nosetest framework has been replaced in favor of pytest ([#1624](https://github.com/biocore/scikit-bio/pull/1624))
 
-* The numpy docs are deprecated in favor of [Napoleon](http://www.sphinx-doc.org/en/master/usage/extensions/napoleon.html) ([#1629](https://github.com/scikit-bio/scikit-bio/pull/1629))
+* The numpy docs are deprecated in favor of [Napoleon](http://www.sphinx-doc.org/en/master/usage/extensions/napoleon.html) ([#1629](https://github.com/biocore/scikit-bio/pull/1629))
 
-* This version is now compatible with numpy >= 1.17.0 and Pandas >= 0.23. ([#1627](https://github.com/scikit-bio/scikit-bio/pull/1627))
+* This version is now compatible with numpy >= 1.17.0 and Pandas >= 0.23. ([#1627](https://github.com/biocore/scikit-bio/pull/1627))
 
 ## Version 0.5.4 (2018-08-23)
 
@@ -238,9 +238,9 @@
 ## Version 0.5.3 (2018-08-07)
 
 ### Features
-* Added `unpack` and `unpack_by_func` methods to `skbio.tree.TreeNode` to unpack one or multiple internal nodes. The `unpack` operation removes an internal node and regrafts its children to its parent while retaining the overall length. ([#1572](https://github.com/scikit-bio/scikit-bio/pull/1572))
+* Added `unpack` and `unpack_by_func` methods to `skbio.tree.TreeNode` to unpack one or multiple internal nodes. The `unpack` operation removes an internal node and regrafts its children to its parent while retaining the overall length. ([#1572](https://github.com/biocore/scikit-bio/pull/1572))
 * Added `support` to `skbio.tree.TreeNode` to return the support value of a node.
-* Added `permdisp` to `skbio.stats.distance` to test for the homogeniety of groups. ([#1228](https://github.com/scikit-bio/scikit-bio/issues/1228)).
+* Added `permdisp` to `skbio.stats.distance` to test for the homogeniety of groups. ([#1228](https://github.com/biocore/scikit-bio/issues/1228)).
 
 * Added `pcoa_biplot` to `skbio.stats.ordination` to project descriptors into a PCoA plot.
 
@@ -254,7 +254,7 @@
 
 ### Bug fixes
 
-* Relaxing type checking in diversity calculations.  ([#1583](https://github.com/scikit-bio/scikit-bio/issues/1583)).
+* Relaxing type checking in diversity calculations.  ([#1583](https://github.com/biocore/scikit-bio/issues/1583)).
 
 ### Deprecated functionality [stable]
 
@@ -268,9 +268,9 @@
 ### Features
 * Added ``skbio.io.format.embl`` for reading and writing EMBL files for ``DNA``, ``RNA`` and ``Sequence`` classes.
 
-* Removing ValueError check in `skbio.stats._subsample.subsample_counts` when `replace=True` and `n` is greater than the number of items in counts.  [#1527](https://github.com/scikit-bio/scikit-bio/pull/1527)
+* Removing ValueError check in `skbio.stats._subsample.subsample_counts` when `replace=True` and `n` is greater than the number of items in counts.  [#1527](https://github.com/biocore/scikit-bio/pull/1527)
 
-* Added ``skbio.io.format.gff3`` for reading and writing GFF3 files for ``DNA``, ``Sequence``, and ``IntervalMetadata`` classes. ([#1450](https://github.com/scikit-bio/scikit-bio/pull/1450))
+* Added ``skbio.io.format.gff3`` for reading and writing GFF3 files for ``DNA``, ``Sequence``, and ``IntervalMetadata`` classes. ([#1450](https://github.com/biocore/scikit-bio/pull/1450))
 
 * `skbio.metadata.IntervalMetadata` constructor has a new keyword argument, `copy_from`, for creating an `IntervalMetadata` object from an existing `IntervalMetadata` object with specified `upper_bound`.
 
@@ -283,16 +283,16 @@
 ### Backward-incompatible changes [experimental]
 
 ### Performance enhancements
-* `skbio.tree.nj` wall-clock runtime was decreased by 99% for a 500x500 distance matrix and 93% for a 100x100 distance matrix. ([#1512](https://github.com/scikit-bio/scikit-bio/pull/1512), [#1513](https://github.com/scikit-bio/scikit-bio/pull/1513))
+* `skbio.tree.nj` wall-clock runtime was decreased by 99% for a 500x500 distance matrix and 93% for a 100x100 distance matrix. ([#1512](https://github.com/biocore/scikit-bio/pull/1512), [#1513](https://github.com/biocore/scikit-bio/pull/1513))
 
 ### Bug fixes
 * The `include_self` parameter was not being honored in `skbio.TreeNode.tips`. The scope of this bug was that if `TreeNode.tips` was called on a tip, it would always result in an empty `list` when unrolled.
 
-* In `skbio.stats.ordination.ca`, `proportion_explained` was missing in the returned `OrdinationResults` object. ([#1345](https://github.com/scikit-bio/scikit-bio/issues/1345))
+* In `skbio.stats.ordination.ca`, `proportion_explained` was missing in the returned `OrdinationResults` object. ([#1345](https://github.com/biocore/scikit-bio/issues/1345))
 
-* `skbio.diversity.beta_diversity` now handles qualitative metrics as expected such that `beta_diversity('jaccard', mat) == beta_diversity('jaccard', mat > 0)`. Please see [#1549](https://github.com/scikit-bio/scikit-bio/issues/1549) for further detail.
+* `skbio.diversity.beta_diversity` now handles qualitative metrics as expected such that `beta_diversity('jaccard', mat) == beta_diversity('jaccard', mat > 0)`. Please see [#1549](https://github.com/biocore/scikit-bio/issues/1549) for further detail.
 
-* `skbio.stats.ordination.rda` The occasional column mismatch in output `biplot_scores` is fixed ([#1519](https://github.com/scikit-bio/scikit-bio/issues/1519)).
+* `skbio.stats.ordination.rda` The occasional column mismatch in output `biplot_scores` is fixed ([#1519](https://github.com/biocore/scikit-bio/issues/1519)).
 
 ### Deprecated functionality [stable]
 
@@ -301,19 +301,19 @@
 ### Miscellaneous
 * scikit-bio now depends on pandas >= 0.19.2, and is compatible with newer pandas versions (e.g. 0.20.3) that were previously incompatible.
 * scikit-bio now depends on `numpy >= 1.17.0, < 1.14.0` for compatibility with Python 3.4, 3.5, and 3.6 and the available numpy conda packages in `defaults` and `conda-forge` channels.
-* added support for running tests from `setup.py`. Both `python setup.py nosetests` and `python setup.py test` are now supported, however `python setup.py test` will only run a subset of the full test suite. ([#1341](https://github.com/scikit-bio/scikit-bio/issues/1341))
+* added support for running tests from `setup.py`. Both `python setup.py nosetests` and `python setup.py test` are now supported, however `python setup.py test` will only run a subset of the full test suite. ([#1341](https://github.com/biocore/scikit-bio/issues/1341))
 
 ## Version 0.5.1 (2016-11-12)
 
 ### Features
-* Added `IntervalMetadata` and `Interval` classes in `skbio.metadata` to store, query, and manipulate information of a sub-region of a sequence. ([#1414](https://github.com/scikit-bio/scikit-bio/issues/1414))
-* `Sequence` and its child classes (including `GrammaredSequence`, `RNA`, `DNA`, `Protein`) now accept `IntervalMetadata` in their constructor API. Some of their relevant methods are also updated accordingly. ([#1430](https://github.com/scikit-bio/scikit-bio/pull/1430))
-* GenBank parser now reads and writes `Sequence` or its subclass objects with `IntervalMetadata`. ([#1440](https://github.com/scikit-bio/scikit-bio/pull/1440))
-* `DissimilarityMatrix` now has a new constructor method called `from_iterable`. ([#1343](https://github.com/scikit-bio/scikit-bio/issues/1343)).
-* `DissimilarityMatrix` now allows non-hollow matrices. ([#1343](https://github.com/scikit-bio/scikit-bio/issues/1343)).
-* `DistanceMatrix.from_iterable` now accepts a `validate=True` parameter. ([#1343](https://github.com/scikit-bio/scikit-bio/issues/1343)).
-* ``DistanceMatrix`` now has a new method called ``to_series`` to create a ``pandas.Series`` from a ``DistanceMatrix`` ([#1397](https://github.com/scikit-bio/scikit-bio/issues/1397)).
-* Added parallel beta diversity calculation support via `skbio.diversity.block_beta_diversity`. The issue and idea is discussed in ([#1181](https://github.com/scikit-bio/scikit-bio/issues/1181), while the actual code changes are in [#1352](https://github.com/scikit-bio/scikit-bio/pull/1352)).
+* Added `IntervalMetadata` and `Interval` classes in `skbio.metadata` to store, query, and manipulate information of a sub-region of a sequence. ([#1414](https://github.com/biocore/scikit-bio/issues/1414))
+* `Sequence` and its child classes (including `GrammaredSequence`, `RNA`, `DNA`, `Protein`) now accept `IntervalMetadata` in their constructor API. Some of their relevant methods are also updated accordingly. ([#1430](https://github.com/biocore/scikit-bio/pull/1430))
+* GenBank parser now reads and writes `Sequence` or its subclass objects with `IntervalMetadata`. ([#1440](https://github.com/biocore/scikit-bio/pull/1440))
+* `DissimilarityMatrix` now has a new constructor method called `from_iterable`. ([#1343](https://github.com/biocore/scikit-bio/issues/1343)).
+* `DissimilarityMatrix` now allows non-hollow matrices. ([#1343](https://github.com/biocore/scikit-bio/issues/1343)).
+* `DistanceMatrix.from_iterable` now accepts a `validate=True` parameter. ([#1343](https://github.com/biocore/scikit-bio/issues/1343)).
+* ``DistanceMatrix`` now has a new method called ``to_series`` to create a ``pandas.Series`` from a ``DistanceMatrix`` ([#1397](https://github.com/biocore/scikit-bio/issues/1397)).
+* Added parallel beta diversity calculation support via `skbio.diversity.block_beta_diversity`. The issue and idea is discussed in ([#1181](https://github.com/biocore/scikit-bio/issues/1181), while the actual code changes are in [#1352](https://github.com/biocore/scikit-bio/pull/1352)).
 
 
 ### Backward-incompatible changes [stable]
@@ -323,12 +323,12 @@
 
 ### Backward-incompatible changes [experimental]
 * Modifying basis handling in `skbio.stats.composition.ilr_inv` prior to checking for orthogonality.  Now the basis is strictly assumed to be in the Aitchison simplex.
-* `DistanceMatrix.from_iterable` default behavior is now to validate matrix by computing all pairwise distances. Pass `validate=False` to get the previous behavior (no validation, but faster execution).([#1343](https://github.com/scikit-bio/scikit-bio/issues/1343)).
+* `DistanceMatrix.from_iterable` default behavior is now to validate matrix by computing all pairwise distances. Pass `validate=False` to get the previous behavior (no validation, but faster execution).([#1343](https://github.com/biocore/scikit-bio/issues/1343)).
 * GenBank I/O now parses sequence features into the attribute of `interval_metadata` instead of `positiona_metadata`. And the key of `FEATURES` is removed from `metadata` attribute.
 
 ### Performance enhancements
-* `TreeNode.shear` was rewritten for approximately a 25% performance increase. ([#1399](https://github.com/scikit-bio/scikit-bio/pull/1399))
-* The `IntervalMetadata` allows dramatic decrease in memory usage in reading GenBank files of feature rich sequences. ([#1159](https://github.com/scikit-bio/scikit-bio/issues/1159))
+* `TreeNode.shear` was rewritten for approximately a 25% performance increase. ([#1399](https://github.com/biocore/scikit-bio/pull/1399))
+* The `IntervalMetadata` allows dramatic decrease in memory usage in reading GenBank files of feature rich sequences. ([#1159](https://github.com/biocore/scikit-bio/issues/1159))
 
 ### Bug fixes
 
@@ -346,17 +346,17 @@
 **IMPORTANT**: scikit-bio is no longer compatible with Python 2. scikit-bio is compatible with Python 3.4 and later.
 
 ### Features
-* Added more descriptive error message to `skbio.io.registry` when attempting to read without specifying `into` and when there is no generator reader. ([#1326](https://github.com/scikit-bio/scikit-bio/issues/1326))
-* Added support for reference tags to `skbio.io.format.stockholm` reader and writer. ([#1348](https://github.com/scikit-bio/scikit-bio/issues/1348))
-* Expanded error message in `skbio.io.format.stockholm` reader when `constructor` is not passed, in order to provide better explanation to user. ([#1327](https://github.com/scikit-bio/scikit-bio/issues/1327))
-* Added `skbio.sequence.distance.kmer_distance` for computing the kmer distance between two sequences. ([#913](https://github.com/scikit-bio/scikit-bio/issues/913))
-* Added `skbio.sequence.Sequence.replace` for assigning a character to positions in a `Sequence`. ([#1222](https://github.com/scikit-bio/scikit-bio/issues/1222))
-* Added support for `pandas.RangeIndex`, lowering the memory footprint of default integer index objects. `Sequence.positional_metadata` and `TabularMSA.positional_metadata` now use `pd.RangeIndex` as the positional metadata index. `TabularMSA` now uses `pd.RangeIndex` as the default index. Usage of `pd.RangeIndex` over the previous `pd.Int64Index` [should be transparent](http://pandas.pydata.org/pandas-docs/version/0.18.0/whatsnew.html#range-index), so these changes should be non-breaking to users. scikit-bio now depends on pandas >= 0.18.0 ([#1308](https://github.com/scikit-bio/scikit-bio/issues/1308))
+* Added more descriptive error message to `skbio.io.registry` when attempting to read without specifying `into` and when there is no generator reader. ([#1326](https://github.com/biocore/scikit-bio/issues/1326))
+* Added support for reference tags to `skbio.io.format.stockholm` reader and writer. ([#1348](https://github.com/biocore/scikit-bio/issues/1348))
+* Expanded error message in `skbio.io.format.stockholm` reader when `constructor` is not passed, in order to provide better explanation to user. ([#1327](https://github.com/biocore/scikit-bio/issues/1327))
+* Added `skbio.sequence.distance.kmer_distance` for computing the kmer distance between two sequences. ([#913](https://github.com/biocore/scikit-bio/issues/913))
+* Added `skbio.sequence.Sequence.replace` for assigning a character to positions in a `Sequence`. ([#1222](https://github.com/biocore/scikit-bio/issues/1222))
+* Added support for `pandas.RangeIndex`, lowering the memory footprint of default integer index objects. `Sequence.positional_metadata` and `TabularMSA.positional_metadata` now use `pd.RangeIndex` as the positional metadata index. `TabularMSA` now uses `pd.RangeIndex` as the default index. Usage of `pd.RangeIndex` over the previous `pd.Int64Index` [should be transparent](http://pandas.pydata.org/pandas-docs/version/0.18.0/whatsnew.html#range-index), so these changes should be non-breaking to users. scikit-bio now depends on pandas >= 0.18.0 ([#1308](https://github.com/biocore/scikit-bio/issues/1308))
 * Added `reset_index=False` parameter to `TabularMSA.append` and `TabularMSA.extend` for resetting the MSA's index to the default index after appending/extending.
-* Added support for partial pairwise calculations via `skbio.diversity.partial_beta_diversity`. ([#1221](https://github.com/scikit-bio/scikit-bio/issues/1221), [#1337](https://github.com/scikit-bio/scikit-bio/pull/1337)). This function is immediately deprecated as its return type will change in the future and should be used with caution in its present form (see the function's documentation for details).
-* `TemporaryFile` and `NamedTemporaryFile` are now supported IO sources for `skbio.io` and related functionality.  ([#1291](https://github.com/scikit-bio/scikit-bio/issues/1291))
-* Added `tree_node_class=TreeNode` parameter to `skbio.tree.majority_rule` to support returning consensus trees of type `TreeNode` (the default) or a type that has the same interface as `TreeNode` (e.g. `TreeNode` subclasses) ([#1193](https://github.com/scikit-bio/scikit-bio/pull/1193))
-* `TreeNode.from_linkage_matrix` and `TreeNode.from_taxonomy` now support constructing `TreeNode` subclasses. `TreeNode.bifurcate` now supports `TreeNode` subclasses ([#1193](https://github.com/scikit-bio/scikit-bio/pull/1193))
+* Added support for partial pairwise calculations via `skbio.diversity.partial_beta_diversity`. ([#1221](https://github.com/biocore/scikit-bio/issues/1221), [#1337](https://github.com/biocore/scikit-bio/pull/1337)). This function is immediately deprecated as its return type will change in the future and should be used with caution in its present form (see the function's documentation for details).
+* `TemporaryFile` and `NamedTemporaryFile` are now supported IO sources for `skbio.io` and related functionality.  ([#1291](https://github.com/biocore/scikit-bio/issues/1291))
+* Added `tree_node_class=TreeNode` parameter to `skbio.tree.majority_rule` to support returning consensus trees of type `TreeNode` (the default) or a type that has the same interface as `TreeNode` (e.g. `TreeNode` subclasses) ([#1193](https://github.com/biocore/scikit-bio/pull/1193))
+* `TreeNode.from_linkage_matrix` and `TreeNode.from_taxonomy` now support constructing `TreeNode` subclasses. `TreeNode.bifurcate` now supports `TreeNode` subclasses ([#1193](https://github.com/biocore/scikit-bio/pull/1193))
 * The `ignore_metadata` keyword has been added to `TabularMSA.iter_positions` to improve performance when metadata is not necessary.
 * Pairwise aligners in `skbio.alignment` now propagate per-sequence `metadata` objects (this does not include `positional_metadata`).
 
@@ -364,21 +364,21 @@
 
 ### Backward-incompatible changes [experimental]
 * `TabularMSA.append` and `TabularMSA.extend` now require one of `minter`, `index`, or `reset_index` to be provided when incorporating new sequences into an MSA. Previous behavior was to auto-increment the index labels if `minter` and `index` weren't provided and the MSA had a default integer index, otherwise error. Use `reset_index=True` to obtain the previous behavior in a more explicit way.
-* `skbio.stats.composition.ancom` now returns two `pd.DataFrame` objects, where it previously returned one. The first contains the ANCOM test results, as before, and the second contains percentile abundances of each feature in each group. The specific percentiles that are computed and returned is controlled by the new `percentiles` parameter to `skbio.stats.composition.ancom`. In the future, this second `pd.DataFrame` will not be returned by this function, but will be available through the [contingency table API](https://github.com/scikit-bio/scikit-bio/issues/848). ([#1293](https://github.com/scikit-bio/scikit-bio/issues/1293))
+* `skbio.stats.composition.ancom` now returns two `pd.DataFrame` objects, where it previously returned one. The first contains the ANCOM test results, as before, and the second contains percentile abundances of each feature in each group. The specific percentiles that are computed and returned is controlled by the new `percentiles` parameter to `skbio.stats.composition.ancom`. In the future, this second `pd.DataFrame` will not be returned by this function, but will be available through the [contingency table API](https://github.com/biocore/scikit-bio/issues/848). ([#1293](https://github.com/biocore/scikit-bio/issues/1293))
 * `skbio.stats.composition.ancom` now performs multiple comparisons correction by default. The previous behavior of not performing multiple comparisons correction can be achieved by passing ``multiple_comparisons_correction=None``.
-* The ``reject`` column in the first ``pd.DataFrame`` returned from `skbio.stats.composition.ancom` has been renamed ``Reject null hypothesis`` for clarity. ([#1375](https://github.com/scikit-bio/scikit-bio/issues/1375))
+* The ``reject`` column in the first ``pd.DataFrame`` returned from `skbio.stats.composition.ancom` has been renamed ``Reject null hypothesis`` for clarity. ([#1375](https://github.com/biocore/scikit-bio/issues/1375))
 
 ### Bug fixes
-* Fixed row and column names to `biplot_scores` in the `OrdinationResults` object from `skbio.stats.ordination`. This fix affect the `cca` and `rda` methods. ([#1322](https://github.com/scikit-bio/scikit-bio/issues/1322))
-* Fixed bug when using `skbio.io.format.stockholm` reader on file with multi-line tree with no id. Previously this raised an `AttributeError`, now it correctly handles this type of tree. ([#1334](https://github.com/scikit-bio/scikit-bio/issues/1334))
-* Fixed bug when reading Stockholm files with GF or GS features split over multiple lines. Previously, the feature text was simply concatenated because it was assumed to have trailing whitespace. There are examples of Stockholm files with and without trailing whitespace for multi-line features, so the `skbio.io.format.stockholm` reader now adds a single space when concatenating feature text without trailing whitespace to avoid joining words together. Multi-line trees stored as GF metadata are concatenated as they appear in the file; a space is not added when concatenating. ([#1328](https://github.com/scikit-bio/scikit-bio/issues/1328))
+* Fixed row and column names to `biplot_scores` in the `OrdinationResults` object from `skbio.stats.ordination`. This fix affect the `cca` and `rda` methods. ([#1322](https://github.com/biocore/scikit-bio/issues/1322))
+* Fixed bug when using `skbio.io.format.stockholm` reader on file with multi-line tree with no id. Previously this raised an `AttributeError`, now it correctly handles this type of tree. ([#1334](https://github.com/biocore/scikit-bio/issues/1334))
+* Fixed bug when reading Stockholm files with GF or GS features split over multiple lines. Previously, the feature text was simply concatenated because it was assumed to have trailing whitespace. There are examples of Stockholm files with and without trailing whitespace for multi-line features, so the `skbio.io.format.stockholm` reader now adds a single space when concatenating feature text without trailing whitespace to avoid joining words together. Multi-line trees stored as GF metadata are concatenated as they appear in the file; a space is not added when concatenating. ([#1328](https://github.com/biocore/scikit-bio/issues/1328))
 * Fixed bug when using `Sequence.iter_kmers` on empty `Sequence` object. Previously this raised a `ValueError`, now it returns
 an empty generator.
 * Fixed minor bug where adding sequences to an empty `TabularMSA` with MSA-wide `positional_metadata` would result in a `TabularMSA` object in an inconsistent state. This could happen using `TabularMSA.append` or `TabularMSA.extend`. This bug only affects a `TabularMSA` object *without* sequences that has MSA-wide `positional_metadata` (for example, `TabularMSA([], positional_metadata={'column': []})`).
-* `TreeNode.distance` now handles the situation in which `self` or `other` are ancestors. Previosly, a node further up the tree was used resulting in inflated distances. ([#807](https://github.com/scikit-bio/scikit-bio/issues/807))
-* `TreeNode.prune` can now handle a root with a single descendent. Previously, the root was ignored from possibly having a single descendent. ([#1247](https://github.com/scikit-bio/scikit-bio/issues/1247))
-* Providing the `format` keyword to `skbio.io.read` when creating a generator with an empty file will now return an empty generator instead of raising `StopIteration`. ([#1313](https://github.com/scikit-bio/scikit-bio/issues/1313))
-* `OrdinationResults` is now importable from `skbio` and `skbio.stats.ordination` and correctly linked from the documentation ([#1205](https://github.com/scikit-bio/scikit-bio/issues/1205))
+* `TreeNode.distance` now handles the situation in which `self` or `other` are ancestors. Previosly, a node further up the tree was used resulting in inflated distances. ([#807](https://github.com/biocore/scikit-bio/issues/807))
+* `TreeNode.prune` can now handle a root with a single descendent. Previously, the root was ignored from possibly having a single descendent. ([#1247](https://github.com/biocore/scikit-bio/issues/1247))
+* Providing the `format` keyword to `skbio.io.read` when creating a generator with an empty file will now return an empty generator instead of raising `StopIteration`. ([#1313](https://github.com/biocore/scikit-bio/issues/1313))
+* `OrdinationResults` is now importable from `skbio` and `skbio.stats.ordination` and correctly linked from the documentation ([#1205](https://github.com/biocore/scikit-bio/issues/1205))
 * Fixed performance bug in pairwise aligners resulting in 100x worse performance than in 0.2.4.
 
 ### Deprecated functionality [stable]
@@ -386,42 +386,42 @@ an empty generator.
 
 ### Deprecated functionality [experimental]
 * Deprecated function `skbio.util.create_dir`. This function will be removed in scikit-bio 0.5.1. Please use the Python standard library
-functionality described [here](https://docs.python.org/2/library/os.html#os.makedirs). ([#833](https://github.com/scikit-bio/scikit-bio/issues/833))
+functionality described [here](https://docs.python.org/2/library/os.html#os.makedirs). ([#833](https://github.com/biocore/scikit-bio/issues/833))
 * Deprecated function `skbio.util.remove_files`. This function will be removed in scikit-bio 0.5.1. Please use the Python standard library
-functionality described [here](https://docs.python.org/2/library/os.html#os.remove). ([#833](https://github.com/scikit-bio/scikit-bio/issues/833))
+functionality described [here](https://docs.python.org/2/library/os.html#os.remove). ([#833](https://github.com/biocore/scikit-bio/issues/833))
 * Deprecated function `skbio.util.is_casava_v180_or_later`. This function will be removed in 0.5.1. Functionality moved to FASTQ sniffer.
-([#833](https://github.com/scikit-bio/scikit-bio/issues/833))
+([#833](https://github.com/biocore/scikit-bio/issues/833))
 
 ### Miscellaneous
-* When installing scikit-bio via `pip`, numpy must now be installed first ([#1296](https://github.com/scikit-bio/scikit-bio/issues/1296))
+* When installing scikit-bio via `pip`, numpy must now be installed first ([#1296](https://github.com/biocore/scikit-bio/issues/1296))
 
 ## Version 0.4.2 (2016-02-17)
 
 Minor maintenance release. **This is the last Python 2.7 compatible release. Future scikit-bio releases will only support Python 3.**
 
 ### Features
-* Added `skbio.tree.TreeNode.bifurcate` for converting multifurcating trees into bifurcating trees. ([#896](https://github.com/scikit-bio/scikit-bio/issues/896))
-* Added `skbio.io.format.stockholm` for reading Stockholm files into a `TabularMSA` and writing from a `TabularMSA`. ([#967](https://github.com/scikit-bio/scikit-bio/issues/967))
+* Added `skbio.tree.TreeNode.bifurcate` for converting multifurcating trees into bifurcating trees. ([#896](https://github.com/biocore/scikit-bio/issues/896))
+* Added `skbio.io.format.stockholm` for reading Stockholm files into a `TabularMSA` and writing from a `TabularMSA`. ([#967](https://github.com/biocore/scikit-bio/issues/967))
 * scikit-bio `Sequence` objects have better compatibility with numpy. For example, calling `np.asarray(sequence)` now converts the sequence to a numpy array of characters (the same as calling `sequence.values`).
-* Added `skbio.sequence.distance` subpackage for computing distances between scikit-bio `Sequence` objects ([#913](https://github.com/scikit-bio/scikit-bio/issues/913))
-* Added ``skbio.sequence.GrammaredSequence``, which can be inherited from to create grammared sequences with custom alphabets (e.g., for use with TabularMSA) ([#1175](https://github.com/scikit-bio/scikit-bio/issues/1175))
+* Added `skbio.sequence.distance` subpackage for computing distances between scikit-bio `Sequence` objects ([#913](https://github.com/biocore/scikit-bio/issues/913))
+* Added ``skbio.sequence.GrammaredSequence``, which can be inherited from to create grammared sequences with custom alphabets (e.g., for use with TabularMSA) ([#1175](https://github.com/biocore/scikit-bio/issues/1175))
 * Added ``skbio.util.classproperty`` decorator
 
 ### Backward-incompatible changes [stable]
 * When sniffing or reading a file (`skbio.io.sniff`, `skbio.io.read`, or the object-oriented `.read()` interface), passing `newline` as a keyword argument to `skbio.io.open` now raises a `TypeError`. This backward-incompatible change to a stable API is necessary because it fixes a bug (more details in bug fix section below).
-* When reading a FASTQ or QSEQ file and passing `variant='solexa'`, `ValueError` is now raised instead of `NotImplementedError`. This backward-incompatible change to a stable API is necessary to avoid creating a spin-locked process due to [a bug in Python](https://bugs.python.org/issue25786). See [#1256](https://github.com/scikit-bio/scikit-bio/issues/1256) for details. This change is temporary and will be reverted to `NotImplementedError` when the bug is fixed in Python.
+* When reading a FASTQ or QSEQ file and passing `variant='solexa'`, `ValueError` is now raised instead of `NotImplementedError`. This backward-incompatible change to a stable API is necessary to avoid creating a spin-locked process due to [a bug in Python](https://bugs.python.org/issue25786). See [#1256](https://github.com/biocore/scikit-bio/issues/1256) for details. This change is temporary and will be reverted to `NotImplementedError` when the bug is fixed in Python.
 
 ### Backward-incompatible changes [experimental]
-* `skbio.io.format.genbank`: When reading GenBank files, the date field of the LOCUS line is no longer parsed into a `datetime.datetime` object and is left as a string. When writing GenBank files, the locus date metadata is expected to be a string instead of a `datetime.datetime` object ([#1153](https://github.com/scikit-bio/scikit-bio/issues/1153))
+* `skbio.io.format.genbank`: When reading GenBank files, the date field of the LOCUS line is no longer parsed into a `datetime.datetime` object and is left as a string. When writing GenBank files, the locus date metadata is expected to be a string instead of a `datetime.datetime` object ([#1153](https://github.com/biocore/scikit-bio/issues/1153))
 * `Sequence.distance` now converts the input sequence (`other`) to its type before passing both sequences to `metric`. Previous behavior was to always convert to `Sequence`.
 
 ### Bug fixes
-* Fixed bug when using `Sequence.distance` or `DistanceMatrix.from_iterable` to compute distances between `Sequence` objects with differing `metadata`/`positional_metadata` and passing `metric=scipy.spatial.distance.hamming` ([#1254](https://github.com/scikit-bio/scikit-bio/issues/1254))
-* Fixed performance bug when computing Hamming distances between `Sequence` objects in `DistanceMatrix.from_iterable` ([#1250](https://github.com/scikit-bio/scikit-bio/issues/1250))
-* Changed `skbio.stats.composition.multiplicative_replacement` to raise an error whenever a large value of `delta` is chosen ([#1241](https://github.com/scikit-bio/scikit-bio/issues/1241))
+* Fixed bug when using `Sequence.distance` or `DistanceMatrix.from_iterable` to compute distances between `Sequence` objects with differing `metadata`/`positional_metadata` and passing `metric=scipy.spatial.distance.hamming` ([#1254](https://github.com/biocore/scikit-bio/issues/1254))
+* Fixed performance bug when computing Hamming distances between `Sequence` objects in `DistanceMatrix.from_iterable` ([#1250](https://github.com/biocore/scikit-bio/issues/1250))
+* Changed `skbio.stats.composition.multiplicative_replacement` to raise an error whenever a large value of `delta` is chosen ([#1241](https://github.com/biocore/scikit-bio/issues/1241))
 * When sniffing or reading a file (`skbio.io.sniff`, `skbio.io.read`, or the object-oriented `.read()` interface), passing `newline` as a keyword argument to `skbio.io.open` now raises a `TypeError`. The file format's `newline` character will be used when opening the file. Previous behavior allowed overriding the format's `newline` character but this could cause issues with readers that assume newline characters are those defined by the file format (which is an entirely reasonable assumption). This bug is very unlikely to have surfaced in practice as the default `newline` behavior is *universal newlines mode*.
 * DNA, RNA, and Protein are no longer inheritable because they assume an IUPAC alphabet.
-* `DistanceMatrix` constructor provides more informative error message when data contains NaNs ([#1276](https://github.com/scikit-bio/scikit-bio/issues/1276))
+* `DistanceMatrix` constructor provides more informative error message when data contains NaNs ([#1276](https://github.com/biocore/scikit-bio/issues/1276))
 
 ### Miscellaneous
 * Warnings raised by scikit-bio now share a common subclass ``skbio.util.SkbioWarning``.
@@ -429,32 +429,32 @@ Minor maintenance release. **This is the last Python 2.7 compatible release. Fut
 ## Version 0.4.1 (2015-12-09)
 
 ### Features
-* The ``TabularMSA`` object was added to represent and operate on tabular multiple sequence alignments. This satisfies [RFC 1](https://github.com/scikit-bio/scikit-bio-rfcs/blob/master/active/001-tabular-msa.md). See the ``TabularMSA`` docs for full details.
+* The ``TabularMSA`` object was added to represent and operate on tabular multiple sequence alignments. This satisfies [RFC 1](https://github.com/biocore/scikit-bio-rfcs/blob/master/active/001-tabular-msa.md). See the ``TabularMSA`` docs for full details.
 * Added phylogenetic diversity metrics, including weighted UniFrac, unweighted UniFrac, and Faith's Phylogenetic Diversity. These are accessible as ``skbio.diversity.beta.unweighted_unifrac``, ``skbio.diversity.beta.weighted_unifrac``, and ``skbio.diversity.alpha.faith_pd``, respectively.
 * Addition of the function ``skbio.diversity.alpha_diversity`` to support applying an alpha diversity metric to multiple samples in one call.
 * Addition of the functions ``skbio.diversity.get_alpha_diversity_metrics`` and ``skbio.diversity.get_beta_diversity_metrics`` to support discovery of the alpha and beta diversity metrics implemented in scikit-bio.
-* Added `skbio.stats.composition.ancom` function, a test for OTU differential abundance across sample categories. ([#1054](https://github.com/scikit-bio/scikit-bio/issues/1054))
-* Added `skbio.io.format.blast7` for reading BLAST+ output format 7 or BLAST output format 9 files into a `pd.DataFrame`. ([#1110](https://github.com/scikit-bio/scikit-bio/issues/1110))
-* Added `skbio.DissimilarityMatrix.to_data_frame` method for creating a ``pandas.DataFrame`` from a `DissimilarityMatrix` or `DistanceMatrix`. ([#757](https://github.com/scikit-bio/scikit-bio/issues/757))
+* Added `skbio.stats.composition.ancom` function, a test for OTU differential abundance across sample categories. ([#1054](https://github.com/biocore/scikit-bio/issues/1054))
+* Added `skbio.io.format.blast7` for reading BLAST+ output format 7 or BLAST output format 9 files into a `pd.DataFrame`. ([#1110](https://github.com/biocore/scikit-bio/issues/1110))
+* Added `skbio.DissimilarityMatrix.to_data_frame` method for creating a ``pandas.DataFrame`` from a `DissimilarityMatrix` or `DistanceMatrix`. ([#757](https://github.com/biocore/scikit-bio/issues/757))
 * Added support for one-dimensional vector of dissimilarities in `skbio.stats.distance.DissimilarityMatrix`
-constructor. ([#6240](https://github.com/scikit-bio/scikit-bio/issues/624))
-* Added `skbio.io.format.blast6` for reading BLAST+ output format 6 or BLAST output format 8 files into a `pd.DataFrame`. ([#1110](https://github.com/scikit-bio/scikit-bio/issues/1110))
-* Added `inner`, `ilr`, `ilr_inv` and `clr_inv`, ``skbio.stats.composition``, which enables linear transformations on compositions ([#892](https://github.com/scikit-bio/scikit-bio/issues/892)
-* Added ``skbio.diversity.alpha.pielou_e`` function as an evenness metric of alpha diversity. ([#1068](https://github.com/scikit-bio/scikit-bio/issues/1068))
+constructor. ([#6240](https://github.com/biocore/scikit-bio/issues/624))
+* Added `skbio.io.format.blast6` for reading BLAST+ output format 6 or BLAST output format 8 files into a `pd.DataFrame`. ([#1110](https://github.com/biocore/scikit-bio/issues/1110))
+* Added `inner`, `ilr`, `ilr_inv` and `clr_inv`, ``skbio.stats.composition``, which enables linear transformations on compositions ([#892](https://github.com/biocore/scikit-bio/issues/892)
+* Added ``skbio.diversity.alpha.pielou_e`` function as an evenness metric of alpha diversity. ([#1068](https://github.com/biocore/scikit-bio/issues/1068))
 * Added `to_regex` method to `skbio.sequence._iupac_sequence` ABC - it returns a regex object that matches all non-degenerate versions of the sequence.
 * Added ``skbio.util.assert_ordination_results_equal`` function for comparing ``OrdinationResults`` objects in unit tests.
 * Added ``skbio.io.format.genbank`` for reading and writing GenBank/GenPept for ``DNA``, ``RNA``, ``Protein`` and ``Sequence`` classes.
 * Added ``skbio.util.RepresentationWarning`` for warning about substitutions, assumptions, or particular alterations that were made for the successful completion of a process.
-* ``TreeNode.tip_tip_distances`` now supports nodes without an associated length. In this case, a length of 0.0 is assumed and an ``skbio.util.RepresentationWarning`` is raised. Previous behavior was to raise a ``NoLengthError``. ([#791](https://github.com/scikit-bio/scikit-bio/issues/791))
+* ``TreeNode.tip_tip_distances`` now supports nodes without an associated length. In this case, a length of 0.0 is assumed and an ``skbio.util.RepresentationWarning`` is raised. Previous behavior was to raise a ``NoLengthError``. ([#791](https://github.com/biocore/scikit-bio/issues/791))
 * ``DistanceMatrix`` now has a new constructor method called `from_iterable`.
 * ``Sequence`` now accepts ``lowercase`` keyword like ``DNA`` and others. Updated ``fasta``, ``fastq``, and ``qseq`` readers/writers for ``Sequence`` to reflect this.
 * The ``lowercase`` method has been moved up to ``Sequence`` meaning all sequence objects now have a ``lowercase`` method.
 * Added ``reverse_transcribe`` class method to ``RNA``.
-* Added `Sequence.observed_chars` property for obtaining the set of observed characters in a sequence. ([#1075](https://github.com/scikit-bio/scikit-bio/issues/1075))
-* Added `Sequence.frequencies` method for computing character frequencies in a sequence. ([#1074](https://github.com/scikit-bio/scikit-bio/issues/1074))
+* Added `Sequence.observed_chars` property for obtaining the set of observed characters in a sequence. ([#1075](https://github.com/biocore/scikit-bio/issues/1075))
+* Added `Sequence.frequencies` method for computing character frequencies in a sequence. ([#1074](https://github.com/biocore/scikit-bio/issues/1074))
 * Added experimental class-method ``Sequence.concat`` which will produce a new sequence from an iterable of existing sequences. Parameters control how positional metadata is propagated during a concatenation.
 * ``TreeNode.to_array`` now supports replacing ``nan`` branch lengths in the resulting branch length vector with the value provided as ``nan_length_value``.
-* ``skbio.io.format.phylip`` now supports sniffing and reading strict, sequential PHYLIP-formatted files into ``skbio.Alignment`` objects. ([#1006](https://github.com/scikit-bio/scikit-bio/issues/1006))
+* ``skbio.io.format.phylip`` now supports sniffing and reading strict, sequential PHYLIP-formatted files into ``skbio.Alignment`` objects. ([#1006](https://github.com/biocore/scikit-bio/issues/1006))
 * Added `default_gap_char` class property to ``DNA``, ``RNA``, and ``Protein`` for representing gap characters in a new sequence.
 
 ### Backward-incompatible changes [stable]
@@ -520,21 +520,21 @@ constructor. ([#6240](https://github.com/scikit-bio/scikit-bio/issues/624))
 
 ### Bug Fixes
 
-* ``Sequence`` objects now handle slicing of empty positional metadata correctly. Any metadata that is empty will no longer be propagated by the internal ``_to`` constructor. ([#1133](https://github.com/scikit-bio/scikit-bio/issues/1133))
+* ``Sequence`` objects now handle slicing of empty positional metadata correctly. Any metadata that is empty will no longer be propagated by the internal ``_to`` constructor. ([#1133](https://github.com/biocore/scikit-bio/issues/1133))
 * ``DissimilarityMatrix.plot()`` no longer leaves a white border around the
   heatmap it plots (PR #1070).
-* TreeNode.root_at_midpoint`` no longer fails when a node with two equal length child branches exists in the tree. ([#1077](https://github.com/scikit-bio/scikit-bio/issues/1077))
-* ``TreeNode._set_max_distance``, as called through ``TreeNode.get_max_distance`` or ``TreeNode.root_at_midpoint`` would store distance information as ``list``s in the attribute ``MaxDistTips`` on each node in the tree, however, these distances were only valid for the node in which the call to ``_set_max_distance`` was made. The values contained in ``MaxDistTips`` are now correct across the tree following a call to ``get_max_distance``. The scope of impact of this bug is limited to users that were interacting directly with ``MaxDistTips`` on descendant nodes; this bug does not impact any known method within scikit-bio. ([#1223](https://github.com/scikit-bio/scikit-bio/issues/1223))
-* Added missing `nose` dependency to setup.py's `install_requires`. ([#1214](https://github.com/scikit-bio/scikit-bio/issues/1214))
-* Fixed issue that resulted in legends of ``OrdinationResult`` plots sometimes being truncated. ([#1210](https://github.com/scikit-bio/scikit-bio/issues/1210))
+* TreeNode.root_at_midpoint`` no longer fails when a node with two equal length child branches exists in the tree. ([#1077](https://github.com/biocore/scikit-bio/issues/1077))
+* ``TreeNode._set_max_distance``, as called through ``TreeNode.get_max_distance`` or ``TreeNode.root_at_midpoint`` would store distance information as ``list``s in the attribute ``MaxDistTips`` on each node in the tree, however, these distances were only valid for the node in which the call to ``_set_max_distance`` was made. The values contained in ``MaxDistTips`` are now correct across the tree following a call to ``get_max_distance``. The scope of impact of this bug is limited to users that were interacting directly with ``MaxDistTips`` on descendant nodes; this bug does not impact any known method within scikit-bio. ([#1223](https://github.com/biocore/scikit-bio/issues/1223))
+* Added missing `nose` dependency to setup.py's `install_requires`. ([#1214](https://github.com/biocore/scikit-bio/issues/1214))
+* Fixed issue that resulted in legends of ``OrdinationResult`` plots sometimes being truncated. ([#1210](https://github.com/biocore/scikit-bio/issues/1210))
 
 ### Deprecated functionality [stable]
 * `skbio.Sequence.copy` has been deprecated in favor of `copy.copy(seq)` and `copy.deepcopy(seq)`.
 
 ### Miscellaneous
 * Doctests are now written in Python 3.
-* ``make test`` now validates MANIFEST.in using [check-manifest](https://github.com/mgedmin/check-manifest). ([#461](https://github.com/scikit-bio/scikit-bio/issues/461))
-* Many new alpha diversity equations added to ``skbio.diversity.alpha`` documentation. ([#321](https://github.com/scikit-bio/scikit-bio/issues/321))
+* ``make test`` now validates MANIFEST.in using [check-manifest](https://github.com/mgedmin/check-manifest). ([#461](https://github.com/biocore/scikit-bio/issues/461))
+* Many new alpha diversity equations added to ``skbio.diversity.alpha`` documentation. ([#321](https://github.com/biocore/scikit-bio/issues/321))
 * Order of ``lowercase`` and ``validate`` keywords swapped in ``DNA``, ``RNA``, and ``Protein``.
 
 ## Version 0.4.0 (2015-07-08)
@@ -546,13 +546,13 @@ substantially different (and improved!):
 * `skbio.sequence`
 * `skbio.io`
 
-The APIs of these subpackages are now stable, and all others are experimental. See the [API stability docs](https://github.com/scikit-bio/scikit-bio/tree/0.4.0/doc/source/user/api_stability.rst) for more details, including what we mean by *stable* and *experimental* in this context. We recognize that this is a lot of backward-incompatible changes. To avoid these types of changes being a surprise to our users, our public APIs are now decorated to make it clear to developers when an API can be relied upon (stable) and when it may be subject to change (experimental).
+The APIs of these subpackages are now stable, and all others are experimental. See the [API stability docs](https://github.com/biocore/scikit-bio/tree/0.4.0/doc/source/user/api_stability.rst) for more details, including what we mean by *stable* and *experimental* in this context. We recognize that this is a lot of backward-incompatible changes. To avoid these types of changes being a surprise to our users, our public APIs are now decorated to make it clear to developers when an API can be relied upon (stable) and when it may be subject to change (experimental).
 
 ### Features
 * Added `skbio.stats.composition` for analyzing data made up of proportions
 * Added new ``skbio.stats.evolve`` subpackage for evolutionary statistics. Currently contains a single function, ``hommola_cospeciation``, which implements a permutation-based test of correlation between two distance matrices.
 * Added support for ``skbio.io.util.open_file`` and ``skbio.io.util.open_files`` to pull files from HTTP and HTTPS URLs. This behavior propagates to the I/O registry.
-* FASTA/QUAL (``skbio.io.format.fasta``) and FASTQ (``skbio.io.format.fastq``) readers now allow blank or whitespace-only lines at the beginning of the file, between records, or at the end of the file. A blank or whitespace-only line in any other location will continue to raise an error [#781](https://github.com/scikit-bio/scikit-bio/issues/781).
+* FASTA/QUAL (``skbio.io.format.fasta``) and FASTQ (``skbio.io.format.fastq``) readers now allow blank or whitespace-only lines at the beginning of the file, between records, or at the end of the file. A blank or whitespace-only line in any other location will continue to raise an error [#781](https://github.com/biocore/scikit-bio/issues/781).
 * scikit-bio now ignores leading and trailing whitespace characters on each line while reading FASTA/QUAL and FASTQ files.
 * Added `ratio` parameter to `skbio.stats.power.subsample_power`. This allows the user to calculate power on groups for uneven size (For example, draw twice as many samples from Group B than Group A). If `ratio` is not set, group sizes will remain equal across all groups.
 * Power calculations (`skbio.stats.power.subsample_power` and `skbio.stats.power.subsample_paired_power`) can use test functions that return multiple p values, like some multivariate linear regression models. Previously, the power calculations required the test to return a single p value.
@@ -563,14 +563,14 @@ The APIs of these subpackages are now stable, and all others are experimental. S
 * The speed of `NucleotideSequence.reverse_complement` has been improved (~6x).
 
 ### Bug fixes
-* Changed `Sequence.distance` to raise an error any time two sequences are passed of different lengths regardless of the `distance_fn` being passed. [(#514)](https://github.com/scikit-bio/scikit-bio/issues/514)
-* Fixed issue with ``TreeNode.extend`` where if given the children of another ``TreeNode`` object (``tree.children``), both trees would be left in an incorrect and unpredictable state. ([#889](https://github.com/scikit-bio/scikit-bio/issues/889))
-* Changed the way power was calculated in `subsample_paired_power` to move the subsample selection before the test is performed. This increases the number of Monte Carlo simulations performed during power estimation, and improves the accuracy of the returned estimate. Previous power estimates from `subsample_paired_power` should be disregarded and re-calculated. ([#910](https://github.com/scikit-bio/scikit-bio/issues/910))
-* Fixed issue where `randdm` was attempting to create asymmetric distance matrices.This was causing an error to be raised by the `DistanceMatrix` constructor inside of the `randdm` function, so that `randdm` would fail when attempting to create large distance matrices. ([#943](https://github.com/scikit-bio/scikit-bio/issues/943))
+* Changed `Sequence.distance` to raise an error any time two sequences are passed of different lengths regardless of the `distance_fn` being passed. [(#514)](https://github.com/biocore/scikit-bio/issues/514)
+* Fixed issue with ``TreeNode.extend`` where if given the children of another ``TreeNode`` object (``tree.children``), both trees would be left in an incorrect and unpredictable state. ([#889](https://github.com/biocore/scikit-bio/issues/889))
+* Changed the way power was calculated in `subsample_paired_power` to move the subsample selection before the test is performed. This increases the number of Monte Carlo simulations performed during power estimation, and improves the accuracy of the returned estimate. Previous power estimates from `subsample_paired_power` should be disregarded and re-calculated. ([#910](https://github.com/biocore/scikit-bio/issues/910))
+* Fixed issue where `randdm` was attempting to create asymmetric distance matrices.This was causing an error to be raised by the `DistanceMatrix` constructor inside of the `randdm` function, so that `randdm` would fail when attempting to create large distance matrices. ([#943](https://github.com/biocore/scikit-bio/issues/943))
 
 ### Deprecated functionality
 * Deprecated `skbio.util.flatten`. This function will be removed in scikit-bio 0.3.1. Please use standard python library functionality
-described here [Making a flat list out of lists of lists](http://stackoverflow.com/a/952952/3639023), [Flattening a shallow list](http://stackoverflow.com/a/406199/3639023) ([#833](https://github.com/scikit-bio/scikit-bio/issues/833))
+described here [Making a flat list out of lists of lists](http://stackoverflow.com/a/952952/3639023), [Flattening a shallow list](http://stackoverflow.com/a/406199/3639023) ([#833](https://github.com/biocore/scikit-bio/issues/833))
 * Deprecated `skbio.stats.power.bootstrap_power_curve` will be removed in scikit-bio 0.4.1. It is deprecated in favor of using ``subsample_power`` or ``sample_paired_power`` to calculate a power matrix, and then the use of ``confidence_bounds`` to calculate the average and confidence intervals.
 
 ### Backward-incompatible changes
@@ -600,7 +600,7 @@ described here [Making a flat list out of lists of lists](http://stackoverflow.c
     - Added `skbio.util._testing.TestRunner` (available through `skbio.util.TestRunner`). Used to provide a `test` method for each module init file. This class represents a unified testing path which wraps all `skbio` testing functionality.
     - Autodetect Python version and disable doctests for Python 3.
 * `numpy` is no longer required to be installed before installing scikit-bio!
-* Upgraded checklist.py to check source files non-conforming to [new header style](http://scikit-bio.org/docs/latest/development/new_module.html). ([#855](https://github.com/scikit-bio/scikit-bio/issues/855))
+* Upgraded checklist.py to check source files non-conforming to [new header style](http://scikit-bio.org/docs/latest/development/new_module.html). ([#855](https://github.com/biocore/scikit-bio/issues/855))
 * Updated to use `natsort` >= 4.0.0.
 * The method of subsampling was changed for ``skbio.stats.power.subsample_paired_power``. Rather than drawing a paired sample for the run and then subsampling for each count, the subsample is now drawn for each sample and each run. In test data, this did not significantly alter the power results.
 * checklist.py now enforces `__future__` imports in .py files.
@@ -612,11 +612,11 @@ described here [Making a flat list out of lists of lists](http://stackoverflow.c
 * Added ``skbio.util.find_duplicates`` for finding duplicate elements in an iterable.
 
 ### Bug fixes
-* Fixed floating point precision bugs in ``Alignment.position_frequencies``, ``Alignment.position_entropies``, ``Alignment.omit_gap_positions``, ``Alignment.omit_gap_sequences``, ``BiologicalSequence.k_word_frequencies``, and ``SequenceCollection.k_word_frequencies`` ([#801](https://github.com/scikit-bio/scikit-bio/issues/801)).
+* Fixed floating point precision bugs in ``Alignment.position_frequencies``, ``Alignment.position_entropies``, ``Alignment.omit_gap_positions``, ``Alignment.omit_gap_sequences``, ``BiologicalSequence.k_word_frequencies``, and ``SequenceCollection.k_word_frequencies`` ([#801](https://github.com/biocore/scikit-bio/issues/801)).
 
 ### Backward-incompatible changes
-* Removed ``feature_types`` attribute from ``BiologicalSequence`` and all subclasses ([#797](https://github.com/scikit-bio/scikit-bio/pull/797)).
-* Removed ``find_features`` method from ``BiologicalSequence`` and ``ProteinSequence`` ([#797](https://github.com/scikit-bio/scikit-bio/pull/797)).
+* Removed ``feature_types`` attribute from ``BiologicalSequence`` and all subclasses ([#797](https://github.com/biocore/scikit-bio/pull/797)).
+* Removed ``find_features`` method from ``BiologicalSequence`` and ``ProteinSequence`` ([#797](https://github.com/biocore/scikit-bio/pull/797)).
 * ``BiologicalSequence.k_word_frequencies`` now returns a ``collections.defaultdict`` of type ``float`` instead of type ``int``. This only affects the "default" case, when a key isn't present in the dictionary. Previous behavior would return ``0`` as an ``int``, while the new behavior is to return ``0.0`` as a ``float``. This change also affects the ``defaultdict``s that are returned by ``SequenceCollection.k_word_frequencies``.
 
 ### Miscellaneous
@@ -625,15 +625,15 @@ described here [Making a flat list out of lists of lists](http://stackoverflow.c
 ## Version 0.2.2 (2014-12-04)
 
 ### Features
-* Added ``plot`` method to ``skbio.stats.distance.DissimilarityMatrix`` for creating basic heatmaps of a dissimilarity/distance matrix (see [#684](https://github.com/scikit-bio/scikit-bio/issues/684)). Also added  ``_repr_png_`` and ``_repr_svg_`` methods for automatic display in the IPython Notebook, with ``png`` and ``svg`` properties for direct access.
+* Added ``plot`` method to ``skbio.stats.distance.DissimilarityMatrix`` for creating basic heatmaps of a dissimilarity/distance matrix (see [#684](https://github.com/biocore/scikit-bio/issues/684)). Also added  ``_repr_png_`` and ``_repr_svg_`` methods for automatic display in the IPython Notebook, with ``png`` and ``svg`` properties for direct access.
 * Added `__str__` method to `skbio.stats.ordination.OrdinationResults`.
-* Added ``skbio.stats.distance.anosim`` and ``skbio.stats.distance.permanova`` functions, which replace the ``skbio.stats.distance.ANOSIM`` and ``skbio.stats.distance.PERMANOVA`` classes. These new functions provide simpler procedural interfaces to running these statistical methods. They also provide more convenient access to results by returning a ``pandas.Series`` instead of a ``CategoricalStatsResults`` object. These functions have more extensive documentation than their previous versions. If significance tests are suppressed, p-values are returned as ``np.nan`` instead of ``None`` for consistency with other statistical methods in scikit-bio. [#754](https://github.com/scikit-bio/scikit-bio/issues/754)
+* Added ``skbio.stats.distance.anosim`` and ``skbio.stats.distance.permanova`` functions, which replace the ``skbio.stats.distance.ANOSIM`` and ``skbio.stats.distance.PERMANOVA`` classes. These new functions provide simpler procedural interfaces to running these statistical methods. They also provide more convenient access to results by returning a ``pandas.Series`` instead of a ``CategoricalStatsResults`` object. These functions have more extensive documentation than their previous versions. If significance tests are suppressed, p-values are returned as ``np.nan`` instead of ``None`` for consistency with other statistical methods in scikit-bio. [#754](https://github.com/biocore/scikit-bio/issues/754)
 * Added `skbio.stats.power` for performing empirical power analysis. The module uses existing datasets and iteratively draws samples to estimate the number of samples needed to see a significant difference for a given critical value.
 * Added `skbio.stats.isubsample` for subsampling from an unknown number of values. This method supports subsampling from multiple partitions and does not require that all items be stored in memory, requiring approximately `O(N*M)`` space where `N` is the number of partitions and `M` is the maximum subsample size.
-* Added ``skbio.stats.subsample_counts``, which replaces ``skbio.stats.subsample``. See deprecation section below for more details ([#770](https://github.com/scikit-bio/scikit-bio/issues/770)).
+* Added ``skbio.stats.subsample_counts``, which replaces ``skbio.stats.subsample``. See deprecation section below for more details ([#770](https://github.com/biocore/scikit-bio/issues/770)).
 
 ### Bug fixes
-* Fixed issue where SSW wouldn't compile on i686 architectures ([#409](https://github.com/scikit-bio/scikit-bio/issues/409)).
+* Fixed issue where SSW wouldn't compile on i686 architectures ([#409](https://github.com/biocore/scikit-bio/issues/409)).
 
 ### Deprecated functionality
 * Deprecated ``skbio.stats.p_value_to_str``. This function will be removed in scikit-bio 0.3.0. Permutation-based p-values in scikit-bio are calculated as ``(num_extreme + 1) / (num_permutations + 1)``, so it is impossible to obtain a p-value of zero. This function historically existed for correcting the number of digits displayed when obtaining a p-value of zero. Since this is no longer possible, this functionality will be removed.
@@ -642,11 +642,11 @@ described here [Making a flat list out of lists of lists](http://stackoverflow.c
 * Deprecated ``skbio.stats.subsample`` in favor of ``skbio.stats.subsample_counts``, which provides an identical interface; only the function name has changed. ``skbio.stats.subsample`` will be removed in scikit-bio 0.3.0.
 
 ### Backward-incompatible changes
-* Deprecation warnings are now raised using ``DeprecationWarning`` instead of ``UserWarning`` ([#774](https://github.com/scikit-bio/scikit-bio/issues/774)).
+* Deprecation warnings are now raised using ``DeprecationWarning`` instead of ``UserWarning`` ([#774](https://github.com/biocore/scikit-bio/issues/774)).
 
 ### Miscellaneous
 * The ``pandas.DataFrame`` returned by ``skbio.stats.distance.pwmantel`` now stores p-values as floats and does not convert them to strings with a specific number of digits. p-values that were previously stored as "N/A" are now stored as ``np.nan`` for consistency with other statistical methods in scikit-bio. See note in "Deprecated functionality" above regarding ``p_value_to_str`` for details.
-* scikit-bio now supports versions of IPython < 2.0.0 ([#767](https://github.com/scikit-bio/scikit-bio/issues/767)).
+* scikit-bio now supports versions of IPython < 2.0.0 ([#767](https://github.com/biocore/scikit-bio/issues/767)).
 
 ## Version 0.2.1 (2014-10-27)
 
@@ -655,9 +655,9 @@ This is an alpha release of scikit-bio. At this stage, major backwards-incompati
 ### Features
 * Added ``strict`` and ``lookup`` optional parameters to ``skbio.stats.distance.mantel`` for handling reordering and matching of IDs when provided ``DistanceMatrix`` instances as input (these parameters were previously only available in ``skbio.stats.distance.pwmantel``).
 * ``skbio.stats.distance.pwmantel`` now accepts an iterable of ``array_like`` objects. Previously, only ``DistanceMatrix`` instances were allowed.
-* Added ``plot`` method to ``skbio.stats.ordination.OrdinationResults`` for creating basic 3-D matplotlib scatterplots of ordination results, optionally colored by metadata in a ``pandas.DataFrame`` (see [#518](https://github.com/scikit-bio/scikit-bio/issues/518)). Also added  ``_repr_png_`` and ``_repr_svg_`` methods for automatic display in the IPython Notebook, with ``png`` and ``svg`` properties for direct access.
+* Added ``plot`` method to ``skbio.stats.ordination.OrdinationResults`` for creating basic 3-D matplotlib scatterplots of ordination results, optionally colored by metadata in a ``pandas.DataFrame`` (see [#518](https://github.com/biocore/scikit-bio/issues/518)). Also added  ``_repr_png_`` and ``_repr_svg_`` methods for automatic display in the IPython Notebook, with ``png`` and ``svg`` properties for direct access.
 * Added ``skbio.stats.ordination.assert_ordination_results_equal`` for comparing ``OrdinationResults`` objects for equality in unit tests.
-* ``BiologicalSequence`` (and its subclasses) now optionally store Phred quality scores. A biological sequence's quality scores are stored as a 1-D ``numpy.ndarray`` of nonnegative integers that is the same length as the biological sequence. Quality scores can be provided upon object instantiation via the keyword argument ``quality``, and can be retrieved via the ``BiologicalSequence.quality`` property. ``BiologicalSequence.has_quality`` is also provided for determining whether a biological sequence has quality scores or not. See [#616](https://github.com/scikit-bio/scikit-bio/issues/616) for more details.
+* ``BiologicalSequence`` (and its subclasses) now optionally store Phred quality scores. A biological sequence's quality scores are stored as a 1-D ``numpy.ndarray`` of nonnegative integers that is the same length as the biological sequence. Quality scores can be provided upon object instantiation via the keyword argument ``quality``, and can be retrieved via the ``BiologicalSequence.quality`` property. ``BiologicalSequence.has_quality`` is also provided for determining whether a biological sequence has quality scores or not. See [#616](https://github.com/biocore/scikit-bio/issues/616) for more details.
 * Added ``BiologicalSequence.sequence`` property for retrieving the underlying string representing the sequence characters. This was previously (and still is) accessible via ``BiologicalSequence.__str__``. It is provided via a property for convenience and explicitness.
 * Added ``BiologicalSequence.equals`` for full control over equality testing of biological sequences. By default, biological sequences must have the same type, underlying sequence of characters, identifier, description, and quality scores to compare equal. These properties can be ignored via the keyword argument ``ignore``. The behavior of ``BiologicalSequence.__eq__``/``__ne__`` remains unchanged (only type and underlying sequence of characters are compared).
 * Added ``BiologicalSequence.copy`` for creating a copy of a biological sequence, optionally with one or more attributes updated.
@@ -752,7 +752,7 @@ This is an alpha release of scikit-bio. At this stage, major backwards-incompati
 ### Miscellaneous
 
 * Added git timestamp checking to checklist.py, ensuring that when changes are made to Cython (.pyx) files, their corresponding generated C files are also updated.
-* Fixed performance bug when instantiating ``BiologicalSequence`` objects. The previous runtime scaled linearly with sequence length; it is now constant time when the sequence is already a string. See [#623](https://github.com/scikit-bio/scikit-bio/issues/623) for details.
+* Fixed performance bug when instantiating ``BiologicalSequence`` objects. The previous runtime scaled linearly with sequence length; it is now constant time when the sequence is already a string. See [#623](https://github.com/biocore/scikit-bio/issues/623) for details.
 * IPython and six are now required dependencies.
 
 ## Version 0.2.0 (2014-08-07)
@@ -761,9 +761,9 @@ This is an initial alpha release of scikit-bio. At this stage, major backwards-i
 
 ### Features
 
-* Added ability to compute distances between sequences in a ``SequenceCollection`` object ([#509](https://github.com/scikit-bio/scikit-bio/issues/509)), and expanded ``Alignment.distance`` to allow the user to pass a function for computing distances (the default distance metric is still ``scipy.spatial.distance.hamming``) ([#194](https://github.com/scikit-bio/scikit-bio/issues/194)).
-* Added functionality to not penalize terminal gaps in global alignment. This functionality results in more biologically relevant global alignments (see [#537](https://github.com/scikit-bio/scikit-bio/issues/537) for discussion of the issue) and is now the default behavior for global alignment.
-* The python global aligners (``global_pairwise_align``, ``global_pairwise_align_nucleotide``, and ``global_pairwise_align_protein``) now support aligning pairs of sequences, pairs of alignments, and a sequence and an alignment (see [#550](https://github.com/scikit-bio/scikit-bio/issues/550)). This functionality supports progressive multiple sequence alignment, among other things such as adding a sequence to an existing alignment.
+* Added ability to compute distances between sequences in a ``SequenceCollection`` object ([#509](https://github.com/biocore/scikit-bio/issues/509)), and expanded ``Alignment.distance`` to allow the user to pass a function for computing distances (the default distance metric is still ``scipy.spatial.distance.hamming``) ([#194](https://github.com/biocore/scikit-bio/issues/194)).
+* Added functionality to not penalize terminal gaps in global alignment. This functionality results in more biologically relevant global alignments (see [#537](https://github.com/biocore/scikit-bio/issues/537) for discussion of the issue) and is now the default behavior for global alignment.
+* The python global aligners (``global_pairwise_align``, ``global_pairwise_align_nucleotide``, and ``global_pairwise_align_protein``) now support aligning pairs of sequences, pairs of alignments, and a sequence and an alignment (see [#550](https://github.com/biocore/scikit-bio/issues/550)). This functionality supports progressive multiple sequence alignment, among other things such as adding a sequence to an existing alignment.
 * Added ``StockholmAlignment.to_file`` for writing Stockholm-formatted files.
 * Added ``strict=True`` optional parameter to ``DissimilarityMatrix.filter``.
 * Added ``TreeNode.find_all`` for finding all tree nodes that match a given name.
@@ -771,7 +771,7 @@ This is an initial alpha release of scikit-bio. At this stage, major backwards-i
 
 ### Bug fixes
 
-* Fixed bug that resulted in a ``ValueError`` from ``local_align_pairwise_nucleotide`` (see [#504](https://github.com/scikit-bio/scikit-bio/issues/504)) under many circumstances. This would not generate incorrect results, but would cause the code to fail.
+* Fixed bug that resulted in a ``ValueError`` from ``local_align_pairwise_nucleotide`` (see [#504](https://github.com/biocore/scikit-bio/issues/504)) under many circumstances. This would not generate incorrect results, but would cause the code to fail.
 
 ### Backward-incompatible changes
 
@@ -780,7 +780,7 @@ This is an initial alpha release of scikit-bio. At this stage, major backwards-i
 * The contents of ``skbio.math.stats.ordination.utils`` are now in ``skbio.stats.ordination``.
 * Removed ``skbio.app`` subpackage (i.e., the *application controller framework*) as this code has been ported to the standalone [burrito](https://github.com/biocore/burrito) Python package. This code was not specific to bioinformatics and is useful for wrapping command-line applications in general.
 * Removed ``skbio.core``, leaving ``alignment``, ``genetic_code``, ``sequence``, ``tree``, and ``workflow`` to become top level packages. For example, instead of ``from skbio.core.sequence import DNA`` you would now import ``from skbio.sequence import DNA``.
-* Removed ``skbio.util.exception`` and ``skbio.util.warning`` (see [#577](https://github.com/scikit-bio/scikit-bio/issues/577) for the reasoning behind this change). The exceptions/warnings were moved to the following locations:
+* Removed ``skbio.util.exception`` and ``skbio.util.warning`` (see [#577](https://github.com/biocore/scikit-bio/issues/577) for the reasoning behind this change). The exceptions/warnings were moved to the following locations:
  - ``FileFormatError``, ``RecordError``, ``FieldError``, and ``EfficiencyWarning`` have been moved to ``skbio.util``
  - ``BiologicalSequenceError`` has been moved to ``skbio.sequence``
  - ``SequenceCollectionError`` and ``StockholmParseError`` have been moved to ``skbio.alignment``
@@ -789,7 +789,7 @@ This is an initial alpha release of scikit-bio. At this stage, major backwards-i
  - ``FastqParseError`` has been moved to ``skbio.parse.sequences``
  - ``GeneticCodeError``, ``GeneticCodeInitError``, and ``InvalidCodonError`` have been moved to ``skbio.genetic_code``
 * The contents of ``skbio.genetic_code`` formerly ``skbio.core.genetic_code`` are now in ``skbio.sequence``. The ``GeneticCodes`` dictionary is now a function ``genetic_code``. The functionality is the same, except that because this is now a function rather than a dict, retrieving a genetic code is done using a function call rather than a lookup (so, for example, ``GeneticCodes[2]`` becomes ``genetic_code(2)``.
-* Many submodules have been made private with the intention of simplifying imports for users. See [#562](https://github.com/scikit-bio/scikit-bio/issues/562) for discussion of this change. The following list contains the previous module name and where imports from that module should now come from.
+* Many submodules have been made private with the intention of simplifying imports for users. See [#562](https://github.com/biocore/scikit-bio/issues/562) for discussion of this change. The following list contains the previous module name and where imports from that module should now come from.
  - ``skbio.alignment.ssw`` to ``skbio.alignment``
  - ``skbio.alignment.alignment`` to ``skbio.alignment``
  - ``skbio.alignment.pairwise`` to ``skbio.alignment``
@@ -817,7 +817,7 @@ This is an initial alpha release of scikit-bio. At this stage, major backwards-i
 
 ### Miscellaneous
 
-* Relaxed requirement in ``BiologicalSequence.distance`` that sequences being compared are of equal length. This is relevant for Hamming distance, so the check is still performed in that case, but other distance metrics may not have that requirement. See [#504](https://github.com/scikit-bio/scikit-bio/issues/507)).
+* Relaxed requirement in ``BiologicalSequence.distance`` that sequences being compared are of equal length. This is relevant for Hamming distance, so the check is still performed in that case, but other distance metrics may not have that requirement. See [#504](https://github.com/biocore/scikit-bio/issues/507)).
 * Renamed ``powertrip.py`` repo-checking script to ``checklist.py`` for clarity.
 * ``checklist.py`` now ensures that all unit tests import from a minimally deep API. For example, it will produce an error if ``skbio.core.distance.DistanceMatrix`` is used over ``skbio.DistanceMatrix``.
 * Extra dimension is no longer calculated in ``skbio.stats.spatial.procrustes``.
@@ -831,7 +831,7 @@ This is a pre-alpha release. At this stage, major backwards-incompatible API cha
 ### Features
 
 * Added Python implementations of Smith-Waterman and Needleman-Wunsch alignment as ``skbio.core.alignment.pairwise.local_pairwise_align`` and ``skbio.core.alignment.pairwise.global_pairwise_align``. These are much slower than native C implementations (e.g., ``skbio.core.alignment.local_pairwise_align_ssw``) and as a result raise an ``EfficencyWarning`` when called, but are included as they serve as useful educational examples as they’re simple to experiment with.
-* Added ``skbio.core.diversity.beta.pw_distances`` and ``skbio.core.diversity.beta.pw_distances_from_table``. These provide convenient access to the ``scipy.spatial.distance.pdist`` *beta diversity* metrics from within scikit-bio. The ``skbio.core.diversity.beta.pw_distances_from_table`` function will only be available temporarily, until the ``biom.table.Table`` object is merged into scikit-bio (see [#489](https://github.com/scikit-bio/scikit-bio/issues/489)), at which point ``skbio.core.diversity.beta.pw_distances`` will be updated to use that.
+* Added ``skbio.core.diversity.beta.pw_distances`` and ``skbio.core.diversity.beta.pw_distances_from_table``. These provide convenient access to the ``scipy.spatial.distance.pdist`` *beta diversity* metrics from within scikit-bio. The ``skbio.core.diversity.beta.pw_distances_from_table`` function will only be available temporarily, until the ``biom.table.Table`` object is merged into scikit-bio (see [#489](https://github.com/biocore/scikit-bio/issues/489)), at which point ``skbio.core.diversity.beta.pw_distances`` will be updated to use that.
 * Added ``skbio.core.alignment.StockholmAlignment``, which provides support for parsing [Stockholm-formatted alignment files](http://sonnhammer.sbc.su.se/Stockholm.html) and working with those alignments in the context RNA secondary structural information.
 * Added ``skbio.core.tree.majority_rule`` function for computing consensus trees from a list of trees.
 
@@ -850,7 +850,7 @@ This is a pre-alpha release. At this stage, major backwards-incompatible API cha
 * Added powertrip.py script to perform basic sanity-checking of the repo based on recurring issues that weren't being caught until release time; added to Travis build.
 * Added RELEASE.md with release instructions.
 * Added intersphinx mappings to docs so that "See Also" references to numpy, scipy, matplotlib, and pandas are hyperlinks.
-* The following classes are no longer ``namedtuple`` subclasses (see [#359](https://github.com/scikit-bio/scikit-bio/issues/359) for the rationale):
+* The following classes are no longer ``namedtuple`` subclasses (see [#359](https://github.com/biocore/scikit-bio/issues/359) for the rationale):
     * ``skbio.math.stats.ordination.OrdinationResults``
     * ``skbio.math.gradient.GroupResults``
     * ``skbio.math.gradient.CategoryResults``

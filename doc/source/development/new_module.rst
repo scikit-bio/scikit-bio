@@ -44,4 +44,4 @@ necessary so that all tests can be run after installation)::
   # ----------------------------------------------------------------------------
 
 Finally, remember to also follow the `documentation guidelines
-<https://github.com/scikit-bio/scikit-bio/blob/master/doc/README.md#documenting-a-module-in-scikit-bio>`_.
+<https://github.com/biocore/scikit-bio/blob/master/doc/README.md#documenting-a-module-in-scikit-bio>`_.

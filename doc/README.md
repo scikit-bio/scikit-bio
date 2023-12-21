@@ -15,7 +15,7 @@ set up. See [CONTRIBUTING.md](../CONTRIBUTING.md) for instructions. In
 addition, you will also need to install Sphinx and the theme for the
 documentation, you can do that with:
 
-    conda install sphinx sphinx_bootstrap_theme
+    pip install 'Sphinx<=3.0' sphinx-bootstrap-theme
 
 **Important:** The documentation will be built for whatever version of
 scikit-bio is *currently installed* on your system (i.e., the version imported

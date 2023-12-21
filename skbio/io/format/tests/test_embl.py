@@ -467,7 +467,7 @@ class ReaderTests(EMBLIOTests):
                 _parse_id(line)
 
     # current status of protein support is described in issue-1499
-    # https://github.com/scikit-bio/scikit-bio/issues/1499
+    # https://github.com/biocore/scikit-bio/issues/1499
     def test_no_protein_support(self):
         """Testing no protein support for embl"""
         # TODO: add protein support
@@ -637,7 +637,7 @@ AS   1-426          AC004528.1
         self.assertEqual(exp, obs)
 
     # current status of protein support is described in issue-1499
-    # https://github.com/scikit-bio/scikit-bio/issues/1499
+    # https://github.com/biocore/scikit-bio/issues/1499
     def test_embl_to_protein(self):
         # TODO: add protein support
         i = 0
@@ -745,7 +745,7 @@ DR   Proteomes; UP000008770; Genome.
 
     # TODO: add support for protein
     # current status of protein support is described in issue-1499
-    # https://github.com/scikit-bio/scikit-bio/issues/1499
+    # https://github.com/biocore/scikit-bio/issues/1499
     def test_protein_to_embl(self):
         seq, md, imd, constructor = self.protein
         obj = constructor(seq, md, interval_metadata=imd)
@@ -816,7 +816,7 @@ class RoundtripTests(EMBLIOTests):
 
     # TODO: test_roundtrip_protein
     # current status of protein support is described in issue-1499
-    # https://github.com/scikit-bio/scikit-bio/issues/1499
+    # https://github.com/biocore/scikit-bio/issues/1499
 
     def test_roundtrip_sequence(self):
         with io.StringIO() as fh:

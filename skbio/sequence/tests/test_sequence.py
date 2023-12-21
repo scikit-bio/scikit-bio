@@ -1903,7 +1903,7 @@ class TestSequence(TestSequenceBase, ReallyEqualMixin):
         # want to test for exactly 1.0. A previous implementation of
         # Sequence.kmer_frequencies(relative=True) added (1 / num_words) for
         # each occurrence of a k-word to compute the frequencies (see
-        # https://github.com/scikit-bio/scikit-bio/issues/801). In certain cases,
+        # https://github.com/biocore/scikit-bio/issues/801). In certain cases,
         # this yielded a frequency slightly less than 1.0 due to roundoff
         # error. The test case here uses a sequence with 10 characters that are
         # all identical and computes k-word frequencies with k=1. This test

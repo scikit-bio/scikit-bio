@@ -53,7 +53,7 @@ You will need to **fully install** the latest master branch of scikit-bio (inclu
 
 ## Tag the release
 
-From the [scikit-bio GitHub page](https://github.com/scikit-bio/scikit-bio), click on the releases tab and draft a new release. Use the version number for the tag name (x.y.z) and create the tag against master. Fill in a release title that is consistent with previous release titles and add a summary of the release (linking to ``CHANGELOG.md`` is a good idea). This release summary will be the primary information that we point users to when we announce the release.
+From the [scikit-bio GitHub page](https://github.com/biocore/scikit-bio), click on the releases tab and draft a new release. Use the version number for the tag name (x.y.z) and create the tag against master. Fill in a release title that is consistent with previous release titles and add a summary of the release (linking to ``CHANGELOG.md`` is a good idea). This release summary will be the primary information that we point users to when we announce the release.
 
 Once the release is created on GitHub, it's a good idea to test out the release tarball before publishing to PyPI:
 
@@ -64,7 +64,7 @@ Once the release is created on GitHub, it's a good idea to test out the release 
 
 2. Install the release tarball from GitHub and run the tests:
 
-        pip install https://github.com/scikit-bio/scikit-bio/archive/x.y.z.tar.gz
+        pip install https://github.com/biocore/scikit-bio/archive/x.y.z.tar.gz
         python -m skbio.test
 
 ## Publish the release
@@ -138,6 +138,6 @@ Assuming the GitHub release tarball correctly installs and passes its tests, you
 
 3. Send an email to the skbio developers list and anyone else who might be interested (e.g., lab mailing lists). You might include links to the GitHub release page.
 
-4. Tweet about the release from `@scikit-bio`, including a link to the GitHub release page (for example, https://github.com/scikit-bio/scikit-bio/releases/tag/x.y.z). Post a similar message to [scikit-bio's Gitter](https://gitter.im/biocore/scikit-bio).
+4. Tweet about the release from `@scikit-bio`, including a link to the GitHub release page (for example, https://github.com/biocore/scikit-bio/releases/tag/x.y.z). Post a similar message to [scikit-bio's Gitter](https://gitter.im/biocore/scikit-bio).
 
 5. :beers:

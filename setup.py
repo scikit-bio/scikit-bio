@@ -165,7 +165,7 @@ if platform.system() != 'Windows':
         stats_extra_link_args.extend(['-fopenmp'])
 
 # Users with i686 architectures have reported that adding this flag allows
-# SSW to be compiled. See https://github.com/scikit-bio/scikit-bio/issues/409 and
+# SSW to be compiled. See https://github.com/biocore/scikit-bio/issues/409 and
 # http://stackoverflow.com/q/26211814/3776794 for details.
 if platform.machine() == 'i686':
     ssw_extra_compile_args.append('-msse2')

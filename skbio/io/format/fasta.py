@@ -75,7 +75,7 @@ the sequence data, optionally split over multiple lines.
    details on legacy FASTA format. If you would like legacy FASTA format
    support added to scikit-bio, please consider submitting a feature request on
    the
-   `scikit-bio issue tracker <https://github.com/scikit-bio/scikit-bio/issues>`_
+   `scikit-bio issue tracker <https://github.com/biocore/scikit-bio/issues>`_
    (pull requests are also welcome!).
 
 Sequence Header
