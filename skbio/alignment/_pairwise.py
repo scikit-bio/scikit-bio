@@ -595,8 +595,8 @@ def global_pairwise_align(seq1, seq2, gap_open_penalty, gap_extend_penalty,
     warn("You're using skbio's python implementation of Needleman-Wunsch "
          "alignment. This is known to be very slow (e.g., thousands of times "
          "slower than a native C implementation). We'll be adding a faster "
-         "version soon (see https://github.com/scikit-bio/scikit-bio/issues/254 "
-         "to track progress on this).", EfficiencyWarning)
+         "version soon (see https://github.com/scikit-bio/scikit-bio/issues/"
+         "254 to track progress on this).", EfficiencyWarning)
 
     for seq in seq1, seq2:
         # We don't need to check the case where `seq` is a `TabularMSA` with a

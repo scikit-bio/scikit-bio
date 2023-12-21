@@ -915,10 +915,11 @@ class Format:
                     except UnicodeDecodeError:
                         pass
                     except Exception:
-                        warn("'%s' has encountered a problem.\nPlease"
-                             " send the following to our issue tracker at\n"
-                             "https://github.com/scikit-bio/scikit-bio/issues\n\n"
-                             "%s" % (sniffer.__name__, traceback.format_exc()),
+                        warn(f'\'{sniffer.__name__}\' has encountered a '
+                             'problem.\nPlease send the following to our '
+                             'issue tracker at\nhttps://github.com/scikit-'
+                             'bio/scikit-bio/issues\n\n'
+                             f'{traceback.format_exc()}',
                              FormatIdentificationWarning)
 
                     return False, {}

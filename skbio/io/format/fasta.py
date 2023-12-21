@@ -74,8 +74,8 @@ the sequence data, optionally split over multiple lines.
    description given in NCBI's BLAST documentation [3]_. See [2]_ for more
    details on legacy FASTA format. If you would like legacy FASTA format
    support added to scikit-bio, please consider submitting a feature request on
-   the
-   `scikit-bio issue tracker <https://github.com/scikit-bio/scikit-bio/issues>`_
+   the scikit-bio
+   `issue tracker <https://github.com/scikit-bio/scikit-bio/issues>`_
    (pull requests are also welcome!).
 
 Sequence Header
