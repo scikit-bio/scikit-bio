@@ -57,10 +57,49 @@ class DNA(GrammaredSequence, NucleotideMixin):
 
     Notes
     -----
-    Subclassing is disabled for DNA, because subclassing makes
-    it possible to change the alphabet, and certain methods rely on the
-    IUPAC alphabet. If a custom sequence alphabet is needed, inherit directly
-    from ``GrammaredSequence``.
+    According to the IUPAC DNA character set [1]_, a DNA sequence may contain
+    the following four definite characters (nucleotides):
+
+    +-----+-----------+
+    |Code |Nucleobase |
+    +=====+===========+
+    |A    |Adenine    |
+    +-----+-----------+
+    |C    |Cytosine   |
+    +-----+-----------+
+    |G    |Guanine    |
+    +-----+-----------+
+    |T    |Thymine    |
+    +-----+-----------+
+
+    And the following 11 degenerate characters, each of which representing 2-4
+    nucleotides.
+
+    +-----+-------------+-----------+
+    |Code |Nucleobases  |Meaning    |
+    +=====+=========================+
+    |R    |A or G       |Purine     |
+    +-----+-------------+-----------+
+    |Y    |C or T       |Pyrimidine |
+    +-----+-------------+-----------+
+    |S    |G or C       |Strong     |
+    +-----+-------------+-----------+
+    |W    |A or T       |Weak       |
+    +-----+-------------+-----------+
+    |K    |G or T       |Keto       |
+    +-----+-------------+-----------+
+    |M    |A or C       |Amino      |
+    +-----+-------------+-----------+
+    |B    |C, G or T    |Not A      |
+    +-----+-------------+-----------+
+    |D    |A, G or T    |Not C      |
+    +-----+-------------+-----------+
+    |H    |A, C or T    |Not G      |
+    +-----+-------------+-----------+
+    |V    |A, C or G    |Not T      |
+    +-----+-------------+-----------+
+    |N    |A, C, G or T |Any        |
+    +-----+-------------+-----------+
 
     References
     ----------
