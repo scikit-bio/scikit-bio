@@ -5,6 +5,7 @@
 ### Performance enhancements
 
 * Improved the calculation of Fisher's alpha diversity index (`fisher_alpha`). It is now compatible with optimizers in SciPy 1.11+. Edge cases such as all singletons can be handled correctly. Handling of errors and warnings was improved. Documentation was enriched ([#1890](https://github.com/scikit-bio/scikit-bio/pull/1890)).
+* Allowed `delimiter=None` which represents whitespace of arbitrary length in reading lsmat format matrices ([#1912](https://github.com/scikit-bio/scikit-bio/pull/1912)).
 
 ### Features
 
