@@ -201,7 +201,6 @@ ACGTGCCTA-GGTACGCAAG
 # ----------------------------------------------------------------------------
 
 from ._tabular_msa import TabularMSA
-from ._substitution import SubstitutionMatrix
 from ._pairwise import (
     local_pairwise_align_nucleotide, local_pairwise_align_protein,
     local_pairwise_align, global_pairwise_align_nucleotide,
