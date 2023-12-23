@@ -12,7 +12,8 @@ import skbio.io  # noqa
 # imports included for convenience
 from skbio.sequence import Sequence, DNA, RNA, Protein, GeneticCode
 from skbio.stats.distance import DistanceMatrix
-from skbio.alignment import local_pairwise_align_ssw, TabularMSA
+from skbio.alignment import (
+    local_pairwise_align_ssw, TabularMSA, SubstitutionMatrix)
 from skbio.tree import TreeNode, nj
 from skbio.io import read, write
 from skbio.stats.ordination import OrdinationResults
