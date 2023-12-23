@@ -25,6 +25,7 @@ class LSMatTestData(TestCase):
         self.lsmat_3x3_fh = io.StringIO(LSMat_3x3)
         self.lsmat_3x3_whitespace_fh = io.StringIO(LSMat_3x3_WHITESPACE)
         self.lsmat_3x3_csv_fh = io.StringIO(LSMat_3x3_CSV)
+        self.lsmat_3x3_fw_fh = io.StringIO(LSMat_3x3_FW)
 
         self.valid_fhs = [
             self.lsmat_1x1_fh,
@@ -115,6 +116,15 @@ class DissimilarityAndDistanceMatrixReaderWriterTests(LSMatTestData):
             self.assertEqual(obs, exp)
             self.assertIsInstance(obs, cls)
 
+        # Test that fixed-width works too.
+        for fn, cls in ((_lsmat_to_dissimilarity_matrix, DissimilarityMatrix),
+                        (_lsmat_to_distance_matrix, DistanceMatrix)):
+            exp = cls(self.lsmat_3x3_data, ['a', 'b', 'c'])
+            self.lsmat_3x3_fw_fh.seek(0)
+            obs = fn(self.lsmat_3x3_fw_fh, delimiter=None)
+            self.assertEqual(obs, exp)
+            self.assertIsInstance(obs, cls)
+
     def test_read_invalid_files(self):
         for fn in _lsmat_to_dissimilarity_matrix, _lsmat_to_distance_matrix:
             for invalid_fh, error_msg_regexp in self.invalid_fhs:
@@ -195,36 +205,59 @@ class SnifferTests(LSMatTestData):
             self.assertEqual(_lsmat_sniffer(fh), (False, {}))
 
 
-LSMat_1x1 = "\ta\na\t0.0\n"
+LSMat_1x1 = (
+    '\ta\n'
+    'a\t0.0\n')
 
-LSMat_2x2 = "\ta\tb\na\t0.0\t0.123\nb\t0.123\t0.0\n"
+LSMat_2x2 = (
+    '\ta\tb\n'
+    'a\t0.0\t0.123\n'
+    'b\t0.123\t0.0\n')
 
-LSMat_2x2_ASYM = "\ta\tb\na\t0.0\t1.0\nb\t-2.0\t0.0\n"
+LSMat_2x2_ASYM = (
+    '\ta\tb\n'
+    'a\t0.0\t1.0\n'
+    'b\t-2.0\t0.0\n')
 
-LSMat_3x3 = ("\ta\tb\tc\na\t0.0\t0.01\t4.2\nb\t0.01\t0.0\t12.0\nc\t4.2\t12.0\t"
-             "0.0\n")
+LSMat_3x3 = (
+    '\ta\tb\tc\n'
+    'a\t0.0\t0.01\t4.2\n'
+    'b\t0.01\t0.0\t12.0\n'
+    'c\t4.2\t12.0\t0.0\n')
 
 # Extra whitespace-only lines throughout. Also has comments before the header.
-LSMat_3x3_WHITESPACE = '\n'.join(['# foo',
-                                  '      \t \t ',
-                                  ' #bar',
-                                  '',
-                                  '',
-                                  '\ta\t b \tc',
-                                  'a  \t0.0\t0.01\t4.2',
-                                  '     \t',
-                                  'b\t0.01\t0.0\t12.0',
-                                  '',
-                                  '\t     \t',
-                                  '',
-                                  'c\t4.2\t12.0\t0.0',
-                                  '',
-                                  '   \t ',
-                                  '\t\t\t',
-                                  ' '])
+LSMat_3x3_WHITESPACE = '\n'.join([
+    '# foo',
+    '      \t \t ',
+    ' #bar',
+    '',
+    '',
+    '\ta\t b \tc',
+    'a  \t0.0\t0.01\t4.2',
+    '     \t',
+    'b\t0.01\t0.0\t12.0',
+    '',
+    '\t     \t',
+    '',
+    'c\t4.2\t12.0\t0.0',
+    '',
+    '   \t ',
+    '\t\t\t',
+    ' '])
 
 # Same matrix as above, but delimited by commas instead of tabs.
-LSMat_3x3_CSV = ",a,b,c\na,0.0,0.01,4.2\nb,0.01,0.0,12.0\nc,4.2,12.0,0.0\n"
+LSMat_3x3_CSV = (
+    ',a,b,c\n'
+    'a,0.0,0.01,4.2\n'
+    'b,0.01,0.0,12.0\n'
+    'c,4.2,12.0,0.0\n')
+
+# Same matrix as above, but delimited by whitespaces instead of tabs.
+LSMat_3x3_FW = (
+    '   a     b     c   \n'
+    'a  0.0   0.01  4.2 \n'
+    'b  0.01  0.0  12.0 \n'
+    'c  4.2  12.0   0.0 \n')
 
 # missing data
 INVALID_1 = '\ta\tb\na\t0\t1\nb\t1'

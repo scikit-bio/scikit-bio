@@ -57,8 +57,14 @@ Format Parameters
 -----------------
 The only supported format parameter is ``delimiter``, which defaults to the tab
 character (``'\\t'``). ``delimiter`` is used to separate elements in the file
-format. ``delimiter`` can be specified as a keyword argument when reading from
-or writing to a file.
+format. Examples include tab (``'\\t'``) for TSV format and comma (``','``) for
+CSV format. ``delimiter`` can be specified as a keyword argument when reading
+from or writing to a file.
+
+A special ``delimiter`` is ``None``, which represents a whitespace of arbitrary
+length. This value is useful for reading a fixed-width text file. However, it
+cannot be automatically determined, nor can it be specified when writing to a
+file.
 
 """
 
@@ -196,11 +202,13 @@ def _find_header(fh):
 def _parse_header(header, delimiter):
     tokens = header.rstrip().split(delimiter)
 
-    if tokens[0]:
-        raise LSMatFormatError(
-            "Header must start with delimiter %r." % str(delimiter))
+    if delimiter is not None:
+        if tokens[0]:
+            raise LSMatFormatError(
+                "Header must start with delimiter %r." % str(delimiter))
+        tokens = tokens[1:]
 
-    return [e.strip() for e in tokens[1:]]
+    return [e.strip() for e in tokens]
 
 
 def _parse_data(fh, delimiter):
