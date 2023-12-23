@@ -66,19 +66,20 @@ class SubstitutionMatrix(DissimilarityMatrix):
     ...     [2, -1, -1, -1],
     ...     [-1, 2, -1, -1],
     ...     [-1, -1, 2, -1],
-    ...     [-1, -1, -1, 2]])
+    ...     [-1, -1, -1, 2]]))
     >>> mat.alphabet
-    (A, C, G, T)
+    ('A', 'C', 'G', 'T')
     >>> mat.scores
-    array([[2., -1., -1., -1.],
-           [-1., 2., -1., -1.],
-           [-1., -1., 2., -1.],
-           [-1., -1., -1., 2.]])
+    array([[ 2., -1., -1., -1.],
+           [-1.,  2., -1., -1.],
+           [-1., -1.,  2., -1.],
+           [-1., -1., -1.,  2.]])
     >>> mat['A', 'T']
     -1.0
     >>> mat['G', 'G']
     2.0
     >>> blosum62 = SubstitutionMatrix.from_name('BLOSUM62')
+
     """
 
     @property
@@ -167,15 +168,16 @@ class SubstitutionMatrix(DissimilarityMatrix):
         --------
         >>> from skbio import SubstitutionMatrix
         >>> d = {'a': {'a': 1, 'b': 0, 'c': 0},
-                 'b': {'a': 0, 'b': 1, 'c': 0},
-                 'c': {'a': 0, 'b': 0, 'c': 1}}
+        ...      'b': {'a': 0, 'b': 1, 'c': 0},
+        ...      'c': {'a': 0, 'b': 0, 'c': 1}}
         >>> mat = SubstitutionMatrix.from_dict(d)
         >>> mat.alphabet
-        (a, b, c)
+        ('a', 'b', 'c')
         >>> mat.scores
-        array([[1., 0., 0.],
-               [0., 1., 0.],
-               [0., 0., 1.]])
+        array([[ 1.,  0.,  0.],
+               [ 0.,  1.,  0.],
+               [ 0.,  0.,  1.]])
+
         """
         alphabet = tuple(dictionary.keys())
         alphabet_set = set(alphabet)
@@ -220,12 +222,13 @@ class SubstitutionMatrix(DissimilarityMatrix):
         >>> from skbio import SubstitutionMatrix
         >>> mat = SubstitutionMatrix.identity('ACGT', 1, -2)
         >>> mat.alphabet
-        (A, C, G, T)
+        ('A', 'C', 'G', 'T')
         >>> mat.scores
-        array([[1., -2., -2., -2.],
-               [-2., 1., -2., -2.],
-               [-2., -2., 1., -2.],
-               [-2., -2., -2., 1.]])
+        array([[ 1., -2., -2., -2.],
+               [-2.,  1., -2., -2.],
+               [-2., -2.,  1., -2.],
+               [-2., -2., -2.,  1.]])
+
         """
         alphabet = tuple(alphabet)
         scores = np.identity(len(alphabet)) * (match - mismatch) + mismatch
