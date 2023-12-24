@@ -117,16 +117,16 @@ class TestSubstitutionMatrix(TestCase):
                         [-2., -2., -2., 1.]])
         assert_array_equal(obs.scores, exp)
 
-    def test_from_name(self):
-        obs = SubstitutionMatrix.from_name('NUC.4.4')
+    def test_by_name(self):
+        obs = SubstitutionMatrix.by_name('NUC.4.4')
         self.assertEqual(len(obs.alphabet), 15)
         self.assertEqual(obs['A', 'T'], -4)
-        obs = SubstitutionMatrix.from_name('BLOSUM50')
+        obs = SubstitutionMatrix.by_name('BLOSUM50')
         self.assertEqual(len(obs.alphabet), 24)
         self.assertEqual(obs['M', 'K'], -2)
         msg = 'Substitution matrix "hello" does not exist.'
         with self.assertRaisesRegex(ValueError, msg):
-            SubstitutionMatrix.from_name('hello')
+            SubstitutionMatrix.by_name('hello')
 
     def test_get_names(self):
         obs = SubstitutionMatrix.get_names()

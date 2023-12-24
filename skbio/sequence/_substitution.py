@@ -8,7 +8,7 @@
 
 import numpy as np
 
-from skbio.util._decorator import experimental, classproperty, classonlymethod
+from skbio.util._decorator import experimental, classonlymethod
 from skbio.stats.distance import DissimilarityMatrix
 
 
@@ -33,7 +33,7 @@ class SubstitutionMatrix(DissimilarityMatrix):
 
     Notes
     -----
-    A substitution matrix, a.k.a. replacement matrix, scores the substitution
+    A substitution matrix (a.k.a. replacement matrix) scores the substitution
     of each character by each other character and itself in an alphabet. The
     score usually represents the rate of substitution over evolutionary time in
     a biological sequence. A higher score usually indicates higher similarity
@@ -78,7 +78,7 @@ class SubstitutionMatrix(DissimilarityMatrix):
     -1.0
     >>> mat['G', 'G']
     2.0
-    >>> blosum62 = SubstitutionMatrix.from_name('BLOSUM62')
+    >>> blosum62 = SubstitutionMatrix.by_name('BLOSUM62')
 
     """
 
@@ -236,7 +236,7 @@ class SubstitutionMatrix(DissimilarityMatrix):
 
     @classonlymethod
     @experimental(as_of='0.5.10')
-    def from_name(cls, name):
+    def by_name(cls, name):
         """Load a pre-defined substitution matrix by its name.
 
         Parameters
@@ -258,10 +258,34 @@ class SubstitutionMatrix(DissimilarityMatrix):
         --------
         get_names
 
+        Notes
+        -----
+        Available substitution matrix names can be obtained by ``get_names``.
+        Currently, the following names are supported:
+
+        - `NUC.4.4` (a.k.a. DNAfull): A nucleotide substitution matrix covering
+          all definite and degenerate nucleotides.
+
+        - Point Accepted Mutation (PAM) [1]_: A set of amino acid substitution
+          matrices, including `PAM30`, `PAM70` and 'PAM250`.
+
+        - BLOcks SUbstitution Matrix (BLOSUM) [2]_: A set of amino acid
+          substitution matrices, including `BLOSUM45`, `BLOSUM50`, `BLOSUM62`,
+          `BLOSUM80` and `BLOSUM90`.
+
+        References
+        ----------
+        .. [1] Dayhoff, M., Schwartz, R., & Orcutt, B. (1978). A model of
+           evolutionary change in proteins. Atlas of protein sequence and
+           structure, 5, 345-352.
+        .. [2] Henikoff, S., & Henikoff, J. G. (1992). Amino acid substitution
+           matrices from protein blocks. Proceedings of the National Academy of
+           Sciences, 89(22), 10915-10919.
+
         Examples
         --------
         >>> from skbio import SubstitutionMatrix
-        >>> mat = SubstitutionMatrix.from_name('BLOSUM62')
+        >>> mat = SubstitutionMatrix.by_name('BLOSUM62')
         >>> len(mat.alphabet)
         24
         >>> mat['M', 'K']
@@ -285,7 +309,7 @@ class SubstitutionMatrix(DissimilarityMatrix):
 
         See Also
         --------
-        from_name
+        by_name
         """
         return list(named_substitution_matrices.keys())
 
@@ -321,7 +345,7 @@ named_substitution_matrices = {
             -3, -1, -1, -1, -1, -4, -2, -2, -3, -1, -3, -1, -1, -1, -2, -2, -1,
             -3, -1, -3, -1, -1, -4, -1, -3, -3, -1, -1, -1, -3, -1, -1, -3, -1,
             -1, -2, -2, -2, -1, -1, -2, -2, -1, -1, -2, -1, -1, -1, -1])),
-            validate=False),
+        validate=False),
 
     # Point Accepted Mutation (PAM)
     'PAM30': SubstitutionMatrix(
@@ -345,7 +369,7 @@ named_substitution_matrices = {
             -7, -6, -1, -5, -3, -17, 7, -13, -6, -3, -3, -6, -4, -17, 13, -5,
             -15, -10, -14, -11, -17, 10, -7, -6, -9, -7, -17, 7, -8, -6, -5,
             -17, 6, 0, -5, -17, 6, -5, -17, -5, -17, 1])),
-            validate=False),
+        validate=False),
     'PAM70': SubstitutionMatrix(
         'ARNDCQEGHILKMFPSTWYVBZX*', _vector_to_matrix(np.array([
             5, -4, -2, -1, -4, -2, -1, 0, -4, -2, -4, -4, -3, -6, 0, 1, 1, -9,
@@ -366,7 +390,7 @@ named_substitution_matrices = {
             -3, -5, -3, 0, -2, -1, -11, 6, -8, -4, -1, -1, -3, -2, -11, 13, -3,
             -10, -7, -10, -7, -11, 9, -5, -4, -7, -5, -11, 6, -5, -4, -2, -11,
             5, 1, -2, -11, 5, -3, -11, -3, -11, 1])),
-            validate=False),
+        validate=False),
     'PAM250': SubstitutionMatrix(
         'ARNDCQEGHILKMFPSTWYVBZX*', _vector_to_matrix(np.array([
             2, -2, 0, 0, -2, 0, 0, 1, -1, -1, -2, -1, -1, -3, 1, 1, 1, -6, -3,
@@ -386,7 +410,7 @@ named_substitution_matrices = {
             0, 0, 0, -8, 3, -5, -3, 0, 0, -1, 0, -8, 17, 0, -6, -5, -6, -4, -8,
             10, -2, -3, -4, -2, -8, 4, -2, -2, -1, -8, 3, 2, -1, -8, 3, -1, -8,
             -1, -8, 1])),
-            validate=False),
+        validate=False),
 
     # BLOcks SUbstitution Matrix (BLOSUM)
     'BLOSUM45': SubstitutionMatrix(
@@ -408,7 +432,7 @@ named_substitution_matrices = {
             -1, -5, 4, 2, -4, -2, -1, 0, 0, 0, -5, 5, -3, -1, 0, 0, -1, 0, -5,
             15, 3, -3, -4, -2, -2, -5, 8, -1, -2, -2, -1, -5, 5, -3, -3, -1,
             -5, 4, 2, -1, -5, 4, -1, -5, -1, -5, 1])),
-            validate=False),
+        validate=False),
     'BLOSUM50': SubstitutionMatrix(
         'ARNDCQEGHILKMFPSTWYVBZX*', _vector_to_matrix(np.array([
             5, -2, -1, -2, -1, -1, -1, 0, -2, -1, -2, -1, -1, -3, -1, 1, 0, -3,
@@ -428,7 +452,7 @@ named_substitution_matrices = {
             -3, -2, -1, -2, -5, 5, 2, -4, -2, -2, 0, 0, -1, -5, 5, -3, -2, 0,
             0, -1, 0, -5, 15, 2, -3, -5, -2, -3, -5, 8, -1, -3, -2, -1, -5, 5,
             -4, -3, -1, -5, 5, 2, -1, -5, 5, -1, -5, -1, -5, 1])),
-            validate=False),
+        validate=False),
     'BLOSUM62': SubstitutionMatrix(
         'ARNDCQEGHILKMFPSTWYVBZX*', _vector_to_matrix(np.array([
             4, -1, -2, -2, 0, -1, -1, 0, -2, -1, -1, -1, -1, -2, -1, 1, 0, -3,
@@ -448,7 +472,7 @@ named_substitution_matrices = {
             -1, -2, -4, 4, 1, -3, -2, -2, 0, 0, 0, -4, 5, -2, -2, 0, -1, -1, 0,
             -4, 11, 2, -3, -4, -3, -2, -4, 7, -1, -3, -2, -1, -4, 4, -3, -2,
             -1, -4, 4, 1, -1, -4, 4, -1, -4, -1, -4, 1])),
-            validate=False),
+        validate=False),
     'BLOSUM80': SubstitutionMatrix(
         'ARNDCQEGHILKMFPSTWYVBZX*', _vector_to_matrix(np.array([
             7, -3, -3, -3, -1, -2, -2, 0, -3, -3, -3, -1, -2, -4, -1, 2, 0, -5,
@@ -469,7 +493,7 @@ named_substitution_matrices = {
             -5, -3, 0, -1, -2, -1, -8, 16, 3, -5, -8, -5, -5, -8, 11, -3, -5,
             -4, -3, -8, 7, -6, -4, -2, -8, 6, 0, -3, -8, 6, -1, -8, -2, -8,
             1])),
-            validate=False),
+        validate=False),
     'BLOSUM90': SubstitutionMatrix(
         'ARNDCQEGHILKMFPSTWYVBZX*', _vector_to_matrix(np.array([
             5, -2, -2, -3, -1, -1, -1, 0, -2, -2, -2, -1, -2, -3, -1, 1, 0, -4,
@@ -490,5 +514,5 @@ named_substitution_matrices = {
             -6, 6, -4, -2, -1, -1, -1, -1, -6, 11, 2, -3, -6, -4, -3, -6, 8,
             -3, -4, -3, -2, -6, 5, -4, -3, -2, -6, 4, 0, -2, -6, 4, -1, -6, -2,
             -6, 1])),
-            validate=False),
+        validate=False),
 }
