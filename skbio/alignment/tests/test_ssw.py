@@ -19,9 +19,8 @@
 from unittest import TestCase, main
 
 from skbio import (local_pairwise_align_ssw, Sequence, DNA, RNA, Protein,
-                   TabularMSA)
+                   SubstitutionMatrix, TabularMSA)
 from skbio.alignment import StripedSmithWaterman, AlignmentStructure
-from skbio.sequence import SubstitutionMatrix
 
 
 class TestSSW(TestCase):
@@ -33,7 +32,7 @@ class TestSSW(TestCase):
         "target_sequence"
     ]
 
-    blosum50 = SubstitutionMatrix.from_name('BLOSUM50').to_dict()
+    blosum50 = SubstitutionMatrix.by_name('BLOSUM50').to_dict()
 
     def _check_alignment(self, alignment, expected):
         for attribute in self.align_attributes:

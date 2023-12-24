@@ -267,7 +267,7 @@ class SubstitutionMatrix(DissimilarityMatrix):
           all definite and degenerate nucleotides.
 
         - Point Accepted Mutation (PAM) [1]_: A set of amino acid substitution
-          matrices, including `PAM30`, `PAM70` and 'PAM250`.
+          matrices, including `PAM30`, `PAM70` and `PAM250`.
 
         - BLOcks SUbstitution Matrix (BLOSUM) [2]_: A set of amino acid
           substitution matrices, including `BLOSUM45`, `BLOSUM50`, `BLOSUM62`,

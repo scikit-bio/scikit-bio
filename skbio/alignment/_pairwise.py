@@ -157,7 +157,7 @@ def local_pairwise_align_protein(seq1, seq2, gap_open_penalty=11,
                 % type(seq).__name__)
 
     if substitution_matrix is None:
-        substitution_matrix = SubstitutionMatrix.from_name(
+        substitution_matrix = SubstitutionMatrix.by_name(
             'BLOSUM50').to_dict()
 
     return local_pairwise_align(seq1, seq2, gap_open_penalty,
@@ -422,7 +422,7 @@ def global_pairwise_align_protein(seq1, seq2, gap_open_penalty=11,
                 "not dtype %r" % seq.dtype.__name__)
 
     if substitution_matrix is None:
-        substitution_matrix = SubstitutionMatrix.from_name(
+        substitution_matrix = SubstitutionMatrix.by_name(
             'BLOSUM50').to_dict()
 
     return global_pairwise_align(seq1, seq2, gap_open_penalty,
