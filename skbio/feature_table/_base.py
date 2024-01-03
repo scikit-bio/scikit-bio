@@ -1,1 +1,1 @@
-from biom import Table
+from biom import Table  # noqa

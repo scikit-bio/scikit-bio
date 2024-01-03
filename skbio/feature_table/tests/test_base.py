@@ -29,8 +29,8 @@ class FeatureTable(TestCase):
 
         self.assertEqual(list(table.ids()), ['S0', 'S1', 'S2', 'S3'])
         self.assertEqual(list(table.ids(axis='observation')),
-                              ['O0', 'O1', 'O2', 'O3', 'O4',
-                               'O5', 'O6', 'O7', 'O8', 'O9'])
+                         ['O0', 'O1', 'O2', 'O3', 'O4',
+                          'O5', 'O6', 'O7', 'O8', 'O9'])
         self.assertEqual(int(table.nnz), 39)
 
 
