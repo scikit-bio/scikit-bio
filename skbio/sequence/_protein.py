@@ -16,8 +16,6 @@ from ._grammared_sequence import (GrammaredSequence, _motifs as parent_motifs)
 class Protein(GrammaredSequence):
     r"""Store protein sequence data and optional associated metadata.
 
-    Only characters in the IUPAC protein character set [1]_ are supported.
-
     Parameters
     ----------
     sequence : str, Sequence, or 1D np.ndarray (np.uint8 or '\|S1')
@@ -55,10 +53,80 @@ class Protein(GrammaredSequence):
 
     Notes
     -----
-    Subclassing is disabled for Protein, because subclassing makes
-    it possible to change the alphabet, and certain methods rely on the
-    IUPAC alphabet. If a custom sequence alphabet is needed, inherit directly
-    from ``GrammaredSequence``.
+    According to the IUPAC notation [1]_ , a protein sequence may contain the
+    following 20 definite characters (canonical amino acids):
+
+    +-----+---------+--------------+
+    |Code |3-letter |Amino acid    |
+    +=====+=========+==============+
+    |`A`  |Ala      |Alanine       |
+    +-----+---------+--------------+
+    |`C`  |Cys      |Cysteine      |
+    +-----+---------+--------------+
+    |`D`  |Asp      |Aspartic acid |
+    +-----+---------+--------------+
+    |`E`  |Glu      |Glutamic acid |
+    +-----+---------+--------------+
+    |`F`  |Phe      |Phenylalanine |
+    +-----+---------+--------------+
+    |`G`  |Gly      |Glycine       |
+    +-----+---------+--------------+
+    |`H`  |His      |Histidine     |
+    +-----+---------+--------------+
+    |`I`  |Ile      |Isoleucine    |
+    +-----+---------+--------------+
+    |`K`  |Lys      |Lysine        |
+    +-----+---------+--------------+
+    |`L`  |Leu      |Leucine       |
+    +-----+---------+--------------+
+    |`M`  |Met      |Methionine    |
+    +-----+---------+--------------+
+    |`N`  |Asn      |Asparagine    |
+    +-----+---------+--------------+
+    |`P`  |Pro      |Proline       |
+    +-----+---------+--------------+
+    |`Q`  |Gln      |Glutamine     |
+    +-----+---------+--------------+
+    |`R`  |Arg      |Arginine      |
+    +-----+---------+--------------+
+    |`S`  |Ser      |Serine        |
+    +-----+---------+--------------+
+    |`T`  |Thr      |Threonine     |
+    +-----+---------+--------------+
+    |`V`  |Val      |Valine        |
+    +-----+---------+--------------+
+    |`W`  |Trp      |Tryptophan    |
+    +-----+---------+--------------+
+    |`Y`  |Tyr      |Tyrosine      |
+    +-----+---------+--------------+
+
+    And the following four degenerate characters, each of which representing
+    two or more amino acids:
+
+    +-----+---------+------------+
+    |Code |3-letter |Amino acids |
+    +=====+=========+============+
+    |`B`  |Asx      |D or N      |
+    +-----+---------+------------+
+    |`Z`  |Glx      |E or Q      |
+    +-----+---------+------------+
+    |`J`  |Xle      |I or L      |
+    +-----+---------+------------+
+    |`X`  |Xaa      |All 20      |
+    +-----+---------+------------+
+
+    Plus one stop character: `*` (Ter), and two gap characters: `-` and `.`.
+
+    Characters other than the above 27 are not allowed. If you intend to use
+    additional characters to represent non-canonical amino acids, such as `U`
+    (Sec, Selenocysteine) and `O` (Pyl, Pyrrolysine), you may create a custom
+    alphabet using ``GrammaredSequence``. Directly modifying the alphabet of
+    ``Protein`` may break functions that rely on the IUPAC alphabet.
+
+    It should be noted that some functions do not support certain characters.
+    For example, the BLOSUM and PAM substitution matrices do not support `J`
+    (Xle). In such circumstances, unsupported characters will be replaced with
+    `X` to represent any of the canonical amino acids.
 
     References
     ----------
