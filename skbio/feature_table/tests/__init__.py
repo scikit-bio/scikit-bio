@@ -5,7 +5,3 @@
 #
 # The full license is in the file LICENSE.txt, distributed with this software.
 # ----------------------------------------------------------------------------
-
-from skbio.feature_table._base import Table
-
-__all__ = ['Table']
