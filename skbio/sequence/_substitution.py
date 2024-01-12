@@ -14,8 +14,7 @@ from skbio.stats.distance import DissimilarityMatrix
 
 @experimental(as_of='0.5.10')
 class SubstitutionMatrix(DissimilarityMatrix):
-    """Matrix for scoring substitutions between characters in biological
-    sequences.
+    """Scoring matrix between characters in biological sequences
 
     Parameters
     ----------
