@@ -122,8 +122,7 @@ class SubstitutionMatrix(DissimilarityMatrix):
 
     @experimental(as_of='0.5.10')
     def __init__(self, alphabet, scores, **kwargs):
-        """Initialize a substitution matrix object with an alphabet and a score
-        matrix.
+        """Initialize a substitution matrix object
         """
         super().__init__(scores, alphabet, **kwargs)
 
