@@ -177,12 +177,12 @@ class SubstitutionMatrix(DissimilarityMatrix):
                [ 0.,  0.,  1.]])
 
         """
-        alphabet = tuple(dictionary.keys())
+        alphabet = tuple(dictionary)
         alphabet_set = set(alphabet)
         idmap = {x: i for i, x in enumerate(alphabet)}
         scores = np.zeros((n := len(alphabet), n))
         for i, row in enumerate(dictionary.values()):
-            if set(row.keys()) != alphabet_set:
+            if set(row) != alphabet_set:
                 raise ValueError('The outer and inner layers of the dictionary'
                                  ' must have the same set of keys.')
             for key, value in row.items():
@@ -198,8 +198,10 @@ class SubstitutionMatrix(DissimilarityMatrix):
     @classonlymethod
     @experimental(as_of='0.5.10')
     def identity(cls, alphabet, match, mismatch):
-        """Create a substitution matrix where all matches and mismatches have
-        the identical scores, respectively, regardless of the character.
+        """Create an identity substitution matrix 
+        
+        All matches and mismatches will have the identical scores, respectively, 
+        regardless of the character.
 
         Parameters
         ----------
@@ -313,14 +315,15 @@ class SubstitutionMatrix(DissimilarityMatrix):
 
 
 def _matrix_to_vector(mat):
-    """Convert a square matrix into a flattened vector consisting of the upper
-    triangle and the diagonal.
+    """Flatten a matrix to a vector of the upper triangle and diagonal.
     """
+    assert len(mat.shape) == 2
+    assert mat.shape[0] == mat.shape[1]
     return mat[np.triu_indices(len(mat))]
 
 
 def _vector_to_matrix(vec):
-    """Convert a vector consisting of the upper triangle and the diagonal of a
+    """Convert a vector of upper triangle and diagonal values to a square matrix
     matrix to square form.
     """
     n = int((np.sqrt(1 + 8 * len(vec)) - 1) / 2)
