@@ -291,10 +291,10 @@ class SubstitutionMatrix(DissimilarityMatrix):
 
         """
         try:
-            return named_substitution_matrices[name]
+            return _named_substitution_matrices[name]
         except KeyError:
             name_lower = name.lower()
-            for key, value in named_substitution_matrices.items():
+            for key, value in _named_substitution_matrices.items():
                 if name_lower == key.lower():
                     return value
             raise ValueError(f'Substitution matrix "{name}" does not exist.')
@@ -313,7 +313,7 @@ class SubstitutionMatrix(DissimilarityMatrix):
         --------
         by_name
         """
-        return list(named_substitution_matrices.keys())
+        return list(_named_substitution_matrices.keys())
 
 
 def _matrix_to_vector(mat):
@@ -340,7 +340,7 @@ def _vector_to_matrix(vec):
 
 # Defined according to the matrices hosted at the NCBI FTP server:
 # https://ftp.ncbi.nlm.nih.gov/blast/matrices/
-named_substitution_matrices = {
+_named_substitution_matrices = {
 
     # NUC.4.4, a.k.a. DNAfull
     'NUC.4.4': SubstitutionMatrix(
