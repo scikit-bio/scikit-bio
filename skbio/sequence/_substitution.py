@@ -14,7 +14,7 @@ from skbio.stats.distance import DissimilarityMatrix
 
 @experimental(as_of='0.5.10')
 class SubstitutionMatrix(DissimilarityMatrix):
-    """Scoring matrix between characters in biological sequences
+    """Scoring matrix between characters in biological sequences.
 
     Parameters
     ----------
@@ -177,31 +177,26 @@ class SubstitutionMatrix(DissimilarityMatrix):
                [ 0.,  0.,  1.]])
 
         """
-        alphabet = tuple(dictionary)
+        alphabet, rows = zip(*dictionary.items())
         alphabet_set = set(alphabet)
         idmap = {x: i for i, x in enumerate(alphabet)}
         scores = np.zeros((n := len(alphabet), n))
-        for i, row in enumerate(dictionary.values()):
+        for i, row in enumerate(rows):
             if set(row) != alphabet_set:
                 raise ValueError('The outer and inner layers of the dictionary'
                                  ' must have the same set of keys.')
             for key, value in row.items():
-                if isinstance(value, int):
-                    value = float(value)
-                elif not isinstance(value, float):
-                    raise ValueError('Scores must be integers or floating-'
-                                     'point numbers.')
-                scores[i][idmap[key]] = value
+                scores[i][idmap[key]] = float(value)
 
         return cls(alphabet, scores)
 
     @classonlymethod
     @experimental(as_of='0.5.10')
     def identity(cls, alphabet, match, mismatch):
-        """Create an identity substitution matrix 
-        
-        All matches and mismatches will have the identical scores, respectively, 
-        regardless of the character.
+        """Create an identity substitution matrix.
+
+        All matches and mismatches will have the identical scores,
+        respectively, regardless of the character.
 
         Parameters
         ----------
@@ -260,6 +255,9 @@ class SubstitutionMatrix(DissimilarityMatrix):
 
         Notes
         -----
+        Names are case-insensitive. For instance, `BLOSUM62` and `blosum62`
+        point to the same substitution matrix.
+
         Available substitution matrix names can be obtained by ``get_names``.
         Currently, the following names are supported:
 
@@ -295,6 +293,10 @@ class SubstitutionMatrix(DissimilarityMatrix):
         try:
             return named_substitution_matrices[name]
         except KeyError:
+            name_lower = name.lower()
+            for key, value in named_substitution_matrices.items():
+                if name_lower == key.lower():
+                    return value
             raise ValueError(f'Substitution matrix "{name}" does not exist.')
 
     @classonlymethod
@@ -315,7 +317,7 @@ class SubstitutionMatrix(DissimilarityMatrix):
 
 
 def _matrix_to_vector(mat):
-    """Flatten a matrix to a vector of the upper triangle and diagonal.
+    """Flatten a square matrix to a vector of the upper triangle and diagonal.
     """
     assert len(mat.shape) == 2
     assert mat.shape[0] == mat.shape[1]
@@ -323,10 +325,14 @@ def _matrix_to_vector(mat):
 
 
 def _vector_to_matrix(vec):
-    """Convert a vector of upper triangle and diagonal values to a square matrix
-    matrix to square form.
+    """Revert a vector representing a flattened matrix to square form.
     """
-    n = int((np.sqrt(1 + 8 * len(vec)) - 1) / 2)
+    assert len(vec.shape) == 1
+    # a square matrix of shape (n, n) will have n * (n + 1) / 2 elements in the
+    # flattened vector; the following code reverses this equation to obtain the
+    # original shape of the matrix
+    n = (np.sqrt(1 + 8 * len(vec)) - 1) / 2
+    assert n == (n := int(n))
     mat = np.zeros((n, n))
     mat[np.triu_indices(n)] = vec
     return mat + np.triu(mat, k=1).T

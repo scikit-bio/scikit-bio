@@ -99,12 +99,11 @@ class TestSubstitutionMatrix(TestCase):
         del d['a']['d']
 
         # scores are not numbers
-        msg = 'Scores must be integers or floating-point numbers.'
         d['a']['b'] = 'hello'
-        with self.assertRaisesRegex(ValueError, msg):
+        with self.assertRaises(ValueError):
             SubstitutionMatrix.from_dict(d)
         d['a']['b'] = None
-        with self.assertRaisesRegex(ValueError, msg):
+        with self.assertRaises(TypeError):
             SubstitutionMatrix.from_dict(d)
 
     def test_identity(self):
@@ -122,6 +121,9 @@ class TestSubstitutionMatrix(TestCase):
         self.assertEqual(len(obs.alphabet), 15)
         self.assertEqual(obs['A', 'T'], -4)
         obs = SubstitutionMatrix.by_name('BLOSUM50')
+        self.assertEqual(len(obs.alphabet), 24)
+        self.assertEqual(obs['M', 'K'], -2)
+        obs = SubstitutionMatrix.by_name('blosum50')
         self.assertEqual(len(obs.alphabet), 24)
         self.assertEqual(obs['M', 'K'], -2)
         msg = 'Substitution matrix "hello" does not exist.'
