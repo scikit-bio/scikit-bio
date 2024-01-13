@@ -33,6 +33,7 @@ Classes
    RNA
    Protein
    GeneticCode
+   SubstitutionMatrix
 
 Subpackages
 -----------
@@ -310,6 +311,7 @@ from ._dna import DNA
 from ._rna import RNA
 from ._genetic_code import GeneticCode
 from ._grammared_sequence import GrammaredSequence
+from ._substitution import SubstitutionMatrix
 
 __all__ = ['Sequence', 'Protein', 'DNA', 'RNA', 'GeneticCode',
-           'GrammaredSequence']
+           'GrammaredSequence', 'SubstitutionMatrix']
