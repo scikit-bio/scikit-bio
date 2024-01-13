@@ -19,9 +19,8 @@
 from unittest import TestCase, main
 
 from skbio import (local_pairwise_align_ssw, Sequence, DNA, RNA, Protein,
-                   TabularMSA)
+                   SubstitutionMatrix, TabularMSA)
 from skbio.alignment import StripedSmithWaterman, AlignmentStructure
-from skbio.alignment._pairwise import blosum50
 
 
 class TestSSW(TestCase):
@@ -32,6 +31,8 @@ class TestSSW(TestCase):
         "query_begin", "query_end", "cigar", "query_sequence",
         "target_sequence"
     ]
+
+    blosum50 = SubstitutionMatrix.by_name('BLOSUM50').to_dict()
 
     def _check_alignment(self, alignment, expected):
         for attribute in self.align_attributes:
@@ -230,7 +231,7 @@ class TestStripedSmithWaterman(TestSSW):
         }
         query = StripedSmithWaterman(expected['query_sequence'],
                                      protein=True,
-                                     substitution_matrix=blosum50)
+                                     substitution_matrix=self.blosum50)
         alignment = query(expected['target_sequence'])
         self._check_alignment(alignment, expected)
 
@@ -557,6 +558,7 @@ class TestStripedSmithWaterman(TestSSW):
 
 
 class TestAlignStripedSmithWaterman(TestSSW):
+
     def _check_TabularMSA_to_AlignmentStructure(self, alignment, structure,
                                                 expected_dtype):
         msa, score, start_end = alignment
@@ -592,11 +594,11 @@ class TestAlignStripedSmithWaterman(TestSSW):
         target_sequence = 'PAWHEAE'
         query = StripedSmithWaterman(query_sequence,
                                      protein=True,
-                                     substitution_matrix=blosum50)
+                                     substitution_matrix=self.blosum50)
         align1 = query(target_sequence)
         align2 = local_pairwise_align_ssw(Protein(query_sequence),
                                           Protein(target_sequence),
-                                          substitution_matrix=blosum50)
+                                          substitution_matrix=self.blosum50)
         self._check_TabularMSA_to_AlignmentStructure(align2, align1, Protein)
 
     def test_kwargs_are_usable(self):

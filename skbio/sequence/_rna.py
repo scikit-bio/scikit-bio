@@ -16,8 +16,6 @@ from ._grammared_sequence import GrammaredSequence
 class RNA(GrammaredSequence, NucleotideMixin):
     r"""Store RNA sequence data and optional associated metadata.
 
-    Only characters in the IUPAC RNA character set [1]_ are supported.
-
     Parameters
     ----------
     sequence : str, Sequence, or 1D np.ndarray (np.uint8 or '\|S1')
@@ -56,10 +54,34 @@ class RNA(GrammaredSequence, NucleotideMixin):
 
     Notes
     -----
-    Subclassing is disabled for RNA, because subclassing makes
-    it possible to change the alphabet, and certain methods rely on the
-    IUPAC alphabet. If a custom sequence alphabet is needed, inherit directly
-    from ``GrammaredSequence``.
+    According to the IUPAC RNA character set [1]_ , an RNA sequence may contain
+    the following four definite characters (canonical nucleotides):
+
+    +-----+-----------+
+    |Code |Nucleobase |
+    +=====+===========+
+    |`A`  |Adenine    |
+    +-----+-----------+
+    |`C`  |Cytosine   |
+    +-----+-----------+
+    |`G`  |Guanine    |
+    +-----+-----------+
+    |`U`  |Uracil     |
+    +-----+-----------+
+
+    Plus 11 degenerate characters: `R`, `Y`, `S`, `W`, `K`, `M`, `B`, `D`, `H`,
+    `V` and `N`, and two gap characters: `-` and `.`. The definitions of
+    degenerate characters are provided in ``DNA``, in which `T` should be
+    replaced with `U` for RNA sequences.
+
+    Characters other than the above 17 are not allowed. To include additional
+    characters, you may create a custom alphabet using ``GrammaredSequence``.
+    Directly modifying the alphabet of ``RNA`` may break methods that rely on
+    the IUPAC alphabet.
+
+    It should be noted that some functions do not support degenerate characters
+    characters. In such cases, they will be replaced with `N` to represent any
+    of the canonical nucleotides.
 
     References
     ----------
