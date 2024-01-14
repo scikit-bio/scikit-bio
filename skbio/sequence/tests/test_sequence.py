@@ -23,7 +23,8 @@ import skbio.sequence.distance
 from skbio import Sequence, DNA
 from skbio.util import assert_data_frame_almost_equal
 from skbio.sequence._sequence import (_single_index_to_slice, _is_single_index,
-                                      _as_slice_if_single_index)
+                                      _as_slice_if_single_index,
+                                      _get_alphabet_index)
 from skbio.util._testing import ReallyEqualMixin
 from skbio.metadata._testing import (MetadataMixinTests,
                                      IntervalMetadataMixinTests,
@@ -2460,6 +2461,36 @@ class TestDistance(TestSequenceBase):
 
         with self.assertRaises(ValueError):
             seq_wrong.distance(seq1)
+
+
+class TestAlphabet(TestCase):
+    def test_get_alphabet_index(self):
+
+        # a typical alphabet for DNA
+        alpha = np.array(tuple('ACGTN'))
+
+        # all characters are present in alphabet
+        obs = _get_alphabet_index('GAGCTC', alpha)
+        exp = np.array([2, 0, 2, 1, 3, 1])
+        npt.assert_equal(obs, exp)
+
+        # one character is absent in alphabet
+        msg = ('One or multiple characters in the sequence are not found in '
+               'the alphabet.')
+        with self.assertRaisesRegex(ValueError, msg):
+            _get_alphabet_index('GAGRCTC', alpha)
+
+        # replace absent character with wildcard
+        obs = _get_alphabet_index('GAGRCTC', alpha, other=4)
+        exp = np.array([2, 0, 2, 4, 1, 3, 1])
+        npt.assert_equal(obs, exp)
+
+        # mask absent character
+        obs = _get_alphabet_index('GAGRCTC', alpha, mask=True)
+        exp_mask = np.array([0, 0, 0, 1, 0, 0, 0])
+        exp_comp = np.array([2, 0, 2, 1, 3, 1])
+        npt.assert_equal(obs.mask, exp_mask)
+        npt.assert_equal(obs.compressed(), exp_comp)
 
 
 # NOTE: this must be a *separate* class for doctests only (no unit tests). nose

@@ -2198,7 +2198,7 @@ fuzzy=[(True, False)], metadata={'gene': 'foo'})
 
 
 def _single_index_to_slice(start_index):
-    end_index = None if start_index == -1 else start_index+1
+    end_index = None if start_index == -1 else start_index + 1
     return slice(start_index, end_index)
 
 
@@ -2225,3 +2225,50 @@ def _slices_from_iter(array, indexables):
                              "containing %r." % i)
 
         yield array[i]
+
+
+def _get_alphabet_index(seq, alphabet, other=None, mask=False):
+    """Convert a sequence into a vector of indices in an alphabet.
+
+    Parameters
+    ----------
+    seq : iterable
+        Input sequence.
+    alphabet : 1D np.ndarray
+        Input alphabet. Must be already sorted.
+    other : int, optional
+        Index in the alphabet to be assigned to characters that are not found
+        in the alphabet.
+    mask : bool, optional
+        Mask characters that are not found in the alphabet. This will return a
+        masked array. Otherwise (default), will raise an error. Not effective
+        when `other` is set.
+
+    Returns
+    -------
+    1D np.ndarray or np.ma.ndarray
+        Vector of indices in the alphabet.
+
+    Raises
+    ------
+    ValueError
+        If character(s) are not found in the alphabet.
+    """
+    if isinstance(seq, str):
+        seq = np.array(tuple(seq))
+    
+    # This function implements a NumPy solution. It is as fast as `map(alpha_
+    # dict.get, seq)`, and faster than `map(alpha_list.index, seq)` as tested
+    # on real DNA and protein data.
+    pos = np.searchsorted(alphabet, seq)
+    last = len(alphabet) - 1
+    pos[pos > last] = last
+    absent = alphabet[pos] != seq
+    if other:
+        return np.where(absent, other, pos)
+    elif mask:
+        return np.ma.array(pos, mask=absent)
+    elif absent.any():
+        raise ValueError('One or multiple characters in the sequence are not '
+                         'found in the alphabet.')
+    return pos
