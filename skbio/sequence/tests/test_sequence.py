@@ -24,7 +24,8 @@ from skbio import Sequence, DNA
 from skbio.util import assert_data_frame_almost_equal
 from skbio.sequence._sequence import (_single_index_to_slice, _is_single_index,
                                       _as_slice_if_single_index,
-                                      _get_alphabet_index)
+                                      _get_index_in_alphabet,
+                                      _make_alphabet_and_index)
 from skbio.util._testing import ReallyEqualMixin
 from skbio.metadata._testing import (MetadataMixinTests,
                                      IntervalMetadataMixinTests,
@@ -2464,13 +2465,13 @@ class TestDistance(TestSequenceBase):
 
 
 class TestAlphabet(TestCase):
-    def test_get_alphabet_index(self):
+    def test_get_index_in_alphabet(self):
 
         # a typical alphabet for DNA
         alpha = np.array(tuple('ACGTN'))
 
         # all characters are present in alphabet
-        obs = _get_alphabet_index('GAGCTC', alpha)
+        obs = _get_index_in_alphabet('GAGCTC', alpha)
         exp = np.array([2, 0, 2, 1, 3, 1])
         npt.assert_equal(obs, exp)
 
@@ -2478,19 +2479,86 @@ class TestAlphabet(TestCase):
         msg = ('One or multiple characters in the sequence are not found in '
                'the alphabet.')
         with self.assertRaisesRegex(ValueError, msg):
-            _get_alphabet_index('GAGRCTC', alpha)
+            _get_index_in_alphabet('GAGRCTC', alpha)
 
         # replace absent character with wildcard
-        obs = _get_alphabet_index('GAGRCTC', alpha, other=4)
+        obs = _get_index_in_alphabet('GAGRCTC', alpha, other=4)
         exp = np.array([2, 0, 2, 4, 1, 3, 1])
         npt.assert_equal(obs, exp)
 
         # mask absent character
-        obs = _get_alphabet_index('GAGRCTC', alpha, mask=True)
+        obs = _get_index_in_alphabet('GAGRCTC', alpha, mask=True)
         exp_mask = np.array([0, 0, 0, 1, 0, 0, 0])
         exp_comp = np.array([2, 0, 2, 1, 3, 1])
         npt.assert_equal(obs.mask, exp_mask)
         npt.assert_equal(obs.compressed(), exp_comp)
+
+        # sequence is a sentence
+        seq = 'The quick brown fox jumps over the lazy dog'.split()
+        alpha = np.array(['dog', 'fox', 'jumps'])
+        obs = get_index_in_alphabet(seq, alpha, mask=True)
+        exp_mask = np.array([1, 1, 1, 0, 0, 1, 1, 1, 0])
+        exp_comp = np.array([1, 2, 0])
+        npt.assert_equal(obs.mask, exp_mask)
+        npt.assert_equal(obs.compressed(), exp_comp)
+
+        # empty sequence
+        obs = _get_index_in_alphabet('', alpha)
+        self.assertEqual(obs.size, 0)
+
+    def test_make_alphabet_and_index(self):
+        # data from human TP53 protein (NP_000537.3)
+        seqs = ('MEEPQSDPSVEPPLSQETFSDLWKLLPE',
+                'NNVLSPLPSQAMDDLMLSP',
+                'DDIEQWFTEDPGPDEAPRMPEAA')
+
+        obs_alpha, obs_index = _make_alphabet_and_index(seqs)
+        exp_alpha = np.array(tuple('ADEFGIKLMNPQRSTVW'))
+        exp_index = (
+            np.array([8, 2, 2, 10, 11, 13, 1, 10, 13, 15, 2, 10, 10, 7, 13, 11,
+                      2, 14, 3, 13, 1, 7, 16, 6, 7, 7, 10, 2]),
+            np.array([9, 9, 15, 7, 13, 10, 7, 10, 13, 11, 0, 8, 1, 1, 7, 8, 7,
+                      13, 10]),
+            np.array([1, 1, 5, 2, 11, 16, 3, 14, 2, 1, 10, 4, 10, 1, 2, 0, 10,
+                      12, 8, 10, 2, 0, 0]))
+        npt.assert_equal(obs_alpha, exp_alpha)
+        for obs_idx, exp_idx in zip(obs_index, exp_index):
+            npt.assert_equal(obs_idx, exp_idx)
+
+        # reconstruct original sequences
+        for idx, seq in zip(obs_index, seqs):
+            self.assertEqual(''.join(obs_alpha[idx]), seq)
+
+        # sequences are numbers
+        seqs = ([1,4,6,7,8],
+                [3,3,4,1,0],
+                [5,2,5,8,0])
+        obs_alpha, obs_index = _make_alphabet_and_index(seqs)
+        npt.assert_equal(obs_alpha, np.arange(9))
+        for idx, seq in zip(obs_index, seqs):
+            npt.assert_equal(obs_alpha[idx], np.array(seq))
+
+        # sequences are sentences
+        seqs = (['this', 'is', 'a', 'cat'],
+                ['that', 'is', 'a', 'dog'],
+                ['cat', 'is', 'not', 'dog'])
+        obs_alpha, obs_index = _make_alphabet_and_index(seqs)
+        exp_alpha = np.unique(np.concatenate(seqs))
+        npt.assert_equal(obs_alpha, exp_alpha)
+        for idx, seq in zip(obs_index, seqs):
+            npt.assert_equal(obs_alpha[idx], np.array(seq))
+
+        # sequences are individual characters
+        obs_alpha, obs_index = _make_alphabet_and_index(['hello'])
+        npt.assert_equal(obs_alpha, np.array(['e', 'h', 'l', 'o']))
+        self.assertEqual(''.join(obs_alpha[np.concatenate(
+            obs_index)]), 'hello')
+
+        # empty sequence
+        obs_alpha, obs_index = _make_alphabet_and_index([[]])
+        self.assertEqual(obs_alpha.size, 0)
+        self.assertEqual(len(obs_index), 1)
+        self.assertEqual(obs_index[0].size, 0)
 
 
 # NOTE: this must be a *separate* class for doctests only (no unit tests). nose

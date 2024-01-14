@@ -2227,7 +2227,7 @@ def _slices_from_iter(array, indexables):
         yield array[i]
 
 
-def _get_alphabet_index(seq, alphabet, other=None, mask=False):
+def _get_index_in_alphabet(seq, alphabet, other=None, mask=False):
     """Convert a sequence into a vector of indices in an alphabet.
 
     Parameters
@@ -2272,3 +2272,34 @@ def _get_alphabet_index(seq, alphabet, other=None, mask=False):
         raise ValueError('One or multiple characters in the sequence are not '
                          'found in the alphabet.')
     return pos
+
+
+def _make_alphabet_and_index(seqs):
+    """Generate a shared alphabet and character indices for sequences.
+
+    The alphabet is a sorted vector of all observed unique characters in the
+    sequences.
+
+    Parameters
+    ----------
+    seqs : iterable of iterable
+        Input sequences.
+
+    Returns
+    -------
+    1D np.ndarray
+        Alphabet, a sorted vector of unique characters.
+    list of 1D np.ndarray
+        Vectors of indices in the alphabet representing the sequences.
+    """
+    # This function uses `np.unique` to extract unique characters and their
+    # indices. It applies `np.unique` on individual sequences, then merges
+    # results. This design is to avoid concatenating too many sequences.
+    alpha_lst, index_lst = zip(*[np.unique(tuple(x) if isinstance(
+        x, str) else x, return_inverse=True) for x in seqs])
+    alpha_union, index_union = np.unique(
+        np.concatenate(alpha_lst), return_inverse=True)
+    index_bounds = np.cumsum([x.size for x in alpha_lst])[:-1]
+    index_chunks = np.split(index_union, index_bounds)
+    index_lst_trans = [x[y] for x, y in zip(index_chunks, index_lst)]
+    return alpha_union, index_lst_trans
