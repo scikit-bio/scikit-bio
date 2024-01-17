@@ -20,12 +20,10 @@ import pandas as pd
 import scipy.spatial.distance
 
 import skbio.sequence.distance
-from skbio import Sequence, DNA
+from skbio import Sequence, DNA, SubstitutionMatrix
 from skbio.util import assert_data_frame_almost_equal
 from skbio.sequence._sequence import (_single_index_to_slice, _is_single_index,
-                                      _as_slice_if_single_index,
-                                      _get_index_in_alphabet,
-                                      _make_alphabet_and_index)
+                                      _as_slice_if_single_index)
 from skbio.util._testing import ReallyEqualMixin
 from skbio.metadata._testing import (MetadataMixinTests,
                                      IntervalMetadataMixinTests,
@@ -2041,6 +2039,123 @@ class TestSequence(TestSequenceBase, ReallyEqualMixin):
             obs = s.iter_contiguous(c(contiguous()), invert=True)
             self.assertEqual(list(obs), exp)
 
+    def test_to_indices_observed(self):
+        # arbitrary sequence
+        seq = Sequence('hello')
+        obs_idx, obs_alp = seq.to_indices()
+        exp_idx, exp_alp = np.array([1, 0, 2, 2, 3]), 'ehlo'
+        npt.assert_equal(obs_idx, exp_idx)
+        self.assertEqual(obs_alp, exp_alp)
+
+        # return ASCII code points
+        obs_idx, obs_alp = seq.to_indices(return_codes=True)
+        exp_alp = np.frombuffer('ehlo'.encode('ascii'), dtype=np.uint8)
+        npt.assert_equal(obs_idx, exp_idx)
+        npt.assert_equal(obs_alp, exp_alp)
+
+        # grammared sequence
+        obs_idx, obs_alp = DNA('GAGCTC').to_indices()
+        npt.assert_equal(obs_idx, np.array([2, 0, 2, 1, 3, 1]))
+        self.assertEqual(obs_alp, 'ACGT')
+
+    def test_to_indices_alphabet(self):
+        # arbitrary sequence
+        seq = Sequence('hello')
+        obs = seq.to_indices('oleh')
+        exp = np.array([3, 2, 1, 1, 0])
+        npt.assert_equal(obs, exp)
+
+        # grammared sequence
+        seq = DNA('GAGCTC')
+        obs = seq.to_indices('ACGT')
+        exp = np.array([2, 0, 2, 1, 3, 1])
+        npt.assert_equal(obs, exp)
+
+        # alphabet has duplicates
+        msg = 'Alphabet contains duplicated characters.'
+        with self.assertRaisesRegex(ValueError, msg):
+            Sequence('hello').to_indices('there')
+
+        # non-ASCII alphabet
+        msg = 'Alphabet cannot be encoded as single ASCII characters.'
+        with self.assertRaisesRegex(ValueError, msg):
+            Sequence('hello').to_indices('how are you'.split())
+
+    def test_to_indices_submat(self):
+        # basic nucleotides
+        sm = SubstitutionMatrix.identity('ACGT', 1, -2)
+        obs = DNA('GAGCTC').to_indices(sm)
+        exp = np.array([2, 0, 2, 1, 3, 1])
+        npt.assert_equal(obs, exp)
+
+        # extended nucleotides (and not sorted)
+        # ATGCSWRYKMBVHDN
+        sm = SubstitutionMatrix.by_name('NUC.4.4')
+        obs = DNA('GAGRCTC').to_indices(sm)
+        exp = np.array([2, 0, 2, 6, 3, 1, 3])
+        npt.assert_equal(obs, exp)
+
+        # non-ASCII alphabet
+        sm = SubstitutionMatrix.identity('how are you'.split(), 1, -2)
+        msg = ('Alphabet in the substitution matrix are not single ASCII '
+               'characters.')
+        with self.assertRaisesRegex(ValueError, msg):
+            Sequence('hello').to_indices(sm)
+
+    def test_to_indices_wildcard(self):
+        # default wildcard
+        seq = DNA('GAGRCTC')
+        obs = seq.to_indices('ACGTN')
+        exp = np.array([2, 0, 2, 4, 1, 3, 1])
+        npt.assert_equal(obs, exp)
+
+        # non-default wildcard
+        obs = seq.to_indices('ACGTN', wildcard='A')
+        exp = np.array([2, 0, 2, 0, 1, 3, 1])
+        npt.assert_equal(obs, exp)
+
+        # invalid wildcard
+        msg = 'Wildcard character "X" is not in the alphabet.'
+        with self.assertRaisesRegex(ValueError, msg):
+            seq.to_indices('ACGTN', wildcard='X')
+        msg = 'Wildcard must be a single ASCII character.'
+        with self.assertRaisesRegex(ValueError, msg):
+            seq.to_indices('ACGTN', wildcard='hi')
+        with self.assertRaisesRegex(ValueError, msg):
+            seq.to_indices('ACGTN', wildcard=chr(200))
+
+    def test_to_indices_masked(self):
+        # gaps are automatically identified and masked
+        obs_idx, obs_alp = DNA('GAG-CTC').to_indices()
+        self.assertTrue(isinstance(obs_idx, np.ma.MaskedArray))
+        npt.assert_equal(obs_idx.data, [2, 0, 2, 255, 1, 3, 1])
+        npt.assert_equal(obs_idx.mask, [0, 0, 0, 1, 0, 0, 0])
+        self.assertEqual(obs_alp, 'ACGT')
+
+        # force masking regardless of gap presence
+        obs_idx, obs_alp = DNA('GAGCTC').to_indices(mask_gaps=True)
+        self.assertTrue(isinstance(obs_idx, np.ma.MaskedArray))
+        npt.assert_equal(obs_idx.data, [2, 0, 2, 1, 3, 1])
+        npt.assert_equal(obs_idx.mask, [0, 0, 0, 0, 0, 0])
+        self.assertEqual(obs_alp, 'ACGT')
+
+        # force not masking regardless of gap presence
+        obs_idx, obs_alp = DNA('GAG-CTC').to_indices(mask_gaps=False)
+        self.assertFalse(isinstance(obs_idx, np.ma.MaskedArray))
+        npt.assert_equal(obs_idx, [3, 1, 3, 0, 2, 4, 2])
+        self.assertEqual(obs_alp, '-ACGT')
+
+        # gap character(s) are not defined
+        msg = 'Gap character\(s\) are not defined for the sequence.'
+        with self.assertRaisesRegex(ValueError, msg):
+            Sequence('hello').to_indices(mask_gaps=True)
+
+        # with alphabet
+        obs = DNA('GAG-CTC').to_indices('ACGT')
+        self.assertTrue(isinstance(obs, np.ma.MaskedArray))
+        npt.assert_equal(obs.data, [2, 0, 2, 255, 1, 3, 1])
+        npt.assert_equal(obs.mask, [0, 0, 0, 1, 0, 0, 0])
+
     def test_copy_without_metadata(self):
         # shallow vs deep copy with sequence only should be equivalent
         for copy_method in copy.copy, copy.deepcopy:
@@ -2462,103 +2577,6 @@ class TestDistance(TestSequenceBase):
 
         with self.assertRaises(ValueError):
             seq_wrong.distance(seq1)
-
-
-class TestAlphabet(TestCase):
-    def test_get_index_in_alphabet(self):
-
-        # a typical alphabet for DNA
-        alpha = np.array(tuple('ACGTN'))
-
-        # all characters are present in alphabet
-        obs = _get_index_in_alphabet('GAGCTC', alpha)
-        exp = np.array([2, 0, 2, 1, 3, 1])
-        npt.assert_equal(obs, exp)
-
-        # one character is absent in alphabet
-        msg = ('One or multiple characters in the sequence are not found in '
-               'the alphabet.')
-        with self.assertRaisesRegex(ValueError, msg):
-            _get_index_in_alphabet('GAGRCTC', alpha)
-
-        # replace absent character with wildcard
-        obs = _get_index_in_alphabet('GAGRCTC', alpha, other=4)
-        exp = np.array([2, 0, 2, 4, 1, 3, 1])
-        npt.assert_equal(obs, exp)
-
-        # mask absent character
-        obs = _get_index_in_alphabet('GAGRCTC', alpha, mask=True)
-        exp_mask = np.array([0, 0, 0, 1, 0, 0, 0])
-        exp_comp = np.array([2, 0, 2, 1, 3, 1])
-        npt.assert_equal(obs.mask, exp_mask)
-        npt.assert_equal(obs.compressed(), exp_comp)
-
-        # sequence is a sentence
-        seq = 'The quick brown fox jumps over the lazy dog'.split()
-        alpha = np.array(['dog', 'fox', 'jumps'])
-        obs = get_index_in_alphabet(seq, alpha, mask=True)
-        exp_mask = np.array([1, 1, 1, 0, 0, 1, 1, 1, 0])
-        exp_comp = np.array([1, 2, 0])
-        npt.assert_equal(obs.mask, exp_mask)
-        npt.assert_equal(obs.compressed(), exp_comp)
-
-        # empty sequence
-        obs = _get_index_in_alphabet('', alpha)
-        self.assertEqual(obs.size, 0)
-
-    def test_make_alphabet_and_index(self):
-        # data from human TP53 protein (NP_000537.3)
-        seqs = ('MEEPQSDPSVEPPLSQETFSDLWKLLPE',
-                'NNVLSPLPSQAMDDLMLSP',
-                'DDIEQWFTEDPGPDEAPRMPEAA')
-
-        obs_alpha, obs_index = _make_alphabet_and_index(seqs)
-        exp_alpha = np.array(tuple('ADEFGIKLMNPQRSTVW'))
-        exp_index = (
-            np.array([8, 2, 2, 10, 11, 13, 1, 10, 13, 15, 2, 10, 10, 7, 13, 11,
-                      2, 14, 3, 13, 1, 7, 16, 6, 7, 7, 10, 2]),
-            np.array([9, 9, 15, 7, 13, 10, 7, 10, 13, 11, 0, 8, 1, 1, 7, 8, 7,
-                      13, 10]),
-            np.array([1, 1, 5, 2, 11, 16, 3, 14, 2, 1, 10, 4, 10, 1, 2, 0, 10,
-                      12, 8, 10, 2, 0, 0]))
-        npt.assert_equal(obs_alpha, exp_alpha)
-        for obs_idx, exp_idx in zip(obs_index, exp_index):
-            npt.assert_equal(obs_idx, exp_idx)
-
-        # reconstruct original sequences
-        for idx, seq in zip(obs_index, seqs):
-            self.assertEqual(''.join(obs_alpha[idx]), seq)
-
-        # sequences are numbers
-        seqs = ([1,4,6,7,8],
-                [3,3,4,1,0],
-                [5,2,5,8,0])
-        obs_alpha, obs_index = _make_alphabet_and_index(seqs)
-        npt.assert_equal(obs_alpha, np.arange(9))
-        for idx, seq in zip(obs_index, seqs):
-            npt.assert_equal(obs_alpha[idx], np.array(seq))
-
-        # sequences are sentences
-        seqs = (['this', 'is', 'a', 'cat'],
-                ['that', 'is', 'a', 'dog'],
-                ['cat', 'is', 'not', 'dog'])
-        obs_alpha, obs_index = _make_alphabet_and_index(seqs)
-        exp_alpha = np.unique(np.concatenate(seqs))
-        npt.assert_equal(obs_alpha, exp_alpha)
-        for idx, seq in zip(obs_index, seqs):
-            npt.assert_equal(obs_alpha[idx], np.array(seq))
-
-        # sequences are individual characters
-        obs_alpha, obs_index = _make_alphabet_and_index(['hello'])
-        npt.assert_equal(obs_alpha, np.array(['e', 'h', 'l', 'o']))
-        self.assertEqual(''.join(obs_alpha[np.concatenate(
-            obs_index)]), 'hello')
-
-        # empty sequence
-        obs_alpha, obs_index = _make_alphabet_and_index([[]])
-        self.assertEqual(obs_alpha.size, 0)
-        self.assertEqual(len(obs_index), 1)
-        self.assertEqual(obs_index[0].size, 0)
 
 
 # NOTE: this must be a *separate* class for doctests only (no unit tests). nose

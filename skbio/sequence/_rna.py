@@ -157,6 +157,11 @@ class RNA(GrammaredSequence, NucleotideMixin):
     def gap_chars(cls):
         return set('-.')
 
+    @classproperty
+    @overrides(GrammaredSequence)
+    def wildcard_char(cls):
+        return 'N'
+
     @property
     def _motifs(self):
         return _motifs

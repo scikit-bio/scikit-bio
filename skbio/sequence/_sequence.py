@@ -20,6 +20,10 @@ from skbio.metadata._mixin import (MetadataMixin, PositionalMetadataMixin,
                                    IntervalMetadataMixin)
 from skbio.metadata import IntervalMetadata
 from skbio.sequence._repr import _SequenceReprBuilder
+from skbio.sequence._alphabet import (_alphabet_to_hashes,
+                                      _indices_in_alphabet_ascii,
+                                      _indices_in_observed)
+from skbio.util import find_duplicates
 from skbio.util._decorator import (stable, experimental, classonlymethod,
                                    overrides)
 
@@ -79,7 +83,6 @@ class Sequence(MetadataMixin, PositionalMetadataMixin, IntervalMetadataMixin,
 
     Examples
     --------
-    >>> from pprint import pprint
     >>> from skbio import Sequence
     >>> from skbio.metadata import IntervalMetadata
 
@@ -148,7 +151,7 @@ class Sequence(MetadataMixin, PositionalMetadataMixin, IntervalMetadataMixin,
 
     Retrieve metadata:
 
-    >>> pprint(seq.metadata) # using pprint to display dict in sorted order
+    >>> seq.metadata
     {'authors': ['Alice'], 'desc': 'seq desc', 'id': 'seq-id'}
 
     Retrieve positional metadata:
@@ -179,18 +182,18 @@ fuzzy=[(False, False)], metadata={'gene': 'sagA'})
 
     First, let's create a sequence and update its metadata:
 
-    >>> metadata = {'id':'seq-id', 'desc':'seq desc', 'authors': ['Alice']}
+    >>> metadata = {'id': 'seq-id', 'desc': 'seq desc', 'authors': ['Alice']}
     >>> seq = Sequence('ACGT', metadata=metadata)
     >>> seq.metadata['id'] = 'new-id'
     >>> seq.metadata['pubmed'] = 12345
-    >>> pprint(seq.metadata)
-    {'authors': ['Alice'], 'desc': 'seq desc', 'id': 'new-id', 'pubmed': 12345}
+    >>> seq.metadata
+    {'id': 'new-id', 'desc': 'seq desc', 'authors': ['Alice'], 'pubmed': 12345}
 
     Note that the original metadata dictionary (stored in variable
     ``metadata``) hasn't changed because a shallow copy was made:
 
-    >>> pprint(metadata)
-    {'authors': ['Alice'], 'desc': 'seq desc', 'id': 'seq-id'}
+    >>> metadata
+    {'id': 'seq-id', 'desc': 'seq desc', 'authors': ['Alice']}
     >>> seq.metadata == metadata
     False
 
@@ -219,11 +222,9 @@ fuzzy=[(False, False)], metadata={'gene': 'sagA'})
         length: 2
     -----------------------------
     0 CG
-    >>> pprint(subseq.metadata)
-    {'authors': ['Alice', 'Bob'],
-     'desc': 'seq desc',
-     'id': 'new-id',
-     'pubmed': 12345}
+    >>> subseq.metadata
+    {'id': 'new-id', 'desc': 'seq desc', 'authors': ['Alice', 'Bob'], \
+'pubmed': 12345}
 
     The subsequence has inherited the metadata of its parent sequence. If we
     update the subsequence's author list, we see the changes propagated in the
@@ -353,7 +354,7 @@ fuzzy=[(False, False)], metadata={'gene': 'foo'})
     Interval(interval_metadata=<...>, bounds=[(0, 2)], \
 fuzzy=[(True, False)], metadata={'gene': 'foo'})
     """
-    _number_of_extended_ascii_codes = 256
+    _num_extended_ascii_codes = 256
     # ASCII is built such that the difference between uppercase and lowercase
     # is the 6th bit.
     _ascii_invert_case_bit_offset = 32
@@ -881,7 +882,7 @@ fuzzy=[(True, False)], metadata={'gene': 'foo'})
         Obtain characters at positions evaluating to `True`:
 
         >>> s = Sequence('GGUCG')
-        >>> index = [True, False, True, 'a' is 'a', False]
+        >>> index = [True, False, True, 'a' == 'a', False]
         >>> s[index]
         Sequence
         -------------
@@ -1778,23 +1779,22 @@ fuzzy=[(True, False)], metadata={'gene': 'foo'})
         --------
         Compute character frequencies of a sequence:
 
-        >>> from pprint import pprint
         >>> from skbio import Sequence
         >>> seq = Sequence('AGAAGACC')
         >>> freqs = seq.frequencies()
-        >>> pprint(freqs) # using pprint to display dict in sorted order
+        >>> dict(sorted(freqs.items())) # display dict in sorted order
         {'A': 4, 'C': 2, 'G': 2}
 
         Compute relative character frequencies:
 
         >>> freqs = seq.frequencies(relative=True)
-        >>> pprint(freqs)
+        >>> dict(sorted(freqs.items()))
         {'A': 0.5, 'C': 0.25, 'G': 0.25}
 
         Compute relative frequencies of characters A, C, and T:
 
         >>> freqs = seq.frequencies(chars={'A', 'C', 'T'}, relative=True)
-        >>> pprint(freqs)
+        >>> dict(sorted(freqs.items()))
         {'A': 0.5, 'C': 0.25, 'T': 0.0}
 
         Note that since character T is not in the sequence we receive a
@@ -1804,7 +1804,7 @@ fuzzy=[(True, False)], metadata={'gene': 'foo'})
 
         """
         freqs = np.bincount(self._bytes,
-                            minlength=self._number_of_extended_ascii_codes)
+                            minlength=self._num_extended_ascii_codes)
 
         if chars is not None:
             chars, indices = self._chars_to_indices(chars)
@@ -1845,7 +1845,7 @@ fuzzy=[(True, False)], metadata={'gene': 'foo'})
                     "character (found %d characters)" % len(char))
 
             index = ord(char)
-            if index >= self._number_of_extended_ascii_codes:
+            if index >= self._num_extended_ascii_codes:
                 raise ValueError(
                     "Character %r in `chars` is outside the range of "
                     "allowable characters in a `Sequence` object." % char)
@@ -1952,14 +1952,13 @@ fuzzy=[(True, False)], metadata={'gene': 'foo'})
 
         Examples
         --------
-        >>> from pprint import pprint
         >>> from skbio import Sequence
         >>> s = Sequence('ACACATTTATTA')
         >>> freqs = s.kmer_frequencies(3, overlap=False)
-        >>> pprint(freqs) # using pprint to display dict in sorted order
+        >>> freqs
         {'ACA': 1, 'CAT': 1, 'TTA': 2}
         >>> freqs = s.kmer_frequencies(3, relative=True, overlap=False)
-        >>> pprint(freqs)
+        >>> freqs
         {'ACA': 0.25, 'CAT': 0.25, 'TTA': 0.5}
 
         """
@@ -2097,6 +2096,177 @@ fuzzy=[(True, False)], metadata={'gene': 'foo'})
             if len(r) >= min_length:
                 yield r
 
+    @experimental(as_of='0.5.10')
+    def to_indices(self, alphabet=None, mask_gaps='auto', wildcard='auto',
+                   return_codes=False):
+        r"""Convert the sequence into indices of characters.
+
+        The result will be indices of characters in an alphabet, if provided,
+        otherwise indices of unique characters observed in the sequence, in
+        which case the unique characters in sorted order will also be returned.
+
+        Parameters
+        ----------
+        alphabet : iterable of scalar or skbio.SubstitutionMatrix, optional
+            Explicitly provided alphabet. The returned indices will be indices
+            of characters in this alphabet. If `None`, will return indices of
+            unique characters observed in the sequence.s
+        mask_gaps : 'auto' or bool, optional
+            Mask gap characters in the sequence, and return a masked array
+            instead of a standard array. The gap characters are defined by the
+            sequence's `gap_characters` attribute. If `'auto'` (default), will
+            return a standard array if no gap character is found, or a masked
+            array if gap character(s) are found.
+        wildcard : 'auto', str of length 1 or None, optional
+            A character to subsitute characters in the sequence that are absent
+            from the alphabet. If `'auto'` (default), will adopt the sequence's
+            `wildcard_char` attribute (if available). If no wildcard is given
+            and there are absent characters, will raise an error.
+        return_codes : bool, optional
+            Return observed characters as an array of ASCII code points instead
+            of a string. Not effective if `alphabet` is set.
+
+        Returns
+        -------
+        1D np.ndarray or np.ma.ndarray of uint8
+            Vector of character indices representing the sequence
+        str or 1D np.array of uint8, optional
+            Sorted unique characters observed in the sequence.
+
+        Raises
+        ------
+        ValueError
+            If alphabet are not valid ASCII characters or contains duplicates.
+        ValueError
+            If gap(s) are to be masked but gap character(s) are not defined.
+        ValueError
+            If wildcard character is not a valid ASCII character.
+
+        Examples
+        --------
+        Convert a protein sequence into indices of unique amino acids in it.
+        Note that the unique characters are ordered.
+
+        >>> from skbio import Protein
+        >>> seq = Protein('MEEPQSDPSV')
+        >>> idx, uniq = seq.to_indices()
+        >>> idx
+        array([2, 1, 1, 3, 4, 5, 0, 3, 5, 6], dtype=uint8)
+        >>> uniq
+        'DEMPQSV'
+
+        Convert a DNA sequence into indices of nucleotides in an alphabet.
+        Note that the order of characters is consistent with the alphabet.
+
+        >>> from skbio import DNA
+        >>> seq = DNA('CTCAAAAGTC')
+        >>> idx = seq.to_indices(alphabet='TCGA')
+        >>> idx
+        array([1, 0, 1, 3, 3, 3, 3, 2, 0, 1], dtype=uint8)
+
+        Use the alphabet included in a substitution matrix.
+
+        >>> from skbio import SubstitutionMatrix
+        >>> sm = SubstitutionMatrix.by_name('NUC.4.4')
+        >>> idx = seq.to_indices(alphabet=sm)
+        >>> idx
+        array([3, 1, 3, 0, 0, 0, 0, 2, 1, 3], dtype=uint8)
+
+        Gap characters ("-" and ".") in the sequence will be masked
+        (`mask_gaps='auto'` is the default behavior).
+
+        >>> seq = DNA('GAG-CTC')
+        >>> idx = seq.to_indices(alphabet='ACGTN', mask_gaps='auto')
+        >>> print(idx)
+        [2 0 2 -- 1 3 1]
+        >>> print(idx.mask)
+        [False False False  True False False False]
+
+        Characters not included in the alphabet will be substituted with a
+        wildcard character, such as "N" for nucleotides and "X" for amino
+        acids (`wildcard='auto'` is the default behavior).
+
+        >>> seq = DNA('GAGRCTC')
+        >>> idx = seq.to_indices(alphabet='ACGTN', wildcard='auto')
+        >>> idx
+        array([2, 0, 2, 4, 1, 3, 1], dtype=uint8)
+
+        """
+        seq = self._bytes
+        
+        # mask gap characters
+        mask = None
+        if mask_gaps in (True, 'auto'):
+            gap_chars = getattr(self, 'gap_chars', None)
+            if gap_chars:
+
+                # encode gap characters
+                gap_chars = list(map(ord, gap_chars))
+
+                # locate gaps in sequence
+                gaps = np.in1d(seq, gap_chars)
+                if mask_gaps is True or gaps.any():
+                    mask, seq = gaps, seq[~gaps]
+
+            elif mask_gaps is True:
+                raise ValueError('Gap character(s) are not defined for the '
+                                 'sequence.')
+
+        # according to an alphabet
+        if alphabet is not None:
+
+            # get wildcard character
+            if wildcard == 'auto':
+                wildcard = getattr(self, 'wildcard_char', None)
+
+            # encode wildcard character
+            if wildcard is not None:
+                try:
+                    assert (wildcard := ord(wildcard)) < 128
+                except (TypeError, AssertionError):
+                    raise ValueError('Wildcard must be a single ASCII '
+                                     'character.')
+
+            # extract alphabet from a substitution matrix
+            if hasattr(alphabet, '_is_ascii'):
+                if alphabet._is_ascii is True:
+                    indices = _indices_in_alphabet_ascii(
+                        seq, alphabet._char_hash, wildcard=wildcard)
+                else:
+                    raise ValueError('Alphabet in the substitution matrix '
+                                     'are not single ASCII characters.')
+
+            # process alphabet from scratch
+            else:
+                if find_duplicates(alphabet):
+                    raise ValueError('Alphabet contains duplicated '
+                                     'characters.')
+                try:
+                    alphabet = _alphabet_to_hashes(alphabet)
+                except (TypeError, ValueError, UnicodeEncodeError):
+                    raise ValueError('Alphabet cannot be encoded as single '
+                                     'ASCII characters.')
+                indices = _indices_in_alphabet_ascii(
+                    seq, alphabet, wildcard=wildcard)
+
+        # according to observed characters
+        else:
+            (indices,), observed = _indices_in_observed([seq])
+            indices = indices.astype(np.uint8)
+            if return_codes is False:
+                observed = observed.tobytes().decode('ascii')
+
+        # construct masked array
+        if mask is not None:
+            indices_ = np.full(mask.size, 255, dtype=np.uint8)
+            indices_[~mask] = indices
+            indices = np.ma.array(indices_, mask=mask)
+
+        if alphabet is not None:
+            return indices
+        else:
+            return indices, observed
+
     def _constructor(self, **kwargs):
         return self.__class__(**kwargs)
 
@@ -2225,81 +2395,3 @@ def _slices_from_iter(array, indexables):
                              "containing %r." % i)
 
         yield array[i]
-
-
-def _get_index_in_alphabet(seq, alphabet, other=None, mask=False):
-    """Convert a sequence into a vector of indices in an alphabet.
-
-    Parameters
-    ----------
-    seq : iterable
-        Input sequence.
-    alphabet : 1D np.ndarray
-        Input alphabet. Must be already sorted.
-    other : int, optional
-        Index in the alphabet to be assigned to characters that are not found
-        in the alphabet.
-    mask : bool, optional
-        Mask characters that are not found in the alphabet. This will return a
-        masked array. Otherwise (default), will raise an error. Not effective
-        when `other` is set.
-
-    Returns
-    -------
-    1D np.ndarray or np.ma.ndarray
-        Vector of indices in the alphabet.
-
-    Raises
-    ------
-    ValueError
-        If character(s) are not found in the alphabet.
-    """
-    if isinstance(seq, str):
-        seq = np.array(tuple(seq))
-    
-    # This function implements a NumPy solution. It is as fast as `map(alpha_
-    # dict.get, seq)`, and faster than `map(alpha_list.index, seq)` as tested
-    # on real DNA and protein data.
-    pos = np.searchsorted(alphabet, seq)
-    last = len(alphabet) - 1
-    pos[pos > last] = last
-    absent = alphabet[pos] != seq
-    if other:
-        return np.where(absent, other, pos)
-    elif mask:
-        return np.ma.array(pos, mask=absent)
-    elif absent.any():
-        raise ValueError('One or multiple characters in the sequence are not '
-                         'found in the alphabet.')
-    return pos
-
-
-def _make_alphabet_and_index(seqs):
-    """Generate a shared alphabet and character indices for sequences.
-
-    The alphabet is a sorted vector of all observed unique characters in the
-    sequences.
-
-    Parameters
-    ----------
-    seqs : iterable of iterable
-        Input sequences.
-
-    Returns
-    -------
-    1D np.ndarray
-        Alphabet, a sorted vector of unique characters.
-    list of 1D np.ndarray
-        Vectors of indices in the alphabet representing the sequences.
-    """
-    # This function uses `np.unique` to extract unique characters and their
-    # indices. It applies `np.unique` on individual sequences, then merges
-    # results. This design is to avoid concatenating too many sequences.
-    alpha_lst, index_lst = zip(*[np.unique(tuple(x) if isinstance(
-        x, str) else x, return_inverse=True) for x in seqs])
-    alpha_union, index_union = np.unique(
-        np.concatenate(alpha_lst), return_inverse=True)
-    index_bounds = np.cumsum([x.size for x in alpha_lst])[:-1]
-    index_chunks = np.split(index_union, index_bounds)
-    index_lst_trans = [x[y] for x, y in zip(index_chunks, index_lst)]
-    return alpha_union, index_lst_trans

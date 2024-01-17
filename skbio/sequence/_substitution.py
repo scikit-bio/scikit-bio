@@ -10,6 +10,7 @@ import numpy as np
 
 from skbio.util._decorator import experimental, classonlymethod
 from skbio.stats.distance import DissimilarityMatrix
+from skbio.sequence._alphabet import _alphabet_to_hashes
 
 
 @experimental(as_of='0.5.10')
@@ -47,9 +48,9 @@ class SubstitutionMatrix(DissimilarityMatrix):
     strings, etc.). Therefore, you may use this class to construct substitution
     matrices of complicated biological units (such as codons or non-canonical
     amino acids). The score matrix may be symmetric, as many existing matrices
-    are, or assymetric, where the score of one character substituted by another
-    is unequal to the the other way around. Only square matrices (i.e., numbers
-    of rows and columns are equal) are supported.
+    are, or asymmetric, where the score of one character substituted by another
+    is unequal to the other way around. Only square matrices (i.e., numbers of
+    rows and columns are equal) are supported.
 
     Multiple commonly used nucleotide and amino acid substitution matrices are
     pre-defined and can be referred to by name. Examples include NUC.4.4 for
@@ -120,11 +121,44 @@ class SubstitutionMatrix(DissimilarityMatrix):
         """
         return self._data
 
+    @property
+    @experimental(as_of='0.5.10')
+    def is_ascii(self):
+        """Whether alphabet consists of single ASCII characters.
+
+        `True` if every character in the alphabet can be represented by a
+        single ASCII character within code point range 0 to 255.
+
+        Returns
+        -------
+        bool
+            Whether alphabet consists of single ASCII characters.
+
+        """
+        return self._is_ascii
+
     @experimental(as_of='0.5.10')
     def __init__(self, alphabet, scores, **kwargs):
-        """Initialize a substitution matrix object
+        """Initialize a substitution matrix object.
         """
         super().__init__(scores, alphabet, **kwargs)
+
+        # `_char_map`: dictionary of characters to indices in the alphabet.
+        # It is to enable efficient conversion of sequences into indices.
+        # It is compatible with generalized sequences.
+        self._char_map = {x: i for i, x in enumerate(alphabet)}
+
+        # `_is_ascii`: whether alphabet can be encoded as ASCII characters.
+        # `_char_hash`: hash table of ASCII code points to indices in the
+        # alphabet. It is to enable efficient conversion of sequences into
+        # into indices. It is optimized for ASCII sequences.
+        try:
+            hash_ = _alphabet_to_hashes(alphabet)
+        except (TypeError, ValueError, UnicodeEncodeError):
+            self._is_ascii = False
+        else:
+            self._is_ascii = True
+            self._char_hash = hash_
 
     @experimental(as_of='0.5.10')
     def to_dict(self):
