@@ -2146,7 +2146,7 @@ class TestSequence(TestSequenceBase, ReallyEqualMixin):
         self.assertEqual(obs_alp, '-ACGT')
 
         # gap character(s) are not defined
-        msg = 'Gap character\(s\) are not defined for the sequence.'
+        msg = r'Gap character\(s\) are not defined for the sequence.'
         with self.assertRaisesRegex(ValueError, msg):
             Sequence('hello').to_indices(mask_gaps=True)
 

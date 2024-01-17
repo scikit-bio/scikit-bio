@@ -2193,7 +2193,7 @@ fuzzy=[(True, False)], metadata={'gene': 'foo'})
 
         """
         seq = self._bytes
-        
+
         # mask gap characters
         mask = None
         if mask_gaps in (True, 'auto'):

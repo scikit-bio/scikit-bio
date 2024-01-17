@@ -100,7 +100,7 @@ def _alphabet_to_hashes(alphabet):
 
     Returns
     -------
-    np.ndarray of np.uint8 of shape (128,) 
+    np.ndarray of np.uint8 of shape (128,)
         Hash table of ASCII code points to indices.
 
     Raises
