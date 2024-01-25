@@ -8,7 +8,8 @@ import numpy as np
 import pandas as pd
 from skbio.util import get_data_path
 from skbio.metadata._metadata import (Metadata, CategoricalMetadataColumn,
-                                      NumericMetadataColumn, MetadataFileError)
+                                      NumericMetadataColumn) 
+from skbio.metadata.io import MetadataFileError
 
 
 # NOTE: many of the test files in the `data` directory intentionally have

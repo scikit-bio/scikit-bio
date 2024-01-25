@@ -9,8 +9,8 @@
 import pandas as pd
 import numpy as np
 
-from .enan import make_nan_with_payload as _make_nan_with_payload
-from .enan import get_payload_from_nan as _get_payload_from_nan
+from ._enan import make_nan_with_payload as _make_nan_with_payload
+from ._enan import get_payload_from_nan as _get_payload_from_nan
 
 
 def _encode_terms(namespace):

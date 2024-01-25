@@ -222,7 +222,6 @@ setup(name='scikit-bio',
           'scipy >= 1.9.0',
           'h5py >= 3.6.0',
           'hdmedians >= 0.14.1',
-          'sqlite3'
       ],
       classifiers=classifiers,
       package_data={
