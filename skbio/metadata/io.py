@@ -15,7 +15,6 @@ import numpy as np
 import pandas as pd
 
 from ._util import find_duplicates
-#import missing as _missing
 from .missing import DEFAULT_MISSING, BUILTIN_MISSING, series_encode_missing
 from .base import SUPPORTED_COLUMN_TYPES, FORMATTED_ID_HEADERS, is_id_header
 from ..metadata._metadata import Metadata, MetadataColumn
@@ -26,16 +25,14 @@ class MetadataFileError(Exception):
         "There may be more errors present in the metadata file. To get a full "
         "report, sample/feature metadata files can be validated with Keemei: "
         "https://keemei.qiime2.org\n\nFind details on QIIME 2 metadata "
-        "requirements here: https://docs.qiime2.org/%s/tutorials/metadata/")
+        "requirements here: https://docs.qiime2.org/")
 
     def __init__(self, message, include_suffix=True):
-        # Lazy import because `qiime2.__release__` is available at runtime but
-        # not at import time (otherwise the release value could be interpolated
-        # into `_suffix` in the class definition above).
-        import qiime2
+        # LH NOTE: in Qiime2 this linked to the specific Qiime2 release.
+        # However since this is not Qiime2 It did break and I removed this 
 
         if include_suffix:
-            message = message + '\n\n' + self._suffix % qiime2.__release__
+            message = message + '\n\n' + self._suffix 
         super().__init__(message)
 
 
@@ -57,7 +54,7 @@ class MetadataReader:
         self._reader = None
 
     def read(self, into, column_types=None, column_missing_schemes=None,
-             default_missing_scheme=DEFAULT_MISSING): #TODO: remove: _missing.DEFAULT_MISSING):
+             default_missing_scheme=DEFAULT_MISSING):
         if column_types is None:
             column_types = {}
 
@@ -251,13 +248,13 @@ class MetadataReader:
 
         if 'missing' in directives:
             for column_name, column_missing in directives['missing'].items():
-                if column_missing not in BUILTIN_MISSING: #TODO: remove _missing.BUILTIN_MISSING:
+                if column_missing not in BUILTIN_MISSING:
                     raise MetadataFileError(
                         "Column %r has an unrecognized missing value scheme %r"
                         " specified in its #q2:missing directive."
                         " Supported missing value schemes (case-sensitive): %s"
                         % (column_name, column_missing,
-                           list(BUILTIN_MISSING)) #TODO: remove: _missing.BUILTIN_MISSING))
+                           list(BUILTIN_MISSING))
                         )
 
         return directives
@@ -336,7 +333,7 @@ class MetadataReader:
     def _cast_column(self, series, column_types, missing_schemes):
         if series.name in missing_schemes:
             scheme = missing_schemes[series.name]
-            series = series_encode_missing(series, scheme) #TODO: remove: _missing.series_encode_missing(series, scheme)
+            series = series_encode_missing(series, scheme) 
         if series.name in column_types:
             if column_types[series.name] == 'numeric':
                 return self._to_numeric(series)
@@ -423,7 +420,7 @@ class MetadataWriter:
         missing = missing_directive[1:]
         result = False
         for m in missing:
-            if m != DEFAULT_MISSING: #TODO: remove: _missing.DEFAULT_MISSING:
+            if m != DEFAULT_MISSING: 
                 result = True
                 break
 

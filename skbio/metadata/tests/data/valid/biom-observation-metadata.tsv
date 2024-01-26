@@ -1,0 +1,4 @@
+#OTUID	taxonomy	confidence
+# optional comments
+OTU_1	k__Bacteria;p__Firmicutes	0.890
+OTU_2	k__Bacteria	0.9999

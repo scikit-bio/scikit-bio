@@ -1,0 +1,21 @@
+# See the corresponding unit test case for the goals of this file. The file
+# tests the following cases for IDs, column names, and cells. Many of the
+# choices are based on use-cases/bugs reported on the forum, Slack, etc.
+#
+# - Unicode characters
+# - Parentheses, underscores, less than (<), and greater than (>)
+# - Single and double quotes. Double quotes must be escaped according to the
+#   Excel TSV dialect's double quote escaping rules.
+# - Escaped newlines (\n), carriage returns (\r), tabs (\t), and spaces
+# - Inline comment characters aren't treated as comments
+
+id	↩c@l1™	col(#2)	#col'3	"""<col_4>"""	"col	  
+5"
+©id##1	ƒoo	(foo)	#f o #o	"foo"
+((id))2	''2''	b#r	"ba
+r"
+'id_3<>'	"b""ar"	"c	d"	"4
+2"
+"""id#4"""	b__a_z	<42>	>42
+"i d	
+5"	baz		42

@@ -1,0 +1,9 @@
+id	col1	col2	col3
+#q2:types	numeric	categorical	categorical
+#q2:missing	BAD:SCHEME	INSDC:missing	no-missing
+id1	1	a	foo
+id2	2	b	bar
+id3	3	c	42
+id4	not applicable	missing	anything
+id5	not collected	not provided	whatever
+id6	restricted access	restricted access	10

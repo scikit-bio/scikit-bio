@@ -1,0 +1,25 @@
+# All sorts of strings that shouldn't be interpreted as numbers in `col2`!
+# Note that the first few values in `col2` *can* be interpreted as numbers,
+# just to have a mixed set of numeric and non-numeric values.
+id	col1	col2
+#q2:types	numeric	numeric
+id1	1	42
+id2	1	-42.50
+id3	1	
+id4	1	a
+id5	1	foo
+id6	1	1,000
+id7	1	1.000.0
+id8	1	$42
+id9	1	nan
+id10	1	NaN
+id11	1	NA
+id12	1	inf
+id13	1	+inf
+id14	1	-inf
+id15	1	Infinity
+id16	1	1_000_000
+id17	1	0xAF
+id18	1	1e3e4
+id19	1	e3
+id20	1	sample-1
