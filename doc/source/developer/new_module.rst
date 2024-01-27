@@ -1,5 +1,5 @@
 Adding a new module to skbio
-############################
+============================
 
 Each module needs an `__init__.py` file and a `tests` folder that also
 contains an `__init__.py` file. For a module, a simple one may look

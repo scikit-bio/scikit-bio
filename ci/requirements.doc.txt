@@ -1,2 +1,2 @@
-Sphinx
-sphinx-bootstrap-theme
+sphinx
+pydata-sphinx-theme

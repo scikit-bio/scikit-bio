@@ -8,8 +8,10 @@ software that is currently under active development.
 API Reference
 -------------
 
-.. toctree::
-   :maxdepth: 1
+.. currentmodule:: skbio
+
+.. autosummary::
+   :toctree: generated
 
    io
    sequence
@@ -40,5 +42,5 @@ to scikit-bio.
 .. toctree::
    :maxdepth: 1
 
-   development/coding_guidelines
-   development/new_module
+   developer/coding_guidelines
+   developer/new_module

@@ -1,1 +1,0 @@
-.. automodule:: skbio.tree

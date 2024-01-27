@@ -49,7 +49,7 @@ The advantage to this approach is that users can access the documentation in an
 interactive Python session or from our website as HTML. Other output formats
 are also possible, such as PDF.
 
-scikit-bio docstrings follow the [numpydoc conventions](https://github.com/numpy/numpy/blob/master/doc/HOWTO_DOCUMENT.rst.txt).
+scikit-bio docstrings follow the [numpydoc conventions](https://numpydoc.readthedocs.io/en/latest/format.html).
 This ensures that the docstrings are easily readable both from the interpreter
 and HTML, PDF, etc. Please read the numpydoc guidelines before continuing.
 
