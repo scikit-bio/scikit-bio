@@ -57,8 +57,8 @@ texinfo_documents = [
 html_title = f'{project} {version} documentation'
 html_short_title = project
 html_baseurl = 'scikit.bio'
-html_logo = 'assets/logo.png'
-html_favicon = 'assets/favicon.ico'
+html_logo = 'logo/logo.png'
+html_favicon = 'logo/favicon.ico'
 html_static_path = ['_static']
 htmlhelp_basename = 'skbio-doc'
 
@@ -68,8 +68,8 @@ htmlhelp_basename = 'skbio-doc'
 html_theme = 'pydata_sphinx_theme'
 html_theme_options = {
    'logo': {
-      'image_light': 'assets/logo.png',
-      'image_dark': 'assets/logo-inverted.png',
+      'image_light': 'logo/logo.png',
+      'image_dark': 'logo/logo-inverted.png',
    }
 }
 
