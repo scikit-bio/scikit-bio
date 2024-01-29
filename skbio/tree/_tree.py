@@ -2193,7 +2193,7 @@ class TreeNode(SkbioObject):
                 (hi - lo - 1) + [PAD] * (end - hi)
             mid = int(np.trunc((lo + hi) / 2))
             prefixes[mid] = char1 + '-' * (LEN - 2) + prefixes[mid][-1]
-            result = [p + l for (p, l) in zip(prefixes, result)]
+            result = [p + L for (p, L) in zip(prefixes, result)]
             if show_internal:
                 stem = result[mid]
                 result[mid] = stem[0] + namestr + stem[len(namestr) + 1:]
