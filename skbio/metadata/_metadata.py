@@ -42,7 +42,7 @@ def find_duplicates(iterable):
             duplicates.add(value)
         else:
             seen.add(value)
-    return duplica
+    return duplicates
 
 
 class _MetadataBase:
