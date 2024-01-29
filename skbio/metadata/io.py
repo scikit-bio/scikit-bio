@@ -28,7 +28,7 @@ class MetadataFileError(Exception):
         "requirements here: https://docs.qiime2.org/")
 
     def __init__(self, message, include_suffix=True):
-        # LH NOTE: in Qiime2 this linked to the specific Qiime2 release.
+        # LH NOTE/TODO: in Qiime2 this linked to the specific Qiime2 release.
         # However since this is not Qiime2 It did break and I removed this 
 
         if include_suffix:
