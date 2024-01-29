@@ -887,7 +887,7 @@ class Format:
         (False, {})
 
         """
-        if not type(override) is bool:
+        if isinstance(override, bool) is not True:
             raise InvalidRegistrationError("`override` must be a bool not %r"
                                            % override)
 
