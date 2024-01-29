@@ -359,9 +359,9 @@ def _interval_metadata_to_gff3(obj, fh, seq_id, skip_subregion=True):
 
 def _construct_seq(fh, constructor=DNA, seq_num=1):
     lines = []
-    for i, (data_type, seq_id, l) in enumerate(_yield_record(fh), 1):
+    for i, (data_type, seq_id, L) in enumerate(_yield_record(fh), 1):
         if data_type == 'data' and seq_num == i:
-            lines = l
+            lines = L
     seq = _get_nth_sequence(_fasta_to_generator(fh, constructor=constructor),
                             seq_num=seq_num)
     seq.interval_metadata = _parse_record(lines, len(seq))
