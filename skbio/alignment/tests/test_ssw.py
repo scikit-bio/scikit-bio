@@ -86,7 +86,7 @@ class TestSSW(TestCase):
         kwarg = {}
 
         def falsy_or_negative(alignment, prop):
-            if type(alignment[prop]) is int:
+            if isinstance(alignment[prop], int):
                 return alignment[prop] < 0
             else:
                 return not alignment[prop]
