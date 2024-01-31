@@ -440,6 +440,8 @@ class TestWriteFilepath(WritableBinarySourceTests, WritableSourceTest):
         with io.open(file, mode='rb') as f:
             return f.read()
 
+# need to rewrite the below test using the responses package
+
 
 @unittest.skipIf(not has_httpretty, "HTTPretty not available to mock tests.")
 class TestReadURL(ReadableBinarySourceTests, ReadableSourceTest):
