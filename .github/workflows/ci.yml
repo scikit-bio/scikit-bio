@@ -31,6 +31,10 @@ jobs:
     name: Lint code (${{ needs.conf.outputs.latest_python }}, ubuntu-latest)
     needs: conf
     runs-on: "ubuntu-latest"
+    # These permissions are needed to run the git-auto-commit-action.
+    # See https://github.com/stefanzweifel/git-auto-commit-action
+    permissions:
+      contents: write
     steps:
       - uses: actions/checkout@v3
       - uses: conda-incubator/setup-miniconda@v2
@@ -45,9 +49,17 @@ jobs:
         run: |
           pip install -r ci/requirements.lint.txt
           conda list
-      - name: Run linter
+      # This will run Ruff's linter and formatter. The linter will perform 'safe' fixes.
+      # The formatter will format everything according to Ruff's settings.
+      # What I need to figure out is how to make it ignore test files.
+      - name: Run ruff
         shell: bash -l {0}
-        run: USE_CYTHON=False make lint
+        run: |
+          ruff check --fix --output-format=github skbio/
+          ruff format skbio/
+      # This line will run the git-auto-commit action, which will automatically add and
+      # commit any changes made by Ruff's linter and formatter.
+      - uses: stefanzweifel/git-auto-commit-action@v5
 
   doc:
     name: Build Documentation  (${{ needs.conf.outputs.latest_python }}, ubuntu-latest)
