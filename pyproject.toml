@@ -32,7 +32,7 @@ exclude = [
 ]
 
 [tool.ruff.lint]
-select = ['E', 'W', 'D']  # pycodestyle (E, W), pydocstyle (D)
+select = ['E', 'W']  # pycodestyle (E, W)
 
 [tool.ruff.format]
 quote-style = 'single'
