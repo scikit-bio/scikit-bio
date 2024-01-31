@@ -26,6 +26,9 @@ ignore = [
 line-length = 79  # conforms to PEP8
 indent-width = 4
 target-version = 'py38'
+exclude = [
+    'doc/source/conf.py' # excluding because Qiyun is currently working on it.
+]
 
 [tool.ruff.lint]
 select = ['E', 'W']  # pycodestyle (E, W)

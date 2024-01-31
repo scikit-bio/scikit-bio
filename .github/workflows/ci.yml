@@ -55,8 +55,8 @@ jobs:
       - name: Run ruff
         shell: bash -l {0}
         run: |
-          ruff check --fix --output-format=github skbio/
-          ruff format skbio/
+          ruff check --fix --output-format=github .
+          ruff format .
       # This line will run the git-auto-commit action, which will automatically add and
       # commit any changes made by Ruff's linter and formatter.
       - uses: stefanzweifel/git-auto-commit-action@v5
