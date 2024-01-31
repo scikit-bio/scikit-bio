@@ -23,15 +23,16 @@ ignore = [
 # Basic configurations for Ruff.
 # See https://docs.astral.sh/ruff/configuration/
 [tool.ruff]
-line-length = 79  # conforms to PEP8
+line-length = 88  # conforms to PEP8
 indent-width = 4
 target-version = 'py38'
 exclude = [
-    'doc/source/conf.py' # excluding because Qiyun is currently working on it.
+    'doc/source/conf.py', # excluding because Qiyun is currently working on it.
+    'skbio/**/tests/*'    # ignoring to be able to implement pydocstyle
 ]
 
 [tool.ruff.lint]
-select = ['E', 'W']  # pycodestyle (E, W)
+select = ['E', 'W', 'D']  # pycodestyle (E, W), pydocstyle (D)
 
 [tool.ruff.format]
 quote-style = 'single'
