@@ -872,8 +872,8 @@ class DissimilarityMatrix(SkbioObject, PlottableMixin):
     def _validate_ids(self, data, ids):
         """Validate the IDs.
 
-        Checks that IDs are unique and that the
-        number of IDs matches the number of rows/cols in the data array.
+        Checks that IDs are unique and that the number of IDs matches the
+        number of rows/cols in the data array.
 
         Subclasses can override this method to perform different/more specific
         validation.

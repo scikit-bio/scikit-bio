@@ -36,21 +36,20 @@ class MetadataMixin(metaclass=abc.ABCMeta):
 
         Create a sequence with metadata:
 
-        >>> from pprint import pprint
         >>> from skbio import Sequence
         >>> seq = Sequence('ACGT', metadata={'description': 'seq description',
         ...                                  'id': 'seq-id'})
 
         Retrieve metadata:
 
-        >>> pprint(seq.metadata) # using pprint to display dict in sorted order
+        >>> print(seq.metadata)
         {'description': 'seq description', 'id': 'seq-id'}
 
         Update metadata:
 
         >>> seq.metadata['id'] = 'new-id'
         >>> seq.metadata['pubmed'] = 12345
-        >>> pprint(seq.metadata)
+        >>> print(seq.metadata)
         {'description': 'seq description', 'id': 'new-id', 'pubmed': 12345}
 
         Set metadata:

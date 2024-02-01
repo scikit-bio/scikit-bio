@@ -9,6 +9,7 @@
 
 ### Features
 
+* Added method `Sequence.to_indices` to convert a sequence into a vector of indices of characters in an alphabet (can be from a substitution matrix) or unique characters observed in the sequence. Supports gap masking and wildcard substitution ([#1917](https://github.com/scikit-bio/scikit-bio/pull/1917)).
 * Added class `SubstitutionMatrix` to support subsitution matrices for nucleotides, amino acids are more general cases ([#1913](https://github.com/scikit-bio/scikit-bio/pull/1913)).
 * Added alpha diversity metric `sobs`, which is the observed species richness (S_{obs}) of a sample. `sobs` will replace `observed_otus`, which uses the historical term "OTU". Also added metric `observed_features` to be compatible with the QIIME 2 terminology. All three metrics are equivalent ([#1902](https://github.com/scikit-bio/scikit-bio/pull/1902)).
 * `beta_diversity` now supports use of Pandas a `DataFrame` index, issue [#1808](https://github.com/scikit-bio/scikit-bio/issues/1808).
