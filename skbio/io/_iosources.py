@@ -17,6 +17,7 @@ import requests
 from skbio.io import IOSourceError
 from ._fileobject import (IterableStringWriterIO, IterableStringReaderIO,
                           WrappedBufferedRandom)
+from ._unbuffered_gzip import UnbufferedWritingGzipFile
 
 
 # NamedTemporaryFile isn't an actual file class, it is a function which
@@ -222,8 +223,11 @@ class GzipCompressor(Compressor):
         return gzip.GzipFile(fileobj=self.file)
 
     def get_writer(self):
-        return gzip.GzipFile(fileobj=self.file, mode='wb',
-                             compresslevel=self.options['compresslevel'])
+        return UnbufferedWritingGzipFile(
+            fileobj=self.file,
+            mode='wb',
+            compresslevel=self.options['compresslevel']
+        )
 
 
 class BZ2Compressor(Compressor):
