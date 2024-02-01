@@ -10,7 +10,10 @@ from gzip import (
     FCOMMENT, write32u
 )
 
-# This class is based on the version of gzip.GzipFile from Python 3.11.
+# This class is based on the version of gzip.GzipFile from CPython 3.11.7.
+# Copyright 2001-2023 Python Software Foundation
+# License provided at licenses/unbuffered-gzip.txt
+# See https://github.com/python/cpython/blob/v3.11.7/Lib/gzip.py
 
 class UnbufferedWritingGzipFile(_compression.BaseStream):
     """The GzipFile class simulates most of the methods of a file object with
