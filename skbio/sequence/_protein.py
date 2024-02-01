@@ -217,6 +217,11 @@ class Protein(GrammaredSequence):
     def default_gap_char(cls):
         return '-'
 
+    @classproperty
+    @overrides(GrammaredSequence)
+    def wildcard_char(cls):
+        return 'X'
+
     @property
     def _motifs(self):
         return _motifs

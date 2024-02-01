@@ -164,7 +164,7 @@ class GrammaredSequence(Sequence, metaclass=GrammaredSequenceMeta):
             as_bytes = ''.join(cls.alphabet).encode('ascii')
             cls.__validation_mask = np.invert(np.bincount(
                 np.frombuffer(as_bytes, dtype=np.uint8),
-                minlength=cls._number_of_extended_ascii_codes).astype(bool))
+                minlength=cls._num_extended_ascii_codes).astype(bool))
         return cls.__validation_mask
 
     @classproperty
@@ -292,6 +292,19 @@ class GrammaredSequence(Sequence, metaclass=GrammaredSequenceMeta):
         """
         raise NotImplementedError
 
+    @classproperty
+    @experimental(as_of='0.5.10')
+    def wildcard_char(cls):
+        """Return wildcard character.
+
+        Returns
+        -------
+        str of length 1
+            Wildcard character.
+
+        """
+        return None
+
     @property
     def _motifs(self):
         return _motifs
@@ -315,7 +328,7 @@ class GrammaredSequence(Sequence, metaclass=GrammaredSequenceMeta):
         # numbers and remove counts of valid numbers, so that we need only
         # see if the array is empty to determine validity.
         invalid_characters = np.bincount(
-            self._bytes, minlength=self._number_of_extended_ascii_codes
+            self._bytes, minlength=self._num_extended_ascii_codes
         ) * self._validation_mask
         if np.any(invalid_characters):
             bad = list(np.where(

@@ -2107,7 +2107,6 @@ class TreeNode(SkbioObject):
 
         Examples
         --------
-        >>> from pprint import pprint
         >>> from skbio import TreeNode
         >>> t = TreeNode.read(['(((a:1,b:2,c:3)x:4,(d:5)y:6)z:7);'])
         >>> res = t.to_array()
