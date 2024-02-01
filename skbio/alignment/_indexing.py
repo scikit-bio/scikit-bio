@@ -168,7 +168,8 @@ class TabularMSALoc(_Indexing):
                     complete_key = (len(indexable) == len(index.levshape) and
                                     indexable in index)
                 partial_key = not complete_key and indexable in index
-            except (TypeError, pd.errors.InvalidIndexError):  # Unhashable type, no biggie
+            except (TypeError,
+                    pd.errors.InvalidIndexError):  # Unhashable type, no biggie
                 pass
         if index.has_duplicates:
             # for a given Index object index,
