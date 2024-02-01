@@ -11,7 +11,7 @@ from gzip import (
 )
 
 # This class is based on the version of gzip.GzipFile from CPython 3.11.7.
-# Copyright 2001-2023 Python Software Foundation
+# Copyright (c) 2001-2023 Python Software Foundation; All Rights Reserved
 # License provided at licenses/unbuffered-gzip.txt
 # See https://github.com/python/cpython/blob/v3.11.7/Lib/gzip.py
 
