@@ -27,6 +27,7 @@
 * Safely handle `Sequence.iter_kmers` where `k` is greater than the sequence length ([#1723](https://github.com/scikit-bio/scikit-bio/issues/1723))
 * Re-enabled OpenMP support, which has been mistakenly disabled in 0.5.8  ([#1874](https://github.com/scikit-bio/scikit-bio/pull/1874))
 * `permanova` and `permdist` operate on a `DistanceMatrix` and a grouping object. Element IDs must be synchronized to compare correct sets of pairwise distances. This failed in case the grouping was provided as a `pandas.Series`, because it was interpreted as an ordered `list` and indices were ignored (see issue [#1877](https://github.com/scikit-bio/scikit-bio/issues/1877) for an example). Note: `pandas.DataFrame` was handled correctly. This behavior has been fixed with PR [#1879](https://github.com/scikit-bio/scikit-bio/pull/1879)
+* Fixed slicing for `TabularMSALoc` on Python 3.12. See issue [#1926](https://github.com/scikit-bio/scikit-bio/issues/1926).
 
 ### Miscellaneous
 
