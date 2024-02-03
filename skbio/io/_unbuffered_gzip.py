@@ -6,8 +6,8 @@ import os
 import time
 
 from gzip import (
-    _COMPRESS_LEVEL_BEST, _GzipReader, READ, WRITE, FTEXT, FHCRC, FEXTRA, FNAME,
-    FCOMMENT, write32u
+    _COMPRESS_LEVEL_BEST, _GzipReader, READ, WRITE, FNAME, write32u,
+    _COMPRESS_LEVEL_FAST
 )
 
 # This class is based on the version of gzip.GzipFile from CPython 3.11.7.
@@ -15,12 +15,13 @@ from gzip import (
 # License provided at licenses/unbuffered-gzip.txt
 # See https://github.com/python/cpython/blob/v3.11.7/Lib/gzip.py
 
+
 class UnbufferedWritingGzipFile(_compression.BaseStream):
     """The GzipFile class simulates most of the methods of a file object with
     the exception of the truncate() method.
 
-    This class only supports opening files in binary mode. If you need to open a
-    compressed file in text mode, use the gzip.open() function.
+    This class only supports opening files in binary mode. If you need to open
+    a compressed file in text mode, use the gzip.open() function.
 
     """
 
@@ -46,11 +47,11 @@ class UnbufferedWritingGzipFile(_compression.BaseStream):
         fileobj, if discernible; otherwise, it defaults to the empty string,
         and in this case the original filename is not included in the header.
 
-        The mode argument can be any of 'r', 'rb', 'a', 'ab', 'w', 'wb', 'x', or
-        'xb' depending on whether the file will be read or written.  The default
-        is the mode of fileobj if discernible; otherwise, the default is 'rb'.
-        A mode of 'r' is equivalent to one of 'rb', and similarly for 'w' and
-        'wb', 'a' and 'ab', and 'x' and 'xb'.
+        The mode argument can be any of 'r', 'rb', 'a', 'ab', 'w', 'wb', 'x',
+        or 'xb' depending on whether the file will be read or written.  The
+        default is the mode of fileobj if discernible; otherwise, the default
+        is 'rb'.  A mode of 'r' is equivalent to one of 'rb', and similarly for
+        'w' and 'wb', 'a' and 'ab', and 'x' and 'xb'.
 
         The compresslevel argument is an integer from 0 to 9 controlling the
         level of compression; 1 is fastest and produces the least compression,
@@ -166,7 +167,7 @@ class UnbufferedWritingGzipFile(_compression.BaseStream):
         if fname:
             self.fileobj.write(fname + b'\000')
 
-    def write(self,data):
+    def write(self, data):
         self._check_not_closed()
         if self.mode != WRITE:
             import errno
@@ -240,7 +241,7 @@ class UnbufferedWritingGzipFile(_compression.BaseStream):
                 self.myfileobj = None
                 myfileobj.close()
 
-    def flush(self,zlib_mode=zlib.Z_SYNC_FLUSH):
+    def flush(self, zlib_mode=zlib.Z_SYNC_FLUSH):
         self._check_not_closed()
         if self.mode == WRITE:
             # Ensure the compressor's buffer is flushed
