@@ -323,9 +323,9 @@ Index(['O83071/192-246', 'O83071/259-312', 'O31698/18-71', 'O31698/88-139',
 
 The ``TabularMSA`` has GF metadata stored in its ``metadata`` dictionary:
 
->>> msa.metadata
-OrderedDict([('CC', 'CBS domains are small intracellular modules mostly found \
-in 2 or four copies within a protein.')])
+>>> list(msa.metadata.items())
+[('CC', 'CBS domains are small intracellular modules mostly found in 2 or \
+four copies within a protein.')]
 
 GC metadata is stored in the ``TabularMSA`` ``positional_metadata``:
 
@@ -345,8 +345,8 @@ GC metadata is stored in the ``TabularMSA`` ``positional_metadata``:
 
 GS metadata is stored in the sequence-specific ``metadata`` dictionary:
 
->>> msa[0].metadata
-OrderedDict([('AC', 'O83071')])
+>>> list(msa[0].metadata.items())
+[('AC', 'O83071')]
 
 GR metadata is stored in sequence-specific ``positional_metadata``:
 
