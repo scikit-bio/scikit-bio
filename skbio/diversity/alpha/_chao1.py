@@ -13,7 +13,7 @@ from skbio.diversity._util import _validate_counts_vector
 from skbio.util._decorator import experimental
 
 
-@experimental(as_of="0.4.0")
+@experimental(as_of='0.4.0')
 def chao1(counts, bias_corrected=True):
     r"""Calculate chao1 richness estimator.
 
@@ -66,12 +66,12 @@ def chao1(counts, bias_corrected=True):
     o, s, d = osd(counts)
 
     if not bias_corrected and s and d:
-        return o + s ** 2 / (d * 2)
+        return o + s**2 / (d * 2)
     else:
         return o + s * (s - 1) / (2 * (d + 1))
 
 
-@experimental(as_of="0.4.0")
+@experimental(as_of='0.4.0')
 def chao1_ci(counts, bias_corrected=True, zscore=1.96):
     """Calculate chao1 confidence interval.
 
@@ -149,7 +149,7 @@ def _chao1_var_uncorrected(singles, doubles):
 
     """
     r = singles / doubles
-    return doubles * (.5 * r ** 2 + r ** 3 + .24 * r ** 4)
+    return doubles * (0.5 * r**2 + r**3 + 0.24 * r**4)
 
 
 def _chao1_var_bias_corrected(s, d):
@@ -160,9 +160,11 @@ def _chao1_var_bias_corrected(s, d):
     From EstimateS manual, equation 6.
 
     """
-    return (s * (s - 1) / (2 * (d + 1)) + (s * (2 * s - 1) ** 2) /
-            (4 * (d + 1) ** 2) + (s ** 2 * d * (s - 1) ** 2) /
-            (4 * (d + 1) ** 4))
+    return (
+        s * (s - 1) / (2 * (d + 1))
+        + (s * (2 * s - 1) ** 2) / (4 * (d + 1) ** 2)
+        + (s**2 * d * (s - 1) ** 2) / (4 * (d + 1) ** 4)
+    )
 
 
 def _chao1_var_no_doubletons(s, chao1):
@@ -174,7 +176,7 @@ def _chao1_var_no_doubletons(s, chao1):
     Chao1 from the same dataset.
 
     """
-    return s * (s - 1) / 2 + s * (2 * s - 1) ** 2 / 4 - s ** 4 / (4 * chao1)
+    return s * (s - 1) / 2 + s * (2 * s - 1) ** 2 / 4 - s**4 / (4 * chao1)
 
 
 def _chao1_var_no_singletons(n, o):
@@ -202,7 +204,7 @@ def _chao_confidence_with_singletons(chao, observed, var_chao, zscore=1.96):
     # observed
     if T == 0:
         return observed, observed
-    K = np.exp(abs(zscore) * np.sqrt(np.log(1 + (var_chao / T ** 2))))
+    K = np.exp(abs(zscore) * np.sqrt(np.log(1 + (var_chao / T**2))))
     return observed + T / K, observed + T * K
 
 
@@ -215,5 +217,7 @@ def _chao_confidence_no_singletons(n, s, zscore=1.96):
 
     """
     P = np.exp(-n / s)
-    return (max(s, s / (1 - P) - zscore * np.sqrt((s * P / (1 - P)))),
-            s / (1 - P) + zscore * np.sqrt(s * P / (1 - P)))
+    return (
+        max(s, s / (1 - P) - zscore * np.sqrt((s * P / (1 - P)))),
+        s / (1 - P) + zscore * np.sqrt(s * P / (1 - P)),
+    )

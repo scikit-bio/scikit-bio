@@ -111,7 +111,7 @@ from skbio.stats.distance import DistanceMatrix
 from scipy.sparse import coo_matrix
 
 
-@experimental(as_of="0.4.0")
+@experimental(as_of='0.4.0')
 def closure(mat):
     """
     Performs closure to ensure that all elements add up to 1.
@@ -150,16 +150,16 @@ def closure(mat):
     """
     mat = np.atleast_2d(mat)
     if np.any(mat < 0):
-        raise ValueError("Cannot have negative proportions")
+        raise ValueError('Cannot have negative proportions')
     if mat.ndim > 2:
-        raise ValueError("Input matrix can only have two dimensions or less")
+        raise ValueError('Input matrix can only have two dimensions or less')
     if np.all(mat == 0, axis=1).sum() > 0:
-        raise ValueError("Input matrix cannot have rows with all zeros")
+        raise ValueError('Input matrix cannot have rows with all zeros')
     mat = mat / mat.sum(axis=1, keepdims=True)
     return mat.squeeze()
 
 
-@experimental(as_of="0.4.0")
+@experimental(as_of='0.4.0')
 def multiplicative_replacement(mat, delta=None):
     r"""Replace all zeros with small non-zero values
 
@@ -213,25 +213,27 @@ def multiplicative_replacement(mat, delta=None):
 
     """
     mat = closure(mat)
-    z_mat = (mat == 0)
+    z_mat = mat == 0
 
     num_feats = mat.shape[-1]
     tot = z_mat.sum(axis=-1, keepdims=True)
 
     if delta is None:
-        delta = (1. / num_feats)**2
+        delta = (1.0 / num_feats) ** 2
 
     zcnts = 1 - tot * delta
     if np.any(zcnts) < 0:
-        raise ValueError('The multiplicative replacement created negative '
-                         'proportions. Consider using a smaller `delta`.')
+        raise ValueError(
+            'The multiplicative replacement created negative '
+            'proportions. Consider using a smaller `delta`.'
+        )
     mat = np.where(z_mat, delta, zcnts * mat)
     return mat.squeeze()
 
 
-@experimental(as_of="0.4.0")
+@experimental(as_of='0.4.0')
 def perturb(x, y):
-    r""" Performs the perturbation operation.
+    r"""Performs the perturbation operation.
 
     This operation is defined as
 
@@ -278,9 +280,9 @@ def perturb(x, y):
     return closure(x * y)
 
 
-@experimental(as_of="0.4.0")
+@experimental(as_of='0.4.0')
 def perturb_inv(x, y):
-    r""" Performs the inverse perturbation operation.
+    r"""Performs the inverse perturbation operation.
 
     This operation is defined as
 
@@ -327,9 +329,9 @@ def perturb_inv(x, y):
     return closure(x / y)
 
 
-@experimental(as_of="0.4.0")
+@experimental(as_of='0.4.0')
 def power(x, a):
-    r""" Performs the power operation.
+    r"""Performs the power operation.
 
     This operation is defined as follows
 
@@ -373,9 +375,9 @@ def power(x, a):
     return closure(x**a).squeeze()
 
 
-@experimental(as_of="0.4.0")
+@experimental(as_of='0.4.0')
 def inner(x, y):
-    r""" Calculates the Aitchson inner product.
+    r"""Calculates the Aitchson inner product.
 
     This inner product is defined as follows
 
@@ -415,9 +417,9 @@ def inner(x, y):
     return a.dot(b.T)
 
 
-@experimental(as_of="0.4.0")
+@experimental(as_of='0.4.0')
 def clr(mat):
-    r""" Performs centre log ratio transformation.
+    r"""Performs centre log ratio transformation.
 
     This function transforms compositions from Aitchison geometry to
     the real space. The :math:`clr` transform is both an isometry and an
@@ -463,9 +465,9 @@ def clr(mat):
     return (lmat - gm).squeeze()
 
 
-@experimental(as_of="0.4.0")
+@experimental(as_of='0.4.0')
 def clr_inv(mat):
-    r""" Performs inverse centre log ratio transformation.
+    r"""Performs inverse centre log ratio transformation.
 
     This function transforms compositions from the real space to
     Aitchison geometry. The :math:`clr^{-1}` transform is both an isometry,
@@ -507,9 +509,9 @@ def clr_inv(mat):
     return closure(emat)
 
 
-@experimental(as_of="0.4.0")
+@experimental(as_of='0.4.0')
 def ilr(mat, basis=None, check=True):
-    r""" Performs isometric log ratio transformation.
+    r"""Performs isometric log ratio transformation.
 
     This function transforms compositions from Aitchison simplex to
     the real space. The :math: ilr` transform is both an isometry,
@@ -564,18 +566,19 @@ def ilr(mat, basis=None, check=True):
         basis = _gram_schmidt_basis(d)  # dimension (d-1) x d
     else:
         if len(basis.shape) != 2:
-            raise ValueError("Basis needs to be a 2D matrix, "
-                             "not a %dD matrix." %
-                             (len(basis.shape)))
+            raise ValueError(
+                'Basis needs to be a 2D matrix, '
+                'not a %dD matrix.' % (len(basis.shape))
+            )
         if check:
             _check_orthogonality(basis)
 
     return clr(mat) @ basis.T
 
 
-@experimental(as_of="0.4.0")
+@experimental(as_of='0.4.0')
 def ilr_inv(mat, basis=None, check=True):
-    r""" Performs inverse isometric log ratio transform.
+    r"""Performs inverse isometric log ratio transform.
 
     This function transforms compositions from the real space to
     Aitchison geometry. The :math:`ilr^{-1}` transform is both an isometry,
@@ -631,9 +634,10 @@ def ilr_inv(mat, basis=None, check=True):
         basis = _gram_schmidt_basis(mat.shape[-1] + 1)
     else:
         if len(basis.shape) != 2:
-            raise ValueError("Basis needs to be a 2D matrix, "
-                             "not a %dD matrix." %
-                             (len(basis.shape)))
+            raise ValueError(
+                'Basis needs to be a 2D matrix, '
+                'not a %dD matrix.' % (len(basis.shape))
+            )
         if check:
             _check_orthogonality(basis)
         # this is necessary, since the clr function
@@ -643,9 +647,9 @@ def ilr_inv(mat, basis=None, check=True):
     return clr_inv(mat @ basis)
 
 
-@experimental(as_of="0.5.5")
+@experimental(as_of='0.5.5')
 def alr(mat, denominator_idx=0):
-    r""" Performs additive log ratio transformation.
+    r"""Performs additive log ratio transformation.
 
     This function transforms compositions from a D-part Aitchison simplex to
     a non-isometric real space of D-1 dimensions. The argument
@@ -694,19 +698,19 @@ def alr(mat, denominator_idx=0):
         mat_t = mat.T
         numerator_idx = list(range(0, mat_t.shape[0]))
         del numerator_idx[denominator_idx]
-        lr = np.log(mat_t[numerator_idx, :]/mat_t[denominator_idx, :]).T
+        lr = np.log(mat_t[numerator_idx, :] / mat_t[denominator_idx, :]).T
     elif mat.ndim == 1:
         numerator_idx = list(range(0, mat.shape[0]))
         del numerator_idx[denominator_idx]
-        lr = np.log(mat[numerator_idx]/mat[denominator_idx])
+        lr = np.log(mat[numerator_idx] / mat[denominator_idx])
     else:
-        raise ValueError("mat must be either 1D or 2D")
+        raise ValueError('mat must be either 1D or 2D')
     return lr
 
 
-@experimental(as_of="0.5.5")
+@experimental(as_of='0.5.5')
 def alr_inv(mat, denominator_idx=0):
-    r""" Performs inverse additive log ratio transform.
+    r"""Performs inverse additive log ratio transform.
 
     This function transforms compositions from the non-isometric real space of
     alrs to Aitchison geometry.
@@ -751,8 +755,7 @@ def alr_inv(mat, denominator_idx=0):
     """
     mat = np.array(mat)
     if mat.ndim == 2:
-        mat_idx = np.insert(mat, denominator_idx,
-                            np.repeat(0, mat.shape[0]), axis=1)
+        mat_idx = np.insert(mat, denominator_idx, np.repeat(0, mat.shape[0]), axis=1)
         comp = np.zeros(mat_idx.shape)
         comp[:, denominator_idx] = 1 / (np.exp(mat).sum(axis=1) + 1)
         numerator_idx = list(range(0, comp.shape[1]))
@@ -768,11 +771,11 @@ def alr_inv(mat, denominator_idx=0):
         for i in numerator_idx:
             comp[i] = comp[denominator_idx] * np.exp(mat_idx[i])
     else:
-        raise ValueError("mat must be either 1D or 2D")
+        raise ValueError('mat must be either 1D or 2D')
     return comp
 
 
-@experimental(as_of="0.4.0")
+@experimental(as_of='0.4.0')
 def centralize(mat):
     r"""Center data around its geometric average.
 
@@ -803,9 +806,9 @@ def centralize(mat):
     return perturb_inv(mat, cen)
 
 
-@experimental(as_of="0.5.7")
+@experimental(as_of='0.5.7')
 def _vlr(x: np.array, y: np.array, ddof: int):
-    r""" Calculates variance log ratio
+    r"""Calculates variance log ratio
 
     Parameters
     ----------
@@ -841,9 +844,9 @@ def _vlr(x: np.array, y: np.array, ddof: int):
     return np.var(x - y, ddof=ddof)
 
 
-@experimental(as_of="0.5.7")
+@experimental(as_of='0.5.7')
 def _robust_vlr(x: np.ndarray, y: np.ndarray, ddof: int):
-    r""" Calculates variance log ratio while masking zeros
+    r"""Calculates variance log ratio while masking zeros
 
     Parameters
     ----------
@@ -884,9 +887,9 @@ def _robust_vlr(x: np.ndarray, y: np.ndarray, ddof: int):
     return np.ma.var(x - y, ddof=ddof)
 
 
-@experimental(as_of="0.5.7")
+@experimental(as_of='0.5.7')
 def vlr(x: np.ndarray, y: np.ndarray, ddof: int = 1, robust: bool = False):
-    r""" Calculates variance log ratio
+    r"""Calculates variance log ratio
 
     Parameters
     ----------
@@ -933,9 +936,9 @@ def vlr(x: np.ndarray, y: np.ndarray, ddof: int = 1, robust: bool = False):
 
     # Set up input and parameters
     kwargs = {
-        "x": x,
-        "y": y,
-        "ddof": ddof,
+        'x': x,
+        'y': y,
+        'ddof': ddof,
     }
 
     # Run backend function
@@ -945,9 +948,9 @@ def vlr(x: np.ndarray, y: np.ndarray, ddof: int = 1, robust: bool = False):
         return _vlr(**kwargs)
 
 
-@experimental(as_of="0.5.7")
+@experimental(as_of='0.5.7')
 def _pairwise_vlr(mat: np.ndarray, ddof: int):
-    r""" Performs pairwise variance log ratio transformation
+    r"""Performs pairwise variance log ratio transformation
 
     Parameters
     ----------
@@ -984,18 +987,15 @@ def _pairwise_vlr(mat: np.ndarray, ddof: int):
     # Variance Log Ratio
     covariance = np.cov(X_log.T, ddof=ddof)
     diagonal = np.diagonal(covariance)
-    vlr_data = -2*covariance + diagonal[:, np.newaxis] + diagonal
+    vlr_data = -2 * covariance + diagonal[:, np.newaxis] + diagonal
     return vlr_data
 
 
-@experimental(as_of="0.5.7")
-def pairwise_vlr(mat,
-                 ids=None,
-                 ddof: int = 1,
-                 robust: bool = False,
-                 validate: bool = True):
-
-    r""" Performs pairwise variance log ratio transformation
+@experimental(as_of='0.5.7')
+def pairwise_vlr(
+    mat, ids=None, ddof: int = 1, robust: bool = False, validate: bool = True
+):
+    r"""Performs pairwise variance log ratio transformation
 
     Parameters
     ----------
@@ -1050,14 +1050,13 @@ def pairwise_vlr(mat,
 
     # Set up input and parameters
     kwargs = {
-        "mat": mat,
-        "ddof": ddof,
+        'mat': mat,
+        'ddof': ddof,
     }
 
     # Variance Log Ratio
     if robust:
-        raise NotImplementedError(
-            'Pairwise version of robust VLR not implemented.')
+        raise NotImplementedError('Pairwise version of robust VLR not implemented.')
     else:
         vlr_data = _pairwise_vlr(**kwargs)
 
@@ -1071,9 +1070,9 @@ def pairwise_vlr(mat,
         return DistanceMatrix(vlr_data, ids=ids, validate=False)
 
 
-@experimental(as_of="0.5.8")
+@experimental(as_of='0.5.8')
 def tree_basis(tree):
-    r""" Calculates sparse representation of an ilr basis from a tree.
+    r"""Calculates sparse representation of an ilr basis from a tree.
 
     This computes an orthonormal basis specified from a bifurcating tree.
 
@@ -1121,13 +1120,19 @@ def tree_basis(tree):
             n._tip_count = 1
         else:
             if len(n.children) == 2:
-                left, right = n.children[NUMERATOR], n.children[DENOMINATOR],
+                left, right = (
+                    n.children[NUMERATOR],
+                    n.children[DENOMINATOR],
+                )
             else:
-                raise ValueError("Not a strictly bifurcating tree.")
+                raise ValueError('Not a strictly bifurcating tree.')
             n._tip_count = left._tip_count + right._tip_count
 
     # calculate k, r, s, t coordinate for each node
-    left, right = t.children[NUMERATOR], t.children[DENOMINATOR],
+    left, right = (
+        t.children[NUMERATOR],
+        t.children[DENOMINATOR],
+    )
     t._k, t._r, t._s, t._t = 0, left._tip_count, right._tip_count, 0
     for n in t.preorder(include_self=False):
         if n.is_tip():
@@ -1144,7 +1149,7 @@ def tree_basis(tree):
             n._s = n.children[DENOMINATOR]._tip_count
             n._t = n.parent._t
         else:
-            raise ValueError("Tree topology is not correct.")
+            raise ValueError('Tree topology is not correct.')
 
     # navigate through tree to build the basis in a sparse matrix form
     value = []
@@ -1153,7 +1158,6 @@ def tree_basis(tree):
     i = 0
 
     for n in t.levelorder(include_self=True):
-
         if n.is_tip():
             continue
 
@@ -1180,15 +1184,18 @@ def tree_basis(tree):
     return basis, nodes
 
 
-@experimental(as_of="0.4.1")
-def ancom(table, grouping,
-          alpha=0.05,
-          tau=0.02,
-          theta=0.1,
-          multiple_comparisons_correction='holm-bonferroni',
-          significance_test=None,
-          percentiles=(0.0, 25.0, 50.0, 75.0, 100.0)):
-    r""" Performs a differential abundance test using ANCOM.
+@experimental(as_of='0.4.1')
+def ancom(
+    table,
+    grouping,
+    alpha=0.05,
+    tau=0.02,
+    theta=0.1,
+    multiple_comparisons_correction='holm-bonferroni',
+    significance_test=None,
+    percentiles=(0.0, 25.0, 50.0, 75.0, 100.0),
+):
+    r"""Performs a differential abundance test using ANCOM.
 
     This is done by calculating pairwise log ratios between all features
     and performing a significance test to determine if there is a significant
@@ -1405,16 +1412,19 @@ def ancom(table, grouping,
 
     """
     if not isinstance(table, pd.DataFrame):
-        raise TypeError('`table` must be a `pd.DataFrame`, '
-                        'not %r.' % type(table).__name__)
+        raise TypeError(
+            '`table` must be a `pd.DataFrame`, ' 'not %r.' % type(table).__name__
+        )
     if not isinstance(grouping, pd.Series):
-        raise TypeError('`grouping` must be a `pd.Series`,'
-                        ' not %r.' % type(grouping).__name__)
+        raise TypeError(
+            '`grouping` must be a `pd.Series`,' ' not %r.' % type(grouping).__name__
+        )
 
     if np.any(table <= 0):
-        raise ValueError('Cannot handle zeros or negative values in `table`. '
-                         'Use pseudocounts or ``multiplicative_replacement``.'
-                         )
+        raise ValueError(
+            'Cannot handle zeros or negative values in `table`. '
+            'Use pseudocounts or ``multiplicative_replacement``.'
+        )
 
     if not 0 < alpha < 1:
         raise ValueError('`alpha`=%f is not within 0 and 1.' % alpha)
@@ -1427,9 +1437,10 @@ def ancom(table, grouping,
 
     if multiple_comparisons_correction is not None:
         if multiple_comparisons_correction != 'holm-bonferroni':
-            raise ValueError('%r is not an available option for '
-                             '`multiple_comparisons_correction`.'
-                             % multiple_comparisons_correction)
+            raise ValueError(
+                '%r is not an available option for '
+                '`multiple_comparisons_correction`.' % multiple_comparisons_correction
+            )
 
     if (grouping.isnull()).any():
         raise ValueError('Cannot handle missing values in `grouping`.')
@@ -1440,32 +1451,37 @@ def ancom(table, grouping,
     percentiles = list(percentiles)
     for percentile in percentiles:
         if not 0.0 <= percentile <= 100.0:
-            raise ValueError('Percentiles must be in the range [0, 100], %r '
-                             'was provided.' % percentile)
+            raise ValueError(
+                'Percentiles must be in the range [0, 100], %r '
+                'was provided.' % percentile
+            )
 
     duplicates = skbio.util.find_duplicates(percentiles)
     if duplicates:
         formatted_duplicates = ', '.join(repr(e) for e in duplicates)
-        raise ValueError('Percentile values must be unique. The following'
-                         ' value(s) were duplicated: %s.' %
-                         formatted_duplicates)
+        raise ValueError(
+            'Percentile values must be unique. The following'
+            ' value(s) were duplicated: %s.' % formatted_duplicates
+        )
 
     groups = np.unique(grouping)
     num_groups = len(groups)
 
     if num_groups == len(grouping):
         raise ValueError(
-            "All values in `grouping` are unique. This method cannot "
-            "operate on a grouping vector with only unique values (e.g., "
+            'All values in `grouping` are unique. This method cannot '
+            'operate on a grouping vector with only unique values (e.g., '
             "there are no 'within' variance because each group of samples "
-            "contains only a single sample).")
+            'contains only a single sample).'
+        )
 
     if num_groups == 1:
         raise ValueError(
-            "All values the `grouping` are the same. This method cannot "
-            "operate on a grouping vector with only a single group of samples"
+            'All values the `grouping` are the same. This method cannot '
+            'operate on a grouping vector with only a single group of samples'
             "(e.g., there are no 'between' variance because there is only a "
-            "single group).")
+            'single group).'
+        )
 
     if significance_test is None:
         significance_test = scipy.stats.f_oneway
@@ -1473,9 +1489,8 @@ def ancom(table, grouping,
     table_index_len = len(table.index)
     grouping_index_len = len(grouping.index)
     mat, cats = table.align(grouping, axis=0, join='inner')
-    if (len(mat) != table_index_len or len(cats) != grouping_index_len):
-        raise ValueError('`table` index and `grouping` '
-                         'index must be consistent.')
+    if len(mat) != table_index_len or len(cats) != grouping_index_len:
+        raise ValueError('`table` index and `grouping` ' 'index must be consistent.')
 
     n_feat = mat.shape[1]
 
@@ -1484,8 +1499,7 @@ def ancom(table, grouping,
 
     # Multiple comparisons
     if multiple_comparisons_correction == 'holm-bonferroni':
-        logratio_mat = np.apply_along_axis(_holm_bonferroni,
-                                           1, logratio_mat)
+        logratio_mat = np.apply_along_axis(_holm_bonferroni, 1, logratio_mat)
     np.fill_diagonal(logratio_mat, 1)
     W = (logratio_mat < alpha).sum(axis=1)
     c_start = W.max() / n_feat
@@ -1494,7 +1508,7 @@ def ancom(table, grouping,
     else:
         # Select appropriate cutoff
         cutoff = c_start - np.linspace(0.05, 0.25, 5)
-        prop_cut = np.array([(W > n_feat*cut).mean() for cut in cutoff])
+        prop_cut = np.array([(W > n_feat * cut).mean() for cut in cutoff])
         dels = np.abs(prop_cut - np.roll(prop_cut, -1))
         dels[-1] = 0
 
@@ -1506,12 +1520,15 @@ def ancom(table, grouping,
             nu = cutoff[3]
         else:
             nu = cutoff[4]
-        reject = (W >= nu*n_feat)
+        reject = W >= nu * n_feat
 
     feat_ids = mat.columns
     ancom_df = pd.DataFrame(
-        {'W': pd.Series(W, index=feat_ids),
-         'Reject null hypothesis': pd.Series(reject, index=feat_ids)})
+        {
+            'W': pd.Series(W, index=feat_ids),
+            'Reject null hypothesis': pd.Series(reject, index=feat_ids),
+        }
+    )
 
     if len(percentiles) == 0:
         return ancom_df, pd.DataFrame()
@@ -1523,15 +1540,15 @@ def ancom(table, grouping,
             for percentile in percentiles:
                 columns.append((percentile, group))
                 data.append(np.percentile(feat_dists, percentile, axis=0))
-        columns = pd.MultiIndex.from_tuples(columns,
-                                            names=['Percentile', 'Group'])
+        columns = pd.MultiIndex.from_tuples(columns, names=['Percentile', 'Group'])
         percentile_df = pd.DataFrame(
-            np.asarray(data).T, columns=columns, index=feat_ids)
+            np.asarray(data).T, columns=columns, index=feat_ids
+        )
         return ancom_df, percentile_df
 
 
 def _holm_bonferroni(p):
-    """ Performs Holm-Bonferroni correction for pvalues
+    """Performs Holm-Bonferroni correction for pvalues
     to account for multiple comparisons
 
     Parameters
@@ -1547,21 +1564,19 @@ def _holm_bonferroni(p):
     K = len(p)
     sort_index = -np.ones(K, dtype=np.int64)
     sorted_p = np.sort(p)
-    sorted_p_adj = sorted_p*(K-np.arange(K))
+    sorted_p_adj = sorted_p * (K - np.arange(K))
     for j in range(K):
         idx = (p == sorted_p[j]) & (sort_index < 0)
         num_ties = len(sort_index[idx])
-        sort_index[idx] = np.arange(j, (j+num_ties), dtype=np.int64)
+        sort_index[idx] = np.arange(j, (j + num_ties), dtype=np.int64)
 
-    sorted_holm_p = [min([max(sorted_p_adj[:k]), 1])
-                     for k in range(1, K+1)]
+    sorted_holm_p = [min([max(sorted_p_adj[:k]), 1]) for k in range(1, K + 1)]
     holm_p = [sorted_holm_p[sort_index[k]] for k in range(K)]
     return holm_p
 
 
-def _log_compare(mat, cats,
-                 significance_test=scipy.stats.ttest_ind):
-    """ Calculates pairwise log ratios between all features and performs a
+def _log_compare(mat, cats, significance_test=scipy.stats.ttest_ind):
+    """Calculates pairwise log ratios between all features and performs a
     significance test (i.e. t-test) to determine if there is a significant
     difference in feature ratios with respect to the variable of interest.
 
@@ -1588,12 +1603,10 @@ def _log_compare(mat, cats,
     def func(x):
         return significance_test(*[x[cats == k] for k in cs])
 
-    for i in range(c-1):
-        ratio = (log_mat[:, i].T - log_mat[:, i+1:].T).T
-        m, p = np.apply_along_axis(func,
-                                   axis=0,
-                                   arr=ratio)
-        log_ratio[i, i+1:] = np.squeeze(np.array(p.T))
+    for i in range(c - 1):
+        ratio = (log_mat[:, i].T - log_mat[:, i + 1 :].T).T
+        m, p = np.apply_along_axis(func, axis=0, arr=ratio)
+        log_ratio[i, i + 1 :] = np.squeeze(np.array(p.T))
     return log_ratio
 
 
@@ -1612,16 +1625,15 @@ def _gram_schmidt_basis(n):
     basis : np.array
         Dimension (n-1) x n basis matrix
     """
-    basis = np.zeros((n, n-1))
-    for j in range(n-1):
+    basis = np.zeros((n, n - 1))
+    for j in range(n - 1):
         i = j + 1
-        e = np.array([(1/i)]*i + [-1] +
-                     [0]*(n-i-1))*np.sqrt(i/(i+1))
+        e = np.array([(1 / i)] * i + [-1] + [0] * (n - i - 1)) * np.sqrt(i / (i + 1))
         basis[:, j] = e
     return basis.T
 
 
-@experimental(as_of="0.5.5")
+@experimental(as_of='0.5.5')
 def sbp_basis(sbp):
     r"""
     Builds an orthogonal basis from a sequential binary partition (SBP). As
@@ -1687,8 +1699,9 @@ def sbp_basis(sbp):
     n_neg = (sbp == -1).sum(axis=1)
     psi = np.zeros(sbp.shape)
     for i in range(0, sbp.shape[0]):
-        psi[i, :] = sbp[i, :] * np.sqrt((n_neg[i] / n_pos[i])**sbp[i, :] /
-                                        np.sum(np.abs(sbp[i, :])))
+        psi[i, :] = sbp[i, :] * np.sqrt(
+            (n_neg[i] / n_pos[i]) ** sbp[i, :] / np.sum(np.abs(sbp[i, :]))
+        )
     return psi
 
 
@@ -1703,6 +1716,5 @@ def _check_orthogonality(basis):
         basis in the Aitchison simplex of dimension d-1 x d
     """
     basis = np.atleast_2d(basis)
-    if not np.allclose(basis @ basis.T, np.identity(len(basis)),
-                       rtol=1e-4, atol=1e-6):
-        raise ValueError("Basis is not orthonormal")
+    if not np.allclose(basis @ basis.T, np.identity(len(basis)), rtol=1e-4, atol=1e-6):
+        raise ValueError('Basis is not orthonormal')

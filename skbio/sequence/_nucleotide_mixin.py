@@ -25,6 +25,7 @@ class NucleotideMixin(metaclass=ABCMeta):
     RNA
 
     """
+
     __complement_lookup = None
     __gc_codes = None
 
@@ -151,9 +152,8 @@ class NucleotideMixin(metaclass=ABCMeta):
             positional_metadata = self.positional_metadata
 
         complement = self._constructor(
-            sequence=result,
-            metadata=metadata,
-            positional_metadata=positional_metadata)
+            sequence=result, metadata=metadata, positional_metadata=positional_metadata
+        )
 
         if reverse:
             # this has to be before the interval metadata code,
@@ -359,8 +359,7 @@ class NucleotideMixin(metaclass=ABCMeta):
 
         """
 
-        counts = np.bincount(self._bytes,
-                             minlength=self._num_extended_ascii_codes)
+        counts = np.bincount(self._bytes, minlength=self._num_extended_ascii_codes)
         gc = counts[self._gc_codes].sum()
         if relative:
             seq = self.degap()
@@ -372,15 +371,13 @@ class NucleotideMixin(metaclass=ABCMeta):
 _motifs = parent_motifs.copy()
 
 
-@_motifs("purine-run")
+@_motifs('purine-run')
 def _motif_purine_run(sequence, min_length, ignore):
     """Identifies purine runs"""
-    return sequence.find_with_regex("([AGR]{%d,})" % min_length,
-                                    ignore=ignore)
+    return sequence.find_with_regex('([AGR]{%d,})' % min_length, ignore=ignore)
 
 
-@_motifs("pyrimidine-run")
+@_motifs('pyrimidine-run')
 def _motif_pyrimidine_run(sequence, min_length, ignore):
     """Identifies pyrimidine runs"""
-    return sequence.find_with_regex("([CTUY]{%d,})" % min_length,
-                                    ignore=ignore)
+    return sequence.find_with_regex('([CTUY]{%d,})' % min_length, ignore=ignore)

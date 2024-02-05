@@ -12,9 +12,8 @@ from skbio.util._decorator import experimental
 from ._cutils import center_distance_matrix_cy
 
 
-@experimental(as_of="0.4.0")
-def mean_and_std(a, axis=None, weights=None, with_mean=True, with_std=True,
-                 ddof=0):
+@experimental(as_of='0.4.0')
+def mean_and_std(a, axis=None, weights=None, with_mean=True, with_std=True, ddof=0):
     """Compute the weighted average and standard deviation along the
     specified axis.
 
@@ -48,8 +47,9 @@ def mean_and_std(a, axis=None, weights=None, with_mean=True, with_std=True,
         axis. If any of them was not required, returns `None` instead
     """
     if not (with_mean or with_std):
-        raise ValueError("Either the mean or standard deviation need to be"
-                         " computed.")
+        raise ValueError(
+            'Either the mean or standard deviation need to be' ' computed.'
+        )
     a = np.asarray(a)
     if weights is None:
         avg = a.mean(axis=axis) if with_mean else None
@@ -58,15 +58,14 @@ def mean_and_std(a, axis=None, weights=None, with_mean=True, with_std=True,
         avg = np.average(a, axis=axis, weights=weights)
         if with_std:
             if axis is None:
-                variance = np.average((a - avg)**2, weights=weights)
+                variance = np.average((a - avg) ** 2, weights=weights)
             else:
                 # Make sure that the subtraction to compute variance works for
                 # multidimensional arrays
                 a_rolled = np.rollaxis(a, axis)
                 # Numpy doesn't have a weighted std implementation, but this is
                 # stable and fast
-                variance = np.average((a_rolled - avg)**2, axis=0,
-                                      weights=weights)
+                variance = np.average((a_rolled - avg) ** 2, axis=0, weights=weights)
             if ddof != 0:  # Don't waste time if variance doesn't need scaling
                 if axis is None:
                     variance *= a.size / (a.size - ddof)
@@ -79,7 +78,7 @@ def mean_and_std(a, axis=None, weights=None, with_mean=True, with_std=True,
     return avg, std
 
 
-@experimental(as_of="0.4.0")
+@experimental(as_of='0.4.0')
 def scale(a, weights=None, with_mean=True, with_std=True, ddof=0, copy=True):
     """Scale array by columns to have weighted average 0 and standard
     deviation 1.
@@ -117,8 +116,9 @@ def scale(a, weights=None, with_mean=True, with_std=True, ddof=0, copy=True):
     if copy:
         a = a.copy()
     a = np.asarray(a, dtype=np.float64)
-    avg, std = mean_and_std(a, axis=0, weights=weights, with_mean=with_mean,
-                            with_std=with_std, ddof=ddof)
+    avg, std = mean_and_std(
+        a, axis=0, weights=weights, with_mean=with_mean, with_std=with_std, ddof=ddof
+    )
     if with_mean:
         a -= avg
     if with_std:
@@ -127,7 +127,7 @@ def scale(a, weights=None, with_mean=True, with_std=True, ddof=0, copy=True):
     return a
 
 
-@experimental(as_of="0.4.0")
+@experimental(as_of='0.4.0')
 def svd_rank(M_shape, S, tol=None):
     """Matrix rank of `M` given its singular values `S`.
 
@@ -139,7 +139,7 @@ def svd_rank(M_shape, S, tol=None):
     return np.sum(S > tol)
 
 
-@experimental(as_of="0.4.0")
+@experimental(as_of='0.4.0')
 def corr(x, y=None):
     """Computes correlation between columns of `x`, or `x` and `y`.
 
@@ -167,7 +167,7 @@ def corr(x, y=None):
     if y is not None:
         y = np.asarray(y)
         if y.shape[0] != x.shape[0]:
-            raise ValueError("Both matrices must have the same number of rows")
+            raise ValueError('Both matrices must have the same number of rows')
         x, y = scale(x), scale(y)
     else:
         x = scale(x)
@@ -178,7 +178,7 @@ def corr(x, y=None):
     return x.T.dot(y) / x.shape[0]
 
 
-@experimental(as_of="0.4.0")
+@experimental(as_of='0.4.0')
 def e_matrix(distance_matrix):
     """Compute E matrix from a distance matrix.
 

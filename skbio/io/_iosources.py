@@ -15,8 +15,11 @@ import itertools
 import requests
 
 from skbio.io import IOSourceError
-from ._fileobject import (IterableStringWriterIO, IterableStringReaderIO,
-                          WrappedBufferedRandom)
+from ._fileobject import (
+    IterableStringWriterIO,
+    IterableStringReaderIO,
+    WrappedBufferedRandom,
+)
 
 
 # NamedTemporaryFile isn't an actual file class, it is a function which
@@ -36,15 +39,12 @@ def get_io_sources():
         BufferedIOSource,
         TextIOSource,
         WrappedTemporaryFileSource,
-        IterableSource
+        IterableSource,
     )
 
 
 def _compressors():
-    return (
-        GzipCompressor,
-        BZ2Compressor
-    )
+    return (GzipCompressor, BZ2Compressor)
 
 
 def get_compression_handler(name):
@@ -97,9 +97,9 @@ class FilePathSource(IOSource):
 
 class HTTPSource(IOSource):
     def can_read(self):
-        return (
-            isinstance(self.file, str) and
-            requests.compat.urlparse(self.file).scheme in {'http', 'https'})
+        return isinstance(self.file, str) and requests.compat.urlparse(
+            self.file
+        ).scheme in {'http', 'https'}
 
     def get_reader(self):
         req = requests.get(self.file)
@@ -166,12 +166,10 @@ class WrappedTemporaryFileSource(IOSource):
     closeable = False
 
     def can_read(self):
-        return (isinstance(self.file, _WrappedTemporaryFile) and
-                self.file.readable())
+        return isinstance(self.file, _WrappedTemporaryFile) and self.file.readable()
 
     def can_write(self):
-        return (isinstance(self.file, _WrappedTemporaryFile) and
-                self.file.writable())
+        return isinstance(self.file, _WrappedTemporaryFile) and self.file.writable()
 
     def get_reader(self):
         # _TemporaryFileWrapper has a file attribute which is an actual fileobj
@@ -195,20 +193,19 @@ class IterableSource(IOSource):
             else:
                 # We may have mangled a generator at this point, so just abort
                 raise IOSourceError(
-                    "Could not open source: %r (mode: %r)" %
-                    (self.file, self.options['mode']))
+                    'Could not open source: %r (mode: %r)'
+                    % (self.file, self.options['mode'])
+                )
         return False
 
     def can_write(self):
         return hasattr(self.file, 'append') and hasattr(self.file, '__iter__')
 
     def get_reader(self):
-        return IterableStringReaderIO(self.repaired,
-                                      newline=self.options['newline'])
+        return IterableStringReaderIO(self.repaired, newline=self.options['newline'])
 
     def get_writer(self):
-        return IterableStringWriterIO(self.file,
-                                      newline=self.options['newline'])
+        return IterableStringWriterIO(self.file, newline=self.options['newline'])
 
 
 class GzipCompressor(Compressor):
@@ -222,8 +219,9 @@ class GzipCompressor(Compressor):
         return gzip.GzipFile(fileobj=self.file)
 
     def get_writer(self):
-        return gzip.GzipFile(fileobj=self.file, mode='wb',
-                             compresslevel=self.options['compresslevel'])
+        return gzip.GzipFile(
+            fileobj=self.file, mode='wb', compresslevel=self.options['compresslevel']
+        )
 
 
 class BZ2Compressor(Compressor):
@@ -237,8 +235,9 @@ class BZ2Compressor(Compressor):
         return bz2.BZ2File(self.file, mode='rb')
 
     def get_writer(self):
-        return bz2.BZ2File(self.file, mode='wb',
-                           compresslevel=self.options['compresslevel'])
+        return bz2.BZ2File(
+            self.file, mode='wb', compresslevel=self.options['compresslevel']
+        )
 
 
 class AutoCompressor(Compressor):

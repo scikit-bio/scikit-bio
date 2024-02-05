@@ -175,21 +175,22 @@ import inspect
 from functools import wraps
 
 from ._exception import DuplicateRegistrationError, InvalidRegistrationError
-from . import (UnrecognizedFormatError, ArgumentOverrideWarning,
-               FormatIdentificationWarning)
+from . import (
+    UnrecognizedFormatError,
+    ArgumentOverrideWarning,
+    FormatIdentificationWarning,
+)
 from .util import _resolve_file, open_file, open_files, _d as _open_kwargs
 from skbio.util._misc import make_sentinel, find_sentinels
 from skbio.util._decorator import stable, classonlymethod
 
-FileSentinel = make_sentinel("FileSentinel")
+FileSentinel = make_sentinel('FileSentinel')
 
 
 class IORegistry:
-    """Create a registry of formats and implementations which map to classes.
+    """Create a registry of formats and implementations which map to classes."""
 
-    """
-
-    @stable(as_of="0.4.0")
+    @stable(as_of='0.4.0')
     def __init__(self):
         # This seperation of binary and text formats is useful because there
         # are many situations where we may have recieved a text-file. When this
@@ -204,7 +205,7 @@ class IORegistry:
         self._text_formats = {}
         self._lookups = (self._binary_formats, self._text_formats)
 
-    @stable(as_of="0.4.0")
+    @stable(as_of='0.4.0')
     def create_format(self, *args, **kwargs):
         """A simple factory for creating new file formats.
 
@@ -222,7 +223,7 @@ class IORegistry:
         self.add_format(format)
         return format
 
-    @stable(as_of="0.4.0")
+    @stable(as_of='0.4.0')
     def add_format(self, format_object):
         """Add a format to the registry.
 
@@ -236,15 +237,16 @@ class IORegistry:
         # occurs.
         name = format_object.name
         if name in self._binary_formats or name in self._text_formats:
-            raise DuplicateRegistrationError("A format already exists with"
-                                             " that name: %s" % name)
+            raise DuplicateRegistrationError(
+                'A format already exists with' ' that name: %s' % name
+            )
 
         if format_object.is_binary_format:
             self._binary_formats[name] = format_object
         else:
             self._text_formats[name] = format_object
 
-    @stable(as_of="0.4.0")
+    @stable(as_of='0.4.0')
     def get_sniffer(self, format_name):
         """Locate the sniffer for a format.
 
@@ -264,7 +266,7 @@ class IORegistry:
                 return lookup[format_name].sniffer_function
         return None
 
-    @stable(as_of="0.4.0")
+    @stable(as_of='0.4.0')
     def get_reader(self, format_name, cls):
         """Locate the reader for a format and class.
 
@@ -285,7 +287,7 @@ class IORegistry:
         """
         return self._get_rw(format_name, cls, 'readers')
 
-    @stable(as_of="0.4.0")
+    @stable(as_of='0.4.0')
     def get_writer(self, format_name, cls):
         """Locate the writer for a format and class.
 
@@ -314,7 +316,7 @@ class IORegistry:
                     return format_lookup[cls]
         return None
 
-    @stable(as_of="0.4.0")
+    @stable(as_of='0.4.0')
     def list_read_formats(self, cls):
         """Return a list of available read formats for a given `cls` type.
 
@@ -333,7 +335,7 @@ class IORegistry:
         """
         return list(self._iter_rw_formats(cls, 'readers'))
 
-    @stable(as_of="0.4.0")
+    @stable(as_of='0.4.0')
     def list_write_formats(self, cls):
         """Return a list of available write formats for a given `cls` type.
 
@@ -358,7 +360,7 @@ class IORegistry:
                 if cls in getattr(format, lookup_name):
                     yield format.name
 
-    @stable(as_of="0.4.0")
+    @stable(as_of='0.4.0')
     def sniff(self, file, **kwargs):
         """Detect the format of a given `file` and suggest kwargs for reading.
 
@@ -387,8 +389,7 @@ class IORegistry:
 
         """
         if 'newline' in kwargs:
-            raise TypeError(
-                "Cannot provide `newline` keyword argument when sniffing.")
+            raise TypeError('Cannot provide `newline` keyword argument when sniffing.')
 
         # By resolving the input here, we have the oppurtunity to reuse the
         # file (which is potentially ephemeral). Each sniffer will also resolve
@@ -401,15 +402,13 @@ class IORegistry:
         # garbage collected (using io.TextIOBase results in close being called
         # on our buffer by the deconstructor which we wanted to share with the
         # next sniffer)
-        with _resolve_file(file, mode='r', **kwargs) as (fh, _,
-                                                         is_binary_file):
+        with _resolve_file(file, mode='r', **kwargs) as (fh, _, is_binary_file):
             # tell may fail noisily if the user provided a TextIOBase or
             # BufferedReader which has already been iterated over (via next()).
             matches = []
             backup = fh.tell()
             if is_binary_file and kwargs.get('encoding', 'binary') == 'binary':
-                matches = self._find_matches(fh, self._binary_formats,
-                                             **kwargs)
+                matches = self._find_matches(fh, self._binary_formats, **kwargs)
 
             if kwargs.get('encoding', None) != 'binary':
                 # We can always turn a binary file into a text file, but the
@@ -417,18 +416,17 @@ class IORegistry:
                 matches += self._find_matches(fh, self._text_formats, **kwargs)
                 fh.seek(backup)
             elif not is_binary_file:
-                raise ValueError("Cannot decode text source (%r) as binary."
-                                 % file)
+                raise ValueError('Cannot decode text source (%r) as binary.' % file)
             # else we are a binary_file and our encoding did not exclude binary
             # so we have already handled that condition
 
         if len(matches) > 1:
-            raise UnrecognizedFormatError("File format for %r is ambiguous,"
-                                          " may be one of: %r"
-                                          % (file, [m for m, s in matches]))
+            raise UnrecognizedFormatError(
+                'File format for %r is ambiguous,'
+                ' may be one of: %r' % (file, [m for m, s in matches])
+            )
         elif len(matches) == 0:
-            raise UnrecognizedFormatError("Could not detect the format of %r"
-                                          % file)
+            raise UnrecognizedFormatError('Could not detect the format of %r' % file)
 
         return matches[0]
 
@@ -442,7 +440,7 @@ class IORegistry:
                     matches.append((format.name, skwargs))
         return matches
 
-    @stable(as_of="0.4.0")
+    @stable(as_of='0.4.0')
     def read(self, file, format=None, into=None, verify=True, **kwargs):
         """Read `file` as `format` into an object.
 
@@ -486,8 +484,7 @@ class IORegistry:
 
         """
         if 'newline' in kwargs:
-            raise TypeError(
-                "Cannot provide `newline` keyword argument when reading.")
+            raise TypeError('Cannot provide `newline` keyword argument when reading.')
 
         # Context managers do not compose well with generators. We have to
         # duplicate the logic so that the file will stay open while yielding.
@@ -496,7 +493,7 @@ class IORegistry:
         # perspective).
         if into is None:
             if format is None:
-                raise ValueError("`into` and `format` cannot both be None")
+                raise ValueError('`into` and `format` cannot both be None')
             gen = self._read_gen(file, format, into, verify, kwargs)
             # This is done so that any errors occur immediately instead of
             # on the first call from __iter__
@@ -515,8 +512,9 @@ class IORegistry:
     def _read_ret(self, file, fmt, into, verify, kwargs):
         io_kwargs = self._find_io_kwargs(kwargs)
         with _resolve_file(file, **io_kwargs) as (file, _, _):
-            reader, kwargs = self._init_reader(file, fmt, into, verify, kwargs,
-                                               io_kwargs)
+            reader, kwargs = self._init_reader(
+                file, fmt, into, verify, kwargs, io_kwargs
+            )
             return reader(file, **kwargs)
 
     def _read_gen(self, file, fmt, into, verify, kwargs):
@@ -526,8 +524,9 @@ class IORegistry:
         # kwargs should still retain the contents of io_kwargs because the
         # actual reader will also need them.
         with _resolve_file(file, **io_kwargs) as (file, _, _):
-            reader, kwargs = self._init_reader(file, fmt, into, verify, kwargs,
-                                               io_kwargs)
+            reader, kwargs = self._init_reader(
+                file, fmt, into, verify, kwargs, io_kwargs
+            )
             yield from reader(file, **kwargs)
 
     def _find_io_kwargs(self, kwargs):
@@ -544,31 +543,40 @@ class IORegistry:
                 is_format, skwargs = sniffer(file, **io_kwargs)
                 file.seek(backup)
                 if not is_format:
-                    warn("%r does not look like a %s file"
-                         % (file, fmt), FormatIdentificationWarning)
+                    warn(
+                        '%r does not look like a %s file' % (file, fmt),
+                        FormatIdentificationWarning,
+                    )
 
         for key in skwargs:
             if key not in kwargs:
                 kwargs[key] = skwargs[key]
             elif kwargs[key] != skwargs[key]:
-                warn('Best guess was: %s=%r, continuing with user'
-                     ' supplied: %r' % (key, skwargs[key],
-                                        kwargs[key]),
-                     ArgumentOverrideWarning)
+                warn(
+                    'Best guess was: %s=%r, continuing with user'
+                    ' supplied: %r' % (key, skwargs[key], kwargs[key]),
+                    ArgumentOverrideWarning,
+                )
 
         reader = self.get_reader(fmt, into)
         if reader is None:
-            possible_intos = [r.__name__ for r in
-                              self._get_possible_readers(fmt)]
+            possible_intos = [r.__name__ for r in self._get_possible_readers(fmt)]
             message = ''
             if possible_intos:
-                message = ("Possible values for `into` include: %s"
-                           % ', '.join(possible_intos))
+                message = 'Possible values for `into` include: %s' % ', '.join(
+                    possible_intos
+                )
             into_message = '`into` also not provided.' if not into else ''
             raise UnrecognizedFormatError(
-                "Cannot read %r from %r, no %s reader found. %s %s" %
-                (fmt, file, into.__name__ if into else 'generator',
-                 into_message, message))
+                'Cannot read %r from %r, no %s reader found. %s %s'
+                % (
+                    fmt,
+                    file,
+                    into.__name__ if into else 'generator',
+                    into_message,
+                    message,
+                )
+            )
         return reader, kwargs
 
     def _get_possible_readers(self, fmt):
@@ -577,7 +585,7 @@ class IORegistry:
                 return list(lookup[fmt].readers)
         return []
 
-    @stable(as_of="0.4.0")
+    @stable(as_of='0.4.0')
     def write(self, obj, format, into, **kwargs):
         """Write `obj` as `format` into a file.
 
@@ -613,13 +621,14 @@ class IORegistry:
         writer = self.get_writer(format, cls)
         if writer is None:
             raise UnrecognizedFormatError(
-                "Cannot write %r into %r, no %s writer found." %
-                (format, into, obj.__class__.__name__))
+                'Cannot write %r into %r, no %s writer found.'
+                % (format, into, obj.__class__.__name__)
+            )
 
         writer(obj, into, **kwargs)
         return into
 
-    @stable(as_of="0.4.0")
+    @stable(as_of='0.4.0')
     def monkey_patch(self):
         """Monkey-patch `read` and `write` methods onto registered classes.
 
@@ -656,7 +665,7 @@ class IORegistry:
         read.__func__.__doc__ = _read_docstring % {
             'name': cls.__name__,
             'list': doc_list,
-            'see': '\n'.join(imports)
+            'see': '\n'.join(imports),
         }
         cls.read = read
 
@@ -665,9 +674,10 @@ class IORegistry:
         write_formats = registry.list_write_formats(cls)
         if not hasattr(cls, 'default_write_format'):
             raise NotImplementedError(
-                "Classes with registered writers must provide a "
-                "`default_write_format`. Please add `default_write_format`"
-                " to '%s'." % cls.__name__)
+                'Classes with registered writers must provide a '
+                '`default_write_format`. Please add `default_write_format`'
+                " to '%s'." % cls.__name__
+            )
 
         def write(self, file, format=cls.default_write_format, **kwargs):
             return registry.write(self, into=file, format=format, **kwargs)
@@ -678,7 +688,7 @@ class IORegistry:
             'name': cls.__name__,
             'list': doc_list,
             'see': '\n'.join(imports),
-            'default': cls.default_write_format
+            'default': cls.default_write_format,
         }
 
         cls.write = write
@@ -686,7 +696,7 @@ class IORegistry:
     def _import_paths(self, formats):
         lines = []
         for fmt in formats:
-            lines.append("skbio.io.format." + fmt)
+            lines.append('skbio.io.format.' + fmt)
         return lines
 
     def _formats_for_docs(self, formats, imports):
@@ -786,44 +796,45 @@ class Format:
         universal newline handling.
 
     """
+
     @property
-    @stable(as_of="0.4.0")
+    @stable(as_of='0.4.0')
     def name(self):
         """The name of this format."""
         return self._name
 
     @property
-    @stable(as_of="0.4.0")
+    @stable(as_of='0.4.0')
     def is_binary_format(self):
         """Return True if this is a binary format."""
         return self._encoding == 'binary'
 
     @property
-    @stable(as_of="0.4.0")
+    @stable(as_of='0.4.0')
     def sniffer_function(self):
         """The sniffer function associated with this format."""
         return self._sniffer_function
 
     @property
-    @stable(as_of="0.4.0")
+    @stable(as_of='0.4.0')
     def readers(self):
         """Dictionary that maps classes to their readers for this format."""
         return self._readers
 
     @property
-    @stable(as_of="0.4.0")
+    @stable(as_of='0.4.0')
     def writers(self):
         """Dictionary that maps classes to their writers for this format."""
         return self._writers
 
     @property
-    @stable(as_of="0.4.0")
+    @stable(as_of='0.4.0')
     def monkey_patched_readers(self):
         """Set of classes bound to readers to monkey patch."""
         return self._monkey_patch['read']
 
     @property
-    @stable(as_of="0.4.0")
+    @stable(as_of='0.4.0')
     def monkey_patched_writers(self):
         """Set of classes bound to writers to monkey patch."""
         return self._monkey_patch['write']
@@ -838,7 +849,7 @@ class Format:
         self._writers = {}
         self._monkey_patch = {'read': set(), 'write': set()}
 
-    @stable(as_of="0.4.0")
+    @stable(as_of='0.4.0')
     def sniffer(self, override=False):
         """Decorate a function to act as the sniffer for this format.
 
@@ -888,24 +899,37 @@ class Format:
 
         """
         if isinstance(override, bool) is not True:
-            raise InvalidRegistrationError("`override` must be a bool not %r"
-                                           % override)
+            raise InvalidRegistrationError(
+                '`override` must be a bool not %r' % override
+            )
 
         if not override and self._sniffer_function is not None:
-            raise DuplicateRegistrationError("A sniffer is already registered"
-                                             " to format: %s" % self._name)
+            raise DuplicateRegistrationError(
+                'A sniffer is already registered' ' to format: %s' % self._name
+            )
 
         def decorator(sniffer):
             @wraps(sniffer)
-            def wrapped_sniffer(file, encoding=self._encoding, errors='ignore',
-                                newline=self._newline, **kwargs):
+            def wrapped_sniffer(
+                file,
+                encoding=self._encoding,
+                errors='ignore',
+                newline=self._newline,
+                **kwargs,
+            ):
                 self._validate_encoding(encoding)
                 if encoding == 'binary':
                     # Errors is irrelevant so set to default to prevent raising
                     # a usage exception in open.
                     errors = _open_kwargs['errors']
-                with open_file(file, mode='r', encoding=encoding,
-                               newline=newline, errors=errors, **kwargs) as fh:
+                with open_file(
+                    file,
+                    mode='r',
+                    encoding=encoding,
+                    newline=newline,
+                    errors=errors,
+                    **kwargs,
+                ) as fh:
                     try:
                         # Some formats may have headers which indicate their
                         # format sniffers should be able to rely on the
@@ -915,20 +939,23 @@ class Format:
                     except UnicodeDecodeError:
                         pass
                     except Exception:
-                        warn(f'\'{sniffer.__name__}\' has encountered a '
-                             'problem.\nPlease send the following to our '
-                             'issue tracker at\nhttps://github.com/scikit-'
-                             'bio/scikit-bio/issues\n\n'
-                             f'{traceback.format_exc()}',
-                             FormatIdentificationWarning)
+                        warn(
+                            f"'{sniffer.__name__}' has encountered a "
+                            'problem.\nPlease send the following to our '
+                            'issue tracker at\nhttps://github.com/scikit-'
+                            'bio/scikit-bio/issues\n\n'
+                            f'{traceback.format_exc()}',
+                            FormatIdentificationWarning,
+                        )
 
                     return False, {}
 
             self._sniffer_function = wrapped_sniffer
             return wrapped_sniffer
+
         return decorator
 
-    @stable(as_of="0.4.0")
+    @stable(as_of='0.4.0')
     def reader(self, cls, monkey_patch=True, override=False):
         """Decorate a function to act as the reader for a class in this format.
 
@@ -988,10 +1015,12 @@ class Format:
             if cls is not None:
 
                 @wraps(reader_function)
-                def wrapped_reader(file, encoding=self._encoding,
-                                   newline=self._newline, **kwargs):
+                def wrapped_reader(
+                    file, encoding=self._encoding, newline=self._newline, **kwargs
+                ):
                     file_keys, files, io_kwargs = self._setup_locals(
-                        file_params, file, encoding, newline, kwargs)
+                        file_params, file, encoding, newline, kwargs
+                    )
                     with open_files(files, mode='r', **io_kwargs) as fhs:
                         # The primary file is at the end of fh because append
                         # is cheaper than insert
@@ -1000,19 +1029,22 @@ class Format:
             else:
 
                 @wraps(reader_function)
-                def wrapped_reader(file, encoding=self._encoding,
-                                   newline=self._newline, **kwargs):
+                def wrapped_reader(
+                    file, encoding=self._encoding, newline=self._newline, **kwargs
+                ):
                     file_keys, files, io_kwargs = self._setup_locals(
-                        file_params, file, encoding, newline, kwargs)
+                        file_params, file, encoding, newline, kwargs
+                    )
                     with open_files(files, mode='r', **io_kwargs) as fhs:
                         kwargs.update(zip(file_keys, fhs[:-1]))
                         yield from reader_function(fhs[-1], **kwargs)
 
             self._add_reader(cls, wrapped_reader, monkey_patch, override)
             return wrapped_reader
+
         return decorator
 
-    @stable(as_of="0.4.0")
+    @stable(as_of='0.4.0')
     def writer(self, cls, monkey_patch=True, override=False):
         """Decorate a function to act as the writer for a class in this format.
 
@@ -1074,22 +1106,26 @@ class Format:
             file_params = find_sentinels(writer_function, FileSentinel)
 
             @wraps(writer_function)
-            def wrapped_writer(obj, file, encoding=self._encoding,
-                               newline=self._newline, **kwargs):
+            def wrapped_writer(
+                obj, file, encoding=self._encoding, newline=self._newline, **kwargs
+            ):
                 file_keys, files, io_kwargs = self._setup_locals(
-                    file_params, file, encoding, newline, kwargs)
+                    file_params, file, encoding, newline, kwargs
+                )
                 with open_files(files, mode='w', **io_kwargs) as fhs:
                     kwargs.update(zip(file_keys, fhs[:-1]))
                     writer_function(obj, fhs[-1], **kwargs)
 
             self._add_writer(cls, wrapped_writer, monkey_patch, override)
             return wrapped_writer
+
         return decorator
 
     def _check_registration(self, cls):
         if cls is not None and not inspect.isclass(cls):
-            raise InvalidRegistrationError("`cls` must be a class or None, not"
-                                           " %r" % cls)
+            raise InvalidRegistrationError(
+                '`cls` must be a class or None, not' ' %r' % cls
+            )
 
     def _setup_locals(self, file_params, file, encoding, newline, kwargs):
         self._validate_encoding(encoding)
@@ -1102,11 +1138,9 @@ class Format:
     def _validate_encoding(self, encoding):
         if encoding != self._encoding:
             if self._encoding == 'binary':
-                raise ValueError("Encoding must be 'binary' for %r"
-                                 % self.name)
+                raise ValueError("Encoding must be 'binary' for %r" % self.name)
             if encoding == 'binary':
-                raise ValueError("Encoding must not be 'binary' for %r"
-                                 % self.name)
+                raise ValueError("Encoding must not be 'binary' for %r" % self.name)
 
     def _pop_io_kwargs(self, kwargs, encoding, newline):
         io_kwargs = dict(encoding=encoding, newline=newline)
@@ -1131,18 +1165,20 @@ class Format:
 
     def _add_writer(self, cls, writer, monkey_patch, override):
         if cls in self._writers and not override:
-            raise DuplicateRegistrationError("There is already a writer"
-                                             " registered to %s in format: %s"
-                                             % (cls, self._name))
+            raise DuplicateRegistrationError(
+                'There is already a writer'
+                ' registered to %s in format: %s' % (cls, self._name)
+            )
         self._writers[cls] = writer
         if monkey_patch and cls is not None:
             self._monkey_patch['write'].add(cls)
 
     def _add_reader(self, cls, reader, monkey_patch, override):
         if cls in self._readers and not override:
-            raise DuplicateRegistrationError("There is already a reader"
-                                             " registered to %s in format: %s"
-                                             % (cls, self._name))
+            raise DuplicateRegistrationError(
+                'There is already a reader'
+                ' registered to %s in format: %s' % (cls, self._name)
+            )
         self._readers[cls] = reader
         if monkey_patch and cls is not None:
             self._monkey_patch['read'].add(cls)
@@ -1158,8 +1194,7 @@ def sniff(file, **kwargs):
 
 @wraps(IORegistry.read)
 def read(file, format=None, into=None, verify=True, **kwargs):
-    return io_registry.read(file, format=format, into=into, verify=verify,
-                            **kwargs)
+    return io_registry.read(file, format=format, into=into, verify=verify, **kwargs)
 
 
 @wraps(IORegistry.write)

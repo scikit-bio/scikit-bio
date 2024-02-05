@@ -17,7 +17,7 @@ from skbio.util._decorator import experimental
 from .__subsample import _subsample_counts_without_replacement
 
 
-@experimental(as_of="0.4.0")
+@experimental(as_of='0.4.0')
 def isubsample(items, maximum, minimum=1, buf_size=1000, bin_f=None):
     """Randomly subsample items from bins, without replacement.
 
@@ -109,10 +109,11 @@ def isubsample(items, maximum, minimum=1, buf_size=1000, bin_f=None):
     sampleB ATGGCG
     """
     if minimum > maximum:
-        raise ValueError("minimum cannot be > maximum.")
+        raise ValueError('minimum cannot be > maximum.')
     if minimum < 1 or maximum < 1:
-        raise ValueError("minimum and maximum must be > 0.")
+        raise ValueError('minimum and maximum must be > 0.')
     if bin_f is None:
+
         def bin_f(x):
             return True
 
@@ -147,7 +148,7 @@ def isubsample(items, maximum, minimum=1, buf_size=1000, bin_f=None):
             yield (bin_, item)
 
 
-@experimental(as_of="0.4.0")
+@experimental(as_of='0.4.0')
 def subsample_counts(counts, n, replace=False):
     """Randomly subsample from a vector of counts, with or without replacement.
 
@@ -223,18 +224,20 @@ def subsample_counts(counts, n, replace=False):
 
     """
     if n < 0:
-        raise ValueError("n cannot be negative.")
+        raise ValueError('n cannot be negative.')
 
     counts = np.asarray(counts)
     counts = counts.astype(int, casting='safe')
 
     if counts.ndim != 1:
-        raise ValueError("Only 1-D vectors are supported.")
+        raise ValueError('Only 1-D vectors are supported.')
 
     counts_sum = counts.sum()
     if n > counts_sum and not replace:
-        raise ValueError("Cannot subsample more items than exist in input "
-                         "counts vector when `replace=False`.")
+        raise ValueError(
+            'Cannot subsample more items than exist in input '
+            'counts vector when `replace=False`.'
+        )
 
     if replace:
         probs = counts / counts_sum
@@ -243,6 +246,5 @@ def subsample_counts(counts, n, replace=False):
         if counts_sum == n:
             result = counts
         else:
-            result = _subsample_counts_without_replacement(counts, n,
-                                                           counts_sum)
+            result = _subsample_counts_without_replacement(counts, n, counts_sum)
     return result

@@ -33,13 +33,13 @@ class _TabularMSAReprBuilder(_MetadataReprBuilder):
             # display all sequences if we can, else display the first two and
             # last two sequences separated by ellipsis
             if num_sequences <= 5:
-                self._lines.add_lines(
-                    self._format_sequences(range(num_sequences)))
+                self._lines.add_lines(self._format_sequences(range(num_sequences)))
             else:
                 self._lines.add_lines(self._format_sequences(range(2)))
                 self._lines.add_line('...')
-                self._lines.add_lines(self._format_sequences(
-                    range(num_sequences - 2, num_sequences)))
+                self._lines.add_lines(
+                    self._format_sequences(range(num_sequences - 2, num_sequences))
+                )
 
     def _format_sequences(self, sequence_indices):
         lines = []
@@ -49,9 +49,9 @@ class _TabularMSAReprBuilder(_MetadataReprBuilder):
                 formatted_seq = seq_str
             else:
                 formatted_seq = (
-                    seq_str[0:self._num_characters_before_ellipse()] +
-                    self._ellipse_insert +
-                    seq_str[-self._num_characters_after_ellipse():]
+                    seq_str[0 : self._num_characters_before_ellipse()]
+                    + self._ellipse_insert
+                    + seq_str[-self._num_characters_after_ellipse() :]
                 )
             lines.append(formatted_seq)
         return lines
@@ -60,8 +60,7 @@ class _TabularMSAReprBuilder(_MetadataReprBuilder):
         return int(self._num_characters_to_display() / 2)
 
     def _num_characters_after_ellipse(self):
-        return (self._num_characters_to_display() -
-                self._num_characters_before_ellipse())
+        return self._num_characters_to_display() - self._num_characters_before_ellipse()
 
     def _num_characters_to_display(self):
         return self._width - len(self._ellipse_insert)

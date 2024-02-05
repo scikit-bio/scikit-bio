@@ -19,44 +19,56 @@ _newline_regex = re.compile(r'\n')
 
 def _decode_qual_to_phred(qual_str, variant=None, phred_offset=None):
     phred_offset, phred_range = _get_phred_offset_and_range(
-        variant, phred_offset,
-        ["Must provide either `variant` or `phred_offset` in order to decode "
-         "quality scores.",
-         "Decoding Solexa quality scores is not currently supported, "
-         "as quality scores are always stored as Phred scores in "
-         "scikit-bio. Please see the following scikit-bio issue to "
-         "track progress on this:\n\t"
-         "https://github.com/scikit-bio/scikit-bio/issues/719"])
-    qual = np.frombuffer(qual_str.encode('ascii'),
-                         dtype=np.uint8) - phred_offset
+        variant,
+        phred_offset,
+        [
+            'Must provide either `variant` or `phred_offset` in order to decode '
+            'quality scores.',
+            'Decoding Solexa quality scores is not currently supported, '
+            'as quality scores are always stored as Phred scores in '
+            'scikit-bio. Please see the following scikit-bio issue to '
+            'track progress on this:\n\t'
+            'https://github.com/scikit-bio/scikit-bio/issues/719',
+        ],
+    )
+    qual = np.frombuffer(qual_str.encode('ascii'), dtype=np.uint8) - phred_offset
 
     if np.any((qual > phred_range[1]) | (qual < phred_range[0])):
-        raise ValueError("Decoded Phred score is out of range [%d, %d]."
-                         % (phred_range[0], phred_range[1]))
+        raise ValueError(
+            'Decoded Phred score is out of range [%d, %d].'
+            % (phred_range[0], phred_range[1])
+        )
 
     return qual
 
 
 def _encode_phred_to_qual(phred, variant=None, phred_offset=None):
     phred_offset, phred_range = _get_phred_offset_and_range(
-        variant, phred_offset,
-        ["Must provide either `variant` or `phred_offset` in order to encode "
-         "Phred scores.",
-         "Encoding Solexa quality scores is not currently supported. "
-         "Please see the following scikit-bio issue to track progress "
-         "on this:\n\t"
-         "https://github.com/scikit-bio/scikit-bio/issues/719"])
+        variant,
+        phred_offset,
+        [
+            'Must provide either `variant` or `phred_offset` in order to encode '
+            'Phred scores.',
+            'Encoding Solexa quality scores is not currently supported. '
+            'Please see the following scikit-bio issue to track progress '
+            'on this:\n\t'
+            'https://github.com/scikit-bio/scikit-bio/issues/719',
+        ],
+    )
 
     qual_chars = []
     for score in phred:
         if score < phred_range[0]:
-            raise ValueError("Phred score %d is out of range [%d, %d]."
-                             % (score, phred_range[0], phred_range[1]))
+            raise ValueError(
+                'Phred score %d is out of range [%d, %d].'
+                % (score, phred_range[0], phred_range[1])
+            )
         if score > phred_range[1]:
             warnings.warn(
-                "Phred score %d is out of targeted range [%d, %d]. Converting "
-                "to %d." % (score, phred_range[0], phred_range[1],
-                            phred_range[1]), UserWarning)
+                'Phred score %d is out of targeted range [%d, %d]. Converting '
+                'to %d.' % (score, phred_range[0], phred_range[1], phred_range[1]),
+                UserWarning,
+            )
             score = phred_range[1]
         qual_chars.append(chr(score + phred_offset))
     return ''.join(qual_chars)
@@ -66,8 +78,7 @@ def _get_phred_offset_and_range(variant, phred_offset, errors):
     if variant is None and phred_offset is None:
         raise ValueError(errors[0])
     if variant is not None and phred_offset is not None:
-        raise ValueError(
-            "Cannot provide both `variant` and `phred_offset`.")
+        raise ValueError('Cannot provide both `variant` and `phred_offset`.')
 
     if variant is not None:
         if variant == 'sanger':
@@ -84,12 +95,13 @@ def _get_phred_offset_and_range(variant, phred_offset, errors):
             phred_range = (-5, 62)
             raise ValueError(errors[1])
         else:
-            raise ValueError("Unrecognized variant %r." % variant)
+            raise ValueError('Unrecognized variant %r.' % variant)
     else:
         if not (33 <= phred_offset <= 126):
             raise ValueError(
-                "`phred_offset` %d is out of printable ASCII character range."
-                % phred_offset)
+                '`phred_offset` %d is out of printable ASCII character range.'
+                % phred_offset
+            )
         phred_range = (0, 126 - phred_offset)
 
     return phred_offset, phred_range
@@ -100,9 +112,11 @@ def _get_nth_sequence(generator, seq_num):
     # undefined variable when compared to seq_num.
     i = None
     if seq_num is None or seq_num < 1:
-        raise ValueError('Invalid sequence number (`seq_num`=%s). `seq_num`'
-                         ' must be between 1 and the number of sequences in'
-                         ' the file.' % str(seq_num))
+        raise ValueError(
+            'Invalid sequence number (`seq_num`=%s). `seq_num`'
+            ' must be between 1 and the number of sequences in'
+            ' the file.' % str(seq_num)
+        )
     try:
         for i, seq in zip(range(1, seq_num + 1), generator):
             pass
@@ -111,8 +125,10 @@ def _get_nth_sequence(generator, seq_num):
 
     if i == seq_num:
         return seq
-    raise ValueError('Reached end of file before finding the %s sequence.'
-                     % cardinal_to_ordinal(seq_num))
+    raise ValueError(
+        'Reached end of file before finding the %s sequence.'
+        % cardinal_to_ordinal(seq_num)
+    )
 
 
 def _parse_fasta_like_header(line):
@@ -133,24 +149,31 @@ def _parse_fasta_like_header(line):
     return id_, desc
 
 
-def _format_fasta_like_records(generator, id_whitespace_replacement,
-                               description_newline_replacement, require_qual,
-                               lowercase=None):
-    if ((id_whitespace_replacement is not None and
-         '\n' in id_whitespace_replacement) or
-        (description_newline_replacement is not None and
-         '\n' in description_newline_replacement)):
+def _format_fasta_like_records(
+    generator,
+    id_whitespace_replacement,
+    description_newline_replacement,
+    require_qual,
+    lowercase=None,
+):
+    if (
+        id_whitespace_replacement is not None and '\n' in id_whitespace_replacement
+    ) or (
+        description_newline_replacement is not None
+        and '\n' in description_newline_replacement
+    ):
         raise ValueError(
-            "Newline character (\\n) cannot be used to replace whitespace in "
-            "sequence IDs, nor to replace newlines in sequence descriptions.")
+            'Newline character (\\n) cannot be used to replace whitespace in '
+            'sequence IDs, nor to replace newlines in sequence descriptions.'
+        )
 
     for idx, seq in enumerate(generator):
-
         if len(seq) < 1:
             raise ValueError(
-                "%s sequence does not contain any characters (i.e., it is an "
-                "empty/blank sequence). Writing empty sequences is not "
-                "supported." % cardinal_to_ordinal(idx + 1))
+                '%s sequence does not contain any characters (i.e., it is an '
+                'empty/blank sequence). Writing empty sequences is not '
+                'supported.' % cardinal_to_ordinal(idx + 1)
+            )
 
         if 'id' in seq.metadata:
             id_ = '%s' % seq.metadata['id']
@@ -175,8 +198,9 @@ def _format_fasta_like_records(generator, id_whitespace_replacement,
 
         if require_qual and 'quality' not in seq.positional_metadata:
             raise ValueError(
-                "Cannot write %s sequence because it does not have quality "
-                "scores associated with it." % cardinal_to_ordinal(idx + 1))
+                'Cannot write %s sequence because it does not have quality '
+                'scores associated with it.' % cardinal_to_ordinal(idx + 1)
+            )
 
         qual = None
         if 'quality' in seq.positional_metadata:
@@ -186,7 +210,7 @@ def _format_fasta_like_records(generator, id_whitespace_replacement,
             seq_str = seq.lowercase(lowercase)
         else:
             seq_str = str(seq)
-        yield header, "%s" % seq_str, qual
+        yield header, '%s' % seq_str, qual
 
 
 def _line_generator(fh, skip_blanks=False, strip=True):

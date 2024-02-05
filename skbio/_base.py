@@ -17,6 +17,7 @@ class SkbioObject(metaclass=abc.ABCMeta):
     be implemented in subclasses, otherwise they will not be instantiable.
 
     """
+
     @abc.abstractmethod
     def __str__(self):
         raise NotImplementedError

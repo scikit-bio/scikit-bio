@@ -60,8 +60,8 @@ def _generate_id_blocks(ids, k=64):
 
     for row_start in range(0, n, k):
         for col_start in range(row_start, n, k):
-            row_ids = ids_idx[row_start:row_start + k]
-            col_ids = ids_idx[col_start:col_start + k]
+            row_ids = ids_idx[row_start : row_start + k]
+            col_ids = ids_idx[col_start : col_start + k]
 
             yield (row_ids, col_ids)
 
@@ -134,12 +134,12 @@ def _pairs_to_compute(rids, cids):
     """
     # if identical, gather the upper triangle
     if len(rids) == len(cids) and (rids == cids).all():
-        return [(i, j) for idx, i in enumerate(rids) for j in rids[idx+1:]]
+        return [(i, j) for idx, i in enumerate(rids) for j in rids[idx + 1 :]]
 
     # otherwise, grab pairwise combinations disregarding the diagonal
     else:
         if set(rids).intersection(set(cids)):
-            raise ValueError("Attempting to compute a lower triangle")
+            raise ValueError('Attempting to compute a lower triangle')
         return [(i, j) for i in rids for j in cids if i != j]
 
 
@@ -151,8 +151,15 @@ def _block_kwargs(**kwargs):
     dict
         The parameters for the block of the distance matrix to compute.
     """
-    valid_block_keys = {'counts', 'ids', 'tree', 'otu_ids', 'metric',
-                        'id_pairs', 'validate'}
+    valid_block_keys = {
+        'counts',
+        'ids',
+        'tree',
+        'otu_ids',
+        'metric',
+        'id_pairs',
+        'validate',
+    }
     for row_ids, col_ids in _generate_id_blocks(kwargs['ids'], kwargs['k']):
         id_pairs = _pairs_to_compute(row_ids, col_ids)
         if id_pairs:
@@ -220,12 +227,16 @@ def _reduce(blocks):
         n_blk_ids = len(block.ids)
 
         # get the corresponding coordinates in the master matrix
-        master_idx = [(i, j) for row, i in enumerate(block.ids)
-                      for j in block.ids[row+1:]]
+        master_idx = [
+            (i, j) for row, i in enumerate(block.ids) for j in block.ids[row + 1 :]
+        ]
 
         # get the corresponding coordinates within the current block
-        block_idx = [(i, j) for row, i in enumerate(range(n_blk_ids))
-                     for j in range(row+1, n_blk_ids)]
+        block_idx = [
+            (i, j)
+            for row, i in enumerate(range(n_blk_ids))
+            for j in range(row + 1, n_blk_ids)
+        ]
 
         for (m_i, m_j), (b_i, b_j) in zip(master_idx, block_idx):
             mat[m_i, m_j] += block.data[b_i, b_j]
@@ -233,9 +244,10 @@ def _reduce(blocks):
     return DistanceMatrix(mat + mat.T, list(range(n_ids)))
 
 
-@experimental(as_of="0.5.1")
-def block_beta_diversity(metric, counts, ids, validate=True, k=64,
-                         reduce_f=None, map_f=None, **kwargs):
+@experimental(as_of='0.5.1')
+def block_beta_diversity(
+    metric, counts, ids, validate=True, k=64, reduce_f=None, map_f=None, **kwargs
+):
     """Perform a block-decomposition beta diversity calculation
 
     Parameters

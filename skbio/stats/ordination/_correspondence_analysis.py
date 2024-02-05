@@ -15,7 +15,7 @@ from ._utils import svd_rank
 from skbio.util._decorator import experimental
 
 
-@experimental(as_of="0.4.0")
+@experimental(as_of='0.4.0')
 def ca(X, scaling=1):
     r"""Compute correspondence analysis, a multivariate statistical
     technique for ordination.
@@ -99,8 +99,7 @@ def ca(X, scaling=1):
     """
 
     if scaling not in {1, 2}:
-        raise NotImplementedError(
-            "Scaling {0} not implemented.".format(scaling))
+        raise NotImplementedError('Scaling {0} not implemented.'.format(scaling))
 
     short_method_name = 'CA'
     long_method_name = 'Correspondance Analysis'
@@ -115,7 +114,7 @@ def ca(X, scaling=1):
     r, c = X.shape
 
     if X.min() < 0:
-        raise ValueError("Input matrix elements must be non-negative.")
+        raise ValueError('Input matrix elements must be non-negative.')
 
     # Step 1 (similar to Pearson chi-square statistic)
     grand_total = X.sum()
@@ -142,8 +141,8 @@ def ca(X, scaling=1):
 
     # Both scalings are a bit intertwined, so we'll compute both and
     # then choose
-    V = column_marginals[:, None]**-0.5 * U
-    V_hat = row_marginals[:, None]**-0.5 * U_hat
+    V = column_marginals[:, None] ** -0.5 * U
+    V_hat = row_marginals[:, None] ** -0.5 * U_hat
     F = V_hat * W
     # According to Formula 9.43, this should hold
     # assert np.allclose(F, (row_marginals**-1)[:, None] * Q.dot(V))
@@ -178,16 +177,24 @@ def ca(X, scaling=1):
     sample_scores = [F, V_hat][scaling - 1]
 
     # build the OrdinationResults object
-    sample_columns = ['%s%d' % (short_method_name, i+1)
-                      for i in range(sample_scores.shape[1])]
-    feature_columns = ['%s%d' % (short_method_name, i+1)
-                       for i in range(features_scores.shape[1])]
+    sample_columns = [
+        '%s%d' % (short_method_name, i + 1) for i in range(sample_scores.shape[1])
+    ]
+    feature_columns = [
+        '%s%d' % (short_method_name, i + 1) for i in range(features_scores.shape[1])
+    ]
 
-    eigvals = pd.Series(eigvals, ['%s%d' % (short_method_name, i+1) for i in
-                                  range(eigvals.shape[0])])
+    eigvals = pd.Series(
+        eigvals, ['%s%d' % (short_method_name, i + 1) for i in range(eigvals.shape[0])]
+    )
     samples = pd.DataFrame(sample_scores, row_ids, sample_columns)
     features = pd.DataFrame(features_scores, column_ids, feature_columns)
     proportion_explained = eigvals / eigvals.sum()
-    return OrdinationResults(short_method_name, long_method_name, eigvals,
-                             samples=samples, features=features,
-                             proportion_explained=proportion_explained)
+    return OrdinationResults(
+        short_method_name,
+        long_method_name,
+        eigvals,
+        samples=samples,
+        features=features,
+        proportion_explained=proportion_explained,
+    )

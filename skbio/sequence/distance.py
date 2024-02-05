@@ -92,8 +92,9 @@ def hamming(seq1, seq2):
     # because the error you would get otherwise is cryptic.
     if len(seq1) != len(seq2):
         raise ValueError(
-            "Hamming distance can only be computed between sequences of equal "
-            "length (%d != %d)" % (len(seq1), len(seq2)))
+            'Hamming distance can only be computed between sequences of equal '
+            'length (%d != %d)' % (len(seq1), len(seq2))
+        )
 
     # scipy throws a RuntimeWarning when computing Hamming distance on length 0
     # input.
@@ -168,11 +169,13 @@ def _check_seqs(seq1, seq2):
     for seq in seq1, seq2:
         if not isinstance(seq, skbio.Sequence):
             raise TypeError(
-                "`seq1` and `seq2` must be Sequence instances, not %r"
-                % type(seq).__name__)
+                '`seq1` and `seq2` must be Sequence instances, not %r'
+                % type(seq).__name__
+            )
 
     # Asserts sequences have the same type
     if type(seq1) is not type(seq2):
         raise TypeError(
-            "Sequences must have matching type. Type %r does not match type %r"
-            % (type(seq1).__name__, type(seq2).__name__))
+            'Sequences must have matching type. Type %r does not match type %r'
+            % (type(seq1).__name__, type(seq2).__name__)
+        )

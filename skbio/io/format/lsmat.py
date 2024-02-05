@@ -142,9 +142,10 @@ def _lsmat_to_matrix(cls, fh, delimiter):
     header = _find_header(fh)
     if header is None:
         raise LSMatFormatError(
-            "Could not find a header line containing IDs in the "
-            "dissimilarity matrix file. Please verify that the file is "
-            "not empty.")
+            'Could not find a header line containing IDs in the '
+            'dissimilarity matrix file. Please verify that the file is '
+            'not empty.'
+        )
 
     ids = _parse_header(header, delimiter)
     num_ids = len(ids)
@@ -156,30 +157,32 @@ def _lsmat_to_matrix(cls, fh, delimiter):
             # We've hit a nonempty line after we already filled the data
             # matrix. Raise an error because we shouldn't ignore extra data.
             raise LSMatFormatError(
-                "Encountered extra row(s) without corresponding IDs in "
-                "the header.")
+                'Encountered extra row(s) without corresponding IDs in ' 'the header.'
+            )
 
         num_vals = len(row_data)
         if num_vals != num_ids:
             raise LSMatFormatError(
-                "There are %d value(s) in row %d, which is not equal to the "
-                "number of ID(s) in the header (%d)." %
-                (num_vals, row_idx + 1, num_ids))
+                'There are %d value(s) in row %d, which is not equal to the '
+                'number of ID(s) in the header (%d).' % (num_vals, row_idx + 1, num_ids)
+            )
 
         expected_id = ids[row_idx]
         if row_id == expected_id:
             data[row_idx, :] = np.asarray(row_data, dtype=float)
         else:
             raise LSMatFormatError(
-                "Encountered mismatched IDs while parsing the "
-                "dissimilarity matrix file. Found %r but expected "
-                "%r. Please ensure that the IDs match between the "
-                "dissimilarity matrix header (first row) and the row "
-                "labels (first column)." % (str(row_id), str(expected_id)))
+                'Encountered mismatched IDs while parsing the '
+                'dissimilarity matrix file. Found %r but expected '
+                '%r. Please ensure that the IDs match between the '
+                'dissimilarity matrix header (first row) and the row '
+                'labels (first column).' % (str(row_id), str(expected_id))
+            )
 
     if row_idx != num_ids - 1:
-        raise LSMatFormatError("Expected %d row(s) of data, but found %d." %
-                               (num_ids, row_idx + 1))
+        raise LSMatFormatError(
+            'Expected %d row(s) of data, but found %d.' % (num_ids, row_idx + 1)
+        )
 
     return cls(data, ids)
 
@@ -205,7 +208,8 @@ def _parse_header(header, delimiter):
     if delimiter is not None:
         if tokens[0]:
             raise LSMatFormatError(
-                "Header must start with delimiter %r." % str(delimiter))
+                'Header must start with delimiter %r.' % str(delimiter)
+            )
         tokens = tokens[1:]
 
     return [e.strip() for e in tokens]
@@ -225,13 +229,13 @@ def _parse_data(fh, delimiter):
 
 
 def _matrix_to_lsmat(obj, fh, delimiter):
-    delimiter = "%s" % delimiter
+    delimiter = '%s' % delimiter
     ids = obj.ids
     fh.write(_format_ids(ids, delimiter))
     fh.write('\n')
 
     for id_, vals in zip(ids, obj.data):
-        fh.write("%s" % id_)
+        fh.write('%s' % id_)
         fh.write(delimiter)
         fh.write(delimiter.join(np.asarray(vals, dtype=str)))
         fh.write('\n')

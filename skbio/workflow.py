@@ -212,11 +212,12 @@ from skbio.util._decorator import experimental
 
 class NotExecuted:
     """Helper object to track if a method was executed"""
-    @experimental(as_of="0.4.0")
+
+    @experimental(as_of='0.4.0')
     def __init__(self):
         self.msg = None
 
-    @experimental(as_of="0.4.0")
+    @experimental(as_of='0.4.0')
     def __call__(self, msg):
         self.msg = msg
         return self
@@ -227,7 +228,8 @@ _not_executed = NotExecuted()
 
 class Exists:
     """Stub object to assist with ``requires`` when a value exists"""
-    @experimental(as_of="0.4.0")
+
+    @experimental(as_of='0.4.0')
     def __contains__(self, item):
         return True
 
@@ -236,7 +238,7 @@ anything = Exists()  # external, for when a value can be anything
 
 
 class NotNone:
-    @experimental(as_of="0.4.0")
+    @experimental(as_of='0.4.0')
     def __contains__(self, item):
         if item is None:
             return False
@@ -280,9 +282,8 @@ class Workflow:
 
     """
 
-    @experimental(as_of="0.4.0")
-    def __init__(self, state, short_circuit=True, debug=False, options=None,
-                 **kwargs):
+    @experimental(as_of='0.4.0')
+    def __init__(self, state, short_circuit=True, debug=False, options=None, **kwargs):
         r"""Build thy workflow of self"""
         if options is None:
             self.options = {}
@@ -303,7 +304,7 @@ class Workflow:
         if self.debug:
             self._setup_debug()
 
-    @experimental(as_of="0.4.0")
+    @experimental(as_of='0.4.0')
     def initialize_state(self, item):
         """Initialize state
 
@@ -315,7 +316,7 @@ class Workflow:
         item : anything
             Workflow dependent
         """
-        raise NotImplementedError("Must implement this method")
+        raise NotImplementedError('Must implement this method')
 
     def _setup_debug(self):
         """Wrap all methods with debug trace support"""
@@ -378,7 +379,7 @@ class Workflow:
         self.debug_pre_state = {}
         self.debug_post_state = {}
 
-    @experimental(as_of="0.4.0")
+    @experimental(as_of='0.4.0')
     def __call__(self, iter_, success_callback=None, fail_callback=None):
         """Operate on all the data
 
@@ -398,6 +399,7 @@ class Workflow:
 
         """
         if success_callback is None:
+
             def success_callback(x):
                 return x.state
 
@@ -424,11 +426,11 @@ class Workflow:
 
     def _debug_trace_wrapper(self, func):
         """Trace a function call"""
+
         def wrapped():
             """Track debug information about a method execution"""
             if not hasattr(self, 'debug_trace'):
-                raise AttributeError(
-                    "%s doesn't have debug_trace." % self.__class__)
+                raise AttributeError("%s doesn't have debug_trace." % self.__class__)
 
             exec_order = self.debug_counter
             name = func.__name__
@@ -459,13 +461,14 @@ class method:
         the priority. Priorities are relative to a given workflow
 
     """
+
     highest_priority = sys.maxsize
 
-    @experimental(as_of="0.4.0")
+    @experimental(as_of='0.4.0')
     def __init__(self, priority=0):
         self.priority = priority
 
-    @experimental(as_of="0.4.0")
+    @experimental(as_of='0.4.0')
     def __call__(self, func):
         func.priority = self.priority
         return func
@@ -494,7 +497,8 @@ class requires:
         requirement is not satisfied. This method will be passed the
         containing ``Workflow``s' ``state`` member variable.
     """
-    @experimental(as_of="0.4.0")
+
+    @experimental(as_of='0.4.0')
     def __init__(self, option=None, values=anything, state=None):
         # self here is the requires object
         self.option = option
@@ -514,12 +518,13 @@ class requires:
             else:
                 self.values = set([values])
 
-    @experimental(as_of="0.4.0")
+    @experimental(as_of='0.4.0')
     def __call__(self, func):
         """Wrap a function
 
         func : the function to wrap
         """
+
         def decorated(dec_self):
             """A decorated function that has requirements
 

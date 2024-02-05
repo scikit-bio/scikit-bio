@@ -19,8 +19,13 @@ from scipy.spatial.distance import correlation
 
 from skbio._base import SkbioObject
 from skbio.stats.distance import DistanceMatrix
-from ._exception import (NoLengthError, DuplicateNodeError, NoParentError,
-                         MissingNodeError, TreeError)
+from ._exception import (
+    NoLengthError,
+    DuplicateNodeError,
+    NoParentError,
+    MissingNodeError,
+    TreeError,
+)
 from skbio.util import RepresentationWarning
 from skbio.util._decorator import experimental, classonlymethod
 
@@ -72,13 +77,14 @@ class TreeNode(SkbioObject):
     children : list of TreeNode or None
         Connect this node to existing children
     """
-    default_write_format = 'newick'
-    _exclude_from_copy = set(['parent', 'children', '_tip_cache',
-                              '_non_tip_cache'])
 
-    @experimental(as_of="0.4.0")
-    def __init__(self, name=None, length=None, support=None, parent=None,
-                 children=None):
+    default_write_format = 'newick'
+    _exclude_from_copy = set(['parent', 'children', '_tip_cache', '_non_tip_cache'])
+
+    @experimental(as_of='0.4.0')
+    def __init__(
+        self, name=None, length=None, support=None, parent=None, children=None
+    ):
         self.name = name
         self.length = length
         self.support = support
@@ -93,7 +99,7 @@ class TreeNode(SkbioObject):
         if children is not None:
             self.extend(children)
 
-    @experimental(as_of="0.4.0")
+    @experimental(as_of='0.4.0')
     def __repr__(self):
         r"""Returns summary of the tree
 
@@ -119,12 +125,16 @@ class TreeNode(SkbioObject):
         n_tips = sum([n.is_tip() for n in nodes])
         n_nontips = len(nodes) - n_tips
         classname = self.__class__.__name__
-        name = self.name if self.name is not None else "unnamed"
+        name = self.name if self.name is not None else 'unnamed'
 
-        return "<%s, name: %s, internal node count: %d, tips count: %d>" % \
-               (classname, name, n_nontips, n_tips)
+        return '<%s, name: %s, internal node count: %d, tips count: %d>' % (
+            classname,
+            name,
+            n_nontips,
+            n_tips,
+        )
 
-    @experimental(as_of="0.4.0")
+    @experimental(as_of='0.4.0')
     def __str__(self):
         r"""Returns string version of self, with names and distances
 
@@ -148,21 +158,21 @@ class TreeNode(SkbioObject):
         """
         return str(''.join(self.write([])))
 
-    @experimental(as_of="0.4.0")
+    @experimental(as_of='0.4.0')
     def __iter__(self):
         r"""Node iter iterates over the `children`."""
         return iter(self.children)
 
-    @experimental(as_of="0.4.0")
+    @experimental(as_of='0.4.0')
     def __len__(self):
         return len(self.children)
 
-    @experimental(as_of="0.4.0")
+    @experimental(as_of='0.4.0')
     def __getitem__(self, i):
         r"""Node delegates slicing to `children`."""
         return self.children[i]
 
-    @experimental(as_of="0.4.0")
+    @experimental(as_of='0.4.0')
     def _adopt(self, node):
         r"""Update `parent` references but does NOT update `children`."""
         self.invalidate_caches()
@@ -171,7 +181,7 @@ class TreeNode(SkbioObject):
         node.parent = self
         return node
 
-    @experimental(as_of="0.4.0")
+    @experimental(as_of='0.4.0')
     def append(self, node):
         r"""Appends a node to `children`, in-place, cleaning up refs
 
@@ -203,7 +213,7 @@ class TreeNode(SkbioObject):
         """
         self.children.append(self._adopt(node))
 
-    @experimental(as_of="0.4.0")
+    @experimental(as_of='0.4.0')
     def extend(self, nodes):
         r"""Append a `list` of `TreeNode` to `self`.
 
@@ -232,7 +242,7 @@ class TreeNode(SkbioObject):
         """
         self.children.extend([self._adopt(n) for n in nodes[:]])
 
-    @experimental(as_of="0.4.0")
+    @experimental(as_of='0.4.0')
     def pop(self, index=-1):
         r"""Remove a `TreeNode` from `self`.
 
@@ -273,7 +283,7 @@ class TreeNode(SkbioObject):
         node.parent = None
         return node
 
-    @experimental(as_of="0.4.0")
+    @experimental(as_of='0.4.0')
     def remove(self, node):
         r"""Remove a node from self
 
@@ -302,13 +312,13 @@ class TreeNode(SkbioObject):
         True
 
         """
-        for (i, curr_node) in enumerate(self.children):
+        for i, curr_node in enumerate(self.children):
             if curr_node is node:
                 self._remove_node(i)
                 return True
         return False
 
-    @experimental(as_of="0.4.0")
+    @experimental(as_of='0.4.0')
     def remove_deleted(self, func):
         r"""Delete nodes in which `func(node)` evaluates `True`.
 
@@ -338,7 +348,7 @@ class TreeNode(SkbioObject):
             if func(node):
                 node.parent.remove(node)
 
-    @experimental(as_of="0.4.0")
+    @experimental(as_of='0.4.0')
     def prune(self):
         r"""Reconstructs correct topology after nodes have been removed.
 
@@ -408,7 +418,7 @@ class TreeNode(SkbioObject):
             self.remove(node_to_copy)
             self.extend(node_to_copy.children)
 
-    @experimental(as_of="0.4.0")
+    @experimental(as_of='0.4.0')
     def shear(self, names):
         """Lop off tips until the tree just has the desired tip names.
 
@@ -449,7 +459,7 @@ class TreeNode(SkbioObject):
         ids = set(names)
 
         if not ids.issubset(all_tips):
-            raise ValueError("ids are not a subset of the tree.")
+            raise ValueError('ids are not a subset of the tree.')
 
         marked = set()
         for tip in tcopy.tips():
@@ -469,7 +479,7 @@ class TreeNode(SkbioObject):
 
         return tcopy
 
-    @experimental(as_of="0.4.0")
+    @experimental(as_of='0.4.0')
     def copy(self):
         r"""Returns a copy of self using an iterative approach
 
@@ -498,6 +508,7 @@ class TreeNode(SkbioObject):
         0
 
         """
+
         def __copy_node(node_to_copy):
             r"""Helper method to copy a node"""
             # this is _possibly_ dangerous, we're assuming the node to copy is
@@ -524,8 +535,7 @@ class TreeNode(SkbioObject):
                 old_child = old_top_node.children[-unvisited_children]
                 new_child = __copy_node(old_child)
                 new_top_node.append(new_child)
-                nodes_stack.append([new_child, old_child,
-                                    len(old_child.children)])
+                nodes_stack.append([new_child, old_child, len(old_child.children)])
             else:  # no unvisited children
                 nodes_stack.pop()
         return root
@@ -533,7 +543,7 @@ class TreeNode(SkbioObject):
     __copy__ = copy
     __deepcopy__ = deepcopy = copy
 
-    @experimental(as_of="0.4.0")
+    @experimental(as_of='0.4.0')
     def unrooted_deepcopy(self, parent=None):
         r"""Walks the tree unrooted-style and returns a new copy
 
@@ -578,7 +588,7 @@ class TreeNode(SkbioObject):
         new_tree_self = new_tree.find_by_id(self.id)
         return new_tree_self.unrooted_copy(parent)
 
-    @experimental(as_of="0.4.0")
+    @experimental(as_of='0.4.0')
     def unrooted_copy(self, parent=None):
         r"""Walks the tree unrooted-style and returns a copy
 
@@ -633,15 +643,14 @@ class TreeNode(SkbioObject):
             edgename = self.name
             length = self.length
 
-        result = self.__class__(name=edgename, children=children,
-                                length=length)
+        result = self.__class__(name=edgename, children=children, length=length)
 
         if parent is None:
-            result.name = "root"
+            result.name = 'root'
 
         return result
 
-    @experimental(as_of="0.4.0")
+    @experimental(as_of='0.4.0')
     def count(self, tips=False):
         """Get the count of nodes in the tree
 
@@ -670,7 +679,7 @@ class TreeNode(SkbioObject):
         else:
             return len(list(self.traverse(include_self=True)))
 
-    @experimental(as_of="0.4.1")
+    @experimental(as_of='0.4.1')
     def observed_node_counts(self, tip_counts):
         """Returns counts of node observations from counts of tip observations
 
@@ -698,24 +707,25 @@ class TreeNode(SkbioObject):
         result = defaultdict(int)
         for tip_name, count in tip_counts.items():
             if count < 1:
-                raise ValueError("All tip counts must be greater than zero.")
+                raise ValueError('All tip counts must be greater than zero.')
             else:
                 t = self.find(tip_name)
                 if not t.is_tip():
                     raise MissingNodeError(
-                        "Counts can only be for tips in the tree. %s is an "
-                        "internal node." % t.name)
+                        'Counts can only be for tips in the tree. %s is an '
+                        'internal node.' % t.name
+                    )
                 result[t] += count
                 for internal_node in t.ancestors():
                     result[internal_node] += count
         return result
 
-    @experimental(as_of="0.4.0")
+    @experimental(as_of='0.4.0')
     def subtree(self, tip_list=None):
         r"""Make a copy of the subtree"""
         raise NotImplementedError()
 
-    @experimental(as_of="0.4.0")
+    @experimental(as_of='0.4.0')
     def subset(self):
         r"""Returns set of names that descend from specified node
 
@@ -740,7 +750,7 @@ class TreeNode(SkbioObject):
         """
         return frozenset({i.name for i in self.tips()})
 
-    @experimental(as_of="0.4.0")
+    @experimental(as_of='0.4.0')
     def subsets(self):
         r"""Return all sets of names that come from self and its descendants
 
@@ -777,7 +787,7 @@ class TreeNode(SkbioObject):
                 i.__leaf_set = leaf_set
         return frozenset(sets)
 
-    @experimental(as_of="0.4.0")
+    @experimental(as_of='0.4.0')
     def root_at(self, node):
         r"""Return a new tree rooted at the provided node.
 
@@ -817,11 +827,10 @@ class TreeNode(SkbioObject):
             node = self.find(node)
 
         if not node.children:
-            raise TreeError("Can't use a tip (%s) as the root" %
-                            repr(node.name))
+            raise TreeError("Can't use a tip (%s) as the root" % repr(node.name))
         return node.unrooted_deepcopy()
 
-    @experimental(as_of="0.4.0")
+    @experimental(as_of='0.4.0')
     def root_at_midpoint(self):
         r"""Return a new tree rooted at midpoint of the two tips farthest apart
 
@@ -900,7 +909,7 @@ class TreeNode(SkbioObject):
 
             return new_root.unrooted_copy()
 
-    @experimental(as_of="0.4.0")
+    @experimental(as_of='0.4.0')
     def is_tip(self):
         r"""Returns `True` if the current node has no `children`.
 
@@ -926,7 +935,7 @@ class TreeNode(SkbioObject):
         """
         return not self.children
 
-    @experimental(as_of="0.4.0")
+    @experimental(as_of='0.4.0')
     def is_root(self):
         r"""Returns `True` if the current is a root, i.e. has no `parent`.
 
@@ -952,7 +961,7 @@ class TreeNode(SkbioObject):
         """
         return self.parent is None
 
-    @experimental(as_of="0.4.0")
+    @experimental(as_of='0.4.0')
     def has_children(self):
         r"""Returns `True` if the node has `children`.
 
@@ -978,7 +987,7 @@ class TreeNode(SkbioObject):
         """
         return not self.is_tip()
 
-    @experimental(as_of="0.4.0")
+    @experimental(as_of='0.4.0')
     def traverse(self, self_before=True, self_after=False, include_self=True):
         r"""Returns iterator over descendants
 
@@ -1039,7 +1048,7 @@ class TreeNode(SkbioObject):
             else:
                 return self.tips(include_self=include_self)
 
-    @experimental(as_of="0.4.0")
+    @experimental(as_of='0.4.0')
     def preorder(self, include_self=True):
         r"""Performs preorder iteration over tree
 
@@ -1082,7 +1091,7 @@ class TreeNode(SkbioObject):
             if curr.children:
                 stack.extend(curr.children[::-1])
 
-    @experimental(as_of="0.4.0")
+    @experimental(as_of='0.4.0')
     def postorder(self, include_self=True):
         r"""Performs postorder iteration over tree.
 
@@ -1154,7 +1163,7 @@ class TreeNode(SkbioObject):
                 child_index_stack.pop()
                 child_index_stack[-1] += 1
 
-    @experimental(as_of="0.4.0")
+    @experimental(as_of='0.4.0')
     def pre_and_postorder(self, include_self=True):
         r"""Performs iteration over tree, visiting node before and after
 
@@ -1229,7 +1238,7 @@ class TreeNode(SkbioObject):
                 child_index_stack.pop()
                 child_index_stack[-1] += 1
 
-    @experimental(as_of="0.4.0")
+    @experimental(as_of='0.4.0')
     def levelorder(self, include_self=True):
         r"""Performs levelorder iteration over tree
 
@@ -1275,7 +1284,7 @@ class TreeNode(SkbioObject):
             if curr.children:
                 queue.extend(curr.children)
 
-    @experimental(as_of="0.4.0")
+    @experimental(as_of='0.4.0')
     def tips(self, include_self=False):
         r"""Iterates over tips descended from `self`.
 
@@ -1317,7 +1326,7 @@ class TreeNode(SkbioObject):
             if n.is_tip():
                 yield n
 
-    @experimental(as_of="0.4.0")
+    @experimental(as_of='0.4.0')
     def non_tips(self, include_self=False):
         r"""Iterates over nontips descended from self
 
@@ -1359,7 +1368,7 @@ class TreeNode(SkbioObject):
             if not n.is_tip():
                 yield n
 
-    @experimental(as_of="0.4.0")
+    @experimental(as_of='0.4.0')
     def invalidate_caches(self, attr=True):
         r"""Delete lookup and attribute caches
 
@@ -1388,7 +1397,7 @@ class TreeNode(SkbioObject):
                         if hasattr(n, cache):
                             delattr(n, cache)
 
-    @experimental(as_of="0.4.0")
+    @experimental(as_of='0.4.0')
     def create_caches(self):
         r"""Construct an internal lookups to facilitate searching by name
 
@@ -1430,8 +1439,9 @@ class TreeNode(SkbioObject):
 
                 if node.is_tip():
                     if name in tip_cache:
-                        raise DuplicateNodeError("Tip with name '%s' already "
-                                                 "exists." % name)
+                        raise DuplicateNodeError(
+                            "Tip with name '%s' already " 'exists.' % name
+                        )
 
                     tip_cache[name] = node
                 else:
@@ -1440,7 +1450,7 @@ class TreeNode(SkbioObject):
             self._tip_cache = tip_cache
             self._non_tip_cache = non_tip_cache
 
-    @experimental(as_of="0.4.0")
+    @experimental(as_of='0.4.0')
     def find_all(self, name):
         r"""Find all nodes that match `name`
 
@@ -1498,11 +1508,11 @@ class TreeNode(SkbioObject):
         nodes.append(tip) if tip is not None else None
 
         if not nodes:
-            raise MissingNodeError("Node %s is not in self" % name)
+            raise MissingNodeError('Node %s is not in self' % name)
         else:
             return nodes
 
-    @experimental(as_of="0.4.0")
+    @experimental(as_of='0.4.0')
     def find(self, name):
         r"""Find a node by `name`.
 
@@ -1558,11 +1568,11 @@ class TreeNode(SkbioObject):
             node = root._non_tip_cache.get(name, [None])[0]
 
         if node is None:
-            raise MissingNodeError("Node %s is not in self" % name)
+            raise MissingNodeError('Node %s is not in self' % name)
         else:
             return node
 
-    @experimental(as_of="0.4.0")
+    @experimental(as_of='0.4.0')
     def find_by_id(self, node_id):
         r"""Find a node by `id`.
 
@@ -1614,11 +1624,11 @@ class TreeNode(SkbioObject):
                 break
 
         if node is None:
-            raise MissingNodeError("ID %d is not in self" % node_id)
+            raise MissingNodeError('ID %d is not in self' % node_id)
         else:
             return node
 
-    @experimental(as_of="0.4.0")
+    @experimental(as_of='0.4.0')
     def find_by_func(self, func):
         r"""Find all nodes given a function
 
@@ -1653,7 +1663,7 @@ class TreeNode(SkbioObject):
             if func(node):
                 yield node
 
-    @experimental(as_of="0.4.0")
+    @experimental(as_of='0.4.0')
     def ancestors(self):
         r"""Returns all ancestors back to the root
 
@@ -1681,7 +1691,7 @@ class TreeNode(SkbioObject):
 
         return result
 
-    @experimental(as_of="0.4.0")
+    @experimental(as_of='0.4.0')
     def root(self):
         r"""Returns root of the tree `self` is in
 
@@ -1705,7 +1715,7 @@ class TreeNode(SkbioObject):
             curr = curr.parent
         return curr
 
-    @experimental(as_of="0.4.0")
+    @experimental(as_of='0.4.0')
     def siblings(self):
         r"""Returns all nodes that are `children` of `self` `parent`.
 
@@ -1737,7 +1747,7 @@ class TreeNode(SkbioObject):
 
         return result
 
-    @experimental(as_of="0.4.0")
+    @experimental(as_of='0.4.0')
     def neighbors(self, ignore=None):
         r"""Returns all nodes that are connected to self
 
@@ -1768,7 +1778,7 @@ class TreeNode(SkbioObject):
         else:
             return [n for n in nodes if n is not ignore]
 
-    @experimental(as_of="0.4.0")
+    @experimental(as_of='0.4.0')
     def lowest_common_ancestor(self, tipnames):
         r"""Lowest common ancestor for a list of tips
 
@@ -1808,7 +1818,7 @@ class TreeNode(SkbioObject):
         tips = [self.find(name) for name in tipnames]
 
         if len(tips) == 0:
-            raise ValueError("No tips found.")
+            raise ValueError('No tips found.')
 
         nodes_to_scrub = []
 
@@ -1843,7 +1853,7 @@ class TreeNode(SkbioObject):
     lca = lowest_common_ancestor  # for convenience
 
     @classonlymethod
-    @experimental(as_of="0.4.0")
+    @experimental(as_of='0.4.0')
     def from_taxonomy(cls, lineage_map):
         r"""Construct a tree from a taxonomy
 
@@ -1941,7 +1951,7 @@ class TreeNode(SkbioObject):
         return distance
 
     @classonlymethod
-    @experimental(as_of="0.4.0")
+    @experimental(as_of='0.4.0')
     def from_linkage_matrix(cls, linkage_matrix, id_list):
         """Return tree from SciPy linkage matrix.
 
@@ -1991,7 +2001,7 @@ class TreeNode(SkbioObject):
 
         return node_lookup[-1]
 
-    @experimental(as_of="0.4.0")
+    @experimental(as_of='0.4.0')
     def to_taxonomy(self, allow_empty=False, filter_f=None):
         """Returns a taxonomy representation of self
 
@@ -2048,6 +2058,7 @@ class TreeNode(SkbioObject):
 
         """
         if filter_f is None:
+
             def filter_f(a, b):
                 return True
 
@@ -2075,7 +2086,7 @@ class TreeNode(SkbioObject):
                     lineage.append(node.name)
                     seen.add(node.id)
 
-    @experimental(as_of="0.4.0")
+    @experimental(as_of='0.4.0')
     def to_array(self, attrs=None, nan_length_value=None):
         """Return an array representation of self
 
@@ -2188,19 +2199,20 @@ class TreeNode(SkbioObject):
             if not compact:
                 result.pop()
             (lo, hi, end) = (mids[0], mids[-1], len(result))
-            prefixes = [PAD] * (lo + 1) + [PA + '|'] * \
-                (hi - lo - 1) + [PAD] * (end - hi)
+            prefixes = (
+                [PAD] * (lo + 1) + [PA + '|'] * (hi - lo - 1) + [PAD] * (end - hi)
+            )
             mid = int(np.trunc((lo + hi) / 2))
             prefixes[mid] = char1 + '-' * (LEN - 2) + prefixes[mid][-1]
             result = [p + L for (p, L) in zip(prefixes, result)]
             if show_internal:
                 stem = result[mid]
-                result[mid] = stem[0] + namestr + stem[len(namestr) + 1:]
+                result[mid] = stem[0] + namestr + stem[len(namestr) + 1 :]
             return (result, mid)
         else:
             return ([char1 + '-' + namestr], 0)
 
-    @experimental(as_of="0.4.0")
+    @experimental(as_of='0.4.0')
     def ascii_art(self, show_internal=True, compact=False):
         r"""Returns a string containing an ascii drawing of the tree
 
@@ -2232,11 +2244,10 @@ class TreeNode(SkbioObject):
                   \f-------|
                             \-e
         """
-        (lines, mid) = self._ascii_art(show_internal=show_internal,
-                                       compact=compact)
+        (lines, mid) = self._ascii_art(show_internal=show_internal, compact=compact)
         return '\n'.join(lines)
 
-    @experimental(as_of="0.4.0")
+    @experimental(as_of='0.4.0')
     def accumulate_to_ancestor(self, ancestor):
         r"""Return the sum of the distance between self and ancestor
 
@@ -2275,18 +2286,19 @@ class TreeNode(SkbioObject):
         curr = self
         while curr is not ancestor:
             if curr.is_root():
-                raise NoParentError("Provided ancestor is not in the path")
+                raise NoParentError('Provided ancestor is not in the path')
 
             if curr.length is None:
-                raise NoLengthError("No length on node %s found." %
-                                    curr.name or "unnamed")
+                raise NoLengthError(
+                    'No length on node %s found.' % curr.name or 'unnamed'
+                )
 
             accum += curr.length
             curr = curr.parent
 
         return accum
 
-    @experimental(as_of="0.4.0")
+    @experimental(as_of='0.4.0')
     def distance(self, other):
         """Return the distance between self and other
 
@@ -2358,10 +2370,9 @@ class TreeNode(SkbioObject):
                 n.MaxDistTips = ((0.0, n), (0.0, n))
             else:
                 if len(n.children) == 1:
-                    raise TreeError("No support for single descedent nodes")
+                    raise TreeError('No support for single descedent nodes')
                 else:
-                    tip_info = [(max(c.MaxDistTips, key=maxkey), c)
-                                for c in n.children]
+                    tip_info = [(max(c.MaxDistTips, key=maxkey), c) for c in n.children]
 
                     dists = [i[0][0] for i in tip_info]
                     best_idx = np.argsort(dists)[-2:]
@@ -2380,7 +2391,7 @@ class TreeNode(SkbioObject):
         max_pair = (distmtx.ids[idx_max[0]], distmtx.ids[idx_max[1]])
         return distmtx[idx_max], max_pair
 
-    @experimental(as_of="0.4.0")
+    @experimental(as_of='0.4.0')
     def get_max_distance(self):
         """Returns the max tip tip distance between any pair of tips
 
@@ -2425,14 +2436,14 @@ class TreeNode(SkbioObject):
         tips = [None, None]
         for n in self.non_tips(include_self=True):
             tip_a, tip_b = n.MaxDistTips
-            dist = (tip_a[0] + tip_b[0])
+            dist = tip_a[0] + tip_b[0]
 
             if dist > longest:
                 longest = dist
                 tips = [tip_a[1], tip_b[1]]
         return longest, tips
 
-    @experimental(as_of="0.4.0")
+    @experimental(as_of='0.4.0')
     def tip_tip_distances(self, endpoints=None):
         """Returns distance matrix between pairs of tips, and a tip order.
 
@@ -2488,8 +2499,7 @@ class TreeNode(SkbioObject):
             tip_order = [self.find(n) for n in endpoints]
             for n in tip_order:
                 if not n.is_tip():
-                    raise ValueError("Node with name '%s' is not a tip." %
-                                     n.name)
+                    raise ValueError("Node with name '%s' is not a tip." % n.name)
 
         # linearize all tips in postorder
         # .__start, .__stop compose the slice in tip_order.
@@ -2514,8 +2524,7 @@ class TreeNode(SkbioObject):
                         if tip2 not in result_map:
                             continue
                         t2idx = result_map[tip2]
-                        result[t1idx, t2idx] = distances[
-                            tip1] + distances[tip2]
+                        result[t1idx, t2idx] = distances[tip1] + distances[tip2]
 
         for node in self.postorder():
             if not node.children:
@@ -2527,11 +2536,13 @@ class TreeNode(SkbioObject):
                 length = child.length
                 if length is None:
                     warnings.warn(
-                        "`TreeNode.tip_tip_distances`: Node with name %r does "
-                        "not have an associated length, so a length of 0.0 "
-                        "will be used." % child.name, RepresentationWarning)
+                        '`TreeNode.tip_tip_distances`: Node with name %r does '
+                        'not have an associated length, so a length of 0.0 '
+                        'will be used.' % child.name,
+                        RepresentationWarning,
+                    )
                     length = 0.0
-                distances[child.__start:child.__stop] += length
+                distances[child.__start : child.__stop] += length
 
                 starts.append(child.__start)
                 stops.append(child.__stop)
@@ -2543,7 +2554,7 @@ class TreeNode(SkbioObject):
 
         return DistanceMatrix(result + result.T, [n.name for n in tip_order])
 
-    @experimental(as_of="0.4.0")
+    @experimental(as_of='0.4.0')
     def compare_rfd(self, other, proportion=False):
         """Calculates the Robinson and Foulds symmetric difference
 
@@ -2615,7 +2626,7 @@ class TreeNode(SkbioObject):
 
         return dist
 
-    @experimental(as_of="0.4.0")
+    @experimental(as_of='0.4.0')
     def compare_subsets(self, other, exclude_absent_taxa=False):
         """Returns fraction of overlapping subsets where self and other differ.
 
@@ -2666,9 +2677,10 @@ class TreeNode(SkbioObject):
 
         return 1 - (2 * intersection_length / float(total_subsets))
 
-    @experimental(as_of="0.4.0")
-    def compare_tip_distances(self, other, sample=None, dist_f=distance_from_r,
-                              shuffle_f=np.random.shuffle):
+    @experimental(as_of='0.4.0')
+    def compare_tip_distances(
+        self, other, sample=None, dist_f=distance_from_r, shuffle_f=np.random.shuffle
+    ):
         """Compares self to other using tip-to-tip distance matrices.
 
         Value returned is `dist_f(m1, m2)` for the two matrices. Default is
@@ -2730,7 +2742,7 @@ class TreeNode(SkbioObject):
         common_names = list(common_names)
 
         if not common_names:
-            raise ValueError("No tip names in common between the two trees.")
+            raise ValueError('No tip names in common between the two trees.')
 
         if len(common_names) <= 2:
             return 1  # the two trees must match by definition in this case
@@ -2747,7 +2759,7 @@ class TreeNode(SkbioObject):
 
         return dist_f(self_matrix, other_matrix)
 
-    @experimental(as_of="0.4.2")
+    @experimental(as_of='0.4.2')
     def bifurcate(self, insert_length=None):
         r"""Reorders the tree into a bifurcating tree.
 
@@ -2812,7 +2824,7 @@ class TreeNode(SkbioObject):
                         n.remove(k)
                     n.extend([ind, intermediate])
 
-    @experimental(as_of="0.4.0")
+    @experimental(as_of='0.4.0')
     def index_tree(self):
         """Index a tree for rapid lookups within a tree array
 
@@ -2840,24 +2852,20 @@ class TreeNode(SkbioObject):
 
                 if c:
                     # c has children itself, so need to add to result
-                    child_index.append((c.id,
-                                        c.children[0].id,
-                                        c.children[-1].id))
+                    child_index.append((c.id, c.children[0].id, c.children[-1].id))
 
         # handle root, which should be t itself
         id_index[self.id] = self
 
         # only want to add to the child_index if self has children...
         if self.children:
-            child_index.append((self.id,
-                                self.children[0].id,
-                                self.children[-1].id))
+            child_index.append((self.id, self.children[0].id, self.children[-1].id))
         child_index = np.asarray(child_index, dtype=np.int64)
         child_index = np.atleast_2d(child_index)
 
         return id_index, child_index
 
-    @experimental(as_of="0.4.0")
+    @experimental(as_of='0.4.0')
     def assign_ids(self):
         """Assign topologically stable unique ids to self
 
@@ -2872,7 +2880,7 @@ class TreeNode(SkbioObject):
 
         self.id = curr_index
 
-    @experimental(as_of="0.4.0")
+    @experimental(as_of='0.4.0')
     def descending_branch_length(self, tip_subset=None):
         """Find total descending branch length from self or subset of self tips
 
@@ -2920,24 +2928,25 @@ class TreeNode(SkbioObject):
         if tip_subset is not None:
             all_tips = self.subset()
             if not set(tip_subset).issubset(all_tips):
-                raise ValueError('tip_subset contains ids that aren\'t tip '
-                                 'names.')
+                raise ValueError("tip_subset contains ids that aren't tip " 'names.')
 
             lca = self.lowest_common_ancestor(tip_subset)
             ancestors = {}
             for tip in tip_subset:
                 curr = self.find(tip)
                 while curr is not lca:
-                    ancestors[curr.id] = curr.length if curr.length is not \
-                        None else 0.0
+                    ancestors[curr.id] = curr.length if curr.length is not None else 0.0
                     curr = curr.parent
             return sum(ancestors.values())
 
         else:
-            return sum(n.length for n in self.postorder(include_self=False) if
-                       n.length is not None)
+            return sum(
+                n.length
+                for n in self.postorder(include_self=False)
+                if n.length is not None
+            )
 
-    @experimental(as_of="0.4.0")
+    @experimental(as_of='0.4.0')
     def cache_attr(self, func, cache_attrname, cache_type=list):
         """Cache attributes on internal nodes of the tree
 
@@ -2989,15 +2998,17 @@ class TreeNode(SkbioObject):
 
         """
         if cache_type in [set, frozenset]:
+
             def reduce_f(a, b):
                 return a | b
 
         elif cache_type == list:
+
             def reduce_f(a, b):
                 return a + b
 
         else:
-            raise TypeError("Only list, set and frozenset are supported.")
+            raise TypeError('Only list, set and frozenset are supported.')
 
         for node in self.postorder(include_self=True):
             node._registered_caches.add(cache_attrname)
@@ -3006,7 +3017,7 @@ class TreeNode(SkbioObject):
             cached.append(cache_type(func(node)))
             setattr(node, cache_attrname, reduce(reduce_f, cached))
 
-    @experimental(as_of="0.4.0")
+    @experimental(as_of='0.4.0')
     def shuffle(self, k=None, names=None, shuffle_f=np.random.shuffle, n=1):
         """Yield trees with shuffled tip names
 
@@ -3069,11 +3080,11 @@ class TreeNode(SkbioObject):
 
         """
         if k is not None and k < 2:
-            raise ValueError("k must be None or >= 2")
+            raise ValueError('k must be None or >= 2')
         if k is not None and names is not None:
-            raise ValueError("n and names cannot be specified at the sametime")
+            raise ValueError('n and names cannot be specified at the sametime')
         if n < 1:
-            raise ValueError("n must be > 0")
+            raise ValueError('n must be > 0')
 
         self.assign_ids()
 
@@ -3101,7 +3112,7 @@ class TreeNode(SkbioObject):
             yield self
             counter += 1
 
-    @experimental(as_of="0.5.6")
+    @experimental(as_of='0.5.6')
     def _extract_support(self):
         """Extract the support value from a node label, if available.
 
@@ -3128,7 +3139,7 @@ class TreeNode(SkbioObject):
             label = right or None if support is not None else self.name
         return support, label
 
-    @experimental(as_of="0.5.6")
+    @experimental(as_of='0.5.6')
     def _node_label(self):
         """Generate a node label in the format of "support:name" if both exist,
         or "support" or "name" if either exists.
@@ -3145,7 +3156,7 @@ class TreeNode(SkbioObject):
             lblst.append(self.name)
         return ':'.join(lblst)
 
-    @experimental(as_of="0.5.6")
+    @experimental(as_of='0.5.6')
     def assign_supports(self):
         """Extract support values from internal node labels of a tree.
 
@@ -3196,7 +3207,7 @@ class TreeNode(SkbioObject):
             else:
                 node.support, node.name = node._extract_support()
 
-    @experimental(as_of="0.5.3")
+    @experimental(as_of='0.5.3')
     def unpack(self):
         """Unpack an internal node in place.
 
@@ -3230,14 +3241,14 @@ class TreeNode(SkbioObject):
         if self.is_tip():
             raise TreeError('Cannot unpack tip.')
         parent = self.parent
-        blen = (self.length or 0.0)
+        blen = self.length or 0.0
         for child in self.children:
-            clen = (child.length or 0.0)
-            child.length = (clen + blen or None)
+            clen = child.length or 0.0
+            child.length = clen + blen or None
         parent.remove(self)
         parent.extend(self.children)
 
-    @experimental(as_of="0.5.3")
+    @experimental(as_of='0.5.3')
     def unpack_by_func(self, func):
         """Unpack internal nodes of a tree that meet certain criteria.
 
@@ -3275,7 +3286,7 @@ class TreeNode(SkbioObject):
             node.unpack()
 
     @classonlymethod
-    @experimental(as_of="0.5.8")
+    @experimental(as_of='0.5.8')
     def from_taxdump(cls, nodes, names=None):
         """Construct a tree from the NCBI taxonomy database.
 
@@ -3347,8 +3358,10 @@ class TreeNode(SkbioObject):
         root_id = tops.index[0]
 
         # get parent-to-child(ren) map
-        to_children = {p: g.index.tolist() for p, g in nodes[
-            nodes.index != root_id].groupby('parent_tax_id')}
+        to_children = {
+            p: g.index.tolist()
+            for p, g in nodes[nodes.index != root_id].groupby('parent_tax_id')
+        }
 
         # get rank map
         ranks = nodes['rank'].to_dict()
@@ -3361,7 +3374,8 @@ class TreeNode(SkbioObject):
         # use "scientific name" as name
         elif isinstance(names, pd.DataFrame):
             names = names[names['name_class'] == 'scientific name'][
-                'name_txt'].to_dict()
+                'name_txt'
+            ].to_dict()
 
         # initiate tree
         tree = cls(names[root_id])

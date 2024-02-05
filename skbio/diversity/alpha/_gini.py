@@ -12,7 +12,7 @@ from skbio.diversity._util import _validate_counts_vector
 from skbio.util._decorator import experimental
 
 
-@experimental(as_of="0.4.0")
+@experimental(as_of='0.4.0')
 def gini_index(data, method='rectangles'):
     r"""Calculate the Gini index.
 
@@ -119,5 +119,7 @@ def _lorenz_curve_integrator(lc_pts, method):
     elif method == 'rectangles':
         return dx * y.sum()
     else:
-        raise ValueError("Method '%s' not implemented. Available methods: "
-                         "'rectangles', 'trapezoids'." % method)
+        raise ValueError(
+            "Method '%s' not implemented. Available methods: "
+            "'rectangles', 'trapezoids'." % method
+        )

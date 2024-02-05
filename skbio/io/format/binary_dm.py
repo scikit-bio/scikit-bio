@@ -137,7 +137,7 @@ def _h5py_mat_to_skbio_mat(cls, fh):
 def _skbio_mat_to_h5py_mat(obj, fh):
     _set_header(fh)
 
-    ids = fh.create_dataset('order', shape=(len(obj.ids), ), dtype=_vlen_dtype)
+    ids = fh.create_dataset('order', shape=(len(obj.ids),), dtype=_vlen_dtype)
     ids[:] = obj.ids
     fh.create_dataset('matrix', data=obj.data)
 
@@ -175,5 +175,9 @@ def _passthrough_decoder(x):
 
 def _set_header(h5grp):
     """Set format spec header information"""
-    h5grp['format'] = [b'BDSM', ]
-    h5grp['version'] = [b'2020.06', ]
+    h5grp['format'] = [
+        b'BDSM',
+    ]
+    h5grp['version'] = [
+        b'2020.06',
+    ]

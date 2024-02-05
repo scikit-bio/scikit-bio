@@ -169,8 +169,9 @@ def _label_line_parser(record):
             key, val = split_line
         else:
             raise ClustalFormatError(
-                "Failed to parse sequence identifier and subsequence from "
-                "the following line: %r" % line)
+                'Failed to parse sequence identifier and subsequence from '
+                'the following line: %r' % line
+            )
 
         if key in result:
             result[key].append(val)
@@ -185,8 +186,12 @@ def _is_clustal_seq_line(line):
 
     Useful for filtering other lines out of the file.
     """
-    return line and (not line[0].isspace()) and\
-        (not line.startswith('CLUSTAL')) and (not line.startswith('MUSCLE'))
+    return (
+        line
+        and (not line[0].isspace())
+        and (not line.startswith('CLUSTAL'))
+        and (not line.startswith('MUSCLE'))
+    )
 
 
 def _delete_trailing_number(line):
@@ -232,7 +237,7 @@ def _check_length(data, labels, num_seqs_check=None):
             seq = data[label][i]
             if len(seq) > subseq_length:
                 return False
-            elif i+1 == num_subseqs:  # Last subsequence
+            elif i + 1 == num_subseqs:  # Last subsequence
                 end_lengths.add(len(seq))
             elif len(seq) < subseq_length:
                 return False
@@ -256,15 +261,14 @@ def _clustal_sniffer(fh):
         return False, {}
     fh.seek(0)
     try:
-        records = map(_delete_trailing_number,
-                      filter(_is_clustal_seq_line, fh))
+        records = map(_delete_trailing_number, filter(_is_clustal_seq_line, fh))
         data, labels = _label_line_parser(records)
         if len(data) > 0:
             empty = False
         # Only check first 50 sequences
         aligned_correctly = _check_length(data, labels, 50)
         if not aligned_correctly:
-            raise ClustalFormatError("Sequences not aligned properly")
+            raise ClustalFormatError('Sequences not aligned properly')
     except ClustalFormatError:
         return False, {}
     return not empty, {}
@@ -273,8 +277,7 @@ def _clustal_sniffer(fh):
 @clustal.writer(TabularMSA)
 def _tabular_msa_to_clustal(obj, fh):
     if not obj.index.is_unique:
-        raise ClustalFormatError(
-            "TabularMSA's index labels must be unique.")
+        raise ClustalFormatError("TabularMSA's index labels must be unique.")
 
     clen = 60  # Max length of clustal lines
     seqs = [str(s) for s in obj]
@@ -285,8 +288,8 @@ def _tabular_msa_to_clustal(obj, fh):
     for i in range(0, seqLen, clen):
         for label, seq in zip(names, seqs):
             name = ('{:<%d}' % (nameLen)).format(label)
-            fh.write("%s\t%s\n" % (name, seq[i:i+clen]))
-        fh.write("\n")
+            fh.write('%s\t%s\n' % (name, seq[i : i + clen]))
+        fh.write('\n')
 
 
 @clustal.reader(TabularMSA)
@@ -334,15 +337,14 @@ def _clustal_to_tabular_msa(fh, constructor=None):
 
     """
     if constructor is None:
-        raise ValueError("Must provide `constructor`.")
+        raise ValueError('Must provide `constructor`.')
 
-    records = map(_delete_trailing_number,
-                  filter(_is_clustal_seq_line, fh))
+    records = map(_delete_trailing_number, filter(_is_clustal_seq_line, fh))
     data, labels = _label_line_parser(records)
 
     aligned_correctly = _check_length(data, labels)
     if not aligned_correctly:
-        raise ClustalFormatError("Sequences not aligned properly")
+        raise ClustalFormatError('Sequences not aligned properly')
     seqs = []
     for label in labels:
         seqs.append(constructor(''.join(data[label])))

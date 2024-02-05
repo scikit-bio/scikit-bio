@@ -289,9 +289,14 @@ import numpy as np
 
 from skbio.io import create_format, FASTQFormatError
 from skbio.io.format._base import (
-    _decode_qual_to_phred, _encode_phred_to_qual, _get_nth_sequence,
-    _parse_fasta_like_header, _format_fasta_like_records, _line_generator,
-    _too_many_blanks)
+    _decode_qual_to_phred,
+    _encode_phred_to_qual,
+    _get_nth_sequence,
+    _parse_fasta_like_header,
+    _format_fasta_like_records,
+    _line_generator,
+    _too_many_blanks,
+)
 from skbio.alignment import TabularMSA
 from skbio.sequence import Sequence, DNA, RNA, Protein
 
@@ -314,8 +319,9 @@ def _fastq_sniffer(fh):
     try:
         not_empty = False
         for _, seq in zip(range(10), _fastq_to_generator(fh, phred_offset=33)):
-            split_length = len((seq.metadata['id'] +
-                                seq.metadata['description']).split(':'))
+            split_length = len(
+                (seq.metadata['id'] + seq.metadata['description']).split(':')
+            )
             description = seq.metadata['description'].split(':')
             if split_length == 10 and description[1] in 'YN':
                 return True, {'variant': 'illumina1.8'}
@@ -326,8 +332,9 @@ def _fastq_sniffer(fh):
 
 
 @fastq.reader(None)
-def _fastq_to_generator(fh, variant=None, phred_offset=None,
-                        constructor=Sequence, **kwargs):
+def _fastq_to_generator(
+    fh, variant=None, phred_offset=None, constructor=Sequence, **kwargs
+):
     # Skip any blank or whitespace-only lines at beginning of file
     try:
         seq_header = next(_line_generator(fh, skip_blanks=True))
@@ -336,8 +343,8 @@ def _fastq_to_generator(fh, variant=None, phred_offset=None,
 
     if not seq_header.startswith('@'):
         raise FASTQFormatError(
-            "Expected sequence (@) header line at start of file: %r"
-            % str(seq_header))
+            'Expected sequence (@) header line at start of file: %r' % str(seq_header)
+        )
 
     while seq_header is not None:
         id_, desc = _parse_fasta_like_header(seq_header)
@@ -345,74 +352,108 @@ def _fastq_to_generator(fh, variant=None, phred_offset=None,
 
         if qual_header != '+' and qual_header[1:] != seq_header[1:]:
             raise FASTQFormatError(
-                "Sequence (@) and quality (+) header lines do not match: "
-                "%r != %r" % (str(seq_header[1:]), str(qual_header[1:])))
+                'Sequence (@) and quality (+) header lines do not match: '
+                '%r != %r' % (str(seq_header[1:]), str(qual_header[1:]))
+            )
 
-        phred_scores, seq_header = _parse_quality_scores(fh, len(seq),
-                                                         variant,
-                                                         phred_offset,
-                                                         qual_header)
-        yield constructor(seq, metadata={'id': id_, 'description': desc},
-                          positional_metadata={'quality': phred_scores},
-                          **kwargs)
+        phred_scores, seq_header = _parse_quality_scores(
+            fh, len(seq), variant, phred_offset, qual_header
+        )
+        yield constructor(
+            seq,
+            metadata={'id': id_, 'description': desc},
+            positional_metadata={'quality': phred_scores},
+            **kwargs,
+        )
 
 
 @fastq.reader(Sequence)
-def _fastq_to_sequence(fh, variant=None, phred_offset=None, seq_num=1,
-                       **kwargs):
+def _fastq_to_sequence(fh, variant=None, phred_offset=None, seq_num=1, **kwargs):
     return _get_nth_sequence(
-        _fastq_to_generator(fh, variant=variant, phred_offset=phred_offset,
-                            constructor=Sequence, **kwargs),
-        seq_num)
+        _fastq_to_generator(
+            fh,
+            variant=variant,
+            phred_offset=phred_offset,
+            constructor=Sequence,
+            **kwargs,
+        ),
+        seq_num,
+    )
 
 
 @fastq.reader(DNA)
-def _fastq_to_dna(fh, variant=None, phred_offset=None, seq_num=1,  **kwargs):
+def _fastq_to_dna(fh, variant=None, phred_offset=None, seq_num=1, **kwargs):
     return _get_nth_sequence(
-        _fastq_to_generator(fh, variant=variant, phred_offset=phred_offset,
-                            constructor=DNA, **kwargs),
-        seq_num)
+        _fastq_to_generator(
+            fh, variant=variant, phred_offset=phred_offset, constructor=DNA, **kwargs
+        ),
+        seq_num,
+    )
 
 
 @fastq.reader(RNA)
 def _fastq_to_rna(fh, variant=None, phred_offset=None, seq_num=1, **kwargs):
     return _get_nth_sequence(
-        _fastq_to_generator(fh, variant=variant, phred_offset=phred_offset,
-                            constructor=RNA, **kwargs),
-        seq_num)
+        _fastq_to_generator(
+            fh, variant=variant, phred_offset=phred_offset, constructor=RNA, **kwargs
+        ),
+        seq_num,
+    )
 
 
 @fastq.reader(Protein)
-def _fastq_to_protein(fh, variant=None, phred_offset=None, seq_num=1,
-                      **kwargs):
+def _fastq_to_protein(fh, variant=None, phred_offset=None, seq_num=1, **kwargs):
     return _get_nth_sequence(
-        _fastq_to_generator(fh, variant=variant, phred_offset=phred_offset,
-                            constructor=Protein,
-                            **kwargs),
-        seq_num)
+        _fastq_to_generator(
+            fh,
+            variant=variant,
+            phred_offset=phred_offset,
+            constructor=Protein,
+            **kwargs,
+        ),
+        seq_num,
+    )
 
 
 @fastq.reader(TabularMSA)
-def _fastq_to_tabular_msa(fh, variant=None, phred_offset=None,
-                          constructor=None, **kwargs):
+def _fastq_to_tabular_msa(
+    fh, variant=None, phred_offset=None, constructor=None, **kwargs
+):
     if constructor is None:
-        raise ValueError("Must provide `constructor`.")
+        raise ValueError('Must provide `constructor`.')
 
     return TabularMSA(
-        _fastq_to_generator(fh, variant=variant, phred_offset=phred_offset,
-                            constructor=constructor, **kwargs))
+        _fastq_to_generator(
+            fh,
+            variant=variant,
+            phred_offset=phred_offset,
+            constructor=constructor,
+            **kwargs,
+        )
+    )
 
 
 @fastq.writer(None)
-def _generator_to_fastq(obj, fh, variant=None, phred_offset=None,
-                        id_whitespace_replacement='_',
-                        description_newline_replacement=' ', lowercase=None):
+def _generator_to_fastq(
+    obj,
+    fh,
+    variant=None,
+    phred_offset=None,
+    id_whitespace_replacement='_',
+    description_newline_replacement=' ',
+    lowercase=None,
+):
     formatted_records = _format_fasta_like_records(
-        obj, id_whitespace_replacement, description_newline_replacement, True,
-        lowercase=lowercase)
+        obj,
+        id_whitespace_replacement,
+        description_newline_replacement,
+        True,
+        lowercase=lowercase,
+    )
     for header, seq_str, qual_scores in formatted_records:
-        qual_str = _encode_phred_to_qual(qual_scores, variant=variant,
-                                         phred_offset=phred_offset)
+        qual_str = _encode_phred_to_qual(
+            qual_scores, variant=variant, phred_offset=phred_offset
+        )
         fh.write('@')
         fh.write(header)
         fh.write('\n')
@@ -423,53 +464,114 @@ def _generator_to_fastq(obj, fh, variant=None, phred_offset=None,
 
 
 @fastq.writer(Sequence)
-def _sequence_to_fastq(obj, fh, variant=None, phred_offset=None,
-                       id_whitespace_replacement='_',
-                       description_newline_replacement=' ', lowercase=None):
-    _sequences_to_fastq([obj], fh, variant, phred_offset,
-                        id_whitespace_replacement,
-                        description_newline_replacement, lowercase=lowercase)
+def _sequence_to_fastq(
+    obj,
+    fh,
+    variant=None,
+    phred_offset=None,
+    id_whitespace_replacement='_',
+    description_newline_replacement=' ',
+    lowercase=None,
+):
+    _sequences_to_fastq(
+        [obj],
+        fh,
+        variant,
+        phred_offset,
+        id_whitespace_replacement,
+        description_newline_replacement,
+        lowercase=lowercase,
+    )
 
 
 @fastq.writer(DNA)
-def _dna_to_fastq(obj, fh, variant=None, phred_offset=None,
-                  id_whitespace_replacement='_',
-                  description_newline_replacement=' ', lowercase=None):
-    _sequences_to_fastq([obj], fh, variant, phred_offset,
-                        id_whitespace_replacement,
-                        description_newline_replacement, lowercase=lowercase)
+def _dna_to_fastq(
+    obj,
+    fh,
+    variant=None,
+    phred_offset=None,
+    id_whitespace_replacement='_',
+    description_newline_replacement=' ',
+    lowercase=None,
+):
+    _sequences_to_fastq(
+        [obj],
+        fh,
+        variant,
+        phred_offset,
+        id_whitespace_replacement,
+        description_newline_replacement,
+        lowercase=lowercase,
+    )
 
 
 @fastq.writer(RNA)
-def _rna_to_fastq(obj, fh, variant=None, phred_offset=None,
-                  id_whitespace_replacement='_',
-                  description_newline_replacement=' ', lowercase=None):
-    _sequences_to_fastq([obj], fh, variant, phred_offset,
-                        id_whitespace_replacement,
-                        description_newline_replacement, lowercase=lowercase)
+def _rna_to_fastq(
+    obj,
+    fh,
+    variant=None,
+    phred_offset=None,
+    id_whitespace_replacement='_',
+    description_newline_replacement=' ',
+    lowercase=None,
+):
+    _sequences_to_fastq(
+        [obj],
+        fh,
+        variant,
+        phred_offset,
+        id_whitespace_replacement,
+        description_newline_replacement,
+        lowercase=lowercase,
+    )
 
 
 @fastq.writer(Protein)
-def _protein_to_fastq(obj, fh, variant=None, phred_offset=None,
-                      id_whitespace_replacement='_',
-                      description_newline_replacement=' ', lowercase=None):
-    _sequences_to_fastq([obj], fh, variant, phred_offset,
-                        id_whitespace_replacement,
-                        description_newline_replacement, lowercase=lowercase)
+def _protein_to_fastq(
+    obj,
+    fh,
+    variant=None,
+    phred_offset=None,
+    id_whitespace_replacement='_',
+    description_newline_replacement=' ',
+    lowercase=None,
+):
+    _sequences_to_fastq(
+        [obj],
+        fh,
+        variant,
+        phred_offset,
+        id_whitespace_replacement,
+        description_newline_replacement,
+        lowercase=lowercase,
+    )
 
 
 @fastq.writer(TabularMSA)
-def _tabular_msa_to_fastq(obj, fh, variant=None, phred_offset=None,
-                          id_whitespace_replacement='_',
-                          description_newline_replacement=' ', lowercase=None):
-    _sequences_to_fastq(obj, fh, variant, phred_offset,
-                        id_whitespace_replacement,
-                        description_newline_replacement, lowercase=lowercase)
+def _tabular_msa_to_fastq(
+    obj,
+    fh,
+    variant=None,
+    phred_offset=None,
+    id_whitespace_replacement='_',
+    description_newline_replacement=' ',
+    lowercase=None,
+):
+    _sequences_to_fastq(
+        obj,
+        fh,
+        variant,
+        phred_offset,
+        id_whitespace_replacement,
+        description_newline_replacement,
+        lowercase=lowercase,
+    )
 
 
 def _blank_error(unique_text):
-    error_string = ("Found blank or whitespace-only line {} in "
-                    "FASTQ file").format(unique_text)
+    error_string = ('Found blank or whitespace-only line {} in ' 'FASTQ file').format(
+        unique_text
+    )
     raise FASTQFormatError(error_string)
 
 
@@ -480,24 +582,24 @@ def _parse_sequence_data(fh, prev):
             if not prev:
                 _blank_error("before '+'")
             if not seq_chunks:
-                raise FASTQFormatError(
-                    "Found FASTQ record without sequence data.")
+                raise FASTQFormatError('Found FASTQ record without sequence data.')
             return ''.join(seq_chunks), chunk
         elif chunk.startswith('@'):
             raise FASTQFormatError(
-                "Found FASTQ record that is missing a quality (+) header line "
-                "after sequence data.")
+                'Found FASTQ record that is missing a quality (+) header line '
+                'after sequence data.'
+            )
         else:
             if not prev:
-                _blank_error("after header or within sequence")
+                _blank_error('after header or within sequence')
             if _whitespace_regex.search(chunk):
                 raise FASTQFormatError(
-                    "Found whitespace in sequence data: %r" % str(chunk))
+                    'Found whitespace in sequence data: %r' % str(chunk)
+                )
             seq_chunks.append(chunk)
         prev = chunk
 
-    raise FASTQFormatError(
-        "Found incomplete/truncated FASTQ record at end of file.")
+    raise FASTQFormatError('Found incomplete/truncated FASTQ record at end of file.')
 
 
 def _parse_quality_scores(fh, seq_len, variant, phred_offset, prev):
@@ -514,29 +616,43 @@ def _parse_quality_scores(fh, seq_len, variant, phred_offset, prev):
 
                 if qual_len > seq_len:
                     raise FASTQFormatError(
-                        "Found more quality score characters than sequence "
-                        "characters. Extra quality score characters: %r" %
-                        chunk[-(qual_len - seq_len):])
+                        'Found more quality score characters than sequence '
+                        'characters. Extra quality score characters: %r'
+                        % chunk[-(qual_len - seq_len) :]
+                    )
 
                 phred_scores.append(
-                    _decode_qual_to_phred(chunk, variant=variant,
-                                          phred_offset=phred_offset))
+                    _decode_qual_to_phred(
+                        chunk, variant=variant, phred_offset=phred_offset
+                    )
+                )
         prev = chunk
 
     if qual_len != seq_len:
         raise FASTQFormatError(
-            "Found incomplete/truncated FASTQ record at end of file.")
+            'Found incomplete/truncated FASTQ record at end of file.'
+        )
     return np.hstack(phred_scores), None
 
 
-def _sequences_to_fastq(obj, fh, variant, phred_offset,
-                        id_whitespace_replacement,
-                        description_newline_replacement, lowercase=None):
+def _sequences_to_fastq(
+    obj,
+    fh,
+    variant,
+    phred_offset,
+    id_whitespace_replacement,
+    description_newline_replacement,
+    lowercase=None,
+):
     def seq_gen():
         yield from obj
 
     _generator_to_fastq(
-        seq_gen(), fh, variant=variant, phred_offset=phred_offset,
+        seq_gen(),
+        fh,
+        variant=variant,
+        phred_offset=phred_offset,
         id_whitespace_replacement=id_whitespace_replacement,
         description_newline_replacement=description_newline_replacement,
-        lowercase=lowercase)
+        lowercase=lowercase,
+    )

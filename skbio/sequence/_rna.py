@@ -125,9 +125,21 @@ class RNA(GrammaredSequence, NucleotideMixin):
     @overrides(NucleotideMixin)
     def complement_map(cls):
         comp_map = {
-            'A': 'U', 'U': 'A', 'G': 'C', 'C': 'G', 'Y': 'R', 'R': 'Y',
-            'S': 'S', 'W': 'W', 'K': 'M', 'M': 'K', 'B': 'V', 'D': 'H',
-            'H': 'D', 'V': 'B', 'N': 'N'
+            'A': 'U',
+            'U': 'A',
+            'G': 'C',
+            'C': 'G',
+            'Y': 'R',
+            'R': 'Y',
+            'S': 'S',
+            'W': 'W',
+            'K': 'M',
+            'M': 'K',
+            'B': 'V',
+            'D': 'H',
+            'H': 'D',
+            'V': 'B',
+            'N': 'N',
         }
 
         comp_map.update({c: c for c in cls.gap_chars})
@@ -136,15 +148,23 @@ class RNA(GrammaredSequence, NucleotideMixin):
     @classproperty
     @overrides(GrammaredSequence)
     def definite_chars(cls):
-        return set("ACGU")
+        return set('ACGU')
 
     @classproperty
     @overrides(GrammaredSequence)
     def degenerate_map(cls):
         return {
-            "R": set("AG"), "Y": set("CU"), "M": set("AC"), "K": set("UG"),
-            "W": set("AU"), "S": set("GC"), "B": set("CGU"), "D": set("AGU"),
-            "H": set("ACU"), "V": set("ACG"), "N": set("ACGU")
+            'R': set('AG'),
+            'Y': set('CU'),
+            'M': set('AC'),
+            'K': set('UG'),
+            'W': set('AU'),
+            'S': set('GC'),
+            'B': set('CGU'),
+            'D': set('AGU'),
+            'H': set('ACU'),
+            'V': set('ACG'),
+            'N': set('ACGU'),
         }
 
     @classproperty
@@ -166,7 +186,7 @@ class RNA(GrammaredSequence, NucleotideMixin):
     def _motifs(self):
         return _motifs
 
-    @stable(as_of="0.4.1")
+    @stable(as_of='0.4.1')
     def reverse_transcribe(self):
         """Reverse transcribe RNA into DNA.
 
@@ -233,12 +253,15 @@ class RNA(GrammaredSequence, NucleotideMixin):
             interval_metadata = self.interval_metadata
 
         # turn off validation because `seq` is guaranteed to be valid
-        return skbio.DNA(seq, metadata=metadata,
-                         positional_metadata=positional_metadata,
-                         interval_metadata=interval_metadata,
-                         validate=False)
+        return skbio.DNA(
+            seq,
+            metadata=metadata,
+            positional_metadata=positional_metadata,
+            interval_metadata=interval_metadata,
+            validate=False,
+        )
 
-    @stable(as_of="0.4.0")
+    @stable(as_of='0.4.0')
     def translate(self, genetic_code=1, *args, **kwargs):
         """Translate RNA sequence into protein sequence.
 
@@ -308,7 +331,7 @@ class RNA(GrammaredSequence, NucleotideMixin):
             genetic_code = skbio.GeneticCode.from_ncbi(genetic_code)
         return genetic_code.translate(self, *args, **kwargs)
 
-    @stable(as_of="0.4.0")
+    @stable(as_of='0.4.0')
     def translate_six_frames(self, genetic_code=1, *args, **kwargs):
         """Translate RNA into protein using six possible reading frames.
 
@@ -450,4 +473,4 @@ class RNA(GrammaredSequence, NucleotideMixin):
 _motifs = _parent_motifs.copy()
 
 # Leave this at the bottom
-_motifs.interpolate(RNA, "find_motifs")
+_motifs.interpolate(RNA, 'find_motifs')

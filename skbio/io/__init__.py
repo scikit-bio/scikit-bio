@@ -203,37 +203,55 @@ not know how you want to serialize an object. OO interfaces define a default
 from importlib import import_module
 
 from ._warning import FormatIdentificationWarning, ArgumentOverrideWarning
-from ._exception import (UnrecognizedFormatError, FileFormatError,
-                         BLAST7FormatError, ClustalFormatError,
-                         FASTAFormatError, GenBankFormatError, IOSourceError,
-                         FASTQFormatError, LSMatFormatError, NewickFormatError,
-                         OrdinationFormatError, PhylipFormatError,
-                         QSeqFormatError, QUALFormatError,
-                         StockholmFormatError, GFF3FormatError,
-                         EMBLFormatError)
+from ._exception import (
+    UnrecognizedFormatError,
+    FileFormatError,
+    BLAST7FormatError,
+    ClustalFormatError,
+    FASTAFormatError,
+    GenBankFormatError,
+    IOSourceError,
+    FASTQFormatError,
+    LSMatFormatError,
+    NewickFormatError,
+    OrdinationFormatError,
+    PhylipFormatError,
+    QSeqFormatError,
+    QUALFormatError,
+    StockholmFormatError,
+    GFF3FormatError,
+    EMBLFormatError,
+)
 from .registry import write, read, sniff, create_format, io_registry
 from .util import open
 
-__all__ = ['write', 'read', 'sniff', 'open', 'io_registry', 'create_format',
-
-           'FormatIdentificationWarning', 'ArgumentOverrideWarning',
-           'UnrecognizedFormatError', 'IOSourceError',
-
-           'FileFormatError',
-           'BLAST7FormatError',
-           'ClustalFormatError',
-           'EMBLFormatError',
-           'FASTAFormatError',
-           'FASTQFormatError',
-           'GenBankFormatError',
-           'GFF3FormatError',
-           'LSMatFormatError',
-           'NewickFormatError',
-           'OrdinationFormatError',
-           'PhylipFormatError',
-           'QSeqFormatError',
-           'QUALFormatError',
-           'StockholmFormatError']
+__all__ = [
+    'write',
+    'read',
+    'sniff',
+    'open',
+    'io_registry',
+    'create_format',
+    'FormatIdentificationWarning',
+    'ArgumentOverrideWarning',
+    'UnrecognizedFormatError',
+    'IOSourceError',
+    'FileFormatError',
+    'BLAST7FormatError',
+    'ClustalFormatError',
+    'EMBLFormatError',
+    'FASTAFormatError',
+    'FASTQFormatError',
+    'GenBankFormatError',
+    'GFF3FormatError',
+    'LSMatFormatError',
+    'NewickFormatError',
+    'OrdinationFormatError',
+    'PhylipFormatError',
+    'QSeqFormatError',
+    'QUALFormatError',
+    'StockholmFormatError',
+]
 
 
 # Necessary to import each file format module to have them added to the I/O

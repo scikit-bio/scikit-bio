@@ -33,17 +33,32 @@ from contextlib import contextmanager, ExitStack
 from skbio.io import IOSourceError
 from skbio.io._iosources import get_io_sources, get_compression_handler
 from skbio.io._fileobject import (
-    is_binary_file, SaneTextIOWrapper, CompressedBufferedReader,
-    CompressedBufferedWriter)
+    is_binary_file,
+    SaneTextIOWrapper,
+    CompressedBufferedReader,
+    CompressedBufferedWriter,
+)
 from skbio.util._decorator import stable
 
-_d = dict(mode='r', encoding=None, errors=None, newline=None,
-          compression='auto', compresslevel=9)
+_d = dict(
+    mode='r',
+    encoding=None,
+    errors=None,
+    newline=None,
+    compression='auto',
+    compresslevel=9,
+)
 
 
-def _resolve(file, mode=_d['mode'], encoding=_d['encoding'],
-             errors=_d['errors'], newline=_d['newline'],
-             compression=_d['compression'], compresslevel=_d['compresslevel']):
+def _resolve(
+    file,
+    mode=_d['mode'],
+    encoding=_d['encoding'],
+    errors=_d['errors'],
+    newline=_d['newline'],
+    compression=_d['compression'],
+    compresslevel=_d['compresslevel'],
+):
     arguments = locals().copy()
 
     if mode not in {'r', 'w'}:
@@ -61,16 +76,21 @@ def _resolve(file, mode=_d['mode'], encoding=_d['encoding'],
             break
 
     if newfile is None:
-        raise IOSourceError(
-            "Could not open source: %r (mode: %r)" % (file, mode))
+        raise IOSourceError('Could not open source: %r (mode: %r)' % (file, mode))
 
     return newfile, source, is_binary_file(newfile)
 
 
-@stable(as_of="0.4.0")
-def open(file, mode=_d['mode'], encoding=_d['encoding'], errors=_d['errors'],
-         newline=_d['newline'], compression=_d['compression'],
-         compresslevel=_d['compresslevel']):
+@stable(as_of='0.4.0')
+def open(
+    file,
+    mode=_d['mode'],
+    encoding=_d['encoding'],
+    errors=_d['errors'],
+    newline=_d['newline'],
+    compression=_d['compression'],
+    compresslevel=_d['compresslevel'],
+):
     r"""Convert input into a filehandle.
 
     Supported inputs:
@@ -172,28 +192,30 @@ def _munge_file(file, is_binary_file, arguments):
     compression_handler = get_compression_handler(compression)
 
     if is_output_binary and newline is not _d['newline']:
-        raise ValueError("Cannot use `newline` with binary encoding.")
+        raise ValueError('Cannot use `newline` with binary encoding.')
 
     if compression is not None and not compression_handler:
-        raise ValueError("Unsupported compression: %r" % compression)
+        raise ValueError('Unsupported compression: %r' % compression)
 
     if is_binary_file:
         if compression:
             c = compression_handler(newfile, arguments)
             if mode == 'w':
-                newfile = CompressedBufferedWriter(file, c.get_writer(),
-                                                   streamable=c.streamable)
+                newfile = CompressedBufferedWriter(
+                    file, c.get_writer(), streamable=c.streamable
+                )
             else:
                 newfile = CompressedBufferedReader(file, c.get_reader())
 
         if not is_output_binary:
-            newfile = SaneTextIOWrapper(newfile, encoding=encoding,
-                                        errors=errors, newline=newline)
+            newfile = SaneTextIOWrapper(
+                newfile, encoding=encoding, errors=errors, newline=newline
+            )
     else:
         if compression is not None and compression != 'auto':
-            raise ValueError("Cannot use compression with that source.")
+            raise ValueError('Cannot use compression with that source.')
         if is_output_binary:
-            raise ValueError("Source is not a binary source")
+            raise ValueError('Source is not a binary source')
 
     return newfile
 
@@ -209,7 +231,7 @@ def _resolve_file(file, **kwargs):
 
 
 @contextmanager
-@stable(as_of="0.4.0")
+@stable(as_of='0.4.0')
 def open_file(file, **kwargs):
     r"""Context manager for :func:`skbio.io.util.open`.
 
@@ -269,7 +291,7 @@ def _flush_compressor(file):
 
 
 @contextmanager
-@stable(as_of="0.4.0")
+@stable(as_of='0.4.0')
 def open_files(files, **kwargs):
     """A plural form of :func:`open_file`."""
     with ExitStack() as stack:

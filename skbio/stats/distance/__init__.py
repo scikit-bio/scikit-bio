@@ -188,15 +188,31 @@ References
 # The full license is in the file LICENSE.txt, distributed with this software.
 # ----------------------------------------------------------------------------
 
-from ._base import (DissimilarityMatrixError, DistanceMatrixError,
-                    MissingIDError, DissimilarityMatrix, DistanceMatrix,
-                    randdm)
+from ._base import (
+    DissimilarityMatrixError,
+    DistanceMatrixError,
+    MissingIDError,
+    DissimilarityMatrix,
+    DistanceMatrix,
+    randdm,
+)
 from ._bioenv import bioenv
 from ._anosim import anosim
 from ._permanova import permanova
 from ._mantel import mantel, pwmantel
 from ._permdisp import permdisp
 
-__all__ = ['DissimilarityMatrixError', 'DistanceMatrixError', 'MissingIDError',
-           'DissimilarityMatrix', 'DistanceMatrix', 'randdm', 'anosim',
-           'permanova', 'bioenv', 'mantel', 'pwmantel', 'permdisp']
+__all__ = [
+    'DissimilarityMatrixError',
+    'DistanceMatrixError',
+    'MissingIDError',
+    'DissimilarityMatrix',
+    'DistanceMatrix',
+    'randdm',
+    'anosim',
+    'permanova',
+    'bioenv',
+    'mantel',
+    'pwmantel',
+    'permdisp',
+]

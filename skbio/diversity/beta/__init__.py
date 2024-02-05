@@ -30,4 +30,4 @@ Functions
 
 from ._unifrac import unweighted_unifrac, weighted_unifrac
 
-__all__ = ["unweighted_unifrac", "weighted_unifrac"]
+__all__ = ['unweighted_unifrac', 'weighted_unifrac']

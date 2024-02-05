@@ -9,24 +9,29 @@
 
 class TreeError(Exception):
     """General tree error"""
+
     pass
 
 
 class NoLengthError(TreeError):
     """Missing length when expected"""
+
     pass
 
 
 class DuplicateNodeError(TreeError):
     """Duplicate nodes with identical names"""
+
     pass
 
 
 class MissingNodeError(TreeError):
     """Expecting a node"""
+
     pass
 
 
 class NoParentError(MissingNodeError):
     """Missing a parent"""
+
     pass

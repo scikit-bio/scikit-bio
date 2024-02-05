@@ -14,11 +14,13 @@ from skbio.io import FileFormatError
 
 
 def _vocabulary_change(format='insdc', read_in=True):
-    '''Return a dict that converts between memory and output vocabulary.'''
-    convert = {'phase': {'insdc': 'codon_start'},
-               'source': {'insdc': 'inference'},
-               'db_xref': {'gff3': 'Dbxref'},
-               'note': {'gff3': 'Note'}}
+    """Return a dict that converts between memory and output vocabulary."""
+    convert = {
+        'phase': {'insdc': 'codon_start'},
+        'source': {'insdc': 'inference'},
+        'db_xref': {'gff3': 'Dbxref'},
+        'note': {'gff3': 'Note'},
+    }
     if read_in:
         return {v[format]: k for k, v in convert.items() if format in v}
     else:
@@ -26,19 +28,21 @@ def _vocabulary_change(format='insdc', read_in=True):
 
 
 def _vocabulary_skip(format='insdc'):
-    '''Return a list of vocabularies that should be skipped when auto
+    """Return a list of vocabularies that should be skipped when auto
     output to disk for the specified format.
 
-    '''
-    skip = {'type': ('insdc', 'gff3'),
-            'ID': ('insdc'),
-            'translation': ('gff3'),
-            'strand': ('insdc')}
+    """
+    skip = {
+        'type': ('insdc', 'gff3'),
+        'ID': ('insdc'),
+        'translation': ('gff3'),
+        'strand': ('insdc'),
+    }
     return [k for k, v in skip.items() if format in v]
 
 
 def _yield_section(is_another_section, **kwargs):
-    '''Returns function that returns successive sections from file.
+    """Returns function that returns successive sections from file.
 
     Parameters
     ----------
@@ -53,7 +57,8 @@ def _yield_section(is_another_section, **kwargs):
     function
         A function accept a list of lines as input and return
         a generator to yield section one by one.
-    '''
+    """
+
     def parser(lines):
         curr = []
         for line in _line_generator(lines, **kwargs):
@@ -66,17 +71,19 @@ def _yield_section(is_another_section, **kwargs):
         # don't forget to return the last section in the file
         if curr:
             yield curr
+
     return parser
 
 
 def _parse_section_default(
-        lines, label_delimiter=None, join_delimiter=' ', return_label=False):
-    '''Parse sections in default way.
+    lines, label_delimiter=None, join_delimiter=' ', return_label=False
+):
+    """Parse sections in default way.
 
     Do 2 things:
         1. split first line with label_delimiter for label
         2. join all the lines into one str with join_delimiter.
-    '''
+    """
     data = []
     label = None
     line = lines[0]
@@ -87,7 +94,7 @@ def _parse_section_default(
         label, section = items
     else:
         label = items[0]
-        section = ""
+        section = ''
     data.append(section)
 
     data.extend(lines[1:])
@@ -99,12 +106,11 @@ def _parse_section_default(
 
 
 def _serialize_section_default(header, obj, indent=12):
-    return '{header:<{indent}}{obj}\n'.format(
-        header=header, obj=obj, indent=indent)
+    return '{header:<{indent}}{obj}\n'.format(header=header, obj=obj, indent=indent)
 
 
 def _parse_feature_table(lines, length):
-    '''parse DDBJ/ENA/GenBank Feature Table.'''
+    """parse DDBJ/ENA/GenBank Feature Table."""
     imd = IntervalMetadata(length)
     # skip the 1st FEATURES line
     if lines[0].startswith('FEATURES'):
@@ -113,8 +119,8 @@ def _parse_feature_table(lines, length):
     # are indented with 21 spaces.
     feature_indent = ' ' * 21
     section_splitter = _yield_section(
-        lambda x: not x.startswith(feature_indent),
-        skip_blanks=True, strip=False)
+        lambda x: not x.startswith(feature_indent), skip_blanks=True, strip=False
+    )
 
     for section in section_splitter(lines):
         _parse_single_feature(section, imd)
@@ -122,26 +128,26 @@ def _parse_feature_table(lines, length):
 
 
 def _parse_single_feature(lines, imd):
-    '''Parse a feature.
+    """Parse a feature.
 
     Parse a feature and add it to ``IntervalMetadata`` object.
 
     Parameters
     ----------
     imd : IntervalMetadata
-    '''
+    """
     voca_change = _vocabulary_change('insdc')
 
     # each component of a feature starts with '/', except the 1st
     # component of location.
-    section_splitter = _yield_section(
-        lambda x: x.startswith('/'), strip=True)
+    section_splitter = _yield_section(lambda x: x.startswith('/'), strip=True)
     section_iter = section_splitter(lines)
 
     # 1st section is location
     section = next(section_iter)
     feature_type, feature_loc = _parse_section_default(
-        section, join_delimiter='', return_label=True)
+        section, join_delimiter='', return_label=True
+    )
 
     metadata = {'type': feature_type, '__location': feature_loc}
 
@@ -150,8 +156,8 @@ def _parse_single_feature(lines, imd):
     for section in section_iter:
         # following sections are Qualifiers
         k, v = _parse_section_default(
-            section, label_delimiter='=',
-            join_delimiter=' ', return_label=True)
+            section, label_delimiter='=', join_delimiter=' ', return_label=True
+        )
         # 1st char is '/'
         k = k[1:]
         if k in voca_change:
@@ -172,7 +178,7 @@ def _parse_single_feature(lines, imd):
 
 
 def _parse_loc_str(loc_str):
-    '''Parse location string.
+    """Parse location string.
 
     .. warning: This converts coordinates to 0-based from 1-based
     GenBank coordinate system.
@@ -197,7 +203,7 @@ def _parse_loc_str(loc_str):
     ----------
     .. [1] http://www.insdc.org/files/feature_table.html#3.4
 
-    '''
+    """
     # define the tokens
     operators = ['join', 'complement', 'order']
     LPAREN = r'(?P<LPAREN>\()'
@@ -216,10 +222,12 @@ def _parse_loc_str(loc_str):
     # specified. Thus, if a pattern happens to be a substring of a
     # longer pattern, you need to make sure the longer pattern goes
     # first.
-    master_pat = re.compile('|'.join(
-        operators + [WS, LPAREN, RPAREN, COMMA,
-                     b, c, d, e_left, e_right, a,
-                     illegal]))
+    master_pat = re.compile(
+        '|'.join(
+            operators
+            + [WS, LPAREN, RPAREN, COMMA, b, c, d, e_left, e_right, a, illegal]
+        )
+    )
 
     scanner = master_pat.scanner(loc_str)
 
@@ -234,12 +242,12 @@ def _parse_loc_str(loc_str):
             metadata['strand'] = '-'
         elif p == 'A':
             start = int(v)
-            bounds.append((start-1, start))
+            bounds.append((start - 1, start))
             fuzzy.append((False, False))
         elif p == 'B':
             start, end = v.split('^')
             start = int(start)
-            bounds.append((start-1, start))
+            bounds.append((start - 1, start))
             fuzzy.append((False, False))
         elif p == 'C' or p == 'D':
             if p == 'C':
@@ -253,31 +261,30 @@ def _parse_loc_str(loc_str):
             if end.startswith('>'):
                 end = end[1:]
                 fuzzy_e = True
-            bounds.append((int(start)-1, int(end)))
+            bounds.append((int(start) - 1, int(end)))
             fuzzy.append((fuzzy_s, fuzzy_e))
         elif p == 'ILLEGAL':
-            raise FileFormatError(
-                'Could not parse location string: "%s"' % loc_str)
+            raise FileFormatError('Could not parse location string: "%s"' % loc_str)
 
     return bounds, fuzzy, metadata
 
 
 def _serialize_feature_table(intervals, indent=21):
-    '''
+    """
     Parameters
     ----------
     intervals : list of ``Interval``
-    '''
+    """
     for intvl in intervals:
         yield _serialize_single_feature(intvl, indent)
 
 
 def _serialize_single_feature(intvl, indent=21):
-    '''
+    """
     Parameters
     ----------
     intvl : Interval
-    '''
+    """
     # there are 5 spaces before Feature Key starts.
     padding = ' ' * 5
     qualifiers = []
@@ -309,7 +316,8 @@ def _serialize_single_feature(intvl, indent=21):
         header=padding + md['type'],
         loc=loc,
         indent=indent,
-        qualifiers='\n'.join(qualifiers))
+        qualifiers='\n'.join(qualifiers),
+    )
 
 
 def _serialize_location(intvl):
@@ -338,12 +346,12 @@ def _serialize_location(intvl):
 
 
 def _serialize_qualifier(key, value):
-    '''Serialize a Qualifier in a feature.
+    """Serialize a Qualifier in a feature.
 
     Parameters
     ----------
     value : int, str
-    '''
+    """
     # if value is empty
     if not value:
         return '/%s' % key
