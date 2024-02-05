@@ -15,7 +15,7 @@ from ._ordination_results import OrdinationResults
 from ._utils import corr, svd_rank, scale
 
 
-@experimental(as_of='0.4.0')
+@experimental(as_of="0.4.0")
 def rda(y, x, scale_Y=False, scaling=1):
     r"""Compute redundancy analysis, a type of canonical analysis.
 
@@ -95,10 +95,10 @@ def rda(y, x, scale_Y=False, scaling=1):
     n, p = y.shape
     n_, m = x.shape
     if n != n_:
-        raise ValueError('Both data matrices must have the same number of rows.')
+        raise ValueError("Both data matrices must have the same number of rows.")
     if n < m:
         # Mmm actually vegan is able to do this case, too
-        raise ValueError('Explanatory variables cannot have less rows than columns.')
+        raise ValueError("Explanatory variables cannot have less rows than columns.")
 
     sample_ids = y.index
     feature_ids = y.columns
@@ -175,12 +175,12 @@ def rda(y, x, scale_Y=False, scaling=1):
 
     # Compute scores
     if scaling not in {1, 2}:
-        raise NotImplementedError('Only scalings 1, 2 available for RDA.')
+        raise NotImplementedError("Only scalings 1, 2 available for RDA.")
     # According to the vegan-FAQ.pdf, the scaling factor for scores
     # is (notice that L&L 1998 says in p. 586 that such scaling
     # doesn't affect the interpretation of a biplot):
     eigvals = pd.Series(
-        eigenvalues, index=['RDA%d' % (i + 1) for i in range(len(eigenvalues))]
+        eigenvalues, index=["RDA%d" % (i + 1) for i in range(len(eigenvalues))]
     )
     const = np.sum(eigenvalues**2) ** 0.25
     if scaling == 1:
@@ -193,19 +193,19 @@ def rda(y, x, scale_Y=False, scaling=1):
     feature_scores = pd.DataFrame(
         feature_scores,
         index=feature_ids,
-        columns=['RDA%d' % (i + 1) for i in range(feature_scores.shape[1])],
+        columns=["RDA%d" % (i + 1) for i in range(feature_scores.shape[1])],
     )
     sample_scores = pd.DataFrame(
         sample_scores,
         index=sample_ids,
-        columns=['RDA%d' % (i + 1) for i in range(sample_scores.shape[1])],
+        columns=["RDA%d" % (i + 1) for i in range(sample_scores.shape[1])],
     )
     # TODO not yet used/displayed
     sample_constraints = np.hstack((Z, F_res)) / scaling_factor
     sample_constraints = pd.DataFrame(
         sample_constraints,
         index=sample_ids,
-        columns=['RDA%d' % (i + 1) for i in range(sample_constraints.shape[1])],
+        columns=["RDA%d" % (i + 1) for i in range(sample_constraints.shape[1])],
     )
     # Vegan seems to compute them as corr(X[:, :rank_X],
     # u) but I don't think that's a good idea. In fact, if
@@ -217,7 +217,7 @@ def rda(y, x, scale_Y=False, scaling=1):
     biplot_scores = pd.DataFrame(
         biplot_scores,
         index=x.columns,
-        columns=['RDA%d' % (i + 1) for i in range(biplot_scores.shape[1])],
+        columns=["RDA%d" % (i + 1) for i in range(biplot_scores.shape[1])],
     )
     # The "Correlations of environmental variables with sample
     # scores" from table 11.4 are quite similar to vegan's biplot
@@ -225,11 +225,11 @@ def rda(y, x, scale_Y=False, scaling=1):
     # corr(X, F))
     p_explained = pd.Series(
         eigenvalues / eigenvalues.sum(),
-        index=['RDA%d' % (i + 1) for i in range(len(eigenvalues))],
+        index=["RDA%d" % (i + 1) for i in range(len(eigenvalues))],
     )
     return OrdinationResults(
-        'RDA',
-        'Redundancy Analysis',
+        "RDA",
+        "Redundancy Analysis",
         eigvals=eigvals,
         proportion_explained=p_explained,
         features=feature_scores,

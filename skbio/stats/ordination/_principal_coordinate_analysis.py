@@ -20,8 +20,8 @@ from ._ordination_results import OrdinationResults
 from ._utils import center_distance_matrix, scale
 
 
-@experimental(as_of='0.4.0')
-def pcoa(distance_matrix, method='eigh', number_of_dimensions=0, inplace=False):
+@experimental(as_of="0.4.0")
+def pcoa(distance_matrix, method="eigh", number_of_dimensions=0, inplace=False):
     r"""Perform Principal Coordinate Analysis.
 
     Principal Coordinate Analysis (PCoA) is a method similar
@@ -100,12 +100,12 @@ def pcoa(distance_matrix, method='eigh', number_of_dimensions=0, inplace=False):
     # If no dimension specified, by default will compute all eigenvectors
     # and eigenvalues
     if number_of_dimensions == 0:
-        if method == 'fsvd' and matrix_data.shape[0] > 10:
+        if method == "fsvd" and matrix_data.shape[0] > 10:
             warn(
-                'FSVD: since no value for number_of_dimensions is specified, '
-                'PCoA for all dimensions will be computed, which may '
-                'result in long computation time if the original '
-                'distance matrix is large.',
+                "FSVD: since no value for number_of_dimensions is specified, "
+                "PCoA for all dimensions will be computed, which may "
+                "result in long computation time if the original "
+                "distance matrix is large.",
                 RuntimeWarning,
             )
 
@@ -113,28 +113,28 @@ def pcoa(distance_matrix, method='eigh', number_of_dimensions=0, inplace=False):
         number_of_dimensions = matrix_data.shape[0]
     elif number_of_dimensions < 0:
         raise ValueError(
-            'Invalid operation: cannot reduce distance matrix '
-            'to negative dimensions using PCoA. Did you intend '
+            "Invalid operation: cannot reduce distance matrix "
+            "to negative dimensions using PCoA. Did you intend "
             'to specify the default value "0", which sets '
-            'the number_of_dimensions equal to the '
-            'dimensionality of the given distance matrix?'
+            "the number_of_dimensions equal to the "
+            "dimensionality of the given distance matrix?"
         )
 
     # Perform eigendecomposition
-    if method == 'eigh':
+    if method == "eigh":
         # eigh does not natively support specifying number_of_dimensions, i.e.
         # there are no speed gains unlike in FSVD. Later, we slice off unwanted
         # dimensions to conform the result of eigh to the specified
         # number_of_dimensions.
 
         eigvals, eigvecs = eigh(matrix_data)
-        long_method_name = 'Principal Coordinate Analysis'
-    elif method == 'fsvd':
+        long_method_name = "Principal Coordinate Analysis"
+    elif method == "fsvd":
         eigvals, eigvecs = _fsvd(matrix_data, number_of_dimensions)
-        long_method_name = 'Approximate Principal Coordinate Analysis ' 'using FSVD'
+        long_method_name = "Approximate Principal Coordinate Analysis " "using FSVD"
     else:
         raise ValueError(
-            'PCoA eigendecomposition method {} not supported.'.format(method)
+            "PCoA eigendecomposition method {} not supported.".format(method)
         )
 
     # cogent makes eigenvalues positive by taking the
@@ -145,13 +145,13 @@ def pcoa(distance_matrix, method='eigh', number_of_dimensions=0, inplace=False):
     eigvals[negative_close_to_zero] = 0
     if np.any(eigvals < 0):
         warn(
-            'The result contains negative eigenvalues.'
-            ' Please compare their magnitude with the magnitude of some'
-            ' of the largest positive eigenvalues. If the negative ones'
+            "The result contains negative eigenvalues."
+            " Please compare their magnitude with the magnitude of some"
+            " of the largest positive eigenvalues. If the negative ones"
             " are smaller, it's probably safe to ignore them, but if they"
             " are large in magnitude, the results won't be useful. See the"
-            ' Notes section for more details. The smallest eigenvalue is'
-            ' {0} and the largest is {1}.'.format(eigvals.min(), eigvals.max()),
+            " Notes section for more details. The smallest eigenvalue is"
+            " {0} and the largest is {1}.".format(eigvals.min(), eigvals.max()),
             RuntimeWarning,
         )
 
@@ -170,7 +170,7 @@ def pcoa(distance_matrix, method='eigh', number_of_dimensions=0, inplace=False):
     eigvecs[:, num_positive:] = np.zeros(eigvecs[:, num_positive:].shape)
     eigvals[num_positive:] = np.zeros(eigvals[num_positive:].shape)
 
-    if method == 'fsvd':
+    if method == "fsvd":
         # Since the dimension parameter, hereafter referred to as 'd',
         # restricts the number of eigenvalues and eigenvectors that FSVD
         # computes, we need to use an alternative method to compute the sum
@@ -206,9 +206,9 @@ def pcoa(distance_matrix, method='eigh', number_of_dimensions=0, inplace=False):
     # needed to represent n points in a euclidean space.
     coordinates = eigvecs * np.sqrt(eigvals)
 
-    axis_labels = ['PC%d' % i for i in range(1, number_of_dimensions + 1)]
+    axis_labels = ["PC%d" % i for i in range(1, number_of_dimensions + 1)]
     return OrdinationResults(
-        short_method_name='PCoA',
+        short_method_name="PCoA",
         long_method_name=long_method_name,
         eigvals=pd.Series(eigvals, index=axis_labels),
         samples=pd.DataFrame(
@@ -264,21 +264,21 @@ def _fsvd(centered_distance_matrix, number_of_dimensions=10):
     # Note: a (conjugate) transpose is removed for performance, since we
     # only expect square matrices.
     if m != n:
-        raise ValueError('FSVD expects square distance matrix')
+        raise ValueError("FSVD expects square distance matrix")
 
     if number_of_dimensions > m or number_of_dimensions > n:
         raise ValueError(
-            'FSVD: number_of_dimensions cannot be larger than'
-            ' the dimensionality of the given distance matrix.'
+            "FSVD: number_of_dimensions cannot be larger than"
+            " the dimensionality of the given distance matrix."
         )
 
     if number_of_dimensions < 0:
         raise ValueError(
-            'Invalid operation: cannot reduce distance matrix '
-            'to negative dimensions using PCoA. Did you intend '
+            "Invalid operation: cannot reduce distance matrix "
+            "to negative dimensions using PCoA. Did you intend "
             'to specify the default value "0", which sets '
-            'the number_of_dimensions equal to the '
-            'dimensionality of the given distance matrix?'
+            "the number_of_dimensions equal to the "
+            "dimensionality of the given distance matrix?"
         )
 
     k = number_of_dimensions + 2
@@ -343,7 +343,7 @@ def _fsvd(centered_distance_matrix, number_of_dimensions=10):
     return eigenvalues, eigenvectors
 
 
-@experimental(as_of='0.5.3')
+@experimental(as_of="0.5.3")
 def pcoa_biplot(ordination, y):
     """Compute the projection of descriptors into a PCoA matrix
 
@@ -369,14 +369,14 @@ def pcoa_biplot(ordination, y):
 
     # acknowledge that most saved ordinations lack a name, however if they have
     # a name, it should be PCoA
-    if ordination.short_method_name != '' and ordination.short_method_name != 'PCoA':
+    if ordination.short_method_name != "" and ordination.short_method_name != "PCoA":
         raise ValueError(
-            'This biplot computation can only be performed in a ' 'PCoA matrix.'
+            "This biplot computation can only be performed in a " "PCoA matrix."
         )
 
     if set(y.index) != set(ordination.samples.index):
         raise ValueError(
-            'The eigenvectors and the descriptors must describe ' 'the same samples.'
+            "The eigenvectors and the descriptors must describe " "the same samples."
         )
 
     eigvals = ordination.eigvals.values

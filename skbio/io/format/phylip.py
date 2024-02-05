@@ -228,7 +228,7 @@ from skbio.io import create_format, PhylipFormatError
 from skbio.util._misc import chunk_str
 
 
-phylip = create_format('phylip')
+phylip = create_format("phylip")
 
 
 @phylip.sniffer()
@@ -251,7 +251,7 @@ def _phylip_sniffer(fh):
 @phylip.reader(TabularMSA)
 def _phylip_to_tabular_msa(fh, constructor=None):
     if constructor is None:
-        raise ValueError('Must provide `constructor`.')
+        raise ValueError("Must provide `constructor`.")
 
     seqs = []
     index = []
@@ -266,15 +266,15 @@ def _tabular_msa_to_phylip(obj, fh):
     sequence_count = obj.shape.sequence
     if sequence_count < 1:
         raise PhylipFormatError(
-            'TabularMSA can only be written in PHYLIP format if there is at '
-            'least one sequence in the alignment.'
+            "TabularMSA can only be written in PHYLIP format if there is at "
+            "least one sequence in the alignment."
         )
 
     sequence_length = obj.shape.position
     if sequence_length < 1:
         raise PhylipFormatError(
-            'TabularMSA can only be written in PHYLIP format if there is at '
-            'least one position in the alignment.'
+            "TabularMSA can only be written in PHYLIP format if there is at "
+            "least one position in the alignment."
         )
 
     chunk_size = 10
@@ -282,18 +282,18 @@ def _tabular_msa_to_phylip(obj, fh):
     for label in labels:
         if len(label) > chunk_size:
             raise PhylipFormatError(
-                '``TabularMSA`` can only be written in PHYLIP format if all '
-                'sequence index labels have %d or fewer characters. Found '
+                "``TabularMSA`` can only be written in PHYLIP format if all "
+                "sequence index labels have %d or fewer characters. Found "
                 "sequence with index label '%s' that exceeds this limit. Use "
-                '``TabularMSA.reassign_index`` to assign shorter index labels.'
+                "``TabularMSA.reassign_index`` to assign shorter index labels."
                 % (chunk_size, label)
             )
 
-    fh.write('{0:d} {1:d}\n'.format(sequence_count, sequence_length))
+    fh.write("{0:d} {1:d}\n".format(sequence_count, sequence_length))
 
-    fmt = '{0:%d}{1}\n' % chunk_size
+    fmt = "{0:%d}{1}\n" % chunk_size
     for label, seq in zip(labels, obj):
-        chunked_seq = chunk_str(str(seq), chunk_size, ' ')
+        chunked_seq = chunk_str(str(seq), chunk_size, " ")
         fh.write(fmt.format(label, chunked_seq))
 
 
@@ -303,12 +303,12 @@ def _validate_header(header):
         n_seqs, seq_len = [int(x) for x in header_vals]
         if n_seqs < 1 or seq_len < 1:
             raise PhylipFormatError(
-                'The number of sequences and the length must be positive.'
+                "The number of sequences and the length must be positive."
             )
     except ValueError:
         raise PhylipFormatError(
-            'Found non-header line when attempting to read the 1st record '
-            '(header line should have two space-separated integers): '
+            "Found non-header line when attempting to read the 1st record "
+            "(header line should have two space-separated integers): "
             '"%s"' % header
         )
     return n_seqs, seq_len
@@ -316,12 +316,12 @@ def _validate_header(header):
 
 def _validate_line(line, seq_len):
     if not line:
-        raise PhylipFormatError('Empty lines are not allowed.')
+        raise PhylipFormatError("Empty lines are not allowed.")
     ID = line[:10].strip()
-    seq = line[10:].replace(' ', '')
+    seq = line[10:].replace(" ", "")
     if len(seq) != seq_len:
         raise PhylipFormatError(
-            'The length of sequence %s is not %s as specified in the header.'
+            "The length of sequence %s is not %s as specified in the header."
             % (ID, seq_len)
         )
     return (seq, ID)
@@ -342,7 +342,7 @@ def _parse_phylip_raw(fh):
     try:
         header = next(_line_generator(fh))
     except StopIteration:
-        raise PhylipFormatError('This file is empty.')
+        raise PhylipFormatError("This file is empty.")
     n_seqs, seq_len = _validate_header(header)
 
     # All following lines should be ID+sequence. No blank lines are allowed.
@@ -351,8 +351,8 @@ def _parse_phylip_raw(fh):
         data.append(_validate_line(line, seq_len))
     if len(data) != n_seqs:
         raise PhylipFormatError(
-            'The number of sequences is not %s ' % n_seqs
-            + 'as specified in the header.'
+            "The number of sequences is not %s " % n_seqs
+            + "as specified in the header."
         )
     return data
 
@@ -360,4 +360,4 @@ def _parse_phylip_raw(fh):
 def _line_generator(fh):
     """Just remove linebreak characters and yield lines."""
     for line in fh:
-        yield line.rstrip('\n')
+        yield line.rstrip("\n")

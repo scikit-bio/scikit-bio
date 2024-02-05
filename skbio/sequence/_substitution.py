@@ -13,7 +13,7 @@ from skbio.stats.distance import DissimilarityMatrix
 from skbio.sequence._alphabet import _alphabet_to_hashes
 
 
-@experimental(as_of='0.5.10')
+@experimental(as_of="0.5.10")
 class SubstitutionMatrix(DissimilarityMatrix):
     """Scoring matrix between characters in biological sequences.
 
@@ -83,7 +83,7 @@ class SubstitutionMatrix(DissimilarityMatrix):
     """
 
     @property
-    @experimental(as_of='0.5.10')
+    @experimental(as_of="0.5.10")
     def alphabet(self):
         """Alphabet of the substitution matrix.
 
@@ -102,7 +102,7 @@ class SubstitutionMatrix(DissimilarityMatrix):
         return self._ids
 
     @property
-    @experimental(as_of='0.5.10')
+    @experimental(as_of="0.5.10")
     def scores(self):
         """Matrix of substitution scores.
 
@@ -122,7 +122,7 @@ class SubstitutionMatrix(DissimilarityMatrix):
         return self._data
 
     @property
-    @experimental(as_of='0.5.10')
+    @experimental(as_of="0.5.10")
     def is_ascii(self):
         """Whether alphabet consists of single ASCII characters.
 
@@ -137,7 +137,7 @@ class SubstitutionMatrix(DissimilarityMatrix):
         """
         return self._is_ascii
 
-    @experimental(as_of='0.5.10')
+    @experimental(as_of="0.5.10")
     def __init__(self, alphabet, scores, **kwargs):
         """Initialize a substitution matrix object."""
         super().__init__(scores, alphabet, **kwargs)
@@ -159,7 +159,7 @@ class SubstitutionMatrix(DissimilarityMatrix):
             self._is_ascii = True
             self._char_hash = hash_
 
-    @experimental(as_of='0.5.10')
+    @experimental(as_of="0.5.10")
     def to_dict(self):
         """Create a 2D dictionary from the substitution matrix.
 
@@ -174,7 +174,7 @@ class SubstitutionMatrix(DissimilarityMatrix):
         }
 
     @classonlymethod
-    @experimental(as_of='0.5.10')
+    @experimental(as_of="0.5.10")
     def from_dict(cls, dictionary):
         """Create a substitution matrix from a 2D dictionary.
 
@@ -218,8 +218,8 @@ class SubstitutionMatrix(DissimilarityMatrix):
         for i, row in enumerate(rows):
             if set(row) != alphabet_set:
                 raise ValueError(
-                    'The outer and inner layers of the dictionary'
-                    ' must have the same set of keys.'
+                    "The outer and inner layers of the dictionary"
+                    " must have the same set of keys."
                 )
             for key, value in row.items():
                 scores[i][idmap[key]] = float(value)
@@ -227,7 +227,7 @@ class SubstitutionMatrix(DissimilarityMatrix):
         return cls(alphabet, scores)
 
     @classonlymethod
-    @experimental(as_of='0.5.10')
+    @experimental(as_of="0.5.10")
     def identity(cls, alphabet, match, mismatch):
         """Create an identity substitution matrix.
 
@@ -266,7 +266,7 @@ class SubstitutionMatrix(DissimilarityMatrix):
         return cls(alphabet, scores)
 
     @classonlymethod
-    @experimental(as_of='0.5.10')
+    @experimental(as_of="0.5.10")
     def by_name(cls, name):
         """Load a pre-defined substitution matrix by its name.
 
@@ -336,7 +336,7 @@ class SubstitutionMatrix(DissimilarityMatrix):
             raise ValueError(f'Substitution matrix "{name}" does not exist.')
 
     @classonlymethod
-    @experimental(as_of='0.5.10')
+    @experimental(as_of="0.5.10")
     def get_names(cls):
         """List names of pre-defined substitution matrices.
 
@@ -376,8 +376,8 @@ def _vector_to_matrix(vec):
 # https://ftp.ncbi.nlm.nih.gov/blast/matrices/
 _named_substitution_matrices = {
     # NUC.4.4, a.k.a. DNAfull
-    'NUC.4.4': SubstitutionMatrix(
-        'ATGCSWRYKMBVHDN',
+    "NUC.4.4": SubstitutionMatrix(
+        "ATGCSWRYKMBVHDN",
         _vector_to_matrix(
             np.array(
                 [
@@ -507,8 +507,8 @@ _named_substitution_matrices = {
         validate=False,
     ),
     # Point Accepted Mutation (PAM)
-    'PAM30': SubstitutionMatrix(
-        'ARNDCQEGHILKMFPSTWYVBZX*',
+    "PAM30": SubstitutionMatrix(
+        "ARNDCQEGHILKMFPSTWYVBZX*",
         _vector_to_matrix(
             np.array(
                 [
@@ -817,8 +817,8 @@ _named_substitution_matrices = {
         ),
         validate=False,
     ),
-    'PAM70': SubstitutionMatrix(
-        'ARNDCQEGHILKMFPSTWYVBZX*',
+    "PAM70": SubstitutionMatrix(
+        "ARNDCQEGHILKMFPSTWYVBZX*",
         _vector_to_matrix(
             np.array(
                 [
@@ -1127,8 +1127,8 @@ _named_substitution_matrices = {
         ),
         validate=False,
     ),
-    'PAM250': SubstitutionMatrix(
-        'ARNDCQEGHILKMFPSTWYVBZX*',
+    "PAM250": SubstitutionMatrix(
+        "ARNDCQEGHILKMFPSTWYVBZX*",
         _vector_to_matrix(
             np.array(
                 [
@@ -1438,8 +1438,8 @@ _named_substitution_matrices = {
         validate=False,
     ),
     # BLOcks SUbstitution Matrix (BLOSUM)
-    'BLOSUM45': SubstitutionMatrix(
-        'ARNDCQEGHILKMFPSTWYVBZX*',
+    "BLOSUM45": SubstitutionMatrix(
+        "ARNDCQEGHILKMFPSTWYVBZX*",
         _vector_to_matrix(
             np.array(
                 [
@@ -1748,8 +1748,8 @@ _named_substitution_matrices = {
         ),
         validate=False,
     ),
-    'BLOSUM50': SubstitutionMatrix(
-        'ARNDCQEGHILKMFPSTWYVBZX*',
+    "BLOSUM50": SubstitutionMatrix(
+        "ARNDCQEGHILKMFPSTWYVBZX*",
         _vector_to_matrix(
             np.array(
                 [
@@ -2058,8 +2058,8 @@ _named_substitution_matrices = {
         ),
         validate=False,
     ),
-    'BLOSUM62': SubstitutionMatrix(
-        'ARNDCQEGHILKMFPSTWYVBZX*',
+    "BLOSUM62": SubstitutionMatrix(
+        "ARNDCQEGHILKMFPSTWYVBZX*",
         _vector_to_matrix(
             np.array(
                 [
@@ -2368,8 +2368,8 @@ _named_substitution_matrices = {
         ),
         validate=False,
     ),
-    'BLOSUM80': SubstitutionMatrix(
-        'ARNDCQEGHILKMFPSTWYVBZX*',
+    "BLOSUM80": SubstitutionMatrix(
+        "ARNDCQEGHILKMFPSTWYVBZX*",
         _vector_to_matrix(
             np.array(
                 [
@@ -2678,8 +2678,8 @@ _named_substitution_matrices = {
         ),
         validate=False,
     ),
-    'BLOSUM90': SubstitutionMatrix(
-        'ARNDCQEGHILKMFPSTWYVBZX*',
+    "BLOSUM90": SubstitutionMatrix(
+        "ARNDCQEGHILKMFPSTWYVBZX*",
         _vector_to_matrix(
             np.array(
                 [

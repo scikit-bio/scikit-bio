@@ -13,13 +13,13 @@ from skbio.io.format._base import _line_generator
 from skbio.io import FileFormatError
 
 
-def _vocabulary_change(format='insdc', read_in=True):
+def _vocabulary_change(format="insdc", read_in=True):
     """Return a dict that converts between memory and output vocabulary."""
     convert = {
-        'phase': {'insdc': 'codon_start'},
-        'source': {'insdc': 'inference'},
-        'db_xref': {'gff3': 'Dbxref'},
-        'note': {'gff3': 'Note'},
+        "phase": {"insdc": "codon_start"},
+        "source": {"insdc": "inference"},
+        "db_xref": {"gff3": "Dbxref"},
+        "note": {"gff3": "Note"},
     }
     if read_in:
         return {v[format]: k for k, v in convert.items() if format in v}
@@ -27,16 +27,16 @@ def _vocabulary_change(format='insdc', read_in=True):
         return {k: v[format] for k, v in convert.items() if format in v}
 
 
-def _vocabulary_skip(format='insdc'):
+def _vocabulary_skip(format="insdc"):
     """Return a list of vocabularies that should be skipped when auto
     output to disk for the specified format.
 
     """
     skip = {
-        'type': ('insdc', 'gff3'),
-        'ID': ('insdc'),
-        'translation': ('gff3'),
-        'strand': ('insdc'),
+        "type": ("insdc", "gff3"),
+        "ID": ("insdc"),
+        "translation": ("gff3"),
+        "strand": ("insdc"),
     }
     return [k for k, v in skip.items() if format in v]
 
@@ -76,7 +76,7 @@ def _yield_section(is_another_section, **kwargs):
 
 
 def _parse_section_default(
-    lines, label_delimiter=None, join_delimiter=' ', return_label=False
+    lines, label_delimiter=None, join_delimiter=" ", return_label=False
 ):
     """Parse sections in default way.
 
@@ -94,7 +94,7 @@ def _parse_section_default(
         label, section = items
     else:
         label = items[0]
-        section = ''
+        section = ""
     data.append(section)
 
     data.extend(lines[1:])
@@ -106,18 +106,18 @@ def _parse_section_default(
 
 
 def _serialize_section_default(header, obj, indent=12):
-    return '{header:<{indent}}{obj}\n'.format(header=header, obj=obj, indent=indent)
+    return "{header:<{indent}}{obj}\n".format(header=header, obj=obj, indent=indent)
 
 
 def _parse_feature_table(lines, length):
     """parse DDBJ/ENA/GenBank Feature Table."""
     imd = IntervalMetadata(length)
     # skip the 1st FEATURES line
-    if lines[0].startswith('FEATURES'):
+    if lines[0].startswith("FEATURES"):
         lines = lines[1:]
     # magic number 21: the lines following header of each feature
     # are indented with 21 spaces.
-    feature_indent = ' ' * 21
+    feature_indent = " " * 21
     section_splitter = _yield_section(
         lambda x: not x.startswith(feature_indent), skip_blanks=True, strip=False
     )
@@ -136,34 +136,34 @@ def _parse_single_feature(lines, imd):
     ----------
     imd : IntervalMetadata
     """
-    voca_change = _vocabulary_change('insdc')
+    voca_change = _vocabulary_change("insdc")
 
     # each component of a feature starts with '/', except the 1st
     # component of location.
-    section_splitter = _yield_section(lambda x: x.startswith('/'), strip=True)
+    section_splitter = _yield_section(lambda x: x.startswith("/"), strip=True)
     section_iter = section_splitter(lines)
 
     # 1st section is location
     section = next(section_iter)
     feature_type, feature_loc = _parse_section_default(
-        section, join_delimiter='', return_label=True
+        section, join_delimiter="", return_label=True
     )
 
-    metadata = {'type': feature_type, '__location': feature_loc}
+    metadata = {"type": feature_type, "__location": feature_loc}
 
     intvl = imd.add(*_parse_loc_str(feature_loc))
 
     for section in section_iter:
         # following sections are Qualifiers
         k, v = _parse_section_default(
-            section, label_delimiter='=', join_delimiter=' ', return_label=True
+            section, label_delimiter="=", join_delimiter=" ", return_label=True
         )
         # 1st char is '/'
         k = k[1:]
         if k in voca_change:
             k = voca_change[k]
 
-        if k == 'phase':
+        if k == "phase":
             v = int(v) - 1
 
         # some Qualifiers can appear multiple times
@@ -205,25 +205,25 @@ def _parse_loc_str(loc_str):
 
     """
     # define the tokens
-    operators = ['join', 'complement', 'order']
-    LPAREN = r'(?P<LPAREN>\()'
-    RPAREN = r'(?P<RPAREN>\))'
-    COMMA = r'(?P<COMMA>,)'
-    WS = r'(?P<WS>\s+)'
-    a = r'(?P<A>\d+)'
-    b = r'(?P<B>\d+\^\d+)'
-    c = r'(?P<C>\d+\.\d+)'
-    d = r'(?P<D><?\d+\.\.>?\d+)'
-    e_left = r'(?P<EL><?[a-zA-Z_0-9\.]+:\d+\.\.>?\d+)'
-    e_right = r'(?P<ER><?\d+\.\.>?[a-zA-Z_0-9\.]+:\d+)'
-    illegal = r'(?P<ILLEGAL>.+)'
+    operators = ["join", "complement", "order"]
+    LPAREN = r"(?P<LPAREN>\()"
+    RPAREN = r"(?P<RPAREN>\))"
+    COMMA = r"(?P<COMMA>,)"
+    WS = r"(?P<WS>\s+)"
+    a = r"(?P<A>\d+)"
+    b = r"(?P<B>\d+\^\d+)"
+    c = r"(?P<C>\d+\.\d+)"
+    d = r"(?P<D><?\d+\.\.>?\d+)"
+    e_left = r"(?P<EL><?[a-zA-Z_0-9\.]+:\d+\.\.>?\d+)"
+    e_right = r"(?P<ER><?\d+\.\.>?[a-zA-Z_0-9\.]+:\d+)"
+    illegal = r"(?P<ILLEGAL>.+)"
     # The order of tokens in the master regular expression also
     # matters. When matching, re tries to match pattens in the order
     # specified. Thus, if a pattern happens to be a substring of a
     # longer pattern, you need to make sure the longer pattern goes
     # first.
     master_pat = re.compile(
-        '|'.join(
+        "|".join(
             operators
             + [WS, LPAREN, RPAREN, COMMA, b, c, d, e_left, e_right, a, illegal]
         )
@@ -234,36 +234,36 @@ def _parse_loc_str(loc_str):
     bounds = []
     fuzzy = []
 
-    metadata = {'strand': '+'}
+    metadata = {"strand": "+"}
 
     for m in iter(scanner.match, None):
         p, v = m.lastgroup, m.group()
-        if v == 'complement':
-            metadata['strand'] = '-'
-        elif p == 'A':
+        if v == "complement":
+            metadata["strand"] = "-"
+        elif p == "A":
             start = int(v)
             bounds.append((start - 1, start))
             fuzzy.append((False, False))
-        elif p == 'B':
-            start, end = v.split('^')
+        elif p == "B":
+            start, end = v.split("^")
             start = int(start)
             bounds.append((start - 1, start))
             fuzzy.append((False, False))
-        elif p == 'C' or p == 'D':
-            if p == 'C':
-                start, end = v.split('.')
+        elif p == "C" or p == "D":
+            if p == "C":
+                start, end = v.split(".")
             else:
-                start, end = v.split('..')
+                start, end = v.split("..")
             fuzzy_s = fuzzy_e = False
-            if start.startswith('<'):
+            if start.startswith("<"):
                 start = start[1:]
                 fuzzy_s = True
-            if end.startswith('>'):
+            if end.startswith(">"):
                 end = end[1:]
                 fuzzy_e = True
             bounds.append((int(start) - 1, int(end)))
             fuzzy.append((fuzzy_s, fuzzy_e))
-        elif p == 'ILLEGAL':
+        elif p == "ILLEGAL":
             raise FileFormatError('Could not parse location string: "%s"' % loc_str)
 
     return bounds, fuzzy, metadata
@@ -286,17 +286,17 @@ def _serialize_single_feature(intvl, indent=21):
     intvl : Interval
     """
     # there are 5 spaces before Feature Key starts.
-    padding = ' ' * 5
+    padding = " " * 5
     qualifiers = []
     md = intvl.metadata
-    voca_skip = _vocabulary_skip('insdc')
-    voca_change = _vocabulary_change('insdc', read_in=False)
+    voca_skip = _vocabulary_skip("insdc")
+    voca_change = _vocabulary_change("insdc", read_in=False)
     # sort it so the output order is deterministic
     for k in sorted(md):
-        if k.startswith('__') or k in voca_skip:
+        if k.startswith("__") or k in voca_skip:
             continue
         v = md[k]
-        if k == 'phase':
+        if k == "phase":
             v = str(v + 1)
         if k in voca_change:
             k = voca_change[k]
@@ -306,17 +306,17 @@ def _serialize_single_feature(intvl, indent=21):
         else:
             qualifiers.append(_serialize_qualifier(k, v))
 
-    if '__location' in md:
-        loc = md['__location']
+    if "__location" in md:
+        loc = md["__location"]
     else:
         loc = _serialize_location(intvl)
     # the qualifiers start at column 22
-    qualifiers = [' ' * indent + i for i in qualifiers]
-    return '{header:<{indent}}{loc}\n{qualifiers}\n'.format(
-        header=padding + md['type'],
+    qualifiers = [" " * indent + i for i in qualifiers]
+    return "{header:<{indent}}{loc}\n{qualifiers}\n".format(
+        header=padding + md["type"],
         loc=loc,
         indent=indent,
-        qualifiers='\n'.join(qualifiers),
+        qualifiers="\n".join(qualifiers),
     )
 
 
@@ -328,20 +328,20 @@ def _serialize_location(intvl):
         if start == end:
             s = str(start)
         elif fuzzy[0] and fuzzy[1]:
-            s = '<%d..>%d' % (start, end)
+            s = "<%d..>%d" % (start, end)
         elif fuzzy[0] and not fuzzy[1]:
-            s = '<%d..%d' % (start, end)
+            s = "<%d..%d" % (start, end)
         elif not fuzzy[0] and fuzzy[1]:
-            s = '%d..>%d' % (start, end)
+            s = "%d..>%d" % (start, end)
         else:
-            s = '%d..%d' % (start, end)
+            s = "%d..%d" % (start, end)
         loc.append(s)
     if len(loc) > 1:
-        loc_str = 'join({})'.format(','.join(loc))
+        loc_str = "join({})".format(",".join(loc))
     else:
         loc_str = loc[0]
-    if intvl.metadata.get('strand') == '-':
-        loc_str = 'complement({})'.format(loc_str)
+    if intvl.metadata.get("strand") == "-":
+        loc_str = "complement({})".format(loc_str)
     return loc_str
 
 
@@ -354,6 +354,6 @@ def _serialize_qualifier(key, value):
     """
     # if value is empty
     if not value:
-        return '/%s' % key
+        return "/%s" % key
 
-    return '/{k}={v}'.format(k=key, v=value)
+    return "/{k}={v}".format(k=key, v=value)

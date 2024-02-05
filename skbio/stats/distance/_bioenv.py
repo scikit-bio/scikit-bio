@@ -17,7 +17,7 @@ from skbio.stats.distance import DistanceMatrix
 from skbio.util._decorator import experimental
 
 
-@experimental(as_of='0.4.0')
+@experimental(as_of="0.4.0")
 def bioenv(distance_matrix, data_frame, columns=None):
     """Find subset of variables maximally correlated with distances.
 
@@ -148,18 +148,18 @@ def bioenv(distance_matrix, data_frame, columns=None):
 
     """
     if not isinstance(distance_matrix, DistanceMatrix):
-        raise TypeError('Must provide a DistanceMatrix as input.')
+        raise TypeError("Must provide a DistanceMatrix as input.")
     if not isinstance(data_frame, pd.DataFrame):
-        raise TypeError('Must provide a pandas.DataFrame as input.')
+        raise TypeError("Must provide a pandas.DataFrame as input.")
 
     if columns is None:
         columns = data_frame.columns.values.tolist()
 
     if len(set(columns)) != len(columns):
-        raise ValueError('Duplicate column names are not supported.')
+        raise ValueError("Duplicate column names are not supported.")
 
     if len(columns) < 1:
-        raise ValueError('Must provide at least one column.')
+        raise ValueError("Must provide at least one column.")
 
     for column in columns:
         if column not in data_frame:
@@ -171,15 +171,15 @@ def bioenv(distance_matrix, data_frame, columns=None):
 
     if vars_df.isnull().any().any():
         raise ValueError(
-            'One or more IDs in the distance matrix are not '
-            'in the data frame, or there is missing data in the '
-            'data frame.'
+            "One or more IDs in the distance matrix are not "
+            "in the data frame, or there is missing data in the "
+            "data frame."
         )
 
     try:
         vars_df = vars_df.astype(float)
     except ValueError:
-        raise TypeError('All specified columns in the data frame must be ' 'numeric.')
+        raise TypeError("All specified columns in the data frame must be " "numeric.")
 
     # Scale the vars and extract the underlying numpy array from the data
     # frame. We mainly do this for performance as we'll be taking subsets of
@@ -194,14 +194,14 @@ def bioenv(distance_matrix, data_frame, columns=None):
     # For each subset size, store the best combination of variables:
     #     (string identifying best vars, subset size, rho)
     max_rhos = np.empty(
-        num_vars, dtype=[('vars', object), ('size', int), ('correlation', float)]
+        num_vars, dtype=[("vars", object), ("size", int), ("correlation", float)]
     )
     for subset_size in range(1, num_vars + 1):
         max_rho = None
         for subset_idxs in combinations(var_idxs, subset_size):
             # Compute Euclidean distances using the current subset of
             # variables. pdist returns the distances in condensed form.
-            vars_dm_flat = pdist(vars_array[:, subset_idxs], metric='euclidean')
+            vars_dm_flat = pdist(vars_array[:, subset_idxs], metric="euclidean")
             rho = spearmanr(dm_flat, vars_dm_flat)[0]
 
             # If there are ties for the best rho at a given subset size, choose
@@ -209,10 +209,10 @@ def bioenv(distance_matrix, data_frame, columns=None):
             if max_rho is None or rho > max_rho[0]:
                 max_rho = (rho, subset_idxs)
 
-        vars_label = ', '.join([columns[i] for i in max_rho[1]])
+        vars_label = ", ".join([columns[i] for i in max_rho[1]])
         max_rhos[subset_size - 1] = (vars_label, subset_size, max_rho[0])
 
-    return pd.DataFrame.from_records(max_rhos, index='vars')
+    return pd.DataFrame.from_records(max_rhos, index="vars")
 
 
 def _scale(df):
@@ -229,7 +229,7 @@ def _scale(df):
 
     if df.isnull().any().any():
         raise ValueError(
-            'Column(s) in the data frame could not be scaled, '
-            'likely because the column(s) had no variance.'
+            "Column(s) in the data frame could not be scaled, "
+            "likely because the column(s) had no variance."
         )
     return df

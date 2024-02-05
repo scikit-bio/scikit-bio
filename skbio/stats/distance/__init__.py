@@ -203,16 +203,16 @@ from ._mantel import mantel, pwmantel
 from ._permdisp import permdisp
 
 __all__ = [
-    'DissimilarityMatrixError',
-    'DistanceMatrixError',
-    'MissingIDError',
-    'DissimilarityMatrix',
-    'DistanceMatrix',
-    'randdm',
-    'anosim',
-    'permanova',
-    'bioenv',
-    'mantel',
-    'pwmantel',
-    'permdisp',
+    "DissimilarityMatrixError",
+    "DistanceMatrixError",
+    "MissingIDError",
+    "DissimilarityMatrix",
+    "DistanceMatrix",
+    "randdm",
+    "anosim",
+    "permanova",
+    "bioenv",
+    "mantel",
+    "pwmantel",
+    "permdisp",
 ]

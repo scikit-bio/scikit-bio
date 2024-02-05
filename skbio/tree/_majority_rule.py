@@ -45,7 +45,7 @@ def _walk_clades(trees, weights):
         return [n.name] if n.is_tip() else []
 
     for tree, weight in zip(trees, weights):
-        tree.cache_attr(tipnames_f, 'tip_names', frozenset)
+        tree.cache_attr(tipnames_f, "tip_names", frozenset)
 
         for node in tree.postorder():
             tip_names = node.tip_names
@@ -178,9 +178,9 @@ def _build_trees(clade_counts, edge_lengths, support_attr, tree_node_class):
     return list(nodes.values())
 
 
-@experimental(as_of='0.4.0')
+@experimental(as_of="0.4.0")
 def majority_rule(
-    trees, weights=None, cutoff=0.5, support_attr='support', tree_node_class=TreeNode
+    trees, weights=None, cutoff=0.5, support_attr="support", tree_node_class=TreeNode
 ):
     r"""Determines consensus trees from a list of rooted trees
 
@@ -279,7 +279,7 @@ def majority_rule(
     else:
         weights = np.asarray(weights)
         if len(weights) != len(trees):
-            raise ValueError('Number of weights and trees differ.')
+            raise ValueError("Number of weights and trees differ.")
 
     cutoff_threshold = cutoff * weights.sum()
 

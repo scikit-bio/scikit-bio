@@ -193,12 +193,12 @@ from ._exception import (
 )
 
 __all__ = [
-    'TreeNode',
-    'nj',
-    'majority_rule',
-    'TreeError',
-    'NoLengthError',
-    'DuplicateNodeError',
-    'MissingNodeError',
-    'NoParentError',
+    "TreeNode",
+    "nj",
+    "majority_rule",
+    "TreeError",
+    "NoLengthError",
+    "DuplicateNodeError",
+    "MissingNodeError",
+    "NoParentError",
 ]

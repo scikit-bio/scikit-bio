@@ -26,14 +26,14 @@ from skbio.stats.ordination import pcoa, OrdinationResults
 from skbio.util._decorator import experimental
 
 
-@experimental(as_of='0.5.2')
+@experimental(as_of="0.5.2")
 def permdisp(
     distance_matrix,
     grouping,
     column=None,
-    test='median',
+    test="median",
     permutations=999,
-    method='eigh',
+    method="eigh",
     number_of_dimensions=10,
 ):
     """Test for Homogeneity of Multivariate Groups Disperisons using Marti
@@ -245,8 +245,8 @@ def permdisp(
     determine whether clustering within groups is significant.
 
     """
-    if test not in ['centroid', 'median']:
-        raise ValueError('Test must be centroid or median')
+    if test not in ["centroid", "median"]:
+        raise ValueError("Test must be centroid or median")
 
     if isinstance(distance_matrix, OrdinationResults):
         ordination = distance_matrix
@@ -254,12 +254,12 @@ def permdisp(
         sample_size = len(ids)
         distance_matrix = None  # not used anymore, avoid using by mistake
     elif isinstance(distance_matrix, DistanceMatrix):
-        if method == 'eigh':
+        if method == "eigh":
             # eigh does not natively support specifying number_of_dimensions
             # and pcoa expects it to be 0
             number_of_dimensions = 0
-        elif method != 'fsvd':
-            raise ValueError('Method must be eigh or fsvd')
+        elif method != "fsvd":
+            raise ValueError("Method must be eigh or fsvd")
 
         ids = distance_matrix.ids
         sample_size = distance_matrix.shape[0]
@@ -268,7 +268,7 @@ def permdisp(
             distance_matrix, method=method, number_of_dimensions=number_of_dimensions
         )
     else:
-        raise TypeError('Input must be a DistanceMatrix or OrdinationResults.')
+        raise TypeError("Input must be a DistanceMatrix or OrdinationResults.")
 
     samples = ordination.samples
 
@@ -279,25 +279,25 @@ def permdisp(
     stat, p_value = _run_monte_carlo_stats(test_stat_function, grouping, permutations)
 
     return _build_results(
-        'PERMDISP', 'F-value', sample_size, num_groups, stat, p_value, permutations
+        "PERMDISP", "F-value", sample_size, num_groups, stat, p_value, permutations
     )
 
 
 def _compute_groups(samples, test_type, grouping):
     groups = []
 
-    samples['grouping'] = grouping
-    if test_type == 'centroid':
-        centroids = samples.groupby('grouping').aggregate('mean')
-    elif test_type == 'median':
-        centroids = samples.groupby('grouping').apply(_config_med)
+    samples["grouping"] = grouping
+    if test_type == "centroid":
+        centroids = samples.groupby("grouping").aggregate("mean")
+    elif test_type == "median":
+        centroids = samples.groupby("grouping").apply(_config_med)
 
-    for label, df in samples.groupby('grouping'):
+    for label, df in samples.groupby("grouping"):
         groups.append(
             cdist(
-                df.values[:, :-1].astype('float64'),
+                df.values[:, :-1].astype("float64"),
                 [centroids.loc[label].values],
-                metric='euclidean',
+                metric="euclidean",
             )
         )
 

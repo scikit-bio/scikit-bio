@@ -20,7 +20,7 @@ from skbio.util._decorator import experimental
 from ._cutils import permanova_f_stat_sW_cy
 
 
-@experimental(as_of='0.4.0')
+@experimental(as_of="0.4.0")
 def permanova(distance_matrix, grouping, column=None, permutations=999):
     """Test for significant differences between groups using PERMANOVA.
 
@@ -96,7 +96,7 @@ def permanova(distance_matrix, grouping, column=None, permutations=999):
 
     """
     if not isinstance(distance_matrix, DistanceMatrix):
-        raise TypeError('Input must be a DistanceMatrix.')
+        raise TypeError("Input must be a DistanceMatrix.")
     sample_size = distance_matrix.shape[0]
 
     num_groups, grouping = _preprocess_input_sng(
@@ -116,7 +116,7 @@ def permanova(distance_matrix, grouping, column=None, permutations=999):
     stat, p_value = _run_monte_carlo_stats(test_stat_function, grouping, permutations)
 
     return _build_results(
-        'PERMANOVA', 'pseudo-F', sample_size, num_groups, stat, p_value, permutations
+        "PERMANOVA", "pseudo-F", sample_size, num_groups, stat, p_value, permutations
     )
 
 

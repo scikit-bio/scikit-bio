@@ -223,7 +223,7 @@ References
 from skbio.io import create_format, NewickFormatError
 from skbio.tree import TreeNode
 
-newick = create_format('newick')
+newick = create_format("newick")
 
 
 @newick.sniffer()
@@ -237,24 +237,24 @@ def _newick_sniffer(fh):
     #       * The parens are unbalanced when ; is found.
     #   If 100 tokens (or less if EOF occurs earlier) then it is probably
     #   newick, or at least we can't prove it isn't.
-    operators = set(',;:()')
+    operators = set(",;:()")
     empty = True
-    last_token = ','
+    last_token = ","
     indent = 0
     try:
         # 100 tokens ought to be enough for anybody.
         for token, _ in zip(_tokenize_newick(fh), range(100)):
             if token not in operators:
                 pass
-            elif token == ',' and last_token != ':' and indent > 0:
+            elif token == "," and last_token != ":" and indent > 0:
                 pass
-            elif token == ':' and last_token != ':':
+            elif token == ":" and last_token != ":":
                 pass
-            elif token == ';' and last_token != ':' and indent == 0:
+            elif token == ";" and last_token != ":" and indent == 0:
                 pass
-            elif token == ')' and last_token != ':':
+            elif token == ")" and last_token != ":":
                 indent -= 1
-            elif token == '(' and (last_token == '(' or last_token == ','):
+            elif token == "(" and (last_token == "(" or last_token == ","):
                 indent += 1
             else:
                 raise NewickFormatError()
@@ -271,37 +271,37 @@ def _newick_sniffer(fh):
 def _newick_to_tree_node(fh, convert_underscores=True):
     tree_stack = []
     current_depth = 0
-    last_token = ''
+    last_token = ""
     next_is_distance = False
     root = TreeNode()
     tree_stack.append((root, current_depth))
     for token in _tokenize_newick(fh, convert_underscores=convert_underscores):
         # Check for a label
-        if last_token not in '(,):':
+        if last_token not in "(,):":
             if not next_is_distance:
                 tree_stack[-1][0].name = last_token if last_token else None
             else:
                 next_is_distance = False
         # Check for a distance
-        if token == ':':
+        if token == ":":
             next_is_distance = True
-        elif last_token == ':':
+        elif last_token == ":":
             try:
                 tree_stack[-1][0].length = float(token)
             except ValueError:
                 raise NewickFormatError(
-                    'Could not read length as numeric type' ': %s.' % token
+                    "Could not read length as numeric type" ": %s." % token
                 )
 
-        elif token == '(':
+        elif token == "(":
             current_depth += 1
             tree_stack.append((TreeNode(), current_depth))
-        elif token == ',':
+        elif token == ",":
             tree_stack.append((TreeNode(), current_depth))
-        elif token == ')':
+        elif token == ")":
             if len(tree_stack) < 2:
                 raise NewickFormatError(
-                    'Could not parse file as newick.' ' Parenthesis are unbalanced.'
+                    "Could not parse file as newick." " Parenthesis are unbalanced."
                 )
             children = []
             # Pop all nodes at this depth as they belong to the remaining
@@ -312,14 +312,14 @@ def _newick_to_tree_node(fh, convert_underscores=True):
             parent = tree_stack[-1][0]
             if parent.children:
                 raise NewickFormatError(
-                    'Could not parse file as newick.' ' Contains unnested children.'
+                    "Could not parse file as newick." " Contains unnested children."
                 )
             # This is much faster than TreeNode.extend
             for child in children:
                 child.parent = parent
             parent.children = children
             current_depth -= 1
-        elif token == ';':
+        elif token == ";":
             if len(tree_stack) == 1:
                 return root
             break
@@ -327,29 +327,29 @@ def _newick_to_tree_node(fh, convert_underscores=True):
         last_token = token
 
     raise NewickFormatError(
-        'Could not parse file as newick.'
+        "Could not parse file as newick."
         " `(Parenthesis)`, `'single-quotes'`,"
-        ' `[comments]` may be unbalanced, or tree may be'
-        ' missing its root.'
+        " `[comments]` may be unbalanced, or tree may be"
+        " missing its root."
     )
 
 
 @newick.writer(TreeNode)
 def _tree_node_to_newick(obj, fh):
-    operators = set(',:_;()[]')
+    operators = set(",:_;()[]")
     current_depth = 0
     nodes_left = [(obj, 0)]
     while len(nodes_left) > 0:
         entry = nodes_left.pop()
         node, node_depth = entry
         if node.children and node_depth >= current_depth:
-            fh.write('(')
+            fh.write("(")
             nodes_left.append(entry)
             nodes_left += ((child, node_depth + 1) for child in reversed(node.children))
             current_depth = node_depth + 1
         else:
             if node_depth < current_depth:
-                fh.write(')')
+                fh.write(")")
                 current_depth -= 1
 
             # Note we don't check for None because there is no way to represent
@@ -357,28 +357,28 @@ def _tree_node_to_newick(obj, fh):
             # are considered to be the absence of a label.
             label = node._node_label()
             if label:
-                escaped = '%s' % label.replace("'", "''")
+                escaped = "%s" % label.replace("'", "''")
                 if any(t in operators for t in label):
                     fh.write("'")
                     fh.write(escaped)
                     fh.write("'")
                 else:
-                    fh.write(escaped.replace(' ', '_'))
+                    fh.write(escaped.replace(" ", "_"))
             if node.length is not None:
-                fh.write(':')
-                fh.write('%s' % node.length)
+                fh.write(":")
+                fh.write("%s" % node.length)
             if nodes_left and nodes_left[-1][1] == current_depth:
-                fh.write(',')
+                fh.write(",")
 
-    fh.write(';\n')
+    fh.write(";\n")
 
 
 def _tokenize_newick(fh, convert_underscores=True):
-    structure_tokens = set('(),;:')
+    structure_tokens = set("(),;:")
     not_escaped = True
     label_start = False
-    last_non_ws_char = ''
-    last_char = ''
+    last_non_ws_char = ""
+    last_char = ""
     comment_depth = 0
     metadata_buffer = []
     # Strategy:
@@ -402,7 +402,7 @@ def _tokenize_newick(fh, convert_underscores=True):
             # Using a comment_depth we can handle nested comments.
             # Additionally if we are inside an escaped literal string, then
             # we don't want to consider it a comment.
-            if character == '[' and not_escaped:
+            if character == "[" and not_escaped:
                 # Sometimes we might not want to nest a comment, so we will use
                 # our escape character. This is not explicitly mentioned in
                 # any format specification, but seems like what a reasonable
@@ -413,7 +413,7 @@ def _tokenize_newick(fh, convert_underscores=True):
                     comment_depth += 1
             if comment_depth > 0:
                 # Same as above, but in reverse
-                if character == ']' and last_non_ws_char != "'":
+                if character == "]" and last_non_ws_char != "'":
                     comment_depth -= 1
                 last_non_ws_char = character
                 continue
@@ -424,7 +424,7 @@ def _tokenize_newick(fh, convert_underscores=True):
             # Otherwise, we are ready to submit our metadata token.
             if not_escaped and character in structure_tokens:
                 label_start = False
-                metadata = ''.join(metadata_buffer)
+                metadata = "".join(metadata_buffer)
                 # If the following condition is True, then we must have just
                 # closed a literal. We know this because last_non_ws_char is
                 # either None or the last non-whitespace character.
@@ -436,7 +436,7 @@ def _tokenize_newick(fh, convert_underscores=True):
                 elif metadata:
                     # Underscores are considered to be spaces when not in an
                     # escaped literal string.
-                    yield metadata.replace('_', ' ')
+                    yield metadata.replace("_", " ")
                 # Clear our buffer for the next metadata token and yield our
                 # current structure token.
                 metadata_buffer = []
@@ -458,16 +458,16 @@ def _tokenize_newick(fh, convert_underscores=True):
                     # ''' ' -> '' <open literal>
                     # What we want is:
                     # ''' ' -> '<open literal> <close literal>
-                    last_non_ws_char = ''
-                    last_char = ''
+                    last_non_ws_char = ""
+                    last_char = ""
                     continue
 
             elif not character.isspace() or not not_escaped:
                 if label_start and last_char.isspace() and not_escaped:
                     raise NewickFormatError(
-                        'Newick files cannot have'
-                        ' unescaped whitespace in their'
-                        ' labels.'
+                        "Newick files cannot have"
+                        " unescaped whitespace in their"
+                        " labels."
                     )
                 metadata_buffer.append(character)
                 label_start = True

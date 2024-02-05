@@ -369,11 +369,11 @@ fuzzy=[(True, False)], metadata={'gene': 'foo'})
     # is the 6th bit.
     _ascii_invert_case_bit_offset = 32
     _ascii_lowercase_boundary = 90
-    default_write_format = 'fasta'
+    default_write_format = "fasta"
     __hash__ = None
 
     @property
-    @stable(as_of='0.4.0')
+    @stable(as_of="0.4.0")
     def values(self):
         r"""Array containing underlying sequence characters.
 
@@ -390,7 +390,7 @@ fuzzy=[(True, False)], metadata={'gene': 'foo'})
               dtype='|S1')
 
         """
-        return self._bytes.view('|S1')
+        return self._bytes.view("|S1")
 
     @property
     def __array_interface__(self):
@@ -416,7 +416,7 @@ fuzzy=[(True, False)], metadata={'gene': 'foo'})
         return self.values.__array_interface__
 
     @property
-    @experimental(as_of='0.4.1')
+    @experimental(as_of="0.4.1")
     def observed_chars(self):
         r"""Set of observed characters in the sequence.
 
@@ -439,8 +439,8 @@ fuzzy=[(True, False)], metadata={'gene': 'foo'})
         return self._bytes.tobytes()
 
     @classonlymethod
-    @experimental(as_of='0.4.1')
-    def concat(cls, sequences, how='strict'):
+    @experimental(as_of="0.4.1")
+    def concat(cls, sequences, how="strict"):
         r"""Concatenate an iterable of ``Sequence`` objects.
 
         Parameters
@@ -542,18 +542,18 @@ fuzzy=[(True, False)], metadata={'gene': 'foo'})
         7  False  4.0
 
         """
-        if how not in {'strict', 'inner', 'outer'}:
+        if how not in {"strict", "inner", "outer"}:
             raise ValueError("`how` must be 'strict', 'inner', or 'outer'.")
 
         seqs = list(sequences)
         if len(seqs) == 0:
-            return cls('')
+            return cls("")
 
         for seq in seqs:
             seq._assert_can_cast_to(cls)
 
-        if how == 'strict':
-            how = 'inner'
+        if how == "strict":
+            how = "inner"
             cols = set()
             for s in seqs:
                 if s.has_positional_metadata():
@@ -562,8 +562,8 @@ fuzzy=[(True, False)], metadata={'gene': 'foo'})
                     cols.add(frozenset())
             if len(cols) > 1:
                 raise ValueError(
-                    'The positional metadata of the sequences do'
-                    ' not have matching columns. Consider setting'
+                    "The positional metadata of the sequences do"
+                    " not have matching columns. Consider setting"
                     " how='inner' or how='outer'"
                 )
         seq_data = []
@@ -584,7 +584,7 @@ fuzzy=[(True, False)], metadata={'gene': 'foo'})
     @classmethod
     def _assert_can_cast_to(cls, target):
         if not (issubclass(cls, target) or issubclass(target, cls)):
-            raise TypeError('Cannot cast %r as %r.' % (cls.__name__, target.__name__))
+            raise TypeError("Cannot cast %r as %r." % (cls.__name__, target.__name__))
 
     @overrides(PositionalMetadataMixin)
     def _positional_metadata_axis_len_(self):
@@ -594,7 +594,7 @@ fuzzy=[(True, False)], metadata={'gene': 'foo'})
     def _interval_metadata_axis_len_(self):
         return len(self)
 
-    @stable(as_of='0.4.0')
+    @stable(as_of="0.4.0")
     def __init__(
         self,
         sequence,
@@ -606,7 +606,7 @@ fuzzy=[(True, False)], metadata={'gene': 'foo'})
         if isinstance(sequence, np.ndarray):
             if sequence.dtype == np.uint8:
                 self._set_bytes_contiguous(sequence)
-            elif sequence.dtype == '|S1':
+            elif sequence.dtype == "|S1":
                 sequence = sequence.view(np.uint8)
                 # Guarantee the sequence is an array (might be scalar before
                 # this).
@@ -615,7 +615,7 @@ fuzzy=[(True, False)], metadata={'gene': 'foo'})
                 self._set_bytes_contiguous(sequence)
             else:
                 raise TypeError(
-                    'Can only create sequence from numpy.ndarray of dtype '
+                    "Can only create sequence from numpy.ndarray of dtype "
                     "np.uint8 or '|S1'. Invalid dtype: %s" % sequence.dtype
                 )
         elif isinstance(sequence, Sequence):
@@ -635,7 +635,7 @@ fuzzy=[(True, False)], metadata={'gene': 'foo'})
         else:
             # Encode as ascii to raise UnicodeEncodeError if necessary.
             if isinstance(sequence, str):
-                sequence = sequence.encode('ascii')
+                sequence = sequence.encode("ascii")
             s = np.frombuffer(sequence, dtype=np.uint8)
 
             # There are two possibilities (to our knowledge) at this point:
@@ -644,7 +644,7 @@ fuzzy=[(True, False)], metadata={'gene': 'foo'})
             # numpy scalar, and so our length must be 1.
             if isinstance(sequence, np.generic) and len(s) != 1:
                 raise TypeError(
-                    'Can cannot create a sequence with %r' % type(sequence).__name__
+                    "Can cannot create a sequence with %r" % type(sequence).__name__
                 )
 
             sequence = s
@@ -667,13 +667,13 @@ fuzzy=[(True, False)], metadata={'gene': 'foo'})
                 self.positional_metadata[lowercase] = lowercase_mask
         else:
             raise TypeError(
-                'lowercase keyword argument expected a bool or '
-                'string, but got %s' % type(lowercase)
+                "lowercase keyword argument expected a bool or "
+                "string, but got %s" % type(lowercase)
             )
 
     def _set_bytes_contiguous(self, sequence):
         r"""Munge the sequence data into a numpy array of dtype uint8."""
-        if not sequence.flags['C_CONTIGUOUS']:
+        if not sequence.flags["C_CONTIGUOUS"]:
             # numpy doesn't support views of non-contiguous arrays. Since we're
             # making heavy use of views internally, and users may also supply
             # us with a view, make sure we *always* store a contiguous array to
@@ -694,7 +694,7 @@ fuzzy=[(True, False)], metadata={'gene': 'foo'})
             with self._byte_ownership():
                 self._bytes[lowercase] ^= self._ascii_invert_case_bit_offset
 
-    @stable(as_of='0.4.0')
+    @stable(as_of="0.4.0")
     def __contains__(self, subsequence):
         r"""Determine if a subsequence is contained in this sequence.
 
@@ -723,9 +723,9 @@ fuzzy=[(True, False)], metadata={'gene': 'foo'})
         >>> 'CCC' in s
         False
         """
-        return self._munge_to_bytestring(subsequence, 'in') in self._string
+        return self._munge_to_bytestring(subsequence, "in") in self._string
 
-    @stable(as_of='0.4.0')
+    @stable(as_of="0.4.0")
     def __eq__(self, other):
         r"""Determine if this sequence is equal to another.
 
@@ -800,7 +800,7 @@ fuzzy=[(True, False)], metadata={'gene': 'foo'})
 
         return True
 
-    @stable(as_of='0.4.0')
+    @stable(as_of="0.4.0")
     def __ne__(self, other):
         r"""Determine if this sequence is not equal to another.
 
@@ -834,7 +834,7 @@ fuzzy=[(True, False)], metadata={'gene': 'foo'})
         """
         return not (self == other)
 
-    @stable(as_of='0.4.0')
+    @stable(as_of="0.4.0")
     def __getitem__(self, indexable):
         r"""Slice this sequence.
 
@@ -909,7 +909,7 @@ fuzzy=[(True, False)], metadata={'gene': 'foo'})
 
         """
         if not isinstance(indexable, np.ndarray) and (
-            (not isinstance(indexable, str)) and hasattr(indexable, '__iter__')
+            (not isinstance(indexable, str)) and hasattr(indexable, "__iter__")
         ):
             indexable_ = indexable
             indexable = np.asarray(indexable)
@@ -945,7 +945,7 @@ fuzzy=[(True, False)], metadata={'gene': 'foo'})
                     )
         elif isinstance(indexable, str) or isinstance(indexable, bool):
             raise IndexError(
-                'Cannot index with %s type: %r' % (type(indexable).__name__, indexable)
+                "Cannot index with %s type: %r" % (type(indexable).__name__, indexable)
             )
 
         if (
@@ -954,8 +954,8 @@ fuzzy=[(True, False)], metadata={'gene': 'foo'})
             and len(indexable) != len(self)
         ):
             raise IndexError(
-                'An boolean vector index must be the same length'
-                ' as the sequence (%d, not %d).' % (len(self), len(indexable))
+                "An boolean vector index must be the same length"
+                " as the sequence (%d, not %d)." % (len(self), len(indexable))
             )
 
         if isinstance(indexable, np.ndarray) and indexable.size == 0:
@@ -984,7 +984,7 @@ fuzzy=[(True, False)], metadata={'gene': 'foo'})
         else:
             return None
 
-    @stable(as_of='0.4.0')
+    @stable(as_of="0.4.0")
     def __len__(self):
         r"""Return the number of characters in this sequence.
 
@@ -1003,7 +1003,7 @@ fuzzy=[(True, False)], metadata={'gene': 'foo'})
         """
         return self._bytes.size
 
-    @stable(as_of='0.4.0')
+    @stable(as_of="0.4.0")
     def __bool__(self):
         r"""Returns truth value (truthiness) of sequence.
 
@@ -1023,7 +1023,7 @@ fuzzy=[(True, False)], metadata={'gene': 'foo'})
         """
         return len(self) > 0
 
-    @stable(as_of='0.4.0')
+    @stable(as_of="0.4.0")
     def __iter__(self):
         r"""Iterate over positions in this sequence.
 
@@ -1048,7 +1048,7 @@ fuzzy=[(True, False)], metadata={'gene': 'foo'})
         for i in range(len(self)):
             yield self[i]
 
-    @stable(as_of='0.4.0')
+    @stable(as_of="0.4.0")
     def __reversed__(self):
         r"""Iterate over positions in this sequence in reverse order.
 
@@ -1072,7 +1072,7 @@ fuzzy=[(True, False)], metadata={'gene': 'foo'})
         """
         return iter(self[::-1])
 
-    @stable(as_of='0.4.0')
+    @stable(as_of="0.4.0")
     def __str__(self):
         r"""Return sequence characters as a string.
 
@@ -1094,9 +1094,9 @@ fuzzy=[(True, False)], metadata={'gene': 'foo'})
         'GGUCGUAAAGGA'
 
         """
-        return str(self._string.decode('ascii'))
+        return str(self._string.decode("ascii"))
 
-    @stable(as_of='0.4.0')
+    @stable(as_of="0.4.0")
     def __repr__(self):
         r"""Return a string representation of this sequence object.
 
@@ -1217,9 +1217,9 @@ fuzzy=[(True, False)], metadata={'gene': 'foo'})
             sequence repr.
 
         """
-        return [('length', '%d' % len(self))]
+        return [("length", "%d" % len(self))]
 
-    @stable(as_of='0.4.0')
+    @stable(as_of="0.4.0")
     def __copy__(self):
         r"""Return a shallow copy of this sequence.
 
@@ -1234,7 +1234,7 @@ fuzzy=[(True, False)], metadata={'gene': 'foo'})
         """
         return self._copy(False, {})
 
-    @stable(as_of='0.4.0')
+    @stable(as_of="0.4.0")
     def __deepcopy__(self, memo):
         r"""Return a deep copy of this sequence.
 
@@ -1283,7 +1283,7 @@ fuzzy=[(True, False)], metadata={'gene': 'foo'})
 
         return seq_copy
 
-    @stable(as_of='0.4.0')
+    @stable(as_of="0.4.0")
     def lowercase(self, lowercase):
         r"""Return a case-sensitive string representation of the sequence.
 
@@ -1329,9 +1329,9 @@ fuzzy=[(True, False)], metadata={'gene': 'foo'})
         index = self._munge_to_index_array(lowercase)
         outbytes = self._bytes.copy()
         outbytes[index] ^= self._ascii_invert_case_bit_offset
-        return str(outbytes.tobytes().decode('ascii'))
+        return str(outbytes.tobytes().decode("ascii"))
 
-    @stable(as_of='0.4.0')
+    @stable(as_of="0.4.0")
     def count(self, subsequence, start=None, end=None):
         r"""Count occurrences of a subsequence in this sequence.
 
@@ -1372,13 +1372,13 @@ fuzzy=[(True, False)], metadata={'gene': 'foo'})
 
         """
         if len(subsequence) == 0:
-            raise ValueError('`count` is not defined for empty subsequences.')
+            raise ValueError("`count` is not defined for empty subsequences.")
 
         return self._string.count(
-            self._munge_to_bytestring(subsequence, 'count'), start, end
+            self._munge_to_bytestring(subsequence, "count"), start, end
         )
 
-    @experimental(as_of='0.5.0')
+    @experimental(as_of="0.5.0")
     def replace(self, where, character):
         r"""Replace values in this sequence with a different character.
 
@@ -1439,7 +1439,7 @@ fuzzy=[(True, False)], metadata={'gene': 'foo'})
 
         """
         if isinstance(character, bytes) is not True:
-            character = character.encode('ascii')
+            character = character.encode("ascii")
         character = ord(character)
         index = self._munge_to_index_array(where)
         seq_bytes = self._bytes.copy()
@@ -1466,7 +1466,7 @@ fuzzy=[(True, False)], metadata={'gene': 'foo'})
             interval_metadata=interval_metadata,
         )
 
-    @stable(as_of='0.4.0')
+    @stable(as_of="0.4.0")
     def index(self, subsequence, start=None, end=None):
         r"""Find position where subsequence first occurs in the sequence.
 
@@ -1502,12 +1502,12 @@ fuzzy=[(True, False)], metadata={'gene': 'foo'})
         """
         try:
             return self._string.index(
-                self._munge_to_bytestring(subsequence, 'index'), start, end
+                self._munge_to_bytestring(subsequence, "index"), start, end
             )
         except ValueError:
-            raise ValueError('%r is not present in %r.' % (subsequence, self))
+            raise ValueError("%r is not present in %r." % (subsequence, self))
 
-    @experimental(as_of='0.4.0')
+    @experimental(as_of="0.4.0")
     def distance(self, other, metric=None):
         r"""Compute the distance to another sequence.
 
@@ -1564,12 +1564,12 @@ fuzzy=[(True, False)], metadata={'gene': 'foo'})
         """
         # TODO refactor this method to accept a name (string) of the distance
         # metric to apply and accept **kwargs
-        other = self._munge_to_self_type(other, 'distance')
+        other = self._munge_to_self_type(other, "distance")
         if metric is None:
             metric = skbio.sequence.distance.hamming
         return float(metric(self, other))
 
-    @stable(as_of='0.4.0')
+    @stable(as_of="0.4.0")
     def matches(self, other):
         r"""Find positions that match with another sequence.
 
@@ -1605,15 +1605,15 @@ fuzzy=[(True, False)], metadata={'gene': 'foo'})
         array([ True, False,  True, False], dtype=bool)
 
         """
-        other = self._munge_to_sequence(other, 'matches/mismatches')
+        other = self._munge_to_sequence(other, "matches/mismatches")
         if len(self) != len(other):
             raise ValueError(
-                'Match and mismatch vectors can only be '
-                'generated from equal length sequences.'
+                "Match and mismatch vectors can only be "
+                "generated from equal length sequences."
             )
         return self._bytes == other._bytes
 
-    @stable(as_of='0.4.0')
+    @stable(as_of="0.4.0")
     def mismatches(self, other):
         r"""Find positions that do not match with another sequence.
 
@@ -1651,7 +1651,7 @@ fuzzy=[(True, False)], metadata={'gene': 'foo'})
         """
         return np.invert(self.matches(other))
 
-    @stable(as_of='0.4.0')
+    @stable(as_of="0.4.0")
     def match_frequency(self, other, relative=False):
         r"""Return count of positions that are the same between two sequences.
 
@@ -1701,7 +1701,7 @@ fuzzy=[(True, False)], metadata={'gene': 'foo'})
         else:
             return int(self.matches(other).sum())
 
-    @stable(as_of='0.4.0')
+    @stable(as_of="0.4.0")
     def mismatch_frequency(self, other, relative=False):
         r"""Return count of positions that differ between two sequences.
 
@@ -1751,7 +1751,7 @@ fuzzy=[(True, False)], metadata={'gene': 'foo'})
         else:
             return int(self.mismatches(other).sum())
 
-    @experimental(as_of='0.4.1')
+    @experimental(as_of="0.4.1")
     def frequencies(self, chars=None, relative=False):
         r"""Compute frequencies of characters in the sequence.
 
@@ -1840,7 +1840,7 @@ fuzzy=[(True, False)], metadata={'gene': 'foo'})
             # Downcast from int64 to uint8 then convert to str. This is safe
             # because we are guaranteed to have indices in the range 0 to 255
             # inclusive.
-            chars = indices.astype(np.uint8).tobytes().decode('ascii')
+            chars = indices.astype(np.uint8).tobytes().decode("ascii")
 
         obs_counts = freqs[indices]
         if relative:
@@ -1855,7 +1855,7 @@ fuzzy=[(True, False)], metadata={'gene': 'foo'})
             chars = set([chars])
         elif not isinstance(chars, set):
             raise TypeError(
-                '`chars` must be of type `set`, not %r' % type(chars).__name__
+                "`chars` must be of type `set`, not %r" % type(chars).__name__
             )
 
         # Impose an (arbitrary) ordering to `chars` so that we can return
@@ -1865,25 +1865,25 @@ fuzzy=[(True, False)], metadata={'gene': 'foo'})
         for char in chars:
             if not isinstance(char, (str, bytes)):
                 raise TypeError(
-                    'Each element of `chars` must be string-like, not %r'
+                    "Each element of `chars` must be string-like, not %r"
                     % type(char).__name__
                 )
             if len(char) != 1:
                 raise ValueError(
-                    'Each element of `chars` must contain a single '
-                    'character (found %d characters)' % len(char)
+                    "Each element of `chars` must contain a single "
+                    "character (found %d characters)" % len(char)
                 )
 
             index = ord(char)
             if index >= self._num_extended_ascii_codes:
                 raise ValueError(
-                    'Character %r in `chars` is outside the range of '
-                    'allowable characters in a `Sequence` object.' % char
+                    "Character %r in `chars` is outside the range of "
+                    "allowable characters in a `Sequence` object." % char
                 )
             indices.append(index)
         return chars, indices
 
-    @stable(as_of='0.4.0')
+    @stable(as_of="0.4.0")
     def iter_kmers(self, k, overlap=True):
         r"""Generate kmers of length `k` from this sequence.
 
@@ -1925,7 +1925,7 @@ fuzzy=[(True, False)], metadata={'gene': 'foo'})
 
         """
         if k < 1:
-            raise ValueError('k must be greater than 0.')
+            raise ValueError("k must be greater than 0.")
 
         if k > len(self):
             return
@@ -1957,7 +1957,7 @@ fuzzy=[(True, False)], metadata={'gene': 'foo'})
                     sequence=s, metadata=metadata, positional_metadata=None
                 )
 
-    @stable(as_of='0.4.0')
+    @stable(as_of="0.4.0")
     def kmer_frequencies(self, k, overlap=True, relative=False):
         r"""Return counts of words of length `k` from this sequence.
 
@@ -2009,7 +2009,7 @@ fuzzy=[(True, False)], metadata={'gene': 'foo'})
 
         return freqs
 
-    @stable(as_of='0.4.0')
+    @stable(as_of="0.4.0")
     def find_with_regex(self, regex, ignore=None):
         r"""Generate slices for patterns matched by a regular expression.
 
@@ -2057,7 +2057,7 @@ fuzzy=[(True, False)], metadata={'gene': 'foo'})
             for g in range(1, len(match.groups()) + 1):
                 yield slice(lookup[match.start(g)], lookup[match.end(g) - 1] + 1)
 
-    @stable(as_of='0.4.0')
+    @stable(as_of="0.4.0")
     def iter_contiguous(self, included, min_length=1, invert=False):
         r"""Yield contiguous subsequences based on `included`.
 
@@ -2126,9 +2126,9 @@ fuzzy=[(True, False)], metadata={'gene': 'foo'})
             if len(r) >= min_length:
                 yield r
 
-    @experimental(as_of='0.5.10')
+    @experimental(as_of="0.5.10")
     def to_indices(
-        self, alphabet=None, mask_gaps='auto', wildcard='auto', return_codes=False
+        self, alphabet=None, mask_gaps="auto", wildcard="auto", return_codes=False
     ):
         r"""Convert the sequence into indices of characters.
 
@@ -2227,8 +2227,8 @@ fuzzy=[(True, False)], metadata={'gene': 'foo'})
 
         # mask gap characters
         mask = None
-        if mask_gaps in (True, 'auto'):
-            gap_chars = getattr(self, 'gap_chars', None)
+        if mask_gaps in (True, "auto"):
+            gap_chars = getattr(self, "gap_chars", None)
             if gap_chars:
                 # encode gap characters
                 gap_chars = list(map(ord, gap_chars))
@@ -2240,43 +2240,43 @@ fuzzy=[(True, False)], metadata={'gene': 'foo'})
 
             elif mask_gaps is True:
                 raise ValueError(
-                    'Gap character(s) are not defined for the ' 'sequence.'
+                    "Gap character(s) are not defined for the " "sequence."
                 )
 
         # according to an alphabet
         if alphabet is not None:
             # get wildcard character
-            if wildcard == 'auto':
-                wildcard = getattr(self, 'wildcard_char', None)
+            if wildcard == "auto":
+                wildcard = getattr(self, "wildcard_char", None)
 
             # encode wildcard character
             if wildcard is not None:
                 try:
                     assert (wildcard := ord(wildcard)) < 128
                 except (TypeError, AssertionError):
-                    raise ValueError('Wildcard must be a single ASCII ' 'character.')
+                    raise ValueError("Wildcard must be a single ASCII " "character.")
 
             # extract alphabet from a substitution matrix
-            if hasattr(alphabet, '_is_ascii'):
+            if hasattr(alphabet, "_is_ascii"):
                 if alphabet._is_ascii is True:
                     indices = _indices_in_alphabet_ascii(
                         seq, alphabet._char_hash, wildcard=wildcard
                     )
                 else:
                     raise ValueError(
-                        'Alphabet in the substitution matrix '
-                        'are not single ASCII characters.'
+                        "Alphabet in the substitution matrix "
+                        "are not single ASCII characters."
                     )
 
             # process alphabet from scratch
             else:
                 if find_duplicates(alphabet):
-                    raise ValueError('Alphabet contains duplicated ' 'characters.')
+                    raise ValueError("Alphabet contains duplicated " "characters.")
                 try:
                     alphabet = _alphabet_to_hashes(alphabet)
                 except (TypeError, ValueError, UnicodeEncodeError):
                     raise ValueError(
-                        'Alphabet cannot be encoded as single ' 'ASCII characters.'
+                        "Alphabet cannot be encoded as single " "ASCII characters."
                     )
                 indices = _indices_in_alphabet_ascii(seq, alphabet, wildcard=wildcard)
 
@@ -2285,7 +2285,7 @@ fuzzy=[(True, False)], metadata={'gene': 'foo'})
             (indices,), observed = _indices_in_observed([seq])
             indices = indices.astype(np.uint8)
             if return_codes is False:
-                observed = observed.tobytes().decode('ascii')
+                observed = observed.tobytes().decode("ascii")
 
         # construct masked array
         if mask is not None:
@@ -2310,15 +2310,15 @@ fuzzy=[(True, False)], metadata={'gene': 'foo'})
                 else:
                     raise TypeError(
                         "Column '%s' in positional metadata does "
-                        'not correspond to a boolean vector' % sliceable
+                        "not correspond to a boolean vector" % sliceable
                     )
             else:
                 raise ValueError(
-                    'No positional metadata associated with key ' "'%s'" % sliceable
+                    "No positional metadata associated with key " "'%s'" % sliceable
                 )
 
-        if not hasattr(sliceable, 'dtype') or (
-            hasattr(sliceable, 'dtype') and sliceable.dtype == 'object'
+        if not hasattr(sliceable, "dtype") or (
+            hasattr(sliceable, "dtype") and sliceable.dtype == "object"
         ):
             sliceable = tuple(sliceable)
             bool_mode = False
@@ -2327,34 +2327,34 @@ fuzzy=[(True, False)], metadata={'gene': 'foo'})
                 if isinstance(s, (bool, np.bool_)):
                     bool_mode = True
                 elif isinstance(s, (slice, int, np.signedinteger)) or (
-                    hasattr(s, 'dtype') and s.dtype != bool
+                    hasattr(s, "dtype") and s.dtype != bool
                 ):
                     int_mode = True
                 else:
                     raise TypeError(
-                        'Invalid type in iterable: %s, must be one'
-                        ' of {bool, int, slice, np.signedinteger}'
+                        "Invalid type in iterable: %s, must be one"
+                        " of {bool, int, slice, np.signedinteger}"
                         % s.__class__.__name__
                     )
             if bool_mode and int_mode:
-                raise TypeError('Cannot provide iterable of both bool and' ' int.')
+                raise TypeError("Cannot provide iterable of both bool and" " int.")
             sliceable = np.r_[sliceable]
 
         if sliceable.dtype == bool:
             if sliceable.size != len(self):
                 raise ValueError(
-                    'Boolean array (%d) does not match length of'
-                    ' sequence (%d).' % (sliceable.size, len(self))
+                    "Boolean array (%d) does not match length of"
+                    " sequence (%d)." % (sliceable.size, len(self))
                 )
             (normalized,) = np.where(sliceable)
         else:
             normalized = np.bincount(sliceable)
             if np.any(normalized > 1):
-                raise ValueError('Overlapping index regions are not allowed.')
+                raise ValueError("Overlapping index regions are not allowed.")
 
             (normalized,) = np.where(normalized)
             if np.any(normalized != sliceable):
-                raise ValueError('Index regions are out of order.')
+                raise ValueError("Index regions are out of order.")
 
         return normalized
 
@@ -2362,7 +2362,7 @@ fuzzy=[(True, False)], metadata={'gene': 'foo'})
         if isinstance(other, Sequence):
             if type(other) is not type(self):
                 raise TypeError(
-                    'Cannot use %s and %s together with `%s`'
+                    "Cannot use %s and %s together with `%s`"
                     % (self.__class__.__name__, other.__class__.__name__, method)
                 )
             else:
@@ -2374,7 +2374,7 @@ fuzzy=[(True, False)], metadata={'gene': 'foo'})
         if isinstance(other, Sequence):
             if type(other) is not type(self):
                 raise TypeError(
-                    'Cannot use %s and %s together with `%s`'
+                    "Cannot use %s and %s together with `%s`"
                     % (self.__class__.__name__, other.__class__.__name__, method)
                 )
             else:
@@ -2389,7 +2389,7 @@ fuzzy=[(True, False)], metadata={'gene': 'foo'})
         if isinstance(other, bytes):
             return other
         elif isinstance(other, str):
-            return other.encode('ascii')
+            return other.encode("ascii")
         else:
             return self._munge_to_sequence(other, method)._string
 
@@ -2428,7 +2428,7 @@ def _slices_from_iter(array, indexables):
             i = _single_index_to_slice(i)
         else:
             raise IndexError(
-                'Cannot slice sequence from iterable ' 'containing %r.' % i
+                "Cannot slice sequence from iterable " "containing %r." % i
             )
 
         yield array[i]

@@ -153,21 +153,21 @@ class DNA(GrammaredSequence, NucleotideMixin):
     @overrides(NucleotideMixin)
     def complement_map(cls):
         comp_map = {
-            'A': 'T',
-            'T': 'A',
-            'G': 'C',
-            'C': 'G',
-            'Y': 'R',
-            'R': 'Y',
-            'S': 'S',
-            'W': 'W',
-            'K': 'M',
-            'M': 'K',
-            'B': 'V',
-            'D': 'H',
-            'H': 'D',
-            'V': 'B',
-            'N': 'N',
+            "A": "T",
+            "T": "A",
+            "G": "C",
+            "C": "G",
+            "Y": "R",
+            "R": "Y",
+            "S": "S",
+            "W": "W",
+            "K": "M",
+            "M": "K",
+            "B": "V",
+            "D": "H",
+            "H": "D",
+            "V": "B",
+            "N": "N",
         }
 
         comp_map.update({c: c for c in cls.gap_chars})
@@ -176,45 +176,45 @@ class DNA(GrammaredSequence, NucleotideMixin):
     @classproperty
     @overrides(GrammaredSequence)
     def definite_chars(cls):
-        return set('ACGT')
+        return set("ACGT")
 
     @classproperty
     @overrides(GrammaredSequence)
     def degenerate_map(cls):
         return {
-            'R': set('AG'),
-            'Y': set('CT'),
-            'M': set('AC'),
-            'K': set('TG'),
-            'W': set('AT'),
-            'S': set('GC'),
-            'B': set('CGT'),
-            'D': set('AGT'),
-            'H': set('ACT'),
-            'V': set('ACG'),
-            'N': set('ACGT'),
+            "R": set("AG"),
+            "Y": set("CT"),
+            "M": set("AC"),
+            "K": set("TG"),
+            "W": set("AT"),
+            "S": set("GC"),
+            "B": set("CGT"),
+            "D": set("AGT"),
+            "H": set("ACT"),
+            "V": set("ACG"),
+            "N": set("ACGT"),
         }
 
     @classproperty
     @overrides(GrammaredSequence)
     def default_gap_char(cls):
-        return '-'
+        return "-"
 
     @classproperty
     @overrides(GrammaredSequence)
     def gap_chars(cls):
-        return set('-.')
+        return set("-.")
 
     @classproperty
     @overrides(GrammaredSequence)
     def wildcard_char(cls):
-        return 'N'
+        return "N"
 
     @property
     def _motifs(self):
         return _motifs
 
-    @stable(as_of='0.4.0')
+    @stable(as_of="0.4.0")
     def transcribe(self):
         """Transcribe DNA into RNA.
 
@@ -266,7 +266,7 @@ class DNA(GrammaredSequence, NucleotideMixin):
         0 UAACGUUA
 
         """
-        seq = self._string.replace(b'T', b'U')
+        seq = self._string.replace(b"T", b"U")
 
         metadata = None
         if self.has_metadata():
@@ -289,7 +289,7 @@ class DNA(GrammaredSequence, NucleotideMixin):
             validate=False,
         )
 
-    @stable(as_of='0.4.0')
+    @stable(as_of="0.4.0")
     def translate(self, *args, **kwargs):
         """Translate DNA sequence into protein sequence.
 
@@ -358,7 +358,7 @@ class DNA(GrammaredSequence, NucleotideMixin):
         """
         return self.transcribe().translate(*args, **kwargs)
 
-    @stable(as_of='0.4.0')
+    @stable(as_of="0.4.0")
     def translate_six_frames(self, *args, **kwargs):
         """Translate DNA into protein using six possible reading frames.
 
@@ -489,11 +489,11 @@ class DNA(GrammaredSequence, NucleotideMixin):
     def _repr_stats(self):
         """Define custom statistics to display in the sequence's repr."""
         stats = super(DNA, self)._repr_stats()
-        stats.append(('GC-content', '{:.2%}'.format(self.gc_content())))
+        stats.append(("GC-content", "{:.2%}".format(self.gc_content())))
         return stats
 
 
 _motifs = _parent_motifs.copy()
 
 # Leave this at the bottom
-_motifs.interpolate(DNA, 'find_motifs')
+_motifs.interpolate(DNA, "find_motifs")

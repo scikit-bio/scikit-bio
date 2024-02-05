@@ -409,10 +409,10 @@ from ._driver import (
 from ._block import block_beta_diversity
 
 __all__ = [
-    'alpha_diversity',
-    'beta_diversity',
-    'get_alpha_diversity_metrics',
-    'get_beta_diversity_metrics',
-    'partial_beta_diversity',
-    'block_beta_diversity',
+    "alpha_diversity",
+    "beta_diversity",
+    "get_alpha_diversity_metrics",
+    "get_beta_diversity_metrics",
+    "partial_beta_diversity",
+    "block_beta_diversity",
 ]

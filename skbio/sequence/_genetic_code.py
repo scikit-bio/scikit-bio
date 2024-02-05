@@ -117,7 +117,7 @@ class GeneticCode(SkbioObject):
 
     _num_codons = 64
     _radix_multiplier = np.asarray([16, 4, 1], dtype=np.uint8)
-    _start_stop_options = ['ignore', 'optional', 'require']
+    _start_stop_options = ["ignore", "optional", "require"]
     __offset_table = None
 
     @classproperty
@@ -130,17 +130,17 @@ class GeneticCode(SkbioObject):
             # error noisily. this is important in case the valid definite
             # IUPAC RNA characters change in the future and the assumptions
             # currently made by the code become invalid
-            table = np.empty(ord(b'U') + 1, dtype=np.uint8)
+            table = np.empty(ord(b"U") + 1, dtype=np.uint8)
             table.fill(255)
-            table[ord(b'U')] = 0
-            table[ord(b'C')] = 1
-            table[ord(b'A')] = 2
-            table[ord(b'G')] = 3
+            table[ord(b"U")] = 0
+            table[ord(b"C")] = 1
+            table[ord(b"A")] = 2
+            table[ord(b"G")] = 3
             cls.__offset_table = table
         return cls.__offset_table
 
     @classonlymethod
-    @stable(as_of='0.4.0')
+    @stable(as_of="0.4.0")
     def from_ncbi(cls, table_id=1):
         """Return NCBI genetic code specified by table ID.
 
@@ -174,13 +174,13 @@ class GeneticCode(SkbioObject):
         """
         if table_id not in _ncbi_genetic_codes:
             raise ValueError(
-                '`table_id` must be one of %r, not %r'
+                "`table_id` must be one of %r, not %r"
                 % (sorted(_ncbi_genetic_codes), table_id)
             )
         return _ncbi_genetic_codes[table_id]
 
     @classproperty
-    @stable(as_of='0.4.0')
+    @stable(as_of="0.4.0")
     def reading_frames(cls):
         """Six possible reading frames.
 
@@ -205,7 +205,7 @@ class GeneticCode(SkbioObject):
         return [1, 2, 3, -1, -2, -3]
 
     @property
-    @stable(as_of='0.4.0')
+    @stable(as_of="0.4.0")
     def name(self):
         """Genetic code name.
 
@@ -220,8 +220,8 @@ class GeneticCode(SkbioObject):
         """
         return self._name
 
-    @stable(as_of='0.4.0')
-    def __init__(self, amino_acids, starts, name=''):
+    @stable(as_of="0.4.0")
+    def __init__(self, amino_acids, starts, name=""):
         self._set_amino_acids(amino_acids)
         self._set_starts(starts)
         self._name = name
@@ -231,13 +231,13 @@ class GeneticCode(SkbioObject):
 
         if len(amino_acids) != self._num_codons:
             raise ValueError(
-                '`amino_acids` must be length %d, not %d'
+                "`amino_acids` must be length %d, not %d"
                 % (self._num_codons, len(amino_acids))
             )
-        indices = (amino_acids.values == b'M').nonzero()[0]
+        indices = (amino_acids.values == b"M").nonzero()[0]
         if indices.size < 1:
             raise ValueError(
-                '`amino_acids` must contain at least one M ' '(methionine) character'
+                "`amino_acids` must contain at least one M " "(methionine) character"
             )
         self._amino_acids = amino_acids
         self._m_character_codon = self._index_to_codon(indices[0])
@@ -247,16 +247,16 @@ class GeneticCode(SkbioObject):
 
         if len(starts) != self._num_codons:
             raise ValueError(
-                '`starts` must be length %d, not %d' % (self._num_codons, len(starts))
+                "`starts` must be length %d, not %d" % (self._num_codons, len(starts))
             )
-        if (starts.values == b'M').sum() + (starts.values == b'-').sum() != len(starts):
+        if (starts.values == b"M").sum() + (starts.values == b"-").sum() != len(starts):
             # to prevent the user from accidentally swapping `starts` and
             # `amino_acids` and getting a translation back
-            raise ValueError('`starts` may only contain M and - characters')
+            raise ValueError("`starts` may only contain M and - characters")
 
         self._starts = starts
 
-        indices = (self._starts.values == b'M').nonzero()[0]
+        indices = (self._starts.values == b"M").nonzero()[0]
         codons = np.empty((indices.size, 3), dtype=np.uint8)
         for i, index in enumerate(indices):
             codons[i] = self._index_to_codon(index)
@@ -270,7 +270,7 @@ class GeneticCode(SkbioObject):
             codon[i] = offset
         return codon
 
-    @stable(as_of='0.4.0')
+    @stable(as_of="0.4.0")
     def __str__(self):
         """Return string representation of the genetic code.
 
@@ -290,7 +290,7 @@ class GeneticCode(SkbioObject):
         """
         return self._build_repr(include_name=False)
 
-    @stable(as_of='0.4.0')
+    @stable(as_of="0.4.0")
     def __repr__(self):
         """Return string representation of the genetic code.
 
@@ -318,22 +318,22 @@ class GeneticCode(SkbioObject):
         if include_name:
             name_line = self.__class__.__name__
             if len(self.name) > 0:
-                name_line += ' (%s)' % self.name
+                name_line += " (%s)" % self.name
             lines.add_line(name_line)
             lines.add_separator()
 
-        lines.add_line('  AAs  = %s' % str(self._amino_acids))
-        lines.add_line('Starts = %s' % str(self._starts))
-        base1 = 'U' * 16 + 'C' * 16 + 'A' * 16 + 'G' * 16
-        lines.add_line('Base1  = %s' % base1)
-        base2 = ('U' * 4 + 'C' * 4 + 'A' * 4 + 'G' * 4) * 4
-        lines.add_line('Base2  = %s' % base2)
-        base3 = 'UCAG' * 16
-        lines.add_line('Base3  = %s' % base3)
+        lines.add_line("  AAs  = %s" % str(self._amino_acids))
+        lines.add_line("Starts = %s" % str(self._starts))
+        base1 = "U" * 16 + "C" * 16 + "A" * 16 + "G" * 16
+        lines.add_line("Base1  = %s" % base1)
+        base2 = ("U" * 4 + "C" * 4 + "A" * 4 + "G" * 4) * 4
+        lines.add_line("Base2  = %s" % base2)
+        base3 = "UCAG" * 16
+        lines.add_line("Base3  = %s" % base3)
 
         return lines.to_str()
 
-    @stable(as_of='0.4.0')
+    @stable(as_of="0.4.0")
     def __eq__(self, other):
         """Determine if the genetic code is equal to another.
 
@@ -381,7 +381,7 @@ class GeneticCode(SkbioObject):
             return False
         return True
 
-    @stable(as_of='0.4.0')
+    @stable(as_of="0.4.0")
     def __ne__(self, other):
         """Determine if the genetic code is not equal to another.
 
@@ -402,8 +402,8 @@ class GeneticCode(SkbioObject):
         """
         return not (self == other)
 
-    @stable(as_of='0.4.0')
-    def translate(self, sequence, reading_frame=1, start='ignore', stop='ignore'):
+    @stable(as_of="0.4.0")
+    def translate(self, sequence, reading_frame=1, start="ignore", stop="ignore"):
         """Translate RNA sequence into protein sequence.
 
         Parameters
@@ -560,7 +560,7 @@ class GeneticCode(SkbioObject):
         data = self._offset_table[data]
         data = data[: data.size // 3 * 3].reshape((-1, 3))
 
-        if start in {'require', 'optional'}:
+        if start in {"require", "optional"}:
             start_codon_index = data.shape[0]
             for start_codon in self._start_codons:
                 indices = np.all(data == start_codon, axis=1).nonzero()[0]
@@ -573,18 +573,18 @@ class GeneticCode(SkbioObject):
             if start_codon_index != data.shape[0]:
                 data = data[start_codon_index:]
                 data[0] = self._m_character_codon
-            elif start == 'require':
-                self._raise_require_error('start', reading_frame)
+            elif start == "require":
+                self._raise_require_error("start", reading_frame)
 
         indices = (data * self._radix_multiplier).sum(axis=1)
         translated = self._amino_acids.values[indices]
 
-        if stop in {'require', 'optional'}:
-            stop_codon_indices = (translated == b'*').nonzero()[0]
+        if stop in {"require", "optional"}:
+            stop_codon_indices = (translated == b"*").nonzero()[0]
             if stop_codon_indices.size > 0:
                 translated = translated[: stop_codon_indices[0]]
-            elif stop == 'require':
-                self._raise_require_error('stop', reading_frame)
+            elif stop == "require":
+                self._raise_require_error("stop", reading_frame)
 
         metadata = None
         if sequence.has_metadata():
@@ -596,46 +596,46 @@ class GeneticCode(SkbioObject):
     def _validate_translate_inputs(self, sequence, reading_frame, start, stop):
         if not isinstance(sequence, RNA):
             raise TypeError(
-                'Sequence to translate must be RNA, not %s' % type(sequence).__name__
+                "Sequence to translate must be RNA, not %s" % type(sequence).__name__
             )
 
         if reading_frame not in self.reading_frames:
             raise ValueError(
-                '`reading_frame` must be one of %r, not %r'
+                "`reading_frame` must be one of %r, not %r"
                 % (self.reading_frames, reading_frame)
             )
 
-        for name, value in ('start', start), ('stop', stop):
+        for name, value in ("start", start), ("stop", stop):
             if value not in self._start_stop_options:
                 raise ValueError(
-                    '`%s` must be one of %r, not %r'
+                    "`%s` must be one of %r, not %r"
                     % (name, self._start_stop_options, value)
                 )
 
         if sequence.has_gaps():
             raise ValueError(
-                'scikit-bio does not support translation of ' 'gapped sequences.'
+                "scikit-bio does not support translation of " "gapped sequences."
             )
 
         if sequence.has_degenerates():
             raise NotImplementedError(
-                'scikit-bio does not currently support '
-                'translation of degenerate sequences.'
-                '`RNA.expand_degenerates` can be used '
-                'to obtain all definite versions '
-                'of a degenerate sequence.'
+                "scikit-bio does not currently support "
+                "translation of degenerate sequences."
+                "`RNA.expand_degenerates` can be used "
+                "to obtain all definite versions "
+                "of a degenerate sequence."
             )
 
     def _raise_require_error(self, name, reading_frame):
         raise ValueError(
-            'Sequence does not contain a %s codon in the '
-            'current reading frame (`reading_frame=%d`). Presence '
+            "Sequence does not contain a %s codon in the "
+            "current reading frame (`reading_frame=%d`). Presence "
             "of a %s codon is required with `%s='require'`"
             % (name, reading_frame, name, name)
         )
 
-    @stable(as_of='0.4.0')
-    def translate_six_frames(self, sequence, start='ignore', stop='ignore'):
+    @stable(as_of="0.4.0")
+    def translate_six_frames(self, sequence, start="ignore", stop="ignore"):
         """Translate RNA into protein using six possible reading frames.
 
         The six possible reading frames are:
@@ -775,94 +775,94 @@ class GeneticCode(SkbioObject):
 # defined at http://www.ncbi.nlm.nih.gov/Taxonomy/Utils/wprintgc.cgi
 _ncbi_genetic_codes = {
     1: GeneticCode(
-        'FFLLSSSSYY**CC*WLLLLPPPPHHQQRRRRIIIMTTTTNNKKSSRRVVVVAAAADDEEGGGG',
-        '---M---------------M---------------M----------------------------',
-        'Standard',
+        "FFLLSSSSYY**CC*WLLLLPPPPHHQQRRRRIIIMTTTTNNKKSSRRVVVVAAAADDEEGGGG",
+        "---M---------------M---------------M----------------------------",
+        "Standard",
     ),
     2: GeneticCode(
-        'FFLLSSSSYY**CCWWLLLLPPPPHHQQRRRRIIMMTTTTNNKKSS**VVVVAAAADDEEGGGG',
-        '--------------------------------MMMM---------------M------------',
-        'Vertebrate Mitochondrial',
+        "FFLLSSSSYY**CCWWLLLLPPPPHHQQRRRRIIMMTTTTNNKKSS**VVVVAAAADDEEGGGG",
+        "--------------------------------MMMM---------------M------------",
+        "Vertebrate Mitochondrial",
     ),
     3: GeneticCode(
-        'FFLLSSSSYY**CCWWTTTTPPPPHHQQRRRRIIMMTTTTNNKKSSRRVVVVAAAADDEEGGGG',
-        '----------------------------------MM----------------------------',
-        'Yeast Mitochondrial',
+        "FFLLSSSSYY**CCWWTTTTPPPPHHQQRRRRIIMMTTTTNNKKSSRRVVVVAAAADDEEGGGG",
+        "----------------------------------MM----------------------------",
+        "Yeast Mitochondrial",
     ),
     4: GeneticCode(
-        'FFLLSSSSYY**CCWWLLLLPPPPHHQQRRRRIIIMTTTTNNKKSSRRVVVVAAAADDEEGGGG',
-        '--MM---------------M------------MMMM---------------M------------',
-        'Mold, Protozoan, and Coelenterate Mitochondrial, and '
-        'Mycoplasma/Spiroplasma',
+        "FFLLSSSSYY**CCWWLLLLPPPPHHQQRRRRIIIMTTTTNNKKSSRRVVVVAAAADDEEGGGG",
+        "--MM---------------M------------MMMM---------------M------------",
+        "Mold, Protozoan, and Coelenterate Mitochondrial, and "
+        "Mycoplasma/Spiroplasma",
     ),
     5: GeneticCode(
-        'FFLLSSSSYY**CCWWLLLLPPPPHHQQRRRRIIMMTTTTNNKKSSSSVVVVAAAADDEEGGGG',
-        '---M----------------------------MMMM---------------M------------',
-        'Invertebrate Mitochondrial',
+        "FFLLSSSSYY**CCWWLLLLPPPPHHQQRRRRIIMMTTTTNNKKSSSSVVVVAAAADDEEGGGG",
+        "---M----------------------------MMMM---------------M------------",
+        "Invertebrate Mitochondrial",
     ),
     6: GeneticCode(
-        'FFLLSSSSYYQQCC*WLLLLPPPPHHQQRRRRIIIMTTTTNNKKSSRRVVVVAAAADDEEGGGG',
-        '-----------------------------------M----------------------------',
-        'Ciliate, Dasycladacean and Hexamita Nuclear',
+        "FFLLSSSSYYQQCC*WLLLLPPPPHHQQRRRRIIIMTTTTNNKKSSRRVVVVAAAADDEEGGGG",
+        "-----------------------------------M----------------------------",
+        "Ciliate, Dasycladacean and Hexamita Nuclear",
     ),
     9: GeneticCode(
-        'FFLLSSSSYY**CCWWLLLLPPPPHHQQRRRRIIIMTTTTNNNKSSSSVVVVAAAADDEEGGGG',
-        '-----------------------------------M---------------M------------',
-        'Echinoderm and Flatworm Mitochondrial',
+        "FFLLSSSSYY**CCWWLLLLPPPPHHQQRRRRIIIMTTTTNNNKSSSSVVVVAAAADDEEGGGG",
+        "-----------------------------------M---------------M------------",
+        "Echinoderm and Flatworm Mitochondrial",
     ),
     10: GeneticCode(
-        'FFLLSSSSYY**CCCWLLLLPPPPHHQQRRRRIIIMTTTTNNKKSSRRVVVVAAAADDEEGGGG',
-        '-----------------------------------M----------------------------',
-        'Euplotid Nuclear',
+        "FFLLSSSSYY**CCCWLLLLPPPPHHQQRRRRIIIMTTTTNNKKSSRRVVVVAAAADDEEGGGG",
+        "-----------------------------------M----------------------------",
+        "Euplotid Nuclear",
     ),
     11: GeneticCode(
-        'FFLLSSSSYY**CC*WLLLLPPPPHHQQRRRRIIIMTTTTNNKKSSRRVVVVAAAADDEEGGGG',
-        '---M---------------M------------MMMM---------------M------------',
-        'Bacterial, Archaeal and Plant Plastid',
+        "FFLLSSSSYY**CC*WLLLLPPPPHHQQRRRRIIIMTTTTNNKKSSRRVVVVAAAADDEEGGGG",
+        "---M---------------M------------MMMM---------------M------------",
+        "Bacterial, Archaeal and Plant Plastid",
     ),
     12: GeneticCode(
-        'FFLLSSSSYY**CC*WLLLSPPPPHHQQRRRRIIIMTTTTNNKKSSRRVVVVAAAADDEEGGGG',
-        '-------------------M---------------M----------------------------',
-        'Alternative Yeast Nuclear',
+        "FFLLSSSSYY**CC*WLLLSPPPPHHQQRRRRIIIMTTTTNNKKSSRRVVVVAAAADDEEGGGG",
+        "-------------------M---------------M----------------------------",
+        "Alternative Yeast Nuclear",
     ),
     13: GeneticCode(
-        'FFLLSSSSYY**CCWWLLLLPPPPHHQQRRRRIIMMTTTTNNKKSSGGVVVVAAAADDEEGGGG',
-        '---M------------------------------MM---------------M------------',
-        'Ascidian Mitochondrial',
+        "FFLLSSSSYY**CCWWLLLLPPPPHHQQRRRRIIMMTTTTNNKKSSGGVVVVAAAADDEEGGGG",
+        "---M------------------------------MM---------------M------------",
+        "Ascidian Mitochondrial",
     ),
     14: GeneticCode(
-        'FFLLSSSSYYY*CCWWLLLLPPPPHHQQRRRRIIIMTTTTNNNKSSSSVVVVAAAADDEEGGGG',
-        '-----------------------------------M----------------------------',
-        'Alternative Flatworm Mitochondrial',
+        "FFLLSSSSYYY*CCWWLLLLPPPPHHQQRRRRIIIMTTTTNNNKSSSSVVVVAAAADDEEGGGG",
+        "-----------------------------------M----------------------------",
+        "Alternative Flatworm Mitochondrial",
     ),
     16: GeneticCode(
-        'FFLLSSSSYY*LCC*WLLLLPPPPHHQQRRRRIIIMTTTTNNKKSSRRVVVVAAAADDEEGGGG',
-        '-----------------------------------M----------------------------',
-        'Chlorophycean Mitochondrial',
+        "FFLLSSSSYY*LCC*WLLLLPPPPHHQQRRRRIIIMTTTTNNKKSSRRVVVVAAAADDEEGGGG",
+        "-----------------------------------M----------------------------",
+        "Chlorophycean Mitochondrial",
     ),
     21: GeneticCode(
-        'FFLLSSSSYY**CCWWLLLLPPPPHHQQRRRRIIMMTTTTNNNKSSSSVVVVAAAADDEEGGGG',
-        '-----------------------------------M---------------M------------',
-        'Trematode Mitochondrial',
+        "FFLLSSSSYY**CCWWLLLLPPPPHHQQRRRRIIMMTTTTNNNKSSSSVVVVAAAADDEEGGGG",
+        "-----------------------------------M---------------M------------",
+        "Trematode Mitochondrial",
     ),
     22: GeneticCode(
-        'FFLLSS*SYY*LCC*WLLLLPPPPHHQQRRRRIIIMTTTTNNKKSSRRVVVVAAAADDEEGGGG',
-        '-----------------------------------M----------------------------',
-        'Scenedesmus obliquus Mitochondrial',
+        "FFLLSS*SYY*LCC*WLLLLPPPPHHQQRRRRIIIMTTTTNNKKSSRRVVVVAAAADDEEGGGG",
+        "-----------------------------------M----------------------------",
+        "Scenedesmus obliquus Mitochondrial",
     ),
     23: GeneticCode(
-        'FF*LSSSSYY**CC*WLLLLPPPPHHQQRRRRIIIMTTTTNNKKSSRRVVVVAAAADDEEGGGG',
-        '--------------------------------M--M---------------M------------',
-        'Thraustochytrium Mitochondrial',
+        "FF*LSSSSYY**CC*WLLLLPPPPHHQQRRRRIIIMTTTTNNKKSSRRVVVVAAAADDEEGGGG",
+        "--------------------------------M--M---------------M------------",
+        "Thraustochytrium Mitochondrial",
     ),
     24: GeneticCode(
-        'FFLLSSSSYY**CCWWLLLLPPPPHHQQRRRRIIIMTTTTNNKKSSSKVVVVAAAADDEEGGGG',
-        '---M---------------M---------------M---------------M------------',
-        'Pterobranchia Mitochondrial',
+        "FFLLSSSSYY**CCWWLLLLPPPPHHQQRRRRIIIMTTTTNNKKSSSKVVVVAAAADDEEGGGG",
+        "---M---------------M---------------M---------------M------------",
+        "Pterobranchia Mitochondrial",
     ),
     25: GeneticCode(
-        'FFLLSSSSYY**CCGWLLLLPPPPHHQQRRRRIIIMTTTTNNKKSSRRVVVVAAAADDEEGGGG',
-        '---M-------------------------------M---------------M------------',
-        'Candidate Division SR1 and Gracilibacteria',
+        "FFLLSSSSYY**CCGWLLLLPPPPHHQQRRRRIIIMTTTTNNKKSSRRVVVVAAAADDEEGGGG",
+        "---M-------------------------------M---------------M------------",
+        "Candidate Division SR1 and Gracilibacteria",
     ),
 }

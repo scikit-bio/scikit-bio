@@ -125,21 +125,21 @@ class RNA(GrammaredSequence, NucleotideMixin):
     @overrides(NucleotideMixin)
     def complement_map(cls):
         comp_map = {
-            'A': 'U',
-            'U': 'A',
-            'G': 'C',
-            'C': 'G',
-            'Y': 'R',
-            'R': 'Y',
-            'S': 'S',
-            'W': 'W',
-            'K': 'M',
-            'M': 'K',
-            'B': 'V',
-            'D': 'H',
-            'H': 'D',
-            'V': 'B',
-            'N': 'N',
+            "A": "U",
+            "U": "A",
+            "G": "C",
+            "C": "G",
+            "Y": "R",
+            "R": "Y",
+            "S": "S",
+            "W": "W",
+            "K": "M",
+            "M": "K",
+            "B": "V",
+            "D": "H",
+            "H": "D",
+            "V": "B",
+            "N": "N",
         }
 
         comp_map.update({c: c for c in cls.gap_chars})
@@ -148,45 +148,45 @@ class RNA(GrammaredSequence, NucleotideMixin):
     @classproperty
     @overrides(GrammaredSequence)
     def definite_chars(cls):
-        return set('ACGU')
+        return set("ACGU")
 
     @classproperty
     @overrides(GrammaredSequence)
     def degenerate_map(cls):
         return {
-            'R': set('AG'),
-            'Y': set('CU'),
-            'M': set('AC'),
-            'K': set('UG'),
-            'W': set('AU'),
-            'S': set('GC'),
-            'B': set('CGU'),
-            'D': set('AGU'),
-            'H': set('ACU'),
-            'V': set('ACG'),
-            'N': set('ACGU'),
+            "R": set("AG"),
+            "Y": set("CU"),
+            "M": set("AC"),
+            "K": set("UG"),
+            "W": set("AU"),
+            "S": set("GC"),
+            "B": set("CGU"),
+            "D": set("AGU"),
+            "H": set("ACU"),
+            "V": set("ACG"),
+            "N": set("ACGU"),
         }
 
     @classproperty
     @overrides(GrammaredSequence)
     def default_gap_char(cls):
-        return '-'
+        return "-"
 
     @classproperty
     @overrides(GrammaredSequence)
     def gap_chars(cls):
-        return set('-.')
+        return set("-.")
 
     @classproperty
     @overrides(GrammaredSequence)
     def wildcard_char(cls):
-        return 'N'
+        return "N"
 
     @property
     def _motifs(self):
         return _motifs
 
-    @stable(as_of='0.4.1')
+    @stable(as_of="0.4.1")
     def reverse_transcribe(self):
         """Reverse transcribe RNA into DNA.
 
@@ -238,7 +238,7 @@ class RNA(GrammaredSequence, NucleotideMixin):
         --------------------------
         0 TAACGTTA
         """
-        seq = self._string.replace(b'U', b'T')
+        seq = self._string.replace(b"U", b"T")
 
         metadata = None
         if self.has_metadata():
@@ -261,7 +261,7 @@ class RNA(GrammaredSequence, NucleotideMixin):
             validate=False,
         )
 
-    @stable(as_of='0.4.0')
+    @stable(as_of="0.4.0")
     def translate(self, genetic_code=1, *args, **kwargs):
         """Translate RNA sequence into protein sequence.
 
@@ -331,7 +331,7 @@ class RNA(GrammaredSequence, NucleotideMixin):
             genetic_code = skbio.GeneticCode.from_ncbi(genetic_code)
         return genetic_code.translate(self, *args, **kwargs)
 
-    @stable(as_of='0.4.0')
+    @stable(as_of="0.4.0")
     def translate_six_frames(self, genetic_code=1, *args, **kwargs):
         """Translate RNA into protein using six possible reading frames.
 
@@ -466,11 +466,11 @@ class RNA(GrammaredSequence, NucleotideMixin):
     def _repr_stats(self):
         """Define custom statistics to display in the sequence's repr."""
         stats = super(RNA, self)._repr_stats()
-        stats.append(('GC-content', '{:.2%}'.format(self.gc_content())))
+        stats.append(("GC-content", "{:.2%}".format(self.gc_content())))
         return stats
 
 
 _motifs = _parent_motifs.copy()
 
 # Leave this at the bottom
-_motifs.interpolate(RNA, 'find_motifs')
+_motifs.interpolate(RNA, "find_motifs")

@@ -12,7 +12,7 @@ from skbio.diversity._util import _validate_counts_vector
 from skbio.util._decorator import experimental
 
 
-@experimental(as_of='0.4.0')
+@experimental(as_of="0.4.0")
 def ace(counts, rare_threshold=10):
     r"""Calculate the ACE metric (Abundance-based Coverage Estimator).
 
@@ -91,9 +91,9 @@ def ace(counts, rare_threshold=10):
 
     if singles > 0 and singles == s_rare:
         raise ValueError(
-            'The only rare OTUs are singletons, so the ACE '
-            'metric is undefined. EstimateS suggests using '
-            'bias-corrected Chao1 instead.'
+            "The only rare OTUs are singletons, so the ACE "
+            "metric is undefined. EstimateS suggests using "
+            "bias-corrected Chao1 instead."
         )
 
     s_abun = _otus_abundant(freq_counts, rare_threshold)

@@ -36,7 +36,7 @@ import skbio
 from skbio.util._decorator import experimental
 
 
-@experimental(as_of='0.4.2')
+@experimental(as_of="0.4.2")
 def hamming(seq1, seq2):
     """Compute Hamming distance between two sequences.
 
@@ -92,8 +92,8 @@ def hamming(seq1, seq2):
     # because the error you would get otherwise is cryptic.
     if len(seq1) != len(seq2):
         raise ValueError(
-            'Hamming distance can only be computed between sequences of equal '
-            'length (%d != %d)' % (len(seq1), len(seq2))
+            "Hamming distance can only be computed between sequences of equal "
+            "length (%d != %d)" % (len(seq1), len(seq2))
         )
 
     # scipy throws a RuntimeWarning when computing Hamming distance on length 0
@@ -106,7 +106,7 @@ def hamming(seq1, seq2):
     return float(distance)
 
 
-@experimental(as_of='0.5.0')
+@experimental(as_of="0.5.0")
 def kmer_distance(seq1, seq2, k, overlap=True):
     """Compute the kmer distance between a pair of sequences
 
@@ -169,13 +169,13 @@ def _check_seqs(seq1, seq2):
     for seq in seq1, seq2:
         if not isinstance(seq, skbio.Sequence):
             raise TypeError(
-                '`seq1` and `seq2` must be Sequence instances, not %r'
+                "`seq1` and `seq2` must be Sequence instances, not %r"
                 % type(seq).__name__
             )
 
     # Asserts sequences have the same type
     if type(seq1) is not type(seq2):
         raise TypeError(
-            'Sequences must have matching type. Type %r does not match type %r'
+            "Sequences must have matching type. Type %r does not match type %r"
             % (type(seq1).__name__, type(seq2).__name__)
         )

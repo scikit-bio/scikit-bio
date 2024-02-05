@@ -17,7 +17,7 @@ from skbio.metadata import IntervalMetadata
 
 class MetadataMixin(metaclass=abc.ABCMeta):
     @property
-    @stable(as_of='0.4.0')
+    @stable(as_of="0.4.0")
     def metadata(self):
         """``dict`` containing metadata which applies to the entire object.
 
@@ -78,7 +78,7 @@ class MetadataMixin(metaclass=abc.ABCMeta):
     def metadata(self, metadata):
         if not isinstance(metadata, dict):
             raise TypeError(
-                'metadata must be a dict, not type %r' % type(metadata).__name__
+                "metadata must be a dict, not type %r" % type(metadata).__name__
             )
         # Shallow copy.
         self._metadata = metadata.copy()
@@ -143,7 +143,7 @@ class MetadataMixin(metaclass=abc.ABCMeta):
         else:
             return None
 
-    @stable(as_of='0.4.0')
+    @stable(as_of="0.4.0")
     def has_metadata(self):
         """Determine if the object has metadata.
 
@@ -192,7 +192,7 @@ class PositionalMetadataMixin(metaclass=abc.ABCMeta):
         raise NotImplementedError
 
     @property
-    @stable(as_of='0.4.0')
+    @stable(as_of="0.4.0")
     def positional_metadata(self):
         """``pd.DataFrame`` containing metadata along an axis.
 
@@ -291,8 +291,8 @@ class PositionalMetadataMixin(metaclass=abc.ABCMeta):
         # a blanket Exception will do.
         except Exception as e:
             raise TypeError(
-                'Invalid positional metadata. Must be consumable by '
-                '`pd.DataFrame` constructor. Original pandas error message: '
+                "Invalid positional metadata. Must be consumable by "
+                "`pd.DataFrame` constructor. Original pandas error message: "
                 '"%s"' % e
             )
 
@@ -300,8 +300,8 @@ class PositionalMetadataMixin(metaclass=abc.ABCMeta):
         axis_len = self._positional_metadata_axis_len_()
         if num_rows != axis_len:
             raise ValueError(
-                'Number of positional metadata values (%d) must match the '
-                'positional metadata axis length (%d).' % (num_rows, axis_len)
+                "Number of positional metadata values (%d) must match the "
+                "positional metadata axis length (%d)." % (num_rows, axis_len)
             )
 
         positional_metadata.index = self._get_positional_metadata_index()
@@ -388,7 +388,7 @@ class PositionalMetadataMixin(metaclass=abc.ABCMeta):
         else:
             return None
 
-    @stable(as_of='0.4.0')
+    @stable(as_of="0.4.0")
     def has_positional_metadata(self):
         """Determine if the object has positional metadata.
 
@@ -453,7 +453,7 @@ class IntervalMetadataMixin(metaclass=abc.ABCMeta):
             self.interval_metadata = interval_metadata
 
     @property
-    @experimental(as_of='0.5.1')
+    @experimental(as_of="0.5.1")
     def interval_metadata(self):
         """``IntervalMetadata`` object containing info about interval features.
 
@@ -479,13 +479,13 @@ class IntervalMetadataMixin(metaclass=abc.ABCMeta):
             axis_len = self._interval_metadata_axis_len_()
             if lower_bound != 0:
                 raise ValueError(
-                    'The lower bound for the interval features (%d) '
-                    'must be zero.' % lower_bound
+                    "The lower bound for the interval features (%d) "
+                    "must be zero." % lower_bound
                 )
             if upper_bound is not None and upper_bound != axis_len:
                 raise ValueError(
-                    'The upper bound for the interval features (%d) '
-                    'must match the interval metadata axis length (%d)'
+                    "The upper bound for the interval features (%d) "
+                    "must match the interval metadata axis length (%d)"
                     % (upper_bound, axis_len)
                 )
             # copy all the data to the mixin
@@ -494,15 +494,15 @@ class IntervalMetadataMixin(metaclass=abc.ABCMeta):
             )
         else:
             raise TypeError(
-                'You must provide `IntervalMetadata` object, '
-                'not type %s.' % type(interval_metadata).__name__
+                "You must provide `IntervalMetadata` object, "
+                "not type %s." % type(interval_metadata).__name__
             )
 
     @interval_metadata.deleter
     def interval_metadata(self):
         self._interval_metadata = None
 
-    @experimental(as_of='0.5.1')
+    @experimental(as_of="0.5.1")
     def has_interval_metadata(self):
         """Determine if the object has interval metadata.
 

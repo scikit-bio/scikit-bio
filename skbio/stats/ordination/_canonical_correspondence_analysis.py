@@ -15,7 +15,7 @@ from ._utils import corr, svd_rank, scale
 from skbio.util._decorator import experimental
 
 
-@experimental(as_of='0.4.0')
+@experimental(as_of="0.4.0")
 def cca(y, x, scaling=1):
     r"""Compute canonical (also known as constrained) correspondence
     analysis.
@@ -119,7 +119,7 @@ def cca(y, x, scaling=1):
             "The samples by features table 'y' cannot contain a " "row with only 0's"
         )
     if scaling not in {1, 2}:
-        raise NotImplementedError('Scaling {0} not implemented.'.format(scaling))
+        raise NotImplementedError("Scaling {0} not implemented.".format(scaling))
 
     # Step 1 (similar to Pearson chi-square statistic)
     grand_total = Y.sum()
@@ -211,7 +211,7 @@ def cca(y, x, scaling=1):
 
     biplot_scores = corr(X_weighted, u)
 
-    pc_ids = ['CCA%d' % (i + 1) for i in range(len(eigenvalues))]
+    pc_ids = ["CCA%d" % (i + 1) for i in range(len(eigenvalues))]
     sample_ids = y.index
     feature_ids = y.columns
     eigvals = pd.Series(eigenvalues, index=pc_ids)
@@ -226,8 +226,8 @@ def cca(y, x, scaling=1):
     )
 
     return OrdinationResults(
-        'CCA',
-        'Canonical Correspondence Analysis',
+        "CCA",
+        "Canonical Correspondence Analysis",
         eigvals,
         samples,
         features=features,

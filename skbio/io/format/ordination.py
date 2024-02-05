@@ -192,7 +192,7 @@ import pandas as pd
 from skbio.stats.ordination import OrdinationResults
 from skbio.io import create_format, OrdinationFormatError
 
-ordination = create_format('ordination')
+ordination = create_format("ordination")
 
 
 @ordination.sniffer()
@@ -204,12 +204,12 @@ def _ordination_sniffer(fh):
     #   - a whitespace-only line
     #   - proportion explained header (minimally parsed)
     try:
-        _parse_header(fh, 'Eigvals', 1)
+        _parse_header(fh, "Eigvals", 1)
         next_line = next(fh, None)
 
         if next_line is not None:
             _check_empty_line(fh)
-            _parse_header(fh, 'Proportion explained', 1)
+            _parse_header(fh, "Proportion explained", 1)
             return True, {}
     except OrdinationFormatError:
         pass
@@ -219,39 +219,39 @@ def _ordination_sniffer(fh):
 
 @ordination.reader(OrdinationResults)
 def _ordination_to_ordination_results(fh):
-    eigvals = _parse_vector_section(fh, 'Eigvals')
+    eigvals = _parse_vector_section(fh, "Eigvals")
     if eigvals is None:
-        raise OrdinationFormatError('At least one eigval must be present.')
+        raise OrdinationFormatError("At least one eigval must be present.")
     _check_empty_line(fh)
 
-    prop_expl = _parse_vector_section(fh, 'Proportion explained')
-    _check_length_against_eigvals(prop_expl, eigvals, 'proportion explained values')
+    prop_expl = _parse_vector_section(fh, "Proportion explained")
+    _check_length_against_eigvals(prop_expl, eigvals, "proportion explained values")
     _check_empty_line(fh)
 
-    species = _parse_array_section(fh, 'Species')
-    _check_length_against_eigvals(species, eigvals, 'coordinates per species')
+    species = _parse_array_section(fh, "Species")
+    _check_length_against_eigvals(species, eigvals, "coordinates per species")
     _check_empty_line(fh)
 
-    site = _parse_array_section(fh, 'Site')
-    _check_length_against_eigvals(site, eigvals, 'coordinates per site')
+    site = _parse_array_section(fh, "Site")
+    _check_length_against_eigvals(site, eigvals, "coordinates per site")
     _check_empty_line(fh)
 
     # biplot does not have ids to parse (the other arrays do)
-    biplot = _parse_array_section(fh, 'Biplot', has_ids=False)
+    biplot = _parse_array_section(fh, "Biplot", has_ids=False)
     _check_empty_line(fh)
 
-    cons = _parse_array_section(fh, 'Site constraints')
+    cons = _parse_array_section(fh, "Site constraints")
 
     if cons is not None and site is not None:
         if not np.array_equal(cons.index, site.index):
             raise OrdinationFormatError(
-                'Site constraints ids and site ids must be equal: %s != %s'
+                "Site constraints ids and site ids must be equal: %s != %s"
                 % (cons.index, site.index)
             )
 
     return OrdinationResults(
-        short_method_name='',
-        long_method_name='',
+        short_method_name="",
+        long_method_name="",
         eigvals=eigvals,
         features=species,
         samples=site,
@@ -265,13 +265,13 @@ def _parse_header(fh, header_id, num_dimensions):
     line = next(fh, None)
     if line is None:
         raise OrdinationFormatError(
-            'Reached end of file while looking for %s header.' % header_id
+            "Reached end of file while looking for %s header." % header_id
         )
 
-    header = line.strip().split('\t')
+    header = line.strip().split("\t")
     # +1 for the header ID
     if len(header) != num_dimensions + 1 or header[0] != header_id:
-        raise OrdinationFormatError('%s header not found.' % header_id)
+        raise OrdinationFormatError("%s header not found." % header_id)
     return header
 
 
@@ -280,11 +280,11 @@ def _check_empty_line(fh):
     line = next(fh, None)
     if line is None:
         raise OrdinationFormatError(
-            'Reached end of file while looking for blank line separating ' 'sections.'
+            "Reached end of file while looking for blank line separating " "sections."
         )
 
     if line.strip():
-        raise OrdinationFormatError('Expected an empty line.')
+        raise OrdinationFormatError("Expected an empty line.")
 
 
 def _check_length_against_eigvals(data, eigvals, label):
@@ -294,7 +294,7 @@ def _check_length_against_eigvals(data, eigvals, label):
 
         if num_vals != num_eigvals:
             raise OrdinationFormatError(
-                'There should be as many %s as eigvals: %d != %d'
+                "There should be as many %s as eigvals: %d != %d"
                 % (label, num_vals, num_eigvals)
             )
 
@@ -312,13 +312,13 @@ def _parse_vector_section(fh, header_id):
         line = next(fh, None)
         if line is None:
             raise OrdinationFormatError(
-                'Reached end of file while looking for line containing values '
-                'for %s section.' % header_id
+                "Reached end of file while looking for line containing values "
+                "for %s section." % header_id
             )
-        vals = pd.Series(np.asarray(line.strip().split('\t'), dtype=np.float64))
+        vals = pd.Series(np.asarray(line.strip().split("\t"), dtype=np.float64))
         if len(vals) != num_vals:
             raise OrdinationFormatError(
-                'Expected %d values in %s section, but found %d.'
+                "Expected %d values in %s section, but found %d."
                 % (num_vals, header_id, len(vals))
             )
     return vals
@@ -341,7 +341,7 @@ def _parse_array_section(fh, header_id, has_ids=True):
     elif rows == 0 or cols == 0:
         # Both dimensions should be 0 or none of them are zero
         raise OrdinationFormatError(
-            'One dimension of %s is 0: %d x %d' % (header_id, rows, cols)
+            "One dimension of %s is 0: %d x %d" % (header_id, rows, cols)
         )
     else:
         # Parse the data
@@ -355,10 +355,10 @@ def _parse_array_section(fh, header_id, has_ids=True):
             line = next(fh, None)
             if line is None:
                 raise OrdinationFormatError(
-                    'Reached end of file while looking for row %d in %s '
-                    'section.' % (i + 1, header_id)
+                    "Reached end of file while looking for row %d in %s "
+                    "section." % (i + 1, header_id)
                 )
-            vals = line.strip().split('\t')
+            vals = line.strip().split("\t")
 
             if has_ids:
                 ids.append(vals[0])
@@ -366,7 +366,7 @@ def _parse_array_section(fh, header_id, has_ids=True):
 
             if len(vals) != cols:
                 raise OrdinationFormatError(
-                    'Expected %d values, but found %d in row %d.'
+                    "Expected %d values, but found %d in row %d."
                     % (cols, len(vals), i + 1)
                 )
             data[i, :] = np.asarray(vals, dtype=np.float64)
@@ -377,13 +377,13 @@ def _parse_array_section(fh, header_id, has_ids=True):
 
 @ordination.writer(OrdinationResults)
 def _ordination_results_to_ordination(obj, fh):
-    _write_vector_section(fh, 'Eigvals', obj.eigvals)
-    _write_vector_section(fh, 'Proportion explained', obj.proportion_explained)
-    _write_array_section(fh, 'Species', obj.features)
-    _write_array_section(fh, 'Site', obj.samples)
-    _write_array_section(fh, 'Biplot', obj.biplot_scores, has_ids=False)
+    _write_vector_section(fh, "Eigvals", obj.eigvals)
+    _write_vector_section(fh, "Proportion explained", obj.proportion_explained)
+    _write_array_section(fh, "Species", obj.features)
+    _write_array_section(fh, "Site", obj.samples)
+    _write_array_section(fh, "Biplot", obj.biplot_scores, has_ids=False)
     _write_array_section(
-        fh, 'Site constraints', obj.sample_constraints, include_section_separator=False
+        fh, "Site constraints", obj.sample_constraints, include_section_separator=False
     )
 
 
@@ -392,11 +392,11 @@ def _write_vector_section(fh, header_id, vector):
         shape = 0
     else:
         shape = vector.shape[0]
-    fh.write('%s\t%d\n' % (header_id, shape))
+    fh.write("%s\t%d\n" % (header_id, shape))
 
     if vector is not None:
         fh.write(_format_vector(vector.values))
-    fh.write('\n')
+    fh.write("\n")
 
 
 def _write_array_section(
@@ -407,7 +407,7 @@ def _write_array_section(
         shape = (0, 0)
     else:
         shape = data.shape
-    fh.write('%s\t%d\t%d\n' % (header_id, shape[0], shape[1]))
+    fh.write("%s\t%d\t%d\n" % (header_id, shape[0], shape[1]))
 
     # write section data
     if data is not None:
@@ -419,13 +419,13 @@ def _write_array_section(
                 fh.write(_format_vector(vals, id_))
 
     if include_section_separator:
-        fh.write('\n')
+        fh.write("\n")
 
 
 def _format_vector(vector, id_=None):
-    formatted_vector = '\t'.join(np.asarray(vector, dtype=str))
+    formatted_vector = "\t".join(np.asarray(vector, dtype=str))
 
     if id_ is None:
-        return '%s\n' % formatted_vector
+        return "%s\n" % formatted_vector
     else:
-        return '%s\t%s\n' % (id_, formatted_vector)
+        return "%s\t%s\n" % (id_, formatted_vector)

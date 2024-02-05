@@ -100,12 +100,12 @@ def _block_party(counts=None, row_ids=None, col_ids=None, **kwargs):
     nonzero_cols = (counts_block != 0).any(axis=0)
     counts_block = counts_block[:, nonzero_cols]
 
-    kwargs['counts'] = counts_block
-    kwargs['ids'] = ids_to_keep
+    kwargs["counts"] = counts_block
+    kwargs["ids"] = ids_to_keep
 
-    if 'tree' in kwargs and 'otu_ids' in kwargs:
-        kwargs['otu_ids'] = np.asarray(kwargs['otu_ids'])[nonzero_cols]
-        kwargs['tree'] = kwargs['tree'].shear(kwargs['otu_ids'])
+    if "tree" in kwargs and "otu_ids" in kwargs:
+        kwargs["otu_ids"] = np.asarray(kwargs["otu_ids"])[nonzero_cols]
+        kwargs["tree"] = kwargs["tree"].shear(kwargs["otu_ids"])
 
     return kwargs
 
@@ -139,7 +139,7 @@ def _pairs_to_compute(rids, cids):
     # otherwise, grab pairwise combinations disregarding the diagonal
     else:
         if set(rids).intersection(set(cids)):
-            raise ValueError('Attempting to compute a lower triangle')
+            raise ValueError("Attempting to compute a lower triangle")
         return [(i, j) for i in rids for j in cids if i != j]
 
 
@@ -152,21 +152,21 @@ def _block_kwargs(**kwargs):
         The parameters for the block of the distance matrix to compute.
     """
     valid_block_keys = {
-        'counts',
-        'ids',
-        'tree',
-        'otu_ids',
-        'metric',
-        'id_pairs',
-        'validate',
+        "counts",
+        "ids",
+        "tree",
+        "otu_ids",
+        "metric",
+        "id_pairs",
+        "validate",
     }
-    for row_ids, col_ids in _generate_id_blocks(kwargs['ids'], kwargs['k']):
+    for row_ids, col_ids in _generate_id_blocks(kwargs["ids"], kwargs["k"]):
         id_pairs = _pairs_to_compute(row_ids, col_ids)
         if id_pairs:
             kw = {k: v for k, v in kwargs.items() if k in valid_block_keys}
-            kw['id_pairs'] = id_pairs
-            kw['row_ids'] = row_ids
-            kw['col_ids'] = col_ids
+            kw["id_pairs"] = id_pairs
+            kw["row_ids"] = row_ids
+            kw["col_ids"] = col_ids
 
             yield kw
 
@@ -244,7 +244,7 @@ def _reduce(blocks):
     return DistanceMatrix(mat + mat.T, list(range(n_ids)))
 
 
-@experimental(as_of='0.5.1')
+@experimental(as_of="0.5.1")
 def block_beta_diversity(
     metric, counts, ids, validate=True, k=64, reduce_f=None, map_f=None, **kwargs
 ):
@@ -318,12 +318,12 @@ def block_beta_diversity(
     # The block method uses numeric IDs to take advantage of fancy indexing
     # with numpy.
     tmp_ids = np.arange(len(counts))
-    kwargs['ids'] = tmp_ids
+    kwargs["ids"] = tmp_ids
 
-    kwargs['metric'] = metric
-    kwargs['counts'] = counts
-    kwargs['k'] = k
-    kwargs['validate'] = False  # we've already validated if necessary
+    kwargs["metric"] = metric
+    kwargs["counts"] = counts
+    kwargs["k"] = k
+    kwargs["validate"] = False  # we've already validated if necessary
 
     dm = reduce_f(map_f(_block_compute, _block_kwargs(**kwargs)))
     dm.ids = ids

@@ -226,57 +226,57 @@ from .registry import write, read, sniff, create_format, io_registry
 from .util import open
 
 __all__ = [
-    'write',
-    'read',
-    'sniff',
-    'open',
-    'io_registry',
-    'create_format',
-    'FormatIdentificationWarning',
-    'ArgumentOverrideWarning',
-    'UnrecognizedFormatError',
-    'IOSourceError',
-    'FileFormatError',
-    'BLAST7FormatError',
-    'ClustalFormatError',
-    'EMBLFormatError',
-    'FASTAFormatError',
-    'FASTQFormatError',
-    'GenBankFormatError',
-    'GFF3FormatError',
-    'LSMatFormatError',
-    'NewickFormatError',
-    'OrdinationFormatError',
-    'PhylipFormatError',
-    'QSeqFormatError',
-    'QUALFormatError',
-    'StockholmFormatError',
+    "write",
+    "read",
+    "sniff",
+    "open",
+    "io_registry",
+    "create_format",
+    "FormatIdentificationWarning",
+    "ArgumentOverrideWarning",
+    "UnrecognizedFormatError",
+    "IOSourceError",
+    "FileFormatError",
+    "BLAST7FormatError",
+    "ClustalFormatError",
+    "EMBLFormatError",
+    "FASTAFormatError",
+    "FASTQFormatError",
+    "GenBankFormatError",
+    "GFF3FormatError",
+    "LSMatFormatError",
+    "NewickFormatError",
+    "OrdinationFormatError",
+    "PhylipFormatError",
+    "QSeqFormatError",
+    "QUALFormatError",
+    "StockholmFormatError",
 ]
 
 
 # Necessary to import each file format module to have them added to the I/O
 # registry. We use import_module instead of a typical import to avoid flake8
 # unused import errors.
-import_module('skbio.io.format.blast6')
-import_module('skbio.io.format.blast7')
-import_module('skbio.io.format.clustal')
-import_module('skbio.io.format.embl')
-import_module('skbio.io.format.fasta')
-import_module('skbio.io.format.fastq')
-import_module('skbio.io.format.lsmat')
-import_module('skbio.io.format.newick')
-import_module('skbio.io.format.ordination')
-import_module('skbio.io.format.phylip')
-import_module('skbio.io.format.qseq')
-import_module('skbio.io.format.genbank')
-import_module('skbio.io.format.gff3')
-import_module('skbio.io.format.stockholm')
-import_module('skbio.io.format.binary_dm')
-import_module('skbio.io.format.taxdump')
+import_module("skbio.io.format.blast6")
+import_module("skbio.io.format.blast7")
+import_module("skbio.io.format.clustal")
+import_module("skbio.io.format.embl")
+import_module("skbio.io.format.fasta")
+import_module("skbio.io.format.fastq")
+import_module("skbio.io.format.lsmat")
+import_module("skbio.io.format.newick")
+import_module("skbio.io.format.ordination")
+import_module("skbio.io.format.phylip")
+import_module("skbio.io.format.qseq")
+import_module("skbio.io.format.genbank")
+import_module("skbio.io.format.gff3")
+import_module("skbio.io.format.stockholm")
+import_module("skbio.io.format.binary_dm")
+import_module("skbio.io.format.taxdump")
 
 # This is meant to be a handy indicator to the user that they have done
 # something wrong.
-import_module('skbio.io.format.emptyfile')
+import_module("skbio.io.format.emptyfile")
 
 # Now that all of our I/O has loaded, we can add the object oriented methods
 # (read and write) to each class which has registered I/O operations.

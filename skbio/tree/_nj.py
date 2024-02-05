@@ -15,7 +15,7 @@ from skbio.tree import TreeNode
 from skbio.util._decorator import experimental
 
 
-@experimental(as_of='0.4.0')
+@experimental(as_of="0.4.0")
 def nj(dm, disallow_negative_branch_length=True, result_constructor=None):
     r"""Apply neighbor joining for phylogenetic reconstruction.
 
@@ -106,14 +106,14 @@ def nj(dm, disallow_negative_branch_length=True, result_constructor=None):
     """
     if dm.shape[0] < 3:
         raise ValueError(
-            'Distance matrix must be at least 3x3 to '
-            'generate a neighbor joining tree.'
+            "Distance matrix must be at least 3x3 to "
+            "generate a neighbor joining tree."
         )
 
     if result_constructor is None:
 
         def result_constructor(x):
-            return TreeNode.read(io.StringIO(x), format='newick')
+            return TreeNode.read(io.StringIO(x), format="newick")
 
     # initialize variables
     node_definition = None
@@ -136,7 +136,7 @@ def nj(dm, disallow_negative_branch_length=True, result_constructor=None):
             dm, idx1, idx2, disallow_negative_branch_length
         )
         # define the new node in newick style
-        node_definition = '(%s:%f, %s:%f)' % (
+        node_definition = "(%s:%f, %s:%f)" % (
             pair_member_1,
             pair_member_1_len,
             pair_member_2,
@@ -174,7 +174,7 @@ def nj(dm, disallow_negative_branch_length=True, result_constructor=None):
         internal_len = 0
 
     # ...and finally create the newick string describing the whole tree.
-    newick = '(%s:%f, %s:%f, %s:%f);' % (
+    newick = "(%s:%f, %s:%f, %s:%f);" % (
         pair_member_1,
         pair_member_1_len,
         node_definition,

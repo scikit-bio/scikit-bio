@@ -10,8 +10,8 @@
 def _pprint_strs(
     strs,
     max_chars=80,
-    delimiter=', ',
-    suffix='...',
+    delimiter=", ",
+    suffix="...",
 ):
     """Pretty-print an iterable of strings, truncating if necessary."""
     # Adapted from http://stackoverflow.com/a/250373

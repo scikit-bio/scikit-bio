@@ -12,7 +12,7 @@ from skbio.diversity._util import _validate_counts_vector
 from skbio.util._decorator import experimental
 
 
-@experimental(as_of='0.4.0')
+@experimental(as_of="0.4.0")
 def lladser_pe(counts, r=10):
     """Calculate single point estimate of conditional uncovered probability.
 
@@ -59,8 +59,8 @@ def lladser_pe(counts, r=10):
     return pe
 
 
-@experimental(as_of='0.4.0')
-def lladser_ci(counts, r, alpha=0.95, f=10, ci_type='ULCL'):
+@experimental(as_of="0.4.0")
+def lladser_ci(counts, r, alpha=0.95, f=10, ci_type="ULCL"):
     """Calculate single CI of the conditional uncovered probability.
 
     Parameters
@@ -153,7 +153,7 @@ def _lladser_point_estimates(sample, r=10):
 
     """
     if r <= 2:
-        raise ValueError('r must be greater than or equal to 3.')
+        raise ValueError("r must be greater than or equal to 3.")
 
     for count, seen, cost, i in _get_interval_for_r_new_otus(sample, r):
         t = np.random.gamma(count, 1)
@@ -218,7 +218,7 @@ def _get_interval_for_r_new_otus(seq, r):
         yield count, set(seen), cost, i
 
 
-def _lladser_ci_series(seq, r, alpha=0.95, f=10, ci_type='ULCL'):
+def _lladser_ci_series(seq, r, alpha=0.95, f=10, ci_type="ULCL"):
     """Construct r-color confidence intervals for uncovered conditional prob.
 
     Parameters
@@ -248,7 +248,7 @@ def _lladser_ci_series(seq, r, alpha=0.95, f=10, ci_type='ULCL'):
         yield _lladser_ci_from_r(r, t, alpha, f, ci_type)
 
 
-def _lladser_ci_from_r(r, t, alpha=0.95, f=10, ci_type='ULCL'):
+def _lladser_ci_from_r(r, t, alpha=0.95, f=10, ci_type="ULCL"):
     """Construct r-color confidence interval for uncovered conditional prob.
 
     Returns
@@ -266,13 +266,13 @@ def _lladser_ci_from_r(r, t, alpha=0.95, f=10, ci_type='ULCL'):
     """
     alpha = round(alpha, 2)
 
-    if ci_type == 'U':
+    if ci_type == "U":
         if alpha != 0.95:
             raise ValueError("alpha must be 0.95 if ci_type is 'U'.")
         if r not in _UPPER_CONFIDENCE_BOUND:
             raise ValueError("r must be between 1-25 or 50 if ci_type is 'U'.")
         return 0.0, _UPPER_CONFIDENCE_BOUND[r] / t
-    elif ci_type == 'L':
+    elif ci_type == "L":
         if alpha != 0.95:
             raise ValueError("alpha must be 0.95 if ci_type is 'L'.")
         if r not in _LOWER_CONFIDENCE_BOUND:
@@ -280,9 +280,9 @@ def _lladser_ci_from_r(r, t, alpha=0.95, f=10, ci_type='ULCL'):
         return _LOWER_CONFIDENCE_BOUND[r] / t, 1.0
 
     bound_params = _ul_confidence_bounds(f, r, alpha)
-    if ci_type == 'ULCL':
+    if ci_type == "ULCL":
         bound_param = bound_params[0]
-    elif ci_type == 'ULCU':
+    elif ci_type == "ULCU":
         bound_param = bound_params[1]
     else:
         raise ValueError("Unknown ci_type '%s'." % ci_type)
@@ -333,8 +333,8 @@ def _ul_confidence_bounds(f, r, alpha):
 
     if a is None or b is None:
         raise ValueError(
-            'No constants are precomputed for the combination of '
-            'f=%f, r=%d, and alpha=%.2f' % (f, r, alpha)
+            "No constants are precomputed for the combination of "
+            "f=%f, r=%d, and alpha=%.2f" % (f, r, alpha)
         )
     return a, b
 

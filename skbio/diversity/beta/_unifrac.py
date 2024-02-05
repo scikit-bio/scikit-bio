@@ -26,7 +26,7 @@ from skbio.diversity._phylogenetic import _tip_distances
 _normalize_weighted_unifrac_by_default = False
 
 
-@experimental(as_of='0.4.1')
+@experimental(as_of="0.4.1")
 def unweighted_unifrac(u_counts, v_counts, otu_ids, tree, validate=True):
     """Compute unweighted UniFrac
 
@@ -152,10 +152,10 @@ def unweighted_unifrac(u_counts, v_counts, otu_ids, tree, validate=True):
     u_node_counts, v_node_counts, _, _, tree_index = _setup_pairwise_unifrac(
         u_counts, v_counts, otu_ids, tree, validate, normalized=False, unweighted=True
     )
-    return _unweighted_unifrac(u_node_counts, v_node_counts, tree_index['length'])
+    return _unweighted_unifrac(u_node_counts, v_node_counts, tree_index["length"])
 
 
-@experimental(as_of='0.4.1')
+@experimental(as_of="0.4.1")
 def weighted_unifrac(
     u_counts,
     v_counts,
@@ -307,7 +307,7 @@ def weighted_unifrac(
         normalized=normalized,
         unweighted=False,
     )
-    branch_lengths = tree_index['length']
+    branch_lengths = tree_index["length"]
 
     if normalized:
         tip_indices = _get_tip_indices(tree_index)
@@ -594,7 +594,7 @@ def _setup_multiple_weighted_unifrac(counts, otu_ids, tree, normalized, validate
 
 def _get_tip_indices(tree_index):
     tip_indices = np.array(
-        [n.id for n in tree_index['id_index'].values() if n.is_tip()]
+        [n.id for n in tree_index["id_index"].values() if n.is_tip()]
     )
     return tip_indices
 

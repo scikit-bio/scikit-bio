@@ -214,15 +214,15 @@ from ._pairwise import (
 from skbio.alignment._ssw_wrapper import StripedSmithWaterman, AlignmentStructure
 
 __all__ = [
-    'TabularMSA',
-    'StripedSmithWaterman',
-    'AlignmentStructure',
-    'local_pairwise_align_ssw',
-    'global_pairwise_align',
-    'global_pairwise_align_nucleotide',
-    'global_pairwise_align_protein',
-    'local_pairwise_align',
-    'local_pairwise_align_nucleotide',
-    'local_pairwise_align_protein',
-    'make_identity_substitution_matrix',
+    "TabularMSA",
+    "StripedSmithWaterman",
+    "AlignmentStructure",
+    "local_pairwise_align_ssw",
+    "global_pairwise_align",
+    "global_pairwise_align_nucleotide",
+    "global_pairwise_align_protein",
+    "local_pairwise_align",
+    "local_pairwise_align_nucleotide",
+    "local_pairwise_align_protein",
+    "make_identity_substitution_matrix",
 ]

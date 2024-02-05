@@ -300,10 +300,10 @@ from skbio.io.format._base import (
 from skbio.alignment import TabularMSA
 from skbio.sequence import Sequence, DNA, RNA, Protein
 
-_whitespace_regex = re.compile(r'\s')
+_whitespace_regex = re.compile(r"\s")
 
 
-fastq = create_format('fastq')
+fastq = create_format("fastq")
 
 
 @fastq.sniffer()
@@ -320,11 +320,11 @@ def _fastq_sniffer(fh):
         not_empty = False
         for _, seq in zip(range(10), _fastq_to_generator(fh, phred_offset=33)):
             split_length = len(
-                (seq.metadata['id'] + seq.metadata['description']).split(':')
+                (seq.metadata["id"] + seq.metadata["description"]).split(":")
             )
-            description = seq.metadata['description'].split(':')
-            if split_length == 10 and description[1] in 'YN':
-                return True, {'variant': 'illumina1.8'}
+            description = seq.metadata["description"].split(":")
+            if split_length == 10 and description[1] in "YN":
+                return True, {"variant": "illumina1.8"}
             not_empty = True
         return not_empty, {}
     except (FASTQFormatError, ValueError):
@@ -341,19 +341,19 @@ def _fastq_to_generator(
     except StopIteration:
         return
 
-    if not seq_header.startswith('@'):
+    if not seq_header.startswith("@"):
         raise FASTQFormatError(
-            'Expected sequence (@) header line at start of file: %r' % str(seq_header)
+            "Expected sequence (@) header line at start of file: %r" % str(seq_header)
         )
 
     while seq_header is not None:
         id_, desc = _parse_fasta_like_header(seq_header)
         seq, qual_header = _parse_sequence_data(fh, seq_header)
 
-        if qual_header != '+' and qual_header[1:] != seq_header[1:]:
+        if qual_header != "+" and qual_header[1:] != seq_header[1:]:
             raise FASTQFormatError(
-                'Sequence (@) and quality (+) header lines do not match: '
-                '%r != %r' % (str(seq_header[1:]), str(qual_header[1:]))
+                "Sequence (@) and quality (+) header lines do not match: "
+                "%r != %r" % (str(seq_header[1:]), str(qual_header[1:]))
             )
 
         phred_scores, seq_header = _parse_quality_scores(
@@ -361,8 +361,8 @@ def _fastq_to_generator(
         )
         yield constructor(
             seq,
-            metadata={'id': id_, 'description': desc},
-            positional_metadata={'quality': phred_scores},
+            metadata={"id": id_, "description": desc},
+            positional_metadata={"quality": phred_scores},
             **kwargs,
         )
 
@@ -420,7 +420,7 @@ def _fastq_to_tabular_msa(
     fh, variant=None, phred_offset=None, constructor=None, **kwargs
 ):
     if constructor is None:
-        raise ValueError('Must provide `constructor`.')
+        raise ValueError("Must provide `constructor`.")
 
     return TabularMSA(
         _fastq_to_generator(
@@ -439,8 +439,8 @@ def _generator_to_fastq(
     fh,
     variant=None,
     phred_offset=None,
-    id_whitespace_replacement='_',
-    description_newline_replacement=' ',
+    id_whitespace_replacement="_",
+    description_newline_replacement=" ",
     lowercase=None,
 ):
     formatted_records = _format_fasta_like_records(
@@ -454,13 +454,13 @@ def _generator_to_fastq(
         qual_str = _encode_phred_to_qual(
             qual_scores, variant=variant, phred_offset=phred_offset
         )
-        fh.write('@')
+        fh.write("@")
         fh.write(header)
-        fh.write('\n')
+        fh.write("\n")
         fh.write(seq_str)
-        fh.write('\n+\n')
+        fh.write("\n+\n")
         fh.write(qual_str)
-        fh.write('\n')
+        fh.write("\n")
 
 
 @fastq.writer(Sequence)
@@ -469,8 +469,8 @@ def _sequence_to_fastq(
     fh,
     variant=None,
     phred_offset=None,
-    id_whitespace_replacement='_',
-    description_newline_replacement=' ',
+    id_whitespace_replacement="_",
+    description_newline_replacement=" ",
     lowercase=None,
 ):
     _sequences_to_fastq(
@@ -490,8 +490,8 @@ def _dna_to_fastq(
     fh,
     variant=None,
     phred_offset=None,
-    id_whitespace_replacement='_',
-    description_newline_replacement=' ',
+    id_whitespace_replacement="_",
+    description_newline_replacement=" ",
     lowercase=None,
 ):
     _sequences_to_fastq(
@@ -511,8 +511,8 @@ def _rna_to_fastq(
     fh,
     variant=None,
     phred_offset=None,
-    id_whitespace_replacement='_',
-    description_newline_replacement=' ',
+    id_whitespace_replacement="_",
+    description_newline_replacement=" ",
     lowercase=None,
 ):
     _sequences_to_fastq(
@@ -532,8 +532,8 @@ def _protein_to_fastq(
     fh,
     variant=None,
     phred_offset=None,
-    id_whitespace_replacement='_',
-    description_newline_replacement=' ',
+    id_whitespace_replacement="_",
+    description_newline_replacement=" ",
     lowercase=None,
 ):
     _sequences_to_fastq(
@@ -553,8 +553,8 @@ def _tabular_msa_to_fastq(
     fh,
     variant=None,
     phred_offset=None,
-    id_whitespace_replacement='_',
-    description_newline_replacement=' ',
+    id_whitespace_replacement="_",
+    description_newline_replacement=" ",
     lowercase=None,
 ):
     _sequences_to_fastq(
@@ -569,7 +569,7 @@ def _tabular_msa_to_fastq(
 
 
 def _blank_error(unique_text):
-    error_string = ('Found blank or whitespace-only line {} in ' 'FASTQ file').format(
+    error_string = ("Found blank or whitespace-only line {} in " "FASTQ file").format(
         unique_text
     )
     raise FASTQFormatError(error_string)
@@ -578,28 +578,28 @@ def _blank_error(unique_text):
 def _parse_sequence_data(fh, prev):
     seq_chunks = []
     for chunk in _line_generator(fh, skip_blanks=False):
-        if chunk.startswith('+'):
+        if chunk.startswith("+"):
             if not prev:
                 _blank_error("before '+'")
             if not seq_chunks:
-                raise FASTQFormatError('Found FASTQ record without sequence data.')
-            return ''.join(seq_chunks), chunk
-        elif chunk.startswith('@'):
+                raise FASTQFormatError("Found FASTQ record without sequence data.")
+            return "".join(seq_chunks), chunk
+        elif chunk.startswith("@"):
             raise FASTQFormatError(
-                'Found FASTQ record that is missing a quality (+) header line '
-                'after sequence data.'
+                "Found FASTQ record that is missing a quality (+) header line "
+                "after sequence data."
             )
         else:
             if not prev:
-                _blank_error('after header or within sequence')
+                _blank_error("after header or within sequence")
             if _whitespace_regex.search(chunk):
                 raise FASTQFormatError(
-                    'Found whitespace in sequence data: %r' % str(chunk)
+                    "Found whitespace in sequence data: %r" % str(chunk)
                 )
             seq_chunks.append(chunk)
         prev = chunk
 
-    raise FASTQFormatError('Found incomplete/truncated FASTQ record at end of file.')
+    raise FASTQFormatError("Found incomplete/truncated FASTQ record at end of file.")
 
 
 def _parse_quality_scores(fh, seq_len, variant, phred_offset, prev):
@@ -607,7 +607,7 @@ def _parse_quality_scores(fh, seq_len, variant, phred_offset, prev):
     qual_len = 0
     for chunk in _line_generator(fh, skip_blanks=False):
         if chunk:
-            if chunk.startswith('@') and qual_len == seq_len:
+            if chunk.startswith("@") and qual_len == seq_len:
                 return np.hstack(phred_scores), chunk
             else:
                 if not prev:
@@ -616,8 +616,8 @@ def _parse_quality_scores(fh, seq_len, variant, phred_offset, prev):
 
                 if qual_len > seq_len:
                     raise FASTQFormatError(
-                        'Found more quality score characters than sequence '
-                        'characters. Extra quality score characters: %r'
+                        "Found more quality score characters than sequence "
+                        "characters. Extra quality score characters: %r"
                         % chunk[-(qual_len - seq_len) :]
                     )
 
@@ -630,7 +630,7 @@ def _parse_quality_scores(fh, seq_len, variant, phred_offset, prev):
 
     if qual_len != seq_len:
         raise FASTQFormatError(
-            'Found incomplete/truncated FASTQ record at end of file.'
+            "Found incomplete/truncated FASTQ record at end of file."
         )
     return np.hstack(phred_scores), None
 

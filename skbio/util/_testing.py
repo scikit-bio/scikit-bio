@@ -46,8 +46,8 @@ class ReallyEqualMixin:
         self.assertTrue(b != a)
 
 
-@experimental(as_of='0.4.0')
-def get_data_path(fn, subfolder='data'):
+@experimental(as_of="0.4.0")
+def get_data_path(fn, subfolder="data"):
     """Return path to filename ``fn`` in the data folder.
 
     During testing it is often necessary to load data files. This
@@ -84,7 +84,7 @@ def get_data_path(fn, subfolder='data'):
     return data_path
 
 
-@experimental(as_of='0.4.0')
+@experimental(as_of="0.4.0")
 def assert_ordination_results_equal(
     left,
     right,
@@ -260,7 +260,7 @@ def _normalize_signs(arr1, arr2):
 
     if arr1.shape != arr2.shape:
         raise ValueError(
-            'Arrays must have the same shape ({0} vs {1}).'.format(
+            "Arrays must have the same shape ({0} vs {1}).".format(
                 arr1.shape, arr2.shape
             )
         )
@@ -276,7 +276,7 @@ def _normalize_signs(arr1, arr2):
 
     # Store current warnings, and ignore division by zero (like 1. /
     # 0.) and invalid operations (like 0. / 0.)
-    wrn = np.seterr(invalid='ignore', divide='ignore')
+    wrn = np.seterr(invalid="ignore", divide="ignore")
     differences = sign_arr1 / sign_arr2
     # The values in `differences` can be:
     #    1 -> equal signs
@@ -293,7 +293,7 @@ def _normalize_signs(arr1, arr2):
     return arr1 * differences, arr2
 
 
-@experimental(as_of='0.4.0')
+@experimental(as_of="0.4.0")
 def assert_data_frame_almost_equal(left, right, rtol=1e-5):
     """Raise AssertionError if ``pd.DataFrame`` objects are not "almost equal".
 
@@ -360,7 +360,7 @@ def assert_series_almost_equal(left, right):
         check_names=True,
         check_exact=False,
         check_datetimelike_compat=False,
-        obj='Series',
+        obj="Series",
     )
     # this check ensures that empty Series with different indices do not
     # compare equal.
@@ -378,7 +378,7 @@ def pytestrunner():
         try:
             # NumPy 1.14 changed repr output breaking our doctests,
             # request the legacy 1.13 style
-            numpy.set_printoptions(legacy='1.13')
+            numpy.set_printoptions(legacy="1.13")
         except TypeError:
             # Old Numpy, output should be fine as it is :)
             # TypeError: set_printoptions() got an unexpected
@@ -400,12 +400,12 @@ def pytestrunner():
     import pytest
 
     args = [
-        '--pyargs',
-        'skbio',
-        '--doctest-modules',
-        '--doctest-glob',
-        '*.pyx',
-        '-o',
+        "--pyargs",
+        "skbio",
+        "--doctest-modules",
+        "--doctest-glob",
+        "*.pyx",
+        "-o",
         '"doctest_optionflags=NORMALIZE_WHITESPACE' ' IGNORE_EXCEPTION_DETAIL"',
     ] + sys.argv[1:]
 

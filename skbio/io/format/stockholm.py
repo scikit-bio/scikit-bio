@@ -408,8 +408,8 @@ from skbio.alignment import TabularMSA
 from skbio.sequence._grammared_sequence import GrammaredSequence
 from skbio.io import create_format, StockholmFormatError
 
-stockholm = create_format('stockholm')
-_REFERENCE_TAGS = frozenset({'RM', 'RT', 'RA', 'RL', 'RC'})
+stockholm = create_format("stockholm")
+_REFERENCE_TAGS = frozenset({"RM", "RT", "RA", "RL", "RC"})
 
 
 @stockholm.sniffer()
@@ -433,53 +433,53 @@ def _stockholm_to_tabular_msa(fh, constructor=None):
     # Checks that user has passed required constructor parameter
     if constructor is None:
         raise ValueError(
-            'Must provide `constructor` parameter indicating the '
-            'type of sequences in the alignment. `constructor` '
-            'must be a subclass of `GrammaredSequence` '
-            '(e.g., `DNA`, `RNA`, `Protein`).'
+            "Must provide `constructor` parameter indicating the "
+            "type of sequences in the alignment. `constructor` "
+            "must be a subclass of `GrammaredSequence` "
+            "(e.g., `DNA`, `RNA`, `Protein`)."
         )
     # Checks that contructor parameter is supported
     elif not issubclass(constructor, GrammaredSequence):
-        raise TypeError('`constructor` must be a subclass of ' '`GrammaredSequence`.')
+        raise TypeError("`constructor` must be a subclass of " "`GrammaredSequence`.")
 
     # Checks that the file isn't empty
     try:
         line = next(fh)
     except StopIteration:
-        raise StockholmFormatError('File is empty.')
+        raise StockholmFormatError("File is empty.")
     # Checks that the file follows basic format (includes the required header)
     if not _is_header(line):
-        raise StockholmFormatError('File missing required Stockholm header ' 'line.')
+        raise StockholmFormatError("File missing required Stockholm header " "line.")
     msa_data = _MSAData()
     for line in fh:
         if line.isspace():
             continue
 
-        line = line.rstrip('\n')
+        line = line.rstrip("\n")
 
         if _is_sequence_line(line):
             seq_name, seq_data = _parse_sequence_line(line)
             msa_data.add_sequence(seq_name, seq_data)
-        elif line.startswith('#=GF'):
+        elif line.startswith("#=GF"):
             feature_name, feature_data = _parse_gf_line(line)
             msa_data.add_gf_metadata(feature_name, feature_data)
-        elif line.startswith('#=GS'):
+        elif line.startswith("#=GS"):
             seq_name, feature_name, feature_data = _parse_gs_line(line)
             msa_data.add_gs_metadata(seq_name, feature_name, feature_data)
-        elif line.startswith('#=GR'):
+        elif line.startswith("#=GR"):
             seq_name, feature_name, feature_data = _parse_gr_line(line)
             msa_data.add_gr_metadata(seq_name, feature_name, feature_data)
-        elif line.startswith('#=GC'):
+        elif line.startswith("#=GC"):
             feature_name, feature_data = _parse_gc_line(line)
             msa_data.add_gc_metadata(feature_name, feature_data)
         elif _is_footer(line):
             break
         else:
-            raise StockholmFormatError('Unrecognized line: %r' % line)
+            raise StockholmFormatError("Unrecognized line: %r" % line)
 
     if not _is_footer(line):
         raise StockholmFormatError(
-            'Final line does not conform to Stockholm '
+            "Final line does not conform to Stockholm "
             'format. Must contain only "//".'
         )
 
@@ -502,18 +502,18 @@ class _MSAData:
 
     def add_gf_metadata(self, feature_name, feature_data):
         # Handles first instance of labelled tree
-        if feature_name == 'TN' and 'NH' not in self._metadata:
-            self._metadata['NH'] = OrderedDict()
-            self._metadata['NH'][feature_data] = ''
+        if feature_name == "TN" and "NH" not in self._metadata:
+            self._metadata["NH"] = OrderedDict()
+            self._metadata["NH"][feature_data] = ""
         # Handles second instance of labelled tree
-        elif feature_name == 'TN' and 'NH' in self._metadata:
-            if feature_data in self._metadata['NH']:
+        elif feature_name == "TN" and "NH" in self._metadata:
+            if feature_data in self._metadata["NH"]:
                 raise StockholmFormatError(
-                    'Tree name %r used multiple times ' 'in file.' % feature_data
+                    "Tree name %r used multiple times " "in file." % feature_data
                 )
-            self._metadata['NH'][feature_data] = ''
+            self._metadata["NH"][feature_data] = ""
         # Handles extra line(s) of an already created tree
-        elif feature_name == 'NH' and feature_name in self._metadata:
+        elif feature_name == "NH" and feature_name in self._metadata:
             trees = self._metadata[feature_name]
             if isinstance(trees, OrderedDict):
                 tree_id = next(reversed(trees))
@@ -522,17 +522,17 @@ class _MSAData:
                 self._metadata[feature_name] = (
                     self._metadata[feature_name] + feature_data
                 )
-        elif feature_name == 'RN':
+        elif feature_name == "RN":
             if feature_name not in self._metadata:
                 self._metadata[feature_name] = [OrderedDict()]
             else:
                 self._metadata[feature_name].append(OrderedDict())
         elif feature_name in _REFERENCE_TAGS:
-            if 'RN' not in self._metadata:
+            if "RN" not in self._metadata:
                 raise StockholmFormatError(
                     "Expected 'RN' tag to precede " "'%s' tag." % feature_name
                 )
-            reference_dict = self._metadata['RN'][-1]
+            reference_dict = self._metadata["RN"][-1]
             if feature_name not in reference_dict:
                 reference_dict[feature_name] = feature_data
             else:
@@ -548,7 +548,7 @@ class _MSAData:
 
     def add_gc_metadata(self, feature_name, feature_data):
         if feature_name in self._positional_metadata:
-            _raise_duplicate_error('Found duplicate GC label %r.' % feature_name)
+            _raise_duplicate_error("Found duplicate GC label %r." % feature_name)
         self._positional_metadata[feature_name] = feature_data
 
     def add_gs_metadata(self, seq_name, feature_name, feature_data):
@@ -565,8 +565,8 @@ class _MSAData:
         if len(self._seqs) != len(self._seq_order):
             invalid_seq_names = set(self._seqs) - set(self._seq_order)
             raise StockholmFormatError(
-                'Found GS or GR metadata for '
-                'nonexistent sequence(s): %r' % invalid_seq_names
+                "Found GS or GR metadata for "
+                "nonexistent sequence(s): %r" % invalid_seq_names
             )
 
         seqs = []
@@ -606,7 +606,7 @@ class _SeqData:
         if self._seq is None:
             self._seq = seq
         else:
-            _raise_duplicate_error('Found duplicate sequence name: %r' % self.name)
+            _raise_duplicate_error("Found duplicate sequence name: %r" % self.name)
 
     def add_metadata_feature(self, feature_name, feature_data):
         if self.metadata is None:
@@ -622,8 +622,8 @@ class _SeqData:
             self.positional_metadata = OrderedDict()
         if feature_name in self.positional_metadata:
             _raise_duplicate_error(
-                'Found duplicate GR label %r associated '
-                'with sequence name %r' % (feature_name, self.name)
+                "Found duplicate GR label %r associated "
+                "with sequence name %r" % (feature_name, self.name)
             )
         else:
             self.positional_metadata[feature_name] = feature_data
@@ -672,77 +672,77 @@ def _parse_sequence_line(line):
 
 
 def _is_header(line):
-    return line == '# STOCKHOLM 1.0\n'
+    return line == "# STOCKHOLM 1.0\n"
 
 
 def _is_footer(line):
-    return line.rstrip() == '//'
+    return line.rstrip() == "//"
 
 
 def _is_sequence_line(line):
-    return not (line.startswith('#') or _is_footer(line))
+    return not (line.startswith("#") or _is_footer(line))
 
 
 def _raise_duplicate_error(message):
     raise StockholmFormatError(
-        message + ' Note: If the file being used is in '
-        'Stockholm interleaved format, this '
-        'is not supported by the reader.'
+        message + " Note: If the file being used is in "
+        "Stockholm interleaved format, this "
+        "is not supported by the reader."
     )
 
 
 def _check_for_malformed_line(line, expected_len):
     if len(line) != expected_len:
         raise StockholmFormatError(
-            'Line contains %d item(s). It must '
-            'contain exactly %d item(s).' % (len(line), expected_len)
+            "Line contains %d item(s). It must "
+            "contain exactly %d item(s)." % (len(line), expected_len)
         )
 
 
 @stockholm.writer(TabularMSA)
 def _tabular_msa_to_stockholm(obj, fh):
     if not obj.index.is_unique:
-        raise StockholmFormatError("The TabularMSA's index labels must be" ' unique.')
+        raise StockholmFormatError("The TabularMSA's index labels must be" " unique.")
     # Writes header
-    fh.write('# STOCKHOLM 1.0\n')
+    fh.write("# STOCKHOLM 1.0\n")
 
     # Writes GF data to file
     if obj.has_metadata():
         for gf_feature, gf_feature_data in obj.metadata.items():
-            if gf_feature == 'NH' and isinstance(gf_feature_data, dict):
+            if gf_feature == "NH" and isinstance(gf_feature_data, dict):
                 for tree_id, tree in gf_feature_data.items():
-                    fh.write('#=GF TN %s\n' % tree_id)
-                    fh.write('#=GF NH %s\n' % tree)
-            elif gf_feature == 'RN':
+                    fh.write("#=GF TN %s\n" % tree_id)
+                    fh.write("#=GF NH %s\n" % tree)
+            elif gf_feature == "RN":
                 if not isinstance(gf_feature_data, list):
                     raise StockholmFormatError(
                         "Expected 'RN' to contain a list of reference "
-                        'dictionaries, got %r.' % gf_feature_data
+                        "dictionaries, got %r." % gf_feature_data
                     )
 
                 for ref_num, dictionary in enumerate(gf_feature_data, start=1):
                     if not isinstance(dictionary, dict):
                         raise StockholmFormatError(
-                            'Expected reference information to be stored as a '
-                            'dictionary, found reference %d stored as %r.'
+                            "Expected reference information to be stored as a "
+                            "dictionary, found reference %d stored as %r."
                             % (ref_num, type(dictionary).__name__)
                         )
 
-                    fh.write('#=GF RN [%d]\n' % ref_num)
+                    fh.write("#=GF RN [%d]\n" % ref_num)
                     for feature in dictionary:
                         if feature not in _REFERENCE_TAGS:
-                            formatted_reference_tags = ', '.join(
+                            formatted_reference_tags = ", ".join(
                                 [tag for tag in _REFERENCE_TAGS]
                             )
                             raise StockholmFormatError(
-                                'Invalid reference tag %r found in reference '
-                                'dictionary %d. Valid reference tags are: %s.'
+                                "Invalid reference tag %r found in reference "
+                                "dictionary %d. Valid reference tags are: %s."
                                 % (feature, ref_num, formatted_reference_tags)
                             )
 
-                        fh.write('#=GF %s %s\n' % (feature, dictionary[feature]))
+                        fh.write("#=GF %s %s\n" % (feature, dictionary[feature]))
             else:
-                fh.write('#=GF %s %s\n' % (gf_feature, gf_feature_data))
+                fh.write("#=GF %s %s\n" % (gf_feature, gf_feature_data))
 
     unpadded_data = []
     # Writes GS data to file, retrieves GR data, and retrieves sequence data
@@ -751,34 +751,34 @@ def _tabular_msa_to_stockholm(obj, fh):
 
         if seq.has_metadata():
             for gs_feature, gs_feature_data in seq.metadata.items():
-                fh.write('#=GS %s %s %s\n' % (seq_name, gs_feature, gs_feature_data))
+                fh.write("#=GS %s %s %s\n" % (seq_name, gs_feature, gs_feature_data))
 
         unpadded_data.append((seq_name, str(seq)))
         if seq.has_positional_metadata():
             df = _format_positional_metadata(
-                seq.positional_metadata, 'Sequence-specific positional ' 'metadata (GR)'
+                seq.positional_metadata, "Sequence-specific positional " "metadata (GR)"
             )
             for gr_feature in df.columns:
-                gr_feature_data = ''.join(df[gr_feature])
-                gr_string = '#=GR %s %s' % (seq_name, gr_feature)
+                gr_feature_data = "".join(df[gr_feature])
+                gr_string = "#=GR %s %s" % (seq_name, gr_feature)
                 unpadded_data.append((gr_string, gr_feature_data))
 
     # Retrieves GC data
     if obj.has_positional_metadata():
         df = _format_positional_metadata(
             obj.positional_metadata,
-            'Multiple sequence alignment ' 'positional metadata (GC)',
+            "Multiple sequence alignment " "positional metadata (GC)",
         )
         for gc_feature in df.columns:
-            gc_feature_data = ''.join(df[gc_feature])
-            gc_string = '#=GC %s' % gc_feature
+            gc_feature_data = "".join(df[gc_feature])
+            gc_string = "#=GC %s" % gc_feature
             unpadded_data.append((gc_string, gc_feature_data))
 
     # Writes GR, GC, and raw data to file with padding
     _write_padded_data(unpadded_data, fh)
 
     # Writes footer
-    fh.write('//\n')
+    fh.write("//\n")
 
 
 def _write_padded_data(data, fh):
@@ -786,7 +786,7 @@ def _write_padded_data(data, fh):
     for label, _ in data:
         if len(label) > max_data_len:
             max_data_len = len(label)
-    fmt = '{0:%d} {1}\n' % max_data_len
+    fmt = "{0:%d} {1}\n" % max_data_len
     for label, value in data:
         fh.write(fmt.format(label, value))
 
@@ -796,8 +796,8 @@ def _format_positional_metadata(df, data_type):
     if not df.columns.is_unique:
         num_repeated_columns = len(df.columns) - len(set(df.columns))
         raise StockholmFormatError(
-            '%s feature names must be unique. '
-            'Found %d duplicate names.' % (data_type, num_repeated_columns)
+            "%s feature names must be unique. "
+            "Found %d duplicate names." % (data_type, num_repeated_columns)
         )
 
     str_df = df.astype(str)
@@ -806,12 +806,12 @@ def _format_positional_metadata(df, data_type):
     for column in str_df.columns:
         if (str_df[column].str.len() != 1).any():
             raise StockholmFormatError(
-                '%s must contain a single character for'
+                "%s must contain a single character for"
                 " each position's value. Found value(s)"
-                ' in column %s of incorrect length.' % (data_type, column)
+                " in column %s of incorrect length." % (data_type, column)
             )
     return str_df
 
 
 def _get_padding(item):
-    return '' if item[-1].isspace() else ' '
+    return "" if item[-1].isspace() else " "

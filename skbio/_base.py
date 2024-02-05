@@ -51,7 +51,7 @@ class ElasticLines:
         self._separator_idxs.append(len(self._lines) - 1)
 
     def to_str(self):
-        separator = '-' * self._max_line_len
+        separator = "-" * self._max_line_len
         for idx in self._separator_idxs:
             self._lines[idx] = separator
-        return '\n'.join(self._lines)
+        return "\n".join(self._lines)

@@ -149,11 +149,11 @@ import scipy.stats
 from skbio.util._decorator import experimental
 
 
-@experimental(as_of='0.4.0')
+@experimental(as_of="0.4.0")
 def subsample_power(
     test,
     samples,
-    draw_mode='ind',
+    draw_mode="ind",
     alpha_pwr=0.05,
     ratio=None,
     max_counts=50,
@@ -389,7 +389,7 @@ def subsample_power(
     return power, sample_counts
 
 
-@experimental(as_of='0.4.0')
+@experimental(as_of="0.4.0")
 def subsample_paired_power(
     test,
     meta,
@@ -568,7 +568,7 @@ def subsample_paired_power(
     ratio, num_p, sample_counts = _check_subsample_power_inputs(
         test=test,
         samples=sub_ids,
-        draw_mode='matched',
+        draw_mode="matched",
         min_counts=min_counts,
         max_counts=max_counts,
         counts_interval=counts_interval,
@@ -591,7 +591,7 @@ def subsample_paired_power(
     return power, sample_counts
 
 
-@experimental(as_of='0.4.0')
+@experimental(as_of="0.4.0")
 def confidence_bound(vec, alpha=0.05, df=None, axis=None):
     r"""Calculates a confidence bound assuming a normal distribution
 
@@ -645,7 +645,7 @@ def confidence_bound(vec, alpha=0.05, df=None, axis=None):
     return bound
 
 
-@experimental(as_of='0.4.0')
+@experimental(as_of="0.4.0")
 def paired_subsamples(meta, cat, control_cats, order=None, strict_match=True):
     r"""Draws a list of samples varied by `cat` and matched for `control_cats`
 
@@ -763,7 +763,7 @@ def _check_nans(x, switch=False):
     elif switch and isinstance(x, (list, tuple)):
         return True
     else:
-        raise TypeError('input must be a string, float or a nan')
+        raise TypeError("input must be a string, float or a nan")
 
 
 def _calculate_power(p_values, alpha=0.05):
@@ -792,7 +792,7 @@ def _calculate_power(p_values, alpha=0.05):
     return w
 
 
-def _compare_distributions(test, samples, num_p, counts=5, mode='ind', num_iter=100):
+def _compare_distributions(test, samples, num_p, counts=5, mode="ind", num_iter=100):
     r"""Compares two distribution arrays iteratively
 
     Parameters
@@ -852,7 +852,7 @@ def _compare_distributions(test, samples, num_p, counts=5, mode='ind', num_iter=
         counts = np.array([counts] * num_groups)
 
     for idx in range(num_iter):
-        if mode == 'matched':
+        if mode == "matched":
             pos = np.random.choice(np.arange(0, samp_lens[0]), counts[0], replace=False)
             subs = [sample[pos] for sample in samples]
         else:
@@ -872,7 +872,7 @@ def _compare_distributions(test, samples, num_p, counts=5, mode='ind', num_iter=
 def _check_subsample_power_inputs(
     test,
     samples,
-    draw_mode='ind',
+    draw_mode="ind",
     ratio=None,
     max_counts=50,
     counts_interval=10,
@@ -941,7 +941,7 @@ def _check_subsample_power_inputs(
 
     """
 
-    if draw_mode not in {'ind', 'matched'}:
+    if draw_mode not in {"ind", "matched"}:
         raise ValueError('mode must be "matched" or "ind".')
 
     # Determines the minimum number of ids in a category
@@ -951,11 +951,11 @@ def _check_subsample_power_inputs(
     num_groups = len(samples)
 
     # Checks that "matched" mode is handled appropriately
-    if draw_mode == 'matched':
+    if draw_mode == "matched":
         for id_ in samples:
             if not len(id_) == num_ids:
                 raise ValueError(
-                    'Each vector in samples must be the same '
+                    "Each vector in samples must be the same "
                     'length in "matched" draw_mode.'
                 )
 
@@ -963,15 +963,15 @@ def _check_subsample_power_inputs(
     if min_counts is None:
         min_counts = counts_interval
     if (max_counts - min_counts) < counts_interval:
-        raise ValueError('No subsamples of the specified size can be drawn.')
+        raise ValueError("No subsamples of the specified size can be drawn.")
 
     # Checks the ratio argument is sane
-    if ratio is None or draw_mode == 'matched':
+    if ratio is None or draw_mode == "matched":
         ratio = np.ones((num_groups))
     else:
         ratio = np.asarray(ratio)
     if not ratio.shape == (num_groups,):
-        raise ValueError('There must be a ratio for each group.')
+        raise ValueError("There must be a ratio for each group.")
 
     ratio_counts = np.array([id_counts[i] / ratio[i] for i in range(num_groups)])
     largest = ratio_counts.min()
@@ -983,7 +983,7 @@ def _check_subsample_power_inputs(
     elif isinstance(p_return, np.ndarray) and len(p_return.shape) == 1:
         num_p = p_return.shape[0]
     else:
-        raise TypeError('test must return a float or one-dimensional array.')
+        raise TypeError("test must return a float or one-dimensional array.")
 
     # Calculates the same counts
     sample_counts = np.arange(min_counts, min(max_counts, largest), counts_interval)
@@ -1070,7 +1070,7 @@ def _identify_sample_groups(meta, cat, control_cats, order, strict_match):
 
     # If index is empty, sets up meta_paris with a no key.
     if not meta_pairs:
-        meta_pairs['no'] = order
+        meta_pairs["no"] = order
 
     return meta_pairs, index
 
@@ -1098,8 +1098,8 @@ def _draw_paired_samples(meta_pairs, index, num_samps):
     """
 
     # Handles an empty paired vector
-    if 'no' in meta_pairs:
-        return [np.array([]) for o in meta_pairs['no']]
+    if "no" in meta_pairs:
+        return [np.array([]) for o in meta_pairs["no"]]
 
     # Identifies the absolute positions of the control group being drawn
     set_pos = np.random.choice(index, int(num_samps), replace=False).astype(int)
@@ -1130,7 +1130,7 @@ def _draw_paired_samples(meta_pairs, index, num_samps):
 
 
 def _calculate_power_curve(
-    test, samples, sample_counts, ratio=None, mode='ind', num_iter=1000, alpha=0.05
+    test, samples, sample_counts, ratio=None, mode="ind", num_iter=1000, alpha=0.05
 ):
     r"""Generates an empirical power curve for the samples.
 
@@ -1187,7 +1187,7 @@ def _calculate_power_curve(
         ratio = np.ones((num_groups))
     ratio = np.asarray(ratio)
     if not ratio.shape == (num_groups,):
-        raise ValueError('There must be a ratio for each group.')
+        raise ValueError("There must be a ratio for each group.")
 
     # Loops through the sample sizes
     for id2, s in enumerate(sample_counts):

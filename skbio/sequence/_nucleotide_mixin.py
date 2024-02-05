@@ -43,7 +43,7 @@ class NucleotideMixin(metaclass=ABCMeta):
     @classproperty
     def _gc_codes(cls):
         if cls.__gc_codes is None:
-            gc_iupac_chars = 'GCS'
+            gc_iupac_chars = "GCS"
             cls.__gc_codes = np.asarray([ord(g) for g in gc_iupac_chars])
         return cls.__gc_codes
 
@@ -53,7 +53,7 @@ class NucleotideMixin(metaclass=ABCMeta):
 
     @abstractproperty
     @classproperty
-    @stable(as_of='0.4.0')
+    @stable(as_of="0.4.0")
     def complement_map(cls):
         """Return mapping of nucleotide characters to their complements.
 
@@ -70,7 +70,7 @@ class NucleotideMixin(metaclass=ABCMeta):
         """
         raise NotImplementedError
 
-    @stable(as_of='0.4.0')
+    @stable(as_of="0.4.0")
     def complement(self, reverse=False):
         """Return the complement of the nucleotide sequence.
 
@@ -170,7 +170,7 @@ class NucleotideMixin(metaclass=ABCMeta):
 
         return complement
 
-    @stable(as_of='0.4.0')
+    @stable(as_of="0.4.0")
     def reverse_complement(self):
         """Return the reverse complement of the nucleotide sequence.
 
@@ -216,7 +216,7 @@ class NucleotideMixin(metaclass=ABCMeta):
         """
         return self.complement(reverse=True)
 
-    @stable(as_of='0.4.0')
+    @stable(as_of="0.4.0")
     def is_reverse_complement(self, other):
         r"""Determine if a sequence is the reverse complement of this sequence.
 
@@ -252,7 +252,7 @@ class NucleotideMixin(metaclass=ABCMeta):
         True
 
         """
-        other = self._munge_to_sequence(other, 'is_reverse_complement')
+        other = self._munge_to_sequence(other, "is_reverse_complement")
 
         # avoid computing the reverse complement if possible
         if len(self) != len(other):
@@ -263,7 +263,7 @@ class NucleotideMixin(metaclass=ABCMeta):
             # underlying sequence data
             return self.reverse_complement()._string == other._string
 
-    @stable(as_of='0.4.0')
+    @stable(as_of="0.4.0")
     def gc_content(self):
         """Calculate the relative frequency of G's and C's in the sequence.
 
@@ -308,7 +308,7 @@ class NucleotideMixin(metaclass=ABCMeta):
         """
         return self.gc_frequency(relative=True)
 
-    @stable(as_of='0.4.0')
+    @stable(as_of="0.4.0")
     def gc_frequency(self, relative=False):
         """Calculate frequency of G's and C's in the sequence.
 
@@ -371,13 +371,13 @@ class NucleotideMixin(metaclass=ABCMeta):
 _motifs = parent_motifs.copy()
 
 
-@_motifs('purine-run')
+@_motifs("purine-run")
 def _motif_purine_run(sequence, min_length, ignore):
     """Identifies purine runs"""
-    return sequence.find_with_regex('([AGR]{%d,})' % min_length, ignore=ignore)
+    return sequence.find_with_regex("([AGR]{%d,})" % min_length, ignore=ignore)
 
 
-@_motifs('pyrimidine-run')
+@_motifs("pyrimidine-run")
 def _motif_pyrimidine_run(sequence, min_length, ignore):
     """Identifies pyrimidine runs"""
-    return sequence.find_with_regex('([CTUY]{%d,})' % min_length, ignore=ignore)
+    return sequence.find_with_regex("([CTUY]{%d,})" % min_length, ignore=ignore)

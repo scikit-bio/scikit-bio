@@ -19,11 +19,11 @@ def resolve_key(obj, key):
     """Resolve key given an object and key."""
     if callable(key):
         return key(obj)
-    elif hasattr(obj, 'metadata'):
+    elif hasattr(obj, "metadata"):
         return obj.metadata[key]
     raise TypeError(
-        'Could not resolve key %r. Key must be callable or %s must'
-        ' have `metadata` attribute.' % (key, obj.__class__.__name__)
+        "Could not resolve key %r. Key must be callable or %s must"
+        " have `metadata` attribute." % (key, obj.__class__.__name__)
     )
 
 
@@ -31,7 +31,7 @@ def make_sentinel(name):
     return type(
         name,
         (),
-        {'__repr__': lambda s: name, '__str__': lambda s: name, '__class__': None},
+        {"__repr__": lambda s: name, "__str__": lambda s: name, "__class__": None},
     )()
 
 
@@ -57,11 +57,11 @@ class MiniRegistry(dict):
     def formatted_listing(self):
         """Produce an RST list with descriptions."""
         if len(self) == 0:
-            return '\tNone'
+            return "\tNone"
         else:
-            return '\n'.join(
+            return "\n".join(
                 [
-                    '\t%r\n\t  %s' % (name, self[name].__doc__.split('\n')[0])
+                    "\t%r\n\t  %s" % (name, self[name].__doc__.split("\n")[0])
                     for name in sorted(self)
                 ]
             )
@@ -79,9 +79,9 @@ class MiniRegistry(dict):
 
         # Conveniently the original docstring is on f2, not the new ones if
         # inheritance is happening. I have no idea why.
-        t = f2.__doc__.split('\n\n')
+        t = f2.__doc__.split("\n\n")
         t.insert(2, self.formatted_listing())
-        f2.__doc__ = '\n\n'.join(t)
+        f2.__doc__ = "\n\n".join(t)
 
         setattr(obj, name, f2)
 
@@ -95,12 +95,12 @@ def chunk_str(s, n, char):
     # Modified from http://stackoverflow.com/a/312464/3776794
     if n < 1:
         raise ValueError(
-            'Cannot split string into chunks with n=%d. n must be >= 1.' % n
+            "Cannot split string into chunks with n=%d. n must be >= 1." % n
         )
     return char.join((s[i : i + n] for i in range(0, len(s), n)))
 
 
-@experimental(as_of='0.4.0')
+@experimental(as_of="0.4.0")
 def cardinal_to_ordinal(n):
     """Return ordinal string version of cardinal int `n`.
 
@@ -139,11 +139,11 @@ def cardinal_to_ordinal(n):
     # Taken and modified from http://stackoverflow.com/a/20007730/3776794
     # Originally from http://codegolf.stackexchange.com/a/4712 by Gareth
     if n < 0:
-        raise ValueError('Cannot convert negative integer %d to ordinal ' 'string.' % n)
-    return '%d%s' % (n, 'tsnrhtdd'[(n // 10 % 10 != 1) * (n % 10 < 4) * n % 10 :: 4])
+        raise ValueError("Cannot convert negative integer %d to ordinal " "string." % n)
+    return "%d%s" % (n, "tsnrhtdd"[(n // 10 % 10 != 1) * (n % 10 < 4) * n % 10 :: 4])
 
 
-@experimental(as_of='0.4.0')
+@experimental(as_of="0.4.0")
 def safe_md5(open_file, block_size=2**20):
     """Computes an md5 sum without loading the file into memory
 
@@ -185,7 +185,7 @@ def safe_md5(open_file, block_size=2**20):
     return md5
 
 
-@experimental(as_of='0.4.0')
+@experimental(as_of="0.4.0")
 def find_duplicates(iterable):
     """Find duplicate elements in an iterable.
 
@@ -213,7 +213,7 @@ def find_duplicates(iterable):
     return repeated
 
 
-@experimental(as_of='0.5.10')
+@experimental(as_of="0.5.10")
 def get_rng(seed=None):
     """Get a random generator.
 
@@ -247,11 +247,11 @@ def get_rng(seed=None):
         if isinstance(seed, np.random.Generator):
             return seed
         raise ValueError(
-            'Invalid seed. It must be an integer or an '
-            'instance of np.random.Generator.'
+            "Invalid seed. It must be an integer or an "
+            "instance of np.random.Generator."
         )
     except AttributeError:
         raise ValueError(
-            'The installed NumPy version does not support '
-            'random.Generator. Please use NumPy >= 1.17.'
+            "The installed NumPy version does not support "
+            "random.Generator. Please use NumPy >= 1.17."
         )

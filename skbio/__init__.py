@@ -21,33 +21,33 @@ import skbio.diversity  # noqa
 import skbio.stats.evolve  # noqa
 
 __all__ = [
-    'Sequence',
-    'DNA',
-    'RNA',
-    'Protein',
-    'GeneticCode',
-    'SubstitutionMatrix',
-    'DistanceMatrix',
-    'TabularMSA',
-    'local_pairwise_align_ssw',
-    'TreeNode',
-    'nj',
-    'read',
-    'write',
-    'OrdinationResults',
+    "Sequence",
+    "DNA",
+    "RNA",
+    "Protein",
+    "GeneticCode",
+    "SubstitutionMatrix",
+    "DistanceMatrix",
+    "TabularMSA",
+    "local_pairwise_align_ssw",
+    "TreeNode",
+    "nj",
+    "read",
+    "write",
+    "OrdinationResults",
 ]
 
-__credits__ = 'https://github.com/scikit-bio/scikit-bio/graphs/contributors'
-__version__ = '0.5.9'
+__credits__ = "https://github.com/scikit-bio/scikit-bio/graphs/contributors"
+__version__ = "0.5.9"
 
 
 mottos = [
     # 03/15/2014
     "It's gonna get weird, bro.",
     # 05/14/2014
-    'no cog yay',
+    "no cog yay",
     # 03/18/2015
-    'bincount!',
+    "bincount!",
 ]
 motto = mottos[-1]
 

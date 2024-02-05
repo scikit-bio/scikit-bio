@@ -20,7 +20,7 @@ from skbio.util import EfficiencyWarning
 from skbio.util._decorator import experimental, deprecated
 
 
-@experimental(as_of='0.4.0')
+@experimental(as_of="0.4.0")
 def local_pairwise_align_nucleotide(
     seq1,
     seq2,
@@ -87,14 +87,14 @@ def local_pairwise_align_nucleotide(
     for seq in seq1, seq2:
         if not isinstance(seq, (DNA, RNA)):
             raise TypeError(
-                '`seq1` and `seq2` must be DNA or RNA, not type %r' % type(seq).__name__
+                "`seq1` and `seq2` must be DNA or RNA, not type %r" % type(seq).__name__
             )
 
     # use the substitution matrix provided by the user, or compute from
     # match_score and mismatch_score if a substitution matrix was not provided
     if substitution_matrix is None:
         substitution_matrix = SubstitutionMatrix.identity(
-            'ACGTU', match_score, mismatch_score
+            "ACGTU", match_score, mismatch_score
         ).to_dict()
 
     return local_pairwise_align(
@@ -102,7 +102,7 @@ def local_pairwise_align_nucleotide(
     )
 
 
-@experimental(as_of='0.4.0')
+@experimental(as_of="0.4.0")
 def local_pairwise_align_protein(
     seq1, seq2, gap_open_penalty=11, gap_extend_penalty=1, substitution_matrix=None
 ):
@@ -160,18 +160,18 @@ def local_pairwise_align_protein(
     for seq in seq1, seq2:
         if not isinstance(seq, Protein):
             raise TypeError(
-                '`seq1` and `seq2` must be Protein, not type %r' % type(seq).__name__
+                "`seq1` and `seq2` must be Protein, not type %r" % type(seq).__name__
             )
 
     if substitution_matrix is None:
-        substitution_matrix = SubstitutionMatrix.by_name('BLOSUM50').to_dict()
+        substitution_matrix = SubstitutionMatrix.by_name("BLOSUM50").to_dict()
 
     return local_pairwise_align(
         seq1, seq2, gap_open_penalty, gap_extend_penalty, substitution_matrix
     )
 
 
-@experimental(as_of='0.4.0')
+@experimental(as_of="0.4.0")
 def local_pairwise_align(
     seq1, seq2, gap_open_penalty, gap_extend_penalty, substitution_matrix
 ):
@@ -225,21 +225,21 @@ def local_pairwise_align(
     """
     warn(
         "You're using skbio's python implementation of Smith-Waterman "
-        'alignment. This will be very slow (e.g., thousands of times slower) '
-        'than skbio.alignment.local_pairwise_align_ssw.',
+        "alignment. This will be very slow (e.g., thousands of times slower) "
+        "than skbio.alignment.local_pairwise_align_ssw.",
         EfficiencyWarning,
     )
 
     for seq in seq1, seq2:
         if not isinstance(seq, GrammaredSequence):
             raise TypeError(
-                '`seq1` and `seq2` must be %r subclasses, not type %r'
+                "`seq1` and `seq2` must be %r subclasses, not type %r"
                 % (GrammaredSequence.__name__, type(seq).__name__)
             )
 
     if type(seq1) is not type(seq2):
         raise TypeError(
-            '`seq1` and `seq2` must be the same type: %r != %r'
+            "`seq1` and `seq2` must be the same type: %r != %r"
             % (type(seq1).__name__, type(seq2).__name__)
         )
 
@@ -273,7 +273,7 @@ def local_pairwise_align(
     return msa, score, start_end_positions
 
 
-@experimental(as_of='0.4.0')
+@experimental(as_of="0.4.0")
 def global_pairwise_align_nucleotide(
     seq1,
     seq2,
@@ -351,13 +351,13 @@ def global_pairwise_align_nucleotide(
     for seq in seq1, seq2:
         if not isinstance(seq, (DNA, RNA, TabularMSA)):
             raise TypeError(
-                '`seq1` and `seq2` must be DNA, RNA, or TabularMSA, not type '
-                '%r' % type(seq).__name__
+                "`seq1` and `seq2` must be DNA, RNA, or TabularMSA, not type "
+                "%r" % type(seq).__name__
             )
         if isinstance(seq, TabularMSA) and not issubclass(seq.dtype, (DNA, RNA)):
             raise TypeError(
-                '`seq1` and `seq2` must be TabularMSA with DNA or RNA dtype, '
-                'not dtype %r' % seq.dtype.__name__
+                "`seq1` and `seq2` must be TabularMSA with DNA or RNA dtype, "
+                "not dtype %r" % seq.dtype.__name__
             )
 
     # use the substitution matrix provided by the user, or compute from
@@ -377,7 +377,7 @@ def global_pairwise_align_nucleotide(
     )
 
 
-@experimental(as_of='0.4.0')
+@experimental(as_of="0.4.0")
 def global_pairwise_align_protein(
     seq1,
     seq2,
@@ -450,17 +450,17 @@ def global_pairwise_align_protein(
     for seq in seq1, seq2:
         if not isinstance(seq, (Protein, TabularMSA)):
             raise TypeError(
-                '`seq1` and `seq2` must be Protein or TabularMSA, not type %r'
+                "`seq1` and `seq2` must be Protein or TabularMSA, not type %r"
                 % type(seq).__name__
             )
         if isinstance(seq, TabularMSA) and not issubclass(seq.dtype, Protein):
             raise TypeError(
-                '`seq1` and `seq2` must be TabularMSA with Protein dtype, '
-                'not dtype %r' % seq.dtype.__name__
+                "`seq1` and `seq2` must be TabularMSA with Protein dtype, "
+                "not dtype %r" % seq.dtype.__name__
             )
 
     if substitution_matrix is None:
-        substitution_matrix = SubstitutionMatrix.by_name('BLOSUM50').to_dict()
+        substitution_matrix = SubstitutionMatrix.by_name("BLOSUM50").to_dict()
 
     return global_pairwise_align(
         seq1,
@@ -472,7 +472,7 @@ def global_pairwise_align_protein(
     )
 
 
-@experimental(as_of='0.4.0')
+@experimental(as_of="0.4.0")
 def global_pairwise_align(
     seq1,
     seq2,
@@ -543,10 +543,10 @@ def global_pairwise_align(
     """
     warn(
         "You're using skbio's python implementation of Needleman-Wunsch "
-        'alignment. This is known to be very slow (e.g., thousands of times '
+        "alignment. This is known to be very slow (e.g., thousands of times "
         "slower than a native C implementation). We'll be adding a faster "
-        'version soon (see https://github.com/scikit-bio/scikit-bio/issues/'
-        '254 to track progress on this).',
+        "version soon (see https://github.com/scikit-bio/scikit-bio/issues/"
+        "254 to track progress on this).",
         EfficiencyWarning,
     )
 
@@ -556,8 +556,8 @@ def global_pairwise_align(
         # guaranteed by `TabularMSA`.
         if not isinstance(seq, (GrammaredSequence, TabularMSA)):
             raise TypeError(
-                '`seq1` and `seq2` must be GrammaredSequence subclasses or '
-                'TabularMSA, not type %r' % type(seq).__name__
+                "`seq1` and `seq2` must be GrammaredSequence subclasses or "
+                "TabularMSA, not type %r" % type(seq).__name__
             )
 
     seq1 = _coerce_alignment_input_type(seq1)
@@ -565,7 +565,7 @@ def global_pairwise_align(
 
     if seq1.dtype is not seq2.dtype:
         raise TypeError(
-            '`seq1` and `seq2` must have the same dtype: %r != %r'
+            "`seq1` and `seq2` must have the same dtype: %r != %r"
             % (seq1.dtype.__name__, seq2.dtype.__name__)
         )
 
@@ -602,11 +602,11 @@ def global_pairwise_align(
 
 
 @deprecated(
-    as_of='0.5.8',
-    until='0.6.0',
-    reason='This will be removed or replaced, in favor of more general'
-    '-purpose performant aligners. Additional details at '
-    'https://github.com/scikit-bio/scikit-bio/issues/1814',
+    as_of="0.5.8",
+    until="0.6.0",
+    reason="This will be removed or replaced, in favor of more general"
+    "-purpose performant aligners. Additional details at "
+    "https://github.com/scikit-bio/scikit-bio/issues/1814",
 )
 def local_pairwise_align_ssw(sequence1, sequence2, **kwargs):
     """Align query and target sequences with Striped Smith-Waterman.
@@ -653,24 +653,24 @@ def local_pairwise_align_ssw(sequence1, sequence2, **kwargs):
     for seq in sequence1, sequence2:
         if not isinstance(seq, (DNA, RNA, Protein)):
             raise TypeError(
-                '`sequence1` and `sequence2` must be DNA, RNA, or Protein, '
-                'not type %r' % type(seq).__name__
+                "`sequence1` and `sequence2` must be DNA, RNA, or Protein, "
+                "not type %r" % type(seq).__name__
             )
 
     if type(sequence1) is not type(sequence2):
         raise TypeError(
-            '`sequence1` and `sequence2` must be the same type: %r != %r'
+            "`sequence1` and `sequence2` must be the same type: %r != %r"
             % (type(sequence1).__name__, type(sequence2).__name__)
         )
 
     # We need the sequences for `TabularMSA` to make sense, so don't let the
     # user suppress them.
-    kwargs['suppress_sequences'] = False
-    kwargs['zero_index'] = True
+    kwargs["suppress_sequences"] = False
+    kwargs["zero_index"] = True
 
-    kwargs['protein'] = False
+    kwargs["protein"] = False
     if isinstance(sequence1, Protein):
-        kwargs['protein'] = True
+        kwargs["protein"] = True
 
     query = StripedSmithWaterman(str(sequence1), **kwargs)
     alignment = query(str(sequence2))
@@ -708,13 +708,13 @@ def local_pairwise_align_ssw(sequence1, sequence2, **kwargs):
 
 
 @deprecated(
-    as_of='0.4.0',
-    until='0.6.0',
-    reason='Will be replaced by a SubstitutionMatrix class. To track '
-    'progress, see [#161]'
-    '(https://github.com/scikit-bio/scikit-bio/issues/161).',
+    as_of="0.4.0",
+    until="0.6.0",
+    reason="Will be replaced by a SubstitutionMatrix class. To track "
+    "progress, see [#161]"
+    "(https://github.com/scikit-bio/scikit-bio/issues/161).",
 )
-def make_identity_substitution_matrix(match_score, mismatch_score, alphabet='ACGTU'):
+def make_identity_substitution_matrix(match_score, mismatch_score, alphabet="ACGTU"):
     """Generate substitution matrix where all matches are scored equally
 
     Parameters
@@ -761,11 +761,11 @@ def _coerce_alignment_input_type(seq):
 
 
 _traceback_encoding = {
-    'match': 1,
-    'vertical-gap': 2,
-    'horizontal-gap': 3,
-    'uninitialized': -1,
-    'alignment-end': 0,
+    "match": 1,
+    "vertical-gap": 2,
+    "horizontal-gap": 3,
+    "uninitialized": -1,
+    "alignment-end": 0,
 }
 
 
@@ -773,9 +773,9 @@ def _init_matrices_sw(aln1, aln2, gap_open_penalty, gap_extend_penalty):
     shape = (aln2.shape.position + 1, aln1.shape.position + 1)
     score_matrix = np.zeros(shape)
     traceback_matrix = np.zeros(shape, dtype=int)
-    traceback_matrix += _traceback_encoding['uninitialized']
-    traceback_matrix[0, :] = _traceback_encoding['alignment-end']
-    traceback_matrix[:, 0] = _traceback_encoding['alignment-end']
+    traceback_matrix += _traceback_encoding["uninitialized"]
+    traceback_matrix[0, :] = _traceback_encoding["alignment-end"]
+    traceback_matrix[:, 0] = _traceback_encoding["alignment-end"]
     return score_matrix, traceback_matrix
 
 
@@ -783,12 +783,12 @@ def _init_matrices_nw(aln1, aln2, gap_open_penalty, gap_extend_penalty):
     shape = (aln2.shape.position + 1, aln1.shape.position + 1)
     score_matrix = np.zeros(shape)
     traceback_matrix = np.zeros(shape, dtype=int)
-    traceback_matrix += _traceback_encoding['uninitialized']
-    traceback_matrix[0, 0] = _traceback_encoding['alignment-end']
+    traceback_matrix += _traceback_encoding["uninitialized"]
+    traceback_matrix[0, 0] = _traceback_encoding["alignment-end"]
 
     # cache some values for quicker access
-    vgap = _traceback_encoding['vertical-gap']
-    hgap = _traceback_encoding['horizontal-gap']
+    vgap = _traceback_encoding["vertical-gap"]
+    hgap = _traceback_encoding["horizontal-gap"]
 
     for i in range(1, shape[0]):
         score_matrix[i, 0] = -gap_open_penalty - ((i - 1) * gap_extend_penalty)
@@ -807,12 +807,12 @@ def _init_matrices_nw_no_terminal_gap_penalty(
     shape = (aln2.shape.position + 1, aln1.shape.position + 1)
     score_matrix = np.zeros(shape)
     traceback_matrix = np.zeros(shape, dtype=int)
-    traceback_matrix += _traceback_encoding['uninitialized']
-    traceback_matrix[0, 0] = _traceback_encoding['alignment-end']
+    traceback_matrix += _traceback_encoding["uninitialized"]
+    traceback_matrix[0, 0] = _traceback_encoding["alignment-end"]
 
     # cache some values for quicker access
-    vgap = _traceback_encoding['vertical-gap']
-    hgap = _traceback_encoding['horizontal-gap']
+    vgap = _traceback_encoding["vertical-gap"]
+    hgap = _traceback_encoding["horizontal-gap"]
 
     for i in range(1, shape[0]):
         traceback_matrix[i, 0] = vgap
@@ -838,14 +838,14 @@ def _compute_substitution_score(
                     c for c in (aln1_char, aln2_char) if c not in substitution_matrix
                 ]
                 raise ValueError(
-                    'One of the sequences contains a character that is '
-                    'not contained in the substitution matrix. Are you '
-                    'using an appropriate substitution matrix for your '
-                    'sequence type (e.g., a nucleotide substitution '
-                    'matrix does not make sense for aligning protein '
-                    'sequences)? Does your sequence contain invalid '
-                    'characters? The offending character(s) is: '
-                    ' %s.' % ', '.join(offending_chars)
+                    "One of the sequences contains a character that is "
+                    "not contained in the substitution matrix. Are you "
+                    "using an appropriate substitution matrix for your "
+                    "sequence type (e.g., a nucleotide substitution "
+                    "matrix does not make sense for aligning protein "
+                    "sequences)? Does your sequence contain invalid "
+                    "characters? The offending character(s) is: "
+                    " %s." % ", ".join(offending_chars)
                 )
     substitution_score /= len(aln1_chars) * len(aln2_chars)
     return substitution_score
@@ -880,10 +880,10 @@ def _compute_score_and_traceback_matrices(
     aln1_length = aln1.shape.position
     aln2_length = aln2.shape.position
     # cache some values for quicker/simpler access
-    aend = _traceback_encoding['alignment-end']
-    match = _traceback_encoding['match']
-    vgap = _traceback_encoding['vertical-gap']
-    hgap = _traceback_encoding['horizontal-gap']
+    aend = _traceback_encoding["alignment-end"]
+    match = _traceback_encoding["match"]
+    vgap = _traceback_encoding["vertical-gap"]
+    hgap = _traceback_encoding["horizontal-gap"]
 
     new_alignment_score = (new_alignment_score, aend)
 
@@ -970,10 +970,10 @@ def _compute_score_and_traceback_matrices(
 
 def _traceback(traceback_matrix, score_matrix, aln1, aln2, start_row, start_col):
     # cache some values for simpler reference
-    aend = _traceback_encoding['alignment-end']
-    match = _traceback_encoding['match']
-    vgap = _traceback_encoding['vertical-gap']
-    hgap = _traceback_encoding['horizontal-gap']
+    aend = _traceback_encoding["alignment-end"]
+    match = _traceback_encoding["match"]
+    vgap = _traceback_encoding["vertical-gap"]
+    hgap = _traceback_encoding["horizontal-gap"]
     gap_character = aln1.dtype.default_gap_char
 
     # initialize the result alignments
@@ -1014,10 +1014,10 @@ def _traceback(traceback_matrix, score_matrix, aln1, aln2, start_row, start_col)
         elif current_value == aend:
             continue
         else:
-            raise ValueError('Invalid value in traceback matrix: %s' % current_value)
+            raise ValueError("Invalid value in traceback matrix: %s" % current_value)
 
     for i, (aligned_seq, original) in enumerate(zip(aligned_seqs1, aln1)):
-        aligned_seq = ''.join(aligned_seq)[::-1]
+        aligned_seq = "".join(aligned_seq)[::-1]
         constructor = aln1.dtype
         metadata = None
         if original.has_metadata():
@@ -1025,7 +1025,7 @@ def _traceback(traceback_matrix, score_matrix, aln1, aln2, start_row, start_col)
         aligned_seqs1[i] = constructor(aligned_seq, metadata=metadata, validate=False)
 
     for i, (aligned_seq, original) in enumerate(zip(aligned_seqs2, aln2)):
-        aligned_seq = ''.join(aligned_seq)[::-1]
+        aligned_seq = "".join(aligned_seq)[::-1]
         constructor = aln2.dtype
         metadata = None
         if original.has_metadata():

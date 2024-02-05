@@ -166,7 +166,7 @@ _default_phred_offset = None
 _default_variant = None
 _will_filter = True
 
-qseq = create_format('qseq')
+qseq = create_format("qseq")
 
 
 @qseq.sniffer()
@@ -206,7 +206,7 @@ def _qseq_to_generator(
         ) = _record_parser(line)
         if not filter or not filtered:
             phred = _decode_qual_to_phred(raw_qual, variant, phred_offset)
-            seq_id = '%s_%s:%s:%s:%s:%s#%s/%s' % (
+            seq_id = "%s_%s:%s:%s:%s:%s#%s/%s" % (
                 machine_name,
                 run,
                 lane,
@@ -219,17 +219,17 @@ def _qseq_to_generator(
             yield constructor(
                 seq,
                 metadata={
-                    'id': seq_id,
-                    'machine_name': machine_name,
-                    'run_number': int(run),
-                    'lane_number': int(lane),
-                    'tile_number': int(tile),
-                    'x': int(x),
-                    'y': int(y),
-                    'index': int(index),
-                    'read_number': int(read),
+                    "id": seq_id,
+                    "machine_name": machine_name,
+                    "run_number": int(run),
+                    "lane_number": int(lane),
+                    "tile_number": int(tile),
+                    "x": int(x),
+                    "y": int(y),
+                    "index": int(index),
+                    "read_number": int(read),
                 },
-                positional_metadata={'quality': phred},
+                positional_metadata={"quality": phred},
                 **kwargs,
             )
 
@@ -319,31 +319,31 @@ def _qseq_to_protein(
 
 
 def _record_parser(line):
-    fields = line.rstrip('\n')
+    fields = line.rstrip("\n")
     if fields:
-        fields = fields.split('\t')
+        fields = fields.split("\t")
     else:
-        raise QSeqFormatError('Found blank line.')
+        raise QSeqFormatError("Found blank line.")
     f_len = len(fields)
     if not (10 <= f_len <= 11):
-        raise QSeqFormatError('Expected 10 or 11 fields, found %d.' % f_len)
+        raise QSeqFormatError("Expected 10 or 11 fields, found %d." % f_len)
     # If the filter field was ommitted, assume that it passed filtering:
     if f_len == 10:
-        fields.append('1')
+        fields.append("1")
 
     (machine, run, lane, tile, x, y, index, read, seq, raw_qaul, filter) = fields
 
-    _test_fields([('filter', filter)], lambda x: x in '01', '0 or 1')
+    _test_fields([("filter", filter)], lambda x: x in "01", "0 or 1")
 
-    _test_fields([('read', read)], lambda x: x in '123', 'in the range [1, 3]')
+    _test_fields([("read", read)], lambda x: x in "123", "in the range [1, 3]")
 
-    _test_fields([('x', x), ('y', y)], lambda x: int(x) is not None, 'an integer')
+    _test_fields([("x", x), ("y", y)], lambda x: int(x) is not None, "an integer")
 
     _test_fields(
-        [('lane', lane), ('tile', tile)], lambda x: int(x) >= 0, 'a positive integer'
+        [("lane", lane), ("tile", tile)], lambda x: int(x) >= 0, "a positive integer"
     )
 
-    return (machine, run, lane, tile, x, y, index, read, seq, raw_qaul, filter == '0')
+    return (machine, run, lane, tile, x, y, index, read, seq, raw_qaul, filter == "0")
 
 
 def _test_fields(iterkv, test, efrag):
@@ -352,4 +352,4 @@ def _test_fields(iterkv, test, efrag):
             if not test(v):
                 raise ValueError()
     except ValueError:
-        raise QSeqFormatError('Field %r is not %s.' % (k, efrag))
+        raise QSeqFormatError("Field %r is not %s." % (k, efrag))

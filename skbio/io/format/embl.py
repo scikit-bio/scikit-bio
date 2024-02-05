@@ -318,24 +318,24 @@ from skbio.util._misc import chunk_str
 
 
 # look at skbio.io.registry to have an idea on how to define this class
-embl = create_format('embl')
+embl = create_format("embl")
 
 # This list is ordered used to read and write embl file. By processing those
 # values one by one, I will write embl sections with the same order
 _HEADERS = [
-    'LOCUS',
-    'ACCESSION',
-    'PARENT_ACCESSION',
-    'PROJECT_IDENTIFIER',
-    'DATE',
-    'DEFINITION',
-    'GENE_NAME',
-    'KEYWORDS',
-    'SOURCE',
-    'REFERENCE',
-    'DBSOURCE',
-    'COMMENT',
-    'FEATURES',
+    "LOCUS",
+    "ACCESSION",
+    "PARENT_ACCESSION",
+    "PROJECT_IDENTIFIER",
+    "DATE",
+    "DEFINITION",
+    "GENE_NAME",
+    "KEYWORDS",
+    "SOURCE",
+    "REFERENCE",
+    "DBSOURCE",
+    "COMMENT",
+    "FEATURES",
 ]
 
 
@@ -346,35 +346,35 @@ _HEADERS = [
 # conversion (EMBL->GB). All the unspecified keys will remain in embl format
 KEYS_TRANSLATOR = {
     # identification
-    'ID': 'LOCUS',
-    'AC': 'ACCESSION',
+    "ID": "LOCUS",
+    "AC": "ACCESSION",
     # PA means PARENT ACCESSION (?) and applies to
     # feature-level-products entries
-    'PA': 'PARENT_ACCESSION',
-    'PR': 'PROJECT_IDENTIFIER',
-    'DT': 'DATE',
-    'DE': 'DEFINITION',
-    'GN': 'GENE_NAME',  # uniprot specific
-    'KW': 'KEYWORDS',
+    "PA": "PARENT_ACCESSION",
+    "PR": "PROJECT_IDENTIFIER",
+    "DT": "DATE",
+    "DE": "DEFINITION",
+    "GN": "GENE_NAME",  # uniprot specific
+    "KW": "KEYWORDS",
     # Source (taxonomy and classification)
-    'OS': 'ORGANISM',
-    'OC': 'taxonomy',
-    'OG': 'organelle',
+    "OS": "ORGANISM",
+    "OC": "taxonomy",
+    "OG": "organelle",
     # reference keys
-    'RA': 'AUTHORS',
-    'RP': 'REFERENCE',
-    'RC': 'REFERENCE_COMMENT',
-    'RX': 'CROSS_REFERENCE',
-    'RG': 'GROUP',
-    'RT': 'TITLE',
-    'RL': 'JOURNAL',
+    "RA": "AUTHORS",
+    "RP": "REFERENCE",
+    "RC": "REFERENCE_COMMENT",
+    "RX": "CROSS_REFERENCE",
+    "RG": "GROUP",
+    "RT": "TITLE",
+    "RL": "JOURNAL",
     # Cross references
-    'DR': 'DBSOURCE',
-    'CC': 'COMMENT',
+    "DR": "DBSOURCE",
+    "CC": "COMMENT",
     # features
-    'FH': 'FEATURES',
-    'FT': 'FEATURES',
-    'SQ': 'ORIGIN',
+    "FH": "FEATURES",
+    "FT": "FEATURES",
+    "SQ": "ORIGIN",
 }
 
 
@@ -389,48 +389,48 @@ REV_KEYS_TRANSLATOR = {v: k for k, v in KEYS_TRANSLATOR.items()}
 # sections using these section name.
 KEYS_2_SECTIONS = {
     # identification
-    'ID': 'LOCUS',
-    'AC': 'ACCESSION',
+    "ID": "LOCUS",
+    "AC": "ACCESSION",
     # PA means PARENT ACCESSION (?) and applies to
     # feature-level-products entries
-    'PA': 'PARENT_ACCESSION',
-    'PR': 'PROJECT_IDENTIFIER',
-    'DT': 'DATE',
-    'DE': 'DEFINITION',
-    'GN': 'GENE_NAME',  # uniprot specific
-    'KW': 'KEYWORDS',
+    "PA": "PARENT_ACCESSION",
+    "PR": "PROJECT_IDENTIFIER",
+    "DT": "DATE",
+    "DE": "DEFINITION",
+    "GN": "GENE_NAME",  # uniprot specific
+    "KW": "KEYWORDS",
     # Source (taxonomy and classification)
-    'OS': 'SOURCE',
-    'OC': 'SOURCE',
-    'OG': 'SOURCE',
+    "OS": "SOURCE",
+    "OC": "SOURCE",
+    "OG": "SOURCE",
     # reference keys
-    'RA': 'REFERENCE',
-    'RP': 'REFERENCE',
-    'RC': 'REFERENCE',
-    'RX': 'REFERENCE',
-    'RG': 'REFERENCE',
-    'RT': 'REFERENCE',
-    'RL': 'REFERENCE',
+    "RA": "REFERENCE",
+    "RP": "REFERENCE",
+    "RC": "REFERENCE",
+    "RX": "REFERENCE",
+    "RG": "REFERENCE",
+    "RT": "REFERENCE",
+    "RL": "REFERENCE",
     # This shuold be Reference Number. However, to split
     # between references with _embl_yield_section I need to
     # change section after reading one reference. So a single
     # reference is completed when I found a new RN. The
     # reference number information will be the reference
     # position in the final REFERENCE list metadata
-    'RN': 'SPACER',
+    "RN": "SPACER",
     # Cross references
-    'DR': 'DBSOURCE',
-    'CC': 'COMMENT',
-    'AH': 'ASSEMBLY',
-    'AS': 'ASSEMBLY',
-    'FH': 'FEATURES',
-    'FT': 'FEATURES',
+    "DR": "DBSOURCE",
+    "CC": "COMMENT",
+    "AH": "ASSEMBLY",
+    "AS": "ASSEMBLY",
+    "FH": "FEATURES",
+    "FT": "FEATURES",
     # sequence
-    'SQ': 'ORIGIN',
-    '  ': 'ORIGIN',
-    'CO': 'CONSTRUCTED',
+    "SQ": "ORIGIN",
+    "  ": "ORIGIN",
+    "CO": "CONSTRUCTED",
     # spacer (discarded)
-    'XX': 'SPACER',
+    "XX": "SPACER",
 }
 
 
@@ -481,14 +481,14 @@ def _get_embl_wrapper(embl_key, indent=5, subsequent_indent=None, width=80):
     80 column"""
 
     # define the string to prepen (eg "OC   ")
-    prepend = '{key:<{indent}}'.format(key=embl_key, indent=indent)
+    prepend = "{key:<{indent}}".format(key=embl_key, indent=indent)
 
     # deal with 2° strings and more
     if subsequent_indent is None:
         subsequent_prepend = prepend
 
     else:
-        subsequent_prepend = '{key:<{indent}}'.format(
+        subsequent_prepend = "{key:<{indent}}".format(
             key=embl_key, indent=subsequent_indent
         )
 
@@ -500,7 +500,7 @@ def _get_embl_wrapper(embl_key, indent=5, subsequent_indent=None, width=80):
     return wrapper
 
 
-def _serialize_list(embl_wrapper, data, sep='\n'):
+def _serialize_list(embl_wrapper, data, sep="\n"):
     """Serialize a list of obj using a textwrap.TextWrapper instance. Returns
     one string of wrapped embl objects"""
 
@@ -511,7 +511,7 @@ def _serialize_list(embl_wrapper, data, sep='\n'):
         output += embl_wrapper.wrap(line)
 
     # merge dates in one string. Add final newline
-    output = sep.join(output) + '\n'
+    output = sep.join(output) + "\n"
 
     # return comupted string
     return output
@@ -568,9 +568,9 @@ def _embl_to_protein(fh, seq_num=1, **kwargs):
     # no protein support, at the moment
     raise EMBLFormatError(
         "There's no protein support for EMBL record. "
-        'Current status of EMBL protein support is '
-        'described in issue-1499 (https://github.com/'
-        'biocore/scikit-bio/issues/1499)'
+        "Current status of EMBL protein support is "
+        "described in issue-1499 (https://github.com/"
+        "biocore/scikit-bio/issues/1499)"
     )
 
 
@@ -601,9 +601,9 @@ def _protein_to_embl(obj, fh):
     # no protein support, at the moment
     raise EMBLFormatError(
         "There's no protein support for EMBL record. "
-        'Current status of EMBL protein support is '
-        'described in issue-1499 (https://github.com/'
-        'biocore/scikit-bio/issues/1499)'
+        "Current status of EMBL protein support is "
+        "described in issue-1499 (https://github.com/"
+        "biocore/scikit-bio/issues/1499)"
     )
 
 
@@ -613,16 +613,16 @@ def _construct(record, constructor=None, **kwargs):
     # sequence, metadata and interval metadata
     seq, md, imd = record
 
-    if 'lowercase' not in kwargs:
-        kwargs['lowercase'] = True
+    if "lowercase" not in kwargs:
+        kwargs["lowercase"] = True
 
     if constructor is None:
-        unit = md['LOCUS']['unit']
-        if unit == 'bp':
+        unit = md["LOCUS"]["unit"]
+        if unit == "bp":
             # RNA mol type has T instead of U for genbank from from NCBI
             constructor = DNA
 
-        elif unit == 'aa':
+        elif unit == "aa":
             # no protein support, at the moment
             # constructor = Protein
             raise EMBLFormatError("There's no protein support for EMBL record")
@@ -639,7 +639,7 @@ def _parse_embls(fh):
 
     data_chunks = []
     for line in _line_generator(fh, skip_blanks=True, strip=False):
-        if line.startswith('//'):
+        if line.startswith("//"):
             yield _parse_single_embl(data_chunks)
             data_chunks = []
         else:
@@ -649,7 +649,7 @@ def _parse_embls(fh):
 def _parse_single_embl(chunks):
     metadata = {}
     interval_metadata = None
-    sequence = ''
+    sequence = ""
 
     # define a section splitter with _embl_yield_section function defined in
     # this module (return the embl section by embl key). returns generator for
@@ -668,12 +668,12 @@ def _parse_single_embl(chunks):
         # set _embl_parse_section_default
         parser = _PARSER_TABLE.get(section_name, _embl_parse_section_default)
 
-        if section_name == 'FEATURES':
+        if section_name == "FEATURES":
             # This requires 'ID' line parsed before 'FEATURES', which should
             # be true and is implicitly checked by the sniffer. This is true
             # since the first section is parsed by the last else condition
 
-            if 'PARENT_ACCESSION' in metadata:
+            if "PARENT_ACCESSION" in metadata:
                 # this is a feature-level-products entry and features are
                 # relative to parent accession; in the same way a subset of a
                 # Sequence object has no interval metadata, I will refuse to
@@ -682,18 +682,18 @@ def _parse_single_embl(chunks):
 
             # partials add arguments to previous defined functions, in this
             # case length of Sequence object
-            parser = partial(parser, length=metadata['LOCUS']['size'])
+            parser = partial(parser, length=metadata["LOCUS"]["size"])
 
-        elif section_name == 'COMMENT':
+        elif section_name == "COMMENT":
             # mantain newlines in comments
             # partials add arguments to previous defined functions
-            parser = partial(parser, join_delimiter='\n')
+            parser = partial(parser, join_delimiter="\n")
 
         # call function on section
         parsed = parser(section)
 
         # reference can appear multiple times
-        if section_name == 'REFERENCE':
+        if section_name == "REFERENCE":
             # genbank data hasn't CROSS_REFERENCE section, To have a similar
             # metatadata object, I chose to remove CROSS_REFERENCE from
             # each single reference and put them in metadata. Since I could
@@ -702,7 +702,7 @@ def _parse_single_embl(chunks):
             # in which some references have a CROSS_REFERENCE and others not.
             # So each reference will have it's cross reference in the same
             # index position, defined or not
-            cross_reference = parsed.pop('CROSS_REFERENCE', None)
+            cross_reference = parsed.pop("CROSS_REFERENCE", None)
 
             # fix REFERENCE metadata. Ask if is the first reference or not
             # I need a reference number as genbank, this could be reference
@@ -714,38 +714,38 @@ def _parse_single_embl(chunks):
                 RN = 1
 
             # fix reference fields. Get RN->REFERENCE value from dict
-            positions = parsed.pop('REFERENCE', None)
-            parsed['REFERENCE'] = str(RN)
+            positions = parsed.pop("REFERENCE", None)
+            parsed["REFERENCE"] = str(RN)
 
             # append position to RN (eg "1  (bases 1 to 63)")
             if positions:
-                parsed['REFERENCE'] += '  %s' % (positions)
+                parsed["REFERENCE"] += "  %s" % (positions)
 
             # cross_reference will be a list of cross reference; Also
             # metadata[REFERENCE] is a list of references
             if section_name in metadata:
                 # I've already seen a reference, append new one
                 metadata[section_name].append(parsed)
-                metadata['CROSS_REFERENCE'].append(cross_reference)
+                metadata["CROSS_REFERENCE"].append(cross_reference)
 
             else:
                 # define a list for this first reference and its RX
                 metadata[section_name] = [parsed]
-                metadata['CROSS_REFERENCE'] = [cross_reference]
+                metadata["CROSS_REFERENCE"] = [cross_reference]
 
-        elif section_name == 'ORIGIN':
+        elif section_name == "ORIGIN":
             sequence = parsed
 
-        elif section_name == 'FEATURES':
+        elif section_name == "FEATURES":
             interval_metadata = parsed
 
-        elif section_name == 'DATE':
+        elif section_name == "DATE":
             # read data (list)
             metadata[section_name] = parsed
 
             # fix locus metadata using last date. Take only last date
             date = metadata[section_name][-1].split()[0]
-            metadata['LOCUS']['date'] = date
+            metadata["LOCUS"]["date"] = date
 
         # parse all the others sections (SOURCE, ...)
         else:
@@ -753,13 +753,13 @@ def _parse_single_embl(chunks):
 
     # after metadata were read, add a VERSION section like genbank
     # eval if entry is a feature level product or not
-    if 'ACCESSION' in metadata:
-        metadata['VERSION'] = '{accession}.{version}'.format(
-            accession=metadata['ACCESSION'].split(';')[0],
-            version=metadata['LOCUS']['version'],
+    if "ACCESSION" in metadata:
+        metadata["VERSION"] = "{accession}.{version}".format(
+            accession=metadata["ACCESSION"].split(";")[0],
+            version=metadata["LOCUS"]["version"],
         )
 
-    elif 'PARENT_ACCESSION' in metadata:
+    elif "PARENT_ACCESSION" in metadata:
         # locus name is in the format
         # <accession>.<version>:<feature location>:<feature name>[:ordinal]
         # and ordinal could be present or not, depends on how many features
@@ -767,7 +767,7 @@ def _parse_single_embl(chunks):
         # database like NCBI (at the moment) so we will take the version
         # relying on parent accession (hoping that an update in the parent
         # accession will generate an update in all feature level products)
-        metadata['VERSION'] = metadata['PARENT_ACCESSION']
+        metadata["VERSION"] = metadata["PARENT_ACCESSION"]
 
     # return a string, metatdata as a dictionary and IntervalMetadata object
     return sequence, metadata, interval_metadata
@@ -788,7 +788,7 @@ def _write_serializer(fh, serializer, embl_key, data):
         fh.write(out)
 
     # add spacer between sections
-    fh.write('XX\n')
+    fh.write("XX\n")
 
 
 # main function for writer methods
@@ -822,12 +822,12 @@ def _serialize_single_embl(obj, fh):
         # this is true also for locus line
         if header in md:
             # deal with special source case, add cross references if needed
-            if header == 'REFERENCE':
+            if header == "REFERENCE":
                 serializer = partial(
-                    serializer, cross_references=md.get('CROSS_REFERENCE')
+                    serializer, cross_references=md.get("CROSS_REFERENCE")
                 )
 
-            elif header == 'LOCUS':
+            elif header == "LOCUS":
                 # pass also metadata (in case of entries from genbank)
                 serializer = partial(serializer, metadata=md)
 
@@ -836,32 +836,32 @@ def _serialize_single_embl(obj, fh):
 
         else:
             # header not in metadata. Could be date read from GB?
-            if header == 'DATE':
+            if header == "DATE":
                 # Have I date in locus metadata?
-                if md['LOCUS']['date']:
+                if md["LOCUS"]["date"]:
                     # call serializer on date. Date is a list of values
-                    _write_serializer(fh, serializer, embl_key, [md['LOCUS']['date']])
+                    _write_serializer(fh, serializer, embl_key, [md["LOCUS"]["date"]])
 
-        if header == 'FEATURES':
+        if header == "FEATURES":
             if obj.has_interval_metadata():
                 # magic number 21: the amount of indentation before
                 # feature table starts as defined by INSDC
                 indent = 21
-                feature_key = 'FH   Key'
+                feature_key = "FH   Key"
                 fh.write(
-                    '{header:<{indent}}Location/Qualifiers\n'.format(
+                    "{header:<{indent}}Location/Qualifiers\n".format(
                         header=feature_key, indent=indent
                     )
                 )
 
                 # add FH spacer
-                fh.write('FH\n')
+                fh.write("FH\n")
 
                 for s in serializer(obj.interval_metadata._intervals, indent):
                     fh.write(s)
 
                 # add spacer between sections
-                fh.write('XX\n')
+                fh.write("XX\n")
 
     # write out the sequence
     # always write RNA seq as DNA
@@ -873,7 +873,7 @@ def _serialize_single_embl(obj, fh):
         fh.write(s)
 
     # terminate a embl record with
-    fh.write('//\n')
+    fh.write("//\n")
 
 
 def _parse_id(lines):
@@ -909,15 +909,15 @@ def _parse_id(lines):
 
     # define a specific patter for EMBL
     pattern = re.compile(
-        r'ID'
-        r' +([^\s]+);'  # ie: CD789012
-        r' +SV ([0-9]*);'  # 4
-        r' +(\w+);'  # linear
-        r' +([^;]+);'  # genomic DNA
-        r' +(\w*);'  # HTG
-        r' +(\w+);'  # MAM
-        r' +(\d+)'  # 500
-        r' +(\w+)\.$'
+        r"ID"
+        r" +([^\s]+);"  # ie: CD789012
+        r" +SV ([0-9]*);"  # 4
+        r" +(\w+);"  # linear
+        r" +([^;]+);"  # genomic DNA
+        r" +(\w*);"  # HTG
+        r" +(\w+);"  # MAM
+        r" +(\d+)"  # 500
+        r" +(\w+)\.$"
     )  # BP
 
     # search it
@@ -927,43 +927,43 @@ def _parse_id(lines):
         res = dict(
             zip(
                 [
-                    'locus_name',
-                    'version',
-                    'shape',
-                    'mol_type',
-                    'class',
-                    'division',
-                    'size',
-                    'unit',
+                    "locus_name",
+                    "version",
+                    "shape",
+                    "mol_type",
+                    "class",
+                    "division",
+                    "size",
+                    "unit",
                 ],
                 matches.groups(),
             )
         )
     except AttributeError:
-        raise EMBLFormatError('Could not parse the ID line:\n%s' % line)
+        raise EMBLFormatError("Could not parse the ID line:\n%s" % line)
 
     # check for CON entries:
-    if res['class'] == 'CON':
+    if res["class"] == "CON":
         # entries like http://www.ebi.ac.uk/ena/data/view/LT357133
         # doesn't have sequence, so can't be read by skbio.sequence
         raise EMBLFormatError(
             "There's no support for embl CON record: for more information "
-            'see issue-1506 (https://github.com/scikit-bio/scikit-bio/issues/'
-            '1506)'
+            "see issue-1506 (https://github.com/scikit-bio/scikit-bio/issues/"
+            "1506)"
         )
 
     # those values are integer
-    res['size'] = int(res['size'])
+    res["size"] = int(res["size"])
 
     # version could be integer
-    if res['version']:
-        res['version'] = int(res['version'])
+    if res["version"]:
+        res["version"] = int(res["version"])
 
     # unit are in lower cases in others modules
-    res['unit'] = res['unit'].lower()
+    res["unit"] = res["unit"].lower()
 
     # initialize a date record (for gb compatibility)
-    res['date'] = None
+    res["date"] = None
 
     # returning parsed attributes
     return res
@@ -978,39 +978,39 @@ def _serialize_id(header, obj, metadata={}, indent=5):
     """
 
     # get key->value pairs, or key->'' if values is None
-    kwargs = {k: '' if v is None else v for k, v in obj.items()}
+    kwargs = {k: "" if v is None else v for k, v in obj.items()}
 
     # then unit is in upper cases
-    kwargs['unit'] = kwargs['unit'].upper()
+    kwargs["unit"] = kwargs["unit"].upper()
 
     # check for missing keys (eg from gb data). Keys in md are in uppercase
-    for key in ['version', 'class']:
+    for key in ["version", "class"]:
         if key not in kwargs:
             if key.upper() in metadata:
                 kwargs[key] = metadata[key.upper()]
 
             else:
-                kwargs[key] = ''
+                kwargs[key] = ""
 
     # version from genbank could be "M14399.1  GI:145229". I need an integer
-    version = kwargs['version']
+    version = kwargs["version"]
 
     # version could by empty, integer or text
-    if version != '':
+    if version != "":
         try:
-            int(kwargs['version'])
+            int(kwargs["version"])
 
         # could be a text like M14399.1
         except ValueError:
-            match = re.search(r'^\w+\.([0-9]+)', version)
+            match = re.search(r"^\w+\.([0-9]+)", version)
 
             if match:
-                kwargs['version'] = match.groups()[0]
+                kwargs["version"] = match.groups()[0]
 
     # return first line
     return (
-        '{header:<{indent}}{locus_name}; SV {version}; {shape}; '
-        '{mol_type}; {class}; {division}; {size} {unit}.\n'
+        "{header:<{indent}}{locus_name}; SV {version}; {shape}; "
+        "{mol_type}; {class}; {division}; {size} {unit}.\n"
     ).format(header=header, indent=indent, **kwargs)
 
 
@@ -1055,7 +1055,7 @@ def _embl_yield_section(get_line_key, **kwargs):
                 curr_type = line_type
 
             # don't append record if line type is a spacer
-            if 'SPACER' not in line_type:
+            if "SPACER" not in line_type:
                 curr.append(line)
 
         # don't forget to return the last section in the file
@@ -1067,7 +1067,7 @@ def _embl_yield_section(get_line_key, **kwargs):
 
 # replace skbio.io.format._sequence_feature_vocabulary._parse_section_default
 def _embl_parse_section_default(
-    lines, label_delimiter=None, join_delimiter=' ', return_label=False
+    lines, label_delimiter=None, join_delimiter=" ", return_label=False
 ):
     """Parse sections in default way.
 
@@ -1087,7 +1087,7 @@ def _embl_parse_section_default(
         label, section = items
     else:
         label = items[0]
-        section = ''
+        section = ""
 
     # append the text of the first element in a empty array
     data.append(section)
@@ -1125,7 +1125,7 @@ def _parse_reference(lines):
         # this function append all data in the same keywords. A list of lines
         # as input (see skbio.io.format._sequence_feature_vocabulary)
         label, data = _embl_parse_section_default(
-            section, join_delimiter=' ', return_label=True
+            section, join_delimiter=" ", return_label=True
         )
 
         res[label] = data
@@ -1134,20 +1134,20 @@ def _parse_reference(lines):
     # back to a list of values you can use: re.compile("([^;\s]*); ([^\s]*)")
 
     # search for pubmed record, and add the PUBMED key
-    if 'RX' in res:
-        match = re.search(r'PUBMED; (\d+)\.', res['RX'])
+    if "RX" in res:
+        match = re.search(r"PUBMED; (\d+)\.", res["RX"])
 
         if match:
             # add pubmed notation
-            res['PUBMED'] = match.groups()[0]
+            res["PUBMED"] = match.groups()[0]
 
     # fix RP field like genbank (if exists), Ie: (bases 1 to 63)
-    if 'RP' in res:
-        match = re.search(r'(\d+)-(\d+)', res['RP'])
+    if "RP" in res:
+        match = re.search(r"(\d+)-(\d+)", res["RP"])
 
         if match:
             # fix rp fields
-            res['RP'] = '(bases {start} to {stop})'.format(
+            res["RP"] = "(bases {start} to {stop})".format(
                 start=match.groups()[0], stop=match.groups()[1]
             )
 
@@ -1159,11 +1159,11 @@ def _serialize_reference(header, obj, cross_references, indent=5):
     """Serialize a list of references"""
 
     reference = []
-    sort_order = ['RC', 'RP', 'RX', 'RG', 'RA', 'RT', 'RL']
+    sort_order = ["RC", "RP", "RX", "RG", "RA", "RT", "RL"]
 
     # deal with RX pattern and RP pattern
-    RX = re.compile(r'([^;\s]*); ([^\s]*)')
-    RP = re.compile(r'bases (\d+) to (\d+)')
+    RX = re.compile(r"([^;\s]*); ([^\s]*)")
+    RP = re.compile(r"bases (\d+) to (\d+)")
 
     # create a copy of obj, that can be changed. I need to delete values or
     # adding new ones
@@ -1172,7 +1172,7 @@ def _serialize_reference(header, obj, cross_references, indent=5):
     # obj is a list of references. Now is a copy of metadata[SOURCE]
     for i, data in enumerate(obj):
         # get the reference number (as the iteration number)
-        embl_key = 'RN'
+        embl_key = "RN"
 
         # get cross_references
         if cross_references:
@@ -1180,23 +1180,23 @@ def _serialize_reference(header, obj, cross_references, indent=5):
 
             # append cross reference [i] to data (obj[i]) (if they exists)
             if cross_reference:
-                data['CROSS_REFERENCE'] = cross_reference
+                data["CROSS_REFERENCE"] = cross_reference
 
             # delete PUBMED key (already present in CROSS_REFERENCE)
-            if 'PUBMED' in data:
-                del data['PUBMED']
+            if "PUBMED" in data:
+                del data["PUBMED"]
 
         else:
             # no cross reference, do I have PUBMED in data?
-            if 'PUBMED' in data:
+            if "PUBMED" in data:
                 # add a fake CROSS_REFERENCE
-                data['CROSS_REFERENCE'] = 'PUBMED; %s.' % data['PUBMED']
+                data["CROSS_REFERENCE"] = "PUBMED; %s." % data["PUBMED"]
 
         # get an embl wrapper
         wrapper = _get_embl_wrapper(embl_key, indent)
 
         # define wrapped string and add RN to embl data
-        reference += wrapper.wrap('[{RN}]'.format(RN=i + 1))
+        reference += wrapper.wrap("[{RN}]".format(RN=i + 1))
 
         # now process each record for references
         for embl_key in sort_order:
@@ -1211,27 +1211,27 @@ def _serialize_reference(header, obj, cross_references, indent=5):
             wrapper = _get_embl_wrapper(embl_key, indent)
 
             # data could have newlines
-            records = data[key].split('\n')
+            records = data[key].split("\n")
 
             for record in records:
                 # strip after newlines
                 record = record.strip()
 
                 # define wrapped string. beware RX
-                if embl_key == 'RX':
+                if embl_key == "RX":
                     for match in re.finditer(RX, record):
                         source, link = match.groups()
                         # join text
-                        cross_reference = '; '.join([source, link])
+                        cross_reference = "; ".join([source, link])
                         reference += wrapper.wrap(cross_reference)
 
                 # RP case
-                elif embl_key == 'RP':
+                elif embl_key == "RP":
                     match = re.search(RP, record)
 
                     # if I have position, re-define RP key
                     if match:
-                        record = '%s-%s' % match.groups()
+                        record = "%s-%s" % match.groups()
                         reference += wrapper.wrap(record)
 
                     # if not, ignore RP key
@@ -1245,10 +1245,10 @@ def _serialize_reference(header, obj, cross_references, indent=5):
         # add a spacer between references (but no at the final reference)
         # cause the caller will add spacer
         if (i + 1) < len(obj):
-            reference += ['XX']
+            reference += ["XX"]
 
     # now define a string and add a final "\n"
-    s = '\n'.join(reference) + '\n'
+    s = "\n".join(reference) + "\n"
 
     # and return it
     return s
@@ -1272,7 +1272,7 @@ def _parse_source(lines):
         # this function append all data in the same keywords. A list of lines
         # as input (see skbio.io.format._sequence_feature_vocabulary)
         label, data = _embl_parse_section_default(
-            section, join_delimiter=' ', return_label=True
+            section, join_delimiter=" ", return_label=True
         )
 
         res[label] = data
@@ -1294,7 +1294,7 @@ def _serialize_source(header, obj, indent=5):
     source = []
 
     # treat taxonomy and all others keys
-    for key in ['ORGANISM', 'taxonomy', 'organelle']:
+    for key in ["ORGANISM", "taxonomy", "organelle"]:
         # get data to serielize
         data = obj.get(key)
 
@@ -1312,7 +1312,7 @@ def _serialize_source(header, obj, indent=5):
         source += wrapper.wrap(data)
 
     # now define a string and add a final "\n"
-    s = '\n'.join(source) + '\n'
+    s = "\n".join(source) + "\n"
 
     # and return it
     return s
@@ -1327,7 +1327,7 @@ def _parse_sequence(lines):
     for line in lines:
         # ignore record like:
         # SQ   Sequence 275 BP; 64 A; 73 C; 88 G; 50 T; 0 other;
-        if line.startswith('SQ'):
+        if line.startswith("SQ"):
             continue
 
         # remove the numbers inside strings. revome spaces around string
@@ -1336,7 +1336,7 @@ def _parse_sequence(lines):
         # append each sequence items to sequence list
         sequence += items
 
-    return ''.join(sequence)
+    return "".join(sequence)
 
 
 def _serialize_sequence(obj, indent=5):
@@ -1373,10 +1373,10 @@ def _serialize_sequence(obj, indent=5):
 
     # get values instead of popping them: I can't assure that the letter T,
     # for example, is always present
-    n_a = freq.get('A', 0)
-    n_c = freq.get('C', 0)
-    n_g = freq.get('G', 0)
-    n_t = freq.get('T', 0)
+    n_a = freq.get("A", 0)
+    n_c = freq.get("C", 0)
+    n_g = freq.get("G", 0)
+    n_t = freq.get("T", 0)
 
     # this will be the count of all others letters (more than ACGT)
     n_others = len(obj) - (n_a + n_c + n_g + n_t)
@@ -1384,8 +1384,8 @@ def _serialize_sequence(obj, indent=5):
     # define SQ like this:
     # SQ   Sequence 275 BP; 63 A; 72 C; 88 G; 52 T; 0 other;
     SQ = (
-        'SQ   Sequence {size} {unit}; {n_a} A; {n_c} C; {n_g} G; '
-        + '{n_t} T; {n_others} other;\n'
+        "SQ   Sequence {size} {unit}; {n_a} A; {n_c} C; {n_g} G; "
+        + "{n_t} T; {n_others} other;\n"
     )
 
     # TODO: deal with protein SQ: they have a sequence header like:
@@ -1394,7 +1394,7 @@ def _serialize_sequence(obj, indent=5):
     # apply format
     SQ = SQ.format(
         size=len(obj),
-        unit=obj.metadata['LOCUS']['unit'].upper(),
+        unit=obj.metadata["LOCUS"]["unit"].upper(),
         n_a=n_a,
         n_c=n_c,
         n_g=n_g,
@@ -1405,9 +1405,9 @@ def _serialize_sequence(obj, indent=5):
     for i in range(0, len(seq), chunk_size):
         line = seq[i : i + chunk_size]
         # pad string left and right
-        s = '{indent}{s:<{pad_right}}{pos:>{pad_left}}\n'.format(
-            indent=' ' * indent,
-            s=chunk_str(line, frag_size, ' '),
+        s = "{indent}{s:<{pad_right}}{pos:>{pad_left}}\n".format(
+            indent=" " * indent,
+            s=chunk_str(line, frag_size, " "),
             pad_left=pad_left,
             pos=i + len(line),
             pad_right=pad_right,
@@ -1430,11 +1430,11 @@ def _embl_parse_feature_table(lines, length):
     imd = IntervalMetadata(length)
 
     # get only FT records, and remove key from line
-    lines = [line[2:] for line in lines if line.startswith('FT')]
+    lines = [line[2:] for line in lines if line.startswith("FT")]
 
     # magic number 19: after key removal, the lines of each feature
     # are indented with 19 spaces.
-    feature_indent = ' ' * 19
+    feature_indent = " " * 19
 
     section_splitter = _yield_section(
         lambda x: not x.startswith(feature_indent), skip_blanks=True, strip=False
@@ -1454,18 +1454,18 @@ def _serialize_feature_table(intervals, indent=21):
 
     # define a embl wrapper object. I need to replace only the first two
     # characters from _serialize_single_feature output
-    wrapper = _get_embl_wrapper('FT', indent=2, subsequent_indent=21)
+    wrapper = _get_embl_wrapper("FT", indent=2, subsequent_indent=21)
 
     for intvl in intervals:
         tmp = _serialize_single_feature(intvl, indent)
         output = []
 
         # I need to remove two spaces, cause I will add a FT key
-        for line in tmp.split('\n'):
+        for line in tmp.split("\n"):
             output += wrapper.wrap(line[2:])
 
         # re add newline between elements, and a final "\n"
-        yield '\n'.join(output) + '\n'
+        yield "\n".join(output) + "\n"
 
 
 def _parse_date(lines, label_delimiter=None, return_label=False):
@@ -1507,7 +1507,7 @@ def _serialize_comment(embl_key, obj, indent=5):
     """Serialize comment (like Assembly)"""
 
     # obj is a string, Split it by newlines
-    data = obj.split('\n')
+    data = obj.split("\n")
 
     # get an embl wrapper
     wrapper = _get_embl_wrapper(embl_key, indent)
@@ -1523,7 +1523,7 @@ def _serialize_dbsource(embl_key, obj, indent=5):
     # I need to split string after final period (not AAT09660.1)
 
     # deal with re pattern. A pattern to find a period as end of sentence
-    DR = re.compile(r'\.\s')
+    DR = re.compile(r"\.\s")
 
     # splitting by this pattern, I will have
     # ["SILVA-LSU; LK021130", "SILVA-SSU; LK021130", ...]
@@ -1534,7 +1534,7 @@ def _serialize_dbsource(embl_key, obj, indent=5):
 
     # serialize data and return it. Split dbsource using re. Add a
     # final period between elements since I removed it by splitting
-    return _serialize_list(wrapper, re.split(DR, obj), sep='.\n')
+    return _serialize_list(wrapper, re.split(DR, obj), sep=".\n")
 
 
 def _parse_assembly(lines):
@@ -1550,7 +1550,7 @@ def _parse_assembly(lines):
         if len(data) == 5:
             res = dict(
                 zip(
-                    ['local_span', 'primary_identifier', 'primary_span', 'comp'],
+                    ["local_span", "primary_identifier", "primary_span", "comp"],
                     data[1:],
                 )
             )
@@ -1558,8 +1558,8 @@ def _parse_assembly(lines):
         elif len(data) == 4:
             res = dict(
                 zip(
-                    ['local_span', 'primary_identifier', 'primary_span', 'comp'],
-                    data[1:] + [''],
+                    ["local_span", "primary_identifier", "primary_span", "comp"],
+                    data[1:] + [""],
                 )
             )
 
@@ -1574,22 +1574,22 @@ def _parse_assembly(lines):
 
 # Map a function to each section of the entry
 _PARSER_TABLE = {
-    'LOCUS': _parse_id,
-    'SOURCE': _parse_source,
-    'DATE': _parse_date,
-    'REFERENCE': _parse_reference,
-    'FEATURES': _embl_parse_feature_table,
-    'ORIGIN': _parse_sequence,
-    'ASSEMBLY': _parse_assembly,
+    "LOCUS": _parse_id,
+    "SOURCE": _parse_source,
+    "DATE": _parse_date,
+    "REFERENCE": _parse_reference,
+    "FEATURES": _embl_parse_feature_table,
+    "ORIGIN": _parse_sequence,
+    "ASSEMBLY": _parse_assembly,
 }
 
 # for writer functions
 _SERIALIZER_TABLE = {
-    'LOCUS': _serialize_id,
-    'SOURCE': _serialize_source,
-    'DATE': _serialize_date,
-    'REFERENCE': _serialize_reference,
-    'FEATURES': _serialize_feature_table,
-    'COMMENT': _serialize_comment,
-    'DBSOURCE': _serialize_dbsource,
+    "LOCUS": _serialize_id,
+    "SOURCE": _serialize_source,
+    "DATE": _serialize_date,
+    "REFERENCE": _serialize_reference,
+    "FEATURES": _serialize_feature_table,
+    "COMMENT": _serialize_comment,
+    "DBSOURCE": _serialize_dbsource,
 }

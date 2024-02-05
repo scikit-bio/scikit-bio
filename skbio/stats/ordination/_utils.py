@@ -12,7 +12,7 @@ from skbio.util._decorator import experimental
 from ._cutils import center_distance_matrix_cy
 
 
-@experimental(as_of='0.4.0')
+@experimental(as_of="0.4.0")
 def mean_and_std(a, axis=None, weights=None, with_mean=True, with_std=True, ddof=0):
     """Compute the weighted average and standard deviation along the
     specified axis.
@@ -48,7 +48,7 @@ def mean_and_std(a, axis=None, weights=None, with_mean=True, with_std=True, ddof
     """
     if not (with_mean or with_std):
         raise ValueError(
-            'Either the mean or standard deviation need to be' ' computed.'
+            "Either the mean or standard deviation need to be" " computed."
         )
     a = np.asarray(a)
     if weights is None:
@@ -78,7 +78,7 @@ def mean_and_std(a, axis=None, weights=None, with_mean=True, with_std=True, ddof
     return avg, std
 
 
-@experimental(as_of='0.4.0')
+@experimental(as_of="0.4.0")
 def scale(a, weights=None, with_mean=True, with_std=True, ddof=0, copy=True):
     """Scale array by columns to have weighted average 0 and standard
     deviation 1.
@@ -127,7 +127,7 @@ def scale(a, weights=None, with_mean=True, with_std=True, ddof=0, copy=True):
     return a
 
 
-@experimental(as_of='0.4.0')
+@experimental(as_of="0.4.0")
 def svd_rank(M_shape, S, tol=None):
     """Matrix rank of `M` given its singular values `S`.
 
@@ -139,7 +139,7 @@ def svd_rank(M_shape, S, tol=None):
     return np.sum(S > tol)
 
 
-@experimental(as_of='0.4.0')
+@experimental(as_of="0.4.0")
 def corr(x, y=None):
     """Computes correlation between columns of `x`, or `x` and `y`.
 
@@ -167,7 +167,7 @@ def corr(x, y=None):
     if y is not None:
         y = np.asarray(y)
         if y.shape[0] != x.shape[0]:
-            raise ValueError('Both matrices must have the same number of rows')
+            raise ValueError("Both matrices must have the same number of rows")
         x, y = scale(x), scale(y)
     else:
         x = scale(x)
@@ -178,7 +178,7 @@ def corr(x, y=None):
     return x.T.dot(y) / x.shape[0]
 
 
-@experimental(as_of='0.4.0')
+@experimental(as_of="0.4.0")
 def e_matrix(distance_matrix):
     """Compute E matrix from a distance matrix.
 
@@ -220,7 +220,7 @@ def center_distance_matrix(distance_matrix, inplace=False):
     """
     if not distance_matrix.flags.c_contiguous:
         # center_distance_matrix_cy requires c_contiguous, so make a copy
-        distance_matrix = np.asarray(distance_matrix, order='C')
+        distance_matrix = np.asarray(distance_matrix, order="C")
 
     if inplace:
         center_distance_matrix_cy(distance_matrix, distance_matrix)

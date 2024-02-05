@@ -148,7 +148,7 @@ from skbio.io import create_format, ClustalFormatError
 from skbio.alignment import TabularMSA
 
 
-clustal = create_format('clustal')
+clustal = create_format("clustal")
 
 
 def _label_line_parser(record):
@@ -169,8 +169,8 @@ def _label_line_parser(record):
             key, val = split_line
         else:
             raise ClustalFormatError(
-                'Failed to parse sequence identifier and subsequence from '
-                'the following line: %r' % line
+                "Failed to parse sequence identifier and subsequence from "
+                "the following line: %r" % line
             )
 
         if key in result:
@@ -189,8 +189,8 @@ def _is_clustal_seq_line(line):
     return (
         line
         and (not line[0].isspace())
-        and (not line.startswith('CLUSTAL'))
-        and (not line.startswith('MUSCLE'))
+        and (not line.startswith("CLUSTAL"))
+        and (not line.startswith("MUSCLE"))
     )
 
 
@@ -204,7 +204,7 @@ def _delete_trailing_number(line):
     pieces = line.split()
     try:
         int(pieces[-1])
-        return ' '.join(pieces[:-1])
+        return " ".join(pieces[:-1])
     except ValueError:  # no trailing numbers
         return line
 
@@ -257,7 +257,7 @@ def _clustal_sniffer(fh):
     #       * One of the sequence ids is not immediately
     #         followed by a subsequence
     empty = True
-    if fh.read(7) != 'CLUSTAL':
+    if fh.read(7) != "CLUSTAL":
         return False, {}
     fh.seek(0)
     try:
@@ -268,7 +268,7 @@ def _clustal_sniffer(fh):
         # Only check first 50 sequences
         aligned_correctly = _check_length(data, labels, 50)
         if not aligned_correctly:
-            raise ClustalFormatError('Sequences not aligned properly')
+            raise ClustalFormatError("Sequences not aligned properly")
     except ClustalFormatError:
         return False, {}
     return not empty, {}
@@ -284,12 +284,12 @@ def _tabular_msa_to_clustal(obj, fh):
     names = [str(label) for label in obj.index]
     nameLen = max(map(len, names))
     seqLen = max(map(len, seqs))
-    fh.write('CLUSTAL\n\n\n')
+    fh.write("CLUSTAL\n\n\n")
     for i in range(0, seqLen, clen):
         for label, seq in zip(names, seqs):
-            name = ('{:<%d}' % (nameLen)).format(label)
-            fh.write('%s\t%s\n' % (name, seq[i : i + clen]))
-        fh.write('\n')
+            name = ("{:<%d}" % (nameLen)).format(label)
+            fh.write("%s\t%s\n" % (name, seq[i : i + clen]))
+        fh.write("\n")
 
 
 @clustal.reader(TabularMSA)
@@ -337,15 +337,15 @@ def _clustal_to_tabular_msa(fh, constructor=None):
 
     """
     if constructor is None:
-        raise ValueError('Must provide `constructor`.')
+        raise ValueError("Must provide `constructor`.")
 
     records = map(_delete_trailing_number, filter(_is_clustal_seq_line, fh))
     data, labels = _label_line_parser(records)
 
     aligned_correctly = _check_length(data, labels)
     if not aligned_correctly:
-        raise ClustalFormatError('Sequences not aligned properly')
+        raise ClustalFormatError("Sequences not aligned properly")
     seqs = []
     for label in labels:
-        seqs.append(constructor(''.join(data[label])))
+        seqs.append(constructor("".join(data[label])))
     return TabularMSA(seqs, index=labels)
