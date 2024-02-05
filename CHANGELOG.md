@@ -36,7 +36,7 @@
 * Dropped support for NumPy < 1.17.0 in order to utilize the new random generator.
 * Use CYTHON by default during build ([#1874](https://github.com/scikit-bio/scikit-bio/pull/1874))
 * Implemented augmented assignments proposed in issue [#1789](https://github.com/scikit-bio/scikit-bio/issues/1789)
-* Updated code style to reflect latest python standards.
+* Incorporated Ruff's formatting and linting via pre-commit hooks and GitHub Actions. See PR [#1924](https://github.com/scikit-bio/scikit-bio/pull/1924).
 
 ## Version 0.5.9
 

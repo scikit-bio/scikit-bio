@@ -313,5 +313,12 @@ from ._genetic_code import GeneticCode
 from ._grammared_sequence import GrammaredSequence
 from ._substitution import SubstitutionMatrix
 
-__all__ = ['Sequence', 'Protein', 'DNA', 'RNA', 'GeneticCode',
-           'GrammaredSequence', 'SubstitutionMatrix']
+__all__ = [
+    "Sequence",
+    "Protein",
+    "DNA",
+    "RNA",
+    "GeneticCode",
+    "GrammaredSequence",
+    "SubstitutionMatrix",
+]

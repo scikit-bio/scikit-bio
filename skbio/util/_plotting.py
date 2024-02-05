@@ -13,29 +13,27 @@ from ._decorator import experimental
 
 
 @experimental(as_of="0.5.10")
-class PlottableMixin():
-    """A plottable object.
-    """
+class PlottableMixin:
+    """A plottable object."""
 
     @experimental(as_of="0.5.10")
     def _get_mpl_plt(self):
-        """Import Matplotlib and its plotting interface.
-        """
-        msg = 'Plotting requires Matplotlib installed in the system.'
-        if hasattr(self, 'mpl'):
+        """Import Matplotlib and its plotting interface."""
+        msg = "Plotting requires Matplotlib installed in the system."
+        if hasattr(self, "mpl"):
             if self.mpl is None:
                 raise ImportError(msg)
             return
         try:
-            self.mpl = importlib.import_module('matplotlib')
+            self.mpl = importlib.import_module("matplotlib")
         except ModuleNotFoundError:
             self.mpl = None
             raise ImportError(msg)
         else:
-            self.plt = importlib.import_module('matplotlib.pyplot')
+            self.plt = importlib.import_module("matplotlib.pyplot")
 
     @experimental(as_of="0.5.10")
-    def _figure_data(self, format='png'):
+    def _figure_data(self, format="png"):
         """Get figure data of a plottable object.
 
         Parameters
@@ -73,15 +71,13 @@ class PlottableMixin():
 
     @experimental(as_of="0.5.10")
     def _repr_png_(self):
-        """Generate a PNG format figure for display in IPython.
-        """
-        return self._figure_data('png')
+        """Generate a PNG format figure for display in IPython."""
+        return self._figure_data("png")
 
     @experimental(as_of="0.5.10")
     def _repr_svg_(self):
-        """Generate an SVG format figure for display in IPython.
-        """
-        return self._figure_data('svg')
+        """Generate an SVG format figure for display in IPython."""
+        return self._figure_data("svg")
 
     @property
     @experimental(as_of="0.4.0")

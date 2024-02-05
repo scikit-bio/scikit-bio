@@ -90,9 +90,11 @@ def ace(counts, rare_threshold=10):
     singles = freq_counts[1]
 
     if singles > 0 and singles == s_rare:
-        raise ValueError("The only rare OTUs are singletons, so the ACE "
-                         "metric is undefined. EstimateS suggests using "
-                         "bias-corrected Chao1 instead.")
+        raise ValueError(
+            "The only rare OTUs are singletons, so the ACE "
+            "metric is undefined. EstimateS suggests using "
+            "bias-corrected Chao1 instead."
+        )
 
     s_abun = _otus_abundant(freq_counts, rare_threshold)
     if s_rare == 0:
@@ -113,12 +115,12 @@ def ace(counts, rare_threshold=10):
 
 def _otus_rare(freq_counts, rare_threshold):
     """Count number of rare OTUs."""
-    return freq_counts[1:rare_threshold + 1].sum()
+    return freq_counts[1 : rare_threshold + 1].sum()
 
 
 def _otus_abundant(freq_counts, rare_threshold):
     """Count number of abundant OTUs."""
-    return freq_counts[rare_threshold + 1:].sum()
+    return freq_counts[rare_threshold + 1 :].sum()
 
 
 def _number_rare(freq_counts, rare_threshold, gamma=False):
@@ -130,10 +132,10 @@ def _number_rare(freq_counts, rare_threshold, gamma=False):
     n_rare = 0
 
     if gamma:
-        for i, j in enumerate(freq_counts[:rare_threshold + 1]):
+        for i, j in enumerate(freq_counts[: rare_threshold + 1]):
             n_rare += (i * j) * (i - 1)
     else:
-        for i, j in enumerate(freq_counts[:rare_threshold + 1]):
-            n_rare += (i * j)
+        for i, j in enumerate(freq_counts[: rare_threshold + 1]):
+            n_rare += i * j
 
     return n_rare

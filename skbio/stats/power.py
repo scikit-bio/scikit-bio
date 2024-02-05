@@ -150,9 +150,18 @@ from skbio.util._decorator import experimental
 
 
 @experimental(as_of="0.4.0")
-def subsample_power(test, samples, draw_mode='ind', alpha_pwr=0.05, ratio=None,
-                    max_counts=50, counts_interval=10, min_counts=None,
-                    num_iter=500, num_runs=10):
+def subsample_power(
+    test,
+    samples,
+    draw_mode="ind",
+    alpha_pwr=0.05,
+    ratio=None,
+    max_counts=50,
+    counts_interval=10,
+    min_counts=None,
+    num_iter=500,
+    num_runs=10,
+):
     r"""Subsamples data to iteratively calculate power
 
     Parameters
@@ -348,14 +357,15 @@ def subsample_power(test, samples, draw_mode='ind', alpha_pwr=0.05, ratio=None,
     """
 
     # Checks the inputs
-    ratio, num_p, sample_counts = \
-        _check_subsample_power_inputs(test=test,
-                                      samples=samples,
-                                      draw_mode=draw_mode,
-                                      ratio=ratio,
-                                      min_counts=min_counts,
-                                      max_counts=max_counts,
-                                      counts_interval=counts_interval)
+    ratio, num_p, sample_counts = _check_subsample_power_inputs(
+        test=test,
+        samples=samples,
+        draw_mode=draw_mode,
+        ratio=ratio,
+        min_counts=min_counts,
+        max_counts=max_counts,
+        counts_interval=counts_interval,
+    )
 
     # Prealocates the power array
     power = np.zeros((num_runs, len(sample_counts), num_p))
@@ -364,12 +374,14 @@ def subsample_power(test, samples, draw_mode='ind', alpha_pwr=0.05, ratio=None,
     for id2, c in enumerate(sample_counts):
         count = np.round(c * ratio, 0).astype(int)
         for id1 in range(num_runs):
-            ps = _compare_distributions(test=test,
-                                        samples=samples,
-                                        num_p=num_p,
-                                        counts=count,
-                                        num_iter=num_iter,
-                                        mode=draw_mode)
+            ps = _compare_distributions(
+                test=test,
+                samples=samples,
+                num_p=num_p,
+                counts=count,
+                num_iter=num_iter,
+                mode=draw_mode,
+            )
             power[id1, id2, :] = _calculate_power(ps, alpha_pwr)
 
     power = power.squeeze()
@@ -378,10 +390,20 @@ def subsample_power(test, samples, draw_mode='ind', alpha_pwr=0.05, ratio=None,
 
 
 @experimental(as_of="0.4.0")
-def subsample_paired_power(test, meta, cat, control_cats, order=None,
-                           strict_match=True, alpha_pwr=0.05,
-                           max_counts=50, counts_interval=10, min_counts=None,
-                           num_iter=500, num_runs=10):
+def subsample_paired_power(
+    test,
+    meta,
+    cat,
+    control_cats,
+    order=None,
+    strict_match=True,
+    alpha_pwr=0.05,
+    max_counts=50,
+    counts_interval=10,
+    min_counts=None,
+    num_iter=500,
+    num_runs=10,
+):
     r"""Estimates power iteratively using samples with matching metadata
 
     Parameters
@@ -532,19 +554,25 @@ def subsample_paired_power(test, meta, cat, control_cats, order=None,
     order = np.array(order)
 
     # Checks for the number of sampling pairs available
-    meta_pairs, index = _identify_sample_groups(meta, cat, control_cats, order,
-                                                strict_match)
-    min_obs = min([_get_min_size(meta, cat, control_cats, order, strict_match),
-                  np.floor(len(index)*0.9)])
+    meta_pairs, index = _identify_sample_groups(
+        meta, cat, control_cats, order, strict_match
+    )
+    min_obs = min(
+        [
+            _get_min_size(meta, cat, control_cats, order, strict_match),
+            np.floor(len(index) * 0.9),
+        ]
+    )
     sub_ids = _draw_paired_samples(meta_pairs, index, min_obs)
 
-    ratio, num_p, sample_counts = \
-        _check_subsample_power_inputs(test=test,
-                                      samples=sub_ids,
-                                      draw_mode='matched',
-                                      min_counts=min_counts,
-                                      max_counts=max_counts,
-                                      counts_interval=counts_interval)
+    ratio, num_p, sample_counts = _check_subsample_power_inputs(
+        test=test,
+        samples=sub_ids,
+        draw_mode="matched",
+        min_counts=min_counts,
+        max_counts=max_counts,
+        counts_interval=counts_interval,
+    )
 
     # Prealocates the power array
     power = np.zeros((num_runs, len(sample_counts), num_p))
@@ -597,8 +625,9 @@ def confidence_bound(vec, alpha=0.05, df=None, axis=None):
     elif axis is None:
         num_counts = vec_shape[0] * vec_shape[1] - np.isnan(vec).sum()
     else:
-        num_counts = vec_shape[axis] - np.isnan(vec).sum() / \
-            (vec_shape[0] * vec_shape[1])
+        num_counts = vec_shape[axis] - np.isnan(vec).sum() / (
+            vec_shape[0] * vec_shape[1]
+        )
 
     # Gets the df if not supplied
     if df is None:
@@ -607,8 +636,11 @@ def confidence_bound(vec, alpha=0.05, df=None, axis=None):
     # Calculates the bound
     # In the conversion from scipy.stats.nanstd -> np.nanstd `ddof=1` had to be
     # added to match the scipy default of `bias=False`.
-    bound = np.nanstd(vec, axis=axis, ddof=1) / np.sqrt(num_counts - 1) * \
-        scipy.stats.t.ppf(1 - alpha / 2, df)
+    bound = (
+        np.nanstd(vec, axis=axis, ddof=1)
+        / np.sqrt(num_counts - 1)
+        * scipy.stats.t.ppf(1 - alpha / 2, df)
+    )
 
     return bound
 
@@ -695,16 +727,16 @@ def paired_subsamples(meta, cat, control_cats, order=None, strict_match=True):
     min_obs = _get_min_size(meta, cat, control_cats, order, strict_match)
 
     # Identifies all possible subsamples
-    meta_pairs, index = _identify_sample_groups(meta=meta,
-                                                cat=cat,
-                                                control_cats=control_cats,
-                                                order=order,
-                                                strict_match=strict_match)
+    meta_pairs, index = _identify_sample_groups(
+        meta=meta,
+        cat=cat,
+        control_cats=control_cats,
+        order=order,
+        strict_match=strict_match,
+    )
 
     # Draws paired ids
-    ids = _draw_paired_samples(meta_pairs=meta_pairs,
-                               index=index,
-                               num_samps=min_obs)
+    ids = _draw_paired_samples(meta_pairs=meta_pairs, index=index, num_samps=min_obs)
 
     return ids
 
@@ -721,8 +753,7 @@ def _get_min_size(meta, cat, control_cats, order, strict_match):
 
 
 def _check_nans(x, switch=False):
-    r"""Returns False if x is a nan and True is x is a string or number
-    """
+    r"""Returns False if x is a nan and True is x is a string or number"""
     if isinstance(x, str):
         return True
     elif isinstance(x, (float, int)):
@@ -732,7 +763,7 @@ def _check_nans(x, switch=False):
     elif switch and isinstance(x, (list, tuple)):
         return True
     else:
-        raise TypeError('input must be a string, float or a nan')
+        raise TypeError("input must be a string, float or a nan")
 
 
 def _calculate_power(p_values, alpha=0.05):
@@ -756,13 +787,12 @@ def _calculate_power(p_values, alpha=0.05):
 
     p_values = np.atleast_2d(p_values)
 
-    w = (p_values < alpha).sum(axis=1)/p_values.shape[1]
+    w = (p_values < alpha).sum(axis=1) / p_values.shape[1]
 
     return w
 
 
-def _compare_distributions(test, samples, num_p, counts=5, mode="ind",
-                           num_iter=100):
+def _compare_distributions(test, samples, num_p, counts=5, mode="ind", num_iter=100):
     r"""Compares two distribution arrays iteratively
 
     Parameters
@@ -823,12 +853,13 @@ def _compare_distributions(test, samples, num_p, counts=5, mode="ind",
 
     for idx in range(num_iter):
         if mode == "matched":
-            pos = np.random.choice(np.arange(0, samp_lens[0]), counts[0],
-                                   replace=False)
+            pos = np.random.choice(np.arange(0, samp_lens[0]), counts[0], replace=False)
             subs = [sample[pos] for sample in samples]
         else:
-            subs = [np.random.choice(np.array(pop), counts[i], replace=False)
-                    for i, pop in enumerate(samples)]
+            subs = [
+                np.random.choice(np.array(pop), counts[i], replace=False)
+                for i, pop in enumerate(samples)
+            ]
 
         p_values[:, idx] = test(subs)
 
@@ -838,9 +869,15 @@ def _compare_distributions(test, samples, num_p, counts=5, mode="ind",
     return p_values
 
 
-def _check_subsample_power_inputs(test, samples, draw_mode='ind', ratio=None,
-                                  max_counts=50, counts_interval=10,
-                                  min_counts=None):
+def _check_subsample_power_inputs(
+    test,
+    samples,
+    draw_mode="ind",
+    ratio=None,
+    max_counts=50,
+    counts_interval=10,
+    min_counts=None,
+):
     r"""Makes sure that everything is sane before power calculations
 
     Parameters
@@ -904,7 +941,7 @@ def _check_subsample_power_inputs(test, samples, draw_mode='ind', ratio=None,
 
     """
 
-    if draw_mode not in {'ind', 'matched'}:
+    if draw_mode not in {"ind", "matched"}:
         raise ValueError('mode must be "matched" or "ind".')
 
     # Determines the minimum number of ids in a category
@@ -917,8 +954,10 @@ def _check_subsample_power_inputs(test, samples, draw_mode='ind', ratio=None,
     if draw_mode == "matched":
         for id_ in samples:
             if not len(id_) == num_ids:
-                raise ValueError('Each vector in samples must be the same '
-                                 'length in "matched" draw_mode.')
+                raise ValueError(
+                    "Each vector in samples must be the same "
+                    'length in "matched" draw_mode.'
+                )
 
     # Checks the number of counts is appropriate
     if min_counts is None:
@@ -927,15 +966,14 @@ def _check_subsample_power_inputs(test, samples, draw_mode='ind', ratio=None,
         raise ValueError("No subsamples of the specified size can be drawn.")
 
     # Checks the ratio argument is sane
-    if ratio is None or draw_mode == 'matched':
+    if ratio is None or draw_mode == "matched":
         ratio = np.ones((num_groups))
     else:
         ratio = np.asarray(ratio)
     if not ratio.shape == (num_groups,):
-        raise ValueError('There must be a ratio for each group.')
+        raise ValueError("There must be a ratio for each group.")
 
-    ratio_counts = np.array([id_counts[i] / ratio[i]
-                             for i in range(num_groups)])
+    ratio_counts = np.array([id_counts[i] / ratio[i] for i in range(num_groups)])
     largest = ratio_counts.min()
 
     # Determines the number of p values returned by the test
@@ -945,12 +983,10 @@ def _check_subsample_power_inputs(test, samples, draw_mode='ind', ratio=None,
     elif isinstance(p_return, np.ndarray) and len(p_return.shape) == 1:
         num_p = p_return.shape[0]
     else:
-        raise TypeError('test must return a float or one-dimensional array.')
+        raise TypeError("test must return a float or one-dimensional array.")
 
     # Calculates the same counts
-    sample_counts = np.arange(min_counts,
-                              min(max_counts, largest),
-                              counts_interval)
+    sample_counts = np.arange(min_counts, min(max_counts, largest), counts_interval)
 
     return ratio, num_p, sample_counts
 
@@ -1017,8 +1053,7 @@ def _identify_sample_groups(meta, cat, control_cats, order, strict_match):
         m_ids = meta.loc[ids].groupby(cat).groups
         # Checks if samples from the cat groups are represented in those
         # Samples
-        id_vecs = [sorted(m_ids[o]) for o in order if o in
-                   m_ids]
+        id_vecs = [sorted(m_ids[o]) for o in order if o in m_ids]
         # If all groups are represented, the index and results are retained
         if len(id_vecs) == len(order):
             min_vec = np.array([len(v) for v in id_vecs])
@@ -1035,7 +1070,7 @@ def _identify_sample_groups(meta, cat, control_cats, order, strict_match):
 
     # If index is empty, sets up meta_paris with a no key.
     if not meta_pairs:
-        meta_pairs['no'] = order
+        meta_pairs["no"] = order
 
     return meta_pairs, index
 
@@ -1063,12 +1098,11 @@ def _draw_paired_samples(meta_pairs, index, num_samps):
     """
 
     # Handles an empty paired vector
-    if 'no' in meta_pairs:
-        return [np.array([]) for o in meta_pairs['no']]
+    if "no" in meta_pairs:
+        return [np.array([]) for o in meta_pairs["no"]]
 
     # Identifies the absolute positions of the control group being drawn
-    set_pos = np.random.choice(index, int(num_samps),
-                               replace=False).astype(int)
+    set_pos = np.random.choice(index, int(num_samps), replace=False).astype(int)
 
     subs = []
 
@@ -1087,8 +1121,7 @@ def _draw_paired_samples(meta_pairs, index, num_samps):
     # now set_list is ordered and we can iterate over it to get counter obj
     for set_ in set_list:
         num_ = counter[set_]
-        r2 = [np.random.choice(col, num_, replace=False) for col in
-              meta_pairs[set_]]
+        r2 = [np.random.choice(col, num_, replace=False) for col in meta_pairs[set_]]
         subs.append(r2)
 
     ids = [np.hstack(ids) for ids in zip(*subs)]
@@ -1096,8 +1129,9 @@ def _draw_paired_samples(meta_pairs, index, num_samps):
     return ids
 
 
-def _calculate_power_curve(test, samples, sample_counts, ratio=None,
-                           mode='ind', num_iter=1000, alpha=0.05):
+def _calculate_power_curve(
+    test, samples, sample_counts, ratio=None, mode="ind", num_iter=1000, alpha=0.05
+):
     r"""Generates an empirical power curve for the samples.
 
     Parameters
@@ -1153,18 +1187,20 @@ def _calculate_power_curve(test, samples, sample_counts, ratio=None,
         ratio = np.ones((num_groups))
     ratio = np.asarray(ratio)
     if not ratio.shape == (num_groups,):
-        raise ValueError('There must be a ratio for each group.')
+        raise ValueError("There must be a ratio for each group.")
 
     # Loops through the sample sizes
     for id2, s in enumerate(sample_counts):
         count = np.round(s * ratio, 0).astype(int)
         for id1, a in enumerate(alpha):
-            ps = _compare_distributions(test=test,
-                                        samples=samples,
-                                        counts=count,
-                                        num_p=1,
-                                        num_iter=num_iter,
-                                        mode=mode)
+            ps = _compare_distributions(
+                test=test,
+                samples=samples,
+                counts=count,
+                num_p=1,
+                num_iter=num_iter,
+                mode=mode,
+            )
             if vec:
                 pwr[id2] = _calculate_power(ps, a)
             else:

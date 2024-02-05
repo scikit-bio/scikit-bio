@@ -32,4 +32,4 @@ Functions
 
 from ._hommola import hommola_cospeciation
 
-__all__ = ['hommola_cospeciation']
+__all__ = ["hommola_cospeciation"]

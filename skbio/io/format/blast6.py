@@ -245,30 +245,44 @@ import pandas as pd
 from skbio.io import create_format
 from skbio.io.format._blast import _parse_blast_data, _possible_columns
 
-blast6 = create_format('blast+6')
+blast6 = create_format("blast+6")
 
-_default_columns = ['qseqid', 'sseqid', 'pident', 'length', 'mismatch',
-                    'gapopen', 'qstart', 'qend', 'sstart', 'send',
-                    'evalue', 'bitscore']
+_default_columns = [
+    "qseqid",
+    "sseqid",
+    "pident",
+    "length",
+    "mismatch",
+    "gapopen",
+    "qstart",
+    "qend",
+    "sstart",
+    "send",
+    "evalue",
+    "bitscore",
+]
 
 
 @blast6.reader(pd.DataFrame, monkey_patch=False)
 def _blast6_to_data_frame(fh, columns=None, default_columns=False):
     if default_columns and columns is not None:
-        raise ValueError("`columns` and `default_columns` cannot both be"
-                         " provided.")
+        raise ValueError("`columns` and `default_columns` cannot both be" " provided.")
     if not default_columns and columns is None:
-        raise ValueError("Either `columns` or `default_columns` must be"
-                         " provided.")
+        raise ValueError("Either `columns` or `default_columns` must be" " provided.")
     if default_columns:
         columns = _default_columns
     else:
         for column in columns:
             if column not in _possible_columns:
-                raise ValueError("Unrecognized column (%r)."
-                                 " Supported columns:\n%r" %
-                                 (column, set(_possible_columns.keys())))
+                raise ValueError(
+                    "Unrecognized column (%r)."
+                    " Supported columns:\n%r" % (column, set(_possible_columns.keys()))
+                )
 
-    return _parse_blast_data(fh, columns, ValueError,
-                             "Specified number of columns (%r) does not equal"
-                             " number of columns in file (%r).")
+    return _parse_blast_data(
+        fh,
+        columns,
+        ValueError,
+        "Specified number of columns (%r) does not equal"
+        " number of columns in file (%r).",
+    )

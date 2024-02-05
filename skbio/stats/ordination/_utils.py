@@ -13,8 +13,7 @@ from ._cutils import center_distance_matrix_cy
 
 
 @experimental(as_of="0.4.0")
-def mean_and_std(a, axis=None, weights=None, with_mean=True, with_std=True,
-                 ddof=0):
+def mean_and_std(a, axis=None, weights=None, with_mean=True, with_std=True, ddof=0):
     """Compute the weighted average and standard deviation along the
     specified axis.
 
@@ -48,8 +47,9 @@ def mean_and_std(a, axis=None, weights=None, with_mean=True, with_std=True,
         axis. If any of them was not required, returns `None` instead
     """
     if not (with_mean or with_std):
-        raise ValueError("Either the mean or standard deviation need to be"
-                         " computed.")
+        raise ValueError(
+            "Either the mean or standard deviation need to be" " computed."
+        )
     a = np.asarray(a)
     if weights is None:
         avg = a.mean(axis=axis) if with_mean else None
@@ -58,15 +58,14 @@ def mean_and_std(a, axis=None, weights=None, with_mean=True, with_std=True,
         avg = np.average(a, axis=axis, weights=weights)
         if with_std:
             if axis is None:
-                variance = np.average((a - avg)**2, weights=weights)
+                variance = np.average((a - avg) ** 2, weights=weights)
             else:
                 # Make sure that the subtraction to compute variance works for
                 # multidimensional arrays
                 a_rolled = np.rollaxis(a, axis)
                 # Numpy doesn't have a weighted std implementation, but this is
                 # stable and fast
-                variance = np.average((a_rolled - avg)**2, axis=0,
-                                      weights=weights)
+                variance = np.average((a_rolled - avg) ** 2, axis=0, weights=weights)
             if ddof != 0:  # Don't waste time if variance doesn't need scaling
                 if axis is None:
                     variance *= a.size / (a.size - ddof)
@@ -117,8 +116,9 @@ def scale(a, weights=None, with_mean=True, with_std=True, ddof=0, copy=True):
     if copy:
         a = a.copy()
     a = np.asarray(a, dtype=np.float64)
-    avg, std = mean_and_std(a, axis=0, weights=weights, with_mean=with_mean,
-                            with_std=with_std, ddof=ddof)
+    avg, std = mean_and_std(
+        a, axis=0, weights=weights, with_mean=with_mean, with_std=with_std, ddof=ddof
+    )
     if with_mean:
         a -= avg
     if with_std:
@@ -220,7 +220,7 @@ def center_distance_matrix(distance_matrix, inplace=False):
     """
     if not distance_matrix.flags.c_contiguous:
         # center_distance_matrix_cy requires c_contiguous, so make a copy
-        distance_matrix = np.asarray(distance_matrix, order='C')
+        distance_matrix = np.asarray(distance_matrix, order="C")
 
     if inplace:
         center_distance_matrix_cy(distance_matrix, distance_matrix)

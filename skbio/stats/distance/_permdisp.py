@@ -15,16 +15,27 @@ from scipy.spatial.distance import cdist
 
 import hdmedians as hd
 
-from ._base import (_preprocess_input_sng, _run_monte_carlo_stats,
-                    _build_results, DistanceMatrix)
+from ._base import (
+    _preprocess_input_sng,
+    _run_monte_carlo_stats,
+    _build_results,
+    DistanceMatrix,
+)
 
 from skbio.stats.ordination import pcoa, OrdinationResults
 from skbio.util._decorator import experimental
 
 
 @experimental(as_of="0.5.2")
-def permdisp(distance_matrix, grouping, column=None, test='median',
-             permutations=999, method="eigh", number_of_dimensions=10):
+def permdisp(
+    distance_matrix,
+    grouping,
+    column=None,
+    test="median",
+    permutations=999,
+    method="eigh",
+    number_of_dimensions=10,
+):
     """Test for Homogeneity of Multivariate Groups Disperisons using Marti
     Anderson's PERMDISP2 procedure.
 
@@ -234,8 +245,8 @@ def permdisp(distance_matrix, grouping, column=None, test='median',
     determine whether clustering within groups is significant.
 
     """
-    if test not in ['centroid', 'median']:
-        raise ValueError('Test must be centroid or median')
+    if test not in ["centroid", "median"]:
+        raise ValueError("Test must be centroid or median")
 
     if isinstance(distance_matrix, OrdinationResults):
         ordination = distance_matrix
@@ -248,44 +259,47 @@ def permdisp(distance_matrix, grouping, column=None, test='median',
             # and pcoa expects it to be 0
             number_of_dimensions = 0
         elif method != "fsvd":
-            raise ValueError('Method must be eigh or fsvd')
+            raise ValueError("Method must be eigh or fsvd")
 
         ids = distance_matrix.ids
         sample_size = distance_matrix.shape[0]
 
-        ordination = pcoa(distance_matrix, method=method,
-                          number_of_dimensions=number_of_dimensions)
+        ordination = pcoa(
+            distance_matrix, method=method, number_of_dimensions=number_of_dimensions
+        )
     else:
         raise TypeError("Input must be a DistanceMatrix or OrdinationResults.")
 
     samples = ordination.samples
 
-    num_groups, grouping = _preprocess_input_sng(
-        ids, sample_size, grouping, column)
+    num_groups, grouping = _preprocess_input_sng(ids, sample_size, grouping, column)
 
     test_stat_function = partial(_compute_groups, samples, test)
 
-    stat, p_value = _run_monte_carlo_stats(test_stat_function, grouping,
-                                           permutations)
+    stat, p_value = _run_monte_carlo_stats(test_stat_function, grouping, permutations)
 
-    return _build_results('PERMDISP', 'F-value', sample_size, num_groups,
-                          stat, p_value, permutations)
+    return _build_results(
+        "PERMDISP", "F-value", sample_size, num_groups, stat, p_value, permutations
+    )
 
 
 def _compute_groups(samples, test_type, grouping):
-
     groups = []
 
-    samples['grouping'] = grouping
-    if test_type == 'centroid':
-        centroids = samples.groupby('grouping').aggregate('mean')
-    elif test_type == 'median':
-        centroids = samples.groupby('grouping').apply(_config_med)
+    samples["grouping"] = grouping
+    if test_type == "centroid":
+        centroids = samples.groupby("grouping").aggregate("mean")
+    elif test_type == "median":
+        centroids = samples.groupby("grouping").apply(_config_med)
 
-    for label, df in samples.groupby('grouping'):
-        groups.append(cdist(df.values[:, :-1].astype('float64'),
-                            [centroids.loc[label].values],
-                            metric='euclidean'))
+    for label, df in samples.groupby("grouping"):
+        groups.append(
+            cdist(
+                df.values[:, :-1].astype("float64"),
+                [centroids.loc[label].values],
+                metric="euclidean",
+            )
+        )
 
     stat, _ = f_oneway(*groups)
     stat = stat[0]
