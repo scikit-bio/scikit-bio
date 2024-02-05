@@ -35,5 +35,4 @@ exclude = [
 select = ['E', 'W']  # pycodestyle (E, W)
 
 [tool.ruff.format]
-quote-style = 'single'
 indent-style = 'space'
