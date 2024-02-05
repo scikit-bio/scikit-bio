@@ -23,8 +23,6 @@ ignore = [
 # Basic configurations for Ruff.
 # See https://docs.astral.sh/ruff/configuration/
 [tool.ruff]
-line-length = 88  # conforms to PEP8
-indent-width = 4
 target-version = 'py38'
 exclude = [
     'doc/source/conf.py', # excluding because Qiyun is currently working on it.
@@ -33,6 +31,3 @@ exclude = [
 
 [tool.ruff.lint]
 select = ['E', 'W']  # pycodestyle (E, W)
-
-[tool.ruff.format]
-indent-style = 'space'
