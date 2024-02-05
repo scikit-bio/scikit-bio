@@ -33,7 +33,7 @@ def is_symmetric_and_hollow(mat):
     # for the common cas of c_contiguous.
     # For all other cases, make a copy.
     if not mat.flags.c_contiguous:
-        mat = np.asarray(mat, order='C')
+        mat = np.asarray(mat, order="C")
 
     return is_symmetric_and_hollow_cy(mat)
 
@@ -75,7 +75,7 @@ def is_hollow(mat):
     """
     # is_symmetric_and_hollow_cy spends most
     # of its time in symetry check, just use numpy
-    return (np.trace(mat) == 0)
+    return np.trace(mat) == 0
 
 
 def distmat_reorder_buf(in_mat, reorder_vec, out_mat, validate=False):
@@ -117,7 +117,7 @@ def distmat_reorder_buf(in_mat, reorder_vec, out_mat, validate=False):
             raise ValueError("Invalid reorder_vec")
 
     if not in_mat.flags.c_contiguous:
-        in_mat = np.asarray(in_mat, order='C')
+        in_mat = np.asarray(in_mat, order="C")
 
     distmat_reorder_cy(in_mat, np_reorder, out_mat)
 
@@ -163,7 +163,7 @@ def distmat_reorder(in_mat, reorder_vec, validate=False):
             raise ValueError("Invalid reorder_vec")
 
     if not in_mat.flags.c_contiguous:
-        in_mat = np.asarray(in_mat, order='C')
+        in_mat = np.asarray(in_mat, order="C")
 
     out_mat = np.empty([np_reorder.size, np_reorder.size], in_mat.dtype)
     distmat_reorder_cy(in_mat, np_reorder, out_mat)
@@ -208,9 +208,9 @@ def distmat_reorder_condensed(in_mat, reorder_vec, validate=False):
             raise ValueError("Invalid reorder_vec")
 
     if not in_mat.flags.c_contiguous:
-        in_mat = np.asarray(in_mat, order='C')
+        in_mat = np.asarray(in_mat, order="C")
 
-    csize = ((np_reorder.size-1)*np_reorder.size) // 2
+    csize = ((np_reorder.size - 1) * np_reorder.size) // 2
     out_mat_condensed = np.empty([csize], in_mat.dtype)
     distmat_reorder_condensed_cy(in_mat, np_reorder, out_mat_condensed)
     return out_mat_condensed

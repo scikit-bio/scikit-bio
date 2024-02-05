@@ -60,8 +60,8 @@ def _generate_id_blocks(ids, k=64):
 
     for row_start in range(0, n, k):
         for col_start in range(row_start, n, k):
-            row_ids = ids_idx[row_start:row_start + k]
-            col_ids = ids_idx[col_start:col_start + k]
+            row_ids = ids_idx[row_start : row_start + k]
+            col_ids = ids_idx[col_start : col_start + k]
 
             yield (row_ids, col_ids)
 
@@ -100,12 +100,12 @@ def _block_party(counts=None, row_ids=None, col_ids=None, **kwargs):
     nonzero_cols = (counts_block != 0).any(axis=0)
     counts_block = counts_block[:, nonzero_cols]
 
-    kwargs['counts'] = counts_block
-    kwargs['ids'] = ids_to_keep
+    kwargs["counts"] = counts_block
+    kwargs["ids"] = ids_to_keep
 
-    if 'tree' in kwargs and 'otu_ids' in kwargs:
-        kwargs['otu_ids'] = np.asarray(kwargs['otu_ids'])[nonzero_cols]
-        kwargs['tree'] = kwargs['tree'].shear(kwargs['otu_ids'])
+    if "tree" in kwargs and "otu_ids" in kwargs:
+        kwargs["otu_ids"] = np.asarray(kwargs["otu_ids"])[nonzero_cols]
+        kwargs["tree"] = kwargs["tree"].shear(kwargs["otu_ids"])
 
     return kwargs
 
@@ -134,7 +134,7 @@ def _pairs_to_compute(rids, cids):
     """
     # if identical, gather the upper triangle
     if len(rids) == len(cids) and (rids == cids).all():
-        return [(i, j) for idx, i in enumerate(rids) for j in rids[idx+1:]]
+        return [(i, j) for idx, i in enumerate(rids) for j in rids[idx + 1 :]]
 
     # otherwise, grab pairwise combinations disregarding the diagonal
     else:
@@ -151,15 +151,22 @@ def _block_kwargs(**kwargs):
     dict
         The parameters for the block of the distance matrix to compute.
     """
-    valid_block_keys = {'counts', 'ids', 'tree', 'otu_ids', 'metric',
-                        'id_pairs', 'validate'}
-    for row_ids, col_ids in _generate_id_blocks(kwargs['ids'], kwargs['k']):
+    valid_block_keys = {
+        "counts",
+        "ids",
+        "tree",
+        "otu_ids",
+        "metric",
+        "id_pairs",
+        "validate",
+    }
+    for row_ids, col_ids in _generate_id_blocks(kwargs["ids"], kwargs["k"]):
         id_pairs = _pairs_to_compute(row_ids, col_ids)
         if id_pairs:
             kw = {k: v for k, v in kwargs.items() if k in valid_block_keys}
-            kw['id_pairs'] = id_pairs
-            kw['row_ids'] = row_ids
-            kw['col_ids'] = col_ids
+            kw["id_pairs"] = id_pairs
+            kw["row_ids"] = row_ids
+            kw["col_ids"] = col_ids
 
             yield kw
 
@@ -220,12 +227,16 @@ def _reduce(blocks):
         n_blk_ids = len(block.ids)
 
         # get the corresponding coordinates in the master matrix
-        master_idx = [(i, j) for row, i in enumerate(block.ids)
-                      for j in block.ids[row+1:]]
+        master_idx = [
+            (i, j) for row, i in enumerate(block.ids) for j in block.ids[row + 1 :]
+        ]
 
         # get the corresponding coordinates within the current block
-        block_idx = [(i, j) for row, i in enumerate(range(n_blk_ids))
-                     for j in range(row+1, n_blk_ids)]
+        block_idx = [
+            (i, j)
+            for row, i in enumerate(range(n_blk_ids))
+            for j in range(row + 1, n_blk_ids)
+        ]
 
         for (m_i, m_j), (b_i, b_j) in zip(master_idx, block_idx):
             mat[m_i, m_j] += block.data[b_i, b_j]
@@ -234,8 +245,9 @@ def _reduce(blocks):
 
 
 @experimental(as_of="0.5.1")
-def block_beta_diversity(metric, counts, ids, validate=True, k=64,
-                         reduce_f=None, map_f=None, **kwargs):
+def block_beta_diversity(
+    metric, counts, ids, validate=True, k=64, reduce_f=None, map_f=None, **kwargs
+):
     """Perform a block-decomposition beta diversity calculation
 
     Parameters
@@ -306,12 +318,12 @@ def block_beta_diversity(metric, counts, ids, validate=True, k=64,
     # The block method uses numeric IDs to take advantage of fancy indexing
     # with numpy.
     tmp_ids = np.arange(len(counts))
-    kwargs['ids'] = tmp_ids
+    kwargs["ids"] = tmp_ids
 
-    kwargs['metric'] = metric
-    kwargs['counts'] = counts
-    kwargs['k'] = k
-    kwargs['validate'] = False  # we've already validated if necessary
+    kwargs["metric"] = metric
+    kwargs["counts"] = counts
+    kwargs["k"] = k
+    kwargs["validate"] = False  # we've already validated if necessary
 
     dm = reduce_f(map_f(_block_compute, _block_kwargs(**kwargs)))
     dm.ids = ids

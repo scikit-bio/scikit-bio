@@ -212,6 +212,7 @@ from skbio.util._decorator import experimental
 
 class NotExecuted:
     """Helper object to track if a method was executed"""
+
     @experimental(as_of="0.4.0")
     def __init__(self):
         self.msg = None
@@ -227,6 +228,7 @@ _not_executed = NotExecuted()
 
 class Exists:
     """Stub object to assist with ``requires`` when a value exists"""
+
     @experimental(as_of="0.4.0")
     def __contains__(self, item):
         return True
@@ -281,8 +283,7 @@ class Workflow:
     """
 
     @experimental(as_of="0.4.0")
-    def __init__(self, state, short_circuit=True, debug=False, options=None,
-                 **kwargs):
+    def __init__(self, state, short_circuit=True, debug=False, options=None, **kwargs):
         r"""Build thy workflow of self"""
         if options is None:
             self.options = {}
@@ -339,11 +340,11 @@ class Workflow:
         methods = []
         for item in dir(self):
             obj = getattr(self, item)
-            if hasattr(obj, 'priority'):
+            if hasattr(obj, "priority"):
                 methods.append(obj)
 
         def key(x):
-            return getattr(x, 'priority')
+            return getattr(x, "priority")
 
         methods_sorted = sorted(methods, key=key, reverse=True)
 
@@ -398,6 +399,7 @@ class Workflow:
 
         """
         if success_callback is None:
+
             def success_callback(x):
                 return x.state
 
@@ -424,11 +426,11 @@ class Workflow:
 
     def _debug_trace_wrapper(self, func):
         """Trace a function call"""
+
         def wrapped():
             """Track debug information about a method execution"""
-            if not hasattr(self, 'debug_trace'):
-                raise AttributeError(
-                    "%s doesn't have debug_trace." % self.__class__)
+            if not hasattr(self, "debug_trace"):
+                raise AttributeError("%s doesn't have debug_trace." % self.__class__)
 
             exec_order = self.debug_counter
             name = func.__name__
@@ -459,6 +461,7 @@ class method:
         the priority. Priorities are relative to a given workflow
 
     """
+
     highest_priority = sys.maxsize
 
     @experimental(as_of="0.4.0")
@@ -494,6 +497,7 @@ class requires:
         requirement is not satisfied. This method will be passed the
         containing ``Workflow``s' ``state`` member variable.
     """
+
     @experimental(as_of="0.4.0")
     def __init__(self, option=None, values=anything, state=None):
         # self here is the requires object
@@ -520,6 +524,7 @@ class requires:
 
         func : the function to wrap
         """
+
         def decorated(dec_self):
             """A decorated function that has requirements
 

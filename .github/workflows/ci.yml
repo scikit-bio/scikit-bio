@@ -45,9 +45,10 @@ jobs:
         run: |
           pip install -r ci/requirements.lint.txt
           conda list
-      - name: Run linter
+      - name: Run Ruff
         shell: bash -l {0}
-        run: USE_CYTHON=False make lint
+        run: |
+          ruff check --output-format=github .
 
   doc:
     name: Build Documentation  (${{ needs.conf.outputs.latest_python }}, ubuntu-latest)

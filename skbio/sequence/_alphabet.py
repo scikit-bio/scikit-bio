@@ -44,11 +44,11 @@ def _encode_alphabet(alphabet):
     .. [1] https://en.wikipedia.org/wiki/ASCII
 
     """
-    errmsg = 'Alphabet is of an invalid data type.'
+    errmsg = "Alphabet is of an invalid data type."
 
     # string
     if isinstance(alphabet, str):
-        alphabet = alphabet.encode('ascii')
+        alphabet = alphabet.encode("ascii")
         return np.frombuffer(alphabet, dtype=np.uint8)
 
     # list or tuple
@@ -64,7 +64,6 @@ def _encode_alphabet(alphabet):
 
     # integers represent ascii code points
     if np.issubdtype(dtype, np.integer):
-
         # ascii code points are within [0, 127]
         if np.all((alphabet >= 0) & (alphabet <= 127)):
             if dtype is np.uint8:
@@ -74,11 +73,11 @@ def _encode_alphabet(alphabet):
             else:
                 return alphabet.astype(np.uint8)
         else:
-            raise ValueError('Not all code points are within the ASCII range.')
+            raise ValueError("Not all code points are within the ASCII range.")
 
     # encode strings as ascii characters
     elif np.issubdtype(dtype, np.str_):
-        alphabet = np.char.encode(alphabet, encoding='ascii')
+        alphabet = np.char.encode(alphabet, encoding="ascii")
 
     # bytes are already encoded
     elif not np.issubdtype(dtype, np.bytes_):
@@ -86,7 +85,7 @@ def _encode_alphabet(alphabet):
 
     # must be single characters
     if not (np.char.str_len(alphabet) == 1).all():
-        raise ValueError('Not all elements are single characters.')
+        raise ValueError("Not all elements are single characters.")
     return alphabet.view(np.uint8)
 
 
@@ -176,12 +175,15 @@ def _indices_in_alphabet(seq, alphabet, wildcard=None):
         try:
             wildcard = alphabet[wildcard]
         except KeyError:
-            raise ValueError(f'Wildcard character "{wildcard}" is not in the '
-                             'alphabet.')
+            raise ValueError(
+                f'Wildcard character "{wildcard}" is not in the ' "alphabet."
+            )
         pos = [wildcard if x is None else x for x in pos]
     elif None in pos:
-        raise ValueError('One or multiple characters in the sequence are '
-                         'absent from the alphabet.')
+        raise ValueError(
+            "One or multiple characters in the sequence are "
+            "absent from the alphabet."
+        )
     return np.array(pos)
 
 
@@ -226,13 +228,16 @@ def _indices_in_alphabet_ascii(seq, alphabet, wildcard=None):
     absent = pos == 255
     if absent.any():
         if wildcard is None:
-            raise ValueError('One or multiple characters in the sequence are '
-                             'absent from the alphabet.')
+            raise ValueError(
+                "One or multiple characters in the sequence are "
+                "absent from the alphabet."
+            )
         try:
             assert (wild := alphabet[wildcard]) != 255
         except AssertionError:
-            raise ValueError(f'Wildcard character "{chr(wildcard)}" is not in '
-                             'the alphabet.')
+            raise ValueError(
+                f'Wildcard character "{chr(wildcard)}" is not in ' "the alphabet."
+            )
         pos = np.where(absent, wild, pos)
     return pos
 
@@ -256,10 +261,13 @@ def _indices_in_observed(seqs):
     # This function uses np.unique to extract unique characters and their
     # indices. It applies np.unique on individual sequences, then merges
     # results. This design is to avoid concatenating too many sequences.
-    alpha_lst, index_lst = zip(*[np.unique(tuple(x) if isinstance(
-        x, str) else x, return_inverse=True) for x in seqs])
-    alpha_union, index_union = np.unique(
-        np.concatenate(alpha_lst), return_inverse=True)
+    alpha_lst, index_lst = zip(
+        *[
+            np.unique(tuple(x) if isinstance(x, str) else x, return_inverse=True)
+            for x in seqs
+        ]
+    )
+    alpha_union, index_union = np.unique(np.concatenate(alpha_lst), return_inverse=True)
     index_bounds = np.cumsum([x.size for x in alpha_lst])[:-1]
     index_chunks = np.split(index_union, index_bounds)
     index_lst_trans = [x[y] for x, y in zip(index_chunks, index_lst)]

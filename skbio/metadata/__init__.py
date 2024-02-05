@@ -26,4 +26,4 @@ Classes
 
 from ._interval import Interval, IntervalMetadata
 
-__all__ = ['Interval', 'IntervalMetadata']
+__all__ = ["Interval", "IntervalMetadata"]

@@ -219,15 +219,16 @@ from collections.abc import Iterable
 from skbio.sequence import DNA, Sequence
 from skbio.io import create_format, GFF3FormatError
 from skbio.metadata import IntervalMetadata
-from skbio.io.format._base import (
-    _line_generator, _too_many_blanks, _get_nth_sequence)
+from skbio.io.format._base import _line_generator, _too_many_blanks, _get_nth_sequence
 from skbio.io.format.fasta import _fasta_to_generator
 from skbio.io.format._sequence_feature_vocabulary import (
-    _vocabulary_change, _vocabulary_skip)
+    _vocabulary_change,
+    _vocabulary_skip,
+)
 from skbio.io import write
 
 
-gff3 = create_format('gff3')
+gff3 = create_format("gff3")
 
 
 @gff3.sniffer()
@@ -241,7 +242,7 @@ def _gff3_sniffer(fh):
     except StopIteration:
         return False, {}
 
-    if re.match(r'##gff-version\s+3', line):
+    if re.match(r"##gff-version\s+3", line):
         return True, {}
     else:
         return False, {}
@@ -249,7 +250,7 @@ def _gff3_sniffer(fh):
 
 @gff3.reader(None)
 def _gff3_to_generator(fh):
-    '''Parse the GFF3 into the existing IntervalMetadata
+    """Parse the GFF3 into the existing IntervalMetadata
 
     Parameters
     ----------
@@ -260,21 +261,21 @@ def _gff3_to_generator(fh):
     ------
     tuple
         str of seq id, IntervalMetadata
-    '''
+    """
     id_lengths = {}
     for data_type, sid, data in _yield_record(fh):
-        if data_type == 'length':
+        if data_type == "length":
             # get length from sequence-region pragma.
             # the pragma lines are always before the real annotation lines.
             id_lengths[sid] = data
-        elif data_type == 'data':
+        elif data_type == "data":
             length = id_lengths.get(sid)
             yield sid, _parse_record(data, length)
 
 
 @gff3.writer(None)
 def _generator_to_gff3(obj, fh, skip_subregion=True):
-    '''Write list of IntervalMetadata into file.
+    """Write list of IntervalMetadata into file.
 
     Parameters
     ----------
@@ -282,9 +283,9 @@ def _generator_to_gff3(obj, fh, skip_subregion=True):
     fh : file handler
     skip_subregion : bool
         write a line for each sub-regions of an ``Interval`` if it is ``False``
-    '''
+    """
     # write file header
-    fh.write('##gff-version 3\n')
+    fh.write("##gff-version 3\n")
     for seq_id, obj_i in obj:
         _serialize_interval_metadata(obj_i, seq_id, fh, skip_subregion)
 
@@ -297,7 +298,7 @@ def _gff3_to_sequence(fh, seq_num=1):
 @gff3.writer(Sequence)
 def _sequence_to_gff3(obj, fh, skip_subregion=True):
     # write file header
-    fh.write('##gff-version 3\n')
+    fh.write("##gff-version 3\n")
     _serialize_seq(obj, fh, skip_subregion)
 
 
@@ -309,39 +310,40 @@ def _gff3_to_dna(fh, seq_num=1):
 @gff3.writer(DNA)
 def _dna_to_gff3(obj, fh, skip_subregion=True):
     # write file header
-    fh.write('##gff-version 3\n')
+    fh.write("##gff-version 3\n")
     _serialize_seq(obj, fh, skip_subregion)
 
 
 @gff3.reader(IntervalMetadata)
 def _gff3_to_interval_metadata(fh, seq_id):
-    '''Read a GFF3 record into the specified interval metadata.
+    """Read a GFF3 record into the specified interval metadata.
 
     Parameters
     ----------
     fh : file handler
     seq_id : str
         sequence ID which the interval metadata is associated with
-    '''
+    """
     length = None
     for data_type, sid, data in _yield_record(fh):
         if seq_id == sid:
-            if data_type == 'length':
+            if data_type == "length":
                 # get length from sequence-region pragma
                 length = data
-            elif data_type == 'data':
+            elif data_type == "data":
                 return _parse_record(data, length)
             else:
                 raise GFF3FormatError(
-                    'Unknown section in the input GFF3 file: '
-                    '%r %r %r' % (data_type, sid, data))
+                    "Unknown section in the input GFF3 file: "
+                    "%r %r %r" % (data_type, sid, data)
+                )
     # return an empty instead of None
     return IntervalMetadata(None)
 
 
 @gff3.writer(IntervalMetadata)
 def _interval_metadata_to_gff3(obj, fh, seq_id, skip_subregion=True):
-    '''Output ``IntervalMetadata`` object to GFF3 file.
+    """Output ``IntervalMetadata`` object to GFF3 file.
 
     Parameters
     ----------
@@ -351,46 +353,46 @@ def _interval_metadata_to_gff3(obj, fh, seq_id, skip_subregion=True):
         ID for column 1 in the GFF3 file.
     skip_subregion : bool
         write a line for each sub-regions of an ``Interval`` if it is ``False``
-    '''
+    """
     # write file header
-    fh.write('##gff-version 3\n')
+    fh.write("##gff-version 3\n")
     _serialize_interval_metadata(obj, seq_id, fh, skip_subregion=True)
 
 
 def _construct_seq(fh, constructor=DNA, seq_num=1):
     lines = []
     for i, (data_type, seq_id, L) in enumerate(_yield_record(fh), 1):
-        if data_type == 'data' and seq_num == i:
+        if data_type == "data" and seq_num == i:
             lines = L
-    seq = _get_nth_sequence(_fasta_to_generator(fh, constructor=constructor),
-                            seq_num=seq_num)
+    seq = _get_nth_sequence(
+        _fasta_to_generator(fh, constructor=constructor), seq_num=seq_num
+    )
     seq.interval_metadata = _parse_record(lines, len(seq))
     return seq
 
 
 def _yield_record(fh):
-    '''Yield (seq_id, lines) that belong to the same sequence.'''
+    """Yield (seq_id, lines) that belong to the same sequence."""
     lines = []
     current = False
     for line in _line_generator(fh, skip_blanks=True, strip=True):
-        if line.startswith('##sequence-region'):
+        if line.startswith("##sequence-region"):
             _, seq_id, start, end = line.split()
             length = int(end) - int(start) + 1
-            yield 'length', seq_id, length
-        if line.startswith('##FASTA'):
+            yield "length", seq_id, length
+        if line.startswith("##FASTA"):
             # stop once reaching to sequence section
             break
-        if not line.startswith('#'):
+        if not line.startswith("#"):
             try:
-                seq_id, _ = line.split('\t', 1)
+                seq_id, _ = line.split("\t", 1)
             except ValueError:
-                raise GFF3FormatError(
-                    'Wrong GFF3 format at line: %s' % line)
+                raise GFF3FormatError("Wrong GFF3 format at line: %s" % line)
             if current == seq_id:
                 lines.append(line)
             else:
                 if current is not False:
-                    yield 'data', current, lines
+                    yield "data", current, lines
                 lines = [line]
                 current = seq_id
     if current is False:
@@ -399,37 +401,39 @@ def _yield_record(fh):
         return
         yield
     else:
-        yield 'data', current, lines
+        yield "data", current, lines
 
 
 def _parse_record(lines, length):
-    '''Parse the lines into a IntervalMetadata object.'''
+    """Parse the lines into a IntervalMetadata object."""
     interval_metadata = IntervalMetadata(length)
     for line in lines:
-        columns = line.split('\t')
+        columns = line.split("\t")
         # there should be 9 columns
         if len(columns) != 9:
-            raise GFF3FormatError(
-                'do not have 9 columns in this line: "%s"' % line)
+            raise GFF3FormatError('do not have 9 columns in this line: "%s"' % line)
         # the 1st column is seq ID for every feature. don't store
         # this repetitive information
-        metadata = {'source': columns[1],
-                    'type': columns[2],
-                    'score': columns[5],
-                    'strand': columns[6]}
+        metadata = {
+            "source": columns[1],
+            "type": columns[2],
+            "score": columns[5],
+            "strand": columns[6],
+        }
         phase = columns[7]
         # phase value can only be int or '.'
         try:
-            metadata['phase'] = int(phase)
+            metadata["phase"] = int(phase)
         except ValueError:
-            if phase != '.':
+            if phase != ".":
                 raise GFF3FormatError(
-                    'unknown value for phase column: {!r}'.format(phase))
+                    "unknown value for phase column: {!r}".format(phase)
+                )
         metadata.update(_parse_attr(columns[8]))
 
         start, end = columns[3:5]
 
-        bounds = [(int(start)-1, int(end))]
+        bounds = [(int(start) - 1, int(end))]
 
         interval_metadata.add(bounds, metadata=metadata)
 
@@ -437,22 +441,21 @@ def _parse_record(lines, length):
 
 
 def _parse_attr(s):
-    '''parse attribute column'''
-    voca_change = _vocabulary_change('gff3')
+    """parse attribute column"""
+    voca_change = _vocabulary_change("gff3")
     md = {}
     # in case the line ending with ';', strip it.
-    s = s.rstrip(';')
-    for attr in s.split(';'):
-        k, v = attr.split('=')
+    s = s.rstrip(";")
+    for attr in s.split(";"):
+        k, v = attr.split("=")
         if k in voca_change:
             k = voca_change[k]
         md[k] = v
     return md
 
 
-def _serialize_interval_metadata(interval_metadata, seq_id, fh,
-                                 skip_subregion=True):
-    '''Serialize an IntervalMetadata to GFF3.
+def _serialize_interval_metadata(interval_metadata, seq_id, fh, skip_subregion=True):
+    """Serialize an IntervalMetadata to GFF3.
 
     Parameters
     ----------
@@ -464,18 +467,15 @@ def _serialize_interval_metadata(interval_metadata, seq_id, fh,
         the file object to output
     skip_subregion : bool
         Whether to skip outputting each sub region as a line in GFF3.
-    '''
-    column_keys = ['source', 'type', 'score', 'strand', 'phase']
-    voca_change = _vocabulary_change('gff3', False)
-    voca_skip = _vocabulary_skip('gff3')
+    """
+    column_keys = ["source", "type", "score", "strand", "phase"]
+    voca_change = _vocabulary_change("gff3", False)
+    voca_skip = _vocabulary_skip("gff3")
     voca_skip.extend(column_keys)
 
     # these characters have reserved meanings in column 9 and must be
     # escaped when used in other contexts
-    escape = str.maketrans({';': '%3B',
-                            '=': '%3D',
-                            '&': '%26',
-                            ',': '%2C'})
+    escape = str.maketrans({";": "%3B", "=": "%3D", "&": "%26", ",": "%2C"})
 
     for interval in interval_metadata._intervals:
         md = interval.metadata
@@ -484,7 +484,8 @@ def _serialize_interval_metadata(interval_metadata, seq_id, fh,
         end = str(bd[-1][-1])
 
         source, feat_type, score, strand, phase = [
-            str(md.get(i, '.')) for i in column_keys]
+            str(md.get(i, ".")) for i in column_keys
+        ]
         columns = [seq_id, source, feat_type, start, end, score, strand, phase]
 
         # serialize the attributes in column 9
@@ -500,39 +501,41 @@ def _serialize_interval_metadata(interval_metadata, seq_id, fh,
             if isinstance(v, Iterable) and not isinstance(v, str):
                 # if there are multiple values for this attribute,
                 # convert them to str and concat them with ","
-                v = ','.join(str(i).translate(escape) for i in v)
+                v = ",".join(str(i).translate(escape) for i in v)
             else:
                 v = v.translate(escape)
-            attr.append('%s=%s' % (k.translate(escape), v))
+            attr.append("%s=%s" % (k.translate(escape), v))
 
-        columns.append(';'.join(attr))
+        columns.append(";".join(attr))
 
-        fh.write('\t'.join(columns))
-        fh.write('\n')
+        fh.write("\t".join(columns))
+        fh.write("\n")
 
         # if there are multiple regions for this feature,
         # output each region as a standalone line in GFF3.
         if len(bd) > 1 and skip_subregion is False:
             for start, end in bd:
                 # if this is a gene, then each sub region should be an exon
-                if columns[2] == 'gene':
-                    columns[2] = 'exon'
+                if columns[2] == "gene":
+                    columns[2] = "exon"
                 columns[3] = str(start + 1)
                 columns[4] = str(end)
                 try:
-                    parent = md['ID']
+                    parent = md["ID"]
                 except KeyError:
                     raise GFF3FormatError(
-                        'You need provide ID info for '
-                        'the parent interval feature: %r' % interval)
-                columns[8] = 'Parent=%s' % parent
-                fh.write('\t'.join(columns))
-                fh.write('\n')
+                        "You need provide ID info for "
+                        "the parent interval feature: %r" % interval
+                    )
+                columns[8] = "Parent=%s" % parent
+                fh.write("\t".join(columns))
+                fh.write("\n")
 
 
 def _serialize_seq(seq, fh, skip_subregion=True):
-    '''Serialize a sequence to GFF3.'''
+    """Serialize a sequence to GFF3."""
     _serialize_interval_metadata(
-        seq.interval_metadata, seq.metadata['id'], fh, skip_subregion)
-    fh.write('##FASTA\n')
-    write(seq, into=fh, format='fasta')
+        seq.interval_metadata, seq.metadata["id"], fh, skip_subregion
+    )
+    fh.write("##FASTA\n")
+    write(seq, into=fh, format="fasta")

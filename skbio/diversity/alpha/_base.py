@@ -266,13 +266,13 @@ def esty_ci(counts):
     f1 = singles(counts)
     f2 = doubles(counts)
     z = 1.959963985
-    W = (f1 * (N - f1) + 2 * N * f2) / (N ** 3)
+    W = (f1 * (N - f1) + 2 * N * f2) / (N**3)
 
     return f1 / N - z * np.sqrt(W), f1 / N + z * np.sqrt(W)
 
 
 @experimental(as_of="0.4.0")
-@np.errstate(invalid='ignore')
+@np.errstate(invalid="ignore")
 def fisher_alpha(counts):
     r"""Calculate Fisher's alpha, a metric of diversity.
 
@@ -477,8 +477,7 @@ def kempton_taylor_q(counts, lower_quantile=0.25, upper_quantile=0.75):
     lower = int(np.ceil(n * lower_quantile))
     upper = int(n * upper_quantile)
     sorted_counts = np.sort(counts)
-    return (upper - lower) / np.log(sorted_counts[upper] /
-                                    sorted_counts[lower])
+    return (upper - lower) / np.log(sorted_counts[upper] / sorted_counts[lower])
 
 
 @experimental(as_of="0.4.0")
@@ -569,7 +568,7 @@ def mcintosh_d(counts):
     counts = _validate_counts_vector(counts)
     if (N := counts.sum()) == 0:
         return 0.0
-    u = np.sqrt((counts ** 2).sum())
+    u = np.sqrt((counts**2).sum())
     return (N - u) / (N - np.sqrt(N))
 
 
@@ -725,8 +724,9 @@ def michaelis_menten_fit(counts, num_repeats=1, params_guess=None):
     xvals = np.arange(1, n_indiv + 1)
     ymtx = np.empty((num_repeats, len(xvals)), dtype=int)
     for i in range(num_repeats):
-        ymtx[i] = np.asarray([sobs(subsample_counts(counts, n))
-                              for n in xvals], dtype=int)
+        ymtx[i] = np.asarray(
+            [sobs(subsample_counts(counts, n)) for n in xvals], dtype=int
+        )
     yvals = ymtx.mean(0)
 
     # Vectors of actual vals y and number of individuals n.
@@ -734,8 +734,9 @@ def michaelis_menten_fit(counts, num_repeats=1, params_guess=None):
         return (((p[0] * n / (p[1] + n)) - y) ** 2).sum()
 
     # Return S_max.
-    return fmin_powell(errfn, params_guess, ftol=1e-5, args=(xvals, yvals),
-                       disp=False)[0]
+    return fmin_powell(errfn, params_guess, ftol=1e-5, args=(xvals, yvals), disp=False)[
+        0
+    ]
 
 
 @experimental(as_of="0.5.10")
@@ -795,8 +796,7 @@ def observed_features(counts):
     return sobs(counts)
 
 
-@deprecated(as_of='0.5.10', until='0.6.0',
-            reason='Historical term')
+@deprecated(as_of="0.5.10", until="0.6.0", reason="Historical term")
 def observed_otus(counts):
     """Calculate the number of distinct OTUs.
 
@@ -896,8 +896,7 @@ def pielou_e(counts):
 
     """
     counts = _validate_counts_vector(counts)
-    return (0.0 if (H := shannon(counts, base=np.e)) == 0.0
-            else H / np.log(sobs(counts)))
+    return 0.0 if (H := shannon(counts, base=np.e)) == 0.0 else H / np.log(sobs(counts))
 
 
 @experimental(as_of="0.4.0")

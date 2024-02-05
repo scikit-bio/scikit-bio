@@ -41,4 +41,4 @@ Functions
 
 from ._subsample import subsample_counts, isubsample
 
-__all__ = ['subsample_counts', 'isubsample']
+__all__ = ["subsample_counts", "isubsample"]

@@ -23,8 +23,10 @@ import numpy as np
 
 
 if sys.version_info.major != 3:
-    sys.exit("scikit-bio can only be used with Python 3. You are currently "
-             "running Python %d." % sys.version_info.major)
+    sys.exit(
+        "scikit-bio can only be used with Python 3. You are currently "
+        "running Python %d." % sys.version_info.major
+    )
 
 
 def check_bin(ccbin, source, allow_dash):
@@ -36,12 +38,12 @@ def check_bin(ccbin, source, allow_dash):
     if allow_dash:
         found = False
         # allow for the ccbin to be between - (e.g. gcc-1.2)
-        for el in bsource.split('-'):
+        for el in bsource.split("-"):
             if el == ccbin:
                 found = True
                 break
     else:
-        found = (bsource == ccbin)
+        found = bsource == ccbin
     return found
 
 
@@ -55,9 +57,9 @@ icc = False
 # Are we using the default gcc as the compiler?
 gcc = True
 try:
-    if os.environ['CC'] == "gcc":
+    if os.environ["CC"] == "gcc":
         gcc = True
-    elif os.environ['CC'] != "":
+    elif os.environ["CC"] != "":
         gcc = False
 except KeyError:
     pass
@@ -65,24 +67,24 @@ except KeyError:
 
 if not gcc:
     try:
-        if check_bin('clang', os.environ['CC'], False):
+        if check_bin("clang", os.environ["CC"], False):
             # note, the conda provideed clang is not detected here
             # and this is on purpose, as MacOS clang is very different
             # than conda-provised one (which is llvm based)
             # so do not look for substrings
             # (e.g. do not match x86_64-apple-darwin13.4.0-clang)
             clang = True
-        elif check_bin('icc', os.environ['CC'], True):
+        elif check_bin("icc", os.environ["CC"], True):
             icc = True
     except KeyError:
         pass
 else:
     try:
-        if check_bin('clang', sysconfig.get_config_vars()['CC'], False):
+        if check_bin("clang", sysconfig.get_config_vars()["CC"], False):
             # as above
             clang = True
             gcc = False
-        elif check_bin('icc', sysconfig.get_config_vars()['CC'], True):
+        elif check_bin("icc", sysconfig.get_config_vars()["CC"], True):
             icc = True
             gcc = False
     except KeyError:
@@ -91,19 +93,22 @@ else:
 if gcc:
     # check if the default gcc is just a wrapper around clang
     try:
-        if subprocess.check_output(
-                ["gcc", "--version"],
-                universal_newlines=True).find("clang") != -1:
+        if (
+            subprocess.check_output(["gcc", "--version"], universal_newlines=True).find(
+                "clang"
+            )
+            != -1
+        ):
             clang = True
     except (subprocess.CalledProcessError, FileNotFoundError):
         pass
 
 # version parsing from __init__ pulled from Flask's setup.py
 # https://github.com/mitsuhiko/flask/blob/master/setup.py
-_version_re = re.compile(r'__version__\s+=\s+(.*)')
+_version_re = re.compile(r"__version__\s+=\s+(.*)")
 
-with open('skbio/__init__.py', 'rb') as f:
-    hit = _version_re.search(f.read().decode('utf-8')).group(1)
+with open("skbio/__init__.py", "rb") as f:
+    hit = _version_re.search(f.read().decode("utf-8")).group(1)
     version = str(ast.literal_eval(hit))
 
 classes = """
@@ -122,115 +127,124 @@ classes = """
     Operating System :: POSIX
     Operating System :: MacOS :: MacOS X
 """
-classifiers = [s.strip() for s in classes.split('\n') if s]
+classifiers = [s.strip() for s in classes.split("\n") if s]
 
-description = ('Data structures, algorithms and educational '
-               'resources for bioinformatics.')
+description = (
+    "Data structures, algorithms and educational " "resources for bioinformatics."
+)
 
-with open('README.rst') as f:
+with open("README.rst") as f:
     long_description = f.read()
 
 # Dealing with Cython
-USE_CYTHON = os.environ.get('USE_CYTHON')
+USE_CYTHON = os.environ.get("USE_CYTHON")
 if USE_CYTHON is None:
     # use CYTHON by default
     USE_CYTHON = True
-elif USE_CYTHON.lower() in {'false', 'no'}:
+elif USE_CYTHON.lower() in {"false", "no"}:
     USE_CYTHON = False
 else:
     USE_CYTHON = True
 
-ext = '.pyx' if USE_CYTHON else '.c'
+ext = ".pyx" if USE_CYTHON else ".c"
 
-ssw_extra_compile_args = ['-I.']
+ssw_extra_compile_args = ["-I."]
 
-if platform.system() != 'Windows':
+if platform.system() != "Windows":
     if icc:
-        ssw_extra_compile_args.extend(['-qopenmp-simd',
-                                       '-DSIMDE_ENABLE_OPENMP'])
+        ssw_extra_compile_args.extend(["-qopenmp-simd", "-DSIMDE_ENABLE_OPENMP"])
     elif not clang:
-        ssw_extra_compile_args.extend(['-fopenmp-simd',
-                                       '-DSIMDE_ENABLE_OPENMP'])
-elif platform.system() == 'Windows':
-    ssw_extra_compile_args.extend(['-openmp:experimental'])
+        ssw_extra_compile_args.extend(["-fopenmp-simd", "-DSIMDE_ENABLE_OPENMP"])
+elif platform.system() == "Windows":
+    ssw_extra_compile_args.extend(["-openmp:experimental"])
 
-stats_extra_compile_args = []+ssw_extra_compile_args
+stats_extra_compile_args = [] + ssw_extra_compile_args
 stats_extra_link_args = []
-if platform.system() != 'Windows':
+if platform.system() != "Windows":
     if icc:
-        stats_extra_compile_args.extend(['-qopenmp'])
-        stats_extra_link_args.extend(['-qopenmp'])
+        stats_extra_compile_args.extend(["-qopenmp"])
+        stats_extra_link_args.extend(["-qopenmp"])
     elif not clang:
-        stats_extra_compile_args.extend(['-fopenmp'])
-        stats_extra_link_args.extend(['-fopenmp'])
+        stats_extra_compile_args.extend(["-fopenmp"])
+        stats_extra_link_args.extend(["-fopenmp"])
 
 # Users with i686 architectures have reported that adding this flag allows
 # SSW to be compiled. See https://github.com/scikit-bio/scikit-bio/issues/409
 # and http://stackoverflow.com/q/26211814/3776794 for details.
-if platform.machine() == 'i686':
-    ssw_extra_compile_args.append('-msse2')
+if platform.machine() == "i686":
+    ssw_extra_compile_args.append("-msse2")
 
 extensions = [
-    Extension("skbio.metadata._intersection",
-              ["skbio/metadata/_intersection" + ext]),
-    Extension("skbio.stats.__subsample",
-              ["skbio/stats/__subsample" + ext],
-              include_dirs=[np.get_include()]),
-    Extension("skbio.alignment._ssw_wrapper",
-              ["skbio/alignment/_ssw_wrapper" + ext,
-               "skbio/alignment/_lib/ssw.c"],
-              extra_compile_args=ssw_extra_compile_args,
-              include_dirs=[np.get_include()]),
-    Extension("skbio.diversity._phylogenetic",
-              ["skbio/diversity/_phylogenetic" + ext],
-              include_dirs=[np.get_include()]),
-    Extension("skbio.stats.ordination._cutils",
-              ["skbio/stats/ordination/_cutils" + ext],
-              extra_compile_args=stats_extra_compile_args,
-              extra_link_args=stats_extra_link_args),
-    Extension("skbio.stats.distance._cutils",
-              ["skbio/stats/distance/_cutils" + ext],
-              extra_compile_args=stats_extra_compile_args,
-              extra_link_args=stats_extra_link_args),
+    Extension("skbio.metadata._intersection", ["skbio/metadata/_intersection" + ext]),
+    Extension(
+        "skbio.stats.__subsample",
+        ["skbio/stats/__subsample" + ext],
+        include_dirs=[np.get_include()],
+    ),
+    Extension(
+        "skbio.alignment._ssw_wrapper",
+        ["skbio/alignment/_ssw_wrapper" + ext, "skbio/alignment/_lib/ssw.c"],
+        extra_compile_args=ssw_extra_compile_args,
+        include_dirs=[np.get_include()],
+    ),
+    Extension(
+        "skbio.diversity._phylogenetic",
+        ["skbio/diversity/_phylogenetic" + ext],
+        include_dirs=[np.get_include()],
+    ),
+    Extension(
+        "skbio.stats.ordination._cutils",
+        ["skbio/stats/ordination/_cutils" + ext],
+        extra_compile_args=stats_extra_compile_args,
+        extra_link_args=stats_extra_link_args,
+    ),
+    Extension(
+        "skbio.stats.distance._cutils",
+        ["skbio/stats/distance/_cutils" + ext],
+        extra_compile_args=stats_extra_compile_args,
+        extra_link_args=stats_extra_link_args,
+    ),
 ]
 
 if USE_CYTHON:
     from Cython.Build import cythonize
+
     # Always recompile the pyx files to C if USE_CYTHON is set.
     extensions = cythonize(extensions, force=True)
 
-setup(name='scikit-bio',
-      version=version,
-      license='BSD-3-Clause',
-      description=description,
-      long_description=long_description,
-      author="scikit-bio development team",
-      author_email="gregcaporaso@gmail.com",
-      maintainer="scikit-bio development team",
-      maintainer_email="gregcaporaso@gmail.com",
-      url='http://scikit-bio.org',
-      packages=find_packages(),
-      ext_modules=extensions,
-      include_dirs=[np.get_include()],
-      tests_require=['pytest', 'coverage'],
-      install_requires=[
-          'requests >= 2.20.0',
-          'decorator >= 3.4.2',
-          'natsort >= 4.0.3',
-          'numpy >= 1.17.0',
-          'pandas >= 1.5.0',
-          'scipy >= 1.9.0',
-          'h5py >= 3.6.0',
-          'hdmedians >= 0.14.1',
-      ],
-      classifiers=classifiers,
-      package_data={
-          'skbio.diversity.alpha.tests': ['data/qiime-191-tt/*'],
-          'skbio.diversity.beta.tests': ['data/qiime-191-tt/*'],
-          'skbio.io.tests': ['data/*'],
-          'skbio.io.format.tests': ['data/*'],
-          'skbio.stats.tests': ['data/*'],
-          'skbio.stats.distance.tests': ['data/*'],
-          'skbio.stats.ordination.tests': ['data/*']
-          }
-      )
+setup(
+    name="scikit-bio",
+    version=version,
+    license="BSD-3-Clause",
+    description=description,
+    long_description=long_description,
+    author="scikit-bio development team",
+    author_email="gregcaporaso@gmail.com",
+    maintainer="scikit-bio development team",
+    maintainer_email="gregcaporaso@gmail.com",
+    url="http://scikit-bio.org",
+    packages=find_packages(),
+    ext_modules=extensions,
+    include_dirs=[np.get_include()],
+    tests_require=["pytest", "coverage"],
+    install_requires=[
+        "requests >= 2.20.0",
+        "decorator >= 3.4.2",
+        "natsort >= 4.0.3",
+        "numpy >= 1.17.0",
+        "pandas >= 1.5.0",
+        "scipy >= 1.9.0",
+        "h5py >= 3.6.0",
+        "hdmedians >= 0.14.1",
+    ],
+    classifiers=classifiers,
+    package_data={
+        "skbio.diversity.alpha.tests": ["data/qiime-191-tt/*"],
+        "skbio.diversity.beta.tests": ["data/qiime-191-tt/*"],
+        "skbio.io.tests": ["data/*"],
+        "skbio.io.format.tests": ["data/*"],
+        "skbio.stats.tests": ["data/*"],
+        "skbio.stats.distance.tests": ["data/*"],
+        "skbio.stats.ordination.tests": ["data/*"],
+    },
+)

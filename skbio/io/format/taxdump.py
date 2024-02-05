@@ -244,63 +244,56 @@ import pandas as pd
 from skbio.io import create_format
 
 
-taxdump = create_format('taxdump')
+taxdump = create_format("taxdump")
 
 _taxdump_column_schemes = {
-    'nodes_slim': {
-        'tax_id': int,
-        'parent_tax_id': int,
-        'rank': str
+    "nodes_slim": {"tax_id": int, "parent_tax_id": int, "rank": str},
+    "nodes": {
+        "tax_id": int,
+        "parent_tax_id": int,
+        "rank": str,
+        "embl_code": str,
+        "division_id": int,
+        "inherited_div_flag": bool,
+        "genetic_code_id": int,
+        "inherited_GC_flag": bool,
+        "mitochondrial_genetic_code_id": int,
+        "inherited_MGC_flag": bool,
+        "GenBank_hidden_flag": bool,
+        "hidden_subtree_root_flag": bool,
+        "comments": str,
     },
-    'nodes': {
-        'tax_id': int,
-        'parent_tax_id': int,
-        'rank': str,
-        'embl_code': str,
-        'division_id': int,
-        'inherited_div_flag': bool,
-        'genetic_code_id': int,
-        'inherited_GC_flag': bool,
-        'mitochondrial_genetic_code_id': int,
-        'inherited_MGC_flag': bool,
-        'GenBank_hidden_flag': bool,
-        'hidden_subtree_root_flag': bool,
-        'comments': str
+    "names": {"tax_id": int, "name_txt": str, "unique_name": str, "name_class": str},
+    "division": {
+        "division_id": int,
+        "division_cde": str,
+        "division_name": str,
+        "comments": str,
     },
-    'names': {
-        'tax_id': int,
-        'name_txt': str,
-        'unique_name': str,
-        'name_class': str
+    "gencode": {
+        "genetic_code_id": int,
+        "abbreviation": str,
+        "name": str,
+        "cde": str,
+        "starts": str,
     },
-    'division': {
-        'division_id': int,
-        'division_cde': str,
-        'division_name': str,
-        'comments': str
-    },
-    'gencode': {
-        'genetic_code_id': int,
-        'abbreviation': str,
-        'name': str,
-        'cde': str,
-        'starts': str
-    }
 }
 
-_taxdump_column_schemes['nodes_new'] = dict(
-    _taxdump_column_schemes['nodes'], **{
-        'plastid_genetic_code_id': bool,
-        'inherited_PGC_flag': bool,
-        'specified_species': bool,
-        'hydrogenosome_genetic_code_id': int,
-        'inherited_HGC_flag': bool
-    })
+_taxdump_column_schemes["nodes_new"] = dict(
+    _taxdump_column_schemes["nodes"],
+    **{
+        "plastid_genetic_code_id": bool,
+        "inherited_PGC_flag": bool,
+        "specified_species": bool,
+        "hydrogenosome_genetic_code_id": int,
+        "inherited_HGC_flag": bool,
+    },
+)
 
 
 @taxdump.reader(pd.DataFrame, monkey_patch=False)
 def _taxdump_to_data_frame(fh, scheme):
-    '''Read a taxdump file into a data frame.
+    """Read a taxdump file into a data frame.
 
     Parameters
     ----------
@@ -313,7 +306,7 @@ def _taxdump_to_data_frame(fh, scheme):
     -------
     pd.DataFrame
         Parsed table
-    '''
+    """
     if isinstance(scheme, str):
         if scheme not in _taxdump_column_schemes:
             raise ValueError(f'Invalid taxdump column scheme: "{scheme}".')
@@ -321,7 +314,13 @@ def _taxdump_to_data_frame(fh, scheme):
     names = list(scheme.keys())
     try:
         return pd.read_csv(
-            fh, sep='\t\\|(?:\t|$)', engine='python', index_col=0,
-            names=names, dtype=scheme, usecols=range(len(names)))
+            fh,
+            sep="\t\\|(?:\t|$)",
+            engine="python",
+            index_col=0,
+            names=names,
+            dtype=scheme,
+            usecols=range(len(names)),
+        )
     except ValueError:
-        raise ValueError('Invalid taxdump file format.')
+        raise ValueError("Invalid taxdump file format.")
