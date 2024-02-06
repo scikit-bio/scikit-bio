@@ -37,6 +37,7 @@
 * Use CYTHON by default during build ([#1874](https://github.com/scikit-bio/scikit-bio/pull/1874))
 * Implemented augmented assignments proposed in issue [#1789](https://github.com/scikit-bio/scikit-bio/issues/1789)
 * Incorporated Ruff's formatting and linting via pre-commit hooks and GitHub Actions. See PR [#1924](https://github.com/scikit-bio/scikit-bio/pull/1924).
+* Fixed broken link in documentation of Simpson's evenness index. See issue [#1923](https://github.com/scikit-bio/scikit-bio/issues/1923).
 
 ## Version 0.5.9
 

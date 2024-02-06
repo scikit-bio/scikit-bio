@@ -1065,11 +1065,13 @@ def simpson_e(counts):
 
     Notes
     -----
-    The implementation here is based on the description given in [1]_.
+    The implementation here is based on the description given in [1]_ and [2]_.
 
     References
     ----------
-    .. [1] http://www.tiem.utk.edu/~gross/bioed/bealsmodules/simpsonDI.html
+    .. [1] Simpson, E. H. (1949). Measurement of diversity. nature, 163(4148), 688-688.
+    .. [2] Pielou, E. C. (1966). The measurement of diversity in different types of
+       biological collections. Journal of theoretical biology, 13, 131-144.
 
     """
     counts = _validate_counts_vector(counts)
