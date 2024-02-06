@@ -17,7 +17,7 @@ from skbio.util._decorator import experimental
 
 @experimental(as_of="0.4.0")
 def nj(dm, disallow_negative_branch_length=True, result_constructor=None):
-    r""" Apply neighbor joining for phylogenetic reconstruction.
+    r"""Apply neighbor joining for phylogenetic reconstruction.
 
     Parameters
     ----------
@@ -107,18 +107,20 @@ def nj(dm, disallow_negative_branch_length=True, result_constructor=None):
     if dm.shape[0] < 3:
         raise ValueError(
             "Distance matrix must be at least 3x3 to "
-            "generate a neighbor joining tree.")
+            "generate a neighbor joining tree."
+        )
 
     if result_constructor is None:
+
         def result_constructor(x):
-            return TreeNode.read(io.StringIO(x), format='newick')
+            return TreeNode.read(io.StringIO(x), format="newick")
 
     # initialize variables
     node_definition = None
 
     # while there are still more than three distances in the distance matrix,
     # join neighboring nodes.
-    while (dm.shape[0] > 3):
+    while dm.shape[0] > 3:
         # compute the Q matrix
         q = _compute_q(dm)
 
@@ -131,18 +133,24 @@ def nj(dm, disallow_negative_branch_length=True, result_constructor=None):
         pair_member_2 = dm.ids[idx2]
         # determine the distance of each node to the new node connecting them.
         pair_member_1_len, pair_member_2_len = _pair_members_to_new_node(
-            dm, idx1, idx2, disallow_negative_branch_length)
+            dm, idx1, idx2, disallow_negative_branch_length
+        )
         # define the new node in newick style
-        node_definition = "(%s:%f, %s:%f)" % (pair_member_1,
-                                              pair_member_1_len,
-                                              pair_member_2,
-                                              pair_member_2_len)
+        node_definition = "(%s:%f, %s:%f)" % (
+            pair_member_1,
+            pair_member_1_len,
+            pair_member_2,
+            pair_member_2_len,
+        )
         # compute the new distance matrix, which will contain distances of all
         # other nodes to this new node
         dm = _compute_collapsed_dm(
-            dm, pair_member_1, pair_member_2,
+            dm,
+            pair_member_1,
+            pair_member_2,
             disallow_negative_branch_length=disallow_negative_branch_length,
-            new_node_id=node_definition)
+            new_node_id=node_definition,
+        )
 
     # When there are three distances left in the distance matrix, we have a
     # fully defined tree. The last node is internal, and its distances are
@@ -151,31 +159,36 @@ def nj(dm, disallow_negative_branch_length=True, result_constructor=None):
     # a pair...
     pair_member_1 = dm.ids[1]
     pair_member_2 = dm.ids[2]
-    pair_member_1_len, pair_member_2_len = \
-        _pair_members_to_new_node(dm, pair_member_1, pair_member_2,
-                                  disallow_negative_branch_length)
+    pair_member_1_len, pair_member_2_len = _pair_members_to_new_node(
+        dm, pair_member_1, pair_member_2, disallow_negative_branch_length
+    )
     # ...then determine their distance to the other remaining node, but first
     # handle the trival case where the input dm was only 3 x 3
     node_definition = node_definition or dm.ids[0]
-    internal_len = 0.5 * (dm[pair_member_1, node_definition] +
-                          dm[pair_member_2, node_definition] -
-                          dm[pair_member_1, pair_member_2])
+    internal_len = 0.5 * (
+        dm[pair_member_1, node_definition]
+        + dm[pair_member_2, node_definition]
+        - dm[pair_member_1, pair_member_2]
+    )
     if disallow_negative_branch_length and internal_len < 0:
         internal_len = 0
 
     # ...and finally create the newick string describing the whole tree.
-    newick = "(%s:%f, %s:%f, %s:%f);" % (pair_member_1, pair_member_1_len,
-                                         node_definition, internal_len,
-                                         pair_member_2, pair_member_2_len)
+    newick = "(%s:%f, %s:%f, %s:%f);" % (
+        pair_member_1,
+        pair_member_1_len,
+        node_definition,
+        internal_len,
+        pair_member_2,
+        pair_member_2_len,
+    )
 
     # package the result as requested by the user and return it.
     return result_constructor(newick)
 
 
 def _compute_q(dm):
-    """Compute Q matrix, used to identify the next pair of nodes to join.
-
-    """
+    """Compute Q matrix, used to identify the next pair of nodes to join."""
     q = np.zeros(dm.shape)
     n = dm.shape[0]
     big_sum = np.array([dm.data.sum(1)] * dm.shape[0])
@@ -185,8 +198,7 @@ def _compute_q(dm):
     return DistanceMatrix(q, dm.ids)
 
 
-def _compute_collapsed_dm(dm, i, j, disallow_negative_branch_length,
-                          new_node_id):
+def _compute_collapsed_dm(dm, i, j, disallow_negative_branch_length, new_node_id):
     """Return the distance matrix resulting from joining ids i and j in a node.
 
     If the input distance matrix has shape ``(n, n)``, the result will have
@@ -201,8 +213,9 @@ def _compute_collapsed_dm(dm, i, j, disallow_negative_branch_length,
     result = np.zeros((out_n, out_n))
     # pre-populate the result array with known distances
     ij_indexes = [dm.index(i), dm.index(j)]
-    result[1:, 1:] = np.delete(np.delete(dm.data, ij_indexes, axis=0),
-                               ij_indexes, axis=1)
+    result[1:, 1:] = np.delete(
+        np.delete(dm.data, ij_indexes, axis=0), ij_indexes, axis=1
+    )
     # calculate the new distances from the current DistanceMatrix
     k_to_u = 0.5 * (dm[i] + dm[j] - dm[i, j])
     # set negative branches to 0 if specified
@@ -230,7 +243,7 @@ def _lowest_index(dm):
     # select results in the bottom-left of the array
     results = results[results[:, 0] > results[:, 1]]
     # calculate the distances of the results to [0, 0]
-    res_distances = np.sqrt(results[:, 0]**2 + results[:, 1]**2)
+    res_distances = np.sqrt(results[:, 0] ** 2 + results[:, 1] ** 2)
     # detect distance ties & return the point which would have
     # been produced by the original function
     if np.count_nonzero(res_distances == np.amin(res_distances)) > 1:

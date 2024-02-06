@@ -13,10 +13,10 @@ import io
 import os.path
 
 try:
-    import httpretty
-    has_httpretty = True
+    import responses
+    has_responses = True
 except ImportError:
-    has_httpretty = False
+    has_responses = False
 
 import skbio.io
 from skbio.io.registry import open_file
@@ -441,13 +441,13 @@ class TestWriteFilepath(WritableBinarySourceTests, WritableSourceTest):
             return f.read()
 
 
-@unittest.skipIf(not has_httpretty, "HTTPretty not available to mock tests.")
+@unittest.skipIf(not has_responses, "Responses not available to mock tests.")
 class TestReadURL(ReadableBinarySourceTests, ReadableSourceTest):
     expected_close = True
 
     def setUp(self):
         super(TestReadURL, self).setUp()
-        httpretty.enable()
+        responses.start()
 
         for file in (get_data_path('example_file'),
                      get_data_path('big5_file'),
@@ -457,13 +457,14 @@ class TestReadURL(ReadableBinarySourceTests, ReadableSourceTest):
                      get_data_path('big5_file.bz2')):
 
             with io.open(file, mode='rb') as f:
-                httpretty.register_uri(httpretty.GET, self.get_fileobj(file),
-                                       body=f.read(),
-                                       content_type="application/octet-stream")
+                responses.add(responses.GET, self.get_fileobj(file),
+                              body=f.read(),
+                              content_type="application/octet-stream")
 
     def tearDown(self):
         super(TestReadURL, self).setUp()
-        httpretty.disable()
+        responses.stop()
+        responses.reset()
 
     def get_fileobj(self, path):
         return "http://example.com/" + os.path.split(path)[1]

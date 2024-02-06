@@ -19,3 +19,15 @@ ignore = [
     # created by conda-incubator/setup-miniconda@v2 action
     "ci/setup-miniconda-patched-conda_host_env.yml",
 ]
+
+# Basic configurations for Ruff.
+# See https://docs.astral.sh/ruff/configuration/
+[tool.ruff]
+target-version = 'py38'
+exclude = [
+    'doc/source/conf.py', # excluding because Qiyun is currently working on it.
+    'skbio/**/tests/*'    # ignoring to be able to implement pydocstyle
+]
+
+[tool.ruff.lint]
+select = ['E', 'W']  # pycodestyle (E, W)

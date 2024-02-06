@@ -184,8 +184,21 @@ pairwise tip-to-tip distances between trees:
 from ._tree import TreeNode
 from ._nj import nj
 from ._majority_rule import majority_rule
-from ._exception import (TreeError, NoLengthError, DuplicateNodeError,
-                         MissingNodeError, NoParentError)
+from ._exception import (
+    TreeError,
+    NoLengthError,
+    DuplicateNodeError,
+    MissingNodeError,
+    NoParentError,
+)
 
-__all__ = ['TreeNode', 'nj', 'majority_rule', 'TreeError', 'NoLengthError',
-           'DuplicateNodeError', 'MissingNodeError', 'NoParentError']
+__all__ = [
+    "TreeNode",
+    "nj",
+    "majority_rule",
+    "TreeError",
+    "NoLengthError",
+    "DuplicateNodeError",
+    "MissingNodeError",
+    "NoParentError",
+]

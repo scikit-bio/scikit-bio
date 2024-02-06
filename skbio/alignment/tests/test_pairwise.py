@@ -11,7 +11,7 @@ import warnings
 
 import numpy as np
 
-from skbio import Sequence, Protein, DNA, RNA, TabularMSA
+from skbio import Sequence, Protein, DNA, RNA, TabularMSA, SubstitutionMatrix
 from skbio.alignment import (
     global_pairwise_align_protein, local_pairwise_align_protein,
     global_pairwise_align_nucleotide, local_pairwise_align_nucleotide,
@@ -215,6 +215,18 @@ class PairwiseAlignmentTests(TestCase):
         self.assertEqual(obs_score, 30.0)
         self.assertEqual(obs_start_end, [(0, 9), (0, 6)])
 
+        # Alternative substitution matrix
+        obs_msa, obs_score, obs_start_end = global_pairwise_align_protein(
+            Protein("HEAGAWGHEE"), Protein("PAWHEAE"), gap_open_penalty=11.,
+            gap_extend_penalty=1.,
+            substitution_matrix=SubstitutionMatrix.by_name(
+                'BLOSUM62').to_dict())
+
+        self.assertEqual(obs_msa, TabularMSA([Protein("---HEAGAWGHEE"),
+                                              Protein("PAWHEAE------")]))
+        self.assertEqual(obs_score, 15.0)
+        self.assertEqual(obs_start_end, [(0, 9), (0, 6)])
+
         # Protein sequences with metadata
         obs_msa, obs_score, obs_start_end = global_pairwise_align_protein(
             Protein("HEAGAWGHEE", metadata={'id': "s1"}),
@@ -384,6 +396,18 @@ class PairwiseAlignmentTests(TestCase):
         self.assertEqual(obs_msa, TabularMSA([DNA("-GACCTTGACCAGGTACC"),
                                               DNA("GAACTTTGAC---GTAAC")]))
         self.assertEqual(obs_score, 32.0)
+        self.assertEqual(obs_start_end, [(0, 16), (0, 14)])
+
+        # Use a substitution matrix
+        obs_msa, obs_score, obs_start_end = global_pairwise_align_nucleotide(
+            DNA("GACCTTGACCAGGTACC"), DNA("GAACTTTGACGTAAC"),
+            gap_open_penalty=5., gap_extend_penalty=2.,
+            substitution_matrix=SubstitutionMatrix.by_name(
+                'NUC.4.4').to_dict())
+
+        self.assertEqual(obs_msa, TabularMSA([DNA("G-ACCTTGACCAGGTACC"),
+                                              DNA("GAACTTTGAC---GTAAC")]))
+        self.assertEqual(obs_score, 38.0)
         self.assertEqual(obs_start_end, [(0, 16), (0, 14)])
 
         # DNA sequences with metadata
