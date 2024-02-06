@@ -1065,11 +1065,12 @@ def simpson_e(counts):
 
     Notes
     -----
-    The implementation here is based on the description given in [1]_.
+    The implementation here is based on the description given in [1]_ and [2]_.
 
     References
     ----------
-    .. [1] http://www.tiem.utk.edu/~gross/bioed/bealsmodules/simpsonDI.html
+    .. [1] https://www.nature.com/articles/163688a0
+    .. [2] https://www.sciencedirect.com/science/article/abs/pii/0022519366900130
 
     """
     counts = _validate_counts_vector(counts)
