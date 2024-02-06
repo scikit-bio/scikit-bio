@@ -1069,8 +1069,9 @@ def simpson_e(counts):
 
     References
     ----------
-    .. [1] https://www.nature.com/articles/163688a0
-    .. [2] https://www.sciencedirect.com/science/article/abs/pii/0022519366900130
+    .. [1] Simpson, E. H. (1949). Measurement of diversity. nature, 163(4148), 688-688.
+    .. [2] Pielou, E. C. (1966). The measurement of diversity in different types of
+       biological collections. Journal of theoretical biology, 13, 131-144.
 
     """
     counts = _validate_counts_vector(counts)
