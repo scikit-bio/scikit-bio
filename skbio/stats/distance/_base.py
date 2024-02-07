@@ -432,7 +432,7 @@ class DissimilarityMatrix(SkbioObject, PlottableMixin):
         return self.__class__(filtered_data, ids, validate=False)
 
     def _stable_order(self, ids):
-        """Obtain a stable ID order with respect to self
+        """Obtain a stable ID order with respect to self.
 
         Parameters
         ----------
@@ -450,7 +450,7 @@ class DissimilarityMatrix(SkbioObject, PlottableMixin):
 
     @experimental(as_of="0.5.5")
     def within(self, ids):
-        """Obtain all the distances among the set of IDs
+        """Obtain all the distances among the set of IDs.
 
         Parameters
         ----------
@@ -508,7 +508,7 @@ class DissimilarityMatrix(SkbioObject, PlottableMixin):
 
     @experimental(as_of="0.5.5")
     def between(self, from_, to_, allow_overlap=False):
-        """Obtain the distances between the two groups of IDs
+        """Obtain the distances between the two groups of IDs.
 
         Parameters
         ----------
@@ -578,7 +578,7 @@ class DissimilarityMatrix(SkbioObject, PlottableMixin):
         return self._subset_to_dataframe(from_, to_)
 
     def _subset_to_dataframe(self, i_ids, j_ids):
-        """Extract a subset of self and express as a DataFrame
+        """Extract a subset of self and express as a DataFrame.
 
         Parameters
         ----------
@@ -628,7 +628,7 @@ class DissimilarityMatrix(SkbioObject, PlottableMixin):
 
     @experimental(as_of="0.4.0")
     def plot(self, cmap=None, title=""):
-        """Creates a heatmap of the dissimilarity matrix
+        """Create a heatmap of the dissimilarity matrix.
 
         Parameters
         ----------

@@ -145,7 +145,7 @@ def svd_rank(M_shape, S, tol=None):
 
 @experimental(as_of="0.4.0")
 def corr(x, y=None):
-    """Computes correlation between columns of `x`, or `x` and `y`.
+    """Compute correlation between columns of `x`, or `x` and `y`.
 
     Correlation is covariance of (columnwise) standardized matrices,
     so each matrix is first centered and scaled to have variance one,
@@ -240,6 +240,7 @@ def center_distance_matrix(distance_matrix, inplace=False):
 
 def _e_matrix_inplace(distance_matrix):
     """Compute E matrix from a distance matrix inplace.
+
     Squares and divides by -2 the input element-wise. Eq. 9.20 in
     Legendre & Legendre 1998.
 
@@ -261,6 +262,7 @@ def _e_matrix_inplace(distance_matrix):
 
 def _f_matrix_inplace(e_matrix):
     """Compute F matrix from E matrix inplace.
+
     Centering step: for each element, the mean of the corresponding
     row and column are subtracted, and the mean of the whole
     matrix is added. Eq. 9.21 in Legendre & Legendre 1998.

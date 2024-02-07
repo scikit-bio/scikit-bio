@@ -220,7 +220,7 @@ def pcoa(distance_matrix, method="eigh", number_of_dimensions=0, inplace=False):
 
 
 def _fsvd(centered_distance_matrix, number_of_dimensions=10):
-    """Performs singular value decomposition, or more specifically in
+    """Perform singular value decomposition, or more specifically in
     this case eigendecomposition, using fast heuristic algorithm
     nicknamed "FSVD" (FastSVD), adapted and optimized from the algorithm
     described by Halko et al (2011).
@@ -345,7 +345,7 @@ def _fsvd(centered_distance_matrix, number_of_dimensions=10):
 
 @experimental(as_of="0.5.3")
 def pcoa_biplot(ordination, y):
-    """Compute the projection of descriptors into a PCoA matrix
+    """Compute the projection of descriptors into a PCoA matrix.
 
     This implementation is as described in Chapter 9 of Legendre & Legendre,
     Numerical Ecology 3rd edition.

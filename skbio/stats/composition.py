@@ -112,7 +112,7 @@ from scipy.sparse import coo_matrix
 
 @experimental(as_of="0.4.0")
 def closure(mat):
-    """Performs closure to ensure that all elements add up to 1.
+    """Perform closure to ensure that all elements add up to 1.
 
     Parameters
     ----------
@@ -159,7 +159,7 @@ def closure(mat):
 
 @experimental(as_of="0.4.0")
 def multiplicative_replacement(mat, delta=None):
-    r"""Replace all zeros with small non-zero values
+    r"""Replace all zeros with small non-zero values.
 
     It uses the multiplicative replacement strategy [1]_ ,
     replacing zeros with a small positive :math:`\delta`
@@ -231,7 +231,7 @@ def multiplicative_replacement(mat, delta=None):
 
 @experimental(as_of="0.4.0")
 def perturb(x, y):
-    r"""Performs the perturbation operation.
+    r"""Perform the perturbation operation.
 
     This operation is defined as
 
@@ -280,7 +280,7 @@ def perturb(x, y):
 
 @experimental(as_of="0.4.0")
 def perturb_inv(x, y):
-    r"""Performs the inverse perturbation operation.
+    r"""Perform the inverse perturbation operation.
 
     This operation is defined as
 
@@ -330,7 +330,7 @@ def perturb_inv(x, y):
 
 @experimental(as_of="0.4.0")
 def power(x, a):
-    r"""Performs the power operation.
+    r"""Perform the power operation.
 
     This operation is defined as follows
 
@@ -376,7 +376,7 @@ def power(x, a):
 
 @experimental(as_of="0.4.0")
 def inner(x, y):
-    r"""Calculates the Aitchson inner product.
+    r"""Calculate the Aitchson inner product.
 
     This inner product is defined as follows
 
@@ -419,7 +419,7 @@ def inner(x, y):
 
 @experimental(as_of="0.4.0")
 def clr(mat):
-    r"""Performs centre log ratio transformation.
+    r"""Perform centre log ratio transformation.
 
     This function transforms compositions from Aitchison geometry to
     the real space. The :math:`clr` transform is both an isometry and an
@@ -467,7 +467,7 @@ def clr(mat):
 
 @experimental(as_of="0.4.0")
 def clr_inv(mat):
-    r"""Performs inverse centre log ratio transformation.
+    r"""Perform inverse centre log ratio transformation.
 
     This function transforms compositions from the real space to
     Aitchison geometry. The :math:`clr^{-1}` transform is both an isometry,
@@ -512,7 +512,7 @@ def clr_inv(mat):
 
 @experimental(as_of="0.4.0")
 def ilr(mat, basis=None, check=True):
-    r"""Performs isometric log ratio transformation.
+    r"""Perform isometric log ratio transformation.
 
     This function transforms compositions from Aitchison simplex to
     the real space. The :math: ilr` transform is both an isometry,
@@ -580,7 +580,7 @@ def ilr(mat, basis=None, check=True):
 
 @experimental(as_of="0.4.0")
 def ilr_inv(mat, basis=None, check=True):
-    r"""Performs inverse isometric log ratio transform.
+    r"""Perform inverse isometric log ratio transform.
 
     This function transforms compositions from the real space to
     Aitchison geometry. The :math:`ilr^{-1}` transform is both an isometry,
@@ -652,7 +652,7 @@ def ilr_inv(mat, basis=None, check=True):
 
 @experimental(as_of="0.5.5")
 def alr(mat, denominator_idx=0):
-    r"""Performs additive log ratio transformation.
+    r"""Perform additive log ratio transformation.
 
     This function transforms compositions from a D-part Aitchison simplex to
     a non-isometric real space of D-1 dimensions. The argument
@@ -714,7 +714,7 @@ def alr(mat, denominator_idx=0):
 
 @experimental(as_of="0.5.5")
 def alr_inv(mat, denominator_idx=0):
-    r"""Performs inverse additive log ratio transform.
+    r"""Perform inverse additive log ratio transform.
 
     This function transforms compositions from the non-isometric real space of
     alrs to Aitchison geometry.
@@ -813,7 +813,7 @@ def centralize(mat):
 
 @experimental(as_of="0.5.7")
 def _vlr(x: np.array, y: np.array, ddof: int):
-    r"""Calculates variance log ratio
+    r"""Calculate variance log ratio.
 
     Parameters
     ----------
@@ -851,7 +851,7 @@ def _vlr(x: np.array, y: np.array, ddof: int):
 
 @experimental(as_of="0.5.7")
 def _robust_vlr(x: np.ndarray, y: np.ndarray, ddof: int):
-    r"""Calculates variance log ratio while masking zeros
+    r"""Calculate variance log ratio while masking zeros.
 
     Parameters
     ----------
@@ -894,7 +894,7 @@ def _robust_vlr(x: np.ndarray, y: np.ndarray, ddof: int):
 
 @experimental(as_of="0.5.7")
 def vlr(x: np.ndarray, y: np.ndarray, ddof: int = 1, robust: bool = False):
-    r"""Calculates variance log ratio
+    r"""Calculate variance log ratio.
 
     Parameters
     ----------
@@ -956,7 +956,7 @@ def vlr(x: np.ndarray, y: np.ndarray, ddof: int = 1, robust: bool = False):
 
 @experimental(as_of="0.5.7")
 def _pairwise_vlr(mat: np.ndarray, ddof: int):
-    r"""Performs pairwise variance log ratio transformation
+    r"""Perform pairwise variance log ratio transformation.
 
     Parameters
     ----------
@@ -1001,7 +1001,7 @@ def _pairwise_vlr(mat: np.ndarray, ddof: int):
 def pairwise_vlr(
     mat, ids=None, ddof: int = 1, robust: bool = False, validate: bool = True
 ):
-    r"""Performs pairwise variance log ratio transformation
+    r"""Perform pairwise variance log ratio transformation.
 
     Parameters
     ----------
@@ -1078,7 +1078,7 @@ def pairwise_vlr(
 
 @experimental(as_of="0.5.8")
 def tree_basis(tree):
-    r"""Calculates sparse representation of an ilr basis from a tree.
+    r"""Calculate sparse representation of an ilr basis from a tree.
 
     This computes an orthonormal basis specified from a bifurcating tree.
 
@@ -1201,7 +1201,7 @@ def ancom(
     significance_test=None,
     percentiles=(0.0, 25.0, 50.0, 75.0, 100.0),
 ):
-    r"""Performs a differential abundance test using ANCOM.
+    r"""Perform a differential abundance test using ANCOM.
 
     This is done by calculating pairwise log ratios between all features
     and performing a significance test to determine if there is a significant
@@ -1554,8 +1554,8 @@ def ancom(
 
 
 def _holm_bonferroni(p):
-    """Performs Holm-Bonferroni correction for pvalues
-    to account for multiple comparisons
+    """Perform Holm-Bonferroni correction for pvalues
+    to account for multiple comparisons.
 
     Parameters
     ----------
@@ -1583,7 +1583,7 @@ def _holm_bonferroni(p):
 
 
 def _log_compare(mat, cats, significance_test=scipy.stats.ttest_ind):
-    """Calculates pairwise log ratios between all features and performs a
+    """Calculate pairwise log ratios between all features and perform a
     significance test (i.e. t-test) to determine if there is a significant
     difference in feature ratios with respect to the variable of interest.
 
@@ -1619,8 +1619,8 @@ def _log_compare(mat, cats, significance_test=scipy.stats.ttest_ind):
 
 
 def _gram_schmidt_basis(n):
-    """Builds clr transformed basis derived from
-    gram schmidt orthogonalization
+    """Build clr transformed basis derived from
+    gram schmidt orthogonalization.
 
     Parameters
     ----------
@@ -1643,7 +1643,7 @@ def _gram_schmidt_basis(n):
 
 @experimental(as_of="0.5.5")
 def sbp_basis(sbp):
-    r"""Builds an orthogonal basis from a sequential binary partition (SBP). As
+    r"""Build an orthogonal basis from a sequential binary partition (SBP). As
     explained in [1]_, the SBP is a hierarchical collection of binary
     divisions of compositional parts. The child groups are divided again until
     all groups contain a single part. The SBP can be encoded in a
@@ -1713,8 +1713,8 @@ def sbp_basis(sbp):
 
 
 def _check_orthogonality(basis):
-    """Checks to see if basis is truly orthonormal in the
-    Aitchison simplex
+    """Check to see if basis is truly orthonormal in the
+    Aitchison simplex.
 
     Parameters
     ----------

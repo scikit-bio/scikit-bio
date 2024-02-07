@@ -691,7 +691,7 @@ def _order_dms(x, y, strict=True, lookup=None):
 
 
 def _remap_ids(dm, lookup, label, order):
-    "Return a copy of `dm` with its IDs remapped based on `lookup`." ""
+    """Return a copy of `dm` with its IDs remapped based on `lookup`."""
     try:
         remapped_ids = [lookup[id_] for id_ in dm.ids]
     except KeyError as e:

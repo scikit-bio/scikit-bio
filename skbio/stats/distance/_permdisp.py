@@ -309,7 +309,7 @@ def _compute_groups(samples, test_type, grouping):
 
 def _config_med(x):
     """Slice the vector up to the last value to exclude grouping column
-    and transpose the vector to be compatible with hd.geomedian
+    and transpose the vector to be compatible with hd.geomedian.
     """
     X = x.values[:, :-1]
     return pd.Series(np.array(hd.geomedian(X.T)), index=x.columns[:-1])
