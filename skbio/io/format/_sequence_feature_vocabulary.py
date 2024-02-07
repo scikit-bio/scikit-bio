@@ -135,7 +135,6 @@ def _parse_single_feature(lines, imd):
 
     Parameters
     ----------
-    lines : ### some description here ###
     imd : IntervalMetadata
 
     """

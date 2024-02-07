@@ -299,8 +299,6 @@ def _clustal_to_tabular_msa(fh, constructor=None):
     ----------
     fh : open file object
         An open Clustal file.
-    constructor : ### something ###
-        ### something ###
 
     Returns
     -------

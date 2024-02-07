@@ -796,7 +796,6 @@ def _serialize_single_embl(obj, fh):
     Parameters
     ----------
     obj : Sequence or its child class
-    fh : ### something here" ###
 
     """
     # shortcut to deal with metadata

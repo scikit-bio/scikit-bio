@@ -533,15 +533,15 @@ def _setup_multiple_weighted_unifrac(counts, otu_ids, tree, normalized, validate
     counts : 2D array_like of ints or floats
         Matrix containing count/abundance data where each row contains counts
         of observations in a given sample.
-    otu_ids: list, np.array
+    otu_ids : list, np.array
         Vector of OTU ids corresponding to tip names in ``tree``. Must be the
         same length as ``u_counts`` and ``v_counts``. These IDs do not need to
         be in tip order with respect to the tree.
-    tree: skbio.TreeNode
+    tree : skbio.TreeNode
         Tree relating the OTUs in otu_ids. The set of tip names in the tree can
         be a superset of ``otu_ids``, but not a subset.
-    normalized: bool
-        ### some discription here ###
+    normalized : bool
+        If `True`, output will be normalized.
     validate: bool, optional
         If `False`, validation of the input won't be performed.
 
