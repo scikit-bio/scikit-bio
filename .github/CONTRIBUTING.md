@@ -193,19 +193,22 @@ Automating code quality: integrating Ruff's autoformatter and linter with pre-co
 ### "Installation"
 
 In your development environment, install Ruff and pre-commit using:
-```python
+
+```bash
 conda install -c conda-forge --file ci/requirements.lint.txt
 ```
 
 Alternatively, install both packages individually.
-```python
+
+```bash
 conda install -c conda-forge ruff pre-commit
 ```
 
 ### "Initialize pre-commit hooks"
 
 Scikit-bio streamlines the installation process by including Ruff's linter and formatter via Astral's [ruff-pre-commit](https://github.com/astral-sh/ruff-pre-commit), referenced in the `.pre-commit-config.yaml` file. Activate the pre-commit hooks with the following command:
-```python
+
+```bash
 pre-commit install
 ```
 
