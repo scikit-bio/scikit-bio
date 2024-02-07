@@ -35,7 +35,7 @@ class WrappedBufferedRandom(FlushDestructorMixin, io.BufferedRandom):
 
 
 class CompressedMixin(FlushDestructorMixin):
-    """Act as a bridge between worlds"""
+    """Act as a bridge between worlds."""
 
     def __init__(self, before_file, *args, **kwargs):
         self.streamable = kwargs.pop("streamable", True)

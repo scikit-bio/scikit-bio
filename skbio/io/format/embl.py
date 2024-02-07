@@ -436,13 +436,13 @@ KEYS_2_SECTIONS = {
 # for convenience: I think such functions are more readadble while accessing
 # values in lambda functions
 def _get_embl_key(line):
-    """Return first part of a string as a embl key (ie 'AC M14399;' -> 'AC')"""
+    """Return first part of a string as a embl key (ie 'AC M14399;' -> 'AC')."""
     # embl keys have a fixed size of 2 chars
     return line[:2]
 
 
 def _get_embl_section(line):
-    """Return the embl section from uniprot key(ie 'RA' -> 'REFERENCE')"""
+    """Return the embl section from uniprot key(ie 'RA' -> 'REFERENCE')."""
     # get embl key
     key = _get_embl_key(line)
 
@@ -453,8 +453,8 @@ def _get_embl_section(line):
 
 
 def _translate_key(key):
-    """A method to translate a single key from EMBL to genbank. Returns key
-    itself if no traslation is defined
+    """Translate a single key from EMBL to genbank. Returns key
+    itself if no traslation is defined.
     """
     return KEYS_TRANSLATOR.get(key, key)
 
@@ -463,7 +463,7 @@ def _translate_key(key):
 # not defined in the original dict will remain the same
 def _translate_keys(data):
     """Translate a dictionary of uniprot key->value in a genbank like
-    dictionary of key values. Keep old keys if no translation is defined
+    dictionary of key values. Keep old keys if no translation is defined.
     """
     # traslate keys and get a new_data object
     new_data = {_translate_key(k): v for k, v in data.items()}
@@ -473,9 +473,9 @@ def _translate_keys(data):
 
 # define a default textwrap.Wrapper for embl
 def _get_embl_wrapper(embl_key, indent=5, subsequent_indent=None, width=80):
-    """Returns a textwrap.TextWrapper for embl records (eg, write
+    """Return a textwrap.TextWrapper for embl records (eg, write
     <key>   <string> by providing embl key and a string. Wrap text to
-    80 column
+    80 column.
     """
     # define the string to prepen (eg "OC   ")
     prepend = "{key:<{indent}}".format(key=embl_key, indent=indent)
@@ -499,7 +499,7 @@ def _get_embl_wrapper(embl_key, indent=5, subsequent_indent=None, width=80):
 
 def _serialize_list(embl_wrapper, data, sep="\n"):
     """Serialize a list of obj using a textwrap.TextWrapper instance. Returns
-    one string of wrapped embl objects
+    one string of wrapped embl objects.
     """
     # the output array
     output = []
@@ -631,7 +631,7 @@ def _construct(record, constructor=None, **kwargs):
 
 # looks like the genbank _parse_genbank
 def _parse_embls(fh):
-    """Chunck multiple EMBL records by '//', and returns a generator"""
+    """Chunk multiple EMBL records by '//', and returns a generator."""
     data_chunks = []
     for line in _line_generator(fh, skip_blanks=True, strip=False):
         if line.startswith("//"):
@@ -769,7 +769,7 @@ def _parse_single_embl(chunks):
 
 
 def _write_serializer(fh, serializer, embl_key, data):
-    """A simple method to write serializer to a file. Append 'XX'"""
+    """Write serializer to a file. Append 'XX'."""
     # call the serializer function
     out = serializer(embl_key, data)
     # test if 'out' is a iterator.
@@ -796,6 +796,7 @@ def _serialize_single_embl(obj, fh):
     Parameters
     ----------
     obj : Sequence or its child class
+    fh : ### something here" ###
 
     """
     # shortcut to deal with metadata
@@ -871,7 +872,7 @@ def _serialize_single_embl(obj, fh):
 
 
 def _parse_id(lines):
-    """From EMBL user manual (Release 130, November 2016)
+    """From EMBL user manual (Release 130, November 2016).
     (ftp://ftp.ebi.ac.uk/pub/databases/embl/release/doc/usrman.txt)
 
     The ID (IDentification) line is always the first line of an entry. The
@@ -1009,7 +1010,7 @@ def _serialize_id(header, obj, metadata={}, indent=5):
 # similar to skbio.io.format._sequence_feature_vocabulary.__yield_section
 # but applies to embl file format
 def _embl_yield_section(get_line_key, **kwargs):
-    """Returns function that returns successive sections from file.
+    """Return function that returns successive sections from file.
 
     Parameters
     ----------
@@ -1147,7 +1148,7 @@ def _parse_reference(lines):
 
 
 def _serialize_reference(header, obj, cross_references, indent=5):
-    """Serialize a list of references"""
+    """Serialize a list of references."""
     reference = []
     sort_order = ["RC", "RP", "RX", "RG", "RA", "RT", "RL"]
 
@@ -1412,7 +1413,7 @@ def _serialize_sequence(obj, indent=5):
 
 
 def _embl_parse_feature_table(lines, length):
-    """Parse embl feature tables"""
+    """Parse embl feature tables."""
     # define interval metadata
     imd = IntervalMetadata(length)
 
@@ -1455,7 +1456,7 @@ def _serialize_feature_table(intervals, indent=21):
 
 
 def _parse_date(lines, label_delimiter=None, return_label=False):
-    """Parse embl date records"""
+    """Parse embl date records."""
     # take the first line, and derive a label
     label = lines[0].split(label_delimiter, 1)[0]
 
@@ -1489,7 +1490,7 @@ def _serialize_date(embl_key, date_list, indent=5):
 
 
 def _serialize_comment(embl_key, obj, indent=5):
-    """Serialize comment (like Assembly)"""
+    """Serialize comment (like Assembly)."""
     # obj is a string, Split it by newlines
     data = obj.split("\n")
 
@@ -1501,7 +1502,7 @@ def _serialize_comment(embl_key, obj, indent=5):
 
 
 def _serialize_dbsource(embl_key, obj, indent=5):
-    """Serialize DBSOURCE"""
+    """Serialize DBSOURCE."""
     # data are stored like 'SILVA-LSU; LK021130. SILVA-SSU; LK021130. ...
     # I need to split string after final period (not AAT09660.1)
 
@@ -1521,7 +1522,7 @@ def _serialize_dbsource(embl_key, obj, indent=5):
 
 
 def _parse_assembly(lines):
-    """Parse embl assembly records"""
+    """Parse embl assembly records."""
     output = []
 
     # first line is header, skip it

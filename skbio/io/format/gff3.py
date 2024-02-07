@@ -250,7 +250,7 @@ def _gff3_sniffer(fh):
 
 @gff3.reader(None)
 def _gff3_to_generator(fh):
-    """Parse the GFF3 into the existing IntervalMetadata
+    """Parse the GFF3 into the existing IntervalMetadata.
 
     Parameters
     ----------
@@ -283,7 +283,7 @@ def _generator_to_gff3(obj, fh, skip_subregion=True):
     obj : Iterable of (seq_id, IntervalMetadata)
     fh : file handler
     skip_subregion : bool
-        write a line for each sub-regions of an ``Interval`` if it is ``False``
+        Write a line for each sub-regions of an ``Interval`` if it is ``False``
 
     """
     # write file header
@@ -445,7 +445,7 @@ def _parse_record(lines, length):
 
 
 def _parse_attr(s):
-    """Parse attribute column"""
+    """Parse attribute column."""
     voca_change = _vocabulary_change("gff3")
     md = {}
     # in case the line ending with ';', strip it.

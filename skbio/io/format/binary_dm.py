@@ -174,7 +174,7 @@ def _passthrough_decoder(x):
 
 
 def _set_header(h5grp):
-    """Set format spec header information"""
+    """Set format spec header information."""
     h5grp["format"] = [
         b"BDSM",
     ]

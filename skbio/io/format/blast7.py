@@ -389,7 +389,7 @@ def _blast7_to_data_frame(fh):
 
 
 def _parse_fields(line, legacy=False):
-    """Removes '\n' from fields line and returns fields as a list (columns)."""
+    r"""Remove '\n' from fields line and returns fields as a list (columns)."""
     line = line.rstrip("\n")
     if legacy:
         fields = line.split(",")

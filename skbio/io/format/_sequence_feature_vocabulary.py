@@ -42,7 +42,7 @@ def _vocabulary_skip(format="insdc"):
 
 
 def _yield_section(is_another_section, **kwargs):
-    """Returns function that returns successive sections from file.
+    """Return function that returns successive sections from file.
 
     Parameters
     ----------
@@ -135,6 +135,7 @@ def _parse_single_feature(lines, imd):
 
     Parameters
     ----------
+    lines : ### some description here ###
     imd : IntervalMetadata
 
     """
