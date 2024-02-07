@@ -7,8 +7,8 @@ on:
     branches: [ master ]
 
 env:
-  latest_python: "3.11"
-  supported_pythons: '["3.8", "3.9", "3.10", "3.11"]'
+  latest_python: "3.12"
+  supported_pythons: '["3.8", "3.9", "3.10", "3.11", "3.12"]'
   miniforge_version: "22.9.0-2"
   miniforge_variant: "Mambaforge"
 
