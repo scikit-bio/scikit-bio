@@ -1458,7 +1458,7 @@ class TabularMSA(MetadataMixin, PositionalMetadataMixin, SkbioObject):
         degenerate_mode="error",
         gap_mode="nan",
     ):
-        """Apply metric to compute conservation for all alignment positions
+        """Apply metric to compute conservation for all alignment positions.
 
         Parameters
         ----------
