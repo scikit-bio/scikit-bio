@@ -1007,7 +1007,7 @@ fuzzy=[(True, False)], metadata={'gene': 'foo'})
 
     @stable(as_of="0.4.0")
     def __bool__(self):
-        r"""Returns truth value (truthiness) of sequence.
+        r"""Return truth value (truthiness) of sequence.
 
         Returns
         -------
