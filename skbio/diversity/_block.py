@@ -15,7 +15,7 @@ from skbio.diversity._util import _validate_counts_matrix
 
 
 def _generate_id_blocks(ids, k=64):
-    """Generate blocks of IDs that map into a DistanceMatrix
+    """Generate blocks of IDs that map into a DistanceMatrix.
 
     Parameters
     ----------
@@ -68,7 +68,7 @@ def _generate_id_blocks(ids, k=64):
 
 
 def _block_party(counts=None, row_ids=None, col_ids=None, **kwargs):
-    """Subset counts to relevant rows and columns
+    """Subset counts to relevant rows and columns.
 
     Parameters
     ----------
@@ -113,7 +113,7 @@ def _block_party(counts=None, row_ids=None, col_ids=None, **kwargs):
 
 
 def _pairs_to_compute(rids, cids):
-    """Determine the pairs of samples to compute distances between
+    """Determine the pairs of samples to compute distances between.
 
     Parameters
     ----------
@@ -147,7 +147,7 @@ def _pairs_to_compute(rids, cids):
 
 
 def _block_kwargs(**kwargs):
-    """Construct arguments describing a block to compute
+    """Construct arguments describing a block to compute.
 
     Returns
     -------
@@ -176,7 +176,7 @@ def _block_kwargs(**kwargs):
 
 
 def _block_compute(**kwargs):
-    """Compute a block within the resulting distance matrix
+    """Compute a block within the resulting distance matrix.
 
     Notes
     -----
@@ -195,7 +195,7 @@ def _block_compute(**kwargs):
 
 
 def _map(func, kw_gen):
-    """Map a function over arguments
+    """Map a function over arguments.
 
     Notes
     -----
@@ -210,7 +210,7 @@ def _map(func, kw_gen):
 
 
 def _reduce(blocks):
-    """Reduce an iterable of partial distance matrices into a full matrix
+    """Reduce an iterable of partial distance matrices into a full matrix.
 
     Note, the reduce doesn't actually care about what pairs are computed
     so if a distance between pairs exists multiple times, it'll get
@@ -254,7 +254,7 @@ def _reduce(blocks):
 def block_beta_diversity(
     metric, counts, ids, validate=True, k=64, reduce_f=None, map_f=None, **kwargs
 ):
-    """Perform a block-decomposition beta diversity calculation
+    """Perform a block-decomposition beta diversity calculation.
 
     Parameters
     ----------
