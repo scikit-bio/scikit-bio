@@ -871,7 +871,7 @@ fuzzy=[(True, True)], metadata={'gene': 'sagB'})
 
     @experimental(as_of="0.5.1")
     def drop(self, intervals, negate=False):
-        """Drops Interval objects.
+        """Drop Interval objects.
 
         The given ``Interval`` objects will be removed and their
         associated ``IntervalMetadata`` will be set to ``None``.
