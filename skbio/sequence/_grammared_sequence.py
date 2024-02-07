@@ -110,7 +110,6 @@ class GrammaredSequence(Sequence, metaclass=GrammaredSequenceMeta):
 
     Examples
     --------
-
     Note in the example below that properties either need to be static or
     use skbio's `classproperty` decorator.
 

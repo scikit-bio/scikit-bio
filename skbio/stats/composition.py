@@ -1,5 +1,4 @@
-r"""
-Composition Statistics (:mod:`skbio.stats.composition`)
+r"""Composition Statistics (:mod:`skbio.stats.composition`)
 =======================================================
 
 .. currentmodule:: skbio.stats.composition
@@ -72,7 +71,6 @@ References
 
 Examples
 --------
-
 >>> import numpy as np
 
 Consider a very simple environment with only 3 species. The species
@@ -91,6 +89,7 @@ And the resulting perturbation would be
 
 >>> perturb(otus, antibiotic)
 array([ 0.25,  0.25,  0.5 ])
+
 
 """
 
@@ -113,8 +112,7 @@ from scipy.sparse import coo_matrix
 
 @experimental(as_of="0.4.0")
 def closure(mat):
-    """
-    Performs closure to ensure that all elements add up to 1.
+    """Performs closure to ensure that all elements add up to 1.
 
     Parameters
     ----------
@@ -324,6 +322,7 @@ def perturb_inv(x, y):
     >>> y = np.array([1./6,1./6,1./3,1./3])
     >>> perturb_inv(x,y)
     array([ 0.14285714,  0.42857143,  0.28571429,  0.14285714])
+
     """
     x, y = closure(x), closure(y)
     return closure(x / y)
@@ -410,6 +409,7 @@ def inner(x, y):
     >>> y = np.array([.2, .4, .2, .2])
     >>> inner(x, y)  # doctest: +ELLIPSIS
     0.2107852473...
+
     """
     x = closure(x)
     y = closure(y)
@@ -502,6 +502,7 @@ def clr_inv(mat):
     >>> x = np.array([.1, .3, .4, .2])
     >>> clr_inv(x)
     array([ 0.21383822,  0.26118259,  0.28865141,  0.23632778])
+
     """
     # for numerical stability (aka softmax trick)
     mat = np.atleast_2d(mat)
@@ -559,6 +560,7 @@ def ilr(mat, basis=None, check=True):
     Aitchison simplex.  If there are `D-1` elements specified in `mat`, then
     the dimensions of the basis needs be `D-1 x D`, where rows represent
     basis vectors, and the columns represent proportions.
+
     """
     mat = closure(mat)
     if basis is None:
@@ -627,6 +629,7 @@ def ilr_inv(mat, basis=None, check=True):
     Aitchison simplex.  If there are `D-1` elements specified in `mat`, then
     the dimensions of the basis needs be `D-1 x D`, where rows represent
     basis vectors, and the columns represent proportions.
+
     """
     mat = np.atleast_2d(mat)
     if basis is None:
@@ -692,6 +695,7 @@ def alr(mat, denominator_idx=0):
     >>> x = np.array([.1, .3, .4, .2])
     >>> alr(x)
     array([ 1.09861229,  1.38629436,  0.69314718])
+
     """
     mat = closure(mat)
     if mat.ndim == 2:
@@ -752,6 +756,7 @@ def alr_inv(mat, denominator_idx=0):
     >>> x = np.array([.1, .3, .4, .2])
     >>> alr_inv(alr(x))
     array([ 0.1,  0.3,  0.4,  0.2])
+
     """
     mat = np.array(mat)
     if mat.ndim == 2:
@@ -834,8 +839,8 @@ def _vlr(x: np.array, y: np.array, ddof: int):
            How should we measure proportionality on relative gene
            expression data?. Theory Biosci. 135, 21–36 (2016).
            https://doi.org/10.1007/s12064-015-0220-8
-    """
 
+    """
     # Log transformation
     x = np.log(x)
     y = np.log(y)
@@ -873,8 +878,8 @@ def _robust_vlr(x: np.ndarray, y: np.ndarray, ddof: int):
            How should we measure proportionality on relative gene
            expression data?. Theory Biosci. 135, 21–36 (2016).
            https://doi.org/10.1007/s12064-015-0220-8
-    """
 
+    """
     # Mask zeros
     x = np.ma.masked_array(x, mask=x == 0)
     y = np.ma.masked_array(y, mask=y == 0)
@@ -929,6 +934,7 @@ def vlr(x: np.ndarray, y: np.ndarray, ddof: int = 1, robust: bool = False):
            How should we measure proportionality on relative gene
            expression data?. Theory Biosci. 135, 21–36 (2016).
            https://doi.org/10.1007/s12064-015-0220-8
+
     """
     # Convert array_like to numpy array
     x = closure(x)
@@ -979,8 +985,8 @@ def _pairwise_vlr(mat: np.ndarray, ddof: int):
            How should we measure proportionality on relative gene
            expression data?. Theory Biosci. 135, 21–36 (2016).
            https://doi.org/10.1007/s12064-015-0220-8
-    """
 
+    """
     # Log Transform
     X_log = np.log(mat)
 
@@ -1043,8 +1049,8 @@ def pairwise_vlr(
            How should we measure proportionality on relative gene
            expression data?. Theory Biosci. 135, 21–36 (2016).
            https://doi.org/10.1007/s12064-015-0220-8
-    """
 
+    """
     # Mask zeros
     mat = closure(mat.astype(np.float64))
 
@@ -1552,7 +1558,7 @@ def _holm_bonferroni(p):
     to account for multiple comparisons
 
     Parameters
-    ---------
+    ----------
     p: numpy.array
         array of pvalues
 
@@ -1560,6 +1566,7 @@ def _holm_bonferroni(p):
     -------
     numpy.array
         corrected pvalues
+
     """
     K = len(p)
     sort_index = -np.ones(K, dtype=np.int64)
@@ -1590,10 +1597,11 @@ def _log_compare(mat, cats, significance_test=scipy.stats.ttest_ind):
     significance_test: function
         statistical test to run
 
-    Returns:
-    --------
+    Returns
+    -------
     log_ratio : np.array
         log ratio pvalue matrix
+
     """
     r, c = mat.shape
     log_ratio = np.zeros((c, c))
@@ -1611,8 +1619,7 @@ def _log_compare(mat, cats, significance_test=scipy.stats.ttest_ind):
 
 
 def _gram_schmidt_basis(n):
-    """
-    Builds clr transformed basis derived from
+    """Builds clr transformed basis derived from
     gram schmidt orthogonalization
 
     Parameters
@@ -1624,6 +1631,7 @@ def _gram_schmidt_basis(n):
     -------
     basis : np.array
         Dimension (n-1) x n basis matrix
+
     """
     basis = np.zeros((n, n - 1))
     for j in range(n - 1):
@@ -1635,8 +1643,7 @@ def _gram_schmidt_basis(n):
 
 @experimental(as_of="0.5.5")
 def sbp_basis(sbp):
-    r"""
-    Builds an orthogonal basis from a sequential binary partition (SBP). As
+    r"""Builds an orthogonal basis from a sequential binary partition (SBP). As
     explained in [1]_, the SBP is a hierarchical collection of binary
     divisions of compositional parts. The child groups are divided again until
     all groups contain a single part. The SBP can be encoded in a
@@ -1693,8 +1700,8 @@ def sbp_basis(sbp):
     .. [2] van den Boogaart, K. Gerald, Tolosana-Delgado, Raimon and Bren,
        Matevz, 2014. `compositions`: Compositional Data Analysis. R package
        version 1.40-1. https://CRAN.R-project.org/package=compositions.
-    """
 
+    """
     n_pos = (sbp == 1).sum(axis=1)
     n_neg = (sbp == -1).sum(axis=1)
     psi = np.zeros(sbp.shape)
@@ -1706,14 +1713,14 @@ def sbp_basis(sbp):
 
 
 def _check_orthogonality(basis):
-    """
-    Checks to see if basis is truly orthonormal in the
+    """Checks to see if basis is truly orthonormal in the
     Aitchison simplex
 
     Parameters
     ----------
     basis: numpy.ndarray
         basis in the Aitchison simplex of dimension d-1 x d
+
     """
     basis = np.atleast_2d(basis)
     if not np.allclose(basis @ basis.T, np.identity(len(basis)), rtol=1e-4, atol=1e-6):

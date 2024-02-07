@@ -73,7 +73,6 @@ the annotation belong to.
 
 Examples
 --------
-
 Let's create a file stream with following data in GFF3 format:
 
 >>> from skbio import Sequence, DNA
@@ -203,6 +202,7 @@ References
 .. [1] https://github.com/The-Sequence-Ontology/\
 Specifications/blob/master/gff3.md
 
+
 '''
 
 # ----------------------------------------------------------------------------
@@ -261,6 +261,7 @@ def _gff3_to_generator(fh):
     ------
     tuple
         str of seq id, IntervalMetadata
+
     """
     id_lengths = {}
     for data_type, sid, data in _yield_record(fh):
@@ -283,6 +284,7 @@ def _generator_to_gff3(obj, fh, skip_subregion=True):
     fh : file handler
     skip_subregion : bool
         write a line for each sub-regions of an ``Interval`` if it is ``False``
+
     """
     # write file header
     fh.write("##gff-version 3\n")
@@ -323,6 +325,7 @@ def _gff3_to_interval_metadata(fh, seq_id):
     fh : file handler
     seq_id : str
         sequence ID which the interval metadata is associated with
+
     """
     length = None
     for data_type, sid, data in _yield_record(fh):
@@ -353,6 +356,7 @@ def _interval_metadata_to_gff3(obj, fh, seq_id, skip_subregion=True):
         ID for column 1 in the GFF3 file.
     skip_subregion : bool
         write a line for each sub-regions of an ``Interval`` if it is ``False``
+
     """
     # write file header
     fh.write("##gff-version 3\n")
@@ -441,7 +445,7 @@ def _parse_record(lines, length):
 
 
 def _parse_attr(s):
-    """parse attribute column"""
+    """Parse attribute column"""
     voca_change = _vocabulary_change("gff3")
     md = {}
     # in case the line ending with ';', strip it.
@@ -467,6 +471,7 @@ def _serialize_interval_metadata(interval_metadata, seq_id, fh, skip_subregion=T
         the file object to output
     skip_subregion : bool
         Whether to skip outputting each sub region as a line in GFF3.
+
     """
     column_keys = ["source", "type", "score", "strand", "phase"]
     voca_change = _vocabulary_change("gff3", False)

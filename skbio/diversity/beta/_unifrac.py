@@ -356,8 +356,7 @@ def _setup_pairwise_unifrac(
 
 
 def _unweighted_unifrac(u_node_counts, v_node_counts, branch_lengths):
-    """
-    Parameters
+    """Parameters
     ----------
     u_node_counts, v_node_counts : np.array
         Vectors indicating presence (value greater than zero) and absence
@@ -391,8 +390,7 @@ def _unweighted_unifrac(u_node_counts, v_node_counts, branch_lengths):
 def _weighted_unifrac(
     u_node_counts, v_node_counts, u_total_count, v_total_count, branch_lengths
 ):
-    """
-    Parameters
+    """Parameters
     ----------
     u_node_counts, v_node_counts : np.array
         Vectors indicating presence (value greater than zero) and absence
@@ -442,8 +440,7 @@ def _weighted_unifrac_normalized(
     branch_lengths,
     node_to_root_distances,
 ):
-    """
-    Parameters
+    """Parameters
     ----------
     u_node_counts, v_node_counts : np.array
          Vectors indicating presence (value greater than zero) and absence
@@ -620,6 +617,7 @@ def _weighted_unifrac_branch_correction(
     -------
     np.ndarray
         The corrected branch lengths
+
     """
     return (
         node_to_root_distances.ravel() * (u_node_proportions + v_node_proportions)

@@ -240,6 +240,7 @@ def get_rng(seed=None):
     .. [2] https://numpy.org/doc/stable/reference/random/legacy.html
 
     .. [3] https://numpy.org/neps/nep-0019-rng-policy.html
+
     """
     try:
         if seed is None or isinstance(seed, int):

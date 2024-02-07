@@ -1,5 +1,4 @@
-r"""
-Empty Files (:mod:`skbio.io.format.emptyfile`)
+r"""Empty Files (:mod:`skbio.io.format.emptyfile`)
 ==============================================
 
 .. currentmodule:: skbio.io.format.emptyfile

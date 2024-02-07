@@ -1,5 +1,4 @@
-"""
-Sequence distance metrics (:mod:`skbio.sequence.distance`)
+"""Sequence distance metrics (:mod:`skbio.sequence.distance`)
 ==========================================================
 
 .. currentmodule:: skbio.sequence.distance

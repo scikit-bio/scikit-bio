@@ -1,5 +1,4 @@
-r"""
-Clustal format (:mod:`skbio.io.format.clustal`)
+r"""Clustal format (:mod:`skbio.io.format.clustal`)
 ===============================================
 
 .. currentmodule:: skbio.io.format.clustal
@@ -134,6 +133,7 @@ References
 .. [1] http://www.sciencedirect.com/science/article/pii/0378111988903307
 .. [2] http://web.mit.edu/meme_v4.9.0/doc/clustalw-format.html
 
+
 """
 
 # ----------------------------------------------------------------------------
@@ -210,8 +210,7 @@ def _delete_trailing_number(line):
 
 
 def _check_length(data, labels, num_seqs_check=None):
-    """
-    Checks the lengths of the clustal sequences to make
+    """Checks the lengths of the clustal sequences to make
     sure that they are lining up right
 
     num_seqs_check: The number of sequences to check
@@ -294,7 +293,7 @@ def _tabular_msa_to_clustal(obj, fh):
 
 @clustal.reader(TabularMSA)
 def _clustal_to_tabular_msa(fh, constructor=None):
-    r"""yields labels and sequences from msa (multiple sequence alignment)
+    r"""Yields labels and sequences from msa (multiple sequence alignment)
 
     Parameters
     ----------

@@ -230,8 +230,7 @@ def _normalize_signs(arr1, arr2):
     flipped, but they're still right.
 
     Notes
-    =====
-
+    -----
     This function tries hard to make sure that, if you find "column"
     and "-column" almost equal, calling a function like np.allclose to
     compare them after calling `normalize_signs` succeeds.
@@ -250,6 +249,7 @@ def _normalize_signs(arr1, arr2):
     whose absolute value is largest. Then, it compares its sign with
     the number found in the same index, but in the other array, and
     flips the sign of the column as needed.
+
     """
     # Let's convert everyting to floating point numbers (it's
     # reasonable to assume that eigenvectors will already be floating

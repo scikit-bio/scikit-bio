@@ -357,8 +357,8 @@ def _mantel_stats_pearson_flat(x, y_flat, permutations):
         values for any "self-permutations" in the permuted_stats.
     permuted_stats : 1D array_like
         Permuted correlation coefficients of the test.
-    """
 
+    """
     x_flat = x.condensed_form()
 
     # If an input is constant, the correlation coefficient is not defined.
@@ -445,8 +445,8 @@ def _mantel_stats_pearson(x, y, permutations):
         values for any "self-permutations" in the permuted_stats.
     permuted_stats : 1D array_like
         Permuted correlation coefficients of the test.
-    """
 
+    """
     y_flat = y.condensed_form()
     return _mantel_stats_pearson_flat(x, y_flat, permutations)
 
@@ -475,8 +475,8 @@ def _mantel_stats_spearman(x, y, permutations):
         values for any "self-permutations" in the permuted_stats.
     permuted_stats : 1D array_like
         Permuted correlation coefficients of the test.
-    """
 
+    """
     x_flat = x.condensed_form()
     y_flat = y.condensed_form()
 
@@ -555,7 +555,7 @@ def pwmantel(
     DistanceMatrix.read
 
     Notes
-    --------
+    -----
     Passing a list of filepaths can be useful as it allows for a smaller amount
     of memory consumption as it only loads two matrices at a time as opposed to
     loading all distance matrices into memory.

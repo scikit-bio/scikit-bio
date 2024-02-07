@@ -358,7 +358,6 @@ class NucleotideMixin(metaclass=ABCMeta):
         0
 
         """
-
         counts = np.bincount(self._bytes, minlength=self._num_extended_ascii_codes)
         gc = counts[self._gc_codes].sum()
         if relative:

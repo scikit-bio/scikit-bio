@@ -49,7 +49,6 @@ class _MetadataReprBuilder(metaclass=ABCMeta):
 
     def build(self):
         """Template method for building the repr"""
-
         self._lines = ElasticLines()
 
         self._process_header()

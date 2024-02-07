@@ -395,6 +395,7 @@ def phydiv(counts, otu_ids, tree, rooted=None, weight=False, validate=True):
        Wu, G. D., ... & Li, H. (2012). Associating microbiome composition with
        environmental covariates using generalized UniFrac distances.
        Bioinformatics, 28(16), 2106-2113.
+
     """
     # whether tree is rooted should not affect whether metric can be calculated
     # ; it is common unrooted PD is calculated on a rooted tree

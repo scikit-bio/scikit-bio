@@ -1529,7 +1529,6 @@ class TabularMSA(MetadataMixin, PositionalMetadataMixin, SkbioObject):
            https://schneider.ncifcrf.gov/glossary.html#Shannon_entropy
 
         """
-
         if gap_mode not in {"nan", "error", "include", "ignore"}:
             raise ValueError("Unknown gap_mode provided: %s" % gap_mode)
 

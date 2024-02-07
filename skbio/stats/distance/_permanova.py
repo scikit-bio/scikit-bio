@@ -124,7 +124,6 @@ def _compute_f_stat(
     sample_size, num_groups, distance_matrix, group_sizes, s_T, grouping
 ):
     """Compute PERMANOVA pseudo-F statistic."""
-
     # Calculate s_W for each group, accounting for different group sizes.
     s_W = permanova_f_stat_sW_cy(distance_matrix.data, group_sizes, grouping)
 

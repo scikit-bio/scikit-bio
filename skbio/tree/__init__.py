@@ -1,5 +1,4 @@
-r"""
-Tree representations (:mod:`skbio.tree`)
+r"""Tree representations (:mod:`skbio.tree`)
 ========================================
 
 .. currentmodule:: skbio.tree
@@ -48,7 +47,6 @@ Exceptions
 
 Examples
 --------
-
 >>> from skbio import TreeNode
 >>> from io import StringIO
 
@@ -170,6 +168,7 @@ pairwise tip-to-tip distances between trees:
 0.0
 >>> print(tree1.compare_tip_distances(tree2))
 0.120492524415
+
 
 """
 

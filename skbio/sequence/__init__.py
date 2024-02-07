@@ -1,5 +1,4 @@
-r"""
-Sequences (:mod:`skbio.sequence`)
+r"""Sequences (:mod:`skbio.sequence`)
 =================================
 
 .. currentmodule:: skbio.sequence
@@ -294,6 +293,7 @@ Class-level methods contain information about the molecule types.
 
 >>> sorted(RNA.degenerate_map['B'])
 ['C', 'G', 'U']
+
 
 """
 

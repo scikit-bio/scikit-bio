@@ -348,6 +348,7 @@ class SubstitutionMatrix(DissimilarityMatrix):
         See Also
         --------
         by_name
+
         """
         return list(_named_substitution_matrices.keys())
 

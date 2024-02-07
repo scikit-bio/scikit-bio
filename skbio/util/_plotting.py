@@ -46,6 +46,7 @@ class PlottableMixin:
         -------
         str or bytes or None
             Figure data, or None if the plotting backend is not available.
+
         """
         try:
             self._get_mpl_plt()
@@ -88,6 +89,7 @@ class PlottableMixin:
         -------
         bytes
             Figure data in PNG format.
+
         """
         return self._repr_png_()
 
@@ -100,5 +102,6 @@ class PlottableMixin:
         -------
         str
             Figure data in SVG format.
+
         """
         return self._repr_svg_()

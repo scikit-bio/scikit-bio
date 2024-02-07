@@ -1,5 +1,4 @@
-r"""
-Metadata (:mod:`skbio.metadata`)
+r"""Metadata (:mod:`skbio.metadata`)
 ================================
 
 .. currentmodule:: skbio.metadata

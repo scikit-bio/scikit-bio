@@ -1,5 +1,4 @@
-r"""
-Alignments (:mod:`skbio.alignment`)
+r"""Alignments (:mod:`skbio.alignment`)
 ===================================
 
 .. currentmodule:: skbio.alignment

@@ -44,6 +44,7 @@ def distance_from_r(m1, m2):
     -------
     float
         The distance between m1 and m2
+
     """
     return correlation(m1.data.flat, m2.data.flat) / 2
 
@@ -76,6 +77,7 @@ class TreeNode(SkbioObject):
         Connect this node to a parent
     children : list of TreeNode or None
         Connect this node to existing children
+
     """
 
     default_write_format = "newick"
@@ -343,6 +345,7 @@ class TreeNode(SkbioObject):
         >>> print(tree)
         (a)c;
         <BLANKLINE>
+
         """
         for node in self.traverse(include_self=False):
             if func(node):
@@ -747,6 +750,7 @@ class TreeNode(SkbioObject):
         >>> tree = TreeNode.read(["((a,(b,c)d)e,(f,g)h)i;"])
         >>> sorted(tree.subset())
         ['a', 'b', 'c', 'f', 'g']
+
         """
         return frozenset({i.name for i in self.tips()})
 
@@ -1493,6 +1497,7 @@ class TreeNode(SkbioObject):
         <BLANKLINE>
         d d;
         <BLANKLINE>
+
         """
         root = self.root()
 
@@ -1554,6 +1559,7 @@ class TreeNode(SkbioObject):
         >>> tree = TreeNode.read(["((a,b)c,(d,e)f);"])
         >>> print(tree.find('c').name)
         c
+
         """
         root = self.root()
 
@@ -1658,6 +1664,7 @@ class TreeNode(SkbioObject):
         >>> func = lambda x: x.parent == tree.find('c')
         >>> [n.name for n in tree.find_by_func(func)]
         ['a', 'b']
+
         """
         for node in self.traverse(include_self=True):
             if func(node):
@@ -2243,6 +2250,7 @@ class TreeNode(SkbioObject):
                  |          /-d
                   \f-------|
                             \-e
+
         """
         (lines, mid) = self._ascii_art(show_internal=show_internal, compact=compact)
         return "\n".join(lines)
@@ -2281,6 +2289,7 @@ class TreeNode(SkbioObject):
         >>> root = tree
         >>> tree.find('a').accumulate_to_ancestor(root)
         4.0
+
         """
         accum = 0.0
         curr = self
@@ -2336,6 +2345,7 @@ class TreeNode(SkbioObject):
         >>> tip_d = tree.find('d')
         >>> tip_a.distance(tip_d)
         14.0
+
         """
         if self is other:
             return 0.0
@@ -2383,9 +2393,10 @@ class TreeNode(SkbioObject):
                 n.MaxDistTips = ((tip_a_d, tip_a), (tip_b_d, tip_b))
 
     def _get_max_distance_singledesc(self):
-        """returns the max distance between any pair of tips
+        """Returns the max distance between any pair of tips
 
-        Also returns the tip names  that it is between as a tuple"""
+        Also returns the tip names  that it is between as a tuple
+        """
         distmtx = self.tip_tip_distances()
         idx_max = divmod(distmtx.data.argmax(), distmtx.shape[1])
         max_pair = (distmtx.ids[idx_max[0]], distmtx.ids[idx_max[1]])
@@ -2423,6 +2434,7 @@ class TreeNode(SkbioObject):
         16.0
         >>> [n.name for n in tips]
         ['b', 'e']
+
         """
         if not hasattr(self, "MaxDistTips"):
             # _set_max_distance will throw a TreeError if a node with a single
@@ -2810,6 +2822,7 @@ class TreeNode(SkbioObject):
                  |          /-d
                   \f-------|
                             \-e
+
         """
         for n in self.traverse(include_self=True):
             if len(n.children) > 2:
@@ -2840,6 +2853,7 @@ class TreeNode(SkbioObject):
             corresponds to node_id. The second column is the left most
             descendent's ID. The third column is the right most descendent's
             ID.
+
         """
         self.assign_ids()
 
@@ -2923,6 +2937,7 @@ class TreeNode(SkbioObject):
         >>> sdbl = tr.descending_branch_length(['A','E'])
         >>> print(round(tdbl, 1), round(sdbl, 1))
         8.9 2.2
+
         """
         self.assign_ids()
         if tip_subset is not None:
@@ -3123,6 +3138,7 @@ class TreeNode(SkbioObject):
                 The support value extracted from the node label
             str or None
                 The node label with the support value stripped
+
         """
         support, label = None, None
         if self.name:
@@ -3148,6 +3164,7 @@ class TreeNode(SkbioObject):
         -------
         str
             Generated node label
+
         """
         lblst = []
         if self.support is not None:  # prevents support of NoneType
@@ -3200,6 +3217,7 @@ class TreeNode(SkbioObject):
         80
         >>> tree.lca(['e', 'f']).name
         'speciesA'
+
         """
         for node in self.traverse():
             if node.is_root() or node.is_tip():
@@ -3222,7 +3240,7 @@ class TreeNode(SkbioObject):
         ValueError
             if input node is root or tip
 
-        See also
+        See Also
         --------
         unpack_by_func
         prune
@@ -3235,6 +3253,7 @@ class TreeNode(SkbioObject):
         >>> print(tree)
         ((c:2.0,d:3.0)a:1.0,e:4.0,f:3.0);
         <BLANKLINE>
+
         """
         if self.is_root():
             raise TreeError("Cannot unpack root.")
@@ -3258,7 +3277,7 @@ class TreeNode(SkbioObject):
             a function that accepts a TreeNode and returns `True` or `False`,
             where `True` indicates the node is to be unpacked
 
-        See also
+        See Also
         --------
         unpack
         prune
@@ -3277,6 +3296,7 @@ class TreeNode(SkbioObject):
         >>> print(tree)
         (((a,b)85,(c,d)78)75,(e,f,g)80);
         <BLANKLINE>
+
         """
         nodes_to_unpack = []
         for node in self.non_tips(include_self=False):

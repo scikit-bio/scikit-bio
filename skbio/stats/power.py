@@ -1,5 +1,4 @@
-r"""
-Empirical Power Estimation (:mod:`skbio.stats.power`)
+r"""Empirical Power Estimation (:mod:`skbio.stats.power`)
 =====================================================
 
 .. currentmodule:: skbio.stats.power
@@ -129,6 +128,7 @@ array([ 0.   ,  0.016,  0.108,  0.332,  0.572,  0.848,  0.956])
 Based on this power estimate, as we increase our confidence that we have not
 committed a type I error and identified a false positive, the number of samples
 we need to be confident that we have not committed a type II error increases.
+
 
 """
 
@@ -355,7 +355,6 @@ def subsample_power(
     power.
 
     """
-
     # Checks the inputs
     ratio, num_p, sample_counts = _check_subsample_power_inputs(
         test=test,
@@ -547,7 +546,6 @@ def subsample_paired_power(
     samples per group.
 
     """
-
     # Handles the order argument
     if order is None:
         order = sorted(meta.groupby(cat).groups.keys())
@@ -616,7 +614,6 @@ def confidence_bound(vec, alpha=0.05, df=None, axis=None):
         [mean - bound, mean + bound].
 
     """
-
     # Determines the number of non-nan counts
     vec = np.asarray(vec)
     vec_shape = vec.shape
@@ -717,7 +714,6 @@ def paired_subsamples(meta, cat, control_cats, order=None, strict_match=True):
     `strict_match` was true, and there is missing AGE data for this sample.
 
     """
-
     # Handles the order argument
     if order is None:
         order = sorted(meta.groupby(cat).groups.keys())
@@ -743,7 +739,6 @@ def paired_subsamples(meta, cat, control_cats, order=None, strict_match=True):
 
 def _get_min_size(meta, cat, control_cats, order, strict_match):
     """Determines the smallest group represented"""
-
     if strict_match:
         all_cats = copy.deepcopy(control_cats)
         all_cats.append(cat)
@@ -784,7 +779,6 @@ def _calculate_power(p_values, alpha=0.05):
         critical value.
 
     """
-
     p_values = np.atleast_2d(p_values)
 
     w = (p_values < alpha).sum(axis=1) / p_values.shape[1]
@@ -840,7 +834,6 @@ def _compare_distributions(test, samples, num_p, counts=5, mode="ind", num_iter=
         If counts is a 1-D array and counts and samples are different lengths.
 
     """
-
     # Prealocates the pvalue matrix
     p_values = np.zeros((num_p, num_iter))
 
@@ -940,7 +933,6 @@ def _check_subsample_power_inputs(
         `test` does not return a float or a 1-dimensional numpy array.
 
     """
-
     if draw_mode not in {"ind", "matched"}:
         raise ValueError('mode must be "matched" or "ind".')
 
@@ -1033,7 +1025,6 @@ def _identify_sample_groups(meta, cat, control_cats, order, strict_match):
         position of the reference group sample in the list of samples.
 
     """
-
     # Sets up variables to be filled
     meta_pairs = {}
     index = []
@@ -1095,8 +1086,8 @@ def _draw_paired_samples(meta_pairs, index, num_samps):
     -------
     ids : list
         A set of randomly selected ids groups from each group.
-    """
 
+    """
     # Handles an empty paired vector
     if "no" in meta_pairs:
         return [np.array([]) for o in meta_pairs["no"]]
@@ -1164,10 +1155,12 @@ def _calculate_power_curve(
     -------
     p_values : array
         The p-values associated with the input sample counts.
+
     Raises
     ------
     ValueError
         If ratio is an array and ratio is not the same length as samples
+
     """
     # Casts array-likes to arrays
     sample_counts = np.asarray(sample_counts)

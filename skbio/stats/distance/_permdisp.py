@@ -308,8 +308,7 @@ def _compute_groups(samples, test_type, grouping):
 
 
 def _config_med(x):
-    """
-    slice the vector up to the last value to exclude grouping column
+    """Slice the vector up to the last value to exclude grouping column
     and transpose the vector to be compatible with hd.geomedian
     """
     X = x.values[:, :-1]

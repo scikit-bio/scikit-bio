@@ -1,5 +1,4 @@
-r"""
-Constructing workflows (:mod:`skbio.workflow`)
+r"""Constructing workflows (:mod:`skbio.workflow`)
 ==============================================
 
 .. currentmodule:: skbio.workflow
@@ -190,6 +189,8 @@ allow you to indicate ``anything`` as an option value, anything that is
 ...     def do_something_awesome(self):
 ...         pass
 ...
+
+
 """
 
 # ----------------------------------------------------------------------------
@@ -315,6 +316,7 @@ class Workflow:
         ----------
         item : anything
             Workflow dependent
+
         """
         raise NotImplementedError("Must implement this method")
 
@@ -496,6 +498,7 @@ class requires:
         the requirement is satisfied, or ``False`` to indicate the
         requirement is not satisfied. This method will be passed the
         containing ``Workflow``s' ``state`` member variable.
+
     """
 
     @experimental(as_of="0.4.0")

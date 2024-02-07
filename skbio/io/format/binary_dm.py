@@ -1,5 +1,4 @@
-"""
-Simple binary dissimilarity matrix format (:mod:`skbio.io.format.binary_dm`)
+"""Simple binary dissimilarity matrix format (:mod:`skbio.io.format.binary_dm`)
 ============================================================================
 
 .. currentmodule:: skbio.io.format.binary_dm
@@ -63,6 +62,7 @@ Required attributes:
 References
 ----------
 .. [1] http://www.hdfgroup.org/
+
 
 """
 

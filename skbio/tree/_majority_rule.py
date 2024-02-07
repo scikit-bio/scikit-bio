@@ -84,6 +84,7 @@ def _filter_clades(clade_counts, cutoff_threshold):
     dict
         A dict of the accepted clades, keyed by the frozenset of the clade and
         valued by the support value.
+
     """
     accepted_clades = {}
 
@@ -132,6 +133,7 @@ def _build_trees(clade_counts, edge_lengths, support_attr, tree_node_class):
     -------
     list of tree_node_class instances
         A list of the constructed trees
+
     """
     nodes = {}
     queue = [(len(clade), clade) for clade in clade_counts]

@@ -1,5 +1,4 @@
-r"""
-File I/O (:mod:`skbio.io`)
+r"""File I/O (:mod:`skbio.io`)
 ==========================
 
 .. currentmodule:: skbio.io

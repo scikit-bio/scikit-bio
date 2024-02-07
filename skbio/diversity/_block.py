@@ -54,6 +54,7 @@ def _generate_id_blocks(ids, k=64):
     -------
     tuple of 1D np.array
         Index 0 contains the row IDs, and index 1 contains the column IDs
+
     """
     n = len(ids)
     ids_idx = np.arange(n)
@@ -89,6 +90,7 @@ def _block_party(counts=None, row_ids=None, col_ids=None, **kwargs):
         kwargs that describe the block to compute. A filtered ``counts`` matrix
         is stored in kwargs. If applicable, a filtered ``tree`` and ``otu_ids``
         are also stored.
+
     """
     ids_to_keep = np.unique(np.hstack([row_ids, col_ids]))
 
@@ -131,6 +133,7 @@ def _pairs_to_compute(rids, cids):
     -------
     list of tuple
         The ID pairs to compute distances between.
+
     """
     # if identical, gather the upper triangle
     if len(rids) == len(cids) and (rids == cids).all():
@@ -150,6 +153,7 @@ def _block_kwargs(**kwargs):
     -------
     dict
         The parameters for the block of the distance matrix to compute.
+
     """
     valid_block_keys = {
         "counts",
@@ -183,6 +187,7 @@ def _block_compute(**kwargs):
     Returns
     -------
     DistanceMatrix
+
     """
     block_kw = _block_party(**kwargs)
 
@@ -198,6 +203,7 @@ def _map(func, kw_gen):
 
     Parallel uses of block decomposition will likely replace this method with
     one which can distribute compute.
+
     """
     for kwargs in kw_gen:
         yield func(**kwargs)
@@ -305,6 +311,7 @@ def block_beta_diversity(
     References
     ----------
     .. [1] http://www.earthmicrobiome.org/
+
     """
     if validate:
         counts = _validate_counts_matrix(counts, ids=ids)

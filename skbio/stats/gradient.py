@@ -1,5 +1,4 @@
-r"""
-Gradient analyses (:mod:`skbio.stats.gradient`)
+r"""Gradient analyses (:mod:`skbio.stats.gradient`)
 ===============================================
 
 .. currentmodule:: skbio.stats.gradient
@@ -83,6 +82,8 @@ Control
 [ 3.52199973  2.29597001  3.20309816]
 >>> print(trajectory_results.categories[0].groups[0].info)
 {'avg': 3.007022633956606}
+
+
 """
 
 # ----------------------------------------------------------------------------
@@ -105,7 +106,7 @@ from skbio.util._decorator import experimental
 
 
 def _weight_by_vector(trajectories, w_vector):
-    r"""weights the values of `trajectories` given a weighting vector
+    r"""Weights the values of `trajectories` given a weighting vector
     `w_vector`.
 
     Each value in `trajectories` will be weighted by the 'rate of change'
@@ -135,6 +136,7 @@ def _weight_by_vector(trajectories, w_vector):
         If `w_vector` is not a gradient
     TypeError
         If `trajectories` and `w_vector` are not iterables
+
     """
     try:
         if len(trajectories) != len(w_vector):
@@ -187,6 +189,7 @@ def _ANOVA_trajectories(category, res_by_group):
     CategoryResults
         An instance of CategoryResults holding the results of the trajectory
         analysis applied on `category`
+
     """
     # If there is only one group under category we cannot run ANOVA
     if len(res_by_group) == 1:
@@ -249,6 +252,7 @@ class GroupResults:
             File-like object to write trajectories trajectory values. Must have
             a `write` method. It is the caller's responsibility to close
             `out_f` when done (if necessary)
+
         """
         out_f.write('For group "%s", the group means is: %f\n' % (self.name, self.mean))
         raw_f.write('For group "%s":\n' % self.name)
@@ -301,6 +305,7 @@ class CategoryResults:
             File-like object to write trajectory raw values. Must have a
             `write` method. It is the caller's responsibility to close `out_f`
             when done (if necessary)
+
         """
         if self.probability is None:
             out_f.write('Grouped by "%s": %s\n' % (self.category, self.message))
@@ -347,6 +352,7 @@ class GradientANOVAResults:
             File-like object to write trajectories raw values. Must have a
             `write` method. It is the caller's responsibility to close `out_f`
             when done (if necessary)
+
         """
         out_f.write("Trajectory algorithm: %s\n" % self.algorithm)
         raw_f.write("Trajectory algorithm: %s\n" % self.algorithm)
@@ -401,6 +407,7 @@ class GradientANOVA:
         If `weighted` is True and the values under `sort_category` are not
         numerical
         If `coords` and `metadata_map` does not have samples in common
+
     """
 
     # Should be defined by the derived classes
@@ -483,6 +490,7 @@ class GradientANOVA:
         -------
         GradientANOVAResults
             An instance of GradientANOVAResults holding the results.
+
         """
         result = GradientANOVAResults(self._alg_name, self._weighted, [])
         # Loop through all the categories that we should compute
@@ -508,6 +516,7 @@ class GradientANOVA:
         ------
         ValueError
             If `coords` and `metadata_map` does not have samples in common
+
         """
         # Figure out the sample ids in common
         coords_sample_ids = set(self._coords.index)
@@ -547,6 +556,7 @@ class GradientANOVA:
             Default: None, compute all of them
         sort_category : str or None
             The category from self._metadata_map to use to sort groups
+
         """
         # If sort_category is provided, we used the value of such category to
         # sort. Otherwise, we use the sample id.
@@ -588,6 +598,7 @@ class GradientANOVA:
         ------
         RuntimeError
             If sids is an empty list
+
         """
         # We multiply the coord values with the prop_expl
         trajectories = self._coords.loc[sids] * self._prop_expl
@@ -633,6 +644,7 @@ class GradientANOVA:
         ------
         NotImplementedError
             This is the base class
+
         """
         raise NotImplementedError("No algorithm is implemented on the base " "class.")
 
@@ -647,6 +659,7 @@ class AverageGradientANOVA(GradientANOVA):
     See Also
     --------
     GradientANOVA
+
     """
 
     _alg_name = "avg"
@@ -666,6 +679,7 @@ class AverageGradientANOVA(GradientANOVA):
         GroupResults
             The trajectory results for `group_name` using the average
             trajectories method
+
         """
         center = np.average(trajectories, axis=0)
         if len(trajectories) == 1:
@@ -697,6 +711,7 @@ class TrajectoryGradientANOVA(GradientANOVA):
     See Also
     --------
     GradientANOVA
+
     """
 
     _alg_name = "trajectory"
@@ -716,6 +731,7 @@ class TrajectoryGradientANOVA(GradientANOVA):
         GroupResults
             The trajectory results for `group_name` using the trajectory
             method
+
         """
         if len(trajectories) == 1:
             trajectory = np.array([np.linalg.norm(trajectories)])
@@ -749,6 +765,7 @@ class FirstDifferenceGradientANOVA(GradientANOVA):
     See Also
     --------
     GradientANOVA
+
     """
 
     _alg_name = "diff"
@@ -768,6 +785,7 @@ class FirstDifferenceGradientANOVA(GradientANOVA):
         GroupResults
             The trajectory results for `group_name` using the first difference
             method
+
         """
         if len(trajectories) == 1:
             trajectory = np.array([np.linalg.norm(trajectories)])
@@ -823,6 +841,7 @@ class WindowDifferenceGradientANOVA(GradientANOVA):
     See Also
     --------
     GradientANOVA
+
     """
 
     _alg_name = "wdiff"
@@ -856,6 +875,7 @@ class WindowDifferenceGradientANOVA(GradientANOVA):
         GroupResults
             The trajectory results for `group_name` using the windowed
             difference method
+
         """
         if len(trajectories) == 1:
             trajectory = np.array([np.linalg.norm(trajectories)])

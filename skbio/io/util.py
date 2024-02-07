@@ -1,5 +1,4 @@
-r"""
-I/O utils (:mod:`skbio.io.util`)
+r"""I/O utils (:mod:`skbio.io.util`)
 ================================
 
 .. currentmodule:: skbio.io.util
