@@ -238,6 +238,8 @@ anything = Exists()  # external, for when a value can be anything
 
 
 class NotNone:
+    """Check for non-None values."""
+
     @experimental(as_of="0.4.0")
     def __contains__(self, item):
         if item is None:
