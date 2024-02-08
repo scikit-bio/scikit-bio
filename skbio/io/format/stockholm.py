@@ -1,5 +1,4 @@
-"""
-Stockholm format (:mod:`skbio.io.format.stockholm`)
+"""Stockholm format (:mod:`skbio.io.format.stockholm`)
 ===================================================
 
 .. currentmodule:: skbio.io.format.stockholm
@@ -388,9 +387,10 @@ O31699/88-139          EVMLTDIPRLHINDPIMK..GFGMVINN......GFV
 >>> fh.close()
 
 References
-==========
+----------
 .. [1] https://en.wikipedia.org/wiki/Stockholm_format
 .. [2] http://sonnhammer.sbc.su.se/Stockholm.html
+
 
 """
 

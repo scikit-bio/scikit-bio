@@ -110,7 +110,6 @@ class GrammaredSequence(Sequence, metaclass=GrammaredSequenceMeta):
 
     Examples
     --------
-
     Note in the example below that properties either need to be static or
     use skbio's `classproperty` decorator.
 
@@ -522,7 +521,7 @@ class GrammaredSequence(Sequence, metaclass=GrammaredSequenceMeta):
 
     @stable(as_of="0.5.0")
     def has_definites(self):
-        """Determine if sequence contains one or more definite characters
+        """Determine if sequence contains one or more definite characters.
 
         Returns
         -------
@@ -552,7 +551,7 @@ class GrammaredSequence(Sequence, metaclass=GrammaredSequenceMeta):
 
     @deprecated(as_of="0.5.0", until="0.6.0", reason="Renamed to has_definites")
     def has_nondegenerates(self):
-        """Determine if sequence contains one or more non-degenerate characters
+        """Determine if sequence contains one or more non-degenerate characters.
 
         Returns
         -------

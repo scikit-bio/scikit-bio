@@ -133,6 +133,7 @@ fuzzy=[(False, False), (False, False)], metadata={'name': 'genA'})
         -------
         bool
             Indicates if the two objects are equal.
+
         """
         return (
             (self.metadata == other.metadata)
@@ -153,6 +154,7 @@ fuzzy=[(False, False), (False, False)], metadata={'name': 'genA'})
         -------
         bool
             Indicates if the two objects are not equal.
+
         """
         return not (self == other)
 
@@ -164,6 +166,7 @@ fuzzy=[(False, False), (False, False)], metadata={'name': 'genA'})
         -------
         str
             String representation of this ``Interval`` object.
+
         """
         if self.dropped:
             s = "{}(dropped=True, bounds={!r}, " "fuzzy={!r}, metadata={!r})"
@@ -194,6 +197,7 @@ fuzzy=[(False, False), (False, False)], metadata={'name': 'genA'})
         See Also
         --------
         skbio.metadata.IntervalMetadata.drop
+
         """
         if not self.dropped:
             self._interval_metadata.drop([self])
@@ -271,7 +275,7 @@ fuzzy=[(False, False), (False, False)], metadata={'name': 'genA'})
             self._interval_metadata._is_stale_tree = True
 
     def _check_bounds(self, bounds):
-        """input `bounds` must be sorted."""
+        """Input `bounds` must be sorted."""
         upper_bound = self._interval_metadata.upper_bound
         lower_bound = self._interval_metadata.lower_bound
         if upper_bound is not None and bounds[-1][-1] > upper_bound:
@@ -299,6 +303,7 @@ fuzzy=[(False, False), (False, False)], metadata={'name': 'genA'})
         References
         ----------
         .. [1] ftp://ftp.ebi.ac.uk/pub/databases/embl/doc/FT_current.html#3.4.3
+
         """
         return self._fuzzy
 
@@ -391,6 +396,7 @@ fuzzy=[(False, False), (False, False)], metadata={'name': 'genA'})
         --------
         skbio.metadata.Interval.drop
         skbio.metadata.IntervalMetadata.drop
+
         """
         return self._interval_metadata is None
 
@@ -584,7 +590,6 @@ fuzzy=[(False, False)], metadata={'gene': 'sagB'})
         For instance, this can be used to compare coordinates
         in the forward strand to coordinates in the reversal strand.
         """
-
         for f in self._intervals:
             try:
                 intvls = [
@@ -735,6 +740,7 @@ fuzzy=[(True, True)], metadata={'gene': 'sagB'})
         ----------
         ascending : bool, optional
             sort in ascending or descending coordinates.
+
         """
         self._intervals.sort(
             key=lambda i: [i.bounds[0][0], i.bounds[-1][1]], reverse=not ascending
@@ -767,6 +773,7 @@ fuzzy=[(True, True)], metadata={'gene': 'sagB'})
         See Also
         --------
         skbio.metadata.Interval
+
         """
         # Add an interval to the tree. Note that the add functionality is
         # built within the Interval constructor.
@@ -801,6 +808,7 @@ fuzzy=[(True, True)], metadata={'gene': 'sagB'})
             ``{}``, return an interator of all the ``Interval``
             objects.
         intervals : an iterable of ``Interval`` objects
+
         """
         if metadata is None:
             return
@@ -845,6 +853,7 @@ fuzzy=[(True, True)], metadata={'gene': 'sagB'})
         ------
         Interval
             ``Interval`` object satisfying the search criteria.
+
         """
         if bounds is None and metadata is None:
             metadata = {}
@@ -862,7 +871,7 @@ fuzzy=[(True, True)], metadata={'gene': 'sagB'})
 
     @experimental(as_of="0.5.1")
     def drop(self, intervals, negate=False):
-        """Drops Interval objects.
+        """Drop Interval objects.
 
         The given ``Interval`` objects will be removed and their
         associated ``IntervalMetadata`` will be set to ``None``.
@@ -874,6 +883,7 @@ fuzzy=[(True, True)], metadata={'gene': 'sagB'})
         negate : bool
             Negate the drop operation, i.e. keeping the specified intervals
             instead of dropping them.
+
         """
         to_delete = {id(f) for f in intervals}
 
@@ -909,6 +919,7 @@ fuzzy=[(True, True)], metadata={'gene': 'sagB'})
         -------
         bool
             Indicates if the two objects are equal.
+
         """
         if (
             self.upper_bound != other.upper_bound
@@ -939,6 +950,7 @@ fuzzy=[(True, True)], metadata={'gene': 'sagB'})
         See Also
         --------
         skbio.metadata.IntervalMetadata.__eq__
+
         """
         return not (self == other)
 
@@ -950,6 +962,7 @@ fuzzy=[(True, True)], metadata={'gene': 'sagB'})
         -------
         str
             String representation of this ``IntervalMetadata`` object.
+
         """
         n = self.num_interval_features
         l1 = "{} interval feature".format(n)
@@ -979,6 +992,7 @@ fuzzy=[(True, True)], metadata={'gene': 'sagB'})
         See Also
         --------
         __deepcopy__
+
         """
         return self._copy(False, {})
 
@@ -995,6 +1009,7 @@ fuzzy=[(True, True)], metadata={'gene': 'sagB'})
         See Also
         --------
         __copy__
+
         """
         return self._copy(True, memo)
 

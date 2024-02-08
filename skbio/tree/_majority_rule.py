@@ -15,7 +15,7 @@ from skbio.util._decorator import experimental
 
 
 def _walk_clades(trees, weights):
-    """Walk all the clades of all the trees
+    """Walk all the clades of all the trees.
 
     Parameters
     ----------
@@ -67,7 +67,7 @@ def _walk_clades(trees, weights):
 
 
 def _filter_clades(clade_counts, cutoff_threshold):
-    """Filter clades that not well supported or are contradicted
+    """Filter clades that not well supported or are contradicted.
 
     Parameters
     ----------
@@ -84,6 +84,7 @@ def _filter_clades(clade_counts, cutoff_threshold):
     dict
         A dict of the accepted clades, keyed by the frozenset of the clade and
         valued by the support value.
+
     """
     accepted_clades = {}
 
@@ -113,7 +114,7 @@ def _filter_clades(clade_counts, cutoff_threshold):
 
 
 def _build_trees(clade_counts, edge_lengths, support_attr, tree_node_class):
-    """Construct the trees with support
+    """Construct the trees with support.
 
     Parameters
     ----------
@@ -132,6 +133,7 @@ def _build_trees(clade_counts, edge_lengths, support_attr, tree_node_class):
     -------
     list of tree_node_class instances
         A list of the constructed trees
+
     """
     nodes = {}
     queue = [(len(clade), clade) for clade in clade_counts]
@@ -182,7 +184,7 @@ def _build_trees(clade_counts, edge_lengths, support_attr, tree_node_class):
 def majority_rule(
     trees, weights=None, cutoff=0.5, support_attr="support", tree_node_class=TreeNode
 ):
-    r"""Determines consensus trees from a list of rooted trees
+    r"""Determine consensus trees from a list of rooted trees.
 
     Parameters
     ----------

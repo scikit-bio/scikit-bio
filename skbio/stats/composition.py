@@ -1,5 +1,4 @@
-r"""
-Composition Statistics (:mod:`skbio.stats.composition`)
+r"""Composition Statistics (:mod:`skbio.stats.composition`)
 =======================================================
 
 .. currentmodule:: skbio.stats.composition
@@ -72,7 +71,6 @@ References
 
 Examples
 --------
-
 >>> import numpy as np
 
 Consider a very simple environment with only 3 species. The species
@@ -91,6 +89,7 @@ And the resulting perturbation would be
 
 >>> perturb(otus, antibiotic)
 array([ 0.25,  0.25,  0.5 ])
+
 
 """
 
@@ -113,8 +112,7 @@ from scipy.sparse import coo_matrix
 
 @experimental(as_of="0.4.0")
 def closure(mat):
-    """
-    Performs closure to ensure that all elements add up to 1.
+    """Perform closure to ensure that all elements add up to 1.
 
     Parameters
     ----------
@@ -161,7 +159,7 @@ def closure(mat):
 
 @experimental(as_of="0.4.0")
 def multiplicative_replacement(mat, delta=None):
-    r"""Replace all zeros with small non-zero values
+    r"""Replace all zeros with small non-zero values.
 
     It uses the multiplicative replacement strategy [1]_ ,
     replacing zeros with a small positive :math:`\delta`
@@ -233,7 +231,7 @@ def multiplicative_replacement(mat, delta=None):
 
 @experimental(as_of="0.4.0")
 def perturb(x, y):
-    r"""Performs the perturbation operation.
+    r"""Perform the perturbation operation.
 
     This operation is defined as
 
@@ -282,7 +280,7 @@ def perturb(x, y):
 
 @experimental(as_of="0.4.0")
 def perturb_inv(x, y):
-    r"""Performs the inverse perturbation operation.
+    r"""Perform the inverse perturbation operation.
 
     This operation is defined as
 
@@ -324,6 +322,7 @@ def perturb_inv(x, y):
     >>> y = np.array([1./6,1./6,1./3,1./3])
     >>> perturb_inv(x,y)
     array([ 0.14285714,  0.42857143,  0.28571429,  0.14285714])
+
     """
     x, y = closure(x), closure(y)
     return closure(x / y)
@@ -331,7 +330,7 @@ def perturb_inv(x, y):
 
 @experimental(as_of="0.4.0")
 def power(x, a):
-    r"""Performs the power operation.
+    r"""Perform the power operation.
 
     This operation is defined as follows
 
@@ -377,7 +376,7 @@ def power(x, a):
 
 @experimental(as_of="0.4.0")
 def inner(x, y):
-    r"""Calculates the Aitchson inner product.
+    r"""Calculate the Aitchson inner product.
 
     This inner product is defined as follows
 
@@ -410,6 +409,7 @@ def inner(x, y):
     >>> y = np.array([.2, .4, .2, .2])
     >>> inner(x, y)  # doctest: +ELLIPSIS
     0.2107852473...
+
     """
     x = closure(x)
     y = closure(y)
@@ -419,7 +419,7 @@ def inner(x, y):
 
 @experimental(as_of="0.4.0")
 def clr(mat):
-    r"""Performs centre log ratio transformation.
+    r"""Perform centre log ratio transformation.
 
     This function transforms compositions from Aitchison geometry to
     the real space. The :math:`clr` transform is both an isometry and an
@@ -467,7 +467,7 @@ def clr(mat):
 
 @experimental(as_of="0.4.0")
 def clr_inv(mat):
-    r"""Performs inverse centre log ratio transformation.
+    r"""Perform inverse centre log ratio transformation.
 
     This function transforms compositions from the real space to
     Aitchison geometry. The :math:`clr^{-1}` transform is both an isometry,
@@ -502,6 +502,7 @@ def clr_inv(mat):
     >>> x = np.array([.1, .3, .4, .2])
     >>> clr_inv(x)
     array([ 0.21383822,  0.26118259,  0.28865141,  0.23632778])
+
     """
     # for numerical stability (aka softmax trick)
     mat = np.atleast_2d(mat)
@@ -511,7 +512,7 @@ def clr_inv(mat):
 
 @experimental(as_of="0.4.0")
 def ilr(mat, basis=None, check=True):
-    r"""Performs isometric log ratio transformation.
+    r"""Perform isometric log ratio transformation.
 
     This function transforms compositions from Aitchison simplex to
     the real space. The :math: ilr` transform is both an isometry,
@@ -559,6 +560,7 @@ def ilr(mat, basis=None, check=True):
     Aitchison simplex.  If there are `D-1` elements specified in `mat`, then
     the dimensions of the basis needs be `D-1 x D`, where rows represent
     basis vectors, and the columns represent proportions.
+
     """
     mat = closure(mat)
     if basis is None:
@@ -578,7 +580,7 @@ def ilr(mat, basis=None, check=True):
 
 @experimental(as_of="0.4.0")
 def ilr_inv(mat, basis=None, check=True):
-    r"""Performs inverse isometric log ratio transform.
+    r"""Perform inverse isometric log ratio transform.
 
     This function transforms compositions from the real space to
     Aitchison geometry. The :math:`ilr^{-1}` transform is both an isometry,
@@ -627,6 +629,7 @@ def ilr_inv(mat, basis=None, check=True):
     Aitchison simplex.  If there are `D-1` elements specified in `mat`, then
     the dimensions of the basis needs be `D-1 x D`, where rows represent
     basis vectors, and the columns represent proportions.
+
     """
     mat = np.atleast_2d(mat)
     if basis is None:
@@ -649,7 +652,7 @@ def ilr_inv(mat, basis=None, check=True):
 
 @experimental(as_of="0.5.5")
 def alr(mat, denominator_idx=0):
-    r"""Performs additive log ratio transformation.
+    r"""Perform additive log ratio transformation.
 
     This function transforms compositions from a D-part Aitchison simplex to
     a non-isometric real space of D-1 dimensions. The argument
@@ -692,6 +695,7 @@ def alr(mat, denominator_idx=0):
     >>> x = np.array([.1, .3, .4, .2])
     >>> alr(x)
     array([ 1.09861229,  1.38629436,  0.69314718])
+
     """
     mat = closure(mat)
     if mat.ndim == 2:
@@ -710,7 +714,7 @@ def alr(mat, denominator_idx=0):
 
 @experimental(as_of="0.5.5")
 def alr_inv(mat, denominator_idx=0):
-    r"""Performs inverse additive log ratio transform.
+    r"""Perform inverse additive log ratio transform.
 
     This function transforms compositions from the non-isometric real space of
     alrs to Aitchison geometry.
@@ -752,6 +756,7 @@ def alr_inv(mat, denominator_idx=0):
     >>> x = np.array([.1, .3, .4, .2])
     >>> alr_inv(alr(x))
     array([ 0.1,  0.3,  0.4,  0.2])
+
     """
     mat = np.array(mat)
     if mat.ndim == 2:
@@ -808,7 +813,7 @@ def centralize(mat):
 
 @experimental(as_of="0.5.7")
 def _vlr(x: np.array, y: np.array, ddof: int):
-    r"""Calculates variance log ratio
+    r"""Calculate variance log ratio.
 
     Parameters
     ----------
@@ -834,8 +839,8 @@ def _vlr(x: np.array, y: np.array, ddof: int):
            How should we measure proportionality on relative gene
            expression data?. Theory Biosci. 135, 21–36 (2016).
            https://doi.org/10.1007/s12064-015-0220-8
-    """
 
+    """
     # Log transformation
     x = np.log(x)
     y = np.log(y)
@@ -846,7 +851,7 @@ def _vlr(x: np.array, y: np.array, ddof: int):
 
 @experimental(as_of="0.5.7")
 def _robust_vlr(x: np.ndarray, y: np.ndarray, ddof: int):
-    r"""Calculates variance log ratio while masking zeros
+    r"""Calculate variance log ratio while masking zeros.
 
     Parameters
     ----------
@@ -873,8 +878,8 @@ def _robust_vlr(x: np.ndarray, y: np.ndarray, ddof: int):
            How should we measure proportionality on relative gene
            expression data?. Theory Biosci. 135, 21–36 (2016).
            https://doi.org/10.1007/s12064-015-0220-8
-    """
 
+    """
     # Mask zeros
     x = np.ma.masked_array(x, mask=x == 0)
     y = np.ma.masked_array(y, mask=y == 0)
@@ -889,7 +894,7 @@ def _robust_vlr(x: np.ndarray, y: np.ndarray, ddof: int):
 
 @experimental(as_of="0.5.7")
 def vlr(x: np.ndarray, y: np.ndarray, ddof: int = 1, robust: bool = False):
-    r"""Calculates variance log ratio
+    r"""Calculate variance log ratio.
 
     Parameters
     ----------
@@ -929,6 +934,7 @@ def vlr(x: np.ndarray, y: np.ndarray, ddof: int = 1, robust: bool = False):
            How should we measure proportionality on relative gene
            expression data?. Theory Biosci. 135, 21–36 (2016).
            https://doi.org/10.1007/s12064-015-0220-8
+
     """
     # Convert array_like to numpy array
     x = closure(x)
@@ -950,7 +956,7 @@ def vlr(x: np.ndarray, y: np.ndarray, ddof: int = 1, robust: bool = False):
 
 @experimental(as_of="0.5.7")
 def _pairwise_vlr(mat: np.ndarray, ddof: int):
-    r"""Performs pairwise variance log ratio transformation
+    r"""Perform pairwise variance log ratio transformation.
 
     Parameters
     ----------
@@ -979,8 +985,8 @@ def _pairwise_vlr(mat: np.ndarray, ddof: int):
            How should we measure proportionality on relative gene
            expression data?. Theory Biosci. 135, 21–36 (2016).
            https://doi.org/10.1007/s12064-015-0220-8
-    """
 
+    """
     # Log Transform
     X_log = np.log(mat)
 
@@ -995,7 +1001,7 @@ def _pairwise_vlr(mat: np.ndarray, ddof: int):
 def pairwise_vlr(
     mat, ids=None, ddof: int = 1, robust: bool = False, validate: bool = True
 ):
-    r"""Performs pairwise variance log ratio transformation
+    r"""Perform pairwise variance log ratio transformation.
 
     Parameters
     ----------
@@ -1043,8 +1049,8 @@ def pairwise_vlr(
            How should we measure proportionality on relative gene
            expression data?. Theory Biosci. 135, 21–36 (2016).
            https://doi.org/10.1007/s12064-015-0220-8
-    """
 
+    """
     # Mask zeros
     mat = closure(mat.astype(np.float64))
 
@@ -1072,7 +1078,7 @@ def pairwise_vlr(
 
 @experimental(as_of="0.5.8")
 def tree_basis(tree):
-    r"""Calculates sparse representation of an ilr basis from a tree.
+    r"""Calculate sparse representation of an ilr basis from a tree.
 
     This computes an orthonormal basis specified from a bifurcating tree.
 
@@ -1195,7 +1201,7 @@ def ancom(
     significance_test=None,
     percentiles=(0.0, 25.0, 50.0, 75.0, 100.0),
 ):
-    r"""Performs a differential abundance test using ANCOM.
+    r"""Perform a differential abundance test using ANCOM.
 
     This is done by calculating pairwise log ratios between all features
     and performing a significance test to determine if there is a significant
@@ -1548,11 +1554,11 @@ def ancom(
 
 
 def _holm_bonferroni(p):
-    """Performs Holm-Bonferroni correction for pvalues
-    to account for multiple comparisons
+    """Perform Holm-Bonferroni correction for pvalues
+    to account for multiple comparisons.
 
     Parameters
-    ---------
+    ----------
     p: numpy.array
         array of pvalues
 
@@ -1560,6 +1566,7 @@ def _holm_bonferroni(p):
     -------
     numpy.array
         corrected pvalues
+
     """
     K = len(p)
     sort_index = -np.ones(K, dtype=np.int64)
@@ -1576,7 +1583,7 @@ def _holm_bonferroni(p):
 
 
 def _log_compare(mat, cats, significance_test=scipy.stats.ttest_ind):
-    """Calculates pairwise log ratios between all features and performs a
+    """Calculate pairwise log ratios between all features and perform a
     significance test (i.e. t-test) to determine if there is a significant
     difference in feature ratios with respect to the variable of interest.
 
@@ -1590,10 +1597,11 @@ def _log_compare(mat, cats, significance_test=scipy.stats.ttest_ind):
     significance_test: function
         statistical test to run
 
-    Returns:
-    --------
+    Returns
+    -------
     log_ratio : np.array
         log ratio pvalue matrix
+
     """
     r, c = mat.shape
     log_ratio = np.zeros((c, c))
@@ -1611,9 +1619,8 @@ def _log_compare(mat, cats, significance_test=scipy.stats.ttest_ind):
 
 
 def _gram_schmidt_basis(n):
-    """
-    Builds clr transformed basis derived from
-    gram schmidt orthogonalization
+    """Build clr transformed basis derived from
+    gram schmidt orthogonalization.
 
     Parameters
     ----------
@@ -1624,6 +1631,7 @@ def _gram_schmidt_basis(n):
     -------
     basis : np.array
         Dimension (n-1) x n basis matrix
+
     """
     basis = np.zeros((n, n - 1))
     for j in range(n - 1):
@@ -1635,8 +1643,7 @@ def _gram_schmidt_basis(n):
 
 @experimental(as_of="0.5.5")
 def sbp_basis(sbp):
-    r"""
-    Builds an orthogonal basis from a sequential binary partition (SBP). As
+    r"""Build an orthogonal basis from a sequential binary partition (SBP). As
     explained in [1]_, the SBP is a hierarchical collection of binary
     divisions of compositional parts. The child groups are divided again until
     all groups contain a single part. The SBP can be encoded in a
@@ -1693,8 +1700,8 @@ def sbp_basis(sbp):
     .. [2] van den Boogaart, K. Gerald, Tolosana-Delgado, Raimon and Bren,
        Matevz, 2014. `compositions`: Compositional Data Analysis. R package
        version 1.40-1. https://CRAN.R-project.org/package=compositions.
-    """
 
+    """
     n_pos = (sbp == 1).sum(axis=1)
     n_neg = (sbp == -1).sum(axis=1)
     psi = np.zeros(sbp.shape)
@@ -1706,14 +1713,14 @@ def sbp_basis(sbp):
 
 
 def _check_orthogonality(basis):
-    """
-    Checks to see if basis is truly orthonormal in the
-    Aitchison simplex
+    """Check to see if basis is truly orthonormal in the
+    Aitchison simplex.
 
     Parameters
     ----------
     basis: numpy.ndarray
         basis in the Aitchison simplex of dimension d-1 x d
+
     """
     basis = np.atleast_2d(basis)
     if not np.allclose(basis @ basis.T, np.identity(len(basis)), rtol=1e-4, atol=1e-6):

@@ -131,6 +131,7 @@ class stable(_state_decorator):
     <BLANKLINE>
         State: Stable as of 0.3.0.
     <BLANKLINE>
+
     """
 
     _required_kwargs = ("as_of",)

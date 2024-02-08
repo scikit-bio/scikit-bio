@@ -1,5 +1,4 @@
-r"""
-Constructing workflows (:mod:`skbio.workflow`)
+r"""Constructing workflows (:mod:`skbio.workflow`)
 ==============================================
 
 .. currentmodule:: skbio.workflow
@@ -190,6 +189,8 @@ allow you to indicate ``anything`` as an option value, anything that is
 ...     def do_something_awesome(self):
 ...         pass
 ...
+
+
 """
 
 # ----------------------------------------------------------------------------
@@ -211,7 +212,7 @@ from skbio.util._decorator import experimental
 
 
 class NotExecuted:
-    """Helper object to track if a method was executed"""
+    """Helper object to track if a method was executed."""
 
     @experimental(as_of="0.4.0")
     def __init__(self):
@@ -227,7 +228,7 @@ _not_executed = NotExecuted()
 
 
 class Exists:
-    """Stub object to assist with ``requires`` when a value exists"""
+    """Stub object to assist with ``requires`` when a value exists."""
 
     @experimental(as_of="0.4.0")
     def __contains__(self, item):
@@ -250,7 +251,7 @@ not_none = NotNone()
 
 
 class Workflow:
-    """Arbitrary workflow support structure
+    """Arbitrary workflow support structure.
 
     Methods that are considered to be directly part of the workflow must
     be decorated with ``method``. The workflow methods offer a mechanism to
@@ -284,7 +285,7 @@ class Workflow:
 
     @experimental(as_of="0.4.0")
     def __init__(self, state, short_circuit=True, debug=False, options=None, **kwargs):
-        r"""Build thy workflow of self"""
+        r"""Build thy workflow of self."""
         if options is None:
             self.options = {}
         else:
@@ -306,7 +307,7 @@ class Workflow:
 
     @experimental(as_of="0.4.0")
     def initialize_state(self, item):
-        """Initialize state
+        """Initialize state.
 
         This method is called first prior to any other defined workflow method
         with the exception of _setup_debug_trace if self.debug is True
@@ -315,11 +316,12 @@ class Workflow:
         ----------
         item : anything
             Workflow dependent
+
         """
         raise NotImplementedError("Must implement this method")
 
     def _setup_debug(self):
-        """Wrap all methods with debug trace support"""
+        """Wrap all methods with debug trace support."""
         # ignore all members of the baseclass
         ignore = set(dir(Workflow))
 
@@ -333,7 +335,7 @@ class Workflow:
                 setattr(self, attrname, self._debug_trace_wrapper(attr))
 
     def _all_wf_methods(self):
-        """Get all workflow methods
+        """Get all workflow methods.
 
         Methods are sorted by priority
         """
@@ -354,7 +356,7 @@ class Workflow:
         return methods_sorted
 
     def _setup_debug_trace(self):
-        """Setup a trace
+        """Setup a trace.
 
         The trace is per item iterated over by the workflow. Information about
         each method executed is tracked and keyed by::
@@ -381,7 +383,7 @@ class Workflow:
 
     @experimental(as_of="0.4.0")
     def __call__(self, iter_, success_callback=None, fail_callback=None):
-        """Operate on all the data
+        """Operate on all the data.
 
         This is the processing engine of the workflow. Callbacks are executed
         following applying all workflow methods to an item from ``iter_``
@@ -425,7 +427,7 @@ class Workflow:
         self.iter_ = None
 
     def _debug_trace_wrapper(self, func):
-        """Trace a function call"""
+        """Trace a function call."""
 
         def wrapped():
             """Track debug information about a method execution"""
@@ -452,7 +454,7 @@ class Workflow:
 
 
 class method:
-    """Decorate a function to indicate it is a workflow method
+    """Decorate a function to indicate it is a workflow method.
 
     Parameters
     ----------
@@ -475,7 +477,7 @@ class method:
 
 
 class requires:
-    """Decorator that executes a function if requirements are met
+    """Decorator that executes a function if requirements are met.
 
     Parameters
     ----------
@@ -496,6 +498,7 @@ class requires:
         the requirement is satisfied, or ``False`` to indicate the
         requirement is not satisfied. This method will be passed the
         containing ``Workflow``s' ``state`` member variable.
+
     """
 
     @experimental(as_of="0.4.0")
@@ -520,13 +523,13 @@ class requires:
 
     @experimental(as_of="0.4.0")
     def __call__(self, func):
-        """Wrap a function
+        """Wrap a function.
 
         func : the function to wrap
         """
 
         def decorated(dec_self):
-            """A decorated function that has requirements
+            """A decorated function that has requirements.
 
             dec_self : this is "self" for the decorated function
             """

@@ -1,5 +1,4 @@
-"""
-Labeled square matrix format (:mod:`skbio.io.format.lsmat`)
+"""Labeled square matrix format (:mod:`skbio.io.format.lsmat`)
 ===========================================================
 
 .. currentmodule:: skbio.io.format.lsmat

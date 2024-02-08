@@ -107,6 +107,7 @@ def isubsample(items, maximum, minimum=1, buf_size=1000, bin_f=None):
     sampleA ATGGCA
     sampleB ATATATAT
     sampleB ATGGCG
+
     """
     if minimum > maximum:
         raise ValueError("minimum cannot be > maximum.")

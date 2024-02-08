@@ -1,5 +1,4 @@
-r"""
-I/O Registry (:mod:`skbio.io.registry`)
+r"""I/O Registry (:mod:`skbio.io.registry`)
 =======================================
 
 .. currentmodule:: skbio.io.registry

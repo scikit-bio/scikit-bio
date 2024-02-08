@@ -362,6 +362,7 @@ fuzzy=[(False, False)], metadata={'gene': 'foo'})
     >>> print(intervals[0])  # doctest: +ELLIPSIS
     Interval(interval_metadata=<...>, bounds=[(0, 2)], \
 fuzzy=[(True, False)], metadata={'gene': 'foo'})
+
     """
 
     _num_extended_ascii_codes = 256
@@ -722,6 +723,7 @@ fuzzy=[(True, False)], metadata={'gene': 'foo'})
         True
         >>> 'CCC' in s
         False
+
         """
         return self._munge_to_bytestring(subsequence, "in") in self._string
 
@@ -1005,7 +1007,7 @@ fuzzy=[(True, False)], metadata={'gene': 'foo'})
 
     @stable(as_of="0.4.0")
     def __bool__(self):
-        r"""Returns truth value (truthiness) of sequence.
+        r"""Return truth value (truthiness) of sequence.
 
         Returns
         -------

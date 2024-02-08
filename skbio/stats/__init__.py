@@ -1,5 +1,4 @@
-"""
-Statistics (:mod:`skbio.stats`)
+"""Statistics (:mod:`skbio.stats`)
 ===============================
 
 .. currentmodule:: skbio.stats

@@ -1,5 +1,4 @@
-"""
-FASTA/QUAL format (:mod:`skbio.io.format.fasta`)
+"""FASTA/QUAL format (:mod:`skbio.io.format.fasta`)
 ================================================
 
 .. currentmodule:: skbio.io.format.fasta
@@ -274,7 +273,6 @@ The following parameters are available to all FASTA format writers:
 
 Examples
 --------
-
 Reading and Writing FASTA Files
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 Suppose we have the following FASTA file with five equal-length sequences
@@ -596,6 +594,7 @@ References
    (US); 2002-. Chapter 16. Available from:
    http://www.ncbi.nlm.nih.gov/books/NBK21097/
 .. [6] http://evolution.genetics.washington.edu/phylip/doc/sequence.html
+
 
 """
 

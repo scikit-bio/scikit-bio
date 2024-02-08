@@ -1,5 +1,4 @@
-r"""
-FASTQ format (:mod:`skbio.io.format.fastq`)
+r"""FASTQ format (:mod:`skbio.io.format.fastq`)
 ===========================================
 
 .. currentmodule:: skbio.io.format.fastq
@@ -272,6 +271,7 @@ References
    http://nar.oxfordjournals.org/content/38/6/1767
 .. [2] http://en.wikipedia.org/wiki/FASTQ_format
 .. [3] http://www.open-bio.org/
+
 
 """
 

@@ -168,7 +168,7 @@ class RepoValidator:
 
 
 class CopyrightHeadersValidator(RepoValidator):
-    """Flag library files with non-standard copyright headers
+    """Flag library files with non-standard copyright headers.
 
     See the current standard for scikit-bio's copyright headers at
     ``http://scikit-bio.org/docs/latest/development/new_module.html``

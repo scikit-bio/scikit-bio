@@ -1,5 +1,4 @@
-"""
-Alpha diversity measures (:mod:`skbio.diversity.alpha`)
+"""Alpha diversity measures (:mod:`skbio.diversity.alpha`)
 =======================================================
 
 .. currentmodule:: skbio.diversity.alpha

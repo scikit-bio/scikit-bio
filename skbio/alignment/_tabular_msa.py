@@ -1458,7 +1458,7 @@ class TabularMSA(MetadataMixin, PositionalMetadataMixin, SkbioObject):
         degenerate_mode="error",
         gap_mode="nan",
     ):
-        """Apply metric to compute conservation for all alignment positions
+        """Apply metric to compute conservation for all alignment positions.
 
         Parameters
         ----------
@@ -1529,7 +1529,6 @@ class TabularMSA(MetadataMixin, PositionalMetadataMixin, SkbioObject):
            https://schneider.ncifcrf.gov/glossary.html#Shannon_entropy
 
         """
-
         if gap_mode not in {"nan", "error", "include", "ignore"}:
             raise ValueError("Unknown gap_mode provided: %s" % gap_mode)
 

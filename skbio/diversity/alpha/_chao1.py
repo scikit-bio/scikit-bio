@@ -128,7 +128,7 @@ def chao1_ci(counts, bias_corrected=True, zscore=1.96):
 
 
 def _chao1_var(counts, bias_corrected=True):
-    """Calculates chao1 variance using decision rules in EstimateS."""
+    """Calculate chao1 variance using decision rules in EstimateS."""
     o, s, d = osd(counts)
     if not d:
         c = chao1(counts, bias_corrected)
@@ -143,7 +143,7 @@ def _chao1_var(counts, bias_corrected=True):
 
 
 def _chao1_var_uncorrected(singles, doubles):
-    """Calculates chao1, uncorrected.
+    """Calculate chao1, uncorrected.
 
     From EstimateS manual, equation 5.
 
@@ -153,7 +153,7 @@ def _chao1_var_uncorrected(singles, doubles):
 
 
 def _chao1_var_bias_corrected(s, d):
-    """Calculates chao1 variance, bias-corrected.
+    """Calculate chao1 variance, bias-corrected.
 
     `s` is the number of singletons and `d` is the number of doubletons.
 
@@ -168,7 +168,7 @@ def _chao1_var_bias_corrected(s, d):
 
 
 def _chao1_var_no_doubletons(s, chao1):
-    """Calculates chao1 variance in absence of doubletons.
+    """Calculate chao1 variance in absence of doubletons.
 
     From EstimateS manual, equation 7.
 
@@ -180,7 +180,7 @@ def _chao1_var_no_doubletons(s, chao1):
 
 
 def _chao1_var_no_singletons(n, o):
-    """Calculates chao1 variance in absence of singletons.
+    """Calculate chao1 variance in absence of singletons.
 
     `n` is the number of individuals and `o` is the number of observed OTUs.
 
@@ -191,7 +191,7 @@ def _chao1_var_no_singletons(n, o):
 
 
 def _chao_confidence_with_singletons(chao, observed, var_chao, zscore=1.96):
-    """Calculates confidence bounds for chao1 or chao2.
+    """Calculate confidence bounds for chao1 or chao2.
 
     Uses Eq. 13 of EstimateS manual.
 
@@ -209,7 +209,7 @@ def _chao_confidence_with_singletons(chao, observed, var_chao, zscore=1.96):
 
 
 def _chao_confidence_no_singletons(n, s, zscore=1.96):
-    """Calculates confidence bounds for chao1/chao2 in absence of singletons.
+    """Calculate confidence bounds for chao1/chao2 in absence of singletons.
 
     Uses Eq. 14 of EstimateS manual.
 

@@ -1,5 +1,4 @@
-"""
-Taxdump format (:mod:`skbio.io.format.taxdump`)
+"""Taxdump format (:mod:`skbio.io.format.taxdump`)
 ===============================================
 
 .. currentmodule:: skbio.io.format.taxdump
@@ -190,7 +189,6 @@ The following format parameters are available in ``taxdump`` format:
 
 Examples
 --------
-
 >>> from io import StringIO
 >>> import skbio.io
 >>> import pandas as pd
@@ -229,6 +227,8 @@ References
 .. [7] https://ftp.ncbi.nlm.nih.gov/pub/taxonomy/new_taxdump/taxdump_readme.txt
 .. [8] https://ncbiinsights.ncbi.nlm.nih.gov/2018/02/22/new-taxonomy-files-
        available-with-lineage-type-and-host-information/
+
+
 """
 
 # ----------------------------------------------------------------------------
@@ -306,6 +306,7 @@ def _taxdump_to_data_frame(fh, scheme):
     -------
     pd.DataFrame
         Parsed table
+
     """
     if isinstance(scheme, str):
         if scheme not in _taxdump_column_schemes:

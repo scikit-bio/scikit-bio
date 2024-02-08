@@ -1,5 +1,4 @@
-"""
-EMBL format (:mod:`skbio.io.format.embl`)
+"""EMBL format (:mod:`skbio.io.format.embl`)
 =========================================
 
 .. currentmodule:: skbio.io.format.embl
@@ -74,7 +73,6 @@ EMBL writers follow these conventions while writing EMBL files.
 
 Examples
 --------
-
 Reading EMBL Files
 ^^^^^^^^^^^^^^^^^^
 Suppose we have the following EMBL file example:
@@ -286,6 +284,7 @@ References
 .. [3] http://www.ebi.ac.uk/ena/browse/feature-level-products
 .. [4] https://github.com/scikit-bio/scikit-bio/issues/1499
 
+
 """
 
 # ----------------------------------------------------------------------------
@@ -437,15 +436,13 @@ KEYS_2_SECTIONS = {
 # for convenience: I think such functions are more readadble while accessing
 # values in lambda functions
 def _get_embl_key(line):
-    """Return first part of a string as a embl key (ie 'AC M14399;' -> 'AC')"""
-
+    """Return first part of a string as a embl key (ie 'AC M14399;' -> 'AC')."""
     # embl keys have a fixed size of 2 chars
     return line[:2]
 
 
 def _get_embl_section(line):
-    """Return the embl section from uniprot key(ie 'RA' -> 'REFERENCE')"""
-
+    """Return the embl section from uniprot key(ie 'RA' -> 'REFERENCE')."""
     # get embl key
     key = _get_embl_key(line)
 
@@ -456,9 +453,9 @@ def _get_embl_section(line):
 
 
 def _translate_key(key):
-    """A method to translate a single key from EMBL to genbank. Returns key
-    itself if no traslation is defined"""
-
+    """Translate a single key from EMBL to genbank. Returns key
+    itself if no traslation is defined.
+    """
     return KEYS_TRANSLATOR.get(key, key)
 
 
@@ -466,8 +463,8 @@ def _translate_key(key):
 # not defined in the original dict will remain the same
 def _translate_keys(data):
     """Translate a dictionary of uniprot key->value in a genbank like
-    dictionary of key values. Keep old keys if no translation is defined"""
-
+    dictionary of key values. Keep old keys if no translation is defined.
+    """
     # traslate keys and get a new_data object
     new_data = {_translate_key(k): v for k, v in data.items()}
 
@@ -476,10 +473,10 @@ def _translate_keys(data):
 
 # define a default textwrap.Wrapper for embl
 def _get_embl_wrapper(embl_key, indent=5, subsequent_indent=None, width=80):
-    """Returns a textwrap.TextWrapper for embl records (eg, write
+    """Return a textwrap.TextWrapper for embl records (eg, write
     <key>   <string> by providing embl key and a string. Wrap text to
-    80 column"""
-
+    80 column.
+    """
     # define the string to prepen (eg "OC   ")
     prepend = "{key:<{indent}}".format(key=embl_key, indent=indent)
 
@@ -502,8 +499,8 @@ def _get_embl_wrapper(embl_key, indent=5, subsequent_indent=None, width=80):
 
 def _serialize_list(embl_wrapper, data, sep="\n"):
     """Serialize a list of obj using a textwrap.TextWrapper instance. Returns
-    one string of wrapped embl objects"""
-
+    one string of wrapped embl objects.
+    """
     # the output array
     output = []
 
@@ -609,7 +606,6 @@ def _protein_to_embl(obj, fh):
 
 def _construct(record, constructor=None, **kwargs):
     """Construct the object of Sequence, DNA, RNA, or Protein."""
-
     # sequence, metadata and interval metadata
     seq, md, imd = record
 
@@ -635,8 +631,7 @@ def _construct(record, constructor=None, **kwargs):
 
 # looks like the genbank _parse_genbank
 def _parse_embls(fh):
-    """Chunck multiple EMBL records by '//', and returns a generator"""
-
+    """Chunk multiple EMBL records by '//', and returns a generator."""
     data_chunks = []
     for line in _line_generator(fh, skip_blanks=True, strip=False):
         if line.startswith("//"):
@@ -774,8 +769,7 @@ def _parse_single_embl(chunks):
 
 
 def _write_serializer(fh, serializer, embl_key, data):
-    """A simple method to write serializer to a file. Append 'XX'"""
-
+    """Write serializer to a file. Append 'XX'."""
     # call the serializer function
     out = serializer(embl_key, data)
     # test if 'out' is a iterator.
@@ -877,8 +871,7 @@ def _serialize_single_embl(obj, fh):
 
 
 def _parse_id(lines):
-    """
-    From EMBL user manual (Release 130, November 2016)
+    """From EMBL user manual (Release 130, November 2016).
     (ftp://ftp.ebi.ac.uk/pub/databases/embl/release/doc/usrman.txt)
 
     The ID (IDentification) line is always the first line of an entry. The
@@ -903,7 +896,6 @@ def _parse_id(lines):
     An example of a complete identification line is shown below:
     ID   CD789012; SV 4; linear; genomic DNA; HTG; MAM; 500 BP.
     """
-
     # get only the first line of EMBL record
     line = lines[0]
 
@@ -975,8 +967,8 @@ def _serialize_id(header, obj, metadata={}, indent=5):
     Parameters
     ----------
     obj : dict
-    """
 
+    """
     # get key->value pairs, or key->'' if values is None
     kwargs = {k: "" if v is None else v for k, v in obj.items()}
 
@@ -1017,7 +1009,7 @@ def _serialize_id(header, obj, metadata={}, indent=5):
 # similar to skbio.io.format._sequence_feature_vocabulary.__yield_section
 # but applies to embl file format
 def _embl_yield_section(get_line_key, **kwargs):
-    """Returns function that returns successive sections from file.
+    """Return function that returns successive sections from file.
 
     Parameters
     ----------
@@ -1033,6 +1025,7 @@ def _embl_yield_section(get_line_key, **kwargs):
     function
         A function accept a list of lines as input and return
         a generator to yield section one by one.
+
     """
 
     def parser(lines):
@@ -1075,7 +1068,6 @@ def _embl_parse_section_default(
         1. split first line with label_delimiter for label
         2. join all the lines into one str with join_delimiter.
     """
-
     data = []
     label = None
     line = lines[0]
@@ -1110,7 +1102,6 @@ def _embl_parse_section_default(
 # parse an embl reference record.
 def _parse_reference(lines):
     """Parse single REFERENCE field."""
-
     # parsed reference will be placed here
     res = {}
 
@@ -1156,8 +1147,7 @@ def _parse_reference(lines):
 
 
 def _serialize_reference(header, obj, cross_references, indent=5):
-    """Serialize a list of references"""
-
+    """Serialize a list of references."""
     reference = []
     sort_order = ["RC", "RP", "RX", "RG", "RA", "RT", "RL"]
 
@@ -1257,7 +1247,6 @@ def _serialize_reference(header, obj, cross_references, indent=5):
 # parse an embl reference record.
 def _parse_source(lines):
     """Parse single SOURCE field."""
-
     # parsed reference will be placed here
     res = {}
 
@@ -1289,8 +1278,8 @@ def _serialize_source(header, obj, indent=5):
     header: section header
     obj : dict
     indent : indent length
-    """
 
+    """
     source = []
 
     # treat taxonomy and all others keys
@@ -1320,7 +1309,6 @@ def _serialize_source(header, obj, indent=5):
 
 def _parse_sequence(lines):
     """Parse the sequence section for sequence."""
-
     # result array
     sequence = []
 
@@ -1345,8 +1333,8 @@ def _serialize_sequence(obj, indent=5):
     Parameters
     ----------
     obj : DNA, RNA, Sequence Obj
-    """
 
+    """
     # a flag to determine if I wrote header or not
     flag_header = False
 
@@ -1424,8 +1412,7 @@ def _serialize_sequence(obj, indent=5):
 
 
 def _embl_parse_feature_table(lines, length):
-    """Parse embl feature tables"""
-
+    """Parse embl feature tables."""
     # define interval metadata
     imd = IntervalMetadata(length)
 
@@ -1446,12 +1433,11 @@ def _embl_parse_feature_table(lines, length):
 
 
 def _serialize_feature_table(intervals, indent=21):
-    """
-    Parameters
+    """Parameters
     ----------
     intervals : list of ``Interval``
-    """
 
+    """
     # define a embl wrapper object. I need to replace only the first two
     # characters from _serialize_single_feature output
     wrapper = _get_embl_wrapper("FT", indent=2, subsequent_indent=21)
@@ -1469,8 +1455,7 @@ def _serialize_feature_table(intervals, indent=21):
 
 
 def _parse_date(lines, label_delimiter=None, return_label=False):
-    """Parse embl date records"""
-
+    """Parse embl date records."""
     # take the first line, and derive a label
     label = lines[0].split(label_delimiter, 1)[0]
 
@@ -1494,8 +1479,8 @@ def _serialize_date(embl_key, date_list, indent=5):
     ----------
     header : embl key id
     date_list : a list of dates
-    """
 
+    """
     # get an embl wrapper
     wrapper = _get_embl_wrapper(embl_key, indent)
 
@@ -1504,8 +1489,7 @@ def _serialize_date(embl_key, date_list, indent=5):
 
 
 def _serialize_comment(embl_key, obj, indent=5):
-    """Serialize comment (like Assembly)"""
-
+    """Serialize comment (like Assembly)."""
     # obj is a string, Split it by newlines
     data = obj.split("\n")
 
@@ -1517,8 +1501,7 @@ def _serialize_comment(embl_key, obj, indent=5):
 
 
 def _serialize_dbsource(embl_key, obj, indent=5):
-    """Serialize DBSOURCE"""
-
+    """Serialize DBSOURCE."""
     # data are stored like 'SILVA-LSU; LK021130. SILVA-SSU; LK021130. ...
     # I need to split string after final period (not AAT09660.1)
 
@@ -1538,8 +1521,7 @@ def _serialize_dbsource(embl_key, obj, indent=5):
 
 
 def _parse_assembly(lines):
-    """Parse embl assembly records"""
-
+    """Parse embl assembly records."""
     output = []
 
     # first line is header, skip it
