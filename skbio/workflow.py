@@ -232,6 +232,7 @@ class Exists:
 
     @experimental(as_of="0.4.0")
     def __contains__(self, item):
+        """Check if a value exists."""
         return True
 
 
@@ -243,6 +244,7 @@ class NotNone:
 
     @experimental(as_of="0.4.0")
     def __contains__(self, item):
+        """Check if item is not None."""
         if item is None:
             return False
         else:
