@@ -3359,9 +3359,9 @@ class TreeNode(SkbioObject):
         >>> print(tree.ascii_art())
                             /-Firmicutes
                   /Bacteria|
-        -root----|          \\-Bacteroidetes
+        -root----|          \-Bacteroidetes
                  |
-                  \\-Archaea
+                  \-Archaea
 
         """
         # identify top level of hierarchy
