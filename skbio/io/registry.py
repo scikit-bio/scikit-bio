@@ -192,15 +192,18 @@ class IORegistry:
 
     @stable(as_of="0.4.0")
     def __init__(self):
-        # This seperation of binary and text formats is useful because there
-        # are many situations where we may have recieved a text-file. When this
-        # happens, the binary data fundamentally does not exist. We could
-        # assume encoding should be interpreted in reverse, however this misses
-        # the bigger point: why would the user ever want text to be treated as
-        # binary? They already went through the effort to hand us text.
-        # Therefore, during format resolution, we should skip the binary
-        # formats if they are irrelevant. (They are incompatible with such a
-        # filehandle anyways.)
+        """Initialize registry mapping formats and implementations to classes.
+
+        This seperation of binary and text formats is useful because there
+        are many situations where we may have recieved a text-file. When this
+        happens, the binary data fundamentally does not exist. We could
+        assume encoding should be interpreted in reverse, however this misses
+        the bigger point: why would the user ever want text to be treated as
+        binary? They already went through the effort to hand us text.
+        Therefore, during format resolution, we should skip the binary
+        formats if they are irrelevant. (They are incompatible with such a
+        filehandle anyways.)
+        """
         self._binary_formats = {}
         self._text_formats = {}
         self._lookups = (self._binary_formats, self._text_formats)
@@ -840,6 +843,7 @@ class Format:
         return self._monkey_patch["write"]
 
     def __init__(self, name, encoding=None, newline=None):
+        """Initialize format for registering sniffers, readers, and writers."""
         self._encoding = encoding
         self._newline = newline
         self._name = name
