@@ -31,3 +31,4 @@ exclude = [
 
 [tool.ruff.lint]
 select = ['E', 'W', 'D']  # pycodestyle (E, W)
+ignore = ['D203', 'D213', 'D400']
