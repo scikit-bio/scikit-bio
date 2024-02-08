@@ -314,7 +314,7 @@ class TestSave(unittest.TestCase):
 
         exp = (
             "id\tdummy-column\n"
-            "#q2:types\tdummy\n"
+            "#sk:types\tdummy\n"
             "id1\t42\n"
             "id2\t42.5\n"
             "id3\t-999.123\n"

@@ -212,7 +212,7 @@ class TestLoadErrors(unittest.TestCase):
         fp = get_data_path('invalid/directive-before-header.tsv')
 
         with self.assertRaisesRegex(MetadataFileError,
-                                    'directive.*#q2:types.*searching for '
+                                    'directive.*#sk:types.*searching for '
                                     'header'):
             Metadata.load(fp)
 
@@ -220,15 +220,15 @@ class TestLoadErrors(unittest.TestCase):
         fp = get_data_path('invalid/unrecognized-directive.tsv')
 
         with self.assertRaisesRegex(MetadataFileError,
-                                    'Unrecognized directive.*#q2:foo.*'
-                                    '#q2:types.*#q2:missing.*directive'):
+                                    'Unrecognized directive.*#sk:foo.*'
+                                    '#sk:types.*#sk:missing.*directive'):
             Metadata.load(fp)
 
     def test_duplicate_directives(self):
         fp = get_data_path('invalid/duplicate-directives.tsv')
 
         with self.assertRaisesRegex(MetadataFileError,
-                                    'duplicate directive.*#q2:types'):
+                                    'duplicate directive.*#sk:types'):
             Metadata.load(fp)
 
     def test_unrecognized_column_type_in_directive(self):
@@ -236,7 +236,7 @@ class TestLoadErrors(unittest.TestCase):
 
         with self.assertRaisesRegex(MetadataFileError,
                                     'col2.*unrecognized column type.*foo.*'
-                                    '#q2:types directive'):
+                                    '#sk:types directive'):
             Metadata.load(fp)
 
     def test_column_types_directive_not_convertible_to_numeric(self):
@@ -259,7 +259,7 @@ class TestLoadErrors(unittest.TestCase):
             'invalid/directive-after-directives-section.tsv')
 
         with self.assertRaisesRegex(MetadataFileError,
-                                    '#q2:types.*outside of the directives '
+                                    '#sk:types.*outside of the directives '
                                     'section'):
             Metadata.load(fp)
 
@@ -283,7 +283,7 @@ class TestLoadErrors(unittest.TestCase):
         fp = get_data_path('invalid/missing-unknown-scheme.tsv')
 
         with self.assertRaisesRegex(MetadataFileError,
-                                    'col1.*BAD:SCHEME.*#q2:missing'):
+                                    'col1.*BAD:SCHEME.*#sk:missing'):
             Metadata.load(fp)
 
 
@@ -890,7 +890,7 @@ class TestSave(unittest.TestCase):
 
         exp = (
             "id\tcol1\tcol2\tcol3\n"
-            "#q2:types\tnumeric\tcategorical\tcategorical\n"
+            "#sk:types\tnumeric\tcategorical\tcategorical\n"
             "id1\t1\ta\tfoo\n"
             "id2\t2\tb\tbar\n"
             "id3\t3\tc\t42\n"
@@ -1032,7 +1032,7 @@ class TestSave(unittest.TestCase):
 
         exp = (
             "id\tcol1\tcol2\tcol3\n"
-            "#q2:types\tnumeric\tcategorical\tcategorical\n"
+            "#sk:types\tnumeric\tcategorical\tcategorical\n"
             "id1\t1\ta\tfoo\n"
             "id2\t2\tb\tbar\n"
             "id3\t3\tc\t42\n"
@@ -1053,7 +1053,7 @@ class TestSave(unittest.TestCase):
 
         exp = (
             "id\tcol1\tcol2\n"
-            "#q2:types\tnumeric\tcategorical\n"
+            "#sk:types\tnumeric\tcategorical\n"
             "id1\t42\ta\n"
             "id2\t\t\n"
             "id3\t-3.5\t\n"
@@ -1076,7 +1076,7 @@ class TestSave(unittest.TestCase):
 
         exp = (
             "id\tcol1\tcol2\n"
-            "#q2:types\tnumeric\tcategorical\n"
+            "#sk:types\tnumeric\tcategorical\n"
             "id1\t\t\n"
             "id2\t\t\n"
             "id3\t\t\n"
@@ -1101,8 +1101,8 @@ class TestSave(unittest.TestCase):
 
         exp = (
             "id\tcol1\tcol2\n"
-            "#q2:types\tnumeric\tcategorical\n"
-            "#q2:missing\tblank\tINSDC:missing\n"
+            "#sk:types\tnumeric\tcategorical\n"
+            "#sk:missing\tblank\tINSDC:missing\n"
             "id1\t42\ta\n"
             "id2\t\tnot applicable\n"
             "id3\t-3.5\trestricted access\n"
@@ -1125,8 +1125,8 @@ class TestSave(unittest.TestCase):
 
         exp = (
             "id\tcol1\tcol2\n"
-            "#q2:types\tnumeric\tcategorical\n"
-            "#q2:missing\tINSDC:missing\tINSDC:missing\n"
+            "#sk:types\tnumeric\tcategorical\n"
+            "#sk:missing\tINSDC:missing\tINSDC:missing\n"
             "id1\t42\ta\n"
             "id2\t\tnot applicable\n"
             "id3\t-3.5\trestricted access\n"
@@ -1140,7 +1140,7 @@ class TestSave(unittest.TestCase):
                           'col2': ['a', 'not applicable',
                                    'restricted access']},
                          index=pd.Index(['id1', 'id2', 'id3'], name='id')),
-            default_missing_scheme='q2:error',
+            default_missing_scheme='sk:error',
             column_missing_schemes=dict(col1='INSDC:missing',
                                         col2='INSDC:missing'))
 
@@ -1151,8 +1151,8 @@ class TestSave(unittest.TestCase):
 
         exp = (
             "id\tcol1\tcol2\n"
-            "#q2:types\tnumeric\tcategorical\n"
-            "#q2:missing\tINSDC:missing\tINSDC:missing\n"
+            "#sk:types\tnumeric\tcategorical\n"
+            "#sk:missing\tINSDC:missing\tINSDC:missing\n"
             "id1\t42\ta\n"
             "id2\t\tnot applicable\n"
             "id3\t-3.5\trestricted access\n"
@@ -1177,7 +1177,7 @@ class TestSave(unittest.TestCase):
 
         exp = (
             "id\tz\tb\ty\n"
-            "#q2:types\tnumeric\tcategorical\tcategorical\n"
+            "#sk:types\tnumeric\tcategorical\tcategorical\n"
             "id1\t1\ta\tfoo\n"
             "id2\t2\tb\tbar\n"
             "id3\t3\tc\t42\n"
@@ -1199,7 +1199,7 @@ class TestSave(unittest.TestCase):
 
         exp = (
             "#SampleID\tcol1\tcol2\tcol3\n"
-            "#q2:types\tnumeric\tcategorical\tcategorical\n"
+            "#sk:types\tnumeric\tcategorical\tcategorical\n"
             "id1\t1\ta\tfoo\n"
             "id2\t2\tb\tbar\n"
             "id3\t3\tc\t42\n"
@@ -1225,7 +1225,7 @@ class TestSave(unittest.TestCase):
 
         exp = (
             "ID\tnumbers\n"
-            "#q2:types\tnumeric\n"
+            "#sk:types\tnumeric\n"
             "id1\t0\n"
             "id2\t-0\n"
             "id3\t\n"
@@ -1251,7 +1251,7 @@ class TestSave(unittest.TestCase):
 
         exp = (
             "id\n"
-            "#q2:types\n"
+            "#sk:types\n"
             "my-id\n"
         )
 
@@ -1269,7 +1269,7 @@ class TestSave(unittest.TestCase):
 
         exp = (
             "featureid\tcol1\tcol2\n"
-            "#q2:types\tcategorical\tnumeric\n"
+            "#sk:types\tcategorical\tnumeric\n"
             "my-id\tfoo\t4.002\n"
         )
 
@@ -1286,7 +1286,7 @@ class TestSave(unittest.TestCase):
 
         exp = (
             "id\n"
-            "#q2:types\n"
+            "#sk:types\n"
             "foo\n"
             "bar\n"
             "baz\n"
@@ -1306,7 +1306,7 @@ class TestSave(unittest.TestCase):
 
         exp = (
             "id\tcol1\n"
-            "#q2:types\tcategorical\n"
+            "#sk:types\tcategorical\n"
             "foo\t42\n"
             "bar\t4.3\n"
             "baz\t4.4000\n"
@@ -1333,7 +1333,7 @@ class TestSave(unittest.TestCase):
 
         exp = (
             "id\t42.0\t1000\t-4.2\n"
-            "#q2:types\tnumeric\tcategorical\tnumeric\n"
+            "#sk:types\tnumeric\tcategorical\tnumeric\n"
             "0.000001\t2\tb\t2.5\n"
             "0.004000\t1\tb\t4.2\n"
             "0.000000\t3\tc\t-9.999\n"
@@ -1358,7 +1358,7 @@ class TestSave(unittest.TestCase):
 
         exp = (
             "id\tcategorical-column\n"
-            "#q2:types\tcategorical\n"
+            "#sk:types\tcategorical\n"
             "id1\tfoo\n"
             "id2\tbar\n"
             "id3\t42.50\n"
@@ -1379,8 +1379,8 @@ class TestSave(unittest.TestCase):
 
         exp = (
             "id\tcategorical-column\n"
-            "#q2:types\tcategorical\n"
-            "#q2:missing\tINSDC:missing\n"
+            "#sk:types\tcategorical\n"
+            "#sk:missing\tINSDC:missing\n"
             "id1\tfoo\n"
             "id2\tbar\n"
             "id3\t42.50\n"
@@ -1401,8 +1401,8 @@ class TestSave(unittest.TestCase):
 
         exp = (
             "id\tcategorical-column\n"
-            "#q2:types\tcategorical\n"
-            "#q2:missing\tINSDC:missing\n"
+            "#sk:types\tcategorical\n"
+            "#sk:missing\tINSDC:missing\n"
             "id1\tfoo\n"
             "id2\tmissing\n"
             "id3\t42.50\n"
@@ -1422,7 +1422,7 @@ class TestSave(unittest.TestCase):
 
         exp = (
             "#OTU ID\tnumeric-column\n"
-            "#q2:types\tnumeric\n"
+            "#sk:types\tnumeric\n"
             "id1\t1e-15\n"
             "id2\t42.5\n"
             "id3\t-999\n"
@@ -1443,8 +1443,8 @@ class TestSave(unittest.TestCase):
 
         exp = (
             "#OTU ID\tnumeric-column\n"
-            "#q2:types\tnumeric\n"
-            "#q2:missing\tINSDC:missing\n"
+            "#sk:types\tnumeric\n"
+            "#sk:missing\tINSDC:missing\n"
             "id1\t1e-15\n"
             "id2\t42.5\n"
             "id3\t-999\n"
@@ -1465,8 +1465,8 @@ class TestSave(unittest.TestCase):
 
         exp = (
             "#OTU ID\tnumeric-column\n"
-            "#q2:types\tnumeric\n"
-            "#q2:missing\tINSDC:missing\n"
+            "#sk:types\tnumeric\n"
+            "#sk:missing\tINSDC:missing\n"
             "id1\t1e-15\n"
             "id2\tmissing\n"
             "id3\t-999\n"

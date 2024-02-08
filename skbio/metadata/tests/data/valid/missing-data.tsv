@@ -6,7 +6,8 @@
 # this behavior to make its empty column categorical.
 
 id	col1	NA	col3	col4
-#q2:types				categorical
+#sk:types				categorical
 None	1		null	
 nan			N/A	
-NA	  	"	 "	NA	
+NA	  	"	 
+"	NA	

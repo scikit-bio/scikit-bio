@@ -114,22 +114,23 @@ class _MetadataBase:
     def __init__(self, index):
         if index.empty:
             raise ValueError(
-                "%s must contain at least one ID." % self.__class__.__name__)
+                "%s must contain at least one ID." % self.__class__.__name__
+            )
 
         id_header = index.name
         self._assert_valid_id_header(id_header)
         self._id_header = id_header
 
-        self._validate_index(index, axis='id')
+        self._validate_index(index, axis="id")
         self._ids = tuple(index)
 
         self._artifacts = []
 
     def __eq__(self, other):
         return (
-            isinstance(other, self.__class__) and
-            self._id_header == other._id_header and
-            self._artifacts == other._artifacts
+            isinstance(other, self.__class__)
+            and self._id_header == other._id_header
+            and self._artifacts == other._artifacts
         )
 
     def __ne__(self, other):
@@ -139,14 +140,13 @@ class _MetadataBase:
         deduped = set(self._artifacts)
         for artifact in artifacts:
             if not isinstance(artifact, qiime2.Artifact):
-                raise TypeError(
-                    "Expected Artifact object, received %r" % artifact)
+                raise TypeError("Expected Artifact object, received %r" % artifact)
             if artifact in deduped:
                 raise ValueError(
                     "Duplicate source artifacts are not supported on %s "
                     "objects. The following artifact is a duplicate of "
-                    "another source artifact: %r" %
-                    (self.__class__.__name__, artifact))
+                    "another source artifact: %r" % (self.__class__.__name__, artifact)
+                )
             deduped.add(artifact)
         self._artifacts.extend(artifacts)
 
@@ -157,46 +157,51 @@ class _MetadataBase:
         if not is_id_header(name):
             raise ValueError(
                 "pandas index name (`Index.name`) must be one of the "
-                "following values, not %r:\n\n%s" %
-                (name, FORMATTED_ID_HEADERS))
+                "following values, not %r:\n\n%s" % (name, FORMATTED_ID_HEADERS)
+            )
 
     @classmethod
     def _validate_index(cls, index, *, axis):
-        if axis == 'id':
-            label = 'ID'
-        elif axis == 'column':
-            label = 'column name'
+        if axis == "id":
+            label = "ID"
+        elif axis == "column":
+            label = "column name"
         else:
             raise NotImplementedError
 
         for value in index:
             if not isinstance(value, str):
                 raise TypeError(
-                    "Detected non-string metadata %s of type %r: %r" %
-                    (label, type(value), value))
+                    "Detected non-string metadata %s of type %r: %r"
+                    % (label, type(value), value)
+                )
 
             if not value:
                 raise ValueError(
                     "Detected empty metadata %s. %ss must consist of at least "
-                    "one character." % (label, label))
+                    "one character." % (label, label)
+                )
 
-            if axis == 'id' and value.startswith('#'):
+            if axis == "id" and value.startswith("#"):
                 raise ValueError(
                     "Detected metadata %s that begins with a pound sign "
-                    "(#): %r" % (label, value))
+                    "(#): %r" % (label, value)
+                )
 
             if is_id_header(value):
                 raise ValueError(
                     "Detected metadata %s %r that conflicts with a name "
-                    "reserved for the ID header. Reserved ID headers:\n\n%s" %
-                    (label, value, FORMATTED_ID_HEADERS))
+                    "reserved for the ID header. Reserved ID headers:\n\n%s"
+                    % (label, value, FORMATTED_ID_HEADERS)
+                )
 
         if len(index) != len(set(index)):
             duplicates = find_duplicates(index)
             raise ValueError(
                 "Metadata %ss must be unique. The following %ss are "
-                "duplicated: %s" %
-                (label, label, ', '.join(repr(e) for e in sorted(duplicates))))
+                "duplicated: %s"
+                % (label, label, ", ".join(repr(e) for e in sorted(duplicates)))
+            )
 
     @classmethod
     def _filter_ids_helper(cls, df_or_series, ids, ids_to_keep):
@@ -211,21 +216,23 @@ class _MetadataBase:
         if duplicates:
             raise ValueError(
                 "`ids_to_keep` must contain unique IDs. The following IDs are "
-                "duplicated: %s" %
-                (', '.join(repr(e) for e in sorted(duplicates))))
+                "duplicated: %s" % (", ".join(repr(e) for e in sorted(duplicates)))
+            )
 
         ids_to_keep = set(ids_to_keep)
         missing_ids = ids_to_keep - ids
         if missing_ids:
             raise ValueError(
                 "The following IDs are not present in the metadata: %s"
-                % (', '.join(repr(e) for e in sorted(missing_ids))))
+                % (", ".join(repr(e) for e in sorted(missing_ids)))
+            )
 
         # While preserving order, get rid of any IDs not contained in
         # `ids_to_keep`.
         ids_to_discard = ids - ids_to_keep
-        return df_or_series.drop(labels=ids_to_discard, axis='index',
-                                 inplace=False, errors='raise')
+        return df_or_series.drop(
+            labels=ids_to_discard, axis="index", inplace=False, errors="raise"
+        )
 
     def save(self, filepath, ext=None):
         """Save a TSV metadata file.
@@ -233,7 +240,7 @@ class _MetadataBase:
         The TSV metadata file format is described at https://docs.qiime2.org in
         the Metadata Tutorial.
 
-        The file will always include the ``#q2:types`` directive in order to
+        The file will always include the ``#sk:types`` directive in order to
         make the file roundtrippable without relying on column type inference.
 
         Parameters
@@ -263,11 +270,11 @@ class _MetadataBase:
         from .io import MetadataWriter
 
         if ext is None:
-            ext = ''
+            ext = ""
         else:
-            ext = '.' + ext.lstrip('.')
+            ext = "." + ext.lstrip(".")
 
-        filepath = filepath.rstrip('.')
+        filepath = filepath.rstrip(".")
 
         if not filepath.endswith(ext):
             filepath += ext
@@ -277,8 +284,9 @@ class _MetadataBase:
 
 
 # Other properties such as units can be included here in the future!
-ColumnProperties = collections.namedtuple('ColumnProperties',
-                                          ['type', 'missing_scheme'])
+ColumnProperties = collections.namedtuple(
+    "ColumnProperties", ["type", "missing_scheme"]
+)
 
 
 class Metadata(_MetadataBase):
@@ -370,8 +378,13 @@ class Metadata(_MetadataBase):
     """
 
     @classmethod
-    def load(cls, filepath, column_types=None, column_missing_schemes=None,
-             default_missing_scheme=DEFAULT_MISSING):
+    def load(
+        cls,
+        filepath,
+        column_types=None,
+        column_missing_schemes=None,
+        default_missing_scheme=DEFAULT_MISSING,
+    ):
         """Load a TSV metadata file.
 
         The TSV metadata file format is described at https://docs.qiime2.org in
@@ -413,11 +426,13 @@ class Metadata(_MetadataBase):
 
         """
         from .io import MetadataReader
+
         return MetadataReader(filepath).read(
             into=cls,
             column_types=column_types,
             column_missing_schemes=column_missing_schemes,
-            default_missing_scheme=default_missing_scheme)
+            default_missing_scheme=default_missing_scheme,
+        )
 
     @property
     def columns(self):
@@ -458,12 +473,17 @@ class Metadata(_MetadataBase):
         """
         return len(self._columns)
 
-    def __init__(self, dataframe, column_missing_schemes=None,
-                 default_missing_scheme=DEFAULT_MISSING):
+    def __init__(
+        self,
+        dataframe,
+        column_missing_schemes=None,
+        default_missing_scheme=DEFAULT_MISSING,
+    ):
         if not isinstance(dataframe, pd.DataFrame):
             raise TypeError(
                 "%s constructor requires a pandas.DataFrame object, not "
-                "%r" % (self.__class__.__name__, type(dataframe)))
+                "%r" % (self.__class__.__name__, type(dataframe))
+            )
 
         super().__init__(dataframe.index)
 
@@ -471,11 +491,13 @@ class Metadata(_MetadataBase):
             column_missing_schemes = {}
 
         self._dataframe, self._columns = self._normalize_dataframe(
-            dataframe, column_missing_schemes, default_missing_scheme)
-        self._validate_index(self._dataframe.columns, axis='column')
+            dataframe, column_missing_schemes, default_missing_scheme
+        )
+        self._validate_index(self._dataframe.columns, axis="column")
 
-    def _normalize_dataframe(self, dataframe, column_missing_schemes,
-                             default_missing_scheme):
+    def _normalize_dataframe(
+        self, dataframe, column_missing_schemes, default_missing_scheme
+    ):
         norm_df = dataframe.copy()
 
         # Do not attempt to strip empty metadata
@@ -486,13 +508,14 @@ class Metadata(_MetadataBase):
 
         columns = collections.OrderedDict()
         for column_name, series in norm_df.items():
-            missing_scheme = column_missing_schemes.get(column_name,
-                                                        default_missing_scheme)
-            metadata_column = self._metadata_column_factory(series,
-                                                            missing_scheme)
+            missing_scheme = column_missing_schemes.get(
+                column_name, default_missing_scheme
+            )
+            metadata_column = self._metadata_column_factory(series, missing_scheme)
             norm_df[column_name] = metadata_column.to_series()
-            properties = ColumnProperties(type=metadata_column.type,
-                                          missing_scheme=missing_scheme)
+            properties = ColumnProperties(
+                type=metadata_column.type, missing_scheme=missing_scheme
+            )
             columns[column_name] = properties
 
         return norm_df, columns
@@ -512,8 +535,8 @@ class Metadata(_MetadataBase):
         else:
             raise TypeError(
                 "Metadata column %r has an unsupported pandas dtype of %s. "
-                "Supported dtypes: float, int, object" %
-                (series.name, dtype))
+                "Supported dtypes: float, int, object" % (series.name, dtype)
+            )
 
         column._add_artifacts(self.artifacts)
         return column
@@ -524,28 +547,31 @@ class Metadata(_MetadataBase):
 
         # Header
         lines.append(self.__class__.__name__)
-        lines.append('-' * len(self.__class__.__name__))
+        lines.append("-" * len(self.__class__.__name__))
 
         # Dimensions
-        lines.append('%d ID%s x %d column%s' % (
-            self.id_count,
-            '' if self.id_count == 1 else 's',
-            self.column_count,
-            '' if self.column_count == 1 else 's',
-        ))
+        lines.append(
+            "%d ID%s x %d column%s"
+            % (
+                self.id_count,
+                "" if self.id_count == 1 else "s",
+                self.column_count,
+                "" if self.column_count == 1 else "s",
+            )
+        )
 
         # Column properties
         if self.column_count != 0:
             max_name_len = max((len(name) for name in self.columns))
             for name, props in self.columns.items():
-                padding = ' ' * ((max_name_len - len(name)) + 1)
-                lines.append('%s:%s%r' % (name, padding, props))
+                padding = " " * ((max_name_len - len(name)) + 1)
+                lines.append("%s:%s%r" % (name, padding, props))
 
         # Epilogue
-        lines.append('')
-        lines.append('Call to_dataframe() for a tabular representation.')
+        lines.append("")
+        lines.append("Call to_dataframe() for a tabular representation.")
 
-        return '\n'.join(lines)
+        return "\n".join(lines)
 
     def __eq__(self, other):
         """Determine if this metadata is equal to another.
@@ -570,9 +596,9 @@ class Metadata(_MetadataBase):
 
         """
         return (
-            super().__eq__(other) and
-            self._columns == other._columns and
-            self._dataframe.equals(other._dataframe)
+            super().__eq__(other)
+            and self._columns == other._columns
+            and self._dataframe.equals(other._dataframe)
         )
 
     def __ne__(self, other):
@@ -623,6 +649,7 @@ class Metadata(_MetadataBase):
         """
         df = self._dataframe.copy()
         if encode_missing:
+
             def replace_nan(series):
                 missing = _missing.series_extract_missing(series)
                 # avoid dtype changing if there's no missing values
@@ -658,8 +685,9 @@ class Metadata(_MetadataBase):
             missing_scheme = self._columns[name].missing_scheme
         except KeyError:
             raise ValueError(
-                '%r is not a column in the metadata. Available columns: '
-                '%s' % (name, ', '.join(repr(c) for c in self.columns)))
+                "%r is not a column in the metadata. Available columns: "
+                "%s" % (name, ", ".join(repr(c) for c in self.columns))
+            )
 
         return self._metadata_column_factory(series, missing_scheme)
 
@@ -692,16 +720,18 @@ class Metadata(_MetadataBase):
         if where is None:
             return set(self._ids)
 
-        conn = sqlite3.connect(':memory:')
+        conn = sqlite3.connect(":memory:")
         conn.row_factory = lambda cursor, row: row[0]
 
         # https://github.com/pandas-dev/pandas/blob/
         # 7c7bd569ce8e0f117c618d068e3d2798134dbc73/pandas/io/sql.py#L1306
         with warnings.catch_warnings():
             warnings.filterwarnings(
-                'ignore', 'The spaces in these column names will not.*')
-            self._dataframe.to_sql('metadata', conn, index=True,
-                                   index_label=self.id_header)
+                "ignore", "The spaces in these column names will not.*"
+            )
+            self._dataframe.to_sql(
+                "metadata", conn, index=True, index_label=self.id_header
+            )
         c = conn.cursor()
 
         # In general we wouldn't want to format our query in this way because
@@ -721,20 +751,24 @@ class Metadata(_MetadataBase):
         #    inserting multiple statements
         #    (e.g., "Subject='subject-1'; DROP...") will result in an
         #    OperationalError being raised.
-        query = ('SELECT "{0}" FROM metadata WHERE {1} GROUP BY "{0}" '
-                 'ORDER BY "{0}";'.format(self.id_header, where))
+        query = (
+            'SELECT "{0}" FROM metadata WHERE {1} GROUP BY "{0}" '
+            'ORDER BY "{0}";'.format(self.id_header, where)
+        )
 
         try:
             c.execute(query)
         except sqlite3.OperationalError as e:
             conn.close()
-            raise ValueError("Selection of IDs failed with query:\n %s\n\n"
-                             "If one of the metadata column names specified "
-                             "in the `where` statement is on this list "
-                             "of reserved keywords "
-                             "(http://www.sqlite.org/lang_keywords.html), "
-                             "please ensure it is quoted appropriately in the "
-                             "`where` statement." % query) from e
+            raise ValueError(
+                "Selection of IDs failed with query:\n %s\n\n"
+                "If one of the metadata column names specified "
+                "in the `where` statement is on this list "
+                "of reserved keywords "
+                "(http://www.sqlite.org/lang_keywords.html), "
+                "please ensure it is quoted appropriately in the "
+                "`where` statement." % query
+            ) from e
 
         ids = set(c.fetchall())
         conn.close()
@@ -788,7 +822,8 @@ class Metadata(_MetadataBase):
         if len(others) < 1:
             raise ValueError(
                 "At least one Metadata object must be provided to merge into "
-                "this Metadata object (otherwise there is nothing to merge).")
+                "this Metadata object (otherwise there is nothing to merge)."
+            )
 
         dfs = []
         columns = []
@@ -803,20 +838,21 @@ class Metadata(_MetadataBase):
         if columns.has_duplicates:
             raise ValueError(
                 "Cannot merge metadata with overlapping columns. The "
-                "following columns overlap: %s" %
-                ', '.join([repr(e) for e in
-                           columns[columns.duplicated()].unique()]))
+                "following columns overlap: %s"
+                % ", ".join([repr(e) for e in columns[columns.duplicated()].unique()])
+            )
 
-        merged_df = dfs[0].join(dfs[1:], how='inner')
+        merged_df = dfs[0].join(dfs[1:], how="inner")
 
         # Not using DataFrame.empty because empty columns are allowed in
         # Metadata.
         if merged_df.index.empty:
             raise ValueError(
                 "Cannot merge because there are no IDs shared across metadata "
-                "objects.")
+                "objects."
+            )
 
-        merged_df.index.name = 'id'
+        merged_df.index.name = "id"
         merged_md = self.__class__(merged_df)
         merged_md._add_artifacts(artifacts)
         return merged_md
@@ -846,14 +882,21 @@ class Metadata(_MetadataBase):
         filter_columns
 
         """
-        filtered_df = self._filter_ids_helper(self._dataframe, self.get_ids(),
-                                              ids_to_keep)
+        filtered_df = self._filter_ids_helper(
+            self._dataframe, self.get_ids(), ids_to_keep
+        )
         filtered_md = self.__class__(filtered_df)
         filtered_md._add_artifacts(self.artifacts)
         return filtered_md
 
-    def filter_columns(self, *, column_type=None, drop_all_unique=False,
-                       drop_zero_variance=False, drop_all_missing=False):
+    def filter_columns(
+        self,
+        *,
+        column_type=None,
+        drop_all_unique=False,
+        drop_zero_variance=False,
+        drop_all_missing=False,
+    ):
         """Filter metadata by columns.
 
         Parameters
@@ -885,11 +928,11 @@ class Metadata(_MetadataBase):
         filter_ids
 
         """
-        if (column_type is not None and
-                column_type not in SUPPORTED_COLUMN_TYPES):
+        if column_type is not None and column_type not in SUPPORTED_COLUMN_TYPES:
             raise ValueError(
-                "Unknown column type %r. Supported column types: %s" %
-                (column_type, ', '.join(sorted(SUPPORTED_COLUMN_TYPES))))
+                "Unknown column type %r. Supported column types: %s"
+                % (column_type, ", ".join(sorted(SUPPORTED_COLUMN_TYPES)))
+            )
 
         # Build up a set of columns to drop. Short-circuit as soon as we know a
         # given column can be dropped (no need to apply further filters to it).
@@ -919,8 +962,7 @@ class Metadata(_MetadataBase):
                 columns_to_drop.add(column)
                 continue
 
-        filtered_df = self._dataframe.drop(columns_to_drop, axis=1,
-                                           inplace=False)
+        filtered_df = self._dataframe.drop(columns_to_drop, axis=1, inplace=False)
         filtered_md = self.__class__(filtered_df)
         filtered_md._add_artifacts(self.artifacts)
         return filtered_md
@@ -950,6 +992,7 @@ class MetadataColumn(_MetadataBase, metaclass=abc.ABCMeta):
         to NaN. The default treatment is to take no action.
 
     """
+
     # Abstract, must be defined by subclasses.
     type = None
 
@@ -1010,8 +1053,9 @@ class MetadataColumn(_MetadataBase, metaclass=abc.ABCMeta):
     def __init__(self, series, missing_scheme=DEFAULT_MISSING):
         if not isinstance(series, pd.Series):
             raise TypeError(
-                "%s constructor requires a pandas.Series object, not %r" %
-                (self.__class__.__name__, type(series)))
+                "%s constructor requires a pandas.Series object, not %r"
+                % (self.__class__.__name__, type(series))
+            )
 
         super().__init__(series.index)
 
@@ -1023,18 +1067,22 @@ class MetadataColumn(_MetadataBase, metaclass=abc.ABCMeta):
 
         if not self._is_supported_dtype(series.dtype):
             raise TypeError(
-                "%s %r does not support a pandas.Series object with dtype %s" %
-                (self.__class__.__name__, series.name, series.dtype))
+                "%s %r does not support a pandas.Series object with dtype %s"
+                % (self.__class__.__name__, series.name, series.dtype)
+            )
 
         self._missing_scheme = missing_scheme
         self._series = self._normalize_(series)
 
-        self._validate_index([self._series.name], axis='column')
+        self._validate_index([self._series.name], axis="column")
 
     def __repr__(self):
         """String summary of the metadata column."""
-        return '<%s name=%r id_count=%d>' % (self.__class__.__name__,
-                                             self.name, self.id_count)
+        return "<%s name=%r id_count=%d>" % (
+            self.__class__.__name__,
+            self.name,
+            self.id_count,
+        )
 
     def __eq__(self, other):
         """Determine if this metadata column is equal to another.
@@ -1059,9 +1107,9 @@ class MetadataColumn(_MetadataBase, metaclass=abc.ABCMeta):
 
         """
         return (
-            super().__eq__(other) and
-            self.name == other.name and
-            self._series.equals(other._series)
+            super().__eq__(other)
+            and self.name == other.name
+            and self._series.equals(other._series)
         )
 
     def __ne__(self, other):
@@ -1261,8 +1309,9 @@ class MetadataColumn(_MetadataBase, metaclass=abc.ABCMeta):
         get_ids
 
         """
-        filtered_series = self._filter_ids_helper(self._series, self.get_ids(),
-                                                  ids_to_keep)
+        filtered_series = self._filter_ids_helper(
+            self._series, self.get_ids(), ids_to_keep
+        )
         filtered_mdc = self.__class__(filtered_series)
         filtered_mdc._add_artifacts(self.artifacts)
         return filtered_mdc
@@ -1276,35 +1325,38 @@ class CategoricalMetadataColumn(MetadataColumn):
     supported data formats.
 
     """
-    type = 'categorical'
+
+    type = "categorical"
 
     @classmethod
     def _is_supported_dtype(cls, dtype):
-        return dtype == 'object'
+        return dtype == "object"
 
     @classmethod
     def _normalize_(cls, series):
         def normalize(value):
             if isinstance(value, str):
                 value = value.strip()
-                if value == '':
+                if value == "":
                     raise ValueError(
                         "%s does not support empty strings as values. Use an "
                         "appropriate pandas missing value type "
                         "(e.g. `numpy.nan`) or supply a non-empty string as "
-                        "the value in column %r." %
-                        (cls.__name__, series.name))
+                        "the value in column %r." % (cls.__name__, series.name)
+                    )
                 else:
                     return value
             elif pd.isna(value):  # permits np.nan, Python float nan, None
-                if type(value) is float and np.isnan(value):
+                if isinstance(value, float) and np.isnan(value):
+                    # if type(value) is float and np.isnan(value):
                     return value
                 return np.nan
             else:
                 raise TypeError(
                     "%s only supports strings or missing values. Found value "
-                    "%r of type %r in column %r." %
-                    (cls.__name__, value, type(value), series.name))
+                    "%r of type %r in column %r."
+                    % (cls.__name__, value, type(value), series.name)
+                )
 
         norm_series = series.apply(normalize, convert_dtype=False)
         norm_series.index = norm_series.index.str.strip()
@@ -1320,18 +1372,19 @@ class NumericMetadataColumn(MetadataColumn):
     supported data formats.
 
     """
-    type = 'numeric'
+
+    type = "numeric"
 
     @classmethod
     def _is_supported_dtype(cls, dtype):
-        return dtype == 'float' or dtype == 'int' or dtype == 'int64'
+        return dtype == "float" or dtype == "int" or dtype == "int64"
 
     @classmethod
     def _normalize_(cls, series):
-        series = series.astype(float, copy=True, errors='raise')
+        series = series.astype(float, copy=True, errors="raise")
         if np.isinf(series).any():
             raise ValueError(
                 "%s does not support positive or negative infinity as a "
-                "floating point value in column %r." %
-                (cls.__name__, series.name))
+                "floating point value in column %r." % (cls.__name__, series.name)
+            )
         return series
