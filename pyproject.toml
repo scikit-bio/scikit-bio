@@ -30,4 +30,4 @@ exclude = [
 ]
 
 [tool.ruff.lint]
-select = ['E', 'W']  # pycodestyle (E, W)
+select = ['E', 'W', 'D']  # pycodestyle (E, W)
