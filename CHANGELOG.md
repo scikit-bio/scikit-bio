@@ -18,6 +18,7 @@
 * SciPy 1.11+ is now supported ([#1887](https://github.com/scikit-bio/scikit-bio/pull/1887)).
 * Removed IPython as a dependency. Scikit-bio continues to support displaying plots in IPython, but it no longer requires importing IPython functionality ([#1901](https://github.com/scikit-bio/scikit-bio/pull/1901)).
 * Made Matplotlib an optional dependency. Scikit-bio no longer requires Matplotlib except for plotting, during which it attempts to import Matplotlib if it is present in the system, and raises an error if not ([#1901](https://github.com/scikit-bio/scikit-bio/pull/1901)).
+* Python 3.12+ is now supported, thank you @actapia ([#1930](https://github.com/scikit-bio/scikit-bio/pull/1930))
 
 ### Backward-incompatible changes [experimental]
 
