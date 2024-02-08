@@ -1189,19 +1189,23 @@ io_registry = IORegistry()
 
 @wraps(IORegistry.sniff)
 def sniff(file, **kwargs):
+    """Detect the format of a given `file` and suggest kwargs."""
     return io_registry.sniff(file, **kwargs)
 
 
 @wraps(IORegistry.read)
 def read(file, format=None, into=None, verify=True, **kwargs):
+    """Read data from file using specified format."""
     return io_registry.read(file, format=format, into=into, verify=verify, **kwargs)
 
 
 @wraps(IORegistry.write)
 def write(obj, format, into, **kwargs):
+    """Write data to file using specified format"""
     return io_registry.write(obj, format, into, **kwargs)
 
 
 @wraps(IORegistry.create_format)
 def create_format(*args, **kwargs):
+    """Make a new format."""
     return io_registry.create_format(*args, **kwargs)
