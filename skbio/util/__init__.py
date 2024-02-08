@@ -32,14 +32,14 @@ Generally useful functionality that doesn't fit in more specific locations.
    safe_md5
    classproperty
 
-Warnings:
+Warnings
 --------
+
 .. autosummary::
    :toctree: generated/
 
    EfficiencyWarning
    RepresentationWarning
-
 
 """
 
