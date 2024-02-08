@@ -63,7 +63,6 @@ Exceptions
    MissingIDError
 
 Examples
---------
 ^^^^^^^^
 Assume we have the following delimited text file storing distances between
 three objects with IDs ``a``, ``b``, and ``c``::
