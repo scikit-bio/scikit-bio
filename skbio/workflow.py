@@ -219,6 +219,7 @@ class NotExecuted:
 
     @experimental(as_of="0.4.0")
     def __call__(self, msg):
+        """Update message and return self."""
         self.msg = msg
         return self
 
@@ -472,6 +473,7 @@ class method:
 
     @experimental(as_of="0.4.0")
     def __call__(self, func):
+        """Decorate function with specified priority."""
         func.priority = self.priority
         return func
 
