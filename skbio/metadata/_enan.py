@@ -14,14 +14,14 @@ def _float_to_int(number: float) -> int:
     # (alignment doesn't matter because this isn't a struct, and since we are
     #  on the same hardware when we go to int, the endian-ness doesn't matter
     #  either)
-    bytes_ = struct.pack('=d', number)
-    integer, = struct.unpack('=Q', bytes_)
+    bytes_ = struct.pack("=d", number)
+    (integer,) = struct.unpack("=Q", bytes_)
     return integer
 
 
 def _int_to_float(number: int) -> float:
-    bytes_ = struct.pack('=Q', number)
-    float_, = struct.unpack('=d', bytes_)
+    bytes_ = struct.pack("=Q", number)
+    (float_,) = struct.unpack("=d", bytes_)
     return float_
 
 
@@ -34,7 +34,7 @@ def _int_to_float(number: int) -> float:
 # ('Q' from struct does fortunately catch this issue before it becomes a
 #  larger problem)
 _R_OFFSET = 1954
-_DEFAULT_NAN_INT = _float_to_int(float('nan'))
+_DEFAULT_NAN_INT = _float_to_int(float("nan"))
 # at this point, calling `bin(_DEFAULT_NAN_INT)` should produce a
 # 64-bit positive quiet nan:
 # 0 11111111111 1000000000000000000000000000000000000000000000000000
