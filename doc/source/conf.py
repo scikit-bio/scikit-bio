@@ -1,15 +1,28 @@
+# ----------------------------------------------------------------------------
+# Copyright (c) 2013--, scikit-bio development team.
+#
+# Distributed under the terms of the Modified BSD License.
+#
+# The full license is in the file LICENSE.txt, distributed with this software.
+# ----------------------------------------------------------------------------
+
 # Configuration file for the Sphinx documentation builder.
+
+# Instructions:
+# https://www.sphinx-doc.org/en/master/usage/configuration.html
 
 import os
 import sys
+from datetime import datetime
 
 import skbio
+
 
 # -- Project information -----------------------------------------------------
 
 project = 'scikit-bio'
 author = f'{project} development team'
-copyright = f'2014--, {author}'
+copyright = f'2014-{datetime.now().year}, {author}'
 version = skbio.__version__
 release = skbio.__version__
 
@@ -18,31 +31,37 @@ release = skbio.__version__
 
 extensions = [
     'sphinx.ext.autodoc',
+    # 'sphinx.ext.napoleon',
     'sphinx.ext.mathjax',
-    'sphinx.ext.napoleon',
     'sphinx.ext.linkcode',
     'sphinx.ext.coverage',
     'sphinx.ext.doctest',
     'sphinx.ext.autosummary',
     'sphinx.ext.intersphinx',
+    'sphinx.ext.extlinks',
+    'numpydoc',
+    'sphinx_design',
+    'sphinx_copybutton',
     'matplotlib.sphinxext.plot_directive'
 ]
 
 root_doc = 'index'
 templates_path = ['_templates']
-exclude_patterns = []
+exclude_patterns = ['_build', 'Thumbs.db', '.DS_Store']
+
 
 # -- Options for manual page output ------------------------------------------
 
-# startdocname, name, description, authors, section
+# Elements: startdocname, name, description, authors, section
 man_pages = [
     (root_doc, project, f'{project} Documentation', author, 1),
 ]
 
+
 # -- Options for Texinfo output ----------------------------------------------
 
-# startdocname, targetname, title, author, dir_entry, description, category,
-# toctree_only
+# Elements: startdocname, targetname, title, author, dir_entry, description,
+# category, [toctree_only]
 texinfo_documents = [
     (root_doc, project, f'{project} Documentation', author, project,
      'Data structures, algorithms, and educational resources for working with '
@@ -52,29 +71,96 @@ texinfo_documents = [
 
 # -- Options for HTML output -------------------------------------------------
 
-# html_theme = 'alabaster'
-# html_theme = 'bootstrap'
 html_title = f'{project} {version} documentation'
 html_short_title = project
 html_baseurl = 'scikit.bio'
-html_logo = 'logo/logo.png'
-html_favicon = 'logo/favicon.ico'
-html_static_path = ['_static']
+html_logo = '_static/logo.png'
+html_favicon = '_static/favicon.ico'
 htmlhelp_basename = 'skbio-doc'
+
+# static files
+html_static_path = ['_static']
+html_css_files = ['style.css']
+
+# do not show source links
+html_show_sourcelink = False
+
+
+# -- External links ----------------------------------------------------------
+
+github_url = f'github.com/{project}/{project}'
+
+extlinks = {
+    'home': (f'https://{html_baseurl}/%s', None),
+    'repo': (f'https://{github_url}/%s', None),
+}
 
 
 # -- PyData Theme configuration ----------------------------------------------
 
+# References:
+# https://pydata-sphinx-theme.readthedocs.io/en/stable/user_guide/layout.html#
+# references
+
 html_theme = 'pydata_sphinx_theme'
+
 html_theme_options = {
+
+    # logo image for light/dark modes
+    # image files must be placed under _static/
    'logo': {
-      'image_light': 'logo/logo.png',
-      'image_dark': 'logo/logo-inverted.png',
-   }
+      'link': html_baseurl,
+      'alt_text': html_title,
+      'image_light': '_static/logo.png',
+      'image_dark': '_static/logo_inv.png',
+    },
+
+    # announcement banner on top of the screen
+    'announcement': (
+        f"{project} is back in active development! Check out our <a href='https://"
+        f"{github_url}/discussions/1892'>announcement of revitalization</a>."
+    ),
+
+    # social media links displayed as icons
+    'github_url': f'https://{github_url}',
+    'twitter_url': 'https://twitter.com/scikitbio',
+
+    # show warning if not latest stable version
+    # 'show_version_warning_banner': True,
+
+    # version switcher
+    'switcher': {
+        'json_url': 'https://qiyunlab.github.io/assets/files/versions.json',
+        'version_match': 'dev' if version.endswith('-dev') else version,
+    },
+
+    # simplify section navigation
+    'navigation_depth': 2,
+    'collapse_navigation': True,
+
+    # display all header links
+    'header_links_before_dropdown': 7,
+
+    # header layout
+    'navbar_start': ['navbar-logo', 'version-switcher'],
+
+    # footer layout
+    'footer_start': ['copyright'],
+    'footer_center': ['sphinx-version'],
+    'footer_end': ['theme-version'],
+
+    # google analytics
+    'analytics': {
+        'google_analytics_id': 'UA-6636235-9',
+    }
+
 }
 
 
 # -- Intersphinx configuration -----------------------------------------------
+
+# References:
+# https://www.sphinx-doc.org/en/master/usage/extensions/intersphinx.html
 
 intersphinx_mapping = {
     'python': ('https://docs.python.org/3/', None),
@@ -84,6 +170,34 @@ intersphinx_mapping = {
     'pandas': ('https://pandas.pydata.org/pandas-docs/stable/', None),
     'biom-format': ('https://biom-format.org/', None)
 }
+
+
+# -- matplotlib.sphinxext.plot_directive -------------------------------------
+
+# References:
+# https://matplotlib.org/stable/api/sphinxext_plot_directive_api.html
+
+plot_include_source = True
+plot_html_show_source_link = False
+# plot_formats = ['png', 'pdf']
+plot_formats = ['png']
+plot_html_show_formats = False
+
+# -- Autodoc configuration ---------------------------------------------------
+
+# References:
+# https://www.sphinx-doc.org/en/master/usage/extensions/autodoc.html
+
+# WIP
+
+# def autodoc_skip_exceptions(app, what, name, obj, skip, options):
+#     if what == 'exception':
+#         print(name)
+#     return True if what == 'exception' else False
+
+
+# def setup(app):
+#     app.connect('autodoc-skip-member', autodoc_skip_exceptions)
 
 
 # -- Source code links --------------------------------------------------------
@@ -136,8 +250,7 @@ def linkcode_resolve(domain, info):
 
     linespec = f'#L{lineno + 1}' if lineno else ''
 
-    return ('https://github.com/scikit-bio/scikit-bio/blob/'
-            f'{branch}/skbio/{fn}{linespec}')
+    return f'https://{github_url}/blob/{branch}/skbio/{fn}{linespec}'
 
 
 # You might see the following exception when building the documentation:

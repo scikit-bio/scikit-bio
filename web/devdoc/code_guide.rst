@@ -3,20 +3,17 @@ Coding guidelines
 
 As project size increases, consistency of the code base and documentation becomes more important. We therefore provide guidelines for code and documentation that is contributed to scikit-bio. Our goal is to create a consistent code base where:
 
-* it is easy to find relevant functionality (and to determine when functionality that you're looking for doesn't exist),
-* you can trust that the code that you're working with is sufficiently tested, and
-* names and interfaces are intuitive.
+* It is easy to find relevant functionality (and to determine when functionality that you're looking for doesn't exist),
+* You can trust that the code that you're working with is sufficiently tested, and
+* Names and interfaces are intuitive.
 
-**As scikit-bio is in beta, our coding guidelines are presented here as a working draft. These guidelines are requirements for all code submitted to scikit-bio, but at this stage the guidelines themselves are malleable. If you disagree with something, or have a suggestion for something new to include, you should** `create an issue`_ **to initiate a discussion.**
+.. note:: As scikit-bio is in beta, our coding guidelines are presented here as a working draft. These guidelines are requirements for all code submitted to scikit-bio, but at this stage the guidelines themselves are malleable. If you disagree with something, or have a suggestion for something new to include, you should :repo:`create an issue <issues>` to initiate a discussion.
 
-.. _`create an issue`: https://github.com/scikit-bio/scikit-bio/issues
 
 What are the naming conventions? and How should I format my code?
 -----------------------------------------------------------------
 
-We adhere to the `PEP 8`_ python coding guidelines for code and documentation standards. Before submitting any code to scikit-bio, you should read these carefully and apply the guidelines in your code.
-
-.. _`PEP 8`: http://legacy.python.org/dev/peps/pep-0008/
+We adhere to the `PEP 8 <https://peps.python.org/pep-0008/>`_ python coding guidelines for code and documentation standards. Before submitting any code to scikit-bio, you should read these carefully and apply the guidelines in your code.
 
 
 What should I call my variables?
@@ -41,97 +38,101 @@ What should I call my variables?
 Acceptable abbreviations
 ^^^^^^^^^^^^^^^^^^^^^^^^
 
-The following list of abbreviations can be considered well-known and used with impunity within mixed name variables, but some should not be used by themselves as they would conflict with common functions, python built-in's, or raise an exception. Do not use the following by themselves as variable names: ``dir``,  ``exp`` (a common ``math`` module function), ``in``, ``max``, and ``min``. They can, however, be used as part of a name, eg ``matrix_exp``.
+The following list of abbreviations can be considered well-known and used with impunity within mixed name variables, but some should not be used by themselves as they would conflict with common functions, python built-in's, or raise an exception. Do not use the following by themselves as variable names: ``dir``,  ``exp`` (a common ``math`` module function), ``in``, ``max``, and ``min``. They can, however, be used as part of a name, e.g. ``matrix_exp``.
 
-+--------------------+--------------+
-|        Full        |  Abbreviated |
-+====================+==============+
-|          alignment |          aln |
-+--------------------+--------------+
-|           archaeal |         arch |
-+--------------------+--------------+
-|          auxiliary |          aux |
-+--------------------+--------------+
-|          bacterial |         bact |
-+--------------------+--------------+
-|           citation |         cite |
-+--------------------+--------------+
-|            current |         curr |
-+--------------------+--------------+
-|           database |           db |
-+--------------------+--------------+
-|         dictionary |         dict |
-+--------------------+--------------+
-|          directory |          dir |
-+--------------------+--------------+
-|    distance matrix |           dm |
-+--------------------+--------------+
-|        end of file |          eof |
-+--------------------+--------------+
-|         eukaryotic |          euk |
-+--------------------+--------------+
-|          filepath  |           fp |
-+--------------------+--------------+
-|          frequency |         freq |
-+--------------------+--------------+
-|           expected |          exp |
-+--------------------+--------------+
-|              index |          idx |
-+--------------------+--------------+
-|              input |           in |
-+--------------------+--------------+
-|            maximum |          max |
-+--------------------+--------------+
-|            minimum |          min |
-+--------------------+--------------+
-|      mitochondrial |           mt |
-+--------------------+--------------+
-|             number |          num |
-+--------------------+--------------+
-|        observation |          obs |
-+--------------------+--------------+
-|           observed |          obs |
-+--------------------+--------------+
-|           original |         orig |
-+--------------------+--------------+
-|             output |          out |
-+--------------------+--------------+
-|          parameter |        param |
-+--------------------+--------------+
-|          phylogeny |        phylo |
-+--------------------+--------------+
-|           previous |         prev |
-+--------------------+--------------+
-|        probability |         prob |
-+--------------------+--------------+
-|            protein |         prot |
-+--------------------+--------------+
-|             record |          rec |
-+--------------------+--------------+
-|          reference |          ref |
-+--------------------+--------------+
-|           sequence |          seq |
-+--------------------+--------------+
-| standard deviation |        stdev |
-+--------------------+--------------+
-|         statistics |        stats |
-+--------------------+--------------+
-|             string |          str |
-+--------------------+--------------+
-|          structure |       struct |
-+--------------------+--------------+
-|          temporary |         temp |
-+--------------------+--------------+
-|               taxa |          tax |
-+--------------------+--------------+
-|              taxon |          tax |
-+--------------------+--------------+
-|          taxonomic |          tax |
-+--------------------+--------------+
-|           taxonomy |          tax |
-+--------------------+--------------+
-|           variance |          var |
-+--------------------+--------------+
+.. dropdown::
+   :open:
+
+   +--------------------+--------------+
+   |        Full        |  Abbreviated |
+   +====================+==============+
+   |          alignment |          aln |
+   +--------------------+--------------+
+   |           archaeal |         arch |
+   +--------------------+--------------+
+   |          auxiliary |          aux |
+   +--------------------+--------------+
+   |          bacterial |         bact |
+   +--------------------+--------------+
+   |           citation |         cite |
+   +--------------------+--------------+
+   |            current |         curr |
+   +--------------------+--------------+
+   |           database |           db |
+   +--------------------+--------------+
+   |         dictionary |         dict |
+   +--------------------+--------------+
+   |          directory |          dir |
+   +--------------------+--------------+
+   |    distance matrix |           dm |
+   +--------------------+--------------+
+   |        end of file |          eof |
+   +--------------------+--------------+
+   |         eukaryotic |          euk |
+   +--------------------+--------------+
+   |          filepath  |           fp |
+   +--------------------+--------------+
+   |          frequency |         freq |
+   +--------------------+--------------+
+   |           expected |          exp |
+   +--------------------+--------------+
+   |              index |          idx |
+   +--------------------+--------------+
+   |              input |           in |
+   +--------------------+--------------+
+   |            maximum |          max |
+   +--------------------+--------------+
+   |            minimum |          min |
+   +--------------------+--------------+
+   |      mitochondrial |           mt |
+   +--------------------+--------------+
+   |             number |          num |
+   +--------------------+--------------+
+   |        observation |          obs |
+   +--------------------+--------------+
+   |           observed |          obs |
+   +--------------------+--------------+
+   |           original |         orig |
+   +--------------------+--------------+
+   |             output |          out |
+   +--------------------+--------------+
+   |          parameter |        param |
+   +--------------------+--------------+
+   |          phylogeny |        phylo |
+   +--------------------+--------------+
+   |           previous |         prev |
+   +--------------------+--------------+
+   |        probability |         prob |
+   +--------------------+--------------+
+   |            protein |         prot |
+   +--------------------+--------------+
+   |             record |          rec |
+   +--------------------+--------------+
+   |          reference |          ref |
+   +--------------------+--------------+
+   |           sequence |          seq |
+   +--------------------+--------------+
+   | standard deviation |        stdev |
+   +--------------------+--------------+
+   |         statistics |        stats |
+   +--------------------+--------------+
+   |             string |          str |
+   +--------------------+--------------+
+   |          structure |       struct |
+   +--------------------+--------------+
+   |          temporary |         temp |
+   +--------------------+--------------+
+   |               taxa |          tax |
+   +--------------------+--------------+
+   |              taxon |          tax |
+   +--------------------+--------------+
+   |          taxonomic |          tax |
+   +--------------------+--------------+
+   |           taxonomy |          tax |
+   +--------------------+--------------+
+   |           variance |          var |
+   +--------------------+--------------+
+
 
 How do I organize my modules (source files)?
 --------------------------------------------
@@ -144,7 +145,7 @@ How do I organize my modules (source files)?
 
 - *Don't use* ``from module import *``, *instead use* ``from module import Name, Name2, Name3...`` *or possibly* ``import module``. This makes it *much* easier to see name collisions and to replace implementations.
 
-- If you are importing `NumPy`_, `Matplotlib`_, or another package that encourages a standard style for their import statements use them as needed for example:
+- If you are importing `NumPy <https://numpy.org/>`_, `Matplotlib <https://matplotlib.org/>`_, or another package that encourages a standard style for their import statements use them as needed for example:
 
 ::
 
@@ -154,18 +155,56 @@ How do I organize my modules (source files)?
 
     from matplotlib import pyplot as plt
 
-.. _`NumPy`: http://www.numpy.org/
-.. _`Matplotlib`: http://matplotlib.org/
-
 Example of module structure
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-The structure of your module should be similar to the example below. scikit-bio uses the `NumPy doc`_ standard for documentation. Our `doc/README.md`_ explains how to write your docstrings using the `NumPy doc`_ standards for scikit-bio:
+The structure of your module should be similar to the example below. scikit-bio follows the `numpydoc style guide <https://numpydoc.readthedocs.io/en/latest/format.html>`_ for documentation. Our :doc:`doc_guide` explains how to write your docstrings using the numpydoc standards for scikit-bio:
 
-.. _`NumPy doc`: https://github.com/numpy/numpy/blob/master/doc/HOWTO_DOCUMENT.rst.txt
-.. _`doc/README.md`: https://github.com/scikit-bio/scikit-bio/blob/master/doc/README.md
+.. code-block:: python
 
-.. literalinclude:: example_module.py
+    r"""
+    Numbers (:mod:`skbio.numbers`)
+    ==============================
+
+    .. currentmodule:: skbio.numbers
+
+    Numbers holds a sequence of numbers, and defines several statistical
+    operations (mean, stdev, etc.) FrequencyDistribution holds a mapping from
+    items (not necessarily numbers) to counts, and defines operations such as
+    Shannon entropy and frequency normalization.
+
+
+    Classes
+    -------
+
+    .. autosummary::
+        :toctree: generated/
+
+        Numbers
+
+    """
+
+    # ----------------------------------------------------------------------------
+    # Copyright (c) 2013--, scikit-bio development team.
+    #
+    # Distributed under the terms of the Modified BSD License.
+    #
+    # The full license is in the file LICENSE.txt, distributed with this software.
+    # ----------------------------------------------------------------------------
+
+    from random import choice, random
+
+    import numpy as np
+    from utils import indices
+
+
+    class Numbers(list):
+        pass
+
+
+    class FrequencyDistribution(dict):
+        pass
+
 
 How should I write comments?
 ----------------------------
@@ -174,23 +213,33 @@ How should I write comments?
 
 - *Comments should say more than the code itself.* Examine your comments carefully: they may indicate that you'd be better off rewriting your code (especially if *renaming your variables* would allow you to get rid of the comment.) In particular, don't scatter magic numbers and other constants that have to be explained through your code. It's far better to use variables whose names are self-documenting, especially if you use the same constant more than once. Also, think about making constants into class or instance data, since it's all too common for 'constants' to need to change or to be needed in several methods.
 
-    +-------+------------------------------------------------------------+
-    | Wrong |       ``win_size -= 20        # decrement win_size by 20`` |
-    +-------+------------------------------------------------------------+
-    |    OK | ``win_size -= 20        # leave space for the scroll bar`` |
-    +-------+------------------------------------------------------------+
-    | Right |                             ``self._scroll_bar_size = 20`` |
-    +-------+------------------------------------------------------------+
-    |       |                      ``win_size -= self._scroll_bar_size`` |
-    +-------+------------------------------------------------------------+
+.. tab-set::
 
+   .. tab-item:: Wrong
+
+      .. code-block:: python
+
+         win_size -= 20        # decrement win_size b
+
+   .. tab-item:: OK
+
+      .. code-block:: python
+
+         win_size -= 20        # leave space for the scroll bar
+
+   .. tab-item:: Right
+
+      .. code-block:: python
+
+         self._scroll_bar_size = 20
+         win_size -= self._scroll_bar_size
 
 - *Use comments starting with #, not strings, inside blocks of code.*
-- *Start each method, class and function with a docstring using triple double quotes (""").* Make sure the docstring follows the `NumPy doc`_ standard.
 
-- *Always update the docstring when the code changes.* Like outdated comments, outdated docstrings can waste a lot of time. "Correct examples are priceless, but incorrect examples are worse than worthless." `Jim Fulton`_.
+- *Start each method, class and function with a docstring using triple double quotes (""").* Make sure the docstring follows the `numpydoc style guide <https://numpydoc.readthedocs.io/en/latest/format.html>`_.
 
-.. _`Jim Fulton`: http://www.python.org/pycon/dc2004/papers/4/PyCon2004DocTestUnit.pdf
+- *Always update the docstring when the code changes.* Like outdated comments, outdated docstrings can waste a lot of time. "Correct examples are priceless, but incorrect examples are worse than worthless." `Jim Fulton <https://svn.python.org/www/branches/rest2web/pydotorg/pycon/dc2004/papers/4/PyCon2004DocTestUnit.pdf>`_.
+
 
 How should I test my code ?
 ---------------------------
@@ -205,9 +254,7 @@ Never treat prototypes as production code. It's fine to write prototype code wit
 
 "Code a little test a little". For production code, write a couple of tests, then a couple of methods, then a couple more tests, then a couple more methods, then maybe change some of the names or generalize some of the functionality. If you have a huge amount of code where all you have to do is write the tests', you're probably closer to 30% done than 90%. Testing vastly reduces the time spent debugging, since whatever went wrong has to be in the code you wrote since the last test suite. And remember to use python's interactive interpreter for quick checks of syntax and ideas.
 
-Run the test suite when you change `anything`. Even if a change seems trivial, it will only take a couple of seconds to run the tests and then you'll be sure. This can eliminate long and frustrating debugging sessions where the change turned out to have been made long ago, but didn't seem significant at the time. **Note that tests are executed using Travis CI**, see `this document's section`_ for further discussion.
-
-.. _`this document's section`: https://github.com/scikit-bio/scikit-bio/blob/master/CONTRIBUTING.md#testing-guidelines
+Run the test suite when you change `anything`. Even if a change seems trivial, it will only take a couple of seconds to run the tests and then you'll be sure. This can eliminate long and frustrating debugging sessions where the change turned out to have been made long ago, but didn't seem significant at the time. **Note that tests are executed using GitHub Actions**, see :doc:`../contribute` for further discussion.
 
 Some pointers
 ^^^^^^^^^^^^^
@@ -255,8 +302,10 @@ Some pointers
 
 - Stochastic failures should occur less than 1/10,1000 times, otherwise you risk adding a significant amount of time to the total running time of the test suite.
 
-Example of a ``nose`` test module structure
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+Example test module
+^^^^^^^^^^^^^^^^^^^
+
+Here is an example of a ``nose`` test module structure:
 
 .. code-block:: python
 
@@ -299,6 +348,7 @@ Example of a ``nose`` test module structure
         import nose
         nose.runmodule()
 
+
 Git pointers
 ------------
 
@@ -307,17 +357,11 @@ Commit messages are a useful way to document the changes being made to a project
 Authoring a commit message
 ^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-The most important metadata in a commit message is (arguably) the author's name and the author's e-mail. GitHub uses this information to attribute your contributions to a project, see for example the `scikit-bio list of contributors`_.
+The most important metadata in a commit message is (arguably) the author's name and the author's e-mail. GitHub uses this information to attribute your contributions to a project, see for example the :repo:`list of scikit-bio contributors <graphs/contributors>`.
 
-.. _`scikit-bio list of contributors`: https://github.com/scikit-bio/scikit-bio/graphs/contributors
+Follow `this guide <https://git-scm.com/book/en/v2/Getting-Started-First-Time-Git-Setup>`_ to set up your system and **make sure the e-mail you use in this step is the same e-mail associated to your GitHub account**.
 
-Follow `this guide`_ to set up your system and **make sure the e-mail you use in this step is the same e-mail associated to your GitHub account**.
-
-.. _`this guide`: http://git-scm.com/book/en/Getting-Started-First-Time-Git-Setup
-
-After doing this you should see your name and e-mail when you run the following commands:
-
-.. code-block:: none
+After doing this you should see your name and e-mail when you run the following commands::
 
     $ git config --global user.name
     Yoshiki Vázquez Baeza
@@ -327,9 +371,6 @@ After doing this you should see your name and e-mail when you run the following 
 Writing a commit message
 ^^^^^^^^^^^^^^^^^^^^^^^^
 
-In general the writing of a commit message should adhere to `NumPy's guidelines`_ which if followed correctly will help you structure your changes better i. e. bug fixes will be in a commit followed by a commit updating the test suite and with one last commit that update the documentation as needed.
+In general the writing of a commit message should adhere to `NumPy's guidelines <https://numpy.org/doc/stable/dev/development_workflow.html#writing-the-commit-message>`_ which if followed correctly will help you structure your changes better i. e. bug fixes will be in a commit followed by a commit updating the test suite and with one last commit that update the documentation as needed.
 
-GitHub provides a set of handy features that will link together a commit message to a ticket in the issue tracker, this is specially helpful because you can `close an issue automatically`_ when the change is merged into the main repository, this reduces the amount of work that has to be done making sure outdated issues are not open.
-
-.. _`NumPy's guidelines`: http://docs.scipy.org/doc/numpy/dev/gitwash/development_workflow.html#writing-the-commit-message
-.. _`close an issue automatically`: https://help.github.com/articles/closing-issues-via-commit-messages
+GitHub provides a set of handy features that will link together a commit message to a ticket in the issue tracker, this is specially helpful because you can `close an issue automatically <https://docs.github.com/en/issues/tracking-your-work-with-issues/closing-an-issue>`_ when the change is merged into the main repository, this reduces the amount of work that has to be done making sure outdated issues are not open.

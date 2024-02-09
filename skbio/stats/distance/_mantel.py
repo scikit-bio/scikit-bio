@@ -536,7 +536,7 @@ def pwmantel(dms, labels=None, method='pearson', permutations=999,
     DistanceMatrix.read
 
     Notes
-    --------
+    -----
     Passing a list of filepaths can be useful as it allows for a smaller amount
     of memory consumption as it only loads two matrices at a time as opposed to
     loading all distance matrices into memory.

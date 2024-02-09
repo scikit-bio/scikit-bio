@@ -26,7 +26,7 @@ __all__ = ['Sequence', 'DNA', 'RNA', 'Protein', 'GeneticCode',
            'OrdinationResults']
 
 __credits__ = "https://github.com/scikit-bio/scikit-bio/graphs/contributors"
-__version__ = "0.5.9"
+__version__ = "0.5.10-dev"
 
 
 mottos = [
@@ -75,7 +75,4 @@ art = r"""
                        Cyanobacteria
 """
 
-if __doc__ is None:
-    __doc__ = title + art
-else:
-    __doc__ = title + art + __doc__
+__doc__ = title + art + (__doc__ or '')

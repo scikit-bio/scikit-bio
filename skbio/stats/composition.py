@@ -54,6 +54,9 @@ Functions
    alr
    alr_inv
    centralize
+   vlr
+   pairwise_vlr
+   tree_basis
    ancom
    sbp_basis
 
@@ -805,21 +808,21 @@ def centralize(mat):
 
 @experimental(as_of="0.5.7")
 def _vlr(x: np.array, y: np.array, ddof: int):
-    r""" Calculates variance log ratio
+    r"""Calculate variance log ratio.
 
     Parameters
     ----------
     x : array_like, float
-       a 1-dimensional vector of proportions
+        A 1-dimensional vector of proportions.
     y : array_like, float
-       a 1-dimensional vector of proportions
+        A 1-dimensional vector of proportions.
     ddof: int
-        degrees of freedom
+        Degrees of freedom.
 
     Returns
     -------
     float
-         variance log ratio value
+        Variance log ratio value.
 
     References
     ----------
@@ -843,22 +846,21 @@ def _vlr(x: np.array, y: np.array, ddof: int):
 
 @experimental(as_of="0.5.7")
 def _robust_vlr(x: np.ndarray, y: np.ndarray, ddof: int):
-    r""" Calculates variance log ratio while masking zeros
+    r"""Calculate variance log ratio while masking zeros.
 
     Parameters
     ----------
     x : array_like, float
-       a 1-dimensional vector of proportions
+        A 1-dimensional vector of proportions.
     y : array_like, float
-       a 1-dimensional vector of proportions
+        A 1-dimensional vector of proportions.
     ddof: int
-        degrees of freedom
+        Degrees of freedom.
 
     Returns
     -------
     float
-         variance log ratio value
-
+        Variance log ratio value.
 
     References
     ----------
@@ -886,35 +888,23 @@ def _robust_vlr(x: np.ndarray, y: np.ndarray, ddof: int):
 
 @experimental(as_of="0.5.7")
 def vlr(x: np.ndarray, y: np.ndarray, ddof: int = 1, robust: bool = False):
-    r""" Calculates variance log ratio
+    r"""Calculate variance log ratio [1]_ [2]_.
 
     Parameters
     ----------
     x : array_like, float
-       a 1-dimensional vector of proportions
+        A 1-dimensional vector of proportions.
     y : array_like, float
-       a 1-dimensional vector of proportions
-
+        A 1-dimensional vector of proportions.
     ddof: int
-        degrees of freedom
-
+        Degrees of freedom.
     robust: bool
-        mask zeros at the cost of performance
+        Mask zeros at the cost of performance.
 
     Returns
     -------
     float
-         variance log ratio value
-
-    Examples
-    --------
-    No zeros
-    >>> import numpy as np
-    >>> from skbio.stats.composition import vlr
-    >>> x = np.exp([1,2,3])
-    >>> y = np.exp([2,3,4])
-    >>> vlr(x,y)
-    0.0
+        Variance log ratio value.
 
     References
     ----------
@@ -926,6 +916,16 @@ def vlr(x: np.ndarray, y: np.ndarray, ddof: int = 1, robust: bool = False):
            How should we measure proportionality on relative gene
            expression data?. Theory Biosci. 135, 21–36 (2016).
            https://doi.org/10.1007/s12064-015-0220-8
+
+    Examples
+    --------
+    >>> import numpy as np
+    >>> from skbio.stats.composition import vlr
+    >>> x = np.exp([1,2,3])
+    >>> y = np.exp([2,3,4])
+    >>> vlr(x,y)  # no zeros
+    0.0
+
     """
     # Convert array_like to numpy array
     x = closure(x)
@@ -947,24 +947,23 @@ def vlr(x: np.ndarray, y: np.ndarray, ddof: int = 1, robust: bool = False):
 
 @experimental(as_of="0.5.7")
 def _pairwise_vlr(mat: np.ndarray, ddof: int):
-    r""" Performs pairwise variance log ratio transformation
+    r"""Perform pairwise variance log ratio transformation.
 
     Parameters
     ----------
     mat : array_like, float
-       a matrix of proportions where
-       rows = compositions and
-       columns = components
+        a matrix of proportions where
+        rows = compositions and
+        columns = components
     ids : array_like, str
-        component names
+        Component names.
     ddof : int
-        degrees of freedom
+        Degrees of freedom.
 
     Returns
     -------
     skbio.DistanceMatrix
-         distance matrix of variance log ratio values
-
+        Distance matrix of variance log ratio values.
 
     References
     ----------
@@ -976,8 +975,8 @@ def _pairwise_vlr(mat: np.ndarray, ddof: int):
            How should we measure proportionality on relative gene
            expression data?. Theory Biosci. 135, 21–36 (2016).
            https://doi.org/10.1007/s12064-015-0220-8
-    """
 
+    """
     # Log Transform
     X_log = np.log(mat)
 
@@ -990,48 +989,33 @@ def _pairwise_vlr(mat: np.ndarray, ddof: int):
 
 @experimental(as_of="0.5.7")
 def pairwise_vlr(mat,
-                 ids=None,
+                 ids = None,
                  ddof: int = 1,
                  robust: bool = False,
                  validate: bool = True):
-
-    r""" Performs pairwise variance log ratio transformation
+    r"""Perform pairwise variance log ratio transformation [1]_ [2]_.
 
     Parameters
     ----------
-    mat: array_like, float
-       a matrix of proportions where
-       rows = compositions and
-       columns = components
-    ids: array_like, str
-        Component names
-    ddof: int
-        Degrees of freedom
-    robust: bool
-        Mask zeros at the cost of performance
-    validate: bool
+    mat : array_like, float
+        a matrix of proportions where
+        rows = compositions and
+        columns = components
+    ids : array_like, str
+        Component names.
+    ddof : int
+        Degrees of freedom.
+    robust : bool
+        Mask zeros at the cost of performance.
+    validate : bool
         Whether to validate the distance matrix after construction.
 
     Returns
     -------
     skbio.DistanceMatrix if validate=True
-         distance matrix of variance log ratio values
+        Distance matrix of variance log ratio values.
     skbio.DissimilarityMatrix if validate=False
-         dissimilarity matrix of variance log ratio values
-
-    Examples
-    --------
-    import numpy as np
-    from skbio.stats.composition import pairwise_vlr
-    >>> mat = np.array([np.exp([1,2,2]),
-    ...                 np.exp([2,3,6]),
-    ...                 np.exp([2,3,12])]).T
-    >>> dism = pairwise_vlr(mat)
-    >>> dism.redundant_form()
-    array([[  0.,   3.,  27.],
-           [  3.,   0.,  12.],
-           [ 27.,  12.,   0.]])
-
+        Dissimilarity matrix of variance log ratio values.
 
     References
     ----------
@@ -1043,8 +1027,19 @@ def pairwise_vlr(mat,
            How should we measure proportionality on relative gene
            expression data?. Theory Biosci. 135, 21–36 (2016).
            https://doi.org/10.1007/s12064-015-0220-8
-    """
 
+    Examples
+    --------
+    >>> import numpy as np
+    >>> from skbio.stats.composition import pairwise_vlr
+    >>> mat = np.array([np.exp([1, 2, 2]),
+    ...                 np.exp([2, 3, 6]),
+    ...                 np.exp([2, 3, 12])]).T
+    >>> dism = pairwise_vlr(mat)
+    >>> dism.redundant_form()
+    array([[ 0.,  3., 27.], [ 3.,  0., 12.], [27., 12.,  0.]])
+
+    """
     # Mask zeros
     mat = closure(mat.astype(np.float64))
 
@@ -1073,7 +1068,7 @@ def pairwise_vlr(mat,
 
 @experimental(as_of="0.5.8")
 def tree_basis(tree):
-    r""" Calculates sparse representation of an ilr basis from a tree.
+    r"""Calculate sparse representation of an ilr basis from a tree.
 
     This computes an orthonormal basis specified from a bifurcating tree.
 
@@ -1098,6 +1093,8 @@ def tree_basis(tree):
     ValueError
         The tree doesn't contain two branches.
 
+    Examples
+    --------
     >>> from skbio import TreeNode
     >>> tree = u"((b,c)a, d)root;"
     >>> t = TreeNode.read([tree])
@@ -1188,7 +1185,7 @@ def ancom(table, grouping,
           multiple_comparisons_correction='holm-bonferroni',
           significance_test=None,
           percentiles=(0.0, 25.0, 50.0, 75.0, 100.0)):
-    r""" Performs a differential abundance test using ANCOM.
+    r"""Perform a differential abundance test using ANCOM.
 
     This is done by calculating pairwise log ratios between all features
     and performing a significance test to determine if there is a significant
