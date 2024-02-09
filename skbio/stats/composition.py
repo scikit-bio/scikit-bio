@@ -895,7 +895,7 @@ def vlr(x: np.ndarray, y: np.ndarray, ddof: int = 1, robust: bool = False):
     Notes
     -----
     Variance log ratio was described in [1]_ and [2]_.
-    
+
     References
     ----------
     .. [1] V. Lovell D, Pawlowsky-Glahn V, Egozcue JJ, Marguerat S,
