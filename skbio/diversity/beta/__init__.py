@@ -1,5 +1,4 @@
-"""
-Beta diversity measures (:mod:`skbio.diversity.beta`)
+"""Beta diversity measures (:mod:`skbio.diversity.beta`)
 =====================================================
 
 .. currentmodule:: skbio.diversity.beta

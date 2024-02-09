@@ -29,17 +29,15 @@ Our core development team consists of three lead developers: **Dr. Qiyun Zhu** a
 Credits
 -------
 
-We thank the many contributors to scikit-bio. A complete list of contributors to the scikit-bio codebase is available at GitHub. This however may miss the larger community who contributed by testing the software and providing valuable comments, who we hold equal appreciation to.
+We thank the many contributors to scikit-bio. A complete :repo:`list of contributors <graphs/contributors>` to the scikit-bio codebase is available at GitHub. This however may miss the larger community who contributed by testing the software and providing valuable comments, who we hold equal appreciation to.
 
-https://github.com/scikit-bio/scikit-bio/graphs/contributors
-
-Wanna contribute? We enthusiastically welcome community contributors! Whether it's adding new features, improving code, or enhancing documentation, your contributions drive scikit-bio and open-source bioinformatics forward. Start your journey by reading the contributor's guidelines.
+Wanna contribute? We enthusiastically welcome community contributors! Whether it's adding new features, improving code, or enhancing documentation, your contributions drive scikit-bio and open-source bioinformatics forward. Start your journey by reading the :doc:`Contributor's guidelines <contribute>`.
 
 
 Funding
 -------
 
-The development of scikit-bio is currently supported by the U.S. Department of Energy, Office of Science under award number DE-SC0024320, awarded to Dr. Qiyun Zhu at ASU (lead PI), Dr. James Morton at Gutz Analytics, and Dr. Rob Knight at UCSD.
+The development of scikit-bio is currently supported by the U.S. Department of Energy, Office of Science under award number `DE-SC0024320 <https://genomicscience.energy.gov/compbioawards2023/#Expanding>`_, awarded to Dr. Qiyun Zhu at ASU (lead PI), Dr. James Morton at Gutz Analytics, and Dr. Rob Knight at UCSD.
 
 .. image:: _static/img/doe_logo_green.png
    :class: only-light

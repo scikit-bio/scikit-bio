@@ -45,6 +45,19 @@ class TestSubstitutionMatrix(TestCase):
         # scores is an alias of data
         assert_array_equal(obs.scores, obs.data)
 
+        # character to index mapping
+        self.assertDictEqual(obs._char_map, dict(zip(
+            alphabet, range(len(alphabet)))))
+
+        # alphabet can be encoded as ASCII characters
+        self.assertTrue(obs._is_ascii)
+
+        # hash table of ASCII characters
+        self.assertTrue(isinstance(obs._char_hash, np.ndarray))
+        self.assertTrue(obs._char_hash.dtype.type is np.uint8)
+        for i, char in enumerate(alphabet):
+            self.assertEqual(i, obs._char_hash[ord(char)])
+
     def test_init_alt_alphabet(self):
         # alternative formats of alphabet: list, dictionary (only keys matter),
         # and iterator

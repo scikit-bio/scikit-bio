@@ -8,7 +8,8 @@
 
 
 class SkbioWarning(Warning):
-    """Used to filter our warnings from warnings given by 3rd parties"""
+    """Filter our warnings from warnings given by 3rd parties."""
+
     pass
 
 
@@ -22,6 +23,7 @@ class EfficiencyWarning(SkbioWarning):
     potentially orders of magnitude slower.
 
     """
+
     pass
 
 
@@ -34,9 +36,11 @@ class RepresentationWarning(SkbioWarning):
     deleterious value could be used, accompanied by this warning.
 
     """
+
     pass
 
 
 class DeprecationWarning(DeprecationWarning, SkbioWarning):
     """Used to indicate deprecated functionality in scikit-bio."""
+
     pass

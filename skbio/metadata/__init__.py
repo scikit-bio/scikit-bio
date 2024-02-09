@@ -1,5 +1,4 @@
-r"""
-Metadata (:mod:`skbio.metadata`)
+r"""Metadata (:mod:`skbio.metadata`)
 ================================
 
 .. currentmodule:: skbio.metadata
@@ -26,4 +25,4 @@ Classes
 
 from ._interval import Interval, IntervalMetadata
 
-__all__ = ['Interval', 'IntervalMetadata']
+__all__ = ["Interval", "IntervalMetadata"]

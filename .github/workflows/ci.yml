@@ -7,8 +7,8 @@ on:
     branches: [ master ]
 
 env:
-  latest_python: "3.11"
-  supported_pythons: '["3.8", "3.9", "3.10", "3.11"]'
+  latest_python: "3.12"
+  supported_pythons: '["3.8", "3.9", "3.10", "3.11", "3.12"]'
   miniforge_version: "22.9.0-2"
   miniforge_variant: "Mambaforge"
 
@@ -45,9 +45,10 @@ jobs:
         run: |
           pip install -r ci/requirements.lint.txt
           conda list
-      - name: Run linter
+      - name: Run Ruff
         shell: bash -l {0}
-        run: USE_CYTHON=False make lint
+        run: |
+          ruff check --output-format=github .
 
   doc:
     name: Build Documentation  (${{ needs.conf.outputs.latest_python }}, ubuntu-latest)

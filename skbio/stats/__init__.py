@@ -1,5 +1,4 @@
-"""
-Statistics (:mod:`skbio.stats`)
+"""Statistics (:mod:`skbio.stats`)
 ===============================
 
 .. currentmodule:: skbio.stats
@@ -41,4 +40,4 @@ Functions
 
 from ._subsample import subsample_counts, isubsample
 
-__all__ = ['subsample_counts', 'isubsample']
+__all__ = ["subsample_counts", "isubsample"]

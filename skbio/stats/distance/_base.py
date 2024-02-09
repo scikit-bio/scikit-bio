@@ -26,11 +26,13 @@ from ._utils import distmat_reorder, distmat_reorder_condensed
 
 class DissimilarityMatrixError(Exception):
     """General error for dissimilarity matrix validation failures."""
+
     pass
 
 
 class DistanceMatrixError(DissimilarityMatrixError):
     """General error for distance matrix validation failures."""
+
     pass
 
 
@@ -39,8 +41,7 @@ class MissingIDError(DissimilarityMatrixError):
 
     def __init__(self, missing_id):
         super(MissingIDError, self).__init__()
-        self.args = ("The ID '%s' is not in the dissimilarity matrix." %
-                     missing_id,)
+        self.args = ("The ID '%s' is not in the dissimilarity matrix." % missing_id,)
 
 
 class DissimilarityMatrix(SkbioObject, PlottableMixin):
@@ -92,9 +93,10 @@ class DissimilarityMatrix(SkbioObject, PlottableMixin):
     .. [1] http://docs.scipy.org/doc/scipy/reference/spatial.distance.html
 
     """
-    default_write_format = 'lsmat'
+
+    default_write_format = "lsmat"
     # Used in __str__
-    _matrix_element_name = 'dissimilarity'
+    _matrix_element_name = "dissimilarity"
 
     @experimental(as_of="0.4.0")
     def __init__(self, data, ids=None, validate=True):
@@ -134,14 +136,14 @@ class DissimilarityMatrix(SkbioObject, PlottableMixin):
                 _issue_copy = False
 
         if _issue_copy:
-            data = np.asarray(data, dtype='float')
+            data = np.asarray(data, dtype="float")
 
         if data.ndim == 1:
             # We can assume squareform will return a symmetric square matrix
             # so no need for full validation.
             # Still do basic checks (e.g. zero length)
             # and id validation
-            data = squareform(data, force='tomatrix', checks=False)
+            data = squareform(data, force="tomatrix", checks=False)
             validate_full = False
             validate_shape = True
             validate_ids = True
@@ -199,8 +201,7 @@ class DissimilarityMatrix(SkbioObject, PlottableMixin):
         """
         iterable = list(iterable)
         if key is not None and keys is not None:
-            raise ValueError("Cannot use both `key` and `keys` at the same"
-                             " time.")
+            raise ValueError("Cannot use both `key` and `keys` at the same" " time.")
 
         keys_ = None
         if key is not None:
@@ -311,9 +312,7 @@ class DissimilarityMatrix(SkbioObject, PlottableMixin):
 
         """
         # Note: Skip validation, since we assume self was already validated
-        return self.__class__(self.data.T.copy(),
-                              deepcopy(self.ids),
-                              validate=False)
+        return self.__class__(self.data.T.copy(), deepcopy(self.ids), validate=False)
 
     @experimental(as_of="0.4.0")
     def index(self, lookup_id):
@@ -380,9 +379,7 @@ class DissimilarityMatrix(SkbioObject, PlottableMixin):
         # We deepcopy IDs in case the tuple contains mutable objects at some
         # point in the future.
         # Note: Skip validation, since we assume self was already validated
-        return self.__class__(self.data.copy(),
-                              deepcopy(self.ids),
-                              validate=False)
+        return self.__class__(self.data.copy(), deepcopy(self.ids), validate=False)
 
     @experimental(as_of="0.4.0")
     def filter(self, ids, strict=True):
@@ -408,6 +405,7 @@ class DissimilarityMatrix(SkbioObject, PlottableMixin):
         ------
         MissingIDError
             If an ID in `ids` is not in the object's list of IDs.
+
         """
         if tuple(self._ids) == tuple(ids):
             return self.__class__(self._data, self._ids)
@@ -434,7 +432,7 @@ class DissimilarityMatrix(SkbioObject, PlottableMixin):
         return self.__class__(filtered_data, ids, validate=False)
 
     def _stable_order(self, ids):
-        """Obtain a stable ID order with respect to self
+        """Obtain a stable ID order with respect to self.
 
         Parameters
         ----------
@@ -445,13 +443,14 @@ class DissimilarityMatrix(SkbioObject, PlottableMixin):
         -------
         np.array, dtype=int
             The corresponding index values
+
         """
         id_order = sorted(self._id_index[i] for i in ids)
         return np.array(id_order, dtype=int)
 
     @experimental(as_of="0.5.5")
     def within(self, ids):
-        """Obtain all the distances among the set of IDs
+        """Obtain all the distances among the set of IDs.
 
         Parameters
         ----------
@@ -496,18 +495,20 @@ class DissimilarityMatrix(SkbioObject, PlottableMixin):
         6  C  A    2.0
         7  C  B    1.0
         8  C  C    0.0
+
         """
         ids = set(ids)
         not_present = ids - set(self._id_index)
         if not_present:
-            raise MissingIDError("At least one ID (e.g., '%s') was not "
-                                 "found." % not_present.pop())
+            raise MissingIDError(
+                "At least one ID (e.g., '%s') was not " "found." % not_present.pop()
+            )
 
         return self._subset_to_dataframe(ids, ids)
 
     @experimental(as_of="0.5.5")
     def between(self, from_, to_, allow_overlap=False):
-        """Obtain the distances between the two groups of IDs
+        """Obtain the distances between the two groups of IDs.
 
         Parameters
         ----------
@@ -554,6 +555,7 @@ class DissimilarityMatrix(SkbioObject, PlottableMixin):
         3  B  C    1.0
         4  B  D    2.0
         5  B  E    3.0
+
         """
         from_ = set(from_)
         to_ = set(to_)
@@ -561,19 +563,22 @@ class DissimilarityMatrix(SkbioObject, PlottableMixin):
         all_ids = from_ | to_
         not_present = all_ids - set(self._id_index)
         if not_present:
-            raise MissingIDError("At least one ID (e.g., '%s') was not "
-                                 "found." % not_present.pop())
+            raise MissingIDError(
+                "At least one ID (e.g., '%s') was not " "found." % not_present.pop()
+            )
 
         overlapping = from_ & to_
         if not allow_overlap and overlapping:
-            raise KeyError("At least one ID overlaps in from_ and to_ "
-                           "(e.g., '%s'). This constraint can removed with "
-                           "allow_overlap=True." % overlapping.pop())
+            raise KeyError(
+                "At least one ID overlaps in from_ and to_ "
+                "(e.g., '%s'). This constraint can removed with "
+                "allow_overlap=True." % overlapping.pop()
+            )
 
         return self._subset_to_dataframe(from_, to_)
 
     def _subset_to_dataframe(self, i_ids, j_ids):
-        """Extract a subset of self and express as a DataFrame
+        """Extract a subset of self and express as a DataFrame.
 
         Parameters
         ----------
@@ -592,6 +597,7 @@ class DissimilarityMatrix(SkbioObject, PlottableMixin):
         pd.DataFrame
             (i, j, value) representing the source ID ("i"), the target ID ("j")
             and the distance ("value").
+
         """
         i_indices = self._stable_order(i_ids)
         j_indices = self._stable_order(j_ids)
@@ -614,15 +620,15 @@ class DissimilarityMatrix(SkbioObject, PlottableMixin):
             subset = self._data[i_idx, j_indices]
             values.append(subset)
 
-        i = pd.Series(i, name='i', dtype=str)
-        j = pd.Series(j, name='j', dtype=str)
-        values = pd.Series(np.hstack(values), name='value')
+        i = pd.Series(i, name="i", dtype=str)
+        j = pd.Series(j, name="j", dtype=str)
+        values = pd.Series(np.hstack(values), name="value")
 
         return pd.concat([i, j, values], axis=1)
 
     @experimental(as_of="0.4.0")
     def plot(self, cmap=None, title=""):
-        """Creates a heatmap of the dissimilarity matrix
+        """Create a heatmap of the dissimilarity matrix.
 
         Parameters
         ----------
@@ -726,9 +732,12 @@ class DissimilarityMatrix(SkbioObject, PlottableMixin):
             String representation of the dissimilarity matrix.
 
         """
-        return '%dx%d %s matrix\nIDs:\n%s\nData:\n' % (
-            self.shape[0], self.shape[1], self._matrix_element_name,
-            _pprint_strs(self.ids)) + str(self.data)
+        return "%dx%d %s matrix\nIDs:\n%s\nData:\n" % (
+            self.shape[0],
+            self.shape[1],
+            self._matrix_element_name,
+            _pprint_strs(self.ids),
+        ) + str(self.data)
 
     @experimental(as_of="0.4.0")
     def __eq__(self, other):
@@ -872,8 +881,8 @@ class DissimilarityMatrix(SkbioObject, PlottableMixin):
     def _validate_ids(self, data, ids):
         """Validate the IDs.
 
-        Checks that IDs are unique and that the
-        number of IDs matches the number of rows/cols in the data array.
+        Checks that IDs are unique and that the number of IDs matches the
+        number of rows/cols in the data array.
 
         Subclasses can override this method to perform different/more specific
         validation.
@@ -888,18 +897,19 @@ class DissimilarityMatrix(SkbioObject, PlottableMixin):
         """
         duplicates = find_duplicates(ids)
         if duplicates:
-            formatted_duplicates = ', '.join(repr(e) for e in duplicates)
-            raise DissimilarityMatrixError("IDs must be unique. Found the "
-                                           "following duplicate IDs: %s" %
-                                           formatted_duplicates)
+            formatted_duplicates = ", ".join(repr(e) for e in duplicates)
+            raise DissimilarityMatrixError(
+                "IDs must be unique. Found the "
+                "following duplicate IDs: %s" % formatted_duplicates
+            )
         if 0 == len(ids):
-            raise DissimilarityMatrixError("IDs must be at least 1 in "
-                                           "size.")
+            raise DissimilarityMatrixError("IDs must be at least 1 in " "size.")
         if len(ids) != data.shape[0]:
-            raise DissimilarityMatrixError("The number of IDs (%d) must match "
-                                           "the number of rows/columns in the "
-                                           "data (%d)." %
-                                           (len(ids), data.shape[0]))
+            raise DissimilarityMatrixError(
+                "The number of IDs (%d) must match "
+                "the number of rows/columns in the "
+                "data (%d)." % (len(ids), data.shape[0])
+            )
 
     def _validate_shape(self, data):
         """Validate the data array shape.
@@ -916,18 +926,19 @@ class DissimilarityMatrix(SkbioObject, PlottableMixin):
 
         """
         if 0 in data.shape:
-            raise DissimilarityMatrixError("Data must be at least 1x1 in "
-                                           "size.")
+            raise DissimilarityMatrixError("Data must be at least 1x1 in " "size.")
         if len(data.shape) != 2:
-            raise DissimilarityMatrixError("Data must have exactly two "
-                                           "dimensions.")
+            raise DissimilarityMatrixError("Data must have exactly two " "dimensions.")
         if data.shape[0] != data.shape[1]:
-            raise DissimilarityMatrixError("Data must be square (i.e., have "
-                                           "the same number of rows and "
-                                           "columns).")
+            raise DissimilarityMatrixError(
+                "Data must be square (i.e., have "
+                "the same number of rows and "
+                "columns)."
+            )
         if data.dtype not in (np.float32, np.float64):
-            raise DissimilarityMatrixError("Data must contain only floating "
-                                           "point values.")
+            raise DissimilarityMatrixError(
+                "Data must contain only floating " "point values."
+            )
 
     def _validate(self, data, ids):
         """Validate the data array and IDs.
@@ -954,9 +965,11 @@ class DissimilarityMatrix(SkbioObject, PlottableMixin):
         return {id_: idx for idx, id_ in enumerate(list_)}
 
     def _is_id_pair(self, index):
-        return (isinstance(index, tuple) and
-                len(index) == 2 and
-                all(map(lambda e: isinstance(e, str), index)))
+        return (
+            isinstance(index, tuple)
+            and len(index) == 2
+            and all(map(lambda e: isinstance(e, str), index))
+        )
 
 
 class DistanceMatrix(DissimilarityMatrix):
@@ -991,12 +1004,11 @@ class DistanceMatrix(DissimilarityMatrix):
     """
 
     # Override here, used in superclass __str__
-    _matrix_element_name = 'distance'
+    _matrix_element_name = "distance"
 
     @classonlymethod
     @experimental(as_of="0.4.1")
-    def from_iterable(cls, iterable, metric, key=None, keys=None,
-                      validate=True):
+    def from_iterable(cls, iterable, metric, key=None, keys=None, validate=True):
         """Create DistanceMatrix from all pairs in an iterable given a metric.
 
         Parameters
@@ -1036,13 +1048,11 @@ class DistanceMatrix(DissimilarityMatrix):
 
         """
         if validate:
-            return super(DistanceMatrix, cls).from_iterable(iterable, metric,
-                                                            key, keys)
+            return super(DistanceMatrix, cls).from_iterable(iterable, metric, key, keys)
 
         iterable = list(iterable)
         if key is not None and keys is not None:
-            raise ValueError("Cannot use both `key` and `keys` at the same"
-                             " time.")
+            raise ValueError("Cannot use both `key` and `keys` at the same" " time.")
 
         keys_ = None
         if key is not None:
@@ -1078,7 +1088,7 @@ class DistanceMatrix(DissimilarityMatrix):
         .. [1] http://docs.scipy.org/doc/scipy/reference/spatial.distance.html
 
         """
-        return squareform(self._data, force='tovector', checks=False)
+        return squareform(self._data, force="tovector", checks=False)
 
     @experimental(as_of="0.4.0")
     def permute(self, condensed=False):
@@ -1135,12 +1145,12 @@ class DistanceMatrix(DissimilarityMatrix):
         data_sym, data_hol = is_symmetric_and_hollow(data)
 
         if not data_sym:
-            raise DistanceMatrixError(
-                "Data must be symmetric and cannot contain NaNs.")
+            raise DistanceMatrixError("Data must be symmetric and cannot contain NaNs.")
 
         if not data_hol:
-            raise DistanceMatrixError("Data must be hollow (i.e., the diagonal"
-                                      " can only contain zeros).")
+            raise DistanceMatrixError(
+                "Data must be hollow (i.e., the diagonal" " can only contain zeros)."
+            )
 
     @experimental(as_of="0.5.1")
     def to_series(self):
@@ -1251,6 +1261,7 @@ def randdm(num_objects, ids=None, constructor=None, random_fn=None):
 
 # helper functions for anosim and permanova
 
+
 def _preprocess_input_sng(ids, sample_size, grouping, column):
     """Compute intermediate results not affected by permutations.
 
@@ -1264,8 +1275,7 @@ def _preprocess_input_sng(ids, sample_size, grouping, column):
     """
     if isinstance(grouping, pd.DataFrame):
         if column is None:
-            raise ValueError(
-                "Must provide a column name if supplying a DataFrame.")
+            raise ValueError("Must provide a column name if supplying a DataFrame.")
         else:
             grouping = _df_to_vector(ids, grouping, column)
     elif isinstance(grouping, pd.Series):
@@ -1275,16 +1285,15 @@ def _preprocess_input_sng(ids, sample_size, grouping, column):
                 " providing column at all."
             )
         else:
-            grouping = _df_to_vector(ids, grouping.to_frame(),
-                                     column=grouping.name)
+            grouping = _df_to_vector(ids, grouping.to_frame(), column=grouping.name)
     elif column is not None:
-        raise ValueError(
-            "Must provide a DataFrame if supplying a column name.")
+        raise ValueError("Must provide a DataFrame if supplying a column name.")
 
     if len(grouping) != sample_size:
         raise ValueError(
             "Grouping vector size must match the number of IDs in the "
-            "distance matrix.")
+            "distance matrix."
+        )
 
     # Find the group labels and convert grouping to an integer vector
     # (factor).
@@ -1296,13 +1305,15 @@ def _preprocess_input_sng(ids, sample_size, grouping, column):
             "All values in the grouping vector are unique. This method cannot "
             "operate on a grouping vector with only unique values (e.g., "
             "there are no 'within' distances because each group of objects "
-            "contains only a single object).")
+            "contains only a single object)."
+        )
     if num_groups == 1:
         raise ValueError(
             "All values in the grouping vector are the same. This method "
             "cannot operate on a grouping vector with only a single group of "
             "objects (e.g., there are no 'between' distances because there is "
-            "only a single group).")
+            "only a single group)."
+        )
 
     return num_groups, grouping
 
@@ -1322,8 +1333,9 @@ def _preprocess_input(distance_matrix, grouping, column):
         raise TypeError("Input must be a DistanceMatrix.")
     sample_size = distance_matrix.shape[0]
 
-    num_groups, grouping = _preprocess_input_sng(distance_matrix.ids,
-                                                 sample_size, grouping, column)
+    num_groups, grouping = _preprocess_input_sng(
+        distance_matrix.ids, sample_size, grouping, column
+    )
 
     tri_idxs = np.triu_indices(sample_size, k=1)
     distances = distance_matrix.condensed_form()
@@ -1363,8 +1375,8 @@ def _df_to_vector(ids, df, column):
     grouping = df.reindex(ids, axis=0).loc[:, column]
     if grouping.isnull().any():
         raise ValueError(
-            "One or more IDs in the distance matrix are not in the data "
-            "frame.")
+            "One or more IDs in the distance matrix are not in the data " "frame."
+        )
     return grouping.tolist()
 
 
@@ -1372,7 +1384,8 @@ def _run_monte_carlo_stats(test_stat_function, grouping, permutations):
     """Run stat test and compute significance with Monte Carlo permutations."""
     if permutations < 0:
         raise ValueError(
-            "Number of permutations must be greater than or equal to zero.")
+            "Number of permutations must be greater than or equal to zero."
+        )
 
     stat = test_stat_function(grouping)
 
@@ -1389,13 +1402,28 @@ def _run_monte_carlo_stats(test_stat_function, grouping, permutations):
     return stat, p_value
 
 
-def _build_results(method_name, test_stat_name, sample_size, num_groups, stat,
-                   p_value, permutations):
+def _build_results(
+    method_name, test_stat_name, sample_size, num_groups, stat, p_value, permutations
+):
     """Return ``pandas.Series`` containing results of statistical test."""
     return pd.Series(
-        data=[method_name, test_stat_name, sample_size, num_groups, stat,
-              p_value, permutations],
-        index=['method name', 'test statistic name', 'sample size',
-               'number of groups', 'test statistic', 'p-value',
-               'number of permutations'],
-        name='%s results' % method_name)
+        data=[
+            method_name,
+            test_stat_name,
+            sample_size,
+            num_groups,
+            stat,
+            p_value,
+            permutations,
+        ],
+        index=[
+            "method name",
+            "test statistic name",
+            "sample size",
+            "number of groups",
+            "test statistic",
+            "p-value",
+            "number of permutations",
+        ],
+        name="%s results" % method_name,
+    )

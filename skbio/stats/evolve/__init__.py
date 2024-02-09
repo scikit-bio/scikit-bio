@@ -1,5 +1,4 @@
-"""
-Evolutionary statistics (:mod:`skbio.stats.evolve`)
+"""Evolutionary statistics (:mod:`skbio.stats.evolve`)
 ===================================================
 
 .. currentmodule:: skbio.stats.evolve
@@ -32,4 +31,4 @@ Functions
 
 from ._hommola import hommola_cospeciation
 
-__all__ = ['hommola_cospeciation']
+__all__ = ["hommola_cospeciation"]
