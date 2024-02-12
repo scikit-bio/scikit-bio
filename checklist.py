@@ -411,8 +411,7 @@ class APIRegressionValidator(RepoValidator):
     reason = "The following tests import `A` but should import `B`" " (file: A => B):"
 
     def __init__(self):
-        """Initialize object for tests importing from non-minimized subpackage
-        hierarchy."""
+        """Initialize object for tests importing from non-minimized hierarchy."""
         self._imports = {}
 
     def _validate(self, root, dirs, files):
