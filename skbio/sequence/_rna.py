@@ -125,9 +125,21 @@ class RNA(GrammaredSequence, NucleotideMixin):
     @overrides(NucleotideMixin)
     def complement_map(cls):
         comp_map = {
-            'A': 'U', 'U': 'A', 'G': 'C', 'C': 'G', 'Y': 'R', 'R': 'Y',
-            'S': 'S', 'W': 'W', 'K': 'M', 'M': 'K', 'B': 'V', 'D': 'H',
-            'H': 'D', 'V': 'B', 'N': 'N'
+            "A": "U",
+            "U": "A",
+            "G": "C",
+            "C": "G",
+            "Y": "R",
+            "R": "Y",
+            "S": "S",
+            "W": "W",
+            "K": "M",
+            "M": "K",
+            "B": "V",
+            "D": "H",
+            "H": "D",
+            "V": "B",
+            "N": "N",
         }
 
         comp_map.update({c: c for c in cls.gap_chars})
@@ -142,20 +154,33 @@ class RNA(GrammaredSequence, NucleotideMixin):
     @overrides(GrammaredSequence)
     def degenerate_map(cls):
         return {
-            "R": set("AG"), "Y": set("CU"), "M": set("AC"), "K": set("UG"),
-            "W": set("AU"), "S": set("GC"), "B": set("CGU"), "D": set("AGU"),
-            "H": set("ACU"), "V": set("ACG"), "N": set("ACGU")
+            "R": set("AG"),
+            "Y": set("CU"),
+            "M": set("AC"),
+            "K": set("UG"),
+            "W": set("AU"),
+            "S": set("GC"),
+            "B": set("CGU"),
+            "D": set("AGU"),
+            "H": set("ACU"),
+            "V": set("ACG"),
+            "N": set("ACGU"),
         }
 
     @classproperty
     @overrides(GrammaredSequence)
     def default_gap_char(cls):
-        return '-'
+        return "-"
 
     @classproperty
     @overrides(GrammaredSequence)
     def gap_chars(cls):
-        return set('-.')
+        return set("-.")
+
+    @classproperty
+    @overrides(GrammaredSequence)
+    def wildcard_char(cls):
+        return "N"
 
     @property
     def _motifs(self):
@@ -212,8 +237,9 @@ class RNA(GrammaredSequence, NucleotideMixin):
             GC-content: 25.00%
         --------------------------
         0 TAACGTTA
+
         """
-        seq = self._string.replace(b'U', b'T')
+        seq = self._string.replace(b"U", b"T")
 
         metadata = None
         if self.has_metadata():
@@ -228,10 +254,13 @@ class RNA(GrammaredSequence, NucleotideMixin):
             interval_metadata = self.interval_metadata
 
         # turn off validation because `seq` is guaranteed to be valid
-        return skbio.DNA(seq, metadata=metadata,
-                         positional_metadata=positional_metadata,
-                         interval_metadata=interval_metadata,
-                         validate=False)
+        return skbio.DNA(
+            seq,
+            metadata=metadata,
+            positional_metadata=positional_metadata,
+            interval_metadata=interval_metadata,
+            validate=False,
+        )
 
     @stable(as_of="0.4.0")
     def translate(self, genetic_code=1, *args, **kwargs):
@@ -438,7 +467,7 @@ class RNA(GrammaredSequence, NucleotideMixin):
     def _repr_stats(self):
         """Define custom statistics to display in the sequence's repr."""
         stats = super(RNA, self)._repr_stats()
-        stats.append(('GC-content', '{:.2%}'.format(self.gc_content())))
+        stats.append(("GC-content", "{:.2%}".format(self.gc_content())))
         return stats
 
 

@@ -9,9 +9,9 @@
 
 # Add skbio.io to sys.modules to prevent cycles in our imports
 import skbio.io  # noqa
+
 # imports included for convenience
-from skbio.sequence import (
-    Sequence, DNA, RNA, Protein, GeneticCode, SubstitutionMatrix)
+from skbio.sequence import Sequence, DNA, RNA, Protein, GeneticCode, SubstitutionMatrix
 from skbio.stats.distance import DistanceMatrix
 from skbio.alignment import local_pairwise_align_ssw, TabularMSA
 from skbio.tree import TreeNode, nj
@@ -20,13 +20,25 @@ from skbio.stats.ordination import OrdinationResults
 import skbio.diversity  # noqa
 import skbio.stats.evolve  # noqa
 
-__all__ = ['Sequence', 'DNA', 'RNA', 'Protein', 'GeneticCode',
-           'SubstitutionMatrix', 'DistanceMatrix', 'TabularMSA',
-           'local_pairwise_align_ssw', 'TreeNode', 'nj', 'read', 'write',
-           'OrdinationResults']
+__all__ = [
+    "Sequence",
+    "DNA",
+    "RNA",
+    "Protein",
+    "GeneticCode",
+    "SubstitutionMatrix",
+    "DistanceMatrix",
+    "TabularMSA",
+    "local_pairwise_align_ssw",
+    "TreeNode",
+    "nj",
+    "read",
+    "write",
+    "OrdinationResults",
+]
 
 __credits__ = "https://github.com/scikit-bio/scikit-bio/graphs/contributors"
-__version__ = "0.5.9"
+__version__ = "0.6.0-dev"
 
 
 mottos = [
@@ -75,7 +87,4 @@ art = r"""
                        Cyanobacteria
 """
 
-if __doc__ is None:
-    __doc__ = title + art
-else:
-    __doc__ = title + art + __doc__
+__doc__ = title + art + (__doc__ or "")

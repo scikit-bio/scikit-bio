@@ -1,5 +1,4 @@
-r"""
-Empty Files (:mod:`skbio.io.format.emptyfile`)
+r"""Empty Files (:mod:`skbio.io.format.emptyfile`)
 ==============================================
 
 .. currentmodule:: skbio.io.format.emptyfile
@@ -29,7 +28,7 @@ An empty file consists of only whitespace characters.
 
 from skbio.io import create_format
 
-emptyfile = create_format('<emptyfile>')
+emptyfile = create_format("<emptyfile>")
 
 
 @emptyfile.sniffer()

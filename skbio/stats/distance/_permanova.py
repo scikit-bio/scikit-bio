@@ -10,8 +10,12 @@ from functools import partial
 
 import numpy as np
 
-from ._base import (_preprocess_input_sng, _run_monte_carlo_stats,
-                    _build_results, DistanceMatrix)
+from ._base import (
+    _preprocess_input_sng,
+    _run_monte_carlo_stats,
+    _build_results,
+    DistanceMatrix,
+)
 from skbio.util._decorator import experimental
 from ._cutils import permanova_f_stat_sW_cy
 
@@ -96,7 +100,8 @@ def permanova(distance_matrix, grouping, column=None, permutations=999):
     sample_size = distance_matrix.shape[0]
 
     num_groups, grouping = _preprocess_input_sng(
-        distance_matrix.ids, sample_size, grouping, column)
+        distance_matrix.ids, sample_size, grouping, column
+    )
 
     # Calculate number of objects in each group.
     group_sizes = np.bincount(grouping)
@@ -105,22 +110,22 @@ def permanova(distance_matrix, grouping, column=None, permutations=999):
     # so cut in half
     s_T /= 2.0
 
-    test_stat_function = partial(_compute_f_stat, sample_size, num_groups,
-                                 distance_matrix, group_sizes, s_T)
-    stat, p_value = _run_monte_carlo_stats(test_stat_function, grouping,
-                                           permutations)
+    test_stat_function = partial(
+        _compute_f_stat, sample_size, num_groups, distance_matrix, group_sizes, s_T
+    )
+    stat, p_value = _run_monte_carlo_stats(test_stat_function, grouping, permutations)
 
-    return _build_results('PERMANOVA', 'pseudo-F', sample_size, num_groups,
-                          stat, p_value, permutations)
+    return _build_results(
+        "PERMANOVA", "pseudo-F", sample_size, num_groups, stat, p_value, permutations
+    )
 
 
-def _compute_f_stat(sample_size, num_groups, distance_matrix, group_sizes,
-                    s_T, grouping):
+def _compute_f_stat(
+    sample_size, num_groups, distance_matrix, group_sizes, s_T, grouping
+):
     """Compute PERMANOVA pseudo-F statistic."""
-
     # Calculate s_W for each group, accounting for different group sizes.
-    s_W = permanova_f_stat_sW_cy(distance_matrix.data,
-                                 group_sizes, grouping)
+    s_W = permanova_f_stat_sW_cy(distance_matrix.data, group_sizes, grouping)
 
     s_A = s_T - s_W
     return (s_A / (num_groups - 1)) / (s_W / (sample_size - num_groups))

@@ -8,5 +8,5 @@
 
 from skbio.util import pytestrunner
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     pytestrunner()

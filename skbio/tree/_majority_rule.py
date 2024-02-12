@@ -15,7 +15,7 @@ from skbio.util._decorator import experimental
 
 
 def _walk_clades(trees, weights):
-    """Walk all the clades of all the trees
+    """Walk all the clades of all the trees.
 
     Parameters
     ----------
@@ -45,7 +45,7 @@ def _walk_clades(trees, weights):
         return [n.name] if n.is_tip() else []
 
     for tree, weight in zip(trees, weights):
-        tree.cache_attr(tipnames_f, 'tip_names', frozenset)
+        tree.cache_attr(tipnames_f, "tip_names", frozenset)
 
         for node in tree.postorder():
             tip_names = node.tip_names
@@ -61,14 +61,13 @@ def _walk_clades(trees, weights):
                 edge_lengths[tip_names] += length / total
 
     # sort clades by number times observed
-    clade_counts = sorted(clade_counts.items(), key=lambda x: len(x[0]),
-                          reverse=True)
+    clade_counts = sorted(clade_counts.items(), key=lambda x: len(x[0]), reverse=True)
 
     return clade_counts, edge_lengths
 
 
 def _filter_clades(clade_counts, cutoff_threshold):
-    """Filter clades that not well supported or are contradicted
+    """Filter clades that not well supported or are contradicted.
 
     Parameters
     ----------
@@ -85,6 +84,7 @@ def _filter_clades(clade_counts, cutoff_threshold):
     dict
         A dict of the accepted clades, keyed by the frozenset of the clade and
         valued by the support value.
+
     """
     accepted_clades = {}
 
@@ -114,7 +114,7 @@ def _filter_clades(clade_counts, cutoff_threshold):
 
 
 def _build_trees(clade_counts, edge_lengths, support_attr, tree_node_class):
-    """Construct the trees with support
+    """Construct the trees with support.
 
     Parameters
     ----------
@@ -133,6 +133,7 @@ def _build_trees(clade_counts, edge_lengths, support_attr, tree_node_class):
     -------
     list of tree_node_class instances
         A list of the constructed trees
+
     """
     nodes = {}
     queue = [(len(clade), clade) for clade in clade_counts]
@@ -144,7 +145,7 @@ def _build_trees(clade_counts, edge_lengths, support_attr, tree_node_class):
         new_queue = []
 
         # search for ancestors of clade
-        for (_, ancestor) in queue:
+        for _, ancestor in queue:
             if clade.issubset(ancestor):
                 # update ancestor such that, in the following example:
                 # ancestor == {1, 2, 3, 4}
@@ -180,9 +181,10 @@ def _build_trees(clade_counts, edge_lengths, support_attr, tree_node_class):
 
 
 @experimental(as_of="0.4.0")
-def majority_rule(trees, weights=None, cutoff=0.5, support_attr='support',
-                  tree_node_class=TreeNode):
-    r"""Determines consensus trees from a list of rooted trees
+def majority_rule(
+    trees, weights=None, cutoff=0.5, support_attr="support", tree_node_class=TreeNode
+):
+    r"""Determine consensus trees from a list of rooted trees.
 
     Parameters
     ----------
@@ -285,7 +287,6 @@ def majority_rule(trees, weights=None, cutoff=0.5, support_attr='support',
 
     clade_counts, edge_lengths = _walk_clades(trees, weights)
     clade_counts = _filter_clades(clade_counts, cutoff_threshold)
-    trees = _build_trees(clade_counts, edge_lengths, support_attr,
-                         tree_node_class)
+    trees = _build_trees(clade_counts, edge_lengths, support_attr, tree_node_class)
 
     return trees
