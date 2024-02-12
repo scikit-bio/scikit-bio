@@ -302,7 +302,7 @@ class GrammaredSequence(Sequence, metaclass=GrammaredSequenceMeta):
         raise NotImplementedError
 
     @classproperty
-    @experimental(as_of="0.5.10")
+    @experimental(as_of="0.6.0")
     def wildcard_char(cls):
         """Return wildcard character.
 

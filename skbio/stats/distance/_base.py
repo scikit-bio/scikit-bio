@@ -477,8 +477,8 @@ class DissimilarityMatrix(SkbioObject, PlottableMixin):
         ['a', 'b'] is equivalent to ['b', 'a']. The order is with respect
         to the order of the .ids attribute of self.
 
-        Example
-        -------
+        Examples
+        --------
         >>> from skbio.stats.distance import DissimilarityMatrix
         >>> dm = DissimilarityMatrix([[0, 1, 2, 3, 4], [1, 0, 1, 2, 3],
         ...                           [2, 1, 0, 1, 2], [3, 2, 1, 0, 1],
@@ -540,8 +540,8 @@ class DissimilarityMatrix(SkbioObject, PlottableMixin):
         ['a', 'b'] is equivalent to ['b', 'a']. The order is with respect to
         the .ids attribute of self.
 
-        Example
-        -------
+        Examples
+        --------
         >>> from skbio.stats.distance import DissimilarityMatrix
         >>> dm = DissimilarityMatrix([[0, 1, 2, 3, 4], [1, 0, 1, 2, 3],
         ...                           [2, 1, 0, 1, 2], [3, 2, 1, 0, 1],

@@ -10,11 +10,11 @@ Functions
 ---------
 
 .. autosummary::
-    :toctree: generated/
+   :toctree:
 
-    open
-    open_file
-    open_files
+   open
+   open_file
+   open_files
 
 """
 

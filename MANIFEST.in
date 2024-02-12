@@ -5,14 +5,15 @@ include pyproject.toml
 include README.rst
 include simde-sse2.h
 
-graft assets
 graft ci
 graft doc
 graft licenses
+graft logos
 graft skbio
 
 prune doc/build
 prune doc/source/generated
+prune web/_build
 
 global-exclude *.pyc
 global-exclude *.pyo

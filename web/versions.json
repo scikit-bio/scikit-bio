@@ -1,0 +1,34 @@
+[
+  {
+    "name": "dev",
+    "version": "dev",
+    "url": "https://scikit.bio/docs/dev/index.html"
+  },
+  {
+    "name": "latest",
+    "version": "0.5.9",
+    "url": "https://scikit.bio/docs/latest/index.html"
+  },
+  { "version": "0.5.9", "url": "https://scikit.bio/docs/0.5.9/index.html" },
+  { "version": "0.5.8", "url": "https://scikit.bio/docs/0.5.8/index.html" },
+  { "version": "0.5.7", "url": "https://scikit.bio/docs/0.5.7/index.html" },
+  { "version": "0.5.6", "url": "https://scikit.bio/docs/0.5.6/index.html" },
+  { "version": "0.5.5", "url": "https://scikit.bio/docs/0.5.5/index.html" },
+  { "version": "0.5.4", "url": "https://scikit.bio/docs/0.5.4/index.html" },
+  { "version": "0.5.3", "url": "https://scikit.bio/docs/0.5.3/index.html" },
+  { "version": "0.5.2", "url": "https://scikit.bio/docs/0.5.2/index.html" },
+  { "version": "0.5.1", "url": "https://scikit.bio/docs/0.5.1/index.html" },
+  { "version": "0.5.0", "url": "https://scikit.bio/docs/0.5.0/index.html" },
+  { "version": "0.4.2", "url": "https://scikit.bio/docs/0.4.2/index.html" },
+  { "version": "0.4.1", "url": "https://scikit.bio/docs/0.4.1/index.html" },
+  { "version": "0.4.0", "url": "https://scikit.bio/docs/0.4.0/index.html" },
+  { "version": "0.4.0", "url": "https://scikit.bio/docs/0.4.0/index.html" },
+  { "version": "0.4.0", "url": "https://scikit.bio/docs/0.4.0/index.html" },
+  { "version": "0.2.3", "url": "https://scikit.bio/docs/0.2.3/index.html" },
+  { "version": "0.2.2", "url": "https://scikit.bio/docs/0.2.2/index.html" },
+  { "version": "0.2.1", "url": "https://scikit.bio/docs/0.2.1/index.html" },
+  { "version": "0.2.0", "url": "https://scikit.bio/docs/0.2.0/index.html" },
+  { "version": "0.1.4", "url": "https://scikit.bio/docs/0.1.4/index.html" },
+  { "version": "0.1.3", "url": "https://scikit.bio/docs/0.1.3/index.html" },
+  { "version": "0.1.1", "url": "https://scikit.bio/docs/0.1.1/index.html" }
+]

@@ -213,7 +213,7 @@ def find_duplicates(iterable):
     return repeated
 
 
-@experimental(as_of="0.5.10")
+@experimental(as_of="0.6.0")
 def get_rng(seed=None):
     """Get a random generator.
 

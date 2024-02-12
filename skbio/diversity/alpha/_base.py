@@ -739,7 +739,7 @@ def michaelis_menten_fit(counts, num_repeats=1, params_guess=None):
     ]
 
 
-@experimental(as_of="0.5.10")
+@experimental(as_of="0.6.0")
 def sobs(counts):
     """Calculate the observed species richness of a sample.
 
@@ -770,7 +770,7 @@ def sobs(counts):
     return (counts != 0).sum()
 
 
-@experimental(as_of="0.5.10")
+@experimental(as_of="0.6.0")
 def observed_features(counts):
     """Calculate the number of distinct features.
 
@@ -796,7 +796,7 @@ def observed_features(counts):
     return sobs(counts)
 
 
-@deprecated(as_of="0.5.10", until="0.6.0", reason="Historical term")
+@deprecated(as_of="0.6.0", until="0.6.0", reason="Historical term")
 def observed_otus(counts):
     """Calculate the number of distinct OTUs.
 
