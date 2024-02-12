@@ -23,7 +23,7 @@ scikit-bio is available under the new BSD license. See :repo:`LICENSE.txt <blob/
 Team
 ----
 
-Our core development team consists of three lead developers: **Dr. Qiyun Zhu** at ASU (@qiyunzhu), **Dr. James Morton** at Gutz Analytics (@mortonjt), and **Dr. Daniel McDonald** at UCSD (@wasade), one software engineer: **Matthew Aton** (@mataton) and one bioinformatician: **Dr. Lars Hunger** (@LarsHunger). **Dr. Rob Knight** at UCSD (@rob-knight) provides guidance on the development and research. **Dr. Greg Caporaso** (@gregcaporaso) at NAU, the former leader of the scikit-bio project, serves as an advisor on the current project.
+Our core development team consists of three lead developers: **Dr. Qiyun Zhu** at Arizona State University (ASU) (@qiyunzhu), **Dr. James Morton** at Gutz Analytics (@mortonjt), and **Dr. Daniel McDonald** at the University of California San Diego (UCSD) (@wasade), one software engineer: **Matthew Aton** (@mataton) and one bioinformatician: **Dr. Lars Hunger** (@LarsHunger). **Dr. Rob Knight** at UCSD (@rob-knight) provides guidance on the development and research. **Dr. Greg Caporaso** (@gregcaporaso) at Northern Arizona University (NAU), the former leader of the scikit-bio project, serves as an advisor on the current project.
 
 
 Credits
