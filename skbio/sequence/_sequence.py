@@ -2128,7 +2128,7 @@ fuzzy=[(True, False)], metadata={'gene': 'foo'})
             if len(r) >= min_length:
                 yield r
 
-    @experimental(as_of="0.5.10")
+    @experimental(as_of="0.6.0")
     def to_indices(
         self, alphabet=None, mask_gaps="auto", wildcard="auto", return_codes=False
     ):

@@ -12,11 +12,9 @@ ignore = [
     ".coveragerc",
     ".dockerignore",
     ".editorconfig",
-    "RELEASE.md",
-    "REVIEWING.md",
     "aarch64.Dockerfile",
     "checklist.py",
-    # created by conda-incubator/setup-miniconda@v2 action
+    # created by conda-incubator/setup-miniconda@v3 action
     "ci/setup-miniconda-patched-conda_host_env.yml",
 ]
 
@@ -25,8 +23,9 @@ ignore = [
 [tool.ruff]
 target-version = 'py38'
 exclude = [
-    'doc/source/conf.py', # excluding because Qiyun is currently working on it.
-    'skbio/**/tests/*'    # ignoring to be able to implement pydocstyle
+    'skbio/**/tests/*',  # ignoring to be able to implement pydocstyle
+    'doc/**',  # documentation
+    'web/**',  # website
 ]
 
 [tool.ruff.lint]

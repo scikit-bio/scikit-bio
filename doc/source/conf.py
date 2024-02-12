@@ -31,7 +31,6 @@ release = skbio.__version__
 
 extensions = [
     'sphinx.ext.autodoc',
-    # 'sphinx.ext.napoleon',
     'sphinx.ext.mathjax',
     'sphinx.ext.linkcode',
     'sphinx.ext.coverage',
@@ -73,14 +72,14 @@ texinfo_documents = [
 
 html_title = f'{project} {version} documentation'
 html_short_title = project
-html_baseurl = 'scikit.bio'
-html_logo = '_static/logo.png'
+html_baseurl = 'https://scikit.bio'
+html_logo = '_static/logo.svg'
 html_favicon = '_static/favicon.ico'
 htmlhelp_basename = 'skbio-doc'
 
 # static files
 html_static_path = ['_static']
-html_css_files = ['style.css']
+html_css_files = ['css/style.css']
 
 # do not show source links
 html_show_sourcelink = False
@@ -88,11 +87,12 @@ html_show_sourcelink = False
 
 # -- External links ----------------------------------------------------------
 
-github_url = f'github.com/{project}/{project}'
+github_url = f'https://github.com/{project}/{project}'
+twitter_url = 'https://twitter.com/scikitbio'
 
 extlinks = {
-    'home': (f'https://{html_baseurl}/%s', None),
-    'repo': (f'https://{github_url}/%s', None),
+    'home': (f'{html_baseurl}/%s', None),
+    'repo': (f'{github_url}/%s', None),
 }
 
 
@@ -111,26 +111,26 @@ html_theme_options = {
    'logo': {
       'link': html_baseurl,
       'alt_text': html_title,
-      'image_light': '_static/logo.png',
-      'image_dark': '_static/logo_inv.png',
+      'image_light': '_static/logo.svg',
+      'image_dark': '_static/logo_inv.svg',
     },
 
     # announcement banner on top of the screen
     'announcement': (
-        f"{project} is back in active development! Check out our <a href='https://"
-        f"{github_url}/discussions/1892'>announcement of revitalization</a>."
+        f"{project} is back in active development! Check out our <a href='"
+        f"{github_url}/discussions/1935'>announcement of revitalization</a>."
     ),
 
     # social media links displayed as icons
-    'github_url': f'https://{github_url}',
-    'twitter_url': 'https://twitter.com/scikitbio',
+    'github_url': github_url,
+    'twitter_url': twitter_url,
 
     # show warning if not latest stable version
     # 'show_version_warning_banner': True,
 
     # version switcher
     'switcher': {
-        'json_url': 'https://qiyunlab.github.io/assets/files/versions.json',
+        'json_url': 'https://scikit.bio/versions.json',
         'version_match': 'dev' if version.endswith('-dev') else version,
     },
 
@@ -179,25 +179,8 @@ intersphinx_mapping = {
 
 plot_include_source = True
 plot_html_show_source_link = False
-# plot_formats = ['png', 'pdf']
 plot_formats = ['png']
 plot_html_show_formats = False
-
-# -- Autodoc configuration ---------------------------------------------------
-
-# References:
-# https://www.sphinx-doc.org/en/master/usage/extensions/autodoc.html
-
-# WIP
-
-# def autodoc_skip_exceptions(app, what, name, obj, skip, options):
-#     if what == 'exception':
-#         print(name)
-#     return True if what == 'exception' else False
-
-
-# def setup(app):
-#     app.connect('autodoc-skip-member', autodoc_skip_exceptions)
 
 
 # -- Source code links --------------------------------------------------------
@@ -207,7 +190,7 @@ from os.path import relpath, dirname
 
 
 def linkcode_resolve(domain, info):
-    """Determine the URL corresponding to Python object.
+    """Determine the URL corresponding to a Python object.
     """
 
     if domain != 'py':

@@ -171,7 +171,7 @@ class CopyrightHeadersValidator(RepoValidator):
     """Flag library files with non-standard copyright headers.
 
     See the current standard for scikit-bio's copyright headers at
-    ``http://scikit-bio.org/docs/latest/development/new_module.html``
+    ``https://scikit.bio/devdoc/new_module.html``
 
     Individual files are ignored if the first line in the file is exactly:
 
@@ -190,7 +190,7 @@ class CopyrightHeadersValidator(RepoValidator):
 
     reason = (
         "Files non-conforming to standard headers as described in\n"
-        "http://scikit-bio.org/docs/latest/development/new_module.html:"
+        "https://scikit.bio/devdoc/new_module.html:"
     )
 
     COPYRIGHT_HEADER = """\

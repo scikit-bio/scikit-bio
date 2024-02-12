@@ -36,8 +36,8 @@ exclude_patterns = ['_build', 'Thumbs.db', '.DS_Store']
 
 html_title = project
 html_short_title = project
-html_baseurl = 'scikit.bio'
-html_logo = '_static/img/logo.png'
+html_baseurl = 'https://scikit.bio'
+html_logo = '_static/img/logo.svg'
 html_favicon = '_static/favicon.ico'
 
 # static files
@@ -53,12 +53,13 @@ html_show_sourcelink = False
 
 # -- External links ----------------------------------------------------------
 
-github_url = f'github.com/{project}/{project}'
+github_url = f'https://github.com/{project}/{project}'
+twitter_url = 'https://twitter.com/scikitbio'
 
 extlinks = {
-    'home': (f'https://{html_baseurl}/%s', None),
-    'repo': (f'https://{github_url}/%s', None),
-    'docs': (f'https://{html_baseurl}/docs/latest/generated/skbio.%s.html', None),
+    'home': (f'{html_baseurl}/%s', None),
+    'repo': (f'{github_url}/%s', None),
+    'docs': (f'{html_baseurl}/docs/dev/generated/skbio.%s.html', None),
 }
 
 
@@ -76,19 +77,19 @@ html_theme_options = {
     # image files must be placed under _static/
    'logo': {
       'alt_text': html_title,
-      'image_light': '_static/img/logo.png',
-      'image_dark': '_static/img/logo_inv.png',
+      'image_light': '_static/img/logo.svg',
+      'image_dark': '_static/img/logo_inv.svg',
     },
 
     # announcement banner on top of the screen
     'announcement': (
-        f"{project} is back in active development! Check out our <a href='https://"
-        f"{github_url}/discussions/1892'>announcement of revitalization</a>."
+        f"{project} is back in active development! Check out our <a href='"
+        f"{github_url}/discussions/1935'>announcement of revitalization</a>."
     ),
 
     # social media links displayed as icons
-    'github_url': f'https://{github_url}',
-    'twitter_url': 'https://twitter.com/scikitbio',
+    'github_url': github_url,
+    'twitter_url': twitter_url,
 
     # disable prev & next buttons
     'show_prev_next': False,

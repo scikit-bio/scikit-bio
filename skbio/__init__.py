@@ -38,7 +38,7 @@ __all__ = [
 ]
 
 __credits__ = "https://github.com/scikit-bio/scikit-bio/graphs/contributors"
-__version__ = "0.5.10-dev"
+__version__ = "0.6.0-dev"
 
 
 mottos = [
@@ -87,4 +87,4 @@ art = r"""
                        Cyanobacteria
 """
 
-__doc__ = title + art + (__doc__ or '')
+__doc__ = title + art + (__doc__ or "")

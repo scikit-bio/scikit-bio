@@ -191,3 +191,36 @@ Getting help with git
 ---------------------
 
 If you're new to GitHub, you'll probably find the `GitHub Docs <https://docs.github.com/>`_ helpful.
+
+
+Automating code quality
+-----------------------
+
+**Integrating Ruff's autoformatter and linter with pre-commit hooks**
+
+`Ruff <https://docs.astral.sh/ruff/>`_ is a valuable autoformatter and linter tool that ensures code consistency and quality. Integrating Ruff with pre-commit hooks empowers developers to automatically format and lint their code before each commit, promoting adherence to project standards and best practices.
+
+Installation
+^^^^^^^^^^^^
+
+In your development environment, install Ruff and pre-commit using::
+
+    conda install -c conda-forge --file ci/requirements.lint.txt
+
+Alternatively, install both packages individually::
+
+    conda install -c conda-forge ruff pre-commit
+
+Initialize pre-commit hooks
+^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+Scikit-bio streamlines the installation process by including Ruff's linter and formatter via Astral's `ruff-pre-commit <https://github.com/astral-sh/ruff-pre-commit>`_, referenced in the ``.pre-commit-config.yaml`` file. Activate the pre-commit hooks with the following command::
+
+    pre-commit install
+
+Once installed, the pre-commit hooks will automatically execute every time you commit changes. By default, they enforce Ruff's formatter and linter rules, ensuring code consistency and adherence to standards.
+
+Make necessary changes and commit
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+After the hooks have executed, address any errors flagged by Ruff. Once resolved, you can proceed to commit and push your changes to your branch as usual.

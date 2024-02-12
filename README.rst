@@ -1,6 +1,7 @@
 |Build Status| |Coverage Status| |ASV Benchmarks| |Gitter Badge| |Depsy Badge| |Anaconda Build Platforms| |Anaconda Build Version| |License| |Downloads| |Install|
 
-.. image:: assets/logo.svg
+.. image:: logos/logo.svg
+   :width: 600 px
    :target: https://scikit.bio
    :alt: scikit-bio logo
 
@@ -36,6 +37,8 @@ Wanna contribute? We enthusiastically welcome community contributors! Whether it
 
 
 ----
+
+Visit the new scikit-bio website: https://scikit.bio to learn more about this project.
 
 
 Releases
