@@ -77,11 +77,11 @@ jobs:
         run: make doc
       # save built documentation (HTML) for deployment
       - name: Substitute URLs
-        if: github.event_name == "push"
+        if: github.event_name == 'push'
         shell: bash -l {0}
         run: python doc/suburl.py
       - name: Save documentation
-        if: github.event_name == "push"
+        if: github.event_name == 'push'
         uses: actions/upload-artifact@v4
         with:
           name: docpack
@@ -188,7 +188,7 @@ jobs:
   # only when event is push and all tests have passed
   deploy-doc:
     name: Deploy documentation
-    if: github.event_name == "push"
+    if: github.event_name == 'push'
     needs: ["doc", "test-all", "test-cython-aarch64"]
     runs-on: ubuntu-latest
     steps:
