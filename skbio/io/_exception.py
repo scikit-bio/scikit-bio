@@ -121,6 +121,6 @@ class InvalidRegistrationError(Exception):
 
 
 class DuplicateRegistrationError(Exception):
-    """Raised when a function is already registered in skbio.io"""
+    """Raised when a function is already registered in skbio.io."""
 
     pass

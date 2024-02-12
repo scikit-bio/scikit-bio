@@ -1,5 +1,4 @@
-"""
-Distance matrices and distance-based statistics (:mod:`skbio.stats.distance`)
+"""Distance matrices and distance-based statistics (:mod:`skbio.stats.distance`)
 =============================================================================
 
 .. currentmodule:: skbio.stats.distance
@@ -177,6 +176,7 @@ References
 ----------
 .. [1] Faith, D. P. (1992). "Conservation evaluation and phylogenetic
    diversity".
+
 
 """
 

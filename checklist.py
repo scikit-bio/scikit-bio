@@ -171,10 +171,10 @@ class RepoValidator:
 
 
 class CopyrightHeadersValidator(RepoValidator):
-    """Flag library files with non-standard copyright headers
+    """Flag library files with non-standard copyright headers.
 
     See the current standard for scikit-bio's copyright headers at
-    ``http://scikit-bio.org/docs/latest/development/new_module.html``
+    ``https://scikit.bio/devdoc/new_module.html``
 
     Individual files are ignored if the first line in the file is exactly:
 
@@ -193,7 +193,7 @@ class CopyrightHeadersValidator(RepoValidator):
 
     reason = (
         "Files non-conforming to standard headers as described in\n"
-        "http://scikit-bio.org/docs/latest/development/new_module.html:"
+        "https://scikit.bio/devdoc/new_module.html:"
     )
 
     COPYRIGHT_HEADER = """\
@@ -411,7 +411,8 @@ class APIRegressionValidator(RepoValidator):
     reason = "The following tests import `A` but should import `B`" " (file: A => B):"
 
     def __init__(self):
-        """Initialize object for tests importing from non-minimized subpackage hierarchy."""
+        """Initialize object for tests importing from non-minimized subpackage
+        hierarchy."""
         self._imports = {}
 
     def _validate(self, root, dirs, files):

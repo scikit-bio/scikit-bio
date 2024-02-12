@@ -39,17 +39,16 @@ class _MetadataReprBuilder(metaclass=ABCMeta):
 
     @abstractmethod
     def _process_header(self):
-        """Used by `build` Template Method to build header for the repr"""
+        """Used by `build` Template Method to build header for the repr."""
         raise NotImplementedError
 
     @abstractmethod
     def _process_data(self):
-        """Used by `build` Template Method to build data lines for the repr"""
+        """Used by `build` Template Method to build data lines for the repr."""
         raise NotImplementedError
 
     def build(self):
-        """Template method for building the repr"""
-
+        """Template method for building the repr."""
         self._lines = ElasticLines()
 
         self._process_header()

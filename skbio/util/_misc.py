@@ -42,7 +42,7 @@ def find_sentinels(function, sentinel):
 
 class MiniRegistry(dict):
     def __call__(self, name):
-        """Act as a decorator to register functions with self"""
+        """Act as a decorator to register functions with self."""
 
         def decorator(func):
             self[name] = func
@@ -51,7 +51,7 @@ class MiniRegistry(dict):
         return decorator
 
     def copy(self):
-        """Useful for inheritance"""
+        """Useful for inheritance."""
         return self.__class__(super(MiniRegistry, self).copy())
 
     def formatted_listing(self):
@@ -145,7 +145,7 @@ def cardinal_to_ordinal(n):
 
 @experimental(as_of="0.4.0")
 def safe_md5(open_file, block_size=2**20):
-    """Computes an md5 sum without loading the file into memory
+    """Compute an md5 sum without loading the file into memory.
 
     Parameters
     ----------
@@ -213,7 +213,7 @@ def find_duplicates(iterable):
     return repeated
 
 
-@experimental(as_of="0.5.10")
+@experimental(as_of="0.6.0")
 def get_rng(seed=None):
     """Get a random generator.
 
@@ -240,6 +240,7 @@ def get_rng(seed=None):
     .. [2] https://numpy.org/doc/stable/reference/random/legacy.html
 
     .. [3] https://numpy.org/neps/nep-0019-rng-policy.html
+
     """
     try:
         if seed is None or isinstance(seed, int):

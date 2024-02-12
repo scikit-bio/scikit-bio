@@ -55,6 +55,7 @@ class OrdinationResults(SkbioObject, PlottableMixin):
     cca
     pcoa
     rda
+
     """
 
     default_write_format = "ordination"
@@ -332,7 +333,6 @@ class OrdinationResults(SkbioObject, PlottableMixin):
         each category (str) to color (used for legend creation).
 
         """
-
         if (df is None and column is not None) or (df is not None and column is None):
             raise ValueError(
                 "Both df and column must be provided, or both " "must be None."

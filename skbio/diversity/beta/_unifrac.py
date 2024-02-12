@@ -28,7 +28,7 @@ _normalize_weighted_unifrac_by_default = False
 
 @experimental(as_of="0.4.1")
 def unweighted_unifrac(u_counts, v_counts, otu_ids, tree, validate=True):
-    """Compute unweighted UniFrac
+    """Compute unweighted UniFrac.
 
     Parameters
     ----------
@@ -164,7 +164,7 @@ def weighted_unifrac(
     normalized=_normalize_weighted_unifrac_by_default,
     validate=True,
 ):
-    """Compute weighted UniFrac with or without branch length normalization
+    """Compute weighted UniFrac with or without branch length normalization.
 
     Parameters
     ----------
@@ -356,8 +356,7 @@ def _setup_pairwise_unifrac(
 
 
 def _unweighted_unifrac(u_node_counts, v_node_counts, branch_lengths):
-    """
-    Parameters
+    """Parameters
     ----------
     u_node_counts, v_node_counts : np.array
         Vectors indicating presence (value greater than zero) and absence
@@ -391,8 +390,7 @@ def _unweighted_unifrac(u_node_counts, v_node_counts, branch_lengths):
 def _weighted_unifrac(
     u_node_counts, v_node_counts, u_total_count, v_total_count, branch_lengths
 ):
-    """
-    Parameters
+    """Parameters
     ----------
     u_node_counts, v_node_counts : np.array
         Vectors indicating presence (value greater than zero) and absence
@@ -442,8 +440,7 @@ def _weighted_unifrac_normalized(
     branch_lengths,
     node_to_root_distances,
 ):
-    """
-    Parameters
+    """Parameters
     ----------
     u_node_counts, v_node_counts : np.array
          Vectors indicating presence (value greater than zero) and absence
@@ -493,7 +490,7 @@ def _setup_multiple_unifrac(counts, otu_ids, tree, validate):
 
 
 def _setup_multiple_unweighted_unifrac(counts, otu_ids, tree, validate):
-    """Create optimized pdist-compatible unweighted UniFrac function
+    """Create optimized pdist-compatible unweighted UniFrac function.
 
     Parameters
     ----------
@@ -529,20 +526,22 @@ def _setup_multiple_unweighted_unifrac(counts, otu_ids, tree, validate):
 
 
 def _setup_multiple_weighted_unifrac(counts, otu_ids, tree, normalized, validate):
-    """Create optimized pdist-compatible weighted UniFrac function
+    """Create optimized pdist-compatible weighted UniFrac function.
 
     Parameters
     ----------
     counts : 2D array_like of ints or floats
         Matrix containing count/abundance data where each row contains counts
         of observations in a given sample.
-    otu_ids: list, np.array
+    otu_ids : list, np.array
         Vector of OTU ids corresponding to tip names in ``tree``. Must be the
         same length as ``u_counts`` and ``v_counts``. These IDs do not need to
         be in tip order with respect to the tree.
-    tree: skbio.TreeNode
+    tree : skbio.TreeNode
         Tree relating the OTUs in otu_ids. The set of tip names in the tree can
         be a superset of ``otu_ids``, but not a subset.
+    normalized : bool
+        If `True`, output will be normalized.
     validate: bool, optional
         If `False`, validation of the input won't be performed.
 
@@ -602,7 +601,7 @@ def _get_tip_indices(tree_index):
 def _weighted_unifrac_branch_correction(
     node_to_root_distances, u_node_proportions, v_node_proportions
 ):
-    """Calculates weighted unifrac branch length correction.
+    """Calculate weighted unifrac branch length correction.
 
     Parameters
     ----------
@@ -620,6 +619,7 @@ def _weighted_unifrac_branch_correction(
     -------
     np.ndarray
         The corrected branch lengths
+
     """
     return (
         node_to_root_distances.ravel() * (u_node_proportions + v_node_proportions)

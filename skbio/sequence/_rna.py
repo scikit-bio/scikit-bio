@@ -237,6 +237,7 @@ class RNA(GrammaredSequence, NucleotideMixin):
             GC-content: 25.00%
         --------------------------
         0 TAACGTTA
+
         """
         seq = self._string.replace(b"U", b"T")
 

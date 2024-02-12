@@ -290,7 +290,7 @@ _motifs = parent_motifs.copy()
 
 @_motifs("N-glycosylation")
 def _motif_nitro_glycosylation(sequence, min_length, ignore):
-    """Identifies N-glycosylation runs"""
+    """Identify N-glycosylation runs."""
     return sequence.find_with_regex("(N[^PX][ST][^PX])", ignore=ignore)
 
 

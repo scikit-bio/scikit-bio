@@ -1,5 +1,4 @@
-r"""
-Ordination results format (:mod:`skbio.io.format.ordination`)
+r"""Ordination results format (:mod:`skbio.io.format.ordination`)
 =============================================================
 
 .. currentmodule:: skbio.io.format.ordination
@@ -175,6 +174,7 @@ Load the ordination results from the file:
 ...  "\n"
 ...  "Site constraints\t0\t0\n")
 >>> ord_res = OrdinationResults.read(or_f)
+
 
 """
 

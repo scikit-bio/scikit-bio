@@ -1,5 +1,4 @@
-"""
-Utility functionality (:mod:`skbio.util`)
+"""Utility functionality (:mod:`skbio.util`)
 =========================================
 
 .. currentmodule:: skbio.util

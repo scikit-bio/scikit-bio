@@ -1,5 +1,4 @@
-r"""
-Newick format (:mod:`skbio.io.format.newick`)
+r"""Newick format (:mod:`skbio.io.format.newick`)
 =============================================
 
 .. currentmodule:: skbio.io.format.newick
@@ -209,6 +208,7 @@ References
 ----------
 .. [1] http://evolution.genetics.washington.edu/phylip/newick_doc.html
 .. [2] http://evolution.genetics.washington.edu/phylip/newicktree.html
+
 
 """
 

@@ -42,7 +42,7 @@ def _vocabulary_skip(format="insdc"):
 
 
 def _yield_section(is_another_section, **kwargs):
-    """Returns function that returns successive sections from file.
+    """Return function that returns successive sections from file.
 
     Parameters
     ----------
@@ -57,6 +57,7 @@ def _yield_section(is_another_section, **kwargs):
     function
         A function accept a list of lines as input and return
         a generator to yield section one by one.
+
     """
 
     def parser(lines):
@@ -110,7 +111,7 @@ def _serialize_section_default(header, obj, indent=12):
 
 
 def _parse_feature_table(lines, length):
-    """parse DDBJ/ENA/GenBank Feature Table."""
+    """Parse DDBJ/ENA/GenBank Feature Table."""
     imd = IntervalMetadata(length)
     # skip the 1st FEATURES line
     if lines[0].startswith("FEATURES"):
@@ -135,6 +136,7 @@ def _parse_single_feature(lines, imd):
     Parameters
     ----------
     imd : IntervalMetadata
+
     """
     voca_change = _vocabulary_change("insdc")
 
@@ -270,20 +272,20 @@ def _parse_loc_str(loc_str):
 
 
 def _serialize_feature_table(intervals, indent=21):
-    """
-    Parameters
+    """Parameters
     ----------
     intervals : list of ``Interval``
+
     """
     for intvl in intervals:
         yield _serialize_single_feature(intvl, indent)
 
 
 def _serialize_single_feature(intvl, indent=21):
-    """
-    Parameters
+    """Parameters
     ----------
     intvl : Interval
+
     """
     # there are 5 spaces before Feature Key starts.
     padding = " " * 5
@@ -351,6 +353,7 @@ def _serialize_qualifier(key, value):
     Parameters
     ----------
     value : int, str
+
     """
     # if value is empty
     if not value:

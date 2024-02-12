@@ -97,7 +97,6 @@ def ca(X, scaling=1):
        Amsterdam.
 
     """
-
     if scaling not in {1, 2}:
         raise NotImplementedError("Scaling {0} not implemented.".format(scaling))
 

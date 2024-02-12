@@ -69,7 +69,7 @@ def _get_alpha_diversity_metric_map():
 
 @experimental(as_of="0.4.1")
 def get_alpha_diversity_metrics():
-    """List scikit-bio's alpha diversity metrics
+    """List scikit-bio's alpha diversity metrics.
 
     The alpha diversity metrics listed here can be passed as metrics to
     ``skbio.diversity.alpha_diversity``.
@@ -92,7 +92,7 @@ def get_alpha_diversity_metrics():
 
 @experimental(as_of="0.4.1")
 def get_beta_diversity_metrics():
-    """List scikit-bio's beta diversity metrics
+    """List scikit-bio's beta diversity metrics.
 
     The beta diversity metrics listed here can be passed as metrics to
     ``skbio.diversity.beta_diversity``.
@@ -121,7 +121,7 @@ def get_beta_diversity_metrics():
 
 @experimental(as_of="0.4.1")
 def alpha_diversity(metric, counts, ids=None, validate=True, **kwargs):
-    """Compute alpha diversity for one or more samples
+    """Compute alpha diversity for one or more samples.
 
     Parameters
     ----------
@@ -215,7 +215,7 @@ def alpha_diversity(metric, counts, ids=None, validate=True, **kwargs):
     ),
 )
 def partial_beta_diversity(metric, counts, ids, id_pairs, validate=True, **kwargs):
-    """Compute distances only between specified ID pairs
+    """Compute distances only between specified ID pairs.
 
     Parameters
     ----------
@@ -353,7 +353,7 @@ _qualitative_beta_metrics = [
 def beta_diversity(
     metric, counts, ids=None, validate=True, pairwise_func=None, **kwargs
 ):
-    """Compute distances between all pairs of samples
+    """Compute distances between all pairs of samples.
 
     Parameters
     ----------

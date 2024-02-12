@@ -1,5 +1,4 @@
-"""
-GenBank format (:mod:`skbio.io.format.genbank`)
+"""GenBank format (:mod:`skbio.io.format.genbank`)
 ===============================================
 
 .. currentmodule:: skbio.io.format.genbank
@@ -173,7 +172,6 @@ a GenBank file with multiple records in it.
 
 Examples
 --------
-
 Reading and Writing GenBank Files
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 Suppose we have the following GenBank file example modified from [5]_:
@@ -305,6 +303,7 @@ References
 .. [3] http://www.insdc.org/files/feature_table.html
 .. [4] http://www.ebi.ac.uk/ena/WebFeat/
 .. [5] http://www.ncbi.nlm.nih.gov/nuccore/3K1V_A
+
 
 """
 
@@ -589,6 +588,7 @@ def _serialize_locus(header, obj, indent=12):
     Parameters
     ----------
     obj : dict
+
     """
     # use 'or' to convert None to ''
     kwargs = {k: v or "" for k, v in obj.items()}
@@ -622,6 +622,7 @@ def _serialize_reference(header, obj, indent=12):
     Parameters
     ----------
     obj : list
+
     """
     padding = "  "
     sort_order = {"REFERENCE": 0, "AUTHORS": 1, "TITLE": 2, "JOURNAL": 3, "PUBMED": 4}
@@ -661,6 +662,7 @@ def _serialize_source(header, obj, indent=12):
     Parameters
     ----------
     obj : dict
+
     """
     s = (
         "{header:<{indent}}{organism}\n"
@@ -695,6 +697,7 @@ def _serialize_origin(seq, indent=9):
     Parameters
     ----------
     seq : str
+
     """
     n = 1
     line_size = 60

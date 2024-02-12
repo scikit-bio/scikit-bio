@@ -1,5 +1,4 @@
-"""
-BLAST+6 format (:mod:`skbio.io.format.blast6`)
+"""BLAST+6 format (:mod:`skbio.io.format.blast6`)
 ==============================================
 
 .. currentmodule:: skbio.io.format.blast6
@@ -230,6 +229,8 @@ References
 .. [2] http://blastedbio.blogspot.com/2014/11/column-headers-in-blast-tabular-\
 and-csv.html
 .. [3] http://www.ncbi.nlm.nih.gov/books/NBK279675/
+
+
 """
 
 # ----------------------------------------------------------------------------

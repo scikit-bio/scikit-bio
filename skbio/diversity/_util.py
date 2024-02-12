@@ -119,7 +119,7 @@ def _validate_otu_ids_and_tree(counts, otu_ids, tree, rooted=True):
 
 
 def _vectorize_counts_and_tree(counts, otu_ids, tree):
-    """Index tree and convert counts to np.array in corresponding order"""
+    """Index tree and convert counts to np.array in corresponding order."""
     tree_index = tree.to_array(nan_length_value=0.0)
     otu_ids = np.asarray(otu_ids)
     counts = np.atleast_2d(counts)

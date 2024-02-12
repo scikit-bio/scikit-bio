@@ -1,5 +1,4 @@
-r"""
-I/O utils (:mod:`skbio.io.util`)
+r"""I/O utils (:mod:`skbio.io.util`)
 ================================
 
 .. currentmodule:: skbio.io.util
@@ -11,11 +10,11 @@ Functions
 ---------
 
 .. autosummary::
-    :toctree: generated/
+   :toctree:
 
-    open
-    open_file
-    open_files
+   open
+   open_file
+   open_files
 
 """
 

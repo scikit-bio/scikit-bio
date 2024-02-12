@@ -13,8 +13,8 @@ from ._cutils import distmat_reorder_cy, distmat_reorder_condensed_cy
 
 
 def is_symmetric_and_hollow(mat):
-    """
-    Check if a Distance Matrix is symmetric and hollow.
+    """Check if a Distance Matrix is symmetric and hollow.
+
     Equivalent to [not (mat.T != mat).any(), np.trace(mat) == 0]
 
     Parameters
@@ -28,6 +28,7 @@ def is_symmetric_and_hollow(mat):
         not (mat.T != mat).any()
     is_hollow: Boolean
         np.trace(mat) == 0
+
     """
     # is_symmetric_and_hollow_cy is optimized
     # for the common cas of c_contiguous.
@@ -39,8 +40,8 @@ def is_symmetric_and_hollow(mat):
 
 
 def is_symmetric(mat):
-    """
-    Check if a Distance Matrix is symmetric.
+    """Check if a Distance Matrix is symmetric.
+
     Equivalent to not (mat.T != mat).any()
 
     Parameters
@@ -52,6 +53,7 @@ def is_symmetric(mat):
     -------
     is_symmetric: Boolean
         not (mat.T != mat).any()
+
     """
     # the is_hollow check is really cheap,
     # so can reuse is_symmetric_and_hollow
@@ -59,8 +61,8 @@ def is_symmetric(mat):
 
 
 def is_hollow(mat):
-    """
-    Check if a Distance Matrix is hollow.
+    """Check if a Distance Matrix is hollow.
+
     Equivalent to np.trace(mat) == 0
 
     Parameters
@@ -72,6 +74,7 @@ def is_hollow(mat):
     -------
     is_hollow: Boolean
         np.trace(mat) == 0
+
     """
     # is_symmetric_and_hollow_cy spends most
     # of its time in symetry check, just use numpy
@@ -79,9 +82,9 @@ def is_hollow(mat):
 
 
 def distmat_reorder_buf(in_mat, reorder_vec, out_mat, validate=False):
-    """
-    Reorder the rows and columns of a distance matrix
+    """Reorder the rows and columns of a distance matrix
     given a reorder vector.
+
     Not all of the columns need to be used.
 
     For example:
@@ -108,6 +111,7 @@ def distmat_reorder_buf(in_mat, reorder_vec, out_mat, validate=False):
         must be in c_order and same size as reorder_vec
     validate: boolean
         Optional, if True, validate reorder_vec content, detaults to False
+
     """
     np_reorder = np.asarray(reorder_vec, dtype=int)
     if validate:
@@ -123,9 +127,9 @@ def distmat_reorder_buf(in_mat, reorder_vec, out_mat, validate=False):
 
 
 def distmat_reorder(in_mat, reorder_vec, validate=False):
-    """
-    Reorder the rows and columns of a distance matrix
+    """Reorder the rows and columns of a distance matrix
     given a reorder vector.
+
     Not all of the columns need to be used.
 
     For example:
@@ -154,6 +158,7 @@ def distmat_reorder(in_mat, reorder_vec, validate=False):
     -------
     out_mat : 2D array_like
         Distance matrix
+
     """
     np_reorder = np.asarray(reorder_vec, dtype=int)
     if validate:
@@ -171,9 +176,9 @@ def distmat_reorder(in_mat, reorder_vec, validate=False):
 
 
 def distmat_reorder_condensed(in_mat, reorder_vec, validate=False):
-    """
-    Reorder the rows and columns of a distance matrix
+    """Reorder the rows and columns of a distance matrix
     given a reorder vector.
+
     Not all of the columns need to be used.
 
     For example:
@@ -199,6 +204,7 @@ def distmat_reorder_condensed(in_mat, reorder_vec, validate=False):
     -------
     out_mat_condensed : 1D array_like
         Condensed distance matrix
+
     """
     np_reorder = np.asarray(reorder_vec, dtype=int)
     if validate:

@@ -1,5 +1,4 @@
-"""
-BLAST+7 format (:mod:`skbio.io.format.blast7`)
+"""BLAST+7 format (:mod:`skbio.io.format.blast7`)
 ==============================================
 
 .. currentmodule:: skbio.io.format.blast7
@@ -182,7 +181,7 @@ For more information on these column types, see :mod:`skbio.io.format.blast6`.
 +-------------------+----------------------+
 
 Examples
-========
+--------
 Suppose we have a BLAST+7 file:
 
 >>> from io import StringIO
@@ -243,10 +242,12 @@ Read the file into a ``pd.DataFrame``:
 2  AF178033  EMORG:AF178031   94.82
 
 References
-==========
+----------
 .. [1] Altschul, S.F., Gish, W., Miller, W., Myers, E.W. & Lipman, D.J. (1990)
    "Basic local alignment search tool." J. Mol. Biol. 215:403-410.
 .. [2] http://www.ncbi.nlm.nih.gov/books/NBK279682/
+
+
 """
 
 # ----------------------------------------------------------------------------
@@ -388,7 +389,7 @@ def _blast7_to_data_frame(fh):
 
 
 def _parse_fields(line, legacy=False):
-    """Removes '\n' from fields line and returns fields as a list (columns)."""
+    r"""Remove '\n' from fields line and returns fields as a list (columns)."""
     line = line.rstrip("\n")
     if legacy:
         fields = line.split(",")

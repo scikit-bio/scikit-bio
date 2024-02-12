@@ -96,7 +96,7 @@ def _lorenz_curve(data):
 
 
 def _lorenz_curve_integrator(lc_pts, method):
-    """Calculates the area under a Lorenz curve.
+    """Calculate the area under a Lorenz curve.
 
     Notes
     -----
