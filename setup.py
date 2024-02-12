@@ -33,6 +33,7 @@ if sys.version_info.major != 3:
 
 
 def check_bin(ccbin, source, allow_dash):
+    """Check if a given compiler matches the specified name."""
     # remove any parameters (e.g. gcc -I /a/b/c -> gcc)
     source0 = source.split()[0]
     # remove any path

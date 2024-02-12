@@ -36,9 +36,9 @@ def permdisp(
     method="eigh",
     number_of_dimensions=10,
 ):
-    """Test for Homogeneity of Multivariate Groups Disperisons using Marti
-    Anderson's PERMDISP2 procedure.
+    """Test for Homogeneity of Multivariate Groups Disperisons.
 
+    Uses Marti Anderson's PERMDISP2 procedure.
     PERMDISP is a multivariate analogue of Levene's test for homogeneity of
     multivariate variances. Distances are handled by reducing the
     original distances to principal coordinates. PERMDISP calculates an
@@ -308,7 +308,9 @@ def _compute_groups(samples, test_type, grouping):
 
 
 def _config_med(x):
-    """Slice the vector up to the last value to exclude grouping column
+    """Slice and transpose the vector.
+
+    Slice the vector up to the last value to exclude grouping column
     and transpose the vector to be compatible with hd.geomedian.
     """
     X = x.values[:, :-1]

@@ -28,8 +28,10 @@ def _vocabulary_change(format="insdc", read_in=True):
 
 
 def _vocabulary_skip(format="insdc"):
-    """Return a list of vocabularies that should be skipped when auto
-    output to disk for the specified format.
+    """Return vocabluaries skipped for auto disk output, given a format.
+
+    Return a list of vocabularies that should be skipped when auto output to disk
+    for the specified format.
 
     """
     skip = {
@@ -272,7 +274,9 @@ def _parse_loc_str(loc_str):
 
 
 def _serialize_feature_table(intervals, indent=21):
-    """Parameters
+    """Serialize a list of intervals into a feature table format.
+
+    Parameters
     ----------
     intervals : list of ``Interval``
 
@@ -282,7 +286,9 @@ def _serialize_feature_table(intervals, indent=21):
 
 
 def _serialize_single_feature(intvl, indent=21):
-    """Parameters
+    """Serialize a single interval into feature format.
+
+    Parameters
     ----------
     intvl : Interval
 

@@ -106,8 +106,7 @@ from skbio.util._decorator import experimental
 
 
 def _weight_by_vector(trajectories, w_vector):
-    r"""Weight the values of `trajectories` given a weighting vector
-    `w_vector`.
+    r"""Weight the values of `trajectories` given a weighting vector `w_vector`.
 
     Each value in `trajectories` will be weighted by the 'rate of change'
     to 'optimal rate of change' ratio. The 'rate of change' of a vector
@@ -239,8 +238,7 @@ class GroupResults:
 
     @experimental(as_of="0.4.0")
     def to_files(self, out_f, raw_f):
-        r"""Save the trajectory analysis results for a category group to files
-        in text format.
+        r"""Save trajectory analysis results for a category group to text format files.
 
         Parameters
         ----------
@@ -292,8 +290,7 @@ class CategoryResults:
 
     @experimental(as_of="0.4.0")
     def to_files(self, out_f, raw_f):
-        r"""Save the trajectory analysis results for a category to files in
-        text format.
+        r"""Save trajectory analysis results for a category to files in text format.
 
         Parameters
         ----------
@@ -483,8 +480,10 @@ class GradientANOVA:
 
     @experimental(as_of="0.4.0")
     def get_trajectories(self):
-        r"""Compute the trajectories for each group in each category and run
-        ANOVA over the results to test group independence.
+        r"""Compute the trajectories for each group and category and run ANOVA.
+
+        More specifically, compute the trajectories for each group in each category
+        and run ANOVA over the results to test group independence.
 
         Returns
         -------
@@ -509,8 +508,7 @@ class GradientANOVA:
         return result
 
     def _normalize_samples(self):
-        r"""Ensure that `self._coords` and `self._metadata_map` have the same
-        sample ids.
+        r"""Ensure `self._coords` and `self._metadata_map` have the same sample ids.
 
         Raises
         ------
@@ -538,8 +536,7 @@ class GradientANOVA:
             self._metadata_map = self._metadata_map.loc[sample_ids]
 
     def _make_groups(self, trajectory_categories, sort_category):
-        r"""Group the sample ids in `self._metadata_map` by the values in
-        `trajectory_categories`.
+        r"""Group sample ids in `self._metadata_map` by `trajectory_categories` values.
 
         Creates `self._groups`, a dictionary keyed by category and values are
         dictionaries in which the keys represent the group name within the
@@ -577,8 +574,7 @@ class GradientANOVA:
                 self._groups[cat][g] = realsorted(df.index, key=sort_val)
 
     def _get_group_trajectories(self, group_name, sids):
-        r"""Compute the trajectory results for `group_name` containing the
-        samples `sids`.
+        r"""Compute trajectory results for `group_name` containing the samples `sids`.
 
         Weights the data if `self._weighted` is True and ``len(sids) > 1``
 
@@ -813,8 +809,7 @@ class FirstDifferenceGradientANOVA(GradientANOVA):
 
 
 class WindowDifferenceGradientANOVA(GradientANOVA):
-    r"""Perform trajectory analysis using the modified first difference
-    algorithm.
+    r"""Perform trajectory analysis using the modified first difference algorithm.
 
     It calculates the norm for all the time-points and subtracts the mean of
     the next number of elements specified in `window_size` and the current

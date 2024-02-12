@@ -3157,7 +3157,9 @@ class TreeNode(SkbioObject):
 
     @experimental(as_of="0.5.6")
     def _node_label(self):
-        """Generate a node label in the format of "support:name" if both exist,
+        """Generate a node label.
+
+        The label will be in the format of "support:name" if both exist,
         or "support" or "name" if either exists.
 
         Returns

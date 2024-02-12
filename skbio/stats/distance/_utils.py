@@ -82,8 +82,7 @@ def is_hollow(mat):
 
 
 def distmat_reorder_buf(in_mat, reorder_vec, out_mat, validate=False):
-    """Reorder the rows and columns of a distance matrix
-    given a reorder vector.
+    """Reorder the rows and columns of a distance matrix given a reorder vector.
 
     Not all of the columns need to be used.
 
@@ -127,8 +126,7 @@ def distmat_reorder_buf(in_mat, reorder_vec, out_mat, validate=False):
 
 
 def distmat_reorder(in_mat, reorder_vec, validate=False):
-    """Reorder the rows and columns of a distance matrix
-    given a reorder vector.
+    """Reorder the rows and columns of a distance matrix given a reorder vector.
 
     Not all of the columns need to be used.
 
@@ -176,8 +174,7 @@ def distmat_reorder(in_mat, reorder_vec, validate=False):
 
 
 def distmat_reorder_condensed(in_mat, reorder_vec, validate=False):
-    """Reorder the rows and columns of a distance matrix
-    given a reorder vector.
+    """Reorder the rows and columns of a distance matrix given a reorder vector.
 
     Not all of the columns need to be used.
 
