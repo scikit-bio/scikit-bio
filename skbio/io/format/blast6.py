@@ -1,4 +1,4 @@
-"""BLAST+6 format (:mod:`skbio.io.format.blast6`)
+r"""BLAST+6 format (:mod:`skbio.io.format.blast6`)
 ==============================================
 
 .. currentmodule:: skbio.io.format.blast6
@@ -10,9 +10,9 @@ headers. Values are separated by the tab character.
 An example BLAST+6-formatted file comparing two protein sequences, taken
 from [2]_ (tab characters represented by ``<tab>``)::
 
-    moaC<tab>gi|15800534|ref|NP_286546.1|<tab>100.00<tab>161<tab>0<tab>0<tab>1\
-<tab>161<tab>1<tab>161<tab>3e-114<tab>330
-    moaC<tab>gi|170768970|ref|ZP_02903423.1|<tab>99.38<tab>161<tab>1<tab>0\
+    moaC<tab>gi|15800534|ref|NP_286546.1|<tab>100.00<tab>161<tab>0<tab>0/\
+<tab>1<tab>161<tab>1<tab>161<tab>3e-114<tab>330
+    moaC<tab>gi|170768970|ref|ZP_02903423.1|<tab>99.38<tab>161<tab>1<tab>0/\
 <tab>1<tab>161<tab>1<tab>161<tab>9e-114<tab>329
 
 Format Support
@@ -178,11 +178,11 @@ Suppose we have a ``blast+6`` file with default columns:
 >>> from io import StringIO
 >>> import skbio.io
 >>> import pandas as pd
->>> fs = '\\n'.join([
-...     'moaC\\tgi|15800534|ref|NP_286546.1|\\t100.00\\t161\\t0\\t0\\t1\\t161\
-\\t1\\t161\\t3e-114\\t330',
-...     'moaC\\tgi|170768970|ref|ZP_02903423.1|\\t99.38\\t161\\t1\\t0\\t1\\t\
-161\\t1\\t161\\t9e-114\\t329'
+>>> fs = '\n'.join([
+...     'moaC\tgi|15800534|ref|NP_286546.1|\t100.00\t161\t0\t0\t1\t161\t1\t161'
+...     '\t3e-114\t330',
+...     'moaC\tgi|170768970|ref|ZP_02903423.1|\t99.38\t161\t1\t0\t1\t161\t1'
+...     '\t161\t9e-114\t329'
 ... ])
 >>> fh = StringIO(fs)
 
@@ -192,7 +192,7 @@ be used:
 >>> df = skbio.io.read(fh, format="blast+6", into=pd.DataFrame,
 ...                    default_columns=True)
 >>> df # doctest: +NORMALIZE_WHITESPACE
-  qseqid                           sseqid  pident  length  mismatch  gapopen \\
+  qseqid                           sseqid  pident  length  mismatch  gapopen \
 0   moaC     gi|15800534|ref|NP_286546.1|  100.00   161.0       0.0      0.0
 1   moaC  gi|170768970|ref|ZP_02903423.1|   99.38   161.0       1.0      0.0
 <BLANKLINE>
@@ -205,9 +205,9 @@ Suppose we have a ``blast+6`` file with user-supplied (non-default) columns:
 >>> from io import StringIO
 >>> import skbio.io
 >>> import pandas as pd
->>> fs = '\\n'.join([
-...     'moaC\\t100.00\\t0\\t161\\t0\\t161\\t330\\t1',
-...     'moaC\\t99.38\\t1\\t161\\t0\\t161\\t329\\t1'
+>>> fs = '\n'.join([
+...     'moaC\t100.00\t0\t161\t0\t161\t330\t1',
+...     'moaC\t99.38\t1\t161\t0\t161\t329\t1'
 ... ])
 >>> fh = StringIO(fs)
 
