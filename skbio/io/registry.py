@@ -1049,7 +1049,7 @@ class Format:
 
     @stable(as_of="0.4.0")
     def writer(self, cls, monkey_patch=True, override=False):
-        """Decorate a function to act as the writer for a class in this format.
+        r"""Decorate a function to act as the writer for a class in this format.
 
         The function should take an instance of `cls` as its first argument
         and the second argument is a filehandle which will be an implementation
@@ -1093,14 +1093,14 @@ class Format:
         ...
         >>> @myformat.writer(MyObject)
         ... def myformat_reader(obj, fh):
-        ...     fh.write("myformat2\\n")
+        ...     fh.write("myformat2\n")
         ...     for c in obj.content:
         ...         fh.write(c)
         ...
         >>> registry.monkey_patch() # If developing skbio, this isn't needed
-        >>> obj = MyObject(["some content here!\\n"])
+        >>> obj = MyObject(["some content here!\n"])
         >>> obj.write([], format='myformat')
-        ['myformat2\\n', 'some content here!\\n']
+        ['myformat2\n', 'some content here!\n']
 
         """
         self._check_registration(cls)

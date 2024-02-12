@@ -1,4 +1,4 @@
-"""Taxdump format (:mod:`skbio.io.format.taxdump`)
+r"""Taxdump format (:mod:`skbio.io.format.taxdump`)
 ===============================================
 
 .. currentmodule:: skbio.io.format.taxdump
@@ -192,10 +192,10 @@ Examples
 >>> from io import StringIO
 >>> import skbio.io
 >>> import pandas as pd
->>> fs = '\\n'.join([
-...     '1\\t|\\t1\\t|\\tno rank\\t|',
-...     '2\\t|\\t131567\\t|\\tsuperkingdom\\t|',
-...     '6\\t|\\t335928\\t|\\tgenus\\t|'
+>>> fs = '\n'.join([
+...     '1\t|\t1\t|\tno rank\t|',
+...     '2\t|\t131567\t|\tsuperkingdom\t|',
+...     '6\t|\t335928\t|\tgenus\t|'
 ... ])
 >>> fh = StringIO(fs)
 
