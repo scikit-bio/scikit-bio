@@ -209,10 +209,10 @@ class IORegistry:
 
     @stable(as_of="0.4.0")
     def create_format(self, *args, **kwargs):
-        """A simple factory for creating new file formats.
+        """Create new file formats.
 
+        A simple factory for creating new file formats.
         This will automatically register the format with this regsistry.
-
         All arguments are passed through to the Format constructor.
 
         Returns

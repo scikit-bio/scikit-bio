@@ -1852,7 +1852,7 @@ fuzzy=[(True, False)], metadata={'gene': 'foo'})
         return dict(zip(chars, obs_counts.tolist()))
 
     def _chars_to_indices(self, chars):
-        r"""Helper for Sequence.frequencies."""
+        """Convert characters to indices for Sequence.frequencies."""
         if isinstance(chars, (str, bytes)):
             chars = set([chars])
         elif not isinstance(chars, set):
