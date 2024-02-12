@@ -19,7 +19,7 @@ from skbio.util._decorator import experimental
 
 @experimental(as_of="0.4.0")
 def bioenv(distance_matrix, data_frame, columns=None):
-    """Find subset of variables maximally correlated with distances.
+    r"""Find subset of variables maximally correlated with distances.
 
     Finds subsets of variables whose Euclidean distances (after scaling the
     variables; see Notes section below for details) are maximally
@@ -144,7 +144,7 @@ def bioenv(distance_matrix, data_frame, columns=None):
     pH, Elevation     2     0.714286
 
     We see that in this simple example, pH alone is maximally rank-correlated
-    with the community distances (:math:`\\rho=0.771517`).
+    with the community distances (:math:`\rho=0.771517`).
 
     """
     if not isinstance(distance_matrix, DistanceMatrix):

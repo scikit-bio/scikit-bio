@@ -1,4 +1,4 @@
-"""Distance matrices and distance-based statistics (:mod:`skbio.stats.distance`)
+r"""Distance matrices and distance-based statistics (:mod:`skbio.stats.distance`)
 =============================================================================
 
 .. currentmodule:: skbio.stats.distance
@@ -67,19 +67,19 @@ Examples
 Assume we have the following delimited text file storing distances between
 three objects with IDs ``a``, ``b``, and ``c``::
 
-    \\ta\\tb\\tc
-    a\\t0.0\\t0.5\\t1.0
-    b\\t0.5\\t0.0\\t0.75
-    c\\t1.0\\t0.75\\t0.0
+    \ta\tb\tc
+    a\t0.0\t0.5\t1.0
+    b\t0.5\t0.0\t0.75
+    c\t1.0\t0.75\t0.0
 
 Load a distance matrix from the file:
 
 >>> from io import StringIO
 >>> from skbio import DistanceMatrix
->>> dm_fh = StringIO("\\ta\\tb\\tc\\n"
-...                  "a\\t0.0\\t0.5\\t1.0\\n"
-...                  "b\\t0.5\\t0.0\\t0.75\\n"
-...                  "c\\t1.0\\t0.75\\t0.0\\n")
+>>> dm_fh = StringIO("\ta\tb\tc\n"
+...                  "a\t0.0\t0.5\t1.0\n"
+...                  "b\t0.5\t0.0\t0.75\n"
+...                  "c\t1.0\t0.75\t0.0\n")
 >>> dm = DistanceMatrix.read(dm_fh)
 >>> print(dm)
 3x3 distance matrix
