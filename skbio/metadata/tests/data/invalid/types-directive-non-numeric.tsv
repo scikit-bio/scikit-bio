@@ -2,7 +2,7 @@
 # Note that the first few values in `col2` *can* be interpreted as numbers,
 # just to have a mixed set of numeric and non-numeric values.
 id	col1	col2
-#sk:types	numeric	numeric
+#q2:types	numeric	numeric
 id1	1	42
 id2	1	-42.50
 id3	1	

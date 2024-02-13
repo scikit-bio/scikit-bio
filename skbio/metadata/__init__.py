@@ -28,4 +28,4 @@ from ._interval import Interval, IntervalMetadata
 from ._metadata import Metadata, NumericMetadataColumn, CategoricalMetadataColumn
 
 
-__all__ = ['Interval', 'IntervalMetadata', 'Metadata']
+__all__ = ["Interval", "IntervalMetadata", "Metadata"]

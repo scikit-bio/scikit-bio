@@ -347,13 +347,13 @@ class MetadataReader:
         return is_id_header(row[0])
 
     def _is_directive(self, row):
-        return len(row) > 0 and row[0].startswith("#sk:")
+        return len(row) > 0 and row[0].startswith(("#sk:", "#q2:"))
 
     def _is_column_types_directive(self, row):
-        return len(row) > 0 and row[0].split(" ")[0] == "#sk:types"
+        return len(row) > 0 and (row[0].split(" ")[0] in ["#sk:types", "#q2:types"])
 
     def _is_missing_directive(self, row):
-        return len(row) > 0 and row[0].split(" ")[0] == "#sk:missing"
+        return len(row) > 0 and (row[0].split(" ")[0] in ["#sk:missing", "#q2:missing"])
 
     def _cast_column(self, series, column_types, missing_schemes):
         if series.name in missing_schemes:

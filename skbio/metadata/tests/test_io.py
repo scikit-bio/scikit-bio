@@ -552,9 +552,11 @@ class TestLoadSuccess(unittest.TestCase):
         self.assertEqual(obs_md, exp_md)
 
     def test_missing_data(self):
+        print(f"Running things...!")
         fp = get_data_path('valid/missing-data.tsv')
 
         obs_md = Metadata.load(fp)
+        
 
         exp_index = pd.Index(['None', 'nan', 'NA'], name='id')
         exp_df = pd.DataFrame(collections.OrderedDict([
@@ -564,6 +566,7 @@ class TestLoadSuccess(unittest.TestCase):
             ('col4', np.array([np.nan, np.nan, np.nan], dtype=object))]),
             index=exp_index)
         exp_md = Metadata(exp_df)
+        print(f"obs_md: {obs_md}, exp_md: {exp_md}")
 
         self.assertEqual(obs_md, exp_md)
 
