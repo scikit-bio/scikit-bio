@@ -1358,7 +1358,7 @@ class CategoricalMetadataColumn(MetadataColumn):
                     % (cls.__name__, value, type(value), series.name)
                 )
 
-        norm_series = series.astype(object).apply(normalize)
+        norm_series = series.apply(normalize, convert_dtype=False)
         norm_series.index = norm_series.index.str.strip()
         norm_series.name = norm_series.name.strip()
         return norm_series

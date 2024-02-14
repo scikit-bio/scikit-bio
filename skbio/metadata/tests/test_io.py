@@ -221,7 +221,7 @@ class TestLoadErrors(unittest.TestCase):
 
         with self.assertRaisesRegex(MetadataFileError,
                                     'Unrecognized directive.*#q2:foo.*'
-                                    '#q2:types.*#sk:missing.*directive'):
+                                    '#q2:types.*#q2:missing.*directive'):
             Metadata.load(fp)
 
     def test_duplicate_directives(self):
@@ -236,7 +236,7 @@ class TestLoadErrors(unittest.TestCase):
 
         with self.assertRaisesRegex(MetadataFileError,
                                     'col2.*unrecognized column type.*foo.*'
-                                    '#sk:types directive'):
+                                    '#q2:types directive'):
             Metadata.load(fp)
 
     def test_column_types_directive_not_convertible_to_numeric(self):
@@ -784,6 +784,20 @@ class TestLoadSuccess(unittest.TestCase):
         exp_df = pd.DataFrame({'col1': ['0', '2.0', '0.00030', '-4.2', '1e-4',
                                         '1e4', '+1.5E+2', np.nan, '1.', '.5',
                                         '1e-08', '-0']},
+                              index=exp_index)
+        exp_md = Metadata(exp_df)
+
+        self.assertEqual(obs_md, exp_md)
+
+    def test_with_complete_types_sk_directive(self):
+        fp = get_data_path('valid/complete-types-directive_w_sk.tsv')
+
+        obs_md = Metadata.load(fp)
+
+        exp_index = pd.Index(['id1', 'id2', 'id3'], name='id')
+        exp_df = pd.DataFrame({'col1': ['1', '2', '3'],
+                               'col2': ['a', 'b', 'c'],
+                               'col3': ['foo', 'bar', '42']},
                               index=exp_index)
         exp_md = Metadata(exp_df)
 
