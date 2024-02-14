@@ -220,6 +220,10 @@ Scikit-bio streamlines the installation process by including Ruff's linter and f
 
 Once installed, the pre-commit hooks will automatically execute every time you commit changes. By default, they enforce Ruff's formatter and linter rules, ensuring code consistency and adherence to standards.
 
+If you have made commits prior to the installation of Ruff and pre-commit, you will need to run the pre-commit hook on all files as illustrated `here <https://pre-commit.com/#4-optional-run-against-all-the-files>`_. To run the pre-commit hook on all files run::
+
+    pre-commit run --all-files
+
 Make necessary changes and commit
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
