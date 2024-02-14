@@ -212,7 +212,7 @@ class TestLoadErrors(unittest.TestCase):
         fp = get_data_path('invalid/directive-before-header.tsv')
 
         with self.assertRaisesRegex(MetadataFileError,
-                                    'directive.*#sk:types.*searching for '
+                                    'directive.*#q2:types.*searching for '
                                     'header'):
             Metadata.load(fp)
 
@@ -220,15 +220,15 @@ class TestLoadErrors(unittest.TestCase):
         fp = get_data_path('invalid/unrecognized-directive.tsv')
 
         with self.assertRaisesRegex(MetadataFileError,
-                                    'Unrecognized directive.*#sk:foo.*'
-                                    '#sk:types.*#sk:missing.*directive'):
+                                    'Unrecognized directive.*#q2:foo.*'
+                                    '#q2:types.*#sk:missing.*directive'):
             Metadata.load(fp)
 
     def test_duplicate_directives(self):
         fp = get_data_path('invalid/duplicate-directives.tsv')
 
         with self.assertRaisesRegex(MetadataFileError,
-                                    'duplicate directive.*#sk:types'):
+                                    'duplicate directive.*#q2:types'):
             Metadata.load(fp)
 
     def test_unrecognized_column_type_in_directive(self):
@@ -259,7 +259,7 @@ class TestLoadErrors(unittest.TestCase):
             'invalid/directive-after-directives-section.tsv')
 
         with self.assertRaisesRegex(MetadataFileError,
-                                    '#sk:types.*outside of the directives '
+                                    '#q2:types.*outside of the directives '
                                     'section'):
             Metadata.load(fp)
 

@@ -235,8 +235,8 @@ class MetadataReader:
                 directive_kind = "missing"
             else:
                 raise MetadataFileError(
-                    "Unrecognized directive %r. Only the #sk:types"
-                    " and #sk:missing directives are supported at this"
+                    "Unrecognized directive %r. Only the #sk:types, #q2:types"
+                    " and #sk:missing, #q2:missing directives are supported at this"
                     " time." % row[0]
                 )
 
@@ -264,7 +264,7 @@ class MetadataReader:
                     )
                     raise MetadataFileError(
                         "Column %r has an unrecognized column type %r "
-                        "specified in its #sk:types directive. "
+                        "specified in its #sk:types or #q2:types directive. "
                         "Supported column types (case-insensitive): %s"
                         % (column_name, column_type, fmt_column_types)
                     )
@@ -274,7 +274,7 @@ class MetadataReader:
                 if column_missing not in BUILTIN_MISSING:
                     raise MetadataFileError(
                         "Column %r has an unrecognized missing value scheme %r"
-                        " specified in its #sk:missing directive."
+                        " specified in its #sk:missing or #q2:missing directive."
                         " Supported missing value schemes (case-sensitive): %s"
                         % (column_name, column_missing, list(BUILTIN_MISSING))
                     )
@@ -415,6 +415,11 @@ class MetadataWriter:
 
             md = self._metadata
             header = [md.id_header]
+            # NOTE/TODO: The Metadata files written with this method
+            # will always have the directives of type #sk:
+            # even if a metadata file with directives of type #q2:
+            # has been read. This can be changed in the future
+            # however we could also decide to just stick with the sk: types.
             types_directive = ["#sk:types"]
             missing_directive = ["#sk:missing"]
 
