@@ -32,7 +32,8 @@ def nj(dm, disallow_negative_branch_length=True, result_constructor=None):
         Function to apply to construct the result object. This must take a
         newick-formatted string as input. The result of applying this function
         to a newick-formatted string will be returned from this function. This
-        defaults to ``lambda x: TreeNode.read(StringIO(x), format='newick')``.
+        defaults to ``lambda x: TreeNode.read(StringIO(x), format='newick')`` 
+        and applying the TreeNode.root_at_midpoint method.
 
     Returns
     -------
@@ -46,10 +47,12 @@ def nj(dm, disallow_negative_branch_length=True, result_constructor=None):
 
     Notes
     -----
-    Neighbor joining was initially described in Saitou and Nei (1987) [1]_. The
-    example presented here is derived from the Wikipedia page on neighbor
-    joining [2]_. The Phylip manual also describes the method [3]_ and Phylip
-    itself provides an implementation which is useful for comparison.
+    Neighbor joining was initially described in Saitou and Nei (1987) [1]_. A 
+    summary of the neighbor joining method, including a discussion of its
+    limitations, appears in [2]_. The example presented here is derived from the
+    Wikipedia page on neighbor joining [3]_. The Phylip manual also describes
+    the method [4]_ and Phylip itself provides an implementation which is useful
+    for comparison.
 
     Neighbor joining, by definition, creates unrooted trees. One strategy for
     rooting the resulting trees is midpoint rooting, which is accessible as
@@ -60,8 +63,11 @@ def nj(dm, disallow_negative_branch_length=True, result_constructor=None):
     .. [1] Saitou N, and Nei M. (1987) "The neighbor-joining method: a new
        method for reconstructing phylogenetic trees." Molecular Biology and
        Evolution. PMID: 3447015.
-    .. [2] http://en.wikipedia.org/wiki/Neighbour_joining
-    .. [3] http://evolution.genetics.washington.edu/phylip/doc/neighbor.html
+    .. [2] Olivier G, Mike S. (2006) "Neighbor-Joining Revealed" Molecular 
+       Biology and Evolution, Volume 23, Issue 11, November 2006, 
+       Pages 1997–2000, https://doi.org/10.1093/molbev/msl072
+    .. [3] http://en.wikipedia.org/wiki/Neighbour_joining
+    .. [4] https://phylipweb.github.io/phylip/doc/neighbor.html
 
     Examples
     --------
@@ -79,20 +85,23 @@ def nj(dm, disallow_negative_branch_length=True, result_constructor=None):
     >>> ids = list('abcde')
     >>> dm = DistanceMatrix(data, ids)
 
-    Contstruct the neighbor joining tree representing the relationship between
-    those OTUs. This is returned as a TreeNode object.
+    Construct the neighbor joining tree representing the relationship between
+    those OTUs. This is returned as a TreeNode object with a midpoint root.
 
     >>> tree = nj(dm)
     >>> print(tree.ascii_art())
-              /-d
-             |
-             |          /-c
-             |---------|
-    ---------|         |          /-b
-             |          \--------|
-             |                    \-a
-             |
-              \-e
+
+                       /-b
+             /--------|
+            |          \-a
+    -midpoint_root
+            |          /-c
+             \--------|
+                      |          /-d
+                       \--------|
+                                 \-e
+
+    
 
     Again, construct the neighbor joining tree, but instead return the newick
     string representing the tree, rather than the TreeNode object. (Note that
@@ -109,11 +118,15 @@ def nj(dm, disallow_negative_branch_length=True, result_constructor=None):
             "Distance matrix must be at least 3x3 to "
             "generate a neighbor joining tree."
         )
-
+    # default result constructor where root is placed at midpoint of farthest OTUs
     if result_constructor is None:
 
         def result_constructor(x):
-            return TreeNode.read(io.StringIO(x), format="newick")
+            y = TreeNode.read(io.StringIO(x), format="newick")
+            y = y.root_at_midpoint()
+            z = y.root()
+            z.name = "midpoint_root"
+            return y
 
     # initialize variables
     node_definition = None
@@ -256,7 +269,7 @@ def _lowest_index(dm):
 
 
 def _pair_members_to_new_node(dm, i, j, disallow_negative_branch_length):
-    """Return the distance between a new node and decendants of that new node.
+    """Return the distance between a new node and descendants of that new node.
 
     Parameters
     ----------
