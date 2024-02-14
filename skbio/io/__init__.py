@@ -273,6 +273,7 @@ import_module("skbio.io.format.gff3")
 import_module("skbio.io.format.stockholm")
 import_module("skbio.io.format.binary_dm")
 import_module("skbio.io.format.taxdump")
+import_module("skbio.io.format.sk_metadata")
 
 # This is meant to be a handy indicator to the user that they have done
 # something wrong.
