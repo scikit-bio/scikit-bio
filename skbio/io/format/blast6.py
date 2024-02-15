@@ -11,10 +11,10 @@ An example BLAST+6-formatted file comparing two protein sequences, taken
 from [2]_ (tab characters represented by ``<tab>``)::
 
     moaC<tab>gi|15800534|ref|NP_286546.1|<tab>100.00<tab>161<tab>0<tab>0/\
-<tab>1<tab>161<tab>1<tab>161<tab>3e-114<tab>330
+    <tab>1<tab>161<tab>1<tab>161<tab>3e-114<tab>330
 
     moaC<tab>gi|170768970|ref|ZP_02903423.1|<tab>99.38<tab>161<tab>1<tab>0/\
-<tab>1<tab>161<tab>1<tab>161<tab>9e-114<tab>329
+    <tab>1<tab>161<tab>1<tab>161<tab>9e-114<tab>329
 
 Format Support
 --------------
