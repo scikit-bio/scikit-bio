@@ -96,7 +96,7 @@ columns after all aforementioned columns.
 |inherited PGC   |1 if node inherits plastid gencode   |
 |flag (1 or 0)   |from parent                          |
 +----------------+-------------------------------------+
-|specified\\_     |1 if species in the node's lineage   |
+|specified       |1 if species in the node's lineage   |
 |species         |has formal name                      |
 +----------------+-------------------------------------+
 |hydrogenosome   |see gencode.dmp file                 |
