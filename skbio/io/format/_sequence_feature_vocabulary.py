@@ -129,14 +129,14 @@ def _parse_feature_table(lines, length):
 
 
 def _parse_single_feature(lines, imd):
-    """Parse a feature.
-
-    Parse a feature and add it to ``IntervalMetadata`` object.
+    """Parse a feature and add it to ``IntervalMetadata`` object.
 
     Parameters
     ----------
     imd : IntervalMetadata
-
+        An IntervalMetadata object to which the parsed feature will be added.
+    lines : list of strings
+        A list of strings representing the lines of text to be parsed.
     """
     voca_change = _vocabulary_change("insdc")
 
@@ -352,7 +352,10 @@ def _serialize_qualifier(key, value):
 
     Parameters
     ----------
+    key : str
+        The key of the Qualifier, representing the type or name of the information.
     value : int, str
+        The value associated with the Qualifier.
 
     """
     # if value is empty

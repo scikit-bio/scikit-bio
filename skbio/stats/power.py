@@ -1081,6 +1081,8 @@ def _draw_paired_samples(meta_pairs, index, num_samps):
         The first array is an index array. The second gives an integer
         corresponding to the `control_cat`-group, and the third lists the
         position of the reference group sample in the list of samples.
+    num_samps : int
+        The number of samples.
 
     Returns
     -------
@@ -1150,6 +1152,8 @@ def _calculate_power_curve(
     num_iter : int
         The default is 1000. The number of p-values to generate for each point
         on the curve.
+    alpha : float, optional
+        The significance level for the statistical test. Defaults to 0.05.
 
     Returns
     -------

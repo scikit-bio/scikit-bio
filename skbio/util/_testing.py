@@ -109,6 +109,8 @@ def assert_ordination_results_equal(
     ignore_directionality : bool, optional
         Ignore differences in directionality (i.e., differences in signs) for
         attributes `samples`, `features` and `biplot_scores`.
+    decimal : int, optional
+        Number of decimal places to compare when checking numerical values. Defaults to 7.
 
     Raises
     ------
@@ -317,6 +319,8 @@ def assert_data_frame_almost_equal(left, right, rtol=1e-5):
     ----------
     left, right : pd.DataFrame
         ``pd.DataFrame`` objects to compare.
+    rtol : float, optional
+        The relative tolerance parameter used for comparison. Defaults to 1e-5.
 
     Raises
     ------

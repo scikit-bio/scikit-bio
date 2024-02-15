@@ -796,6 +796,10 @@ def _serialize_single_embl(obj, fh):
     Parameters
     ----------
     obj : Sequence or its child class
+        A Sequence object or its child class representing the biological sequence to be
+        serialized.
+    fh : file object
+        A file object open for writing.
 
     """
     # shortcut to deal with metadata
@@ -966,7 +970,15 @@ def _serialize_id(header, obj, metadata={}, indent=5):
 
     Parameters
     ----------
+    header : str
+        The header of the ID line. Usually 'ID' for EMBL or 'LOCUS' for GenBank.
     obj : dict
+        A dictionary containing key-value pairs representing the attributes of the
+        sequence entry.
+    metadata : dict, optional
+        Additional metadata information, typically extracted from a GenBank entry.
+    indent : int, optional
+        The number of spaces used to indent the serialized ID line. Defaults to 5.
 
     """
     # get key->value pairs, or key->'' if values is None
@@ -1275,9 +1287,14 @@ def _serialize_source(header, obj, indent=5):
 
     Parameters
     ----------
-    header: section header
+    header: str
+        The section header.
     obj : dict
-    indent : indent length
+        A dictionary containing key-value pairs representing the attributes
+        of the SOURCE section.
+    indent : int, optional
+        The number of spaces used to indent the serialized SOURCE section.
+        Defaults to 5.
 
     """
     source = []
@@ -1333,6 +1350,10 @@ def _serialize_sequence(obj, indent=5):
     Parameters
     ----------
     obj : DNA, RNA, Sequence Obj
+        A DNA, RNA, or Sequence object representing the biological sequence to be
+        serialized.
+    indent : int, optional
+        The number of spaces used to indent the serialized sequence. Defaults to 5.
 
     """
     # a flag to determine if I wrote header or not
@@ -1477,8 +1498,12 @@ def _serialize_date(embl_key, date_list, indent=5):
 
     Parameters
     ----------
-    header : embl key id
-    date_list : a list of dates
+    embl_key : str
+        The EMBL key ID corresponding to the date line.
+    date_list : list
+        A list of dates associated with the sequence entry.
+    indent : int, optional
+        The number of spaces used to indent the serialized date line. Defaults to 5.
 
     """
     # get an embl wrapper

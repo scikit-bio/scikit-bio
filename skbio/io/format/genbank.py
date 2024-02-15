@@ -495,6 +495,10 @@ def _serialize_single_genbank(obj, fh):
     Parameters
     ----------
     obj : Sequence or its child class
+        A Sequence object or its child class representing the biological sequence to be
+        serialized.
+    fh : file object
+        A file object open for writing.
 
     """
     # write out the headers
@@ -587,7 +591,13 @@ def _serialize_locus(header, obj, indent=12):
 
     Parameters
     ----------
+    header : str
+        The header of the LOCUS line.
     obj : dict
+        A dictionary containing key-value pairs representing the attributes of the
+        sequence entry.
+    indent : int, optional
+        The number of spaces used to indent the serialized LOCUS line. Defaults to 12.
 
     """
     # use 'or' to convert None to ''
@@ -621,7 +631,14 @@ def _serialize_reference(header, obj, indent=12):
 
     Parameters
     ----------
+    header : str
+        The header of the REFERENCE section.
     obj : list
+        A list of dictionaries representing the individual references cited in the
+        sequence entry.
+    indent : int, optional
+        The number of spaces used to indent each line of the serialized REFERENCE section.
+        Defaults to 12.
 
     """
     padding = "  "
@@ -661,7 +678,14 @@ def _serialize_source(header, obj, indent=12):
 
     Parameters
     ----------
+    header : str
+        The header of the SOURCE section,
     obj : dict
+        A dictionary containing key-value pairs representing the attributes of the
+        SOURCE section.
+    indent : int, optional
+        The number of spaces used to indent each line of the serialized SOURCE section.
+        Defaults to 12.
 
     """
     s = (
@@ -697,6 +721,9 @@ def _serialize_origin(seq, indent=9):
     Parameters
     ----------
     seq : str
+        The sequence data to be serialized.
+    indent : int, optional
+        The number of spaces used to indent each line of the serialized ORIGIN section.
 
     """
     n = 1

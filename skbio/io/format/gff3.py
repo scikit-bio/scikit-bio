@@ -281,9 +281,12 @@ def _generator_to_gff3(obj, fh, skip_subregion=True):
     Parameters
     ----------
     obj : Iterable of (seq_id, IntervalMetadata)
+        An iterable containing tuples where each tuple consists of a sequence ID
+        (seq_id) and an IntervalMetadata object.
     fh : file handler
+        A file handler object opened in write mode.
     skip_subregion : bool
-        Write a line for each sub-regions of an ``Interval`` if it is ``False``
+        Write a line for each sub-regions of an ``Interval`` if it is ``False``.
 
     """
     # write file header
@@ -323,8 +326,9 @@ def _gff3_to_interval_metadata(fh, seq_id):
     Parameters
     ----------
     fh : file handler
+        A file handler object opened for reading.
     seq_id : str
-        sequence ID which the interval metadata is associated with
+        Sequence ID which the interval metadata is associated with.
 
     """
     length = None
@@ -351,11 +355,13 @@ def _interval_metadata_to_gff3(obj, fh, seq_id, skip_subregion=True):
     Parameters
     ----------
     obj : IntervalMetadata
-    fh : file object like
+        An IntervalMetadata object.
+    fh : file object
+        File object opened for writing.
     seq_id : str
         ID for column 1 in the GFF3 file.
     skip_subregion : bool
-        write a line for each sub-regions of an ``Interval`` if it is ``False``
+        Write a line for each sub-regions of an ``Interval`` if it is ``False``.
 
     """
     # write file header
@@ -464,11 +470,12 @@ def _serialize_interval_metadata(interval_metadata, seq_id, fh, skip_subregion=T
     Parameters
     ----------
     interval_metadata : IntervalMetadata
+        An IntervalMetadata object.
     seq_id : str
         Seq id for the current annotation. It will be used as the 1st column
         in the GFF3.
     fh : file handler
-        the file object to output
+        The file object to output.
     skip_subregion : bool
         Whether to skip outputting each sub region as a line in GFF3.
 

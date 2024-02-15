@@ -393,11 +393,14 @@ class Workflow:
 
         Parameters
         ----------
-        it : an iterator
-        success_callback : method to call on a successful item prior to
-            yielding. By default, ``self.state`` is yielded.
-        fail_callback : method to call on a failed item prior to yielding. By
-            default, failures are ignored.
+        iter_ : iterator
+            The iterator containing the data to be processed.
+        success_callback : method, optional
+            Method to call on a successful item prior to yielding. By default,
+            ``self.state`` is yielded.
+        fail_callback : method, optional
+            Method to call on a failed item prior to yielding. By default, failures
+            are ignored.
 
         """
         if success_callback is None:
