@@ -14,6 +14,7 @@ import re
 import numpy as np
 import pandas as pd
 
+from skbio.io._fileobject import SaneTextIOWrapper
 from ._util import find_duplicates
 from .missing import DEFAULT_MISSING, BUILTIN_MISSING, series_encode_missing
 from .base import SUPPORTED_COLUMN_TYPES, FORMATTED_ID_HEADERS, is_id_header
@@ -38,16 +39,23 @@ class MetadataFileError(Exception):
 
 
 class MetadataReader:
-    def __init__(self, filepath):
-        if not os.path.isfile(filepath):
-            raise MetadataFileError(
-                "Metadata file path doesn't exist, or the path points to "
-                "something other than a file. Please check that the path "
-                "exists, has read permissions, and points to a regular file "
-                "(not a directory): %s" % filepath
-            )
+    def __init__(self, filepath_or_filehandle):
+        # check if the filepath_filehandle is a path... if it is check if it
+        # points to a file
+        # TODO: Refine this check to be more specific
+        if isinstance(filepath_or_filehandle, str):
+            self._file_is_filehandle = False
+            if not os.path.isfile(filepath_or_filehandle):
+                raise MetadataFileError(
+                    "Metadata file path doesn't exist, or the path points to "
+                    "something other than a file. Please check that the path "
+                    "exists, has read permissions, and points to a regular file "
+                    "(not a directory): %s" % filepath_or_filehandle
+                )
+        else:
+            self._file_is_filehandle = True
 
-        self._filepath = filepath
+        self._filepath = filepath_or_filehandle
 
         # Used by `read()` to store an iterator yielding rows with
         # leading/trailing whitespace stripped from their cells (this is a
@@ -66,11 +74,18 @@ class MetadataReader:
             column_types = {}
 
         try:
-            # Newline settings based on recommendation from csv docs:
-            #     https://docs.python.org/3/library/csv.html#id3
+            # choose the appropriate context manager depending
+            # on if a filehandle has been passed.
+            if self._file_is_filehandle:
+                cm = self._filepath
+            else:
+                # Newline settings based on recommendation from csv docs:
+                #     https://docs.python.org/3/library/csv.html#id3
 
-            # Ignore BOM on read (but do not write BOM)
-            with open(self._filepath, "r", newline="", encoding="utf-8-sig") as fh:
+                # Ignore BOM on read (but do not write BOM)
+                cm = open(self._filepath, "r", newline="", encoding="utf-8-sig")
+
+            with cm as fh:
                 tsv_reader = csv.reader(fh, dialect="excel-tab", strict=True)
                 self._reader = (self._strip_cell_whitespace(row) for row in tsv_reader)
                 header = self._read_header()
@@ -405,12 +420,16 @@ class MetadataWriter:
     def __init__(self, metadata):
         self._metadata = metadata
 
-    def write(self, filepath):
-        # Newline settings based on recommendation from csv docs:
-        #     https://docs.python.org/3/library/csv.html#id3
+    def write(self, filepath_or_filehandle):
+        if isinstance(filepath_or_filehandle, str):
+            # Newline settings based on recommendation from csv docs:
+            # https://docs.python.org/3/library/csv.html#id3
+            # Do NOT write a BOM, hence utf-8 not utf-8-sig
+            cm = open(filepath, "w", newline="", encoding="utf-8")
+        else:
+            cm = filepath_or_filehandle
 
-        # Do NOT write a BOM, hence utf-8 not utf-8-sig
-        with open(filepath, "w", newline="", encoding="utf-8") as fh:
+        with cm as fh:
             tsv_writer = csv.writer(fh, dialect="excel-tab", strict=True)
 
             md = self._metadata
