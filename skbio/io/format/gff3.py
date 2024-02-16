@@ -276,15 +276,14 @@ def _gff3_to_generator(fh):
 
 @gff3.writer(None)
 def _generator_to_gff3(obj, fh, skip_subregion=True):
-    """Write list of IntervalMetadata into file.
+    """Write a list of IntervalMetadata into a file.
 
     Parameters
     ----------
     obj : Iterable of (seq_id, IntervalMetadata)
-        An iterable containing tuples where each tuple consists of a sequence ID
-        (seq_id) and an IntervalMetadata object.
+        List of IntervalMetadata to write.
     fh : file handler
-        A file handler object opened in write mode.
+        File to write into.
     skip_subregion : bool
         Write a line for each sub-regions of an ``Interval`` if it is ``False``.
 
@@ -326,7 +325,7 @@ def _gff3_to_interval_metadata(fh, seq_id):
     Parameters
     ----------
     fh : file handler
-        A file handler object opened for reading.
+        GFF3 file to read.
     seq_id : str
         Sequence ID which the interval metadata is associated with.
 

@@ -17,9 +17,9 @@ from skbio.util._decorator import experimental
 
 @experimental(as_of="0.4.0")
 def ca(X, scaling=1):
-    r"""Compute correspondence analysis, a multivariate statistical
-    technique for ordination.
+    r"""Compute correspondence analysis.
 
+    Correspondence analysis is a multivariate statistical technique for ordination.
     In general, rows in the data table will correspond to samples and
     columns to features, but the method is symmetric. In order to
     measure the correspondence between rows and columns, the

@@ -210,8 +210,7 @@ def _delete_trailing_number(line):
 
 
 def _check_length(data, labels, num_seqs_check=None):
-    """Check the lengths of the clustal sequences to make
-    sure that they are lining up right.
+    """Check that the lengths of the clustal sequences line up correctly.
 
     num_seqs_check: The number of sequences to check
 
