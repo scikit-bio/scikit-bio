@@ -38,7 +38,6 @@ def permdisp(
 ):
     """Test for Homogeneity of Multivariate Groups Disperisons.
 
-    Uses Marti Anderson's PERMDISP2 procedure.
     PERMDISP is a multivariate analogue of Levene's test for homogeneity of
     multivariate variances. Distances are handled by reducing the
     original distances to principal coordinates. PERMDISP calculates an
@@ -125,6 +124,8 @@ def permdisp(
 
     Notes
     -----
+    This function uses Marti Anderson's PERMDISP2 procedure.
+
     The significance of the results from this function will be the same as the
     results found in vegan's betadisper, however due to floating point
     variability the F-statistic results may vary slightly.
@@ -134,8 +135,8 @@ def permdisp(
 
     References
     ----------
-    .. [1] Anderson, Marti J. "Distance-Based Tests for Homogeneity of
-        Multivariate Dispersions." Biometrics 62 (2006):245-253
+    .. [1] Anderson, M. J. (2006). Distance-based tests for homogeneity of multivariate
+       dispersions. Biometrics, 62(1), 245-253.
 
     .. [2] http://cran.r-project.org/web/packages/vegan/index.html
 
