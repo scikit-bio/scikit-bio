@@ -1528,8 +1528,9 @@ def ancom(
 
 
 def _holm_bonferroni(p):
-    """Perform Holm-Bonferroni correction for pvalues
-    to account for multiple comparisons.
+    """Perform Holm-Bonferroni correction.
+
+    Perform Holm-Bonferroni correction for pvalues to account for multiple comparisons.
 
     Parameters
     ----------
@@ -1557,7 +1558,9 @@ def _holm_bonferroni(p):
 
 
 def _log_compare(mat, cats, significance_test=scipy.stats.ttest_ind):
-    """Calculate pairwise log ratios between all features and perform a
+    """Calculate pairwise log ratios and perform a significance test.
+
+    Calculate pairwise log ratios between all features and perform a
     significance test (i.e. t-test) to determine if there is a significant
     difference in feature ratios with respect to the variable of interest.
 
@@ -1593,8 +1596,7 @@ def _log_compare(mat, cats, significance_test=scipy.stats.ttest_ind):
 
 
 def _gram_schmidt_basis(n):
-    """Build clr transformed basis derived from
-    gram schmidt orthogonalization.
+    """Build clr transformed basis derived from gram schmidt orthogonalization.
 
     Parameters
     ----------
@@ -1617,8 +1619,9 @@ def _gram_schmidt_basis(n):
 
 @experimental(as_of="0.5.5")
 def sbp_basis(sbp):
-    r"""Build an orthogonal basis from a sequential binary partition (SBP). As
-    explained in [1]_, the SBP is a hierarchical collection of binary
+    r"""Build an orthogonal basis from a sequential binary partition (SBP).
+
+    As explained in [1]_, the SBP is a hierarchical collection of binary
     divisions of compositional parts. The child groups are divided again until
     all groups contain a single part. The SBP can be encoded in a
     :math:`(D - 1) \times D` matrix where, for each row, parts can be grouped
@@ -1687,8 +1690,7 @@ def sbp_basis(sbp):
 
 
 def _check_orthogonality(basis):
-    """Check to see if basis is truly orthonormal in the
-    Aitchison simplex.
+    """Check to see if basis is truly orthonormal in the Aitchison simplex.
 
     Parameters
     ----------

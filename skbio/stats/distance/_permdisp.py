@@ -36,8 +36,7 @@ def permdisp(
     method="eigh",
     number_of_dimensions=10,
 ):
-    """Test for Homogeneity of Multivariate Groups Disperisons using Marti
-    Anderson's PERMDISP2 procedure.
+    """Test for Homogeneity of Multivariate Groups Disperisons.
 
     PERMDISP is a multivariate analogue of Levene's test for homogeneity of
     multivariate variances. Distances are handled by reducing the
@@ -125,6 +124,8 @@ def permdisp(
 
     Notes
     -----
+    This function uses Marti Anderson's PERMDISP2 procedure.
+
     The significance of the results from this function will be the same as the
     results found in vegan's betadisper, however due to floating point
     variability the F-statistic results may vary slightly.
@@ -134,8 +135,8 @@ def permdisp(
 
     References
     ----------
-    .. [1] Anderson, Marti J. "Distance-Based Tests for Homogeneity of
-        Multivariate Dispersions." Biometrics 62 (2006):245-253
+    .. [1] Anderson, M. J. (2006). Distance-based tests for homogeneity of multivariate
+       dispersions. Biometrics, 62(1), 245-253.
 
     .. [2] http://cran.r-project.org/web/packages/vegan/index.html
 
@@ -308,7 +309,9 @@ def _compute_groups(samples, test_type, grouping):
 
 
 def _config_med(x):
-    """Slice the vector up to the last value to exclude grouping column
+    """Slice and transpose the vector.
+
+    Slice the vector up to the last value to exclude grouping column
     and transpose the vector to be compatible with hd.geomedian.
     """
     X = x.values[:, :-1]

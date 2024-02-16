@@ -453,8 +453,9 @@ def _get_embl_section(line):
 
 
 def _translate_key(key):
-    """Translate a single key from EMBL to genbank. Returns key
-    itself if no traslation is defined.
+    """Translate a single key from EMBL to genbank.
+
+    Returns key itself if no traslation is defined.
     """
     return KEYS_TRANSLATOR.get(key, key)
 
@@ -462,8 +463,10 @@ def _translate_key(key):
 # a method to translate keys from embl to genbank for a dict object. All keys
 # not defined in the original dict will remain the same
 def _translate_keys(data):
-    """Translate a dictionary of uniprot key->value in a genbank like
-    dictionary of key values. Keep old keys if no translation is defined.
+    """Translate keys from EMBL to genbank for a dict object.
+
+    Translate a dictionary of uniprot key->value in a genbank like dictionary
+    of key values. Keep old keys if no translation is defined.
     """
     # traslate keys and get a new_data object
     new_data = {_translate_key(k): v for k, v in data.items()}
@@ -473,8 +476,9 @@ def _translate_keys(data):
 
 # define a default textwrap.Wrapper for embl
 def _get_embl_wrapper(embl_key, indent=5, subsequent_indent=None, width=80):
-    """Return a textwrap.TextWrapper for embl records (eg, write
-    <key>   <string> by providing embl key and a string. Wrap text to
+    """Return a textwrap.TextWrapper for embl records.
+
+    For example, write <key>   <string> by providing embl key and a string. Wrap text to
     80 column.
     """
     # define the string to prepen (eg "OC   ")
@@ -498,8 +502,9 @@ def _get_embl_wrapper(embl_key, indent=5, subsequent_indent=None, width=80):
 
 
 def _serialize_list(embl_wrapper, data, sep="\n"):
-    """Serialize a list of obj using a textwrap.TextWrapper instance. Returns
-    one string of wrapped embl objects.
+    """Serialize a list of obj using a textwrap.TextWrapper instance.
+
+    Returns one string of wrapped embl objects.
     """
     # the output array
     output = []
@@ -871,7 +876,9 @@ def _serialize_single_embl(obj, fh):
 
 
 def _parse_id(lines):
-    """From EMBL user manual (Release 130, November 2016).
+    """Parse the identification line of an EMBL record.
+
+    From EMBL user manual (Release 130, November 2016).
     (ftp://ftp.ebi.ac.uk/pub/databases/embl/release/doc/usrman.txt)
 
     The ID (IDentification) line is always the first line of an entry. The
@@ -1433,7 +1440,9 @@ def _embl_parse_feature_table(lines, length):
 
 
 def _serialize_feature_table(intervals, indent=21):
-    """Parameters
+    """Serialize a list of ``Interval`` objects into EMBL format.
+
+    Parameters
     ----------
     intervals : list of ``Interval``
 

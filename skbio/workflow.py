@@ -220,6 +220,7 @@ class NotExecuted:
 
     @experimental(as_of="0.4.0")
     def __call__(self, msg):
+        """Update message and return self."""
         self.msg = msg
         return self
 
@@ -232,6 +233,7 @@ class Exists:
 
     @experimental(as_of="0.4.0")
     def __contains__(self, item):
+        """Check if a value exists."""
         return True
 
 
@@ -239,8 +241,11 @@ anything = Exists()  # external, for when a value can be anything
 
 
 class NotNone:
+    """Check for non-None values."""
+
     @experimental(as_of="0.4.0")
     def __contains__(self, item):
+        """Check if item is not None."""
         if item is None:
             return False
         else:
@@ -472,6 +477,7 @@ class method:
 
     @experimental(as_of="0.4.0")
     def __call__(self, func):
+        """Decorate function with specified priority."""
         func.priority = self.priority
         return func
 

@@ -14,8 +14,7 @@ from ._cutils import center_distance_matrix_cy
 
 @experimental(as_of="0.4.0")
 def mean_and_std(a, axis=None, weights=None, with_mean=True, with_std=True, ddof=0):
-    """Compute the weighted average and standard deviation along the
-    specified axis.
+    """Compute the weighted average and standard deviation along the specified axis.
 
     Parameters
     ----------
@@ -82,8 +81,7 @@ def mean_and_std(a, axis=None, weights=None, with_mean=True, with_std=True, ddof
 
 @experimental(as_of="0.4.0")
 def scale(a, weights=None, with_mean=True, with_std=True, ddof=0, copy=True):
-    """Scale array by columns to have weighted average 0 and standard
-    deviation 1.
+    """Scale array by columns to have weighted average 0 and standard deviation 1.
 
     Parameters
     ----------

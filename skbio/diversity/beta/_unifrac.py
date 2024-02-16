@@ -356,7 +356,9 @@ def _setup_pairwise_unifrac(
 
 
 def _unweighted_unifrac(u_node_counts, v_node_counts, branch_lengths):
-    """Parameters
+    """Calculate unweighted UniFrac distance between samples.
+
+    Parameters
     ----------
     u_node_counts, v_node_counts : np.array
         Vectors indicating presence (value greater than zero) and absence
@@ -390,7 +392,9 @@ def _unweighted_unifrac(u_node_counts, v_node_counts, branch_lengths):
 def _weighted_unifrac(
     u_node_counts, v_node_counts, u_total_count, v_total_count, branch_lengths
 ):
-    """Parameters
+    """Calculate weighted Unifrac distance between samples.
+
+    Parameters
     ----------
     u_node_counts, v_node_counts : np.array
         Vectors indicating presence (value greater than zero) and absence
@@ -440,7 +444,9 @@ def _weighted_unifrac_normalized(
     branch_lengths,
     node_to_root_distances,
 ):
-    """Parameters
+    """Calculate weighted normalized UniFrac distance between samples.
+
+    Parameters
     ----------
     u_node_counts, v_node_counts : np.array
          Vectors indicating presence (value greater than zero) and absence

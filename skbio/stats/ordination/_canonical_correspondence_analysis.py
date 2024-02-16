@@ -17,8 +17,7 @@ from skbio.util._decorator import experimental
 
 @experimental(as_of="0.4.0")
 def cca(y, x, scaling=1):
-    r"""Compute canonical (also known as constrained) correspondence
-    analysis.
+    r"""Compute canonical (also known as constrained) correspondence analysis.
 
     Canonical (or constrained) correspondence analysis is a
     multivariate ordination technique. It appeared in community

@@ -220,10 +220,11 @@ def pcoa(distance_matrix, method="eigh", number_of_dimensions=0, inplace=False):
 
 
 def _fsvd(centered_distance_matrix, number_of_dimensions=10):
-    """Perform singular value decomposition, or more specifically in
-    this case eigendecomposition, using fast heuristic algorithm
-    nicknamed "FSVD" (FastSVD), adapted and optimized from the algorithm
-    described by Halko et al (2011).
+    """Perform singular value decomposition.
+
+    More specifically in this case eigendecomposition, using fast heuristic algorithm
+    nicknamed "FSVD" (FastSVD), adapted and optimized from the algorithm described
+    by Halko et al (2011).
 
     Parameters
     ----------

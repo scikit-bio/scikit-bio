@@ -845,7 +845,7 @@ class TabularMSA(MetadataMixin, PositionalMetadataMixin, SkbioObject):
 
     @experimental(as_of="0.4.1")
     def __repr__(self):
-        """String summary of this MSA."""
+        """Return string summary of this MSA."""
         pep8_line_length_limit = 79
         length_taken_by_docstring_indent = 8
         width = pep8_line_length_limit - length_taken_by_docstring_indent
@@ -924,7 +924,7 @@ class TabularMSA(MetadataMixin, PositionalMetadataMixin, SkbioObject):
 
     @experimental(as_of="0.4.1")
     def __len__(self):
-        """Number of sequences in the MSA.
+        """Return number of sequences in the MSA.
 
         Returns
         -------
@@ -992,7 +992,7 @@ class TabularMSA(MetadataMixin, PositionalMetadataMixin, SkbioObject):
 
     @experimental(as_of="0.4.1")
     def __str__(self):
-        """String summary of this MSA."""
+        """Return string summary of this MSA."""
         return self.__repr__()
 
     @experimental(as_of="0.4.1")
