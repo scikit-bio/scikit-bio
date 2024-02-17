@@ -854,7 +854,7 @@ class Format:
 
     @stable(as_of="0.4.0")
     def sniffer(self, override=False):
-        """Decorate a function to act as the sniffer for this format.
+        r"""Decorate a function to act as the sniffer for this format.
 
         The function should take one argument which will be an implementation
         of either :class:`io.TextIOBase` or :class:`io.BufferedReader`
@@ -895,9 +895,9 @@ class Format:
         ...         return True, {'version': version}
         ...     return False, {}
         ...
-        >>> myformat_sniffer(["myformat2\\n", "some content\\n"])
+        >>> myformat_sniffer(["myformat2\n", "some content\n"])
         (True, {'version': 2})
-        >>> myformat_sniffer(["something else\\n"])
+        >>> myformat_sniffer(["something else\n"])
         (False, {})
 
         """
@@ -960,7 +960,7 @@ class Format:
 
     @stable(as_of="0.4.0")
     def reader(self, cls, monkey_patch=True, override=False):
-        """Decorate a function to act as the reader for a class in this format.
+        r"""Decorate a function to act as the reader for a class in this format.
 
         The function should take an argument which will be an implementation
         of either :class:`io.TextIOBase` or :class:`io.BufferedReader`
@@ -1005,9 +1005,9 @@ class Format:
         ...     return MyObject(fh.readlines()[1:])
         ...
         >>> registry.monkey_patch() # If developing skbio, this isn't needed
-        >>> MyObject.read(["myformat2\\n", "some content here!\\n"],
+        >>> MyObject.read(["myformat2\n", "some content here!\n"],
         ...               format='myformat').content
-        ['some content here!\\n']
+        ['some content here!\n']
 
         """
         self._check_registration(cls)
@@ -1204,7 +1204,7 @@ def read(file, format=None, into=None, verify=True, **kwargs):
 
 @wraps(IORegistry.write)
 def write(obj, format, into, **kwargs):
-    """Write data to file using specified format"""
+    """Write data to file using specified format."""
     return io_registry.write(obj, format, into, **kwargs)
 
 

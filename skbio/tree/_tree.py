@@ -513,7 +513,7 @@ class TreeNode(SkbioObject):
         """
 
         def __copy_node(node_to_copy):
-            r"""Helper method to copy a node"""
+            r"""Helper method to copy a node."""
             # this is _possibly_ dangerous, we're assuming the node to copy is
             # of the same class as self, and has the same exclusion criteria.
             # however, it is potentially dangerous to mix TreeNode subclasses

@@ -216,6 +216,7 @@ class NotExecuted:
 
     @experimental(as_of="0.4.0")
     def __init__(self):
+        """Constructs all the necessary attributes for the NotExecuted object."""
         self.msg = None
 
     @experimental(as_of="0.4.0")
@@ -438,7 +439,7 @@ class Workflow:
         """Trace a function call."""
 
         def wrapped():
-            """Track debug information about a method execution"""
+            """Track debug information about a method execution."""
             if not hasattr(self, "debug_trace"):
                 raise AttributeError("%s doesn't have debug_trace." % self.__class__)
 
@@ -476,6 +477,7 @@ class method:
 
     @experimental(as_of="0.4.0")
     def __init__(self, priority=0):
+        """Constructs all the necessary attributes for the method object."""
         self.priority = priority
 
     @experimental(as_of="0.4.0")
@@ -512,6 +514,7 @@ class requires:
 
     @experimental(as_of="0.4.0")
     def __init__(self, option=None, values=anything, state=None):
+        """Constructs all the necessary attributes for the requires object."""
         # self here is the requires object
         self.option = option
         self.required_state = state

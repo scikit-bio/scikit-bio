@@ -139,6 +139,7 @@ def _parse_single_feature(lines, imd):
         An IntervalMetadata object to which the parsed feature will be added.
     lines : list of strings
         A list of strings representing the lines of text to be parsed.
+
     """
     voca_change = _vocabulary_change("insdc")
 

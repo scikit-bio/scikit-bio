@@ -44,7 +44,7 @@ class _MetadataReprBuilder(metaclass=ABCMeta):
 
     @abstractmethod
     def _process_data(self):
-        """Build data lines for the repr. Used by `build` Template Method"""
+        """Build data lines for the repr. Used by `build` Template Method."""
         raise NotImplementedError
 
     def build(self):
