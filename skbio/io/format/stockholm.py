@@ -392,7 +392,7 @@ References
 .. [2] http://sonnhammer.sbc.su.se/Stockholm.html
 
 
-"""
+"""  # noqa: D205, D415
 
 # ----------------------------------------------------------------------------
 # Copyright (c) 2013--, scikit-bio development team.

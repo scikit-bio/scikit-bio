@@ -191,7 +191,7 @@ allow you to indicate ``anything`` as an option value, anything that is
 ...
 
 
-"""
+"""  # noqa: D205, D415
 
 # ----------------------------------------------------------------------------
 # Copyright (c) 2013--, scikit-bio development team.

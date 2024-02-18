@@ -189,7 +189,7 @@ Stats:
 GCGTGCCTAAGGTATGCAAG
 ACGTGCCTA-GGTACGCAAG
 
-"""
+"""  # noqa: D205, D415
 
 # ----------------------------------------------------------------------------
 # Copyright (c) 2013--, scikit-bio development team.

@@ -213,7 +213,7 @@ References
 .. [5] http://www.bioperl.org/wiki/PHYLIP_multiple_alignment_format
 
 
-"""
+"""  # noqa: D205, D415
 
 # ----------------------------------------------------------------------------
 # Copyright (c) 2013--, scikit-bio development team.

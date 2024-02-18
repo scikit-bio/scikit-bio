@@ -156,7 +156,7 @@ The following are not yet used but should be avoided as well:
 - `exclusive`
 - `append`
 
-"""
+"""  # noqa: D205, D415
 
 # ----------------------------------------------------------------------------
 # Copyright (c) 2013--, scikit-bio development team.

@@ -229,7 +229,7 @@ References
        available-with-lineage-type-and-host-information/
 
 
-"""
+"""  # noqa: D205, D415
 
 # ----------------------------------------------------------------------------
 # Copyright (c) 2013--, scikit-bio development team.

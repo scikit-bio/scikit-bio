@@ -130,7 +130,7 @@ committed a type I error and identified a false positive, the number of samples
 we need to be confident that we have not committed a type II error increases.
 
 
-"""
+"""  # noqa: D205, D415
 
 # ----------------------------------------------------------------------------
 # Copyright (c) 2013--, scikit-bio development team.

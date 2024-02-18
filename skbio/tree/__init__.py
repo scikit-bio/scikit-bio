@@ -170,7 +170,7 @@ pairwise tip-to-tip distances between trees:
 0.120492524415
 
 
-"""
+"""  # noqa: D205, D415
 
 # ----------------------------------------------------------------------------
 # Copyright (c) 2013--, scikit-bio development team.

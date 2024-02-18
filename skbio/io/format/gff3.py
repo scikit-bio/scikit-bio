@@ -1,4 +1,4 @@
-'''GFF3 format (:mod:`skbio.io.format.gff3`)
+"""GFF3 format (:mod:`skbio.io.format.gff3`)
 =========================================
 
 .. currentmodule:: skbio.io.format.gff3
@@ -76,7 +76,7 @@ Examples
 Let's create a file stream with following data in GFF3 format:
 
 >>> from skbio import Sequence, DNA
->>> gff_str = """
+>>> gff_str = '''
 ... ##gff-version 3
 ... seq_1\\t.\\tgene\\t10\\t90\\t.\\t+\\t0\\tID=gen1
 ... seq_1\\t.\\texon\\t10\\t30\\t.\\t+\\t.\\tParent=gen1
@@ -89,7 +89,7 @@ Let's create a file stream with following data in GFF3 format:
 ... >seq_2
 ... ATGCATGCATGCATGCATGCATGCATGCATGCATGCATGCATGCATGCATGCATGCATGC
 ... ATGCATGCATGCATGCATGCATGCATGCATGCATGCATGCATGCATGCATGCATGCATGC
-... """
+... '''
 >>> import io
 >>> from skbio.metadata import IntervalMetadata
 >>> from skbio.io import read
@@ -203,7 +203,7 @@ References
 Specifications/blob/master/gff3.md
 
 
-'''
+"""  # noqa: D205, D415
 
 # ----------------------------------------------------------------------------
 # Copyright (c) 2013--, scikit-bio development team.

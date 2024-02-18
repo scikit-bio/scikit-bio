@@ -248,7 +248,7 @@ References
 .. [2] http://www.ncbi.nlm.nih.gov/books/NBK279682/
 
 
-"""
+"""  # noqa: D205, D415
 
 # ----------------------------------------------------------------------------
 # Copyright (c) 2013--, scikit-bio development team.
