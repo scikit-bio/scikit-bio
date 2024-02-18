@@ -110,7 +110,8 @@ def assert_ordination_results_equal(
         Ignore differences in directionality (i.e., differences in signs) for
         attributes `samples`, `features` and `biplot_scores`.
     decimal : int, optional
-        Number of decimal places to compare when checking numerical values. Defaults to 7.
+        Number of decimal places to compare when checking numerical values.
+        Defaults to 7.
 
     Raises
     ------

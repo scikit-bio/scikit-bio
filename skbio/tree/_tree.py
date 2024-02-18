@@ -280,9 +280,9 @@ class TreeNode(SkbioObject):
 
     def _remove_node(self, idx):
         r"""Perform node removal.
-        
+
         The actual (and only) method that performs node removal.
-        
+
         """
         self.invalidate_caches()
         node = self.children.pop(idx)

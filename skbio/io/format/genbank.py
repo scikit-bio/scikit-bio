@@ -637,8 +637,8 @@ def _serialize_reference(header, obj, indent=12):
         A list of dictionaries representing the individual references cited in the
         sequence entry.
     indent : int, optional
-        The number of spaces used to indent each line of the serialized REFERENCE section.
-        Defaults to 12.
+        The number of spaces used to indent each line of the serialized REFERENCE
+        section. Defaults to 12.
 
     """
     padding = "  "
