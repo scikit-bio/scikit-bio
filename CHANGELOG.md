@@ -44,6 +44,7 @@
 * Use CYTHON by default during build ([#1874](https://github.com/scikit-bio/scikit-bio/pull/1874))
 * Implemented augmented assignments proposed in issue [#1789](https://github.com/scikit-bio/scikit-bio/issues/1789)
 * Incorporated Ruff's formatting and linting via pre-commit hooks and GitHub Actions. See PR [#1924](https://github.com/scikit-bio/scikit-bio/pull/1924).
+* Improved docstrings for functions accross the entire codebase. See [#1933](https://github.com/scikit-bio/scikit-bio/pull/1933) and [#1940](https://github.com/scikit-bio/scikit-bio/pull/1940)
 
 ## Version 0.5.9
 
