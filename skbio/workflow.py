@@ -216,7 +216,7 @@ class NotExecuted:
 
     @experimental(as_of="0.4.0")
     def __init__(self):
-        """Constructs all the necessary attributes for the NotExecuted object."""
+        """Construct all the necessary attributes for the NotExecuted object."""
         self.msg = None
 
     @experimental(as_of="0.4.0")
@@ -362,7 +362,7 @@ class Workflow:
         return methods_sorted
 
     def _setup_debug_trace(self):
-        """Setup a trace.
+        """Set up a trace.
 
         The trace is per item iterated over by the workflow. Information about
         each method executed is tracked and keyed by::
@@ -477,7 +477,7 @@ class method:
 
     @experimental(as_of="0.4.0")
     def __init__(self, priority=0):
-        """Constructs all the necessary attributes for the method object."""
+        """Construct all the necessary attributes for the method object."""
         self.priority = priority
 
     @experimental(as_of="0.4.0")
@@ -514,7 +514,7 @@ class requires:
 
     @experimental(as_of="0.4.0")
     def __init__(self, option=None, values=anything, state=None):
-        """Constructs all the necessary attributes for the requires object."""
+        """Construct all the necessary attributes for the requires object."""
         # self here is the requires object
         self.option = option
         self.required_state = state
@@ -541,7 +541,7 @@ class requires:
         """
 
         def decorated(dec_self):
-            """A decorated function that has requirements.
+            """Execute a decorated function that has requirements.
 
             dec_self : this is "self" for the decorated function
             """

@@ -51,7 +51,7 @@ class MiniRegistry(dict):
         return decorator
 
     def copy(self):
-        """Useful for inheritance."""
+        """Use for inheritance."""
         return self.__class__(super(MiniRegistry, self).copy())
 
     def formatted_listing(self):

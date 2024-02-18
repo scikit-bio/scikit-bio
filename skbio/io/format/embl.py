@@ -1466,6 +1466,9 @@ def _serialize_feature_table(intervals, indent=21):
     Parameters
     ----------
     intervals : list of ``Interval``
+        A list of Interval objects representing the intervals to be serialized.
+    indent : int, optional
+        The number of spaces to indent each serialized feature. Defaults to 21.
 
     """
     # define a embl wrapper object. I need to replace only the first two
