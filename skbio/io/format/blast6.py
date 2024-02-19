@@ -231,7 +231,8 @@ References
    and-csv.html
 .. [3] http://www.ncbi.nlm.nih.gov/books/NBK279675/
 
-"""
+
+"""  # noqa: D205, D415
 
 # ----------------------------------------------------------------------------
 # Copyright (c) 2013--, scikit-bio development team.

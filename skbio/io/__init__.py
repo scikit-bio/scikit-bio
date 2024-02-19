@@ -189,7 +189,7 @@ not know how you want to serialize an object. OO interfaces define a default
 `format`, so it may not be necessary to include it.
 
 
-"""
+"""  # noqa: D205, D415
 
 # ----------------------------------------------------------------------------
 # Copyright (c) 2013--, scikit-bio development team.

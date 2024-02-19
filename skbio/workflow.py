@@ -191,7 +191,7 @@ allow you to indicate ``anything`` as an option value, anything that is
 ...
 
 
-"""
+"""  # noqa: D205, D415
 
 # ----------------------------------------------------------------------------
 # Copyright (c) 2013--, scikit-bio development team.
@@ -216,6 +216,7 @@ class NotExecuted:
 
     @experimental(as_of="0.4.0")
     def __init__(self):
+        """Construct all the necessary attributes for the NotExecuted object."""
         self.msg = None
 
     @experimental(as_of="0.4.0")
@@ -361,7 +362,7 @@ class Workflow:
         return methods_sorted
 
     def _setup_debug_trace(self):
-        """Setup a trace.
+        """Set up a trace.
 
         The trace is per item iterated over by the workflow. Information about
         each method executed is tracked and keyed by::
@@ -398,11 +399,14 @@ class Workflow:
 
         Parameters
         ----------
-        it : an iterator
-        success_callback : method to call on a successful item prior to
-            yielding. By default, ``self.state`` is yielded.
-        fail_callback : method to call on a failed item prior to yielding. By
-            default, failures are ignored.
+        iter_ : iterator
+            The iterator containing the data to be processed.
+        success_callback : method, optional
+            Method to call on a successful item prior to yielding. By default,
+            ``self.state`` is yielded.
+        fail_callback : method, optional
+            Method to call on a failed item prior to yielding. By default, failures
+            are ignored.
 
         """
         if success_callback is None:
@@ -435,7 +439,7 @@ class Workflow:
         """Trace a function call."""
 
         def wrapped():
-            """Track debug information about a method execution"""
+            """Track debug information about a method execution."""
             if not hasattr(self, "debug_trace"):
                 raise AttributeError("%s doesn't have debug_trace." % self.__class__)
 
@@ -473,6 +477,7 @@ class method:
 
     @experimental(as_of="0.4.0")
     def __init__(self, priority=0):
+        """Construct all the necessary attributes for the method object."""
         self.priority = priority
 
     @experimental(as_of="0.4.0")
@@ -509,6 +514,7 @@ class requires:
 
     @experimental(as_of="0.4.0")
     def __init__(self, option=None, values=anything, state=None):
+        """Construct all the necessary attributes for the requires object."""
         # self here is the requires object
         self.option = option
         self.required_state = state
@@ -535,7 +541,7 @@ class requires:
         """
 
         def decorated(dec_self):
-            """A decorated function that has requirements.
+            """Execute a decorated function that has requirements.
 
             dec_self : this is "self" for the decorated function
             """

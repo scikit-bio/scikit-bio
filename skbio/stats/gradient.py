@@ -84,7 +84,7 @@ Control
 {'avg': 3.007022633956606}
 
 
-"""
+"""  # noqa: D205, D415
 
 # ----------------------------------------------------------------------------
 # Copyright (c) 2013--, scikit-bio development team.
@@ -230,6 +230,7 @@ class GroupResults:
 
     @experimental(as_of="0.4.0")
     def __init__(self, name, trajectory, mean, info, message):
+        """Construct all the necessary attributes for the GroupResults object."""
         self.name = name
         self.trajectory = trajectory
         self.mean = mean
@@ -283,6 +284,7 @@ class CategoryResults:
 
     @experimental(as_of="0.4.0")
     def __init__(self, category, probability, groups, message):
+        """Construct all the necessary attributes for the CategoryResults object."""
         self.category = category
         self.probability = probability
         self.groups = groups
@@ -331,6 +333,7 @@ class GradientANOVAResults:
 
     @experimental(as_of="0.4.0")
     def __init__(self, algorithm, weighted, categories):
+        """Construct all the attributes for the GradientANOVAResults object."""
         self.algorithm = algorithm
         self.weighted = weighted
         self.categories = categories
@@ -421,6 +424,7 @@ class GradientANOVA:
         axes=3,
         weighted=False,
     ):
+        """Construct all the necessary attributes for the GradientANOVA object."""
         if not trajectory_categories:
             # If trajectory_categories is not provided, use all the categories
             # present in the metadata map
@@ -843,6 +847,7 @@ class WindowDifferenceGradientANOVA(GradientANOVA):
 
     @experimental(as_of="0.4.0")
     def __init__(self, coords, prop_expl, metadata_map, window_size, **kwargs):
+        """Build all the attributes for the WindowDifferenceGradientANOVA object."""
         super(WindowDifferenceGradientANOVA, self).__init__(
             coords, prop_expl, metadata_map, **kwargs
         )

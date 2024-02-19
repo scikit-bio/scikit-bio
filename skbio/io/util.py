@@ -16,7 +16,7 @@ Functions
    open_file
    open_files
 
-"""
+"""  # noqa: D205, D415
 
 # ----------------------------------------------------------------------------
 # Copyright (c) 2013--, scikit-bio development team.
@@ -294,6 +294,8 @@ def _flush_compressor(file):
 def open_files(files, **kwargs):
     """Context manager for :func:`skbio.io.util.open`.
 
-    A plural form of :func:`open_file`."""
+    A plural form of :func:`open_file`.
+
+    """
     with ExitStack() as stack:
         yield [stack.enter_context(open_file(f, **kwargs)) for f in files]

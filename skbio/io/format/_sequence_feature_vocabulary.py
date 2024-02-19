@@ -131,13 +131,14 @@ def _parse_feature_table(lines, length):
 
 
 def _parse_single_feature(lines, imd):
-    """Parse a feature.
-
-    Parse a feature and add it to ``IntervalMetadata`` object.
+    """Parse a feature and add it to ``IntervalMetadata`` object.
 
     Parameters
     ----------
     imd : IntervalMetadata
+        An IntervalMetadata object to which the parsed feature will be added.
+    lines : list of strings
+        A list of strings representing the lines of text to be parsed.
 
     """
     voca_change = _vocabulary_change("insdc")
@@ -279,6 +280,9 @@ def _serialize_feature_table(intervals, indent=21):
     Parameters
     ----------
     intervals : list of ``Interval``
+        A list of Interval objects representing the intervals to be serialized.
+    indent : int, optional
+        The number of spaces to indent each serialized feature. Defaults to 21.
 
     """
     for intvl in intervals:
@@ -291,6 +295,9 @@ def _serialize_single_feature(intvl, indent=21):
     Parameters
     ----------
     intvl : Interval
+        The Interval object representing the interval to be serialized.
+    indent : int, optional
+        The number of spaces to indent each serialized feature. Defaults to 21.
 
     """
     # there are 5 spaces before Feature Key starts.
@@ -358,7 +365,10 @@ def _serialize_qualifier(key, value):
 
     Parameters
     ----------
+    key : str
+        The key of the Qualifier, representing the type or name of the information.
     value : int, str
+        The value associated with the Qualifier.
 
     """
     # if value is empty

@@ -65,7 +65,7 @@ length. This value is useful for reading a fixed-width text file. However, it
 cannot be automatically determined, nor can it be specified when writing to a
 file.
 
-"""
+"""  # noqa: D205, D415
 
 # ----------------------------------------------------------------------------
 # Copyright (c) 2013--, scikit-bio development team.

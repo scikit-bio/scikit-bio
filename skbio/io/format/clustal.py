@@ -134,7 +134,7 @@ References
 .. [2] http://web.mit.edu/meme_v4.9.0/doc/clustalw-format.html
 
 
-"""
+"""  # noqa: D205, D415
 
 # ----------------------------------------------------------------------------
 # Copyright (c) 2013--, scikit-bio development team.
@@ -298,6 +298,8 @@ def _clustal_to_tabular_msa(fh, constructor=None):
     ----------
     fh : open file object
         An open Clustal file.
+    constructor : callable, optional
+        A callable object that constructs sequences.
 
     Returns
     -------

@@ -94,7 +94,7 @@ And the resulting perturbation would be
 array([ 0.25,  0.25,  0.5 ])
 
 
-"""
+"""  # noqa: D205, D415
 
 # ----------------------------------------------------------------------------
 # Copyright (c) 2013--, scikit-bio development team.

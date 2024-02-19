@@ -6,6 +6,7 @@
 # The full license is in the file LICENSE.txt, distributed with this software.
 # ----------------------------------------------------------------------------
 
+# ruff: noqa: D104
 
 # Add skbio.io to sys.modules to prevent cycles in our imports
 import skbio.io  # noqa

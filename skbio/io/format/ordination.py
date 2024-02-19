@@ -176,7 +176,7 @@ Load the ordination results from the file:
 >>> ord_res = OrdinationResults.read(or_f)
 
 
-"""
+"""  # noqa: D205, D415
 
 # ----------------------------------------------------------------------------
 # Copyright (c) 2013--, scikit-bio development team.

@@ -582,9 +582,9 @@ class DissimilarityMatrix(SkbioObject, PlottableMixin):
 
         Parameters
         ----------
-        i_order : Iterable of str
+        i_ids : Iterable of str
             The "from" IDs.
-        j_order : Iterable of str
+        j_ids : Iterable of str
             The "to" IDs.
 
         Notes

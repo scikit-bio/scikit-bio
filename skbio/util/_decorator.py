@@ -272,12 +272,12 @@ class deprecated(_state_decorator):
 
 # Adapted from http://stackoverflow.com/a/8313042/579416
 def overrides(interface_class):
-    """Decorator for class-level members.
+    """Indicate that a member is being overridden from a specific parent class.
 
-    Used to indicate that a member is being overridden from a specific parent
-    class. If the member does not have a docstring, it will pull one from the
-    parent class. When chaining decorators, this should be first as it is
-    relatively nondestructive.
+    Decorator for class-level members. Used to indicate that a member is being
+    overridden from a specific parent class. If the member does not have a docstring,
+    it will pull one from the parent class. When chaining decorators, this should be
+    first as it is relatively nondestructive.
 
     Parameters
     ----------
