@@ -749,6 +749,34 @@ class GrammaredSequence(Sequence, metaclass=GrammaredSequenceMeta):
 
         return re.compile(regex_string)
 
+    def to_definites(self, degenerate="wild", char=None):
+        """Convert degenerate or non-canonical characters to definite characters."""
+        sequence = str(self)
+        # print(f"original sequence: {sequence}")
+        # print(len(sequence))
+
+        if degenerate == "wild":
+            for degenerate_char in self.degenerate_chars:
+                sequence = sequence.replace(
+                    degenerate_char, "".join(self.wildcard_char)
+                )
+        elif degenerate == "gap":
+            for degenerate_char in self.degenerate_chars:
+                sequence = sequence.replace(
+                    degenerate_char, "".join(self.default_gap_char)
+                )
+        elif degenerate == "char":
+            for degenerate_char in self.degenerate_chars:
+                sequence = sequence.replace(degenerate_char, "".join(char))
+        # print(f"modified sequence: {sequence}")
+        # print(len(sequence))
+
+        return self._constructor(
+            sequence=sequence,
+            metadata=self.metadata,
+            positional_metadata=self.positional_metadata,
+        )
+
     @stable(as_of="0.4.0")
     def find_motifs(self, motif_type, min_length=1, ignore=None):
         """Search the biological sequence for motifs.
