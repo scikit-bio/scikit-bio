@@ -58,6 +58,8 @@ Functions
    tree_basis
    ancom
    sbp_basis
+   dirmult
+
 
 References
 ----------
@@ -70,6 +72,11 @@ References
 .. [3] J. A. Martin-Fernandez,  "Dealing With Zeros and Missing Values in
    Compositional Data Sets Using Nonparametric Imputation",
    Mathematical Geology, 35.3 (2003)
+
+.. [4] Fernandes, Andrew D., et al. "Unifying the analysis of
+   high-throughput sequencing datasets: characterizing RNA-seq,
+   16S rRNA gene sequencing and selective growth experiments by
+   compositional data analysis." Microbiome 2 (2014): 1-13.
 
 
 Examples
@@ -111,6 +118,7 @@ import skbio.util
 from skbio.util._decorator import experimental
 from skbio.stats.distance import DistanceMatrix
 from scipy.sparse import coo_matrix
+from statsmodels.stats.multitest import multipletests
 
 
 @experimental(as_of="0.4.0")
@@ -1701,3 +1709,191 @@ def _check_orthogonality(basis):
     basis = np.atleast_2d(basis)
     if not np.allclose(basis @ basis.T, np.identity(len(basis)), rtol=1e-4, atol=1e-6):
         raise ValueError("Basis is not orthonormal")
+
+
+
+class DifferentialSummary():
+
+    def __init__(self, foldchanges, pvalues=None):
+        self.foldchanges = foldchanges
+        self.pvalues = pvalues
+
+    def credible_intervals():
+        pass
+
+    def predict():
+        pass
+
+
+def _welch_ttest(x1, x2):
+    # See https://stats.stackexchange.com/a/475345
+    n1 = x1.size
+    n2 = x2.size
+    m1 = np.mean(x1)
+    m2 = np.mean(x2)
+
+    v1 = np.var(x1, ddof=1)
+    v2 = np.var(x2, ddof=1)
+
+    pooled_se = np.sqrt(v1 / n1 + v2 / n2)
+    delta = m1-m2
+
+    tstat = delta /  pooled_se
+    df = (v1 / n1 + v2 / n2)**2 / (v1**2 / (n1**2 * (n1 - 1)) + v2**2 / (n2**2 * (n2 - 1)))
+
+    # two side t-test
+    p = 2 * t.cdf(-abs(tstat), df)
+
+    # upper and lower bounds
+    lb = delta - t.ppf(0.975,df)*pooled_se
+    ub = delta + t.ppf(0.975,df)*pooled_se
+
+    return pd.DataFrame(np.array([tstat,df,p,delta,lb,ub]).reshape(1,-1),
+                        columns=['T statistic','df','pvalue','Difference',
+                                 'CI(2.5)','CI(97.5)'])
+
+
+@experimental(as_of="0.5.9")
+def dirmult_ttest(table : pd.DataFrame, grouping : str,
+                  treatment : str, reference : str,
+                  pseudocount : float = 0.5, posterior_samples : int = 128):
+    """ T-test using Dirichilet Monte Carlo.
+
+    The Dirichlet-multinomial distribution is a compound distribution that
+    combines a Dirichlet distribution over the probabilities of a multinomial
+    distribution. This distribution is used to model the distribution of
+    species in a community. The Dirichlet-multinomial distribution is
+    parameterized by a vector of probabilities, :math:`\alpha`, and a sample
+    size, :math:`n`.
+
+    To perform the t-test,we first fit a Dirichlet-multinomial distribution
+    for each sample, and then we compute the fold change and p-value for each
+    feature. The fold change is computed as the difference between the
+    samples of the two groups. T-tests are then performed on the posterior
+    samples, sampled from each Dirichlet-multinomial distribution, and the
+    expected pvalues, log-fold changes as well as their credible intervals are
+    reported.
+
+    Parameters
+    ----------
+    table : pd.DataFrame
+        Contingency table of counts where rows are features and columns are samples.
+    grouping : pd.Series
+        Vector indicating the assignment of samples to groups.  For example,
+        these could be strings or integers denoting which group a sample
+        belongs to.  It must be the same length as the samples in `table`.
+        The index must be the same on `table` and `grouping` but need not be
+        in the same order.  The t-test is computed between the `treatment`
+        group and the `reference` group specified in the `grouping` vector.
+    treatment : str
+        Name of the treatment group.
+    reference : str
+        Name of the reference group.
+    pseudocount : float, optional
+        A non-zero value added to the input counts to ensure that all of the
+        estimated abundances are strictly greater than zero.
+    posterior_samples : int, optional
+        The number of posterior samples drawn from each Dirichilet-Multinomial
+        distribution. More samples provide higher uncertainty surrounding the estimated
+        log-fold changes and pvalues.
+
+    Notes
+    -----
+    FDR-corrected pvalues use Benjamini-Hochberg for pvalue adjustment for
+    multiple corrections.
+
+    The reference frame here is the geometric mean. Extracting absolute log
+    fold changes from this test assumes that the average microbial abundance
+    between the `treatment` and the `reference` groups are the same. If this
+    assumption is violated, then the log-fold changes will be biased, and the
+    pvalues will not be reliable. However, the bias is the same across each
+    feature, thus the ordering of the log-fold changes will be invariant to this bias.
+    """
+    if not isinstance(table, pd.DataFrame):
+        raise TypeError(
+            "`table` must be a `pd.DataFrame`, " "not %r." % type(table).__name__
+        )
+    if not isinstance(grouping, pd.Series):
+        raise TypeError(
+            "`grouping` must be a `pd.Series`," " not %r." % type(grouping).__name__
+        )
+
+    if np.any(table < 0):
+        raise ValueError(
+            "Cannot handle negative values in `table`. "
+            "Use pseudocounts or ``multiplicative_replacement``."
+        )
+
+    if (grouping.isnull()).any():
+        raise ValueError("Cannot handle missing values in `grouping`.")
+
+    if (table.isnull()).any().any():
+        raise ValueError("Cannot handle missing values in `table`.")
+
+    table_index_len = len(table.index)
+    grouping_index_len = len(grouping.index)
+    mat, cats = table.align(grouping, axis=0, join="inner")
+    if len(mat) != table_index_len or len(cats) != grouping_index_len:
+        raise ValueError("`table` index and `grouping` " "index must be consistent.")
+
+    table = pd.DataFrame(clr(table.values), index=table.index, column=table.column)
+
+    md = metadata.query(
+        f"{grouping} == {treatment_group} | "
+        f"{treatment_column} == {reference_group} "
+    )
+
+    trt_group = md.query(f"{grouping} == {treatment_group}")
+    ref_group = md.query(f"{grouping} == {reference_group}")
+    prior = np.random.dirichlet(np.ones(table.shape[1]),
+                                size=table.shape[0])
+    dir_table = table + prior
+
+    res = [_welch_ttest(np.array(table.loc[trt_group.index, x].values),
+                        np.array(table.loc[ref_group.index, x].values))
+           for x in table.columns]
+    res = pd.concat(ires)
+
+    for i in range(1, posterior_samples):
+        prior = np.random.dirichlet(np.ones(table.shape[1]), size=table.shape[0])
+        dir_table = table + prior
+
+        ires = [_welch_ttest(np.array(dir_table.loc[trt_group.index, x].values),
+                             np.array(dir_table.loc[ref_group.index, x].values))
+               for x in table.columns]
+        ires = pd.concat(ires)
+        log2_fold_change = lfc / np.log(2)
+
+        # online average to avoid holding all of the results in memory
+        res["Difference"] = (i * res["Difference"] + ires["Difference"]) / (i + 1)
+        res["pvalue"] = (i * res["pvalue"] + ires["pvalue"]) / (i + 1)
+        res["CI(2.5)"] = (i * res["CI(2.5)"] + ires["CI(2.5)"]) / (i + 1)
+        res["CI(97.5)"] = (i * res["CI(97.5)"] + ires["CI(97.5)"]) / (i + 1)
+        res["T statistic"] = (i * res["T statistic"] + ires["T statistic"]) / (i + 1)
+
+    res.index = table.columns
+    res['Difference'] = res['Difference'] / np.log(2)
+
+    mres = multipletests(res['pvalue'], method='fdr_bh')
+    qval = mres[1]
+    reject = mres[0]
+
+    res = res.rename(columns={'Difference': 'Log2(FC)'})
+    res['qvalue'] = qval
+    res['reject'] = reject
+
+    return res
+
+
+@experimental(as_of="0.5.9")
+def dirmult_glm(table : pd.DataFrame, metadata : pd.DataFrame,
+                formula : str, **kwargs):
+    """ """
+    pass
+
+
+@experimental(as_of="0.5.9")
+def dirmult_lme(table : pd.DataFrame, metadata : pd.DataFrame,
+                formula : str, **kwargs):
+    """ """
+    pass
