@@ -134,7 +134,7 @@ References
 .. [2] http://web.mit.edu/meme_v4.9.0/doc/clustalw-format.html
 
 
-"""
+"""  # noqa: D205, D415
 
 # ----------------------------------------------------------------------------
 # Copyright (c) 2013--, scikit-bio development team.
@@ -210,8 +210,7 @@ def _delete_trailing_number(line):
 
 
 def _check_length(data, labels, num_seqs_check=None):
-    """Check the lengths of the clustal sequences to make
-    sure that they are lining up right.
+    """Check that the lengths of the clustal sequences line up correctly.
 
     num_seqs_check: The number of sequences to check
 
@@ -299,6 +298,8 @@ def _clustal_to_tabular_msa(fh, constructor=None):
     ----------
     fh : open file object
         An open Clustal file.
+    constructor : callable, optional
+        A callable object that constructs sequences.
 
     Returns
     -------

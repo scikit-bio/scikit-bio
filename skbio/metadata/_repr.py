@@ -39,12 +39,12 @@ class _MetadataReprBuilder(metaclass=ABCMeta):
 
     @abstractmethod
     def _process_header(self):
-        """Used by `build` Template Method to build header for the repr."""
+        """Build header for the repr. Used by `build` Template Method."""
         raise NotImplementedError
 
     @abstractmethod
     def _process_data(self):
-        """Used by `build` Template Method to build data lines for the repr."""
+        """Build data lines for the repr. Used by `build` Template Method."""
         raise NotImplementedError
 
     def build(self):

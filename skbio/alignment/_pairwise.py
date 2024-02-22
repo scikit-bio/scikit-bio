@@ -617,6 +617,8 @@ def local_pairwise_align_ssw(sequence1, sequence2, **kwargs):
         The first unaligned sequence
     sequence2 : DNA, RNA, or Protein
         The second unaligned sequence
+    kwargs : dict
+        Additional keyword arguments to pass to ``StripedSmithWaterman``.
 
     Returns
     -------

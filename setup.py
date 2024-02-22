@@ -1,12 +1,15 @@
 #!/usr/bin/env python
 
-# ----------------------------------------------------------------------------
-# Copyright (c) 2013--, scikit-bio development team.
-#
-# Distributed under the terms of the Modified BSD License.
-#
-# The full license is in the file LICENSE.txt, distributed with this software.
-# ----------------------------------------------------------------------------
+"""Setup script for scikit-bio installation.
+
+----------------------------------------------------------------------------
+Copyright (c) 2013--, scikit-bio development team.
+
+Distributed under the terms of the Modified BSD License.
+
+The full license is in the file LICENSE.txt, distributed with this software.
+----------------------------------------------------------------------------
+"""
 
 import os
 import platform
@@ -30,6 +33,7 @@ if sys.version_info.major != 3:
 
 
 def check_bin(ccbin, source, allow_dash):
+    """Check if a given compiler matches the specified name."""
     # remove any parameters (e.g. gcc -I /a/b/c -> gcc)
     source0 = source.split()[0]
     # remove any path

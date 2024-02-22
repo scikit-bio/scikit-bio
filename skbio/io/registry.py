@@ -156,7 +156,7 @@ The following are not yet used but should be avoided as well:
 - `exclusive`
 - `append`
 
-"""
+"""  # noqa: D205, D415
 
 # ----------------------------------------------------------------------------
 # Copyright (c) 2013--, scikit-bio development team.
@@ -191,25 +191,28 @@ class IORegistry:
 
     @stable(as_of="0.4.0")
     def __init__(self):
-        # This seperation of binary and text formats is useful because there
-        # are many situations where we may have recieved a text-file. When this
-        # happens, the binary data fundamentally does not exist. We could
-        # assume encoding should be interpreted in reverse, however this misses
-        # the bigger point: why would the user ever want text to be treated as
-        # binary? They already went through the effort to hand us text.
-        # Therefore, during format resolution, we should skip the binary
-        # formats if they are irrelevant. (They are incompatible with such a
-        # filehandle anyways.)
+        """Initialize registry mapping formats and implementations to classes.
+
+        This seperation of binary and text formats is useful because there
+        are many situations where we may have recieved a text-file. When this
+        happens, the binary data fundamentally does not exist. We could
+        assume encoding should be interpreted in reverse, however this misses
+        the bigger point: why would the user ever want text to be treated as
+        binary? They already went through the effort to hand us text.
+        Therefore, during format resolution, we should skip the binary
+        formats if they are irrelevant. (They are incompatible with such a
+        filehandle anyways.)
+        """
         self._binary_formats = {}
         self._text_formats = {}
         self._lookups = (self._binary_formats, self._text_formats)
 
     @stable(as_of="0.4.0")
     def create_format(self, *args, **kwargs):
-        """A simple factory for creating new file formats.
+        """Create new file formats.
 
+        A simple factory for creating new file formats.
         This will automatically register the format with this regsistry.
-
         All arguments are passed through to the Format constructor.
 
         Returns
@@ -839,6 +842,7 @@ class Format:
         return self._monkey_patch["write"]
 
     def __init__(self, name, encoding=None, newline=None):
+        """Initialize format for registering sniffers, readers, and writers."""
         self._encoding = encoding
         self._newline = newline
         self._name = name
@@ -850,7 +854,7 @@ class Format:
 
     @stable(as_of="0.4.0")
     def sniffer(self, override=False):
-        """Decorate a function to act as the sniffer for this format.
+        r"""Decorate a function to act as the sniffer for this format.
 
         The function should take one argument which will be an implementation
         of either :class:`io.TextIOBase` or :class:`io.BufferedReader`
@@ -891,9 +895,9 @@ class Format:
         ...         return True, {'version': version}
         ...     return False, {}
         ...
-        >>> myformat_sniffer(["myformat2\\n", "some content\\n"])
+        >>> myformat_sniffer(["myformat2\n", "some content\n"])
         (True, {'version': 2})
-        >>> myformat_sniffer(["something else\\n"])
+        >>> myformat_sniffer(["something else\n"])
         (False, {})
 
         """
@@ -956,7 +960,7 @@ class Format:
 
     @stable(as_of="0.4.0")
     def reader(self, cls, monkey_patch=True, override=False):
-        """Decorate a function to act as the reader for a class in this format.
+        r"""Decorate a function to act as the reader for a class in this format.
 
         The function should take an argument which will be an implementation
         of either :class:`io.TextIOBase` or :class:`io.BufferedReader`
@@ -1001,9 +1005,9 @@ class Format:
         ...     return MyObject(fh.readlines()[1:])
         ...
         >>> registry.monkey_patch() # If developing skbio, this isn't needed
-        >>> MyObject.read(["myformat2\\n", "some content here!\\n"],
+        >>> MyObject.read(["myformat2\n", "some content here!\n"],
         ...               format='myformat').content
-        ['some content here!\\n']
+        ['some content here!\n']
 
         """
         self._check_registration(cls)
@@ -1045,7 +1049,7 @@ class Format:
 
     @stable(as_of="0.4.0")
     def writer(self, cls, monkey_patch=True, override=False):
-        """Decorate a function to act as the writer for a class in this format.
+        r"""Decorate a function to act as the writer for a class in this format.
 
         The function should take an instance of `cls` as its first argument
         and the second argument is a filehandle which will be an implementation
@@ -1089,14 +1093,14 @@ class Format:
         ...
         >>> @myformat.writer(MyObject)
         ... def myformat_reader(obj, fh):
-        ...     fh.write("myformat2\\n")
+        ...     fh.write("myformat2\n")
         ...     for c in obj.content:
         ...         fh.write(c)
         ...
         >>> registry.monkey_patch() # If developing skbio, this isn't needed
-        >>> obj = MyObject(["some content here!\\n"])
+        >>> obj = MyObject(["some content here!\n"])
         >>> obj.write([], format='myformat')
-        ['myformat2\\n', 'some content here!\\n']
+        ['myformat2\n', 'some content here!\n']
 
         """
         self._check_registration(cls)
@@ -1188,19 +1192,23 @@ io_registry = IORegistry()
 
 @wraps(IORegistry.sniff)
 def sniff(file, **kwargs):
+    """Detect the format of a given `file` and suggest kwargs."""
     return io_registry.sniff(file, **kwargs)
 
 
 @wraps(IORegistry.read)
 def read(file, format=None, into=None, verify=True, **kwargs):
+    """Read data from file using specified format."""
     return io_registry.read(file, format=format, into=into, verify=verify, **kwargs)
 
 
 @wraps(IORegistry.write)
 def write(obj, format, into, **kwargs):
+    """Write data to file using specified format."""
     return io_registry.write(obj, format, into, **kwargs)
 
 
 @wraps(IORegistry.create_format)
 def create_format(*args, **kwargs):
+    """Make a new format."""
     return io_registry.create_format(*args, **kwargs)

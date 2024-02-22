@@ -130,7 +130,7 @@ html_theme_options = {
 
     # version switcher
     'switcher': {
-        'json_url': 'https://scikit.bio/versions.json',
+        'json_url': f'{html_baseurl}/versions.json',
         'version_match': 'dev' if version.endswith('-dev') else version,
     },
 
@@ -233,7 +233,7 @@ def linkcode_resolve(domain, info):
 
     linespec = f'#L{lineno + 1}' if lineno else ''
 
-    return f'https://{github_url}/blob/{branch}/skbio/{fn}{linespec}'
+    return f'{github_url}/blob/{branch}/skbio/{fn}{linespec}'
 
 
 # You might see the following exception when building the documentation:

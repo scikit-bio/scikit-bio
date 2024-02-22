@@ -279,7 +279,11 @@ class TreeNode(SkbioObject):
         return self._remove_node(index)
 
     def _remove_node(self, idx):
-        r"""The actual (and only) method that performs node removal."""
+        r"""Perform node removal.
+
+        The actual (and only) method that performs node removal.
+
+        """
         self.invalidate_caches()
         node = self.children.pop(idx)
         node.parent = None
@@ -513,7 +517,7 @@ class TreeNode(SkbioObject):
         """
 
         def __copy_node(node_to_copy):
-            r"""Helper method to copy a node"""
+            r"""Copy a node."""
             # this is _possibly_ dangerous, we're assuming the node to copy is
             # of the same class as self, and has the same exclusion criteria.
             # however, it is potentially dangerous to mix TreeNode subclasses
@@ -3157,7 +3161,9 @@ class TreeNode(SkbioObject):
 
     @experimental(as_of="0.5.6")
     def _node_label(self):
-        """Generate a node label in the format of "support:name" if both exist,
+        """Generate a node label.
+
+        The label will be in the format of "support:name" if both exist,
         or "support" or "name" if either exists.
 
         Returns

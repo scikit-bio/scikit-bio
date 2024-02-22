@@ -1,4 +1,4 @@
-"""Labeled square matrix format (:mod:`skbio.io.format.lsmat`)
+r"""Labeled square matrix format (:mod:`skbio.io.format.lsmat`)
 ===========================================================
 
 .. currentmodule:: skbio.io.format.lsmat
@@ -55,8 +55,8 @@ IDs will have any leading/trailing whitespace removed when they are parsed.
 Format Parameters
 -----------------
 The only supported format parameter is ``delimiter``, which defaults to the tab
-character (``'\\t'``). ``delimiter`` is used to separate elements in the file
-format. Examples include tab (``'\\t'``) for TSV format and comma (``','``) for
+character (``'\t'``). ``delimiter`` is used to separate elements in the file
+format. Examples include tab (``'\t'``) for TSV format and comma (``','``) for
 CSV format. ``delimiter`` can be specified as a keyword argument when reading
 from or writing to a file.
 
@@ -65,7 +65,7 @@ length. This value is useful for reading a fixed-width text file. However, it
 cannot be automatically determined, nor can it be specified when writing to a
 file.
 
-"""
+"""  # noqa: D205, D415
 
 # ----------------------------------------------------------------------------
 # Copyright (c) 2013--, scikit-bio development team.

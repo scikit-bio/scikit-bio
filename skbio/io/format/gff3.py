@@ -1,4 +1,4 @@
-'''GFF3 format (:mod:`skbio.io.format.gff3`)
+"""GFF3 format (:mod:`skbio.io.format.gff3`)
 =========================================
 
 .. currentmodule:: skbio.io.format.gff3
@@ -76,7 +76,7 @@ Examples
 Let's create a file stream with following data in GFF3 format:
 
 >>> from skbio import Sequence, DNA
->>> gff_str = """
+>>> gff_str = '''
 ... ##gff-version 3
 ... seq_1\\t.\\tgene\\t10\\t90\\t.\\t+\\t0\\tID=gen1
 ... seq_1\\t.\\texon\\t10\\t30\\t.\\t+\\t.\\tParent=gen1
@@ -89,7 +89,7 @@ Let's create a file stream with following data in GFF3 format:
 ... >seq_2
 ... ATGCATGCATGCATGCATGCATGCATGCATGCATGCATGCATGCATGCATGCATGCATGC
 ... ATGCATGCATGCATGCATGCATGCATGCATGCATGCATGCATGCATGCATGCATGCATGC
-... """
+... '''
 >>> import io
 >>> from skbio.metadata import IntervalMetadata
 >>> from skbio.io import read
@@ -203,7 +203,7 @@ References
 Specifications/blob/master/gff3.md
 
 
-'''
+"""  # noqa: D205, D415
 
 # ----------------------------------------------------------------------------
 # Copyright (c) 2013--, scikit-bio development team.
@@ -276,14 +276,16 @@ def _gff3_to_generator(fh):
 
 @gff3.writer(None)
 def _generator_to_gff3(obj, fh, skip_subregion=True):
-    """Write list of IntervalMetadata into file.
+    """Write a list of IntervalMetadata into a file.
 
     Parameters
     ----------
     obj : Iterable of (seq_id, IntervalMetadata)
+        List of IntervalMetadata to write.
     fh : file handler
+        File to write into.
     skip_subregion : bool
-        Write a line for each sub-regions of an ``Interval`` if it is ``False``
+        Write a line for each sub-regions of an ``Interval`` if it is ``False``.
 
     """
     # write file header
@@ -323,8 +325,9 @@ def _gff3_to_interval_metadata(fh, seq_id):
     Parameters
     ----------
     fh : file handler
+        GFF3 file to read.
     seq_id : str
-        sequence ID which the interval metadata is associated with
+        Sequence ID which the interval metadata is associated with.
 
     """
     length = None
@@ -351,11 +354,13 @@ def _interval_metadata_to_gff3(obj, fh, seq_id, skip_subregion=True):
     Parameters
     ----------
     obj : IntervalMetadata
-    fh : file object like
+        An IntervalMetadata object.
+    fh : file object
+        File object opened for writing.
     seq_id : str
         ID for column 1 in the GFF3 file.
     skip_subregion : bool
-        write a line for each sub-regions of an ``Interval`` if it is ``False``
+        Write a line for each sub-regions of an ``Interval`` if it is ``False``.
 
     """
     # write file header
@@ -464,11 +469,12 @@ def _serialize_interval_metadata(interval_metadata, seq_id, fh, skip_subregion=T
     Parameters
     ----------
     interval_metadata : IntervalMetadata
+        An IntervalMetadata object.
     seq_id : str
         Seq id for the current annotation. It will be used as the 1st column
         in the GFF3.
     fh : file handler
-        the file object to output
+        The file object to output.
     skip_subregion : bool
         Whether to skip outputting each sub region as a line in GFF3.
 

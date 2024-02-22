@@ -32,7 +32,7 @@ def mantel(
     strict=True,
     lookup=None,
 ):
-    """Compute correlation between distance matrices using the Mantel test.
+    r"""Compute correlation between distance matrices using the Mantel test.
 
     The Mantel test compares two distance matrices by computing the correlation
     between the distances in the lower (or upper) triangular portions of the
@@ -46,14 +46,14 @@ def mantel(
 
     .. math::
 
-       r_M=\\frac{1}{d-1}\\sum_{i=1}^{n-1}\\sum_{j=i+1}^{n}
+       r_M=\frac{1}{d-1}\sum_{i=1}^{n-1}\sum_{j=i+1}^{n}
        stand(D_X)_{ij}stand(D_Y)_{ij}
 
     where
 
     .. math::
 
-       d=\\frac{n(n-1)}{2}
+       d=\frac{n(n-1)}{2}
 
     and :math:`n` is the number of rows/columns in each of the distance
     matrices. :math:`stand(D_X)` and :math:`stand(D_Y)` are distance matrices
