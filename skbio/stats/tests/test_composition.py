@@ -23,7 +23,8 @@ from skbio.stats.composition import (closure, multiplicative_replacement,
                                      clr, clr_inv, ilr, ilr_inv, alr, alr_inv,
                                      sbp_basis, _gram_schmidt_basis,
                                      centralize, _holm_bonferroni, ancom,
-                                     vlr, pairwise_vlr, tree_basis)
+                                     vlr, pairwise_vlr, tree_basis,
+                                     dirmult_ttest)
 
 from scipy.sparse import coo_matrix
 
@@ -1303,6 +1304,53 @@ class TestVLR(TestCase):
                             validate=False)
         output = dism.data.sum() / 2
         self.assertAlmostEqual(output, 0.2857382286903922)
+
+
+class TestDirMultTTest(TestCase):
+    def setUp(self):
+        # Create sample data for testing
+        self.data = {
+            'feature1': [5, 8, 12, 15, 20],
+            'feature2': [3, 6, 9, 12, 15],
+            'feature3': [10, 15, 20, 25, 30],
+        }
+        self.table = pd.DataFrame(self.data)
+        self.grouping = pd.Series(['Group1', 'Group1', 'Group2', 'Group2', 'Group2'])
+        self.treatment = 'Group2'
+        self.reference = 'Group1'
+
+    def test_dirmult_ttest_valid_input(self):
+        result = dirmult_ttest(self.table, self.grouping, self.treatment, self.reference)
+        self.assertIsInstance(result, pd.DataFrame)
+        self.assertEqual(result.shape[1], 8)  # Expected number of columns
+
+    def test_dirmult_ttest_invalid_table_type(self):
+        with self.assertRaises(TypeError):
+            dirmult_ttest("invalid_table", self.grouping, self.treatment, self.reference)
+
+    def test_dirmult_ttest_invalid_grouping_type(self):
+        with self.assertRaises(TypeError):
+            dirmult_ttest(self.table, "invalid_grouping", self.treatment, self.reference)
+
+    def test_dirmult_ttest_negative_values_in_table(self):
+        self.table.iloc[0, 0] = -5  # Modify a value to be negative
+        with self.assertRaises(ValueError):
+            dirmult_ttest(self.table, self.grouping, self.treatment, self.reference)
+
+    def test_dirmult_ttest_missing_values_in_grouping(self):
+        self.grouping[1] = np.nan  # Introduce a missing value in grouping
+        with self.assertRaises(ValueError):
+            dirmult_ttest(self.table, self.grouping, self.treatment, self.reference)
+
+    def test_dirmult_ttest_missing_values_in_table(self):
+        self.table.iloc[2, 1] = np.nan  # Introduce a missing value in the table
+        with self.assertRaises(ValueError):
+            dirmult_ttest(self.table, self.grouping, self.treatment, self.reference)
+
+    def test_dirmult_ttest_inconsistent_indexes(self):
+        self.table.index = ['a', 'b', 'c', 'd', 'e']  # Change table index
+        with self.assertRaises(ValueError):
+            dirmult_ttest(self.table, self.grouping, self.treatment, self.reference)
 
 
 if __name__ == "__main__":
