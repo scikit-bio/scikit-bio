@@ -1,7 +1,7 @@
 Contribute to scikit-bio
 ========================
 
-**scikit-bio** is an open source software package and we welcome community contributions. You can find the scikit-bio source code on :repo:`GitHub repo`.
+**scikit-bio** is an open source software package and we welcome community contributions.
 
 This document covers what you should do to get started with contributing to scikit-bio. You should read the entire document before contributing code to scikit-bio. This will save time for both you and the scikit-bio developers.
 
@@ -50,7 +50,7 @@ Some of our issues are labeled as ``quick fix``. Working on :repo:`these issues 
 Joining development
 ^^^^^^^^^^^^^^^^^^^
 
-Once you are more comfortable with our development process, you can check out the ```on deck`` :repo:`label <labels/on%20deck>` on our issue tracker. These issues represent what our current focus is in the project. As such, they are probably the best place to start if you are looking to join the conversation and contribute code.
+Once you are more comfortable with our development process, you can check out the ``on deck`` :repo:`label <labels/on%20deck>` on our issue tracker. These issues represent what our current focus is in the project. As such, they are probably the best place to start if you are looking to join the conversation and contribute code.
 
 
 Code review
@@ -146,7 +146,11 @@ The recommended way to set up a development environment for contributing to scik
 
     pip install --no-deps -e .
 
-6. Test the installation::
+6. At this point, when you execute `git status`, you will notice multiple `.c` files marked as "modified". These files were automatically generated from Cython code during the `pip install` process. You should restore them to the original status by:
+
+    git restore **.c
+
+7. Test the installation::
 
     make test
 
@@ -168,7 +172,7 @@ All code that is added to scikit-bio must be unit tested, and the unit test code
 - All tests import functionality from the appropriate minimally deep API.
 - Documentation can be built.
 - Current code coverage is maintained or improved.
-- Code passes ``flake8`` checks.
+- Code passes ``ruff`` checks.
 
 Running ``make test`` locally during development will include a subset of the full checks performed by Travis-CI.
 
