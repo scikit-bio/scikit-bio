@@ -77,7 +77,7 @@
    Documentation <https://scikit.bio/docs/dev/index.html>
    Contribute <contribute>
    Community <https://github.com/scikit-bio/scikit-bio/discussions>
-   Releases <https://github.com/scikit-bio/scikit-bio/blob/master/CHANGELOG.md>
+   Releases <https://github.com/scikit-bio/scikit-bio/blob/main/CHANGELOG.md>
    About <about>
 
 
@@ -182,7 +182,7 @@
       **For Developers** :octicon:`git-merge;1.2em;sd-text-warning`
       ^^^
 
-      Industry-standard, production-ready Python codebase featuring a stable, unit-tested API that streamlines development and integration. Licensed under the :repo:`3-Clause BSD <blob/master/LICENSE.txt>`, it provides an expansive platform for both academic research and commercial ventures.
+      Industry-standard, production-ready Python codebase featuring a stable, unit-tested API that streamlines development and integration. Licensed under the :repo:`3-Clause BSD <blob/main/LICENSE.txt>`, it provides an expansive platform for both academic research and commercial ventures.
       +++
 
       .. raw:: html
@@ -275,7 +275,7 @@
 
          .. card::
 
-            Latest release (:repo:`changelog <blob/master/CHANGELOG.md#version-059>`):
+            Latest release (:repo:`changelog <blob/main/CHANGELOG.md#version-059>`):
 
             .. button-link:: https://github.com/scikit-bio/scikit-bio/releases/tag/0.5.9
                :color: success
