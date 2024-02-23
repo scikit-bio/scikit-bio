@@ -50,7 +50,7 @@
    Documentation <self>
    Contribute <https://scikit.bio/contribute.html>
    Community <https://github.com/scikit-bio/scikit-bio/discussions>
-   Releases <https://github.com/scikit-bio/scikit-bio/blob/master/CHANGELOG.md>
+   Releases <https://github.com/scikit-bio/scikit-bio/blob/main/CHANGELOG.md>
    About <https://scikit.bio/about.html>
 
 

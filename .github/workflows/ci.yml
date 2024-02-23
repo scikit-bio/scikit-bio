@@ -2,10 +2,10 @@ name: CI
 
 on:
   push:
-    branches: [ master ]
+    branches: [ main ]
     paths-ignore: ["web/**", "**.md", "README.rst"]
   pull_request:
-    branches: [ master ]
+    branches: [ main ]
     paths-ignore: ["web/**", "**.md", "README.rst"]
 
 env:

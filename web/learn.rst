@@ -20,7 +20,7 @@ Cookbooks
 
 `scikit-bio-cookbook <https://github.com/scikit-bio/scikit-bio-cookbook>`_: A series of Jupyter Notebooks containing executable "recipes" for bioinformatics workflows using scikit-bio. You can find the table of contents, installation instructions, and other information at:
 
-.. button-link:: https://nbviewer.org/github/biocore/scikit-bio-cookbook/blob/master/Index.ipynb
+.. button-link:: https://nbviewer.org/github/biocore/scikit-bio-cookbook/blob/main/Index.ipynb
    :color: primary
    :shadow:
 

@@ -13,7 +13,7 @@ This guide explains how to release a new version of scikit-bio. To illustrate ex
 Prep the release
 ----------------
 
-1. Ensure the GitHub Actions CI build is passing against master.
+1. Ensure the GitHub Actions CI build is passing against main.
 
 2. Update the version strings (x.y.y-dev) to the new version (x.y.z). This will include ``__version__`` defined in ``skbio/__init__.py``, as well as any ``@experimental/@stable/@deprecated`` (see `API stability decorators <api_stability>`_) with ``as_of='x.y.y-dev'``. ``grep`` for the current version string to find all occurrences::
 
@@ -33,7 +33,7 @@ Prep the release
 Build website docs
 ------------------
 
-You will need to **fully install** the latest master branch of scikit-bio (including built extensions) and build the docs from this version. **Make sure the version of scikit-bio that is imported by ``import skbio`` is the correct one before building the docs.**
+You will need to **fully install** the latest main branch of scikit-bio (including built extensions) and build the docs from this version. **Make sure the version of scikit-bio that is imported by ``import skbio`` is the correct one before building the docs.**
 
 1. Build the documentation locally::
 
@@ -64,7 +64,7 @@ You will need to **fully install** the latest master branch of scikit-bio (inclu
 Tag the release
 ---------------
 
-From :repo:`scikit-bio GitHub repo`, click on the releases tab and draft a new release. Use the version number for the tag name (x.y.z) and create the tag against master. Fill in a release title that is consistent with previous release titles and add a summary of the release (linking to ``CHANGELOG.md`` is a good idea). This release summary will be the primary information that we point users to when we announce the release.
+From :repo:`scikit-bio GitHub repo`, click on the releases tab and draft a new release. Use the version number for the tag name (x.y.z) and create the tag against main. Fill in a release title that is consistent with previous release titles and add a summary of the release (linking to ``CHANGELOG.md`` is a good idea). This release summary will be the primary information that we point users to when we announce the release.
 
 Once the release is created on GitHub, it's a good idea to test out the release tarball before publishing to PyPI:
 
