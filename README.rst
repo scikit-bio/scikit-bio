@@ -44,7 +44,7 @@ Visit the new scikit-bio website: https://scikit.bio to learn more about this pr
 Releases
 --------
 
-Latest release: `0.5.9 <https://github.com/scikit-bio/scikit-bio/releases/tag/0.5.9>`_ (`documentation <https://scikit.bio/docs/0.5.9/index.html>`_, `changelog <https://github.com/scikit-bio/scikit-bio/blob/master/CHANGELOG.md#version-059>`_). Compatible with Python 3.8 and above.
+Latest release: `0.5.9 <https://github.com/scikit-bio/scikit-bio/releases/tag/0.5.9>`_ (`documentation <https://scikit.bio/docs/0.5.9/index.html>`_, `changelog <https://github.com/scikit-bio/scikit-bio/blob/main/CHANGELOG.md#version-059>`_). Compatible with Python 3.8 and above.
 
 
 Installation
@@ -125,12 +125,12 @@ scikit-bio began from code derived from `PyCogent <https://github.com/pycogent/p
 - Rob Knight (@rob-knight), Gavin Huttley (@gavinhuttley), Daniel McDonald (@wasade), Micah Hamady, Antonio Gonzalez (@antgonza), Sandra Smit, Greg Caporaso (@gregcaporaso), Jai Ram Rideout (@jairideout), Cathy Lozupone (@clozupone), Mike Robeson (@mikerobeson), Marcin Cieslik, Peter Maxwell, Jeremy Widmann, Zongzhi Liu, Michael Dwan, Logan Knecht (@loganknecht), Andrew Cochran, Jose Carlos Clemente (@cleme), Damien Coy, Levi McCracken, Andrew Butterfield, Will Van Treuren (@wdwvt1), Justin Kuczynski (@justin212k), Jose Antonio Navas Molina (@josenavas), Matthew Wakefield (@genomematt) and Jens Reeder (@jensreeder).
 
 
-.. |Build Status| image:: https://travis-ci.org/biocore/scikit-bio.svg?branch=master
+.. |Build Status| image:: https://travis-ci.org/biocore/scikit-bio.svg?branch=main
    :target: https://travis-ci.org/biocore/scikit-bio
 .. |Coverage Status| image:: https://coveralls.io/repos/biocore/scikit-bio/badge.png
    :target: https://coveralls.io/r/biocore/scikit-bio
 .. |ASV Benchmarks| image:: https://img.shields.io/badge/benchmarked%20by-asv-green.svg?style=flat
-   :target: https://s3-us-west-2.amazonaws.com/scikit-bio.org/benchmarks/master/index.html
+   :target: https://s3-us-west-2.amazonaws.com/scikit-bio.org/benchmarks/main/index.html
 .. |Gitter Badge| image:: https://badges.gitter.im/Join%20Chat.svg
    :alt: Join the chat at https://gitter.im/biocore/scikit-bio
    :target: https://gitter.im/biocore/scikit-bio?utm_source=badge&utm_medium=badge&utm_campaign=pr-badge&utm_content=badge

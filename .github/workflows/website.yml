@@ -2,10 +2,10 @@ name: Website
 
 on:
   push:
-    branches: [ master ]
+    branches: [ main ]
     paths: [ "web/**", "!**.md" ]
   pull_request:
-    branches: [ master ]
+    branches: [ main ]
     paths: [ "web/**", "!**.md" ]
 
 env:
