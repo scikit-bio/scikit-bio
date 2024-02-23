@@ -17,7 +17,7 @@ Some of the projects that we know of that are using scikit-bio are:
 License
 -------
 
-scikit-bio is available under the new BSD license. See :repo:`LICENSE.txt <blob/master/LICENSE.txt>` for scikit-bio's license, and the :repo:`licenses directory <tree/master/licenses>` for the licenses of third-party software that is (either partially or entirely) distributed with scikit-bio.
+scikit-bio is available under the new BSD license. See :repo:`LICENSE.txt <blob/main/LICENSE.txt>` for scikit-bio's license, and the :repo:`licenses directory <tree/main/licenses>` for the licenses of third-party software that is (either partially or entirely) distributed with scikit-bio.
 
 
 Team
@@ -66,7 +66,7 @@ For collaboration inquiries and other formal communications, please reach out to
 Branding
 --------
 
-The logo of scikit-bio was created by `Alina Prassas <https://cargocollective.com/alinaprassas>`_. Vector and bitmap image files are available at the :repo:`logos <tree/master/logos>` directory.
+The logo of scikit-bio was created by `Alina Prassas <https://cargocollective.com/alinaprassas>`_. Vector and bitmap image files are available at the :repo:`logos <tree/main/logos>` directory.
 
 
 Pre-history

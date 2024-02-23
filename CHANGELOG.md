@@ -39,6 +39,7 @@
 
 ### Miscellaneous
 
+* Renamed the default branch from "master" to "main". See [#1953](https://github.com/scikit-bio/scikit-bio/pull/1953).
 * Enabled subclassing of DNA, RNA and Protein classes to allow secondary development.
 * Dropped support for NumPy < 1.17.0 in order to utilize the new random generator.
 * Use CYTHON by default during build ([#1874](https://github.com/scikit-bio/scikit-bio/pull/1874))
