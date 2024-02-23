@@ -750,32 +750,48 @@ class GrammaredSequence(Sequence, metaclass=GrammaredSequenceMeta):
         return re.compile(regex_string)
 
     def to_definites(self, degenerate="wild", char=None):
-        """Convert degenerate or non-canonical characters to definite characters."""
+        """Convert degenerate or non-canonical characters to definite characters.
+
+        Parameters
+        ----------
+        degenerate : {"wild", "gap", "char", "trim", "raise"}
+            "wild" replace degenerate characters with wildcard characters.
+            "gap" replace degenerate characters with default gap characters.
+            "char" replace degenerate characters with user-defined character.
+            "trim" remove degenerate characters.
+            "raise" raise an error.
+        char : str
+            String object to replace degenerate characters.
+
+        Returns
+        -------
+        GrammaredSequence
+            Definite version of the sequence
+
+        """
         sequence = str(self)
-        # print(f"original sequence: {sequence}")
-        # print(len(sequence))
+        degenerates = self.degenerate_chars
 
         if degenerate == "wild":
-            for degenerate_char in self.degenerate_chars:
+            for degenerate_char in degenerates:
                 sequence = sequence.replace(
                     degenerate_char, "".join(self.wildcard_char)
                 )
         elif degenerate == "gap":
-            for degenerate_char in self.degenerate_chars:
+            for degenerate_char in degenerates:
                 sequence = sequence.replace(
                     degenerate_char, "".join(self.default_gap_char)
                 )
         elif degenerate == "char":
-            for degenerate_char in self.degenerate_chars:
+            for degenerate_char in degenerates:
                 sequence = sequence.replace(degenerate_char, "".join(char))
-        # print(f"modified sequence: {sequence}")
-        # print(len(sequence))
+        elif degenerate == "trim":
+            for degenerate_char in degenerates:
+                sequence = sequence.replace(degenerate_char, "")
+        # elif degenerate == "raise":
+        # raise an error?
 
-        return self._constructor(
-            sequence=sequence,
-            metadata=self.metadata,
-            positional_metadata=self.positional_metadata,
-        )
+        return self._constructor(sequence=sequence)
 
     @stable(as_of="0.4.0")
     def find_motifs(self, motif_type, min_length=1, ignore=None):
