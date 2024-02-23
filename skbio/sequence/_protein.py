@@ -187,6 +187,11 @@ class Protein(GrammaredSequence):
 
     @classproperty
     @overrides(GrammaredSequence)
+    def canonical_chars(cls):
+        return set("ACDEFGHIKLMNPQRSTVWY")
+
+    @classproperty
+    @overrides(GrammaredSequence)
     def degenerate_map(cls):
         return {
             "B": set("DN"),
