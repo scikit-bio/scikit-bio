@@ -93,7 +93,6 @@ jobs:
     needs: conf
     runs-on: ${{ matrix.os }}
     env:
-      MPLBACKEND: Agg
       USE_CYTHON: TRUE
     defaults:
       run:
@@ -149,9 +148,7 @@ jobs:
     name: Test (${{ matrix.python_version }}, ${{ matrix.os }}, ${{ fromJSON('["pypi", "conda"]')[matrix.use_conda] }})
     runs-on: ${{ matrix.os }}
     needs: ["conf", "test-cython", "lint"]
-    env:
-      # not testing Cython here, whether the Cython compiles to C is tested above
-      MPLBACKEND: Agg
+    # not testing Cython here, whether the Cython compiles to C is tested above
     defaults:
       run:
         shell: bash -l {0}
