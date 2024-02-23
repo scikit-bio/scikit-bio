@@ -286,6 +286,18 @@ class GrammaredSequence(Sequence, metaclass=GrammaredSequenceMeta):
         """
         raise NotImplementedError
 
+    @classproperty
+    def non_canonical_chars(cls):
+        """Return non-canonical characters.
+
+        Returns
+        -------
+        set
+            Non-canonical characters.
+
+        """
+        return set()
+
     @abstractproperty
     @classproperty
     @stable(as_of="0.4.0")
@@ -749,7 +761,7 @@ class GrammaredSequence(Sequence, metaclass=GrammaredSequenceMeta):
 
         return re.compile(regex_string)
 
-    def to_definites(self, degenerate="wild", char=None):
+    def to_definites(self, degenerate="wild", char=None, canonical=True):
         """Convert degenerate or non-canonical characters to definite characters.
 
         Parameters
@@ -762,15 +774,22 @@ class GrammaredSequence(Sequence, metaclass=GrammaredSequenceMeta):
             "raise" raise an error.
         char : str
             String object to replace degenerate characters.
+        canonical : bool
+            If True, non-canonical amino acids are included in the set of
+            degenerate characters.
 
         Returns
         -------
         GrammaredSequence
-            Definite version of the sequence
+            Definite version of the sequence.
 
         """
         sequence = str(self)
-        degenerates = self.degenerate_chars
+
+        if canonical:
+            degenerates = self.degenerate_chars.union(self.non_canonical_chars)
+        else:
+            degenerates = self.degenerate_chars
 
         if degenerate == "wild":
             for degenerate_char in degenerates:
