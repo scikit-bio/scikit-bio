@@ -391,6 +391,7 @@ def pytestrunner():
             pass
     except ImportError:
         numpy = None
+
     try:
         import pandas
 
@@ -400,6 +401,15 @@ def pytestrunner():
         pandas.options.display.max_columns = None
     except ImportError:
         pandas = None
+
+    try:
+        import matplotlib
+    except ImportError:
+        matplotlib = None
+    else:
+        # Set a non-interactive backend for Matplotlib, such that it can work on
+        # systems without graphics
+        matplotlib.use("agg")
 
     # import here, cause outside the eggs aren't loaded
     import pytest
