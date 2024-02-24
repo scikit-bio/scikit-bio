@@ -791,24 +791,23 @@ class GrammaredSequence(Sequence, metaclass=GrammaredSequenceMeta):
         else:
             degenerates = self.degenerate_chars
 
+        # print(degenerates)
+
         if degenerate == "wild":
-            for degenerate_char in degenerates:
-                sequence = sequence.replace(
-                    degenerate_char, "".join(self.wildcard_char)
-                )
+            sub_char = self.wildcard_char
         elif degenerate == "gap":
-            for degenerate_char in degenerates:
-                sequence = sequence.replace(
-                    degenerate_char, "".join(self.default_gap_char)
-                )
+            sub_char = self.default_gap_char
         elif degenerate == "char":
-            for degenerate_char in degenerates:
-                sequence = sequence.replace(degenerate_char, "".join(char))
+            sub_char = char
         elif degenerate == "trim":
-            for degenerate_char in degenerates:
-                sequence = sequence.replace(degenerate_char, "")
+            sub_char = ""
         # elif degenerate == "raise":
-        # raise an error?
+        # raise an error
+
+        sequence = "".join(sub_char if x in degenerates else x for x in sequence)
+
+        # pattern = re.compile("[{}]".format("".join(map(re.escape, degenerates))))
+        # sequence = pattern.sub(sub_char, sequence)
 
         return self._constructor(sequence=sequence)
 
