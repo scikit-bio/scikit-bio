@@ -182,6 +182,12 @@ jobs:
         env:
           WITH_COVERAGE: "TRUE"
         run: make test
+      - name: Upload coverage reports to Codecov
+        uses: codecov/codecov-action@v4.0.1
+        if: ${{ matrix.python_version == env.latest_python }}
+        with:
+          token: ${{ secrets.CODECOV_TOKEN }}
+          slug: scikit-bio/scikit-bio
 
   # deploy the current development documentation to the website
   # only when event is push and all tests have passed
