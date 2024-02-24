@@ -188,6 +188,7 @@ jobs:
         with:
           token: ${{ secrets.CODECOV_TOKEN }}
           slug: scikit-bio/scikit-bio
+          directory: ci
 
   # deploy the current development documentation to the website
   # only when event is push and all tests have passed
