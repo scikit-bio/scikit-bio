@@ -13,18 +13,15 @@
 .. image:: https://img.shields.io/github/v/release/scikit-bio/scikit-bio.svg
    :alt: Release
    :target: https://github.com/scikit-bio/scikit-bio/releases
-.. image:: https://badges.gitter.im/Join%20Chat.svg
-   :alt: Gitter
-   :target: https://gitter.im/biocore/scikit-bio
-.. image:: https://depsy.org/api/package/pypi/scikit-bio/badge.svg
-   :alt: Depsy
-   :target: http://depsy.org/package/python/scikit-bio
 .. image:: https://img.shields.io/pypi/dm/scikit-bio.svg?label=PyPI%20downloads
    :alt: PyPI Downloads
    :target: https://pypi.org/project/scikit-bio/
 .. image:: https://img.shields.io/conda/dn/conda-forge/scikit-bio.svg?label=Conda%20downloads
    :alt: Conda Downloads
    :target: https://anaconda.org/conda-forge/scikit-bio
+.. image:: https://badges.gitter.im/Join%20Chat.svg
+   :alt: Gitter
+   :target: https://gitter.im/biocore/scikit-bio
 
 
 .. image:: logos/logo.svg
