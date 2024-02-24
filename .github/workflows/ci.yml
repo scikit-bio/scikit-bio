@@ -116,7 +116,7 @@ jobs:
           conda list
       - name: Run unit tests
         env:
-          WITH_COVERAGE: TRUE
+          WITH_COVERAGE: "TRUE"
         run: make test
       - name: Generate coverage reports
         run: |
@@ -188,7 +188,7 @@ jobs:
           conda list
       - name: Run unit tests
         env:
-          WITH_COVERAGE: TRUE
+          WITH_COVERAGE: "TRUE"
         run: make test
 
   # deploy the current development documentation to the website
