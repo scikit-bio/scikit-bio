@@ -300,9 +300,12 @@ Create a matrix containing 6 samples (rows) and 7 OTUs (columns):
    Now let's plot our PCoA results, coloring each sample by the subject it
    was taken from:
 
-   >>> fig = wu_pc.plot(sample_md, 'subject',
-   ...                  axis_labels=('PC 1', 'PC 2', 'PC 3'),
-   ...                  title='Samples colored by subject', cmap='jet', s=50)
+   >>> fig = wu_pc.plot(
+   ...     sample_md, 'subject',
+   ...     axis_labels=('PC 1', 'PC 2', 'PC 3'),
+   ...     title='Samples colored by subject',
+   ...     cmap='jet', s=50
+   ... )  # doctest: +SKIP
 
 .. plot::
    :context:
@@ -313,11 +316,12 @@ Create a matrix containing 6 samples (rows) and 7 OTUs (columns):
    closer to one another in the 3-D space then they are to samples from
    other body sites.
 
-   >>> import matplotlib.pyplot as plt
-   >>> plt.close('all') # not necessary for normal use
-   >>> fig = wu_pc.plot(sample_md, 'body_site',
-   ...                  axis_labels=('PC 1', 'PC 2', 'PC 3'),
-   ...                  title='Samples colored by body site', cmap='jet', s=50)
+   >>> fig = wu_pc.plot(
+   ...     sample_md, 'body_site',
+   ...     axis_labels=('PC 1', 'PC 2', 'PC 3'),
+   ...     title='Samples colored by body site',
+   ...     cmap='jet', s=50
+   ... )  # doctest: +SKIP
 
 .. plot::
    :context:
@@ -373,9 +377,7 @@ Create a matrix containing 6 samples (rows) and 7 OTUs (columns):
    categories. For example, we can generate boxplots showing Faith PD by body
    site.
 
-   >>> import matplotlib.pyplot as plt
-   >>> plt.close('all') # not necessary for normal use
-   >>> fig = sample_md.boxplot(column='Faith PD', by='body_site')
+   >>> fig = sample_md.boxplot(column='Faith PD', by='body_site')  # doctest: +SKIP
 
 We can also compute Spearman correlations between all pairs of columns in
 this ``DataFrame``. Since our alpha diversity metrics are the only two

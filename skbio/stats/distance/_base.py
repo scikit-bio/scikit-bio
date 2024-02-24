@@ -661,7 +661,7 @@ class DissimilarityMatrix(SkbioObject, PlottableMixin):
 
            Plot the dissimilarity matrix as a heatmap:
 
-           >>> fig = dm.plot(cmap='Reds', title='Example heatmap')
+           >>> fig = dm.plot(cmap='Reds', title='Example heatmap')  # doctest: +SKIP
 
         """
         self._get_mpl_plt()

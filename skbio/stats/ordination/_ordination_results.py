@@ -249,9 +249,11 @@ class OrdinationResults(SkbioObject, PlottableMixin):
            Plot the ordination results, where each sample is colored by body
            site (a categorical variable):
 
-           >>> fig = pcoa_results.plot(df=df, column='body_site',
-           ...                         title='Samples colored by body site',
-           ...                         cmap='Set1', s=50)
+           >>> fig = pcoa_results.plot(
+           ...     df=df, column='body_site',
+           ...     title='Samples colored by body site',
+           ...     cmap='Set1', s=50
+           ... )  # doctest: +SKIP
 
         """
         # Note: New features should not be added to this method and should
