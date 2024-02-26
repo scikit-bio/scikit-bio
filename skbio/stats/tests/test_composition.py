@@ -1383,6 +1383,8 @@ class TestDirMultTTest(TestCase):
         result = dirmult_ttest(self.table, self.grouping, self.treatment, self.reference)
         self.assertIsInstance(result, pd.DataFrame)
         self.assertEqual(result.shape[1], 8)  # Expected number of columns
+        pdt.assert_index_equal(result.index,
+                               pd.Index(['feature1', 'feature2', 'feature3']))
 
     def test_dirmult_ttest_invalid_table_type(self):
         with self.assertRaises(TypeError):
