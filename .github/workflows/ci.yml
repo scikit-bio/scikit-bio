@@ -88,6 +88,7 @@ jobs:
           name: docpack
           path: doc/build/html/
 
+  # full-scale test (including Cython) with latest Python
   test-cython:
     name: Test Cython (${{ needs.conf.outputs.latest_python }}, ${{ matrix.os }})
     needs: conf
@@ -119,6 +120,19 @@ jobs:
           WITH_COVERAGE: "TRUE"
         run: make test
 
+        # upload coverage reports to Codecov (only under Linux)
+      - name: Generate coverage reports
+        if: runner.os == 'Linux'
+        run: |
+          cd ci && coverage lcov --rcfile ../.coveragerc
+      - name: Upload coverage reports to Codecov
+        if: runner.os == 'Linux'
+        uses: codecov/codecov-action@v4.0.1
+        with:
+          token: ${{ secrets.CODECOV_TOKEN }}
+          slug: scikit-bio/scikit-bio
+
+  # test under AArch64 (ARM64) architecture
   test-cython-aarch64:
     name: Test Cython (${{ needs.conf.outputs.latest_python }}, qemu::aarch64-centos)
     needs: conf
@@ -144,6 +158,7 @@ jobs:
           build-args: |
             PYTHON_VERSION=${{ env.latest_python }}
 
+  # test under all combinations of environments (Python versions, operating systems, PyPI vs Conda)
   test-all:
     name: Test (${{ matrix.python_version }}, ${{ matrix.os }}, ${{ fromJSON('["pypi", "conda"]')[matrix.use_conda] }})
     runs-on: ${{ matrix.os }}

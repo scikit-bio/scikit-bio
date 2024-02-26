@@ -1,4 +1,28 @@
-|Build Status| |Coverage Status| |ASV Benchmarks| |Gitter Badge| |Depsy Badge| |Anaconda Build Platforms| |Anaconda Build Version| |License| |Downloads| |Install|
+.. image:: https://img.shields.io/badge/License-BSD%203--Clause-blue.svg
+   :alt: License
+   :target: https://opensource.org/licenses/BSD-3-Clause
+.. image:: https://github.com/scikit-bio/scikit-bio/actions/workflows/ci.yml/badge.svg
+   :alt: Build Status
+   :target: https://github.com/scikit-bio/scikit-bio/actions/workflows/ci.yml
+.. image:: https://codecov.io/gh/scikit-bio/scikit-bio/graph/badge.svg?token=1qbzC6d2F5 
+   :alt: Coverage Status
+   :target: https://codecov.io/gh/scikit-bio/scikit-bio
+.. image:: https://img.shields.io/badge/benchmarked%20by-asv-green.svg
+   :alt: ASV Benchmarks
+   :target: https://s3-us-west-2.amazonaws.com/scikit-bio.org/benchmarks/main/index.html
+.. image:: https://img.shields.io/github/v/release/scikit-bio/scikit-bio.svg
+   :alt: Release
+   :target: https://github.com/scikit-bio/scikit-bio/releases
+.. image:: https://img.shields.io/pypi/dm/scikit-bio.svg?label=PyPI%20downloads
+   :alt: PyPI Downloads
+   :target: https://pypi.org/project/scikit-bio/
+.. image:: https://img.shields.io/conda/dn/conda-forge/scikit-bio.svg?label=Conda%20downloads
+   :alt: Conda Downloads
+   :target: https://anaconda.org/conda-forge/scikit-bio
+.. image:: https://badges.gitter.im/Join%20Chat.svg
+   :alt: Gitter
+   :target: https://gitter.im/biocore/scikit-bio
+
 
 .. image:: logos/logo.svg
    :width: 600 px
@@ -123,26 +147,3 @@ Pre-history
 scikit-bio began from code derived from `PyCogent <https://github.com/pycogent/pycogent>`_ and `QIIME <https://github.com/biocore/qiime>`_, and the contributors and/or copyright holders have agreed to make the code they wrote for PyCogent and/or QIIME available under the BSD license. The contributors to PyCogent and/or QIIME modules that have been ported to scikit-bio are listed below:
 
 - Rob Knight (@rob-knight), Gavin Huttley (@gavinhuttley), Daniel McDonald (@wasade), Micah Hamady, Antonio Gonzalez (@antgonza), Sandra Smit, Greg Caporaso (@gregcaporaso), Jai Ram Rideout (@jairideout), Cathy Lozupone (@clozupone), Mike Robeson (@mikerobeson), Marcin Cieslik, Peter Maxwell, Jeremy Widmann, Zongzhi Liu, Michael Dwan, Logan Knecht (@loganknecht), Andrew Cochran, Jose Carlos Clemente (@cleme), Damien Coy, Levi McCracken, Andrew Butterfield, Will Van Treuren (@wdwvt1), Justin Kuczynski (@justin212k), Jose Antonio Navas Molina (@josenavas), Matthew Wakefield (@genomematt) and Jens Reeder (@jensreeder).
-
-
-.. |Build Status| image:: https://travis-ci.org/biocore/scikit-bio.svg?branch=main
-   :target: https://travis-ci.org/biocore/scikit-bio
-.. |Coverage Status| image:: https://coveralls.io/repos/biocore/scikit-bio/badge.png
-   :target: https://coveralls.io/r/biocore/scikit-bio
-.. |ASV Benchmarks| image:: https://img.shields.io/badge/benchmarked%20by-asv-green.svg?style=flat
-   :target: https://s3-us-west-2.amazonaws.com/scikit-bio.org/benchmarks/main/index.html
-.. |Gitter Badge| image:: https://badges.gitter.im/Join%20Chat.svg
-   :alt: Join the chat at https://gitter.im/biocore/scikit-bio
-   :target: https://gitter.im/biocore/scikit-bio?utm_source=badge&utm_medium=badge&utm_campaign=pr-badge&utm_content=badge
-.. |Depsy Badge| image:: http://depsy.org/api/package/pypi/scikit-bio/badge.svg
-   :target: http://depsy.org/package/python/scikit-bio
-.. |Anaconda Build Platforms| image:: https://anaconda.org/conda-forge/scikit-bio/badges/platforms.svg
-   :target: https://anaconda.org/conda-forge/scikit-bio
-.. |Anaconda Build Version| image:: https://anaconda.org/conda-forge/scikit-bio/badges/version.svg
-   :target: https://anaconda.org/conda-forge/scikit-bio
-.. |License| image:: https://anaconda.org/conda-forge/scikit-bio/badges/license.svg
-   :target: https://anaconda.org/conda-forge/scikit-bio
-.. |Downloads| image:: https://anaconda.org/conda-forge/scikit-bio/badges/downloads.svg
-   :target: https://anaconda.org/conda-forge/scikit-bio
-.. |Install| image:: https://anaconda.org/conda-forge/scikit-bio/badges/installer/conda.svg
-   :target: https://conda.anaconda.org/conda-forge

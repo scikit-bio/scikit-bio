@@ -9,9 +9,17 @@
 import sys
 import unittest
 
+try:
+    import matplotlib
+except ImportError:
+    has_matplotlib = False
+else:
+    has_matplotlib = True
+
 from skbio.util._plotting import PlottableMixin
 
 
+@unittest.skipUnless(has_matplotlib, "Matplotlib not available.")
 class TestPlottableMixin(unittest.TestCase):
     def setUp(self):
 
