@@ -1734,7 +1734,6 @@ def _welch_ttest(x1, x2):
     # upper and lower bounds
     lb = delta - t.ppf(0.975,df)*pooled_se
     ub = delta + t.ppf(0.975,df)*pooled_se
-
     return pd.DataFrame(np.array([tstat, df, p, delta, lb, ub]).reshape(1,-1),
                         columns=['T statistic','df','pvalue','Difference',
                                  'CI(2.5)','CI(97.5)'])
@@ -1827,13 +1826,12 @@ def dirmult_ttest(table : pd.DataFrame, grouping : str,
     if len(mat) != table_index_len or len(cats) != grouping_index_len:
         raise ValueError("`table` index and `grouping` " "index must be consistent.")
 
-    table = pd.DataFrame(clr(table.values), index=table.index, columns=table.columns)
-
     trt_group = grouping.loc[grouping == treatment]
     ref_group = grouping.loc[grouping == reference]
     prior = np.random.dirichlet(np.ones(table.shape[1]) + pseudocount,
                                 size=table.shape[0])
-    dir_table = table + prior
+    dir_table = pd.DataFrame(clr(table.values + prior),
+                             index=table.index, columns=table.columns)
 
     res = [_welch_ttest(np.array(table.loc[trt_group.index, x].values),
                         np.array(table.loc[ref_group.index, x].values))
@@ -1843,27 +1841,37 @@ def dirmult_ttest(table : pd.DataFrame, grouping : str,
     for i in range(1, posterior_samples):
         prior = np.random.dirichlet(np.ones(table.shape[1]) + pseudocount,
                                     size=table.shape[0])
-        dir_table = table + prior
+        dir_table = pd.DataFrame(clr(table.values + prior),
+                                 index=table.index, columns=table.columns)
 
         ires = [_welch_ttest(np.array(dir_table.loc[trt_group.index, x].values),
                              np.array(dir_table.loc[ref_group.index, x].values))
-               for x in table.columns]
+                for x in table.columns]
         ires = pd.concat(ires)
         log2_fold_change = ires["Difference"] / np.log(2)
 
         # online average to avoid holding all of the results in memory
         res["Difference"] = (i * res["Difference"] + ires["Difference"]) / (i + 1)
-        res["pvalue"] = (i * res["pvalue"] + ires["pvalue"]) / (i + 1)
-        res["CI(2.5)"] = (i * res["CI(2.5)"] + ires["CI(2.5)"]) / (i + 1)
-        res["CI(97.5)"] = (i * res["CI(97.5)"] + ires["CI(97.5)"]) / (i + 1)
+        res['pvalue'] = (i * res['pvalue'] + ires["pvalue"]) / (i + 1)
+        res["CI(2.5)"] = np.minimum(res["CI(2.5)"], ires["CI(2.5)"])
+        res["CI(97.5)"] = np.maximum(res["CI(97.5)"], ires["CI(97.5)"])
         res["T statistic"] = (i * res["T statistic"] + ires["T statistic"]) / (i + 1)
 
     res.index = table.columns
+    # convert all log fold changes to base 2
     res['Difference'] = res['Difference'] / np.log(2)
-
+    res['CI(2.5)'] = res['CI(2.5)'] / np.log(2)
+    res['CI(97.5)'] = res['CI(97.5)'] / np.log(2)
     mres = multipletests(res['pvalue'], method='fdr_bh')
     qval = mres[1]
-    reject = mres[0]
+
+    # test to see if confidence interval includes 0.
+    sig = np.logical_or(
+        np.logical_and(res["CI(2.5)"] > 0, res["CI(97.5)"] > 0),
+        np.logical_and(res["CI(2.5)"] < 0, res["CI(97.5)"] < 0)
+    )
+
+    reject = np.logical_and(mres[0], sig)
 
     res = res.rename(columns={'Difference': 'Log2(FC)'})
     res['qvalue'] = qval

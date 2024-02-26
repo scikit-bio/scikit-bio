@@ -1308,6 +1308,7 @@ class TestVLR(TestCase):
 
 class TestDirMultTTest(TestCase):
     def setUp(self):
+        np.random.seed(0)
         # Create sample data for testing
         self.data = {
             'feature1': [5, 8, 12, 15, 20],
@@ -1318,6 +1319,65 @@ class TestDirMultTTest(TestCase):
         self.grouping = pd.Series(['Group1', 'Group1', 'Group2', 'Group2', 'Group2'])
         self.treatment = 'Group2'
         self.reference = 'Group1'
+
+        d = 50
+        n = 200
+        self.depth = depth = 1000
+        p1 = np.random.lognormal(0, 1, size=d) * 10
+        p2 = np.random.lognormal(0.01, 1, size=d) * 10
+        self.p1, self.p2 = p1 / p1.sum(), p2 / p2.sum()
+        self.data2 = np.vstack(
+            (
+                [np.random.multinomial(depth, self.p1) for _ in range(n)],
+                [np.random.multinomial(depth, self.p2) for _ in range(n)]
+            )
+        )
+        self.table2 = pd.DataFrame(self.data2)
+        self.grouping2 = pd.Series(['Group1'] * n + ['Group2'] * n)
+
+    def test_dirmult_ttest_toy(self):
+        p1 = np.array([5, 6, 7])
+        p2 = np.array([4, 7, 7])
+        p1, p2 = p1 / p1.sum(), p2 / p2.sum()
+        depth = 1000
+        n = 100
+        data = np.vstack(
+            (
+                [np.random.multinomial(depth, p1) for _ in range(n)],
+                [np.random.multinomial(depth, p2) for _ in range(n)]
+            )
+        )
+        table = pd.DataFrame(data)
+        grouping = pd.Series(['Group1'] * n + ['Group2'] * n)
+
+        exp_lfc = np.log2([4/5, 7/6, 7/7])
+        exp_lfc = (exp_lfc - exp_lfc.mean())  # convert to CLR coordinates
+
+        res = dirmult_ttest(table, grouping, self.treatment, self.reference)
+
+        npt.assert_array_less(exp_lfc, res['CI(97.5)'])
+        npt.assert_array_less(res['CI(2.5)'], exp_lfc)
+
+    def test_dirmult_ttest_output(self):
+        # exp_lfc = np.log2((self.depth * self.p2 + 0.5) / (self.depth * self.p1 + 0.5))
+        exp_lfc = np.log2(self.p2 / self.p1)
+        exp_lfc = exp_lfc - exp_lfc.mean()
+        res = dirmult_ttest(self.table2, self.grouping2,
+                            self.treatment, self.reference)
+        npt.assert_array_less(res['Log2(FC)'], res['CI(97.5)'])
+        npt.assert_array_less(res['CI(2.5)'], res['Log2(FC)'])
+
+        # a couple of things that complicate the tests
+        # first, there is going to be a little bit of a fudge factor due
+        # to the pseudocount, so we will define it via log2(0.5)
+        eps = np.abs(np.log2(0.5))
+
+        # second, the confidence interval is expected to be inaccurate
+        # for (1/20) of the tests. So we should double check to
+        # see if the confidence intervals were able to capture
+        # 95% of the log-fold changes correctly
+        self.assertGreater(np.mean(res['CI(2.5)'] - eps < exp_lfc), 0.95)
+        self.assertGreater(np.mean(res['CI(97.5)'] + eps > exp_lfc), 0.95)
 
     def test_dirmult_ttest_valid_input(self):
         result = dirmult_ttest(self.table, self.grouping, self.treatment, self.reference)
