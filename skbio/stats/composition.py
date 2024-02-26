@@ -1771,7 +1771,7 @@ def dirmult_ttest(table : pd.DataFrame, grouping : str,
         group and the `reference` group specified in the `grouping` vector.
     treatment : str
         Name of the treatment group.
-    reference : str
+p    reference : str
         Name of the reference group.
     pseudocount : float, optional
         A non-zero value added to the input counts to ensure that all of the
@@ -1780,6 +1780,10 @@ def dirmult_ttest(table : pd.DataFrame, grouping : str,
         The number of draws from the Dirichilet-Multinomial posterior distribution
         More draws provide higher uncertainty surrounding the estimated
         log-fold changes and pvalues.
+
+    See Also
+    --------
+    scipy.stats.ttest_ind
 
     Notes
     -----
@@ -1801,6 +1805,33 @@ def dirmult_ttest(table : pd.DataFrame, grouping : str,
        high-throughput sequencing datasets: characterizing RNA-seq,
        16S rRNA gene sequencing and selective growth experiments by
        compositional data analysis." Microbiome 2 (2014): 1-13.
+
+    Examples
+    --------
+    >>> import pandas as pd
+    >>> from skbio.stats.composition import dirmult_ttest
+    >>> table = pd.DataFrame([[12, 11, 10, 10, 10, 10, 10],
+    ...                       [9,  11, 12, 10, 10, 10, 10],
+    ...                       [1,  11, 10, 11, 10, 5,  9],
+    ...                       [22, 21, 9,  10, 10, 10, 10],
+    ...                       [20, 22, 10, 10, 13, 10, 10],
+    ...                       [23, 21, 14, 10, 10, 10, 10]],
+    ...                      index=['s1', 's2', 's3', 's4', 's5', 's6'],
+    ...                      columns=['b1', 'b2', 'b3', 'b4', 'b5', 'b6',
+    ...                               'b7'])
+    >>> grouping = pd.Series(['treatment', 'treatment', 'treatment',
+    ...                       'placebo', 'placebo', 'placebo'],
+    ...                      index=['s1', 's2', 's3', 's4', 's5', 's6'])
+    >>> lfc_result = dirmult_ttest(table, grouping, 'treatment', 'placebo')
+    >>> lfc_result
+    ...     T statistic        df    pvalue  Log2(FC)    CI(2.5)  CI(97.5)    qvalue  reject
+    ... b1    -1.870510  2.287164  0.202775 -1.754808 -39.433632  2.301225  0.238847   False
+    ... b2    -2.336873  2.000000  0.162592 -0.554130 -16.976987  0.526619  0.238847   False
+    ... b3     1.949975  2.735230  0.127501  0.474152  -8.569666  7.607870  0.238847   False
+    ... b4     2.178115  2.000000  0.159200  0.551037  -1.588240  2.550037  0.238847   False
+    ... b5     1.567955  2.000000  0.204726  0.366559  -7.650111  4.764721  0.238847   False
+    ... b6     1.411865  2.000000  0.283412  0.157482 -12.750185  7.941201  0.283412   False
+    ... b7     2.838726  2.000000  0.097868  0.447876  -2.550037  1.588240  0.238847   False
     """
     if not isinstance(table, pd.DataFrame):
         raise TypeError(
@@ -1878,5 +1909,4 @@ def dirmult_ttest(table : pd.DataFrame, grouping : str,
     res = res.rename(columns={'Difference': 'Log2(FC)'})
     res['qvalue'] = qval
     res['reject'] = reject
-
     return res
