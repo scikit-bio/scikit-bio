@@ -8,11 +8,17 @@
 
 import unittest
 
-import matplotlib as mpl
-import matplotlib.pyplot as plt
 import numpy as np
 import numpy.testing as npt
 import pandas as pd
+
+try:
+    import matplotlib as mpl
+    import matplotlib.pyplot as plt
+except ImportError:
+    has_matplotlib = False
+else:
+    has_matplotlib = True
 
 from skbio import OrdinationResults
 
@@ -38,32 +44,6 @@ class TestOrdinationResults(unittest.TestCase):
         self.ordination_results = OrdinationResults(
             'CA', 'Correspondance Analysis', eigvals=eigvals,
             samples=samples_df, features=features_df)
-        self.ordination_results._get_mpl_plt()
-
-        # DataFrame for testing plot method. Has a categorical column with a
-        # mix of numbers and strings. Has a numeric column with a mix of ints,
-        # floats, and strings that can be converted to floats. Has a numeric
-        # column with missing data (np.nan).
-        self.df = pd.DataFrame([['foo', '42', 10],
-                                [22, 0, 8],
-                                [22, -4.2, np.nan],
-                                ['foo', '42.19', 11]],
-                               index=['A', 'B', 'C', 'D'],
-                               columns=['categorical', 'numeric', 'nancolumn'])
-
-        # Minimal ordination results for easier testing of plotting method.
-        # Paired with df above.
-        eigvals = np.array([0.50, 0.25, 0.25])
-        samples = np.array([[0.1, 0.2, 0.3],
-                            [0.2, 0.3, 0.4],
-                            [0.3, 0.4, 0.5],
-                            [0.4, 0.5, 0.6]])
-        samples_df = pd.DataFrame(samples, ['A', 'B', 'C', 'D'],
-                                  ['PC1', 'PC2', 'PC3'])
-
-        self.min_ord_results = OrdinationResults(
-            'PCoA', 'Principal Coordinate Analysis', eigvals, samples_df)
-        self.min_ord_results._get_mpl_plt()
 
     def test_str(self):
         exp = ("Ordination results:\n"
@@ -94,6 +74,35 @@ class TestOrdinationResults(unittest.TestCase):
         obs = str(OrdinationResults('PCoA', 'Principal Coordinate Analysis',
                                     pd.Series(np.array([4.2])), samples_df))
         self.assertEqual(obs.split('\n'), exp.split('\n'))
+
+
+@unittest.skipUnless(has_matplotlib, "Matplotlib not available.")
+class TestOrdinationResultsPlotting(unittest.TestCase):
+    def setUp(self):
+        # DataFrame for testing plot method. Has a categorical column with a
+        # mix of numbers and strings. Has a numeric column with a mix of ints,
+        # floats, and strings that can be converted to floats. Has a numeric
+        # column with missing data (np.nan).
+        self.df = pd.DataFrame([['foo', '42', 10],
+                                [22, 0, 8],
+                                [22, -4.2, np.nan],
+                                ['foo', '42.19', 11]],
+                               index=['A', 'B', 'C', 'D'],
+                               columns=['categorical', 'numeric', 'nancolumn'])
+
+        # Minimal ordination results for easier testing of plotting method.
+        # Paired with df above.
+        eigvals = np.array([0.50, 0.25, 0.25])
+        samples = np.array([[0.1, 0.2, 0.3],
+                            [0.2, 0.3, 0.4],
+                            [0.3, 0.4, 0.5],
+                            [0.4, 0.5, 0.6]])
+        samples_df = pd.DataFrame(samples, ['A', 'B', 'C', 'D'],
+                                  ['PC1', 'PC2', 'PC3'])
+
+        self.min_ord_results = OrdinationResults(
+            'PCoA', 'Principal Coordinate Analysis', eigvals, samples_df)
+        self.min_ord_results._get_mpl_plt()
 
     def check_basic_figure_sanity(self, fig, exp_num_subplots, exp_title,
                                   exp_legend_exists, exp_xlabel, exp_ylabel,
