@@ -58,7 +58,7 @@ Functions
    tree_basis
    ancom
    sbp_basis
-   dirmult
+   dirmult_ttest
 
 
 References
@@ -1742,7 +1742,7 @@ def _welch_ttest(x1, x2):
 @experimental(as_of="0.5.9")
 def dirmult_ttest(table : pd.DataFrame, grouping : str,
                   treatment : str, reference : str,
-                  pseudocount : float = 0.5, posterior_samples : int = 128):
+                  pseudocount : float = 0.5, draws : int = 128):
     """ T-test using Dirichilet Mulitnomial Distribution.
 
     The Dirichlet-multinomial distribution is a compound distribution that
@@ -1776,22 +1776,24 @@ def dirmult_ttest(table : pd.DataFrame, grouping : str,
     pseudocount : float, optional
         A non-zero value added to the input counts to ensure that all of the
         estimated abundances are strictly greater than zero.
-    posterior_samples : int, optional
-        The number of posterior samples drawn from each Dirichilet-Multinomial
-        distribution. More samples provide higher uncertainty surrounding the estimated
+    draws : int, optional
+        The number of draws from the Dirichilet-Multinomial posterior distribution
+        More draws provide higher uncertainty surrounding the estimated
         log-fold changes and pvalues.
 
     Notes
     -----
     FDR-corrected pvalues use Benjamini-Hochberg for pvalue adjustment for
-    multiple corrections.
+    multiple corrections. The confidence intervals are computed using the
+    mininum 2.5% and maximum 95% bounds computed across all of the posterior draws.
+
 
     The reference frame here is the geometric mean. Extracting absolute log
     fold changes from this test assumes that the average microbial abundance
     between the `treatment` and the `reference` groups are the same. If this
     assumption is violated, then the log-fold changes will be biased, and the
     pvalues will not be reliable. However, the bias is the same across each
-    feature, thus the ordering of the log-fold changes will be invariant to this bias.
+
 
     References
     ----------
@@ -1838,7 +1840,7 @@ def dirmult_ttest(table : pd.DataFrame, grouping : str,
            for x in table.columns]
     res = pd.concat(res)
 
-    for i in range(1, posterior_samples):
+    for i in range(1, draws):
         prior = np.random.dirichlet(np.ones(table.shape[1]) + pseudocount,
                                     size=table.shape[0])
         dir_table = pd.DataFrame(clr(table.values + prior),
