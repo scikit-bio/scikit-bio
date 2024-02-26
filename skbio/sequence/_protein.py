@@ -59,45 +59,45 @@ class Protein(GrammaredSequence):
     +-----+---------+--------------+
     |Code |3-letter |Amino acid    |
     +=====+=========+==============+
-    |`A`  |Ala      |Alanine       |
+    |``A``|Ala      |Alanine       |
     +-----+---------+--------------+
-    |`C`  |Cys      |Cysteine      |
+    |``C``|Cys      |Cysteine      |
     +-----+---------+--------------+
-    |`D`  |Asp      |Aspartic acid |
+    |``D``|Asp      |Aspartic acid |
     +-----+---------+--------------+
-    |`E`  |Glu      |Glutamic acid |
+    |``E``|Glu      |Glutamic acid |
     +-----+---------+--------------+
-    |`F`  |Phe      |Phenylalanine |
+    |``F``|Phe      |Phenylalanine |
     +-----+---------+--------------+
-    |`G`  |Gly      |Glycine       |
+    |``G``|Gly      |Glycine       |
     +-----+---------+--------------+
-    |`H`  |His      |Histidine     |
+    |``H``|His      |Histidine     |
     +-----+---------+--------------+
-    |`I`  |Ile      |Isoleucine    |
+    |``I``|Ile      |Isoleucine    |
     +-----+---------+--------------+
-    |`K`  |Lys      |Lysine        |
+    |``K``|Lys      |Lysine        |
     +-----+---------+--------------+
-    |`L`  |Leu      |Leucine       |
+    |``L``|Leu      |Leucine       |
     +-----+---------+--------------+
-    |`M`  |Met      |Methionine    |
+    |``M``|Met      |Methionine    |
     +-----+---------+--------------+
-    |`N`  |Asn      |Asparagine    |
+    |``N``|Asn      |Asparagine    |
     +-----+---------+--------------+
-    |`P`  |Pro      |Proline       |
+    |``P``|Pro      |Proline       |
     +-----+---------+--------------+
-    |`Q`  |Gln      |Glutamine     |
+    |``Q``|Gln      |Glutamine     |
     +-----+---------+--------------+
-    |`R`  |Arg      |Arginine      |
+    |``R``|Arg      |Arginine      |
     +-----+---------+--------------+
-    |`S`  |Ser      |Serine        |
+    |``S``|Ser      |Serine        |
     +-----+---------+--------------+
-    |`T`  |Thr      |Threonine     |
+    |``T``|Thr      |Threonine     |
     +-----+---------+--------------+
-    |`V`  |Val      |Valine        |
+    |``V``|Val      |Valine        |
     +-----+---------+--------------+
-    |`W`  |Trp      |Tryptophan    |
+    |``W``|Trp      |Tryptophan    |
     +-----+---------+--------------+
-    |`Y`  |Tyr      |Tyrosine      |
+    |``Y``|Tyr      |Tyrosine      |
     +-----+---------+--------------+
 
     And the following four degenerate characters, each of which representing
@@ -106,27 +106,27 @@ class Protein(GrammaredSequence):
     +-----+---------+------------+
     |Code |3-letter |Amino acids |
     +=====+=========+============+
-    |`B`  |Asx      |D or N      |
+    |``B``|Asx      |D or N      |
     +-----+---------+------------+
-    |`Z`  |Glx      |E or Q      |
+    |``Z``|Glx      |E or Q      |
     +-----+---------+------------+
-    |`J`  |Xle      |I or L      |
+    |``J``|Xle      |I or L      |
     +-----+---------+------------+
-    |`X`  |Xaa      |All 20      |
+    |``X``|Xaa      |All 20      |
     +-----+---------+------------+
 
-    Plus one stop character: `*` (Ter), and two gap characters: `-` and `.`.
+    Plus one stop character: ``*`` (Ter), and two gap characters: ``-`` and ``.``.
 
     Characters other than the above 27 are not allowed. If you intend to use
-    additional characters to represent non-canonical amino acids, such as `U`
-    (Sec, Selenocysteine) and `O` (Pyl, Pyrrolysine), you may create a custom
+    additional characters to represent non-canonical amino acids, such as ``U``
+    (Sec, Selenocysteine) and ``O`` (Pyl, Pyrrolysine), you may create a custom
     alphabet using ``GrammaredSequence``. Directly modifying the alphabet of
     ``Protein`` may break functions that rely on the IUPAC alphabet.
 
     It should be noted that some functions do not support certain characters.
-    For example, the BLOSUM and PAM substitution matrices do not support `J`
+    For example, the BLOSUM and PAM substitution matrices do not support ``J``
     (Xle). In such circumstances, unsupported characters will be replaced with
-    `X` to represent any of the canonical amino acids.
+    ``X`` to represent any of the canonical amino acids.
 
     References
     ----------
