@@ -241,7 +241,6 @@ setup(
         "scipy >= 1.9.0",
         "h5py >= 3.6.0",
         "hdmedians >= 0.14.1",
-        "statsmodels >= 0.10.0"
     ],
     classifiers=classifiers,
     package_data={
