@@ -73,11 +73,6 @@ References
    Compositional Data Sets Using Nonparametric Imputation",
    Mathematical Geology, 35.3 (2003)
 
-.. [4] Fernandes, Andrew D., et al. "Unifying the analysis of
-   high-throughput sequencing datasets: characterizing RNA-seq,
-   16S rRNA gene sequencing and selective growth experiments by
-   compositional data analysis." Microbiome 2 (2014): 1-13.
-
 
 Examples
 --------
@@ -1752,7 +1747,7 @@ def dirmult_ttest(
     draws: int = 128,
     seed=None,
 ):
-    """T-test using Dirichilet Mulitnomial Distribution.
+    r"""T-test using Dirichilet Mulitnomial Distribution.
 
     The Dirichlet-multinomial distribution is a compound distribution that
     combines a Dirichlet distribution over the probabilities of a multinomial
@@ -1763,9 +1758,10 @@ def dirmult_ttest(
     for each sample, and then we compute the fold change and p-value for each
     feature. The fold change is computed as the difference between the
     samples of the two groups. T-tests are then performed on the posterior
-    samples, sampled from each Dirichlet-multinomial distribution, and the
-    expected pvalues, log-fold changes as well as their credible intervals are
-    reported. This process mirrors the approach performed by ALDEx2 [1]_.
+    samples, drawn from each Dirichlet-multinomial distribution. The
+    log-fold changes as well as their credible intervals, the pvalues a
+    FDR corrected pvalues using Holm-Bonferroni [1]_ are reported.
+    This process mirrors the approach performed by ALDEx2.
 
     Parameters
     ----------
@@ -1824,7 +1820,7 @@ def dirmult_ttest(
 
         `qvalue` is the pvalue of the t-test after performing multiple
         hypothesis correction. The reported `qvalue` is computed after
-        performing holm-bonferroni [2]_ multiple hypothesis correction on the
+        performing holm-bonferroni multiple hypothesis correction on the
         reported `pvalue`.
 
         `"Reject null hypothesis"` indicates if feature is differentially
@@ -1856,16 +1852,14 @@ def dirmult_ttest(
     per sample will shrink the size of the confidence intervals, and can result in
     lower pvalues.
 
-
     References
     ----------
-    .. [1] Fernandes, Andrew D., et al. "Unifying the analysis of
+    .. [1] Holm, S. "A simple sequentially rejective multiple test procedure".
+       Scandinavian Journal of Statistics (1979), 6.
+    .. [2] Fernandes et al. "Unifying the analysis of
        high-throughput sequencing datasets: characterizing RNA-seq,
        16S rRNA gene sequencing and selective growth experiments by
-       compositional data analysis." Microbiome 2 (2014): 1-13.
-    .. [2] Holm, S. "A simple sequentially rejective multiple test procedure".
-       Scandinavian Journal of Statistics (1979), 6.
-
+       compositional data analysis." Microbiome (2014).
 
     Examples
     --------
