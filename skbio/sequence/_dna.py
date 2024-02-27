@@ -61,13 +61,13 @@ class DNA(GrammaredSequence, NucleotideMixin):
     +-----+-----------+
     |Code |Nucleobase |
     +=====+===========+
-    |`A`  |Adenine    |
+    |``A``|Adenine    |
     +-----+-----------+
-    |`C`  |Cytosine   |
+    |``C``|Cytosine   |
     +-----+-----------+
-    |`G`  |Guanine    |
+    |``G``|Guanine    |
     +-----+-----------+
-    |`T`  |Thymine    |
+    |``T``|Thymine    |
     +-----+-----------+
 
     And the following 11 degenerate characters, each of which representing 2-4
@@ -76,33 +76,33 @@ class DNA(GrammaredSequence, NucleotideMixin):
     +-----+-------------+-----------+
     |Code |Nucleobases  |Meaning    |
     +=====+=============+===========+
-    |`R`  |A or G       |Purine     |
+    |``R``|A or G       |Purine     |
     +-----+-------------+-----------+
-    |`Y`  |C or T       |Pyrimidine |
+    |``Y``|C or T       |Pyrimidine |
     +-----+-------------+-----------+
-    |`S`  |G or C       |Strong     |
+    |``S``|G or C       |Strong     |
     +-----+-------------+-----------+
-    |`W`  |A or T       |Weak       |
+    |``W``|A or T       |Weak       |
     +-----+-------------+-----------+
-    |`K`  |G or T       |Keto       |
+    |``K``|G or T       |Keto       |
     +-----+-------------+-----------+
-    |`M`  |A or C       |Amino      |
+    |``M``|A or C       |Amino      |
     +-----+-------------+-----------+
-    |`B`  |C, G or T    |Not A      |
+    |``B``|C, G or T    |Not A      |
     +-----+-------------+-----------+
-    |`D`  |A, G or T    |Not C      |
+    |``D``|A, G or T    |Not C      |
     +-----+-------------+-----------+
-    |`H`  |A, C or T    |Not G      |
+    |``H``|A, C or T    |Not G      |
     +-----+-------------+-----------+
-    |`V`  |A, C or G    |Not T      |
+    |``V``|A, C or G    |Not T      |
     +-----+-------------+-----------+
-    |`N`  |A, C, G or T |Any        |
+    |``N``|A, C, G or T |Any        |
     +-----+-------------+-----------+
 
-    Plus two gap characters: `-` and `.`.
+    Plus two gap characters: ``-`` and ``.``.
 
     Characters other than the above 17 are not allowed. If you intend to use
-    additional characters to represent non-canonical nucleobases, such as `I`
+    additional characters to represent non-canonical nucleobases, such as ``I``
     (Inosine), you may create a custom alphabet using ``GrammaredSequence``.
     Directly modifying the alphabet of ``DNA`` may break methods that rely on
     the IUPAC alphabet.

@@ -60,19 +60,19 @@ class RNA(GrammaredSequence, NucleotideMixin):
     +-----+-----------+
     |Code |Nucleobase |
     +=====+===========+
-    |`A`  |Adenine    |
+    |``A``|Adenine    |
     +-----+-----------+
-    |`C`  |Cytosine   |
+    |``C``|Cytosine   |
     +-----+-----------+
-    |`G`  |Guanine    |
+    |``G``|Guanine    |
     +-----+-----------+
-    |`U`  |Uracil     |
+    |``U``|Uracil     |
     +-----+-----------+
 
-    Plus 11 degenerate characters: `R`, `Y`, `S`, `W`, `K`, `M`, `B`, `D`, `H`,
-    `V` and `N`, and two gap characters: `-` and `.`. The definitions of
-    degenerate characters are provided in ``DNA``, in which `T` should be
-    replaced with `U` for RNA sequences.
+    Plus 11 degenerate characters: ``R``, ``Y``, ``S``, ``W``, ``K``, ``M``, ``B``,
+    ``D``, ``H``, ``V`` and ``N``, and two gap characters: ``-`` and ``.``. The
+    definitions of degenerate characters are provided in ``DNA``, in which ``T`` should
+    be replaced with ``U`` for RNA sequences.
 
     Characters other than the above 17 are not allowed. To include additional
     characters, you may create a custom alphabet using ``GrammaredSequence``.
