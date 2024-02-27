@@ -1723,17 +1723,17 @@ def _welch_ttest(x1, x2):
     v2 = np.var(x2, ddof=1)
 
     pooled_se = np.sqrt(v1 / n1 + v2 / n2)
-    delta = m1-m2
+    delta = m1 - m2
 
     tstat = delta /  pooled_se
     df = (v1 / n1 + v2 / n2)**2 / (v1**2 / (n1**2 * (n1 - 1)) + v2**2 / (n2**2 * (n2 - 1)))
 
     # two side t-test
-    p = 2 * t.cdf(-abs(tstat), df)
+    p = 2 * t.cdf(- abs(tstat), df)
 
     # upper and lower bounds
-    lb = delta - t.ppf(0.975,df)*pooled_se
-    ub = delta + t.ppf(0.975,df)*pooled_se
+    lb = delta - t.ppf(0.975, df) * pooled_se
+    ub = delta + t.ppf(0.975, df) * pooled_se
     return pd.DataFrame(np.array([tstat, df, p, delta, lb, ub]).reshape(1,-1),
                         columns=['T statistic','df','pvalue','Difference',
                                  'CI(2.5)','CI(97.5)'])
@@ -1750,7 +1750,7 @@ def dirmult_ttest(table : pd.DataFrame, grouping : str,
     distribution. This distribution is used to model the distribution of
     species abundances in a community.
 
-    To perform the t-test,we first fit a Dirichlet-multinomial distribution
+    To perform the t-test, we first fit a Dirichlet-multinomial distribution
     for each sample, and then we compute the fold change and p-value for each
     feature. The fold change is computed as the difference between the
     samples of the two groups. T-tests are then performed on the posterior
@@ -1771,7 +1771,7 @@ def dirmult_ttest(table : pd.DataFrame, grouping : str,
         group and the `reference` group specified in the `grouping` vector.
     treatment : str
         Name of the treatment group.
-p    reference : str
+    reference : str
         Name of the reference group.
     pseudocount : float, optional
         A non-zero value added to the input counts to ensure that all of the
@@ -1780,6 +1780,46 @@ p    reference : str
         The number of draws from the Dirichilet-Multinomial posterior distribution
         More draws provide higher uncertainty surrounding the estimated
         log-fold changes and pvalues.
+
+    Returns
+    -------
+    pd.DataFrame
+        A table of features, their log-fold changes and other relevant statistics.
+
+        `"T statistic"` is the t-statistic outputted from the t-test. T-statistics
+        are generated from each posterior draw.  The reported `T statistic` is the
+        average across all of the posterior draws.
+
+        `"df"` is the degrees of freedom from the t-test.
+
+        `"Log2(FC)"` is the expected log2-fold change. Within each posterior draw
+        the log2 fold-change is computed as the difference between the mean log-abundance
+        the `treatment` group and the `reference` group. All log2 fold changes are express
+        in clr coordinates. The reported `Log2(FC)` is the average of all of the log2-fold
+        changes computed from each of the posterior draws.
+
+        `CI(2.5)` is the 2.5% quantile of the log2-fold change. The reported `CI(2.5)`
+        is the 2.5% quantile of all of the log2-fold changes computed from each of the
+        posterior draws.
+
+        `CI(97.5)` is the 97.5% quantile of the log2-fold change. The reported `CI(97.5)`
+        is the 97.5% quantile of all of the log2-fold changes computed from each of the
+        posterior draws.
+
+        `pvalue` is the pvalue of the t-test. The reported `pvalue`
+        is the average of all of the pvalues computed from the t-tests calculated across
+        all of the posterior draws.
+
+        `qvalue` is the pvalue of the t-test after performing multiple hypothesis correction.
+        The reported `qvalue` is computed after performing holm-bonferroni [2]_
+        multiple hypothesis correction on the reported `pvalue`.
+
+        `"Reject null hypothesis"` indicates if feature is differentially
+        abundant across groups (`True`) or not (`False`). In order for a feature to be
+        differentially abundant, the qvalue needs to be significant (i.e. <0.05) and
+        the confidence intervals reported by `CI(2.5)` and `CI(97.5)` must not overlap
+        with zero.
+
 
     See Also
     --------
@@ -1790,7 +1830,6 @@ p    reference : str
     FDR-corrected pvalues use Benjamini-Hochberg for pvalue adjustment for
     multiple corrections. The confidence intervals are computed using the
     mininum 2.5% and maximum 95% bounds computed across all of the posterior draws.
-
 
     The reference frame here is the geometric mean. Extracting absolute log
     fold changes from this test assumes that the average microbial abundance
@@ -1805,17 +1844,20 @@ p    reference : str
        high-throughput sequencing datasets: characterizing RNA-seq,
        16S rRNA gene sequencing and selective growth experiments by
        compositional data analysis." Microbiome 2 (2014): 1-13.
+    .. [2] Holm, S. "A simple sequentially rejective multiple test procedure".
+       Scandinavian Journal of Statistics (1979), 6.
+
 
     Examples
     --------
     >>> import pandas as pd
     >>> from skbio.stats.composition import dirmult_ttest
-    >>> table = pd.DataFrame([[12, 11, 10, 10, 10, 10, 10],
-    ...                       [9,  11, 12, 10, 10, 10, 10],
-    ...                       [1,  11, 10, 11, 10, 5,  9],
-    ...                       [22, 21, 9,  10, 10, 10, 10],
-    ...                       [20, 22, 10, 10, 13, 10, 10],
-    ...                       [23, 21, 14, 10, 10, 10, 10]],
+    >>> table = pd.DataFrame([[20,  110, 100, 101, 100, 103, 104],
+    ...                       [33,  110, 120, 100, 101, 100, 102],
+    ...                       [12,  110, 100, 110, 100, 50,  90],
+    ...                       [202, 201, 9,  10, 10, 11, 11],
+    ...                       [200, 202, 10, 10, 13, 10, 10],
+    ...                       [203, 201, 14, 10, 10, 13, 12]],
     ...                      index=['s1', 's2', 's3', 's4', 's5', 's6'],
     ...                      columns=['b1', 'b2', 'b3', 'b4', 'b5', 'b6',
     ...                               'b7'])
@@ -1824,14 +1866,14 @@ p    reference : str
     ...                      index=['s1', 's2', 's3', 's4', 's5', 's6'])
     >>> lfc_result = dirmult_ttest(table, grouping, 'treatment', 'placebo')
     >>> lfc_result
-    ...     T statistic        df    pvalue  Log2(FC)    CI(2.5)  CI(97.5)    qvalue  reject
-    ... b1    -1.870510  2.287164  0.202775 -1.754808 -39.433632  2.301225  0.238847   False
-    ... b2    -2.336873  2.000000  0.162592 -0.554130 -16.976987  0.526619  0.238847   False
-    ... b3     1.949975  2.735230  0.127501  0.474152  -8.569666  7.607870  0.238847   False
-    ... b4     2.178115  2.000000  0.159200  0.551037  -1.588240  2.550037  0.238847   False
-    ... b5     1.567955  2.000000  0.204726  0.366559  -7.650111  4.764721  0.238847   False
-    ... b6     1.411865  2.000000  0.283412  0.157482 -12.750185  7.941201  0.283412   False
-    ... b7     2.838726  2.000000  0.097868  0.447876  -2.550037  1.588240  0.238847   False
+    ...     T statistic        df  Log2(FC)   CI(2.5)  CI(97.5)    pvalue    qvalue  "Reject null hypothesis"
+    ... b1   -15.927561  2.405273 -4.986221 -7.714606 -2.316502  0.003403  0.020417                      True
+    ... b2   -17.292299  3.447750 -2.545375 -3.748628 -1.395006  0.001004  0.007025                      True
+    ... b3     6.583727  3.719677  1.615844 -1.166965  4.775300  0.023214  0.069643                     False
+    ... b4     6.543672  2.541711  1.681734 -0.603502  4.162178  0.013685  0.068424                     False
+    ... b5     6.361830  2.221351  1.534736 -1.421531  4.288884  0.024046  0.069643                     False
+    ... b6     4.091524  2.206520  1.193343 -0.792342  3.581417  0.042581  0.069643                     False
+    ... b7     7.943857  2.078685  1.505939 -1.222567  4.372829  0.017303  0.069213                     False
     """
     if not isinstance(table, pd.DataFrame):
         raise TypeError(
@@ -1861,28 +1903,25 @@ p    reference : str
 
     trt_group = grouping.loc[grouping == treatment]
     ref_group = grouping.loc[grouping == reference]
-    prior = np.random.dirichlet(np.ones(table.shape[1]) + pseudocount,
-                                size=table.shape[0])
-    dir_table = pd.DataFrame(clr(table.values + prior),
+    posterior = [np.random.dirichlet(table.values[i] + pseudocount)
+                 for i in range(table.shape[0])]
+    dir_table = pd.DataFrame(clr(posterior),
                              index=table.index, columns=table.columns)
-
-    res = [_welch_ttest(np.array(table.loc[trt_group.index, x].values),
-                        np.array(table.loc[ref_group.index, x].values))
+    res = [_welch_ttest(np.array(dir_table.loc[trt_group.index, x].values),
+                        np.array(dir_table.loc[ref_group.index, x].values))
            for x in table.columns]
     res = pd.concat(res)
-
     for i in range(1, draws):
-        prior = np.random.dirichlet(np.ones(table.shape[1]) + pseudocount,
-                                    size=table.shape[0])
-        dir_table = pd.DataFrame(clr(table.values + prior),
+
+        posterior = [np.random.dirichlet(table.values[i] + pseudocount)
+                     for i in range(table.shape[0])]
+        dir_table = pd.DataFrame(clr(posterior),
                                  index=table.index, columns=table.columns)
 
         ires = [_welch_ttest(np.array(dir_table.loc[trt_group.index, x].values),
                              np.array(dir_table.loc[ref_group.index, x].values))
                 for x in table.columns]
         ires = pd.concat(ires)
-        log2_fold_change = ires["Difference"] / np.log(2)
-
         # online average to avoid holding all of the results in memory
         res["Difference"] = (i * res["Difference"] + ires["Difference"]) / (i + 1)
         res['pvalue'] = (i * res['pvalue'] + ires["pvalue"]) / (i + 1)
@@ -1895,8 +1934,9 @@ p    reference : str
     res['Difference'] = res['Difference'] / np.log(2)
     res['CI(2.5)'] = res['CI(2.5)'] / np.log(2)
     res['CI(97.5)'] = res['CI(97.5)'] / np.log(2)
-    mres = multipletests(res['pvalue'], method='fdr_bh')
-    qval = mres[1]
+
+    mres = _holm_bonferroni(res['pvalue'])
+    qval = mres
 
     # test to see if confidence interval includes 0.
     sig = np.logical_or(
@@ -1908,5 +1948,10 @@ p    reference : str
 
     res = res.rename(columns={'Difference': 'Log2(FC)'})
     res['qvalue'] = qval
-    res['reject'] = reject
-    return res
+    res['"Reject null hypothesis"'] = reject
+
+    col_order = [
+        'T statistic', 'df', 'Log2(FC)', 'CI(2.5)', 'CI(97.5)',
+        'pvalue', 'qvalue', '"Reject null hypothesis"'
+    ]
+    return res[col_order]

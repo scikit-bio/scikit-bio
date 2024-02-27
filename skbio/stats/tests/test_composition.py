@@ -1358,26 +1358,56 @@ class TestDirMultTTest(TestCase):
         npt.assert_array_less(exp_lfc, res['CI(97.5)'])
         npt.assert_array_less(res['CI(2.5)'], exp_lfc)
 
+    def test_dirmult_ttest_toy_depth(self):
+        p1 = np.array([5, 6, 7, 8, 9, 4])
+        p2 = np.array([4, 7, 7, 6, 5, 7])
+        p1, p2 = p1 / p1.sum(), p2 / p2.sum()
+        depth = 100
+        n = 100
+        data = np.vstack(
+            (
+                [np.random.multinomial(depth, p1) for _ in range(n)],
+                [np.random.multinomial(depth, p2) for _ in range(n)]
+            )
+        )
+        table = pd.DataFrame(data)
+        grouping = pd.Series(['Group1'] * n + ['Group2'] * n)
+        exp_lfc = np.log2([4/5, 7/6, 7/7, 6/8, 5/9, 7/4])
+        exp_lfc = (exp_lfc - exp_lfc.mean())  # convert to CLR coordinates
+        res_100 = dirmult_ttest(table, grouping, self.treatment, self.reference)
+
+        # increase sequencing depth by 100 fold
+        depth = 10000
+        data = np.vstack(
+            (
+                [np.random.multinomial(depth, p1) for _ in range(n)],
+                [np.random.multinomial(depth, p2) for _ in range(n)]
+            )
+        )
+        table = pd.DataFrame(data)
+        res_10000 = dirmult_ttest(table, grouping, self.treatment, self.reference)
+
+        # when the sequencing depth increases, the confidence intervals
+        # should also shrink
+
+        npt.assert_array_less(res_100['CI(2.5)'], res_10000['CI(2.5)'])
+        npt.assert_array_less(res_10000['CI(97.5)'], res_100['CI(97.5)'])
+
+
     def test_dirmult_ttest_output(self):
         # exp_lfc = np.log2((self.depth * self.p2 + 0.5) / (self.depth * self.p1 + 0.5))
         exp_lfc = np.log2(self.p2 / self.p1)
         exp_lfc = exp_lfc - exp_lfc.mean()
         res = dirmult_ttest(self.table2, self.grouping2,
                             self.treatment, self.reference)
+
         npt.assert_array_less(res['Log2(FC)'], res['CI(97.5)'])
         npt.assert_array_less(res['CI(2.5)'], res['Log2(FC)'])
 
-        # a couple of things that complicate the tests
-        # first, there is going to be a little bit of a fudge factor due
-        # to the pseudocount, so we will define it via log2(0.5)
-        eps = np.abs(np.log2(0.5))
+        npt.assert_array_less(res['CI(2.5)'], exp_lfc)
+        npt.assert_array_less(exp_lfc, res['CI(97.5)'])
 
-        # second, the confidence interval is expected to be inaccurate
-        # for (1/20) of the tests. So we should double check to
-        # see if the confidence intervals were able to capture
-        # 95% of the log-fold changes correctly
-        self.assertGreater(np.mean(res['CI(2.5)'] - eps < exp_lfc), 0.95)
-        self.assertGreater(np.mean(res['CI(97.5)'] + eps > exp_lfc), 0.95)
+
 
     def test_dirmult_ttest_valid_input(self):
         result = dirmult_ttest(self.table, self.grouping, self.treatment, self.reference)
