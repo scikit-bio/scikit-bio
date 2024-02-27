@@ -1726,26 +1726,34 @@ def _welch_ttest(x1, x2):
     pooled_se = np.sqrt(v1 / n1 + v2 / n2)
     delta = m1 - m2
 
-    tstat = delta /  pooled_se
-    df = (v1 / n1 + v2 / n2)**2 / (v1**2 / (n1**2 * (n1 - 1)) + v2**2 / (n2**2 * (n2 - 1)))
+    tstat = delta / pooled_se
+    df = (v1 / n1 + v2 / n2) ** 2 / (
+        v1**2 / (n1**2 * (n1 - 1)) + v2**2 / (n2**2 * (n2 - 1))
+    )
 
     # two side t-test
-    p = 2 * t.cdf(- abs(tstat), df)
+    p = 2 * t.cdf(-abs(tstat), df)
 
     # upper and lower bounds
     lb = delta - t.ppf(0.975, df) * pooled_se
     ub = delta + t.ppf(0.975, df) * pooled_se
-    return pd.DataFrame(np.array([tstat, df, p, delta, lb, ub]).reshape(1,-1),
-                        columns=['T statistic','df','pvalue','Difference',
-                                 'CI(2.5)','CI(97.5)'])
+    return pd.DataFrame(
+        np.array([tstat, df, p, delta, lb, ub]).reshape(1, -1),
+        columns=["T statistic", "df", "pvalue", "Difference", "CI(2.5)", "CI(97.5)"],
+    )
 
 
 @experimental(as_of="0.5.9")
-def dirmult_ttest(table : pd.DataFrame, grouping : str,
-                  treatment : str, reference : str,
-                  pseudocount : float = 0.5, draws : int = 128,
-                  seed=0):
-    """ T-test using Dirichilet Mulitnomial Distribution.
+def dirmult_ttest(
+    table: pd.DataFrame,
+    grouping: str,
+    treatment: str,
+    reference: str,
+    pseudocount: float = 0.5,
+    draws: int = 128,
+    seed=0,
+):
+    """T-test using Dirichilet Mulitnomial Distribution.
 
     The Dirichlet-multinomial distribution is a compound distribution that
     combines a Dirichlet distribution over the probabilities of a multinomial
@@ -1797,32 +1805,34 @@ def dirmult_ttest(table : pd.DataFrame, grouping : str,
         `"df"` is the degrees of freedom from the t-test.
 
         `"Log2(FC)"` is the expected log2-fold change. Within each posterior draw
-        the log2 fold-change is computed as the difference between the mean log-abundance
-        the `treatment` group and the `reference` group. All log2 fold changes are express
-        in clr coordinates. The reported `Log2(FC)` is the average of all of the log2-fold
+        the log2 fold-change is computed as the difference between the mean
+        log-abundance the `treatment` group and the `reference` group. All log2
+        fold changes are expressed in clr coordinates. The reported `Log2(FC)`
+        is the average of all of the log2-fold changes computed from each of the
+        posterior draws.
+
+        `"CI(2.5)"` is the 2.5% quantile of the log2-fold change. The reported
+        `CI(2.5)` is the 2.5% quantile of all of the log2-fold changes computed
+        from each of the posterior draws.
+
+        `"CI(97.5)"` is the 97.5% quantile of the log2-fold change. The
+        reported `CI(97.5)` is the 97.5% quantile of all of the log2-fold
         changes computed from each of the posterior draws.
 
-        `CI(2.5)` is the 2.5% quantile of the log2-fold change. The reported `CI(2.5)`
-        is the 2.5% quantile of all of the log2-fold changes computed from each of the
-        posterior draws.
+        `"pvalue`" is the pvalue of the t-test. The reported `pvalue` is the
+        average of all of the pvalues computed from the t-tests calculated
+        across all of the posterior draws.
 
-        `CI(97.5)` is the 97.5% quantile of the log2-fold change. The reported `CI(97.5)`
-        is the 97.5% quantile of all of the log2-fold changes computed from each of the
-        posterior draws.
-
-        `pvalue` is the pvalue of the t-test. The reported `pvalue`
-        is the average of all of the pvalues computed from the t-tests calculated across
-        all of the posterior draws.
-
-        `qvalue` is the pvalue of the t-test after performing multiple hypothesis correction.
-        The reported `qvalue` is computed after performing holm-bonferroni [2]_
-        multiple hypothesis correction on the reported `pvalue`.
+        `qvalue` is the pvalue of the t-test after performing multiple
+        hypothesis correction. The reported `qvalue` is computed after
+        performing holm-bonferroni [2]_ multiple hypothesis correction on the
+        reported `pvalue`.
 
         `"Reject null hypothesis"` indicates if feature is differentially
-        abundant across groups (`True`) or not (`False`). In order for a feature to be
-        differentially abundant, the qvalue needs to be significant (i.e. <0.05) and
-        the confidence intervals reported by `CI(2.5)` and `CI(97.5)` must not overlap
-        with zero.
+        abundant across groups (`True`) or not (`False`). In order for a
+        feature to be differentially abundant, the qvalue needs to be significant
+        (i.e. <0.05) and the confidence intervals reported by `CI(2.5)` and
+        `CI(97.5)` must not overlap with zero.
 
 
     See Also
@@ -1874,16 +1884,19 @@ def dirmult_ttest(table : pd.DataFrame, grouping : str,
     >>> grouping = pd.Series(['treatment', 'treatment', 'treatment',
     ...                       'placebo', 'placebo', 'placebo'],
     ...                      index=['s1', 's2', 's3', 's4', 's5', 's6'])
-    >>> lfc_result = dirmult_ttest(table, grouping, 'treatment', 'placebo', seed=0)
-    >>> lfc_result
-    ...     T statistic        df  Log2(FC)   CI(2.5)  CI(97.5)    pvalue    qvalue  "Reject null hypothesis"
-    ... b1   -17.178600  2.232500 -4.991987 -7.884498 -2.293463  0.003355  0.020131                      True
-    ... b2   -16.873187  3.847380 -2.533729 -3.594590 -1.462339  0.001064  0.007446                      True
-    ... b3     6.942727  2.740170  1.627677 -1.048219  4.750792  0.021130  0.068310                     False
-    ... b4     6.522786  3.972941  1.707221 -0.467481  4.164998  0.013123  0.065613                     False
-    ... b5     6.654142  3.461029  1.528243 -1.036910  3.978387  0.019360  0.068310                     False
-    ... b6     3.839520  3.581368  1.182343 -0.702656  3.556061  0.045376  0.068310                     False
-    ... b7     7.600734  2.483072  1.480232 -0.601277  4.043888  0.017077  0.068310                     False
+    >>> lfc_result = dirmult_ttest(table, grouping, 'treatment', 'placebo',
+                                   seed=0)
+    >>> lfc_result[["Log2(FC)", "CI(2.5)",  "CI(97.5)", "qvalue",
+    ...            '"Reject null hypothesis"']]
+    ...     Log2(FC)   CI(2.5)  CI(97.5)    qvalue  "Reject null hypothesis"
+    ... b1 -4.991987 -7.884498 -2.293463  0.020131                      True
+    ... b2 -2.533729 -3.594590 -1.462339  0.007446                      True
+    ... b3  1.627677 -1.048219  4.750792  0.068310                     False
+    ... b4  1.707221 -0.467481  4.164998  0.065613                     False
+    ... b5  1.528243 -1.036910  3.978387  0.068310                     False
+    ... b6  1.182343 -0.702656  3.556061  0.068310                     False
+    ... b7  1.480232 -0.601277  4.043888  0.068310                     False
+
     """
     rng = get_rng(seed)
     if not isinstance(table, pd.DataFrame):
@@ -1896,9 +1909,7 @@ def dirmult_ttest(table : pd.DataFrame, grouping : str,
         )
 
     if np.any(table < 0):
-        raise ValueError(
-            "Cannot handle negative values in `table`. "
-        )
+        raise ValueError("Cannot handle negative values in `table`. ")
 
     if (grouping.isnull()).any():
         raise ValueError("Cannot handle missing values in `grouping`.")
@@ -1914,55 +1925,70 @@ def dirmult_ttest(table : pd.DataFrame, grouping : str,
 
     trt_group = grouping.loc[grouping == treatment]
     ref_group = grouping.loc[grouping == reference]
-    posterior = [rng.dirichlet(table.values[i] + pseudocount)
-                 for i in range(table.shape[0])]
-    dir_table = pd.DataFrame(clr(posterior),
-                             index=table.index, columns=table.columns)
-    res = [_welch_ttest(np.array(dir_table.loc[trt_group.index, x].values),
-                        np.array(dir_table.loc[ref_group.index, x].values))
-           for x in table.columns]
+    posterior = [
+        rng.dirichlet(table.values[i] + pseudocount) for i in range(table.shape[0])
+    ]
+    dir_table = pd.DataFrame(clr(posterior), index=table.index, columns=table.columns)
+    res = [
+        _welch_ttest(
+            np.array(dir_table.loc[trt_group.index, x].values),
+            np.array(dir_table.loc[ref_group.index, x].values),
+        )
+        for x in table.columns
+    ]
     res = pd.concat(res)
     for i in range(1, draws):
+        posterior = [
+            rng.dirichlet(table.values[i] + pseudocount) for i in range(table.shape[0])
+        ]
+        dir_table = pd.DataFrame(
+            clr(posterior), index=table.index, columns=table.columns
+        )
 
-        posterior = [rng.dirichlet(table.values[i] + pseudocount)
-                     for i in range(table.shape[0])]
-        dir_table = pd.DataFrame(clr(posterior),
-                                 index=table.index, columns=table.columns)
-
-        ires = [_welch_ttest(np.array(dir_table.loc[trt_group.index, x].values),
-                             np.array(dir_table.loc[ref_group.index, x].values))
-                for x in table.columns]
+        ires = [
+            _welch_ttest(
+                np.array(dir_table.loc[trt_group.index, x].values),
+                np.array(dir_table.loc[ref_group.index, x].values),
+            )
+            for x in table.columns
+        ]
         ires = pd.concat(ires)
         # online average to avoid holding all of the results in memory
         res["Difference"] = (i * res["Difference"] + ires["Difference"]) / (i + 1)
-        res['pvalue'] = (i * res['pvalue'] + ires["pvalue"]) / (i + 1)
+        res["pvalue"] = (i * res["pvalue"] + ires["pvalue"]) / (i + 1)
         res["CI(2.5)"] = np.minimum(res["CI(2.5)"], ires["CI(2.5)"])
         res["CI(97.5)"] = np.maximum(res["CI(97.5)"], ires["CI(97.5)"])
         res["T statistic"] = (i * res["T statistic"] + ires["T statistic"]) / (i + 1)
 
     res.index = table.columns
     # convert all log fold changes to base 2
-    res['Difference'] = res['Difference'] / np.log(2)
-    res['CI(2.5)'] = res['CI(2.5)'] / np.log(2)
-    res['CI(97.5)'] = res['CI(97.5)'] / np.log(2)
+    res["Difference"] = res["Difference"] / np.log(2)
+    res["CI(2.5)"] = res["CI(2.5)"] / np.log(2)
+    res["CI(97.5)"] = res["CI(97.5)"] / np.log(2)
 
-    mres = _holm_bonferroni(res['pvalue'])
+    mres = _holm_bonferroni(res["pvalue"])
     qval = mres
 
     # test to see if confidence interval includes 0.
     sig = np.logical_or(
         np.logical_and(res["CI(2.5)"] > 0, res["CI(97.5)"] > 0),
-        np.logical_and(res["CI(2.5)"] < 0, res["CI(97.5)"] < 0)
+        np.logical_and(res["CI(2.5)"] < 0, res["CI(97.5)"] < 0),
     )
 
     reject = np.logical_and(mres[0], sig)
 
-    res = res.rename(columns={'Difference': 'Log2(FC)'})
-    res['qvalue'] = qval
+    res = res.rename(columns={"Difference": "Log2(FC)"})
+    res["qvalue"] = qval
     res['"Reject null hypothesis"'] = reject
 
     col_order = [
-        'T statistic', 'df', 'Log2(FC)', 'CI(2.5)', 'CI(97.5)',
-        'pvalue', 'qvalue', '"Reject null hypothesis"'
+        "T statistic",
+        "df",
+        "Log2(FC)",
+        "CI(2.5)",
+        "CI(97.5)",
+        "pvalue",
+        "qvalue",
+        '"Reject null hypothesis"',
     ]
     return res[col_order]
