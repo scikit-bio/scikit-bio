@@ -117,6 +117,7 @@ import scipy.stats
 import skbio.util
 from skbio.util._decorator import experimental
 from skbio.stats.distance import DistanceMatrix
+from skbio.util._misc import get_rng
 from scipy.sparse import coo_matrix
 from scipy.stats import t
 from statsmodels.stats.multitest import multipletests
@@ -1742,7 +1743,8 @@ def _welch_ttest(x1, x2):
 @experimental(as_of="0.5.9")
 def dirmult_ttest(table : pd.DataFrame, grouping : str,
                   treatment : str, reference : str,
-                  pseudocount : float = 0.5, draws : int = 128):
+                  pseudocount : float = 0.5, draws : int = 128,
+                  seed=0):
     """ T-test using Dirichilet Mulitnomial Distribution.
 
     The Dirichlet-multinomial distribution is a compound distribution that
@@ -1780,6 +1782,8 @@ def dirmult_ttest(table : pd.DataFrame, grouping : str,
         The number of draws from the Dirichilet-Multinomial posterior distribution
         More draws provide higher uncertainty surrounding the estimated
         log-fold changes and pvalues.
+    seed : int or np.random.Generator, optional
+        A user-provided random seed or random generator instance.
 
     Returns
     -------
@@ -1836,6 +1840,7 @@ def dirmult_ttest(table : pd.DataFrame, grouping : str,
     between the `treatment` and the `reference` groups are the same. If this
     assumption is violated, then the log-fold changes will be biased, and the
     pvalues will not be reliable. However, the bias is the same across each
+    feature, as a result the ordering of the log-fold changes can still be useful.
 
 
     References
@@ -1864,17 +1869,18 @@ def dirmult_ttest(table : pd.DataFrame, grouping : str,
     >>> grouping = pd.Series(['treatment', 'treatment', 'treatment',
     ...                       'placebo', 'placebo', 'placebo'],
     ...                      index=['s1', 's2', 's3', 's4', 's5', 's6'])
-    >>> lfc_result = dirmult_ttest(table, grouping, 'treatment', 'placebo')
+    >>> lfc_result = dirmult_ttest(table, grouping, 'treatment', 'placebo', seed=0)
     >>> lfc_result
     ...     T statistic        df  Log2(FC)   CI(2.5)  CI(97.5)    pvalue    qvalue  "Reject null hypothesis"
-    ... b1   -15.927561  2.405273 -4.986221 -7.714606 -2.316502  0.003403  0.020417                      True
-    ... b2   -17.292299  3.447750 -2.545375 -3.748628 -1.395006  0.001004  0.007025                      True
-    ... b3     6.583727  3.719677  1.615844 -1.166965  4.775300  0.023214  0.069643                     False
-    ... b4     6.543672  2.541711  1.681734 -0.603502  4.162178  0.013685  0.068424                     False
-    ... b5     6.361830  2.221351  1.534736 -1.421531  4.288884  0.024046  0.069643                     False
-    ... b6     4.091524  2.206520  1.193343 -0.792342  3.581417  0.042581  0.069643                     False
-    ... b7     7.943857  2.078685  1.505939 -1.222567  4.372829  0.017303  0.069213                     False
+    ... b1   -17.178600  2.232500 -4.991987 -7.884498 -2.293463  0.003355  0.020131                      True
+    ... b2   -16.873187  3.847380 -2.533729 -3.594590 -1.462339  0.001064  0.007446                      True
+    ... b3     6.942727  2.740170  1.627677 -1.048219  4.750792  0.021130  0.068310                     False
+    ... b4     6.522786  3.972941  1.707221 -0.467481  4.164998  0.013123  0.065613                     False
+    ... b5     6.654142  3.461029  1.528243 -1.036910  3.978387  0.019360  0.068310                     False
+    ... b6     3.839520  3.581368  1.182343 -0.702656  3.556061  0.045376  0.068310                     False
+    ... b7     7.600734  2.483072  1.480232 -0.601277  4.043888  0.017077  0.068310                     False
     """
+    rng = get_rng(seed)
     if not isinstance(table, pd.DataFrame):
         raise TypeError(
             "`table` must be a `pd.DataFrame`, " "not %r." % type(table).__name__
@@ -1903,7 +1909,7 @@ def dirmult_ttest(table : pd.DataFrame, grouping : str,
 
     trt_group = grouping.loc[grouping == treatment]
     ref_group = grouping.loc[grouping == reference]
-    posterior = [np.random.dirichlet(table.values[i] + pseudocount)
+    posterior = [rng.dirichlet(table.values[i] + pseudocount)
                  for i in range(table.shape[0])]
     dir_table = pd.DataFrame(clr(posterior),
                              index=table.index, columns=table.columns)
@@ -1913,7 +1919,7 @@ def dirmult_ttest(table : pd.DataFrame, grouping : str,
     res = pd.concat(res)
     for i in range(1, draws):
 
-        posterior = [np.random.dirichlet(table.values[i] + pseudocount)
+        posterior = [rng.dirichlet(table.values[i] + pseudocount)
                      for i in range(table.shape[0])]
         dir_table = pd.DataFrame(clr(posterior),
                                  index=table.index, columns=table.columns)
