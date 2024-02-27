@@ -120,7 +120,6 @@ from skbio.stats.distance import DistanceMatrix
 from skbio.util._misc import get_rng
 from scipy.sparse import coo_matrix
 from scipy.stats import t
-from statsmodels.stats.multitest import multipletests
 
 
 @experimental(as_of="0.4.0")
