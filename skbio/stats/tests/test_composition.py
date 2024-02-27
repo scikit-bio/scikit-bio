@@ -1393,9 +1393,7 @@ class TestDirMultTTest(TestCase):
         npt.assert_array_less(res_100['CI(2.5)'], res_10000['CI(2.5)'])
         npt.assert_array_less(res_10000['CI(97.5)'], res_100['CI(97.5)'])
 
-
     def test_dirmult_ttest_output(self):
-        # exp_lfc = np.log2((self.depth * self.p2 + 0.5) / (self.depth * self.p1 + 0.5))
         exp_lfc = np.log2(self.p2 / self.p1)
         exp_lfc = exp_lfc - exp_lfc.mean()
         res = dirmult_ttest(self.table2, self.grouping2,
@@ -1404,10 +1402,17 @@ class TestDirMultTTest(TestCase):
         npt.assert_array_less(res['Log2(FC)'], res['CI(97.5)'])
         npt.assert_array_less(res['CI(2.5)'], res['Log2(FC)'])
 
-        npt.assert_array_less(res['CI(2.5)'], exp_lfc)
-        npt.assert_array_less(exp_lfc, res['CI(97.5)'])
+        # a couple of things that complicate the tests
+        # first, there is going to be a little bit of a fudge factor due
+        # to the pseudocount, so we will define it via log2(0.5)
+        eps = np.abs(np.log2(0.5))
 
-
+        # second, the confidence interval is expected to be inaccurate
+        # for (1/20) of the tests. So we should double check to
+        # see if the confidence intervals were able to capture
+        # 95% of the log-fold changes correctly
+        self.assertGreater(np.mean(res['CI(2.5)'] - eps < exp_lfc), 0.95)
+        self.assertGreater(np.mean(res['CI(97.5)'] + eps > exp_lfc), 0.95)
 
     def test_dirmult_ttest_valid_input(self):
         result = dirmult_ttest(self.table, self.grouping, self.treatment, self.reference)
