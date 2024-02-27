@@ -761,22 +761,18 @@ class GrammaredSequence(Sequence, metaclass=GrammaredSequenceMeta):
 
         return re.compile(regex_string)
 
-    def to_definites(self, degenerate="wild", char=None, canonical=True):
-        """Convert degenerate or non-canonical characters to definite characters.
+    def to_definites(self, degenerate="wild", noncanonical=True):
+        """Convert degenerate and or non-canonical characters to definite characters.
 
         Parameters
         ----------
-        degenerate : {"wild", "gap", "char", "trim", "raise"}
-            "wild" replace degenerate characters with wildcard characters.
-            "gap" replace degenerate characters with default gap characters.
-            "char" replace degenerate characters with user-defined character.
-            "trim" remove degenerate characters.
-            "raise" raise an error.
-        char : str
-            String object to replace degenerate characters.
-        canonical : bool
-            If True, non-canonical amino acids are included in the set of
-            degenerate characters.
+        degenerate : {"wild", "gap", "trim", "keep", str of length 1}, optional
+            How degenerate characters should be treated: Replace them with the wildcard
+            character ("wild", default), or the default gap character ("gap"), or a
+            user-defined character (str of length 1), or remove them ("trim").
+        noncanonical : bool, optional
+            Treat non-canonical characters in the same way as with degenerate
+            characters (``True``, default), or leave them as-is (``False``).
 
         Returns
         -------
@@ -786,28 +782,30 @@ class GrammaredSequence(Sequence, metaclass=GrammaredSequenceMeta):
         """
         sequence = str(self)
 
-        if canonical:
+        if noncanonical:
             degenerates = self.degenerate_chars.union(self.non_canonical_chars)
         else:
             degenerates = self.degenerate_chars
 
-        # print(degenerates)
+        errmsg = (
+            f'%s character for sequence type "{self.__class__}" is undefined or '
+            "invalid."
+        )
 
         if degenerate == "wild":
             sub_char = self.wildcard_char
+            if not isinstance(sub_char, str):
+                raise ValueError(errmsg % "Wildcard")
         elif degenerate == "gap":
             sub_char = self.default_gap_char
-        elif degenerate == "char":
-            sub_char = char
         elif degenerate == "trim":
             sub_char = ""
-        # elif degenerate == "raise":
-        # raise an error
+        elif isinstance(degenerate, str) and len(degenerate) == 1:
+            sub_char = degenerate
+        else:
+            raise ValueError('Invalid value for parameter "degenerate".')
 
         sequence = "".join(sub_char if x in degenerates else x for x in sequence)
-
-        # pattern = re.compile("[{}]".format("".join(map(re.escape, degenerates))))
-        # sequence = pattern.sub(sub_char, sequence)
 
         return self._constructor(sequence=sequence)
 
