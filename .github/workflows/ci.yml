@@ -2,10 +2,10 @@ name: CI
 
 on:
   push:
-    branches: [ master ]
+    branches: [ main ]
     paths-ignore: ["web/**", "**.md", "README.rst"]
   pull_request:
-    branches: [ master ]
+    branches: [ main ]
     paths-ignore: ["web/**", "**.md", "README.rst"]
 
 env:
@@ -34,6 +34,9 @@ jobs:
     name: Lint code (${{ needs.conf.outputs.latest_python }}, ubuntu-latest)
     needs: conf
     runs-on: ubuntu-latest
+    defaults:
+      run:
+        shell: bash -l {0}
     steps:
       - uses: actions/checkout@v4
       - uses: conda-incubator/setup-miniconda@v3
@@ -44,12 +47,10 @@ jobs:
           miniforge-variant: ${{ env.miniforge_variant }}
           environment-file: ci/conda_host_env.yml
       - name: Install dependencies
-        shell: bash -l {0}
         run: |
           pip install -r ci/requirements.lint.txt
           conda list
       - name: Run Ruff
-        shell: bash -l {0}
         run: |
           ruff check --output-format=github .
 
@@ -57,6 +58,9 @@ jobs:
     name: Build Documentation (${{ needs.conf.outputs.latest_python }}, ubuntu-latest)
     needs: ["conf", "lint"]
     runs-on: ubuntu-latest
+    defaults:
+      run:
+        shell: bash -l {0}
     steps:
       - uses: actions/checkout@v4
       - uses: conda-incubator/setup-miniconda@v3
@@ -67,18 +71,15 @@ jobs:
           miniforge-variant: ${{ env.miniforge_variant }}
           environment-file: ci/conda_host_env.yml
       - name: Install dependencies
-        shell: bash -l {0}
         run: |
           pip install -r ci/requirements.doc.txt
           pip install .
           conda list
       - name: Make documentation
-        shell: bash -l {0}
         run: make doc
       # save built documentation (HTML) for deployment
       - name: Substitute URLs
         if: github.event_name == 'push'
-        shell: bash -l {0}
         run: python doc/suburl.py
       - name: Save documentation
         if: github.event_name == 'push'
@@ -87,13 +88,16 @@ jobs:
           name: docpack
           path: doc/build/html/
 
+  # full-scale test (including Cython) with latest Python
   test-cython:
     name: Test Cython (${{ needs.conf.outputs.latest_python }}, ${{ matrix.os }})
     needs: conf
     runs-on: ${{ matrix.os }}
     env:
-      MPLBACKEND: Agg
       USE_CYTHON: TRUE
+    defaults:
+      run:
+        shell: bash -l {0}
     strategy:
       fail-fast: true
       matrix:
@@ -108,16 +112,27 @@ jobs:
           miniforge-variant: ${{ env.miniforge_variant }}
           environment-file: ci/conda_host_env.yml
       - name: Install dependencies
-        shell: bash -l {0}
         run: |
           pip install .
           conda list
       - name: Run unit tests
-        shell: bash -l {0}
         env:
           WITH_COVERAGE: "TRUE"
         run: make test
 
+        # upload coverage reports to Codecov (only under Linux)
+      - name: Generate coverage reports
+        if: runner.os == 'Linux'
+        run: |
+          cd ci && coverage lcov --rcfile ../.coveragerc
+      - name: Upload coverage reports to Codecov
+        if: runner.os == 'Linux'
+        uses: codecov/codecov-action@v4.0.1
+        with:
+          token: ${{ secrets.CODECOV_TOKEN }}
+          slug: scikit-bio/scikit-bio
+
+  # test under AArch64 (ARM64) architecture
   test-cython-aarch64:
     name: Test Cython (${{ needs.conf.outputs.latest_python }}, qemu::aarch64-centos)
     needs: conf
@@ -143,13 +158,15 @@ jobs:
           build-args: |
             PYTHON_VERSION=${{ env.latest_python }}
 
+  # test under all combinations of environments (Python versions, operating systems, PyPI vs Conda)
   test-all:
     name: Test (${{ matrix.python_version }}, ${{ matrix.os }}, ${{ fromJSON('["pypi", "conda"]')[matrix.use_conda] }})
     runs-on: ${{ matrix.os }}
     needs: ["conf", "test-cython", "lint"]
-    env:
-      # not testing Cython here, whether the Cython compiles to C is tested above
-      MPLBACKEND: Agg
+    # not testing Cython here, whether the Cython compiles to C is tested above
+    defaults:
+      run:
+        shell: bash -l {0}
     strategy:
       fail-fast: false
       matrix:
@@ -167,19 +184,16 @@ jobs:
           environment-file: ci/conda_host_env.yml
       - name: Install dependencies (conda)
         if: ${{ matrix.use_conda }}
-        shell: bash -l {0}
         run: |
           conda install -q --yes -c conda-forge --file ci/conda_requirements.txt
           pip install . --no-deps
           conda list
       - name: Install dependencies
         if: ${{ !matrix.use_conda }}
-        shell: bash -l {0}
         run: |
           pip install .
           conda list
       - name: Run unit tests
-        shell: bash -l {0}
         env:
           WITH_COVERAGE: "TRUE"
         run: make test
@@ -191,6 +205,9 @@ jobs:
     if: github.event_name == 'push'
     needs: ["doc", "test-all", "test-cython-aarch64"]
     runs-on: ubuntu-latest
+    defaults:
+      run:
+        shell: bash -l {0}
     steps:
       # load documentation built by job "doc"
       - name: Load documentation
@@ -207,11 +224,9 @@ jobs:
           ssh-key: ${{ secrets.SSH_DEPLOY_KEY }}
       # synchronize documentation to website's docs/dev directory
       - name: Update documentation
-        shell: bash -l {0}
         run: rsync -av --delete docpack/ website/docs/dev
       # push website back to repo
       - name: Push website
-        shell: bash -l {0}
         run: |
           cd website
           git config user.name "${{ github.actor }}"

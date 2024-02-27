@@ -227,7 +227,7 @@ def linkcode_resolve(domain, info):
     except:
         lineno = None
 
-    branch = 'master' if 'dev' in version else version
+    branch = 'main' if 'dev' in version else version
 
     fn = relpath(fn, start=dirname(skbio.__file__))
 

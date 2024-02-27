@@ -4,3 +4,4 @@ sphinx-copybutton
 pydata-sphinx-theme
 sphinxcontrib-youtube
 numpydoc
+matplotlib
