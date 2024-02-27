@@ -1750,7 +1750,7 @@ def dirmult_ttest(
     reference: str,
     pseudocount: float = 0.5,
     draws: int = 128,
-    seed=0,
+    seed=None,
 ):
     """T-test using Dirichilet Mulitnomial Distribution.
 
