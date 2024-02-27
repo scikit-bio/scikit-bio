@@ -1836,11 +1836,16 @@ def dirmult_ttest(table : pd.DataFrame, grouping : str,
     mininum 2.5% and maximum 95% bounds computed across all of the posterior draws.
 
     The reference frame here is the geometric mean. Extracting absolute log
-    fold changes from this test assumes that the average microbial abundance
+    fold changes from this test assumes that the average feature abundance
     between the `treatment` and the `reference` groups are the same. If this
     assumption is violated, then the log-fold changes will be biased, and the
     pvalues will not be reliable. However, the bias is the same across each
     feature, as a result the ordering of the log-fold changes can still be useful.
+
+    One benefit of using the Dirichlet Multinomial distribution is that the
+    statistical power increases with regards to the abundance magnitude. More counts
+    per sample will shrink the size of the confidence intervals, and can result in
+    lower pvalues.
 
 
     References
