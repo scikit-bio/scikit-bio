@@ -23,7 +23,8 @@ from skbio.stats.composition import (closure, multiplicative_replacement,
                                      clr, clr_inv, ilr, ilr_inv, alr, alr_inv,
                                      sbp_basis, _gram_schmidt_basis,
                                      centralize, _holm_bonferroni, ancom,
-                                     vlr, pairwise_vlr, tree_basis)
+                                     vlr, pairwise_vlr, tree_basis,
+                                     dirmult_ttest)
 
 from scipy.sparse import coo_matrix
 
@@ -1303,6 +1304,150 @@ class TestVLR(TestCase):
                             validate=False)
         output = dism.data.sum() / 2
         self.assertAlmostEqual(output, 0.2857382286903922)
+
+
+class TestDirMultTTest(TestCase):
+    def setUp(self):
+        np.random.seed(0)
+        # Create sample data for testing
+        self.data = {
+            'feature1': [5, 8, 12, 15, 20],
+            'feature2': [3, 6, 9, 12, 15],
+            'feature3': [10, 15, 20, 25, 30],
+        }
+        self.table = pd.DataFrame(self.data)
+        self.grouping = pd.Series(['Group1', 'Group1', 'Group2', 'Group2', 'Group2'])
+        self.treatment = 'Group2'
+        self.reference = 'Group1'
+
+        d = 50
+        n = 200
+        self.depth = depth = 1000
+        p1 = np.random.lognormal(0, 1, size=d) * 10
+        p2 = np.random.lognormal(0.01, 1, size=d) * 10
+        self.p1, self.p2 = p1 / p1.sum(), p2 / p2.sum()
+        self.data2 = np.vstack(
+            (
+                [np.random.multinomial(depth, self.p1) for _ in range(n)],
+                [np.random.multinomial(depth, self.p2) for _ in range(n)]
+            )
+        )
+        self.table2 = pd.DataFrame(self.data2)
+        self.grouping2 = pd.Series(['Group1'] * n + ['Group2'] * n)
+
+    def test_dirmult_ttest_toy(self):
+        p1 = np.array([5, 6, 7])
+        p2 = np.array([4, 7, 7])
+        p1, p2 = p1 / p1.sum(), p2 / p2.sum()
+        depth = 1000
+        n = 100
+        data = np.vstack(
+            (
+                [np.random.multinomial(depth, p1) for _ in range(n)],
+                [np.random.multinomial(depth, p2) for _ in range(n)]
+            )
+        )
+        table = pd.DataFrame(data)
+        grouping = pd.Series(['Group1'] * n + ['Group2'] * n)
+
+        exp_lfc = np.log2([4/5, 7/6, 7/7])
+        exp_lfc = (exp_lfc - exp_lfc.mean())  # convert to CLR coordinates
+
+        res = dirmult_ttest(table, grouping, self.treatment, self.reference)
+
+        npt.assert_array_less(exp_lfc, res['CI(97.5)'])
+        npt.assert_array_less(res['CI(2.5)'], exp_lfc)
+
+    def test_dirmult_ttest_toy_depth(self):
+        p1 = np.array([5, 6, 7, 8, 9, 4])
+        p2 = np.array([4, 7, 7, 6, 5, 7])
+        p1, p2 = p1 / p1.sum(), p2 / p2.sum()
+        depth = 100
+        n = 100
+        data = np.vstack(
+            (
+                [np.random.multinomial(depth, p1) for _ in range(n)],
+                [np.random.multinomial(depth, p2) for _ in range(n)]
+            )
+        )
+        table = pd.DataFrame(data)
+        grouping = pd.Series(['Group1'] * n + ['Group2'] * n)
+        exp_lfc = np.log2([4/5, 7/6, 7/7, 6/8, 5/9, 7/4])
+        exp_lfc = (exp_lfc - exp_lfc.mean())  # convert to CLR coordinates
+        res_100 = dirmult_ttest(table, grouping, self.treatment, self.reference)
+
+        # increase sequencing depth by 100 fold
+        depth = 10000
+        data = np.vstack(
+            (
+                [np.random.multinomial(depth, p1) for _ in range(n)],
+                [np.random.multinomial(depth, p2) for _ in range(n)]
+            )
+        )
+        table = pd.DataFrame(data)
+        res_10000 = dirmult_ttest(table, grouping, self.treatment, self.reference)
+
+        # when the sequencing depth increases, the confidence intervals
+        # should also shrink
+
+        npt.assert_array_less(res_100['CI(2.5)'], res_10000['CI(2.5)'])
+        npt.assert_array_less(res_10000['CI(97.5)'], res_100['CI(97.5)'])
+
+    def test_dirmult_ttest_output(self):
+        exp_lfc = np.log2(self.p2 / self.p1)
+        exp_lfc = exp_lfc - exp_lfc.mean()
+        res = dirmult_ttest(self.table2, self.grouping2,
+                            self.treatment, self.reference)
+
+        npt.assert_array_less(res['Log2(FC)'], res['CI(97.5)'])
+        npt.assert_array_less(res['CI(2.5)'], res['Log2(FC)'])
+
+        # a couple of things that complicate the tests
+        # first, there is going to be a little bit of a fudge factor due
+        # to the pseudocount, so we will define it via log2(0.5)
+        eps = np.abs(np.log2(0.5))
+
+        # second, the confidence interval is expected to be inaccurate
+        # for (1/20) of the tests. So we should double check to
+        # see if the confidence intervals were able to capture
+        # 95% of the log-fold changes correctly
+        self.assertGreater(np.mean(res['CI(2.5)'] - eps < exp_lfc), 0.95)
+        self.assertGreater(np.mean(res['CI(97.5)'] + eps > exp_lfc), 0.95)
+
+    def test_dirmult_ttest_valid_input(self):
+        result = dirmult_ttest(self.table, self.grouping, self.treatment, self.reference)
+        self.assertIsInstance(result, pd.DataFrame)
+        self.assertEqual(result.shape[1], 8)  # Expected number of columns
+        pdt.assert_index_equal(result.index,
+                               pd.Index(['feature1', 'feature2', 'feature3']))
+
+    def test_dirmult_ttest_invalid_table_type(self):
+        with self.assertRaises(TypeError):
+            dirmult_ttest("invalid_table", self.grouping, self.treatment, self.reference)
+
+    def test_dirmult_ttest_invalid_grouping_type(self):
+        with self.assertRaises(TypeError):
+            dirmult_ttest(self.table, "invalid_grouping", self.treatment, self.reference)
+
+    def test_dirmult_ttest_negative_values_in_table(self):
+        self.table.iloc[0, 0] = -5  # Modify a value to be negative
+        with self.assertRaises(ValueError):
+            dirmult_ttest(self.table, self.grouping, self.treatment, self.reference)
+
+    def test_dirmult_ttest_missing_values_in_grouping(self):
+        self.grouping[1] = np.nan  # Introduce a missing value in grouping
+        with self.assertRaises(ValueError):
+            dirmult_ttest(self.table, self.grouping, self.treatment, self.reference)
+
+    def test_dirmult_ttest_missing_values_in_table(self):
+        self.table.iloc[2, 1] = np.nan  # Introduce a missing value in the table
+        with self.assertRaises(ValueError):
+            dirmult_ttest(self.table, self.grouping, self.treatment, self.reference)
+
+    def test_dirmult_ttest_inconsistent_indexes(self):
+        self.table.index = ['a', 'b', 'c', 'd', 'e']  # Change table index
+        with self.assertRaises(ValueError):
+            dirmult_ttest(self.table, self.grouping, self.treatment, self.reference)
 
 
 if __name__ == "__main__":

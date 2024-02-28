@@ -7,14 +7,21 @@
 # ----------------------------------------------------------------------------
 
 import io
+import unittest
 from unittest import TestCase, main
 
-import matplotlib as mpl
 import numpy as np
 import numpy.testing as npt
 import pandas as pd
 import pandas.testing as pdt
 import scipy.spatial.distance
+
+try:
+    import matplotlib as mpl
+except ImportError:
+    has_matplotlib = False
+else:
+    has_matplotlib = True
 
 import skbio.sequence.distance
 from skbio import DistanceMatrix, Sequence
@@ -541,6 +548,7 @@ class DissimilarityMatrixTestBase(DissimilarityMatrixTestData):
         with self.assertRaises(DissimilarityMatrixError):
             self.dm_3x3.filter([])
 
+    @unittest.skipUnless(has_matplotlib, "Matplotlib not available.")
     def test_plot_default(self):
         fig = self.dm_1x1.plot()
         self.assertIsInstance(fig, mpl.figure.Figure)
@@ -557,6 +565,7 @@ class DissimilarityMatrixTestBase(DissimilarityMatrixTestData):
             yticks.append(tick.get_text())
         self.assertEqual(yticks, ['a'])
 
+    @unittest.skipUnless(has_matplotlib, "Matplotlib not available.")
     def test_plot_no_default(self):
         ids = ['0', 'one', '2', 'three', '4.000']
         data = ([0, 1, 2, 3, 4], [1, 0, 1, 2, 3], [2, 1, 0, 1, 2],
