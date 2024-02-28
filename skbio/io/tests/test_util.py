@@ -15,9 +15,10 @@ import gc
 
 try:
     import responses
-    has_responses = True
 except ImportError:
     has_responses = False
+else:
+    has_responses = True
 
 import skbio.io
 from skbio.io.registry import open_file

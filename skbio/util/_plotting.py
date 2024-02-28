@@ -26,7 +26,7 @@ class PlottableMixin:
             return
         try:
             self.mpl = importlib.import_module("matplotlib")
-        except ModuleNotFoundError:
+        except ImportError:
             self.mpl = None
             raise ImportError(msg)
         else:
