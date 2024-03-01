@@ -1,0 +1,24 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE eSearchResult PUBLIC "-//NLM//DTD esearch 20060628//EN" "https://eutils.ncbi.nlm.nih.gov/eutils/dtd/20060628/esearch.dtd">
+<eSearchResult><Count>997</Count><RetMax>20</RetMax><RetStart>0</RetStart><IdList>
+<Id>2054258803</Id>
+<Id>2054258802</Id>
+<Id>2054258801</Id>
+<Id>2054258800</Id>
+<Id>2054258799</Id>
+<Id>2054258798</Id>
+<Id>2054258797</Id>
+<Id>2054258796</Id>
+<Id>2054258795</Id>
+<Id>2054258794</Id>
+<Id>2054258793</Id>
+<Id>2054258792</Id>
+<Id>2054258791</Id>
+<Id>2054258790</Id>
+<Id>2054258789</Id>
+<Id>2054258788</Id>
+<Id>2054258787</Id>
+<Id>2054258786</Id>
+<Id>2054258785</Id>
+<Id>2054258784</Id>
+</IdList><TranslationSet/><TranslationStack>   <TermSet>    <Term>biomol trna[prop]</Term>    <Field>prop</Field>    <Count>997</Count>    <Explode>N</Explode>   </TermSet>   <OP>GROUP</OP>  </TranslationStack><QueryTranslation>biomol trna[prop]</QueryTranslation></eSearchResult>
