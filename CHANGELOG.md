@@ -39,6 +39,7 @@
 
 ### Miscellaneous
 
+* Revised contributor's guidelines.
 * Enabled code coverage reporting via Codecov. See [#1954](https://github.com/scikit-bio/scikit-bio/pull/1954).
 * Renamed the default branch from "master" to "main". See [#1953](https://github.com/scikit-bio/scikit-bio/pull/1953).
 * Enabled subclassing of DNA, RNA and Protein classes to allow secondary development.
