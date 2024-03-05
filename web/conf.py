@@ -22,6 +22,7 @@ copyright = f'2014-{datetime.now().year}, {author}'
 
 extensions = [
     'sphinx.ext.extlinks',
+    'sphinx.ext.autosectionlabel',
     'sphinx_design',
     'sphinx_copybutton',
     'sphinxcontrib.youtube',
@@ -49,6 +50,9 @@ html_sidebars = {"**": []}
 
 # do not show source links
 html_show_sourcelink = False
+
+# link to document:section
+autosectionlabel_prefix_document = True
 
 
 # -- External links ----------------------------------------------------------

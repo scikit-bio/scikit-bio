@@ -241,8 +241,8 @@ How should I write comments?
 - *Always update the docstring when the code changes.* Like outdated comments, outdated docstrings can waste a lot of time. "Correct examples are priceless, but incorrect examples are worse than worthless." `Jim Fulton <https://svn.python.org/www/branches/rest2web/pydotorg/pycon/dc2004/papers/4/PyCon2004DocTestUnit.pdf>`_.
 
 
-How should I test my code ?
----------------------------
+How should I test my code?
+--------------------------
 
 There are several different approaches for testing code in python: ``nose``, ``unittest`` and ``numpy.testing``. Their purpose is the same, to check that execution of code given some input produces a specified output. The cases to which the approaches lend themselves are different.
 

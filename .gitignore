@@ -53,3 +53,7 @@ web/_build
 
 # VS Code
 .vscode
+
+# Cython files
+*.c
+!ssw.c
