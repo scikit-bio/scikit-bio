@@ -126,11 +126,11 @@ To start contributing code to scikit-bio, you'll need to prepare a local develop
 
 1. `Fork <https://help.github.com/articles/fork-a-repo>`_ the scikit-bio repository on the GitHub website. This will create a copy of the repository under your account, and you can access it using the URL: ``https://github.com/urname/scikit-bio/`` (``urname`` is your GitHub account).
 
-2. `Clone <https://docs.github.com/en/repositories/creating-and-managing-repositories/cloning-a-repository>`_ the forked repository to your local computer. You may click the :bdg-success:`<> Code` button, make sure that you are under the "Local" - "SSH" tab, and copy the URL to the clipboard. It should typically be: ``git@github.com:urname/scikit-bio.git``.
+2. `Clone <https://docs.github.com/en/repositories/creating-and-managing-repositories/cloning-a-repository>`_ the forked repository to your local computer. Specifically, in your forked repository, you may click the :bdg-success:`<> Code` button, make sure that you are under the "Local" - "SSH" tab, and copy the URL to the clipboard. It should typically be: ``git@github.com:urname/scikit-bio.git``.
 
 .. note:: If the "SSH" tab is not available, it could mean that you have not set up an SSH key for your GitHub account. You may follow the instructions on `Connecting to GitHub with SSH <https://docs.github.com/en/authentication/connecting-to-github-with-ssh>`_ to set it up.
 
-Then, open "Terminal" :octicon:`terminal` (or anything alike) in your local computer and navigate to a directory where you want to place the workspace, and execute::
+Then, open "Terminal" :octicon:`terminal` (or anything similar) in your local computer and navigate to a directory where you want to place the workspace, and execute::
 
     git clone git@github.com:urname/scikit-bio.git
 
@@ -195,6 +195,10 @@ Before you start writing code, you may discuss with the scikit-bio team to make 
     git checkout main
     git pull upstream main
 
+Optionally, you may do the following to keep your forked repository's main branch up-to-date as well::
+
+    git push origin main
+
 2. Create a new `branch <https://docs.github.com/en/pull-requests/collaborating-with-pull-requests/proposing-changes-to-your-work-with-pull-requests/about-branches>`__ that you will make changes in::
 
     git checkout -b mywork
@@ -236,7 +240,7 @@ We highly recommend that you use real-world biological data in addition to small
 Unit test
 ^^^^^^^^^
 
-`Unit testing <https://en.wikipedia.org/wiki/Unit_testing>`_ involves testing the smallest units of your code, such as classes, functions, and methods, to ensure they function correctly in isolation. It is a fundamental best practice in software engineering, but is often overlooked by beginners. Unit testing is automated by writing test code alongside the algorithm code. Both types of code are integrated into the scikit-bio codebase. This test code is then regularly executed whenever changes are made to ensure that the intended behavior remains consistent over time.
+`Unit testing <https://en.wikipedia.org/wiki/Unit_testing>`_ involves testing the smallest units of your code, such as classes, functions, and methods, to ensure they function correctly in isolation. It is a fundamental best practice in software engineering, but is often overlooked by beginners. Unit testing is made easier by writing test code alongside the algorithm code. Both types of code are integrated into the scikit-bio codebase. This test code is then regularly executed whenever changes are made to ensure that the intended behavior remains consistent over time.
 
 For example, the test code for the ``gc_content`` may live in ``skbio/sequence/tests/test_nucl.py``, under class ``TestNucl``, as a method ``test_gc_content``. It may read like::
 
