@@ -13,7 +13,6 @@
 
 import os
 import re
-import sys
 import glob
 from functools import partial
 
