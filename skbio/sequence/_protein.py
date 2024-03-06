@@ -187,7 +187,7 @@ class Protein(GrammaredSequence):
 
     @classproperty
     @overrides(GrammaredSequence)
-    def non_canonical_chars(cls):
+    def noncanonical_chars(cls):
         return set("OU")
 
     @classproperty
