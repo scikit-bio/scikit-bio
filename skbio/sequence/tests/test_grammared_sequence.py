@@ -691,7 +691,7 @@ class TestGrammaredSequence(TestCase):
         self.assertIn('...', obs)
         self.assertTrue(obs.endswith('300 A'))
 
-    def test_to_definites(self):
+    def test_char_convert(self):
         """ 
         Degenerates = XYZ
         noncanonical = Q
@@ -706,41 +706,41 @@ class TestGrammaredSequence(TestCase):
         seq = ExampleGrammaredSequence("ABCQXYZ")
 
         # default behavior, here I expect to see the sequence "ABCWWWW" returned
-        obs = seq.to_definites()
+        obs = seq.char_convert()
         exp = ExampleGrammaredSequence("ABCWWWW")
         self.assertEqual(obs, exp)
 
         # noncanonical wildcard, expect to see "ABCQWWW" returned
-        obs = seq.to_definites(noncanonical=False)
+        obs = seq.char_convert(noncanonical=False)
         exp = ExampleGrammaredSequence("ABCQWWW")
 
         # gap behavior, I expect to see the sequence "ABC----" returned
-        obs = seq.to_definites(degenerate="gap")
+        obs = seq.char_convert(degenerate="gap")
         exp = ExampleGrammaredSequence("ABC----")
         self.assertEqual(obs, exp)
 
         # noncanonical gap
-        obs = seq.to_definites(degenerate="gap", noncanonical=False)
+        obs = seq.char_convert(degenerate="gap", noncanonical=False)
         exp = ExampleGrammaredSequence("ABCQ---")
         self.assertEqual(obs, exp)
 
         # trim
-        obs = seq.to_definites(degenerate="trim")
+        obs = seq.char_convert(degenerate="trim")
         exp = ExampleGrammaredSequence("ABC")
         self.assertEqual(obs, exp)
 
         # noncanonical trim
-        obs = seq.to_definites(degenerate="trim")
+        obs = seq.char_convert(degenerate="trim")
         exp = ExampleGrammaredSequence("ABCQ")
         self.assertEqual(obs, exp)
 
         # single char
-        obs = seq.to_definites(degenerate="P")
+        obs = seq.char_convert(degenerate="P")
         exp = ExampleGrammaredSequence("ABCPPPP")
         self.assertEqual(obs, exp)
 
         # noncanonical single char
-        obs = seq.to_definites(degenerate="P", noncanonical=False)
+        obs = seq.char_convert(degenerate="P", noncanonical=False)
         exp = ExampleGrammaredSequence("ABCQPPP")
         self.assertEqual(obs, exp)
 

@@ -761,23 +761,24 @@ class GrammaredSequence(Sequence, metaclass=GrammaredSequenceMeta):
 
         return re.compile(regex_string)
 
-    def to_definites(self, degenerate="wild", noncanonical=True):
-        """Convert degenerate and or non-canonical characters to definite characters.
+    def char_convert(self, to="wild", noncanonical=True):
+        """Convert degenerate and or non-canonical characters to alternative characters.
 
         Parameters
         ----------
-        degenerate : {"wild", "gap", "trim", "keep", str of length 1}, optional
-            How degenerate characters should be treated: Replace them with the wildcard
-            character ("wild", default), or the default gap character ("gap"), or a
-            user-defined character (str of length 1), or remove them ("trim").
+        to : {"wild", "gap", "trim", "keep", str of length 1}, optional
+            How degenerate/non-canonical characters should be treated: Replace them
+            with the wildcard character ("wild", default), or the default gap character
+            ("gap"), or a user-defined character (str of length 1), or remove them
+            ("trim").
         noncanonical : bool, optional
-            Treat non-canonical characters in the same way as with degenerate
+            Treat non-canonical characters in the same way as degenerate
             characters (``True``, default), or leave them as-is (``False``).
 
         Returns
         -------
         GrammaredSequence
-            Definite version of the sequence.
+            Converted version of the sequence.
 
         """
         sequence = str(self)
@@ -792,18 +793,18 @@ class GrammaredSequence(Sequence, metaclass=GrammaredSequenceMeta):
             "invalid."
         )
 
-        if degenerate == "wild":
+        if to == "wild":
             sub_char = self.wildcard_char
             if not isinstance(sub_char, str):
                 raise ValueError(errmsg % "Wildcard")
-        elif degenerate == "gap":
+        elif to == "gap":
             sub_char = self.default_gap_char
-        elif degenerate == "trim":
+        elif to == "trim":
             sub_char = ""
-        elif isinstance(degenerate, str) and len(degenerate) == 1:
-            sub_char = degenerate
+        elif isinstance(to, str) and len(to) == 1:
+            sub_char = to
         else:
-            raise ValueError('Invalid value for parameter "degenerate".')
+            raise ValueError('Invalid value for parameter "to".')
 
         sequence = "".join(sub_char if x in degenerates else x for x in sequence)
 
