@@ -766,7 +766,7 @@ class GrammaredSequence(Sequence, metaclass=GrammaredSequenceMeta):
 
         Parameters
         ----------
-        to : {"wild", "gap", "trim", "keep", str of length 1}, optional
+        to : {"wild", "gap", "trim", str of length 1}, optional
             How degenerate/non-canonical characters should be treated: Replace them
             with the wildcard character ("wild", default), or the default gap character
             ("gap"), or a user-defined character (str of length 1), or remove them
@@ -802,7 +802,15 @@ class GrammaredSequence(Sequence, metaclass=GrammaredSequenceMeta):
         elif to == "trim":
             sub_char = ""
         elif isinstance(to, str) and len(to) == 1:
-            sub_char = to
+            # Need to make sure that 'to' is in the set of valid characters for the
+            # sequence. If it is not, it should throw an error.
+            if to in self.alphabet:
+                sub_char = to
+            else:
+                raise ValueError(
+                    f"Invalid character '{to}' in sequence. Character must "
+                    f"be within sequence alphabet {self.alphabet}"
+                )
         else:
             raise ValueError('Invalid value for parameter "to".')
 

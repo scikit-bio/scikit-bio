@@ -715,33 +715,33 @@ class TestGrammaredSequence(TestCase):
         exp = ExampleGrammaredSequence("ABCQWWW")
 
         # gap behavior, I expect to see the sequence "ABC----" returned
-        obs = seq.char_convert(degenerate="gap")
+        obs = seq.char_convert(to="gap")
         exp = ExampleGrammaredSequence("ABC----")
         self.assertEqual(obs, exp)
 
         # noncanonical gap
-        obs = seq.char_convert(degenerate="gap", noncanonical=False)
+        obs = seq.char_convert(to="gap", noncanonical=False)
         exp = ExampleGrammaredSequence("ABCQ---")
         self.assertEqual(obs, exp)
 
         # trim
-        obs = seq.char_convert(degenerate="trim")
+        obs = seq.char_convert(to="trim")
         exp = ExampleGrammaredSequence("ABC")
         self.assertEqual(obs, exp)
 
         # noncanonical trim
-        obs = seq.char_convert(degenerate="trim")
+        obs = seq.char_convert(to="trim", noncanonical=False)
         exp = ExampleGrammaredSequence("ABCQ")
         self.assertEqual(obs, exp)
 
-        # single char
-        obs = seq.char_convert(degenerate="P")
-        exp = ExampleGrammaredSequence("ABCPPPP")
+        # single char, acceptable input
+        obs = seq.char_convert(to="A")
+        exp = ExampleGrammaredSequence("ABCAAAA")
         self.assertEqual(obs, exp)
 
-        # noncanonical single char
-        obs = seq.char_convert(degenerate="P", noncanonical=False)
-        exp = ExampleGrammaredSequence("ABCQPPP")
+        # noncanonical single char, acceptable input
+        obs = seq.char_convert(to="A", noncanonical=False)
+        exp = ExampleGrammaredSequence("ABCQAAA")
         self.assertEqual(obs, exp)
 
 if __name__ == "__main__":
