@@ -250,7 +250,7 @@ def _reduce(blocks):
     return DistanceMatrix(mat + mat.T, list(range(n_ids)))
 
 
-@experimental(as_of="0.5.1")
+# @experimental(as_of="0.5.1")
 def block_beta_diversity(
     metric, counts, ids, validate=True, k=64, reduce_f=None, map_f=None, **kwargs
 ):

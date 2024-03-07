@@ -214,12 +214,12 @@ from skbio.util._decorator import experimental
 class NotExecuted:
     """Helper object to track if a method was executed."""
 
-    @experimental(as_of="0.4.0")
+    # @experimental(as_of="0.4.0")
     def __init__(self):
         """Construct all the necessary attributes for the NotExecuted object."""
         self.msg = None
 
-    @experimental(as_of="0.4.0")
+    # @experimental(as_of="0.4.0")
     def __call__(self, msg):
         """Update message and return self."""
         self.msg = msg
@@ -232,7 +232,7 @@ _not_executed = NotExecuted()
 class Exists:
     """Stub object to assist with ``requires`` when a value exists."""
 
-    @experimental(as_of="0.4.0")
+    # @experimental(as_of="0.4.0")
     def __contains__(self, item):
         """Check if a value exists."""
         return True
@@ -244,7 +244,7 @@ anything = Exists()  # external, for when a value can be anything
 class NotNone:
     """Check for non-None values."""
 
-    @experimental(as_of="0.4.0")
+    # @experimental(as_of="0.4.0")
     def __contains__(self, item):
         """Check if item is not None."""
         if item is None:
@@ -289,7 +289,7 @@ class Workflow:
 
     """
 
-    @experimental(as_of="0.4.0")
+    # @experimental(as_of="0.4.0")
     def __init__(self, state, short_circuit=True, debug=False, options=None, **kwargs):
         r"""Build thy workflow of self."""
         if options is None:
@@ -311,7 +311,7 @@ class Workflow:
         if self.debug:
             self._setup_debug()
 
-    @experimental(as_of="0.4.0")
+    # @experimental(as_of="0.4.0")
     def initialize_state(self, item):
         """Initialize state.
 
@@ -387,7 +387,7 @@ class Workflow:
         self.debug_pre_state = {}
         self.debug_post_state = {}
 
-    @experimental(as_of="0.4.0")
+    # @experimental(as_of="0.4.0")
     def __call__(self, iter_, success_callback=None, fail_callback=None):
         """Operate on all the data.
 
@@ -475,12 +475,12 @@ class method:
 
     highest_priority = sys.maxsize
 
-    @experimental(as_of="0.4.0")
+    # @experimental(as_of="0.4.0")
     def __init__(self, priority=0):
         """Construct all the necessary attributes for the method object."""
         self.priority = priority
 
-    @experimental(as_of="0.4.0")
+    # @experimental(as_of="0.4.0")
     def __call__(self, func):
         """Decorate function with specified priority."""
         func.priority = self.priority
@@ -512,7 +512,7 @@ class requires:
 
     """
 
-    @experimental(as_of="0.4.0")
+    # @experimental(as_of="0.4.0")
     def __init__(self, option=None, values=anything, state=None):
         """Construct all the necessary attributes for the requires object."""
         # self here is the requires object
@@ -533,7 +533,7 @@ class requires:
             else:
                 self.values = set([values])
 
-    @experimental(as_of="0.4.0")
+    # @experimental(as_of="0.4.0")
     def __call__(self, func):
         """Wrap a function.
 

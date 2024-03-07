@@ -100,7 +100,7 @@ def chunk_str(s, n, char):
     return char.join((s[i : i + n] for i in range(0, len(s), n)))
 
 
-@experimental(as_of="0.4.0")
+# @experimental(as_of="0.4.0")
 def cardinal_to_ordinal(n):
     """Return ordinal string version of cardinal int `n`.
 
@@ -143,7 +143,7 @@ def cardinal_to_ordinal(n):
     return "%d%s" % (n, "tsnrhtdd"[(n // 10 % 10 != 1) * (n % 10 < 4) * n % 10 :: 4])
 
 
-@experimental(as_of="0.4.0")
+# @experimental(as_of="0.4.0")
 def safe_md5(open_file, block_size=2**20):
     """Compute an md5 sum without loading the file into memory.
 
@@ -185,7 +185,7 @@ def safe_md5(open_file, block_size=2**20):
     return md5
 
 
-@experimental(as_of="0.4.0")
+# @experimental(as_of="0.4.0")
 def find_duplicates(iterable):
     """Find duplicate elements in an iterable.
 
@@ -213,7 +213,7 @@ def find_duplicates(iterable):
     return repeated
 
 
-@experimental(as_of="0.6.0")
+# @experimental(as_of="0.6.0")
 def get_rng(seed=None):
     """Get a random generator.
 

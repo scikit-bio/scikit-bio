@@ -186,7 +186,7 @@ class RNA(GrammaredSequence, NucleotideMixin):
     def _motifs(self):
         return _motifs
 
-    @stable(as_of="0.4.1")
+    # @stable(as_of="0.4.1")
     def reverse_transcribe(self):
         """Reverse transcribe RNA into DNA.
 
@@ -262,7 +262,7 @@ class RNA(GrammaredSequence, NucleotideMixin):
             validate=False,
         )
 
-    @stable(as_of="0.4.0")
+    # @stable(as_of="0.4.0")
     def translate(self, genetic_code=1, *args, **kwargs):
         """Translate RNA sequence into protein sequence.
 
@@ -332,7 +332,7 @@ class RNA(GrammaredSequence, NucleotideMixin):
             genetic_code = skbio.GeneticCode.from_ncbi(genetic_code)
         return genetic_code.translate(self, *args, **kwargs)
 
-    @stable(as_of="0.4.0")
+    # @stable(as_of="0.4.0")
     def translate_six_frames(self, genetic_code=1, *args, **kwargs):
         """Translate RNA into protein using six possible reading frames.
 

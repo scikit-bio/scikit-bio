@@ -15,7 +15,7 @@ from ._utils import svd_rank
 from skbio.util._decorator import experimental
 
 
-@experimental(as_of="0.4.0")
+# @experimental(as_of="0.4.0")
 def ca(X, scaling=1):
     r"""Compute correspondence analysis.
 

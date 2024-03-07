@@ -228,7 +228,7 @@ class GroupResults:
 
     """
 
-    @experimental(as_of="0.4.0")
+    # @experimental(as_of="0.4.0")
     def __init__(self, name, trajectory, mean, info, message):
         """Construct all the necessary attributes for the GroupResults object."""
         self.name = name
@@ -237,7 +237,7 @@ class GroupResults:
         self.info = info
         self.message = message
 
-    @experimental(as_of="0.4.0")
+    # @experimental(as_of="0.4.0")
     def to_files(self, out_f, raw_f):
         r"""Save trajectory analysis results for a category group to text format files.
 
@@ -282,7 +282,7 @@ class CategoryResults:
 
     """
 
-    @experimental(as_of="0.4.0")
+    # @experimental(as_of="0.4.0")
     def __init__(self, category, probability, groups, message):
         """Construct all the necessary attributes for the CategoryResults object."""
         self.category = category
@@ -290,7 +290,7 @@ class CategoryResults:
         self.groups = groups
         self.message = message
 
-    @experimental(as_of="0.4.0")
+    # @experimental(as_of="0.4.0")
     def to_files(self, out_f, raw_f):
         r"""Save trajectory analysis results for a category to files in text format.
 
@@ -331,14 +331,14 @@ class GradientANOVAResults:
 
     """
 
-    @experimental(as_of="0.4.0")
+    # @experimental(as_of="0.4.0")
     def __init__(self, algorithm, weighted, categories):
         """Construct all the attributes for the GradientANOVAResults object."""
         self.algorithm = algorithm
         self.weighted = weighted
         self.categories = categories
 
-    @experimental(as_of="0.4.0")
+    # @experimental(as_of="0.4.0")
     def to_files(self, out_f, raw_f):
         r"""Save the trajectory analysis results to files in text format.
 
@@ -413,7 +413,7 @@ class GradientANOVA:
     # Should be defined by the derived classes
     _alg_name = None
 
-    @experimental(as_of="0.4.0")
+    # @experimental(as_of="0.4.0")
     def __init__(
         self,
         coords,
@@ -482,7 +482,7 @@ class GradientANOVA:
         # Initialize the message buffer
         self._message_buffer = []
 
-    @experimental(as_of="0.4.0")
+    # @experimental(as_of="0.4.0")
     def get_trajectories(self):
         r"""Compute the trajectories for each group and category and run ANOVA.
 
@@ -845,7 +845,7 @@ class WindowDifferenceGradientANOVA(GradientANOVA):
 
     _alg_name = "wdiff"
 
-    @experimental(as_of="0.4.0")
+    # @experimental(as_of="0.4.0")
     def __init__(self, coords, prop_expl, metadata_map, window_size, **kwargs):
         """Build all the attributes for the WindowDifferenceGradientANOVA object."""
         super(WindowDifferenceGradientANOVA, self).__init__(

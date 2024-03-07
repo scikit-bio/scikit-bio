@@ -149,7 +149,7 @@ import scipy.stats
 from skbio.util._decorator import experimental
 
 
-@experimental(as_of="0.4.0")
+# @experimental(as_of="0.4.0")
 def subsample_power(
     test,
     samples,
@@ -388,7 +388,7 @@ def subsample_power(
     return power, sample_counts
 
 
-@experimental(as_of="0.4.0")
+# @experimental(as_of="0.4.0")
 def subsample_paired_power(
     test,
     meta,
@@ -589,7 +589,7 @@ def subsample_paired_power(
     return power, sample_counts
 
 
-@experimental(as_of="0.4.0")
+# @experimental(as_of="0.4.0")
 def confidence_bound(vec, alpha=0.05, df=None, axis=None):
     r"""Calculate a confidence bound assuming a normal distribution.
 
@@ -642,7 +642,7 @@ def confidence_bound(vec, alpha=0.05, df=None, axis=None):
     return bound
 
 
-@experimental(as_of="0.4.0")
+# @experimental(as_of="0.4.0")
 def paired_subsamples(meta, cat, control_cats, order=None, strict_match=True):
     r"""Draw a list of samples varied by `cat` and matched for `control_cats`.
 

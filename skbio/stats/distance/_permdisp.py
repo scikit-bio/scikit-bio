@@ -26,7 +26,7 @@ from skbio.stats.ordination import pcoa, OrdinationResults
 from skbio.util._decorator import experimental
 
 
-@experimental(as_of="0.5.2")
+# @experimental(as_of="0.5.2")
 def permdisp(
     distance_matrix,
     grouping,

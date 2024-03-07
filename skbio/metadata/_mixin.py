@@ -17,7 +17,7 @@ from skbio.metadata import IntervalMetadata
 
 class MetadataMixin(metaclass=abc.ABCMeta):
     @property
-    @stable(as_of="0.4.0")
+    # @stable(as_of="0.4.0")
     def metadata(self):
         """``dict`` containing metadata which applies to the entire object.
 
@@ -143,7 +143,7 @@ class MetadataMixin(metaclass=abc.ABCMeta):
         else:
             return None
 
-    @stable(as_of="0.4.0")
+    # @stable(as_of="0.4.0")
     def has_metadata(self):
         """Determine if the object has metadata.
 
@@ -192,7 +192,7 @@ class PositionalMetadataMixin(metaclass=abc.ABCMeta):
         raise NotImplementedError
 
     @property
-    @stable(as_of="0.4.0")
+    # @stable(as_of="0.4.0")
     def positional_metadata(self):
         """``pd.DataFrame`` containing metadata along an axis.
 
@@ -388,7 +388,7 @@ class PositionalMetadataMixin(metaclass=abc.ABCMeta):
         else:
             return None
 
-    @stable(as_of="0.4.0")
+    # @stable(as_of="0.4.0")
     def has_positional_metadata(self):
         """Determine if the object has positional metadata.
 
@@ -453,7 +453,7 @@ class IntervalMetadataMixin(metaclass=abc.ABCMeta):
             self.interval_metadata = interval_metadata
 
     @property
-    @experimental(as_of="0.5.1")
+    # @experimental(as_of="0.5.1")
     def interval_metadata(self):
         """``IntervalMetadata`` object containing info about interval features.
 
@@ -502,7 +502,7 @@ class IntervalMetadataMixin(metaclass=abc.ABCMeta):
     def interval_metadata(self):
         self._interval_metadata = None
 
-    @experimental(as_of="0.5.1")
+    # @experimental(as_of="0.5.1")
     def has_interval_metadata(self):
         """Determine if the object has interval metadata.
 

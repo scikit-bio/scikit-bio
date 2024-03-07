@@ -200,7 +200,7 @@ class GrammaredSequence(Sequence, metaclass=GrammaredSequenceMeta):
         return cls.__gap_codes
 
     @classproperty
-    @stable(as_of="0.4.0")
+    # @stable(as_of="0.4.0")
     def alphabet(cls):
         """Return valid characters.
 
@@ -216,7 +216,7 @@ class GrammaredSequence(Sequence, metaclass=GrammaredSequenceMeta):
 
     @abstractproperty
     @classproperty
-    @stable(as_of="0.4.0")
+    # @stable(as_of="0.4.0")
     def gap_chars(cls):
         """Return characters defined as gaps.
 
@@ -230,7 +230,7 @@ class GrammaredSequence(Sequence, metaclass=GrammaredSequenceMeta):
 
     @abstractproperty
     @classproperty
-    @experimental(as_of="0.4.1")
+    # @experimental(as_of="0.4.1")
     def default_gap_char(cls):
         """Gap character to use when constructing a new gapped sequence.
 
@@ -247,7 +247,7 @@ class GrammaredSequence(Sequence, metaclass=GrammaredSequenceMeta):
         raise NotImplementedError
 
     @classproperty
-    @stable(as_of="0.4.0")
+    # @stable(as_of="0.4.0")
     def degenerate_chars(cls):
         """Return degenerate characters.
 
@@ -260,7 +260,7 @@ class GrammaredSequence(Sequence, metaclass=GrammaredSequenceMeta):
         return set(cls.degenerate_map)
 
     @classproperty
-    @deprecated(as_of="0.5.0", until="0.6.0", reason="Renamed to definite_chars")
+    # @deprecated(as_of="0.5.0", until="0.6.0", reason="Renamed to definite_chars")
     def nondegenerate_chars(cls):
         """Return non-degenerate characters.
 
@@ -274,7 +274,7 @@ class GrammaredSequence(Sequence, metaclass=GrammaredSequenceMeta):
 
     @abstractproperty
     @classproperty
-    @stable(as_of="0.5.0")
+    # @stable(as_of="0.5.0")
     def definite_chars(cls):
         """Return definite characters.
 
@@ -288,7 +288,7 @@ class GrammaredSequence(Sequence, metaclass=GrammaredSequenceMeta):
 
     @abstractproperty
     @classproperty
-    @stable(as_of="0.4.0")
+    # @stable(as_of="0.4.0")
     def degenerate_map(cls):
         """Return mapping of degenerate to definite characters.
 
@@ -302,7 +302,7 @@ class GrammaredSequence(Sequence, metaclass=GrammaredSequenceMeta):
         raise NotImplementedError
 
     @classproperty
-    @experimental(as_of="0.6.0")
+    # @experimental(as_of="0.6.0")
     def wildcard_char(cls):
         """Return wildcard character.
 
@@ -363,7 +363,7 @@ class GrammaredSequence(Sequence, metaclass=GrammaredSequenceMeta):
                 )
             )
 
-    @stable(as_of="0.4.0")
+    # @stable(as_of="0.4.0")
     def gaps(self):
         """Find positions containing gaps in the biological sequence.
 
@@ -387,7 +387,7 @@ class GrammaredSequence(Sequence, metaclass=GrammaredSequenceMeta):
         """
         return np.in1d(self._bytes, self._gap_codes)
 
-    @stable(as_of="0.4.0")
+    # @stable(as_of="0.4.0")
     def has_gaps(self):
         """Determine if the sequence contains one or more gap characters.
 
@@ -412,7 +412,7 @@ class GrammaredSequence(Sequence, metaclass=GrammaredSequenceMeta):
         # TODO: cache results
         return bool(self.gaps().any())
 
-    @stable(as_of="0.4.0")
+    # @stable(as_of="0.4.0")
     def degenerates(self):
         """Find positions containing degenerate characters in the sequence.
 
@@ -438,7 +438,7 @@ class GrammaredSequence(Sequence, metaclass=GrammaredSequenceMeta):
         """
         return np.in1d(self._bytes, self._degenerate_codes)
 
-    @stable(as_of="0.4.0")
+    # @stable(as_of="0.4.0")
     def has_degenerates(self):
         """Determine if sequence contains one or more degenerate characters.
 
@@ -469,7 +469,7 @@ class GrammaredSequence(Sequence, metaclass=GrammaredSequenceMeta):
         # TODO: cache results
         return bool(self.degenerates().any())
 
-    @stable(as_of="0.5.0")
+    # @stable(as_of="0.5.0")
     def definites(self):
         """Find positions containing definite characters in the sequence.
 
@@ -494,7 +494,7 @@ class GrammaredSequence(Sequence, metaclass=GrammaredSequenceMeta):
         """
         return np.in1d(self._bytes, self._definite_char_codes)
 
-    @deprecated(as_of="0.5.0", until="0.6.0", reason="Renamed to definites")
+    # @deprecated(as_of="0.5.0", until="0.6.0", reason="Renamed to definites")
     def nondegenerates(self):
         """Find positions containing non-degenerate characters in the sequence.
 
@@ -519,7 +519,7 @@ class GrammaredSequence(Sequence, metaclass=GrammaredSequenceMeta):
         """
         return self.definites()
 
-    @stable(as_of="0.5.0")
+    # @stable(as_of="0.5.0")
     def has_definites(self):
         """Determine if sequence contains one or more definite characters.
 
@@ -549,7 +549,7 @@ class GrammaredSequence(Sequence, metaclass=GrammaredSequenceMeta):
         # TODO: cache results
         return bool(self.definites().any())
 
-    @deprecated(as_of="0.5.0", until="0.6.0", reason="Renamed to has_definites")
+    # @deprecated(as_of="0.5.0", until="0.6.0", reason="Renamed to has_definites")
     def has_nondegenerates(self):
         """Determine if sequence contains one or more non-degenerate characters.
 
@@ -579,7 +579,7 @@ class GrammaredSequence(Sequence, metaclass=GrammaredSequenceMeta):
         # TODO: cache results
         return self.has_definites()
 
-    @stable(as_of="0.4.0")
+    # @stable(as_of="0.4.0")
     def degap(self):
         """Return a new sequence with gap characters removed.
 
@@ -621,7 +621,7 @@ class GrammaredSequence(Sequence, metaclass=GrammaredSequenceMeta):
         """
         return self[np.invert(self.gaps())]
 
-    @stable(as_of="0.4.0")
+    # @stable(as_of="0.4.0")
     def expand_degenerates(self):
         """Yield all possible definite versions of the sequence.
 
@@ -701,7 +701,7 @@ class GrammaredSequence(Sequence, metaclass=GrammaredSequenceMeta):
                 interval_metadata=self.interval_metadata,
             )
 
-    @stable(as_of="0.4.1")
+    # @stable(as_of="0.4.1")
     def to_regex(self, within_capture=False):
         """Return regular expression object that accounts for degenerate chars.
 
@@ -749,7 +749,7 @@ class GrammaredSequence(Sequence, metaclass=GrammaredSequenceMeta):
 
         return re.compile(regex_string)
 
-    @stable(as_of="0.4.0")
+    # @stable(as_of="0.4.0")
     def find_motifs(self, motif_type, min_length=1, ignore=None):
         """Search the biological sequence for motifs.
 

@@ -80,7 +80,7 @@ def _resolve(
     return newfile, source, is_binary_file(newfile)
 
 
-@stable(as_of="0.4.0")
+# @stable(as_of="0.4.0")
 def open(
     file,
     mode=_d["mode"],
@@ -230,7 +230,7 @@ def _resolve_file(file, **kwargs):
 
 
 @contextmanager
-@stable(as_of="0.4.0")
+# @stable(as_of="0.4.0")
 def open_file(file, **kwargs):
     r"""Context manager for :func:`skbio.io.util.open`.
 
@@ -290,7 +290,7 @@ def _flush_compressor(file):
 
 
 @contextmanager
-@stable(as_of="0.4.0")
+# @stable(as_of="0.4.0")
 def open_files(files, **kwargs):
     """Context manager for :func:`skbio.io.util.open`.
 

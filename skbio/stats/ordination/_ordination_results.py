@@ -60,7 +60,7 @@ class OrdinationResults(SkbioObject, PlottableMixin):
 
     default_write_format = "ordination"
 
-    @experimental(as_of="0.4.0")
+    # @experimental(as_of="0.4.0")
     def __init__(
         self,
         short_method_name,
@@ -82,7 +82,7 @@ class OrdinationResults(SkbioObject, PlottableMixin):
         self.sample_constraints = sample_constraints
         self.proportion_explained = proportion_explained
 
-    @experimental(as_of="0.4.0")
+    # @experimental(as_of="0.4.0")
     def __str__(self):
         """Return a string representation of the ordination results.
 
@@ -129,7 +129,7 @@ class OrdinationResults(SkbioObject, PlottableMixin):
 
         return "\n".join(lines)
 
-    @experimental(as_of="0.4.0")
+    # @experimental(as_of="0.4.0")
     def plot(
         self,
         df=None,

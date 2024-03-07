@@ -46,7 +46,7 @@ class ReallyEqualMixin:
         self.assertTrue(b != a)
 
 
-@experimental(as_of="0.4.0")
+# @experimental(as_of="0.4.0")
 def get_data_path(fn, subfolder="data"):
     """Return path to filename ``fn`` in the data folder.
 
@@ -84,7 +84,7 @@ def get_data_path(fn, subfolder="data"):
     return data_path
 
 
-@experimental(as_of="0.4.0")
+# @experimental(as_of="0.4.0")
 def assert_ordination_results_equal(
     left,
     right,
@@ -296,7 +296,7 @@ def _normalize_signs(arr1, arr2):
     return arr1 * differences, arr2
 
 
-@experimental(as_of="0.4.0")
+# @experimental(as_of="0.4.0")
 def assert_data_frame_almost_equal(left, right, rtol=1e-5):
     """Raise AssertionError if ``pd.DataFrame`` objects are not "almost equal".
 

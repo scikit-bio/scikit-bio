@@ -15,7 +15,7 @@ from ._utils import corr, svd_rank, scale
 from skbio.util._decorator import experimental
 
 
-@experimental(as_of="0.4.0")
+# @experimental(as_of="0.4.0")
 def cca(y, x, scaling=1):
     r"""Compute canonical (also known as constrained) correspondence analysis.
 

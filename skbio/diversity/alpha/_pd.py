@@ -38,7 +38,7 @@ def _faith_pd(counts_by_node, branch_lengths):
     return (branch_lengths * (counts_by_node > 0)).sum()
 
 
-@experimental(as_of="0.4.1")
+# @experimental(as_of="0.4.1")
 def faith_pd(counts, otu_ids, tree, validate=True):
     r"""Calculate Faith's phylogenetic diversity (Faith's PD) metric.
 
@@ -215,7 +215,7 @@ def _phydiv(counts_by_node, branch_lengths, rooted, weight):
     return (branch_lengths * fracs_by_node).sum()
 
 
-@experimental(as_of="0.6.0")
+# @experimental(as_of="0.6.0")
 def phydiv(counts, otu_ids, tree, rooted=None, weight=False, validate=True):
     r"""Calculate generalized phylogenetic diversity (PD) metrics.
 

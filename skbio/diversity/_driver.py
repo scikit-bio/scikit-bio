@@ -67,7 +67,7 @@ def _get_alpha_diversity_metric_map():
     }
 
 
-@experimental(as_of="0.4.1")
+# @experimental(as_of="0.4.1")
 def get_alpha_diversity_metrics():
     """List scikit-bio's alpha diversity metrics.
 
@@ -90,7 +90,7 @@ def get_alpha_diversity_metrics():
     return sorted(metrics.keys())
 
 
-@experimental(as_of="0.4.1")
+# @experimental(as_of="0.4.1")
 def get_beta_diversity_metrics():
     """List scikit-bio's beta diversity metrics.
 
@@ -119,7 +119,7 @@ def get_beta_diversity_metrics():
     return sorted(["unweighted_unifrac", "weighted_unifrac"])
 
 
-@experimental(as_of="0.4.1")
+# @experimental(as_of="0.4.1")
 def alpha_diversity(metric, counts, ids=None, validate=True, **kwargs):
     """Compute alpha diversity for one or more samples.
 
@@ -203,17 +203,20 @@ def alpha_diversity(metric, counts, ids=None, validate=True, **kwargs):
     results = [metric(c, **kwargs) for c in counts]
     return pd.Series(results, index=ids)
 
+    # @deprecated(
+    as_of = ("0.5.0",)
+    until = ("0.6.0",)
+    reason = (
+        (
+            "The return type is unstable. Developer caution is "
+            "advised. The resulting DistanceMatrix object will "
+            "include zeros when distance has not been calculated, and "
+            "therefore can be misleading."
+        ),
+    )
 
-@deprecated(
-    as_of="0.5.0",
-    until="0.6.0",
-    reason=(
-        "The return type is unstable. Developer caution is "
-        "advised. The resulting DistanceMatrix object will "
-        "include zeros when distance has not been calculated, and "
-        "therefore can be misleading."
-    ),
-)
+
+# )
 def partial_beta_diversity(metric, counts, ids, id_pairs, validate=True, **kwargs):
     """Compute distances only between specified ID pairs.
 
@@ -349,7 +352,7 @@ _qualitative_beta_metrics = [
 ]
 
 
-@experimental(as_of="0.4.0")
+# @experimental(as_of="0.4.0")
 def beta_diversity(
     metric, counts, ids=None, validate=True, pairwise_func=None, **kwargs
 ):

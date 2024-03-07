@@ -20,7 +20,7 @@ from skbio.util import EfficiencyWarning
 from skbio.util._decorator import experimental, deprecated
 
 
-@experimental(as_of="0.4.0")
+# @experimental(as_of="0.4.0")
 def local_pairwise_align_nucleotide(
     seq1,
     seq2,
@@ -102,7 +102,7 @@ def local_pairwise_align_nucleotide(
     )
 
 
-@experimental(as_of="0.4.0")
+# @experimental(as_of="0.4.0")
 def local_pairwise_align_protein(
     seq1, seq2, gap_open_penalty=11, gap_extend_penalty=1, substitution_matrix=None
 ):
@@ -171,7 +171,7 @@ def local_pairwise_align_protein(
     )
 
 
-@experimental(as_of="0.4.0")
+# @experimental(as_of="0.4.0")
 def local_pairwise_align(
     seq1, seq2, gap_open_penalty, gap_extend_penalty, substitution_matrix
 ):
@@ -273,7 +273,7 @@ def local_pairwise_align(
     return msa, score, start_end_positions
 
 
-@experimental(as_of="0.4.0")
+# @experimental(as_of="0.4.0")
 def global_pairwise_align_nucleotide(
     seq1,
     seq2,
@@ -377,7 +377,7 @@ def global_pairwise_align_nucleotide(
     )
 
 
-@experimental(as_of="0.4.0")
+# @experimental(as_of="0.4.0")
 def global_pairwise_align_protein(
     seq1,
     seq2,
@@ -472,7 +472,7 @@ def global_pairwise_align_protein(
     )
 
 
-@experimental(as_of="0.4.0")
+# @experimental(as_of="0.4.0")
 def global_pairwise_align(
     seq1,
     seq2,
@@ -600,14 +600,15 @@ def global_pairwise_align(
 
     return msa, score, start_end_positions
 
-
-@deprecated(
-    as_of="0.5.8",
-    until="0.6.0",
-    reason="This will be removed or replaced, in favor of more general"
+    # @deprecated(
+    as_of = ("0.5.8",)
+    until = ("0.6.0",)
+    reason = "This will be removed or replaced, in favor of more general"
     "-purpose performant aligners. Additional details at "
-    "https://github.com/scikit-bio/scikit-bio/issues/1814",
-)
+    ("https://github.com/scikit-bio/scikit-bio/issues/1814",)
+
+
+# )
 def local_pairwise_align_ssw(sequence1, sequence2, **kwargs):
     """Align query and target sequences with Striped Smith-Waterman.
 
@@ -708,14 +709,15 @@ def local_pairwise_align_ssw(sequence1, sequence2, **kwargs):
 
     return msa, alignment.optimal_alignment_score, start_end
 
-
-@deprecated(
-    as_of="0.4.0",
-    until="0.6.0",
-    reason="Will be replaced by a SubstitutionMatrix class. To track "
+    # @deprecated(
+    as_of = ("0.4.0",)
+    until = ("0.6.0",)
+    reason = "Will be replaced by a SubstitutionMatrix class. To track "
     "progress, see [#161]"
-    "(https://github.com/scikit-bio/scikit-bio/issues/161).",
-)
+    ("(https://github.com/scikit-bio/scikit-bio/issues/161).",)
+
+
+# )
 def make_identity_substitution_matrix(match_score, mismatch_score, alphabet="ACGTU"):
     """Generate substitution matrix where all matches are scored equally.
 

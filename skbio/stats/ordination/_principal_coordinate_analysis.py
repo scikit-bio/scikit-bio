@@ -20,7 +20,7 @@ from ._ordination_results import OrdinationResults
 from ._utils import center_distance_matrix, scale
 
 
-@experimental(as_of="0.4.0")
+# @experimental(as_of="0.4.0")
 def pcoa(distance_matrix, method="eigh", number_of_dimensions=0, inplace=False):
     r"""Perform Principal Coordinate Analysis.
 
@@ -344,7 +344,7 @@ def _fsvd(centered_distance_matrix, number_of_dimensions=10):
     return eigenvalues, eigenvectors
 
 
-@experimental(as_of="0.5.3")
+# @experimental(as_of="0.5.3")
 def pcoa_biplot(ordination, y):
     """Compute the projection of descriptors into a PCoA matrix.
 

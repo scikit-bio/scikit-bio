@@ -17,7 +17,7 @@ from skbio.util._decorator import experimental
 from .__subsample import _subsample_counts_without_replacement
 
 
-@experimental(as_of="0.4.0")
+# @experimental(as_of="0.4.0")
 def isubsample(items, maximum, minimum=1, buf_size=1000, bin_f=None):
     """Randomly subsample items from bins, without replacement.
 
@@ -149,7 +149,7 @@ def isubsample(items, maximum, minimum=1, buf_size=1000, bin_f=None):
             yield (bin_, item)
 
 
-@experimental(as_of="0.4.0")
+# @experimental(as_of="0.4.0")
 def subsample_counts(counts, n, replace=False):
     """Randomly subsample from a vector of counts, with or without replacement.
 
