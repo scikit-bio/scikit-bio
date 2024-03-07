@@ -748,9 +748,9 @@ class TestGrammaredSequence(TestCase):
             seq.to_definites(degenerate='nonsense')
 
     def test_noncanonical_chars(self):
-        exp = "Q"
-        obs = ExampleGrammaredSequence("").noncanonical_chars
-        self.assertEqual(obs, exp)
+        exp = 'Q'
+        self.assertEqual(ExampleGrammaredSequence("").noncanonical_chars, exp)
+        self.assertEqual(ExampleGrammaredSequence.noncanonical_chars, exp)
 
 
 if __name__ == "__main__":
