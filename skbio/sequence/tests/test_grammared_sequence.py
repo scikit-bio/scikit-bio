@@ -21,11 +21,11 @@ from skbio.metadata import IntervalMetadata
 class ExampleGrammaredSequence(GrammaredSequence):
     @classproperty
     def degenerate_map(cls):
-        return {"X": set("AB"), "Y": set("BC"), "Z": set("AC")}
+        return {"X": set("AB"), "Y": set("BC"), "Z": set("AC"), "W": set("ABCQ")}
 
     @classproperty
     def definite_chars(cls):
-        return set("ABC")
+        return set("ABCQ")
 
     @classproperty
     def default_gap_char(cls):
@@ -34,6 +34,14 @@ class ExampleGrammaredSequence(GrammaredSequence):
     @classproperty
     def gap_chars(cls):
         return set('-.')
+
+    @classproperty
+    def noncanonical_chars(cls):
+        return "Q"
+
+    @classproperty
+    def wildcard_char(cls):
+        return "W"
 
 
 class ExampleMotifsTester(ExampleGrammaredSequence):
@@ -265,7 +273,7 @@ class TestGrammaredSequence(TestCase):
                 ExampleGrammaredSequence('ACGTacgt', lowercase=invalid_key)
 
     def test_degenerate_chars(self):
-        expected = set("XYZ")
+        expected = set("WXYZ")
         self.assertIs(type(ExampleGrammaredSequence.degenerate_chars), set)
         self.assertEqual(ExampleGrammaredSequence.degenerate_chars, expected)
 
@@ -281,7 +289,7 @@ class TestGrammaredSequence(TestCase):
     # TODO: duplicate of test_definite_chars, remove when nondegenerate_chars,
     # is removed
     def test_nondegenerate_chars(self):
-        expected = set("ABC")
+        expected = set("ABCQ")
         self.assertEqual(ExampleGrammaredSequence.nondegenerate_chars,
                          expected)
 
@@ -296,7 +304,7 @@ class TestGrammaredSequence(TestCase):
             ExampleGrammaredSequence('').nondegenerate_chars = set("BAR")
 
     def test_definite_chars(self):
-        expected = set("ABC")
+        expected = set("ABCQ")
         self.assertEqual(ExampleGrammaredSequence.definite_chars,
                          expected)
 
@@ -332,7 +340,7 @@ class TestGrammaredSequence(TestCase):
             ExampleGrammaredSequence('').default_gap_char = '.'
 
     def test_alphabet(self):
-        expected = set("ABC.-XYZ")
+        expected = set("ABC.-XYZQW")
         self.assertIs(type(ExampleGrammaredSequence.alphabet), set)
         self.assertEqual(ExampleGrammaredSequence.alphabet, expected)
 
@@ -345,7 +353,7 @@ class TestGrammaredSequence(TestCase):
             ExampleGrammaredSequence('').alphabet = set("ABCDEFG.-WXYZ")
 
     def test_degenerate_map(self):
-        expected = {"X": set("AB"), "Y": set("BC"), "Z": set("AC")}
+        expected = {"X": set("AB"), "Y": set("BC"), "Z": set("AC"), "W": set("ABCQ")}
         self.assertEqual(ExampleGrammaredSequence.degenerate_map, expected)
 
         ExampleGrammaredSequence.degenerate_map['W'] = set("ABC")
@@ -683,6 +691,69 @@ class TestGrammaredSequence(TestCase):
         self.assertIn('...', obs)
         self.assertTrue(obs.endswith('300 A'))
 
+    def test_to_definites(self):
+        seq = ExampleGrammaredSequence("ABCQXYZ")
+
+        # default behavior, here I expect to see the sequence "ABCWWWW" returned
+        obs = seq.to_definites()
+        exp = ExampleGrammaredSequence("ABCWWWW")
+        self.assertEqual(obs, exp)
+
+        # noncanonical wildcard, expect to see "ABCQWWW" returned
+        obs = seq.to_definites(noncanonical=False)
+        exp = ExampleGrammaredSequence("ABCQWWW")
+
+        # gap behavior, I expect to see the sequence "ABC----" returned
+        obs = seq.to_definites(degenerate="gap")
+        exp = ExampleGrammaredSequence("ABC----")
+        self.assertEqual(obs, exp)
+
+        # noncanonical gap
+        obs = seq.to_definites(degenerate="gap", noncanonical=False)
+        exp = ExampleGrammaredSequence("ABCQ---")
+        self.assertEqual(obs, exp)
+
+        # trim
+        obs = seq.to_definites(degenerate="trim")
+        exp = ExampleGrammaredSequence("ABC")
+        self.assertEqual(obs, exp)
+
+        # noncanonical trim
+        obs = seq.to_definites(degenerate="trim", noncanonical=False)
+        exp = ExampleGrammaredSequence("ABCQ")
+        self.assertEqual(obs, exp)
+
+        # single char, acceptable input
+        obs = seq.to_definites(degenerate="A")
+        exp = ExampleGrammaredSequence("ABCAAAA")
+        self.assertEqual(obs, exp)
+
+        # noncanonical single char, acceptable input
+        obs = seq.to_definites(degenerate="A", noncanonical=False)
+        exp = ExampleGrammaredSequence("ABCQAAA")
+        self.assertEqual(obs, exp)
+
+        # test that single char outside of alphabet will throw error
+        with self.assertRaises(ValueError):
+            seq.to_definites("P")
+
+        # test that an invalid wildcard (not a string) will throw an error
+        ExampleGrammaredSequence.wildcard_char = 1
+        with self.assertRaises(ValueError):
+            seq.to_definites()
+        ExampleGrammaredSequence.wildcard_char = 'W'
+
+        # test that nonsense input for 'to' will throw error
+        with self.assertRaises(ValueError):
+            seq.to_definites(degenerate='nonsense')
+
+    def test_noncanonical_chars(self):
+        self.assertTrue(isinstance(GrammaredSequence.noncanonical_chars, set))
+        self.assertEqual(len(GrammaredSequence.noncanonical_chars), 0)
+    
+    def test_wildcard_char(self):
+        exp = None
+        self.assertEqual(GrammaredSequence.wildcard_char, exp)
 
 if __name__ == "__main__":
     main()
