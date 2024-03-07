@@ -270,8 +270,7 @@ class TestOrdinationResultsPlotting(unittest.TestCase):
         self.assertTrue(legend is not None)
 
         # do some light sanity checking to make sure our input labels and
-        # colors are present. we're not using nose.tools.assert_items_equal
-        # because it isn't available in Python 3.
+        # colors are present
         labels = [t.get_text() for t in legend.get_texts()]
         npt.assert_equal(sorted(labels), ['bar', 'foo'])
 
