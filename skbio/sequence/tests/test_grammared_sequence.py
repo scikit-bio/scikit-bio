@@ -750,7 +750,10 @@ class TestGrammaredSequence(TestCase):
     def test_noncanonical_chars(self):
         self.assertTrue(isinstance(GrammaredSequence.noncanonical_chars, set))
         self.assertEqual(len(GrammaredSequence.noncanonical_chars), 0)
-
+    
+    def test_wildcard_char(self):
+        exp = None
+        self.assertEqual(GrammaredSequence.wildcard_char, exp)
 
 if __name__ == "__main__":
     main()
