@@ -12,7 +12,7 @@ from types import FunctionType
 
 import numpy as np
 
-from ._decorator import experimental
+# from ._decorator import experimental
 
 
 def resolve_key(obj, key):
