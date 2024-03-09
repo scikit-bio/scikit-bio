@@ -215,6 +215,23 @@ class FaithPDTests(TestCase):
         otu_ids = ['OTU1', 'OTU2', 'OTU42']
         self.assertRaises(MissingNodeError, faith_pd, counts, otu_ids, t)
 
+    def test_faith_pd_taxa_alias(self):
+        # for backward compatibility; will be removed in the future
+        datum, taxa, tree = self.b1[0], self.oids1, self.t1
+        self.assertIsNotNone(faith_pd(datum, taxa, tree))
+        self.assertIsNotNone(faith_pd(datum, taxa=taxa, tree=tree))
+        self.assertIsNotNone(faith_pd(datum, tree=tree, taxa=taxa))
+        self.assertIsNotNone(faith_pd(datum, otu_ids=taxa, tree=tree))
+        self.assertIsNotNone(faith_pd(datum, taxa=taxa, tree=tree, otu_ids=['x', 'y']))
+        msg = "A list of taxon IDs must be provided."
+        with self.assertRaises(ValueError) as cm:
+            faith_pd(datum)
+        self.assertEqual(str(cm.exception), msg)
+        msg = "A phylogenetic tree must be provided."
+        with self.assertRaises(ValueError) as cm:
+            faith_pd(datum, taxa)
+        self.assertEqual(str(cm.exception), msg)
+
 
 class PhyDivTests(TestCase):
 
@@ -395,6 +412,23 @@ class PhyDivTests(TestCase):
         self.assertRaises(ValueError, phydiv, *params, weight='hello')
         self.assertRaises(ValueError, phydiv, *params, weight=-0.5)
         self.assertRaises(ValueError, phydiv, *params, weight=2.0)
+
+    def test_phydiv_taxa_alias(self):
+        # for backward compatibility; will be removed in the future
+        datum, taxa, tree = self.data[0], self.taxa, self.tree
+        self.assertIsNotNone(phydiv(datum, taxa, tree))
+        self.assertIsNotNone(phydiv(datum, taxa=taxa, tree=tree))
+        self.assertIsNotNone(phydiv(datum, tree=tree, taxa=taxa))
+        self.assertIsNotNone(phydiv(datum, otu_ids=taxa, tree=tree))
+        self.assertIsNotNone(phydiv(datum, taxa=taxa, tree=tree, otu_ids=['x', 'y']))
+        msg = "A list of taxon IDs must be provided."
+        with self.assertRaises(ValueError) as cm:
+            phydiv(datum)
+        self.assertEqual(str(cm.exception), msg)
+        msg = "A phylogenetic tree must be provided."
+        with self.assertRaises(ValueError) as cm:
+            phydiv(datum, taxa)
+        self.assertEqual(str(cm.exception), msg)
 
 
 if __name__ == "__main__":

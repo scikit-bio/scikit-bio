@@ -73,16 +73,14 @@ def _validate_counts_matrix(counts, ids=None, suppress_cast=False):
         return np.asarray(results)
 
 
-def _validate_otu_ids_and_tree(counts, otu_ids, tree, rooted=True):
-    len_otu_ids = len(otu_ids)
-    set_otu_ids = set(otu_ids)
-    if len_otu_ids != len(set_otu_ids):
-        raise ValueError("``otu_ids`` cannot contain duplicated ids.")
+def _validate_taxa_and_tree(counts, taxa, tree, rooted=True):
+    len_taxa = len(taxa)
+    set_taxa = set(taxa)
+    if len_taxa != len(set_taxa):
+        raise ValueError("``taxa`` cannot contain duplicated ids.")
 
-    if len(counts) != len_otu_ids:
-        raise ValueError(
-            "``otu_ids`` must be the same length as ``counts`` " "vector(s)."
-        )
+    if len(counts) != len_taxa:
+        raise ValueError("``taxa`` must be the same length as ``counts`` " "vector(s).")
 
     if len(tree.root().children) == 0:
         raise ValueError("``tree`` must contain more than just a root node.")
@@ -94,7 +92,7 @@ def _validate_otu_ids_and_tree(counts, otu_ids, tree, rooted=True):
 
     # all nodes (except the root node) have corresponding branch lengths
     # all tip names in tree are unique
-    # all otu_ids correspond to tip names in tree
+    # all taxa correspond to tip names in tree
     branch_lengths = []
     tip_names = []
     for e in tree.traverse():
@@ -108,22 +106,22 @@ def _validate_otu_ids_and_tree(counts, otu_ids, tree, rooted=True):
 
     if np.array([branch is None for branch in branch_lengths]).any():
         raise ValueError("All non-root nodes in ``tree`` must have a branch " "length.")
-    missing_tip_names = set_otu_ids - set_tip_names
+    missing_tip_names = set_taxa - set_tip_names
     if missing_tip_names != set():
         n_missing_tip_names = len(missing_tip_names)
         raise MissingNodeError(
-            "All ``otu_ids`` must be present as tip names "
-            "in ``tree``. ``otu_ids`` not corresponding to "
+            "All ``taxa`` must be present as tip names "
+            "in ``tree``. ``taxa`` not corresponding to "
             "tip names (n=%d): %s" % (n_missing_tip_names, " ".join(missing_tip_names))
         )
 
 
-def _vectorize_counts_and_tree(counts, otu_ids, tree):
+def _vectorize_counts_and_tree(counts, taxa, tree):
     """Index tree and convert counts to np.array in corresponding order."""
     tree_index = tree.to_array(nan_length_value=0.0)
-    otu_ids = np.asarray(otu_ids)
+    taxa = np.asarray(taxa)
     counts = np.atleast_2d(counts)
-    counts_by_node = _nodes_by_counts(counts, otu_ids, tree_index)
+    counts_by_node = _nodes_by_counts(counts, taxa, tree_index)
     branch_lengths = tree_index["length"]
 
     # branch_lengths is just a reference to the array inside of tree_index,
@@ -133,18 +131,27 @@ def _vectorize_counts_and_tree(counts, otu_ids, tree):
 
 def _get_phylogenetic_kwargs(counts, **kwargs):
     try:
-        otu_ids = kwargs.pop("otu_ids")
+        taxa = kwargs.pop("taxa")
     except KeyError:
-        raise ValueError(
-            "``otu_ids`` is required for phylogenetic diversity " "metrics."
-        )
+        raise ValueError("``taxa`` is required for phylogenetic diversity " "metrics.")
     try:
         tree = kwargs.pop("tree")
     except KeyError:
         raise ValueError("``tree`` is required for phylogenetic diversity " "metrics.")
 
-    return otu_ids, tree, kwargs
+    return taxa, tree, kwargs
 
 
 def _quantitative_to_qualitative_counts(counts):
     return counts > 0.0
+
+
+def _check_taxa_alias(taxa, tree, otu_ids):
+    # make `taxa` an alias of `taxa`; for backward compatibility
+    if taxa is None:
+        if otu_ids is None:
+            raise ValueError("A list of taxon IDs must be provided.")
+        taxa = otu_ids
+    if tree is None:
+        raise ValueError("A phylogenetic tree must be provided.")
+    return taxa
