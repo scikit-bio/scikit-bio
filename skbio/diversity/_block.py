@@ -74,7 +74,7 @@ def _block_party(counts=None, row_ids=None, col_ids=None, **kwargs):
     ----------
     counts : 2D array_like of ints or floats
         Matrix containing count/abundance data where each row contains counts
-        of OTUs in a given sample.
+        of taxa in a given sample.
     row_ids : 1D np.ndarray of int
         Block row IDs to keep in the counts matrix.
     col_ids : 1D np.ndarray of int
@@ -182,7 +182,7 @@ def _block_compute(**kwargs):
     -----
     This method encapsulates the two expensive operations to perform for each
     block, namely, the "shearing" of the phylogenetic tree to correspond to
-    only the OTUs of interest, and the actual beta diversity calculations.
+    only the taxa of interest, and the actual beta diversity calculations.
 
     Returns
     -------
@@ -264,7 +264,7 @@ def block_beta_diversity(
         callable.
     counts : 2D array_like of ints or floats
         Matrix containing count/abundance data where each row contains counts
-        of OTUs in a given sample.
+        of taxa in a given sample.
     ids : iterable of strs
         Identifiers for each sample in ``counts``.
     validate : bool, optional
@@ -301,7 +301,7 @@ def block_beta_diversity(
     likely the case that `skbio.diversity.beta_diversity` will be faster. The
     original need which motivated the development of this method was processing
     the Earth Microbiome Project [1]_ dataset which at the time spanned over
-    25,000 samples and 7.5 million open reference OTUs.
+    25,000 samples and 7.5 million open reference taxa.
 
     See Also
     --------
