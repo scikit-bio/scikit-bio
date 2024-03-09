@@ -82,7 +82,7 @@ Consider a very simple environment with only 3 species. The species
 in the environment are equally distributed and their proportions are
 equivalent:
 
->>> otus = np.array([1./3, 1./3., 1./3])
+>>> taxa = np.array([1./3, 1./3., 1./3])
 
 Suppose that an antibiotic kills off half of the population for the
 first two species, but doesn't harm the third species. Then the
@@ -92,7 +92,7 @@ perturbation vector would be as follows
 
 And the resulting perturbation would be
 
->>> perturb(otus, antibiotic)
+>>> perturb(taxa, antibiotic)
 array([ 0.25,  0.25,  0.5 ])
 
 
@@ -1304,7 +1304,7 @@ def ancom(
     >>> import pandas as pd
 
     Now let's load in a DataFrame with 6 samples and 7 features (e.g.,
-    these may be bacterial OTUs):
+    these may be bacterial taxa):
 
     >>> table = pd.DataFrame([[12, 11, 10, 10, 10, 10, 10],
     ...                       [9,  11, 12, 10, 10, 10, 10],
@@ -1571,17 +1571,17 @@ def _log_compare(mat, cats, significance_test=scipy.stats.ttest_ind):
     Parameters
     ----------
     mat: np.array
-       rows correspond to samples and columns correspond to
-       features (i.e. OTUs)
+        Matrix with rows corresponding to samples and columns corresponding to
+        features.
     cats: np.array, float
-       Vector of categories
+        Vector of categories.
     significance_test: function
-        statistical test to run
+        Statistical test to run.
 
     Returns
     -------
     log_ratio : np.array
-        log ratio pvalue matrix
+        Log ratio pvalue matrix.
 
     """
     r, c = mat.shape

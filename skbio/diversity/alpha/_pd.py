@@ -156,16 +156,16 @@ def faith_pd(counts, taxa=None, tree=None, validate=True, otu_ids=None):
     Because Faith PD is a phylogenetic diversity metric, we need to know which
     taxon each count corresponds to, which we'll provide as ``taxa``.
 
-    >>> taxa = ['T1', 'T2', 'T3', 'T4', 'T5', 'T6', 'T7', 'T8']
+    >>> taxa = ['U1', 'U2', 'U3', 'U4', 'U5', 'U6', 'U7', 'U8']
 
     We also need a phylogenetic tree that relates the taxa to one another.
 
     >>> from io import StringIO
     >>> from skbio import TreeNode
     >>> tree = TreeNode.read(StringIO(
-    ...                      '(((((T1:0.5,T2:0.5):0.5,T3:1.0):1.0):0.0,'
-    ...                      '(T4:0.75,(T5:0.5,((T6:0.33,T7:0.62):0.5'
-    ...                      ',T8:0.5):0.5):0.5):1.25):0.0)root;'))
+    ...                      '(((((U1:0.5,U2:0.5):0.5,U3:1.0):1.0):0.0,'
+    ...                      '(U4:0.75,(U5:0.5,((U6:0.33,U7:0.62):0.5'
+    ...                      ',U8:0.5):0.5):0.5):1.25):0.0)root;'))
 
     We can then compute the Faith PD of the sample.
 

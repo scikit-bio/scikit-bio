@@ -126,7 +126,7 @@ class FaithPDTests(TestCase):
         expected = pd.read_csv(expected_fp, sep='\t', index_col=0)
         for sid in self.q_table.columns:
             actual = faith_pd(self.q_table[sid],
-                              otu_ids=self.q_table.index,
+                              taxa=self.q_table.index,
                               tree=self.q_tree)
             self.assertAlmostEqual(actual, expected['PD_whole_tree'][sid])
 
@@ -135,16 +135,16 @@ class FaithPDTests(TestCase):
         tree = TreeNode.read(
             StringIO('((OTU1:0.1, OTU2:0.2):0.3, (OTU3:0.5, OTU4:0.7):1.1)'
                      'root;'))
-        otu_ids = ['OTU%d' % i for i in range(1, 5)]
+        taxa = ['OTU%d' % i for i in range(1, 5)]
         # root node not observed, but branch between (OTU1, OTU2) and root
         # is considered observed
-        actual = faith_pd([1, 1, 0, 0], otu_ids, tree)
+        actual = faith_pd([1, 1, 0, 0], taxa, tree)
         expected = 0.6
         self.assertAlmostEqual(actual, expected)
 
         # root node not observed, but branch between (OTU3, OTU4) and root
         # is considered observed
-        actual = faith_pd([0, 0, 1, 1], otu_ids, tree)
+        actual = faith_pd([0, 0, 1, 1], taxa, tree)
         expected = 2.3
         self.assertAlmostEqual(actual, expected)
 
@@ -154,83 +154,66 @@ class FaithPDTests(TestCase):
             StringIO('(((((OTU1:0.5,OTU2:0.5):0.5,OTU3:1.0):1.0):0.0,(OTU4:'
                      '0.75,OTU2:0.75):1.25):0.0)root;'))
         counts = [1, 2, 3]
-        otu_ids = ['OTU1', 'OTU2', 'OTU3']
-        self.assertRaises(DuplicateNodeError, faith_pd, counts, otu_ids,
+        taxa = ['OTU1', 'OTU2', 'OTU3']
+        self.assertRaises(DuplicateNodeError, faith_pd, counts, taxa,
                           t)
 
         # unrooted tree as input
         t = TreeNode.read(StringIO('((OTU1:0.1, OTU2:0.2):0.3, OTU3:0.5,'
                                    'OTU4:0.7);'))
         counts = [1, 2, 3]
-        otu_ids = ['OTU1', 'OTU2', 'OTU3']
-        self.assertRaises(ValueError, faith_pd, counts, otu_ids, t)
+        taxa = ['OTU1', 'OTU2', 'OTU3']
+        self.assertRaises(ValueError, faith_pd, counts, taxa, t)
 
-        # otu_ids has duplicated ids
+        # taxa has duplicated ids
         t = TreeNode.read(
             StringIO('(((((OTU1:0.5,OTU2:0.5):0.5,OTU3:1.0):1.0):0.0,(OTU4:'
                      '0.75,OTU5:0.75):1.25):0.0)root;'))
         counts = [1, 2, 3]
-        otu_ids = ['OTU1', 'OTU2', 'OTU2']
-        self.assertRaises(ValueError, faith_pd, counts, otu_ids, t)
+        taxa = ['OTU1', 'OTU2', 'OTU2']
+        self.assertRaises(ValueError, faith_pd, counts, taxa, t)
 
         # len of vectors not equal
         t = TreeNode.read(
             StringIO('(((((OTU1:0.5,OTU2:0.5):0.5,OTU3:1.0):1.0):0.0,(OTU4:'
                      '0.75,OTU5:0.75):1.25):0.0)root;'))
         counts = [1, 2]
-        otu_ids = ['OTU1', 'OTU2', 'OTU3']
-        self.assertRaises(ValueError, faith_pd, counts, otu_ids, t)
+        taxa = ['OTU1', 'OTU2', 'OTU3']
+        self.assertRaises(ValueError, faith_pd, counts, taxa, t)
         counts = [1, 2, 3]
-        otu_ids = ['OTU1', 'OTU2']
-        self.assertRaises(ValueError, faith_pd, counts, otu_ids, t)
+        taxa = ['OTU1', 'OTU2']
+        self.assertRaises(ValueError, faith_pd, counts, taxa, t)
 
         # negative counts
         t = TreeNode.read(
             StringIO('(((((OTU1:0.5,OTU2:0.5):0.5,OTU3:1.0):1.0):0.0,(OTU4:'
                      '0.75,OTU5:0.75):1.25):0.0)root;'))
         counts = [1, 2, -3]
-        otu_ids = ['OTU1', 'OTU2', 'OTU3']
-        self.assertRaises(ValueError, faith_pd, counts, otu_ids, t)
+        taxa = ['OTU1', 'OTU2', 'OTU3']
+        self.assertRaises(ValueError, faith_pd, counts, taxa, t)
 
         # tree with no branch lengths
         t = TreeNode.read(
             StringIO('((((OTU1,OTU2),OTU3)),(OTU4,OTU5));'))
         counts = [1, 2, 3]
-        otu_ids = ['OTU1', 'OTU2', 'OTU3']
-        self.assertRaises(ValueError, faith_pd, counts, otu_ids, t)
+        taxa = ['OTU1', 'OTU2', 'OTU3']
+        self.assertRaises(ValueError, faith_pd, counts, taxa, t)
 
         # tree missing some branch lengths
         t = TreeNode.read(
             StringIO('(((((OTU1,OTU2:0.5):0.5,OTU3:1.0):1.0):0.0,(OTU4:'
                      '0.75,OTU5:0.75):1.25):0.0)root;'))
         counts = [1, 2, 3]
-        otu_ids = ['OTU1', 'OTU2', 'OTU3']
-        self.assertRaises(ValueError, faith_pd, counts, otu_ids, t)
+        taxa = ['OTU1', 'OTU2', 'OTU3']
+        self.assertRaises(ValueError, faith_pd, counts, taxa, t)
 
-        # otu_ids not present in tree
+        # taxa not present in tree
         t = TreeNode.read(
             StringIO('(((((OTU1:0.5,OTU2:0.5):0.5,OTU3:1.0):1.0):0.0,(OTU4:'
                      '0.75,OTU5:0.75):1.25):0.0)root;'))
         counts = [1, 2, 3]
-        otu_ids = ['OTU1', 'OTU2', 'OTU42']
-        self.assertRaises(MissingNodeError, faith_pd, counts, otu_ids, t)
-
-    def test_faith_pd_taxa_alias(self):
-        # for backward compatibility; will be removed in the future
-        datum, taxa, tree = self.b1[0], self.oids1, self.t1
-        self.assertIsNotNone(faith_pd(datum, taxa, tree))
-        self.assertIsNotNone(faith_pd(datum, taxa=taxa, tree=tree))
-        self.assertIsNotNone(faith_pd(datum, tree=tree, taxa=taxa))
-        self.assertIsNotNone(faith_pd(datum, otu_ids=taxa, tree=tree))
-        self.assertIsNotNone(faith_pd(datum, taxa=taxa, tree=tree, otu_ids=['x', 'y']))
-        msg = "A list of taxon IDs must be provided."
-        with self.assertRaises(ValueError) as cm:
-            faith_pd(datum)
-        self.assertEqual(str(cm.exception), msg)
-        msg = "A phylogenetic tree must be provided."
-        with self.assertRaises(ValueError) as cm:
-            faith_pd(datum, taxa)
-        self.assertEqual(str(cm.exception), msg)
+        taxa = ['OTU1', 'OTU2', 'OTU42']
+        self.assertRaises(MissingNodeError, faith_pd, counts, taxa, t)
 
 
 class PhyDivTests(TestCase):
@@ -412,23 +395,6 @@ class PhyDivTests(TestCase):
         self.assertRaises(ValueError, phydiv, *params, weight='hello')
         self.assertRaises(ValueError, phydiv, *params, weight=-0.5)
         self.assertRaises(ValueError, phydiv, *params, weight=2.0)
-
-    def test_phydiv_taxa_alias(self):
-        # for backward compatibility; will be removed in the future
-        datum, taxa, tree = self.data[0], self.taxa, self.tree
-        self.assertIsNotNone(phydiv(datum, taxa, tree))
-        self.assertIsNotNone(phydiv(datum, taxa=taxa, tree=tree))
-        self.assertIsNotNone(phydiv(datum, tree=tree, taxa=taxa))
-        self.assertIsNotNone(phydiv(datum, otu_ids=taxa, tree=tree))
-        self.assertIsNotNone(phydiv(datum, taxa=taxa, tree=tree, otu_ids=['x', 'y']))
-        msg = "A list of taxon IDs must be provided."
-        with self.assertRaises(ValueError) as cm:
-            phydiv(datum)
-        self.assertEqual(str(cm.exception), msg)
-        msg = "A phylogenetic tree must be provided."
-        with self.assertRaises(ValueError) as cm:
-            phydiv(datum, taxa)
-        self.assertEqual(str(cm.exception), msg)
 
 
 if __name__ == "__main__":

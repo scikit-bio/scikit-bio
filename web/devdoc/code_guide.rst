@@ -332,10 +332,10 @@ Here is an example of a ``nose`` test module structure:
         assert_almost_equal(ace(np.array([12, 3, 2, 1])), 4.6)
         assert_almost_equal(ace(np.array([12, 3, 6, 1, 10])), 5.62749672)
 
-        # Just returns the number of OTUs when all are abundant.
+        # Just returns the number of taxa when all are abundant.
         assert_almost_equal(ace(np.array([12, 12, 13, 14])), 4.0)
 
-        # Border case: only singletons and 10-tons, no abundant OTUs.
+        # Border case: only singletons and 10-tons, no abundant taxa.
         assert_almost_equal(ace([0, 1, 1, 0, 0, 10, 10, 1, 0, 0]), 9.35681818182)
 
 
