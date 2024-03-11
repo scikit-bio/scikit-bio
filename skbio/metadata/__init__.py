@@ -25,7 +25,7 @@ Classes
 # ----------------------------------------------------------------------------
 
 from ._interval import Interval, IntervalMetadata
-from ._metadata import Metadata, NumericMetadataColumn, CategoricalMetadataColumn
+from ._metadata import SampleMetadata, NumericMetadataColumn, CategoricalMetadataColumn
 
 
 __all__ = ["Interval", "IntervalMetadata", "Metadata"]

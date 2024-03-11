@@ -18,7 +18,7 @@ from skbio.io._fileobject import SaneTextIOWrapper
 from ._util import find_duplicates
 from .missing import DEFAULT_MISSING, BUILTIN_MISSING, series_encode_missing
 from .base import SUPPORTED_COLUMN_TYPES, FORMATTED_ID_HEADERS, is_id_header
-from ..metadata._metadata import Metadata, MetadataColumn
+from ..metadata._metadata import SampleMetadata, MetadataColumn
 
 
 class MetadataFileError(Exception):
@@ -425,7 +425,7 @@ class MetadataWriter:
             # Newline settings based on recommendation from csv docs:
             # https://docs.python.org/3/library/csv.html#id3
             # Do NOT write a BOM, hence utf-8 not utf-8-sig
-            cm = open(filepath, "w", newline="", encoding="utf-8")
+            cm = open(filepath_or_filehandle, "w", newline="", encoding="utf-8")
         else:
             cm = filepath_or_filehandle
 
@@ -442,7 +442,7 @@ class MetadataWriter:
             types_directive = ["#sk:types"]
             missing_directive = ["#sk:missing"]
 
-            if isinstance(md, Metadata):
+            if isinstance(md, SampleMetadata):
                 for name, props in md.columns.items():
                     header.append(name)
                     types_directive.append(props.type)

@@ -5,7 +5,7 @@ import warnings
 import pandas as pd
 import numpy as np
 
-from skbio.metadata._metadata import (Metadata, CategoricalMetadataColumn,
+from skbio.metadata._metadata import (SampleMetadata, CategoricalMetadataColumn,
                                       NumericMetadataColumn)
 
 
@@ -13,32 +13,32 @@ class TestInvalidMetadataConstruction(unittest.TestCase):
     def test_non_dataframe(self):
         with self.assertRaisesRegex(
                 TypeError, 'Metadata constructor.*DataFrame.*not.*Series'):
-            Metadata(pd.Series([1, 2, 3], name='col',
+            SampleMetadata(pd.Series([1, 2, 3], name='col',
                                index=pd.Index(['a', 'b', 'c'], name='id')))
 
     def test_no_ids(self):
         with self.assertRaisesRegex(ValueError, 'Metadata.*at least one ID'):
-            Metadata(pd.DataFrame({}, index=pd.Index([], name='id')))
+            SampleMetadata(pd.DataFrame({}, index=pd.Index([], name='id')))
 
         with self.assertRaisesRegex(ValueError, 'Metadata.*at least one ID'):
-            Metadata(pd.DataFrame({'column': []},
+            SampleMetadata(pd.DataFrame({'column': []},
                                   index=pd.Index([], name='id')))
 
     def test_invalid_id_header(self):
         # default index name
         with self.assertRaisesRegex(ValueError, r'Index\.name.*None'):
-            Metadata(pd.DataFrame(
+            SampleMetadata(pd.DataFrame(
                 {'col': [1, 2, 3]}, index=pd.Index(['a', 'b', 'c'])))
 
         with self.assertRaisesRegex(ValueError, r'Index\.name.*my-id-header'):
-            Metadata(pd.DataFrame(
+            SampleMetadata(pd.DataFrame(
                 {'col': [1, 2, 3]},
                 index=pd.Index(['a', 'b', 'c'], name='my-id-header')))
 
     def test_non_str_id(self):
         with self.assertRaisesRegex(
                 TypeError, 'non-string metadata ID.*type.*float.*nan'):
-            Metadata(pd.DataFrame(
+            SampleMetadata(pd.DataFrame(
                 {'col': [1, 2, 3]},
                 index=pd.Index(['a', np.nan, 'c'], name='id')))
 
@@ -46,7 +46,7 @@ class TestInvalidMetadataConstruction(unittest.TestCase):
         with self.assertRaisesRegex(
                 TypeError, 'non-string metadata column name.*type.*'
                            'float.*nan'):
-            Metadata(pd.DataFrame(
+            SampleMetadata(pd.DataFrame(
                 {'col': [1, 2, 3],
                  np.nan: [4, 5, 6]},
                 index=pd.Index(['a', 'b', 'c'], name='id')))
@@ -54,21 +54,21 @@ class TestInvalidMetadataConstruction(unittest.TestCase):
     def test_empty_id(self):
         with self.assertRaisesRegex(
                 ValueError, 'empty metadata ID.*at least one character'):
-            Metadata(pd.DataFrame(
+            SampleMetadata(pd.DataFrame(
                 {'col': [1, 2, 3]}, index=pd.Index(['a', '', 'c'], name='id')))
 
     def test_empty_column_name(self):
         with self.assertRaisesRegex(
                 ValueError, 'empty metadata column name.*'
                             'at least one character'):
-            Metadata(pd.DataFrame(
+            SampleMetadata(pd.DataFrame(
                 {'col': [1, 2, 3],
                  '': [4, 5, 6]}, index=pd.Index(['a', 'b', 'c'], name='id')))
 
     def test_pound_sign_id(self):
         with self.assertRaisesRegex(
                 ValueError, "metadata ID.*begins with a pound sign.*'#b'"):
-            Metadata(pd.DataFrame(
+            SampleMetadata(pd.DataFrame(
                 {'col': [1, 2, 3]},
                 index=pd.Index(['a', '#b', 'c'], name='id')))
 
@@ -76,7 +76,7 @@ class TestInvalidMetadataConstruction(unittest.TestCase):
         with self.assertRaisesRegex(
                 ValueError, "metadata ID 'sample-id'.*conflicts.*reserved.*"
                             "ID header"):
-            Metadata(pd.DataFrame(
+            SampleMetadata(pd.DataFrame(
                 {'col': [1, 2, 3]},
                 index=pd.Index(['a', 'sample-id', 'c'], name='id')))
 
@@ -84,14 +84,14 @@ class TestInvalidMetadataConstruction(unittest.TestCase):
         with self.assertRaisesRegex(
                 ValueError, "metadata column name 'featureid'.*conflicts.*"
                             "reserved.*ID header"):
-            Metadata(pd.DataFrame(
+            SampleMetadata(pd.DataFrame(
                 {'col': [1, 2, 3],
                  'featureid': [4, 5, 6]},
                 index=pd.Index(['a', 'b', 'c'], name='id')))
 
     def test_duplicate_ids(self):
         with self.assertRaisesRegex(ValueError, "Metadata IDs.*unique.*'a'"):
-            Metadata(pd.DataFrame(
+            SampleMetadata(pd.DataFrame(
                 {'col': [1, 2, 3]},
                 index=pd.Index(['a', 'b', 'a'], name='id')))
 
@@ -101,13 +101,13 @@ class TestInvalidMetadataConstruction(unittest.TestCase):
                 [7, 8, 9]]
         with self.assertRaisesRegex(ValueError,
                                     "Metadata column names.*unique.*'col1'"):
-            Metadata(pd.DataFrame(data, columns=['col1', 'col2', 'col1'],
+            SampleMetadata(pd.DataFrame(data, columns=['col1', 'col2', 'col1'],
                                   index=pd.Index(['a', 'b', 'c'], name='id')))
 
     def test_unsupported_column_dtype(self):
         with self.assertRaisesRegex(
                 TypeError, "Metadata column 'col2'.*unsupported.*dtype.*bool"):
-            Metadata(pd.DataFrame(
+            SampleMetadata(pd.DataFrame(
                 {'col1': [1, 2, 3],
                  'col2': [True, False, True]},
                 index=pd.Index(['a', 'b', 'c'], name='id')))
@@ -116,7 +116,7 @@ class TestInvalidMetadataConstruction(unittest.TestCase):
         with self.assertRaisesRegex(
                 TypeError, "CategoricalMetadataColumn.*strings or missing "
                            r"values.*42\.5.*float.*'col2'"):
-            Metadata(pd.DataFrame(
+            SampleMetadata(pd.DataFrame(
                 {'col1': [1, 2, 3],
                  'col2': ['foo', 'bar', 42.5]},
                 index=pd.Index(['a', 'b', 'c'], name='id')))
@@ -125,7 +125,7 @@ class TestInvalidMetadataConstruction(unittest.TestCase):
         with self.assertRaisesRegex(
                 ValueError, "CategoricalMetadataColumn.*empty strings.*"
                             "column 'col2'"):
-            Metadata(pd.DataFrame(
+            SampleMetadata(pd.DataFrame(
                 {'col1': [1, 2, 3],
                  'col2': ['foo', '', 'bar']},
                 index=pd.Index(['a', 'b', 'c'], name='id')))
@@ -134,14 +134,14 @@ class TestInvalidMetadataConstruction(unittest.TestCase):
         with self.assertRaisesRegex(
                 ValueError, "NumericMetadataColumn.*positive or negative "
                             "infinity.*column 'col2'"):
-            Metadata(pd.DataFrame(
+            SampleMetadata(pd.DataFrame(
                 {'col1': ['foo', 'bar', 'baz'],
                  'col2': [42, float('+inf'), 4.3]},
                 index=pd.Index(['a', 'b', 'c'], name='id')))
 
     def test_unknown_missing_scheme(self):
         with self.assertRaisesRegex(ValueError, "BAD:SCHEME"):
-            Metadata(pd.DataFrame(
+            SampleMetadata(pd.DataFrame(
                 {'col1': [1, 2, 3],
                  'col2': ['foo', 'bar', 'bar']},
                 index=pd.Index(['a', 'b', 'c'], name='id')),
@@ -158,7 +158,7 @@ class TestInvalidMetadataConstruction(unittest.TestCase):
             index=index)
 
         with self.assertRaisesRegex(ValueError, 'col1.*no-missing'):
-            Metadata(df, default_missing_scheme='no-missing')
+            SampleMetadata(df, default_missing_scheme='no-missing')
 
 
 class TestMetadataConstructionAndProperties(unittest.TestCase):
@@ -167,7 +167,7 @@ class TestMetadataConstructionAndProperties(unittest.TestCase):
         self.assertEqual(obs, exp)
 
     def test_minimal(self):
-        md = Metadata(pd.DataFrame({}, index=pd.Index(['a'], name='id')))
+        md = SampleMetadata(pd.DataFrame({}, index=pd.Index(['a'], name='id')))
 
         self.assertEqual(md.id_count, 1)
         self.assertEqual(md.column_count, 0)
@@ -179,7 +179,7 @@ class TestMetadataConstructionAndProperties(unittest.TestCase):
         index = pd.Index(['id1'], name='id')
         df = pd.DataFrame({'col1': [1.0], 'col2': ['a'], 'col3': ['foo']},
                           index=index)
-        md = Metadata(df)
+        md = SampleMetadata(df)
 
         self.assertEqual(md.id_count, 1)
         self.assertEqual(md.column_count, 3)
@@ -192,7 +192,7 @@ class TestMetadataConstructionAndProperties(unittest.TestCase):
     def test_no_columns(self):
         index = pd.Index(['id1', 'id2', 'foo'], name='id')
         df = pd.DataFrame({}, index=index)
-        md = Metadata(df)
+        md = SampleMetadata(df)
 
         self.assertEqual(md.id_count, 3)
         self.assertEqual(md.column_count, 0)
@@ -203,7 +203,7 @@ class TestMetadataConstructionAndProperties(unittest.TestCase):
     def test_single_column(self):
         index = pd.Index(['id1', 'a', 'my-id'], name='id')
         df = pd.DataFrame({'column': ['foo', 'bar', 'baz']}, index=index)
-        md = Metadata(df)
+        md = SampleMetadata(df)
 
         self.assertEqual(md.id_count, 3)
         self.assertEqual(md.column_count, 1)
@@ -222,7 +222,7 @@ class TestMetadataConstructionAndProperties(unittest.TestCase):
             [3.0, 'c', '42']
         ]
         df = pd.DataFrame(data, index=index, columns=columns)
-        md = Metadata(df)
+        md = SampleMetadata(df)
 
         self.assertEqual(md.id_count, 3)
         self.assertEqual(md.column_count, 3)
@@ -256,7 +256,7 @@ class TestMetadataConstructionAndProperties(unittest.TestCase):
         for header in headers:
             index = pd.Index(['id1', 'id2'], name=header)
             df = pd.DataFrame({'column': ['foo', 'bar']}, index=index)
-            md = Metadata(df)
+            md = SampleMetadata(df)
 
             self.assertEqual(md.id_header, header)
             count += 1
@@ -269,7 +269,7 @@ class TestMetadataConstructionAndProperties(unittest.TestCase):
         index = pd.Index(['c6ca034a-223f-40b4-a0e0-45942912a5ea', 'My.ID'],
                          name='id')
         df = pd.DataFrame({'col1': ['foo', 'bar']}, index=index)
-        md = Metadata(df)
+        md = SampleMetadata(df)
 
         self.assertEqual(md.id_count, 2)
         self.assertEqual(md.column_count, 1)
@@ -290,7 +290,7 @@ class TestMetadataConstructionAndProperties(unittest.TestCase):
             ['baz', np.nan, '42']
         ]
         df = pd.DataFrame(data, index=index, columns=columns)
-        md = Metadata(df)
+        md = SampleMetadata(df)
 
         self.assertEqual(md.id_count, 5)
         self.assertEqual(md.column_count, 5)
@@ -312,7 +312,7 @@ class TestMetadataConstructionAndProperties(unittest.TestCase):
             ('col4', np.array([np.nan, np.nan, np.nan, np.nan],
                               dtype=object))]),
             index=index)
-        md = Metadata(df)
+        md = SampleMetadata(df)
 
         self.assertEqual(md.id_count, 4)
         self.assertEqual(md.column_count, 4)
@@ -335,7 +335,7 @@ class TestMetadataConstructionAndProperties(unittest.TestCase):
             ('col4', np.array([np.nan, np.nan, 'restricted access', np.nan],
                               dtype=object))]),
             index=index)
-        md = Metadata(df, default_missing_scheme='INSDC:missing')
+        md = SampleMetadata(df, default_missing_scheme='INSDC:missing')
 
         self.assertEqual(md.id_count, 4)
         self.assertEqual(md.column_count, 3)
@@ -363,7 +363,7 @@ class TestMetadataConstructionAndProperties(unittest.TestCase):
             ('col4', np.array([np.nan, np.nan, 'restricted access', np.nan],
                               dtype=object))]),
             index=index)
-        md = Metadata(df, column_missing_schemes={
+        md = SampleMetadata(df, column_missing_schemes={
                               'col1': 'INSDC:missing',
                               'col3': 'INSDC:missing',
                               'col4': 'INSDC:missing'
@@ -395,7 +395,7 @@ class TestMetadataConstructionAndProperties(unittest.TestCase):
             ('col4', np.array([np.nan, np.nan, 'restricted access', np.nan],
                               dtype=object))]),
             index=index)
-        md = Metadata(df, column_missing_schemes={
+        md = SampleMetadata(df, column_missing_schemes={
                               'col1': 'INSDC:missing',
                               'col3': 'INSDC:missing',
                               'col4': 'INSDC:missing'
@@ -425,7 +425,7 @@ class TestMetadataConstructionAndProperties(unittest.TestCase):
             [3.0, 'c', -9.999]
         ]
         df = pd.DataFrame(data, index=index, columns=columns)
-        md = Metadata(df)
+        md = SampleMetadata(df)
 
         self.assertEqual(md.id_count, 3)
         self.assertEqual(md.column_count, 3)
@@ -436,7 +436,7 @@ class TestMetadataConstructionAndProperties(unittest.TestCase):
                                              ('-4.2', 'numeric')])
 
     def test_mixed_column_types(self):
-        md = Metadata(
+        md = SampleMetadata(
             pd.DataFrame({'col0': [1.0, 2.0, 3.0],
                           'col1': ['a', 'b', 'c'],
                           'col2': ['foo', 'bar', '42'],
@@ -467,7 +467,7 @@ class TestMetadataConstructionAndProperties(unittest.TestCase):
     def test_case_insensitive_duplicate_ids(self):
         index = pd.Index(['a', 'b', 'A'], name='id')
         df = pd.DataFrame({'column': ['1', '2', '3']}, index=index)
-        metadata = Metadata(df)
+        metadata = SampleMetadata(df)
 
         self.assertEqual(metadata.ids, ('a', 'b', 'A'))
 
@@ -475,16 +475,16 @@ class TestMetadataConstructionAndProperties(unittest.TestCase):
         index = pd.Index(['a', 'b', 'c'], name='id')
         df = pd.DataFrame({'column': ['1', '2', '3'],
                            'Column': ['4', '5', '6']}, index=index)
-        metadata = Metadata(df)
+        metadata = SampleMetadata(df)
 
         self.assertEqual(set(metadata.columns), {'column', 'Column'})
 
     def test_categorical_column_leading_trailing_whitespace_value(self):
-        md1 = Metadata(pd.DataFrame(
+        md1 = SampleMetadata(pd.DataFrame(
             {'col1': [1, 2, 3],
              'col2': ['foo', ' bar ', 'baz']},
             index=pd.Index(['a', 'b', 'c'], name='id')))
-        md2 = Metadata(pd.DataFrame(
+        md2 = SampleMetadata(pd.DataFrame(
             {'col1': [1, 2, 3],
              'col2': ['foo', 'bar', 'baz']},
             index=pd.Index(['a', 'b', 'c'], name='id')))
@@ -492,20 +492,20 @@ class TestMetadataConstructionAndProperties(unittest.TestCase):
         self.assertEqual(md1, md2)
 
     def test_leading_trailing_whitespace_id(self):
-        md1 = Metadata(pd.DataFrame(
+        md1 = SampleMetadata(pd.DataFrame(
             {'col1': [1, 2, 3], 'col2': [4, 5, 6]},
             index=pd.Index(['a', ' b ', 'c'], name='id')))
-        md2 = Metadata(pd.DataFrame(
+        md2 = SampleMetadata(pd.DataFrame(
             {'col1': [1, 2, 3], 'col2': [4, 5, 6]},
             index=pd.Index(['a', 'b', 'c'], name='id')))
 
         self.assertEqual(md1, md2)
 
     def test_leading_trailing_whitespace_column_name(self):
-        md1 = Metadata(pd.DataFrame(
+        md1 = SampleMetadata(pd.DataFrame(
             {'col1': [1, 2, 3], ' col2 ': [4, 5, 6]},
             index=pd.Index(['a', 'b', 'c'], name='id')))
-        md2 = Metadata(pd.DataFrame(
+        md2 = SampleMetadata(pd.DataFrame(
             {'col1': [1, 2, 3], 'col2': [4, 5, 6]},
             index=pd.Index(['a', 'b', 'c'], name='id')))
 
@@ -514,7 +514,7 @@ class TestMetadataConstructionAndProperties(unittest.TestCase):
 
 class TestRepr(unittest.TestCase):
     def test_singular(self):
-        md = Metadata(pd.DataFrame({'col1': [42]},
+        md = SampleMetadata(pd.DataFrame({'col1': [42]},
                                    index=pd.Index(['a'], name='id')))
 
         obs = repr(md)
@@ -525,7 +525,7 @@ class TestRepr(unittest.TestCase):
                       " missing_scheme='blank')", obs)
 
     def test_plural(self):
-        md = Metadata(pd.DataFrame({'col1': [42, 42], 'col2': ['foo', 'bar']},
+        md = SampleMetadata(pd.DataFrame({'col1': [42, 42], 'col2': ['foo', 'bar']},
                                    index=pd.Index(['a', 'b'], name='id')))
 
         obs = repr(md)
@@ -541,7 +541,7 @@ class TestRepr(unittest.TestCase):
         data = [[0, 42, 'foo']]
         index = pd.Index(['my-id'], name='id')
         columns = ['col1', 'longer-column-name', 'c']
-        md = Metadata(pd.DataFrame(data, index=index, columns=columns))
+        md = SampleMetadata(pd.DataFrame(data, index=index, columns=columns))
 
         obs = repr(md)
 
@@ -561,7 +561,7 @@ class TestRepr(unittest.TestCase):
 class TestToDataframe(unittest.TestCase):
     def test_minimal(self):
         df = pd.DataFrame({}, index=pd.Index(['id1'], name='id'))
-        md = Metadata(df)
+        md = SampleMetadata(df)
 
         obs = md.to_dataframe()
 
@@ -570,7 +570,7 @@ class TestToDataframe(unittest.TestCase):
     def test_id_header_preserved(self):
         df = pd.DataFrame({'col1': [42, 2.5], 'col2': ['foo', 'bar']},
                           index=pd.Index(['id1', 'id2'], name='#SampleID'))
-        md = Metadata(df)
+        md = SampleMetadata(df)
 
         obs = md.to_dataframe()
 
@@ -580,7 +580,7 @@ class TestToDataframe(unittest.TestCase):
     def test_dataframe_copy(self):
         df = pd.DataFrame({'col1': [42, 2.5], 'col2': ['foo', 'bar']},
                           index=pd.Index(['id1', 'id2'], name='id'))
-        md = Metadata(df)
+        md = SampleMetadata(df)
 
         obs = md.to_dataframe()
 
@@ -595,7 +595,7 @@ class TestToDataframe(unittest.TestCase):
             [2.0, 'b', 'bar']
         ]
         df = pd.DataFrame(data, index=index, columns=columns)
-        md = Metadata(df)
+        md = SampleMetadata(df)
 
         obs = md.to_dataframe()
 
@@ -612,7 +612,7 @@ class TestToDataframe(unittest.TestCase):
             ('col4', np.array([np.nan, np.nan, np.nan, np.nan],
                               dtype=object))]),
             index=index)
-        md = Metadata(df)
+        md = SampleMetadata(df)
 
         obs = md.to_dataframe()
 
@@ -643,7 +643,7 @@ class TestToDataframe(unittest.TestCase):
                          {'col1': np.int64, 'col2': np.float64,
                           'col3': np.float64})
 
-        md = Metadata(df)
+        md = SampleMetadata(df)
         obs = md.to_dataframe()
 
         exp = pd.DataFrame({'col1': [42.0, -43.0, 0.0],
@@ -660,7 +660,7 @@ class TestToDataframe(unittest.TestCase):
         df = pd.DataFrame({'col1': [42.0, 50.0],
                            'col2': ['foo', 'bar']},
                           index=pd.Index(['id1', 'id2'], name='id'))
-        md = Metadata(df, default_missing_scheme='INSDC:missing')
+        md = SampleMetadata(df, default_missing_scheme='INSDC:missing')
 
         obs = md.to_dataframe(encode_missing=True)
 
@@ -671,7 +671,7 @@ class TestToDataframe(unittest.TestCase):
         df = pd.DataFrame({'col1': [42, 'missing'],
                            'col2': ['foo', 'not applicable']},
                           index=pd.Index(['id1', 'id2'], name='id'))
-        md = Metadata(df, default_missing_scheme='INSDC:missing')
+        md = SampleMetadata(df, default_missing_scheme='INSDC:missing')
 
         obs = md.to_dataframe(encode_missing=True)
 
@@ -682,7 +682,7 @@ class TestToDataframe(unittest.TestCase):
         df = pd.DataFrame({'col1': [42, 'missing'],
                            'col2': ['foo', 'not applicable']},
                           index=pd.Index(['id1', 'id2'], name='id'))
-        md = Metadata(df, default_missing_scheme='INSDC:missing')
+        md = SampleMetadata(df, default_missing_scheme='INSDC:missing')
 
         obs = md.to_dataframe()
 
@@ -699,7 +699,7 @@ class TestGetIDs(unittest.TestCase):
         df = pd.DataFrame({'Subject': ['subject-1', 'subject-1', 'subject-2'],
                            'SampleType': ['gut', 'tongue', 'gut']},
                           index=pd.Index(['S1', 'S2', 'S3'], name='id'))
-        metadata = Metadata(df)
+        metadata = SampleMetadata(df)
 
         actual = metadata.get_ids()
         expected = {'S1', 'S2', 'S3'}
@@ -709,7 +709,7 @@ class TestGetIDs(unittest.TestCase):
         df = pd.DataFrame({'Subject': ['subject-1', 'subject-1', 'subject-2'],
                            'SampleType': ['gut', 'tongue', 'gut']},
                           index=pd.Index(['S1', 'S2', 'S3'], name='sampleid'))
-        metadata = Metadata(df)
+        metadata = SampleMetadata(df)
 
         where = "Subject='subject-1' AND SampleType="
         with self.assertRaises(ValueError):
@@ -723,7 +723,7 @@ class TestGetIDs(unittest.TestCase):
         df = pd.DataFrame({'Subject': ['subject-1', 'subject-1', 'subject-2'],
                            'SampleType': ['gut', 'tongue', 'gut']},
                           index=pd.Index(['S1', 'S2', 'S3'], name='sampleid'))
-        metadata = Metadata(df)
+        metadata = SampleMetadata(df)
 
         where = "not-a-column-name='subject-1'"
         with self.assertRaises(ValueError):
@@ -733,7 +733,7 @@ class TestGetIDs(unittest.TestCase):
         df = pd.DataFrame({'Subject': ['subject-1', 'subject-1', 'subject-2'],
                            'SampleType': ['gut', 'tongue', 'gut']},
                           index=pd.Index(['S1', 'S2', 'S3'], name='id'))
-        metadata = Metadata(df)
+        metadata = SampleMetadata(df)
 
         where = "Subject='subject-3'"
         actual = metadata.get_ids(where)
@@ -744,7 +744,7 @@ class TestGetIDs(unittest.TestCase):
         df = pd.DataFrame({'Subject': ['subject-1', 'subject-1', 'subject-2'],
                            'SampleType': ['gut', 'tongue', 'gut']},
                           index=pd.Index(['S1', 'S2', 'S3'], name='id'))
-        metadata = Metadata(df)
+        metadata = SampleMetadata(df)
 
         where = "Subject='subject-1'"
         actual = metadata.get_ids(where)
@@ -775,7 +775,7 @@ class TestGetIDs(unittest.TestCase):
         df = pd.DataFrame({'Subject': ['subject-1', 'subject-1', 'subject-2'],
                            'SampleType': ['gut', 'tongue', 'gut']},
                           index=pd.Index(['S1', 'S2', 'S3'], name='id'))
-        metadata = Metadata(df)
+        metadata = SampleMetadata(df)
 
         where = "Subject='subject-1' OR Subject='subject-2'"
         actual = metadata.get_ids(where)
@@ -796,14 +796,14 @@ class TestGetIDs(unittest.TestCase):
         df = pd.DataFrame({'Subject': ['subject-1', 'subject-1', 'subject-2'],
                            'SampleType': ['gut', 'tongue', 'gut']},
                           index=pd.Index(['S1', 'S2', 'S3'], name='id'))
-        metadata = Metadata(df)
+        metadata = SampleMetadata(df)
 
         actual = metadata.get_ids(where="id='S2' OR id='S1'")
         expected = {'S1', 'S2'}
         self.assertEqual(actual, expected)
 
     def test_query_by_alternate_id_header(self):
-        metadata = Metadata(pd.DataFrame(
+        metadata = SampleMetadata(pd.DataFrame(
             {}, index=pd.Index(['id1', 'id2', 'id3'], name='#OTU ID')))
 
         obs = metadata.get_ids(where="\"#OTU ID\" IN ('id2', 'id3')")
@@ -812,7 +812,7 @@ class TestGetIDs(unittest.TestCase):
         self.assertEqual(obs, exp)
 
     def test_no_columns(self):
-        metadata = Metadata(
+        metadata = SampleMetadata(
             pd.DataFrame({}, index=pd.Index(['a', 'b', 'my-id'], name='id')))
 
         obs = metadata.get_ids()
@@ -827,7 +827,7 @@ class TestGetIDs(unittest.TestCase):
                            'Age_Str': ['9', '10', '11', '101'],
                            'Weight': [80.5, 85.3, np.nan, 120.0]},
                           index=pd.Index(['S1', 'S2', 'S3', 'S4'], name='id'))
-        metadata = Metadata(df)
+        metadata = SampleMetadata(df)
 
         # string pattern matching
         obs = metadata.get_ids(where="Name LIKE 'Ba_'")
@@ -853,7 +853,7 @@ class TestGetIDs(unittest.TestCase):
         df = pd.DataFrame({'Subject': ['subject-1', 'subject-1', 'subject-2'],
                            'Sample Type': ['gut', 'tongue', 'gut']},
                           index=pd.Index(['S1', 'S2', 'S3'], name='id'))
-        metadata = Metadata(df)
+        metadata = SampleMetadata(df)
 
         with warnings.catch_warnings(record=True) as w:
             warnings.simplefilter('always')

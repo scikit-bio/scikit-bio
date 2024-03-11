@@ -289,7 +289,7 @@ ColumnProperties = collections.namedtuple(
 )
 
 
-class Metadata(_MetadataBase):
+class SampleMetadata(_MetadataBase):
     """Store metadata associated with identifiers in a study.
 
     Metadata is tabular in nature, mapping study identifiers (e.g. sample or
