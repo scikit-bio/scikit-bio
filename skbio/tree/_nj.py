@@ -22,7 +22,7 @@ def nj(dm, disallow_negative_branch_length=True, result_constructor=None):
     Parameters
     ----------
     dm : skbio.DistanceMatrix
-        Input distance matrix containing distances between OTUs.
+        Input distance matrix containing distances between taxa.
     disallow_negative_branch_length : bool, optional
         Neighbor joining can result in negative branch lengths, which don't
         make sense in an evolutionary context. If `True`, negative branch
@@ -68,7 +68,7 @@ def nj(dm, disallow_negative_branch_length=True, result_constructor=None):
     Examples
     --------
     Define a new distance matrix object describing the distances between five
-    OTUs: a, b, c, d, and e.
+    taxa: a, b, c, d, and e.
 
     >>> from skbio import DistanceMatrix
     >>> from skbio.tree import nj
@@ -82,7 +82,7 @@ def nj(dm, disallow_negative_branch_length=True, result_constructor=None):
     >>> dm = DistanceMatrix(data, ids)
 
     Construct the neighbor joining tree representing the relationship between
-    those OTUs. This is returned as a TreeNode object.
+    those taxa. This is returned as a TreeNode object.
 
     >>> tree = nj(dm)
     >>> print(tree.ascii_art())

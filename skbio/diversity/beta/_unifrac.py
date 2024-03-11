@@ -13,8 +13,9 @@ import numpy as np
 from skbio.util._decorator import experimental
 from skbio.diversity._util import (
     _validate_counts_matrix,
-    _validate_otu_ids_and_tree,
+    _validate_taxa_and_tree,
     _vectorize_counts_and_tree,
+    _check_taxa_alias,
 )
 from skbio.diversity._phylogenetic import _tip_distances
 
@@ -27,28 +28,33 @@ _normalize_weighted_unifrac_by_default = False
 
 
 @experimental(as_of="0.4.1")
-def unweighted_unifrac(u_counts, v_counts, otu_ids, tree, validate=True):
+def unweighted_unifrac(
+    u_counts, v_counts, taxa=None, tree=None, validate=True, otu_ids=None
+):
     """Compute unweighted UniFrac.
 
     Parameters
     ----------
     u_counts, v_counts: list, np.array
-        Vectors of counts/abundances of OTUs for two samples. Must be equal
+        Vectors of counts/abundances of taxa for two samples. Must be equal
         length.
-    otu_ids: list, np.array
-        Vector of OTU ids corresponding to tip names in ``tree``. Must be the
-        same length as ``u_counts`` and ``v_counts``.
-    tree: skbio.TreeNode
-        Tree relating the OTUs in otu_ids. The set of tip names in the tree can
-        be a superset of ``otu_ids``, but not a subset.
+    taxa : list, np.array
+        Vector of taxon IDs corresponding to tip names in ``tree``. Must be the
+        same length as ``u_counts`` and ``v_counts``. Required.
+    tree : skbio.TreeNode
+        Tree relating taxa. The set of tip names in the tree can be a superset
+        of ``taxa``, but not a subset. Required.
     validate: bool, optional
-        If `False`, validation of the input won't be performed. This step can
+        If ``False``, validation of the input won't be performed. This step can
         be slow, so if validation is run elsewhere it can be disabled here.
         However, invalid input data can lead to invalid results or error
         messages that are hard to interpret, so this step should not be
         bypassed if you're not certain that your input data are valid. See
         :mod:`skbio.diversity` for the description of what validation entails
         so you can determine if you can safely disable validation.
+    otu_ids : list, np.array
+        Alias of ``taxa`` for backward compatibility. Deprecated and to be
+        removed in a future release.
 
     Returns
     -------
@@ -82,11 +88,10 @@ def unweighted_unifrac(u_counts, v_counts, otu_ids, tree, validate=True):
     inputs. First, the input tree must be rooted. In PyCogent, if an unrooted
     tree was provided that had a single trifurcating node (a newick convention
     for unrooted trees) that node was considered the root of the tree. Next,
-    all OTU IDs must be tips in the tree. PyCogent would silently ignore OTU
-    IDs that were not present the tree. To reproduce UniFrac results from
-    PyCogent with scikit-bio, ensure that your PyCogent UniFrac calculations
-    are performed on a rooted tree and that all OTU IDs are present in the
-    tree.
+    all taxa must be tips in the tree. PyCogent would silently ignore taxa that
+    were not present the tree. To reproduce UniFrac results from PyCogent with
+    scikit-bio, ensure that your PyCogent UniFrac calculations are performed on
+    a rooted tree and that all taxa are present in the tree.
 
     This implementation of unweighted UniFrac is the array-based implementation
     described in [4]_.
@@ -120,37 +125,37 @@ def unweighted_unifrac(u_counts, v_counts, otu_ids, tree, validate=True):
     --------
     Assume we have the following abundance data for two samples, ``u`` and
     ``v``, represented as a pair of counts vectors. These counts represent the
-    number of times specific Operational Taxonomic Units, or OTUs, were
+    number of times specific Operational Taxonomic Units, or taxa, were
     observed in each of the samples.
 
     >>> u_counts = [1, 0, 0, 4, 1, 2, 3, 0]
     >>> v_counts = [0, 1, 1, 6, 0, 1, 0, 0]
 
     Because UniFrac is a phylogenetic diversity metric, we need to know which
-    OTU each count corresponds to, which we'll provide as ``otu_ids``.
+    taxon each count corresponds to, which we'll provide as ``taxa``.
 
-    >>> otu_ids = ['OTU1', 'OTU2', 'OTU3', 'OTU4', 'OTU5', 'OTU6', 'OTU7',
-    ...            'OTU8']
+    >>> taxa = ['U1', 'U2', 'U3', 'U4', 'U5', 'U6', 'U7', 'U8']
 
-    We also need a phylogenetic tree that relates the OTUs to one another.
+    We also need a phylogenetic tree that relates the taxa to one another.
 
     >>> from io import StringIO
     >>> from skbio import TreeNode
     >>> tree = TreeNode.read(StringIO(
-    ...                      '(((((OTU1:0.5,OTU2:0.5):0.5,OTU3:1.0):1.0):0.0,'
-    ...                      '(OTU4:0.75,(OTU5:0.5,((OTU6:0.33,OTU7:0.62):0.5'
-    ...                      ',OTU8:0.5):0.5):0.5):1.25):0.0)root;'))
+    ...                      '(((((U1:0.5,U2:0.5):0.5,U3:1.0):1.0):0.0,'
+    ...                      '(U4:0.75,(U5:0.5,((U6:0.33,U7:0.62):0.5'
+    ...                      ',U8:0.5):0.5):0.5):1.25):0.0)root;'))
 
     We can then compute the unweighted UniFrac distance between the samples.
 
     >>> from skbio.diversity.beta import unweighted_unifrac
-    >>> uu = unweighted_unifrac(u_counts, v_counts, otu_ids, tree)
+    >>> uu = unweighted_unifrac(u_counts, v_counts, taxa, tree)
     >>> print(round(uu, 2))
     0.37
 
     """
+    taxa = _check_taxa_alias(taxa, tree, otu_ids)
     u_node_counts, v_node_counts, _, _, tree_index = _setup_pairwise_unifrac(
-        u_counts, v_counts, otu_ids, tree, validate, normalized=False, unweighted=True
+        u_counts, v_counts, taxa, tree, validate, normalized=False, unweighted=True
     )
     return _unweighted_unifrac(u_node_counts, v_node_counts, tree_index["length"])
 
@@ -159,35 +164,39 @@ def unweighted_unifrac(u_counts, v_counts, otu_ids, tree, validate=True):
 def weighted_unifrac(
     u_counts,
     v_counts,
-    otu_ids,
-    tree,
+    taxa=None,
+    tree=None,
     normalized=_normalize_weighted_unifrac_by_default,
     validate=True,
+    otu_ids=None,
 ):
     """Compute weighted UniFrac with or without branch length normalization.
 
     Parameters
     ----------
     u_counts, v_counts: list, np.array
-        Vectors of counts/abundances of OTUs for two samples. Must be equal
+        Vectors of counts/abundances of taxa for two samples. Must be equal
         length.
-    otu_ids: list, np.array
-        Vector of OTU ids corresponding to tip names in ``tree``. Must be the
-        same length as ``u_counts`` and ``v_counts``.
-    tree: skbio.TreeNode
-        Tree relating the OTUs in otu_ids. The set of tip names in the tree can
-        be a superset of ``otu_ids``, but not a subset.
+    taxa : list, np.array
+        Vector of taxon IDs corresponding to tip names in ``tree``. Must be the
+        same length as ``u_counts`` and ``v_counts``. Required.
+    tree : skbio.TreeNode
+        Tree relating taxa. The set of tip names in the tree can be a superset
+        of ``taxa``, but not a subset. Required.
     normalized: boolean, optional
         If ``True``, apply branch length normalization, which is described in
         [1]_. Resulting distances will then be in the range ``[0, 1]``.
     validate: bool, optional
-        If `False`, validation of the input won't be performed. This step can
+        If ``False``, validation of the input won't be performed. This step can
         be slow, so if validation is run elsewhere it can be disabled here.
         However, invalid input data can lead to invalid results or error
         messages that are hard to interpret, so this step should not be
         bypassed if you're not certain that your input data are valid. See
         :mod:`skbio.diversity` for the description of what validation entails
         so you can determine if you can safely disable validation.
+    otu_ids : list, np.array
+        Alias of ``taxa`` for backward compatibility. Deprecated and to be
+        removed in a future release.
 
     Returns
     -------
@@ -221,11 +230,10 @@ def weighted_unifrac(
     inputs. First, the input tree must be rooted. In PyCogent, if an unrooted
     tree was provided that had a single trifurcating node (a newick convention
     for unrooted trees) that node was considered the root of the tree. Next,
-    all OTU IDs must be tips in the tree. PyCogent would silently ignore OTU
-    IDs that were not present the tree. To reproduce UniFrac results from
-    PyCogent with scikit-bio, ensure that your PyCogent UniFrac calculations
-    are performed on a rooted tree and that all OTU IDs are present in the
-    tree.
+    all taxa must be tips in the tree. PyCogent would silently ignore taxa that
+    were not present the tree. To reproduce UniFrac results from PyCogent with
+    scikit-bio, ensure that your PyCogent UniFrac calculations are performed on
+    a rooted tree and that all taxa are present in the tree.
 
     This implementation of weighted UniFrac is the array-based implementation
     described in [3]_.
@@ -255,43 +263,41 @@ def weighted_unifrac(
     --------
     Assume we have the following abundance data for two samples, ``u`` and
     ``v``, represented as a pair of counts vectors. These counts represent the
-    number of times specific Operational Taxonomic Units, or OTUs, were
-    observed in each of the samples.
+    number of times specific taxa were observed in each of the samples.
 
     >>> u_counts = [1, 0, 0, 4, 1, 2, 3, 0]
     >>> v_counts = [0, 1, 1, 6, 0, 1, 0, 0]
 
     Because UniFrac is a phylogenetic diversity metric, we need to know which
-    OTU each count corresponds to, which we'll provide as ``otu_ids``.
+    taxon each count corresponds to, which we'll provide as ``taxa``.
 
-    >>> otu_ids = ['OTU1', 'OTU2', 'OTU3', 'OTU4', 'OTU5', 'OTU6', 'OTU7',
-    ...            'OTU8']
+    >>> taxa = ['U1', 'U2', 'U3', 'U4', 'U5', 'U6', 'U7', 'U8']
 
-    We also need a phylogenetic tree that relates the OTUs to one another.
+    We also need a phylogenetic tree that relates the taxa to one another.
 
     >>> from io import StringIO
     >>> from skbio import TreeNode
     >>> tree = TreeNode.read(StringIO(
-    ...                      '(((((OTU1:0.5,OTU2:0.5):0.5,OTU3:1.0):1.0):0.0,'
-    ...                      '(OTU4:0.75,(OTU5:0.5,((OTU6:0.33,OTU7:0.62):0.5'
-    ...                      ',OTU8:0.5):0.5):0.5):1.25):0.0)root;'))
+    ...                      '(((((U1:0.5,U2:0.5):0.5,U3:1.0):1.0):0.0,'
+    ...                      '(U4:0.75,(U5:0.5,((U6:0.33,U7:0.62):0.5'
+    ...                      ',U8:0.5):0.5):0.5):1.25):0.0)root;'))
 
     Compute the weighted UniFrac distance between the samples.
 
     >>> from skbio.diversity.beta import weighted_unifrac
-    >>> wu = weighted_unifrac(u_counts, v_counts, otu_ids, tree)
+    >>> wu = weighted_unifrac(u_counts, v_counts, taxa, tree)
     >>> print(round(wu, 2))
     1.54
 
     Compute the weighted UniFrac distance between the samples including
     branch length normalization so the value falls in the range ``[0.0, 1.0]``.
 
-    >>> wu = weighted_unifrac(u_counts, v_counts, otu_ids, tree,
-    ...                       normalized=True)
+    >>> wu = weighted_unifrac(u_counts, v_counts, taxa, tree, normalized=True)
     >>> print(round(wu, 2))
     0.33
 
     """
+    taxa = _check_taxa_alias(taxa, tree, otu_ids)
     (
         u_node_counts,
         v_node_counts,
@@ -301,7 +307,7 @@ def weighted_unifrac(
     ) = _setup_pairwise_unifrac(
         u_counts,
         v_counts,
-        otu_ids,
+        taxa,
         tree,
         validate,
         normalized=normalized,
@@ -326,16 +332,16 @@ def weighted_unifrac(
         )[0]
 
 
-def _validate(u_counts, v_counts, otu_ids, tree):
+def _validate(u_counts, v_counts, taxa, tree):
     _validate_counts_matrix([u_counts, v_counts], suppress_cast=True)
-    _validate_otu_ids_and_tree(counts=u_counts, otu_ids=otu_ids, tree=tree)
+    _validate_taxa_and_tree(counts=u_counts, taxa=taxa, tree=tree)
 
 
 def _setup_pairwise_unifrac(
-    u_counts, v_counts, otu_ids, tree, validate, normalized, unweighted
+    u_counts, v_counts, taxa, tree, validate, normalized, unweighted
 ):
     if validate:
-        _validate(u_counts, v_counts, otu_ids, tree)
+        _validate(u_counts, v_counts, taxa, tree)
 
     # temporarily store u_counts and v_counts in a 2-D array as that's what
     # _vectorize_counts_and_tree takes
@@ -343,7 +349,7 @@ def _setup_pairwise_unifrac(
     v_counts = np.asarray(v_counts)
     counts = np.vstack([u_counts, v_counts])
     counts_by_node, tree_index, branch_lengths = _vectorize_counts_and_tree(
-        counts, otu_ids, tree
+        counts, taxa, tree
     )
     # unpack counts vectors for single pairwise UniFrac calculation
     u_node_counts = counts_by_node[0]
@@ -489,34 +495,34 @@ def _weighted_unifrac_normalized(
     return u / c
 
 
-def _setup_multiple_unifrac(counts, otu_ids, tree, validate):
+def _setup_multiple_unifrac(counts, taxa, tree, validate):
     if validate:
-        _validate_otu_ids_and_tree(counts[0], otu_ids, tree)
+        _validate_taxa_and_tree(counts[0], taxa, tree)
 
     counts_by_node, tree_index, branch_lengths = _vectorize_counts_and_tree(
-        counts, otu_ids, tree
+        counts, taxa, tree
     )
 
     return counts_by_node, tree_index, branch_lengths
 
 
-def _setup_multiple_unweighted_unifrac(counts, otu_ids, tree, validate):
-    """Create optimized pdist-compatible unweighted UniFrac function.
+def _setup_multiple_unweighted_unifrac(counts, taxa, tree, validate):
+    r"""Create optimized pdist-compatible unweighted UniFrac function.
 
     Parameters
     ----------
     counts : 2D array_like of ints or floats
         Matrix containing count/abundance data where each row contains counts
         of observations in a given sample.
-    otu_ids: list, np.array
-        Vector of OTU ids corresponding to tip names in ``tree``. Must be the
+    taxa: list, np.array
+        Vector of taxon IDs corresponding to tip names in ``tree``. Must be the
         same length as ``u_counts`` and ``v_counts``. These IDs do not need to
         be in tip order with respect to the tree.
     tree: skbio.TreeNode
-        Tree relating the OTUs in otu_ids. The set of tip names in the tree can
-        be a superset of ``otu_ids``, but not a subset.
+        Tree relating taxa. The set of tip names in the tree can be a superset
+        of ``taxa``, but not a subset.
     validate: bool, optional
-        If `False`, validation of the input won't be performed.
+        If ``False``, validation of the input won't be performed.
 
     Returns
     -------
@@ -528,7 +534,7 @@ def _setup_multiple_unweighted_unifrac(counts, otu_ids, tree, validate):
 
     """
     counts_by_node, _, branch_lengths = _setup_multiple_unifrac(
-        counts, otu_ids, tree, validate
+        counts, taxa, tree, validate
     )
 
     f = functools.partial(_unweighted_unifrac, branch_lengths=branch_lengths)
@@ -536,25 +542,25 @@ def _setup_multiple_unweighted_unifrac(counts, otu_ids, tree, validate):
     return f, counts_by_node
 
 
-def _setup_multiple_weighted_unifrac(counts, otu_ids, tree, normalized, validate):
-    """Create optimized pdist-compatible weighted UniFrac function.
+def _setup_multiple_weighted_unifrac(counts, taxa, tree, normalized, validate):
+    r"""Create optimized pdist-compatible weighted UniFrac function.
 
     Parameters
     ----------
     counts : 2D array_like of ints or floats
         Matrix containing count/abundance data where each row contains counts
         of observations in a given sample.
-    otu_ids : list, np.array
-        Vector of OTU ids corresponding to tip names in ``tree``. Must be the
+    taxa : list, np.array
+        Vector of taxon IDs corresponding to tip names in ``tree``. Must be the
         same length as ``u_counts`` and ``v_counts``. These IDs do not need to
         be in tip order with respect to the tree.
     tree : skbio.TreeNode
-        Tree relating the OTUs in otu_ids. The set of tip names in the tree can
-        be a superset of ``otu_ids``, but not a subset.
+        Tree relating taxa. The set of tip names in the tree can be a superset
+        of ``taxa``, but not a subset.
     normalized : bool
-        If `True`, output will be normalized.
+        If ``True``, output will be normalized.
     validate: bool, optional
-        If `False`, validation of the input won't be performed.
+        If ``False``, validation of the input won't be performed.
 
     Returns
     -------
@@ -566,7 +572,7 @@ def _setup_multiple_weighted_unifrac(counts, otu_ids, tree, normalized, validate
 
     """
     counts_by_node, tree_index, branch_lengths = _setup_multiple_unifrac(
-        counts, otu_ids, tree, validate
+        counts, taxa, tree, validate
     )
     tip_indices = _get_tip_indices(tree_index)
 

@@ -68,19 +68,19 @@ class AlphaDiversityTests(TestCase):
         self.assertRaises(TypeError, alpha_diversity, 'sobs',
                           [0, 1], not_a_real_kwarg=42.0)
         self.assertRaises(TypeError, alpha_diversity, 'faith_pd',
-                          [0, 1], tree=self.tree1, otu_ids=['OTU1', 'OTU2'],
+                          [0, 1], tree=self.tree1, taxa=['OTU1', 'OTU2'],
                           not_a_real_kwarg=42.0)
         self.assertRaises(TypeError, alpha_diversity, faith_pd,
-                          [0, 1], tree=self.tree1, otu_ids=['OTU1', 'OTU2'],
+                          [0, 1], tree=self.tree1, taxa=['OTU1', 'OTU2'],
                           not_a_real_kwarg=42.0)
 
     def test_invalid_input_phylogenetic(self):
-        # otu_ids not provided
+        # taxa not provided
         self.assertRaises(ValueError, alpha_diversity, 'faith_pd', self.table1,
                           list('ABC'), tree=self.tree1)
         # tree not provided
         self.assertRaises(ValueError, alpha_diversity, 'faith_pd', self.table1,
-                          list('ABC'), otu_ids=self.oids1)
+                          list('ABC'), taxa=self.oids1)
 
         # tree has duplicated tip ids
         t = TreeNode.read(
@@ -88,27 +88,27 @@ class AlphaDiversityTests(TestCase):
                 '(((((OTU2:0.5,OTU2:0.5):0.5,OTU3:1.0):1.0):0.0,(OTU4:'
                 '0.75,OTU5:0.75):1.25):0.0)root;'))
         counts = [1, 2, 3]
-        otu_ids = ['OTU1', 'OTU2', 'OTU3']
+        taxa = ['OTU1', 'OTU2', 'OTU3']
         self.assertRaises(DuplicateNodeError, alpha_diversity, 'faith_pd',
-                          counts, otu_ids=otu_ids, tree=t)
+                          counts, taxa=taxa, tree=t)
 
         # unrooted tree as input
         t = TreeNode.read(io.StringIO(
             '((OTU1:0.1, OTU2:0.2):0.3, OTU3:0.5,OTU4:0.7);'))
         counts = [1, 2, 3]
-        otu_ids = ['OTU1', 'OTU2', 'OTU3']
+        taxa = ['OTU1', 'OTU2', 'OTU3']
         self.assertRaises(ValueError, alpha_diversity, 'faith_pd',
-                          counts, otu_ids=otu_ids, tree=t)
+                          counts, taxa=taxa, tree=t)
 
-        # otu_ids has duplicated ids
+        # taxa has duplicated ids
         t = TreeNode.read(
             io.StringIO(
                 '(((((OTU1:0.5,OTU2:0.5):0.5,OTU3:1.0):1.0):0.0,(OTU4:'
                 '0.75,OTU2:0.75):1.25):0.0)root;'))
         counts = [1, 2, 3]
-        otu_ids = ['OTU1', 'OTU2', 'OTU2']
+        taxa = ['OTU1', 'OTU2', 'OTU2']
         self.assertRaises(ValueError, alpha_diversity, 'faith_pd',
-                          counts, otu_ids=otu_ids, tree=t)
+                          counts, taxa=taxa, tree=t)
 
         # count and OTU vectors are not equal length
         t = TreeNode.read(
@@ -116,44 +116,44 @@ class AlphaDiversityTests(TestCase):
                 '(((((OTU1:0.5,OTU2:0.5):0.5,OTU3:1.0):1.0):0.0,(OTU4:'
                 '0.75,OTU2:0.75):1.25):0.0)root;'))
         counts = [1, 2, 3]
-        otu_ids = ['OTU1', 'OTU2']
+        taxa = ['OTU1', 'OTU2']
         self.assertRaises(ValueError, alpha_diversity, 'faith_pd',
-                          counts, otu_ids=otu_ids, tree=t)
+                          counts, taxa=taxa, tree=t)
         t = TreeNode.read(
             io.StringIO(
                 '(((((OTU1:0.5,OTU2:0.5):0.5,OTU3:1.0):1.0):0.0,(OTU4:'
                 '0.75,OTU2:0.75):1.25):0.0)root;'))
         counts = [1, 2]
-        otu_ids = ['OTU1', 'OTU2', 'OTU3']
+        taxa = ['OTU1', 'OTU2', 'OTU3']
         self.assertRaises(ValueError, alpha_diversity, 'faith_pd',
-                          counts, otu_ids=otu_ids, tree=t)
+                          counts, taxa=taxa, tree=t)
 
         # tree with no branch lengths
         t = TreeNode.read(
             io.StringIO('((((OTU1,OTU2),OTU3)),(OTU4,OTU5));'))
         counts = [1, 2, 3]
-        otu_ids = ['OTU1', 'OTU2', 'OTU3']
+        taxa = ['OTU1', 'OTU2', 'OTU3']
         self.assertRaises(ValueError, alpha_diversity, 'faith_pd',
-                          counts, otu_ids=otu_ids, tree=t)
+                          counts, taxa=taxa, tree=t)
 
         # tree missing some branch lengths
         t = TreeNode.read(
             io.StringIO('(((((OTU1,OTU2:0.5):0.5,OTU3:1.0):1.0):0.0,(OTU4:'
                         '0.75,OTU5:0.75):1.25):0.0)root;'))
         counts = [1, 2, 3]
-        otu_ids = ['OTU1', 'OTU2', 'OTU3']
+        taxa = ['OTU1', 'OTU2', 'OTU3']
         self.assertRaises(ValueError, alpha_diversity, 'faith_pd',
-                          counts, otu_ids=otu_ids, tree=t)
+                          counts, taxa=taxa, tree=t)
 
-        # some otu_ids not present in tree
+        # some taxa not present in tree
         t = TreeNode.read(
             io.StringIO(
                 '(((((OTU1:0.5,OTU2:0.5):0.5,OTU3:1.0):1.0):0.0,(OTU4:'
                 '0.75,OTU5:0.75):1.25):0.0)root;'))
         counts = [1, 2, 3]
-        otu_ids = ['OTU1', 'OTU2', 'OTU42']
+        taxa = ['OTU1', 'OTU2', 'OTU42']
         self.assertRaises(MissingNodeError, alpha_diversity, 'faith_pd',
-                          counts, otu_ids=otu_ids, tree=t)
+                          counts, taxa=taxa, tree=t)
 
     def test_empty(self):
         # empty vector
@@ -176,21 +176,21 @@ class AlphaDiversityTests(TestCase):
 
         # empty vector
         actual = alpha_diversity('faith_pd', np.array([], dtype=np.int64),
-                                 tree=self.tree1, otu_ids=[])
+                                 tree=self.tree1, taxa=[])
         expected = pd.Series([0.])
         assert_series_almost_equal(actual, expected)
 
         # array of empty vector
         actual = alpha_diversity('faith_pd',
                                  np.array([[]], dtype=np.int64),
-                                 tree=self.tree1, otu_ids=[])
+                                 tree=self.tree1, taxa=[])
         expected = pd.Series([0.])
         assert_series_almost_equal(actual, expected)
 
         # array of empty vectors
         actual = alpha_diversity('faith_pd',
                                  np.array([[], []], dtype=np.int64),
-                                 tree=self.tree1, otu_ids=[])
+                                 tree=self.tree1, taxa=[])
         expected = pd.Series([0., 0.])
         assert_series_almost_equal(actual, expected)
 
@@ -200,7 +200,7 @@ class AlphaDiversityTests(TestCase):
         assert_series_almost_equal(actual, expected)
 
         actual = alpha_diversity('faith_pd', np.array([1, 3, 0, 1, 0]),
-                                 tree=self.tree1, otu_ids=self.oids1)
+                                 tree=self.tree1, taxa=self.oids1)
         self.assertAlmostEqual(actual[0], 4.5)
 
     def test_input_types(self):
@@ -211,9 +211,9 @@ class AlphaDiversityTests(TestCase):
         assert_series_almost_equal(list_result, array_result)
 
         list_result = alpha_diversity('faith_pd', [1, 3, 0, 1, 0],
-                                      tree=self.tree1, otu_ids=self.oids1)
+                                      tree=self.tree1, taxa=self.oids1)
         array_result = alpha_diversity('faith_pd', np.array([1, 3, 0, 1, 0]),
-                                       tree=self.tree1, otu_ids=self.oids1)
+                                       tree=self.tree1, taxa=self.oids1)
         self.assertAlmostEqual(list_result[0], 4.5)
         assert_series_almost_equal(list_result, array_result)
 
@@ -235,46 +235,46 @@ class AlphaDiversityTests(TestCase):
         # calling it directly
         expected = []
         for e in self.table1:
-            expected.append(faith_pd(e, tree=self.tree1, otu_ids=self.oids1))
+            expected.append(faith_pd(e, tree=self.tree1, taxa=self.oids1))
         expected = pd.Series(expected)
         actual = alpha_diversity('faith_pd', self.table1, tree=self.tree1,
-                                 otu_ids=self.oids1)
+                                 taxa=self.oids1)
         assert_series_almost_equal(actual, expected)
 
         # alt input table and tree
         expected = []
         for e in self.table2:
-            expected.append(faith_pd(e, tree=self.tree2, otu_ids=self.oids2))
+            expected.append(faith_pd(e, tree=self.tree2, taxa=self.oids2))
         expected = pd.Series(expected)
         actual = alpha_diversity('faith_pd', self.table2, tree=self.tree2,
-                                 otu_ids=self.oids2)
+                                 taxa=self.oids2)
         assert_series_almost_equal(actual, expected)
 
     def test_phydiv(self):
         expected = []
         for e in self.table1:
-            expected.append(phydiv(e, tree=self.tree1, otu_ids=self.oids1))
+            expected.append(phydiv(e, tree=self.tree1, taxa=self.oids1))
         expected = pd.Series(expected)
         actual = alpha_diversity('phydiv', self.table1, tree=self.tree1,
-                                 otu_ids=self.oids1)
+                                 taxa=self.oids1)
         assert_series_almost_equal(actual, expected)
 
         expected = []
         for e in self.table1:
-            expected.append(phydiv(e, tree=self.tree1, otu_ids=self.oids1,
+            expected.append(phydiv(e, tree=self.tree1, taxa=self.oids1,
                                    rooted=False))
         expected = pd.Series(expected)
         actual = alpha_diversity('phydiv', self.table1, tree=self.tree1,
-                                 otu_ids=self.oids1, rooted=False)
+                                 taxa=self.oids1, rooted=False)
         assert_series_almost_equal(actual, expected)
 
         expected = []
         for e in self.table1:
-            expected.append(phydiv(e, tree=self.tree1, otu_ids=self.oids1,
+            expected.append(phydiv(e, tree=self.tree1, taxa=self.oids1,
                                    weight=True))
         expected = pd.Series(expected)
         actual = alpha_diversity('phydiv', self.table1, tree=self.tree1,
-                                 otu_ids=self.oids1, weight=True)
+                                 taxa=self.oids1, weight=True)
         assert_series_almost_equal(actual, expected)
 
     def test_no_ids(self):
@@ -287,9 +287,9 @@ class AlphaDiversityTests(TestCase):
         # calling optimized faith_pd gives same results as calling unoptimized
         # version
         optimized = alpha_diversity('faith_pd', self.table1, tree=self.tree1,
-                                    otu_ids=self.oids1)
+                                    taxa=self.oids1)
         unoptimized = alpha_diversity(faith_pd, self.table1, tree=self.tree1,
-                                      otu_ids=self.oids1)
+                                      taxa=self.oids1)
         assert_series_almost_equal(optimized, unoptimized)
 
 
@@ -383,27 +383,27 @@ class BetaDiversityTests(TestCase):
         with self.assertRaisesRegex(TypeError, error_msg):
             beta_diversity('unweighted_unifrac', [[0, 1, 3], [0, 3, 12]],
                            not_a_real_kwarg=42.0, tree=self.tree1,
-                           otu_ids=['O1', 'O2', 'O3'])
+                           taxa=['O1', 'O2', 'O3'])
         with self.assertRaisesRegex(TypeError, error_msg):
             beta_diversity('weighted_unifrac', [[0, 1, 3], [0, 3, 12]],
                            not_a_real_kwarg=42.0, tree=self.tree1,
-                           otu_ids=['O1', 'O2', 'O3'])
+                           taxa=['O1', 'O2', 'O3'])
         with self.assertRaisesRegex(TypeError, error_msg):
             beta_diversity(weighted_unifrac, [[0, 1, 3], [0, 3, 12]],
                            not_a_real_kwarg=42.0, tree=self.tree1,
-                           otu_ids=['O1', 'O2', 'O3'])
+                           taxa=['O1', 'O2', 'O3'])
 
     def test_invalid_input_phylogenetic(self):
-        # otu_ids not provided
+        # taxa not provided
         self.assertRaises(ValueError, beta_diversity, 'weighted_unifrac',
                           self.table1, list('ABC'), tree=self.tree1)
         self.assertRaises(ValueError, beta_diversity, 'unweighted_unifrac',
                           self.table1, list('ABC'), tree=self.tree1)
         # tree not provided
         self.assertRaises(ValueError, beta_diversity, 'weighted_unifrac',
-                          self.table1, list('ABC'), otu_ids=self.oids1)
+                          self.table1, list('ABC'), taxa=self.oids1)
         self.assertRaises(ValueError, beta_diversity, 'unweighted_unifrac',
-                          self.table1, list('ABC'), otu_ids=self.oids1)
+                          self.table1, list('ABC'), taxa=self.oids1)
 
         # tree has duplicated tip ids
         t = TreeNode.read(
@@ -411,35 +411,35 @@ class BetaDiversityTests(TestCase):
                 '(((((OTU2:0.5,OTU2:0.5):0.5,OTU3:1.0):1.0):0.0,(OTU4:'
                 '0.75,OTU5:0.75):1.25):0.0)root;'))
         counts = [1, 2, 3]
-        otu_ids = ['OTU1', 'OTU2', 'OTU3']
+        taxa = ['OTU1', 'OTU2', 'OTU3']
         self.assertRaises(DuplicateNodeError, beta_diversity,
-                          'weighted_unifrac', counts, otu_ids=otu_ids, tree=t)
+                          'weighted_unifrac', counts, taxa=taxa, tree=t)
         self.assertRaises(DuplicateNodeError, beta_diversity,
-                          'unweighted_unifrac', counts, otu_ids=otu_ids,
+                          'unweighted_unifrac', counts, taxa=taxa,
                           tree=t)
 
         # unrooted tree as input
         t = TreeNode.read(io.StringIO('((OTU1:0.1, OTU2:0.2):0.3, OTU3:0.5,'
                                       'OTU4:0.7);'))
         counts = [1, 2, 3]
-        otu_ids = ['OTU1', 'OTU2', 'OTU3']
+        taxa = ['OTU1', 'OTU2', 'OTU3']
         self.assertRaises(ValueError, beta_diversity,
-                          'weighted_unifrac', counts, otu_ids=otu_ids, tree=t)
+                          'weighted_unifrac', counts, taxa=taxa, tree=t)
         self.assertRaises(ValueError, beta_diversity,
-                          'unweighted_unifrac', counts, otu_ids=otu_ids,
+                          'unweighted_unifrac', counts, taxa=taxa,
                           tree=t)
 
-        # otu_ids has duplicated ids
+        # taxa has duplicated ids
         t = TreeNode.read(
             io.StringIO(
                 '(((((OTU1:0.5,OTU2:0.5):0.5,OTU3:1.0):1.0):0.0,(OTU4:'
                 '0.75,OTU2:0.75):1.25):0.0)root;'))
         counts = [1, 2, 3]
-        otu_ids = ['OTU1', 'OTU2', 'OTU2']
+        taxa = ['OTU1', 'OTU2', 'OTU2']
         self.assertRaises(ValueError, beta_diversity,
-                          'weighted_unifrac', counts, otu_ids=otu_ids, tree=t)
+                          'weighted_unifrac', counts, taxa=taxa, tree=t)
         self.assertRaises(ValueError, beta_diversity,
-                          'unweighted_unifrac', counts, otu_ids=otu_ids,
+                          'unweighted_unifrac', counts, taxa=taxa,
                           tree=t)
 
         # count and OTU vectors are not equal length
@@ -448,33 +448,33 @@ class BetaDiversityTests(TestCase):
                 '(((((OTU1:0.5,OTU2:0.5):0.5,OTU3:1.0):1.0):0.0,(OTU4:'
                 '0.75,OTU2:0.75):1.25):0.0)root;'))
         counts = [1, 2, 3]
-        otu_ids = ['OTU1', 'OTU2']
+        taxa = ['OTU1', 'OTU2']
         self.assertRaises(ValueError, beta_diversity,
-                          'weighted_unifrac', counts, otu_ids=otu_ids, tree=t)
+                          'weighted_unifrac', counts, taxa=taxa, tree=t)
         self.assertRaises(ValueError, beta_diversity,
-                          'unweighted_unifrac', counts, otu_ids=otu_ids,
+                          'unweighted_unifrac', counts, taxa=taxa,
                           tree=t)
         t = TreeNode.read(
             io.StringIO(
                 '(((((OTU1:0.5,OTU2:0.5):0.5,OTU3:1.0):1.0):0.0,(OTU4:'
                 '0.75,OTU2:0.75):1.25):0.0)root;'))
         counts = [1, 2]
-        otu_ids = ['OTU1', 'OTU2', 'OTU3']
+        taxa = ['OTU1', 'OTU2', 'OTU3']
         self.assertRaises(ValueError, beta_diversity,
-                          'weighted_unifrac', counts, otu_ids=otu_ids, tree=t)
+                          'weighted_unifrac', counts, taxa=taxa, tree=t)
         self.assertRaises(ValueError, beta_diversity,
-                          'unweighted_unifrac', counts, otu_ids=otu_ids,
+                          'unweighted_unifrac', counts, taxa=taxa,
                           tree=t)
 
         # tree with no branch lengths
         t = TreeNode.read(
             io.StringIO('((((OTU1,OTU2),OTU3)),(OTU4,OTU5));'))
         counts = [1, 2, 3]
-        otu_ids = ['OTU1', 'OTU2', 'OTU3']
+        taxa = ['OTU1', 'OTU2', 'OTU3']
         self.assertRaises(ValueError, beta_diversity,
-                          'weighted_unifrac', counts, otu_ids=otu_ids, tree=t)
+                          'weighted_unifrac', counts, taxa=taxa, tree=t)
         self.assertRaises(ValueError, beta_diversity,
-                          'unweighted_unifrac', counts, otu_ids=otu_ids,
+                          'unweighted_unifrac', counts, taxa=taxa,
                           tree=t)
 
         # tree missing some branch lengths
@@ -482,24 +482,24 @@ class BetaDiversityTests(TestCase):
             io.StringIO('(((((OTU1,OTU2:0.5):0.5,OTU3:1.0):1.0):0.0,(OTU4:'
                         '0.75,OTU5:0.75):1.25):0.0)root;'))
         counts = [1, 2, 3]
-        otu_ids = ['OTU1', 'OTU2', 'OTU3']
+        taxa = ['OTU1', 'OTU2', 'OTU3']
         self.assertRaises(ValueError, beta_diversity,
-                          'weighted_unifrac', counts, otu_ids=otu_ids, tree=t)
+                          'weighted_unifrac', counts, taxa=taxa, tree=t)
         self.assertRaises(ValueError, beta_diversity,
-                          'unweighted_unifrac', counts, otu_ids=otu_ids,
+                          'unweighted_unifrac', counts, taxa=taxa,
                           tree=t)
 
-        # some otu_ids not present in tree
+        # some taxa not present in tree
         t = TreeNode.read(
             io.StringIO(
                 '(((((OTU1:0.5,OTU2:0.5):0.5,OTU3:1.0):1.0):0.0,(OTU4:'
                 '0.75,OTU5:0.75):1.25):0.0)root;'))
         counts = [1, 2, 3]
-        otu_ids = ['OTU1', 'OTU2', 'OTU42']
+        taxa = ['OTU1', 'OTU2', 'OTU42']
         self.assertRaises(MissingNodeError, beta_diversity,
-                          'weighted_unifrac', counts, otu_ids=otu_ids, tree=t)
+                          'weighted_unifrac', counts, taxa=taxa, tree=t)
         self.assertRaises(MissingNodeError, beta_diversity,
-                          'unweighted_unifrac', counts, otu_ids=otu_ids,
+                          'unweighted_unifrac', counts, taxa=taxa,
                           tree=t)
 
     def test_empty(self):
@@ -512,7 +512,7 @@ class BetaDiversityTests(TestCase):
 
         actual = beta_diversity('unweighted_unifrac',
                                 np.array([[], []], dtype=np.int64),
-                                ids=['a', 'b'], tree=self.tree1, otu_ids=[])
+                                ids=['a', 'b'], tree=self.tree1, taxa=[])
         expected_dm = DistanceMatrix([[0.0, 0.0], [0.0, 0.0]], ['a', 'b'])
         self.assertEqual(actual, expected_dm)
 
@@ -587,9 +587,9 @@ class BetaDiversityTests(TestCase):
         # near-equality testing when that support is available
         # expected values calculated by hand
         dm1 = beta_diversity('unweighted_unifrac', self.table1, self.sids1,
-                             otu_ids=self.oids1, tree=self.tree1)
+                             taxa=self.oids1, tree=self.tree1)
         dm2 = beta_diversity(unweighted_unifrac, self.table1, self.sids1,
-                             otu_ids=self.oids1, tree=self.tree1)
+                             taxa=self.oids1, tree=self.tree1)
         self.assertEqual(dm1.shape, (3, 3))
         self.assertEqual(dm1, dm2)
         expected_data = [[0.0, 0.0, 0.25],
@@ -606,9 +606,9 @@ class BetaDiversityTests(TestCase):
         # near-equality testing when that support is available
         # expected values calculated by hand
         dm1 = beta_diversity('weighted_unifrac', self.table1, self.sids1,
-                             otu_ids=self.oids1, tree=self.tree1)
+                             taxa=self.oids1, tree=self.tree1)
         dm2 = beta_diversity(weighted_unifrac, self.table1, self.sids1,
-                             otu_ids=self.oids1, tree=self.tree1)
+                             taxa=self.oids1, tree=self.tree1)
         self.assertEqual(dm1.shape, (3, 3))
         self.assertEqual(dm1, dm2)
         expected_data = [
@@ -626,10 +626,10 @@ class BetaDiversityTests(TestCase):
         # near-equality testing when that support is available
         # expected values calculated by hand
         dm1 = beta_diversity('weighted_unifrac', self.table1, self.sids1,
-                             otu_ids=self.oids1, tree=self.tree1,
+                             taxa=self.oids1, tree=self.tree1,
                              normalized=True)
         dm2 = beta_diversity(weighted_unifrac, self.table1, self.sids1,
-                             otu_ids=self.oids1, tree=self.tree1,
+                             taxa=self.oids1, tree=self.tree1,
                              normalized=True)
         self.assertEqual(dm1.shape, (3, 3))
         self.assertEqual(dm1, dm2)
@@ -660,19 +660,19 @@ class BetaDiversityTests(TestCase):
         def not_a_real_pdist(counts, metric):
             return [[0.0, 42.0], [42.0, 0.0]]
         dm1 = beta_diversity('unweighted_unifrac', self.table1,
-                             otu_ids=self.oids1, tree=self.tree1,
+                             taxa=self.oids1, tree=self.tree1,
                              pairwise_func=not_a_real_pdist)
         expected = DistanceMatrix([[0.0, 42.0], [42.0, 0.0]])
         self.assertEqual(dm1, expected)
 
         dm1 = beta_diversity('weighted_unifrac', self.table1,
-                             otu_ids=self.oids1, tree=self.tree1,
+                             taxa=self.oids1, tree=self.tree1,
                              pairwise_func=not_a_real_pdist)
         expected = DistanceMatrix([[0.0, 42.0], [42.0, 0.0]])
         self.assertEqual(dm1, expected)
 
         dm1 = beta_diversity(unweighted_unifrac, self.table1,
-                             otu_ids=self.oids1, tree=self.tree1,
+                             taxa=self.oids1, tree=self.tree1,
                              pairwise_func=not_a_real_pdist)
         expected = DistanceMatrix([[0.0, 42.0], [42.0, 0.0]])
         self.assertEqual(dm1, expected)
@@ -729,7 +729,7 @@ class TestPartialBetaDiversity(TestCase):
     def test_id_pairs_as_iterable(self):
         id_pairs = iter([('B', 'C'), ])
         dm = partial_beta_diversity('unweighted_unifrac', self.table1,
-                                    self.sids1, otu_ids=self.oids1,
+                                    self.sids1, taxa=self.oids1,
                                     tree=self.tree1, id_pairs=id_pairs)
         self.assertEqual(dm.shape, (3, 3))
         expected_data = [[0.0, 0.0, 0.0],
@@ -748,7 +748,7 @@ class TestPartialBetaDiversity(TestCase):
         # near-equality testing when that support is available
         # expected values calculated by hand
         dm = partial_beta_diversity('unweighted_unifrac', self.table1,
-                                    self.sids1, otu_ids=self.oids1,
+                                    self.sids1, taxa=self.oids1,
                                     tree=self.tree1, id_pairs=[('B', 'C'), ])
         self.assertEqual(dm.shape, (3, 3))
         expected_data = [[0.0, 0.0, 0.0],
@@ -765,12 +765,12 @@ class TestPartialBetaDiversity(TestCase):
         # near-equality testing when that support is available
         # expected values calculated by hand
         dm1 = partial_beta_diversity('weighted_unifrac', self.table1,
-                                     self.sids1, otu_ids=self.oids1,
+                                     self.sids1, taxa=self.oids1,
                                      tree=self.tree1, id_pairs=[('A', 'B'),
                                                                 ('A', 'C'),
                                                                 ('B', 'C')])
         dm2 = beta_diversity('weighted_unifrac', self.table1, self.sids1,
-                             otu_ids=self.oids1, tree=self.tree1)
+                             taxa=self.oids1, tree=self.tree1)
 
         self.assertEqual(dm1.shape, (3, 3))
         self.assertEqual(dm1, dm2)

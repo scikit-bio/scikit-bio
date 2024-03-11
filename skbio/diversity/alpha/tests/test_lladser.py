@@ -15,7 +15,7 @@ from skbio.stats import subsample_counts
 from skbio.diversity.alpha import lladser_pe, lladser_ci
 from skbio.diversity.alpha._lladser import (
     _expand_counts, _lladser_point_estimates,
-    _get_interval_for_r_new_otus, _lladser_ci_series, _lladser_ci_from_r)
+    _get_interval_for_r_new_taxa, _lladser_ci_series, _lladser_ci_from_r)
 
 
 def create_fake_observation():
@@ -124,17 +124,17 @@ class LladserTests(unittest.TestCase):
             list(_lladser_point_estimates([5, 1, 5, 1, 2, 3, 1, 5, 3, 2, 5, 3],
                                           2))
 
-    def test_get_interval_for_r_new_otus(self):
+    def test_get_interval_for_r_new_taxa(self):
         s = [5, 1, 5, 1, 2, 3, 1, 5, 3, 2, 5]
         expected = [(3, set([5]), 4, 0),
                     (4, set([5, 1]), 6, 1),
                     (4, set([5, 1, 2]), 9, 4)]
-        for x, y in zip(_get_interval_for_r_new_otus(s, 2), expected):
+        for x, y in zip(_get_interval_for_r_new_taxa(s, 2), expected):
             self.assertEqual(x, y)
 
         s = [5, 5, 5, 5, 5]
         # never saw new one
-        self.assertEqual(list(_get_interval_for_r_new_otus(s, 2)), [])
+        self.assertEqual(list(_get_interval_for_r_new_taxa(s, 2)), [])
 
     def test_lladser_ci_series_exact(self):
         # have seen RWB

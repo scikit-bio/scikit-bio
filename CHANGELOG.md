@@ -39,6 +39,8 @@
 
 ### Miscellaneous
 
+* Replaced the historical term "OTU" with the more generic term "taxon" (plural: "taxa"). As a consequence, the parameter "otu_ids" in phylogenetic alpha and beta diversity metrics was replaced by "taxa". Meanwhile,
+the old parameter "otu_ids" is still kept as an alias of "taxa" for backward compatibility. However it will be removed in a future release.
 * Revised contributor's guidelines.
 * Enabled code coverage reporting via Codecov. See [#1954](https://github.com/scikit-bio/scikit-bio/pull/1954).
 * Renamed the default branch from "master" to "main". See [#1953](https://github.com/scikit-bio/scikit-bio/pull/1953).

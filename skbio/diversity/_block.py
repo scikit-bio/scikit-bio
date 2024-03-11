@@ -74,7 +74,7 @@ def _block_party(counts=None, row_ids=None, col_ids=None, **kwargs):
     ----------
     counts : 2D array_like of ints or floats
         Matrix containing count/abundance data where each row contains counts
-        of OTUs in a given sample.
+        of taxa in a given sample.
     row_ids : 1D np.ndarray of int
         Block row IDs to keep in the counts matrix.
     col_ids : 1D np.ndarray of int
@@ -88,7 +88,7 @@ def _block_party(counts=None, row_ids=None, col_ids=None, **kwargs):
     -------
     dict
         kwargs that describe the block to compute. A filtered ``counts`` matrix
-        is stored in kwargs. If applicable, a filtered ``tree`` and ``otu_ids``
+        is stored in kwargs. If applicable, a filtered ``tree`` and ``taxa``
         are also stored.
 
     """
@@ -105,9 +105,9 @@ def _block_party(counts=None, row_ids=None, col_ids=None, **kwargs):
     kwargs["counts"] = counts_block
     kwargs["ids"] = ids_to_keep
 
-    if "tree" in kwargs and "otu_ids" in kwargs:
-        kwargs["otu_ids"] = np.asarray(kwargs["otu_ids"])[nonzero_cols]
-        kwargs["tree"] = kwargs["tree"].shear(kwargs["otu_ids"])
+    if "tree" in kwargs and "taxa" in kwargs:
+        kwargs["taxa"] = np.asarray(kwargs["taxa"])[nonzero_cols]
+        kwargs["tree"] = kwargs["tree"].shear(kwargs["taxa"])
 
     return kwargs
 
@@ -159,10 +159,11 @@ def _block_kwargs(**kwargs):
         "counts",
         "ids",
         "tree",
-        "otu_ids",
+        "taxa",
         "metric",
         "id_pairs",
         "validate",
+        "otu_ids",
     }
     for row_ids, col_ids in _generate_id_blocks(kwargs["ids"], kwargs["k"]):
         id_pairs = _pairs_to_compute(row_ids, col_ids)
@@ -182,7 +183,7 @@ def _block_compute(**kwargs):
     -----
     This method encapsulates the two expensive operations to perform for each
     block, namely, the "shearing" of the phylogenetic tree to correspond to
-    only the OTUs of interest, and the actual beta diversity calculations.
+    only the taxa of interest, and the actual beta diversity calculations.
 
     Returns
     -------
@@ -264,7 +265,7 @@ def block_beta_diversity(
         callable.
     counts : 2D array_like of ints or floats
         Matrix containing count/abundance data where each row contains counts
-        of OTUs in a given sample.
+        of taxa in a given sample.
     ids : iterable of strs
         Identifiers for each sample in ``counts``.
     validate : bool, optional
@@ -301,7 +302,7 @@ def block_beta_diversity(
     likely the case that `skbio.diversity.beta_diversity` will be faster. The
     original need which motivated the development of this method was processing
     the Earth Microbiome Project [1]_ dataset which at the time spanned over
-    25,000 samples and 7.5 million open reference OTUs.
+    25,000 samples and 7.5 million open reference taxa.
 
     See Also
     --------

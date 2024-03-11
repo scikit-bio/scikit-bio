@@ -20,15 +20,15 @@ def berger_parker_d(counts):
     r"""Calculate Berger-Parker dominance index.
 
     Berger-Parker dominance index :math:`d` is defined as the fraction of the
-    sample that belongs to the most abundant species:
+    sample that belongs to the most abundant taxon:
 
     .. math::
 
        d = \frac{n_{max}}{N}
 
     where :math:`n_{max}` is the number of individuals in the most abundant
-    species (or any of the most abundant species in the case of ties), and
-    :math:`N` is the total number of individuals in the sample.
+    taxon (or any of the most abundant taxa in the case of ties), and :math:`N`
+    is the total number of individuals in the sample.
 
     Parameters
     ----------
@@ -67,8 +67,8 @@ def brillouin_d(counts):
        H_B = \frac{\ln N!-\sum^s_{i=1}{\ln n_i!}}{N}
 
     where :math:`N` is the total number of individuals in the sample, :math:`s`
-    is the number of species, and :math:`n_i` is the number of individuals in
-    the :math:`i^{\text{th}}` species.
+    is the number of taxa, and :math:`n_i` is the number of individuals in the
+    :math:`i^{\text{th}}` taxon.
 
     Parameters
     ----------
@@ -102,17 +102,17 @@ def dominance(counts):
     r"""Calculate Simpson's dominance index.
 
     Simpson's dominance index, a.k.a. Simpson's :math:`D`, measures the degree
-    of concentration of species composition of a sample. It is defined as
+    of concentration of taxon composition of a sample. It is defined as
 
     .. math::
 
        D = \sum{p_i^2}
 
-    where :math:`p_i` is the proportion of the entire sample that species
+    where :math:`p_i` is the proportion of the entire sample that taxon
     :math:`i` represents.
 
     Simpson's :math:`D` can be interpreted as the probability that two randomly
-    selected individuals belong to the same species. It ranges between 0 and 1.
+    selected individuals belong to the same taxon. It ranges between 0 and 1.
 
     Simpson's :math:`D` is sometimes referred to as "Simpson's index". It
     should be noted that :math:`D` is not a measure of community diversity. It
@@ -156,7 +156,7 @@ def dominance(counts):
 
 @experimental(as_of="0.4.0")
 def doubles(counts):
-    """Calculate number of double-occurrence species (doubletons).
+    """Calculate number of double-occurrence taxa (doubletons).
 
     Parameters
     ----------
@@ -183,8 +183,8 @@ def enspie(counts):
 
        ENS_{pie} = \frac{1}{\sum_{i=1}^s{p_i^2}}
 
-    where :math:`s` is the number of species and :math:`p_i` is the proportion
-    of the sample represented by species :math:`i`.
+    where :math:`s` is the number of taxa and :math:`p_i` is the proportion
+    of the sample represented by taxon :math:`i`.
 
     Parameters
     ----------
@@ -225,7 +225,7 @@ def esty_ci(counts):
 
        F_1/N \pm z\sqrt{W}
 
-    where :math:`F_1` is the number of singleton species, :math:`N` is the
+    where :math:`F_1` is the number of singleton taxa, :math:`N` is the
     total number of individuals, and :math:`z` is a constant that depends on
     the targeted confidence and based on the normal distribution.
 
@@ -235,7 +235,7 @@ def esty_ci(counts):
 
        \frac{F_1(N-F_1)+2NF_2}{N^3}
 
-    where :math:`F_2` is the number of doubleton species.
+    where :math:`F_2` is the number of doubleton taxa.
 
     Parameters
     ----------
@@ -283,7 +283,7 @@ def fisher_alpha(counts):
 
        S=\alpha\ln(1+\frac{N}{\alpha})
 
-    where :math:`S` is the number of species and :math:`N` is the total number
+    where :math:`S` is the number of taxa and :math:`N` is the total number
     of individuals in the sample.
 
     Parameters
@@ -310,15 +310,15 @@ def fisher_alpha(counts):
     SciPy's ``minimize_scalar`` to find alpha. It is deterministic. The result
     should be reasonably close to the true alpha.
 
-    Alpha can become large when most species are singletons. Alpha = +inf when
-    all species are singletons.
+    Alpha can become large when most taxa are singletons. Alpha = +inf when
+    all taxa are singletons.
 
     When the sample is empty (i.e., all counts are zero), alpha = 0.
 
     References
     ----------
     .. [1] Fisher, R.A., Corbet, A.S. and Williams, C.B., 1943. The relation
-       between the number of species and the number of individuals in a random
+       between the number of taxa and the number of individuals in a random
        sample of an animal population. The Journal of Animal Ecology, pp.42-58.
 
     """
@@ -328,7 +328,7 @@ def fisher_alpha(counts):
     if (N := counts.sum()) == 0:
         return 0.0
 
-    # alpha = +inf when all species are singletons
+    # alpha = +inf when all taxa are singletons
     if N == (S := sobs(counts)):
         return np.inf
 
@@ -358,7 +358,7 @@ def goods_coverage(counts):
 
        C = 1 - \frac{F_1}{N}
 
-    where :math:`F_1` is the number of species observed only once (i.e.,
+    where :math:`F_1` is the number of taxa observed only once (i.e.,
     singletons) and :math:`N` is the total number of individuals.
 
     Parameters
@@ -399,7 +399,7 @@ def heip_e(counts):
        \frac{(e^H-1)}{(S-1)}
 
     where :math:`H` is the Shannon-Wiener entropy of counts (using logarithm
-    base :math:`e`) and :math:`S` is the number of species in the sample.
+    base :math:`e`) and :math:`S` is the number of taxa in the sample.
 
     Parameters
     ----------
@@ -458,9 +458,9 @@ def kempton_taylor_q(counts, lower_quantile=0.25, upper_quantile=0.75):
 
     The implementation provided here differs slightly from the results given in
     Magurran 1998. Specifically, we have 14 in the numerator rather than 15.
-    Magurran recommends counting half of the OTUs with the same # counts as the
+    Magurran recommends counting half of the taxa with the same # counts as the
     point where the UQ falls and the point where the LQ falls, but the
-    justification for this is unclear (e.g. if there were a very large # OTUs
+    justification for this is unclear (e.g. if there were a very large # taxa
     that just overlapped one of the quantiles, the results would be
     considerably off). Leaving the calculation as-is for now, but consider
     changing.
@@ -490,7 +490,7 @@ def margalef(counts):
 
        D = \frac{(S - 1)}{\ln N}
 
-    where :math:`S` is the number of species and :math:`N` is the total number
+    where :math:`S` is the number of taxa and :math:`N` is the total number
     of individuals in the sample.
 
     Assumes log accumulation.
@@ -539,7 +539,7 @@ def mcintosh_d(counts):
        U = \sqrt{\sum{{n_i}^2}}
 
     where :math:`n_i` is the number of individuals in the :math:`i^{\text{th}}`
-    species.
+    taxon.
 
     Parameters
     ----------
@@ -583,8 +583,8 @@ def mcintosh_e(counts):
        E = \frac{\sqrt{\sum{n_i^2}}}{\sqrt{((N-S+1)^2 + S -1}}
 
     where :math:`n_i` is the number of individuals in the :math:`i^{\text{th}}`
-    species, :math:`N` is the total number of individuals, and :math:`S` is the
-    number of species in the sample.
+    taxon, :math:`N` is the total number of individuals, and :math:`S` is the
+    number of taxa in the sample.
 
     Parameters
     ----------
@@ -629,7 +629,7 @@ def menhinick(counts):
 
        D_{Mn} = \frac{S}{\sqrt{N}}
 
-    where :math:`S` is the number of species and :math:`N` is the total number
+    where :math:`S` is the number of taxa and :math:`N` is the total number
     of individuals in the sample.
 
     Assumes square-root accumulation.
@@ -660,7 +660,7 @@ def menhinick(counts):
 
 @experimental(as_of="0.4.0")
 def michaelis_menten_fit(counts, num_repeats=1, params_guess=None):
-    r"""Calculate Michaelis-Menten fit to rarefaction curve of observed OTUs.
+    r"""Calculate Michaelis-Menten fit to rarefaction curve of observed taxa.
 
     The Michaelis-Menten equation is defined as:
 
@@ -669,12 +669,12 @@ def michaelis_menten_fit(counts, num_repeats=1, params_guess=None):
        S=\frac{nS_{max}}{n+B}
 
     where :math:`n` is the number of individuals and :math:`S` is the number of
-    OTUs. This function estimates the :math:`S_{max}` parameter.
+    taxa. This function estimates the :math:`S_{max}` parameter.
 
     The fit is made to datapoints for :math:`n=1,2,...,N`, where :math:`N` is
-    the total number of individuals (sum of abundances for all OTUs).
-    :math:`S` is the number of OTUs represented in a random sample of :math:`n`
-    individuals.
+    the total number of individuals (sum of abundances for all taxa).
+    :math:`S` is the number of taxa represented in a random sample of
+    :math:`n` individuals.
 
     Parameters
     ----------
@@ -720,7 +720,7 @@ def michaelis_menten_fit(counts, num_repeats=1, params_guess=None):
         B_guess = int(round(n_indiv / 2))
         params_guess = (S_max_guess, B_guess)
 
-    # observed # of OTUs vs # of individuals sampled, S vs n
+    # observed # of taxa vs # of individuals sampled, S vs n
     xvals = np.arange(1, n_indiv + 1)
     ymtx = np.empty((num_repeats, len(xvals)), dtype=int)
     for i in range(num_repeats):
@@ -744,8 +744,8 @@ def sobs(counts):
     """Calculate the observed species richness of a sample.
 
     Observed species richness, usually denoted as :math:`S_{obs}` or simply
-    :math:`S`, is the number of distinct species, or any discrete groups of
-    biological entities found in a sample.
+    :math:`S`, is the number of distinct species (i.e., taxa), or any discrete
+    groups of biological entities found in a sample.
 
     It should be noted that observed species richness is smaller than or equal
     to the true species richness of a population from which the sample is
@@ -824,7 +824,7 @@ def observed_otus(counts):
 
 @experimental(as_of="0.4.0")
 def osd(counts):
-    """Calculate observed species, singletons, and doubletons.
+    """Calculate observed taxa, singletons, and doubletons.
 
     Parameters
     ----------
@@ -834,7 +834,7 @@ def osd(counts):
     Returns
     -------
     osd : tuple
-        Numbers of observed species, singletons, and doubletons.
+        Numbers of observed taxa, singletons, and doubletons.
 
     See Also
     --------
@@ -864,10 +864,10 @@ def pielou_e(counts):
        J' = \frac{(H)}{\ln(S)}
 
     where :math:`H` is the Shannon index of the sample and :math:`S` is the
-    number of species in the sample.
+    number of taxa in the sample.
 
     That is, :math:`J'` is the ratio of the actual Shannon index of the sample
-    versus the maximum-possible Shannon index when all species have the same
+    versus the maximum-possible Shannon index when all taxa have the same
     number of individuals. :math:`J'` ranges between 0 and 1.
 
     Parameters
@@ -909,7 +909,7 @@ def robbins(counts):
 
        \frac{F_1}{n+1}
 
-    where :math:`F_1` is the number of singleton species.
+    where :math:`F_1` is the number of singleton taxa.
 
     Parameters
     ----------
@@ -946,8 +946,8 @@ def shannon(counts, base=2):
 
        H' = -\sum_{i=1}^s\left(p_i\log_2 p_i\right)
 
-    where :math:`s` is the number of species and :math:`p_i` is the proportion
-    of the sample represented by species :math:`i`.
+    where :math:`s` is the number of taxa and :math:`p_i` is the proportion
+    of the sample represented by taxon :math:`i`.
 
     Parameters
     ----------
@@ -995,7 +995,7 @@ def simpson(counts):
 
        1 - \sum{p_i^2}
 
-    where :math:`p_i` is the proportion of the sample represented by species
+    where :math:`p_i` is the proportion of the sample represented by taxon
     :math:`i`.
 
     Therefore, Simpson's diversity index is also denoted as :math:`1 - D`, in
@@ -1040,10 +1040,10 @@ def simpson_e(counts):
        E_D = \frac{1}{D \times S}
 
     where :math:`D` is the Simpson's dominance index and :math:`S` is the
-    number of species in the sample.
+    number of taxa in the sample.
 
     That is, :math:`E_D` is the ratio of the minimum-possible Simpson's
-    dominance index when all species have the same number of individuals:
+    dominance index when all taxa have the same number of individuals:
     :math:`D_{min} = 1 / S`, versus the actual Simpson's dominance index of the
     sample.
 
@@ -1080,7 +1080,7 @@ def simpson_e(counts):
 
 @experimental(as_of="0.4.0")
 def singles(counts):
-    """Calculate number of single-occurrence species (singletons).
+    """Calculate number of single-occurrence taxa (singletons).
 
     Parameters
     ----------
@@ -1108,11 +1108,11 @@ def strong(counts):
        D_w = max_i[(\frac{b_i}{N})-\frac{i}{S}]
 
     where :math:`b_i` is the sequential cumulative totaling of the
-    :math:`i^{\text{th}}` species abundance values ranked from largest to
+    :math:`i^{\text{th}}` taxon abundance values ranked from largest to
     smallest, :math:`N` is the total number of individuals in the sample, and
-    :math:`S` is the number of species in the sample. The expression in
-    brackets is computed for all species, and :math:`max_i` denotes the maximum
-    value in brackets for any species.
+    :math:`S` is the number of taxa in the sample. The expression in
+    brackets is computed for all taxa, and :math:`max_i` denotes the maximum
+    value in brackets for any taxa.
 
     Parameters
     ----------

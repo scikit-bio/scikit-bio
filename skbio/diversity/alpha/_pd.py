@@ -11,24 +11,23 @@ import numpy as np
 from skbio.util._decorator import experimental
 from skbio.diversity._util import (
     _validate_counts_vector,
-    _validate_otu_ids_and_tree,
+    _validate_taxa_and_tree,
     _vectorize_counts_and_tree,
+    _check_taxa_alias,
 )
 
 
-def _setup_pd(counts, otu_ids, tree, validate, rooted, single_sample):
+def _setup_pd(counts, taxa, tree, validate, rooted, single_sample):
     if validate:
         if single_sample:
             # only validate count if operating in single sample mode, they
             # will have already been validated otherwise
             counts = _validate_counts_vector(counts)
-            _validate_otu_ids_and_tree(counts, otu_ids, tree, rooted)
+            _validate_taxa_and_tree(counts, taxa, tree, rooted)
         else:
-            _validate_otu_ids_and_tree(counts[0], otu_ids, tree, rooted)
+            _validate_taxa_and_tree(counts[0], taxa, tree, rooted)
 
-    counts_by_node, _, branch_lengths = _vectorize_counts_and_tree(
-        counts, otu_ids, tree
-    )
+    counts_by_node, _, branch_lengths = _vectorize_counts_and_tree(counts, taxa, tree)
 
     return counts_by_node, branch_lengths
 
@@ -39,7 +38,7 @@ def _faith_pd(counts_by_node, branch_lengths):
 
 
 @experimental(as_of="0.4.1")
-def faith_pd(counts, otu_ids, tree, validate=True):
+def faith_pd(counts, taxa=None, tree=None, validate=True, otu_ids=None):
     r"""Calculate Faith's phylogenetic diversity (Faith's PD) metric.
 
     The Faith's PD metric is defined as:
@@ -56,21 +55,24 @@ def faith_pd(counts, otu_ids, tree, validate=True):
     Parameters
     ----------
     counts : 1-D array_like, int
-        Vectors of counts/abundances of OTUs for one sample.
-    otu_ids : list, np.array
-        Vector of OTU ids corresponding to tip names in ``tree``. Must be the
-        same length as ``counts``.
+        Vectors of counts/abundances of taxa for one sample.
+    taxa : list, np.array
+        Vector of taxon IDs corresponding to tip names in ``tree``. Must be the
+        same length as ``counts``. Required.
     tree : skbio.TreeNode
-        Tree relating the OTUs in otu_ids. The set of tip names in the tree can
-        be a superset of ``otu_ids``, but not a subset.
+        Tree relating taxa. The set of tip names in the tree can be a superset
+        of ``taxa``, but not a subset. Required.
     validate: bool, optional
-        If `False`, validation of the input won't be performed. This step can
+        If ``False``, validation of the input won't be performed. This step can
         be slow, so if validation is run elsewhere it can be disabled here.
         However, invalid input data can lead to invalid results or error
         messages that are hard to interpret, so this step should not be
         bypassed if you're not certain that your input data are valid. See
         :mod:`skbio.diversity` for the description of what validation entails
         so you can determine if you can safely disable validation.
+    otu_ids : list, np.array
+        Alias of ``taxa`` for backward compatibility. Deprecated and to be
+        removed in a future release.
 
     Returns
     -------
@@ -118,11 +120,10 @@ def faith_pd(counts, otu_ids, tree, validate=True):
     inputs. First, the input tree must be rooted. In PyCogent, if an unrooted
     tree was provided that had a single trifurcating node (a newick convention
     for unrooted trees) that node was considered the root of the tree. Next,
-    all OTU IDs must be tips in the tree. PyCogent would silently ignore OTU
-    IDs that were not present the tree. To reproduce Faith PD results from
-    PyCogent with scikit-bio, ensure that your PyCogent Faith PD calculations
-    are performed on a rooted tree and that all OTU IDs are present in the
-    tree.
+    all taxa must be tips in the tree. PyCogent would silently ignore taxa that
+    were not present the tree. To reproduce Faith PD results from PyCogent with
+    scikit-bio, ensure that your PyCogent Faith PD calculations are performed
+    on a rooted tree and that all taxa are present in the tree.
 
     References
     ----------
@@ -146,38 +147,38 @@ def faith_pd(counts, otu_ids, tree, validate=True):
 
     Examples
     --------
-    Assume we have the following abundance data for a sample ``u``,
-    represented as a counts vector. These counts represent the
-    number of times specific Operational Taxonomic Units, or OTUs, were
-    observed in the sample.
+    Assume we have the following abundance data for a sample ``u``, represented
+    as a counts vector. These counts represent the number of times specific
+    taxa were observed in the sample.
 
     >>> u_counts = [1, 0, 0, 4, 1, 2, 3, 0]
 
     Because Faith PD is a phylogenetic diversity metric, we need to know which
-    OTU each count corresponds to, which we'll provide as ``otu_ids``.
+    taxon each count corresponds to, which we'll provide as ``taxa``.
 
-    >>> otu_ids = ['OTU1', 'OTU2', 'OTU3', 'OTU4', 'OTU5', 'OTU6', 'OTU7',
-    ...            'OTU8']
+    >>> taxa = ['U1', 'U2', 'U3', 'U4', 'U5', 'U6', 'U7', 'U8']
 
-    We also need a phylogenetic tree that relates the OTUs to one another.
+    We also need a phylogenetic tree that relates the taxa to one another.
 
     >>> from io import StringIO
     >>> from skbio import TreeNode
     >>> tree = TreeNode.read(StringIO(
-    ...                      '(((((OTU1:0.5,OTU2:0.5):0.5,OTU3:1.0):1.0):0.0,'
-    ...                      '(OTU4:0.75,(OTU5:0.5,((OTU6:0.33,OTU7:0.62):0.5'
-    ...                      ',OTU8:0.5):0.5):0.5):1.25):0.0)root;'))
+    ...                      '(((((U1:0.5,U2:0.5):0.5,U3:1.0):1.0):0.0,'
+    ...                      '(U4:0.75,(U5:0.5,((U6:0.33,U7:0.62):0.5'
+    ...                      ',U8:0.5):0.5):0.5):1.25):0.0)root;'))
 
     We can then compute the Faith PD of the sample.
 
     >>> from skbio.diversity.alpha import faith_pd
-    >>> pd = faith_pd(u_counts, otu_ids, tree)
+    >>> pd = faith_pd(u_counts, taxa, tree)
     >>> print(round(pd, 2))
     6.95
 
     """
+    taxa = _check_taxa_alias(taxa, tree, otu_ids)
+
     counts_by_node, branch_lengths = _setup_pd(
-        counts, otu_ids, tree, validate, rooted=True, single_sample=True
+        counts, taxa, tree, validate, rooted=True, single_sample=True
     )
 
     return _faith_pd(counts_by_node, branch_lengths)
@@ -216,19 +217,21 @@ def _phydiv(counts_by_node, branch_lengths, rooted, weight):
 
 
 @experimental(as_of="0.6.0")
-def phydiv(counts, otu_ids, tree, rooted=None, weight=False, validate=True):
+def phydiv(
+    counts, taxa=None, tree=None, rooted=None, weight=False, validate=True, otu_ids=None
+):
     r"""Calculate generalized phylogenetic diversity (PD) metrics.
 
     Parameters
     ----------
     counts : 1-D array_like, int
-        Vectors of counts/abundances of OTUs for one sample.
-    otu_ids : list, np.array
-        Vector of OTU ids corresponding to tip names in ``tree``. Must be the
-        same length as ``counts``.
+        Vectors of counts/abundances of taxa for one sample.
+    taxa : list, np.array
+        Vector of taxon IDs corresponding to tip names in ``tree``. Must be the
+        same length as ``counts``. Required.
     tree : skbio.TreeNode
-        Tree relating the OTUs in otu_ids. The set of tip names in the tree can
-        be a superset of ``otu_ids``, but not a subset.
+        Tree relating taxa. The set of tip names in the tree can be a superset
+        of ``taxa``, but not a subset. Required.
     rooted : bool, optional
         Whether the metric is calculated considering the root of the tree. By
         default, this will be determined based on whether the input tree is
@@ -241,6 +244,9 @@ def phydiv(counts, otu_ids, tree, rooted=None, weight=False, validate=True):
         fully-weighted).
     validate: bool, optional
         Whether validate the input data. See ``faith_pd`` for details.
+    otu_ids : list, np.array
+        Alias of ``taxa`` for backward compatibility. Deprecated and to be
+        removed in a future release.
 
     Returns
     -------
@@ -397,10 +403,12 @@ def phydiv(counts, otu_ids, tree, rooted=None, weight=False, validate=True):
        Bioinformatics, 28(16), 2106-2113.
 
     """
+    taxa = _check_taxa_alias(taxa, tree, otu_ids)
+
     # whether tree is rooted should not affect whether metric can be calculated
     # ; it is common unrooted PD is calculated on a rooted tree
     counts_by_node, branch_lengths = _setup_pd(
-        counts, otu_ids, tree, validate, rooted=False, single_sample=True
+        counts, taxa, tree, validate, rooted=False, single_sample=True
     )
 
     # if not specified, determine whether metric should be calculated in rooted
