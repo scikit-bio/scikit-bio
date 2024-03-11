@@ -17,7 +17,6 @@ from scipy.stats import ConstantInputWarning
 from scipy.stats import NearConstantInputWarning
 
 from skbio.stats.distance import DistanceMatrix
-from skbio.util._decorator import experimental
 
 from ._cutils import mantel_perm_pearsonr_cy
 

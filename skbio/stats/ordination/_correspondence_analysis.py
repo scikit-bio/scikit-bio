@@ -12,7 +12,6 @@ from scipy.linalg import svd
 
 from ._ordination_results import OrdinationResults
 from ._utils import svd_rank
-from skbio.util._decorator import experimental
 
 
 # @experimental(as_of="0.4.0")

@@ -8,7 +8,6 @@
 
 import numpy as np
 
-from skbio.util._decorator import experimental
 from skbio.diversity._driver import partial_beta_diversity
 from skbio.stats.distance import DistanceMatrix
 from skbio.diversity._util import _validate_counts_matrix

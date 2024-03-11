@@ -10,7 +10,6 @@ import numpy as np
 
 from ._base import osd
 from skbio.diversity._util import _validate_counts_vector
-from skbio.util._decorator import experimental
 
 
 # @experimental(as_of="0.4.0")

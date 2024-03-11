@@ -37,7 +37,6 @@ from skbio.io._fileobject import (
     CompressedBufferedReader,
     CompressedBufferedWriter,
 )
-from skbio.util._decorator import stable
 
 _d = dict(
     mode="r",

@@ -29,7 +29,7 @@ from skbio.sequence._alphabet import (
     _indices_in_observed,
 )
 from skbio.util import find_duplicates
-from skbio.util._decorator import stable, experimental, classonlymethod, overrides
+from skbio.util._decorator import classonlymethod, overrides
 
 
 class Sequence(

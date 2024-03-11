@@ -13,7 +13,6 @@ from copy import copy
 
 import numpy as np
 
-from skbio.util._decorator import experimental
 from .__subsample import _subsample_counts_without_replacement
 
 

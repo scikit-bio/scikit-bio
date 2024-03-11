@@ -15,7 +15,6 @@ from scipy.linalg import eigh
 from warnings import warn
 
 from skbio.stats.distance import DistanceMatrix
-from skbio.util._decorator import experimental
 from ._ordination_results import OrdinationResults
 from ._utils import center_distance_matrix, scale
 

@@ -6,13 +6,7 @@
 # The full license is in the file LICENSE.txt, distributed with this software.
 # ----------------------------------------------------------------------------
 
-import warnings
-import textwrap
-
-import decorator
-
 from ._exception import OverrideError
-from ._warning import DeprecationWarning as SkbioDeprecationWarning
 
 
 # Adapted from http://stackoverflow.com/a/8313042/579416

@@ -8,7 +8,7 @@
 
 import numpy as np
 
-from skbio.util._decorator import classproperty, stable, classonlymethod
+from skbio.util._decorator import classproperty, classonlymethod
 from skbio._base import SkbioObject
 from skbio.sequence import Protein, RNA
 from skbio._base import ElasticLines

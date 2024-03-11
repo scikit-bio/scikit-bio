@@ -110,7 +110,6 @@ import numpy as np
 import pandas as pd
 import scipy.stats
 import skbio.util
-from skbio.util._decorator import experimental
 from skbio.stats.distance import DistanceMatrix
 from skbio.util._misc import get_rng
 from scipy.sparse import coo_matrix

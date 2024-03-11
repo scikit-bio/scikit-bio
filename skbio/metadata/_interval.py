@@ -11,7 +11,7 @@ import copy
 import functools
 
 from ._intersection import IntervalTree
-from skbio.util._decorator import experimental, classonlymethod
+from skbio.util._decorator import classonlymethod
 
 
 class Interval:

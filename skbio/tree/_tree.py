@@ -27,7 +27,7 @@ from ._exception import (
     TreeError,
 )
 from skbio.util import RepresentationWarning
-from skbio.util._decorator import experimental, classonlymethod
+from skbio.util._decorator import classonlymethod
 
 
 def distance_from_r(m1, m2):

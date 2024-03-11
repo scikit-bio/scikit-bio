@@ -102,8 +102,6 @@ import numpy as np
 from natsort import realsorted
 from scipy.stats import f_oneway
 
-from skbio.util._decorator import experimental
-
 
 def _weight_by_vector(trajectories, w_vector):
     r"""Weight the values of `trajectories` given a weighting vector `w_vector`.

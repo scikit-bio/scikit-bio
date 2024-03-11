@@ -11,7 +11,6 @@ from scipy.special import gammaln
 from scipy.optimize import fmin_powell, minimize_scalar
 
 from skbio.stats import subsample_counts
-from skbio.util._decorator import experimental, deprecated
 from skbio.diversity._util import _validate_counts_vector
 
 

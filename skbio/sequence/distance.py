@@ -32,7 +32,6 @@ import numpy as np
 import scipy.spatial.distance
 
 import skbio
-from skbio.util._decorator import experimental
 
 
 # @experimental(as_of="0.4.2")

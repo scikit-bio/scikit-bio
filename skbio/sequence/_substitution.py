@@ -8,7 +8,7 @@
 
 import numpy as np
 
-from skbio.util._decorator import experimental, classonlymethod
+from skbio.util._decorator import classonlymethod
 from skbio.stats.distance import DissimilarityMatrix
 from skbio.sequence._alphabet import _alphabet_to_hashes
 

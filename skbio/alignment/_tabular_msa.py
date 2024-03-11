@@ -17,7 +17,7 @@ from skbio._base import SkbioObject
 from skbio.metadata._mixin import MetadataMixin, PositionalMetadataMixin
 from skbio.sequence import Sequence
 from skbio.sequence._grammared_sequence import GrammaredSequence
-from skbio.util._decorator import experimental, classonlymethod, overrides
+from skbio.util._decorator import classonlymethod, overrides
 from skbio.util._misc import resolve_key
 from skbio.alignment._indexing import TabularMSAILoc, TabularMSALoc
 

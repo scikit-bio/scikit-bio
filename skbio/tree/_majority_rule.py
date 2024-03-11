@@ -11,7 +11,6 @@ from collections import defaultdict
 import numpy as np
 
 from skbio.tree import TreeNode
-from skbio.util._decorator import experimental
 
 
 def _walk_clades(trees, weights):

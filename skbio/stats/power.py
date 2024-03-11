@@ -146,8 +146,6 @@ import copy
 import numpy as np
 import scipy.stats
 
-from skbio.util._decorator import experimental
-
 
 # @experimental(as_of="0.4.0")
 def subsample_power(

@@ -10,7 +10,6 @@ import functools
 
 import numpy as np
 
-from skbio.util._decorator import experimental
 from skbio.diversity._util import (
     _validate_counts_matrix,
     _validate_otu_ids_and_tree,

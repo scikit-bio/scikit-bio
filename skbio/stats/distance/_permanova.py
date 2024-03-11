@@ -16,7 +16,6 @@ from ._base import (
     _build_results,
     DistanceMatrix,
 )
-from skbio.util._decorator import experimental
 from ._cutils import permanova_f_stat_sW_cy
 
 

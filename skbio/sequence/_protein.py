@@ -9,7 +9,6 @@
 import numpy as np
 
 from skbio.util._decorator import classproperty, overrides
-from skbio.util._decorator import stable
 from ._grammared_sequence import GrammaredSequence, _motifs as parent_motifs
 
 

@@ -14,7 +14,6 @@ import numpy as np
 import numpy.testing as npt
 import pandas.testing as pdt
 from scipy.spatial.distance import pdist
-from ._decorator import experimental
 
 
 class ReallyEqualMixin:

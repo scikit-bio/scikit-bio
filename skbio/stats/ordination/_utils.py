@@ -8,7 +8,6 @@
 
 import numpy as np
 
-from skbio.util._decorator import experimental
 from ._cutils import center_distance_matrix_cy
 
 

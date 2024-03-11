@@ -208,8 +208,6 @@ from functools import update_wrapper
 from collections.abc import Iterable
 from types import MethodType
 
-from skbio.util._decorator import experimental
-
 
 class NotExecuted:
     """Helper object to track if a method was executed."""

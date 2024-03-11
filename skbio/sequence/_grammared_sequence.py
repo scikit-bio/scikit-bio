@@ -12,13 +12,7 @@ import re
 
 import numpy as np
 
-from skbio.util._decorator import (
-    classproperty,
-    overrides,
-    stable,
-    deprecated,
-    experimental,
-)
+from skbio.util._decorator import classproperty, overrides
 from skbio.util._misc import MiniRegistry
 from ._sequence import Sequence
 

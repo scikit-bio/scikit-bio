@@ -17,7 +17,7 @@ from skbio.sequence import DNA, RNA, Protein
 from skbio.sequence import GrammaredSequence
 from skbio.sequence import SubstitutionMatrix
 from skbio.util import EfficiencyWarning
-from skbio.util._decorator import experimental, deprecated
+# from skbio.util._decorator import experimental, deprecated
 
 
 # @experimental(as_of="0.4.0")

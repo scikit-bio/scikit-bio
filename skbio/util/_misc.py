@@ -12,8 +12,6 @@ from types import FunctionType
 
 import numpy as np
 
-# from ._decorator import experimental
-
 
 def resolve_key(obj, key):
     """Resolve key given an object and key."""

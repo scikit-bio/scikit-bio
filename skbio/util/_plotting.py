@@ -9,8 +9,6 @@
 import importlib
 from io import StringIO, BytesIO
 
-from ._decorator import experimental
-
 
 # @experimental(as_of="0.6.0")
 class PlottableMixin:
