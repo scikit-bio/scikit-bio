@@ -244,7 +244,7 @@ How should I write comments?
 How should I test my code?
 --------------------------
 
-There are several different approaches for testing code in python: ``nose``, ``unittest`` and ``numpy.testing``. Their purpose is the same, to check that execution of code given some input produces a specified output. The cases to which the approaches lend themselves are different.
+There are several different approaches for testing code in python: ``unittest`` and ``numpy.testing``. Their purpose is the same, to check that execution of code given some input produces a specified output. The cases to which the approaches lend themselves are different.
 
 Whatever approach is employed, the general principle is every line of code should be tested. It is critical that your code be fully tested before you draw conclusions from results it produces. For scientific work, bugs don't just mean unhappy users who you'll never actually meet: **they may mean retracted publications**.
 
@@ -259,7 +259,7 @@ Run the test suite when you change `anything`. Even if a change seems trivial, i
 Some pointers
 ^^^^^^^^^^^^^
 
-- *Use the* ``unittest`` *or the* ``nose`` *framework with tests in a separate file for each module.* Name the test file ``test_module_name.py`` and include it inside the tests folder of the module. Keeping the tests separate from the code reduces the temptation to change the tests when the code doesn't work, and makes it easy to verify that a completely new implementation presents the same interface (behaves the same) as the old.
+- *Use the* ``unittest`` *framework with tests in a separate file for each module.* Name the test file ``test_module_name.py`` and include it inside the tests folder of the module. Keeping the tests separate from the code reduces the temptation to change the tests when the code doesn't work, and makes it easy to verify that a completely new implementation presents the same interface (behaves the same) as the old.
 
 - *Always include an* ``__init__.py`` *file in your tests directory*. This is required for the module to be included when the package is built and installed via ``setup.py``.
 
@@ -273,7 +273,7 @@ Some pointers
 
 - *Tests of private methods should be in a separate* ``TestCase`` *called* ``ClassNameTests_private``. Private methods may change if you change the implementation. It is not required that test cases for private methods pass when you change things (that's why they're private, after all), though it is often useful to have these tests for debugging.
 
-- *Test `all` the methods in your class.* You should assume that any method you haven't tested has bugs. The convention for naming tests is ``test_method_name``. Any leading and trailing underscores on the method name can be ignored for the purposes of the test; however, *all tests must start with the literal substring* ``test`` *for* ``unittest`` and ``nose`` *to find them.* If the method is particularly complex, or has several discretely different cases you need to check, use ``test_method_name_suffix``, e.g. ``test_init_empty``, ``test_init_single``, ``test_init_wrong_type``, etc. for testing ``__init__``.
+- *Test `all` the methods in your class.* You should assume that any method you haven't tested has bugs. The convention for naming tests is ``test_method_name``. Any leading and trailing underscores on the method name can be ignored for the purposes of the test; however, *all tests must start with the literal substring* ``test`` *for* ``unittest`` *to find them.* If the method is particularly complex, or has several discretely different cases you need to check, use ``test_method_name_suffix``, e.g. ``test_init_empty``, ``test_init_single``, ``test_init_wrong_type``, etc. for testing ``__init__``.
 
 - *Docstrings for testing methods should be considered optional*, instead the description of what the method does should be included in the name itself, therefore the name should be descriptive enough such that when running the tests in verbose mode you can immediately see the file and test method that's failing.
 
@@ -305,7 +305,7 @@ Some pointers
 Example test module
 ^^^^^^^^^^^^^^^^^^^
 
-Here is an example of a ``nose`` test module structure:
+Here is an example of a unit-test module structure:
 
 .. code-block:: python
 
@@ -318,35 +318,35 @@ Here is an example of a ``nose`` test module structure:
     # ----------------------------------------------------------------------------
 
     import numpy as np
-    from nose.tools import assert_almost_equal, assert_raises
+    import unittest
 
     from skbio.math.diversity.alpha.ace import ace
 
 
-    def test_ace():
-        assert_almost_equal(ace(np.array([2, 0])), 1.0)
-        assert_almost_equal(ace(np.array([12, 0, 9])), 2.0)
-        assert_almost_equal(ace(np.array([12, 2, 8])), 3.0)
-        assert_almost_equal(ace(np.array([12, 2, 1])), 4.0)
-        assert_almost_equal(ace(np.array([12, 1, 2, 1])), 7.0)
-        assert_almost_equal(ace(np.array([12, 3, 2, 1])), 4.6)
-        assert_almost_equal(ace(np.array([12, 3, 6, 1, 10])), 5.62749672)
+    class AceTests(unittest.TestCase):
 
-        # Just returns the number of OTUs when all are abundant.
-        assert_almost_equal(ace(np.array([12, 12, 13, 14])), 4.0)
+        def test_ace(self):
+            self.assertAlmostEqual(ace(np.array([2, 0])), 1.0)
+            self.assertAlmostEqual(ace(np.array([12, 0, 9])), 2.0)
+            self.assertAlmostEqual(ace(np.array([12, 2, 8])), 3.0)
+            self.assertAlmostEqual(ace(np.array([12, 2, 1])), 4.0)
+            self.assertAlmostEqual(ace(np.array([12, 1, 2, 1])), 7.0)
+            self.assertAlmostEqual(ace(np.array([12, 3, 2, 1])), 4.6)
+            self.assertAlmostEqual(ace(np.array([12, 3, 6, 1, 10])), 5.62749672)
 
-        # Border case: only singletons and 10-tons, no abundant OTUs.
-        assert_almost_equal(ace([0, 1, 1, 0, 0, 10, 10, 1, 0, 0]), 9.35681818182)
+            # Just returns the number of OTUs when all are abundant.
+            self.assertAlmostEqual(ace(np.array([12, 12, 13, 14])), 4.0)
 
+            # Border case: only singletons and 10-tons, no abundant OTUs.
+            self.assertAlmostEqual(ace([0, 1, 1, 0, 0, 10, 10, 1, 0, 0]), 9.35681818182)
 
-    def test_ace_only_rare_singletons():
-        with assert_raises(ValueError):
-            ace([0, 0, 43, 0, 1, 0, 1, 42, 1, 43])
+        def test_ace_only_rare_singletons(self):
+            with self.assertRaises(ValueError):
+                ace([0, 0, 43, 0, 1, 0, 1, 42, 1, 43])
 
 
     if __name__ == '__main__':
-        import nose
-        nose.runmodule()
+        unittest.main()
 
 
 Git pointers
