@@ -42,7 +42,7 @@ individual organism's genome.
    unit (OTU), a historically important term in microbiome research. However,
    as the field advances and the research targets diverge (e.g., amplicon
    sequence variant, or ASV), a more generic term such as "taxon" becomes more
-   appropriate. Therefore, the term OTU was replaced by taxon since scikit-bio
+   appropriate. Therefore, the term OTU was replaced by taxon in scikit-bio
    0.6.0.
 
 Each frequency in a given vector represents the number of individuals observed

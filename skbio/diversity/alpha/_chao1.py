@@ -213,7 +213,7 @@ def _chao_confidence_no_singletons(n, s, zscore=1.96):
 
     Uses Eq. 14 of EstimateS manual.
 
-    `n` is the number of individuals and `s` is the number of observed species.
+    `n` is the number of individuals and `s` is the number of observed taxa.
 
     """
     P = np.exp(-n / s)
