@@ -594,15 +594,7 @@ def global_pairwise_align(
 
     return msa, score, start_end_positions
 
-    # @deprecated(
-    as_of = ("0.5.8",)
-    until = ("0.6.0",)
-    reason = "This will be removed or replaced, in favor of more general"
-    "-purpose performant aligners. Additional details at "
-    ("https://github.com/scikit-bio/scikit-bio/issues/1814",)
 
-
-# )
 def local_pairwise_align_ssw(sequence1, sequence2, **kwargs):
     """Align query and target sequences with Striped Smith-Waterman.
 
@@ -622,6 +614,11 @@ def local_pairwise_align_ssw(sequence1, sequence2, **kwargs):
         (float), and start/end positions of each input sequence (iterable
         of two-item tuples). Note that start/end positions are indexes into the
         unaligned sequences.
+
+    Warnings
+    --------
+    This function is deprecated as of 0.5.8 and will be removed in favor of more
+    general-purpose performant aligners. Additional details at :repo:`issues/1814`.
 
     Notes
     -----
@@ -732,6 +729,10 @@ def make_identity_substitution_matrix(match_score, mismatch_score, alphabet="ACG
         All characters in alphabet are keys in both dictionaries, so that any
         pair of characters can be looked up to get their match or mismatch
         score.
+
+    Warnings
+    --------
+
 
     """
     result = {}
