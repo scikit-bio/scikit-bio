@@ -34,7 +34,6 @@ import scipy.spatial.distance
 import skbio
 
 
-# @experimental(as_of="0.4.2")
 def hamming(seq1, seq2):
     """Compute Hamming distance between two sequences.
 
@@ -104,7 +103,6 @@ def hamming(seq1, seq2):
     return float(distance)
 
 
-# @experimental(as_of="0.5.0")
 def kmer_distance(seq1, seq2, k, overlap=True):
     """Compute the kmer distance between a pair of sequences.
 

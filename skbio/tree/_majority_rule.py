@@ -179,7 +179,6 @@ def _build_trees(clade_counts, edge_lengths, support_attr, tree_node_class):
     return list(nodes.values())
 
 
-# @experimental(as_of="0.4.0")
 def majority_rule(
     trees, weights=None, cutoff=0.5, support_attr="support", tree_node_class=TreeNode
 ):

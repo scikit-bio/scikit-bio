@@ -13,7 +13,6 @@ from skbio.stats.distance import DissimilarityMatrix
 from skbio.sequence._alphabet import _alphabet_to_hashes
 
 
-# @experimental(as_of="0.6.0")
 class SubstitutionMatrix(DissimilarityMatrix):
     """Scoring matrix between characters in biological sequences.
 
@@ -83,7 +82,6 @@ class SubstitutionMatrix(DissimilarityMatrix):
     """
 
     @property
-    # @experimental(as_of="0.6.0")
     def alphabet(self):
         """Alphabet of the substitution matrix.
 
@@ -102,7 +100,6 @@ class SubstitutionMatrix(DissimilarityMatrix):
         return self._ids
 
     @property
-    # @experimental(as_of="0.6.0")
     def scores(self):
         """Matrix of substitution scores.
 
@@ -122,7 +119,6 @@ class SubstitutionMatrix(DissimilarityMatrix):
         return self._data
 
     @property
-    # @experimental(as_of="0.6.0")
     def is_ascii(self):
         """Whether alphabet consists of single ASCII characters.
 
@@ -137,7 +133,6 @@ class SubstitutionMatrix(DissimilarityMatrix):
         """
         return self._is_ascii
 
-    # @experimental(as_of="0.6.0")
     def __init__(self, alphabet, scores, **kwargs):
         """Initialize a substitution matrix object."""
         super().__init__(scores, alphabet, **kwargs)
@@ -159,7 +154,6 @@ class SubstitutionMatrix(DissimilarityMatrix):
             self._is_ascii = True
             self._char_hash = hash_
 
-    # @experimental(as_of="0.6.0")
     def to_dict(self):
         """Create a 2D dictionary from the substitution matrix.
 
@@ -174,7 +168,6 @@ class SubstitutionMatrix(DissimilarityMatrix):
         }
 
     @classonlymethod
-    # @experimental(as_of="0.6.0")
     def from_dict(cls, dictionary):
         """Create a substitution matrix from a 2D dictionary.
 
@@ -227,7 +220,6 @@ class SubstitutionMatrix(DissimilarityMatrix):
         return cls(alphabet, scores)
 
     @classonlymethod
-    # @experimental(as_of="0.6.0")
     def identity(cls, alphabet, match, mismatch):
         """Create an identity substitution matrix.
 
@@ -266,7 +258,6 @@ class SubstitutionMatrix(DissimilarityMatrix):
         return cls(alphabet, scores)
 
     @classonlymethod
-    # @experimental(as_of="0.6.0")
     def by_name(cls, name):
         """Load a pre-defined substitution matrix by its name.
 
@@ -336,7 +327,6 @@ class SubstitutionMatrix(DissimilarityMatrix):
             raise ValueError(f'Substitution matrix "{name}" does not exist.')
 
     @classonlymethod
-    # @experimental(as_of="0.6.0")
     def get_names(cls):
         """List names of pre-defined substitution matrices.
 

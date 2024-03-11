@@ -20,7 +20,6 @@ from skbio.util import EfficiencyWarning
 # from skbio.util._decorator import experimental, deprecated
 
 
-# @experimental(as_of="0.4.0")
 def local_pairwise_align_nucleotide(
     seq1,
     seq2,
@@ -102,7 +101,6 @@ def local_pairwise_align_nucleotide(
     )
 
 
-# @experimental(as_of="0.4.0")
 def local_pairwise_align_protein(
     seq1, seq2, gap_open_penalty=11, gap_extend_penalty=1, substitution_matrix=None
 ):
@@ -171,7 +169,6 @@ def local_pairwise_align_protein(
     )
 
 
-# @experimental(as_of="0.4.0")
 def local_pairwise_align(
     seq1, seq2, gap_open_penalty, gap_extend_penalty, substitution_matrix
 ):
@@ -273,7 +270,6 @@ def local_pairwise_align(
     return msa, score, start_end_positions
 
 
-# @experimental(as_of="0.4.0")
 def global_pairwise_align_nucleotide(
     seq1,
     seq2,
@@ -377,7 +373,6 @@ def global_pairwise_align_nucleotide(
     )
 
 
-# @experimental(as_of="0.4.0")
 def global_pairwise_align_protein(
     seq1,
     seq2,
@@ -472,7 +467,6 @@ def global_pairwise_align_protein(
     )
 
 
-# @experimental(as_of="0.4.0")
 def global_pairwise_align(
     seq1,
     seq2,

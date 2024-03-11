@@ -14,7 +14,6 @@ from skbio.stats import subsample_counts
 from skbio.diversity._util import _validate_counts_vector
 
 
-# @experimental(as_of="0.4.0")
 def berger_parker_d(counts):
     r"""Calculate Berger-Parker dominance index.
 
@@ -55,7 +54,6 @@ def berger_parker_d(counts):
     return counts.max() / N
 
 
-# @experimental(as_of="0.4.0")
 def brillouin_d(counts):
     r"""Calculate Brillouin's diversity index.
 
@@ -96,7 +94,6 @@ def brillouin_d(counts):
     return (gammaln(N + 1) - gammaln(nz + 1).sum()) / N
 
 
-# @experimental(as_of="0.4.0")
 def dominance(counts):
     r"""Calculate Simpson's dominance index.
 
@@ -153,7 +150,6 @@ def dominance(counts):
     return ((counts / N) ** 2).sum()
 
 
-# @experimental(as_of="0.4.0")
 def doubles(counts):
     """Calculate number of double-occurrence species (doubletons).
 
@@ -172,7 +168,6 @@ def doubles(counts):
     return (counts == 2).sum()
 
 
-# @experimental(as_of="0.4.0")
 def enspie(counts):
     r"""Calculate ENS_pie alpha diversity measure.
 
@@ -214,7 +209,6 @@ def enspie(counts):
     return 1 / dominance(counts)
 
 
-# @experimental(as_of="0.4.0")
 def esty_ci(counts):
     r"""Calculate Esty's confidence interval of Good's coverage estimator.
 
@@ -270,7 +264,6 @@ def esty_ci(counts):
     return f1 / N - z * np.sqrt(W), f1 / N + z * np.sqrt(W)
 
 
-# @experimental(as_of="0.4.0")
 @np.errstate(invalid="ignore")
 def fisher_alpha(counts):
     r"""Calculate Fisher's alpha, a metric of diversity.
@@ -346,7 +339,6 @@ def fisher_alpha(counts):
     return res.x
 
 
-# @experimental(as_of="0.4.0")
 def goods_coverage(counts):
     r"""Calculate Good's coverage estimator.
 
@@ -387,7 +379,6 @@ def goods_coverage(counts):
     return 1 - (f1 / N)
 
 
-# @experimental(as_of="0.4.0")
 def heip_e(counts):
     r"""Calculate Heip's evenness measure.
 
@@ -429,7 +420,6 @@ def heip_e(counts):
     return (np.exp(shannon(counts, base=np.e)) - 1) / (sobs(counts) - 1)
 
 
-# @experimental(as_of="0.4.0")
 def kempton_taylor_q(counts, lower_quantile=0.25, upper_quantile=0.75):
     """Calculate Kempton-Taylor Q index of alpha diversity.
 
@@ -479,7 +469,6 @@ def kempton_taylor_q(counts, lower_quantile=0.25, upper_quantile=0.75):
     return (upper - lower) / np.log(sorted_counts[upper] / sorted_counts[lower])
 
 
-# @experimental(as_of="0.4.0")
 def margalef(counts):
     r"""Calculate Margalef's richness index.
 
@@ -520,7 +509,6 @@ def margalef(counts):
     return (sobs(counts) - 1) / np.log(N)
 
 
-# @experimental(as_of="0.4.0")
 def mcintosh_d(counts):
     r"""Calculate McIntosh dominance index.
 
@@ -571,7 +559,6 @@ def mcintosh_d(counts):
     return (N - u) / (N - np.sqrt(N))
 
 
-# @experimental(as_of="0.4.0")
 def mcintosh_e(counts):
     r"""Calculate McIntosh's evenness measure E.
 
@@ -618,7 +605,6 @@ def mcintosh_e(counts):
     return numerator / denominator
 
 
-# @experimental(as_of="0.4.0")
 def menhinick(counts):
     r"""Calculate Menhinick's richness index.
 
@@ -657,7 +643,6 @@ def menhinick(counts):
     return sobs(counts) / np.sqrt(counts.sum())
 
 
-# @experimental(as_of="0.4.0")
 def michaelis_menten_fit(counts, num_repeats=1, params_guess=None):
     r"""Calculate Michaelis-Menten fit to rarefaction curve of observed OTUs.
 
@@ -738,7 +723,6 @@ def michaelis_menten_fit(counts, num_repeats=1, params_guess=None):
     ]
 
 
-# @experimental(as_of="0.6.0")
 def sobs(counts):
     """Calculate the observed species richness of a sample.
 
@@ -769,7 +753,6 @@ def sobs(counts):
     return (counts != 0).sum()
 
 
-# @experimental(as_of="0.6.0")
 def observed_features(counts):
     """Calculate the number of distinct features.
 
@@ -821,7 +804,6 @@ def observed_otus(counts):
     return sobs(counts)
 
 
-# @experimental(as_of="0.4.0")
 def osd(counts):
     """Calculate observed species, singletons, and doubletons.
 
@@ -851,7 +833,6 @@ def osd(counts):
     return sobs(counts), singles(counts), doubles(counts)
 
 
-# @experimental(as_of="0.4.1")
 def pielou_e(counts):
     r"""Calculate Pielou's evenness index.
 
@@ -898,7 +879,6 @@ def pielou_e(counts):
     return 0.0 if (H := shannon(counts, base=np.e)) == 0.0 else H / np.log(sobs(counts))
 
 
-# @experimental(as_of="0.4.0")
 def robbins(counts):
     r"""Calculate Robbins' estimator for probability of unobserved outcomes.
 
@@ -934,7 +914,6 @@ def robbins(counts):
     return singles(counts) / counts.sum()
 
 
-# @experimental(as_of="0.4.0")
 def shannon(counts, base=2):
     r"""Calculate Shannon's diversity index, default in bits.
 
@@ -983,7 +962,6 @@ def shannon(counts, base=2):
     return -(nonzero_freqs * np.log(nonzero_freqs)).sum() / np.log(base)
 
 
-# @experimental(as_of="0.4.0")
 def simpson(counts):
     r"""Calculate Simpson's diversity index.
 
@@ -1028,7 +1006,6 @@ def simpson(counts):
     return 1 - dominance(counts)
 
 
-# @experimental(as_of="0.4.0")
 def simpson_e(counts):
     r"""Calculate Simpson's evenness index.
 
@@ -1077,7 +1054,6 @@ def simpson_e(counts):
     return enspie(counts) / sobs(counts)
 
 
-# @experimental(as_of="0.4.0")
 def singles(counts):
     """Calculate number of single-occurrence species (singletons).
 
@@ -1096,7 +1072,6 @@ def singles(counts):
     return (counts == 1).sum()
 
 
-# @experimental(as_of="0.4.0")
 def strong(counts):
     r"""Calculate Strong's dominance index.
 

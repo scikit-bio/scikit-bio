@@ -10,11 +10,9 @@ import importlib
 from io import StringIO, BytesIO
 
 
-# @experimental(as_of="0.6.0")
 class PlottableMixin:
     """A plottable object."""
 
-    # @experimental(as_of="0.6.0")
     def _get_mpl_plt(self):
         """Import Matplotlib and its plotting interface."""
         msg = "Plotting requires Matplotlib installed in the system."
@@ -30,7 +28,6 @@ class PlottableMixin:
         else:
             self.plt = importlib.import_module("matplotlib.pyplot")
 
-    # @experimental(as_of="0.6.0")
     def _figure_data(self, format="png"):
         """Get figure data of a plottable object.
 
@@ -68,18 +65,15 @@ class PlottableMixin:
 
         return f.getvalue()
 
-    # @experimental(as_of="0.6.0")
     def _repr_png_(self):
         """Generate a PNG format figure for display in IPython."""
         return self._figure_data("png")
 
-    # @experimental(as_of="0.6.0")
     def _repr_svg_(self):
         """Generate an SVG format figure for display in IPython."""
         return self._figure_data("svg")
 
     @property
-    # @experimental(as_of="0.4.0")
     def png(self):
         """Get figure data in PNG format.
 
@@ -92,7 +86,6 @@ class PlottableMixin:
         return self._repr_png_()
 
     @property
-    # @experimental(as_of="0.4.0")
     def svg(self):
         """Get figure data in SVG format.
 

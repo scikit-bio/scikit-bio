@@ -14,7 +14,6 @@ from ._ordination_results import OrdinationResults
 from ._utils import svd_rank
 
 
-# @experimental(as_of="0.4.0")
 def ca(X, scaling=1):
     r"""Compute correspondence analysis.
 

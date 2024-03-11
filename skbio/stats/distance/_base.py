@@ -98,7 +98,6 @@ class DissimilarityMatrix(SkbioObject, PlottableMixin):
     # Used in __str__
     _matrix_element_name = "dissimilarity"
 
-    # @experimental(as_of="0.4.0")
     def __init__(self, data, ids=None, validate=True):
         validate_full = validate
         validate_shape = False
@@ -167,7 +166,6 @@ class DissimilarityMatrix(SkbioObject, PlottableMixin):
         self._id_index = self._index_list(self._ids)
 
     @classonlymethod
-    # @experimental(as_of="0.5.1")
     def from_iterable(cls, iterable, metric, key=None, keys=None):
         """Create DissimilarityMatrix from an iterable given a metric.
 
@@ -217,7 +215,6 @@ class DissimilarityMatrix(SkbioObject, PlottableMixin):
         return cls(dm, keys_)
 
     @property
-    # @experimental(as_of="0.4.0")
     def data(self):
         """Array of dissimilarities.
 
@@ -232,7 +229,6 @@ class DissimilarityMatrix(SkbioObject, PlottableMixin):
         return self._data
 
     @property
-    # @experimental(as_of="0.4.0")
     def ids(self):
         """Tuple of object IDs.
 
@@ -254,13 +250,11 @@ class DissimilarityMatrix(SkbioObject, PlottableMixin):
         self._id_index = self._index_list(self._ids)
 
     @property
-    # @experimental(as_of="0.4.0")
     def dtype(self):
         """Data type of the dissimilarities."""
         return self.data.dtype
 
     @property
-    # @experimental(as_of="0.4.0")
     def shape(self):
         """Two-element tuple containing the dissimilarity matrix dimensions.
 
@@ -273,7 +267,6 @@ class DissimilarityMatrix(SkbioObject, PlottableMixin):
         return self.data.shape
 
     @property
-    # @experimental(as_of="0.4.0")
     def size(self):
         """Total number of elements in the dissimilarity matrix.
 
@@ -285,7 +278,6 @@ class DissimilarityMatrix(SkbioObject, PlottableMixin):
         return self.data.size
 
     @property
-    # @experimental(as_of="0.4.0")
     def T(self):
         """Transpose of the dissimilarity matrix.
 
@@ -296,7 +288,6 @@ class DissimilarityMatrix(SkbioObject, PlottableMixin):
         """
         return self.transpose()
 
-    # @experimental(as_of="0.4.0")
     def transpose(self):
         """Return the transpose of the dissimilarity matrix.
 
@@ -314,7 +305,6 @@ class DissimilarityMatrix(SkbioObject, PlottableMixin):
         # Note: Skip validation, since we assume self was already validated
         return self.__class__(self.data.T.copy(), deepcopy(self.ids), validate=False)
 
-    # @experimental(as_of="0.4.0")
     def index(self, lookup_id):
         """Return the index of the specified ID.
 
@@ -339,7 +329,6 @@ class DissimilarityMatrix(SkbioObject, PlottableMixin):
         else:
             raise MissingIDError(lookup_id)
 
-    # @experimental(as_of="0.4.0")
     def redundant_form(self):
         """Return an array of dissimilarities in redundant format.
 
@@ -365,7 +354,6 @@ class DissimilarityMatrix(SkbioObject, PlottableMixin):
         """
         return self.data
 
-    # @experimental(as_of="0.4.0")
     def copy(self):
         """Return a deep copy of the dissimilarity matrix.
 
@@ -381,7 +369,6 @@ class DissimilarityMatrix(SkbioObject, PlottableMixin):
         # Note: Skip validation, since we assume self was already validated
         return self.__class__(self.data.copy(), deepcopy(self.ids), validate=False)
 
-    # @experimental(as_of="0.4.0")
     def filter(self, ids, strict=True):
         """Filter the dissimilarity matrix by IDs.
 
@@ -448,7 +435,6 @@ class DissimilarityMatrix(SkbioObject, PlottableMixin):
         id_order = sorted(self._id_index[i] for i in ids)
         return np.array(id_order, dtype=int)
 
-    # @experimental(as_of="0.5.5")
     def within(self, ids):
         """Obtain all the distances among the set of IDs.
 
@@ -506,7 +492,6 @@ class DissimilarityMatrix(SkbioObject, PlottableMixin):
 
         return self._subset_to_dataframe(ids, ids)
 
-    # @experimental(as_of="0.5.5")
     def between(self, from_, to_, allow_overlap=False):
         """Obtain the distances between the two groups of IDs.
 
@@ -626,7 +611,6 @@ class DissimilarityMatrix(SkbioObject, PlottableMixin):
 
         return pd.concat([i, j, values], axis=1)
 
-    # @experimental(as_of="0.4.0")
     def plot(self, cmap=None, title=""):
         """Create a heatmap of the dissimilarity matrix.
 
@@ -694,7 +678,6 @@ class DissimilarityMatrix(SkbioObject, PlottableMixin):
 
         return fig
 
-    # @experimental(as_of="0.4.1")
     def to_data_frame(self):
         """Create a ``pandas.DataFrame`` from this ``DissimilarityMatrix``.
 
@@ -719,7 +702,6 @@ class DissimilarityMatrix(SkbioObject, PlottableMixin):
         """
         return pd.DataFrame(data=self.data, index=self.ids, columns=self.ids)
 
-    # @experimental(as_of="0.4.0")
     def __str__(self):
         """Return a string representation of the dissimilarity matrix.
 
@@ -739,7 +721,6 @@ class DissimilarityMatrix(SkbioObject, PlottableMixin):
             _pprint_strs(self.ids),
         ) + str(self.data)
 
-    # @experimental(as_of="0.4.0")
     def __eq__(self, other):
         """Compare this dissimilarity matrix to another for equality.
 
@@ -780,7 +761,6 @@ class DissimilarityMatrix(SkbioObject, PlottableMixin):
 
         return equal
 
-    # @experimental(as_of="0.4.0")
     def __ne__(self, other):
         """Determine whether two dissimilarity matrices are not equal.
 
@@ -801,7 +781,6 @@ class DissimilarityMatrix(SkbioObject, PlottableMixin):
         """
         return not self == other
 
-    # @experimental(as_of="0.4.0")
     def __contains__(self, lookup_id):
         """Check if the specified ID is in the dissimilarity matrix.
 
@@ -823,7 +802,6 @@ class DissimilarityMatrix(SkbioObject, PlottableMixin):
         """
         return lookup_id in self._id_index
 
-    # @experimental(as_of="0.4.0")
     def __getitem__(self, index):
         """Slice into dissimilarity data by object ID or numpy indexing.
 
@@ -1007,7 +985,6 @@ class DistanceMatrix(DissimilarityMatrix):
     _matrix_element_name = "distance"
 
     @classonlymethod
-    # @experimental(as_of="0.4.1")
     def from_iterable(cls, iterable, metric, key=None, keys=None, validate=True):
         """Create DistanceMatrix from all pairs in an iterable given a metric.
 
@@ -1067,7 +1044,6 @@ class DistanceMatrix(DissimilarityMatrix):
 
         return cls(dm, keys_)
 
-    # @experimental(as_of="0.4.0")
     def condensed_form(self):
         """Return an array of distances in condensed format.
 
@@ -1090,7 +1066,6 @@ class DistanceMatrix(DissimilarityMatrix):
         """
         return squareform(self._data, force="tovector", checks=False)
 
-    # @experimental(as_of="0.4.0")
     def permute(self, condensed=False):
         """Randomly permute both rows and columns in the matrix.
 
@@ -1152,7 +1127,6 @@ class DistanceMatrix(DissimilarityMatrix):
                 "Data must be hollow (i.e., the diagonal" " can only contain zeros)."
             )
 
-    # @experimental(as_of="0.5.1")
     def to_series(self):
         """Create a ``pandas.Series`` from this ``DistanceMatrix``.
 
@@ -1203,7 +1177,6 @@ class DistanceMatrix(DissimilarityMatrix):
         return pd.Series(data=distances, index=index, dtype=float)
 
 
-# @experimental(as_of="0.4.0")
 def randdm(num_objects, ids=None, constructor=None, random_fn=None):
     """Generate a distance matrix populated with random distances.
 

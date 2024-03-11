@@ -144,7 +144,6 @@ class TabularMSA(MetadataMixin, PositionalMetadataMixin, SkbioObject):
     __hash__ = None
 
     @property
-    # @experimental(as_of="0.4.1")
     def dtype(self):
         """Data type of the stored sequences.
 
@@ -165,7 +164,6 @@ class TabularMSA(MetadataMixin, PositionalMetadataMixin, SkbioObject):
         return type(self._get_sequence_iloc_(0)) if len(self) > 0 else None
 
     @property
-    # @experimental(as_of="0.4.1")
     def shape(self):
         """Number of sequences (rows) and positions (columns).
 
@@ -207,7 +205,6 @@ class TabularMSA(MetadataMixin, PositionalMetadataMixin, SkbioObject):
         return _Shape(sequence=sequence_count, position=position_count)
 
     @property
-    # @experimental(as_of="0.4.1")
     def index(self):
         """Index containing labels along the sequence axis.
 
@@ -271,7 +268,6 @@ class TabularMSA(MetadataMixin, PositionalMetadataMixin, SkbioObject):
         self._seqs.index = pd.RangeIndex(start=0, stop=len(self), step=1)
 
     @property
-    # @experimental(as_of="0.4.1")
     def loc(self):
         """Slice the MSA on first axis by index label, second axis by position.
 
@@ -537,7 +533,6 @@ class TabularMSA(MetadataMixin, PositionalMetadataMixin, SkbioObject):
         return self._loc
 
     @property
-    # @experimental(as_of="0.4.1")
     def iloc(self):
         """Slice the MSA on either axis by index position.
 
@@ -719,7 +714,6 @@ class TabularMSA(MetadataMixin, PositionalMetadataMixin, SkbioObject):
         return self._iloc
 
     @classonlymethod
-    # @experimental(as_of="0.4.1")
     def from_dict(cls, dictionary):
         """Create a ``TabularMSA`` from a ``dict``.
 
@@ -765,7 +759,6 @@ class TabularMSA(MetadataMixin, PositionalMetadataMixin, SkbioObject):
         #         dictionary-view-objects
         return cls(dictionary.values(), index=dictionary.keys())
 
-    # @experimental(as_of="0.4.1")
     def __init__(
         self,
         sequences,
@@ -843,7 +836,6 @@ class TabularMSA(MetadataMixin, PositionalMetadataMixin, SkbioObject):
             index=index,
         )
 
-    # @experimental(as_of="0.4.1")
     def __repr__(self):
         """Return string summary of this MSA."""
         pep8_line_length_limit = 79
@@ -857,7 +849,6 @@ class TabularMSA(MetadataMixin, PositionalMetadataMixin, SkbioObject):
             ("position count", str(self.shape.position)),
         ]
 
-    # @experimental(as_of="0.4.1")
     def __bool__(self):
         """Boolean indicating whether the MSA is empty or not.
 
@@ -894,7 +885,6 @@ class TabularMSA(MetadataMixin, PositionalMetadataMixin, SkbioObject):
         # TODO: change for #1198
         return self.shape.position > 0
 
-    # @experimental(as_of="0.4.1")
     def __contains__(self, label):
         """Determine if an index label is in this MSA.
 
@@ -922,7 +912,6 @@ class TabularMSA(MetadataMixin, PositionalMetadataMixin, SkbioObject):
         """
         return label in self.index
 
-    # @experimental(as_of="0.4.1")
     def __len__(self):
         """Return number of sequences in the MSA.
 
@@ -948,7 +937,6 @@ class TabularMSA(MetadataMixin, PositionalMetadataMixin, SkbioObject):
         """
         return len(self._seqs)
 
-    # @experimental(as_of="0.4.1")
     def __iter__(self):
         """Iterate over sequences in the MSA.
 
@@ -969,7 +957,6 @@ class TabularMSA(MetadataMixin, PositionalMetadataMixin, SkbioObject):
         """
         return iter(self._seqs)
 
-    # @experimental(as_of="0.4.1")
     def __reversed__(self):
         """Iterate in reverse order over sequences in the MSA.
 
@@ -990,12 +977,10 @@ class TabularMSA(MetadataMixin, PositionalMetadataMixin, SkbioObject):
         """
         return reversed(self._seqs)
 
-    # @experimental(as_of="0.4.1")
     def __str__(self):
         """Return string summary of this MSA."""
         return self.__repr__()
 
-    # @experimental(as_of="0.4.1")
     def __eq__(self, other):
         """Determine if this MSA is equal to another.
 
@@ -1064,7 +1049,6 @@ class TabularMSA(MetadataMixin, PositionalMetadataMixin, SkbioObject):
 
         return self._seqs.equals(other._seqs)
 
-    # @experimental(as_of="0.4.1")
     def __ne__(self, other):
         """Determine if this MSA is not equal to another.
 
@@ -1088,7 +1072,6 @@ class TabularMSA(MetadataMixin, PositionalMetadataMixin, SkbioObject):
         """
         return not (self == other)
 
-    # @experimental(as_of="0.4.1")
     def __copy__(self):
         """Return a shallow copy of this MSA.
 
@@ -1120,7 +1103,6 @@ class TabularMSA(MetadataMixin, PositionalMetadataMixin, SkbioObject):
 
         return msa_copy
 
-    # @experimental(as_of="0.4.1")
     def __deepcopy__(self, memo):
         """Return a deep copy of this MSA.
 
@@ -1153,7 +1135,6 @@ class TabularMSA(MetadataMixin, PositionalMetadataMixin, SkbioObject):
 
         return msa_copy
 
-    # @experimental(as_of="0.4.1")
     def __getitem__(self, indexable):
         """Slice the MSA on either axis.
 
@@ -1232,7 +1213,6 @@ class TabularMSA(MetadataMixin, PositionalMetadataMixin, SkbioObject):
 
     # end of helpers
 
-    # @experimental(as_of="0.4.1")
     def iter_positions(self, reverse=False, ignore_metadata=False):
         """Iterate over positions (columns) in the MSA.
 
@@ -1360,7 +1340,6 @@ class TabularMSA(MetadataMixin, PositionalMetadataMixin, SkbioObject):
             for index in indices
         )
 
-    # @experimental(as_of="0.4.1")
     def consensus(self):
         """Compute the majority consensus sequence for this MSA.
 
@@ -1451,7 +1430,6 @@ class TabularMSA(MetadataMixin, PositionalMetadataMixin, SkbioObject):
 
         return f
 
-    # @experimental(as_of="0.4.1")
     def conservation(
         self,
         metric="inverse_shannon_uncertainty",
@@ -1588,7 +1566,6 @@ class TabularMSA(MetadataMixin, PositionalMetadataMixin, SkbioObject):
 
         return np.array(result)
 
-    # @experimental(as_of="0.4.1")
     def gap_frequencies(self, axis="sequence", relative=False):
         """Compute frequency of gap characters across an axis.
 
@@ -1672,7 +1649,6 @@ class TabularMSA(MetadataMixin, PositionalMetadataMixin, SkbioObject):
 
         return gap_freqs
 
-    # @experimental(as_of="0.4.1")
     def reassign_index(self, mapping=None, minter=None):
         """Reassign index labels to sequences in this MSA.
 
@@ -1753,7 +1729,6 @@ class TabularMSA(MetadataMixin, PositionalMetadataMixin, SkbioObject):
         else:
             del self.index
 
-    # @experimental(as_of="0.4.1")
     def append(self, sequence, minter=None, index=None, reset_index=False):
         """Append a sequence to the MSA without recomputing alignment.
 
@@ -1855,7 +1830,6 @@ class TabularMSA(MetadataMixin, PositionalMetadataMixin, SkbioObject):
             index = [index]
         self.extend([sequence], minter=minter, index=index, reset_index=reset_index)
 
-    # @experimental(as_of="0.4.1")
     def extend(self, sequences, minter=None, index=None, reset_index=False):
         """Extend this MSA with sequences without recomputing alignment.
 
@@ -2455,7 +2429,6 @@ class TabularMSA(MetadataMixin, PositionalMetadataMixin, SkbioObject):
         self._seqs.sort_index(ascending=ascending, level=level, inplace=True)
         self.positional_metadata.sort_index(axis=1, inplace=True)
 
-    # @experimental(as_of="0.4.1")
     def to_dict(self):
         """Create a ``dict`` from this ``TabularMSA``.
 

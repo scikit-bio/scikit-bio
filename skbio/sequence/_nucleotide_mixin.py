@@ -53,7 +53,6 @@ class NucleotideMixin(metaclass=ABCMeta):
 
     @abstractproperty
     @classproperty
-    # @stable(as_of="0.4.0")
     def complement_map(cls):
         """Return mapping of nucleotide characters to their complements.
 
@@ -70,7 +69,6 @@ class NucleotideMixin(metaclass=ABCMeta):
         """
         raise NotImplementedError
 
-    # @stable(as_of="0.4.0")
     def complement(self, reverse=False):
         """Return the complement of the nucleotide sequence.
 
@@ -170,7 +168,6 @@ class NucleotideMixin(metaclass=ABCMeta):
 
         return complement
 
-    # @stable(as_of="0.4.0")
     def reverse_complement(self):
         """Return the reverse complement of the nucleotide sequence.
 
@@ -216,7 +213,6 @@ class NucleotideMixin(metaclass=ABCMeta):
         """
         return self.complement(reverse=True)
 
-    # @stable(as_of="0.4.0")
     def is_reverse_complement(self, other):
         r"""Determine if a sequence is the reverse complement of this sequence.
 
@@ -263,7 +259,6 @@ class NucleotideMixin(metaclass=ABCMeta):
             # underlying sequence data
             return self.reverse_complement()._string == other._string
 
-    # @stable(as_of="0.4.0")
     def gc_content(self):
         """Calculate the relative frequency of G's and C's in the sequence.
 
@@ -308,7 +303,6 @@ class NucleotideMixin(metaclass=ABCMeta):
         """
         return self.gc_frequency(relative=True)
 
-    # @stable(as_of="0.4.0")
     def gc_frequency(self, relative=False):
         """Calculate frequency of G's and C's in the sequence.
 

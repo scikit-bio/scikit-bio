@@ -25,7 +25,6 @@ from ._base import (
 from skbio.stats.ordination import pcoa, OrdinationResults
 
 
-# @experimental(as_of="0.5.2")
 def permdisp(
     distance_matrix,
     grouping,

@@ -115,7 +115,6 @@ fuzzy=[(False, False), (False, False)], metadata={'name': 'genA'})
             self._interval_metadata._interval_tree.add(start, end, self)
         self._interval_metadata._intervals.append(self)
 
-    # @experimental(as_of="0.5.1")
     def __eq__(self, other):
         """Test if this ``Interval`` object is equal to another.
 
@@ -141,7 +140,6 @@ fuzzy=[(False, False), (False, False)], metadata={'name': 'genA'})
             and (self.fuzzy == other.fuzzy)
         )
 
-    # @experimental(as_of="0.5.1")
     def __ne__(self, other):
         """Test if this ``Interval`` object is not equal to another.
 
@@ -158,7 +156,6 @@ fuzzy=[(False, False), (False, False)], metadata={'name': 'genA'})
         """
         return not (self == other)
 
-    # @experimental(as_of="0.5.1")
     def __repr__(self):
         """Return a string representation of this ``Interval`` object.
 
@@ -186,7 +183,6 @@ fuzzy=[(False, False), (False, False)], metadata={'name': 'genA'})
                 self.metadata,
             )
 
-    # @experimental(as_of="0.5.1")
     def drop(self):
         """Drop this ``Interval`` object from interval metadata it links to.
 
@@ -291,7 +287,6 @@ fuzzy=[(False, False), (False, False)], metadata={'name': 'genA'})
             )
 
     @property
-    # @experimental(as_of="0.5.1")
     def fuzzy(self):
         """The openness of each coordinate.
 
@@ -308,7 +303,6 @@ fuzzy=[(False, False), (False, False)], metadata={'name': 'genA'})
         return self._fuzzy
 
     @fuzzy.setter
-    # @experimental(as_of="0.5.1")
     def fuzzy(self, value):
         """Set ``fuzzy``.
 
@@ -317,7 +311,6 @@ fuzzy=[(False, False), (False, False)], metadata={'name': 'genA'})
         self._bounds_fuzzy_setter(fuzzy=value)
 
     @fuzzy.deleter
-    # @experimental(as_of="0.5.1")
     def fuzzy(self):
         """Delete ``fuzzy``.
 
@@ -328,7 +321,6 @@ fuzzy=[(False, False), (False, False)], metadata={'name': 'genA'})
         self._fuzzy = [(False, False)] * len(self.bounds)
 
     @property
-    # @experimental(as_of="0.5.1")
     def bounds(self):
         """The coordinates of the interval feature.
 
@@ -340,7 +332,6 @@ fuzzy=[(False, False), (False, False)], metadata={'name': 'genA'})
         return self._bounds
 
     @bounds.setter
-    # @experimental(as_of="0.5.1")
     def bounds(self, value):
         """Set ``bounds``.
 
@@ -351,7 +342,6 @@ fuzzy=[(False, False), (False, False)], metadata={'name': 'genA'})
         self._bounds_fuzzy_setter(bounds=value)
 
     @property
-    # @experimental(as_of="0.5.1")
     def metadata(self):
         """The metadata of the interval feature.
 
@@ -361,7 +351,6 @@ fuzzy=[(False, False), (False, False)], metadata={'name': 'genA'})
         return self._metadata
 
     @metadata.setter
-    # @experimental(as_of="0.5.1")
     def metadata(self, value):
         if self.dropped:
             raise RuntimeError("Cannot change metadata on dropped " "Interval object.")
@@ -370,7 +359,6 @@ fuzzy=[(False, False), (False, False)], metadata={'name': 'genA'})
         self._metadata = value
 
     @metadata.deleter
-    # @experimental(as_of="0.5.1")
     def metadata(self):
         """Delete metadata.
 
@@ -381,7 +369,6 @@ fuzzy=[(False, False), (False, False)], metadata={'name': 'genA'})
         self._metadata = {}
 
     @property
-    # @experimental(as_of="0.5.1")
     def dropped(self):
         """Boolean value indicating if the ``Interval`` object is dropped.
 
@@ -550,19 +537,16 @@ fuzzy=[(False, False)], metadata={'gene': 'sagB'})
                 self.add(bounds_cp, fuzzy=fuzzy_cp, metadata=metadata_cp)
 
     @property
-    # @experimental(as_of="0.5.1")
     def upper_bound(self):
         """The exclusive upper bound of interval features."""
         return self._upper_bound
 
     @property
-    # @experimental(as_of="0.5.1")
     def lower_bound(self):
         """The inclusive lower bound of interval features."""
         return 0
 
     @property
-    # @experimental(as_of="0.5.1")
     def num_interval_features(self):
         """The total number of interval features."""
         return len(self._intervals)
@@ -607,7 +591,6 @@ fuzzy=[(False, False)], metadata={'gene': 'sagB'})
         self._is_stale_tree = True
 
     @classonlymethod
-    # @experimental(as_of="0.5.1")
     def concat(cls, interval_metadata):
         """Concatenate an iterable of ``IntervalMetadata`` objects.
 
@@ -685,7 +668,6 @@ fuzzy=[(True, True)], metadata={'gene': 'sagB'})
 
         return new
 
-    # @experimental(as_of="0.5.1")
     def merge(self, other):
         """Merge the interval features of another ``IntervalMetadata`` object.
 
@@ -727,7 +709,6 @@ fuzzy=[(True, True)], metadata={'gene': 'sagB'})
         for intvl in other._intervals:
             self.add(intvl.bounds, intvl.fuzzy, intvl.metadata)
 
-    # @experimental(as_of="0.5.1")
     def sort(self, ascending=True):
         """Sort interval features by their coordinates.
 
@@ -746,7 +727,6 @@ fuzzy=[(True, True)], metadata={'gene': 'sagB'})
             key=lambda i: [i.bounds[0][0], i.bounds[-1][1]], reverse=not ascending
         )
 
-    # @experimental(as_of="0.5.1")
     def add(self, bounds, fuzzy=None, metadata=None):
         """Create and add an ``Interval`` to this ``IntervalMetadata``.
 
@@ -824,7 +804,6 @@ fuzzy=[(True, True)], metadata={'gene': 'sagB'})
             else:
                 yield intvl
 
-    # @experimental(as_of="0.5.1")
     @_rebuild_tree
     def query(self, bounds=None, metadata=None):
         """Yield ``Interval`` object with the bounds and attributes.
@@ -870,7 +849,6 @@ fuzzy=[(True, True)], metadata={'gene': 'sagB'})
                 for intvl in self._query_attribute(metadata, intvls):
                     yield intvl
 
-    # @experimental(as_of="0.5.1")
     def drop(self, intervals, negate=False):
         """Drop Interval objects.
 
@@ -902,7 +880,6 @@ fuzzy=[(True, True)], metadata={'gene': 'sagB'})
         self._intervals = new_intvls
         self._is_stale_tree = True
 
-    # @experimental(as_of="0.5.1")
     def __eq__(self, other):
         """Test if this object is equal to another.
 
@@ -934,7 +911,6 @@ fuzzy=[(True, True)], metadata={'gene': 'sagB'})
             )
             return self_intervals == other_intervals
 
-    # @experimental(as_of="0.5.1")
     def __ne__(self, other):
         """Test if this object is not equal to another.
 
@@ -955,7 +931,6 @@ fuzzy=[(True, True)], metadata={'gene': 'sagB'})
         """
         return not (self == other)
 
-    # @experimental(as_of="0.5.1")
     def __repr__(self):
         """Return a string representation of this object.
 
@@ -980,7 +955,6 @@ fuzzy=[(True, True)], metadata={'gene': 'sagB'})
 
         return "\n".join([l1, l2] + items)
 
-    # @experimental(as_of="0.5.1")
     def __copy__(self):
         """Return a shallow copy.
 
@@ -997,7 +971,6 @@ fuzzy=[(True, True)], metadata={'gene': 'sagB'})
         """
         return self._copy(False, {})
 
-    # @experimental(as_of="0.5.1")
     def __deepcopy__(self, memo):
         """Return a deep copy.
 
