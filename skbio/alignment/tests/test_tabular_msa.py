@@ -3677,6 +3677,7 @@ class TestRepr(unittest.TestCase):
 
 # NOTE: this must be a *separate* class for doctests only (no unit tests). nose
 # will not run the unit tests otherwise
+# TODO: check if this is still the case since nose is no longer used
 #
 # these doctests exercise the correct formatting of TabularMSA's repr in a
 # variety of situations. they are more extensive than the unit tests above
