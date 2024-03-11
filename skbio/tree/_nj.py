@@ -48,8 +48,8 @@ def nj(dm, disallow_negative_branch_length=True, result_constructor=None):
     -----
     Neighbor joining was initially described in Saitou and Nei (1987) [1]_. The
     example presented here is derived from the Wikipedia page on neighbor
-    joining [2]_. The Phylip manual also describes the method [3]_ and Phylip
-    itself provides an implementation which is useful for comparison.
+    joining [2]_. Gascuel and Steel (2006) provide a detailed overview of
+    Neighbor joining in terms of its biological relevance and limitations [3]_.
 
     Neighbor joining, by definition, creates unrooted trees. One strategy for
     rooting the resulting trees is midpoint rooting, which is accessible as
@@ -61,7 +61,9 @@ def nj(dm, disallow_negative_branch_length=True, result_constructor=None):
        method for reconstructing phylogenetic trees." Molecular Biology and
        Evolution. PMID: 3447015.
     .. [2] http://en.wikipedia.org/wiki/Neighbour_joining
-    .. [3] http://evolution.genetics.washington.edu/phylip/doc/neighbor.html
+    .. [3] Gascuel O, and Steel M. (2006) "Neighbor-Joining Revealed" Molecular
+       Biology and Evolution, Volume 23, Issue 11, November 2006,
+       Pages 1997–2000, https://doi.org/10.1093/molbev/msl072
 
     Examples
     --------
@@ -79,7 +81,7 @@ def nj(dm, disallow_negative_branch_length=True, result_constructor=None):
     >>> ids = list('abcde')
     >>> dm = DistanceMatrix(data, ids)
 
-    Contstruct the neighbor joining tree representing the relationship between
+    Construct the neighbor joining tree representing the relationship between
     those OTUs. This is returned as a TreeNode object.
 
     >>> tree = nj(dm)
@@ -163,7 +165,7 @@ def nj(dm, disallow_negative_branch_length=True, result_constructor=None):
         dm, pair_member_1, pair_member_2, disallow_negative_branch_length
     )
     # ...then determine their distance to the other remaining node, but first
-    # handle the trival case where the input dm was only 3 x 3
+    # handle the trivial case where the input dm was only 3 x 3
     node_definition = node_definition or dm.ids[0]
     internal_len = 0.5 * (
         dm[pair_member_1, node_definition]
@@ -256,7 +258,7 @@ def _lowest_index(dm):
 
 
 def _pair_members_to_new_node(dm, i, j, disallow_negative_branch_length):
-    """Return the distance between a new node and decendants of that new node.
+    """Return the distance between a new node and descendants of that new node.
 
     Parameters
     ----------
@@ -264,7 +266,7 @@ def _pair_members_to_new_node(dm, i, j, disallow_negative_branch_length):
         The input distance matrix.
     i, j : str
         Identifiers of entries in the distance matrix to be collapsed (i.e.,
-        the descendents of the new node, which is internally represented as
+        the descendants of the new node, which is internally represented as
         `u`).
     disallow_negative_branch_length : bool
         Neighbor joining can result in negative branch lengths, which don't
