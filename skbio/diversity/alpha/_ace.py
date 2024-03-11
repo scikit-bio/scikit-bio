@@ -21,13 +21,13 @@ def ace(counts, rare_threshold=10):
        S_{ace}=S_{abund}+\frac{S_{rare}}{C_{ace}}+
        \frac{F_1}{C_{ace}}\gamma^2_{ace}
 
-    where :math:`S_{abund}` is the number of abundant OTUs (with more than
+    where :math:`S_{abund}` is the number of abundant taxa (with more than
     `rare_threshold`  individuals) when all samples are pooled,
-    :math:`S_{rare}` is the number of rare OTUs (with less than or equal to
+    :math:`S_{rare}` is the number of rare taxa (with less than or equal to
     `rare_threshold` individuals) when all samples are pooled, :math:`C_{ace}`
     is the sample abundance coverage estimator, :math:`F_1` is the frequency of
     singletons, and :math:`\gamma^2_{ace}` is the estimated coefficient of
-    variation for rare OTUs.
+    variation for rare taxa.
 
     The estimated coefficient of variation is defined as (assuming
     `rare_threshold` is 10, the default):
@@ -43,7 +43,7 @@ def ace(counts, rare_threshold=10):
     counts : 1-D array_like, int
         Vector of counts.
     rare_threshold : int, optional
-        Threshold at which an OTU containing as many or fewer individuals will
+        Threshold at which a taxon containing as many or fewer individuals will
         be considered rare.
 
     Returns
@@ -54,19 +54,19 @@ def ace(counts, rare_threshold=10):
     Raises
     ------
     ValueError
-        If every rare OTU is a singleton.
+        If every rare taxon is a singleton.
 
     Notes
     -----
     ACE was first introduced in [1]_ and [2]_. The implementation here is based
     on the description given in the EstimateS manual [3]_.
 
-    If no rare OTUs exist, returns the number of abundant OTUs. The default
+    If no rare taxa exist, returns the number of abundant taxa. The default
     value of 10 for `rare_threshold` is based on [4]_.
 
-    If `counts` contains zeros, indicating OTUs which are known to exist in the
+    If `counts` contains zeros, indicating taxa which are known to exist in the
     environment but did not appear in the sample, they will be ignored for the
-    purpose of calculating the number of rare OTUs.
+    purpose of calculating the number of rare taxa.
 
     References
     ----------
@@ -84,17 +84,17 @@ def ace(counts, rare_threshold=10):
     """
     counts = _validate_counts_vector(counts)
     freq_counts = np.bincount(counts)
-    s_rare = _otus_rare(freq_counts, rare_threshold)
+    s_rare = _taxa_rare(freq_counts, rare_threshold)
     singles = freq_counts[1]
 
     if singles > 0 and singles == s_rare:
         raise ValueError(
-            "The only rare OTUs are singletons, so the ACE "
+            "The only rare taxa are singletons, so the ACE "
             "metric is undefined. EstimateS suggests using "
             "bias-corrected Chao1 instead."
         )
 
-    s_abun = _otus_abundant(freq_counts, rare_threshold)
+    s_abun = _taxa_abundant(freq_counts, rare_threshold)
     if s_rare == 0:
         return s_abun
 
@@ -111,18 +111,18 @@ def ace(counts, rare_threshold=10):
     return s_abun + (s_rare / c_ace) + ((singles / c_ace) * gamma_ace)
 
 
-def _otus_rare(freq_counts, rare_threshold):
-    """Count number of rare OTUs."""
+def _taxa_rare(freq_counts, rare_threshold):
+    """Count number of rare taxa."""
     return freq_counts[1 : rare_threshold + 1].sum()
 
 
-def _otus_abundant(freq_counts, rare_threshold):
-    """Count number of abundant OTUs."""
+def _taxa_abundant(freq_counts, rare_threshold):
+    """Count number of abundant taxa."""
     return freq_counts[rare_threshold + 1 :].sum()
 
 
 def _number_rare(freq_counts, rare_threshold, gamma=False):
-    """Return number of individuals in rare OTUs.
+    """Return number of individuals in rare taxa.
 
     ``gamma=True`` generates the ``n_rare`` used for the variation coefficient.
 

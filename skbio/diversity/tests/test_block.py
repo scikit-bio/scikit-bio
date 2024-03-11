@@ -116,9 +116,9 @@ class ParallelBetaDiversity(TestCase):
 
     def test_block_beta_diversity(self):
         exp = beta_diversity('unweighted_unifrac', self.table1, self.sids1,
-                             tree=self.tree1, otu_ids=self.oids1)
+                             tree=self.tree1, taxa=self.oids1)
         obs = block_beta_diversity('unweighted_unifrac', self.table1,
-                                   self.sids1, otu_ids=self.oids1,
+                                   self.sids1, taxa=self.oids1,
                                    tree=self.tree1, k=2)
         npt.assert_equal(obs.data, exp.data)
         self.assertEqual(obs.ids, exp.ids)
@@ -160,11 +160,11 @@ class ParallelBetaDiversity(TestCase):
                            [0, 0, 1],
                            [0, 1, 1]])
         tree = TreeNode.read(['(a:1,b:2,c:3);'])
-        otu_ids = ['a', 'b', 'c']
+        taxa = ['a', 'b', 'c']
 
-        kw = {'tree': tree, 'otu_ids': otu_ids}
-        kw_no_a = {'tree': tree.shear(['b', 'c']), 'otu_ids': ['b', 'c']}
-        kw_no_b = {'tree': tree.shear(['a', 'c']), 'otu_ids': ['a', 'c']}
+        kw = {'tree': tree, 'taxa': taxa}
+        kw_no_a = {'tree': tree.shear(['b', 'c']), 'taxa': ['b', 'c']}
+        kw_no_b = {'tree': tree.shear(['a', 'c']), 'taxa': ['a', 'c']}
 
         # python >= 3.5 supports {foo: bar, **baz}
         exp = [dict(counts=np.array([[1, 1, 1], [1, 0, 1]]), **kw),
@@ -180,7 +180,7 @@ class ParallelBetaDiversity(TestCase):
 
         for okw, ekw in zip(obs, exp):
             npt.assert_equal(okw['counts'], ekw['counts'])
-            npt.assert_equal(okw['otu_ids'], ekw['otu_ids'])
+            npt.assert_equal(okw['taxa'], ekw['taxa'])
             self.assertEqual(str(okw['tree']), str(ekw['tree']))
 
     def test_pairs_to_compute_rids_are_cids(self):

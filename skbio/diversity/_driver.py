@@ -127,7 +127,7 @@ def alpha_diversity(metric, counts, ids=None, validate=True, **kwargs):
         the metric being used.
     counts : 1D or 2D array_like of ints or floats
         Vector or matrix containing count/abundance data. If a matrix, each row
-        should contain counts of OTUs in a given sample.
+        should contain counts of taxa in a given sample.
     ids : iterable of strs, optional
         Identifiers for each sample in ``counts``. By default, samples will be
         assigned integer identifiers in the order that they were provided.
@@ -169,17 +169,17 @@ def alpha_diversity(metric, counts, ids=None, validate=True, **kwargs):
         counts = _validate_counts_matrix(counts, ids=ids)
 
     if metric == "faith_pd":
-        otu_ids, tree, kwargs = _get_phylogenetic_kwargs(counts, **kwargs)
+        taxa, tree, kwargs = _get_phylogenetic_kwargs(counts, **kwargs)
         counts_by_node, branch_lengths = _setup_pd(
-            counts, otu_ids, tree, validate, rooted=True, single_sample=False
+            counts, taxa, tree, validate, rooted=True, single_sample=False
         )
         counts = counts_by_node
         metric = functools.partial(_faith_pd, branch_lengths=branch_lengths, **kwargs)
 
     elif metric == "phydiv":
-        otu_ids, tree, kwargs = _get_phylogenetic_kwargs(counts, **kwargs)
+        taxa, tree, kwargs = _get_phylogenetic_kwargs(counts, **kwargs)
         counts_by_node, branch_lengths = _setup_pd(
-            counts, otu_ids, tree, validate, rooted=False, single_sample=False
+            counts, taxa, tree, validate, rooted=False, single_sample=False
         )
         counts = counts_by_node
         if "rooted" not in kwargs:
@@ -224,7 +224,7 @@ def partial_beta_diversity(metric, counts, ids, id_pairs, validate=True, **kwarg
         callable.
     counts : 2D array_like of ints or floats
         Matrix containing count/abundance data where each row contains counts
-        of OTUs in a given sample.
+        of taxa in a given sample.
     ids : iterable of strs
         Identifiers for each sample in ``counts``.
     id_pairs : iterable of tuple
@@ -272,18 +272,18 @@ def partial_beta_diversity(metric, counts, ids, id_pairs, validate=True, **kwarg
 
     if metric == "unweighted_unifrac":
         counts = _quantitative_to_qualitative_counts(counts)
-        otu_ids, tree, kwargs = _get_phylogenetic_kwargs(counts, **kwargs)
+        taxa, tree, kwargs = _get_phylogenetic_kwargs(counts, **kwargs)
         metric, counts_by_node = _setup_multiple_unweighted_unifrac(
-            counts, otu_ids=otu_ids, tree=tree, validate=validate
+            counts, taxa=taxa, tree=tree, validate=validate
         )
         counts = counts_by_node
     elif metric == "weighted_unifrac":
         # get the value for normalized. if it was not provided, it will fall
         # back to the default value inside of _weighted_unifrac_pdist_f
         normalized = kwargs.pop("normalized", _normalize_weighted_unifrac_by_default)
-        otu_ids, tree, kwargs = _get_phylogenetic_kwargs(counts, **kwargs)
+        taxa, tree, kwargs = _get_phylogenetic_kwargs(counts, **kwargs)
         metric, counts_by_node = _setup_multiple_weighted_unifrac(
-            counts, otu_ids=otu_ids, tree=tree, normalized=normalized, validate=validate
+            counts, taxa=taxa, tree=tree, normalized=normalized, validate=validate
         )
         counts = counts_by_node
     elif callable(metric):
@@ -362,7 +362,7 @@ def beta_diversity(
         results in an optimized version of the metric being used.
     counts : 2D array_like of ints or floats or 2D pandas DataFrame
         Matrix containing count/abundance data where each row contains counts
-        of OTUs in a given sample.
+        of taxa in a given sample.
     ids : iterable of strs, optional
         Identifiers for each sample in ``counts``. By default, samples will be
         assigned integer identifiers in the order that they were provided
@@ -423,18 +423,18 @@ def beta_diversity(
 
     if metric == "unweighted_unifrac":
         counts = _quantitative_to_qualitative_counts(counts)
-        otu_ids, tree, kwargs = _get_phylogenetic_kwargs(counts, **kwargs)
+        taxa, tree, kwargs = _get_phylogenetic_kwargs(counts, **kwargs)
         metric, counts_by_node = _setup_multiple_unweighted_unifrac(
-            counts, otu_ids=otu_ids, tree=tree, validate=validate
+            counts, taxa=taxa, tree=tree, validate=validate
         )
         counts = counts_by_node
     elif metric == "weighted_unifrac":
         # get the value for normalized. if it was not provided, it will fall
         # back to the default value inside of _weighted_unifrac_pdist_f
         normalized = kwargs.pop("normalized", _normalize_weighted_unifrac_by_default)
-        otu_ids, tree, kwargs = _get_phylogenetic_kwargs(counts, **kwargs)
+        taxa, tree, kwargs = _get_phylogenetic_kwargs(counts, **kwargs)
         metric, counts_by_node = _setup_multiple_weighted_unifrac(
-            counts, otu_ids=otu_ids, tree=tree, normalized=normalized, validate=validate
+            counts, taxa=taxa, tree=tree, normalized=normalized, validate=validate
         )
         counts = counts_by_node
     elif metric == "manhattan":

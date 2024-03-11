@@ -179,7 +179,7 @@ def _chao1_var_no_doubletons(s, chao1):
 def _chao1_var_no_singletons(n, o):
     """Calculate chao1 variance in absence of singletons.
 
-    `n` is the number of individuals and `o` is the number of observed OTUs.
+    `n` is the number of individuals and `o` is the number of observed species.
 
     From EstimateS manual, equation 8.
 
@@ -210,7 +210,7 @@ def _chao_confidence_no_singletons(n, s, zscore=1.96):
 
     Uses Eq. 14 of EstimateS manual.
 
-    `n` is the number of individuals and `s` is the number of OTUs.
+    `n` is the number of individuals and `s` is the number of observed taxa.
 
     """
     P = np.exp(-n / s)
