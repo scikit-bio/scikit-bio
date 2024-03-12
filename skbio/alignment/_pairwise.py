@@ -616,7 +616,7 @@ def local_pairwise_align_ssw(sequence1, sequence2, **kwargs):
 
     Warnings
     --------
-    This function is deprecated as of `0.5.8` and will be removed in favor of more
+    This function is deprecated as of ``0.5.8`` and will be removed in favor of more
     general-purpose performant aligners. Additional details at :repo:`issues/1814`.
 
     Notes
@@ -723,7 +723,7 @@ def make_identity_substitution_matrix(match_score, mismatch_score, alphabet="ACG
 
     Warnings
     --------
-    This function is deprecated as of `0.4.0`. It will be replaced by a
+    This function is deprecated as of ``0.4.0``. It will be replaced by a
     SubstitutionMatrix class. Additional details at :repo:`issues/161`.
 
     """

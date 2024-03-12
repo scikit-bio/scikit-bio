@@ -232,7 +232,7 @@ def partial_beta_diversity(metric, counts, ids, id_pairs, validate=True, **kwarg
 
     Warnings
     --------
-    This function is deprecated as of `0.5.0`. The return type is unstable. Developer
+    This function is deprecated as of ``0.5.0``. The return type is unstable. Developer
     caution is advised. The resulting DistanceMatrix object will include zeros when
     distance has not been calculated, and therefore can be misleading.
 

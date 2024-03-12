@@ -793,7 +793,7 @@ def observed_otus(counts):
 
     Warnings
     --------
-    This function is deprecated as of `0.6.0` due to its usage of the historical term
+    This function is deprecated as of ``0.6.0`` due to its usage of the historical term
     "OTU".
 
     See Also

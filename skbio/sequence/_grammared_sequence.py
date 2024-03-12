@@ -260,8 +260,12 @@ class GrammaredSequence(Sequence, metaclass=GrammaredSequenceMeta):
 
         Warnings
         --------
-        This function is deprecated as of `0.5.0`. It has been renamed to
-        `definite_chars`.
+        This function is deprecated as of ``0.5.0``. It has been renamed to
+        ``definite_chars``.
+
+        See Also
+        --------
+        definite_chars
 
         """  # noqa: D416
         return cls.definite_chars
@@ -503,10 +507,12 @@ class GrammaredSequence(Sequence, metaclass=GrammaredSequenceMeta):
 
         Warnings
         --------
-        This function is deprecated as of `0.5.0`. It has been renamed to `definites`.
+        This function is deprecated as of ``0.5.0``. It has been renamed to
+        ``definites``.
 
         See Also
         --------
+        definites
         has_definites
         degenerates
 
@@ -560,12 +566,13 @@ class GrammaredSequence(Sequence, metaclass=GrammaredSequenceMeta):
 
         Warnings
         --------
-        This function is deprecated as of `0.5.0`. It has been renamed to
-        `has_definites`.
+        This function is deprecated as of ``0.5.0``. It has been renamed to
+        ``has_definites``.
 
         See Also
         --------
         definites
+        has_definites
         degenerates
         has_degenerates
 
