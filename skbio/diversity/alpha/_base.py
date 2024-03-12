@@ -6,6 +6,8 @@
 # The full license is in the file LICENSE.txt, distributed with this software.
 # ----------------------------------------------------------------------------
 
+from warnings import warn
+
 import numpy as np
 from scipy.special import gammaln
 from scipy.optimize import fmin_powell, minimize_scalar
@@ -793,8 +795,8 @@ def observed_otus(counts):
 
     Warnings
     --------
-    This function is deprecated as of ``0.6.0`` due to its usage of the historical term
-    "OTU".
+    ``observed_otus`` is deprecated as of ``0.6.0`` due to its usage of the
+    historical term "OTU".
 
     See Also
     --------
@@ -805,6 +807,8 @@ def observed_otus(counts):
     `observed_otus` is an alias for `sobs`.
 
     """
+    warn("observed_otus is deprecated as of 0.6.0.", DeprecationWarning)
+
     return sobs(counts)
 
 

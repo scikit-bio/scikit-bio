@@ -616,8 +616,9 @@ def local_pairwise_align_ssw(sequence1, sequence2, **kwargs):
 
     Warnings
     --------
-    This function is deprecated as of ``0.5.8`` and will be removed in favor of more
-    general-purpose performant aligners. Additional details at :repo:`issues/1814`.
+    ``local_pairwise_align_ssw`` is deprecated as of ``0.5.8`` and will be removed in
+    favor of more general-purpose performant aligners. Additional details at
+    :repo:`issues/1814`.
 
     Notes
     -----
@@ -643,6 +644,13 @@ def local_pairwise_align_ssw(sequence1, sequence2, **kwargs):
     skbio.alignment.StripedSmithWaterman
 
     """
+    warn(
+        "local_pairwise_align_ssw is deprecated as of 0.5.8 and will be removed in "
+        "favor of more general purpose performant aligners. Additional details at "
+        "https://github.com/scikit-bio/scikit-bio/issues/1814.",
+        DeprecationWarning,
+    )
+
     for seq in sequence1, sequence2:
         if not isinstance(seq, (DNA, RNA, Protein)):
             raise TypeError(
@@ -723,10 +731,17 @@ def make_identity_substitution_matrix(match_score, mismatch_score, alphabet="ACG
 
     Warnings
     --------
-    This function is deprecated as of ``0.4.0``. It will be replaced by a
-    SubstitutionMatrix class. Additional details at :repo:`issues/161`.
+    ``make_identity_substitution_matrix`` is deprecated as of ``0.4.0``. It has been
+    replaced by a SubstitutionMatrix class. Additional details at :repo:`pull/1913`.
 
     """
+    warn(
+        "make_identity_substitution_matrix is deprecated as of 0.4.0 and has been "
+        "replaced by a SubstitutionMatrix class. Additional details at "
+        "https://github.com/scikit-bio/scikit-bio/pull/1913.",
+        DeprecationWarning,
+    )
+
     result = {}
     for c1 in alphabet:
         row = {}

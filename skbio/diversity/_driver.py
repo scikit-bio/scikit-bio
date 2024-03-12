@@ -8,6 +8,7 @@
 
 import functools
 import itertools
+from warnings import warn
 
 import numpy as np
 import scipy.spatial.distance
@@ -232,9 +233,10 @@ def partial_beta_diversity(metric, counts, ids, id_pairs, validate=True, **kwarg
 
     Warnings
     --------
-    This function is deprecated as of ``0.5.0``. The return type is unstable. Developer
-    caution is advised. The resulting DistanceMatrix object will include zeros when
-    distance has not been calculated, and therefore can be misleading.
+    ``partial_beta_diversity`` is deprecated as of ``0.5.0``. The return type is
+    unstable. Developer caution is advised. The resulting DistanceMatrix object will
+    include zeros when distance has not been calculated, and therefore can be
+    misleading.
 
     Raises
     ------
@@ -251,6 +253,14 @@ def partial_beta_diversity(metric, counts, ids, id_pairs, validate=True, **kwarg
     skbio.diversity.get_beta_diversity_metrics
 
     """
+    warn(
+        "partial_beta_diversity is deprecated as of 0.5.0. The return type is "
+        "unstable. Developer caution is advised. The resulting DistanceMatrix "
+        "object will include zeros when distance has not been calculated, and "
+        "therefore can be misleading.",
+        DeprecationWarning,
+    )
+
     if validate:
         counts = _validate_counts_matrix(counts, ids=ids)
 

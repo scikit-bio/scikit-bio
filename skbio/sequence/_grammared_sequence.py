@@ -6,6 +6,7 @@
 # The full license is in the file LICENSE.txt, distributed with this software.
 # ----------------------------------------------------------------------------
 
+from warnings import warn
 from abc import ABCMeta, abstractproperty
 from itertools import product
 import re
@@ -260,7 +261,7 @@ class GrammaredSequence(Sequence, metaclass=GrammaredSequenceMeta):
 
         Warnings
         --------
-        This function is deprecated as of ``0.5.0``. It has been renamed to
+        ``nondegenerate_chars`` is deprecated as of ``0.5.0``. It has been renamed to
         ``definite_chars``.
 
         See Also
@@ -268,6 +269,7 @@ class GrammaredSequence(Sequence, metaclass=GrammaredSequenceMeta):
         definite_chars
 
         """  # noqa: D416
+        warn("nondegenerate_chars is deprecated as of 0.5.0", DeprecationWarning)
         return cls.definite_chars
 
     @abstractproperty
@@ -507,7 +509,7 @@ class GrammaredSequence(Sequence, metaclass=GrammaredSequenceMeta):
 
         Warnings
         --------
-        This function is deprecated as of ``0.5.0``. It has been renamed to
+        ``nondegenerates`` is deprecated as of ``0.5.0``. It has been renamed to
         ``definites``.
 
         See Also
@@ -524,6 +526,7 @@ class GrammaredSequence(Sequence, metaclass=GrammaredSequenceMeta):
         array([ True,  True, False,  True, False], dtype=bool)
 
         """  # noqa: D416
+        warn("nondenengerates is deprecated as of 0.5.0.", DeprecationWarning)
         return self.definites()
 
     def has_definites(self):
@@ -566,7 +569,7 @@ class GrammaredSequence(Sequence, metaclass=GrammaredSequenceMeta):
 
         Warnings
         --------
-        This function is deprecated as of ``0.5.0``. It has been renamed to
+        ``has_nondegenerates`` is deprecated as of ``0.5.0``. It has been renamed to
         ``has_definites``.
 
         See Also
@@ -588,6 +591,7 @@ class GrammaredSequence(Sequence, metaclass=GrammaredSequenceMeta):
 
         """  # noqa: D416
         # TODO: cache results
+        warn("has_nondegenerates is deprecated as of 0.5.0", DeprecationWarning)
         return self.has_definites()
 
     def degap(self):
