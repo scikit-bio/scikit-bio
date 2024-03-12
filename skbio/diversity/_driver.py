@@ -199,20 +199,7 @@ def alpha_diversity(metric, counts, ids=None, validate=True, **kwargs):
     results = [metric(c, **kwargs) for c in counts]
     return pd.Series(results, index=ids)
 
-    # @deprecated(
-    as_of = ("0.5.0",)
-    until = ("0.6.0",)
-    reason = (
-        (
-            "The return type is unstable. Developer caution is "
-            "advised. The resulting DistanceMatrix object will "
-            "include zeros when distance has not been calculated, and "
-            "therefore can be misleading."
-        ),
-    )
 
-
-# )
 def partial_beta_diversity(metric, counts, ids, id_pairs, validate=True, **kwargs):
     """Compute distances only between specified ID pairs.
 
@@ -242,6 +229,12 @@ def partial_beta_diversity(metric, counts, ids, id_pairs, validate=True, **kwarg
         Distances between pairs of samples indicated by id_pairs. Pairwise
         distances not defined by id_pairs will be 0.0. Use this resulting
         DistanceMatrix with caution as 0.0 is a valid distance.
+
+    Warnings
+    --------
+    This function is deprecated as of `0.5.0`. The return type is unstable. Developer
+    caution is advised. The resulting DistanceMatrix object will include zeros when
+    distance has not been calculated, and therefore can be misleading.
 
     Raises
     ------

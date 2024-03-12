@@ -17,7 +17,6 @@ from skbio.sequence import DNA, RNA, Protein
 from skbio.sequence import GrammaredSequence
 from skbio.sequence import SubstitutionMatrix
 from skbio.util import EfficiencyWarning
-# from skbio.util._decorator import experimental, deprecated
 
 
 def local_pairwise_align_nucleotide(
@@ -617,7 +616,7 @@ def local_pairwise_align_ssw(sequence1, sequence2, **kwargs):
 
     Warnings
     --------
-    This function is deprecated as of 0.5.8 and will be removed in favor of more
+    This function is deprecated as of `0.5.8` and will be removed in favor of more
     general-purpose performant aligners. Additional details at :repo:`issues/1814`.
 
     Notes
@@ -700,15 +699,7 @@ def local_pairwise_align_ssw(sequence1, sequence2, **kwargs):
 
     return msa, alignment.optimal_alignment_score, start_end
 
-    # @deprecated(
-    as_of = ("0.4.0",)
-    until = ("0.6.0",)
-    reason = "Will be replaced by a SubstitutionMatrix class. To track "
-    "progress, see [#161]"
-    ("(https://github.com/scikit-bio/scikit-bio/issues/161).",)
 
-
-# )
 def make_identity_substitution_matrix(match_score, mismatch_score, alphabet="ACGTU"):
     """Generate substitution matrix where all matches are scored equally.
 
@@ -732,7 +723,8 @@ def make_identity_substitution_matrix(match_score, mismatch_score, alphabet="ACG
 
     Warnings
     --------
-
+    This function is deprecated as of `0.4.0`. It will be replaced by a
+    SubstitutionMatrix class. Additional details at :repo:`issues/161`.
 
     """
     result = {}

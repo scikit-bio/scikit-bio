@@ -778,7 +778,6 @@ def observed_features(counts):
     return sobs(counts)
 
 
-# @deprecated(as_of="0.6.0", until="0.6.0", reason="Historical term")
 def observed_otus(counts):
     """Calculate the number of distinct OTUs.
 
@@ -791,6 +790,11 @@ def observed_otus(counts):
     -------
     int
         Distinct OTU count.
+
+    Warnings
+    --------
+    This function is deprecated as of `0.6.0` due to its usage of the historical term
+    "OTU".
 
     See Also
     --------

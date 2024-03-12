@@ -250,7 +250,6 @@ class GrammaredSequence(Sequence, metaclass=GrammaredSequenceMeta):
         return set(cls.degenerate_map)
 
     @classproperty
-    # @deprecated(as_of="0.5.0", until="0.6.0", reason="Renamed to definite_chars")
     def nondegenerate_chars(cls):
         """Return non-degenerate characters.
 
@@ -259,7 +258,12 @@ class GrammaredSequence(Sequence, metaclass=GrammaredSequenceMeta):
         set
             Non-degenerate characters.
 
-        """
+        Warnings
+        --------
+        This function is deprecated as of `0.5.0`. It has been renamed to
+        `definite_chars`.
+
+        """  # noqa: D416
         return cls.definite_chars
 
     @abstractproperty
@@ -488,7 +492,6 @@ class GrammaredSequence(Sequence, metaclass=GrammaredSequenceMeta):
         """
         return np.in1d(self._bytes, self._definite_char_codes)
 
-    # @deprecated(as_of="0.5.0", until="0.6.0", reason="Renamed to definites")
     def nondegenerates(self):
         """Find positions containing non-degenerate characters in the sequence.
 
@@ -497,6 +500,10 @@ class GrammaredSequence(Sequence, metaclass=GrammaredSequenceMeta):
         1D np.ndarray (bool)
             Boolean vector where ``True`` indicates a non-degenerate character
             is present at that position in the biological sequence.
+
+        Warnings
+        --------
+        This function is deprecated as of `0.5.0`. It has been renamed to `definites`.
 
         See Also
         --------
@@ -510,7 +517,7 @@ class GrammaredSequence(Sequence, metaclass=GrammaredSequenceMeta):
         >>> s.nondegenerates()
         array([ True,  True, False,  True, False], dtype=bool)
 
-        """
+        """  # noqa: D416
         return self.definites()
 
     def has_definites(self):
@@ -542,7 +549,6 @@ class GrammaredSequence(Sequence, metaclass=GrammaredSequenceMeta):
         # TODO: cache results
         return bool(self.definites().any())
 
-    # @deprecated(as_of="0.5.0", until="0.6.0", reason="Renamed to has_definites")
     def has_nondegenerates(self):
         """Determine if sequence contains one or more non-degenerate characters.
 
@@ -551,6 +557,11 @@ class GrammaredSequence(Sequence, metaclass=GrammaredSequenceMeta):
         bool
             Indicates whether there are one or more occurrences of
             non-degenerate characters in the biological sequence.
+
+        Warnings
+        --------
+        This function is deprecated as of `0.5.0`. It has been renamed to
+        `has_definites`.
 
         See Also
         --------
@@ -568,7 +579,7 @@ class GrammaredSequence(Sequence, metaclass=GrammaredSequenceMeta):
         >>> t.has_nondegenerates()
         True
 
-        """
+        """  # noqa: D416
         # TODO: cache results
         return self.has_definites()
 
