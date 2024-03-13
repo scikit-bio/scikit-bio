@@ -876,13 +876,12 @@ class GrammaredSequence(Sequence, metaclass=GrammaredSequenceMeta):
         sub_char = ord(sub_char)
         res = np.where(pos, sub_char, self._bytes)
 
-        # pos = self.degenerates()
-        # if noncanonical:
-        #     pos |= np.isin(self._bytes, self._noncanonical_codes)
-        # sub_char = ord(sub_char)
-        # res = np.where(pos, sub_char, self._bytes)
+        # only implementing this for now to see if unit tests pass
+        aas = []
+        for i in range(len(res)):
+            aas.append(chr(res[i]))
 
-        return res
+        return "".join(aas)
 
     @stable(as_of="0.4.0")
     def find_motifs(self, motif_type, min_length=1, ignore=None):
