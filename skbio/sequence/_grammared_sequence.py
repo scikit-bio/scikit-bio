@@ -163,6 +163,7 @@ class GrammaredSequence(Sequence, metaclass=GrammaredSequenceMeta):
     __degenerate_codes = None
     __definite_char_codes = None
     __gap_codes = None
+    __noncanonical_codes = None
 
     @classproperty
     def _validation_mask(cls):
@@ -198,6 +199,13 @@ class GrammaredSequence(Sequence, metaclass=GrammaredSequenceMeta):
             gaps = cls.gap_chars
             cls.__gap_codes = np.asarray([ord(g) for g in gaps])
         return cls.__gap_codes
+
+    @classproperty
+    def _noncanonical_codes(cls):
+        if cls.__noncanonical_codes is None:
+            noncanonical_chars = cls.noncanonical_chars
+            cls.__noncanonical_codes = np.asarray([ord(c) for c in noncanonical_chars])
+        return cls.__noncanonical_codes
 
     @classproperty
     @stable(as_of="0.4.0")
@@ -815,6 +823,34 @@ class GrammaredSequence(Sequence, metaclass=GrammaredSequenceMeta):
         sequence = "".join(sub_char if x in degenerates else x for x in sequence)
 
         return self._constructor(sequence=sequence)
+
+    def to_definites_np(self, degenerate="wild", noncanonical=True):
+        if degenerate == "wild":
+            sub_char = self.wildcard_char
+            if not isinstance(sub_char, str):
+                raise ValueError(errmsg % "Wildcard")
+        elif degenerate == "gap":
+            sub_char = self.default_gap_char
+        elif degenerate == "trim":
+            sub_char = ""
+        elif isinstance(degenerate, str) and len(degenerate) == 1:
+            if degenerate in self.alphabet:
+                sub_char = degenerate
+            else:
+                raise ValueError(
+                    f"Invalid character '{degenerate}' in sequence. Character must "
+                    f"be within sequence alphabet: {self.alphabet}"
+                )
+        else:
+            raise ValueError('Invalid value for parameter "degenerate".')
+
+        pos = self.degenerates()
+        if noncanonical:
+            pos |= np.isin(self._bytes, self._noncanonical_codes)
+        sub_char = ord(sub_char)
+        res = np.where(pos, sub_char, self._bytes)
+
+        return res
 
     @stable(as_of="0.4.0")
     def find_motifs(self, motif_type, min_length=1, ignore=None):
