@@ -50,7 +50,7 @@ the old parameter "otu_ids" is still kept as an alias of "taxa" for backward com
 * Implemented augmented assignments proposed in issue [#1789](https://github.com/scikit-bio/scikit-bio/issues/1789)
 * Incorporated Ruff's formatting and linting via pre-commit hooks and GitHub Actions. See PR [#1924](https://github.com/scikit-bio/scikit-bio/pull/1924).
 * Improved docstrings for functions accross the entire codebase. See [#1933](https://github.com/scikit-bio/scikit-bio/pull/1933) and [#1940](https://github.com/scikit-bio/scikit-bio/pull/1940)
-* Removed life cycle decorators in favor of deprecation warnings. See [#1916](https://github.com/scikit-bio/scikit-bio/issues/1916)
+* Removed API lifecycle decorators in favor of deprecation warnings. See [#1916](https://github.com/scikit-bio/scikit-bio/issues/1916)
 
 ## Version 0.5.9
 

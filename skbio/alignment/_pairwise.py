@@ -6,7 +6,7 @@
 # The full license is in the file LICENSE.txt, distributed with this software.
 # ----------------------------------------------------------------------------
 
-from warnings import warn
+from warnings import warn, simplefilter
 from itertools import product
 
 import numpy as np
@@ -617,7 +617,7 @@ def local_pairwise_align_ssw(sequence1, sequence2, **kwargs):
     Warnings
     --------
     ``local_pairwise_align_ssw`` is deprecated as of ``0.5.8`` and will be removed in
-    favor of more general-purpose performant aligners. Additional details at
+    favor of more general-purpose and performant aligners. Additional details at
     :repo:`issues/1814`.
 
     Notes
@@ -646,7 +646,7 @@ def local_pairwise_align_ssw(sequence1, sequence2, **kwargs):
     """
     warn(
         "local_pairwise_align_ssw is deprecated as of 0.5.8 and will be removed in "
-        "favor of more general purpose performant aligners. Additional details at "
+        "favor of more general purpose and performant aligners. Additional details at "
         "https://github.com/scikit-bio/scikit-bio/issues/1814.",
         DeprecationWarning,
     )
