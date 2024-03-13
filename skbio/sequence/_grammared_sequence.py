@@ -769,6 +769,61 @@ class GrammaredSequence(Sequence, metaclass=GrammaredSequenceMeta):
 
         return re.compile(regex_string)
 
+    # def to_definites(self, degenerate="wild", noncanonical=True):
+    # """Convert degenerate and or non-canonical characters to alternative characters.
+
+    #     Parameters
+    #     ----------
+    #     degenerate : {"wild", "gap", "trim", str of length 1}, optional
+    #         How degenerate/non-canonical characters should be treated: Replace them
+    #     with the wildcard character ("wild", default), or the default gap character
+    #         ("gap"), or a user-defined character (str of length 1), or remove them
+    #         ("trim").
+    #     noncanonical : bool, optional
+    #         Treat non-canonical characters in the same way as degenerate
+    #         characters (``True``, default), or leave them as-is (``False``).
+
+    #     Returns
+    #     -------
+    #     GrammaredSequence
+    #         Converted version of the sequence.
+
+    #     """
+    #     sequence = str(self)
+
+    #     if noncanonical:
+    #         degenerates = self.degenerate_chars.union(self.noncanonical_chars)
+    #     else:
+    #         degenerates = self.degenerate_chars
+
+    #     errmsg = (
+    #         f'%s character for sequence type "{self.__class__}" is undefined or '
+    #         "invalid."
+    #     )
+
+    #     if degenerate == "wild":
+    #         sub_char = self.wildcard_char
+    #         if not isinstance(sub_char, str):
+    #             raise ValueError(errmsg % "Wildcard")
+    #     elif degenerate == "gap":
+    #         sub_char = self.default_gap_char
+    #     elif degenerate == "trim":
+    #         sub_char = ""
+    #     elif isinstance(degenerate, str) and len(degenerate) == 1:
+    #         if degenerate in self.alphabet:
+    #             sub_char = degenerate
+    #         else:
+    #             raise ValueError(
+    #                 f"Invalid character '{degenerate}' in sequence. Character must "
+    #                 f"be within sequence alphabet: {self.alphabet}"
+    #             )
+    #     else:
+    #         raise ValueError('Invalid value for parameter "degenerate".')
+
+    #     sequence = "".join(sub_char if x in degenerates else x for x in sequence)
+
+    #     return self._constructor(sequence=sequence)
+
     def to_definites(self, degenerate="wild", noncanonical=True):
         """Convert degenerate and or non-canonical characters to alternative characters.
 
@@ -789,13 +844,6 @@ class GrammaredSequence(Sequence, metaclass=GrammaredSequenceMeta):
             Converted version of the sequence.
 
         """
-        sequence = str(self)
-
-        if noncanonical:
-            degenerates = self.degenerate_chars.union(self.noncanonical_chars)
-        else:
-            degenerates = self.degenerate_chars
-
         errmsg = (
             f'%s character for sequence type "{self.__class__}" is undefined or '
             "invalid."
@@ -820,35 +868,19 @@ class GrammaredSequence(Sequence, metaclass=GrammaredSequenceMeta):
         else:
             raise ValueError('Invalid value for parameter "degenerate".')
 
-        sequence = "".join(sub_char if x in degenerates else x for x in sequence)
-
-        return self._constructor(sequence=sequence)
-
-    def to_definites_np(self, degenerate="wild", noncanonical=True):
-        if degenerate == "wild":
-            sub_char = self.wildcard_char
-            if not isinstance(sub_char, str):
-                raise ValueError(errmsg % "Wildcard")
-        elif degenerate == "gap":
-            sub_char = self.default_gap_char
-        elif degenerate == "trim":
-            sub_char = ""
-        elif isinstance(degenerate, str) and len(degenerate) == 1:
-            if degenerate in self.alphabet:
-                sub_char = degenerate
-            else:
-                raise ValueError(
-                    f"Invalid character '{degenerate}' in sequence. Character must "
-                    f"be within sequence alphabet: {self.alphabet}"
-                )
-        else:
-            raise ValueError('Invalid value for parameter "degenerate".')
-
-        pos = self.degenerates()
+        htab = np.zeros((256,), dtype=np.uint8)
+        htab[self._degenerate_codes] = 1
         if noncanonical:
-            pos |= np.isin(self._bytes, self._noncanonical_codes)
+            htab[self._noncanonical_codes] = 1
+        pos = htab[self._bytes]
         sub_char = ord(sub_char)
         res = np.where(pos, sub_char, self._bytes)
+
+        # pos = self.degenerates()
+        # if noncanonical:
+        #     pos |= np.isin(self._bytes, self._noncanonical_codes)
+        # sub_char = ord(sub_char)
+        # res = np.where(pos, sub_char, self._bytes)
 
         return res
 
