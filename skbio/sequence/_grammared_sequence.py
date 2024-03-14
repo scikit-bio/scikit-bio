@@ -6,7 +6,7 @@
 # The full license is in the file LICENSE.txt, distributed with this software.
 # ----------------------------------------------------------------------------
 
-from warnings import warn
+from warnings import warn, simplefilter
 from abc import ABCMeta, abstractproperty
 from itertools import product
 import re
@@ -269,7 +269,11 @@ class GrammaredSequence(Sequence, metaclass=GrammaredSequenceMeta):
         definite_chars
 
         """  # noqa: D416
-        warn("nondegenerate_chars is deprecated as of 0.5.0", DeprecationWarning)
+        if not hasattr(nondegenerate_chars, "warned"):
+            simplefilter("once", DeprecationWarning)
+            warn("nondegenerate_chars is deprecated as of 0.5.0", DeprecationWarning)
+            nondegenerate_chars.warned = True
+
         return cls.definite_chars
 
     @abstractproperty
@@ -526,7 +530,11 @@ class GrammaredSequence(Sequence, metaclass=GrammaredSequenceMeta):
         array([ True,  True, False,  True, False], dtype=bool)
 
         """  # noqa: D416
-        warn("nondenengerates is deprecated as of 0.5.0.", DeprecationWarning)
+        if not hasattr(nondegenerates, "warned"):
+            simplefilter("once", DeprecationWarning)
+            warn("nondenengerates is deprecated as of 0.5.0.", DeprecationWarning)
+            nondegenerates.warned = True
+
         return self.definites()
 
     def has_definites(self):
@@ -591,7 +599,11 @@ class GrammaredSequence(Sequence, metaclass=GrammaredSequenceMeta):
 
         """  # noqa: D416
         # TODO: cache results
-        warn("has_nondegenerates is deprecated as of 0.5.0", DeprecationWarning)
+        if not hasattr(has_nondegenerates, "warned"):
+            simplefilter("once", DeprecationWarning)
+            warn("has_nondegenerates is deprecated as of 0.5.0", DeprecationWarning)
+            has_nondegenerates.warned = True
+
         return self.has_definites()
 
     def degap(self):

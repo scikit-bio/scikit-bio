@@ -6,7 +6,7 @@
 # The full license is in the file LICENSE.txt, distributed with this software.
 # ----------------------------------------------------------------------------
 
-from warnings import warn
+from warnings import warn, simplefilter
 
 import numpy as np
 from scipy.special import gammaln
@@ -807,7 +807,10 @@ def observed_otus(counts):
     `observed_otus` is an alias for `sobs`.
 
     """
-    warn("observed_otus is deprecated as of 0.6.0.", DeprecationWarning)
+    if not hasattr(observed_otus, "warned"):
+        simplefilter("once", DeprecationWarning)
+        warn("observed_otus is deprecated as of 0.6.0.", DeprecationWarning)
+        observed_otus.warned = True
 
     return sobs(counts)
 
