@@ -269,6 +269,7 @@ class GrammaredSequence(Sequence, metaclass=GrammaredSequenceMeta):
         definite_chars
 
         """  # noqa: D416
+        # @deprecated
         warn("nondegenerate_chars is deprecated as of 0.5.0", DeprecationWarning)
 
         return cls.definite_chars
@@ -527,6 +528,7 @@ class GrammaredSequence(Sequence, metaclass=GrammaredSequenceMeta):
         array([ True,  True, False,  True, False], dtype=bool)
 
         """  # noqa: D416
+        # @deprecated
         warn("nondenengerates is deprecated as of 0.5.0.", DeprecationWarning)
 
         return self.definites()
@@ -593,6 +595,7 @@ class GrammaredSequence(Sequence, metaclass=GrammaredSequenceMeta):
 
         """  # noqa: D416
         # TODO: cache results
+        # @deprecated
         warn("has_nondegenerates is deprecated as of 0.5.0", DeprecationWarning)
 
         return self.has_definites()

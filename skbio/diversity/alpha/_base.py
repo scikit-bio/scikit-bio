@@ -807,6 +807,7 @@ def observed_otus(counts):
     `observed_otus` is an alias for `sobs`.
 
     """
+    # @deprecated
     if not hasattr(observed_otus, "warned"):
         simplefilter("once", DeprecationWarning)
         warn("observed_otus is deprecated as of 0.6.0.", DeprecationWarning)

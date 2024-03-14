@@ -644,6 +644,7 @@ def local_pairwise_align_ssw(sequence1, sequence2, **kwargs):
     skbio.alignment.StripedSmithWaterman
 
     """
+    # @deprecated
     if not hasattr(local_pairwise_align_ssw, "warned"):
         simplefilter("once", DeprecationWarning)
         warn(
@@ -739,6 +740,7 @@ def make_identity_substitution_matrix(match_score, mismatch_score, alphabet="ACG
     replaced by a SubstitutionMatrix class. Additional details at :repo:`pull/1913`.
 
     """
+    # @deprecated
     if not hasattr(make_identity_substitution_matrix, "warned"):
         simplefilter("once", DeprecationWarning)
         warn(

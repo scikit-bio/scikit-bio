@@ -253,6 +253,7 @@ def partial_beta_diversity(metric, counts, ids, id_pairs, validate=True, **kwarg
     skbio.diversity.get_beta_diversity_metrics
 
     """
+    # @deprecated
     if not hasattr(partial_beta_diversity, "warned"):
         simplefilter("once", DeprecationWarning)
         warn(
