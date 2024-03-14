@@ -1,3 +1,26 @@
+"""
+Sample Metadata object ported over from qiime2
+===============================================
+
+.. currentmodule:: skbio.io.format.sample_metadata
+
+Format Support
+--------------
+**Has Sniffer: Yes**
+
++------+------+---------------------------------------------------------------+
+|Reader|Writer|                          Object Class                         |
++======+======+===============================================================+
+|Yes   |Yes   |:mod:`skbio.metadata.SampleMetadata`                              |
++------+------+---------------------------------------------------------------+"""
+# ----------------------------------------------------------------------------
+# Copyright (c) 2013--, scikit-bio development team.
+#
+# Distributed under the terms of the Modified BSD License.
+#
+# The full license is in the file LICENSE.txt, distributed with this software.
+# ----------------------------------------------------------------------------
+
 from skbio.io import create_format
 from skbio.metadata._metadata import SampleMetadata, MetadataColumn
 from skbio.metadata.io import MetadataFileError, MetadataReader, MetadataWriter

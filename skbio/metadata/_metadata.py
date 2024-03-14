@@ -555,7 +555,7 @@ class SampleMetadata(_MetadataBase):
         return column
 
     def __repr__(self):
-        """String summary of the metadata and its columns."""
+        """Return the string summary of the metadata and its columns."""
         lines = []
 
         # Header
@@ -1012,26 +1012,20 @@ class MetadataColumn(_MetadataBase, metaclass=abc.ABCMeta):
     @classmethod
     @abc.abstractmethod
     def _is_supported_dtype(cls, dtype):
-        """
-
-        Contract: Return ``True`` if the series `dtype` is supported by this
+        """Contract: Return ``True`` if the series `dtype` is supported by this
         object and can be handled appropriately by ``_normalize_``. Return
         ``False`` otherwise.
-
         """
         raise NotImplementedError
 
     @classmethod
     @abc.abstractmethod
     def _normalize_(cls, series):
-        """
-
-        Contract: Return a copy of `series` that has been converted to the
+        """Contract: Return a copy of `series` that has been converted to the
         appropriate internal dtype and has any other necessary normalization or
         validation applied (e.g. missing value representations, disallowing
         certain values, etc). Raise an error with a detailed error message if
         the operation cannot be completed.
-
         """
         raise NotImplementedError
 
@@ -1051,7 +1045,7 @@ class MetadataColumn(_MetadataBase, metaclass=abc.ABCMeta):
 
     @property
     def missing_scheme(self):
-        """The vocabulary used to encode missing values
+        """Return the vocabulary used to encode missing values.
 
         This property is read-only.
 

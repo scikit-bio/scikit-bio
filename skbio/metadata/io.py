@@ -1,3 +1,4 @@
+"""This contains io functionality for the Metadata module."""
 # ----------------------------------------------------------------------------
 # Copyright (c) 2016-2023, QIIME 2 development team.
 #
@@ -22,6 +23,8 @@ from ..metadata._metadata import SampleMetadata, MetadataColumn
 
 
 class MetadataFileError(Exception):
+    """Exception for errors with Metadata files."""
+
     _suffix = (
         "There may be more errors present in the metadata file. To get a full "
         "report, sample/feature metadata files can be validated with Keemei: "
@@ -30,6 +33,7 @@ class MetadataFileError(Exception):
     )
 
     def __init__(self, message, include_suffix=True):
+        """Initializes the MetadataFileError"""
         # LH NOTE/TODO: in Qiime2 this linked to the specific Qiime2 release.
         # However since this is not Qiime2 It did break and I removed this
 
@@ -39,7 +43,10 @@ class MetadataFileError(Exception):
 
 
 class MetadataReader:
+    """Reader for Metadata files."""
+
     def __init__(self, filepath_or_filehandle):
+        """Initialize the Reader for Metadata files."""
         # check if the filepath_filehandle is a path... if it is check if it
         # points to a file
         # TODO: Refine this check to be more specific
@@ -70,6 +77,7 @@ class MetadataReader:
         column_missing_schemes=None,
         default_missing_scheme=DEFAULT_MISSING,
     ):
+        """Returns a Metadata object read from the given file."""
         if column_types is None:
             column_types = {}
 
@@ -417,10 +425,14 @@ class MetadataReader:
 
 
 class MetadataWriter:
+    """Writer for Metadata."""
+
     def __init__(self, metadata):
+        """Initializes Writer for Metadata."""
         self._metadata = metadata
 
     def write(self, filepath_or_filehandle):
+        """Writes metadata object to passed file or filehandle"""
         if isinstance(filepath_or_filehandle, str):
             # Newline settings based on recommendation from csv docs:
             # https://docs.python.org/3/library/csv.html#id3
