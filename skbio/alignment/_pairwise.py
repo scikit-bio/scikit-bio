@@ -6,7 +6,7 @@
 # The full license is in the file LICENSE.txt, distributed with this software.
 # ----------------------------------------------------------------------------
 
-from warnings import warn
+from warnings import warn, simplefilter
 from itertools import product
 
 import numpy as np
@@ -17,10 +17,8 @@ from skbio.sequence import DNA, RNA, Protein
 from skbio.sequence import GrammaredSequence
 from skbio.sequence import SubstitutionMatrix
 from skbio.util import EfficiencyWarning
-from skbio.util._decorator import experimental, deprecated
 
 
-@experimental(as_of="0.4.0")
 def local_pairwise_align_nucleotide(
     seq1,
     seq2,
@@ -102,7 +100,6 @@ def local_pairwise_align_nucleotide(
     )
 
 
-@experimental(as_of="0.4.0")
 def local_pairwise_align_protein(
     seq1, seq2, gap_open_penalty=11, gap_extend_penalty=1, substitution_matrix=None
 ):
@@ -171,7 +168,6 @@ def local_pairwise_align_protein(
     )
 
 
-@experimental(as_of="0.4.0")
 def local_pairwise_align(
     seq1, seq2, gap_open_penalty, gap_extend_penalty, substitution_matrix
 ):
@@ -273,7 +269,6 @@ def local_pairwise_align(
     return msa, score, start_end_positions
 
 
-@experimental(as_of="0.4.0")
 def global_pairwise_align_nucleotide(
     seq1,
     seq2,
@@ -377,7 +372,6 @@ def global_pairwise_align_nucleotide(
     )
 
 
-@experimental(as_of="0.4.0")
 def global_pairwise_align_protein(
     seq1,
     seq2,
@@ -472,7 +466,6 @@ def global_pairwise_align_protein(
     )
 
 
-@experimental(as_of="0.4.0")
 def global_pairwise_align(
     seq1,
     seq2,
@@ -601,13 +594,6 @@ def global_pairwise_align(
     return msa, score, start_end_positions
 
 
-@deprecated(
-    as_of="0.5.8",
-    until="0.6.0",
-    reason="This will be removed or replaced, in favor of more general"
-    "-purpose performant aligners. Additional details at "
-    "https://github.com/scikit-bio/scikit-bio/issues/1814",
-)
 def local_pairwise_align_ssw(sequence1, sequence2, **kwargs):
     """Align query and target sequences with Striped Smith-Waterman.
 
@@ -627,6 +613,12 @@ def local_pairwise_align_ssw(sequence1, sequence2, **kwargs):
         (float), and start/end positions of each input sequence (iterable
         of two-item tuples). Note that start/end positions are indexes into the
         unaligned sequences.
+
+    Warnings
+    --------
+    ``local_pairwise_align_ssw`` is deprecated as of ``0.5.8`` and will be removed in
+    favor of more general-purpose and performant aligners. Additional details at
+    :repo:`issues/1814`.
 
     Notes
     -----
@@ -652,6 +644,18 @@ def local_pairwise_align_ssw(sequence1, sequence2, **kwargs):
     skbio.alignment.StripedSmithWaterman
 
     """
+    # @deprecated
+    if not hasattr(local_pairwise_align_ssw, "warned"):
+        simplefilter("once", DeprecationWarning)
+        warn(
+            "local_pairwise_align_ssw is deprecated as of 0.5.8 and will be removed "
+            "in favor of more general purpose and performant aligners. Additional "
+            "details at "
+            "https://github.com/scikit-bio/scikit-bio/issues/1814.",
+            DeprecationWarning,
+        )
+        local_pairwise_align_ssw.warned = True
+
     for seq in sequence1, sequence2:
         if not isinstance(seq, (DNA, RNA, Protein)):
             raise TypeError(
@@ -709,13 +713,6 @@ def local_pairwise_align_ssw(sequence1, sequence2, **kwargs):
     return msa, alignment.optimal_alignment_score, start_end
 
 
-@deprecated(
-    as_of="0.4.0",
-    until="0.6.0",
-    reason="Will be replaced by a SubstitutionMatrix class. To track "
-    "progress, see [#161]"
-    "(https://github.com/scikit-bio/scikit-bio/issues/161).",
-)
 def make_identity_substitution_matrix(match_score, mismatch_score, alphabet="ACGTU"):
     """Generate substitution matrix where all matches are scored equally.
 
@@ -737,7 +734,23 @@ def make_identity_substitution_matrix(match_score, mismatch_score, alphabet="ACG
         pair of characters can be looked up to get their match or mismatch
         score.
 
+    Warnings
+    --------
+    ``make_identity_substitution_matrix`` is deprecated as of ``0.4.0``. It has been
+    replaced by a SubstitutionMatrix class. Additional details at :repo:`pull/1913`.
+
     """
+    # @deprecated
+    if not hasattr(make_identity_substitution_matrix, "warned"):
+        simplefilter("once", DeprecationWarning)
+        warn(
+            "make_identity_substitution_matrix is deprecated as of 0.4.0 and has been "
+            "replaced by a SubstitutionMatrix class. Additional details at "
+            "https://github.com/scikit-bio/scikit-bio/pull/1913.",
+            DeprecationWarning,
+        )
+        make_identity_substitution_matrix.warned = True
+
     result = {}
     for c1 in alphabet:
         row = {}

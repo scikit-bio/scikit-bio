@@ -9,7 +9,6 @@
 import numpy as np
 
 from skbio.util._decorator import classproperty, overrides
-from skbio.util._decorator import stable
 from ._grammared_sequence import GrammaredSequence, _motifs as parent_motifs
 
 
@@ -201,7 +200,6 @@ class Protein(GrammaredSequence):
         }
 
     @classproperty
-    @stable(as_of="0.4.0")
     def stop_chars(cls):
         """Return characters representing translation stop codons.
 
@@ -232,7 +230,6 @@ class Protein(GrammaredSequence):
     def _motifs(self):
         return _motifs
 
-    @stable(as_of="0.4.0")
     def stops(self):
         """Find positions containing stop characters in the protein sequence.
 
@@ -259,7 +256,6 @@ class Protein(GrammaredSequence):
         """
         return np.in1d(self._bytes, self._stop_codes)
 
-    @stable(as_of="0.4.0")
     def has_stops(self):
         """Determine if the sequence contains one or more stop characters.
 
