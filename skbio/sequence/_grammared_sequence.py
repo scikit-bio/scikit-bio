@@ -769,71 +769,16 @@ class GrammaredSequence(Sequence, metaclass=GrammaredSequenceMeta):
 
         return re.compile(regex_string)
 
-    # def to_definites(self, degenerate="wild", noncanonical=True):
-    # """Convert degenerate and or non-canonical characters to alternative characters.
-
-    #     Parameters
-    #     ----------
-    #     degenerate : {"wild", "gap", "trim", str of length 1}, optional
-    #         How degenerate/non-canonical characters should be treated: Replace them
-    #     with the wildcard character ("wild", default), or the default gap character
-    #         ("gap"), or a user-defined character (str of length 1), or remove them
-    #         ("trim").
-    #     noncanonical : bool, optional
-    #         Treat non-canonical characters in the same way as degenerate
-    #         characters (``True``, default), or leave them as-is (``False``).
-
-    #     Returns
-    #     -------
-    #     GrammaredSequence
-    #         Converted version of the sequence.
-
-    #     """
-    #     sequence = str(self)
-
-    #     if noncanonical:
-    #         degenerates = self.degenerate_chars.union(self.noncanonical_chars)
-    #     else:
-    #         degenerates = self.degenerate_chars
-
-    #     errmsg = (
-    #         f'%s character for sequence type "{self.__class__}" is undefined or '
-    #         "invalid."
-    #     )
-
-    #     if degenerate == "wild":
-    #         sub_char = self.wildcard_char
-    #         if not isinstance(sub_char, str):
-    #             raise ValueError(errmsg % "Wildcard")
-    #     elif degenerate == "gap":
-    #         sub_char = self.default_gap_char
-    #     elif degenerate == "trim":
-    #         sub_char = ""
-    #     elif isinstance(degenerate, str) and len(degenerate) == 1:
-    #         if degenerate in self.alphabet:
-    #             sub_char = degenerate
-    #         else:
-    #             raise ValueError(
-    #                 f"Invalid character '{degenerate}' in sequence. Character must "
-    #                 f"be within sequence alphabet: {self.alphabet}"
-    #             )
-    #     else:
-    #         raise ValueError('Invalid value for parameter "degenerate".')
-
-    #     sequence = "".join(sub_char if x in degenerates else x for x in sequence)
-
-    #     return self._constructor(sequence=sequence)
-
     def to_definites(self, degenerate="wild", noncanonical=True):
         """Convert degenerate and or non-canonical characters to alternative characters.
 
         Parameters
         ----------
-        degenerate : {"wild", "gap", "trim", str of length 1}, optional
+        degenerate : {"wild", "gap", str of length 1, empty str}, optional
             How degenerate/non-canonical characters should be treated: Replace them
             with the wildcard character ("wild", default), or the default gap character
             ("gap"), or a user-defined character (str of length 1), or remove them
-            ("trim").
+            (empty string, "").
         noncanonical : bool, optional
             Treat non-canonical characters in the same way as degenerate
             characters (``True``, default), or leave them as-is (``False``).
@@ -855,8 +800,6 @@ class GrammaredSequence(Sequence, metaclass=GrammaredSequenceMeta):
                 raise ValueError(errmsg % "Wildcard")
         elif degenerate == "gap":
             sub_char = self.default_gap_char
-        elif degenerate == "trim":
-            sub_char = ""
         elif isinstance(degenerate, str) and len(degenerate) == 1:
             if degenerate in self.alphabet:
                 sub_char = degenerate
@@ -865,6 +808,8 @@ class GrammaredSequence(Sequence, metaclass=GrammaredSequenceMeta):
                     f"Invalid character '{degenerate}' in sequence. Character must "
                     f"be within sequence alphabet: {self.alphabet}"
                 )
+        elif isinstance(degenerate, str) and len(degenerate) == 0:
+            sub_char = 0
         else:
             raise ValueError('Invalid value for parameter "degenerate".')
 
@@ -873,15 +818,11 @@ class GrammaredSequence(Sequence, metaclass=GrammaredSequenceMeta):
         if noncanonical:
             htab[self._noncanonical_codes] = 1
         pos = htab[self._bytes]
-        sub_char = ord(sub_char)
-        res = np.where(pos, sub_char, self._bytes)
+        if sub_char:
+            sub_char = ord(sub_char)
+        seq = np.trim_zeros(np.where(pos, sub_char, self._bytes))
 
-        # only implementing this for now to see if unit tests pass
-        aas = []
-        for i in range(len(res)):
-            aas.append(chr(res[i]))
-
-        return "".join(aas)
+        return self._constructor(sequence=seq)
 
     @stable(as_of="0.4.0")
     def find_motifs(self, motif_type, min_length=1, ignore=None):

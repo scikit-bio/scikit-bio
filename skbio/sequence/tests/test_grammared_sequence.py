@@ -713,13 +713,13 @@ class TestGrammaredSequence(TestCase):
         exp = ExampleGrammaredSequence("ABCQ---")
         self.assertEqual(obs, exp)
 
-        # trim
-        obs = seq.to_definites(degenerate="trim")
+        # canonical trim
+        obs = seq.to_definites(degenerate="")
         exp = ExampleGrammaredSequence("ABC")
         self.assertEqual(obs, exp)
 
         # noncanonical trim
-        obs = seq.to_definites(degenerate="trim", noncanonical=False)
+        obs = seq.to_definites(degenerate="", noncanonical=False)
         exp = ExampleGrammaredSequence("ABCQ")
         self.assertEqual(obs, exp)
 
