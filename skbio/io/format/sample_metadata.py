@@ -77,6 +77,6 @@ def _sample_metadata_read(fh):
     return MetadataReader(fh).read(SampleMetadata)
 
 
-# @sample_metadata.writer(SampleMetadata)
-# def _sample_metadata_write(obj, fh):
-#     MetadataWriter(obj).write(fh)
+@sample_metadata.writer(SampleMetadata)
+def _sample_metadata_write(obj, fh):
+    MetadataWriter(obj).write(fh)
