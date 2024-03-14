@@ -16,6 +16,7 @@ from skbio.metadata.missing import (
 import csv
 import itertools
 import pandas as pd
+import re
 
 
 sample_metadata = create_format("sample_metadata")
@@ -28,20 +29,39 @@ def _sample_metadata_sniffer(fh):
     # of allowed metadata words
     try:
         tsv_reader = csv.reader(fh, dialect="excel-tab", strict=True)
-        for line in tsv_reader:
-            if line[0] in [
-                "id",
-                "sampleid",
-                "sample id",
-                "sample-id",
-                "featureid",
-                "feature id",
-                "feature-id",
-            ]:
+        possible_ids = ["id", "sampleid", "sample-id", "featureid", "feature-id"]
+        possible_spaced_ids = ["sample id", "feature id"]
+
+        # We need to find the actual header row
+        # so we loop until we find the first row that isn't empty or a comment
+        for header in tsv_reader:
+            # Skip empty rows
+            if len(header) == 0:
+                continue
+
+            # Skip rows whose first non-whitespace character is a #
+            # since they are comments.
+            match = re.search(r"\S", header[0])
+            if not match or match.group() == "#":
+                continue
+
+            if any([x == header[0].strip() for x in possible_ids]):
                 return True, {}
-            else:
-                return False, {}
-    except Exception:
+
+            if len(header) > 1 and any(
+                [
+                    x == " ".join(h.strip() for h in header[:2])
+                    for x in possible_spaced_ids
+                ]
+            ):
+                return True, {}
+
+            # if the first non-empty non-comment row doesn't have a valid id as
+            # first entry we conclude that this is not a metadata file.
+            return False, {}
+
+    # if we run into errors with the csv file we assume its not a metadata file
+    except csv.Error:
         return False, {}
 
 
