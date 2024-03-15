@@ -10,6 +10,8 @@ import io
 import string
 from unittest import TestCase, main
 import pandas as pd
+import tempfile
+import os
 
 
 from skbio.sequence import GrammaredSequence
@@ -57,3 +59,24 @@ class TestSampleMetadataReader(TestCase):
                               index=exp_index)
         exp_md = SampleMetadata(exp_df)
         self.assertEqual(obs_md, exp_md)
+
+
+class TestRoundtrip(TestCase):
+    def setUp(self):
+        self.temp_dir_obj = tempfile.TemporaryDirectory(
+            prefix='sample-metadata-temp')
+        self.temp_dir = self.temp_dir_obj.name
+
+        self.filepath = os.path.join(self.temp_dir, 'metadata.tsv')
+
+    def tearDown(self):
+        self.temp_dir_obj.cleanup()
+
+    def test_simple(self):
+        fp = get_data_path('sample-metadata-comments-mixed-case.tsv')
+        md1 = SampleMetadata.read(fp)
+
+        md1.write(self.filepath)
+        md2 = SampleMetadata.read(self.filepath)
+
+        self.assertEqual(md1, md2)
