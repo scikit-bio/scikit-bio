@@ -377,6 +377,8 @@ class SampleMetadata(_MetadataBase):
 
     """
 
+    default_write_format = "sample_metadata"
+
     @classmethod
     def load(
         cls,
@@ -473,18 +475,6 @@ class SampleMetadata(_MetadataBase):
         """
         return len(self._columns)
 
-    @property
-    def default_write_format(self):
-        """Write format used by the IO registry.
-
-        Returns
-        -------
-        str
-            Name of write format to be used by IOregistry
-
-        """
-        return self._default_write_format
-
     def __init__(
         self,
         dataframe,
@@ -506,7 +496,6 @@ class SampleMetadata(_MetadataBase):
             dataframe, column_missing_schemes, default_missing_scheme
         )
         self._validate_index(self._dataframe.columns, axis="column")
-        self._default_write_format = "sample_metadata"
 
     def _normalize_dataframe(
         self, dataframe, column_missing_schemes, default_missing_scheme
