@@ -1,4 +1,4 @@
-"""This is the base for the metadata module."""
+"""Base for the metadata module."""
 # ----------------------------------------------------------------------------
 # Copyright (c) 2016-2023, QIIME 2 development team.
 #

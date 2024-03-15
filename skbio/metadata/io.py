@@ -1,4 +1,4 @@
-"""This contains io functionality for the Metadata module."""
+"""Contains io functionality for the Metadata module."""
 # ----------------------------------------------------------------------------
 # Copyright (c) 2016-2023, QIIME 2 development team.
 #
@@ -33,7 +33,7 @@ class MetadataFileError(Exception):
     )
 
     def __init__(self, message, include_suffix=True):
-        """Initializes the MetadataFileError"""
+        """Initialize the MetadataFileError."""
         # LH NOTE/TODO: in Qiime2 this linked to the specific Qiime2 release.
         # However since this is not Qiime2 It did break and I removed this
 
@@ -77,7 +77,7 @@ class MetadataReader:
         column_missing_schemes=None,
         default_missing_scheme=DEFAULT_MISSING,
     ):
-        """Returns a Metadata object read from the given file."""
+        """Return a Metadata object read from the given file."""
         if column_types is None:
             column_types = {}
 
@@ -428,11 +428,11 @@ class MetadataWriter:
     """Writer for Metadata."""
 
     def __init__(self, metadata):
-        """Initializes Writer for Metadata."""
+        """Initialize Writer for Metadata."""
         self._metadata = metadata
 
     def write(self, filepath_or_filehandle):
-        """Writes metadata object to passed file or filehandle"""
+        """Write metadata object to passed file or filehandle."""
         if isinstance(filepath_or_filehandle, str):
             # Newline settings based on recommendation from csv docs:
             # https://docs.python.org/3/library/csv.html#id3

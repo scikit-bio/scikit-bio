@@ -1,4 +1,4 @@
-"""Defines Handling of different Missing classes for Metadata module. """
+"""Defines Handling of different Missing classes for Metadata module."""
 # ----------------------------------------------------------------------------
 # Copyright (c) 2016-2023, QIIME 2 development team.
 #
@@ -69,7 +69,7 @@ DEFAULT_MISSING = "blank"
 
 
 def series_encode_missing(series: pd.Series, enumeration: str) -> pd.Series:
-    """Returns encoded Missing values."""
+    """Return encoded Missing values."""
     if not isinstance(enumeration, str):
         TypeError("Wrong type for `enumeration`, expected string")
     try:
@@ -88,7 +88,7 @@ def series_encode_missing(series: pd.Series, enumeration: str) -> pd.Series:
 
 
 def series_extract_missing(series: pd.Series) -> pd.Series:
-    """Returns extracted Missing types from passed Series."""
+    """Return extracted Missing types from passed Series."""
 
     def _decode(x):
         if np.issubdtype(type(x), np.floating) and np.isnan(x):

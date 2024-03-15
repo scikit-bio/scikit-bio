@@ -1,5 +1,6 @@
 """
-Sample Metadata object ported over from qiime2
+Sample Metadata object ported over from qiime2.
+
 ===============================================
 
 .. currentmodule:: skbio.io.format.sample_metadata
