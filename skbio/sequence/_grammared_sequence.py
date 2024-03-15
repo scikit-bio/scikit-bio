@@ -205,13 +205,6 @@ class GrammaredSequence(Sequence, metaclass=GrammaredSequenceMeta):
         return cls.__noncanonical_codes
 
     @classproperty
-    def _noncanonical_codes(cls):
-        if cls.__noncanonical_codes is None:
-            noncanonical_chars = cls.noncanonical_chars
-            cls.__noncanonical_codes = np.asarray([ord(c) for c in noncanonical_chars])
-        return cls.__noncanonical_codes
-
-    @classproperty
     def _degenerate_hash(cls):
         if cls.__degenerate_hash is None:
             htab = np.zeros((256,), dtype=np.uint8)
