@@ -12,7 +12,8 @@ Format Support
 |Reader|Writer|                          Object Class                         |
 +======+======+===============================================================+
 |Yes   |Yes   |:mod:`skbio.metadata.SampleMetadata`                              |
-+------+------+---------------------------------------------------------------+"""
++------+------+---------------------------------------------------------------+
+"""
 # ----------------------------------------------------------------------------
 # Copyright (c) 2013--, scikit-bio development team.
 #
@@ -21,25 +22,12 @@ Format Support
 # The full license is in the file LICENSE.txt, distributed with this software.
 # ----------------------------------------------------------------------------
 
-from skbio.io import create_format
-from skbio.metadata._metadata import SampleMetadata, MetadataColumn
-from skbio.metadata.io import MetadataFileError, MetadataReader, MetadataWriter
-from skbio.metadata.base import (
-    SUPPORTED_COLUMN_TYPES,
-    FORMATTED_ID_HEADERS,
-    is_id_header,
-)
-from skbio.metadata._util import find_duplicates
-from skbio.metadata.missing import (
-    DEFAULT_MISSING,
-    BUILTIN_MISSING,
-    series_encode_missing,
-)
-
 import csv
-import itertools
-import pandas as pd
 import re
+
+from skbio.io import create_format
+from skbio.metadata._metadata import SampleMetadata
+from skbio.metadata.io import MetadataReader, MetadataWriter
 
 
 sample_metadata = create_format("sample_metadata")
