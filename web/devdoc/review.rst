@@ -41,19 +41,7 @@ Be aware of what type of API changes are being made. scikit-bio uses the followi
 **Private API:** API with object name starting with an underscore. Users should not import private API. Private API should only be imported and used in the module where it is defined. It should not be imported in other parts of the scikit-bio package. Examples: ``skbio.util._testing._normalize_signs``, ``skbio.stats.composition._gram_schmidt_basis``.
 
 - Prefer defining private APIs and only promote things to the public API that users need access to.
-- Private/package-private API does not need to be decorated with ``@experimental``/``@stable``/``@deprecated``, only public API.
 - Within scikit-bio, prefer *using* public APIs defined in the package even if private APIs offer the same functionality.
-
-
-API stability
--------------
-
-Refer to scikit-bio's `API stability document <api_stability>`_ for the current API lifecycle.
-
-- Prefer making new APIs experimental. This allows for changes to the API without needing to deprecate it first.
-- Try to avoid changing stable API if at all possible. If a change is necessary, deprecate the API and remove after 2+ minor releases.
-- Under extreme circumstances, a stable API can be changed without deprecation warning to users. This has happened in the past to fix bugs that required an API change. If this happens, discuss with other devs before committing to the change and document this change extensively in the changelog.
-- Always document stable/experimental API changes and any deprecated APIs in the changelog.
 
 
 Integration/consistency with existing API

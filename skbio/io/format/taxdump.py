@@ -20,7 +20,6 @@ Format Support
 
 Format Specification
 --------------------
-**State: Experimental as of 0.5.8.**
 
 The NCBI taxonomy database [1]_ [2]_ hosts organism names and classifications.
 It has a web portal [3]_ and an FTP download server [4]_. It is also accessible

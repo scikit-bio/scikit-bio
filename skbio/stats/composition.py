@@ -110,14 +110,12 @@ import numpy as np
 import pandas as pd
 import scipy.stats
 import skbio.util
-from skbio.util._decorator import experimental
 from skbio.stats.distance import DistanceMatrix
 from skbio.util._misc import get_rng
 from scipy.sparse import coo_matrix
 from scipy.stats import t
 
 
-@experimental(as_of="0.4.0")
 def closure(mat):
     """Perform closure to ensure that all elements add up to 1.
 
@@ -164,7 +162,6 @@ def closure(mat):
     return mat.squeeze()
 
 
-@experimental(as_of="0.4.0")
 def multiplicative_replacement(mat, delta=None):
     r"""Replace all zeros with small non-zero values.
 
@@ -236,7 +233,6 @@ def multiplicative_replacement(mat, delta=None):
     return mat.squeeze()
 
 
-@experimental(as_of="0.4.0")
 def perturb(x, y):
     r"""Perform the perturbation operation.
 
@@ -285,7 +281,6 @@ def perturb(x, y):
     return closure(x * y)
 
 
-@experimental(as_of="0.4.0")
 def perturb_inv(x, y):
     r"""Perform the inverse perturbation operation.
 
@@ -335,7 +330,6 @@ def perturb_inv(x, y):
     return closure(x / y)
 
 
-@experimental(as_of="0.4.0")
 def power(x, a):
     r"""Perform the power operation.
 
@@ -381,7 +375,6 @@ def power(x, a):
     return closure(x**a).squeeze()
 
 
-@experimental(as_of="0.4.0")
 def inner(x, y):
     r"""Calculate the Aitchson inner product.
 
@@ -424,7 +417,6 @@ def inner(x, y):
     return a.dot(b.T)
 
 
-@experimental(as_of="0.4.0")
 def clr(mat):
     r"""Perform centre log ratio transformation.
 
@@ -472,7 +464,6 @@ def clr(mat):
     return (lmat - gm).squeeze()
 
 
-@experimental(as_of="0.4.0")
 def clr_inv(mat):
     r"""Perform inverse centre log ratio transformation.
 
@@ -517,7 +508,6 @@ def clr_inv(mat):
     return closure(emat)
 
 
-@experimental(as_of="0.4.0")
 def ilr(mat, basis=None, check=True):
     r"""Perform isometric log ratio transformation.
 
@@ -585,7 +575,6 @@ def ilr(mat, basis=None, check=True):
     return clr(mat) @ basis.T
 
 
-@experimental(as_of="0.4.0")
 def ilr_inv(mat, basis=None, check=True):
     r"""Perform inverse isometric log ratio transform.
 
@@ -657,7 +646,6 @@ def ilr_inv(mat, basis=None, check=True):
     return clr_inv(mat @ basis)
 
 
-@experimental(as_of="0.5.5")
 def alr(mat, denominator_idx=0):
     r"""Perform additive log ratio transformation.
 
@@ -719,7 +707,6 @@ def alr(mat, denominator_idx=0):
     return lr
 
 
-@experimental(as_of="0.5.5")
 def alr_inv(mat, denominator_idx=0):
     r"""Perform inverse additive log ratio transform.
 
@@ -787,7 +774,6 @@ def alr_inv(mat, denominator_idx=0):
     return comp
 
 
-@experimental(as_of="0.4.0")
 def centralize(mat):
     r"""Center data around its geometric average.
 
@@ -818,7 +804,6 @@ def centralize(mat):
     return perturb_inv(mat, cen)
 
 
-@experimental(as_of="0.5.7")
 def _vlr(x: np.array, y: np.array, ddof: int):
     r"""Calculate variance log ratio.
 
@@ -845,7 +830,6 @@ def _vlr(x: np.array, y: np.array, ddof: int):
     return np.var(x - y, ddof=ddof)
 
 
-@experimental(as_of="0.5.7")
 def _robust_vlr(x: np.ndarray, y: np.ndarray, ddof: int):
     r"""Calculate variance log ratio while masking zeros.
 
@@ -876,7 +860,6 @@ def _robust_vlr(x: np.ndarray, y: np.ndarray, ddof: int):
     return np.ma.var(x - y, ddof=ddof)
 
 
-@experimental(as_of="0.5.7")
 def vlr(x: np.ndarray, y: np.ndarray, ddof: int = 1, robust: bool = False):
     r"""Calculate variance log ratio.
 
@@ -939,7 +922,6 @@ def vlr(x: np.ndarray, y: np.ndarray, ddof: int = 1, robust: bool = False):
         return _vlr(**kwargs)
 
 
-@experimental(as_of="0.5.7")
 def _pairwise_vlr(mat: np.ndarray, ddof: int):
     r"""Perform pairwise variance log ratio transformation.
 
@@ -970,7 +952,6 @@ def _pairwise_vlr(mat: np.ndarray, ddof: int):
     return vlr_data
 
 
-@experimental(as_of="0.5.7")
 def pairwise_vlr(
     mat, ids=None, ddof: int = 1, robust: bool = False, validate: bool = True
 ):
@@ -1052,7 +1033,6 @@ def pairwise_vlr(
         return DistanceMatrix(vlr_data, ids=ids, validate=False)
 
 
-@experimental(as_of="0.5.8")
 def tree_basis(tree):
     r"""Calculate sparse representation of an ilr basis from a tree.
 
@@ -1168,7 +1148,6 @@ def tree_basis(tree):
     return basis, nodes
 
 
-@experimental(as_of="0.4.1")
 def ancom(
     table,
     grouping,
@@ -1621,7 +1600,6 @@ def _gram_schmidt_basis(n):
     return basis.T
 
 
-@experimental(as_of="0.5.5")
 def sbp_basis(sbp):
     r"""Build an orthogonal basis from a sequential binary partition (SBP).
 
@@ -1737,7 +1715,6 @@ def _welch_ttest(x1, x2):
     )
 
 
-@experimental(as_of="0.5.9")
 def dirmult_ttest(
     table: pd.DataFrame,
     grouping: str,

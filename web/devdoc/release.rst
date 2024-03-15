@@ -15,11 +15,11 @@ Prep the release
 
 1. Ensure the GitHub Actions CI build is passing against main.
 
-2. Update the version strings (x.y.y-dev) to the new version (x.y.z). This will include ``__version__`` defined in ``skbio/__init__.py``, as well as any ``@experimental/@stable/@deprecated`` (see `API stability decorators <api_stability>`_) with ``as_of='x.y.y-dev'``. ``grep`` for the current version string to find all occurrences::
+2. Update the version strings (x.y.y-dev) to the new version (x.y.z). This will include ``__version__`` defined in ``skbio/__init__.py``. ``grep`` for the current version string to find all occurrences::
 
     grep -r 'x\.y\.y-dev' .
 
-3. Remove any deprecated functionality that was scheduled for removal on or before this release. When removing deprecated functionality, make sure the functionality has been in a deprecated state for the appropriate number of releases described in the `API stability document <api_stability>`_. If there is functionality that shouldn't be removed yet, bump the `until` version to a future version. To find all deprecated functionality, search for `@deprecated` decorators:
+3. Remove any deprecated functionality that was scheduled for removal on or before this release. To find all deprecated functionality, search for `@deprecated` decorators:
 
     grep -r '@deprecated' .
 

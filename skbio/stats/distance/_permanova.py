@@ -16,11 +16,9 @@ from ._base import (
     _build_results,
     DistanceMatrix,
 )
-from skbio.util._decorator import experimental
 from ._cutils import permanova_f_stat_sW_cy
 
 
-@experimental(as_of="0.4.0")
 def permanova(distance_matrix, grouping, column=None, permutations=999):
     """Test for significant differences between groups using PERMANOVA.
 

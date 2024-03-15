@@ -8,7 +8,6 @@
 
 import skbio
 from skbio.util._decorator import classproperty, overrides
-from skbio.util._decorator import stable
 from ._nucleotide_mixin import NucleotideMixin, _motifs as _parent_motifs
 from ._grammared_sequence import GrammaredSequence
 
@@ -214,7 +213,6 @@ class DNA(GrammaredSequence, NucleotideMixin):
     def _motifs(self):
         return _motifs
 
-    @stable(as_of="0.4.0")
     def transcribe(self):
         """Transcribe DNA into RNA.
 
@@ -289,7 +287,6 @@ class DNA(GrammaredSequence, NucleotideMixin):
             validate=False,
         )
 
-    @stable(as_of="0.4.0")
     def translate(self, *args, **kwargs):
         """Translate DNA sequence into protein sequence.
 
@@ -358,7 +355,6 @@ class DNA(GrammaredSequence, NucleotideMixin):
         """
         return self.transcribe().translate(*args, **kwargs)
 
-    @stable(as_of="0.4.0")
     def translate_six_frames(self, *args, **kwargs):
         """Translate DNA into protein using six possible reading frames.
 
