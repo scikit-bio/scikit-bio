@@ -159,6 +159,8 @@ class GrammaredSequence(Sequence, metaclass=GrammaredSequenceMeta):
     __definite_char_codes = None
     __gap_codes = None
     __noncanonical_codes = None
+    __degenerate_hash = None
+    __degen_nonca_hash = None
 
     @classproperty
     def _validation_mask(cls):
@@ -208,6 +210,21 @@ class GrammaredSequence(Sequence, metaclass=GrammaredSequenceMeta):
             noncanonical_chars = cls.noncanonical_chars
             cls.__noncanonical_codes = np.asarray([ord(c) for c in noncanonical_chars])
         return cls.__noncanonical_codes
+
+    @classproperty
+    def _degenerate_hash(cls):
+        if cls.__degenerate_hash is None:
+            htab = np.zeros((256,), dtype=np.uint8)
+            htab[cls._degenerate_codes] = 1
+            cls.__degenerate_hash = htab
+        return cls.__degenerate_hash
+
+    @classproperty
+    def _degen_nonca_hash(cls):
+        if cls.__degen_nonca_hash is None:
+            cls.__degen_nonca_hash = cls._degenerate_hash
+            cls.__degen_nonca_hash[cls._noncanonical_codes] = 1
+        return cls.__degen_nonca_hash
 
     @classproperty
     def alphabet(cls):
@@ -783,15 +800,15 @@ class GrammaredSequence(Sequence, metaclass=GrammaredSequenceMeta):
         return re.compile(regex_string)
 
     def to_definites(self, degenerate="wild", noncanonical=True):
-        """Convert degenerate and or non-canonical characters to alternative characters.
+        """Convert degenerate and noncanonical characters to alternative characters.
 
         Parameters
         ----------
-        degenerate : {"wild", "gap", str of length 1, empty str}, optional
+        degenerate : {"wild", "gap", "del", str of length 1}, optional
             How degenerate/non-canonical characters should be treated: Replace them
             with the wildcard character ("wild", default), or the default gap character
             ("gap"), or a user-defined character (str of length 1), or remove them
-            (empty string, "").
+            ("del").
         noncanonical : bool, optional
             Treat non-canonical characters in the same way as degenerate
             characters (``True``, default), or leave them as-is (``False``).
@@ -813,6 +830,8 @@ class GrammaredSequence(Sequence, metaclass=GrammaredSequenceMeta):
                 raise ValueError(errmsg % "Wildcard")
         elif degenerate == "gap":
             sub_char = self.default_gap_char
+        elif degenerate == "del":
+            degenerate = ""
         elif isinstance(degenerate, str) and len(degenerate) == 1:
             if degenerate in self.alphabet:
                 sub_char = degenerate
@@ -821,8 +840,6 @@ class GrammaredSequence(Sequence, metaclass=GrammaredSequenceMeta):
                     f"Invalid character '{degenerate}' in sequence. Character must "
                     f"be within sequence alphabet: {self.alphabet}"
                 )
-        elif isinstance(degenerate, str) and len(degenerate) == 0:
-            sub_char = 0
         else:
             raise ValueError('Invalid value for parameter "degenerate".')
 
