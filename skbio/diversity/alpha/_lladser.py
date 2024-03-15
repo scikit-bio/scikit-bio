@@ -9,10 +9,8 @@
 import numpy as np
 
 from skbio.diversity._util import _validate_counts_vector
-from skbio.util._decorator import experimental
 
 
-@experimental(as_of="0.4.0")
 def lladser_pe(counts, r=10):
     """Calculate single point estimate of conditional uncovered probability.
 
@@ -59,7 +57,6 @@ def lladser_pe(counts, r=10):
     return pe
 
 
-@experimental(as_of="0.4.0")
 def lladser_ci(counts, r, alpha=0.95, f=10, ci_type="ULCL"):
     """Calculate single CI of the conditional uncovered probability.
 

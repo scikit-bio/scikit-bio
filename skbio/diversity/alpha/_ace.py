@@ -9,10 +9,8 @@
 import numpy as np
 
 from skbio.diversity._util import _validate_counts_vector
-from skbio.util._decorator import experimental
 
 
-@experimental(as_of="0.4.0")
 def ace(counts, rare_threshold=10):
     r"""Calculate the ACE metric (Abundance-based Coverage Estimator).
 

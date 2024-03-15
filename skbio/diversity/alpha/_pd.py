@@ -8,7 +8,6 @@
 
 import numpy as np
 
-from skbio.util._decorator import experimental
 from skbio.diversity._util import (
     _validate_counts_vector,
     _validate_taxa_and_tree,
@@ -37,7 +36,6 @@ def _faith_pd(counts_by_node, branch_lengths):
     return (branch_lengths * (counts_by_node > 0)).sum()
 
 
-@experimental(as_of="0.4.1")
 def faith_pd(counts, taxa=None, tree=None, validate=True, otu_ids=None):
     r"""Calculate Faith's phylogenetic diversity (Faith's PD) metric.
 
@@ -216,7 +214,6 @@ def _phydiv(counts_by_node, branch_lengths, rooted, weight):
     return (branch_lengths * fracs_by_node).sum()
 
 
-@experimental(as_of="0.6.0")
 def phydiv(
     counts, taxa=None, tree=None, rooted=None, weight=False, validate=True, otu_ids=None
 ):

@@ -8,6 +8,7 @@
 
 import functools
 import itertools
+from warnings import warn, simplefilter
 
 import numpy as np
 import scipy.spatial.distance
@@ -20,7 +21,6 @@ from skbio.diversity.beta._unifrac import (
     _setup_multiple_weighted_unifrac,
     _normalize_weighted_unifrac_by_default,
 )
-from skbio.util._decorator import experimental, deprecated
 from skbio.stats.distance import DistanceMatrix
 from skbio.diversity._util import (
     _validate_counts_matrix,
@@ -67,7 +67,6 @@ def _get_alpha_diversity_metric_map():
     }
 
 
-@experimental(as_of="0.4.1")
 def get_alpha_diversity_metrics():
     """List scikit-bio's alpha diversity metrics.
 
@@ -90,7 +89,6 @@ def get_alpha_diversity_metrics():
     return sorted(metrics.keys())
 
 
-@experimental(as_of="0.4.1")
 def get_beta_diversity_metrics():
     """List scikit-bio's beta diversity metrics.
 
@@ -119,7 +117,6 @@ def get_beta_diversity_metrics():
     return sorted(["unweighted_unifrac", "weighted_unifrac"])
 
 
-@experimental(as_of="0.4.1")
 def alpha_diversity(metric, counts, ids=None, validate=True, **kwargs):
     """Compute alpha diversity for one or more samples.
 
@@ -204,16 +201,6 @@ def alpha_diversity(metric, counts, ids=None, validate=True, **kwargs):
     return pd.Series(results, index=ids)
 
 
-@deprecated(
-    as_of="0.5.0",
-    until="0.6.0",
-    reason=(
-        "The return type is unstable. Developer caution is "
-        "advised. The resulting DistanceMatrix object will "
-        "include zeros when distance has not been calculated, and "
-        "therefore can be misleading."
-    ),
-)
 def partial_beta_diversity(metric, counts, ids, id_pairs, validate=True, **kwargs):
     """Compute distances only between specified ID pairs.
 
@@ -244,6 +231,13 @@ def partial_beta_diversity(metric, counts, ids, id_pairs, validate=True, **kwarg
         distances not defined by id_pairs will be 0.0. Use this resulting
         DistanceMatrix with caution as 0.0 is a valid distance.
 
+    Warnings
+    --------
+    ``partial_beta_diversity`` is deprecated as of ``0.5.0``. The return type is
+    unstable. Developer caution is advised. The resulting DistanceMatrix object will
+    include zeros when distance has not been calculated, and therefore can be
+    misleading.
+
     Raises
     ------
     ValueError
@@ -259,6 +253,18 @@ def partial_beta_diversity(metric, counts, ids, id_pairs, validate=True, **kwarg
     skbio.diversity.get_beta_diversity_metrics
 
     """
+    # @deprecated
+    if not hasattr(partial_beta_diversity, "warned"):
+        simplefilter("once", DeprecationWarning)
+        warn(
+            "partial_beta_diversity is deprecated as of 0.5.0. The return type is "
+            "unstable. Developer caution is advised. The resulting DistanceMatrix "
+            "object will include zeros when distance has not been calculated, and "
+            "therefore can be misleading.",
+            DeprecationWarning,
+        )
+        partial_beta_diversity.warned = True
+
     if validate:
         counts = _validate_counts_matrix(counts, ids=ids)
 
@@ -349,7 +355,6 @@ _qualitative_beta_metrics = [
 ]
 
 
-@experimental(as_of="0.4.0")
 def beta_diversity(
     metric, counts, ids=None, validate=True, pairwise_func=None, **kwargs
 ):
