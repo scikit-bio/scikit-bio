@@ -1,5 +1,4 @@
-"""
-Sample Metadata object ported over from qiime2.
+"""Sample Metadata object ported over from qiime2.
 
 ===============================================
 
