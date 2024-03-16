@@ -207,15 +207,14 @@ class GrammaredSequence(Sequence, metaclass=GrammaredSequenceMeta):
     @classproperty
     def _degenerate_hash(cls):
         if cls.__degenerate_hash is None:
-            htab = np.zeros((256,), dtype=np.uint8)
-            htab[cls._degenerate_codes] = 1
-            cls.__degenerate_hash = htab
+            cls.__degenerate_hash = np.zeros((256,), dtype=np.uint8)
+            cls.__degenerate_hash[cls._degenerate_codes] = 1
         return cls.__degenerate_hash
 
     @classproperty
     def _degen_nonca_hash(cls):
         if cls.__degen_nonca_hash is None:
-            cls.__degen_nonca_hash = cls._degenerate_hash
+            cls.__degen_nonca_hash = cls._degenerate_hash.copy()
             cls.__degen_nonca_hash[cls._noncanonical_codes] = 1
         return cls.__degen_nonca_hash
 
@@ -817,33 +816,31 @@ class GrammaredSequence(Sequence, metaclass=GrammaredSequenceMeta):
             "invalid."
         )
 
-        if degenerate == "wild":
-            sub_char = self.wildcard_char
-            if not isinstance(sub_char, str):
-                raise ValueError(errmsg % "Wildcard")
-        elif degenerate == "gap":
-            sub_char = self.default_gap_char
-        elif degenerate == "del":
-            degenerate = ""
-        elif isinstance(degenerate, str) and len(degenerate) == 1:
-            if degenerate in self.alphabet:
-                sub_char = degenerate
-            else:
-                raise ValueError(
-                    f"Invalid character '{degenerate}' in sequence. Character must "
-                    f"be within sequence alphabet: {self.alphabet}"
-                )
-        else:
-            raise ValueError('Invalid value for parameter "degenerate".')
-
-        htab = np.zeros((256,), dtype=np.uint8)
-        htab[self._degenerate_codes] = 1
         if noncanonical:
-            htab[self._noncanonical_codes] = 1
-        pos = htab[self._bytes]
-        if sub_char:
-            sub_char = ord(sub_char)
-        seq = np.trim_zeros(np.where(pos, sub_char, self._bytes))
+            pos = self._degen_nonca_hash[self._bytes]
+        elif not noncanonical:
+            pos = self._degenerate_hash[self._bytes]
+
+        if degenerate == "del":
+            seq = self._bytes[np.where(1 - pos)[0]]
+        else:
+            if degenerate == "wild":
+                sub_char = self.wildcard_char
+                if not isinstance(sub_char, str):
+                    raise ValueError(errmsg % "Wildcard")
+            elif degenerate == "gap":
+                sub_char = self.default_gap_char
+            elif isinstance(degenerate, str) and len(degenerate) == 1:
+                if degenerate in self.alphabet:
+                    sub_char = degenerate
+                else:
+                    raise ValueError(
+                        f"Invalid character '{degenerate}' in sequence. Character must "
+                        f"be within sequence alphabet: {self.alphabet}"
+                    )
+            else:
+                raise ValueError('Invalid value for parameter "degenerate".')
+            seq = np.where(pos, ord(sub_char), self._bytes)
 
         return self._constructor(sequence=seq)
 
