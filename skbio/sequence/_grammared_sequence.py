@@ -160,7 +160,10 @@ class GrammaredSequence(Sequence, metaclass=GrammaredSequenceMeta):
     __gap_codes = None
     __noncanonical_codes = None
     __degenerate_hash = None
+    __degen_bool_hash = None
     __degen_nonca_hash = None
+    __gap_hash = None
+    __definite_hash = None
 
     @classproperty
     def _validation_mask(cls):
@@ -212,11 +215,32 @@ class GrammaredSequence(Sequence, metaclass=GrammaredSequenceMeta):
         return cls.__degenerate_hash
 
     @classproperty
+    def _degen_bool_hash(cls):
+        if cls.__degen_bool_hash is None:
+            cls.__degen_bool_hash = np.zeros((256,), dtype=bool)
+            cls.__degen_bool_hash[cls._degenerate_codes] = 1
+        return cls.__degen_bool_hash
+
+    @classproperty
     def _degen_nonca_hash(cls):
         if cls.__degen_nonca_hash is None:
             cls.__degen_nonca_hash = cls._degenerate_hash.copy()
             cls.__degen_nonca_hash[cls._noncanonical_codes] = 1
         return cls.__degen_nonca_hash
+
+    @classproperty
+    def _gap_hash(cls):
+        if cls.__gap_hash is None:
+            cls.__gap_hash = np.zeros((256,), dtype=bool)
+            cls.__gap_hash[cls._gap_codes] = True
+        return cls.__gap_hash
+
+    @classproperty
+    def _definite_hash(cls):
+        if cls.__definite_hash is None:
+            cls.__definite_hash = np.zeros((256,), dtype=bool)
+            cls.__definite_hash[cls._definite_char_codes] = True
+        return cls.__definite_hash
 
     @classproperty
     def alphabet(cls):
@@ -419,7 +443,7 @@ class GrammaredSequence(Sequence, metaclass=GrammaredSequenceMeta):
         array([False, False,  True, False,  True], dtype=bool)
 
         """
-        return np.in1d(self._bytes, self._gap_codes)
+        return self._gap_hash[self._bytes]
 
     def has_gaps(self):
         """Determine if the sequence contains one or more gap characters.
@@ -468,7 +492,7 @@ class GrammaredSequence(Sequence, metaclass=GrammaredSequenceMeta):
         array([False, False,  True, False,  True], dtype=bool)
 
         """
-        return np.in1d(self._bytes, self._degenerate_codes)
+        return self._degen_bool_hash[self._bytes]
 
     def has_degenerates(self):
         """Determine if sequence contains one or more degenerate characters.
@@ -522,7 +546,7 @@ class GrammaredSequence(Sequence, metaclass=GrammaredSequenceMeta):
         array([ True,  True, False,  True, False], dtype=bool)
 
         """
-        return np.in1d(self._bytes, self._definite_char_codes)
+        return self._definite_hash[self._bytes]
 
     def nondegenerates(self):
         """Find positions containing non-degenerate characters in the sequence.
