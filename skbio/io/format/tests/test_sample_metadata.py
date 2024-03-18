@@ -6,17 +6,13 @@
 # The full license is in the file LICENSE.txt, distributed with this software.
 # ----------------------------------------------------------------------------
 
-import io
-import string
 from unittest import TestCase, main
 import pandas as pd
 import tempfile
 import os
 
 
-from skbio.sequence import GrammaredSequence
 from skbio.util import get_data_path
-from skbio.util import classproperty
 from skbio.util._decorator import overrides
 
 from skbio.metadata._metadata import SampleMetadata
@@ -26,6 +22,7 @@ from skbio.io.format.sample_metadata import (
 class SnifferTests(TestCase):
     def setUp(self):
         self.positive_fps = list(map(get_data_path, [
+            'sample-metadata-comments-comment-char-id.tsv',
             'sample-metadata-comments.tsv',
             'sample-metadata-comments-mixed-case.tsv',
             'sample-metadata-complete-types-directive.tsv',

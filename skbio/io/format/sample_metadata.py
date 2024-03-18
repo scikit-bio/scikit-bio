@@ -50,6 +50,13 @@ def _sample_metadata_sniffer(fh):
             "feature-id",
             "sample id",
             "feature id",
+            "sample_name",  # Technically this should be case-sensitive
+        ]
+        possible_ids_w_leading_comment_char = [
+            "#SampleID",
+            "#Sample ID",
+            "#OTUID",
+            "#OTU ID",
         ]
 
         # We need to find the actual header row
@@ -59,10 +66,15 @@ def _sample_metadata_sniffer(fh):
             if len(header) == 0:
                 continue
 
+            match = re.search(r"\S+", header[0])
+
+            # Check if first word is a columnID that starts with #
+            if match and match.group() in possible_ids_w_leading_comment_char:
+                return True, {}
+
             # Skip rows whose first non-whitespace character is a #
-            # since they are comments.
-            match = re.search(r"\S", header[0])
-            if not match or match.group() == "#":
+            # since they are comments. skips empty rows too.
+            if not match or match.group()[0] == "#":
                 continue
 
             if any(
@@ -74,7 +86,7 @@ def _sample_metadata_sniffer(fh):
             # first entry we conclude that this is not a metadata file.
             return False, {}
 
-        # In case the file is empty and has no files that non-empty non-comment
+        # In case the file is empty and has no rows that are non-empty non-comment
         # we return a negative result.
         return False, {}
 
