@@ -1814,11 +1814,11 @@ def dirmult_ttest(
         reported ``CI(97.5)`` is the 97.5% quantile of all of the log2-fold
         changes computed from each of the posterior draws.
 
-        ``p-value`` is the pvalue of the *t*-test. The reported ``*p*-value`` is the
+        ``pvalue`` is the pvalue of the *t*-test. The reported ``*p*-value`` is the
         average of all of the pvalues computed from the t-tests calculated
         across all of the posterior draws.
 
-        ``q-value`` is the pvalue of the t-test after performing multiple
+        ``qvalue`` is the pvalue of the t-test after performing multiple
         hypothesis correction. The reported ``*q*-value`` is computed after
         performing holm-bonferroni multiple hypothesis correction on the
         reported ``*p*-value``.
@@ -1888,6 +1888,7 @@ def dirmult_ttest(
     b5  1.528243 -1.036910  3.978387  0.068310
     b6  1.182343 -0.702656  3.556061  0.068310
     b7  1.480232 -0.601277  4.043888  0.068310
+
     """
     rng = get_rng(seed)
     if not isinstance(table, pd.DataFrame):
