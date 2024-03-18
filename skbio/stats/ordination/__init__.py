@@ -1,5 +1,4 @@
-r"""
-Ordination methods (:mod:`skbio.stats.ordination`)
+r"""Ordination methods (:mod:`skbio.stats.ordination`)
 ==================================================
 
 .. currentmodule:: skbio.stats.ordination
@@ -43,7 +42,6 @@ Utility Functions
 
 Examples
 --------
-
 This is an artificial dataset (table 11.3 in [1]_) that represents fish
 abundance in different sites (`Y`, the response variables) and
 environmental variables (`X`, the explanatory variables).
@@ -115,11 +113,11 @@ dtype: float64
 
 References
 ----------
-
 .. [1] Legendre P. and Legendre L. 1998. Numerical Ecology. Elsevier,
    Amsterdam.
 
-"""
+
+"""  # noqa: D205, D415
 
 # ----------------------------------------------------------------------------
 # Copyright (c) 2013--, scikit-bio development team.

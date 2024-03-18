@@ -1,5 +1,4 @@
-"""
-Diversity calculations (:mod:`skbio.diversity`)
+"""Diversity calculations (:mod:`skbio.diversity`)
 ===============================================
 
 .. currentmodule:: skbio.diversity
@@ -169,7 +168,6 @@ Functions
 
 Examples
 --------
-
 Create a matrix containing 6 samples (rows) and 7 OTUs (columns):
 
 .. plot::
@@ -389,7 +387,8 @@ is relevant), this will give us a symmetric 2x2 correlation matrix.
 Obs. richness       1.000000  0.939336
 Faith PD            0.939336  1.000000
 
-"""
+
+"""  # noqa: D205, D415
 
 # ----------------------------------------------------------------------------
 # Copyright (c) 2013--, scikit-bio development team.

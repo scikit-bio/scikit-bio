@@ -1,5 +1,4 @@
-"""
-Sequence distance metrics (:mod:`skbio.sequence.distance`)
+"""Sequence distance metrics (:mod:`skbio.sequence.distance`)
 ==========================================================
 
 .. currentmodule:: skbio.sequence.distance
@@ -19,7 +18,7 @@ Functions
    hamming
    kmer_distance
 
-"""
+"""  # noqa: D205, D415
 
 # ----------------------------------------------------------------------------
 # Copyright (c) 2013--, scikit-bio development team.
@@ -108,7 +107,7 @@ def hamming(seq1, seq2):
 
 @experimental(as_of="0.5.0")
 def kmer_distance(seq1, seq2, k, overlap=True):
-    """Compute the kmer distance between a pair of sequences
+    """Compute the kmer distance between a pair of sequences.
 
     The kmer distance between two sequences is the fraction of kmers that are
     unique to either sequence.

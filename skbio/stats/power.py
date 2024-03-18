@@ -1,5 +1,4 @@
-r"""
-Empirical Power Estimation (:mod:`skbio.stats.power`)
+r"""Empirical Power Estimation (:mod:`skbio.stats.power`)
 =====================================================
 
 .. currentmodule:: skbio.stats.power
@@ -130,7 +129,8 @@ Based on this power estimate, as we increase our confidence that we have not
 committed a type I error and identified a false positive, the number of samples
 we need to be confident that we have not committed a type II error increases.
 
-"""
+
+"""  # noqa: D205, D415
 
 # ----------------------------------------------------------------------------
 # Copyright (c) 2013--, scikit-bio development team.
@@ -162,7 +162,7 @@ def subsample_power(
     num_iter=500,
     num_runs=10,
 ):
-    r"""Subsamples data to iteratively calculate power
+    r"""Subsample data to iteratively calculate power.
 
     Parameters
     ----------
@@ -355,7 +355,6 @@ def subsample_power(
     power.
 
     """
-
     # Checks the inputs
     ratio, num_p, sample_counts = _check_subsample_power_inputs(
         test=test,
@@ -404,7 +403,7 @@ def subsample_paired_power(
     num_iter=500,
     num_runs=10,
 ):
-    r"""Estimates power iteratively using samples with matching metadata
+    r"""Estimate power iteratively using samples with matching metadata.
 
     Parameters
     ----------
@@ -547,7 +546,6 @@ def subsample_paired_power(
     samples per group.
 
     """
-
     # Handles the order argument
     if order is None:
         order = sorted(meta.groupby(cat).groups.keys())
@@ -593,7 +591,7 @@ def subsample_paired_power(
 
 @experimental(as_of="0.4.0")
 def confidence_bound(vec, alpha=0.05, df=None, axis=None):
-    r"""Calculates a confidence bound assuming a normal distribution
+    r"""Calculate a confidence bound assuming a normal distribution.
 
     Parameters
     ----------
@@ -616,7 +614,6 @@ def confidence_bound(vec, alpha=0.05, df=None, axis=None):
         [mean - bound, mean + bound].
 
     """
-
     # Determines the number of non-nan counts
     vec = np.asarray(vec)
     vec_shape = vec.shape
@@ -647,7 +644,7 @@ def confidence_bound(vec, alpha=0.05, df=None, axis=None):
 
 @experimental(as_of="0.4.0")
 def paired_subsamples(meta, cat, control_cats, order=None, strict_match=True):
-    r"""Draws a list of samples varied by `cat` and matched for `control_cats`
+    r"""Draw a list of samples varied by `cat` and matched for `control_cats`.
 
     This function is designed to provide controlled samples, based on a
     metadata category. For example, one could control for age, sex, education
@@ -717,7 +714,6 @@ def paired_subsamples(meta, cat, control_cats, order=None, strict_match=True):
     `strict_match` was true, and there is missing AGE data for this sample.
 
     """
-
     # Handles the order argument
     if order is None:
         order = sorted(meta.groupby(cat).groups.keys())
@@ -742,8 +738,7 @@ def paired_subsamples(meta, cat, control_cats, order=None, strict_match=True):
 
 
 def _get_min_size(meta, cat, control_cats, order, strict_match):
-    """Determines the smallest group represented"""
-
+    """Determine the smallest group represented."""
     if strict_match:
         all_cats = copy.deepcopy(control_cats)
         all_cats.append(cat)
@@ -753,7 +748,7 @@ def _get_min_size(meta, cat, control_cats, order, strict_match):
 
 
 def _check_nans(x, switch=False):
-    r"""Returns False if x is a nan and True is x is a string or number"""
+    r"""Return False if x is a nan and True is x is a string or number."""
     if isinstance(x, str):
         return True
     elif isinstance(x, (float, int)):
@@ -767,7 +762,7 @@ def _check_nans(x, switch=False):
 
 
 def _calculate_power(p_values, alpha=0.05):
-    r"""Calculates statistical power empirically
+    r"""Calculate statistical power empirically.
 
     Parameters
     ----------
@@ -784,7 +779,6 @@ def _calculate_power(p_values, alpha=0.05):
         critical value.
 
     """
-
     p_values = np.atleast_2d(p_values)
 
     w = (p_values < alpha).sum(axis=1) / p_values.shape[1]
@@ -793,7 +787,7 @@ def _calculate_power(p_values, alpha=0.05):
 
 
 def _compare_distributions(test, samples, num_p, counts=5, mode="ind", num_iter=100):
-    r"""Compares two distribution arrays iteratively
+    r"""Compare two distribution arrays iteratively.
 
     Parameters
     ----------
@@ -840,7 +834,6 @@ def _compare_distributions(test, samples, num_p, counts=5, mode="ind", num_iter=
         If counts is a 1-D array and counts and samples are different lengths.
 
     """
-
     # Prealocates the pvalue matrix
     p_values = np.zeros((num_p, num_iter))
 
@@ -878,7 +871,7 @@ def _check_subsample_power_inputs(
     counts_interval=10,
     min_counts=None,
 ):
-    r"""Makes sure that everything is sane before power calculations
+    r"""Make sure that everything is sane before power calculations.
 
     Parameters
     ----------
@@ -940,7 +933,6 @@ def _check_subsample_power_inputs(
         `test` does not return a float or a 1-dimensional numpy array.
 
     """
-
     if draw_mode not in {"ind", "matched"}:
         raise ValueError('mode must be "matched" or "ind".')
 
@@ -992,7 +984,7 @@ def _check_subsample_power_inputs(
 
 
 def _identify_sample_groups(meta, cat, control_cats, order, strict_match):
-    """Aggregates samples matches for `control_cats` that vary by `cat`
+    """Aggregate samples matches for `control_cats` that vary by `cat`.
 
     Parameters
     ----------
@@ -1033,7 +1025,6 @@ def _identify_sample_groups(meta, cat, control_cats, order, strict_match):
         position of the reference group sample in the list of samples.
 
     """
-
     # Sets up variables to be filled
     meta_pairs = {}
     index = []
@@ -1076,7 +1067,7 @@ def _identify_sample_groups(meta, cat, control_cats, order, strict_match):
 
 
 def _draw_paired_samples(meta_pairs, index, num_samps):
-    """Draws a random set of ids from a matched list
+    """Draw a random set of ids from a matched list.
 
     Parameters
     ----------
@@ -1090,13 +1081,15 @@ def _draw_paired_samples(meta_pairs, index, num_samps):
         The first array is an index array. The second gives an integer
         corresponding to the `control_cat`-group, and the third lists the
         position of the reference group sample in the list of samples.
+    num_samps : int
+        The number of samples.
 
     Returns
     -------
     ids : list
         A set of randomly selected ids groups from each group.
-    """
 
+    """
     # Handles an empty paired vector
     if "no" in meta_pairs:
         return [np.array([]) for o in meta_pairs["no"]]
@@ -1132,7 +1125,7 @@ def _draw_paired_samples(meta_pairs, index, num_samps):
 def _calculate_power_curve(
     test, samples, sample_counts, ratio=None, mode="ind", num_iter=1000, alpha=0.05
 ):
-    r"""Generates an empirical power curve for the samples.
+    r"""Generate an empirical power curve for the samples.
 
     Parameters
     ----------
@@ -1159,15 +1152,19 @@ def _calculate_power_curve(
     num_iter : int
         The default is 1000. The number of p-values to generate for each point
         on the curve.
+    alpha : float, optional
+        The significance level for the statistical test. Defaults to 0.05.
 
     Returns
     -------
     p_values : array
         The p-values associated with the input sample counts.
+
     Raises
     ------
     ValueError
         If ratio is an array and ratio is not the same length as samples
+
     """
     # Casts array-likes to arrays
     sample_counts = np.asarray(sample_counts)

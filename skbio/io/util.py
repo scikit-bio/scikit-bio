@@ -1,5 +1,4 @@
-r"""
-I/O utils (:mod:`skbio.io.util`)
+r"""I/O utils (:mod:`skbio.io.util`)
 ================================
 
 .. currentmodule:: skbio.io.util
@@ -11,13 +10,13 @@ Functions
 ---------
 
 .. autosummary::
-    :toctree: generated/
+   :toctree:
 
-    open
-    open_file
-    open_files
+   open
+   open_file
+   open_files
 
-"""
+"""  # noqa: D205, D415
 
 # ----------------------------------------------------------------------------
 # Copyright (c) 2013--, scikit-bio development team.
@@ -293,6 +292,10 @@ def _flush_compressor(file):
 @contextmanager
 @stable(as_of="0.4.0")
 def open_files(files, **kwargs):
-    """A plural form of :func:`open_file`."""
+    """Context manager for :func:`skbio.io.util.open`.
+
+    A plural form of :func:`open_file`.
+
+    """
     with ExitStack() as stack:
         yield [stack.enter_context(open_file(f, **kwargs)) for f in files]

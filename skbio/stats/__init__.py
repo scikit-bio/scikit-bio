@@ -1,5 +1,4 @@
-"""
-Statistics (:mod:`skbio.stats`)
+"""Statistics (:mod:`skbio.stats`)
 ===============================
 
 .. currentmodule:: skbio.stats
@@ -29,7 +28,7 @@ Functions
    subsample_counts
    isubsample
 
-"""
+"""  # noqa: D205, D415
 
 # ----------------------------------------------------------------------------
 # Copyright (c) 2013--, scikit-bio development team.

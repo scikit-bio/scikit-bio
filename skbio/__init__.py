@@ -6,6 +6,7 @@
 # The full license is in the file LICENSE.txt, distributed with this software.
 # ----------------------------------------------------------------------------
 
+# ruff: noqa: D104
 
 # Add skbio.io to sys.modules to prevent cycles in our imports
 import skbio.io  # noqa
@@ -38,7 +39,7 @@ __all__ = [
 ]
 
 __credits__ = "https://github.com/scikit-bio/scikit-bio/graphs/contributors"
-__version__ = "0.5.9"
+__version__ = "0.6.0-dev"
 
 
 mottos = [
@@ -87,7 +88,4 @@ art = r"""
                        Cyanobacteria
 """
 
-if __doc__ is None:
-    __doc__ = title + art
-else:
-    __doc__ = title + art + __doc__
+__doc__ = title + art + (__doc__ or "")

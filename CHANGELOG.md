@@ -1,14 +1,18 @@
 # scikit-bio changelog
 
-## Version 0.5.10
+## Version 0.6.0-dev
 
 ### Performance enhancements
 
+* Launched the new scikit-bio website: https://scikit.bio. The previous domain names _scikit-bio.org_ and _skbio.org_ continue to work and redirect to the new website.
+* Migrated the scikit-bio website repo from the `gh-pages` branch of the `scikit-bio` repo to a standalone repo: [`scikit-bio.github.io`](https://github.com/scikit-bio/scikit-bio.github.io).
+* Replaced the [Bootstrap theme](https://sphinx-bootstrap-theme.readthedocs.io/en/latest/) with the [PyData theme](https://pydata-sphinx-theme.readthedocs.io/en/stable/) for building documentation using Sphinx. Extended this theme to the website. Customized design elements ([#1934](https://github.com/scikit-bio/scikit-bio/pull/1934)).
 * Improved the calculation of Fisher's alpha diversity index (`fisher_alpha`). It is now compatible with optimizers in SciPy 1.11+. Edge cases such as all singletons can be handled correctly. Handling of errors and warnings was improved. Documentation was enriched ([#1890](https://github.com/scikit-bio/scikit-bio/pull/1890)).
 * Allowed `delimiter=None` which represents whitespace of arbitrary length in reading lsmat format matrices ([#1912](https://github.com/scikit-bio/scikit-bio/pull/1912)).
 
 ### Features
 
+* Implemented a mechanism to automatically build documentation and/or homepage and deploy them to the website ([#1934](https://github.com/scikit-bio/scikit-bio/pull/1934)).
 * Added method `Sequence.to_indices` to convert a sequence into a vector of indices of characters in an alphabet (can be from a substitution matrix) or unique characters observed in the sequence. Supports gap masking and wildcard substitution ([#1917](https://github.com/scikit-bio/scikit-bio/pull/1917)).
 * Added class `SubstitutionMatrix` to support subsitution matrices for nucleotides, amino acids are more general cases ([#1913](https://github.com/scikit-bio/scikit-bio/pull/1913)).
 * Added alpha diversity metric `sobs`, which is the observed species richness (S_{obs}) of a sample. `sobs` will replace `observed_otus`, which uses the historical term "OTU". Also added metric `observed_features` to be compatible with the QIIME 2 terminology. All three metrics are equivalent ([#1902](https://github.com/scikit-bio/scikit-bio/pull/1902)).
@@ -19,6 +23,7 @@
 * Removed IPython as a dependency. Scikit-bio continues to support displaying plots in IPython, but it no longer requires importing IPython functionality ([#1901](https://github.com/scikit-bio/scikit-bio/pull/1901)).
 * Made Matplotlib an optional dependency. Scikit-bio no longer requires Matplotlib except for plotting, during which it attempts to import Matplotlib if it is present in the system, and raises an error if not ([#1901](https://github.com/scikit-bio/scikit-bio/pull/1901)).
 * Ported the qiime2 metadata object into skbio. ([#1929](https://github.com/scikit-bio/scikit-bio/pull/1929))
+* Python 3.12+ is now supported, thank you @actapia ([#1930](https://github.com/scikit-bio/scikit-bio/pull/1930))
 
 ### Backward-incompatible changes [experimental]
 
@@ -26,8 +31,10 @@
 
 ### Bug fixes
 
+* Fixed documentation interface of `vlr` and relevant functions ([#1934](https://github.com/scikit-bio/scikit-bio/pull/1934)).
+* Fixed broken link in documentation of Simpson's evenness index. See issue [#1923](https://github.com/scikit-bio/scikit-bio/issues/1923).
 * Safely handle `Sequence.iter_kmers` where `k` is greater than the sequence length ([#1723](https://github.com/scikit-bio/scikit-bio/issues/1723))
-* Re-enabled OpenMP support, which has been mistakenly disabled in 0.5.8  ([#1874](https://github.com/scikit-bio/scikit-bio/pull/1874))
+* Re-enabled OpenMP support, which has been mistakenly disabled in 0.5.8 ([#1874](https://github.com/scikit-bio/scikit-bio/pull/1874))
 * `permanova` and `permdist` operate on a `DistanceMatrix` and a grouping object. Element IDs must be synchronized to compare correct sets of pairwise distances. This failed in case the grouping was provided as a `pandas.Series`, because it was interpreted as an ordered `list` and indices were ignored (see issue [#1877](https://github.com/scikit-bio/scikit-bio/issues/1877) for an example). Note: `pandas.DataFrame` was handled correctly. This behavior has been fixed with PR [#1879](https://github.com/scikit-bio/scikit-bio/pull/1879)
 * Fixed slicing for `TabularMSALoc` on Python 3.12. See issue [#1926](https://github.com/scikit-bio/scikit-bio/issues/1926).
 
@@ -38,7 +45,7 @@
 * Use CYTHON by default during build ([#1874](https://github.com/scikit-bio/scikit-bio/pull/1874))
 * Implemented augmented assignments proposed in issue [#1789](https://github.com/scikit-bio/scikit-bio/issues/1789)
 * Incorporated Ruff's formatting and linting via pre-commit hooks and GitHub Actions. See PR [#1924](https://github.com/scikit-bio/scikit-bio/pull/1924).
-* Fixed broken link in documentation of Simpson's evenness index. See issue [#1923](https://github.com/scikit-bio/scikit-bio/issues/1923).
+* Improved docstrings for functions accross the entire codebase. See [#1933](https://github.com/scikit-bio/scikit-bio/pull/1933) and [#1940](https://github.com/scikit-bio/scikit-bio/pull/1940)
 
 ## Version 0.5.9
 
@@ -164,6 +171,7 @@
 ### Performance enhancements
 
 ### Bug fixes
+
 * Require `Sphinx <= 3.0`. Newer Sphinx versions caused build errors. [#1719](https://github.com/scikit-bio/scikit-bio/pull/1719)
 
 * * `skbio.stats.ordination` tests have been relaxed. ([#1713](https://github.com/scikit-bio/scikit-bio/issues/1713))

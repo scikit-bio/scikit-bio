@@ -1,5 +1,4 @@
-r"""
-QSeq format (:mod:`skbio.io.format.qseq`)
+r"""QSeq format (:mod:`skbio.io.format.qseq`)
 =========================================
 
 .. currentmodule:: skbio.io.format.qseq
@@ -148,7 +147,8 @@ References
 ----------
 .. [1] http://biowulf.nih.gov/apps/CASAVA_UG_15011196B.pdf
 
-"""
+
+"""  # noqa: D205, D415
 
 # ----------------------------------------------------------------------------
 # Copyright (c) 2013--, scikit-bio development team.

@@ -1,5 +1,4 @@
-"""
-Taxdump format (:mod:`skbio.io.format.taxdump`)
+r"""Taxdump format (:mod:`skbio.io.format.taxdump`)
 ===============================================
 
 .. currentmodule:: skbio.io.format.taxdump
@@ -97,7 +96,7 @@ columns after all aforementioned columns.
 |inherited PGC   |1 if node inherits plastid gencode   |
 |flag (1 or 0)   |from parent                          |
 +----------------+-------------------------------------+
-|specified\\_     |1 if species in the node's lineage   |
+|specified       |1 if species in the node's lineage   |
 |species         |has formal name                      |
 +----------------+-------------------------------------+
 |hydrogenosome   |see gencode.dmp file                 |
@@ -190,14 +189,13 @@ The following format parameters are available in ``taxdump`` format:
 
 Examples
 --------
-
 >>> from io import StringIO
 >>> import skbio.io
 >>> import pandas as pd
->>> fs = '\\n'.join([
-...     '1\\t|\\t1\\t|\\tno rank\\t|',
-...     '2\\t|\\t131567\\t|\\tsuperkingdom\\t|',
-...     '6\\t|\\t335928\\t|\\tgenus\\t|'
+>>> fs = '\n'.join([
+...     '1\t|\t1\t|\tno rank\t|',
+...     '2\t|\t131567\t|\tsuperkingdom\t|',
+...     '6\t|\t335928\t|\tgenus\t|'
 ... ])
 >>> fh = StringIO(fs)
 
@@ -229,7 +227,9 @@ References
 .. [7] https://ftp.ncbi.nlm.nih.gov/pub/taxonomy/new_taxdump/taxdump_readme.txt
 .. [8] https://ncbiinsights.ncbi.nlm.nih.gov/2018/02/22/new-taxonomy-files-
        available-with-lineage-type-and-host-information/
-"""
+
+
+"""  # noqa: D205, D415
 
 # ----------------------------------------------------------------------------
 # Copyright (c) 2013--, scikit-bio development team.
@@ -306,6 +306,7 @@ def _taxdump_to_data_frame(fh, scheme):
     -------
     pd.DataFrame
         Parsed table
+
     """
     if isinstance(scheme, str):
         if scheme not in _taxdump_column_schemes:

@@ -8,7 +8,7 @@
 
 
 class SkbioWarning(Warning):
-    """Used to filter our warnings from warnings given by 3rd parties"""
+    """Filter our warnings from warnings given by 3rd parties."""
 
     pass
 

@@ -1,5 +1,4 @@
-r"""
-Ordination results format (:mod:`skbio.io.format.ordination`)
+r"""Ordination results format (:mod:`skbio.io.format.ordination`)
 =============================================================
 
 .. currentmodule:: skbio.io.format.ordination
@@ -176,7 +175,8 @@ Load the ordination results from the file:
 ...  "Site constraints\t0\t0\n")
 >>> ord_res = OrdinationResults.read(or_f)
 
-"""
+
+"""  # noqa: D205, D415
 
 # ----------------------------------------------------------------------------
 # Copyright (c) 2013--, scikit-bio development team.

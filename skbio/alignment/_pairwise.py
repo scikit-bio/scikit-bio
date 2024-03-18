@@ -30,7 +30,7 @@ def local_pairwise_align_nucleotide(
     mismatch_score=-3,
     substitution_matrix=None,
 ):
-    """Locally align exactly two nucleotide seqs with Smith-Waterman
+    """Locally align exactly two nucleotide seqs with Smith-Waterman.
 
     Parameters
     ----------
@@ -106,7 +106,7 @@ def local_pairwise_align_nucleotide(
 def local_pairwise_align_protein(
     seq1, seq2, gap_open_penalty=11, gap_extend_penalty=1, substitution_matrix=None
 ):
-    """Locally align exactly two protein seqs with Smith-Waterman
+    """Locally align exactly two protein seqs with Smith-Waterman.
 
     Parameters
     ----------
@@ -175,7 +175,7 @@ def local_pairwise_align_protein(
 def local_pairwise_align(
     seq1, seq2, gap_open_penalty, gap_extend_penalty, substitution_matrix
 ):
-    """Locally align exactly two seqs with Smith-Waterman
+    """Locally align exactly two seqs with Smith-Waterman.
 
     Parameters
     ----------
@@ -284,7 +284,7 @@ def global_pairwise_align_nucleotide(
     substitution_matrix=None,
     penalize_terminal_gaps=False,
 ):
-    """Globally align nucleotide seqs or alignments with Needleman-Wunsch
+    """Globally align nucleotide seqs or alignments with Needleman-Wunsch.
 
     Parameters
     ----------
@@ -386,7 +386,7 @@ def global_pairwise_align_protein(
     substitution_matrix=None,
     penalize_terminal_gaps=False,
 ):
-    """Globally align pair of protein seqs or alignments with Needleman-Wunsch
+    """Globally align pair of protein seqs or alignments with Needleman-Wunsch.
 
     Parameters
     ----------
@@ -481,7 +481,7 @@ def global_pairwise_align(
     substitution_matrix,
     penalize_terminal_gaps=False,
 ):
-    """Globally align a pair of seqs or alignments with Needleman-Wunsch
+    """Globally align a pair of seqs or alignments with Needleman-Wunsch.
 
     Parameters
     ----------
@@ -617,6 +617,8 @@ def local_pairwise_align_ssw(sequence1, sequence2, **kwargs):
         The first unaligned sequence
     sequence2 : DNA, RNA, or Protein
         The second unaligned sequence
+    kwargs : dict
+        Additional keyword arguments to pass to ``StripedSmithWaterman``.
 
     Returns
     -------
@@ -715,7 +717,7 @@ def local_pairwise_align_ssw(sequence1, sequence2, **kwargs):
     "(https://github.com/scikit-bio/scikit-bio/issues/161).",
 )
 def make_identity_substitution_matrix(match_score, mismatch_score, alphabet="ACGTU"):
-    """Generate substitution matrix where all matches are scored equally
+    """Generate substitution matrix where all matches are scored equally.
 
     Parameters
     ----------
@@ -1036,7 +1038,7 @@ def _traceback(traceback_matrix, score_matrix, aln1, aln2, start_row, start_col)
 
 
 def _first_largest(scores):
-    """Similar to max, but returns the first element achieving the high score
+    """Similar to max, but returns the first element achieving the high score.
 
     If max receives a tuple, it will break a tie for the highest value
     of entry[i] with entry[i+1]. We don't want that here - to better match

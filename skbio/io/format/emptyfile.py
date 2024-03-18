@@ -1,5 +1,4 @@
-r"""
-Empty Files (:mod:`skbio.io.format.emptyfile`)
+r"""Empty Files (:mod:`skbio.io.format.emptyfile`)
 ==============================================
 
 .. currentmodule:: skbio.io.format.emptyfile
@@ -17,7 +16,7 @@ Format Specification
 --------------------
 An empty file consists of only whitespace characters.
 
-"""
+"""  # noqa: D205, D415
 
 # ----------------------------------------------------------------------------
 # Copyright (c) 2013--, scikit-bio development team.

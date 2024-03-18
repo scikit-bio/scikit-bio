@@ -11,6 +11,7 @@ import tempfile
 import shutil
 import io
 import os.path
+import gc
 
 try:
     import responses
@@ -320,6 +321,10 @@ class WritableBinarySourceTests:
             result.close()
             self.assertTrue(result.closed)
             self.check_closed(file, True)
+
+        gc.collect()
+        del result
+        gc.collect()
 
     def compare_gzip_file_contents(self, a, b):
         # The first 10 bytes of a gzip header include a timestamp. The header

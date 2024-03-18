@@ -109,6 +109,9 @@ def assert_ordination_results_equal(
     ignore_directionality : bool, optional
         Ignore differences in directionality (i.e., differences in signs) for
         attributes `samples`, `features` and `biplot_scores`.
+    decimal : int, optional
+        Number of decimal places to compare when checking numerical values.
+        Defaults to 7.
 
     Raises
     ------
@@ -230,8 +233,7 @@ def _normalize_signs(arr1, arr2):
     flipped, but they're still right.
 
     Notes
-    =====
-
+    -----
     This function tries hard to make sure that, if you find "column"
     and "-column" almost equal, calling a function like np.allclose to
     compare them after calling `normalize_signs` succeeds.
@@ -250,6 +252,7 @@ def _normalize_signs(arr1, arr2):
     whose absolute value is largest. Then, it compares its sign with
     the number found in the same index, but in the other array, and
     flips the sign of the column as needed.
+
     """
     # Let's convert everyting to floating point numbers (it's
     # reasonable to assume that eigenvectors will already be floating
@@ -317,6 +320,8 @@ def assert_data_frame_almost_equal(left, right, rtol=1e-5):
     ----------
     left, right : pd.DataFrame
         ``pd.DataFrame`` objects to compare.
+    rtol : float, optional
+        The relative tolerance parameter used for comparison. Defaults to 1e-5.
 
     Raises
     ------
@@ -386,6 +391,7 @@ def pytestrunner():
             pass
     except ImportError:
         numpy = None
+
     try:
         import pandas
 
@@ -395,6 +401,15 @@ def pytestrunner():
         pandas.options.display.max_columns = None
     except ImportError:
         pandas = None
+
+    try:
+        import matplotlib
+    except ImportError:
+        matplotlib = None
+    else:
+        # Set a non-interactive backend for Matplotlib, such that it can work on
+        # systems without graphics
+        matplotlib.use("agg")
 
     # import here, cause outside the eggs aren't loaded
     import pytest

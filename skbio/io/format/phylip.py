@@ -1,5 +1,4 @@
-"""
-PHYLIP multiple sequence alignment format (:mod:`skbio.io.format.phylip`)
+"""PHYLIP multiple sequence alignment format (:mod:`skbio.io.format.phylip`)
 =========================================================================
 
 .. currentmodule:: skbio.io.format.phylip
@@ -213,7 +212,8 @@ References
 .. [4] http://www.phylo.org/tools/obsolete/phylip.html
 .. [5] http://www.bioperl.org/wiki/PHYLIP_multiple_alignment_format
 
-"""
+
+"""  # noqa: D205, D415
 
 # ----------------------------------------------------------------------------
 # Copyright (c) 2013--, scikit-bio development team.

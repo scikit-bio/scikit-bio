@@ -1,12 +1,15 @@
 #!/usr/bin/env python
 
-# ----------------------------------------------------------------------------
-# Copyright (c) 2013--, scikit-bio development team.
-#
-# Distributed under the terms of the Modified BSD License.
-#
-# The full license is in the file LICENSE.txt, distributed with this software.
-# ----------------------------------------------------------------------------
+"""Setup script for scikit-bio installation.
+
+----------------------------------------------------------------------------
+Copyright (c) 2013--, scikit-bio development team.
+
+Distributed under the terms of the Modified BSD License.
+
+The full license is in the file LICENSE.txt, distributed with this software.
+----------------------------------------------------------------------------
+"""
 
 import os
 import platform
@@ -30,6 +33,7 @@ if sys.version_info.major != 3:
 
 
 def check_bin(ccbin, source, allow_dash):
+    """Check if a given compiler matches the specified name."""
     # remove any parameters (e.g. gcc -I /a/b/c -> gcc)
     source0 = source.split()[0]
     # remove any path
@@ -123,6 +127,7 @@ classes = """
     Programming Language :: Python :: 3.9
     Programming Language :: Python :: 3.10
     Programming Language :: Python :: 3.11
+    Programming Language :: Python :: 3.12
     Operating System :: Unix
     Operating System :: POSIX
     Operating System :: MacOS :: MacOS X
@@ -219,10 +224,10 @@ setup(
     description=description,
     long_description=long_description,
     author="scikit-bio development team",
-    author_email="gregcaporaso@gmail.com",
+    author_email="qiyunzhu@gmail.com",
     maintainer="scikit-bio development team",
-    maintainer_email="gregcaporaso@gmail.com",
-    url="http://scikit-bio.org",
+    maintainer_email="qiyunzhu@gmail.com",
+    url="https://scikit.bio",
     packages=find_packages(),
     ext_modules=extensions,
     include_dirs=[np.get_include()],

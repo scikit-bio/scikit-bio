@@ -143,9 +143,10 @@ class TabularMSAILoc(_Indexing):
 
 class TabularMSALoc(_Indexing):
     def is_scalar(self, indexable, axis):
-        """
-        Sometimes (MultiIndex!) something that looks like a scalar, isn't
-        and vice-versa.
+        """Check if an indexable object is scalar or not.
+
+        Sometimes (MultiIndex!) something that looks like a scalar,
+        isn't and vice-versa.
 
         Consider:
 

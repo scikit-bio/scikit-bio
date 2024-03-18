@@ -12,11 +12,11 @@ from io import StringIO, BytesIO
 from ._decorator import experimental
 
 
-@experimental(as_of="0.5.10")
+@experimental(as_of="0.6.0")
 class PlottableMixin:
     """A plottable object."""
 
-    @experimental(as_of="0.5.10")
+    @experimental(as_of="0.6.0")
     def _get_mpl_plt(self):
         """Import Matplotlib and its plotting interface."""
         msg = "Plotting requires Matplotlib installed in the system."
@@ -32,7 +32,7 @@ class PlottableMixin:
         else:
             self.plt = importlib.import_module("matplotlib.pyplot")
 
-    @experimental(as_of="0.5.10")
+    @experimental(as_of="0.6.0")
     def _figure_data(self, format="png"):
         """Get figure data of a plottable object.
 
@@ -46,6 +46,7 @@ class PlottableMixin:
         -------
         str or bytes or None
             Figure data, or None if the plotting backend is not available.
+
         """
         try:
             self._get_mpl_plt()
@@ -69,12 +70,12 @@ class PlottableMixin:
 
         return f.getvalue()
 
-    @experimental(as_of="0.5.10")
+    @experimental(as_of="0.6.0")
     def _repr_png_(self):
         """Generate a PNG format figure for display in IPython."""
         return self._figure_data("png")
 
-    @experimental(as_of="0.5.10")
+    @experimental(as_of="0.6.0")
     def _repr_svg_(self):
         """Generate an SVG format figure for display in IPython."""
         return self._figure_data("svg")
@@ -88,6 +89,7 @@ class PlottableMixin:
         -------
         bytes
             Figure data in PNG format.
+
         """
         return self._repr_png_()
 
@@ -100,5 +102,6 @@ class PlottableMixin:
         -------
         str
             Figure data in SVG format.
+
         """
         return self._repr_svg_()

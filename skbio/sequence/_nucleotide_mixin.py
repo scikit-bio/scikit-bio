@@ -358,7 +358,6 @@ class NucleotideMixin(metaclass=ABCMeta):
         0
 
         """
-
         counts = np.bincount(self._bytes, minlength=self._num_extended_ascii_codes)
         gc = counts[self._gc_codes].sum()
         if relative:
@@ -373,11 +372,11 @@ _motifs = parent_motifs.copy()
 
 @_motifs("purine-run")
 def _motif_purine_run(sequence, min_length, ignore):
-    """Identifies purine runs"""
+    """Identify purine runs."""
     return sequence.find_with_regex("([AGR]{%d,})" % min_length, ignore=ignore)
 
 
 @_motifs("pyrimidine-run")
 def _motif_pyrimidine_run(sequence, min_length, ignore):
-    """Identifies pyrimidine runs"""
+    """Identify pyrimidine runs."""
     return sequence.find_with_regex("([CTUY]{%d,})" % min_length, ignore=ignore)

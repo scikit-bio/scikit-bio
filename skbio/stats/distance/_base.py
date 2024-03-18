@@ -405,6 +405,7 @@ class DissimilarityMatrix(SkbioObject, PlottableMixin):
         ------
         MissingIDError
             If an ID in `ids` is not in the object's list of IDs.
+
         """
         if tuple(self._ids) == tuple(ids):
             return self.__class__(self._data, self._ids)
@@ -431,7 +432,7 @@ class DissimilarityMatrix(SkbioObject, PlottableMixin):
         return self.__class__(filtered_data, ids, validate=False)
 
     def _stable_order(self, ids):
-        """Obtain a stable ID order with respect to self
+        """Obtain a stable ID order with respect to self.
 
         Parameters
         ----------
@@ -442,13 +443,14 @@ class DissimilarityMatrix(SkbioObject, PlottableMixin):
         -------
         np.array, dtype=int
             The corresponding index values
+
         """
         id_order = sorted(self._id_index[i] for i in ids)
         return np.array(id_order, dtype=int)
 
     @experimental(as_of="0.5.5")
     def within(self, ids):
-        """Obtain all the distances among the set of IDs
+        """Obtain all the distances among the set of IDs.
 
         Parameters
         ----------
@@ -475,8 +477,8 @@ class DissimilarityMatrix(SkbioObject, PlottableMixin):
         ['a', 'b'] is equivalent to ['b', 'a']. The order is with respect
         to the order of the .ids attribute of self.
 
-        Example
-        -------
+        Examples
+        --------
         >>> from skbio.stats.distance import DissimilarityMatrix
         >>> dm = DissimilarityMatrix([[0, 1, 2, 3, 4], [1, 0, 1, 2, 3],
         ...                           [2, 1, 0, 1, 2], [3, 2, 1, 0, 1],
@@ -493,6 +495,7 @@ class DissimilarityMatrix(SkbioObject, PlottableMixin):
         6  C  A    2.0
         7  C  B    1.0
         8  C  C    0.0
+
         """
         ids = set(ids)
         not_present = ids - set(self._id_index)
@@ -505,7 +508,7 @@ class DissimilarityMatrix(SkbioObject, PlottableMixin):
 
     @experimental(as_of="0.5.5")
     def between(self, from_, to_, allow_overlap=False):
-        """Obtain the distances between the two groups of IDs
+        """Obtain the distances between the two groups of IDs.
 
         Parameters
         ----------
@@ -537,8 +540,8 @@ class DissimilarityMatrix(SkbioObject, PlottableMixin):
         ['a', 'b'] is equivalent to ['b', 'a']. The order is with respect to
         the .ids attribute of self.
 
-        Example
-        -------
+        Examples
+        --------
         >>> from skbio.stats.distance import DissimilarityMatrix
         >>> dm = DissimilarityMatrix([[0, 1, 2, 3, 4], [1, 0, 1, 2, 3],
         ...                           [2, 1, 0, 1, 2], [3, 2, 1, 0, 1],
@@ -552,6 +555,7 @@ class DissimilarityMatrix(SkbioObject, PlottableMixin):
         3  B  C    1.0
         4  B  D    2.0
         5  B  E    3.0
+
         """
         from_ = set(from_)
         to_ = set(to_)
@@ -574,13 +578,13 @@ class DissimilarityMatrix(SkbioObject, PlottableMixin):
         return self._subset_to_dataframe(from_, to_)
 
     def _subset_to_dataframe(self, i_ids, j_ids):
-        """Extract a subset of self and express as a DataFrame
+        """Extract a subset of self and express as a DataFrame.
 
         Parameters
         ----------
-        i_order : Iterable of str
+        i_ids : Iterable of str
             The "from" IDs.
-        j_order : Iterable of str
+        j_ids : Iterable of str
             The "to" IDs.
 
         Notes
@@ -593,6 +597,7 @@ class DissimilarityMatrix(SkbioObject, PlottableMixin):
         pd.DataFrame
             (i, j, value) representing the source ID ("i"), the target ID ("j")
             and the distance ("value").
+
         """
         i_indices = self._stable_order(i_ids)
         j_indices = self._stable_order(j_ids)
@@ -623,7 +628,7 @@ class DissimilarityMatrix(SkbioObject, PlottableMixin):
 
     @experimental(as_of="0.4.0")
     def plot(self, cmap=None, title=""):
-        """Creates a heatmap of the dissimilarity matrix
+        """Create a heatmap of the dissimilarity matrix.
 
         Parameters
         ----------

@@ -1,5 +1,4 @@
-r"""
-FASTQ format (:mod:`skbio.io.format.fastq`)
+r"""FASTQ format (:mod:`skbio.io.format.fastq`)
 ===========================================
 
 .. currentmodule:: skbio.io.format.fastq
@@ -273,7 +272,8 @@ References
 .. [2] http://en.wikipedia.org/wiki/FASTQ_format
 .. [3] http://www.open-bio.org/
 
-"""
+
+"""  # noqa: D205, D415
 
 # ----------------------------------------------------------------------------
 # Copyright (c) 2013--, scikit-bio development team.

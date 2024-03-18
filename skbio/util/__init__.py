@@ -1,5 +1,4 @@
-"""
-Utility functionality (:mod:`skbio.util`)
+"""Utility functionality (:mod:`skbio.util`)
 =========================================
 
 .. currentmodule:: skbio.util
@@ -42,7 +41,8 @@ Warnings
    EfficiencyWarning
    RepresentationWarning
 
-"""
+
+"""  # noqa: D412, D416, D205, D415
 
 # ----------------------------------------------------------------------------
 # Copyright (c) 2013--, scikit-bio development team.

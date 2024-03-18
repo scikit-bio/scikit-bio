@@ -1,12 +1,15 @@
 #!/usr/bin/env python
 
-# ----------------------------------------------------------------------------
-# Copyright (c) 2013--, scikit-bio development team.
-#
-# Distributed under the terms of the Modified BSD License.
-#
-# The full license is in the file LICENSE.txt, distributed with this software.
-# ----------------------------------------------------------------------------
+"""Validate the content and structure of a scikit-bio repository.
+
+----------------------------------------------------------------------------
+Copyright (c) 2013--, scikit-bio development team.
+
+Distributed under the terms of the Modified BSD License.
+
+The full license is in the file LICENSE.txt, distributed with this software.
+----------------------------------------------------------------------------
+"""
 
 import collections
 import os
@@ -168,10 +171,10 @@ class RepoValidator:
 
 
 class CopyrightHeadersValidator(RepoValidator):
-    """Flag library files with non-standard copyright headers
+    """Flag library files with non-standard copyright headers.
 
     See the current standard for scikit-bio's copyright headers at
-    ``http://scikit-bio.org/docs/latest/development/new_module.html``
+    ``https://scikit.bio/devdoc/new_module.html``
 
     Individual files are ignored if the first line in the file is exactly:
 
@@ -190,7 +193,7 @@ class CopyrightHeadersValidator(RepoValidator):
 
     reason = (
         "Files non-conforming to standard headers as described in\n"
-        "http://scikit-bio.org/docs/latest/development/new_module.html:"
+        "https://scikit.bio/devdoc/new_module.html:"
     )
 
     COPYRIGHT_HEADER = """\
@@ -204,6 +207,7 @@ class CopyrightHeadersValidator(RepoValidator):
 """
 
     def __init__(self, skip_dirs=None):
+        """Initialize with directories to skip."""
         if skip_dirs is None:
             skip_dirs = {"data", "__pycache__"}
         self.skip_dirs = set(skip_dirs)
@@ -275,6 +279,7 @@ class InitValidator(RepoValidator):
     reason = "Directories missing init files:"
 
     def __init__(self, skip_dirs=None):
+        """Initialize with directories to skip."""
         if skip_dirs is None:
             skip_dirs = {"data", "__pycache__"}
         self.skip_dirs = set(skip_dirs)
@@ -308,6 +313,7 @@ class ExecPermissionValidator(RepoValidator):
     reason = "Library code with execute permissions:"
 
     def __init__(self, extensions=None):
+        """Initialize with specific file extensions."""
         if extensions is None:
             extensions = {".py", ".pyx", ".h", ".c"}
         self.extensions = set(extensions)
@@ -346,6 +352,7 @@ class GeneratedCythonValidator(RepoValidator):
     reason = "Cython code with missing or outdated generated C code:"
 
     def __init__(self, cython_ext=".pyx", c_ext=".c"):
+        """Initialize with specific file extensions."""
         self.cython_ext = cython_ext
         self.c_ext = c_ext
 
@@ -404,6 +411,7 @@ class APIRegressionValidator(RepoValidator):
     reason = "The following tests import `A` but should import `B`" " (file: A => B):"
 
     def __init__(self):
+        """Initialize object for tests importing from non-minimized hierarchy."""
         self._imports = {}
 
     def _validate(self, root, dirs, files):

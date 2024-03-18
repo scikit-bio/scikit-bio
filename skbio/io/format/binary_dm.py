@@ -1,5 +1,4 @@
-"""
-Simple binary dissimilarity matrix format (:mod:`skbio.io.format.binary_dm`)
+"""Simple binary dissimilarity matrix format (:mod:`skbio.io.format.binary_dm`)
 ============================================================================
 
 .. currentmodule:: skbio.io.format.binary_dm
@@ -64,7 +63,8 @@ References
 ----------
 .. [1] http://www.hdfgroup.org/
 
-"""
+
+"""  # noqa: D205, D415
 
 # ----------------------------------------------------------------------------
 # Copyright (c) 2013--, scikit-bio development team.
@@ -174,7 +174,7 @@ def _passthrough_decoder(x):
 
 
 def _set_header(h5grp):
-    """Set format spec header information"""
+    """Set format spec header information."""
     h5grp["format"] = [
         b"BDSM",
     ]

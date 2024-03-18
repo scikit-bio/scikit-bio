@@ -1,5 +1,4 @@
-"""
-FASTA/QUAL format (:mod:`skbio.io.format.fasta`)
+r"""FASTA/QUAL format (:mod:`skbio.io.format.fasta`)
 ================================================
 
 .. currentmodule:: skbio.io.format.fasta
@@ -274,7 +273,6 @@ The following parameters are available to all FASTA format writers:
 
 Examples
 --------
-
 Reading and Writing FASTA Files
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 Suppose we have the following FASTA file with five equal-length sequences
@@ -310,20 +308,20 @@ Let's define this file in-memory as a ``StringIO``, though this could be a real
 file path, file handle, or anything that's supported by scikit-bio's I/O
 registry in practice:
 
->>> fl = [">seq1 Turkey\\n",
-...       "AAGCTNGGGCATTTCAGGGTGAGCCCGGGCAATACAGGGTAT\\n",
-...       ">seq2 Salmo gair\\n",
-...       "AAGCCTTGGCAGTGCAGGGTGAGCCGTGG\\n",
-...       "CCGGGCACGGTAT\\n",
-...       ">seq3 H. Sapiens\\n",
-...       "ACCGGTTGGCCGTTCAGGGTACAGGTTGGCCGTTCAGGGTAA\\n",
-...       ">seq4 Chimp\\n",
-...       "AAACCCTTGCCG\\n",
-...       "TTACGCTTAAAC\\n",
-...       "CGAGGCCGGGAC\\n",
-...       "ACTCAT\\n",
-...       ">seq5 Gorilla\\n",
-...       "AAACCCTTGCCGGTACGCTTAAACCATTGCCGGTACGCTTAA\\n"]
+>>> fl = [">seq1 Turkey\n",
+...       "AAGCTNGGGCATTTCAGGGTGAGCCCGGGCAATACAGGGTAT\n",
+...       ">seq2 Salmo gair\n",
+...       "AAGCCTTGGCAGTGCAGGGTGAGCCGTGG\n",
+...       "CCGGGCACGGTAT\n",
+...       ">seq3 H. Sapiens\n",
+...       "ACCGGTTGGCCGTTCAGGGTACAGGTTGGCCGTTCAGGGTAA\n",
+...       ">seq4 Chimp\n",
+...       "AAACCCTTGCCG\n",
+...       "TTACGCTTAAAC\n",
+...       "CGAGGCCGGGAC\n",
+...       "ACTCAT\n",
+...       ">seq5 Gorilla\n",
+...       "AAACCCTTGCCGGTACGCTTAAACCATTGCCGGTACGCTTAA\n"]
 
 Since these sequences are of equal length (presumably because they've been
 aligned), let's read the FASTA file into a ``TabularMSA`` object:
@@ -503,16 +501,16 @@ Also suppose we have the following QUAL file::
     3 3 10 42 80 80 79
 
 >>> fasta_fl = [
-...     ">seq1 db-accession-149855\\n",
-...     "CGATGTC\\n",
-...     ">seq2 db-accession-34989\\n",
-...     "CATCGTC\\n"]
+...     ">seq1 db-accession-149855\n",
+...     "CGATGTC\n",
+...     ">seq2 db-accession-34989\n",
+...     "CATCGTC\n"]
 >>> qual_fl = [
-...     ">seq1 db-accession-149855\\n",
-...     "40 39 39 4\\n",
-...     "50 1 100\\n",
-...     ">seq2 db-accession-34989\\n",
-...     "3 3 10 42 80 80 79\\n"]
+...     ">seq1 db-accession-149855\n",
+...     "40 39 39 4\n",
+...     "50 1 100\n",
+...     ">seq2 db-accession-34989\n",
+...     "3 3 10 42 80 80 79\n"]
 
 To read in a single ``Sequence`` at a time, we can use the
 generator-based reader as we did above, providing both FASTA and QUAL files:
@@ -597,7 +595,8 @@ References
    http://www.ncbi.nlm.nih.gov/books/NBK21097/
 .. [6] http://evolution.genetics.washington.edu/phylip/doc/sequence.html
 
-"""
+
+"""  # noqa: D205, D415
 
 # ----------------------------------------------------------------------------
 # Copyright (c) 2013--, scikit-bio development team.
