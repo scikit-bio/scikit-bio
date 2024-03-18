@@ -1793,7 +1793,7 @@ def dirmult_ttest(
     pd.DataFrame
         A table of features, their log-fold changes and other relevant statistics.
 
-        ``T statistic`` is the *t*-statistic outputted from the *t*-test. *t*-statistics
+        ``t-statistic`` is the *t*-statistic outputted from the *t*-test. *t*-statistics
         are generated from each posterior draw.  The reported ``T statistic`` is the
         average across all of the posterior draws.
 
@@ -1814,11 +1814,11 @@ def dirmult_ttest(
         reported ``CI(97.5)`` is the 97.5% quantile of all of the log2-fold
         changes computed from each of the posterior draws.
 
-        ``pvalue`` is the pvalue of the *t*-test. The reported ``*p*-value`` is the
+        ``p-value`` is the pvalue of the *t*-test. The reported ``*p*-value`` is the
         average of all of the pvalues computed from the t-tests calculated
         across all of the posterior draws.
 
-        ``qvalue`` is the pvalue of the t-test after performing multiple
+        ``q-value`` is the pvalue of the t-test after performing multiple
         hypothesis correction. The reported ``*q*-value`` is computed after
         performing holm-bonferroni multiple hypothesis correction on the
         reported ``*p*-value``.
