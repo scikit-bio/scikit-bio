@@ -1739,12 +1739,12 @@ def _welch_ttest(x1, x2):
 
 @experimental(as_of="0.5.9")
 def dirmult_ttest(
-    table: pd.DataFrame,
-    grouping: str,
-    treatment: str,
-    reference: str,
-    pseudocount: float = 0.5,
-    draws: int = 128,
+    table,
+    grouping,
+    treatment,
+    reference,
+    pseudocount = 0.5,
+    draws = 128,
     seed=None,
 ):
     r"""T-test using Dirichilet Mulitnomial Distribution.
@@ -1757,7 +1757,7 @@ def dirmult_ttest(
     To perform the t-test, we first fit a Dirichlet-multinomial distribution
     for each sample, and then we compute the fold change and p-value for each
     feature. The fold change is computed as the difference between the
-    samples of the two groups. T-tests are then performed on the posterior
+    samples of the two groups. *t*-tests are then performed on the posterior
     samples, drawn from each Dirichlet-multinomial distribution. The
     log-fold changes as well as their credible intervals, the pvalues a
     FDR corrected pvalues using Holm-Bonferroni [1]_ are reported.
@@ -1770,10 +1770,10 @@ def dirmult_ttest(
     grouping : pd.Series
         Vector indicating the assignment of samples to groups.  For example,
         these could be strings or integers denoting which group a sample
-        belongs to.  It must be the same length as the samples in `table`.
-        The index must be the same on `table` and `grouping` but need not be
-        in the same order.  The t-test is computed between the `treatment`
-        group and the `reference` group specified in the `grouping` vector.
+        belongs to.  It must be the same length as the samples in ``table``.
+        The index must be the same on ``table`` and ``grouping`` but need not be
+        in the same order.  The t-test is computed between the ``treatment``
+        group and the ``reference`` group specified in the ``grouping`` vector.
     treatment : str
         Name of the treatment group.
     reference : str
@@ -1793,41 +1793,41 @@ def dirmult_ttest(
     pd.DataFrame
         A table of features, their log-fold changes and other relevant statistics.
 
-        `"T statistic"` is the t-statistic outputted from the t-test. T-statistics
-        are generated from each posterior draw.  The reported `T statistic` is the
+        ``T statistic`` is the *t*-statistic outputted from the *t*-test. *t*-statistics
+        are generated from each posterior draw.  The reported ``T statistic`` is the
         average across all of the posterior draws.
 
-        `"df"` is the degrees of freedom from the t-test.
+        ``df`` is the degrees of freedom from the *t*-test.
 
-        `"Log2(FC)"` is the expected log2-fold change. Within each posterior draw
+        ``Log2(FC)`` is the expected log2-fold change. Within each posterior draw
         the log2 fold-change is computed as the difference between the mean
-        log-abundance the `treatment` group and the `reference` group. All log2
-        fold changes are expressed in clr coordinates. The reported `Log2(FC)`
+        log-abundance the ``treatment`` group and the ``reference`` group. All log2
+        fold changes are expressed in clr coordinates. The reported ``Log2(FC)``
         is the average of all of the log2-fold changes computed from each of the
         posterior draws.
 
-        `"CI(2.5)"` is the 2.5% quantile of the log2-fold change. The reported
-        `CI(2.5)` is the 2.5% quantile of all of the log2-fold changes computed
+        ``CI(2.5)`` is the 2.5% quantile of the log2-fold change. The reported
+        ``CI(2.5)`` is the 2.5% quantile of all of the log2-fold changes computed
         from each of the posterior draws.
 
-        `"CI(97.5)"` is the 97.5% quantile of the log2-fold change. The
-        reported `CI(97.5)` is the 97.5% quantile of all of the log2-fold
+        ``CI(97.5)`` is the 97.5% quantile of the log2-fold change. The
+        reported ``CI(97.5)`` is the 97.5% quantile of all of the log2-fold
         changes computed from each of the posterior draws.
 
-        `"pvalue`" is the pvalue of the t-test. The reported `pvalue` is the
+        ``pvalue`` is the pvalue of the *t*-test. The reported ``*p*-value`` is the
         average of all of the pvalues computed from the t-tests calculated
         across all of the posterior draws.
 
-        `qvalue` is the pvalue of the t-test after performing multiple
-        hypothesis correction. The reported `qvalue` is computed after
+        ``qvalue`` is the pvalue of the t-test after performing multiple
+        hypothesis correction. The reported ``*q*-value`` is computed after
         performing holm-bonferroni multiple hypothesis correction on the
-        reported `pvalue`.
+        reported ``*p*-value``.
 
-        `"Reject null hypothesis"` indicates if feature is differentially
-        abundant across groups (`True`) or not (`False`). In order for a
+        ``Reject null hypothesis`` indicates if feature is differentially
+        abundant across groups (``True``) or not (``False``). In order for a
         feature to be differentially abundant, the qvalue needs to be significant
-        (i.e. <0.05) and the confidence intervals reported by `CI(2.5)` and
-        `CI(97.5)` must not overlap with zero.
+        (i.e. <0.05) and the confidence intervals reported by ``CI(2.5)`` and
+        ``CI(97.5)`` must not overlap with zero.
 
 
     See Also
@@ -1838,11 +1838,11 @@ def dirmult_ttest(
     -----
     FDR-corrected pvalues use Benjamini-Hochberg for pvalue adjustment for
     multiple corrections. The confidence intervals are computed using the
-    mininum 2.5% and maximum 95% bounds computed across all of the posterior draws.
+    mininum 2.5% and maximum 97.5% bounds computed across all of the posterior draws.
 
     The reference frame here is the geometric mean. Extracting absolute log
     fold changes from this test assumes that the average feature abundance
-    between the `treatment` and the `reference` groups are the same. If this
+    between the ``treatment`` and the ``reference`` groups are the same. If this
     assumption is violated, then the log-fold changes will be biased, and the
     pvalues will not be reliable. However, the bias is the same across each
     feature, as a result the ordering of the log-fold changes can still be useful.
@@ -1888,7 +1888,6 @@ def dirmult_ttest(
     b5  1.528243 -1.036910  3.978387  0.068310
     b6  1.182343 -0.702656  3.556061  0.068310
     b7  1.480232 -0.601277  4.043888  0.068310
-
     """
     rng = get_rng(seed)
     if not isinstance(table, pd.DataFrame):
