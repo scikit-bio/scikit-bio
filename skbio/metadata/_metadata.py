@@ -9,40 +9,11 @@ import pandas as pd
 import numpy as np
 
 import skbio.metadata.missing as _missing
+from ._util import find_duplicates
 from .base import SUPPORTED_COLUMN_TYPES, FORMATTED_ID_HEADERS, is_id_header
 
 
 DEFAULT_MISSING = _missing.DEFAULT_MISSING
-
-
-def find_duplicates(iterable):
-    """Find duplicate values in an iterable.
-
-    Parameters
-    ----------
-    iterable : iterable
-        Iterable to search for duplicates.
-
-    Returns
-    -------
-    set
-        Values that are duplicated in `iterable`.
-
-    Notes
-    -----
-    Values in `iterable` must be hashable.
-
-    """
-    # Modified from https://stackoverflow.com/a/9835819/3776794 to return
-    # duplicates instead of remove duplicates from an iterable.
-    seen = set()
-    duplicates = set()
-    for value in iterable:
-        if value in seen:
-            duplicates.add(value)
-        else:
-            seen.add(value)
-    return duplicates
 
 
 class _MetadataBase:
