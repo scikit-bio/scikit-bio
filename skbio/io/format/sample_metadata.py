@@ -11,7 +11,7 @@ Format Support
 +------+------+---------------------------------------------------------------+
 |Reader|Writer|                          Object Class                         |
 +======+======+===============================================================+
-|Yes   |Yes   |:mod:`skbio.metadata.SampleMetadata`                              |
+|Yes   |Yes   |:mod:`skbio.metadata.SampleMetadata`                           |
 +------+------+---------------------------------------------------------------+
 """
 # ----------------------------------------------------------------------------
@@ -36,7 +36,7 @@ sample_metadata = create_format("sample_metadata")
 @sample_metadata.sniffer()
 def _sample_metadata_sniffer(fh):
     # Strategy:
-    # Check if first word is in the file is in the list
+    # Check if first word in the file is in the list
     # of allowed metadata words
     try:
         tsv_reader = csv.reader(fh, dialect="excel-tab", strict=True)
