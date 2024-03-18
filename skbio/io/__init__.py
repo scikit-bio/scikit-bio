@@ -31,6 +31,7 @@ see the associated documentation.
    qseq
    stockholm
    taxdump
+   sample_metadata
 
 .. currentmodule:: skbio.io.registry
 
