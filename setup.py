@@ -253,5 +253,6 @@ setup(
         "skbio.stats.tests": ["data/*"],
         "skbio.stats.distance.tests": ["data/*"],
         "skbio.stats.ordination.tests": ["data/*"],
+        "skbio.metadata.tests": ["data/invalid/*", "data/valid/*"],
     },
 )

@@ -1,0 +1,15 @@
+   # Leading/trailing whitespace is ignored in *any* type of cell, including
+   # comments, empty rows, headers, directives, and data cells.    
+# Double-quotes are always processed prior to stripping leading/trailing
+# whitespace within the cell.
+  sample id 	"col1	"	"	col2"	col3   
+ #q2:types  	"	numeric "	categorical  	"
+categorical
+  "
+id1 	" 1 "	  a  	foo
+       	
+"	 	"
+"	id2 "	2	b	"bar
+  "
+id3	3	"c
+"	42
