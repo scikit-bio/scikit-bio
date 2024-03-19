@@ -1747,15 +1747,15 @@ def dirmult_ttest(
     draws = 128,
     seed=None,
 ):
-    r"""T-test using Dirichilet Mulitnomial Distribution.
+    r"""*T*-test using Dirichlet Multinomial Distribution.
 
     The Dirichlet-multinomial distribution is a compound distribution that
     combines a Dirichlet distribution over the probabilities of a multinomial
     distribution. This distribution is used to model the distribution of
     species abundances in a community.
 
-    To perform the t-test, we first fit a Dirichlet-multinomial distribution
-    for each sample, and then we compute the fold change and p-value for each
+    To perform the *t*-test, we first fit a Dirichlet-multinomial distribution
+    for each sample, and then we compute the fold change and *p*-value for each
     feature. The fold change is computed as the difference between the
     samples of the two groups. *t*-tests are then performed on the posterior
     samples, drawn from each Dirichlet-multinomial distribution. The
@@ -1768,11 +1768,11 @@ def dirmult_ttest(
     table : pd.DataFrame
         Contingency table of counts where rows are features and columns are samples.
     grouping : pd.Series
-        Vector indicating the assignment of samples to groups.  For example,
+        Vector indicating the assignment of samples to groups. For example,
         these could be strings or integers denoting which group a sample
-        belongs to.  It must be the same length as the samples in ``table``.
+        belongs to. It must be the same length as the samples in ``table``.
         The index must be the same on ``table`` and ``grouping`` but need not be
-        in the same order.  The t-test is computed between the ``treatment``
+        in the same order. The *t*-test is computed between the ``treatment``
         group and the ``reference`` group specified in the ``grouping`` vector.
     treatment : str
         Name of the treatment group.
@@ -1782,9 +1782,9 @@ def dirmult_ttest(
         A non-zero value added to the input counts to ensure that all of the
         estimated abundances are strictly greater than zero.
     draws : int, optional
-        The number of draws from the Dirichilet-Multinomial posterior distribution
+        The number of draws from the Dirichilet-multinomial posterior distribution
         More draws provide higher uncertainty surrounding the estimated
-        log-fold changes and pvalues.
+        log-fold changes and *p*-values.
     seed : int or np.random.Generator, optional
         A user-provided random seed or random generator instance.
 
@@ -1793,7 +1793,7 @@ def dirmult_ttest(
     pd.DataFrame
         A table of features, their log-fold changes and other relevant statistics.
 
-        ``t-statistic`` is the *t*-statistic outputted from the *t*-test. *t*-statistics
+        ``T statistic`` is the *t*-statistic outputted from the *t*-test. *t*-statistics
         are generated from each posterior draw.  The reported ``T statistic`` is the
         average across all of the posterior draws.
 
@@ -1847,10 +1847,10 @@ def dirmult_ttest(
     pvalues will not be reliable. However, the bias is the same across each
     feature, as a result the ordering of the log-fold changes can still be useful.
 
-    One benefit of using the Dirichlet Multinomial distribution is that the
+    One benefit of using the Dirichlet-multinomial distribution is that the
     statistical power increases with regards to the abundance magnitude. More counts
     per sample will shrink the size of the confidence intervals, and can result in
-    lower pvalues.
+    lower *p*-values.
 
     References
     ----------
