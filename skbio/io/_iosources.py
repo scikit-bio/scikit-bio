@@ -13,6 +13,7 @@ import tempfile
 import itertools
 
 import requests
+import h5py
 
 from skbio.io import IOSourceError
 from ._fileobject import (
@@ -43,6 +44,10 @@ def get_io_sources():
     )
 
 
+def _containers():
+    return (HDF5Container, )
+
+
 def _compressors():
     return (GzipCompressor, BZ2Compressor)
 
@@ -51,6 +56,12 @@ def get_compression_handler(name):
     compressors = {c.name: c for c in _compressors()}
     compressors["auto"] = AutoCompressor
     return compressors.get(name, False)
+
+
+def get_container_handler(name):
+    containers = {c.name: c for c in _containers()}
+    containers["auto"] = AutoContainer
+    return containers.get(name, False)
 
 
 class IOSource:
@@ -75,6 +86,14 @@ class IOSource:
 
 class Compressor(IOSource):
     streamable = True
+    name = ""
+
+    def can_write(self):
+        return True
+
+
+class Container(IOSource):
+    streamable = False
     name = ""
 
     def can_write(self):
@@ -249,6 +268,79 @@ class AutoCompressor(Compressor):
             compressor = compression_handler(self.file, self.options)
             if compressor.can_read():
                 return compressor.get_reader()
+
+        return self.file
+
+    def get_writer(self):
+        return self.file
+
+
+class HDF5Container(Container):
+    name = 'hdf5'
+    streamable = False
+
+    def can_read(self):
+        # From https://en.wikipedia.org/wiki/Hierarchical_Data_Format
+        # Note that Wikipedia specifies: "\211HDF\r\n\032\n" which is an ordinal form:
+        # >>> ord('\211')
+        # 137
+        # >>> ord('\x89')
+        # 137
+        # >>> ord('\032')
+        # 26
+        # >>> ord('\x1a')
+        # 26
+        return self.file.peek(8) == b"\x89HDF\r\n\x1a\n"
+
+    # The following modes are permitted:
+    # r, r+, w, w-, x, a
+    # https://github.com/h5py/h5py/blob/d051d24a02e739bf51e744360e309974f6593c07/h5py/_hl/files.py#L263  # noqa
+    def get_reader(self):
+        return H5PYFile(self.file, mode='r')
+
+    def get_writer(self):
+        return H5PYFile(self.file, mode='w')
+
+
+class H5PYMixin:
+    @property
+    def closed(self):
+        return self.id.valid != 1
+
+    def seek(self, *args, **kwargs):
+        return 0
+
+    def seekable(self):
+        # assume seekable if open
+        return not self.closed
+
+    def readable(self):
+        if not self.closed:
+            if self.mode in ('r', 'r+', 'a'):
+                return True
+        return False
+
+    def writable(self):
+        if not self.closed:
+            if self.mode in ('r+', 'w', 'w-', 'x', 'a'):
+                return True
+        return False
+
+
+class H5PYFile(h5py.File, H5PYMixin):
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+
+
+class AutoContainer(Container):
+    streamable = True
+    name = "auto"
+
+    def get_reader(self):
+        for container_handler in _containers():
+            container = container_handler(self.file, self.options)
+            if container.can_read():
+                return container.get_reader()
 
         return self.file
 

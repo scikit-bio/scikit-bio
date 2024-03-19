@@ -407,7 +407,10 @@ class IORegistry:
                 # We can always turn a binary file into a text file, but the
                 # reverse doesn't make sense.
                 matches += self._find_matches(fh, self._text_formats, **kwargs)
-                fh.seek(backup)
+
+                if fh.seekable():
+                    fh.seek(backup)
+
             elif not is_binary_file:
                 raise ValueError("Cannot decode text source (%r) as binary." % file)
             # else we are a binary_file and our encoding did not exclude binary
@@ -428,7 +431,8 @@ class IORegistry:
         for format in lookup.values():
             if format.sniffer_function is not None:
                 is_format, skwargs = format.sniffer_function(file, **kwargs)
-                file.seek(0)
+                if file.seekable():
+                    file.seek(0)
                 if is_format:
                     matches.append((format.name, skwargs))
         return matches
@@ -822,11 +826,12 @@ class Format:
         """Set of classes bound to writers to monkey patch."""
         return self._monkey_patch["write"]
 
-    def __init__(self, name, encoding=None, newline=None):
+    def __init__(self, name, encoding=None, newline=None, container=None):
         """Initialize format for registering sniffers, readers, and writers."""
         self._encoding = encoding
         self._newline = newline
         self._name = name
+        self._container = container
 
         self._sniffer_function = None
         self._readers = {}
@@ -898,6 +903,7 @@ class Format:
                 encoding=self._encoding,
                 errors="ignore",
                 newline=self._newline,
+                container=self._container,
                 **kwargs,
             ):
                 self._validate_encoding(encoding)
@@ -911,13 +917,15 @@ class Format:
                     encoding=encoding,
                     newline=newline,
                     errors=errors,
+                    container=container,
                     **kwargs,
                 ) as fh:
                     try:
                         # Some formats may have headers which indicate their
                         # format sniffers should be able to rely on the
                         # filehandle to point at the beginning of the file.
-                        fh.seek(0)
+                        if fh.seekable():
+                            fh.seek(0)
                         return sniffer(fh)
                     except UnicodeDecodeError:
                         pass
@@ -997,11 +1005,13 @@ class Format:
             if cls is not None:
 
                 @wraps(reader_function)
-                def wrapped_reader(
-                    file, encoding=self._encoding, newline=self._newline, **kwargs
-                ):
+                def wrapped_reader(file,
+                                   encoding=self._encoding,
+                                   newline=self._newline,
+                                   container=self._container,
+                                   **kwargs):
                     file_keys, files, io_kwargs = self._setup_locals(
-                        file_params, file, encoding, newline, kwargs
+                        file_params, file, encoding, newline, container, kwargs
                     )
                     with open_files(files, mode="r", **io_kwargs) as fhs:
                         # The primary file is at the end of fh because append
@@ -1011,11 +1021,13 @@ class Format:
             else:
 
                 @wraps(reader_function)
-                def wrapped_reader(
-                    file, encoding=self._encoding, newline=self._newline, **kwargs
-                ):
+                def wrapped_reader(file,
+                                   encoding=self._encoding,
+                                   newline=self._newline,
+                                   container=self._container,
+                                   **kwargs):
                     file_keys, files, io_kwargs = self._setup_locals(
-                        file_params, file, encoding, newline, kwargs
+                        file_params, file, encoding, newline, container, kwargs
                     )
                     with open_files(files, mode="r", **io_kwargs) as fhs:
                         kwargs.update(zip(file_keys, fhs[:-1]))
@@ -1087,11 +1099,15 @@ class Format:
             file_params = find_sentinels(writer_function, FileSentinel)
 
             @wraps(writer_function)
-            def wrapped_writer(
-                obj, file, encoding=self._encoding, newline=self._newline, **kwargs
+            def wrapped_writer(obj,
+                               file,
+                               encoding=self._encoding,
+                               newline=self._newline,
+                               container=self._container,
+                               **kwargs
             ):
                 file_keys, files, io_kwargs = self._setup_locals(
-                    file_params, file, encoding, newline, kwargs
+                    file_params, file, encoding, newline, container, kwargs
                 )
                 with open_files(files, mode="w", **io_kwargs) as fhs:
                     kwargs.update(zip(file_keys, fhs[:-1]))
@@ -1108,9 +1124,9 @@ class Format:
                 "`cls` must be a class or None, not" " %r" % cls
             )
 
-    def _setup_locals(self, file_params, file, encoding, newline, kwargs):
+    def _setup_locals(self, file_params, file, encoding, newline, container, kwargs):
         self._validate_encoding(encoding)
-        io_kwargs = self._pop_io_kwargs(kwargs, encoding, newline)
+        io_kwargs = self._pop_io_kwargs(kwargs, encoding, newline, container)
         file_keys, files = self._setup_file_args(kwargs, file_params)
         files.append(file)
 
@@ -1123,8 +1139,8 @@ class Format:
             if encoding == "binary":
                 raise ValueError("Encoding must not be 'binary' for %r" % self.name)
 
-    def _pop_io_kwargs(self, kwargs, encoding, newline):
-        io_kwargs = dict(encoding=encoding, newline=newline)
+    def _pop_io_kwargs(self, kwargs, encoding, newline, container):
+        io_kwargs = dict(encoding=encoding, newline=newline, container=container)
         for key in _open_kwargs:
             if key in kwargs:
                 io_kwargs[key] = kwargs.pop(key)

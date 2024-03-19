@@ -14,6 +14,7 @@ import unittest
 import warnings
 import types
 from tempfile import mkstemp
+import h5py
 
 from skbio.io import (FormatIdentificationWarning, UnrecognizedFormatError,
                       ArgumentOverrideWarning, io_registry, sniff,
@@ -789,6 +790,23 @@ class TestSniff(RegistryTest):
         self.assertTrue(self._check_f1)
         self.assertTrue(self._check_f2)
         self.assertTrue(self._check_f3)
+
+    def test_sniff_hdf5(self):
+        expected = [1, 2, 3]
+
+        formata = self.registry.create_format('formata', encoding='binary',
+                                              container='hdf5')
+
+        @formata.sniffer()
+        def formata_sniffer(fh):
+            self._check_f1 = True
+            observed = list(fh.raw['some-data'][:])
+            self.assertEqual(observed, expected)
+            return True, {}
+
+        self._check_f1 = True
+        self.registry.sniff(get_data_path('example.hdf5'))
+        self.assertTrue(self._check_f1)
 
     def test_text_skip_binary(self):
         binf = self.registry.create_format('binf', encoding='binary')

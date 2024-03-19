@@ -30,12 +30,18 @@ import io
 from contextlib import contextmanager, ExitStack
 
 from skbio.io import IOSourceError
-from skbio.io._iosources import get_io_sources, get_compression_handler
+from skbio.io._iosources import (
+    get_io_sources,
+    get_compression_handler,
+    get_container_handler
+)
 from skbio.io._fileobject import (
     is_binary_file,
     SaneTextIOWrapper,
     CompressedBufferedReader,
     CompressedBufferedWriter,
+    ContainerReader,
+    ContainerWriter,
 )
 
 _d = dict(
@@ -45,6 +51,7 @@ _d = dict(
     newline=None,
     compression="auto",
     compresslevel=9,
+    container=None
 )
 
 
@@ -56,6 +63,7 @@ def _resolve(
     newline=_d["newline"],
     compression=_d["compression"],
     compresslevel=_d["compresslevel"],
+    container=_d['container']
 ):
     arguments = locals().copy()
 
@@ -87,6 +95,7 @@ def open(
     newline=_d["newline"],
     compression=_d["compression"],
     compresslevel=_d["compresslevel"],
+    container=_d["container"]
 ):
     r"""Convert input into a filehandle.
 
@@ -183,16 +192,30 @@ def _munge_file(file, is_binary_file, arguments):
     errors = arguments.get("errors", _d["errors"])
     newline = arguments.get("newline", _d["newline"])
     compression = arguments.get("compression", _d["compression"])
+    container = arguments.get("container", _d["container"])
     is_output_binary = encoding == "binary"
     newfile = file
 
     compression_handler = get_compression_handler(compression)
+    container_handler = get_container_handler(container)
 
     if is_output_binary and newline is not _d["newline"]:
         raise ValueError("Cannot use `newline` with binary encoding.")
 
     if compression is not None and not compression_handler:
         raise ValueError("Unsupported compression: %r" % compression)
+
+    if container is not None and not container_handler:
+        raise ValueError("Unsupported container: %r" % container)
+
+    if container is not None:
+        if compression == "auto":
+            compression = None
+        elif compression is not None:
+            raise ValueError("Compression with a container is not supported.")
+
+    if container is not None and not is_binary_file:
+        raise ValueError("Containers are binary.")
 
     if is_binary_file:
         if compression:
@@ -203,6 +226,15 @@ def _munge_file(file, is_binary_file, arguments):
                 )
             else:
                 newfile = CompressedBufferedReader(file, c.get_reader())
+
+        if container:
+            c = container_handler(newfile, arguments)
+            if mode == "w":
+                newfile = ContainerWriter(
+                    file, c.get_writer(), streamable=c.streamable
+                )
+            else:
+                newfile = ContainerReader(file, c.get_reader())
 
         if not is_output_binary:
             newfile = SaneTextIOWrapper(

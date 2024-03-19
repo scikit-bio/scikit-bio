@@ -8,7 +8,7 @@
 
 import unittest
 
-from skbio.io._iosources import IOSource, Compressor
+from skbio.io._iosources import IOSource, Compressor, Container
 
 
 class TestIOSource(unittest.TestCase):
@@ -45,6 +45,15 @@ class TestCompressor(TestIOSource):
 
     def test_can_write(self):
         self.assertEqual(self.compressor.can_write(), True)
+
+
+class TestContainer(TestIOSource):
+    def setUp(self):
+        super(TestContainer, self).setUp()
+        self.container = Container(self.file, self.options)
+
+    def test_can_write(self):
+        self.assertEqual(self.container.can_write(), True)
 
 
 if __name__ == "__main__":

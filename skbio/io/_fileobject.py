@@ -10,7 +10,8 @@ import io
 
 
 def is_binary_file(file):
-    return isinstance(file, (io.BufferedReader, io.BufferedWriter, io.BufferedRandom))
+    return isinstance(file, (io.BufferedReader, io.BufferedWriter, io.BufferedRandom,
+                             io.RawIOBase))
 
 
 # Everything beyond this point will be some kind of hack needed to make
@@ -61,6 +62,34 @@ class CompressedBufferedReader(CompressedMixin, io.BufferedReader):
 
 
 class CompressedBufferedWriter(CompressedMixin, io.BufferedWriter):
+    pass
+
+
+class ContainerMixin(FlushDestructorMixin):
+    """Act as a bridge between worlds."""
+
+    def __init__(self, before_file, *args, **kwargs):
+        self.streamable = kwargs.pop("streamable", True)
+        self._before_file = before_file
+        super(ContainerMixin, self).__init__(*args, **kwargs)
+
+    @property
+    def closed(self):
+        return self.raw.closed or self._before_file.closed
+
+    def close(self):
+        super(ContainerMixin, self).close()
+
+        # NOTE: I do not fully understand this edge case, but preserving it out of
+        # caution.
+        self._before_file.close()
+
+
+class ContainerReader(ContainerMixin, io.BufferedReader):
+    pass
+
+
+class ContainerWriter(ContainerMixin, io.BufferedWriter):
     pass
 
 
