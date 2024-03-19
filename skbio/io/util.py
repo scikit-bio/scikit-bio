@@ -160,6 +160,9 @@ def open(
     compresslevel : int (0-9 inclusive), optional
         The level of compression to use, will be passed to the appropriate
         compression handler. This is only used when writing.
+    container : {'hdf5', None}, optional
+        TODO
+        "auto" while currently in the code may not actually make sense
 
     Returns
     -------
