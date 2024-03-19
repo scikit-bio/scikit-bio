@@ -365,6 +365,7 @@ fuzzy=[(True, False)], metadata={'gene': 'foo'})
 
     """
 
+    _num_ascii_codes = 128
     _num_extended_ascii_codes = 256
     # ASCII is built such that the difference between uppercase and lowercase
     # is the 6th bit.

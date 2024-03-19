@@ -159,8 +159,7 @@ class GrammaredSequence(Sequence, metaclass=GrammaredSequenceMeta):
     __definite_char_codes = None
     __gap_codes = None
     __noncanonical_codes = None
-    __degenerate_hash = None
-    __degen_bool_hash = None
+    __degen_hash = None
     __degen_nonca_hash = None
     __gap_hash = None
     __definite_hash = None
@@ -208,37 +207,30 @@ class GrammaredSequence(Sequence, metaclass=GrammaredSequenceMeta):
         return cls.__noncanonical_codes
 
     @classproperty
-    def _degenerate_hash(cls):
-        if cls.__degenerate_hash is None:
-            cls.__degenerate_hash = np.zeros((256,), dtype=np.uint8)
-            cls.__degenerate_hash[cls._degenerate_codes] = 1
-        return cls.__degenerate_hash
-
-    @classproperty
-    def _degen_bool_hash(cls):
-        if cls.__degen_bool_hash is None:
-            cls.__degen_bool_hash = np.zeros((256,), dtype=bool)
-            cls.__degen_bool_hash[cls._degenerate_codes] = 1
-        return cls.__degen_bool_hash
+    def _degen_hash(cls):
+        if cls.__degen_hash is None:
+            cls.__degen_hash = np.zeros((Sequence._num_ascii_codes,), dtype=bool)
+            cls.__degen_hash[cls._degenerate_codes] = True
+        return cls.__degen_hash
 
     @classproperty
     def _degen_nonca_hash(cls):
         if cls.__degen_nonca_hash is None:
-            cls.__degen_nonca_hash = cls._degenerate_hash.copy()
-            cls.__degen_nonca_hash[cls._noncanonical_codes] = 1
+            cls.__degen_nonca_hash = cls._degen_hash.copy()
+            cls.__degen_nonca_hash[cls._noncanonical_codes] = True
         return cls.__degen_nonca_hash
 
     @classproperty
     def _gap_hash(cls):
         if cls.__gap_hash is None:
-            cls.__gap_hash = np.zeros((256,), dtype=bool)
+            cls.__gap_hash = np.zeros((Sequence._num_ascii_codes,), dtype=bool)
             cls.__gap_hash[cls._gap_codes] = True
         return cls.__gap_hash
 
     @classproperty
     def _definite_hash(cls):
         if cls.__definite_hash is None:
-            cls.__definite_hash = np.zeros((256,), dtype=bool)
+            cls.__definite_hash = np.zeros((Sequence._num_ascii_codes,), dtype=bool)
             cls.__definite_hash[cls._definite_char_codes] = True
         return cls.__definite_hash
 
@@ -492,7 +484,7 @@ class GrammaredSequence(Sequence, metaclass=GrammaredSequenceMeta):
         array([False, False,  True, False,  True], dtype=bool)
 
         """
-        return self._degen_bool_hash[self._bytes]
+        return self._degen_hash[self._bytes]
 
     def has_degenerates(self):
         """Determine if sequence contains one or more degenerate characters.
@@ -843,7 +835,7 @@ class GrammaredSequence(Sequence, metaclass=GrammaredSequenceMeta):
         if noncanonical:
             pos = self._degen_nonca_hash[self._bytes]
         else:
-            pos = self._degenerate_hash[self._bytes]
+            pos = self._degen_hash[self._bytes]
 
         if degenerate == "del":
             seq = self._bytes[np.where(1 - pos)[0]]
