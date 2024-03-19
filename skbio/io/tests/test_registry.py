@@ -804,7 +804,7 @@ class TestSniff(RegistryTest):
             self.assertEqual(observed, expected)
             return True, {}
 
-        self._check_f1 = True
+        self._check_f1 = False
         self.registry.sniff(get_data_path('example.hdf5'))
         self.assertTrue(self._check_f1)
 

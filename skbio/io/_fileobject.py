@@ -10,8 +10,7 @@ import io
 
 
 def is_binary_file(file):
-    return isinstance(file, (io.BufferedReader, io.BufferedWriter, io.BufferedRandom,
-                             io.RawIOBase))
+    return isinstance(file, (io.BufferedReader, io.BufferedWriter, io.BufferedRandom))
 
 
 # Everything beyond this point will be some kind of hack needed to make
