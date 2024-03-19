@@ -1,0 +1,17 @@
+# pre-header
+# comment
+sAmpLEid	col1	col2	col3
+# post-header
+# comment
+id1	1	a	foo
+id2	2	b	bar
+# intra-data comment with another # sign
+#
+##
+  # comment with leading whitespace is still a comment.
+# comment with tab 	 characters 	 is also a comment!	 	 	 
+"# if the first cell is quoted, the parsing rules first process and strip double quotes, then check if the first cell begins with a pound sign"
+"     	 # same rule applies if the de-quoted cell has leading whitespace (leading/trailing whitespace is *always* ignored)"
+id3	3	c	42
+# trailing
+# comment
