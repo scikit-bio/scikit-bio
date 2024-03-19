@@ -272,6 +272,18 @@ class TestGrammaredSequence(TestCase):
                                         invalid_type):
                 ExampleGrammaredSequence('ACGTacgt', lowercase=invalid_key)
 
+    def test_definite_char_codes(self):
+        definite_char_codes = set(ExampleGrammaredSequence._definite_char_codes)
+        self.assertEqual(definite_char_codes, set([65, 66, 67, 81]))
+
+    def test_gap_codes(self):
+        gap_codes = set(ExampleGrammaredSequence._gap_codes)
+        self.assertEqual(gap_codes, set([45, 46]))
+
+    def test_noncanonical_codes(self):
+        noncanonical_codes = set(ExampleGrammaredSequence._noncanonical_codes)
+        self.assertEqual(noncanonical_codes, set([81]))
+
     def test_degenerate_chars(self):
         expected = set("WXYZ")
         self.assertIs(type(ExampleGrammaredSequence.degenerate_chars), set)
