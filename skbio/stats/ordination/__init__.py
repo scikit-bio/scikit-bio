@@ -1,5 +1,4 @@
-r"""
-Ordination methods (:mod:`skbio.stats.ordination`)
+r"""Ordination methods (:mod:`skbio.stats.ordination`)
 ==================================================
 
 .. currentmodule:: skbio.stats.ordination
@@ -43,7 +42,6 @@ Utility Functions
 
 Examples
 --------
-
 This is an artificial dataset (table 11.3 in [1]_) that represents fish
 abundance in different sites (`Y`, the response variables) and
 environmental variables (`X`, the explanatory variables).
@@ -115,11 +113,11 @@ dtype: float64
 
 References
 ----------
-
 .. [1] Legendre P. and Legendre L. 1998. Numerical Ecology. Elsevier,
    Amsterdam.
 
-"""
+
+"""  # noqa: D205, D415
 
 # ----------------------------------------------------------------------------
 # Copyright (c) 2013--, scikit-bio development team.
@@ -134,9 +132,28 @@ from ._correspondence_analysis import ca
 from ._canonical_correspondence_analysis import cca
 from ._principal_coordinate_analysis import pcoa, pcoa_biplot
 from ._ordination_results import OrdinationResults
-from ._utils import (mean_and_std, scale, svd_rank, corr, e_matrix, f_matrix,
-                     center_distance_matrix)
+from ._utils import (
+    mean_and_std,
+    scale,
+    svd_rank,
+    corr,
+    e_matrix,
+    f_matrix,
+    center_distance_matrix,
+)
 
-__all__ = ['ca', 'rda', 'cca', 'pcoa', 'pcoa_biplot', 'OrdinationResults',
-           'mean_and_std', 'scale', 'svd_rank', 'corr',
-           'e_matrix', 'f_matrix', 'center_distance_matrix']
+__all__ = [
+    "ca",
+    "rda",
+    "cca",
+    "pcoa",
+    "pcoa_biplot",
+    "OrdinationResults",
+    "mean_and_std",
+    "scale",
+    "svd_rank",
+    "corr",
+    "e_matrix",
+    "f_matrix",
+    "center_distance_matrix",
+]

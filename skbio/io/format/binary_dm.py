@@ -1,5 +1,4 @@
-"""
-Simple binary dissimilarity matrix format (:mod:`skbio.io.format.binary_dm`)
+"""Simple binary dissimilarity matrix format (:mod:`skbio.io.format.binary_dm`)
 ============================================================================
 
 .. currentmodule:: skbio.io.format.binary_dm
@@ -64,7 +63,8 @@ References
 ----------
 .. [1] http://www.hdfgroup.org/
 
-"""
+
+"""  # noqa: D205, D415
 
 # ----------------------------------------------------------------------------
 # Copyright (c) 2013--, scikit-bio development team.
@@ -80,14 +80,14 @@ from skbio.io import create_format
 from skbio.stats.distance import DissimilarityMatrix, DistanceMatrix
 
 
-binary_dm = create_format('binary_dm', encoding='binary')
+binary_dm = create_format("binary_dm", encoding="binary")
 _vlen_dtype = h5py.special_dtype(vlen=str)
 
 
 @binary_dm.sniffer()
 def _binary_dm_sniffer(fh):
     try:
-        f = h5py.File(fh, 'r')
+        f = h5py.File(fh, "r")
     except OSError:
         return False, {}
 
@@ -95,11 +95,11 @@ def _binary_dm_sniffer(fh):
     if header is None:
         return False, {}
 
-    ids = f.get('order')
+    ids = f.get("order")
     if ids is None:
         return False, {}
 
-    mat = f.get('matrix')
+    mat = f.get("matrix")
     if mat is None:
         return False, {}
 
@@ -131,24 +131,24 @@ def _distance_to_binary_dm(obj, fh):
 
 
 def _h5py_mat_to_skbio_mat(cls, fh):
-    return cls(fh['matrix'], _parse_ids(fh['order']))
+    return cls(fh["matrix"], _parse_ids(fh["order"]))
 
 
 def _skbio_mat_to_h5py_mat(obj, fh):
     _set_header(fh)
 
-    ids = fh.create_dataset('order', shape=(len(obj.ids), ), dtype=_vlen_dtype)
+    ids = fh.create_dataset("order", shape=(len(obj.ids),), dtype=_vlen_dtype)
     ids[:] = obj.ids
-    fh.create_dataset('matrix', data=obj.data)
+    fh.create_dataset("matrix", data=obj.data)
 
 
 def _get_header(fh):
-    format_ = fh.get('format')
-    version = fh.get('version')
+    format_ = fh.get("format")
+    version = fh.get("version")
     if format is None or version is None:
         return None
     else:
-        return {'format': format_[0], 'version': version[0]}
+        return {"format": format_[0], "version": version[0]}
 
 
 def _parse_ids(ids):
@@ -159,14 +159,14 @@ def _parse_ids(ids):
 
 
 def _verify_dimensions(fh):
-    if 'order' not in fh or 'matrix' not in fh:
+    if "order" not in fh or "matrix" not in fh:
         return False
-    n = len(fh['order'])
-    return fh['matrix'].shape == (n, n)
+    n = len(fh["order"])
+    return fh["matrix"].shape == (n, n)
 
 
 def _bytes_decoder(x):
-    return [i.decode('utf8') for i in x]
+    return [i.decode("utf8") for i in x]
 
 
 def _passthrough_decoder(x):
@@ -174,6 +174,10 @@ def _passthrough_decoder(x):
 
 
 def _set_header(h5grp):
-    """Set format spec header information"""
-    h5grp['format'] = [b'BDSM', ]
-    h5grp['version'] = [b'2020.06', ]
+    """Set format spec header information."""
+    h5grp["format"] = [
+        b"BDSM",
+    ]
+    h5grp["version"] = [
+        b"2020.06",
+    ]

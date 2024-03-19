@@ -1,5 +1,4 @@
-r"""
-Composition Statistics (:mod:`skbio.stats.composition`)
+r"""Composition Statistics (:mod:`skbio.stats.composition`)
 =======================================================
 
 .. currentmodule:: skbio.stats.composition
@@ -54,6 +53,9 @@ Functions
    alr
    alr_inv
    centralize
+   vlr
+   pairwise_vlr
+   tree_basis
    ancom
    sbp_basis
 
@@ -72,7 +74,6 @@ References
 
 Examples
 --------
-
 >>> import numpy as np
 
 Consider a very simple environment with only 3 species. The species
@@ -92,7 +93,8 @@ And the resulting perturbation would be
 >>> perturb(otus, antibiotic)
 array([ 0.25,  0.25,  0.5 ])
 
-"""
+
+"""  # noqa: D205, D415
 
 # ----------------------------------------------------------------------------
 # Copyright (c) 2013--, scikit-bio development team.
@@ -113,8 +115,7 @@ from scipy.sparse import coo_matrix
 
 @experimental(as_of="0.4.0")
 def closure(mat):
-    """
-    Performs closure to ensure that all elements add up to 1.
+    """Perform closure to ensure that all elements add up to 1.
 
     Parameters
     ----------
@@ -161,7 +162,7 @@ def closure(mat):
 
 @experimental(as_of="0.4.0")
 def multiplicative_replacement(mat, delta=None):
-    r"""Replace all zeros with small non-zero values
+    r"""Replace all zeros with small non-zero values.
 
     It uses the multiplicative replacement strategy [1]_ ,
     replacing zeros with a small positive :math:`\delta`
@@ -213,25 +214,27 @@ def multiplicative_replacement(mat, delta=None):
 
     """
     mat = closure(mat)
-    z_mat = (mat == 0)
+    z_mat = mat == 0
 
     num_feats = mat.shape[-1]
     tot = z_mat.sum(axis=-1, keepdims=True)
 
     if delta is None:
-        delta = (1. / num_feats)**2
+        delta = (1.0 / num_feats) ** 2
 
     zcnts = 1 - tot * delta
     if np.any(zcnts) < 0:
-        raise ValueError('The multiplicative replacement created negative '
-                         'proportions. Consider using a smaller `delta`.')
+        raise ValueError(
+            "The multiplicative replacement created negative "
+            "proportions. Consider using a smaller `delta`."
+        )
     mat = np.where(z_mat, delta, zcnts * mat)
     return mat.squeeze()
 
 
 @experimental(as_of="0.4.0")
 def perturb(x, y):
-    r""" Performs the perturbation operation.
+    r"""Perform the perturbation operation.
 
     This operation is defined as
 
@@ -280,7 +283,7 @@ def perturb(x, y):
 
 @experimental(as_of="0.4.0")
 def perturb_inv(x, y):
-    r""" Performs the inverse perturbation operation.
+    r"""Perform the inverse perturbation operation.
 
     This operation is defined as
 
@@ -322,6 +325,7 @@ def perturb_inv(x, y):
     >>> y = np.array([1./6,1./6,1./3,1./3])
     >>> perturb_inv(x,y)
     array([ 0.14285714,  0.42857143,  0.28571429,  0.14285714])
+
     """
     x, y = closure(x), closure(y)
     return closure(x / y)
@@ -329,7 +333,7 @@ def perturb_inv(x, y):
 
 @experimental(as_of="0.4.0")
 def power(x, a):
-    r""" Performs the power operation.
+    r"""Perform the power operation.
 
     This operation is defined as follows
 
@@ -375,7 +379,7 @@ def power(x, a):
 
 @experimental(as_of="0.4.0")
 def inner(x, y):
-    r""" Calculates the Aitchson inner product.
+    r"""Calculate the Aitchson inner product.
 
     This inner product is defined as follows
 
@@ -408,6 +412,7 @@ def inner(x, y):
     >>> y = np.array([.2, .4, .2, .2])
     >>> inner(x, y)  # doctest: +ELLIPSIS
     0.2107852473...
+
     """
     x = closure(x)
     y = closure(y)
@@ -417,7 +422,7 @@ def inner(x, y):
 
 @experimental(as_of="0.4.0")
 def clr(mat):
-    r""" Performs centre log ratio transformation.
+    r"""Perform centre log ratio transformation.
 
     This function transforms compositions from Aitchison geometry to
     the real space. The :math:`clr` transform is both an isometry and an
@@ -465,7 +470,7 @@ def clr(mat):
 
 @experimental(as_of="0.4.0")
 def clr_inv(mat):
-    r""" Performs inverse centre log ratio transformation.
+    r"""Perform inverse centre log ratio transformation.
 
     This function transforms compositions from the real space to
     Aitchison geometry. The :math:`clr^{-1}` transform is both an isometry,
@@ -500,6 +505,7 @@ def clr_inv(mat):
     >>> x = np.array([.1, .3, .4, .2])
     >>> clr_inv(x)
     array([ 0.21383822,  0.26118259,  0.28865141,  0.23632778])
+
     """
     # for numerical stability (aka softmax trick)
     mat = np.atleast_2d(mat)
@@ -509,7 +515,7 @@ def clr_inv(mat):
 
 @experimental(as_of="0.4.0")
 def ilr(mat, basis=None, check=True):
-    r""" Performs isometric log ratio transformation.
+    r"""Perform isometric log ratio transformation.
 
     This function transforms compositions from Aitchison simplex to
     the real space. The :math: ilr` transform is both an isometry,
@@ -557,6 +563,7 @@ def ilr(mat, basis=None, check=True):
     Aitchison simplex.  If there are `D-1` elements specified in `mat`, then
     the dimensions of the basis needs be `D-1 x D`, where rows represent
     basis vectors, and the columns represent proportions.
+
     """
     mat = closure(mat)
     if basis is None:
@@ -564,9 +571,10 @@ def ilr(mat, basis=None, check=True):
         basis = _gram_schmidt_basis(d)  # dimension (d-1) x d
     else:
         if len(basis.shape) != 2:
-            raise ValueError("Basis needs to be a 2D matrix, "
-                             "not a %dD matrix." %
-                             (len(basis.shape)))
+            raise ValueError(
+                "Basis needs to be a 2D matrix, "
+                "not a %dD matrix." % (len(basis.shape))
+            )
         if check:
             _check_orthogonality(basis)
 
@@ -575,7 +583,7 @@ def ilr(mat, basis=None, check=True):
 
 @experimental(as_of="0.4.0")
 def ilr_inv(mat, basis=None, check=True):
-    r""" Performs inverse isometric log ratio transform.
+    r"""Perform inverse isometric log ratio transform.
 
     This function transforms compositions from the real space to
     Aitchison geometry. The :math:`ilr^{-1}` transform is both an isometry,
@@ -624,6 +632,7 @@ def ilr_inv(mat, basis=None, check=True):
     Aitchison simplex.  If there are `D-1` elements specified in `mat`, then
     the dimensions of the basis needs be `D-1 x D`, where rows represent
     basis vectors, and the columns represent proportions.
+
     """
     mat = np.atleast_2d(mat)
     if basis is None:
@@ -631,9 +640,10 @@ def ilr_inv(mat, basis=None, check=True):
         basis = _gram_schmidt_basis(mat.shape[-1] + 1)
     else:
         if len(basis.shape) != 2:
-            raise ValueError("Basis needs to be a 2D matrix, "
-                             "not a %dD matrix." %
-                             (len(basis.shape)))
+            raise ValueError(
+                "Basis needs to be a 2D matrix, "
+                "not a %dD matrix." % (len(basis.shape))
+            )
         if check:
             _check_orthogonality(basis)
         # this is necessary, since the clr function
@@ -645,7 +655,7 @@ def ilr_inv(mat, basis=None, check=True):
 
 @experimental(as_of="0.5.5")
 def alr(mat, denominator_idx=0):
-    r""" Performs additive log ratio transformation.
+    r"""Perform additive log ratio transformation.
 
     This function transforms compositions from a D-part Aitchison simplex to
     a non-isometric real space of D-1 dimensions. The argument
@@ -688,17 +698,18 @@ def alr(mat, denominator_idx=0):
     >>> x = np.array([.1, .3, .4, .2])
     >>> alr(x)
     array([ 1.09861229,  1.38629436,  0.69314718])
+
     """
     mat = closure(mat)
     if mat.ndim == 2:
         mat_t = mat.T
         numerator_idx = list(range(0, mat_t.shape[0]))
         del numerator_idx[denominator_idx]
-        lr = np.log(mat_t[numerator_idx, :]/mat_t[denominator_idx, :]).T
+        lr = np.log(mat_t[numerator_idx, :] / mat_t[denominator_idx, :]).T
     elif mat.ndim == 1:
         numerator_idx = list(range(0, mat.shape[0]))
         del numerator_idx[denominator_idx]
-        lr = np.log(mat[numerator_idx]/mat[denominator_idx])
+        lr = np.log(mat[numerator_idx] / mat[denominator_idx])
     else:
         raise ValueError("mat must be either 1D or 2D")
     return lr
@@ -706,7 +717,7 @@ def alr(mat, denominator_idx=0):
 
 @experimental(as_of="0.5.5")
 def alr_inv(mat, denominator_idx=0):
-    r""" Performs inverse additive log ratio transform.
+    r"""Perform inverse additive log ratio transform.
 
     This function transforms compositions from the non-isometric real space of
     alrs to Aitchison geometry.
@@ -748,11 +759,11 @@ def alr_inv(mat, denominator_idx=0):
     >>> x = np.array([.1, .3, .4, .2])
     >>> alr_inv(alr(x))
     array([ 0.1,  0.3,  0.4,  0.2])
+
     """
     mat = np.array(mat)
     if mat.ndim == 2:
-        mat_idx = np.insert(mat, denominator_idx,
-                            np.repeat(0, mat.shape[0]), axis=1)
+        mat_idx = np.insert(mat, denominator_idx, np.repeat(0, mat.shape[0]), axis=1)
         comp = np.zeros(mat_idx.shape)
         comp[:, denominator_idx] = 1 / (np.exp(mat).sum(axis=1) + 1)
         numerator_idx = list(range(0, comp.shape[1]))
@@ -805,34 +816,23 @@ def centralize(mat):
 
 @experimental(as_of="0.5.7")
 def _vlr(x: np.array, y: np.array, ddof: int):
-    r""" Calculates variance log ratio
+    r"""Calculate variance log ratio.
 
     Parameters
     ----------
     x : array_like, float
-       a 1-dimensional vector of proportions
+        A 1-dimensional vector of proportions.
     y : array_like, float
-       a 1-dimensional vector of proportions
+        A 1-dimensional vector of proportions.
     ddof: int
-        degrees of freedom
+        Degrees of freedom.
 
     Returns
     -------
     float
-         variance log ratio value
+        Variance log ratio value.
 
-    References
-    ----------
-    .. [1] V. Lovell D, Pawlowsky-Glahn V, Egozcue JJ, Marguerat S,
-           Bähler J (2015) Proportionality: A Valid Alternative to
-           Correlation for Relative Data. PLoS Comput Biol 11(3): e1004075.
-           https://doi.org/10.1371/journal.pcbi.1004075
-    .. [2] Erb, I., Notredame, C.
-           How should we measure proportionality on relative gene
-           expression data?. Theory Biosci. 135, 21–36 (2016).
-           https://doi.org/10.1007/s12064-015-0220-8
     """
-
     # Log transformation
     x = np.log(x)
     y = np.log(y)
@@ -843,35 +843,23 @@ def _vlr(x: np.array, y: np.array, ddof: int):
 
 @experimental(as_of="0.5.7")
 def _robust_vlr(x: np.ndarray, y: np.ndarray, ddof: int):
-    r""" Calculates variance log ratio while masking zeros
+    r"""Calculate variance log ratio while masking zeros.
 
     Parameters
     ----------
     x : array_like, float
-       a 1-dimensional vector of proportions
+        A 1-dimensional vector of proportions.
     y : array_like, float
-       a 1-dimensional vector of proportions
+        A 1-dimensional vector of proportions.
     ddof: int
-        degrees of freedom
+        Degrees of freedom.
 
     Returns
     -------
     float
-         variance log ratio value
+        Variance log ratio value.
 
-
-    References
-    ----------
-    .. [1] V. Lovell D, Pawlowsky-Glahn V, Egozcue JJ, Marguerat S,
-           Bähler J (2015) Proportionality: A Valid Alternative to
-           Correlation for Relative Data. PLoS Comput Biol 11(3): e1004075.
-           https://doi.org/10.1371/journal.pcbi.1004075
-    .. [2] Erb, I., Notredame, C.
-           How should we measure proportionality on relative gene
-           expression data?. Theory Biosci. 135, 21–36 (2016).
-           https://doi.org/10.1007/s12064-015-0220-8
     """
-
     # Mask zeros
     x = np.ma.masked_array(x, mask=x == 0)
     y = np.ma.masked_array(y, mask=y == 0)
@@ -886,35 +874,27 @@ def _robust_vlr(x: np.ndarray, y: np.ndarray, ddof: int):
 
 @experimental(as_of="0.5.7")
 def vlr(x: np.ndarray, y: np.ndarray, ddof: int = 1, robust: bool = False):
-    r""" Calculates variance log ratio
+    r"""Calculate variance log ratio.
 
     Parameters
     ----------
     x : array_like, float
-       a 1-dimensional vector of proportions
+        A 1-dimensional vector of proportions.
     y : array_like, float
-       a 1-dimensional vector of proportions
-
+        A 1-dimensional vector of proportions.
     ddof: int
-        degrees of freedom
-
+        Degrees of freedom.
     robust: bool
-        mask zeros at the cost of performance
+        Mask zeros at the cost of performance.
 
     Returns
     -------
     float
-         variance log ratio value
+        Variance log ratio value.
 
-    Examples
-    --------
-    No zeros
-    >>> import numpy as np
-    >>> from skbio.stats.composition import vlr
-    >>> x = np.exp([1,2,3])
-    >>> y = np.exp([2,3,4])
-    >>> vlr(x,y)
-    0.0
+    Notes
+    -----
+    Variance log ratio was described in [1]_ and [2]_.
 
     References
     ----------
@@ -924,8 +904,18 @@ def vlr(x: np.ndarray, y: np.ndarray, ddof: int = 1, robust: bool = False):
            https://doi.org/10.1371/journal.pcbi.1004075
     .. [2] Erb, I., Notredame, C.
            How should we measure proportionality on relative gene
-           expression data?. Theory Biosci. 135, 21–36 (2016).
+           expression data?. Theory Biosci. 135, 21-36 (2016).
            https://doi.org/10.1007/s12064-015-0220-8
+
+    Examples
+    --------
+    >>> import numpy as np
+    >>> from skbio.stats.composition import vlr
+    >>> x = np.exp([1,2,3])
+    >>> y = np.exp([2,3,4])
+    >>> vlr(x,y)  # no zeros
+    0.0
+
     """
     # Convert array_like to numpy array
     x = closure(x)
@@ -947,91 +937,66 @@ def vlr(x: np.ndarray, y: np.ndarray, ddof: int = 1, robust: bool = False):
 
 @experimental(as_of="0.5.7")
 def _pairwise_vlr(mat: np.ndarray, ddof: int):
-    r""" Performs pairwise variance log ratio transformation
+    r"""Perform pairwise variance log ratio transformation.
 
     Parameters
     ----------
     mat : array_like, float
-       a matrix of proportions where
-       rows = compositions and
-       columns = components
+        a matrix of proportions where
+        rows = compositions and
+        columns = components
     ids : array_like, str
-        component names
+        Component names.
     ddof : int
-        degrees of freedom
+        Degrees of freedom.
 
     Returns
     -------
     skbio.DistanceMatrix
-         distance matrix of variance log ratio values
+        Distance matrix of variance log ratio values.
 
-
-    References
-    ----------
-    .. [1] V. Lovell D, Pawlowsky-Glahn V, Egozcue JJ, Marguerat S,
-           Bähler J (2015) Proportionality: A Valid Alternative to
-           Correlation for Relative Data. PLoS Comput Biol 11(3): e1004075.
-           https://doi.org/10.1371/journal.pcbi.1004075
-    .. [2] Erb, I., Notredame, C.
-           How should we measure proportionality on relative gene
-           expression data?. Theory Biosci. 135, 21–36 (2016).
-           https://doi.org/10.1007/s12064-015-0220-8
     """
-
     # Log Transform
     X_log = np.log(mat)
 
     # Variance Log Ratio
     covariance = np.cov(X_log.T, ddof=ddof)
     diagonal = np.diagonal(covariance)
-    vlr_data = -2*covariance + diagonal[:, np.newaxis] + diagonal
+    vlr_data = -2 * covariance + diagonal[:, np.newaxis] + diagonal
     return vlr_data
 
 
 @experimental(as_of="0.5.7")
-def pairwise_vlr(mat,
-                 ids=None,
-                 ddof: int = 1,
-                 robust: bool = False,
-                 validate: bool = True):
-
-    r""" Performs pairwise variance log ratio transformation
+def pairwise_vlr(
+    mat, ids=None, ddof: int = 1, robust: bool = False, validate: bool = True
+):
+    r"""Perform pairwise variance log ratio transformation.
 
     Parameters
     ----------
-    mat: array_like, float
-       a matrix of proportions where
-       rows = compositions and
-       columns = components
-    ids: array_like, str
-        Component names
-    ddof: int
-        Degrees of freedom
-    robust: bool
-        Mask zeros at the cost of performance
-    validate: bool
+    mat : array_like, float
+        a matrix of proportions where
+        rows = compositions and
+        columns = components
+    ids : array_like, str
+        Component names.
+    ddof : int
+        Degrees of freedom.
+    robust : bool
+        Mask zeros at the cost of performance.
+    validate : bool
         Whether to validate the distance matrix after construction.
 
     Returns
     -------
     skbio.DistanceMatrix if validate=True
-         distance matrix of variance log ratio values
+        Distance matrix of variance log ratio values.
     skbio.DissimilarityMatrix if validate=False
-         dissimilarity matrix of variance log ratio values
+        Dissimilarity matrix of variance log ratio values.
 
-    Examples
-    --------
-    import numpy as np
-    from skbio.stats.composition import pairwise_vlr
-    >>> mat = np.array([np.exp([1,2,2]),
-    ...                 np.exp([2,3,6]),
-    ...                 np.exp([2,3,12])]).T
-    >>> dism = pairwise_vlr(mat)
-    >>> dism.redundant_form()
-    array([[  0.,   3.,  27.],
-           [  3.,   0.,  12.],
-           [ 27.,  12.,   0.]])
-
+    Notes
+    -----
+    Pairwise variance log ratio transformation was described in [1]_ and [2]_.
 
     References
     ----------
@@ -1041,10 +1006,23 @@ def pairwise_vlr(mat,
            https://doi.org/10.1371/journal.pcbi.1004075
     .. [2] Erb, I., Notredame, C.
            How should we measure proportionality on relative gene
-           expression data?. Theory Biosci. 135, 21–36 (2016).
+           expression data?. Theory Biosci. 135, 21-36 (2016).
            https://doi.org/10.1007/s12064-015-0220-8
-    """
 
+    Examples
+    --------
+    >>> import numpy as np
+    >>> from skbio.stats.composition import pairwise_vlr
+    >>> mat = np.array([np.exp([1, 2, 2]),
+    ...                 np.exp([2, 3, 6]),
+    ...                 np.exp([2, 3, 12])]).T
+    >>> dism = pairwise_vlr(mat)
+    >>> dism.redundant_form()
+    array([[  0.,   3.,  27.],
+           [  3.,   0.,  12.],
+           [ 27.,  12.,   0.]])
+
+    """
     # Mask zeros
     mat = closure(mat.astype(np.float64))
 
@@ -1056,8 +1034,7 @@ def pairwise_vlr(mat,
 
     # Variance Log Ratio
     if robust:
-        raise NotImplementedError(
-            'Pairwise version of robust VLR not implemented.')
+        raise NotImplementedError("Pairwise version of robust VLR not implemented.")
     else:
         vlr_data = _pairwise_vlr(**kwargs)
 
@@ -1073,7 +1050,7 @@ def pairwise_vlr(mat,
 
 @experimental(as_of="0.5.8")
 def tree_basis(tree):
-    r""" Calculates sparse representation of an ilr basis from a tree.
+    r"""Calculate sparse representation of an ilr basis from a tree.
 
     This computes an orthonormal basis specified from a bifurcating tree.
 
@@ -1098,6 +1075,8 @@ def tree_basis(tree):
     ValueError
         The tree doesn't contain two branches.
 
+    Examples
+    --------
     >>> from skbio import TreeNode
     >>> tree = u"((b,c)a, d)root;"
     >>> t = TreeNode.read([tree])
@@ -1121,13 +1100,19 @@ def tree_basis(tree):
             n._tip_count = 1
         else:
             if len(n.children) == 2:
-                left, right = n.children[NUMERATOR], n.children[DENOMINATOR],
+                left, right = (
+                    n.children[NUMERATOR],
+                    n.children[DENOMINATOR],
+                )
             else:
                 raise ValueError("Not a strictly bifurcating tree.")
             n._tip_count = left._tip_count + right._tip_count
 
     # calculate k, r, s, t coordinate for each node
-    left, right = t.children[NUMERATOR], t.children[DENOMINATOR],
+    left, right = (
+        t.children[NUMERATOR],
+        t.children[DENOMINATOR],
+    )
     t._k, t._r, t._s, t._t = 0, left._tip_count, right._tip_count, 0
     for n in t.preorder(include_self=False):
         if n.is_tip():
@@ -1153,7 +1138,6 @@ def tree_basis(tree):
     i = 0
 
     for n in t.levelorder(include_self=True):
-
         if n.is_tip():
             continue
 
@@ -1181,14 +1165,17 @@ def tree_basis(tree):
 
 
 @experimental(as_of="0.4.1")
-def ancom(table, grouping,
-          alpha=0.05,
-          tau=0.02,
-          theta=0.1,
-          multiple_comparisons_correction='holm-bonferroni',
-          significance_test=None,
-          percentiles=(0.0, 25.0, 50.0, 75.0, 100.0)):
-    r""" Performs a differential abundance test using ANCOM.
+def ancom(
+    table,
+    grouping,
+    alpha=0.05,
+    tau=0.02,
+    theta=0.1,
+    multiple_comparisons_correction="holm-bonferroni",
+    significance_test=None,
+    percentiles=(0.0, 25.0, 50.0, 75.0, 100.0),
+):
+    r"""Perform a differential abundance test using ANCOM.
 
     This is done by calculating pairwise log ratios between all features
     and performing a significance test to determine if there is a significant
@@ -1405,50 +1392,57 @@ def ancom(table, grouping,
 
     """
     if not isinstance(table, pd.DataFrame):
-        raise TypeError('`table` must be a `pd.DataFrame`, '
-                        'not %r.' % type(table).__name__)
+        raise TypeError(
+            "`table` must be a `pd.DataFrame`, " "not %r." % type(table).__name__
+        )
     if not isinstance(grouping, pd.Series):
-        raise TypeError('`grouping` must be a `pd.Series`,'
-                        ' not %r.' % type(grouping).__name__)
+        raise TypeError(
+            "`grouping` must be a `pd.Series`," " not %r." % type(grouping).__name__
+        )
 
     if np.any(table <= 0):
-        raise ValueError('Cannot handle zeros or negative values in `table`. '
-                         'Use pseudocounts or ``multiplicative_replacement``.'
-                         )
+        raise ValueError(
+            "Cannot handle zeros or negative values in `table`. "
+            "Use pseudocounts or ``multiplicative_replacement``."
+        )
 
     if not 0 < alpha < 1:
-        raise ValueError('`alpha`=%f is not within 0 and 1.' % alpha)
+        raise ValueError("`alpha`=%f is not within 0 and 1." % alpha)
 
     if not 0 < tau < 1:
-        raise ValueError('`tau`=%f is not within 0 and 1.' % tau)
+        raise ValueError("`tau`=%f is not within 0 and 1." % tau)
 
     if not 0 < theta < 1:
-        raise ValueError('`theta`=%f is not within 0 and 1.' % theta)
+        raise ValueError("`theta`=%f is not within 0 and 1." % theta)
 
     if multiple_comparisons_correction is not None:
-        if multiple_comparisons_correction != 'holm-bonferroni':
-            raise ValueError('%r is not an available option for '
-                             '`multiple_comparisons_correction`.'
-                             % multiple_comparisons_correction)
+        if multiple_comparisons_correction != "holm-bonferroni":
+            raise ValueError(
+                "%r is not an available option for "
+                "`multiple_comparisons_correction`." % multiple_comparisons_correction
+            )
 
     if (grouping.isnull()).any():
-        raise ValueError('Cannot handle missing values in `grouping`.')
+        raise ValueError("Cannot handle missing values in `grouping`.")
 
     if (table.isnull()).any().any():
-        raise ValueError('Cannot handle missing values in `table`.')
+        raise ValueError("Cannot handle missing values in `table`.")
 
     percentiles = list(percentiles)
     for percentile in percentiles:
         if not 0.0 <= percentile <= 100.0:
-            raise ValueError('Percentiles must be in the range [0, 100], %r '
-                             'was provided.' % percentile)
+            raise ValueError(
+                "Percentiles must be in the range [0, 100], %r "
+                "was provided." % percentile
+            )
 
     duplicates = skbio.util.find_duplicates(percentiles)
     if duplicates:
-        formatted_duplicates = ', '.join(repr(e) for e in duplicates)
-        raise ValueError('Percentile values must be unique. The following'
-                         ' value(s) were duplicated: %s.' %
-                         formatted_duplicates)
+        formatted_duplicates = ", ".join(repr(e) for e in duplicates)
+        raise ValueError(
+            "Percentile values must be unique. The following"
+            " value(s) were duplicated: %s." % formatted_duplicates
+        )
 
     groups = np.unique(grouping)
     num_groups = len(groups)
@@ -1458,24 +1452,25 @@ def ancom(table, grouping,
             "All values in `grouping` are unique. This method cannot "
             "operate on a grouping vector with only unique values (e.g., "
             "there are no 'within' variance because each group of samples "
-            "contains only a single sample).")
+            "contains only a single sample)."
+        )
 
     if num_groups == 1:
         raise ValueError(
             "All values the `grouping` are the same. This method cannot "
             "operate on a grouping vector with only a single group of samples"
             "(e.g., there are no 'between' variance because there is only a "
-            "single group).")
+            "single group)."
+        )
 
     if significance_test is None:
         significance_test = scipy.stats.f_oneway
 
     table_index_len = len(table.index)
     grouping_index_len = len(grouping.index)
-    mat, cats = table.align(grouping, axis=0, join='inner')
-    if (len(mat) != table_index_len or len(cats) != grouping_index_len):
-        raise ValueError('`table` index and `grouping` '
-                         'index must be consistent.')
+    mat, cats = table.align(grouping, axis=0, join="inner")
+    if len(mat) != table_index_len or len(cats) != grouping_index_len:
+        raise ValueError("`table` index and `grouping` " "index must be consistent.")
 
     n_feat = mat.shape[1]
 
@@ -1483,9 +1478,8 @@ def ancom(table, grouping,
     logratio_mat = _logratio_mat + _logratio_mat.T
 
     # Multiple comparisons
-    if multiple_comparisons_correction == 'holm-bonferroni':
-        logratio_mat = np.apply_along_axis(_holm_bonferroni,
-                                           1, logratio_mat)
+    if multiple_comparisons_correction == "holm-bonferroni":
+        logratio_mat = np.apply_along_axis(_holm_bonferroni, 1, logratio_mat)
     np.fill_diagonal(logratio_mat, 1)
     W = (logratio_mat < alpha).sum(axis=1)
     c_start = W.max() / n_feat
@@ -1494,7 +1488,7 @@ def ancom(table, grouping,
     else:
         # Select appropriate cutoff
         cutoff = c_start - np.linspace(0.05, 0.25, 5)
-        prop_cut = np.array([(W > n_feat*cut).mean() for cut in cutoff])
+        prop_cut = np.array([(W > n_feat * cut).mean() for cut in cutoff])
         dels = np.abs(prop_cut - np.roll(prop_cut, -1))
         dels[-1] = 0
 
@@ -1506,12 +1500,15 @@ def ancom(table, grouping,
             nu = cutoff[3]
         else:
             nu = cutoff[4]
-        reject = (W >= nu*n_feat)
+        reject = W >= nu * n_feat
 
     feat_ids = mat.columns
     ancom_df = pd.DataFrame(
-        {'W': pd.Series(W, index=feat_ids),
-         'Reject null hypothesis': pd.Series(reject, index=feat_ids)})
+        {
+            "W": pd.Series(W, index=feat_ids),
+            "Reject null hypothesis": pd.Series(reject, index=feat_ids),
+        }
+    )
 
     if len(percentiles) == 0:
         return ancom_df, pd.DataFrame()
@@ -1523,19 +1520,20 @@ def ancom(table, grouping,
             for percentile in percentiles:
                 columns.append((percentile, group))
                 data.append(np.percentile(feat_dists, percentile, axis=0))
-        columns = pd.MultiIndex.from_tuples(columns,
-                                            names=['Percentile', 'Group'])
+        columns = pd.MultiIndex.from_tuples(columns, names=["Percentile", "Group"])
         percentile_df = pd.DataFrame(
-            np.asarray(data).T, columns=columns, index=feat_ids)
+            np.asarray(data).T, columns=columns, index=feat_ids
+        )
         return ancom_df, percentile_df
 
 
 def _holm_bonferroni(p):
-    """ Performs Holm-Bonferroni correction for pvalues
-    to account for multiple comparisons
+    """Perform Holm-Bonferroni correction.
+
+    Perform Holm-Bonferroni correction for pvalues to account for multiple comparisons.
 
     Parameters
-    ---------
+    ----------
     p: numpy.array
         array of pvalues
 
@@ -1543,25 +1541,26 @@ def _holm_bonferroni(p):
     -------
     numpy.array
         corrected pvalues
+
     """
     K = len(p)
     sort_index = -np.ones(K, dtype=np.int64)
     sorted_p = np.sort(p)
-    sorted_p_adj = sorted_p*(K-np.arange(K))
+    sorted_p_adj = sorted_p * (K - np.arange(K))
     for j in range(K):
         idx = (p == sorted_p[j]) & (sort_index < 0)
         num_ties = len(sort_index[idx])
-        sort_index[idx] = np.arange(j, (j+num_ties), dtype=np.int64)
+        sort_index[idx] = np.arange(j, (j + num_ties), dtype=np.int64)
 
-    sorted_holm_p = [min([max(sorted_p_adj[:k]), 1])
-                     for k in range(1, K+1)]
+    sorted_holm_p = [min([max(sorted_p_adj[:k]), 1]) for k in range(1, K + 1)]
     holm_p = [sorted_holm_p[sort_index[k]] for k in range(K)]
     return holm_p
 
 
-def _log_compare(mat, cats,
-                 significance_test=scipy.stats.ttest_ind):
-    """ Calculates pairwise log ratios between all features and performs a
+def _log_compare(mat, cats, significance_test=scipy.stats.ttest_ind):
+    """Calculate pairwise log ratios and perform a significance test.
+
+    Calculate pairwise log ratios between all features and perform a
     significance test (i.e. t-test) to determine if there is a significant
     difference in feature ratios with respect to the variable of interest.
 
@@ -1575,10 +1574,11 @@ def _log_compare(mat, cats,
     significance_test: function
         statistical test to run
 
-    Returns:
-    --------
+    Returns
+    -------
     log_ratio : np.array
         log ratio pvalue matrix
+
     """
     r, c = mat.shape
     log_ratio = np.zeros((c, c))
@@ -1588,19 +1588,15 @@ def _log_compare(mat, cats,
     def func(x):
         return significance_test(*[x[cats == k] for k in cs])
 
-    for i in range(c-1):
-        ratio = (log_mat[:, i].T - log_mat[:, i+1:].T).T
-        m, p = np.apply_along_axis(func,
-                                   axis=0,
-                                   arr=ratio)
-        log_ratio[i, i+1:] = np.squeeze(np.array(p.T))
+    for i in range(c - 1):
+        ratio = (log_mat[:, i].T - log_mat[:, i + 1 :].T).T
+        m, p = np.apply_along_axis(func, axis=0, arr=ratio)
+        log_ratio[i, i + 1 :] = np.squeeze(np.array(p.T))
     return log_ratio
 
 
 def _gram_schmidt_basis(n):
-    """
-    Builds clr transformed basis derived from
-    gram schmidt orthogonalization
+    """Build clr transformed basis derived from gram schmidt orthogonalization.
 
     Parameters
     ----------
@@ -1611,21 +1607,21 @@ def _gram_schmidt_basis(n):
     -------
     basis : np.array
         Dimension (n-1) x n basis matrix
+
     """
-    basis = np.zeros((n, n-1))
-    for j in range(n-1):
+    basis = np.zeros((n, n - 1))
+    for j in range(n - 1):
         i = j + 1
-        e = np.array([(1/i)]*i + [-1] +
-                     [0]*(n-i-1))*np.sqrt(i/(i+1))
+        e = np.array([(1 / i)] * i + [-1] + [0] * (n - i - 1)) * np.sqrt(i / (i + 1))
         basis[:, j] = e
     return basis.T
 
 
 @experimental(as_of="0.5.5")
 def sbp_basis(sbp):
-    r"""
-    Builds an orthogonal basis from a sequential binary partition (SBP). As
-    explained in [1]_, the SBP is a hierarchical collection of binary
+    r"""Build an orthogonal basis from a sequential binary partition (SBP).
+
+    As explained in [1]_, the SBP is a hierarchical collection of binary
     divisions of compositional parts. The child groups are divided again until
     all groups contain a single part. The SBP can be encoded in a
     :math:`(D - 1) \times D` matrix where, for each row, parts can be grouped
@@ -1681,28 +1677,27 @@ def sbp_basis(sbp):
     .. [2] van den Boogaart, K. Gerald, Tolosana-Delgado, Raimon and Bren,
        Matevz, 2014. `compositions`: Compositional Data Analysis. R package
        version 1.40-1. https://CRAN.R-project.org/package=compositions.
-    """
 
+    """
     n_pos = (sbp == 1).sum(axis=1)
     n_neg = (sbp == -1).sum(axis=1)
     psi = np.zeros(sbp.shape)
     for i in range(0, sbp.shape[0]):
-        psi[i, :] = sbp[i, :] * np.sqrt((n_neg[i] / n_pos[i])**sbp[i, :] /
-                                        np.sum(np.abs(sbp[i, :])))
+        psi[i, :] = sbp[i, :] * np.sqrt(
+            (n_neg[i] / n_pos[i]) ** sbp[i, :] / np.sum(np.abs(sbp[i, :]))
+        )
     return psi
 
 
 def _check_orthogonality(basis):
-    """
-    Checks to see if basis is truly orthonormal in the
-    Aitchison simplex
+    """Check to see if basis is truly orthonormal in the Aitchison simplex.
 
     Parameters
     ----------
     basis: numpy.ndarray
         basis in the Aitchison simplex of dimension d-1 x d
+
     """
     basis = np.atleast_2d(basis)
-    if not np.allclose(basis @ basis.T, np.identity(len(basis)),
-                       rtol=1e-4, atol=1e-6):
+    if not np.allclose(basis @ basis.T, np.identity(len(basis)), rtol=1e-4, atol=1e-6):
         raise ValueError("Basis is not orthonormal")

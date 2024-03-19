@@ -1,5 +1,4 @@
-"""
-Labeled square matrix format (:mod:`skbio.io.format.lsmat`)
+r"""Labeled square matrix format (:mod:`skbio.io.format.lsmat`)
 ===========================================================
 
 .. currentmodule:: skbio.io.format.lsmat
@@ -56,8 +55,8 @@ IDs will have any leading/trailing whitespace removed when they are parsed.
 Format Parameters
 -----------------
 The only supported format parameter is ``delimiter``, which defaults to the tab
-character (``'\\t'``). ``delimiter`` is used to separate elements in the file
-format. Examples include tab (``'\\t'``) for TSV format and comma (``','``) for
+character (``'\t'``). ``delimiter`` is used to separate elements in the file
+format. Examples include tab (``'\t'``) for TSV format and comma (``','``) for
 CSV format. ``delimiter`` can be specified as a keyword argument when reading
 from or writing to a file.
 
@@ -66,7 +65,7 @@ length. This value is useful for reading a fixed-width text file. However, it
 cannot be automatically determined, nor can it be specified when writing to a
 file.
 
-"""
+"""  # noqa: D205, D415
 
 # ----------------------------------------------------------------------------
 # Copyright (c) 2013--, scikit-bio development team.
@@ -84,7 +83,7 @@ from skbio.stats.distance import DissimilarityMatrix, DistanceMatrix
 from skbio.io import create_format, LSMatFormatError
 
 
-lsmat = create_format('lsmat')
+lsmat = create_format("lsmat")
 
 
 @lsmat.sniffer()
@@ -100,7 +99,7 @@ def _lsmat_sniffer(fh):
             first_id, _ = next(_parse_data(fh, delimiter), (None, None))
 
             if first_id is not None and first_id == ids[0]:
-                return True, {'delimiter': delimiter}
+                return True, {"delimiter": delimiter}
         except (csv.Error, LSMatFormatError):
             pass
 
@@ -108,22 +107,22 @@ def _lsmat_sniffer(fh):
 
 
 @lsmat.reader(DissimilarityMatrix)
-def _lsmat_to_dissimilarity_matrix(fh, delimiter='\t'):
+def _lsmat_to_dissimilarity_matrix(fh, delimiter="\t"):
     return _lsmat_to_matrix(DissimilarityMatrix, fh, delimiter)
 
 
 @lsmat.reader(DistanceMatrix)
-def _lsmat_to_distance_matrix(fh, delimiter='\t'):
+def _lsmat_to_distance_matrix(fh, delimiter="\t"):
     return _lsmat_to_matrix(DistanceMatrix, fh, delimiter)
 
 
 @lsmat.writer(DissimilarityMatrix)
-def _dissimilarity_matrix_to_lsmat(obj, fh, delimiter='\t'):
+def _dissimilarity_matrix_to_lsmat(obj, fh, delimiter="\t"):
     _matrix_to_lsmat(obj, fh, delimiter)
 
 
 @lsmat.writer(DistanceMatrix)
-def _distance_matrix_to_lsmat(obj, fh, delimiter='\t'):
+def _distance_matrix_to_lsmat(obj, fh, delimiter="\t"):
     _matrix_to_lsmat(obj, fh, delimiter)
 
 
@@ -144,7 +143,8 @@ def _lsmat_to_matrix(cls, fh, delimiter):
         raise LSMatFormatError(
             "Could not find a header line containing IDs in the "
             "dissimilarity matrix file. Please verify that the file is "
-            "not empty.")
+            "not empty."
+        )
 
     ids = _parse_header(header, delimiter)
     num_ids = len(ids)
@@ -156,15 +156,15 @@ def _lsmat_to_matrix(cls, fh, delimiter):
             # We've hit a nonempty line after we already filled the data
             # matrix. Raise an error because we shouldn't ignore extra data.
             raise LSMatFormatError(
-                "Encountered extra row(s) without corresponding IDs in "
-                "the header.")
+                "Encountered extra row(s) without corresponding IDs in " "the header."
+            )
 
         num_vals = len(row_data)
         if num_vals != num_ids:
             raise LSMatFormatError(
                 "There are %d value(s) in row %d, which is not equal to the "
-                "number of ID(s) in the header (%d)." %
-                (num_vals, row_idx + 1, num_ids))
+                "number of ID(s) in the header (%d)." % (num_vals, row_idx + 1, num_ids)
+            )
 
         expected_id = ids[row_idx]
         if row_id == expected_id:
@@ -175,11 +175,13 @@ def _lsmat_to_matrix(cls, fh, delimiter):
                 "dissimilarity matrix file. Found %r but expected "
                 "%r. Please ensure that the IDs match between the "
                 "dissimilarity matrix header (first row) and the row "
-                "labels (first column)." % (str(row_id), str(expected_id)))
+                "labels (first column)." % (str(row_id), str(expected_id))
+            )
 
     if row_idx != num_ids - 1:
-        raise LSMatFormatError("Expected %d row(s) of data, but found %d." %
-                               (num_ids, row_idx + 1))
+        raise LSMatFormatError(
+            "Expected %d row(s) of data, but found %d." % (num_ids, row_idx + 1)
+        )
 
     return cls(data, ids)
 
@@ -190,7 +192,7 @@ def _find_header(fh):
     for line in fh:
         stripped_line = line.strip()
 
-        if stripped_line and not stripped_line.startswith('#'):
+        if stripped_line and not stripped_line.startswith("#"):
             # Don't strip the header because the first delimiter might be
             # whitespace (e.g., tab).
             header = line
@@ -205,7 +207,8 @@ def _parse_header(header, delimiter):
     if delimiter is not None:
         if tokens[0]:
             raise LSMatFormatError(
-                "Header must start with delimiter %r." % str(delimiter))
+                "Header must start with delimiter %r." % str(delimiter)
+            )
         tokens = tokens[1:]
 
     return [e.strip() for e in tokens]
@@ -228,14 +231,14 @@ def _matrix_to_lsmat(obj, fh, delimiter):
     delimiter = "%s" % delimiter
     ids = obj.ids
     fh.write(_format_ids(ids, delimiter))
-    fh.write('\n')
+    fh.write("\n")
 
     for id_, vals in zip(ids, obj.data):
         fh.write("%s" % id_)
         fh.write(delimiter)
         fh.write(delimiter.join(np.asarray(vals, dtype=str)))
-        fh.write('\n')
+        fh.write("\n")
 
 
 def _format_ids(ids, delimiter):
-    return delimiter.join([''] + list(ids))
+    return delimiter.join([""] + list(ids))

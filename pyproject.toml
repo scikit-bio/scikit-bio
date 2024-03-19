@@ -12,10 +12,27 @@ ignore = [
     ".coveragerc",
     ".dockerignore",
     ".editorconfig",
-    "RELEASE.md",
-    "REVIEWING.md",
     "aarch64.Dockerfile",
     "checklist.py",
-    # created by conda-incubator/setup-miniconda@v2 action
+    # created by conda-incubator/setup-miniconda@v3 action
     "ci/setup-miniconda-patched-conda_host_env.yml",
+]
+
+# Basic configurations for Ruff.
+# See https://docs.astral.sh/ruff/configuration/
+[tool.ruff]
+target-version = "py38"
+exclude = [
+    "skbio/**/tests/*",  # ignoring to be able to implement pydocstyle
+    "doc/**",  # documentation
+    "web/**",  # website
+]
+
+[tool.ruff.lint]
+select = ["E", "W", "D"]  # pycodestyle (E, W), pydocstyle (D)
+ignore = [
+    "D203",  # puts a space before class docstrings
+    "D213",  # puts summary on second line
+    "D400",  # redundant with D415 in place
+    "D301",  # forces raw string literals
 ]

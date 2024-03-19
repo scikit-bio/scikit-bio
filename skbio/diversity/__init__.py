@@ -1,5 +1,4 @@
-"""
-Diversity calculations (:mod:`skbio.diversity`)
+"""Diversity calculations (:mod:`skbio.diversity`)
 ===============================================
 
 .. currentmodule:: skbio.diversity
@@ -169,7 +168,6 @@ Functions
 
 Examples
 --------
-
 Create a matrix containing 6 samples (rows) and 7 OTUs (columns):
 
 .. plot::
@@ -389,7 +387,8 @@ is relevant), this will give us a symmetric 2x2 correlation matrix.
 Obs. richness       1.000000  0.939336
 Faith PD            0.939336  1.000000
 
-"""
+
+"""  # noqa: D205, D415
 
 # ----------------------------------------------------------------------------
 # Copyright (c) 2013--, scikit-bio development team.
@@ -399,10 +398,20 @@ Faith PD            0.939336  1.000000
 # The full license is in the file LICENSE.txt, distributed with this software.
 # ----------------------------------------------------------------------------
 
-from ._driver import (alpha_diversity, beta_diversity, partial_beta_diversity,
-                      get_alpha_diversity_metrics, get_beta_diversity_metrics)
+from ._driver import (
+    alpha_diversity,
+    beta_diversity,
+    partial_beta_diversity,
+    get_alpha_diversity_metrics,
+    get_beta_diversity_metrics,
+)
 from ._block import block_beta_diversity
 
-__all__ = ["alpha_diversity", "beta_diversity", "get_alpha_diversity_metrics",
-           "get_beta_diversity_metrics", "partial_beta_diversity",
-           "block_beta_diversity"]
+__all__ = [
+    "alpha_diversity",
+    "beta_diversity",
+    "get_alpha_diversity_metrics",
+    "get_beta_diversity_metrics",
+    "partial_beta_diversity",
+    "block_beta_diversity",
+]

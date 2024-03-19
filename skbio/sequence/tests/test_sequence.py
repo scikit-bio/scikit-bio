@@ -20,7 +20,7 @@ import pandas as pd
 import scipy.spatial.distance
 
 import skbio.sequence.distance
-from skbio import Sequence, DNA
+from skbio import Sequence, DNA, SubstitutionMatrix
 from skbio.util import assert_data_frame_almost_equal
 from skbio.sequence._sequence import (_single_index_to_slice, _is_single_index,
                                       _as_slice_if_single_index)
@@ -2038,6 +2038,123 @@ class TestSequence(TestSequenceBase, ReallyEqualMixin):
             exp = [Sequence("89ab")]
             obs = s.iter_contiguous(c(contiguous()), invert=True)
             self.assertEqual(list(obs), exp)
+
+    def test_to_indices_observed(self):
+        # arbitrary sequence
+        seq = Sequence('hello')
+        obs_idx, obs_alp = seq.to_indices()
+        exp_idx, exp_alp = np.array([1, 0, 2, 2, 3]), 'ehlo'
+        npt.assert_equal(obs_idx, exp_idx)
+        self.assertEqual(obs_alp, exp_alp)
+
+        # return ASCII code points
+        obs_idx, obs_alp = seq.to_indices(return_codes=True)
+        exp_alp = np.frombuffer('ehlo'.encode('ascii'), dtype=np.uint8)
+        npt.assert_equal(obs_idx, exp_idx)
+        npt.assert_equal(obs_alp, exp_alp)
+
+        # grammared sequence
+        obs_idx, obs_alp = DNA('GAGCTC').to_indices()
+        npt.assert_equal(obs_idx, np.array([2, 0, 2, 1, 3, 1]))
+        self.assertEqual(obs_alp, 'ACGT')
+
+    def test_to_indices_alphabet(self):
+        # arbitrary sequence
+        seq = Sequence('hello')
+        obs = seq.to_indices('oleh')
+        exp = np.array([3, 2, 1, 1, 0])
+        npt.assert_equal(obs, exp)
+
+        # grammared sequence
+        seq = DNA('GAGCTC')
+        obs = seq.to_indices('ACGT')
+        exp = np.array([2, 0, 2, 1, 3, 1])
+        npt.assert_equal(obs, exp)
+
+        # alphabet has duplicates
+        msg = 'Alphabet contains duplicated characters.'
+        with self.assertRaisesRegex(ValueError, msg):
+            Sequence('hello').to_indices('there')
+
+        # non-ASCII alphabet
+        msg = 'Alphabet cannot be encoded as single ASCII characters.'
+        with self.assertRaisesRegex(ValueError, msg):
+            Sequence('hello').to_indices('how are you'.split())
+
+    def test_to_indices_submat(self):
+        # basic nucleotides
+        sm = SubstitutionMatrix.identity('ACGT', 1, -2)
+        obs = DNA('GAGCTC').to_indices(sm)
+        exp = np.array([2, 0, 2, 1, 3, 1])
+        npt.assert_equal(obs, exp)
+
+        # extended nucleotides (and not sorted)
+        # ATGCSWRYKMBVHDN
+        sm = SubstitutionMatrix.by_name('NUC.4.4')
+        obs = DNA('GAGRCTC').to_indices(sm)
+        exp = np.array([2, 0, 2, 6, 3, 1, 3])
+        npt.assert_equal(obs, exp)
+
+        # non-ASCII alphabet
+        sm = SubstitutionMatrix.identity('how are you'.split(), 1, -2)
+        msg = ('Alphabet in the substitution matrix are not single ASCII '
+               'characters.')
+        with self.assertRaisesRegex(ValueError, msg):
+            Sequence('hello').to_indices(sm)
+
+    def test_to_indices_wildcard(self):
+        # default wildcard
+        seq = DNA('GAGRCTC')
+        obs = seq.to_indices('ACGTN')
+        exp = np.array([2, 0, 2, 4, 1, 3, 1])
+        npt.assert_equal(obs, exp)
+
+        # non-default wildcard
+        obs = seq.to_indices('ACGTN', wildcard='A')
+        exp = np.array([2, 0, 2, 0, 1, 3, 1])
+        npt.assert_equal(obs, exp)
+
+        # invalid wildcard
+        msg = 'Wildcard character "X" is not in the alphabet.'
+        with self.assertRaisesRegex(ValueError, msg):
+            seq.to_indices('ACGTN', wildcard='X')
+        msg = 'Wildcard must be a single ASCII character.'
+        with self.assertRaisesRegex(ValueError, msg):
+            seq.to_indices('ACGTN', wildcard='hi')
+        with self.assertRaisesRegex(ValueError, msg):
+            seq.to_indices('ACGTN', wildcard=chr(200))
+
+    def test_to_indices_masked(self):
+        # gaps are automatically identified and masked
+        obs_idx, obs_alp = DNA('GAG-CTC').to_indices()
+        self.assertTrue(isinstance(obs_idx, np.ma.MaskedArray))
+        npt.assert_equal(obs_idx.data, [2, 0, 2, 255, 1, 3, 1])
+        npt.assert_equal(obs_idx.mask, [0, 0, 0, 1, 0, 0, 0])
+        self.assertEqual(obs_alp, 'ACGT')
+
+        # force masking regardless of gap presence
+        obs_idx, obs_alp = DNA('GAGCTC').to_indices(mask_gaps=True)
+        self.assertTrue(isinstance(obs_idx, np.ma.MaskedArray))
+        npt.assert_equal(obs_idx.data, [2, 0, 2, 1, 3, 1])
+        npt.assert_equal(obs_idx.mask, [0, 0, 0, 0, 0, 0])
+        self.assertEqual(obs_alp, 'ACGT')
+
+        # force not masking regardless of gap presence
+        obs_idx, obs_alp = DNA('GAG-CTC').to_indices(mask_gaps=False)
+        self.assertFalse(isinstance(obs_idx, np.ma.MaskedArray))
+        npt.assert_equal(obs_idx, [3, 1, 3, 0, 2, 4, 2])
+        self.assertEqual(obs_alp, '-ACGT')
+
+        # gap character(s) are not defined
+        msg = r'Gap character\(s\) are not defined for the sequence.'
+        with self.assertRaisesRegex(ValueError, msg):
+            Sequence('hello').to_indices(mask_gaps=True)
+
+        # with alphabet
+        obs = DNA('GAG-CTC').to_indices('ACGT')
+        self.assertTrue(isinstance(obs, np.ma.MaskedArray))
+        npt.assert_equal(obs.data, [2, 0, 2, 255, 1, 3, 1])
+        npt.assert_equal(obs.mask, [0, 0, 0, 1, 0, 0, 0])
 
     def test_copy_without_metadata(self):
         # shallow vs deep copy with sequence only should be equivalent

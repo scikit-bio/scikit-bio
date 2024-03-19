@@ -1,5 +1,4 @@
-"""
-GenBank format (:mod:`skbio.io.format.genbank`)
+"""GenBank format (:mod:`skbio.io.format.genbank`)
 ===============================================
 
 .. currentmodule:: skbio.io.format.genbank
@@ -173,7 +172,6 @@ a GenBank file with multiple records in it.
 
 Examples
 --------
-
 Reading and Writing GenBank Files
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 Suppose we have the following GenBank file example modified from [5]_:
@@ -306,7 +304,8 @@ References
 .. [4] http://www.ebi.ac.uk/ena/WebFeat/
 .. [5] http://www.ncbi.nlm.nih.gov/nuccore/3K1V_A
 
-"""
+
+"""  # noqa: D205, D415
 
 # ----------------------------------------------------------------------------
 # Copyright (c) 2013--, scikit-bio development team.
@@ -320,31 +319,36 @@ import re
 from functools import partial
 
 from skbio.io import create_format, GenBankFormatError
-from skbio.io.format._base import (
-    _get_nth_sequence, _line_generator, _too_many_blanks)
+from skbio.io.format._base import _get_nth_sequence, _line_generator, _too_many_blanks
 from skbio.util._misc import chunk_str
 from skbio.sequence import Sequence, DNA, RNA, Protein
 from skbio.io.format._sequence_feature_vocabulary import (
-    _yield_section, _parse_section_default, _serialize_section_default,
-    _parse_feature_table, _serialize_feature_table)
+    _yield_section,
+    _parse_section_default,
+    _serialize_section_default,
+    _parse_feature_table,
+    _serialize_feature_table,
+)
 
 
-genbank = create_format('genbank')
+genbank = create_format("genbank")
 
 # This list is ordered
 # used to read and write genbank file.
-_HEADERS = ['LOCUS',
-            'DEFINITION',
-            'ACCESSION',
-            'VERSION',
-            'DBSOURCE',
-            'DBLINK',
-            'KEYWORDS',
-            'SOURCE',
-            'REFERENCE',
-            'COMMENT',
-            'FEATURES',
-            'ORIGIN']
+_HEADERS = [
+    "LOCUS",
+    "DEFINITION",
+    "ACCESSION",
+    "VERSION",
+    "DBSOURCE",
+    "DBLINK",
+    "KEYWORDS",
+    "SOURCE",
+    "REFERENCE",
+    "COMMENT",
+    "FEATURES",
+    "ORIGIN",
+]
 
 
 @genbank.sniffer()
@@ -421,31 +425,28 @@ def _protein_to_genbank(obj, fh):
 
 
 def _construct(record, constructor=None, **kwargs):
-    '''Construct the object of Sequence, DNA, RNA, or Protein.
-    '''
+    """Construct the object of Sequence, DNA, RNA, or Protein."""
     seq, md, imd = record
-    if 'lowercase' not in kwargs:
-        kwargs['lowercase'] = True
+    if "lowercase" not in kwargs:
+        kwargs["lowercase"] = True
     if constructor is None:
-        unit = md['LOCUS']['unit']
-        if unit == 'bp':
+        unit = md["LOCUS"]["unit"]
+        if unit == "bp":
             # RNA mol type has T instead of U for genbank from from NCBI
             constructor = DNA
-        elif unit == 'aa':
+        elif unit == "aa":
             constructor = Protein
 
     if constructor == RNA:
-        return DNA(
-            seq, metadata=md, interval_metadata=imd, **kwargs).transcribe()
+        return DNA(seq, metadata=md, interval_metadata=imd, **kwargs).transcribe()
     else:
-        return constructor(
-            seq, metadata=md, interval_metadata=imd, **kwargs)
+        return constructor(seq, metadata=md, interval_metadata=imd, **kwargs)
 
 
 def _parse_genbanks(fh):
     data_chunks = []
     for line in _line_generator(fh, skip_blanks=True, strip=False):
-        if line.startswith('//'):
+        if line.startswith("//"):
             yield _parse_single_genbank(data_chunks)
             data_chunks = []
         else:
@@ -455,32 +456,29 @@ def _parse_genbanks(fh):
 def _parse_single_genbank(chunks):
     metadata = {}
     interval_metadata = None
-    sequence = ''
+    sequence = ""
     # each section starts with a HEADER without indent.
-    section_splitter = _yield_section(
-        lambda x: not x[0].isspace(), strip=False)
+    section_splitter = _yield_section(lambda x: not x[0].isspace(), strip=False)
     for section in section_splitter(chunks):
         header = section[0].split(None, 1)[0]
-        parser = _PARSER_TABLE.get(
-            header, _parse_section_default)
+        parser = _PARSER_TABLE.get(header, _parse_section_default)
 
-        if header == 'FEATURES':
+        if header == "FEATURES":
             # This requires 'LOCUS' line parsed before 'FEATURES', which should
             # be true and is implicitly checked by the sniffer.
-            parser = partial(
-                parser, length=metadata['LOCUS']['size'])
+            parser = partial(parser, length=metadata["LOCUS"]["size"])
 
         parsed = parser(section)
 
         # reference can appear multiple times
-        if header == 'REFERENCE':
+        if header == "REFERENCE":
             if header in metadata:
                 metadata[header].append(parsed)
             else:
                 metadata[header] = [parsed]
-        elif header == 'ORIGIN':
+        elif header == "ORIGIN":
             sequence = parsed
-        elif header == 'FEATURES':
+        elif header == "FEATURES":
             interval_metadata = parsed
         else:
             metadata[header] = parsed
@@ -488,7 +486,7 @@ def _parse_single_genbank(chunks):
 
 
 def _serialize_single_genbank(obj, fh):
-    '''Write a GenBank record.
+    """Write a GenBank record.
 
     Always write it in NCBI canonical way:
     1. sequence in lowercase
@@ -497,13 +495,16 @@ def _serialize_single_genbank(obj, fh):
     Parameters
     ----------
     obj : Sequence or its child class
+        A Sequence object or its child class representing the biological sequence to be
+        serialized.
+    fh : file object
+        A file object open for writing.
 
-    '''
+    """
     # write out the headers
     md = obj.metadata
     for header in _HEADERS:
-        serializer = _SERIALIZER_TABLE.get(
-            header, _serialize_section_default)
+        serializer = _SERIALIZER_TABLE.get(header, _serialize_section_default)
         if header in md:
             out = serializer(header, md[header])
             # test if 'out' is a iterator.
@@ -513,13 +514,16 @@ def _serialize_single_genbank(obj, fh):
                     fh.write(s)
             else:
                 fh.write(out)
-        if header == 'FEATURES':
+        if header == "FEATURES":
             if obj.has_interval_metadata():
                 # magic number 21: the amount of indentation before
                 # feature table starts as defined by INSDC
                 indent = 21
-                fh.write('{header:<{indent}}Location/Qualifiers\n'.format(
-                    header=header, indent=indent))
+                fh.write(
+                    "{header:<{indent}}Location/Qualifiers\n".format(
+                        header=header, indent=indent
+                    )
+                )
                 for s in serializer(obj.interval_metadata._intervals, indent):
                     fh.write(s)
     # write out the sequence
@@ -532,11 +536,11 @@ def _serialize_single_genbank(obj, fh):
 
     for s in _serialize_origin(seq_str):
         fh.write(s)
-    fh.write('//\n')
+    fh.write("//\n")
 
 
 def _parse_locus(lines):
-    '''Parse the line LOCUS.
+    """Parse the line LOCUS.
 
     Format:
     #    Positions  Contents
@@ -554,163 +558,200 @@ def _parse_locus(lines):
     #    52:55      The division code (e.g. BCT, VRL, INV)
     #    55:62      space
     #    62:73      Date, in the form dd-MMM-yyyy (e.g., 15-MAR-1991)
-    '''
+    """
     line = lines[0]
-    pattern = (r'LOCUS'
-               r' +([^\s]+)'
-               r' +([0-9]+)'
-               r' +(bp|aa|rc)'
-               r' +(.*DNA|.*RNA)?'
-               r' +(linear|circular)?'
-               r' +(?!.*DNA|.*RNA)([A-Z]{3})'
-               r' +([0-9]{2}-[A-Z]{3}-[0-9]{4})')
+    pattern = (
+        r"LOCUS"
+        r" +([^\s]+)"
+        r" +([0-9]+)"
+        r" +(bp|aa|rc)"
+        r" +(.*DNA|.*RNA)?"
+        r" +(linear|circular)?"
+        r" +(?!.*DNA|.*RNA)([A-Z]{3})"
+        r" +([0-9]{2}-[A-Z]{3}-[0-9]{4})"
+    )
     matches = re.match(pattern, line)
 
     try:
-        res = dict(zip(
-            ['locus_name', 'size', 'unit', 'mol_type',
-             'shape', 'division', 'date'],
-            matches.groups()))
+        res = dict(
+            zip(
+                ["locus_name", "size", "unit", "mol_type", "shape", "division", "date"],
+                matches.groups(),
+            )
+        )
     except Exception:
-        raise GenBankFormatError(
-            "Could not parse the LOCUS line:\n%s" % line)
+        raise GenBankFormatError("Could not parse the LOCUS line:\n%s" % line)
 
-    res['size'] = int(res['size'])
+    res["size"] = int(res["size"])
     return res
 
 
 def _serialize_locus(header, obj, indent=12):
-    '''Serialize LOCUS line.
+    """Serialize LOCUS line.
 
     Parameters
     ----------
+    header : str
+        The header of the LOCUS line.
     obj : dict
-    '''
-    # use 'or' to convert None to ''
-    kwargs = {k: v or '' for k, v in obj.items()}
+        A dictionary containing key-value pairs representing the attributes of the
+        sequence entry.
+    indent : int, optional
+        The number of spaces used to indent the serialized LOCUS line. Defaults to 12.
 
-    return ('{header:<{indent}}{locus_name}   {size} {unit}'
-            '   {mol_type}   {shape}   {division}   {date}\n').format(
-                header=header, indent=indent, **kwargs)
+    """
+    # use 'or' to convert None to ''
+    kwargs = {k: v or "" for k, v in obj.items()}
+
+    return (
+        "{header:<{indent}}{locus_name}   {size} {unit}"
+        "   {mol_type}   {shape}   {division}   {date}\n"
+    ).format(header=header, indent=indent, **kwargs)
 
 
 def _parse_reference(lines):
-    '''Parse single REFERENCE field.
-    '''
+    """Parse single REFERENCE field."""
     res = {}
     # magic number 11: the non keyworded lines in REFERENCE
     # are at least indented with 11 spaces.
-    feature_indent = ' ' * 11
+    feature_indent = " " * 11
     section_splitter = _yield_section(
-        lambda x: not x.startswith(feature_indent),
-        skip_blanks=True, strip=False)
+        lambda x: not x.startswith(feature_indent), skip_blanks=True, strip=False
+    )
     for section in section_splitter(lines):
         label, data = _parse_section_default(
-            section, join_delimiter=' ', return_label=True)
+            section, join_delimiter=" ", return_label=True
+        )
         res[label] = data
     return res
 
 
 def _serialize_reference(header, obj, indent=12):
-    '''Serialize REFERENCE.
+    """Serialize REFERENCE.
 
     Parameters
     ----------
+    header : str
+        The header of the REFERENCE section.
     obj : list
-    '''
-    padding = '  '
-    sort_order = {'REFERENCE': 0, 'AUTHORS': 1,
-                  'TITLE': 2, 'JOURNAL': 3, 'PUBMED': 4}
+        A list of dictionaries representing the individual references cited in the
+        sequence entry.
+    indent : int, optional
+        The number of spaces used to indent each line of the serialized REFERENCE
+        section. Defaults to 12.
+
+    """
+    padding = "  "
+    sort_order = {"REFERENCE": 0, "AUTHORS": 1, "TITLE": 2, "JOURNAL": 3, "PUBMED": 4}
     for obj_i in obj:
         ref_i = []
         for h in sorted(obj_i, key=lambda k: sort_order.get(k, 100)):
             if h == header:
-                s = '{h:<{indent}}{ref}'.format(
-                    h=h, indent=indent, ref=obj_i[h])
+                s = "{h:<{indent}}{ref}".format(h=h, indent=indent, ref=obj_i[h])
             else:
-                s = '{h:<{indent}}{value}'.format(
-                    h=padding + h, indent=indent, value=obj_i[h])
+                s = "{h:<{indent}}{value}".format(
+                    h=padding + h, indent=indent, value=obj_i[h]
+                )
             ref_i.append(s)
-        yield '%s\n' % '\n'.join(ref_i)
+        yield "%s\n" % "\n".join(ref_i)
 
 
 def _parse_source(lines):
-    '''Parse SOURCE field.
-    '''
+    """Parse SOURCE field."""
     res = {}
     # magic number 11: the non keyworded lines in SOURCE
     # are at least indented with 11 spaces.
-    feature_indent = ' ' * 11
+    feature_indent = " " * 11
     section_splitter = _yield_section(
-        lambda x: not x.startswith(feature_indent),
-        skip_blanks=True, strip=False)
+        lambda x: not x.startswith(feature_indent), skip_blanks=True, strip=False
+    )
     # SOURCE line is not informative; skip it
     _, organism = list(section_splitter(lines))
 
-    res['ORGANISM'] = organism[0].split(None, 1)[1].strip()
-    res['taxonomy'] = ' '.join([i.strip() for i in organism[1:]])
+    res["ORGANISM"] = organism[0].split(None, 1)[1].strip()
+    res["taxonomy"] = " ".join([i.strip() for i in organism[1:]])
     return res
 
 
 def _serialize_source(header, obj, indent=12):
-    '''Serialize SOURCE.
+    """Serialize SOURCE.
 
     Parameters
     ----------
+    header : str
+        The header of the SOURCE section,
     obj : dict
-    '''
-    s = ('{header:<{indent}}{organism}\n'
-         '{h:<{indent}}{organism}\n'
-         '{space}{taxonomy}\n').format(
-             header=header, indent=indent,
-             h='  ORGANISM', organism=obj['ORGANISM'],
-             space=' ' * 12, taxonomy=obj['taxonomy'])
+        A dictionary containing key-value pairs representing the attributes of the
+        SOURCE section.
+    indent : int, optional
+        The number of spaces used to indent each line of the serialized SOURCE section.
+        Defaults to 12.
+
+    """
+    s = (
+        "{header:<{indent}}{organism}\n"
+        "{h:<{indent}}{organism}\n"
+        "{space}{taxonomy}\n"
+    ).format(
+        header=header,
+        indent=indent,
+        h="  ORGANISM",
+        organism=obj["ORGANISM"],
+        space=" " * 12,
+        taxonomy=obj["taxonomy"],
+    )
     return s
 
 
 def _parse_origin(lines):
-    '''Parse the ORIGIN section for sequence.
-    '''
+    """Parse the ORIGIN section for sequence."""
     sequence = []
     for line in lines:
-        if line.startswith('ORIGIN'):
+        if line.startswith("ORIGIN"):
             continue
         # remove the number at the beg of each line
         items = line.split()
-        sequence.append(''.join(items[1:]))
-    return ''.join(sequence)
+        sequence.append("".join(items[1:]))
+    return "".join(sequence)
 
 
 def _serialize_origin(seq, indent=9):
-    '''Serialize seq to ORIGIN.
+    """Serialize seq to ORIGIN.
 
     Parameters
     ----------
     seq : str
-    '''
+        The sequence data to be serialized.
+    indent : int, optional
+        The number of spaces used to indent each line of the serialized ORIGIN section.
+
+    """
     n = 1
     line_size = 60
     frag_size = 10
     for i in range(0, len(seq), line_size):
-        line = seq[i:i+line_size]
-        s = '{n:>{indent}} {s}\n'.format(
-            n=n, indent=indent, s=chunk_str(line, frag_size, ' '))
+        line = seq[i : i + line_size]
+        s = "{n:>{indent}} {s}\n".format(
+            n=n, indent=indent, s=chunk_str(line, frag_size, " ")
+        )
         if n == 1:
-            s = 'ORIGIN\n' + s
+            s = "ORIGIN\n" + s
         n += line_size
         yield s
 
 
 _PARSER_TABLE = {
-    'LOCUS': _parse_locus,
-    'SOURCE': _parse_source,
-    'REFERENCE': _parse_reference,
-    'FEATURES': _parse_feature_table,
-    'ORIGIN': _parse_origin}
+    "LOCUS": _parse_locus,
+    "SOURCE": _parse_source,
+    "REFERENCE": _parse_reference,
+    "FEATURES": _parse_feature_table,
+    "ORIGIN": _parse_origin,
+}
 
 
 _SERIALIZER_TABLE = {
-    'LOCUS': _serialize_locus,
-    'SOURCE': _serialize_source,
-    'REFERENCE': _serialize_reference,
-    'FEATURES': _serialize_feature_table}
+    "LOCUS": _serialize_locus,
+    "SOURCE": _serialize_source,
+    "REFERENCE": _serialize_reference,
+    "FEATURES": _serialize_feature_table,
+}

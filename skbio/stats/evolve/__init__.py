@@ -1,5 +1,4 @@
-"""
-Evolutionary statistics (:mod:`skbio.stats.evolve`)
+"""Evolutionary statistics (:mod:`skbio.stats.evolve`)
 ===================================================
 
 .. currentmodule:: skbio.stats.evolve
@@ -20,7 +19,7 @@ Functions
 
    hommola_cospeciation
 
-"""
+"""  # noqa: D205, D415
 
 # ----------------------------------------------------------------------------
 # Copyright (c) 2013--, scikit-bio development team.
@@ -32,4 +31,4 @@ Functions
 
 from ._hommola import hommola_cospeciation
 
-__all__ = ['hommola_cospeciation']
+__all__ = ["hommola_cospeciation"]

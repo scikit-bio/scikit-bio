@@ -5,3 +5,5 @@
 #
 # The full license is in the file LICENSE.txt, distributed with this software.
 # ----------------------------------------------------------------------------
+
+# ruff: noqa: D104

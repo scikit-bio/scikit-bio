@@ -1,5 +1,4 @@
-"""
-BLAST+7 format (:mod:`skbio.io.format.blast7`)
+"""BLAST+7 format (:mod:`skbio.io.format.blast7`)
 ==============================================
 
 .. currentmodule:: skbio.io.format.blast7
@@ -182,7 +181,7 @@ For more information on these column types, see :mod:`skbio.io.format.blast6`.
 +-------------------+----------------------+
 
 Examples
-========
+--------
 Suppose we have a BLAST+7 file:
 
 >>> from io import StringIO
@@ -243,11 +242,13 @@ Read the file into a ``pd.DataFrame``:
 2  AF178033  EMORG:AF178031   94.82
 
 References
-==========
+----------
 .. [1] Altschul, S.F., Gish, W., Miller, W., Myers, E.W. & Lipman, D.J. (1990)
    "Basic local alignment search tool." J. Mol. Biol. 215:403-410.
 .. [2] http://www.ncbi.nlm.nih.gov/books/NBK279682/
-"""
+
+
+"""  # noqa: D205, D415
 
 # ----------------------------------------------------------------------------
 # Copyright (c) 2013--, scikit-bio development team.
@@ -262,35 +263,58 @@ import pandas as pd
 from skbio.io import create_format, BLAST7FormatError
 from skbio.io.format._blast import _parse_blast_data
 
-blast7 = create_format('blast+7')
+blast7 = create_format("blast+7")
 
-column_converter = {'query id': 'qseqid', 'query gi': 'qgi',
-                    'query acc.': 'qacc', 'query acc.ver': 'qaccver',
-                    'query length': 'qlen', 'subject id': 'sseqid',
-                    'subject ids': 'sallseqid', 'subject gi': 'sgi',
-                    'subject gis': 'sallgi', 'subject acc.': 'sacc',
-                    'subject acc.ver': 'saccver', 'subject accs.': 'sallacc',
-                    'subject length': 'slen', 'q. start': 'qstart',
-                    'q. end': 'qend', 's. start': 'sstart', 's. end': 'send',
-                    'query seq': 'qseq', 'subject seq': 'sseq',
-                    'evalue': 'evalue', 'bit score': 'bitscore',
-                    'score': 'score', 'alignment length': 'length',
-                    '% identity': 'pident', 'identical': 'nident',
-                    'mismatches': 'mismatch', 'positives': 'positive',
-                    'gap opens': 'gapopen', 'gaps': 'gaps',
-                    '% positives': 'ppos', 'query/sbjct frames': 'frames',
-                    'query frame': 'qframe', 'sbjct frame': 'sframe',
-                    'BTOP': 'btop', 'subject tax ids': 'staxids',
-                    'subject sci names': 'sscinames',
-                    'subject com names': 'scomnames',
-                    'subject blast names': 'sblastnames',
-                    'subject super kingdoms': 'sskingdoms',
-                    'subject title': 'stitle', 'subject titles': 'salltitles',
-                    'subject strand': 'sstrand',
-                    '% query coverage per subject': 'qcovs',
-                    '% query coverage per hsp': 'qcovhsp',
-                    'Query id': 'qseqid', 'Subject id': 'sseqid',
-                    'gap openings': 'gapopen', 'e-value': 'evalue'}
+column_converter = {
+    "query id": "qseqid",
+    "query gi": "qgi",
+    "query acc.": "qacc",
+    "query acc.ver": "qaccver",
+    "query length": "qlen",
+    "subject id": "sseqid",
+    "subject ids": "sallseqid",
+    "subject gi": "sgi",
+    "subject gis": "sallgi",
+    "subject acc.": "sacc",
+    "subject acc.ver": "saccver",
+    "subject accs.": "sallacc",
+    "subject length": "slen",
+    "q. start": "qstart",
+    "q. end": "qend",
+    "s. start": "sstart",
+    "s. end": "send",
+    "query seq": "qseq",
+    "subject seq": "sseq",
+    "evalue": "evalue",
+    "bit score": "bitscore",
+    "score": "score",
+    "alignment length": "length",
+    "% identity": "pident",
+    "identical": "nident",
+    "mismatches": "mismatch",
+    "positives": "positive",
+    "gap opens": "gapopen",
+    "gaps": "gaps",
+    "% positives": "ppos",
+    "query/sbjct frames": "frames",
+    "query frame": "qframe",
+    "sbjct frame": "sframe",
+    "BTOP": "btop",
+    "subject tax ids": "staxids",
+    "subject sci names": "sscinames",
+    "subject com names": "scomnames",
+    "subject blast names": "sblastnames",
+    "subject super kingdoms": "sskingdoms",
+    "subject title": "stitle",
+    "subject titles": "salltitles",
+    "subject strand": "sstrand",
+    "% query coverage per subject": "qcovs",
+    "% query coverage per hsp": "qcovhsp",
+    "Query id": "qseqid",
+    "Subject id": "sseqid",
+    "gap openings": "gapopen",
+    "e-value": "evalue",
+}
 
 
 @blast7.sniffer()
@@ -305,12 +329,13 @@ def _blast7_sniffer(fh):
 
     if not lines[0].startswith("# BLAST"):
         return False, {}
-    if not (lines[1].startswith("# Query:") or
-            lines[1].startswith("# Database:")):
+    if not (lines[1].startswith("# Query:") or lines[1].startswith("# Database:")):
         return False, {}
-    if not (lines[2].startswith("# Subject:") or
-            lines[2].startswith("# Query:") or
-            lines[2].startswith("# Database:")):
+    if not (
+        lines[2].startswith("# Subject:")
+        or lines[2].startswith("# Query:")
+        or lines[2].startswith("# Database:")
+    ):
         return False, {}
 
     return True, {}
@@ -332,8 +357,9 @@ def _blast7_to_data_frame(fh):
             else:
                 next_columns = _parse_fields(line, legacy=True)
                 if columns != next_columns:
-                    raise BLAST7FormatError("Fields %r do not equal fields %r"
-                                            % (columns, next_columns))
+                    raise BLAST7FormatError(
+                        "Fields %r do not equal fields %r" % (columns, next_columns)
+                    )
                 skiprows.append(line_num)
         elif line.startswith("# Fields: "):
             # Identifies BLAST+7 data
@@ -343,34 +369,39 @@ def _blast7_to_data_frame(fh):
                 # Affirms data types do not differ throught file
                 next_columns = _parse_fields(line)
                 if columns != next_columns:
-                    raise BLAST7FormatError("Fields %r do not equal fields %r"
-                                            % (columns, next_columns))
+                    raise BLAST7FormatError(
+                        "Fields %r do not equal fields %r" % (columns, next_columns)
+                    )
         line_num += 1
     if columns is None:
         # Affirms file contains BLAST data
         raise BLAST7FormatError("File contains no BLAST data.")
     fh.seek(0)
 
-    return _parse_blast_data(fh, columns, BLAST7FormatError,
-                             "Number of fields (%r) does not equal number"
-                             " of data columns (%r).", comment='#',
-                             skiprows=skiprows)
+    return _parse_blast_data(
+        fh,
+        columns,
+        BLAST7FormatError,
+        "Number of fields (%r) does not equal number" " of data columns (%r).",
+        comment="#",
+        skiprows=skiprows,
+    )
 
 
 def _parse_fields(line, legacy=False):
-    """Removes '\n' from fields line and returns fields as a list (columns)."""
-    line = line.rstrip('\n')
+    r"""Remove '\n' from fields line and returns fields as a list (columns)."""
+    line = line.rstrip("\n")
     if legacy:
-        fields = line.split(',')
+        fields = line.split(",")
     else:
-        line = line.split('# Fields: ')[1]
-        fields = line.split(', ')
+        line = line.split("# Fields: ")[1]
+        fields = line.split(", ")
     columns = []
     for field in fields:
         if field not in column_converter:
-            raise BLAST7FormatError("Unrecognized field (%r)."
-                                    " Supported fields: %r"
-                                    % (field,
-                                       set(column_converter.keys())))
+            raise BLAST7FormatError(
+                "Unrecognized field (%r)."
+                " Supported fields: %r" % (field, set(column_converter.keys()))
+            )
         columns.append(column_converter[field])
     return columns

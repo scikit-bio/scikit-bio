@@ -47,7 +47,7 @@ class ReallyEqualMixin:
 
 
 @experimental(as_of="0.4.0")
-def get_data_path(fn, subfolder='data'):
+def get_data_path(fn, subfolder="data"):
     """Return path to filename ``fn`` in the data folder.
 
     During testing it is often necessary to load data files. This
@@ -85,10 +85,14 @@ def get_data_path(fn, subfolder='data'):
 
 
 @experimental(as_of="0.4.0")
-def assert_ordination_results_equal(left, right, ignore_method_names=False,
-                                    ignore_axis_labels=False,
-                                    ignore_directionality=False,
-                                    decimal=7):
+def assert_ordination_results_equal(
+    left,
+    right,
+    ignore_method_names=False,
+    ignore_axis_labels=False,
+    ignore_directionality=False,
+    decimal=7,
+):
     """Assert that ordination results objects are equal.
 
     This is a helper function intended to be used in unit tests that need to
@@ -105,6 +109,9 @@ def assert_ordination_results_equal(left, right, ignore_method_names=False,
     ignore_directionality : bool, optional
         Ignore differences in directionality (i.e., differences in signs) for
         attributes `samples`, `features` and `biplot_scores`.
+    decimal : int, optional
+        Number of decimal places to compare when checking numerical values.
+        Defaults to 7.
 
     Raises
     ------
@@ -118,33 +125,48 @@ def assert_ordination_results_equal(left, right, ignore_method_names=False,
         npt.assert_equal(left.short_method_name, right.short_method_name)
         npt.assert_equal(left.long_method_name, right.long_method_name)
 
-    _assert_frame_dists_equal(left.samples, right.samples,
-                              ignore_columns=ignore_axis_labels,
-                              ignore_directionality=ignore_directionality,
-                              decimal=decimal)
+    _assert_frame_dists_equal(
+        left.samples,
+        right.samples,
+        ignore_columns=ignore_axis_labels,
+        ignore_directionality=ignore_directionality,
+        decimal=decimal,
+    )
 
-    _assert_frame_dists_equal(left.features, right.features,
-                              ignore_columns=ignore_axis_labels,
-                              ignore_directionality=ignore_directionality,
-                              decimal=decimal)
+    _assert_frame_dists_equal(
+        left.features,
+        right.features,
+        ignore_columns=ignore_axis_labels,
+        ignore_directionality=ignore_directionality,
+        decimal=decimal,
+    )
 
-    _assert_frame_dists_equal(left.biplot_scores, right.biplot_scores,
-                              ignore_columns=ignore_axis_labels,
-                              ignore_directionality=ignore_directionality,
-                              decimal=decimal)
+    _assert_frame_dists_equal(
+        left.biplot_scores,
+        right.biplot_scores,
+        ignore_columns=ignore_axis_labels,
+        ignore_directionality=ignore_directionality,
+        decimal=decimal,
+    )
 
-    _assert_frame_dists_equal(left.sample_constraints,
-                              right.sample_constraints,
-                              ignore_columns=ignore_axis_labels,
-                              ignore_directionality=ignore_directionality,
-                              decimal=decimal)
+    _assert_frame_dists_equal(
+        left.sample_constraints,
+        right.sample_constraints,
+        ignore_columns=ignore_axis_labels,
+        ignore_directionality=ignore_directionality,
+        decimal=decimal,
+    )
 
-    _assert_series_equal(left.eigvals, right.eigvals, ignore_axis_labels,
-                         decimal=decimal)
+    _assert_series_equal(
+        left.eigvals, right.eigvals, ignore_axis_labels, decimal=decimal
+    )
 
-    _assert_series_equal(left.proportion_explained, right.proportion_explained,
-                         ignore_axis_labels,
-                         decimal=decimal)
+    _assert_series_equal(
+        left.proportion_explained,
+        right.proportion_explained,
+        ignore_axis_labels,
+        decimal=decimal,
+    )
 
 
 def _assert_series_equal(left_s, right_s, ignore_index=False, decimal=7):
@@ -152,15 +174,19 @@ def _assert_series_equal(left_s, right_s, ignore_index=False, decimal=7):
     if left_s is None or right_s is None:
         assert left_s is None and right_s is None
     else:
-        npt.assert_almost_equal(left_s.values, right_s.values,
-                                decimal=decimal)
+        npt.assert_almost_equal(left_s.values, right_s.values, decimal=decimal)
         if not ignore_index:
             pdt.assert_index_equal(left_s.index, right_s.index)
 
 
-def _assert_frame_dists_equal(left_df, right_df, ignore_index=False,
-                              ignore_columns=False,
-                              ignore_directionality=False, decimal=7):
+def _assert_frame_dists_equal(
+    left_df,
+    right_df,
+    ignore_index=False,
+    ignore_columns=False,
+    ignore_directionality=False,
+    decimal=7,
+):
     if left_df is None or right_df is None:
         assert left_df is None and right_df is None
     else:
@@ -176,9 +202,14 @@ def _assert_frame_dists_equal(left_df, right_df, ignore_index=False,
             pdt.assert_index_equal(left_df.columns, right_df.columns)
 
 
-def _assert_frame_equal(left_df, right_df, ignore_index=False,
-                        ignore_columns=False, ignore_directionality=False,
-                        decimal=7):
+def _assert_frame_equal(
+    left_df,
+    right_df,
+    ignore_index=False,
+    ignore_columns=False,
+    ignore_directionality=False,
+    decimal=7,
+):
     # assert_frame_equal doesn't like None...
     if left_df is None or right_df is None:
         assert left_df is None and right_df is None
@@ -186,8 +217,7 @@ def _assert_frame_equal(left_df, right_df, ignore_index=False,
         left_values = left_df.values
         right_values = right_df.values
         if ignore_directionality:
-            left_values, right_values = _normalize_signs(left_values,
-                                                         right_values)
+            left_values, right_values = _normalize_signs(left_values, right_values)
         npt.assert_almost_equal(left_values, right_values, decimal=decimal)
 
         if not ignore_index:
@@ -203,8 +233,7 @@ def _normalize_signs(arr1, arr2):
     flipped, but they're still right.
 
     Notes
-    =====
-
+    -----
     This function tries hard to make sure that, if you find "column"
     and "-column" almost equal, calling a function like np.allclose to
     compare them after calling `normalize_signs` succeeds.
@@ -223,6 +252,7 @@ def _normalize_signs(arr1, arr2):
     whose absolute value is largest. Then, it compares its sign with
     the number found in the same index, but in the other array, and
     flips the sign of the column as needed.
+
     """
     # Let's convert everyting to floating point numbers (it's
     # reasonable to assume that eigenvectors will already be floating
@@ -233,8 +263,9 @@ def _normalize_signs(arr1, arr2):
 
     if arr1.shape != arr2.shape:
         raise ValueError(
-            "Arrays must have the same shape ({0} vs {1}).".format(arr1.shape,
-                                                                   arr2.shape)
+            "Arrays must have the same shape ({0} vs {1}).".format(
+                arr1.shape, arr2.shape
+            )
         )
 
     # To avoid issues around zero, we'll compare signs of the values
@@ -248,7 +279,7 @@ def _normalize_signs(arr1, arr2):
 
     # Store current warnings, and ignore division by zero (like 1. /
     # 0.) and invalid operations (like 0. / 0.)
-    wrn = np.seterr(invalid='ignore', divide='ignore')
+    wrn = np.seterr(invalid="ignore", divide="ignore")
     differences = sign_arr1 / sign_arr2
     # The values in `differences` can be:
     #    1 -> equal signs
@@ -289,6 +320,8 @@ def assert_data_frame_almost_equal(left, right, rtol=1e-5):
     ----------
     left, right : pd.DataFrame
         ``pd.DataFrame`` objects to compare.
+    rtol : float, optional
+        The relative tolerance parameter used for comparison. Defaults to 1e-5.
 
     Raises
     ------
@@ -302,15 +335,18 @@ def assert_data_frame_almost_equal(left, right, rtol=1e-5):
     """
     # pass all kwargs to ensure this function has consistent behavior even if
     # `assert_frame_equal`'s defaults change
-    pdt.assert_frame_equal(left, right,
-                           check_dtype=True,
-                           check_index_type=True,
-                           check_column_type=True,
-                           check_frame_type=True,
-                           check_names=True,
-                           by_blocks=False,
-                           check_exact=False,
-                           rtol=rtol)
+    pdt.assert_frame_equal(
+        left,
+        right,
+        check_dtype=True,
+        check_index_type=True,
+        check_column_type=True,
+        check_frame_type=True,
+        check_names=True,
+        by_blocks=False,
+        check_exact=False,
+        rtol=rtol,
+    )
     # this check ensures that empty DataFrames with different indices do not
     # compare equal. exact=True specifies that the type of the indices must be
     # exactly the same
@@ -320,29 +356,30 @@ def assert_data_frame_almost_equal(left, right, rtol=1e-5):
 def assert_series_almost_equal(left, right):
     # pass all kwargs to ensure this function has consistent behavior even if
     # `assert_series_equal`'s defaults change
-    pdt.assert_series_equal(left, right,
-                            check_dtype=True,
-                            check_index_type=True,
-                            check_series_type=True,
-                            check_names=True,
-                            check_exact=False,
-                            check_datetimelike_compat=False,
-                            obj='Series')
+    pdt.assert_series_equal(
+        left,
+        right,
+        check_dtype=True,
+        check_index_type=True,
+        check_series_type=True,
+        check_names=True,
+        check_exact=False,
+        check_datetimelike_compat=False,
+        obj="Series",
+    )
     # this check ensures that empty Series with different indices do not
     # compare equal.
     assert_index_equal(left.index, right.index)
 
 
 def assert_index_equal(a, b):
-    pdt.assert_index_equal(a, b,
-                           exact=True,
-                           check_names=True,
-                           check_exact=True)
+    pdt.assert_index_equal(a, b, exact=True, check_names=True, check_exact=True)
 
 
 def pytestrunner():
     try:
         import numpy
+
         try:
             # NumPy 1.14 changed repr output breaking our doctests,
             # request the legacy 1.13 style
@@ -354,8 +391,10 @@ def pytestrunner():
             pass
     except ImportError:
         numpy = None
+
     try:
         import pandas
+
         # Max columns is automatically set by pandas based on terminal
         # width, so set columns to unlimited to prevent the test suite
         # from passing/failing based on terminal size.
@@ -363,12 +402,27 @@ def pytestrunner():
     except ImportError:
         pandas = None
 
+    try:
+        import matplotlib
+    except ImportError:
+        matplotlib = None
+    else:
+        # Set a non-interactive backend for Matplotlib, such that it can work on
+        # systems without graphics
+        matplotlib.use("agg")
+
     # import here, cause outside the eggs aren't loaded
     import pytest
 
-    args = ['--pyargs', 'skbio', '--doctest-modules', '--doctest-glob',
-            '*.pyx', '-o', '"doctest_optionflags=NORMALIZE_WHITESPACE'
-            ' IGNORE_EXCEPTION_DETAIL"'] + sys.argv[1:]
+    args = [
+        "--pyargs",
+        "skbio",
+        "--doctest-modules",
+        "--doctest-glob",
+        "*.pyx",
+        "-o",
+        '"doctest_optionflags=NORMALIZE_WHITESPACE' ' IGNORE_EXCEPTION_DETAIL"',
+    ] + sys.argv[1:]
 
     errno = pytest.main(args=args)
     sys.exit(errno)

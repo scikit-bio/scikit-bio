@@ -24,7 +24,7 @@ from skbio.alignment._indexing import TabularMSAILoc, TabularMSALoc
 from skbio.alignment._repr import _TabularMSAReprBuilder
 
 
-_Shape = collections.namedtuple('Shape', ['sequence', 'position'])
+_Shape = collections.namedtuple("Shape", ["sequence", "position"])
 
 
 class TabularMSA(MetadataMixin, PositionalMetadataMixin, SkbioObject):
@@ -139,11 +139,12 @@ class TabularMSA(MetadataMixin, PositionalMetadataMixin, SkbioObject):
     Index(['seq1', 'seq2', 'seq3'], dtype='object')
 
     """
-    default_write_format = 'fasta'
+
+    default_write_format = "fasta"
     __hash__ = None
 
     @property
-    @experimental(as_of='0.4.1')
+    @experimental(as_of="0.4.1")
     def dtype(self):
         """Data type of the stored sequences.
 
@@ -164,7 +165,7 @@ class TabularMSA(MetadataMixin, PositionalMetadataMixin, SkbioObject):
         return type(self._get_sequence_iloc_(0)) if len(self) > 0 else None
 
     @property
-    @experimental(as_of='0.4.1')
+    @experimental(as_of="0.4.1")
     def shape(self):
         """Number of sequences (rows) and positions (columns).
 
@@ -206,7 +207,7 @@ class TabularMSA(MetadataMixin, PositionalMetadataMixin, SkbioObject):
         return _Shape(sequence=sequence_count, position=position_count)
 
     @property
-    @experimental(as_of='0.4.1')
+    @experimental(as_of="0.4.1")
     def index(self):
         """Index containing labels along the sequence axis.
 
@@ -764,14 +765,19 @@ class TabularMSA(MetadataMixin, PositionalMetadataMixin, SkbioObject):
         #         dictionary-view-objects
         return cls(dictionary.values(), index=dictionary.keys())
 
-    @experimental(as_of='0.4.1')
-    def __init__(self, sequences, metadata=None, positional_metadata=None,
-                 minter=None, index=None):
+    @experimental(as_of="0.4.1")
+    def __init__(
+        self,
+        sequences,
+        metadata=None,
+        positional_metadata=None,
+        minter=None,
+        index=None,
+    ):
         if isinstance(sequences, TabularMSA):
             if metadata is None and sequences.has_metadata():
                 metadata = sequences.metadata
-            if (positional_metadata is None and
-                    sequences.has_positional_metadata()):
+            if positional_metadata is None and sequences.has_positional_metadata():
                 positional_metadata = sequences.positional_metadata
             if minter is None and index is None:
                 index = sequences.index
@@ -779,23 +785,29 @@ class TabularMSA(MetadataMixin, PositionalMetadataMixin, SkbioObject):
         # Give a better error message than the one raised by `extend` (it
         # references `reset_index`, which isn't a constructor parameter).
         if minter is not None and index is not None:
-            raise ValueError(
-                "Cannot use both `minter` and `index` at the same time.")
+            raise ValueError("Cannot use both `minter` and `index` at the same time.")
         self._seqs = pd.Series([], dtype=object)
-        self.extend(sequences, minter=minter, index=index,
-                    reset_index=minter is None and index is None)
+        self.extend(
+            sequences,
+            minter=minter,
+            index=index,
+            reset_index=minter is None and index is None,
+        )
 
         MetadataMixin._init_(self, metadata=metadata)
-        PositionalMetadataMixin._init_(
-            self, positional_metadata=positional_metadata)
+        PositionalMetadataMixin._init_(self, positional_metadata=positional_metadata)
 
         # Set up our indexers
         self._loc = TabularMSALoc(self)
         self._iloc = TabularMSAILoc(self)
 
-    def _constructor_(self, sequences=NotImplemented, metadata=NotImplemented,
-                      positional_metadata=NotImplemented,
-                      index=NotImplemented):
+    def _constructor_(
+        self,
+        sequences=NotImplemented,
+        metadata=NotImplemented,
+        positional_metadata=NotImplemented,
+        index=NotImplemented,
+    ):
         """Return new copy of the MSA with overridden properties.
 
         NotImplemented is used as a sentinel so that None may be used to
@@ -824,26 +836,28 @@ class TabularMSA(MetadataMixin, PositionalMetadataMixin, SkbioObject):
 
         sequences = [copy.copy(s) for s in sequences]
 
-        return self.__class__(sequences, metadata=metadata,
-                              positional_metadata=positional_metadata,
-                              index=index)
+        return self.__class__(
+            sequences,
+            metadata=metadata,
+            positional_metadata=positional_metadata,
+            index=index,
+        )
 
-    @experimental(as_of='0.4.1')
+    @experimental(as_of="0.4.1")
     def __repr__(self):
-        """String summary of this MSA."""
+        """Return string summary of this MSA."""
         pep8_line_length_limit = 79
         length_taken_by_docstring_indent = 8
         width = pep8_line_length_limit - length_taken_by_docstring_indent
-        return _TabularMSAReprBuilder(
-            msa=self,
-            width=width,
-            indent=4).build()
+        return _TabularMSAReprBuilder(msa=self, width=width, indent=4).build()
 
     def _repr_stats(self):
-        return [("sequence count", str(self.shape.sequence)),
-                ("position count", str(self.shape.position))]
+        return [
+            ("sequence count", str(self.shape.sequence)),
+            ("position count", str(self.shape.position)),
+        ]
 
-    @experimental(as_of='0.4.1')
+    @experimental(as_of="0.4.1")
     def __bool__(self):
         """Boolean indicating whether the MSA is empty or not.
 
@@ -880,7 +894,7 @@ class TabularMSA(MetadataMixin, PositionalMetadataMixin, SkbioObject):
         # TODO: change for #1198
         return self.shape.position > 0
 
-    @experimental(as_of='0.4.1')
+    @experimental(as_of="0.4.1")
     def __contains__(self, label):
         """Determine if an index label is in this MSA.
 
@@ -908,9 +922,9 @@ class TabularMSA(MetadataMixin, PositionalMetadataMixin, SkbioObject):
         """
         return label in self.index
 
-    @experimental(as_of='0.4.1')
+    @experimental(as_of="0.4.1")
     def __len__(self):
-        """Number of sequences in the MSA.
+        """Return number of sequences in the MSA.
 
         Returns
         -------
@@ -934,7 +948,7 @@ class TabularMSA(MetadataMixin, PositionalMetadataMixin, SkbioObject):
         """
         return len(self._seqs)
 
-    @experimental(as_of='0.4.1')
+    @experimental(as_of="0.4.1")
     def __iter__(self):
         """Iterate over sequences in the MSA.
 
@@ -955,7 +969,7 @@ class TabularMSA(MetadataMixin, PositionalMetadataMixin, SkbioObject):
         """
         return iter(self._seqs)
 
-    @experimental(as_of='0.4.1')
+    @experimental(as_of="0.4.1")
     def __reversed__(self):
         """Iterate in reverse order over sequences in the MSA.
 
@@ -976,12 +990,12 @@ class TabularMSA(MetadataMixin, PositionalMetadataMixin, SkbioObject):
         """
         return reversed(self._seqs)
 
-    @experimental(as_of='0.4.1')
+    @experimental(as_of="0.4.1")
     def __str__(self):
-        """String summary of this MSA."""
+        """Return string summary of this MSA."""
         return self.__repr__()
 
-    @experimental(as_of='0.4.1')
+    @experimental(as_of="0.4.1")
     def __eq__(self, other):
         """Determine if this MSA is equal to another.
 
@@ -1050,7 +1064,7 @@ class TabularMSA(MetadataMixin, PositionalMetadataMixin, SkbioObject):
 
         return self._seqs.equals(other._seqs)
 
-    @experimental(as_of='0.4.1')
+    @experimental(as_of="0.4.1")
     def __ne__(self, other):
         """Determine if this MSA is not equal to another.
 
@@ -1074,7 +1088,7 @@ class TabularMSA(MetadataMixin, PositionalMetadataMixin, SkbioObject):
         """
         return not (self == other)
 
-    @experimental(as_of='0.4.1')
+    @experimental(as_of="0.4.1")
     def __copy__(self):
         """Return a shallow copy of this MSA.
 
@@ -1106,7 +1120,7 @@ class TabularMSA(MetadataMixin, PositionalMetadataMixin, SkbioObject):
 
         return msa_copy
 
-    @experimental(as_of='0.4.1')
+    @experimental(as_of="0.4.1")
     def __deepcopy__(self, memo):
         """Return a deep copy of this MSA.
 
@@ -1135,8 +1149,7 @@ class TabularMSA(MetadataMixin, PositionalMetadataMixin, SkbioObject):
         msa_copy = self._constructor_(sequences=seqs)
 
         msa_copy._metadata = MetadataMixin._deepcopy_(self, memo)
-        msa_copy._positional_metadata = \
-            PositionalMetadataMixin._deepcopy_(self, memo)
+        msa_copy._positional_metadata = PositionalMetadataMixin._deepcopy_(self, memo)
 
         return msa_copy
 
@@ -1186,7 +1199,8 @@ class TabularMSA(MetadataMixin, PositionalMetadataMixin, SkbioObject):
                 raise AssertionError(
                     "Something went wrong with the index %r provided to"
                     " `_get_sequence_loc_`, please report this stack trace to"
-                    "\nhttps://github.com/scikit-bio/scikit-bio/issues" % ids)
+                    "\nhttps://github.com/scikit-bio/scikit-bio/issues" % ids
+                )
 
     def _slice_sequences_loc_(self, ids):
         new_seqs = self._seqs.loc[ids]
@@ -1200,9 +1214,9 @@ class TabularMSA(MetadataMixin, PositionalMetadataMixin, SkbioObject):
 
     def _get_position_(self, i, ignore_metadata=False):
         if ignore_metadata:
-            return Sequence(''.join([str(s[i]) for s in self._seqs]))
+            return Sequence("".join([str(s[i]) for s in self._seqs]))
 
-        seq = Sequence.concat([s[i] for s in self._seqs], how='outer')
+        seq = Sequence.concat([s[i] for s in self._seqs], how="outer")
         # TODO: change for #1198
         if len(self) and self.has_positional_metadata():
             seq.metadata = dict(self.positional_metadata.iloc[i])
@@ -1215,9 +1229,10 @@ class TabularMSA(MetadataMixin, PositionalMetadataMixin, SkbioObject):
         if len(self) and self.has_positional_metadata():
             pm = self.positional_metadata.iloc[i]
         return self._constructor_(seqs, positional_metadata=pm)
+
     # end of helpers
 
-    @experimental(as_of='0.4.1')
+    @experimental(as_of="0.4.1")
     def iter_positions(self, reverse=False, ignore_metadata=False):
         """Iterate over positions (columns) in the MSA.
 
@@ -1340,10 +1355,12 @@ class TabularMSA(MetadataMixin, PositionalMetadataMixin, SkbioObject):
         if reverse:
             indices = reversed(indices)
 
-        return (self._get_position_(index, ignore_metadata=ignore_metadata)
-                for index in indices)
+        return (
+            self._get_position_(index, ignore_metadata=ignore_metadata)
+            for index in indices
+        )
 
-    @experimental(as_of='0.4.1')
+    @experimental(as_of="0.4.1")
     def consensus(self):
         """Compute the majority consensus sequence for this MSA.
 
@@ -1419,8 +1436,7 @@ class TabularMSA(MetadataMixin, PositionalMetadataMixin, SkbioObject):
 
             consensus.append(collections.Counter(freqs).most_common(1)[0][0])
 
-        return dtype(''.join(consensus),
-                     positional_metadata=positional_metadata)
+        return dtype("".join(consensus), positional_metadata=positional_metadata)
 
     def _build_inverse_shannon_uncertainty_f(self, include_gaps):
         base = len(self.dtype.definite_chars)
@@ -1431,13 +1447,18 @@ class TabularMSA(MetadataMixin, PositionalMetadataMixin, SkbioObject):
 
         def f(p):
             freqs = list(p.frequencies().values())
-            return 1. - scipy.stats.entropy(freqs, base=base)
+            return 1.0 - scipy.stats.entropy(freqs, base=base)
+
         return f
 
-    @experimental(as_of='0.4.1')
-    def conservation(self, metric='inverse_shannon_uncertainty',
-                     degenerate_mode='error', gap_mode='nan'):
-        """Apply metric to compute conservation for all alignment positions
+    @experimental(as_of="0.4.1")
+    def conservation(
+        self,
+        metric="inverse_shannon_uncertainty",
+        degenerate_mode="error",
+        gap_mode="nan",
+    ):
+        """Apply metric to compute conservation for all alignment positions.
 
         Parameters
         ----------
@@ -1508,17 +1529,14 @@ class TabularMSA(MetadataMixin, PositionalMetadataMixin, SkbioObject):
            https://schneider.ncifcrf.gov/glossary.html#Shannon_entropy
 
         """
-
-        if gap_mode not in {'nan', 'error', 'include', 'ignore'}:
+        if gap_mode not in {"nan", "error", "include", "ignore"}:
             raise ValueError("Unknown gap_mode provided: %s" % gap_mode)
 
-        if degenerate_mode not in {'nan', 'error'}:
-            raise ValueError("Unknown degenerate_mode provided: %s" %
-                             degenerate_mode)
+        if degenerate_mode not in {"nan", "error"}:
+            raise ValueError("Unknown degenerate_mode provided: %s" % degenerate_mode)
 
-        if metric not in {'inverse_shannon_uncertainty'}:
-            raise ValueError("Unknown metric provided: %s" %
-                             metric)
+        if metric not in {"inverse_shannon_uncertainty"}:
+            raise ValueError("Unknown metric provided: %s" % metric)
 
         if self.shape[0] == 0:
             # handle empty alignment to avoid error on lookup of character sets
@@ -1529,8 +1547,7 @@ class TabularMSA(MetadataMixin, PositionalMetadataMixin, SkbioObject):
         # was provided, we just define metric_f here. When additional metrics
         # are supported, this will be handled differently (e.g., via a lookup
         # or if/elif/else).
-        metric_f = self._build_inverse_shannon_uncertainty_f(
-                        gap_mode == 'include')
+        metric_f = self._build_inverse_shannon_uncertainty_f(gap_mode == "include")
 
         result = []
         for p in self.iter_positions(ignore_metadata=True):
@@ -1541,27 +1558,28 @@ class TabularMSA(MetadataMixin, PositionalMetadataMixin, SkbioObject):
 
             # handle degenerate characters if present
             if pos_seq.has_degenerates():
-                if degenerate_mode == 'nan':
+                if degenerate_mode == "nan":
                     cons = np.nan
                 else:  # degenerate_mode == 'error' is the only choice left
                     degenerate_chars = pos_seq[pos_seq.degenerates()]
-                    raise ValueError("Conservation is undefined for positions "
-                                     "with degenerate characters. The "
-                                     "following degenerate characters were "
-                                     "observed: %s." % degenerate_chars)
+                    raise ValueError(
+                        "Conservation is undefined for positions "
+                        "with degenerate characters. The "
+                        "following degenerate characters were "
+                        "observed: %s." % degenerate_chars
+                    )
 
             # handle gap characters if present
             if pos_seq.has_gaps():
-                if gap_mode == 'nan':
+                if gap_mode == "nan":
                     cons = np.nan
-                elif gap_mode == 'error':
+                elif gap_mode == "error":
                     raise ValueError("Gap characters present in alignment.")
-                elif gap_mode == 'ignore':
+                elif gap_mode == "ignore":
                     pos_seq = pos_seq.degap()
                 else:  # gap_mode == 'include' is the only choice left
                     # Recode all gap characters with pos_seq.default_gap_char.
-                    pos_seq = pos_seq.replace(pos_seq.gaps(),
-                                              pos_seq.default_gap_char)
+                    pos_seq = pos_seq.replace(pos_seq.gaps(), pos_seq.default_gap_char)
 
             if cons is None:
                 cons = metric_f(pos_seq)
@@ -1570,8 +1588,8 @@ class TabularMSA(MetadataMixin, PositionalMetadataMixin, SkbioObject):
 
         return np.array(result)
 
-    @experimental(as_of='0.4.1')
-    def gap_frequencies(self, axis='sequence', relative=False):
+    @experimental(as_of="0.4.1")
+    def gap_frequencies(self, axis="sequence", relative=False):
         """Compute frequency of gap characters across an axis.
 
         Parameters
@@ -1654,7 +1672,7 @@ class TabularMSA(MetadataMixin, PositionalMetadataMixin, SkbioObject):
 
         return gap_freqs
 
-    @experimental(as_of='0.4.1')
+    @experimental(as_of="0.4.1")
     def reassign_index(self, mapping=None, minter=None):
         """Reassign index labels to sequences in this MSA.
 
@@ -1715,25 +1733,27 @@ class TabularMSA(MetadataMixin, PositionalMetadataMixin, SkbioObject):
 
         """
         if mapping is not None and minter is not None:
-            raise ValueError(
-                "Cannot use both `mapping` and `minter` at the same time.")
+            raise ValueError("Cannot use both `mapping` and `minter` at the same time.")
 
         if mapping is not None:
             if isinstance(mapping, dict):
-                self.index = [mapping[label] if label in mapping else label
-                              for label in self.index]
+                self.index = [
+                    mapping[label] if label in mapping else label
+                    for label in self.index
+                ]
             elif callable(mapping):
                 self.index = [mapping(label) for label in self.index]
             else:
                 raise TypeError(
                     "`mapping` must be a dict or callable, not type %r"
-                    % type(mapping).__name__)
+                    % type(mapping).__name__
+                )
         elif minter is not None:
             self.index = [resolve_key(seq, minter) for seq in self._seqs]
         else:
             del self.index
 
-    @experimental(as_of='0.4.1')
+    @experimental(as_of="0.4.1")
     def append(self, sequence, minter=None, index=None, reset_index=False):
         """Append a sequence to the MSA without recomputing alignment.
 
@@ -1833,10 +1853,9 @@ class TabularMSA(MetadataMixin, PositionalMetadataMixin, SkbioObject):
         """
         if index is not None:
             index = [index]
-        self.extend([sequence], minter=minter, index=index,
-                    reset_index=reset_index)
+        self.extend([sequence], minter=minter, index=index, reset_index=reset_index)
 
-    @experimental(as_of='0.4.1')
+    @experimental(as_of="0.4.1")
     def extend(self, sequences, minter=None, index=None, reset_index=False):
         """Extend this MSA with sequences without recomputing alignment.
 
@@ -1944,12 +1963,11 @@ class TabularMSA(MetadataMixin, PositionalMetadataMixin, SkbioObject):
         RangeIndex(start=0, stop=6, step=1)
 
         """
-        if sum([minter is not None,
-                index is not None,
-                bool(reset_index)]) != 1:
+        if sum([minter is not None, index is not None, bool(reset_index)]) != 1:
             raise ValueError(
                 "Must provide exactly one of the following parameters: "
-                "`minter`, `index`, `reset_index`")
+                "`minter`, `index`, `reset_index`"
+            )
 
         # Verify `sequences` first because `minter` could interact with each
         # sequence's `metadata`.
@@ -1970,22 +1988,23 @@ class TabularMSA(MetadataMixin, PositionalMetadataMixin, SkbioObject):
             # through.
             if len(sequences) != len(index):
                 raise ValueError(
-                    "Number of sequences (%d) must match index length (%d)" %
-                    (len(sequences), len(index)))
+                    "Number of sequences (%d) must match index length (%d)"
+                    % (len(sequences), len(index))
+                )
         else:
             # Case for `reset_index=True`. We could simply set `index=None`
             # since it will be reset after appending below, but we can avoid a
             # memory spike if Series.append creates a new RangeIndex from
             # adjacent RangeIndexes in the future (pandas 0.18.0 creates an
             # Int64Index).
-            index = pd.RangeIndex(start=len(self),
-                                  stop=len(self) + len(sequences),
-                                  step=1)
+            index = pd.RangeIndex(
+                start=len(self), stop=len(self) + len(sequences), step=1
+            )
 
         if len(self):
-            self._seqs = pd.concat([self._seqs,
-                                    pd.Series(sequences, index=index,
-                                              dtype=object)])
+            self._seqs = pd.concat(
+                [self._seqs, pd.Series(sequences, index=index, dtype=object)]
+            )
         else:
             # Not using Series.append to avoid turning a RangeIndex supplied
             # via `index` parameter into an Int64Index (this happens in pandas
@@ -2019,7 +2038,8 @@ class TabularMSA(MetadataMixin, PositionalMetadataMixin, SkbioObject):
             if not issubclass(expected_dtype, GrammaredSequence):
                 raise TypeError(
                     "Each sequence must be of type %r, not type %r"
-                    % (GrammaredSequence.__name__, expected_dtype.__name__))
+                    % (GrammaredSequence.__name__, expected_dtype.__name__)
+                )
             expected_length = len(sequence)
 
         for sequence in sequences:
@@ -2027,17 +2047,17 @@ class TabularMSA(MetadataMixin, PositionalMetadataMixin, SkbioObject):
             if dtype is not expected_dtype:
                 raise TypeError(
                     "Sequences in MSA must have matching type. Type %r does "
-                    "not match type %r" % (dtype.__name__,
-                                           expected_dtype.__name__))
+                    "not match type %r" % (dtype.__name__, expected_dtype.__name__)
+                )
 
             length = len(sequence)
             if length != expected_length:
                 raise ValueError(
                     "Each sequence's length must match the number of "
-                    "positions in the MSA: %d != %d"
-                    % (length, expected_length))
+                    "positions in the MSA: %d != %d" % (length, expected_length)
+                )
 
-    def join(self, other, how='strict'):
+    def join(self, other, how="strict"):
         """Join this MSA with another by sequence (horizontally).
 
         Sequences will be joined by index labels. MSA ``positional_metadata``
@@ -2239,10 +2259,10 @@ class TabularMSA(MetadataMixin, PositionalMetadataMixin, SkbioObject):
         4   NaN     5    o
 
         """
-        if how not in {'strict', 'inner', 'outer', 'left', 'right'}:
+        if how not in {"strict", "inner", "outer", "left", "right"}:
             raise ValueError(
-                "`how` must be 'strict', 'inner', 'outer', 'left', or "
-                "'right'.")
+                "`how` must be 'strict', 'inner', 'outer', 'left', or " "'right'."
+            )
 
         self._assert_joinable(other)
 
@@ -2253,36 +2273,51 @@ class TabularMSA(MetadataMixin, PositionalMetadataMixin, SkbioObject):
             left_seq = self._get_sequence_for_join(label)
             right_seq = other._get_sequence_for_join(label)
 
-            joined_seqs.append(
-                self.dtype.concat([left_seq, right_seq], how='outer'))
+            joined_seqs.append(self.dtype.concat([left_seq, right_seq], how="outer"))
 
         # TODO: update when #1198 is implemented.
         joined_positional_metadata = None
         if joined_seqs:
-            if how == 'left':
+            if how == "left":
                 joined_positional_metadata = pd.concat(
-                    [self.positional_metadata,
-                     other.positional_metadata.reindex(
-                        columns=self.positional_metadata.columns)],
-                    ignore_index=True, sort=True)
-            elif how == 'right':
+                    [
+                        self.positional_metadata,
+                        other.positional_metadata.reindex(
+                            columns=self.positional_metadata.columns
+                        ),
+                    ],
+                    ignore_index=True,
+                    sort=True,
+                )
+            elif how == "right":
                 joined_positional_metadata = pd.concat(
-                    [self.positional_metadata.reindex(
-                        columns=other.positional_metadata.columns),
-                     other.positional_metadata],
-                    ignore_index=True, sort=True)
+                    [
+                        self.positional_metadata.reindex(
+                            columns=other.positional_metadata.columns
+                        ),
+                        other.positional_metadata,
+                    ],
+                    ignore_index=True,
+                    sort=True,
+                )
             else:
                 joined_positional_metadata = pd.concat(
                     [self.positional_metadata, other.positional_metadata],
-                    ignore_index=True, sort=True, **concat_kwargs)
+                    ignore_index=True,
+                    sort=True,
+                    **concat_kwargs,
+                )
 
             if not self.has_positional_metadata():
                 del self.positional_metadata
             if not other.has_positional_metadata():
                 del other.positional_metadata
 
-        joined = self.__class__(joined_seqs, index=join_index,
-                                positional_metadata=joined_positional_metadata)
+        joined = self.__class__(
+            joined_seqs,
+            index=join_index,
+            positional_metadata=joined_positional_metadata,
+        )
 
         if not joined.has_positional_metadata():
             del joined.positional_metadata
@@ -2292,31 +2327,33 @@ class TabularMSA(MetadataMixin, PositionalMetadataMixin, SkbioObject):
     def _assert_joinable(self, other):
         if not isinstance(other, TabularMSA):
             raise TypeError(
-                "`other` must be a `TabularMSA` object, not type %r" %
-                type(other).__name__)
+                "`other` must be a `TabularMSA` object, not type %r"
+                % type(other).__name__
+            )
 
         if self.dtype is not other.dtype:
             raise TypeError(
-                "`other` dtype %r does not match this MSA's dtype %r" %
-                (other.dtype if other.dtype is None else other.dtype.__name__,
-                 self.dtype if self.dtype is None else self.dtype.__name__))
+                "`other` dtype %r does not match this MSA's dtype %r"
+                % (
+                    other.dtype if other.dtype is None else other.dtype.__name__,
+                    self.dtype if self.dtype is None else self.dtype.__name__,
+                )
+            )
 
         if not self.index.is_unique:
-            raise ValueError(
-                "This MSA's index labels must be unique.")
+            raise ValueError("This MSA's index labels must be unique.")
         if not other.index.is_unique:
-            raise ValueError(
-                "`other`'s index labels must be unique.")
+            raise ValueError("`other`'s index labels must be unique.")
 
     def _get_join_index(self, other, how):
-        if how == 'strict':
+        if how == "strict":
             diff = self.index.symmetric_difference(other.index)
             if len(diff) > 0:
-                raise ValueError(
-                    "Index labels must all match with `how='strict'`")
+                raise ValueError("Index labels must all match with `how='strict'`")
 
             diff = self.positional_metadata.columns.symmetric_difference(
-                other.positional_metadata.columns)
+                other.positional_metadata.columns
+            )
 
             if not self.has_positional_metadata():
                 del self.positional_metadata
@@ -2325,23 +2362,23 @@ class TabularMSA(MetadataMixin, PositionalMetadataMixin, SkbioObject):
 
             if len(diff) > 0:
                 raise ValueError(
-                    "Positional metadata columns must all match with "
-                    "`how='strict'`")
+                    "Positional metadata columns must all match with " "`how='strict'`"
+                )
 
             join_index = self.index
-            concat_kwargs = {'join': 'inner'}
-        elif how == 'inner':
+            concat_kwargs = {"join": "inner"}
+        elif how == "inner":
             join_index = self.index.intersection(other.index)
-            concat_kwargs = {'join': 'inner'}
-        elif how == 'outer':
+            concat_kwargs = {"join": "inner"}
+        elif how == "outer":
             join_index = self.index.union(other.index)
-            concat_kwargs = {'join': 'outer'}
-        elif how == 'left':
+            concat_kwargs = {"join": "outer"}
+        elif how == "left":
             join_index = self.index
-            concat_kwargs = {'join_axes': [self.positional_metadata.columns]}
+            concat_kwargs = {"join_axes": [self.positional_metadata.columns]}
         else:  # how='right'
             join_index = other.index
-            concat_kwargs = {'join_axes': [other.positional_metadata.columns]}
+            concat_kwargs = {"join_axes": [other.positional_metadata.columns]}
 
         return join_index, concat_kwargs
 
@@ -2349,8 +2386,7 @@ class TabularMSA(MetadataMixin, PositionalMetadataMixin, SkbioObject):
         if label in self.index:
             return self.loc[label]
         else:
-            return self.dtype(
-                self.dtype.default_gap_char * self.shape.position)
+            return self.dtype(self.dtype.default_gap_char * self.shape.position)
 
     def sort(self, level=None, ascending=True):
         """Sort sequences by index label in-place.
@@ -2419,7 +2455,7 @@ class TabularMSA(MetadataMixin, PositionalMetadataMixin, SkbioObject):
         self._seqs.sort_index(ascending=ascending, level=level, inplace=True)
         self.positional_metadata.sort_index(axis=1, inplace=True)
 
-    @experimental(as_of='0.4.1')
+    @experimental(as_of="0.4.1")
     def to_dict(self):
         """Create a ``dict`` from this ``TabularMSA``.
 
@@ -2453,18 +2489,17 @@ class TabularMSA(MetadataMixin, PositionalMetadataMixin, SkbioObject):
         if self.index.is_unique:
             return self._seqs.to_dict()
         else:
-            raise ValueError("Cannot convert to dict. Index labels are not"
-                             " unique.")
+            raise ValueError("Cannot convert to dict. Index labels are not" " unique.")
 
     def _is_sequence_axis(self, axis):
-        if axis == 'sequence' or axis == 0:
+        if axis == "sequence" or axis == 0:
             return True
-        elif axis == 'position' or axis == 1:
+        elif axis == "position" or axis == 1:
             return False
         else:
             raise ValueError(
-                "`axis` must be 'sequence' (0) or 'position' (1), not %r"
-                % axis)
+                "`axis` must be 'sequence' (0) or 'position' (1), not %r" % axis
+            )
 
     @overrides(PositionalMetadataMixin)
     def _positional_metadata_axis_len_(self):

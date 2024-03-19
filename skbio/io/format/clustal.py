@@ -1,5 +1,4 @@
-r"""
-Clustal format (:mod:`skbio.io.format.clustal`)
+r"""Clustal format (:mod:`skbio.io.format.clustal`)
 ===============================================
 
 .. currentmodule:: skbio.io.format.clustal
@@ -134,7 +133,8 @@ References
 .. [1] http://www.sciencedirect.com/science/article/pii/0378111988903307
 .. [2] http://web.mit.edu/meme_v4.9.0/doc/clustalw-format.html
 
-"""
+
+"""  # noqa: D205, D415
 
 # ----------------------------------------------------------------------------
 # Copyright (c) 2013--, scikit-bio development team.
@@ -148,11 +148,11 @@ from skbio.io import create_format, ClustalFormatError
 from skbio.alignment import TabularMSA
 
 
-clustal = create_format('clustal')
+clustal = create_format("clustal")
 
 
 def _label_line_parser(record):
-    """Returns dict mapping list of data to labels, plus list with field order.
+    """Return dict mapping list of data to labels, plus list with field order.
 
     Field order contains labels in order encountered in file.
 
@@ -170,7 +170,8 @@ def _label_line_parser(record):
         else:
             raise ClustalFormatError(
                 "Failed to parse sequence identifier and subsequence from "
-                "the following line: %r" % line)
+                "the following line: %r" % line
+            )
 
         if key in result:
             result[key].append(val)
@@ -181,16 +182,20 @@ def _label_line_parser(record):
 
 
 def _is_clustal_seq_line(line):
-    """Returns True if line starts with a non-blank character but not 'CLUSTAL'
+    """Return True if line starts with a non-blank character but not 'CLUSTAL'.
 
     Useful for filtering other lines out of the file.
     """
-    return line and (not line[0].isspace()) and\
-        (not line.startswith('CLUSTAL')) and (not line.startswith('MUSCLE'))
+    return (
+        line
+        and (not line[0].isspace())
+        and (not line.startswith("CLUSTAL"))
+        and (not line.startswith("MUSCLE"))
+    )
 
 
 def _delete_trailing_number(line):
-    """Deletes trailing number from a line.
+    """Delete trailing number from a line.
 
     WARNING: does not preserve internal whitespace when a number is removed!
     (converts each whitespace run to a single space). Returns the original
@@ -199,15 +204,13 @@ def _delete_trailing_number(line):
     pieces = line.split()
     try:
         int(pieces[-1])
-        return ' '.join(pieces[:-1])
+        return " ".join(pieces[:-1])
     except ValueError:  # no trailing numbers
         return line
 
 
 def _check_length(data, labels, num_seqs_check=None):
-    """
-    Checks the lengths of the clustal sequences to make
-    sure that they are lining up right
+    """Check that the lengths of the clustal sequences line up correctly.
 
     num_seqs_check: The number of sequences to check
 
@@ -232,7 +235,7 @@ def _check_length(data, labels, num_seqs_check=None):
             seq = data[label][i]
             if len(seq) > subseq_length:
                 return False
-            elif i+1 == num_subseqs:  # Last subsequence
+            elif i + 1 == num_subseqs:  # Last subsequence
                 end_lengths.add(len(seq))
             elif len(seq) < subseq_length:
                 return False
@@ -252,12 +255,11 @@ def _clustal_sniffer(fh):
     #       * One of the sequence ids is not immediately
     #         followed by a subsequence
     empty = True
-    if fh.read(7) != 'CLUSTAL':
+    if fh.read(7) != "CLUSTAL":
         return False, {}
     fh.seek(0)
     try:
-        records = map(_delete_trailing_number,
-                      filter(_is_clustal_seq_line, fh))
+        records = map(_delete_trailing_number, filter(_is_clustal_seq_line, fh))
         data, labels = _label_line_parser(records)
         if len(data) > 0:
             empty = False
@@ -273,30 +275,31 @@ def _clustal_sniffer(fh):
 @clustal.writer(TabularMSA)
 def _tabular_msa_to_clustal(obj, fh):
     if not obj.index.is_unique:
-        raise ClustalFormatError(
-            "TabularMSA's index labels must be unique.")
+        raise ClustalFormatError("TabularMSA's index labels must be unique.")
 
     clen = 60  # Max length of clustal lines
     seqs = [str(s) for s in obj]
     names = [str(label) for label in obj.index]
     nameLen = max(map(len, names))
     seqLen = max(map(len, seqs))
-    fh.write('CLUSTAL\n\n\n')
+    fh.write("CLUSTAL\n\n\n")
     for i in range(0, seqLen, clen):
         for label, seq in zip(names, seqs):
-            name = ('{:<%d}' % (nameLen)).format(label)
-            fh.write("%s\t%s\n" % (name, seq[i:i+clen]))
+            name = ("{:<%d}" % (nameLen)).format(label)
+            fh.write("%s\t%s\n" % (name, seq[i : i + clen]))
         fh.write("\n")
 
 
 @clustal.reader(TabularMSA)
 def _clustal_to_tabular_msa(fh, constructor=None):
-    r"""yields labels and sequences from msa (multiple sequence alignment)
+    r"""Yield labels and sequences from msa (multiple sequence alignment).
 
     Parameters
     ----------
     fh : open file object
         An open Clustal file.
+    constructor : callable, optional
+        A callable object that constructs sequences.
 
     Returns
     -------
@@ -336,8 +339,7 @@ def _clustal_to_tabular_msa(fh, constructor=None):
     if constructor is None:
         raise ValueError("Must provide `constructor`.")
 
-    records = map(_delete_trailing_number,
-                  filter(_is_clustal_seq_line, fh))
+    records = map(_delete_trailing_number, filter(_is_clustal_seq_line, fh))
     data, labels = _label_line_parser(records)
 
     aligned_correctly = _check_length(data, labels)
@@ -345,5 +347,5 @@ def _clustal_to_tabular_msa(fh, constructor=None):
         raise ClustalFormatError("Sequences not aligned properly")
     seqs = []
     for label in labels:
-        seqs.append(constructor(''.join(data[label])))
+        seqs.append(constructor("".join(data[label])))
     return TabularMSA(seqs, index=labels)

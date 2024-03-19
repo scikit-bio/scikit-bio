@@ -1,5 +1,4 @@
-"""
-BLAST+6 format (:mod:`skbio.io.format.blast6`)
+r"""BLAST+6 format (:mod:`skbio.io.format.blast6`)
 ==============================================
 
 .. currentmodule:: skbio.io.format.blast6
@@ -11,10 +10,11 @@ headers. Values are separated by the tab character.
 An example BLAST+6-formatted file comparing two protein sequences, taken
 from [2]_ (tab characters represented by ``<tab>``)::
 
-    moaC<tab>gi|15800534|ref|NP_286546.1|<tab>100.00<tab>161<tab>0<tab>0<tab>1\
-<tab>161<tab>1<tab>161<tab>3e-114<tab>330
-    moaC<tab>gi|170768970|ref|ZP_02903423.1|<tab>99.38<tab>161<tab>1<tab>0\
-<tab>1<tab>161<tab>1<tab>161<tab>9e-114<tab>329
+    moaC<tab>gi|15800534|ref|NP_286546.1|<tab>100.00<tab>161<tab>0<tab>0
+    <tab>1<tab>161<tab>1<tab>161<tab>3e-114<tab>330
+
+    moaC<tab>gi|170768970|ref|ZP_02903423.1|<tab>99.38<tab>161<tab>1<tab>0
+    <tab>1<tab>161<tab>1<tab>161<tab>9e-114<tab>329
 
 Format Support
 --------------
@@ -179,11 +179,11 @@ Suppose we have a ``blast+6`` file with default columns:
 >>> from io import StringIO
 >>> import skbio.io
 >>> import pandas as pd
->>> fs = '\\n'.join([
-...     'moaC\\tgi|15800534|ref|NP_286546.1|\\t100.00\\t161\\t0\\t0\\t1\\t161\
-\\t1\\t161\\t3e-114\\t330',
-...     'moaC\\tgi|170768970|ref|ZP_02903423.1|\\t99.38\\t161\\t1\\t0\\t1\\t\
-161\\t1\\t161\\t9e-114\\t329'
+>>> fs = '\n'.join([
+...     'moaC\tgi|15800534|ref|NP_286546.1|\t100.00\t161\t0\t0\t1\t161\t1\t161'
+...     '\t3e-114\t330',
+...     'moaC\tgi|170768970|ref|ZP_02903423.1|\t99.38\t161\t1\t0\t1\t161\t1'
+...     '\t161\t9e-114\t329'
 ... ])
 >>> fh = StringIO(fs)
 
@@ -193,7 +193,7 @@ be used:
 >>> df = skbio.io.read(fh, format="blast+6", into=pd.DataFrame,
 ...                    default_columns=True)
 >>> df # doctest: +NORMALIZE_WHITESPACE
-  qseqid                           sseqid  pident  length  mismatch  gapopen \\
+  qseqid                           sseqid  pident  length  mismatch  gapopen \
 0   moaC     gi|15800534|ref|NP_286546.1|  100.00   161.0       0.0      0.0
 1   moaC  gi|170768970|ref|ZP_02903423.1|   99.38   161.0       1.0      0.0
 <BLANKLINE>
@@ -206,9 +206,9 @@ Suppose we have a ``blast+6`` file with user-supplied (non-default) columns:
 >>> from io import StringIO
 >>> import skbio.io
 >>> import pandas as pd
->>> fs = '\\n'.join([
-...     'moaC\\t100.00\\t0\\t161\\t0\\t161\\t330\\t1',
-...     'moaC\\t99.38\\t1\\t161\\t0\\t161\\t329\\t1'
+>>> fs = '\n'.join([
+...     'moaC\t100.00\t0\t161\t0\t161\t330\t1',
+...     'moaC\t99.38\t1\t161\t0\t161\t329\t1'
 ... ])
 >>> fh = StringIO(fs)
 
@@ -228,9 +228,11 @@ References
 .. [1] Altschul, S.F., Gish, W., Miller, W., Myers, E.W. & Lipman, D.J. (1990)
    "Basic local alignment search tool." J. Mol. Biol. 215:403-410.
 .. [2] http://blastedbio.blogspot.com/2014/11/column-headers-in-blast-tabular-\
-and-csv.html
+   and-csv.html
 .. [3] http://www.ncbi.nlm.nih.gov/books/NBK279675/
-"""
+
+
+"""  # noqa: D205, D415
 
 # ----------------------------------------------------------------------------
 # Copyright (c) 2013--, scikit-bio development team.
@@ -245,30 +247,44 @@ import pandas as pd
 from skbio.io import create_format
 from skbio.io.format._blast import _parse_blast_data, _possible_columns
 
-blast6 = create_format('blast+6')
+blast6 = create_format("blast+6")
 
-_default_columns = ['qseqid', 'sseqid', 'pident', 'length', 'mismatch',
-                    'gapopen', 'qstart', 'qend', 'sstart', 'send',
-                    'evalue', 'bitscore']
+_default_columns = [
+    "qseqid",
+    "sseqid",
+    "pident",
+    "length",
+    "mismatch",
+    "gapopen",
+    "qstart",
+    "qend",
+    "sstart",
+    "send",
+    "evalue",
+    "bitscore",
+]
 
 
 @blast6.reader(pd.DataFrame, monkey_patch=False)
 def _blast6_to_data_frame(fh, columns=None, default_columns=False):
     if default_columns and columns is not None:
-        raise ValueError("`columns` and `default_columns` cannot both be"
-                         " provided.")
+        raise ValueError("`columns` and `default_columns` cannot both be" " provided.")
     if not default_columns and columns is None:
-        raise ValueError("Either `columns` or `default_columns` must be"
-                         " provided.")
+        raise ValueError("Either `columns` or `default_columns` must be" " provided.")
     if default_columns:
         columns = _default_columns
     else:
         for column in columns:
             if column not in _possible_columns:
-                raise ValueError("Unrecognized column (%r)."
-                                 " Supported columns:\n%r" %
-                                 (column, set(_possible_columns.keys())))
+                raise ValueError(
+                    "Unrecognized column (%r)."
+                    " Supported columns:\n%r" % (column, set(_possible_columns.keys()))
+                )
 
-    return _parse_blast_data(fh, columns, ValueError,
-                             "Specified number of columns (%r) does not equal"
-                             " number of columns in file (%r).")
+    return _parse_blast_data(
+        fh,
+        columns,
+        ValueError,
+        "Specified number of columns (%r) does not equal"
+        " number of columns in file (%r).",
+    )

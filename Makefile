@@ -12,17 +12,21 @@ else
 	TEST_COMMAND = python -m skbio.test
 endif
 
-.PHONY: doc lint test dev install cython
+.PHONY: doc web lint test dev install cython
 
 doc:
 	$(MAKE) -C doc clean html
 
+web:
+	$(MAKE) -C web clean html
+
 clean:
 	$(MAKE) -C doc clean
+	$(MAKE) -C web clean
 	rm -rf build dist scikit_bio.egg-info
 
 lint:
-	flake8 skbio setup.py checklist.py
+	ruff check skbio setup.py checklist.py
 	./checklist.py
 	check-manifest
 

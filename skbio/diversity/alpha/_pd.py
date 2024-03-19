@@ -9,9 +9,11 @@
 import numpy as np
 
 from skbio.util._decorator import experimental
-from skbio.diversity._util import (_validate_counts_vector,
-                                   _validate_otu_ids_and_tree,
-                                   _vectorize_counts_and_tree)
+from skbio.diversity._util import (
+    _validate_counts_vector,
+    _validate_otu_ids_and_tree,
+    _vectorize_counts_and_tree,
+)
 
 
 def _setup_pd(counts, otu_ids, tree, validate, rooted, single_sample):
@@ -24,15 +26,15 @@ def _setup_pd(counts, otu_ids, tree, validate, rooted, single_sample):
         else:
             _validate_otu_ids_and_tree(counts[0], otu_ids, tree, rooted)
 
-    counts_by_node, _, branch_lengths = \
-        _vectorize_counts_and_tree(counts, otu_ids, tree)
+    counts_by_node, _, branch_lengths = _vectorize_counts_and_tree(
+        counts, otu_ids, tree
+    )
 
     return counts_by_node, branch_lengths
 
 
 def _faith_pd(counts_by_node, branch_lengths):
-    """Calculate Faith's phylogenetic diversity (Faith's PD) metric.
-    """
+    """Calculate Faith's phylogenetic diversity (Faith's PD) metric."""
     return (branch_lengths * (counts_by_node > 0)).sum()
 
 
@@ -175,14 +177,14 @@ def faith_pd(counts, otu_ids, tree, validate=True):
 
     """
     counts_by_node, branch_lengths = _setup_pd(
-        counts, otu_ids, tree, validate, rooted=True, single_sample=True)
+        counts, otu_ids, tree, validate, rooted=True, single_sample=True
+    )
 
     return _faith_pd(counts_by_node, branch_lengths)
 
 
 def _phydiv(counts_by_node, branch_lengths, rooted, weight):
-    """Calculate generalized phylogenetic diversity (PD) metrics.
-    """
+    """Calculate generalized phylogenetic diversity (PD) metrics."""
     # select branches connecting taxa
     included = counts_by_node > 0
 
@@ -213,7 +215,7 @@ def _phydiv(counts_by_node, branch_lengths, rooted, weight):
     return (branch_lengths * fracs_by_node).sum()
 
 
-@experimental(as_of="0.5.10")
+@experimental(as_of="0.6.0")
 def phydiv(counts, otu_ids, tree, rooted=None, weight=False, validate=True):
     r"""Calculate generalized phylogenetic diversity (PD) metrics.
 
@@ -393,11 +395,13 @@ def phydiv(counts, otu_ids, tree, rooted=None, weight=False, validate=True):
        Wu, G. D., ... & Li, H. (2012). Associating microbiome composition with
        environmental covariates using generalized UniFrac distances.
        Bioinformatics, 28(16), 2106-2113.
+
     """
     # whether tree is rooted should not affect whether metric can be calculated
     # ; it is common unrooted PD is calculated on a rooted tree
     counts_by_node, branch_lengths = _setup_pd(
-        counts, otu_ids, tree, validate, rooted=False, single_sample=True)
+        counts, otu_ids, tree, validate, rooted=False, single_sample=True
+    )
 
     # if not specified, determine whether metric should be calculated in rooted
     # mode according to the tree
@@ -405,8 +409,11 @@ def phydiv(counts, otu_ids, tree, rooted=None, weight=False, validate=True):
         rooted = len(tree.root().children) == 2
 
     # validate weight parameter
-    if not isinstance(weight, (bool, int, float)) or (w_ := float(weight)) \
-            < 0.0 or w_ > 1.0:
-        raise ValueError('Weight parameter must be boolean or within [0, 1].')
+    if (
+        not isinstance(weight, (bool, int, float))
+        or (w_ := float(weight)) < 0.0
+        or w_ > 1.0
+    ):
+        raise ValueError("Weight parameter must be boolean or within [0, 1].")
 
     return _phydiv(counts_by_node, branch_lengths, rooted, weight)

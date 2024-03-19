@@ -1,5 +1,4 @@
-r"""
-I/O utils (:mod:`skbio.io.util`)
+r"""I/O utils (:mod:`skbio.io.util`)
 ================================
 
 .. currentmodule:: skbio.io.util
@@ -11,13 +10,13 @@ Functions
 ---------
 
 .. autosummary::
-    :toctree: generated/
+   :toctree:
 
-    open
-    open_file
-    open_files
+   open
+   open_file
+   open_files
 
-"""
+"""  # noqa: D205, D415
 
 # ----------------------------------------------------------------------------
 # Copyright (c) 2013--, scikit-bio development team.
@@ -33,44 +32,64 @@ from contextlib import contextmanager, ExitStack
 from skbio.io import IOSourceError
 from skbio.io._iosources import get_io_sources, get_compression_handler
 from skbio.io._fileobject import (
-    is_binary_file, SaneTextIOWrapper, CompressedBufferedReader,
-    CompressedBufferedWriter)
+    is_binary_file,
+    SaneTextIOWrapper,
+    CompressedBufferedReader,
+    CompressedBufferedWriter,
+)
 from skbio.util._decorator import stable
 
-_d = dict(mode='r', encoding=None, errors=None, newline=None,
-          compression='auto', compresslevel=9)
+_d = dict(
+    mode="r",
+    encoding=None,
+    errors=None,
+    newline=None,
+    compression="auto",
+    compresslevel=9,
+)
 
 
-def _resolve(file, mode=_d['mode'], encoding=_d['encoding'],
-             errors=_d['errors'], newline=_d['newline'],
-             compression=_d['compression'], compresslevel=_d['compresslevel']):
+def _resolve(
+    file,
+    mode=_d["mode"],
+    encoding=_d["encoding"],
+    errors=_d["errors"],
+    newline=_d["newline"],
+    compression=_d["compression"],
+    compresslevel=_d["compresslevel"],
+):
     arguments = locals().copy()
 
-    if mode not in {'r', 'w'}:
+    if mode not in {"r", "w"}:
         raise ValueError("Unsupported mode: %r, use 'r' or 'w'" % mode)
 
     newfile = None
     source = None
     for source_handler in get_io_sources():
         source = source_handler(file, arguments)
-        if mode == 'r' and source.can_read():
+        if mode == "r" and source.can_read():
             newfile = source.get_reader()
             break
-        elif mode == 'w' and source.can_write():
+        elif mode == "w" and source.can_write():
             newfile = source.get_writer()
             break
 
     if newfile is None:
-        raise IOSourceError(
-            "Could not open source: %r (mode: %r)" % (file, mode))
+        raise IOSourceError("Could not open source: %r (mode: %r)" % (file, mode))
 
     return newfile, source, is_binary_file(newfile)
 
 
 @stable(as_of="0.4.0")
-def open(file, mode=_d['mode'], encoding=_d['encoding'], errors=_d['errors'],
-         newline=_d['newline'], compression=_d['compression'],
-         compresslevel=_d['compresslevel']):
+def open(
+    file,
+    mode=_d["mode"],
+    encoding=_d["encoding"],
+    errors=_d["errors"],
+    newline=_d["newline"],
+    compression=_d["compression"],
+    compresslevel=_d["compresslevel"],
+):
     r"""Convert input into a filehandle.
 
     Supported inputs:
@@ -154,24 +173,24 @@ def open(file, mode=_d['mode'], encoding=_d['encoding'], errors=_d['errors'],
 
     """
     arguments = locals().copy()
-    del arguments['file']
+    del arguments["file"]
 
     file, _, is_binary_file = _resolve(file, **arguments)
     return _munge_file(file, is_binary_file, arguments)
 
 
 def _munge_file(file, is_binary_file, arguments):
-    mode = arguments.get('mode', _d['mode'])
-    encoding = arguments.get('encoding', _d['encoding'])
-    errors = arguments.get('errors', _d['errors'])
-    newline = arguments.get('newline', _d['newline'])
-    compression = arguments.get('compression', _d['compression'])
-    is_output_binary = encoding == 'binary'
+    mode = arguments.get("mode", _d["mode"])
+    encoding = arguments.get("encoding", _d["encoding"])
+    errors = arguments.get("errors", _d["errors"])
+    newline = arguments.get("newline", _d["newline"])
+    compression = arguments.get("compression", _d["compression"])
+    is_output_binary = encoding == "binary"
     newfile = file
 
     compression_handler = get_compression_handler(compression)
 
-    if is_output_binary and newline is not _d['newline']:
+    if is_output_binary and newline is not _d["newline"]:
         raise ValueError("Cannot use `newline` with binary encoding.")
 
     if compression is not None and not compression_handler:
@@ -180,17 +199,19 @@ def _munge_file(file, is_binary_file, arguments):
     if is_binary_file:
         if compression:
             c = compression_handler(newfile, arguments)
-            if mode == 'w':
-                newfile = CompressedBufferedWriter(file, c.get_writer(),
-                                                   streamable=c.streamable)
+            if mode == "w":
+                newfile = CompressedBufferedWriter(
+                    file, c.get_writer(), streamable=c.streamable
+                )
             else:
                 newfile = CompressedBufferedReader(file, c.get_reader())
 
         if not is_output_binary:
-            newfile = SaneTextIOWrapper(newfile, encoding=encoding,
-                                        errors=errors, newline=newline)
+            newfile = SaneTextIOWrapper(
+                newfile, encoding=encoding, errors=errors, newline=newline
+            )
     else:
-        if compression is not None and compression != 'auto':
+        if compression is not None and compression != "auto":
             raise ValueError("Cannot use compression with that source.")
         if is_output_binary:
             raise ValueError("Source is not a binary source")
@@ -259,7 +280,7 @@ def open_file(file, **kwargs):
 
 
 def _flush_compressor(file):
-    if isinstance(file, io.TextIOBase) and hasattr(file, 'buffer'):
+    if isinstance(file, io.TextIOBase) and hasattr(file, "buffer"):
         file = file.buffer
     if isinstance(file, CompressedBufferedWriter) and not file.streamable:
         # Some formats like BZ2 compress the entire file, and so they will
@@ -271,6 +292,10 @@ def _flush_compressor(file):
 @contextmanager
 @stable(as_of="0.4.0")
 def open_files(files, **kwargs):
-    """A plural form of :func:`open_file`."""
+    """Context manager for :func:`skbio.io.util.open`.
+
+    A plural form of :func:`open_file`.
+
+    """
     with ExitStack() as stack:
         yield [stack.enter_context(open_file(f, **kwargs)) for f in files]

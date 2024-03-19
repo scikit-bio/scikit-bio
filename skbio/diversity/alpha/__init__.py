@@ -1,5 +1,4 @@
-"""
-Alpha diversity measures (:mod:`skbio.diversity.alpha`)
+"""Alpha diversity measures (:mod:`skbio.diversity.alpha`)
 =======================================================
 
 .. currentmodule:: skbio.diversity.alpha
@@ -49,7 +48,7 @@ Functions
    sobs
    strong
 
-"""
+"""  # noqa: D205, D415
 
 # ----------------------------------------------------------------------------
 # Copyright (c) 2013--, scikit-bio development team.
@@ -63,20 +62,70 @@ from ._ace import ace
 from ._chao1 import chao1, chao1_ci
 from ._pd import faith_pd, phydiv
 from ._base import (
-    berger_parker_d, brillouin_d, dominance, doubles, enspie,
-    esty_ci, fisher_alpha, goods_coverage, heip_e, kempton_taylor_q,
-    margalef, mcintosh_d, mcintosh_e, menhinick, michaelis_menten_fit,
-    observed_features, observed_otus, osd, pielou_e, robbins, shannon,
-    simpson, simpson_e, singles, sobs, strong)
+    berger_parker_d,
+    brillouin_d,
+    dominance,
+    doubles,
+    enspie,
+    esty_ci,
+    fisher_alpha,
+    goods_coverage,
+    heip_e,
+    kempton_taylor_q,
+    margalef,
+    mcintosh_d,
+    mcintosh_e,
+    menhinick,
+    michaelis_menten_fit,
+    observed_features,
+    observed_otus,
+    osd,
+    pielou_e,
+    robbins,
+    shannon,
+    simpson,
+    simpson_e,
+    singles,
+    sobs,
+    strong,
+)
 from ._gini import gini_index
 from ._lladser import lladser_pe, lladser_ci
 
 
-__all__ = ['ace', 'chao1', 'chao1_ci', 'berger_parker_d', 'brillouin_d',
-           'dominance', 'doubles', 'enspie', 'esty_ci', 'faith_pd',
-           'fisher_alpha', 'gini_index', 'goods_coverage', 'heip_e',
-           'kempton_taylor_q', 'margalef', 'mcintosh_d', 'mcintosh_e',
-           'menhinick', 'michaelis_menten_fit', 'observed_features',
-           'observed_otus', 'osd', 'phydiv', 'pielou_e', 'robbins', 'shannon',
-           'simpson', 'simpson_e', 'singles', 'sobs', 'strong', 'lladser_pe',
-           'lladser_ci']
+__all__ = [
+    "ace",
+    "chao1",
+    "chao1_ci",
+    "berger_parker_d",
+    "brillouin_d",
+    "dominance",
+    "doubles",
+    "enspie",
+    "esty_ci",
+    "faith_pd",
+    "fisher_alpha",
+    "gini_index",
+    "goods_coverage",
+    "heip_e",
+    "kempton_taylor_q",
+    "margalef",
+    "mcintosh_d",
+    "mcintosh_e",
+    "menhinick",
+    "michaelis_menten_fit",
+    "observed_features",
+    "observed_otus",
+    "osd",
+    "phydiv",
+    "pielou_e",
+    "robbins",
+    "shannon",
+    "simpson",
+    "simpson_e",
+    "singles",
+    "sobs",
+    "strong",
+    "lladser_pe",
+    "lladser_ci",
+]

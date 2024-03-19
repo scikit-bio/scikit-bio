@@ -1,5 +1,4 @@
-r"""
-Constructing workflows (:mod:`skbio.workflow`)
+r"""Constructing workflows (:mod:`skbio.workflow`)
 ==============================================
 
 .. currentmodule:: skbio.workflow
@@ -190,7 +189,9 @@ allow you to indicate ``anything`` as an option value, anything that is
 ...     def do_something_awesome(self):
 ...         pass
 ...
-"""
+
+
+"""  # noqa: D205, D415
 
 # ----------------------------------------------------------------------------
 # Copyright (c) 2013--, scikit-bio development team.
@@ -211,13 +212,16 @@ from skbio.util._decorator import experimental
 
 
 class NotExecuted:
-    """Helper object to track if a method was executed"""
+    """Helper object to track if a method was executed."""
+
     @experimental(as_of="0.4.0")
     def __init__(self):
+        """Construct all the necessary attributes for the NotExecuted object."""
         self.msg = None
 
     @experimental(as_of="0.4.0")
     def __call__(self, msg):
+        """Update message and return self."""
         self.msg = msg
         return self
 
@@ -226,9 +230,11 @@ _not_executed = NotExecuted()
 
 
 class Exists:
-    """Stub object to assist with ``requires`` when a value exists"""
+    """Stub object to assist with ``requires`` when a value exists."""
+
     @experimental(as_of="0.4.0")
     def __contains__(self, item):
+        """Check if a value exists."""
         return True
 
 
@@ -236,8 +242,11 @@ anything = Exists()  # external, for when a value can be anything
 
 
 class NotNone:
+    """Check for non-None values."""
+
     @experimental(as_of="0.4.0")
     def __contains__(self, item):
+        """Check if item is not None."""
         if item is None:
             return False
         else:
@@ -248,7 +257,7 @@ not_none = NotNone()
 
 
 class Workflow:
-    """Arbitrary workflow support structure
+    """Arbitrary workflow support structure.
 
     Methods that are considered to be directly part of the workflow must
     be decorated with ``method``. The workflow methods offer a mechanism to
@@ -281,9 +290,8 @@ class Workflow:
     """
 
     @experimental(as_of="0.4.0")
-    def __init__(self, state, short_circuit=True, debug=False, options=None,
-                 **kwargs):
-        r"""Build thy workflow of self"""
+    def __init__(self, state, short_circuit=True, debug=False, options=None, **kwargs):
+        r"""Build thy workflow of self."""
         if options is None:
             self.options = {}
         else:
@@ -305,7 +313,7 @@ class Workflow:
 
     @experimental(as_of="0.4.0")
     def initialize_state(self, item):
-        """Initialize state
+        """Initialize state.
 
         This method is called first prior to any other defined workflow method
         with the exception of _setup_debug_trace if self.debug is True
@@ -314,11 +322,12 @@ class Workflow:
         ----------
         item : anything
             Workflow dependent
+
         """
         raise NotImplementedError("Must implement this method")
 
     def _setup_debug(self):
-        """Wrap all methods with debug trace support"""
+        """Wrap all methods with debug trace support."""
         # ignore all members of the baseclass
         ignore = set(dir(Workflow))
 
@@ -332,18 +341,18 @@ class Workflow:
                 setattr(self, attrname, self._debug_trace_wrapper(attr))
 
     def _all_wf_methods(self):
-        """Get all workflow methods
+        """Get all workflow methods.
 
         Methods are sorted by priority
         """
         methods = []
         for item in dir(self):
             obj = getattr(self, item)
-            if hasattr(obj, 'priority'):
+            if hasattr(obj, "priority"):
                 methods.append(obj)
 
         def key(x):
-            return getattr(x, 'priority')
+            return getattr(x, "priority")
 
         methods_sorted = sorted(methods, key=key, reverse=True)
 
@@ -353,7 +362,7 @@ class Workflow:
         return methods_sorted
 
     def _setup_debug_trace(self):
-        """Setup a trace
+        """Set up a trace.
 
         The trace is per item iterated over by the workflow. Information about
         each method executed is tracked and keyed by::
@@ -380,7 +389,7 @@ class Workflow:
 
     @experimental(as_of="0.4.0")
     def __call__(self, iter_, success_callback=None, fail_callback=None):
-        """Operate on all the data
+        """Operate on all the data.
 
         This is the processing engine of the workflow. Callbacks are executed
         following applying all workflow methods to an item from ``iter_``
@@ -390,14 +399,18 @@ class Workflow:
 
         Parameters
         ----------
-        it : an iterator
-        success_callback : method to call on a successful item prior to
-            yielding. By default, ``self.state`` is yielded.
-        fail_callback : method to call on a failed item prior to yielding. By
-            default, failures are ignored.
+        iter_ : iterator
+            The iterator containing the data to be processed.
+        success_callback : method, optional
+            Method to call on a successful item prior to yielding. By default,
+            ``self.state`` is yielded.
+        fail_callback : method, optional
+            Method to call on a failed item prior to yielding. By default, failures
+            are ignored.
 
         """
         if success_callback is None:
+
             def success_callback(x):
                 return x.state
 
@@ -423,12 +436,12 @@ class Workflow:
         self.iter_ = None
 
     def _debug_trace_wrapper(self, func):
-        """Trace a function call"""
+        """Trace a function call."""
+
         def wrapped():
-            """Track debug information about a method execution"""
-            if not hasattr(self, 'debug_trace'):
-                raise AttributeError(
-                    "%s doesn't have debug_trace." % self.__class__)
+            """Track debug information about a method execution."""
+            if not hasattr(self, "debug_trace"):
+                raise AttributeError("%s doesn't have debug_trace." % self.__class__)
 
             exec_order = self.debug_counter
             name = func.__name__
@@ -450,7 +463,7 @@ class Workflow:
 
 
 class method:
-    """Decorate a function to indicate it is a workflow method
+    """Decorate a function to indicate it is a workflow method.
 
     Parameters
     ----------
@@ -459,20 +472,23 @@ class method:
         the priority. Priorities are relative to a given workflow
 
     """
+
     highest_priority = sys.maxsize
 
     @experimental(as_of="0.4.0")
     def __init__(self, priority=0):
+        """Construct all the necessary attributes for the method object."""
         self.priority = priority
 
     @experimental(as_of="0.4.0")
     def __call__(self, func):
+        """Decorate function with specified priority."""
         func.priority = self.priority
         return func
 
 
 class requires:
-    """Decorator that executes a function if requirements are met
+    """Decorator that executes a function if requirements are met.
 
     Parameters
     ----------
@@ -493,9 +509,12 @@ class requires:
         the requirement is satisfied, or ``False`` to indicate the
         requirement is not satisfied. This method will be passed the
         containing ``Workflow``s' ``state`` member variable.
+
     """
+
     @experimental(as_of="0.4.0")
     def __init__(self, option=None, values=anything, state=None):
+        """Construct all the necessary attributes for the requires object."""
         # self here is the requires object
         self.option = option
         self.required_state = state
@@ -516,12 +535,13 @@ class requires:
 
     @experimental(as_of="0.4.0")
     def __call__(self, func):
-        """Wrap a function
+        """Wrap a function.
 
         func : the function to wrap
         """
+
         def decorated(dec_self):
-            """A decorated function that has requirements
+            """Execute a decorated function that has requirements.
 
             dec_self : this is "self" for the decorated function
             """

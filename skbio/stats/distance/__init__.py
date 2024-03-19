@@ -1,5 +1,4 @@
-"""
-Distance matrices and distance-based statistics (:mod:`skbio.stats.distance`)
+r"""Distance matrices and distance-based statistics (:mod:`skbio.stats.distance`)
 =============================================================================
 
 .. currentmodule:: skbio.stats.distance
@@ -68,19 +67,19 @@ Examples
 Assume we have the following delimited text file storing distances between
 three objects with IDs ``a``, ``b``, and ``c``::
 
-    \\ta\\tb\\tc
-    a\\t0.0\\t0.5\\t1.0
-    b\\t0.5\\t0.0\\t0.75
-    c\\t1.0\\t0.75\\t0.0
+    \ta\tb\tc
+    a\t0.0\t0.5\t1.0
+    b\t0.5\t0.0\t0.75
+    c\t1.0\t0.75\t0.0
 
 Load a distance matrix from the file:
 
 >>> from io import StringIO
 >>> from skbio import DistanceMatrix
->>> dm_fh = StringIO("\\ta\\tb\\tc\\n"
-...                  "a\\t0.0\\t0.5\\t1.0\\n"
-...                  "b\\t0.5\\t0.0\\t0.75\\n"
-...                  "c\\t1.0\\t0.75\\t0.0\\n")
+>>> dm_fh = StringIO("\ta\tb\tc\n"
+...                  "a\t0.0\t0.5\t1.0\n"
+...                  "b\t0.5\t0.0\t0.75\n"
+...                  "c\t1.0\t0.75\t0.0\n")
 >>> dm = DistanceMatrix.read(dm_fh)
 >>> print(dm)
 3x3 distance matrix
@@ -178,7 +177,8 @@ References
 .. [1] Faith, D. P. (1992). "Conservation evaluation and phylogenetic
    diversity".
 
-"""
+
+"""  # noqa: D407, D205, D415
 
 # ----------------------------------------------------------------------------
 # Copyright (c) 2013--, scikit-bio development team.
@@ -188,15 +188,31 @@ References
 # The full license is in the file LICENSE.txt, distributed with this software.
 # ----------------------------------------------------------------------------
 
-from ._base import (DissimilarityMatrixError, DistanceMatrixError,
-                    MissingIDError, DissimilarityMatrix, DistanceMatrix,
-                    randdm)
+from ._base import (
+    DissimilarityMatrixError,
+    DistanceMatrixError,
+    MissingIDError,
+    DissimilarityMatrix,
+    DistanceMatrix,
+    randdm,
+)
 from ._bioenv import bioenv
 from ._anosim import anosim
 from ._permanova import permanova
 from ._mantel import mantel, pwmantel
 from ._permdisp import permdisp
 
-__all__ = ['DissimilarityMatrixError', 'DistanceMatrixError', 'MissingIDError',
-           'DissimilarityMatrix', 'DistanceMatrix', 'randdm', 'anosim',
-           'permanova', 'bioenv', 'mantel', 'pwmantel', 'permdisp']
+__all__ = [
+    "DissimilarityMatrixError",
+    "DistanceMatrixError",
+    "MissingIDError",
+    "DissimilarityMatrix",
+    "DistanceMatrix",
+    "randdm",
+    "anosim",
+    "permanova",
+    "bioenv",
+    "mantel",
+    "pwmantel",
+    "permdisp",
+]

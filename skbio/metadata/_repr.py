@@ -31,24 +31,24 @@ class _MetadataReprBuilder(metaclass=ABCMeta):
         Number of spaces to use for indented lines.
 
     """
+
     def __init__(self, obj, width, indent):
         self._obj = obj
         self._width = width
-        self._indent = ' ' * indent
+        self._indent = " " * indent
 
     @abstractmethod
     def _process_header(self):
-        """Used by `build` Template Method to build header for the repr"""
+        """Build header for the repr. Used by `build` Template Method."""
         raise NotImplementedError
 
     @abstractmethod
     def _process_data(self):
-        """Used by `build` Template Method to build data lines for the repr"""
+        """Build data lines for the repr. Used by `build` Template Method."""
         raise NotImplementedError
 
     def build(self):
-        """Template method for building the repr"""
-
+        """Template method for building the repr."""
         self._lines = ElasticLines()
 
         self._process_header()
@@ -62,14 +62,13 @@ class _MetadataReprBuilder(metaclass=ABCMeta):
 
     def _process_metadata(self):
         if self._obj.has_metadata():
-            self._lines.add_line('Metadata:')
+            self._lines.add_line("Metadata:")
             # Python 3 doesn't allow sorting of mixed types so we can't just
             # use sorted() on the metadata keys. Sort first by type then sort
             # by value within each type.
             for key in self._sorted_keys_grouped_by_type(self._obj.metadata):
                 value = self._obj.metadata[key]
-                self._lines.add_lines(
-                    self._format_metadata_key_value(key, value))
+                self._lines.add_lines(self._format_metadata_key_value(key, value))
 
     def _sorted_keys_grouped_by_type(self, dict_):
         """Group keys within a dict by their type and sort within type."""
@@ -120,27 +119,30 @@ class _MetadataReprBuilder(metaclass=ABCMeta):
 
     def _process_positional_metadata(self):
         if self._obj.has_positional_metadata():
-            self._lines.add_line('Positional metadata:')
+            self._lines.add_line("Positional metadata:")
             for key in self._obj.positional_metadata.columns.values.tolist():
                 dtype = self._obj.positional_metadata[key].dtype
                 self._lines.add_lines(
-                    self._format_positional_metadata_column(key, dtype))
+                    self._format_positional_metadata_column(key, dtype)
+                )
 
     def _format_positional_metadata_column(self, key, dtype):
         key_fmt = self._format_key(key)
-        dtype_fmt = '<dtype: %s>' % str(dtype)
+        dtype_fmt = "<dtype: %s>" % str(dtype)
         return self._wrap_text_with_indent(dtype_fmt, key_fmt, 1)
 
     def _process_interval_metadata(self):
         # TODO: this hasattr check can be removed once all the relevant
         # classes have interval_metadata added to it.
-        if (hasattr(self._obj, "has_interval_metadata") and
-           self._obj.has_interval_metadata()):
-            self._lines.add_line('Interval metadata:')
+        if (
+            hasattr(self._obj, "has_interval_metadata")
+            and self._obj.has_interval_metadata()
+        ):
+            self._lines.add_line("Interval metadata:")
             n = self._obj.interval_metadata.num_interval_features
-            line = self._indent + '%d interval feature' % n
+            line = self._indent + "%d interval feature" % n
             if n > 1:
-                line += 's'
+                line += "s"
             self._lines.add_line(line)
 
     def _format_key(self, key):
@@ -153,10 +155,9 @@ class _MetadataReprBuilder(metaclass=ABCMeta):
         """
         key_fmt = self._indent + repr(key)
         supported_types = (str, bytes, numbers.Number, type(None))
-        if len(key_fmt) > (self._width / 2) or not isinstance(key,
-                                                              supported_types):
+        if len(key_fmt) > (self._width / 2) or not isinstance(key, supported_types):
             key_fmt = self._indent + str(type(key))
-        return '%s: ' % key_fmt
+        return "%s: " % key_fmt
 
     def _wrap_text_with_indent(self, text, initial_text, extra_indent):
         """Wrap text across lines with an initial indentation.
@@ -173,12 +174,15 @@ class _MetadataReprBuilder(metaclass=ABCMeta):
 
         """
         return textwrap.wrap(
-            text, width=self._width, expand_tabs=False,
+            text,
+            width=self._width,
+            expand_tabs=False,
             initial_indent=initial_text,
-            subsequent_indent=' ' * (len(initial_text) + extra_indent))
+            subsequent_indent=" " * (len(initial_text) + extra_indent),
+        )
 
     def _process_stats(self):
-        self._lines.add_line('Stats:')
+        self._lines.add_line("Stats:")
         for label, value in self._obj._repr_stats():
-            self._lines.add_line('%s%s: %s' % (self._indent, label, value))
+            self._lines.add_line("%s%s: %s" % (self._indent, label, value))
         self._lines.add_separator()

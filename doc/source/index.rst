@@ -1,15 +1,69 @@
-scikit-bio
-==========
+:html_theme.sidebar_secondary.remove:
 
-scikit-bio (canonically pronounced *sigh-kit-buy-oh*) is a library for working
-with biological data in Python 3. scikit-bio is open source, BSD-licensed
-software that is currently under active development.
+.. page style and classes
+
+.. raw:: html
+
+   <style>
+
+      /* hide prev/next button */
+
+     .prev-next-footer {
+       display: none;
+     }
+
+     /* arange level 2 entries in the same line */
+
+     .toctree-l1 {
+       margin-top: 20px;
+       line-height: 2em;
+     }
+
+     .toctree-l1 > a:first-of-type {
+       font-size: 1.5em;
+       font-weight: bold;
+     }
+
+     .toctree-l2 {
+       display: inline;
+     }
+
+     .toctree-l2:not(:last-of-type)::after {
+       content: " - ";
+     }
+
+   </style>
+
+
+.. hidden page title
+
+.. title:: Home
+
+.. toctree hidden from document but provides header links
+
+.. toctree::
+   :hidden:
+   :maxdepth: 1
+
+   Install <https://scikit.bio/install.html>
+   Learn <https://scikit.bio/learn.html>
+   Documentation <self>
+   Contribute <https://scikit.bio/contribute.html>
+   Community <https://github.com/scikit-bio/scikit-bio/discussions>
+   Releases <https://github.com/scikit-bio/scikit-bio/blob/master/CHANGELOG.md>
+   About <https://scikit.bio/about.html>
+
+
+scikit-bio |version|
+====================
+
+scikit-bio (canonically pronounced *sigh-kit-buy-oh*) is a library for working with biological data in Python 3. scikit-bio is open source, BSD-licensed software that is currently under active development.
 
 API Reference
 -------------
 
 .. toctree::
-   :maxdepth: 1
+   :maxdepth: 2
 
    io
    sequence
@@ -20,25 +74,3 @@ API Reference
    stats
    metadata
    util
-
-User Documentation
-------------------
-
-The user documentation contains high-level information for users of scikit-bio.
-
-.. toctree::
-   :maxdepth: 1
-
-   user/api_stability
-
-Developer Documentation
------------------------
-
-The developer documentation contains information for how to contribute
-to scikit-bio.
-
-.. toctree::
-   :maxdepth: 1
-
-   development/coding_guidelines
-   development/new_module

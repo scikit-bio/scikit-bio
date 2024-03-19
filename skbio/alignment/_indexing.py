@@ -33,12 +33,14 @@ class _Indexing(metaclass=ABCMeta):
 
         if type(indexable) is tuple:
             if len(indexable) > 2:
-                raise ValueError("Can only slice on two axes. Tuple is length:"
-                                 " %r" % len(indexable))
+                raise ValueError(
+                    "Can only slice on two axes. Tuple is length:"
+                    " %r" % len(indexable)
+                )
             elif len(indexable) > 1:
                 return self._handle_both_axes(*indexable)
             else:
-                indexable, = indexable
+                (indexable,) = indexable
 
         return self._slice_on_first_axis(self._obj, indexable)
 
@@ -46,7 +48,7 @@ class _Indexing(metaclass=ABCMeta):
         seq_index = self._convert_ellipsis(seq_index)
         pos_index = self._convert_ellipsis(pos_index)
 
-        if not hasattr(seq_index, '__iter__') and seq_index == slice(None):
+        if not hasattr(seq_index, "__iter__") and seq_index == slice(None):
             # Only slice second axis
             return self._slice_on_second_axis(self._obj, pos_index)
         else:
@@ -112,15 +114,16 @@ class _Indexing(metaclass=ABCMeta):
     def _assert_bool_vector_right_size(self, indexable, axis):
         if isinstance(indexable, np.ndarray):
             pass
-        elif hasattr(indexable, '__iter__'):
+        elif hasattr(indexable, "__iter__"):
             indexable = np.asarray(list(indexable))
         else:
             return indexable
 
         if indexable.dtype == bool and len(indexable) != self._obj.shape[axis]:
-            raise IndexError("Boolean index's length (%r) does not match the"
-                             " axis length (%r)" % (len(indexable),
-                                                    self._obj.shape[axis]))
+            raise IndexError(
+                "Boolean index's length (%r) does not match the"
+                " axis length (%r)" % (len(indexable), self._obj.shape[axis])
+            )
 
         return indexable
 
@@ -140,9 +143,10 @@ class TabularMSAILoc(_Indexing):
 
 class TabularMSALoc(_Indexing):
     def is_scalar(self, indexable, axis):
-        """
-        Sometimes (MultiIndex!) something that looks like a scalar, isn't
-        and vice-versa.
+        """Check if an indexable object is scalar or not.
+
+        Sometimes (MultiIndex!) something that looks like a scalar,
+        isn't and vice-versa.
 
         Consider:
 
@@ -165,18 +169,23 @@ class TabularMSALoc(_Indexing):
         if axis == 0 and self._has_fancy_index():
             try:
                 if type(indexable) is tuple:
-                    complete_key = (len(indexable) == len(index.levshape) and
-                                    indexable in index)
+                    complete_key = (
+                        len(indexable) == len(index.levshape) and indexable in index
+                    )
                 partial_key = not complete_key and indexable in index
-            except TypeError:  # Unhashable type, no biggie
+            except (
+                TypeError,
+                pd.errors.InvalidIndexError,
+            ):  # Unhashable type, no biggie
                 pass
         if index.has_duplicates:
             # for a given Index object index,
             # index[index.duplicated()].unique() is pandas' recommended
             # replacement for index.get_duplicates(), per the pandas 0.23 docs
             duplicated_key = indexable in index[index.duplicated()].unique()
-        return (not duplicated_key and
-                ((np.isscalar(indexable) and not partial_key) or complete_key))
+        return not duplicated_key and (
+            (np.isscalar(indexable) and not partial_key) or complete_key
+        )
 
     def _get_sequence(self, obj, indexable):
         self._assert_tuple_rules(indexable)
@@ -184,14 +193,18 @@ class TabularMSALoc(_Indexing):
 
     def _slice_sequences(self, obj, indexable):
         self._assert_tuple_rules(indexable)
-        if (self._has_fancy_index() and
-                type(indexable) is not tuple and
-                pd.api.types.is_list_like(indexable) and
-                len(indexable) > 0):
+        if (
+            self._has_fancy_index()
+            and type(indexable) is not tuple
+            and pd.api.types.is_list_like(indexable)
+            and len(indexable) > 0
+        ):
             if not self.is_scalar(indexable[0], axis=0):
-                raise TypeError("A list is used with complete labels, try"
-                                " using a tuple to indicate independent"
-                                " selections of a `pd.MultiIndex`.")
+                raise TypeError(
+                    "A list is used with complete labels, try"
+                    " using a tuple to indicate independent"
+                    " selections of a `pd.MultiIndex`."
+                )
             # prevents
             # pd.Series.loc[['x', 'b', 'b', 'a']] from being interepereted as
             # pd.Series.loc[[('a', 0), ('b', 1)]] who knows why it does this.
@@ -207,17 +220,21 @@ class TabularMSALoc(_Indexing):
         if type(indexable) is tuple:
             if not self._has_fancy_index():
                 # prevents unfriendly errors
-                raise TypeError("Cannot provide a tuple to the first axis of"
-                                " `loc` unless the MSA's `index` is a"
-                                " `pd.MultiIndex`.")
+                raise TypeError(
+                    "Cannot provide a tuple to the first axis of"
+                    " `loc` unless the MSA's `index` is a"
+                    " `pd.MultiIndex`."
+                )
             elif self.is_scalar(indexable[0], axis=0):
                 # prevents unreasonable results
                 # pd.Series.loc[('a', 0), ('b', 1)] would be interpreted as
                 # pd.Series.loc[('a', 1)] which is horrifying.
-                raise TypeError("A tuple provided to the first axis of `loc`"
-                                " represents a selection for each index of a"
-                                " `pd.MultiIndex`; it should not contain a"
-                                " complete label.")
+                raise TypeError(
+                    "A tuple provided to the first axis of `loc`"
+                    " represents a selection for each index of a"
+                    " `pd.MultiIndex`; it should not contain a"
+                    " complete label."
+                )
 
     def _has_fancy_index(self):
-        return hasattr(self._obj.index, 'levshape')
+        return hasattr(self._obj.index, "levshape")

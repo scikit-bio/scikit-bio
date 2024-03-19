@@ -1,5 +1,4 @@
-"""
-PHYLIP multiple sequence alignment format (:mod:`skbio.io.format.phylip`)
+"""PHYLIP multiple sequence alignment format (:mod:`skbio.io.format.phylip`)
 =========================================================================
 
 .. currentmodule:: skbio.io.format.phylip
@@ -213,7 +212,8 @@ References
 .. [4] http://www.phylo.org/tools/obsolete/phylip.html
 .. [5] http://www.bioperl.org/wiki/PHYLIP_multiple_alignment_format
 
-"""
+
+"""  # noqa: D205, D415
 
 # ----------------------------------------------------------------------------
 # Copyright (c) 2013--, scikit-bio development team.
@@ -228,7 +228,7 @@ from skbio.io import create_format, PhylipFormatError
 from skbio.util._misc import chunk_str
 
 
-phylip = create_format('phylip')
+phylip = create_format("phylip")
 
 
 @phylip.sniffer()
@@ -267,13 +267,15 @@ def _tabular_msa_to_phylip(obj, fh):
     if sequence_count < 1:
         raise PhylipFormatError(
             "TabularMSA can only be written in PHYLIP format if there is at "
-            "least one sequence in the alignment.")
+            "least one sequence in the alignment."
+        )
 
     sequence_length = obj.shape.position
     if sequence_length < 1:
         raise PhylipFormatError(
             "TabularMSA can only be written in PHYLIP format if there is at "
-            "least one position in the alignment.")
+            "least one position in the alignment."
+        )
 
     chunk_size = 10
     labels = [str(label) for label in obj.index]
@@ -284,13 +286,14 @@ def _tabular_msa_to_phylip(obj, fh):
                 "sequence index labels have %d or fewer characters. Found "
                 "sequence with index label '%s' that exceeds this limit. Use "
                 "``TabularMSA.reassign_index`` to assign shorter index labels."
-                % (chunk_size, label))
+                % (chunk_size, label)
+            )
 
-    fh.write('{0:d} {1:d}\n'.format(sequence_count, sequence_length))
+    fh.write("{0:d} {1:d}\n".format(sequence_count, sequence_length))
 
-    fmt = '{0:%d}{1}\n' % chunk_size
+    fmt = "{0:%d}{1}\n" % chunk_size
     for label, seq in zip(labels, obj):
-        chunked_seq = chunk_str(str(seq), chunk_size, ' ')
+        chunked_seq = chunk_str(str(seq), chunk_size, " ")
         fh.write(fmt.format(label, chunked_seq))
 
 
@@ -300,12 +303,14 @@ def _validate_header(header):
         n_seqs, seq_len = [int(x) for x in header_vals]
         if n_seqs < 1 or seq_len < 1:
             raise PhylipFormatError(
-                'The number of sequences and the length must be positive.')
+                "The number of sequences and the length must be positive."
+            )
     except ValueError:
         raise PhylipFormatError(
-            'Found non-header line when attempting to read the 1st record '
-            '(header line should have two space-separated integers): '
-            '"%s"' % header)
+            "Found non-header line when attempting to read the 1st record "
+            "(header line should have two space-separated integers): "
+            '"%s"' % header
+        )
     return n_seqs, seq_len
 
 
@@ -313,11 +318,12 @@ def _validate_line(line, seq_len):
     if not line:
         raise PhylipFormatError("Empty lines are not allowed.")
     ID = line[:10].strip()
-    seq = line[10:].replace(' ', '')
+    seq = line[10:].replace(" ", "")
     if len(seq) != seq_len:
         raise PhylipFormatError(
             "The length of sequence %s is not %s as specified in the header."
-            % (ID, seq_len))
+            % (ID, seq_len)
+        )
     return (seq, ID)
 
 
@@ -345,13 +351,13 @@ def _parse_phylip_raw(fh):
         data.append(_validate_line(line, seq_len))
     if len(data) != n_seqs:
         raise PhylipFormatError(
-            "The number of sequences is not %s " % n_seqs +
-            "as specified in the header.")
+            "The number of sequences is not %s " % n_seqs
+            + "as specified in the header."
+        )
     return data
 
 
 def _line_generator(fh):
-    """Just remove linebreak characters and yield lines.
-    """
+    """Just remove linebreak characters and yield lines."""
     for line in fh:
-        yield line.rstrip('\n')
+        yield line.rstrip("\n")

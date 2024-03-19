@@ -49,16 +49,14 @@ def _validate_counts_matrix(counts, ids=None, suppress_cast=False):
             )
         return np.asarray(counts)
     else:
-
-        if len(counts) == 0 or not isinstance(counts[0],
-                                              collections.abc.Iterable):
+        if len(counts) == 0 or not isinstance(counts[0], collections.abc.Iterable):
             counts = [counts]
         counts = np.asarray(counts)
         if counts.ndim > 2:
             raise ValueError(
                 "Only 1-D and 2-D array-like objects can be provided "
-                "as input. Provided object has %d dimensions." %
-                counts.ndim)
+                "as input. Provided object has %d dimensions." % counts.ndim
+            )
 
         if ids is not None and len(counts) != len(ids):
             raise ValueError(
@@ -71,9 +69,7 @@ def _validate_counts_matrix(counts, ids=None, suppress_cast=False):
             results.append(_validate_counts_vector(v, suppress_cast))
             lens.append(len(v))
         if len(set(lens)) > 1:
-            raise ValueError(
-                "All rows in ``counts`` must be of equal length."
-            )
+            raise ValueError("All rows in ``counts`` must be of equal length.")
         return np.asarray(results)
 
 
@@ -84,8 +80,9 @@ def _validate_otu_ids_and_tree(counts, otu_ids, tree, rooted=True):
         raise ValueError("``otu_ids`` cannot contain duplicated ids.")
 
     if len(counts) != len_otu_ids:
-        raise ValueError("``otu_ids`` must be the same length as ``counts`` "
-                         "vector(s).")
+        raise ValueError(
+            "``otu_ids`` must be the same length as ``counts`` " "vector(s)."
+        )
 
     if len(tree.root().children) == 0:
         raise ValueError("``tree`` must contain more than just a root node.")
@@ -110,26 +107,24 @@ def _validate_otu_ids_and_tree(counts, otu_ids, tree, rooted=True):
         raise DuplicateNodeError("All tip names must be unique.")
 
     if np.array([branch is None for branch in branch_lengths]).any():
-        raise ValueError("All non-root nodes in ``tree`` must have a branch "
-                         "length.")
+        raise ValueError("All non-root nodes in ``tree`` must have a branch " "length.")
     missing_tip_names = set_otu_ids - set_tip_names
     if missing_tip_names != set():
         n_missing_tip_names = len(missing_tip_names)
-        raise MissingNodeError("All ``otu_ids`` must be present as tip names "
-                               "in ``tree``. ``otu_ids`` not corresponding to "
-                               "tip names (n=%d): %s" %
-                               (n_missing_tip_names,
-                                " ".join(missing_tip_names)))
+        raise MissingNodeError(
+            "All ``otu_ids`` must be present as tip names "
+            "in ``tree``. ``otu_ids`` not corresponding to "
+            "tip names (n=%d): %s" % (n_missing_tip_names, " ".join(missing_tip_names))
+        )
 
 
 def _vectorize_counts_and_tree(counts, otu_ids, tree):
-    """ Index tree and convert counts to np.array in corresponding order
-    """
+    """Index tree and convert counts to np.array in corresponding order."""
     tree_index = tree.to_array(nan_length_value=0.0)
     otu_ids = np.asarray(otu_ids)
     counts = np.atleast_2d(counts)
     counts_by_node = _nodes_by_counts(counts, otu_ids, tree_index)
-    branch_lengths = tree_index['length']
+    branch_lengths = tree_index["length"]
 
     # branch_lengths is just a reference to the array inside of tree_index,
     # but it's used so much that it's convenient to just pull it out here.
@@ -138,15 +133,15 @@ def _vectorize_counts_and_tree(counts, otu_ids, tree):
 
 def _get_phylogenetic_kwargs(counts, **kwargs):
     try:
-        otu_ids = kwargs.pop('otu_ids')
+        otu_ids = kwargs.pop("otu_ids")
     except KeyError:
-        raise ValueError("``otu_ids`` is required for phylogenetic diversity "
-                         "metrics.")
+        raise ValueError(
+            "``otu_ids`` is required for phylogenetic diversity " "metrics."
+        )
     try:
-        tree = kwargs.pop('tree')
+        tree = kwargs.pop("tree")
     except KeyError:
-        raise ValueError("``tree`` is required for phylogenetic diversity "
-                         "metrics.")
+        raise ValueError("``tree`` is required for phylogenetic diversity " "metrics.")
 
     return otu_ids, tree, kwargs
 

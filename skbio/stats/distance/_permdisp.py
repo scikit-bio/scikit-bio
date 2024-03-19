@@ -15,18 +15,28 @@ from scipy.spatial.distance import cdist
 
 import hdmedians as hd
 
-from ._base import (_preprocess_input_sng, _run_monte_carlo_stats,
-                    _build_results, DistanceMatrix)
+from ._base import (
+    _preprocess_input_sng,
+    _run_monte_carlo_stats,
+    _build_results,
+    DistanceMatrix,
+)
 
 from skbio.stats.ordination import pcoa, OrdinationResults
 from skbio.util._decorator import experimental
 
 
 @experimental(as_of="0.5.2")
-def permdisp(distance_matrix, grouping, column=None, test='median',
-             permutations=999, method="eigh", number_of_dimensions=10):
-    """Test for Homogeneity of Multivariate Groups Disperisons using Marti
-    Anderson's PERMDISP2 procedure.
+def permdisp(
+    distance_matrix,
+    grouping,
+    column=None,
+    test="median",
+    permutations=999,
+    method="eigh",
+    number_of_dimensions=10,
+):
+    """Test for Homogeneity of Multivariate Groups Disperisons.
 
     PERMDISP is a multivariate analogue of Levene's test for homogeneity of
     multivariate variances. Distances are handled by reducing the
@@ -114,6 +124,8 @@ def permdisp(distance_matrix, grouping, column=None, test='median',
 
     Notes
     -----
+    This function uses Marti Anderson's PERMDISP2 procedure.
+
     The significance of the results from this function will be the same as the
     results found in vegan's betadisper, however due to floating point
     variability the F-statistic results may vary slightly.
@@ -123,8 +135,8 @@ def permdisp(distance_matrix, grouping, column=None, test='median',
 
     References
     ----------
-    .. [1] Anderson, Marti J. "Distance-Based Tests for Homogeneity of
-        Multivariate Dispersions." Biometrics 62 (2006):245-253
+    .. [1] Anderson, M. J. (2006). Distance-based tests for homogeneity of multivariate
+       dispersions. Biometrics, 62(1), 245-253.
 
     .. [2] http://cran.r-project.org/web/packages/vegan/index.html
 
@@ -234,8 +246,8 @@ def permdisp(distance_matrix, grouping, column=None, test='median',
     determine whether clustering within groups is significant.
 
     """
-    if test not in ['centroid', 'median']:
-        raise ValueError('Test must be centroid or median')
+    if test not in ["centroid", "median"]:
+        raise ValueError("Test must be centroid or median")
 
     if isinstance(distance_matrix, OrdinationResults):
         ordination = distance_matrix
@@ -248,44 +260,47 @@ def permdisp(distance_matrix, grouping, column=None, test='median',
             # and pcoa expects it to be 0
             number_of_dimensions = 0
         elif method != "fsvd":
-            raise ValueError('Method must be eigh or fsvd')
+            raise ValueError("Method must be eigh or fsvd")
 
         ids = distance_matrix.ids
         sample_size = distance_matrix.shape[0]
 
-        ordination = pcoa(distance_matrix, method=method,
-                          number_of_dimensions=number_of_dimensions)
+        ordination = pcoa(
+            distance_matrix, method=method, number_of_dimensions=number_of_dimensions
+        )
     else:
         raise TypeError("Input must be a DistanceMatrix or OrdinationResults.")
 
     samples = ordination.samples
 
-    num_groups, grouping = _preprocess_input_sng(
-        ids, sample_size, grouping, column)
+    num_groups, grouping = _preprocess_input_sng(ids, sample_size, grouping, column)
 
     test_stat_function = partial(_compute_groups, samples, test)
 
-    stat, p_value = _run_monte_carlo_stats(test_stat_function, grouping,
-                                           permutations)
+    stat, p_value = _run_monte_carlo_stats(test_stat_function, grouping, permutations)
 
-    return _build_results('PERMDISP', 'F-value', sample_size, num_groups,
-                          stat, p_value, permutations)
+    return _build_results(
+        "PERMDISP", "F-value", sample_size, num_groups, stat, p_value, permutations
+    )
 
 
 def _compute_groups(samples, test_type, grouping):
-
     groups = []
 
-    samples['grouping'] = grouping
-    if test_type == 'centroid':
-        centroids = samples.groupby('grouping').aggregate('mean')
-    elif test_type == 'median':
-        centroids = samples.groupby('grouping').apply(_config_med)
+    samples["grouping"] = grouping
+    if test_type == "centroid":
+        centroids = samples.groupby("grouping").aggregate("mean")
+    elif test_type == "median":
+        centroids = samples.groupby("grouping").apply(_config_med)
 
-    for label, df in samples.groupby('grouping'):
-        groups.append(cdist(df.values[:, :-1].astype('float64'),
-                            [centroids.loc[label].values],
-                            metric='euclidean'))
+    for label, df in samples.groupby("grouping"):
+        groups.append(
+            cdist(
+                df.values[:, :-1].astype("float64"),
+                [centroids.loc[label].values],
+                metric="euclidean",
+            )
+        )
 
     stat, _ = f_oneway(*groups)
     stat = stat[0]
@@ -294,9 +309,10 @@ def _compute_groups(samples, test_type, grouping):
 
 
 def _config_med(x):
-    """
-    slice the vector up to the last value to exclude grouping column
-    and transpose the vector to be compatible with hd.geomedian
+    """Slice and transpose the vector.
+
+    Slice the vector up to the last value to exclude grouping column
+    and transpose the vector to be compatible with hd.geomedian.
     """
     X = x.values[:, :-1]
     return pd.Series(np.array(hd.geomedian(X.T)), index=x.columns[:-1])

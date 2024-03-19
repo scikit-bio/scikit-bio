@@ -17,8 +17,7 @@ from skbio.util._decorator import experimental
 
 @experimental(as_of="0.4.0")
 def cca(y, x, scaling=1):
-    r"""Compute canonical (also known as constrained) correspondence
-    analysis.
+    r"""Compute canonical (also known as constrained) correspondence analysis.
 
     Canonical (or constrained) correspondence analysis is a
     multivariate ordination technique. It appeared in community
@@ -105,21 +104,21 @@ def cca(y, x, scaling=1):
 
     # Perform parameter sanity checks
     if X.shape[0] != Y.shape[0]:
-        raise ValueError("The samples by features table 'y' and the samples by"
-                         " constraints table 'x' must have the same number of "
-                         " rows. 'y': {0} 'x': {1}".format(X.shape[0],
-                                                           Y.shape[0]))
-    if Y.min() < 0:
         raise ValueError(
-            "The samples by features table 'y' must be nonnegative")
+            "The samples by features table 'y' and the samples by"
+            " constraints table 'x' must have the same number of "
+            " rows. 'y': {0} 'x': {1}".format(X.shape[0], Y.shape[0])
+        )
+    if Y.min() < 0:
+        raise ValueError("The samples by features table 'y' must be nonnegative")
     row_max = Y.max(axis=1)
     if np.any(row_max <= 0):
         # Or else the lstsq call to compute Y_hat breaks
-        raise ValueError("The samples by features table 'y' cannot contain a "
-                         "row with only 0's")
+        raise ValueError(
+            "The samples by features table 'y' cannot contain a " "row with only 0's"
+        )
     if scaling not in {1, 2}:
-        raise NotImplementedError(
-            "Scaling {0} not implemented.".format(scaling))
+        raise NotImplementedError("Scaling {0} not implemented.".format(scaling))
 
     # Step 1 (similar to Pearson chi-square statistic)
     grand_total = Y.sum()
@@ -141,7 +140,7 @@ def cca(y, x, scaling=1):
     X = scale(X, weights=row_marginals, ddof=0)
 
     # Step 3. Weighted multiple regression.
-    X_weighted = row_marginals[:, None]**0.5 * X
+    X_weighted = row_marginals[:, None] ** 0.5 * X
     B, _, rank_lstsq, _ = lstsq(X_weighted, Q_bar)
     Y_hat = X_weighted.dot(B)
     Y_res = Q_bar - Y_hat
@@ -167,7 +166,7 @@ def cca(y, x, scaling=1):
     U_res = vt_res.T
     U_hat_res = Y_res.dot(U_res) * s_res**-1
 
-    eigenvalues = np.r_[s, s_res]**2
+    eigenvalues = np.r_[s, s_res] ** 2
 
     # Scalings (p. 596 L&L 1998):
     # feature scores, scaling 1
@@ -184,8 +183,7 @@ def cca(y, x, scaling=1):
 
     # Sample scores which are linear combinations of constraint
     # variables
-    Z_scaling1 = ((row_marginals**-0.5)[:, None] *
-                  Y_hat.dot(U))
+    Z_scaling1 = (row_marginals**-0.5)[:, None] * Y_hat.dot(U)
     Z_scaling2 = Z_scaling1 * s**-1
 
     # Feature residual scores, scaling 1
@@ -212,23 +210,27 @@ def cca(y, x, scaling=1):
 
     biplot_scores = corr(X_weighted, u)
 
-    pc_ids = ['CCA%d' % (i+1) for i in range(len(eigenvalues))]
+    pc_ids = ["CCA%d" % (i + 1) for i in range(len(eigenvalues))]
     sample_ids = y.index
     feature_ids = y.columns
     eigvals = pd.Series(eigenvalues, index=pc_ids)
-    samples = pd.DataFrame(sample_scores,
-                           columns=pc_ids, index=sample_ids)
-    features = pd.DataFrame(features_scores,
-                            columns=pc_ids, index=feature_ids)
+    samples = pd.DataFrame(sample_scores, columns=pc_ids, index=sample_ids)
+    features = pd.DataFrame(features_scores, columns=pc_ids, index=feature_ids)
 
-    biplot_scores = pd.DataFrame(biplot_scores,
-                                 index=x.columns,
-                                 columns=pc_ids[:biplot_scores.shape[1]])
-    sample_constraints = pd.DataFrame(sample_constraints,
-                                      index=sample_ids, columns=pc_ids)
+    biplot_scores = pd.DataFrame(
+        biplot_scores, index=x.columns, columns=pc_ids[: biplot_scores.shape[1]]
+    )
+    sample_constraints = pd.DataFrame(
+        sample_constraints, index=sample_ids, columns=pc_ids
+    )
 
     return OrdinationResults(
-        "CCA", "Canonical Correspondence Analysis", eigvals, samples,
-        features=features, biplot_scores=biplot_scores,
+        "CCA",
+        "Canonical Correspondence Analysis",
+        eigvals,
+        samples,
+        features=features,
+        biplot_scores=biplot_scores,
         sample_constraints=sample_constraints,
-        proportion_explained=eigvals / eigvals.sum())
+        proportion_explained=eigvals / eigvals.sum(),
+    )

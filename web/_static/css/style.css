@@ -1,0 +1,52 @@
+/*
+----------------------------------------------------------------------------
+Copyright (c) 2013--, scikit-bio development team.
+
+Distributed under the terms of the Modified BSD License.
+
+The full license is in the file LICENSE.txt, distributed with this software.
+----------------------------------------------------------------------------
+*/
+
+/*
+Custom stylesheet for the Sphinx website with the PyData theme.
+Instructions:
+https://pydata-sphinx-theme.readthedocs.io/en/stable/user_guide/styling.html
+*/
+
+/*
+Refer to doc/source/_static/style.css for comments.
+*/
+
+html {
+  --pst-icon-external-link: unset; 
+}
+
+code {
+  border: none !important;
+  background-color: transparent !important;
+}
+
+html[data-theme="light"] {
+  --pst-color-primary: #239552;
+  --pst-color-target: #F5FDC6;
+  --pst-color-secondary: var(--pst-color-primary);
+  --pst-color-inline-code: var(--pst-color-accent);
+  --pst-color-inline-code-links: var(--pst-color-primary);
+}
+
+html[data-theme="dark"] {
+  --pst-color-primary: #72C093;
+  --pst-color-target: #2C1E7F;
+  --pst-color-secondary: var(--pst-color-primary);
+  --pst-color-inline-code: var(--pst-color-accent);
+  --pst-color-inline-code-links: var(--pst-color-primary);
+}
+
+html[data-theme="light"] div.bd-header-announcement {
+  background-color: var(--pst-color-target);
+}
+
+html[data-theme="dark"] div.bd-header-announcement {
+  background-color: var(--pst-color-target);
+}

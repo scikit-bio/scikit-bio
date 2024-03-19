@@ -1,0 +1,92 @@
+name: Website
+
+on:
+  push:
+    branches: [ master ]
+    paths: [ "web/**", "!**.md" ]
+  pull_request:
+    branches: [ master ]
+    paths: [ "web/**", "!**.md" ]
+
+env:
+  latest_python: "3.12"
+  miniforge_version: "23.11.0-0"
+  miniforge_variant: "Mambaforge"
+
+jobs:
+
+  build:
+    name: Build website
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        shell: bash -l {0}
+    steps:
+      - name: Check out repo
+        uses: actions/checkout@v4
+
+      - name: Set up conda
+        uses: conda-incubator/setup-miniconda@v3
+        with:
+          auto-update-conda: true
+          python-version: ${{ env.latest_python }}
+          miniforge-version: ${{ env.miniforge_version }}
+          miniforge-variant: ${{ env.miniforge_variant }}
+
+      - name: Install dependencies
+        run: pip install -r ci/requirements.doc.txt
+
+      - name: Make website
+        run: make web
+
+      - name: Substitute URLs
+        if: github.event_name == 'push'
+        run: python web/suburl.py
+
+      - name: Add version list
+        if: github.event_name == 'push'
+        run: cp web/versions.json web/_build/html/
+
+      - name: Save website package
+        if: github.event_name == 'push'
+        uses: actions/upload-artifact@v4
+        with:
+          name: webpack
+          path: web/_build/html/
+
+  deploy:
+    name: Deploy website
+    if: github.event_name == 'push'
+    needs: build
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        shell: bash -l {0}
+    steps:
+      - name: Check out repo
+        uses: actions/checkout@v4
+
+      - name: Load website package
+        uses: actions/download-artifact@v4
+        with:
+          name: webpack
+          path: webpack
+
+      - name: Check out website repo
+        uses: actions/checkout@v4
+        with:
+          repository: scikit-bio/scikit-bio.github.io
+          path: website
+          ssh-key: ${{ secrets.SSH_DEPLOY_KEY }}
+
+      - name: Update website
+        run: rsync -av --delete --exclude-from web/.exclude webpack/ website
+
+      - name: Push website
+        run: |
+          cd website
+          git config user.name "${{ github.actor }}"
+          git config user.email "${{ github.actor_id }}+${{ github.actor }}@users.noreply.github.com"
+          git add -A
+          git commit -m "Update from ${{ github.server_url }}/${{ github.repository }}/commit/${{ github.sha }}"
+          git push

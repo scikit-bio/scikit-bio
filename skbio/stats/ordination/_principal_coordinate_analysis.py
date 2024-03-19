@@ -21,8 +21,7 @@ from ._utils import center_distance_matrix, scale
 
 
 @experimental(as_of="0.4.0")
-def pcoa(distance_matrix, method="eigh", number_of_dimensions=0,
-         inplace=False):
+def pcoa(distance_matrix, method="eigh", number_of_dimensions=0, inplace=False):
     r"""Perform Principal Coordinate Analysis.
 
     Principal Coordinate Analysis (PCoA) is a method similar
@@ -92,6 +91,7 @@ def pcoa(distance_matrix, method="eigh", number_of_dimensions=0,
         However, a warning is raised whenever negative eigenvalues
         appear, allowing the user to decide if they can be safely
         ignored.
+
     """
     distance_matrix = DistanceMatrix(distance_matrix)
 
@@ -102,19 +102,24 @@ def pcoa(distance_matrix, method="eigh", number_of_dimensions=0,
     # and eigenvalues
     if number_of_dimensions == 0:
         if method == "fsvd" and matrix_data.shape[0] > 10:
-            warn("FSVD: since no value for number_of_dimensions is specified, "
-                 "PCoA for all dimensions will be computed, which may "
-                 "result in long computation time if the original "
-                 "distance matrix is large.", RuntimeWarning)
+            warn(
+                "FSVD: since no value for number_of_dimensions is specified, "
+                "PCoA for all dimensions will be computed, which may "
+                "result in long computation time if the original "
+                "distance matrix is large.",
+                RuntimeWarning,
+            )
 
         # distance_matrix is guaranteed to be square
         number_of_dimensions = matrix_data.shape[0]
     elif number_of_dimensions < 0:
-        raise ValueError('Invalid operation: cannot reduce distance matrix '
-                         'to negative dimensions using PCoA. Did you intend '
-                         'to specify the default value "0", which sets '
-                         'the number_of_dimensions equal to the '
-                         'dimensionality of the given distance matrix?')
+        raise ValueError(
+            "Invalid operation: cannot reduce distance matrix "
+            "to negative dimensions using PCoA. Did you intend "
+            'to specify the default value "0", which sets '
+            "the number_of_dimensions equal to the "
+            "dimensionality of the given distance matrix?"
+        )
 
     # Perform eigendecomposition
     if method == "eigh":
@@ -127,11 +132,11 @@ def pcoa(distance_matrix, method="eigh", number_of_dimensions=0,
         long_method_name = "Principal Coordinate Analysis"
     elif method == "fsvd":
         eigvals, eigvecs = _fsvd(matrix_data, number_of_dimensions)
-        long_method_name = "Approximate Principal Coordinate Analysis " \
-                           "using FSVD"
+        long_method_name = "Approximate Principal Coordinate Analysis " "using FSVD"
     else:
         raise ValueError(
-            "PCoA eigendecomposition method {} not supported.".format(method))
+            "PCoA eigendecomposition method {} not supported.".format(method)
+        )
 
     # cogent makes eigenvalues positive by taking the
     # abs value, but that doesn't seem to be an approach accepted
@@ -147,9 +152,8 @@ def pcoa(distance_matrix, method="eigh", number_of_dimensions=0,
             " are smaller, it's probably safe to ignore them, but if they"
             " are large in magnitude, the results won't be useful. See the"
             " Notes section for more details. The smallest eigenvalue is"
-            " {0} and the largest is {1}.".format(eigvals.min(),
-                                                  eigvals.max()),
-            RuntimeWarning
+            " {0} and the largest is {1}.".format(eigvals.min(), eigvals.max()),
+            RuntimeWarning,
         )
 
     # eigvals might not be ordered, so we first sort them, then analogously
@@ -208,18 +212,19 @@ def pcoa(distance_matrix, method="eigh", number_of_dimensions=0,
         short_method_name="PCoA",
         long_method_name=long_method_name,
         eigvals=pd.Series(eigvals, index=axis_labels),
-        samples=pd.DataFrame(coordinates, index=distance_matrix.ids,
-                             columns=axis_labels),
-        proportion_explained=pd.Series(proportion_explained,
-                                       index=axis_labels))
+        samples=pd.DataFrame(
+            coordinates, index=distance_matrix.ids, columns=axis_labels
+        ),
+        proportion_explained=pd.Series(proportion_explained, index=axis_labels),
+    )
 
 
 def _fsvd(centered_distance_matrix, number_of_dimensions=10):
-    """
-    Performs singular value decomposition, or more specifically in
-    this case eigendecomposition, using fast heuristic algorithm
-    nicknamed "FSVD" (FastSVD), adapted and optimized from the algorithm
-    described by Halko et al (2011).
+    """Perform singular value decomposition.
+
+    More specifically in this case eigendecomposition, using fast heuristic algorithm
+    nicknamed "FSVD" (FastSVD), adapted and optimized from the algorithm described
+    by Halko et al (2011).
 
     Parameters
     ----------
@@ -246,8 +251,8 @@ def _fsvd(centered_distance_matrix, number_of_dimensions=10):
 
     Ported from MATLAB implementation described here:
     https://stats.stackexchange.com/a/11934/211065
-    """
 
+    """
     m, n = centered_distance_matrix.shape
 
     # Number of levels of the Krylov method to use.
@@ -260,18 +265,22 @@ def _fsvd(centered_distance_matrix, number_of_dimensions=10):
     # Note: a (conjugate) transpose is removed for performance, since we
     # only expect square matrices.
     if m != n:
-        raise ValueError('FSVD expects square distance matrix')
+        raise ValueError("FSVD expects square distance matrix")
 
     if number_of_dimensions > m or number_of_dimensions > n:
-        raise ValueError('FSVD: number_of_dimensions cannot be larger than'
-                         ' the dimensionality of the given distance matrix.')
+        raise ValueError(
+            "FSVD: number_of_dimensions cannot be larger than"
+            " the dimensionality of the given distance matrix."
+        )
 
     if number_of_dimensions < 0:
-        raise ValueError('Invalid operation: cannot reduce distance matrix '
-                         'to negative dimensions using PCoA. Did you intend '
-                         'to specify the default value "0", which sets '
-                         'the number_of_dimensions equal to the '
-                         'dimensionality of the given distance matrix?')
+        raise ValueError(
+            "Invalid operation: cannot reduce distance matrix "
+            "to negative dimensions using PCoA. Did you intend "
+            'to specify the default value "0", which sets '
+            "the number_of_dimensions equal to the "
+            "dimensionality of the given distance matrix?"
+        )
 
     k = number_of_dimensions + 2
 
@@ -295,16 +304,13 @@ def _fsvd(centered_distance_matrix, number_of_dimensions=10):
         # Note that this is done implicitly in each iteration below.
         H = dot(centered_distance_matrix, G)
         # to enhance performance
-        H = hstack(
-            (H,
-             dot(centered_distance_matrix, dot(centered_distance_matrix, H))))
+        H = hstack((H, dot(centered_distance_matrix, dot(centered_distance_matrix, H))))
         for x in range(3, num_levels + 2):
-            tmp = dot(centered_distance_matrix,
-                      dot(centered_distance_matrix, H))
+            tmp = dot(centered_distance_matrix, dot(centered_distance_matrix, H))
 
             H = hstack(
-                (H, dot(centered_distance_matrix,
-                        dot(centered_distance_matrix, tmp))))
+                (H, dot(centered_distance_matrix, dot(centered_distance_matrix, tmp)))
+            )
 
     # Using the pivoted QR-decomposition, form a real m * ((i+1)l) matrix Q
     # whose columns are orthonormal, s.t. there exists a real
@@ -340,7 +346,7 @@ def _fsvd(centered_distance_matrix, number_of_dimensions=10):
 
 @experimental(as_of="0.5.3")
 def pcoa_biplot(ordination, y):
-    """Compute the projection of descriptors into a PCoA matrix
+    """Compute the projection of descriptors into a PCoA matrix.
 
     This implementation is as described in Chapter 9 of Legendre & Legendre,
     Numerical Ecology 3rd edition.
@@ -360,18 +366,19 @@ def pcoa_biplot(ordination, y):
     OrdinationResults
         The modified input object that includes projected features onto the
         ordination space in the ``features`` attribute.
-    """
 
+    """
     # acknowledge that most saved ordinations lack a name, however if they have
     # a name, it should be PCoA
-    if (ordination.short_method_name != '' and
-            ordination.short_method_name != 'PCoA'):
-        raise ValueError('This biplot computation can only be performed in a '
-                         'PCoA matrix.')
+    if ordination.short_method_name != "" and ordination.short_method_name != "PCoA":
+        raise ValueError(
+            "This biplot computation can only be performed in a " "PCoA matrix."
+        )
 
     if set(y.index) != set(ordination.samples.index):
-        raise ValueError('The eigenvectors and the descriptors must describe '
-                         'the same samples.')
+        raise ValueError(
+            "The eigenvectors and the descriptors must describe " "the same samples."
+        )
 
     eigvals = ordination.eigvals.values
     coordinates = ordination.samples
@@ -389,12 +396,13 @@ def pcoa_biplot(ordination, y):
     #
     # Only get the power of non-zero values, otherwise this will raise a
     # divide by zero warning. There shouldn't be negative eigenvalues(?)
-    Uproj = np.sqrt(N - 1) * spc.dot(np.diag(np.power(eigvals, -0.5,
-                                                      where=eigvals > 0)))
+    Uproj = np.sqrt(N - 1) * spc.dot(
+        np.diag(np.power(eigvals, -0.5, where=eigvals > 0))
+    )
 
-    ordination.features = pd.DataFrame(data=Uproj,
-                                       index=y.columns.copy(),
-                                       columns=coordinates.columns.copy())
+    ordination.features = pd.DataFrame(
+        data=Uproj, index=y.columns.copy(), columns=coordinates.columns.copy()
+    )
     ordination.features.fillna(0.0, inplace=True)
 
     return ordination

@@ -1,5 +1,4 @@
-r"""
-Tree representations (:mod:`skbio.tree`)
+r"""Tree representations (:mod:`skbio.tree`)
 ========================================
 
 .. currentmodule:: skbio.tree
@@ -48,7 +47,6 @@ Exceptions
 
 Examples
 --------
-
 >>> from skbio import TreeNode
 >>> from io import StringIO
 
@@ -171,7 +169,8 @@ pairwise tip-to-tip distances between trees:
 >>> print(tree1.compare_tip_distances(tree2))
 0.120492524415
 
-"""
+
+"""  # noqa: D205, D415
 
 # ----------------------------------------------------------------------------
 # Copyright (c) 2013--, scikit-bio development team.
@@ -184,8 +183,21 @@ pairwise tip-to-tip distances between trees:
 from ._tree import TreeNode
 from ._nj import nj
 from ._majority_rule import majority_rule
-from ._exception import (TreeError, NoLengthError, DuplicateNodeError,
-                         MissingNodeError, NoParentError)
+from ._exception import (
+    TreeError,
+    NoLengthError,
+    DuplicateNodeError,
+    MissingNodeError,
+    NoParentError,
+)
 
-__all__ = ['TreeNode', 'nj', 'majority_rule', 'TreeError', 'NoLengthError',
-           'DuplicateNodeError', 'MissingNodeError', 'NoParentError']
+__all__ = [
+    "TreeNode",
+    "nj",
+    "majority_rule",
+    "TreeError",
+    "NoLengthError",
+    "DuplicateNodeError",
+    "MissingNodeError",
+    "NoParentError",
+]

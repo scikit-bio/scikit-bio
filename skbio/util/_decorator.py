@@ -16,23 +16,25 @@ from ._warning import DeprecationWarning as SkbioDeprecationWarning
 
 
 class _state_decorator:
-    """ Base class for decorators of all public functionality.
-    """
+    """Base class for decorators of all public functionality."""
 
     _required_kwargs = ()
 
-    def _get_indentation_level(self, docstring_lines,
-                               default_existing_docstring=4,
-                               default_no_existing_docstring=0):
-        """ Determine the level of indentation of the docstring to match it.
+    def _get_indentation_level(
+        self,
+        docstring_lines,
+        default_existing_docstring=4,
+        default_no_existing_docstring=0,
+    ):
+        """Determine the level of indentation of the docstring to match it.
 
-            The indented content after the first line of a docstring can
-            differ based on the nesting of the functionality being documented.
-            For example, a top-level function may have its "Parameters" section
-            indented four-spaces, but a method nested under a class may have
-            its "Parameters" section indented eight spaces. This function
-            determines the indentation level of the first non-whitespace line
-            following the initial summary line.
+        The indented content after the first line of a docstring can
+        differ based on the nesting of the functionality being documented.
+        For example, a top-level function may have its "Parameters" section
+        indented four-spaces, but a method nested under a class may have
+        its "Parameters" section indented eight spaces. This function
+        determines the indentation level of the first non-whitespace line
+        following the initial summary line.
         """
         # if there is no existing docstring, return the corresponding default
         if len(docstring_lines) == 0:
@@ -56,15 +58,13 @@ class _state_decorator:
         # line, return the corresponding default
         return default_existing_docstring
 
-    def _update_docstring(self, docstring, state_desc,
-                          state_desc_prefix='State: '):
+    def _update_docstring(self, docstring, state_desc, state_desc_prefix="State: "):
         # Hande the case of no initial docstring
         if docstring is None:
-            return f'{state_desc_prefix}{state_desc}'
+            return f"{state_desc_prefix}{state_desc}"
 
-        docstring_lines = docstring.split('\n')
-        docstring_content_indentation = \
-            self._get_indentation_level(docstring_lines)
+        docstring_lines = docstring.split("\n")
+        docstring_content_indentation = self._get_indentation_level(docstring_lines)
 
         # wrap lines at 79 characters, accounting for the length of
         # docstring_content_indentation and start_desc_prefix
@@ -76,26 +76,29 @@ class _state_decorator:
         # the text in this section. This is for consistency with numpydoc
         # formatting of deprecation notices, which are done using the note
         # Sphinx directive.
-        state_desc_lines[0] = (f'{" " * docstring_content_indentation}'
-                               f'{state_desc_prefix}{state_desc_lines[0]}')
-        header_spaces = ' ' * (docstring_content_indentation +
-                               len_state_desc_prefix)
+        state_desc_lines[0] = (
+            f'{" " * docstring_content_indentation}'
+            f'{state_desc_prefix}{state_desc_lines[0]}'
+        )
+        header_spaces = " " * (docstring_content_indentation + len_state_desc_prefix)
         for i, line in enumerate(state_desc_lines[1:], 1):
-            state_desc_lines[i] = f'{header_spaces}{line}'
+            state_desc_lines[i] = f"{header_spaces}{line}"
 
-        new_doc_lines = '\n'.join(state_desc_lines)
-        docstring_lines[0] = f'{docstring_lines[0]}\n\n{new_doc_lines}'
-        return '\n'.join(docstring_lines)
+        new_doc_lines = "\n".join(state_desc_lines)
+        docstring_lines[0] = f"{docstring_lines[0]}\n\n{new_doc_lines}"
+        return "\n".join(docstring_lines)
 
     def _validate_kwargs(self, **kwargs):
         for required_kwarg in self._required_kwargs:
             if required_kwarg not in kwargs:
-                raise ValueError(f'{self.__class__} decorator requires '
-                                 f'parameter: {required_kwarg}')
+                raise ValueError(
+                    f"{self.__class__} decorator requires "
+                    f"parameter: {required_kwarg}"
+                )
 
 
 class stable(_state_decorator):
-    """ State decorator indicating stable functionality.
+    """State decorator indicating stable functionality.
 
     Used to indicate that public functionality is considered ``stable``,
     meaning that its API will be backward compatible unless it is deprecated.
@@ -128,22 +131,23 @@ class stable(_state_decorator):
     <BLANKLINE>
         State: Stable as of 0.3.0.
     <BLANKLINE>
+
     """
 
-    _required_kwargs = ('as_of', )
+    _required_kwargs = ("as_of",)
 
     def __init__(self, *args, **kwargs):
         self._validate_kwargs(**kwargs)
-        self.as_of = kwargs['as_of']
+        self.as_of = kwargs["as_of"]
 
     def __call__(self, func):
-        state_desc = f'Stable as of {self.as_of}.'
+        state_desc = f"Stable as of {self.as_of}."
         func.__doc__ = self._update_docstring(func.__doc__, state_desc)
         return func
 
 
 class experimental(_state_decorator):
-    """ State decorator indicating experimental functionality.
+    """State decorator indicating experimental functionality.
 
     Used to indicate that public functionality is considered experimental,
     meaning that its API is subject to change or removal with little or
@@ -179,20 +183,20 @@ class experimental(_state_decorator):
 
     """
 
-    _required_kwargs = ('as_of', )
+    _required_kwargs = ("as_of",)
 
     def __init__(self, *args, **kwargs):
         self._validate_kwargs(**kwargs)
-        self.as_of = kwargs['as_of']
+        self.as_of = kwargs["as_of"]
 
     def __call__(self, func):
-        state_desc = f'Experimental as of {self.as_of}.'
+        state_desc = f"Experimental as of {self.as_of}."
         func.__doc__ = self._update_docstring(func.__doc__, state_desc)
         return func
 
 
 class deprecated(_state_decorator):
-    """ State decorator indicating deprecated functionality.
+    """State decorator indicating deprecated functionality.
 
     Used to indicate that a public class or function is deprecated, meaning
     that its API will be removed in a future version of scikit-bio. Decorating
@@ -235,25 +239,30 @@ class deprecated(_state_decorator):
 
     """
 
-    _required_kwargs = ('as_of', 'until', 'reason')
+    _required_kwargs = ("as_of", "until", "reason")
 
     def __init__(self, *args, **kwargs):
         self._validate_kwargs(**kwargs)
-        self.as_of = kwargs['as_of']
-        self.until = kwargs['until']
-        self.reason = kwargs['reason']
+        self.as_of = kwargs["as_of"]
+        self.until = kwargs["until"]
+        self.reason = kwargs["reason"]
 
     def __call__(self, func, *args, **kwargs):
-        state_desc = (f'Deprecated as of {self.as_of} for removal in '
-                      f'{self.until}. {self.reason}')
-        func.__doc__ = self._update_docstring(func.__doc__, state_desc,
-                                              state_desc_prefix='.. note:: ')
+        state_desc = (
+            f"Deprecated as of {self.as_of} for removal in "
+            f"{self.until}. {self.reason}"
+        )
+        func.__doc__ = self._update_docstring(
+            func.__doc__, state_desc, state_desc_prefix=".. note:: "
+        )
 
         def wrapped_f(*args, **kwargs):
-            warnings.warn(f'{func.__name__} is deprecated as of scikit-bio '
-                          f'version {self.as_of}, and will be removed in '
-                          f'version {self.until}. {self.reason}',
-                          SkbioDeprecationWarning)
+            warnings.warn(
+                f"{func.__name__} is deprecated as of scikit-bio "
+                f"version {self.as_of}, and will be removed in "
+                f"version {self.until}. {self.reason}",
+                SkbioDeprecationWarning,
+            )
             # args[0] is the function being wrapped when this is called
             # after wrapping with decorator.decorator, but why???
             return func(*args[1:], **kwargs)
@@ -263,12 +272,12 @@ class deprecated(_state_decorator):
 
 # Adapted from http://stackoverflow.com/a/8313042/579416
 def overrides(interface_class):
-    """Decorator for class-level members.
+    """Indicate that a member is being overridden from a specific parent class.
 
-    Used to indicate that a member is being overridden from a specific parent
-    class. If the member does not have a docstring, it will pull one from the
-    parent class. When chaining decorators, this should be first as it is
-    relatively nondestructive.
+    Decorator for class-level members. Used to indicate that a member is being
+    overridden from a specific parent class. If the member does not have a docstring,
+    it will pull one from the parent class. When chaining decorators, this should be
+    first as it is relatively nondestructive.
 
     Parameters
     ----------
@@ -287,16 +296,20 @@ def overrides(interface_class):
         as the decorated member.
 
     """
+
     def overrider(method):
         if method.__name__ not in dir(interface_class):
-            raise OverrideError(f'{method.__name__} is not present in parent '
-                                f'class: {interface_class.__name__}.')
+            raise OverrideError(
+                f"{method.__name__} is not present in parent "
+                f"class: {interface_class.__name__}."
+            )
         backup = classproperty.__get__
         classproperty.__get__ = lambda x, y, z: x
         if method.__doc__ is None:
             method.__doc__ = getattr(interface_class, method.__name__).__doc__
         classproperty.__get__ = backup
         return method
+
     return overrider
 
 
@@ -323,6 +336,7 @@ class classproperty(property):
         If the property is set on an instance.
 
     """
+
     def __init__(self, func):
         name = func.__name__
         doc = func.__doc__
@@ -342,7 +356,9 @@ class classonlymethod(classmethod):
 
     def __get__(self, obj, cls=None):
         if obj is not None:
-            raise TypeError(f'Class-only method called on an instance. Use '
-                            f'{cls.__name__}.{self.__func__.__name__} '
-                            'instead.')
+            raise TypeError(
+                f"Class-only method called on an instance. Use "
+                f"{cls.__name__}.{self.__func__.__name__} "
+                "instead."
+            )
         return super().__get__(obj, cls)
