@@ -302,32 +302,10 @@ class HDF5Container(Container):
         return H5PYFile(self.file, mode='w')
 
 
-class H5PYMixin:
-    @property
-    def closed(self):
-        return self.id.valid != 1
-
-    def seek(self, *args, **kwargs):
-        return 0
-
-    def seekable(self):
-        # assume seekable if open
-        return not self.closed
-
-    def readable(self):
-        if not self.closed:
-            if self.mode in ('r', 'r+', 'a'):
-                return True
-        return False
-
-    def writable(self):
-        if not self.closed:
-            if self.mode in ('r+', 'w', 'w-', 'x', 'a'):
-                return True
-        return False
-
-
-class H5PYFile(h5py.File, H5PYMixin):
+class H5PYFile(h5py.File, io.BytesIO):
+    # h5py.File does not provide typical attributes and methods for a file
+    # like closed, readable, seekable, writable, etc. A mixin with BytesIO
+    # solves this
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
 
