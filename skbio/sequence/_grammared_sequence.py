@@ -842,7 +842,7 @@ class GrammaredSequence(Sequence, metaclass=GrammaredSequenceMeta):
 
         if noncanonical:
             pos = self._degen_nonca_hash[self._bytes]
-        elif not noncanonical:
+        else:
             pos = self._degenerate_hash[self._bytes]
 
         if degenerate == "del":
