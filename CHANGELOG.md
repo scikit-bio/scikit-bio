@@ -25,6 +25,7 @@
 * Made Matplotlib an optional dependency. Scikit-bio no longer requires Matplotlib except for plotting, during which it attempts to import Matplotlib if it is present in the system, and raises an error if not ([#1901](https://github.com/scikit-bio/scikit-bio/pull/1901)).
 * Ported the qiime2 metadata object into skbio. ([#1929](https://github.com/scikit-bio/scikit-bio/pull/1929))
 * Python 3.12+ is now supported, thank you @actapia ([#1930](https://github.com/scikit-bio/scikit-bio/pull/1930))
+* Introduced native character conversion ([#1971])(https://github.com/scikit-bio/scikit-bio/pull/1971)
 
 ### Backward-incompatible changes [experimental]
 

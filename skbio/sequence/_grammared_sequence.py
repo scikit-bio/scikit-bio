@@ -158,6 +158,11 @@ class GrammaredSequence(Sequence, metaclass=GrammaredSequenceMeta):
     __degenerate_codes = None
     __definite_char_codes = None
     __gap_codes = None
+    __noncanonical_codes = None
+    __degenerate_hash = None
+    __degen_nonca_hash = None
+    __gap_hash = None
+    __definite_hash = None
 
     @classproperty
     def _validation_mask(cls):
@@ -193,6 +198,41 @@ class GrammaredSequence(Sequence, metaclass=GrammaredSequenceMeta):
             gaps = cls.gap_chars
             cls.__gap_codes = np.asarray([ord(g) for g in gaps])
         return cls.__gap_codes
+
+    @classproperty
+    def _noncanonical_codes(cls):
+        if cls.__noncanonical_codes is None:
+            noncanonical_chars = cls.noncanonical_chars
+            cls.__noncanonical_codes = np.asarray([ord(c) for c in noncanonical_chars])
+        return cls.__noncanonical_codes
+
+    @classproperty
+    def _degenerate_hash(cls):
+        if cls.__degenerate_hash is None:
+            cls.__degenerate_hash = np.zeros((Sequence._num_ascii_codes,), dtype=bool)
+            cls.__degenerate_hash[cls._degenerate_codes] = True
+        return cls.__degenerate_hash
+
+    @classproperty
+    def _degen_nonca_hash(cls):
+        if cls.__degen_nonca_hash is None:
+            cls.__degen_nonca_hash = cls._degenerate_hash.copy()
+            cls.__degen_nonca_hash[cls._noncanonical_codes] = True
+        return cls.__degen_nonca_hash
+
+    @classproperty
+    def _gap_hash(cls):
+        if cls.__gap_hash is None:
+            cls.__gap_hash = np.zeros((Sequence._num_ascii_codes,), dtype=bool)
+            cls.__gap_hash[cls._gap_codes] = True
+        return cls.__gap_hash
+
+    @classproperty
+    def _definite_hash(cls):
+        if cls.__definite_hash is None:
+            cls.__definite_hash = np.zeros((Sequence._num_ascii_codes,), dtype=bool)
+            cls.__definite_hash[cls._definite_char_codes] = True
+        return cls.__definite_hash
 
     @classproperty
     def alphabet(cls):
@@ -395,7 +435,7 @@ class GrammaredSequence(Sequence, metaclass=GrammaredSequenceMeta):
         array([False, False,  True, False,  True], dtype=bool)
 
         """
-        return np.in1d(self._bytes, self._gap_codes)
+        return self._gap_hash[self._bytes]
 
     def has_gaps(self):
         """Determine if the sequence contains one or more gap characters.
@@ -444,7 +484,7 @@ class GrammaredSequence(Sequence, metaclass=GrammaredSequenceMeta):
         array([False, False,  True, False,  True], dtype=bool)
 
         """
-        return np.in1d(self._bytes, self._degenerate_codes)
+        return self._degenerate_hash[self._bytes]
 
     def has_degenerates(self):
         """Determine if sequence contains one or more degenerate characters.
@@ -498,7 +538,7 @@ class GrammaredSequence(Sequence, metaclass=GrammaredSequenceMeta):
         array([ True,  True, False,  True, False], dtype=bool)
 
         """
-        return np.in1d(self._bytes, self._definite_char_codes)
+        return self._definite_hash[self._bytes]
 
     def nondegenerates(self):
         """Find positions containing non-degenerate characters in the sequence.
@@ -768,15 +808,15 @@ class GrammaredSequence(Sequence, metaclass=GrammaredSequenceMeta):
         return re.compile(regex_string)
 
     def to_definites(self, degenerate="wild", noncanonical=True):
-        """Convert degenerate and or non-canonical characters to alternative characters.
+        """Convert degenerate and noncanonical characters to alternative characters.
 
         Parameters
         ----------
-        degenerate : {"wild", "gap", "trim", str of length 1}, optional
+        degenerate : {"wild", "gap", "del", str of length 1}, optional
             How degenerate/non-canonical characters should be treated: Replace them
             with the wildcard character ("wild", default), or the default gap character
             ("gap"), or a user-defined character (str of length 1), or remove them
-            ("trim").
+            ("del").
         noncanonical : bool, optional
             Treat non-canonical characters in the same way as degenerate
             characters (``True``, default), or leave them as-is (``False``).
@@ -787,40 +827,38 @@ class GrammaredSequence(Sequence, metaclass=GrammaredSequenceMeta):
             Converted version of the sequence.
 
         """
-        sequence = str(self)
-
-        if noncanonical:
-            degenerates = self.degenerate_chars.union(self.noncanonical_chars)
-        else:
-            degenerates = self.degenerate_chars
-
         errmsg = (
             f'%s character for sequence type "{self.__class__}" is undefined or '
             "invalid."
         )
 
-        if degenerate == "wild":
-            sub_char = self.wildcard_char
-            if not isinstance(sub_char, str):
-                raise ValueError(errmsg % "Wildcard")
-        elif degenerate == "gap":
-            sub_char = self.default_gap_char
-        elif degenerate == "trim":
-            sub_char = ""
-        elif isinstance(degenerate, str) and len(degenerate) == 1:
-            if degenerate in self.alphabet:
-                sub_char = degenerate
-            else:
-                raise ValueError(
-                    f"Invalid character '{degenerate}' in sequence. Character must "
-                    f"be within sequence alphabet: {self.alphabet}"
-                )
+        if noncanonical:
+            pos = self._degen_nonca_hash[self._bytes]
         else:
-            raise ValueError('Invalid value for parameter "degenerate".')
+            pos = self._degenerate_hash[self._bytes]
 
-        sequence = "".join(sub_char if x in degenerates else x for x in sequence)
+        if degenerate == "del":
+            seq = self._bytes[np.where(1 - pos)[0]]
+        else:
+            if degenerate == "wild":
+                sub_char = self.wildcard_char
+                if not isinstance(sub_char, str):
+                    raise ValueError(errmsg % "Wildcard")
+            elif degenerate == "gap":
+                sub_char = self.default_gap_char
+            elif isinstance(degenerate, str) and len(degenerate) == 1:
+                if degenerate in self.alphabet:
+                    sub_char = degenerate
+                else:
+                    raise ValueError(
+                        f"Invalid character '{degenerate}' in sequence. Character must "
+                        f"be within sequence alphabet: {self.alphabet}"
+                    )
+            else:
+                raise ValueError('Invalid value for parameter "degenerate".')
+            seq = np.where(pos, ord(sub_char), self._bytes)
 
-        return self._constructor(sequence=sequence)
+        return self._constructor(sequence=seq)
 
     def find_motifs(self, motif_type, min_length=1, ignore=None):
         """Search the biological sequence for motifs.
