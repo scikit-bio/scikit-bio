@@ -6,4 +6,5 @@
 # The full license is in the file LICENSE.txt, distributed with this software.
 # ----------------------------------------------------------------------------
 
-from biom import Table  # noqa
+from biom import Table
+Table.default_write_format = 'biom'

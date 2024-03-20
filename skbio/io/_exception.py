@@ -124,3 +124,9 @@ class DuplicateRegistrationError(Exception):
     """Raised when a function is already registered in skbio.io."""
 
     pass
+
+
+class BIOMFormatError(Exception):
+    """Raised when a ``BIOM`` formatted file cannot be parsed."""
+
+    pass

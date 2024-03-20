@@ -221,6 +221,7 @@ from ._exception import (
     StockholmFormatError,
     GFF3FormatError,
     EMBLFormatError,
+    BIOMFormatError,
 )
 from .registry import write, read, sniff, create_format, io_registry
 from .util import open
@@ -251,6 +252,7 @@ __all__ = [
     "QSeqFormatError",
     "QUALFormatError",
     "StockholmFormatError",
+    "BIOMFormatError",
 ]
 
 
@@ -274,6 +276,7 @@ import_module("skbio.io.format.stockholm")
 import_module("skbio.io.format.binary_dm")
 import_module("skbio.io.format.taxdump")
 import_module("skbio.io.format.sample_metadata")
+import_module("skbio.io.format.biom")
 
 # This is meant to be a handy indicator to the user that they have done
 # something wrong.
