@@ -30,10 +30,10 @@ from skbio.diversity._driver import (_qualitative_beta_metrics,
 
 class TableConversionTests(TestCase):
     def test_table_to_numpy(self):
-        exp_data = np.array([[0, 1, 2], [3, 4, 5]])
-        exp_ids = ['S1', 'S2']
+        exp_data = np.array([[0, 1, 2], [3, 4, 5]]).T
+        exp_ids = ['S1', 'S2', 'S3']
         obs_data, obs_ids = _table_to_numpy(example_table)
-        npt.assertEqual(obs_data, exp_data)
+        npt.assert_equal(obs_data, exp_data)
         self.assertEqual(obs_ids, exp_ids)
 
 
