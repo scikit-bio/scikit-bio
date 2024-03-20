@@ -25,14 +25,27 @@ from skbio.diversity.beta import unweighted_unifrac, weighted_unifrac
 from skbio.tree import DuplicateNodeError, MissingNodeError
 from skbio.diversity._driver import (_qualitative_beta_metrics,
                                      _valid_beta_metrics,
-                                     _table_to_numpy)
+                                     _table_to_numpy,
+                                     _validate_table)
 
 
 class TableConversionTests(TestCase):
     def test_table_to_numpy(self):
         exp_data = np.array([[0, 1, 2], [3, 4, 5]]).T
         exp_ids = ['S1', 'S2', 'S3']
-        obs_data, obs_ids = _table_to_numpy(example_table)
+        exp_feat_ids = ['O1', 'O2']
+        obs_data, obs_ids, obs_feat_ids = _table_to_numpy(example_table)
+        npt.assert_equal(obs_data, exp_data)
+        self.assertEqual(obs_ids, exp_ids)
+        self.assertEqual(obs_feat_ids, exp_feat_ids)
+
+    def test_validate_table(self):
+        self.assertRaises(ValueError, _validate_table, example_table, ['foo', 'bar'], {})
+        self.assertRaises(ValueError, _validate_table, example_table, None,
+                          {'taxa': 'foo'})
+        obs_data, obs_ids = _validate_table(example_table, None, {})
+        exp_data = np.array([[0, 1, 2], [3, 4, 5]]).T
+        exp_ids = ['S1', 'S2', 'S3']
         npt.assert_equal(obs_data, exp_data)
         self.assertEqual(obs_ids, exp_ids)
 
@@ -216,8 +229,9 @@ class AlphaDiversityTests(TestCase):
         assert_series_almost_equal(actual, expected)
 
         # empty Table
-        actual = alpha_diversity('sobs', Table())
-        expected = pd.Series([])
+        actual = alpha_diversity('sobs', Table([], [], []))
+        actual.index = pd.RangeIndex(len(actual))
+        expected = pd.Series([0])
         assert_series_almost_equal(actual, expected)
 
     def test_single_count_vector(self):
@@ -234,9 +248,12 @@ class AlphaDiversityTests(TestCase):
         array_result = alpha_diversity('sobs',
                                        np.array([1, 3, 0, 1, 0]))
         table_result = alpha_diversity('sobs',
-                                       Table(np.array([[1, 3, 0, 1, 0], ]),
+                                       Table(np.array([[1, 3, 0, 1, 0], ]).T,
                                              list('ABCDE'),
                                              ['S1', ]))
+
+        # using a table we get sample IDs for free, drop them for the test
+        table_result.index = pd.RangeIndex(len(table_result))
 
         self.assertAlmostEqual(list_result[0], 3)
         assert_series_almost_equal(list_result, array_result)
@@ -247,10 +264,14 @@ class AlphaDiversityTests(TestCase):
         array_result = alpha_diversity('faith_pd', np.array([1, 3, 0, 1, 0]),
                                        tree=self.tree1, taxa=self.oids1)
         table_result = alpha_diversity('faith_pd',
-                                       Table(np.array([[1, 3, 0, 1, 0], ]),
+                                       Table(np.array([[1, 3, 0, 1, 0], ]).T,
                                              self.oids1,
                                              ['S1', ]),
                                        tree=self.tree1)
+
+        # using a table we get sample IDs for free, drop them for the test
+        table_result.index = pd.RangeIndex(len(table_result))
+
         self.assertAlmostEqual(list_result[0], 4.5)
         assert_series_almost_equal(list_result, array_result)
         assert_series_almost_equal(table_result, array_result)
