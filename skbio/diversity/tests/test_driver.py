@@ -206,7 +206,7 @@ class AlphaDiversityTests(TestCase):
         assert_series_almost_equal(actual, expected)
 
         # empty Table
-        actual = alpha_diversity('sobs', Table([], [], []))
+        actual = alpha_diversity('sobs', Table(np.array([[]]), [], ['S1', ]))
         actual.index = pd.RangeIndex(len(actual))
         expected = pd.Series([0])
         assert_series_almost_equal(actual, expected)
@@ -562,7 +562,7 @@ class BetaDiversityTests(TestCase):
         self.assertEqual(actual, expected_dm)
 
         actual = beta_diversity('unweighted_unifrac',
-                                Table(np.array([[]]), [], ['a', 'b']),
+                                Table(np.array([[], []]).T, [], ['a', 'b']),
                                 tree=self.tree1)
         expected_dm = DistanceMatrix([[0.0, 0.0], [0.0, 0.0]], ['a', 'b'])
         self.assertEqual(actual, expected_dm)
@@ -576,7 +576,7 @@ class BetaDiversityTests(TestCase):
         actual_table = beta_diversity('euclidean',
                                       Table(np.array([[1, 5], [2, 3]]).T,
                                             ['O1', 'O2'],
-                                            ['a', 'b'])
+                                            ['a', 'b']))
         self.assertEqual(actual_array, actual_list)
         self.assertEqual(actual_array, actual_table)
 

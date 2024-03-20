@@ -420,6 +420,9 @@ def beta_diversity(
     sklearn.metrics.pairwise_distances
 
     """
+    if isinstance(counts, skbio.Table):
+        counts, ids = _validate_table(counts, ids, kwargs)
+
     if isinstance(counts, pd.DataFrame) and ids is None:
         ids = list(counts.index)
 
