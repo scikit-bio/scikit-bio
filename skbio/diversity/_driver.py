@@ -26,6 +26,8 @@ from skbio.diversity._util import (
     _validate_counts_matrix,
     _get_phylogenetic_kwargs,
     _quantitative_to_qualitative_counts,
+    _table_to_numpy,
+    _validate_table
 )
 
 
@@ -356,38 +358,6 @@ _qualitative_beta_metrics = [
     "sokalsneath",
     "yule",
 ]
-
-
-def _table_to_numpy(table):
-    """Convert a skbio.feature_table.Table to a dense representation
-
-    This is a stop-gap solution to allow current Table objects to interoperate
-    with existing driver methods, until they transition to be "sparse" aware.
-    """
-    if table.is_empty():
-        return np.array([[]]), None, None
-    else:
-        return (table.matrix_data.T.toarray(),
-                list(table.ids()),
-                list(table.ids(axis='observation')))
-
-
-def _validate_table(counts, ids, kwargs):
-    """Disallow overriding of sample and feature IDs
-
-    WARNING: this implicitly adds an entry to kwargs IF `tree` is present.
-    """
-    if ids is not None:
-        raise ValueError("Cannot provide a `Table` as `counts` and `ids`")
-
-    if 'taxa' in kwargs:
-        raise ValueError("Cannot provide a `Table` as `counts` and `taxa`")
-
-    dense_counts, sample_ids, feature_ids = _table_to_numpy(counts)
-    if 'tree' in kwargs:
-        kwargs['taxa'] = feature_ids
-
-    return dense_counts, sample_ids
 
 
 def beta_diversity(

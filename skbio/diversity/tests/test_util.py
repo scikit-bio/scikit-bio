@@ -14,12 +14,15 @@ import pandas as pd
 import numpy.testing as npt
 
 from skbio import TreeNode
+from skbio.feature_table import example_table
 from skbio.diversity._util import (_validate_counts_vector,
                                    _validate_counts_matrix,
                                    _validate_taxa_and_tree,
                                    _vectorize_counts_and_tree,
                                    _quantitative_to_qualitative_counts,
-                                   _check_taxa_alias)
+                                   _check_taxa_alias,
+                                   _table_to_numpy,
+                                   _validate_table)
 from skbio.tree import DuplicateNodeError, MissingNodeError
 
 
@@ -270,6 +273,27 @@ class ValidationTests(TestCase):
         self.assertListEqual(obs, [1])
         obs = _check_taxa_alias(None, '1', [1])
         self.assertListEqual(obs, [1])
+
+
+class TableConversionTests(TestCase):
+    def test_table_to_numpy(self):
+        exp_data = np.array([[0, 1, 2], [3, 4, 5]]).T
+        exp_ids = ['S1', 'S2', 'S3']
+        exp_feat_ids = ['O1', 'O2']
+        obs_data, obs_ids, obs_feat_ids = _table_to_numpy(example_table)
+        npt.assert_equal(obs_data, exp_data)
+        self.assertEqual(obs_ids, exp_ids)
+        self.assertEqual(obs_feat_ids, exp_feat_ids)
+
+    def test_validate_table(self):
+        self.assertRaises(ValueError, _validate_table, example_table, ['foo', 'bar'], {})
+        self.assertRaises(ValueError, _validate_table, example_table, None,
+                          {'taxa': 'foo'})
+        obs_data, obs_ids = _validate_table(example_table, None, {})
+        exp_data = np.array([[0, 1, 2], [3, 4, 5]]).T
+        exp_ids = ['S1', 'S2', 'S3']
+        npt.assert_equal(obs_data, exp_data)
+        self.assertEqual(obs_ids, exp_ids)
 
 
 if __name__ == "__main__":

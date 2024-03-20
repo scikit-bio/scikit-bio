@@ -24,30 +24,7 @@ from skbio.diversity.alpha import faith_pd, phydiv, sobs
 from skbio.diversity.beta import unweighted_unifrac, weighted_unifrac
 from skbio.tree import DuplicateNodeError, MissingNodeError
 from skbio.diversity._driver import (_qualitative_beta_metrics,
-                                     _valid_beta_metrics,
-                                     _table_to_numpy,
-                                     _validate_table)
-
-
-class TableConversionTests(TestCase):
-    def test_table_to_numpy(self):
-        exp_data = np.array([[0, 1, 2], [3, 4, 5]]).T
-        exp_ids = ['S1', 'S2', 'S3']
-        exp_feat_ids = ['O1', 'O2']
-        obs_data, obs_ids, obs_feat_ids = _table_to_numpy(example_table)
-        npt.assert_equal(obs_data, exp_data)
-        self.assertEqual(obs_ids, exp_ids)
-        self.assertEqual(obs_feat_ids, exp_feat_ids)
-
-    def test_validate_table(self):
-        self.assertRaises(ValueError, _validate_table, example_table, ['foo', 'bar'], {})
-        self.assertRaises(ValueError, _validate_table, example_table, None,
-                          {'taxa': 'foo'})
-        obs_data, obs_ids = _validate_table(example_table, None, {})
-        exp_data = np.array([[0, 1, 2], [3, 4, 5]]).T
-        exp_ids = ['S1', 'S2', 'S3']
-        npt.assert_equal(obs_data, exp_data)
-        self.assertEqual(obs_ids, exp_ids)
+                                     _valid_beta_metrics)
 
 
 class AlphaDiversityTests(TestCase):
