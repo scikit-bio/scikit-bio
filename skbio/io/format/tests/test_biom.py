@@ -12,9 +12,8 @@ import tempfile
 from pathlib import Path
 
 import h5py
-import biom
 
-from skbio import Table
+from skbio.feature_table import Table, example_table
 from skbio.io import BIOMFormatError
 from skbio.io.format.biom import (
     _biom_to_feature_table, _feature_table_to_biom, _biom_sniffer)
@@ -28,7 +27,7 @@ class BIOMFormatTests(unittest.TestCase):
         self.invalid_biom_path = str(tempdir / Path('invalid'))
         self.writable_biom_path = str(tempdir / Path('write.biom'))
 
-        self.table = biom.example_table.copy()
+        self.table = example_table.copy()
         with h5py.File(self.valid_biom_path, 'w') as fp:
             self.table.to_hdf5(fp, 'unit-test')
 

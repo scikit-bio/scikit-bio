@@ -14,6 +14,7 @@ import numpy as np
 import numpy.testing as npt
 
 from skbio import DistanceMatrix, TreeNode
+from skbio.feature_table import example_table
 from skbio.util._testing import assert_series_almost_equal
 from skbio.diversity import (alpha_diversity, beta_diversity,
                              partial_beta_diversity,
@@ -23,7 +24,17 @@ from skbio.diversity.alpha import faith_pd, phydiv, sobs
 from skbio.diversity.beta import unweighted_unifrac, weighted_unifrac
 from skbio.tree import DuplicateNodeError, MissingNodeError
 from skbio.diversity._driver import (_qualitative_beta_metrics,
-                                     _valid_beta_metrics)
+                                     _valid_beta_metrics,
+                                     _table_to_numpy)
+
+
+class TableConversionTests(TestCase):
+    def test_table_to_numpy(self):
+        exp_data = np.array([[0, 1, 2], [3, 4, 5]])
+        exp_ids = ['S1', 'S2']
+        obs_data, obs_ids = _table_to_numpy(example_table)
+        npt.assertEqual(obs_data, exp_data)
+        self.assertEqual(obs_ids, exp_ids)
 
 
 class AlphaDiversityTests(TestCase):
