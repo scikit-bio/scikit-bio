@@ -221,40 +221,10 @@ class BaseTests(TestCase):
 
     def test_kempton_taylor_q(self):
         # Approximate Magurran 1998 calculation p143.
-        arr = np.array(
-            [
-                2,
-                3,
-                3,
-                3,
-                3,
-                3,
-                4,
-                4,
-                4,
-                6,
-                6,
-                7,
-                7,
-                9,
-                9,
-                11,
-                14,
-                15,
-                15,
-                20,
-                29,
-                33,
-                34,
-                36,
-                37,
-                53,
-                57,
-                138,
-                146,
-                170,
-            ]
-        )
+        # fmt: off
+        arr = np.array([2, 3, 3, 3, 3, 3, 4, 4, 4, 6, 6, 7, 7, 9, 9, 11, 14,
+                        15, 15, 20, 29, 33, 34, 36, 37, 53, 57, 138, 146, 170])
+        # fmt: on
         exp = 14 / np.log(34 / 4)
         self.assertAlmostEqual(kempton_taylor_q(arr), exp)
 
