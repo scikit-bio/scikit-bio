@@ -22,10 +22,9 @@ from skbio.util._plotting import PlottableMixin
 @unittest.skipUnless(has_matplotlib, "Matplotlib not available.")
 class TestPlottableMixin(unittest.TestCase):
     def setUp(self):
-
         def _plot(self):
             fig, ax = self.plt.subplots()
-            ax.plot(1, 1, color='k', marker='o')
+            ax.plot(1, 1, color="k", marker="o")
             return fig
 
         PlottableMixin.plot = _plot
@@ -34,22 +33,22 @@ class TestPlottableMixin(unittest.TestCase):
         obj = PlottableMixin()
 
         # hasn't imported yet
-        self.assertFalse(hasattr(obj, 'mpl'))
+        self.assertFalse(hasattr(obj, "mpl"))
 
         # import Matplotlib if available
         obj._get_mpl_plt()
-        self.assertEqual(obj.mpl.__name__, 'matplotlib')
-        self.assertEqual(obj.plt.__name__, 'matplotlib.pyplot')
+        self.assertEqual(obj.mpl.__name__, "matplotlib")
+        self.assertEqual(obj.plt.__name__, "matplotlib.pyplot")
 
         # make Matplotlib unimportable
-        delattr(obj, 'mpl')
-        backup = sys.modules['matplotlib']
-        sys.modules['matplotlib'] = None
+        delattr(obj, "mpl")
+        backup = sys.modules["matplotlib"]
+        sys.modules["matplotlib"] = None
         with self.assertRaises(ImportError):
             obj._get_mpl_plt()
 
         # won't try again if already failed
-        sys.modules['matplotlib'] = backup
+        sys.modules["matplotlib"] = backup
         self.assertIsNone(obj.mpl)
         with self.assertRaises(ImportError):
             obj._get_mpl_plt()
@@ -59,21 +58,21 @@ class TestPlottableMixin(unittest.TestCase):
         obj._get_mpl_plt()
 
         # PNG data are bytes
-        obs = obj._figure_data('png')
+        obs = obj._figure_data("png")
         self.assertIsInstance(obs, bytes)
         self.assertTrue(len(obs) > 0)
 
         # SVG data are string
-        obs = obj._figure_data('svg')
+        obs = obj._figure_data("svg")
         self.assertIsInstance(obs, str)
         self.assertTrue(len(obs) > 0)
 
         # plotting backend not available
-        delattr(obj, 'mpl')
-        backup = sys.modules['matplotlib']
-        sys.modules['matplotlib'] = None
+        delattr(obj, "mpl")
+        backup = sys.modules["matplotlib"]
+        sys.modules["matplotlib"] = None
         self.assertIsNone(obj._figure_data())
-        sys.modules['matplotlib'] = backup
+        sys.modules["matplotlib"] = backup
 
     def test_repr_png(self):
         obj = PlottableMixin()
@@ -104,5 +103,5 @@ class TestPlottableMixin(unittest.TestCase):
         self.assertTrue(len(obs) > 0)
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     unittest.main()

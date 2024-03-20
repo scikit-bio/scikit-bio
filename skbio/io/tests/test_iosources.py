@@ -12,10 +12,9 @@ from skbio.io._iosources import IOSource, Compressor
 
 
 class TestIOSource(unittest.TestCase):
-
     def setUp(self):
-        self.file = 'somepath'
-        self.options = {'a': 1, 'b': 2}
+        self.file = "somepath"
+        self.options = {"a": 1, "b": 2}
 
         self.source = IOSource(self.file, self.options)
 

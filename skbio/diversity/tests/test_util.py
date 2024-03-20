@@ -14,17 +14,18 @@ import pandas as pd
 import numpy.testing as npt
 
 from skbio import TreeNode
-from skbio.diversity._util import (_validate_counts_vector,
-                                   _validate_counts_matrix,
-                                   _validate_taxa_and_tree,
-                                   _vectorize_counts_and_tree,
-                                   _quantitative_to_qualitative_counts,
-                                   _check_taxa_alias)
+from skbio.diversity._util import (
+    _validate_counts_vector,
+    _validate_counts_matrix,
+    _validate_taxa_and_tree,
+    _vectorize_counts_and_tree,
+    _quantitative_to_qualitative_counts,
+    _check_taxa_alias,
+)
 from skbio.tree import DuplicateNodeError, MissingNodeError
 
 
 class ValidationTests(TestCase):
-
     def test_validate_counts_vector(self):
         # python list
         obs = _validate_counts_vector([0, 2, 1, 3])
@@ -60,7 +61,6 @@ class ValidationTests(TestCase):
         self.assertEqual(obs.dtype, int)
 
     def test_validate_counts_vector_invalid_input(self):
-
         # wrong number of dimensions (2-D)
         with self.assertRaises(ValueError):
             _validate_counts_vector([[0, 2, 1, 3], [4, 5, 6, 7]])
@@ -75,19 +75,18 @@ class ValidationTests(TestCase):
 
         # strings
         with self.assertRaises(ValueError):
-            _validate_counts_vector([0, 0, 'a', -1, 3])
+            _validate_counts_vector([0, 0, "a", -1, 3])
 
     def test_validate_counts_matrix(self):
         # basic valid input (n=2)
-        obs = _validate_counts_matrix([[0, 1, 1, 0, 2],
-                                       [0, 0, 2, 1, 3]])
+        obs = _validate_counts_matrix([[0, 1, 1, 0, 2], [0, 0, 2, 1, 3]])
         npt.assert_array_equal(obs[0], np.array([0, 1, 1, 0, 2]))
         npt.assert_array_equal(obs[1], np.array([0, 0, 2, 1, 3]))
 
         # basic valid input (n=3)
-        obs = _validate_counts_matrix([[0, 1, 1, 0, 2],
-                                       [0, 0, 2, 1, 3],
-                                       [1, 1, 1, 1, 1]])
+        obs = _validate_counts_matrix(
+            [[0, 1, 1, 0, 2], [0, 0, 2, 1, 3], [1, 1, 1, 1, 1]]
+        )
         npt.assert_array_equal(obs[0], np.array([0, 1, 1, 0, 2]))
         npt.assert_array_equal(obs[1], np.array([0, 0, 2, 1, 3]))
         npt.assert_array_equal(obs[2], np.array([1, 1, 1, 1, 1]))
@@ -98,9 +97,9 @@ class ValidationTests(TestCase):
         npt.assert_array_equal(obs[1], np.array([]))
 
     def test_validate_counts_matrix_pandas(self):
-        obs = _validate_counts_matrix(pd.DataFrame([[0, 1, 1, 0, 2],
-                                                    [0, 0, 2, 1, 3],
-                                                    [1, 1, 1, 1, 1]]))
+        obs = _validate_counts_matrix(
+            pd.DataFrame([[0, 1, 1, 0, 2], [0, 0, 2, 1, 3], [1, 1, 1, 1, 1]])
+        )
         npt.assert_array_equal(obs[0], np.array([0, 1, 1, 0, 2]))
         npt.assert_array_equal(obs[1], np.array([0, 0, 2, 1, 3]))
         npt.assert_array_equal(obs[2], np.array([1, 1, 1, 1, 1]))
@@ -108,7 +107,8 @@ class ValidationTests(TestCase):
     def test_validate_counts_matrix_suppress_cast(self):
         # suppress_cast is passed through to _validate_counts_vector
         obs = _validate_counts_matrix(
-            [[42.2, 42.1, 0], [42.2, 42.1, 1.0]], suppress_cast=True)
+            [[42.2, 42.1, 0], [42.2, 42.1, 1.0]], suppress_cast=True
+        )
         npt.assert_array_equal(obs[0], np.array([42.2, 42.1, 0]))
         npt.assert_array_equal(obs[1], np.array([42.2, 42.1, 1.0]))
         self.assertEqual(obs[0].dtype, float)
@@ -133,26 +133,32 @@ class ValidationTests(TestCase):
         # basic valid input
         tree = TreeNode.read(
             io.StringIO(
-                '(((((OTU1:0.5,OTU2:0.5):0.5,OTU3:1.0):1.0):0.0,(OTU4:'
-                '0.75,OTU5:0.75):1.25):0.0)root;'))
+                "(((((OTU1:0.5,OTU2:0.5):0.5,OTU3:1.0):1.0):0.0,(OTU4:"
+                "0.75,OTU5:0.75):1.25):0.0)root;"
+            )
+        )
         counts = [1, 1, 1]
-        taxa = ['OTU1', 'OTU2', 'OTU3']
+        taxa = ["OTU1", "OTU2", "OTU3"]
         self.assertTrue(_validate_taxa_and_tree(counts, taxa, tree) is None)
 
         # all tips observed
         tree = TreeNode.read(
             io.StringIO(
-                '(((((OTU1:0.5,OTU2:0.5):0.5,OTU3:1.0):1.0):0.0,(OTU4:'
-                '0.75,OTU5:0.75):1.25):0.0)root;'))
+                "(((((OTU1:0.5,OTU2:0.5):0.5,OTU3:1.0):1.0):0.0,(OTU4:"
+                "0.75,OTU5:0.75):1.25):0.0)root;"
+            )
+        )
         counts = [1, 1, 1, 1, 1]
-        taxa = ['OTU1', 'OTU2', 'OTU3', 'OTU4', 'OTU5']
+        taxa = ["OTU1", "OTU2", "OTU3", "OTU4", "OTU5"]
         self.assertTrue(_validate_taxa_and_tree(counts, taxa, tree) is None)
 
         # no tips observed
         tree = TreeNode.read(
             io.StringIO(
-                '(((((OTU1:0.5,OTU2:0.5):0.5,OTU3:1.0):1.0):0.0,(OTU4:'
-                '0.75,OTU5:0.75):1.25):0.0)root;'))
+                "(((((OTU1:0.5,OTU2:0.5):0.5,OTU3:1.0):1.0):0.0,(OTU4:"
+                "0.75,OTU5:0.75):1.25):0.0)root;"
+            )
+        )
         counts = []
         taxa = []
         self.assertTrue(_validate_taxa_and_tree(counts, taxa, tree) is None)
@@ -160,77 +166,91 @@ class ValidationTests(TestCase):
         # all counts zero
         tree = TreeNode.read(
             io.StringIO(
-                '(((((OTU1:0.5,OTU2:0.5):0.5,OTU3:1.0):1.0):0.0,(OTU4:'
-                '0.75,OTU5:0.75):1.25):0.0)root;'))
+                "(((((OTU1:0.5,OTU2:0.5):0.5,OTU3:1.0):1.0):0.0,(OTU4:"
+                "0.75,OTU5:0.75):1.25):0.0)root;"
+            )
+        )
         counts = [0, 0, 0, 0, 0]
-        taxa = ['OTU1', 'OTU2', 'OTU3', 'OTU4', 'OTU5']
+        taxa = ["OTU1", "OTU2", "OTU3", "OTU4", "OTU5"]
         self.assertTrue(_validate_taxa_and_tree(counts, taxa, tree) is None)
 
     def test_validate_taxa_and_tree_invalid_input(self):
         # tree has duplicated tip ids
         tree = TreeNode.read(
             io.StringIO(
-                '(((((OTU1:0.5,OTU2:0.5):0.5,OTU3:1.0):1.0):0.0,(OTU4:'
-                '0.75,OTU2:0.75):1.25):0.0)root;'))
+                "(((((OTU1:0.5,OTU2:0.5):0.5,OTU3:1.0):1.0):0.0,(OTU4:"
+                "0.75,OTU2:0.75):1.25):0.0)root;"
+            )
+        )
         counts = [1, 1, 1]
-        taxa = ['OTU1', 'OTU2', 'OTU3']
-        self.assertRaises(DuplicateNodeError, _validate_taxa_and_tree,
-                          counts, taxa, tree)
+        taxa = ["OTU1", "OTU2", "OTU3"]
+        self.assertRaises(
+            DuplicateNodeError, _validate_taxa_and_tree, counts, taxa, tree
+        )
 
         # unrooted tree as input
-        tree = TreeNode.read(io.StringIO('((OTU1:0.1, OTU2:0.2):0.3, OTU3:0.5,'
-                                      'OTU4:0.7);'))
+        tree = TreeNode.read(
+            io.StringIO("((OTU1:0.1, OTU2:0.2):0.3, OTU3:0.5," "OTU4:0.7);")
+        )
         counts = [1, 2, 3]
-        taxa = ['OTU1', 'OTU2', 'OTU3']
+        taxa = ["OTU1", "OTU2", "OTU3"]
         self.assertRaises(ValueError, _validate_taxa_and_tree, counts, taxa, tree)
 
         # taxa has duplicated ids
         tree = TreeNode.read(
             io.StringIO(
-                '(((((OTU1:0.5,OTU2:0.5):0.5,OTU3:1.0):1.0):0.0,(OTU4:'
-                '0.75,OTU5:0.75):1.25):0.0)root;'))
+                "(((((OTU1:0.5,OTU2:0.5):0.5,OTU3:1.0):1.0):0.0,(OTU4:"
+                "0.75,OTU5:0.75):1.25):0.0)root;"
+            )
+        )
         counts = [1, 2, 3]
-        taxa = ['OTU1', 'OTU2', 'OTU2']
+        taxa = ["OTU1", "OTU2", "OTU2"]
         self.assertRaises(ValueError, _validate_taxa_and_tree, counts, taxa, tree)
 
         # len of vectors not equal
         tree = TreeNode.read(
             io.StringIO(
-                '(((((OTU1:0.5,OTU2:0.5):0.5,OTU3:1.0):1.0):0.0,(OTU4:'
-                '0.75,OTU5:0.75):1.25):0.0)root;'))
+                "(((((OTU1:0.5,OTU2:0.5):0.5,OTU3:1.0):1.0):0.0,(OTU4:"
+                "0.75,OTU5:0.75):1.25):0.0)root;"
+            )
+        )
         counts = [1, 2]
-        taxa = ['OTU1', 'OTU2', 'OTU3']
+        taxa = ["OTU1", "OTU2", "OTU3"]
         self.assertRaises(ValueError, _validate_taxa_and_tree, counts, taxa, tree)
         counts = [1, 2, 3]
-        taxa = ['OTU1', 'OTU2']
+        taxa = ["OTU1", "OTU2"]
         self.assertRaises(ValueError, _validate_taxa_and_tree, counts, taxa, tree)
 
         # tree with no branch lengths
-        tree = TreeNode.read(io.StringIO('((((OTU1,OTU2),OTU3)),(OTU4,OTU5));'))
+        tree = TreeNode.read(io.StringIO("((((OTU1,OTU2),OTU3)),(OTU4,OTU5));"))
         counts = [1, 2, 3]
-        taxa = ['OTU1', 'OTU2', 'OTU3']
+        taxa = ["OTU1", "OTU2", "OTU3"]
         self.assertRaises(ValueError, _validate_taxa_and_tree, counts, taxa, tree)
 
         # tree missing some branch lengths
         tree = TreeNode.read(
             io.StringIO(
-                '(((((OTU1,OTU2:0.5):0.5,OTU3:1.0):1.0):0.0,(OTU4:'
-                '0.75,OTU5:0.75):1.25):0.0)root;'))
+                "(((((OTU1,OTU2:0.5):0.5,OTU3:1.0):1.0):0.0,(OTU4:"
+                "0.75,OTU5:0.75):1.25):0.0)root;"
+            )
+        )
         counts = [1, 2, 3]
-        taxa = ['OTU1', 'OTU2', 'OTU3']
+        taxa = ["OTU1", "OTU2", "OTU3"]
         self.assertRaises(ValueError, _validate_taxa_and_tree, counts, taxa, tree)
 
         # taxa not present in tree
         tree = TreeNode.read(
             io.StringIO(
-                '(((((OTU1:0.25,OTU2:0.5):0.5,OTU3:1.0):1.0):0.0,(OTU4:'
-                '0.75,OTU5:0.75):1.25):0.0)root;'))
+                "(((((OTU1:0.25,OTU2:0.5):0.5,OTU3:1.0):1.0):0.0,(OTU4:"
+                "0.75,OTU5:0.75):1.25):0.0)root;"
+            )
+        )
         counts = [1, 2, 3]
-        taxa = ['OTU1', 'OTU2', 'OTU32']
+        taxa = ["OTU1", "OTU2", "OTU32"]
         self.assertRaises(MissingNodeError, _validate_taxa_and_tree, counts, taxa, tree)
 
         # single node tree
-        tree = TreeNode.read(io.StringIO('root;'))
+        tree = TreeNode.read(io.StringIO("root;"))
         counts = []
         taxa = []
         self.assertRaises(ValueError, _validate_taxa_and_tree, counts, taxa, tree)
@@ -238,8 +258,9 @@ class ValidationTests(TestCase):
     def test_vectorize_counts_and_tree(self):
         tree = TreeNode.read(io.StringIO("((a:1, b:2)c:3)root;"))
         counts = np.array([[0, 1], [1, 5], [10, 1]])
-        count_array, indexed, branch_lengths = \
-            _vectorize_counts_and_tree(counts, np.array(['a', 'b']), tree)
+        count_array, indexed, branch_lengths = _vectorize_counts_and_tree(
+            counts, np.array(["a", "b"]), tree
+        )
         exp_counts = np.array([[0, 1, 10], [1, 5, 1], [1, 6, 11], [1, 6, 11]])
         npt.assert_equal(count_array, exp_counts.T)
 
@@ -266,9 +287,9 @@ class ValidationTests(TestCase):
             _check_taxa_alias([1], None, None)
         self.assertEqual(str(cm.exception), msg)
 
-        obs = _check_taxa_alias([1], '1', None)
+        obs = _check_taxa_alias([1], "1", None)
         self.assertListEqual(obs, [1])
-        obs = _check_taxa_alias(None, '1', [1])
+        obs = _check_taxa_alias(None, "1", [1])
         self.assertListEqual(obs, [1])
 
 

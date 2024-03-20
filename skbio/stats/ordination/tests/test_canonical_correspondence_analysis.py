@@ -19,8 +19,8 @@ from skbio.util import get_data_path, assert_ordination_results_equal
 class TestCCAErrors(TestCase):
     def setUp(self):
         """Data from table 11.3 in Legendre & Legendre 1998."""
-        self.Y = pd.DataFrame(np.loadtxt(get_data_path('example3_Y')))
-        self.X = pd.DataFrame(np.loadtxt(get_data_path('example3_X')))
+        self.Y = pd.DataFrame(np.loadtxt(get_data_path("example3_Y")))
+        self.X = pd.DataFrame(np.loadtxt(get_data_path("example3_X")))
 
     def test_shape(self):
         X, Y = self.X, self.Y
@@ -52,124 +52,188 @@ class TestCCAResults1(TestCase):
         """Data from table 11.3 in Legendre & Legendre 1998
         (p. 590). Loaded results as computed with vegan 2.0-8 and
         compared with table 11.5 if also there."""
-        self.feature_ids = ['Feature0', 'Feature1', 'Feature2', 'Feature3',
-                            'Feature4', 'Feature5', 'Feature6', 'Feature7',
-                            'Feature8']
-        self.sample_ids = ['Sample0', 'Sample1', 'Sample2', 'Sample3',
-                           'Sample4', 'Sample5', 'Sample6', 'Sample7',
-                           'Sample8', 'Sample9']
-        self.env_ids = ['Constraint0', 'Constraint1',
-                        'Constraint2']
-        self.pc_ids = ['CCA1', 'CCA2', 'CCA3', 'CCA4', 'CCA5', 'CCA6', 'CCA7',
-                       'CCA8', 'CCA9']
+        self.feature_ids = [
+            "Feature0",
+            "Feature1",
+            "Feature2",
+            "Feature3",
+            "Feature4",
+            "Feature5",
+            "Feature6",
+            "Feature7",
+            "Feature8",
+        ]
+        self.sample_ids = [
+            "Sample0",
+            "Sample1",
+            "Sample2",
+            "Sample3",
+            "Sample4",
+            "Sample5",
+            "Sample6",
+            "Sample7",
+            "Sample8",
+            "Sample9",
+        ]
+        self.env_ids = ["Constraint0", "Constraint1", "Constraint2"]
+        self.pc_ids = [
+            "CCA1",
+            "CCA2",
+            "CCA3",
+            "CCA4",
+            "CCA5",
+            "CCA6",
+            "CCA7",
+            "CCA8",
+            "CCA9",
+        ]
         self.Y = pd.DataFrame(
-            np.loadtxt(get_data_path('example3_Y')),
+            np.loadtxt(get_data_path("example3_Y")),
             columns=self.feature_ids,
-            index=self.sample_ids)
+            index=self.sample_ids,
+        )
         self.X = pd.DataFrame(
-            np.loadtxt(get_data_path('example3_X'))[:, :-1],
+            np.loadtxt(get_data_path("example3_X"))[:, :-1],
             columns=self.env_ids,
-            index=self.sample_ids
-            )
+            index=self.sample_ids,
+        )
 
     def test_scaling1(self):
         scores = cca(self.Y, self.X, scaling=1)
 
         # Load data as computed with vegan 2.0-8
         vegan_features = pd.DataFrame(
-            np.loadtxt(get_data_path(
-                'example3_species_scaling1_from_vegan')),
+            np.loadtxt(get_data_path("example3_species_scaling1_from_vegan")),
             index=self.feature_ids,
-            columns=self.pc_ids)
+            columns=self.pc_ids,
+        )
 
         vegan_samples = pd.DataFrame(
-            np.loadtxt(get_data_path(
-                'example3_site_scaling1_from_vegan')),
+            np.loadtxt(get_data_path("example3_site_scaling1_from_vegan")),
             index=self.sample_ids,
-            columns=self.pc_ids)
+            columns=self.pc_ids,
+        )
 
         sample_constraints = pd.DataFrame(
-            np.loadtxt(get_data_path(
-                'example3_sample_constraints_scaling1')),
+            np.loadtxt(get_data_path("example3_sample_constraints_scaling1")),
             index=self.sample_ids,
-            columns=self.pc_ids)
-        mat = np.loadtxt(get_data_path(
-            'example3_biplot_scaling1'))
-        cropped_pcs = self.pc_ids[:mat.shape[1]]
-        biplot_scores = pd.DataFrame(mat,
-                                     index=self.env_ids,
-                                     columns=cropped_pcs)
+            columns=self.pc_ids,
+        )
+        mat = np.loadtxt(get_data_path("example3_biplot_scaling1"))
+        cropped_pcs = self.pc_ids[: mat.shape[1]]
+        biplot_scores = pd.DataFrame(mat, index=self.env_ids, columns=cropped_pcs)
 
-        proportion_explained = pd.Series([0.466911, 0.238327, 0.100548,
-                                          0.104937, 0.044805, 0.029747,
-                                          0.012631, 0.001562, 0.000532],
-                                         index=self.pc_ids)
-        eigvals = pd.Series([0.366136, 0.186888, 0.078847, 0.082288,
-                             0.035135, 0.023327, 0.009905, 0.001225,
-                             0.000417], index=self.pc_ids)
+        proportion_explained = pd.Series(
+            [
+                0.466911,
+                0.238327,
+                0.100548,
+                0.104937,
+                0.044805,
+                0.029747,
+                0.012631,
+                0.001562,
+                0.000532,
+            ],
+            index=self.pc_ids,
+        )
+        eigvals = pd.Series(
+            [
+                0.366136,
+                0.186888,
+                0.078847,
+                0.082288,
+                0.035135,
+                0.023327,
+                0.009905,
+                0.001225,
+                0.000417,
+            ],
+            index=self.pc_ids,
+        )
 
         exp = OrdinationResults(
-            'CCA', 'Canonical Correspondence Analysis',
+            "CCA",
+            "Canonical Correspondence Analysis",
             samples=vegan_samples,
             features=vegan_features,
             sample_constraints=sample_constraints,
             biplot_scores=biplot_scores,
             proportion_explained=proportion_explained,
-            eigvals=eigvals)
+            eigvals=eigvals,
+        )
 
-        assert_ordination_results_equal(scores, exp,
-                                        decimal=6)
+        assert_ordination_results_equal(scores, exp, decimal=6)
 
     def test_scaling2(self):
         scores = cca(self.Y, self.X, scaling=2)
 
         # Load data as computed with vegan 2.0-8
         vegan_features = pd.DataFrame(
-            np.loadtxt(get_data_path(
-                'example3_species_scaling2_from_vegan')),
+            np.loadtxt(get_data_path("example3_species_scaling2_from_vegan")),
             index=self.feature_ids,
-            columns=self.pc_ids)
+            columns=self.pc_ids,
+        )
 
         vegan_samples = pd.DataFrame(
-            np.loadtxt(get_data_path(
-                'example3_site_scaling2_from_vegan')),
+            np.loadtxt(get_data_path("example3_site_scaling2_from_vegan")),
             index=self.sample_ids,
-            columns=self.pc_ids)
+            columns=self.pc_ids,
+        )
 
         sample_constraints = pd.DataFrame(
-            np.loadtxt(get_data_path(
-                'example3_sample_constraints_scaling2')),
+            np.loadtxt(get_data_path("example3_sample_constraints_scaling2")),
             index=self.sample_ids,
-            columns=self.pc_ids)
+            columns=self.pc_ids,
+        )
 
-        mat = np.loadtxt(get_data_path(
-            'example3_biplot_scaling2'))
+        mat = np.loadtxt(get_data_path("example3_biplot_scaling2"))
 
-        cropped_pc_ids = self.pc_ids[:mat.shape[1]]
-        biplot_scores = pd.DataFrame(mat,
-                                     index=self.env_ids,
-                                     columns=cropped_pc_ids)
+        cropped_pc_ids = self.pc_ids[: mat.shape[1]]
+        biplot_scores = pd.DataFrame(mat, index=self.env_ids, columns=cropped_pc_ids)
 
-        proportion_explained = pd.Series([0.466911, 0.238327, 0.100548,
-                                          0.104937, 0.044805, 0.029747,
-                                          0.012631, 0.001562, 0.000532],
-                                         index=self.pc_ids)
-        eigvals = pd.Series([0.366136, 0.186888, 0.078847, 0.082288,
-                             0.035135, 0.023327, 0.009905, 0.001225,
-                             0.000417], index=self.pc_ids)
+        proportion_explained = pd.Series(
+            [
+                0.466911,
+                0.238327,
+                0.100548,
+                0.104937,
+                0.044805,
+                0.029747,
+                0.012631,
+                0.001562,
+                0.000532,
+            ],
+            index=self.pc_ids,
+        )
+        eigvals = pd.Series(
+            [
+                0.366136,
+                0.186888,
+                0.078847,
+                0.082288,
+                0.035135,
+                0.023327,
+                0.009905,
+                0.001225,
+                0.000417,
+            ],
+            index=self.pc_ids,
+        )
 
         exp = OrdinationResults(
-            'CCA', 'Canonical Correspondence Analysis',
+            "CCA",
+            "Canonical Correspondence Analysis",
             samples=vegan_samples,
             features=vegan_features,
             sample_constraints=sample_constraints,
             biplot_scores=biplot_scores,
             proportion_explained=proportion_explained,
-            eigvals=eigvals)
+            eigvals=eigvals,
+        )
 
-        assert_ordination_results_equal(scores, exp,
-                                        decimal=6)
+        assert_ordination_results_equal(scores, exp, decimal=6)
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     main()

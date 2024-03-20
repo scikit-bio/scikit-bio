@@ -16,4 +16,4 @@ This module provides support for interaction with BIOM Tables.
 # ----------------------------------------------------------------------------
 from skbio.feature_table._base import Table
 
-__all__ = ['Table']
+__all__ = ["Table"]
