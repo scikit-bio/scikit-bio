@@ -88,7 +88,7 @@ def _biom_sniffer(fh):
         if url != 'http://biom-format.org':
             return False, {}
         if list(version) != [2, 1]:
-            raise BIOMFormatError("Only biom-format 2.1.0 currently supported")
+            return False, {}
 
         return True, {}
     else:
