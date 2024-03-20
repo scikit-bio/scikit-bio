@@ -14,7 +14,7 @@ import numpy as np
 import numpy.testing as npt
 
 from skbio import DistanceMatrix, TreeNode
-from skbio.feature_table import example_table
+from skbio.feature_table import Table, example_table
 from skbio.util._testing import assert_series_almost_equal
 from skbio.diversity import (alpha_diversity, beta_diversity,
                              partial_beta_diversity,
@@ -84,6 +84,9 @@ class AlphaDiversityTests(TestCase):
         self.assertRaises(TypeError, alpha_diversity, faith_pd,
                           [0, 1], tree=self.tree1, taxa=['OTU1', 'OTU2'],
                           not_a_real_kwarg=42.0)
+
+        self.assertRaises(ValueError, alpha_diversity, 'sobs',
+                          example_table, ids=['A', 'B', 'C'])
 
     def test_invalid_input_phylogenetic(self):
         # taxa not provided
@@ -166,6 +169,13 @@ class AlphaDiversityTests(TestCase):
         self.assertRaises(MissingNodeError, alpha_diversity, 'faith_pd',
                           counts, taxa=taxa, tree=t)
 
+        # table and taxa are provided
+        test_table = Table(np.array([[1, 2, 3], [4, 5, 6], [7, 8, 9]]),
+                           ['O1', 'O2', 'O3'],
+                           ['S1', 'S2', 'S3'])
+        self.assertRaises(ValueError, alpha_diversity, 'faith_pd',
+                          test_table, taxa=taxa, tree=t)
+
     def test_empty(self):
         # empty vector
         actual = alpha_diversity('sobs',
@@ -205,6 +215,11 @@ class AlphaDiversityTests(TestCase):
         expected = pd.Series([0., 0.])
         assert_series_almost_equal(actual, expected)
 
+        # empty Table
+        actual = alpha_diversity('sobs', Table())
+        expected = pd.Series([])
+        assert_series_almost_equal(actual, expected)
+
     def test_single_count_vector(self):
         actual = alpha_diversity('sobs', np.array([1, 0, 2]))
         expected = pd.Series([2])
@@ -218,15 +233,27 @@ class AlphaDiversityTests(TestCase):
         list_result = alpha_diversity('sobs', [1, 3, 0, 1, 0])
         array_result = alpha_diversity('sobs',
                                        np.array([1, 3, 0, 1, 0]))
+        table_result = alpha_diversity('sobs',
+                                       Table(np.array([[1, 3, 0, 1, 0], ]),
+                                             list('ABCDE'),
+                                             ['S1', ]))
+
         self.assertAlmostEqual(list_result[0], 3)
         assert_series_almost_equal(list_result, array_result)
+        assert_series_almost_equal(table_result, array_result)
 
         list_result = alpha_diversity('faith_pd', [1, 3, 0, 1, 0],
                                       tree=self.tree1, taxa=self.oids1)
         array_result = alpha_diversity('faith_pd', np.array([1, 3, 0, 1, 0]),
                                        tree=self.tree1, taxa=self.oids1)
+        table_result = alpha_diversity('faith_pd',
+                                       Table(np.array([[1, 3, 0, 1, 0], ]),
+                                             self.oids1,
+                                             ['S1', ]),
+                                       tree=self.tree1)
         self.assertAlmostEqual(list_result[0], 4.5)
         assert_series_almost_equal(list_result, array_result)
+        assert_series_almost_equal(table_result, array_result)
 
     def test_sobs(self):
         # expected values hand-calculated
