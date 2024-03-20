@@ -429,6 +429,15 @@ class BetaDiversityTests(TestCase):
                            not_a_real_kwarg=42.0, tree=self.tree1,
                            taxa=['O1', 'O2', 'O3'])
 
+        error_msg = r"`counts` and `ids`"
+        with self.assertRaisesRegex(ValueError, error_msg):
+            beta_diversity('euclidean', example_table, ids=['foo', 'bar'])
+
+        error_msg = r"`counts` and `taxa`"
+        with self.assertRaisesRegex(ValueError, error_msg):
+            beta_diversity(weighted_unifrac, example_table, taxa=['foo', 'bar'],
+                           tree=self.tree1)
+
     def test_invalid_input_phylogenetic(self):
         # taxa not provided
         self.assertRaises(ValueError, beta_diversity, 'weighted_unifrac',
@@ -552,13 +561,24 @@ class BetaDiversityTests(TestCase):
         expected_dm = DistanceMatrix([[0.0, 0.0], [0.0, 0.0]], ['a', 'b'])
         self.assertEqual(actual, expected_dm)
 
+        actual = beta_diversity('unweighted_unifrac',
+                                Table(np.array([[]]), [], ['a', 'b']),
+                                tree=self.tree1)
+        expected_dm = DistanceMatrix([[0.0, 0.0], [0.0, 0.0]], ['a', 'b'])
+        self.assertEqual(actual, expected_dm)
+
     def test_input_types(self):
         actual_array = beta_diversity('euclidean',
                                       np.array([[1, 5], [2, 3]]),
                                       ids=['a', 'b'])
         actual_list = beta_diversity('euclidean',
                                      [[1, 5], [2, 3]], ids=['a', 'b'])
+        actual_table = beta_diversity('euclidean',
+                                      Table(np.array([[1, 5], [2, 3]]).T,
+                                            ['O1', 'O2'],
+                                            ['a', 'b'])
         self.assertEqual(actual_array, actual_list)
+        self.assertEqual(actual_array, actual_table)
 
     def test_euclidean(self):
         # TODO: update npt.assert_almost_equal calls to use DistanceMatrix
