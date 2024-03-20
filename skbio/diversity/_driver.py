@@ -128,7 +128,7 @@ def alpha_diversity(metric, counts, ids=None, validate=True, **kwargs):
         The alpha diversity metric to apply to the sample(s). Passing metric as
         a string is preferable as this often results in an optimized version of
         the metric being used.
-    counts : 1D or 2D array_like of ints or floats
+    counts : 1D or 2D array_like of ints or floats, Table
         Vector or matrix containing count/abundance data. If a matrix, each row
         should contain counts of taxa in a given sample.
     ids : iterable of strs, optional
@@ -372,7 +372,7 @@ def beta_diversity(
         and the scikit-bio functions linked under *See Also* for available
         metrics. Passing metrics as a strings is preferable as this often
         results in an optimized version of the metric being used.
-    counts : 2D array_like of ints or floats or 2D pandas DataFrame
+    counts : 2D array_like of ints or floats, 2D pandas DataFrame, Table
         Matrix containing count/abundance data where each row contains counts
         of taxa in a given sample.
     ids : iterable of strs, optional
