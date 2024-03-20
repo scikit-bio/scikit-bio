@@ -26,6 +26,15 @@ Format Specification
 --------------------
 The official format specification for BIOM-Format can be found at [1]_.
 
+Examples
+--------
+Here we will write an existing BIOM table, and re-read it. Note that the Table
+from ``biom`` implicitly gets the ``.write`` method from the IO registry.
+
+>>> import biom, skbio
+>>> biom.example_table.write('test.biom')
+>>> roundtrip = skbio.read('test.biom', into=skbio.Table)
+
 References
 ----------
 .. [1] http://biom-format.org/documentation/format_versions/biom-2.1.html
@@ -86,12 +95,29 @@ def _biom_sniffer(fh):
 
 
 @biom.reader(Table)
+def _biom_to_feature_table_into(fh):
+    return _biom_to_feature_table(fh)
+
+
+@biom.reader(None)
+def _biom_to_feature_table_default(fh):
+    # skbio.read('foo.biom', format='biom')
+    # will return a generator, that subsequently iterates the table.
+    # returning a single item tuple yields expected behavior such that:
+    # next(skbio.read('foo.biom', format='biom')) == Table
+    return (_biom_to_feature_table(fh), )
+
+
 def _biom_to_feature_table(fh):
     h5grp = h5py.File(fh, 'r')
     return Table.from_hdf5(h5grp)
 
 
 @biom.writer(Table)
+def _sktable_to_biom(obj, fh):
+    _feature_table_to_biom(obj, fh)
+
+
 def _feature_table_to_biom(obj, fh):
     h5grp = h5py.File(fh, 'w')
     obj.to_hdf5(h5grp, f'Written by scikit-bio version {skbio.__version__}')
