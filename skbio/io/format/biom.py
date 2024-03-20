@@ -33,6 +33,7 @@ from ``biom`` implicitly gets the ``.write`` method from the IO registry.
 
 >>> import biom, skbio
 >>> biom.example_table.write('test.biom')
+'test.biom'
 >>> roundtrip = skbio.read('test.biom', into=skbio.Table)
 
 References
