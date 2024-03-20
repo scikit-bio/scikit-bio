@@ -14,6 +14,7 @@
 
 * Added biom-format Table import and updated corresponding requirement files ([#1907](https://github.com/scikit-bio/scikit-bio/pull/1907)).
 * Added biom-format 2.1.0 IO support ([#1984](https://github.com/scikit-bio/scikit-bio/pull/1984)).
+* Added ``Table`` support to `alpha_diversity` and `beta_diversity` drivers ([#1984](https://github.com/scikit-bio/scikit-bio/pull/1984)).
 * Implemented a mechanism to automatically build documentation and/or homepage and deploy them to the website ([#1934](https://github.com/scikit-bio/scikit-bio/pull/1934)).
 * Added method `Sequence.to_indices` to convert a sequence into a vector of indices of characters in an alphabet (can be from a substitution matrix) or unique characters observed in the sequence. Supports gap masking and wildcard substitution ([#1917](https://github.com/scikit-bio/scikit-bio/pull/1917)).
 * Added class `SubstitutionMatrix` to support subsitution matrices for nucleotides, amino acids are more general cases ([#1913](https://github.com/scikit-bio/scikit-bio/pull/1913)).
