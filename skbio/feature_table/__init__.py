@@ -14,6 +14,6 @@ This module provides support for interaction with BIOM Tables.
 #
 # The full license is in the file LICENSE.txt, distributed with this software.
 # ----------------------------------------------------------------------------
-from skbio.feature_table._base import Table
+from skbio.feature_table._base import Table, example_table
 
-__all__ = ['Table']
+__all__ = ['Table', 'example_table']

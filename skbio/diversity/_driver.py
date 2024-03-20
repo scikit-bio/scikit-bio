@@ -26,6 +26,8 @@ from skbio.diversity._util import (
     _validate_counts_matrix,
     _get_phylogenetic_kwargs,
     _quantitative_to_qualitative_counts,
+    _table_to_numpy,
+    _validate_table
 )
 
 
@@ -164,6 +166,9 @@ def alpha_diversity(metric, counts, ids=None, validate=True, **kwargs):
     skbio.diversity.beta_diversity
 
     """
+    if isinstance(counts, skbio.Table):
+        counts, ids = _validate_table(counts, ids, kwargs)
+
     metric_map = _get_alpha_diversity_metric_map()
 
     if validate:
@@ -415,6 +420,9 @@ def beta_diversity(
     sklearn.metrics.pairwise_distances
 
     """
+    if isinstance(counts, skbio.Table):
+        counts, ids = _validate_table(counts, ids, kwargs)
+
     if isinstance(counts, pd.DataFrame) and ids is None:
         ids = list(counts.index)
 

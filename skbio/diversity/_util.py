@@ -51,7 +51,10 @@ def _validate_counts_matrix(counts, ids=None, suppress_cast=False):
     else:
         if len(counts) == 0 or not isinstance(counts[0], collections.abc.Iterable):
             counts = [counts]
-        counts = np.asarray(counts)
+
+        if not isinstance(counts, np.ndarray):
+            counts = np.asarray(counts)
+
         if counts.ndim > 2:
             raise ValueError(
                 "Only 1-D and 2-D array-like objects can be provided "
@@ -155,3 +158,38 @@ def _check_taxa_alias(taxa, tree, otu_ids):
     if tree is None:
         raise ValueError("A phylogenetic tree must be provided.")
     return taxa
+
+
+def _table_to_numpy(table):
+    """Convert a skbio.feature_table.Table to a dense representation.
+
+    This is a stop-gap solution to allow current Table objects to interoperate
+    with existing driver methods, until they transition to be "sparse" aware.
+    """
+    sample_ids = list(table.ids())
+    obs_ids = list(table.ids(axis='observation'))
+
+    if table.is_empty():
+        counts = np.array([[]] * len(sample_ids))
+    else:
+        counts = table.matrix_data.T.toarray()
+
+    return counts, sample_ids, obs_ids
+
+
+def _validate_table(counts, ids, kwargs):
+    """Disallow overriding of sample and feature IDs.
+
+    WARNING: this implicitly adds an entry to kwargs IF `tree` is present.
+    """
+    if ids is not None:
+        raise ValueError("Cannot provide a `Table` as `counts` and `ids`")
+
+    if 'taxa' in kwargs:
+        raise ValueError("Cannot provide a `Table` as `counts` and `taxa`")
+
+    dense_counts, sample_ids, feature_ids = _table_to_numpy(counts)
+    if 'tree' in kwargs:
+        kwargs['taxa'] = feature_ids
+
+    return dense_counts, sample_ids
