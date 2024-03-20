@@ -13,7 +13,7 @@ from skbio.metadata._enan import get_payload_from_nan, make_nan_with_payload
 
 class TestNanPayloads(unittest.TestCase):
     def test_normal_nan(self):
-        normal_nan = float('nan')
+        normal_nan = float("nan")
 
         payload, namespace = get_payload_from_nan(normal_nan)
 

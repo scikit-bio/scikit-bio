@@ -56,23 +56,23 @@ class Chao1Tests(TestCase):
         # Should match observed results from EstimateS.NOTE: EstimateS reports
         # sd, not var, and rounds to 2 dp.
         obs = _chao1_var(self.counts)
-        npt.assert_allclose(obs, 1.42 ** 2, rtol=0.01)
+        npt.assert_allclose(obs, 1.42**2, rtol=0.01)
 
         obs = _chao1_var(self.counts, bias_corrected=False)
-        npt.assert_allclose(obs, 2.29 ** 2, rtol=0.01)
+        npt.assert_allclose(obs, 2.29**2, rtol=0.01)
 
         obs = _chao1_var(self.no_singles)
-        self.assertAlmostEqual(obs, 0.39 ** 2, delta=0.01)
+        self.assertAlmostEqual(obs, 0.39**2, delta=0.01)
 
         obs = _chao1_var(self.no_singles, bias_corrected=False)
-        self.assertAlmostEqual(obs, 0.39 ** 2, delta=0.01)
+        self.assertAlmostEqual(obs, 0.39**2, delta=0.01)
 
         obs = _chao1_var(self.no_doubles)
-        self.assertAlmostEqual(obs, 2.17 ** 2, delta=0.01)
+        self.assertAlmostEqual(obs, 2.17**2, delta=0.01)
 
         obs = _chao1_var(self.no_doubles, bias_corrected=False)
-        self.assertAlmostEqual(obs, 2.17 ** 2, delta=0.01)
+        self.assertAlmostEqual(obs, 2.17**2, delta=0.01)
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     main()

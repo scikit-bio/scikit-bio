@@ -33,8 +33,8 @@ class TestClassOnlyMethod(unittest.TestCase):
         with self.assertRaises(TypeError) as e:
             A().example()
 
-        self.assertIn('A.example', str(e.exception))
-        self.assertIn('instance', str(e.exception))
+        self.assertIn("A.example", str(e.exception))
+        self.assertIn("instance", str(e.exception))
 
     def test_matches_classmethod(self):
         class A:
@@ -46,8 +46,8 @@ class TestClassOnlyMethod(unittest.TestCase):
         A.example1 = classmethod(example)
         A.example2 = classonlymethod(example)
 
-        self.assertEqual(A.__dict__['example1'].__func__, example)
-        self.assertEqual(A.__dict__['example2'].__func__, example)
+        self.assertEqual(A.__dict__["example1"].__func__, example)
+        self.assertEqual(A.__dict__["example2"].__func__, example)
 
         self.assertEqual(A.example1.__doc__, example.__doc__)
         self.assertEqual(A.example2.__doc__, example.__doc__)
@@ -60,16 +60,15 @@ class TestClassOnlyMethod(unittest.TestCase):
 
         class A:
             @classonlymethod
-            def example(cls, arg1, arg2, kwarg1=None, kwarg2=None,
-                        default=5):
+            def example(cls, arg1, arg2, kwarg1=None, kwarg2=None, default=5):
                 self.assertEqual(arg1, 1)
                 self.assertEqual(arg2, 2)
-                self.assertEqual(kwarg1, '1')
-                self.assertEqual(kwarg2, '2')
+                self.assertEqual(kwarg1, "1")
+                self.assertEqual(kwarg2, "2")
                 self.assertEqual(default, 5)
                 self.ran_test = True
 
-        A.example(1, *[2], kwarg2='2', **{'kwarg1': '1'})
+        A.example(1, *[2], kwarg2="2", **{"kwarg1": "1"})
         self.assertTrue(self.ran_test)
 
 
@@ -79,6 +78,7 @@ class TestOverrides(unittest.TestCase):
             pass
 
         with self.assertRaises(OverrideError):
+
             class B(A):
                 @overrides(A)
                 def test(self):
@@ -132,5 +132,5 @@ class TestClassProperty(unittest.TestCase):
             f.foo = 4242
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     unittest.main()

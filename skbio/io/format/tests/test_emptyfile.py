@@ -32,5 +32,5 @@ class TestEmptyFile(unittest.TestCase):
         self.assertEqual({}, kw)
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     unittest.main()

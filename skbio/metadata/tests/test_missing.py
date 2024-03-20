@@ -33,7 +33,7 @@ class RoundTripMixin:
         self.check_roundtrip(0.05, float)
 
     def test_roundtrip_string(self):
-        self.check_roundtrip('hello', object)
+        self.check_roundtrip("hello", object)
 
     def test_roundtrip_int(self):
         self.check_roundtrip(42, float)
@@ -42,7 +42,7 @@ class RoundTripMixin:
         self.check_roundtrip(True, object)
 
     def test_roundtrip_all_missing_object(self):
-        expected = [None, float('nan')] + self.missing_terms
+        expected = [None, float("nan")] + self.missing_terms
         series = pd.Series(expected, dtype=object)
 
         encoded = series_encode_missing(series, self.enum)
@@ -54,19 +54,24 @@ class RoundTripMixin:
 
 class TestISNDC(RoundTripMixin, unittest.TestCase):
     def setUp(self):
-        self.enum = 'INSDC:missing'
-        self.missing_terms = ['not applicable', 'missing', 'not collected',
-                              'not provided', 'restricted access']
+        self.enum = "INSDC:missing"
+        self.missing_terms = [
+            "not applicable",
+            "missing",
+            "not collected",
+            "not provided",
+            "restricted access",
+        ]
 
 
 class TestOmitted(RoundTripMixin, unittest.TestCase):
     def setUp(self):
-        self.enum = 'blank'
-        self.missing_terms = [None, float('nan')]
+        self.enum = "blank"
+        self.missing_terms = [None, float("nan")]
 
     # test_roundtrip_all_missing_float is not possible with other schemes
     def test_roundtrip_all_missing_float(self):
-        expected = [None, float('nan')] + self.missing_terms
+        expected = [None, float("nan")] + self.missing_terms
         series = pd.Series(expected, dtype=float)
 
         encoded = series_encode_missing(series, self.enum)
@@ -78,7 +83,7 @@ class TestOmitted(RoundTripMixin, unittest.TestCase):
 
 class TestError(RoundTripMixin, unittest.TestCase):
     def setUp(self):
-        self.enum = 'no-missing'
+        self.enum = "no-missing"
         self.missing_terms = []
 
     # no missing values, so bool and int are not object and float
@@ -89,5 +94,5 @@ class TestError(RoundTripMixin, unittest.TestCase):
         self.check_roundtrip(42, int)
 
     def test_roundtrip_all_missing_object(self):
-        with self.assertRaisesRegex(ValueError, 'Missing values.*name=None'):
+        with self.assertRaisesRegex(ValueError, "Missing values.*name=None"):
             super().test_roundtrip_all_missing_object()

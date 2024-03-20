@@ -14,25 +14,53 @@ import numpy.testing as npt
 
 from skbio import TreeNode
 from skbio.diversity.alpha import (
-    berger_parker_d, brillouin_d, dominance, doubles, enspie,
-    esty_ci, fisher_alpha, goods_coverage, heip_e, kempton_taylor_q,
-    margalef, mcintosh_d, mcintosh_e, menhinick, michaelis_menten_fit,
-    observed_features, observed_otus, osd, pielou_e, robbins, shannon,
-    simpson, simpson_e, singles, sobs, strong)
+    berger_parker_d,
+    brillouin_d,
+    dominance,
+    doubles,
+    enspie,
+    esty_ci,
+    fisher_alpha,
+    goods_coverage,
+    heip_e,
+    kempton_taylor_q,
+    margalef,
+    mcintosh_d,
+    mcintosh_e,
+    menhinick,
+    michaelis_menten_fit,
+    observed_features,
+    observed_otus,
+    osd,
+    pielou_e,
+    robbins,
+    shannon,
+    simpson,
+    simpson_e,
+    singles,
+    sobs,
+    strong,
+)
 
 
 class BaseTests(TestCase):
     def setUp(self):
         self.counts = np.array([0, 1, 1, 4, 2, 5, 2, 4, 1, 2])
-        self.sids1 = list('ABCD')
-        self.oids1 = ['OTU%d' % i for i in range(1, 6)]
-        self.t1 = TreeNode.read(StringIO(
-            '(((((OTU1:0.5,OTU2:0.5):0.5,OTU3:1.0):1.0):'
-            '0.0,(OTU4:0.75,OTU5:0.75):1.25):0.0)root;'))
+        self.sids1 = list("ABCD")
+        self.oids1 = ["OTU%d" % i for i in range(1, 6)]
+        self.t1 = TreeNode.read(
+            StringIO(
+                "(((((OTU1:0.5,OTU2:0.5):0.5,OTU3:1.0):1.0):"
+                "0.0,(OTU4:0.75,OTU5:0.75):1.25):0.0)root;"
+            )
+        )
         self.t1_w_extra_tips = TreeNode.read(
-           StringIO('(((((OTU1:0.5,OTU2:0.5):0.5,OTU3:1.0):1.0):0.0,(OTU4:'
-                    '0.75,(OTU5:0.25,(OTU6:0.5,OTU7:0.5):0.5):0.5):1.25):0.0'
-                    ')root;'))
+            StringIO(
+                "(((((OTU1:0.5,OTU2:0.5):0.5,OTU3:1.0):1.0):0.0,(OTU4:"
+                "0.75,(OTU5:0.25,(OTU6:0.5,OTU7:0.5):0.5):0.5):1.25):0.0"
+                ")root;"
+            )
+        )
 
     def test_berger_parker_d(self):
         self.assertEqual(berger_parker_d(np.array([5, 5])), 0.5)
@@ -43,8 +71,9 @@ class BaseTests(TestCase):
         self.assertEqual(berger_parker_d([]), 0)
 
     def test_brillouin_d(self):
-        self.assertAlmostEqual(brillouin_d(np.array([1, 2, 0, 0, 3, 1])),
-                               0.86289353018248782)
+        self.assertAlmostEqual(
+            brillouin_d(np.array([1, 2, 0, 0, 3, 1])), 0.86289353018248782
+        )
         self.assertEqual(brillouin_d([0, 0, 0]), 0)
         self.assertEqual(brillouin_d([]), 0)
 
@@ -90,7 +119,7 @@ class BaseTests(TestCase):
             max_size = max(indices) + 1
             freqs = np.zeros(max_size, dtype=int)
             for i in range(len(indices)):
-                freqs += np.bincount(indices[i:i + 1], minlength=max_size)
+                freqs += np.bincount(indices[i : i + 1], minlength=max_size)
                 try:
                     curr = f(freqs)
                 except (ZeroDivisionError, FloatingPointError):
@@ -102,12 +131,34 @@ class BaseTests(TestCase):
 
         observed_lower, observed_upper = zip(*_diversity(data, esty_ci))
 
-        expected_lower = np.array([1, -1.38590382, -0.73353593, -0.17434465,
-                                   -0.15060902, -0.04386191, -0.33042054,
-                                   -0.29041008, -0.43554755, -0.33385652])
-        expected_upper = np.array([1, 1.38590382, 1.40020259, 0.67434465,
-                                   0.55060902, 0.71052858, 0.61613483,
-                                   0.54041008, 0.43554755, 0.53385652])
+        expected_lower = np.array(
+            [
+                1,
+                -1.38590382,
+                -0.73353593,
+                -0.17434465,
+                -0.15060902,
+                -0.04386191,
+                -0.33042054,
+                -0.29041008,
+                -0.43554755,
+                -0.33385652,
+            ]
+        )
+        expected_upper = np.array(
+            [
+                1,
+                1.38590382,
+                1.40020259,
+                0.67434465,
+                0.55060902,
+                0.71052858,
+                0.61613483,
+                0.54041008,
+                0.43554755,
+                0.53385652,
+            ]
+        )
 
         npt.assert_array_almost_equal(observed_lower, expected_lower)
         npt.assert_array_almost_equal(observed_upper, expected_upper)
@@ -170,8 +221,40 @@ class BaseTests(TestCase):
 
     def test_kempton_taylor_q(self):
         # Approximate Magurran 1998 calculation p143.
-        arr = np.array([2, 3, 3, 3, 3, 3, 4, 4, 4, 6, 6, 7, 7, 9, 9, 11, 14,
-                        15, 15, 20, 29, 33, 34, 36, 37, 53, 57, 138, 146, 170])
+        arr = np.array(
+            [
+                2,
+                3,
+                3,
+                3,
+                3,
+                3,
+                4,
+                4,
+                4,
+                6,
+                6,
+                7,
+                7,
+                9,
+                9,
+                11,
+                14,
+                15,
+                15,
+                20,
+                29,
+                33,
+                34,
+                36,
+                37,
+                53,
+                57,
+                138,
+                146,
+                170,
+            ]
+        )
         exp = 14 / np.log(34 / 4)
         self.assertAlmostEqual(kempton_taylor_q(arr), exp)
 
@@ -185,8 +268,7 @@ class BaseTests(TestCase):
         self.assertEqual(margalef([]), 0)
 
     def test_mcintosh_d(self):
-        self.assertAlmostEqual(mcintosh_d(np.array([1, 2, 3])),
-                               0.636061424871458)
+        self.assertAlmostEqual(mcintosh_d(np.array([1, 2, 3])), 0.636061424871458)
         self.assertEqual(mcintosh_d([0, 0, 0]), 0)
         self.assertEqual(mcintosh_d([]), 0)
 
@@ -221,15 +303,11 @@ class BaseTests(TestCase):
         self.assertTrue(obs_few > obs_many)
 
     def test_observed_features(self):
-        for obs in [np.array([4, 3, 4, 0, 1, 0, 2]),
-                    np.array([0, 0, 0]),
-                    self.counts]:
+        for obs in [np.array([4, 3, 4, 0, 1, 0, 2]), np.array([0, 0, 0]), self.counts]:
             self.assertEqual(observed_features(obs), sobs(obs))
 
     def test_observed_otus(self):
-        for obs in [np.array([4, 3, 4, 0, 1, 0, 2]),
-                    np.array([0, 0, 0]),
-                    self.counts]:
+        for obs in [np.array([4, 3, 4, 0, 1, 0, 2]), np.array([0, 0, 0]), self.counts]:
             self.assertEqual(observed_otus(obs), sobs(obs))
 
     def test_osd(self):
@@ -276,7 +354,7 @@ class BaseTests(TestCase):
 
         arr = np.array([0, 30, 25, 40, 0, 0, 5])
         freq_arr = arr / arr.sum()
-        D = (freq_arr ** 2).sum()
+        D = (freq_arr**2).sum()
         exp = 1 / (D * 4)
         obs = simpson_e(arr)
         self.assertEqual(obs, exp)
@@ -311,5 +389,5 @@ class BaseTests(TestCase):
         self.assertEqual(strong([]), 0)
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     main()

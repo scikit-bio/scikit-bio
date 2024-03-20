@@ -1720,8 +1720,8 @@ def dirmult_ttest(
     grouping,
     treatment,
     reference,
-    pseudocount = 0.5,
-    draws = 128,
+    pseudocount=0.5,
+    draws=128,
     seed=None,
 ):
     r"""*T*-test using Dirichlet Multinomial Distribution.
