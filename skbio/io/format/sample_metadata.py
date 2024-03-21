@@ -100,6 +100,7 @@ The ID column name (i.e. ID header) must be one of the following values. The
 values listed below may not be used to name other IDs or columns in the file.
 
 Case-insensitive:
+
 - id
 
 - sampleid
@@ -116,6 +117,7 @@ Case-insensitive:
 
 Case-sensitive (these are mostly for backwards-compatibility with QIIME 1,
 biom-format, and Qiita files):
+
 - #SampleID
 
 - #Sample ID
