@@ -1429,6 +1429,11 @@ class DirMultTTestTests(TestCase):
         pdt.assert_index_equal(result.index,
                                pd.Index(['feature1', 'feature2', 'feature3']))
 
+    def test_dirmult_ttest_no_p_adjust(self):
+        result = dirmult_ttest(self.table, self.grouping, self.treatment, self.reference,
+                               p_adjust=None)
+        pdt.assert_series_equal(result['pvalue'], result['qvalue'], check_names=False)
+
     def test_dirmult_ttest_invalid_table_type(self):
         with self.assertRaises(TypeError):
             dirmult_ttest("invalid_table", self.grouping, self.treatment, self.reference)

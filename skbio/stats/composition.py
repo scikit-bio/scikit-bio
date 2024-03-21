@@ -92,6 +92,7 @@ from scipy.stats import t, gmean
 from skbio.stats.distance import DistanceMatrix
 from skbio.util import find_duplicates
 from skbio.util._misc import get_rng
+from skbio.util._warning import _warn_deprecated
 
 
 def closure(mat):
@@ -238,14 +239,7 @@ def multiplicative_replacement(mat, delta=None):
     multi_replace
 
     """
-    # @deprecated
-    if not hasattr(multi_replace, "warned"):
-        simplefilter("once", DeprecationWarning)
-        warn(
-            "multiplicative_replacement is deprecated as of 0.6.0.", DeprecationWarning
-        )
-        multi_replace.warned = True
-
+    _warn_deprecated(multiplicative_replacement, "0.6.0")
     return multi_replace(mat, delta)
 
 
@@ -1288,6 +1282,11 @@ def ancom(
         Boniferroni ("holm" or "holm-bonferroni") (default) or Benjamini-
         Hochberg ("bh", "fdr_bh" or "benjamini-hochberg"). Case-insensitive. If
         None, no correction will be performed.
+
+        .. versionchanged:: 0.6.0
+
+            Replaces ``multiple_comparisons_correction`` for conciseness.
+
     significance_test : str or callable, optional
         A function to test for significance between classes. It must be able to
         accept at least two vectors of floats and returns a test statistic and
@@ -1334,7 +1333,7 @@ def ancom(
 
     Notes
     -----
-    The developers of ANCOM recommend the following significance tests ([2]_,
+    The developers of ANCOM recommend the following significance tests ([1]_,
     Supplementary File 1, top of page 11):
 
     - If there are two groups, use the standard parametric *t*-test
@@ -1493,13 +1492,7 @@ def ancom(
 
     # deprecated parameter
     if multiple_comparisons_correction != "holm-bonferroni":
-        if not hasattr(ancom, "warned"):
-            simplefilter("once", DeprecationWarning)
-            warn(
-                "multiple_comparisons_correction is deprecated as of 0.6.0.",
-                DeprecationWarning,
-            )
-            ancom.warned = True
+        _warn_deprecated(ancom, "0.6.0")
         p_adjust = multiple_comparisons_correction
 
     p_adjust = _dispatch_p_adjust(p_adjust)
