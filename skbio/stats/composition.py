@@ -1292,6 +1292,11 @@ def ancom(
         accept at least two vectors of floats and returns a test statistic and
         a *p*-value. Functions under ``scipy.stats`` can be directly specified
         by name. The default is one-way ANOVA ("f_oneway").
+
+        .. versionchanged:: 0.6.0
+
+            Accepts test names in addition to functions.
+
     percentiles : iterable of floats, optional
         Percentile abundances to return for each feature in each group. By
         default, will return the minimum, 25th percentile, median, 75th
@@ -1330,6 +1335,9 @@ def ancom(
     --------
     ``multiple_comparisons_correction`` is deprecated as of ``0.6.0``. It has
     been renamed to ``p_adjust``.
+
+    ``significance_test=None` is deprecated as of ``0.6.0``. The default value
+    is now "f_oneway".
 
     Notes
     -----
@@ -1490,7 +1498,7 @@ def ancom(
     if not 0 < theta < 1:
         raise ValueError("`theta`=%f is not within 0 and 1." % theta)
 
-    # deprecated parameter
+    # @deprecated
     if multiple_comparisons_correction != "holm-bonferroni":
         _warn_deprecated(ancom, "0.6.0")
         p_adjust = multiple_comparisons_correction
@@ -1538,6 +1546,7 @@ def ancom(
             "single group)."
         )
 
+    # @deprecated
     if significance_test is None:
         significance_test = "f_oneway"
 

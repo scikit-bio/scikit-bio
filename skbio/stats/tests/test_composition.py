@@ -15,6 +15,7 @@ from numpy.random import normal
 import pandas as pd
 import pandas.testing as pdt
 from scipy.sparse import coo_matrix
+from scipy.stats import f_oneway
 
 from skbio import TreeNode
 from skbio.util import assert_data_frame_almost_equal
@@ -317,6 +318,10 @@ class CompositionTests(TestCase):
         npt.assert_allclose(ilr(self.ortho1), np.identity(3),
                             rtol=1e-04, atol=1e-06)
 
+        # no check
+        npt.assert_array_almost_equal(ilr(mat, check=False),
+                                      np.array([0.70710678, 0.40824829]))
+
         with self.assertRaises(ValueError):
             ilr(self.cdata1, basis=self.cdata1)
 
@@ -358,6 +363,9 @@ class CompositionTests(TestCase):
 
         npt.assert_allclose(ilr_inv(np.identity(3)), self.ortho1,
                             rtol=1e-04, atol=1e-06)
+
+        # no check
+        npt.assert_array_almost_equal(ilr_inv(ilr(mat)), mat, check=False)
 
         with self.assertRaises(ValueError):
             ilr_inv(self.cdata1, basis=self.cdata1)
@@ -439,6 +447,10 @@ class CompositionTests(TestCase):
         # make sure that inplace modification is not occurring
         alr(self.cdata2)
         npt.assert_allclose(self.cdata2, np.array([2, 2, 6]))
+
+        # matrix must be 1d or 2d
+        with self.assertRaises(ValueError):
+            alr(np.atleast_3d(self.cdata2))
 
     def test_alr_inv(self):
         # 2d-composition
@@ -1044,6 +1056,24 @@ class AncomTests(TestCase):
                                                 dtype=bool)})
         assert_data_frame_almost_equal(result[0], exp)
 
+    def test_ancom_significance_test_none(self):
+        exp = pd.DataFrame(
+            {'W': np.array([5, 5, 2, 2, 2, 2, 2]),
+             'Reject null hypothesis': np.array([True, True, False, False,
+                                                 False, False, False],
+                                                dtype=bool)})
+        result = ancom(self.table1, self.cats1, significance_test=None)
+        assert_data_frame_almost_equal(result[0], exp)
+
+    def test_ancom_significance_test_callable(self):
+        exp = pd.DataFrame(
+            {'W': np.array([5, 5, 2, 2, 2, 2, 2]),
+             'Reject null hypothesis': np.array([True, True, False, False,
+                                                 False, False, False],
+                                                dtype=bool)})
+        result = ancom(self.table1, self.cats1, significance_test=f_oneway)
+        assert_data_frame_almost_equal(result[0], exp)
+
     def test_ancom_multiple_comparisons(self):
         exp = pd.DataFrame(
             {'W': np.array([0] * 7),
@@ -1054,6 +1084,7 @@ class AncomTests(TestCase):
             assert_data_frame_almost_equal(result[0], exp)
 
     def test_ancom_multiple_comparisons_deprecated(self):
+        # @deprecated
         exp = pd.DataFrame(
             {'W': np.array([0] * 7),
              'Reject null hypothesis': np.array([False] * 7, dtype=bool)})
