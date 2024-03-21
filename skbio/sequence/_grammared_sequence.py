@@ -6,7 +6,7 @@
 # The full license is in the file LICENSE.txt, distributed with this software.
 # ----------------------------------------------------------------------------
 
-from warnings import warn, simplefilter
+from warnings import warn
 from abc import ABCMeta, abstractproperty
 from itertools import product
 import re

@@ -8,7 +8,7 @@
 
 import functools
 import itertools
-from warnings import warn, simplefilter
+from warnings import warn
 
 import numpy as np
 import scipy.spatial.distance
@@ -27,8 +27,9 @@ from skbio.diversity._util import (
     _get_phylogenetic_kwargs,
     _quantitative_to_qualitative_counts,
     _table_to_numpy,
-    _validate_table
+    _validate_table,
 )
+from skbio.util._warning import _warn_deprecated
 
 
 def _get_alpha_diversity_metric_map():
@@ -259,16 +260,13 @@ def partial_beta_diversity(metric, counts, ids, id_pairs, validate=True, **kwarg
 
     """
     # @deprecated
-    if not hasattr(partial_beta_diversity, "warned"):
-        simplefilter("once", DeprecationWarning)
-        warn(
-            "partial_beta_diversity is deprecated as of 0.5.0. The return type is "
-            "unstable. Developer caution is advised. The resulting DistanceMatrix "
-            "object will include zeros when distance has not been calculated, and "
-            "therefore can be misleading.",
-            DeprecationWarning,
-        )
-        partial_beta_diversity.warned = True
+    _warn_deprecated(
+        partial_beta_diversity,
+        "0.5.0",
+        msg="The return type is unstable. Developer caution is advised. The resulting "
+        "DistanceMatrix object will include zeros when distance has not been "
+        "calculated, and therefore can be misleading.",
+    )
 
     if validate:
         counts = _validate_counts_matrix(counts, ids=ids)
