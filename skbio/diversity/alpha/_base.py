@@ -6,7 +6,7 @@
 # The full license is in the file LICENSE.txt, distributed with this software.
 # ----------------------------------------------------------------------------
 
-from warnings import warn, simplefilter
+from warnings import warn
 
 import numpy as np
 from scipy.special import gammaln
@@ -14,6 +14,7 @@ from scipy.optimize import fmin_powell, minimize_scalar
 
 from skbio.stats import subsample_counts
 from skbio.diversity._util import _validate_counts_vector
+from skbio.util._warning import _warn_deprecated
 
 
 def berger_parker_d(counts):
@@ -808,10 +809,7 @@ def observed_otus(counts):
 
     """
     # @deprecated
-    if not hasattr(observed_otus, "warned"):
-        simplefilter("once", DeprecationWarning)
-        warn("observed_otus is deprecated as of 0.6.0.", DeprecationWarning)
-        observed_otus.warned = True
+    _warn_deprecated(observed_otus, "0.6.0")
 
     return sobs(counts)
 
