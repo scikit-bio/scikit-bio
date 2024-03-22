@@ -517,7 +517,7 @@ def ilr(mat, basis=None, check=True):
     r"""Perform isometric log ratio transformation.
 
     This function transforms compositions from Aitchison simplex to the real
-    space. The :math: ilr` transform is both an isometry, and an isomorphism
+    space. The :math:`ilr` transform is both an isometry, and an isomorphism
     defined on the following spaces:
 
     .. math::
@@ -1336,7 +1336,7 @@ def ancom(
     ``multiple_comparisons_correction`` is deprecated as of ``0.6.0``. It has
     been renamed to ``p_adjust``.
 
-    ``significance_test=None` is deprecated as of ``0.6.0``. The default value
+    ``significance_test=None`` is deprecated as of ``0.6.0``. The default value
     is now "f_oneway".
 
     Notes
