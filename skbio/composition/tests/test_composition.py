@@ -20,7 +20,7 @@ from scipy.stats import f_oneway
 from skbio import TreeNode
 from skbio.util import assert_data_frame_almost_equal
 from skbio.stats.distance import DistanceMatrixError
-from skbio.stats.composition import (
+from skbio.composition._composition import (
     closure, multi_replace, multiplicative_replacement, perturb, perturb_inv, power,
     inner, clr, clr_inv, ilr, ilr_inv, alr, alr_inv, sbp_basis, _gram_schmidt_basis,
     centralize, _holm_bonferroni, _benjamini_hochberg, _dispatch_p_adjust, ancom,

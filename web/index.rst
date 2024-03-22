@@ -210,7 +210,7 @@
              Examples
              --------
              >>> import numpy as np
-             >>> from skbio.stats.composition import centralize
+             >>> from skbio.composition import centralize
              >>> X = np.array([[.1,.3,.4, .2],[.2,.2,.2,.4]])
              >>> centralize(X)
              array([[ 0.17445763,  0.30216948,  0.34891526,  0.17445763],
