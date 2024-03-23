@@ -70,6 +70,7 @@ API Reference
    alignment
    tree
    diversity
+   ordination
    metadata
    composition
    distance

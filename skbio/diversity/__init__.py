@@ -288,7 +288,7 @@ Create a matrix containing 6 samples (rows) and 7 taxa (columns):
    Next, we'll perform principal coordinates analysis (PCoA) on our weighted
    UniFrac distance matrix.
 
-   >>> from skbio.stats.ordination import pcoa
+   >>> from skbio.ordination import pcoa
    >>> wu_pc = pcoa(wu_dm)
 
    PCoA plots are only really interesting in the context of sample metadata, so

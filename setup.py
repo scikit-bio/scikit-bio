@@ -198,8 +198,8 @@ extensions = [
         include_dirs=[np.get_include()],
     ),
     Extension(
-        "skbio.stats.ordination._cutils",
-        ["skbio/stats/ordination/_cutils" + ext],
+        "skbio.ordination._cutils",
+        ["skbio/ordination/_cutils" + ext],
         extra_compile_args=stats_extra_compile_args,
         extra_link_args=stats_extra_link_args,
     ),
@@ -252,7 +252,7 @@ setup(
         "skbio.io.format.tests": ["data/*"],
         "skbio.stats.tests": ["data/*"],
         "skbio.distance.tests": ["data/*"],
-        "skbio.stats.ordination.tests": ["data/*"],
+        "skbio.ordination.tests": ["data/*"],
         "skbio.metadata.tests": ["data/invalid/*", "data/valid/*"],
     },
 )

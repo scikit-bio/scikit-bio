@@ -12,10 +12,10 @@ import copy
 import numpy as np
 import numpy.testing as npt
 
-from skbio.stats.ordination import corr, mean_and_std, e_matrix, f_matrix, \
+from skbio.ordination import corr, mean_and_std, e_matrix, f_matrix, \
     center_distance_matrix
 
-from skbio.stats.ordination._utils import _e_matrix_inplace, _f_matrix_inplace
+from skbio.ordination._utils import _e_matrix_inplace, _f_matrix_inplace
 
 
 class TestUtils(TestCase):

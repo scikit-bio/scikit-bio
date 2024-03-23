@@ -1,7 +1,7 @@
-r"""Ordination methods (:mod:`skbio.stats.ordination`)
+r"""Ordination methods (:mod:`skbio.ordination`)
 ==================================================
 
-.. currentmodule:: skbio.stats.ordination
+.. currentmodule:: skbio.ordination
 
 This module contains several ordination methods, including Principal
 Coordinate Analysis, Correspondence Analysis, Redundancy Analysis and
@@ -11,7 +11,7 @@ Ordination Functions
 --------------------
 
 .. autosummary::
-   :toctree:
+   :toctree: generated/
 
    ca
    pcoa
@@ -23,7 +23,7 @@ Classes
 -------
 
 .. autosummary::
-   :toctree:
+   :toctree: generated/
 
    OrdinationResults
 
@@ -31,7 +31,7 @@ Utility Functions
 -----------------
 
 .. autosummary::
-   :toctree:
+   :toctree: generated/
 
    mean_and_std
    corr
@@ -88,7 +88,7 @@ We can now perform canonical correspondence analysis. Matrix `X` contains a
 continuous variable (depth) and a categorical one (substrate type) encoded
 using a one-hot encoding.
 
->>> from skbio.stats.ordination import cca
+>>> from skbio.ordination import cca
 
 We explicitly need to avoid perfect collinearity, so we'll drop one of the
 substrate types (the last column of `X`).

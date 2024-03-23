@@ -81,7 +81,7 @@ def f_matrix_inplace_cy(TReal[::1] row_means, TReal global_mean, TReal[:, ::1] c
     row and column are subtracted, and the mean of the whole
     matrix is added. Eq. 9.21 in Legendre & Legendre 1998.
 
-    Modified from :func:`skbio.stats.ordination.f_matrix_inplace` function,
+    Modified from :func:`skbio.ordination.f_matrix_inplace` function,
 
     Parameters
     ----------

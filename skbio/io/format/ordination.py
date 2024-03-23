@@ -12,11 +12,11 @@ Format Support
 --------------
 **Has Sniffer: Yes**
 
-+------+------+---------------------------------------------------------------+
-|Reader|Writer|                          Object Class                         |
-+======+======+===============================================================+
-|Yes   |Yes   |:mod:`skbio.stats.ordination.OrdinationResults`                |
-+------+------+---------------------------------------------------------------+
++------+------+---------------------------------------------------------+
+|Reader|Writer|                       Object Class                      |
++======+======+=========================================================+
+|Yes   |Yes   |:mod:`skbio.ordination.OrdinationResults`                |
++------+------+---------------------------------------------------------+
 
 Format Specification
 --------------------
@@ -189,7 +189,7 @@ Load the ordination results from the file:
 import numpy as np
 import pandas as pd
 
-from skbio.stats.ordination import OrdinationResults
+from skbio.ordination import OrdinationResults
 from skbio.io import create_format, OrdinationFormatError
 
 ordination = create_format("ordination")

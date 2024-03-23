@@ -17,7 +17,7 @@ from scipy.stats import f_oneway
 import hdmedians as hd
 
 from skbio import DistanceMatrix
-from skbio.stats.ordination import pcoa
+from skbio.ordination import pcoa
 from skbio.distance import permdisp
 from skbio.distance._permdisp import _compute_groups
 from skbio.util import get_data_path

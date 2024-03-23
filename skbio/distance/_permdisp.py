@@ -22,7 +22,7 @@ from ._base import (
     DistanceMatrix,
 )
 
-from skbio.stats.ordination import pcoa, OrdinationResults
+from skbio.ordination import pcoa, OrdinationResults
 
 
 def permdisp(

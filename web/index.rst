@@ -103,7 +103,7 @@
 
          from skbio.tree import TreeNode
          from skbio.diversity import beta_diversity
-         from skbio.stats.ordination import pcoa
+         from skbio.ordination import pcoa
 
          data = pd.read_table('data.tsv', index_col=0)
          metadata = pd.read_table('metadata.tsv', index_col=0)
