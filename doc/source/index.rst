@@ -75,6 +75,7 @@ API Reference
    distance
    feature_table
    evolve
+   gradient
    workflow
    util
    stats

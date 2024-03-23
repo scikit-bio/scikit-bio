@@ -1,12 +1,3 @@
-r"""Gradient analyses (:mod:`skbio.stats.gradient`)
-===================================================
-
-.. currentmodule:: skbio.stats.gradient
-
-Alias of :mod:`skbio.gradient` for backward compatibility. Deprecated as of 0.6.0.
-
-"""  # noqa: D205, D415
-
 # ----------------------------------------------------------------------------
 # Copyright (c) 2013--, scikit-bio development team.
 #
@@ -14,5 +5,3 @@ Alias of :mod:`skbio.gradient` for backward compatibility. Deprecated as of 0.6.
 #
 # The full license is in the file LICENSE.txt, distributed with this software.
 # ----------------------------------------------------------------------------
-
-from skbio.gradient import *

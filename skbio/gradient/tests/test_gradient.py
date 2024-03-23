@@ -16,12 +16,12 @@ import numpy.testing as npt
 import pandas.testing as pdt
 
 from skbio.util import get_data_path, assert_data_frame_almost_equal
-from skbio.stats.gradient import (GradientANOVA, AverageGradientANOVA,
-                                  TrajectoryGradientANOVA,
-                                  FirstDifferenceGradientANOVA,
-                                  WindowDifferenceGradientANOVA, GroupResults,
-                                  CategoryResults, GradientANOVAResults,
-                                  _weight_by_vector, _ANOVA_trajectories)
+from skbio.gradient._gradient import (GradientANOVA, AverageGradientANOVA,
+                                      TrajectoryGradientANOVA,
+                                      FirstDifferenceGradientANOVA,
+                                      WindowDifferenceGradientANOVA, GroupResults,
+                                      CategoryResults, GradientANOVAResults,
+                                      _weight_by_vector, _ANOVA_trajectories)
 
 
 class BaseTests(TestCase):
