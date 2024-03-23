@@ -13,19 +13,12 @@ import numpy.testing as npt
 import pandas as pd
 from scipy.stats import kruskal
 
-from skbio.stats.power import (subsample_power,
-                               subsample_paired_power,
-                               _check_nans,
-                               confidence_bound,
-                               _calculate_power,
-                               _compare_distributions,
-                               _calculate_power_curve,
-                               _check_subsample_power_inputs,
-                               _identify_sample_groups,
-                               _draw_paired_samples,
-                               _get_min_size,
-                               paired_subsamples
-                               )
+from skbio.power._power import (
+    subsample_power, subsample_paired_power, _check_nans, confidence_bound,
+    _calculate_power, _compare_distributions, _calculate_power_curve,
+    _check_subsample_power_inputs, _identify_sample_groups, _draw_paired_samples,
+    _get_min_size, paired_subsamples
+)
 
 
 class PowerAnalysisTest(TestCase):
