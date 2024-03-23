@@ -12,7 +12,7 @@ import warnings
 import numpy as np
 import numpy.testing as npt
 
-from skbio.stats import subsample_counts, isubsample
+from skbio.sampling import subsample_counts, isubsample
 
 
 def setup():

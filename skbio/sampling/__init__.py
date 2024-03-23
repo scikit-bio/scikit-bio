@@ -1,23 +1,9 @@
-r"""Statistics (:mod:`skbio.stats`)
-===============================
+r"""Sampling methods (:mod:`skbio.sampling`)
+========================================
 
-.. currentmodule:: skbio.stats
+.. currentmodule:: skbio.sampling
 
-This package contains various statistical methods, including ordination
-techniques and distance matrix-based statistics.
-
-Subpackages
------------
-
-.. autosummary::
-   :toctree: generated/
-
-   distance
-   evolve
-   ordination
-   gradient
-   power
-   composition
+This module provides methods for sampling from frequency data.
 
 Functions
 ---------
@@ -38,7 +24,7 @@ Functions
 # The full license is in the file LICENSE.txt, distributed with this software.
 # ----------------------------------------------------------------------------
 
-from skbio.sampling import subsample_counts, isubsample
+from ._subsample import subsample_counts, isubsample
 
 
 __all__ = ["subsample_counts", "isubsample"]
