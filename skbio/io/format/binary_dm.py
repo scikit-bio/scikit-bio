@@ -12,13 +12,13 @@ Format Support
 --------------
 **Has Sniffer: Yes**
 
-+------+------+---------------------------------------------------------------+
-|Reader|Writer|                          Object Class                         |
-+======+======+===============================================================+
-|Yes   |Yes   |:mod:`skbio.stats.distance.DissimilarityMatrix`                |
-+------+------+---------------------------------------------------------------+
-|Yes   |Yes   |:mod:`skbio.stats.distance.DistanceMatrix`                     |
-+------+------+---------------------------------------------------------------+
++------+------+---------------------------------------------------------+
+|Reader|Writer|                       Object Class                      |
++======+======+=========================================================+
+|Yes   |Yes   |:mod:`skbio.distance.DissimilarityMatrix`                |
++------+------+---------------------------------------------------------+
+|Yes   |Yes   |:mod:`skbio.distance.DistanceMatrix`                     |
++------+------+---------------------------------------------------------+
 
 Format Specification
 --------------------
@@ -77,7 +77,7 @@ References
 import h5py
 
 from skbio.io import create_format
-from skbio.stats.distance import DissimilarityMatrix, DistanceMatrix
+from skbio.distance import DissimilarityMatrix, DistanceMatrix
 
 
 binary_dm = create_format("binary_dm", encoding="binary")

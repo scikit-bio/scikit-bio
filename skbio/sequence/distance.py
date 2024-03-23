@@ -7,7 +7,7 @@ This module contains functions for computing distances between scikit-bio
 ``Sequence`` objects. These functions can be used directly or supplied to other
 parts of the scikit-bio API that accept a sequence distance metric as input,
 such as :meth:`skbio.sequence.Sequence.distance` and
-:meth:`skbio.stats.distance.DistanceMatrix.from_iterable`.
+:meth:`skbio.distance.DistanceMatrix.from_iterable`.
 
 Functions
 ---------

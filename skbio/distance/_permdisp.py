@@ -155,7 +155,7 @@ def permdisp(
 
     Run PERMDISP using 99 permutations to caluculate the p-value:
 
-    >>> from skbio.stats.distance import permdisp
+    >>> from skbio.distance import permdisp
     >>> import numpy as np
     >>> #make output deterministic, should not be included during normal use
     >>> np.random.seed(0)

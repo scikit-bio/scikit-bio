@@ -277,7 +277,7 @@ Create a matrix containing 6 samples (rows) and 7 taxa (columns):
    Then we'll determine if the p-value is significant based on an alpha of
    0.05.
 
-   >>> from skbio.stats.distance import mantel
+   >>> from skbio.distance import mantel
    >>> r, p_value, n = mantel(wu_dm, bc_dm)
    >>> print(r)
    0.922404392093
@@ -351,7 +351,7 @@ Create a matrix containing 6 samples (rows) and 7 taxa (columns):
 
    First test the grouping of samples by subject:
 
-   >>> from skbio.stats.distance import anosim
+   >>> from skbio.distance import anosim
    >>> results = anosim(wu_dm, sample_md, column='subject', permutations=999)
    >>> results['test statistic']
    -0.33333333333333331

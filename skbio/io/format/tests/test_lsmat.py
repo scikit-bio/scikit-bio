@@ -14,7 +14,7 @@ from skbio.io import LSMatFormatError
 from skbio.io.format.lsmat import (
     _lsmat_to_dissimilarity_matrix, _lsmat_to_distance_matrix,
     _dissimilarity_matrix_to_lsmat, _distance_matrix_to_lsmat, _lsmat_sniffer)
-from skbio.stats.distance import DissimilarityMatrix, DistanceMatrixError
+from skbio.distance import DissimilarityMatrix, DistanceMatrixError
 
 
 class LSMatTestData(TestCase):

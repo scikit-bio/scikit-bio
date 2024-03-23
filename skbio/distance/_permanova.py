@@ -89,7 +89,7 @@ def permanova(distance_matrix, grouping, column=None, permutations=999):
 
     Examples
     --------
-    See :mod:`skbio.stats.distance.anosim` for usage examples (both functions
+    See :mod:`skbio.distance.anosim` for usage examples (both functions
     provide similar interfaces).
 
     """

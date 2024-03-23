@@ -9,7 +9,7 @@
 import numpy as np
 
 from skbio.diversity._driver import partial_beta_diversity
-from skbio.stats.distance import DistanceMatrix
+from skbio.distance import DistanceMatrix
 from skbio.diversity._util import _validate_counts_matrix
 
 

@@ -101,7 +101,7 @@ def anosim(distance_matrix, grouping, column=None, permutations=999):
     >>> import numpy as np
     >>> # make output deterministic; not necessary for normal use
     >>> np.random.seed(0)
-    >>> from skbio.stats.distance import anosim
+    >>> from skbio.distance import anosim
     >>> anosim(dm, grouping, permutations=99)
     method name               ANOSIM
     test statistic name            R

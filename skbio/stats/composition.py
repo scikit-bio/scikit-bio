@@ -1,10 +1,9 @@
 r"""Composition Statistics (:mod:`skbio.stats.composition`)
-==========================
+=======================================================
 
 .. currentmodule:: skbio.stats.composition
 
-This is an alias of :mod:`skbio.composition` for backward compatibility.
-It is deprecated and will be removed in a future release.
+Alias of :mod:`skbio.composition` for backward compatibility. Deprecated as of 0.6.0.
 
 """  # noqa: D205, D415
 

@@ -1,5 +1,5 @@
 r"""Composition Statistics (:mod:`skbio.composition`)
-=======================================================
+=================================================
 
 .. currentmodule:: skbio.composition
 
@@ -36,7 +36,7 @@ Functions
 ---------
 
 .. autosummary::
-   :toctree:
+   :toctree: generated/
 
    closure
    multi_replace

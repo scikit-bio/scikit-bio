@@ -14,7 +14,7 @@ from numpy.random import standard_normal
 from scipy.linalg import eigh
 from warnings import warn
 
-from skbio.stats.distance import DistanceMatrix
+from skbio.distance import DistanceMatrix
 from ._ordination_results import OrdinationResults
 from ._utils import center_distance_matrix, scale
 

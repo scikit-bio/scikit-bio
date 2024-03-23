@@ -12,8 +12,8 @@ import numpy as np
 import pandas as pd
 
 from skbio import DistanceMatrix
-from skbio.stats.distance import bioenv
-from skbio.stats.distance._bioenv import _scale
+from skbio.distance import bioenv
+from skbio.distance._bioenv import _scale
 from skbio.util import get_data_path, assert_data_frame_almost_equal
 
 

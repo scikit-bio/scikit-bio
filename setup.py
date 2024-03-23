@@ -204,8 +204,8 @@ extensions = [
         extra_link_args=stats_extra_link_args,
     ),
     Extension(
-        "skbio.stats.distance._cutils",
-        ["skbio/stats/distance/_cutils" + ext],
+        "skbio.distance._cutils",
+        ["skbio/distance/_cutils" + ext],
         extra_compile_args=stats_extra_compile_args,
         extra_link_args=stats_extra_link_args,
     ),
@@ -242,7 +242,7 @@ setup(
         "scipy >= 1.9.0",
         "h5py >= 3.6.0",
         "hdmedians >= 0.14.1",
-        "biom-format"
+        "biom-format",
     ],
     classifiers=classifiers,
     package_data={
@@ -251,7 +251,7 @@ setup(
         "skbio.io.tests": ["data/*"],
         "skbio.io.format.tests": ["data/*"],
         "skbio.stats.tests": ["data/*"],
-        "skbio.stats.distance.tests": ["data/*"],
+        "skbio.distance.tests": ["data/*"],
         "skbio.stats.ordination.tests": ["data/*"],
         "skbio.metadata.tests": ["data/invalid/*", "data/valid/*"],
     },

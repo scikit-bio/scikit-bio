@@ -15,9 +15,9 @@ import pandas as pd
 from pandas.testing import assert_series_equal
 
 from skbio import DistanceMatrix
-from skbio.stats.distance import permanova
+from skbio.distance import permanova
 from skbio.util import get_data_path
-from skbio.stats.distance._base import _preprocess_input_sng
+from skbio.distance._base import _preprocess_input_sng
 
 
 class TestPERMANOVA(TestCase):

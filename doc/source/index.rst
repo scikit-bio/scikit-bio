@@ -74,3 +74,6 @@ API Reference
    stats
    metadata
    util
+   composition
+   distance
+   feature_table

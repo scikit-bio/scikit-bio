@@ -141,7 +141,7 @@
 
          from skbio.alignment import global_pairwise_align_protein
          from skbio.sequence.distance import hamming
-         from skbio.stats.distance import DistanceMatrix
+         from skbio.distance import DistanceMatrix
          from skbio.tree import nj
 
          def align_dist(seq1, seq2):

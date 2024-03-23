@@ -14,13 +14,13 @@ Format Support
 --------------
 **Has Sniffer: Yes**
 
-+------+------+---------------------------------------------------------------+
-|Reader|Writer|                          Object Class                         |
-+======+======+===============================================================+
-|Yes   |Yes   |:mod:`skbio.stats.distance.DissimilarityMatrix`                |
-+------+------+---------------------------------------------------------------+
-|Yes   |Yes   |:mod:`skbio.stats.distance.DistanceMatrix`                     |
-+------+------+---------------------------------------------------------------+
++------+------+---------------------------------------------------------+
+|Reader|Writer|                       Object Class                      |
++======+======+=========================================================+
+|Yes   |Yes   |:mod:`skbio.distance.DissimilarityMatrix`                |
++------+------+---------------------------------------------------------+
+|Yes   |Yes   |:mod:`skbio.distance.DistanceMatrix`                     |
++------+------+---------------------------------------------------------+
 
 Format Specification
 --------------------
@@ -79,7 +79,7 @@ import csv
 
 import numpy as np
 
-from skbio.stats.distance import DissimilarityMatrix, DistanceMatrix
+from skbio.distance import DissimilarityMatrix, DistanceMatrix
 from skbio.io import create_format, LSMatFormatError
 
 

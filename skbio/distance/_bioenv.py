@@ -13,7 +13,7 @@ import pandas as pd
 from scipy.spatial.distance import pdist
 from scipy.stats import spearmanr
 
-from skbio.stats.distance import DistanceMatrix
+from skbio.distance import DistanceMatrix
 
 
 def bioenv(distance_matrix, data_frame, columns=None):
@@ -106,7 +106,7 @@ def bioenv(distance_matrix, data_frame, columns=None):
 
     >>> import pandas as pd
     >>> from skbio import DistanceMatrix
-    >>> from skbio.stats.distance import bioenv
+    >>> from skbio.distance import bioenv
 
     Load a 4x4 community distance matrix:
 

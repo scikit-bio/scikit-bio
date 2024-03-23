@@ -25,12 +25,12 @@ else:
 
 import skbio.sequence.distance
 from skbio import DistanceMatrix, Sequence
-from skbio.stats.distance import (
+from skbio.distance import (
     DissimilarityMatrixError, DistanceMatrixError, MissingIDError,
     DissimilarityMatrix, randdm)
-from skbio.stats.distance._base import (_preprocess_input,
+from skbio.distance._base import (_preprocess_input,
                                         _run_monte_carlo_stats)
-from skbio.stats.distance._utils import is_symmetric_and_hollow
+from skbio.distance._utils import is_symmetric_and_hollow
 from skbio.util import assert_data_frame_almost_equal
 from skbio.util._testing import assert_series_almost_equal
 
@@ -236,7 +236,7 @@ class DissimilarityMatrixTestBase(DissimilarityMatrixTestData):
         data = [[1, 1], [1, 1]]
         obs = self.matobj(data, ['a', 'b'])
         self.assertTrue(np.array_equal(obs.data, data))
-        data_hollow = skbio.stats.distance._utils.is_hollow(obs.data)
+        data_hollow = skbio.distance._utils.is_hollow(obs.data)
         self.assertEqual(data_hollow, False)
 
     def test_init_no_ids(self):
@@ -1010,10 +1010,10 @@ class DistanceMatrixTestBase(DissimilarityMatrixTestData):
         del data_sym
         self.assertEqual(data_hollow, True)
         del data_hollow
-        data_sym = skbio.stats.distance._utils.is_symmetric(data_good)
+        data_sym = skbio.distance._utils.is_symmetric(data_good)
         self.assertEqual(data_sym, True)
         del data_sym
-        data_hollow = skbio.stats.distance._utils.is_hollow(data_good)
+        data_hollow = skbio.distance._utils.is_hollow(data_good)
         self.assertEqual(data_hollow, True)
         del data_hollow
         self.dm_3x3._validate_shape(data_good)
@@ -1026,10 +1026,10 @@ class DistanceMatrixTestBase(DissimilarityMatrixTestData):
         del data_sym
         self.assertEqual(data_hollow, False)
         del data_hollow
-        data_sym = skbio.stats.distance._utils.is_symmetric(bad_data)
+        data_sym = skbio.distance._utils.is_symmetric(bad_data)
         self.assertEqual(data_sym, False)
         del data_sym
-        data_hollow = skbio.stats.distance._utils.is_hollow(bad_data)
+        data_hollow = skbio.distance._utils.is_hollow(bad_data)
         self.assertEqual(data_hollow, False)
         del data_hollow
         self.dm_3x3._validate_shape(bad_data)
@@ -1042,10 +1042,10 @@ class DistanceMatrixTestBase(DissimilarityMatrixTestData):
         del data_sym
         self.assertEqual(data_hollow, True)
         del data_hollow
-        data_sym = skbio.stats.distance._utils.is_symmetric(bad_data)
+        data_sym = skbio.distance._utils.is_symmetric(bad_data)
         self.assertEqual(data_sym, False)
         del data_sym
-        data_hollow = skbio.stats.distance._utils.is_hollow(bad_data)
+        data_hollow = skbio.distance._utils.is_hollow(bad_data)
         self.assertEqual(data_hollow, True)
         del data_hollow
         self.dm_3x3._validate_shape(bad_data)

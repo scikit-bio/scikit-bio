@@ -16,7 +16,7 @@ from scipy.stats import kendalltau
 from scipy.stats import ConstantInputWarning
 from scipy.stats import NearConstantInputWarning
 
-from skbio.stats.distance import DistanceMatrix
+from skbio.distance import DistanceMatrix
 
 from ._cutils import mantel_perm_pearsonr_cy
 
@@ -170,7 +170,7 @@ def mantel(
     Import the functionality we'll use in the following examples:
 
     >>> from skbio import DistanceMatrix
-    >>> from skbio.stats.distance import mantel
+    >>> from skbio.distance import mantel
 
     Define two 3x3 distance matrices:
 
@@ -562,7 +562,7 @@ def pwmantel(
     Import the functionality we'll use in the following examples:
 
     >>> from skbio import DistanceMatrix
-    >>> from skbio.stats.distance import pwmantel
+    >>> from skbio.distance import pwmantel
 
     Define three 3x3 distance matrices:
 

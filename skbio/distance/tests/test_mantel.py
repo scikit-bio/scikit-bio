@@ -17,13 +17,13 @@ from scipy.spatial.distance import squareform
 from scipy.stats import pearsonr, spearmanr
 
 from skbio import DistanceMatrix
-from skbio.stats.distance import (DissimilarityMatrixError,
+from skbio.distance import (DissimilarityMatrixError,
                                   DistanceMatrixError, mantel, pwmantel)
-from skbio.stats.distance._mantel import _order_dms
-from skbio.stats.distance._mantel import _mantel_stats_pearson
-from skbio.stats.distance._mantel import _mantel_stats_spearman
-from skbio.stats.distance._cutils import mantel_perm_pearsonr_cy
-from skbio.stats.distance._utils import distmat_reorder_condensed
+from skbio.distance._mantel import _order_dms
+from skbio.distance._mantel import _mantel_stats_pearson
+from skbio.distance._mantel import _mantel_stats_spearman
+from skbio.distance._cutils import mantel_perm_pearsonr_cy
+from skbio.distance._utils import distmat_reorder_condensed
 from skbio.util import get_data_path, assert_data_frame_almost_equal
 
 

@@ -465,7 +465,7 @@ class DissimilarityMatrix(SkbioObject, PlottableMixin):
 
         Examples
         --------
-        >>> from skbio.stats.distance import DissimilarityMatrix
+        >>> from skbio.distance import DissimilarityMatrix
         >>> dm = DissimilarityMatrix([[0, 1, 2, 3, 4], [1, 0, 1, 2, 3],
         ...                           [2, 1, 0, 1, 2], [3, 2, 1, 0, 1],
         ...                           [4, 3, 2, 1, 0]],
@@ -527,7 +527,7 @@ class DissimilarityMatrix(SkbioObject, PlottableMixin):
 
         Examples
         --------
-        >>> from skbio.stats.distance import DissimilarityMatrix
+        >>> from skbio.distance import DissimilarityMatrix
         >>> dm = DissimilarityMatrix([[0, 1, 2, 3, 4], [1, 0, 1, 2, 3],
         ...                           [2, 1, 0, 1, 2], [3, 2, 1, 0, 1],
         ...                           [4, 3, 2, 1, 0]],
@@ -637,7 +637,7 @@ class DissimilarityMatrix(SkbioObject, PlottableMixin):
 
            Define a dissimilarity matrix with five objects labeled A-E:
 
-           >>> from skbio.stats.distance import DissimilarityMatrix
+           >>> from skbio.distance import DissimilarityMatrix
            >>> dm = DissimilarityMatrix([[0, 1, 2, 3, 4], [1, 0, 1, 2, 3],
            ...                           [2, 1, 0, 1, 2], [3, 2, 1, 0, 1],
            ...                           [4, 3, 2, 1, 0]],

@@ -18,8 +18,8 @@ import hdmedians as hd
 
 from skbio import DistanceMatrix
 from skbio.stats.ordination import pcoa
-from skbio.stats.distance import permdisp
-from skbio.stats.distance._permdisp import _compute_groups
+from skbio.distance import permdisp
+from skbio.distance._permdisp import _compute_groups
 from skbio.util import get_data_path
 
 

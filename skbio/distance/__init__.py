@@ -1,7 +1,7 @@
-r"""Distance matrices and distance-based statistics (:mod:`skbio.stats.distance`)
-=============================================================================
+r"""Distance matrices and statistics (:mod:`skbio.distance`)
+========================================================
 
-.. currentmodule:: skbio.stats.distance
+.. currentmodule:: skbio.distance
 
 This subpackage provides functionality for serializing, deserializing, and
 manipulating dissimilarity and distance matrices in memory. It also contains
@@ -39,7 +39,7 @@ Classes
 ^^^^^^^
 
 .. autosummary::
-   :toctree:
+   :toctree: generated/
 
    DissimilarityMatrix
    DistanceMatrix
@@ -48,7 +48,7 @@ Functions
 ^^^^^^^^^
 
 .. autosummary::
-   :toctree:
+   :toctree: generated/
 
    randdm
 
@@ -56,7 +56,7 @@ Exceptions
 ^^^^^^^^^^
 
 .. autosummary::
-   :toctree:
+   :toctree: generated/
 
    DissimilarityMatrixError
    DistanceMatrixError
@@ -149,7 +149,7 @@ Categorical Variable Stats
 ^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 .. autosummary::
-   :toctree:
+   :toctree: generated/
 
    anosim
    permanova
@@ -159,7 +159,7 @@ Continuous Variable Stats
 ^^^^^^^^^^^^^^^^^^^^^^^^^
 
 .. autosummary::
-   :toctree:
+   :toctree: generated/
 
    bioenv
 
@@ -167,7 +167,7 @@ Distance Matrix Comparisons
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 .. autosummary::
-   :toctree:
+   :toctree: generated/
 
    mantel
    pwmantel

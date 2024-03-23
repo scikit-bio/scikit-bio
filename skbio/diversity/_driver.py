@@ -21,7 +21,7 @@ from skbio.diversity.beta._unifrac import (
     _setup_multiple_weighted_unifrac,
     _normalize_weighted_unifrac_by_default,
 )
-from skbio.stats.distance import DistanceMatrix
+from skbio.distance import DistanceMatrix
 from skbio.diversity._util import (
     _validate_counts_matrix,
     _get_phylogenetic_kwargs,

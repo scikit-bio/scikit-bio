@@ -12,7 +12,7 @@ import scipy.stats
 from scipy.sparse import coo_matrix
 from scipy.stats import t, gmean
 
-from skbio.stats.distance import DistanceMatrix
+from skbio.distance import DistanceMatrix
 from skbio.util import find_duplicates
 from skbio.util._misc import get_rng
 from skbio.util._warning import _warn_deprecated

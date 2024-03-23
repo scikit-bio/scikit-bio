@@ -13,7 +13,7 @@ from copy import deepcopy
 from unittest import TestCase, main
 
 from skbio import DistanceMatrix, OrdinationResults
-from skbio.stats.distance import DissimilarityMatrixError
+from skbio.distance import DissimilarityMatrixError
 from skbio.stats.ordination import pcoa, pcoa_biplot
 from skbio.util import (get_data_path, assert_ordination_results_equal,
                         assert_data_frame_almost_equal)
