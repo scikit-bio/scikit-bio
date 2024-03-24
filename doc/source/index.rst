@@ -69,12 +69,12 @@ API Reference
    sequence
    alignment
    tree
-   workflow
    diversity
-   ordination
-   metadata
-   util
-   composition
    distance
+   ordination
    feature_table
+   metadata
+   composition
    stats
+   workflow
+   util
