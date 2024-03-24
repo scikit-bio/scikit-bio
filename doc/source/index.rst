@@ -77,7 +77,6 @@ API Reference
    feature_table
    evolve
    gradient
-   power
    workflow
    util
    stats
