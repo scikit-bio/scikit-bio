@@ -11,7 +11,7 @@ import unittest
 import numpy as np
 import numpy.testing as npt
 
-from skbio.sampling import subsample_counts
+from skbio.stats import subsample_counts
 from skbio.diversity.alpha import lladser_pe, lladser_ci
 from skbio.diversity.alpha._lladser import (
     _expand_counts, _lladser_point_estimates,

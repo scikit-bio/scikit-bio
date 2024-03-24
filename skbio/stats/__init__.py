@@ -38,7 +38,8 @@ Functions
 # The full license is in the file LICENSE.txt, distributed with this software.
 # ----------------------------------------------------------------------------
 
-from skbio.sampling import subsample_counts, isubsample
+from ._subsample import subsample_counts, isubsample
+# from skbio import composition
 
 
 __all__ = ["subsample_counts", "isubsample"]

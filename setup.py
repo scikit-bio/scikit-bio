@@ -182,8 +182,8 @@ if platform.machine() == "i686":
 extensions = [
     Extension("skbio.metadata._intersection", ["skbio/metadata/_intersection" + ext]),
     Extension(
-        "skbio.sampling.__subsample",
-        ["skbio/sampling/__subsample" + ext],
+        "skbio.stats.__subsample",
+        ["skbio/stats/__subsample" + ext],
         include_dirs=[np.get_include()],
     ),
     Extension(
@@ -250,7 +250,7 @@ setup(
         "skbio.diversity.beta.tests": ["data/qiime-191-tt/*"],
         "skbio.io.tests": ["data/*"],
         "skbio.io.format.tests": ["data/*"],
-        "skbio.sampling.tests": ["data/*"],
+        "skbio.stats.tests": ["data/*"],
         "skbio.distance.tests": ["data/*"],
         "skbio.ordination.tests": ["data/*"],
         "skbio.metadata.tests": ["data/invalid/*", "data/valid/*"],

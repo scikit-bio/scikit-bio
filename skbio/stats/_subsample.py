@@ -78,7 +78,7 @@ def isubsample(items, maximum, minimum=1, buf_size=1000, bin_f=None):
     Randomly keep up to 2 sequences per sample from a set of demultiplexed
     sequences:
 
-    >>> from skbio.sampling import isubsample
+    >>> from skbio.stats import isubsample
     >>> import numpy as np
     >>> np.random.seed(123)
     >>> seqs = [('sampleA', 'AATTGG'),
@@ -198,7 +198,7 @@ def subsample_counts(counts, n, replace=False):
     Subsample 4 items (without replacement) from a vector of counts:
 
     >>> import numpy as np
-    >>> from skbio.sampling import subsample_counts
+    >>> from skbio.stats import subsample_counts
     >>> a = np.array([4, 5, 0, 2, 1])
     >>> sub = subsample_counts(a, 4)
     >>> sub.sum()

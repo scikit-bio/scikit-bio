@@ -78,7 +78,6 @@ API Reference
    evolve
    gradient
    power
-   sampling
    workflow
    util
    stats

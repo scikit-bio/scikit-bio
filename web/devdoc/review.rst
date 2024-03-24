@@ -34,11 +34,11 @@ Public vs. private API
 
 Be aware of what type of API changes are being made. scikit-bio uses the following conventions to distinguish public vs. private API:
 
-**Public API:** API with an import path that doesn't contain leading underscores in any submodule/subpackage/object names. Users and scikit-bio devs can use public API. Examples: ``skbio.sequence.Sequence``, ``skbio.sampling.subsample_counts``.
+**Public API:** API with an import path that doesn't contain leading underscores in any submodule/subpackage/object names. Users and scikit-bio devs can use public API. Examples: ``skbio.sequence.Sequence``, ``skbio.stats.subsample``.
 
 **Package-private API:** API with an import path containing a leading underscore in at least one submodule/subpackage. Users should not import package-private API. Package-private API can be imported anywhere *within* the scikit-bio package. Examples: ``skbio.util._misc.chunk_str``, ``skbio.util._testing.ReallyEqualMixin``.
 
-**Private API:** API with object name starting with an underscore. Users should not import private API. Private API should only be imported and used in the module where it is defined. It should not be imported in other parts of the scikit-bio package. Examples: ``skbio.util._testing._normalize_signs``, ``skbio.composition._gram_schmidt_basis``.
+**Private API:** API with object name starting with an underscore. Users should not import private API. Private API should only be imported and used in the module where it is defined. It should not be imported in other parts of the scikit-bio package. Examples: ``skbio.util._testing._normalize_signs``, ``skbio.stats.composition._gram_schmidt_basis``.
 
 - Prefer defining private APIs and only promote things to the public API that users need access to.
 - Within scikit-bio, prefer *using* public APIs defined in the package even if private APIs offer the same functionality.

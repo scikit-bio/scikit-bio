@@ -12,7 +12,7 @@ import numpy as np
 from scipy.special import gammaln
 from scipy.optimize import fmin_powell, minimize_scalar
 
-from skbio.sampling import subsample_counts
+from skbio.stats import subsample_counts
 from skbio.diversity._util import _validate_counts_vector
 from skbio.util._warning import _warn_deprecated
 
@@ -683,7 +683,7 @@ def michaelis_menten_fit(counts, num_repeats=1, params_guess=None):
 
     See Also
     --------
-    skbio.sampling.subsample_counts
+    skbio.stats.subsample_counts
 
     Notes
     -----
