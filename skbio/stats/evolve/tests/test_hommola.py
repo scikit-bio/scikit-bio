@@ -11,7 +11,7 @@ import unittest
 import numpy as np
 import numpy.testing as npt
 
-from skbio.stats.distance import mantel
+from skbio.distance import mantel
 from skbio.stats.evolve import hommola_cospeciation
 from skbio.stats.evolve._hommola import _get_dist, _gen_lists
 

@@ -10,7 +10,7 @@ import io
 
 import numpy as np
 
-from skbio.stats.distance import DistanceMatrix
+from skbio.distance import DistanceMatrix
 from skbio.tree import TreeNode
 
 

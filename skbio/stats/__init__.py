@@ -1,4 +1,4 @@
-"""Statistics (:mod:`skbio.stats`)
+r"""Statistics (:mod:`skbio.stats`)
 ===============================
 
 .. currentmodule:: skbio.stats
@@ -39,5 +39,7 @@ Functions
 # ----------------------------------------------------------------------------
 
 from ._subsample import subsample_counts, isubsample
+# from skbio import composition
+
 
 __all__ = ["subsample_counts", "isubsample"]

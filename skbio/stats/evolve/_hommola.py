@@ -87,7 +87,7 @@ def hommola_cospeciation(host_dist, par_dist, interaction, permutations=999):
 
     See Also
     --------
-    skbio.stats.distance.mantel
+    skbio.distance.mantel
     scipy.stats.pearsonr
 
     Notes

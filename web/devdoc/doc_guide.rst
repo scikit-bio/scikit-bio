@@ -39,7 +39,7 @@ Documenting a module
 In addition to following the numpydoc conventions for docstrings, we have a few more conventions that will ensure your documentation is correctly built and
 linked within our website, and that it maintains consistency with the rest of the scikit-bio docs.
 
-The easiest way to get started with documenting your code is to look at the docstrings in existing scikit-bio modules. A couple of modules to start with are ``skbio.sequence`` and ``skbio.stats.distance``. Go ahead and look through those now. We've structured our docs in a similar way to `SciPy's documentation <https://docs.scipy.org/doc/scipy/reference/>`_, so that may be another good place to look for examples.
+The easiest way to get started with documenting your code is to look at the docstrings in existing scikit-bio modules. A couple of modules to start with are ``skbio.sequence`` and ``skbio.distance``. Go ahead and look through those now. We've structured our docs in a similar way to `SciPy's documentation <https://docs.scipy.org/doc/scipy/reference/>`_, so that may be another good place to look for examples.
 
 We'll take a top-down approach by discussing how to document a new module that you'd like to add to scikit-bio (let's call it ``skbio/example.py``).
 

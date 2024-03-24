@@ -103,7 +103,7 @@
 
          from skbio.tree import TreeNode
          from skbio.diversity import beta_diversity
-         from skbio.stats.ordination import pcoa
+         from skbio.ordination import pcoa
 
          data = pd.read_table('data.tsv', index_col=0)
          metadata = pd.read_table('metadata.tsv', index_col=0)
@@ -141,7 +141,7 @@
 
          from skbio.alignment import global_pairwise_align_protein
          from skbio.sequence.distance import hamming
-         from skbio.stats.distance import DistanceMatrix
+         from skbio.distance import DistanceMatrix
          from skbio.tree import nj
 
          def align_dist(seq1, seq2):
@@ -210,7 +210,7 @@
              Examples
              --------
              >>> import numpy as np
-             >>> from skbio.stats.composition import centralize
+             >>> from skbio.composition import centralize
              >>> X = np.array([[.1,.3,.4, .2],[.2,.2,.2,.4]])
              >>> centralize(X)
              array([[ 0.17445763,  0.30216948,  0.34891526,  0.17445763],

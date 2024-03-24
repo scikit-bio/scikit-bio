@@ -47,7 +47,7 @@ Be aware of what type of API changes are being made. scikit-bio uses the followi
 Integration/consistency with existing API
 -----------------------------------------
 
-When reviewing API changes/additions, look at them in the context of the rest of the codebase and its existing APIs. For example, are there existing parameter names that could be reused for consistency/predictability? Does the new API (or changed API) compose with other relevant APIs? Example: ``skbio.stats.distance.anosim`` uses a ``permutations`` parameter, so a new nonparametric function would want to use this name over something like ``n`` or ``num_permutations``.
+When reviewing API changes/additions, look at them in the context of the rest of the codebase and its existing APIs. For example, are there existing parameter names that could be reused for consistency/predictability? Does the new API (or changed API) compose with other relevant APIs? Example: ``skbio.distance.anosim`` uses a ``permutations`` parameter, so a new nonparametric function would want to use this name over something like ``n`` or ``num_permutations``.
 
 
 Commit messages and merging pull requests

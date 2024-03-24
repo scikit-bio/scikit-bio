@@ -18,7 +18,7 @@ import pandas as pd
 from scipy.spatial.distance import correlation
 
 from skbio._base import SkbioObject
-from skbio.stats.distance import DistanceMatrix
+from skbio.distance import DistanceMatrix
 from ._exception import (
     NoLengthError,
     DuplicateNodeError,
