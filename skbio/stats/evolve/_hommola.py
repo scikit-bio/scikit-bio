@@ -106,7 +106,7 @@ def hommola_cospeciation(host_dist, par_dist, interaction, permutations=999):
 
     Examples
     --------
-    >>> from skbio.evolve import hommola_cospeciation
+    >>> from skbio.stats.evolve import hommola_cospeciation
 
     Create arrays for host distances, parasite distances, and their
     interactions (data taken from example in [1]_):

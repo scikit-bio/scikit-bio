@@ -20,7 +20,7 @@ from skbio.io import read, write
 from skbio.ordination import OrdinationResults
 from skbio.feature_table import Table
 import skbio.diversity  # noqa
-import skbio.evolve  # noqa
+import skbio.stats.evolve  # noqa
 
 __all__ = [
     "Sequence",

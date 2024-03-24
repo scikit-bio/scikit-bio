@@ -69,13 +69,12 @@ API Reference
    sequence
    alignment
    tree
+   workflow
    diversity
    ordination
    metadata
+   util
    composition
    distance
    feature_table
-   evolve
-   workflow
-   util
    stats

@@ -1,7 +1,7 @@
-r"""Evolutionary statistics (:mod:`skbio.evolve`)
-=============================================
+"""Evolutionary statistics (:mod:`skbio.stats.evolve`)
+===================================================
 
-.. currentmodule:: skbio.evolve
+.. currentmodule:: skbio.stats.evolve
 
 This package contains statistics pertaining to phylogenies and evolution.
 
@@ -15,7 +15,7 @@ Functions
 ^^^^^^^^^
 
 .. autosummary::
-   :toctree: generated/
+   :toctree:
 
    hommola_cospeciation
 
