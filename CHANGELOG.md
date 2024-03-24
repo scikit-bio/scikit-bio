@@ -59,6 +59,7 @@
 * Incorporated Ruff's formatting and linting via pre-commit hooks and GitHub Actions. See PR [#1924](https://github.com/scikit-bio/scikit-bio/pull/1924).
 * Improved docstrings for functions accross the entire codebase. See [#1933](https://github.com/scikit-bio/scikit-bio/pull/1933) and [#1940](https://github.com/scikit-bio/scikit-bio/pull/1940)
 * Removed API lifecycle decorators in favor of deprecation warnings. See [#1916](https://github.com/scikit-bio/scikit-bio/issues/1916)
+* Elevated 2nd-level modules `composition`, `distance` and `ordination` from under `stats` to the 1st level. Aliases to these three modules still exist under `stats` for backward compatibility.
 
 ## Version 0.5.9
 
