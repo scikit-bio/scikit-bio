@@ -252,6 +252,7 @@ setup(
         "skbio.io.format.tests": ["data/*"],
         "skbio.sampling.tests": ["data/*"],
         "skbio.distance.tests": ["data/*"],
+        "skbio.gradient.tests": ["data/*"],
         "skbio.ordination.tests": ["data/*"],
         "skbio.metadata.tests": ["data/invalid/*", "data/valid/*"],
     },
