@@ -9,8 +9,10 @@ Internally, it stores the data in both compressed sparse row, and compressed
 sparse column representation. It additionally has support for representing sample
 and feature metadata.
 
-.. note:: Internally, BIOM describes features as observations, whereas scikit-bio
-uses the term features.
+.. note::
+
+   Internally, BIOM describes features as observations, whereas scikit-bio uses the
+   term features.
 
 Format Support
 --------------
@@ -31,10 +33,17 @@ Examples
 Here we will write an existing BIOM table, and re-read it. Note that the Table
 from ``biom`` implicitly gets the ``.write`` method from the IO registry.
 
->>> import biom, skbio, os
+>>> import biom, skbio
 >>> biom.example_table.write('test.biom')
 'test.biom'
->>> roundtrip = skbio.read('test.biom', into=skbio.Table)
+
+>>> table = skbio.read('test.biom', into=skbio.Table)
+>>> table
+2 x 3 <class 'biom.table.Table'> with 5 nonzero entries (83% dense)
+
+Clean up:
+
+>>> import os
 >>> os.remove('test.biom')
 
 References
