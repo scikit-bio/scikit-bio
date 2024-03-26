@@ -30,21 +30,19 @@ The official format specification for BIOM-Format can be found at [1]_.
 
 Examples
 --------
-Here we will write an existing BIOM table, and re-read it. Note that the Table
-from ``biom`` implicitly gets the ``.write`` method from the IO registry.
+Here we're demonstrating how to convert a BIOM table into HDF5 format and then
+read it back.
 
->>> import biom, skbio
->>> biom.example_table.write('test.biom')
-'test.biom'
-
->>> table = skbio.read('test.biom', into=skbio.Table)
->>> table
+>>> import io
+>>> import biom
+>>> import skbio
+>>> import h5py
+>>> f = io.BytesIO()
+>>> with h5py.File(f, 'w') as fp:
+...     biom.example_table.to_hdf5(fp, 'asd')
+>>> roundtrip = skbio.read(io.BytesIO(f.getvalue()), into=skbio.Table)
+>>> roundtrip
 2 x 3 <class 'biom.table.Table'> with 5 nonzero entries (83% dense)
-
-Clean up:
-
->>> import os
->>> os.remove('test.biom')
 
 References
 ----------
