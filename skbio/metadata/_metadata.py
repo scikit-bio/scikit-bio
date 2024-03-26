@@ -97,7 +97,7 @@ class _MetadataBase:
 
     def __ne__(self, other):
         return not (self == other)
-    
+
     # Static helpers below for code reuse in Metadata and MetadataColumn
 
     @classmethod
@@ -770,7 +770,7 @@ class SampleMetadata(_MetadataBase):
             )
 
         dfs = []
-        columns = []        
+        columns = []
         for md in itertools.chain([self], others):
             df = md._dataframe
             dfs.append(df)
@@ -826,7 +826,7 @@ class SampleMetadata(_MetadataBase):
         filtered_df = self._filter_ids_helper(
             self._dataframe, self.get_ids(), ids_to_keep
         )
-        filtered_md = self.__class__(filtered_df)        
+        filtered_md = self.__class__(filtered_df)
         return filtered_md
 
     def filter_columns(
@@ -903,7 +903,7 @@ class SampleMetadata(_MetadataBase):
                 continue
 
         filtered_df = self._dataframe.drop(columns_to_drop, axis=1, inplace=False)
-        filtered_md = self.__class__(filtered_df)        
+        filtered_md = self.__class__(filtered_df)
         return filtered_md
 
 
@@ -1249,7 +1249,7 @@ class MetadataColumn(_MetadataBase, metaclass=abc.ABCMeta):
         filtered_series = self._filter_ids_helper(
             self._series, self.get_ids(), ids_to_keep
         )
-        filtered_mdc = self.__class__(filtered_series)        
+        filtered_mdc = self.__class__(filtered_series)
         return filtered_mdc
 
 
