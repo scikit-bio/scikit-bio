@@ -56,7 +56,6 @@ Exceptions
 ^^^^^^^^^^
 
 .. autosummary::
-   :toctree:
 
    DissimilarityMatrixError
    DistanceMatrixError

@@ -3,30 +3,57 @@
 
 .. currentmodule:: skbio.stats
 
-This package contains various statistical methods, including ordination
-techniques and distance matrix-based statistics.
+This package contains various statistical methods, such as distance matrix-based
+statistics, ordination techniques, composition statistics, and data subsampling
+techniques.
 
-Subpackages
------------
+
+Distance matrix-based statistics
+--------------------------------
 
 .. autosummary::
    :toctree: generated/
 
    distance
-   evolve
+
+
+Ordination techniques
+---------------------
+
+.. autosummary::
+   :toctree: generated/
+
    ordination
-   gradient
-   power
+
+
+Composition statistics
+----------------------
+
+.. autosummary::
+   :toctree: generated/
+
    composition
 
-Functions
----------
+
+Data subsampling
+----------------
 
 .. autosummary::
    :toctree: generated/
 
    subsample_counts
    isubsample
+
+
+Other statistical methods
+-------------------------
+
+.. autosummary::
+   :toctree: generated/
+
+   evolve
+   gradient
+   power
 
 """  # noqa: D205, D415
 
