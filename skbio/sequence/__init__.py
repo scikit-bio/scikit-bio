@@ -10,9 +10,7 @@ generic/nonbiological sequences which have no alphabet restrictions
 computing the reverse complement of a DNA sequence, or searching for
 N-glycosylation motifs in protein sequences. Class attributes provide valid
 character sets, complement maps for different sequence types, and degenerate
-character definitions. Additionally this module defines the ``GeneticCode``
-class, which represents an immutable object that translates DNA or RNA
-sequences into protein sequences.
+character definitions.
 
 The primary information stored for each different type of sequence object is
 the underlying sequence data itself. This is stored as an immutable numpy
@@ -20,8 +18,14 @@ array. Additionally, each type of sequence may include optional metadata
 and positional metadata. Note that metadata and positional metadata are
 mutable.
 
-Classes
--------
+Additionally, this module defines the ``GeneticCode`` class, which represents an
+immutable object that translates DNA or RNA sequences into protein sequences, and
+the ``SubstitutionMatrix``, which stores scores of substitutions between sequence
+characters.
+
+
+Sequence classes
+----------------
 
 .. autosummary::
    :toctree: generated/
@@ -31,19 +35,30 @@ Classes
    DNA
    RNA
    Protein
+
+
+Utility classes
+---------------
+
+.. autosummary::
+   :toctree: generated/
+
    GeneticCode
    SubstitutionMatrix
 
-Subpackages
------------
+
+Distance calculation
+--------------------
 
 .. autosummary::
    :toctree: generated/
 
    distance
 
-Examples
+
+Tutorial
 --------
+
 New sequences are created with optional metadata and positional metadata.
 Metadata is stored as a Python ``dict``, while positional metadata is stored as
 a pandas ``DataFrame``.

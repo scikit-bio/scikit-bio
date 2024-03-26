@@ -70,8 +70,8 @@ Develop custom formats
    registry
 
 
-User exceptions and warnings
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+Exceptions and warnings
+^^^^^^^^^^^^^^^^^^^^^^^
 
 .. currentmodule:: skbio.io
 
@@ -105,8 +105,9 @@ User exceptions and warnings
    StockholmFormatError
 
 
-Introduction to I/O
--------------------
+Tutorial
+--------
+
 Reading and writing files (I/O) can be a complicated task:
 
 * A file format can sometimes be read into more than one in-memory representation
