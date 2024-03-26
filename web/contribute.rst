@@ -32,7 +32,6 @@ In addition, there are separate documents covering advanced topics:
    devdoc/new_module
    devdoc/review
    devdoc/release
-   devdoc/api_stability
 
 
 Ask a question
