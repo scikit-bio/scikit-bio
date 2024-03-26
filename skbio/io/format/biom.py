@@ -9,8 +9,10 @@ Internally, it stores the data in both compressed sparse row, and compressed
 sparse column representation. It additionally has support for representing sample
 and feature metadata.
 
-.. note:: Internally, BIOM describes features as observations, whereas scikit-bio
-uses the term features.
+.. note::
+
+   Internally, BIOM describes features as observations, whereas scikit-bio uses the
+   term features.
 
 Format Support
 --------------
@@ -29,12 +31,16 @@ The official format specification for BIOM-Format can be found at [1]_.
 Examples
 --------
 Here we will write an existing BIOM table, and re-read it. Note that the Table
-from ``biom`` implicitly gets the ``.write`` method from the IO registry.
+from ``biom`` implicitly gets the ``.write`` method from the IO registry. This
+``ByteIO`` object can be a file path in a regular use case.
 
->>> import biom, skbio
->>> biom.example_table.write('test.biom')
-'test.biom'
->>> roundtrip = skbio.read('test.biom', into=skbio.Table)
+>>> import io, skbio
+>>> f = io.BytesIO()
+>>> skbio.feature_table.example_table.write(f)  # doctest: +ELLIPSIS
+<_io.BytesIO object at ...>
+>>> roundtrip = skbio.read(f, into=skbio.Table)
+>>> roundtrip
+2 x 3 <class 'biom.table.Table'> with 5 nonzero entries (83% dense)
 
 References
 ----------
@@ -79,13 +85,13 @@ def _biom_sniffer(fh):
     # >>> ord('\x1a')
     # 26
     if magic == b"\x89HDF\r\n\x1a\n":
-        fp = h5py.File(fh, 'r')
-        url = fp.attrs.get('format-url')
-        version = fp.attrs.get('format-version')
+        fp = h5py.File(fh, "r")
+        url = fp.attrs.get("format-url")
+        version = fp.attrs.get("format-version")
 
         if url is None or version is None:
             return False, {}
-        if url != 'http://biom-format.org':
+        if url != "http://biom-format.org":
             return False, {}
         if list(version) != [2, 1]:
             return False, {}
@@ -106,11 +112,11 @@ def _biom_to_feature_table_default(fh):
     # will return a generator, that subsequently iterates the table.
     # returning a single item tuple yields expected behavior such that:
     # next(skbio.read('foo.biom', format='biom')) == Table
-    return (_biom_to_feature_table(fh), )
+    return (_biom_to_feature_table(fh),)
 
 
 def _biom_to_feature_table(fh):
-    h5grp = h5py.File(fh, 'r')
+    h5grp = h5py.File(fh, "r")
     return Table.from_hdf5(h5grp)
 
 
@@ -120,5 +126,5 @@ def _sktable_to_biom(obj, fh):
 
 
 def _feature_table_to_biom(obj, fh):
-    h5grp = h5py.File(fh, 'w')
-    obj.to_hdf5(h5grp, f'Written by scikit-bio version {skbio.__version__}')
+    h5grp = h5py.File(fh, "w")
+    obj.to_hdf5(h5grp, f"Written by scikit-bio version {skbio.__version__}")
