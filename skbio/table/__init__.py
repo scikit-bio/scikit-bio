@@ -1,5 +1,5 @@
 r"""Feature Table (:mod:`skbio.table`)
-==========================
+==================================
 
 .. currentmodule:: skbio.table
 
