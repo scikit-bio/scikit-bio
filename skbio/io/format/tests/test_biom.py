@@ -13,9 +13,9 @@ from pathlib import Path
 
 import h5py
 
-from skbio.feature_table import Table, example_table
+from skbio.table import Table, example_table
 from skbio.io.format.biom import (
-    _biom_to_feature_table, _feature_table_to_biom, _biom_sniffer)
+    _biom_to_table, _table_to_biom, _biom_sniffer)
 
 
 class BIOMFormatTests(unittest.TestCase):
@@ -52,13 +52,13 @@ class BIOMFormatTests(unittest.TestCase):
         self.assertEqual(_biom_sniffer(self.nonbiom_hdf5_path), (False, {}))
         self.assertEqual(_biom_sniffer(self.difbiomver_path), (False, {}))
 
-    def test_biom_to_feature_table(self):
-        tab = _biom_to_feature_table(self.valid_biom_path)
+    def test_biom_to_table(self):
+        tab = _biom_to_table(self.valid_biom_path)
         self.assertEqual(tab, self.table)
 
-    def test_feature_table_to_biom(self):
-        _feature_table_to_biom(self.table, self.writable_biom_path)
-        roundtrip = _biom_to_feature_table(self.writable_biom_path)
+    def test_table_to_biom(self):
+        _table_to_biom(self.table, self.writable_biom_path)
+        roundtrip = _biom_to_table(self.writable_biom_path)
         self.assertEqual(roundtrip, self.table)
 
 

@@ -7,12 +7,12 @@
 # ----------------------------------------------------------------------------
 
 from unittest import TestCase, main
-from skbio.feature_table import Table
+from skbio.table import Table
 import numpy as np
 
 
-class FeatureTable(TestCase):
-    def test_feature_table(self):
+class TableTests(TestCase):
+    def test_table(self):
         data = np.arange(40).reshape(10, 4)
         sample_ids = ['S%d' % i for i in range(4)]
         observ_ids = ['O%d' % i for i in range(10)]

@@ -14,7 +14,7 @@ import numpy as np
 import numpy.testing as npt
 
 from skbio import DistanceMatrix, TreeNode
-from skbio.feature_table import Table, example_table
+from skbio.table import Table, example_table
 from skbio.util._testing import assert_series_almost_equal
 from skbio.diversity import (alpha_diversity, beta_diversity,
                              partial_beta_diversity,

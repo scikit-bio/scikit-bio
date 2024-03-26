@@ -17,6 +17,7 @@ are supported by each format, see the associated documentation.
    :toctree: generated/
 
    binary_dm
+   biom
    blast6
    blast7
    clustal
