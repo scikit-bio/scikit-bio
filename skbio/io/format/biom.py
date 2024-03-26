@@ -18,11 +18,11 @@ Format Support
 --------------
 **Has Sniffer: Yes**
 
-+------+------+---------------------------------------------------------------+
-|Reader|Writer|                          Object Class                         |
-+======+======+===============================================================+
-|Yes   |Yes   |:mod:`skbio.feature_table.Table`                               |
-+------+------+---------------------------------------------------------------+
++------+------+-------------------------------------------------------+
+|Reader|Writer|                      Object Class                     |
++======+======+=======================================================+
+|Yes   |Yes   |:mod:`skbio.table.Table`                               |
++------+------+-------------------------------------------------------+
 
 Format Specification
 --------------------
@@ -36,7 +36,7 @@ from ``biom`` implicitly gets the ``.write`` method from the IO registry. This
 
 >>> import io, skbio
 >>> f = io.BytesIO()
->>> skbio.feature_table.example_table.write(f)  # doctest: +ELLIPSIS
+>>> skbio.table.example_table.write(f)  # doctest: +ELLIPSIS
 <_io.BytesIO object at ...>
 >>> roundtrip = skbio.read(f, into=skbio.Table)
 >>> roundtrip
@@ -60,7 +60,7 @@ import h5py
 
 import skbio
 from skbio.io import create_format
-from skbio.feature_table import Table
+from skbio.table import Table
 
 from .. import BIOMFormatError
 
@@ -102,29 +102,29 @@ def _biom_sniffer(fh):
 
 
 @biom.reader(Table)
-def _biom_to_feature_table_into(fh):
-    return _biom_to_feature_table(fh)
+def _biom_to_table_into(fh):
+    return _biom_to_table(fh)
 
 
 @biom.reader(None)
-def _biom_to_feature_table_default(fh):
+def _biom_to_table_default(fh):
     # skbio.read('foo.biom', format='biom')
     # will return a generator, that subsequently iterates the table.
     # returning a single item tuple yields expected behavior such that:
     # next(skbio.read('foo.biom', format='biom')) == Table
-    return (_biom_to_feature_table(fh),)
+    return (_biom_to_table(fh),)
 
 
-def _biom_to_feature_table(fh):
+def _biom_to_table(fh):
     h5grp = h5py.File(fh, "r")
     return Table.from_hdf5(h5grp)
 
 
 @biom.writer(Table)
 def _sktable_to_biom(obj, fh):
-    _feature_table_to_biom(obj, fh)
+    _table_to_biom(obj, fh)
 
 
-def _feature_table_to_biom(obj, fh):
+def _table_to_biom(obj, fh):
     h5grp = h5py.File(fh, "w")
     obj.to_hdf5(h5grp, f"Written by scikit-bio version {skbio.__version__}")
