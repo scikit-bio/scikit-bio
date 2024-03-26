@@ -24,7 +24,6 @@ Exceptions
 ----------
 
 .. autosummary::
-   :toctree:
 
    DuplicateRegistrationError
    InvalidRegistrationError
@@ -355,14 +354,14 @@ class IORegistry:
                     yield format.name
 
     def sniff(self, file, **kwargs):
-        """Detect the format of a given `file` and suggest kwargs for reading.
+        r"""Detect the format of a given file and suggest kwargs for reading.
 
         Parameters
         ----------
         file : openable (filepath, URL, filehandle, etc.)
-            The file to sniff. Something that is understood by `skbio.io.open`.
+            The file to sniff. Something that is understood by :func:`skbio.io.open`.
         kwargs : dict, optional
-            Keyword arguments will be passed to `skbio.io.open`. `newline`
+            Keyword arguments will be passed to :func:`skbio.io.open`. ``newline``
             cannot be provided.
 
         Returns
@@ -378,7 +377,7 @@ class IORegistry:
             sniffer or when the format is ambiguous and has been 'claimed' by
             more than one sniffer.
         TypeError
-            If `newline` is provided in `kwargs`.
+            If ``newline`` is provided in ``kwargs``.
 
         """
         if "newline" in kwargs:
@@ -434,45 +433,44 @@ class IORegistry:
         return matches
 
     def read(self, file, format=None, into=None, verify=True, **kwargs):
-        """Read `file` as `format` into an object.
+        r"""Read a file as certain format into an object.
 
         Parameters
         ----------
         file : openable (filepath, URL, filehandle, etc.)
-            The file to read. Something that is understood by `skbio.io.open`.
+            The file to read. Something that is understood by :func:`skbio.io.open`.
         format : str, optional
-            The format of the file if known. If None, the format will be
-            inferred from the file.
+            The format of the file if known. If None, the format will be inferred from
+            the file.
         into : type or None, optional
-            The object which will be returned. If None, a generator will be
-            returned.
+            The object which will be returned. If None, a generator will be returned.
         verify : bool, optional
-            When True, will double check the `format` if provided.
+            When True, will double check the ``format`` if provided.
         kwargs : dict, optional
             Keyword arguments will be passed to their respective handlers
-            (`skbio.io.open` and the reader for `format`). `newline` cannot be
-            provided.
+            (:func:`skbio.io.open` and the reader for ``format``). ``newline`` cannot
+            be provided.
 
         Returns
         -------
         object or generator
-            An instance of `into` if `into` is not None else generator
+            An instance of ``into`` if ``into`` is not None else generator
 
         Raises
         ------
         ValueError
-            Raised when `format` and `into` are both None.
+            Raised when ``format`` and ``into`` are both None.
         TypeError
-            If `newline` is provided in `kwargs`.
+            If ``newline`` is provided in ``kwargs``.
         UnrecognizedFormatError
-            Raised when a reader could not be found for a given `format` or the
+            Raised when a reader could not be found for a given ``format`` or the
             format could not be guessed.
         FormatIdentificationWarning
-            Raised when `verify` is True and the sniffer of a `format` did
-            not agree that `file` is a member of `format`
+            Raised when ``verify`` is True and the sniffer of a ``format`` did
+            not agree that ``file`` is a member of ``format``
         ArgumentOverrideWarning
-            Raised when `verify` is True and a user-supplied argument is
-            overriding the suggestion provided by the sniffer of `format`.
+            Raised when ``verify`` is True and a user-supplied argument is
+            overriding the suggestion provided by the sniffer of ``format``.
 
         """
         if "newline" in kwargs:
@@ -578,31 +576,30 @@ class IORegistry:
         return []
 
     def write(self, obj, format, into, **kwargs):
-        """Write `obj` as `format` into a file.
+        r"""Write an object as certain format into a file.
 
         Parameters
         ----------
         obj : object
-            The object to write as `format`
+            The object to write as ``format``.
         format : str
-            The format to write `obj` as
+            The format to write ``obj`` as.
         into : openable (filepath, URL, filehandle, etc.)
-            What to write `obj` to. Something that is understood by
-            `skbio.io.open`.
+            What to write ``obj`` to. Something that is understood by
+            :func:`skbio.io.open`.
         kwargs : dict, optional
             Keyword arguments will be passed to their respective handlers
-            (`skbio.io.open` and the writer for `format`)
+            (:func:`skbio.io.open` and the writer for ``format``).
 
         Returns
         -------
         openable (filepath, URL, filehandle, etc.)
-            Will pass back the user argument for `into` as a convenience.
+            Will pass back the user argument for ``into`` as a convenience.
 
         Raises
         ------
         UnrecognizedFormatError
-            Raised when a writer for writing `obj` as `format` could not be
-            found.
+            Raised when a writer for writing ``obj`` as ``format`` could not be found.
 
         """
         # The simplest functionality here.
@@ -620,14 +617,14 @@ class IORegistry:
         return into
 
     def monkey_patch(self):
-        """Monkey-patch `read` and `write` methods onto registered classes.
+        r"""Monkey-patch ``read`` and ``write`` methods onto registered classes.
 
-        Will modify classes which have been registered to a reader or writer
-        to have `read` and `write` methods which will contain documentation
-        specifying useable formats for that class.
+        Will modify classes which have been registered to a reader or writer to have
+        ``read`` and ``write`` methods which will contain documentation specifying
+        useable formats for that class.
 
-        The actual functionality will be a pass-through to `skbio.io.read`
-        and `skbio.io.write` respectively.
+        The actual functionality will be a pass-through to :func:`skbio.io.read` and
+        :func:`skbio.io.write` respectively.
         """
         reads = set()
         writes = set()
