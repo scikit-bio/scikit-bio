@@ -14,7 +14,7 @@ import pandas as pd
 import numpy.testing as npt
 
 from skbio import TreeNode
-from skbio.feature_table import example_table
+from skbio.table import example_table
 from skbio.diversity._util import (_validate_counts_vector,
                                    _validate_counts_matrix,
                                    _validate_taxa_and_tree,

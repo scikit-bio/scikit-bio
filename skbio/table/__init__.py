@@ -1,3 +1,12 @@
+r"""Feature Table (:mod:`skbio.table`)
+==================================
+
+.. currentmodule:: skbio.table
+
+This module provides support for interaction with BIOM Tables.
+
+"""  # noqa: D205, D415
+
 # ----------------------------------------------------------------------------
 # Copyright (c) 2013--, scikit-bio development team.
 #
@@ -5,7 +14,6 @@
 #
 # The full license is in the file LICENSE.txt, distributed with this software.
 # ----------------------------------------------------------------------------
+from skbio.table._base import Table, example_table
 
-from biom import Table, example_table
-
-Table.default_write_format = 'biom'
+__all__ = ["Table", "example_table"]

@@ -72,5 +72,6 @@ API Reference
    workflow
    diversity
    stats
+   table
    metadata
    util

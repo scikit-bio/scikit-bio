@@ -161,13 +161,13 @@ def _check_taxa_alias(taxa, tree, otu_ids):
 
 
 def _table_to_numpy(table):
-    """Convert a skbio.feature_table.Table to a dense representation.
+    """Convert a skbio.table.Table to a dense representation.
 
     This is a stop-gap solution to allow current Table objects to interoperate
     with existing driver methods, until they transition to be "sparse" aware.
     """
     sample_ids = list(table.ids())
-    obs_ids = list(table.ids(axis='observation'))
+    obs_ids = list(table.ids(axis="observation"))
 
     if table.is_empty():
         counts = np.array([[]] * len(sample_ids))
@@ -185,11 +185,11 @@ def _validate_table(counts, ids, kwargs):
     if ids is not None:
         raise ValueError("Cannot provide a `Table` as `counts` and `ids`")
 
-    if 'taxa' in kwargs:
+    if "taxa" in kwargs:
         raise ValueError("Cannot provide a `Table` as `counts` and `taxa`")
 
     dense_counts, sample_ids, feature_ids = _table_to_numpy(counts)
-    if 'tree' in kwargs:
-        kwargs['taxa'] = feature_ids
+    if "tree" in kwargs:
+        kwargs["taxa"] = feature_ids
 
     return dense_counts, sample_ids
