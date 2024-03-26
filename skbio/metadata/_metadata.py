@@ -76,20 +76,6 @@ class _MetadataBase:
         """
         return len(self._ids)
 
-    @property
-    def artifacts(self):
-        """Artifacts that are the source of the metadata.
-
-        This property is read-only.
-
-        Returns
-        -------
-        tuple of qiime2.Artifact
-            Source artifacts of the metadata.
-
-        """
-        return tuple(self._artifacts)
-
     def __init__(self, index):
         if index.empty:
             raise ValueError(
@@ -103,32 +89,15 @@ class _MetadataBase:
         self._validate_index(index, axis="id")
         self._ids = tuple(index)
 
-        self._artifacts = []
-
     def __eq__(self, other):
         return (
             isinstance(other, self.__class__)
             and self._id_header == other._id_header
-            and self._artifacts == other._artifacts
         )
 
     def __ne__(self, other):
         return not (self == other)
-
-    def _add_artifacts(self, artifacts):
-        deduped = set(self._artifacts)
-        for artifact in artifacts:
-            if not isinstance(artifact, qiime2.Artifact):
-                raise TypeError("Expected Artifact object, received %r" % artifact)
-            if artifact in deduped:
-                raise ValueError(
-                    "Duplicate source artifacts are not supported on %s "
-                    "objects. The following artifact is a duplicate of "
-                    "another source artifact: %r" % (self.__class__.__name__, artifact)
-                )
-            deduped.add(artifact)
-        self._artifacts.extend(artifacts)
-
+    
     # Static helpers below for code reuse in Metadata and MetadataColumn
 
     @classmethod
@@ -519,7 +488,6 @@ class SampleMetadata(_MetadataBase):
                 "Supported dtypes: float, int, object" % (series.name, dtype)
             )
 
-        column._add_artifacts(self.artifacts)
         return column
 
     def __repr__(self):
@@ -558,8 +526,7 @@ class SampleMetadata(_MetadataBase):
         """Determine if this metadata is equal to another.
 
         ``Metadata`` objects are equal if their IDs, columns (including column
-        names, types, and ordering), ID headers, source artifacts, and metadata
-        values are equal.
+        names, types, and ordering), ID headers, and metadata values are equal.
 
         Parameters
         ----------
@@ -586,8 +553,8 @@ class SampleMetadata(_MetadataBase):
         """Determine if this metadata is not equal to another.
 
         ``Metadata`` objects are not equal if their IDs, columns (including
-        column names, types, or ordering), ID headers, source artifacts, or
-        metadata values are not equal.
+        column names, types, or ordering), ID headers, or metadata values are
+        not equal.
 
         Parameters
         ----------
@@ -795,10 +762,6 @@ class SampleMetadata(_MetadataBase):
         property set to ``'id'``, regardless of the ``id_header`` values on the
         ``Metadata`` objects being merged.
 
-        The merged ``Metadata`` object tracks all source artifacts that it was
-        built from to preserve provenance (i.e. the ``.artifacts`` property
-        on all ``Metadata`` objects is merged).
-
         """
         if len(others) < 1:
             raise ValueError(
@@ -807,13 +770,11 @@ class SampleMetadata(_MetadataBase):
             )
 
         dfs = []
-        columns = []
-        artifacts = []
+        columns = []        
         for md in itertools.chain([self], others):
             df = md._dataframe
             dfs.append(df)
             columns.extend(df.columns.tolist())
-            artifacts.extend(md.artifacts)
 
         columns = pd.Index(columns)
         if columns.has_duplicates:
@@ -835,7 +796,6 @@ class SampleMetadata(_MetadataBase):
 
         merged_df.index.name = "id"
         merged_md = self.__class__(merged_df)
-        merged_md._add_artifacts(artifacts)
         return merged_md
 
     def filter_ids(self, ids_to_keep):
@@ -866,8 +826,7 @@ class SampleMetadata(_MetadataBase):
         filtered_df = self._filter_ids_helper(
             self._dataframe, self.get_ids(), ids_to_keep
         )
-        filtered_md = self.__class__(filtered_df)
-        filtered_md._add_artifacts(self.artifacts)
+        filtered_md = self.__class__(filtered_df)        
         return filtered_md
 
     def filter_columns(
@@ -944,8 +903,7 @@ class SampleMetadata(_MetadataBase):
                 continue
 
         filtered_df = self._dataframe.drop(columns_to_drop, axis=1, inplace=False)
-        filtered_md = self.__class__(filtered_df)
-        filtered_md._add_artifacts(self.artifacts)
+        filtered_md = self.__class__(filtered_df)        
         return filtered_md
 
 
@@ -1067,7 +1025,7 @@ class MetadataColumn(_MetadataBase, metaclass=abc.ABCMeta):
         """Determine if this metadata column is equal to another.
 
         ``MetadataColumn`` objects are equal if their IDs, column names, column
-        types, ID headers, source artifacts, and metadata values are equal.
+        types, ID headers and metadata values are equal.
 
         Parameters
         ----------
@@ -1095,7 +1053,7 @@ class MetadataColumn(_MetadataBase, metaclass=abc.ABCMeta):
         """Determine if this metadata column is not equal to another.
 
         ``MetadataColumn`` objects are not equal if their IDs, column names,
-        column types, ID headers, source artifacts, or metadata values are not
+        column types, ID headers, or metadata values are not
         equal.
 
         Parameters
@@ -1291,8 +1249,7 @@ class MetadataColumn(_MetadataBase, metaclass=abc.ABCMeta):
         filtered_series = self._filter_ids_helper(
             self._series, self.get_ids(), ids_to_keep
         )
-        filtered_mdc = self.__class__(filtered_series)
-        filtered_mdc._add_artifacts(self.artifacts)
+        filtered_mdc = self.__class__(filtered_series)        
         return filtered_mdc
 
 
