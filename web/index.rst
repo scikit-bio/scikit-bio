@@ -275,13 +275,13 @@
 
          .. card::
 
-            Latest release (:repo:`changelog <blob/main/CHANGELOG.md#version-059>`):
+            Latest release:
 
-            .. button-link:: https://github.com/scikit-bio/scikit-bio/releases/tag/0.5.9
+            .. button-link:: https://github.com/scikit-bio/scikit-bio/releases/tag/0.6.0
                :color: success
                :shadow:
 
-               scikit-bio 0.5.9
+               scikit-bio 0.6.0
 
          .. card::
 

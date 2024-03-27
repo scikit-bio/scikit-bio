@@ -6,9 +6,11 @@
   },
   {
     "name": "latest",
-    "version": "0.5.9",
-    "url": "https://scikit.bio/docs/latest/index.html"
+    "version": "0.6.0",
+    "url": "https://scikit.bio/docs/latest/index.html",
+    "preferred": true
   },
+  { "version": "0.6.0", "url": "https://scikit.bio/docs/0.6.0/index.html" },
   { "version": "0.5.9", "url": "https://scikit.bio/docs/0.5.9/index.html" },
   { "version": "0.5.8", "url": "https://scikit.bio/docs/0.5.8/index.html" },
   { "version": "0.5.7", "url": "https://scikit.bio/docs/0.5.7/index.html" },
