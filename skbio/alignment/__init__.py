@@ -1,5 +1,5 @@
-r"""Alignments (:mod:`skbio.alignment`)
-===================================
+r"""Sequence Alignments (:mod:`skbio.alignment`)
+============================================
 
 .. currentmodule:: skbio.alignment
 
@@ -8,8 +8,8 @@ alignments. DNA, RNA, and protein sequences can be aligned, as well as
 sequences with custom alphabets.
 
 
-Alignment data structure
-------------------------
+Alignment structure
+-------------------
 
 .. autosummary::
    :toctree: generated/

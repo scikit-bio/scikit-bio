@@ -1,9 +1,10 @@
-r"""File I/O (:mod:`skbio.io`)
-==========================
+r"""Input and Output (:mod:`skbio.io`)
+==================================
 
 .. currentmodule:: skbio.io
 
-This package provides I/O functionality for skbio.
+This module provides input/output (I/O) functionality for scikit-bio.
+
 
 Supported file formats
 ----------------------

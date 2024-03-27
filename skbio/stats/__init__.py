@@ -3,7 +3,7 @@
 
 .. currentmodule:: skbio.stats
 
-This package contains various statistical methods, such as distance matrix-based
+This module contains various statistical methods, such as distance matrix-based
 statistics, ordination techniques, composition statistics, and data subsampling
 techniques.
 

@@ -3,7 +3,28 @@ r"""Feature Table (:mod:`skbio.table`)
 
 .. currentmodule:: skbio.table
 
-This module provides support for interaction with BIOM Tables.
+This module provides support for interaction with feature tables in the Biological
+Observation Matrix (BIOM) format.
+
+Please refer to the `BIOM documentation <https://biom-format.org/>`__ for the
+instructions on working with BIOM tables.
+
+
+Classes
+-------
+
+.. autosummary::
+   :toctree: generated/
+
+   Table
+
+
+Example data
+^^^^^^^^^^^^
+.. autosummary::
+   :toctree: generated/
+
+   example_table
 
 """  # noqa: D205, D415
 

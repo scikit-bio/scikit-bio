@@ -1,9 +1,9 @@
-"""Diversity calculations (:mod:`skbio.diversity`)
-===============================================
+r"""Community Diversity (:mod:`skbio.diversity`)
+============================================
 
 .. currentmodule:: skbio.diversity
 
-This package provides functionality for analyzing biological diversity. It
+This module provides functionality for analyzing biological diversity. It
 implements metrics of alpha and beta diversity, and provides two "driver
 functions" that are intended to be the primary interface for computing alpha
 and beta diversity with scikit-bio. Functions are additionally provided that

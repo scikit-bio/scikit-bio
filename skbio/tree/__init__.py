@@ -10,8 +10,8 @@ more. This module supports trees that are multifurcating and nodes that have
 single descendants.
 
 
-Tree data structure
--------------------
+Tree structure and operations
+-----------------------------
 
 .. autosummary::
    :toctree: generated/
@@ -28,8 +28,8 @@ Phylogenetic reconstruction
     nj
 
 
-Utility functions
------------------
+Tree utilities
+--------------
 
 .. autosummary::
    :toctree: generated/

@@ -1,5 +1,5 @@
-r"""Constructing workflows (:mod:`skbio.workflow`)
-==============================================
+r"""Workflow construction (:mod:`skbio.workflow`)
+=============================================
 
 .. currentmodule:: skbio.workflow
 
@@ -16,6 +16,7 @@ Classes
 
     Workflow
 
+
 Decorators
 ----------
 
@@ -25,8 +26,10 @@ Decorators
     requires
     method
 
-Examples
+
+Tutorial
 --------
+
 >>> from skbio.workflow import Workflow
 
 As an example of the :class:`Workflow` object, let's construct a sequence processor

@@ -1,5 +1,5 @@
-"""Utility functionality (:mod:`skbio.util`)
-=========================================
+r"""Utilities for Developers (:mod:`skbio.util`)
+============================================
 
 .. currentmodule:: skbio.util
 
@@ -8,7 +8,7 @@ scikit-bio, as well as various utility functionality, including I/O and
 unit-testing convenience functions.
 
 Testing functionality
----------------------
+^^^^^^^^^^^^^^^^^^^^^
 
 Common functionality to support testing in skbio.
 
@@ -20,7 +20,7 @@ Common functionality to support testing in skbio.
    assert_data_frame_almost_equal
 
 Miscellaneous functionality
----------------------------
+^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 Generally useful functionality that doesn't fit in more specific locations.
 
@@ -32,8 +32,8 @@ Generally useful functionality that doesn't fit in more specific locations.
    safe_md5
    classproperty
 
-Warnings
---------
+Developer warnings
+^^^^^^^^^^^^^^^^^^
 
 .. autosummary::
    :toctree: generated/
