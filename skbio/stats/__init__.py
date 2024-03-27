@@ -1,5 +1,5 @@
-"""Multivariate Statistics (:mod:`skbio.stats`)
-===============================
+r"""Multivariate Statistics (:mod:`skbio.stats`)
+============================================
 
 .. currentmodule:: skbio.stats
 
