@@ -11,11 +11,35 @@ support discovery of the available diversity metrics. This document provides a
 high-level discussion of how to work with the ``skbio.diversity`` module, and
 should be the first document you read before working with the module.
 
-Driver functions
-----------------
 
-The driver functions, ``skbio.diversity.alpha_diversity`` and
-``skbio.diversity.beta_diversity``, are designed to compute alpha diversity for
+Subpackages
+-----------
+
+.. autosummary::
+   :toctree: generated/
+
+   alpha
+   beta
+
+Functions
+---------
+
+.. autosummary::
+   :toctree: generated/
+
+    alpha_diversity
+    beta_diversity
+    partial_beta_diversity
+    block_beta_diversity
+    get_alpha_diversity_metrics
+    get_beta_diversity_metrics
+
+
+Introduction
+------------
+
+The driver functions, :func:`skbio.diversity.alpha_diversity` and
+:func:`skbio.diversity.beta_diversity`, are designed to compute alpha diversity for
 one or more samples, or beta diversity for one or more pairs of samples. The
 diversity driver functions accept a matrix containing vectors of frequencies of
 taxa within each sample.
@@ -58,8 +82,8 @@ columns represent taxa.
 
 Some diversity metrics incorporate relationships between the taxa in their
 computation through reference to a phylogenetic tree. These metrics
-additionally take a ``skbio.TreeNode`` object and a list of taxa mapping the
-values in the counts vector to tips in the tree.
+additionally take a :class:`skbio.TreeNode` object and a list of taxa mapping
+the values in the counts vector to tips in the tree.
 
 The driver functions are optimized so that computing a diversity metric more
 than one time (i.e., for more than one sample for alpha diversity metrics, or
@@ -72,7 +96,7 @@ counts vectors in the matrix, and the ``beta_diversity`` driver function will
 compute beta diversity for all pairs of counts vectors in the matrix.
 
 Input validation
-----------------
+^^^^^^^^^^^^^^^^
 
 The driver functions perform validation of input by default. Validation can be
 slow so it is possible to disable this step by passing ``validate=False``. This
@@ -102,7 +126,7 @@ following conditions are also confirmed:
 * all provided taxa correspond to tip names in the provided tree
 
 Count vectors
--------------
+^^^^^^^^^^^^^
 
 There are different ways that count vectors are represented in the ecological
 literature and in related software. The diversity measures provided here
@@ -131,7 +155,7 @@ that is a tripleton. We do not have any 0-tons or doubletons:
 Always use the first representation (a counts vector) with this module.
 
 Specifying a diversity metric
------------------------------
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 The driver functions take a parameter, ``metric``, that specifies which
 diversity metric should be applied. The value that you provide for ``metric``
@@ -160,29 +184,8 @@ that are implemented in scikit-bio. There may be additional metrics that can be
 passed as strings which won't be listed here, such as those implemented in
 ``scipy.spatial.distance.pdist``.
 
-Subpackages
------------
 
-.. autosummary::
-   :toctree: generated/
-
-   alpha
-   beta
-
-Functions
----------
-
-.. autosummary::
-   :toctree: generated/
-
-    alpha_diversity
-    beta_diversity
-    partial_beta_diversity
-    block_beta_diversity
-    get_alpha_diversity_metrics
-    get_beta_diversity_metrics
-
-Examples
+Tutorial
 --------
 Create a matrix containing 6 samples (rows) and 7 taxa (columns):
 

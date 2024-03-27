@@ -29,10 +29,10 @@ Examples
 --------
 >>> from skbio.workflow import Workflow
 
-As an example of the ``Workflow`` object, let's construct a sequence processor
+As an example of the :class:`Workflow` object, let's construct a sequence processor
 that will filter sequences that are < 10 nucleotides, reverse the sequence
 if the runtime options indicate to, and truncate if a specific nucleotide
-pattern is observed. The ``Workflow`` object will only short circuit, and
+pattern is observed. The :class:`Workflow` object will only short circuit, and
 evaluate requirements on methods decorated by ``method``. Developers are free
 to define as many methods as they'd like within the object definition, and
 which can be called from workflow methods, but they will not be subjected
