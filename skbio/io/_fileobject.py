@@ -11,8 +11,9 @@ import h5py
 
 
 def is_binary_file(file):
-    return isinstance(file, (io.BufferedReader, io.BufferedWriter,
-                             io.BufferedRandom, h5py.Group))
+    return isinstance(
+        file, (io.BufferedReader, io.BufferedWriter, io.BufferedRandom, h5py.Group)
+    )
 
 
 # Everything beyond this point will be some kind of hack needed to make
