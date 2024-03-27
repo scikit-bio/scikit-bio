@@ -16,7 +16,7 @@ import numpy as np
 import pandas as pd
 
 from skbio.io._fileobject import SaneTextIOWrapper
-from ._util import find_duplicates
+from skbio.util import find_duplicates
 from .missing import DEFAULT_MISSING, BUILTIN_MISSING, series_encode_missing
 from .base import SUPPORTED_COLUMN_TYPES, FORMATTED_ID_HEADERS, is_id_header
 from ..metadata._metadata import SampleMetadata, MetadataColumn

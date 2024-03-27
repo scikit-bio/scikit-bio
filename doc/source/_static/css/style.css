@@ -18,6 +18,13 @@ https://pydata-sphinx-theme.readthedocs.io/en/stable/user_guide/styling.html
 
 html {
   --pst-icon-external-link: unset; 
+
+  --pst-font-size-h1: 2rem;
+  --pst-font-size-h2: 1.5rem;
+  --pst-font-size-h3: 1.25rem;
+  --pst-font-size-h4: 1.1rem;
+  --pst-font-size-h5: 1.0rem;
+  --pst-font-size-h6: 1.0rem;
 }
 
 

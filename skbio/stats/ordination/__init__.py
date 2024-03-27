@@ -3,31 +3,59 @@ r"""Ordination methods (:mod:`skbio.stats.ordination`)
 
 .. currentmodule:: skbio.stats.ordination
 
-This module contains several ordination methods, including Principal
-Coordinate Analysis, Correspondence Analysis, Redundancy Analysis and
-Canonical Correspondence Analysis.
+This module provides functions for ordination -- a category of methods that aim at
+arranging data so that similar data points are proximate to each other. Ordination can
+preserve and represent the structure of high-dimensional data within a low-dimensional
+space, thereby facilitating visual exploration and statistical analysis.
 
-Ordination Functions
---------------------
+Mathematically, ordination shares similarities with, and is in multiple respects
+equivalent to, embedding and dimensionality reduction. While all three aim to represent
+high-dimensional data in a lower-dimensional space, the term "ordination" is mainly
+used in the field of ecology to reveal patterns such as groups or gradients underlying
+community data. However, the ordination methods implemented in scikit-bio are
+versatile, serving not only ecological studies but also broader applications in
+scientific computing.
+
+
+Multidimensional scaling
+------------------------
+
+.. autosummary::
+   :toctree:
+
+   pcoa
+   pcoa_biplot
+
+
+Correspondence analysis
+-----------------------
 
 .. autosummary::
    :toctree:
 
    ca
-   pcoa
-   pcoa_biplot
+
+
+Canonical analysis
+------------------
+
+.. autosummary::
+   :toctree:
+
    cca
    rda
 
-Classes
--------
+
+Ordination results
+------------------
 
 .. autosummary::
    :toctree:
 
    OrdinationResults
 
-Utility Functions
+
+Utility functions
 -----------------
 
 .. autosummary::
@@ -39,6 +67,7 @@ Utility Functions
    svd_rank
    e_matrix
    f_matrix
+
 
 Examples
 --------

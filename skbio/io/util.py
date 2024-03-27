@@ -1,10 +1,9 @@
-r"""I/O utils (:mod:`skbio.io.util`)
-================================
+r"""I/O utilities (:mod:`skbio.io.util`)
+====================================
 
 .. currentmodule:: skbio.io.util
 
-This module provides utility functions to deal with files and I/O in
-general.
+This module provides utility functions to deal with files and I/O in general.
 
 Functions
 ---------

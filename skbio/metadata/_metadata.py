@@ -17,7 +17,7 @@ import pandas as pd
 import numpy as np
 
 import skbio.metadata.missing as _missing
-from ._util import find_duplicates
+from skbio.util import find_duplicates
 from .base import SUPPORTED_COLUMN_TYPES, FORMATTED_ID_HEADERS, is_id_header
 
 
