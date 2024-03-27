@@ -8,8 +8,8 @@ statistics, ordination techniques, composition statistics, and data subsampling
 techniques.
 
 
-Distance matrix-based statistics
---------------------------------
+Distance matrix statistics
+--------------------------
 
 .. autosummary::
    :toctree: generated/

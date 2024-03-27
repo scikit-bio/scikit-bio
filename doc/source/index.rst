@@ -54,13 +54,10 @@
    About <https://scikit.bio/about.html>
 
 
-scikit-bio |version|
-====================
+scikit-bio |version| documentation
+==================================
 
 scikit-bio (canonically pronounced *sigh-kit-buy-oh*) is a library for working with biological data in Python 3. scikit-bio is open source, BSD-licensed software that is currently under active development.
-
-API Reference
--------------
 
 .. toctree::
    :maxdepth: 2
