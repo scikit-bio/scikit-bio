@@ -1,11 +1,12 @@
-"""Statistics (:mod:`skbio.stats`)
+"""Multivariate Statistics (:mod:`skbio.stats`)
 ===============================
 
 .. currentmodule:: skbio.stats
 
-This module contains various statistical methods, such as distance matrix-based
-statistics, ordination techniques, composition statistics, and data subsampling
-techniques.
+This module provides various statistical methods to support the analyses of
+high-dimensional biological data to uncover the relationships among samples,
+features and metadata. Examples include distance matrix-based statistics,
+ordination methods, composition statistics, and data subsampling techniques.
 
 
 Distance matrix statistics

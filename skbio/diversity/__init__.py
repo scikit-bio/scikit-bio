@@ -3,53 +3,67 @@ r"""Community Diversity (:mod:`skbio.diversity`)
 
 .. currentmodule:: skbio.diversity
 
-This module provides functionality for analyzing biological diversity. It
-implements metrics of alpha and beta diversity, and provides two "driver
-functions" that are intended to be the primary interface for computing alpha
-and beta diversity with scikit-bio. Functions are additionally provided that
-support discovery of the available diversity metrics. This document provides a
-high-level discussion of how to work with the ``skbio.diversity`` module, and
-should be the first document you read before working with the module.
+This module provides functionality for analyzing biodiversity of communities
+-- groups of organisms living in the same area. It implements various metrics
+of alpha (within-community) and beta (between-community) diversity, and
+provides "driver functions" for computing alpha and beta diversity for an
+entire data table. Additional utilities are provided to support discovery of
+available diversity metrics. While diversity metrics were originally designed
+to study biological communities, they can be generalized to the analysis of
+various biological data types.
 
 
-Subpackages
------------
+Alpha diversity
+---------------
+
+.. rubric:: Alpha diversity metrics
 
 .. autosummary::
    :toctree: generated/
 
    alpha
-   beta
+   get_alpha_diversity_metrics
 
-Functions
----------
+.. rubric:: Driver function
 
 .. autosummary::
    :toctree: generated/
 
-    alpha_diversity
-    beta_diversity
-    partial_beta_diversity
-    block_beta_diversity
-    get_alpha_diversity_metrics
-    get_beta_diversity_metrics
+   alpha_diversity
+
+
+Beta diversity
+--------------
+
+.. rubric:: Beta diversity metrics
+
+.. autosummary::
+   :toctree: generated/
+
+   beta
+   get_beta_diversity_metrics
+
+.. rubric:: Driver functions
+
+.. autosummary::
+   :toctree: generated/
+
+   beta_diversity
+   partial_beta_diversity
+   block_beta_diversity
 
 
 Introduction
 ------------
 
-The driver functions, :func:`skbio.diversity.alpha_diversity` and
-:func:`skbio.diversity.beta_diversity`, are designed to compute alpha diversity for
-one or more samples, or beta diversity for one or more pairs of samples. The
-diversity driver functions accept a matrix containing vectors of frequencies of
-taxa within each sample.
-
-The term "taxon" (plural: "taxa") describes a group of biologically related
-organisms that constitute a unit in the community. Taxa are usually defined at
-a uniform taxonomic rank, such as species, genus or family. In community
-ecology, taxon is usually referred to as "species" (singular = plural), but its
-definition is not limited to species as a taxonomic rank. The term "taxonomic
-group" is a synonym of taxon in many situations.
+A community (i.e., sample) is represented by a vector of frequencies of taxa
+within the sample. The term "taxon" (plural: "taxa") describes a group of
+biologically related organisms that constitute a unit in the community. Taxa
+are usually defined at a uniform taxonomic rank, such as species, genus or
+family. In community ecology, taxon is usually referred to as "species"
+(singular = plural), but its definition is not limited to species as a
+taxonomic rank. The term "taxonomic group" is a synonym of taxon in many
+situations.
 
 In scikit-bio, the term "taxon/taxa" is used very loosely, as these can in
 practice represent diverse feature types including organisms, genes, and
@@ -74,11 +88,14 @@ for a particular taxon. We will refer to the frequencies associated with a
 single sample as a *counts vector* or ``counts`` throughout the documentation.
 Counts vectors are `array_like`: anything that can be converted into a 1-D
 numpy array is acceptable input. For example, you can provide a numpy array or
-a native Python list and the results will be identical. As mentioned above, the
-driver functions accept one or more of these vectors (representing one or more
-samples) in a matrix which is also `array_like`. Each row in the matrix
-represents a single sample's count vector, so that rows represent samples and
-columns represent taxa.
+a native Python list and the results will be identical.
+
+The driver functions :func:`alpha_diversity` and :func:`beta_diversity` are
+designed to compute alpha diversity for one or more samples, or beta diversity
+for one or more pairs of samples. The driver functions accept a matrix
+containing vectors of frequencies of taxa within each sample. Each row in the
+matrix represents a single sample's count vector, so that rows represent
+samples and columns represent taxa.
 
 Some diversity metrics incorporate relationships between the taxa in their
 computation through reference to a phylogenetic tree. These metrics

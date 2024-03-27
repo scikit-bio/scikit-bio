@@ -48,8 +48,10 @@ Exceptions
    MissingNodeError
    NoParentError
 
-Examples
+
+Tutorial
 --------
+
 >>> from skbio import TreeNode
 >>> from io import StringIO
 

@@ -1,9 +1,9 @@
-r"""Distance matrices and distance-based statistics (:mod:`skbio.stats.distance`)
-=============================================================================
+r"""Distance matrix-based statistics (:mod:`skbio.stats.distance`)
+==============================================================
 
 .. currentmodule:: skbio.stats.distance
 
-This subpackage provides functionality for serializing, deserializing, and
+This module provides functionality for serializing, deserializing, and
 manipulating dissimilarity and distance matrices in memory. It also contains
 various statistical methods that operate on distance matrices, often relating
 distances (e.g., community distances) to categorical and/or continuous
@@ -11,8 +11,9 @@ variables of interest (e.g., gender or age). Methods are also provided for
 comparing distance matrices (e.g., computing the correlation between two or
 more distance matrices using the Mantel test).
 
-Data Structures: DissimilarityMatrix and DistanceMatrix
--------------------------------------------------------
+
+Data structures
+---------------
 
 This package provides two matrix classes, `DissimilarityMatrix` and
 `DistanceMatrix`. Both classes can store measures of difference/distinction
@@ -61,8 +62,43 @@ Exceptions
    DistanceMatrixError
    MissingIDError
 
+
+Distance-based statistics
+-------------------------
+
+In addition to the data structures described above, this package provides the
+following distance-based statistical methods.
+
+Categorical Variable Stats
+^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+.. autosummary::
+   :toctree:
+
+   anosim
+   permanova
+   permdisp
+
+Continuous Variable Stats
+^^^^^^^^^^^^^^^^^^^^^^^^^
+
+.. autosummary::
+   :toctree:
+
+   bioenv
+
+Distance Matrix Comparisons
+^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+.. autosummary::
+   :toctree:
+
+   mantel
+   pwmantel
+
+
 Examples
-^^^^^^^^
+--------
 Assume we have the following delimited text file storing distances between
 three objects with IDs ``a``, ``b``, and ``c``::
 
@@ -138,38 +174,6 @@ Monotonically-increasing integers (cast as strings) will be automatically used:
 >>> dm.ids
 ('0', '1', '2')
 
-Distance-based statistics
--------------------------
-
-In addition to the data structures described above, this package provides the
-following distance-based statistical methods.
-
-Categorical Variable Stats
-^^^^^^^^^^^^^^^^^^^^^^^^^^
-
-.. autosummary::
-   :toctree:
-
-   anosim
-   permanova
-   permdisp
-
-Continuous Variable Stats
-^^^^^^^^^^^^^^^^^^^^^^^^^
-
-.. autosummary::
-   :toctree:
-
-   bioenv
-
-Distance Matrix Comparisons
-^^^^^^^^^^^^^^^^^^^^^^^^^^^
-
-.. autosummary::
-   :toctree:
-
-   mantel
-   pwmantel
 
 References
 ----------
