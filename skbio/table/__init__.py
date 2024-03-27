@@ -1,17 +1,17 @@
-r"""Feature Table (:mod:`skbio.table`)
+r"""Data Table (:mod:`skbio.table`)
 ==================================
 
 .. currentmodule:: skbio.table
 
-This module provides support for interaction with feature tables in the Biological
+This module provides support for interaction with data tables in the Biological
 Observation Matrix (BIOM) format.
 
 Please refer to the `BIOM documentation <https://biom-format.org/>`__ for the
 instructions on working with BIOM tables.
 
 
-Classes
--------
+BIOM table
+----------
 
 .. autosummary::
    :toctree: generated/
@@ -35,6 +35,7 @@ Example data
 #
 # The full license is in the file LICENSE.txt, distributed with this software.
 # ----------------------------------------------------------------------------
+
 from skbio.table._base import Table, example_table
 
 __all__ = ["Table", "example_table"]

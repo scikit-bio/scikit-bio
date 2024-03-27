@@ -28,7 +28,7 @@ class SubstitutionMatrix(DissimilarityMatrix):
 
     See Also
     --------
-    DissimilarityMatrix
+    skbio.stats.distance.DissimilarityMatrix
 
     Notes
     -----

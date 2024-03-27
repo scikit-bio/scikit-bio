@@ -3,9 +3,10 @@ r"""Ordination methods (:mod:`skbio.stats.ordination`)
 
 .. currentmodule:: skbio.stats.ordination
 
-This module contains several ordination methods, including Principal
-Coordinate Analysis, Correspondence Analysis, Redundancy Analysis and
-Canonical Correspondence Analysis.
+This module provides multiple ordination methods, including principal coordinate
+analysis (PCoA), correspondence analysis (CA), canonical correspondence analysis
+(CCA), and redundancy analysis (RA), as well as functionality for exploring and
+analyzing ordination results.
 
 Ordination Functions
 --------------------

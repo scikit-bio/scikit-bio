@@ -17,7 +17,7 @@ import pandas as pd
 import numpy as np
 
 import skbio.metadata.missing as _missing
-from ._util import find_duplicates
+from skbio.util import find_duplicates
 from .base import SUPPORTED_COLUMN_TYPES, FORMATTED_ID_HEADERS, is_id_header
 
 
@@ -90,10 +90,7 @@ class _MetadataBase:
         self._ids = tuple(index)
 
     def __eq__(self, other):
-        return (
-            isinstance(other, self.__class__)
-            and self._id_header == other._id_header
-        )
+        return isinstance(other, self.__class__) and self._id_header == other._id_header
 
     def __ne__(self, other):
         return not (self == other)

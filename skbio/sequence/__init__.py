@@ -14,8 +14,8 @@ the :class:`SubstitutionMatrix` class, which stores scores of substitutions betw
 sequence characters.
 
 
-Sequence classes
-----------------
+Sequence types
+--------------
 
 .. autosummary::
    :toctree: generated/
@@ -27,8 +27,8 @@ Sequence classes
    Protein
 
 
-Utility classes
----------------
+Sequence utilities
+------------------
 
 .. autosummary::
    :toctree: generated/

@@ -17,8 +17,8 @@ Distance matrix-based statistics
    distance
 
 
-Ordination techniques
----------------------
+Ordination methods
+------------------
 
 .. autosummary::
    :toctree: generated/
