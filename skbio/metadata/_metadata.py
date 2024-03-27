@@ -90,10 +90,7 @@ class _MetadataBase:
         self._ids = tuple(index)
 
     def __eq__(self, other):
-        return (
-            isinstance(other, self.__class__)
-            and self._id_header == other._id_header
-        )
+        return isinstance(other, self.__class__) and self._id_header == other._id_header
 
     def __ne__(self, other):
         return not (self == other)

@@ -242,7 +242,7 @@ setup(
         "scipy >= 1.9.0",
         "h5py >= 3.6.0",
         "hdmedians >= 0.14.1",
-        "biom-format"
+        "biom-format",
     ],
     classifiers=classifiers,
     package_data={
