@@ -69,9 +69,9 @@ API Reference
    sequence
    alignment
    tree
-   workflow
    diversity
    stats
    table
    metadata
+   workflow
    util
