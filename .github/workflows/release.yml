@@ -1,6 +1,7 @@
 name: Release
 
 on:
+  workflow_dispatch:
   push:
     tags:
       - '*'
@@ -28,7 +29,7 @@ jobs:
 
       - name: Build distribution
         run: |
-          export RELEASE_VERSION=${{ github.ref_name }}
+          export RELEASE_VERSION=0.6.0
           pip install numpy cython
           python setup.py sdist
 
@@ -78,8 +79,9 @@ jobs:
           ssh-key: ${{ secrets.SSH_DEPLOY_KEY }}
 
       - name: Update documentation
-        run: rsync -av --delete doc/build/html/ website/docs/${{ github.ref_name }}
-        run: rsync -av --delete doc/build/html/ website/docs/latest
+        run: |
+          rsync -av --delete doc/build/html/ website/docs/0.6.0
+          rsync -av --delete doc/build/html/ website/docs/latest
 
       - name: Publish website
         run: |
