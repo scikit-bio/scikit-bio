@@ -7,12 +7,22 @@
 # -----------------------------------------------------------------------------
 
 import numpy as np
+cimport numpy as cnp
 cimport cython
 from cython.parallel import prange
+from libc.math cimport isnan, sqrt, acos, fabs
+
 
 ctypedef fused TReal:
     float
     double
+
+ctypedef fused floating:
+    cnp.float32_t
+    cnp.float64_t
+
+ctypedef cnp.float32_t float32_t
+ctypedef cnp.float64_t float64_t
 
 @cython.boundscheck(False)
 @cython.wraparound(False)
@@ -294,22 +304,17 @@ def permanova_f_stat_sW_cy(TReal[:, ::1] distance_matrix,
 
     return s_W
 
-from libc.math cimport isnan, sqrt, acos, fabs
-
-cimport numpy as cnp
-
-ctypedef fused floating:
-    cnp.float32_t
-    cnp.float64_t
-
-ctypedef cnp.float32_t float32_t
-ctypedef cnp.float64_t float64_t
-
 @cython.boundscheck(False)
 @cython.wraparound(False)
 def geomedian_axis_one(floating[:, :] X, floating eps=1e-7,
                            size_t maxiters=500):
-    """Compute high dimensional median."""
+    """Compute high dimensional median.
+    
+    This function, its helpers (dist_euclidean, norm_euclidean, sum), and necessary
+    type definitions (floating) were ported from hdmedians v0.14.2. The only change was
+    changing "cdef" to "def" on the line defining the function. See
+    https://github.com/daleroberts/hdmedians for more information.
+    """
     cdef size_t p = X.shape[0]
     cdef size_t n = X.shape[1]
 
