@@ -307,7 +307,7 @@ ctypedef cnp.float64_t float64_t
 
 @cython.boundscheck(False)
 @cython.wraparound(False)
-cdef geomedian_axis_one(floating[:, :] X, floating eps=1e-7,
+def geomedian_axis_one(floating[:, :] X, floating eps=1e-7,
                            size_t maxiters=500):
     """Compute high dimensional median."""
     cdef size_t p = X.shape[0]
