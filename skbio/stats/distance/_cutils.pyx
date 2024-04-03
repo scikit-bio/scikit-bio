@@ -18,10 +18,8 @@ ctypedef fused TReal:
     double
 
 ctypedef fused floating:
-    cnp.float32_t
     cnp.float64_t
 
-ctypedef cnp.float32_t float32_t
 ctypedef cnp.float64_t float64_t
 
 @cython.boundscheck(False)
