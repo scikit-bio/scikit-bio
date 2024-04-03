@@ -402,3 +402,10 @@ cdef floating norm_euclidean(floating[:] x) nogil:
     for i in range(n):
         d += x[i] * x[i]
     return <floating>sqrt(d)
+
+cdef floating sum(floating[:] x) nogil:
+    cdef size_t n = x.shape[0]
+    cdef float64_t total = 0.
+    for i in range(n):
+        total += x[i]
+    return <floating>total
