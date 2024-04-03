@@ -12,6 +12,7 @@ import numpy as np
 import pandas as pd
 from scipy.stats import f_oneway
 from scipy.spatial.distance import cdist
+from ._cutils import geomedian_axis_one
 
 import hdmedians as hd
 
@@ -313,4 +314,4 @@ def _config_med(x):
     and transpose the vector to be compatible with hd.geomedian.
     """
     X = x.values[:, :-1]
-    return pd.Series(np.array(hd.geomedian(X.T)), index=x.columns[:-1])
+    return pd.Series(np.array(geomedian_axis_one(X.T)), index=x.columns[:-1])
