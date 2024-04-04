@@ -14,7 +14,6 @@ import numpy.testing as npt
 import pandas as pd
 from pandas.testing import assert_series_equal
 from scipy.stats import f_oneway
-import hdmedians as hd
 
 from skbio import DistanceMatrix
 from skbio.stats.ordination import pcoa

@@ -14,7 +14,6 @@ from scipy.stats import f_oneway
 from scipy.spatial.distance import cdist
 from ._cutils import geomedian_axis_one
 
-import hdmedians as hd
 
 from ._base import (
     _preprocess_input_sng,
