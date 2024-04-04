@@ -20,6 +20,7 @@ from skbio import DistanceMatrix
 from skbio.stats.ordination import pcoa
 from skbio.stats.distance import permdisp
 from skbio.stats.distance._permdisp import _compute_groups
+from skbio.stats.distance._cutils import geomedian_axis_one
 from skbio.util import get_data_path
 
 
@@ -245,10 +246,10 @@ class testPERMDISP(TestCase):
         pval = obs['p-value']
         np.isnan(pval)
 
-    def test_hdmedians(self):
+    def test_geomedian(self):
         exp = np.array([2.01956244, 1.53164546, 2.60571752, 0.91424179,
                         1.76214416, 1.69943057])
-        obs = np.array(hd.geomedian(self.eq_mat.data))
+        obs = np.array(geomedian_axis_one(self.eq_mat.data))
         npt.assert_almost_equal(obs, exp, decimal=6)
 
     def test_confirm_betadispr_results(self):

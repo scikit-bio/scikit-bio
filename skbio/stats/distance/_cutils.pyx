@@ -19,8 +19,10 @@ ctypedef fused TReal:
 
 ctypedef fused floating:
     cnp.float64_t
+    cnp.float32_t
 
 ctypedef cnp.float64_t float64_t
+ctypedef cnp.float32_t float32_t
 
 @cython.boundscheck(False)
 @cython.wraparound(False)
@@ -342,14 +344,14 @@ def geomedian_axis_one(floating[:, :] X, floating eps=1e-7,
         while iteration < maxiters:
 
             for i in range(n):
-                Di = dist_euclidean(X[:, i], y)
+                Di = _dist_euclidean(X[:, i], y)
                 D[i] = Di
                 if fabs(Di) > eps:
                     Dinv[i] = 1. / Di
                 else:
                     Dinv[i] = 0.
 
-            Dinvs = sum(Dinv)
+            Dinvs = _sum(Dinv)
 
             for i in range(n):
                 W[i] = Dinv[i] / Dinvs
@@ -373,7 +375,7 @@ def geomedian_axis_one(floating[:, :] X, floating eps=1e-7,
             else:
                 for j in range(p):
                     R[j] = (T[j] - y[j]) * Dinvs
-                r = norm_euclidean(R)
+                r = _norm_euclidean(R)
                 if r > eps:
                     rinv = nzeros/r
                 else:
@@ -381,7 +383,7 @@ def geomedian_axis_one(floating[:, :] X, floating eps=1e-7,
                 for j in range(p):
                     y1[j] = max(0, 1-rinv)*T[j] + min(1, rinv)*y[j]
 
-            dist = dist_euclidean(y, y1)
+            dist = _dist_euclidean(y, y1)
             if dist < eps:
                break
 
@@ -390,7 +392,7 @@ def geomedian_axis_one(floating[:, :] X, floating eps=1e-7,
             
     return y
 
-cdef floating dist_euclidean(floating[:] x, floating[:] y) nogil:
+cdef floating _dist_euclidean(floating[:] x, floating[:] y) nogil:
     cdef size_t n = x.shape[0]
     cdef float64_t d = 0.
     cdef float64_t tmp
@@ -399,14 +401,14 @@ cdef floating dist_euclidean(floating[:] x, floating[:] y) nogil:
         d += tmp * tmp
     return <floating>sqrt(d)
 
-cdef floating norm_euclidean(floating[:] x) nogil:
+cdef floating _norm_euclidean(floating[:] x) nogil:
     cdef size_t n = x.shape[0]
     cdef float64_t d = 0.
     for i in range(n):
         d += x[i] * x[i]
     return <floating>sqrt(d)
 
-cdef floating sum(floating[:] x) nogil:
+cdef floating _sum(floating[:] x) nogil:
     cdef size_t n = x.shape[0]
     cdef float64_t total = 0.
     for i in range(n):
