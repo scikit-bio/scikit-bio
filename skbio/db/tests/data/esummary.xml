@@ -1,0 +1,202 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE eSummaryResult PUBLIC "-//NLM//DTD esummary pubmed 20160808//EN" "https://eutils.ncbi.nlm.nih.gov/eutils/dtd/20160808/esummary_pubmed.dtd">
+<eSummaryResult>
+<DocumentSummarySet status="OK">
+<DbBuild>Build220523-2142m.3</DbBuild>
+
+<DocumentSummary uid="11850928">
+	<PubDate>1965 Aug</PubDate>
+	<EPubDate></EPubDate>
+	<Source>Arch Dermatol</Source>
+	<Authors>
+		<Author>
+			<Name>LoPresti PJ</Name>
+			<AuthType>Author</AuthType>
+			<ClusterID></ClusterID>
+		</Author>
+		<Author>
+			<Name>Hambrick GW Jr</Name>
+			<AuthType>Author</AuthType>
+			<ClusterID></ClusterID>
+		</Author>
+	</Authors>
+	<LastAuthor>Hambrick GW Jr</LastAuthor>
+	<Title>Zirconium granuloma following treatment of rhus dermatitis.</Title>
+	<SortTitle>zirconium granuloma following treatment of rhus dermatitis</SortTitle>
+	<Volume>92</Volume>
+	<Issue>2</Issue>
+	<Pages>188-91</Pages>
+	<Lang>
+		<string>eng</string>
+	</Lang>
+	<NlmUniqueID>0372433</NlmUniqueID>
+	<ISSN>0003-987X</ISSN>
+	<ESSN>1538-3652</ESSN>
+	<PubType>
+		<flag>Journal Article</flag>
+	</PubType>
+	<RecordStatus>PubMed - indexed for MEDLINE</RecordStatus>
+	<PubStatus>4</PubStatus>
+	<ArticleIds>
+		<ArticleId>
+			<IdType>pubmed</IdType>
+			<IdTypeN>1</IdTypeN>
+			<Value>11850928</Value>
+		</ArticleId>
+		<ArticleId>
+			<IdType>rid</IdType>
+			<IdTypeN>8</IdTypeN>
+			<Value>11850928</Value>
+		</ArticleId>
+		<ArticleId>
+			<IdType>eid</IdType>
+			<IdTypeN>8</IdTypeN>
+			<Value>11850928</Value>
+		</ArticleId>
+	</ArticleIds>
+	<History>
+		<PubMedPubDate>
+			<PubStatus>pubmed</PubStatus>
+			<Date>1965/08/01 00:00</Date>
+		</PubMedPubDate>
+		<PubMedPubDate>
+			<PubStatus>medline</PubStatus>
+			<Date>2002/03/09 10:01</Date>
+		</PubMedPubDate>
+		<PubMedPubDate>
+			<PubStatus>entrez</PubStatus>
+			<Date>1965/08/01 00:00</Date>
+		</PubMedPubDate>
+	</History>
+	<References>
+	</References>
+	<Attributes>
+		<flag>Has Abstract</flag>
+	</Attributes>
+	<PmcRefCount>0</PmcRefCount>
+	<FullJournalName>Archives of dermatology</FullJournalName>
+	<ELocationID></ELocationID>
+	<DocType>citation</DocType>
+	<SrcContribList>
+	</SrcContribList>
+	<BookTitle></BookTitle>
+	<Medium></Medium>
+	<Edition></Edition>
+	<PublisherLocation></PublisherLocation>
+	<PublisherName></PublisherName>
+	<SrcDate></SrcDate>
+	<ReportNumber></ReportNumber>
+	<AvailableFromURL></AvailableFromURL>
+	<LocationLabel></LocationLabel>
+	<DocContribList>
+	</DocContribList>
+	<DocDate></DocDate>
+	<BookName></BookName>
+	<Chapter></Chapter>
+	<SortPubDate>1965/08/01 00:00</SortPubDate>
+	<SortFirstAuthor>LoPresti PJ</SortFirstAuthor>
+	<VernacularTitle></VernacularTitle>
+</DocumentSummary>
+
+<DocumentSummary uid="11482001">
+	<PubDate>2001 Jun</PubDate>
+	<EPubDate></EPubDate>
+	<Source>Adverse Drug React Toxicol Rev</Source>
+	<Authors>
+		<Author>
+			<Name>Mantle D</Name>
+			<AuthType>Author</AuthType>
+			<ClusterID></ClusterID>
+		</Author>
+		<Author>
+			<Name>Gok MA</Name>
+			<AuthType>Author</AuthType>
+			<ClusterID></ClusterID>
+		</Author>
+		<Author>
+			<Name>Lennard TW</Name>
+			<AuthType>Author</AuthType>
+			<ClusterID></ClusterID>
+		</Author>
+	</Authors>
+	<LastAuthor>Lennard TW</LastAuthor>
+	<Title>Adverse and beneficial effects of plant extracts on skin and skin disorders.</Title>
+	<SortTitle>adverse and beneficial effects of plant extracts on skin and skin disorders</SortTitle>
+	<Volume>20</Volume>
+	<Issue>2</Issue>
+	<Pages>89-103</Pages>
+	<Lang>
+		<string>eng</string>
+	</Lang>
+	<NlmUniqueID>9109474</NlmUniqueID>
+	<ISSN>0964-198X</ISSN>
+	<ESSN></ESSN>
+	<PubType>
+		<flag>Journal Article</flag>
+		<flag>Review</flag>
+	</PubType>
+	<RecordStatus>PubMed - indexed for MEDLINE</RecordStatus>
+	<PubStatus>4</PubStatus>
+	<ArticleIds>
+		<ArticleId>
+			<IdType>pubmed</IdType>
+			<IdTypeN>1</IdTypeN>
+			<Value>11482001</Value>
+		</ArticleId>
+		<ArticleId>
+			<IdType>rid</IdType>
+			<IdTypeN>8</IdTypeN>
+			<Value>11482001</Value>
+		</ArticleId>
+		<ArticleId>
+			<IdType>eid</IdType>
+			<IdTypeN>8</IdTypeN>
+			<Value>11482001</Value>
+		</ArticleId>
+	</ArticleIds>
+	<History>
+		<PubMedPubDate>
+			<PubStatus>pubmed</PubStatus>
+			<Date>2001/08/03 10:00</Date>
+		</PubMedPubDate>
+		<PubMedPubDate>
+			<PubStatus>medline</PubStatus>
+			<Date>2002/01/23 10:01</Date>
+		</PubMedPubDate>
+		<PubMedPubDate>
+			<PubStatus>entrez</PubStatus>
+			<Date>2001/08/03 10:00</Date>
+		</PubMedPubDate>
+	</History>
+	<References>
+	</References>
+	<Attributes>
+		<flag>Has Abstract</flag>
+	</Attributes>
+	<PmcRefCount>15</PmcRefCount>
+	<FullJournalName>Adverse drug reactions and toxicological reviews</FullJournalName>
+	<ELocationID></ELocationID>
+	<DocType>citation</DocType>
+	<SrcContribList>
+	</SrcContribList>
+	<BookTitle></BookTitle>
+	<Medium></Medium>
+	<Edition></Edition>
+	<PublisherLocation></PublisherLocation>
+	<PublisherName></PublisherName>
+	<SrcDate></SrcDate>
+	<ReportNumber></ReportNumber>
+	<AvailableFromURL></AvailableFromURL>
+	<LocationLabel></LocationLabel>
+	<DocContribList>
+	</DocContribList>
+	<DocDate></DocDate>
+	<BookName></BookName>
+	<Chapter></Chapter>
+	<SortPubDate>2001/06/01 00:00</SortPubDate>
+	<SortFirstAuthor>Mantle D</SortFirstAuthor>
+	<VernacularTitle></VernacularTitle>
+</DocumentSummary>
+
+</DocumentSummarySet>
+</eSummaryResult>

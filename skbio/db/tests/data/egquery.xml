@@ -1,0 +1,49 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE Result PUBLIC "-//NLM//DTD eSearchResult, January 2004//EN" "https://www.ncbi.nlm.nih.gov/entrez/query/DTD/egquery.dtd">
+<Result>
+   
+    <Term>asthma</Term>
+    
+    <eGQueryResult>
+        <ResultItem><DbName>pubmed</DbName><MenuName>PubMed</MenuName><Count>206737</Count><Status>Ok</Status></ResultItem>
+        <ResultItem><DbName>pmc</DbName><MenuName>PubMed Central</MenuName><Count>285242</Count><Status>Ok</Status></ResultItem>
+        <ResultItem><DbName>mesh</DbName><MenuName>MeSH</MenuName><Count>12</Count><Status>Ok</Status></ResultItem>
+        <ResultItem><DbName>books</DbName><MenuName>Books</MenuName><Count>15497</Count><Status>Ok</Status></ResultItem>
+        <ResultItem><DbName>pubmedhealth</DbName><MenuName>PubMed Health</MenuName><Count>Error</Count><Status>Database Error</Status></ResultItem>
+        <ResultItem><DbName>omim</DbName><MenuName>OMIM</MenuName><Count>315</Count><Status>Ok</Status></ResultItem>
+        
+        <ResultItem><DbName>ncbisearch</DbName><MenuName>Site Search</MenuName><Count>17</Count><Status>Ok</Status></ResultItem>
+        <ResultItem><DbName>nuccore</DbName><MenuName>Nucleotide</MenuName><Count>39244</Count><Status>Ok</Status></ResultItem>
+        <ResultItem><DbName>nucgss</DbName><MenuName>GSS</MenuName><Count>0</Count><Status>Ok</Status></ResultItem>
+        <ResultItem><DbName>nucest</DbName><MenuName>EST</MenuName><Count>0</Count><Status>Ok</Status></ResultItem>
+        <ResultItem><DbName>protein</DbName><MenuName>Protein</MenuName><Count>5225</Count><Status>Ok</Status></ResultItem>
+        <ResultItem><DbName>genome</DbName><MenuName>Genome</MenuName><Count>1</Count><Status>Ok</Status></ResultItem>
+        <ResultItem><DbName>structure</DbName><MenuName>Structure</MenuName><Count>338</Count><Status>Ok</Status></ResultItem>
+        <ResultItem><DbName>taxonomy</DbName><MenuName>Taxonomy</MenuName><Count>0</Count><Status>Term or Database is not found</Status></ResultItem>
+        <ResultItem><DbName>snp</DbName><MenuName>SNP</MenuName><Count>0</Count><Status>Term or Database is not found</Status></ResultItem>
+        <ResultItem><DbName>dbvar</DbName><MenuName>dbVar</MenuName><Count>0</Count><Status>Term or Database is not found</Status></ResultItem>
+        <ResultItem><DbName>gene</DbName><MenuName>Gene</MenuName><Count>2164</Count><Status>Ok</Status></ResultItem>
+        <ResultItem><DbName>sra</DbName><MenuName>SRA</MenuName><Count>51756</Count><Status>Ok</Status></ResultItem>
+        <ResultItem><DbName>biosystems</DbName><MenuName>BioSystems</MenuName><Count>Error</Count><Status>Database Error</Status></ResultItem>
+        <ResultItem><DbName>unigene</DbName><MenuName>UniGene</MenuName><Count>0</Count><Status>Ok</Status></ResultItem>
+        <ResultItem><DbName>cdd</DbName><MenuName>Conserved Domains</MenuName><Count>51</Count><Status>Ok</Status></ResultItem>
+        <ResultItem><DbName>clone</DbName><MenuName>Clone</MenuName><Count>0</Count><Status>Ok</Status></ResultItem>
+        
+        <ResultItem><DbName>popset</DbName><MenuName>PopSet</MenuName><Count>24</Count><Status>Ok</Status></ResultItem>
+        <ResultItem><DbName>geoprofiles</DbName><MenuName>GEO Profiles</MenuName><Count>879771</Count><Status>Ok</Status></ResultItem>
+        <ResultItem><DbName>gds</DbName><MenuName>GEO DataSets</MenuName><Count>14447</Count><Status>Ok</Status></ResultItem>
+        <ResultItem><DbName>homologene</DbName><MenuName>HomoloGene</MenuName><Count>18</Count><Status>Ok</Status></ResultItem>
+        <ResultItem><DbName>pccompound</DbName><MenuName>PubChem Compound</MenuName><Count>2</Count><Status>Ok</Status></ResultItem>
+        <ResultItem><DbName>pcsubstance</DbName><MenuName>PubChem Substance</MenuName><Count>421</Count><Status>Ok</Status></ResultItem>
+        <ResultItem><DbName>pcassay</DbName><MenuName>PubChem BioAssay</MenuName><Count>5489</Count><Status>Ok</Status></ResultItem>
+        <ResultItem><DbName>nlmcatalog</DbName><MenuName>NLM Catalog</MenuName><Count>2906</Count><Status>Ok</Status></ResultItem>
+        <ResultItem><DbName>probe</DbName><MenuName>Probe</MenuName><Count>0</Count><Status>Ok</Status></ResultItem>
+        <ResultItem><DbName>gap</DbName><MenuName>dbGaP</MenuName><Count>6862</Count><Status>Ok</Status></ResultItem>
+        <ResultItem><DbName>proteinclusters</DbName><MenuName>Protein Clusters</MenuName><Count>0</Count><Status>Term or Database is not found</Status></ResultItem>
+        
+        <ResultItem><DbName>bioproject</DbName><MenuName>BioProject</MenuName><Count>768</Count><Status>Ok</Status></ResultItem>
+        <ResultItem><DbName>biosample</DbName><MenuName>BioSample</MenuName><Count>64882</Count><Status>Ok</Status></ResultItem>
+        <ResultItem><DbName>biocollections</DbName><MenuName>BioCollections</MenuName><Count>0</Count><Status>Term or Database is not found</Status></ResultItem>
+    </eGQueryResult>
+    
+</Result>

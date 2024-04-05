@@ -1,0 +1,740 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE eInfoResult PUBLIC "-//NLM//DTD einfo 20190110//EN" "https://eutils.ncbi.nlm.nih.gov/eutils/dtd/20190110/einfo.dtd">
+<eInfoResult>
+	<DbInfo>
+	<DbName>protein</DbName>
+	<MenuName>Protein</MenuName>
+	<Description>Protein sequence record</Description>
+	<DbBuild>Build220518-2026m.1</DbBuild>
+	<Count>1048488808</Count>
+	<LastUpdate>2022/05/21 11:12</LastUpdate>
+	<FieldList>
+		<Field>
+			<Name>ALL</Name>
+			<FullName>All Fields</FullName>
+			<Description>All terms from all searchable fields</Description>
+			<TermCount>5424268589</TermCount>
+			<IsDate>N</IsDate>
+			<IsNumerical>N</IsNumerical>
+			<SingleToken>N</SingleToken>
+			<Hierarchy>N</Hierarchy>
+			<IsHidden>N</IsHidden>
+			<IsTruncatable>Y</IsTruncatable>
+			<IsRangable>N</IsRangable>
+		</Field>
+		<Field>
+			<Name>UID</Name>
+			<FullName>UID</FullName>
+			<Description>Unique number assigned to each sequence</Description>
+			<TermCount>0</TermCount>
+			<IsDate>N</IsDate>
+			<IsNumerical>Y</IsNumerical>
+			<SingleToken>Y</SingleToken>
+			<Hierarchy>N</Hierarchy>
+			<IsHidden>Y</IsHidden>
+			<IsTruncatable>N</IsTruncatable>
+			<IsRangable>N</IsRangable>
+		</Field>
+		<Field>
+			<Name>FILT</Name>
+			<FullName>Filter</FullName>
+			<Description>Limits the records</Description>
+			<TermCount>264</TermCount>
+			<IsDate>N</IsDate>
+			<IsNumerical>N</IsNumerical>
+			<SingleToken>Y</SingleToken>
+			<Hierarchy>N</Hierarchy>
+			<IsHidden>N</IsHidden>
+			<IsTruncatable>Y</IsTruncatable>
+			<IsRangable>N</IsRangable>
+		</Field>
+		<Field>
+			<Name>WORD</Name>
+			<FullName>Text Word</FullName>
+			<Description>Free text associated with record</Description>
+			<TermCount>1444397753</TermCount>
+			<IsDate>N</IsDate>
+			<IsNumerical>N</IsNumerical>
+			<SingleToken>N</SingleToken>
+			<Hierarchy>N</Hierarchy>
+			<IsHidden>N</IsHidden>
+			<IsTruncatable>Y</IsTruncatable>
+			<IsRangable>N</IsRangable>
+		</Field>
+		<Field>
+			<Name>TITL</Name>
+			<FullName>Title</FullName>
+			<Description>Words in definition line</Description>
+			<TermCount>169438578</TermCount>
+			<IsDate>N</IsDate>
+			<IsNumerical>N</IsNumerical>
+			<SingleToken>N</SingleToken>
+			<Hierarchy>N</Hierarchy>
+			<IsHidden>N</IsHidden>
+			<IsTruncatable>Y</IsTruncatable>
+			<IsRangable>N</IsRangable>
+		</Field>
+		<Field>
+			<Name>KYWD</Name>
+			<FullName>Keyword</FullName>
+			<Description>Nonstandardized terms provided by submitter</Description>
+			<TermCount>32370</TermCount>
+			<IsDate>N</IsDate>
+			<IsNumerical>N</IsNumerical>
+			<SingleToken>Y</SingleToken>
+			<Hierarchy>N</Hierarchy>
+			<IsHidden>N</IsHidden>
+			<IsTruncatable>Y</IsTruncatable>
+			<IsRangable>N</IsRangable>
+		</Field>
+		<Field>
+			<Name>AUTH</Name>
+			<FullName>Author</FullName>
+			<Description>Author(s) of publication</Description>
+			<TermCount>3076581</TermCount>
+			<IsDate>N</IsDate>
+			<IsNumerical>N</IsNumerical>
+			<SingleToken>Y</SingleToken>
+			<Hierarchy>N</Hierarchy>
+			<IsHidden>N</IsHidden>
+			<IsTruncatable>Y</IsTruncatable>
+			<IsRangable>N</IsRangable>
+		</Field>
+		<Field>
+			<Name>JOUR</Name>
+			<FullName>Journal</FullName>
+			<Description>Journal abbreviation of publication</Description>
+			<TermCount>93628</TermCount>
+			<IsDate>N</IsDate>
+			<IsNumerical>N</IsNumerical>
+			<SingleToken>Y</SingleToken>
+			<Hierarchy>N</Hierarchy>
+			<IsHidden>N</IsHidden>
+			<IsTruncatable>Y</IsTruncatable>
+			<IsRangable>N</IsRangable>
+		</Field>
+		<Field>
+			<Name>VOL</Name>
+			<FullName>Volume</FullName>
+			<Description>Volume number of publication</Description>
+			<TermCount>4855</TermCount>
+			<IsDate>N</IsDate>
+			<IsNumerical>N</IsNumerical>
+			<SingleToken>Y</SingleToken>
+			<Hierarchy>N</Hierarchy>
+			<IsHidden>N</IsHidden>
+			<IsTruncatable>Y</IsTruncatable>
+			<IsRangable>N</IsRangable>
+		</Field>
+		<Field>
+			<Name>ISS</Name>
+			<FullName>Issue</FullName>
+			<Description>Issue number of publication</Description>
+			<TermCount>4866</TermCount>
+			<IsDate>N</IsDate>
+			<IsNumerical>N</IsNumerical>
+			<SingleToken>Y</SingleToken>
+			<Hierarchy>N</Hierarchy>
+			<IsHidden>N</IsHidden>
+			<IsTruncatable>Y</IsTruncatable>
+			<IsRangable>N</IsRangable>
+		</Field>
+		<Field>
+			<Name>PAGE</Name>
+			<FullName>Page Number</FullName>
+			<Description>Page number(s) of publication</Description>
+			<TermCount>223000</TermCount>
+			<IsDate>N</IsDate>
+			<IsNumerical>N</IsNumerical>
+			<SingleToken>Y</SingleToken>
+			<Hierarchy>N</Hierarchy>
+			<IsHidden>N</IsHidden>
+			<IsTruncatable>Y</IsTruncatable>
+			<IsRangable>N</IsRangable>
+		</Field>
+		<Field>
+			<Name>ORGN</Name>
+			<FullName>Organism</FullName>
+			<Description>Scientific and common names of organism, and all higher levels of taxonomy</Description>
+			<TermCount>4177009</TermCount>
+			<IsDate>N</IsDate>
+			<IsNumerical>N</IsNumerical>
+			<SingleToken>Y</SingleToken>
+			<Hierarchy>Y</Hierarchy>
+			<IsHidden>N</IsHidden>
+			<IsTruncatable>Y</IsTruncatable>
+			<IsRangable>N</IsRangable>
+		</Field>
+		<Field>
+			<Name>ACCN</Name>
+			<FullName>Accession</FullName>
+			<Description>Accession number of sequence</Description>
+			<TermCount>2098412586</TermCount>
+			<IsDate>N</IsDate>
+			<IsNumerical>N</IsNumerical>
+			<SingleToken>Y</SingleToken>
+			<Hierarchy>N</Hierarchy>
+			<IsHidden>N</IsHidden>
+			<IsTruncatable>Y</IsTruncatable>
+			<IsRangable>Y</IsRangable>
+		</Field>
+		<Field>
+			<Name>PACC</Name>
+			<FullName>Primary Accession</FullName>
+			<Description>Does not include retired secondary accessions</Description>
+			<TermCount>2096796864</TermCount>
+			<IsDate>N</IsDate>
+			<IsNumerical>N</IsNumerical>
+			<SingleToken>Y</SingleToken>
+			<Hierarchy>N</Hierarchy>
+			<IsHidden>N</IsHidden>
+			<IsTruncatable>Y</IsTruncatable>
+			<IsRangable>Y</IsRangable>
+		</Field>
+		<Field>
+			<Name>GENE</Name>
+			<FullName>Gene Name</FullName>
+			<Description>Name of gene associated with sequence</Description>
+			<TermCount>1509020889</TermCount>
+			<IsDate>N</IsDate>
+			<IsNumerical>N</IsNumerical>
+			<SingleToken>Y</SingleToken>
+			<Hierarchy>N</Hierarchy>
+			<IsHidden>N</IsHidden>
+			<IsTruncatable>Y</IsTruncatable>
+			<IsRangable>N</IsRangable>
+		</Field>
+		<Field>
+			<Name>PROT</Name>
+			<FullName>Protein Name</FullName>
+			<Description>Name of protein associated with sequence</Description>
+			<TermCount>8379256</TermCount>
+			<IsDate>N</IsDate>
+			<IsNumerical>N</IsNumerical>
+			<SingleToken>Y</SingleToken>
+			<Hierarchy>N</Hierarchy>
+			<IsHidden>N</IsHidden>
+			<IsTruncatable>Y</IsTruncatable>
+			<IsRangable>N</IsRangable>
+		</Field>
+		<Field>
+			<Name>ECNO</Name>
+			<FullName>EC/RN Number</FullName>
+			<Description>EC number for enzyme or CAS registry number</Description>
+			<TermCount>6601</TermCount>
+			<IsDate>N</IsDate>
+			<IsNumerical>N</IsNumerical>
+			<SingleToken>Y</SingleToken>
+			<Hierarchy>N</Hierarchy>
+			<IsHidden>N</IsHidden>
+			<IsTruncatable>Y</IsTruncatable>
+			<IsRangable>N</IsRangable>
+		</Field>
+		<Field>
+			<Name>PDAT</Name>
+			<FullName>Publication Date</FullName>
+			<Description>Date sequence added to GenBank</Description>
+			<TermCount>12357</TermCount>
+			<IsDate>Y</IsDate>
+			<IsNumerical>N</IsNumerical>
+			<SingleToken>Y</SingleToken>
+			<Hierarchy>N</Hierarchy>
+			<IsHidden>N</IsHidden>
+			<IsTruncatable>N</IsTruncatable>
+			<IsRangable>Y</IsRangable>
+		</Field>
+		<Field>
+			<Name>MDAT</Name>
+			<FullName>Modification Date</FullName>
+			<Description>Date of last update</Description>
+			<TermCount>7762</TermCount>
+			<IsDate>Y</IsDate>
+			<IsNumerical>N</IsNumerical>
+			<SingleToken>Y</SingleToken>
+			<Hierarchy>N</Hierarchy>
+			<IsHidden>N</IsHidden>
+			<IsTruncatable>N</IsTruncatable>
+			<IsRangable>Y</IsRangable>
+		</Field>
+		<Field>
+			<Name>SUBS</Name>
+			<FullName>Substance Name</FullName>
+			<Description>CAS chemical name or MEDLINE Substance Name</Description>
+			<TermCount>1261935</TermCount>
+			<IsDate>N</IsDate>
+			<IsNumerical>N</IsNumerical>
+			<SingleToken>Y</SingleToken>
+			<Hierarchy>N</Hierarchy>
+			<IsHidden>N</IsHidden>
+			<IsTruncatable>Y</IsTruncatable>
+			<IsRangable>N</IsRangable>
+		</Field>
+		<Field>
+			<Name>PROP</Name>
+			<FullName>Properties</FullName>
+			<Description>Classification by source qualifiers and molecule type</Description>
+			<TermCount>175620</TermCount>
+			<IsDate>N</IsDate>
+			<IsNumerical>N</IsNumerical>
+			<SingleToken>Y</SingleToken>
+			<Hierarchy>N</Hierarchy>
+			<IsHidden>N</IsHidden>
+			<IsTruncatable>Y</IsTruncatable>
+			<IsRangable>N</IsRangable>
+		</Field>
+		<Field>
+			<Name>SQID</Name>
+			<FullName>SeqID String</FullName>
+			<Description>String identifier for sequence</Description>
+			<TermCount>735281081</TermCount>
+			<IsDate>N</IsDate>
+			<IsNumerical>N</IsNumerical>
+			<SingleToken>Y</SingleToken>
+			<Hierarchy>N</Hierarchy>
+			<IsHidden>N</IsHidden>
+			<IsTruncatable>Y</IsTruncatable>
+			<IsRangable>N</IsRangable>
+		</Field>
+		<Field>
+			<Name>GPRJ</Name>
+			<FullName>BioProject</FullName>
+			<Description>BioProject</Description>
+			<TermCount>170165</TermCount>
+			<IsDate>N</IsDate>
+			<IsNumerical>N</IsNumerical>
+			<SingleToken>Y</SingleToken>
+			<Hierarchy>Y</Hierarchy>
+			<IsHidden>N</IsHidden>
+			<IsTruncatable>Y</IsTruncatable>
+			<IsRangable>N</IsRangable>
+		</Field>
+		<Field>
+			<Name>SLEN</Name>
+			<FullName>Sequence Length</FullName>
+			<Description>Length of sequence</Description>
+			<TermCount>17658</TermCount>
+			<IsDate>N</IsDate>
+			<IsNumerical>Y</IsNumerical>
+			<SingleToken>Y</SingleToken>
+			<Hierarchy>N</Hierarchy>
+			<IsHidden>N</IsHidden>
+			<IsTruncatable>N</IsTruncatable>
+			<IsRangable>Y</IsRangable>
+		</Field>
+		<Field>
+			<Name>MLWT</Name>
+			<FullName>Molecular Weight</FullName>
+			<Description>Molecular Weight</Description>
+			<TermCount>639768</TermCount>
+			<IsDate>N</IsDate>
+			<IsNumerical>Y</IsNumerical>
+			<SingleToken>Y</SingleToken>
+			<Hierarchy>N</Hierarchy>
+			<IsHidden>N</IsHidden>
+			<IsTruncatable>N</IsTruncatable>
+			<IsRangable>Y</IsRangable>
+		</Field>
+		<Field>
+			<Name>FKEY</Name>
+			<FullName>Feature key</FullName>
+			<Description>Feature annotated on sequence</Description>
+			<TermCount>32</TermCount>
+			<IsDate>N</IsDate>
+			<IsNumerical>N</IsNumerical>
+			<SingleToken>Y</SingleToken>
+			<Hierarchy>N</Hierarchy>
+			<IsHidden>N</IsHidden>
+			<IsTruncatable>Y</IsTruncatable>
+			<IsRangable>N</IsRangable>
+		</Field>
+		<Field>
+			<Name>PORG</Name>
+			<FullName>Primary Organism</FullName>
+			<Description>Scientific and common names of primary organism, and all higher levels of taxonomy</Description>
+			<TermCount>4167369</TermCount>
+			<IsDate>N</IsDate>
+			<IsNumerical>N</IsNumerical>
+			<SingleToken>Y</SingleToken>
+			<Hierarchy>Y</Hierarchy>
+			<IsHidden>N</IsHidden>
+			<IsTruncatable>Y</IsTruncatable>
+			<IsRangable>N</IsRangable>
+		</Field>
+		<Field>
+			<Name>ASSM</Name>
+			<FullName>Assembly</FullName>
+			<Description>Assembly</Description>
+			<TermCount>74</TermCount>
+			<IsDate>N</IsDate>
+			<IsNumerical>N</IsNumerical>
+			<SingleToken>Y</SingleToken>
+			<Hierarchy>N</Hierarchy>
+			<IsHidden>N</IsHidden>
+			<IsTruncatable>Y</IsTruncatable>
+			<IsRangable>N</IsRangable>
+		</Field>
+		<Field>
+			<Name>DIV</Name>
+			<FullName>Division</FullName>
+			<Description>Division</Description>
+			<TermCount>13</TermCount>
+			<IsDate>N</IsDate>
+			<IsNumerical>N</IsNumerical>
+			<SingleToken>Y</SingleToken>
+			<Hierarchy>N</Hierarchy>
+			<IsHidden>N</IsHidden>
+			<IsTruncatable>Y</IsTruncatable>
+			<IsRangable>N</IsRangable>
+		</Field>
+		<Field>
+			<Name>STRN</Name>
+			<FullName>Strain</FullName>
+			<Description>Strain</Description>
+			<TermCount>1060262</TermCount>
+			<IsDate>N</IsDate>
+			<IsNumerical>N</IsNumerical>
+			<SingleToken>Y</SingleToken>
+			<Hierarchy>N</Hierarchy>
+			<IsHidden>N</IsHidden>
+			<IsTruncatable>Y</IsTruncatable>
+			<IsRangable>N</IsRangable>
+		</Field>
+		<Field>
+			<Name>ISOL</Name>
+			<FullName>Isolate</FullName>
+			<Description>Isolate</Description>
+			<TermCount>5802532</TermCount>
+			<IsDate>N</IsDate>
+			<IsNumerical>N</IsNumerical>
+			<SingleToken>Y</SingleToken>
+			<Hierarchy>N</Hierarchy>
+			<IsHidden>N</IsHidden>
+			<IsTruncatable>Y</IsTruncatable>
+			<IsRangable>N</IsRangable>
+		</Field>
+		<Field>
+			<Name>CULT</Name>
+			<FullName>Cultivar</FullName>
+			<Description>Cultivar</Description>
+			<TermCount>26345</TermCount>
+			<IsDate>N</IsDate>
+			<IsNumerical>N</IsNumerical>
+			<SingleToken>Y</SingleToken>
+			<Hierarchy>N</Hierarchy>
+			<IsHidden>N</IsHidden>
+			<IsTruncatable>Y</IsTruncatable>
+			<IsRangable>N</IsRangable>
+		</Field>
+		<Field>
+			<Name>BRD</Name>
+			<FullName>Breed</FullName>
+			<Description>Breed</Description>
+			<TermCount>3524</TermCount>
+			<IsDate>N</IsDate>
+			<IsNumerical>N</IsNumerical>
+			<SingleToken>Y</SingleToken>
+			<Hierarchy>N</Hierarchy>
+			<IsHidden>N</IsHidden>
+			<IsTruncatable>Y</IsTruncatable>
+			<IsRangable>N</IsRangable>
+		</Field>
+	</FieldList>
+		<LinkList>
+			<Link>
+				<Name>nuccore_protein_wp</Name>
+				<Menu>Links to autonomous proteins</Menu>
+				<Description>Autonomous protein records</Description>
+				<DbTo>nuccore</DbTo>
+			</Link>
+			<Link>
+				<Name>protein_biocollections</Name>
+				<Menu>BioCollections</Menu>
+				<Description>BioCollections</Description>
+				<DbTo>biocollections</DbTo>
+			</Link>
+			<Link>
+				<Name>protein_bioproject</Name>
+				<Menu>BioProject Links</Menu>
+				<Description>Proteins related to BioProjects</Description>
+				<DbTo>bioproject</DbTo>
+			</Link>
+			<Link>
+				<Name>protein_biosystems</Name>
+				<Menu>BioSystem Links</Menu>
+				<Description>BioSystems</Description>
+				<DbTo>biosystems</DbTo>
+			</Link>
+			<Link>
+				<Name>protein_ccds</Name>
+				<Menu>ccds</Menu>
+				<Description>Link to Consensus CDS</Description>
+				<DbTo>ccds</DbTo>
+			</Link>
+			<Link>
+				<Name>protein_cdd</Name>
+				<Menu>Conserved Domain Links</Menu>
+				<Description>Link to conserved domains within a protein</Description>
+				<DbTo>cdd</DbTo>
+			</Link>
+			<Link>
+				<Name>protein_cdd_concise_2</Name>
+				<Menu>Concise Conserved Domain Links</Menu>
+				<Description>Link to a concise list of conserved domains in a protein</Description>
+				<DbTo>cdd</DbTo>
+			</Link>
+			<Link>
+				<Name>protein_cdd_summary</Name>
+				<Menu></Menu>
+				<Description>Display conserved domains within a protein</Description>
+				<DbTo>cdd</DbTo>
+			</Link>
+			<Link>
+				<Name>protein_gene</Name>
+				<Menu>Gene Links</Menu>
+				<Description>Link to related Genes</Description>
+				<DbTo>gene</DbTo>
+			</Link>
+			<Link>
+				<Name>protein_genome</Name>
+				<Menu>Genome Links</Menu>
+				<Description>Genome record encoding protein sequence</Description>
+				<DbTo>genome</DbTo>
+			</Link>
+			<Link>
+				<Name>protein_homologene</Name>
+				<Menu>HomoloGene Links</Menu>
+				<Description>Related HomoloGene</Description>
+				<DbTo>homologene</DbTo>
+			</Link>
+			<Link>
+				<Name>protein_nuccore</Name>
+				<Menu>Nucleotide Links</Menu>
+				<Description>Nucleotide sequence from coding region</Description>
+				<DbTo>nuccore</DbTo>
+			</Link>
+			<Link>
+				<Name>protein_nuccore_mat_peptide</Name>
+				<Menu>Mature Peptides</Menu>
+				<Description>Link between nucleotide record and mature peptides contained within nucleotide record</Description>
+				<DbTo>nuccore</DbTo>
+			</Link>
+			<Link>
+				<Name>protein_nuccore_mgc</Name>
+				<Menu>Nucleotide NIH cDNA clone links</Menu>
+				<Description>Nucleotide NIH cDNA clone</Description>
+				<DbTo>nuccore</DbTo>
+			</Link>
+			<Link>
+				<Name>protein_nuccore_mrna</Name>
+				<Menu>Encoding mRNA</Menu>
+				<Description>Link from protein to encoding mRNA</Description>
+				<DbTo>nuccore</DbTo>
+			</Link>
+			<Link>
+				<Name>protein_nuccore_small_genome</Name>
+				<Menu>Link to all nucleotide sequences from this genome</Menu>
+				<Description>All nucleotide sequences from this genome</Description>
+				<DbTo>nuccore</DbTo>
+			</Link>
+			<Link>
+				<Name>protein_nuccore_tsa</Name>
+				<Menu>TSA master records</Menu>
+				<Description>Links to TSA master records</Description>
+				<DbTo>nuccore</DbTo>
+			</Link>
+			<Link>
+				<Name>protein_nuccore_wgs</Name>
+				<Menu></Menu>
+				<Description>Links to WGS master sequences</Description>
+				<DbTo>nuccore</DbTo>
+			</Link>
+			<Link>
+				<Name>protein_nuccore_wp</Name>
+				<Menu>Link to genomic records</Menu>
+				<Description>Genomic records</Description>
+				<DbTo>nuccore</DbTo>
+			</Link>
+			<Link>
+				<Name>protein_nucgss</Name>
+				<Menu>GSS Links</Menu>
+				<Description>GSS sequence from coding region</Description>
+				<DbTo>nucgss</DbTo>
+			</Link>
+			<Link>
+				<Name>protein_nucleotide_mgc_url</Name>
+				<Menu></Menu>
+				<Description>Order cDNA clone</Description>
+				<DbTo>nucleotide</DbTo>
+			</Link>
+			<Link>
+				<Name>protein_omim</Name>
+				<Menu>OMIM Links</Menu>
+				<Description>OMIM records associated with protein sequence</Description>
+				<DbTo>omim</DbTo>
+			</Link>
+			<Link>
+				<Name>protein_pcassay_target</Name>
+				<Menu>BioAssay by Target (List)</Menu>
+				<Description>PubChem BioAssays done on the protein target</Description>
+				<DbTo>pcassay</DbTo>
+			</Link>
+			<Link>
+				<Name>protein_pcassay_target_pig</Name>
+				<Menu>BioAssay by Target (Identical Proteins, List)</Menu>
+				<Description>PubChem BioAssays done on the protein target PIG</Description>
+				<DbTo>pcassay</DbTo>
+			</Link>
+			<Link>
+				<Name>protein_pcassay_target_pig_summary</Name>
+				<Menu>pcassay</Menu>
+				<Description>BioAssay by Target (Identical Proteins, Summary)</Description>
+				<DbTo>pcassay</DbTo>
+			</Link>
+			<Link>
+				<Name>protein_pcassay_target_summary</Name>
+				<Menu>pcassay</Menu>
+				<Description>BioAssay by Target (Summary)</Description>
+				<DbTo>pcassay</DbTo>
+			</Link>
+			<Link>
+				<Name>protein_pccompound</Name>
+				<Menu>PubChem Compound Links</Menu>
+				<Description>Related PubChem Compound</Description>
+				<DbTo>pccompound</DbTo>
+			</Link>
+			<Link>
+				<Name>protein_pcsubstance</Name>
+				<Menu>PubChem Substance Links</Menu>
+				<Description>Related PubChem Substance</Description>
+				<DbTo>pcsubstance</DbTo>
+			</Link>
+			<Link>
+				<Name>protein_pmc</Name>
+				<Menu>PMC Links</Menu>
+				<Description>Free full text articles in PMC</Description>
+				<DbTo>pmc</DbTo>
+			</Link>
+			<Link>
+				<Name>protein_popset</Name>
+				<Menu>PopSet Links</Menu>
+				<Description>Population set containing protein sequence</Description>
+				<DbTo>popset</DbTo>
+			</Link>
+			<Link>
+				<Name>protein_protein_cdart_summary</Name>
+				<Menu></Menu>
+				<Description>Display proteins with similar conserved domain architecture</Description>
+				<DbTo>protein</DbTo>
+			</Link>
+			<Link>
+				<Name>protein_protein_ref2wp</Name>
+				<Menu>Links from references to autonomous proteins</Menu>
+				<Description>Autonomous protein records</Description>
+				<DbTo>protein</DbTo>
+			</Link>
+			<Link>
+				<Name>protein_protein_refseq2uniprot</Name>
+				<Menu>Protein (UniProtKB)</Menu>
+				<Description>Protein gi (refseq) to protein gi (UniProtKB)</Description>
+				<DbTo>protein</DbTo>
+			</Link>
+			<Link>
+				<Name>protein_protein_small_genome</Name>
+				<Menu>Link to all proteins from this genome</Menu>
+				<Description>All proteins from this genome</Description>
+				<DbTo>protein</DbTo>
+			</Link>
+			<Link>
+				<Name>protein_protein_uniprot2refseq</Name>
+				<Menu>Protein (RefSeq)</Menu>
+				<Description>Protein gi (UniProtKB) to protein gi (refseq)</Description>
+				<DbTo>protein</DbTo>
+			</Link>
+			<Link>
+				<Name>protein_protein_wp2ref</Name>
+				<Menu>Link to referencing proteins</Menu>
+				<Description>Referencing proteins</Description>
+				<DbTo>protein</DbTo>
+			</Link>
+			<Link>
+				<Name>protein_proteinclusters</Name>
+				<Menu>Protein Cluster Links</Menu>
+				<Description>Related Protein Clusters</Description>
+				<DbTo>proteinclusters</DbTo>
+			</Link>
+			<Link>
+				<Name>protein_protfam</Name>
+				<Menu>Protein Family Models</Menu>
+				<Description>Protein family models characterizing a particular protein</Description>
+				<DbTo>protfam</DbTo>
+			</Link>
+			<Link>
+				<Name>protein_pubmed</Name>
+				<Menu>PubMed Links</Menu>
+				<Description>PubMed articles cited by protein sequence record</Description>
+				<DbTo>pubmed</DbTo>
+			</Link>
+			<Link>
+				<Name>protein_pubmed_refseq</Name>
+				<Menu>PubMed (RefSeq) Links</Menu>
+				<Description>Link to RefSeq PubMed articles</Description>
+				<DbTo>pubmed</DbTo>
+			</Link>
+			<Link>
+				<Name>protein_pubmed_weighted</Name>
+				<Menu>PubMed (Weighted) Links</Menu>
+				<Description>Links to pubmed</Description>
+				<DbTo>pubmed</DbTo>
+			</Link>
+			<Link>
+				<Name>protein_snp</Name>
+				<Menu>SNP Links</Menu>
+				<Description>Related SNPs</Description>
+				<DbTo>snp</DbTo>
+			</Link>
+			<Link>
+				<Name>protein_snp_geneview</Name>
+				<Menu></Menu>
+				<Description>SNPs linked from GeneView</Description>
+				<DbTo>snp</DbTo>
+			</Link>
+			<Link>
+				<Name>protein_structure</Name>
+				<Menu>Identical Structures</Menu>
+				<Description>3D structures for identical protein sequences</Description>
+				<DbTo>structure</DbTo>
+			</Link>
+			<Link>
+				<Name>protein_structure_direct</Name>
+				<Menu>Structures</Menu>
+				<Description>Experimentally determined 3D Structures</Description>
+				<DbTo>structure</DbTo>
+			</Link>
+			<Link>
+				<Name>protein_structure_related</Name>
+				<Menu></Menu>
+				<Description>Related structures</Description>
+				<DbTo>structure</DbTo>
+			</Link>
+			<Link>
+				<Name>protein_structure_related_list</Name>
+				<Menu>Related Structures (List)</Menu>
+				<Description>List of related structures</Description>
+				<DbTo>structure</DbTo>
+			</Link>
+			<Link>
+				<Name>protein_taxonomy</Name>
+				<Menu>Taxonomy Links</Menu>
+				<Description>Taxonomy sequences associated with protein record</Description>
+				<DbTo>taxonomy</DbTo>
+			</Link>
+			<Link>
+				<Name>protein_taxonomy_wp2species</Name>
+				<Menu>Links from autonomous proteins to species level organisms</Menu>
+				<Description>Species level organisms</Description>
+				<DbTo>taxonomy</DbTo>
+			</Link>
+		</LinkList>
+	</DbInfo>
+
+</eInfoResult>

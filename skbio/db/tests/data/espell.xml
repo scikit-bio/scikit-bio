@@ -1,0 +1,9 @@
+<?xml version="1.0"?>
+<!DOCTYPE eSpellResult PUBLIC "-//NLM//DTD eSpellResult, 23 November 2004//EN" "http://www.ncbi.nlm.nih.gov/entrez/query/DTD/eSpell.dtd">
+<eSpellResult>
+	<Database>pubmed</Database>
+	<Query>asthmaa OR alergies</Query>
+	<CorrectedQuery>asthma or allergies</CorrectedQuery>
+	<SpelledQuery><Original></Original><Replaced>asthma</Replaced><Original> OR </Original><Replaced>allergies</Replaced></SpelledQuery>
+	<ERROR/>
+</eSpellResult>
