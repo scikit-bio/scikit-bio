@@ -241,7 +241,6 @@ setup(
         "pandas >= 1.5.0",
         "scipy >= 1.9.0",
         "h5py >= 3.6.0",
-        "hdmedians >= 0.14.1",
         "biom-format",
     ],
     classifiers=classifiers,
