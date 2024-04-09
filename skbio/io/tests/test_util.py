@@ -413,13 +413,13 @@ class WritableSourceTest(unittest.TestCase):
         self.text_contents = self.binary_contents.decode('utf8')
 
     def tearDown(self):
-        shutil.rmtree(self._dir)
         self.safe_close(self.binary_file)
         self.safe_close(self.gzip_file)
         self.safe_close(self.bz2_file)
         self.safe_close(self.big5_file)
         self.safe_close(self.gzip_encoded_file)
         self.safe_close(self.bz2_encoded_file)
+        shutil.rmtree(self._dir)
 
     def safe_close(self, f):
         if hasattr(f, 'close'):

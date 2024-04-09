@@ -58,6 +58,7 @@ class BinaryMatrixTests(unittest.TestCase):
                                            dtype=_vlen_dtype)
         ids[:] = self.ids
         self.noheader.create_dataset('matrix', data=self.mat)
+        self.noheader.close()
 
     def tearDown(self):
         shutil.rmtree(self.tempdir.name)
