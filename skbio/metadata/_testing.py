@@ -410,7 +410,7 @@ class PositionalMetadataMixinTests:
         df = pd.DataFrame(
             {"foo": np.arange(5), "bar": np.arange(5)[::-1]}, index=np.arange(5)
         )
-        self.assertEqual(df.index.dtype, np.int64)
+        self.assertEqual(df.index.dtype, np.int_)
 
         obj = self._positional_metadata_constructor_(5, positional_metadata=df)
 
@@ -479,12 +479,12 @@ class PositionalMetadataMixinTests:
 
     def test_eq_from_different_source(self):
         obj1 = self._positional_metadata_constructor_(
-            3, positional_metadata={"foo": np.array([1, 2, 3])}
+            3, positional_metadata={"foo": np.array([1, 2, 3], dtype=np.int_)}
         )
         obj2 = self._positional_metadata_constructor_(
             3,
             positional_metadata=pd.DataFrame(
-                {"foo": [1, 2, 3]}, index=["foo", "bar", "baz"]
+                {"foo": [1, 2, 3]}, index=["foo", "bar", "baz"], dtype=np.int_
             ),
         )
         self.assertReallyEqual(obj1, obj2)
@@ -828,7 +828,7 @@ class PositionalMetadataMixinTests:
         df = pd.DataFrame(
             {"foo": np.arange(5), "bar": np.arange(5)[::-1]}, index=np.arange(5)
         )
-        self.assertEqual(df.index.dtype, np.int64)
+        self.assertEqual(df.index.dtype, np.int_)
 
         obj.positional_metadata = df
 
