@@ -46,13 +46,14 @@ def _embed_to_generator(
     embed_fh = h5grp["embedding"]
     id_fh = h5grp["id"]
     idptr_fh = h5grp["idptr"]
-
+    j = 0
     n = embed_fh.shape[0]
     for i in range(n):
-        emb = embed_fh[i]
+        emb = embed_fh[i].squeeze()
         idptr = idptr_fh[i]
-        id_ = id_fh[idptr : idptr_fh[i + 1]]
-        string = str(id_.tobytes().decode("ascii"))
+        id_ = id_fh[j:idptr]
+        string = str(id_.tobytes().decode("ascii")).replace("\x00", "")
+        j = idptr
         yield embed_constructor(emb, string, **embed_kwargs)
 
 
@@ -89,62 +90,63 @@ def _embed_to_protein(
     )
 
 
-def _object_to_embed(obj, fh, mode="w"):
-    print(mode)
-    with h5py.File(fh, mode) as h5grp:
-        # Store the embedding itself. We are assuming that the
-        # embbedding is a 2D numpy array
-        emb = obj.embedding
-        emb = emb.reshape(1, emb.shape[0], emb.shape[1])
+def _objects_to_embed(objs, fh):
+    with h5py.File(fh, "w") as h5grp:
+        for obj in objs:
+            # Store the embedding itself. We are assuming that the
+            # embbedding is a 2D numpy array
+            emb = obj.embedding
+            emb = emb.reshape(1, emb.shape[0], emb.shape[1])
 
-        if "embedding" in h5grp:
-            embed_fh = h5grp["embedding"]
-            n = emb.shape[0]
-            embed_fh.resize(n, axis=0)
-            embed_fh[-1] = emb
-        else:
-            embed_fh = h5grp.create_dataset(
-                "embedding",
-                data=emb,
-                maxshape=(None, emb.shape[1], emb.shape[2]),
-                dtype=obj.embedding.dtype,
-            )
+            if "embedding" in h5grp:
+                embed_fh = h5grp["embedding"]
+                n = emb.shape[0]
+                embed_fh.resize(n, axis=0)
+                embed_fh[-1] = emb
+            else:
+                embed_fh = h5grp.create_dataset(
+                    "embedding",
+                    data=emb,
+                    maxshape=(None, emb.shape[1], emb.shape[2]),
+                    dtype=obj.embedding.dtype,
+                )
 
-        # store string representation of the object
-        # that will serve as an identifier for the entire object.
-        # for sequences, this could be the sequence itself
-        # for molecules, this could be the SMILES string.
-        # The entries in this string representation can be used
-        # to index the row vectors in the embedding.
-        # For sequences, this is the positional index of the sequence.
-        # For molecules, this is the position index of atoms in the SMILES string.
-        arr = np.frombuffer(str(obj).encode("ascii"), dtype=np.uint8)
-        if "id" in h5grp:
-            id_fh = h5grp["id"]
-            m = len(id_fh)
-            id_fh.resize((m + len(arr),))
-            id_fh[m : m + len(arr)] = arr
-        else:
-            id_fh = h5grp.create_dataset(
-                "id", data=arr, maxshape=(None,), dtype=np.int32
-            )
-        if "idptr" in h5grp:
-            idptr_fh = h5grp["idptr"]
-            n = emb.shape[0]
-            idptr_fh.resize((n + 1,))
-            idptr_fh[-1] = len(arr)
-        else:
-            idptr_fh = h5grp.create_dataset(
-                "idptr", data=[len(arr)], maxshape=(None,), dtype=np.int32
-            )
+            # store string representation of the object
+            # that will serve as an identifier for the entire object.
+            # for sequences, this could be the sequence itself
+            # for molecules, this could be the SMILES string.
+            # The entries in this string representation can be used
+            # to index the row vectors in the embedding.
+            # For sequences, this is the positional index of the sequence.
+            # For molecules, this is the position index of atoms in the SMILES string.
+            arr = np.frombuffer(str(obj).encode("ascii"), dtype=np.uint8)
+            print(arr)
+            if "id" in h5grp:
+                id_fh = h5grp["id"]
+                print(id_fh, len(id_fh))
+                m = len(id_fh)
+                id_fh.resize((m + len(arr),))
+                id_fh[m : m + len(arr)] = arr
+            else:
+                id_fh = h5grp.create_dataset(
+                    "id", data=arr, maxshape=(None,), dtype=np.int32
+                )
+            if "idptr" in h5grp:
+                idptr_fh = h5grp["idptr"]
+                n = emb.shape[0]
+                idptr_fh.resize((n + 1,))
+                idptr_fh[-1] = len(arr)
+            else:
+                idptr_fh = h5grp.create_dataset(
+                    "idptr", data=[len(arr)], maxshape=(None,), dtype=np.int32
+                )
 
 
 @embed.writer(None)
 def _generator_to_embed(objs, fh):
-    for obj in objs:
-        _object_to_embed(obj, fh, mode="a")
+    return _objects_to_embed(objs, fh)
 
 
 @embed.writer(ProteinEmbedding)
-def _protein_to_embed(obj, fh, mode="w"):
-    _object_to_embed(obj, fh, mode=mode)
+def _protein_to_embed(obj, fh):
+    _objects_to_embed([obj], fh)
