@@ -11,9 +11,10 @@ import io
 import string
 from unittest import TestCase, main
 from functools import partial
+from pathlib import Path
 
 import numpy as np
-
+import tempfile
 from skbio import Sequence, DNA, RNA, Protein, TabularMSA
 from skbio.embedding._protein import ProteinEmbedding
 from skbio.io import FASTAFormatError, QUALFormatError
@@ -45,18 +46,18 @@ class EmbeddingTests(TestCase):
                 )
             ]
         )
+        self.tempdir = tempfile.TemporaryDirectory()
+        tempdir = Path(self.tempdir.name)
+        self.writable_emb_path = str(tempdir / Path('test.emb'))
 
     def test_writer_single(self):
         for emb, seq in self.sequences:
-            fh = io.BytesIO()
+            fh = self.writable_emb_path
             obj = ProteinEmbedding(emb, seq)
-            print(dir(obj))
-            print(repr(obj))
             _object_to_embed(obj, fh)
-            fh.seek(0)
-            emb2, id_ = _embed_to_object(fh)
-            np.testing.assert_array_equal(emb, emb2)
-            self.assertEqual(str(seq), id_)
+            emb2 = _embed_to_object(fh)
+            np.testing.assert_array_equal(emb, emb2.embedding)
+            self.assertEqual(str(seq), str(emb2))
 
 
 if __name__ == '__main__':

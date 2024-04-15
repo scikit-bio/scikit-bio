@@ -36,5 +36,4 @@ class SequenceEmbedding(Embedding):
     """Store embeddings for a biological sequence."""
 
     def __init__(self, embedding, sequence, **kwargs):
-        ids = str(sequence)
-        super(SequenceEmbedding, self).__init__(embedding, ids, **kwargs)
+        super(SequenceEmbedding, self).__init__(embedding, sequence, **kwargs)

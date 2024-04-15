@@ -42,14 +42,16 @@ class ProteinEmbedding(SequenceEmbedding):
         if clip_tail:
             embedding = embedding[:-1]
 
-        assert isinstance(sequence, Protein) or isinstance(sequence, str)
-        if isinstance(sequence, str):
-            sequence = Protein(sequence)
+        if isinstance(sequence, Protein):
+            sequence = str(sequence)
 
         # make sure that the embedding has the same length as the sequence
         sequence_len = len(sequence)
         if embedding.shape[0] != sequence_len:
-            raise ValueError("The embedding must have the same length as the sequence.")
+            raise ValueError(
+                f"The embedding ({embedding.shape[0]}) must have the "
+                f"same length as the sequence ({len(sequence)})."
+            )
 
         super(ProteinEmbedding, self).__init__(
             embedding=embedding, sequence=sequence, **kwargs

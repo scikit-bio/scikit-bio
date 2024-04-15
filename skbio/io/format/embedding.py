@@ -64,14 +64,13 @@ def _embed_to_object(
     embed_kwargs: dict = {},
 ):
     h5grp = h5py.File(fh, "r")
-    embed_fh = fh["embedding"]
-    id_fh = fh["id"]
+    embed_fh = h5grp["embedding"]
+    id_fh = h5grp["id"]
 
     # assumes that there is only a single object in the file
-    emb = embed_fh[()]
+    emb = embed_fh[()].squeeze()
     id_ = id_fh[()]
-
-    string = str(id_.tobytes().decode("ascii"))
+    string = str(id_.tobytes().decode("ascii")).replace("\x00", "")
     return embed_constructor(emb, string, **embed_kwargs)
 
 
@@ -103,12 +102,11 @@ def _object_to_embed(obj, fh, mode="w"):
         n = emb.shape[0]
         embed_fh.resize(n, axis=0)
         embed_fh[-1] = emb
-
     else:
         embed_fh = h5grp.create_dataset(
             "embedding",
             data=emb,
-            maxshape=(None, obj.embedding.shape[0], obj.embedding.shape[1]),
+            maxshape=(None, emb.shape[1], emb.shape[2]),
             dtype=obj.embedding.dtype,
         )
 
