@@ -61,7 +61,7 @@ class BaseTests(TestCase):
         self.assertEqual(doubles(np.array([0, 0])), 0)
 
     def test_enspie(self):
-        # Totally even community should have ENS_pie = number of OTUs.
+        # Totally even community should have ENS_pie = number of taxa.
         self.assertAlmostEqual(enspie(np.array([1, 1, 1, 1, 1, 1])), 6)
         self.assertAlmostEqual(enspie(np.array([13, 13, 13, 13])), 4)
 
@@ -82,7 +82,7 @@ class BaseTests(TestCase):
         def _diversity(indices, f):
             """Calculate diversity index for each window of size 1.
 
-            indices: vector of indices of OTUs
+            indices: vector of indices of taxa
             f: f(counts) -> diversity measure
 
             """
@@ -118,13 +118,13 @@ class BaseTests(TestCase):
         obs = fisher_alpha(arr)
         self.assertAlmostEqual(obs, exp, places=6)
 
-        # Should depend only on S and N (number of OTUs, number of
+        # Should depend only on S and N (number of taxa, number of
         # individuals / seqs), so we should obtain the same output as above.
         obs = fisher_alpha([1, 6, 1, 0, 1, 0, 5])
         self.assertAlmostEqual(obs, exp, places=6)
 
         # Should match another by hand:
-        # 2 OTUs, 62 seqs, alpha is 0.39509
+        # 2 taxa, 62 seqs, alpha is 0.39509
         obs = fisher_alpha([61, 0, 0, 1])
         self.assertAlmostEqual(obs, 0.3950909, places=6)
 
@@ -215,9 +215,9 @@ class BaseTests(TestCase):
 
         obs_few = michaelis_menten_fit(np.arange(4) * 2, num_repeats=10)
         obs_many = michaelis_menten_fit(np.arange(4) * 100, num_repeats=10)
-        # [0,100,200,300] looks like only 3 OTUs.
+        # [0,100,200,300] looks like only 3 taxa.
         self.assertAlmostEqual(obs_many, 3.0, places=1)
-        # [0,2,4,6] looks like 3 OTUs with maybe more to be found.
+        # [0,2,4,6] looks like 3 taxa with maybe more to be found.
         self.assertTrue(obs_few > obs_many)
 
     def test_observed_features(self):

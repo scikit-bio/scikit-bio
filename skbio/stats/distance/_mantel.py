@@ -17,12 +17,10 @@ from scipy.stats import ConstantInputWarning
 from scipy.stats import NearConstantInputWarning
 
 from skbio.stats.distance import DistanceMatrix
-from skbio.util._decorator import experimental
 
 from ._cutils import mantel_perm_pearsonr_cy
 
 
-@experimental(as_of="0.4.0")
 def mantel(
     x,
     y,
@@ -498,7 +496,6 @@ def _mantel_stats_spearman(x, y, permutations):
     return _mantel_stats_pearson_flat(x_rank_matrix, y_rank, permutations)
 
 
-@experimental(as_of="0.4.0")
 def pwmantel(
     dms,
     labels=None,

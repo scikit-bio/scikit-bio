@@ -10,12 +10,10 @@ import numpy as np
 import pandas as pd
 from scipy.linalg import svd, lstsq
 
-from skbio.util._decorator import experimental
 from ._ordination_results import OrdinationResults
 from ._utils import corr, svd_rank, scale
 
 
-@experimental(as_of="0.4.0")
 def rda(y, x, scale_Y=False, scaling=1):
     r"""Compute redundancy analysis, a type of canonical analysis.
 

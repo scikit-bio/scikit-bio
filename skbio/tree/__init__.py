@@ -1,5 +1,5 @@
-r"""Tree representations (:mod:`skbio.tree`)
-========================================
+r"""Trees and Phylogenetics (:mod:`skbio.tree`)
+===========================================
 
 .. currentmodule:: skbio.tree
 
@@ -9,15 +9,17 @@ trees, for traversing in multiple ways, comparisons, fetching subtrees, and
 more. This module supports trees that are multifurcating and nodes that have
 single descendants.
 
-Classes
--------
+
+Tree structure and operations
+-----------------------------
 
 .. autosummary::
    :toctree: generated/
 
     TreeNode
 
-Phylogenetic Reconstruction
+
+Phylogenetic reconstruction
 ---------------------------
 
 .. autosummary::
@@ -25,19 +27,20 @@ Phylogenetic Reconstruction
 
     nj
 
-Utility Functions
------------------
+
+Tree utilities
+--------------
 
 .. autosummary::
    :toctree: generated/
 
     majority_rule
 
+
 Exceptions
-----------
+^^^^^^^^^^
 
 .. autosummary::
-   :toctree: generated/
 
    TreeError
    NoLengthError
@@ -45,8 +48,10 @@ Exceptions
    MissingNodeError
    NoParentError
 
-Examples
+
+Tutorial
 --------
+
 >>> from skbio import TreeNode
 >>> from io import StringIO
 

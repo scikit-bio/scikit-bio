@@ -1,28 +1,4 @@
-.. image:: https://img.shields.io/badge/License-BSD%203--Clause-blue.svg
-   :alt: License
-   :target: https://opensource.org/licenses/BSD-3-Clause
-.. image:: https://github.com/scikit-bio/scikit-bio/actions/workflows/ci.yml/badge.svg
-   :alt: Build Status
-   :target: https://github.com/scikit-bio/scikit-bio/actions/workflows/ci.yml
-.. image:: https://codecov.io/gh/scikit-bio/scikit-bio/graph/badge.svg?token=1qbzC6d2F5 
-   :alt: Coverage Status
-   :target: https://codecov.io/gh/scikit-bio/scikit-bio
-.. image:: https://img.shields.io/badge/benchmarked%20by-asv-green.svg
-   :alt: ASV Benchmarks
-   :target: https://s3-us-west-2.amazonaws.com/scikit-bio.org/benchmarks/main/index.html
-.. image:: https://img.shields.io/github/v/release/scikit-bio/scikit-bio.svg
-   :alt: Release
-   :target: https://github.com/scikit-bio/scikit-bio/releases
-.. image:: https://img.shields.io/pypi/dm/scikit-bio.svg?label=PyPI%20downloads
-   :alt: PyPI Downloads
-   :target: https://pypi.org/project/scikit-bio/
-.. image:: https://img.shields.io/conda/dn/conda-forge/scikit-bio.svg?label=Conda%20downloads
-   :alt: Conda Downloads
-   :target: https://anaconda.org/conda-forge/scikit-bio
-.. image:: https://badges.gitter.im/Join%20Chat.svg
-   :alt: Gitter
-   :target: https://gitter.im/biocore/scikit-bio
-
+|license| |build| |coverage| |bench| |release| |pypi| |conda| |gitter|
 
 .. image:: logos/logo.svg
    :width: 600 px
@@ -68,7 +44,7 @@ Visit the new scikit-bio website: https://scikit.bio to learn more about this pr
 Releases
 --------
 
-Latest release: `0.5.9 <https://github.com/scikit-bio/scikit-bio/releases/tag/0.5.9>`_ (`documentation <https://scikit.bio/docs/0.5.9/index.html>`_, `changelog <https://github.com/scikit-bio/scikit-bio/blob/main/CHANGELOG.md#version-059>`_). Compatible with Python 3.8 and above.
+Latest release: `0.6.0 <https://github.com/scikit-bio/scikit-bio/releases/tag/0.6.0>`_ (`documentation <https://scikit.bio/docs/0.6.0/index.html>`_, `changelog <https://github.com/scikit-bio/scikit-bio/blob/main/CHANGELOG.md#version-060>`_). Compatible with Python 3.8 and above.
 
 
 Installation
@@ -147,3 +123,29 @@ Pre-history
 scikit-bio began from code derived from `PyCogent <https://github.com/pycogent/pycogent>`_ and `QIIME <https://github.com/biocore/qiime>`_, and the contributors and/or copyright holders have agreed to make the code they wrote for PyCogent and/or QIIME available under the BSD license. The contributors to PyCogent and/or QIIME modules that have been ported to scikit-bio are listed below:
 
 - Rob Knight (@rob-knight), Gavin Huttley (@gavinhuttley), Daniel McDonald (@wasade), Micah Hamady, Antonio Gonzalez (@antgonza), Sandra Smit, Greg Caporaso (@gregcaporaso), Jai Ram Rideout (@jairideout), Cathy Lozupone (@clozupone), Mike Robeson (@mikerobeson), Marcin Cieslik, Peter Maxwell, Jeremy Widmann, Zongzhi Liu, Michael Dwan, Logan Knecht (@loganknecht), Andrew Cochran, Jose Carlos Clemente (@cleme), Damien Coy, Levi McCracken, Andrew Butterfield, Will Van Treuren (@wdwvt1), Justin Kuczynski (@justin212k), Jose Antonio Navas Molina (@josenavas), Matthew Wakefield (@genomematt) and Jens Reeder (@jensreeder).
+
+
+.. |license| image:: https://img.shields.io/badge/License-BSD%203--Clause-blue.svg
+   :alt: License
+   :target: https://opensource.org/licenses/BSD-3-Clause
+.. |build| image:: https://github.com/scikit-bio/scikit-bio/actions/workflows/ci.yml/badge.svg
+   :alt: Build Status
+   :target: https://github.com/scikit-bio/scikit-bio/actions/workflows/ci.yml
+.. |coverage| image:: https://codecov.io/gh/scikit-bio/scikit-bio/graph/badge.svg?token=1qbzC6d2F5 
+   :alt: Coverage Status
+   :target: https://codecov.io/gh/scikit-bio/scikit-bio
+.. |bench| image:: https://img.shields.io/badge/benchmarked%20by-asv-green.svg
+   :alt: ASV Benchmarks
+   :target: https://s3-us-west-2.amazonaws.com/scikit-bio.org/benchmarks/main/index.html
+.. |release| image:: https://img.shields.io/github/v/release/scikit-bio/scikit-bio.svg
+   :alt: Release
+   :target: https://github.com/scikit-bio/scikit-bio/releases
+.. |pypi| image:: https://img.shields.io/pypi/dm/scikit-bio.svg?label=PyPI%20downloads
+   :alt: PyPI Downloads
+   :target: https://pypi.org/project/scikit-bio/
+.. |conda| image:: https://img.shields.io/conda/dn/conda-forge/scikit-bio.svg?label=Conda%20downloads
+   :alt: Conda Downloads
+   :target: https://anaconda.org/conda-forge/scikit-bio
+.. |gitter| image:: https://badges.gitter.im/Join%20Chat.svg
+   :alt: Gitter
+   :target: https://gitter.im/biocore/scikit-bio

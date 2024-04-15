@@ -96,6 +96,16 @@ extlinks = {
 }
 
 
+# -- numpydoc configuration --------------------------------------------------
+
+# References:
+# https://numpydoc.readthedocs.io/en/latest/install.html#configuration
+
+numpydoc_class_members_toctree = False
+numpydoc_show_class_members = False
+numpydoc_show_inherited_class_members = False
+
+
 # -- PyData Theme configuration ----------------------------------------------
 
 # References:

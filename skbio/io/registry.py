@@ -24,7 +24,6 @@ Exceptions
 ----------
 
 .. autosummary::
-   :toctree:
 
    DuplicateRegistrationError
    InvalidRegistrationError
@@ -181,7 +180,7 @@ from . import (
 )
 from .util import _resolve_file, open_file, open_files, _d as _open_kwargs
 from skbio.util._misc import make_sentinel, find_sentinels
-from skbio.util._decorator import stable, classonlymethod
+from skbio.util._decorator import classonlymethod
 
 FileSentinel = make_sentinel("FileSentinel")
 
@@ -189,7 +188,6 @@ FileSentinel = make_sentinel("FileSentinel")
 class IORegistry:
     """Create a registry of formats and implementations which map to classes."""
 
-    @stable(as_of="0.4.0")
     def __init__(self):
         """Initialize registry mapping formats and implementations to classes.
 
@@ -207,7 +205,6 @@ class IORegistry:
         self._text_formats = {}
         self._lookups = (self._binary_formats, self._text_formats)
 
-    @stable(as_of="0.4.0")
     def create_format(self, *args, **kwargs):
         """Create new file formats.
 
@@ -225,7 +222,6 @@ class IORegistry:
         self.add_format(format)
         return format
 
-    @stable(as_of="0.4.0")
     def add_format(self, format_object):
         """Add a format to the registry.
 
@@ -248,7 +244,6 @@ class IORegistry:
         else:
             self._text_formats[name] = format_object
 
-    @stable(as_of="0.4.0")
     def get_sniffer(self, format_name):
         """Locate the sniffer for a format.
 
@@ -268,7 +263,6 @@ class IORegistry:
                 return lookup[format_name].sniffer_function
         return None
 
-    @stable(as_of="0.4.0")
     def get_reader(self, format_name, cls):
         """Locate the reader for a format and class.
 
@@ -289,7 +283,6 @@ class IORegistry:
         """
         return self._get_rw(format_name, cls, "readers")
 
-    @stable(as_of="0.4.0")
     def get_writer(self, format_name, cls):
         """Locate the writer for a format and class.
 
@@ -318,7 +311,6 @@ class IORegistry:
                     return format_lookup[cls]
         return None
 
-    @stable(as_of="0.4.0")
     def list_read_formats(self, cls):
         """Return a list of available read formats for a given `cls` type.
 
@@ -337,7 +329,6 @@ class IORegistry:
         """
         return list(self._iter_rw_formats(cls, "readers"))
 
-    @stable(as_of="0.4.0")
     def list_write_formats(self, cls):
         """Return a list of available write formats for a given `cls` type.
 
@@ -362,16 +353,15 @@ class IORegistry:
                 if cls in getattr(format, lookup_name):
                     yield format.name
 
-    @stable(as_of="0.4.0")
     def sniff(self, file, **kwargs):
-        """Detect the format of a given `file` and suggest kwargs for reading.
+        r"""Detect the format of a given file and suggest kwargs for reading.
 
         Parameters
         ----------
         file : openable (filepath, URL, filehandle, etc.)
-            The file to sniff. Something that is understood by `skbio.io.open`.
+            The file to sniff. Something that is understood by :func:`skbio.io.open`.
         kwargs : dict, optional
-            Keyword arguments will be passed to `skbio.io.open`. `newline`
+            Keyword arguments will be passed to :func:`skbio.io.open`. ``newline``
             cannot be provided.
 
         Returns
@@ -387,7 +377,7 @@ class IORegistry:
             sniffer or when the format is ambiguous and has been 'claimed' by
             more than one sniffer.
         TypeError
-            If `newline` is provided in `kwargs`.
+            If ``newline`` is provided in ``kwargs``.
 
         """
         if "newline" in kwargs:
@@ -442,47 +432,45 @@ class IORegistry:
                     matches.append((format.name, skwargs))
         return matches
 
-    @stable(as_of="0.4.0")
     def read(self, file, format=None, into=None, verify=True, **kwargs):
-        """Read `file` as `format` into an object.
+        r"""Read a file as certain format into an object.
 
         Parameters
         ----------
         file : openable (filepath, URL, filehandle, etc.)
-            The file to read. Something that is understood by `skbio.io.open`.
+            The file to read. Something that is understood by :func:`skbio.io.open`.
         format : str, optional
-            The format of the file if known. If None, the format will be
-            inferred from the file.
+            The format of the file if known. If None, the format will be inferred from
+            the file.
         into : type or None, optional
-            The object which will be returned. If None, a generator will be
-            returned.
+            The object which will be returned. If None, a generator will be returned.
         verify : bool, optional
-            When True, will double check the `format` if provided.
+            When True, will double check the ``format`` if provided.
         kwargs : dict, optional
             Keyword arguments will be passed to their respective handlers
-            (`skbio.io.open` and the reader for `format`). `newline` cannot be
-            provided.
+            (:func:`skbio.io.open` and the reader for ``format``). ``newline`` cannot
+            be provided.
 
         Returns
         -------
         object or generator
-            An instance of `into` if `into` is not None else generator
+            An instance of ``into`` if ``into`` is not None else generator
 
         Raises
         ------
         ValueError
-            Raised when `format` and `into` are both None.
+            Raised when ``format`` and ``into`` are both None.
         TypeError
-            If `newline` is provided in `kwargs`.
+            If ``newline`` is provided in ``kwargs``.
         UnrecognizedFormatError
-            Raised when a reader could not be found for a given `format` or the
+            Raised when a reader could not be found for a given ``format`` or the
             format could not be guessed.
         FormatIdentificationWarning
-            Raised when `verify` is True and the sniffer of a `format` did
-            not agree that `file` is a member of `format`
+            Raised when ``verify`` is True and the sniffer of a ``format`` did
+            not agree that ``file`` is a member of ``format``
         ArgumentOverrideWarning
-            Raised when `verify` is True and a user-supplied argument is
-            overriding the suggestion provided by the sniffer of `format`.
+            Raised when ``verify`` is True and a user-supplied argument is
+            overriding the suggestion provided by the sniffer of ``format``.
 
         """
         if "newline" in kwargs:
@@ -587,33 +575,31 @@ class IORegistry:
                 return list(lookup[fmt].readers)
         return []
 
-    @stable(as_of="0.4.0")
     def write(self, obj, format, into, **kwargs):
-        """Write `obj` as `format` into a file.
+        r"""Write an object as certain format into a file.
 
         Parameters
         ----------
         obj : object
-            The object to write as `format`
+            The object to write as ``format``.
         format : str
-            The format to write `obj` as
+            The format to write ``obj`` as.
         into : openable (filepath, URL, filehandle, etc.)
-            What to write `obj` to. Something that is understood by
-            `skbio.io.open`.
+            What to write ``obj`` to. Something that is understood by
+            :func:`skbio.io.open`.
         kwargs : dict, optional
             Keyword arguments will be passed to their respective handlers
-            (`skbio.io.open` and the writer for `format`)
+            (:func:`skbio.io.open` and the writer for ``format``).
 
         Returns
         -------
         openable (filepath, URL, filehandle, etc.)
-            Will pass back the user argument for `into` as a convenience.
+            Will pass back the user argument for ``into`` as a convenience.
 
         Raises
         ------
         UnrecognizedFormatError
-            Raised when a writer for writing `obj` as `format` could not be
-            found.
+            Raised when a writer for writing ``obj`` as ``format`` could not be found.
 
         """
         # The simplest functionality here.
@@ -630,16 +616,15 @@ class IORegistry:
         writer(obj, into, **kwargs)
         return into
 
-    @stable(as_of="0.4.0")
     def monkey_patch(self):
-        """Monkey-patch `read` and `write` methods onto registered classes.
+        r"""Monkey-patch ``read`` and ``write`` methods onto registered classes.
 
-        Will modify classes which have been registered to a reader or writer
-        to have `read` and `write` methods which will contain documentation
-        specifying useable formats for that class.
+        Will modify classes which have been registered to a reader or writer to have
+        ``read`` and ``write`` methods which will contain documentation specifying
+        useable formats for that class.
 
-        The actual functionality will be a pass-through to `skbio.io.read`
-        and `skbio.io.write` respectively.
+        The actual functionality will be a pass-through to :func:`skbio.io.read` and
+        :func:`skbio.io.write` respectively.
         """
         reads = set()
         writes = set()
@@ -800,43 +785,36 @@ class Format:
     """
 
     @property
-    @stable(as_of="0.4.0")
     def name(self):
         """The name of this format."""
         return self._name
 
     @property
-    @stable(as_of="0.4.0")
     def is_binary_format(self):
         """Return True if this is a binary format."""
         return self._encoding == "binary"
 
     @property
-    @stable(as_of="0.4.0")
     def sniffer_function(self):
         """The sniffer function associated with this format."""
         return self._sniffer_function
 
     @property
-    @stable(as_of="0.4.0")
     def readers(self):
         """Dictionary that maps classes to their readers for this format."""
         return self._readers
 
     @property
-    @stable(as_of="0.4.0")
     def writers(self):
         """Dictionary that maps classes to their writers for this format."""
         return self._writers
 
     @property
-    @stable(as_of="0.4.0")
     def monkey_patched_readers(self):
         """Set of classes bound to readers to monkey patch."""
         return self._monkey_patch["read"]
 
     @property
-    @stable(as_of="0.4.0")
     def monkey_patched_writers(self):
         """Set of classes bound to writers to monkey patch."""
         return self._monkey_patch["write"]
@@ -852,7 +830,6 @@ class Format:
         self._writers = {}
         self._monkey_patch = {"read": set(), "write": set()}
 
-    @stable(as_of="0.4.0")
     def sniffer(self, override=False):
         r"""Decorate a function to act as the sniffer for this format.
 
@@ -958,7 +935,6 @@ class Format:
 
         return decorator
 
-    @stable(as_of="0.4.0")
     def reader(self, cls, monkey_patch=True, override=False):
         r"""Decorate a function to act as the reader for a class in this format.
 
@@ -1047,7 +1023,6 @@ class Format:
 
         return decorator
 
-    @stable(as_of="0.4.0")
     def writer(self, cls, monkey_patch=True, override=False):
         r"""Decorate a function to act as the writer for a class in this format.
 

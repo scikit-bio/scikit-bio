@@ -44,7 +44,7 @@ class UnifracTests(TestCase):
                      'root;'))
         self.oids2 = ['OTU%d' % i for i in range(1, 5)]
 
-    def test_unweighted_otus_out_of_order(self):
+    def test_unweighted_taxa_out_of_order(self):
         # UniFrac API does not assert the observations are in tip order of the
         # input tree
         shuffled_ids = self.oids1[:]
@@ -61,7 +61,7 @@ class UnifracTests(TestCase):
                     shuffled_b1[i], shuffled_b1[j], shuffled_ids, self.t1)
                 self.assertAlmostEqual(actual, expected)
 
-    def test_weighted_otus_out_of_order(self):
+    def test_weighted_taxa_out_of_order(self):
         # UniFrac API does not assert the observations are in tip order of the
         # input tree
         shuffled_ids = self.oids1[:]
@@ -196,34 +196,34 @@ class UnifracTests(TestCase):
                      '0.75,OTU2:0.75):1.25):0.0)root;'))
         u_counts = [1, 2, 3]
         v_counts = [1, 1, 1]
-        otu_ids = ['OTU1', 'OTU2', 'OTU3']
+        taxa = ['OTU1', 'OTU2', 'OTU3']
         self.assertRaises(DuplicateNodeError, unweighted_unifrac,
-                          u_counts, v_counts, otu_ids, t)
+                          u_counts, v_counts, taxa, t)
         self.assertRaises(DuplicateNodeError, weighted_unifrac, u_counts,
-                          v_counts, otu_ids, t)
+                          v_counts, taxa, t)
 
         # unrooted tree as input
         t = TreeNode.read(StringIO('((OTU1:0.1, OTU2:0.2):0.3, OTU3:0.5,'
                                    'OTU4:0.7);'))
         u_counts = [1, 2, 3]
         v_counts = [1, 1, 1]
-        otu_ids = ['OTU1', 'OTU2', 'OTU3']
+        taxa = ['OTU1', 'OTU2', 'OTU3']
         self.assertRaises(ValueError, unweighted_unifrac, u_counts,
-                          v_counts, otu_ids, t)
+                          v_counts, taxa, t)
         self.assertRaises(ValueError, weighted_unifrac, u_counts,
-                          v_counts, otu_ids, t)
+                          v_counts, taxa, t)
 
-        # otu_ids has duplicated ids
+        # taxa has duplicated ids
         t = TreeNode.read(
             StringIO('(((((OTU1:0.5,OTU2:0.5):0.5,OTU3:1.0):1.0):0.0,(OTU4:'
                      '0.75,OTU5:0.75):1.25):0.0)root;'))
         u_counts = [1, 2, 3]
         v_counts = [1, 1, 1]
-        otu_ids = ['OTU1', 'OTU2', 'OTU2']
+        taxa = ['OTU1', 'OTU2', 'OTU2']
         self.assertRaises(ValueError, unweighted_unifrac, u_counts,
-                          v_counts, otu_ids, t)
+                          v_counts, taxa, t)
         self.assertRaises(ValueError, weighted_unifrac, u_counts,
-                          v_counts, otu_ids, t)
+                          v_counts, taxa, t)
 
         # len of vectors not equal
         t = TreeNode.read(
@@ -231,25 +231,25 @@ class UnifracTests(TestCase):
                      '0.75,OTU5:0.75):1.25):0.0)root;'))
         u_counts = [1, 2]
         v_counts = [1, 1, 1]
-        otu_ids = ['OTU1', 'OTU2', 'OTU3']
+        taxa = ['OTU1', 'OTU2', 'OTU3']
         self.assertRaises(ValueError, unweighted_unifrac, u_counts,
-                          v_counts, otu_ids, t)
+                          v_counts, taxa, t)
         self.assertRaises(ValueError, weighted_unifrac, u_counts,
-                          v_counts, otu_ids, t)
+                          v_counts, taxa, t)
         u_counts = [1, 2, 3]
         v_counts = [1, 1]
-        otu_ids = ['OTU1', 'OTU2', 'OTU3']
+        taxa = ['OTU1', 'OTU2', 'OTU3']
         self.assertRaises(ValueError, unweighted_unifrac, u_counts,
-                          v_counts, otu_ids, t)
+                          v_counts, taxa, t)
         self.assertRaises(ValueError, weighted_unifrac, u_counts,
-                          v_counts, otu_ids, t)
+                          v_counts, taxa, t)
         u_counts = [1, 2, 3]
         v_counts = [1, 1, 1]
-        otu_ids = ['OTU1', 'OTU2']
+        taxa = ['OTU1', 'OTU2']
         self.assertRaises(ValueError, unweighted_unifrac, u_counts,
-                          v_counts, otu_ids, t)
+                          v_counts, taxa, t)
         self.assertRaises(ValueError, weighted_unifrac, u_counts,
-                          v_counts, otu_ids, t)
+                          v_counts, taxa, t)
 
         # negative counts
         t = TreeNode.read(
@@ -257,29 +257,29 @@ class UnifracTests(TestCase):
                      '0.75,OTU5:0.75):1.25):0.0)root;'))
         u_counts = [1, 2, -3]
         v_counts = [1, 1, 1]
-        otu_ids = ['OTU1', 'OTU2', 'OTU3']
+        taxa = ['OTU1', 'OTU2', 'OTU3']
         self.assertRaises(ValueError, unweighted_unifrac, u_counts,
-                          v_counts, otu_ids, t)
+                          v_counts, taxa, t)
         self.assertRaises(ValueError, weighted_unifrac, u_counts,
-                          v_counts, otu_ids, t)
+                          v_counts, taxa, t)
         u_counts = [1, 2, 3]
         v_counts = [1, 1, -1]
-        otu_ids = ['OTU1', 'OTU2', 'OTU3']
+        taxa = ['OTU1', 'OTU2', 'OTU3']
         self.assertRaises(ValueError, unweighted_unifrac, u_counts,
-                          v_counts, otu_ids, t)
+                          v_counts, taxa, t)
         self.assertRaises(ValueError, weighted_unifrac, u_counts,
-                          v_counts, otu_ids, t)
+                          v_counts, taxa, t)
 
         # tree with no branch lengths
         t = TreeNode.read(
             StringIO('((((OTU1,OTU2),OTU3)),(OTU4,OTU5));'))
         u_counts = [1, 2, 3]
         v_counts = [1, 1, 1]
-        otu_ids = ['OTU1', 'OTU2', 'OTU3']
+        taxa = ['OTU1', 'OTU2', 'OTU3']
         self.assertRaises(ValueError, unweighted_unifrac, u_counts,
-                          v_counts, otu_ids, t)
+                          v_counts, taxa, t)
         self.assertRaises(ValueError, weighted_unifrac, u_counts,
-                          v_counts, otu_ids, t)
+                          v_counts, taxa, t)
 
         # tree missing some branch lengths
         t = TreeNode.read(
@@ -287,23 +287,23 @@ class UnifracTests(TestCase):
                      '0.75,OTU5:0.75):1.25):0.0)root;'))
         u_counts = [1, 2, 3]
         v_counts = [1, 1, 1]
-        otu_ids = ['OTU1', 'OTU2', 'OTU3']
+        taxa = ['OTU1', 'OTU2', 'OTU3']
         self.assertRaises(ValueError, unweighted_unifrac, u_counts,
-                          v_counts, otu_ids, t)
+                          v_counts, taxa, t)
         self.assertRaises(ValueError, weighted_unifrac, u_counts,
-                          v_counts, otu_ids, t)
+                          v_counts, taxa, t)
 
-        # otu_ids not present in tree
+        # taxa not present in tree
         t = TreeNode.read(
             StringIO('(((((OTU1:0.5,OTU2:0.5):0.5,OTU3:1.0):1.0):0.0,(OTU4:'
                      '0.75,OTU5:0.75):1.25):0.0)root;'))
         u_counts = [1, 2, 3]
         v_counts = [1, 1, 1]
-        otu_ids = ['OTU1', 'OTU2', 'OTU42']
+        taxa = ['OTU1', 'OTU2', 'OTU42']
         self.assertRaises(MissingNodeError, unweighted_unifrac, u_counts,
-                          v_counts, otu_ids, t)
+                          v_counts, taxa, t)
         self.assertRaises(MissingNodeError, weighted_unifrac, u_counts,
-                          v_counts, otu_ids, t)
+                          v_counts, taxa, t)
 
     def test_unweighted_unifrac_non_overlapping(self):
         # these communities only share the root node

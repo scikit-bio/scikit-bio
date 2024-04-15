@@ -13,7 +13,6 @@
 
 import os
 import re
-import sys
 import glob
 from functools import partial
 
@@ -21,8 +20,8 @@ from functools import partial
 # -- Configuration -----------------------------------------------------------
 
 rootdir = "_build/html"
-source = "https://scikit.bio/docs/dev"
-target = "docs/dev"
+source = "https://scikit.bio/docs/latest"
+target = "docs/latest"
 
 
 # -- Workflow ----------------------------------------------------------------

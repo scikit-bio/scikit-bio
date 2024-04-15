@@ -1,0 +1,12 @@
+# Missing data can be represented with empty cells or whitespace-only cells.
+# Test that values used to represent missing data in other programs
+# (e.g. pandas) are not treated as missing (e.g. "NA", "N/A"). Also test
+# columns that consist solely of missing data. By default, an empty column will
+# be treated as numeric data (column "NA" in this example). "col4" overrides
+# this behavior to make its empty column categorical.
+
+id	col1	NA	col3	col4
+#q2:types				categorical
+None	1		null	
+nan			N/A	
+NA	  	"	 "	NA	

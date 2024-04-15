@@ -26,7 +26,6 @@ Format Support
 
 Format Specification
 --------------------
-**State: Experimental as of 0.5.1.**
 
 The first line of the file is a comment that identifies the format and
 version. This is followed by a series of data lines. Each data line

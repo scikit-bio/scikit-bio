@@ -10,10 +10,8 @@ import numpy as np
 
 from ._base import osd
 from skbio.diversity._util import _validate_counts_vector
-from skbio.util._decorator import experimental
 
 
-@experimental(as_of="0.4.0")
 def chao1(counts, bias_corrected=True):
     r"""Calculate chao1 richness estimator.
 
@@ -71,7 +69,6 @@ def chao1(counts, bias_corrected=True):
         return o + s * (s - 1) / (2 * (d + 1))
 
 
-@experimental(as_of="0.4.0")
 def chao1_ci(counts, bias_corrected=True, zscore=1.96):
     """Calculate chao1 confidence interval.
 
@@ -182,7 +179,7 @@ def _chao1_var_no_doubletons(s, chao1):
 def _chao1_var_no_singletons(n, o):
     """Calculate chao1 variance in absence of singletons.
 
-    `n` is the number of individuals and `o` is the number of observed OTUs.
+    `n` is the number of individuals and `o` is the number of observed species.
 
     From EstimateS manual, equation 8.
 
@@ -213,7 +210,7 @@ def _chao_confidence_no_singletons(n, s, zscore=1.96):
 
     Uses Eq. 14 of EstimateS manual.
 
-    `n` is the number of individuals and `s` is the number of OTUs.
+    `n` is the number of individuals and `s` is the number of observed taxa.
 
     """
     P = np.exp(-n / s)

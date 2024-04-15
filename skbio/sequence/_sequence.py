@@ -29,7 +29,7 @@ from skbio.sequence._alphabet import (
     _indices_in_observed,
 )
 from skbio.util import find_duplicates
-from skbio.util._decorator import stable, experimental, classonlymethod, overrides
+from skbio.util._decorator import classonlymethod, overrides
 
 
 class Sequence(
@@ -365,6 +365,7 @@ fuzzy=[(True, False)], metadata={'gene': 'foo'})
 
     """
 
+    _num_ascii_codes = 128
     _num_extended_ascii_codes = 256
     # ASCII is built such that the difference between uppercase and lowercase
     # is the 6th bit.
@@ -374,7 +375,6 @@ fuzzy=[(True, False)], metadata={'gene': 'foo'})
     __hash__ = None
 
     @property
-    @stable(as_of="0.4.0")
     def values(self):
         r"""Array containing underlying sequence characters.
 
@@ -417,7 +417,6 @@ fuzzy=[(True, False)], metadata={'gene': 'foo'})
         return self.values.__array_interface__
 
     @property
-    @experimental(as_of="0.4.1")
     def observed_chars(self):
         r"""Set of observed characters in the sequence.
 
@@ -440,7 +439,6 @@ fuzzy=[(True, False)], metadata={'gene': 'foo'})
         return self._bytes.tobytes()
 
     @classonlymethod
-    @experimental(as_of="0.4.1")
     def concat(cls, sequences, how="strict"):
         r"""Concatenate an iterable of ``Sequence`` objects.
 
@@ -595,7 +593,6 @@ fuzzy=[(True, False)], metadata={'gene': 'foo'})
     def _interval_metadata_axis_len_(self):
         return len(self)
 
-    @stable(as_of="0.4.0")
     def __init__(
         self,
         sequence,
@@ -695,7 +692,6 @@ fuzzy=[(True, False)], metadata={'gene': 'foo'})
             with self._byte_ownership():
                 self._bytes[lowercase] ^= self._ascii_invert_case_bit_offset
 
-    @stable(as_of="0.4.0")
     def __contains__(self, subsequence):
         r"""Determine if a subsequence is contained in this sequence.
 
@@ -727,7 +723,6 @@ fuzzy=[(True, False)], metadata={'gene': 'foo'})
         """
         return self._munge_to_bytestring(subsequence, "in") in self._string
 
-    @stable(as_of="0.4.0")
     def __eq__(self, other):
         r"""Determine if this sequence is equal to another.
 
@@ -802,7 +797,6 @@ fuzzy=[(True, False)], metadata={'gene': 'foo'})
 
         return True
 
-    @stable(as_of="0.4.0")
     def __ne__(self, other):
         r"""Determine if this sequence is not equal to another.
 
@@ -836,7 +830,6 @@ fuzzy=[(True, False)], metadata={'gene': 'foo'})
         """
         return not (self == other)
 
-    @stable(as_of="0.4.0")
     def __getitem__(self, indexable):
         r"""Slice this sequence.
 
@@ -986,7 +979,6 @@ fuzzy=[(True, False)], metadata={'gene': 'foo'})
         else:
             return None
 
-    @stable(as_of="0.4.0")
     def __len__(self):
         r"""Return the number of characters in this sequence.
 
@@ -1005,7 +997,6 @@ fuzzy=[(True, False)], metadata={'gene': 'foo'})
         """
         return self._bytes.size
 
-    @stable(as_of="0.4.0")
     def __bool__(self):
         r"""Return truth value (truthiness) of sequence.
 
@@ -1025,7 +1016,6 @@ fuzzy=[(True, False)], metadata={'gene': 'foo'})
         """
         return len(self) > 0
 
-    @stable(as_of="0.4.0")
     def __iter__(self):
         r"""Iterate over positions in this sequence.
 
@@ -1050,7 +1040,6 @@ fuzzy=[(True, False)], metadata={'gene': 'foo'})
         for i in range(len(self)):
             yield self[i]
 
-    @stable(as_of="0.4.0")
     def __reversed__(self):
         r"""Iterate over positions in this sequence in reverse order.
 
@@ -1074,7 +1063,6 @@ fuzzy=[(True, False)], metadata={'gene': 'foo'})
         """
         return iter(self[::-1])
 
-    @stable(as_of="0.4.0")
     def __str__(self):
         r"""Return sequence characters as a string.
 
@@ -1098,7 +1086,6 @@ fuzzy=[(True, False)], metadata={'gene': 'foo'})
         """
         return str(self._string.decode("ascii"))
 
-    @stable(as_of="0.4.0")
     def __repr__(self):
         r"""Return a string representation of this sequence object.
 
@@ -1221,7 +1208,6 @@ fuzzy=[(True, False)], metadata={'gene': 'foo'})
         """
         return [("length", "%d" % len(self))]
 
-    @stable(as_of="0.4.0")
     def __copy__(self):
         r"""Return a shallow copy of this sequence.
 
@@ -1236,7 +1222,6 @@ fuzzy=[(True, False)], metadata={'gene': 'foo'})
         """
         return self._copy(False, {})
 
-    @stable(as_of="0.4.0")
     def __deepcopy__(self, memo):
         r"""Return a deep copy of this sequence.
 
@@ -1285,7 +1270,6 @@ fuzzy=[(True, False)], metadata={'gene': 'foo'})
 
         return seq_copy
 
-    @stable(as_of="0.4.0")
     def lowercase(self, lowercase):
         r"""Return a case-sensitive string representation of the sequence.
 
@@ -1333,7 +1317,6 @@ fuzzy=[(True, False)], metadata={'gene': 'foo'})
         outbytes[index] ^= self._ascii_invert_case_bit_offset
         return str(outbytes.tobytes().decode("ascii"))
 
-    @stable(as_of="0.4.0")
     def count(self, subsequence, start=None, end=None):
         r"""Count occurrences of a subsequence in this sequence.
 
@@ -1380,7 +1363,6 @@ fuzzy=[(True, False)], metadata={'gene': 'foo'})
             self._munge_to_bytestring(subsequence, "count"), start, end
         )
 
-    @experimental(as_of="0.5.0")
     def replace(self, where, character):
         r"""Replace values in this sequence with a different character.
 
@@ -1468,7 +1450,6 @@ fuzzy=[(True, False)], metadata={'gene': 'foo'})
             interval_metadata=interval_metadata,
         )
 
-    @stable(as_of="0.4.0")
     def index(self, subsequence, start=None, end=None):
         r"""Find position where subsequence first occurs in the sequence.
 
@@ -1509,7 +1490,6 @@ fuzzy=[(True, False)], metadata={'gene': 'foo'})
         except ValueError:
             raise ValueError("%r is not present in %r." % (subsequence, self))
 
-    @experimental(as_of="0.4.0")
     def distance(self, other, metric=None):
         r"""Compute the distance to another sequence.
 
@@ -1571,7 +1551,6 @@ fuzzy=[(True, False)], metadata={'gene': 'foo'})
             metric = skbio.sequence.distance.hamming
         return float(metric(self, other))
 
-    @stable(as_of="0.4.0")
     def matches(self, other):
         r"""Find positions that match with another sequence.
 
@@ -1615,7 +1594,6 @@ fuzzy=[(True, False)], metadata={'gene': 'foo'})
             )
         return self._bytes == other._bytes
 
-    @stable(as_of="0.4.0")
     def mismatches(self, other):
         r"""Find positions that do not match with another sequence.
 
@@ -1653,7 +1631,6 @@ fuzzy=[(True, False)], metadata={'gene': 'foo'})
         """
         return np.invert(self.matches(other))
 
-    @stable(as_of="0.4.0")
     def match_frequency(self, other, relative=False):
         r"""Return count of positions that are the same between two sequences.
 
@@ -1703,7 +1680,6 @@ fuzzy=[(True, False)], metadata={'gene': 'foo'})
         else:
             return int(self.matches(other).sum())
 
-    @stable(as_of="0.4.0")
     def mismatch_frequency(self, other, relative=False):
         r"""Return count of positions that differ between two sequences.
 
@@ -1753,7 +1729,6 @@ fuzzy=[(True, False)], metadata={'gene': 'foo'})
         else:
             return int(self.mismatches(other).sum())
 
-    @experimental(as_of="0.4.1")
     def frequencies(self, chars=None, relative=False):
         r"""Compute frequencies of characters in the sequence.
 
@@ -1885,7 +1860,6 @@ fuzzy=[(True, False)], metadata={'gene': 'foo'})
             indices.append(index)
         return chars, indices
 
-    @stable(as_of="0.4.0")
     def iter_kmers(self, k, overlap=True):
         r"""Generate kmers of length `k` from this sequence.
 
@@ -1959,7 +1933,6 @@ fuzzy=[(True, False)], metadata={'gene': 'foo'})
                     sequence=s, metadata=metadata, positional_metadata=None
                 )
 
-    @stable(as_of="0.4.0")
     def kmer_frequencies(self, k, overlap=True, relative=False):
         r"""Return counts of words of length `k` from this sequence.
 
@@ -2011,7 +1984,6 @@ fuzzy=[(True, False)], metadata={'gene': 'foo'})
 
         return freqs
 
-    @stable(as_of="0.4.0")
     def find_with_regex(self, regex, ignore=None):
         r"""Generate slices for patterns matched by a regular expression.
 
@@ -2059,7 +2031,6 @@ fuzzy=[(True, False)], metadata={'gene': 'foo'})
             for g in range(1, len(match.groups()) + 1):
                 yield slice(lookup[match.start(g)], lookup[match.end(g) - 1] + 1)
 
-    @stable(as_of="0.4.0")
     def iter_contiguous(self, included, min_length=1, invert=False):
         r"""Yield contiguous subsequences based on `included`.
 
@@ -2128,7 +2099,6 @@ fuzzy=[(True, False)], metadata={'gene': 'foo'})
             if len(r) >= min_length:
                 yield r
 
-    @experimental(as_of="0.6.0")
     def to_indices(
         self, alphabet=None, mask_gaps="auto", wildcard="auto", return_codes=False
     ):

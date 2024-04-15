@@ -39,6 +39,16 @@ class TestProtein(unittest.TestCase):
         self.assertEqual(Protein("").definite_chars, exp)
         self.assertEqual(Protein.definite_chars, exp)
 
+    def test_noncanonical_chars(self):
+        exp = set("OU")
+        self.assertEqual(Protein("").noncanonical_chars, exp)
+        self.assertEqual(Protein.noncanonical_chars, exp)
+    
+    def test_wildcard_char(self):
+        exp = "X"
+        self.assertEqual(Protein("").wildcard_char, exp)
+        self.assertEqual(Protein.wildcard_char, exp)
+
     def test_degenerate_map(self):
         exp = {
             'B': set(['D', 'N']), 'Z': set(['E', 'Q']), 'J': set(['I', 'L']),

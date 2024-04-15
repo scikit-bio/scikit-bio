@@ -12,8 +12,8 @@ import numpy as np
 import pandas as pd
 from scipy.stats import f_oneway
 from scipy.spatial.distance import cdist
+from ._cutils import geomedian_axis_one
 
-import hdmedians as hd
 
 from ._base import (
     _preprocess_input_sng,
@@ -23,10 +23,8 @@ from ._base import (
 )
 
 from skbio.stats.ordination import pcoa, OrdinationResults
-from skbio.util._decorator import experimental
 
 
-@experimental(as_of="0.5.2")
 def permdisp(
     distance_matrix,
     grouping,
@@ -315,4 +313,4 @@ def _config_med(x):
     and transpose the vector to be compatible with hd.geomedian.
     """
     X = x.values[:, :-1]
-    return pd.Series(np.array(hd.geomedian(X.T)), index=x.columns[:-1])
+    return pd.Series(np.array(geomedian_axis_one(X.T)), index=x.columns[:-1])

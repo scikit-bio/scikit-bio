@@ -8,6 +8,7 @@
 
 import functools
 import itertools
+from warnings import warn
 
 import numpy as np
 import scipy.spatial.distance
@@ -20,13 +21,15 @@ from skbio.diversity.beta._unifrac import (
     _setup_multiple_weighted_unifrac,
     _normalize_weighted_unifrac_by_default,
 )
-from skbio.util._decorator import experimental, deprecated
 from skbio.stats.distance import DistanceMatrix
 from skbio.diversity._util import (
     _validate_counts_matrix,
     _get_phylogenetic_kwargs,
     _quantitative_to_qualitative_counts,
+    _table_to_numpy,
+    _validate_table,
 )
+from skbio.util._warning import _warn_deprecated
 
 
 def _get_alpha_diversity_metric_map():
@@ -67,7 +70,6 @@ def _get_alpha_diversity_metric_map():
     }
 
 
-@experimental(as_of="0.4.1")
 def get_alpha_diversity_metrics():
     """List scikit-bio's alpha diversity metrics.
 
@@ -90,7 +92,6 @@ def get_alpha_diversity_metrics():
     return sorted(metrics.keys())
 
 
-@experimental(as_of="0.4.1")
 def get_beta_diversity_metrics():
     """List scikit-bio's beta diversity metrics.
 
@@ -119,7 +120,6 @@ def get_beta_diversity_metrics():
     return sorted(["unweighted_unifrac", "weighted_unifrac"])
 
 
-@experimental(as_of="0.4.1")
 def alpha_diversity(metric, counts, ids=None, validate=True, **kwargs):
     """Compute alpha diversity for one or more samples.
 
@@ -129,9 +129,9 @@ def alpha_diversity(metric, counts, ids=None, validate=True, **kwargs):
         The alpha diversity metric to apply to the sample(s). Passing metric as
         a string is preferable as this often results in an optimized version of
         the metric being used.
-    counts : 1D or 2D array_like of ints or floats
+    counts : 1D or 2D array_like of ints or floats, Table
         Vector or matrix containing count/abundance data. If a matrix, each row
-        should contain counts of OTUs in a given sample.
+        should contain counts of taxa in a given sample.
     ids : iterable of strs, optional
         Identifiers for each sample in ``counts``. By default, samples will be
         assigned integer identifiers in the order that they were provided.
@@ -167,23 +167,26 @@ def alpha_diversity(metric, counts, ids=None, validate=True, **kwargs):
     skbio.diversity.beta_diversity
 
     """
+    if isinstance(counts, skbio.Table):
+        counts, ids = _validate_table(counts, ids, kwargs)
+
     metric_map = _get_alpha_diversity_metric_map()
 
     if validate:
         counts = _validate_counts_matrix(counts, ids=ids)
 
     if metric == "faith_pd":
-        otu_ids, tree, kwargs = _get_phylogenetic_kwargs(counts, **kwargs)
+        taxa, tree, kwargs = _get_phylogenetic_kwargs(counts, **kwargs)
         counts_by_node, branch_lengths = _setup_pd(
-            counts, otu_ids, tree, validate, rooted=True, single_sample=False
+            counts, taxa, tree, validate, rooted=True, single_sample=False
         )
         counts = counts_by_node
         metric = functools.partial(_faith_pd, branch_lengths=branch_lengths, **kwargs)
 
     elif metric == "phydiv":
-        otu_ids, tree, kwargs = _get_phylogenetic_kwargs(counts, **kwargs)
+        taxa, tree, kwargs = _get_phylogenetic_kwargs(counts, **kwargs)
         counts_by_node, branch_lengths = _setup_pd(
-            counts, otu_ids, tree, validate, rooted=False, single_sample=False
+            counts, taxa, tree, validate, rooted=False, single_sample=False
         )
         counts = counts_by_node
         if "rooted" not in kwargs:
@@ -204,16 +207,6 @@ def alpha_diversity(metric, counts, ids=None, validate=True, **kwargs):
     return pd.Series(results, index=ids)
 
 
-@deprecated(
-    as_of="0.5.0",
-    until="0.6.0",
-    reason=(
-        "The return type is unstable. Developer caution is "
-        "advised. The resulting DistanceMatrix object will "
-        "include zeros when distance has not been calculated, and "
-        "therefore can be misleading."
-    ),
-)
 def partial_beta_diversity(metric, counts, ids, id_pairs, validate=True, **kwargs):
     """Compute distances only between specified ID pairs.
 
@@ -225,7 +218,7 @@ def partial_beta_diversity(metric, counts, ids, id_pairs, validate=True, **kwarg
         callable.
     counts : 2D array_like of ints or floats
         Matrix containing count/abundance data where each row contains counts
-        of OTUs in a given sample.
+        of taxa in a given sample.
     ids : iterable of strs
         Identifiers for each sample in ``counts``.
     id_pairs : iterable of tuple
@@ -244,6 +237,13 @@ def partial_beta_diversity(metric, counts, ids, id_pairs, validate=True, **kwarg
         distances not defined by id_pairs will be 0.0. Use this resulting
         DistanceMatrix with caution as 0.0 is a valid distance.
 
+    Warnings
+    --------
+    ``partial_beta_diversity`` is deprecated as of ``0.5.0``. The return type is
+    unstable. Developer caution is advised. The resulting DistanceMatrix object will
+    include zeros when distance has not been calculated, and therefore can be
+    misleading.
+
     Raises
     ------
     ValueError
@@ -259,6 +259,15 @@ def partial_beta_diversity(metric, counts, ids, id_pairs, validate=True, **kwarg
     skbio.diversity.get_beta_diversity_metrics
 
     """
+    # @deprecated
+    _warn_deprecated(
+        partial_beta_diversity,
+        "0.5.0",
+        msg="The return type is unstable. Developer caution is advised. The resulting "
+        "DistanceMatrix object will include zeros when distance has not been "
+        "calculated, and therefore can be misleading.",
+    )
+
     if validate:
         counts = _validate_counts_matrix(counts, ids=ids)
 
@@ -273,18 +282,18 @@ def partial_beta_diversity(metric, counts, ids, id_pairs, validate=True, **kwarg
 
     if metric == "unweighted_unifrac":
         counts = _quantitative_to_qualitative_counts(counts)
-        otu_ids, tree, kwargs = _get_phylogenetic_kwargs(counts, **kwargs)
+        taxa, tree, kwargs = _get_phylogenetic_kwargs(counts, **kwargs)
         metric, counts_by_node = _setup_multiple_unweighted_unifrac(
-            counts, otu_ids=otu_ids, tree=tree, validate=validate
+            counts, taxa=taxa, tree=tree, validate=validate
         )
         counts = counts_by_node
     elif metric == "weighted_unifrac":
         # get the value for normalized. if it was not provided, it will fall
         # back to the default value inside of _weighted_unifrac_pdist_f
         normalized = kwargs.pop("normalized", _normalize_weighted_unifrac_by_default)
-        otu_ids, tree, kwargs = _get_phylogenetic_kwargs(counts, **kwargs)
+        taxa, tree, kwargs = _get_phylogenetic_kwargs(counts, **kwargs)
         metric, counts_by_node = _setup_multiple_weighted_unifrac(
-            counts, otu_ids=otu_ids, tree=tree, normalized=normalized, validate=validate
+            counts, taxa=taxa, tree=tree, normalized=normalized, validate=validate
         )
         counts = counts_by_node
     elif callable(metric):
@@ -349,7 +358,6 @@ _qualitative_beta_metrics = [
 ]
 
 
-@experimental(as_of="0.4.0")
 def beta_diversity(
     metric, counts, ids=None, validate=True, pairwise_func=None, **kwargs
 ):
@@ -362,9 +370,9 @@ def beta_diversity(
         and the scikit-bio functions linked under *See Also* for available
         metrics. Passing metrics as a strings is preferable as this often
         results in an optimized version of the metric being used.
-    counts : 2D array_like of ints or floats or 2D pandas DataFrame
+    counts : 2D array_like of ints or floats, 2D pandas DataFrame, Table
         Matrix containing count/abundance data where each row contains counts
-        of OTUs in a given sample.
+        of taxa in a given sample.
     ids : iterable of strs, optional
         Identifiers for each sample in ``counts``. By default, samples will be
         assigned integer identifiers in the order that they were provided
@@ -410,6 +418,9 @@ def beta_diversity(
     sklearn.metrics.pairwise_distances
 
     """
+    if isinstance(counts, skbio.Table):
+        counts, ids = _validate_table(counts, ids, kwargs)
+
     if isinstance(counts, pd.DataFrame) and ids is None:
         ids = list(counts.index)
 
@@ -425,18 +436,18 @@ def beta_diversity(
 
     if metric == "unweighted_unifrac":
         counts = _quantitative_to_qualitative_counts(counts)
-        otu_ids, tree, kwargs = _get_phylogenetic_kwargs(counts, **kwargs)
+        taxa, tree, kwargs = _get_phylogenetic_kwargs(counts, **kwargs)
         metric, counts_by_node = _setup_multiple_unweighted_unifrac(
-            counts, otu_ids=otu_ids, tree=tree, validate=validate
+            counts, taxa=taxa, tree=tree, validate=validate
         )
         counts = counts_by_node
     elif metric == "weighted_unifrac":
         # get the value for normalized. if it was not provided, it will fall
         # back to the default value inside of _weighted_unifrac_pdist_f
         normalized = kwargs.pop("normalized", _normalize_weighted_unifrac_by_default)
-        otu_ids, tree, kwargs = _get_phylogenetic_kwargs(counts, **kwargs)
+        taxa, tree, kwargs = _get_phylogenetic_kwargs(counts, **kwargs)
         metric, counts_by_node = _setup_multiple_weighted_unifrac(
-            counts, otu_ids=otu_ids, tree=tree, normalized=normalized, validate=validate
+            counts, taxa=taxa, tree=tree, normalized=normalized, validate=validate
         )
         counts = counts_by_node
     elif metric == "manhattan":

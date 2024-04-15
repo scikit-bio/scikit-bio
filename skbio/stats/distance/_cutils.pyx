@@ -7,12 +7,22 @@
 # -----------------------------------------------------------------------------
 
 import numpy as np
+cimport numpy as cnp
 cimport cython
 from cython.parallel import prange
+from libc.math cimport isnan, sqrt, acos, fabs
+
 
 ctypedef fused TReal:
     float
     double
+
+ctypedef fused floating:
+    cnp.float64_t
+    cnp.float32_t
+
+ctypedef cnp.float64_t float64_t
+ctypedef cnp.float32_t float32_t
 
 @cython.boundscheck(False)
 @cython.wraparound(False)
@@ -293,3 +303,114 @@ def permanova_f_stat_sW_cy(TReal[:, ::1] distance_matrix,
             s_W += local_s_W/group_sizes[group_idx]
 
     return s_W
+
+@cython.boundscheck(False)
+@cython.wraparound(False)
+def geomedian_axis_one(floating[:, :] X, floating eps=1e-7,
+                           size_t maxiters=500):
+    """Compute high dimensional median.
+    
+    This function, its helpers (dist_euclidean, norm_euclidean, sum), and necessary
+    type definitions (floating) were ported from hdmedians v0.14.2. The only change was
+    changing "cdef" to "def" on the line defining the function. See
+    https://github.com/daleroberts/hdmedians for more information.
+    """
+    cdef size_t p = X.shape[0]
+    cdef size_t n = X.shape[1]
+
+    cdef floating[:] y = np.mean(X, axis=1)
+
+    if n == 1:
+        return y
+
+    if floating is cnp.float32_t:
+        dtype = np.float32
+    else:
+        dtype = np.float64
+
+    cdef floating[:] D = np.empty(n, dtype=dtype)
+    cdef floating[:] Dinv = np.empty(n, dtype=dtype)
+    cdef floating[:] W = np.empty(n, dtype=dtype)
+    cdef floating[:] T = np.empty(p, dtype=dtype)
+    cdef floating[:] y1 = np.empty(p, dtype=dtype)
+    cdef floating[:] R = np.empty(p, dtype=dtype)
+
+    cdef floating dist, Dinvs, total, r, rinv, tmp, Di
+    cdef size_t nzeros = n
+    cdef size_t iteration
+
+    with nogil:
+        iteration = 0
+        while iteration < maxiters:
+
+            for i in range(n):
+                Di = _dist_euclidean(X[:, i], y)
+                D[i] = Di
+                if fabs(Di) > eps:
+                    Dinv[i] = 1. / Di
+                else:
+                    Dinv[i] = 0.
+
+            Dinvs = _sum(Dinv)
+
+            for i in range(n):
+                W[i] = Dinv[i] / Dinvs
+
+            for j in range(p):
+                total = 0.
+                for i in range(n):
+                    if fabs(D[i]) > eps:
+                        total += W[i] * X[j, i]
+                T[j] = total
+
+            nzeros = n
+            for i in range(n):
+                if fabs(D[i]) > eps:
+                    nzeros -= 1
+
+            if nzeros == 0:
+                y1 = T
+            elif nzeros == n:
+                break
+            else:
+                for j in range(p):
+                    R[j] = (T[j] - y[j]) * Dinvs
+                r = _norm_euclidean(R)
+                if r > eps:
+                    rinv = nzeros/r
+                else:
+                    rinv = 0.
+                for j in range(p):
+                    y1[j] = max(0, 1-rinv)*T[j] + min(1, rinv)*y[j]
+
+            dist = _dist_euclidean(y, y1)
+            if dist < eps:
+               break
+
+            y[:] = y1
+            iteration = iteration + 1
+            
+    return y
+
+cdef floating _dist_euclidean(floating[:] x, floating[:] y) nogil:
+    cdef size_t n = x.shape[0]
+    cdef float64_t d = 0.
+    cdef float64_t tmp
+    for i in range(n):
+        tmp = x[i] - y[i]
+        d += tmp * tmp
+    return <floating>sqrt(d)
+
+cdef floating _norm_euclidean(floating[:] x) nogil:
+    cdef size_t n = x.shape[0]
+    cdef float64_t d = 0.
+    for i in range(n):
+        d += x[i] * x[i]
+    return <floating>sqrt(d)
+
+cdef floating _sum(floating[:] x) nogil:
+    cdef size_t n = x.shape[0]
+    cdef float64_t total = 0.
+    for i in range(n):
+        total += x[i]
+    return <floating>total

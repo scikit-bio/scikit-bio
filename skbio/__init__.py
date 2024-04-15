@@ -18,6 +18,7 @@ from skbio.alignment import local_pairwise_align_ssw, TabularMSA
 from skbio.tree import TreeNode, nj
 from skbio.io import read, write
 from skbio.stats.ordination import OrdinationResults
+from skbio.table import Table
 import skbio.diversity  # noqa
 import skbio.stats.evolve  # noqa
 
@@ -36,10 +37,11 @@ __all__ = [
     "read",
     "write",
     "OrdinationResults",
+    "Table",
 ]
 
 __credits__ = "https://github.com/scikit-bio/scikit-bio/graphs/contributors"
-__version__ = "0.6.0-dev"
+__version__ = "0.6.1-dev"
 
 
 mottos = [

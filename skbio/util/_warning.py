@@ -6,6 +6,8 @@
 # The full license is in the file LICENSE.txt, distributed with this software.
 # ----------------------------------------------------------------------------
 
+from warnings import warn, simplefilter
+
 
 class SkbioWarning(Warning):
     """Filter our warnings from warnings given by 3rd parties."""
@@ -44,3 +46,16 @@ class DeprecationWarning(DeprecationWarning, SkbioWarning):
     """Used to indicate deprecated functionality in scikit-bio."""
 
     pass
+
+
+def _warn_deprecated(func, ver, msg=None):
+    """Warn of deprecated status."""
+    if not hasattr(func, "warned"):
+        simplefilter("once", DeprecationWarning)
+        if msg:
+            warn(
+                f"{func.__name__} is deprecated as of {ver}. {msg}", DeprecationWarning
+            )
+        else:
+            warn(f"{func.__name__} is deprecated as of {ver}.")
+        func.warned = True

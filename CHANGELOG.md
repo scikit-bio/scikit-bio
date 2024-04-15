@@ -1,6 +1,6 @@
 # scikit-bio changelog
 
-## Version 0.6.0-dev
+## Version 0.6.0
 
 ### Performance enhancements
 
@@ -12,7 +12,12 @@
 
 ### Features
 
+* Added biom-format Table import and updated corresponding requirement files ([#1907](https://github.com/scikit-bio/scikit-bio/pull/1907)).
+* Added biom-format 2.1.0 IO support ([#1984](https://github.com/scikit-bio/scikit-bio/pull/1984)).
+* Added `Table` support to `alpha_diversity` and `beta_diversity` drivers ([#1984](https://github.com/scikit-bio/scikit-bio/pull/1984)).
 * Implemented a mechanism to automatically build documentation and/or homepage and deploy them to the website ([#1934](https://github.com/scikit-bio/scikit-bio/pull/1934)).
+* Added the Benjamini-Hochberg method as an option for FDR correction (in addition to the existing Holm-Bonferroni method) for `ancom` and `dirmult_ttest` ([#1988](https://github.com/scikit-bio/scikit-bio/pull/1988)).
+* Added function `dirmult_ttest`, which performs differential abundance test using a Dirichilet multinomial distribution. This function mirrors the method provided by ALDEx2 ([#1956](https://github.com/scikit-bio/scikit-bio/pull/1956)).
 * Added method `Sequence.to_indices` to convert a sequence into a vector of indices of characters in an alphabet (can be from a substitution matrix) or unique characters observed in the sequence. Supports gap masking and wildcard substitution ([#1917](https://github.com/scikit-bio/scikit-bio/pull/1917)).
 * Added class `SubstitutionMatrix` to support subsitution matrices for nucleotides, amino acids are more general cases ([#1913](https://github.com/scikit-bio/scikit-bio/pull/1913)).
 * Added alpha diversity metric `sobs`, which is the observed species richness (S_{obs}) of a sample. `sobs` will replace `observed_otus`, which uses the historical term "OTU". Also added metric `observed_features` to be compatible with the QIIME 2 terminology. All three metrics are equivalent ([#1902](https://github.com/scikit-bio/scikit-bio/pull/1902)).
@@ -22,7 +27,9 @@
 * SciPy 1.11+ is now supported ([#1887](https://github.com/scikit-bio/scikit-bio/pull/1887)).
 * Removed IPython as a dependency. Scikit-bio continues to support displaying plots in IPython, but it no longer requires importing IPython functionality ([#1901](https://github.com/scikit-bio/scikit-bio/pull/1901)).
 * Made Matplotlib an optional dependency. Scikit-bio no longer requires Matplotlib except for plotting, during which it attempts to import Matplotlib if it is present in the system, and raises an error if not ([#1901](https://github.com/scikit-bio/scikit-bio/pull/1901)).
+* Ported the QIIME 2 metadata object into skbio. ([#1929](https://github.com/scikit-bio/scikit-bio/pull/1929))
 * Python 3.12+ is now supported, thank you @actapia ([#1930](https://github.com/scikit-bio/scikit-bio/pull/1930))
+* Introduced native character conversion ([#1971])(https://github.com/scikit-bio/scikit-bio/pull/1971)
 
 ### Backward-incompatible changes [experimental]
 
@@ -39,6 +46,10 @@
 
 ### Miscellaneous
 
+* Replaced the historical term "OTU" with the more generic term "taxon" (plural: "taxa"). As a consequence, the parameter "otu_ids" in phylogenetic alpha and beta diversity metrics was replaced by "taxa". Meanwhile, the old parameter "otu_ids" is still kept as an alias of "taxa" for backward compatibility. However it will be removed in a future release.
+* Revised contributor's guidelines.
+* Renamed function `multiplicative_replacement` as `multi_replace` for conciseness ([#1988](https://github.com/scikit-bio/scikit-bio/pull/1988)).
+* Renamed parameter `multiple_comparisons_correction` as `p_adjust` of function `ancom` for conciseness ([#1988](https://github.com/scikit-bio/scikit-bio/pull/1988)).
 * Enabled code coverage reporting via Codecov. See [#1954](https://github.com/scikit-bio/scikit-bio/pull/1954).
 * Renamed the default branch from "master" to "main". See [#1953](https://github.com/scikit-bio/scikit-bio/pull/1953).
 * Enabled subclassing of DNA, RNA and Protein classes to allow secondary development.
@@ -47,6 +58,7 @@
 * Implemented augmented assignments proposed in issue [#1789](https://github.com/scikit-bio/scikit-bio/issues/1789)
 * Incorporated Ruff's formatting and linting via pre-commit hooks and GitHub Actions. See PR [#1924](https://github.com/scikit-bio/scikit-bio/pull/1924).
 * Improved docstrings for functions accross the entire codebase. See [#1933](https://github.com/scikit-bio/scikit-bio/pull/1933) and [#1940](https://github.com/scikit-bio/scikit-bio/pull/1940)
+* Removed API lifecycle decorators in favor of deprecation warnings. See [#1916](https://github.com/scikit-bio/scikit-bio/issues/1916)
 
 ## Version 0.5.9
 

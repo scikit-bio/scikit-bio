@@ -34,7 +34,6 @@ Format Support
 
 Format Specification
 --------------------
-**State: Experimental as of 0.4.1.**
 
 Sections before ``FEATURES``
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^

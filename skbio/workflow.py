@@ -1,5 +1,5 @@
-r"""Constructing workflows (:mod:`skbio.workflow`)
-==============================================
+r"""Workflow construction (:mod:`skbio.workflow`)
+=============================================
 
 .. currentmodule:: skbio.workflow
 
@@ -16,6 +16,7 @@ Classes
 
     Workflow
 
+
 Decorators
 ----------
 
@@ -25,14 +26,16 @@ Decorators
     requires
     method
 
-Examples
+
+Tutorial
 --------
+
 >>> from skbio.workflow import Workflow
 
-As an example of the ``Workflow`` object, let's construct a sequence processor
+As an example of the :class:`Workflow` object, let's construct a sequence processor
 that will filter sequences that are < 10 nucleotides, reverse the sequence
 if the runtime options indicate to, and truncate if a specific nucleotide
-pattern is observed. The ``Workflow`` object will only short circuit, and
+pattern is observed. The :class:`Workflow` object will only short circuit, and
 evaluate requirements on methods decorated by ``method``. Developers are free
 to define as many methods as they'd like within the object definition, and
 which can be called from workflow methods, but they will not be subjected
@@ -208,18 +211,14 @@ from functools import update_wrapper
 from collections.abc import Iterable
 from types import MethodType
 
-from skbio.util._decorator import experimental
-
 
 class NotExecuted:
     """Helper object to track if a method was executed."""
 
-    @experimental(as_of="0.4.0")
     def __init__(self):
         """Construct all the necessary attributes for the NotExecuted object."""
         self.msg = None
 
-    @experimental(as_of="0.4.0")
     def __call__(self, msg):
         """Update message and return self."""
         self.msg = msg
@@ -232,7 +231,6 @@ _not_executed = NotExecuted()
 class Exists:
     """Stub object to assist with ``requires`` when a value exists."""
 
-    @experimental(as_of="0.4.0")
     def __contains__(self, item):
         """Check if a value exists."""
         return True
@@ -244,7 +242,6 @@ anything = Exists()  # external, for when a value can be anything
 class NotNone:
     """Check for non-None values."""
 
-    @experimental(as_of="0.4.0")
     def __contains__(self, item):
         """Check if item is not None."""
         if item is None:
@@ -289,7 +286,6 @@ class Workflow:
 
     """
 
-    @experimental(as_of="0.4.0")
     def __init__(self, state, short_circuit=True, debug=False, options=None, **kwargs):
         r"""Build thy workflow of self."""
         if options is None:
@@ -311,7 +307,6 @@ class Workflow:
         if self.debug:
             self._setup_debug()
 
-    @experimental(as_of="0.4.0")
     def initialize_state(self, item):
         """Initialize state.
 
@@ -387,7 +382,6 @@ class Workflow:
         self.debug_pre_state = {}
         self.debug_post_state = {}
 
-    @experimental(as_of="0.4.0")
     def __call__(self, iter_, success_callback=None, fail_callback=None):
         """Operate on all the data.
 
@@ -475,12 +469,10 @@ class method:
 
     highest_priority = sys.maxsize
 
-    @experimental(as_of="0.4.0")
     def __init__(self, priority=0):
         """Construct all the necessary attributes for the method object."""
         self.priority = priority
 
-    @experimental(as_of="0.4.0")
     def __call__(self, func):
         """Decorate function with specified priority."""
         func.priority = self.priority
@@ -512,7 +504,6 @@ class requires:
 
     """
 
-    @experimental(as_of="0.4.0")
     def __init__(self, option=None, values=anything, state=None):
         """Construct all the necessary attributes for the requires object."""
         # self here is the requires object
@@ -533,7 +524,6 @@ class requires:
             else:
                 self.values = set([values])
 
-    @experimental(as_of="0.4.0")
     def __call__(self, func):
         """Wrap a function.
 

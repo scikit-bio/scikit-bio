@@ -65,23 +65,23 @@ class TreeTests(TestCase):
         self.assertEqual(id(new_tree), id(new_tree.children[1].parent))
 
     def test_observed_node_counts(self):
-        """returns observed nodes counts given vector of otu observation counts
+        """returns observed nodes counts given vector of observed taxon counts
         """
-        # no OTUs observed
-        otu_counts = {}
+        # no taxon observed
+        taxon_counts = {}
         expected = defaultdict(int)
-        self.assertEqual(self.simple_t.observed_node_counts(otu_counts),
+        self.assertEqual(self.simple_t.observed_node_counts(taxon_counts),
                          expected)
         # error on zero count(s)
-        otu_counts = {'a': 0}
+        taxon_counts = {'a': 0}
         self.assertRaises(ValueError, self.simple_t.observed_node_counts,
-                          otu_counts)
-        otu_counts = {'a': 0, 'b': 0, 'c': 0, 'd': 0}
+                          taxon_counts)
+        taxon_counts = {'a': 0, 'b': 0, 'c': 0, 'd': 0}
         self.assertRaises(ValueError, self.simple_t.observed_node_counts,
-                          otu_counts)
+                          taxon_counts)
 
-        # all OTUs observed once
-        otu_counts = {'a': 1, 'b': 1, 'c': 1, 'd': 1}
+        # all taxa observed once
+        taxon_counts = {'a': 1, 'b': 1, 'c': 1, 'd': 1}
         expected = defaultdict(int)
         expected[self.simple_t.find('root')] = 4
         expected[self.simple_t.find('i1')] = 2
@@ -90,11 +90,11 @@ class TreeTests(TestCase):
         expected[self.simple_t.find('b')] = 1
         expected[self.simple_t.find('c')] = 1
         expected[self.simple_t.find('d')] = 1
-        self.assertEqual(self.simple_t.observed_node_counts(otu_counts),
+        self.assertEqual(self.simple_t.observed_node_counts(taxon_counts),
                          expected)
 
-        # some OTUs observed twice
-        otu_counts = {'a': 2, 'b': 1, 'c': 1, 'd': 1}
+        # some taxa observed twice
+        taxon_counts = {'a': 2, 'b': 1, 'c': 1, 'd': 1}
         expected = defaultdict(int)
         expected[self.simple_t.find('root')] = 5
         expected[self.simple_t.find('i1')] = 3
@@ -103,10 +103,10 @@ class TreeTests(TestCase):
         expected[self.simple_t.find('b')] = 1
         expected[self.simple_t.find('c')] = 1
         expected[self.simple_t.find('d')] = 1
-        self.assertEqual(self.simple_t.observed_node_counts(otu_counts),
+        self.assertEqual(self.simple_t.observed_node_counts(taxon_counts),
                          expected)
 
-        otu_counts = {'a': 2, 'b': 1, 'c': 1, 'd': 2}
+        taxon_counts = {'a': 2, 'b': 1, 'c': 1, 'd': 2}
         expected = defaultdict(int)
         expected[self.simple_t.find('root')] = 6
         expected[self.simple_t.find('i1')] = 3
@@ -115,47 +115,47 @@ class TreeTests(TestCase):
         expected[self.simple_t.find('b')] = 1
         expected[self.simple_t.find('c')] = 1
         expected[self.simple_t.find('d')] = 2
-        self.assertEqual(self.simple_t.observed_node_counts(otu_counts),
+        self.assertEqual(self.simple_t.observed_node_counts(taxon_counts),
                          expected)
 
-        # some OTUs observed, others not observed
-        otu_counts = {'a': 2, 'b': 1}
+        # some taxa observed, others not observed
+        taxon_counts = {'a': 2, 'b': 1}
         expected = defaultdict(int)
         expected[self.simple_t.find('root')] = 3
         expected[self.simple_t.find('i1')] = 3
         expected[self.simple_t.find('a')] = 2
         expected[self.simple_t.find('b')] = 1
-        self.assertEqual(self.simple_t.observed_node_counts(otu_counts),
+        self.assertEqual(self.simple_t.observed_node_counts(taxon_counts),
                          expected)
 
-        otu_counts = {'d': 1}
+        taxon_counts = {'d': 1}
         expected = defaultdict(int)
         expected[self.simple_t.find('root')] = 1
         expected[self.simple_t.find('i2')] = 1
         expected[self.simple_t.find('d')] = 1
-        self.assertEqual(self.simple_t.observed_node_counts(otu_counts),
+        self.assertEqual(self.simple_t.observed_node_counts(taxon_counts),
                          expected)
 
         # error on non-tips
-        otu_counts = {'a': 2, 'e': 1}
+        taxon_counts = {'a': 2, 'e': 1}
         self.assertRaises(MissingNodeError, self.simple_t.observed_node_counts,
-                          otu_counts)
-        otu_counts = {'a': 2, 'i1': 1}
+                          taxon_counts)
+        taxon_counts = {'a': 2, 'i1': 1}
         self.assertRaises(MissingNodeError, self.simple_t.observed_node_counts,
-                          otu_counts)
+                          taxon_counts)
 
         # test with another tree
-        otu_counts = {}
+        taxon_counts = {}
         expected = defaultdict(int)
-        self.assertEqual(self.complex_tree.observed_node_counts(otu_counts),
+        self.assertEqual(self.complex_tree.observed_node_counts(taxon_counts),
                          expected)
 
-        otu_counts = {'e': 42, 'f': 1}
+        taxon_counts = {'e': 42, 'f': 1}
         expected[self.complex_tree.root()] = 43
         expected[self.complex_tree.find('int5')] = 43
         expected[self.complex_tree.find('e')] = 42
         expected[self.complex_tree.find('f')] = 1
-        self.assertEqual(self.complex_tree.observed_node_counts(otu_counts),
+        self.assertEqual(self.complex_tree.observed_node_counts(taxon_counts),
                          expected)
 
     def test_count(self):

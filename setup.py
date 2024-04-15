@@ -217,6 +217,7 @@ if USE_CYTHON:
     # Always recompile the pyx files to C if USE_CYTHON is set.
     extensions = cythonize(extensions, force=True)
 
+
 setup(
     name="scikit-bio",
     version=version,
@@ -240,7 +241,7 @@ setup(
         "pandas >= 1.5.0",
         "scipy >= 1.9.0",
         "h5py >= 3.6.0",
-        "hdmedians >= 0.14.1",
+        "biom-format",
     ],
     classifiers=classifiers,
     package_data={
@@ -251,5 +252,6 @@ setup(
         "skbio.stats.tests": ["data/*"],
         "skbio.stats.distance.tests": ["data/*"],
         "skbio.stats.ordination.tests": ["data/*"],
+        "skbio.metadata.tests": ["data/invalid/*", "data/valid/*"],
     },
 )
