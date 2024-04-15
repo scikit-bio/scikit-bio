@@ -65,16 +65,15 @@ class EmbeddingTests(TestCase):
     def test_read_write_generator(self):
         writable_emb_path2 = 'test2.emb'
 
-        objs = [ProteinEmbedding(emb, seq) for emb, seq in self.sequences]
-        # for obj in objs:
-        #     _object_to_embed(obj, writable_emb_path2, 'a')
+        objs1 = [ProteinEmbedding(emb, seq) for emb, seq in self.sequences]
 
-        _generator_to_embed(objs, writable_emb_path2)
-
+        _generator_to_embed(objs1, writable_emb_path2)
         objs2 = _embed_to_generator(writable_emb_path2)
-        for obj1, obj2 in zip(objs, objs2):
+
+        for obj1, obj2 in zip(objs1, objs2):
             np.testing.assert_array_equal(obj1.embedding, obj2.embedding)
             self.assertEqual(str(obj1), str(obj2))
+
 
 
 if __name__ == '__main__':
