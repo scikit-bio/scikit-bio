@@ -90,60 +90,61 @@ def _embed_to_protein(
 
 
 def _object_to_embed(obj, fh, mode="w"):
-    h5grp = h5py.File(fh, mode)
+    print(mode)
+    with h5py.File(fh, mode) as h5grp:
+        # Store the embedding itself. We are assuming that the
+        # embbedding is a 2D numpy array
+        emb = obj.embedding
+        emb = emb.reshape(1, emb.shape[0], emb.shape[1])
 
-    # Store the embedding itself. We are assuming that the
-    # embbedding is a 2D numpy array
-    emb = obj.embedding
-    emb = emb.reshape(1, emb.shape[0], emb.shape[1])
+        if "embedding" in h5grp:
+            embed_fh = h5grp["embedding"]
+            n = emb.shape[0]
+            embed_fh.resize(n, axis=0)
+            embed_fh[-1] = emb
+        else:
+            embed_fh = h5grp.create_dataset(
+                "embedding",
+                data=emb,
+                maxshape=(None, emb.shape[1], emb.shape[2]),
+                dtype=obj.embedding.dtype,
+            )
 
-    if "embedding" in h5grp:
-        embed_fh = h5grp["embedding"]
-        n = emb.shape[0]
-        embed_fh.resize(n, axis=0)
-        embed_fh[-1] = emb
-    else:
-        embed_fh = h5grp.create_dataset(
-            "embedding",
-            data=emb,
-            maxshape=(None, emb.shape[1], emb.shape[2]),
-            dtype=obj.embedding.dtype,
-        )
-
-    # store string representation of the object
-    # that will serve as an identifier for the entire object.
-    # for sequences, this could be the sequence itself
-    # for molecules, this could be the SMILES string.
-    # The entries in this string representation can be used
-    # to index the row vectors in the embedding.
-    # For sequences, this is the positional index of the sequence.
-    # For molecules, this is the position index of atoms in the SMILES string.
-    arr = np.frombuffer(str(obj).encode("ascii"), dtype=np.uint8)
-    if "id" in h5grp:
-        id_fh = h5grp["id"]
-        m = len(id)
-        id_fh.resize(m + len(arr))
-        id_fh[m : m + len(arr)] = arr
-    else:
-        id_fh = h5grp.create_dataset("id", data=arr, maxshape=(None,), dtype=np.int32)
-    if "idptr" in h5grp:
-        idptr = h5grp["idptr"]
-        n = embed_eh.shape[0]
-        idptr_fh = h5grp["ids"]
-        idptr.resize(n)
-        idptr_fh[n] = len(arr)
-    else:
-        idptr_fh = h5grp.create_dataset(
-            "idptr", data=[len(arr)], maxshape=(None,), dtype=np.int32
-        )
+        # store string representation of the object
+        # that will serve as an identifier for the entire object.
+        # for sequences, this could be the sequence itself
+        # for molecules, this could be the SMILES string.
+        # The entries in this string representation can be used
+        # to index the row vectors in the embedding.
+        # For sequences, this is the positional index of the sequence.
+        # For molecules, this is the position index of atoms in the SMILES string.
+        arr = np.frombuffer(str(obj).encode("ascii"), dtype=np.uint8)
+        if "id" in h5grp:
+            id_fh = h5grp["id"]
+            m = len(id_fh)
+            id_fh.resize((m + len(arr),))
+            id_fh[m : m + len(arr)] = arr
+        else:
+            id_fh = h5grp.create_dataset(
+                "id", data=arr, maxshape=(None,), dtype=np.int32
+            )
+        if "idptr" in h5grp:
+            idptr_fh = h5grp["idptr"]
+            n = emb.shape[0]
+            idptr_fh.resize((n + 1,))
+            idptr_fh[-1] = len(arr)
+        else:
+            idptr_fh = h5grp.create_dataset(
+                "idptr", data=[len(arr)], maxshape=(None,), dtype=np.int32
+            )
 
 
 @embed.writer(None)
-def _generator_to_embed(obj, fh):
-    for it in obj:
-        _object_to_embed(it, fh, mode="a")
+def _generator_to_embed(objs, fh):
+    for obj in objs:
+        _object_to_embed(obj, fh, mode="a")
 
 
 @embed.writer(ProteinEmbedding)
 def _protein_to_embed(obj, fh, mode="w"):
-    _object_to_embed(it, fh, mode=mode)
+    _object_to_embed(obj, fh, mode=mode)
