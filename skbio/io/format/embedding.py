@@ -1,9 +1,72 @@
-"""Embedding format (:mod:`skbio.io.format.embed`)."""
+r"""Embedding format (:mod:`skbio.io.format.embed`).
+====================================================
+
+.. currentmodule:: skbio.io.format.embed
+
+This module provides support for reading and writing embedding files that
+are outputted by sequential language models such as protein language models
+(pLMs).
+
+Format Support
+--------------
+**Has Sniffer: Yes**
+
++------+------+---------------------------------------------------------------+
+|Reader|Writer|                          Object Class                         |
++======+======+===============================================================+
+|Yes   |Yes   |generator of :mod:`skbio.sequence.ProteinEmbedding` objects    |
++------+------+---------------------------------------------------------------+
+|Yes   |Yes   |:mod:`skbio.sequence.ProteinEmbedding` objects                 |
++------+------+---------------------------------------------------------------+
+
+Format Specification
+--------------------
+The format is a HDF5 file with the following structure:
+
+  - `embeddings` (dataset)
+  - `id` (dataset)
+  - `idptr` (dataset)
+
+The `idptr` dataset contains the cumulative sum of the sequence lengths
+in the hdf5. This is used to index both the sequences and the embeddings
+in the hdf5, which can be useful for iterating through the embeddings and
+avoiding the need to load all of the embedding into memory.  For protein
+embeddings the `id` is the original sequence used to generate the embeddings.
+The `embeddings` dataset contains the embeddings for each sequence, where the
+first dimension is the sequence length and the second dimension is the
+embedding dimension. The row vectors in the `embeddings` correspond to the
+residues of the sequence in the `id` dataset.
+
+Examples
+--------
+Here we will read in an example protein embedding file and write it back out.
+Note that the embedding from implicitly gets the ``.write`` method from
+the IO registry. This ``ByteIO`` object can be a file path in a regular
+use case.
+
+>>> import io, skbio
+>>> f = io.BytesIO()
+>>> skbio.embedding.example_protein_embedding.write(f)  # doctest: +ELLIPSIS
+<_io.BytesIO object at ...>
+>>> roundtrip = skbio.read(f, skbio.ProteinEmbedding)
+>>> roundtrip
+ProteinEmbedding
+--------------------------------------------------------------------
+Stats:
+    length: 62
+    embedding dimension: 1024
+    has gaps: False
+    has degenerates: False
+    has definites: True
+    has stops: False
+--------------------------------------------------------------------
+0  IGKEEIQQRL AQFVDHWKEL KQLAAARGQR LEESLEYQQF VANVEEEEAW INEKMTLVAS
+60 ED
+"""
 
 import numpy as np
 import h5py
-from skbio.io import create_format, FASTAFormatError
-from skbio.io.format.fasta import _sequence_to_fasta
+from skbio.io import create_format
 from skbio.embedding._protein import ProteinEmbedding
 from skbio.sequence import Protein
 
@@ -39,8 +102,7 @@ def _embed_to_generator(
     fh,
     embed_constructor=ProteinEmbedding,
     obj_constructor=Protein,
-    obj_kwargs: dict = {},
-    embed_kwargs: dict = {},
+    kwargs: dict = {},
 ):
     h5grp = h5py.File(fh, "r")
     embed_fh = h5grp["embedding"]
@@ -54,15 +116,14 @@ def _embed_to_generator(
         emb = embed_fh[j:idptr]
         string = str(id_.tobytes().decode("ascii")).replace("\x00", "")
         j = idptr
-        yield embed_constructor(emb, string, **embed_kwargs)
+        yield embed_constructor(emb, string, **kwargs)
 
 
 def _embed_to_object(
     fh,
     embed_constructor=ProteinEmbedding,
     obj_constructor=Protein,
-    obj_kwargs: dict = {},
-    embed_kwargs: dict = {},
+    kwargs: dict = {},
 ):
     h5grp = h5py.File(fh, "r")
     embed_fh = h5grp["embedding"]
@@ -72,21 +133,19 @@ def _embed_to_object(
     emb = embed_fh[()].squeeze()
     id_ = id_fh[()]
     string = str(id_.tobytes().decode("ascii")).replace("\x00", "")
-    return embed_constructor(emb, string, **embed_kwargs)
+    return embed_constructor(emb, string, **kwargs)
 
 
 @embed.reader(ProteinEmbedding)
 def _embed_to_protein(
     fh,
-    obj_kwargs: dict = {},
-    embed_kwargs: dict = {},
+    kwargs: dict = {},
 ):
     return _embed_to_object(
         fh,
         embed_constructor=ProteinEmbedding,
         obj_constructor=Protein,
-        obj_kwargs=obj_kwargs,
-        embed_kwargs=embed_kwargs,
+        kwargs=kwargs,
     )
 
 

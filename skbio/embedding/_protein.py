@@ -7,6 +7,8 @@
 # ----------------------------------------------------------------------------
 from skbio.sequence import Protein
 from skbio.embedding._embedding import SequenceEmbedding
+from skbio.util import get_data_path
+from pathlib import Path
 
 
 class ProteinEmbedding(SequenceEmbedding):
@@ -34,8 +36,10 @@ class ProteinEmbedding(SequenceEmbedding):
 
     """
 
+    default_write_format = "embed"
+
     def __init__(
-        self, embedding, sequence: Protein, clip_head=False, clip_tail=False, **kwargs
+        self, embedding, sequence: str, clip_head=False, clip_tail=False, **kwargs
     ):
         if clip_head:
             embedding = embedding[1:]
@@ -59,3 +63,28 @@ class ProteinEmbedding(SequenceEmbedding):
 
     def __str__(self):
         return str(self._ids)
+
+    def __repr__(self):
+        """
+        Return a string representation of the ProteinEmbedding object.
+
+        Returns
+        -------
+        str
+            A string representation of the ProteinEmbedding object.
+
+        See Also
+        --------
+        Protein
+        """
+        seq = Protein(str(self._ids))
+
+        rstr = repr(seq)
+        rstr = rstr.replace("Protein", "ProteinEmbedding")
+        n_indent = 4  # see Sequence.__repr__
+        indent = " " * n_indent
+        rstr = rstr.replace(
+            "has gaps",
+            f"embedding dimension: {self.embedding.shape[1]}\n{indent}has gaps",
+        )
+        return rstr

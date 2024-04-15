@@ -50,7 +50,23 @@ class EmbeddingTests(TestCase):
         self.tempdir = tempfile.TemporaryDirectory()
         tempdir = Path(self.tempdir.name)
         self.writable_emb_path = str(tempdir / Path('test.emb'))
-        #self.writable_emb_path2 = str(tempdir / Path('test2.emb'))
+        self.writable_emb_path2 = str(tempdir / Path('test2.emb'))
+
+
+        self.invalid_embed_path = str(tempdir / Path('invalid'))
+        self.nonembed_hdf5_path = str(tempdir / Path('other.hdf5'))
+
+        with open(self.invalid_embed_path, 'wb') as fp:
+            fp.write(b'this is not a embed file')
+
+        with h5py.File(self.nonembed_hdf5_path, 'w') as fp:
+            fp['stuff'] = [1, 2, 3]
+
+
+    def test_sniffer(self):
+        self.assertEqual(_embed_sniffer(self.valid_embed_path), (True, {}))
+        self.assertEqual(_embed_sniffer(self.invalid_embed_path), (False, {}))
+        self.assertEqual(_embed_sniffer(self.nonembed_hdf5_path), (False, {}))
 
 
     def test_read_write_single(self):
@@ -64,16 +80,12 @@ class EmbeddingTests(TestCase):
 
     def test_read_write_generator(self):
         writable_emb_path2 = 'test2.emb'
-
         objs1 = [ProteinEmbedding(emb, seq) for emb, seq in self.sequences]
-
-        _generator_to_embed(objs1, writable_emb_path2)
-        objs2 = _embed_to_generator(writable_emb_path2)
-
+        _generator_to_embed(objs1, self.writable_emb_path2)
+        objs2 = _embed_to_generator(self.writable_emb_path2)
         for obj1, obj2 in zip(objs1, objs2):
             np.testing.assert_array_equal(obj1.embedding, obj2.embedding)
             self.assertEqual(str(obj1), str(obj2))
-
 
 
 if __name__ == '__main__':
