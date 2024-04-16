@@ -9,6 +9,7 @@
 import copy
 import io
 import string
+import numpy as np
 from unittest import TestCase, main
 from functools import partial
 from pathlib import Path
@@ -17,6 +18,7 @@ from skbio.embedding._protein import ProteinEmbedding
 
 
 class ProteinEmbeddingtests(TestCase):
+
 
     def test_repr(self):
         self.p_emb = ProteinEmbedding.read(get_data_path('prot.emb'))

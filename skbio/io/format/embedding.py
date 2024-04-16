@@ -100,7 +100,7 @@ def _embed_sniffer(fh):
 @embed.reader(None)
 def _embed_to_generator(
     fh,
-    embed_constructor=ProteinEmbedding,
+    constructor=ProteinEmbedding,
     obj_constructor=Protein,
     kwargs: dict = {},
 ):
@@ -116,12 +116,12 @@ def _embed_to_generator(
         emb = embed_fh[j:idptr]
         string = str(id_.tobytes().decode("ascii")).replace("\x00", "")
         j = idptr
-        yield embed_constructor(emb, string, **kwargs)
+        yield constructor(emb, string, **kwargs)
 
 
 def _embed_to_object(
     fh,
-    embed_constructor=ProteinEmbedding,
+    constructor=ProteinEmbedding,
     obj_constructor=Protein,
     kwargs: dict = {},
 ):
@@ -133,7 +133,7 @@ def _embed_to_object(
     emb = embed_fh[()].squeeze()
     id_ = id_fh[()]
     string = str(id_.tobytes().decode("ascii")).replace("\x00", "")
-    return embed_constructor(emb, string, **kwargs)
+    return constructor(emb, string, **kwargs)
 
 
 @embed.reader(ProteinEmbedding)
@@ -143,7 +143,7 @@ def _embed_to_protein(
 ):
     return _embed_to_object(
         fh,
-        embed_constructor=ProteinEmbedding,
+        constructor=ProteinEmbedding,
         obj_constructor=Protein,
         kwargs=kwargs,
     )
