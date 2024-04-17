@@ -23,6 +23,7 @@ are supported by each format, see the associated documentation.
    blast7
    clustal
    embl
+   embedding
    fasta
    fastq
    genbank
@@ -276,6 +277,7 @@ __all__ = [
     "QUALFormatError",
     "StockholmFormatError",
     "BIOMFormatError",
+    "EmbeddingFormatError",
 ]
 
 

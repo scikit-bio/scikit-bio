@@ -1,5 +1,11 @@
 # scikit-bio changelog
 
+## Version 0.6.1
+
+### Features
+
+* Adding `ProteinEmbedding` class and corresponding file format ([#2008](https://github.com/scikit-bio/scikit-bio/pull/2008]))
+
 ## Version 0.6.0
 
 ### Performance enhancements

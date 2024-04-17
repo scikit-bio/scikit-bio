@@ -14,9 +14,9 @@ Format Support
 +------+------+---------------------------------------------------------------+
 |Reader|Writer|                          Object Class                         |
 +======+======+===============================================================+
-|Yes   |Yes   |generator of :mod:`skbio.sequence.ProteinEmbedding` objects    |
+|Yes   |Yes   |generator of :mod:`skbio.embedding.ProteinEmbedding` objects   |
 +------+------+---------------------------------------------------------------+
-|Yes   |Yes   |:mod:`skbio.sequence.ProteinEmbedding` objects                 |
+|Yes   |Yes   |:mod:`skbio.embedding.ProteinEmbedding` objects                |
 +------+------+---------------------------------------------------------------+
 
 Format Specification

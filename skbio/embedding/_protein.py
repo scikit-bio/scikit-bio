@@ -9,6 +9,8 @@ from skbio.sequence import Protein
 from skbio.embedding._embedding import SequenceEmbedding
 from skbio.util import get_data_path
 from pathlib import Path
+import pandas as pd
+import numpy as np
 
 
 class ProteinEmbedding(SequenceEmbedding):
@@ -88,3 +90,8 @@ class ProteinEmbedding(SequenceEmbedding):
             f"embedding dimension: {self.embedding.shape[1]}\n{indent}has gaps",
         )
         return rstr
+
+
+example_protein_embedding = ProteinEmbedding(
+    np.load(get_data_path('embed1.txt.npy', 'tests/data')),
+    'IGKEEIQQRLAQFVDHWKELKQLAAARGQRLEESLEYQQFVANVEEEEAWINEKMTLVASED')
