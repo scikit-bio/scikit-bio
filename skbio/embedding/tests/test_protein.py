@@ -38,6 +38,10 @@ class ProteinEmbeddingtests(TestCase):
         self.assertEqual(str(p_emb), s)
         self.assertEqual(p_emb.sequence, s)
 
+    def test_assert_length(self):
+        with self.assertRaises(ValueError):
+            ProteinEmbedding(self.emb, self.seq + "A")
+
     def test_repr(self):
         emb, s = self.emb, self.seq
         p_emb = ProteinEmbedding(emb, s)
