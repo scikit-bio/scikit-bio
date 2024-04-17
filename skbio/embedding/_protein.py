@@ -96,5 +96,5 @@ class ProteinEmbedding(SequenceEmbedding):
 
 
 example_protein_embedding = ProteinEmbedding(
-    np.load(np.random.randn(62, 1024)),
+    np.random.randn(62, 1024),
     'IGKEEIQQRLAQFVDHWKELKQLAAARGQRLEESLEYQQFVANVEEEEAWINEKMTLVASED')
