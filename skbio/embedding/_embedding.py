@@ -37,3 +37,7 @@ class SequenceEmbedding(Embedding):
 
     def __init__(self, embedding, sequence, **kwargs):
         super(SequenceEmbedding, self).__init__(embedding, sequence, **kwargs)
+
+    @property
+    def sequence(self):
+        return str(self._ids)

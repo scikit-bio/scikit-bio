@@ -15,15 +15,34 @@ from functools import partial
 from pathlib import Path
 from skbio.util import get_data_path
 from skbio.embedding._protein import ProteinEmbedding
-
+import numpy.testing as npt
 
 class ProteinEmbeddingtests(TestCase):
 
+    def setUp(self):
+        self.emb = np.load(get_data_path('embed1.txt.npy'))
+        self.seq = ("IGKEEIQQRLAQFVDHWKELKQLAAARGQRLEESLEYQ"
+                    "QFVANVEEEEAWINEKMTLVASED")
+
+    def test_clipping(self):
+        emb, s = self.emb, self.seq
+        nemb = np.zeros((emb.shape[0] + 2, emb.shape[1]))
+        nemb[1:-1] = emb
+        p2_emb = ProteinEmbedding(nemb, s, clip_head=True, clip_tail=True)
+        npt.assert_array_equal(p2_emb.embedding, emb)
+        self.assertEqual(p2_emb.sequence, s)
+
+    def test_str(self):
+        emb, s = self.emb, self.seq
+        p_emb = ProteinEmbedding(emb, s)
+        self.assertEqual(str(p_emb), s)
+        self.assertEqual(p_emb.sequence, s)
 
     def test_repr(self):
-        self.p_emb = ProteinEmbedding.read(get_data_path('prot.emb'))
-        self.assertEqual(self.p_emb.embedding.shape, (62, 1024))
-        res_rstr = repr(self.p_emb)
+        emb, s = self.emb, self.seq
+        p_emb = ProteinEmbedding(emb, s)
+        self.assertEqual(p_emb.embedding.shape, (62, 1024))
+        res_rstr = repr(p_emb)
         exp_rstr = (
             ("ProteinEmbedding\n"
              "--------------------------------------------------------------------\n"
