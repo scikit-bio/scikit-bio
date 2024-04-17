@@ -48,7 +48,7 @@ use case.
 >>> f = io.BytesIO()
 >>> skbio.embedding.example_protein_embedding.write(f)  # doctest: +ELLIPSIS
 <_io.BytesIO object at ...>
->>> roundtrip = skbio.read(f, skbio.ProteinEmbedding)
+>>> roundtrip = skbio.read(f, into=skbio.ProteinEmbedding)
 >>> roundtrip
 ProteinEmbedding
 --------------------------------------------------------------------
