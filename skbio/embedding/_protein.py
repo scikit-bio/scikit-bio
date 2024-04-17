@@ -14,11 +14,11 @@ import numpy as np
 
 
 class ProteinEmbedding(SequenceEmbedding):
-    """Stores the embeddings of the protein sequence.
+    r"""Stores the embeddings of the protein sequence.
 
     Parameters
     ----------
-    sequence : str, Sequence, or 1D np.ndarray
+    sequence : str, Protein, or 1D np.ndarray
         Characters representing the protein sequence itself.
     embedding : np.ndarray
         The embedding of the protein sequence. Row vectors correspond to
@@ -41,7 +41,7 @@ class ProteinEmbedding(SequenceEmbedding):
     default_write_format = "embed"
 
     def __init__(
-        self, embedding, sequence: str, clip_head=False, clip_tail=False, **kwargs
+        self, embedding, sequence, clip_head=False, clip_tail=False, **kwargs
     ):
         if clip_head:
             embedding = embedding[1:]

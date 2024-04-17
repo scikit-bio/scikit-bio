@@ -9,12 +9,12 @@
 import copy
 import io
 import string
-import numpy as np
 from unittest import TestCase, main
 from functools import partial
 from pathlib import Path
 from skbio.util import get_data_path
 from skbio.embedding._protein import ProteinEmbedding
+import numpy as np
 import numpy.testing as npt
 
 class ProteinEmbeddingtests(TestCase):

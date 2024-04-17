@@ -5,6 +5,7 @@
 #
 # The full license is in the file LICENSE.txt, distributed with this software.
 # ----------------------------------------------------------------------------
+
 import numpy as np
 
 from skbio.sequence import Sequence
@@ -25,11 +26,8 @@ class Embedding(SkbioObject):
         return self._ids
 
     def __init__(self, embedding, ids, **kwargs):
-        self._embedding = embedding
+        self._embedding = np.array(embedding)
         self._ids = ids
-
-        if not isinstance(embedding, np.ndarray):
-            raise ValueError("Input `embedding` must be a numpy array.")
 
 
 class SequenceEmbedding(Embedding):

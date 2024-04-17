@@ -23,9 +23,9 @@ Format Specification
 --------------------
 The format is a HDF5 file with the following structure:
 
-  - `embeddings` (dataset)
-  - `id` (dataset)
-  - `idptr` (dataset)
+  - ``embeddings`` (dataset)
+  - ``id`` (dataset)
+  - ``idptr`` (dataset)
 
 The `idptr` dataset contains the cumulative sum of the sequence lengths
 in the hdf5. This is used to index both the sequences and the embeddings
