@@ -51,6 +51,9 @@ class ProteinEmbedding(SequenceEmbedding):
         if isinstance(sequence, Protein):
             sequence = str(sequence)
 
+        if " " in sequence:
+            sequence = sequence.replace(" ", "")
+
         # make sure that the embedding has the same length as the sequence
         sequence_len = len(sequence)
         if embedding.shape[0] != sequence_len:

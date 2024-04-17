@@ -38,6 +38,14 @@ class ProteinEmbeddingtests(TestCase):
         self.assertEqual(str(p_emb), s)
         self.assertEqual(p_emb.sequence, s)
 
+    def test_str_spaces(self):
+        seq = ("I G K E E I Q Q R L A Q F V D H W K E L K Q L A "
+               "A A R G Q R L E E S L E Y Q Q F V A N V E E E E "
+               "A W I N E K M T L V A S E D")
+        p_emb = ProteinEmbedding(self.emb, seq)
+        self.assertEqual(str(p_emb), self.seq)
+        self.assertEqual(p_emb.sequence, self.seq)
+
     def test_assert_length(self):
         with self.assertRaises(ValueError):
             ProteinEmbedding(self.emb, self.seq + "A")
