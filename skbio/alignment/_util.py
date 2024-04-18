@@ -1,3 +1,6 @@
+import numpy as np
+
+
 def align_score(path, seqs, match=2, mismatch=-3, gap_open=-5, gap_extend=-2):
     """Calculate alignment score of a pairwise alignment."""
     # The current code only accepts an alignment path and the original sequences. It is

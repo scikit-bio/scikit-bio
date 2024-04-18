@@ -6,6 +6,8 @@
 # The full license is in the file LICENSE.txt, distributed with this software.
 # ----------------------------------------------------------------------------
 
+import numpy as np
+
 from skbio.util._decorator import overrides, classonlymethod
 
 
@@ -159,9 +161,32 @@ class PairAlignPath(AlignPath):
         seqs: If provided, will distinguish match (=) and mismatch (X). Otherwise,
             will uniformly note them as (mis)match (M).
         """
-        pass
+        cigar = ""
+        lengths = self.lengths
+        gaps = self.states
+        codes = ["M", "I", "D"]
+        # Leaving this out for now, but need to implement "=" and "X" on a per
+        # character basis.
+        if seqs is not None:
+            pass
+        else:
+            for i, length in enumerate(lengths):
+                cigar += str(length) + codes[gaps[i]]
+            return cigar
 
     @classonlymethod
-    def from_cigar(self):
+    def from_cigar(self, cigar):
         """Create a pairwise alignment path from a CIGAR string."""
-        pass
+        cigar = cigar.replace("=", "M").replace("X", "M")
+        lengths = []
+        gaps = []
+        current_length = 0
+        mapping = {"M": 0, "I": 1, "D": 2}
+        for char in cigar:
+            if char.isdigit():
+                current_length = current_length * 10 + int(char)
+            elif char in mapping:
+                lengths.append(current_length)
+                gaps.append(mapping[char])
+                current_length = 0
+        return lengths, gaps
