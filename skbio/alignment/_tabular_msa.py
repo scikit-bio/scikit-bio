@@ -2477,3 +2477,16 @@ class TabularMSA(MetadataMixin, PositionalMetadataMixin, SkbioObject):
     @overrides(PositionalMetadataMixin)
     def _positional_metadata_axis_len_(self):
         return self.shape.position
+
+
+class TabularMSA2(TabularMSA):
+    @classonlymethod
+    def from_path_seqs(cls, path, seqs):
+        """Create a tabular MSA from an alignment path and sequences."""
+        seqtype = seqs[0].__class__
+        bits = path.to_bits()
+        gaps = np.repeat(bits, path.lengths, axis=1)
+        gap_char = ord(seqtype.default_gap_char)
+        byte_arr = np.full(path.shape, gap_char, dtype=np.uint8)
+        byte_arr[gaps == 0] = np.concatenate([x._bytes for x in seqs])
+        return cls([seqtype(x) for x in byte_arr])
