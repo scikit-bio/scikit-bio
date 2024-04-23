@@ -616,8 +616,7 @@ class TestSequence(TestSequenceBase, ReallyEqualMixin):
                         interval_metadata=im)
         seq2 = Sequence(np.array([65, 67, 71, 84], dtype=np.uint8),
                         metadata={'id': 'foo', 'desc': 'abc'},
-                        positional_metadata={'quality': np.array([1, 2, 3,
-                                                                  4])},
+                        positional_metadata={'quality': np.array([1, 2, 3, 4])},
                         interval_metadata=im)
         self.assertTrue(seq1 == seq2)
 
@@ -673,19 +672,21 @@ class TestSequence(TestSequenceBase, ReallyEqualMixin):
         s = "Sequence string !1@2#3?.,"
         length = len(s)
         seq = Sequence(s, metadata={'id': 'id', 'description': 'dsc'},
-                       positional_metadata={'quality': np.arange(length)})
+                       positional_metadata={'quality': np.arange(length,
+                                                                 dtype=np.int64)})
 
         eseq = Sequence("S", {'id': 'id', 'description': 'dsc'},
-                        positional_metadata={'quality': np.array([0])})
+                        positional_metadata={'quality': np.array([0], dtype=np.int64)})
         self.assertEqual(seq[0], eseq)
 
         eseq = Sequence(",", metadata={'id': 'id', 'description': 'dsc'},
                         positional_metadata={'quality':
-                                             np.array([len(seq) - 1])})
+                                             np.array([len(seq) - 1], dtype=np.int64)})
         self.assertEqual(seq[len(seq) - 1], eseq)
 
         eseq = Sequence("t", metadata={'id': 'id', 'description': 'dsc'},
-                        positional_metadata={'quality': [10]})
+                        positional_metadata={'quality': np.asarray([10],
+                                                                   dtype=np.int64)})
         self.assertEqual(seq[10], eseq)
 
     def test_single_index_to_slice(self):
@@ -734,36 +735,38 @@ class TestSequence(TestSequenceBase, ReallyEqualMixin):
         s = "0123456789abcdef"
         length = len(s)
         seq = Sequence(s, metadata={'id': 'id3', 'description': 'dsc3'},
-                       positional_metadata={'quality': np.arange(length)})
+                       positional_metadata={'quality': np.arange(length,
+                                                                 dtype=np.int64)})
 
         eseq = Sequence("012", metadata={'id': 'id3', 'description': 'dsc3'},
-                        positional_metadata={'quality': np.arange(3)})
+                        positional_metadata={'quality': np.arange(3, dtype=np.int64)})
         self.assertEqual(seq[0:3], eseq)
         self.assertEqual(seq[:3], eseq)
         self.assertEqual(seq[:3:1], eseq)
 
         eseq = Sequence("def", metadata={'id': 'id3', 'description': 'dsc3'},
-                        positional_metadata={'quality': [13, 14, 15]})
+                        positional_metadata={'quality': np.asarray([13, 14, 15],
+                                                                   dtype=np.int64)})
         self.assertEqual(seq[-3:], eseq)
         self.assertEqual(seq[-3::1], eseq)
 
         eseq = Sequence("02468ace",
                         metadata={'id': 'id3', 'description': 'dsc3'},
-                        positional_metadata={'quality': [0, 2, 4, 6, 8, 10,
-                                                         12, 14]})
+                        positional_metadata={'quality': np.asarray([0, 2, 4, 6, 8, 10,
+                                                         12, 14], dtype=np.int64)})
         self.assertEqual(seq[0:length:2], eseq)
         self.assertEqual(seq[::2], eseq)
 
         eseq = Sequence(s[::-1], metadata={'id': 'id3', 'description': 'dsc3'},
                         positional_metadata={'quality':
-                                             np.arange(length)[::-1]})
+                                             np.arange(length, dtype=np.int64)[::-1]})
         self.assertEqual(seq[length::-1], eseq)
         self.assertEqual(seq[::-1], eseq)
 
         eseq = Sequence('fdb97531',
                         metadata={'id': 'id3', 'description': 'dsc3'},
-                        positional_metadata={'quality': [15, 13, 11, 9, 7, 5,
-                                                         3, 1]})
+                        positional_metadata={'quality': np.asarray([15, 13, 11, 9, 7, 5,
+                                                         3, 1], dtype=np.int64)})
         self.assertEqual(seq[length::-2], eseq)
         self.assertEqual(seq[::-2], eseq)
 
@@ -777,7 +780,7 @@ class TestSequence(TestSequenceBase, ReallyEqualMixin):
         self.assertEqual(seq[1:0], eseq)
 
         eseq = Sequence("0", metadata={'id': 'id3', 'description': 'dsc3'},
-                        positional_metadata={'quality': [0]})
+                        positional_metadata={'quality': np.asarray([0], dtype=np.int64)})
         self.assertEqual(seq[0:1], eseq)
         self.assertEqual(seq[0:1:1], eseq)
         self.assertEqual(seq[-length::-1], eseq)
@@ -796,10 +799,12 @@ class TestSequence(TestSequenceBase, ReallyEqualMixin):
         s = "0123456789abcdef"
         length = len(s)
         seq = Sequence(s, metadata={'id': 'id5', 'description': 'dsc5'},
-                       positional_metadata={'quality': np.arange(length)})
+                       positional_metadata={'quality': np.arange(length,
+                                                                 dtype=np.int64)})
 
         eseq = Sequence("00000", metadata={'id': 'id5', 'description': 'dsc5'},
-                        positional_metadata={'quality': [0, 0, 0, 0, 0]})
+                        positional_metadata={'quality': np.asarray([0, 0, 0, 0, 0],
+                                                                   dtype=np.int64)})
         self.assertEqual(seq[0, 0, 0, 0, 0], eseq)
         self.assertEqual(seq[0, 0:1, 0, 0, 0], eseq)
         self.assertEqual(seq[0, 0:1, 0, -length::-1, 0, 1:0], eseq)
@@ -837,7 +842,8 @@ class TestSequence(TestSequenceBase, ReallyEqualMixin):
         s = "0123456789abcdef"
         length = len(s)
         seq = Sequence(s, metadata={'id': 'id7', 'description': 'dsc7'},
-                       positional_metadata={'quality': np.arange(length)})
+                       positional_metadata={'quality': np.arange(length,
+                                                                 dtype=np.int64)})
 
         def generator():
             yield slice(0, 4)
@@ -848,8 +854,8 @@ class TestSequence(TestSequenceBase, ReallyEqualMixin):
 
         eseq = Sequence("0123fed9",
                         metadata={'id': 'id7', 'description': 'dsc7'},
-                        positional_metadata={'quality': [0, 1, 2, 3, 15, 14,
-                                                         13, 9]})
+                        positional_metadata={'quality': np.asarray([0, 1, 2, 3, 15, 14, 
+                                                                    13, 9], dtype=np.int64)})
         self.assertEqual(seq[[0, 1, 2, 3, 15, 14, 13, 9]], eseq)
         self.assertEqual(seq[generator()], eseq)
         self.assertEqual(seq[[slice(0, 4), slice(None, -4, -1), 9]], eseq)
@@ -878,12 +884,12 @@ class TestSequence(TestSequenceBase, ReallyEqualMixin):
         s = "0123456789abcdef"
         length = len(s)
         seq = Sequence(s, metadata={'id': 'id9', 'description': 'dsc9'},
-                       positional_metadata={'quality': np.arange(length)})
+                       positional_metadata={'quality': np.arange(length, dtype=np.int64)})
 
         eseq = Sequence("0123fed9",
                         metadata={'id': 'id9', 'description': 'dsc9'},
-                        positional_metadata={'quality': [0, 1, 2, 3, 15, 14,
-                                                         13, 9]})
+                        positional_metadata={'quality': np.asarray([0, 1, 2, 3, 15, 14,
+                                                         13, 9], dtype=np.int64)})
         self.assertEqual(seq[np.array([0, 1, 2, 3, 15, 14, 13, 9])], eseq)
 
     def test_getitem_with_numpy_index_no_positional_metadata(self):
@@ -922,12 +928,13 @@ class TestSequence(TestSequenceBase, ReallyEqualMixin):
         s = "0123456789abcdef"
         length = len(s)
         seq = Sequence(s, metadata={'id': 'id11', 'description': 'dsc11'},
-                       positional_metadata={'quality': np.arange(length)})
+                       positional_metadata={'quality': np.arange(length,
+                                                                 dtype=np.int64)})
 
         eseq = Sequence("13579bdf",
                         metadata={'id': 'id11', 'description': 'dsc11'},
-                        positional_metadata={'quality': [1, 3, 5, 7, 9, 11,
-                                                         13, 15]})
+                        positional_metadata={'quality': np.asarray([1, 3, 5, 7, 9, 11,
+                                                         13, 15], dtype=np.int64)})
 
         self.assertEqual(seq[np.array([False, True] * 8)], eseq)
         self.assertEqual(seq[[False, True] * 8], eseq)
@@ -1030,12 +1037,12 @@ class TestSequence(TestSequenceBase, ReallyEqualMixin):
     def test_iter_has_positional_metadata(self):
         tested = False
         seq = Sequence("0123456789", metadata={'id': 'a', 'desc': 'b'},
-                       positional_metadata={'qual': np.arange(10)})
+                       positional_metadata={'qual': np.arange(10, dtype=np.int64)})
         for i, s in enumerate(seq):
             tested = True
             self.assertEqual(s, Sequence(str(i),
                                          metadata={'id': 'a', 'desc': 'b'},
-                                         positional_metadata={'qual': [i]}))
+                                         positional_metadata={'qual': np.asarray([i], dtype=np.int64)}))
         self.assertTrue(tested)
 
     def test_iter_no_positional_metadata(self):
@@ -1050,13 +1057,15 @@ class TestSequence(TestSequenceBase, ReallyEqualMixin):
     def test_reversed_has_positional_metadata(self):
         tested = False
         seq = Sequence("0123456789", metadata={'id': 'a', 'desc': 'b'},
-                       positional_metadata={'qual': np.arange(10)})
+                       positional_metadata={'qual': np.arange(10, dtype=np.int64)})
         for i, s in enumerate(reversed(seq)):
             tested = True
-            self.assertEqual(s, Sequence(str(9 - i),
-                                         metadata={'id': 'a', 'desc': 'b'},
-                                         positional_metadata={'qual':
-                                                              [9 - i]}))
+            self.assertEqual(s,
+                             Sequence(str(9 - i),
+                                      metadata={'id': 'a', 'desc': 'b'},
+                                      positional_metadata={'qual':
+                                                            np.asarray([9 - i], 
+                                                            dtype=np.int64)}))
         self.assertTrue(tested)
 
     def test_reversed_no_positional_metadata(self):
