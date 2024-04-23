@@ -10,6 +10,7 @@ import unittest
 
 import pandas as pd
 import pandas.testing as pdt
+import numpy as np
 
 
 from skbio.metadata.missing import series_encode_missing, series_extract_missing
@@ -26,7 +27,7 @@ class RoundTripMixin:
         self.assertEqual(encoded.dtype, dtype)
         # the non-null side of the series
         self.assertEqual(list(encoded[encoded.notna()]), notna_exp)
-        # the null end (but in the orginal vocabulary)
+        # the null end (but in the original vocabulary)
         pdt.assert_series_equal(missing, series[1:].astype(object))
 
     def test_roundtrip_float(self):
@@ -86,8 +87,11 @@ class TestError(RoundTripMixin, unittest.TestCase):
         self.check_roundtrip(True, bool)
 
     def test_roundtrip_int(self):
-        self.check_roundtrip(42, int)
+        self.check_roundtrip(42, np.int64)
 
     def test_roundtrip_all_missing_object(self):
         with self.assertRaisesRegex(ValueError, 'Missing values.*name=None'):
             super().test_roundtrip_all_missing_object()
+
+if __name__ == '__main__':
+    unittest.main()
