@@ -474,7 +474,7 @@ class TestSequence(TestSequenceBase, ReallyEqualMixin):
         with self.assertRaisesRegex(TypeError, r'float'):
             Sequence(4.2)
         with self.assertRaisesRegex(TypeError, r'int64'):
-            Sequence(np.int_(50))
+            Sequence(np.int64(50))
         with self.assertRaisesRegex(TypeError, r'float64'):
             Sequence(np.float_(50))
         with self.assertRaisesRegex(TypeError, r'Foo'):
@@ -612,11 +612,11 @@ class TestSequence(TestSequenceBase, ReallyEqualMixin):
         im = IntervalMetadata(4)
         im.add([(0, 2)], metadata={'gene': 'sagB'})
         seq1 = Sequence('ACGT', metadata={'id': 'foo', 'desc': 'abc'},
-                        positional_metadata={'quality': (1, 2, 3, 4)},
+                        positional_metadata={'quality': np.array((1, 2, 3, 4), dtype=np.int64)},
                         interval_metadata=im)
         seq2 = Sequence(np.array([65, 67, 71, 84], dtype=np.uint8),
                         metadata={'id': 'foo', 'desc': 'abc'},
-                        positional_metadata={'quality': np.array([1, 2, 3, 4])},
+                        positional_metadata={'quality': np.array([1, 2, 3, 4], dtype=np.int64)},
                         interval_metadata=im)
         self.assertTrue(seq1 == seq2)
 
@@ -711,9 +711,9 @@ class TestSequence(TestSequenceBase, ReallyEqualMixin):
 
     def test_slice_positional_metadata(self):
         seq = Sequence('ABCDEFGHIJ',
-                       positional_metadata={'foo': np.arange(10),
-                                            'bar': np.arange(100, 110)})
-        self.assertTrue(pd.DataFrame({'foo': [0], 'bar': [100]}).equals(
+                       positional_metadata={'foo': np.arange(10, dtype=np.int64),
+                                            'bar': np.arange(100, 110, dtype=np.int64)})
+        self.assertTrue(pd.DataFrame({'foo': [0], 'bar': [100]}, dtype=np.int64).equals(
                         seq._slice_positional_metadata(0)))
         self.assertTrue(pd.DataFrame({'foo': [0], 'bar': [100]}).equals(
                         seq._slice_positional_metadata(slice(0, 1))))
