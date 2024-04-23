@@ -225,7 +225,7 @@ def subsample_counts(counts, n, replace=False):
         raise ValueError("n cannot be negative.")
 
     counts = np.asarray(counts)
-    counts = counts.astype(int, casting="safe")
+    counts = counts.astype(np.int64, casting="safe")
 
     if counts.ndim != 1:
         raise ValueError("Only 1-D vectors are supported.")
