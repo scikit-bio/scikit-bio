@@ -282,7 +282,7 @@ class ReadableSourceTest(unittest.TestCase):
             self.get_fileobj(get_data_path("big5_file.bz2"))
 
         self.binary_contents = (f"This is some content{os.linesep}"
-                                f"It occurs on more than one line{os.linesep}").encode()
+                                f"It occurs on more than one line{os.linesep}").replace("\r\n", "\n").encode()
         self.decoded_contents = '\u4f60\u597d\n'  # Ni Hau
         self.compression = 'gzip'
         self.encoding = "big5"
