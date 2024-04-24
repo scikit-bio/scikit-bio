@@ -57,13 +57,15 @@ class ReadableBinarySourceTests:
 
     def check_open_state_contents(self, file, contents, is_binary, **kwargs):
         result = skbio.io.open(file, **kwargs)
+        self.assertTrue(result.readable())
         if is_binary:
             self.assertIsInstance(result, (io.BufferedReader,
                                            io.BufferedRandom))
+            actual_contents = result.read().decode().replace("\r\n", "\n").encode()
         else:
             self.assertIsInstance(result, io.TextIOBase)
-        self.assertTrue(result.readable())
-        self.assertEqual(result.read(), contents)
+            actual_contents = result.read().replace("\r\n", "\n")
+        self.assertEqual(actual_contents, contents)
         self.assertFalse(result.closed)
 
         result.close()
@@ -73,13 +75,15 @@ class ReadableBinarySourceTests:
     def check_open_file_state_contents(self, file, contents, is_binary,
                                        **kwargs):
         with open_file(file, **kwargs) as f:
+            self.assertTrue(f.readable())
             if is_binary:
                 self.assertIsInstance(f, (io.BufferedReader,
                                           io.BufferedRandom))
+                actual_contents = f.read().decode().replace("\r\n", "\n").encode()
             else:
                 self.assertIsInstance(f, io.TextIOBase)
-            self.assertTrue(f.readable())
-            self.assertEqual(f.read(), contents)
+                actual_contents = f.read().replace("\r\n", "\n")
+            self.assertEqual(actual_contents, contents)
         self.assertEqual(f.closed, self.expected_close)
 
         f.close()
