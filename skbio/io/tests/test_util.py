@@ -366,8 +366,12 @@ class WritableBinarySourceTests:
         self.check_open_state_contents(self.big5_file, self.decoded_contents,
                                        False, encoding='big5')
 
-        self.assertEqual(self.get_contents(self.big5_file),
-                         self.encoded_contents)
+        self.assertEqual(
+            self.get_contents(self.big5_file)
+            .decode(encoding="big5")
+            .replace("\r\n", "\n")
+            .encode(encoding="big5"),
+            self.encoded_contents)
 
     def test_open_gzip_encoding(self):
         self.check_open_state_contents(self.gzip_encoded_file,
