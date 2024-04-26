@@ -179,6 +179,7 @@ class PairAlignPath(AlignPath):
                     cigar += "D"
                 elif qchar != rchar:
                     cigar += "X"
+            print(cigar)
             return self._run_length_encode(cigar)
         else:
             for i, length in enumerate(lengths):
@@ -203,16 +204,18 @@ class PairAlignPath(AlignPath):
                 gaps.append(mapping[char])
                 current_length = 0
         if self.fix_arrs:
-            lengths, gaps = self._fix_arrays(np.array(lengths), np.array(gaps))
+            lengths, gaps = self._fix_arrays(
+                lengths=np.array(lengths), gaps=np.array(gaps)
+            )
         return lengths, gaps
 
-    def _run_length_encode(self, input):
+    def _run_length_encode(self, input_string):
         """Perform run length encoding on a string."""
         encoded_string = ""
         count = 1
-        prev_char = input[0]
+        prev_char = input_string[0]
 
-        for char in input[1:]:
+        for char in input_string[1:]:
             if char == prev_char:
                 count += 1
             else:
@@ -222,7 +225,7 @@ class PairAlignPath(AlignPath):
                 prev_char = char
 
         encoded_string += str(count) if count > 1 else ""
-        encoded_string += input[-1]
+        encoded_string += input_string[-1]
         return encoded_string
 
     def _fix_arrays(self, lengths, gaps):
