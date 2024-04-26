@@ -211,7 +211,6 @@ class PairAlignPath(AlignPath):
                 lengths[start] += np.sum(lengths[start + 1 : stop])
 
         identical_indices = np.where(gaps[:-1] == gaps[1:])[0] + 1
-        print(identical_indices)
         gaps = np.delete(gaps, identical_indices)
         lengths = np.delete(lengths, identical_indices)
 
