@@ -177,6 +177,8 @@ class PairAlignPath(AlignPath):
     @classonlymethod
     def from_cigar(self, cigar):
         """Create a pairwise alignment path from a CIGAR string."""
+        if "=" in cigar or "X" in cigar:
+            self.fix_arrs = True
         cigar = cigar.replace("=", "M").replace("X", "M")
         lengths = []
         gaps = []
@@ -189,4 +191,25 @@ class PairAlignPath(AlignPath):
                 lengths.append(current_length)
                 gaps.append(mapping[char])
                 current_length = 0
+        if self.fix_arrs:
+            lengths, gaps = self._fix_arrays(np.array(lengths), np.array(gaps))
+        return lengths, gaps
+
+    def _fix_arrays(lengths, gaps):
+        """Fix output arrays if subsequent '=', 'X', or 'M' are present in the input
+        CIGAR string."""
+        is_zero = np.concatenate(([0], np.equal(gaps, 0).view(np.int8), [0]))
+        abs_diff = np.abs(np.diff(is_zero))
+
+        ranges = np.where(abs_diff == 1)[0].reshape(-1, 2)
+
+        for start, stop in ranges:
+            if stop - start > 1:
+                lengths[start] += np.sum(lengths[start + 1 : stop])
+
+        identical_indices = np.where(gaps[:-1] == gaps[1:])[0] + 1
+        print(identical_indices)
+        gaps = np.delete(gaps, identical_indices)
+        lengths = np.delete(lengths, identical_indices)
+
         return lengths, gaps
