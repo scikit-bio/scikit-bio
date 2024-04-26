@@ -168,7 +168,33 @@ class PairAlignPath(AlignPath):
         # Leaving this out for now, but need to implement "=" and "X" on a per
         # character basis.
         if seqs is not None:
-            pass
+            query = seqs[0]
+            ref = seqs[1]
+            for qchar, rchar in zip(query, ref):
+                if qchar == rchar:
+                    cigar += "="
+                elif qchar == "-":
+                    cigar += "I"
+                elif rchar == "-":
+                    cigar += "D"
+                elif qchar != rchar:
+                    cigar += "X"
+            encoded_string = ""
+            count = 1
+            prev_char = cigar[0]
+
+            for char in cigar[1:]:
+                if char == prev_char:
+                    count += 1
+                else:
+                    encoded_string += str(count) if count > 1 else ""
+                    encoded_string += prev_char
+                    count = 1
+                    prev_char = char
+
+            encoded_string += str(count) if count > 1 else ""
+            encoded_string += cigar[-1]
+            return encoded_string
         else:
             for i, length in enumerate(lengths):
                 cigar += str(length) + codes[gaps[i]]
