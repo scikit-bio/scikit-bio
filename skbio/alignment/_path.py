@@ -179,22 +179,7 @@ class PairAlignPath(AlignPath):
                     cigar += "D"
                 elif qchar != rchar:
                     cigar += "X"
-            encoded_string = ""
-            count = 1
-            prev_char = cigar[0]
-
-            for char in cigar[1:]:
-                if char == prev_char:
-                    count += 1
-                else:
-                    encoded_string += str(count) if count > 1 else ""
-                    encoded_string += prev_char
-                    count = 1
-                    prev_char = char
-
-            encoded_string += str(count) if count > 1 else ""
-            encoded_string += cigar[-1]
-            return encoded_string
+            return self._run_length_encode(cigar)
         else:
             for i, length in enumerate(lengths):
                 cigar += str(length) + codes[gaps[i]]
@@ -221,7 +206,26 @@ class PairAlignPath(AlignPath):
             lengths, gaps = self._fix_arrays(np.array(lengths), np.array(gaps))
         return lengths, gaps
 
-    def _fix_arrays(lengths, gaps):
+    def _run_length_encode(self, input):
+        """Perform run length encoding on a string."""
+        encoded_string = ""
+        count = 1
+        prev_char = input[0]
+
+        for char in input[1:]:
+            if char == prev_char:
+                count += 1
+            else:
+                encoded_string += str(count) if count > 1 else ""
+                encoded_string += prev_char
+                count = 1
+                prev_char = char
+
+        encoded_string += str(count) if count > 1 else ""
+        encoded_string += input[-1]
+        return encoded_string
+
+    def _fix_arrays(self, lengths, gaps):
         """Fix output arrays if subsequent '=', 'X', or 'M' are present in the input
         CIGAR string.
 
