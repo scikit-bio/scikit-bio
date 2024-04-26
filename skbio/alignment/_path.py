@@ -197,7 +197,10 @@ class PairAlignPath(AlignPath):
 
     def _fix_arrays(lengths, gaps):
         """Fix output arrays if subsequent '=', 'X', or 'M' are present in the input
-        CIGAR string."""
+        CIGAR string.
+
+        The first part of this function is taken from
+        https://stackoverflow.com/questions/24885092/finding-the-consecutive-zeros-in-a-numpy-array"""
         is_zero = np.concatenate(([0], np.equal(gaps, 0).view(np.int8), [0]))
         abs_diff = np.abs(np.diff(is_zero))
 
