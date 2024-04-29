@@ -7,6 +7,7 @@
 # ----------------------------------------------------------------------------
 
 import unittest
+import numpy as np
 import numpy.testing as npt
 
 from skbio.alignment._path import PairAlignPath, AlignPath
@@ -43,6 +44,7 @@ class TestPairAlignPath(unittest.TestCase):
         obs = ExamplePairAlignPath.to_cigar()
         exp = "1I2M3D4I50M234I"
         # do we want to include or omit 1?
+        # include 1 by default, maybe have option to not include 1
         self.assertEqual(obs, exp)
 
         # test if seqs are provided
@@ -52,6 +54,19 @@ class TestPairAlignPath(unittest.TestCase):
         obs = ExamplePairAlignPath.to_cigar(seqs=seqs)
         exp = "1I1=1X3D4I20=30X234I"
         self.assertEqual(obs, exp)
+
+        # test invalid input
+
+    def from_bits(self):
+        # test base case
+        bits = np.array(([0, 1, 0, 0, 0, 1], [1, 0, 0, 0, 1, 0]))
+        exp = PairAlignPath(lengths=[1, 1, 2, 1, 1], states=[2, 1, 0, 2, 1], n_seqs=2)
+        obs = PairAlignPath.from_bits(bits)
+        self.assertEqual(obs, exp)
+
+        # test empty bit array
+        bits = np.array(([],[]))
+
 
 if __name__ == "__main__":
     unittest.main()

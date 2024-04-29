@@ -32,6 +32,13 @@ class AlignPath:
         # (n_seqs,)) should be included as a parameter. It is only relevant for
         # nucleotide sequences.
 
+    def subset(self):
+        """Select subset of sequences from AlignPath.
+
+        Better to have ability to index an AlignPath for particular sequences,
+        then compress these sequences using something like _fix_arrays"""
+        pass
+
     def to_bits(self):
         """Unpack states into an array of bits."""
         return np.unpackbits(
@@ -188,8 +195,9 @@ class PairAlignPath(AlignPath):
             return cigar
 
     @classonlymethod
-    def from_cigar(self, cigar):
+    def from_cigar(cls, cigar):
         """Create a pairwise alignment path from a CIGAR string."""
+        # need to have ability for strings without 1's
         # Make sure cigar is not empty.
         if not cigar:
             raise ValueError("CIGAR string must not be empty.")
@@ -214,7 +222,7 @@ class PairAlignPath(AlignPath):
             else:
                 raise ValueError("Invalid characters in CIGAR string.")
         if fix_arrs:
-            lengths, gaps = self._fix_arrays(
+            lengths, gaps = cls._fix_arrays(
                 lengths=np.array(lengths), gaps=np.array(gaps)
             )
         return np.asarray(lengths), np.asarray(gaps)
@@ -239,22 +247,13 @@ class PairAlignPath(AlignPath):
         return encoded_string
 
     def _fix_arrays(lengths, gaps):
-        """Fix output arrays if subsequent '=', 'X', or 'M' are present in the input
-        CIGAR string.
+        """Merge consecutive same values from gaps array and sum corresponding values
+        in lengths array."""
+        boundaries = (
+            np.diff(gaps, prepend=np.array([np.nan]), append=np.array([np.nan])) != 0
+        )
+        gaps_out = gaps[boundaries[:-1]]
+        group_labels = np.cumsum(boundaries[:-1])
+        lengths_out = np.bincount(group_labels, weights=lengths).astype(int)[1:]
 
-        The first part of this function is taken from
-        https://stackoverflow.com/questions/24885092/finding-the-consecutive-zeros-in-a-numpy-array"""
-        is_zero = np.concatenate(([0], np.equal(gaps, 0).view(np.int8), [0]))
-        abs_diff = np.abs(np.diff(is_zero))
-
-        ranges = np.where(abs_diff == 1)[0].reshape(-1, 2)
-
-        for start, stop in ranges:
-            if stop - start > 1:
-                lengths[start] += np.sum(lengths[start + 1 : stop])
-
-        identical_indices = np.where(gaps[:-1] == gaps[1:])[0] + 1
-        gaps = np.delete(gaps, identical_indices)
-        lengths = np.delete(lengths, identical_indices)
-
-        return lengths, gaps
+        return lengths_out, gaps_out
