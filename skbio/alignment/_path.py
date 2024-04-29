@@ -249,9 +249,7 @@ class PairAlignPath(AlignPath):
     def _fix_arrays(lengths, gaps):
         """Merge consecutive same values from gaps array and sum corresponding values
         in lengths array."""
-        boundaries = (
-            np.diff(gaps, prepend=np.array([np.nan]), append=np.array([np.nan])) != 0
-        )
+        boundaries = np.diff(gaps, prepend=np.array([0]), append=np.array([0])) != 0
         gaps_out = gaps[boundaries[:-1]]
         group_labels = np.cumsum(boundaries[:-1])
         lengths_out = np.bincount(group_labels, weights=lengths).astype(int)[1:]
