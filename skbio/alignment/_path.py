@@ -212,13 +212,19 @@ class PairAlignPath(AlignPath):
         gaps = []
         current_length = 0
         mapping = {"M": 0, "I": 1, "D": 2}
+        no_ones = True
         for char in cigar:
             if char.isdigit():
+                no_ones = False
                 current_length = current_length * 10 + int(char)
             elif char in mapping:
-                lengths.append(current_length)
+                if no_ones:
+                    lengths.append(current_length + 1)
+                else:
+                    lengths.append(current_length)
                 gaps.append(mapping[char])
                 current_length = 0
+                no_ones = True
             else:
                 raise ValueError("Invalid characters in CIGAR string.")
         if fix_arrs:
