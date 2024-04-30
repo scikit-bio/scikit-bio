@@ -229,21 +229,13 @@ class PairAlignPath(AlignPath):
 
     def _run_length_encode(self, input_string):
         """Perform run length encoding on a string."""
-        encoded_string = ""
-        count = 1
-        prev_char = input_string[0]
-
-        for char in input_string[1:]:
-            if char == prev_char:
-                count += 1
-            else:
-                encoded_string += str(count)  # if count > 1 else ""
-                encoded_string += prev_char
-                count = 1
-                prev_char = char
-
-        encoded_string += str(count)  # if count > 1 else ""
-        encoded_string += input_string[-1]
+        input_array = np.array(list(input_string))
+        change_indices = np.append(
+            0, np.where(input_array[:-1] != input_array[1:])[0] + 1
+        )
+        count = np.diff(np.concatenate((change_indices, [len(input_string)])))
+        unique_chars = input_array[change_indices]
+        encoded_string = "".join(str(c) + u for c, u in zip(count, unique_chars))
         return encoded_string
 
     def _fix_arrays(lengths, gaps):
