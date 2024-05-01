@@ -97,10 +97,6 @@ class SubsampleCountsTests(unittest.TestCase):
         with self.assertRaises(ValueError):
             subsample_counts([1, 2, 3], -1)
 
-        # Floats.
-        with self.assertRaises(TypeError):
-            subsample_counts([1, 2.3, 3], 2)
-
         # Wrong number of dimensions.
         with self.assertRaises(ValueError):
             subsample_counts([[1, 2, 3], [4, 5, 6]], 2)

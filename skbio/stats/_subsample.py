@@ -12,8 +12,10 @@ from collections import defaultdict
 from copy import copy
 
 import numpy as np
+import scipy.sparse as sparse
+from skbio.util import get_rng
 
-from .__subsample import _subsample_counts_without_replacement
+from biom._subsample import _subsample
 
 
 def isubsample(items, maximum, minimum=1, buf_size=1000, bin_f=None):
@@ -147,19 +149,21 @@ def isubsample(items, maximum, minimum=1, buf_size=1000, bin_f=None):
             yield (bin_, item)
 
 
-def subsample_counts(counts, n, replace=False):
+def subsample_counts(counts, n, replace=False, seed=None):
     """Randomly subsample from a vector of counts, with or without replacement.
 
     Parameters
     ----------
     counts : 1-D array_like
-        Vector of counts (integers) to randomly subsample from.
+        Vector of counts (integers or floats) to randomly subsample from.
     n : int
         Number of items to subsample from `counts`. Must be less than or equal
         to the sum of `counts`.
     replace : bool, optional
         If ``True``, subsample with replacement. If ``False`` (the default),
         subsample without replacement.
+    seed : int, optional
+        If provided, set the numpy random seed with this value
 
     Returns
     -------
@@ -170,8 +174,6 @@ def subsample_counts(counts, n, replace=False):
 
     Raises
     ------
-    TypeError
-        If `counts` cannot be safely converted to an integer datatype.
     ValueError
         If `n` is less than zero or greater than the sum of `counts`
         when `replace=False`.
@@ -224,11 +226,15 @@ def subsample_counts(counts, n, replace=False):
     if n < 0:
         raise ValueError("n cannot be negative.")
 
-    counts = np.asarray(counts)
-    counts = counts.astype(int, casting="safe")
+    counts = np.asarray(counts).copy()
 
     if counts.ndim != 1:
         raise ValueError("Only 1-D vectors are supported.")
+
+    # csr_matrix will report ndim of 2 if vector
+    # casting to float as that's what the biom subsample method currently
+    # requires
+    counts = sparse.csr_matrix(counts.astype(float, casting="safe"))
 
     counts_sum = counts.sum()
     if n > counts_sum and not replace:
@@ -237,12 +243,7 @@ def subsample_counts(counts, n, replace=False):
             "counts vector when `replace=False`."
         )
 
-    if replace:
-        probs = counts / counts_sum
-        result = np.random.multinomial(n, probs)
-    else:
-        if counts_sum == n:
-            result = counts
-        else:
-            result = _subsample_counts_without_replacement(counts, n, counts_sum)
-    return result
+    rng = get_rng(seed)
+    _subsample(counts, n, replace, rng)
+
+    return np.atleast_1d(counts.astype(int).toarray().squeeze())
