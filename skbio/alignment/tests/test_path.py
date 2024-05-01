@@ -36,6 +36,12 @@ class TestPairAlignPath(unittest.TestCase):
         with self.assertRaises(ValueError):
             PairAlignPath.from_cigar("23M45B13X")
 
+        # test valid cigar with no 1's
+        cigar = "MID12MI"
+        obs = PairAlignPath.from_cigar(cigar)
+        exp = ([1, 1, 1, 12, 1], [0, 1, 2, 0, 1])
+        npt.assert_array_equal(obs, exp)
+
     def test_to_cigar(self):
         # test base case
         lengths = [1, 2, 3, 4, 50, 234]
@@ -57,15 +63,28 @@ class TestPairAlignPath(unittest.TestCase):
 
         # test invalid input
 
-    def from_bits(self):
+    def test_from_bits(self):
         # test base case
         bits = np.array(([0, 1, 0, 0, 0, 1], [1, 0, 0, 0, 1, 0]))
         exp = PairAlignPath(lengths=[1, 1, 2, 1, 1], states=[2, 1, 0, 2, 1], n_seqs=2)
         obs = PairAlignPath.from_bits(bits)
-        self.assertEqual(obs, exp)
+        npt.assert_array_equal(obs.lengths, exp.lengths)
+        npt.assert_array_equal(obs.states, exp.states)
 
         # test empty bit array
         bits = np.array(([],[]))
+        with self.assertRaises(ValueError):
+            PairAlignPath.from_bits(bits)
+
+        # test 1D bit array
+        bits = np.array([0, 0, 1])
+        with self.assertRaises(ValueError):
+            PairAlignPath.from_bits(bits)
+
+        # test array with invalid values
+        bits = np.array(([1, 2, 3], [0, 5, 1]))
+        with self.assertRaises(ValueError):
+            PairAlignPath.from_bits(bits)
 
 
 if __name__ == "__main__":

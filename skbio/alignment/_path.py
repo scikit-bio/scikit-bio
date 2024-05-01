@@ -150,6 +150,13 @@ class PairAlignPath(AlignPath):
         """Create an alignment path from a bit array."""
         # This should be faster than the generic solution I guess.
         # TODO: Pending benchmark and optimization.
+
+        # Ensure bits is a 2D numpy array of ones and zeros.
+        if not isinstance(bits, np.ndarray) or bits.ndim != 2 or bits.shape[1] == 0:
+            raise ValueError("Input 'bits' must be a non-empty 2D numpy array.")
+        if not np.all(np.logical_or(bits == 0, bits == 1)):
+            raise ValueError("Input 'bits' must contain only zeros and ones.")
+
         ints = bits[0] + (bits[1] << 1)
         idx = np.append(0, np.where(ints[:-1] != ints[1:])[0] + 1)
         lens = np.append(idx[1:] - idx[:-1], ints.size - idx[-1])
