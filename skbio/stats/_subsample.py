@@ -226,6 +226,7 @@ def subsample_counts(counts, n, replace=False, seed=None):
     if n < 0:
         raise ValueError("n cannot be negative.")
 
+    # biom's subsample operates inplace
     counts = np.asarray(counts).copy()
 
     if counts.ndim != 1:
