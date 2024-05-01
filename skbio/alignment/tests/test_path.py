@@ -6,11 +6,48 @@
 # The full license is in the file LICENSE.txt, distributed with this software.
 # ----------------------------------------------------------------------------
 
+import os
 import unittest
+
 import numpy as np
 import numpy.testing as npt
 
 from skbio.alignment._path import PairAlignPath, AlignPath
+from skbio.alignment import TabularMSA
+from skbio.sequence import DNA
+
+class TestAlignPath(unittest.TestCase):
+    def test_to_bits(self):
+        obj = AlignPath(lengths=[3, 2, 5, 1, 4, 3, 2],
+                        states=[0, 2, 0, 6, 0, 1, 0],
+                        n_seqs=3)
+        exp = np.array(([0, 0, 0, 0, 0, 1, 0], [0, 1, 0, 1, 0, 0, 0], [0, 0, 0, 1, 0, 0, 0]))
+        obs = obj.to_bits()
+        npt.assert_array_equal(obs, exp)
+    
+    def test_from_bits(self):
+        bits = np.array(([0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1,1,1,0,0],
+                         [0,0,0,1,1,0,0,0,0,0,1,0,0,0,0,0,0,0,0,0],
+                         [0,0,0,0,0,0,0,0,0,0,1,0,0,0,0,0,0,0,0,0]))
+        exp = AlignPath(lengths=[3, 2, 5, 1, 4, 3, 2],
+                        states=[0, 2, 0, 6, 0, 1, 0],
+                        n_seqs=3)
+        obs = AlignPath.from_bits(bits)
+        npt.assert_array_equal(obs.lengths, exp.lengths)
+        npt.assert_array_equal(obs.states, exp.states)
+
+    def test_from_tabular(self):
+        # should probably put this in a setUp/tearDown
+        msa = ('CGGTCGTAACGCGTA---CA',
+               'CAG--GTAAG-CATACCTCA',
+               'CGGTCGTCAC-TGTACACTA')
+        tabular = TabularMSA([DNA(x) for x in msa])
+        obj = AlignPath.from_tabular(tabular)
+        lengths = [3, 2, 5, 1, 4, 3, 2]
+        states = [0, 2, 0, 6, 0, 1, 0]
+        npt.assert_array_equal(lengths, obj.lengths)
+        npt.assert_array_equal(states, obj.states)
+
 
 class TestPairAlignPath(unittest.TestCase):
     def test_from_cigar(self):
@@ -65,8 +102,11 @@ class TestPairAlignPath(unittest.TestCase):
 
     def test_from_bits(self):
         # test base case
-        bits = np.array(([0, 1, 0, 0, 0, 1], [1, 0, 0, 0, 1, 0]))
-        exp = PairAlignPath(lengths=[1, 1, 2, 1, 1], states=[2, 1, 0, 2, 1], n_seqs=2)
+        bits = np.array(([0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1,1,1,0,0],
+                         [0,0,0,1,1,0,0,0,0,0,1,0,0,0,0,0,0,0,0,0]))
+        exp = PairAlignPath(lengths=[3, 2, 5, 1, 4, 3, 2],
+                            states=[0, 2, 0, 2, 0, 1, 0],
+                            n_seqs=2)
         obs = PairAlignPath.from_bits(bits)
         npt.assert_array_equal(obs.lengths, exp.lengths)
         npt.assert_array_equal(obs.states, exp.states)
