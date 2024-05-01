@@ -27,13 +27,13 @@ class TestPairAlignPath(unittest.TestCase):
         npt.assert_array_equal(obs, exp)
 
         # test empty cigar string
-        with self.assertRaises(ValueError):
+        with self.assertRaises(ValueError, msg="CIGAR string must not be empty."):
             PairAlignPath.from_cigar("")
 
         # test invalid cigar string
         # Do we want from_cigar to handle other characters besides
         # 'M', 'I', 'D', '=', and 'X'?
-        with self.assertRaises(ValueError):
+        with self.assertRaises(ValueError, msg="Invalid characters in CIGAR string."):
             PairAlignPath.from_cigar("23M45B13X")
 
         # test valid cigar with no 1's
@@ -73,19 +73,36 @@ class TestPairAlignPath(unittest.TestCase):
 
         # test empty bit array
         bits = np.array(([],[]))
-        with self.assertRaises(ValueError):
+        with self.assertRaises(ValueError,
+                               msg="Input 'bits' must be a non-empty 2D numpy array."):
             PairAlignPath.from_bits(bits)
 
         # test 1D bit array
         bits = np.array([0, 0, 1])
-        with self.assertRaises(ValueError):
+        with self.assertRaises(ValueError,
+                               msg="Input 'bits' must be a non-empty 2D numpy array."):
             PairAlignPath.from_bits(bits)
 
         # test array with invalid values
         bits = np.array(([1, 2, 3], [0, 5, 1]))
-        with self.assertRaises(ValueError):
+        with self.assertRaises(ValueError,
+                               msg="Input 'bits' must contain only zeros and ones."):
             PairAlignPath.from_bits(bits)
 
+    def test_to_bits(self):
+        # test input with invalid values
+        with self.assertRaises(ValueError,
+                               msg="For pairwise alignment, `states` must only "
+                               "contain zeros, ones, or twos."):
+            PairAlignPath(lengths=[1, 2, 3], states=[1, 2, 3], n_seqs=2).to_bits()
+
+        # test base case
+        obj = PairAlignPath(lengths=[3, 2, 5, 1, 4, 3, 2],
+                            states=[0, 2, 0, 2, 0, 1, 0],
+                            n_seqs=2)
+        exp = np.array(([0, 0, 0, 0, 0, 1, 0], [0, 1, 0, 1, 0, 0, 0]))
+        obs = obj.to_bits()
+        npt.assert_array_equal(obs, exp)
 
 if __name__ == "__main__":
     unittest.main()

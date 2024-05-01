@@ -167,6 +167,11 @@ class PairAlignPath(AlignPath):
         """Unpack states into an array of bits."""
         # This should be faster than the generic solution I guess.
         # TODO: Pending benchmark and optimization.
+        if not np.all(np.isin(self.states, [0, 1, 2])):
+            raise ValueError(
+                "For pairwise alignment, `states` must only contain "
+                "zeros, ones, or twos."
+            )
         return np.stack([self.states & 1, self.states >> 1])
 
     def to_cigar(self, seqs=None):
@@ -191,10 +196,8 @@ class PairAlignPath(AlignPath):
                     cigar += "I"
                 elif rchar == "-":
                     cigar += "D"
-                elif qchar != rchar:
-                    cigar += "X"
                 else:
-                    raise ValueError("Error.")
+                    cigar += "X"
             return self._run_length_encode(cigar)
         else:
             for i, length in enumerate(lengths):
