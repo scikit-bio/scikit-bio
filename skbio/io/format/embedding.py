@@ -26,6 +26,11 @@ The format is a HDF5 file with the following structure:
   - ``embeddings`` (dataset)
   - ``id`` (dataset)
   - ``idptr`` (dataset)
+  - ``format`` (attribute)
+  - ``format-version`` (attribute)
+  - ``dtype`` (attribute)
+  - ``dimensionality`` (attribute)
+
 
 The `idptr` dataset contains the cumulative sum of the sequence lengths
 in the hdf5. This is used to index both the sequences and the embeddings
@@ -36,6 +41,15 @@ The `embeddings` dataset contains the embeddings for each sequence, where the
 first dimension is the sequence length and the second dimension is the
 embedding dimension. The row vectors in the `embeddings` correspond to the
 residues of the sequence in the `id` dataset.
+
+The format attribute is a string that specifies the format of the embedding.
+If the ``format`` attribute is present and has the value of `embed`, then
+the file is a valid embedding file. The `format-version` attribute is a string
+that specifies the version of the format. The `dtype` attribute is a string
+that specifies the data type of the embeddings. Valid dtypes include
+ The `dimensionality` attribute is an integer that specifies the dimensionality
+of the embeddings. The `embed` format currently does not support storing embeddings
+with different dimensionality in the same file.
 
 Examples
 --------
