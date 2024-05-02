@@ -1625,7 +1625,7 @@ class TestILoc(SharedPropertyIndexTests, unittest.TestCase):
                          TabularMSA([a[0:0], b[0:0], c[0:0]],
                                     metadata={3: 3},
                                     positional_metadata={3: np.array(
-                                        [], dtype=int)}))
+                                        [], dtype=np.int64)}))
 
     def test_fancy_empty_both_axes(self):
         a = DNA("ACGT", metadata={0: 0}, positional_metadata={0: [1, 2, 3, 4]})
