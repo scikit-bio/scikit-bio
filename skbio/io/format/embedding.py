@@ -46,10 +46,10 @@ The format attribute is a string that specifies the format of the embedding.
 If the ``format`` attribute is present and has the value of `embed`, then
 the file is a valid embedding file. The `format-version` attribute is a string
 that specifies the version of the format. The `dtype` attribute is a string
-that specifies the data type of the embeddings. Valid dtypes include
- The `dimensionality` attribute is an integer that specifies the dimensionality
-of the embeddings. The `embed` format currently does not support storing embeddings
-with different dimensionality in the same file.
+that specifies the data type of the embeddings. Currently supported dtypes include
+`float32` or `float64`.  The `dimensionality` attribute is an integer that
+specifies the dimensionality of the embeddings. The `embed` format currently
+does not support storing embeddings with different dimensionality in the same file.
 
 Examples
 --------
