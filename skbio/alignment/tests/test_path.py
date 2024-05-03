@@ -58,7 +58,43 @@ class TestAlignPath(unittest.TestCase):
         npt.assert_array_equal(lengths, obj.lengths)
         npt.assert_array_equal(states, obj.states)
     
-    # def test_to_indices(self):
+    def test_to_indices(self):
+        # test gap = -1
+        obj = AlignPath(lengths=[3, 2, 5, 1, 4, 3, 2],
+                        states=[0, 2, 0, 6, 0, 1, 0],
+                        n_seqs=3)
+        exp = np.array([[0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, -1, -1, -1, 15, 16],
+                        [0, 1, 2, -1, -1, 3, 4, 5, 6, 7, -1, 8, 9, 10, 11, 12, 13, 14, 15, 16],
+                        [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, -1, 10, 11, 12, 13, 14, 15, 16, 17, 18]])
+        obs = obj.to_indices()
+        npt.assert_array_equal(obs, exp)
+
+        # test gap = 'del'
+        exp = np.array([[0, 1, 2, 5, 6, 7, 8, 9, 11, 12, 13, 14, 15, 16],
+                        [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 15, 16],
+                        [0, 1, 2, 5, 6, 7, 8, 9, 10, 11, 12, 13, 17, 18]])
+        obs = obj.to_indices(gap='del')
+        npt.assert_array_equal(obs, exp)
+
+        # test gap = 'mask'
+        exp = np.ma.array(data=[[ 0,  1,  2,  3,  4,  5,  6,  7,  8,  9, 10, 11, 12,
+                                 13, 14, 14, 14, 14, 15, 16],
+                                [ 0,  1,  2,  2,  2,  3,  4,  5,  6,  7,  7,  8,  9,
+                                 10, 11, 12, 13, 14, 15, 16],
+                                [ 0,  1,  2,  3,  4,  5,  6,  7,  8,  9,  9, 10, 11,
+                                 12, 13, 14, 15, 16, 17, 18]], 
+                          mask=[[False, False, False, False, False, False, False,
+                                 False, False, False, False, False, False, False,
+                                 False,  True,  True,  True, False, False],
+                                [False, False, False,  True,  True, False, False,
+                                 False, False, False,  True, False, False, False,
+                                 False, False, False, False, False, False],
+                                [False, False, False, False, False, False, False,
+                                 False, False, False,  True, False, False, False,
+                                 False, False, False, False, False, False]],
+                          fill_value=999999)
+        obs = obj.to_indices(gap='mask')
+        npt.assert_array_equal(obs, exp)
 
 
 
