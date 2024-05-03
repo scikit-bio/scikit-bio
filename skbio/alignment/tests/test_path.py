@@ -26,6 +26,7 @@ class TestAlignPath(unittest.TestCase):
         npt.assert_array_equal(obs, exp)
     
     def test_from_bits(self):
+        # test 1D base case, less than 8 sequences
         bits = np.array(([0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1,1,1,0,0],
                          [0,0,0,1,1,0,0,0,0,0,1,0,0,0,0,0,0,0,0,0],
                          [0,0,0,0,0,0,0,0,0,0,1,0,0,0,0,0,0,0,0,0]))
@@ -36,8 +37,17 @@ class TestAlignPath(unittest.TestCase):
         npt.assert_array_equal(obs.lengths, exp.lengths)
         npt.assert_array_equal(obs.states, exp.states)
 
+        # test 2D base case, more than 8 sequences
+        rng = np.random.default_rng(seed=42)
+        bits = rng.choice([0, 1], size=(10, 10), p=[0.85, 0.15])
+        exp = AlignPath(lengths=[1, 1, 1, 1, 1, 1, 3, 1],
+                        states=[[0, 10, 133, 4, 0, 1, 0, 0], [0, 0, 0, 0, 0, 0, 0, 2]],
+                        n_seqs=10)
+        obs = AlignPath.from_bits(bits)
+        npt.assert_array_equal(obs.lengths, exp.lengths)
+        npt.assert_array_equal(obs.states, exp.states)
+
     def test_from_tabular(self):
-        # should probably put this in a setUp/tearDown
         msa = ('CGGTCGTAACGCGTA---CA',
                'CAG--GTAAG-CATACCTCA',
                'CGGTCGTCAC-TGTACACTA')
@@ -47,6 +57,9 @@ class TestAlignPath(unittest.TestCase):
         states = [0, 2, 0, 6, 0, 1, 0]
         npt.assert_array_equal(lengths, obj.lengths)
         npt.assert_array_equal(states, obj.states)
+    
+    # def test_to_indices(self):
+
 
 
 class TestPairAlignPath(unittest.TestCase):
