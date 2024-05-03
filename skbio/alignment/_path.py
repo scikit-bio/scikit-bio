@@ -102,6 +102,10 @@ class AlignPath:
         (default: -1):
         fill gaps with this value.
         """
+        valid_gaps = {-1, "del", "mask"}
+        if gap not in valid_gaps:
+            raise ValueError("Gap must be -1, 'del', or 'mask'.")
+
         bits = self.to_bits()
         # TODO: Consider optimization using np.arange.
         pos = np.repeat(1 - bits, self.lengths, axis=1)

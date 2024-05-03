@@ -96,6 +96,9 @@ class TestAlignPath(unittest.TestCase):
         obs = obj.to_indices(gap='mask')
         npt.assert_array_equal(obs, exp)
 
+        # test invalid gap
+        with self.assertRaises(ValueError, msg="Gap must be -1, 'del', or 'mask'."):
+            obj.to_indices(gap=2)
 
 
 class TestPairAlignPath(unittest.TestCase):
