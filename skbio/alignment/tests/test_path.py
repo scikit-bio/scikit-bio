@@ -100,6 +100,45 @@ class TestAlignPath(unittest.TestCase):
         with self.assertRaises(ValueError, msg="Gap must be -1, 'del', or 'mask'."):
             obj.to_indices(gap=2)
 
+    def test_from_indices(self):
+        # test no mask
+        indices = np.array([[0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, -1, -1, -1, 15, 16],
+                            [0, 1, 2, -1, -1, 3, 4, 5, 6, 7, -1, 8, 9, 10, 11, 12, 13, 14, 15, 16],
+                            [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, -1, 10, 11, 12, 13, 14, 15, 16, 17, 18]])
+        obj = AlignPath.from_indices(indices)
+        lengths = [3, 2, 5, 1, 4, 3, 2]
+        states = [0, 2, 0, 6, 0, 1, 0]
+        npt.assert_array_equal(lengths, obj.lengths)
+        npt.assert_array_equal(states, obj.states)
+    
+        # test masked array
+        masked = np.ma.array(indices, mask=(indices == -1))
+        obj = AlignPath.from_indices(masked, gap="mask")
+        npt.assert_array_equal(lengths, obj.lengths)
+        npt.assert_array_equal(states, obj.states)
+
+    def test_to_coordinates(self):
+        # test base case
+        exp = np.array([[0, 3, 5, 10, 11, 15, 15, 17],
+                        [0, 3, 3,  8,  8, 12, 15, 17],
+                        [0, 3, 5, 10, 10, 14, 17, 19]])
+        obj = AlignPath(lengths=[3, 2, 5, 1, 4, 3, 2],
+                        states=[0, 2, 0, 6, 0, 1, 0],
+                        n_seqs=3)
+        obs = obj.to_coordinates()
+        npt.assert_array_equal(obs, exp)
+
+    def test_from_coordinates(self):
+        # test base case
+        coords = np.array([[0, 3, 5, 10, 11, 15, 15, 17],
+                           [0, 3, 3,  8,  8, 12, 15, 17],
+                           [0, 3, 5, 10, 10, 14, 17, 19]])
+        obj = AlignPath.from_coordinates(coords)
+        lengths = [3, 2, 5, 1, 4, 3, 2]
+        states = [0, 2, 0, 6, 0, 1, 0]
+        npt.assert_array_equal(lengths, obj.lengths)
+        npt.assert_array_equal(states, obj.states)
+
 
 class TestPairAlignPath(unittest.TestCase):
     def test_from_cigar(self):
