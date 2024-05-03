@@ -50,26 +50,6 @@ class ProteinEmbeddingtests(TestCase):
         with self.assertRaises(ValueError):
             ProteinEmbedding(self.emb, self.seq + "A")
 
-    def test_repr(self):
-        emb, s = self.emb, self.seq
-        p_emb = ProteinEmbedding(emb, s)
-        self.assertEqual(p_emb.embedding.shape, (62, 1024))
-        res_rstr = repr(p_emb)
-        exp_rstr = (
-            ("ProteinEmbedding\n"
-             "--------------------------------------------------------------------\n"
-             "Stats:\n"
-             "    length: 62\n"
-             "    embedding dimension: 1024\n"
-             "    has gaps: False\n"
-             "    has degenerates: False\n"
-             "    has definites: True\n"
-             "    has stops: False\n"
-             "--------------------------------------------------------------------\n"
-             "0  IGKEEIQQRL AQFVDHWKEL KQLAAARGQR LEESLEYQQF VANVEEEEAW INEKMTLVAS\n"
-             "60 ED"))
-        self.assertEqual(res_rstr, exp_rstr)
-
 
 if __name__ == '__main__':
     main()

@@ -26,8 +26,19 @@ class Embedding(SkbioObject):
         return self._ids
 
     def __init__(self, embedding, ids, **kwargs):
+        # make sure that the embedding has the same length as the sequence
+        ids_len = len(ids)
+        if embedding.shape[0] != ids_len:
+            raise ValueError(
+                f"The embedding ({embedding.shape[0]}) must have the "
+                f"same length as the ids ({ids_len})."
+            )
+
         self._embedding = np.array(embedding)
         self._ids = ids
+
+    def __str__(self):
+        return str(self._ids)
 
 
 class SequenceEmbedding(Embedding):
@@ -39,3 +50,28 @@ class SequenceEmbedding(Embedding):
     @property
     def sequence(self):
         return str(self._ids)
+
+    def __repr__(self):
+        """
+        Return a string representation of the ProteinEmbedding object.
+
+        Returns
+        -------
+        str
+            A string representation of the ProteinEmbedding object.
+
+        See Also
+        --------
+        Protein
+        """
+        seq = Sequence(str(self._ids))
+
+        rstr = repr(seq)
+        rstr = rstr.replace("Sequence", "SequenceEmbedding")
+        n_indent = 4  # see Sequence.__repr__
+        indent = " " * n_indent
+        rstr = rstr.replace(
+            "has gaps",
+            f"embedding dimension: {self.embedding.shape[1]}\n{indent}has gaps",
+        )
+        return rstr

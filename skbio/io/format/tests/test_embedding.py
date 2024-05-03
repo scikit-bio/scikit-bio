@@ -62,12 +62,10 @@ class EmbeddingTests(TestCase):
         with h5py.File(self.nonembed_hdf5_path, 'w') as fp:
             fp['stuff'] = [1, 2, 3]
 
-
     def test_sniffer(self):
         self.assertEqual(_embed_sniffer(self.valid_embed_path), (True, {}))
         self.assertEqual(_embed_sniffer(self.invalid_embed_path), (False, {}))
         self.assertEqual(_embed_sniffer(self.nonembed_hdf5_path), (False, {}))
-
 
     def test_read_write_single(self):
         for emb, seq in self.sequences:

@@ -54,20 +54,13 @@ class ProteinEmbedding(SequenceEmbedding):
         if " " in sequence:
             sequence = sequence.replace(" ", "")
 
-        # make sure that the embedding has the same length as the sequence
-        sequence_len = len(sequence)
-        if embedding.shape[0] != sequence_len:
-            raise ValueError(
-                f"The embedding ({embedding.shape[0]}) must have the "
-                f"same length as the sequence ({len(sequence)})."
-            )
-
         super(ProteinEmbedding, self).__init__(
             embedding=embedding, sequence=sequence, **kwargs
         )
 
-    def __str__(self):
-        return str(self._ids)
+    @property
+    def residues(self):
+        return self._ids
 
     def __repr__(self):
         """

@@ -29,7 +29,7 @@ The format is a HDF5 file with the following structure:
   - ``format`` (attribute)
   - ``format-version`` (attribute)
   - ``dtype`` (attribute)
-  - ``dimensionality`` (attribute)
+  - ``dim`` (attribute)
 
 
 The `idptr` dataset contains the cumulative sum of the sequence lengths
@@ -46,10 +46,11 @@ The format attribute is a string that specifies the format of the embedding.
 If the ``format`` attribute is present and has the value of `embed`, then
 the file is a valid embedding file. The `format-version` attribute is a string
 that specifies the version of the format. The `dtype` attribute is a string
-that specifies the data type of the embeddings. Currently supported dtypes include
-`float32` or `float64`.  The `dimensionality` attribute is an integer that
+that specifies the data type of the embeddings. Currently supported dtypes
+include `float32` or `float64`.  The `dim` attribute is an integer that
 specifies the dimensionality of the embeddings. The `embed` format currently
-does not support storing embeddings with different dimensionality in the same file.
+does not support storing embeddings with different dimensionality in the
+same file.
 
 Examples
 --------
@@ -79,6 +80,7 @@ Stats:
 """
 
 import numpy as np
+from math import ceil
 import h5py
 from skbio.io import create_format
 from skbio.embedding._protein import ProteinEmbedding
@@ -128,7 +130,7 @@ def _embed_to_generator(
         idptr = idptr_fh[i]
         id_ = id_fh[j:idptr]
         emb = embed_fh[j:idptr]
-        string = str(id_.tobytes().decode("ascii")).replace("\x00", "")
+        string = str(id_.tobytes().decode("ascii"))
         j = idptr
         yield constructor(emb, string, **kwargs)
 
@@ -144,9 +146,9 @@ def _embed_to_object(
     id_fh = h5grp["id"]
 
     # assumes that there is only a single object in the file
-    emb = embed_fh[()].squeeze()
+    emb = np.array(embed_fh[:])
     id_ = id_fh[()]
-    string = str(id_.tobytes().decode("ascii")).replace("\x00", "")
+    string = str(id_.tobytes().decode("ascii"))
     return constructor(emb, string, **kwargs)
 
 
@@ -165,6 +167,11 @@ def _embed_to_protein(
 
 def _objects_to_embed(objs, fh):
     with h5py.File(fh, "w") as h5grp:
+
+        h5grp.attrs["format"] = "embedding"
+        h5grp.attrs["format-version"] = "1.0"
+        maxsize = 1
+        resize = False
         for i, obj in enumerate(objs):
             # store string representation of the object
             # that will serve as an identifier for the entire object.
@@ -178,24 +185,39 @@ def _objects_to_embed(objs, fh):
             # Store the embedding itself. We are assuming that the
             # embbedding is a 2D numpy array
             emb = obj.embedding
+            dtype = emb.dtype
+            if "dtype" not in h5grp.attrs:
+                h5grp.attrs["dtype"] = dtype.name
+            if "dim" not in h5grp.attrs:
+                h5grp.attrs["dim"] = emb.shape[1]
+
             # store the pointers that keep track of the start and
             # end of the embedding for each object, as well as well as
             # the corresponding string representation
-            if "idptr" in h5grp:
+            if i > 0 and "idptr" in h5grp:
                 idptr_fh = h5grp["idptr"]
-                idptr_fh.resize((i + 1,))
+
+                if len(arr) + idptr_fh[i - 1] > maxsize:
+                    maxsize = ceil(len(arr) + idptr_fh[i - 1] * 1.38)
+                    resize = True
+
+                if resize:
+                    idptr_fh.resize((ceil(i * 1.38),))
                 idptr_fh[i] = len(arr) + idptr_fh[i - 1]
             else:
                 idptr_fh = h5grp.create_dataset(
-                    "idptr", data=[len(arr)], maxshape=(None,), dtype=np.int32
+                    "idptr", data=[len(arr)], maxshape=(None,),
+                    dtype=np.int32, compression='gzip'
                 )
             if "id" in h5grp:
                 id_fh = h5grp["id"]
-                id_fh.resize((idptr_fh[i],))
+                if resize:
+                    id_fh.resize((maxsize,))
                 id_fh[idptr_fh[i - 1] : idptr_fh[i]] = arr
             else:
                 id_fh = h5grp.create_dataset(
-                    "id", data=arr, maxshape=(None,), dtype=np.int32
+                    "id", data=arr, maxshape=(None,), dtype=np.uint8,
+                    compression='gzip'
                 )
 
             if "embedding" in h5grp:
@@ -204,8 +226,8 @@ def _objects_to_embed(objs, fh):
                     "Embedding dimension mismatch between objects. "
                     f"({embed_fh.shape}) and ({emb.shape})"
                 )
-
-                embed_fh.resize(idptr_fh[i], axis=0)
+                if resize:
+                    embed_fh.resize(maxsize, axis=0)
                 embed_fh[idptr_fh[i - 1] : idptr_fh[i]] = emb
             else:
                 embed_fh = h5grp.create_dataset(
@@ -213,7 +235,13 @@ def _objects_to_embed(objs, fh):
                     data=emb,
                     maxshape=(None, emb.shape[1]),
                     dtype=obj.embedding.dtype,
+                    compression='gzip'
                 )
+        # resize the datasets to the actual number of objects
+        maxsize = idptr_fh[i]
+        idptr_fh.resize((maxsize,))
+        id_fh.resize((maxsize,))
+        embed_fh.resize(maxsize, axis=0)
 
 
 @embed.writer(None)
