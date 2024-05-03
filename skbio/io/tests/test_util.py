@@ -57,13 +57,15 @@ class ReadableBinarySourceTests:
 
     def check_open_state_contents(self, file, contents, is_binary, **kwargs):
         result = skbio.io.open(file, **kwargs)
+        self.assertTrue(result.readable())
         if is_binary:
             self.assertIsInstance(result, (io.BufferedReader,
                                            io.BufferedRandom))
+            actual_contents = result.read().decode().replace("\r\n", "\n").encode()
         else:
             self.assertIsInstance(result, io.TextIOBase)
-        self.assertTrue(result.readable())
-        self.assertEqual(result.read(), contents)
+            actual_contents = result.read().replace("\r\n", "\n")
+        self.assertEqual(actual_contents, contents)
         self.assertFalse(result.closed)
 
         result.close()
@@ -73,13 +75,15 @@ class ReadableBinarySourceTests:
     def check_open_file_state_contents(self, file, contents, is_binary,
                                        **kwargs):
         with open_file(file, **kwargs) as f:
+            self.assertTrue(f.readable())
             if is_binary:
                 self.assertIsInstance(f, (io.BufferedReader,
                                           io.BufferedRandom))
+                actual_contents = f.read().decode().replace("\r\n", "\n").encode()
             else:
                 self.assertIsInstance(f, io.TextIOBase)
-            self.assertTrue(f.readable())
-            self.assertEqual(f.read(), contents)
+                actual_contents = f.read().replace("\r\n", "\n")
+            self.assertEqual(actual_contents, contents)
         self.assertEqual(f.closed, self.expected_close)
 
         f.close()
@@ -281,8 +285,10 @@ class ReadableSourceTest(unittest.TestCase):
         self.bz2_encoded_file = \
             self.get_fileobj(get_data_path("big5_file.bz2"))
 
-        self.binary_contents = (b"This is some content\n"
-                                b"It occurs on more than one line\n")
+        self.binary_contents = (
+            f"This is some content{os.linesep}"
+            f"It occurs on more than one line{os.linesep}"
+            ).replace("\r\n", "\n").encode()
         self.decoded_contents = '\u4f60\u597d\n'  # Ni Hau
         self.compression = 'gzip'
         self.encoding = "big5"
@@ -360,8 +366,12 @@ class WritableBinarySourceTests:
         self.check_open_state_contents(self.big5_file, self.decoded_contents,
                                        False, encoding='big5')
 
-        self.assertEqual(self.get_contents(self.big5_file),
-                         self.encoded_contents)
+        self.assertEqual(
+            self.get_contents(self.big5_file)
+            .decode(encoding="big5")
+            .replace("\r\n", "\n")
+            .encode(encoding="big5"),
+            self.encoded_contents)
 
     def test_open_gzip_encoding(self):
         self.check_open_state_contents(self.gzip_encoded_file,
@@ -413,13 +423,13 @@ class WritableSourceTest(unittest.TestCase):
         self.text_contents = self.binary_contents.decode('utf8')
 
     def tearDown(self):
-        shutil.rmtree(self._dir)
         self.safe_close(self.binary_file)
         self.safe_close(self.gzip_file)
         self.safe_close(self.bz2_file)
         self.safe_close(self.big5_file)
         self.safe_close(self.gzip_encoded_file)
         self.safe_close(self.bz2_encoded_file)
+        shutil.rmtree(self._dir)
 
     def safe_close(self, f):
         if hasattr(f, 'close'):
