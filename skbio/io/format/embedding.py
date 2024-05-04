@@ -181,7 +181,7 @@ def _objects_to_embed(objs, fh):
             # to index the row vectors in the embedding.
             # For sequences, this is the positional index of the sequence.
             # For molecules, this is the position index of atoms in the SMILES string.
-            arr = np.frombuffer(str(obj).encode("ascii"), dtype=np.uint8)
+            arr = obj.ids
             # Store the embedding itself. We are assuming that the
             # embbedding is a 2D numpy array
             emb = obj.embedding

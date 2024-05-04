@@ -26,6 +26,15 @@ class Embedding(SkbioObject):
         return self._ids
 
     def __init__(self, embedding, ids, **kwargs):
+        """
+        Parameters
+        ----------
+        embedding : array_like
+           Embedding matrix where the first axis is indexed by `ids`
+        ids : array_like
+           List of ids
+        """
+        
         # make sure that the embedding has the same length as the sequence
         ids_len = len(ids)
         if embedding.shape[0] != ids_len:
@@ -35,21 +44,30 @@ class Embedding(SkbioObject):
             )
 
         self._embedding = np.array(embedding)
-        self._ids = ids
+        self._ids = np.array(ids)
 
     def __str__(self):
-        return str(self._ids)
-
+        raise NotImplemented
+    
 
 class SequenceEmbedding(Embedding):
     """Store embeddings for a biological sequence."""
 
     def __init__(self, embedding, sequence, **kwargs):
-        super(SequenceEmbedding, self).__init__(embedding, sequence, **kwargs)
+        
+        if isinstance(sequence, Sequence):
+            sequence = str(sequence)        
+        if isinstance(sequence, str):
+            sequence = sequence.encode("ascii")
+        seq = np.frombuffer(sequence, dtype=np.uint8)
+        super(SequenceEmbedding, self).__init__(embedding, seq, **kwargs)
+
+    def __str__(self):
+        return str(self._ids.tobytes().decode('ascii'))
 
     @property
     def sequence(self):
-        return str(self._ids)
+        return str(self)    
 
     def __repr__(self):
         """
@@ -70,8 +88,9 @@ class SequenceEmbedding(Embedding):
         rstr = rstr.replace("Sequence", "SequenceEmbedding")
         n_indent = 4  # see Sequence.__repr__
         indent = " " * n_indent
+        dim = self.embedding.shape[1]
         rstr = rstr.replace(
             "has gaps",
-            f"embedding dimension: {self.embedding.shape[1]}\n{indent}has gaps",
+            f"embedding dimension: {dim}\n{indent}has gaps",
         )
         return rstr

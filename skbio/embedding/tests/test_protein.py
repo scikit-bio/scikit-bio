@@ -17,12 +17,16 @@ from skbio.embedding._protein import ProteinEmbedding
 import numpy as np
 import numpy.testing as npt
 
-class ProteinEmbeddingtests(TestCase):
+class ProteinEmbeddingTests(TestCase):
 
     def setUp(self):
         self.emb = np.load(get_data_path('embed1.txt.npy'))
         self.seq = ("IGKEEIQQRLAQFVDHWKELKQLAAARGQRLEESLEYQ"
                     "QFVANVEEEEAWINEKMTLVASED")
+        self.invalid_seq = (
+            "$GKEEIQQRLAQFVDHWKELKQLAAARGQRLEESLEYQ"
+            "QFVANVEEEEAWINEKMTLVASED")
+
 
     def test_clipping(self):
         emb, s = self.emb, self.seq
@@ -37,6 +41,9 @@ class ProteinEmbeddingtests(TestCase):
         p_emb = ProteinEmbedding(emb, s)
         self.assertEqual(str(p_emb), s)
         self.assertEqual(p_emb.sequence, s)
+        self.assertEqual(p_emb.residues, s)
+
+        self.assertEqual(str(p_emb.ids.tobytes().decode('ascii')), s)
 
     def test_str_spaces(self):
         seq = ("I G K E E I Q Q R L A Q F V D H W K E L K Q L A "
@@ -46,9 +53,25 @@ class ProteinEmbeddingtests(TestCase):
         self.assertEqual(str(p_emb), self.seq)
         self.assertEqual(p_emb.sequence, self.seq)
 
+    def test_embedding(self):
+        emb, s = self.emb, self.seq
+        p_emb = ProteinEmbedding(emb, s)
+        self.assertEqual(p_emb.embedding.shape, (62, 1024))
+
+
     def test_assert_length(self):
         with self.assertRaises(ValueError):
             ProteinEmbedding(self.emb, self.seq + "A")
+
+    def test_invalid_sequence(self):
+        emb, s = self.emb, self.invalid_seq
+        with self.assertRaises(ValueError):
+            ProteinEmbedding(emb, s)
+
+    def test_repr(self):
+        emb, s = self.emb, self.seq
+        p_emb = ProteinEmbedding(emb, s)
+        self.assertTrue('ProteinEmbedding' in repr(p_emb))
 
 
 if __name__ == '__main__':

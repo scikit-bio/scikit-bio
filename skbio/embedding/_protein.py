@@ -47,20 +47,25 @@ class ProteinEmbedding(SequenceEmbedding):
             embedding = embedding[1:]
         if clip_tail:
             embedding = embedding[:-1]
-
+            
         if isinstance(sequence, Protein):
             sequence = str(sequence)
-
-        if " " in sequence:
-            sequence = sequence.replace(" ", "")
-
+        elif isinstance(sequence, str):
+            if " " in sequence:
+                sequence = sequence.replace(" ", "")
+                
+            # perform a check to make sure the sequence is a valid
+            # protein sequence
+            Protein(sequence)
+    
         super(ProteinEmbedding, self).__init__(
             embedding=embedding, sequence=sequence, **kwargs
         )
 
     @property
     def residues(self):
-        return self._ids
+        # same as self.sequence
+        return str(self)
 
     def __repr__(self):
         """
@@ -75,7 +80,7 @@ class ProteinEmbedding(SequenceEmbedding):
         --------
         Protein
         """
-        seq = Protein(str(self._ids))
+        seq = Protein(str(self))
 
         rstr = repr(seq)
         rstr = rstr.replace("Protein", "ProteinEmbedding")
