@@ -45,7 +45,7 @@ class SequenceEmbeddingTests(TestCase):
         emb, s = self.emb, self.seq
         p_emb = SequenceEmbedding(emb, s)
         self.assertTrue('SequenceEmbedding' in repr(p_emb))
-
+    
 
     def test_str(self):
         emb, s = self.emb, self.seq
@@ -62,6 +62,7 @@ class SequenceEmbeddingTests(TestCase):
     def test_assert_length(self):
         with self.assertRaises(ValueError):
             SequenceEmbedding(self.emb, self.seq + "A")
+
 
 
 if __name__ == '__main__':
