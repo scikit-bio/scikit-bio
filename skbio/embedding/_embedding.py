@@ -62,7 +62,7 @@ class SequenceEmbedding(Embedding):
         super(SequenceEmbedding, self).__init__(embedding, seq, **kwargs)
 
     def __str__(self):
-        r""" String representation of the underlying sequence """        
+        r""" String representation of the underlying sequence """
         return str(self._ids.tobytes().decode('ascii'))
 
     @property
