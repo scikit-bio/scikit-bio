@@ -34,7 +34,7 @@ class Embedding(SkbioObject):
         ids : array_like
            List of ids
         """
-        
+
         # make sure that the embedding has the same length as the sequence
         ids_len = len(ids)
         if embedding.shape[0] != ids_len:
@@ -48,15 +48,15 @@ class Embedding(SkbioObject):
 
     def __str__(self):
         raise NotImplemented
-    
+
 
 class SequenceEmbedding(Embedding):
     """Store embeddings for a biological sequence."""
 
     def __init__(self, embedding, sequence, **kwargs):
-        
+
         if isinstance(sequence, Sequence):
-            sequence = str(sequence)        
+            sequence = str(sequence)
         if isinstance(sequence, str):
             sequence = sequence.encode("ascii")
         seq = np.frombuffer(sequence, dtype=np.uint8)
@@ -67,7 +67,7 @@ class SequenceEmbedding(Embedding):
 
     @property
     def sequence(self):
-        return str(self)    
+        return str(self)
 
     def __repr__(self):
         """

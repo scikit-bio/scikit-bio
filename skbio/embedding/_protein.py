@@ -47,17 +47,17 @@ class ProteinEmbedding(SequenceEmbedding):
             embedding = embedding[1:]
         if clip_tail:
             embedding = embedding[:-1]
-            
+
         if isinstance(sequence, Protein):
             sequence = str(sequence)
         elif isinstance(sequence, str):
             if " " in sequence:
                 sequence = sequence.replace(" ", "")
-                
+
             # perform a check to make sure the sequence is a valid
             # protein sequence
             Protein(sequence)
-    
+
         super(ProteinEmbedding, self).__init__(
             embedding=embedding, sequence=sequence, **kwargs
         )
