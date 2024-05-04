@@ -48,9 +48,6 @@ class Embedding(SkbioObject):
         self._embedding = np.array(embedding)
         self._ids = np.array(ids)
 
-    def __str__(self):
-        raise NotImplemented
-
 
 class SequenceEmbedding(Embedding):
     r"""Store embeddings for a biological sequence."""
