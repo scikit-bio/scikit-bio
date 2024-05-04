@@ -64,11 +64,11 @@ class ProteinEmbedding(SequenceEmbedding):
 
     @property
     def residues(self):
-        # same as self.sequence
-        return str(self)
+        r""" Array containing underlying residue characters """
+        return self._ids.view("|S1")
 
     def __repr__(self):
-        """
+        r"""
         Return a string representation of the ProteinEmbedding object.
 
         Returns

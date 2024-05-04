@@ -41,7 +41,17 @@ class ProteinEmbeddingTests(TestCase):
         p_emb = ProteinEmbedding(emb, s)
         self.assertEqual(str(p_emb), s)
         self.assertEqual(p_emb.sequence, s)
-        self.assertEqual(p_emb.residues, s)
+        
+        byte_s = np.array([b"I", b"G", b"K", b"E", b"E", b"I", b"Q",
+                           b"Q", b"R", b"L", b"A", b"Q", b"F", b"V",
+                           b"D", b"H", b"W", b"K", b"E", b"L", b"K",
+                           b"Q", b"L", b"A", b"A", b"A", b"R", b"G",
+                           b"Q", b"R", b"L", b"E", b"E", b"S", b"L",
+                           b"E", b"Y", b"Q", b"Q", b"F", b"V", b"A",
+                           b"N", b"V", b"E", b"E", b"E", b"E", b"A",
+                           b"W", b"I", b"N", b"E", b"K", b"M", b"T",
+                           b"L", b"V", b"A", b"S", b"E", b"D"], dtype='|S1')
+        np.testing.assert_array_equal(p_emb.residues, byte_s)
 
         self.assertEqual(str(p_emb.ids.tobytes().decode('ascii')), s)
 
@@ -57,7 +67,6 @@ class ProteinEmbeddingTests(TestCase):
         emb, s = self.emb, self.seq
         p_emb = ProteinEmbedding(emb, s)
         self.assertEqual(p_emb.embedding.shape, (62, 1024))
-
 
     def test_assert_length(self):
         with self.assertRaises(ValueError):
