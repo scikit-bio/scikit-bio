@@ -34,6 +34,10 @@ class EmbeddingTests(TestCase):
         p_emb = Embedding(emb, s)
         self.assertEqual(p_emb.embedding.shape, (62, 10))
 
+    def test_assert_length(self):
+        with self.assertRaises(ValueError):
+            Embedding(self.emb, self.seq + "A")
+
 
 class SequenceEmbeddingTests(TestCase):
     def setUp(self):
@@ -44,13 +48,14 @@ class SequenceEmbeddingTests(TestCase):
     def test_repr(self):
         emb, s = self.emb, self.seq
         p_emb = SequenceEmbedding(emb, s)
-        self.assertTrue('SequenceEmbedding' in repr(p_emb))
-    
+        self.assertTrue('SequenceEmbedding' in p_emb.__repr__())
+
 
     def test_str(self):
         emb, s = self.emb, self.seq
         p_emb = SequenceEmbedding(emb, s)
-        self.assertEqual(str(p_emb), s)
+
+        self.assertEqual(p_emb.__str__(), s)
         self.assertEqual(p_emb.sequence, s)
         self.assertEqual(str(p_emb.ids.tobytes().decode('ascii')), s)
 
