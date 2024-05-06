@@ -87,13 +87,11 @@ class AlignPath:
         byte_arr = np.stack([x._bytes for x in msa._seqs])
 
         # Get gap character code.
-        # TODO: current code only handles default gap character. Not sure if other gap
-        # characters matter. Should add.
-        gap_char = ord(msa.dtype.default_gap_char)
+        gap_chars = [ord(x) for x in msa.dtype.gap_chars]
 
         # Identify gap positions, and convert them into a bit array, then create an
         # alignment path based on it.
-        return cls.from_bits(byte_arr == gap_char)
+        return cls.from_bits(np.isin(byte_arr, gap_chars))
 
     def to_indices(self, gap=-1):
         """Generate an array of indices of characters in the original sequences.
