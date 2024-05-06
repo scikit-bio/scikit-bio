@@ -16,6 +16,7 @@ from skbio.sequence import Sequence, DNA, RNA, Protein, GeneticCode, Substitutio
 from skbio.stats.distance import DistanceMatrix
 from skbio.alignment import local_pairwise_align_ssw, TabularMSA
 from skbio.tree import TreeNode, nj
+from skbio.embedding import ProteinEmbedding
 from skbio.io import read, write
 from skbio.stats.ordination import OrdinationResults
 from skbio.table import Table
