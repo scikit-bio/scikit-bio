@@ -8,10 +8,11 @@
 
 import numpy as np
 
+from skbio._base import SkbioObject
 from skbio.util._decorator import overrides, classonlymethod
 
 
-class AlignPath:
+class AlignPath(SkbioObject):
     def __init__(self, lengths, states, n_seqs, starts=None):
         """Create an alignment path from segment lengths and states."""
         # Number of sequences needs to be explicitly provided, because the packed bits
@@ -31,6 +32,12 @@ class AlignPath:
         # TODO: Needs to think about whether reverse complemented (Boolean array of
         # (n_seqs,)) should be included as a parameter. It is only relevant for
         # nucleotide sequences.
+
+    def __str__(self):
+        """Return string representation of this AlignPath."""
+        # Not sure if this makes sense for this class, but it is needed for all
+        # SkbioObjects.
+        pass
 
     def subset(self):
         """Select subset of sequences from AlignPath.
