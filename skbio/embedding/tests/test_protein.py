@@ -13,9 +13,11 @@ from unittest import TestCase, main
 from functools import partial
 from pathlib import Path
 from skbio.util import get_data_path
-from skbio.embedding._protein import ProteinEmbedding
+from skbio.embedding._protein import ProteinEmbedding, ProteinVector
+from skbio import Protein
 import numpy as np
 import numpy.testing as npt
+
 
 class ProteinEmbeddingTests(TestCase):
 
@@ -81,6 +83,29 @@ class ProteinEmbeddingTests(TestCase):
         emb, s = self.emb, self.seq
         p_emb = ProteinEmbedding(emb, s)
         self.assertTrue('ProteinEmbedding' in repr(p_emb))
+
+
+class ProteinVectorTests(TestCase):
+    def setUp(self):
+        rk = 10
+        self.emb = np.random.randn(rk)
+        self.seq = Protein(('IGKEEIQQRLAQFVDHWKELKQLAAARGQRL'
+                            'EESLEYQQFVANVEEEEAWINEKMTLVASED'),
+                           metadata={"id": "seq1"})
+
+    def test_valid_protein_vector(self):
+        ProteinVector(self.emb, self.seq)        
+
+    def test_invalid_protein_vector(self):
+        seq = ('$GKEEIQQRLAQFVDHWKELKQLAAARGQRLE'
+               'ESLEYQQFVANVEEEEAWINEKMTLVASED^^')
+        with self.assertRaises(ValueError):
+            ProteinVector(self.emb, seq)        
+                                  
+    def test_repr(self):
+        pv = ProteinVector(self.emb, self.seq)
+        self.assertTrue('ProteinVector' in repr(pv))
+        self.assertTrue('vector dimension' in repr(pv))
 
 
 if __name__ == '__main__':
