@@ -65,12 +65,18 @@ class IOSource:
 
     def can_write(self):
         return False
+    
+    def can_seek(self):
+        return True
 
     def get_reader(self):
         raise NotImplementedError()
 
     def get_writer(self):
         raise NotImplementedError()
+    
+    def get_seekable(self):
+        return NotImplementedError()
 
 
 class Compressor(IOSource):
@@ -160,6 +166,13 @@ class TextIOSource(IOSource):
 
     def get_writer(self):
         return self.file
+    
+    def can_seek(self):
+        return self.get_reader().seekable()
+    
+    def get_seekable(self):
+        # Convert the stream to a StringIO, which is seek compatible
+        return io.StringIO(self.get_reader().read())
 
 
 class WrappedTemporaryFileSource(IOSource):
