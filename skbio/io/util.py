@@ -66,7 +66,8 @@ def _resolve(
     for source_handler in get_io_sources():
         source = source_handler(file, arguments)
         if mode == "r" and source.can_read():
-            if(source.can_seek()):
+            # Check if it's seekable
+            if source.can_seek():
                 newfile = source.get_reader()
             else:
                 newfile = source.get_seekable()
