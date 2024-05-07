@@ -14,7 +14,28 @@ from skbio.util._decorator import overrides, classonlymethod
 
 class AlignPath(SkbioObject):
     def __init__(self, lengths, states, n_seqs, starts=None):
-        """Create an alignment path from segment lengths and states."""
+        """Create an alignment path from segment lengths and states.
+
+        Parameters
+        ----------
+        lengths : array like
+            A 1D array of integers where each element represents the length of a segment
+            in the alignment.
+        states : array like
+            An array of integers where each element represents the gap status of that
+            segment.
+        n_seqs : int
+            Number of sequences in the alignment.
+        starts : array like
+            A 1D array which contains the start positions for each sequence in the
+            alignment.
+
+        See Also
+        --------
+        skbio.sequence.DNA
+        skbio.sequence.RNA
+        skbio.sequence.Protein
+        skbio.alignment.TabularMSA"""
         # Number of sequences needs to be explicitly provided, because the packed bits
         # does not contain this information. (It is merely in multiples of 8.)
         self.lengths = np.asarray(lengths, dtype=int)
@@ -28,6 +49,7 @@ class AlignPath(SkbioObject):
         # of the alignment in each sequence (shape: (n_seqs,)). This is important
         # especially for local alignments (e.g., search for a short read in a genome
         # sequence). If it is provided, `n_seqs` is no longer necessary.
+        self.starts = starts
 
         # TODO: Needs to think about whether reverse complemented (Boolean array of
         # (n_seqs,)) should be included as a parameter. It is only relevant for
@@ -38,6 +60,13 @@ class AlignPath(SkbioObject):
         # Not sure if this makes sense for this class, but it is needed for all
         # SkbioObjects.
         pass
+
+    def __repr__(self):
+        """Return summary of the alignment path."""
+        return (
+            f"<{self.__class__.__name__}, shape: {self.shape}, lengths: "
+            f"{self.lengths}, states: {self.states}"
+        )
 
     def subset(self):
         """Select subset of sequences from AlignPath.
