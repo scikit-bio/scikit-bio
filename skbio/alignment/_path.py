@@ -113,6 +113,7 @@ class AlignPath(SkbioObject):
 
         bits = self.to_bits()
         # TODO: Consider optimization using np.arange.
+        # thought: initiate [-1, -1, -1 ... -1], then add slices of arange into it
         pos = np.repeat(1 - bits, self.lengths, axis=1)
         idx = np.cumsum(pos, axis=1, dtype=int) - 1
         if gap == "del":
@@ -193,8 +194,6 @@ class PairAlignPath(AlignPath):
         lengths = self.lengths
         gaps = self.states
         codes = ["M", "I", "D"]
-        # Leaving this out for now, but need to implement "=" and "X" on a per
-        # character basis.
         if seqs is not None:
             query = seqs[0]
             ref = seqs[1]
@@ -267,9 +266,9 @@ class PairAlignPath(AlignPath):
     def _fix_arrays(lengths, gaps):
         """Merge consecutive same values from gaps array and sum corresponding values
         in lengths array."""
-        boundaries = np.diff(gaps, prepend=np.array([True])) != 0
-        gaps_out = gaps[boundaries]
-        group_labels = np.cumsum(boundaries)
-        lengths_out = np.bincount(group_labels, weights=lengths).astype(int)[1:]
+        idx = np.diff(gaps, prepend=np.array([True])) != 0
+        gaps_out = gaps[idx]
+        groups = np.cumsum(idx)
+        lengths_out = np.bincount(groups, weights=lengths).astype(int)[1:]
 
         return lengths_out, gaps_out
