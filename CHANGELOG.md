@@ -4,7 +4,11 @@
 
 ### Features
 
-* Added `ProteinEmbedding` class and corresponding file format ([#2008](https://github.com/scikit-bio/scikit-bio/pull/2008]))
+* Added `ProteinEmbedding` class and corresponding file format ([#2008](https://github.com/scikit-bio/scikit-bio/pull/2008))
+
+### Performance enhancements
+
+* Added support for standard input (stdin) streaming to I/O reading. ([#2017](https://github.com/scikit-bio/scikit-bio/issues/2017))
 
 ## Version 0.6.0
 
