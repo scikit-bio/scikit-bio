@@ -75,9 +75,6 @@ class IOSource:
     def get_writer(self):
         raise NotImplementedError()
 
-    def get_seekable(self):
-        return NotImplementedError()
-
 
 class Compressor(IOSource):
     streamable = True
@@ -169,10 +166,6 @@ class TextIOSource(IOSource):
 
     def can_seek(self):
         return self.get_reader().seekable()
-
-    def get_seekable(self):
-        # Convert the stream to a StringIO, which is seek compatible
-        return io.StringIO(self.get_reader().read())
 
 
 class WrappedTemporaryFileSource(IOSource):

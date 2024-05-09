@@ -66,11 +66,7 @@ def _resolve(
     for source_handler in get_io_sources():
         source = source_handler(file, arguments)
         if mode == "r" and source.can_read():
-            # Check if it's seekable
-            if source.can_seek():
-                newfile = source.get_reader()
-            else:
-                newfile = source.get_seekable()
+            newfile = source.get_reader()
             break
         elif mode == "w" and source.can_write():
             newfile = source.get_writer()
