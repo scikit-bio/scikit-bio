@@ -20,7 +20,7 @@ class TestAlignPath(unittest.TestCase):
     def test_to_bits(self):
         obj = AlignPath(lengths=[3, 2, 5, 1, 4, 3, 2],
                         states=[0, 2, 0, 6, 0, 1, 0],
-                        n_seqs=3)
+                        starts=[0, 0, 0])
         exp = np.array(([0, 0, 0, 0, 0, 1, 0], [0, 1, 0, 1, 0, 0, 0], [0, 0, 0, 1, 0, 0, 0]))
         obs = obj.to_bits()
         npt.assert_array_equal(obs, exp)
@@ -32,7 +32,7 @@ class TestAlignPath(unittest.TestCase):
                          [0,0,0,0,0,0,0,0,0,0,1,0,0,0,0,0,0,0,0,0]))
         exp = AlignPath(lengths=[3, 2, 5, 1, 4, 3, 2],
                         states=[0, 2, 0, 6, 0, 1, 0],
-                        n_seqs=3)
+                        starts=[0, 0, 0])
         obs = AlignPath.from_bits(bits)
         npt.assert_array_equal(obs.lengths, exp.lengths)
         npt.assert_array_equal(obs.states, exp.states)
@@ -42,7 +42,7 @@ class TestAlignPath(unittest.TestCase):
         bits = rng.choice([0, 1], size=(10, 10), p=[0.85, 0.15])
         exp = AlignPath(lengths=[1, 1, 1, 1, 1, 1, 3, 1],
                         states=[[0, 10, 133, 4, 0, 1, 0, 0], [0, 0, 0, 0, 0, 0, 0, 2]],
-                        n_seqs=10)
+                        starts=[0, 0, 0, 0, 0, 0, 0, 0, 0, 0])
         obs = AlignPath.from_bits(bits)
         npt.assert_array_equal(obs.lengths, exp.lengths)
         npt.assert_array_equal(obs.states, exp.states)
@@ -62,7 +62,7 @@ class TestAlignPath(unittest.TestCase):
         # test gap = -1
         obj = AlignPath(lengths=[3, 2, 5, 1, 4, 3, 2],
                         states=[0, 2, 0, 6, 0, 1, 0],
-                        n_seqs=3)
+                        starts=[0, 0, 0])
         exp = np.array([[0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, -1, -1, -1, 15, 16],
                         [0, 1, 2, -1, -1, 3, 4, 5, 6, 7, -1, 8, 9, 10, 11, 12, 13, 14, 15, 16],
                         [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, -1, 10, 11, 12, 13, 14, 15, 16, 17, 18]])
@@ -124,7 +124,7 @@ class TestAlignPath(unittest.TestCase):
                         [0, 3, 5, 10, 10, 14, 17, 19]])
         obj = AlignPath(lengths=[3, 2, 5, 1, 4, 3, 2],
                         states=[0, 2, 0, 6, 0, 1, 0],
-                        n_seqs=3)
+                        starts=[0, 0, 0])
         obs = obj.to_coordinates()
         npt.assert_array_equal(obs, exp)
 
@@ -174,7 +174,7 @@ class TestPairAlignPath(unittest.TestCase):
         # test base case
         lengths = [1, 2, 3, 4, 50, 234]
         gaps = [1, 0, 2, 1, 0, 1]
-        ExamplePairAlignPath = PairAlignPath(lengths=lengths, states=gaps, n_seqs=2)
+        ExamplePairAlignPath = PairAlignPath(lengths=lengths, states=gaps, starts=[0, 0])
         obs = ExamplePairAlignPath.to_cigar()
         exp = "1I2M3D4I50M234I"
         # do we want to include or omit 1?
@@ -197,7 +197,7 @@ class TestPairAlignPath(unittest.TestCase):
                          [0,0,0,1,1,0,0,0,0,0,1,0,0,0,0,0,0,0,0,0]))
         exp = PairAlignPath(lengths=[3, 2, 5, 1, 4, 3, 2],
                             states=[0, 2, 0, 2, 0, 1, 0],
-                            n_seqs=2)
+                            starts=[0, 0])
         obs = PairAlignPath.from_bits(bits)
         npt.assert_array_equal(obs.lengths, exp.lengths)
         npt.assert_array_equal(obs.states, exp.states)
@@ -225,12 +225,12 @@ class TestPairAlignPath(unittest.TestCase):
         with self.assertRaises(ValueError,
                                msg="For pairwise alignment, `states` must only "
                                "contain zeros, ones, or twos."):
-            PairAlignPath(lengths=[1, 2, 3], states=[1, 2, 3], n_seqs=2).to_bits()
+            PairAlignPath(lengths=[1, 2, 3], states=[1, 2, 3], starts=[0, 0]).to_bits()
 
         # test base case
         obj = PairAlignPath(lengths=[3, 2, 5, 1, 4, 3, 2],
                             states=[0, 2, 0, 2, 0, 1, 0],
-                            n_seqs=2)
+                            starts=[0, 0])
         exp = np.array(([0, 0, 0, 0, 0, 1, 0], [0, 1, 0, 1, 0, 0, 0]))
         obs = obj.to_bits()
         npt.assert_array_equal(obs, exp)

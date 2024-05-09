@@ -13,43 +13,50 @@ from skbio.util._decorator import overrides, classonlymethod
 
 
 class AlignPath(SkbioObject):
-    def __init__(self, lengths, states, n_seqs, starts=None):
+    def __init__(self, lengths, states, starts):
         """Create an alignment path from segment lengths and states.
 
         Parameters
         ----------
-        lengths : array like
-            A 1D array of integers where each element represents the length of a segment
-            in the alignment.
-        states : array like
-            An array of integers where each element represents the gap status of that
-            segment.
-        n_seqs : int
-            Number of sequences in the alignment.
-        starts : array like
-            A 1D array which contains the start positions for each sequence in the
-            alignment.
+        lengths : array_like of int of shape (n_segments,)
+            Length of each segment in the alignment.
+        states : array_like of unit8 of shape (n_segments,) or (n_packs, n_segments)
+            Packed bits representing character (0) or gap (1) status per sequence per
+            segment in the alignment.
+        starts : array_like of int of shape (n_sequences,), optional
+            Start position (0-based) of each sequence in the alignment.
 
         See Also
         --------
-        skbio.sequence.DNA
-        skbio.sequence.RNA
-        skbio.sequence.Protein
-        skbio.alignment.TabularMSA"""
+        skbio.sequence.Sequence
+        skbio.alignment.TabularMSA
+
+        """
         # Number of sequences needs to be explicitly provided, because the packed bits
         # does not contain this information. (It is merely in multiples of 8.)
         self.lengths = np.asarray(lengths, dtype=int)
+        n_positions = self.lengths.sum()
         self.states = np.asarray(states, dtype=np.uint8)
+
+        # start positions
+        self.starts = np.asarray(starts, dtype=int)
+        if self.starts.ndim > 1:
+            raise ValueError("`starts` must be a 1-D vector.")
+        n_seqs = self.starts.size
+        print(f"{n_seqs}")
+        print(f"{self.states.shape}")
+        if np.ceil(n_seqs / 8) != self.states.shape[0]:
+            raise ValueError("Sizes of `starts` and `states` do not match.")
 
         # Shape is n_seqs (rows) x n_positions (columns), which is consistent with
         # TabularMSA
-        self.shape = (n_seqs, self.lengths.sum())
+        self.shape = (n_seqs, n_positions)
 
         # TODO: An additional parameter `starts` should record the starting positions
         # of the alignment in each sequence (shape: (n_seqs,)). This is important
         # especially for local alignments (e.g., search for a short read in a genome
         # sequence). If it is provided, `n_seqs` is no longer necessary.
-        self.starts = starts
+        # self.starts = starts
 
         # TODO: Needs to think about whether reverse complemented (Boolean array of
         # (n_seqs,)) should be included as a parameter. It is only relevant for
@@ -59,7 +66,7 @@ class AlignPath(SkbioObject):
         """Return string representation of this AlignPath."""
         # Not sure if this makes sense for this class, but it is needed for all
         # SkbioObjects.
-        pass
+        return self.__repr__()
 
     def __repr__(self):
         """Return summary of the alignment path."""
