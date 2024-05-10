@@ -56,7 +56,7 @@ class TestAlignPath(unittest.TestCase):
         lengths = [3, 2, 5, 1, 4, 3, 2]
         states = [0, 2, 0, 6, 0, 1, 0]
         npt.assert_array_equal(lengths, obj.lengths)
-        npt.assert_array_equal(states, obj.states)
+        npt.assert_array_equal(states, np.squeeze(obj.states))
     
     def test_to_indices(self):
         # test gap = -1
@@ -109,13 +109,13 @@ class TestAlignPath(unittest.TestCase):
         lengths = [3, 2, 5, 1, 4, 3, 2]
         states = [0, 2, 0, 6, 0, 1, 0]
         npt.assert_array_equal(lengths, obj.lengths)
-        npt.assert_array_equal(states, obj.states)
+        npt.assert_array_equal(states, np.squeeze(obj.states))
     
         # test masked array
         masked = np.ma.array(indices, mask=(indices == -1))
         obj = AlignPath.from_indices(masked, gap="mask")
         npt.assert_array_equal(lengths, obj.lengths)
-        npt.assert_array_equal(states, obj.states)
+        npt.assert_array_equal(states, np.squeeze(obj.states))
 
     def test_to_coordinates(self):
         # test base case
@@ -137,22 +137,26 @@ class TestAlignPath(unittest.TestCase):
         lengths = [3, 2, 5, 1, 4, 3, 2]
         states = [0, 2, 0, 6, 0, 1, 0]
         npt.assert_array_equal(lengths, obj.lengths)
-        npt.assert_array_equal(states, obj.states)
+        npt.assert_array_equal(states, np.squeeze(obj.states))
 
 
 class TestPairAlignPath(unittest.TestCase):
     def test_from_cigar(self):
         # test valid cigar with no = or X
         cigar = "3M42I270M32D"
-        obs = PairAlignPath.from_cigar(cigar)
-        exp = ([3, 42, 270, 32], [0, 1, 0, 2])
-        npt.assert_array_equal(obs, exp)
+        obj = PairAlignPath.from_cigar(cigar)
+        lengths = [3, 42, 270, 32]
+        states = [0, 1, 0, 2]
+        npt.assert_array_equal(lengths, obj.lengths)
+        npt.assert_array_equal(states, np.squeeze(obj.states))
 
         # test valid cigar with = or X
         cigar = "3M42I270M23X663=32D24X43="
-        obs = PairAlignPath.from_cigar(cigar)
-        exp = ([3, 42, 956, 32, 67], [0, 1, 0, 2, 0])
-        npt.assert_array_equal(obs, exp)
+        obj = PairAlignPath.from_cigar(cigar)
+        lengths = [3, 42, 956, 32, 67]
+        states = [0, 1, 0, 2, 0]
+        npt.assert_array_equal(lengths, obj.lengths)
+        npt.assert_array_equal(states, np.squeeze(obj.states))
 
         # test empty cigar string
         with self.assertRaises(ValueError, msg="CIGAR string must not be empty."):
@@ -166,9 +170,11 @@ class TestPairAlignPath(unittest.TestCase):
 
         # test valid cigar with no 1's
         cigar = "MID12MI"
-        obs = PairAlignPath.from_cigar(cigar)
-        exp = ([1, 1, 1, 12, 1], [0, 1, 2, 0, 1])
-        npt.assert_array_equal(obs, exp)
+        obj = PairAlignPath.from_cigar(cigar)
+        lengths = [1, 1, 1, 12, 1]
+        states = [0, 1, 2, 0, 1]
+        npt.assert_array_equal(lengths, obj.lengths)
+        npt.assert_array_equal(states, np.squeeze(obj.states))
 
     def test_to_cigar(self):
         # test base case
@@ -233,7 +239,7 @@ class TestPairAlignPath(unittest.TestCase):
                             starts=[0, 0])
         exp = np.array(([0, 0, 0, 0, 0, 1, 0], [0, 1, 0, 1, 0, 0, 0]))
         obs = obj.to_bits()
-        npt.assert_array_equal(obs, exp)
+        npt.assert_array_equal(np.squeeze(obs), exp)
 
 if __name__ == "__main__":
     unittest.main()

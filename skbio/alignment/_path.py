@@ -36,15 +36,13 @@ class AlignPath(SkbioObject):
         # does not contain this information. (It is merely in multiples of 8.)
         self.lengths = np.asarray(lengths, dtype=int)
         n_positions = self.lengths.sum()
-        self.states = np.asarray(states, dtype=np.uint8)
+        self.states = np.atleast_2d(np.asarray(states, dtype=np.uint8))
 
         # start positions
         self.starts = np.asarray(starts, dtype=int)
         if self.starts.ndim > 1:
             raise ValueError("`starts` must be a 1-D vector.")
         n_seqs = self.starts.size
-        print(f"{n_seqs}")
-        print(f"{self.states.shape}")
         if np.ceil(n_seqs / 8) != self.states.shape[0]:
             raise ValueError("Sizes of `starts` and `states` do not match.")
 
@@ -119,7 +117,7 @@ class AlignPath(SkbioObject):
             ints = ints[:, idx]
 
         # return per-segment lengths and bits
-        return cls(lens, ints, bits.shape[0])
+        return cls(lens, ints, np.zeros(bits.shape[0], dtype=int))
 
     @classonlymethod
     def from_tabular(cls, msa):
@@ -186,7 +184,7 @@ class AlignPath(SkbioObject):
         ints = np.packbits(bits, axis=0, bitorder="little")
         if ints.shape[0] == 1:
             ints = np.squeeze(ints, axis=0)
-        return cls(lens, ints, diff.shape[0])
+        return cls(lens, ints, np.zeros(diff.shape[0], dtype=int))
 
 
 class PairAlignPath(AlignPath):
@@ -206,7 +204,7 @@ class PairAlignPath(AlignPath):
         ints = bits[0] + (bits[1] << 1)
         idx = np.append(0, np.where(ints[:-1] != ints[1:])[0] + 1)
         lens = np.append(idx[1:] - idx[:-1], ints.size - idx[-1])
-        return cls(lens, ints[idx], bits.shape[0])
+        return cls(lens, ints[idx], np.zeros(bits.shape[0], dtype=int))
 
     @overrides(AlignPath)
     def to_bits(self):
@@ -228,7 +226,7 @@ class PairAlignPath(AlignPath):
         """
         cigar = ""
         lengths = self.lengths
-        gaps = self.states
+        gaps = np.squeeze(self.states)
         codes = ["M", "I", "D"]
         if seqs is not None:
             query = seqs[0]
@@ -285,7 +283,7 @@ class PairAlignPath(AlignPath):
             lengths, gaps = cls._fix_arrays(
                 lengths=np.array(lengths), gaps=np.array(gaps)
             )
-        return np.asarray(lengths), np.asarray(gaps)
+        return cls(np.asarray(lengths), np.asarray(gaps), [0, 0])
 
     def _run_length_encode(self, input_string):
         """Perform run length encoding on a string."""
