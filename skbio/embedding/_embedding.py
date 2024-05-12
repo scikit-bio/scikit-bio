@@ -18,12 +18,12 @@ class Embedding(SkbioObject):
 
     @property
     def embedding(self):
-        r""" The embedding tensor. """
+        r"""The embedding tensor."""
         return self._embedding
 
     @property
     def ids(self):
-        r""" IDs corresponding to each row of the embedding. """
+        r"""IDs corresponding to each row of the embedding."""
         # each embedding row corresponds to an id
         return self._ids
 
@@ -56,7 +56,6 @@ class SequenceEmbedding(Embedding):
     r"""Store embeddings for a biological sequence."""
 
     def __init__(self, embedding, sequence, **kwargs):
-
         if isinstance(sequence, Sequence):
             sequence = str(sequence)
         if isinstance(sequence, str):
@@ -65,12 +64,12 @@ class SequenceEmbedding(Embedding):
         super(SequenceEmbedding, self).__init__(embedding, seq, **kwargs)
 
     def __str__(self):
-        r""" String representation of the underlying sequence """
-        return str(self._ids.tobytes().decode('ascii'))
+        r"""String representation of the underlying sequence"""
+        return str(self._ids.tobytes().decode("ascii"))
 
     @property
     def sequence(self):
-        r""" String representation of the underlying sequence """
+        r"""String representation of the underlying sequence"""
         return str(self)
 
     def __repr__(self):

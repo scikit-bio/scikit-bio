@@ -1,4 +1,4 @@
-r""" Biological Embeddings (:mod:`skbio.embedding`)
+r"""Biological Embeddings (:mod:`skbio.embedding`)
 =================================================
 
 .. currentmodule:: skbio.embedding

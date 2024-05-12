@@ -40,9 +40,7 @@ class ProteinEmbedding(SequenceEmbedding):
 
     default_write_format = "embed"
 
-    def __init__(
-        self, embedding, sequence, clip_head=False, clip_tail=False, **kwargs
-    ):
+    def __init__(self, embedding, sequence, clip_head=False, clip_tail=False, **kwargs):
         if clip_head:
             embedding = embedding[1:]
         if clip_tail:
@@ -64,7 +62,7 @@ class ProteinEmbedding(SequenceEmbedding):
 
     @property
     def residues(self):
-        r""" Array containing underlying residue characters """
+        r"""Array containing underlying residue characters"""
         return self._ids.view("|S1")
 
     def __repr__(self):
@@ -95,4 +93,5 @@ class ProteinEmbedding(SequenceEmbedding):
 
 example_protein_embedding = ProteinEmbedding(
     np.random.randn(62, 1024),
-    'IGKEEIQQRLAQFVDHWKELKQLAAARGQRLEESLEYQQFVANVEEEEAWINEKMTLVASED')
+    "IGKEEIQQRLAQFVDHWKELKQLAAARGQRLEESLEYQQFVANVEEEEAWINEKMTLVASED",
+)

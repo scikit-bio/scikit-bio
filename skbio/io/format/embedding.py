@@ -167,7 +167,6 @@ def _embed_to_protein(
 
 def _objects_to_embed(objs, fh):
     with h5py.File(fh, "w") as h5grp:
-
         h5grp.attrs["format"] = "embedding"
         h5grp.attrs["format-version"] = "1.0"
         maxsize = 1
@@ -206,8 +205,11 @@ def _objects_to_embed(objs, fh):
                 idptr_fh[i] = len(arr) + idptr_fh[i - 1]
             else:
                 idptr_fh = h5grp.create_dataset(
-                    "idptr", data=[len(arr)], maxshape=(None,),
-                    dtype=np.int32, compression='gzip'
+                    "idptr",
+                    data=[len(arr)],
+                    maxshape=(None,),
+                    dtype=np.int32,
+                    compression="gzip",
                 )
             if "id" in h5grp:
                 id_fh = h5grp["id"]
@@ -216,8 +218,7 @@ def _objects_to_embed(objs, fh):
                 id_fh[idptr_fh[i - 1] : idptr_fh[i]] = arr
             else:
                 id_fh = h5grp.create_dataset(
-                    "id", data=arr, maxshape=(None,), dtype=np.uint8,
-                    compression='gzip'
+                    "id", data=arr, maxshape=(None,), dtype=np.uint8, compression="gzip"
                 )
 
             if "embedding" in h5grp:
@@ -235,7 +236,7 @@ def _objects_to_embed(objs, fh):
                     data=emb,
                     maxshape=(None, emb.shape[1]),
                     dtype=obj.embedding.dtype,
-                    compression='gzip'
+                    compression="gzip",
                 )
         # resize the datasets to the actual number of objects
         maxsize = idptr_fh[i]
