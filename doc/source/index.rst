@@ -69,6 +69,7 @@ scikit-bio (canonically pronounced *sigh-kit-buy-oh*) is a library for working w
    diversity
    stats
    table
+   embedding
    metadata
    workflow
    util
