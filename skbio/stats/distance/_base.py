@@ -213,7 +213,46 @@ class DissimilarityMatrix(SkbioObject, PlottableMixin):
                 dm[i, j] = metric(a, b)
 
         return cls(dm, keys_)
+    def rename(self, rename_dict, strict=True):
+        """
+        Rename IDs in the DistanceMatrix.
 
+        Parameters
+        ----------
+        rename_dict : dict
+            A dictionary mapping current IDs to new IDs.
+        strict : bool, optional
+            If True, requires that all existing IDs in the DistanceMatrix must be
+            included in the rename_dict. If False, IDs not in rename_dict will be
+            kept as is.
+
+        Returns
+        -------
+        DistanceMatrix
+            A new instance of DistanceMatrix with IDs renamed.
+
+        Raises
+        ------
+        ValueError
+            If strict is True and not all IDs are present in rename_dict.
+
+        Examples
+        --------
+        >>> from skbio import DistanceMatrix
+        >>> dm = DistanceMatrix([[0, 1], [1, 0]], ids=['a', 'b'])
+        >>> dm.rename({'a': 'x', 'b': 'y'})
+        >>> print(dm.ids)
+        ['x', 'y']
+        """
+        new_ids = []
+        for old_id in self.ids:
+            if strict and old_id not in rename_dict:
+                raise ValueError(
+                    f"ID '{old_id}' not found in rename_dict under strict mode."
+                )
+            new_ids.append(rename_dict.get(old_id, old_id))
+        new_data = self._data.copy()
+        return self.__class__(new_data, new_ids)
     @property
     def data(self):
         """Array of dissimilarities.
