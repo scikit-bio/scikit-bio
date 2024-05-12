@@ -2,7 +2,7 @@
 *~
 \#*#
 .pytest_cache/*
-
+.github
 *.py[cod]
 
 # C extensions
