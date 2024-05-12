@@ -168,20 +168,17 @@ class AlphaDiversityTests(TestCase):
 
     def test_empty(self):
         # empty vector
-        actual = alpha_diversity('sobs',
-                                 np.array([], dtype=np.int64))
+        actual = alpha_diversity('sobs', np.array([], dtype=np.int64))
         expected = pd.Series([0])
         assert_series_almost_equal(actual, expected)
 
         # array of empty vector
-        actual = alpha_diversity('sobs',
-                                 np.array([[]], dtype=np.int64))
+        actual = alpha_diversity('sobs', np.array([[]], dtype=np.int64))
         expected = pd.Series([0])
         assert_series_almost_equal(actual, expected)
 
         # array of empty vectors
-        actual = alpha_diversity('sobs',
-                                 np.array([[], []], dtype=np.int64))
+        actual = alpha_diversity('sobs', np.array([[], []], dtype=np.int64))
         expected = pd.Series([0, 0])
         assert_series_almost_equal(actual, expected)
 

@@ -47,10 +47,15 @@ class ValidationTests(TestCase):
         self.assertEqual(obs.dtype, int)
         self.assertEqual(obs.shape, (1,))
 
-        # suppress casting to int
-        obs = _validate_counts_vector([42.2, 42.1, 0], suppress_cast=True)
-        npt.assert_array_equal(obs, np.array([42.2, 42.1, 0]))
+        # keep float
+        obs = _validate_counts_vector([42.2, 42.7, 0])
+        npt.assert_array_equal(obs, np.array([42.2, 42.7, 0]))
         self.assertEqual(obs.dtype, float)
+
+        # cast into int
+        obs = _validate_counts_vector([42.2, 42.7, 0], cast_int=True)
+        npt.assert_array_equal(obs, np.array([42, 42, 0]))
+        self.assertEqual(obs.dtype, int)
 
         # all zeros
         obs = _validate_counts_vector([0, 0, 0])
@@ -63,6 +68,13 @@ class ValidationTests(TestCase):
         self.assertEqual(obs.dtype, int)
 
     def test_validate_counts_vector_invalid_input(self):
+        # wrong data type (strings)
+        with self.assertRaises(ValueError):
+            _validate_counts_vector(['a', 'b', 'c'])
+
+        # wrong data type (complex numbers)
+        with self.assertRaises(ValueError):
+            _validate_counts_vector([1 + 2j, 3 + 4j])
 
         # wrong number of dimensions (2-D)
         with self.assertRaises(ValueError):
@@ -108,10 +120,10 @@ class ValidationTests(TestCase):
         npt.assert_array_equal(obs[1], np.array([0, 0, 2, 1, 3]))
         npt.assert_array_equal(obs[2], np.array([1, 1, 1, 1, 1]))
 
-    def test_validate_counts_matrix_suppress_cast(self):
-        # suppress_cast is passed through to _validate_counts_vector
+    def test_validate_counts_matrix_no_cast_int(self):
+        # cast_int is passed through to _validate_counts_vector
         obs = _validate_counts_matrix(
-            [[42.2, 42.1, 0], [42.2, 42.1, 1.0]], suppress_cast=True)
+            [[42.2, 42.1, 0], [42.2, 42.1, 1.0]], cast_int=False)
         npt.assert_array_equal(obs[0], np.array([42.2, 42.1, 0]))
         npt.assert_array_equal(obs[1], np.array([42.2, 42.1, 1.0]))
         self.assertEqual(obs[0].dtype, float)

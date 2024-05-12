@@ -7,6 +7,7 @@
 # ----------------------------------------------------------------------------
 
 from warnings import warn
+import functools
 
 import numpy as np
 from scipy.special import gammaln
@@ -17,6 +18,63 @@ from skbio.diversity._util import _validate_counts_vector
 from skbio.util._warning import _warn_deprecated
 
 
+def _validate_counts(counts):
+    counts = _validate_counts_vector(counts)
+    if not (nonzero := counts != 0).all():
+        counts = counts[nonzero]
+    return counts
+
+
+def _validate_alpha(empty=None, cast_int=False):
+    """Validate counts vector for an alpha diversity metric.
+
+    Parameters
+    ----------
+    func : callable
+        Function that calculates an alpha diversity metric.
+    empty : any, optional
+        Return this value if set instead of calling the function when an input
+        community is empty (i.e., no taxon, or all taxa have zero counts).
+    cast_int : bool, optional
+        Cast values into integers, if not already. ``False`` by default.
+
+    Returns
+    -------
+    callable
+        Decorated function.
+
+    Notes
+    -----
+    This function serves as a decorator for individual functions that calculate alpha
+    diversity metrics. The first positional argument of a decorated function must be a
+    1-D vector of counts/abundances of taxa in a community. Additional arguments may
+    follow.
+
+    """
+
+    def decorator(func):
+        @functools.wraps(func)
+        def wrapper(counts, *args, **kwargs):
+            counts = _validate_counts_vector(counts, cast_int)
+
+            # drop zero values, as these represent taxa that are absent from the
+            # community
+            if not (nonzero := counts != 0).all():
+                counts = counts[nonzero]
+
+            # return a value if community is empty (after dropping zeros)
+            if empty is not None and counts.size == 0:
+                return empty
+
+            # call function to calculate alpha diversity metric
+            return func(counts, *args, **kwargs)
+
+        return wrapper
+
+    return decorator
+
+
+@_validate_alpha(empty=np.nan)
 def berger_parker_d(counts):
     r"""Calculate Berger-Parker dominance index.
 
@@ -38,7 +96,7 @@ def berger_parker_d(counts):
 
     Returns
     -------
-    double
+    float
         Berger-Parker dominance index.
 
     Notes
@@ -51,20 +109,18 @@ def berger_parker_d(counts):
        foraminifera in deep-sea sediments. Science, 168(3937), 1345-1347.
 
     """
-    counts = _validate_counts_vector(counts)
-    if (N := counts.sum()) == 0:
-        return 0.0
-    return counts.max() / N
+    return counts.max() / counts.sum()
 
 
+@_validate_alpha(empty=np.nan)
 def brillouin_d(counts):
     r"""Calculate Brillouin's diversity index.
 
-    Brillouin's diversity index (:math:`H_B`) is defined as
+    Brillouin's diversity index (:math:`H_B`) is defined as:
 
     .. math::
 
-       H_B = \frac{\ln N!-\sum^s_{i=1}{\ln n_i!}}{N}
+       H_B = \frac{\ln N!-\sum_{i=1}^s{\ln n_i!}}{N}
 
     where :math:`N` is the total number of individuals in the sample, :math:`s`
     is the number of taxa, and :math:`n_i` is the number of individuals in the
@@ -77,7 +133,7 @@ def brillouin_d(counts):
 
     Returns
     -------
-    double
+    float
         Brillouin's diversity index.
 
     Notes
@@ -90,25 +146,22 @@ def brillouin_d(counts):
        Press. New York.
 
     """
-    counts = _validate_counts_vector(counts)
-    if (N := counts.sum()) == 0:
-        return 0.0
-    nz = counts[counts.nonzero()]
-    return (gammaln(N + 1) - gammaln(nz + 1).sum()) / N
+    return (gammaln((N := counts.sum()) + 1) - gammaln(counts + 1).sum()) / N
 
 
+@_validate_alpha(empty=np.nan)
 def dominance(counts):
     r"""Calculate Simpson's dominance index.
 
     Simpson's dominance index, a.k.a. Simpson's :math:`D`, measures the degree
-    of concentration of taxon composition of a sample. It is defined as
+    of concentration of taxon composition of a sample. It is defined as:
 
     .. math::
 
-       D = \sum{p_i^2}
+       D = \sum_{i=1}^s{p_i^2}
 
-    where :math:`p_i` is the proportion of the entire sample that taxon
-    :math:`i` represents.
+    where :math:`s` is the number of taxa and :math:`p_i` is the proportion
+    of the sample represented by taxon :math:`i`.
 
     Simpson's :math:`D` can be interpreted as the probability that two randomly
     selected individuals belong to the same taxon. It ranges between 0 and 1.
@@ -130,7 +183,7 @@ def dominance(counts):
 
     Returns
     -------
-    double
+    float
         Simpson's dominance index.
 
     See Also
@@ -147,12 +200,10 @@ def dominance(counts):
        688-688.
 
     """
-    counts = _validate_counts_vector(counts)
-    if (N := counts.sum()) == 0:
-        return 0.0
-    return ((counts / N) ** 2).sum()
+    return ((counts / counts.sum()) ** 2).sum()
 
 
+@_validate_alpha()
 def doubles(counts):
     """Calculate number of double-occurrence taxa (doubletons).
 
@@ -167,21 +218,25 @@ def doubles(counts):
         Doubleton count.
 
     """
-    counts = _validate_counts_vector(counts)
     return (counts == 2).sum()
 
 
 def enspie(counts):
     r"""Calculate ENS_pie alpha diversity measure.
 
-    ENS_pie is equivalent to ``1 / dominance``:
+    The effective number of species (ENS) derived from Hurlbert's probability
+    of interspecific encounter (PIE) is defined as:
 
     .. math::
 
        ENS_{pie} = \frac{1}{\sum_{i=1}^s{p_i^2}}
 
-    where :math:`s` is the number of taxa and :math:`p_i` is the proportion
-    of the sample represented by taxon :math:`i`.
+    where :math:`s` is the number of taxa and :math:`p_i` is the proportion of
+    the sample represented by taxon :math:`i`.
+
+    Therefore, :math:`ENS_{pie}` is equivalent to the reciprocal of Simpson's
+    dominance index, i.e., ``1 / D``. It is also known as Simpson's reciprocal
+    index.
 
     Parameters
     ----------
@@ -190,7 +245,7 @@ def enspie(counts):
 
     Returns
     -------
-    double
+    float
         ENS_pie alpha diversity measure.
 
     See Also
@@ -203,19 +258,22 @@ def enspie(counts):
 
     References
     ----------
-    .. [1] Chase and Knight (2013). "Scale-dependent effect sizes of ecological
-       drivers on biodiversity: why standardised sampling is not enough".
-       Ecology Letters, Volume 16, Issue Supplement s1, pgs 17-26.
+    .. [1] Chase, J. M., & Knight, T. M. (2013). Scale-dependent effect sizes
+       of ecological drivers on biodiversity: why standardised sampling is not
+       enough. Ecology letters, 16, 17-26.
+
+    .. [2] Hurlbert, S. H. (1971). The nonconcept of species diversity: a
+       critique and alternative parameters. Ecology, 52(4), 577-586.
 
     """
-    counts = _validate_counts_vector(counts)
     return 1 / dominance(counts)
 
 
+@_validate_alpha(empty=np.nan)
 def esty_ci(counts):
     r"""Calculate Esty's confidence interval of Good's coverage estimator.
 
-    Esty's confidence interval is defined as
+    Esty's confidence interval is defined as:
 
     .. math::
 
@@ -225,7 +283,7 @@ def esty_ci(counts):
     total number of individuals, and :math:`z` is a constant that depends on
     the targeted confidence and based on the normal distribution.
 
-    :math:`W` is defined as
+    :math:`W` is defined as:
 
     .. math::
 
@@ -255,19 +313,15 @@ def esty_ci(counts):
        estimator of the coverage of a random sample". Ann Statist 11: 905-912.
 
     """
-    counts = _validate_counts_vector(counts)
-    if (N := counts.sum()) == 0:
-        return 0.0
-
-    f1 = singles(counts)
-    f2 = doubles(counts)
+    N = counts.sum()
+    f1 = (counts == 1).sum()
+    f2 = (counts == 2).sum()
     z = 1.959963985
     W = (f1 * (N - f1) + 2 * N * f2) / (N**3)
-
     return f1 / N - z * np.sqrt(W), f1 / N + z * np.sqrt(W)
 
 
-@np.errstate(invalid="ignore")
+@_validate_alpha(empty=np.nan)
 def fisher_alpha(counts):
     r"""Calculate Fisher's alpha, a metric of diversity.
 
@@ -288,7 +342,7 @@ def fisher_alpha(counts):
 
     Returns
     -------
-    double
+    float
         Fisher's alpha.
 
     Raises
@@ -317,14 +371,8 @@ def fisher_alpha(counts):
        sample of an animal population. The Journal of Animal Ecology, pp.42-58.
 
     """
-    counts = _validate_counts_vector(counts)
-
-    # alpha = 0 when sample has no individual
-    if (N := counts.sum()) == 0:
-        return 0.0
-
     # alpha = +inf when all taxa are singletons
-    if N == (S := sobs(counts)):
+    if (N := counts.sum()) == (S := counts.size):
         return np.inf
 
     # objective function to minimize:
@@ -333,7 +381,8 @@ def fisher_alpha(counts):
         return (x * np.log(1 + (N / x)) - S) ** 2 if x > 0 else np.inf
 
     # minimize the function using the default method (Brent's algorithm)
-    res = minimize_scalar(f)
+    with np.errstate(invalid="ignore"):
+        res = minimize_scalar(f)
 
     # there is a chance optimization could fail
     if res.success is False:
@@ -342,11 +391,12 @@ def fisher_alpha(counts):
     return res.x
 
 
+@_validate_alpha(empty=np.nan)
 def goods_coverage(counts):
     r"""Calculate Good's coverage estimator.
 
     Good's coverage estimator :math:`C` is an estimation of the proportion of
-    the population represented in the sample. It is defined as
+    the population represented in the sample. It is defined as:
 
     .. math::
 
@@ -362,7 +412,7 @@ def goods_coverage(counts):
 
     Returns
     -------
-    double
+    float
         Good's coverage estimator.
 
     Notes
@@ -375,14 +425,11 @@ def goods_coverage(counts):
        estimation of population parameters. Biometrika, 40(3-4), 237-264.
 
     """
-    counts = _validate_counts_vector(counts)
-    if (N := counts.sum()) == 0:
-        return 0.0
-    f1 = singles(counts)
-    return 1 - (f1 / N)
+    return 1 - ((counts == 1).sum() / counts.sum())
 
 
-def heip_e(counts):
+@_validate_alpha()
+def heip_e(counts, base=None):
     r"""Calculate Heip's evenness measure.
 
     Heip's evenness is defined as:
@@ -391,17 +438,19 @@ def heip_e(counts):
 
        \frac{(e^H-1)}{(S-1)}
 
-    where :math:`H` is the Shannon-Wiener entropy of counts (using logarithm
-    base :math:`e`) and :math:`S` is the number of taxa in the sample.
+    where :math:`H` is Shannon's diversity index and :math:`S` is the number
+    of taxa in the sample.
 
     Parameters
     ----------
     counts : 1-D array_like, int
         Vector of counts.
+    base : int or float, optional
+        Logarithm base to use in the calculation. Default is ``e``.
 
     Returns
     -------
-    double
+    float
         Heip's evenness measure.
 
     See Also
@@ -413,16 +462,21 @@ def heip_e(counts):
     -----
     Heip's evenness measure was originally described in [1]_.
 
+    When there is only one taxon, the return value is ``np.nan``.
+
     References
     ----------
     .. [1] Heip, C. 1974. A new index measuring evenness. J. Mar. Biol. Ass.
        UK., 54, 555-557.
 
     """
-    counts = _validate_counts_vector(counts)
-    return (np.exp(shannon(counts, base=np.e)) - 1) / (sobs(counts) - 1)
+    if (S := counts.size) <= 1:
+        return np.nan
+    H = shannon(counts, base=base)
+    return (np.exp(H) - 1) / (S - 1)
 
 
+@_validate_alpha(empty=np.nan)
 def kempton_taylor_q(counts, lower_quantile=0.25, upper_quantile=0.75):
     """Calculate Kempton-Taylor Q index of alpha diversity.
 
@@ -440,7 +494,7 @@ def kempton_taylor_q(counts, lower_quantile=0.25, upper_quantile=0.75):
 
     Returns
     -------
-    double
+    float
         Kempton-Taylor Q index of alpha diversity.
 
     Notes
@@ -464,14 +518,14 @@ def kempton_taylor_q(counts, lower_quantile=0.25, upper_quantile=0.75):
     .. [2] http://www.pisces-conservation.com/sdrhelp/index.html
 
     """
-    counts = _validate_counts_vector(counts)
-    n = len(counts)
-    lower = int(np.ceil(n * lower_quantile))
-    upper = int(n * upper_quantile)
+    S = counts.size
+    lower = int(np.ceil(S * lower_quantile))
+    upper = int(S * upper_quantile)
     sorted_counts = np.sort(counts)
     return (upper - lower) / np.log(sorted_counts[upper] / sorted_counts[lower])
 
 
+@_validate_alpha(empty=np.nan)
 def margalef(counts):
     r"""Calculate Margalef's richness index.
 
@@ -493,7 +547,7 @@ def margalef(counts):
 
     Returns
     -------
-    double
+    float
         Margalef's richness index.
 
     Notes
@@ -506,12 +560,12 @@ def margalef(counts):
        3, 36-71.
 
     """
-    counts = _validate_counts_vector(counts)
-    if (N := counts.sum()) == 0:
-        return 0.0
-    return (sobs(counts) - 1) / np.log(N)
+    if (N := counts.sum()) == 1:
+        return np.nan
+    return (counts.size - 1) / np.log(N)
 
 
+@_validate_alpha(empty=np.nan)
 def mcintosh_d(counts):
     r"""Calculate McIntosh dominance index.
 
@@ -538,7 +592,7 @@ def mcintosh_d(counts):
 
     Returns
     -------
-    double
+    float
         McIntosh dominance index.
 
     See Also
@@ -555,17 +609,17 @@ def mcintosh_d(counts):
        certain concepts to diversity. Ecology 48, 1115-1126.
 
     """
-    counts = _validate_counts_vector(counts)
-    if (N := counts.sum()) == 0:
-        return 0.0
+    if (N := counts.sum()) == 1:
+        return np.nan
     u = np.sqrt((counts**2).sum())
     return (N - u) / (N - np.sqrt(N))
 
 
+@_validate_alpha(empty=np.nan)
 def mcintosh_e(counts):
-    r"""Calculate McIntosh's evenness measure E.
+    r"""Calculate McIntosh's evenness measure.
 
-    McIntosh evenness measure E is defined as:
+    McIntosh evenness measure :math:`E` is defined as:
 
     .. math::
 
@@ -582,8 +636,8 @@ def mcintosh_e(counts):
 
     Returns
     -------
-    double
-        McIntosh evenness measure E.
+    float
+        McIntosh evenness measure.
 
     See Also
     --------
@@ -600,14 +654,14 @@ def mcintosh_e(counts):
        Indices. p 560.
 
     """
-    counts = _validate_counts_vector(counts)
-    numerator = np.sqrt((counts * counts).sum())
+    S = counts.size
     N = counts.sum()
-    S = sobs(counts)
+    numerator = np.sqrt((counts * counts).sum())
     denominator = np.sqrt((N - S + 1) ** 2 + S - 1)
     return numerator / denominator
 
 
+@_validate_alpha(empty=np.nan)
 def menhinick(counts):
     r"""Calculate Menhinick's richness index.
 
@@ -629,7 +683,7 @@ def menhinick(counts):
 
     Returns
     -------
-    double
+    float
         Menhinick's richness index.
 
     Notes
@@ -642,10 +696,10 @@ def menhinick(counts):
        76-77.
 
     """
-    counts = _validate_counts_vector(counts)
-    return sobs(counts) / np.sqrt(counts.sum())
+    return counts.size / np.sqrt(counts.sum())
 
 
+@_validate_alpha(empty=np.nan)
 def michaelis_menten_fit(counts, num_repeats=1, params_guess=None):
     r"""Calculate Michaelis-Menten fit to rarefaction curve of observed taxa.
 
@@ -677,7 +731,7 @@ def michaelis_menten_fit(counts, num_repeats=1, params_guess=None):
 
     Returns
     -------
-    S_max : double
+    float
         Estimate of the :math:`S_{max}` parameter in the Michaelis-Menten
         equation.
 
@@ -699,8 +753,6 @@ def michaelis_menten_fit(counts, num_repeats=1, params_guess=None):
        Michaelis-Menten equation. Biometrics 43, 793-803.
 
     """
-    counts = _validate_counts_vector(counts)
-
     n_indiv = counts.sum()
     if params_guess is None:
         S_max_guess = sobs(counts)
@@ -726,36 +778,6 @@ def michaelis_menten_fit(counts, num_repeats=1, params_guess=None):
     ]
 
 
-def sobs(counts):
-    """Calculate the observed species richness of a sample.
-
-    Observed species richness, usually denoted as :math:`S_{obs}` or simply
-    :math:`S`, is the number of distinct species (i.e., taxa), or any discrete
-    groups of biological entities found in a sample.
-
-    It should be noted that observed species richness is smaller than or equal
-    to the true species richness of a population from which the sample is
-    collected.
-
-    Parameters
-    ----------
-    counts : 1-D array_like, int
-        Vector of counts.
-
-    Returns
-    -------
-    int
-        Observed species richness.
-
-    See Also
-    --------
-    observed_features
-
-    """
-    counts = _validate_counts_vector(counts)
-    return (counts != 0).sum()
-
-
 def observed_features(counts):
     """Calculate the number of distinct features.
 
@@ -775,7 +797,7 @@ def observed_features(counts):
 
     Notes
     -----
-    `observed_features` is an alias for `sobs`.
+    ``observed_features`` is an alias for `sobs`.
 
     """
     return sobs(counts)
@@ -805,7 +827,7 @@ def observed_otus(counts):
 
     Notes
     -----
-    `observed_otus` is an alias for `sobs`.
+    ``observed_otus`` is an alias for `sobs`.
 
     """
     # @deprecated
@@ -814,6 +836,7 @@ def observed_otus(counts):
     return sobs(counts)
 
 
+@_validate_alpha()
 def osd(counts):
     """Calculate observed taxa, singletons, and doubletons.
 
@@ -839,19 +862,19 @@ def osd(counts):
     on these three measures.
 
     """
-    counts = _validate_counts_vector(counts)
-    return sobs(counts), singles(counts), doubles(counts)
+    return counts.size, (counts == 1).sum(), (counts == 2).sum()
 
 
-def pielou_e(counts):
+@_validate_alpha()
+def pielou_e(counts, base=None):
     r"""Calculate Pielou's evenness index.
 
     Pielou's evenness index (:math:`J'`), a.k.a., Shannon's equitability index
-    (:math:`E_H`), is defined as
+    (:math:`E_H`), is defined as:
 
     .. math::
 
-       J' = \frac{(H)}{\ln(S)}
+       J' = \frac{(H)}{\log(S)}
 
     where :math:`H` is the Shannon index of the sample and :math:`S` is the
     number of taxa in the sample.
@@ -864,10 +887,12 @@ def pielou_e(counts):
     ----------
     counts : 1-D array_like, int
         Vector of counts.
+    base : int or float, optional
+        Logarithm base to use in the calculation. Default is ``e``.
 
     Returns
     -------
-    double
+    float
         Pielou's evenness index.
 
     See Also
@@ -885,8 +910,13 @@ def pielou_e(counts):
        of biological collections. Journal of Theoretical Biology, 13, 131-44.
 
     """
-    counts = _validate_counts_vector(counts)
-    return 0.0 if (H := shannon(counts, base=np.e)) == 0.0 else H / np.log(sobs(counts))
+    if (S := counts.size) <= 1:
+        return np.nan
+    H = shannon(counts, base=base)
+    H_max = np.log(S)
+    if base is not None:
+        H_max /= np.log(base)
+    return H / H_max
 
 
 def robbins(counts):
@@ -907,7 +937,7 @@ def robbins(counts):
 
     Returns
     -------
-    double
+    float
         Robbins' estimate.
 
     Notes
@@ -920,19 +950,23 @@ def robbins(counts):
     .. [1] Robbins, H. E (1968). Ann. of Stats. Vol 36, pp. 256-257.
 
     """
-    counts = _validate_counts_vector(counts)
-    return singles(counts) / counts.sum()
+    counts = _validate_counts(counts)
+    if counts.size == 0:
+        return np.nan
+
+    return (counts == 1).sum() / counts.sum()
 
 
-def shannon(counts, base=2):
+@_validate_alpha(empty=np.nan)
+def shannon(counts, base=None):
     r"""Calculate Shannon's diversity index, default in bits.
 
     Shannon's diversity index, :math:`H'`, a.k.a., Shannon index, or Shannon-
-    Wiener index, is defined as
+    Wiener index, is defined as:
 
     .. math::
 
-       H' = -\sum_{i=1}^s\left(p_i\log_2 p_i\right)
+       H' = -\sum_{i=1}^s\left(p_i\log(p_i)\right)
 
     where :math:`s` is the number of taxa and :math:`p_i` is the proportion
     of the sample represented by taxon :math:`i`.
@@ -941,12 +975,12 @@ def shannon(counts, base=2):
     ----------
     counts : 1-D array_like, int
         Vector of counts.
-    base : scalar, optional
-        Logarithm base to use in the calculation.
+    base : int or float, optional
+        Logarithm base to use in the calculation. Default is ``e``.
 
     Returns
     -------
-    double
+    float
         Shannon's diversity index.
 
     Notes
@@ -962,28 +996,25 @@ def shannon(counts, base=2):
        Bell system technical journal, 27(3), 379-423.
 
     """
-    counts = _validate_counts_vector(counts)
-    if (N := counts.sum()) == 0:
-        return 0.0
-    freqs = counts / N
-    nonzero_freqs = freqs[freqs.nonzero()]
-    if nonzero_freqs.size <= 1:
-        return 0.0
-    return -(nonzero_freqs * np.log(nonzero_freqs)).sum() / np.log(base)
+    freqs = counts / counts.sum()
+    H = (-freqs * np.log(freqs)).sum()
+    if base is not None:
+        H /= np.log(base)
+    return H
 
 
 def simpson(counts):
     r"""Calculate Simpson's diversity index.
 
     Simpson's diversity index, a.k.a., Gini-Simpson index, or Gini impurity,
-    is defined as
+    is defined as:
 
     .. math::
 
-       1 - \sum{p_i^2}
+       1 - \sum_{i=1}^s{p_i^2}
 
-    where :math:`p_i` is the proportion of the sample represented by taxon
-    :math:`i`.
+    where :math:`s` is the number of taxa and :math:`p_i` is the proportion
+    of the sample represented by taxon :math:`i`.
 
     Therefore, Simpson's diversity index is also denoted as :math:`1 - D`, in
     which :math:`D` is the Simpson's dominance index.
@@ -995,7 +1026,7 @@ def simpson(counts):
 
     Returns
     -------
-    double
+    float
         Simpson's diversity index.
 
     See Also
@@ -1012,14 +1043,14 @@ def simpson(counts):
        688-688.
 
     """
-    counts = _validate_counts_vector(counts)
     return 1 - dominance(counts)
 
 
+@_validate_alpha()
 def simpson_e(counts):
     r"""Calculate Simpson's evenness index.
 
-    Simpson's evenness (a.k.a., equitability) index :math:`E_D` is defined as
+    Simpson's evenness (a.k.a., equitability) index :math:`E_D` is defined as:
 
     .. math::
 
@@ -1040,7 +1071,7 @@ def simpson_e(counts):
 
     Returns
     -------
-    double
+    float
         Simpson's evenness index.
 
     See Also
@@ -1056,14 +1087,15 @@ def simpson_e(counts):
     References
     ----------
     .. [1] Simpson, E. H. (1949). Measurement of diversity. nature, 163(4148), 688-688.
+
     .. [2] Pielou, E. C. (1966). The measurement of diversity in different types of
        biological collections. Journal of theoretical biology, 13, 131-144.
 
     """
-    counts = _validate_counts_vector(counts)
-    return enspie(counts) / sobs(counts)
+    return 1 / (counts.size * dominance(counts))
 
 
+@_validate_alpha()
 def singles(counts):
     """Calculate number of single-occurrence taxa (singletons).
 
@@ -1078,10 +1110,40 @@ def singles(counts):
         Singleton count.
 
     """
-    counts = _validate_counts_vector(counts)
     return (counts == 1).sum()
 
 
+@_validate_alpha()
+def sobs(counts):
+    """Calculate the observed species richness of a sample.
+
+    Observed species richness, usually denoted as :math:`S_{obs}` or simply
+    :math:`S`, is the number of distinct species (i.e., taxa), or any discrete
+    groups of biological entities found in a sample.
+
+    It should be noted that observed species richness is smaller than or equal
+    to the true species richness of a population from which the sample is
+    collected.
+
+    Parameters
+    ----------
+    counts : 1-D array_like, int
+        Vector of counts.
+
+    Returns
+    -------
+    int
+        Observed species richness.
+
+    See Also
+    --------
+    observed_features
+
+    """
+    return counts.size
+
+
+@_validate_alpha(empty=np.nan)
 def strong(counts):
     r"""Calculate Strong's dominance index.
 
@@ -1105,7 +1167,7 @@ def strong(counts):
 
     Returns
     -------
-    double
+    float
         Strong's dominance index.
 
     Notes
@@ -1118,10 +1180,7 @@ def strong(counts):
        and between plant communities. Community Ecology, 3, 237-246.
 
     """
-    counts = _validate_counts_vector(counts)
-    if (N := counts.sum()) == 0:
-        return 0.0
-    S = sobs(counts)
-    i = np.arange(1, len(counts) + 1)
+    S = counts.size
     sorted_sum = np.sort(counts)[::-1].cumsum()
-    return (sorted_sum / N - (i / S)).max()
+    i = np.arange(1, S + 1)
+    return (sorted_sum / counts.sum() - (i / S)).max()

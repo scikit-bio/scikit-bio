@@ -330,7 +330,7 @@ def weighted_unifrac(
 
 
 def _validate(u_counts, v_counts, taxa, tree):
-    _validate_counts_matrix([u_counts, v_counts], suppress_cast=True)
+    _validate_counts_matrix([u_counts, v_counts], cast_int=False)
     _validate_taxa_and_tree(counts=u_counts, taxa=taxa, tree=tree)
 
 

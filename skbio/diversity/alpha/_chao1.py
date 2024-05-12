@@ -13,10 +13,10 @@ from skbio.diversity._util import _validate_counts_vector
 
 
 def chao1(counts, bias_corrected=True):
-    r"""Calculate chao1 richness estimator.
+    r"""Calculate Chao1 richness estimator.
 
-    Uses the bias-corrected version unless `bias_corrected` is ``False`` *and*
-    there are both singletons and doubletons.
+    Uses the bias-corrected version unless ``bias_corrected`` is ``False``
+    *and* there are both singletons and doubletons.
 
     Parameters
     ----------
@@ -31,7 +31,7 @@ def chao1(counts, bias_corrected=True):
     Returns
     -------
     double
-        Computed chao1 richness estimator.
+        Computed Chao1 richness estimator.
 
     See Also
     --------
@@ -48,7 +48,7 @@ def chao1(counts, bias_corrected=True):
     where :math:`F_1` and :math:`F_2` are the count of singletons and
     doubletons, respectively.
 
-    The bias-corrected version is defined as
+    The bias-corrected version is defined as:
 
     .. math::
 
@@ -70,7 +70,7 @@ def chao1(counts, bias_corrected=True):
 
 
 def chao1_ci(counts, bias_corrected=True, zscore=1.96):
-    """Calculate chao1 confidence interval.
+    """Calculate Chao1 confidence interval.
 
     Parameters
     ----------
@@ -88,7 +88,7 @@ def chao1_ci(counts, bias_corrected=True, zscore=1.96):
     Returns
     -------
     tuple
-        chao1 confidence interval as ``(lower_bound, upper_bound)``.
+        Chao1 confidence interval as ``(lower_bound, upper_bound)``.
 
     See Also
     --------
@@ -97,7 +97,7 @@ def chao1_ci(counts, bias_corrected=True, zscore=1.96):
     Notes
     -----
     The implementation here is based on the equations in the EstimateS manual
-    [1]_. Different equations are employed to calculate the chao1 variance and
+    [1]_. Different equations are employed to calculate the Chao1 variance and
     confidence interval depending on `bias_corrected` and the presence/absence
     of singletons and/or doubletons.
 
@@ -125,7 +125,7 @@ def chao1_ci(counts, bias_corrected=True, zscore=1.96):
 
 
 def _chao1_var(counts, bias_corrected=True):
-    """Calculate chao1 variance using decision rules in EstimateS."""
+    """Calculate Chao1 variance using decision rules in EstimateS."""
     o, s, d = osd(counts)
     if not d:
         c = chao1(counts, bias_corrected)
@@ -140,7 +140,7 @@ def _chao1_var(counts, bias_corrected=True):
 
 
 def _chao1_var_uncorrected(singles, doubles):
-    """Calculate chao1, uncorrected.
+    """Calculate Chao1 variance without correction.
 
     From EstimateS manual, equation 5.
 
@@ -150,7 +150,7 @@ def _chao1_var_uncorrected(singles, doubles):
 
 
 def _chao1_var_bias_corrected(s, d):
-    """Calculate chao1 variance, bias-corrected.
+    """Calculate Chao1 variance with bias correction.
 
     `s` is the number of singletons and `d` is the number of doubletons.
 
@@ -165,7 +165,7 @@ def _chao1_var_bias_corrected(s, d):
 
 
 def _chao1_var_no_doubletons(s, chao1):
-    """Calculate chao1 variance in absence of doubletons.
+    """Calculate Chao1 variance in absence of doubletons.
 
     From EstimateS manual, equation 7.
 
@@ -177,7 +177,7 @@ def _chao1_var_no_doubletons(s, chao1):
 
 
 def _chao1_var_no_singletons(n, o):
-    """Calculate chao1 variance in absence of singletons.
+    """Calculate Chao1 variance in absence of singletons.
 
     `n` is the number of individuals and `o` is the number of observed species.
 
@@ -188,7 +188,7 @@ def _chao1_var_no_singletons(n, o):
 
 
 def _chao_confidence_with_singletons(chao, observed, var_chao, zscore=1.96):
-    """Calculate confidence bounds for chao1 or chao2.
+    """Calculate confidence bounds for Chao1 or Chao2.
 
     Uses Eq. 13 of EstimateS manual.
 
@@ -197,7 +197,7 @@ def _chao_confidence_with_singletons(chao, observed, var_chao, zscore=1.96):
 
     """
     T = chao - observed
-    # if no diff betweeh chao and observed, CI is just point estimate of
+    # if no diff between chao and observed, CI is just point estimate of
     # observed
     if T == 0:
         return observed, observed
@@ -206,7 +206,7 @@ def _chao_confidence_with_singletons(chao, observed, var_chao, zscore=1.96):
 
 
 def _chao_confidence_no_singletons(n, s, zscore=1.96):
-    """Calculate confidence bounds for chao1/chao2 in absence of singletons.
+    """Calculate confidence bounds for Chao1/Chao2 in absence of singletons.
 
     Uses Eq. 14 of EstimateS manual.
 
