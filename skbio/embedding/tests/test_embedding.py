@@ -37,6 +37,10 @@ class EmbeddingTests(TestCase):
         p_emb = Embedding(emb, s)
         self.assertEqual(p_emb.embedding.shape, (62, 10))
 
+    def test_str(self):
+        self.assertRaises(NotImplementedError,
+                          Embedding(self.emb, self.seq).__str__)
+
     def test_assert_length(self):
         with self.assertRaises(ValueError):
             Embedding(self.emb, self.seq + "A")
@@ -53,7 +57,6 @@ class SequenceEmbeddingTests(TestCase):
         p_emb = SequenceEmbedding(emb, s)
         self.assertTrue('SequenceEmbedding' in p_emb.__repr__())
 
-
     def test_str(self):
         emb, s = self.emb, self.seq
         p_emb = SequenceEmbedding(emb, s)
@@ -61,6 +64,13 @@ class SequenceEmbeddingTests(TestCase):
         self.assertEqual(p_emb.__str__(), s)
         self.assertEqual(p_emb.sequence, s)
         self.assertEqual(str(p_emb.ids.tobytes().decode('ascii')), s)
+
+    def test_bytes(self):
+        emb, s = self.emb, self.seq
+        p_emb = SequenceEmbedding(emb, s)
+        res = p_emb.bytes()
+        res_str = str(res.tobytes().decode("ascii"))
+        self.assertEqual(res_str, s)
 
     def test_embedding(self):
         emb, s = self.emb, self.seq
@@ -82,6 +92,28 @@ class TestSequenceVectorMethods(TestCase):
         self.sequence_vectors = [SequenceVector(self.vector1, "ACGT"),
                                  SequenceVector(self.vector2, "GCTA"),
                                  SequenceVector(self.vector3, "TTAG")]
+
+    def test_vector(self):
+        # Test if the vector attribute is set correctly
+        for i, vector in enumerate([self.vector1, self.vector2, self.vector3]):
+            self.assertTrue(np.array_equal(self.sequence_vectors[i].vector, vector))
+
+    def test_sequence(self):
+        # Test if the sequence attribute is set correctly
+        for i, sequence in enumerate(["ACGT", "GCTA", "TTAG"]):
+            self.assertEqual(self.sequence_vectors[i].sequence, sequence)
+
+    def test_repr(self):
+        # Test if the __repr__ method returns the correct string
+        for i, sequence_vector in enumerate(self.sequence_vectors):
+            self.assertTrue(
+                sequence_vector.__repr__().startswith("SequenceVector")
+            )
+
+    def test_str(self):
+        # Test if the __str__ method returns the correct string
+        for i, sequence_vector in enumerate(self.sequence_vectors):
+            self.assertEqual(str(sequence_vector), sequence_vector.sequence)
 
     def test_to_numpy(self):
         # Test if to_numpy returns the correct numpy array

@@ -13,6 +13,7 @@ Embedding types
     :toctree: generated/
 
     ProteinEmbedding
+    ProteinVector
 
 """
 # ----------------------------------------------------------------------------

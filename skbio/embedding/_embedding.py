@@ -53,7 +53,7 @@ class Embedding(SkbioObject):
         self._ids = np.array(ids)
 
     def __str__(self):
-        raise NotImplemented
+        raise NotImplementedError("This method should be implemented by subclasses.")
 
     def bytes(self):
         r""" Bytes representation of string encoding"""
@@ -139,7 +139,7 @@ class SequenceVector(Embedding):
 
     @property
     def vector(self):
-        return self.embedding
+        return self.embedding.squeeze()
 
     def __repr__(self):
         r"""
