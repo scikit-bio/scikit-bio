@@ -60,8 +60,8 @@ class Embedding(SkbioObject):
         seq = np.frombuffer(str(self).encode("ascii"),
                             dtype=np.uint8)
         return seq
-        
-    
+
+
 class SequenceEmbedding(Embedding):
     r"""Store embeddings for a biological sequence."""
 
@@ -77,7 +77,7 @@ class SequenceEmbedding(Embedding):
     def __str__(self):
         r""" String representation of the underlying sequence """
         return str(self._ids.tobytes().decode('ascii'))
-        
+
     @property
     def sequence(self):
         r""" String representation of the underlying sequence """
@@ -109,7 +109,7 @@ class SequenceEmbedding(Embedding):
         )
         return rstr
 
-    
+
 class SequenceVector(Embedding):
     r"""Store a vector representation for a biological sequence."""
     def __init__(self, vector, sequence, **kwargs):
@@ -125,13 +125,13 @@ class SequenceVector(Embedding):
             assert vector.shape[0] == 1, (
                 "Only 1 vector per sequence is allowed."
             )
-            
+
         seq = np.array([sequence], dtype='O')
-        super(SequenceVector, self).__init__(vector, seq, **kwargs)    
+        super(SequenceVector, self).__init__(vector, seq, **kwargs)
 
     def __str__(self):
         return str(self._ids[0].decode('ascii'))
-            
+
     @property
     def sequence(self):
         r""" String representation of the underlying sequence """
@@ -140,7 +140,7 @@ class SequenceVector(Embedding):
     @property
     def vector(self):
         return self.embedding
-    
+
     def __repr__(self):
         r"""
         Return a string representation of the SequenceEmbedding object.
@@ -165,17 +165,17 @@ class SequenceVector(Embedding):
             "has gaps",
             f"embedding dimension: {dim}\n{indent}has gaps",
         )
-        return rstr    
+        return rstr
 
     @property
     def embedding(self):
         r""" The embedding tensor. """
         return self._embedding.reshape(1, -1)
-    
+
     @staticmethod
     def to_numpy(sequence_vectors : List["SequenceVector"]):
         lens = [len(pv.vector) for pv in sequence_vectors]
-        if not all(l == lens[0] for l in lens):
+        if not all(ln == lens[0] for ln in lens):
             raise ValueError("All vectors must have the same length.")
         data = np.vstack([pv.vector for pv in sequence_vectors])
         return data

@@ -28,7 +28,7 @@ def _validate_protein(sequence):
         # protein sequence
         Protein(sequence)
     return sequence
-    
+
 
 class ProteinEmbedding(SequenceEmbedding):
     r"""Stores the embeddings of the protein sequence.

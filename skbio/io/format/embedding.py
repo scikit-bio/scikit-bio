@@ -119,7 +119,7 @@ def _embed_sniffer(fh):
     # 26
     if magic == b"\x89HDF\r\n\x1a\n":
         with h5py.File(fh, "r") as h5file:
-            if "embedding" in h5file and "id" in h5file and "idptr" in h5file:            
+            if "embedding" in h5file and "id" in h5file and "idptr" in h5file:
                     return True, {}
 
 
@@ -204,9 +204,9 @@ def _objects_to_embed(objs, fh, include_embedding_pointer=True):
         h5grp.attrs["format"] = "embedding"
         h5grp.attrs["format-version"] = "1.0"
         max_idsize = 1
-        max_embsize = 1        
+        max_embsize = 1
         resize = False
-        for i, obj in enumerate(objs):            
+        for i, obj in enumerate(objs):
             # store string representation of the object
             # that will serve as an identifier for the entire object.
             # for sequences, this could be the sequence itself
@@ -237,7 +237,7 @@ def _objects_to_embed(objs, fh, include_embedding_pointer=True):
                     if len(arr) + idptr_fh[i - 1] > max_idsize:
                         max_idsize = ceil(len(arr) + idptr_fh[i - 1] * 1.38)
                         resize = True
-                
+
             # store the pointers that keep track of the start and
             # end of the embedding for each object, as well as well as
             # the corresponding string representation
@@ -285,7 +285,7 @@ def _objects_to_embed(objs, fh, include_embedding_pointer=True):
                 )
                 if resize:
                     embed_fh.resize(max_embsize, axis=0)
-                    
+
                 if include_embedding_pointer:
                     embed_fh[embptr_fh[i - 1] : embptr_fh[i]] = emb
                 else:
@@ -299,13 +299,13 @@ def _objects_to_embed(objs, fh, include_embedding_pointer=True):
                     dtype=obj.embedding.dtype,
                     compression='gzip'
                 )
-                
+
             resize = False
 
         # resize the datasets to the actual number of objects
         max_idsize = idptr_fh[i]
         max_embsize = embptr_fh[i] if include_embedding_pointer else max_idsize
-        
+
         id_fh.resize((max_idsize,))
         idptr_fh.resize((i,))
         embed_fh.resize(max_embsize, axis=0)

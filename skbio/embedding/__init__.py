@@ -23,7 +23,9 @@ Embedding types
 # The full license is in the file LICENSE.txt, distributed with this software.
 # ----------------------------------------------------------------------------
 
-from skbio.embedding._protein import ProteinEmbedding, ProteinVector, example_protein_embedding
+from skbio.embedding._protein import (
+    ProteinEmbedding, ProteinVector, example_protein_embedding
+)
 
 
 __all__ = ["ProteinEmbedding", "ProteinVector", "example_protein_embedding"]
