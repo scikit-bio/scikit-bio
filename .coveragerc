@@ -2,6 +2,7 @@
 
 [run]
 omit =
+    */tests*
     */__init__.py
 source = skbio
 branch = True

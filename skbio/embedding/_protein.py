@@ -53,6 +53,25 @@ class ProteinEmbedding(SequenceEmbedding):
     --------
     Protein
 
+
+    Examples
+    --------
+    >>> from skbio.embedding import ProteinEmbedding
+    >>> import numpy as np
+    >>> embedding = np.random.rand(10, 3)
+    >>> sequence = "ACDEFGHIKL"
+    >>> ProteinEmbedding(embedding, sequence)
+    ProteinEmbedding
+    --------------------------
+    Stats:
+        length: 10
+        embedding dimension: 3
+        has gaps: False
+        has degenerates: False
+        has definites: True
+        has stops: False
+    --------------------------
+    0 ACDEFGHIKL
     """
 
     default_write_format = "embed"
@@ -119,6 +138,25 @@ class ProteinVector(SequenceVector):
     See Also
     --------
     Protein
+
+    Examples
+    --------
+    >>> from skbio.embedding import ProteinVector
+    >>> import numpy as np
+    >>> embedding = np.random.rand(10)
+    >>> sequence = "ACDEFGHIKL"
+    >>> ProteinVector(embedding, sequence)
+    ProteinVector
+    --------------------------
+    Stats:
+        length: 10
+        vector dimension: 10
+        has gaps: False
+        has degenerates: False
+        has definites: True
+        has stops: False
+    --------------------------
+    0 ACDEFGHIKL
 
     """
     default_write_format = "embed"

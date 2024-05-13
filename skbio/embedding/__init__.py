@@ -1,5 +1,5 @@
 r""" Biological Embeddings (:mod:`skbio.embedding`)
-=================================================
+p=================================================
 
 .. currentmodule:: skbio.embedding
 
