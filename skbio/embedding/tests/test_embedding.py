@@ -82,7 +82,7 @@ class SequenceEmbeddingTests(TestCase):
             SequenceEmbedding(self.emb, self.seq + "A")
 
 
-class TestSequenceVectorMethods(TestCase):
+class SequenceVectorTests(TestCase):
 
     def setUp(self):
         # Create some sample SequenceVector objects for testing
