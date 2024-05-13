@@ -107,7 +107,7 @@ example_protein_embedding = ProteinEmbedding(
 
 
 class ProteinVector(SequenceVector):
-    """ A vector representation of the protein sequence.
+    r""" A vector representation of the protein sequence.
 
     Parameters
     ----------
@@ -139,7 +139,7 @@ class ProteinVector(SequenceVector):
         )
 
     def __repr__(self):
-        """
+        r"""
         Return a string representation of the ProteinVector object.
 
         Returns

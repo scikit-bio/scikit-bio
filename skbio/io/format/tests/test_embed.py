@@ -19,7 +19,7 @@ from skbio import Sequence, DNA, RNA, Protein, TabularMSA
 from skbio.embedding._protein import ProteinEmbedding
 from skbio.embedding._protein import ProteinVector
 from skbio.io import FASTAFormatError, QUALFormatError
-from skbio.io.format.embedding import (
+from skbio.io.format.embed import (
     _embed_sniffer, _embed_to_generator,
     _embed_to_object, _generator_to_embed,
     _objects_to_embed,
@@ -29,7 +29,7 @@ from skbio.io.format.embedding import (
 from skbio.util import get_data_path
 
 
-class EmbeddingTests(TestCase):
+class EmbedTests(TestCase):
     def setUp(self):
         # single sequence
         rk = 5  # latent dimension of residues
@@ -115,7 +115,7 @@ class EmbeddingTests(TestCase):
             for obj1, obj2 in zip(objs1, objs2):
                 np.testing.assert_array_equal(obj1.embedding, obj2.embedding)
                 self.assertEqual(str(obj1), str(obj2))
-            
+
 
 class VectorTests(TestCase):
     def setUp(self):
@@ -130,7 +130,7 @@ class VectorTests(TestCase):
                             metadata={"id": "seq1"})
                  ),
                 (
-                    np.random.randn(rk),                    
+                    np.random.randn(rk),
                     Protein(('QQNKELNFKLREKQNEIFELKKIAETLRSKL'
                              'EKYVDITKKLEDQNLNLQIKISDLEKKLSDA'),
                             metadata={"id": "seq2"})
@@ -141,7 +141,7 @@ class VectorTests(TestCase):
         tempdir = Path(self.tempdir.name)
         self.writable_emb_path = str(tempdir / Path('test.emb'))
         self.writable_emb_path2 = str(tempdir / Path('test2.emb'))
-        
+
         self.valid_embed_path = get_data_path('prot_vec.emb')
         self.invalid_embed_path = str(tempdir / Path('invalid'))
         self.nonembed_hdf5_path = str(tempdir / Path('other.hdf5'))
@@ -160,7 +160,7 @@ class VectorTests(TestCase):
         emb, seq = self.sequences[0]
         obj = ProteinVector(emb, seq)
         _protein_to_vector(obj, 'prot_vec.emb')
-            
+
     def test_read_write_single(self):
         for emb, seq in self.sequences:
             fh = self.writable_emb_path
@@ -196,7 +196,7 @@ class VectorTests(TestCase):
             for obj1, obj2 in zip(objs1, objs2):
                 np.testing.assert_array_equal(obj1.embedding, obj2.embedding)
                 self.assertEqual(str(obj1), str(obj2))
-                
-                
+
+
 if __name__ == '__main__':
     main()

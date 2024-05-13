@@ -23,7 +23,7 @@ are supported by each format, see the associated documentation.
    blast7
    clustal
    embl
-   embedding
+   embed
    fasta
    fastq
    genbank
@@ -246,6 +246,7 @@ from ._exception import (
     GFF3FormatError,
     EMBLFormatError,
     BIOMFormatError,
+    EmbedFormatError,
 )
 from .registry import write, read, sniff, create_format, io_registry
 from .util import open
@@ -277,7 +278,7 @@ __all__ = [
     "QUALFormatError",
     "StockholmFormatError",
     "BIOMFormatError",
-    "EmbeddingFormatError",
+    "EmbedFormatError",
 ]
 
 
@@ -302,7 +303,7 @@ import_module("skbio.io.format.binary_dm")
 import_module("skbio.io.format.taxdump")
 import_module("skbio.io.format.sample_metadata")
 import_module("skbio.io.format.biom")
-import_module("skbio.io.format.embedding")
+import_module("skbio.io.format.embed")
 
 # This is meant to be a handy indicator to the user that they have done
 # something wrong.
