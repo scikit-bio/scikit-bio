@@ -145,7 +145,7 @@ class AlignPath(SkbioObject):
         if gap not in valid_gaps:
             raise ValueError("Gap must be -1, 'del', or 'mask'.")
 
-        bits = self.to_bits()
+        bits = np.squeeze(self.to_bits())
         # TODO: Consider optimization using np.arange.
         # thought: initiate [-1, -1, -1 ... -1], then add slices of arange into it
         pos = np.repeat(1 - bits, self.lengths, axis=1)

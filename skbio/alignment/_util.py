@@ -1,3 +1,11 @@
+# ----------------------------------------------------------------------------
+# Copyright (c) 2013--, scikit-bio development team.
+#
+# Distributed under the terms of the Modified BSD License.
+#
+# The full license is in the file LICENSE.txt, distributed with this software.
+# ----------------------------------------------------------------------------
+
 import numpy as np
 
 
@@ -15,14 +23,23 @@ def align_score(path, seqs, match=2, mismatch=-3, gap_open=-5, gap_extend=-2):
     # agnostic of the sequences
     gap_segs = path.states != 0
     n_gap_opens = gap_segs.sum()
-    n_gap_extends = (gap_segs * path.lengths).sum()
+    n_gap_extends = (gap_segs * path.lengths).sum() - n_gap_opens
 
     # step 2: calculate match & mismatch scores
     # based on the characters within the non-gap segments
     idx = path.to_indices(gap="del")
+    # seq1 and seq2 are incorrect for pairwise example from issue.
+    # this part is more complicated than it needs to be for a strictly pairwise
+    # alignment.
     seq1, seq2 = (x._bytes[i] for x, i in zip(seqs, idx))
     n_matches = (seq1 == seq2).sum()
     n_mismatches = seq1.size - n_matches
+
+    # this will work for a strictly pairwise alignment, where it is certain that
+    # gaps will not occur in the same position in both sequences.
+    seq1, seq2 = (x._bytes for x in seqs)
+    n_matches = (seq1 == seq2).sum()
+    n_mismatches = seq1.size - n_matches - n_gap_opens - n_gap_extends
 
     # get total score
     return (
