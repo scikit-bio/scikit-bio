@@ -9,7 +9,7 @@
 import numpy as np
 
 
-def align_score(path, seqs, match=2, mismatch=-3, gap_open=-5, gap_extend=-2):
+def pairwise_align_score(path, seqs, match=2, mismatch=-3, gap_open=-5, gap_extend=-2):
     """Calculate alignment score of a pairwise alignment."""
     # The current code only accepts an alignment path and the original sequences. It is
     # optimized for this data structure.
@@ -27,19 +27,21 @@ def align_score(path, seqs, match=2, mismatch=-3, gap_open=-5, gap_extend=-2):
 
     # step 2: calculate match & mismatch scores
     # based on the characters within the non-gap segments
-    idx = path.to_indices(gap="del")
-    # seq1 and seq2 are incorrect for pairwise example from issue.
-    # this part is more complicated than it needs to be for a strictly pairwise
-    # alignment.
-    seq1, seq2 = (x._bytes[i] for x, i in zip(seqs, idx))
-    n_matches = (seq1 == seq2).sum()
-    n_mismatches = seq1.size - n_matches
-
-    # this will work for a strictly pairwise alignment, where it is certain that
+    # This will work for a strictly pairwise alignment, where it is certain that
     # gaps will not occur in the same position in both sequences.
     seq1, seq2 = (x._bytes for x in seqs)
     n_matches = (seq1 == seq2).sum()
     n_mismatches = seq1.size - n_matches - n_gap_opens - n_gap_extends
+    #     idx = path.to_indices(gap="del")
+    #     # seq1 and seq2 are incorrect for pairwise example from issue.
+    #     # this part is more complicated than it needs to be for a strictly pairwise
+    #     # alignment.
+    #     seq1, seq2 = (x._bytes[i] for x, i in zip(seqs, idx))
+    #     # This was original, but switching them works.
+    #     # n_matches = (seq1 == seq2).sum()
+    #     # n_mismatches = seq1.size - n_matches
+    #     n_mismatches = (seq1 == seq2).sum()
+    #     n_matches = seq1.size - n_mismatches
 
     # get total score
     return (
@@ -50,7 +52,7 @@ def align_score(path, seqs, match=2, mismatch=-3, gap_open=-5, gap_extend=-2):
     )
 
 
-def align_scores(path, seqs, match, mismatch, gap_open, gap_extend):
+def multiple_align_scores(path, seqs, match, mismatch, gap_open, gap_extend):
     """Calculate pairwise alignment scores of a multiple alignment and return a
     matrix."""
     pass
