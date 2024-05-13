@@ -15,6 +15,8 @@ Alignment structure
    :toctree: generated/
 
    TabularMSA
+   AlignPath
+   PairAlignPath
 
 
 Alignment algorithms

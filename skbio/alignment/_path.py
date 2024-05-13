@@ -14,7 +14,7 @@ from skbio.util._decorator import overrides, classonlymethod
 
 class AlignPath(SkbioObject):
     def __init__(self, lengths, states, starts):
-        """Create an alignment path from segment lengths and states.
+        r"""Create an alignment path from segment lengths and states.
 
         Parameters
         ----------
@@ -50,45 +50,39 @@ class AlignPath(SkbioObject):
         # TabularMSA
         self.shape = (n_seqs, n_positions)
 
-        # TODO: An additional parameter `starts` should record the starting positions
-        # of the alignment in each sequence (shape: (n_seqs,)). This is important
-        # especially for local alignments (e.g., search for a short read in a genome
-        # sequence). If it is provided, `n_seqs` is no longer necessary.
-        # self.starts = starts
-
         # TODO: Needs to think about whether reverse complemented (Boolean array of
         # (n_seqs,)) should be included as a parameter. It is only relevant for
         # nucleotide sequences.
 
     def __str__(self):
-        """Return string representation of this AlignPath."""
+        r"""Return string representation of this AlignPath."""
         # Not sure if this makes sense for this class, but it is needed for all
         # SkbioObjects.
         return self.__repr__()
 
     def __repr__(self):
-        """Return summary of the alignment path."""
+        r"""Return summary of the alignment path."""
         return (
             f"<{self.__class__.__name__}, shape: {self.shape}, lengths: "
             f"{self.lengths}, states: {self.states}"
         )
 
     def subset(self):
-        """Select subset of sequences from AlignPath.
+        r"""Select subset of sequences from AlignPath.
 
         Better to have ability to index an AlignPath for particular sequences,
         then compress these sequences using something like _fix_arrays"""
-        pass
+        raise NotImplementedError()
 
     def to_bits(self):
-        """Unpack states into an array of bits."""
+        r"""Unpack states into an array of bits."""
         return np.unpackbits(
             np.atleast_2d(self.states), axis=0, count=self.shape[0], bitorder="little"
         )
 
     @classonlymethod
     def from_bits(cls, bits):
-        """Create an alignment path from a bit array (0 - char, 1 - gap)."""
+        r"""Create an alignment path from a bit array (0 - char, 1 - gap)."""
         # Pack bits into integers.
         ints = np.packbits(bits, axis=0, bitorder="little")
 
@@ -121,7 +115,7 @@ class AlignPath(SkbioObject):
 
     @classonlymethod
     def from_tabular(cls, msa):
-        """Create an alignment path from a `TabularMSA` object."""
+        r"""Create an alignment path from a `TabularMSA` object."""
         # Convert TabularMSA in to a 2D array of bytes.
         # TODO: TabularMSA itself should be refactored to have this as the default data
         # structure.
@@ -135,7 +129,7 @@ class AlignPath(SkbioObject):
         return cls.from_bits(np.isin(byte_arr, gap_chars))
 
     def to_indices(self, gap=-1):
-        """Generate an array of indices of characters in the original sequences.
+        r"""Generate an array of indices of characters in the original sequences.
 
         gap = "del": delete columns that have any gap, "mask": mask gaps, others
         (default: -1):
@@ -160,7 +154,7 @@ class AlignPath(SkbioObject):
 
     @classonlymethod
     def from_indices(cls, indices, gap=-1):
-        """Create an alignment path from character indices in the original sequences.
+        r"""Create an alignment path from character indices in the original sequences.
 
         gap can be a value or "mask", but cannot be "del".
         """
@@ -170,7 +164,7 @@ class AlignPath(SkbioObject):
             return cls.from_bits(indices == gap)
 
     def to_coordinates(self):
-        """Generate an array of segment coordinates in the original sequences."""
+        r"""Generate an array of segment coordinates in the original sequences."""
         lens = self.lengths * (1 - self.to_bits())
         col0 = np.zeros((self.shape[0], 1), dtype=int)
         lens = np.append(col0, lens, axis=1)
@@ -178,6 +172,7 @@ class AlignPath(SkbioObject):
 
     @classonlymethod
     def from_coordinates(cls, coords):
+        r"""Generate the an alignment path from an array of segment coordinates."""
         diff = np.diff(coords)
         bits = diff == 0
         lens = diff[bits.argmin(axis=0), np.arange(diff.shape[1])]
@@ -191,7 +186,7 @@ class PairAlignPath(AlignPath):
     @overrides(AlignPath)
     @classonlymethod
     def from_bits(cls, bits):
-        """Create an alignment path from a bit array."""
+        r"""Create an alignment path from a bit array."""
         # This should be faster than the generic solution I guess.
         # TODO: Pending benchmark and optimization.
 
@@ -208,7 +203,7 @@ class PairAlignPath(AlignPath):
 
     @overrides(AlignPath)
     def to_bits(self):
-        """Unpack states into an array of bits."""
+        r"""Unpack states into an array of bits."""
         # This should be faster than the generic solution I guess.
         # TODO: Pending benchmark and optimization.
         if not np.all(np.isin(self.states, [0, 1, 2])):
@@ -219,9 +214,11 @@ class PairAlignPath(AlignPath):
         return np.stack([self.states & 1, self.states >> 1])
 
     def to_cigar(self, seqs=None):
-        """Get a CIGAR string representing the pairwise alignment path.
+        r"""Get a CIGAR string representing the pairwise alignment path.
 
-        seqs: If provided, will distinguish match (=) and mismatch (X). Otherwise,
+        Parameters
+        ----------
+        seqs : If provided, will distinguish match (=) and mismatch (X). Otherwise,
             will uniformly note them as (mis)match (M).
         """
         cigar = ""
@@ -248,7 +245,7 @@ class PairAlignPath(AlignPath):
 
     @classonlymethod
     def from_cigar(cls, cigar):
-        """Create a pairwise alignment path from a CIGAR string."""
+        r"""Create a pairwise alignment path from a CIGAR string."""
         # need to have ability for strings without 1's
         # Make sure cigar is not empty.
         if not cigar:
@@ -286,7 +283,7 @@ class PairAlignPath(AlignPath):
         return cls(np.asarray(lengths), np.asarray(gaps), [0, 0])
 
     def _run_length_encode(self, input_string):
-        """Perform run length encoding on a string."""
+        r"""Perform run length encoding on a string."""
         input_array = np.array(list(input_string))
         change_indices = np.append(
             0, np.where(input_array[:-1] != input_array[1:])[0] + 1
@@ -298,7 +295,7 @@ class PairAlignPath(AlignPath):
         return encoded_string
 
     def _fix_arrays(lengths, gaps):
-        """Merge consecutive same values from gaps array and sum corresponding values
+        r"""Merge consecutive same values from gaps array and sum corresponding values
         in lengths array."""
         idx = np.diff(gaps, prepend=np.array([True])) != 0
         gaps_out = gaps[idx]
