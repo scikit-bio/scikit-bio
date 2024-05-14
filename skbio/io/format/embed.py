@@ -267,7 +267,7 @@ def _objects_to_embed(objs, fh, include_embedding_pointer=True):
                 if "embedding_ptr" in h5grp:
                     embptr_fh = h5grp["embedding_ptr"]
                     if resize:
-                        embptr_fh.resize((ceil(i * 1.38),))
+                        embptr_fh.resize((ceil(i * resize_by),))
                     embptr_fh[i] = emb.shape[0] + embptr_fh[i - 1]
 
                 else:
