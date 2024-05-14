@@ -19,6 +19,7 @@ import numpy as np
 import numpy.testing as npt
 import pandas as pd
 from skbio import DistanceMatrix, OrdinationResults
+from scipy.spatial.distance import euclidean
 
 
 class EmbeddingTests(TestCase):
@@ -55,7 +56,15 @@ class SequenceEmbeddingTests(TestCase):
     def test_repr(self):
         emb, s = self.emb, self.seq
         p_emb = SequenceEmbedding(emb, s)
-        self.assertTrue('SequenceEmbedding' in p_emb.__repr__())
+        rstr = repr(p_emb)
+        self.assertTrue('SequenceEmbedding' in rstr)
+        self.assertTrue(
+            '62' in rstr
+        )
+        self.assertTrue(
+            '10' in rstr
+        )
+        self.assertTrue('IGKEEIQQRL' in rstr)
 
     def test_str(self):
         emb, s = self.emb, self.seq
@@ -89,6 +98,7 @@ class SequenceVectorTests(TestCase):
         self.vector1 = np.array([1, 2, 3])
         self.vector2 = np.array([4, 5, 6])
         self.vector3 = np.array([7, 8, 9])
+        self.bad_vector = np.array([7, 8])
         self.sequence_vectors = [SequenceVector(self.vector1, "ACGT"),
                                  SequenceVector(self.vector2, "GCTA"),
                                  SequenceVector(self.vector3, "TTAG")]
@@ -109,6 +119,14 @@ class SequenceVectorTests(TestCase):
             self.assertTrue(
                 sequence_vector.__repr__().startswith("SequenceVector")
             )
+            self.assertTrue(
+                'vector' in sequence_vector.__repr__()
+            )
+
+            # check latent dimension
+            self.assertTrue(
+                '4' in sequence_vector.__repr__()
+            )
 
     def test_str(self):
         # Test if the __str__ method returns the correct string
@@ -121,17 +139,39 @@ class SequenceVectorTests(TestCase):
         result = SequenceVector.to_numpy(self.sequence_vectors)
         self.assertTrue(np.array_equal(result, expected_result))
 
+    def test_to_numpy_raises(self):
+        # assert lengths are equal
+        arr = [SequenceVector(self.vector1, "ACGT"),
+               SequenceVector(self.vector2, "GCTA"),
+               SequenceVector(self.bad_vector, "TTAG")]
+
+        with self.assertRaises(ValueError):
+            result = SequenceVector.to_numpy(arr)
+
     def test_to_distance_matrix(self):
         # Test if to_distance_matrix returns a DistanceMatrix object
         distance_matrix = SequenceVector.to_distance_matrix(self.sequence_vectors)
         self.assertEqual(distance_matrix.shape, (3, 3))
         self.assertTrue(all(isinstance(d, float) for d in distance_matrix.condensed_form()))
 
+        d12 = euclidean(self.vector1, self.vector2)
+        d13 = euclidean(self.vector1, self.vector3)
+        d23 = euclidean(self.vector2, self.vector3)
+        exp_dm = DistanceMatrix([[0, d12, d13],
+                                 [d12, 0, d23],
+                                 [d13, d23, 0]], ids=["ACGT", "GCTA", "TTAG"])
+        self.assertTrue(np.allclose(distance_matrix.data, exp_dm.data))
+        self.assertEqual(distance_matrix.ids, exp_dm.ids)
+
     def test_to_dataframe(self):
         # Test if to_dataframe returns a pandas DataFrame object
         dataframe = SequenceVector.to_dataframe(self.sequence_vectors)
         self.assertIsInstance(dataframe, pd.DataFrame)
         self.assertEqual(dataframe.shape, (3, 3))
+
+        exp_df = pd.DataFrame([self.vector1, self.vector2, self.vector3],
+                              index=["ACGT", "GCTA", "TTAG"])
+        pd.testing.assert_frame_equal(dataframe, exp_df)
 
     def test_to_ordination(self):
         # Test if to_ordination returns an OrdinationResults object

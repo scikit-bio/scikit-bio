@@ -13,6 +13,7 @@ from skbio._base import SkbioObject
 from skbio.stats.distance import DistanceMatrix
 from skbio.stats.ordination import OrdinationResults
 from skbio.metadata._mixin import MetadataMixin
+from skbio.diversity import beta_diversity
 from scipy.spatial.distance import pdist, squareform
 from typing import List
 
@@ -96,17 +97,14 @@ class SequenceEmbedding(Embedding):
         --------
         Protein
         """
-        seq = Sequence(str(self._ids))
+        seq = Sequence(self.sequence)
 
         rstr = repr(seq)
         rstr = rstr.replace("Sequence", "SequenceEmbedding")
         n_indent = 4  # see Sequence.__repr__
         indent = " " * n_indent
         dim = self.embedding.shape[1]
-        rstr = rstr.replace(
-            "has gaps",
-            f"embedding dimension: {dim}\n{indent}has gaps",
-        )
+        rstr = rstr.replace('length', f'embedding dimension: {dim}\n{indent}length')
         return rstr
 
 
@@ -130,7 +128,7 @@ class SequenceVector(Embedding):
         super(SequenceVector, self).__init__(vector, seq, **kwargs)
 
     def __str__(self):
-        return self._ids.squeeze().decode('ascii')
+        return self._ids[0].decode('ascii')
 
     @property
     def sequence(self):
@@ -155,16 +153,13 @@ class SequenceVector(Embedding):
         Protein
         """
         seq = Sequence(str(self))
-
         rstr = repr(seq)
         rstr = rstr.replace("Sequence", "SequenceVector")
         n_indent = 4  # see Sequence.__repr__
         indent = " " * n_indent
         dim = self.embedding.shape[1]
-        rstr = rstr.replace(
-            "has gaps",
-            f"embedding dimension: {dim}\n{indent}has gaps",
-        )
+        rstr = rstr.replace('length', f'vector dimension: {dim}\n{indent}length')
+
         return rstr
 
     @property
@@ -173,7 +168,24 @@ class SequenceVector(Embedding):
         return self._embedding.reshape(1, -1)
 
     @staticmethod
-    def to_numpy(sequence_vectors : List["SequenceVector"]):
+    def to_numpy(sequence_vectors):
+        r""" Convert a SequenceVector object to a numpy array.
+
+        Parameters
+        ----------
+        sequence_vectors : iterable of SequenceVector objects
+            An iterable of SequenceVector objects.
+
+        Returns
+        -------
+        np.ndarray
+            A numpy array of shape (n_sequences, n_features) where
+
+        Raises
+        ------
+        ValueError
+            If the vectors do not have the same length.
+        """
         lens = [len(pv.vector) for pv in sequence_vectors]
         if not all(ln == lens[0] for ln in lens):
             raise ValueError("All vectors must have the same length.")
@@ -181,10 +193,8 @@ class SequenceVector(Embedding):
         return data
 
     @staticmethod
-    def to_distance_matrix(sequence_vectors : List["SequenceVector"],
-                           metric='euclidean'):
-        """
-        Convert a SequenceVector object to a DistanceMatrix object.
+    def to_distance_matrix(sequence_vectors, metric='euclidean'):
+        r""" Convert a SequenceVector object to a DistanceMatrix object.
 
         Parameters
         ----------
@@ -203,15 +213,14 @@ class SequenceVector(Embedding):
         --------
         DistanceMatrix
         """
+
         data = SequenceVector.to_numpy(sequence_vectors)
         ids = [str(pv) for pv in sequence_vectors]
-        dm = squareform(pdist(data, metric))
-        return DistanceMatrix(dm, ids=ids)
+        return beta_diversity(metric, data, ids)
 
     @staticmethod
-    def to_ordination(sequence_vectors : List["SequenceVector"]):
-        """
-        Convert a list of SequenceVector objects to an Ordination object.
+    def to_ordination(sequence_vectors):
+        r""" Convert a list of SequenceVector objects to an Ordination object.
 
         Parameters
         ----------
@@ -242,9 +251,8 @@ class SequenceVector(Embedding):
         return ordr
 
     @staticmethod
-    def to_dataframe(sequence_vectors : List["SequenceVector"]):
-        """
-        Convert a list of SequenceVector objects to a pandas DataFrame.
+    def to_dataframe(sequence_vectors):
+        r""" Convert a list of SequenceVector objects to a pandas DataFrame.
 
         Parameters
         ----------

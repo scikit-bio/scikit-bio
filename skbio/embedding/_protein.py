@@ -108,14 +108,13 @@ class ProteinEmbedding(SequenceEmbedding):
         Protein
         """
         seq = Protein(str(self))
-
         rstr = repr(seq)
         rstr = rstr.replace("Protein", "ProteinEmbedding")
         n_indent = 4  # see Sequence.__repr__
         indent = " " * n_indent
         rstr = rstr.replace(
             "has gaps",
-            f"embedding dimension: {self.embedding.shape[1]}\n{indent}has gaps",
+            f"vector dimension: {self.embedding.shape[1]}\n{indent}has gaps",
         )
         return rstr
 
@@ -190,7 +189,6 @@ class ProteinVector(SequenceVector):
         Protein
         """
         seq = Protein(str(self))
-
         rstr = repr(seq)
         rstr = rstr.replace("Protein", "ProteinVector")
         n_indent = 4  # see Sequence.__repr__
