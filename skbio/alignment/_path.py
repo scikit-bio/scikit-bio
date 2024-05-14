@@ -34,7 +34,7 @@ class AlignPath(SkbioObject):
         """
         # Number of sequences needs to be explicitly provided, because the packed bits
         # does not contain this information. (It is merely in multiples of 8.)
-        self.lengths = np.asarray(lengths, dtype=np.uint64)
+        self.lengths = np.asarray(lengths, dtype=np.int64)
         n_positions = self.lengths.sum()
         self.states = np.atleast_2d(np.asarray(states, dtype=np.uint8))
 
@@ -229,7 +229,7 @@ class PairAlignPath(AlignPath):
         # Ensure bits is a 2D numpy array of ones and zeros.
         if not isinstance(bits, np.ndarray) or bits.ndim != 2 or bits.shape[1] == 0:
             raise ValueError("Input 'bits' must be a non-empty 2D numpy array.")
-        if not np.all(np.logical_or(bits == 0, bits == 1)):
+        if not (np.logical_or(bits == 0, bits == 1).all()):
             raise ValueError("Input 'bits' must contain only zeros and ones.")
 
         ints = bits[0] + (bits[1] << 1)
