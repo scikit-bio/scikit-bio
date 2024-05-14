@@ -230,12 +230,12 @@ def _objects_to_embed(objs, fh, include_embedding_pointer=True):
                 if include_embedding_pointer:
                     if ((len(arr) + idptr_fh[i - 1]) > max_idsize or
                         (emb.shape[0] + embptr_fh[i - 1]) > max_embsize ):
-                        max_idsize = ceil(len(arr) + idptr_fh[i - 1]) * 1.38
-                        max_embsize = ceil(emb.shape[0] + embptr_fh[i - 1]) * 1.38
+                        max_idsize = ceil(len(arr) + idptr_fh[i - 1]) * resize_by
+                        max_embsize = ceil(emb.shape[0] + embptr_fh[i - 1]) * resize_by
                         resize = True
                 else:
                     if len(arr) + idptr_fh[i - 1] > max_idsize:
-                        max_idsize = ceil(len(arr) + idptr_fh[i - 1] * 1.38)
+                        max_idsize = ceil(len(arr) + idptr_fh[i - 1] * resize_by)
                         resize = True
 
             # store the pointers that keep track of the start and
