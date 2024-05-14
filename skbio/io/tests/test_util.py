@@ -645,6 +645,7 @@ class TestReadStandardInput(unittest.TestCase):
         with patch('sys.stdin', io.StringIO(open(get_data_path("fasta_file.fna")).read())):
             inc = 0
             for r in skbio.read(sys.stdin, format="fasta"):
+                print(sys.stdin.tell())
                 self.assertEqual(str(r), self.data_seq[inc])
                 self.assertEqual(r.metadata["id"], self.data_id[inc])
                 self.assertEqual(r.metadata["description"], self.data_desc[inc])

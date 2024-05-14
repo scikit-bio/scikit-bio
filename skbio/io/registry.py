@@ -165,6 +165,7 @@ The following are not yet used but should be avoided as well:
 # The full license is in the file LICENSE.txt, distributed with this software.
 # ----------------------------------------------------------------------------
 
+import io
 from warnings import warn
 import types
 import traceback
@@ -514,24 +515,29 @@ class IORegistry:
         # kwargs should still retain the contents of io_kwargs because the
         # actual reader will also need them.
         with _resolve_file(file, **io_kwargs) as (file, _, _):
-            reader, kwargs = self._init_reader(
-                file, fmt, into, verify, kwargs, io_kwargs
+            reader, kwargs, header = self._init_reader(
+                file, fmt, into, verify, kwargs, io_kwargs, True
             )
+            file = itertools.chain(header, file)
             yield from reader(file, **kwargs)
 
     def _find_io_kwargs(self, kwargs):
         return {k: kwargs[k] for k in _open_kwargs if k in kwargs}
 
-    def _init_reader(self, file, fmt, into, verify, kwargs, io_kwargs):
+    def _init_reader(self, file, fmt, into, verify, kwargs, io_kwargs, getheader=False):
         skwargs = {}
         if fmt is None:
             fmt, skwargs = self.sniff(file, **io_kwargs)
         elif verify:
             sniffer = self.get_sniffer(fmt)
             if sniffer is not None:
-                backup = file.tell()
-                is_format, skwargs = sniffer(file, **io_kwargs)
-                file.seek(backup)
+                try:
+                    backup = file.tell()
+                    is_format, skwargs = sniffer(file, **io_kwargs)
+                    file.seek(backup)
+                    header = iter([])
+                except io.UnsupportedOperation:
+                    is_format, skwargs, header = sniffer(file, True, **io_kwargs)
                 if not is_format:
                     warn(
                         "%r does not look like a %s file" % (file, fmt),
@@ -567,7 +573,10 @@ class IORegistry:
                     message,
                 )
             )
-        return reader, kwargs
+        if getheader:
+            return reader, kwargs, header
+        else:
+            return reader, kwargs
 
     def _get_possible_readers(self, fmt):
         for lookup in self._lookups:
@@ -810,6 +819,11 @@ class Format:
         return self._writers
 
     @property
+    def header(self):
+        """Returns a boolean describing if the file format has a header."""
+        return self._header
+
+    @property
     def monkey_patched_readers(self):
         """Set of classes bound to readers to monkey patch."""
         return self._monkey_patch["read"]
@@ -819,11 +833,12 @@ class Format:
         """Set of classes bound to writers to monkey patch."""
         return self._monkey_patch["write"]
 
-    def __init__(self, name, encoding=None, newline=None):
+    def __init__(self, name, encoding=None, newline=None, header=True):
         """Initialize format for registering sniffers, readers, and writers."""
         self._encoding = encoding
         self._newline = newline
         self._name = name
+        self._header = header
 
         self._sniffer_function = None
         self._readers = {}
@@ -892,6 +907,7 @@ class Format:
             @wraps(sniffer)
             def wrapped_sniffer(
                 file,
+                getheader=False,
                 encoding=self._encoding,
                 errors="ignore",
                 newline=self._newline,
@@ -914,8 +930,9 @@ class Format:
                         # Some formats may have headers which indicate their
                         # format sniffers should be able to rely on the
                         # filehandle to point at the beginning of the file.
-                        fh.seek(0)
-                        return sniffer(fh)
+                        if self.header:
+                            fh.seek(0)
+                        return sniffer(fh, getheader)
                     except UnicodeDecodeError:
                         pass
                     except Exception:
@@ -1014,9 +1031,10 @@ class Format:
                     file_keys, files, io_kwargs = self._setup_locals(
                         file_params, file, encoding, newline, kwargs
                     )
-                    with open_files(files, mode="r", **io_kwargs) as fhs:
-                        kwargs.update(zip(file_keys, fhs[:-1]))
-                        yield from reader_function(fhs[-1], **kwargs)
+                    yield from reader_function(files[-1], **kwargs)
+                    # with open_files(files, mode="r", **io_kwargs) as fhs:
+                    #     kwargs.update(zip(file_keys, fhs[:-1]))
+                    #     yield from reader_function(fhs[-1], **kwargs)
 
             self._add_reader(cls, wrapped_reader, monkey_patch, override)
             return wrapped_reader

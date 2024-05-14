@@ -6,6 +6,8 @@
 # The full license is in the file LICENSE.txt, distributed with this software.
 # ----------------------------------------------------------------------------
 
+import io
+from itertools import chain
 import re
 import warnings
 
@@ -224,10 +226,12 @@ def _line_generator(fh, skip_blanks=False, strip=True):
             yield line
 
 
-def _too_many_blanks(fh, max_blanks):
+def _too_many_blanks(fh, max_blanks, getheader=False):
     count = 0
     too_many = False
+    header = iter([])
     for line in _line_generator(fh, skip_blanks=False):
+        header = chain(header, iter([line]))
         if line:
             break
         else:
@@ -235,5 +239,11 @@ def _too_many_blanks(fh, max_blanks):
             if count > max_blanks:
                 too_many = True
                 break
-    fh.seek(0)
-    return too_many
+    try:
+        fh.seek(0)
+    except io.UnsupportedOperation:
+        pass
+    if getheader:
+        return too_many, header
+    else:
+        return too_many
