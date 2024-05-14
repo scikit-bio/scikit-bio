@@ -34,12 +34,12 @@ class AlignPath(SkbioObject):
         """
         # Number of sequences needs to be explicitly provided, because the packed bits
         # does not contain this information. (It is merely in multiples of 8.)
-        self.lengths = np.asarray(lengths, dtype=int)
+        self.lengths = np.asarray(lengths, dtype=np.uint64)
         n_positions = self.lengths.sum()
         self.states = np.atleast_2d(np.asarray(states, dtype=np.uint8))
 
         # start positions
-        self.starts = np.asarray(starts, dtype=int)
+        self.starts = np.asarray(starts, dtype=np.uint64)
         if self.starts.ndim > 1:
             raise ValueError("`starts` must be a 1-D vector.")
         n_seqs = self.starts.size
@@ -49,10 +49,6 @@ class AlignPath(SkbioObject):
         # Shape is n_seqs (rows) x n_positions (columns), which is consistent with
         # TabularMSA
         self.shape = (n_seqs, n_positions)
-
-        # TODO: Needs to think about whether reverse complemented (Boolean array of
-        # (n_seqs,)) should be included as a parameter. It is only relevant for
-        # nucleotide sequences.
 
     def __str__(self):
         r"""Return string representation of this AlignPath."""
@@ -82,7 +78,13 @@ class AlignPath(SkbioObject):
 
     @classonlymethod
     def from_bits(cls, bits):
-        r"""Create an alignment path from a bit array (0 - char, 1 - gap)."""
+        r"""Create an alignment path from a bit array (0 - char, 1 - gap).
+
+        Parameters
+        ----------
+        bits : array_like of 0's and 1's of shape (n_seqs, alignment_length)
+            Array of zeros (char) and ones (gap) which represent the alignment.
+        """
         # Pack bits into integers.
         ints = np.packbits(bits, axis=0, bitorder="little")
 
@@ -115,7 +117,13 @@ class AlignPath(SkbioObject):
 
     @classonlymethod
     def from_tabular(cls, msa):
-        r"""Create an alignment path from a `TabularMSA` object."""
+        r"""Create an alignment path from a `TabularMSA` object.
+
+        Parameters
+        ----------
+        msa : TabularMSA object
+            TabularMSA to be converted into AlignPath object.
+        """
         # Convert TabularMSA in to a 2D array of bytes.
         # TODO: TabularMSA itself should be refactored to have this as the default data
         # structure.
@@ -131,9 +139,11 @@ class AlignPath(SkbioObject):
     def to_indices(self, gap=-1):
         r"""Generate an array of indices of characters in the original sequences.
 
-        gap = "del": delete columns that have any gap, "mask": mask gaps, others
-        (default: -1):
-        fill gaps with this value.
+        Parameters
+        ----------
+        gap : -1, "del", or "mask", default=-1
+            If -1, replace gaps with this value. If "del", delete columns that have any
+            gap. If "mask", mask gaps.
         """
         valid_gaps = {-1, "del", "mask"}
         if gap not in valid_gaps:
@@ -156,7 +166,14 @@ class AlignPath(SkbioObject):
     def from_indices(cls, indices, gap=-1):
         r"""Create an alignment path from character indices in the original sequences.
 
-        gap can be a value or "mask", but cannot be "del".
+        Parameters
+        ----------
+        indices : array_like of int of shape (n_seqs, alignment_length)
+            Each element in the array is the index in the corresponding sequence.
+        gap : int or "mask", default=-1
+            The value which represents a gap in the alignment. Defaults to -1, but
+            can be other values. If "mask", `indices` must be a masked array. Cannot
+            use "del".
         """
         if gap == "mask":
             return cls.from_bits(np.ma.getmask(indices))
@@ -172,7 +189,13 @@ class AlignPath(SkbioObject):
 
     @classonlymethod
     def from_coordinates(cls, coords):
-        r"""Generate the an alignment path from an array of segment coordinates."""
+        r"""Generate the an alignment path from an array of segment coordinates.
+
+        Parameters
+        ----------
+        coords : array_like of int of shape (n_seqs, n_segments)
+            Array where each value defines the start positions (index) of each segment
+            for each sequence."""
         diff = np.diff(coords)
         bits = diff == 0
         lens = diff[bits.argmin(axis=0), np.arange(diff.shape[1])]
@@ -183,6 +206,19 @@ class AlignPath(SkbioObject):
 
 
 class PairAlignPath(AlignPath):
+    # @overrides(AlignPath)
+    # def __str__(self):
+    #     r"""Return string representation of this AlignPath."""
+    #     return self.__repr__()
+
+    # @overrides(AlignPath)
+    # def __repr__(self):
+    #     r"""Return summary of the alignment path."""
+    #     return (
+    #         f"<{self.__class__.__name__}, shape: {self.shape},
+    # CIGAR: '{self.to_cigar()}'"
+    #     )
+
     @overrides(AlignPath)
     @classonlymethod
     def from_bits(cls, bits):
