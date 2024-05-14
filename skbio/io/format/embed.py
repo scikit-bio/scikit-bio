@@ -244,7 +244,7 @@ def _objects_to_embed(objs, fh, include_embedding_pointer=True):
             if "idptr" in h5grp:
                 idptr_fh = h5grp["idptr"]
                 if resize:
-                    idptr_fh.resize((ceil(i * 1.38),))
+                    idptr_fh.resize((ceil(i * resize_by),))
                 idptr_fh[i] = len(arr) + idptr_fh[i - 1]
             else:
                 idptr_fh = h5grp.create_dataset(
