@@ -130,7 +130,7 @@ class SequenceVector(Embedding):
         super(SequenceVector, self).__init__(vector, seq, **kwargs)
 
     def __str__(self):
-        return str(self._ids[0].decode('ascii'))
+        return self._ids.squeeze().decode('ascii')
 
     @property
     def sequence(self):
