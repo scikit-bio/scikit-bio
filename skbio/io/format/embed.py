@@ -205,6 +205,7 @@ def _objects_to_embed(objs, fh, include_embedding_pointer=True):
         h5grp.attrs["format-version"] = "1.0"
         max_idsize = 1
         max_embsize = 1
+        resize_by = 1.38
         resize = False
         for i, obj in enumerate(objs):
             # store string representation of the object
