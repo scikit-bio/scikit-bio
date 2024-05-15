@@ -220,16 +220,17 @@ class PairAlignPath(AlignPath):
 
     """
 
-    def __str__(self):
-        r"""Return string representation of this AlignPath."""
-        return self.__repr__()
+    # comment out while working on from_cigar/to_cigar double gap problem
+    # def __str__(self):
+    #     r"""Return string representation of this AlignPath."""
+    #     return self.__repr__()
 
-    def __repr__(self):
-        r"""Return summary of the alignment path."""
-        return (
-            f"<{self.__class__.__name__}, shape: {self.shape}, "
-            f"CIGAR: '{self.to_cigar()}'"
-        )
+    # def __repr__(self):
+    #     r"""Return summary of the alignment path."""
+    #     return (
+    #         f"<{self.__class__.__name__}, shape: {self.shape}, "
+    #         f"CIGAR: '{self.to_cigar()}'"
+    #     )
 
     @classonlymethod
     def from_bits(cls, bits):
@@ -269,7 +270,7 @@ class PairAlignPath(AlignPath):
 
         Parameters
         ----------
-        seqs : list of str or skbio.sequence
+        seqs : list of skbio.sequence
             Pair of aligned sequences to generate cigar string. If provided, will
             distinguish match (=) and mismatch (X). Otherwise, will uniformly note
             them as (mis)match (M).
@@ -306,20 +307,28 @@ class PairAlignPath(AlignPath):
 
         cigar = ""
         lengths = self.lengths
+        print(lengths)
         gaps = np.squeeze(self.states)
-        codes = ["M", "I", "D"]
+        print(gaps)
+        codes = ["M", "I", "D", "P"]
         if seqs is not None:
             query = seqs[0]
             ref = seqs[1]
             for qchar, rchar in zip(query, ref):
+                print(qchar, rchar)
+                # if qchar == "-" and rchar == "-":
+                #     cigar += "P"
+                #     print('p')
                 if qchar == rchar:
                     cigar += "="
+                    print("=")
                 elif qchar == "-":
                     cigar += "I"
                 elif rchar == "-":
                     cigar += "D"
                 else:
                     cigar += "X"
+                print(f"{cigar}\n")
             return self._run_length_encode(cigar)
         else:
             for i, length in enumerate(lengths):
@@ -339,16 +348,20 @@ class PairAlignPath(AlignPath):
         if not cigar:
             raise ValueError("CIGAR string must not be empty.")
 
-        # Determine whether or not to fix the arrays.
-        fix_arrs = False
-        if "=" in cigar or "X" in cigar:
-            fix_arrs = True
-
-        cigar = cigar.replace("=", "M").replace("X", "M")
         lengths = []
         gaps = []
         current_length = 0
-        mapping = {"M": 0, "I": 1, "D": 2}
+        mapping = {
+            "M": 0,
+            "I": 1,
+            "D": 2,
+            "P": 3,
+            "=": 0,
+            "X": 0,
+            "N": 2,
+            "S": 1,
+            "H": 3,
+        }
         no_ones = True
         for char in cigar:
             if char.isdigit():
@@ -364,11 +377,8 @@ class PairAlignPath(AlignPath):
                 no_ones = True
             else:
                 raise ValueError("Invalid characters in CIGAR string.")
-        if fix_arrs:
-            lengths, gaps = cls._fix_arrays(
-                lengths=np.array(lengths), gaps=np.array(gaps)
-            )
-        return cls(np.asarray(lengths), np.asarray(gaps), [0, 0])
+        lengths, gaps = cls._fix_arrays(lengths=np.array(lengths), gaps=np.array(gaps))
+        return cls(lengths, gaps, [0, 0])
 
     def _run_length_encode(self, string_in):
         r"""Perform run length encoding on a string.
@@ -399,8 +409,8 @@ class PairAlignPath(AlignPath):
             segment in the alignment.
         """
         idx = np.diff(gaps, prepend=np.array([True])) != 0
-        gaps_out = gaps[idx]
+        gaps_out = np.asarray(gaps[idx])
         groups = np.cumsum(idx)
-        lengths_out = np.bincount(groups, weights=lengths).astype(int)[1:]
+        lengths_out = np.asarray(np.bincount(groups, weights=lengths).astype(int)[1:])
 
         return lengths_out, gaps_out

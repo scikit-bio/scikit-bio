@@ -190,7 +190,7 @@ class TestPairAlignPath(unittest.TestCase):
         # test if seqs are provided
         seq1 = "-AATCT----" + "C"*50 + "-"*234
         seq2 = "TAC---GGCC" + "C"*20 + "A"*264
-        seqs = [seq1, seq2]
+        seqs = [DNA(seq1), DNA(seq2)]
         obs = ExamplePairAlignPath.to_cigar(seqs=seqs)
         exp = "1I1=1X3D4I20=30X234I"
         self.assertEqual(obs, exp)
