@@ -144,12 +144,9 @@ class SequenceVector(EmbeddingVector):
         if isinstance(sequence, str):
             sequence = sequence.encode("ascii")
 
-        if len(vector.shape) == 1:
-            vector = vector.reshape(1, -1)
-        if len(vector.shape) == 2:
-            assert vector.shape[0] == 1, (
-                "Only 1 vector per sequence is allowed."
-            )
+        vector = np.atleast_2d(vector)
+        if vector.shape[0] != 1:
+            raise ValueError("Only 1 vector per sequence is allowed.")
 
         seq = np.array([sequence], dtype='O')
         super(SequenceVector, self).__init__(vector, seq, **kwargs)
