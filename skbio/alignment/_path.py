@@ -63,13 +63,6 @@ class AlignPath(SkbioObject):
             f"{self.lengths}, states: {self.states}"
         )
 
-    def subset(self):
-        r"""Select subset of sequences from AlignPath.
-
-        Better to have ability to index an AlignPath for particular sequences,
-        then compress these sequences using something like _fix_arrays"""
-        raise NotImplementedError()
-
     def to_bits(self):
         r"""Unpack states into an array of bits."""
         return np.unpackbits(
@@ -260,6 +253,16 @@ class PairAlignPath(AlignPath):
             distinguish match (=) and mismatch (X). Otherwise, will uniformly note
             them as (mis)match (M).
         """
+        # If `seqs` is provided, ensure that the sequence lengths match the alignment
+        # length.
+        if seqs:
+            if len(seqs[0]) != self.shape[1] or len(seqs[1]) != self.shape[1]:
+                raise ValueError(
+                    f"At least one of sequence lengths "
+                    f"{len(seqs[0]), len(seqs[1])} does not match "
+                    f"alignment length ({self.shape[1]})."
+                )
+
         cigar = ""
         lengths = self.lengths
         gaps = np.squeeze(self.states)
