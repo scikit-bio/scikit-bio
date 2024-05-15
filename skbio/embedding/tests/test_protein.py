@@ -99,6 +99,7 @@ class ProteinVectorTests(TestCase):
         self.vector2 = np.array([4, 5, 6])
         self.vector3 = np.array([7, 8, 9])
         self.bad_vector = np.array([7, 8])
+        self.bad_vector2 = np.array([[7, 8], [7, 9]])
         self.protein_vectors = [ProteinVector(self.vector1, "ACGT"),
                                 ProteinVector(self.vector2, "GCTA"),
                                 ProteinVector(self.vector3, "TTAG")]
@@ -112,6 +113,9 @@ class ProteinVectorTests(TestCase):
                'ESLEYQQFVANVEEEEAWINEKMTLVASED^^')
         with self.assertRaises(ValueError):
             ProteinVector(self.emb, seq)
+
+        with self.assertRaises(ValueError):
+            ProteinVector(self.bad_vector2, seq)
 
     def test_repr(self):
         pv = ProteinVector(self.emb, self.seq)
