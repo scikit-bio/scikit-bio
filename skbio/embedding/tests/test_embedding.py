@@ -184,6 +184,10 @@ class SequenceVectorTests(TestCase):
         ordination_results = embedding_vectors_to_ordination(self.sequence_vectors)
         self.assertEqual(ordination_results.samples.shape, (3, 3))
         self.assertEqual(ordination_results.features.shape, (3, 3))
+        reconstructed = (ordination_results.samples.values @
+                         ordination_results.features.values.T)
+        self.assertTrue(np.allclose(
+            reconstructed, embedding_vectors_to_numpy(self.sequence_vectors)))
 
 
 if __name__ == '__main__':

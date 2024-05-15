@@ -15,6 +15,7 @@ from skbio.stats.ordination import OrdinationResults
 from skbio.metadata._mixin import MetadataMixin
 from skbio.diversity import beta_diversity
 from scipy.spatial.distance import pdist, squareform
+from scipy.linalg import svd
 from typing import List
 
 
@@ -275,18 +276,22 @@ def embedding_vectors_to_ordination(embedding_vectors, validate=True):
     OrdinationResults
     """
     data = embedding_vectors_to_numpy(embedding_vectors)
-    u, s, v = np.linalg.svd(data)
+    u, s, vh = svd(data, full_matrices=False)
     eigvals = s ** 2
     short_name = "SVD"
     long_name = "Singular Value Decomposition"
+    # note that we are moving half of the singular values
+    # in the eigvals to the samples and the other half to the features
+    # this is to help with the interpretation of the ordination
+    # if visualizing with biplots
     ordr = OrdinationResults(
         short_method_name = short_name,
         long_method_name = long_name,
         eigvals = eigvals,
         proportion_explained = eigvals / eigvals.sum(),
         samples=pd.DataFrame(
-            u * s, index=[str(sv) for sv in embedding_vectors]),
-        features=pd.DataFrame(v.T * s, index=range(data.shape[1])),
+            u * np.sqrt(s), index=[str(sv) for sv in embedding_vectors]),
+        features=pd.DataFrame(vh.T * np.sqrt(s), index=range(data.shape[1])),
     )
     return ordr
 
