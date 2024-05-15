@@ -226,8 +226,10 @@ class PairAlignPath(AlignPath):
         # This should be faster than the generic solution I guess.
         # TODO: Pending benchmark and optimization.
 
-        # Ensure bits is a 2D numpy array of ones and zeros.
-        if not isinstance(bits, np.ndarray) or bits.ndim != 2 or bits.shape[1] == 0:
+        # Ensure bits is a 2D array-like of ones and zeros.
+        if not isinstance(bits, np.ndarray):
+            bits = np.atleast_2d(bits)
+        if bits.ndim != 2 or bits.shape[1] == 0:
             raise ValueError("Input 'bits' must be a non-empty 2D numpy array.")
         if not (np.logical_or(bits == 0, bits == 1).all()):
             raise ValueError("Input 'bits' must contain only zeros and ones.")

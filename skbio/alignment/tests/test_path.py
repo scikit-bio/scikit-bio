@@ -225,6 +225,17 @@ class TestPairAlignPath(unittest.TestCase):
         with self.assertRaises(ValueError,
                                msg="Input 'bits' must contain only zeros and ones."):
             PairAlignPath.from_bits(bits)
+        
+        # test non numpy array input
+        bits = [[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1,1,1,0,0],
+                [0,0,0,1,1,0,0,0,0,0,1,0,0,0,0,0,0,0,0,0],
+                [0,0,0,0,0,0,0,0,0,0,1,0,0,0,0,0,0,0,0,0]]
+        exp = PairAlignPath(lengths=[3, 2, 5, 1, 4, 3, 2],
+                states=[0, 2, 0, 2, 0, 1, 0],
+                starts=[0, 0, 0])
+        obs = PairAlignPath.from_bits(bits)
+        npt.assert_array_equal(obs.lengths, exp.lengths)
+        npt.assert_array_equal(obs.states, exp.states)
 
     def test_to_bits(self):
         # test input with invalid values
