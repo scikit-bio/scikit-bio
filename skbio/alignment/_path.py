@@ -206,25 +206,26 @@ class AlignPath(SkbioObject):
 
 
 class PairAlignPath(AlignPath):
-    # @overrides(AlignPath)
-    # def __str__(self):
-    #     r"""Return string representation of this AlignPath."""
-    #     return self.__repr__()
+    def __str__(self):
+        r"""Return string representation of this AlignPath."""
+        return self.__repr__()
 
-    # @overrides(AlignPath)
-    # def __repr__(self):
-    #     r"""Return summary of the alignment path."""
-    #     return (
-    #         f"<{self.__class__.__name__}, shape: {self.shape},
-    # CIGAR: '{self.to_cigar()}'"
-    #     )
+    def __repr__(self):
+        r"""Return summary of the alignment path."""
+        return (
+            f"<{self.__class__.__name__}, shape: {self.shape}, "
+            f"CIGAR: '{self.to_cigar()}'"
+        )
 
     @classonlymethod
     def from_bits(cls, bits):
-        r"""Create an alignment path from a bit array."""
-        # This should be faster than the generic solution I guess.
-        # TODO: Pending benchmark and optimization.
+        r"""Create an alignment path from a bit array.
 
+        Parameters
+        ----------
+        bits : array_like of 0's and 1's of shape (n_seqs, alignment_length)
+            Array of zeros (char) and ones (gap) which represent the alignment.
+        """
         # Ensure bits is a 2D array-like of ones and zeros.
         if not isinstance(bits, np.ndarray):
             bits = np.atleast_2d(bits)
@@ -254,8 +255,10 @@ class PairAlignPath(AlignPath):
 
         Parameters
         ----------
-        seqs : If provided, will distinguish match (=) and mismatch (X). Otherwise,
-            will uniformly note them as (mis)match (M).
+        seqs : list of str or skbio.sequence
+            Pair of aligned sequences to generate cigar string. If provided, will
+            distinguish match (=) and mismatch (X). Otherwise, will uniformly note
+            them as (mis)match (M).
         """
         cigar = ""
         lengths = self.lengths
@@ -281,8 +284,13 @@ class PairAlignPath(AlignPath):
 
     @classonlymethod
     def from_cigar(cls, cigar):
-        r"""Create a pairwise alignment path from a CIGAR string."""
-        # need to have ability for strings without 1's
+        r"""Create a pairwise alignment path from a CIGAR string.
+
+        Parameters
+        ----------
+        cigar : str
+            CIGAR format string used to build the PairAlignPath.
+        """
         # Make sure cigar is not empty.
         if not cigar:
             raise ValueError("CIGAR string must not be empty.")
@@ -318,21 +326,34 @@ class PairAlignPath(AlignPath):
             )
         return cls(np.asarray(lengths), np.asarray(gaps), [0, 0])
 
-    def _run_length_encode(self, input_string):
-        r"""Perform run length encoding on a string."""
-        input_array = np.array(list(input_string))
-        change_indices = np.append(
-            0, np.where(input_array[:-1] != input_array[1:])[0] + 1
-        )
-        count = np.diff(np.concatenate((change_indices, [len(input_string)])))
-        unique_chars = input_array[change_indices]
-        encoded_string = "".join(str(c) + u for c, u in zip(count, unique_chars))
+    def _run_length_encode(self, string_in):
+        r"""Perform run length encoding on a string.
 
-        return encoded_string
+        Parameters
+        ----------
+        string_in : str
+            String on which to perform run length encoding.
+        """
+        input_arr = np.array(list(string_in))
+        idx = np.append(0, np.where(input_arr[:-1] != input_arr[1:])[0] + 1)
+        count = np.diff(np.concatenate((idx, [len(string_in)])))
+        unique = input_arr[idx]
+        encoded_str = "".join(str(c) + u for c, u in zip(count, unique))
+
+        return encoded_str
 
     def _fix_arrays(lengths, gaps):
         r"""Merge consecutive same values from gaps array and sum corresponding values
-        in lengths array."""
+        in lengths array.
+
+        Parameters
+        ----------
+        lengths : array_like of int of shape (n_segments,)
+            Length of each segment in the alignment.
+        gaps : array_like of uint8 of shape (n_segments,) or (n_packs, n_segments)
+            Packed bits representing character (0) or gap (1) status per sequence per
+            segment in the alignment.
+        """
         idx = np.diff(gaps, prepend=np.array([True])) != 0
         gaps_out = gaps[idx]
         groups = np.cumsum(idx)
