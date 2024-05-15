@@ -8,6 +8,7 @@
 from skbio.sequence import Protein
 from skbio.embedding._embedding import SequenceEmbedding
 from skbio.embedding._embedding import SequenceVector
+from skbio.embedding._embedding import _repr_helper
 from skbio.stats.ordination import OrdinationResults
 from scipy.spatial.distance import pdist, squareform
 from skbio.util import get_data_path
@@ -26,7 +27,7 @@ def _validate_protein(sequence):
 
         # perform a check to make sure the sequence is a valid
         # protein sequence
-        Protein(sequence)
+        _ = Protein(sequence)
     return sequence
 
 
@@ -108,13 +109,9 @@ class ProteinEmbedding(SequenceEmbedding):
         Protein
         """
         seq = Protein(str(self))
-        rstr = repr(seq)
-        rstr = rstr.replace("Protein", "ProteinEmbedding")
-        n_indent = 4  # see Sequence.__repr__
-        indent = " " * n_indent
-        rstr = rstr.replace(
-            "has gaps",
-            f"vector dimension: {self.embedding.shape[1]}\n{indent}has gaps",
+        rstr = _repr_helper(
+            repr(seq), "Protein", "ProteinEmbedding", "embedding",
+            regex_match="has gaps", shape=self.embedding.shape[1]
         )
         return rstr
 
@@ -189,12 +186,8 @@ class ProteinVector(SequenceVector):
         Protein
         """
         seq = Protein(str(self))
-        rstr = repr(seq)
-        rstr = rstr.replace("Protein", "ProteinVector")
-        n_indent = 4  # see Sequence.__repr__
-        indent = " " * n_indent
-        rstr = rstr.replace(
-            "has gaps",
-            f"vector dimension: {self.embedding.shape[1]}\n{indent}has gaps",
+        rstr = _repr_helper(
+            repr(seq), "Protein", "ProteinVector", "vector",
+            regex_match="has gaps", shape=self.embedding.shape[1]
         )
         return rstr

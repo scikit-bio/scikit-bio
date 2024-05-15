@@ -15,6 +15,12 @@ from pathlib import Path
 from skbio.util import get_data_path
 from skbio.embedding._embedding import (
     SequenceVector, SequenceEmbedding, Embedding)
+from skbio.embedding._embedding import (
+    embedding_vectors_to_numpy,
+    embedding_vectors_to_dataframe,
+    embedding_vectors_to_distance_matrix,
+    embedding_vectors_to_ordination,
+)
 import numpy as np
 import numpy.testing as npt
 import pandas as pd
@@ -136,7 +142,7 @@ class SequenceVectorTests(TestCase):
     def test_to_numpy(self):
         # Test if to_numpy returns the correct numpy array
         expected_result = np.array([self.vector1, self.vector2, self.vector3])
-        result = SequenceVector.to_numpy(self.sequence_vectors)
+        result = embedding_vectors_to_numpy(self.sequence_vectors)
         self.assertTrue(np.array_equal(result, expected_result))
 
     def test_to_numpy_raises(self):
@@ -146,11 +152,11 @@ class SequenceVectorTests(TestCase):
                SequenceVector(self.bad_vector, "TTAG")]
 
         with self.assertRaises(ValueError):
-            result = SequenceVector.to_numpy(arr)
+            result = embedding_vectors_to_numpy(arr)
 
     def test_to_distance_matrix(self):
         # Test if to_distance_matrix returns a DistanceMatrix object
-        distance_matrix = SequenceVector.to_distance_matrix(self.sequence_vectors)
+        distance_matrix = embedding_vectors_to_distance_matrix(self.sequence_vectors)
         self.assertEqual(distance_matrix.shape, (3, 3))
         self.assertTrue(all(isinstance(d, float) for d in distance_matrix.condensed_form()))
 
@@ -165,7 +171,7 @@ class SequenceVectorTests(TestCase):
 
     def test_to_dataframe(self):
         # Test if to_dataframe returns a pandas DataFrame object
-        dataframe = SequenceVector.to_dataframe(self.sequence_vectors)
+        dataframe = embedding_vectors_to_dataframe(self.sequence_vectors)
         self.assertIsInstance(dataframe, pd.DataFrame)
         self.assertEqual(dataframe.shape, (3, 3))
 
@@ -175,7 +181,7 @@ class SequenceVectorTests(TestCase):
 
     def test_to_ordination(self):
         # Test if to_ordination returns an OrdinationResults object
-        ordination_results = SequenceVector.to_ordination(self.sequence_vectors)
+        ordination_results = embedding_vectors_to_ordination(self.sequence_vectors)
         self.assertEqual(ordination_results.samples.shape, (3, 3))
         self.assertEqual(ordination_results.features.shape, (3, 3))
 
