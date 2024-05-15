@@ -13,25 +13,26 @@ from skbio.util._decorator import classonlymethod
 
 
 class AlignPath(SkbioObject):
+    r"""Create an alignment path from segment lengths and states.
+
+    Parameters
+    ----------
+    lengths : array_like of int of shape (n_segments,)
+        Length of each segment in the alignment.
+    states : array_like of unit8 of shape (n_segments,) or (n_packs, n_segments)
+        Packed bits representing character (0) or gap (1) status per sequence per
+        segment in the alignment.
+    starts : array_like of int of shape (n_sequences,), optional
+        Start position (0-based) of each sequence in the alignment.
+
+    See Also
+    --------
+    skbio.sequence.Sequence
+    skbio.alignment.TabularMSA
+
+    """
+
     def __init__(self, lengths, states, starts):
-        r"""Create an alignment path from segment lengths and states.
-
-        Parameters
-        ----------
-        lengths : array_like of int of shape (n_segments,)
-            Length of each segment in the alignment.
-        states : array_like of unit8 of shape (n_segments,) or (n_packs, n_segments)
-            Packed bits representing character (0) or gap (1) status per sequence per
-            segment in the alignment.
-        starts : array_like of int of shape (n_sequences,), optional
-            Start position (0-based) of each sequence in the alignment.
-
-        See Also
-        --------
-        skbio.sequence.Sequence
-        skbio.alignment.TabularMSA
-
-        """
         # Number of sequences needs to be explicitly provided, because the packed bits
         # does not contain this information. (It is merely in multiples of 8.)
         self.lengths = np.asarray(lengths, dtype=np.int64)
@@ -188,7 +189,8 @@ class AlignPath(SkbioObject):
         ----------
         coords : array_like of int of shape (n_seqs, n_segments)
             Array where each value defines the start positions (index) of each segment
-            for each sequence."""
+            for each sequence.
+        """
         diff = np.diff(coords)
         bits = diff == 0
         lens = diff[bits.argmin(axis=0), np.arange(diff.shape[1])]
@@ -199,6 +201,25 @@ class AlignPath(SkbioObject):
 
 
 class PairAlignPath(AlignPath):
+    r"""Create a pairwise alignment path from segment lengths and states.
+
+    Parameters
+    ----------
+    lengths : array_like of int of shape (n_segments,)
+        Length of each segment in the alignment.
+    states : array_like of unit8 of shape (n_segments,) or (n_packs, n_segments)
+        Packed bits representing character (0) or gap (1) status per sequence per
+        segment in the alignment.
+    starts : array_like of int of shape (n_sequences,), optional
+        Start position (0-based) of each sequence in the alignment.
+
+    See Also
+    --------
+    skbio.sequence.Sequence
+    skbio.alignment.TabularMSA
+
+    """
+
     def __str__(self):
         r"""Return string representation of this AlignPath."""
         return self.__repr__()
@@ -261,6 +282,26 @@ class PairAlignPath(AlignPath):
                     f"At least one of sequence lengths "
                     f"{len(seqs[0]), len(seqs[1])} does not match "
                     f"alignment length ({self.shape[1]})."
+                )
+            # Also need to ensure that the sequences provided actually match the
+            # lengths and states of the instantiated object.
+            byte_arr = np.stack([x._bytes for x in seqs])
+            gap_chars = [ord(x) for x in seqs[0].gap_chars]
+            test_obj = PairAlignPath.from_bits(np.isin(byte_arr, gap_chars))
+            if (
+                self.lengths.shape != test_obj.lengths.shape
+                or (self.lengths != test_obj.lengths).any()
+            ):
+                raise ValueError(
+                    "Provided sequences do not match existing segment lengths."
+                )
+            elif (
+                self.states.shape != test_obj.states.shape
+                or (self.states != test_obj.states).any()
+            ):
+                raise ValueError(
+                    "Provided sequences do not match existing states. Consider the "
+                    "order of the provided sequences."
                 )
 
         cigar = ""
