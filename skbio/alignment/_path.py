@@ -9,7 +9,7 @@
 import numpy as np
 
 from skbio._base import SkbioObject
-from skbio.util._decorator import overrides, classonlymethod
+from skbio.util._decorator import classonlymethod
 
 
 class AlignPath(SkbioObject):
