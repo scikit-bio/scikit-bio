@@ -219,7 +219,6 @@ class PairAlignPath(AlignPath):
     # CIGAR: '{self.to_cigar()}'"
     #     )
 
-    @overrides(AlignPath)
     @classonlymethod
     def from_bits(cls, bits):
         r"""Create an alignment path from a bit array."""
@@ -239,7 +238,6 @@ class PairAlignPath(AlignPath):
         lens = np.append(idx[1:] - idx[:-1], ints.size - idx[-1])
         return cls(lens, ints[idx], np.zeros(bits.shape[0], dtype=int))
 
-    @overrides(AlignPath)
     def to_bits(self):
         r"""Unpack states into an array of bits."""
         # This should be faster than the generic solution I guess.
