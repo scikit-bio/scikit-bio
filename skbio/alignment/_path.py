@@ -61,7 +61,7 @@ class AlignPath(SkbioObject):
         r"""Return summary of the alignment path."""
         return (
             f"<{self.__class__.__name__}, shape: {self.shape}, lengths: "
-            f"{self.lengths}, states: {self.states}"
+            f"{self.lengths}, states: {self.states}>"
         )
 
     def to_bits(self):
@@ -220,17 +220,16 @@ class PairAlignPath(AlignPath):
 
     """
 
-    # comment out while working on from_cigar/to_cigar double gap problem
-    # def __str__(self):
-    #     r"""Return string representation of this AlignPath."""
-    #     return self.__repr__()
+    def __str__(self):
+        r"""Return string representation of this AlignPath."""
+        return self.__repr__()
 
-    # def __repr__(self):
-    #     r"""Return summary of the alignment path."""
-    #     return (
-    #         f"<{self.__class__.__name__}, shape: {self.shape}, "
-    #         f"CIGAR: '{self.to_cigar()}'"
-    #     )
+    def __repr__(self):
+        r"""Return summary of the alignment path."""
+        return (
+            f"<{self.__class__.__name__}, shape: {self.shape}, "
+            f"CIGAR: '{self.to_cigar()}'>"
+        )
 
     @classonlymethod
     def from_bits(cls, bits):
@@ -256,12 +255,10 @@ class PairAlignPath(AlignPath):
 
     def to_bits(self):
         r"""Unpack states into an array of bits."""
-        # This should be faster than the generic solution I guess.
-        # TODO: Pending benchmark and optimization.
-        if not np.all(np.isin(self.states, [0, 1, 2])):
+        if not np.all(np.isin(self.states, [0, 1, 2, 3])):
             raise ValueError(
                 "For pairwise alignment, `states` must only contain "
-                "zeros, ones, or twos."
+                "zeros, ones, twos, or threes."
             )
         return np.stack([self.states & 1, self.states >> 1])
 
