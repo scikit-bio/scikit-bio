@@ -315,7 +315,7 @@ class PairAlignPath(AlignPath):
             for qchar, rchar in zip(query, ref):
                 if qchar == "-" and rchar == "-":
                     cigar += "P"
-                if qchar == rchar:
+                elif qchar == rchar:
                     cigar += "="
                 elif qchar == "-":
                     cigar += "I"
