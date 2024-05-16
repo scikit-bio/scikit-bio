@@ -17,6 +17,17 @@ from skbio.alignment import TabularMSA
 from skbio.sequence import DNA
 
 class TestAlignPath(unittest.TestCase):
+    def test_init(self):
+        # test 1-D starts vector
+        with self.assertRaises(ValueError, msg="`starts` must be a 1-D vector."):
+            obj = AlignPath(lengths=[1, 2, 3], states=[1, 2, 3], starts=[[0], [0]])
+        
+        # test states and starts matching
+        with self.assertRaises(ValueError, msg="Sizes of `starts` and `states` do not "
+                               "match."):
+            obj = AlignPath(lengths=[1, 2, 3], states=[1, 2, 3],
+                            starts=[0, 0, 0, 0, 0, 0, 0, 0, 0, 0])
+    
     def test_to_bits(self):
         obj = AlignPath(lengths=[3, 2, 5, 1, 4, 3, 2],
                         states=[0, 2, 0, 6, 0, 1, 0],
