@@ -163,8 +163,6 @@ class TestPairAlignPath(unittest.TestCase):
             PairAlignPath.from_cigar("")
 
         # test invalid cigar string
-        # Do we want from_cigar to handle other characters besides
-        # 'M', 'I', 'D', '=', and 'X'?
         with self.assertRaises(ValueError, msg="Invalid characters in CIGAR string."):
             PairAlignPath.from_cigar("23M45B13X")
 
@@ -173,6 +171,14 @@ class TestPairAlignPath(unittest.TestCase):
         obj = PairAlignPath.from_cigar(cigar)
         lengths = [1, 1, 1, 12, 1]
         states = [0, 1, 2, 0, 1]
+        npt.assert_array_equal(lengths, obj.lengths)
+        npt.assert_array_equal(states, np.squeeze(obj.states))
+
+        # test cigar with all possible valid codes
+        cigar = "1M2I3D4P5=6X7N8S9H"
+        obj = PairAlignPath.from_cigar(cigar)
+        lengths = [1, 2, 3, 4, 11, 7, 8, 9]
+        states = [0, 1, 2, 3, 0, 2, 1, 3]
         npt.assert_array_equal(lengths, obj.lengths)
         npt.assert_array_equal(states, np.squeeze(obj.states))
 
