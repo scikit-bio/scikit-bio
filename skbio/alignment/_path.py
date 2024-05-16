@@ -307,28 +307,22 @@ class PairAlignPath(AlignPath):
 
         cigar = ""
         lengths = self.lengths
-        print(lengths)
         gaps = np.squeeze(self.states)
-        print(gaps)
         codes = ["M", "I", "D", "P"]
         if seqs is not None:
-            query = seqs[0]
-            ref = seqs[1]
+            query = str(seqs[0])
+            ref = str(seqs[1])
             for qchar, rchar in zip(query, ref):
-                print(qchar, rchar)
-                # if qchar == "-" and rchar == "-":
-                #     cigar += "P"
-                #     print('p')
+                if qchar == "-" and rchar == "-":
+                    cigar += "P"
                 if qchar == rchar:
                     cigar += "="
-                    print("=")
                 elif qchar == "-":
                     cigar += "I"
                 elif rchar == "-":
                     cigar += "D"
                 else:
                     cigar += "X"
-                print(f"{cigar}\n")
             return self._run_length_encode(cigar)
         else:
             for i, length in enumerate(lengths):
