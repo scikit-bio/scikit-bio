@@ -10,6 +10,7 @@ import numpy as np
 
 from skbio._base import SkbioObject
 from skbio.util._decorator import classonlymethod
+from skbio.sequence import GrammaredSequence
 
 
 class AlignPath(SkbioObject):
@@ -275,17 +276,20 @@ class PairAlignPath(AlignPath):
         cigar = []
         codes = ["M", "I", "D", "P"]
         if seqs is not None:
-            # test if seqs is strings or Sequence object or something else
-            if isinstance(seqs[0], str) and isinstance(seqs[1], str):
-                seq1 = np.array([ord(char) for char in str(seqs[0])])
-                seq2 = np.array([ord(char) for char in str(seqs[1])])
-            # otherwise it could be this
-            seq1 = seqs[0]._bytes
-            seq2 = seqs[1]._bytes
+            # # test if seqs is strings or Sequence object or something else
+            # if isinstance(seqs[0], str) and isinstance(seqs[1], str):
+            #     seq1 = np.array([ord(char) for char in str(seqs[0])])
+            #     seq2 = np.array([ord(char) for char in str(seqs[1])])
 
-            # remove gap characters
-            seq1 = seq1[seq1 != 45]
-            seq2 = seq2[seq2 != 45]
+            # get bytes with gaps removed
+            if isinstance(seqs[0], GrammaredSequence) and isinstance(
+                seqs[1], GrammaredSequence
+            ):
+                seq1 = seqs[0]._bytes
+                seq2 = seqs[1]._bytes
+                # remove gap characters
+                seq1 = seq1[seq1 != seqs[0]._gap_codes]
+                seq2 = seq2[seq2 != seqs[1]._gap_codes]
 
             idx1, idx2 = int(self.starts[0]), int(self.starts[1])
 
