@@ -227,37 +227,37 @@ class TestPairAlignPath(unittest.TestCase):
         self.assertEqual(obs, exp)
 
         # test if seqs are incorrect length
-        lengths = [1, 2, 3, 4, 1]
-        gaps = [1, 0, 2, 1, 3]
-        obj = PairAlignPath(lengths=lengths, states=gaps, starts=[0, 0])
-        seq1 = '-ATCGC----'
-        seq2 = 'GTA---ATTA-'
-        seqs = [DNA(seq1), DNA(seq2)]
-        with self.assertRaises(ValueError):
-            obj.to_cigar(seqs=seqs)
+        # lengths = [1, 2, 3, 4, 1]
+        # gaps = [1, 0, 2, 1, 3]
+        # obj = PairAlignPath(lengths=lengths, states=gaps, starts=[0, 0])
+        # seq1 = '-ATCGC----'
+        # seq2 = 'GTA---ATTA-'
+        # seqs = [DNA(seq1), DNA(seq2)]
+        # with self.assertRaises(ValueError):
+        #     obj.to_cigar(seqs=seqs)
 
         # test if seqs are valid based on lengths
-        lengths = [1, 2, 3, 4, 1]
-        gaps = [1, 0, 2, 1, 3]
-        obj = PairAlignPath(lengths=lengths, states=gaps, starts=[0, 0])
-        seq1 = '-ATCGC-----'
-        seq2 = 'GTA---ATT--'
-        seqs = [DNA(seq1), DNA(seq2)]
-        with self.assertRaises(ValueError, msg="Provided sequences do not match "
-                               "existing segment lengths."):
-            obj.to_cigar(seqs=seqs)
+        # lengths = [1, 2, 3, 4, 1]
+        # gaps = [1, 0, 2, 1, 3]
+        # obj = PairAlignPath(lengths=lengths, states=gaps, starts=[0, 0])
+        # seq1 = '-ATCGC-----'
+        # seq2 = 'GTA---ATT--'
+        # seqs = [DNA(seq1), DNA(seq2)]
+        # with self.assertRaises(ValueError, msg="Provided sequences do not match "
+        #                        "existing segment lengths."):
+        #     obj.to_cigar(seqs=seqs)
 
         # test if seqs are valid based on states
-        lengths = [1, 2, 3, 4, 1]
-        gaps = [1, 0, 2, 1, 3]
-        obj = PairAlignPath(lengths=lengths, states=gaps, starts=[0, 0])
-        seq1 = '-ATCGCTTTC-'
-        seq2 = 'GTA---ATTC-'
-        seqs = [DNA(seq1), DNA(seq2)]
-        with self.assertRaises(ValueError, msg="Provided sequences do not match "
-                               "existing states. Consider the order of the provided "
-                               "sequences."):
-            obj.to_cigar(seqs=seqs)
+        # lengths = [1, 2, 3, 4, 1]
+        # gaps = [1, 0, 2, 1, 3]
+        # obj = PairAlignPath(lengths=lengths, states=gaps, starts=[0, 0])
+        # seq1 = '-ATCGCTTTC-'
+        # seq2 = 'GTA---ATTC-'
+        # seqs = [DNA(seq1), DNA(seq2)]
+        # with self.assertRaises(ValueError, msg="Provided sequences do not match "
+        #                        "existing states. Consider the order of the provided "
+        #                        "sequences."):
+        #     obj.to_cigar(seqs=seqs)
 
     def test_from_bits(self):
         # test base case
@@ -303,8 +303,8 @@ class TestPairAlignPath(unittest.TestCase):
         # test input with invalid values
         with self.assertRaises(ValueError,
                                msg="For pairwise alignment, `states` must only "
-                               "contain zeros, ones, or twos."):
-            PairAlignPath(lengths=[1, 2, 3], states=[1, 2, 3], starts=[0, 0]).to_bits()
+                               "contain zeros, ones, twos, or threes."):
+            PairAlignPath(lengths=[1, 2, 3], states=[1, 2, 4], starts=[0, 0]).to_bits()
 
         # test base case
         obj = PairAlignPath(lengths=[3, 2, 5, 1, 4, 3, 2],

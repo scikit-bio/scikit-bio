@@ -272,106 +272,50 @@ class PairAlignPath(AlignPath):
             distinguish match (=) and mismatch (X). Otherwise, will uniformly note
             them as (mis)match (M).
         """
-        # If `seqs` is provided, ensure that the sequence lengths match the alignment
-        # length.
-        # if seqs:
-        # THIS is incompatible with allowing sequences of different lengths into
-        # the function.
-        # if len(seqs[0]) != self.shape[1] or len(seqs[1]) != self.shape[1]:
-        #     raise ValueError(
-        #         f"At least one of sequence lengths "
-        #         f"{len(seqs[0]), len(seqs[1])} does not match "
-        #         f"alignment length ({self.shape[1]})."
-        #     )
-
-        # Also need to ensure that the sequences provided actually match the
-        # lengths and states of the instantiated object.
-        # byte_arr = np.stack([x._bytes for x in seqs])
-        # gap_chars = [ord(x) for x in seqs[0].gap_chars]
-        # test_obj = PairAlignPath.from_bits(np.isin(byte_arr, gap_chars))
-        # if (
-        #     self.lengths.shape != test_obj.lengths.shape
-        #     or (self.lengths != test_obj.lengths).any()
-        # ):
-        #     raise ValueError(
-        #         "Provided sequences do not match existing segment lengths."
-        #     )
-        # elif (
-        #     self.states.shape != test_obj.states.shape
-        #     or (self.states != test_obj.states).any()
-        # ):
-        #     raise ValueError(
-        #         "Provided sequences do not match existing states. Consider the "
-        #         "order of the provided sequences."
-        #     )
-
-        cigar = ""
-        lengths = self.lengths
-        gaps = np.squeeze(self.states)
+        cigar = []
         codes = ["M", "I", "D", "P"]
         if seqs is not None:
-            # find stop positions in sequences.
-            # adjust lengths based on start positions
-            seq1_length = len(seqs[0]) - self.starts[0]
-            seq2_length = len(seqs[1]) - self.starts[1]
+            # test if seqs is strings or Sequence object or something else
+            if isinstance(seqs[0], str) and isinstance(seqs[1], str):
+                seq1 = np.array([ord(char) for char in str(seqs[0])])
+                seq2 = np.array([ord(char) for char in str(seqs[1])])
+            # otherwise it could be this
+            seq1 = seqs[0]._bytes
+            seq2 = seqs[1]._bytes
 
-            # find how many gaps will be present in each sequence
-            seq1_gaps = np.where(self.states == 1, self.lengths, 0).sum()
-            seq2_gaps = np.where(self.states == 2, self.lengths, 0).sum()
-            both_gaps = np.where(self.states == 3, self.lengths, 0).sum()
+            # remove gap characters
+            seq1 = seq1[seq1 != 45]
+            seq2 = seq2[seq2 != 45]
 
-            # readjust lengths incorporating gaps
-            seq1_length = seq1_length + seq1_gaps + both_gaps
-            seq2_length = seq2_length + seq2_gaps + both_gaps
+            idx1, idx2 = int(self.starts[0]), int(self.starts[1])
 
-            # figure out stop index for each sequence, if it is 0,
-            # then stop isn't needed
-            seq1_stop = self.n_positions - seq1_length
-            seq2_stop = self.n_positions - seq2_length
-            if seq1_stop != 0:
-                query = str(seqs[0][self.starts[0] : int(seq1_stop)])
-            else:
-                query = str(seqs[0][self.starts[0] :])
-            if seq2_stop != 0:
-                ref = str(seqs[1][self.starts[1] : int(seq2_stop)])
-            else:
-                ref = str(seqs[1][self.starts[1] :])
+            for length, state in zip(self.lengths, np.squeeze(self.states)):
+                if state == 0:
+                    for i in range(length):
+                        if idx1 < len(seq1) and idx2 < len(seq2):
+                            if seq1[idx1] == seq2[idx2]:
+                                cigar.append("=")
+                            else:
+                                cigar.append("X")
+                        idx1 += 1
+                        idx2 += 1
+                elif state == 1:
+                    cigar.extend(["I"] * length)
+                    idx2 += length
+                elif state == 2:
+                    cigar.extend(["D"] * length)
+                    idx1 += length
+                elif state == 3:
+                    cigar.extend(["P"] * length)
+            cigar_str = self._run_length_encode("".join(cigar))
 
-            # convert to numpy arrays
-            seq1_arr = np.array([ord(x) for x in query])
-            seq2_arr = np.array([ord(x) for x in ref])
-
-            # create array of indices for gaps, and replace non gap
-            # values with character values
-            gaps_arr = self.to_indices()
-            gaps_arr[0][gaps_arr[0] != -1] = seq1_arr
-            gaps_arr[1][gaps_arr[1] != -1] = seq2_arr
-
-            # this is just hardcoded for now to make it work. the
-            # whole thing needs to be cleaned up a lot.
-            gaps_arr[gaps_arr == -1] = 45
-
-            # convert back to string. this won't stay, just doing it now
-            # to see if it works.
-            query = "".join([chr(x) for x in gaps_arr[0]])
-            ref = "".join([chr(x) for x in gaps_arr[1]])
-
-            for qchar, rchar in zip(query, ref):
-                if qchar == "-" and rchar == "-":
-                    cigar += "P"
-                elif qchar == rchar:
-                    cigar += "="
-                elif qchar == "-":
-                    cigar += "I"
-                elif rchar == "-":
-                    cigar += "D"
-                else:
-                    cigar += "X"
-            return self._run_length_encode(cigar)
         else:
-            for i, length in enumerate(lengths):
-                cigar += str(length) + codes[gaps[i]]
-            return cigar
+            for i, length in enumerate(self.lengths):
+                cigar.append(str(length) + codes[np.squeeze(self.states)[i]])
+
+            cigar_str = "".join(cigar)
+
+        return cigar_str
 
     @classonlymethod
     def from_cigar(cls, cigar):
