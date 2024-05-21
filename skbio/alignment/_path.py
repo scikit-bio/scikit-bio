@@ -406,22 +406,6 @@ class PairAlignPath(AlignPath):
         lengths, gaps = cls._fix_arrays(lengths=np.array(lengths), gaps=np.array(gaps))
         return cls(lengths, gaps, [0, 0])
 
-    def _run_length_encode(string_in):
-        r"""Perform run length encoding on a string.
-
-        Parameters
-        ----------
-        string_in : str
-            String on which to perform run length encoding.
-        """
-        input_arr = np.array(list(string_in))
-        idx = np.append(0, np.where(input_arr[:-1] != input_arr[1:])[0] + 1)
-        count = np.diff(np.concatenate((idx, [len(string_in)])))
-        unique = input_arr[idx]
-        encoded_str = "".join(str(c) + u for c, u in zip(count, unique))
-
-        return encoded_str
-
     def _fix_arrays(lengths, gaps):
         r"""Merge consecutive same values from gaps array and sum corresponding values
         in lengths array.
@@ -440,6 +424,23 @@ class PairAlignPath(AlignPath):
         lengths_out = np.asarray(np.bincount(groups, weights=lengths).astype(int)[1:])
 
         return lengths_out, gaps_out
+
+
+def _run_length_encode(string_in):
+    r"""Perform run length encoding on a string.
+
+    Parameters
+    ----------
+    string_in : str
+        String on which to perform run length encoding.
+    """
+    input_arr = np.array(list(string_in))
+    idx = np.append(0, np.where(input_arr[:-1] != input_arr[1:])[0] + 1)
+    count = np.diff(np.concatenate((idx, [len(string_in)])))
+    unique = input_arr[idx]
+    encoded_str = "".join(str(c) + u for c, u in zip(count, unique))
+
+    return encoded_str
 
 
 codes = np.array(["M", "I", "D", "P"])

@@ -12,7 +12,7 @@ import unittest
 import numpy as np
 import numpy.testing as npt
 
-from skbio.alignment._path import PairAlignPath, AlignPath
+from skbio.alignment._path import PairAlignPath, AlignPath, _run_length_encode
 from skbio.alignment import TabularMSA
 from skbio.sequence import DNA
 
@@ -243,7 +243,6 @@ class TestPairAlignPath(unittest.TestCase):
                                msg="Gap must be an integer, float, 'del', or 'mask'."):
             obs = obj.to_cigar(seqs=seqs)
 
-
     def test_from_bits(self):
         # test base case
         bits = np.array(([0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1,1,1,0,0],
@@ -298,6 +297,11 @@ class TestPairAlignPath(unittest.TestCase):
         exp = np.array(([0, 0, 0, 0, 0, 1, 0], [0, 1, 0, 1, 0, 0, 0]))
         obs = obj.to_bits()
         npt.assert_array_equal(np.squeeze(obs), exp)
+    
+    def test_run_length_encode(self):
+        obs = _run_length_encode("ABBCCCDDDD")
+        exp = "1A2B3C4D"
+        self.assertEqual(obs, exp)
 
 if __name__ == "__main__":
     unittest.main()
