@@ -274,12 +274,16 @@ class PairAlignPath(AlignPath):
             them as (mis)match (M).
         """
         cigar = []
+        # remove codes from this function, see GeneticCode for example
         codes = ["M", "I", "D", "P"]
+
+        states = np.squeeze(self.states)
+
         if seqs is not None:
             # # test if seqs is strings or Sequence object or something else
-            # if isinstance(seqs[0], str) and isinstance(seqs[1], str):
-            #     seq1 = np.array([ord(char) for char in str(seqs[0])])
-            #     seq2 = np.array([ord(char) for char in str(seqs[1])])
+            if isinstance(seqs[0], str) and isinstance(seqs[1], str):
+                seq1 = np.array([ord(char) for char in str(seqs[0])])
+                seq2 = np.array([ord(char) for char in str(seqs[1])])
 
             # get bytes with gaps removed
             if isinstance(seqs[0], GrammaredSequence) and isinstance(
@@ -288,15 +292,17 @@ class PairAlignPath(AlignPath):
                 seq1 = seqs[0]._bytes
                 seq2 = seqs[1]._bytes
                 # remove gap characters
-                seq1 = seq1[seq1 != seqs[0]._gap_codes]
-                seq2 = seq2[seq2 != seqs[1]._gap_codes]
+                # seq1 = seq1[seq1 != seqs[0]._gap_codes]
+                # seq2 = seq2[seq2 != seqs[1]._gap_codes]
 
             idx1, idx2 = int(self.starts[0]), int(self.starts[1])
 
-            for length, state in zip(self.lengths, np.squeeze(self.states)):
+            for length, state in zip(self.lengths, states):
                 if state == 0:
                     for i in range(length):
                         if idx1 < len(seq1) and idx2 < len(seq2):
+                            print(f"seqs: {seq1, seq2}")
+                            print(f"{idx1, idx2}")
                             if seq1[idx1] == seq2[idx2]:
                                 cigar.append("=")
                             else:
@@ -315,7 +321,7 @@ class PairAlignPath(AlignPath):
 
         else:
             for i, length in enumerate(self.lengths):
-                cigar.append(str(length) + codes[np.squeeze(self.states)[i]])
+                cigar.append(str(length) + codes[states[i]])
 
             cigar_str = "".join(cigar)
 
