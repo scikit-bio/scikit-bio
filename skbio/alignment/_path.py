@@ -295,18 +295,29 @@ class PairAlignPath(AlignPath):
                 # seq1 = seq1[seq1 != seqs[0]._gap_codes]
                 # seq2 = seq2[seq2 != seqs[1]._gap_codes]
 
-            idx1, idx2 = int(self.starts[0]), int(self.starts[1])
+            idx1, idx2 = self.starts
 
             for length, state in zip(self.lengths, states):
                 if state == 0:
+                    # x = seq1[idx1:idx1 + length] == seq2[idx2:idx2 + length]
+                    # this give boolean vector
+                    # np.array(["X", "="])[x]
+                    # or
+                    # np.where(x, "=", "X")
                     for i in range(length):
+                        # looping anyway right here, specify transient variable
+                        # _prev_cigar, increase counter if prev_cigar == current_char
+
+                        # check if this line is needed. if it is not, then can use
+                        # array tricks mentioned above.
                         if idx1 < len(seq1) and idx2 < len(seq2):
                             print(f"seqs: {seq1, seq2}")
                             print(f"{idx1, idx2}")
-                            if seq1[idx1] == seq2[idx2]:
-                                cigar.append("=")
-                            else:
-                                cigar.append("X")
+                            cigar.append("X="[seq1[idx1] == seq2[idx2]])
+                            # if seq1[idx1] == seq2[idx2]:
+                            #     cigar.append("=")
+                            # else:
+                            #     cigar.append("X")
                         idx1 += 1
                         idx2 += 1
                 elif state == 1:
@@ -322,6 +333,8 @@ class PairAlignPath(AlignPath):
         else:
             for i, length in enumerate(self.lengths):
                 cigar.append(str(length) + codes[states[i]])
+
+            # ''.join(f'{L}{C}' for )
 
             cigar_str = "".join(cigar)
 
