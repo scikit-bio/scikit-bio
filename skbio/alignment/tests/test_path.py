@@ -109,7 +109,8 @@ class TestAlignPath(unittest.TestCase):
 
         # test invalid gap
         with self.assertRaises(ValueError,
-                               msg="Gap must be an integer, float, 'del', or 'mask'."):
+                               msg="Gap must be an integer, np.nan, np.inf, 'del', "
+                                 "or 'mask'."):
             obj.to_indices(gap="no")
 
     def test_from_indices(self):
@@ -240,7 +241,7 @@ class TestPairAlignPath(unittest.TestCase):
         seq2 = 'GTA---ATTA-'
         seqs = [seq1, seq2]
         with self.assertRaises(ValueError,
-                               msg="Gap must be an integer, float, 'del', or 'mask'."):
+                               msg="`seqs` must be of type string or Sequence object."):
             obs = obj.to_cigar(seqs=seqs)
 
     def test_from_bits(self):

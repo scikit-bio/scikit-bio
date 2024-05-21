@@ -146,20 +146,25 @@ class AlignPath(SkbioObject):
 
         Parameters
         ----------
-        gap : int, float, "del", or "mask", optional
-            If int or float, replace gaps with this value. If "del", delete columns
+        gap : int, np.nan, np.inf, "del", or "mask", optional
+            If numeric, replace gaps with this value. If "del", delete columns
             that have any gap. If "mask", mask gaps. Default is -1.
         """
         valid_gaps = {"del", "mask"}
         if isinstance(gap, str):
             if gap not in valid_gaps:
-                raise ValueError("Gap must be an integer, float, 'del', or 'mask'.")
-        elif not (
-            np.issubdtype(type(gap), np.integer)
-            or np.issubdtype(type(gap), np.floating)
-            or isinstance(gap, (int, float))
-        ):
-            raise ValueError("Gap must be an integer, float, 'del', or 'mask'.")
+                raise ValueError(
+                    "Gap must be an integer, np.nan, np.inf, 'del', " "or 'mask'."
+                )
+        elif isinstance(gap, float):
+            if not (np.isnan(gap) or np.isinf(gap)):
+                raise ValueError(
+                    "Gap must be an integer, np.nan, np.inf, 'del', " "or 'mask'."
+                )
+        elif not np.issubdtype(type(gap), np.integer):
+            raise ValueError(
+                "Gap must be an integer, np.nan, np.inf, 'del', or " "'mask'."
+            )
 
         bits = np.squeeze(self.to_bits())
         # TODO: Consider optimization using np.arange.
