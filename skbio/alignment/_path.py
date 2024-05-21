@@ -73,12 +73,17 @@ class AlignPath(SkbioObject):
 
     @classonlymethod
     def from_bits(cls, bits):
-        r"""Create an alignment path from a bit array (0 - char, 1 - gap).
+        r"""Create an alignment path from a bit array (0 - character, 1 - gap).
 
         Parameters
         ----------
-        bits : array_like of 0's and 1's of shape (n_seqs, alignment_length)
-            Array of zeros (char) and ones (gap) which represent the alignment.
+        bits : array_like of 0's and 1's of shape (n_seqs, n_positions)
+            Array of zeros (character) and ones (gap) which represent the alignment.
+
+        Returns
+        -------
+        AlignPath
+            The alignment path created from the given bit array.
         """
         # Pack bits into integers.
         ints = np.packbits(bits, axis=0, bitorder="little")
@@ -118,8 +123,13 @@ class AlignPath(SkbioObject):
         ----------
         msa : TabularMSA object
             TabularMSA to be converted into AlignPath object.
+
+        Returns
+        -------
+        AlignPath
+            The alignment path created from the TabularMSA object.
         """
-        # Convert TabularMSA in to a 2D array of bytes.
+        # Convert TabularMSA into a 2D array of bytes.
         # TODO: TabularMSA itself should be refactored to have this as the default data
         # structure.
         byte_arr = np.stack([x._bytes for x in msa._seqs])
@@ -136,9 +146,9 @@ class AlignPath(SkbioObject):
 
         Parameters
         ----------
-        gap : -1, "del", or "mask", default=-1
+        gap : -1, "del", or "mask", optional
             If -1, replace gaps with this value. If "del", delete columns that have any
-            gap. If "mask", mask gaps.
+            gap. If "mask", mask gaps. Default is -1.
         """
         valid_gaps = {-1, "del", "mask"}
         if gap not in valid_gaps:
@@ -163,12 +173,17 @@ class AlignPath(SkbioObject):
 
         Parameters
         ----------
-        indices : array_like of int of shape (n_seqs, alignment_length)
+        indices : array_like of int of shape (n_seqs, n_positions)
             Each element in the array is the index in the corresponding sequence.
-        gap : int or "mask", default=-1
+        gap : int or "mask", optional
             The value which represents a gap in the alignment. Defaults to -1, but
             can be other values. If "mask", `indices` must be a masked array. Cannot
             use "del".
+
+        Returns
+        -------
+        AlignPath
+            The alignment path created from the given indices.
         """
         if gap == "mask":
             return cls.from_bits(np.ma.getmask(indices))
@@ -191,6 +206,11 @@ class AlignPath(SkbioObject):
         coords : array_like of int of shape (n_seqs, n_segments)
             Array where each value defines the start positions (index) of each segment
             for each sequence.
+
+        Returns
+        -------
+        AlignPath
+            The alignment path created from the given coordinates.
         """
         diff = np.diff(coords)
         bits = diff == 0
@@ -238,8 +258,13 @@ class PairAlignPath(AlignPath):
 
         Parameters
         ----------
-        bits : array_like of 0's and 1's of shape (n_seqs, alignment_length)
-            Array of zeros (char) and ones (gap) which represent the alignment.
+        bits : array_like of 0's and 1's of shape (n_seqs, n_positions)
+            Array of zeros (character) and ones (gap) which represent the alignment.
+
+        Returns
+        -------
+        PairAlignPath
+            The alignment path of the provided bit array.
         """
         # Ensure bits is a 2D array-like of ones and zeros.
         if not isinstance(bits, np.ndarray):
@@ -268,10 +293,11 @@ class PairAlignPath(AlignPath):
 
         Parameters
         ----------
-        seqs : list of skbio.sequence
-            Pair of aligned sequences to generate cigar string. If provided, will
-            distinguish match (=) and mismatch (X). Otherwise, will uniformly note
-            them as (mis)match (M).
+        seqs : list of skbio.Sequence or list of string
+            A pair of sequences to generate CIGAR string. If provided, will
+            distinguish match (``=``) and mismatch (``X``). Otherwise, will uniformly
+            note them as (mis)match (``M``). The first sequence in the list is the
+            query sequence, the second is the reference sequence.
         """
         cigar = []
 
@@ -331,6 +357,11 @@ class PairAlignPath(AlignPath):
         ----------
         cigar : str
             CIGAR format string used to build the PairAlignPath.
+
+        Returns
+        -------
+        AlignPath
+            The alignment path created from the given CIGAR string.
         """
         # Make sure cigar is not empty.
         if not cigar:
@@ -368,7 +399,7 @@ class PairAlignPath(AlignPath):
         lengths, gaps = cls._fix_arrays(lengths=np.array(lengths), gaps=np.array(gaps))
         return cls(lengths, gaps, [0, 0])
 
-    def _run_length_encode(self, string_in):
+    def _run_length_encode(string_in):
         r"""Perform run length encoding on a string.
 
         Parameters
