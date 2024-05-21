@@ -274,71 +274,54 @@ class PairAlignPath(AlignPath):
             them as (mis)match (M).
         """
         cigar = []
-        # remove codes from this function, see GeneticCode for example
-        codes = ["M", "I", "D", "P"]
 
         states = np.squeeze(self.states)
 
         if seqs is not None:
-            # # test if seqs is strings or Sequence object or something else
+            # test if seqs is strings or Sequence object or something else
             if isinstance(seqs[0], str) and isinstance(seqs[1], str):
                 seq1 = np.array([ord(char) for char in str(seqs[0])])
                 seq2 = np.array([ord(char) for char in str(seqs[1])])
-
-            # get bytes with gaps removed
-            if isinstance(seqs[0], GrammaredSequence) and isinstance(
+            elif isinstance(seqs[0], GrammaredSequence) and isinstance(
                 seqs[1], GrammaredSequence
             ):
                 seq1 = seqs[0]._bytes
                 seq2 = seqs[1]._bytes
-                # remove gap characters
-                # seq1 = seq1[seq1 != seqs[0]._gap_codes]
-                # seq2 = seq2[seq2 != seqs[1]._gap_codes]
+            else:
+                raise ValueError("`seqs` must be of type string or Sequence object.")
 
-            idx1, idx2 = self.starts
+            idx1, idx2 = [int(x) for x in self.starts]
 
             for length, state in zip(self.lengths, states):
                 if state == 0:
-                    # x = seq1[idx1:idx1 + length] == seq2[idx2:idx2 + length]
-                    # this give boolean vector
-                    # np.array(["X", "="])[x]
-                    # or
-                    # np.where(x, "=", "X")
-                    for i in range(length):
-                        # looping anyway right here, specify transient variable
-                        # _prev_cigar, increase counter if prev_cigar == current_char
-
-                        # check if this line is needed. if it is not, then can use
-                        # array tricks mentioned above.
-                        if idx1 < len(seq1) and idx2 < len(seq2):
-                            print(f"seqs: {seq1, seq2}")
-                            print(f"{idx1, idx2}")
-                            cigar.append("X="[seq1[idx1] == seq2[idx2]])
-                            # if seq1[idx1] == seq2[idx2]:
-                            #     cigar.append("=")
-                            # else:
-                            #     cigar.append("X")
-                        idx1 += 1
-                        idx2 += 1
+                    x = seq1[idx1 : idx1 + length] == seq2[idx2 : idx2 + length]
+                    char_arr = np.where(x, "=", "X")
+                    n = len(char_arr)
+                    result = ""
+                    count = 1
+                    curr_char = char_arr[0]
+                    for i in range(1, n):
+                        if char_arr[i] == curr_char:
+                            count += 1
+                        else:
+                            result += str(count) + curr_char
+                            curr_char = char_arr[i]
+                            count = 1
+                    result += str(count) + curr_char
+                    cigar.append(result)
+                    idx1 += 1
+                    idx2 += 1
                 elif state == 1:
-                    cigar.extend(["I"] * length)
+                    cigar.append(str(length) + "I")
                     idx2 += length
                 elif state == 2:
-                    cigar.extend(["D"] * length)
+                    cigar.append(str(length) + "D")
                     idx1 += length
                 elif state == 3:
-                    cigar.extend(["P"] * length)
-            cigar_str = self._run_length_encode("".join(cigar))
-
+                    cigar.append(str(length) + "P")
+            return "".join(cigar)
         else:
-            for i, length in enumerate(self.lengths):
-                cigar.append(str(length) + codes[states[i]])
-
-            # ''.join(f'{L}{C}' for )
-
-            cigar_str = "".join(cigar)
-
-        return cigar_str
+            return "".join(f"{L}{C}" for L, C in zip(self.lengths, codes[states]))
 
     @classonlymethod
     def from_cigar(cls, cigar):
@@ -419,3 +402,6 @@ class PairAlignPath(AlignPath):
         lengths_out = np.asarray(np.bincount(groups, weights=lengths).astype(int)[1:])
 
         return lengths_out, gaps_out
+
+
+codes = np.array(["M", "I", "D", "P"])

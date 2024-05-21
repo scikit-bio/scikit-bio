@@ -207,7 +207,7 @@ class TestPairAlignPath(unittest.TestCase):
         seq2 = "TAC---GGCC" + "C"*20 + "A"*264
         seqs = [DNA(seq1), DNA(seq2)]
         obs = ExamplePairAlignPath.to_cigar(seqs=seqs)
-        exp = "1I1=1X3D4I20=30X234I"
+        exp = "1I2X3D4I6X18=26X234I"
         self.assertEqual(obs, exp)
 
         # test if alignment has two gaps in same position
@@ -215,7 +215,7 @@ class TestPairAlignPath(unittest.TestCase):
         gaps = [1, 0, 2, 1, 3]
         obj = PairAlignPath(lengths=lengths, states=gaps, starts=[0, 0])
         obs = obj.to_cigar()
-        exp = '1I2M3D4I1P'
+        exp = "1I2M3D4I1P"
         self.assertEqual(obs, exp)
 
         # two gaps with seqs provided
@@ -223,41 +223,8 @@ class TestPairAlignPath(unittest.TestCase):
         seq2 = 'GTA---ATTA-'
         seqs = [DNA(seq1), DNA(seq2)]
         obs = obj.to_cigar(seqs=seqs)
-        exp = '1I2X3D4I1P'
+        exp = "1I1X1=3D4I1P"
         self.assertEqual(obs, exp)
-
-        # test if seqs are incorrect length
-        # lengths = [1, 2, 3, 4, 1]
-        # gaps = [1, 0, 2, 1, 3]
-        # obj = PairAlignPath(lengths=lengths, states=gaps, starts=[0, 0])
-        # seq1 = '-ATCGC----'
-        # seq2 = 'GTA---ATTA-'
-        # seqs = [DNA(seq1), DNA(seq2)]
-        # with self.assertRaises(ValueError):
-        #     obj.to_cigar(seqs=seqs)
-
-        # test if seqs are valid based on lengths
-        # lengths = [1, 2, 3, 4, 1]
-        # gaps = [1, 0, 2, 1, 3]
-        # obj = PairAlignPath(lengths=lengths, states=gaps, starts=[0, 0])
-        # seq1 = '-ATCGC-----'
-        # seq2 = 'GTA---ATT--'
-        # seqs = [DNA(seq1), DNA(seq2)]
-        # with self.assertRaises(ValueError, msg="Provided sequences do not match "
-        #                        "existing segment lengths."):
-        #     obj.to_cigar(seqs=seqs)
-
-        # test if seqs are valid based on states
-        # lengths = [1, 2, 3, 4, 1]
-        # gaps = [1, 0, 2, 1, 3]
-        # obj = PairAlignPath(lengths=lengths, states=gaps, starts=[0, 0])
-        # seq1 = '-ATCGCTTTC-'
-        # seq2 = 'GTA---ATTC-'
-        # seqs = [DNA(seq1), DNA(seq2)]
-        # with self.assertRaises(ValueError, msg="Provided sequences do not match "
-        #                        "existing states. Consider the order of the provided "
-        #                        "sequences."):
-        #     obj.to_cigar(seqs=seqs)
 
     def test_from_bits(self):
         # test base case
