@@ -108,8 +108,9 @@ class TestAlignPath(unittest.TestCase):
         npt.assert_array_equal(obs, exp)
 
         # test invalid gap
-        with self.assertRaises(ValueError, msg="Gap must be -1, 'del', or 'mask'."):
-            obj.to_indices(gap=2)
+        with self.assertRaises(ValueError,
+                               msg="Gap must be an integer, float, 'del', or 'mask'."):
+            obj.to_indices(gap="no")
 
     def test_from_indices(self):
         # test no mask
@@ -225,6 +226,23 @@ class TestPairAlignPath(unittest.TestCase):
         obs = obj.to_cigar(seqs=seqs)
         exp = "1I1X1=3D4I1P"
         self.assertEqual(obs, exp)
+
+        # test sequences as strings
+        seq1 = '-ATCGC-----'
+        seq2 = 'GTA---ATTA-'
+        seqs = [seq1, seq2]
+        obs = obj.to_cigar(seqs=seqs)
+        exp = "1I1X1=3D4I1P"
+        self.assertEqual(obs, exp)
+
+        # test invalid sequence input
+        seq1 = 1
+        seq2 = 'GTA---ATTA-'
+        seqs = [seq1, seq2]
+        with self.assertRaises(ValueError,
+                               msg="Gap must be an integer, float, 'del', or 'mask'."):
+            obs = obj.to_cigar(seqs=seqs)
+
 
     def test_from_bits(self):
         # test base case
