@@ -19,7 +19,7 @@ from skbio.sequence import DNA
 class TestAlignPath(unittest.TestCase):
     def test_init(self):
         # test 1-D starts vector
-        with self.assertRaises(ValueError, msg="`starts` must be a 1-D vector."):
+        with self.assertRaises(TypeError, msg="`starts` must be a 1-D vector."):
             obj = AlignPath(lengths=[1, 2, 3], states=[1, 2, 3], starts=[[0], [0]])
         
         # test states and starts matching
@@ -133,7 +133,7 @@ class TestAlignPath(unittest.TestCase):
         npt.assert_array_equal(obs, exp)
 
         # test invalid gap
-        with self.assertRaises(ValueError,
+        with self.assertRaises(TypeError,
                                msg="Gap must be an integer, np.nan, np.inf, 'del', "
                                  "or 'mask'."):
             obj.to_indices(gap="no")
@@ -265,7 +265,7 @@ class TestPairAlignPath(unittest.TestCase):
         seq1 = 1
         seq2 = 'GTA---ATTA-'
         seqs = [seq1, seq2]
-        with self.assertRaises(ValueError,
+        with self.assertRaises(TypeError,
                                msg="`seqs` must be of type string or Sequence object."):
             obs = obj.to_cigar(seqs=seqs)
 
@@ -282,13 +282,13 @@ class TestPairAlignPath(unittest.TestCase):
 
         # test empty bit array
         bits = np.array(([],[]))
-        with self.assertRaises(ValueError,
+        with self.assertRaises(TypeError,
                                msg="Input 'bits' must be a non-empty 2D numpy array."):
             PairAlignPath.from_bits(bits)
 
         # test 1D bit array
         bits = np.array([0, 0, 1])
-        with self.assertRaises(ValueError,
+        with self.assertRaises(TypeError,
                                msg="Input 'bits' must be a non-empty 2D numpy array."):
             PairAlignPath.from_bits(bits)
 

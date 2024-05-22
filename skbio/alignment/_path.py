@@ -50,6 +50,9 @@ class AlignPath(SkbioObject):
     skbio.sequence.Sequence
     skbio.alignment.TabularMSA
 
+    Examples
+    --------
+
     """
 
     def __init__(self, lengths, states, starts):
@@ -62,7 +65,7 @@ class AlignPath(SkbioObject):
         # start positions
         self._starts = np.asarray(starts, dtype=np.int64)
         if self._starts.ndim > 1:
-            raise ValueError("`starts` must be a 1-D vector.")
+            raise TypeError("`starts` must be a 1-D vector.")
         n_seqs = self._starts.size
         if np.ceil(n_seqs / 8) != self._states.shape[0]:
             raise ValueError("Sizes of `starts` and `states` do not match.")
@@ -198,16 +201,16 @@ class AlignPath(SkbioObject):
         valid_gaps = {"del", "mask"}
         if isinstance(gap, str):
             if gap not in valid_gaps:
-                raise ValueError(
+                raise TypeError(
                     "Gap must be an integer, np.nan, np.inf, 'del', " "or 'mask'."
                 )
         elif isinstance(gap, float):
             if not (np.isnan(gap) or np.isinf(gap)):
-                raise ValueError(
+                raise TypeError(
                     "Gap must be an integer, np.nan, np.inf, 'del', " "or 'mask'."
                 )
         elif not np.issubdtype(type(gap), np.integer):
-            raise ValueError(
+            raise TypeError(
                 "Gap must be an integer, np.nan, np.inf, 'del', or " "'mask'."
             )
 
@@ -327,7 +330,7 @@ class PairAlignPath(AlignPath):
         if not isinstance(bits, np.ndarray):
             bits = np.atleast_2d(bits)
         if bits.ndim != 2 or bits.shape[1] == 0:
-            raise ValueError("Input 'bits' must be a non-empty 2D numpy array.")
+            raise TypeError("Input 'bits' must be a non-empty 2D numpy array.")
         if not (np.logical_or(bits == 0, bits == 1).all()):
             raise ValueError("Input 'bits' must contain only zeros and ones.")
 
@@ -369,7 +372,7 @@ class PairAlignPath(AlignPath):
                 seq1 = seqs[0]._bytes
                 seq2 = seqs[1]._bytes
             else:
-                raise ValueError("`seqs` must be strings or Sequence objects.")
+                raise TypeError("`seqs` must be strings or Sequence objects.")
 
             idx1, idx2 = self._starts
 
