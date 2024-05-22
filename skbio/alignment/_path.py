@@ -6,11 +6,30 @@
 # The full license is in the file LICENSE.txt, distributed with this software.
 # ----------------------------------------------------------------------------
 
+import collections
+
 import numpy as np
 
 from skbio._base import SkbioObject
 from skbio.util._decorator import classonlymethod
 from skbio.sequence import Sequence
+
+
+_Shape = collections.namedtuple("Shape", ["sequence", "position"])
+
+_cigar_codes = np.array(["M", "I", "D", "P"])
+
+_cigar_mapping = {
+    "M": 0,
+    "I": 1,
+    "D": 2,
+    "P": 3,
+    "=": 0,
+    "X": 0,
+    "N": 2,
+    "S": 1,
+    "H": 3,
+}
 
 
 class AlignPath(SkbioObject):
@@ -36,21 +55,21 @@ class AlignPath(SkbioObject):
     def __init__(self, lengths, states, starts):
         # Number of sequences needs to be explicitly provided, because the packed bits
         # does not contain this information. (It is merely in multiples of 8.)
-        self.lengths = np.asarray(lengths, dtype=np.int64)
-        self.n_positions = self.lengths.sum()
-        self.states = np.atleast_2d(np.asarray(states, dtype=np.uint8))
+        self._lengths = np.asarray(lengths, dtype=np.int64)
+        n_positions = self._lengths.sum()
+        self._states = np.atleast_2d(np.asarray(states, dtype=np.uint8))
 
         # start positions
-        self.starts = np.asarray(starts, dtype=np.int64)
-        if self.starts.ndim > 1:
+        self._starts = np.asarray(starts, dtype=np.int64)
+        if self._starts.ndim > 1:
             raise ValueError("`starts` must be a 1-D vector.")
-        self.n_seqs = self.starts.size
-        if np.ceil(self.n_seqs / 8) != self.states.shape[0]:
+        n_seqs = self._starts.size
+        if np.ceil(n_seqs / 8) != self._states.shape[0]:
             raise ValueError("Sizes of `starts` and `states` do not match.")
 
         # Shape is n_seqs (rows) x n_positions (columns), which is consistent with
         # TabularMSA
-        self.shape = (self.n_seqs, self.n_positions)
+        self._shape = _Shape(sequence=n_seqs, position=n_positions)
 
     def __str__(self):
         r"""Return string representation of this AlignPath."""
@@ -61,14 +80,40 @@ class AlignPath(SkbioObject):
     def __repr__(self):
         r"""Return summary of the alignment path."""
         return (
-            f"<{self.__class__.__name__}, shape: {self.shape}, lengths: "
-            f"{self.lengths}, states: {self.states}>"
+            f"<{self.__class__.__name__}, shape: {self._shape}, lengths: "
+            f"{self._lengths}, states: {self._states}>"
         )
+
+    @property
+    def lengths(self):
+        """Array of lengths of segments in alignment path."""
+        return self._lengths
+
+    @property
+    def states(self):
+        """Array of gap status of segments in alignment path."""
+        return self._states
+
+    @property
+    def starts(self):
+        """Array of start indices for each sequence in the alignment."""
+        return self._starts
+
+    @property
+    def shape(self):
+        """Number of sequences (rows) and positions (columns).
+
+        Notes
+        -----
+        This property is not writeable.
+
+        """
+        return self._shape
 
     def to_bits(self):
         r"""Unpack states into an array of bits."""
         return np.unpackbits(
-            np.atleast_2d(self.states), axis=0, count=self.shape[0], bitorder="little"
+            np.atleast_2d(self._states), axis=0, count=self._shape[0], bitorder="little"
         )
 
     @classonlymethod
@@ -169,10 +214,10 @@ class AlignPath(SkbioObject):
         bits = np.squeeze(self.to_bits())
         # TODO: Consider optimization using np.arange.
         # thought: initiate [-1, -1, -1 ... -1], then add slices of arange into it
-        pos = np.repeat(1 - bits, self.lengths, axis=1)
+        pos = np.repeat(1 - bits, self._lengths, axis=1)
         idx = np.cumsum(pos, axis=1, dtype=int) - 1
         if gap == "del":
-            keep = np.repeat(self.states == 0, self.lengths)
+            keep = np.repeat(self._states == 0, self._lengths)
             return idx[:, keep]
         elif gap == "mask":
             return np.ma.array(idx, mask=(1 - pos))
@@ -204,8 +249,8 @@ class AlignPath(SkbioObject):
 
     def to_coordinates(self):
         r"""Generate an array of segment coordinates in the original sequences."""
-        lens = self.lengths * (1 - self.to_bits())
-        col0 = np.zeros((self.shape[0], 1), dtype=int)
+        lens = self._lengths * (1 - self.to_bits())
+        col0 = np.zeros((self._shape[0], 1), dtype=int)
         lens = np.append(col0, lens, axis=1)
         return lens.cumsum(axis=1)
 
@@ -260,7 +305,7 @@ class PairAlignPath(AlignPath):
     def __repr__(self):
         r"""Return summary of the alignment path."""
         return (
-            f"<{self.__class__.__name__}, shape: {self.shape}, "
+            f"<{self.__class__.__name__}, shape: {self._shape}, "
             f"CIGAR: '{self.to_cigar()}'>"
         )
 
@@ -293,12 +338,12 @@ class PairAlignPath(AlignPath):
 
     def to_bits(self):
         r"""Unpack states into an array of bits."""
-        if not np.all(np.isin(self.states, [0, 1, 2, 3])):
+        if not np.all(np.isin(self._states, [0, 1, 2, 3])):
             raise ValueError(
                 "For pairwise alignment, `states` must only contain "
                 "zeros, ones, twos, or threes."
             )
-        return np.stack([self.states & 1, self.states >> 1])
+        return np.stack([self._states & 1, self._states >> 1])
 
     def to_cigar(self, seqs=None):
         r"""Generate a CIGAR string representing the pairwise alignment path.
@@ -313,7 +358,7 @@ class PairAlignPath(AlignPath):
         """
         cigar = []
 
-        states = np.squeeze(self.states)
+        states = np.squeeze(self._states)
 
         if seqs is not None:
             # test if seqs is strings or Sequence object or something else
@@ -326,9 +371,9 @@ class PairAlignPath(AlignPath):
             else:
                 raise ValueError("`seqs` must be strings or Sequence objects.")
 
-            idx1, idx2 = self.starts
+            idx1, idx2 = self._starts
 
-            for length, state in zip(self.lengths, states):
+            for length, state in zip(self._lengths, states):
                 if state == 0:
                     match_arr = seq1[idx1 : idx1 + length] == seq2[idx2 : idx2 + length]
                     char_arr = np.where(match_arr, "=", "X")
@@ -356,7 +401,7 @@ class PairAlignPath(AlignPath):
             return "".join(cigar)
         else:
             return "".join(
-                f"{L}{C}" for L, C in zip(self.lengths, _cigar_codes[states])
+                f"{L}{C}" for L, C in zip(self._lengths, _cigar_codes[states])
             )
 
     @classonlymethod
@@ -433,18 +478,3 @@ def _run_length_encode(string_in):
     encoded_str = "".join(str(c) + u for c, u in zip(count, unique))
 
     return encoded_str
-
-
-_cigar_codes = np.array(["M", "I", "D", "P"])
-
-_cigar_mapping = {
-    "M": 0,
-    "I": 1,
-    "D": 2,
-    "P": 3,
-    "=": 0,
-    "X": 0,
-    "N": 2,
-    "S": 1,
-    "H": 3,
-}

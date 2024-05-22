@@ -28,6 +28,31 @@ class TestAlignPath(unittest.TestCase):
             obj = AlignPath(lengths=[1, 2, 3], states=[1, 2, 3],
                             starts=[0, 0, 0, 0, 0, 0, 0, 0, 0, 0])
     
+    def test_lengths(self):
+        obs = AlignPath(lengths=[3, 2, 5, 1, 4, 3, 2],
+                        states=[0, 2, 0, 6, 0, 1, 0],
+                        starts=[0, 0, 0]).lengths
+        npt.assert_array_equal(obs, np.array([3, 2, 5, 1, 4, 3, 2], dtype=np.int64))
+
+    def test_states(self):
+        obs = AlignPath(lengths=[3, 2, 5, 1, 4, 3, 2],
+                        states=[0, 2, 0, 6, 0, 1, 0],
+                        starts=[0, 0, 0]).states
+        npt.assert_array_equal(obs, np.array([[0, 2, 0, 6, 0, 1, 0]], dtype=np.uint8))
+    
+    def test_starts(self):
+        obs = AlignPath(lengths=[3, 2, 5, 1, 4, 3, 2],
+                        states=[0, 2, 0, 6, 0, 1, 0],
+                        starts=[0, 0, 0]).starts
+        npt.assert_array_equal(obs, np.array([0, 0, 0], dtype=np.int64))
+    
+    def test_shape(self):
+        obs = AlignPath(lengths=[3, 2, 5, 1, 4, 3, 2],
+                        states=[0, 2, 0, 6, 0, 1, 0],
+                        starts=[0, 0, 0]).shape
+        self.assertEqual(obs.sequence, 3)
+        self.assertEqual(obs.position, 20)
+
     def test_to_bits(self):
         obj = AlignPath(lengths=[3, 2, 5, 1, 4, 3, 2],
                         states=[0, 2, 0, 6, 0, 1, 0],
