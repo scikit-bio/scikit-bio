@@ -10,7 +10,7 @@ import numpy as np
 
 from skbio._base import SkbioObject
 from skbio.util._decorator import classonlymethod
-from skbio.sequence import GrammaredSequence
+from skbio.sequence import Sequence
 
 
 class AlignPath(SkbioObject):
@@ -301,11 +301,11 @@ class PairAlignPath(AlignPath):
         return np.stack([self.states & 1, self.states >> 1])
 
     def to_cigar(self, seqs=None):
-        r"""Get a CIGAR string representing the pairwise alignment path.
+        r"""Generate a CIGAR string representing the pairwise alignment path.
 
         Parameters
         ----------
-        seqs : list of skbio.Sequence or list of string
+        seqs : list of skbio.Sequence or string
             A pair of sequences to generate CIGAR string. If provided, will
             distinguish match (``=``) and mismatch (``X``). Otherwise, will uniformly
             note them as (mis)match (``M``). The first sequence in the list is the
@@ -318,37 +318,33 @@ class PairAlignPath(AlignPath):
         if seqs is not None:
             # test if seqs is strings or Sequence object or something else
             if isinstance(seqs[0], str) and isinstance(seqs[1], str):
-                seq1 = np.array([ord(char) for char in str(seqs[0])])
-                seq2 = np.array([ord(char) for char in str(seqs[1])])
-            elif isinstance(seqs[0], GrammaredSequence) and isinstance(
-                seqs[1], GrammaredSequence
-            ):
+                seq1 = np.frombuffer(seqs[0].encode("ascii"), dtype=np.uint8)
+                seq2 = np.frombuffer(seqs[1].encode("ascii"), dtype=np.uint8)
+            elif isinstance(seqs[0], Sequence) and isinstance(seqs[1], Sequence):
                 seq1 = seqs[0]._bytes
                 seq2 = seqs[1]._bytes
             else:
-                raise ValueError("`seqs` must be of type string or Sequence object.")
+                raise ValueError("`seqs` must be strings or Sequence objects.")
 
             idx1, idx2 = [int(x) for x in self.starts]
 
             for length, state in zip(self.lengths, states):
                 if state == 0:
-                    x = seq1[idx1 : idx1 + length] == seq2[idx2 : idx2 + length]
-                    char_arr = np.where(x, "=", "X")
+                    match_arr = seq1[idx1 : idx1 + length] == seq2[idx2 : idx2 + length]
+                    char_arr = np.where(match_arr, "=", "X")
                     n = len(char_arr)
-                    result = ""
                     count = 1
                     curr_char = char_arr[0]
                     for i in range(1, n):
                         if char_arr[i] == curr_char:
                             count += 1
                         else:
-                            result += str(count) + curr_char
+                            cigar.append(str(count) + curr_char)
                             curr_char = char_arr[i]
                             count = 1
-                    result += str(count) + curr_char
-                    cigar.append(result)
-                    idx1 += 1
-                    idx2 += 1
+                    cigar.append(str(count) + curr_char)
+                    idx1 += length
+                    idx2 += length
                 elif state == 1:
                     cigar.append(str(length) + "I")
                     idx2 += length

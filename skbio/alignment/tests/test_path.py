@@ -209,7 +209,7 @@ class TestPairAlignPath(unittest.TestCase):
         seq2 = "TAC---GGCC" + "C"*20 + "A"*264
         seqs = [DNA(seq1), DNA(seq2)]
         obs = ExamplePairAlignPath.to_cigar(seqs=seqs)
-        exp = "1I2X3D4I6X18=26X234I"
+        exp = "1I2X3D4I5X18=27X234I"
         self.assertEqual(obs, exp)
 
         # test if alignment has two gaps in same position
