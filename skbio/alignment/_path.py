@@ -355,7 +355,9 @@ class PairAlignPath(AlignPath):
                     cigar.append(str(length) + "P")
             return "".join(cigar)
         else:
-            return "".join(f"{L}{C}" for L, C in zip(self.lengths, codes[states]))
+            return "".join(
+                f"{L}{C}" for L, C in zip(self.lengths, _cigar_codes[states])
+            )
 
     @classonlymethod
     def from_cigar(cls, cigar):
@@ -383,12 +385,12 @@ class PairAlignPath(AlignPath):
             if char.isdigit():
                 no_ones = False
                 current_length = current_length * 10 + int(char)
-            elif char in mapping:
+            elif char in _cigar_mapping:
                 if no_ones:
                     lengths.append(current_length + 1)
                 else:
                     lengths.append(current_length)
-                gaps.append(mapping[char])
+                gaps.append(_cigar_mapping[char])
                 current_length = 0
                 no_ones = True
             else:
@@ -433,9 +435,9 @@ def _run_length_encode(string_in):
     return encoded_str
 
 
-codes = np.array(["M", "I", "D", "P"])
+_cigar_codes = np.array(["M", "I", "D", "P"])
 
-mapping = {
+_cigar_mapping = {
     "M": 0,
     "I": 1,
     "D": 2,
