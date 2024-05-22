@@ -226,12 +226,12 @@ def _line_generator(fh, skip_blanks=False, strip=True):
             yield line
 
 
-def _too_many_blanks(fh, max_blanks, getheader=False):
+def _too_many_blanks(fh, max_blanks):
     count = 0
     too_many = False
-    header = iter([])
+    consumed = []
     for line in _line_generator(fh, skip_blanks=False):
-        header = chain(header, iter([line]))
+        consumed += [line]
         if line:
             break
         else:
@@ -243,7 +243,4 @@ def _too_many_blanks(fh, max_blanks, getheader=False):
         fh.seek(0)
     except io.UnsupportedOperation:
         pass
-    if getheader:
-        return too_many, header
-    else:
-        return too_many
+    return too_many, consumed

@@ -629,7 +629,7 @@ fasta = create_format("fasta", header=False)
 
 
 @fasta.sniffer()
-def _fasta_sniffer(fh, getheader=False):
+def _fasta_sniffer(fh):
     # Strategy:
     #   Ignore up to 5 blank/whitespace-only lines at the beginning of the
     #   file. Read up to 10 records. If at least one record is read (i.e.
@@ -640,37 +640,24 @@ def _fasta_sniffer(fh, getheader=False):
     #   not be validated but it probably isn't what the user wanted). Also, if
     #   we add QUAL as its own file format in the future, we wouldn't want the
     #   FASTA and QUAL sniffers to both positively identify a QUAL file.
-    blanks, header = _too_many_blanks(fh, 5, True)
+    blanks, consumed = _too_many_blanks(fh, 5)
     if blanks:
-        if getheader:
-            return False, {}, header
-        else:
-            return False, {}
-    fh = itertools.chain(header, fh)
-    header = iter([])
+        return False, {}, consumed
+    if not fh.seekable:
+        fh = itertools.chain(consumed, fh)
+
+    consumed = []
     num_records = 10
     empty = True
     try:
-        parser = _parse_fasta_raw(fh, _sniffer_data_parser, FASTAFormatError, True)
+        parser = _parse_fasta_raw(fh, _sniffer_data_parser, FASTAFormatError)
         for record in zip(range(num_records), parser):
-            header = itertools.chain(header, record[1][3])
+            consumed += record[1][3]
             empty = False
     except FASTAFormatError:
-        if getheader:
-            return False, {}, header
-        else:
-            return False, {}
+        return False, {}, consumed
 
-    if empty:
-        if getheader:
-            return False, {}, header
-        else:
-            return False, {}
-    else:
-        if getheader:
-            return True, {}, header
-        else:
-            return True, {}
+    return not empty, {}, consumed
 
 
 def _sniffer_data_parser(chunks):
@@ -688,7 +675,7 @@ def _sniffer_data_parser(chunks):
 @fasta.reader(None)
 def _fasta_to_generator(fh, qual=FileSentinel, constructor=Sequence, **kwargs):
     if qual is None:
-        for seq, id_, desc in _parse_fasta_raw(
+        for seq, id_, desc, _ in _parse_fasta_raw(
             fh, _parse_sequence_data, FASTAFormatError
         ):
             yield constructor(seq, metadata={"id": id_, "description": desc}, **kwargs)
@@ -704,8 +691,8 @@ def _fasta_to_generator(fh, qual=FileSentinel, constructor=Sequence, **kwargs):
             if qual_rec is None:
                 raise FASTAFormatError("FASTA file has more records than QUAL file.")
 
-            fasta_seq, fasta_id, fasta_desc = fasta_rec
-            qual_scores, qual_id, qual_desc = qual_rec
+            fasta_seq, fasta_id, fasta_desc, _ = fasta_rec
+            qual_scores, qual_id, qual_desc, _ = qual_rec
 
             if fasta_id != qual_id:
                 raise FASTAFormatError(
@@ -915,7 +902,7 @@ def _tabular_msa_to_fasta(
     )
 
 
-def _parse_fasta_raw(fh, data_parser, error_type, getconsumed=False):
+def _parse_fasta_raw(fh, data_parser, error_type):
     """Raw parser for FASTA or QUAL files.
 
     Returns raw values (seq/qual, id, description). It is the responsibility of
@@ -927,30 +914,23 @@ def _parse_fasta_raw(fh, data_parser, error_type, getconsumed=False):
         seq_header = next(_line_generator(fh, skip_blanks=True))
     except StopIteration:
         return
-
     # header check inlined here and below for performance
     if seq_header.startswith(">"):
         id_, desc = _parse_fasta_like_header(seq_header)
-        consumed = iter([seq_header])
+        consumed = [seq_header]
     else:
         raise error_type(
             "Found non-header line when attempting to read the 1st record:"
             "\n%s" % seq_header
         )
-    # print("WOOOO", seq_header)
     data_chunks = []
     prev = seq_header
     for line in _line_generator(fh, skip_blanks=False):
-        # print("Start of loop", line, data_chunks)
-        consumed = itertools.chain(consumed, iter([line]))
+        consumed += [line]
         if line.startswith(">"):
             # new header, so yield current record and reset state
-            if getconsumed:
-                yield data_parser(data_chunks), id_, desc, consumed
-            else:
-                yield data_parser(data_chunks), id_, desc
-            consumed = iter([])
-            # print("Resetting!", data_chunks)
+            yield data_parser(data_chunks), id_, desc, consumed
+            consumed = []
             data_chunks = []
             id_, desc = _parse_fasta_like_header(line)
         else:
@@ -963,11 +943,7 @@ def _parse_fasta_raw(fh, data_parser, error_type, getconsumed=False):
                 data_chunks.append(line)
         prev = line
     # yield last record in file
-    # print("Before Last Yield:", data_chunks)
-    if getconsumed:
-        yield data_parser(data_chunks), id_, desc, consumed
-    else:
-        yield data_parser(data_chunks), id_, desc
+    yield data_parser(data_chunks), id_, desc, consumed
 
 
 def _parse_sequence_data(chunks):

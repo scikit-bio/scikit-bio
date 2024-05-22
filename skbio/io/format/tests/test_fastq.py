@@ -129,16 +129,25 @@ class TestSniffer(unittest.TestCase):
 
     def test_positives(self):
         for fp in self.positives:
-            self.assertEqual(_fastq_sniffer(fp), (True, {}))
+            # ignore the 3rd element, as that is the consumed lines which vary from file to file
+            res = list(_fastq_sniffer(fp))
+            res[2] = []
+            self.assertEqual(tuple(res), (True, {}, []))
 
     def test_negatives(self):
         for fp in self.negatives:
-            self.assertEqual(_fastq_sniffer(fp), (False, {}))
+            # ignore the 3rd element, as that is the consumed lines which vary from file to file
+            res = list(_fastq_sniffer(fp))
+            res[2] = []
+            self.assertEqual(tuple(res), (False, {}, []))
 
     def test_illumina_sniffed(self):
         fp = get_data_path('fastq_single_seq_illumina1.8')
-        self.assertEqual(_fastq_sniffer(fp), (True, {'variant':
-                                                     'illumina1.8'}))
+        # ignore the 3rd element, as that is the consumed lines which vary from file to file
+        res = list(_fastq_sniffer(fp))
+        res[2] = []
+        self.assertEqual(tuple(res), (True, {'variant':
+                                                     'illumina1.8'}, []))
 
 
 class TestReaders(unittest.TestCase):

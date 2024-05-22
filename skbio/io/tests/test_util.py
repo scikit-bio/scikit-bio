@@ -637,18 +637,15 @@ class TestIterableReaderWriter(unittest.TestCase):
         self.assertTrue(fh.closed)
 
 class TestReadStandardInput(unittest.TestCase):
-    data_seq = ["THISISTESTDATANUMBERONE", "THISISTESTDATANUMBERTWO"]
-    data_id = ["test_1", "test_2"]
-    data_desc = ["TESTING DATA ONE", "TESTING DATA TWO"]
+    num_text = ["ONE", "TWO", "THREE", "FOUR", "FIVE", "SIX", "SEVEN"]
 
     def test_stdin_read(self):
         with patch('sys.stdin', io.StringIO(open(get_data_path("fasta_file.fna")).read())):
             inc = 0
             for r in skbio.read(sys.stdin, format="fasta"):
-                print(sys.stdin.tell())
-                self.assertEqual(str(r), self.data_seq[inc])
-                self.assertEqual(r.metadata["id"], self.data_id[inc])
-                self.assertEqual(r.metadata["description"], self.data_desc[inc])
+                self.assertEqual(str(r), "THISISTESTDATANUMBER" + self.num_text[inc])
+                self.assertEqual(r.metadata["id"], "test_" + str(inc + 1))
+                self.assertEqual(r.metadata["description"], "TESTING DATA " + self.num_text[inc])
                 inc += 1
 
 if __name__ == '__main__':

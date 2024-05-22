@@ -427,7 +427,9 @@ class IORegistry:
         matches = []
         for format in lookup.values():
             if format.sniffer_function is not None:
-                is_format, skwargs = format.sniffer_function(file, **kwargs)
+                res = format.sniffer_function(file, **kwargs)
+                is_format = res[0]
+                skwargs = res[1]
                 file.seek(0)
                 if is_format:
                     matches.append((format.name, skwargs))
@@ -503,7 +505,7 @@ class IORegistry:
     def _read_ret(self, file, fmt, into, verify, kwargs):
         io_kwargs = self._find_io_kwargs(kwargs)
         with _resolve_file(file, **io_kwargs) as (file, _, _):
-            reader, kwargs = self._init_reader(
+            reader, kwargs, _ = self._init_reader(
                 file, fmt, into, verify, kwargs, io_kwargs
             )
             return reader(file, **kwargs)
@@ -515,17 +517,19 @@ class IORegistry:
         # kwargs should still retain the contents of io_kwargs because the
         # actual reader will also need them.
         with _resolve_file(file, **io_kwargs) as (file, _, _):
-            reader, kwargs, header = self._init_reader(
-                file, fmt, into, verify, kwargs, io_kwargs, True
+            reader, kwargs, consumed = self._init_reader(
+                file, fmt, into, verify, kwargs, io_kwargs
             )
-            file = itertools.chain(header, file)
+            if consumed is not None and not file.seekable():
+                file = itertools.chain(consumed, file)
             yield from reader(file, **kwargs)
 
     def _find_io_kwargs(self, kwargs):
         return {k: kwargs[k] for k in _open_kwargs if k in kwargs}
 
-    def _init_reader(self, file, fmt, into, verify, kwargs, io_kwargs, getheader=False):
+    def _init_reader(self, file, fmt, into, verify, kwargs, io_kwargs):
         skwargs = {}
+        consumed = []
         if fmt is None:
             fmt, skwargs = self.sniff(file, **io_kwargs)
         elif verify:
@@ -533,11 +537,12 @@ class IORegistry:
             if sniffer is not None:
                 try:
                     backup = file.tell()
-                    is_format, skwargs = sniffer(file, **io_kwargs)
+                    res = sniffer(file, **io_kwargs)
+                    is_format = res[0]
+                    skwargs = res[1]
                     file.seek(backup)
-                    header = iter([])
                 except io.UnsupportedOperation:
-                    is_format, skwargs, header = sniffer(file, True, **io_kwargs)
+                    is_format, skwargs, consumed = sniffer(file, **io_kwargs)
                 if not is_format:
                     warn(
                         "%r does not look like a %s file" % (file, fmt),
@@ -573,10 +578,7 @@ class IORegistry:
                     message,
                 )
             )
-        if getheader:
-            return reader, kwargs, header
-        else:
-            return reader, kwargs
+        return reader, kwargs, consumed
 
     def _get_possible_readers(self, fmt):
         for lookup in self._lookups:
@@ -907,7 +909,6 @@ class Format:
             @wraps(sniffer)
             def wrapped_sniffer(
                 file,
-                getheader=False,
                 encoding=self._encoding,
                 errors="ignore",
                 newline=self._newline,
@@ -932,7 +933,7 @@ class Format:
                         # filehandle to point at the beginning of the file.
                         if self.header:
                             fh.seek(0)
-                        return sniffer(fh, getheader)
+                        return sniffer(fh)
                     except UnicodeDecodeError:
                         pass
                     except Exception:
@@ -1031,10 +1032,9 @@ class Format:
                     file_keys, files, io_kwargs = self._setup_locals(
                         file_params, file, encoding, newline, kwargs
                     )
-                    yield from reader_function(files[-1], **kwargs)
-                    # with open_files(files, mode="r", **io_kwargs) as fhs:
-                    #     kwargs.update(zip(file_keys, fhs[:-1]))
-                    #     yield from reader_function(fhs[-1], **kwargs)
+                    with open_files(files, mode="r", **io_kwargs) as fhs:
+                        kwargs.update(zip(file_keys, fhs[:-1]))
+                        yield from reader_function(fhs[-1], **kwargs)
 
             self._add_reader(cls, wrapped_reader, monkey_patch, override)
             return wrapped_reader
