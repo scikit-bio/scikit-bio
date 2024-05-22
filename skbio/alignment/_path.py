@@ -41,7 +41,7 @@ class AlignPath(SkbioObject):
         self.states = np.atleast_2d(np.asarray(states, dtype=np.uint8))
 
         # start positions
-        self.starts = np.asarray(starts, dtype=np.uint64)
+        self.starts = np.asarray(starts, dtype=np.int64)
         if self.starts.ndim > 1:
             raise ValueError("`starts` must be a 1-D vector.")
         self.n_seqs = self.starts.size
@@ -326,7 +326,7 @@ class PairAlignPath(AlignPath):
             else:
                 raise ValueError("`seqs` must be strings or Sequence objects.")
 
-            idx1, idx2 = [int(x) for x in self.starts]
+            idx1, idx2 = self.starts
 
             for length, state in zip(self.lengths, states):
                 if state == 0:
@@ -378,17 +378,6 @@ class PairAlignPath(AlignPath):
         lengths = []
         gaps = []
         current_length = 0
-        mapping = {
-            "M": 0,
-            "I": 1,
-            "D": 2,
-            "P": 3,
-            "=": 0,
-            "X": 0,
-            "N": 2,
-            "S": 1,
-            "H": 3,
-        }
         no_ones = True
         for char in cigar:
             if char.isdigit():
@@ -445,3 +434,15 @@ def _run_length_encode(string_in):
 
 
 codes = np.array(["M", "I", "D", "P"])
+
+mapping = {
+    "M": 0,
+    "I": 1,
+    "D": 2,
+    "P": 3,
+    "=": 0,
+    "X": 0,
+    "N": 2,
+    "S": 1,
+    "H": 3,
+}
