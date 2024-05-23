@@ -640,7 +640,7 @@ class TestReadStandardInput(unittest.TestCase):
     num_text = ["ONE", "TWO", "THREE", "FOUR", "FIVE", "SIX", "SEVEN"]
 
     def test_stdin_read(self):
-        with patch('sys.stdin', io.StringIO(open(get_data_path("fasta_file.fna")).read())):
+        with patch('sys.stdin', io.StringIO(open(get_data_path("fasta_file.fasta")).read())):
             inc = 0
             for r in skbio.read(sys.stdin, format="fasta"):
                 self.assertEqual(str(r), "THISISTESTDATANUMBER" + self.num_text[inc])
