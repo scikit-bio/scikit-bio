@@ -75,6 +75,47 @@ class TestOrdinationResults(unittest.TestCase):
                                     pd.Series(np.array([4.2])), samples_df))
         self.assertEqual(obs.split('\n'), exp.split('\n'))
 
+    def test_rename(self):
+        rename_dict_samples = {'Site2' : 'B', 'Site1' : 'A', 'Site3' : 'C'}
+        rename_dict_features = {'Species2' : 'Y', 'Species1' : 'X', 'Species3' : 'Z'}
+
+        self.ordination_results.rename('samples', rename_dict_samples)
+        self.assertEqual(list(self.ordination_results.samples.index), ['A', 'B', 'C'])
+
+        self.ordination_results.rename('features', rename_dict_features)
+        self.assertEqual(list(self.ordination_results.features.index), ['X', 'Y', 'Z'])
+
+        rename_dict_samples = {'A' : '001', 'B' : '010'}
+        rename_dict_features = {'X' : 'abc', 'Y' : 'def'}
+
+        self.ordination_results.rename('samples', rename_dict_samples, strict=False)
+        self.assertEqual(list(self.ordination_results.samples.index), ['001', '010', 'C'])
+
+        self.ordination_results.rename('features', rename_dict_features, strict=False)
+        self.assertEqual(list(self.ordination_results.features.index), ['abc', 'def', 'Z'])
+
+        rename_dict_samples = {'001' : 'he', '010' : 'llo', 'C' : 'wor', 'D' : 'ld'}
+        rename_dict_features = {'abc' : 'go', 'def' : 'od', 'Z' : 'by', 'W' : 'e'}
+
+        with self.assertRaises(ValueError):
+            self.ordination_results.rename('samples', rename_dict_samples)
+
+        with self.assertRaises(ValueError):
+            self.ordination_results.rename('features', rename_dict_features)
+
+        rename_dict_samples = {'001' : 'he', '010' : 'llo', 'invalid' : 'world'}
+        rename_dict_features = {'abc' : 'go', 'def' : 'od', 'invalid' : 'bye'}
+
+        with self.assertRaises(ValueError):
+            self.ordination_results.rename('samples', rename_dict_samples)
+
+        with self.assertRaises(ValueError):
+            self.ordination_results.rename('features', rename_dict_features)
+
+        self.ordination_results.features = None
+        with self.assertRaises(ValueError):
+            self.ordination_results.rename('features', rename_dict_features)
+
 
 @unittest.skipUnless(has_matplotlib, "Matplotlib not available.")
 class TestOrdinationResultsPlotting(unittest.TestCase):
