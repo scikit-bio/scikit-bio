@@ -18,6 +18,7 @@
 
 ### Features
 
+* Added rename function for _ordination_results.py ([#2027](https://github.com/scikit-bio/scikit-bio/pull/2027)).
 * Added biom-format Table import and updated corresponding requirement files ([#1907](https://github.com/scikit-bio/scikit-bio/pull/1907)).
 * Added biom-format 2.1.0 IO support ([#1984](https://github.com/scikit-bio/scikit-bio/pull/1984)).
 * Added `Table` support to `alpha_diversity` and `beta_diversity` drivers ([#1984](https://github.com/scikit-bio/scikit-bio/pull/1984)).
