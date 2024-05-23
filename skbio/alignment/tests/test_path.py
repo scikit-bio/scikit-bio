@@ -73,6 +73,13 @@ class TestAlignPath(unittest.TestCase):
         npt.assert_array_equal(obs.lengths, exp.lengths)
         npt.assert_array_equal(obs.states, exp.states)
 
+        # test starts parameter
+        starts = [1, 2, 3]
+        obs = AlignPath.from_bits(bits, starts)
+        npt.assert_array_equal(obs.lengths, exp.lengths)
+        npt.assert_array_equal(obs.states, exp.states)
+        npt.assert_array_equal(obs.starts, starts)
+
         # test 2D base case, more than 8 sequences
         rng = np.random.default_rng(seed=42)
         bits = rng.choice([0, 1], size=(10, 10), p=[0.85, 0.15])
@@ -148,12 +155,25 @@ class TestAlignPath(unittest.TestCase):
         states = [0, 2, 0, 6, 0, 1, 0]
         npt.assert_array_equal(lengths, obj.lengths)
         npt.assert_array_equal(states, np.squeeze(obj.states))
-    
+
         # test masked array
         masked = np.ma.array(indices, mask=(indices == -1))
         obj = AlignPath.from_indices(masked, gap="mask")
         npt.assert_array_equal(lengths, obj.lengths)
         npt.assert_array_equal(states, np.squeeze(obj.states))
+
+        # test non-zero indices
+        indices = np.array([[25, 26, -1, -1, 27, 28, 29, 30],
+                            [-1, 79, 80, 81, 82, 83, 84, -1]])
+        obj = AlignPath.from_indices(indices)
+        lengths = [1, 1, 2, 3, 1]
+        states = [2, 0, 1, 0, 2]
+        npt.assert_array_equal(lengths, obj.lengths)
+        npt.assert_array_equal(states, np.squeeze(obj.states))
+        npt.assert_array_equal(obj.starts, [25, 79])
+
+        # test masked array and non-zero indices
+        # TODO
 
     def test_to_coordinates(self):
         # test base case
