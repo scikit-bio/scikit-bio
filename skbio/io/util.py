@@ -27,6 +27,7 @@ Functions
 
 import io
 from contextlib import contextmanager, ExitStack
+import itertools
 
 from skbio.io import IOSourceError
 from skbio.io._iosources import get_io_sources, get_compression_handler
@@ -66,11 +67,10 @@ def _resolve(
     for source_handler in get_io_sources():
         source = source_handler(file, arguments)
         if mode == "r" and source.can_read():
-            # Check if it's seekable
-            if source.can_seek():
-                newfile = source.get_reader()
+            if isinstance(file, itertools.chain):
+                newfile = source.repaired
             else:
-                newfile = source.get_seekable()
+                newfile = source.get_reader()
             break
         elif mode == "w" and source.can_write():
             newfile = source.get_writer()
@@ -274,9 +274,12 @@ def open_file(file, **kwargs):
             # buffer, the outer buffer will reflect that state, but it won't
             # get flushed as the inner buffer is oblivious to the outer
             # buffer's existence.
-            if not newfile.closed:
-                newfile.flush()
-                _flush_compressor(newfile)
+            try:
+                if not newfile.closed:
+                    newfile.flush()
+                    _flush_compressor(newfile)
+            except AttributeError:
+                pass
 
 
 def _flush_compressor(file):

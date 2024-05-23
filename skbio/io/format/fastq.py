@@ -283,6 +283,7 @@ References
 # The full license is in the file LICENSE.txt, distributed with this software.
 # ----------------------------------------------------------------------------
 
+import itertools
 import re
 
 import numpy as np
@@ -313,22 +314,27 @@ def _fastq_sniffer(fh):
     #   file. Read up to 10 records. If at least one record is read (i.e. the
     #   file isn't empty) and the quality scores are in printable ASCII range,
     #   assume the file is FASTQ.
-    if _too_many_blanks(fh, 5):
-        return False, {}
+    blanks, consumed = _too_many_blanks(fh, 5)
+    if blanks:
+        return False, {}, consumed
+    if not fh.seekable:
+        fh = itertools.chain(consumed, fh)
 
+    consumed = []
+    num_records = 10
+    empty = True
     try:
-        not_empty = False
-        for _, seq in zip(range(10), _fastq_to_generator(fh, phred_offset=33)):
+        for _, seq in zip(range(num_records), _fastq_to_generator(fh, phred_offset=33)):
             split_length = len(
                 (seq.metadata["id"] + seq.metadata["description"]).split(":")
             )
             description = seq.metadata["description"].split(":")
             if split_length == 10 and description[1] in "YN":
-                return True, {"variant": "illumina1.8"}
-            not_empty = True
-        return not_empty, {}
+                return True, {"variant": "illumina1.8"}, consumed
+            empty = False
+        return not empty, {}, consumed
     except (FASTQFormatError, ValueError):
-        return False, {}
+        return False, {}, consumed
 
 
 @fastq.reader(None)

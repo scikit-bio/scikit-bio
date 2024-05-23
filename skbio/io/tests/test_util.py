@@ -6,12 +6,14 @@
 # The full license is in the file LICENSE.txt, distributed with this software.
 # ----------------------------------------------------------------------------
 
+import sys
 import unittest
 import tempfile
 import shutil
 import io
 import os.path
 import gc
+from unittest.mock import patch
 
 try:
     import responses
@@ -634,6 +636,17 @@ class TestIterableReaderWriter(unittest.TestCase):
         fh.close()
         self.assertTrue(fh.closed)
 
+class TestReadStandardInput(unittest.TestCase):
+    num_text = ["ONE", "TWO", "THREE", "FOUR", "FIVE", "SIX", "SEVEN"]
+
+    def test_stdin_read(self):
+        with patch('sys.stdin', io.StringIO(open(get_data_path("fasta_file.fna")).read())):
+            inc = 0
+            for r in skbio.read(sys.stdin, format="fasta"):
+                self.assertEqual(str(r), "THISISTESTDATANUMBER" + self.num_text[inc])
+                self.assertEqual(r.metadata["id"], "test_" + str(inc + 1))
+                self.assertEqual(r.metadata["description"], "TESTING DATA " + self.num_text[inc])
+                inc += 1
 
 if __name__ == '__main__':
     unittest.main()
