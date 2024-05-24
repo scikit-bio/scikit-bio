@@ -311,7 +311,10 @@ class AlignPath(SkbioObject):
         lens = self._lengths * (1 - self.to_bits())
         col0 = np.zeros((self._shape[0], 1), dtype=int)
         lens = np.append(col0, lens, axis=1)
-        return lens.cumsum(axis=1)
+        if self.starts.any():
+            return lens.cumsum(axis=1) + self.starts.reshape(-1, 1)
+        else:
+            return lens.cumsum(axis=1)
 
     @classonlymethod
     def from_coordinates(cls, coords):
@@ -329,13 +332,14 @@ class AlignPath(SkbioObject):
             The alignment path created from the given coordinates.
 
         """
+        starts = coords[:, 0]
         diff = np.diff(coords)
         bits = diff == 0
         lens = diff[bits.argmin(axis=0), np.arange(diff.shape[1])]
         ints = np.packbits(bits, axis=0, bitorder="little")
         if ints.shape[0] == 1:
             ints = np.squeeze(ints, axis=0)
-        return cls(lens, ints, np.zeros(diff.shape[0], dtype=int))
+        return cls(lens, ints, starts)
 
 
 class PairAlignPath(AlignPath):

@@ -234,6 +234,16 @@ class TestAlignPath(unittest.TestCase):
         obs = path.to_coordinates()
         npt.assert_array_equal(obs, exp)
 
+        # test non-zero starts
+        exp = np.array([[2,  5,  7, 12, 13, 17, 17, 19],
+                           [512, 515, 515, 520, 520, 524, 527, 529],
+                           [28, 31, 33, 38, 38, 42, 45, 47]])
+        path = AlignPath(lengths = [3, 2, 5, 1, 4, 3, 2],
+                         states = [0, 2, 0, 6, 0, 1, 0],
+                         starts = [2, 512, 28])
+        obs = path.to_coordinates()
+        npt.assert_array_equal(obs, exp)
+
     def test_from_coordinates(self):
         # test base case
         coords = np.array([[0, 3, 5, 10, 11, 15, 15, 17],
@@ -242,9 +252,22 @@ class TestAlignPath(unittest.TestCase):
         path = AlignPath.from_coordinates(coords)
         lengths = [3, 2, 5, 1, 4, 3, 2]
         states = [0, 2, 0, 6, 0, 1, 0]
+        starts = [0, 0, 0]
         npt.assert_array_equal(lengths, path.lengths)
         npt.assert_array_equal(states, np.squeeze(path.states))
+        npt.assert_array_equal(starts, path.starts)
 
+        # test non-zero starts
+        coords = np.array([[2,  5,  7, 12, 13, 17, 17, 19],
+                           [512, 515, 515, 520, 520, 524, 527, 529],
+                           [28, 31, 33, 38, 38, 42, 45, 47]])
+        path = AlignPath.from_coordinates(coords)
+        lengths = [3, 2, 5, 1, 4, 3, 2]
+        states = [0, 2, 0, 6, 0, 1, 0]
+        starts = [2, 512, 28]
+        npt.assert_array_equal(lengths, path.lengths)
+        npt.assert_array_equal(states, np.squeeze(path.states))
+        npt.assert_array_equal(starts, path.starts)
 
 class TestPairAlignPath(unittest.TestCase):
     def test_from_cigar(self):
