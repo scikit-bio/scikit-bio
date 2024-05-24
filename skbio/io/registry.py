@@ -487,6 +487,7 @@ class IORegistry:
         if into is None:
             if format is None:
                 raise ValueError("`into` and `format` cannot both be None")
+            # Yield lines by creating a generator line by line, better for long files
             gen = self._read_gen(file, format, into, verify, kwargs)
             # This is done so that any errors occur immediately instead of
             # on the first call from __iter__
@@ -500,6 +501,7 @@ class IORegistry:
                 # See #1313 for more info.
                 return (x for x in [])
         else:
+            # Return lines by reading the whole file, better for short files
             return self._read_ret(file, format, into, verify, kwargs)
 
     def _read_ret(self, file, fmt, into, verify, kwargs):
@@ -520,6 +522,7 @@ class IORegistry:
             reader, kwargs, consumed = self._init_reader(
                 file, fmt, into, verify, kwargs, io_kwargs
             )
+            # Add consumed lines to the start of the file to "reset" it
             if consumed is not None and not file.seekable():
                 file = itertools.chain(consumed, file)
             yield from reader(file, **kwargs)
@@ -530,19 +533,23 @@ class IORegistry:
     def _init_reader(self, file, fmt, into, verify, kwargs, io_kwargs):
         skwargs = {}
         consumed = []
+        # Get sniffer from format (defined in iosources)
         if fmt is None:
             fmt, skwargs = self.sniff(file, **io_kwargs)
         elif verify:
             sniffer = self.get_sniffer(fmt)
             if sniffer is not None:
                 try:
+                    # Attempt to reset and sniff file
                     backup = file.tell()
                     res = sniffer(file, **io_kwargs)
                     is_format = res[0]
                     skwargs = res[1]
                     file.seek(backup)
                 except io.UnsupportedOperation:
+                    # File is not seekable, so get consumed lines to reset it
                     is_format, skwargs, consumed = sniffer(file, **io_kwargs)
+
                 if not is_format:
                     warn(
                         "%r does not look like a %s file" % (file, fmt),
@@ -559,6 +566,7 @@ class IORegistry:
                     ArgumentOverrideWarning,
                 )
 
+        # Get individual reader from format (defined in iosources)
         reader = self.get_reader(fmt, into)
         if reader is None:
             possible_intos = [r.__name__ for r in self._get_possible_readers(fmt)]

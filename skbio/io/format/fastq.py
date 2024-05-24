@@ -304,7 +304,7 @@ from skbio.sequence import Sequence, DNA, RNA, Protein
 _whitespace_regex = re.compile(r"\s")
 
 
-fastq = create_format("fastq")
+fastq = create_format("fastq", header=False)
 
 
 @fastq.sniffer()
@@ -317,18 +317,19 @@ def _fastq_sniffer(fh):
     blanks, consumed = _too_many_blanks(fh, 5)
     if blanks:
         return False, {}, consumed
-    if not fh.seekable:
+    if not fh.seekable():
         fh = itertools.chain(consumed, fh)
 
     consumed = []
     num_records = 10
     empty = True
     try:
-        for _, seq in zip(range(num_records), _fastq_to_generator(fh, phred_offset=33)):
-            split_length = len(
-                (seq.metadata["id"] + seq.metadata["description"]).split(":")
-            )
-            description = seq.metadata["description"].split(":")
+        # Scan 10 lines of the file and make sure they're valid
+        fastqgen = _parse_fastq_raw(fh, FASTQFormatError, phred_offset=33)
+        for _, seq in zip(range(num_records), fastqgen):
+            consumed += seq[4]
+            split_length = len((seq[1] + seq[2]).split(":"))
+            description = seq[2].split(":")
             if split_length == 10 and description[1] in "YN":
                 return True, {"variant": "illumina1.8"}, consumed
             empty = False
@@ -341,30 +342,10 @@ def _fastq_sniffer(fh):
 def _fastq_to_generator(
     fh, variant=None, phred_offset=None, constructor=Sequence, **kwargs
 ):
-    # Skip any blank or whitespace-only lines at beginning of file
-    try:
-        seq_header = next(_line_generator(fh, skip_blanks=True))
-    except StopIteration:
-        return
-
-    if not seq_header.startswith("@"):
-        raise FASTQFormatError(
-            "Expected sequence (@) header line at start of file: %r" % str(seq_header)
-        )
-
-    while seq_header is not None:
-        id_, desc = _parse_fasta_like_header(seq_header)
-        seq, qual_header = _parse_sequence_data(fh, seq_header)
-
-        if qual_header != "+" and qual_header[1:] != seq_header[1:]:
-            raise FASTQFormatError(
-                "Sequence (@) and quality (+) header lines do not match: "
-                "%r != %r" % (str(seq_header[1:]), str(qual_header[1:]))
-            )
-
-        phred_scores, seq_header = _parse_quality_scores(
-            fh, len(seq), variant, phred_offset, qual_header
-        )
+    # Run it through the parser and yield from there
+    for seq, id_, desc, phred_scores, _ in _parse_fastq_raw(
+        fh, FASTQFormatError, variant, phred_offset
+    ):
         yield constructor(
             seq,
             metadata={"id": id_, "description": desc},
@@ -583,13 +564,15 @@ def _blank_error(unique_text):
 
 def _parse_sequence_data(fh, prev):
     seq_chunks = []
+    consumed = []
     for chunk in _line_generator(fh, skip_blanks=False):
+        consumed += [chunk]
         if chunk.startswith("+"):
             if not prev:
                 _blank_error("before '+'")
             if not seq_chunks:
                 raise FASTQFormatError("Found FASTQ record without sequence data.")
-            return "".join(seq_chunks), chunk
+            return "".join(seq_chunks), chunk, consumed
         elif chunk.startswith("@"):
             raise FASTQFormatError(
                 "Found FASTQ record that is missing a quality (+) header line "
@@ -610,11 +593,13 @@ def _parse_sequence_data(fh, prev):
 
 def _parse_quality_scores(fh, seq_len, variant, phred_offset, prev):
     phred_scores = []
+    consumed = []
     qual_len = 0
     for chunk in _line_generator(fh, skip_blanks=False):
+        consumed += [chunk]
         if chunk:
             if chunk.startswith("@") and qual_len == seq_len:
-                return np.hstack(phred_scores), chunk
+                return np.hstack(phred_scores), chunk, consumed
             else:
                 if not prev:
                     _blank_error("after '+' or within quality scores")
@@ -638,7 +623,39 @@ def _parse_quality_scores(fh, seq_len, variant, phred_offset, prev):
         raise FASTQFormatError(
             "Found incomplete/truncated FASTQ record at end of file."
         )
-    return np.hstack(phred_scores), None
+    return np.hstack(phred_scores), None, consumed
+
+
+def _parse_fastq_raw(fh, error_type, variant=None, phred_offset=None):
+    # Skip any blank or whitespace-only lines at beginning of file
+    try:
+        seq_header = next(_line_generator(fh, skip_blanks=True))
+        consumed = [seq_header]
+    except StopIteration:
+        return
+
+    # Check to make sure header is valid
+    if not seq_header.startswith("@"):
+        raise error_type(
+            "Expected sequence (@) header line at start of file: %r" % str(seq_header)
+        )
+    while seq_header is not None:
+        id_, desc = _parse_fasta_like_header(seq_header)
+        seq, qual_header, lines = _parse_sequence_data(fh, seq_header)
+        consumed += lines
+        if qual_header != "+" and qual_header[1:] != seq_header[1:]:
+            raise error_type(
+                "Sequence (@) and quality (+) header lines do not match: "
+                "%r != %r" % (str(seq_header[1:]), str(qual_header[1:]))
+            )
+
+        phred_scores, seq_header, lines = _parse_quality_scores(
+            fh, len(seq), variant, phred_offset, qual_header
+        )
+        # Return full sequence data and reset consumed
+        consumed += lines
+        yield seq, id_, desc, phred_scores, consumed
+        consumed = []
 
 
 def _sequences_to_fastq(

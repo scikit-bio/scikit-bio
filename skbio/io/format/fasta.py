@@ -643,7 +643,7 @@ def _fasta_sniffer(fh):
     blanks, consumed = _too_many_blanks(fh, 5)
     if blanks:
         return False, {}, consumed
-    if not fh.seekable:
+    if not fh.seekable():
         fh = itertools.chain(consumed, fh)
 
     consumed = []
@@ -651,6 +651,8 @@ def _fasta_sniffer(fh):
     empty = True
     try:
         parser = _parse_fasta_raw(fh, _sniffer_data_parser, FASTAFormatError)
+        # Check 10 records, record is in the form of (index, data)
+        # Data is returned as consumed from the parser
         for record in zip(range(num_records), parser):
             consumed += record[1][3]
             empty = False
@@ -675,11 +677,13 @@ def _sniffer_data_parser(chunks):
 @fasta.reader(None)
 def _fasta_to_generator(fh, qual=FileSentinel, constructor=Sequence, **kwargs):
     if qual is None:
+        # Used for most fasta files
         for seq, id_, desc, _ in _parse_fasta_raw(
             fh, _parse_sequence_data, FASTAFormatError
         ):
             yield constructor(seq, metadata={"id": id_, "description": desc}, **kwargs)
     else:
+        # Used for more complicated fasta files - with quality scores
         fasta_gen = _parse_fasta_raw(fh, _parse_sequence_data, FASTAFormatError)
         qual_gen = _parse_fasta_raw(qual, _parse_quality_scores, QUALFormatError)
 
@@ -926,6 +930,7 @@ def _parse_fasta_raw(fh, data_parser, error_type):
     data_chunks = []
     prev = seq_header
     for line in _line_generator(fh, skip_blanks=False):
+        # store consumed lines
         consumed += [line]
         if line.startswith(">"):
             # new header, so yield current record and reset state
