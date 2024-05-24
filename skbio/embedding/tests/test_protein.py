@@ -13,9 +13,13 @@ from unittest import TestCase, main
 from functools import partial
 from pathlib import Path
 from skbio.util import get_data_path
-from skbio.embedding._protein import ProteinEmbedding
+from skbio.embedding._embedding import SequenceVector
+from skbio.embedding._protein import ProteinEmbedding, ProteinVector
+from skbio.embedding._embedding import embed_vec_to_numpy
+from skbio import Protein
 import numpy as np
 import numpy.testing as npt
+
 
 class ProteinEmbeddingTests(TestCase):
 
@@ -41,7 +45,7 @@ class ProteinEmbeddingTests(TestCase):
         p_emb = ProteinEmbedding(emb, s)
         self.assertEqual(str(p_emb), s)
         self.assertEqual(p_emb.sequence, s)
-        
+
         byte_s = np.array([b"I", b"G", b"K", b"E", b"E", b"I", b"Q",
                            b"Q", b"R", b"L", b"A", b"Q", b"F", b"V",
                            b"D", b"H", b"W", b"K", b"E", b"L", b"K",
@@ -81,6 +85,65 @@ class ProteinEmbeddingTests(TestCase):
         emb, s = self.emb, self.seq
         p_emb = ProteinEmbedding(emb, s)
         self.assertTrue('ProteinEmbedding' in repr(p_emb))
+
+
+class ProteinVectorTests(TestCase):
+    def setUp(self):
+        rk = 10
+        self.emb = np.random.randn(rk)
+        self.seq = Protein(('IGKEEIQQRLAQFVDHWKELKQLAAARGQRL'
+                            'EESLEYQQFVANVEEEEAWINEKMTLVASED'),
+                           metadata={"id": "seq1"})
+
+        self.vector1 = np.array([1, 2, 3])
+        self.vector2 = np.array([4, 5, 6])
+        self.vector3 = np.array([7, 8, 9])
+        self.bad_vector = np.array([7, 8])
+        self.bad_vector2 = np.array([[7, 8], [7, 9]])
+        self.protein_vectors = [ProteinVector(self.vector1, "ACGT"),
+                                ProteinVector(self.vector2, "GCTA"),
+                                ProteinVector(self.vector3, "TTAG")]
+
+
+    def test_valid_protein_vector(self):
+        ProteinVector(self.emb, self.seq)
+
+    def test_invalid_protein_vector(self):
+        seq = ('$GKEEIQQRLAQFVDHWKELKQLAAARGQRLE'
+               'ESLEYQQFVANVEEEEAWINEKMTLVASED^^')
+        with self.assertRaises(ValueError):
+            ProteinVector(self.emb, seq)
+
+        with self.assertRaises(ValueError):
+            ProteinVector(self.bad_vector2, seq)
+
+    def test_repr(self):
+        pv = ProteinVector(self.emb, self.seq)
+        self.assertTrue('ProteinVector' in repr(pv))
+        self.assertTrue('vector dimension' in repr(pv))
+
+    def test_to_numpy(self):
+        # confirm that Protein objects can be casted to numpy
+        expected_result = np.array([self.vector1, self.vector2, self.vector3])
+        result = embed_vec_to_numpy(self.protein_vectors)
+        self.assertTrue(np.array_equal(result, expected_result))
+
+    def test_to_numpy_raises(self):
+        # assert that all types are the same
+        arr = [ProteinVector(self.vector1, "ACGT"),
+               SequenceVector(self.vector2, "GCTA"),
+               SequenceVector(self.bad_vector, "TTAG")]
+
+        with self.assertRaises(ValueError):
+            result = embed_vec_to_numpy(arr)
+
+        # assert that all objects subclass EmbeddingVector
+        arr = [Protein("TGAG"),
+               Protein("ATAG"),
+               Protein("TTAG")]
+
+        with self.assertRaises(ValueError):
+            result = embed_vec_to_numpy(arr)
 
 
 if __name__ == '__main__':
