@@ -10,11 +10,9 @@ import numpy as np
 import pandas as pd
 from skbio.sequence import Sequence
 from skbio._base import SkbioObject
-from skbio.stats.distance import DistanceMatrix
 from skbio.stats.ordination import OrdinationResults
 from skbio.metadata._mixin import MetadataMixin
 from skbio.diversity import beta_diversity
-from scipy.spatial.distance import pdist, squareform
 from scipy.linalg import svd
 from typing import List
 
@@ -64,7 +62,7 @@ class Embedding(SkbioObject):
             )
 
         self._embedding = np.array(embedding)
-        self._ids = np.array(ids)
+        self._ids = np.asarray(ids)
 
     def __str__(self):
         raise NotImplementedError("This method should be implemented by subclasses.")
@@ -128,12 +126,12 @@ class EmbeddingVector(Embedding):
 
     @property
     def vector(self):
-        return self.embedding.squeeze()
+        return self._embedding.squeeze()
 
     @property
     def embedding(self):
         r""" The embedding tensor. """
-        return self._embedding.reshape(1, -1)
+        return np.expand_dims(self._embedding, 0)
 
 
 class SequenceVector(EmbeddingVector):
@@ -168,7 +166,7 @@ class SequenceVector(EmbeddingVector):
 
         See Also
         --------
-        Protein
+        skbio.sequence.Protein
         """
         seq = Sequence(str(self))
         rstr = _repr_helper(
@@ -178,7 +176,7 @@ class SequenceVector(EmbeddingVector):
         return rstr
 
 
-def embedding_vectors_to_numpy(embedding_vectors, validate=True):
+def embed_vec_to_numpy(embedding_vectors, validate=True):
     r""" Convert an iterable of EmbeddingVector objects to a numpy array.
 
     Parameters
@@ -187,13 +185,14 @@ def embedding_vectors_to_numpy(embedding_vectors, validate=True):
         An iterable of EmbeddingVector objects, or objects that
         subclass EmbeddingVector.
     validate : bool, optional
-        If True, validate that all vectors have the same length
+        If ``True``, validate that all vectors have the same length
         and are valid types
 
     Returns
     -------
     np.ndarray
-        A numpy array of shape (n_sequences, n_features) where
+        A numpy array of shape (n_sequences, n_features) where n_features
+        corresponds to the dimensionality of the latent space
 
     Raises
     ------
@@ -221,21 +220,20 @@ def embedding_vectors_to_numpy(embedding_vectors, validate=True):
     return data
 
 
-def embedding_vectors_to_distance_matrix(embedding_vectors, metric='euclidean',
-                                         validate=True):
-    r""" Convert an iterable of EmbeddingVector objects to a
-    DistanceMatrix object.
+def embed_vec_to_distances(embedding_vectors, metric='euclidean',
+                           validate=True):
+    r""" Convert EmbeddingVector objects to a DistanceMatrix object.
 
     Parameters
     ----------
     embedding_vectors : iterable of EmbeddingVector objects
         An iterable of EmbeddingVector objects, or objects that
         subclass EmbeddingVector.
-    metric : str, optional
+    metric : str or Callable, optional
         The distance metric to use. Must be a valid metric for
         `scipy.spatial.distance.pdist`.
     validate : bool, optional
-        If True, validate that all vectors have the same length
+        If ``True``, validate that all vectors have the same length
         and are valid types
 
     Returns
@@ -247,12 +245,12 @@ def embedding_vectors_to_distance_matrix(embedding_vectors, metric='euclidean',
     --------
     DistanceMatrix
     """
-    data = embedding_vectors_to_numpy(embedding_vectors)
+    data = embed_vec_to_numpy(embedding_vectors)
     ids = [str(sv) for sv in embedding_vectors]
     return beta_diversity(metric, data, ids)
 
 
-def embedding_vectors_to_ordination(embedding_vectors, validate=True):
+def embed_vec_to_ordination(embedding_vectors, validate=True):
     r""" Convert iterable of EmbeddingVector objects to an Ordination object.
 
     A singular value decomposition (SVD) is performed on the data.
@@ -263,7 +261,7 @@ def embedding_vectors_to_ordination(embedding_vectors, validate=True):
         An iterable of EmbeddingVector objects, or objects that
         subclass EmbeddingVector.
     validate : bool, optional
-        If True, validate that all vectors have the same length
+        If ``True``, validate that all vectors have the same length
         and are valid types
 
     Returns
@@ -275,7 +273,7 @@ def embedding_vectors_to_ordination(embedding_vectors, validate=True):
     --------
     OrdinationResults
     """
-    data = embedding_vectors_to_numpy(embedding_vectors)
+    data = embed_vec_to_numpy(embedding_vectors)
     u, s, vh = svd(data, full_matrices=False)
     eigvals = s ** 2
     short_name = "SVD"
@@ -290,12 +288,12 @@ def embedding_vectors_to_ordination(embedding_vectors, validate=True):
         eigvals = eigvals,
         proportion_explained = eigvals / eigvals.sum(),
         samples=pd.DataFrame(
-            u * np.sqrt(s), index=[str(sv) for sv in embedding_vectors]),
-        features=pd.DataFrame(vh.T * np.sqrt(s), index=range(data.shape[1])),
+            u @ np.diag(s), index=[str(sv) for sv in embedding_vectors]),
+        features=pd.DataFrame(vh.T, index=range(data.shape[1])),
     )
     return ordr
 
-def embedding_vectors_to_dataframe(embedding_vectors, validate=True):
+def embed_vec_to_dataframe(embedding_vectors, validate=True):
     r""" Convert a list of SequenceVector objects to a pandas DataFrame.
 
     Parameters
@@ -304,7 +302,7 @@ def embedding_vectors_to_dataframe(embedding_vectors, validate=True):
         An iterable of EmbeddingVector objects, or objects that
         subclass EmbeddingVector.
     validate : bool, optional
-        If True, validate that all vectors have the same length
+        If ``True``, validate that all vectors have the same length
         and are valid types
 
     Returns
@@ -316,6 +314,6 @@ def embedding_vectors_to_dataframe(embedding_vectors, validate=True):
     --------
     pd.DataFrame
     """
-    data = embedding_vectors_to_numpy(embedding_vectors)
+    data = embed_vec_to_numpy(embedding_vectors)
     df = pd.DataFrame(data, index=[str(sv) for sv in embedding_vectors])
     return df

@@ -15,7 +15,7 @@ from pathlib import Path
 from skbio.util import get_data_path
 from skbio.embedding._embedding import SequenceVector
 from skbio.embedding._protein import ProteinEmbedding, ProteinVector
-from skbio.embedding._embedding import embedding_vectors_to_numpy
+from skbio.embedding._embedding import embed_vec_to_numpy
 from skbio import Protein
 import numpy as np
 import numpy.testing as npt
@@ -125,7 +125,7 @@ class ProteinVectorTests(TestCase):
     def test_to_numpy(self):
         # confirm that Protein objects can be casted to numpy
         expected_result = np.array([self.vector1, self.vector2, self.vector3])
-        result = embedding_vectors_to_numpy(self.protein_vectors)
+        result = embed_vec_to_numpy(self.protein_vectors)
         self.assertTrue(np.array_equal(result, expected_result))
 
     def test_to_numpy_raises(self):
@@ -135,7 +135,7 @@ class ProteinVectorTests(TestCase):
                SequenceVector(self.bad_vector, "TTAG")]
 
         with self.assertRaises(ValueError):
-            result = embedding_vectors_to_numpy(arr)
+            result = embed_vec_to_numpy(arr)
 
         # assert that all objects subclass EmbeddingVector
         arr = [Protein("TGAG"),
@@ -143,7 +143,7 @@ class ProteinVectorTests(TestCase):
                Protein("TTAG")]
 
         with self.assertRaises(ValueError):
-            result = embedding_vectors_to_numpy(arr)
+            result = embed_vec_to_numpy(arr)
 
 
 if __name__ == '__main__':
