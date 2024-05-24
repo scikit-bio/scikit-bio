@@ -37,6 +37,17 @@ _cigar_mapping = {
 class AlignPath(SkbioObject):
     r"""Create an alignment path from segment lengths and states.
 
+    The underliying data structure of the ``AlignPath`` class efficiently represents a
+    sequence alignment as two equal-length vectors: lengths and gap status. The lengths
+    vector contains the lengths of individual segments of the alignment with consistent
+    gap status. The gap status vector contains the encoded bits of the gap (1) and
+    character (0) status for each position in the alignment.
+
+    This data structure is detached from the original sequences and is highly memory
+    efficient. It permits fully vectorized operations and enables efficient conversion
+    between various formats such as CIGAR, tabular, indices (Biotite), and coordinates
+    (Biopython).
+
     Parameters
     ----------
     lengths : array_like of int of shape (n_segments,)
@@ -51,6 +62,36 @@ class AlignPath(SkbioObject):
     --------
     skbio.sequence.Sequence
     skbio.alignment.TabularMSA
+
+    Examples
+    --------
+    Create an ``AlignPath`` object from a ``TabularMSA`` object with three DNA
+    sequences and 20 positions.
+
+    >>> from skbio import DNA, TabularMSA
+    >>> from skbio.alignment import AlignPath
+    >>> seqs = [
+    ...    DNA('CGGTCGTAACGCGTA---CA'),
+    ...    DNA('CAG--GTAAG-CATACCTCA'),
+    ...    DNA('CGGTCGTCAC-TGTACACTA')
+    ... ]
+    >>> msa = TabularMSA(seqs)
+    >>> msa
+    TabularMSA[DNA]
+    ----------------------
+    Stats:
+        sequence count: 3
+        position count: 20
+    ----------------------
+    CGGTCGTAACGCGTA---CA
+    CAG--GTAAG-CATACCTCA
+    CGGTCGTCAC-TGTACACTA
+    >>> path = AlignPath.from_tabular(msa)
+    >>> path
+    AlignPath
+    Shape(sequence=3, position=20)
+    lengths: [3 2 5 1 4 3 2]
+    states: [0 2 0 6 0 1 0]
 
     """
 
@@ -82,8 +123,8 @@ class AlignPath(SkbioObject):
     def __repr__(self):
         r"""Summary of the alignment path."""
         return (
-            f"<{self.__class__.__name__}, shape: {self._shape}, lengths: "
-            f"{self._lengths}, states: {self._states}>"
+            f"{self.__class__.__name__}\n{self._shape}\nlengths: "
+            f"{self._lengths}\nstates: {np.squeeze(self._states)}"
         )
 
     @property
