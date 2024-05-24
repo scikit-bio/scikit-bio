@@ -131,7 +131,7 @@ class EmbeddingVector(Embedding):
     @property
     def embedding(self):
         r""" The embedding tensor. """
-        return np.expand_dims(self._embedding, 0)
+        return self._embedding.reshape(1, -1)
 
 
 class SequenceVector(EmbeddingVector):
