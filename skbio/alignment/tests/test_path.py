@@ -20,12 +20,12 @@ class TestAlignPath(unittest.TestCase):
     def test_init(self):
         # test 1-D starts vector
         with self.assertRaises(TypeError, msg="`starts` must be a 1-D vector."):
-            obj = AlignPath(lengths=[1, 2, 3], states=[1, 2, 3], starts=[[0], [0]])
+            path = AlignPath(lengths=[1, 2, 3], states=[1, 2, 3], starts=[[0], [0]])
         
         # test states and starts matching
         with self.assertRaises(ValueError, msg="Sizes of `starts` and `states` do not "
                                "match."):
-            obj = AlignPath(lengths=[1, 2, 3], states=[1, 2, 3],
+            path = AlignPath(lengths=[1, 2, 3], states=[1, 2, 3],
                             starts=[0, 0, 0, 0, 0, 0, 0, 0, 0, 0])
     
     def test_lengths(self):
@@ -54,11 +54,11 @@ class TestAlignPath(unittest.TestCase):
         self.assertEqual(obs.position, 20)
 
     def test_to_bits(self):
-        obj = AlignPath(lengths=[3, 2, 5, 1, 4, 3, 2],
+        path = AlignPath(lengths=[3, 2, 5, 1, 4, 3, 2],
                         states=[0, 2, 0, 6, 0, 1, 0],
                         starts=[0, 0, 0])
         exp = np.array(([0, 0, 0, 0, 0, 1, 0], [0, 1, 0, 1, 0, 0, 0], [0, 0, 0, 1, 0, 0, 0]))
-        obs = obj.to_bits()
+        obs = path.to_bits()
         npt.assert_array_equal(obs, exp)
     
     def test_from_bits(self):
@@ -95,28 +95,28 @@ class TestAlignPath(unittest.TestCase):
                'CAG--GTAAG-CATACCTCA',
                'CGGTCGTCAC-TGTACACTA')
         tabular = TabularMSA([DNA(x) for x in msa])
-        obj = AlignPath.from_tabular(tabular)
+        path = AlignPath.from_tabular(tabular)
         lengths = [3, 2, 5, 1, 4, 3, 2]
         states = [0, 2, 0, 6, 0, 1, 0]
-        npt.assert_array_equal(lengths, obj.lengths)
-        npt.assert_array_equal(states, np.squeeze(obj.states))
+        npt.assert_array_equal(lengths, path.lengths)
+        npt.assert_array_equal(states, np.squeeze(path.states))
     
     def test_to_indices(self):
         # test gap = -1
-        obj = AlignPath(lengths=[3, 2, 5, 1, 4, 3, 2],
+        path = AlignPath(lengths=[3, 2, 5, 1, 4, 3, 2],
                         states=[0, 2, 0, 6, 0, 1, 0],
                         starts=[0, 0, 0])
         exp = np.array([[0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, -1, -1, -1, 15, 16],
                         [0, 1, 2, -1, -1, 3, 4, 5, 6, 7, -1, 8, 9, 10, 11, 12, 13, 14, 15, 16],
                         [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, -1, 10, 11, 12, 13, 14, 15, 16, 17, 18]])
-        obs = obj.to_indices()
+        obs = path.to_indices()
         npt.assert_array_equal(obs, exp)
 
         # test gap = 'del'
         exp = np.array([[0, 1, 2, 5, 6, 7, 8, 9, 11, 12, 13, 14, 15, 16],
                         [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 15, 16],
                         [0, 1, 2, 5, 6, 7, 8, 9, 10, 11, 12, 13, 17, 18]])
-        obs = obj.to_indices(gap='del')
+        obs = path.to_indices(gap='del')
         npt.assert_array_equal(obs, exp)
 
         # test gap = 'mask'
@@ -136,54 +136,102 @@ class TestAlignPath(unittest.TestCase):
                                  False, False, False,  True, False, False, False,
                                  False, False, False, False, False, False]],
                           fill_value=999999)
-        obs = obj.to_indices(gap='mask')
+        obs = path.to_indices(gap='mask')
+        npt.assert_array_equal(obs, exp)
+
+        # test with starts as non-zero
+        path = AlignPath(lengths=[3, 2, 5, 1, 4, 3, 2],
+                        states=[0, 2, 0, 6, 0, 1, 0],
+                        starts=[1, 35, 28])
+        exp = np.array([[1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, -1, -1, -1, 16, 17],
+                        [35, 36, 37, -1, -1, 38, 39, 40, 41, 42, -1, 43, 44, 45, 46, 47, 48, 49, 50, 51],
+                        [28, 29, 30, 31, 32, 33, 34, 35, 36, 37, -1, 38, 39, 40, 41, 42, 43, 44, 45, 46]])
+        obs = path.to_indices()
+        npt.assert_array_equal(obs, exp)
+
+        # test 'del' with non-zero starts
+        exp = np.array([[1,  2,  3,  6,  7,  8,  9, 10, 12, 13, 14, 15, 16, 17],
+                        [35, 36, 37, 38, 39, 40, 41, 42, 43, 44, 45, 46, 50, 51],
+                        [28, 29, 30, 33, 34, 35, 36, 37, 38, 39, 40, 41, 45, 46]])
+        obs = path.to_indices(gap='del')
+        npt.assert_array_equal(obs, exp)
+
+        # test 'mask' with non-zero starts
+        exp = np.ma.array(data=[[ 1,  2,  3,  4,  5,  6,  7,  8,  9, 10, 11, 12, 13,
+                                 14, 15, 15, 15, 15, 16, 17],
+                                [35, 36, 37, 37, 37, 38, 39, 40, 41, 42, 42, 43, 44,
+                                 45, 46, 47, 48, 49, 50, 51],
+                                [28, 29, 30, 31, 32, 33, 34, 35, 36, 37, 37, 38, 39,
+                                 40, 41, 42, 43, 44, 45, 46]], 
+                          mask=[[False, False, False, False, False, False, False,
+                                 False, False, False, False, False, False, False,
+                                 False,  True,  True,  True, False, False],
+                                [False, False, False,  True,  True, False, False,
+                                 False, False, False,  True, False, False, False,
+                                 False, False, False, False, False, False],
+                                [False, False, False, False, False, False, False,
+                                 False, False, False,  True, False, False, False,
+                                 False, False, False, False, False, False]],
+                          fill_value=999999)
+        obs = path.to_indices(gap='mask')
         npt.assert_array_equal(obs, exp)
 
         # test invalid gap
         with self.assertRaises(TypeError,
                                msg="Gap must be an integer, np.nan, np.inf, 'del', "
                                  "or 'mask'."):
-            obj.to_indices(gap="no")
+            path.to_indices(gap="no")
 
     def test_from_indices(self):
         # test no mask
         indices = np.array([[0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, -1, -1, -1, 15, 16],
                             [0, 1, 2, -1, -1, 3, 4, 5, 6, 7, -1, 8, 9, 10, 11, 12, 13, 14, 15, 16],
                             [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, -1, 10, 11, 12, 13, 14, 15, 16, 17, 18]])
-        obj = AlignPath.from_indices(indices)
+        path = AlignPath.from_indices(indices)
         lengths = [3, 2, 5, 1, 4, 3, 2]
         states = [0, 2, 0, 6, 0, 1, 0]
-        npt.assert_array_equal(lengths, obj.lengths)
-        npt.assert_array_equal(states, np.squeeze(obj.states))
+        npt.assert_array_equal(lengths, path.lengths)
+        npt.assert_array_equal(states, np.squeeze(path.states))
 
         # test masked array
         masked = np.ma.array(indices, mask=(indices == -1))
-        obj = AlignPath.from_indices(masked, gap="mask")
-        npt.assert_array_equal(lengths, obj.lengths)
-        npt.assert_array_equal(states, np.squeeze(obj.states))
+        path = AlignPath.from_indices(masked, gap="mask")
+        npt.assert_array_equal(lengths, path.lengths)
+        npt.assert_array_equal(states, np.squeeze(path.states))
 
         # test non-zero indices
         indices = np.array([[25, 26, -1, -1, 27, 28, 29, 30],
                             [-1, 79, 80, 81, 82, 83, 84, -1]])
-        obj = AlignPath.from_indices(indices)
+        path = AlignPath.from_indices(indices)
         lengths = [1, 1, 2, 3, 1]
         states = [2, 0, 1, 0, 2]
-        npt.assert_array_equal(lengths, obj.lengths)
-        npt.assert_array_equal(states, np.squeeze(obj.states))
-        npt.assert_array_equal(obj.starts, [25, 79])
+        npt.assert_array_equal(lengths, path.lengths)
+        npt.assert_array_equal(states, np.squeeze(path.states))
+        npt.assert_array_equal(path.starts, [25, 79])
 
         # test masked array and non-zero indices
         # TODO
+
+        # test indices all gaps
+        indices = np.array([[25, 26, -1, -1, 27, 28, 29, 30],
+                            [-1, -1, -1, -1, -1, -1, -1, -1]])
+        path = AlignPath.from_indices(indices)
+        lengths = [2, 2, 4]
+        states = [2, 3, 2]
+        starts = [25, -1]
+        npt.assert_array_equal(path.lengths, lengths)
+        npt.assert_array_equal(np.squeeze(path.states), states)
+        npt.assert_array_equal(path.starts, starts)
 
     def test_to_coordinates(self):
         # test base case
         exp = np.array([[0, 3, 5, 10, 11, 15, 15, 17],
                         [0, 3, 3,  8,  8, 12, 15, 17],
                         [0, 3, 5, 10, 10, 14, 17, 19]])
-        obj = AlignPath(lengths=[3, 2, 5, 1, 4, 3, 2],
+        path = AlignPath(lengths=[3, 2, 5, 1, 4, 3, 2],
                         states=[0, 2, 0, 6, 0, 1, 0],
                         starts=[0, 0, 0])
-        obs = obj.to_coordinates()
+        obs = path.to_coordinates()
         npt.assert_array_equal(obs, exp)
 
     def test_from_coordinates(self):
@@ -191,30 +239,30 @@ class TestAlignPath(unittest.TestCase):
         coords = np.array([[0, 3, 5, 10, 11, 15, 15, 17],
                            [0, 3, 3,  8,  8, 12, 15, 17],
                            [0, 3, 5, 10, 10, 14, 17, 19]])
-        obj = AlignPath.from_coordinates(coords)
+        path = AlignPath.from_coordinates(coords)
         lengths = [3, 2, 5, 1, 4, 3, 2]
         states = [0, 2, 0, 6, 0, 1, 0]
-        npt.assert_array_equal(lengths, obj.lengths)
-        npt.assert_array_equal(states, np.squeeze(obj.states))
+        npt.assert_array_equal(lengths, path.lengths)
+        npt.assert_array_equal(states, np.squeeze(path.states))
 
 
 class TestPairAlignPath(unittest.TestCase):
     def test_from_cigar(self):
         # test valid cigar with no = or X
         cigar = "3M42I270M32D"
-        obj = PairAlignPath.from_cigar(cigar)
+        path = PairAlignPath.from_cigar(cigar)
         lengths = [3, 42, 270, 32]
         states = [0, 1, 0, 2]
-        npt.assert_array_equal(lengths, obj.lengths)
-        npt.assert_array_equal(states, np.squeeze(obj.states))
+        npt.assert_array_equal(lengths, path.lengths)
+        npt.assert_array_equal(states, np.squeeze(path.states))
 
         # test valid cigar with = or X
         cigar = "3M42I270M23X663=32D24X43="
-        obj = PairAlignPath.from_cigar(cigar)
+        path = PairAlignPath.from_cigar(cigar)
         lengths = [3, 42, 956, 32, 67]
         states = [0, 1, 0, 2, 0]
-        npt.assert_array_equal(lengths, obj.lengths)
-        npt.assert_array_equal(states, np.squeeze(obj.states))
+        npt.assert_array_equal(lengths, path.lengths)
+        npt.assert_array_equal(states, np.squeeze(path.states))
 
         # test empty cigar string
         with self.assertRaises(ValueError, msg="CIGAR string must not be empty."):
@@ -226,19 +274,19 @@ class TestPairAlignPath(unittest.TestCase):
 
         # test valid cigar with no 1's
         cigar = "MID12MI"
-        obj = PairAlignPath.from_cigar(cigar)
+        path = PairAlignPath.from_cigar(cigar)
         lengths = [1, 1, 1, 12, 1]
         states = [0, 1, 2, 0, 1]
-        npt.assert_array_equal(lengths, obj.lengths)
-        npt.assert_array_equal(states, np.squeeze(obj.states))
+        npt.assert_array_equal(lengths, path.lengths)
+        npt.assert_array_equal(states, np.squeeze(path.states))
 
         # test cigar with all possible valid codes
         cigar = "1M2I3D4P5=6X7N8S9H"
-        obj = PairAlignPath.from_cigar(cigar)
+        path = PairAlignPath.from_cigar(cigar)
         lengths = [1, 2, 3, 4, 11, 7, 8, 9]
         states = [0, 1, 2, 3, 0, 2, 1, 3]
-        npt.assert_array_equal(lengths, obj.lengths)
-        npt.assert_array_equal(states, np.squeeze(obj.states))
+        npt.assert_array_equal(lengths, path.lengths)
+        npt.assert_array_equal(states, np.squeeze(path.states))
 
     def test_to_cigar(self):
         # test base case
@@ -260,8 +308,8 @@ class TestPairAlignPath(unittest.TestCase):
         # test if alignment has two gaps in same position
         lengths = [1, 2, 3, 4, 1]
         gaps = [1, 0, 2, 1, 3]
-        obj = PairAlignPath(lengths=lengths, states=gaps, starts=[0, 0])
-        obs = obj.to_cigar()
+        path = PairAlignPath(lengths=lengths, states=gaps, starts=[0, 0])
+        obs = path.to_cigar()
         exp = "1I2M3D4I1P"
         self.assertEqual(obs, exp)
 
@@ -269,7 +317,7 @@ class TestPairAlignPath(unittest.TestCase):
         seq1 = '-ATCGC-----'
         seq2 = 'GTA---ATTA-'
         seqs = [DNA(seq1), DNA(seq2)]
-        obs = obj.to_cigar(seqs=seqs)
+        obs = path.to_cigar(seqs=seqs)
         exp = "1I1X1=3D4I1P"
         self.assertEqual(obs, exp)
 
@@ -277,7 +325,7 @@ class TestPairAlignPath(unittest.TestCase):
         seq1 = '-ATCGC-----'
         seq2 = 'GTA---ATTA-'
         seqs = [seq1, seq2]
-        obs = obj.to_cigar(seqs=seqs)
+        obs = path.to_cigar(seqs=seqs)
         exp = "1I1X1=3D4I1P"
         self.assertEqual(obs, exp)
 
@@ -286,8 +334,8 @@ class TestPairAlignPath(unittest.TestCase):
         seq2 = 'GTA---ATTA-'
         seqs = [seq1, seq2]
         with self.assertRaises(TypeError,
-                               msg="`seqs` must be of type string or Sequence object."):
-            obs = obj.to_cigar(seqs=seqs)
+                               msg="`seqs` must be of type string or Sequence pathect."):
+            obs = path.to_cigar(seqs=seqs)
 
     def test_from_bits(self):
         # test base case
@@ -337,11 +385,11 @@ class TestPairAlignPath(unittest.TestCase):
             PairAlignPath(lengths=[1, 2, 3], states=[1, 2, 4], starts=[0, 0]).to_bits()
 
         # test base case
-        obj = PairAlignPath(lengths=[3, 2, 5, 1, 4, 3, 2],
+        path = PairAlignPath(lengths=[3, 2, 5, 1, 4, 3, 2],
                             states=[0, 2, 0, 2, 0, 1, 0],
                             starts=[0, 0])
         exp = np.array(([0, 0, 0, 0, 0, 1, 0], [0, 1, 0, 1, 0, 0, 0]))
-        obs = obj.to_bits()
+        obs = path.to_bits()
         npt.assert_array_equal(np.squeeze(obs), exp)
     
     def test_run_length_encode(self):

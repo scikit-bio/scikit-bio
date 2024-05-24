@@ -275,24 +275,27 @@ class AlignPath(SkbioObject):
 
         Notes
         -----
-        The returned alignment path will span across the entire tabular MSA. Its start
-        positions will be uniformly zeros.
+        If a sequence in the alignment consists of entirely gap characters, its start
+        position will be equal to the gap character.
 
         """
         if gap == "mask":
             return cls.from_bits(
                 np.ma.getmask(indices),
-                [x[np.argmax(x != indices.fill_value)] for x in indices],
+                indices[
+                    np.arange(indices.shape[0]),
+                    np.argmax(indices != indices.fill_value, axis=1),
+                ],
             )
         else:
+            if isinstance(indices, np.ma.MaskedArray):
+                raise TypeError("For masked arrays, gap must be 'mask'.")
             indices = np.asarray(indices)
             return cls.from_bits(
-                indices == gap, [x[np.argmax(x != gap)] for x in indices]
+                indices == gap,
+                indices[np.arange(indices.shape[0]), np.argmax(indices != gap, axis=1)],
             )
         # TODO
-        # 1. make mask version (first unmasked element)
-        # 2. consider edge cases (e.g., all elements are gap)
-        # 3. double-check if results are sane
         # n. optimization
 
     def to_coordinates(self):
