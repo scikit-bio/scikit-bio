@@ -93,6 +93,21 @@ class AlignPath(SkbioObject):
     lengths: [3 2 5 1 4 3 2]
     states: [0 2 0 6 0 1 0]
 
+    Notes
+    -----
+    The underlying logic of the ``AlignPath`` data structure is rooted in two concepts:
+    run length encoding and bit arrays.
+
+    The lengths array is calculated by performing run length encoding on the alignment,
+    considering each segment with consistent gap status to be an individual unit in the
+    encoding. In the above example, the first three positions of the alignment contain
+    no gaps, so the first value in the lengths array is 3, and so on.
+
+    The states array is calculated by turning the alignment segments into a bit array
+    where gaps become 1's, and characters become zeros. Then, the 0's and 1's are
+    converted into bytes. In the above example, the fourth segment, which has length 1,
+    would become [0, 1, 1], which then becomes 6.
+
     """
 
     def __init__(self, lengths, states, starts):
