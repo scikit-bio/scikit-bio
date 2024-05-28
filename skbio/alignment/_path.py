@@ -318,8 +318,8 @@ class AlignPath(SkbioObject):
         --------
         >>> from skbio.alignment import AlignPath
         >>> path = Align.Path(lengths=[1, 2, 2, 1],
-                              states=[0, 5, 2, 6],
-                              starts=[0, 0, 0])
+        ...                   states=[0, 5, 2, 6],
+        ...                   starts=[0, 0, 0])
         >>> path.to_indices()
         array([[ 0, -1, -1,  1,  2,  3],
                [ 0,  1,  2, -1, -1, -1],
@@ -380,8 +380,8 @@ class AlignPath(SkbioObject):
         >>> import numpy as np
         >>> from skbio.alignment import AlignPath
         >>> indices = np.array([[ 0, -1, -1,  1,  2,  3],
-                                [ 0,  1,  2, -1, -1, -1],
-                                [ 0, -1, -1,  1,  2, -1]])
+        ...                     [ 0,  1,  2, -1, -1, -1],
+        ...                     [ 0, -1, -1,  1,  2, -1]])
         >>> path = AlignPath.from_indices()
         >>> path
         AlignPath
