@@ -176,6 +176,22 @@ class AlignPath(SkbioObject):
         ndarray of (0, 1) of shape (n_seqs, n_positions)
             Array of zeros (character) and ones (gap) which represent the alignment.
 
+        Examples
+        --------
+        >>> from skbio import DNA, TabularMSA
+        >>> from skbio.alignment import AlignPath
+        >>> seqs = [
+        ...    DNA('CGTCGTGC'),
+        ...    DNA('CA--GT-C'),
+        ...    DNA('CGTCGT-T')
+        ... ]
+        >>> msa = TabularMSA(seqs)
+        >>> path = AlignPath.from_tabular(msa)
+        >>> path.to_bits()
+        array([[0, 0, 0, 0, 0],
+               [0, 1, 0, 1, 0],
+               [0, 0, 0, 1, 0]], dtype=uint8)
+
         """
         return np.unpackbits(
             np.atleast_2d(self._states), axis=0, count=self._shape[0], bitorder="little"
@@ -197,6 +213,20 @@ class AlignPath(SkbioObject):
         -------
         AlignPath
             The alignment path created from the given bit array.
+
+        Examples
+        --------
+        >>> import numpy as np
+        >>> from skbio.alignment import AlignPath
+        >>> bit_arr = np.array([[0, 0, 0, 0, 0, 0, 0, 0],
+        ...                     [0, 0, 1, 1, 0, 0, 1, 0],
+        ...                     [0, 0, 0, 0, 0, 0, 1, 0]])
+        >>> path = AlignPath.from_bits(bit_arr)
+        >>> path
+        AlignPath
+        Shape(sequence=3, position=8)
+        lengths: [2 2 2 1 1]
+        states: [0 2 0 6 0]
 
         """
         # Pack bits into integers.
@@ -284,6 +314,17 @@ class AlignPath(SkbioObject):
         ndarray of int of shape (n_seqs, n_positions)
             Array of indices of characters in the original sequences.
 
+        Examples
+        --------
+        >>> from skbio.alignment import AlignPath
+        >>> path = Align.Path(lengths=[1, 2, 2, 1],
+                              states=[0, 5, 2, 6],
+                              starts=[0, 0, 0])
+        >>> path.to_indices()
+        array([[ 0, -1, -1,  1,  2,  3],
+               [ 0,  1,  2, -1, -1, -1],
+               [ 0, -1, -1,  1,  2, -1]])
+
         """
         errmsg = "Gap must be an integer, np.nan, np.inf, 'del', or 'mask'."
         valid_gaps = {"del", "mask"}
@@ -333,6 +374,20 @@ class AlignPath(SkbioObject):
         -----
         If a sequence in the alignment consists of entirely gap characters, its start
         position will be equal to the gap character.
+
+        Examples
+        --------
+        >>> import numpy as np
+        >>> from skbio.alignment import AlignPath
+        >>> indices = np.array([[ 0, -1, -1,  1,  2,  3],
+                                [ 0,  1,  2, -1, -1, -1],
+                                [ 0, -1, -1,  1,  2, -1]])
+        >>> path = AlignPath.from_indices()
+        >>> path
+        AlignPath
+        Shape(sequence=3, position=6)
+        lengths: [1 2 2 1]
+        states: [0 5 2 6]
 
         """
         if gap == "mask":
