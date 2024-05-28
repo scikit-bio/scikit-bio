@@ -418,6 +418,10 @@ class AlignPath(SkbioObject):
             Array where each value defines the start positions (index) of each segment
             for each sequence.
 
+        Examples
+        --------
+
+
         """
         lens = self._lengths * (1 - self.to_bits())
         col0 = np.zeros((self._shape[0], 1), dtype=int)
