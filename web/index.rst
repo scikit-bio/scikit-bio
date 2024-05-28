@@ -289,7 +289,7 @@
 
          .. card::
 
-            Upcoming scikit-bio `workshop at ISMB 2024 <https://www.iscb.org/ismb2024/programme-schedule/tutorials#ip3>`_, July 11, Montreal, Canada. Welcome to join!
+            Upcoming scikit-bio `workshop at ISMB 2024 <https://www.iscb.org/ismb2024/programme-schedule/tutorials#ip3>`_, July 12, Montreal, Canada. Welcome to join!
 
          .. card::
 
