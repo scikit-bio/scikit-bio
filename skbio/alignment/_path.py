@@ -420,7 +420,14 @@ class AlignPath(SkbioObject):
 
         Examples
         --------
-
+        >>> from skbio.alignment import AlignPath
+        >>> path = AlignPath(lengths=[1, 2, 2, 1],
+        ...                  states=[0, 5, 2, 6],
+        ...                  gaps=[0, 0, 0])
+        >>> path.to_coordinates()
+        array([[0, 1, 1, 3, 4],
+               [0, 1, 3, 3, 3],
+               [0, 1, 1, 3, 3]])
 
         """
         lens = self._lengths * (1 - self.to_bits())
@@ -445,6 +452,20 @@ class AlignPath(SkbioObject):
         -------
         AlignPath
             The alignment path created from the given coordinates.
+
+        Examples
+        --------
+        >>> import numpy as np
+        >>> from skbio.alignment import AlignPath
+        >>> coordinates = np.array([[0, 1, 1, 3, 4],
+        ...                         [0, 1, 3, 3, 3],
+        ...                         [0, 1, 1, 3, 3]])
+        >>> path = AlignPath.from_coordinates(coordinates)
+        >>> path
+        AlignPath
+        Shape(sequence=3, position=6)
+        lengths: [1 2 2 1]
+        states: [0 5 2 6]
 
         """
         starts = coords[:, 0]
@@ -540,6 +561,15 @@ class PairAlignPath(AlignPath):
         str
             CIGAR string representing the pairwise alignment path.
 
+        Examples
+        --------
+        >>> from skbio.alignment import PairAlignPath
+        >>> path = PairAlignPath(lengths=[2, 5, 3, 1],
+        ...                      states=[0, 3, 2, 1],
+        ...                      starts=[0, 0])
+        >>> path.to_cigar()
+        '2M5P3D1I'
+
         """
         cigar = []
 
@@ -605,6 +635,15 @@ class PairAlignPath(AlignPath):
         -------
         PairAlignPath
             The pairwise alignment path created from the given CIGAR string.
+
+        Examples
+        --------
+        >>> from skbio.alignment import PairAlignPath
+        >>> cigar = "2M5P3D1I"
+        >>> path = PairAlignPath.from_cigar(cigar)
+        >>> path
+        <PairAlignPath, shape: Shape(sequence=2, position=11), CIGAR: '2M5P3D1I'>
+
         """
         # Make sure cigar is not empty.
         if not cigar:
