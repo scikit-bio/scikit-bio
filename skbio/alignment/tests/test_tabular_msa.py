@@ -19,6 +19,7 @@ import pandas as pd
 import scipy.stats
 
 from skbio import Sequence, DNA, RNA, Protein, TabularMSA
+from skbio.alignment import AlignPath
 from skbio.sequence import GrammaredSequence
 from skbio.util import classproperty
 from skbio.util._decorator import overrides
@@ -872,6 +873,18 @@ class TestTabularMSA(unittest.TestCase, ReallyEqualMixin):
         self.assertEqual(d2, d1)
         self.assertIs(d1['a'], d2['a'])
         self.assertIs(d1[42], d2[42])
+    
+    def test_from_path_seqs(self):
+        path = AlignPath(lengths=[3, 2, 5, 1, 4, 3, 2],
+                         states=[0, 2, 0, 6, 0, 1, 0],
+                         starts=[0, 0, 0])
+        seqs = [DNA("CGGTCGTAACGCGTACA"),
+                DNA("CAGGTAAGCATACCTCA"),
+                DNA("CGGTCGTCACTGTACACTA")]
+        obj = TabularMSA.from_path_seqs(path=path, seqs=seqs)
+        self.assertEqual(str(obj[0]), "CGGTCGTAACGCGTA---CA")
+        self.assertEqual(str(obj[1]), "CAG--GTAAG-CATACCTCA")
+        self.assertEqual(str(obj[2]), "CGGTCGTCAC-TGTACACTA")
 
 
 class TestContains(unittest.TestCase):

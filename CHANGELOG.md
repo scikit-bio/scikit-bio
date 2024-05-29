@@ -5,6 +5,7 @@
 ### Features
 
 * Added `ProteinEmbedding` class and corresponding file format ([#2008](https://github.com/scikit-bio/scikit-bio/pull/2008]))
+* Added `AlignPath` and `PairAlignPath` classes ([#2011](https://github.com/scikit-bio/scikit-bio/pull/2011))
 
 ## Version 0.6.0
 
