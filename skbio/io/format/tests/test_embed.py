@@ -8,9 +8,6 @@
 import copy
 import io
 import string
-import os
-import shutil
-import gc
 from unittest import TestCase, main
 from functools import partial
 from pathlib import Path
