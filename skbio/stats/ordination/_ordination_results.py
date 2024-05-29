@@ -427,7 +427,7 @@ class OrdinationResults(SkbioObject, PlottableMixin):
             self.samples = self.samples.rename(index=rename_dict)
         elif id_type == 'features':
             if self.features is None:
-                raise ValueError("Features is None.")
+                raise ValueError("`features` were not provided on construction of this object")
             elif strict and set(rename_dict.keys()) != set(self.features.index):
                 raise ValueError("The ids in rename_dict are different \
                                   from the ids in self.features.")
