@@ -423,7 +423,7 @@ class OrdinationResults(SkbioObject, PlottableMixin):
 
         """
         if axis == 'samples':
-            if (strict and type(mapper) == dict and
+            if (strict and isinstance(mapper, dict) and
                     set(mapper) != set(self.samples.index)):
                 raise ValueError("The ids in mapper are different from the \
                                  ids in self.samples.")
@@ -432,7 +432,7 @@ class OrdinationResults(SkbioObject, PlottableMixin):
             if self.features is None:
                 raise ValueError("`features` were not provided on \
                                  construction of this object")
-            elif (strict and type(mapper) == dict and
+            elif (strict and isinstance(mapper, dict) and
                     set(mapper) != set(self.features.index)):
                 raise ValueError("The ids in mapper are different \
                                   from the ids in self.features.")
