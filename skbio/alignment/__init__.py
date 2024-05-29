@@ -15,6 +15,8 @@ Alignment structure
    :toctree: generated/
 
    TabularMSA
+   AlignPath
+   PairAlignPath
 
 
 Alignment algorithms
@@ -218,11 +220,14 @@ from ._pairwise import (
     local_pairwise_align_ssw,
 )
 from skbio.alignment._ssw_wrapper import StripedSmithWaterman, AlignmentStructure
+from skbio.alignment._path import AlignPath, PairAlignPath
 
 __all__ = [
     "TabularMSA",
     "StripedSmithWaterman",
     "AlignmentStructure",
+    "AlignPath",
+    "PairAlignPath",
     "local_pairwise_align_ssw",
     "global_pairwise_align",
     "global_pairwise_align_nucleotide",

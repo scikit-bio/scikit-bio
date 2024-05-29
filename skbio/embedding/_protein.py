@@ -5,12 +5,30 @@
 #
 # The full license is in the file LICENSE.txt, distributed with this software.
 # ----------------------------------------------------------------------------
+
+from pathlib import Path
 from skbio.sequence import Protein
 from skbio.embedding._embedding import SequenceEmbedding
+from skbio.embedding._embedding import SequenceVector
+from skbio.embedding._embedding import _repr_helper
+from skbio.stats.ordination import OrdinationResults
+from scipy.spatial.distance import pdist, squareform
 from skbio.util import get_data_path
-from pathlib import Path
 import pandas as pd
 import numpy as np
+
+
+def _validate_protein(sequence):
+    if isinstance(sequence, Protein):
+        sequence = str(sequence)
+    elif isinstance(sequence, str):
+        if " " in sequence:
+            sequence = sequence.replace(" ", "")
+
+        # perform a check to make sure the sequence is a valid
+        # protein sequence
+        _ = Protein(sequence)
+    return sequence
 
 
 class ProteinEmbedding(SequenceEmbedding):
@@ -27,15 +45,33 @@ class ProteinEmbedding(SequenceEmbedding):
         If ``True``, then the first row of the embedding will be removed.
         Some language models specify start tokens, and this parameter can
         be used to account for this.
-    clip_end : bool, optional
+    clip_tail : bool, optional
         If ``True``, then the last row of the embedding will be removed.
         Some language models specify end tokens, and this parameter can
         be used to account for this.
 
     See Also
     --------
-    Protein
+    skbio.sequence.Protein
 
+    Examples
+    --------
+    >>> from skbio.embedding import ProteinEmbedding
+    >>> import numpy as np
+    >>> embedding = np.random.rand(10, 3)
+    >>> sequence = "ACDEFGHIKL"
+    >>> ProteinEmbedding(embedding, sequence)
+    ProteinEmbedding
+    --------------------------
+    Stats:
+        length: 10
+        embedding dimension: 3
+        has gaps: False
+        has degenerates: False
+        has definites: True
+        has stops: False
+    --------------------------
+    0 ACDEFGHIKL
     """
 
     default_write_format = "embed"
@@ -43,21 +79,13 @@ class ProteinEmbedding(SequenceEmbedding):
     def __init__(
         self, embedding, sequence, clip_head=False, clip_tail=False, **kwargs
     ):
+        embedding = np.asarray(embedding)
         if clip_head:
             embedding = embedding[1:]
         if clip_tail:
             embedding = embedding[:-1]
 
-        if isinstance(sequence, Protein):
-            sequence = str(sequence)
-        elif isinstance(sequence, str):
-            if " " in sequence:
-                sequence = sequence.replace(" ", "")
-
-            # perform a check to make sure the sequence is a valid
-            # protein sequence
-            Protein(sequence)
-
+        sequence = _validate_protein(sequence)
         super(ProteinEmbedding, self).__init__(
             embedding=embedding, sequence=sequence, **kwargs
         )
@@ -81,18 +109,85 @@ class ProteinEmbedding(SequenceEmbedding):
         Protein
         """
         seq = Protein(str(self))
-
-        rstr = repr(seq)
-        rstr = rstr.replace("Protein", "ProteinEmbedding")
-        n_indent = 4  # see Sequence.__repr__
-        indent = " " * n_indent
-        rstr = rstr.replace(
-            "has gaps",
-            f"embedding dimension: {self.embedding.shape[1]}\n{indent}has gaps",
+        rstr = _repr_helper(
+            repr(seq), "Protein", "ProteinEmbedding", "embedding",
+            regex_match="has gaps", shape=self.embedding.shape[1]
         )
         return rstr
 
 
 example_protein_embedding = ProteinEmbedding(
-    np.random.randn(62, 1024),
+    np.random.default_rng(0).normal(size=(62, 1024)),
     'IGKEEIQQRLAQFVDHWKELKQLAAARGQRLEESLEYQQFVANVEEEEAWINEKMTLVASED')
+
+
+class ProteinVector(SequenceVector):
+    r""" A vector representation of the protein sequence.
+
+    Parameters
+    ----------
+    sequence : str, Sequence, or 1D np.ndarray
+        Characters representing the protein sequence itself.
+    vector : np.ndarray
+        The vector representation of the protein sequence.
+
+    See Also
+    --------
+    Protein
+
+    Examples
+    --------
+    >>> from skbio.embedding import ProteinVector
+    >>> import numpy as np
+    >>> embedding = np.random.rand(10)
+    >>> sequence = "ACDEFGHIKL"
+    >>> ProteinVector(embedding, sequence)
+    ProteinVector
+    --------------------------
+    Stats:
+        length: 10
+        vector dimension: 10
+        has gaps: False
+        has degenerates: False
+        has definites: True
+        has stops: False
+    --------------------------
+    0 ACDEFGHIKL
+
+    """
+    default_write_format = "embed"
+
+    def __init__(
+        self, vector, sequence: str, **kwargs
+    ):
+
+        sequence = _validate_protein(sequence)
+        if len(vector.shape) == 1:
+            vector = vector.reshape(1, -1)
+        if len(vector.shape) == 2:
+            assert vector.shape[0] == 1, (
+                "Only 1 vector per sequence is allowed."
+            )
+        super(ProteinVector, self).__init__(
+            vector, sequence=sequence,  **kwargs
+        )
+
+    def __repr__(self):
+        r"""
+        Return a string representation of the ProteinVector object.
+
+        Returns
+        -------
+        str
+            A string representation of the ProteinEmbedding object.
+
+        See Also
+        --------
+        Protein
+        """
+        seq = Protein(str(self))
+        rstr = _repr_helper(
+            repr(seq), "Protein", "ProteinVector", "vector",
+            regex_match="has gaps", shape=self.embedding.shape[1]
+        )
+        return rstr
