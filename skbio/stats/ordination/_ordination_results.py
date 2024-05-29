@@ -400,14 +400,16 @@ class OrdinationResults(SkbioObject, PlottableMixin):
             formatted_attr = formatter(attr)
         return "\t%s: %s" % (attr_label, formatted_attr)
 
-    def rename(self, id_type, rename_dict, strict=True):
+    def rename(self, mapper, axis='samples', strict=True):
         """
         Renames ids in OrdinationResults.
 
         Parameters
         ----------
-        rename_dict : dict
-            A dictionary that maps current ids to new ids.
+        mapper : dict or function
+            A dictionary or function that maps current ids to new ids.
+        axis : samples or features
+            Specifies which id type, either 'samples' or 'features', to rename.
         strict: bool, optional
            If True, then every id in the OrdinationResults dataframe must be
            included in rename_dict and renamed.
@@ -420,17 +422,21 @@ class OrdinationResults(SkbioObject, PlottableMixin):
             ids as OrdinationResults.
 
         """
-        if id_type == 'samples':
-            if strict and set(rename_dict) != set(self.samples.index):
-                raise ValueError("The ids in rename_dict are different from the \
-                                  ids in self.samples.")
-            self.samples = self.samples.rename(index=rename_dict)
-        elif id_type == 'features':
+        if axis == 'samples':
+            if strict and type(mapper) == dict and
+                    set(mapper) != set(self.samples.index):
+                raise ValueError("The ids in mapper are different from the \
+                                 ids in self.samples.")
+            self.samples = self.samples.rename(index=mapper)
+        elif axis == 'features':
             if self.features is None:
-                raise ValueError("`features` were not provided on construction of this object")
-            elif strict and set(rename_dict) != set(self.features.index):
-                raise ValueError("The ids in rename_dict are different \
+                raise ValueError("`features` were not provided on \
+                                 construction of this object")
+            elif strict and type(mapper) == dict and
+                    set(mapper) != set(self.features.index):
+                raise ValueError("The ids in mapper are different \
                                   from the ids in self.features.")
-            self.features = self.features.rename(index=rename_dict)
+            self.features = self.features.rename(index=mapper)
         else:
-            raise ValueError("The id_type must be either 'samples' or 'features'.")
+            raise ValueError("axis must be either 'samples' or \
+                             'features'.")
