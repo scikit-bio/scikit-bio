@@ -408,7 +408,6 @@ class OrdinationResults(SkbioObject, PlottableMixin):
         ----------
         rename_dict : dict
             A dictionary that maps current ids to new ids.
-
         strict: bool, optional
            If True, then every id in the OrdinationResults dataframe must be
            included in rename_dict and renamed.
