@@ -415,7 +415,6 @@ class OrdinationResults(SkbioObject, PlottableMixin):
 
         Raises
         ______
-
         ValueError
             If strict is True and rename_dict does not contain all of the same
             ids as OrdinationResults.
