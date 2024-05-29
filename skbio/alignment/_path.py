@@ -423,7 +423,7 @@ class AlignPath(SkbioObject):
         >>> from skbio.alignment import AlignPath
         >>> path = AlignPath(lengths=[1, 2, 2, 1],
         ...                  states=[0, 5, 2, 6],
-        ...                  gaps=[0, 0, 0])
+        ...                  starts=[0, 0, 0])
         >>> path.to_coordinates()
         array([[0, 1, 1, 3, 4],
                [0, 1, 3, 3, 3],
