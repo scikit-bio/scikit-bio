@@ -8,6 +8,9 @@
 import copy
 import io
 import string
+import os
+import shutil
+import gc
 from unittest import TestCase, main
 from functools import partial
 from pathlib import Path
@@ -64,6 +67,10 @@ class EmbedTests(TestCase):
         with h5py.File(self.nonembed_hdf5_path, 'w') as fp:
             fp['stuff'] = [1, 2, 3]
 
+    # def tearDown(self):
+    #     os.unlink(self.writable_emb_path)
+    #     os.unlink(self.writable_emb_path2)
+
     def test_sniffer(self):
         self.assertEqual(_embed_sniffer(self.valid_embed_path), (True, {}))
         self.assertEqual(_embed_sniffer(self.invalid_embed_path), (False, {}))
@@ -105,7 +112,7 @@ class EmbedTests(TestCase):
         f = lambda x: ProteinEmbedding(*x)
         objs1 = (x for x in map(f, sequences))
 
-        with tempfile.TemporaryDirectory() as tempdir:
+        with tempfile.TemporaryDirectory(delete=False) as tempdir:
             tempdir = Path(tempdir)
             writable_emb_path = str(tempdir / Path('test.emb'))
 
@@ -186,7 +193,7 @@ class VectorTests(TestCase):
         f = lambda x: ProteinVector(*x)
         objs1 = (x for x in map(f, sequences))
 
-        with tempfile.TemporaryDirectory() as tempdir:
+        with tempfile.TemporaryDirectory(delete=False) as tempdir:
             tempdir = Path(tempdir)
             writable_emb_path = str(tempdir / Path('test.emb'))
 
