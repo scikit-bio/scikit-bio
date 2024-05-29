@@ -421,7 +421,7 @@ class OrdinationResults(SkbioObject, PlottableMixin):
 
         """
         if id_type == 'samples':
-            if strict and set(rename_dict.keys()) != set(self.samples.index):
+            if strict and set(rename_dict) != set(self.samples.index):
                 raise ValueError("The ids in rename_dict are different from the \
                                   ids in self.samples.")
             self.samples = self.samples.rename(index=rename_dict)
