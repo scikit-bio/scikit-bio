@@ -406,7 +406,6 @@ class OrdinationResults(SkbioObject, PlottableMixin):
 
         Parameters
         ----------
-
         rename_dict : dict
             A dictionary that maps current ids to new ids.
 
