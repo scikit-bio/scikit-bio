@@ -406,10 +406,8 @@ class OrdinationResults(SkbioObject, PlottableMixin):
 
         Parameters
         ----------
-
         rename_dict : dict
             A dictionary that maps current ids to new ids.
-
         strict: bool, optional
            If True, then every id in the OrdinationResults dataframe must be
            included in rename_dict and renamed.
@@ -417,21 +415,20 @@ class OrdinationResults(SkbioObject, PlottableMixin):
 
         Raises
         ______
-
         ValueError
             If strict is True and rename_dict does not contain all of the same
             ids as OrdinationResults.
 
         """
         if id_type == 'samples':
-            if strict and set(rename_dict.keys()) != set(self.samples.index):
+            if strict and set(rename_dict) != set(self.samples.index):
                 raise ValueError("The ids in rename_dict are different from the \
                                   ids in self.samples.")
             self.samples = self.samples.rename(index=rename_dict)
         elif id_type == 'features':
             if self.features is None:
-                raise ValueError("Features is None.")
-            elif strict and set(rename_dict.keys()) != set(self.features.index):
+                raise ValueError("`features` were not provided on construction of this object")
+            elif strict and set(rename_dict) != set(self.features.index):
                 raise ValueError("The ids in rename_dict are different \
                                   from the ids in self.features.")
             self.features = self.features.rename(index=rename_dict)
