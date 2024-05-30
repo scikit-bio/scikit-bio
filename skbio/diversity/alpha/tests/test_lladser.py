@@ -81,7 +81,7 @@ class LladserTests(unittest.TestCase):
         # of all test runs. To make this test pass reliable we thus have to
         # set a defined seed
         np.random.seed(12345678)
-        reps = 100
+        reps = 1000
         sum = 0
         for i in range(reps):
             # re-create the obs for every estimate, such that they are truly
