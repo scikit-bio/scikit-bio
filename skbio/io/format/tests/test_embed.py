@@ -13,6 +13,7 @@ import tempfile
 import h5py
 import numpy as np
 
+import skbio
 from skbio import Protein
 from skbio.util import get_data_path
 from skbio.embedding._protein import ProteinEmbedding
