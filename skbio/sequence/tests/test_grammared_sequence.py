@@ -545,27 +545,29 @@ class TestGrammaredSequence(TestCase):
         self.assertEqual(
             ExampleGrammaredSequence(
                 "ABC-XYZ",
-                positional_metadata={'qual': np.arange(7)},
+                positional_metadata={'qual': np.arange(7, dtype=np.int64)},
                 **kw).degap(),
             ExampleGrammaredSequence(
                 "ABCXYZ",
-                positional_metadata={'qual': [0, 1, 2, 4, 5, 6]},
+                positional_metadata={'qual': np.asarray([0, 1, 2, 4, 5, 6],
+                                                        dtype=np.int64)},
                 **kw))
 
         self.assertEqual(
             ExampleGrammaredSequence(
                 ".-ABC-XYZ.",
-                positional_metadata={'qual': np.arange(10)},
+                positional_metadata={'qual': np.arange(10, dtype=np.int64)},
                 **kw).degap(),
             ExampleGrammaredSequence(
                 "ABCXYZ",
-                positional_metadata={'qual': [2, 3, 4, 6, 7, 8]},
+                positional_metadata={'qual': np.asarray([2, 3, 4, 6, 7, 8],
+                                                        dtype=np.int64)},
                 **kw))
 
         self.assertEqual(
             ExampleGrammaredSequence(
                 "---.-.-.-.-.",
-                positional_metadata={'quality': np.arange(12)},
+                positional_metadata={'quality': np.arange(12, dtype=np.int64)},
                 **kw).degap(),
             ExampleGrammaredSequence(
                 "",

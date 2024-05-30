@@ -119,7 +119,7 @@ def isubsample(items, maximum, minimum=1, buf_size=1000, bin_f=None):
             return True
 
     # buffer some random values
-    random_values = np.random.randint(0, sys.maxsize, buf_size)
+    random_values = np.random.randint(0, sys.maxsize, buf_size, dtype=np.int64)
     random_idx = 0
 
     result = defaultdict(list)
@@ -132,7 +132,7 @@ def isubsample(items, maximum, minimum=1, buf_size=1000, bin_f=None):
         random_value = random_values[random_idx]
         random_idx += 1
         if random_idx >= buf_size:
-            random_values = np.random.randint(0, sys.maxsize, buf_size)
+            random_values = np.random.randint(0, sys.maxsize, buf_size, dtype=np.int64)
             random_idx = 0
 
         # push our item on to the heap and drop the smallest if necessary
@@ -226,8 +226,8 @@ def subsample_counts(counts, n, replace=False, seed=None):
     if n < 0:
         raise ValueError("n cannot be negative.")
 
-    # biom's subsample operates inplace
-    counts = np.asarray(counts).copy()
+    counts = np.asarray(counts)
+    counts = counts.astype(np.int64, casting="safe")
 
     if counts.ndim != 1:
         raise ValueError("Only 1-D vectors are supported.")

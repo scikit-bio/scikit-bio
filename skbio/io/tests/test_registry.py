@@ -63,10 +63,10 @@ class RegistryTest(unittest.TestCase):
         self.fd2, self.fp2 = mkstemp()
 
     def tearDown(self):
-        os.remove(self.fp1)
         os.close(self.fd1)
-        os.remove(self.fp2)
+        os.remove(self.fp1)
         os.close(self.fd2)
+        os.remove(self.fp2)
 
 
 class TestRegisterAndGetReader(RegistryTest):
