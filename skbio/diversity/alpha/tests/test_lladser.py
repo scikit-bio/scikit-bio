@@ -91,7 +91,7 @@ class LladserTests(unittest.TestCase):
             if (low <= exp_p <= high):
                 sum += 1
 
-        self.assertTrue(sum/reps >= 0.95)
+        self.assertTrue(sum/reps >= 0.95, msg=f"{sum}, {reps}, {sum/reps}")
 
     def test_expand_counts(self):
         arr = np.array([2, 0, 1, 2])
