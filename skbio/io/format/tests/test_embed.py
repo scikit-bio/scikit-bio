@@ -5,11 +5,9 @@
 #
 # The full license is in the file LICENSE.txt, distributed with this software.
 # ----------------------------------------------------------------------------
-import copy
-import io
-import string
+
 from unittest import TestCase, main
-from functools import partial
+
 from pathlib import Path
 import h5py
 import numpy as np
@@ -159,7 +157,7 @@ class VectorTests(TestCase):
         self.assertEqual(_embed_sniffer(self.nonembed_hdf5_path), (False, {}))
         emb, seq = self.sequences[0]
         obj = ProteinVector(emb, seq)
-        _protein_to_vector(obj, 'prot_vec.emb')
+        _protein_to_vector(obj, str(Path(self.tempdir.name) / Path("prot_vec.emb")))
 
     def test_read_write_single(self):
         for emb, seq in self.sequences:

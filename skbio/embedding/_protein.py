@@ -6,16 +6,12 @@
 # The full license is in the file LICENSE.txt, distributed with this software.
 # ----------------------------------------------------------------------------
 
-from pathlib import Path
-from skbio.sequence import Protein
-from skbio.embedding._embedding import SequenceEmbedding
-from skbio.embedding._embedding import SequenceVector
-from skbio.embedding._embedding import _repr_helper
-from skbio.stats.ordination import OrdinationResults
-from scipy.spatial.distance import pdist, squareform
-from skbio.util import get_data_path
-import pandas as pd
 import numpy as np
+import pandas as pd
+
+from skbio.sequence import Protein
+from skbio.stats.ordination import OrdinationResults
+from skbio.embedding._embedding import SequenceEmbedding, SequenceVector, _repr_helper
 
 
 def _validate_protein(sequence):
@@ -25,20 +21,19 @@ def _validate_protein(sequence):
         if " " in sequence:
             sequence = sequence.replace(" ", "")
 
-        # perform a check to make sure the sequence is a valid
-        # protein sequence
+        # perform a check to make sure the sequence is a valid protein sequence
         _ = Protein(sequence)
     return sequence
 
 
 class ProteinEmbedding(SequenceEmbedding):
-    r"""Stores the embeddings of the protein sequence.
+    r"""Embedding of a protein sequence.
 
     Parameters
     ----------
-    sequence : str, Protein, or 1D np.ndarray
+    sequence : str, Protein, or 1D ndarray
         Characters representing the protein sequence itself.
-    embedding : np.ndarray
+    embedding : array_like
         The embedding of the protein sequence. Row vectors correspond to
         the latent residues coordinates.
     clip_head : bool, optional
@@ -72,13 +67,12 @@ class ProteinEmbedding(SequenceEmbedding):
         has stops: False
     --------------------------
     0 ACDEFGHIKL
+
     """
 
     default_write_format = "embed"
 
-    def __init__(
-        self, embedding, sequence, clip_head=False, clip_tail=False, **kwargs
-    ):
+    def __init__(self, embedding, sequence, clip_head=False, clip_tail=False, **kwargs):
         embedding = np.asarray(embedding)
         if clip_head:
             embedding = embedding[1:]
@@ -92,37 +86,42 @@ class ProteinEmbedding(SequenceEmbedding):
 
     @property
     def residues(self):
-        r""" Array containing underlying residue characters """
+        r"""Array containing underlying residue characters."""
         return self._ids.view("|S1")
 
     def __repr__(self):
-        r"""
-        Return a string representation of the ProteinEmbedding object.
+        r"""Return a string representation of the ProteinEmbedding object.
 
         Returns
         -------
         str
-            A string representation of the ProteinEmbedding object.
+            String representation of the ProteinEmbedding object.
 
         See Also
         --------
-        Protein
+        skbio.sequence.Protein
+
         """
         seq = Protein(str(self))
         rstr = _repr_helper(
-            repr(seq), "Protein", "ProteinEmbedding", "embedding",
-            regex_match="has gaps", shape=self.embedding.shape[1]
+            repr(seq),
+            "Protein",
+            "ProteinEmbedding",
+            "embedding",
+            regex_match="has gaps",
+            shape=self.embedding.shape[1],
         )
         return rstr
 
 
 example_protein_embedding = ProteinEmbedding(
     np.random.default_rng(0).normal(size=(62, 1024)),
-    'IGKEEIQQRLAQFVDHWKELKQLAAARGQRLEESLEYQQFVANVEEEEAWINEKMTLVASED')
+    "IGKEEIQQRLAQFVDHWKELKQLAAARGQRLEESLEYQQFVANVEEEEAWINEKMTLVASED",
+)
 
 
 class ProteinVector(SequenceVector):
-    r""" A vector representation of the protein sequence.
+    r"""Vector representation of a protein sequence.
 
     Parameters
     ----------
@@ -133,7 +132,7 @@ class ProteinVector(SequenceVector):
 
     See Also
     --------
-    Protein
+    skbio.sequence.Protein
 
     Examples
     --------
@@ -155,39 +154,38 @@ class ProteinVector(SequenceVector):
     0 ACDEFGHIKL
 
     """
+
     default_write_format = "embed"
 
-    def __init__(
-        self, vector, sequence: str, **kwargs
-    ):
-
+    def __init__(self, vector, sequence: str, **kwargs):
         sequence = _validate_protein(sequence)
         if len(vector.shape) == 1:
             vector = vector.reshape(1, -1)
         if len(vector.shape) == 2:
-            assert vector.shape[0] == 1, (
-                "Only 1 vector per sequence is allowed."
-            )
-        super(ProteinVector, self).__init__(
-            vector, sequence=sequence,  **kwargs
-        )
+            if vector.shape[0] != 1:
+                raise ValueError("Only one vector per sequence is allowed.")
+        super(ProteinVector, self).__init__(vector, sequence=sequence, **kwargs)
 
     def __repr__(self):
-        r"""
-        Return a string representation of the ProteinVector object.
+        r"""Return a string representation of the ProteinVector object.
 
         Returns
         -------
         str
-            A string representation of the ProteinEmbedding object.
+            String representation of the ProteinEmbedding object.
 
         See Also
         --------
-        Protein
+        skbio.sequence.Protein
+
         """
         seq = Protein(str(self))
         rstr = _repr_helper(
-            repr(seq), "Protein", "ProteinVector", "vector",
-            regex_match="has gaps", shape=self.embedding.shape[1]
+            repr(seq),
+            "Protein",
+            "ProteinVector",
+            "vector",
+            regex_match="has gaps",
+            shape=self.embedding.shape[1],
         )
         return rstr
