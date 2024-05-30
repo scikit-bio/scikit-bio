@@ -15,7 +15,7 @@ import numpy as np
 import scipy.sparse as sparse
 from skbio.util import get_rng
 
-from biom._subsample import _subsample
+from biom import subsample as biom_subsample
 
 
 def isubsample(items, maximum, minimum=1, buf_size=1000, bin_f=None):
@@ -245,6 +245,6 @@ def subsample_counts(counts, n, replace=False, seed=None):
         )
 
     rng = get_rng(seed)
-    _subsample(counts, n, replace, rng)
+    biom_subsample(counts, n, replace, rng)
 
     return np.atleast_1d(counts.astype(int).toarray().squeeze())
