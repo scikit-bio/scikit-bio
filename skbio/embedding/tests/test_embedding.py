@@ -137,9 +137,10 @@ class SequenceVectorTests(TestCase):
         npt.assert_array_equal(obs.vector, vec)
 
         # input is a matrix, not a vector
+        vec2d = np.vstack([vec, vec])
         msg = "Only one vector per sequence is allowed."
         with self.assertRaisesRegex(ValueError, msg):
-            SequenceVector(np.vstack([vec, vec]), seq)
+            SequenceVector(vec2d, seq)
 
     def test_vector(self):
         # Test if the vector attribute is set correctly
@@ -203,6 +204,7 @@ class SequenceVectorTests(TestCase):
     def test_to_distances(self):
         # Test if to_distances returns a DistanceMatrix object
         obs = embed_vec_to_distances(self.seq_vectors)
+        self.assertIsInstance(obs, DistanceMatrix)
         self.assertTupleEqual(obs.shape, (3, 3))
         self.assertTrue(all(isinstance(d, float) for d in obs.condensed_form()))
 
@@ -216,6 +218,23 @@ class SequenceVectorTests(TestCase):
         npt.assert_allclose(obs.data, exp.data)
         self.assertEqual(obs.ids, exp.ids)
 
+        obs = embed_vec_to_distances(self.seq_vectors, validate=False)
+        self.assertIsInstance(obs, DistanceMatrix)
+
+    def test_to_ordination(self):
+        # Test if to_ordination returns an OrdinationResults object
+        obs = embed_vec_to_ordination(self.seq_vectors)
+        self.assertIsInstance(obs, OrdinationResults)
+        self.assertEqual(obs.samples.shape, (3, 3))
+        self.assertEqual(obs.features.shape, (3, 3))
+        reconstructed = (obs.samples.values @ obs.features.values.T)
+        npt.assert_allclose(
+            reconstructed, embed_vec_to_numpy(self.seq_vectors)
+        )
+
+        obs = embed_vec_to_ordination(self.seq_vectors, validate=False)
+        self.assertIsInstance(obs, OrdinationResults)
+
     def test_to_dataframe(self):
         # Test if to_dataframe returns a pandas DataFrame object
         obs = embed_vec_to_dataframe(self.seq_vectors)
@@ -226,15 +245,8 @@ class SequenceVectorTests(TestCase):
                             index=["ACGT", "GCTA", "TTAG"])
         pd.testing.assert_frame_equal(obs, exp)
 
-    def test_to_ordination(self):
-        # Test if to_ordination returns an OrdinationResults object
-        obs = embed_vec_to_ordination(self.seq_vectors)
-        self.assertEqual(obs.samples.shape, (3, 3))
-        self.assertEqual(obs.features.shape, (3, 3))
-        reconstructed = (obs.samples.values @ obs.features.values.T)
-        npt.assert_allclose(
-            reconstructed, embed_vec_to_numpy(self.seq_vectors)
-        )
+        obs = embed_vec_to_dataframe(self.seq_vectors, validate=False)
+        self.assertIsInstance(obs, pd.DataFrame)
 
 
 if __name__ == "__main__":

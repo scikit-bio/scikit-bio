@@ -109,9 +109,10 @@ class ProteinVectorTests(TestCase):
                                 ProteinVector(self.vector2, "EIQQ"),
                                 ProteinVector(self.vector3, "RLAQ")]
 
-
     def test_valid_protein_vector(self):
         ProteinVector(self.emb, self.seq)
+        ProteinVector(self.emb, str(self.seq))
+        ProteinVector(self.emb, str(self.seq).encode("ascii"))
 
     def test_invalid_protein_vector(self):
         seq = "$GKEEIQQRLAQFVDHWKELKQLAAARGQRLEESLEYQQFVANVEEEEAWINEKMTLVASED^^"
@@ -123,7 +124,7 @@ class ProteinVectorTests(TestCase):
     def test_invalid_vector_shape(self):
         msg = "Only one vector per sequence is allowed."
         with self.assertRaisesRegex(ValueError, msg):
-            SequenceVector(np.vstack([self.emb, self.emb]), self.seq)
+            ProteinVector(np.vstack([self.emb, self.emb]), self.seq)
 
     def test_repr(self):
         pv = ProteinVector(self.emb, self.seq)

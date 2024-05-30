@@ -31,11 +31,11 @@ class ProteinEmbedding(SequenceEmbedding):
 
     Parameters
     ----------
-    sequence : str, Protein, or 1D ndarray
-        Characters representing the protein sequence itself.
     embedding : array_like
         The embedding of the protein sequence. Row vectors correspond to
         the latent residues coordinates.
+    sequence : str, Protein, or 1D ndarray
+        Characters representing the protein sequence itself.
     clip_head : bool, optional
         If ``True``, then the first row of the embedding will be removed.
         Some language models specify start tokens, and this parameter can
@@ -121,26 +121,28 @@ example_protein_embedding = ProteinEmbedding(
 
 
 class ProteinVector(SequenceVector):
-    r"""Vector representation of a protein sequence.
+    r"""Vector representation for a protein sequence.
 
     Parameters
     ----------
-    sequence : str, Sequence, or 1D np.ndarray
+    vector : 1D or 2D array_like
+        The vector representation of the protein sequence. Typically a 1D array. Can
+        also be a 2D array with only one row.
+    sequence : str, Sequence, or 1D ndarray
         Characters representing the protein sequence itself.
-    vector : np.ndarray
-        The vector representation of the protein sequence.
 
     See Also
     --------
+    SequenceVector
     skbio.sequence.Protein
 
     Examples
     --------
     >>> from skbio.embedding import ProteinVector
     >>> import numpy as np
-    >>> embedding = np.random.rand(10)
+    >>> vector = np.random.rand(10)
     >>> sequence = "ACDEFGHIKL"
-    >>> ProteinVector(embedding, sequence)
+    >>> ProteinVector(vector, sequence)
     ProteinVector
     --------------------------
     Stats:
@@ -159,11 +161,6 @@ class ProteinVector(SequenceVector):
 
     def __init__(self, vector, sequence: str, **kwargs):
         sequence = _validate_protein(sequence)
-        if len(vector.shape) == 1:
-            vector = vector.reshape(1, -1)
-        if len(vector.shape) == 2:
-            if vector.shape[0] != 1:
-                raise ValueError("Only one vector per sequence is allowed.")
         super(ProteinVector, self).__init__(vector, sequence=sequence, **kwargs)
 
     def __repr__(self):

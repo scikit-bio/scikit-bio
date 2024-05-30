@@ -35,7 +35,8 @@ class Embedding(SkbioObject):
     embedding : array_like
         Embedding matrix where the first axis is indexed by `ids`.
     ids : array_like
-        List of biological object IDs.
+        IDs of biological objects.
+
     """
 
     @property
@@ -71,7 +72,22 @@ class Embedding(SkbioObject):
 
 
 class SequenceEmbedding(Embedding):
-    r"""Embedding for a biological sequence."""
+    r"""Embedding for a biological sequence.
+
+    Parameters
+    ----------
+    embedding : array_like
+        The embedding of the sequence. Row vectors correspond to the latent character
+        coordinates.
+    sequence : str, Sequence, or 1D ndarray
+        Characters representing the sequence itself.
+
+    See Also
+    --------
+    Embedding
+    skbio.sequence.Sequence
+
+    """
 
     def __init__(self, embedding, sequence, **kwargs):
         if isinstance(sequence, Sequence):
@@ -116,7 +132,21 @@ class SequenceEmbedding(Embedding):
 
 
 class EmbeddingVector(Embedding):
-    r"""Vector representation for a biological entity."""
+    r"""Vector representation for a biological entity.
+
+    Parameters
+    ----------
+    vector : 1D or 2D array_like
+        The vector representation of the sequence. Typically a 1D array. Can also be a
+        2D array with only one row.
+    sequence : str, Sequence, or 1D ndarray
+        Characters representing the sequence itself.
+
+    See Also
+    --------
+    Embedding
+
+    """
 
     def __init__(self, vector, obj, **kwargs):
         super(EmbeddingVector, self).__init__(vector, obj, **kwargs)
@@ -136,20 +166,35 @@ class EmbeddingVector(Embedding):
 
 
 class SequenceVector(EmbeddingVector):
-    r"""Vector representation for a biological sequence."""
+    r"""Vector representation for a biological sequence.
+
+    Parameters
+    ----------
+    vector : 1D or 2D array_like
+        The vector representation of the sequence. Typically a 1D array. Can also be a
+        2D array with only one row.
+    sequence : str, Sequence, or 1D ndarray
+        Characters representing the sequence itself.
+
+    See Also
+    --------
+    EmbeddingVector
+    skbio.sequence.Sequence
+
+    """
 
     def __init__(self, vector, sequence, **kwargs):
-        if isinstance(sequence, Sequence):
-            sequence = str(sequence)
-        if isinstance(sequence, str):
-            sequence = sequence.encode("ascii")
-
         vector = np.atleast_2d(vector)
         if vector.shape[0] != 1:
             raise ValueError("Only one vector per sequence is allowed.")
 
-        seq = np.array([sequence], dtype="O")
-        super(SequenceVector, self).__init__(vector, seq, **kwargs)
+        if isinstance(sequence, Sequence):
+            sequence = str(sequence)
+        if isinstance(sequence, str):
+            sequence = sequence.encode("ascii")
+        sequence = np.array([sequence], dtype="O")
+
+        super(SequenceVector, self).__init__(vector, sequence, **kwargs)
 
     @property
     def sequence(self):
@@ -166,7 +211,7 @@ class SequenceVector(EmbeddingVector):
 
         See Also
         --------
-        skbio.sequence.Protein
+        skbio.sequence.Sequence
 
         """
         seq = Sequence(str(self))
@@ -196,8 +241,8 @@ def embed_vec_to_numpy(vectors, validate=True):
     Returns
     -------
     ndarray of shape (n_objects, n_features)
-        A NumPy array of shape (n_sequences, n_features) where n_features
-        corresponds to the dimensionality of the latent space.
+        A NumPy array where n_features corresponds to the dimensionality of the latent
+        space.
 
     Raises
     ------
@@ -220,6 +265,7 @@ def embed_vec_to_numpy(vectors, validate=True):
         lens = [len(ev.vector) for ev in vectors]
         if not all(ln == lens[0] for ln in lens):
             raise ValueError("All vectors must have the same length.")
+
     data = np.vstack([ev.vector for ev in vectors])
     return data
 
@@ -242,13 +288,15 @@ def embed_vec_to_distances(vectors, metric="euclidean", validate=True):
     Returns
     -------
     DistanceMatrix
-        A DistanceMatrix object.
+        A distance matrix representing pairwise distances among objects calculated by
+        the given metric.
 
     See Also
     --------
     skbio.stats.distance.DistanceMatrix
+
     """
-    data = embed_vec_to_numpy(vectors)
+    data = embed_vec_to_numpy(vectors, validate=validate)
     ids = [str(ev) for ev in vectors]
     return beta_diversity(metric, data, ids)
 
@@ -261,22 +309,23 @@ def embed_vec_to_ordination(vectors, validate=True):
     Parameters
     ----------
     vectors : iterable of EmbeddingVector objects
-        An iterable of EmbeddingVector objects, or objects that
-        subclass EmbeddingVector.
+        An iterable of EmbeddingVector objects, or objects that subclass
+        EmbeddingVector.
     validate : bool, optional
-        If ``True``, validate that all vectors have the same length
-        and are valid types.
+        If ``True``, validate that all vectors have the same length and are valid
+        types.
 
     Returns
     -------
     OrdinationResults
-        An Ordination object.
+        Ordination results with objects as samples and latent variables as features.
 
     See Also
     --------
     skbio.stats.ordination.OrdinationResults
+
     """
-    data = embed_vec_to_numpy(vectors)
+    data = embed_vec_to_numpy(vectors, validate=validate)
     u, s, vh = svd(data, full_matrices=False)
     eigvals = s**2
     short_name = "SVD"
@@ -311,12 +360,13 @@ def embed_vec_to_dataframe(vectors, validate=True):
     Returns
     -------
     pd.DataFrame
-        A pandas DataFrame containing the embedding vectors as rows.
+        Data frame containing the embedding vectors as rows (index) and object IDs as
+        columns.
 
     See Also
     --------
     pd.DataFrame
 
     """
-    data = embed_vec_to_numpy(vectors)
+    data = embed_vec_to_numpy(vectors, validate=validate)
     return pd.DataFrame(data, index=[str(ev) for ev in vectors])
