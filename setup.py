@@ -236,7 +236,7 @@ setup(
         "pandas >= 1.5.0",
         "scipy >= 1.9.0",
         "h5py >= 3.6.0",
-        "biom-format",
+        "biom-format >= 2.1.16",
     ],
     classifiers=classifiers,
     package_data={
