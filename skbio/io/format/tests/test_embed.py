@@ -7,16 +7,16 @@
 # ----------------------------------------------------------------------------
 
 from unittest import TestCase, main
-
 from pathlib import Path
+import tempfile
+
 import h5py
 import numpy as np
-import tempfile
-import skbio
-from skbio import Sequence, DNA, RNA, Protein, TabularMSA
+
+from skbio import Protein
+from skbio.util import get_data_path
 from skbio.embedding._protein import ProteinEmbedding
 from skbio.embedding._protein import ProteinVector
-from skbio.io import FASTAFormatError, QUALFormatError
 from skbio.io.format.embed import (
     _embed_sniffer, _embed_to_generator,
     _embed_to_object, _generator_to_embed,
@@ -24,7 +24,6 @@ from skbio.io.format.embed import (
     _embed_to_protein, _protein_to_embed,
     _protein_to_vector, _vector_to_protein
 )
-from skbio.util import get_data_path
 
 
 class EmbedTests(TestCase):
