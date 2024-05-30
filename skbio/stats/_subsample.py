@@ -162,8 +162,8 @@ def subsample_counts(counts, n, replace=False, seed=None):
     replace : bool, optional
         If ``True``, subsample with replacement. If ``False`` (the default),
         subsample without replacement.
-    seed : int, optional
-        If provided, set the numpy random seed with this value
+    seed : int or np.random.Generator, optional
+        A user-provided random seed or random generator instance.
 
     Returns
     -------
