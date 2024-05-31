@@ -24,7 +24,7 @@ from skbio.embedding._embedding import (
     embed_vec_to_numpy,
     embed_vec_to_dataframe,
     embed_vec_to_distances,
-    embed_vec_to_ordination,
+    embed_vec_to_ordination
 )
 
 
@@ -52,6 +52,7 @@ class EmbeddingTests(TestCase):
         with self.assertRaises(ValueError) as cm:
             Embedding(self.emb, self.seq + "A")
         self.assertEqual(str(cm.exception), msg)
+
 
 class SequenceEmbeddingTests(TestCase):
     def setUp(self):
@@ -154,21 +155,33 @@ class SequenceVectorTests(TestCase):
 
     def test_repr(self):
         # Test if the __repr__ method returns the correct string
-        for i, sequence_vector in enumerate(self.seq_vectors):
-            self.assertTrue(
-                sequence_vector.__repr__().startswith("SequenceVector")
-            )
-            self.assertIn("vector", sequence_vector.__repr__())
+        for seq_vector in self.seq_vectors:
+            self.assertTrue(seq_vector.__repr__().startswith("SequenceVector"))
+            self.assertIn("vector", seq_vector.__repr__())
 
             # check latent dimension
-            self.assertIn("4", sequence_vector.__repr__())
+            self.assertIn("4", seq_vector.__repr__())
 
     def test_str(self):
         # Test if the __str__ method returns the correct string
-        for i, sequence_vector in enumerate(self.seq_vectors):
-            self.assertEqual(str(sequence_vector), sequence_vector.sequence)
+        for seq_vector in self.seq_vectors:
+            self.assertEqual(str(seq_vector), seq_vector.sequence)
 
-    def test_to_numpy(self):
+
+class EmbedVecUtilityTests(TestCase):
+
+    def setUp(self):
+        self.vector1 = np.array([1, 2, 3])
+        self.vector2 = np.array([4, 5, 6])
+        self.vector3 = np.array([7, 8, 9])
+        self.bad_vector = np.array([7, 8])
+        self.seq_vectors = [
+            SequenceVector(self.vector1, "ACGT"),
+            SequenceVector(self.vector2, "GCTA"),
+            SequenceVector(self.vector3, "TTAG")
+        ]
+
+    def test_embed_vec_to_numpy(self):
         # Test if to_numpy returns the correct numpy array
         exp = np.array([self.vector1, self.vector2, self.vector3])
         obs = embed_vec_to_numpy(self.seq_vectors)
@@ -178,7 +191,7 @@ class SequenceVectorTests(TestCase):
         obs = embed_vec_to_numpy(self.seq_vectors, validate=False)
         npt.assert_array_equal(obs, exp)
 
-    def test_to_numpy_raises(self):
+    def test_embed_vec_to_numpy_raises(self):
         # input contains non-vector
         lst = [SequenceVector(self.vector1, "ACGT"),
                SequenceEmbedding(np.vstack([self.vector2, self.vector3]), "AT")]
@@ -201,7 +214,7 @@ class SequenceVectorTests(TestCase):
         with self.assertRaisesRegex(ValueError, msg):
             embed_vec_to_numpy(lst)
 
-    def test_to_distances(self):
+    def test_embed_vec_to_distances(self):
         # Test if to_distances returns a DistanceMatrix object
         obs = embed_vec_to_distances(self.seq_vectors)
         self.assertIsInstance(obs, DistanceMatrix)
@@ -221,7 +234,7 @@ class SequenceVectorTests(TestCase):
         obs = embed_vec_to_distances(self.seq_vectors, validate=False)
         self.assertIsInstance(obs, DistanceMatrix)
 
-    def test_to_ordination(self):
+    def test_embed_vec_to_ordination(self):
         # Test if to_ordination returns an OrdinationResults object
         obs = embed_vec_to_ordination(self.seq_vectors)
         self.assertIsInstance(obs, OrdinationResults)
@@ -235,7 +248,7 @@ class SequenceVectorTests(TestCase):
         obs = embed_vec_to_ordination(self.seq_vectors, validate=False)
         self.assertIsInstance(obs, OrdinationResults)
 
-    def test_to_dataframe(self):
+    def test_embed_vec_to_dataframe(self):
         # Test if to_dataframe returns a pandas DataFrame object
         obs = embed_vec_to_dataframe(self.seq_vectors)
         self.assertIsInstance(obs, pd.DataFrame)
