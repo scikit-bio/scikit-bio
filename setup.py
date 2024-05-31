@@ -182,11 +182,6 @@ if platform.machine() == "i686":
 extensions = [
     Extension("skbio.metadata._intersection", ["skbio/metadata/_intersection" + ext]),
     Extension(
-        "skbio.stats.__subsample",
-        ["skbio/stats/__subsample" + ext],
-        include_dirs=[np.get_include()],
-    ),
-    Extension(
         "skbio.alignment._ssw_wrapper",
         ["skbio/alignment/_ssw_wrapper" + ext, "skbio/alignment/_lib/ssw.c"],
         extra_compile_args=ssw_extra_compile_args,
@@ -241,7 +236,7 @@ setup(
         "pandas >= 1.5.0",
         "scipy >= 1.9.0",
         "h5py >= 3.6.0",
-        "biom-format",
+        "biom-format >= 2.1.16",
     ],
     classifiers=classifiers,
     package_data={
