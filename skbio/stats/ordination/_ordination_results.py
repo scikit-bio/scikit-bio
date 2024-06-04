@@ -412,7 +412,7 @@ class OrdinationResults(SkbioObject, PlottableMixin):
             Specifies which id type, either 'samples' or 'features', to rename.
         strict: bool, optional
            If True, then every id in the OrdinationResults dataframe must be
-           included in rename_dict and renamed.
+           included in mapper and renamed.
            If False, then only the specified indices will be renamed.
 
         Raises
