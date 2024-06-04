@@ -410,7 +410,7 @@ class OrdinationResults(SkbioObject, PlottableMixin):
             A dictionary or function that maps current IDs to new IDs.
         matrix : samples or features
             Specifies which id type, either 'samples' or 'features', to rename.
-        strict: bool, optional
+        strict : bool, optional
            If True, then every id in the OrdinationResults dataframe must be
            included in mapper and renamed.
            If False, then only the specified indices will be renamed.
