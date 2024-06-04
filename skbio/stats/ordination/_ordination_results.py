@@ -400,15 +400,15 @@ class OrdinationResults(SkbioObject, PlottableMixin):
             formatted_attr = formatter(attr)
         return "\t%s: %s" % (attr_label, formatted_attr)
 
-    def rename(self, mapper, axis='samples', strict=True):
+    def rename(self, mapper, matrix='samples', strict=True):
         """
-        Renames ids in OrdinationResults.
+        Renames IDs in OrdinationResults.
 
         Parameters
         ----------
         mapper : dict or function
-            A dictionary or function that maps current ids to new ids.
-        axis : samples or features
+            A dictionary or function that maps current IDs to new IDs.
+        matrix : samples or features
             Specifies which id type, either 'samples' or 'features', to rename.
         strict: bool, optional
            If True, then every id in the OrdinationResults dataframe must be
@@ -419,28 +419,28 @@ class OrdinationResults(SkbioObject, PlottableMixin):
         ______
         ValueError
             If strict is True and `mapper` does not contain all of the same
-            ids as `OrdinationResults`.
-           
+            IDs as `OrdinationResults`.
+
             If renaming `features` but `self` does not contain `features`.
-            
-            If `axis` is neither `samples` nor `features`.  
+
+            If `matrix` is neither `samples` nor `features`.
 
         """
-        if axis == 'samples':
+        if matrix == 'samples':
             if (strict and isinstance(mapper, dict) and
                     set(mapper) != set(self.samples.index)):
-                raise ValueError("The ids in mapper are different from the \
-                                 ids in self.samples.")
+                raise ValueError("The IDs in mapper are different from the \
+                                 IDs in self.samples.")
             self.samples = self.samples.rename(index=mapper)
-        elif axis == 'features':
+        elif matrix == 'features':
             if self.features is None:
                 raise ValueError("`features` were not provided on \
                                  construction of this object")
             elif (strict and isinstance(mapper, dict) and
                     set(mapper) != set(self.features.index)):
-                raise ValueError("The ids in mapper are different \
-                                  from the ids in self.features.")
+                raise ValueError("The IDs in mapper are different \
+                                  from the IDs in self.features.")
             self.features = self.features.rename(index=mapper)
         else:
-            raise ValueError("axis must be either 'samples' or \
+            raise ValueError("Matrix must be either 'samples' or \
                              'features'.")
