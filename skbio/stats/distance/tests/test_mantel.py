@@ -495,28 +495,40 @@ class PairwiseMantelTests(MantelTestData):
 
         self.min_dms = (self.minx_dm, self.miny_dm, self.minz_dm)
 
-        self.exp_results_minimal = _data_frame_to_default_int_type(pd.read_csv(
-            get_data_path('pwmantel_exp_results_minimal.txt'), sep='\t',
-            index_col=(0, 1)))
+        self.exp_results_minimal = pd.read_csv(
+            get_data_path('pwmantel_exp_results_minimal.txt'),
+            sep='\t',
+            index_col=(0, 1)
+        )
+        _data_frame_to_default_int_type(self.exp_results_minimal)
 
-        self.exp_results_minimal_with_labels = _data_frame_to_default_int_type(
-            pd.read_csv(get_data_path('pwmantel_exp_results_minimal_with_labels.txt'),
-                                      sep='\t',
-                                      index_col=(0, 1)))
+        self.exp_results_minimal_with_labels = pd.read_csv(
+            get_data_path('pwmantel_exp_results_minimal_with_labels.txt'),
+            sep='\t',
+            index_col=(0, 1)
+        )
+        _data_frame_to_default_int_type(self.exp_results_minimal_with_labels)
 
-        self.exp_results_duplicate_dms = _data_frame_to_default_int_type(pd.read_csv(
+        self.exp_results_duplicate_dms = pd.read_csv(
             get_data_path('pwmantel_exp_results_duplicate_dms.txt'),
-            sep='\t', index_col=(0, 1)))
+            sep='\t',
+            index_col=(0, 1)
+        )
+        _data_frame_to_default_int_type(self.exp_results_duplicate_dms)
 
-        self.exp_results_na_p_value = _data_frame_to_default_int_type(pd.read_csv(
+        self.exp_results_na_p_value = pd.read_csv(
             get_data_path('pwmantel_exp_results_na_p_value.txt'),
-            sep='\t', index_col=(0, 1)))
+            sep='\t',
+            index_col=(0, 1)
+        )
+        _data_frame_to_default_int_type(self.exp_results_na_p_value)
 
-        self.exp_results_reordered_distance_matrices = _data_frame_to_default_int_type(
-            pd.read_csv(get_data_path(
-                        'pwmantel_exp_results_reordered_distance_matrices.txt'),
-                        sep='\t',
-                        index_col=(0, 1)))
+        self.exp_results_reordered_distance_matrices = pd.read_csv(
+            get_data_path('pwmantel_exp_results_reordered_distance_matrices.txt'),
+            sep='\t',
+            index_col=(0, 1)
+        )
+        _data_frame_to_default_int_type(self.exp_results_reordered_distance_matrices)
 
         self.exp_results_dm_dm2 = pd.read_csv(
             get_data_path('pwmantel_exp_results_dm_dm2.txt'),

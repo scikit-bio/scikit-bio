@@ -363,8 +363,6 @@ def _data_frame_to_default_int_type(df):
     for col in df.select_dtypes("int").columns:
         df[col] = df[col].astype(int)
 
-    return df
-
 
 def assert_series_almost_equal(left, right):
     # pass all kwargs to ensure this function has consistent behavior even if
