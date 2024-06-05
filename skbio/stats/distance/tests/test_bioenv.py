@@ -15,6 +15,7 @@ from skbio import DistanceMatrix
 from skbio.stats.distance import bioenv
 from skbio.stats.distance._bioenv import _scale
 from skbio.util import get_data_path, assert_data_frame_almost_equal
+from skbio.util._testing import _data_frame_to_default_int_type
 
 
 class BIOENVTests(TestCase):
@@ -74,17 +75,26 @@ class BIOENVTests(TestCase):
         self.df_vegan.set_index('#SampleID', inplace=True)
 
         # Load expected results.
-        self.exp_results = pd.read_csv(get_data_path('exp_results.txt'),
-                                       sep='\t', index_col=0)
-        self.exp_results_single_column = pd.read_csv(
-            get_data_path('exp_results_single_column.txt'), sep='\t',
-            index_col=0)
-        self.exp_results_different_column_order = pd.read_csv(
-            get_data_path('exp_results_different_column_order.txt'), sep='\t',
-            index_col=0)
-        self.exp_results_vegan = pd.read_csv(
-            get_data_path('bioenv_exp_results_vegan.txt'), sep='\t',
-            index_col=0)
+        self.exp_results = _data_frame_to_default_int_type(
+            pd.read_csv(get_data_path('exp_results.txt'),
+                        sep='\t',
+                        index_col=0)
+            )
+        self.exp_results_single_column = _data_frame_to_default_int_type(
+            pd.read_csv(get_data_path('exp_results_single_column.txt'),
+                        sep='\t',
+                        index_col=0)
+            )
+        self.exp_results_different_column_order = _data_frame_to_default_int_type(
+            pd.read_csv(get_data_path('exp_results_different_column_order.txt'),
+                        sep='\t',
+                        index_col=0)
+            )
+        self.exp_results_vegan = _data_frame_to_default_int_type(
+            pd.read_csv(get_data_path('bioenv_exp_results_vegan.txt'),
+                        sep='\t',
+                        index_col=0)
+            )
 
     def test_bioenv_all_columns_implicit(self):
         # Test with all columns in data frame (implicitly).
@@ -146,7 +156,11 @@ class BIOENVTests(TestCase):
         # same distances yields *very* similar results. Thus, the discrepancy
         # seems to stem from differences when computing ranks/ties.
         obs = bioenv(self.dm_vegan, self.df_vegan)
-        assert_data_frame_almost_equal(obs, self.exp_results_vegan, rtol=1e-3)
+        assert_data_frame_almost_equal(
+            obs,
+            self.exp_results_vegan,
+            rtol=1e-3
+            )
 
     def test_bioenv_no_distance_matrix(self):
         with self.assertRaises(TypeError):

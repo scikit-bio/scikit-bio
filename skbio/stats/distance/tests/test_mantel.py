@@ -25,6 +25,7 @@ from skbio.stats.distance._mantel import _mantel_stats_spearman
 from skbio.stats.distance._cutils import mantel_perm_pearsonr_cy
 from skbio.stats.distance._utils import distmat_reorder_condensed
 from skbio.util import get_data_path, assert_data_frame_almost_equal
+from skbio.util._testing import _data_frame_to_default_int_type
 
 
 class MantelTestData(TestCase):
@@ -494,26 +495,28 @@ class PairwiseMantelTests(MantelTestData):
 
         self.min_dms = (self.minx_dm, self.miny_dm, self.minz_dm)
 
-        self.exp_results_minimal = pd.read_csv(
+        self.exp_results_minimal = _data_frame_to_default_int_type(pd.read_csv(
             get_data_path('pwmantel_exp_results_minimal.txt'), sep='\t',
-            index_col=(0, 1))
+            index_col=(0, 1)))
 
-        self.exp_results_minimal_with_labels = pd.read_csv(
-            get_data_path('pwmantel_exp_results_minimal_with_labels.txt'),
-            sep='\t', index_col=(0, 1))
+        self.exp_results_minimal_with_labels = _data_frame_to_default_int_type(
+            pd.read_csv(get_data_path('pwmantel_exp_results_minimal_with_labels.txt'),
+                                      sep='\t',
+                                      index_col=(0, 1)))
 
-        self.exp_results_duplicate_dms = pd.read_csv(
+        self.exp_results_duplicate_dms = _data_frame_to_default_int_type(pd.read_csv(
             get_data_path('pwmantel_exp_results_duplicate_dms.txt'),
-            sep='\t', index_col=(0, 1))
+            sep='\t', index_col=(0, 1)))
 
-        self.exp_results_na_p_value = pd.read_csv(
+        self.exp_results_na_p_value = _data_frame_to_default_int_type(pd.read_csv(
             get_data_path('pwmantel_exp_results_na_p_value.txt'),
-            sep='\t', index_col=(0, 1))
+            sep='\t', index_col=(0, 1)))
 
-        self.exp_results_reordered_distance_matrices = pd.read_csv(
-            get_data_path('pwmantel_exp_results_reordered_distance_matrices'
-                          '.txt'),
-            sep='\t', index_col=(0, 1))
+        self.exp_results_reordered_distance_matrices = _data_frame_to_default_int_type(
+            pd.read_csv(get_data_path(
+                        'pwmantel_exp_results_reordered_distance_matrices.txt'),
+                        sep='\t',
+                        index_col=(0, 1)))
 
         self.exp_results_dm_dm2 = pd.read_csv(
             get_data_path('pwmantel_exp_results_dm_dm2.txt'),
@@ -549,7 +552,7 @@ class PairwiseMantelTests(MantelTestData):
         # input as array_like
         obs = pwmantel((self.minx, self.miny, self.minz),
                        alternative='greater')
-        assert_data_frame_almost_equal(obs, self.exp_results_minimal)
+        assert_data_frame_almost_equal(obs, self.exp_results_minimal) #
 
     def test_minimal_compatible_input_with_labels(self):
         np.random.seed(0)
@@ -558,17 +561,17 @@ class PairwiseMantelTests(MantelTestData):
                        labels=('minx', 'miny', 'minz'))
         assert_data_frame_almost_equal(
             obs,
-            self.exp_results_minimal_with_labels)
+            self.exp_results_minimal_with_labels) #
 
     def test_duplicate_dms(self):
         obs = pwmantel((self.minx_dm, self.minx_dm, self.minx_dm),
                        alternative='less')
-        assert_data_frame_almost_equal(obs, self.exp_results_duplicate_dms)
+        assert_data_frame_almost_equal(obs, self.exp_results_duplicate_dms) #
 
     def test_na_p_value(self):
         obs = pwmantel((self.miny_dm, self.minx_dm), method='spearman',
                        permutations=0)
-        assert_data_frame_almost_equal(obs, self.exp_results_na_p_value)
+        assert_data_frame_almost_equal(obs, self.exp_results_na_p_value) #
 
     def test_reordered_distance_matrices(self):
         # Matrices have matching IDs but they all have different ordering.
@@ -581,7 +584,7 @@ class PairwiseMantelTests(MantelTestData):
         obs = pwmantel((x, y, z), alternative='greater')
         assert_data_frame_almost_equal(
             obs,
-            self.exp_results_reordered_distance_matrices)
+            self.exp_results_reordered_distance_matrices) #
 
     def test_strict(self):
         # Matrices have some matching and nonmatching IDs, with different
@@ -596,7 +599,7 @@ class PairwiseMantelTests(MantelTestData):
         obs = pwmantel((x, y, z), alternative='greater', strict=False)
         assert_data_frame_almost_equal(
             obs,
-            self.exp_results_reordered_distance_matrices)
+            self.exp_results_reordered_distance_matrices) #
 
     def test_id_lookup(self):
         # Matrices have mismatched IDs but a lookup is provided.
@@ -620,7 +623,7 @@ class PairwiseMantelTests(MantelTestData):
                        lookup=lookup)
         assert_data_frame_almost_equal(
             obs,
-            self.exp_results_reordered_distance_matrices)
+            self.exp_results_reordered_distance_matrices) #
 
         # Make sure the inputs aren't modified.
         self.assertEqual(x, x_copy)
