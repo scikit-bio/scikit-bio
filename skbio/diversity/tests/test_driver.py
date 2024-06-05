@@ -170,19 +170,19 @@ class AlphaDiversityTests(TestCase):
         # empty vector
         actual = alpha_diversity('sobs',
                                  np.array([], dtype=np.int64))
-        expected = pd.Series([0])
+        expected = pd.Series([0], dtype=int)
         assert_series_almost_equal(actual, expected)
 
         # array of empty vector
         actual = alpha_diversity('sobs',
                                  np.array([[]], dtype=np.int64))
-        expected = pd.Series([0])
+        expected = pd.Series([0], dtype=int)
         assert_series_almost_equal(actual, expected)
 
         # array of empty vectors
         actual = alpha_diversity('sobs',
                                  np.array([[], []], dtype=np.int64))
-        expected = pd.Series([0, 0])
+        expected = pd.Series([0, 0], dtype=int)
         assert_series_almost_equal(actual, expected)
 
         # empty vector
@@ -208,12 +208,12 @@ class AlphaDiversityTests(TestCase):
         # empty Table
         actual = alpha_diversity('sobs', Table(np.array([[]]), [], ['S1', ]))
         actual.index = pd.RangeIndex(len(actual))
-        expected = pd.Series([0])
+        expected = pd.Series([0], dtype=int)
         assert_series_almost_equal(actual, expected)
 
     def test_single_count_vector(self):
         actual = alpha_diversity('sobs', np.array([1, 0, 2]))
-        expected = pd.Series([2])
+        expected = pd.Series([2], dtype=int)
         assert_series_almost_equal(actual, expected)
 
         actual = alpha_diversity('faith_pd', np.array([1, 3, 0, 1, 0]),
@@ -255,14 +255,14 @@ class AlphaDiversityTests(TestCase):
 
     def test_sobs(self):
         # expected values hand-calculated
-        expected = pd.Series([3, 3, 3, 3], index=self.sids1)
+        expected = pd.Series([3, 3, 3, 3], index=self.sids1, dtype=int)
         actual = alpha_diversity('sobs', self.table1, self.sids1)
         assert_series_almost_equal(actual, expected)
         # function passed instead of string
         actual = alpha_diversity(sobs, self.table1, self.sids1)
         assert_series_almost_equal(actual, expected)
         # alt input table
-        expected = pd.Series([2, 1, 0], index=self.sids2)
+        expected = pd.Series([2, 1, 0], index=self.sids2, dtype=int)
         actual = alpha_diversity('sobs', self.table2, self.sids2)
         assert_series_almost_equal(actual, expected)
 
@@ -315,7 +315,7 @@ class AlphaDiversityTests(TestCase):
 
     def test_no_ids(self):
         # expected values hand-calculated
-        expected = pd.Series([3, 3, 3, 3])
+        expected = pd.Series([3, 3, 3, 3], dtype=int)
         actual = alpha_diversity('sobs', self.table1)
         assert_series_almost_equal(actual, expected)
 
