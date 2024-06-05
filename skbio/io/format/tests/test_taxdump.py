@@ -69,7 +69,8 @@ class TestTaxdumpReader(unittest.TestCase):
                  'inherited_MGC_flag', 'GenBank_hidden_flag',
                  'hidden_subtree_root_flag', 'comments']).set_index('tax_id')
         exp['comments'] = exp['comments'].astype('O')
-        assert_data_frame_almost_equal(obs, _data_frame_to_default_int_type(exp))
+        _data_frame_to_default_int_type(exp)
+        assert_data_frame_almost_equal(obs, exp)
 
     def test_names_default(self):
         # subset of a real NCBI taxonomy names.dmp file
@@ -131,7 +132,8 @@ class TestTaxdumpReader(unittest.TestCase):
             [1038927, 562,    'no rank'],
             [2580236, 488338, 'species']],
             columns=['tax_id', 'parent_tax_id', 'rank']).set_index('tax_id')
-        assert_data_frame_almost_equal(obs, _data_frame_to_default_int_type(exp))
+        _data_frame_to_default_int_type(exp)
+        assert_data_frame_almost_equal(obs, exp)
 
     def test_custom_scheme(self):
         fs = StringIO('\n'.join(map('\t|\t'.join, [

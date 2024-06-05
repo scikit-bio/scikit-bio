@@ -75,26 +75,31 @@ class BIOENVTests(TestCase):
         self.df_vegan.set_index('#SampleID', inplace=True)
 
         # Load expected results.
-        self.exp_results = _data_frame_to_default_int_type(
-            pd.read_csv(get_data_path('exp_results.txt'),
-                        sep='\t',
-                        index_col=0)
-            )
-        self.exp_results_single_column = _data_frame_to_default_int_type(
-            pd.read_csv(get_data_path('exp_results_single_column.txt'),
-                        sep='\t',
-                        index_col=0)
-            )
-        self.exp_results_different_column_order = _data_frame_to_default_int_type(
-            pd.read_csv(get_data_path('exp_results_different_column_order.txt'),
-                        sep='\t',
-                        index_col=0)
-            )
-        self.exp_results_vegan = _data_frame_to_default_int_type(
-            pd.read_csv(get_data_path('bioenv_exp_results_vegan.txt'),
-                        sep='\t',
-                        index_col=0)
-            )
+        self.exp_results = pd.read_csv(get_data_path('exp_results.txt'),
+                                       sep='\t',
+                                       index_col=0)
+        _data_frame_to_default_int_type(self.exp_results)
+
+        self.exp_results_single_column = pd.read_csv(
+            get_data_path('exp_results_single_column.txt'),
+            sep='\t',
+            index_col=0
+        )
+        _data_frame_to_default_int_type(self.exp_results_single_column)
+
+        self.exp_results_different_column_order = pd.read_csv(
+            get_data_path('exp_results_different_column_order.txt'),
+            sep='\t',
+            index_col=0
+        )
+        _data_frame_to_default_int_type(self.exp_results_different_column_order)
+
+        self.exp_results_vegan = pd.read_csv(
+            get_data_path('bioenv_exp_results_vegan.txt'),
+            sep='\t',
+            index_col=0
+        )
+        _data_frame_to_default_int_type(self.exp_results_vegan)
 
     def test_bioenv_all_columns_implicit(self):
         # Test with all columns in data frame (implicitly).
