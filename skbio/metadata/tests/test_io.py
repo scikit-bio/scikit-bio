@@ -1,6 +1,6 @@
 import collections
 import os.path
-import pkg_resources
+# import pkg_resources
 import tempfile
 import unittest
 
