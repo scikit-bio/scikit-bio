@@ -349,6 +349,21 @@ def assert_data_frame_almost_equal(left, right, rtol=1e-5):
     assert_index_equal(left.index, right.index)
 
 
+def _data_frame_to_default_int_type(df):
+    """Convert integer columns in a data frame into the platform-default integer type.
+
+    Pandas DataFrame defaults to int64 when reading integers, rather than respecting
+    the platform default (Linux and MacOS: int64, Windows: int32). This causes issues
+    in comparing observed and expected data frames in Windows. This function repairs
+    the issue by converting int64 columns of a data frame into int32 in Windows.
+
+    See: https://github.com/unionai-oss/pandera/issues/726
+
+    """
+    for col in df.select_dtypes("int").columns:
+        df[col] = df[col].astype(int)
+
+
 def assert_series_almost_equal(left, right):
     # pass all kwargs to ensure this function has consistent behavior even if
     # `assert_series_equal`'s defaults change
