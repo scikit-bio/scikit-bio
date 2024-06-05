@@ -476,7 +476,7 @@ class TestSequence(TestSequenceBase, ReallyEqualMixin):
         with self.assertRaisesRegex(TypeError, r'int64'):
             Sequence(np.int64(50))
         with self.assertRaisesRegex(TypeError, r'float64'):
-            Sequence(np.float_(50))
+            Sequence(np.float64(50))
         with self.assertRaisesRegex(TypeError, r'Foo'):
             class Foo:
                 pass

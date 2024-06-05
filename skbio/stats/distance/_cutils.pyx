@@ -8,6 +8,7 @@
 
 import numpy as np
 cimport numpy as cnp
+cnp.import_array()
 cimport cython
 from cython.parallel import prange
 from libc.math cimport isnan, sqrt, acos, fabs
