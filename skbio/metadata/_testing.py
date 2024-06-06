@@ -462,7 +462,7 @@ class PositionalMetadataMixinTests:
         )
 
         # Mutate list (not a deep copy).
-        df["bar"][0].append(42)
+        df["bar"].iloc[0].append(42)
         assert_data_frame_almost_equal(
             obj.positional_metadata,
             pd.DataFrame({"foo": [22, 22, 0], "bar": [[42], [], []]}, index=range(3)),
@@ -875,7 +875,7 @@ class PositionalMetadataMixinTests:
         )
 
         # Mutate list (not a deep copy).
-        df["bar"][0].append(42)
+        df["bar"].iloc[0].append(42)
         assert_data_frame_almost_equal(
             obj.positional_metadata,
             pd.DataFrame({"foo": [22, 22, 0], "bar": [[42], [], []]}, index=range(3)),
