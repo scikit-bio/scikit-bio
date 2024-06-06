@@ -955,7 +955,7 @@ def _parse_quality_scores(chunks):
 
     qual_str = " ".join(chunks)
     try:
-        quality = np.asarray(qual_str.split(), dtype=int)
+        quality = np.asarray(qual_str.split(), dtype=np.int64)
     except ValueError:
         raise QUALFormatError(
             "Could not convert quality scores to integers:\n%s" % str(qual_str)
