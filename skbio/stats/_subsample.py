@@ -226,16 +226,14 @@ def subsample_counts(counts, n, replace=False, seed=None):
     if n < 0:
         raise ValueError("n cannot be negative.")
 
-    counts = np.asarray(counts)
-    counts = counts.astype(np.int64, casting="safe")
+    # cast to float as that's what the biom subsample method currently requires
+    counts = np.asarray(counts, dtype=float)
 
     if counts.ndim != 1:
         raise ValueError("Only 1-D vectors are supported.")
 
     # csr_matrix will report ndim of 2 if vector
-    # casting to float as that's what the biom subsample method currently
-    # requires
-    counts = sparse.csr_matrix(counts.astype(float, casting="safe"))
+    counts = sparse.csr_matrix(counts)
 
     counts_sum = counts.sum()
     if n > counts_sum and not replace:

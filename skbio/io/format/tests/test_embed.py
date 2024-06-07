@@ -5,7 +5,6 @@
 #
 # The full license is in the file LICENSE.txt, distributed with this software.
 # ----------------------------------------------------------------------------
-
 from unittest import TestCase, main
 from pathlib import Path
 import tempfile
@@ -103,16 +102,15 @@ class EmbedTests(TestCase):
         f = lambda x: ProteinEmbedding(*x)
         objs1 = (x for x in map(f, sequences))
 
-        with tempfile.TemporaryDirectory() as tempdir:
-            tempdir = Path(tempdir)
-            writable_emb_path = str(tempdir / Path('test.emb'))
+        tempdir = Path(tempfile.mkdtemp())
+        writable_emb_path = str(tempdir / Path('test.emb'))
 
-            skbio.io.write(objs1, format='embed', into=writable_emb_path)
-            objs2 = iter(skbio.io.read(writable_emb_path, format='embed',
-                                       constructor=ProteinEmbedding))
-            for obj1, obj2 in zip(objs1, objs2):
-                np.testing.assert_array_equal(obj1.embedding, obj2.embedding)
-                self.assertEqual(str(obj1), str(obj2))
+        skbio.io.write(objs1, format='embed', into=writable_emb_path)
+        objs2 = iter(skbio.io.read(writable_emb_path, format='embed',
+                                    constructor=ProteinEmbedding))
+        for obj1, obj2 in zip(objs1, objs2):
+            np.testing.assert_array_equal(obj1.embedding, obj2.embedding)
+            self.assertEqual(str(obj1), str(obj2))
 
 
 class VectorTests(TestCase):
@@ -184,16 +182,15 @@ class VectorTests(TestCase):
         f = lambda x: ProteinVector(*x)
         objs1 = (x for x in map(f, sequences))
 
-        with tempfile.TemporaryDirectory() as tempdir:
-            tempdir = Path(tempdir)
-            writable_emb_path = str(tempdir / Path('test.emb'))
+        tempdir = Path(tempfile.mkdtemp())
+        writable_emb_path = str(tempdir / Path('test.emb'))
 
-            skbio.io.write(objs1, format='embed', into=writable_emb_path)
-            objs2 = iter(skbio.io.read(writable_emb_path, format='embed',
-                                       constructor=ProteinVector))
-            for obj1, obj2 in zip(objs1, objs2):
-                np.testing.assert_array_equal(obj1.embedding, obj2.embedding)
-                self.assertEqual(str(obj1), str(obj2))
+        skbio.io.write(objs1, format='embed', into=writable_emb_path)
+        objs2 = iter(skbio.io.read(writable_emb_path, format='embed',
+                                    constructor=ProteinVector))
+        for obj1, obj2 in zip(objs1, objs2):
+            np.testing.assert_array_equal(obj1.embedding, obj2.embedding)
+            self.assertEqual(str(obj1), str(obj2))
 
 
 if __name__ == '__main__':

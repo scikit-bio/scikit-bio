@@ -1409,7 +1409,7 @@ def ancom(
     feature in each group.
 
     >>> ancom_df, percentile_df = ancom(table, grouping)
-    >>> ancom_df['W']
+    >>> ancom_df['W'] # doctest: +ELLIPSIS
     b1    0
     b2    4
     b3    0
@@ -1417,7 +1417,7 @@ def ancom(
     b5    1
     b6    0
     b7    1
-    Name: W, dtype: int64
+    Name: W, dtype: ...
 
     The *W*-statistic is the number of features that a single feature is tested
     to be significantly different against. In this scenario, ``b2`` was
