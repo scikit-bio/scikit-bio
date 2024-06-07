@@ -190,7 +190,7 @@ class VectorTests(TestCase):
                                     constructor=ProteinVector))
         for obj1, obj2 in zip(objs1, objs2):
             np.testing.assert_array_equal(obj1.embedding, obj2.embedding)
-            self.assertEqual(str(objs1), str(obj2))
+            self.assertEqual(str(obj1), str(obj2))
 
 
 if __name__ == '__main__':
