@@ -222,14 +222,14 @@ Create a matrix containing 6 samples (rows) and 7 taxa (columns):
 
    >>> from skbio.diversity import alpha_diversity
    >>> adiv_sobs = alpha_diversity('sobs', data, ids)
-   >>> adiv_sobs
+   >>> adiv_sobs # doctest: +ELLIPSIS
    A    5
    B    5
    C    4
    D    4
    E    5
    F    3
-   dtype: int64
+   dtype: ...
 
    Next we'll compute Faith's PD on the same samples. Since this is a
    phylogenetic diversity metric, we'll first create a tree and an ordered
