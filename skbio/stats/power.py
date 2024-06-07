@@ -63,8 +63,8 @@ step.
 >>> import numpy as np
 >>> np.random.seed(20)
 >>> ind = np.random.randint(0, 20, 15)
->>> ind
-array([ 3, 15,  9, 11,  7,  2,  0,  8, 19, 16,  6,  6, 16,  9,  5])
+>>> ind # doctest: +ELLIPSIS
+array([ 3, 15,  9, 11,  7,  2,  0,  8, 19, 16,  6,  6, 16,  9,  5]...
 >>> dep = (3 * ind + 5 + np.random.randn(15) * 5).round(3)
 >>> dep
 array([ 15.617,  47.533,  28.04 ,  33.788,  19.602,  12.229,   4.779,
