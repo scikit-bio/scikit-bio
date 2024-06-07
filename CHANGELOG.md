@@ -6,6 +6,10 @@
 
 * Added `ProteinEmbedding` class and corresponding file format ([#2008](https://github.com/scikit-bio/scikit-bio/pull/2008]))
 * Added `AlignPath` and `PairAlignPath` classes ([#2011](https://github.com/scikit-bio/scikit-bio/pull/2011))
+* Added `simpson_d` as an alias for `dominance` (Simpson's dominance index, a.k.a. Simpson's D) ([#2024](https://github.com/scikit-bio/scikit-bio/pull/2024)).
+* Added `inv_simpson` (inverse Simpson index), which is equivalent to `enspie` ([#2024](https://github.com/scikit-bio/scikit-bio/pull/2024)).
+* Added parameter `exp` to `shannon` to convert Shannon index into the effective number of species ([#2024](https://github.com/scikit-bio/scikit-bio/pull/2024)).
+* Added parameter `correct` to Simpson's _D_ (`dominance`) and derived metrics (`simpson`, `simpson_e` and `inv_simpson`) to perform bias-corrected calculation.
 
 ### Performance enhancements
 

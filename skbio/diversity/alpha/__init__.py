@@ -7,46 +7,81 @@ This package provides implementations of alpha diversity measures, including
 measures of richness, dominance, and evenness. Some functions generate
 confidence intervals (CIs). These functions have the suffix ``_ci``.
 
-Functions
----------
+
+Richness metrics
+----------------
 
 .. autosummary::
    :toctree:
 
    ace
-   berger_parker_d
-   brillouin_d
    chao1
    chao1_ci
-   dominance
    doubles
-   enspie
-   esty_ci
    faith_pd
-   fisher_alpha
-   gini_index
-   goods_coverage
-   heip_e
-   kempton_taylor_q
-   lladser_ci
-   lladser_pe
    margalef
-   mcintosh_d
-   mcintosh_e
    menhinick
-   michaelis_menten_fit
    observed_features
    observed_otus
    osd
-   phydiv
-   pielou_e
-   robbins
-   shannon
-   simpson
-   simpson_e
    singles
    sobs
+
+
+Evenness metrics
+----------------
+
+.. autosummary::
+   :toctree:
+
+   heip_e
+   mcintosh_e
+   pielou_e
+   simpson_e
+
+
+Diversity metrics
+-----------------
+
+.. autosummary::
+   :toctree:
+
+   brillouin_d
+   enspie
+   inv_simpson
+   phydiv
+   shannon
+   simpson
+
+
+Dominance metrics
+-----------------
+
+.. autosummary::
+   :toctree:
+
+   berger_parker_d
+   dominance
+   gini_index
+   mcintosh_d
+   simpson_d
    strong
+
+
+Miscellaneous
+-------------
+
+.. autosummary::
+   :toctree:
+
+   esty_ci
+   fisher_alpha
+   goods_coverage
+   kempton_taylor_q
+   lladser_ci
+   lladser_pe
+   michaelis_menten_fit
+   robbins
 
 """  # noqa: D205, D415
 
@@ -71,6 +106,7 @@ from ._base import (
     fisher_alpha,
     goods_coverage,
     heip_e,
+    inv_simpson,
     kempton_taylor_q,
     margalef,
     mcintosh_d,
@@ -84,6 +120,7 @@ from ._base import (
     robbins,
     shannon,
     simpson,
+    simpson_d,
     simpson_e,
     singles,
     sobs,
@@ -108,6 +145,7 @@ __all__ = [
     "gini_index",
     "goods_coverage",
     "heip_e",
+    "inv_simpson",
     "kempton_taylor_q",
     "margalef",
     "mcintosh_d",
@@ -122,6 +160,7 @@ __all__ = [
     "robbins",
     "shannon",
     "simpson",
+    "simpson_d",
     "simpson_e",
     "singles",
     "sobs",

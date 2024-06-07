@@ -8,17 +8,17 @@
 
 from unittest import TestCase, main
 from io import StringIO
+import warnings
 
 import numpy as np
 import numpy.testing as npt
 
 from skbio import TreeNode
 from skbio.diversity.alpha import (
-    berger_parker_d, brillouin_d, dominance, doubles, enspie,
-    esty_ci, fisher_alpha, goods_coverage, heip_e, kempton_taylor_q,
-    margalef, mcintosh_d, mcintosh_e, menhinick, michaelis_menten_fit,
-    observed_features, observed_otus, osd, pielou_e, robbins, shannon,
-    simpson, simpson_e, singles, sobs, strong)
+    berger_parker_d, brillouin_d, dominance, doubles, enspie, esty_ci, fisher_alpha,
+    goods_coverage, heip_e, inv_simpson, kempton_taylor_q, margalef, mcintosh_d,
+    mcintosh_e, menhinick, michaelis_menten_fit, observed_features, observed_otus, osd,
+    pielou_e, robbins, shannon, simpson, simpson_d, simpson_e, singles, sobs, strong)
 
 
 class BaseTests(TestCase):
@@ -51,6 +51,12 @@ class BaseTests(TestCase):
         self.assertAlmostEqual(dominance(np.array([1, 0, 2, 5, 2])), 0.34)
         self.assertTrue(np.isnan(dominance([0, 0])))
 
+        # bias-correction
+        self.assertEqual(dominance(np.array([5]), correct=True), 1)
+        self.assertAlmostEqual(dominance(
+            np.array([1, 0, 2, 5, 2]), correct=True), 0.8 / 3)
+        self.assertTrue(np.isnan(dominance([0, 0], correct=True)))
+
     def test_doubles(self):
         self.assertEqual(doubles(self.counts), 3)
         self.assertEqual(doubles(np.array([0, 3, 4])), 0)
@@ -58,24 +64,12 @@ class BaseTests(TestCase):
         self.assertEqual(doubles([0, 0]), 0)
 
     def test_enspie(self):
-        # Totally even community should have ENS_pie = number of taxa.
-        self.assertAlmostEqual(enspie(np.array([1, 1, 1, 1, 1, 1])), 6)
-        self.assertAlmostEqual(enspie(np.array([13, 13, 13, 13])), 4)
-
-        # Hand calculated.
-        arr = np.array([1, 41, 0, 0, 12, 13])
-        exp = 1 / ((arr / arr.sum()) ** 2).sum()
-        self.assertAlmostEqual(enspie(arr), exp)
-
-        # Using dominance.
-        exp = 1 / dominance(arr)
-        self.assertAlmostEqual(enspie(arr), exp)
-
-        arr = np.array([1, 0, 2, 5, 2])
-        exp = 1 / dominance(arr)
-        self.assertAlmostEqual(enspie(arr), exp)
-
-        self.assertTrue(np.isnan(enspie([0, 0])))
+        for vec in (
+            np.array([1, 1, 1, 1, 1, 1]),
+            np.array([1, 41, 0, 0, 12, 13]),
+            np.array([1, 0, 2, 5, 2])
+        ):
+            self.assertEqual(enspie(vec), inv_simpson(vec))
 
     def test_esty_ci(self):
         def _diversity(indices, f):
@@ -174,6 +168,31 @@ class BaseTests(TestCase):
         self.assertTrue(np.isnan(heip_e([0])))
         self.assertTrue(np.isnan(heip_e([1])))
 
+    def test_inv_simpson(self):
+        # Totally even community should have 1 / D = number of taxa.
+        self.assertAlmostEqual(inv_simpson(np.array([1, 1, 1, 1, 1, 1])), 6)
+        self.assertAlmostEqual(inv_simpson(np.array([13, 13, 13, 13])), 4)
+
+        # Hand calculated.
+        arr = np.array([1, 41, 0, 0, 12, 13])
+        exp = 1 / ((arr / arr.sum()) ** 2).sum()
+        self.assertAlmostEqual(inv_simpson(arr), exp)
+
+        # Using dominance.
+        exp = 1 / dominance(arr)
+        self.assertAlmostEqual(inv_simpson(arr), exp)
+
+        arr = np.array([1, 0, 2, 5, 2])
+        exp = 1 / dominance(arr)
+        self.assertAlmostEqual(inv_simpson(arr), exp)
+
+        # Bias correction
+        self.assertEqual(inv_simpson(
+            np.array([1, 0, 2, 5, 2]), correct=True), 3.75)
+        self.assertEqual(inv_simpson(np.array([3, 3, 3]), correct=True), 4)
+
+        self.assertTrue(np.isnan(inv_simpson([0, 0])))
+
     def test_kempton_taylor_q(self):
         # Approximate Magurran 1998 calculation p143.
         arr = np.array([2, 3, 3, 3, 3, 3, 4, 4, 4, 6, 6, 7, 7, 9, 9, 11, 14,
@@ -231,12 +250,14 @@ class BaseTests(TestCase):
         self.assertTrue(np.isnan(michaelis_menten_fit([0, 0])))
 
     def test_observed_features(self):
-        for obs in (np.array([4, 3, 4, 0, 1, 0, 2]), self.counts):
-            self.assertEqual(observed_features(obs), sobs(obs))
+        for vec in (np.array([4, 3, 4, 0, 1, 0, 2]), self.counts):
+            self.assertEqual(observed_features(vec), sobs(vec))
 
     def test_observed_otus(self):
-        for obs in (np.array([4, 3, 4, 0, 1, 0, 2]), self.counts):
-            self.assertEqual(observed_otus(obs), sobs(obs))
+        with warnings.catch_warnings():
+            warnings.simplefilter("ignore")
+            for vec in (np.array([4, 3, 4, 0, 1, 0, 2]), self.counts):
+                self.assertEqual(observed_otus(vec), sobs(vec))
 
     def test_osd(self):
         self.assertEqual(osd(self.counts), (9, 3, 3))
@@ -292,6 +313,12 @@ class BaseTests(TestCase):
         self.assertAlmostEqual(simpson(np.array([1, 0, 2, 5, 2])), 0.66)
         self.assertAlmostEqual(simpson(np.array([5])), 0)
         self.assertTrue(np.isnan(simpson([0, 0])))
+
+    def  test_simpson_d(self):
+        for vec in (np.array([5]), np.array([1, 0, 2, 5, 2])):
+            self.assertEqual(dominance(vec), simpson_d(vec))
+            self.assertEqual(dominance(vec, correct=True),
+                             simpson_d(vec, correct=True))
 
     def test_simpson_e(self):
         # A totally even community should have simpson_e = 1.

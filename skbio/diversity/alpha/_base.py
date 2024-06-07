@@ -150,7 +150,7 @@ def brillouin_d(counts):
 
 
 @_validate_alpha(empty=np.nan)
-def dominance(counts):
+def dominance(counts, correct=False):
     r"""Calculate Simpson's dominance index.
 
     Simpson's dominance index, a.k.a. Simpson's :math:`D`, measures the degree
@@ -166,11 +166,22 @@ def dominance(counts):
     Simpson's :math:`D` can be interpreted as the probability that two randomly
     selected individuals belong to the same taxon. It ranges between 0 and 1.
 
+    The bias-corrected version of Simpson's :math:`D` is calculated as follows.
+    It accounts for the effect of sampling without replacement. Therefore it
+    more accurately represents the above probability when the sample is small.
+
+    .. math::
+
+       D = \frac{\sum_{i=1}^s{n_i(n_i - 1))}}{N(N - 1)}
+
+    where :math:`n_i` is the number of individuals in the :math:`i^{\text{th}}`
+    taxon and :math:`N` is the total number of individuals in the sample.
+
     Simpson's :math:`D` is sometimes referred to as "Simpson's index". It
     should be noted that :math:`D` is not a measure of community diversity. It
     is also important to distinguish :math:`D` from Simpson's diversity index
-    (:math:`1 - D`) and Simpson's reciprocal index (:math:`1 / D`), both of
-    which are measures of community diversity.
+    (:math:`1 - D`) and inverse Simpson index (:math:`1 / D`), both of which
+    are measures of community diversity.
 
     Discrepancy exists among literature in using the term "Simpson index" and
     the denotion :math:`D`. It is therefore important to distinguish these
@@ -180,6 +191,8 @@ def dominance(counts):
     ----------
     counts : 1-D array_like, int
         Vector of counts.
+    correct : bool, optional
+        If ``True``, use the bias-corrected version of the equation.
 
     Returns
     -------
@@ -200,7 +213,11 @@ def dominance(counts):
        688-688.
 
     """
-    return ((counts / counts.sum()) ** 2).sum()
+    if correct:
+        D = (counts * (counts - 1)).sum() / ((N := counts.sum()) * (N - 1))
+    else:
+        D = ((counts / counts.sum()) ** 2).sum()
+    return D
 
 
 @_validate_alpha()
@@ -224,19 +241,17 @@ def doubles(counts):
 def enspie(counts):
     r"""Calculate ENS_pie alpha diversity measure.
 
-    The effective number of species (ENS) derived from Hurlbert's probability
-    of interspecific encounter (PIE) is defined as:
+    The effective number of species (ENS) derived from Hurlbert's probability of
+    interspecific encounter (PIE) ([1]_, [2]_) is defined as:
 
     .. math::
 
        ENS_{pie} = \frac{1}{\sum_{i=1}^s{p_i^2}}
 
-    where :math:`s` is the number of taxa and :math:`p_i` is the proportion of
-    the sample represented by taxon :math:`i`.
+    where :math:`s` is the number of taxa and :math:`p_i` is the proportion of the
+    sample represented by taxon :math:`i`.
 
-    Therefore, :math:`ENS_{pie}` is equivalent to the reciprocal of Simpson's
-    dominance index, i.e., ``1 / D``. It is also known as Simpson's reciprocal
-    index.
+    Therefore, :math:`ENS_{pie}` is equivalent to the inverse Simpson index (``1 / D``).
 
     Parameters
     ----------
@@ -250,11 +265,12 @@ def enspie(counts):
 
     See Also
     --------
+    inv_simpson
     dominance
 
     Notes
     -----
-    ENS_pie is defined in [1]_.
+    ``enspie`` is an alias for ``inv_simpson``.
 
     References
     ----------
@@ -266,7 +282,7 @@ def enspie(counts):
        critique and alternative parameters. Ecology, 52(4), 577-586.
 
     """
-    return 1 / dominance(counts)
+    return inv_simpson(counts)
 
 
 @_validate_alpha(empty=np.nan)
@@ -523,6 +539,51 @@ def kempton_taylor_q(counts, lower_quantile=0.25, upper_quantile=0.75):
     upper = int(S * upper_quantile)
     sorted_counts = np.sort(counts)
     return (upper - lower) / np.log(sorted_counts[upper] / sorted_counts[lower])
+
+
+def inv_simpson(counts, correct=False):
+    r"""Calculate inverse Simpson index.
+
+    The inverse Simpson index (:math:`1 / D`), a.k.a., Simpson's reciprocal index, is
+    defined as:
+
+    .. math::
+
+       1 / D = \frac{1}{\sum_{i=1}^s{p_i^2}}
+
+    where :math:`s` is the number of taxa and :math:`p_i` is the proportion of
+    the sample represented by taxon :math:`i`.
+
+    Parameters
+    ----------
+    counts : 1-D array_like, int
+        Vector of counts.
+    correct : bool, optional
+        If ``True``, use the bias-corrected equation to calculate :math:`D`.
+
+    Returns
+    -------
+    float
+        Inverse Simpson index.
+
+    See Also
+    --------
+    dominance
+
+    Notes
+    -----
+    :math:`1 / D` is a measurement of the effective number of species (ENS). It is
+    equivalent to Hill number with order 2 (:math:`^2D`).
+
+    Inverse Simpson index was originally described in [1]_.
+
+    References
+    ----------
+    .. [1] Simpson, E. H. (1949). Measurement of diversity. Nature, 163(4148),
+       688-688.
+
+    """
+    return 1 / dominance(counts, correct=correct)
 
 
 @_validate_alpha(empty=np.nan)
@@ -797,7 +858,7 @@ def observed_features(counts):
 
     Notes
     -----
-    ``observed_features`` is an alias for `sobs`.
+    ``observed_features`` is an alias for ``sobs``.
 
     """
     return sobs(counts)
@@ -827,7 +888,7 @@ def observed_otus(counts):
 
     Notes
     -----
-    ``observed_otus`` is an alias for `sobs`.
+    ``observed_otus`` is an alias for ``sobs``.
 
     """
     # @deprecated
@@ -958,8 +1019,8 @@ def robbins(counts):
 
 
 @_validate_alpha(empty=np.nan)
-def shannon(counts, base=None):
-    r"""Calculate Shannon's diversity index, default in bits.
+def shannon(counts, base=None, exp=None):
+    r"""Calculate Shannon's diversity index.
 
     Shannon's diversity index, :math:`H'`, a.k.a., Shannon index, or Shannon-
     Wiener index, is defined as:
@@ -977,6 +1038,9 @@ def shannon(counts, base=None):
         Vector of counts.
     base : int or float, optional
         Logarithm base to use in the calculation. Default is ``e``.
+    exp : bool, optional
+        Return exponential of Shannon index, which measures the effective
+        number of species (ENS).
 
     Returns
     -------
@@ -985,21 +1049,34 @@ def shannon(counts, base=None):
 
     Notes
     -----
-    Shannon's diversity index was originally proposed in [1]_ as a measure of
-    entropy.
+    Shannon index was originally proposed in [1]_ as a measure of **entropy**
+    in information theory.
 
-    The default logarithm base used here is 2 instead of :math:`e`.
+    .. note:: The default logarithm base was changed from 2 to :math:`e` in
+       version 0.6.1, for consistency with the majority of literature.
+
+    The exponential of Shannon index, :math:`exp(H')`, measures the effective
+    number of species (a.k.a., "true diversity") ([2]_). It is equivalent to
+    **perplexity** in information theory, or Hill number with order 1
+    (:math:`^1D`).
 
     References
     ----------
     .. [1] Shannon, C. E. (1948). A mathematical theory of communication. The
        Bell system technical journal, 27(3), 379-423.
 
+    .. [2] Jost, L. (2006). Entropy and diversity. Oikos, 113(2), 363-375.
+
     """
     freqs = counts / counts.sum()
     H = (-freqs * np.log(freqs)).sum()
     if base is not None:
         H /= np.log(base)
+    if exp is True:
+        if base is not None:
+            return base**H
+        else:
+            return np.exp(H)
     return H
 
 
@@ -1044,6 +1121,35 @@ def simpson(counts):
 
     """
     return 1 - dominance(counts)
+
+
+def simpson_d(counts, correct=False):
+    """Calculate Simpson's dominance index, a.k.a. Simpson's D.
+
+    Parameters
+    ----------
+    counts : 1-D array_like, int
+        Vector of counts.
+    correct : bool, optional
+        If ``True``, use the bias-corrected version of the equation.
+
+    Returns
+    -------
+    int
+        Simpson's dominance index.
+
+    See Also
+    --------
+    dominance
+    simpson
+    simpson_e
+
+    Notes
+    -----
+    ``simpson_d`` is an alias for ``dominance``.
+
+    """
+    return dominance(counts, correct=correct)
 
 
 @_validate_alpha()
