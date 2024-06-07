@@ -289,7 +289,8 @@ def _compute_groups(samples, test_type, grouping):
     if test_type == "centroid":
         centroids = samples.groupby("grouping").aggregate("mean")
     elif test_type == "median":
-        centroids = samples.groupby("grouping")[samples.columns.to_list()].apply(_config_med)
+        grouping_cols = samples.columns.to_list()
+        centroids = samples.groupby("grouping")[grouping_cols].apply(_config_med)
 
     for label, df in samples.groupby("grouping"):
         groups.append(
