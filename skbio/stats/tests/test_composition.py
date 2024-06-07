@@ -1246,7 +1246,10 @@ class AncomTests(TestCase):
             ancom(self.table1, self.cats1, alpha=1.1)
 
     def test_ancom_fail_multiple_groups(self):
-        with self.assertRaises((TypeError, np.AxisError)):
+        # np.exceptions was introduced in NumPy 1.25, before which errors were
+        # members of np. The following code is for backward compatibility.
+        npe = getattr(np, 'exceptions', np)
+        with self.assertRaises((TypeError, npe.AxisError)):
             ancom(self.table4, self.cats4,
                   significance_test="ttest_ind")
 

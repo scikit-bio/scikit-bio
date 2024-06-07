@@ -19,7 +19,7 @@ from scipy.spatial.distance import correlation
 
 from skbio._base import SkbioObject
 from skbio.stats.distance import DistanceMatrix
-from ._exception import (
+from skbio.tree._exception import (
     NoLengthError,
     DuplicateNodeError,
     NoParentError,
@@ -2085,11 +2085,11 @@ class TreeNode(SkbioObject):
         >>> res = t.to_array()
         >>> sorted(res.keys())
         ['child_index', 'id', 'id_index', 'length', 'name']
-        >>> res['child_index']
+        >>> res['child_index'] # doctest: +ELLIPSIS
         array([[4, 0, 2],
                [5, 3, 3],
                [6, 4, 5],
-               [7, 6, 6]])
+               [7, 6, 6]]...
         >>> for k, v in res['id_index'].items():
         ...     print(k, v)
         ...
