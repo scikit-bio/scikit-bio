@@ -607,7 +607,7 @@ def _setup_multiple_weighted_unifrac(counts, taxa, tree, normalized, validate):
 
 def _get_tip_indices(tree_index):
     tip_indices = np.array(
-        [n.id for n in tree_index["id_index"].values() if n.is_tip()]
+        [n.id for n in tree_index["id_index"].values() if n.is_tip()], dtype=np.intp
     )
     return tip_indices
 
