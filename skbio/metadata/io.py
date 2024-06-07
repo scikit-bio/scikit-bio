@@ -473,7 +473,9 @@ class MetadataWriter:
 
             df = md.to_dataframe(encode_missing=True)
             df.fillna("", inplace=True)
-            df = df.map(self._format)
+            # df = df.map(self._format)
+            # `applymap` is for backward-compatibility with pandas<2.1.0.
+            df = getattr(df, "map", df.applymap)(self._format)
             tsv_writer.writerows(df.itertuples(index=True))
 
     def _non_default_missing(self, missing_directive):
