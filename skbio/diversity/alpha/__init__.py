@@ -4,8 +4,7 @@ r"""Alpha diversity measures (:mod:`skbio.diversity.alpha`)
 .. currentmodule:: skbio.diversity.alpha
 
 This package provides implementations of various alpha diversity [1]_ metrics,
-including measures of richness, diversity, evenness, dominance, coverage, and
-other categories of metrics.
+including measures of richness, diversity, evenness, dominance, and coverage.
 
 Some functions generate confidence intervals (CIs). These functions have
 the suffix ``_ci``.
@@ -125,7 +124,7 @@ References
 
 .. [4] https://en.wikipedia.org/wiki/Species_evenness
 
-.. [5] https://en.wikipedia.org/wiki/Dominance_(ecology)
+.. [5] https://en.wikipedia.org/wiki/Dominance_%28ecology%29
 
 .. [6] Good, I. J. (1953). The population frequencies of species and the
    estimation of population parameters. Biometrika, 40(3-4), 237-264.
