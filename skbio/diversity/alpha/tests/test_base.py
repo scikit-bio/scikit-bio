@@ -51,11 +51,11 @@ class BaseTests(TestCase):
         self.assertAlmostEqual(dominance(np.array([1, 0, 2, 5, 2])), 0.34)
         self.assertTrue(np.isnan(dominance([0, 0])))
 
-        # bias-correction
-        self.assertEqual(dominance(np.array([5]), correct=True), 1)
+        # finite sample correction
+        self.assertEqual(dominance(np.array([5]), finite=True), 1)
         self.assertAlmostEqual(dominance(
-            np.array([1, 0, 2, 5, 2]), correct=True), 0.8 / 3)
-        self.assertTrue(np.isnan(dominance([0, 0], correct=True)))
+            np.array([1, 0, 2, 5, 2]), finite=True), 0.8 / 3)
+        self.assertTrue(np.isnan(dominance([0, 0], finite=True)))
 
     def test_doubles(self):
         self.assertEqual(doubles(self.counts), 3)
@@ -70,6 +70,9 @@ class BaseTests(TestCase):
             np.array([1, 0, 2, 5, 2])
         ):
             self.assertEqual(enspie(vec), inv_simpson(vec))
+        vec = np.array([1, 2, 3, 4])
+        self.assertEqual(enspie(vec, finite=True),
+                         inv_simpson(vec, finite=True))
 
     def test_esty_ci(self):
         def _diversity(indices, f):
@@ -155,18 +158,14 @@ class BaseTests(TestCase):
         expected = (np.exp(H) - 1) / (arr.size - 1)
         self.assertEqual(heip_e(arr), expected)
 
-        # alternative base
-        expected = (np.exp(shannon(arr, base=2)) - 1) / (arr.size - 1)
-        self.assertEqual(heip_e(arr, base=2), expected)
-
         # From Statistical Ecology: A Primer in Methods and Computing, page 94,
         # table 8.1.
         self.assertAlmostEqual(heip_e([500, 300, 200]), 0.90, places=2)
         self.assertAlmostEqual(heip_e([500, 299, 200, 1]), 0.61, places=2)
 
-        # Return NaN when there is zero or one species.
-        self.assertTrue(np.isnan(heip_e([0])))
-        self.assertTrue(np.isnan(heip_e([1])))
+        # Edge cases
+        self.assertEqual(heip_e([5]), 1)
+        self.assertTrue(np.isnan(heip_e([0, 0])))
 
     def test_inv_simpson(self):
         # Totally even community should have 1 / D = number of taxa.
@@ -186,10 +185,10 @@ class BaseTests(TestCase):
         exp = 1 / dominance(arr)
         self.assertAlmostEqual(inv_simpson(arr), exp)
 
-        # Bias correction
+        # Finite sample correction.
         self.assertEqual(inv_simpson(
-            np.array([1, 0, 2, 5, 2]), correct=True), 3.75)
-        self.assertEqual(inv_simpson(np.array([3, 3, 3]), correct=True), 4)
+            np.array([1, 0, 2, 5, 2]), finite=True), 3.75)
+        self.assertEqual(inv_simpson(np.array([3, 3, 3]), finite=True), 4)
 
         self.assertTrue(np.isnan(inv_simpson([0, 0])))
 
@@ -283,8 +282,10 @@ class BaseTests(TestCase):
         # Examples from
         # http://ww2.mdsg.umd.edu/interactive_lessons/biofilm/diverse.htm#3
         self.assertAlmostEqual(pielou_e([1, 1, 196, 1, 1]), 0.078, 3)
-        self.assertTrue(np.isnan(pielou_e([0, 0, 200, 0, 0])))
-        self.assertTrue(np.isnan(pielou_e([0, 0, 0, 0, 0])))
+
+        # Edge cases
+        self.assertEqual(pielou_e([5]), 1)
+        self.assertTrue(np.isnan(pielou_e([0, 0])))
 
     def test_robbins(self):
         self.assertEqual(robbins(np.array([1, 2, 3, 0, 1])), 2 / 7)
@@ -309,16 +310,23 @@ class BaseTests(TestCase):
         # different from scipy.stats.entropy, which would return 0.0.
         self.assertTrue(np.isnan(shannon([])))
 
+        # Exponential of Shannon index
+        self.assertAlmostEqual(shannon([1, 2, 3, 4], exp=True), 3.596115467)
+
+        # Equally abundant taxa, exp(H) = # taxa
+        self.assertEqual(shannon([5, 5, 5], exp=True), 3.0)
+
     def test_simpson(self):
         self.assertAlmostEqual(simpson(np.array([1, 0, 2, 5, 2])), 0.66)
-        self.assertAlmostEqual(simpson(np.array([5])), 0)
+        self.assertEqual(simpson(np.array([5])), 0)
+        self.assertEqual(simpson(np.array([5]), finite=True), 0)
         self.assertTrue(np.isnan(simpson([0, 0])))
 
     def  test_simpson_d(self):
         for vec in (np.array([5]), np.array([1, 0, 2, 5, 2])):
             self.assertEqual(dominance(vec), simpson_d(vec))
-            self.assertEqual(dominance(vec, correct=True),
-                             simpson_d(vec, correct=True))
+            self.assertEqual(dominance(vec, finite=True),
+                             simpson_d(vec, finite=True))
 
     def test_simpson_e(self):
         # A totally even community should have simpson_e = 1.

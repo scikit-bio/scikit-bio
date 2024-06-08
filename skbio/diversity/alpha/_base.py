@@ -45,10 +45,10 @@ def _validate_alpha(empty=None, cast_int=False):
 
     Notes
     -----
-    This function serves as a decorator for individual functions that calculate alpha
-    diversity metrics. The first positional argument of a decorated function must be a
-    1-D vector of counts/abundances of taxa in a community. Additional arguments may
-    follow.
+    This function serves as a decorator for individual functions that calculate
+    alpha diversity metrics. The first positional argument of a decorated
+    function must be a 1-D vector of counts/abundances of taxa in a community.
+    Additional arguments may follow.
 
     """
 
@@ -57,8 +57,8 @@ def _validate_alpha(empty=None, cast_int=False):
         def wrapper(counts, *args, **kwargs):
             counts = _validate_counts_vector(counts, cast_int)
 
-            # drop zero values, as these represent taxa that are absent from the
-            # community
+            # drop zero values, as these represent taxa that are absent from
+            # the community
             if not (nonzero := counts != 0).all():
                 counts = counts[nonzero]
 
@@ -120,9 +120,9 @@ def brillouin_d(counts):
 
     .. math::
 
-       H_B = \frac{\ln N!-\sum_{i=1}^s{\ln n_i!}}{N}
+       H_B = \frac{\ln N!-\sum_{i=1}^S{\ln n_i!}}{N}
 
-    where :math:`N` is the total number of individuals in the sample, :math:`s`
+    where :math:`N` is the total number of individuals in the sample, :math:`S`
     is the number of taxa, and :math:`n_i` is the number of individuals in the
     :math:`i^{\text{th}}` taxon.
 
@@ -150,7 +150,7 @@ def brillouin_d(counts):
 
 
 @_validate_alpha(empty=np.nan)
-def dominance(counts, correct=False):
+def dominance(counts, finite=False):
     r"""Calculate Simpson's dominance index.
 
     Simpson's dominance index, a.k.a. Simpson's :math:`D`, measures the degree
@@ -158,17 +158,20 @@ def dominance(counts, correct=False):
 
     .. math::
 
-       D = \sum_{i=1}^s{p_i^2}
+       D = \sum_{i=1}^S{p_i^2}
 
-    where :math:`s` is the number of taxa and :math:`p_i` is the proportion
+    where :math:`S` is the number of taxa and :math:`p_i` is the proportion
     of the sample represented by taxon :math:`i`.
 
-    Simpson's :math:`D` can be interpreted as the probability that two randomly
-    selected individuals belong to the same taxon. It ranges between 0 and 1.
+    Simpson's :math:`D` ranges from 0 (infinite diversity; no dominance) and 1
+    (complete dominance, no diversity).
 
-    The bias-corrected version of Simpson's :math:`D` is calculated as follows.
-    It accounts for the effect of sampling without replacement. Therefore it
-    more accurately represents the above probability when the sample is small.
+    Simpson's :math:`D` can be interpreted as the probability that two randomly
+    selected individuals belong to the same taxon.
+
+    Simpson's :math:`D` may be corrected for finite samples to account for the
+    effect of sampling without replacement. This more accurately represents the
+    above probability when the sample is small. It is calculated as:
 
     .. math::
 
@@ -191,8 +194,8 @@ def dominance(counts, correct=False):
     ----------
     counts : 1-D array_like, int
         Vector of counts.
-    correct : bool, optional
-        If ``True``, use the bias-corrected version of the equation.
+    finite : bool, optional
+        If ``True``, correct for finite sampling.
 
     Returns
     -------
@@ -213,7 +216,7 @@ def dominance(counts, correct=False):
        688-688.
 
     """
-    if correct:
+    if finite:
         D = (counts * (counts - 1)).sum() / ((N := counts.sum()) * (N - 1))
     else:
         D = ((counts / counts.sum()) ** 2).sum()
@@ -238,25 +241,28 @@ def doubles(counts):
     return (counts == 2).sum()
 
 
-def enspie(counts):
+def enspie(counts, finite=False):
     r"""Calculate ENS_pie alpha diversity measure.
 
-    The effective number of species (ENS) derived from Hurlbert's probability of
-    interspecific encounter (PIE) ([1]_, [2]_) is defined as:
+    The effective number of species (ENS) derived from Hurlbert's probability
+    of interspecific encounter (PIE) ([1]_, [2]_) is defined as:
 
     .. math::
 
-       ENS_{pie} = \frac{1}{\sum_{i=1}^s{p_i^2}}
+       ENS_{pie} = \frac{1}{\sum_{i=1}^S{p_i^2}}
 
-    where :math:`s` is the number of taxa and :math:`p_i` is the proportion of the
-    sample represented by taxon :math:`i`.
+    where :math:`S` is the number of taxa and :math:`p_i` is the proportion of
+    the sample represented by taxon :math:`i`.
 
-    Therefore, :math:`ENS_{pie}` is equivalent to the inverse Simpson index (``1 / D``).
+    Therefore, :math:`ENS_{pie}` is equivalent to the inverse Simpson index
+    (``1 / D``).
 
     Parameters
     ----------
     counts : 1-D array_like, int
         Vector of counts.
+    finite : bool, optional
+        If ``True``, correct for finite sampling.
 
     Returns
     -------
@@ -282,7 +288,7 @@ def enspie(counts):
        critique and alternative parameters. Ecology, 52(4), 577-586.
 
     """
-    return inv_simpson(counts)
+    return inv_simpson(counts, finite=finite)
 
 
 @_validate_alpha(empty=np.nan)
@@ -316,6 +322,10 @@ def esty_ci(counts):
     -------
     tuple
         Esty's confidence interval as ``(lower_bound, upper_bound)``.
+
+    See Also
+    --------
+    goods_coverage
 
     Notes
     -----
@@ -411,8 +421,9 @@ def fisher_alpha(counts):
 def goods_coverage(counts):
     r"""Calculate Good's coverage estimator.
 
-    Good's coverage estimator :math:`C` is an estimation of the proportion of
-    the population represented in the sample. It is defined as:
+    Good's coverage estimator :math:`C`, a.k.a. Turing estimator or Good-
+    Turing (GT) estimator, is an estimation of the proportion of the
+    population represented in the sample. It is defined as:
 
     .. math::
 
@@ -431,6 +442,11 @@ def goods_coverage(counts):
     float
         Good's coverage estimator.
 
+    See Also
+    --------
+    esty_ci
+    robbins
+
     Notes
     -----
     Good's coverage estimator was originally described in [1]_.
@@ -445,7 +461,7 @@ def goods_coverage(counts):
 
 
 @_validate_alpha()
-def heip_e(counts, base=None):
+def heip_e(counts):
     r"""Calculate Heip's evenness measure.
 
     Heip's evenness is defined as:
@@ -461,8 +477,6 @@ def heip_e(counts, base=None):
     ----------
     counts : 1-D array_like, int
         Vector of counts.
-    base : int or float, optional
-        Logarithm base to use in the calculation. Default is ``e``.
 
     Returns
     -------
@@ -478,7 +492,7 @@ def heip_e(counts, base=None):
     -----
     Heip's evenness measure was originally described in [1]_.
 
-    When there is only one taxon, the return value is ``np.nan``.
+    When there is only one taxon, the return value is 1.0.
 
     References
     ----------
@@ -486,18 +500,36 @@ def heip_e(counts, base=None):
        UK., 54, 555-557.
 
     """
-    if (S := counts.size) <= 1:
+    if (S := counts.size) == 0:
         return np.nan
-    H = shannon(counts, base=base)
-    return (np.exp(H) - 1) / (S - 1)
+    elif S == 1:
+        return 1.0
+    return (shannon(counts, exp=True) - 1) / (S - 1)
 
 
 @_validate_alpha(empty=np.nan)
 def kempton_taylor_q(counts, lower_quantile=0.25, upper_quantile=0.75):
-    """Calculate Kempton-Taylor Q index of alpha diversity.
+    r"""Calculate Kempton-Taylor Q index of alpha diversity.
 
-    Estimates the slope of the cumulative abundance curve in the interquantile
-    range. By default, uses lower and upper quartiles, rounding inwards.
+    Kempton-Taylor Q index measures diversity based on the middle-ranking taxa
+    in the abundance distribution. Specifically, it estimates the slope of the
+    cumulative abundance curve in the interquantile range. It is defined as:
+
+    .. math::
+
+       Q = \frac{S_{lower..upper}}{\ln n_{lower} - \ln n_{upper}}
+
+    where "lower" and "upper" are the taxa at the lower and upper quantiles of
+    the abundance distribution, :math:`S` is the number of taxa, and :math:`n`
+    is the number of individuals.
+
+    By default, the lower and upper quartiles are used. Therefore:
+
+    .. math::
+
+       Q = \frac{S}{2(\ln n_{0.25} - \ln n_{0.75})}
+
+    The quantiles are rounded inwards in this implementation.
 
     Parameters
     ----------
@@ -541,25 +573,25 @@ def kempton_taylor_q(counts, lower_quantile=0.25, upper_quantile=0.75):
     return (upper - lower) / np.log(sorted_counts[upper] / sorted_counts[lower])
 
 
-def inv_simpson(counts, correct=False):
+def inv_simpson(counts, finite=False):
     r"""Calculate inverse Simpson index.
 
-    The inverse Simpson index (:math:`1 / D`), a.k.a., Simpson's reciprocal index, is
-    defined as:
+    The inverse Simpson index (:math:`1 / D`), a.k.a., Simpson's reciprocal
+    index, is defined as:
 
     .. math::
 
-       1 / D = \frac{1}{\sum_{i=1}^s{p_i^2}}
+       1 / D = \frac{1}{\sum_{i=1}^S{p_i^2}}
 
-    where :math:`s` is the number of taxa and :math:`p_i` is the proportion of
-    the sample represented by taxon :math:`i`.
+    where :math:`S` is the number of taxa and :math:`p_i` is the proportion
+    of the sample represented by taxon :math:`i`.
 
     Parameters
     ----------
     counts : 1-D array_like, int
         Vector of counts.
-    correct : bool, optional
-        If ``True``, use the bias-corrected equation to calculate :math:`D`.
+    finite : bool, optional
+        If ``True``, correct for finite sampling when calculating :math:`D`.
 
     Returns
     -------
@@ -572,8 +604,8 @@ def inv_simpson(counts, correct=False):
 
     Notes
     -----
-    :math:`1 / D` is a measurement of the effective number of species (ENS). It is
-    equivalent to Hill number with order 2 (:math:`^2D`).
+    :math:`1 / D` is a measurement of the effective number of species (ENS).
+    It is equivalent to Hill number with order 2 (:math:`^2D`).
 
     Inverse Simpson index was originally described in [1]_.
 
@@ -583,7 +615,7 @@ def inv_simpson(counts, correct=False):
        688-688.
 
     """
-    return 1 / dominance(counts, correct=correct)
+    return 1 / dominance(counts, finite=finite)
 
 
 @_validate_alpha(empty=np.nan)
@@ -599,7 +631,7 @@ def margalef(counts):
     where :math:`S` is the number of taxa and :math:`N` is the total number
     of individuals in the sample.
 
-    Assumes log accumulation.
+    Margalef's richness index assumes log accumulation.
 
     Parameters
     ----------
@@ -610,6 +642,10 @@ def margalef(counts):
     -------
     float
         Margalef's richness index.
+
+    See Also
+    --------
+    menhinick
 
     Notes
     -----
@@ -680,7 +716,7 @@ def mcintosh_d(counts):
 def mcintosh_e(counts):
     r"""Calculate McIntosh's evenness measure.
 
-    McIntosh evenness measure :math:`E` is defined as:
+    McIntosh's evenness measure :math:`E` is defined as:
 
     .. math::
 
@@ -706,8 +742,7 @@ def mcintosh_e(counts):
 
     Notes
     -----
-    The implementation here is based on the description given in [1]_, **NOT**
-    the one in the SDR-IV online manual, which is wrong.
+    McIntosh's evenness measure was originally described in [1]_.
 
     References
     ----------
@@ -735,7 +770,7 @@ def menhinick(counts):
     where :math:`S` is the number of taxa and :math:`N` is the total number
     of individuals in the sample.
 
-    Assumes square-root accumulation.
+    Menhinick's richness index assumes square-root accumulation.
 
     Parameters
     ----------
@@ -746,6 +781,10 @@ def menhinick(counts):
     -------
     float
         Menhinick's richness index.
+
+    See Also
+    --------
+    margalef
 
     Notes
     -----
@@ -764,11 +803,13 @@ def menhinick(counts):
 def michaelis_menten_fit(counts, num_repeats=1, params_guess=None):
     r"""Calculate Michaelis-Menten fit to rarefaction curve of observed taxa.
 
-    The Michaelis-Menten equation is defined as:
+    The Michaelis-Menten equation estimates the asymptote of the rarefaction
+    curve. It is an estimator of the true richness of a community given the
+    observation. It is defined as:
 
     .. math::
 
-       S=\frac{nS_{max}}{n+B}
+       S = \frac{nS_{max}}{n+B}
 
     where :math:`n` is the number of individuals and :math:`S` is the number of
     taxa. This function estimates the :math:`S_{max}` parameter.
@@ -965,14 +1006,18 @@ def pielou_e(counts, base=None):
     -----
     Pielou's evenness index was originally described in [1]_.
 
+    When there is only one taxon, the return value is 1.0.
+
     References
     ----------
     .. [1] Pielou, E. C., 1966. The measurement of diversity in different types
        of biological collections. Journal of Theoretical Biology, 13, 131-44.
 
     """
-    if (S := counts.size) <= 1:
+    if (S := counts.size) == 0:
         return np.nan
+    elif S == 1:
+        return 1.0
     H = shannon(counts, base=base)
     H_max = np.log(S)
     if base is not None:
@@ -987,9 +1032,13 @@ def robbins(counts):
 
     .. math::
 
-       \frac{F_1}{n+1}
+       \frac{F_1}{N}
 
-    where :math:`F_1` is the number of singleton taxa.
+    where :math:`F_1` is the number of singleton taxa and and :math:`N` is the
+    total number of individuals in the sample.
+
+    The result can be interpreted as the probability of discovering a new taxon
+    at the :math:`N`-th individual given the current :math:`N - 1` individuals.
 
     Parameters
     ----------
@@ -999,16 +1048,21 @@ def robbins(counts):
     Returns
     -------
     float
-        Robbins' estimate.
+        Robbins' estimator.
+
+    See Also
+    --------
+    goods_coverage
 
     Notes
     -----
-    Robbins' estimator is defined in [1]_. The estimate computed here is for
-    :math:`n-1` counts, i.e. the x-axis is off by 1.
+    Robbins' estimator is defined in [1]_.
 
     References
     ----------
-    .. [1] Robbins, H. E (1968). Ann. of Stats. Vol 36, pp. 256-257.
+    .. [1] Robbins, H. E. (1968). Estimating the total probability of the
+       unobserved outcomes of an experiment. Ann. Math. Statist., 39(6),
+       256-257.
 
     """
     counts = _validate_counts(counts)
@@ -1018,19 +1072,45 @@ def robbins(counts):
     return (counts == 1).sum() / counts.sum()
 
 
+def _entropy(freqs):
+    """Calculate entropy from proportional frequencies"""
+    H = (-freqs * np.log(freqs)).sum()
+    if base is not None:
+        H /= np.log(base)
+    return H
+
+
+def _perplexity(freqs):
+    return (freqs**-freqs).prod()
+
+
 @_validate_alpha(empty=np.nan)
-def shannon(counts, base=None, exp=None):
+def shannon(counts, base=None, exp=False):
     r"""Calculate Shannon's diversity index.
 
     Shannon's diversity index, :math:`H'`, a.k.a., Shannon index, or Shannon-
-    Wiener index, is defined as:
+    Wiener index, is equivalent to entropy in information theory. It is defined
+    as:
 
     .. math::
 
-       H' = -\sum_{i=1}^s\left(p_i\log(p_i)\right)
+       H' = -\sum_{i=1}^S\left(p_i\log_b(p_i)\right)
 
-    where :math:`s` is the number of taxa and :math:`p_i` is the proportion
+    where :math:`S` is the number of taxa and :math:`p_i` is the proportion
     of the sample represented by taxon :math:`i`.
+
+    The logarithm base :math:`b` defaults to ``e``, but may be 2, 10 or other
+    custom values.
+
+    The exponential of Shannon index, :math:`exp(H')`, measures the effective
+    number of species (a.k.a., true diversity). It is equivalent to perplexity
+    in information theory, or Hill number with order 1 (:math:`^1D`). The value
+    is independent from the base:
+
+    .. math::
+
+       exp(H') = b ^ {-\sum_{i=1}^S\left(p_i\log_b(p_i)\right)} = \prod_{i=1}
+       ^{S}p_i^{-p_i}
 
     Parameters
     ----------
@@ -1039,8 +1119,7 @@ def shannon(counts, base=None, exp=None):
     base : int or float, optional
         Logarithm base to use in the calculation. Default is ``e``.
     exp : bool, optional
-        Return exponential of Shannon index, which measures the effective
-        number of species (ENS).
+        If ``True``, return the exponential of Shannon index.
 
     Returns
     -------
@@ -1049,16 +1128,12 @@ def shannon(counts, base=None, exp=None):
 
     Notes
     -----
-    Shannon index was originally proposed in [1]_ as a measure of **entropy**
-    in information theory.
+    Shannon index (i.e., entropy) was originally proposed in [1]_. The
+    exponential of Shannon index (i.e., perplexity) was discussed in [2]_ in
+    the context of community diversity.
 
     .. note:: The default logarithm base was changed from 2 to :math:`e` in
        version 0.6.1, for consistency with the majority of literature.
-
-    The exponential of Shannon index, :math:`exp(H')`, measures the effective
-    number of species (a.k.a., "true diversity") ([2]_). It is equivalent to
-    **perplexity** in information theory, or Hill number with order 1
-    (:math:`^1D`).
 
     References
     ----------
@@ -1069,18 +1144,20 @@ def shannon(counts, base=None, exp=None):
 
     """
     freqs = counts / counts.sum()
-    H = (-freqs * np.log(freqs)).sum()
-    if base is not None:
-        H /= np.log(base)
+
+    # perplexity
     if exp is True:
+        return (freqs**-freqs).prod()
+
+    # entropy
+    else:
+        H = (-freqs * np.log(freqs)).sum()
         if base is not None:
-            return base**H
-        else:
-            return np.exp(H)
-    return H
+            H /= np.log(base)
+        return H
 
 
-def simpson(counts):
+def simpson(counts, finite=False):
     r"""Calculate Simpson's diversity index.
 
     Simpson's diversity index, a.k.a., Gini-Simpson index, or Gini impurity,
@@ -1088,18 +1165,24 @@ def simpson(counts):
 
     .. math::
 
-       1 - \sum_{i=1}^s{p_i^2}
+       1 - \sum_{i=1}^S{p_i^2}
 
-    where :math:`s` is the number of taxa and :math:`p_i` is the proportion
+    where :math:`S` is the number of taxa and :math:`p_i` is the proportion
     of the sample represented by taxon :math:`i`.
 
     Therefore, Simpson's diversity index is also denoted as :math:`1 - D`, in
     which :math:`D` is the Simpson's dominance index.
 
+    Simpson's diversity index can be interpreted as the probability that two
+    randomly selected individuals belong to different taxa. It is also known
+    as Hurlbert's probability of interspecific encounter (PIE).
+
     Parameters
     ----------
     counts : 1-D array_like, int
         Vector of counts.
+    finite : bool, optional
+        If ``True``, correct for finite sampling when calculating :math:`D`.
 
     Returns
     -------
@@ -1114,24 +1197,29 @@ def simpson(counts):
     -----
     Simpson's diversity index was originally described in [1]_.
 
+    Hurlbert's probability of interspecific encounter was described in [2]_.
+
     References
     ----------
     .. [1] Simpson, E. H. (1949). Measurement of diversity. Nature, 163(4148),
        688-688.
 
+    .. [2] Hurlbert, S. H. (1971). The nonconcept of species diversity: a
+       critique and alternative parameters. Ecology, 52(4), 577-586.
+
     """
-    return 1 - dominance(counts)
+    return 1 - dominance(counts, finite=finite)
 
 
-def simpson_d(counts, correct=False):
+def simpson_d(counts, finite=False):
     """Calculate Simpson's dominance index, a.k.a. Simpson's D.
 
     Parameters
     ----------
     counts : 1-D array_like, int
         Vector of counts.
-    correct : bool, optional
-        If ``True``, use the bias-corrected version of the equation.
+    finite : bool, optional
+        If ``True``, correct for finite sampling.
 
     Returns
     -------
@@ -1149,7 +1237,7 @@ def simpson_d(counts, correct=False):
     ``simpson_d`` is an alias for ``dominance``.
 
     """
-    return dominance(counts, correct=correct)
+    return dominance(counts, finite=finite)
 
 
 @_validate_alpha()
@@ -1183,7 +1271,6 @@ def simpson_e(counts):
     See Also
     --------
     dominance
-    enspie
     simpson
 
     Notes
@@ -1192,12 +1279,18 @@ def simpson_e(counts):
 
     References
     ----------
-    .. [1] Simpson, E. H. (1949). Measurement of diversity. nature, 163(4148), 688-688.
+    .. [1] Simpson, E. H. (1949). Measurement of diversity. nature, 163(4148),
+       688-688.
 
-    .. [2] Pielou, E. C. (1966). The measurement of diversity in different types of
-       biological collections. Journal of theoretical biology, 13, 131-144.
+    .. [2] Pielou, E. C. (1966). The measurement of diversity in different
+       types of biological collections. Journal of theoretical biology, 13,
+       131-144.
 
     """
+    # Note: the finite version of simpson_e might be: 1 / (D(S + 1)), because
+    # S + 1 is the maximum possible finite D given S. Otherwise, the result can
+    # be greater than 1 for small samples. However, I didn't find literature
+    # stating this. Therefore, the `finite` parameter is not used here.
     return 1 / (counts.size * dominance(counts))
 
 

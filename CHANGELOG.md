@@ -8,8 +8,8 @@
 * Added `AlignPath` and `PairAlignPath` classes ([#2011](https://github.com/scikit-bio/scikit-bio/pull/2011))
 * Added `simpson_d` as an alias for `dominance` (Simpson's dominance index, a.k.a. Simpson's D) ([#2024](https://github.com/scikit-bio/scikit-bio/pull/2024)).
 * Added `inv_simpson` (inverse Simpson index), which is equivalent to `enspie` ([#2024](https://github.com/scikit-bio/scikit-bio/pull/2024)).
-* Added parameter `exp` to `shannon` to convert Shannon index into the effective number of species ([#2024](https://github.com/scikit-bio/scikit-bio/pull/2024)).
-* Added parameter `correct` to Simpson's _D_ (`dominance`) and derived metrics (`simpson`, `simpson_e` and `inv_simpson`) to perform bias-corrected calculation.
+* Added parameter `exp` to `shannon` to calculate the exponential of Shannon index (i.e., perplexity, or effective number of species) ([#2024](https://github.com/scikit-bio/scikit-bio/pull/2024)).
+* Added parameter `finite` to Simpson's _D_ (`dominance`) and derived metrics (`simpson`, `simpson_e` and `inv_simpson`) to correct for finite samples ([#2024](https://github.com/scikit-bio/scikit-bio/pull/2024)).
 
 ### Performance enhancements
 
@@ -18,7 +18,8 @@
 ### Miscellaneous
 * Improved efficiency of counts matrix and vector validation prior to calculating community diversity metrics ([#2024](https://github.com/scikit-bio/scikit-bio/pull/2024)).
 * Improved treatment of empty communities (i.e., all taxa have zero counts, or there is no taxon) when calculating alpha diversity metrics. Most metrics will return `np.nan` and do not raise a warning due to zero division. Exceptions are metrics that describe observed counts, includng `sobs`, `singles`, `doubles` and `osd`, which return zero ([#2024](https://github.com/scikit-bio/scikit-bio/pull/2024)). See discussions in [2014](https://github.com/scikit-bio/scikit-bio/issues/2014).
-* Default logarithm base of Shannon index (`shannon`) was changed from 2 to e. This is to ensure consistency with other Shannon-based metrics (`pielou_e` and `heip_e`), and with literature and implementations in the field. Meanwhile, parameter `base` was added to `pielou_e` and `heip_e` such that the user can control this behavior ([#2024](https://github.com/scikit-bio/scikit-bio/pull/2024)). See discussions in [1884](https://github.com/scikit-bio/scikit-bio/issues/1884) and [2014](https://github.com/scikit-bio/scikit-bio/issues/2014).
+* Return values of `pielou_e` and `heip_e` were set to 1.0 for one-taxon communities, such that NaN is avoided, while honoring the definition (evenness of taxon abundance(s)) and the rationale (ratio between observed and maximum) ([#2024](https://github.com/scikit-bio/scikit-bio/pull/2024)).
+* Default logarithm base of Shannon index (`shannon`) was changed from 2 to e. This is to ensure consistency with other Shannon-based metrics (`pielou_e`), and with literature and implementations in the field. Meanwhile, parameter `base` was added to `pielou_e` such that the user can control this behavior ([#2024](https://github.com/scikit-bio/scikit-bio/pull/2024)). See discussions in [1884](https://github.com/scikit-bio/scikit-bio/issues/1884) and [2014](https://github.com/scikit-bio/scikit-bio/issues/2014).
 
 
 ## Version 0.6.0
