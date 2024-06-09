@@ -207,11 +207,13 @@ class BaseTests(TestCase):
 
     def test_margalef(self):
         self.assertEqual(margalef(self.counts), 8 / np.log(22))
+        self.assertTrue(np.isnan(margalef([1])))
         self.assertTrue(np.isnan(margalef([0, 0])))
 
     def test_mcintosh_d(self):
         self.assertAlmostEqual(mcintosh_d(np.array([1, 2, 3])),
                                0.636061424871458)
+        self.assertTrue(np.isnan(mcintosh_d([1])))
         self.assertTrue(np.isnan(mcintosh_d([0, 0])))
 
     def test_mcintosh_e(self):

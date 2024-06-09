@@ -6,8 +6,8 @@ r"""Alpha diversity measures (:mod:`skbio.diversity.alpha`)
 This package provides implementations of various alpha diversity [1]_ metrics,
 including measures of richness, diversity, evenness, dominance, and coverage.
 
-Some functions generate confidence intervals (CIs). These functions have
-the suffix ``_ci``.
+Some functions generate confidence intervals (CIs). These functions have the
+suffix ``_ci``.
 
 
 Richness metrics

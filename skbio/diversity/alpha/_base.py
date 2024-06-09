@@ -18,13 +18,6 @@ from skbio.diversity._util import _validate_counts_vector
 from skbio.util._warning import _warn_deprecated
 
 
-def _validate_counts(counts):
-    counts = _validate_counts_vector(counts)
-    if not (nonzero := counts != 0).all():
-        counts = counts[nonzero]
-    return counts
-
-
 def _validate_alpha(empty=None, cast_int=False):
     """Validate counts vector for an alpha diversity metric.
 
@@ -1025,6 +1018,7 @@ def pielou_e(counts, base=None):
     return H / H_max
 
 
+@_validate_alpha(empty=np.nan)
 def robbins(counts):
     r"""Calculate Robbins' estimator for probability of unobserved outcomes.
 
@@ -1065,23 +1059,7 @@ def robbins(counts):
        256-257.
 
     """
-    counts = _validate_counts(counts)
-    if counts.size == 0:
-        return np.nan
-
     return (counts == 1).sum() / counts.sum()
-
-
-def _entropy(freqs):
-    """Calculate entropy from proportional frequencies"""
-    H = (-freqs * np.log(freqs)).sum()
-    if base is not None:
-        H /= np.log(base)
-    return H
-
-
-def _perplexity(freqs):
-    return (freqs**-freqs).prod()
 
 
 @_validate_alpha(empty=np.nan)
@@ -1240,7 +1218,7 @@ def simpson_d(counts, finite=False):
     return dominance(counts, finite=finite)
 
 
-@_validate_alpha()
+@_validate_alpha(empty=np.nan)
 def simpson_e(counts):
     r"""Calculate Simpson's evenness index.
 

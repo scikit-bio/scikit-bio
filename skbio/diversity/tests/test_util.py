@@ -120,20 +120,30 @@ class ValidationTests(TestCase):
         npt.assert_array_equal(obs[1], np.array([0, 0, 2, 1, 3]))
         npt.assert_array_equal(obs[2], np.array([1, 1, 1, 1, 1]))
 
-    def test_validate_counts_matrix_no_cast_int(self):
-        # cast_int is passed through to _validate_counts_vector
+    def test_validate_counts_matrix_cast_int(self):
         obs = _validate_counts_matrix(
-            [[42.2, 42.1, 0], [42.2, 42.1, 1.0]], cast_int=False)
-        npt.assert_array_equal(obs[0], np.array([42.2, 42.1, 0]))
-        npt.assert_array_equal(obs[1], np.array([42.2, 42.1, 1.0]))
-        self.assertEqual(obs[0].dtype, float)
-        self.assertEqual(obs[1].dtype, float)
+            [[42.2, 42.1, 0], [42.2, 42.1, 1.0]], cast_int=True)
+        npt.assert_array_equal(obs[0], np.array([42, 42, 0]))
+        npt.assert_array_equal(obs[1], np.array([42, 42, 1]))
+        self.assertEqual(obs[0].dtype, int)
+        self.assertEqual(obs[1].dtype, int)
 
     def test_validate_counts_matrix_negative_counts(self):
         with self.assertRaises(ValueError):
             _validate_counts_matrix([[0, 1, 1, 0, 2], [0, 0, 2, -1, 3]])
         with self.assertRaises(ValueError):
             _validate_counts_matrix([[0, 0, 2, -1, 3], [0, 1, 1, 0, 2]])
+
+    def test_validate_counts_matrix_unmatching_ids(self):
+        with self.assertRaises(ValueError):
+            _validate_counts_matrix([[0, 1, 1, 0, 2],
+                                     [0, 0, 2, 1, 3],
+                                     [1, 1, 1, 1, 1]], ids=['a', 'b'])
+        with self.assertRaises(ValueError):
+            obs = _validate_counts_matrix(pd.DataFrame(
+                [[0, 1, 1, 0, 2],
+                 [0, 0, 2, 1, 3],
+                 [1, 1, 1, 1, 1]]), ids=['a', 'b'])
 
     def test_validate_counts_matrix_unequal_lengths(self):
         # len of vectors not equal
@@ -143,6 +153,12 @@ class ValidationTests(TestCase):
             _validate_counts_matrix([[0, 0], [0, 0, 8], [9, 8]])
         with self.assertRaises(ValueError):
             _validate_counts_matrix([[0, 0, 75], [0, 0, 3], [9, 8, 22, 44]])
+
+    def test_validate_counts_matrix_invalid_input(self):
+        with self.assertRaises(ValueError):
+            _validate_counts_matrix([['a', 'b', 'c']])
+        with self.assertRaises(ValueError):
+            _validate_counts_matrix([[1 + 2j, 3 + 4j]])
 
     def test_validate_taxa_and_tree(self):
         # basic valid input
