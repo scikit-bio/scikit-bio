@@ -1824,14 +1824,14 @@ class TreeNode(SkbioObject):
 
         Parameters
         ----------
-        lineage_map : iterable of tuple
-            A id to lineage mapping where the first index is an ID and the
-            second index is an iterable of the lineage.
+        lineage_map : dict, iterable of tuples, or pd.DataFrame
+            Mapping of taxon IDs to lineages (iterables of taxonomic units
+            from high to low in ranking).
 
         Returns
         -------
         TreeNode
-            The constructed taxonomy
+            The constructed taxonomy.
 
         See Also
         --------
@@ -1873,6 +1873,11 @@ class TreeNode(SkbioObject):
         """
         root = cls(name=None)
         root._lookup = {}
+
+        if isinstance(lineage_map, dict):
+            lineage_map = lineage_map.items()
+        elif isinstance(lineage_map, pd.DataFrame):
+            lineage_map = ((idx, row.tolist()) for idx, row in lineage_map.iterrows())
 
         for id_, lineage in lineage_map:
             cur_node = root
