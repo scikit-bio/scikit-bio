@@ -599,6 +599,7 @@ class SampleMetadata(_MetadataBase):
                 missing = _missing.series_extract_missing(series)
                 # avoid dtype changing if there's no missing values
                 if not missing.empty:
+                    series = series.astype(object)
                     series[missing.index] = missing
                 return series
 
