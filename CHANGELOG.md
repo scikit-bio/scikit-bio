@@ -10,6 +10,7 @@
 * Added `inv_simpson` (inverse Simpson index), which is equivalent to `enspie` ([#2024](https://github.com/scikit-bio/scikit-bio/pull/2024)).
 * Added parameter `exp` to `shannon` to calculate the exponential of Shannon index (i.e., perplexity, or effective number of species) ([#2024](https://github.com/scikit-bio/scikit-bio/pull/2024)).
 * Added parameter `finite` to Simpson's _D_ (`dominance`) and derived metrics (`simpson`, `simpson_e` and `inv_simpson`) to correct for finite samples ([#2024](https://github.com/scikit-bio/scikit-bio/pull/2024)).
+* Added support for dictionary and pandas DataFrame as input for `TreeNode.from_taxonomy` ([#2042](https://github.com/scikit-bio/scikit-bio/pull/2042)).
 
 ### Performance enhancements
 

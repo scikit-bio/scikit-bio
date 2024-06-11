@@ -1212,24 +1212,33 @@ class TreeTests(TestCase):
                          np.array([1, 2, 42.0, 42.0], dtype=float))
 
     def test_from_taxonomy(self):
-        input_lineages = {'1': ['a', 'b', 'c', 'd', 'e', 'f', 'g'],
-                          '2': ['a', 'b', 'c', None, None, 'x', 'y'],
-                          '3': ['h', 'i', 'j', 'k', 'l', 'm', 'n'],
-                          '4': ['h', 'i', 'j', 'k', 'l', 'm', 'q'],
-                          '5': ['h', 'i', 'j', 'k', 'l', 'm', 'n']}
+        lineages = [('1', ['a', 'b', 'c', 'd', 'e', 'f', 'g']),
+                    ('2', ['a', 'b', 'c', None, None, 'x', 'y']),
+                    ('3', ['h', 'i', 'j', 'k', 'l', 'm', 'n']),
+                    ('4', ['h', 'i', 'j', 'k', 'l', 'm', 'q']),
+                    ('5', ['h', 'i', 'j', 'k', 'l', 'm', 'n'])]
         exp = TreeNode.read(io.StringIO(
             "((((((((1)g)f)e)d,((((2)y)x)))c)b)a,"
             "(((((((3,5)n,(4)q)m)l)k)j)i)h);"))
 
-        root = TreeNode.from_taxonomy(input_lineages.items())
+        # input as 2-element tuples
+        obs = TreeNode.from_taxonomy(lineages)
+        self.assertIs(type(obs), TreeNode)
+        self.assertEqual(obs.compare_subsets(exp), 0.0)
 
-        self.assertIs(type(root), TreeNode)
+        obs = TreeNodeSubclass.from_taxonomy(lineages)
+        self.assertIs(type(obs), TreeNodeSubclass)
 
-        self.assertEqual(root.compare_subsets(exp), 0.0)
+        # input as dictionary
+        dict_ = dict(lineages)
+        obs = TreeNode.from_taxonomy(dict_)
+        self.assertEqual(obs.compare_subsets(exp), 0.0)
 
-        root = TreeNodeSubclass.from_taxonomy(input_lineages.items())
+        # input as data frame
+        df_ = pd.DataFrame([x[1] for x in lineages], [x[0] for x in lineages])
+        obs = TreeNode.from_taxonomy(df_)
+        self.assertEqual(obs.compare_subsets(exp), 0.0)
 
-        self.assertIs(type(root), TreeNodeSubclass)
 
     def test_to_taxonomy(self):
         input_lineages = {'1': ['a', 'b', 'c', 'd', 'e', 'f', 'g'],
