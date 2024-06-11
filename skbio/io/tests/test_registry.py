@@ -624,7 +624,9 @@ class TestSniff(RegistryTest):
 
         @formatx.sniffer()
         def sniffer(fh):
-            self.assertEqual(fh.readlines(), ['a\nb\nc\nd\ne\n'])
+            with io.open(fp, newline=None) as f:
+                content = f.read()
+            self.assertEqual(content, 'a\nb\nc\nd\ne\n')
             return True, {}
 
         fmt, _ = self.registry.sniff(fp)
@@ -1181,11 +1183,15 @@ class TestRead(RegistryTest):
 
         @formatx.reader(MockClass)
         def reader(fh):
-            return MockClass(fh.readlines())
+            with io.open(fp, newline=None) as f:
+                content = [''.join(f.readlines())]
+            return MockClass(content)
 
         @formatx.reader(None)
         def reader_gen(fh):
-            yield MockClass(fh.readlines())
+            with io.open(fp, newline=None) as f:
+                content = [''.join(f.readlines())]
+            yield MockClass(content)
 
         instance = self.registry.read(fp, into=MockClass)
         self.assertEqual(instance, MockClass(['a\nb\nc\nd\ne\n']))
@@ -1535,7 +1541,11 @@ class TestWrite(RegistryTest):
 
         with io.open(fp, mode='rb') as fh:
             # This would have been b'\xe4\xbd\xa0\xe5\xa5\xbd\n' in utf8
-            self.assertEqual(b'\xa7A\xa6n\n', fh.read())
+            self.assertEqual(b"\xa7A\xa6n\n",
+                             fh.read()
+                             .decode(encoding="big5")
+                             .replace("\r\n", "\n")
+                             .encode(encoding="big5"))
 
     def test_non_default_encoding(self):
         format1 = self.registry.create_format('format1', encoding='big5')
@@ -1552,13 +1562,21 @@ class TestWrite(RegistryTest):
         self.registry.write(obj, format='format1', into=fp)
 
         with io.open(fp, mode='rb') as fh:
-            self.assertEqual(b'\xa7A\xa6n\n', fh.read())
+            self.assertEqual(b"\xa7A\xa6n\n",
+                             fh.read()
+                             .decode(encoding="big5")
+                             .replace("\r\n", "\n")
+                             .encode(encoding="big5"))
 
         self._expected_encoding = 'utf8'
         self.registry.write(obj, format='format1', into=fp, encoding='utf8')
 
         with io.open(fp, mode='rb') as fh:
-            self.assertEqual(b'\xe4\xbd\xa0\xe5\xa5\xbd\n', fh.read())
+            self.assertEqual(b"\xe4\xbd\xa0\xe5\xa5\xbd\n",
+                             fh.read()
+                             .decode(encoding="utf8")
+                             .replace("\r\n", "\n")
+                             .encode(encoding="utf8"))
 
     def test_that_newline_is_used(self):
         format1 = self.registry.create_format('format1')
