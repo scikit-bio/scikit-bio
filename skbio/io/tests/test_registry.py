@@ -1541,11 +1541,7 @@ class TestWrite(RegistryTest):
 
         with io.open(fp, mode='rb') as fh:
             # This would have been b'\xe4\xbd\xa0\xe5\xa5\xbd\n' in utf8
-            self.assertEqual(b"\xa7A\xa6n\n",
-                             fh.read()
-                             .decode(encoding="big5")
-                             .replace("\r\n", "\n")
-                             .encode(encoding="big5"))
+            self.assertEqual(b"\xa7A\xa6n\n", fh.read().replace(b"\r\n", b"\n"))
 
     def test_non_default_encoding(self):
         format1 = self.registry.create_format('format1', encoding='big5')
@@ -1562,21 +1558,14 @@ class TestWrite(RegistryTest):
         self.registry.write(obj, format='format1', into=fp)
 
         with io.open(fp, mode='rb') as fh:
-            self.assertEqual(b"\xa7A\xa6n\n",
-                             fh.read()
-                             .decode(encoding="big5")
-                             .replace("\r\n", "\n")
-                             .encode(encoding="big5"))
+            self.assertEqual(b"\xa7A\xa6n\n", fh.read().replace(b"\r\n", b"\n"))
 
         self._expected_encoding = 'utf8'
         self.registry.write(obj, format='format1', into=fp, encoding='utf8')
 
         with io.open(fp, mode='rb') as fh:
             self.assertEqual(b"\xe4\xbd\xa0\xe5\xa5\xbd\n",
-                             fh.read()
-                             .decode(encoding="utf8")
-                             .replace("\r\n", "\n")
-                             .encode(encoding="utf8"))
+                             fh.read().replace(b"\r\n", b"\n"))
 
     def test_that_newline_is_used(self):
         format1 = self.registry.create_format('format1')
