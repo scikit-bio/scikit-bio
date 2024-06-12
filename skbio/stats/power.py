@@ -1193,7 +1193,8 @@ def _calculate_power_curve(
                 mode=mode,
             )
             if vec:
-                pwr[id2] = _calculate_power(ps, a)
+                pwr[id2] = (_calculate_power(ps, a)).item()
+
             else:
                 pwr[id1, id2] = _calculate_power(ps, a)
 
