@@ -313,6 +313,9 @@ def nni(tree, dm, inplace=True):
     an initial tree topology by performing subtree exchanges such that the distance
     is minimized. This implementation is based on the FastNNI algorithm [1]_.
 
+    The input tree is required to be binary and rooted at a leaf node such that
+    there is a unique descendant from the root.
+
     References
     ----------
     .. [1] Desper R, Gascuel O. Fast and accurate phylogeny reconstruction
@@ -320,10 +323,16 @@ def nni(tree, dm, inplace=True):
        2002;9(5):687-705. doi: 10.1089/106652702761034136. PMID: 12487758.
 
     """
-    # Needs errors for nonbinary trees and trees rooted on internal node
     # Initialize and populate the average distance matrix
     if not inplace:
         tree = tree.copy()
+    if len(tree.root().children) != 1:
+        print("Could not perform NNI. Tree needs to be rooted at a leaf node")
+        return
+    for node in tree.non_tips():
+        if len(node.children) != 2:
+            print("Could not perform NNI. Tree needs to be a binary tree")
+            return
     adm = _average_distance_matrix(tree, dm)
     while True:
         # create heap of possible swaps and then swapping subtrees
@@ -369,12 +378,19 @@ def _tip_or_root(node):
 def _average_distance_upper(node1, node2, dm):
     """Returns the average distance between the leaves of two subtrees.
 
-    Used for subtrees that contain ancestors corresponding to the root of the
-    tree as descendants within the subtree.
+    Used for subtrees which have a set of tips that are the complement
+    of the set of tips that are descendants from the node defining
+    the subtree.
+
+    Given an internal edge of a binary tree, exactly one adjacent edge
+    will connect to a node defining a subtree of this form.
     """
     nodelist1 = _tip_or_root(node1)
     if node2.is_root():
         nodelist2 = []
+    # Second subtree serves as the tree with a set of tips
+    # complementary to the set of tips that descend from the
+    # corresponding second node.
     else:
         root2 = node2.root()
         nodelist2 = [root2.name]
@@ -395,7 +411,11 @@ def _subtree_count(subtree):
 
 
 def _swap_length(a, b, c, d, i, j, k, m, adm):
-    """Returns the change in overall tree length after a given swap."""
+    """Returns the change in overall tree length after a given swap.
+
+    The count of leaves contained in each subtree are denoted 'a, b, c, d' while
+    each node defining the subtree has the index 'i, j, k, m', respectively.
+    """
     lambda1 = (a * d + b * c) / ((a + b) * (c + d))
     lambda2 = (a * d + b * c) / ((a + c) * (b + d))
     return 0.5 * (
@@ -406,16 +426,20 @@ def _swap_length(a, b, c, d, i, j, k, m, adm):
 
 
 def _swap_heap(tree, adm):
-    """ """
+    """Returns a maxheap ordered by the swap length for all possible swaps."""
     heap = []
     ordered = list(tree.postorder(include_self=False))
     root = tree.root()
     n_taxa = root.count(tips=True) + 1
+    # begin by finding nodes which are the child node of an internal edge
     for node in ordered:
+        # ignore tips of the tree
         if node.is_tip():
             continue
+        # identify the parent and grandparent nodes
         parent = node
         a = parent.parent
+        # identify the index of each neighboring node
         for index, node in enumerate(ordered):
             if node == a:
                 i1 = index
@@ -434,21 +458,16 @@ def _swap_heap(tree, adm):
                         i3 = index
                     elif node == d:
                         i4 = index
-                if c.is_tip():
-                    c_ = 1
-                else:
-                    c_ = c.count(tips=True)
-                if d.is_tip():
-                    d_ = 1
-                else:
-                    d_ = d.count(tips=True)
-                if b.is_tip():
-                    b_ = 1
-                else:
-                    b_ = b.count(tips=True)
+                # count the tips of the subtrees defined by the neighboring nodes
+                sub_tips = []
+                for subtree in [b, c, d]:
+                    sub_tips.append(1 if subtree.is_tip() else subtree.count(tips=True))
+                b_, c_, d_ = sub_tips
                 a_ = n_taxa - b_ - c_ - d_
+                # calculate the swap length for the two possible swaps given the edge
                 swap_1 = _swap_length(a_, b_, c_, d_, i1, i2, i3, i4, adm)
                 swap_2 = _swap_length(a_, b_, d_, c_, i1, i2, i4, i3, adm)
+                # store the best possible swap into a maxheap
                 if swap_1 > swap_2 and swap_1 > 0:
                     swap = -1 * swap_1
                     hq.heappush(heap, (swap, (b, c)))
@@ -459,7 +478,7 @@ def _swap_heap(tree, adm):
 
 
 def _average_subtree_distance(a, b, a1, a2, dm):
-    """ """
+    """Returns the average distance between two subtrees."""
     return (
         _subtree_count(a1) * _average_distance(a1, b, dm)
         + _subtree_count(a2) * _average_distance(a2, b, dm)
@@ -467,35 +486,44 @@ def _average_subtree_distance(a, b, a1, a2, dm):
 
 
 def _average_distance_matrix(tree, dm):
-    """ """
+    """Returns the matrix of distances between pairs of subtrees."""
     ordered = list(tree.postorder(include_self=False))
     n = len(ordered)
     r = tree.root()
     taxa_size = r.count(tips=True) + 1
     adm = np.empty((n, n))
-    for i, a in enumerate(ordered):  # consider refactoring with tip-to-tip distance
-        if a in tree.children:  # skipping over unique descendant
+    for i, a in enumerate(ordered):
+        # skip over unique descendant
+        if a in tree.children:
             continue
-        if a.is_tip():  # part (b)
+        # find the average distance between given node and root
+        if a.is_tip():
             adm[n - 1, i] = adm[i, n - 1] = dm[a.name, r.name]
         else:
             a1, a2 = a.children
-            adm[n - 1, i] = _average_subtree_distance(a, r, a1, a2, dm)
-            adm[i, n - 1] = adm[n - 1, i]
+            adm[n - 1, i] = adm[i, n - 1] = _average_subtree_distance(a, r, a1, a2, dm)
+        # find the average distance between first node and a second node
+        # which is above the first node in the postorder as well as an ancestor
         for j in range(i + 1, n - 1):  # part (a)
             b = ordered[j]
-            if b in a.ancestors():  # skipping over ancestors
+            # skipping over ancestors
+            if b in a.ancestors():
                 continue
+            # both nodes are tips
             if a.is_tip() and b.is_tip():
                 adm[i, j] = adm[j, i] = dm[a.name, b.name]
+            # second node is a tip, but not the first node
             elif b.is_tip():
                 a1, a2 = a.children
                 adm[i, j] = adm[j, i] = _average_subtree_distance(a, b, a1, a2, dm)
+            # neither node is a tip
             else:
                 b1, b2 = b.children
                 adm[i, j] = adm[j, i] = _average_subtree_distance(b, a, b1, b2, dm)
-    for j, b in enumerate(ordered):  # calculating for ancestors
-        if b in tree.children:  # skipping over unique descendant
+    # calculating for second nodes which are ancestors
+    for j, b in enumerate(ordered):
+        # skipping over unique descendant
+        if b in tree.children:
             continue
         s_ = b.siblings()
         for sibling in s_:
@@ -503,64 +531,68 @@ def _average_distance_matrix(tree, dm):
         p = b.parent
         for i, a in enumerate(ordered):
             if b in a.ancestors():
-                adm[i, j] = (
+                adm[i, j] = adm[j, i] = (
                     _subtree_count(s) * _average_distance(a, s, dm)
                     + (taxa_size - _subtree_count(p))
                     * _average_distance_upper(a, p, dm)
                 ) / (taxa_size - _subtree_count(b))
-                adm[j, i] = adm[i, j]
     return adm
 
 
 def _edge_estimation(tree, dm):
-    """ """
+    """Assigns estimated edge values to a tree based on a given distance matrix.
+
+    Estimation of edge values is based on a ordinary least squares (OLS) framework.
+    """
     adm = _average_distance_matrix(tree, dm)
     ordered = list(tree.postorder(include_self=False))
     root = tree.root()
     taxa_size = root.count(tips=True) + 1
-    for treenode in ordered:
-        if treenode.is_root():
+    # identify edges by first finding the child node of an edge
+    for edge_node in ordered:
+        parent = edge_node.parent
+        # skip over root node
+        if edge_node.is_root():
             continue
-        elif treenode.parent.is_root():
+        # calculate edge length for the edge adjacent to the root
+        elif parent.is_root():
             for index, node in enumerate(ordered):
-                if node == treenode:
+                if node == edge_node:
                     i1 = index
-            a, b = treenode.children
+            a, b = edge_node.children
             for index, node in enumerate(ordered):
                 if node == a:
                     i2 = index
                 elif node == b:
                     i3 = index
-            length = 0.5 * (adm[i2][i1] + adm[i3][i1] - adm[i2][i3])
-            treenode.length = length
-        elif treenode.is_tip():
-            parentnode = treenode.parent
-            a = parentnode.parent
+            edge_node.length = 0.5 * (adm[i2][i1] + adm[i3][i1] - adm[i2][i3])
+        # calculate edge lengths for external edges
+        elif edge_node.is_tip():
+            a = parent.parent
             if a.is_root():
                 for child in a.children:
                     a = child
-            for siblingnode in treenode.siblings():
+            for siblingnode in edge_node.siblings():
                 b = siblingnode
                 for index, node in enumerate(ordered):
-                    if node == treenode:
+                    if node == edge_node:
                         i1 = index
                     if node == a:
                         i2 = index
                     if node == b:
                         i3 = index
-            length = 0.5 * (adm[i2][i1] + adm[i3][i1] - adm[i2][i3])
-            treenode.length = length
+            edge_node.length = 0.5 * (adm[i2][i1] + adm[i3][i1] - adm[i2][i3])
+        # calculate edge lengths for internal edges
         else:
-            parentnode = treenode.parent
-            a = parentnode.parent
+            a = parent.parent
             if a.is_root():
                 for child in a.children:
                     a = child
             for index, node in enumerate(ordered):
                 if node == a:
                     i1 = index
-            c, d = treenode.children
-            for sibling in treenode.siblings():
+            c, d = edge_node.children
+            for sibling in edge_node.siblings():
                 b = sibling
             for index, node in enumerate(ordered):
                 if node == b:
@@ -569,23 +601,16 @@ def _edge_estimation(tree, dm):
                     i3 = index
                 elif node == d:
                     i4 = index
-            if c.is_tip():
-                c_ = 1
-            else:
-                c_ = c.count(tips=True)
-            if d.is_tip():
-                d_ = 1
-            else:
-                d_ = d.count(tips=True)
-            if b.is_tip():
-                b_ = 1
-            else:
-                b_ = b.count(tips=True)
+            # count the tips of subtrees which are adjacent to the internal edge
+            sub_tips = []
+            for subtree in [b, c, d]:
+                sub_tips.append(1 if subtree.is_tip() else subtree.count(tips=True))
+            b_, c_, d_ = sub_tips
             a_ = taxa_size - b_ - c_ - d_
+            # calculate the edge length
             lambda1 = (a_ * d_ + b_ * c_) / ((a_ + b_) * (c_ + d_))
-            length = 0.5 * (
+            edge_node.length = 0.5 * (
                 (lambda1 * (adm[i1][i3] + adm[i2][i4]))
                 + ((1 - lambda1) * (adm[i1][i4] + adm[i2][i3]))
                 - (adm[i1][i2] + adm[i3][i4])
             )
-            treenode.length = length

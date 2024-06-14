@@ -9,10 +9,14 @@
 import io
 from unittest import TestCase, main
 
-from skbio import DistanceMatrix, TreeNode, nj
+from skbio import DistanceMatrix, TreeNode, nj, nni
 from skbio.tree._nj import (
     _compute_q, _compute_collapsed_dm, _lowest_index,
-    _pair_members_to_new_node)
+    _pair_members_to_new_node, _perform_swap,
+    _average_distance, _tip_or_root,
+    _average_distance_upper, _subtree_count,
+    _swap_length, _swap_heap, _average_subtree_distance,
+    _average_distance_matrix, _edge_estimation)
 
 
 class NjTests(TestCase):
@@ -32,6 +36,15 @@ class NjTests(TestCase):
                               " a:2.000000):3.000000):2.000000, e:1.000000);")
         self.expected1_TreeNode = TreeNode.read(
                 io.StringIO(self.expected1_str))
+        # For nni testing an arbitrary tree is given alongside the distance
+        # matrix. Tree topologies are equivalent to that of the unrooted tree
+        # of the above newick string.
+        self.pre1_nni_str = ("(((b,d),(e,c)))a;")
+        self.pre1_nni_TreeNode = TreeNode.read(
+                io.StringIO(self.pre1_nni_str))
+        self.post1_nni_str = ("((((e:1.0,d:2.0):2.0,c:4.0):3.0,b:3.0):2.0)a;")
+        self.post1_nni_TreeNode = TreeNode.read(
+                io.StringIO(self.post1_nni_str))
 
         # this example was pulled from the Phylip manual
         # http://evolution.genetics.washington.edu/phylip/doc/neighbor.html
@@ -51,6 +64,16 @@ class NjTests(TestCase):
                               "0.91769);")
         self.expected2_TreeNode = TreeNode.read(
                 io.StringIO(self.expected2_str))
+        self.pre2_nni_str = ("(((Mouse,Gorilla),(Gibbon,(Bovine,(Orang"
+                             ",Chimp)))))Human;")
+        self.pre2_nni_TreeNode = TreeNode.read(
+                io.StringIO(self.pre2_nni_str))
+        self.post2_nni_str = ("((((((Bovine:0.9117125,Mouse:0.7748875):0.42773"
+                              "33,Gibbon:0.3504666):0.0408666,Orang:0.2809083)"
+                              ":0.0345694,Gorilla:0.1475249):0.0414812,Chimp:0"
+                              ".1470600):0.1221399)Human;")
+        self.post2_nni_TreeNode = TreeNode.read(
+                io.StringIO(self.post2_nni_str))
 
         data3 = [[0, 5, 4, 7, 6, 8],
                  [5, 0, 7, 10, 9, 11],
@@ -65,8 +88,15 @@ class NjTests(TestCase):
                               "250000);")
         self.expected3_TreeNode = TreeNode.read(
                 io.StringIO(self.expected3_str))
+        self.pre3_nni_str = ("((1,(((5,2),4),3)))0;")
+        self.pre3_nni_TreeNode = TreeNode.read(
+                io.StringIO(self.pre3_nni_str))
+        self.post3_nni_str = ("((1:4.0,((5:4.75,(4:2.0,3:3.0):0.75):1.25"
+                              ",2:2.0):1.0):1.0)0;")
+        self.post3_nni_TreeNode = TreeNode.read(
+                io.StringIO(self.post3_nni_str))
 
-        # this dm can yield negative branch lengths
+        # this dm can yield negative branch lengths for both nj and nni
         data4 = [[0,  5,  9,  9,  800],
                  [5,  0, 10, 10,  9],
                  [9, 10,  0,  8,  7],
@@ -190,6 +220,195 @@ class NjTests(TestCase):
         # this makes it clear why negative branch lengths don't make sense...
         self.assertEqual(
             _pair_members_to_new_node(dm, 'a', 'b', False), (-16, 20))
+
+    def test_nni_dm1(self):
+        self.assertEqual(nj(self.dm1, result_constructor=str),
+                         self.expected1_str)
+        actual_TreeNode = nni(self.pre1_nni_TreeNode, self.dm1, inplace=False)
+        self.assertAlmostEqual(actual_TreeNode.compare_tip_distances(
+            self.post1_nni_TreeNode), 0.0, places=10)
+
+    def test_nni_dm2(self):
+        # Resulting tree topology is equivalent to result from nj, however,
+        # resulting edge lengths are almost equal to 2 places.
+        actual_TreeNode = nni(self.pre2_nni_TreeNode, self.dm2, inplace=False)
+        self.assertAlmostEqual(actual_TreeNode.compare_tip_distances(
+            self.post2_nni_TreeNode), 0.0)
+
+    def test_nni_dm3(self):
+        actual_TreeNode = nni(self.pre3_nni_TreeNode, self.dm3, inplace=False)
+        self.assertAlmostEqual(actual_TreeNode.compare_tip_distances(
+            self.post3_nni_TreeNode), 0.0)
+        
+    def test_nni_trivial(self):
+        # No swaps are performed, but edge lengths are assigned.
+        data = [[0, 3, 2],
+                [3, 0, 3],
+                [2, 3, 0]]
+        dm = DistanceMatrix(data, list('abc'))
+        pre_str = "((c,b))a;"
+        pre_TreeNode = TreeNode.read(
+                io.StringIO(pre_str))
+        expected_str = "((c:1.0,b:2.0):1.0)a;"
+        expected_TreeNode = TreeNode.read(
+                io.StringIO(expected_str))
+        self.assertEqual(str(nni(pre_TreeNode, dm, inplace=False)),
+                         str(expected_TreeNode))
+
+    def test_nni_binary_flag(self):
+        # Flag prints out 'Tree needs to be a binary tree' and
+        # returns a None object.
+        data = [[0, 3],
+                [3, 0]]
+        dm = DistanceMatrix(data, list('ab'))
+        pre_str = "((b))a;"
+        pre_TreeNode = TreeNode.read(
+                io.StringIO(pre_str))
+        self.assertEqual(nni(pre_TreeNode, dm), None)
+
+    def test_nni_leaf_root_flag(self):
+        # Flag prints out 'Tree needs to be rooted at a leaf node' and
+        # returns a None object.
+        data = [[0, 3, 2],
+                [3, 0, 3],
+                [2, 3, 0]]
+        dm = DistanceMatrix(data, list('abc'))
+        pre_str = "((c,b))a;"
+        pre_TreeNode = TreeNode.read(
+                io.StringIO(pre_str))
+        self.assertEqual(nni(pre_TreeNode, dm), None)
+
+    def test_perform_swap(self):
+        # Swapping the leaf nodes a tree without edge lengths.
+        pre_str = "(((b,d),(e,c)))a;"
+        pre_TreeNode = TreeNode.read(
+            io.StringIO(pre_str))
+        node1 = pre_TreeNode.find('b')
+        node2 = pre_TreeNode.find('c')
+        expected_str = "(((d,c),(e,b)))a;"
+        expected_TreeNode = TreeNode.read(
+            io.StringIO(expected_str))
+        self.assertEqual(str(_perform_swap(node1, node2)),
+                         str(expected_TreeNode))
+
+    def test_average_distance(self):
+        expected_str = ("((((e:1.0,d:2.0):2.0,c:4.0):3.0,b:3.0):2.0)a;")
+        expected_TreeNode = TreeNode.read(io.StringIO(expected_str))
+        node1 = expected_TreeNode.find('b')
+        node2 = expected_TreeNode.find('d').parent
+        self.assertAlmostEqual(_average_distance(node1, node2, self.dm1),
+                               9.5, places=10)
+
+    def test_tip_or_root(self):
+        expected_str = ("((((e:1.0,d:2.0):2.0,c:4.0):3.0,b:3.0):2.0)a;")
+        expected_TreeNode = TreeNode.read(io.StringIO(expected_str))
+        node_internal = expected_TreeNode.find('d').parent
+        node_leaf = expected_TreeNode.find('b')
+        root = expected_TreeNode.root()
+        self.assertEqual(len(_tip_or_root(node_internal)), 2)
+        self.assertEqual(str(_tip_or_root(node_leaf)[0]),
+                             str(node_leaf.name))
+        self.assertEqual(str(_tip_or_root(root)[0]),
+                             str(root.name))
+
+    def test_average_distance_upper(self):
+        data = [[0, 0.02, 0.18, 0.34, 0.55],
+                [0.02, 0, 0.19, 0.35, 0.55],
+                [0.18, 0.19, 0, 0.34, 0.54],
+                [0.34, 0.35, 0.34, 0, 0.62],
+                [0.55, 0.55, 0.54, 0.62, 0]]
+        ids = ['human','monkey','pig','rat','chicken']
+        dm = DistanceMatrix(data, ids)
+        expected_str = "((rat,(human,(pig,monkey))))chicken;"
+        expected_TreeNode = TreeNode.read(io.StringIO(expected_str))
+        node1 = expected_TreeNode.find('pig').parent
+        node2 = expected_TreeNode.find('human').parent.parent
+        self.assertAlmostEqual(_average_distance_upper(node1, node2, dm), 0.445, places=10)
+
+    def test_subtree_count(self):
+        expected_str = ("((((e:1.0,d:2.0):2.0,c:4.0):3.0,b:3.0):2.0)a;")
+        expected_TreeNode = TreeNode.read(io.StringIO(expected_str))
+        internal_node = expected_TreeNode.find('d').parent.parent
+        leaf = expected_TreeNode.find('d')
+        root = expected_TreeNode.root()
+        self.assertEqual(_subtree_count(internal_node), 3)
+        self.assertEqual(_subtree_count(leaf), 1)
+        self.assertEqual(_subtree_count(root), 1)
+
+    def test_swap_length(self):
+        # results in a positive integer
+        # computed manually
+        expected_str = ("(((b,d),(e,c)))a;")
+        expected_TreeNode = TreeNode.read(io.StringIO(expected_str))
+        adm = _average_distance_matrix(expected_TreeNode, self.dm1)
+        self.assertAlmostEqual(_swap_length(
+            2, 1, 1, 1, 6, 3, 0, 1, adm), 2.5, places=10)
+
+    def test_swap_heap(self):
+        # swap length is stored into the maxheap as a negative integer
+        expected_str = ("(((b,d),(e,c)))a;")
+        expected_TreeNode = TreeNode.read(io.StringIO(expected_str))
+        adm = _average_distance_matrix(expected_TreeNode, self.dm1)
+        self.assertAlmostEqual(_swap_heap(expected_TreeNode, adm)[0][0],
+                               -2.5, places=10)
+
+    def test_average_subtree_distance(self):
+        # computed manually
+        expected_str = ("(((b,d),(e,c)))a;")
+        expected_TreeNode = TreeNode.read(io.StringIO(expected_str))
+        a = expected_TreeNode.find('e').parent
+        b = expected_TreeNode.find('b')
+        a1 = expected_TreeNode.find('e')
+        a2 = expected_TreeNode.find('c')
+        self.assertAlmostEqual(_average_subtree_distance(a, b, a1, a2, self.dm1),
+                               9.5, places=10)
+
+    def test_average_distance_matrix_trivial(self):
+        # In this case, the average distance matrix is equivalent to
+        # the original distance matrix
+        data = [[0, 3, 2],
+                [3, 0, 3],
+                [2, 3, 0]]
+        ids = list('abc')
+        dm = DistanceMatrix(data, ids)
+        expected_str = "((c,b))a;"
+        expected_TreeNode = TreeNode.read(io.StringIO(expected_str))
+        index = [0, 1, 2]
+        actual_adm = _average_distance_matrix(expected_TreeNode, dm)
+        for i in index:
+            for j in index:
+                self.assertEqual(dm[i][j], actual_adm[i][j])
+
+    def test_average_distance_matrix(self):
+        # computed manually
+        expected_str = ("(((b,d),(e,c)))a;")
+        expected_TreeNode = TreeNode.read(io.StringIO(expected_str))
+        expected_adm = [[0.0, 10.0, 8.0, 9.0, 10.0, 9.5, 5.0],
+                        [10.0, 0.0, 6.66666667, 3.0, 8.0, 5.5, 9.0],
+                        [8.0, 6.66666667, 0.0, 6.0, 9.0, 7.5, 7.0],
+                        [9.0, 3.0, 6.0, 0.0, 7.0, 6.66666667, 8.0],
+                        [1.0, 8.0, 9.0, 7.0, 0.0, 9.0, 9.0],
+                        [9.5, 5.5, 7.5, 6.66666667, 9.0, 0.0, 8.5],
+                        [5.0, 9.0, 7.0, 8.0, 9.0, 8.5, 0.0]]
+        actual_adm = _average_distance_matrix(expected_TreeNode, self.dm1)
+        index = [0, 1, 2, 3, 4, 5, 6]
+        for i in index:
+            for j in index:
+                self.assertAlmostEqual(expected_adm[i][j], actual_adm[i][j])
+
+    def test_edge_estimation(self):
+        data = [[0, 3, 2],
+                [3, 0, 3],
+                [2, 3, 0]]
+        ids = list('abc')
+        dm = DistanceMatrix(data, ids)
+        pre_estimation_str = "((c,b))a;"
+        expected_str = "((c:1.0,b:2.0):1.0)a;"
+        actual_TreeNode = TreeNode.read(io.StringIO(pre_estimation_str))
+        _edge_estimation(actual_TreeNode)
+        expected_TreeNode = TreeNode.read(io.StringIO(expected_str))
+        self.assertAlmostEqual(actual_TreeNode.compare_tip_distances(
+            expected_TreeNode), 0.0, places=10)
 
 
 if __name__ == "__main__":

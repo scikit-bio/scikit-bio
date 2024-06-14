@@ -7,6 +7,7 @@
 * Added `ProteinEmbedding` class and corresponding file format ([#2008](https://github.com/scikit-bio/scikit-bio/pull/2008]))
 * Added `AlignPath` and `PairAlignPath` classes ([#2011](https://github.com/scikit-bio/scikit-bio/pull/2011))
 * Added support for dictionary and pandas DataFrame as input for `TreeNode.from_taxonomy` ([#2042](https://github.com/scikit-bio/scikit-bio/pull/2042)).
+* Added `nni` method for phylogenetic reconstruction ([#2050](https://github.com/scikit-bio/scikit-bio/pull/2050))
 
 ### Performance enhancements
 
