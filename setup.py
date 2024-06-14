@@ -237,6 +237,7 @@ setup(
         "scipy >= 1.9.0",
         "h5py >= 3.6.0",
         "biom-format >= 2.1.16",
+        "statsmodels >= 0.14.2",
     ],
     classifiers=classifiers,
     package_data={
