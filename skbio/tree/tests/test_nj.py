@@ -281,14 +281,15 @@ class NjTests(TestCase):
     def test_perform_swap(self):
         # Swapping the leaf nodes a tree without edge lengths.
         pre_str = "(((b,d),(e,c)))a;"
-        pre_TreeNode = TreeNode.read(
+        actual_TreeNode = TreeNode.read(
             io.StringIO(pre_str))
-        node1 = pre_TreeNode.find('b')
-        node2 = pre_TreeNode.find('c')
+        node1 = actual_TreeNode.find('b')
+        node2 = actual_TreeNode.find('c')
         expected_str = "(((d,c),(e,b)))a;"
         expected_TreeNode = TreeNode.read(
             io.StringIO(expected_str))
-        self.assertEqual(str(_perform_swap(node1, node2)),
+        _perform_swap(node1, node2)
+        self.assertEqual(str(actual_TreeNode),
                          str(expected_TreeNode))
 
     def test_average_distance(self):
@@ -312,6 +313,7 @@ class NjTests(TestCase):
                              str(root.name))
 
     def test_average_distance_upper(self):
+        # computed manually
         data = [[0, 0.02, 0.18, 0.34, 0.55],
                 [0.02, 0, 0.19, 0.35, 0.55],
                 [0.18, 0.19, 0, 0.34, 0.54],
@@ -323,7 +325,7 @@ class NjTests(TestCase):
         expected_TreeNode = TreeNode.read(io.StringIO(expected_str))
         node1 = expected_TreeNode.find('pig').parent
         node2 = expected_TreeNode.find('human').parent.parent
-        self.assertAlmostEqual(_average_distance_upper(node1, node2, dm), 0.445, places=10)
+        self.assertAlmostEqual(_average_distance_upper(node1, node2, dm), 0.545, places=10)
 
     def test_subtree_count(self):
         expected_str = ("((((e:1.0,d:2.0):2.0,c:4.0):3.0,b:3.0):2.0)a;")
@@ -350,7 +352,7 @@ class NjTests(TestCase):
         expected_TreeNode = TreeNode.read(io.StringIO(expected_str))
         adm = _average_distance_matrix(expected_TreeNode, self.dm1)
         self.assertAlmostEqual(_swap_heap(expected_TreeNode, adm)[0][0],
-                               -2.5, places=10)
+                               -2.0, places=10)
 
     def test_average_subtree_distance(self):
         # computed manually
@@ -405,7 +407,7 @@ class NjTests(TestCase):
         pre_estimation_str = "((c,b))a;"
         expected_str = "((c:1.0,b:2.0):1.0)a;"
         actual_TreeNode = TreeNode.read(io.StringIO(pre_estimation_str))
-        _edge_estimation(actual_TreeNode)
+        _edge_estimation(actual_TreeNode, dm)
         expected_TreeNode = TreeNode.read(io.StringIO(expected_str))
         self.assertAlmostEqual(actual_TreeNode.compare_tip_distances(
             expected_TreeNode), 0.0, places=10)
