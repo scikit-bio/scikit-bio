@@ -536,6 +536,8 @@ def _average_distance_matrix(tree, dm):
                     + (taxa_size - _subtree_count(p))
                     * _average_distance_upper(a, p, dm)
                 ) / (taxa_size - _subtree_count(b))
+                # zero the diagonal
+                adm[i, i] = 0
     return adm
 
 
