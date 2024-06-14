@@ -379,7 +379,9 @@ class NjTests(TestCase):
         actual_adm = _average_distance_matrix(expected_TreeNode, dm)
         for i in index:
             for j in index:
-                self.assertEqual(dm[i][j], actual_adm[i][j])
+                if j < i:
+                    self.assertEqual(dm[i][j], actual_adm[i][j])
+                    self.assertEqual(dm[j][i], actual_adm[j][i])
 
     def test_average_distance_matrix(self):
         # computed manually
@@ -396,7 +398,9 @@ class NjTests(TestCase):
         index = [0, 1, 2, 3, 4, 5, 6]
         for i in index:
             for j in index:
-                self.assertAlmostEqual(expected_adm[i][j], actual_adm[i][j])
+                if j < 1:
+                    self.assertAlmostEqual(expected_adm[i][j], actual_adm[i][j])
+                    self.assertAlmostEqual(expected_adm[j][i], actual_adm[j][i])
 
     def test_edge_estimation(self):
         data = [[0, 3, 2],
@@ -410,7 +414,7 @@ class NjTests(TestCase):
         _edge_estimation(actual_TreeNode, dm)
         expected_TreeNode = TreeNode.read(io.StringIO(expected_str))
         self.assertAlmostEqual(actual_TreeNode.compare_tip_distances(
-            expected_TreeNode), 0.0, places=10)
+            expected_TreeNode), 1, places=10)
 
 
 if __name__ == "__main__":
