@@ -9,6 +9,7 @@
 import io
 
 import numpy as np
+import heapq as hq
 
 from skbio.stats.distance import DistanceMatrix
 from skbio.tree import TreeNode
@@ -286,3 +287,305 @@ def _pair_members_to_new_node(dm, i, j, disallow_negative_branch_length):
         j_to_u = 0
 
     return i_to_u, j_to_u
+
+
+def nni(tree, dm, inplace=True):
+    r"""Perform nearest neighbor interchanges on a phylogenetic tree.
+
+    Parameters
+    ----------
+    tree : skbio.TreeNode
+        Input phylogenetic tree to be rearranged.
+    dm : skbio.DistanceMatrix
+        Input distance matrix containing distances between taxa.
+    inplace : bool, optional
+        Whether manipulate the tree in place (``True``, default) or return a
+        copy of the tree (``False``).
+
+    Returns
+    -------
+    TreeNode
+        Rearranged phylogenetic tree (if ``inplace`` is ``True``).
+
+    Notes
+    -----
+    NNI algorithm for minimum evolution problem on phylogenetic trees. It rearranges
+    an initial tree topology by performing subtree exchanges such that the distance
+    is minimized. This implementation is based on the FastNNI algorithm [1]_.
+
+    References
+    ----------
+    .. [1] Desper R, Gascuel O. Fast and accurate phylogeny reconstruction
+       algorithms based on the minimum-evolution principle. J Comput Biol.
+       2002;9(5):687-705. doi: 10.1089/106652702761034136. PMID: 12487758.
+
+    """
+    # Needs errors for nonbinary trees and trees rooted on internal node
+    # Initialize and populate the average distance matrix
+    if not inplace:
+        tree = tree.copy()
+    adm = _average_distance_matrix(tree, dm)
+    while True:
+        # create heap of possible swaps and then swapping subtrees
+        # until no more swaps are possible.
+        adm = _average_distance_matrix(tree, dm)
+        heap = _swap_heap(tree, adm)
+        if not heap:
+            break
+        swap = hq.heappop(heap)
+        _perform_swap(swap[1][0], swap[1][1])
+    # edge values are added using an OLS framework.
+    _edge_estimation(tree, dm)
+    if not inplace:
+        return tree
+
+
+def _perform_swap(node1, node2):
+    """Returns a tree after swapping two subtrees."""
+    parent1, parent2 = node1.parent, node2.parent
+    parent1.append(node2)
+    parent2.append(node1)
+
+
+def _average_distance(node1, node2, dm):
+    """Returns the average distance between the leaves of two subtrees.
+
+    Distances between nodes are calculated using a distance matrix.
+    """
+    nodelist1 = _tip_or_root(node1)
+    nodelist2 = _tip_or_root(node2)
+    df = dm.between(nodelist1, nodelist2)
+    return df["value"].mean()
+
+
+def _tip_or_root(node):
+    """Get name(s) of a node if it's a tip or root, otherwise its descending tips."""
+    if node.is_tip() or node.is_root():
+        return [node.name]
+    else:
+        return [x.name for x in node.tips()]
+
+
+def _average_distance_upper(node1, node2, dm):
+    """Returns the average distance between the leaves of two subtrees.
+
+    Used for subtrees that contain ancestors corresponding to the root of the
+    tree as descendants within the subtree.
+    """
+    nodelist1 = _tip_or_root(node1)
+    if node2.is_root():
+        nodelist2 = []
+    else:
+        root2 = node2.root()
+        nodelist2 = [root2.name]
+        nodelist2.extend(root2.subset() - node2.subset())
+    df = dm.between(nodelist1, nodelist2)
+    return df["value"].mean()
+
+
+def _subtree_count(subtree):
+    """Returns the number of leaves in a subtree.
+
+    Assumes the root as a leaf node.
+    """
+    if subtree.is_tip() or subtree.is_root():
+        return 1
+    else:
+        return subtree.count(tips=True)
+
+
+def _swap_length(a, b, c, d, i, j, k, m, adm):
+    """Returns the change in overall tree length after a given swap."""
+    lambda1 = (a * d + b * c) / ((a + b) * (c + d))
+    lambda2 = (a * d + b * c) / ((a + c) * (b + d))
+    return 0.5 * (
+        (lambda1 - 1) * (adm[i][k] + adm[j][m])
+        - (lambda2 - 1) * (adm[i][j] + adm[k][m])
+        - (lambda1 - lambda2) * (adm[i][m] + adm[j][k])
+    )
+
+
+def _swap_heap(tree, adm):
+    """ """
+    heap = []
+    ordered = list(tree.postorder(include_self=False))
+    root = tree.root()
+    n_taxa = root.count(tips=True) + 1
+    for node in ordered:
+        if node.is_tip():
+            continue
+        parent = node
+        a = parent.parent
+        for index, node in enumerate(ordered):
+            if node == a:
+                i1 = index
+        for child in parent.children:
+            if child.is_tip():
+                continue
+            else:
+                childnode = child
+                c, d = childnode.children
+                for sibling in childnode.siblings():
+                    b = sibling
+                for index, node in enumerate(ordered):
+                    if node == b:
+                        i2 = index
+                    elif node == c:
+                        i3 = index
+                    elif node == d:
+                        i4 = index
+                if c.is_tip():
+                    c_ = 1
+                else:
+                    c_ = c.count(tips=True)
+                if d.is_tip():
+                    d_ = 1
+                else:
+                    d_ = d.count(tips=True)
+                if b.is_tip():
+                    b_ = 1
+                else:
+                    b_ = b.count(tips=True)
+                a_ = n_taxa - b_ - c_ - d_
+                swap_1 = _swap_length(a_, b_, c_, d_, i1, i2, i3, i4, adm)
+                swap_2 = _swap_length(a_, b_, d_, c_, i1, i2, i4, i3, adm)
+                if swap_1 > swap_2 and swap_1 > 0:
+                    swap = -1 * swap_1
+                    hq.heappush(heap, (swap, (b, c)))
+                elif swap_2 > swap_1 and swap_2 > 0:
+                    swap = -1 * swap_2
+                    hq.heappush(heap, (swap, (b, d)))
+    return heap
+
+
+def _average_subtree_distance(a, b, a1, a2, dm):
+    """ """
+    return (
+        _subtree_count(a1) * _average_distance(a1, b, dm)
+        + _subtree_count(a2) * _average_distance(a2, b, dm)
+    ) / _subtree_count(a)
+
+
+def _average_distance_matrix(tree, dm):
+    """ """
+    ordered = list(tree.postorder(include_self=False))
+    n = len(ordered)
+    r = tree.root()
+    taxa_size = r.count(tips=True) + 1
+    adm = np.empty((n, n))
+    for i, a in enumerate(ordered):  # consider refactoring with tip-to-tip distance
+        if a in tree.children:  # skipping over unique descendant
+            continue
+        if a.is_tip():  # part (b)
+            adm[n - 1, i] = adm[i, n - 1] = dm[a.name, r.name]
+        else:
+            a1, a2 = a.children
+            adm[n - 1, i] = _average_subtree_distance(a, r, a1, a2, dm)
+            adm[i, n - 1] = adm[n - 1, i]
+        for j in range(i + 1, n - 1):  # part (a)
+            b = ordered[j]
+            if b in a.ancestors():  # skipping over ancestors
+                continue
+            if a.is_tip() and b.is_tip():
+                adm[i, j] = adm[j, i] = dm[a.name, b.name]
+            elif b.is_tip():
+                a1, a2 = a.children
+                adm[i, j] = adm[j, i] = _average_subtree_distance(a, b, a1, a2, dm)
+            else:
+                b1, b2 = b.children
+                adm[i, j] = adm[j, i] = _average_subtree_distance(b, a, b1, b2, dm)
+    for j, b in enumerate(ordered):  # calculating for ancestors
+        if b in tree.children:  # skipping over unique descendant
+            continue
+        s_ = b.siblings()
+        for sibling in s_:
+            s = sibling
+        p = b.parent
+        for i, a in enumerate(ordered):
+            if b in a.ancestors():
+                adm[i, j] = (
+                    _subtree_count(s) * _average_distance(a, s, dm)
+                    + (taxa_size - _subtree_count(p))
+                    * _average_distance_upper(a, p, dm)
+                ) / (taxa_size - _subtree_count(b))
+                adm[j, i] = adm[i, j]
+    return adm
+
+
+def _edge_estimation(tree, dm):
+    """ """
+    adm = _average_distance_matrix(tree, dm)
+    ordered = list(tree.postorder(include_self=False))
+    root = tree.root()
+    taxa_size = root.count(tips=True) + 1
+    for treenode in ordered:
+        if treenode.is_root():
+            continue
+        elif treenode.parent.is_root():
+            for index, node in enumerate(ordered):
+                if node == treenode:
+                    i1 = index
+            a, b = treenode.children
+            for index, node in enumerate(ordered):
+                if node == a:
+                    i2 = index
+                elif node == b:
+                    i3 = index
+            length = 0.5 * (adm[i2][i1] + adm[i3][i1] - adm[i2][i3])
+            treenode.length = length
+        elif treenode.is_tip():
+            parentnode = treenode.parent
+            a = parentnode.parent
+            if a.is_root():
+                for child in a.children:
+                    a = child
+            for siblingnode in treenode.siblings():
+                b = siblingnode
+                for index, node in enumerate(ordered):
+                    if node == treenode:
+                        i1 = index
+                    if node == a:
+                        i2 = index
+                    if node == b:
+                        i3 = index
+            length = 0.5 * (adm[i2][i1] + adm[i3][i1] - adm[i2][i3])
+            treenode.length = length
+        else:
+            parentnode = treenode.parent
+            a = parentnode.parent
+            if a.is_root():
+                for child in a.children:
+                    a = child
+            for index, node in enumerate(ordered):
+                if node == a:
+                    i1 = index
+            c, d = treenode.children
+            for sibling in treenode.siblings():
+                b = sibling
+            for index, node in enumerate(ordered):
+                if node == b:
+                    i2 = index
+                elif node == c:
+                    i3 = index
+                elif node == d:
+                    i4 = index
+            if c.is_tip():
+                c_ = 1
+            else:
+                c_ = c.count(tips=True)
+            if d.is_tip():
+                d_ = 1
+            else:
+                d_ = d.count(tips=True)
+            if b.is_tip():
+                b_ = 1
+            else:
+                b_ = b.count(tips=True)
+            a_ = taxa_size - b_ - c_ - d_
+            lambda1 = (a_ * d_ + b_ * c_) / ((a_ + b_) * (c_ + d_))
+            length = 0.5 * (
+                (lambda1 * (adm[i1][i3] + adm[i2][i4]))
+                + ((1 - lambda1) * (adm[i1][i4] + adm[i2][i3]))
+                - (adm[i1][i2] + adm[i3][i4])
+            )
+            treenode.length = length
