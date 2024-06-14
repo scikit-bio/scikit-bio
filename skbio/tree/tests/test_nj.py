@@ -9,10 +9,10 @@
 import io
 from unittest import TestCase, main
 
-from skbio import DistanceMatrix, TreeNode, nj, nni
+from skbio import DistanceMatrix, TreeNode, nj
 from skbio.tree._nj import (
     _compute_q, _compute_collapsed_dm, _lowest_index,
-    _pair_members_to_new_node, _perform_swap,
+    _pair_members_to_new_node, nni, _perform_swap,
     _average_distance, _tip_or_root,
     _average_distance_upper, _subtree_count,
     _swap_length, _swap_heap, _average_subtree_distance,
