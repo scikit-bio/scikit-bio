@@ -1800,10 +1800,12 @@ def _welch_ttest(a, b):
     # See https://stats.stackexchange.com/a/475345
     # See https://www.statsmodels.org/dev/generated/statsmodels.stats.weightstats.CompareMeans.html
 
+    # Creating a CompareMeans object to perform Welch's t-test
     statsmodel_cm_object = CompareMeans.from_data(
         data1=a, data2=b, weights1=None, weights2=None
     )
 
+    # Performing Welch's t-test using the object to obtain tstat, pvalue, and df
     ttest_cm_result = statsmodel_cm_object.ttest_ind(
         alternative="two-sided", usevar="unequal", value=0
     )
@@ -1812,11 +1814,13 @@ def _welch_ttest(a, b):
     p = ttest_cm_result[1]
     df = ttest_cm_result[2]
 
+    # Calculating difference between the two means
     m1 = np.mean(a)
     m2 = np.mean(b)
 
     delta = m1 - m2
 
+    # Calculating confidence intervals using the aformentioned CompareMeans object
     conf_int = statsmodel_cm_object.tconfint_diff(
         alpha=0.05, alternative="two-sided", usevar="unequal"
     )
