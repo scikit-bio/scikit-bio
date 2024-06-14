@@ -88,7 +88,6 @@ import pandas as pd
 import scipy.stats
 from scipy.sparse import coo_matrix
 from scipy.stats import t, gmean
-from statsmodels.stats.weightstats import ttest_ind as _statsmodel_welch_ttest
 from statsmodels.stats.weightstats import CompareMeans
 
 from skbio.stats.distance import DistanceMatrix
