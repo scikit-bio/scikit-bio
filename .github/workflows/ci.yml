@@ -113,6 +113,7 @@ jobs:
           environment-file: ci/conda_host_env.yml
       - name: Install dependencies
         run: |
+          pip install numpy cython
           pip install . --no-build-isolation
           conda list
       - name: Run unit tests
