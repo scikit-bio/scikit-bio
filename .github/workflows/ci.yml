@@ -98,10 +98,13 @@ jobs:
         shell: bash -l {0}
     strategy:
       fail-fast: true
-      # macos-14 and on uses Apple silicon chips (ARM-based)
-      # macos-13 is the last version that uses Intel chips
+      # macos-14 and on uses Apple silicon chips (ARM-based).
+      # macos-13 is the last version that uses Intel chips. See:
+      # https://docs.github.com/en/actions/using-github-hosted-runners/
+      # about-github-hosted-runners/about-github-hosted-runners#standard-
+      # github-hosted-runners-for-public-repositories
       matrix:
-        os: ["ubuntu-latest", "macos-13", "macos-latest"]
+        os: ["ubuntu-latest", "macos-13", "macos-14"]
     steps:
       - uses: actions/checkout@v4
       - uses: conda-incubator/setup-miniconda@v3
