@@ -88,20 +88,20 @@ jobs:
           name: docpack
           path: doc/build/html/
 
-  # full-scale test (including Cython) with latest Python
-  test-cython:
-    name: Test Cython (${{ needs.conf.outputs.latest_python }}, ${{ matrix.os }})
+  # full-scale test with latest Python
+  test-latest:
+    name: Test (${{ needs.conf.outputs.latest_python }}, ${{ matrix.os }})
     needs: conf
     runs-on: ${{ matrix.os }}
-    env:
-      USE_CYTHON: TRUE
     defaults:
       run:
         shell: bash -l {0}
     strategy:
       fail-fast: true
+      # macos-14 and on uses Apple silicon chips (ARM-based)
+      # macos-13 is the last version that uses Intel chips
       matrix:
-        os: ["ubuntu-latest", "macos-13", "macos-14"]
+        os: ["ubuntu-latest", "macos-13", "macos-latest"]
     steps:
       - uses: actions/checkout@v4
       - uses: conda-incubator/setup-miniconda@v3
@@ -133,8 +133,8 @@ jobs:
           slug: scikit-bio/scikit-bio
 
   # test under AArch64 (ARM64) architecture
-  test-cython-aarch64:
-    name: Test Cython (${{ needs.conf.outputs.latest_python }}, qemu::aarch64-centos)
+  test-aarch64:
+    name: Test (${{ needs.conf.outputs.latest_python }}, qemu::aarch64-centos)
     needs: conf
     runs-on: ubuntu-latest
     steps:
@@ -162,8 +162,7 @@ jobs:
   test-all:
     name: Test (${{ matrix.python_version }}, ${{ matrix.os }}, ${{ fromJSON('["pypi", "conda"]')[matrix.use_conda] }})
     runs-on: ${{ matrix.os }}
-    needs: ["conf", "test-cython", "lint"]
-    # not testing Cython here, whether the Cython compiles to C is tested above
+    needs: ["conf", "test-latest", "lint"]
     defaults:
       run:
         shell: bash -l {0}
@@ -203,7 +202,7 @@ jobs:
   deploy-doc:
     name: Deploy documentation
     if: github.event_name == 'push'
-    needs: ["doc", "test-all", "test-cython-aarch64"]
+    needs: ["doc", "test-all", "test-aarch64"]
     runs-on: ubuntu-latest
     defaults:
       run:

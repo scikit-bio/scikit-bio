@@ -12,7 +12,7 @@ else
 	TEST_COMMAND = python -m skbio.test
 endif
 
-.PHONY: doc web lint test dev install cython
+.PHONY: doc web lint test dev install
 
 doc:
 	$(MAKE) -C doc clean html
@@ -38,9 +38,6 @@ lint:
 # not install correctly (for example).
 test:
 	cd ci && $(TEST_COMMAND)
-
-cython:
-	USE_CYTHON=TRUE python setup.py build_ext --inplace
 
 install:
 	pip install .
