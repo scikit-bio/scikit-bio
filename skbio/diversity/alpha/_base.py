@@ -1096,6 +1096,12 @@ def shannon(counts, base=None, exp=False):
         Vector of counts.
     base : int or float, optional
         Logarithm base to use in the calculation. Default is ``e``.
+
+        .. versionchanged:: 0.6.1
+
+            The default logarithm base was changed from 2 to :math:`e` for
+            consistency with the majority of literature.
+
     exp : bool, optional
         If ``True``, return the exponential of Shannon index.
 
@@ -1109,9 +1115,6 @@ def shannon(counts, base=None, exp=False):
     Shannon index (i.e., entropy) was originally proposed in [1]_. The
     exponential of Shannon index (i.e., perplexity) was discussed in [2]_ in
     the context of community diversity.
-
-    .. note:: The default logarithm base was changed from 2 to :math:`e` in
-       version 0.6.1, for consistency with the majority of literature.
 
     References
     ----------
