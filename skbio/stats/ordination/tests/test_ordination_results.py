@@ -111,11 +111,11 @@ class TestOrdinationResults(unittest.TestCase):
         rename_dict_features = {'abc' : 'go', 'def' : 'od', 'Z' : 'by',
                                 'W' : 'e'}
 
-        with self.assertRaises(ValueError, "The IDs in mapper are different \
+        with self.assertRaisesRegex(ValueError, "The IDs in mapper are different \
                                from the IDs in self.samples"):
             self.ordination_results.rename(rename_dict_samples)
 
-        with self.assertRaises(ValueError, "The IDs in mapper are different \
+        with self.assertRaisesRegex(ValueError, "The IDs in mapper are different \
                                from the IDs in self.features"):
             self.ordination_results.rename(rename_dict_features,
                                            matrix='features')
