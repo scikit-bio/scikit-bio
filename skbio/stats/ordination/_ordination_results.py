@@ -429,8 +429,8 @@ class OrdinationResults(SkbioObject, PlottableMixin):
         if matrix == 'samples':
             if (strict and isinstance(mapper, dict) and
                     set(mapper) != set(self.samples.index)):
-                raise ValueError("The IDs in mapper are different from the \
-                                 IDs in self.samples.")
+                raise ValueError("The IDs in mapper are different \
+                                 from the IDs in self.samples.")
             self.samples = self.samples.rename(index=mapper)
         elif matrix == 'features':
             if self.features is None:
