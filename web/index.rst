@@ -197,28 +197,26 @@
 
              Parameters
              ----------
-             mat : array_like, float
-                 a matrix of proportions where
-                 rows = compositions and
-                 columns = components
+             mat : array_like of shape (n_compositions, n_components)
+                 A matrix of proportions.
 
              Returns
              -------
-             numpy.ndarray
-                 centered composition matrix
+             ndarray of shape (n_compositions, n_components)
+                 centered composition matrix.
 
              Examples
              --------
              >>> import numpy as np
              >>> from skbio.stats.composition import centralize
-             >>> X = np.array([[.1,.3,.4, .2],[.2,.2,.2,.4]])
+             >>> X = np.array([[.1, .3, .4, .2], [.2, .2, .2, .4]])
              >>> centralize(X)
              array([[ 0.17445763,  0.30216948,  0.34891526,  0.17445763],
                     [ 0.32495488,  0.18761279,  0.16247744,  0.32495488]])
 
              """
              mat = closure(mat)
-             cen = scipy.stats.gmean(mat, axis=0)
+             cen = gmean(mat, axis=0)
              return perturb_inv(mat, cen)
 
       .. raw:: html
@@ -275,13 +273,13 @@
 
          .. card::
 
-            Latest release:
+            Latest release (2024-06-18):
 
-            .. button-link:: https://github.com/scikit-bio/scikit-bio/releases/tag/0.6.0
+            .. button-link:: https://github.com/scikit-bio/scikit-bio/releases/tag/0.6.1
                :color: success
                :shadow:
 
-               scikit-bio 0.6.0
+               scikit-bio 0.6.1
 
          .. card::
 
