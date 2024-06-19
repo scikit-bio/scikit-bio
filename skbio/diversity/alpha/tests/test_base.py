@@ -316,7 +316,7 @@ class BaseTests(TestCase):
         self.assertAlmostEqual(shannon([1, 2, 3, 4], exp=True), 3.596115467)
 
         # Equally abundant taxa, exp(H) = # taxa
-        self.assertEqual(shannon([5, 5, 5], exp=True), 3.0)
+        self.assertAlmostEqual(shannon([5, 5, 5], exp=True), 3.0)
 
     def test_simpson(self):
         self.assertAlmostEqual(simpson(np.array([1, 0, 2, 5, 2])), 0.66)
