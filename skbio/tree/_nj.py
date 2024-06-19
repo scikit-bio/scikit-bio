@@ -379,12 +379,12 @@ def nni(tree, dm, inplace=True):
     if not inplace:
         tree = tree.copy()
     if len(tree.root().children) != 1:
-        print("Could not perform NNI. Tree needs to be rooted at a leaf node")
-        return
+        raise TypeError(
+            "Could not perform NNI. " "Tree needs to be rooted at a leaf node."
+        )
     for node in tree.non_tips():
         if len(node.children) != 2:
-            print("Could not perform NNI. Tree needs to be a binary tree")
-            return
+            raise TypeError("Could not perform NNI. Tree needs to be a binary tree.")
     adm = _average_distance_matrix(tree, dm)
     while True:
         # create heap of possible swaps and then swapping subtrees
