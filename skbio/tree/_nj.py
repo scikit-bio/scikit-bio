@@ -370,7 +370,7 @@ def nni(tree, dm, inplace=True):
     Besides rearranging the tree, estimated edge lengths are assigned to the
     tree.
 
-    >>> rat = tree.find('rat)
+    >>> rat = tree.find('rat')
     >>> print(rat.length)
     0.21
 
