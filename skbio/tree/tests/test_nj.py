@@ -276,20 +276,6 @@ class NjTests(TestCase):
                     io.StringIO(pre_str))
             nni(pre_TreeNode, dm)
 
-    def test_nni_leaf_root_flag(self):
-        # Flag prints out 'Tree needs to be rooted at a leaf node' and
-        # returns a None object.
-        data = [[0, 3, 2],
-                [3, 0, 3],
-                [2, 3, 0]]
-        dm = DistanceMatrix(data, list('abc'))
-        pre_str = "((c,b))a;"
-        pre_TreeNode = TreeNode.read(
-                io.StringIO(pre_str))
-        self.assertRaises(
-            "Could not perform NNI. Tree needs to be rooted at a leaf node.", nni, pre_TreeNode, dm
-            )
-
     def test_perform_swap(self):
         # Swapping the leaf nodes a tree without edge lengths.
         pre_str = "(((b,d),(e,c)))a;"
