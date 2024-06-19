@@ -290,7 +290,7 @@ def _pair_members_to_new_node(dm, i, j, disallow_negative_branch_length):
 
 
 def nni(tree, dm, inplace=True):
-    r"""Perform nearest neighbor interchanges on a phylogenetic tree.
+    r"""Perform nearest neighbor interchange (NNI) on a phylogenetic tree.
 
     Parameters
     ----------
@@ -322,6 +322,58 @@ def nni(tree, dm, inplace=True):
        algorithms based on the minimum-evolution principle. J Comput Biol.
        2002;9(5):687-705. doi: 10.1089/106652702761034136. PMID: 12487758.
 
+    Examples
+    --------
+    Define a new distance matrix object describing the distances between five
+    taxa: human, monkey, pig, rat, and chicken.
+
+    >>> from skbio import DistanceMatrix
+    >>> from skbio.tree import nj
+
+    >>> dm = DistanceMatrix([[0, 0.02,  0.18,  0.34,  0.55],
+    ...                      [0.02,  0, 0.19, 0.35,  0.55],
+    ...                      [0.18, 0.19,  0,  0.34,  0.54],
+    ...                      [0.34, 0.35,  0.34,  0,  0.62],
+    ...                      [0.55,  0.55,  0.54,  0.62,  0]],
+    ...                      ['human','monkey','pig','rat','chicken'])
+
+    Also, provide a tree topology to be rearranged. The tree provided is
+    required to be a binary tree rooted at a leaf node.
+
+    Note that the tree provided does not require to have assigned edge lengths.
+
+    >>> from skbio.tree import TreeNode
+
+    >>> tree = TreeNode.read(["(((human,chicken),(rat,monkey)))pig;"])
+    >>> print(tree.ascii_art())
+                                  /-human
+                        /--------|
+                       |          \-chicken
+    -pig----- /--------|
+                       |          /-rat
+                        \--------|
+                                  \-monkey
+
+    Perform nearest neighbor interchange (NNI). By default, the tree is
+    rearrangede in place.
+
+    >>> nni(tree, dm)
+    >>> print(tree.ascii_art())
+                                  /-rat
+                        /--------|
+                       |          \-chicken
+    -pig----- /--------|
+                       |          /-monkey
+                        \--------|
+                                  \-human
+
+    Besides rearranging the tree, estimated edge lengths are assigned to the
+    tree.
+
+    >>> print(tree)
+    (((rat:0.20999999999999996,chicken:0.41000000000000003):0.041250000000
+    000064,(monkey:0.015,human:0.0049999999999999906):0.08625):0.08875)pig;
+
     """
     # Initialize and populate the average distance matrix
     if not inplace:
@@ -350,14 +402,14 @@ def nni(tree, dm, inplace=True):
 
 
 def _perform_swap(node1, node2):
-    """Returns a tree after swapping two subtrees."""
+    """Return a tree after swapping two subtrees."""
     parent1, parent2 = node1.parent, node2.parent
     parent1.append(node2)
     parent2.append(node1)
 
 
 def _average_distance(node1, node2, dm):
-    """Returns the average distance between the leaves of two subtrees.
+    """Return the average distance between the leaves of two subtrees.
 
     Distances between nodes are calculated using a distance matrix.
     """
@@ -376,7 +428,7 @@ def _tip_or_root(node):
 
 
 def _average_distance_upper(node1, node2, dm):
-    """Returns the average distance between the leaves of two subtrees.
+    """Return the average distance between the leaves of two subtrees.
 
     Used for subtrees which have a set of tips that are the complement
     of the set of tips that are descendants from the node defining
@@ -400,7 +452,7 @@ def _average_distance_upper(node1, node2, dm):
 
 
 def _subtree_count(subtree):
-    """Returns the number of leaves in a subtree.
+    """Return the number of leaves in a subtree.
 
     Assumes the root as a leaf node.
     """
@@ -411,7 +463,7 @@ def _subtree_count(subtree):
 
 
 def _swap_length(a, b, c, d, i, j, k, m, adm):
-    """Returns the change in overall tree length after a given swap.
+    """Return the change in overall tree length after a given swap.
 
     The count of leaves contained in each subtree are denoted 'a, b, c, d' while
     each node defining the subtree has the index 'i, j, k, m', respectively.
@@ -426,7 +478,7 @@ def _swap_length(a, b, c, d, i, j, k, m, adm):
 
 
 def _swap_heap(tree, adm):
-    """Returns a maxheap ordered by the swap length for all possible swaps."""
+    """Return a maxheap ordered by the swap length for all possible swaps."""
     heap = []
     ordered = list(tree.postorder(include_self=False))
     root = tree.root()
@@ -446,39 +498,38 @@ def _swap_heap(tree, adm):
         for child in parent.children:
             if child.is_tip():
                 continue
-            else:
-                childnode = child
-                c, d = childnode.children
-                for sibling in childnode.siblings():
-                    b = sibling
-                for index, node in enumerate(ordered):
-                    if node == b:
-                        i2 = index
-                    elif node == c:
-                        i3 = index
-                    elif node == d:
-                        i4 = index
-                # count the tips of the subtrees defined by the neighboring nodes
-                sub_tips = []
-                for subtree in [b, c, d]:
-                    sub_tips.append(1 if subtree.is_tip() else subtree.count(tips=True))
-                b_, c_, d_ = sub_tips
-                a_ = n_taxa - b_ - c_ - d_
-                # calculate the swap length for the two possible swaps given the edge
-                swap_1 = _swap_length(a_, b_, c_, d_, i1, i2, i3, i4, adm)
-                swap_2 = _swap_length(a_, b_, d_, c_, i1, i2, i4, i3, adm)
-                # store the best possible swap into a maxheap
-                if swap_1 > swap_2 and swap_1 > 0:
-                    swap = -1 * swap_1
-                    hq.heappush(heap, (swap, (b, c)))
-                elif swap_2 > swap_1 and swap_2 > 0:
-                    swap = -1 * swap_2
-                    hq.heappush(heap, (swap, (b, d)))
+            childnode = child
+            c, d = childnode.children
+            for sibling in childnode.siblings():
+                b = sibling
+            for index, node in enumerate(ordered):
+                if node == b:
+                    i2 = index
+                elif node == c:
+                    i3 = index
+                elif node == d:
+                    i4 = index
+            # count the tips of the subtrees defined by the neighboring nodes
+            sub_tips = []
+            for subtree in [b, c, d]:
+                sub_tips.append(1 if subtree.is_tip() else subtree.count(tips=True))
+            b_, c_, d_ = sub_tips
+            a_ = n_taxa - b_ - c_ - d_
+            # calculate the swap length for the two possible swaps given the edge
+            swap_1 = _swap_length(a_, b_, c_, d_, i1, i2, i3, i4, adm)
+            swap_2 = _swap_length(a_, b_, d_, c_, i1, i2, i4, i3, adm)
+            # store the best possible swap into a maxheap
+            if swap_1 > swap_2 and swap_1 > 0:
+                swap = -1 * swap_1
+                hq.heappush(heap, (swap, (b, c)))
+            elif swap_2 > swap_1 and swap_2 > 0:
+                swap = -1 * swap_2
+                hq.heappush(heap, (swap, (b, d)))
     return heap
 
 
 def _average_subtree_distance(a, b, a1, a2, dm):
-    """Returns the average distance between two subtrees."""
+    """Return the average distance between two subtrees."""
     return (
         _subtree_count(a1) * _average_distance(a1, b, dm)
         + _subtree_count(a2) * _average_distance(a2, b, dm)
@@ -486,12 +537,12 @@ def _average_subtree_distance(a, b, a1, a2, dm):
 
 
 def _average_distance_matrix(tree, dm):
-    """Returns the matrix of distances between pairs of subtrees."""
+    """Return the matrix of distances between pairs of subtrees."""
     ordered = list(tree.postorder(include_self=False))
     n = len(ordered)
     r = tree.root()
     taxa_size = r.count(tips=True) + 1
-    adm = np.empty((n, n))
+    adm = np.zeros((n, n))
     for i, a in enumerate(ordered):
         # skip over unique descendant
         if a in tree.children:
@@ -542,9 +593,9 @@ def _average_distance_matrix(tree, dm):
 
 
 def _edge_estimation(tree, dm):
-    """Assigns estimated edge values to a tree based on a given distance matrix.
+    """Assign estimated edge values to a tree based on a given distance matrix.
 
-    Estimation of edge values is based on a ordinary least squares (OLS) framework.
+    Estimation of edge values is based on an ordinary least squares (OLS) framework.
     """
     adm = _average_distance_matrix(tree, dm)
     ordered = list(tree.postorder(include_self=False))
