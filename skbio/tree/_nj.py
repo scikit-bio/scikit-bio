@@ -371,8 +371,7 @@ def nni(tree, dm, inplace=True):
     tree.
 
     >>> print(tree)
-    (((rat:0.21,chicken:0.41):0.04125,(monkey:0.015,human:0.005):0.08625):0.
-    08875)pig;
+    (((rat:0.21,chicken:0.41):0.04125,(monkey:0.015,human:0.005):0.08625):0.08875)pig;
 
     """
     # Initialize and populate the average distance matrix
