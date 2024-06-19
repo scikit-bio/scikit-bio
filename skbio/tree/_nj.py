@@ -543,7 +543,7 @@ def _average_distance_matrix(tree, dm):
     n = len(ordered)
     r = tree.root()
     taxa_size = r.count(tips=True) + 1
-    adm = np.zeros((n, n))
+    adm = np.empty((n, n))
     for i, a in enumerate(ordered):
         # skip over unique descendant
         if a in tree.children:
