@@ -2,12 +2,9 @@
 
 ## Version 0.6.2-dev
 
-<<<<<<< HEAD
 ### Features
 
 * Added `nni` function for phylogenetic tree rearrangement using nearest neighbor interchange (NNI) ([#2050](https://github.com/scikit-bio/scikit-bio/pull/2050))
-=======
->>>>>>> upstream/main
 
 ## Version 0.6.1
 

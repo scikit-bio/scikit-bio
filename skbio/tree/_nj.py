@@ -498,33 +498,34 @@ def _swap_heap(tree, adm):
         for child in parent.children:
             if child.is_tip():
                 continue
-            childnode = child
-            c, d = childnode.children
-            for sibling in childnode.siblings():
-                b = sibling
-            for index, node in enumerate(ordered):
-                if node == b:
-                    i2 = index
-                elif node == c:
-                    i3 = index
-                elif node == d:
-                    i4 = index
-            # count the tips of the subtrees defined by the neighboring nodes
-            sub_tips = []
-            for subtree in [b, c, d]:
-                sub_tips.append(1 if subtree.is_tip() else subtree.count(tips=True))
-            b_, c_, d_ = sub_tips
-            a_ = n_taxa - b_ - c_ - d_
-            # calculate the swap length for the two possible swaps given the edge
-            swap_1 = _swap_length(a_, b_, c_, d_, i1, i2, i3, i4, adm)
-            swap_2 = _swap_length(a_, b_, d_, c_, i1, i2, i4, i3, adm)
-            # store the best possible swap into a maxheap
-            if swap_1 > swap_2 and swap_1 > 0:
-                swap = -1 * swap_1
-                hq.heappush(heap, (swap, (b, c)))
-            elif swap_2 > swap_1 and swap_2 > 0:
-                swap = -1 * swap_2
-                hq.heappush(heap, (swap, (b, d)))
+            else:
+                childnode = child
+                c, d = childnode.children
+                for sibling in childnode.siblings():
+                    b = sibling
+                for index, node in enumerate(ordered):
+                    if node == b:
+                        i2 = index
+                    elif node == c:
+                        i3 = index
+                    elif node == d:
+                        i4 = index
+                # count the tips of the subtrees defined by the neighboring nodes
+                sub_tips = []
+                for subtree in [b, c, d]:
+                    sub_tips.append(1 if subtree.is_tip() else subtree.count(tips=True))
+                b_, c_, d_ = sub_tips
+                a_ = n_taxa - b_ - c_ - d_
+                # calculate the swap length for the two possible swaps given the edge
+                swap_1 = _swap_length(a_, b_, c_, d_, i1, i2, i3, i4, adm)
+                swap_2 = _swap_length(a_, b_, d_, c_, i1, i2, i4, i3, adm)
+                # store the best possible swap into a maxheap
+                if swap_1 > swap_2 and swap_1 > 0:
+                    swap = -1 * swap_1
+                    hq.heappush(heap, (swap, (b, c)))
+                elif swap_2 > swap_1 and swap_2 > 0:
+                    swap = -1 * swap_2
+                    hq.heappush(heap, (swap, (b, d)))
     return heap
 
 
