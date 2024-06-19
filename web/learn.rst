@@ -6,7 +6,7 @@ Workshops
 
 :bdg-info:`New` Upcoming scikit-bio workshop at `ISMB 2024 <https://www.iscb.org/ismb2024/home/>`_! The tutorial will introduce the revitalized scikit-bio, with a focus on multi-omic data integration for microbiome research. Tutorial materials will be shared via a public GitHub repository. Welcome to join us!
 
-- **When**: 9:00 - 18:00 EDT, July 11, 2024 | **Where**: Montreal, Canada
+- **When**: 9:00 - 18:00 EDT, July 12, 2024 | **Where**: Montreal, Canada
 
 .. button-link:: https://www.iscb.org/ismb2024/programme-schedule/tutorials#ip3
    :color: primary

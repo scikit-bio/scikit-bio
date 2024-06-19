@@ -136,7 +136,7 @@ def alpha_diversity(metric, counts, ids=None, validate=True, **kwargs):
         Identifiers for each sample in ``counts``. By default, samples will be
         assigned integer identifiers in the order that they were provided.
     validate: bool, optional
-        If `False`, validation of the input won't be performed. This step can
+        If ``False``, validation of the input won't be performed. This step can
         be slow, so if validation is run elsewhere it can be disabled here.
         However, invalid input data can lead to invalid results or error
         messages that are hard to interpret, so this step should not be
@@ -378,7 +378,7 @@ def beta_diversity(
         assigned integer identifiers in the order that they were provided
         (where the type of the identifiers will be ``str``).
     validate : bool, optional
-        If `False`, validation of the input won't be performed. This step can
+        If ``False``, validation of the input won't be performed. This step can
         be slow, so if validation is run elsewhere it can be disabled here.
         However, invalid input data can lead to invalid results or error
         messages that are hard to interpret, so this step should not be
