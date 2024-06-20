@@ -256,14 +256,15 @@ class NjTests(TestCase):
                          str(expected_TreeNode))
 
     def test_nni_binary_flag(self):
-        with self.assertRaises(TypeError, msg="Could not perform NNI. Tree needs to be a binary tree."):
-            data = [[0, 3],
-                    [3, 0]]
-            dm = DistanceMatrix(data, list('ab'))
-            pre_str = "((b))a;"
-            pre_TreeNode = TreeNode.read(
-                    io.StringIO(pre_str))
+        data = [[0, 3],
+                [3, 0]]
+        dm = DistanceMatrix(data, list('ab'))
+        pre_str = "((b))a;"
+        pre_TreeNode = TreeNode.read(io.StringIO(pre_str))
+        msg = "Could not perform NNI. Tree needs to be a binary tree."
+        with self.assertRaises(TypeError) as cm:
             nni(pre_TreeNode, dm)
+        self.assertEqual(str(cm.exception), msg)
 
     def test_nni_leaf_root_flag(self):
         with self.assertRaises(TypeError, msg="Could not perform NNI. Tree needs to be rooted at a leaf node."):
