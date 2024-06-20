@@ -267,11 +267,12 @@ class NjTests(TestCase):
         self.assertEqual(str(cm.exception), msg)
 
     def test_nni_leaf_root_flag(self):
-        with self.assertRaises(TypeError, msg="Could not perform NNI. Tree needs to be rooted at a leaf node."):
-            pre_str = "((b,d,e,c))a;"
-            pre_TreeNode = TreeNode.read(
-                    io.StringIO(pre_str))
+        pre_str = "((b,d),(e,c))a;"
+        pre_TreeNode = TreeNode.read(io.StringIO(pre_str))
+        msg = "Could not perform NNI. Tree needs to be rooted at a leaf node."
+        with self.assertRaises(TypeError) as cm:
             nni(pre_TreeNode, self.dm1)
+        self.assertEqual(str(cm.exception), msg)
 
     def test_perform_swap(self):
         # Swapping the leaf nodes a tree without edge lengths.
