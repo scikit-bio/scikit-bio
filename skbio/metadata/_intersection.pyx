@@ -27,7 +27,6 @@ preserves all information about the intervals (unlike bitset projection methods)
 
 import operator
 import random
-import math
 
 cdef extern from "stdlib.h":
     int ceil(float f)
