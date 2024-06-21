@@ -26,6 +26,8 @@ preserves all information about the intervals (unlike bitset projection methods)
 #cython: cdivision=True
 
 import operator
+import random
+import math
 
 cdef extern from "stdlib.h":
     int ceil(float f)
@@ -94,7 +96,12 @@ cdef class IntervalNode:
         # uniform into a binomial because it naturally scales with
         # tree size.  Also, python's uniform is perfect since the
         # upper limit is not inclusive, which gives us undefined here.
-        self.priority = ceil(nlog * log(-1.0/(1.0 * rand()/RAND_MAX - 1)))
+        RAND_MAX = 32767
+        rand_value = random.randint(0, RAND_MAX)
+        scaled_rand = rand_value / (RAND_MAX + 1)
+        if scaled_rand == 1.0:
+            scaled_rand = 1.0 - 1e-10
+        self.priority = ceil(nlog * log(-1.0/(1.0 * scaled_rand - 1)))
         self.start    = start
         self.end      = end
         self.interval = interval
