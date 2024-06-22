@@ -1151,8 +1151,8 @@ def _holm_bonferroni(p):
     """Perform Holm-Bonferroni correction.
 
     Perform Holm-Bonferroni correction ([1]_) for *p*-values to account for
-    multiple comparisons. This implementation uses ``multipletests``
-    from ``statsmodels.stats.multitest``.
+    multiple comparisons. This implementation uses ``holm`` method which is
+    part of ``multipletests`` from ``statsmodels.stats.multitest``.
 
     Parameters
     ----------
@@ -1180,7 +1180,9 @@ def _benjamini_hochberg(p):
     """Perform Benjamini-Hochberg correction.
 
     Perform Benjamini-Hochberg correction ([1]_) for *p*-values to account for
-    multiple comparisons.
+    multiple comparisons. This implementation uses ``fdr_bh`` Benjamini/Hochberg
+    (non-negative) method which is part of ``multipletests`` from
+    ``statsmodels.stats.multitest``.
 
     Parameters
     ----------
@@ -1195,16 +1197,14 @@ def _benjamini_hochberg(p):
     References
     ----------
     .. [1] https://en.wikipedia.org/wiki/Benjamini%E2%80%93Hochberg_procedure
+    .. [2] https://www.statsmodels.org/dev/generated/statsmodels.stats.multitest.multipletests.html
 
     """
-    # Derived from @Vladimir's answer at:
+    # Initially derived from @Vladimir's answer at:
     # https://stackoverflow.com/questions/7450957/
-    p = np.asarray(p)
-    K = len(p)
-    order = p.argsort()[::-1]
-    bh_p = p[order] * K / np.arange(K, 0, -1)
-    bh_p = np.minimum(1, np.minimum.accumulate(bh_p))
-    return bh_p[order.argsort()]
+    bh_p = sm_multipletests(pvals=p, alpha=0.05, method="fdr_bh")[1]
+    bh_p = list(bh_p)
+    return bh_p
 
 
 def _dispatch_p_adjust(name):
