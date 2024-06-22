@@ -94,6 +94,7 @@ from skbio.stats.distance import DistanceMatrix
 from skbio.util import find_duplicates
 from skbio.util._misc import get_rng
 from skbio.util._warning import _warn_deprecated
+from statsmodels.stats.multitest import multipletests as sm_multipletests
 
 
 def closure(mat):
@@ -1150,7 +1151,8 @@ def _holm_bonferroni(p):
     """Perform Holm-Bonferroni correction.
 
     Perform Holm-Bonferroni correction ([1]_) for *p*-values to account for
-    multiple comparisons.
+    multiple comparisons. This implementation uses ``multipletests``
+    from ``statsmodels.stats.multitest``.
 
     Parameters
     ----------
@@ -1165,19 +1167,12 @@ def _holm_bonferroni(p):
     References
     ----------
     .. [1] https://en.wikipedia.org/wiki/Holm%E2%80%93Bonferroni_method
+    .. [2] https://www.statsmodels.org/dev/generated/statsmodels.stats.multitest.multipletests.html
 
     """
-    K = len(p)
-    sort_index = -np.ones(K, dtype=np.int64)
-    sorted_p = np.sort(p)
-    sorted_p_adj = sorted_p * (K - np.arange(K))
-    for j in range(K):
-        idx = (p == sorted_p[j]) & (sort_index < 0)
-        num_ties = len(sort_index[idx])
-        sort_index[idx] = np.arange(j, (j + num_ties), dtype=np.int64)
 
-    sorted_holm_p = [min([max(sorted_p_adj[:k]), 1]) for k in range(1, K + 1)]
-    holm_p = [sorted_holm_p[sort_index[k]] for k in range(K)]
+    holm_p = sm_multipletests(pvals=p, alpha=0.05, method="holm")[1]
+    holm_p = list(holm_p)
     return holm_p
 
 
