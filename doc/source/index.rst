@@ -12,26 +12,6 @@
        display: none;
      }
 
-     /* arange level 2 entries in the same line */
-
-     .toctree-l1 {
-       margin-top: 20px;
-       line-height: 2em;
-     }
-
-     .toctree-l1 > a:first-of-type {
-       font-size: 1.5em;
-       font-weight: bold;
-     }
-
-     .toctree-l2 {
-       display: inline;
-     }
-
-     .toctree-l2:not(:last-of-type)::after {
-       content: " - ";
-     }
-
    </style>
 
 
@@ -60,7 +40,7 @@ scikit-bio |version| documentation
 scikit-bio (canonically pronounced *sigh-kit-buy-oh*) is a library for working with biological data in Python 3. scikit-bio is open source, BSD-licensed software that is currently under active development.
 
 .. toctree::
-   :maxdepth: 2
+   :maxdepth: 1
 
    io
    sequence
@@ -68,8 +48,8 @@ scikit-bio (canonically pronounced *sigh-kit-buy-oh*) is a library for working w
    tree
    diversity
    stats
-   table
    embedding
+   table
    metadata
    workflow
    util

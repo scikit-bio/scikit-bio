@@ -57,7 +57,7 @@ However, be cautious that the new functionality may not be stable and could be c
 Test
 ----
 
-You can verify your installation by running the scikit-bio unit tests::
+You can verify your installation by running the scikit-bio unit tests (this requires `pytest` installed)::
 
     python -m skbio.test
 

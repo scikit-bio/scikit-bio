@@ -3,7 +3,6 @@ RUN sudo yum update -y && \
 	sudo yum install -y make git && \
 	sudo yum clean all
 ENV MPLBACKEND=Agg
-ENV USE_CYTHON=TRUE
 ARG PYTHON_VERSION
 RUN bash -c ". /opt/conda/etc/profile.d/conda.sh && conda activate base && conda create -n testing -c conda-forge --yes python=$PYTHON_VERSION gxx_linux-aarch64"
 COPY . /work
