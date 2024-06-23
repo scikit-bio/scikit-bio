@@ -2030,8 +2030,6 @@ def dirmult_ttest(
     if (table.isnull()).any().any():
         raise ValueError("Cannot handle missing values in `table`.")
 
-    p_adjust = _dispatch_p_adjust(p_adjust)
-
     table_index_len = len(table.index)
     grouping_index_len = len(grouping.index)
     mat, cats = table.align(grouping, axis=0, join="inner")
@@ -2083,7 +2081,8 @@ def dirmult_ttest(
 
     # multiple comparison
     if p_adjust is not None:
-        qval = p_adjust(res["pvalue"])
+        p_adjust = str(p_adjust).lower()
+        qval = _calc_p_adjust(p_adjust, res["pvalue"])
     else:
         qval = res["pvalue"].values
 
