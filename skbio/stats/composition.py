@@ -1147,78 +1147,41 @@ def tree_basis(tree):
     return basis, nodes
 
 
-def _holm_bonferroni(p):
-    """Perform Holm-Bonferroni correction.
-
-    Perform Holm-Bonferroni correction ([1]_) for *p*-values to account for
-    multiple comparisons. This implementation uses ``holm`` method which is
-    part of ``multipletests`` from ``statsmodels.stats.multitest``.
-
-    Parameters
-    ----------
-    p : ndarray of shape (n_tests,)
-        Original *p*-values.
-
-    Returns
-    -------
-    ndarray of shape (n_tests,)
-        Corrected *p*-values.
-
-    References
-    ----------
-    .. [1] https://en.wikipedia.org/wiki/Holm%E2%80%93Bonferroni_method
-    .. [2] https://www.statsmodels.org/dev/generated/statsmodels.stats.multitest.multipletests.html
-
-    """
-
-    holm_p = sm_multipletests(pvals=p, alpha=0.05, method="holm")[1]
-    holm_p = list(holm_p)
-    return holm_p
-
-
-def _benjamini_hochberg(p):
-    """Perform Benjamini-Hochberg correction.
-
-    Perform Benjamini-Hochberg correction ([1]_) for *p*-values to account for
-    multiple comparisons. This implementation uses ``fdr_bh`` Benjamini/Hochberg
-    (non-negative) method which is part of ``multipletests`` from
-    ``statsmodels.stats.multitest``.
-
-    Parameters
-    ----------
-    p : ndarray of shape (n_tests,)
-        Original *p*-values.
-
-    Returns
-    -------
-    ndarray of shape (n_tests,)
-        Corrected *p*-values.
-
-    References
-    ----------
-    .. [1] https://en.wikipedia.org/wiki/Benjamini%E2%80%93Hochberg_procedure
-    .. [2] https://www.statsmodels.org/dev/generated/statsmodels.stats.multitest.multipletests.html
-
-    """
-    # Initially derived from @Vladimir's answer at:
-    # https://stackoverflow.com/questions/7450957/
-    bh_p = sm_multipletests(pvals=p, alpha=0.05, method="fdr_bh")[1]
-    bh_p = list(bh_p)
-    return bh_p
-
-
 def _calc_p_adjust(name, p):
-    """Refer to a *p*-value correction function by the method's name."""
+    """
+    Calculate the p-value adjustment for a given method.
+
+    Parameters
+    -------
+        name (str): The name of the p-value adjustment method. Defaults to None.
+        p (array-like): The array of p-values.
+
+    Returns
+    -------
+        list: The adjusted p-values.
+
+    Raises
+    -------
+        ValueError: If the given method name is not available.
+
+    See Also
+    --------
+    statsmodels.stats.multitest.multipletests
+
+    """
     if name is None:
-        return
+        return p
     name_ = name.lower()
+
+    # Original options are kept for backwards compatibility
     if name_ in ("holm", "holm-bonferroni"):
-        holm_p = sm_multipletests(pvals=p, alpha=0.05, method="holm")[1]
-        return list(holm_p)
-    elif name_ in ("bh", "fdr_bh", "benjamini-hochberg"):
-        bh_p = sm_multipletests(pvals=p, alpha=0.05, method="fdr_bh")[1]
-        return list(bh_p)
-    elif name_ in (
+        name_ = "holm"
+    if name_ in ("bh", "fdr_bh", "benjamini-hochberg"):
+        name_ = "fdr_bh"
+
+    if name_ in (
+        "holm",
+        "fdr_bh",
         "bonferroni",
         "sidak",
         "holm-sidak",
@@ -1230,19 +1193,6 @@ def _calc_p_adjust(name, p):
     ):
         res_p = sm_multipletests(pvals=p, alpha=0.05, method=name_)[1]
         return list(res_p)
-    else:
-        raise ValueError(f"{name} is not an available FDR correction method.")
-
-
-def _dispatch_p_adjust(name):
-    """Refer to a *p*-value correction function by the method's name."""
-    if name is None:
-        return
-    name_ = name.lower()
-    if name_ in ("holm", "holm-bonferroni"):
-        return _holm_bonferroni
-    elif name_ in ("bh", "fdr_bh", "benjamini-hochberg"):
-        return _benjamini_hochberg
     else:
         raise ValueError(f"{name} is not an available FDR correction method.")
 
