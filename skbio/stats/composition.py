@@ -1207,7 +1207,7 @@ def _benjamini_hochberg(p):
     return bh_p
 
 
-def _dispatch_p_adjust(name):
+def _calc_p_adjust(name):
     """Refer to a *p*-value correction function by the method's name."""
     if name is None:
         return
@@ -1275,9 +1275,10 @@ def ancom(
         exclusive.
     p_adjust : str or None, optional
         Method to correct *p*-values for multiple comparisons. Options are Holm-
-        Boniferroni ("holm" or "holm-bonferroni") (default) or Benjamini-
-        Hochberg ("bh", "fdr_bh" or "benjamini-hochberg"). Case-insensitive. If
-        None, no correction will be performed.
+        Boniferroni ("holm" or "holm-bonferroni") (default), Benjamini-
+        Hochberg ("bh", "fdr_bh" or "benjamini-hochberg"), or any method supported
+        by statsmodels' ``multipletests`` function. Case-insensitive. If None, no
+        correction will be performed.
 
         .. versionchanged:: 0.6.0
 
@@ -1499,7 +1500,7 @@ def ancom(
         _warn_deprecated(ancom, "0.6.0")
         p_adjust = multiple_comparisons_correction
 
-    p_adjust = _dispatch_p_adjust(p_adjust)
+    p_adjust = _calc_p_adjust(p_adjust)
 
     if (grouping.isnull()).any():
         raise ValueError("Cannot handle missing values in `grouping`.")
@@ -1880,9 +1881,10 @@ def dirmult_ttest(
         log-fold changes and *p*-values.
     p_adjust : str or None, optional
         Method to correct *p*-values for multiple comparisons. Options are Holm-
-        Boniferroni ("holm" or "holm-bonferroni") (default) or Benjamini-
-        Hochberg ("bh", "fdr_bh" or "benjamini-hochberg"). Case-insensitive. If
-        None, no correction will be performed.
+        Boniferroni ("holm" or "holm-bonferroni") (default), Benjamini-
+        Hochberg ("bh", "fdr_bh" or "benjamini-hochberg"), or any method supported
+        by statsmodels' ``multipletests`` function. Case-insensitive. If None, no
+        correction will be performed.
     seed : int or np.random.Generator, optional
         A user-provided random seed or random generator instance.
 
@@ -2001,7 +2003,7 @@ def dirmult_ttest(
     if (table.isnull()).any().any():
         raise ValueError("Cannot handle missing values in `table`.")
 
-    p_adjust = _dispatch_p_adjust(p_adjust)
+    p_adjust = _calc_p_adjust(p_adjust)
 
     table_index_len = len(table.index)
     grouping_index_len = len(grouping.index)
