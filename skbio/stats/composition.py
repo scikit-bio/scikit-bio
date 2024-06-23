@@ -1207,7 +1207,34 @@ def _benjamini_hochberg(p):
     return bh_p
 
 
-def _calc_p_adjust(name):
+def _calc_p_adjust(name, p):
+    """Refer to a *p*-value correction function by the method's name."""
+    if name is None:
+        return
+    name_ = name.lower()
+    if name_ in ("holm", "holm-bonferroni"):
+        holm_p = sm_multipletests(pvals=p, alpha=0.05, method="holm")[1]
+        return list(holm_p)
+    elif name_ in ("bh", "fdr_bh", "benjamini-hochberg"):
+        bh_p = sm_multipletests(pvals=p, alpha=0.05, method="fdr_bh")[1]
+        return list(bh_p)
+    elif name_ in (
+        "bonferroni",
+        "sidak",
+        "holm-sidak",
+        "simes-hochberg",
+        "hommel",
+        "fdr_by",
+        "fdr_tsbh",
+        "fdr_tsbky",
+    ):
+        res_p = sm_multipletests(pvals=p, alpha=0.05, method=name_)[1]
+        return list(res_p)
+    else:
+        raise ValueError(f"{name} is not an available FDR correction method.")
+
+
+def _dispatch_p_adjust(name):
     """Refer to a *p*-value correction function by the method's name."""
     if name is None:
         return
@@ -1500,8 +1527,6 @@ def ancom(
         _warn_deprecated(ancom, "0.6.0")
         p_adjust = multiple_comparisons_correction
 
-    p_adjust = _calc_p_adjust(p_adjust)
-
     if (grouping.isnull()).any():
         raise ValueError("Cannot handle missing values in `grouping`.")
 
@@ -1560,7 +1585,9 @@ def ancom(
 
     # Multiple comparisons
     if p_adjust is not None:
-        logratio_mat = np.apply_along_axis(p_adjust, 1, logratio_mat)
+        logratio_mat = np.apply_along_axis(
+            lambda arr: _calc_p_adjust(p_adjust, arr), 1, logratio_mat
+        )
 
     np.fill_diagonal(logratio_mat, 1)
     W = (logratio_mat < alpha).sum(axis=1)
@@ -2003,7 +2030,7 @@ def dirmult_ttest(
     if (table.isnull()).any().any():
         raise ValueError("Cannot handle missing values in `table`.")
 
-    p_adjust = _calc_p_adjust(p_adjust)
+    p_adjust = _dispatch_p_adjust(p_adjust)
 
     table_index_len = len(table.index)
     grouping_index_len = len(grouping.index)
