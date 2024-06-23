@@ -1154,7 +1154,8 @@ def _calc_p_adjust(name, p):
     Parameters
     -------
         name (str): The name of the p-value adjustment method. Defaults to None.
-        p (array-like): The array of p-values.
+        p : ndarray of shape (n_tests,)
+            Original *p*-values.
 
     Returns
     -------
@@ -1167,6 +1168,10 @@ def _calc_p_adjust(name, p):
     See Also
     --------
     statsmodels.stats.multitest.multipletests
+
+    References
+    ----------
+    .. [1] https://www.statsmodels.org/dev/generated/statsmodels.stats.multitest.multipletests.html
 
     """
     if name is None:
