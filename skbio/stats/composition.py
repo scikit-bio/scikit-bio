@@ -88,6 +88,7 @@ import pandas as pd
 import scipy.stats
 from scipy.sparse import coo_matrix
 from scipy.stats import t, gmean
+from statsmodels.stats.weightstats import CompareMeans
 
 from skbio.stats.distance import DistanceMatrix
 from skbio.util import find_duplicates
@@ -1787,36 +1788,46 @@ def _welch_ttest(a, b):
     See Also
     --------
     scipy.stats.ttest_ind
+    statsmodels.stats.weightstats.CompareMeans
 
     Notes
     -----
     Compared with ``scipy.stats.ttest_ind`` with ``equal_var=False``, this
-    function additionally returns confidence intervals.
+    function additionally returns confidence intervals. This implementation
+    uses the ``CompareMeans`` class from ``statsmodels.stats.weightstats``.
 
     """
     # See https://stats.stackexchange.com/a/475345
-    n1 = len(a)
-    n2 = len(b)
+    # See https://www.statsmodels.org/dev/generated/statsmodels.stats.weightstats.CompareMeans.html
+
+    # Creating a CompareMeans object to perform Welch's t-test
+    statsmodel_cm_object = CompareMeans.from_data(
+        data1=a, data2=b, weights1=None, weights2=None
+    )
+
+    # Performing Welch's t-test using the object to obtain tstat, pvalue, and df
+    ttest_cm_result = statsmodel_cm_object.ttest_ind(
+        alternative="two-sided", usevar="unequal", value=0
+    )
+
+    tstat = ttest_cm_result[0]
+    p = ttest_cm_result[1]
+    df = ttest_cm_result[2]
+
+    # Calculating difference between the two means
     m1 = np.mean(a)
     m2 = np.mean(b)
 
-    v1 = np.var(a, ddof=1)
-    v2 = np.var(b, ddof=1)
-
-    pooled_se = np.sqrt(v1 / n1 + v2 / n2)
     delta = m1 - m2
 
-    tstat = delta / pooled_se
-    df = (v1 / n1 + v2 / n2) ** 2 / (
-        v1**2 / (n1**2 * (n1 - 1)) + v2**2 / (n2**2 * (n2 - 1))
+    # Calculating confidence intervals using the aformentioned CompareMeans object
+    conf_int = statsmodel_cm_object.tconfint_diff(
+        alpha=0.05, alternative="two-sided", usevar="unequal"
     )
 
-    # two-sided t-test
-    p = 2 * t.cdf(-abs(tstat), df)
+    lb = conf_int[0]
+    ub = conf_int[1]
 
-    # upper and lower bounds
-    lb = delta - t.ppf(0.975, df) * pooled_se
-    ub = delta + t.ppf(0.975, df) * pooled_se
     return pd.DataFrame(
         np.array([tstat, df, p, delta, lb, ub]).reshape(1, -1),
         columns=["T statistic", "df", "pvalue", "Difference", "CI(2.5)", "CI(97.5)"],
