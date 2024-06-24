@@ -72,10 +72,8 @@ class TestRoundtrip(TestCase):
     def test_simple(self):
         fp = get_data_path('sample-metadata-comments-mixed-case.tsv')
         md1 = SampleMetadata.read(fp)
-
         md1.write(self.filepath)
         md2 = SampleMetadata.read(self.filepath)
-
         self.assertEqual(md1, md2)
 
 
