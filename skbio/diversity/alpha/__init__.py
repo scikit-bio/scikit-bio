@@ -139,9 +139,6 @@ References
 # The full license is in the file LICENSE.txt, distributed with this software.
 # ----------------------------------------------------------------------------
 
-from ._ace import ace
-from ._chao1 import chao1, chao1_ci
-from ._pd import faith_pd, phydiv
 from ._base import (
     berger_parker_d,
     brillouin_d,
@@ -172,8 +169,11 @@ from ._base import (
     sobs,
     strong,
 )
+from ._ace import ace
+from ._chao1 import chao1, chao1_ci
 from ._gini import gini_index
 from ._lladser import lladser_pe, lladser_ci
+from ._pd import faith_pd, phydiv
 
 
 __all__ = [
