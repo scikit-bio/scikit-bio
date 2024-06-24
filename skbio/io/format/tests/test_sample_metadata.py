@@ -77,3 +77,7 @@ class TestRoundtrip(TestCase):
         md2 = SampleMetadata.read(self.filepath)
 
         self.assertEqual(md1, md2)
+
+
+if __name__ == '__main__':
+    main()
