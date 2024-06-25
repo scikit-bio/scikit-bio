@@ -1153,13 +1153,15 @@ def _calc_p_adjust(name, p):
 
     Parameters
     -------
-        name (str): The name of the p-value adjustment method. Defaults to None.
+        name : str
+            The name of the *p*-value correction function.`
         p : ndarray of shape (n_tests,)
             Original *p*-values.
 
     Returns
     -------
-        list: The adjusted p-values.
+        p : ndarray of shape (n_tests,)
+            Corrected *p*-values.
 
     Raises
     -------
@@ -1174,8 +1176,6 @@ def _calc_p_adjust(name, p):
     .. [1] https://www.statsmodels.org/dev/generated/statsmodels.stats.multitest.multipletests.html
 
     """
-    if name is None:
-        return p
     name_ = name.lower()
 
     # Original options are kept for backwards compatibility
@@ -1184,22 +1184,15 @@ def _calc_p_adjust(name, p):
     if name_ in ("bh", "fdr_bh", "benjamini-hochberg"):
         name_ = "fdr_bh"
 
-    if name_ in (
-        "holm",
-        "fdr_bh",
-        "bonferroni",
-        "sidak",
-        "holm-sidak",
-        "simes-hochberg",
-        "hommel",
-        "fdr_by",
-        "fdr_tsbh",
-        "fdr_tsbky",
-    ):
-        res_p = sm_multipletests(pvals=p, alpha=0.05, method=name_)[1]
-        return list(res_p)
+    try:
+        res = sm_multipletests(pvals=p, alpha=0.05, method=name_)
+    except ValueError as e:
+        if "method not recognized" in str(e):
+            raise ValueError(f"{name} is not an available FDR correction method.")
+        else:
+            raise ValueError(f"Cannot perform FDR correction using the {name} method.")
     else:
-        raise ValueError(f"{name} is not an available FDR correction method.")
+        return res[1]
 
 
 def ancom(
