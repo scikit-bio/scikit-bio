@@ -1154,7 +1154,11 @@ def _calc_p_adjust(name, p):
     Parameters
     -------
         name : str
-            The name of the *p*-value correction function.`
+            The name of the *p*-value correction function.
+            One of the following methods: "holm", "fdr_bh", "bonferroni", "sidak",
+            "holm-sidak", "simes-hochberg", "hommel", "fdr_by", "fdr_tsbh",
+            "fdr_tsbky". Note that these are the same as the methods available in
+            statsmodels.stats.multitest.multipletests.
         p : ndarray of shape (n_tests,)
             Original *p*-values.
 
