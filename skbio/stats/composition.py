@@ -2031,7 +2031,6 @@ def dirmult_ttest(
 
     # multiple comparison
     if p_adjust is not None:
-        p_adjust = str(p_adjust).lower()
         qval = _calc_p_adjust(p_adjust, res["pvalue"])
     else:
         qval = res["pvalue"].values
