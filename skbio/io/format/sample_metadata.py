@@ -288,7 +288,9 @@ from skbio.metadata._metadata import SampleMetadata
 from skbio.metadata.io import MetadataReader, MetadataWriter
 
 
-sample_metadata = create_format("sample_metadata")
+# newline="" is because otherwise csv.writer will write blank lines between rows
+# in Windows. See: https://stackoverflow.com/questions/3348460/
+sample_metadata = create_format("sample_metadata", newline="")
 
 
 @sample_metadata.sniffer()
