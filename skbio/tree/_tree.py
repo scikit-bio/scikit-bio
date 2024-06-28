@@ -2959,12 +2959,12 @@ class TreeNode(SkbioObject):
         Node name: h, cache: ['h']
 
         """
-        if cache_type in [set, frozenset]:
+        if cache_type in (set, frozenset):
 
             def reduce_f(a, b):
                 return a | b
 
-        elif cache_type == list:
+        elif cache_type is list:
 
             def reduce_f(a, b):
                 return a + b
