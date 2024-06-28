@@ -23,8 +23,7 @@ from skbio.stats.distance import DistanceMatrixError
 from skbio.stats.composition import (
     closure, multi_replace, multiplicative_replacement, perturb, perturb_inv, power,
     inner, clr, clr_inv, ilr, ilr_inv, alr, alr_inv, sbp_basis, _gram_schmidt_basis,
-    centralize, _holm_bonferroni, _benjamini_hochberg, _dispatch_p_adjust, ancom,
-    vlr, pairwise_vlr, tree_basis, dirmult_ttest)
+    centralize, _calc_p_adjust, ancom, vlr, pairwise_vlr, tree_basis, dirmult_ttest)
 
 
 def assert_coo_allclose(res, exp, rtol=1e-7, atol=1e-7):
@@ -1257,24 +1256,17 @@ class AncomTests(TestCase):
 class FDRTests(TestCase):
     def test_holm_bonferroni(self):
         p = [0.005, 0.011, 0.02, 0.04, 0.13]
-        obs = _holm_bonferroni(p)
+        obs = _calc_p_adjust("holm-bonferroni", p)
         exp = p * np.arange(1, 6)[::-1]
         for a, b in zip(obs, exp):
             self.assertAlmostEqual(a, b)
 
     def test_benjamini_hochberg(self):
         p = [0.005, 0.011, 0.02, 0.04, 0.13]
-        obs = _benjamini_hochberg(p)
+        obs = _calc_p_adjust("benjamini-hochberg", p)
         exp = [0.025, 0.0275, 0.03333333, 0.05, 0.13]
         for a, b in zip(obs, exp):
             self.assertAlmostEqual(a, b)
-
-    def test_dispatch_p_adjust(self):
-        self.assertIsNone(_dispatch_p_adjust(None))
-        self.assertEqual(_dispatch_p_adjust(
-            "holm-bonferroni").__name__, "_holm_bonferroni")
-        self.assertEqual(_dispatch_p_adjust(
-            "benjamini-hochberg").__name__, "_benjamini_hochberg")
 
 
 class VLRTests(TestCase):

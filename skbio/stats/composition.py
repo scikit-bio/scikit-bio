@@ -88,11 +88,13 @@ import pandas as pd
 import scipy.stats
 from scipy.sparse import coo_matrix
 from scipy.stats import t, gmean
+from statsmodels.stats.weightstats import CompareMeans
 
 from skbio.stats.distance import DistanceMatrix
 from skbio.util import find_duplicates
 from skbio.util._misc import get_rng
 from skbio.util._warning import _warn_deprecated
+from statsmodels.stats.multitest import multipletests as sm_multipletests
 
 
 def closure(mat):
@@ -1145,83 +1147,54 @@ def tree_basis(tree):
     return basis, nodes
 
 
-def _holm_bonferroni(p):
-    """Perform Holm-Bonferroni correction.
-
-    Perform Holm-Bonferroni correction ([1]_) for *p*-values to account for
-    multiple comparisons.
+def _calc_p_adjust(name, p):
+    """
+    Calculate the p-value adjustment for a given method.
 
     Parameters
-    ----------
-    p : ndarray of shape (n_tests,)
-        Original *p*-values.
+    -------
+        name : str
+            The name of the *p*-value correction function.
+            This should match one of the method names available
+            in `statsmodels.stats.multitest.multipletests`.
+        p : ndarray of shape (n_tests,)
+            Original *p*-values.
 
     Returns
     -------
-    ndarray of shape (n_tests,)
-        Corrected *p*-values.
+        p : ndarray of shape (n_tests,)
+            Corrected *p*-values.
 
-    References
-    ----------
-    .. [1] https://en.wikipedia.org/wiki/Holm%E2%80%93Bonferroni_method
-
-    """
-    K = len(p)
-    sort_index = -np.ones(K, dtype=np.int64)
-    sorted_p = np.sort(p)
-    sorted_p_adj = sorted_p * (K - np.arange(K))
-    for j in range(K):
-        idx = (p == sorted_p[j]) & (sort_index < 0)
-        num_ties = len(sort_index[idx])
-        sort_index[idx] = np.arange(j, (j + num_ties), dtype=np.int64)
-
-    sorted_holm_p = [min([max(sorted_p_adj[:k]), 1]) for k in range(1, K + 1)]
-    holm_p = [sorted_holm_p[sort_index[k]] for k in range(K)]
-    return holm_p
-
-
-def _benjamini_hochberg(p):
-    """Perform Benjamini-Hochberg correction.
-
-    Perform Benjamini-Hochberg correction ([1]_) for *p*-values to account for
-    multiple comparisons.
-
-    Parameters
-    ----------
-    p : ndarray of shape (n_tests,)
-        Original *p*-values.
-
-    Returns
+    Raises
     -------
-    ndarray of shape (n_tests,)
-        Corrected *p*-values.
+        ValueError: If the given method name is not available.
+
+    See Also
+    --------
+    statsmodels.stats.multitest.multipletests
 
     References
     ----------
-    .. [1] https://en.wikipedia.org/wiki/Benjamini%E2%80%93Hochberg_procedure
+    .. [1] https://www.statsmodels.org/dev/generated/statsmodels.stats.multitest.multipletests.html
 
     """
-    # Derived from @Vladimir's answer at:
-    # https://stackoverflow.com/questions/7450957/
-    p = np.asarray(p)
-    K = len(p)
-    order = p.argsort()[::-1]
-    bh_p = p[order] * K / np.arange(K, 0, -1)
-    bh_p = np.minimum(1, np.minimum.accumulate(bh_p))
-    return bh_p[order.argsort()]
-
-
-def _dispatch_p_adjust(name):
-    """Refer to a *p*-value correction function by the method's name."""
-    if name is None:
-        return
     name_ = name.lower()
+
+    # Original options are kept for backwards compatibility
     if name_ in ("holm", "holm-bonferroni"):
-        return _holm_bonferroni
-    elif name_ in ("bh", "fdr_bh", "benjamini-hochberg"):
-        return _benjamini_hochberg
+        name_ = "holm"
+    if name_ in ("bh", "fdr_bh", "benjamini-hochberg"):
+        name_ = "fdr_bh"
+
+    try:
+        res = sm_multipletests(pvals=p, alpha=0.05, method=name_)
+    except ValueError as e:
+        if "method not recognized" in str(e):
+            raise ValueError(f"{name} is not an available FDR correction method.")
+        else:
+            raise ValueError(f"Cannot perform FDR correction using the {name} method.")
     else:
-        raise ValueError(f"{name} is not an available FDR correction method.")
+        return res[1]
 
 
 def ancom(
@@ -1279,9 +1252,10 @@ def ancom(
         exclusive.
     p_adjust : str or None, optional
         Method to correct *p*-values for multiple comparisons. Options are Holm-
-        Boniferroni ("holm" or "holm-bonferroni") (default) or Benjamini-
-        Hochberg ("bh", "fdr_bh" or "benjamini-hochberg"). Case-insensitive. If
-        None, no correction will be performed.
+        Boniferroni ("holm" or "holm-bonferroni") (default), Benjamini-
+        Hochberg ("bh", "fdr_bh" or "benjamini-hochberg"), or any method supported
+        by statsmodels' ``multipletests`` function. Case-insensitive. If None, no
+        correction will be performed.
 
         .. versionchanged:: 0.6.0
 
@@ -1503,8 +1477,6 @@ def ancom(
         _warn_deprecated(ancom, "0.6.0")
         p_adjust = multiple_comparisons_correction
 
-    p_adjust = _dispatch_p_adjust(p_adjust)
-
     if (grouping.isnull()).any():
         raise ValueError("Cannot handle missing values in `grouping`.")
 
@@ -1563,7 +1535,9 @@ def ancom(
 
     # Multiple comparisons
     if p_adjust is not None:
-        logratio_mat = np.apply_along_axis(p_adjust, 1, logratio_mat)
+        logratio_mat = np.apply_along_axis(
+            lambda arr: _calc_p_adjust(p_adjust, arr), 1, logratio_mat
+        )
 
     np.fill_diagonal(logratio_mat, 1)
     W = (logratio_mat < alpha).sum(axis=1)
@@ -1787,36 +1761,46 @@ def _welch_ttest(a, b):
     See Also
     --------
     scipy.stats.ttest_ind
+    statsmodels.stats.weightstats.CompareMeans
 
     Notes
     -----
     Compared with ``scipy.stats.ttest_ind`` with ``equal_var=False``, this
-    function additionally returns confidence intervals.
+    function additionally returns confidence intervals. This implementation
+    uses the ``CompareMeans`` class from ``statsmodels.stats.weightstats``.
 
     """
     # See https://stats.stackexchange.com/a/475345
-    n1 = len(a)
-    n2 = len(b)
+    # See https://www.statsmodels.org/dev/generated/statsmodels.stats.weightstats.CompareMeans.html
+
+    # Creating a CompareMeans object to perform Welch's t-test
+    statsmodel_cm_object = CompareMeans.from_data(
+        data1=a, data2=b, weights1=None, weights2=None
+    )
+
+    # Performing Welch's t-test using the object to obtain tstat, pvalue, and df
+    ttest_cm_result = statsmodel_cm_object.ttest_ind(
+        alternative="two-sided", usevar="unequal", value=0
+    )
+
+    tstat = ttest_cm_result[0]
+    p = ttest_cm_result[1]
+    df = ttest_cm_result[2]
+
+    # Calculating difference between the two means
     m1 = np.mean(a)
     m2 = np.mean(b)
 
-    v1 = np.var(a, ddof=1)
-    v2 = np.var(b, ddof=1)
-
-    pooled_se = np.sqrt(v1 / n1 + v2 / n2)
     delta = m1 - m2
 
-    tstat = delta / pooled_se
-    df = (v1 / n1 + v2 / n2) ** 2 / (
-        v1**2 / (n1**2 * (n1 - 1)) + v2**2 / (n2**2 * (n2 - 1))
+    # Calculating confidence intervals using the aformentioned CompareMeans object
+    conf_int = statsmodel_cm_object.tconfint_diff(
+        alpha=0.05, alternative="two-sided", usevar="unequal"
     )
 
-    # two-sided t-test
-    p = 2 * t.cdf(-abs(tstat), df)
+    lb = conf_int[0]
+    ub = conf_int[1]
 
-    # upper and lower bounds
-    lb = delta - t.ppf(0.975, df) * pooled_se
-    ub = delta + t.ppf(0.975, df) * pooled_se
     return pd.DataFrame(
         np.array([tstat, df, p, delta, lb, ub]).reshape(1, -1),
         columns=["T statistic", "df", "pvalue", "Difference", "CI(2.5)", "CI(97.5)"],
@@ -1874,9 +1858,10 @@ def dirmult_ttest(
         log-fold changes and *p*-values.
     p_adjust : str or None, optional
         Method to correct *p*-values for multiple comparisons. Options are Holm-
-        Boniferroni ("holm" or "holm-bonferroni") (default) or Benjamini-
-        Hochberg ("bh", "fdr_bh" or "benjamini-hochberg"). Case-insensitive. If
-        None, no correction will be performed.
+        Boniferroni ("holm" or "holm-bonferroni") (default), Benjamini-
+        Hochberg ("bh", "fdr_bh" or "benjamini-hochberg"), or any method supported
+        by statsmodels' ``multipletests`` function. Case-insensitive. If None, no
+        correction will be performed.
     seed : int or np.random.Generator, optional
         A user-provided random seed or random generator instance.
 
@@ -1995,8 +1980,6 @@ def dirmult_ttest(
     if (table.isnull()).any().any():
         raise ValueError("Cannot handle missing values in `table`.")
 
-    p_adjust = _dispatch_p_adjust(p_adjust)
-
     table_index_len = len(table.index)
     grouping_index_len = len(grouping.index)
     mat, cats = table.align(grouping, axis=0, join="inner")
@@ -2048,7 +2031,7 @@ def dirmult_ttest(
 
     # multiple comparison
     if p_adjust is not None:
-        qval = p_adjust(res["pvalue"])
+        qval = _calc_p_adjust(p_adjust, res["pvalue"])
     else:
         qval = res["pvalue"].values
 
