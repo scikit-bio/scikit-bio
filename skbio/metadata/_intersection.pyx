@@ -26,7 +26,6 @@ preserves all information about the intervals (unlike bitset projection methods)
 #cython: cdivision=True
 
 import operator
-import random
 
 cdef extern from "stdlib.h":
     int ceil(float f)
