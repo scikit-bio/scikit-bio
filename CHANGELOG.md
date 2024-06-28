@@ -4,6 +4,10 @@
 
 ### Features
 
+* Added support for Microsoft Windows operating system. ([#2071](https://github.com/scikit-bio/scikit-bio/pull/2071), [#2068](https://github.com/scikit-bio/scikit-bio/pull/2068),
+[#2067](https://github.com/scikit-bio/scikit-bio/pull/2067), [#2061](https://github.com/scikit-bio/scikit-bio/pull/2061), [#2046](https://github.com/scikit-bio/scikit-bio/pull/2046),
+[#2040](https://github.com/scikit-bio/scikit-bio/pull/2040), [#2036](https://github.com/scikit-bio/scikit-bio/pull/2036), [#2034](https://github.com/scikit-bio/scikit-bio/pull/2034),
+[#2032](https://github.com/scikit-bio/scikit-bio/pull/2032), [#2005](https://github.com/scikit-bio/scikit-bio/pull/2005)) 
 * Added `nni` function for phylogenetic tree rearrangement using nearest neighbor interchange (NNI) ([#2050](https://github.com/scikit-bio/scikit-bio/pull/2050))
 
 ## Version 0.6.1
