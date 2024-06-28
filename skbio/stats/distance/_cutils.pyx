@@ -8,10 +8,13 @@
 
 import numpy as np
 cimport numpy as cnp
+cnp.import_array()
 cimport cython
 from cython.parallel import prange
-from libc.math cimport isnan, sqrt, acos, fabs
+from libc.math cimport sqrt, fabs
 
+
+ctypedef cnp.npy_intp intp_t
 
 ctypedef fused TReal:
     float
@@ -75,7 +78,7 @@ def is_symmetric_and_hollow_cy(TReal[:, ::1] mat):
 
 @cython.boundscheck(False)
 @cython.wraparound(False)
-def distmat_reorder_cy(TReal[:, ::1] in_mat, long[::1] reorder_vec,
+def distmat_reorder_cy(TReal[:, ::1] in_mat, intp_t[::1] reorder_vec,
                        TReal[:, ::1] out_mat):
     """
     Reorder the rows and columns of a distance matrix
@@ -127,8 +130,8 @@ def distmat_reorder_cy(TReal[:, ::1] in_mat, long[::1] reorder_vec,
 
 @cython.boundscheck(False)
 @cython.wraparound(False)
-def distmat_reorder_condensed_cy(TReal[:, ::1] in_mat, long[::1] reorder_vec,
-                                  TReal[::1] out_mat_condensed):
+def distmat_reorder_condensed_cy(TReal[:, ::1] in_mat, intp_t[::1] reorder_vec,
+                                 TReal[::1] out_mat_condensed):
     """
     Reorder the rows and columns of a distance matrix
     given a reorder vector.
@@ -177,7 +180,7 @@ def distmat_reorder_condensed_cy(TReal[:, ::1] in_mat, long[::1] reorder_vec,
 
 @cython.boundscheck(False)
 @cython.wraparound(False)
-def mantel_perm_pearsonr_cy(TReal[:, ::1] x_data, long[:, ::1] perm_order,
+def mantel_perm_pearsonr_cy(TReal[:, ::1] x_data, intp_t[:, ::1] perm_order,
                             TReal xmean, TReal normxm,
                             TReal[::1] ym_normalized,
                             TReal[::1] permuted_stats):

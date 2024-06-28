@@ -403,7 +403,7 @@ def _mantel_stats_pearson_flat(x, y_flat, permutations):
 
         # compute all pearsonr permutations at once
         # create first the list of permutations
-        perm_order = np.empty((permutations + 1, mat_n), dtype=int)
+        perm_order = np.empty((permutations + 1, mat_n), dtype=np.intp)
         # first row/statistic will be comp_stat
         perm_order[0, :] = np.arange(mat_n)
         for row in range(1, permutations + 1):

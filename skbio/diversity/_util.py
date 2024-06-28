@@ -15,68 +15,132 @@ from skbio.tree import DuplicateNodeError, MissingNodeError
 from skbio.diversity._phylogenetic import _nodes_by_counts
 
 
-def _validate_counts_vector(counts, suppress_cast=False):
+def _validate_counts_vector(counts, cast_int=False):
     """Validate and convert input to an acceptable counts vector type.
 
-    Note: may not always return a copy of `counts`!
+    Parameters
+    ----------
+    counts : array_like of int or float of shape (n_taxa,)
+        Vector of counts.
+    cast_int : bool, optional
+        Cast values into integers, if not already. ``False`` by default.
+
+    Returns
+    -------
+    ndarray of int or float of shape (n_taxa,)
+        Valid counts vector.
+
+    Raises
+    ------
+    ValueError
+        If input array has an invalid data type.
+    ValueError
+        If input array is not 1-D.
+    ValueError
+        If there are negative values.
+
+    Notes
+    -----
+    This function will return the original ``counts`` if it is already a valid counts
+    vector. Otherwise it will return an edited copy that is valid.
+
+    The data type of counts must be any subtype of ``np.integer`` (integers) or
+    ``np.floating`` (floating-point numbers; excluding complex numbers) [1]_.
+
+    See Also
+    --------
+    _validate_counts_matrix
+
+    References
+    ----------
+    .. [1] https://numpy.org/doc/stable/reference/arrays.scalars.html
 
     """
     counts = np.asarray(counts)
-    try:
-        if not np.all(np.isreal(counts)):
-            raise Exception
-    except Exception:
-        raise ValueError("Counts vector must contain real-valued entries.")
+
+    # counts must be int or float
+    if np.issubdtype(dtype := counts.dtype, np.floating):
+        # cast values into integers
+        if cast_int:
+            counts = counts.astype(int)
+
+    elif not np.issubdtype(dtype, np.integer) and dtype is not np.dtype("bool"):
+        raise ValueError("Counts must be integers or floating-point numbers.")
+
     if counts.ndim != 1:
         raise ValueError("Only 1-D vectors are supported.")
-    elif (counts < 0).any():
+
+    if (counts < 0).any():
         raise ValueError("Counts vector cannot contain negative values.")
 
     return counts
 
 
-def _validate_counts_matrix(counts, ids=None, suppress_cast=False):
-    results = []
+def _validate_counts_matrix(counts, ids=None, cast_int=False):
+    """Validate and convert input to an acceptable counts matrix type.
 
-    # handle case of where counts is a single vector by making it a matrix.
-    # this has to be done before forcing counts into an ndarray because we
-    # don't yet know that all of the entries are of equal length
-    if isinstance(counts, pd.core.frame.DataFrame):
-        if ids is not None and len(counts.index) != len(ids):
-            raise ValueError(
-                "Number of rows in ``counts``"
-                " must be equal to number of provided ``ids``."
-            )
-        return np.asarray(counts)
+    Parameters
+    ----------
+    counts : array_like of shape (n_samples, n_taxa)
+        Matrix of counts.
+    ids : array_like of shape (n_samples,), optional
+        Sample IDs to check against counts dimensions.
+    cast_int : bool, optional
+        Cast values into integers, if not already. ``False`` by default.
+
+    Returns
+    -------
+    ndarray of shape (n_samples, n_taxa)
+        Valid counts matrix.
+
+    See Also
+    --------
+    _validate_counts_vector
+
+    """
+    lenerr = "Number of rows in `counts` must be equal to number of provided `ids`."
+
+    # handle pandas data frame
+    if isinstance(counts, pd.DataFrame):
+        if ids is not None and counts.shape[0] != len(ids):
+            raise ValueError(lenerr)
+        counts = counts.to_numpy()
+
     else:
-        if len(counts) == 0 or not isinstance(counts[0], collections.abc.Iterable):
-            counts = [counts]
-
-        if not isinstance(counts, np.ndarray):
-            counts = np.asarray(counts)
+        # convert counts into a 2-D array
+        # will raise ValueError if row lengths are unequal
+        counts = np.atleast_2d(counts)
 
         if counts.ndim > 2:
             raise ValueError(
-                "Only 1-D and 2-D array-like objects can be provided "
-                "as input. Provided object has %d dimensions." % counts.ndim
+                "Only 1-D and 2-D array-like objects can be provided as input. "
+                f"Provided object has {counts.ndim} dimensions."
             )
 
-        if ids is not None and len(counts) != len(ids):
-            raise ValueError(
-                "Number of rows in ``counts`` must be equal "
-                "to number of provided ``ids``."
-            )
+        if ids is not None and counts.shape[0] != len(ids):
+            raise ValueError(lenerr)
 
-        lens = []
-        for v in counts:
-            results.append(_validate_counts_vector(v, suppress_cast))
-            lens.append(len(v))
-        if len(set(lens)) > 1:
-            raise ValueError("All rows in ``counts`` must be of equal length.")
-        return np.asarray(results)
+    # counts must be int or float
+    if np.issubdtype(dtype := counts.dtype, np.floating):
+        # cast values into integers
+        if cast_int:
+            counts = counts.astype(int)
+
+    elif not np.issubdtype(dtype, np.integer) and dtype is not np.dtype("bool"):
+        raise ValueError("Counts must be integers or floating-point numbers.")
+
+    # negative values are not allowed
+    # TODO: `counts < 0` creates a Boolean array of the same shape, which could be
+    # memory-inefficient if the input array is very large. Should optimize.
+    # See: https://stackoverflow.com/questions/75553212/
+    if (counts < 0).any():
+        raise ValueError("Counts cannot contain negative values.")
+
+    return counts
 
 
 def _validate_taxa_and_tree(counts, taxa, tree, rooted=True):
+    """Validate taxa and tree prior to calculating phylogenetic diversity metrics."""
     len_taxa = len(taxa)
     set_taxa = set(taxa)
     if len_taxa != len(set_taxa):
@@ -120,7 +184,32 @@ def _validate_taxa_and_tree(counts, taxa, tree, rooted=True):
 
 
 def _vectorize_counts_and_tree(counts, taxa, tree):
-    """Index tree and convert counts to np.array in corresponding order."""
+    """Index tree and convert counts to np.array in corresponding order.
+
+    Parameters
+    ----------
+    counts : array_like of shape (n_samples, n_taxa) or (n_taxa,)
+        Counts/abundances of taxa in one or multiple samples.
+    taxa : array_like of shape (n_taxa,)
+        Taxon IDs corresponding to tip names in `tree`.
+    tree : skbio.TreeNode
+        Tree relating taxa. The set of tip names in the tree can be a superset
+        of `taxa`, but not a subset.
+
+    Returns
+    -------
+    ndarray of shape (n_samples, n_nodes)
+        Total counts/abundances of taxa descending from individual nodes of the tree.
+    dict of array
+        Indexed tree. See `to_array`.
+    ndarray of shape (n_nodes,)
+        Branch lengths of corresponding nodes of the tree.
+
+    See Also
+    --------
+    skbio.tree.TreeNode.to_array
+
+    """
     tree_index = tree.to_array(nan_length_value=0.0)
     taxa = np.asarray(taxa)
     counts = np.atleast_2d(counts)

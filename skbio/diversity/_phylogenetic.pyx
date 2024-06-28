@@ -11,13 +11,12 @@ cimport numpy as np
 cimport cython
 
 DTYPE = np.int64
-ctypedef np.int64_t DTYPE_t
-
+ctypedef np.npy_intp intp_t
 
 @cython.boundscheck(False)
 @cython.wraparound(False)
 def _tip_distances(np.ndarray[np.double_t, ndim=1] a, object t,
-                   np.ndarray[DTYPE_t, ndim=1] tip_indices):
+                   np.ndarray[intp_t, ndim=1] tip_indices):
     """Sets each tip to its distance from the root
 
     Parameters
@@ -65,8 +64,8 @@ def _tip_distances(np.ndarray[np.double_t, ndim=1] a, object t,
 
 @cython.boundscheck(False)
 @cython.wraparound(False)
-cdef _traverse_reduce(np.ndarray[DTYPE_t, ndim=2] child_index,
-                      np.ndarray[DTYPE_t, ndim=2] a):
+cdef _traverse_reduce(np.ndarray[intp_t, ndim=2] child_index,
+                      np.ndarray[intp_t, ndim=2] a):
     """Apply a[k] = sum[i:j]
 
     Parameters
@@ -124,8 +123,8 @@ cdef _traverse_reduce(np.ndarray[DTYPE_t, ndim=2] child_index,
     """
     cdef:
         Py_ssize_t i, j, k
-        DTYPE_t node, start, end
-        DTYPE_t n_envs = a.shape[1]
+        intp_t node, start, end
+        intp_t n_envs = a.shape[1]
 
     # possible GPGPU target
     for i in range(child_index.shape[0]):
@@ -165,13 +164,13 @@ def _nodes_by_counts(np.ndarray counts,
     """
     cdef:
         np.ndarray nodes, observed_ids
-        np.ndarray[DTYPE_t, ndim=2] count_array, counts_t
-        np.ndarray[DTYPE_t, ndim=1] observed_indices, taxa_in_nodes
+        np.ndarray[intp_t, ndim=2] count_array, counts_t
+        np.ndarray[intp_t, ndim=1] observed_indices, taxa_in_nodes
         Py_ssize_t i, j
         set observed_ids_set
         object n
         dict node_lookup
-        DTYPE_t n_count_vectors, n_count_taxa
+        intp_t n_count_vectors, n_count_taxa
 
     nodes = indexed['name']
 

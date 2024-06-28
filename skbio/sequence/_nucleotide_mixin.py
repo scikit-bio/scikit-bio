@@ -135,8 +135,8 @@ class NucleotideMixin(metaclass=ABCMeta):
             GC-content: 16.67%
         -----------------------------
         0 AATGAA
-        >>> rc.positional_metadata['quality'].values
-        array([5, 4, 3, 2, 1, 0])
+        >>> rc.positional_metadata['quality'].values # doctest: +ELLIPSIS
+        array([5, 4, 3, 2, 1, 0]...
 
         """
         result = self._complement_lookup[self._bytes]
@@ -206,8 +206,8 @@ class NucleotideMixin(metaclass=ABCMeta):
             GC-content: 16.67%
         -----------------------------
         0 AATGAA
-        >>> seq.positional_metadata['quality'].values
-        array([5, 4, 3, 2, 1, 0])
+        >>> seq.positional_metadata['quality'].values # doctest: +ELLIPSIS
+        array([5, 4, 3, 2, 1, 0]...
 
 
         """

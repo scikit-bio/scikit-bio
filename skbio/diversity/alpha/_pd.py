@@ -32,7 +32,21 @@ def _setup_pd(counts, taxa, tree, validate, rooted, single_sample):
 
 
 def _faith_pd(counts_by_node, branch_lengths):
-    """Calculate Faith's phylogenetic diversity (Faith's PD) metric."""
+    """Calculate Faith's phylogenetic diversity (Faith's PD) metric.
+
+    Parameters
+    ----------
+    counts_by_node : ndarray of shape (n_samples, n_nodes)
+        Total counts/abundances of taxa descending from individual nodes of the tree.
+    branch_lengths : ndarray of shape (n_nodes,)
+        Branch lengths of corresponding nodes of the tree.
+
+    Returns
+    -------
+    float
+        Faith's phylogenetic diversity (PD).
+
+    """
     return (branch_lengths * (counts_by_node > 0)).sum()
 
 
@@ -60,7 +74,7 @@ def faith_pd(counts, taxa=None, tree=None, validate=True, otu_ids=None):
     tree : skbio.TreeNode
         Tree relating taxa. The set of tip names in the tree can be a superset
         of ``taxa``, but not a subset. Required.
-    validate: bool, optional
+    validate : bool, optional
         If ``False``, validation of the input won't be performed. This step can
         be slow, so if validation is run elsewhere it can be disabled here.
         However, invalid input data can lead to invalid results or error
@@ -183,7 +197,26 @@ def faith_pd(counts, taxa=None, tree=None, validate=True, otu_ids=None):
 
 
 def _phydiv(counts_by_node, branch_lengths, rooted, weight):
-    """Calculate generalized phylogenetic diversity (PD) metrics."""
+    """Calculate generalized phylogenetic diversity (PD) metrics.
+
+    Parameters
+    ----------
+    counts_by_node : ndarray of shape (n_samples, n_nodes)
+        Total counts/abundances of taxa descending from individual nodes of the tree.
+    branch_lengths : ndarray of shape (n_nodes,)
+        Branch lengths of corresponding nodes of the tree.
+    rooted : bool
+        Whether the metric is calculated considering the root of the tree.
+    weight : bool or float
+        Whether and to what degree branch lengths should be weighted by the relative
+        abundance of taxa descending from the branch.
+
+    Returns
+    -------
+    float
+        Phylogenetic diversity (PD).
+
+    """
     # select branches connecting taxa
     included = counts_by_node > 0
 

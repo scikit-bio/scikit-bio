@@ -14,7 +14,7 @@ from skbio.diversity._util import _validate_counts_vector
 def gini_index(data, method="rectangles"):
     r"""Calculate the Gini index.
 
-    The Gini index is defined as
+    The Gini index is defined as:
 
     .. math::
 
@@ -41,25 +41,25 @@ def gini_index(data, method="rectangles"):
 
     Returns
     -------
-    double
+    float
         Gini index.
 
     Raises
     ------
     ValueError
-        If `method` isn't one of the supported methods for calculating the area
-        under the curve.
+        If ``method`` isn't one of the supported methods for calculating the
+        area under the curve.
 
     Notes
     -----
     The Gini index was introduced in [1]_. The formula for
-    ``method='rectangles'`` is
+    ``method='rectangles'`` is:
 
     .. math::
 
        dx\sum_{i=1}^n h_i
 
-    The formula for ``method='trapezoids'`` is
+    The formula for ``method='trapezoids'`` is:
 
     .. math::
 
@@ -72,8 +72,8 @@ def gini_index(data, method="rectangles"):
        E, Salvemini, T). Rome: Libreria Eredi Virgilio Veschi (1955).
 
     """
-    # Suppress cast to int because this method supports ints and floats.
-    data = _validate_counts_vector(data, suppress_cast=True)
+    # Suppress casting to int because this metric supports ints and floats.
+    data = _validate_counts_vector(data, cast_int=False)
     lorenz_points = _lorenz_curve(data)
     B = _lorenz_curve_integrator(lorenz_points, method)
     return max(0.0, 1 - 2 * B)

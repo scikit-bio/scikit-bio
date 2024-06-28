@@ -1,10 +1,36 @@
 # scikit-bio changelog
 
+## Version 0.6.2-dev
+
+### Features
+
+* Added `nni` function for phylogenetic tree rearrangement using nearest neighbor interchange (NNI) ([#2050](https://github.com/scikit-bio/scikit-bio/pull/2050))
+
 ## Version 0.6.1
 
 ### Features
 
-* Added `ProteinEmbedding` class and corresponding file format ([#2008](https://github.com/scikit-bio/scikit-bio/pull/2008]))
+* NumPy 2.0 is now supported ([#2051](https://github.com/scikit-bio/scikit-bio/pull/2051])). We thank @rgommers 's advice on this ([#1964](https://github.com/scikit-bio/scikit-bio/issues/1964)).
+* Added module `skbio.embedding` to provide support for storing and manipulating embeddings for biological objects, such as protein embeddings outputted from protein language models ([#2008](https://github.com/scikit-bio/scikit-bio/pull/2008])).
+* Added an efficient sequence alignment path data structure `AlignPath` and its derivative `PairAlignPath` to provide a uniform interface for various multiple and pariwise alignment formats ([#2011](https://github.com/scikit-bio/scikit-bio/pull/2011)).
+* Added `simpson_d` as an alias for `dominance` (Simpson's dominance index, a.k.a. Simpson's D) ([#2024](https://github.com/scikit-bio/scikit-bio/pull/2024)).
+* Added `inv_simpson` (inverse Simpson index), which is equivalent to `enspie` ([#2024](https://github.com/scikit-bio/scikit-bio/pull/2024)).
+* Added parameter `exp` to `shannon` to calculate the exponential of Shannon index (i.e., perplexity, or effective number of species) ([#2024](https://github.com/scikit-bio/scikit-bio/pull/2024)).
+* Added parameter `finite` to Simpson's _D_ (`dominance`) and derived metrics (`simpson`, `simpson_e` and `inv_simpson`) to correct for finite samples ([#2024](https://github.com/scikit-bio/scikit-bio/pull/2024)).
+* Added support for dictionary and pandas DataFrame as input for `TreeNode.from_taxonomy` ([#2042](https://github.com/scikit-bio/scikit-bio/pull/2042)).
+
+### Performance enhancements
+
+* `subsample_counts` now uses an optimized method from `biom-format` ([#2016](https://github.com/scikit-bio/scikit-bio/pull/2016)).
+* Improved efficiency of counts matrix and vector validation prior to calculating community diversity metrics ([#2024](https://github.com/scikit-bio/scikit-bio/pull/2024)).
+
+### Miscellaneous
+
+* Default logarithm base of Shannon index (`shannon`) was changed from 2 to e. This is to ensure consistency with other Shannon-based metrics (`pielou_e`), and with literature and implementations in the field. Meanwhile, parameter `base` was added to `pielou_e` such that the user can control this behavior ([#2024](https://github.com/scikit-bio/scikit-bio/pull/2024)). See discussions in [1884](https://github.com/scikit-bio/scikit-bio/issues/1884) and [2014](https://github.com/scikit-bio/scikit-bio/issues/2014).
+* Improved treatment of empty communities (i.e., all taxa have zero counts, or there is no taxon) when calculating alpha diversity metrics. Most metrics will return `np.nan` and do not raise a warning due to zero division. Exceptions are metrics that describe observed counts, includng `sobs`, `singles`, `doubles` and `osd`, which return zero ([#2024](https://github.com/scikit-bio/scikit-bio/pull/2024)). See discussions in [#2014](https://github.com/scikit-bio/scikit-bio/issues/2014).
+* Return values of `pielou_e` and `heip_e` were set to 1.0 for one-taxon communities, such that NaN is avoided, while honoring the definition (evenness of taxon abundance(s)) and the rationale (ratio between observed and maximum) ([#2024](https://github.com/scikit-bio/scikit-bio/pull/2024)).
+* Removed hdmedians as a dependency by porting its `geomedian` function (geometric median) into scikit-bio ([#2003](https://github.com/scikit-bio/scikit-bio/pull/2003)).
+* Removed 98% warnings issued during the test process ([#2045](https://github.com/scikit-bio/scikit-bio/pull/2045) and [#2037](https://github.com/scikit-bio/scikit-bio/pull/2037)).
 
 ## Version 0.6.0
 

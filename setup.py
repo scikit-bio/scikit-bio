@@ -23,6 +23,7 @@ from setuptools import find_packages, setup
 from setuptools.extension import Extension
 
 import numpy as np
+from Cython.Build import cythonize
 
 
 if sys.version_info.major != 3:
@@ -141,18 +142,8 @@ description = (
 with open("README.rst") as f:
     long_description = f.read()
 
-# Dealing with Cython
-USE_CYTHON = os.environ.get("USE_CYTHON")
-if USE_CYTHON is None:
-    # use CYTHON by default
-    USE_CYTHON = True
-elif USE_CYTHON.lower() in {"false", "no"}:
-    USE_CYTHON = False
-else:
-    USE_CYTHON = True
 
-ext = ".pyx" if USE_CYTHON else ".c"
-
+# Compile SSW module
 ssw_extra_compile_args = ["-I."]
 
 if platform.system() != "Windows":
@@ -179,13 +170,11 @@ if platform.system() != "Windows":
 if platform.machine() == "i686":
     ssw_extra_compile_args.append("-msse2")
 
+
+# Cython modules (*.pyx). They will be compiled into C code (*.c) during build.
+ext = ".pyx"
 extensions = [
     Extension("skbio.metadata._intersection", ["skbio/metadata/_intersection" + ext]),
-    Extension(
-        "skbio.stats.__subsample",
-        ["skbio/stats/__subsample" + ext],
-        include_dirs=[np.get_include()],
-    ),
     Extension(
         "skbio.alignment._ssw_wrapper",
         ["skbio/alignment/_ssw_wrapper" + ext, "skbio/alignment/_lib/ssw.c"],
@@ -211,11 +200,7 @@ extensions = [
     ),
 ]
 
-if USE_CYTHON:
-    from Cython.Build import cythonize
-
-    # Always recompile the pyx files to C if USE_CYTHON is set.
-    extensions = cythonize(extensions, force=True)
+extensions = cythonize(extensions, force=True)
 
 
 setup(
@@ -241,7 +226,8 @@ setup(
         "pandas >= 1.5.0",
         "scipy >= 1.9.0",
         "h5py >= 3.6.0",
-        "biom-format",
+        "biom-format >= 2.1.16",
+        "statsmodels >= 0.14.0",
     ],
     classifiers=classifiers,
     package_data={
@@ -253,5 +239,6 @@ setup(
         "skbio.stats.distance.tests": ["data/*"],
         "skbio.stats.ordination.tests": ["data/*"],
         "skbio.metadata.tests": ["data/invalid/*", "data/valid/*"],
+        "skbio.embedding.tests": ["data/*"],
     },
 )
