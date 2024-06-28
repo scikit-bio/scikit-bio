@@ -95,8 +95,7 @@ cdef class IntervalNode:
         # uniform into a binomial because it naturally scales with
         # tree size.  Also, python's uniform is perfect since the
         # upper limit is not inclusive, which gives us undefined here.
-        # self.priority = 2
-        self.priority = ceil(nlog * log(1/(1 * rand()/RAND_MAX)))
+        self.priority = ceil(nlog * log(-1.0/(1.0 * rand()/(RAND_MAX + 1) - 1)))
         self.start    = start
         self.end      = end
         self.interval = interval
