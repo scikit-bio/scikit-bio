@@ -539,20 +539,25 @@ class TreeNode(SkbioObject):
         r"""Walk the tree unrooted-style and returns a new copy.
 
         Perform a deepcopy of self and return a new copy of the tree as an
-        unrooted copy. This is useful for defining new roots of the tree as
-        the `TreeNode`.
+        unrooted copy. This is useful for defining a new root of the tree.
 
         This method calls `TreeNode.unrooted_copy` which is recursive.
 
         Parameters
         ----------
         parent : TreeNode or None
-            Used to avoid infinite loops when performing the unrooted traverse
+            Direction of walking (from parent to self). If specified, walking
+            to the parent will be prohibited.
 
         Returns
         -------
         TreeNode
-            A new copy of the tree
+            A new copy of the tree rooted at the given node.
+
+            .. versionchanged:: 0.6.2
+
+                The original node naming is preserved. The new root node will
+                not be named as "root".
 
         See Also
         --------
@@ -566,7 +571,7 @@ class TreeNode(SkbioObject):
         >>> tree = TreeNode.read(["((a,(b,c)d)e,(f,g)h)i;"])
         >>> new_tree = tree.find('d').unrooted_deepcopy()
         >>> print(new_tree)
-        (b,c,(a,((f,g)h)e)d)root;
+        (b,c,(a,((f,g)h)i)e)d;
         <BLANKLINE>
 
         """
@@ -583,22 +588,25 @@ class TreeNode(SkbioObject):
         r"""Walk the tree unrooted-style and returns a copy.
 
         Perform a copy of self and return a new copy of the tree as an
-        unrooted copy. This is useful for defining new roots of the tree as
-        the `TreeNode`.
-
-        This method is recursive.
-
-        Warning, this is _NOT_ a deepcopy
+        unrooted copy. This is useful for defining a new root of the tree.
 
         Parameters
         ----------
         parent : TreeNode or None
-            Used to avoid infinite loops when performing the unrooted traverse
+            Direction of walking (from parent to self). If specified, walking
+            to the parent will be prohibited.
 
         Returns
         -------
         TreeNode
-            A new copy of the tree
+            A new copy of the tree rooted at the given node.
+
+            .. warning:: This is NOT a deepcopy.
+
+            .. versionchanged:: 0.6.2
+
+                The original node naming is preserved. The new root node will
+                not be named as "root".
 
         See Also
         --------
@@ -606,37 +614,37 @@ class TreeNode(SkbioObject):
         unrooted_deepcopy
         root_at
 
+        Notes
+        -----
+        This method is recursive.
+
         Examples
         --------
         >>> from skbio import TreeNode
         >>> tree = TreeNode.read(["((a,(b,c)d)e,(f,g)h)i;"])
         >>> new_tree = tree.find('d').unrooted_copy()
         >>> print(new_tree)
-        (b,c,(a,((f,g)h)e)d)root;
+        (b,c,(a,((f,g)h)i)e)d;
         <BLANKLINE>
 
         """
         neighbors = self.neighbors(ignore=parent)
         children = [c.unrooted_copy(parent=self) for c in neighbors]
 
-        # we might be walking UP the tree, so:
+        # starting point (becomes root)
         if parent is None:
-            # base edge
-            edgename = None
             length = None
+
+        # walk up (parent becomes child)
         elif parent.parent is self:
-            # self's parent is becoming self's child
-            edgename = parent.name
             length = parent.length
+
+        # walk down (retain the same order)
         else:
             assert parent is self.parent
-            edgename = self.name
             length = self.length
 
-        result = self.__class__(name=edgename, children=children, length=length)
-
-        if parent is None:
-            result.name = "root"
+        result = self.__class__(name=self.name, children=children, length=length)
 
         return result
 
@@ -782,55 +790,56 @@ class TreeNode(SkbioObject):
         Parameters
         ----------
         node : TreeNode or str
-            The node to root at
+            The node to root at.
 
         Returns
         -------
         TreeNode
-            A new copy of the tree
+            A new copy of the tree rooted at the give node.
 
-        Raises
-        ------
-        TreeError
-            Raises a `TreeError` if a tip is specified as the new root
+            .. versionchanged:: 0.6.2
+
+                The original node naming is preserved. The new root node will
+                not be named as "root".
 
         See Also
         --------
         root_at_midpoint
         unrooted_deepcopy
 
+        Notes
+        -----
+        The specified node will be come the root of the new tree.
+
         Examples
         --------
         >>> from skbio import TreeNode
         >>> tree = TreeNode.read(["(((a,b)c,(d,e)f)g,h)i;"])
-        >>> print(tree.root_at('c'))
-        (a,b,((d,e)f,(h)g)c)root;
+        >>> print(tree.root_at("c"))
+        (a,b,((d,e)f,(h)i)g)c;
         <BLANKLINE>
 
         """
         if isinstance(node, str):
             node = self.find(node)
-
-        if not node.children:
-            raise TreeError("Can't use a tip (%s) as the root" % repr(node.name))
         return node.unrooted_deepcopy()
 
     def root_at_midpoint(self):
         r"""Return a new tree rooted at midpoint of the two tips farthest apart.
 
-        This method doesn't preserve the internal node naming or structure,
-        but does keep tip to tip distances correct. Uses `unrooted_copy` but
-        operates on a full copy of the tree.
+        Returns
+        -------
+        TreeNode
+            A tree rooted at its midpoint.
+
+            .. versionchanged:: 0.6.2
+
+                The midpoint rooting algorithm now preserves node naming.
 
         Raises
         ------
         TreeError
-            If a tip ends up being the mid point
-
-        Returns
-        -------
-        TreeNode
-            A tree rooted at its midpoint
+            If a tip ends up being the mid point.
         LengthError
             Midpoint rooting requires `length` and will raise (indirectly) if
             evaluated nodes don't have length.
@@ -840,12 +849,21 @@ class TreeNode(SkbioObject):
         root_at
         unrooted_deepcopy
 
+        Notes
+        -----
+        The midpoint rooting (MPR) method was originally described in [1]_.
+
+        References
+        ----------
+        .. [1] Farris, J. S. (1972). Estimating phylogenetic trees from
+           distance matrices. The American Naturalist, 106(951), 645-668.
+
         Examples
         --------
         >>> from skbio import TreeNode
-        >>> tree = TreeNode.read(["(((d:1,e:1,(g:1)f:1)c:1)b:1,h:1)a:1;"])
+        >>> tree = TreeNode.read(["((a:1,b:1)c:2,(d:3,e:4)f:5,g:1)h;"])
         >>> print(tree.root_at_midpoint())
-        ((d:1.0,e:1.0,(g:1.0)f:1.0)c:0.5,((h:1.0)b:1.0):0.5)root;
+        ((d:3.0,e:4.0)f:2.0,((a:1.0,b:1.0)c:2.0,g:1.0)h:3.0);
         <BLANKLINE>
 
         """

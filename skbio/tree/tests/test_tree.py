@@ -957,26 +957,33 @@ class TreeTests(TestCase):
                                             [9, 6, 7], [10, 8, 9]]))
 
     def test_root_at(self):
-        """Form a new root"""
-        t = TreeNode.read(io.StringIO("(((a,b)c,(d,e)f)g,h)i;"))
-        with self.assertRaises(TreeError):
-            t.root_at(t.find('h'))
+        """Root tree at given node"""
+        t = TreeNode.read(["(((a,b)c,(d,e)f)g,h)i;"])
 
-        exp = "(a,b,((d,e)f,(h)g)c)root;\n"
-        rooted = t.root_at('c')
-        obs = str(rooted)
+        # root at internal node
+        obs = str(t.root_at("c"))
+        exp = "(a,b,((d,e)f,(h)i)g)c;\n"
         self.assertEqual(obs, exp)
 
+        # root at tip
+        obs = str(t.root_at(t.find("h")))
+        exp = "((((a,b)c,(d,e)f)g)i)h;\n"
+        self.assertEqual(obs, exp)
+
+        # root at root (no change)
+        obs = str(t.root_at("i"))
+        self.assertEqual(obs, str(t))
+
     def test_root_at_midpoint(self):
-        """Root at the midpoint"""
-        tree1 = self.TreeRoot
-        for n in tree1.traverse():
+        """Root tree at the midpoint"""
+        t = self.TreeRoot
+        for n in t.traverse():
             n.length = 1
 
-        result = tree1.root_at_midpoint()
+        result = t.root_at_midpoint()
         self.assertEqual(result.distance(result.find('e')), 1.5)
         self.assertEqual(result.distance(result.find('g')), 2.5)
-        exp_dist = tree1.tip_tip_distances()
+        exp_dist = t.tip_tip_distances()
         obs_dist = result.tip_tip_distances()
         self.assertEqual(obs_dist, exp_dist)
 
@@ -988,14 +995,12 @@ class TreeTests(TestCase):
         self.assertEqual(str(obs), nwk)
 
     def test_root_at_midpoint_tie(self):
-        nwk = "(((a:1,b:1)c:2,(d:3,e:4)f:5),g:1)root;"
-        t = TreeNode.read(io.StringIO(nwk))
-        exp = "((d:3,e:4)f:2,((a:1,b:1)c:2,(g:1)):3)root;"
-        texp = TreeNode.read(io.StringIO(exp))
-
+        t = TreeNode.read(["((a:1,b:1)c:2,(d:3,e:4)f:5,g:1)h;"])
+        # farthest tip-to-tip distance is 12 (a or b to e)
+        # therefore new root should be 2 above f
         obs = t.root_at_midpoint()
-
-        for o, e in zip(obs.traverse(), texp.traverse()):
+        exp = TreeNode.read(["((d:3,e:4)f:2,((a:1,b:1)c:2,g:1)h:3);"])
+        for o, e in zip(obs.traverse(), exp.traverse()):
             self.assertEqual(o.name, e.name)
             self.assertEqual(o.length, e.length)
 
@@ -1088,9 +1093,8 @@ class TreeTests(TestCase):
                          [n.id for n in t3_copy.traverse()])
 
     def test_unrooted_deepcopy(self):
-        """Do an unrooted_copy"""
-        t = TreeNode.read(io.StringIO("((a,(b,c)d)e,(f,g)h)i;"))
-        exp = "(b,c,(a,((f,g)h)e)d)root;\n"
+        t = TreeNode.read(["((a,(b,c)d)e,(f,g)h)i;"])
+        exp = "(b,c,(a,((f,g)h)i)e)d;\n"
         obs = t.find('d').unrooted_deepcopy()
         self.assertEqual(str(obs), exp)
 

@@ -10,6 +10,11 @@
 [#2032](https://github.com/scikit-bio/scikit-bio/pull/2032), [#2005](https://github.com/scikit-bio/scikit-bio/pull/2005)) 
 * Added `nni` function for phylogenetic tree rearrangement using nearest neighbor interchange (NNI) ([#2050](https://github.com/scikit-bio/scikit-bio/pull/2050))
 
+### Performance enhancements
+
+* `TreeNode.unrooted_copy` now preserves names of the original nodes, in addition to topology and branch lengths. The new root is no longer named as "root" ([#2073](https://github.com/scikit-bio/scikit-bio/pull/2073)).
+
+
 ## Version 0.6.1
 
 ### Features
