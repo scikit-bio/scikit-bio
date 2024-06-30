@@ -18,7 +18,8 @@ from skbio.diversity.alpha import (
     berger_parker_d, brillouin_d, dominance, doubles, enspie, esty_ci, fisher_alpha,
     goods_coverage, heip_e, inv_simpson, kempton_taylor_q, margalef, mcintosh_d,
     mcintosh_e, menhinick, michaelis_menten_fit, observed_features, observed_otus, osd,
-    pielou_e, robbins, shannon, simpson, simpson_d, simpson_e, singles, sobs, strong)
+    pielou_e, renyi, robbins, shannon, simpson, simpson_d, simpson_e, singles, sobs,
+    strong)
 
 
 class BaseTests(TestCase):
@@ -288,6 +289,37 @@ class BaseTests(TestCase):
         # Edge cases
         self.assertEqual(pielou_e([5]), 1)
         self.assertTrue(np.isnan(pielou_e([0, 0])))
+
+    def test_renyi(self):
+        orders = [0, 0.5, 1, 2, 10, np.inf]
+
+        # a regular case
+        arr = np.array([1, 2, 3, 4, 5])
+        obs = [renyi(arr, order=x) for x in orders]
+        exp = [1.60943791, 1.54420220, 1.48975032,
+               1.40876722, 1.20873239, 1.09861229]
+        npt.assert_almost_equal(obs, exp)
+
+        # equivalent to Shannon index when q = 1
+        self.assertAlmostEqual(renyi(arr, order=1), shannon(arr))
+
+        # equivalent to log(inverse Simpson index) when q = 2 (default)
+        self.assertAlmostEqual(renyi(arr), np.log(inv_simpson(arr)))
+
+        # default q, custom logarithm base
+        self.assertAlmostEqual(renyi(arr, base=2), 2.03242148)
+
+        # equally abundant taxa: qH = log(S)
+        arr = np.array([5, 5, 5])
+        obs = [renyi(arr, order=x) for x in orders]
+        exp = [np.log(arr.size)] * 6
+        npt.assert_almost_equal(obs, exp)
+
+        # single taxon: qH = 0
+        self.assertEqual(renyi([1]), 0.0)
+
+        # empty community
+        self.assertTrue(np.isnan(renyi([0, 0])))
 
     def test_robbins(self):
         self.assertEqual(robbins(np.array([1, 2, 3, 0, 1])), 2 / 7)

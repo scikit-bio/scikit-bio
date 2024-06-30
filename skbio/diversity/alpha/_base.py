@@ -1018,6 +1018,85 @@ def pielou_e(counts, base=None):
     return H / H_max
 
 
+@_validate_alpha()
+def renyi(counts, order=2, base=None):
+    r"""Calculate Renyi entropy.
+
+    Renyi entropy (:math:`^qH'`) is a generalization of Shannon index, with an
+    exponent (order, :math:`q`) instead of 1. It is defined as:
+
+    .. math::
+
+       ^qH' = \frac{1}{1-q}\log_b{(\sum_{i=1}^S p_i^q)}
+
+    where :math:`S` is the number of taxa and :math:`p_i` is the proportion
+    of the sample represented by taxon :math:`i`.
+
+    Parameters
+    ----------
+    counts : 1-D array_like, int
+        Vector of counts.
+    order : int or float, optional
+        Order (:math:`q`). Range: :math:`[0, \infty]`. Default is 2.
+    base : int or float, optional
+        Logarithm base to use in the calculation. Default is ``e``.
+
+    Returns
+    -------
+    float
+        Renyi entropy.
+
+    See Also
+    --------
+    shannon
+    inv_simpson
+
+    Notes
+    -----
+    Renyi entropy is a generalization of multiple entropy notions, as
+    determined by the order (:math:`q`). Special cases of Renyi entropy
+    include:
+
+    - :math:`q=0`: Max-entropy (:math:`\log{S}`).
+    - :math:`q=1`: Shannon entropy (index).
+    - :math:`q=2`: Collision entropy, a.k.a, Renyi's quadratic entropy, or
+      "Renyi entropy". Equivalent to the logarithm of inverse Simpson index.
+    - :math:`q=\infty`: Min-entropy (:math:`-\log{\max{p}}`).
+
+    Renyi entropy was originally defined in [1]_.
+
+    References
+    ----------
+    .. [1] Rényi, A. (1961, January). On measures of entropy and information.
+       In Proceedings of the fourth Berkeley symposium on mathematical
+       statistics and probability, volume 1: contributions to the theory of
+       statistics (Vol. 4, pp. 547-562). University of California Press.
+
+    """
+    if (S := counts.size) == 0:
+        return np.nan
+    elif S == 1:
+        return 0.0
+
+    probs = counts / counts.sum()
+
+    # max-entropy
+    if order == 0:
+        qH = np.log(S)
+    # Shannon entropy
+    elif order == 1:
+        qH = (-probs * np.log(probs)).sum()
+    # min-entropy
+    elif np.isposinf(order):
+        qH = -np.log(probs.max())
+    else:
+        qH = np.log((probs**order).sum()) / (1 - order)
+
+    if base is not None:
+        qH /= np.log(base)
+    return qH
+
+
 @_validate_alpha(empty=np.nan)
 def robbins(counts):
     r"""Calculate Robbins' estimator for probability of unobserved outcomes.
@@ -1124,15 +1203,15 @@ def shannon(counts, base=None, exp=False):
     .. [2] Jost, L. (2006). Entropy and diversity. Oikos, 113(2), 363-375.
 
     """
-    freqs = counts / counts.sum()
+    probs = counts / counts.sum()
 
     # perplexity
     if exp is True:
-        return (freqs**-freqs).prod()
+        return (probs**-probs).prod()
 
     # entropy
     else:
-        H = (-freqs * np.log(freqs)).sum()
+        H = (-probs * np.log(probs)).sum()
         if base is not None:
             H /= np.log(base)
         return H

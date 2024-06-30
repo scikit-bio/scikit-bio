@@ -57,6 +57,7 @@ diversity measurement.
    inv_simpson
    kempton_taylor_q
    phydiv
+   renyi
    shannon
    simpson
 
@@ -160,6 +161,7 @@ from ._base import (
     observed_otus,
     osd,
     pielou_e,
+    renyi,
     robbins,
     shannon,
     simpson,
@@ -203,6 +205,7 @@ __all__ = [
     "osd",
     "phydiv",
     "pielou_e",
+    "renyi",
     "robbins",
     "shannon",
     "simpson",
