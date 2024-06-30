@@ -120,8 +120,7 @@ def _embed_sniffer(fh):
     if magic == b"\x89HDF\r\n\x1a\n":
         with h5py.File(fh, "r") as h5file:
             if "embedding" in h5file and "id" in h5file and "idptr" in h5file:
-                    return True, {}
-
+                return True, {}
 
     return False, {}
 
@@ -229,8 +228,9 @@ def _objects_to_embed(objs, fh, include_embedding_pointer=True):
             # resize if necessary
             if i > 0:
                 if include_embedding_pointer:
-                    if ((len(arr) + idptr_fh[i - 1]) > max_idsize or
-                        (emb.shape[0] + embptr_fh[i - 1]) > max_embsize ):
+                    if (len(arr) + idptr_fh[i - 1]) > max_idsize or (
+                        emb.shape[0] + embptr_fh[i - 1]
+                    ) > max_embsize:
                         max_idsize = ceil(len(arr) + idptr_fh[i - 1]) * resize_by
                         max_embsize = ceil(emb.shape[0] + embptr_fh[i - 1]) * resize_by
                         resize = True
@@ -249,8 +249,11 @@ def _objects_to_embed(objs, fh, include_embedding_pointer=True):
                 idptr_fh[i] = len(arr) + idptr_fh[i - 1]
             else:
                 idptr_fh = h5grp.create_dataset(
-                    "idptr", data=[len(arr)], maxshape=(None,),
-                    dtype=np.int32, compression='gzip'
+                    "idptr",
+                    data=[len(arr)],
+                    maxshape=(None,),
+                    dtype=np.int32,
+                    compression="gzip",
                 )
             if "id" in h5grp:
                 id_fh = h5grp["id"]
@@ -259,12 +262,10 @@ def _objects_to_embed(objs, fh, include_embedding_pointer=True):
                 id_fh[idptr_fh[i - 1] : idptr_fh[i]] = arr
             else:
                 id_fh = h5grp.create_dataset(
-                    "id", data=arr, maxshape=(None,), dtype=np.uint8,
-                    compression='gzip'
+                    "id", data=arr, maxshape=(None,), dtype=np.uint8, compression="gzip"
                 )
 
             if include_embedding_pointer:
-
                 if "embedding_ptr" in h5grp:
                     embptr_fh = h5grp["embedding_ptr"]
                     if resize:
@@ -298,7 +299,7 @@ def _objects_to_embed(objs, fh, include_embedding_pointer=True):
                     data=emb,
                     maxshape=(None, emb.shape[1]),
                     dtype=obj.embedding.dtype,
-                    compression='gzip'
+                    compression="gzip",
                 )
 
             resize = False

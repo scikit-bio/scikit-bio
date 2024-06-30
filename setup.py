@@ -132,6 +132,7 @@ classes = """
     Operating System :: Unix
     Operating System :: POSIX
     Operating System :: MacOS :: MacOS X
+    Operating System :: Microsoft :: Windows
 """
 classifiers = [s.strip() for s in classes.split("\n") if s]
 
