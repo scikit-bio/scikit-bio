@@ -501,6 +501,79 @@ def heip_e(counts):
 
 
 @_validate_alpha(empty=np.nan)
+def hill(counts, order=2):
+    r"""Calculate Hill number.
+
+    Hill number (:math:`^qD`) is a generalized measure of the effective number
+    of species. It is defined as:
+
+    .. math::
+
+       ^qD = (\sum_{i=1}^S p_i^q)^{\frac{1}{1-q}}
+
+    where :math:`S` is the number of taxa and :math:`p_i` is the proportion
+    of the sample represented by taxon :math:`i`.
+
+    Parameters
+    ----------
+    counts : 1-D array_like, int
+        Vector of counts.
+    order : int or float, optional
+        Order (:math:`q`). Ranges between 0 and infinity. Default is 2.
+
+    Returns
+    -------
+    float
+        Hill number.
+
+    See Also
+    --------
+    inv_simpson
+    renyi
+    shannon
+    sobs
+
+    Notes
+    -----
+    Hill number was originally defined in [1]_. It is a measurement of "true
+    diversity", or the effective number of species (ENS) ([2]_), which is
+    defined as the number of equally abundant taxa that would make the same
+    diversity measurement given the observed total abundance of the community.
+
+    Hill number is a generalization of multiple diversity metrics. Depending on
+    the order :math:`q`, it is equivalent to:
+
+    - :math:`q=0`: Observed species richness (:math:`S_{obs}`).
+    - :math:`q \to 1`: The exponential of Shannon index (:math:`\exp{H'}`),
+      i.e., perplexity.
+    - :math:`q=2`: Inverse Simpson index (:math:`1 / D`).
+    - :math:`q \to \infty`: :math:`1/\max{p}`, i.e., the inverse of
+      Berger-Parker dominance index.
+
+    The order :math:`q` determines the influence of taxon abundance on the
+    metric. A larger (or smaller) :math:`q` puts more weight on the abundant
+    (or rare) taxa.
+
+    Hill number is equivalent to the exponential of Renyi entropy.
+
+    References
+    ----------
+    .. [1] Hill, M. O. (1973). Diversity and evenness: a unifying notation and
+       its consequences. Ecology, 54(2), 427-432.
+
+    .. [2] Jost, L. (2006). Entropy and diversity. Oikos, 113(2), 363-375.
+
+    """
+    probs = counts / counts.sum()
+    if order == 1:
+        return _perplexity(probs)
+    elif np.isposinf(order):
+        return 1 / probs.max()
+    else:
+        return (probs**order).sum() ** (1 / (1 - order))
+
+
+@_validate_alpha(empty=np.nan)
 def kempton_taylor_q(counts, lower_quantile=0.25, upper_quantile=0.75):
     r"""Calculate Kempton-Taylor Q index of alpha diversity.
 
@@ -1037,7 +1110,7 @@ def renyi(counts, order=2, base=None):
     counts : 1-D array_like, int
         Vector of counts.
     order : int or float, optional
-        Order (:math:`q`). Range: :math:`[0, \infty]`. Default is 2.
+        Order (:math:`q`). Ranges between 0 and infinity. Default is 2.
     base : int or float, optional
         Logarithm base to use in the calculation. Default is ``e``.
 
@@ -1060,10 +1133,10 @@ def renyi(counts, order=2, base=None):
     cases of Renyi entropy include:
 
     - :math:`q=0`: Max-entropy (:math:`\log{S}`).
-    - :math:`q=1`: Shannon entropy (index).
+    - :math:`q \to 1`: Shannon entropy (index).
     - :math:`q=2`: Collision entropy, a.k.a, Renyi's quadratic entropy, or
       "Renyi entropy". Equivalent to the logarithm of inverse Simpson index.
-    - :math:`q=\infty`: Min-entropy (:math:`-\log{\max{p}}`).
+    - :math:`q \to \infty`: Min-entropy (:math:`-\log{\max{p}}`).
 
     Renyi entropy is equivalent to the logarithm of Hill number.
 
@@ -1087,7 +1160,7 @@ def renyi(counts, order=2, base=None):
         qH = np.log(S)
     # Shannon entropy
     elif order == 1:
-        qH = (-probs * np.log(probs)).sum()
+        qH = _entropy(probs)
     # min-entropy
     elif np.isposinf(order):
         qH = -np.log(probs.max())
@@ -1097,79 +1170,6 @@ def renyi(counts, order=2, base=None):
     if base is not None:
         qH /= np.log(base)
     return qH
-
-
-@_validate_alpha(empty=np.nan)
-def hill(counts, order=2):
-    r"""Calculate Hill number.
-
-    Hill number (:math:`^qD`) is a generalized measure of the effective number
-    of species. It is defined as:
-
-    .. math::
-
-       ^qD = (\sum_{i=1}^S p_i^q)^{\frac{1}{1-q}}
-
-    where :math:`S` is the number of taxa and :math:`p_i` is the proportion
-    of the sample represented by taxon :math:`i`.
-
-    Parameters
-    ----------
-    counts : 1-D array_like, int
-        Vector of counts.
-    order : int or float, optional
-        Order (:math:`q`). Range: :math:`[0, \infty]`. Default is 2.
-
-    Returns
-    -------
-    float
-        Hill number.
-
-    See Also
-    --------
-    inv_simpson
-    renyi
-    shannon
-    sobs
-
-    Notes
-    -----
-    Hill number was originally defined in [1]_. It is a measurement of "true
-    diversity", or the effective number of species (ENS) ([2]_), which is
-    defined as the number of equally abundant taxa that makes the same
-    diversity measurement.
-
-    Hill number is a generalization of multiple diversity metrics. Depending on
-    the order :math:`q`, it is equivalent to:
-
-    - :math:`q=0`: Observed species richness (:math:`S` or :math:`S_{sobs}`).
-    - :math:`q=1`: The exponential of Shannon index (:math:`\exp{H'}`), i.e.,
-      perplexity.
-    - :math:`q=2`: Inverse Simpson index (:math:`1 / D`).
-    - :math:`q=\infty`: :math:`1/\max{p}`, i.e., the inverse of Berger-Parker
-      dominance index.
-
-    The order (:math:`q`) determines the influence of taxon abundance on the
-    metric. A larger (or small) :math:`q` puts more weight on the abundant (or
-    rare) taxa.
-
-    Hill number is equivalent to the exponential of Renyi entropy.
-
-    References
-    ----------
-    .. [1] Hill, M. O. (1973). Diversity and evenness: a unifying notation and
-       its consequences. Ecology, 54(2), 427-432.
-
-    .. [2] Jost, L. (2006). Entropy and diversity. Oikos, 113(2), 363-375.
-
-    """
-    probs = counts / counts.sum()
-    if order == 1:
-        return (probs**-probs).prod()
-    elif np.isposinf(order):
-        return 1 / probs.max()
-    else:
-        return (probs**order).sum() ** (1 / (1 - order))
 
 
 @_validate_alpha(empty=np.nan)
@@ -1214,6 +1214,16 @@ def robbins(counts):
 
     """
     return (counts == 1).sum() / counts.sum()
+
+
+def _entropy(probs):
+    """Calculate entropy."""
+    return (-probs * np.log(probs)).sum()
+
+
+def _perplexity(probs):
+    """Calculate perplexity."""
+    return (probs**-probs).prod()
 
 
 @_validate_alpha(empty=np.nan)
@@ -1282,11 +1292,11 @@ def shannon(counts, base=None, exp=False):
 
     # perplexity
     if exp is True:
-        return (probs**-probs).prod()
+        return _perplexity(probs)
 
     # entropy
     else:
-        H = (-probs * np.log(probs)).sum()
+        H = _entropy(probs)
         if base is not None:
             H /= np.log(base)
         return H
@@ -1518,3 +1528,65 @@ def strong(counts):
     sorted_sum = np.sort(counts)[::-1].cumsum()
     i = np.arange(1, S + 1)
     return (sorted_sum / counts.sum() - (i / S)).max()
+
+
+@_validate_alpha()
+def tsallis(counts, order=2):
+    r"""Calculate Tsallis entropy.
+
+    Tsallis entropy (:math:`^qH`) is a generalization of Boltzmann-Gibbs
+    entropy, with an exponent (order) :math:`q`. It is defined as:
+
+    .. math::
+
+       ^qH = \frac{1}{q - 1}(1 - \sum_{i=1}^S p_i^q)
+
+    where :math:`S` is the number of taxa and :math:`p_i` is the proportion
+    of the sample represented by taxon :math:`i`.
+
+    Parameters
+    ----------
+    counts : 1-D array_like, int
+        Vector of counts.
+    order : int or float, optional
+        Order (:math:`q`). Ranges between 0 and infinity. Default is 2.
+
+    Returns
+    -------
+    float
+        Tsallis entropy.
+
+    See Also
+    --------
+    renyi
+    shannon
+    simpson
+    sobs
+
+    Notes
+    -----
+    Tsallis entropy was originally defined in [1]_. Special cases of Tsallis
+    entropy given order :math:`q` include:
+
+    - :math:`q=0`: Observed species richness (:math:`S_{obs}`) minus 1.
+    - :math:`q \to 1`: Shannon index :math:`H'`.
+    - :math:`q=2`: Simpson diversity index (:math:`1 - D`).
+    - :math:`q \to \infty`: 0.
+
+    References
+    ----------
+    .. [1] Tsallis, C. (1988). Possible generalization of Boltzmann-Gibbs
+       statistics. Journal of statistical physics, 52, 479-487.
+
+    """
+    if (S := counts.size) == 0:
+        return np.nan
+    elif S == 1:
+        return 0.0
+    probs = counts / counts.sum()
+    if order == 1:
+        return _entropy(probs)
+    elif np.isposinf(order):
+        return 0.0
+    else:
+        return (1 - (probs**order).sum()) / (order - 1)

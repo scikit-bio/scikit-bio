@@ -61,6 +61,7 @@ diversity measurement.
    renyi
    shannon
    simpson
+   tsallis
 
 
 Evenness metrics
@@ -172,6 +173,7 @@ from ._base import (
     singles,
     sobs,
     strong,
+    tsallis,
 )
 from ._ace import ace
 from ._chao1 import chao1, chao1_ci
@@ -198,6 +200,8 @@ __all__ = [
     "hill",
     "inv_simpson",
     "kempton_taylor_q",
+    "lladser_pe",
+    "lladser_ci",
     "margalef",
     "mcintosh_d",
     "mcintosh_e",
@@ -217,6 +221,5 @@ __all__ = [
     "singles",
     "sobs",
     "strong",
-    "lladser_pe",
-    "lladser_ci",
+    "tsallis",
 ]
