@@ -1534,8 +1534,9 @@ def strong(counts):
 def tsallis(counts, order=2):
     r"""Calculate Tsallis entropy.
 
-    Tsallis entropy (:math:`^qH`) is a generalization of Boltzmann-Gibbs
-    entropy, with an exponent (order) :math:`q`. It is defined as:
+    Tsallis entropy (:math:`^qH`), a.k.a. HCDT entropy, is a generalization of
+    Boltzmann-Gibbs entropy with an exponent (order) :math:`q`. It is defined
+    as:
 
     .. math::
 
