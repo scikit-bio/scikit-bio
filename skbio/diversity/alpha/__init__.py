@@ -54,6 +54,7 @@ diversity measurement.
    brillouin_d
    enspie
    fisher_alpha
+   hill
    inv_simpson
    kempton_taylor_q
    phydiv
@@ -150,6 +151,7 @@ from ._base import (
     fisher_alpha,
     goods_coverage,
     heip_e,
+    hill,
     inv_simpson,
     kempton_taylor_q,
     margalef,
@@ -193,6 +195,7 @@ __all__ = [
     "gini_index",
     "goods_coverage",
     "heip_e",
+    "hill",
     "inv_simpson",
     "kempton_taylor_q",
     "margalef",

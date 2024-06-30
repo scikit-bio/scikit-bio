@@ -1022,12 +1022,12 @@ def pielou_e(counts, base=None):
 def renyi(counts, order=2, base=None):
     r"""Calculate Renyi entropy.
 
-    Renyi entropy (:math:`^qH'`) is a generalization of Shannon index, with an
-    exponent (order, :math:`q`) instead of 1. It is defined as:
+    Renyi entropy (:math:`^qH`) is a generalization of Shannon index, with an
+    exponent (order) :math:`q` instead of 1. It is defined as:
 
     .. math::
 
-       ^qH' = \frac{1}{1-q}\log_b{(\sum_{i=1}^S p_i^q)}
+       ^qH = \frac{1}{1-q}\log_b{(\sum_{i=1}^S p_i^q)}
 
     where :math:`S` is the number of taxa and :math:`p_i` is the proportion
     of the sample represented by taxon :math:`i`.
@@ -1048,14 +1048,16 @@ def renyi(counts, order=2, base=None):
 
     See Also
     --------
-    shannon
+    hill
     inv_simpson
+    renyi
+    shannon
 
     Notes
     -----
-    Renyi entropy is a generalization of multiple entropy notions, as
-    determined by the order (:math:`q`). Special cases of Renyi entropy
-    include:
+    Renyi entropy was originally defined in [1]_. It is a generalization of
+    multiple entropy notions, as determined by the order (:math:`q`). Special
+    cases of Renyi entropy include:
 
     - :math:`q=0`: Max-entropy (:math:`\log{S}`).
     - :math:`q=1`: Shannon entropy (index).
@@ -1063,7 +1065,7 @@ def renyi(counts, order=2, base=None):
       "Renyi entropy". Equivalent to the logarithm of inverse Simpson index.
     - :math:`q=\infty`: Min-entropy (:math:`-\log{\max{p}}`).
 
-    Renyi entropy was originally defined in [1]_.
+    Renyi entropy is equivalent to the logarithm of Hill number.
 
     References
     ----------
@@ -1095,6 +1097,79 @@ def renyi(counts, order=2, base=None):
     if base is not None:
         qH /= np.log(base)
     return qH
+
+
+@_validate_alpha(empty=np.nan)
+def hill(counts, order=2):
+    r"""Calculate Hill number.
+
+    Hill number (:math:`^qD`) is a generalized measure of the effective number
+    of species. It is defined as:
+
+    .. math::
+
+       ^qD = (\sum_{i=1}^S p_i^q)^{\frac{1}{1-q}}
+
+    where :math:`S` is the number of taxa and :math:`p_i` is the proportion
+    of the sample represented by taxon :math:`i`.
+
+    Parameters
+    ----------
+    counts : 1-D array_like, int
+        Vector of counts.
+    order : int or float, optional
+        Order (:math:`q`). Range: :math:`[0, \infty]`. Default is 2.
+
+    Returns
+    -------
+    float
+        Hill number.
+
+    See Also
+    --------
+    inv_simpson
+    renyi
+    shannon
+    sobs
+
+    Notes
+    -----
+    Hill number was originally defined in [1]_. It is a measurement of "true
+    diversity", or the effective number of species (ENS) ([2]_), which is
+    defined as the number of equally abundant taxa that makes the same
+    diversity measurement.
+
+    Hill number is a generalization of multiple diversity metrics. Depending on
+    the order :math:`q`, it is equivalent to:
+
+    - :math:`q=0`: Observed species richness (:math:`S` or :math:`S_{sobs}`).
+    - :math:`q=1`: The exponential of Shannon index (:math:`\exp{H'}`), i.e.,
+      perplexity.
+    - :math:`q=2`: Inverse Simpson index (:math:`1 / D`).
+    - :math:`q=\infty`: :math:`1/\max{p}`, i.e., the inverse of Berger-Parker
+      dominance index.
+
+    The order (:math:`q`) determines the influence of taxon abundance on the
+    metric. A larger (or small) :math:`q` puts more weight on the abundant (or
+    rare) taxa.
+
+    Hill number is equivalent to the exponential of Renyi entropy.
+
+    References
+    ----------
+    .. [1] Hill, M. O. (1973). Diversity and evenness: a unifying notation and
+       its consequences. Ecology, 54(2), 427-432.
+
+    .. [2] Jost, L. (2006). Entropy and diversity. Oikos, 113(2), 363-375.
+
+    """
+    probs = counts / counts.sum()
+    if order == 1:
+        return (probs**-probs).prod()
+    elif np.isposinf(order):
+        return 1 / probs.max()
+    else:
+        return (probs**order).sum() ** (1 / (1 - order))
 
 
 @_validate_alpha(empty=np.nan)

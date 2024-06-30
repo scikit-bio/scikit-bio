@@ -16,7 +16,7 @@ import numpy.testing as npt
 from skbio import TreeNode
 from skbio.diversity.alpha import (
     berger_parker_d, brillouin_d, dominance, doubles, enspie, esty_ci, fisher_alpha,
-    goods_coverage, heip_e, inv_simpson, kempton_taylor_q, margalef, mcintosh_d,
+    goods_coverage, heip_e, hill, inv_simpson, kempton_taylor_q, margalef, mcintosh_d,
     mcintosh_e, menhinick, michaelis_menten_fit, observed_features, observed_otus, osd,
     pielou_e, renyi, robbins, shannon, simpson, simpson_d, simpson_e, singles, sobs,
     strong)
@@ -168,6 +168,39 @@ class BaseTests(TestCase):
         self.assertEqual(heip_e([5]), 1)
         self.assertTrue(np.isnan(heip_e([0, 0])))
 
+    def test_hill(self):
+        orders = [0, 0.5, 1, 2, 10, np.inf]
+
+        # a regular case
+        arr = np.array([1, 2, 3, 4, 5])
+        obs = [hill(arr, order=x) for x in orders]
+        exp = [5, 4.68423304, 4.43598780, 4.09090909, 3.34923645, 3]
+        npt.assert_almost_equal(obs, exp)
+
+        # equivalent to observed species richness when q = 0
+        self.assertAlmostEqual(hill(arr, order=0), sobs(arr))
+
+        # equivalent to the exponential of Shannon index when q = 1
+        self.assertAlmostEqual(hill(arr, order=1), shannon(arr, exp=True))
+
+        # equivalent to inverse Simpson index when q = 2 (default)
+        self.assertAlmostEqual(hill(arr), inv_simpson(arr))
+
+        # equivalent to the inverse of Berger-Parker dominance index when q = inf
+        self.assertAlmostEqual(hill(arr, order=np.inf), 1 / berger_parker_d(arr))
+
+        # equally abundant taxa: qD = S
+        arr = np.array([5, 5, 5])
+        obs = [hill(arr, order=x) for x in orders]
+        exp = [arr.size] * 6
+        npt.assert_almost_equal(obs, exp)
+
+        # single taxon: qD = 1
+        self.assertEqual(hill([1]), 1)
+
+        # empty community
+        self.assertTrue(np.isnan(hill([0, 0])))
+
     def test_inv_simpson(self):
         # Totally even community should have 1 / D = number of taxa.
         self.assertAlmostEqual(inv_simpson(np.array([1, 1, 1, 1, 1, 1])), 6)
@@ -316,7 +349,7 @@ class BaseTests(TestCase):
         npt.assert_almost_equal(obs, exp)
 
         # single taxon: qH = 0
-        self.assertEqual(renyi([1]), 0.0)
+        self.assertEqual(renyi([1]), 0)
 
         # empty community
         self.assertTrue(np.isnan(renyi([0, 0])))
