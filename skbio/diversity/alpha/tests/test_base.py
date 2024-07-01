@@ -16,9 +16,10 @@ import numpy.testing as npt
 from skbio import TreeNode
 from skbio.diversity.alpha import (
     berger_parker_d, brillouin_d, dominance, doubles, enspie, esty_ci, fisher_alpha,
-    goods_coverage, heip_e, inv_simpson, kempton_taylor_q, margalef, mcintosh_d,
+    goods_coverage, heip_e, hill, inv_simpson, kempton_taylor_q, margalef, mcintosh_d,
     mcintosh_e, menhinick, michaelis_menten_fit, observed_features, observed_otus, osd,
-    pielou_e, robbins, shannon, simpson, simpson_d, simpson_e, singles, sobs, strong)
+    pielou_e, renyi, robbins, shannon, simpson, simpson_d, simpson_e, singles, sobs,
+    strong, tsallis)
 
 
 class BaseTests(TestCase):
@@ -167,6 +168,39 @@ class BaseTests(TestCase):
         self.assertEqual(heip_e([5]), 1)
         self.assertTrue(np.isnan(heip_e([0, 0])))
 
+    def test_hill(self):
+        orders = [0, 0.5, 1, 2, 10, np.inf]
+
+        # a regular case
+        arr = np.array([1, 2, 3, 4, 5])
+        obs = [hill(arr, order=x) for x in orders]
+        exp = [5, 4.68423304, 4.43598780, 4.09090909, 3.34923645, 3]
+        npt.assert_almost_equal(obs, exp)
+
+        # equivalent to observed species richness when q = 0
+        self.assertAlmostEqual(hill(arr, order=0), sobs(arr))
+
+        # equivalent to the exponential of Shannon index when q = 1
+        self.assertAlmostEqual(hill(arr, order=1), shannon(arr, exp=True))
+
+        # equivalent to inverse Simpson index when q = 2 (default)
+        self.assertAlmostEqual(hill(arr), inv_simpson(arr))
+
+        # equivalent to the inverse of Berger-Parker dominance index when q = inf
+        self.assertAlmostEqual(hill(arr, order=np.inf), 1 / berger_parker_d(arr))
+
+        # equally abundant taxa: qD = S
+        arr = np.array([5, 5, 5])
+        obs = [hill(arr, order=x) for x in orders]
+        exp = [arr.size] * 6
+        npt.assert_almost_equal(obs, exp)
+
+        # single taxon: qD = 1
+        self.assertEqual(hill([1]), 1)
+
+        # empty community
+        self.assertTrue(np.isnan(hill([0, 0])))
+
     def test_inv_simpson(self):
         # Totally even community should have 1 / D = number of taxa.
         self.assertAlmostEqual(inv_simpson(np.array([1, 1, 1, 1, 1, 1])), 6)
@@ -289,6 +323,37 @@ class BaseTests(TestCase):
         self.assertEqual(pielou_e([5]), 1)
         self.assertTrue(np.isnan(pielou_e([0, 0])))
 
+    def test_renyi(self):
+        orders = [0, 0.5, 1, 2, 10, np.inf]
+
+        # a regular case
+        arr = np.array([1, 2, 3, 4, 5])
+        obs = [renyi(arr, order=x) for x in orders]
+        exp = [1.60943791, 1.54420220, 1.48975032,
+               1.40876722, 1.20873239, 1.09861229]
+        npt.assert_almost_equal(obs, exp)
+
+        # equivalent to Shannon index when q = 1
+        self.assertAlmostEqual(renyi(arr, order=1), shannon(arr))
+
+        # equivalent to log(inverse Simpson index) when q = 2 (default)
+        self.assertAlmostEqual(renyi(arr), np.log(inv_simpson(arr)))
+
+        # default q, custom logarithm base
+        self.assertAlmostEqual(renyi(arr, base=2), 2.03242148)
+
+        # equally abundant taxa: qH = log(S)
+        arr = np.array([5, 5, 5])
+        obs = [renyi(arr, order=x) for x in orders]
+        exp = [np.log(arr.size)] * 6
+        npt.assert_almost_equal(obs, exp)
+
+        # single taxon: qH = 0
+        self.assertEqual(renyi([1]), 0)
+
+        # empty community
+        self.assertTrue(np.isnan(renyi([0, 0])))
+
     def test_robbins(self):
         self.assertEqual(robbins(np.array([1, 2, 3, 0, 1])), 2 / 7)
         self.assertTrue(np.isnan(robbins([0, 0])))
@@ -370,6 +435,33 @@ class BaseTests(TestCase):
     def test_strong(self):
         self.assertAlmostEqual(strong(np.array([1, 2, 3, 1])), 0.214285714)
         self.assertTrue(np.isnan(strong([0, 0])))
+
+    def test_tsallis(self):
+        orders = [0, 0.5, 1, 2, 10, np.inf]
+
+        # a regular case
+        arr = np.array([1, 2, 3, 4, 5])
+        obs = [tsallis(arr, order=x) for x in orders]
+        exp = [4, 2.32861781, 1.48975032, 0.75555556, 0.11110902, 0]
+        npt.assert_almost_equal(obs, exp)
+
+        # equivalent to richess - 1 when q = 0
+        self.assertAlmostEqual(tsallis(arr, order=0), sobs(arr) - 1)
+
+        # equivalent to Shannon index when q = 1
+        self.assertAlmostEqual(tsallis(arr, order=1), shannon(arr))
+
+        # equivalent to Simpson's diversity index) when q = 2 (default)
+        self.assertAlmostEqual(tsallis(arr), simpson(arr))
+
+        # 0 when order is infinity
+        self.assertAlmostEqual(tsallis(arr, order=np.inf), 0)
+
+        # 0 when there is a single taxon
+        self.assertEqual(tsallis([1]), 0)
+
+        # empty community
+        self.assertTrue(np.isnan(tsallis([0, 0])))
 
 
 if __name__ == '__main__':
