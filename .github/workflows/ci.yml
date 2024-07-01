@@ -130,7 +130,7 @@ jobs:
           cd ci && coverage lcov --rcfile ../.coveragerc
       - name: Upload coverage reports to Codecov
         if: runner.os == 'Linux'
-        uses: codecov/codecov-action@v4.0.1
+        uses: codecov/codecov-action@v4.2.0
         with:
           token: ${{ secrets.CODECOV_TOKEN }}
           slug: scikit-bio/scikit-bio
