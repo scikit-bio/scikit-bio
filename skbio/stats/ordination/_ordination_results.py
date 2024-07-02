@@ -426,10 +426,10 @@ class OrdinationResults(SkbioObject, PlottableMixin):
             If `matrix` is neither `samples` nor `features`.
 
         """
-        samp_errmsg = "The IDs in mapper are different from the IDs in \
-                      self.samples."
-        feat_errmsg = "The IDs in mapper are different from the IDs in \
-                      self.features."
+        samp_errmsg = ("The IDs in mapper are different from the IDs in "
+                       "self.samples.")
+        feat_errmsg = ("The IDs in mapper are different from the IDs in "
+                       "self.features.")
 
         if matrix == 'samples':
             if (strict and isinstance(mapper, dict) and
