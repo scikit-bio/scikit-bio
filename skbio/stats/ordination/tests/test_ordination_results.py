@@ -110,13 +110,14 @@ class TestOrdinationResults(unittest.TestCase):
                                'D' : 'ld'}
         rename_dict_features = {'abc' : 'go', 'def' : 'od', 'Z' : 'by',
                                 'W' : 'e'}
-
-        with self.assertRaisesRegex(ValueError, "The IDs in mapper are different \
-                               from the IDs in self.samples"):
+        samp_errmsg = "The IDs in mapper are different from the IDs in \
+                      self.samples."
+        with self.assertRaisesRegex(ValueError, samp_errmsg):
             self.ordination_results.rename(rename_dict_samples)
 
-        with self.assertRaisesRegex(ValueError, "The IDs in mapper are different \
-                               from the IDs in self.features"):
+        feat_errmsg = "The IDs in mapper are different from the IDs in \
+                      self.features."
+        with self.assertRaisesRegex(ValueError, feat_errmsg):
             self.ordination_results.rename(rename_dict_features,
                                            matrix='features')
 
@@ -126,12 +127,10 @@ class TestOrdinationResults(unittest.TestCase):
                                'invalid' : 'world'}
         rename_dict_features = {'abc' : 'go', 'def' : 'od', 'invalid' : 'bye'}
 
-        with self.assertRaises(ValueError, "The IDs in mapper are different \
-                               from the IDs in self.samples"):
+        with self.assertRaises(ValueError, samp_errmsg):
             self.ordination_results.rename(rename_dict_samples)
 
-        with self.assertRaises(ValueError, "The IDs in mapper are different \
-                               from the IDs in self.features"):
+        with self.assertRaises(ValueError, feat_errmsg):
             self.ordination_results.rename(rename_dict_features,
                                            matrix='features')
 

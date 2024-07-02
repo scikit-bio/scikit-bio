@@ -426,11 +426,15 @@ class OrdinationResults(SkbioObject, PlottableMixin):
             If `matrix` is neither `samples` nor `features`.
 
         """
+        samp_errmsg = "The IDs in mapper are different from the IDs in \
+                      self.samples."
+        feat_errmsg = "The IDs in mapper are different from the IDs in \
+                      self.features."
+
         if matrix == 'samples':
             if (strict and isinstance(mapper, dict) and
                     set(mapper) != set(self.samples.index)):
-                raise ValueError("The IDs in mapper are different \
-                                 from the IDs in self.samples.")
+                raise ValueError(samp_errmsg)
             self.samples = self.samples.rename(index=mapper)
         elif matrix == 'features':
             if self.features is None:
@@ -438,8 +442,7 @@ class OrdinationResults(SkbioObject, PlottableMixin):
                                  construction of this object")
             elif (strict and isinstance(mapper, dict) and
                     set(mapper) != set(self.features.index)):
-                raise ValueError("The IDs in mapper are different \
-                                  from the IDs in self.features.")
+                raise ValueError(feat_errmsg)
             self.features = self.features.rename(index=mapper)
         else:
             raise ValueError("Matrix must be either 'samples' or \
