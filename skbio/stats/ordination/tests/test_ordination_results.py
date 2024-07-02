@@ -115,7 +115,7 @@ class TestOrdinationResults(unittest.TestCase):
         with self.assertRaisesRegex(ValueError, samp_errmsg):
             self.ordination_results.rename(rename_dict_samples)
 
-        feat_errmsg = ("The IDs in mapper are different from the IDs in ")
+        feat_errmsg = ("The IDs in mapper are different from the IDs in "
                        "self.features.")
         with self.assertRaisesRegex(ValueError, feat_errmsg):
             self.ordination_results.rename(rename_dict_features,
