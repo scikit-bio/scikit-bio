@@ -10,6 +10,7 @@
 [#2032](https://github.com/scikit-bio/scikit-bio/pull/2032), [#2005](https://github.com/scikit-bio/scikit-bio/pull/2005))
 * Added alpha diversity metrics: Hill number (`hill`), Renyi entropy (`renyi`) and Tsallis entropy (`tsallis`) ([#2074](https://github.com/scikit-bio/scikit-bio/pull/2074)).
 * Added `nni` function for phylogenetic tree rearrangement using nearest neighbor interchange (NNI) ([#2050](https://github.com/scikit-bio/scikit-bio/pull/2050)).
+* Fixed the Zenodo link in the README to always point to the most recent version
 
 ## Version 0.6.1
 
