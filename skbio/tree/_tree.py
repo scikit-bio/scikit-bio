@@ -178,20 +178,22 @@ class TreeNode(SkbioObject):
         return node
 
     def append(self, node):
-        r"""Append a node to `children`, in-place, cleaning up refs.
-
-        `append` will invalidate any node lookup caches, remove an existing
-        parent on `node` if one exists, set the parent of `node` to self
-        and add the `node` to `self` `children`.
+        r"""Add a node to self's children.
 
         Parameters
         ----------
         node : TreeNode
-            An existing TreeNode object
+            Node to add as a child.
 
         See Also
         --------
         extend
+
+        Notes
+        -----
+        ``append`` will invalidate any node lookup caches, remove the node's
+        parent if it exists, set the parent of node to self, and add the node
+        to self's children.
 
         Examples
         --------
@@ -209,20 +211,22 @@ class TreeNode(SkbioObject):
         self.children.append(self._adopt(node))
 
     def extend(self, nodes):
-        r"""Append a `list` of `TreeNode` to `self`.
-
-        `extend` will invalidate any node lookup caches, remove existing
-        parents of the `nodes` if they have any, set their parents to self
-        and add the nodes to `self` `children`.
+        r"""Add a list of nodes to self's children.
 
         Parameters
         ----------
         nodes : list of TreeNode
-            A list of TreeNode objects
+            Nodes to add as children.
 
         See Also
         --------
         append
+
+        Notes
+        -----
+        ``extend`` will invalidate any node lookup caches, remove existing
+        parents of the nodes if they have any, set their parents to self
+        and add the nodes to the children of self.
 
         Examples
         --------
@@ -236,27 +240,77 @@ class TreeNode(SkbioObject):
         """
         self.children.extend([self._adopt(n) for n in nodes[:]])
 
-    def pop(self, index=-1):
-        r"""Remove a `TreeNode` from `self`.
+    def insert(self, node, distance=None):
+        r"""Insert a node into the branch connecting self and its parent.
 
-        Remove a child node by its index position. All node lookup caches
-        are invalidated, and the parent reference for the popped node will be
-        set to `None`.
+        Parameters
+        ----------
+        node : TreeNode
+            Node to insert.
+        distance : float or None
+            Distance between self and the insertion point. Must not exceed
+            ``self.length``. If ``None`` whereas ``self.length`` is not
+            ``None``, will insert at the midpoint of the branch.
+
+        See Also
+        --------
+        append
+
+        Examples
+        --------
+        >>> from skbio import TreeNode
+        >>> root = TreeNode(name="root")
+        >>> child1 = TreeNode(name="child1")
+        >>> child2 = TreeNode(name="child2")
+        >>> root.append(child1)
+        >>> root.append(child2)
+        >>> print(root)
+        (child1,child2)root;
+        <BLANKLINE>
+
+        """
+        if (parent := self.parent) is None:
+            raise NoParentError("Self has no parent.")
+        parent.append(node)
+        node.append(self)
+
+        # determine insertion point
+        if distance is None:
+            if self.length is None:
+                node.length = None
+            else:
+                self.length *= 0.5
+                node.length = self.length
+        else:
+            if self.length is None:
+                raise ValueError("Distance is provided but branch has no length.")
+            elif distance > self.length:
+                raise ValueError("Distance cannot exceed branch length.")
+            node.length = self.length - distance
+            self.length = distance
+
+    def pop(self, index=-1):
+        r"""Remove and return a child node by its index position from self.
 
         Parameters
         ----------
         index : int
-            The index position in `children` to pop
+            The index position in ``children`` to pop.
 
         Returns
         -------
         TreeNode
-            The popped child
+            The popped child node.
 
         See Also
         --------
         remove
         remove_deleted
+
+        Notes
+        -----
+        All node lookup caches are invalidated, and the parent reference for
+        the popped node will be set to ``None``.
 
         Examples
         --------
@@ -473,6 +527,50 @@ class TreeNode(SkbioObject):
 
         return tcopy
 
+    def _copy(self, deep, memo):
+        """Return a copy of self."""
+        _copy = deepcopy if deep else copy
+        _args = [memo] if deep else []
+
+        def __copy_node(node_to_copy):
+            """Copy a node."""
+            # this is _possibly_ dangerous, we're assuming the node to copy is
+            # of the same class as self, and has the same exclusion criteria.
+            # however, it is potentially dangerous to mix TreeNode subclasses
+            # within a tree, so...
+            result = self.__class__()
+            efc = self._exclude_from_copy
+            for key in node_to_copy.__dict__:
+                if key not in efc:
+                    result.__dict__[key] = _copy(node_to_copy.__dict__[key], *_args)
+            return result
+
+        root = __copy_node(self)
+        nodes_stack = [[root, self, len(self.children)]]
+
+        while nodes_stack:
+            # check the top node, any children left unvisited?
+            top = nodes_stack[-1]
+            new_top_node, old_top_node, unvisited_children = top
+
+            if unvisited_children:
+                top[2] -= 1
+                old_child = old_top_node.children[-unvisited_children]
+                new_child = __copy_node(old_child)
+                new_top_node.append(new_child)
+                nodes_stack.append([new_child, old_child, len(old_child.children)])
+            else:  # no unvisited children
+                nodes_stack.pop()
+        return root
+
+    def __copy__(self):
+        """Return a shallow copy."""
+        return self._copy(False, {})
+
+    def __deepcopy__(self, memo):
+        """Return a deep copy."""
+        return self._copy(True, memo)
+
     def copy(self, deep=True):
         r"""Return a copy of self using an iterative approach.
 
@@ -516,40 +614,7 @@ class TreeNode(SkbioObject):
         0
 
         """
-        _copy = deepcopy if deep else copy
-
-        def __copy_node(node_to_copy):
-            """Copy a node."""
-            # this is _possibly_ dangerous, we're assuming the node to copy is
-            # of the same class as self, and has the same exclusion criteria.
-            # however, it is potentially dangerous to mix TreeNode subclasses
-            # within a tree, so...
-            result = self.__class__()
-            efc = self._exclude_from_copy
-            for key in node_to_copy.__dict__:
-                if key not in efc:
-                    result.__dict__[key] = _copy(node_to_copy.__dict__[key])
-            return result
-
-        root = __copy_node(self)
-        nodes_stack = [[root, self, len(self.children)]]
-
-        while nodes_stack:
-            # check the top node, any children left unvisited?
-            top = nodes_stack[-1]
-            new_top_node, old_top_node, unvisited_children = top
-
-            if unvisited_children:
-                top[2] -= 1
-                old_child = old_top_node.children[-unvisited_children]
-                new_child = __copy_node(old_child)
-                new_top_node.append(new_child)
-                nodes_stack.append([new_child, old_child, len(old_child.children)])
-            else:  # no unvisited children
-                nodes_stack.pop()
-        return root
-
-    __copy__ = copy
+        return self._copy(deep, {})
 
     def deepcopy(self):
         r"""Return a deep copy of self using an iterative approach.
@@ -568,17 +633,21 @@ class TreeNode(SkbioObject):
         ``deepcopy`` is equivalent to ``copy`` with ``deep=True``, which is
         currently the default behavior of the latter.
 
-        """
-        return self.copy(deep=True)
+        Warnings
+        --------
+        ``deepcopy`` is deprecated as of ``0.6.2``. Use ``copy`` instead.
 
-    __deepcopy__ = deepcopy
+        """
+        _warn_deprecated(self.__class__.unrooted_deepcopy, "0.6.2")
+
+        return self._copy(True, {})
 
     def unrooted_copy(
         self,
         parent=None,
         branch_attrs={"name", "length", "support"},
         root_name="root",
-        deep=True,
+        deep=False,
     ):
         r"""Walk the tree unrooted-style and returns a copy.
 
@@ -598,8 +667,8 @@ class TreeNode(SkbioObject):
             .. versionadded:: 0.6.2
 
             .. note:: ``name`` will be removed from the default in 0.7.0, as
-                they are usually considered as node labels instead of branch
-                labels in a typical tree.
+                it is usually considered as an attribute of the node instead of
+                the branch.
 
         root_name : str, optional
             Name for the new root node, if it doesn't have one.
@@ -607,12 +676,10 @@ class TreeNode(SkbioObject):
             .. versionadded:: 0.6.2
 
         deep : bool, optional
-            Whether perform a deep (``True``, default) or shallow (``False``)
+            Whether perform a shallow (``False``, default) or deep (``True``)
             copy of node attributes.
 
             .. versionadded:: 0.6.2
-
-            .. note:: The default value will be changed to ``False`` in 0.7.0.
 
         Returns
         -------
@@ -878,7 +945,7 @@ class TreeNode(SkbioObject):
                 i.__leaf_set = leaf_set
         return frozenset(sets)
 
-    def root_at(self, node):
+    def root_at(self, node, branch_attrs=["name"]):
         r"""Return a new tree rooted at the provided node.
 
         This can be useful for drawing unrooted trees with an orientation that
@@ -888,6 +955,17 @@ class TreeNode(SkbioObject):
         ----------
         node : TreeNode or str
             The node to root at.
+        branch_attrs : iterable of str, optional
+            Attributes of each node that should be considered as attributes of
+            the branch connecting the node to its parent. This is important for
+            the correct rerooting operation. "length" and "support" will be
+            automatically included as they are always branch attributes.
+
+            .. versionadded:: 0.6.2
+
+            .. note:: ``name`` will be removed from the default in 0.7.0, as
+                it is usually considered as an attribute of the node instead of
+                the branch.
 
         Returns
         -------
@@ -919,10 +997,26 @@ class TreeNode(SkbioObject):
         """
         if isinstance(node, str):
             node = self.find(node)
-        return node.unrooted_deepcopy()
+        branch_attrs = set(branch_attrs)
+        branch_attrs.update(["length", "support"])
+        return node.unrooted_copy(branch_attrs=branch_attrs)
 
-    def root_at_midpoint(self):
+    def root_at_midpoint(self, branch_attrs=["name"]):
         r"""Return a new tree rooted at midpoint of the two tips farthest apart.
+
+        Parameters
+        ----------
+        branch_attrs : iterable of str, optional
+            Attributes of each node that should be considered as attributes of
+            the branch connecting the node to its parent. This is important for
+            the correct rerooting operation. "length" and "support" will be
+            automatically included as they are always branch attributes.
+
+            .. versionadded:: 0.6.2
+
+            .. note:: ``name`` will be removed from the default in 0.7.0, as
+                it is usually considered as an attribute of the node instead of
+                the branch.
 
         Returns
         -------
@@ -964,6 +1058,9 @@ class TreeNode(SkbioObject):
         <BLANKLINE>
 
         """
+        branch_attrs = set(branch_attrs)
+        branch_attrs.update(["length", "support"])
+
         tree = self.copy()
         max_dist, tips = tree.get_max_distance()
         half_max_dist = max_dist / 2.0
@@ -991,9 +1088,9 @@ class TreeNode(SkbioObject):
             # climb to midpoint spot
             climb_node = climb_node.parent
             if climb_node.is_tip():
-                raise TreeError("error trying to root tree at tip")
+                raise TreeError("Cannot root the tree at a tip.")
             else:
-                return climb_node.unrooted_copy()
+                return climb_node.unrooted_copy(branch_attrs=branch_attrs)
 
         else:
             # make a new node on climb_node's branch to its parent
@@ -1006,7 +1103,7 @@ class TreeNode(SkbioObject):
             climb_node.length = half_max_dist - dist_climbed
             new_root.length = old_br_len - climb_node.length
 
-            return new_root.unrooted_copy()
+            return new_root.unrooted_copy(branch_attrs=branch_attrs)
 
     def is_tip(self):
         r"""Return `True` if the current node has no `children`.
@@ -2845,9 +2942,9 @@ class TreeNode(SkbioObject):
     def bifurcate(self, insert_length=None):
         r"""Reorder the tree into a bifurcating tree.
 
-        All nodes that have more than 2 children will
-        have additional intermediate nodes inserted to ensure that
-        every node has only 2 children.
+        All nodes that have more than two children will have additional
+        intermediate nodes inserted to ensure that every node has only two
+        children.
 
         Parameters
         ----------
