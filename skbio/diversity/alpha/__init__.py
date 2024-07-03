@@ -54,11 +54,14 @@ diversity measurement.
    brillouin_d
    enspie
    fisher_alpha
+   hill
    inv_simpson
    kempton_taylor_q
    phydiv
+   renyi
    shannon
    simpson
+   tsallis
 
 
 Evenness metrics
@@ -149,6 +152,7 @@ from ._base import (
     fisher_alpha,
     goods_coverage,
     heip_e,
+    hill,
     inv_simpson,
     kempton_taylor_q,
     margalef,
@@ -160,6 +164,7 @@ from ._base import (
     observed_otus,
     osd,
     pielou_e,
+    renyi,
     robbins,
     shannon,
     simpson,
@@ -168,6 +173,7 @@ from ._base import (
     singles,
     sobs,
     strong,
+    tsallis,
 )
 from ._ace import ace
 from ._chao1 import chao1, chao1_ci
@@ -191,8 +197,11 @@ __all__ = [
     "gini_index",
     "goods_coverage",
     "heip_e",
+    "hill",
     "inv_simpson",
     "kempton_taylor_q",
+    "lladser_pe",
+    "lladser_ci",
     "margalef",
     "mcintosh_d",
     "mcintosh_e",
@@ -203,6 +212,7 @@ __all__ = [
     "osd",
     "phydiv",
     "pielou_e",
+    "renyi",
     "robbins",
     "shannon",
     "simpson",
@@ -211,6 +221,5 @@ __all__ = [
     "singles",
     "sobs",
     "strong",
-    "lladser_pe",
-    "lladser_ci",
+    "tsallis",
 ]

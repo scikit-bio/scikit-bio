@@ -20,6 +20,7 @@ from skbio.embedding import ProteinEmbedding
 from skbio.io import read, write
 from skbio.stats.ordination import OrdinationResults
 from skbio.table import Table
+from skbio.metadata import SampleMetadata
 import skbio.diversity  # noqa
 import skbio.stats.evolve  # noqa
 
@@ -39,6 +40,7 @@ __all__ = [
     "write",
     "OrdinationResults",
     "Table",
+    "SampleMetadata",
 ]
 
 __credits__ = "https://github.com/scikit-bio/scikit-bio/graphs/contributors"
