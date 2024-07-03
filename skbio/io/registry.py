@@ -399,7 +399,10 @@ class IORegistry:
             # tell may fail noisily if the user provided a TextIOBase or
             # BufferedReader which has already been iterated over (via next()).
             matches = []
-            backup = fh.tell()
+            try:
+                backup = fh.tell()
+            except io.UnsupportedOperation:
+                raise ValueError("Must provide type for non-seekable data.")
             if is_binary_file and kwargs.get("encoding", "binary") == "binary":
                 matches = self._find_matches(fh, self._binary_formats, **kwargs)
 
@@ -507,9 +510,11 @@ class IORegistry:
     def _read_ret(self, file, fmt, into, verify, kwargs):
         io_kwargs = self._find_io_kwargs(kwargs)
         with _resolve_file(file, **io_kwargs) as (file, _, _):
-            reader, kwargs, _ = self._init_reader(
+            reader, kwargs, consumed = self._init_reader(
                 file, fmt, into, verify, kwargs, io_kwargs
             )
+            if consumed is not None and not file.seekable():
+                file = itertools.chain(consumed, file)
             return reader(file, **kwargs)
 
     def _read_gen(self, file, fmt, into, verify, kwargs):
