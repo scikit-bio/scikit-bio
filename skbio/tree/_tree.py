@@ -8,7 +8,7 @@
 
 import warnings
 from operator import or_, itemgetter
-from copy import deepcopy
+from copy import copy, deepcopy
 from itertools import combinations
 from functools import reduce
 from collections import defaultdict
@@ -28,6 +28,7 @@ from skbio.tree._exception import (
 )
 from skbio.util import RepresentationWarning
 from skbio.util._decorator import classonlymethod
+from skbio.util._warning import _warn_deprecated
 
 
 def distance_from_r(m1, m2):
@@ -472,22 +473,37 @@ class TreeNode(SkbioObject):
 
         return tcopy
 
-    def copy(self):
+    def copy(self, deep=True):
         r"""Return a copy of self using an iterative approach.
 
-        Perform an iterative deepcopy of self. It is not assured that the copy
-        of node attributes will be performed iteratively as that depends on
-        the copy method of the types being copied
+        Parameters
+        ----------
+        deep : bool, optional
+            Whether perform a deep (``True``, default) or shallow (``False``)
+            copy of node attributes.
+
+            .. versionadded:: 0.6.2
+
+            .. note:: The default value will be changed to ``False`` in 0.7.0.
 
         Returns
         -------
         TreeNode
-            A new copy of self
+            A new copy of self.
 
         See Also
         --------
-        unrooted_deepcopy
         unrooted_copy
+
+        Notes
+        -----
+        This method iteratively copies the current node and its descendants.
+        That is, if the current node is not the root of the tree, only the
+        subtree below the node, instead of the entire tree, will be copied.
+
+        All nodes and their attributes will be copied. The copies are new
+        objects rather than references to the original objects. The distinction
+        between deep and shallow copies only applies to each node attribute.
 
         Examples
         --------
@@ -500,9 +516,10 @@ class TreeNode(SkbioObject):
         0
 
         """
+        _copy = deepcopy if deep else copy
 
         def __copy_node(node_to_copy):
-            r"""Copy a node."""
+            """Copy a node."""
             # this is _possibly_ dangerous, we're assuming the node to copy is
             # of the same class as self, and has the same exclusion criteria.
             # however, it is potentially dangerous to mix TreeNode subclasses
@@ -511,7 +528,7 @@ class TreeNode(SkbioObject):
             efc = self._exclude_from_copy
             for key in node_to_copy.__dict__:
                 if key not in efc:
-                    result.__dict__[key] = deepcopy(node_to_copy.__dict__[key])
+                    result.__dict__[key] = _copy(node_to_copy.__dict__[key])
             return result
 
         root = __copy_node(self)
@@ -533,58 +550,36 @@ class TreeNode(SkbioObject):
         return root
 
     __copy__ = copy
-    __deepcopy__ = deepcopy = copy
 
-    def unrooted_deepcopy(self, parent=None):
-        r"""Walk the tree unrooted-style and returns a new copy.
-
-        Perform a deepcopy of self and return a new copy of the tree as an
-        unrooted copy. This is useful for defining a new root of the tree.
-
-        This method calls `TreeNode.unrooted_copy` which is recursive.
-
-        Parameters
-        ----------
-        parent : TreeNode or None
-            Direction of walking (from parent to self). If specified, walking
-            to the parent will be prohibited.
+    def deepcopy(self):
+        r"""Return a deep copy of self using an iterative approach.
 
         Returns
         -------
         TreeNode
-            A new copy of the tree rooted at the given node.
-
-            .. versionchanged:: 0.6.2
-
-                The original node naming is preserved. The new root node will
-                not be named as "root".
+            A new deep copy of self.
 
         See Also
         --------
         copy
-        unrooted_copy
-        root_at
 
-        Examples
-        --------
-        >>> from skbio import TreeNode
-        >>> tree = TreeNode.read(["((a,(b,c)d)e,(f,g)h)i;"])
-        >>> new_tree = tree.find('d').unrooted_deepcopy()
-        >>> print(new_tree)
-        (b,c,(a,((f,g)h)i)e)d;
-        <BLANKLINE>
+        Notes
+        -----
+        ``deepcopy`` is equivalent to ``copy`` with ``deep=True``, which is
+        currently the default behavior of the latter.
 
         """
-        root = self.root()
-        root.assign_ids()
+        return self.copy(deep=True)
 
-        new_tree = root.copy()
-        new_tree.assign_ids()
+    __deepcopy__ = deepcopy
 
-        new_tree_self = new_tree.find_by_id(self.id)
-        return new_tree_self.unrooted_copy(parent)
-
-    def unrooted_copy(self, parent=None):
+    def unrooted_copy(
+        self,
+        parent=None,
+        branch_attrs={"name", "length", "support"},
+        root_name="root",
+        deep=True,
+    ):
         r"""Walk the tree unrooted-style and returns a copy.
 
         Perform a copy of self and return a new copy of the tree as an
@@ -596,22 +591,37 @@ class TreeNode(SkbioObject):
             Direction of walking (from parent to self). If specified, walking
             to the parent will be prohibited.
 
+        branch_attrs : set of str, optional
+            Attributes of ``TreeNode`` objects that should be considered as
+            branch attributes during the operation.
+
+            .. versionadded:: 0.6.2
+
+            .. note:: ``name`` will be removed from the default in 0.7.0, as
+                they are usually considered as node labels instead of branch
+                labels in a typical tree.
+
+        root_name : str, optional
+            Name for the new root node, if it doesn't have one.
+
+            .. versionadded:: 0.6.2
+
+        deep : bool, optional
+            Whether perform a deep (``True``, default) or shallow (``False``)
+            copy of node attributes.
+
+            .. versionadded:: 0.6.2
+
+            .. note:: The default value will be changed to ``False`` in 0.7.0.
+
         Returns
         -------
         TreeNode
             A new copy of the tree rooted at the given node.
 
-            .. warning:: This is NOT a deepcopy.
-
-            .. versionchanged:: 0.6.2
-
-                The original node naming is preserved. The new root node will
-                not be named as "root".
-
         See Also
         --------
         copy
-        unrooted_deepcopy
         root_at
 
         Notes
@@ -628,25 +638,112 @@ class TreeNode(SkbioObject):
         <BLANKLINE>
 
         """
+        _copy = deepcopy if deep else copy
+
+        # identify neighbors (adjacent nodes) of self, excluding the incoming node
         neighbors = self.neighbors(ignore=parent)
-        children = [c.unrooted_copy(parent=self) for c in neighbors]
 
-        # starting point (becomes root)
+        # recursively copy each neighbor; they will become outgoing nodes (children)
+        children = [
+            c.unrooted_copy(parent=self, branch_attrs=branch_attrs, deep=deep)
+            for c in neighbors
+        ]
+
+        # identify node from which branch attributes should be transferred
+        # 1. starting point (becomes root)
         if parent is None:
-            length = None
-
-        # walk up (parent becomes child)
+            other = None
+        # 2. walk up (parent becomes child)
         elif parent.parent is self:
-            length = parent.length
-
-        # walk down (retain the same order)
+            other = parent
+        # 3. walk down (retain the same order)
         else:
-            assert parent is self.parent
-            length = self.length
+            other = self
 
-        result = self.__class__(name=self.name, children=children, length=length)
+        # create a new node and attach children to it
+        result = self.__class__(children=children)
+
+        # transfer attributes to the new node
+        efc = self._exclude_from_copy
+        for key in self.__dict__:
+            if key not in efc:
+                source = other if key in branch_attrs else self
+                if source is not None and key in source.__dict__:
+                    result.__dict__[key] = _copy(source.__dict__[key])
+
+        # name the new root
+        if root_name and parent is None and result.name is None:
+            result.name = root_name
 
         return result
+
+    def _walk_copy(self, parent=None):
+        """A simplified version of `unrooted_copy` for internal use.
+
+        Node names are treated as an attribute of nodes.
+
+        """
+        neighbors = self.neighbors(ignore=parent)
+        children = [c._walk_copy(parent=self) for c in neighbors]
+        length = (
+            None
+            if parent is None
+            else (parent.length if parent.parent is self else self.length)
+        )
+        return self.__class__(name=self.name, children=children, length=length)
+
+    def unrooted_deepcopy(self, parent=None):
+        r"""Walk the tree unrooted-style and returns a new deepcopy.
+
+        Parameters
+        ----------
+        parent : TreeNode or None
+            Direction of walking (from parent to self). If specified, walking
+            to the parent will be prohibited.
+
+        Returns
+        -------
+        TreeNode
+            A new copy of the tree rooted at the given node.
+
+        Warnings
+        --------
+        ``unrooted_deepcopy`` is deprecated as of ``0.6.2``, as it generates a
+        redundant copy of the tree. Use ``unrooted_copy`` instead.
+
+        See Also
+        --------
+        copy
+        unrooted_copy
+        root_at
+
+        Notes
+        -----
+        Perform a deepcopy of self and return a new copy of the tree as an
+        unrooted copy. This is useful for defining a new root of the tree.
+
+        This method calls ``unrooted_copy`` which is recursive.
+
+        Examples
+        --------
+        >>> from skbio import TreeNode
+        >>> tree = TreeNode.read(["((a,(b,c)d)e,(f,g)h)i;"])
+        >>> new_tree = tree.find('d').unrooted_deepcopy()
+        >>> print(new_tree)
+        (b,c,(a,((f,g)h)i)e)d;
+        <BLANKLINE>
+
+        """
+        _warn_deprecated(self.__class__.unrooted_deepcopy, "0.6.2")
+
+        root = self.root()
+        root.assign_ids()
+
+        new_tree = root.copy()
+        new_tree.assign_ids()
+
+        new_tree_self = new_tree.find_by_id(self.id)
+        return new_tree_self.unrooted_copy(parent, deep=True)
 
     def count(self, tips=False):
         """Get the count of nodes in the tree.
@@ -805,7 +902,7 @@ class TreeNode(SkbioObject):
         See Also
         --------
         root_at_midpoint
-        unrooted_deepcopy
+        unrooted_copy
 
         Notes
         -----
@@ -847,7 +944,7 @@ class TreeNode(SkbioObject):
         See Also
         --------
         root_at
-        unrooted_deepcopy
+        unrooted_copy
 
         Notes
         -----
@@ -1389,25 +1486,27 @@ class TreeNode(SkbioObject):
                             delattr(n, cache)
 
     def create_caches(self):
-        r"""Construct an internal lookups to facilitate searching by name.
-
-        This method will not cache nodes in which the .name is None. This
-        method will raise `DuplicateNodeError` if a name conflict in the tips
-        is discovered, but will not raise if on internal nodes. This is
-        because, in practice, the tips of a tree are required to be unique
-        while no such requirement holds for internal nodes.
+        r"""Construct an internal lookup table to facilitate searching by name.
 
         Raises
         ------
         DuplicateNodeError
             The tip cache requires that names are unique (with the exception of
-            names that are None)
+            names that are ``None``).
 
         See Also
         --------
         invalidate_caches
         cache_attr
         find
+
+        Notes
+        -----
+        This method will not cache nodes whose name is ``None``. This method
+        will raise ``DuplicateNodeError`` if a name conflict in the tips
+        is discovered, but will not raise if on internal nodes. This is
+        because, in practice, the tips of a tree are required to be unique
+        while no such requirement holds for internal nodes.
 
         """
         if not self.is_root():
@@ -1503,39 +1602,41 @@ class TreeNode(SkbioObject):
             return nodes
 
     def find(self, name):
-        r"""Find a node by `name`.
-
-        The first call to `find` will cache all nodes in the tree on the
-        assumption that additional calls to `find` will be made.
-
-        `find` will first attempt to find the node in the tips. If it cannot
-        find a corresponding tip, then it will search through the internal
-        nodes of the tree. In practice, phylogenetic trees and other common
-        trees in biology do not have unique internal node names. As a result,
-        this find method will only return the first occurance of an internal
-        node encountered on a postorder traversal of the tree.
+        r"""Find a node by name.
 
         Parameters
         ----------
         name : TreeNode or str
-            The name or node to find. If `name` is `TreeNode` then it is
-            simply returned
+            The name of the node to find. If a ``TreeNode`` object is provided,
+            then it is simply returned.
 
         Raises
         ------
         MissingNodeError
-            Raises if the node to be searched for is not found
+            Raises if the node to be searched for is not found.
 
         Returns
         -------
         TreeNode
-            The found node
+            The found node.
 
         See Also
         --------
         find_all
         find_by_id
         find_by_func
+
+        Notes
+        -----
+        The first call to ``find`` will cache all nodes in the tree on the
+        assumption that additional calls to ``find`` will be made.
+
+        ``find`` will first attempt to find the node in the tips. If it cannot
+        find a corresponding tip, then it will search through the internal
+        nodes of the tree. In practice, phylogenetic trees and other common
+        trees in biology do not have unique internal node names. As a result,
+        this find method will only return the first occurrence of an internal
+        node encountered on a postorder traversal of the tree.
 
         Examples
         --------

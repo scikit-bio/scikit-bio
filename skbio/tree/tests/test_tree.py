@@ -29,7 +29,7 @@ class TreeTests(TestCase):
 
     def setUp(self):
         """Prep the self"""
-        self.simple_t = TreeNode.read(io.StringIO("((a,b)i1,(c,d)i2)root;"))
+        self.simple_t = TreeNode.read(["((a,b)i1,(c,d)i2)root;"])
         nodes = dict([(x, TreeNode(x)) for x in 'abcdefgh'])
         nodes['a'].append(nodes['b'])
         nodes['b'].append(nodes['c'])
@@ -180,6 +180,23 @@ class TreeTests(TestCase):
             self.assertIsNot(a, b)
             self.assertEqual(a.name, b.name)
             self.assertEqual(a.length, b.length)
+
+        # deep vs shallow copy
+        self.simple_t.dummy = [1, [2, 3], 4]
+        cp = self.simple_t.copy()
+        cp.dummy[1].append(0)
+        self.assertListEqual(self.simple_t.dummy[1], [2, 3])
+        cp = self.simple_t.copy(deep=False)
+        cp.dummy[1].append(0)
+        self.assertListEqual(self.simple_t.dummy[1], [2, 3, 0])
+        del self.simple_t.dummy
+
+    def test_deepcopy(self):
+        self.simple_t.dummy = [1, [2, 3], 4]
+        cp = self.simple_t.deepcopy()
+        cp.dummy[1].append(0)
+        self.assertListEqual(self.simple_t.dummy[1], [2, 3])
+        del self.simple_t.dummy
 
     def test_append(self):
         """Append a node to a tree"""
@@ -1094,7 +1111,7 @@ class TreeTests(TestCase):
 
     def test_unrooted_deepcopy(self):
         t = TreeNode.read(["((a,(b,c)d)e,(f,g)h)i;"])
-        exp = "(b,c,(a,((f,g)h)i)e)d;\n"
+        exp = "(b,c,(a,((f,g)h)e)d)root;\n"
         obs = t.find('d').unrooted_deepcopy()
         self.assertEqual(str(obs), exp)
 
@@ -1102,6 +1119,64 @@ class TreeTests(TestCase):
         obs_ids = {id(n) for n in obs.traverse()}
 
         self.assertEqual(t_ids.intersection(obs_ids), set())
+
+    def test_unrooted_copy(self):
+        tree = TreeNode.read(["((a,(b,c)d)e,(f,g)h)i;"])
+        node = tree.find("d")
+
+        # name as branch label (default behavior, but will change in the
+        # future)
+        obs = node.unrooted_copy()
+        exp = "(b,c,(a,((f,g)h)e)d)root;\n"
+        self.assertEqual(str(obs), exp)
+
+        # name as node label
+        obs = node.unrooted_copy(branch_attrs={"length"})
+        exp = "(b,c,(a,((f,g)h)i)e)d;\n"
+        self.assertEqual(str(obs), exp)
+
+        # name the new root node (only when it doesn't have one)
+        obs = node.unrooted_copy(root_name="hello")
+        exp = "(b,c,(a,((f,g)h)e)d)hello;\n"
+        self.assertEqual(str(obs), exp)
+
+        obs = node.unrooted_copy(branch_attrs={"length"}, root_name="hello")
+        exp = "(b,c,(a,((f,g)h)i)e)d;\n"
+        self.assertEqual(str(obs), exp)
+
+        # transfer branch support to opposite node
+        tree = TreeNode.read(["((a,b)90,(c,d)90);"])
+        node = tree.find("a")
+        obs = node.unrooted_copy(branch_attrs={"support", "length"})
+        exp = "((b,((c,d)90))90)a;\n"
+        self.assertEqual(str(obs), exp)
+
+        tree.assign_supports()
+        obs = node.unrooted_copy(branch_attrs={"support", "length"})
+        exp = "((b,((c,d)90)90))a;\n"
+        self.assertEqual(str(obs), exp)
+
+        # retain custom attributes
+        tree = TreeNode.read(["(((a,b)c,d)e,f)g;"])
+        tree.find("c").dummy = "this"
+        tree.find("e").dummy = "that"
+        obs = tree.find("c").unrooted_copy(branch_attrs={"length"})
+        exp = "(a,b,(d,(f)g)e)c;\n"
+        self.assertEqual(str(obs), exp)
+        self.assertEqual(obs.dummy, "this")
+        self.assertEqual(obs.find("e").dummy, "that")
+        self.assertIsNone(getattr(obs.find("d"), "dummy", None))
+
+        # deep vs shallow copy
+        tree = TreeNode.read(["(((a,b)c,d)e,f)g;"])
+        tree.find("c").dummy = [1, [2, 3], 4]
+        tcopy = tree.unrooted_copy()
+        tcopy.find("c").dummy[1].append(0)
+        self.assertListEqual(tree.find("c").dummy[1], [2, 3])
+
+        tcopy = tree.unrooted_copy(deep=False)
+        tcopy.find("c").dummy[1].append(0)
+        self.assertListEqual(tree.find("c").dummy[1], [2, 3, 0])
 
     def test_descending_branch_length_bug_1847(self):
         tr = TreeNode.read(io.StringIO(
