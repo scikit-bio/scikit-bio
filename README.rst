@@ -102,7 +102,7 @@ The development of scikit-bio is currently supported by the U.S. Department of E
 Citation
 --------
 
-If you use scikit-bio for any published research, please see our `Zenodo page <https://zenodo.org/record/8209901>`_ for how to cite.
+If you use scikit-bio for any published research, please see our `Zenodo page <https://zenodo.org/doi/10.5281/zenodo.593387>`_ for how to cite.
 
 
 Collaboration
