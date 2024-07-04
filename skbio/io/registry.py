@@ -510,12 +510,19 @@ class IORegistry:
     def _read_ret(self, file, fmt, into, verify, kwargs):
         io_kwargs = self._find_io_kwargs(kwargs)
         with _resolve_file(file, **io_kwargs) as (file, _, _):
-            if not fmt.support_non_seekable and not file.seekable():
+            seekable = True
+            try:
+                file.tell()
+            except io.UnsupportedOperation:
+                seekable = False
+            if not seekable:
+                print(seekable)
+            if not seekable and (fmt is not None or not fmt.support_non_seekable):
                 raise ValueError("Cannot parse non-seekable data of type %r", fmt.name)
             reader, kwargs, consumed = self._init_reader(
                 file, fmt, into, verify, kwargs, io_kwargs
             )
-            if consumed is not None and not file.seekable():
+            if consumed is not None and not seekable:
                 file = itertools.chain(consumed, file)
             return reader(file, **kwargs)
 
@@ -526,6 +533,13 @@ class IORegistry:
         # kwargs should still retain the contents of io_kwargs because the
         # actual reader will also need them.
         with _resolve_file(file, **io_kwargs) as (file, _, _):
+            seekable = True
+            try:
+                file.tell()
+            except io.UnsupportedOperation:
+                seekable = False
+            if not seekable and (fmt is not None or not fmt.support_non_seekable):
+                raise ValueError("Cannot parse non-seekable data of type %r", fmt.name)
             reader, kwargs, consumed = self._init_reader(
                 file, fmt, into, verify, kwargs, io_kwargs
             )
@@ -946,8 +960,7 @@ class Format:
                         # Some formats may have headers which indicate their
                         # format sniffers should be able to rely on the
                         # filehandle to point at the beginning of the file.
-                        if self.header:
-                            fh.seek(0)
+                        fh.seek(0)
                         return sniffer(fh)
                     except UnicodeDecodeError:
                         pass
