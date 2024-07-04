@@ -625,7 +625,7 @@ from skbio.alignment import TabularMSA
 from skbio.sequence import Sequence, DNA, RNA, Protein
 
 
-fasta = create_format("fasta", header=False)
+fasta = create_format("fasta", support_non_seekable=False)
 
 
 @fasta.sniffer()

@@ -510,6 +510,8 @@ class IORegistry:
     def _read_ret(self, file, fmt, into, verify, kwargs):
         io_kwargs = self._find_io_kwargs(kwargs)
         with _resolve_file(file, **io_kwargs) as (file, _, _):
+            if not fmt.support_non_seekable and not file.seekable():
+                raise ValueError("Cannot parse non-seekable data of type %r", fmt.name)
             reader, kwargs, consumed = self._init_reader(
                 file, fmt, into, verify, kwargs, io_kwargs
             )
@@ -834,9 +836,9 @@ class Format:
         return self._writers
 
     @property
-    def header(self):
+    def support_non_seekable(self):
         """Returns a boolean describing if the file format has a header."""
-        return self._header
+        return self._support_non_seekable
 
     @property
     def monkey_patched_readers(self):
@@ -848,12 +850,12 @@ class Format:
         """Set of classes bound to writers to monkey patch."""
         return self._monkey_patch["write"]
 
-    def __init__(self, name, encoding=None, newline=None, header=True):
+    def __init__(self, name, encoding=None, newline=None, support_non_seekable=False):
         """Initialize format for registering sniffers, readers, and writers."""
         self._encoding = encoding
         self._newline = newline
         self._name = name
-        self._header = header
+        self._support_non_seekable = support_non_seekable
 
         self._sniffer_function = None
         self._readers = {}
