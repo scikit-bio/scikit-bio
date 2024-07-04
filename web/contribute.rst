@@ -7,7 +7,7 @@ We are interested in many types of contributions, including feature additions, b
 
 This document covers the information you may need to get started with contributing to scikit-bio. In addition, for a broader perspective, we recommend the inspiring guide: `How to Contribute to Open Source <https://opensource.guide/how-to-contribute/>`_.
 
-Visit our GitHub repository: :repo:`GitHub repo` for the source code of scikit-bio. You will need a GitHub account to interact with the scikit-bio codebase and community.
+Visit our GitHub repository: :repo:`scikit-bio/scikit-bio <>` for the source code of scikit-bio. You will need a GitHub account to interact with the scikit-bio codebase and community.
 
 Valuable contributions can be made without or with minimum amount of coding. We detail various ways you can contribute below:
 

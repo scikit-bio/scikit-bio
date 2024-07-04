@@ -44,7 +44,7 @@ Visit the new scikit-bio website: https://scikit.bio to learn more about this pr
 Releases
 --------
 
-Latest release: `0.6.0 <https://github.com/scikit-bio/scikit-bio/releases/tag/0.6.0>`_ (`documentation <https://scikit.bio/docs/0.6.0/index.html>`_, `changelog <https://github.com/scikit-bio/scikit-bio/blob/main/CHANGELOG.md#version-060>`_). Compatible with Python 3.8 and above.
+Latest release: `0.6.1 <https://github.com/scikit-bio/scikit-bio/releases/tag/0.6.1>`_ (`documentation <https://scikit.bio/docs/0.6.1/index.html>`_, `changelog <https://github.com/scikit-bio/scikit-bio/blob/main/CHANGELOG.md#version-061>`_). Compatible with Python 3.8 and above.
 
 
 Installation

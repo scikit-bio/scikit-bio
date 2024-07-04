@@ -317,11 +317,12 @@ class WritableBinarySourceTests:
 
     def check_open_state_contents(self, file, contents, is_binary,
                                   **kwargs):
-        result = skbio.io.open(file, mode='w', **kwargs)
         if is_binary:
+            result = skbio.io.open(file, mode='w', **kwargs)
             self.assertIsInstance(result, (io.BufferedWriter,
                                            io.BufferedRandom))
         else:
+            result = skbio.io.open(file, mode='w', **kwargs, newline='')
             self.assertIsInstance(result, io.TextIOBase)
         self.assertTrue(result.writable())
 
@@ -400,11 +401,11 @@ class WritableSourceTest(unittest.TestCase):
         self._dir = tempfile.mkdtemp()
 
         with io.open(get_data_path('example_file'), mode='rb') as f:
-            self.binary_contents = f.read()
+            self.binary_contents = f.read().decode('utf8').replace("\r\n", "\n", -1).encode('utf8')
         self.binary_file = self._make_file('example_file')
 
         with io.open(get_data_path('big5_file'), mode='rb') as f:
-            self.encoded_contents = f.read()
+            self.encoded_contents = f.read().decode('big5').replace("\r\n", "\n", -1).encode('big5')
         self.big5_file = self._make_file('big5_file')
 
         with io.open(get_data_path('example_file.gz'), mode='rb') as f:

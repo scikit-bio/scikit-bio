@@ -245,7 +245,7 @@ class TestRDAResults_biplot_score(TestCase):
             eigvals=vegan_eigvals)
 
         # This scaling constant is required to make skbio comparable to vegan.
-        scaling = (rda_.eigvals[0] / rda_.eigvals[:6])
+        scaling = (rda_.eigvals.iloc[0] / rda_.eigvals.iloc[:6])
         exp.biplot_scores *= scaling
         assert_ordination_results_equal(
             rda_, exp,

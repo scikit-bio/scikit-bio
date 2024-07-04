@@ -5,3 +5,4 @@ pydata-sphinx-theme
 sphinxcontrib-youtube
 numpydoc
 matplotlib
+statsmodels

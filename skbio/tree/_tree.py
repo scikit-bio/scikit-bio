@@ -19,7 +19,7 @@ from scipy.spatial.distance import correlation
 
 from skbio._base import SkbioObject
 from skbio.stats.distance import DistanceMatrix
-from ._exception import (
+from skbio.tree._exception import (
     NoLengthError,
     DuplicateNodeError,
     NoParentError,
@@ -1824,14 +1824,14 @@ class TreeNode(SkbioObject):
 
         Parameters
         ----------
-        lineage_map : iterable of tuple
-            A id to lineage mapping where the first index is an ID and the
-            second index is an iterable of the lineage.
+        lineage_map : dict, iterable of tuples, or pd.DataFrame
+            Mapping of taxon IDs to lineages (iterables of taxonomic units
+            from high to low in ranking).
 
         Returns
         -------
         TreeNode
-            The constructed taxonomy
+            The constructed taxonomy.
 
         See Also
         --------
@@ -1873,6 +1873,11 @@ class TreeNode(SkbioObject):
         """
         root = cls(name=None)
         root._lookup = {}
+
+        if isinstance(lineage_map, dict):
+            lineage_map = lineage_map.items()
+        elif isinstance(lineage_map, pd.DataFrame):
+            lineage_map = ((idx, row.tolist()) for idx, row in lineage_map.iterrows())
 
         for id_, lineage in lineage_map:
             cur_node = root
@@ -2085,11 +2090,11 @@ class TreeNode(SkbioObject):
         >>> res = t.to_array()
         >>> sorted(res.keys())
         ['child_index', 'id', 'id_index', 'length', 'name']
-        >>> res['child_index']
+        >>> res['child_index'] # doctest: +ELLIPSIS
         array([[4, 0, 2],
                [5, 3, 3],
                [6, 4, 5],
-               [7, 6, 6]])
+               [7, 6, 6]]...
         >>> for k, v in res['id_index'].items():
         ...     print(k, v)
         ...
@@ -2954,12 +2959,12 @@ class TreeNode(SkbioObject):
         Node name: h, cache: ['h']
 
         """
-        if cache_type in [set, frozenset]:
+        if cache_type in (set, frozenset):
 
             def reduce_f(a, b):
                 return a | b
 
-        elif cache_type == list:
+        elif cache_type is list:
 
             def reduce_f(a, b):
                 return a + b

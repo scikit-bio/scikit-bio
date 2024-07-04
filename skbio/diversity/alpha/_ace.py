@@ -22,15 +22,15 @@ def ace(counts, rare_threshold=10):
        \frac{F_1}{C_{ace}}\gamma^2_{ace}
 
     where :math:`S_{abund}` is the number of abundant taxa (with more than
-    `rare_threshold`  individuals) when all samples are pooled,
+    ``rare_threshold`` individuals) when all samples are pooled,
     :math:`S_{rare}` is the number of rare taxa (with less than or equal to
-    `rare_threshold` individuals) when all samples are pooled, :math:`C_{ace}`
-    is the sample abundance coverage estimator, :math:`F_1` is the frequency of
-    singletons, and :math:`\gamma^2_{ace}` is the estimated coefficient of
-    variation for rare taxa.
+    ``rare_threshold`` individuals) when all samples are pooled,
+    :math:`C_{ace}` is the sample abundance coverage estimator, :math:`F_1` is
+    the frequency of singletons, and :math:`\gamma^2_{ace}` is the estimated
+    coefficient of variation for rare taxa.
 
     The estimated coefficient of variation is defined as (assuming
-    `rare_threshold` is 10, the default):
+    ``rare_threshold`` is 10, the default):
 
     .. math::
 
@@ -64,9 +64,9 @@ def ace(counts, rare_threshold=10):
     If no rare taxa exist, returns the number of abundant taxa. The default
     value of 10 for `rare_threshold` is based on [4]_.
 
-    If `counts` contains zeros, indicating taxa which are known to exist in the
-    environment but did not appear in the sample, they will be ignored for the
-    purpose of calculating the number of rare taxa.
+    If ``counts`` contains zeros, indicating taxa which are known to exist in
+    the environment but did not appear in the sample, they will be ignored for
+    the purpose of calculating the number of rare taxa.
 
     References
     ----------

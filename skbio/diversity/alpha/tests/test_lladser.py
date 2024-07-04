@@ -28,7 +28,7 @@ def create_fake_observation():
     counts[0] = 9000
     total = counts.sum()
 
-    fake_obs = subsample_counts(counts, 1000)
+    fake_obs = subsample_counts(counts, 1000, replace=False, seed=123456789)
     exp_p = 1 - sum([x/total for (x, y) in zip(counts, fake_obs) if y > 0])
 
     return fake_obs, exp_p
@@ -41,7 +41,6 @@ class LladserTests(unittest.TestCase):
         obs = lladser_pe([3], r=4)
         self.assertTrue(np.isnan(obs))
 
-        np.random.seed(123456789)
         fake_obs, exp_p = create_fake_observation()
         reps = 100
         sum = 0
@@ -51,7 +50,7 @@ class LladserTests(unittest.TestCase):
 
         # Estimator has variance of (1-p)^2/(r-2),
         # which for r=30 and p~=0.9 is 0.0289
-        npt.assert_almost_equal(obs, exp_p, decimal=2)
+        self.assertTrue(abs(obs - exp_p) < 0.0289)
 
     def test_lladser_ci_nan(self):
         """lladser_ci returns nan if sample is too short to make an estimate"""
@@ -82,7 +81,7 @@ class LladserTests(unittest.TestCase):
         # of all test runs. To make this test pass reliable we thus have to
         # set a defined seed
         np.random.seed(12345678)
-        reps = 100
+        reps = 1000
         sum = 0
         for i in range(reps):
             # re-create the obs for every estimate, such that they are truly
@@ -92,7 +91,7 @@ class LladserTests(unittest.TestCase):
             if (low <= exp_p <= high):
                 sum += 1
 
-        self.assertTrue(sum/reps >= 0.95)
+        self.assertTrue(sum/reps >= 0.95, msg=f"{sum}, {reps}, {sum/reps}")
 
     def test_expand_counts(self):
         arr = np.array([2, 0, 1, 2])

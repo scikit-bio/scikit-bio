@@ -33,6 +33,7 @@ html[data-theme="light"] {
   --pst-color-secondary: var(--pst-color-primary);
   --pst-color-inline-code: var(--pst-color-accent);
   --pst-color-inline-code-links: var(--pst-color-primary);
+  --pst-color-table-row-hover-bg: var(--pst-color-target);
 }
 
 html[data-theme="dark"] {
@@ -41,6 +42,7 @@ html[data-theme="dark"] {
   --pst-color-secondary: var(--pst-color-primary);
   --pst-color-inline-code: var(--pst-color-accent);
   --pst-color-inline-code-links: var(--pst-color-primary);
+  --pst-color-table-row-hover-bg: var(--pst-color-target);
 }
 
 html[data-theme="light"] div.bd-header-announcement {
