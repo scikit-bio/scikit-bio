@@ -1025,34 +1025,41 @@ class TreeTests(TestCase):
                                             [9, 6, 7], [10, 8, 9]]))
 
     def test_unroot(self):
-        """Convert a root tree into unrooted."""
+        """Convert a rooted tree into unrooted."""
+        # default behavior
         t = TreeNode.read(["((a,b)c,(d,e)f)g;"])
         t.unroot()
+        exp = "(a,b,(d,e)f)c;\n"
+        self.assertEqual(str(t), exp)
+
+        # choose the other side
+        t = TreeNode.read(["((a,b)c,(d,e)f)g;"])
+        t.unroot(side=1)
         exp = "((a,b)c,d,e)f;\n"
         self.assertEqual(str(t), exp)
 
         # with branch lengths
         t = TreeNode.read(["((a:2.0,b:1.5)c:0.5,(d:1.0,e:1.2)f:0.3)g;"])
         t.unroot()
-        exp = "((a:2.0,b:1.5)c:0.8,d:1.0,e:1.2)f;\n"
+        exp = "(a:2.0,b:1.5,(d:1.0,e:1.2)f:0.8)c;\n"
         self.assertEqual(str(t), exp)
 
         # other child has no branch length
-        t = TreeNode.read(["((a,b)c,(d,e)f:1.0)g;"])
+        t = TreeNode.read(["((a,b)c:1.0,(d,e)f)g;"])
         t.unroot()
-        exp = "((a,b)c:1.0,d,e)f;\n"
+        exp = "(a,b,(d,e)f:1.0)c;\n"
         self.assertEqual(str(t), exp)
 
-        # second child is a tip
-        t = TreeNode.read(["((a,b)c,d)e;"])
+        # first child is a tip
+        t = TreeNode.read(["(a,(b,c)d)e;"])
         t.unroot()
-        exp = "(d,a,b)c;\n"
+        exp = "(a,b,c)d;\n"
         self.assertEqual(str(t), exp)
 
         # both children are tips
         t = TreeNode.read(["(a,b)c;"])
         t.unroot()
-        exp = "(a)b;\n"
+        exp = "(b)a;\n"
         self.assertEqual(str(t), exp)
 
         # tree is already unrooted
@@ -1062,7 +1069,7 @@ class TreeTests(TestCase):
         self.assertEqual(str(t), exp)
 
     def test_root_at(self):
-        """Root tree at given node"""
+        """Root tree at a given node."""
         t = TreeNode.read(["(((a,b)c,(d,e)f)g,h)i;"])
 
         # original behavior (name as branch label); deprecated
@@ -1084,7 +1091,10 @@ class TreeTests(TestCase):
         obs = str(t.root_at("i", branch_attrs=[]))
         self.assertEqual(obs, str(t))
 
-        # root at branch above node
+    def test_root_at_above(self):
+        """Root tree at the branch above a given node."""
+        # no branch length
+        t = TreeNode.read(["(((a,b)c,(d,e)f)g,h)i;"])
         obs = str(t.root_at("c", above=True, branch_attrs=[]))
         exp = "((a,b)c,((d,e)f,(h)i)g)root;\n"
         self.assertEqual(obs, exp)
@@ -1099,6 +1109,26 @@ class TreeTests(TestCase):
         t = TreeNode.read(["(((a,b)c:1.0,(d,e)f)g,h)i;"])
         obs = str(t.root_at("c", above=0.4, branch_attrs=[]))
         exp = "((a,b)c:0.4,((d,e)f,(h)i)g:0.6)root;\n"
+        self.assertEqual(obs, exp)
+
+    def test_root_at_reset(self):
+        """Root tree while resetting original root."""
+        t = TreeNode.read(["(((a,b)c,(d,e)f)g,h)i;"])
+
+        # unroot tree prior to rerooting
+        obs = str(t.root_at("c", reset_root=True, branch_attrs=[]))
+        exp = "(a,b,((d,e)f,h)g)c;\n"
+        self.assertEqual(obs, exp)
+
+        # root at a basal node (which will be avoided during unrooting)
+        obs = str(t.root_at("g", reset_root=True, branch_attrs=[]))
+        exp = "((a,b)c,(d,e)f,h)g;\n"
+        self.assertEqual(obs, exp)
+
+        # tree is already unrooted
+        t = TreeNode.read(["((a,b)c,d,e)f;"])
+        obs = str(t.root_at("c", branch_attrs=[], reset_root=True))
+        exp = str(t.root_at("c", branch_attrs=[]))
         self.assertEqual(obs, exp)
 
     def test_root_at_midpoint(self):

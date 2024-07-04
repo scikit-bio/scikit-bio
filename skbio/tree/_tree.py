@@ -988,8 +988,15 @@ class TreeNode(SkbioObject):
                 i.__leaf_set = leaf_set
         return frozenset(sets)
 
-    def unroot(self):
+    def unroot(self, side=None):
         r"""Convert a rooted tree into unrooted.
+
+        Parameters
+        ----------
+        side : int, optional
+            Which basal node (i.e., children of root) will be elevated to root.
+            Must be 0 or 1. If not provided, will elevate the first basal node
+            that is not a tip.
 
         See Also
         --------
@@ -1005,36 +1012,40 @@ class TreeNode(SkbioObject):
         modify the tree if it is already unrooted.
 
         This method unroots a tree by trifucating its root. Specifically, it
-        removes one of its two child nodes, transfers the name of the removed
-        child to the root, and re-attaches the removed child's children to the
-        root. Additionally, the removed child's branch length, if available,
-        will be added to the other child's branch. The outcome appears as if
-        the root node is removed and the two children are directly connected.
+        removes one of the two basal nodes of the tree (i.e., children of the
+        root), transfers the name of the removed node to the root, and
+        re-attaches the removed node's children to the root. Additionally, the
+        removed node's branch length, if available, will be added to the other
+        basal node's branch. The outcome appears as if the root is removed
+        and the two basal nodes are directly connected.
 
-        The child to be removed is the last child that is not a tip. This
-        choice affects the positioning of the resulting tree, but does not
-        affect its topology when it is considered as an unrooted tree in
-        phylogenetics. In an extreme case where both children are tips (i.e.,
-        the tree has only two tips), the second tip will be removed.
+        The choice of the basal node to be elevated affects the positioning of
+        the resulting tree, but does not affect its topology from a
+        phylogenetic perspective, as it is considered as unrooted.
 
         This method manipulates the tree in place. There is no return value.
+
+        .. note:: In the case where the basal node has just one child, the
+            resulting tree will still appear rooted as it has two basal nodes.
+            To avoid this scenario, call `prune` to remove all one-child
+            internal nodes.
 
         Examples
         --------
         >>> from skbio import TreeNode
-        >>> tree = TreeNode.read(['((a,b)c,((d,e)f,(g,h)i)j)k;'])
+        >>> tree = TreeNode.read(['(((a,b)c,(d,e)f)g,(h,i)j)k;'])
         >>> print(tree.ascii_art())
-                            /-a
-                  /c-------|
-                 |          \-b
+                                      /-a
+                            /c-------|
+                           |          \-b
+                  /g-------|
+                 |         |          /-d
+                 |          \f-------|
+        -k-------|                    \-e
                  |
-        -k-------|                    /-d
-                 |          /f-------|
-                 |         |          \-e
+                 |          /-h
                   \j-------|
-                           |          /-g
-                            \i-------|
-                                      \-h
+                            \-i
         >>> tree.unroot()
         >>> print(tree.ascii_art())
                             /-a
@@ -1042,49 +1053,64 @@ class TreeNode(SkbioObject):
                  |          \-b
                  |
                  |          /-d
-        -j-------|-f-------|
+        -g-------|-f-------|
                  |          \-e
                  |
-                 |          /-g
-                  \i-------|
-                            \-h
+                 |          /-h
+                  \j-------|
+                            \-i
 
         """
+        # return original tree if already unrooted
         root = self.root()
-        if len(children := root.children) != 2:
+        if len(bases := root.children) != 2:
             return root
+
+        # choose a basal node to elevate
+        if side is None:
+            side = 1 if (bases[0].is_tip() and not bases[1].is_tip()) else 0
+        chosen, other = bases[side], bases[1 - side]
+
+        # remove chosen node and re-attach its children to root
         root.invalidate_caches()
+        chosen.parent = None
+        for child in chosen.children:
+            child.parent = root
+        if side:
+            root.children = [other] + chosen.children
+        else:
+            root.children = chosen.children + [other]
 
-        # choose a child to remove
-        other, chosen = children
-        if chosen.is_tip() and not other.is_tip():
-            chosen, other = other, chosen
-
-        # remove chosen child and re-attach its children to root
-        root.remove(chosen)
-        root.extend(chosen.children)
-
-        # transfer chosen child's name to root
+        # transfer basal node's name to root
         root.name = chosen.name
         # TODO: also transfer other custom node attributes
 
-        # add branch length to the other child
+        # add branch length to the other basal node
         if (L := chosen.length) is not None:
             if other.length is not None:
                 other.length += L
             else:
                 other.length = L
 
-    def root_at(self, node, above=False, branch_attrs=["name"], root_name="root"):
-        r"""Return a new tree rooted at the provided node.
+    def root_at(
+        self,
+        node=None,
+        above=False,
+        reset_root=False,
+        branch_attrs=["name"],
+        root_name="root",
+    ):
+        r"""Reroot the tree at the provided node.
 
         This is useful for positioning a tree with an orientation that reflects
         knowledge of the true root location.
 
         Parameters
         ----------
-        node : TreeNode or str
-            The node to root at.
+        node : TreeNode or str, optional
+            The node to root at. Can either be a node object or the name of the
+            node. If not provided, will root at self. If a root is provided,
+            will return the original tree.
 
         above : bool, float, or int, optional
             Whether and where to insert a new root node. If ``False``, the
@@ -1095,6 +1121,14 @@ class TreeNode(SkbioObject):
             number ranges between 0 and branch length.
 
             .. versionadded:: 0.6.2
+
+        reset_root : bool, optional
+            Whether unroot the tree if it is rooted before performing the
+            rerooting operation. Default is ``False``.
+
+            .. versionadded:: 0.6.2
+
+            .. note:: The default value will be set as ``True`` in 0.7.0.
 
         branch_attrs : iterable of str, optional
             Attributes of each node that should be considered as attributes of
@@ -1187,12 +1221,39 @@ class TreeNode(SkbioObject):
                             \i------- /-h
 
         """
-        if isinstance(node, str):
-            node = self.find(node)
+        tree = self.root()
+        if node is None:
+            node = self
+        elif isinstance(node, str):
+            node = tree.find(node)
+        if node.is_root():
+            return node.copy()
 
         branch_attrs = set(branch_attrs)
         branch_attrs.update(["length", "support"])
 
+        if reset_root and len(tree.children) != 2:
+            reset_root = False
+
+        # copy the tree if it needs to be manipulated prior to walking
+        if reset_root or above is not False:
+            tree.assign_ids()
+            new_tree = tree.copy()
+            new_tree.assign_ids()
+            node = new_tree.find_by_id(node.id)
+            tree = new_tree
+
+        # remove original root; we need to make sure the node itself is not the
+        # basal node that gets removed
+        if reset_root:
+            side = None
+            for i, base in enumerate(tree.children):
+                if node is base:
+                    side = 1 - i
+                    break
+            tree.unroot(side)
+
+        # insert a new root node into the branch above
         if above is not False:
             new_root = self.__class__()
             if above is True:
@@ -3599,7 +3660,7 @@ class TreeNode(SkbioObject):
 
         Notes
         -----
-        This function sequentially: 1) elongates child nodes by branch length
+        This method sequentially: 1) elongates child nodes by branch length
         of self (omit if there is no branch length), 2) removes self from
         parent node, and 3) grafts child nodes to parent node.
 
