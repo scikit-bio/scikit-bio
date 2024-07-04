@@ -240,17 +240,30 @@ class TreeNode(SkbioObject):
         """
         self.children.extend([self._adopt(n) for n in nodes[:]])
 
-    def insert(self, node, distance=None):
+    def insert(self, node, distance=None, branch_attrs=[]):
         r"""Insert a node into the branch connecting self and its parent.
 
         Parameters
         ----------
         node : TreeNode
             Node to insert.
-        distance : float or None
+        distance : float, int or None, optional
             Distance between self and the insertion point. Must not exceed
             ``self.length``. If ``None`` whereas ``self.length`` is not
             ``None``, will insert at the midpoint of the branch.
+        branch_attrs : iterable of str, optional
+            Attributes of self that should be transferred to the inserted node
+            as they are considered as attributes of the branch. ``support``
+            will be automatically included as it is always a branch attribute.
+
+        Raises
+        ------
+        NoParentError
+            If self has no parent.
+        ValueError
+            If distance is specified but branch has no length.
+        ValueError
+            If distance exceeds branch length.
 
         See Also
         --------
@@ -259,13 +272,10 @@ class TreeNode(SkbioObject):
         Examples
         --------
         >>> from skbio import TreeNode
-        >>> root = TreeNode(name="root")
-        >>> child1 = TreeNode(name="child1")
-        >>> child2 = TreeNode(name="child2")
-        >>> root.append(child1)
-        >>> root.append(child2)
-        >>> print(root)
-        (child1,child2)root;
+        >>> tree = TreeNode.read(["((a:1,b:2)c:4,d:5);"])
+        >>> tree.find("c").insert(TreeNode("x"))
+        >>> print(tree)
+        (d:5.0,((a:1.0,b:2.0)c:2.0)x:2.0);
         <BLANKLINE>
 
         """
@@ -273,6 +283,12 @@ class TreeNode(SkbioObject):
             raise NoParentError("Self has no parent.")
         parent.append(node)
         node.append(self)
+
+        # copy branch attributes to new node
+        branch_attrs = set(branch_attrs)
+        branch_attrs.update(["support"])
+        for attr in branch_attrs:
+            setattr(node, attr, getattr(self, attr, None))
 
         # determine insertion point
         if distance is None:
@@ -670,10 +686,12 @@ class TreeNode(SkbioObject):
                 it is usually considered as an attribute of the node instead of
                 the branch.
 
-        root_name : str, optional
+        root_name : str or None, optional
             Name for the new root node, if it doesn't have one.
 
             .. versionadded:: 0.6.2
+
+            .. note:: The default value will be set as ``None`` in 0.7.0.
 
         deep : bool, optional
             Whether perform a shallow (``False``, default) or deep (``True``)
@@ -685,6 +703,10 @@ class TreeNode(SkbioObject):
         -------
         TreeNode
             A new copy of the tree rooted at the given node.
+
+            .. versionchanged:: 0.6.2
+
+                Node attributes other than name and length will also be copied.
 
         See Also
         --------
@@ -701,7 +723,7 @@ class TreeNode(SkbioObject):
         >>> tree = TreeNode.read(["((a,(b,c)d)e,(f,g)h)i;"])
         >>> new_tree = tree.find('d').unrooted_copy()
         >>> print(new_tree)
-        (b,c,(a,((f,g)h)i)e)d;
+        (b,c,(a,((f,g)h)e)d)root;
         <BLANKLINE>
 
         """
@@ -790,15 +812,6 @@ class TreeNode(SkbioObject):
         unrooted copy. This is useful for defining a new root of the tree.
 
         This method calls ``unrooted_copy`` which is recursive.
-
-        Examples
-        --------
-        >>> from skbio import TreeNode
-        >>> tree = TreeNode.read(["((a,(b,c)d)e,(f,g)h)i;"])
-        >>> new_tree = tree.find('d').unrooted_deepcopy()
-        >>> print(new_tree)
-        (b,c,(a,((f,g)h)i)e)d;
-        <BLANKLINE>
 
         """
         _warn_deprecated(self.__class__.unrooted_deepcopy, "0.6.2")
@@ -945,7 +958,7 @@ class TreeNode(SkbioObject):
                 i.__leaf_set = leaf_set
         return frozenset(sets)
 
-    def root_at(self, node, branch_attrs=["name"]):
+    def root_at(self, node, above=False, branch_attrs=["name"], root_name="root"):
         r"""Return a new tree rooted at the provided node.
 
         This can be useful for drawing unrooted trees with an orientation that
@@ -955,6 +968,17 @@ class TreeNode(SkbioObject):
         ----------
         node : TreeNode or str
             The node to root at.
+
+        above : bool, float, or int, optional
+            Whether and where to insert a new root node. If ``False``, the
+            target node will serve as the root node. If ``True``, a new root
+            node will be created and inserted at the midpoint of the branch
+            connecting the target node and its parent. If a number, the new
+            root will be inserted at this distance from the target node. The
+            number ranges between 0 and branch length.
+
+            .. versionadded:: 0.6.2
+
         branch_attrs : iterable of str, optional
             Attributes of each node that should be considered as attributes of
             the branch connecting the node to its parent. This is important for
@@ -966,6 +990,13 @@ class TreeNode(SkbioObject):
             .. note:: ``name`` will be removed from the default in 0.7.0, as
                 it is usually considered as an attribute of the node instead of
                 the branch.
+
+        root_name : str or None, optional
+            Name for the root node, if it doesn't already have one.
+
+            .. versionadded:: 0.6.2
+
+            .. note:: The default value will be set as ``None`` in 0.7.0.
 
         Returns
         -------
@@ -990,18 +1021,28 @@ class TreeNode(SkbioObject):
         --------
         >>> from skbio import TreeNode
         >>> tree = TreeNode.read(["(((a,b)c,(d,e)f)g,h)i;"])
-        >>> print(tree.root_at("c"))
+        >>> print(tree.root_at("c", branch_attrs=[]))
         (a,b,((d,e)f,(h)i)g)c;
         <BLANKLINE>
 
         """
         if isinstance(node, str):
             node = self.find(node)
+
         branch_attrs = set(branch_attrs)
         branch_attrs.update(["length", "support"])
-        return node.unrooted_copy(branch_attrs=branch_attrs)
 
-    def root_at_midpoint(self, branch_attrs=["name"]):
+        if above is not False:
+            new_root = self.__class__()
+            if above is True:
+                node.insert(new_root, None)
+            else:
+                node.insert(new_root, above)
+            node = new_root
+
+        return node.unrooted_copy(branch_attrs=branch_attrs, root_name=root_name)
+
+    def root_at_midpoint(self, branch_attrs=["name"], root_name="root"):
         r"""Return a new tree rooted at midpoint of the two tips farthest apart.
 
         Parameters
@@ -1017,6 +1058,13 @@ class TreeNode(SkbioObject):
             .. note:: ``name`` will be removed from the default in 0.7.0, as
                 it is usually considered as an attribute of the node instead of
                 the branch.
+
+        root_name : str or None, optional
+            Name for the new root node, if it doesn't have one.
+
+            .. versionadded:: 0.6.2
+
+            .. note:: The default value will be set as ``None`` in 0.7.0.
 
         Returns
         -------
@@ -1053,8 +1101,8 @@ class TreeNode(SkbioObject):
         --------
         >>> from skbio import TreeNode
         >>> tree = TreeNode.read(["((a:1,b:1)c:2,(d:3,e:4)f:5,g:1)h;"])
-        >>> print(tree.root_at_midpoint())
-        ((d:3.0,e:4.0)f:2.0,((a:1.0,b:1.0)c:2.0,g:1.0)h:3.0);
+        >>> print(tree.root_at_midpoint(branch_attrs=[]))
+        ((d:3.0,e:4.0)f:2.0,((a:1.0,b:1.0)c:2.0,g:1.0)h:3.0)root;
         <BLANKLINE>
 
         """
@@ -1082,28 +1130,20 @@ class TreeNode(SkbioObject):
             dist_climbed += climb_node.length
             climb_node = climb_node.parent
 
-        # now midpt is either at on the branch to climb_node's  parent
-        # or midpt is at climb_node's parent
+        # case 1: midpoint is at the climb node's parent
+        # make the parent node as the new root
         if dist_climbed + climb_node.length == half_max_dist:
-            # climb to midpoint spot
-            climb_node = climb_node.parent
-            if climb_node.is_tip():
+            new_root = climb_node.parent
+            if new_root.is_tip():
                 raise TreeError("Cannot root the tree at a tip.")
-            else:
-                return climb_node.unrooted_copy(branch_attrs=branch_attrs)
 
+        # case 2: midpoint is on the climb node's branch to its parent
+        # insert a new root node into the branch
         else:
-            # make a new node on climb_node's branch to its parent
-            old_br_len = climb_node.length
-
             new_root = tree.__class__()
-            climb_node.parent.append(new_root)
-            new_root.append(climb_node)
+            climb_node.insert(new_root, half_max_dist - dist_climbed)
 
-            climb_node.length = half_max_dist - dist_climbed
-            new_root.length = old_br_len - climb_node.length
-
-            return new_root.unrooted_copy(branch_attrs=branch_attrs)
+        return new_root.unrooted_copy(branch_attrs=branch_attrs, root_name=root_name)
 
     def is_tip(self):
         r"""Return `True` if the current node has no `children`.
@@ -3356,13 +3396,15 @@ class TreeNode(SkbioObject):
         the node label and assigned to the `support` property.
 
         IMPORTANT: mathematically, "support value" is a property of a branch,
-        not a node. Because of historical reasons, support values are usually
-        attached to nodes in a typical tree file [1].
+        not a node, although they are usually attached to nodes in tree file
+        formats [1]_.
 
-        [1] Czech, Lucas, Jaime Huerta-Cepas, and Alexandros Stamatakis. "A
-            Critical Review on the Use of Support Values in Tree Viewers and
-            Bioinformatics Toolkits." Molecular biology and evolution 34.6
-            (2017): 1535-1542.
+        References
+        ----------
+        .. [1] Czech, Lucas, Jaime Huerta-Cepas, and Alexandros Stamatakis. "A
+           Critical Review on the Use of Support Values in Tree Viewers and
+           Bioinformatics Toolkits." Molecular biology and evolution 34.6
+           (2017): 1535-1542.
 
         Examples
         --------

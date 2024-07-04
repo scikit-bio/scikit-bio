@@ -287,6 +287,21 @@ class TreeTests(TestCase):
         with self.assertRaisesRegex(ValueError, msg):
             t.find("c").insert(TreeNode("x"), 20)
 
+        # with branch support
+        t = TreeNode.read(["(((a,b)90)d);"])
+        t.assign_supports()
+        t.lca(["a", "b"]).insert(TreeNode("x"))
+        self.assertEqual(t.find("x").support, 90)
+
+        # with custom branch attribute
+        t = TreeNode.read(["(((a,b)c)d);"])
+        n = t.find("c")
+        n.battr = 1  # branch attribute
+        n.nattr = 2  # node attribute
+        n.insert(TreeNode("x"), branch_attrs=["battr"])
+        self.assertEqual(t.find("x").battr, 1)
+        self.assertFalse(hasattr(t.find("x"), "nattr"))
+
     def test_iter(self):
         """iter wraps children"""
         exp = ["i1", "i2"]
