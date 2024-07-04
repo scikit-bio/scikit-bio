@@ -1710,8 +1710,8 @@ class TestWrite(RegistryTest):
             for line in iterator:
                 fh.write(line)
 
-        self.registry.write(obj, format='format1', into=fp, compression='bz2')
-        self.registry.write(obj, format='format1', into=f, compression='bz2')
+        self.registry.write(obj, format='format1', into=fp, compression='bz2', newline='\n')
+        self.registry.write(obj, format='format1', into=f, compression='bz2', newline='\n')
         expected = (
             b'BZh91AY&SY\x03\x89\x0c\xa6\x00\x00\x01\xc1\x00\x00\x108\x00 \x00'
             b'!\x9ah3M\x1c\xb7\x8b\xb9"\x9c(H\x01\xc4\x86S\x00')
