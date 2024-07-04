@@ -625,7 +625,7 @@ from skbio.alignment import TabularMSA
 from skbio.sequence import Sequence, DNA, RNA, Protein
 
 
-fasta = create_format("fasta")
+fasta = create_format("fasta", header=False)
 
 
 @fasta.sniffer()
@@ -640,22 +640,26 @@ def _fasta_sniffer(fh):
     #   not be validated but it probably isn't what the user wanted). Also, if
     #   we add QUAL as its own file format in the future, we wouldn't want the
     #   FASTA and QUAL sniffers to both positively identify a QUAL file.
-    if _too_many_blanks(fh, 5):
-        return False, {}
+    blanks, consumed = _too_many_blanks(fh, 5)
+    if blanks:
+        return False, {}, consumed
+    if not fh.seekable():
+        fh = itertools.chain(consumed, fh)
 
+    consumed = []
     num_records = 10
     empty = True
     try:
         parser = _parse_fasta_raw(fh, _sniffer_data_parser, FASTAFormatError)
-        for _ in zip(range(num_records), parser):
+        # Check 10 records, record is in the form of (index, data)
+        # Data is returned as consumed from the parser
+        for record in zip(range(num_records), parser):
+            consumed += record[1][3]
             empty = False
     except FASTAFormatError:
-        return False, {}
+        return False, {}, consumed
 
-    if empty:
-        return False, {}
-    else:
-        return True, {}
+    return not empty, {}, consumed
 
 
 def _sniffer_data_parser(chunks):
@@ -673,11 +677,13 @@ def _sniffer_data_parser(chunks):
 @fasta.reader(None)
 def _fasta_to_generator(fh, qual=FileSentinel, constructor=Sequence, **kwargs):
     if qual is None:
-        for seq, id_, desc in _parse_fasta_raw(
+        # Used for most fasta files
+        for seq, id_, desc, _ in _parse_fasta_raw(
             fh, _parse_sequence_data, FASTAFormatError
         ):
             yield constructor(seq, metadata={"id": id_, "description": desc}, **kwargs)
     else:
+        # Used for more complicated fasta files - with quality scores
         fasta_gen = _parse_fasta_raw(fh, _parse_sequence_data, FASTAFormatError)
         qual_gen = _parse_fasta_raw(qual, _parse_quality_scores, QUALFormatError)
 
@@ -689,8 +695,8 @@ def _fasta_to_generator(fh, qual=FileSentinel, constructor=Sequence, **kwargs):
             if qual_rec is None:
                 raise FASTAFormatError("FASTA file has more records than QUAL file.")
 
-            fasta_seq, fasta_id, fasta_desc = fasta_rec
-            qual_scores, qual_id, qual_desc = qual_rec
+            fasta_seq, fasta_id, fasta_desc, _ = fasta_rec
+            qual_scores, qual_id, qual_desc, _ = qual_rec
 
             if fasta_id != qual_id:
                 raise FASTAFormatError(
@@ -912,22 +918,24 @@ def _parse_fasta_raw(fh, data_parser, error_type):
         seq_header = next(_line_generator(fh, skip_blanks=True))
     except StopIteration:
         return
-
     # header check inlined here and below for performance
     if seq_header.startswith(">"):
         id_, desc = _parse_fasta_like_header(seq_header)
+        consumed = [seq_header]
     else:
         raise error_type(
             "Found non-header line when attempting to read the 1st record:"
             "\n%s" % seq_header
         )
-
     data_chunks = []
     prev = seq_header
     for line in _line_generator(fh, skip_blanks=False):
+        # store consumed lines
+        consumed += [line]
         if line.startswith(">"):
             # new header, so yield current record and reset state
-            yield data_parser(data_chunks), id_, desc
+            yield data_parser(data_chunks), id_, desc, consumed
+            consumed = []
             data_chunks = []
             id_, desc = _parse_fasta_like_header(line)
         else:
@@ -940,7 +948,7 @@ def _parse_fasta_raw(fh, data_parser, error_type):
                 data_chunks.append(line)
         prev = line
     # yield last record in file
-    yield data_parser(data_chunks), id_, desc
+    yield data_parser(data_chunks), id_, desc, consumed
 
 
 def _parse_sequence_data(chunks):

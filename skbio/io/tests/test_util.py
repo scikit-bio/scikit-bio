@@ -6,12 +6,16 @@
 # The full license is in the file LICENSE.txt, distributed with this software.
 # ----------------------------------------------------------------------------
 
+import sys
 import unittest
 import tempfile
 import shutil
 import io
 import os.path
 import gc
+from unittest.mock import patch
+
+import numpy as np
 
 try:
     import responses
@@ -635,6 +639,29 @@ class TestIterableReaderWriter(unittest.TestCase):
         fh.close()
         self.assertTrue(fh.closed)
 
+class TestReadStandardInput(unittest.TestCase):
+    seq_num_text = ["-N-", "TW-", "THR--", "---R", "--V-", "S--", "S-V-N"]
+    num_text = ["ONE", "TWO", "THREE", "FOUR", "FIVE", "SIX", "SEVEN"]
+
+
+    def test_stdin_read_fasta(self):
+        with patch('sys.stdin', io.StringIO(open(get_data_path("fasta_file.fasta")).read())):
+            inc = 0
+            for r in skbio.read(sys.stdin, format="fasta"):
+                self.assertEqual(str(r), "TH-S-ST-STDATAN-MB-R" + self.seq_num_text[inc])
+                self.assertEqual(r.metadata["id"], "test_" + str(inc + 1))
+                self.assertEqual(r.metadata["description"], "TESTING DATA " + self.num_text[inc])
+                inc += 1
+
+    def test_stdin_read_fastq(self):
+        with patch('sys.stdin', io.StringIO(open(get_data_path("fastq_file.fastq")).read())):
+            inc = 0
+            for r in skbio.read(sys.stdin, format="fastq", phred_offset=33):
+                self.assertEqual(str(r), "T-STDATA" + self.seq_num_text[inc])
+                self.assertEqual(r.metadata["id"], "test_" + str(inc + 1))
+                self.assertEqual(r.metadata["description"], "TESTING DATA " + self.num_text[inc])
+                self.assertEqual(list(r.positional_metadata["quality"].to_numpy()), list(np.full(len("TESTDATA" + self.num_text[inc]), inc + 16, dtype=np.uint8)))
+                inc += 1
 
 if __name__ == '__main__':
     unittest.main()

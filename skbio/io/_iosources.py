@@ -180,6 +180,9 @@ class WrappedTemporaryFileSource(IOSource):
 
 
 class IterableSource(IOSource):
+    def __init__(self, file, options):
+        super(IterableSource, self).__init__(file, options)
+
     def can_read(self):
         if hasattr(self.file, "__iter__"):
             iterator = iter(self.file)
@@ -187,7 +190,7 @@ class IterableSource(IOSource):
             if head is None:
                 self.repaired = []
                 return True
-            if isinstance(head, str):
+            if isinstance(head, str) or isinstance(head, bytes):
                 self.repaired = itertools.chain([head], iterator)
                 return True
             else:

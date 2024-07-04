@@ -6,6 +6,8 @@
 # The full license is in the file LICENSE.txt, distributed with this software.
 # ----------------------------------------------------------------------------
 
+import io
+from itertools import chain
 import re
 import warnings
 
@@ -227,7 +229,9 @@ def _line_generator(fh, skip_blanks=False, strip=True):
 def _too_many_blanks(fh, max_blanks):
     count = 0
     too_many = False
+    consumed = []
     for line in _line_generator(fh, skip_blanks=False):
+        consumed += [line]
         if line:
             break
         else:
@@ -235,5 +239,8 @@ def _too_many_blanks(fh, max_blanks):
             if count > max_blanks:
                 too_many = True
                 break
-    fh.seek(0)
-    return too_many
+    try:
+        fh.seek(0)
+    except io.UnsupportedOperation:
+        pass
+    return too_many, consumed

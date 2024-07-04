@@ -165,6 +165,7 @@ The following are not yet used but should be avoided as well:
 # The full license is in the file LICENSE.txt, distributed with this software.
 # ----------------------------------------------------------------------------
 
+import io
 from warnings import warn
 import types
 import traceback
@@ -398,7 +399,10 @@ class IORegistry:
             # tell may fail noisily if the user provided a TextIOBase or
             # BufferedReader which has already been iterated over (via next()).
             matches = []
-            backup = fh.tell()
+            try:
+                backup = fh.tell()
+            except io.UnsupportedOperation:
+                raise ValueError("Must provide type for non-seekable data.")
             if is_binary_file and kwargs.get("encoding", "binary") == "binary":
                 matches = self._find_matches(fh, self._binary_formats, **kwargs)
 
@@ -426,7 +430,9 @@ class IORegistry:
         matches = []
         for format in lookup.values():
             if format.sniffer_function is not None:
-                is_format, skwargs = format.sniffer_function(file, **kwargs)
+                res = format.sniffer_function(file, **kwargs)
+                is_format = res[0]
+                skwargs = res[1]
                 file.seek(0)
                 if is_format:
                     matches.append((format.name, skwargs))
@@ -484,6 +490,7 @@ class IORegistry:
         if into is None:
             if format is None:
                 raise ValueError("`into` and `format` cannot both be None")
+            # Yield lines by creating a generator line by line, better for long files
             gen = self._read_gen(file, format, into, verify, kwargs)
             # This is done so that any errors occur immediately instead of
             # on the first call from __iter__
@@ -497,14 +504,17 @@ class IORegistry:
                 # See #1313 for more info.
                 return (x for x in [])
         else:
+            # Return lines by reading the whole file, better for short files
             return self._read_ret(file, format, into, verify, kwargs)
 
     def _read_ret(self, file, fmt, into, verify, kwargs):
         io_kwargs = self._find_io_kwargs(kwargs)
         with _resolve_file(file, **io_kwargs) as (file, _, _):
-            reader, kwargs = self._init_reader(
+            reader, kwargs, consumed = self._init_reader(
                 file, fmt, into, verify, kwargs, io_kwargs
             )
+            if consumed is not None and not file.seekable():
+                file = itertools.chain(consumed, file)
             return reader(file, **kwargs)
 
     def _read_gen(self, file, fmt, into, verify, kwargs):
@@ -514,9 +524,12 @@ class IORegistry:
         # kwargs should still retain the contents of io_kwargs because the
         # actual reader will also need them.
         with _resolve_file(file, **io_kwargs) as (file, _, _):
-            reader, kwargs = self._init_reader(
+            reader, kwargs, consumed = self._init_reader(
                 file, fmt, into, verify, kwargs, io_kwargs
             )
+            # Add consumed lines to the start of the file to "reset" it
+            if consumed is not None and not file.seekable():
+                file = itertools.chain(consumed, file)
             yield from reader(file, **kwargs)
 
     def _find_io_kwargs(self, kwargs):
@@ -524,14 +537,24 @@ class IORegistry:
 
     def _init_reader(self, file, fmt, into, verify, kwargs, io_kwargs):
         skwargs = {}
+        consumed = []
+        # Get sniffer from format (defined in iosources)
         if fmt is None:
             fmt, skwargs = self.sniff(file, **io_kwargs)
         elif verify:
             sniffer = self.get_sniffer(fmt)
             if sniffer is not None:
-                backup = file.tell()
-                is_format, skwargs = sniffer(file, **io_kwargs)
-                file.seek(backup)
+                try:
+                    # Attempt to reset and sniff file
+                    backup = file.tell()
+                    res = sniffer(file, **io_kwargs)
+                    is_format = res[0]
+                    skwargs = res[1]
+                    file.seek(backup)
+                except io.UnsupportedOperation:
+                    # File is not seekable, so get consumed lines to reset it
+                    is_format, skwargs, consumed = sniffer(file, **io_kwargs)
+
                 if not is_format:
                     warn(
                         "%r does not look like a %s file" % (file, fmt),
@@ -548,6 +571,7 @@ class IORegistry:
                     ArgumentOverrideWarning,
                 )
 
+        # Get individual reader from format (defined in iosources)
         reader = self.get_reader(fmt, into)
         if reader is None:
             possible_intos = [r.__name__ for r in self._get_possible_readers(fmt)]
@@ -567,7 +591,7 @@ class IORegistry:
                     message,
                 )
             )
-        return reader, kwargs
+        return reader, kwargs, consumed
 
     def _get_possible_readers(self, fmt):
         for lookup in self._lookups:
@@ -810,6 +834,11 @@ class Format:
         return self._writers
 
     @property
+    def header(self):
+        """Returns a boolean describing if the file format has a header."""
+        return self._header
+
+    @property
     def monkey_patched_readers(self):
         """Set of classes bound to readers to monkey patch."""
         return self._monkey_patch["read"]
@@ -819,11 +848,12 @@ class Format:
         """Set of classes bound to writers to monkey patch."""
         return self._monkey_patch["write"]
 
-    def __init__(self, name, encoding=None, newline=None):
+    def __init__(self, name, encoding=None, newline=None, header=True):
         """Initialize format for registering sniffers, readers, and writers."""
         self._encoding = encoding
         self._newline = newline
         self._name = name
+        self._header = header
 
         self._sniffer_function = None
         self._readers = {}
@@ -914,7 +944,8 @@ class Format:
                         # Some formats may have headers which indicate their
                         # format sniffers should be able to rely on the
                         # filehandle to point at the beginning of the file.
-                        fh.seek(0)
+                        if self.header:
+                            fh.seek(0)
                         return sniffer(fh)
                     except UnicodeDecodeError:
                         pass
