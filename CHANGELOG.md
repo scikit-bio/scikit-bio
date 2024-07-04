@@ -12,6 +12,10 @@
 * Added `nni` function for phylogenetic tree rearrangement using nearest neighbor interchange (NNI) ([#2050](https://github.com/scikit-bio/scikit-bio/pull/2050)).
 * Fixed the Zenodo link in the README to always point to the most recent version
 
+### Performance enhancements
+
+* Added support for standard input (stdin) streaming to I/O reading. ([#2017](https://github.com/scikit-bio/scikit-bio/issues/2017))
+
 ## Version 0.6.1
 
 ### Features
