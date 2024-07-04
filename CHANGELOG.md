@@ -4,6 +4,7 @@
 
 ### Features
 
+* Added method `TreeNode.insert`, which insert a node intot the branch connecting self and its parent.
 * Added support for Microsoft Windows operating system. ([#2071](https://github.com/scikit-bio/scikit-bio/pull/2071), [#2068](https://github.com/scikit-bio/scikit-bio/pull/2068),
 [#2067](https://github.com/scikit-bio/scikit-bio/pull/2067), [#2061](https://github.com/scikit-bio/scikit-bio/pull/2061), [#2046](https://github.com/scikit-bio/scikit-bio/pull/2046),
 [#2040](https://github.com/scikit-bio/scikit-bio/pull/2040), [#2036](https://github.com/scikit-bio/scikit-bio/pull/2036), [#2034](https://github.com/scikit-bio/scikit-bio/pull/2034),
@@ -13,7 +14,9 @@
 
 ### Performance enhancements
 
-* `TreeNode.unrooted_copy` now preserves names of the original nodes, in addition to topology and branch lengths. The new root is no longer named as "root" ([#2073](https://github.com/scikit-bio/scikit-bio/pull/2073)).
+* `Treenode.copy` and `TreeNode.unrooted_copy` can perform shallow copy of a tree in addition to deep copy.
+* `TreeNode.unrooted_copy` now preserves names of the original nodes, in addition to topology and branch lengths. The new root is no longer named as "root".
+This affects `TreeNode.root_at` and `TreeNode.root_at_midpoint` ([#2073](https://github.com/scikit-bio/scikit-bio/pull/2073)).
 
 
 ## Version 0.6.1

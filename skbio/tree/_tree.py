@@ -272,17 +272,47 @@ class TreeNode(SkbioObject):
         Examples
         --------
         >>> from skbio import TreeNode
-        >>> tree = TreeNode.read(["((a:1,b:2)c:4,d:5);"])
+        >>> tree = TreeNode.read(["((a:1,b:2)c:4,d:5)e;"])
+        >>> print(tree.ascii_art())
+                            /-a
+                  /c-------|
+        -e-------|          \-b
+                 |
+                  \-d
         >>> tree.find("c").insert(TreeNode("x"))
         >>> print(tree)
-        (d:5.0,((a:1.0,b:2.0)c:2.0)x:2.0);
+        (((a:1.0,b:2.0)c:2.0)x:2.0,d:5.0)e;
         <BLANKLINE>
+        >>> print(tree.ascii_art())
+                                      /-a
+                  /x------- /c-------|
+        -e-------|                    \-b
+                 |
+                  \-d
 
         """
         if (parent := self.parent) is None:
             raise NoParentError("Self has no parent.")
-        parent.append(node)
-        node.append(self)
+
+        # detach node from original tree if applicable
+        if node.parent is not None:
+            node.parent.remove(node)
+
+        # See also `_adopt`. The current code replaces the node at the same
+        # position in the parent's list of children, instead of appending to
+        # the end. Additionally, the current code performs cache invalidation
+        # only once.
+        self.invalidate_caches()
+
+        # replace self with node in the parent's list of children
+        node.parent = parent
+        for i, curr_node in enumerate(parent.children):
+            if curr_node is self:
+                parent.children[i] = node
+
+        # add self to the beginning of the node's list of children
+        self.parent = node
+        node.children.insert(0, self)
 
         # copy branch attributes to new node
         branch_attrs = set(branch_attrs)
@@ -958,11 +988,98 @@ class TreeNode(SkbioObject):
                 i.__leaf_set = leaf_set
         return frozenset(sets)
 
+    def unroot(self):
+        r"""Convert a rooted tree into unrooted.
+
+        See Also
+        --------
+        root
+        root_at
+
+        Notes
+        -----
+        In scikit-bio, every tree has a root node. A tree is considered as
+        "rooted" if its root node has exactly two children. In contrast, an
+        "unrooted" tree may have three (the most common case), one, or more
+        than three children attached to its root node. This method will not
+        modify the tree if it is already unrooted.
+
+        This method unroots a tree by trifucating its root. Specifically, it
+        removes one of its two child nodes, transfers the name of the removed
+        child to the root, and re-attaches the removed child's children to the
+        root. Additionally, the removed child's branch length, if available,
+        will be added to the other child's branch. The outcome appears as if
+        the root node is removed and the two children are directly connected.
+
+        The child to be removed is the last child that is not a tip. This
+        choice affects the positioning of the resulting tree, but does not
+        affect its topology when it is considered as an unrooted tree in
+        phylogenetics. In an extreme case where both children are tips (i.e.,
+        the tree has only two tips), the second tip will be removed.
+
+        This method manipulates the tree in place. There is no return value.
+
+        Examples
+        --------
+        >>> from skbio import TreeNode
+        >>> tree = TreeNode.read(['((a,b)c,((d,e)f,(g,h)i)j)k;'])
+        >>> print(tree.ascii_art())
+                            /-a
+                  /c-------|
+                 |          \-b
+                 |
+        -k-------|                    /-d
+                 |          /f-------|
+                 |         |          \-e
+                  \j-------|
+                           |          /-g
+                            \i-------|
+                                      \-h
+        >>> tree.unroot()
+        >>> print(tree.ascii_art())
+                            /-a
+                  /c-------|
+                 |          \-b
+                 |
+                 |          /-d
+        -j-------|-f-------|
+                 |          \-e
+                 |
+                 |          /-g
+                  \i-------|
+                            \-h
+
+        """
+        root = self.root()
+        if len(children := root.children) != 2:
+            return root
+        root.invalidate_caches()
+
+        # choose a child to remove
+        other, chosen = children
+        if chosen.is_tip() and not other.is_tip():
+            chosen, other = other, chosen
+
+        # remove chosen child and re-attach its children to root
+        root.remove(chosen)
+        root.extend(chosen.children)
+
+        # transfer chosen child's name to root
+        root.name = chosen.name
+        # TODO: also transfer other custom node attributes
+
+        # add branch length to the other child
+        if (L := chosen.length) is not None:
+            if other.length is not None:
+                other.length += L
+            else:
+                other.length = L
+
     def root_at(self, node, above=False, branch_attrs=["name"], root_name="root"):
         r"""Return a new tree rooted at the provided node.
 
-        This can be useful for drawing unrooted trees with an orientation that
-        reflects knowledge of the true root location.
+        This is useful for positioning a tree with an orientation that reflects
+        knowledge of the true root location.
 
         Parameters
         ----------
@@ -1012,6 +1129,7 @@ class TreeNode(SkbioObject):
         --------
         root_at_midpoint
         unrooted_copy
+        unroot
 
         Notes
         -----
@@ -1021,9 +1139,52 @@ class TreeNode(SkbioObject):
         --------
         >>> from skbio import TreeNode
         >>> tree = TreeNode.read(["(((a,b)c,(d,e)f)g,h)i;"])
-        >>> print(tree.root_at("c", branch_attrs=[]))
+        >>> print(tree.ascii_art())
+                                      /-a
+                            /c-------|
+                           |          \-b
+                  /g-------|
+                 |         |          /-d
+        -i-------|          \f-------|
+                 |                    \-e
+                 |
+                  \-h
+
+        Use the given node as the root node. This will typically create an
+        unrooted tree (i.e., root node has three children).
+
+        >>> t1 = tree.root_at("c", branch_attrs=[])
+        >>> print(t1)
         (a,b,((d,e)f,(h)i)g)c;
         <BLANKLINE>
+        >>> print(t1.ascii_art())
+                  /-a
+                 |
+                 |--b
+        -c-------|
+                 |                    /-d
+                 |          /f-------|
+                  \g-------|          \-e
+                           |
+                            \i------- /-h
+
+        Insert a new root node into the branch above the given node. This will
+        create a rooted tree (i.e., root node has two children).
+
+        >>> t2 = tree.root_at("c", above=True, branch_attrs=[])
+        >>> print(t2)
+        ((a,b)c,((d,e)f,(h)i)g)root;
+        <BLANKLINE>
+        >>> print(t2.ascii_art())
+                            /-a
+                  /c-------|
+                 |          \-b
+        -root----|
+                 |                    /-d
+                 |          /f-------|
+                  \g-------|          \-e
+                           |
+                            \i------- /-h
 
         """
         if isinstance(node, str):
@@ -2648,13 +2809,12 @@ class TreeNode(SkbioObject):
         ['b', 'e']
 
         """
-        if not hasattr(self, "MaxDistTips"):
-            # _set_max_distance will throw a TreeError if a node with a single
-            # child is encountered
-            try:
-                self._set_max_distance()
-            except TreeError:  #
-                return self._get_max_distance_singledesc()
+        # _set_max_distance will throw a TreeError if a node with a single
+        # child is encountered
+        try:
+            self._set_max_distance()
+        except TreeError:  #
+            return self._get_max_distance_singledesc()
 
         longest = 0.0
         tips = [None, None]
@@ -2665,6 +2825,12 @@ class TreeNode(SkbioObject):
             if dist > longest:
                 longest = dist
                 tips = [tip_a[1], tip_b[1]]
+
+        # The MaxDistTips attribute causes problems during deep copy because it
+        # contains references to other nodes. This patch removes the attribute.
+        for n in self.traverse():
+            del n.MaxDistTips
+
         return longest, tips
 
     def tip_tip_distances(self, endpoints=None):
@@ -3440,7 +3606,7 @@ class TreeNode(SkbioObject):
         Raises
         ------
         ValueError
-            if input node is root or tip
+            If input node is root or tip.
 
         See Also
         --------
