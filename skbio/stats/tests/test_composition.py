@@ -1503,13 +1503,13 @@ class DirMultLinearMixedEffectsTests(TestCase):
                              groups="patient_id", 
                              data=self.data)
         
-        self.assert_allclose(result.fe_params, np.r_[11.3452, 0.3736], rtol=1e-5)
+        npt.assert_allclose(result.fe_params, np.r_[11.3452, 0.3736], rtol=1e-5)
 
-        self.assert_allclose(result.bse[0:2], np.r_[1.458852, 0.106825], rtol=1e-5)
+        npt.assert_allclose(result.bse[0:2], np.r_[1.458852, 0.106825], rtol=1e-5)
 
-        self.assert_allclose(result.scale, 1.42644, rtol=1e-5)
+        npt.assert_allclose(result.scale, 1.42644, rtol=1e-5)
 
-        self.assert_allclose(result.cov_re, 1.42644, rtol=1e-5)
+        npt.assert_allclose(result.cov_re, 1.42644, rtol=1e-5)
         
 
 if __name__ == "__main__":
