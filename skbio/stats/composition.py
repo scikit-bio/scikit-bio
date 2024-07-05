@@ -95,6 +95,7 @@ from skbio.util import find_duplicates
 from skbio.util._misc import get_rng
 from skbio.util._warning import _warn_deprecated
 from statsmodels.stats.multitest import multipletests as sm_multipletests
+from statsmodels.formula.api import mixedlm
 
 
 def closure(mat):
@@ -2058,3 +2059,15 @@ def dirmult_ttest(
         "Reject null hypothesis",
     ]
     return res[col_order]
+
+
+def dirmult_lme(
+    formula, data, groups, reml=True, method=None, fit_kwargs=None, **kwargs
+):
+    # Fit the Dirichlet Multinomial linear mixed effects model
+    model = mixedlm(formula=formula, data=data, groups=data[groups], **kwargs)
+    if fit_kwargs is None:
+        fit_kwargs = {}
+    results = model.fit(reml=reml, method=method, **fit_kwargs)
+
+    return results
