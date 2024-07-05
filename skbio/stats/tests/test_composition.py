@@ -1510,6 +1510,93 @@ class DirMultLinearMixedEffectsTests(TestCase):
         npt.assert_allclose(result.scale, 1.42644, rtol=1e-5)
 
         npt.assert_allclose(result.cov_re, 1.42644, rtol=1e-5)
+
+    def test_vcomp(self):
+        np.random.seed(6241)
+        n = 1600
+        exog = np.random.normal(size=(n, 2))
+        groups = np.kron(np.arange(n / 16), np.ones(16))
+        print(groups)
+
+        # Build up the random error vector
+        errors = 0
+
+        # The random effects
+        exog_re = np.random.normal(size=(n, 2))
+        slopes = np.random.normal(size=(n // 16, 2))
+        slopes = np.kron(slopes, np.ones((16, 1))) * exog_re
+        errors += slopes.sum(1)
+
+        # First variance component
+        subgroups1 = np.kron(np.arange(n / 4), np.ones(4))
+        errors += np.kron(2 * np.random.normal(size=n // 4), np.ones(4))
+
+        # Second variance component
+        subgroups2 = np.kron(np.arange(n / 2), np.ones(2))
+        errors += np.kron(2 * np.random.normal(size=n // 2), np.ones(2))
+
+        # iid errors
+        errors += np.random.normal(size=n)
+
+        endog = exog.sum(1) + errors
+
+        df = pd.DataFrame({
+            "y": endog,
+            "groups": groups,
+            "x1": exog[:, 0],
+            "x2": exog[:, 1],
+            "z1": exog_re[:, 0],
+            "z2": exog_re[:, 1],
+            "v1": subgroups1,
+            "v2": subgroups2
+        })
+
+
+        # Equivalent model in R:
+        # df.to_csv("tst.csv")
+        # model = lmer(y ~ x1 + x2 + (0 + z1 + z2 | groups) + (1 | v1) + (1 |
+        # v2), df)
+
+        vcf = {"a": "0 + C(v1)", "b": "0 + C(v2)"}
+        result1 = dirmult_lme(
+            formula="y ~ x1 + x2",
+            groups=groups,
+            data=df,
+            re_formula="0+z1+z2",
+            vc_formula=vcf,
+            )
+
+        # Compare to R
+        npt.assert_allclose(
+            result1.fe_params, [0.16527, 0.99911, 0.96217], rtol=1e-4)
+        npt.assert_allclose(
+            result1.cov_re, [[1.244, 0.146], [0.146, 1.371]], rtol=1e-3)
+        npt.assert_allclose(result1.vcomp, [4.024, 3.997], rtol=1e-3)
+        npt.assert_allclose(
+            result1.bse.iloc[0:3], [0.12610, 0.03938, 0.03848], rtol=1e-3)
+
+    def test_vcomp2(self):
+        np.random.seed(4279)
+        x1 = np.random.normal(size=400)
+        groups = np.kron(np.arange(100), np.ones(4))
+        slopes = np.random.normal(size=100)
+        slopes = np.kron(slopes, np.ones(4)) * x1
+        y = slopes + np.random.normal(size=400)
+        vc_fml = {"a": "0 + x1"}
+        df = pd.DataFrame({"y": y, "x1": x1, "groups": groups})
+
+        result = dirmult_lme(
+            formula="y ~ 1", groups="groups", vc_formula=vc_fml, data=df)
+        result.summary()
+
+        npt.assert_allclose(
+            result.resid.iloc[0:4],
+            np.r_[-1.180753, 0.279966, 0.578576, -0.667916],
+            rtol=1e-3)
+        npt.assert_allclose(
+            result.fittedvalues.iloc[0:4],
+            np.r_[-0.101549, 0.028613, -0.224621, -0.126295],
+            rtol=1e-3)
         
 
 if __name__ == "__main__":

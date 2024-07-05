@@ -96,6 +96,7 @@ from skbio.util._misc import get_rng
 from skbio.util._warning import _warn_deprecated
 from statsmodels.stats.multitest import multipletests as sm_multipletests
 from statsmodels.formula.api import mixedlm
+from statsmodels.regression.mixed_linear_model import MixedLM
 
 
 def closure(mat):
@@ -2092,10 +2093,12 @@ def dirmult_lme(
     method : str
         Optimization method. Can be a scipy.optimize method name, or a list of such
         names to be tried in sequence.
+        See https://docs.scipy.org/doc/scipy/tutorial/optimize.html for all options.
     fit_kwargs : dict
-        Keyword arguments to pass to the model fit function
+        Keyword arguments to pass to the model fit function.
+        See ``statsmodels.regression.mixed_linear_model.MixedLM.fit``
     **kwargs
-        Additional keyword arguments to pass to the mixedlm function
+        Additional keyword arguments to pass to the mixedlm function only.
 
     Returns
     -------
@@ -2141,7 +2144,7 @@ def dirmult_lme(
     """
 
     # Fit the Dirichlet Multinomial linear mixed effects model
-    model = mixedlm(formula=formula, data=data, groups=data[groups], **kwargs)
+    model = MixedLM.from_formula(formula=formula, data=data, groups=groups, **kwargs)
     if fit_kwargs is None:
         fit_kwargs = {}
     results = model.fit(reml=reml, method=method, **fit_kwargs)
