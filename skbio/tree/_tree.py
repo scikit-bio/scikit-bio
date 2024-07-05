@@ -6,7 +6,7 @@
 # The full license is in the file LICENSE.txt, distributed with this software.
 # ----------------------------------------------------------------------------
 
-import warnings
+from warnings import warn, simplefilter
 from operator import or_, itemgetter
 from copy import copy, deepcopy
 from itertools import combinations
@@ -243,6 +243,8 @@ class TreeNode(SkbioObject):
     def insert(self, node, distance=None, branch_attrs=[]):
         r"""Insert a node into the branch connecting self and its parent.
 
+        .. versionadded:: 0.6.2
+
         Parameters
         ----------
         node : TreeNode
@@ -279,16 +281,18 @@ class TreeNode(SkbioObject):
         -e-------|          \-b
                  |
                   \-d
+
         >>> tree.find("c").insert(TreeNode("x"))
-        >>> print(tree)
-        (((a:1.0,b:2.0)c:2.0)x:2.0,d:5.0)e;
-        <BLANKLINE>
         >>> print(tree.ascii_art())
                                       /-a
                   /x------- /c-------|
         -e-------|                    \-b
                  |
                   \-d
+        >>> tree.find("c").length
+        2.0
+        >>> tree.find("x").length
+        2.0
 
         """
         if (parent := self.parent) is None:
@@ -685,7 +689,8 @@ class TreeNode(SkbioObject):
         ``deepcopy`` is deprecated as of ``0.6.2``. Use ``copy`` instead.
 
         """
-        _warn_deprecated(self.__class__.unrooted_deepcopy, "0.6.2")
+        msg = "Use copy instead."
+        _warn_deprecated(self.__class__.deepcopy, "0.6.2", msg)
 
         return self._copy(True, {})
 
@@ -740,6 +745,12 @@ class TreeNode(SkbioObject):
 
                 Node attributes other than name and length will also be copied.
 
+        Warnings
+        --------
+        The default behavior of ``unrooted_copy`` is subject to change in
+        0.7.0. The new default behavior can be achieved by specifying
+        ``branch_attrs={"length", "support"}, root_name=None``.
+
         See Also
         --------
         copy
@@ -759,6 +770,19 @@ class TreeNode(SkbioObject):
         <BLANKLINE>
 
         """
+        # future warning
+        if branch_attrs == {"name", "length", "support"} and root_name == "root":
+            func = self.__class__.unrooted_copy
+            if not hasattr(func, "warned"):
+                simplefilter("once", FutureWarning)
+                warn(
+                    "The default behavior of `unrooted_copy` is subject to change in "
+                    "0.7.0. The new default behavior can be achieved by specifying "
+                    '`branch_attrs={"length", "support"}, root_name=None`.',
+                    FutureWarning,
+                )
+                func.warned = True
+
         _copy = deepcopy if deep else copy
 
         # identify neighbors (adjacent nodes) of self, excluding the incoming node
@@ -766,7 +790,9 @@ class TreeNode(SkbioObject):
 
         # recursively copy each neighbor; they will become outgoing nodes (children)
         children = [
-            c.unrooted_copy(parent=self, branch_attrs=branch_attrs, deep=deep)
+            c.unrooted_copy(
+                parent=self, branch_attrs=branch_attrs, root_name=root_name, deep=deep
+            )
             for c in neighbors
         ]
 
@@ -831,7 +857,8 @@ class TreeNode(SkbioObject):
         This method calls ``unrooted_copy`` which is recursive.
 
         """
-        _warn_deprecated(self.__class__.unrooted_deepcopy, "0.6.2")
+        msg = "Use unrooted_copy instead."
+        _warn_deprecated(self.__class__.unrooted_deepcopy, "0.6.2", msg)
 
         root = self.root()
         root.assign_ids()
@@ -849,8 +876,7 @@ class TreeNode(SkbioObject):
     ):
         r"""Walk the tree unrooted-style and rearrange it.
 
-        Perform a copy of self and return a new copy of the tree as an
-        unrooted copy. This is useful for defining a new root of the tree.
+        .. versionadded:: 0.6.2
 
         Parameters
         ----------
@@ -868,7 +894,10 @@ class TreeNode(SkbioObject):
 
         Notes
         -----
-        This method is recursive.
+        This method recursively walks a tree from a given node in an unrooted
+        style (i.e., directions of branches are not assumed). It rerranges the
+        tree such that the given node becomes the root node and all other nodes
+        are re-positioned accordingly, whereas the topology remains the same.
 
         Examples
         --------
@@ -1038,6 +1067,8 @@ class TreeNode(SkbioObject):
 
     def unroot(self, side=None):
         r"""Convert a rooted tree into unrooted.
+
+        .. versionadded:: 0.6.2
 
         Parameters
         ----------
@@ -1214,6 +1245,12 @@ class TreeNode(SkbioObject):
         TreeNode
             A new copy of the tree rooted at the give node.
 
+        Warnings
+        --------
+        The default behavior of ``root_at`` is subject to change in 0.7.0. The
+        new default behavior can be achieved by specifying ``reset=True,
+        branch_attrs=[], root_name=None``.
+
         See Also
         --------
         root_at_midpoint
@@ -1276,6 +1313,22 @@ class TreeNode(SkbioObject):
                             \i------- /-h
 
         """
+        # future warning
+        if reset is False and branch_attrs == ["name"] and root_name == "root":
+            func = self.__class__.root_at
+            if not hasattr(func, "warned"):
+                simplefilter("once", FutureWarning)
+                warn(
+                    "The default behavior of `root_at` is subject to change in 0.7.0. "
+                    "The new default behavior can be achieved by specifying "
+                    "`reset=True, branch_attrs=[], root_name=None`.",
+                    FutureWarning,
+                )
+                func.warned = True
+
+        msg = "Use unrooted_copy instead."
+        _warn_deprecated(self.__class__.unrooted_deepcopy, "0.6.2", msg)
+
         tree = self.root()
         if node is None:
             node = self
@@ -1357,6 +1410,12 @@ class TreeNode(SkbioObject):
             Midpoint rooting requires `length` and will raise (indirectly) if
             evaluated nodes don't have length.
 
+        Warnings
+        --------
+        The default behavior of ``root_at_midpoint`` is subject to change in
+        0.7.0. The new default behavior can be achieved by specifying
+        ``reset=True, branch_attrs=[], root_name=None``.
+
         See Also
         --------
         root_at
@@ -1402,6 +1461,19 @@ class TreeNode(SkbioObject):
                             \-g
 
         """
+        # future warning
+        if reset is False and branch_attrs == ["name"] and root_name == "root":
+            func = self.__class__.root_at_midpoint
+            if not hasattr(func, "warned"):
+                simplefilter("once", FutureWarning)
+                warn(
+                    "The default behavior of `root_at_midpoint` is subject to change "
+                    "in 0.7.0. The new default behavior can be achieved by specifying "
+                    "`reset=True, branch_attrs=[], root_name=None`.",
+                    FutureWarning,
+                )
+                func.warned = True
+
         tree = self.copy()
         if reset:
             tree.unroot()
@@ -1449,6 +1521,8 @@ class TreeNode(SkbioObject):
         self, outgroup, above=True, reset=True, branch_attrs=[], root_name=None
     ):
         r"""Reroot the tree with a given set of taxa as outgroup.
+
+        .. versionadded:: 0.6.2
 
         Parameters
         ----------
@@ -3205,7 +3279,7 @@ class TreeNode(SkbioObject):
             for child in node.children:
                 length = child.length
                 if length is None:
-                    warnings.warn(
+                    warn(
                         "`TreeNode.tip_tip_distances`: Node with name %r does "
                         "not have an associated length, so a length of 0.0 "
                         "will be used." % child.name,

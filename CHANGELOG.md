@@ -4,21 +4,33 @@
 
 ### Features
 
-* Added method `TreeNode.unrooted_move`, which resembles `TreeNode.unrooted_copy` but rearranges the tree in place, thus avoid making copies of the nodes.
-* Added method `TreeNode.root_by_outgroup`, which reroots a tree according to a given outgroup.
-* Added method `TreeNode.insert`, which inserts a node intot the branch connecting self and its parent.
 * Added support for Microsoft Windows operating system. ([#2071](https://github.com/scikit-bio/scikit-bio/pull/2071), [#2068](https://github.com/scikit-bio/scikit-bio/pull/2068),
 [#2067](https://github.com/scikit-bio/scikit-bio/pull/2067), [#2061](https://github.com/scikit-bio/scikit-bio/pull/2061), [#2046](https://github.com/scikit-bio/scikit-bio/pull/2046),
 [#2040](https://github.com/scikit-bio/scikit-bio/pull/2040), [#2036](https://github.com/scikit-bio/scikit-bio/pull/2036), [#2034](https://github.com/scikit-bio/scikit-bio/pull/2034),
 [#2032](https://github.com/scikit-bio/scikit-bio/pull/2032), [#2005](https://github.com/scikit-bio/scikit-bio/pull/2005))
 * Added alpha diversity metrics: Hill number (`hill`), Renyi entropy (`renyi`) and Tsallis entropy (`tsallis`) ([#2074](https://github.com/scikit-bio/scikit-bio/pull/2074)).
 * Added `nni` function for phylogenetic tree rearrangement using nearest neighbor interchange (NNI) ([#2050](https://github.com/scikit-bio/scikit-bio/pull/2050)).
+* Added method `TreeNode.unrooted_move`, which resembles `TreeNode.unrooted_copy` but rearranges the tree in place, thus avoid making copies of the nodes ([#2073](https://github.com/scikit-bio/scikit-bio/pull/2073)).
+* Added method `TreeNode.root_by_outgroup`, which reroots a tree according to a given outgroup ([#2073](https://github.com/scikit-bio/scikit-bio/pull/2073)).
+* Added method `TreeNode.unroot`, which converts a rooted tree into unrooted by trifucating its root ([#2073](https://github.com/scikit-bio/scikit-bio/pull/2073)).
+* Added method `TreeNode.insert`, which inserts a node into the branch connecting self and its parent ([#2073](https://github.com/scikit-bio/scikit-bio/pull/2073)).
 
 ### Performance enhancements
 
-* `Treenode.copy` and `TreeNode.unrooted_copy` can perform shallow copy of a tree in addition to deep copy.
-* `TreeNode.unrooted_copy` now preserves names of the original nodes, in addition to topology and branch lengths. The new root is no longer named as "root".
-This affects `TreeNode.root_at` and `TreeNode.root_at_midpoint` ([#2073](https://github.com/scikit-bio/scikit-bio/pull/2073)).
+* `Treenode.copy` and `TreeNode.unrooted_copy` can now perform shallow copy of a tree in addition to deep copy.
+* `TreeNode.unrooted_copy` can now copy all attributes of the nodes, in addition to name and length ([#2073](https://github.com/scikit-bio/scikit-bio/pull/2073)).
+* Paremter `above` was added to `TreeNode.root_at`, such that the user can root the tree within the branch connecting the given node and its parent, thereby creating a rooted tree ([#2073](https://github.com/scikit-bio/scikit-bio/pull/2073)).
+* Parameter `branch_attrs` was added to the `unrooted_copy`, `root_at`, and `root_at_midpoint` methods of `TreeNode`, such that the user can customize which node attributes should be considered as branch attributes and treated accordingly
+during the rerooting operation. The default behavior is preserved but is subject ot change in version 0.7.0 ([#2073](https://github.com/scikit-bio/scikit-bio/pull/2073)).
+* Parameter `root_name` was added to the `unrooted_copy`, `root_at`, and `root_at_midpoint` methods of `TreeNode`, such that the user can customize (or omit) the name to be given to the root node. The default behavior is preserved but is subject ot change in version 0.7.0 ([#2073](https://github.com/scikit-bio/scikit-bio/pull/2073)).
+
+### Bug fixes
+
+* Cleared the internal node references after performing midpoint rooting (`TreeNode.root_at_midpoint`), such that a deep copy of the resulting tree will not result in infinite recursion ([#2073](https://github.com/scikit-bio/scikit-bio/pull/2073)).
+
+### Deprecated functionality
+
+* Methods `deepcopy` and `unrooted_deepcopy` of `Treenode` are deprecated. Use `copy` and `unrooted_copy` instead.
 
 
 ## Version 0.6.1
