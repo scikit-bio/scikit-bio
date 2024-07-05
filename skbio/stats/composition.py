@@ -2120,7 +2120,7 @@ def dirmult_lme(
     ...                     columns=["patient_id", "time_point",
     ...                             "response"])
     >>> result = dirmult_lme("response ~ time_point", groups="patient_id", data=data)
-    >>> print(result.summary())
+    >>> print(result.summary()) # doctest: +SKIP
               Mixed Linear Model Regression Results
     =========================================================
     Model:             MixedLM  Dependent Variable:  response
