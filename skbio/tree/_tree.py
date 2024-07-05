@@ -1326,9 +1326,6 @@ class TreeNode(SkbioObject):
                 )
                 func.warned = True
 
-        msg = "Use unrooted_copy instead."
-        _warn_deprecated(self.__class__.unrooted_deepcopy, "0.6.2", msg)
-
         tree = self.root()
         if node is None:
             node = self
