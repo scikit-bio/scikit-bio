@@ -2110,7 +2110,7 @@ def dirmult_lme(
 
     Notes
     -----
-
+    pass
 
     Examples
     --------

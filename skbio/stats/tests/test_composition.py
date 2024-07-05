@@ -23,7 +23,8 @@ from skbio.stats.distance import DistanceMatrixError
 from skbio.stats.composition import (
     closure, multi_replace, multiplicative_replacement, perturb, perturb_inv, power,
     inner, clr, clr_inv, ilr, ilr_inv, alr, alr_inv, sbp_basis, _gram_schmidt_basis,
-    centralize, _calc_p_adjust, ancom, vlr, pairwise_vlr, tree_basis, dirmult_ttest)
+    centralize, _calc_p_adjust, ancom, vlr, pairwise_vlr, tree_basis, dirmult_ttest, 
+    dirmult_lme)
 
 
 def assert_coo_allclose(res, exp, rtol=1e-7, atol=1e-7):
@@ -1488,6 +1489,28 @@ class DirMultTTestTests(TestCase):
         with self.assertRaises(ValueError):
             dirmult_ttest(self.table, self.grouping, self.treatment, self.reference)
 
+class DirMultLinearMixedEffectsTests(TestCase):
+
+    def setUp(self):
+        self.data = pd.DataFrame(
+            [[1, 0, 10.2], [1, 1, 12.5], 
+            [1, 7, 14.8], [1, 14, 16.1]],
+        index=[0, 1, 2, 3],
+        columns=["patient_id", "time_point", "response"],)
+
+    def test_dirmult_linear_mixed_effects(self):
+        result = dirmult_lme("response ~ time_point", 
+                             groups="patient_id", 
+                             data=self.data)
+        
+        self.assert_allclose(result.fe_params, np.r_[11.3452, 0.3736], rtol=1e-5)
+
+        self.assert_allclose(result.bse[0:2], np.r_[1.458852, 0.106825], rtol=1e-5)
+
+        self.assert_allclose(result.scale, 1.42644, rtol=1e-5)
+
+        self.assert_allclose(result.cov_re, 1.42644, rtol=1e-5)
+        
 
 if __name__ == "__main__":
     main()
