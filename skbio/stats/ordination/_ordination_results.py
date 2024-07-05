@@ -438,7 +438,7 @@ class OrdinationResults(SkbioObject, PlottableMixin):
             self.samples = self.samples.rename(index=mapper)
         elif matrix == 'features':
             if self.features is None:
-                raise ValueError("`features` were not provided on"
+                raise ValueError("`features` were not provided on "
                                  "the construction of this object")
             elif (strict and isinstance(mapper, dict) and
                     set(mapper) != set(self.features.index)):

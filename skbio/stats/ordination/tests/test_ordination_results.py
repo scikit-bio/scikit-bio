@@ -150,7 +150,7 @@ class TestOrdinationResults(unittest.TestCase):
 
         # Testing rename when features is None
         errmsg = ("'features' were not provided on the construction of this"
-                  "object")
+                  " object")
         self.ordination_results.features = None
         with self.assertRaisesRegex(ValueError, errmsg):
             self.ordination_results.rename(rename_dict_features,
