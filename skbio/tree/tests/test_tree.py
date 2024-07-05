@@ -1118,6 +1118,10 @@ class TreeTests(TestCase):
         exp = "(a,b,((d,e)f,(h)i)g)c;\n"
         self.assertEqual(obs, exp)
 
+        # root at self
+        obs = str(t.find("c").root_at(branch_attrs=[]))
+        self.assertEqual(obs, exp)
+
         # root at tip (and input node instead of name)
         obs = str(t.root_at(t.find("h"), branch_attrs=[]))
         exp = "((((a,b)c,(d,e)f)g)i)h;\n"
