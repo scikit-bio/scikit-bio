@@ -1398,17 +1398,6 @@ class TreeTests(TestCase):
         self.assertEqual([n.id for n in t3.traverse()],
                          [n.id for n in t3_copy.traverse()])
 
-    def test_unrooted_deepcopy(self):
-        t = TreeNode.read(["((a,(b,c)d)e,(f,g)h)i;"])
-        exp = "(b,c,(a,((f,g)h)e)d)root;\n"
-        obs = t.find("d").unrooted_deepcopy()
-        self.assertEqual(str(obs), exp)
-
-        t_ids = {id(n) for n in t.traverse()}
-        obs_ids = {id(n) for n in obs.traverse()}
-
-        self.assertEqual(t_ids.intersection(obs_ids), set())
-
     def test_unrooted_copy(self):
         tree = TreeNode.read(["((a,(b,c)d)e,(f,g)h)i;"])
         node = tree.find("d")
@@ -1466,6 +1455,28 @@ class TreeTests(TestCase):
         tcopy = tree.unrooted_copy()
         tcopy.find("c").dummy[1].append(0)
         self.assertListEqual(tree.find("c").dummy[1], [2, 3, 0])
+
+    def test_unrooted_deepcopy(self):
+        t = TreeNode.read(["((a,(b,c)d)e,(f,g)h)i;"])
+        exp = "(b,c,(a,((f,g)h)e)d)root;\n"
+        obs = t.find("d").unrooted_deepcopy()
+        self.assertEqual(str(obs), exp)
+
+        t_ids = {id(n) for n in t.traverse()}
+        obs_ids = {id(n) for n in obs.traverse()}
+
+        self.assertEqual(t_ids.intersection(obs_ids), set())
+
+    def test_unrooted_move(self):
+        t = TreeNode.read(["(((a:1,b:1)c:1,(d:1,e:1)f:2)g:0.5,(h:1,i:1)j:0.5)k;"])
+        tcopy = t.copy()
+        obs = tcopy.find("c")
+        obs.unrooted_move()
+        exp = TreeNode.read(["(a:1,b:1,((d:1,e:1)f:2,((h:1,i:1)j:0.5)k:0.5)g:1)c;"])
+        self.assertTrue(obs.is_root())
+        for o, e in zip(obs.traverse(), exp.traverse()):
+            self.assertEqual(o.name, e.name)
+            self.assertEqual(o.length, e.length)
 
     def test_descending_branch_length_bug_1847(self):
         tr = TreeNode.read([

@@ -314,7 +314,7 @@ class TreeNode(SkbioObject):
         self.parent = node
         node.children.insert(0, self)
 
-        # copy branch attributes to new node
+        # transfer branch attributes to new node
         branch_attrs = set(branch_attrs)
         branch_attrs.add("support")
         branch_attrs.discard("length")
@@ -722,7 +722,8 @@ class TreeNode(SkbioObject):
 
             .. versionadded:: 0.6.2
 
-            .. note:: The default value will be set as ``None`` in 0.7.0.
+            .. note:: This parameter will be removed in 0.7.0, and the root
+                node will not be renamed.
 
         deep : bool, optional
             Whether perform a shallow (``False``, default) or deep (``True``)
@@ -742,7 +743,7 @@ class TreeNode(SkbioObject):
         See Also
         --------
         copy
-        root_at
+        unrooted_move
 
         Notes
         -----
@@ -797,21 +798,6 @@ class TreeNode(SkbioObject):
 
         return result
 
-    def _walk_copy(self, parent=None):
-        """A simplified version of `unrooted_copy` for internal use.
-
-        Node names are treated as an attribute of nodes.
-
-        """
-        neighbors = self.neighbors(ignore=parent)
-        children = [c._walk_copy(parent=self) for c in neighbors]
-        length = (
-            None
-            if parent is None
-            else (parent.length if parent.parent is self else self.length)
-        )
-        return self.__class__(name=self.name, children=children, length=length)
-
     def unrooted_deepcopy(self, parent=None):
         r"""Walk the tree unrooted-style and returns a new deepcopy.
 
@@ -855,6 +841,67 @@ class TreeNode(SkbioObject):
 
         new_tree_self = new_tree.find_by_id(self.id)
         return new_tree_self.unrooted_copy(parent, deep=True)
+
+    def unrooted_move(
+        self,
+        parent=None,
+        branch_attrs={"length", "support"},
+    ):
+        r"""Walk the tree unrooted-style and rearrange it.
+
+        Perform a copy of self and return a new copy of the tree as an
+        unrooted copy. This is useful for defining a new root of the tree.
+
+        Parameters
+        ----------
+        parent : TreeNode or None
+            Direction of walking (from parent to self). If specified, walking
+            to the parent will be prohibited.
+        branch_attrs : set of str, optional
+            Attributes of ``TreeNode`` objects that should be considered as
+            branch attributes during the operation.
+
+        See Also
+        --------
+        root_at
+        unrooted_copy
+
+        Notes
+        -----
+        This method is recursive.
+
+        Examples
+        --------
+        >>> from skbio import TreeNode
+        >>> tree = TreeNode.read(["((a,(b,c)d)e,(f,g)h)i;"])
+        >>> new_root = tree.find('d')
+        >>> new_root.unrooted_move()
+        >>> print(new_root)
+        (b,c,(a,((f,g)h)i)e)d;
+        <BLANKLINE>
+
+        """
+        # recursively add parent to children
+        children = self.children
+        if (old_parent := self.parent) is not None:
+            children.append(old_parent)
+            old_parent.unrooted_move(parent=self)
+
+        # 1. starting point (becomes root)
+        if parent is None:
+            self.parent = None
+            for attr in branch_attrs:
+                setattr(self, attr, None)
+
+        # 2. walk up (parent becomes child)
+        else:
+            for i, child in enumerate(children):
+                if child is parent:
+                    children.pop(i)
+                    break
+            self.parent = parent
+            for attr in branch_attrs:
+                setattr(self, attr, getattr(parent, attr, None))
 
     def count(self, tips=False):
         """Get the count of nodes in the tree.
@@ -1028,7 +1075,7 @@ class TreeNode(SkbioObject):
 
         .. note:: In the case where the basal node has just one child, the
             resulting tree will still appear rooted as it has two basal nodes.
-            To avoid this scenario, call `prune` to remove all one-child
+            To avoid this scenario, call ``prune`` to remove all one-child
             internal nodes.
 
         Examples
@@ -1047,6 +1094,7 @@ class TreeNode(SkbioObject):
                  |          /-h
                   \j-------|
                             \-i
+
         >>> tree.unroot()
         >>> print(tree.ascii_art())
                             /-a
@@ -1165,11 +1213,6 @@ class TreeNode(SkbioObject):
         -------
         TreeNode
             A new copy of the tree rooted at the give node.
-
-            .. versionchanged:: 0.6.2
-
-                The original node naming is preserved. The new root node will
-                not be named as "root".
 
         See Also
         --------

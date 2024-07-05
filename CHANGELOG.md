@@ -4,7 +4,9 @@
 
 ### Features
 
-* Added method `TreeNode.insert`, which insert a node intot the branch connecting self and its parent.
+* Added method `TreeNode.unrooted_move`, which resembles `TreeNode.unrooted_copy` but rearranges the tree in place, thus avoid making copies of the nodes.
+* Added method `TreeNode.root_by_outgroup`, which reroots a tree according to a given outgroup.
+* Added method `TreeNode.insert`, which inserts a node intot the branch connecting self and its parent.
 * Added support for Microsoft Windows operating system. ([#2071](https://github.com/scikit-bio/scikit-bio/pull/2071), [#2068](https://github.com/scikit-bio/scikit-bio/pull/2068),
 [#2067](https://github.com/scikit-bio/scikit-bio/pull/2067), [#2061](https://github.com/scikit-bio/scikit-bio/pull/2061), [#2046](https://github.com/scikit-bio/scikit-bio/pull/2046),
 [#2040](https://github.com/scikit-bio/scikit-bio/pull/2040), [#2036](https://github.com/scikit-bio/scikit-bio/pull/2036), [#2034](https://github.com/scikit-bio/scikit-bio/pull/2034),
