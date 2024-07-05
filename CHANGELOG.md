@@ -27,11 +27,11 @@ during the rerooting operation. The default behavior is preserved but is subject
 ### Bug fixes
 
 * Cleared the internal node references after performing midpoint rooting (`TreeNode.root_at_midpoint`), such that a deep copy of the resulting tree will not result in infinite recursion ([#2073](https://github.com/scikit-bio/scikit-bio/pull/2073)).
+* Fixed the Zenodo link in the README to always point to the most recent version.
 
 ### Deprecated functionality
 
 * Methods `deepcopy` and `unrooted_deepcopy` of `Treenode` are deprecated. Use `copy` and `unrooted_copy` instead.
-
 
 ## Version 0.6.1
 
@@ -71,6 +71,7 @@ during the rerooting operation. The default behavior is preserved but is subject
 
 ### Features
 
+* Added `rename` method for `OrdinationResults` class ([#2027](https://github.com/scikit-bio/scikit-bio/pull/2027)).
 * Added biom-format Table import and updated corresponding requirement files ([#1907](https://github.com/scikit-bio/scikit-bio/pull/1907)).
 * Added biom-format 2.1.0 IO support ([#1984](https://github.com/scikit-bio/scikit-bio/pull/1984)).
 * Added `Table` support to `alpha_diversity` and `beta_diversity` drivers ([#1984](https://github.com/scikit-bio/scikit-bio/pull/1984)).
