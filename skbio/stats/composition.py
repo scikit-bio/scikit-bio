@@ -2064,6 +2064,82 @@ def dirmult_ttest(
 def dirmult_lme(
     formula, data, groups, reml=True, method=None, fit_kwargs=None, **kwargs
 ):
+    r"""Fit a Dirichlet Multinomial linear mixed effects model.
+
+    The Dirichlet-multinomial distribution is a compound distribution that
+    combines a Dirichlet distribution over the probabilities of a multinomial
+    distribution. This distribution is used to model the distribution of
+    species abundances in a community.
+
+    To perform
+
+    This function uses ``MixedLM`` module from ``statsmodels.formula.api``
+
+    Parameters
+    ----------
+    formula : str or generic Formula object
+        The formula specifying the model
+    data : array_like
+        The data for the model. data must define __getitem__ with the keys in
+        the formula terms args and kwargs are passed on to the model
+        instantiation. E.g., a numpy structured or rec array, a dictionary,
+        or a pandas DataFrame.
+    groups : str
+        The column name in data that identifies the grouping variable
+    reml : bool
+        If true, fit according to the REML likelihood, else fit the standard
+        likelihood using ML.
+    method : str
+        Optimization method. Can be a scipy.optimize method name, or a list of such
+        names to be tried in sequence.
+    fit_kwargs : dict
+        Keyword arguments to pass to the model fit function
+    **kwargs
+        Additional keyword arguments to pass to the mixedlm function
+
+    Returns
+    -------
+    results : statsmodels.regression.mixed_linear_model.MixedLMResults
+        The fitted model results.
+        See ``statsmodels.regression.mixed_linear_model.MixedLMResults``
+
+    See Also
+    --------
+    statsmodels.formula.api.mixedlm
+    statsmodels.regression.mixed_linear_model.MixedLM
+
+    Notes
+    -----
+
+
+    Examples
+    --------
+    >>> data = pd.DataFrame([[1, 0, 10.2], [1, 1, 12.5],
+    ...                     [1, 7, 14.8], [1, 14, 16.1]],
+    ...                     index=[0, 1, 2, 3],
+    ...                     columns=["patient_id", "time_point",
+    ...                             "response"])
+    >>> result = dirmult_lme("response ~ time_point", groups="patient_id", data=data)
+    >>> print(result.summary())
+              Mixed Linear Model Regression Results
+    =========================================================
+    Model:             MixedLM  Dependent Variable:  response
+    No. Observations:  4        Method:              REML
+    No. Groups:        1        Scale:               1.4264
+    Min. group size:   4        Log-Likelihood:      -6.3004
+    Max. group size:   4        Converged:           Yes
+    Mean group size:   4.0
+    ---------------------------------------------------------
+               Coef.     Std.Err.     z   P>|z| [0.025 0.975]
+    ---------------------------------------------------------
+    Intercept  11.345         1.459 7.777 0.000  8.486 14.204
+    time_point  0.374         0.107 3.497 0.000  0.164  0.583
+    Group Var   1.426 160301149.746
+    =========================================================
+    <BLANKLINE>
+
+    """
+
     # Fit the Dirichlet Multinomial linear mixed effects model
     model = mixedlm(formula=formula, data=data, groups=data[groups], **kwargs)
     if fit_kwargs is None:
