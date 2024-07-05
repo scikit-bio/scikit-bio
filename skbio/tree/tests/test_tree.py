@@ -28,7 +28,17 @@ class TreeTests(TestCase):
 
     def setUp(self):
         """Prep the self"""
+        # a simple tree
         self.simple_t = TreeNode.read(["((a,b)i1,(c,d)i2)root;"])
+        #                     /-a
+        #           /i1------|
+        #          |          \-b
+        # -root----|
+        #          |          /-c
+        #           \i2------|
+        #                     \-d
+
+        # another test tree
         nodes = dict([(x, TreeNode(x)) for x in "abcdefgh"])
         nodes["a"].append(nodes["b"])
         nodes["b"].append(nodes["c"])
@@ -38,6 +48,14 @@ class TreeTests(TestCase):
         nodes["f"].append(nodes["g"])
         nodes["a"].append(nodes["h"])
         self.TreeRoot = nodes["a"]
+        # (((d,e,(g)f)c)b,h)a;
+        #                               /-d
+        #                              |
+        #           /b------- /c-------|--e
+        #          |                   |
+        # -a-------|                    \f------- /-g
+        #          |
+        #           \-h
 
         def rev_f(items):
             items.reverse()
@@ -188,14 +206,32 @@ class TreeTests(TestCase):
         cp = self.simple_t.copy(deep=False)
         cp.dummy[1].append(0)
         self.assertListEqual(self.simple_t.dummy[1], [2, 3, 0])
-        del self.simple_t.dummy
 
     def test_deepcopy(self):
         self.simple_t.dummy = [1, [2, 3], 4]
         cp = self.simple_t.deepcopy()
         cp.dummy[1].append(0)
         self.assertListEqual(self.simple_t.dummy[1], [2, 3])
-        del self.simple_t.dummy
+
+    def test__copy__(self):
+        self.simple_t.dummy = [1, [2, 3], 4]
+        cp = self.simple_t.__copy__()
+        for obs, exp in zip(cp.traverse(), self.simple_t.traverse()):
+            self.assertIsNot(obs, exp)
+            self.assertEqual(obs.name, exp.name)
+            self.assertEqual(obs.length, exp.length)
+        cp.dummy[1].append(0)
+        self.assertListEqual(self.simple_t.dummy[1], [2, 3, 0])
+
+    def test__deepcopy__(self):
+        self.simple_t.dummy = [1, [2, 3], 4]
+        cp = self.simple_t.__deepcopy__({})
+        for obs, exp in zip(cp.traverse(), self.simple_t.traverse()):
+            self.assertIsNot(obs, exp)
+            self.assertEqual(obs.name, exp.name)
+            self.assertEqual(obs.length, exp.length)
+        cp.dummy[1].append(0)
+        self.assertListEqual(self.simple_t.dummy[1], [2, 3])
 
     def test_append(self):
         """Append a node to a tree"""
@@ -1111,23 +1147,30 @@ class TreeTests(TestCase):
         exp = "((a,b)c:0.4,((d,e)f,(h)i)g:0.6)root;\n"
         self.assertEqual(obs, exp)
 
+        # with branch support
+        t = TreeNode.read(["(((a,b)'90:c',(d,e)'80:f')g,h)i;"])
+        t.assign_supports()
+        obs = str(t.root_at("c", above=True, branch_attrs=[]))
+        exp = "((a,b)'90:c',((d,e)'80:f',(h)i)'90:g')root;\n"
+        self.assertEqual(obs, exp)
+
     def test_root_at_reset(self):
         """Root tree while resetting original root."""
         t = TreeNode.read(["(((a,b)c,(d,e)f)g,h)i;"])
 
         # unroot tree prior to rerooting
-        obs = str(t.root_at("c", reset_root=True, branch_attrs=[]))
+        obs = str(t.root_at("c", reset=True, branch_attrs=[]))
         exp = "(a,b,((d,e)f,h)g)c;\n"
         self.assertEqual(obs, exp)
 
         # root at a basal node (which will be avoided during unrooting)
-        obs = str(t.root_at("g", reset_root=True, branch_attrs=[]))
+        obs = str(t.root_at("g", reset=True, branch_attrs=[]))
         exp = "((a,b)c,(d,e)f,h)g;\n"
         self.assertEqual(obs, exp)
 
         # tree is already unrooted
         t = TreeNode.read(["((a,b)c,d,e)f;"])
-        obs = str(t.root_at("c", branch_attrs=[], reset_root=True))
+        obs = str(t.root_at("c", branch_attrs=[], reset=True))
         exp = str(t.root_at("c", branch_attrs=[]))
         self.assertEqual(obs, exp)
 
@@ -1137,6 +1180,8 @@ class TreeTests(TestCase):
         for n in t.traverse():
             n.length = 1
 
+        # g and h are farthest apart, by 5, therefore root should be
+        # 2.5 away from h, i.e., midpoint between b and c
         result = t.root_at_midpoint()
         self.assertEqual(result.distance(result.find("e")), 1.5)
         self.assertEqual(result.distance(result.find("g")), 2.5)
@@ -1168,6 +1213,102 @@ class TreeTests(TestCase):
         for o, e in zip(obs.traverse(), exp.traverse()):
             self.assertEqual(o.name, e.name)
             self.assertEqual(o.length, e.length)
+
+        # no root name
+        obs = t.root_at_midpoint(branch_attrs=[], root_name=None)
+        self.assertIsNone(obs.name)
+
+        # with branch support
+        t = TreeNode.read(["((a:1,b:1)c:2,(d:3,e:4)'80:f':5,g:1)h;"])
+        t.assign_supports()
+        obs = t.root_at_midpoint(branch_attrs=[])
+        exp = TreeNode.read(["((d:3,e:4)'80:f':2,((a:1,b:1)c:2,g:1)'80:h':3)root;"])
+        exp.assign_supports()
+        for o, e in zip(obs.traverse(), exp.traverse()):
+            self.assertEqual(o.name, e.name)
+            self.assertEqual(o.length, e.length)
+            self.assertEqual(o.support, e.support)
+
+    def test_root_at_midpoint_node(self):
+        t = TreeNode.read(["(((a:2,b:3)c:1,d:1)e:1,f:3)g;"])
+        # farthest tip-to-tip distance is 8 (b - c - e - f)
+        # therefore new root should be at e
+        obs = t.root_at_midpoint(branch_attrs=[])
+        exp = TreeNode.read(["((a:2.0,b:3.0)c:1.0,d:1.0,(f:3.0)g:1.0)e;"])
+        for o, e in zip(obs.traverse(), exp.traverse()):
+            self.assertEqual(o.name, e.name)
+            self.assertEqual(o.length, e.length)
+
+        # remove original root
+        obs = t.root_at_midpoint(branch_attrs=[], reset=True)
+        exp = TreeNode.read(["((a:2.0,b:3.0)c:1.0,d:1.0,f:4.0)e;"])
+        for o, e in zip(obs.traverse(), exp.traverse()):
+            self.assertEqual(o.name, e.name)
+            self.assertEqual(o.length, e.length)
+
+    def test_root_by_outgroup(self):
+        tree = TreeNode.read(["((((a,b),(c,d)),(e,f)),g);"])
+
+        # outgroup is monophyletic
+        obs = str(tree.root_by_outgroup(["a", "b"]))
+        exp = "((a,b),((c,d),((e,f),g)));\n"
+        self.assertEqual(obs, exp)
+
+        # outgroup is monophyletic after rotating
+        obs = str(tree.root_by_outgroup(["e", "f", "g"]))
+        exp = "(((e,f),g),((c,d),(b,a)));\n"
+        self.assertEqual(obs, exp)
+
+        # outgroup is a single taxon
+        obs = str(tree.root_by_outgroup(["a"]))
+        exp = "(a,(b,((c,d),((e,f),g))));\n"
+        self.assertEqual(obs, exp)
+
+        # outgroup is not monophyletic
+        msg = "Outgroup is not monophyletic in the tree."
+        with self.assertRaisesRegex(TreeError, msg):
+            tree.root_by_outgroup(["a", "c"])
+
+        # outgroup has extra taxa
+        msg = "Outgroup is not a proper subset of taxa in the tree."
+        with self.assertRaisesRegex(TreeError, msg):
+            tree.root_by_outgroup(["a", "b", "x"])
+
+        # outgroup is not in tree
+        with self.assertRaisesRegex(TreeError, msg):
+            tree.root_by_outgroup(["x", "y"])
+
+        # outgroup is the whole tree
+        with self.assertRaisesRegex(TreeError, msg):
+            tree.root_by_outgroup("abcdefg")
+
+        # generate unrooted tree
+        obs = str(tree.root_by_outgroup(["a", "b"], above=False))
+        exp = "(a,b,((c,d),((e,f),g)));\n"
+        self.assertEqual(obs, exp)
+
+        # keep old root node
+        obs = str(tree.root_by_outgroup(["a", "b"], reset=False))
+        exp = "((a,b),((c,d),((e,f),(g))));\n"
+        self.assertEqual(obs, exp)
+
+        # specify root name
+        obs = str(tree.root_by_outgroup(["a", "b"], root_name="root"))
+        exp = "((a,b),((c,d),((e,f),g)))root;\n"
+        self.assertEqual(obs, exp)
+
+        # transfer branch support
+        tree = TreeNode.read(["((((a,b)80,(c,d)),(e,f)),g);"])
+        tree.assign_supports()
+        obs = str(tree.root_by_outgroup(["a", "b"]))
+        exp = "((a,b)80,((c,d),((e,f),g))80);\n"
+        self.assertEqual(obs, exp)
+
+        # transfer custom branch attribute
+        tree = TreeNode.read(["((((a,b),(c,d))x,(e,f)),g);"])
+        obs = str(tree.root_by_outgroup(["a", "b"], branch_attrs=["name"]))
+        exp = "((a,b),((c,d),((e,f),g)x));\n"
+        self.assertEqual(obs, exp)
 
     def test_compare_subsets(self):
         """compare_subsets should return the fraction of shared subsets"""

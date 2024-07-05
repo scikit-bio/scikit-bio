@@ -316,7 +316,8 @@ class TreeNode(SkbioObject):
 
         # copy branch attributes to new node
         branch_attrs = set(branch_attrs)
-        branch_attrs.update(["support"])
+        branch_attrs.add("support")
+        branch_attrs.discard("length")
         for attr in branch_attrs:
             setattr(node, attr, getattr(self, attr, None))
 
@@ -1092,11 +1093,22 @@ class TreeNode(SkbioObject):
             else:
                 other.length = L
 
+    def _insert_above(self, above, branch_attrs=[]):
+        """Insert a node into the branch connecting a node to its parent."""
+        if above is False:
+            return self
+        node = self.__class__()
+        if above is True:
+            self.insert(node, None, branch_attrs)
+        else:
+            self.insert(node, above, branch_attrs)
+        return node
+
     def root_at(
         self,
         node=None,
         above=False,
-        reset_root=False,
+        reset=False,
         branch_attrs=["name"],
         root_name="root",
     ):
@@ -1113,18 +1125,18 @@ class TreeNode(SkbioObject):
             will return the original tree.
 
         above : bool, float, or int, optional
-            Whether and where to insert a new root node. If ``False``, the
-            target node will serve as the root node. If ``True``, a new root
-            node will be created and inserted at the midpoint of the branch
-            connecting the target node and its parent. If a number, the new
-            root will be inserted at this distance from the target node. The
-            number ranges between 0 and branch length.
+            Whether and where to insert a new root node. If ``False``
+            (default), the target node will serve as the root node. If
+            ``True``, a new root node will be created and inserted at the
+            midpoint of the branch connecting the target node and its parent.
+            If a number, the new root will be inserted at this distance from
+            the target node. The number ranges between 0 and branch length.
 
             .. versionadded:: 0.6.2
 
-        reset_root : bool, optional
-            Whether unroot the tree if it is rooted before performing the
-            rerooting operation. Default is ``False``.
+        reset : bool, optional
+            Whether remove the original root of a rooted tree before performing
+            the rerooting operation. Default is ``False``.
 
             .. versionadded:: 0.6.2
 
@@ -1229,14 +1241,11 @@ class TreeNode(SkbioObject):
         if node.is_root():
             return node.copy()
 
-        branch_attrs = set(branch_attrs)
-        branch_attrs.update(["length", "support"])
-
-        if reset_root and len(tree.children) != 2:
-            reset_root = False
+        if reset and len(tree.children) != 2:
+            reset = False
 
         # copy the tree if it needs to be manipulated prior to walking
-        if reset_root or above is not False:
+        if reset or above is not False:
             tree.assign_ids()
             new_tree = tree.copy()
             new_tree.assign_ids()
@@ -1245,7 +1254,7 @@ class TreeNode(SkbioObject):
 
         # remove original root; we need to make sure the node itself is not the
         # basal node that gets removed
-        if reset_root:
+        if reset:
             side = None
             for i, base in enumerate(tree.children):
                 if node is base:
@@ -1254,21 +1263,25 @@ class TreeNode(SkbioObject):
             tree.unroot(side)
 
         # insert a new root node into the branch above
-        if above is not False:
-            new_root = self.__class__()
-            if above is True:
-                node.insert(new_root, None)
-            else:
-                node.insert(new_root, above)
-            node = new_root
+        node = node._insert_above(above, branch_attrs)
 
+        branch_attrs = set(branch_attrs)
+        branch_attrs.update(["length", "support"])
         return node.unrooted_copy(branch_attrs=branch_attrs, root_name=root_name)
 
-    def root_at_midpoint(self, branch_attrs=["name"], root_name="root"):
-        r"""Return a new tree rooted at midpoint of the two tips farthest apart.
+    def root_at_midpoint(self, reset=False, branch_attrs=["name"], root_name="root"):
+        r"""Reroot the tree at the midpoint of the two tips farthest apart.
 
         Parameters
         ----------
+        reset : bool, optional
+            Whether remove the original root of a rooted tree before performing
+            the rerooting operation. Default is ``False``.
+
+            .. versionadded:: 0.6.2
+
+            .. note:: The default value will be set as ``True`` in 0.7.0.
+
         branch_attrs : iterable of str, optional
             Attributes of each node that should be considered as attributes of
             the branch connecting the node to its parent. This is important for
@@ -1292,10 +1305,6 @@ class TreeNode(SkbioObject):
         -------
         TreeNode
             A tree rooted at its midpoint.
-
-            .. versionchanged:: 0.6.2
-
-                The midpoint rooting algorithm now preserves node naming.
 
         Raises
         ------
@@ -1323,19 +1332,41 @@ class TreeNode(SkbioObject):
         --------
         >>> from skbio import TreeNode
         >>> tree = TreeNode.read(["((a:1,b:1)c:2,(d:3,e:4)f:5,g:1)h;"])
-        >>> print(tree.root_at_midpoint(branch_attrs=[]))
+        >>> print(tree.ascii_art())
+                            /-a
+                  /c-------|
+                 |          \-b
+                 |
+        -h-------|          /-d
+                 |-f-------|
+                 |          \-e
+                 |
+                  \-g
+
+        >>> t = tree.root_at_midpoint(branch_attrs=[])
+        >>> print(t)
         ((d:3.0,e:4.0)f:2.0,((a:1.0,b:1.0)c:2.0,g:1.0)h:3.0)root;
         <BLANKLINE>
+        >>> print(t.ascii_art())
+                            /-d
+                  /f-------|
+                 |          \-e
+        -root----|
+                 |                    /-a
+                 |          /c-------|
+                  \h-------|          \-b
+                           |
+                            \-g
 
         """
-        branch_attrs = set(branch_attrs)
-        branch_attrs.update(["length", "support"])
-
         tree = self.copy()
+        if reset:
+            tree.unroot()
+
         max_dist, tips = tree.get_max_distance()
         half_max_dist = max_dist / 2.0
 
-        if max_dist == 0.0:  # only pathological cases with no lengths
+        if max_dist == 0.0:
             return tree
 
         tip1 = tree.find(tips[0])
@@ -1356,16 +1387,162 @@ class TreeNode(SkbioObject):
         # make the parent node as the new root
         if dist_climbed + climb_node.length == half_max_dist:
             new_root = climb_node.parent
-            if new_root.is_tip():
-                raise TreeError("Cannot root the tree at a tip.")
 
         # case 2: midpoint is on the climb node's branch to its parent
         # insert a new root node into the branch
         else:
             new_root = tree.__class__()
             climb_node.insert(new_root, half_max_dist - dist_climbed)
+            # TODO: Here, `branch_attrs` should be added to `insert`. However, this
+            # will cause a backward-incompatible behavior. This change will be made
+            # in version 0.7.0, along with the removal of `name` from the default of
+            # `branch_attrs`.
 
+        branch_attrs = set(branch_attrs)
+        branch_attrs.update(["length", "support"])
         return new_root.unrooted_copy(branch_attrs=branch_attrs, root_name=root_name)
+
+    def root_by_outgroup(
+        self, outgroup, above=True, reset=True, branch_attrs=[], root_name=None
+    ):
+        r"""Reroot the tree with a given set of taxa as outgroup.
+
+        Parameters
+        ----------
+        outgroup : iterable of str
+            Taxon set to serve as outgroup. Must be a proper subset of taxa in
+            the tree. The tree will be rooted at the lowest common ancestor
+            (LCA) of the outgroup.
+        above : bool, float, or int, optional
+            Whether and where to insert a new root node. If ``False``, the
+            LCA will serve as the root node. If ``True`` (default), a new root
+            node will be created and inserted at the midpoint of the branch
+            connecting the LCA and its parent (i.e., the midpoint between
+            outgroup and ingroup). If a number between 0 and branch length, the
+            new root will be inserted at this distance from the LCA.
+        reset : bool, optional
+            Whether remove the original root of a rooted tree before performing
+            the rerooting operation. Default is ``True``.
+        branch_attrs : iterable of str, optional
+            Attributes of each node that should be considered as attributes of
+            the branch connecting the node to its parent. This is important for
+            the correct rerooting operation. "length" and "support" will be
+            automatically included as they are always branch attributes.
+        root_name : str or None, optional
+            Name for the root node, if it doesn't already have one.
+
+        Returns
+        -------
+        TreeNode
+            A tree rooted by the outgroup.
+
+        Raises
+        ------
+        TreeError
+            Outgroup is not a proper subset of taxa in the tree.
+        TreeError
+            Outgroup is not monophyletic in the tree.
+
+        Notes
+        -----
+        An outgroup is a subset of taxa that are usually distantly related from
+        the remaining taxa (ingroup). The outgroup helps with locating the root
+        of the ingroup, which are of interest in the study.
+
+        This method reroots the tree at the lowest common ancestor (LCA) of the
+        outgroup. By default, a new root will be placed at the midpoint between
+        the LCA of outgroup and that of ingroup. But this behavior can be
+        customized.
+
+        This method requires the outgroup to be monophyletic, i.e., it forms a
+        single clade in the tree. If the outgroup spans across the root of the
+        tree, the method will reroot the tree within the ingroup such that the
+        outgroup can form a clade in the rerooted tree, prior to rooting by
+        outgroup.
+
+        Examples
+        --------
+        >>> from skbio import TreeNode
+        >>> tree = TreeNode.read(['((((a,b),(c,d)),(e,f)),g);'])
+        >>> print(tree.ascii_art())
+                                                /-a
+                                      /--------|
+                                     |          \-b
+                            /--------|
+                           |         |          /-c
+                           |          \--------|
+                  /--------|                    \-d
+                 |         |
+                 |         |          /-e
+        ---------|          \--------|
+                 |                    \-f
+                 |
+                  \-g
+
+        >>> rooted = tree.root_by_outgroup(['a', 'b'])
+        >>> print(rooted.ascii_art())
+                            /-a
+                  /--------|
+                 |          \-b
+                 |
+        ---------|                    /-c
+                 |          /--------|
+                 |         |          \-d
+                  \--------|
+                           |                    /-e
+                           |          /--------|
+                            \--------|          \-f
+                                     |
+                                      \-g
+
+        >>> rooted = tree.root_by_outgroup(['e', 'f', 'g'])
+        >>> print(rooted.ascii_art())
+                                      /-e
+                            /--------|
+                  /--------|          \-f
+                 |         |
+                 |          \-g
+        ---------|
+                 |                    /-c
+                 |          /--------|
+                 |         |          \-d
+                  \--------|
+                           |          /-b
+                            \--------|
+                                      \-a
+
+        """
+        outgroup = set(outgroup)
+
+        if not outgroup < self.subset():
+            raise TreeError("Outgroup is not a proper subset of taxa in the tree.")
+
+        # locate the lowest common ancestor (LCA) of outgroup in the tree
+        lca = self.lca(outgroup)
+
+        # if LCA is root (i.e., outgroup is split across basal clades), root
+        # the tree at a tip within the ingroup and locate LCA again
+        if lca is self:
+            for tip in self.tips():
+                if tip.name not in outgroup:
+                    tree = self.root_at(tip, reset=reset, branch_attrs=branch_attrs)
+                    break
+            lca = tree.lca(outgroup)
+        else:
+            tree = self
+
+        # test if outgroup is monophyletic
+        if lca.count(tips=True) > len(outgroup):
+            raise TreeError("Outgroup is not monophyletic in the tree.")
+
+        # reroot the tree at LCA
+        return tree.root_at(
+            lca,
+            above=above,
+            reset=reset,
+            branch_attrs=branch_attrs,
+            root_name=root_name,
+        )
 
     def is_tip(self):
         r"""Return `True` if the current node has no `children`.
@@ -2228,7 +2405,7 @@ class TreeNode(SkbioObject):
 
         Parameters
         ----------
-        tipnames : list of TreeNode or str
+        tipnames : iterable of TreeNode or str
             The nodes of interest
 
         Returns
@@ -2257,7 +2434,7 @@ class TreeNode(SkbioObject):
 
         """
         if len(tipnames) == 1:
-            return self.find(tipnames[0])
+            return self.find(next(iter(tipnames)))
 
         tips = [self.find(name) for name in tipnames]
 
