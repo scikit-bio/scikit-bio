@@ -91,13 +91,8 @@ class TreeNode(SkbioObject):
         self.length = length
         self.support = support
         self.parent = parent
-        self._tip_cache = {}
-        self._non_tip_cache = {}
-        self._registered_caches = set()
-
         self.children = []
         self.id = None
-
         if children is not None:
             self.extend(children)
 
@@ -171,7 +166,6 @@ class TreeNode(SkbioObject):
 
     def _adopt(self, node):
         r"""Update `parent` references but does NOT update `children`."""
-        self.invalidate_caches()
         if node.parent is not None:
             node.parent.remove(node)
         node.parent = self
@@ -208,6 +202,7 @@ class TreeNode(SkbioObject):
         <BLANKLINE>
 
         """
+        self.invalidate_caches()
         self.children.append(self._adopt(node))
 
     def extend(self, nodes):
@@ -238,6 +233,7 @@ class TreeNode(SkbioObject):
         <BLANKLINE>
 
         """
+        self.invalidate_caches()
         self.children.extend([self._adopt(n) for n in nodes[:]])
 
     def insert(self, node, distance=None, branch_attrs=[]):
@@ -2126,14 +2122,16 @@ class TreeNode(SkbioObject):
         if not self.is_root():
             self.root().invalidate_caches()
         else:
-            self._tip_cache = {}
-            self._non_tip_cache = {}
+            if hasattr(self, "_tip_cache"):
+                delattr(self, "_tip_cache")
+            if hasattr(self, "_non_tip_cache"):
+                delattr(self, "_non_tip_cache")
 
-            if self._registered_caches and attr:
-                for n in self.traverse():
+            if hasattr(self, "_registered_caches") and attr:
+                for node in self.traverse():
                     for cache in self._registered_caches:
-                        if hasattr(n, cache):
-                            delattr(n, cache)
+                        if hasattr(node, cache):
+                            delattr(node, cache)
 
     def create_caches(self):
         r"""Construct an internal lookup table to facilitate searching by name.
@@ -2162,7 +2160,7 @@ class TreeNode(SkbioObject):
         if not self.is_root():
             self.root().create_caches()
         else:
-            if self._tip_cache and self._non_tip_cache:
+            if hasattr(self, "_tip_cache") and hasattr(self, "_non_tip_cache"):
                 return
 
             self.invalidate_caches(attr=False)
@@ -2179,7 +2177,7 @@ class TreeNode(SkbioObject):
                 if node.is_tip():
                     if name in tip_cache:
                         raise DuplicateNodeError(
-                            "Tip with name '%s' already " "exists." % name
+                            f"Tip with name '{name}' already exists."
                         )
 
                     tip_cache[name] = node
@@ -2247,7 +2245,7 @@ class TreeNode(SkbioObject):
         nodes.append(tip) if tip is not None else None
 
         if not nodes:
-            raise MissingNodeError("Node %s is not in self" % name)
+            raise MissingNodeError(f"Node '{name}' is not in self.")
         else:
             return nodes
 
@@ -3747,6 +3745,8 @@ class TreeNode(SkbioObject):
             raise TypeError("Only list, set and frozenset are supported.")
 
         for node in self.postorder(include_self=True):
+            if not hasattr(node, "_registered_caches"):
+                node._registered_caches = set()
             node._registered_caches.add(cache_attrname)
 
             cached = [getattr(c, cache_attrname) for c in node.children]
