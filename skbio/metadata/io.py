@@ -473,7 +473,14 @@ class MetadataWriter:
 
             df = md.to_dataframe(encode_missing=True)
             df.fillna("", inplace=True)
-            df = df.applymap(self._format)
+            # since `applymap` is going to be deprecated soon
+            # and `map` may not work on older versions of pandas
+            try:
+                mapper_ = df.map
+            except AttributeError:
+                mapper_ = df.applymap
+            df = mapper_(self._format)
+
             tsv_writer.writerows(df.itertuples(index=True))
 
     def _non_default_missing(self, missing_directive):

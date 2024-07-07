@@ -45,9 +45,14 @@ def _get_alpha_diversity_metric_map():
         "esty_ci": skbio.diversity.alpha.esty_ci,
         "faith_pd": skbio.diversity.alpha.faith_pd,
         "fisher_alpha": skbio.diversity.alpha.fisher_alpha,
+        "gini_index": skbio.diversity.alpha.gini_index,
         "goods_coverage": skbio.diversity.alpha.goods_coverage,
+        "inv_simpson": skbio.diversity.alpha.inv_simpson,
+        "hill": skbio.diversity.alpha.hill,
         "heip_e": skbio.diversity.alpha.heip_e,
         "kempton_taylor_q": skbio.diversity.alpha.kempton_taylor_q,
+        "lladser_ci": skbio.diversity.alpha.lladser_ci,
+        "lladser_pe": skbio.diversity.alpha.lladser_pe,
         "margalef": skbio.diversity.alpha.margalef,
         "mcintosh_d": skbio.diversity.alpha.mcintosh_d,
         "mcintosh_e": skbio.diversity.alpha.mcintosh_e,
@@ -56,17 +61,18 @@ def _get_alpha_diversity_metric_map():
         "observed_features": skbio.diversity.alpha.observed_features,
         "observed_otus": skbio.diversity.alpha.observed_otus,
         "osd": skbio.diversity.alpha.osd,
+        "phydiv": skbio.diversity.alpha.phydiv,
         "pielou_e": skbio.diversity.alpha.pielou_e,
+        "renyi": skbio.diversity.alpha.renyi,
         "robbins": skbio.diversity.alpha.robbins,
         "shannon": skbio.diversity.alpha.shannon,
         "simpson": skbio.diversity.alpha.simpson,
+        "simpson_d": skbio.diversity.alpha.simpson_d,
         "simpson_e": skbio.diversity.alpha.simpson_e,
         "singles": skbio.diversity.alpha.singles,
         "sobs": skbio.diversity.alpha.sobs,
         "strong": skbio.diversity.alpha.strong,
-        "gini_index": skbio.diversity.alpha.gini_index,
-        "lladser_pe": skbio.diversity.alpha.lladser_pe,
-        "lladser_ci": skbio.diversity.alpha.lladser_ci,
+        "tsallis": skbio.diversity.alpha.tsallis,
     }
 
 
@@ -136,7 +142,7 @@ def alpha_diversity(metric, counts, ids=None, validate=True, **kwargs):
         Identifiers for each sample in ``counts``. By default, samples will be
         assigned integer identifiers in the order that they were provided.
     validate: bool, optional
-        If `False`, validation of the input won't be performed. This step can
+        If ``False``, validation of the input won't be performed. This step can
         be slow, so if validation is run elsewhere it can be disabled here.
         However, invalid input data can lead to invalid results or error
         messages that are hard to interpret, so this step should not be
@@ -378,7 +384,7 @@ def beta_diversity(
         assigned integer identifiers in the order that they were provided
         (where the type of the identifiers will be ``str``).
     validate : bool, optional
-        If `False`, validation of the input won't be performed. This step can
+        If ``False``, validation of the input won't be performed. This step can
         be slow, so if validation is run elsewhere it can be disabled here.
         However, invalid input data can lead to invalid results or error
         messages that are hard to interpret, so this step should not be

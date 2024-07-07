@@ -13,6 +13,7 @@ import pandas as pd
 import numpy as np
 
 from skbio.util import get_data_path, assert_data_frame_almost_equal
+from skbio.util._testing import _data_frame_to_default_int_type
 from skbio.io.format.taxdump import _taxdump_to_data_frame
 
 
@@ -68,6 +69,7 @@ class TestTaxdumpReader(unittest.TestCase):
                  'inherited_MGC_flag', 'GenBank_hidden_flag',
                  'hidden_subtree_root_flag', 'comments']).set_index('tax_id')
         exp['comments'] = exp['comments'].astype('O')
+        _data_frame_to_default_int_type(exp)
         assert_data_frame_almost_equal(obs, exp)
 
     def test_names_default(self):
@@ -130,6 +132,7 @@ class TestTaxdumpReader(unittest.TestCase):
             [1038927, 562,    'no rank'],
             [2580236, 488338, 'species']],
             columns=['tax_id', 'parent_tax_id', 'rank']).set_index('tax_id')
+        _data_frame_to_default_int_type(exp)
         assert_data_frame_almost_equal(obs, exp)
 
     def test_custom_scheme(self):

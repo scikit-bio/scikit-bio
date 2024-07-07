@@ -14,6 +14,7 @@ import unittest
 import warnings
 import types
 from tempfile import mkstemp
+from sys import platform
 
 from skbio.io import (FormatIdentificationWarning, UnrecognizedFormatError,
                       ArgumentOverrideWarning, io_registry, sniff,
@@ -624,7 +625,9 @@ class TestSniff(RegistryTest):
 
         @formatx.sniffer()
         def sniffer(fh):
-            self.assertEqual(fh.readlines(), ['a\nb\nc\nd\ne\n'])
+            with io.open(fp, newline=None) as f:
+                content = f.read()
+            self.assertEqual(content, 'a\nb\nc\nd\ne\n')
             return True, {}
 
         fmt, _ = self.registry.sniff(fp)
@@ -638,10 +641,16 @@ class TestSniff(RegistryTest):
             return True, {}
 
         with io.open(get_data_path('real_file')) as fh:
-            fh.seek(2)
-            self.registry.sniff(fh)
-            self.assertEqual(fh.tell(), 2)
-            self.assertEqual('b\n', fh.readline())
+            if platform == "win32":
+                fh.seek(3)
+                self.registry.sniff(fh)
+                self.assertEqual(fh.tell(), 3)
+                self.assertEqual('b\n', fh.readline())
+            else:
+                fh.seek(2)
+                self.registry.sniff(fh)
+                self.assertEqual(fh.tell(), 2)
+                self.assertEqual('b\n', fh.readline())
 
     def test_position_not_mutated_fileish(self):
         formatx = self.registry.create_format('formatx')
@@ -1181,11 +1190,15 @@ class TestRead(RegistryTest):
 
         @formatx.reader(MockClass)
         def reader(fh):
-            return MockClass(fh.readlines())
+            with io.open(fp, newline=None) as f:
+                content = [''.join(f.readlines())]
+            return MockClass(content)
 
         @formatx.reader(None)
         def reader_gen(fh):
-            yield MockClass(fh.readlines())
+            with io.open(fp, newline=None) as f:
+                content = [''.join(f.readlines())]
+            yield MockClass(content)
 
         instance = self.registry.read(fp, into=MockClass)
         self.assertEqual(instance, MockClass(['a\nb\nc\nd\ne\n']))
@@ -1535,7 +1548,7 @@ class TestWrite(RegistryTest):
 
         with io.open(fp, mode='rb') as fh:
             # This would have been b'\xe4\xbd\xa0\xe5\xa5\xbd\n' in utf8
-            self.assertEqual(b'\xa7A\xa6n\n', fh.read())
+            self.assertEqual(b"\xa7A\xa6n\n", fh.read().replace(b"\r\n", b"\n"))
 
     def test_non_default_encoding(self):
         format1 = self.registry.create_format('format1', encoding='big5')
@@ -1552,13 +1565,14 @@ class TestWrite(RegistryTest):
         self.registry.write(obj, format='format1', into=fp)
 
         with io.open(fp, mode='rb') as fh:
-            self.assertEqual(b'\xa7A\xa6n\n', fh.read())
+            self.assertEqual(b"\xa7A\xa6n\n", fh.read().replace(b"\r\n", b"\n"))
 
         self._expected_encoding = 'utf8'
         self.registry.write(obj, format='format1', into=fp, encoding='utf8')
 
         with io.open(fp, mode='rb') as fh:
-            self.assertEqual(b'\xe4\xbd\xa0\xe5\xa5\xbd\n', fh.read())
+            self.assertEqual(b"\xe4\xbd\xa0\xe5\xa5\xbd\n",
+                             fh.read().replace(b"\r\n", b"\n"))
 
     def test_that_newline_is_used(self):
         format1 = self.registry.create_format('format1')
@@ -1696,8 +1710,8 @@ class TestWrite(RegistryTest):
             for line in iterator:
                 fh.write(line)
 
-        self.registry.write(obj, format='format1', into=fp, compression='bz2')
-        self.registry.write(obj, format='format1', into=f, compression='bz2')
+        self.registry.write(obj, format='format1', into=fp, compression='bz2', newline='\n')
+        self.registry.write(obj, format='format1', into=f, compression='bz2', newline='\n')
         expected = (
             b'BZh91AY&SY\x03\x89\x0c\xa6\x00\x00\x01\xc1\x00\x00\x108\x00 \x00'
             b'!\x9ah3M\x1c\xb7\x8b\xb9"\x9c(H\x01\xc4\x86S\x00')

@@ -399,3 +399,51 @@ class OrdinationResults(SkbioObject, PlottableMixin):
         else:
             formatted_attr = formatter(attr)
         return "\t%s: %s" % (attr_label, formatted_attr)
+
+    def rename(self, mapper, matrix='samples', strict=True):
+        """
+        Renames IDs in OrdinationResults.
+
+        Parameters
+        ----------
+        mapper : dict or function
+            A dictionary or function that maps current IDs to new IDs.
+        matrix : samples or features
+            Specifies which id type, either 'samples' or 'features', to rename.
+        strict : bool, optional
+           If True, then every id in the OrdinationResults dataframe must be
+           included in mapper and renamed.
+           If False, then only the specified indices will be renamed.
+
+        Raises
+        ______
+        ValueError
+            If strict is True and `mapper` does not contain all of the same
+            IDs as `OrdinationResults`.
+
+            If renaming `features` but `self` does not contain `features`.
+
+            If `matrix` is neither `samples` nor `features`.
+
+        """
+        samp_errmsg = ("The IDs in mapper are different from the IDs in "
+                       "self.samples.")
+        feat_errmsg = ("The IDs in mapper are different from the IDs in "
+                       "self.features.")
+
+        if matrix == 'samples':
+            if (strict and isinstance(mapper, dict) and
+                    set(mapper) != set(self.samples.index)):
+                raise ValueError(samp_errmsg)
+            self.samples = self.samples.rename(index=mapper)
+        elif matrix == 'features':
+            if self.features is None:
+                raise ValueError("`features` were not provided on "
+                                 "the construction of this object")
+            elif (strict and isinstance(mapper, dict) and
+                    set(mapper) != set(self.features.index)):
+                raise ValueError(feat_errmsg)
+            self.features = self.features.rename(index=mapper)
+        else:
+            raise ValueError("Matrix must be either 'samples' or \
+                             'features'.")

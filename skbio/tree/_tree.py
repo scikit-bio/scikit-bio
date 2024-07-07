@@ -19,7 +19,7 @@ from scipy.spatial.distance import correlation
 
 from skbio._base import SkbioObject
 from skbio.stats.distance import DistanceMatrix
-from ._exception import (
+from skbio.tree._exception import (
     NoLengthError,
     DuplicateNodeError,
     NoParentError,
@@ -90,13 +90,8 @@ class TreeNode(SkbioObject):
         self.length = length
         self.support = support
         self.parent = parent
-        self._tip_cache = {}
-        self._non_tip_cache = {}
-        self._registered_caches = set()
-
         self.children = []
         self.id = None
-
         if children is not None:
             self.extend(children)
 
@@ -170,7 +165,6 @@ class TreeNode(SkbioObject):
 
     def _adopt(self, node):
         r"""Update `parent` references but does NOT update `children`."""
-        self.invalidate_caches()
         if node.parent is not None:
             node.parent.remove(node)
         node.parent = self
@@ -205,6 +199,7 @@ class TreeNode(SkbioObject):
         <BLANKLINE>
 
         """
+        self.invalidate_caches()
         self.children.append(self._adopt(node))
 
     def extend(self, nodes):
@@ -233,6 +228,7 @@ class TreeNode(SkbioObject):
         <BLANKLINE>
 
         """
+        self.invalidate_caches()
         self.children.extend([self._adopt(n) for n in nodes[:]])
 
     def pop(self, index=-1):
@@ -1361,14 +1357,16 @@ class TreeNode(SkbioObject):
         if not self.is_root():
             self.root().invalidate_caches()
         else:
-            self._tip_cache = {}
-            self._non_tip_cache = {}
+            if hasattr(self, "_tip_cache"):
+                delattr(self, "_tip_cache")
+            if hasattr(self, "_non_tip_cache"):
+                delattr(self, "_non_tip_cache")
 
-            if self._registered_caches and attr:
-                for n in self.traverse():
+            if hasattr(self, "_registered_caches") and attr:
+                for node in self.traverse():
                     for cache in self._registered_caches:
-                        if hasattr(n, cache):
-                            delattr(n, cache)
+                        if hasattr(node, cache):
+                            delattr(node, cache)
 
     def create_caches(self):
         r"""Construct an internal lookups to facilitate searching by name.
@@ -1395,7 +1393,7 @@ class TreeNode(SkbioObject):
         if not self.is_root():
             self.root().create_caches()
         else:
-            if self._tip_cache and self._non_tip_cache:
+            if hasattr(self, "_tip_cache") and hasattr(self, "_non_tip_cache"):
                 return
 
             self.invalidate_caches(attr=False)
@@ -1412,7 +1410,7 @@ class TreeNode(SkbioObject):
                 if node.is_tip():
                     if name in tip_cache:
                         raise DuplicateNodeError(
-                            "Tip with name '%s' already " "exists." % name
+                            f"Tip with name '{name}' already exists."
                         )
 
                     tip_cache[name] = node
@@ -1480,7 +1478,7 @@ class TreeNode(SkbioObject):
         nodes.append(tip) if tip is not None else None
 
         if not nodes:
-            raise MissingNodeError("Node %s is not in self" % name)
+            raise MissingNodeError(f"Node '{name}' is not in self.")
         else:
             return nodes
 
@@ -1824,14 +1822,14 @@ class TreeNode(SkbioObject):
 
         Parameters
         ----------
-        lineage_map : iterable of tuple
-            A id to lineage mapping where the first index is an ID and the
-            second index is an iterable of the lineage.
+        lineage_map : dict, iterable of tuples, or pd.DataFrame
+            Mapping of taxon IDs to lineages (iterables of taxonomic units
+            from high to low in ranking).
 
         Returns
         -------
         TreeNode
-            The constructed taxonomy
+            The constructed taxonomy.
 
         See Also
         --------
@@ -1873,6 +1871,11 @@ class TreeNode(SkbioObject):
         """
         root = cls(name=None)
         root._lookup = {}
+
+        if isinstance(lineage_map, dict):
+            lineage_map = lineage_map.items()
+        elif isinstance(lineage_map, pd.DataFrame):
+            lineage_map = ((idx, row.tolist()) for idx, row in lineage_map.iterrows())
 
         for id_, lineage in lineage_map:
             cur_node = root
@@ -2085,11 +2088,11 @@ class TreeNode(SkbioObject):
         >>> res = t.to_array()
         >>> sorted(res.keys())
         ['child_index', 'id', 'id_index', 'length', 'name']
-        >>> res['child_index']
+        >>> res['child_index'] # doctest: +ELLIPSIS
         array([[4, 0, 2],
                [5, 3, 3],
                [6, 4, 5],
-               [7, 6, 6]])
+               [7, 6, 6]]...
         >>> for k, v in res['id_index'].items():
         ...     print(k, v)
         ...
@@ -2954,12 +2957,12 @@ class TreeNode(SkbioObject):
         Node name: h, cache: ['h']
 
         """
-        if cache_type in [set, frozenset]:
+        if cache_type in (set, frozenset):
 
             def reduce_f(a, b):
                 return a | b
 
-        elif cache_type == list:
+        elif cache_type is list:
 
             def reduce_f(a, b):
                 return a + b
@@ -2968,6 +2971,8 @@ class TreeNode(SkbioObject):
             raise TypeError("Only list, set and frozenset are supported.")
 
         for node in self.postorder(include_self=True):
+            if not hasattr(node, "_registered_caches"):
+                node._registered_caches = set()
             node._registered_caches.add(cache_attrname)
 
             cached = [getattr(c, cache_attrname) for c in node.children]

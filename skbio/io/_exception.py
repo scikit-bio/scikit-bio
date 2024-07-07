@@ -132,7 +132,7 @@ class BIOMFormatError(Exception):
     pass
 
 
-class EmbeddingFormatError(Exception):
+class EmbedFormatError(Exception):
     """Raised when an ``Embedding`` formatted file cannot be parsed."""
 
     pass

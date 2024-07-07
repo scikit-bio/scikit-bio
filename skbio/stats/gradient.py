@@ -167,7 +167,7 @@ def _weight_by_vector(trajectories, w_vector):
             trajectories.loc[idx] = (
                 trajectories.loc[idx]
                 * optimal_gradient
-                / np.abs((w_vector[i] - w_vector[i - 1]))
+                / np.abs((w_vector.iloc[i] - w_vector.iloc[i - 1]))
             )
 
     return trajectories.astype("float64")
