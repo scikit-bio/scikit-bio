@@ -4,12 +4,12 @@
 
 ### Features
 
-* Added `rename` method for `OrdinationResults` class ([#2027](https://github.com/scikit-bio/scikit-bio/pull/2027)).
 * Added support for Microsoft Windows operating system. ([#2071](https://github.com/scikit-bio/scikit-bio/pull/2071), [#2068](https://github.com/scikit-bio/scikit-bio/pull/2068),
 [#2067](https://github.com/scikit-bio/scikit-bio/pull/2067), [#2061](https://github.com/scikit-bio/scikit-bio/pull/2061), [#2046](https://github.com/scikit-bio/scikit-bio/pull/2046),
 [#2040](https://github.com/scikit-bio/scikit-bio/pull/2040), [#2036](https://github.com/scikit-bio/scikit-bio/pull/2036), [#2034](https://github.com/scikit-bio/scikit-bio/pull/2034),
 [#2032](https://github.com/scikit-bio/scikit-bio/pull/2032), [#2005](https://github.com/scikit-bio/scikit-bio/pull/2005))
 * Added alpha diversity metrics: Hill number (`hill`), Renyi entropy (`renyi`) and Tsallis entropy (`tsallis`) ([#2074](https://github.com/scikit-bio/scikit-bio/pull/2074)).
+* Added `rename` method for `OrdinationResults` and `DissimilarityMatrix` classes ([#2027](https://github.com/scikit-bio/scikit-bio/pull/2027), [#2085](https://github.com/scikit-bio/scikit-bio/pull/2085)).
 * Added `nni` function for phylogenetic tree rearrangement using nearest neighbor interchange (NNI) ([#2050](https://github.com/scikit-bio/scikit-bio/pull/2050)).
 * Added method `TreeNode.unrooted_move`, which resembles `TreeNode.unrooted_copy` but rearranges the tree in place, thus avoid making copies of the nodes ([#2073](https://github.com/scikit-bio/scikit-bio/pull/2073)).
 * Added method `TreeNode.root_by_outgroup`, which reroots a tree according to a given outgroup ([#2073](https://github.com/scikit-bio/scikit-bio/pull/2073)).

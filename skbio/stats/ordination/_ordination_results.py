@@ -412,14 +412,13 @@ class OrdinationResults(SkbioObject, PlottableMixin):
             "samples" (default) or "features".
         strict : bool, optional
            If ``True`` (default), every ID in the matrix must be included in
-           ``mapper`` and renamed. If ``False``, only the specified IDs will be
-           renamed.
+           ``mapper``. If ``False``, only the specified IDs will be renamed.
 
         Raises
         ------
         ValueError
-            If ``mapper`` does not contain all of the same IDs in the data
-            matrix whereas in strict mode.
+            If ``mapper`` does not contain all of the same IDs in the matrix
+            whereas in strict mode.
         ValueError
             If renaming features but self does not contain features.
         ValueError
