@@ -31,6 +31,9 @@ during the rerooting operation. The default behavior is preserved but is subject
 * Cleared the internal node references after performing midpoint rooting (`TreeNode.root_at_midpoint`), such that a deep copy of the resulting tree will not result in infinite recursion ([#2073](https://github.com/scikit-bio/scikit-bio/pull/2073)).
 * Fixed the Zenodo link in the README to always point to the most recent version ([#2078](https://github.com/scikit-bio/scikit-bio/pull/2078)).
 
+### Miscellaneous
+* Added statsmodels as a dependency of scikit-bio. It replaces some of the from-scratch statistical analyses in scikit-bio, including Welch's t-test (with confidence intervals), Benjamini-Hochberg FDR correction, and Holm-Bonferroni FDR correction ([#2049](https://github.com/scikit-bio/scikit-bio/pull/2049), ([#2063](https://github.com/scikit-bio/scikit-bio/pull/2063))).
+
 ### Deprecated functionality
 
 * Methods `deepcopy` and `unrooted_deepcopy` of `Treenode` are deprecated. Use `copy` and `unrooted_copy` instead.
