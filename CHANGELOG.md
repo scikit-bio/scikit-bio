@@ -1,6 +1,6 @@
 # scikit-bio changelog
 
-## Version 0.6.2-dev
+## Version 0.6.2
 
 ### Features
 
