@@ -1123,8 +1123,8 @@ def renyi(counts, order=2, base=None):
     --------
     hill
     inv_simpson
-    renyi
     shannon
+    tsallis
 
     Notes
     -----
