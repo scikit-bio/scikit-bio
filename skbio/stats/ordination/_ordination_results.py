@@ -400,50 +400,41 @@ class OrdinationResults(SkbioObject, PlottableMixin):
             formatted_attr = formatter(attr)
         return "\t%s: %s" % (attr_label, formatted_attr)
 
-    def rename(self, mapper, matrix='samples', strict=True):
-        """
-        Renames IDs in OrdinationResults.
+    def rename(self, mapper, matrix="samples", strict=True):
+        r"""Rename sample or feature IDs in the data matrix.
 
         Parameters
         ----------
-        mapper : dict or function
+        mapper : dict or callable
             A dictionary or function that maps current IDs to new IDs.
-        matrix : samples or features
-            Specifies which id type, either 'samples' or 'features', to rename.
+        matrix : str, optional
+            Specifies which matrix contains the IDs to be renamed. Either
+            "samples" (default) or "features".
         strict : bool, optional
-           If True, then every id in the OrdinationResults dataframe must be
-           included in mapper and renamed.
-           If False, then only the specified indices will be renamed.
+           If ``True`` (default), every ID in the matrix must be included in
+           ``mapper`` and renamed. If ``False``, only the specified IDs will be
+           renamed.
 
         Raises
-        ______
+        ------
         ValueError
-            If strict is True and `mapper` does not contain all of the same
-            IDs as `OrdinationResults`.
-
-            If renaming `features` but `self` does not contain `features`.
-
-            If `matrix` is neither `samples` nor `features`.
+            If ``mapper`` does not contain all of the same IDs in the data
+            matrix whereas in strict mode.
+        ValueError
+            If renaming features but self does not contain features.
+        ValueError
+            If ``matrix`` is neither "samples" nor "features".
 
         """
-        samp_errmsg = ("The IDs in mapper are different from the IDs in "
-                       "self.samples.")
-        feat_errmsg = ("The IDs in mapper are different from the IDs in "
-                       "self.features.")
-
-        if matrix == 'samples':
-            if (strict and isinstance(mapper, dict) and
-                    set(mapper) != set(self.samples.index)):
-                raise ValueError(samp_errmsg)
-            self.samples = self.samples.rename(index=mapper)
-        elif matrix == 'features':
-            if self.features is None:
-                raise ValueError("`features` were not provided on "
-                                 "the construction of this object")
-            elif (strict and isinstance(mapper, dict) and
-                    set(mapper) != set(self.features.index)):
-                raise ValueError(feat_errmsg)
-            self.features = self.features.rename(index=mapper)
-        else:
-            raise ValueError("Matrix must be either 'samples' or \
-                             'features'.")
+        if matrix not in ("samples", "features"):
+            raise ValueError('Matrix must be either "samples" or "features".')
+        df = getattr(self, matrix)
+        if matrix == "features" and df is None:
+            raise ValueError(
+                "`features` were not provided on the construction of this object."
+            )
+        if strict and isinstance(mapper, dict) and not set(df.index).issubset(mapper):
+            raise ValueError(
+                "The IDs in mapper do not include all IDs in the %s matrix." % matrix
+            )
+        df.rename(index=mapper, inplace=True)

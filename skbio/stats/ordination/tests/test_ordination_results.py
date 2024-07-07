@@ -76,85 +76,55 @@ class TestOrdinationResults(unittest.TestCase):
         self.assertEqual(obs.split('\n'), exp.split('\n'))
 
     def test_rename(self):
+        ordi = self.ordination_results
+
         # Testing rename function when passing in a dictionary to mapper
         # `strict` is True
         # Should rename current elements to their corresponding new value
-        rename_dict_samples = {'Site2' : 'B', 'Site1' : 'A', 'Site3' : 'C'}
-        rename_dict_features = {'Species2' : 'Y', 'Species1' : 'X',
-                                'Species3' : 'Z'}
+        rename_dict_samp = {'Site2': 'B', 'Site1': 'A', 'Site3': 'C'}
+        rename_dict_feat = {'Species2': 'Y', 'Species1': 'X', 'Species3': 'Z'}
 
-        self.ordination_results.rename(rename_dict_samples)
-        self.assertEqual(list(self.ordination_results.samples.index),
-                              ['A', 'B', 'C'])
+        ordi.rename(rename_dict_samp)
+        self.assertListEqual(list(ordi.samples.index), ['A', 'B', 'C'])
 
-        self.ordination_results.rename(rename_dict_features, matrix='features')
-        self.assertEqual(list(self.ordination_results.features.index),
-                         ['X', 'Y', 'Z'])
+        ordi.rename(rename_dict_feat, matrix='features')
+        self.assertListEqual(list(ordi.features.index), ['X', 'Y', 'Z'])
 
         # Same test as above, except `strict` is False
-        rename_dict_samples = {'A' : '001', 'B' : '010'}
-        rename_dict_features = {'X' : 'abc', 'Y' : 'def'}
+        rename_dict_samp = {'A': '001', 'B': '010'}
+        rename_dict_feat = {'X': 'abc', 'Y': 'def'}
 
-        self.ordination_results.rename(rename_dict_samples, strict=False)
-        self.assertEqual(list(self.ordination_results.samples.index),
-                         ['001', '010', 'C'])
+        ordi.rename(rename_dict_samp, strict=False)
+        self.assertEqual(list(ordi.samples.index), ['001', '010', 'C'])
 
-        self.ordination_results.rename(rename_dict_features, matrix='features',
-                                       strict=False)
-        self.assertEqual(list(self.ordination_results.features.index),
-                         ['abc', 'def', 'Z'])
+        ordi.rename(rename_dict_feat, matrix='features', strict=False)
+        self.assertEqual(list(ordi.features.index), ['abc', 'def', 'Z'])
 
         # Testing rename when `strict` is True and there are extra keys
-        # Should  throw a ValueError
-        rename_dict_samples = {'001' : 'he', '010' : 'llo', 'C' : 'wor',
-                               'D' : 'ld'}
-        rename_dict_features = {'abc' : 'go', 'def' : 'od', 'Z' : 'by',
-                                'W' : 'e'}
-        samp_errmsg = ("The IDs in mapper are different from the IDs in "
-                       "self.samples.")
-        with self.assertRaisesRegex(ValueError, samp_errmsg):
-            self.ordination_results.rename(rename_dict_samples)
-
-        feat_errmsg = ("The IDs in mapper are different from the IDs in "
-                       "self.features.")
-        with self.assertRaisesRegex(ValueError, feat_errmsg):
-            self.ordination_results.rename(rename_dict_features,
-                                           matrix='features')
-
-        # Testing rename when `strict` is True and there is an invalid key
         # Should throw a ValueError
-        rename_dict_samples = {'001' : 'he', '010' : 'llo',
-                               'invalid' : 'world'}
-        rename_dict_features = {'abc' : 'go', 'def' : 'od', 'invalid' : 'bye'}
+        rename_dict_samp = {'001': 'he', '010': 'llo', 'D': 'hello'}
+        rename_dict_feat = {'abc': 'go', 'def': 'od', 'W': 'bye'}
 
-        with self.assertRaisesRegex(ValueError, samp_errmsg):
-            self.ordination_results.rename(rename_dict_samples)
-
-        with self.assertRaisesRegex(ValueError, feat_errmsg):
-            self.ordination_results.rename(rename_dict_features,
-                                           matrix='features')
+        errmsg = "The IDs in mapper do not include all IDs in the %s matrix."
+        with self.assertRaisesRegex(ValueError, errmsg % "samples"):
+            ordi.rename(rename_dict_samp)
+        with self.assertRaisesRegex(ValueError, errmsg % "features"):
+            ordi.rename(rename_dict_feat, matrix='features')
 
         # Testing rename when passing a lambda function into mapper
         # Should append '_0' to the previous elements in ordination_results
         lam = lambda x: x + '_0'
-        try:
-            self.ordination_results.rename(lam)
-            self.ordination_results.rename(lam, matrix='features')
-        except:
-            raise Exception
+        ordi.rename(lam)
+        self.assertEqual(list(ordi.samples.index), ['001_0', '010_0', 'C_0'])
 
-        self.assertEqual(list(self.ordination_results.samples.index),
-                         ['001_0', '010_0', 'C_0'])
-        self.assertEqual(list(self.ordination_results.features.index),
-                         ['abc_0', 'def_0', 'Z_0'])
+        ordi.rename(lam, matrix='features')
+        self.assertEqual(list(ordi.features.index), ['abc_0', 'def_0', 'Z_0'])
 
         # Testing rename when features is None
-        errmsg = ("`features` were not provided on the construction of this"
-                  " object")
-        self.ordination_results.features = None
+        errmsg = "`features` were not provided on the construction of this object."
+        ordi.features = None
         with self.assertRaisesRegex(ValueError, errmsg):
-            self.ordination_results.rename(rename_dict_features,
-                                           matrix='features')
+            ordi.rename(rename_dict_feat, matrix='features')
 
 
 @unittest.skipUnless(has_matplotlib, "Matplotlib not available.")
