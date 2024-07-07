@@ -426,8 +426,8 @@ class TreeTests(TestCase):
         self.assertNotEqual(root._tip_cache, {})
         self.assertNotEqual(root._non_tip_cache, {})
         root.invalidate_caches()
-        self.assertEqual(root._tip_cache, {})
-        self.assertEqual(root._non_tip_cache, {})
+        self.assertFalse(hasattr(root, "_tip_cache"))
+        self.assertFalse(hasattr(root, "_non_tip_cache"))
 
     def test_invalidate_attr_caches(self):
         tree = TreeNode.read(io.StringIO("((a,b,(c,d)e)f,(g,h)i)root;"))
@@ -490,7 +490,7 @@ class TreeTests(TestCase):
         exp_non_tip_cache_keys = set(['c', 'f'])
         tip_a = t.children[0].children[0]
         tip_a.create_caches()
-        self.assertEqual(tip_a._tip_cache, {})
+        self.assertFalse(hasattr(tip_a, "_tip_cache"))
         self.assertEqual(set(t._tip_cache), exp_tip_cache_keys)
         self.assertEqual(set(t._non_tip_cache), exp_non_tip_cache_keys)
         self.assertEqual(t._non_tip_cache['f'], [t.children[1], t.children[2]])
