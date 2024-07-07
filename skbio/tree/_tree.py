@@ -895,6 +895,10 @@ class TreeNode(SkbioObject):
         tree such that the given node becomes the root node and all other nodes
         are re-positioned accordingly, whereas the topology remains the same.
 
+        This method manipulates the tree in place. There is no return value.
+        The new tree should be referred to by the node where the operation
+        started, as it has become the new root node.
+
         Examples
         --------
         >>> from skbio import TreeNode
@@ -929,17 +933,17 @@ class TreeNode(SkbioObject):
                 setattr(self, attr, getattr(parent, attr, None))
 
     def count(self, tips=False):
-        """Get the count of nodes in the tree.
+        r"""Get the count of nodes in the tree.
 
         Parameters
         ----------
         tips : bool
-            If `True`, only return the count of the number of tips
+            If ``True``, only return the count of tips.
 
         Returns
         -------
         int
-            The number of nodes or tips
+            The number of nodes.
 
         Examples
         --------
