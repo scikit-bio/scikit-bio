@@ -549,7 +549,7 @@ class TreeNode(SkbioObject):
         <BLANKLINE>
 
         """
-        tcopy = self.deepcopy()
+        tcopy = self.copy()
         all_tips = {n.name for n in tcopy.tips()}
         ids = set(names)
 

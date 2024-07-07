@@ -17,6 +17,7 @@
 
 ### Performance enhancements
 
+* The time and memory efficiency of `TreeNode` has been significantly improved by making its caching mechanism lazy ([#2082](https://github.com/scikit-bio/scikit-bio/pull/2082)).
 * `Treenode.copy` and `TreeNode.unrooted_copy` can now perform shallow copy of a tree in addition to deep copy.
 * `TreeNode.unrooted_copy` can now copy all attributes of the nodes, in addition to name and length ([#2073](https://github.com/scikit-bio/scikit-bio/pull/2073)).
 * Paremter `above` was added to `TreeNode.root_at`, such that the user can root the tree within the branch connecting the given node and its parent, thereby creating a rooted tree ([#2073](https://github.com/scikit-bio/scikit-bio/pull/2073)).
@@ -27,11 +28,12 @@ during the rerooting operation. The default behavior is preserved but is subject
 ### Bug fixes
 
 * Cleared the internal node references after performing midpoint rooting (`TreeNode.root_at_midpoint`), such that a deep copy of the resulting tree will not result in infinite recursion ([#2073](https://github.com/scikit-bio/scikit-bio/pull/2073)).
-* Fixed the Zenodo link in the README to always point to the most recent version.
+* Fixed the Zenodo link in the README to always point to the most recent version ([#2078](https://github.com/scikit-bio/scikit-bio/pull/2078)).
 
 ### Deprecated functionality
 
 * Methods `deepcopy` and `unrooted_deepcopy` of `Treenode` are deprecated. Use `copy` and `unrooted_copy` instead.
+
 
 ## Version 0.6.1
 

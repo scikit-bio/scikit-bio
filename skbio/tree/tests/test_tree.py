@@ -209,7 +209,7 @@ class TreeTests(TestCase):
 
     def test_deepcopy(self):
         self.simple_t.dummy = [1, [2, 3], 4]
-        cp = self.simple_t.deepcopy()
+        cp = self.simple_t.copy()
         cp.dummy[1].append(0)
         self.assertListEqual(self.simple_t.dummy[1], [2, 3])
 
