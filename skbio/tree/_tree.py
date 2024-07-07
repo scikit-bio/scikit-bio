@@ -697,10 +697,7 @@ class TreeNode(SkbioObject):
         root_name="root",
         deep=False,
     ):
-        r"""Walk the tree unrooted-style and returns a copy.
-
-        Perform a copy of self and return a new copy of the tree as an
-        unrooted copy. This is useful for defining a new root of the tree.
+        r"""Walk the tree unrooted-style and return a copy.
 
         Parameters
         ----------
@@ -754,7 +751,12 @@ class TreeNode(SkbioObject):
 
         Notes
         -----
-        This method is recursive.
+        This method recursively walks a tree from a given node in an unrooted
+        style (i.e., directions of branches are not assumed), and copies each
+        node it visits, such that the copy of the given node becomes the root
+        node of a new tree and the copies of all other nodes are re-positioned
+        accordingly, whereas the topology of the new tree will be identical to
+        the existing one.
 
         Examples
         --------
@@ -1200,8 +1202,12 @@ class TreeNode(SkbioObject):
         ----------
         node : TreeNode or str, optional
             The node to root at. Can either be a node object or the name of the
-            node. If not provided, will root at self. If a root is provided,
+            node. If not provided, will root at self. If a root node provided,
             will return the original tree.
+
+            .. versionchanged:: 0.6.2
+
+                Becomes optional.
 
         above : bool, float, or int, optional
             Whether and where to insert a new root node. If ``False``
