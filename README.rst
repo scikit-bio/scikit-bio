@@ -58,10 +58,6 @@ Or using ``pip``::
 
     pip install scikit-bio
 
-Verify the installation::
-
-    python -m skbio.test
-
 See further `instructions on installing <https://scikit.bio/install.html>`_ scikit-bio on various platforms.
 
 
