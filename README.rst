@@ -44,7 +44,7 @@ Visit the new scikit-bio website: https://scikit.bio to learn more about this pr
 Releases
 --------
 
-Latest release: `0.6.1 <https://github.com/scikit-bio/scikit-bio/releases/tag/0.6.1>`_ (`documentation <https://scikit.bio/docs/0.6.1/index.html>`_, `changelog <https://github.com/scikit-bio/scikit-bio/blob/main/CHANGELOG.md#version-061>`_). Compatible with Python 3.8 and above.
+Latest release: `0.6.2 <https://github.com/scikit-bio/scikit-bio/releases/tag/0.6.2>`_ (`documentation <https://scikit.bio/docs/0.6.2/index.html>`_, `changelog <https://github.com/scikit-bio/scikit-bio/blob/main/CHANGELOG.md#version-062>`_). Compatible with Python 3.8 and above.
 
 
 Installation
@@ -102,7 +102,7 @@ The development of scikit-bio is currently supported by the U.S. Department of E
 Citation
 --------
 
-If you use scikit-bio for any published research, please see our `Zenodo page <https://zenodo.org/record/8209901>`_ for how to cite.
+If you use scikit-bio for any published research, please see our `Zenodo page <https://zenodo.org/doi/10.5281/zenodo.593387>`_ for how to cite.
 
 
 Collaboration

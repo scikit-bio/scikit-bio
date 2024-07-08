@@ -48,6 +48,7 @@ def _get_alpha_diversity_metric_map():
         "gini_index": skbio.diversity.alpha.gini_index,
         "goods_coverage": skbio.diversity.alpha.goods_coverage,
         "inv_simpson": skbio.diversity.alpha.inv_simpson,
+        "hill": skbio.diversity.alpha.hill,
         "heip_e": skbio.diversity.alpha.heip_e,
         "kempton_taylor_q": skbio.diversity.alpha.kempton_taylor_q,
         "lladser_ci": skbio.diversity.alpha.lladser_ci,
@@ -62,6 +63,7 @@ def _get_alpha_diversity_metric_map():
         "osd": skbio.diversity.alpha.osd,
         "phydiv": skbio.diversity.alpha.phydiv,
         "pielou_e": skbio.diversity.alpha.pielou_e,
+        "renyi": skbio.diversity.alpha.renyi,
         "robbins": skbio.diversity.alpha.robbins,
         "shannon": skbio.diversity.alpha.shannon,
         "simpson": skbio.diversity.alpha.simpson,
@@ -70,6 +72,7 @@ def _get_alpha_diversity_metric_map():
         "singles": skbio.diversity.alpha.singles,
         "sobs": skbio.diversity.alpha.sobs,
         "strong": skbio.diversity.alpha.strong,
+        "tsallis": skbio.diversity.alpha.tsallis,
     }
 
 

@@ -36,6 +36,7 @@ Tree Rearrangement
    :toctree: generated/
 
     nni
+    nni
 
 
 Tree utilities
@@ -196,7 +197,7 @@ pairwise tip-to-tip distances between trees:
 # ----------------------------------------------------------------------------
 
 from ._tree import TreeNode
-from ._nj import nj
+from ._nj import nj, nni
 from ._majority_rule import majority_rule
 from ._exception import (
     TreeError,

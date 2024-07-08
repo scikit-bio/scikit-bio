@@ -1050,6 +1050,34 @@ class DistanceMatrixTestBase(DissimilarityMatrixTestData):
         del data_hollow
         self.dm_3x3._validate_shape(bad_data)
         del bad_data
+    
+    def test_rename(self):
+        # Test successful renaming with a dictionary in strict mode (default)
+        dm = DistanceMatrix([[0, 1], [1, 0]], ids=['a', 'b'])
+        rename_dict = {'a': 'x', 'b': 'y'}
+        dm.rename(rename_dict)
+        exp = ('x', 'y')
+        self.assertEqual(dm.ids, exp)
+
+        # Test successful renaming with a function in strict mode (default)
+        dm = DistanceMatrix([[0, 1], [1, 0]], ids=['a', 'b'])
+        rename_func = lambda x: x + '_1'
+        dm.rename(rename_func)
+        exp = ('a_1', 'b_1')
+        self.assertEqual(dm.ids, exp)
+
+        # Test renaming in non-strict mode where one ID is not included in the dictionary
+        dm = DistanceMatrix([[0, 1], [1, 0]], ids=['a', 'b'])
+        rename_dict = {'a': 'x'}  # 'b' will retain its original ID
+        dm.rename(rename_dict, strict=False)
+        exp = ('x', 'b')
+        self.assertEqual(dm.ids, exp)
+
+        # Test that renaming with strict=True raises an error if not all IDs are included
+        dm = DistanceMatrix([[0, 1], [1, 0]], ids=['a', 'b'])
+        rename_dict = {'a': 'x'}  # Missing 'b'
+        with self.assertRaises(ValueError):
+            dm.rename(rename_dict, strict=True)
 
 
 class RandomDistanceMatrixTests(TestCase):

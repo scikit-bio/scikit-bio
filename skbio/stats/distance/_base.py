@@ -369,6 +369,42 @@ class DissimilarityMatrix(SkbioObject, PlottableMixin):
         # Note: Skip validation, since we assume self was already validated
         return self.__class__(self.data.copy(), deepcopy(self.ids), validate=False)
 
+    def rename(self, mapper, strict=True):
+        """Rename IDs in the dissimilarity matrix.
+
+        Parameters
+        ----------
+        mapper : dict or callable
+            A dictionary or function that maps current IDs to new IDs.
+        strict : bool, optional
+           If ``True`` (default), every ID in the matrix must be included in
+           ``mapper``. If ``False``, only the specified IDs will be renamed.
+
+        Raises
+        ------
+        ValueError
+            If ``mapper`` does not contain all of the same IDs in the matrix
+            whereas in strict mode.
+
+        Examples
+        --------
+        >>> from skbio import DistanceMatrix
+        >>> dm = DistanceMatrix([[0, 1], [1, 0]], ids=['a', 'b'])
+        >>> dm.rename({'a': 'x', 'b': 'y'})
+        >>> print(dm.ids)
+        ('x', 'y')
+
+        """
+        if isinstance(mapper, dict):
+            if strict and not set(self.ids).issubset(mapper):
+                raise ValueError(
+                    "The IDs in mapper do not include all IDs in the matrix."
+                )
+            new_ids = [mapper.get(x, x) for x in self.ids]
+        else:
+            new_ids = [mapper(x) for x in self.ids]
+        self.ids = new_ids
+
     def filter(self, ids, strict=True):
         """Filter the dissimilarity matrix by IDs.
 

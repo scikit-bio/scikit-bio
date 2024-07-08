@@ -75,6 +75,57 @@ class TestOrdinationResults(unittest.TestCase):
                                     pd.Series(np.array([4.2])), samples_df))
         self.assertEqual(obs.split('\n'), exp.split('\n'))
 
+    def test_rename(self):
+        ordi = self.ordination_results
+
+        # Testing rename function when passing in a dictionary to mapper
+        # `strict` is True
+        # Should rename current elements to their corresponding new value
+        rename_dict_samp = {'Site2': 'B', 'Site1': 'A', 'Site3': 'C'}
+        rename_dict_feat = {'Species2': 'Y', 'Species1': 'X', 'Species3': 'Z'}
+
+        ordi.rename(rename_dict_samp)
+        self.assertListEqual(list(ordi.samples.index), ['A', 'B', 'C'])
+
+        ordi.rename(rename_dict_feat, matrix='features')
+        self.assertListEqual(list(ordi.features.index), ['X', 'Y', 'Z'])
+
+        # Same test as above, except `strict` is False
+        rename_dict_samp = {'A': '001', 'B': '010'}
+        rename_dict_feat = {'X': 'abc', 'Y': 'def'}
+
+        ordi.rename(rename_dict_samp, strict=False)
+        self.assertEqual(list(ordi.samples.index), ['001', '010', 'C'])
+
+        ordi.rename(rename_dict_feat, matrix='features', strict=False)
+        self.assertEqual(list(ordi.features.index), ['abc', 'def', 'Z'])
+
+        # Testing rename when `strict` is True and there are extra keys
+        # Should throw a ValueError
+        rename_dict_samp = {'001': 'he', '010': 'llo', 'D': 'hello'}
+        rename_dict_feat = {'abc': 'go', 'def': 'od', 'W': 'bye'}
+
+        errmsg = "The IDs in mapper do not include all IDs in the %s matrix."
+        with self.assertRaisesRegex(ValueError, errmsg % "samples"):
+            ordi.rename(rename_dict_samp)
+        with self.assertRaisesRegex(ValueError, errmsg % "features"):
+            ordi.rename(rename_dict_feat, matrix='features')
+
+        # Testing rename when passing a lambda function into mapper
+        # Should append '_0' to the previous elements in ordination_results
+        lam = lambda x: x + '_0'
+        ordi.rename(lam)
+        self.assertEqual(list(ordi.samples.index), ['001_0', '010_0', 'C_0'])
+
+        ordi.rename(lam, matrix='features')
+        self.assertEqual(list(ordi.features.index), ['abc_0', 'def_0', 'Z_0'])
+
+        # Testing rename when features is None
+        errmsg = "`features` were not provided on the construction of this object."
+        ordi.features = None
+        with self.assertRaisesRegex(ValueError, errmsg):
+            ordi.rename(rename_dict_feat, matrix='features')
+
 
 @unittest.skipUnless(has_matplotlib, "Matplotlib not available.")
 class TestOrdinationResultsPlotting(unittest.TestCase):
