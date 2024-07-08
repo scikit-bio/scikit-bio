@@ -26,6 +26,16 @@ Phylogenetic reconstruction
    :toctree: generated/
 
     nj
+    gme
+
+
+Tree Rearrangement
+------------------
+
+.. autosummary::
+   :toctree: generated/
+
+    nni
 
 
 Tree utilities
@@ -199,6 +209,8 @@ from ._exception import (
 __all__ = [
     "TreeNode",
     "nj",
+    "gme",
+    "nni",
     "majority_rule",
     "TreeError",
     "NoLengthError",
