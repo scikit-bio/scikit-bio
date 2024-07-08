@@ -54,11 +54,11 @@ Alternatively, you may download the repository, extract, and execute::
 However, be cautious that the new functionality may not be stable and could be changed in the next formal release. It is not recommended to deploy the development version in a production environment.
 
 
-Test
-----
+.. Test
+.. ----
 
-You can verify your installation by running the scikit-bio unit tests (this requires `pytest` installed)::
+.. You can verify your installation by running the scikit-bio unit tests (this requires `pytest` installed)::
 
-    python -m skbio.test
+..     python -m skbio.test
 
-If the installation was successful and all features of scikit-bio work as intended, the test will report only passes (and warnings), but no failures.
+.. If the installation was successful and all features of scikit-bio work as intended, the test will report only passes (and warnings), but no failures.
