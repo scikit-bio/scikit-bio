@@ -36,7 +36,6 @@ Tree Rearrangement
    :toctree: generated/
 
     nni
-    nni
 
 
 Tree utilities
