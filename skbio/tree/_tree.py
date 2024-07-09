@@ -1967,7 +1967,6 @@ class TreeNode(SkbioObject):
         >>> tree = TreeNode.read(["((a,b)c,(d,e)f)g;"])
         >>> for node in tree.pre_and_postorder():
         ...     print(node.name)
-        None
         g
         c
         a
