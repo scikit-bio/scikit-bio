@@ -11,7 +11,7 @@ from operator import or_, itemgetter
 from copy import copy, deepcopy
 from itertools import combinations
 from functools import reduce
-from collections import defaultdict
+from collections import defaultdict, deque
 
 import numpy as np
 import pandas as pd
@@ -2023,13 +2023,13 @@ class TreeNode(SkbioObject):
         e
 
         """
-        queue = [self]
+        queue = deque([self]) if include_self else deque(self.children)
+        queue_popleft = queue.popleft
+        queue_extend = queue.extend
         while queue:
-            curr = queue.pop(0)
-            if include_self or (curr is not self):
-                yield curr
+            yield (curr := queue_popleft())
             if curr.children:
-                queue.extend(curr.children)
+                queue_extend(curr.children)
 
     def tips(self, include_self=False):
         r"""Iterate over tips descended from `self`.
