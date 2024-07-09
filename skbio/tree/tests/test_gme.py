@@ -9,7 +9,7 @@
 import io
 from unittest import TestCase, main
 
-from skbio import DistanceMatrix, TreeNode, gme
+from skbio import DistanceMatrix, TreeNode
 from skbio.tree._gme import (
     _average_distance_k, _average_distance_k_upper,
     _lower_subtree_list, _upper_subtree_list,
@@ -17,7 +17,7 @@ from skbio.tree._gme import (
     _average_distance, _tip_or_root,
     _average_distance_upper, _subtree_count,
     _average_subtree_distance, _average_distance_matrix, 
-    _edge_estimation)
+    _edge_estimation, gme)
 
 
 class NniTests(TestCase):

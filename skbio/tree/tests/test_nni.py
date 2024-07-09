@@ -9,11 +9,11 @@
 import io
 from unittest import TestCase, main
 
-from skbio import DistanceMatrix, TreeNode, nni
+from skbio import DistanceMatrix, TreeNode
 from skbio.tree._nni import (
     nni, _perform_swap,
     _swap_length, _swap_heap,
-    _average_distance_matrix)
+    _average_distance_matrix, nni)
 
 
 class NniTests(TestCase):
