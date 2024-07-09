@@ -1833,13 +1833,13 @@ class TreeNode(SkbioObject):
         b
 
         """
-        stack = [self]
+        stack = [self] if include_self else self.children[::-1]
+        stack_pop = stack.pop
+        stack_extend = stack.extend
         while stack:
-            curr = stack.pop()
-            if include_self or (curr is not self):
-                yield curr
+            yield (curr := stack_pop())
             if curr.children:
-                stack.extend(curr.children[::-1])
+                stack_extend(curr.children[::-1])
 
     def postorder(self, include_self=True):
         r"""Perform postorder iteration over tree.
