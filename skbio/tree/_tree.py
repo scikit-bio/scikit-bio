@@ -2144,7 +2144,7 @@ class TreeNode(SkbioObject):
                             /-a
                   /c-------|
                  |          \-b
-        -g-------|
+        ---------|
                  |          /-d
                   \f-------|
                             \-e
@@ -2192,7 +2192,7 @@ class TreeNode(SkbioObject):
                             /-a
                   /c-------|
                  |          \-b
-        -g-------|
+        ---------|
                  |          /-d
                   \f-------|
                             \-e
