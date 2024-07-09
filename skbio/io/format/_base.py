@@ -231,7 +231,7 @@ def _too_many_blanks(fh, max_blanks):
     too_many = False
     consumed = []
     for line in _line_generator(fh, skip_blanks=False):
-        consumed += [line]
+        consumed.append(line)
         if line:
             break
         else:

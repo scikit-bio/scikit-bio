@@ -226,7 +226,7 @@ def _resolve_file(file, **kwargs):
     try:
         yield file, source, is_binary_file
     finally:
-        if source.closeable:
+        if not isinstance(source, itertools.chain) and source.closeable:
             file.close()
 
 
