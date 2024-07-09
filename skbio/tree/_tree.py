@@ -1880,17 +1880,19 @@ class TreeNode(SkbioObject):
 
         """
         child_index_stack = [0]
+        child_index_stack_append = child_index_stack.append
+        child_index_stack_pop = child_index_stack.pop
         curr = self
         curr_children = self.children
         curr_children_len = len(curr_children)
-        while 1:
+        while True:
             curr_index = child_index_stack[-1]
             # if there are children left, process them
             if curr_index < curr_children_len:
                 curr_child = curr_children[curr_index]
                 # if the current child has children, go there
                 if curr_child.children:
-                    child_index_stack.append(0)
+                    child_index_stack_append(0)
                     curr = curr_child
                     curr_children = curr.children
                     curr_children_len = len(curr_children)
@@ -1909,7 +1911,7 @@ class TreeNode(SkbioObject):
                 curr = curr.parent
                 curr_children = curr.children
                 curr_children_len = len(curr_children)
-                child_index_stack.pop()
+                child_index_stack_pop()
                 child_index_stack[-1] += 1
 
     def pre_and_postorder(self, include_self=True):
@@ -1954,9 +1956,11 @@ class TreeNode(SkbioObject):
                 yield self
             return
         child_index_stack = [0]
+        child_index_stack_append = child_index_stack.append
+        child_index_stack_pop = child_index_stack.pop
         curr = self
         curr_children = self.children
-        while 1:
+        while True:
             curr_index = child_index_stack[-1]
             if not curr_index:
                 if include_self or (curr is not self):
@@ -1966,7 +1970,7 @@ class TreeNode(SkbioObject):
                 curr_child = curr_children[curr_index]
                 # if the current child has children, go there
                 if curr_child.children:
-                    child_index_stack.append(0)
+                    child_index_stack_append(0)
                     curr = curr_child
                     curr_children = curr.children
                     curr_index = 0
@@ -1983,7 +1987,7 @@ class TreeNode(SkbioObject):
                     break
                 curr = curr.parent
                 curr_children = curr.children
-                child_index_stack.pop()
+                child_index_stack_pop()
                 child_index_stack[-1] += 1
 
     def levelorder(self, include_self=True):
