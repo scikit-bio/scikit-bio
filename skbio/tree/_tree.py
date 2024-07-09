@@ -1782,6 +1782,15 @@ class TreeNode(SkbioObject):
         --------
         >>> from skbio import TreeNode
         >>> tree = TreeNode.read(["((a,b)c,(d,e)f)g;"])
+        >>> print(tree.ascii_art())
+                            /-a
+                  /c-------|
+                 |          \-b
+        -g-------|
+                 |          /-d
+                  \f-------|
+                            \-e
+
         >>> for node in tree.traverse():
         ...     print(node.name)
         g
@@ -1835,6 +1844,15 @@ class TreeNode(SkbioObject):
         --------
         >>> from skbio import TreeNode
         >>> tree = TreeNode.read(["((a,b)c,(d,e)f)g;"])
+        >>> print(tree.ascii_art())
+                            /-a
+                  /c-------|
+                 |          \-b
+        -g-------|
+                 |          /-d
+                  \f-------|
+                            \-e
+
         >>> for node in tree.preorder():
         ...     print(node.name)
         g
@@ -1885,6 +1903,15 @@ class TreeNode(SkbioObject):
         --------
         >>> from skbio import TreeNode
         >>> tree = TreeNode.read(["((a,b)c,(d,e)f)g;"])
+        >>> print(tree.ascii_art())
+                            /-a
+                  /c-------|
+                 |          \-b
+        -g-------|
+                 |          /-d
+                  \f-------|
+                            \-e
+
         >>> for node in tree.postorder():
         ...     print(node.name)
         a
@@ -1965,6 +1992,15 @@ class TreeNode(SkbioObject):
         --------
         >>> from skbio import TreeNode
         >>> tree = TreeNode.read(["((a,b)c,(d,e)f)g;"])
+        >>> print(tree.ascii_art())
+                            /-a
+                  /c-------|
+                 |          \-b
+        -g-------|
+                 |          /-d
+                  \f-------|
+                            \-e
+
         >>> for node in tree.pre_and_postorder():
         ...     print(node.name)
         g
@@ -2049,6 +2085,15 @@ class TreeNode(SkbioObject):
         --------
         >>> from skbio import TreeNode
         >>> tree = TreeNode.read(["((a,b)c,(d,e)f)g;"])
+        >>> print(tree.ascii_art())
+                            /-a
+                  /c-------|
+                 |          \-b
+        -g-------|
+                 |          /-d
+                  \f-------|
+                            \-e
+
         >>> for node in tree.levelorder():
         ...     print(node.name)
         g
@@ -2095,6 +2140,15 @@ class TreeNode(SkbioObject):
         --------
         >>> from skbio import TreeNode
         >>> tree = TreeNode.read(["((a,b)c,(d,e)f);"])
+        >>> print(tree.ascii_art())
+                            /-a
+                  /c-------|
+                 |          \-b
+        -g-------|
+                 |          /-d
+                  \f-------|
+                            \-e
+
         >>> for node in tree.tips():
         ...     print(node.name)
         a
@@ -2134,6 +2188,15 @@ class TreeNode(SkbioObject):
         --------
         >>> from skbio import TreeNode
         >>> tree = TreeNode.read(["((a,b)c,(d,e)f);"])
+        >>> print(tree.ascii_art())
+                            /-a
+                  /c-------|
+                 |          \-b
+        -g-------|
+                 |          /-d
+                  \f-------|
+                            \-e
+
         >>> for node in tree.non_tips():
         ...     print(node.name)
         c
