@@ -137,7 +137,7 @@ class NniTests(TestCase):
         child = self.gme_starting1_TreeNode.find('c')
         lowerlist = _lower_subtree_list(ordered, self.gme_attach_node, self.dm1)
         upperlist = _upper_subtree_list(ordered, self.gme_attach_node, 3, self.dm1)
-        ordered = ordered = list(self.gme_starting1_TreeNode.postorder(include_self=False))
+        ordered = list(self.gme_starting1_TreeNode.postorder(include_self=False))
         adm = _average_distance_matrix(self.gme_starting1_TreeNode, self.dm1)
         self.assertEqual(_edge_attachment_length(child, lowerlist, upperlist, ordered, 3, adm), -1.5)
 
