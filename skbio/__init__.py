@@ -44,7 +44,7 @@ __all__ = [
 ]
 
 __credits__ = "https://github.com/scikit-bio/scikit-bio/graphs/contributors"
-__version__ = "0.6.2"
+__version__ = "0.6.3-dev"
 
 
 mottos = [
