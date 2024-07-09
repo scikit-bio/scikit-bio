@@ -196,7 +196,9 @@ pairwise tip-to-tip distances between trees:
 # ----------------------------------------------------------------------------
 
 from ._tree import TreeNode
-from ._nj import nj, nni
+from ._nj import nj
+from ._gme import gme
+from ._nni import nni
 from ._majority_rule import majority_rule
 from ._exception import (
     TreeError,
