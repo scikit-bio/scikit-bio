@@ -12,7 +12,7 @@ from skbio.tree import TreeNode
 
 
 def gme(dm, allow_edge_estimation=True):
-    r"""Perform nearest neighbor interchange (NNI) on a phylogenetic tree.
+    r"""Perform greedy minimum evolution (GME) on a phylogenetic tree.
 
     Parameters
     ----------
@@ -63,8 +63,7 @@ def gme(dm, allow_edge_estimation=True):
 
     >>> from skbio.tree import TreeNode
 
-    Perform nearest neighbor interchange (NNI). By default, the tree is
-    rearrangede in place.
+    Perform greedy minimum evolution (GME).
 
     >>> tree = gme(dm)
     >>> print(tree.ascii_art())
