@@ -515,10 +515,15 @@ class IORegistry:
                 file.tell()
             except io.UnsupportedOperation:
                 seekable = False
-            if not seekable:
-                print(seekable)
-            if not seekable and (fmt is not None or not fmt.support_non_seekable):
-                raise ValueError("Cannot parse non-seekable data of type %r", fmt.name)
+            if not seekable and fmt is None:
+                raise ValueError("Cannot sniff filetype of non-seekable data.")
+            elif not seekable:
+                for lookup in self._lookups:
+                    if fmt in lookup and not lookup[fmt].support_non_seekable:
+                        raise ValueError(
+                            "Cannot parse non-seekable data of type %r"
+                            % lookup[fmt].name
+                        )
             reader, kwargs, consumed = self._init_reader(
                 file, fmt, into, verify, kwargs, io_kwargs
             )
@@ -538,8 +543,15 @@ class IORegistry:
                 file.tell()
             except io.UnsupportedOperation:
                 seekable = False
-            if not seekable and (fmt is not None or not fmt.support_non_seekable):
-                raise ValueError("Cannot parse non-seekable data of type %r", fmt.name)
+            if not seekable and fmt is None:
+                raise ValueError("Cannot sniff filetype of non-seekable data.")
+            elif not seekable:
+                for lookup in self._lookups:
+                    if fmt in lookup and not lookup[fmt].support_non_seekable:
+                        raise ValueError(
+                            "Cannot parse non-seekable data of type %r"
+                            % lookup[fmt].name
+                        )
             reader, kwargs, consumed = self._init_reader(
                 file, fmt, into, verify, kwargs, io_kwargs
             )
@@ -560,15 +572,13 @@ class IORegistry:
         elif verify:
             sniffer = self.get_sniffer(fmt)
             if sniffer is not None:
-                try:
-                    # Attempt to reset and sniff file
+                if file.seekable():
                     backup = file.tell()
                     res = sniffer(file, **io_kwargs)
                     is_format = res[0]
                     skwargs = res[1]
                     file.seek(backup)
-                except io.UnsupportedOperation:
-                    # File is not seekable, so get consumed lines to reset it
+                else:
                     is_format, skwargs, consumed = sniffer(file, **io_kwargs)
 
                 if not is_format:
@@ -960,7 +970,8 @@ class Format:
                         # Some formats may have headers which indicate their
                         # format sniffers should be able to rely on the
                         # filehandle to point at the beginning of the file.
-                        fh.seek(0)
+                        if fh.seekable():
+                            fh.seek(0)
                         return sniffer(fh)
                     except UnicodeDecodeError:
                         pass
