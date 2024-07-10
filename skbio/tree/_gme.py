@@ -8,6 +8,8 @@
 
 import numpy as np
 
+from skbio.tree import TreeNode
+
 
 def gme(dm, allow_edge_estimation=True):
     r"""Perform greedy minimum evolution (GME) for phylogenetic reconstruction.

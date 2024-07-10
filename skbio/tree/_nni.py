@@ -6,13 +6,8 @@
 # The full license is in the file LICENSE.txt, distributed with this software.
 # ----------------------------------------------------------------------------
 
-import io
-
-import numpy as np
 import heapq as hq
 
-from skbio.stats.distance import DistanceMatrix
-from skbio.tree import TreeNode
 from skbio.tree._gme import _average_distance_matrix, _edge_estimation
 
 
