@@ -59,12 +59,9 @@ def gme(dm, allow_edge_estimation=True):
     ...                      [0.55,  0.55,  0.54,  0.62,  0]],
     ...                      ['human','monkey','pig','rat','chicken'])
 
-    Construct the minimum evolution tree representing the relationship between
-    those taxa. This is returned as a TreeNode object.
-
-    >>> from skbio.tree import TreeNode
-
-    Perform greedy minimum evolution (GME).
+    Perform Greedy Minimum Evoltuion (GME) and construct the minimum evolution tree
+    representing the relationship between those taxa. This is returned as a TreeNode
+    object.
 
     >>> tree = gme(dm)
     >>> print(tree.ascii_art())
