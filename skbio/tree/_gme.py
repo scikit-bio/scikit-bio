@@ -8,11 +8,9 @@
 
 import numpy as np
 
-from skbio.tree import TreeNode
-
 
 def gme(dm, allow_edge_estimation=True):
-    r"""Perform greedy minimum evolution (GME) on a phylogenetic tree.
+    r"""Perform greedy minimum evolution (GME) for phylogenetic reconstruction.
 
     Parameters
     ----------
@@ -91,10 +89,11 @@ def gme(dm, allow_edge_estimation=True):
 
     # create initial nodes
     root_name, node_a_name, node_b_name = dm.ids[0], dm.ids[1], dm.ids[2]
-    root = TreeNode.read(["()%s;" % (root_name)])
-    node_a = TreeNode.read(["%s;" % (node_a_name)])
-    node_b = TreeNode.read(["%s;" % (node_b_name)])
-    root_child = root.children[0]
+    root = TreeNode(root_name)
+    root_child = TreeNode("")
+    node_a = TreeNode(node_a_name)
+    node_b = TreeNode(node_b_name)
+    root.append(root_child)
     root_child.append(node_a)
     root_child.append(node_b)
 
@@ -105,8 +104,11 @@ def gme(dm, allow_edge_estimation=True):
         adm = _average_distance_matrix(root, dm)
         # create node for taxa k
         node_k_name = dm.ids[k]
-        connecting_node = TreeNode.read(["(%s);" % (node_k_name)])
-        node_k = connecting_node.find(node_k_name)
+        connecting_node = TreeNode("")
+        node_k = TreeNode(node_k_name)
+        connecting_node.append(node_k)
+        # connecting_node = TreeNode.read(["(%s);" % (node_k_name)])
+        # node_k = connecting_node.find(node_k_name)
         # create average distance lists for subtrees of T_(k-1)
         ordered = list(root.postorder(include_self=False))
         lowerlist = _lower_subtree_list(ordered, node_k, dm)
@@ -131,11 +133,8 @@ def gme(dm, allow_edge_estimation=True):
             e2 = (a2, value2 + i)
             edge_list.append(e1)
             edge_list.append(e2)
-        edge_nodes, edge_values = list(zip(*edge_list))
         # find the edge with minimum length after edge attachment
-        for i in range(len(edge_values)):
-            if edge_values[i] is min(edge_values):
-                minimum_child = edge_nodes[i]
+        minimum_child = sorted(edge_list, key=itemgetter(1))[0][0]
         # attach new taxa to the edge
         minimum_parent = minimum_child.parent
         minimum_parent.append(connecting_node)
@@ -207,14 +206,13 @@ def _upper_subtree_list(ordered, node, taxa, dm):
 
     """
     upper_list = []
-    for i, a in enumerate(ordered):
+    for a in enumerate(ordered):
+        a = a[1]
         if a.parent.is_root():
             upper_list.append(dm[a.parent.name, node.name])
         else:
             p = a.parent
-            s_ = a.siblings()
-            for sibling in s_:
-                s = sibling
+            s = a.siblings()[0]
             average = (
                 (taxa - _subtree_count(p)) * _average_distance_k_upper(node, p, dm)
                 + _subtree_count(s) * _average_distance_k(node, s, dm)
@@ -231,8 +229,7 @@ def _edge_attachment_length(child, lowerlist, upperlist, ordered, taxa, adm):
 
     """
     parent = child.parent
-    for node in child.siblings():
-        sibling = node
+    sibling = child.siblings()[0]
     for i, a in enumerate(ordered):
         if a is parent:
             c_i = i
@@ -246,9 +243,9 @@ def _edge_attachment_length(child, lowerlist, upperlist, ordered, taxa, adm):
     lambda_1 = (a_size + b_size * c_size) / ((a_size + b_size) * (c_size + 1))
     lambda_2 = (a_size + b_size * c_size) / ((a_size + c_size) * (b_size + 1))
     length = 0.5 * (
-        (lambda_1 - lambda_2) * (lowerlist[a_i] + adm[b_i][c_i])
-        + (lambda_2 - 1) * (adm[a_i][b_i] + upperlist[c_i])
-        + (1 - lambda_1) * (adm[a_i][c_i] + lowerlist[b_i])
+        (lambda_1 - lambda_2) * (lowerlist[a_i] + adm[b_i, c_i])
+        + (lambda_2 - 1) * (adm[a_i, b_i] + upperlist[c_i])
+        + (1 - lambda_1) * (adm[a_i, c_i] + lowerlist[b_i])
     )
     return length
 
@@ -326,6 +323,7 @@ def _average_distance_matrix(tree, dm):
     taxa_size = r.count(tips=True) + 1
     adm = np.empty((n, n))
     for i, a in enumerate(ordered):
+        ancestors = a.ancestors()
         # skip over unique descendant
         if a in tree.children:
             continue
@@ -340,7 +338,7 @@ def _average_distance_matrix(tree, dm):
         for j in range(i + 1, n - 1):  # part (a)
             b = ordered[j]
             # skipping over ancestors
-            if b in a.ancestors():
+            if b in ancestors:
                 continue
             # both nodes are tips
             if a.is_tip() and b.is_tip():
@@ -401,7 +399,7 @@ def _edge_estimation(tree, dm):
                     i2 = index
                 elif node == b:
                     i3 = index
-            edge_node.length = 0.5 * (adm[i2][i1] + adm[i3][i1] - adm[i2][i3])
+            edge_node.length = 0.5 * (adm[i2, i1] + adm[i3, i1] - adm[i2, i3])
         # calculate edge lengths for external edges
         elif edge_node.is_tip():
             a = parent.parent
@@ -411,11 +409,11 @@ def _edge_estimation(tree, dm):
             for siblingnode in edge_node.siblings():
                 b = siblingnode
                 for index, node in enumerate(ordered):
-                    if node == edge_node:
+                    if node is edge_node:
                         i1 = index
-                    if node == a:
+                    elif node is a:
                         i2 = index
-                    if node == b:
+                    elif node is b:
                         i3 = index
             edge_node.length = 0.5 * (adm[i2][i1] + adm[i3][i1] - adm[i2][i3])
         # calculate edge lengths for internal edges
@@ -431,22 +429,22 @@ def _edge_estimation(tree, dm):
             for sibling in edge_node.siblings():
                 b = sibling
             for index, node in enumerate(ordered):
-                if node == b:
+                if node is b:
                     i2 = index
-                elif node == c:
+                elif node is c:
                     i3 = index
-                elif node == d:
+                elif node is d:
                     i4 = index
             # count the tips of subtrees which are adjacent to the internal edge
             sub_tips = []
-            for subtree in [b, c, d]:
+            for subtree in b, c, d:
                 sub_tips.append(1 if subtree.is_tip() else subtree.count(tips=True))
             b_, c_, d_ = sub_tips
             a_ = taxa_size - b_ - c_ - d_
             # calculate the edge length
             lambda1 = (a_ * d_ + b_ * c_) / ((a_ + b_) * (c_ + d_))
             edge_node.length = 0.5 * (
-                (lambda1 * (adm[i1][i3] + adm[i2][i4]))
-                + ((1 - lambda1) * (adm[i1][i4] + adm[i2][i3]))
-                - (adm[i1][i2] + adm[i3][i4])
+                (lambda1 * (adm[i1, i3] + adm[i2, i4]))
+                + ((1 - lambda1) * (adm[i1, i4] + adm[i2, i3]))
+                - (adm[i1, i2] + adm[i3, i4])
             )
