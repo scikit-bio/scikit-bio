@@ -2275,24 +2275,22 @@ def _lme_call(
     formula, data, groups, reml=True, method=None, draws=128, fit_kwargs={}, **kwargs
 ):
     model = MixedLM.from_formula(formula=formula, data=data, groups=groups, **kwargs)
-    with warnings.catch_warnings():
-        warnings.simplefilter("ignore")
 
-        # try-catch block to prevent a Singular matrix which
-        # causes numpy.linalg.LinAlgError
-        try:
-            results = model.fit(reml=reml, method=method, **fit_kwargs)
-        except Exception as e:
-            return None
+    # try-catch block to prevent a Singular matrix which
+    # causes numpy.linalg.LinAlgError
+    try:
+        results = model.fit(reml=reml, method=method, **fit_kwargs)
+    except Exception as e:
+        return None
 
-        output = {
-            "fittedvalues": results.fittedvalues,
-            "tvalues": results.tvalues,
-            "bse": results.bse,
-            "bse_fe": results.bse_fe,
-            "pvalue": results.pvalues,
-            "df_modelwc": results.df_modelwc,
-            "summary": str(results.summary()),
-        }
+    output = {
+        "fittedvalues": results.fittedvalues,
+        "tvalues": results.tvalues,
+        "bse": results.bse,
+        "bse_fe": results.bse_fe,
+        "pvalue": results.pvalues,
+        "df_modelwc": results.df_modelwc,
+        "summary": str(results.summary()),
+    }
 
     return output
