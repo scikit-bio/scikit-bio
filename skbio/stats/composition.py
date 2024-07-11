@@ -1994,6 +1994,11 @@ def dirmult_ttest(
         rng.dirichlet(table.values[i] + pseudocount) for i in range(table.shape[0])
     ]
     dir_table = pd.DataFrame(clr(posterior), index=table.index, columns=table.columns)
+    print(table)
+    print("------")
+    print(dir_table)
+    print("======")
+
     res = [
         _welch_ttest(
             np.array(dir_table.loc[trt_group.index, x].values),
@@ -2063,7 +2068,17 @@ def dirmult_ttest(
 
 
 def dirmult_lme(
-    formula, data, groups, reml=True, method=None, fit_kwargs=None, **kwargs
+    formula,
+    data: pd.DataFrame,
+    groups,
+    reml=True,
+    method=None,
+    draws=128,
+    seed=None,
+    pseudocount=0.5,
+    p_adjust="holm",
+    fit_kwargs={},
+    **kwargs,
 ):
     r"""Fit a Dirichlet Multinomial linear mixed effects model.
 
@@ -2072,15 +2087,13 @@ def dirmult_lme(
     distribution. This distribution is used to model the distribution of
     species abundances in a community.
 
-    To perform
-
     This function uses ``MixedLM`` module from ``statsmodels.formula.api``
 
     Parameters
     ----------
     formula : str or generic Formula object
         The formula specifying the model
-    data : array_like
+    data : DataFrame
         The data for the model. data must define __getitem__ with the keys in
         the formula terms args and kwargs are passed on to the model
         instantiation. E.g., a numpy structured or rec array, a dictionary,
@@ -2094,6 +2107,19 @@ def dirmult_lme(
         Optimization method. Can be a scipy.optimize method name, or a list of such
         names to be tried in sequence.
         See https://docs.scipy.org/doc/scipy/tutorial/optimize.html for all options.
+    draws : int, optional
+        The number of draws from the Dirichilet-multinomial posterior distribution
+    seed : int or np.random.Generator, optional
+        A user-provided random seed or random generator instance.
+    pseudocount : float, optional
+        A non-zero value added to the input counts to ensure that all of the
+        estimated abundances are strictly greater than zero.
+    p_adjust : str or None, optional
+        Method to correct *p*-values for multiple comparisons. Options are Holm-
+        Boniferroni ("holm" or "holm-bonferroni") (default), Benjamini-
+        Hochberg ("bh", "fdr_bh" or "benjamini-hochberg"), or any method supported
+        by statsmodels' ``multipletests`` function. Case-insensitive. If None, no
+        correction will be performed.
     fit_kwargs : dict
         Keyword arguments to pass to the model fit function.
         See ``statsmodels.regression.mixed_linear_model.MixedLM.fit``
@@ -2102,9 +2128,7 @@ def dirmult_lme(
 
     Returns
     -------
-    results : statsmodels.regression.mixed_linear_model.MixedLMResults
-        The fitted model results.
-        See ``statsmodels.regression.mixed_linear_model.MixedLMResults``
+    < need to rewrite, currently returns a dict but should return a DataFrame >
 
     See Also
     --------
@@ -2123,30 +2147,152 @@ def dirmult_lme(
     ...                     columns=["patient_id", "time_point",
     ...                             "response"])
     >>> result = dirmult_lme("response ~ time_point", groups="patient_id", data=data)
-    >>> print(result.summary()) # doctest: +SKIP
-              Mixed Linear Model Regression Results
-    =========================================================
-    Model:             MixedLM  Dependent Variable:  response
-    No. Observations:  4        Method:              REML
-    No. Groups:        1        Scale:               1.4264
-    Min. group size:   4        Log-Likelihood:      -6.3004
-    Max. group size:   4        Converged:           Yes
-    Mean group size:   4.0
-    ---------------------------------------------------------
-               Coef.     Std.Err.     z   P>|z| [0.025 0.975]
-    ---------------------------------------------------------
-    Intercept  11.345         1.459 7.777 0.000  8.486 14.204
-    time_point  0.374         0.107 3.497 0.000  0.164  0.583
-    Group Var   1.426 160301149.746
-    =========================================================
-    <BLANKLINE>
+    >>> print(result["summary"]) # doctest: +SKIP
+               Mixed Linear Model Regression Results
+        ==========================================================
+        Model:              MixedLM  Dependent Variable:  response
+        No. Observations:   4        Method:              REML
+        No. Groups:         4        Scale:               0.1068
+        Min. group size:    1        Log-Likelihood:      -3.5921
+        Max. group size:    1        Converged:           Yes
+        Mean group size:    1.0
+        ----------------------------------------------------------
+                    Coef.  Std.Err.    z    P>|z| [0.025 0.975]
+        ----------------------------------------------------------
+        Intercept       1.529    0.221   6.934 0.000  1.097  1.961
+        time_point     -0.516    0.011 -46.837 0.000 -0.538 -0.495
+        patient_id Var  0.107
+        ==========================================================
 
     """
 
-    # Fit the Dirichlet Multinomial linear mixed effects model
-    model = MixedLM.from_formula(formula=formula, data=data, groups=groups, **kwargs)
-    if fit_kwargs is None:
-        fit_kwargs = {}
-    results = model.fit(reml=reml, method=method, **fit_kwargs)
+    if not hasattr(data, "__getitem__"):
+        raise ValueError(
+            """data must be a pandas DataFrame or a numpy structured
+              or rec array or a dictionary"""
+        )
 
-    return results
+    rng = get_rng(seed)
+
+    posterior = [
+        rng.dirichlet(data.values[i] + pseudocount) for i in range(data.shape[0])
+    ]
+
+    dir_table = pd.DataFrame(clr(posterior), index=data.index, columns=data.columns)
+
+    res = _lme_call(
+        formula=formula,
+        data=dir_table,
+        groups=groups,
+        reml=reml,
+        method=method,
+        draws=draws,
+        fit_kwargs=fit_kwargs,
+        **kwargs,
+    )
+
+    for i in range(1, draws):
+        posterior = [
+            rng.dirichlet(data.values[i] + pseudocount) for i in range(data.shape[0])
+        ]
+        dir_table = pd.DataFrame(clr(posterior), index=data.index, columns=data.columns)
+
+        ires = _lme_call(
+            formula=formula,
+            data=dir_table,
+            groups=groups,
+            reml=reml,
+            method=method,
+            draws=draws,
+            fit_kwargs=fit_kwargs,
+            **kwargs,
+        )
+
+        if ires is None:
+            continue
+
+        # print("================ \nires")
+        # print(ires["df_modelwc"])
+
+        res["fittedvalues"] = (i * res["fittedvalues"] + ires["fittedvalues"]) / (i + 1)
+
+        # only if Intercept and time_point are neither +inf nor -inf
+        if not np.isinf(ires["tvalues"]["Intercept"]) and not np.isinf(
+            ires["tvalues"]["time_point"]
+        ):
+            # only if Intercept and time_point are both numbers
+            if not np.isnan(ires["tvalues"]["Intercept"]) and not np.isnan(
+                ires["tvalues"]["time_point"]
+            ):
+                # print(ires["tvalues"])
+                # print(type(ires["tvalues"]))
+                res["tvalues"] = (i * res["tvalues"] + ires["tvalues"]) / (i + 1)
+
+        if not np.isinf(ires["bse"]["Intercept"]) and not np.isinf(
+            ires["bse"]["time_point"]
+        ):
+            if not np.isnan(ires["bse"]["Intercept"]) and not np.isnan(
+                ires["bse"]["time_point"]
+            ):
+                # print(ires["bse"])
+                # print(type(ires["bse"]))
+                res["bse"] = (i * res["bse"] + ires["bse"]) / (i + 1)
+
+        if not np.isinf(ires["bse_fe"]["Intercept"]) and not np.isinf(
+            ires["bse_fe"]["time_point"]
+        ):
+            if not np.isnan(ires["bse_fe"]["Intercept"]) and not np.isnan(
+                ires["bse_fe"]["time_point"]
+            ):
+                # print(ires["bse_fe"])
+                # print(type(ires["bse_fe"]))
+                res["bse_fe"] = (i * res["bse_fe"] + ires["bse_fe"]) / (i + 1)
+
+        if not np.isinf(ires["pvalue"]["Intercept"]) and not np.isinf(
+            ires["pvalue"]["time_point"]
+        ):
+            if not np.isnan(ires["pvalue"]["Intercept"]) and not np.isnan(
+                ires["pvalue"]["time_point"]
+            ):
+                # print(ires["pvalue"])
+                # print(type(ires["pvalue"]))
+                res["pvalue"] = (i * res["pvalue"] + ires["pvalue"]) / (i + 1)
+
+        # multiple comparison
+        if p_adjust is not None:
+            qval = _calc_p_adjust(p_adjust, res["pvalue"])
+            qval = pd.Series(qval, index=res["pvalue"].index)
+        else:
+            qval = res["pvalue"].values
+            qval = pd.Series(qval, index=res["pvalue"].index)
+
+        res["qvalue"] = qval
+
+    return res
+
+
+def _lme_call(
+    formula, data, groups, reml=True, method=None, draws=128, fit_kwargs={}, **kwargs
+):
+    model = MixedLM.from_formula(formula=formula, data=data, groups=groups, **kwargs)
+    with warnings.catch_warnings():
+        warnings.simplefilter("ignore")
+
+        # try-catch block to prevent a Singular matrix which
+        # causes numpy.linalg.LinAlgError
+        try:
+            results = model.fit(reml=reml, method=method, **fit_kwargs)
+        except Exception as e:
+            return None
+
+        output = {
+            "fittedvalues": results.fittedvalues,
+            "tvalues": results.tvalues,
+            "bse": results.bse,
+            "bse_fe": results.bse_fe,
+            "pvalue": results.pvalues,
+            "df_modelwc": results.df_modelwc,
+            "summary": str(results.summary()),
+        }
+
+    return output

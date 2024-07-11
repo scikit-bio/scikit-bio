@@ -399,3 +399,41 @@ class OrdinationResults(SkbioObject, PlottableMixin):
         else:
             formatted_attr = formatter(attr)
         return "\t%s: %s" % (attr_label, formatted_attr)
+
+    def rename(self, mapper, matrix="samples", strict=True):
+        r"""Rename sample or feature IDs in the data matrix.
+
+        Parameters
+        ----------
+        mapper : dict or callable
+            A dictionary or function that maps current IDs to new IDs.
+        matrix : str, optional
+            Specifies which matrix contains the IDs to be renamed. Either
+            "samples" (default) or "features".
+        strict : bool, optional
+           If ``True`` (default), every ID in the matrix must be included in
+           ``mapper``. If ``False``, only the specified IDs will be renamed.
+
+        Raises
+        ------
+        ValueError
+            If ``mapper`` does not contain all of the same IDs in the matrix
+            whereas in strict mode.
+        ValueError
+            If renaming features but self does not contain features.
+        ValueError
+            If ``matrix`` is neither "samples" nor "features".
+
+        """
+        if matrix not in ("samples", "features"):
+            raise ValueError('Matrix must be either "samples" or "features".')
+        df = getattr(self, matrix)
+        if matrix == "features" and df is None:
+            raise ValueError(
+                "`features` were not provided on the construction of this object."
+            )
+        if strict and isinstance(mapper, dict) and not set(df.index).issubset(mapper):
+            raise ValueError(
+                "The IDs in mapper do not include all IDs in the %s matrix." % matrix
+            )
+        df.rename(index=mapper, inplace=True)

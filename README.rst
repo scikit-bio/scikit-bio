@@ -44,7 +44,7 @@ Visit the new scikit-bio website: https://scikit.bio to learn more about this pr
 Releases
 --------
 
-Latest release: `0.6.1 <https://github.com/scikit-bio/scikit-bio/releases/tag/0.6.1>`_ (`documentation <https://scikit.bio/docs/0.6.1/index.html>`_, `changelog <https://github.com/scikit-bio/scikit-bio/blob/main/CHANGELOG.md#version-061>`_). Compatible with Python 3.8 and above.
+Latest release: `0.6.2 <https://github.com/scikit-bio/scikit-bio/releases/tag/0.6.2>`_ (`documentation <https://scikit.bio/docs/0.6.2/index.html>`_, `changelog <https://github.com/scikit-bio/scikit-bio/blob/main/CHANGELOG.md#version-062>`_). Compatible with Python 3.8 and above.
 
 
 Installation
@@ -57,10 +57,6 @@ Install the latest release of scikit-bio using ``conda``::
 Or using ``pip``::
 
     pip install scikit-bio
-
-Verify the installation::
-
-    python -m skbio.test
 
 See further `instructions on installing <https://scikit.bio/install.html>`_ scikit-bio on various platforms.
 
