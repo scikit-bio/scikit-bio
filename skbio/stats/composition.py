@@ -1994,10 +1994,6 @@ def dirmult_ttest(
         rng.dirichlet(table.values[i] + pseudocount) for i in range(table.shape[0])
     ]
     dir_table = pd.DataFrame(clr(posterior), index=table.index, columns=table.columns)
-    print(table)
-    print("------")
-    print(dir_table)
-    print("======")
 
     res = [
         _welch_ttest(
@@ -2146,7 +2142,7 @@ def dirmult_lme(
     ...                     index=[0, 1, 2, 3],
     ...                     columns=["patient_id", "time_point",
     ...                             "response"])
-    >>> result = dirmult_lme("response ~ time_point", groups="patient_id", data=data)
+    >>> result = dirmult_lme("time_point", groups="patient_id", data=data)
     >>> print(result["summary"]) # doctest: +SKIP
                Mixed Linear Model Regression Results
         ==========================================================
@@ -2274,12 +2270,15 @@ def dirmult_lme(
 def _lme_call(
     formula, data, groups, reml=True, method=None, draws=128, fit_kwargs={}, **kwargs
 ):
-    model = MixedLM.from_formula(formula=formula, data=data, groups=groups, **kwargs)
-
     # try-catch block to prevent a Singular matrix which
     # causes numpy.linalg.LinAlgError
     try:
-        results = model.fit(reml=reml, method=method, **fit_kwargs)
+        for b in data.columns:
+            stats_formula = "%s ~ %s" % (b, formula)
+            model = MixedLM.from_formula(
+                formula=stats_formula, data=data, groups=groups, **kwargs
+            )
+            results = model.fit(reml=reml, method=method, **fit_kwargs)
     except Exception as e:
         return None
 
