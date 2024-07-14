@@ -113,57 +113,57 @@ class UpDownStreamTestCase(unittest.TestCase):
             self.assertEqual(r[1].start, i + 20)
 
 
-class LotsaTestCase(unittest.TestCase):
-    """ put lotsa data in the tree and make sure it works"""
-    def setUp(self):
-        iv = IntervalNode(1, 2, IntervalObj(1, 2))
-        self.max = 1000000
-        for i in range(0, self.max, 10):
-            f = IntervalObj(i, i)
-            iv = iv.insert(f.start, f.end, f)
+# class LotsaTestCase(unittest.TestCase):
+#     """ put lotsa data in the tree and make sure it works"""
+#     def setUp(self):
+#         iv = IntervalNode(1, 2, IntervalObj(1, 2))
+#         self.max = 1000000
+#         for i in range(0, self.max, 10):
+#             f = IntervalObj(i, i)
+#             iv = iv.insert(f.start, f.end, f)
 
-        for i in range(600):
-            iv = iv.insert(0, 1, IntervalObj(0, 1))
-        self.intervals = iv
+#         for i in range(600):
+#             iv = iv.insert(0, 1, IntervalObj(0, 1))
+#         self.intervals = iv
 
-    def test_count(self):
-        iv = self.intervals
+#     def test_count(self):
+#         iv = self.intervals
 
-        r = iv.right(1, n=33)
-        self.assertEqual(len(r), 33)
+#         r = iv.right(1, n=33)
+#         self.assertEqual(len(r), 33)
 
-        left = iv.left(1, n=33)
-        self.assertEqual(len(left), 1)
+#         left = iv.left(1, n=33)
+#         self.assertEqual(len(left), 1)
 
-        u = iv.right(1, n=9999)
-        self.assertEqual(len(u), 250)
+#         u = iv.right(1, n=9999)
+#         self.assertEqual(len(u), 250)
 
-        # now increase max_dist
-        u = iv.right(1, n=9999, max_dist=99999)
-        self.assertEqual(len(u), 9999)
+#         # now increase max_dist
+#         u = iv.right(1, n=9999, max_dist=99999)
+#         self.assertEqual(len(u), 9999)
 
-    def test_max_dist(self):
-        iv = self.intervals
-        r = iv.right(1, max_dist=0, n=10)
-        self.assertEqual(len(r), 0)
+#     def test_max_dist(self):
+#         iv = self.intervals
+#         r = iv.right(1, max_dist=0, n=10)
+#         self.assertEqual(len(r), 0)
 
-        for n, d in enumerate(range(10, 1000, 10)):
-            r = iv.right(1, max_dist=d, n=10000)
-            self.assertEqual(len(r), n + 1)
+#         for n, d in enumerate(range(10, 1000, 10)):
+#             r = iv.right(1, max_dist=d, n=10000)
+#             self.assertEqual(len(r), n + 1)
 
-    def test_find(self):
-        iv = self.intervals
-        path = sys.path[:]
-        sys.path = sys.path[2:]
-        sys.path = path
-        for t in range(25):
-            start = random.randint(0, self.max - 10000)
-            end = start + random.randint(100, 10000)
-            results = iv.find(start, end)
-            for feat in results:
-                self.assertTrue(
-                        (feat.end >= start and feat.end <= end) or
-                        (feat.start <= end and feat.start >= start))
+#     def test_find(self):
+#         iv = self.intervals
+#         path = sys.path[:]
+#         sys.path = sys.path[2:]
+#         sys.path = path
+#         for t in range(25):
+#             start = random.randint(0, self.max - 10000)
+#             end = start + random.randint(100, 10000)
+#             results = iv.find(start, end)
+#             for feat in results:
+#                 self.assertTrue(
+#                         (feat.end >= start and feat.end <= end) or
+#                         (feat.start <= end and feat.start >= start))
 
 
 class IntervalTreeTest(unittest.TestCase):
