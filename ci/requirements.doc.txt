@@ -6,3 +6,4 @@ sphinxcontrib-youtube
 numpydoc
 matplotlib
 statsmodels
+patsy
