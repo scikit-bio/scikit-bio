@@ -95,8 +95,8 @@ from skbio.util import find_duplicates
 from skbio.util._misc import get_rng
 from skbio.util._warning import _warn_deprecated
 from statsmodels.stats.multitest import multipletests as sm_multipletests
-from patsy import dmatrix
-import statsmodels.formula.api as smf
+from statsmodels.formula.api import mixedlm
+from statsmodels.regression.mixed_linear_model import MixedLM
 
 
 def closure(mat):
@@ -2066,7 +2066,6 @@ def dirmult_ttest(
 def dirmult_lme(
     formula,
     data: pd.DataFrame,
-    metadata: pd.DataFrame,
     groups,
     reml=True,
     method=None,
@@ -2095,10 +2094,6 @@ def dirmult_lme(
         the formula terms args and kwargs are passed on to the model
         instantiation. E.g., a numpy structured or rec array, a dictionary,
         or a pandas DataFrame.
-    metadata: pd.DataFrame
-        Metadata table that contains information about the samples contained
-        in the `table` object.  Samples correspond to rows and covariates
-        correspond to columns. ()
     groups : str
         The column name in data that identifies the grouping variable
     reml : bool
@@ -2142,47 +2137,28 @@ def dirmult_lme(
 
     Examples
     --------
-    >>> table = pd.DataFrame({
-    ...    'u1': [ 1.00000053,  6.09924644],
-    ...    'u2': [ 0.99999843,  7.0000045 ],
-    ...    'u3': [ 1.09999884,  8.08474053],
-    ...    'x1': [ 1.09999758,  1.10000349],
-    ...    'x2': [ 0.99999902,  2.00000027],
-    ...    'x3': [ 1.09999862,  2.99998318],
-    ...    'y1': [ 1.00000084,  2.10001257],
-    ...    'y2': [ 0.9999991 ,  3.09998418],
-    ...    'y3': [ 0.99999899,  3.9999742 ],
-    ...    'z1': [ 1.10000124,  5.0001796 ],
-    ...    'z2': [ 1.00000053,  6.09924644],
-    ...    'z3': [ 1.10000173,  6.99693644]},
-    ...      index=['Y1', 'Y2']).T
-
-    >>> metadata = pd.DataFrame({
-    ...          'patient': [1, 1, 1, 2, 2, 2, 3, 3, 3, 4, 4, 4],
-    ...          'treatment': [1, 1, 1, 1, 1, 1, 2, 2, 2, 2, 2, 2],
-    ...          'time': [1, 2, 3, 1, 2, 3, 1, 2, 3, 1, 2, 3]
-    ...      }, index=['x1', 'x2', 'x3', 'y1', 'y2', 'y3',
-    ...                'z1', 'z2', 'z3', 'u1', 'u2', 'u3'])
-
-    >>> res = dirmult_lme(formula='time + treatment', data=table, metadata=metadata,
-    ...                    groups='patient')
-    >>> print(res["summary"])
-                    Mixed Linear Model Regression Results
-        =====================================================================
-        Model:                 MixedLM      Dependent Variable:      time
-        No. Observations:      12           Method:                  REML
-        No. Groups:            4            Scale:                   0.0000
-        Min. group size:       3            Log-Likelihood:          308.9730
-        Max. group size:       3            Converged:               Yes
-        Mean group size:       3.0
-        ---------------------------------------------------------------------
-                    Coef.  Std.Err.           z           P>|z| [0.025 0.975]
-        ---------------------------------------------------------------------
-        Intercept   -0.000
-        time         1.000    0.000 15228956584595532.000 0.000  1.000  1.000
-        treatment    0.000    0.000                 9.104 0.000  0.000  0.000
-        patient Var  0.000
-        =====================================================================
+    >>> data = pd.DataFrame([[1, 0, 10.2], [1, 1, 12.5],
+    ...                     [1, 7, 14.8], [1, 14, 16.1]],
+    ...                     index=[0, 1, 2, 3],
+    ...                     columns=["patient_id", "time_point",
+    ...                             "response"])
+    >>> result = dirmult_lme("time_point", groups="patient_id", data=data)
+    >>> print(result["summary"]) # doctest: +SKIP
+               Mixed Linear Model Regression Results
+        ==========================================================
+        Model:              MixedLM  Dependent Variable:  response
+        No. Observations:   4        Method:              REML
+        No. Groups:         4        Scale:               0.1068
+        Min. group size:    1        Log-Likelihood:      -3.5921
+        Max. group size:    1        Converged:           Yes
+        Mean group size:    1.0
+        ----------------------------------------------------------
+                    Coef.  Std.Err.    z    P>|z| [0.025 0.975]
+        ----------------------------------------------------------
+        Intercept       1.529    0.221   6.934 0.000  1.097  1.961
+        time_point     -0.516    0.011 -46.837 0.000 -0.538 -0.495
+        patient_id Var  0.107
+        ==========================================================
 
     """
 
@@ -2200,10 +2176,9 @@ def dirmult_lme(
 
     dir_table = pd.DataFrame(clr(posterior), index=data.index, columns=data.columns)
 
-    _call_res = _lme_call(
+    res = _lme_call(
         formula=formula,
         data=dir_table,
-        metadata=metadata,
         groups=groups,
         reml=reml,
         method=method,
@@ -2212,18 +2187,15 @@ def dirmult_lme(
         **kwargs,
     )
 
-    res = _call_res[0]
-
     for i in range(1, draws):
         posterior = [
             rng.dirichlet(data.values[i] + pseudocount) for i in range(data.shape[0])
         ]
         dir_table = pd.DataFrame(clr(posterior), index=data.index, columns=data.columns)
 
-        _call_ires = _lme_call(
+        ires = _lme_call(
             formula=formula,
             data=dir_table,
-            metadata=metadata,
             groups=groups,
             reml=reml,
             method=method,
@@ -2232,12 +2204,55 @@ def dirmult_lme(
             **kwargs,
         )
 
-        ires = _call_ires[0]
-
         if ires is None:
             continue
 
+        # print("================ \nires")
+        # print(ires["df_modelwc"])
+
         res["fittedvalues"] = (i * res["fittedvalues"] + ires["fittedvalues"]) / (i + 1)
+
+        # only if Intercept and time_point are neither +inf nor -inf
+        if not np.isinf(ires["tvalues"]["Intercept"]) and not np.isinf(
+            ires["tvalues"]["time_point"]
+        ):
+            # only if Intercept and time_point are both numbers
+            if not np.isnan(ires["tvalues"]["Intercept"]) and not np.isnan(
+                ires["tvalues"]["time_point"]
+            ):
+                # print(ires["tvalues"])
+                # print(type(ires["tvalues"]))
+                res["tvalues"] = (i * res["tvalues"] + ires["tvalues"]) / (i + 1)
+
+        if not np.isinf(ires["bse"]["Intercept"]) and not np.isinf(
+            ires["bse"]["time_point"]
+        ):
+            if not np.isnan(ires["bse"]["Intercept"]) and not np.isnan(
+                ires["bse"]["time_point"]
+            ):
+                # print(ires["bse"])
+                # print(type(ires["bse"]))
+                res["bse"] = (i * res["bse"] + ires["bse"]) / (i + 1)
+
+        if not np.isinf(ires["bse_fe"]["Intercept"]) and not np.isinf(
+            ires["bse_fe"]["time_point"]
+        ):
+            if not np.isnan(ires["bse_fe"]["Intercept"]) and not np.isnan(
+                ires["bse_fe"]["time_point"]
+            ):
+                # print(ires["bse_fe"])
+                # print(type(ires["bse_fe"]))
+                res["bse_fe"] = (i * res["bse_fe"] + ires["bse_fe"]) / (i + 1)
+
+        if not np.isinf(ires["pvalue"]["Intercept"]) and not np.isinf(
+            ires["pvalue"]["time_point"]
+        ):
+            if not np.isnan(ires["pvalue"]["Intercept"]) and not np.isnan(
+                ires["pvalue"]["time_point"]
+            ):
+                # print(ires["pvalue"])
+                # print(type(ires["pvalue"]))
+                res["pvalue"] = (i * res["pvalue"] + ires["pvalue"]) / (i + 1)
 
         # multiple comparison
         if p_adjust is not None:
@@ -2249,46 +2264,23 @@ def dirmult_lme(
 
         res["qvalue"] = qval
 
-    res["submodels"] = _call_res[1]
     return res
 
 
 def _lme_call(
-    formula,
-    data,
-    metadata,
-    groups,
-    reml=True,
-    method=None,
-    draws=128,
-    fit_kwargs={},
-    **kwargs,
+    formula, data, groups, reml=True, method=None, draws=128, fit_kwargs={}, **kwargs
 ):
-    # TODO: add docs when this implementation is approved
-
-    submodels = []
-    metadata = _type_cast_to_float(metadata.copy())
-
-    data = pd.merge(data, metadata, left_index=True, right_index=True)
-    if len(data) == 0:
-        raise ValueError(
-            (
-                "No more samples left.  Check to make sure that "
-                "the sample names between `metadata` and `table` "
-                "are consistent"
+    # try-catch block to prevent a Singular matrix which
+    # causes numpy.linalg.LinAlgError
+    try:
+        for b in data.columns:
+            stats_formula = "%s ~ %s" % (b, formula)
+            model = MixedLM.from_formula(
+                formula=stats_formula, data=data, groups=groups, **kwargs
             )
-        )
-
-    design_matrix = dmatrix(formula, metadata, return_type="dataframe")
-
-    for b in data.columns:
-        # mixed effects code is obtained here:
-        # http://stackoverflow.com/a/22439820/1167475
-
-        stats_formula = "%s ~ %s" % (b, formula)
-        model = smf.mixedlm(formula=stats_formula, data=data, groups=groups, **kwargs)
-        submodels.append(model)
-        results = model.fit(reml=reml, method=method, **fit_kwargs)
+            results = model.fit(reml=reml, method=method, **fit_kwargs)
+    except Exception as e:
+        return None
 
     output = {
         "fittedvalues": results.fittedvalues,
@@ -2300,29 +2292,4 @@ def _lme_call(
         "summary": str(results.summary()),
     }
 
-    return (output, submodels)
-
-
-def _type_cast_to_float(df):
-    """Attempt to cast all of the values in dataframe to float.
-
-    This will try to type cast all of the series within the
-    dataframe into floats.  If a column cannot be type casted,
-    it will be kept as is.
-
-    Parameters
-    ----------
-    df : pd.DataFrame
-
-    Returns
-    -------
-    pd.DataFrame
-    """
-    # TODO: Will need to improve this, as this is a very hacky solution.
-    for c in df.columns:
-        s = df[c]
-        try:
-            df[c] = s.astype(np.float64)
-        except Exception:
-            continue
-    return df
+    return output
