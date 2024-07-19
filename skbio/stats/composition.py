@@ -2129,17 +2129,42 @@ def dirmult_lme(
 
     Returns
     -------
-    TODO: need to rewrite, previously returned a dict but now returns a DataFrame
+    pd.DataFrame
+        A table of features, their log-fold changes and other relevant statistics.
+
+        ``FeatureID`` is the feature identifier, ie: dependent variables
+
+        ``Covariate`` is the covariate name, ie: independent variables
+
+        ``Log2(FC)`` is the expected log2-fold change. Within each posterior draw
+        the log2 fold-change is computed as the difference between the mean
+        log-abundance the ``treatment`` group and the ``reference`` group. All log2
+        fold changes are expressed in clr coordinates. The reported ``Log2(FC)``
+        is the average of all of the log2-fold changes computed from each of the
+        posterior draws.
+
+        ``CI(2.5)`` is the 2.5% quantile of the log2-fold change. The reported
+        ``CI(2.5)`` is the 2.5% quantile of all of the log2-fold changes computed
+        from each of the posterior draws.
+
+        ``CI(97.5)`` is the 97.5% quantile of the log2-fold change. The
+        reported ``CI(97.5)`` is the 97.5% quantile of all of the log2-fold
+        changes computed from each of the posterior draws.
+
+        ``pvalue`` is the *p*-value of the linear mixed effects model. The
+        reported values are the average of all of the *p*-values computed from the
+        linear mixed effects models calculated across all of the posterior draws.
+
+        ``qvalue`` is the corrected *p*-value of the linear mixed effects model
+        for multiple comparisons. The reported values are the average of all of
+        the *q*-values computed from the linear mixed effects models calculated
+        across all of the posterior draws.
 
     See Also
     --------
     statsmodels.formula.api.mixedlm
     statsmodels.regression.mixed_linear_model.MixedLM
     differential.regression.mixedlm
-
-    Notes
-    -----
-    TODO: write
 
     Examples
     --------
@@ -2170,14 +2195,15 @@ def dirmult_lme(
     ...            "z1", "z2", "z3", "u1", "u2", "u3"],
     ... )
     >>> res = dirmult_lme(
-    ...     formula="time + treatment", data=table, metadata=metadata, groups="patient"
+    ...     formula="time + treatment", data=table, metadata=metadata,
+    ...     groups="patient", seed=0
     ... )
-    >>> print(res) # doctest: +SKIP
-        FeatureID  Covariate Log2(FC)  CI(2.5)  CI(97.5)    pvalue    qvalue
-      0        Y1       time      NaN -0.73364  0.754530  0.331207  0.331207
-      1        Y1  treatment      NaN -0.73364 -0.025969  0.331207  0.331207
-      2        Y2       time      NaN -0.73364  0.835320  0.331207  0.331207
-      3        Y2  treatment      NaN -0.73364  2.676199  0.331207  0.331207
+    >>> res
+      FeatureID  Covariate Log2(FC)   CI(2.5)  CI(97.5)    pvalue    qvalue
+    0        Y1       time      NaN -0.731153  0.309650  0.403737  0.403737
+    1        Y1  treatment      NaN -1.780094  0.291999  0.252057  0.252057
+    2        Y2       time      NaN -0.309650  0.731153  0.403737  0.403737
+    3        Y2  treatment      NaN -0.291999  1.780094  0.252057  0.252057
 
     """
 
@@ -2207,6 +2233,12 @@ def dirmult_lme(
     )
 
     res = _call_res[0]
+    list_of_vars = _call_res[2]
+
+    submodels = _call_res[1]
+    for i in submodels:
+        i = i.fit(reml=reml, method=method, **fit_kwargs)
+
     for single_covar_data in res:
         # multiple comparison
         if p_adjust is not None:
@@ -2216,29 +2248,28 @@ def dirmult_lme(
 
         single_covar_data["qvalue"] = qval[0]
 
-    final_res = pd.DataFrame(
-        columns=[
-            "FeatureID",
-            "Covariate",
-            "Log2(FC)",  # TODO: Implement log2(FC)
-            "CI(2.5)",
-            "CI(97.5)",
-            "pvalue",
-            "qvalue",
-        ]
-    )
+    # Creating an empty dict to store sum of values (Using a DataFrame threw errors)
+    # uses a separate array for each covariate and each feature
+    # array index: 0: pvalue, 1: CI(2.5), 2: CI(97.5), 3: qvalue, 4: log2fc
+    res_dict = {}
+
+    for b in data.columns:
+        res_dict[b] = {}
+        for covar in list_of_vars:
+            res_dict[b][covar] = [0, 0, 0, 0, 0]
 
     for single_covar_data in res:
-        final_res = final_res._append(
-            {
-                "FeatureID": single_covar_data["FeatureID"],
-                "Covariate": single_covar_data["Covariate"],
-                "CI(2.5)": single_covar_data["CI(2.5)"],
-                "CI(97.5)": single_covar_data["CI(97.5)"],
-                "pvalue": single_covar_data["pvalue"],
-                "qvalue": single_covar_data["qvalue"],
-            },
-            ignore_index=True,
+        res_dict[single_covar_data["FeatureID"]][single_covar_data["Covariate"]][0] = (
+            single_covar_data["pvalue"]
+        )
+        res_dict[single_covar_data["FeatureID"]][single_covar_data["Covariate"]][1] = (
+            single_covar_data["CI(2.5)"]
+        )
+        res_dict[single_covar_data["FeatureID"]][single_covar_data["Covariate"]][2] = (
+            single_covar_data["CI(97.5)"]
+        )
+        res_dict[single_covar_data["FeatureID"]][single_covar_data["Covariate"]][3] = (
+            single_covar_data["qvalue"]
         )
 
     for i in range(1, draws):
@@ -2274,21 +2305,62 @@ def dirmult_lme(
 
         # online average to avoid holding all of the results in memory
         for single_covar_data in ires:
-            final_res["pvalue"] = (
-                i * final_res["pvalue"] + single_covar_data["pvalue"]
-            ) / (i + 1)
-            final_res["qvalue"] = (
-                i * final_res["qvalue"] + single_covar_data["qvalue"]
-            ) / (i + 1)
-            final_res["CI(2.5)"] = (
-                i * final_res["CI(2.5)"] + single_covar_data["CI(2.5)"]
-            ) / (i + 1)
+            curr_feature_id = single_covar_data["FeatureID"]
+            curr_covariate = single_covar_data["Covariate"]
 
-    # convert all log fold changes to base 2
-    final_res["CI(2.5)"] = final_res["CI(2.5)"] / np.log(2)
-    final_res["CI(97.5)"] = final_res["CI(97.5)"] / np.log(2)
+            res_dict[curr_feature_id][curr_covariate][0] += single_covar_data["pvalue"]
+            res_dict[curr_feature_id][curr_covariate][1] += single_covar_data["CI(2.5)"]
+            res_dict[curr_feature_id][curr_covariate][2] += single_covar_data[
+                "CI(97.5)"
+            ]
+            res_dict[curr_feature_id][curr_covariate][3] += single_covar_data["qvalue"]
 
-    return final_res
+    # TODO: implement online averages to save memory
+    for b in data.columns:
+        for covar in list_of_vars:
+            res_dict[b][covar][0] = res_dict[b][covar][0] / draws
+            res_dict[b][covar][1] = res_dict[b][covar][1] / draws
+            res_dict[b][covar][2] = res_dict[b][covar][2] / draws
+            res_dict[b][covar][3] = res_dict[b][covar][3] / draws
+
+    final_res = pd.DataFrame(
+        columns=[
+            "FeatureID",
+            "Covariate",
+            "Log2(FC)",  # TODO: Implement log2(FC)
+            "CI(2.5)",
+            "CI(97.5)",
+            "pvalue",
+            "qvalue",
+        ]
+    )
+
+    for b in data.columns:
+        for covar in list_of_vars:
+            final_res = final_res._append(
+                {
+                    "FeatureID": b,
+                    "Covariate": covar,
+                    # convert all log fold changes to base 2 while appending to df
+                    "CI(2.5)": res_dict[b][covar][1] / np.log(2),
+                    "CI(97.5)": res_dict[b][covar][2] / np.log(2),
+                    "pvalue": res_dict[b][covar][0],
+                    "qvalue": res_dict[b][covar][3],
+                },
+                ignore_index=True,
+            )
+
+    col_order = [
+        "FeatureID",
+        "Covariate",
+        "Log2(FC)",
+        "CI(2.5)",
+        "CI(97.5)",
+        "pvalue",
+        "qvalue",
+    ]
+
+    return final_res[col_order]
 
 
 def _lme_call(
@@ -2302,6 +2374,7 @@ def _lme_call(
     **kwargs,
 ):
     # TODO: add docs when this implementation is approved
+    # list_of_vars is essentially the list of covariates
 
     submodels = []
     metadata = _type_cast_to_float(metadata.copy())
@@ -2346,7 +2419,7 @@ def _lme_call(
 
             output.append(individial_results)
 
-    return (output, submodels)
+    return (output, submodels, list_of_vars)
 
 
 def _type_cast_to_float(df):
