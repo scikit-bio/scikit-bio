@@ -95,7 +95,6 @@ from skbio.util import find_duplicates
 from skbio.util._misc import get_rng
 from skbio.util._warning import _warn_deprecated
 from statsmodels.stats.multitest import multipletests as sm_multipletests
-from statsmodels.formula.api import mixedlm
 from statsmodels.regression.mixed_linear_model import MixedLM
 from patsy import dmatrix
 
@@ -2174,9 +2173,11 @@ def dirmult_lme(
     ...     formula="time + treatment", data=table, metadata=metadata, groups="patient"
     ... )
     >>> print(res) # doctest: +SKIP
-              FeatureID  Covariate Log2(FC)   CI(2.5)  CI(97.5)    pvalue    qvalue
-            0         1       time      NaN -0.333390  0.526584  0.358196  0.358196
-            1         2  treatment      NaN -0.333385  1.155599  0.358168  0.358168
+        FeatureID  Covariate Log2(FC)  CI(2.5)  CI(97.5)    pvalue    qvalue
+      0        Y1       time      NaN -0.73364  0.754530  0.331207  0.331207
+      1        Y1  treatment      NaN -0.73364 -0.025969  0.331207  0.331207
+      2        Y2       time      NaN -0.73364  0.835320  0.331207  0.331207
+      3        Y2  treatment      NaN -0.73364  2.676199  0.331207  0.331207
 
     """
 
@@ -2201,7 +2202,6 @@ def dirmult_lme(
         groups=groups,
         reml=reml,
         method=method,
-        draws=draws,
         fit_kwargs=fit_kwargs,
         **kwargs,
     )
@@ -2228,11 +2228,10 @@ def dirmult_lme(
         ]
     )
 
-    count = 1
     for single_covar_data in res:
         final_res = final_res._append(
             {
-                "FeatureID": count,
+                "FeatureID": single_covar_data["FeatureID"],
                 "Covariate": single_covar_data["Covariate"],
                 "CI(2.5)": single_covar_data["CI(2.5)"],
                 "CI(97.5)": single_covar_data["CI(97.5)"],
@@ -2241,7 +2240,6 @@ def dirmult_lme(
             },
             ignore_index=True,
         )
-        count += 1
 
     for i in range(1, draws):
         posterior = [
@@ -2256,7 +2254,6 @@ def dirmult_lme(
             groups=groups,
             reml=reml,
             method=method,
-            draws=draws,
             fit_kwargs=fit_kwargs,
             **kwargs,
         )
@@ -2301,7 +2298,6 @@ def _lme_call(
     groups,
     reml=True,
     method=None,
-    draws=128,
     fit_kwargs={},
     **kwargs,
 ):
@@ -2328,6 +2324,7 @@ def _lme_call(
     # Removing intercept since it is not a covariate, and is included by default
     list_of_vars.remove("Intercept")
 
+    output = []
     for b in table.columns:
         # mixed effects code is obtained here:
         # http://stackoverflow.com/a/22439820/1167475
@@ -2338,17 +2335,16 @@ def _lme_call(
         submodels.append(model)
         results = model.fit(reml=reml, method=method, **fit_kwargs)
 
-    output = []
+        for var_name in list_of_vars:
+            individial_results = {
+                "FeatureID": b,
+                "Covariate": var_name,
+                "CI(2.5)": float(results.summary().tables[1]["[0.025"][var_name]),
+                "CI(97.5)": float(results.summary().tables[1]["0.975]"][var_name]),
+                "pvalue": results.pvalues[var_name],
+            }
 
-    for var_name in list_of_vars:
-        individial_results = {
-            "Covariate": var_name,
-            "CI(2.5)": float(results.summary().tables[1]["[0.025"][var_name]),
-            "CI(97.5)": float(results.summary().tables[1]["0.975]"][var_name]),
-            "pvalue": results.pvalues[var_name],
-        }
-
-        output.append(individial_results)
+            output.append(individial_results)
 
     return (output, submodels)
 
