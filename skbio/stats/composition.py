@@ -2174,7 +2174,16 @@ def dirmult_lme(
     distribution. This distribution is used to model the distribution of
     species abundances in a community.
 
-    This function uses ``MixedLM`` module from ``statsmodels.formula.api``
+    To fit the linear mixed effect model we first fit a Dirichlet-multinomial
+    distribution for each sample, and then we compute the fold change and
+    *p*-value for each feature. The fold change is computed as the slopes
+    from the resulting model. Statistical tests are then performed on the posterior
+    samples, drawn from each Dirichlet-multinomial distribution. The
+    log-fold changes as well as their credible intervals, the *p*-values and
+    the multiple comparison corrected *p*-values are reported.
+
+    This function uses ``MixedLM`` module from
+    ``statsmodels.regression.mixed_linear_model``
 
     Parameters
     ----------
