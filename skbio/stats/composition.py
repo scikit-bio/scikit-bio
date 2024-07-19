@@ -97,6 +97,7 @@ from skbio.util._warning import _warn_deprecated
 from statsmodels.stats.multitest import multipletests as sm_multipletests
 from statsmodels.formula.api import mixedlm
 from statsmodels.regression.mixed_linear_model import MixedLM
+from patsy import dmatrix
 
 
 def closure(mat):
@@ -2066,6 +2067,7 @@ def dirmult_ttest(
 def dirmult_lme(
     formula,
     data: pd.DataFrame,
+    metadata: pd.DataFrame,
     groups,
     reml=True,
     method=None,
@@ -2094,6 +2096,10 @@ def dirmult_lme(
         the formula terms args and kwargs are passed on to the model
         instantiation. E.g., a numpy structured or rec array, a dictionary,
         or a pandas DataFrame.
+    metadata: pd.DataFrame
+        Metadata table that contains information about the samples contained
+        in the `table` object.  Samples correspond to rows and covariates
+        correspond to columns. ()
     groups : str
         The column name in data that identifies the grouping variable
     reml : bool
@@ -2124,41 +2130,53 @@ def dirmult_lme(
 
     Returns
     -------
-    < need to rewrite, currently returns a dict but should return a DataFrame >
+    TODO: need to rewrite, previously returned a dict but now returns a DataFrame
 
     See Also
     --------
     statsmodels.formula.api.mixedlm
     statsmodels.regression.mixed_linear_model.MixedLM
+    differential.regression.mixedlm
 
     Notes
     -----
-    pass
+    TODO: write
 
     Examples
     --------
-    >>> data = pd.DataFrame([[1, 0, 10.2], [1, 1, 12.5],
-    ...                     [1, 7, 14.8], [1, 14, 16.1]],
-    ...                     index=[0, 1, 2, 3],
-    ...                     columns=["patient_id", "time_point",
-    ...                             "response"])
-    >>> result = dirmult_lme("time_point", groups="patient_id", data=data)
-    >>> print(result["summary"]) # doctest: +SKIP
-               Mixed Linear Model Regression Results
-        ==========================================================
-        Model:              MixedLM  Dependent Variable:  response
-        No. Observations:   4        Method:              REML
-        No. Groups:         4        Scale:               0.1068
-        Min. group size:    1        Log-Likelihood:      -3.5921
-        Max. group size:    1        Converged:           Yes
-        Mean group size:    1.0
-        ----------------------------------------------------------
-                    Coef.  Std.Err.    z    P>|z| [0.025 0.975]
-        ----------------------------------------------------------
-        Intercept       1.529    0.221   6.934 0.000  1.097  1.961
-        time_point     -0.516    0.011 -46.837 0.000 -0.538 -0.495
-        patient_id Var  0.107
-        ==========================================================
+    >>> table = pd.DataFrame(
+    ...     {
+    ...         "u1": [1.00000053, 6.09924644],
+    ...         "u2": [0.99999843, 7.0000045],
+    ...         "u3": [1.09999884, 8.08474053],
+    ...         "x1": [1.09999758, 1.10000349],
+    ...         "x2": [0.99999902, 2.00000027],
+    ...         "x3": [1.09999862, 2.99998318],
+    ...         "y1": [1.00000084, 2.10001257],
+    ...         "y2": [0.9999991, 3.09998418],
+    ...         "y3": [0.99999899, 3.9999742],
+    ...         "z1": [1.10000124, 5.0001796],
+    ...         "z2": [1.00000053, 6.09924644],
+    ...         "z3": [1.10000173, 6.99693644],
+    ...     },
+    ...     index=["Y1", "Y2"],
+    ... ).T
+    >>> metadata = pd.DataFrame(
+    ...     {
+    ...         "patient": [1, 1, 1, 2, 2, 2, 3, 3, 3, 4, 4, 4],
+    ...         "treatment": [1, 1, 1, 1, 1, 1, 2, 2, 2, 2, 2, 2],
+    ...         "time": [1, 2, 3, 1, 2, 3, 1, 2, 3, 1, 2, 3],
+    ...     },
+    ...     index=["x1", "x2", "x3", "y1", "y2", "y3",
+    ...            "z1", "z2", "z3", "u1", "u2", "u3"],
+    ... )
+    >>> res = dirmult_lme(
+    ...     formula="time + treatment", data=table, metadata=metadata, groups="patient"
+    ... )
+    >>> print(res) # doctest: +SKIP
+              FeatureID  Covariate Log2(FC)   CI(2.5)  CI(97.5)    pvalue    qvalue
+            0         1       time      NaN -0.333390  0.526584  0.358196  0.358196
+            1         2  treatment      NaN -0.333385  1.155599  0.358168  0.358168
 
     """
 
@@ -2176,9 +2194,10 @@ def dirmult_lme(
 
     dir_table = pd.DataFrame(clr(posterior), index=data.index, columns=data.columns)
 
-    res = _lme_call(
+    _call_res = _lme_call(
         formula=formula,
-        data=dir_table,
+        table=dir_table,
+        metadata=metadata,
         groups=groups,
         reml=reml,
         method=method,
@@ -2187,15 +2206,53 @@ def dirmult_lme(
         **kwargs,
     )
 
+    res = _call_res[0]
+    for single_covar_data in res:
+        # multiple comparison
+        if p_adjust is not None:
+            qval = _calc_p_adjust(p_adjust, single_covar_data["pvalue"])
+        else:
+            qval = single_covar_data["pvalue"].values
+
+        single_covar_data["qvalue"] = qval[0]
+
+    final_res = pd.DataFrame(
+        columns=[
+            "FeatureID",
+            "Covariate",
+            "Log2(FC)",
+            "CI(2.5)",
+            "CI(97.5)",
+            "pvalue",
+            "qvalue",
+        ]
+    )
+
+    count = 1
+    for single_covar_data in res:
+        final_res = final_res._append(
+            {
+                "FeatureID": count,
+                "Covariate": single_covar_data["Covariate"],
+                "CI(2.5)": single_covar_data["CI(2.5)"],
+                "CI(97.5)": single_covar_data["CI(97.5)"],
+                "pvalue": single_covar_data["pvalue"],
+                "qvalue": single_covar_data["qvalue"],
+            },
+            ignore_index=True,
+        )
+        count += 1
+
     for i in range(1, draws):
         posterior = [
             rng.dirichlet(data.values[i] + pseudocount) for i in range(data.shape[0])
         ]
         dir_table = pd.DataFrame(clr(posterior), index=data.index, columns=data.columns)
 
-        ires = _lme_call(
+        _call_ires = _lme_call(
             formula=formula,
-            data=dir_table,
+            table=dir_table,
+            metadata=metadata,
             groups=groups,
             reml=reml,
             method=method,
@@ -2204,92 +2261,123 @@ def dirmult_lme(
             **kwargs,
         )
 
+        ires = _call_ires[0]
+
         if ires is None:
             continue
 
-        # print("================ \nires")
-        # print(ires["df_modelwc"])
+        for single_covar_data in ires:
+            # multiple comparison
+            if p_adjust is not None:
+                qval = _calc_p_adjust(p_adjust, single_covar_data["pvalue"])
+            else:
+                qval = single_covar_data["pvalue"].values
 
-        res["fittedvalues"] = (i * res["fittedvalues"] + ires["fittedvalues"]) / (i + 1)
+            single_covar_data["qvalue"] = qval[0]
 
-        # only if Intercept and time_point are neither +inf nor -inf
-        if not np.isinf(ires["tvalues"]["Intercept"]) and not np.isinf(
-            ires["tvalues"]["time_point"]
-        ):
-            # only if Intercept and time_point are both numbers
-            if not np.isnan(ires["tvalues"]["Intercept"]) and not np.isnan(
-                ires["tvalues"]["time_point"]
-            ):
-                # print(ires["tvalues"])
-                # print(type(ires["tvalues"]))
-                res["tvalues"] = (i * res["tvalues"] + ires["tvalues"]) / (i + 1)
+        # online average to avoid holding all of the results in memory
+        for single_covar_data in ires:
+            final_res["pvalue"] = (
+                i * final_res["pvalue"] + single_covar_data["pvalue"]
+            ) / (i + 1)
+            final_res["qvalue"] = (
+                i * final_res["qvalue"] + single_covar_data["qvalue"]
+            ) / (i + 1)
+            final_res["CI(2.5)"] = (
+                i * final_res["CI(2.5)"] + single_covar_data["CI(2.5)"]
+            ) / (i + 1)
 
-        if not np.isinf(ires["bse"]["Intercept"]) and not np.isinf(
-            ires["bse"]["time_point"]
-        ):
-            if not np.isnan(ires["bse"]["Intercept"]) and not np.isnan(
-                ires["bse"]["time_point"]
-            ):
-                # print(ires["bse"])
-                # print(type(ires["bse"]))
-                res["bse"] = (i * res["bse"] + ires["bse"]) / (i + 1)
+    # convert all log fold changes to base 2
+    final_res["CI(2.5)"] = final_res["CI(2.5)"] / np.log(2)
+    final_res["CI(97.5)"] = final_res["CI(97.5)"] / np.log(2)
 
-        if not np.isinf(ires["bse_fe"]["Intercept"]) and not np.isinf(
-            ires["bse_fe"]["time_point"]
-        ):
-            if not np.isnan(ires["bse_fe"]["Intercept"]) and not np.isnan(
-                ires["bse_fe"]["time_point"]
-            ):
-                # print(ires["bse_fe"])
-                # print(type(ires["bse_fe"]))
-                res["bse_fe"] = (i * res["bse_fe"] + ires["bse_fe"]) / (i + 1)
-
-        if not np.isinf(ires["pvalue"]["Intercept"]) and not np.isinf(
-            ires["pvalue"]["time_point"]
-        ):
-            if not np.isnan(ires["pvalue"]["Intercept"]) and not np.isnan(
-                ires["pvalue"]["time_point"]
-            ):
-                # print(ires["pvalue"])
-                # print(type(ires["pvalue"]))
-                res["pvalue"] = (i * res["pvalue"] + ires["pvalue"]) / (i + 1)
-
-        # multiple comparison
-        if p_adjust is not None:
-            qval = _calc_p_adjust(p_adjust, res["pvalue"])
-            qval = pd.Series(qval, index=res["pvalue"].index)
-        else:
-            qval = res["pvalue"].values
-            qval = pd.Series(qval, index=res["pvalue"].index)
-
-        res["qvalue"] = qval
-
-    return res
+    return final_res
 
 
 def _lme_call(
-    formula, data, groups, reml=True, method=None, draws=128, fit_kwargs={}, **kwargs
+    formula,
+    metadata,
+    table,
+    groups,
+    reml=True,
+    method=None,
+    draws=128,
+    fit_kwargs={},
+    **kwargs,
 ):
-    # try-catch block to prevent a Singular matrix which
-    # causes numpy.linalg.LinAlgError
-    try:
-        for b in data.columns:
-            stats_formula = "%s ~ %s" % (b, formula)
-            model = MixedLM.from_formula(
-                formula=stats_formula, data=data, groups=groups, **kwargs
+    # TODO: add docs when this implementation is approved
+
+    submodels = []
+    metadata = _type_cast_to_float(metadata.copy())
+
+    data = pd.merge(table, metadata, left_index=True, right_index=True)
+    if len(data) == 0:
+        raise ValueError(
+            (
+                "No more samples left.  Check to make sure that "
+                "the sample names between `metadata` and `data` "
+                "are consistent"
             )
-            results = model.fit(reml=reml, method=method, **fit_kwargs)
-    except Exception as e:
-        return None
+        )
 
-    output = {
-        "fittedvalues": results.fittedvalues,
-        "tvalues": results.tvalues,
-        "bse": results.bse,
-        "bse_fe": results.bse_fe,
-        "pvalue": results.pvalues,
-        "df_modelwc": results.df_modelwc,
-        "summary": str(results.summary()),
-    }
+    design_matrix = dmatrix(formula, metadata, return_type="dataframe")
 
-    return output
+    # Obtaining the list of covariates by selecting the relevant columns
+    list_of_vars = list(design_matrix.columns)
+
+    # Removing intercept since it is not a covariate, and is included by default
+    list_of_vars.remove("Intercept")
+
+    for b in table.columns:
+        # mixed effects code is obtained here:
+        # http://stackoverflow.com/a/22439820/1167475
+        stats_formula = "%s ~ %s" % (b, formula)
+        model = MixedLM.from_formula(
+            formula=stats_formula, data=data, groups=groups, **kwargs
+        )
+        submodels.append(model)
+        results = model.fit(reml=reml, method=method, **fit_kwargs)
+
+    output = []
+
+    for var_name in list_of_vars:
+        individial_results = {
+            "Covariate": var_name,
+            "CI(2.5)": float(results.summary().tables[1]["[0.025"][var_name]),
+            "CI(97.5)": float(results.summary().tables[1]["0.975]"][var_name]),
+            "pvalue": results.pvalues[var_name],
+        }
+
+        output.append(individial_results)
+
+    return (output, submodels)
+
+
+def _type_cast_to_float(df):
+    """Attempt to cast all of the values in dataframe to float.
+
+    This will try to type cast all of the series within the
+    dataframe into floats.  If a column cannot be type casted,
+    it will be kept as is.
+
+    See Also
+    --------
+    differential.regression.mixedlm
+
+    Parameters
+    ----------
+    df : pd.DataFrame
+
+    Returns
+    -------
+    pd.DataFrame
+    """
+    # Implementation based on https://github.com/mortonjt/differential/blob/65752567ef4cf303471405b0a9be503eb10a0bbb/differential/util.py#L4
+    # TODO: Will need to improve this, as this is a very hacky solution.
+    for c in df.columns:
+        s = df[c]
+        try:
+            df[c] = s.astype(np.float64)
+        except Exception:
+            continue
+    return df
