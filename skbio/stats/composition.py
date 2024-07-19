@@ -2402,7 +2402,7 @@ def dirmult_lme(
 
             single_covar_data["qvalue"] = qval[0]
 
-        # online average to avoid holding all of the results in memory
+        # TODO: online average to avoid holding all of the results in memory
         for single_covar_data in ires:
             curr_feature_id = single_covar_data["FeatureID"]
             curr_covariate = single_covar_data["Covariate"]
