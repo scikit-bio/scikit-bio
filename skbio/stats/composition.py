@@ -2220,7 +2220,7 @@ def dirmult_lme(
         columns=[
             "FeatureID",
             "Covariate",
-            "Log2(FC)",
+            "Log2(FC)",  # TODO: Implement log2(FC)
             "CI(2.5)",
             "CI(97.5)",
             "pvalue",
