@@ -2226,10 +2226,7 @@ def dirmult_lme(
 
         ``Covariate`` is the covariate name, ie: independent variables
 
-        ``Log2(FC)`` is the expected log2-fold change. Within each posterior draw
-        the log2 fold-change is computed as the difference between the mean
-        log-abundance the ``treatment`` group and the ``reference`` group. All log2
-        fold changes are expressed in clr coordinates. The reported ``Log2(FC)``
+        ``Log2(FC)`` is the expected log2-fold change. The reported ``Log2(FC)``
         is the average of all of the log2-fold changes computed from each of the
         posterior draws.
 
