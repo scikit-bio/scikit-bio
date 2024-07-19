@@ -2063,6 +2063,96 @@ def dirmult_ttest(
     return res[col_order]
 
 
+def _type_cast_to_float(df):
+    """Attempt to cast all of the values in dataframe to float.
+
+    This will try to type cast all of the series within the
+    dataframe into floats.  If a column cannot be type casted,
+    it will be kept as is.
+
+    See Also
+    --------
+    differential.regression.mixedlm
+
+    Parameters
+    ----------
+    df : pd.DataFrame
+
+    Returns
+    -------
+    pd.DataFrame
+    """
+    # Implementation based on https://github.com/mortonjt/differential/blob/65752567ef4cf303471405b0a9be503eb10a0bbb/differential/util.py#L4
+    # TODO: Will need to improve this, as this is a very hacky solution.
+    for c in df.columns:
+        s = df[c]
+        try:
+            df[c] = s.astype(np.float64)
+        except Exception:
+            continue
+    return df
+
+
+def _lme_call(
+    formula,
+    metadata,
+    table,
+    groups,
+    reml=True,
+    method=None,
+    fit_kwargs={},
+    **kwargs,
+):
+    # TODO: add docs when this implementation is approved
+    # list_of_vars is essentially the list of covariates
+
+    submodels = []
+    metadata = _type_cast_to_float(metadata.copy())
+
+    data = pd.merge(table, metadata, left_index=True, right_index=True)
+    if len(data) == 0:
+        raise ValueError(
+            (
+                "No more samples left.  Check to make sure that "
+                "the sample names between `metadata` and `data` "
+                "are consistent"
+            )
+        )
+
+    design_matrix = dmatrix(formula, metadata, return_type="dataframe")
+
+    # Obtaining the list of covariates by selecting the relevant columns
+    list_of_vars = list(design_matrix.columns)
+
+    # Removing intercept since it is not a covariate, and is included by default
+    list_of_vars.remove("Intercept")
+
+    output = []
+    for b in table.columns:
+        # mixed effects code is obtained here:
+        # http://stackoverflow.com/a/22439820/1167475
+        stats_formula = "%s ~ %s" % (b, formula)
+        model = MixedLM.from_formula(
+            formula=stats_formula, data=data, groups=groups, **kwargs
+        )
+        submodels.append(model)
+        results = model.fit(reml=reml, method=method, **fit_kwargs)
+
+        for var_name in list_of_vars:
+            individial_results = {
+                "FeatureID": b,
+                "Covariate": var_name,
+                "Log2(FC)": float(results.summary().tables[1]["Coef."][var_name]),
+                "CI(2.5)": float(results.summary().tables[1]["[0.025"][var_name]),
+                "CI(97.5)": float(results.summary().tables[1]["0.975]"][var_name]),
+                "pvalue": results.pvalues[var_name],
+            }
+
+            output.append(individial_results)
+
+    return (output, submodels, list_of_vars)
+
+
 def dirmult_lme(
     formula,
     data: pd.DataFrame,
@@ -2199,11 +2289,11 @@ def dirmult_lme(
     ...     groups="patient", seed=0
     ... )
     >>> res
-      FeatureID  Covariate Log2(FC)   CI(2.5)  CI(97.5)    pvalue    qvalue
-    0        Y1       time      NaN -0.731153  0.309650  0.403737  0.403737
-    1        Y1  treatment      NaN -1.780094  0.291999  0.252057  0.252057
-    2        Y2       time      NaN -0.309650  0.731153  0.403737  0.403737
-    3        Y2  treatment      NaN -0.291999  1.780094  0.252057  0.252057
+      FeatureID  Covariate  Log2(FC)   CI(2.5)  CI(97.5)    pvalue    qvalue
+    0        Y1       time -0.210769 -0.731153  0.309650  0.403737  0.403737
+    1        Y1  treatment -0.744093 -1.780094  0.291999  0.252057  0.252057
+    2        Y2       time  0.210769 -0.309650  0.731153  0.403737  0.403737
+    3        Y2  treatment  0.744093 -0.291999  1.780094  0.252057  0.252057
 
     """
 
@@ -2271,6 +2361,9 @@ def dirmult_lme(
         res_dict[single_covar_data["FeatureID"]][single_covar_data["Covariate"]][3] = (
             single_covar_data["qvalue"]
         )
+        res_dict[single_covar_data["FeatureID"]][single_covar_data["Covariate"]][4] = (
+            single_covar_data["Log2(FC)"]
+        )
 
     for i in range(1, draws):
         posterior = [
@@ -2314,6 +2407,9 @@ def dirmult_lme(
                 "CI(97.5)"
             ]
             res_dict[curr_feature_id][curr_covariate][3] += single_covar_data["qvalue"]
+            res_dict[curr_feature_id][curr_covariate][4] += single_covar_data[
+                "Log2(FC)"
+            ]
 
     # TODO: implement online averages to save memory
     for b in data.columns:
@@ -2322,12 +2418,13 @@ def dirmult_lme(
             res_dict[b][covar][1] = res_dict[b][covar][1] / draws
             res_dict[b][covar][2] = res_dict[b][covar][2] / draws
             res_dict[b][covar][3] = res_dict[b][covar][3] / draws
+            res_dict[b][covar][4] = res_dict[b][covar][4] / draws
 
     final_res = pd.DataFrame(
         columns=[
             "FeatureID",
             "Covariate",
-            "Log2(FC)",  # TODO: Implement log2(FC)
+            "Log2(FC)",
             "CI(2.5)",
             "CI(97.5)",
             "pvalue",
@@ -2342,6 +2439,7 @@ def dirmult_lme(
                     "FeatureID": b,
                     "Covariate": covar,
                     # convert all log fold changes to base 2 while appending to df
+                    "Log2(FC)": res_dict[b][covar][4] / np.log(2),
                     "CI(2.5)": res_dict[b][covar][1] / np.log(2),
                     "CI(97.5)": res_dict[b][covar][2] / np.log(2),
                     "pvalue": res_dict[b][covar][0],
@@ -2361,92 +2459,3 @@ def dirmult_lme(
     ]
 
     return final_res[col_order]
-
-
-def _lme_call(
-    formula,
-    metadata,
-    table,
-    groups,
-    reml=True,
-    method=None,
-    fit_kwargs={},
-    **kwargs,
-):
-    # TODO: add docs when this implementation is approved
-    # list_of_vars is essentially the list of covariates
-
-    submodels = []
-    metadata = _type_cast_to_float(metadata.copy())
-
-    data = pd.merge(table, metadata, left_index=True, right_index=True)
-    if len(data) == 0:
-        raise ValueError(
-            (
-                "No more samples left.  Check to make sure that "
-                "the sample names between `metadata` and `data` "
-                "are consistent"
-            )
-        )
-
-    design_matrix = dmatrix(formula, metadata, return_type="dataframe")
-
-    # Obtaining the list of covariates by selecting the relevant columns
-    list_of_vars = list(design_matrix.columns)
-
-    # Removing intercept since it is not a covariate, and is included by default
-    list_of_vars.remove("Intercept")
-
-    output = []
-    for b in table.columns:
-        # mixed effects code is obtained here:
-        # http://stackoverflow.com/a/22439820/1167475
-        stats_formula = "%s ~ %s" % (b, formula)
-        model = MixedLM.from_formula(
-            formula=stats_formula, data=data, groups=groups, **kwargs
-        )
-        submodels.append(model)
-        results = model.fit(reml=reml, method=method, **fit_kwargs)
-
-        for var_name in list_of_vars:
-            individial_results = {
-                "FeatureID": b,
-                "Covariate": var_name,
-                "CI(2.5)": float(results.summary().tables[1]["[0.025"][var_name]),
-                "CI(97.5)": float(results.summary().tables[1]["0.975]"][var_name]),
-                "pvalue": results.pvalues[var_name],
-            }
-
-            output.append(individial_results)
-
-    return (output, submodels, list_of_vars)
-
-
-def _type_cast_to_float(df):
-    """Attempt to cast all of the values in dataframe to float.
-
-    This will try to type cast all of the series within the
-    dataframe into floats.  If a column cannot be type casted,
-    it will be kept as is.
-
-    See Also
-    --------
-    differential.regression.mixedlm
-
-    Parameters
-    ----------
-    df : pd.DataFrame
-
-    Returns
-    -------
-    pd.DataFrame
-    """
-    # Implementation based on https://github.com/mortonjt/differential/blob/65752567ef4cf303471405b0a9be503eb10a0bbb/differential/util.py#L4
-    # TODO: Will need to improve this, as this is a very hacky solution.
-    for c in df.columns:
-        s = df[c]
-        try:
-            df[c] = s.astype(np.float64)
-        except Exception:
-            continue
-    return df
