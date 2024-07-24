@@ -2335,18 +2335,9 @@ def dirmult_lme(
     for i in submodels:
         i = i.fit(reml=reml, method=method, **fit_kwargs)
 
-    for single_covar_data in res:
-        # multiple comparison
-        if p_adjust is not None:
-            qval = _calc_p_adjust(p_adjust, single_covar_data["pvalue"])
-        else:
-            qval = single_covar_data["pvalue"].values
-
-        single_covar_data["qvalue"] = qval[0]
-
     # Creating an empty dict to store sum of values (Using a DataFrame threw errors)
     # uses a separate array for each covariate and each feature
-    # array index: 0: pvalue, 1: CI(2.5), 2: CI(97.5), 3: qvalue, 4: log2fc
+    # array index: 0: pvalue, 1: CI(2.5), 2: CI(97.5), 3: log2fc, 4: qvalue
     res_dict = {}
 
     for b in data.columns:
@@ -2365,9 +2356,6 @@ def dirmult_lme(
             single_covar_data["CI(97.5)"]
         )
         res_dict[single_covar_data["FeatureID"]][single_covar_data["Covariate"]][3] = (
-            single_covar_data["qvalue"]
-        )
-        res_dict[single_covar_data["FeatureID"]][single_covar_data["Covariate"]][4] = (
             single_covar_data["Log2(FC)"]
         )
 
@@ -2393,15 +2381,6 @@ def dirmult_lme(
         if ires is None:
             continue
 
-        for single_covar_data in ires:
-            # multiple comparison
-            if p_adjust is not None:
-                qval = _calc_p_adjust(p_adjust, single_covar_data["pvalue"])
-            else:
-                qval = single_covar_data["pvalue"].values
-
-            single_covar_data["qvalue"] = qval[0]
-
         # TODO: online average to avoid holding all of the results in memory
         for single_covar_data in ires:
             curr_feature_id = single_covar_data["FeatureID"]
@@ -2412,8 +2391,7 @@ def dirmult_lme(
             res_dict[curr_feature_id][curr_covariate][2] += single_covar_data[
                 "CI(97.5)"
             ]
-            res_dict[curr_feature_id][curr_covariate][3] += single_covar_data["qvalue"]
-            res_dict[curr_feature_id][curr_covariate][4] += single_covar_data[
+            res_dict[curr_feature_id][curr_covariate][3] += single_covar_data[
                 "Log2(FC)"
             ]
 
@@ -2424,7 +2402,23 @@ def dirmult_lme(
             res_dict[b][covar][1] = res_dict[b][covar][1] / draws
             res_dict[b][covar][2] = res_dict[b][covar][2] / draws
             res_dict[b][covar][3] = res_dict[b][covar][3] / draws
-            res_dict[b][covar][4] = res_dict[b][covar][4] / draws
+
+    p_value_arr = []
+    for b in data.columns:
+        for covar in list_of_vars:
+            p_value_arr.append(res_dict[b][covar][0])
+
+    # multiple comparison
+    if p_adjust is not None:
+        qval = _calc_p_adjust(p_adjust, p_value_arr)
+    else:
+        qval = p_value_arr
+
+    count = 0
+    for b in data.columns:
+        for covar in list_of_vars:
+            res_dict[b][covar][4] = qval[count]
+            count += 1
 
     final_res = pd.DataFrame(
         columns=[
@@ -2445,11 +2439,11 @@ def dirmult_lme(
                     "FeatureID": b,
                     "Covariate": covar,
                     # convert all log fold changes to base 2 while appending to df
-                    "Log2(FC)": res_dict[b][covar][4] / np.log(2),
+                    "Log2(FC)": res_dict[b][covar][3] / np.log(2),
                     "CI(2.5)": res_dict[b][covar][1] / np.log(2),
                     "CI(97.5)": res_dict[b][covar][2] / np.log(2),
                     "pvalue": res_dict[b][covar][0],
-                    "qvalue": res_dict[b][covar][3],
+                    "qvalue": res_dict[b][covar][4],
                 },
                 ignore_index=True,
             )
