@@ -2292,10 +2292,10 @@ def dirmult_lme(
     ... )
     >>> res
       FeatureID  Covariate  Log2(FC)   CI(2.5)  CI(97.5)    pvalue    qvalue
-    0        Y1       time -0.210769 -0.731153  0.309650  0.403737  0.873598
-    1        Y1  treatment -0.744093 -1.780094  0.291999  0.252057  0.687051
-    2        Y2       time  0.210769 -0.309650  0.731153  0.403737  0.873598
-    3        Y2  treatment  0.744093 -0.291999  1.780094  0.252057  0.687051
+    0        Y1       time -0.210769 -1.532142  1.122417  0.403737  0.873598
+    1        Y1  treatment -0.744093 -3.401875  1.582636  0.252057  0.687051
+    2        Y2       time  0.210769 -1.122417  1.532142  0.403737  0.873598
+    3        Y2  treatment  0.744093 -1.582636  3.401875  0.252057  0.687051
 
     """
 
@@ -2377,27 +2377,26 @@ def dirmult_lme(
         if ires is None:
             continue
 
-        # TODO: online average to avoid holding all of the results in memory
         for single_covar_data in ires:
             curr_feature_id = single_covar_data["FeatureID"]
             curr_covariate = single_covar_data["Covariate"]
 
-            res_dict[curr_feature_id][curr_covariate][0] += single_covar_data["pvalue"]
-            res_dict[curr_feature_id][curr_covariate][1] += single_covar_data["CI(2.5)"]
-            res_dict[curr_feature_id][curr_covariate][2] += single_covar_data[
-                "CI(97.5)"
-            ]
-            res_dict[curr_feature_id][curr_covariate][3] += single_covar_data[
-                "Log2(FC)"
-            ]
-
-    # TODO: implement online averages to save memory
-    for b in data.columns:
-        for covar in list_of_vars:
-            res_dict[b][covar][0] = res_dict[b][covar][0] / draws
-            res_dict[b][covar][1] = res_dict[b][covar][1] / draws
-            res_dict[b][covar][2] = res_dict[b][covar][2] / draws
-            res_dict[b][covar][3] = res_dict[b][covar][3] / draws
+            res_dict[curr_feature_id][curr_covariate][0] = (
+                i * res_dict[curr_feature_id][curr_covariate][0]
+                + single_covar_data["pvalue"]
+            ) / (i + 1)
+            res_dict[curr_feature_id][curr_covariate][1] = np.minimum(
+                res_dict[curr_feature_id][curr_covariate][1],
+                single_covar_data["CI(2.5)"],
+            )
+            res_dict[curr_feature_id][curr_covariate][2] = np.maximum(
+                res_dict[curr_feature_id][curr_covariate][2],
+                single_covar_data["CI(97.5)"],
+            )
+            res_dict[curr_feature_id][curr_covariate][3] = (
+                i * res_dict[curr_feature_id][curr_covariate][3]
+                + single_covar_data["Log2(FC)"]
+            ) / (i + 1)
 
     p_value_arr = []
     for b in data.columns:
