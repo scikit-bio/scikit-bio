@@ -2292,14 +2292,14 @@ def dirmult_lme(
     ... )
     >>> res = dirmult_lme(
     ...     formula="time + treatment", data=table, metadata=metadata,
-    ...     groups="patient", seed=0
+    ...     groups="patient", seed=0, p_adjust="sidak"
     ... )
     >>> res
       FeatureID  Covariate  Log2(FC)   CI(2.5)  CI(97.5)    pvalue    qvalue
-    0        Y1       time -0.210769 -0.731153  0.309650  0.403737  0.403737
-    1        Y1  treatment -0.744093 -1.780094  0.291999  0.252057  0.252057
-    2        Y2       time  0.210769 -0.309650  0.731153  0.403737  0.403737
-    3        Y2  treatment  0.744093 -0.291999  1.780094  0.252057  0.252057
+    0        Y1       time -0.210769 -0.731153  0.309650  0.403737  0.873598
+    1        Y1  treatment -0.744093 -1.780094  0.291999  0.252057  0.687051
+    2        Y2       time  0.210769 -0.309650  0.731153  0.403737  0.873598
+    3        Y2  treatment  0.744093 -0.291999  1.780094  0.252057  0.687051
 
     """
 
