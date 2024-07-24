@@ -2240,12 +2240,12 @@ def dirmult_lme(
         posterior draws.
 
         ``CI(2.5)`` is the 2.5% quantile of the log2-fold change. The reported
-        ``CI(2.5)`` is the 2.5% quantile of all of the log2-fold changes computed
-        from each of the posterior draws.
+        ``CI(2.5)`` is the average of the 2.5% quantile of all of the log2-fold
+        changes computed from each of the posterior draws.
 
         ``CI(97.5)`` is the 97.5% quantile of the log2-fold change. The
-        reported ``CI(97.5)`` is the 97.5% quantile of all of the log2-fold
-        changes computed from each of the posterior draws.
+        reported ``CI(97.5)`` is the average of the 97.5% quantile of all of
+        the log2-fold changes computed from each of the posterior draws.
 
         ``pvalue`` is the *p*-value of the linear mixed effects model. The
         reported values are the average of all of the *p*-values computed from the
