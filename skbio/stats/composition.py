@@ -2070,10 +2070,6 @@ def _type_cast_to_float(df):
     dataframe into floats.  If a column cannot be type casted,
     it will be kept as is.
 
-    See Also
-    --------
-    differential.regression.mixedlm
-
     Parameters
     ----------
     df : pd.DataFrame
