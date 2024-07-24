@@ -2377,6 +2377,7 @@ def dirmult_lme(
         if ires is None:
             continue
 
+        # online average to avoid holding all of the results in memory
         for single_covar_data in ires:
             curr_feature_id = single_covar_data["FeatureID"]
             curr_covariate = single_covar_data["Covariate"]
@@ -2397,6 +2398,13 @@ def dirmult_lme(
                 i * res_dict[curr_feature_id][curr_covariate][3]
                 + single_covar_data["Log2(FC)"]
             ) / (i + 1)
+
+    # convert all log fold changes to base 2
+    for b in data.columns:
+        for covar in list_of_vars:
+            res_dict[b][covar][1] = res_dict[b][covar][1] / np.log(2)
+            res_dict[b][covar][2] = res_dict[b][covar][2] / np.log(2)
+            res_dict[b][covar][3] = res_dict[b][covar][3] / np.log(2)
 
     p_value_arr = []
     for b in data.columns:
@@ -2433,10 +2441,9 @@ def dirmult_lme(
                 {
                     "FeatureID": b,
                     "Covariate": covar,
-                    # convert all log fold changes to base 2 while appending to df
-                    "Log2(FC)": res_dict[b][covar][3] / np.log(2),
-                    "CI(2.5)": res_dict[b][covar][1] / np.log(2),
-                    "CI(97.5)": res_dict[b][covar][2] / np.log(2),
+                    "Log2(FC)": res_dict[b][covar][3],
+                    "CI(2.5)": res_dict[b][covar][1],
+                    "CI(97.5)": res_dict[b][covar][2],
                     "pvalue": res_dict[b][covar][0],
                     "qvalue": res_dict[b][covar][4],
                 },
