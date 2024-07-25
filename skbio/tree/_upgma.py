@@ -77,8 +77,7 @@ def upgma(dm: DistanceMatrix, weighted=False) -> TreeNode:
     if not isinstance(dm, DistanceMatrix):
         raise ValueError("Input must be a DistanceMatrix object.")
 
-    # If weighted is set to 'False', UPGMA is performed through
-    # the 'weighted' function
+    # If weighted is set to 'False', UPGMA is performed
     if weighted is False:
         linkage_matrix = average(dm.condensed_form())
     # Otherwise, WPGMA is performed
