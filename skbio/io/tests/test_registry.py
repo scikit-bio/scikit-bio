@@ -641,10 +641,10 @@ class TestSniff(RegistryTest):
             return True, {}
 
         with io.open(get_data_path('real_file'), 'r') as fh:
-            initial_pos = 3 if platform.system() == "Windows" else 2
-            fh.seek(initial_pos)
+            pos = 3 if platform.system() == "Windows" else 2
+            fh.seek(pos)
             self.registry.sniff(fh)
-            self.assertEqual(fh.tell(), initial_pos)
+            self.assertEqual(fh.tell(), pos)
             self.assertEqual('b\n', fh.readline())
 
     def test_position_not_mutated_fileish(self):
