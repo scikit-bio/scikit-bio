@@ -543,9 +543,9 @@ class IORegistry:
                 file.tell()
             except io.UnsupportedOperation:
                 seekable = False
-            if not seekable and fmt is None:
-                raise ValueError("Cannot sniff filetype of non-seekable data.")
-            elif not seekable:
+            if not seekable:
+                if fmt is None:
+                    raise ValueError("Cannot sniff filetype of non-seekable data.")
                 for lookup in self._lookups:
                     if fmt in lookup and not lookup[fmt].support_non_seekable:
                         raise ValueError(
@@ -860,9 +860,9 @@ class Format:
         return self._writers
 
     @property
-    def support_non_seekable(self):
+    def non_seek_ok(self):
         """Returns a boolean describing if the file format has a header."""
-        return self._support_non_seekable
+        return self._non_seek_ok
 
     @property
     def monkey_patched_readers(self):
@@ -874,12 +874,12 @@ class Format:
         """Set of classes bound to writers to monkey patch."""
         return self._monkey_patch["write"]
 
-    def __init__(self, name, encoding=None, newline=None, support_non_seekable=False):
+    def __init__(self, name, encoding=None, newline=None, non_seek_ok=False):
         """Initialize format for registering sniffers, readers, and writers."""
         self._encoding = encoding
         self._newline = newline
         self._name = name
-        self._support_non_seekable = support_non_seekable
+        self._non_seek_ok = non_seek_ok
 
         self._sniffer_function = None
         self._readers = {}

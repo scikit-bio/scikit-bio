@@ -654,6 +654,8 @@ def _fasta_sniffer(fh):
         # Check 10 records, record is in the form of (index, data)
         # Data is returned as consumed from the parser
         for record in zip(range(num_records), parser):
+            # record[1][3] here gets the third item from parser, which is consumed
+            # see _parse_fasta_raw
             consumed += record[1][3]
             empty = False
     except FASTAFormatError:
