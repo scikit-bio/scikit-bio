@@ -304,7 +304,7 @@ from skbio.sequence import Sequence, DNA, RNA, Protein
 _whitespace_regex = re.compile(r"\s")
 
 
-fastq = create_format("fastq", support_non_seekable=True)
+fastq = create_format("fastq", non_seek_ok=True)
 
 
 @fastq.sniffer()
