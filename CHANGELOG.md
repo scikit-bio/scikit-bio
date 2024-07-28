@@ -2,6 +2,10 @@
 
 ## Version 0.6.3-dev
 
+### Performance enhancements
+
+* Improved the performance of tree traversal algorithms ([#2093](https://github.com/scikit-bio/scikit-bio/pull/2093)).
+
 
 ## Version 0.6.2
 
