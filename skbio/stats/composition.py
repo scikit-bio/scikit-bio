@@ -2194,7 +2194,7 @@ def dirmult_lme(
     metadata: pd.DataFrame
         Metadata table that contains information about the samples contained
         in the `table` object.  Samples correspond to rows and covariates
-        correspond to columns. ()
+        correspond to columns.
     groups : str
         The column name in data that identifies the grouping variable
     reml : bool
