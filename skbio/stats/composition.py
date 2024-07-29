@@ -2131,6 +2131,7 @@ def _lme_call(
         model = MixedLM.from_formula(
             formula=stats_formula, data=data, groups=groups, **kwargs
         )
+
         submodels.append(model)
         results = model.fit(reml=reml, method=method, **fit_kwargs)
 
@@ -2326,10 +2327,6 @@ def dirmult_lme(
 
     res = _call_res[0]
     list_of_vars = _call_res[2]
-
-    submodels = _call_res[1]
-    for i in submodels:
-        i = i.fit(reml=reml, method=method, **fit_kwargs)
 
     # Creating an empty dict to store sum of values (Using a DataFrame threw errors)
     # uses a separate array for each covariate and each feature
