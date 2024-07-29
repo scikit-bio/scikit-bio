@@ -6,8 +6,6 @@
 # The full license is in the file LICENSE.txt, distributed with this software.
 # ----------------------------------------------------------------------------
 
-import numpy as np
-
 from scipy.cluster.hierarchy import linkage
 from skbio import TreeNode
 from skbio.stats.distance import DistanceMatrix
