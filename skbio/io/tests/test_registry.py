@@ -640,7 +640,7 @@ class TestSniff(RegistryTest):
             return True, {}
 
         with io.open(get_data_path('real_file'), 'r') as fh:
-            pos = 3 if len(os.linesep) == 2 else 2
+            pos = len(os.linesep) + 1
             fh.seek(pos)
             self.registry.sniff(fh)
             self.assertEqual(fh.tell(), pos)
