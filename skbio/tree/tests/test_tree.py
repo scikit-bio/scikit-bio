@@ -971,6 +971,26 @@ class TreeTests(TestCase):
         self.assertEqual(t.name, "c")
         self.assertTrue(t.is_tip())
 
+    def test_preorder(self):
+        """Preorder traversal of the tree"""
+        exp = ["root", "i1", "a", "b", "i2", "c", "d"]
+        obs = [n.name for n in self.simple_t.preorder()]
+        self.assertEqual(obs, exp)
+
+        exp = ["i1", "a", "b", "i2", "c", "d"]
+        obs = [n.name for n in self.simple_t.preorder(include_self=False)]
+        self.assertEqual(obs, exp)
+
+    def test_postorder(self):
+        """Postorder traversal of the tree"""
+        exp = ["a", "b", "i1", "c", "d", "i2", "root"]
+        obs = [n.name for n in self.simple_t.postorder()]
+        self.assertEqual(obs, exp)
+
+        exp = ["a", "b", "i1", "c", "d", "i2"]
+        obs = [n.name for n in self.simple_t.postorder(include_self=False)]
+        self.assertEqual(obs, exp)
+
     def test_pre_and_postorder(self):
         """Pre and post order traversal of the tree"""
         exp = ["root", "i1", "a", "b", "i1", "i2", "c", "d", "i2", "root"]
@@ -992,9 +1012,13 @@ class TreeTests(TestCase):
         self.assertEqual(obs, [])
 
     def test_levelorder(self):
-        """Test level order traversal of the tree"""
+        """Level order traversal of the tree"""
         exp = ["root", "i1", "i2", "a", "b", "c", "d"]
         obs = [n.name for n in self.simple_t.levelorder()]
+        self.assertEqual(obs, exp)
+
+        exp = ["i1", "i2", "a", "b", "c", "d"]
+        obs = [n.name for n in self.simple_t.levelorder(include_self=False)]
         self.assertEqual(obs, exp)
 
     def test_bifurcate(self):
