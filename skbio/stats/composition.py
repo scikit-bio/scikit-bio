@@ -2306,6 +2306,12 @@ def dirmult_lme(
               or rec array or a dictionary"""
         )
 
+    if data.isnull().values.any():
+        raise ValueError("Cannot handle missing values in 'data")
+
+    if metadata.isnull().values.any():
+        raise ValueError("Cannot handle missing values in 'metadata")
+
     rng = get_rng(seed)
 
     posterior = [

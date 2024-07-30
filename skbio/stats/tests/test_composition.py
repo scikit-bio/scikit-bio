@@ -1489,5 +1489,42 @@ class DirMultTTestTests(TestCase):
         with self.assertRaises(ValueError):
             dirmult_ttest(self.table, self.grouping, self.treatment, self.reference)   
 
+class DirMultLMETests(TestCase):
+    def setUp(self):
+        np.random.seed(0)
+
+        # create sample data for testing
+        self.table = pd.DataFrame(
+            [
+                [20, 110, 100, 101, 100, 103, 104],
+                [33, 110, 120, 100, 101, 100, 102],
+                [12, 110, 100, 110, 100, 50, 90],
+                [202, 201, 9, 10, 10, 11, 11],
+                [200, 202, 10, 10, 13, 10, 10],
+                [203, 201, 14, 10, 10, 13, 12],
+            ],
+            index=["subject1", "subject2", "subject3", "subject4", "subject5", "subject6"],
+            columns=["feature1", "feature2", "feature3", "feature4", "feature5", "feature6", "feature7"],
+        )
+
+        self.metadata = pd.DataFrame(
+            {
+                "Covar1": [1,1,2,2,3,3,3],
+                "Covar2": [1,1,1,1,2,2,2],
+                "Covar3": [1,2,1,2,1,2,1],
+            },
+            index=["subject1", "subject2", "subject3", "subject4", "subject5", "subject6", "subject7"],
+        )
+
+
+    def test_dirmult_lme_output(self):
+        formula = "Covar2 + Covar3"
+        res = dirmult_lme(formula=formula, data=self.table, metadata=self.metadata, groups='Covar1', seed=0, p_adjust="sidak", reml=True)
+        self.assertIsInstance(res, pd.DataFrame)
+        self.assertEqual(res.shape[1], 7)  # Expected number of columns
+        pdt.assert_series_equal(res.iloc[:, 0], pd.Series(['feature1', 'feature1', 'feature2', 'feature2', 'feature3', 'feature3', 'feature4', 'feature4', 'feature5', 'feature5', 'feature6', 'feature6', 'feature7', 'feature7'], name='FeatureID'))
+        npt.assert_array_less(res['Log2(FC)'], res['CI(97.5)'])
+        npt.assert_array_less(res['CI(2.5)'], res['Log2(FC)'])
+
 if __name__ == "__main__":
     main()
