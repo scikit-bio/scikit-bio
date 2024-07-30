@@ -1509,11 +1509,11 @@ class DirMultLMETests(TestCase):
 
         self.metadata = pd.DataFrame(
             {
-                "Covar1": [1,1,2,2,3,3,3],
-                "Covar2": [1,1,1,1,2,2,2],
-                "Covar3": [1,2,1,2,1,2,1],
+                "Covar1": [1,1,2,2,3,3],
+                "Covar2": [1,1,1,1,2,2],
+                "Covar3": [1,2,1,2,1,2],
             },
-            index=["subject1", "subject2", "subject3", "subject4", "subject5", "subject6", "subject7"],
+            index=["subject1", "subject2", "subject3", "subject4", "subject5", "subject6"],
         )
 
 
@@ -1525,6 +1525,9 @@ class DirMultLMETests(TestCase):
         pdt.assert_series_equal(res.iloc[:, 0], pd.Series(['feature1', 'feature1', 'feature2', 'feature2', 'feature3', 'feature3', 'feature4', 'feature4', 'feature5', 'feature5', 'feature6', 'feature6', 'feature7', 'feature7'], name='FeatureID'))
         npt.assert_array_less(res['Log2(FC)'], res['CI(97.5)'])
         npt.assert_array_less(res['CI(2.5)'], res['Log2(FC)'])
+
+    def test_dirmult_lme_toy_data(self):
+        pass
 
 if __name__ == "__main__":
     main()

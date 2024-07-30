@@ -2300,17 +2300,51 @@ def dirmult_lme(
 
     """
 
+    # Test if data is a pandas DataFrame
+    if not isinstance(data, pd.DataFrame):
+        try:
+            data = pd.DataFrame(data)
+        except ValueError:
+            raise ValueError(
+                """data must be a pandas DataFrame or a numpy structured
+                  or rec array or a dictionary"""
+            )
+
+    if data.ndim != 2:
+        try:
+            data = pd.DataFrame(data, index=data.dtype.names)
+        except (TypeError, ValueError):
+            raise ValueError(
+                """data must be a pandas DataFrame or a numpy structured
+                  or rec array or a dictionary"""
+            )
+
     if not hasattr(data, "__getitem__"):
-        raise ValueError(
-            """data must be a pandas DataFrame or a numpy structured
-              or rec array or a dictionary"""
-        )
+        try:
+            data = pd.DataFrame(data)
+        except ValueError:
+            raise ValueError(
+                """data must be a pandas DataFrame or a numpy structured
+                  or rec array or a dictionary"""
+            )
 
+    # Test if data has missing values
     if data.isnull().values.any():
-        raise ValueError("Cannot handle missing values in 'data")
+        raise ValueError("Cannot handle missing values in 'data'")
 
+    # Test if metadata has missing values
     if metadata.isnull().values.any():
-        raise ValueError("Cannot handle missing values in 'metadata")
+        raise ValueError("Cannot handle missing values in 'metadata'")
+
+    # Test if metadata and data have the same index
+    if (
+        not data.index.isin(metadata.index).all()
+        or not metadata.index.isin(data.index).all()
+    ):
+        raise ValueError(
+            "data and metadata must have the same index. Current data index: {} and"
+            "metadata index: {}".format(data.index, metadata.index)
+        )
 
     rng = get_rng(seed)
 
