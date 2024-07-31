@@ -1543,7 +1543,6 @@ class DirMultLMETests(TestCase):
             formula = "Covar2 + Covar3"
             dirmult_lme(formula=formula, data=self.table, metadata="not a table", groups='Covar1', seed=0, p_adjust="sidak", reml=True)
 
-
     def test_dirmult_lme_toy_data(self):
         p1 = np.array([5, 6, 7])
         p2 = np.array([4, 7, 7])
@@ -1574,6 +1573,53 @@ class DirMultLMETests(TestCase):
         res = dirmult_lme(formula="covar2", data=table, metadata=metadata, groups="covar1", seed=0, p_adjust="sidak", reml=True)
         npt.assert_array_less(exp_lfc, res['CI(97.5)'])
         npt.assert_array_less(res['CI(2.5)'], exp_lfc)
+
+    def test_dirmult_lme_toy_data_depth(self):
+        p1 = np.array([5, 6, 7, 8, 9, 4])
+        p2 = np.array([4, 7, 7, 6, 5, 7])
+        p1, p2 = p1 / p1.sum(), p2 / p2.sum()
+        depth = 100
+        n = 10
+        data = np.vstack(
+            (
+                [np.random.multinomial(depth, p1) for _ in range(n)],
+                [np.random.multinomial(depth, p2) for _ in range(n)]
+            )
+        )
+        table = pd.DataFrame(data)
+        table.columns = ["feature1", "feature2", "feature3", "feature4", "feature5", "feature6"]
+        table.index = [f"subject{i}" for i in range(1, n*2+1)]
+
+        metadata = pd.DataFrame(
+            {
+                "covar1": [1,1,2,2,3,3,4,4,5,5,6,6,7,7,8,8,9,9,10,10],
+                "covar2": [1,1,1,1,1,1,1,1,1,1,2,2,2,2,2,2,2,2,2,2],
+            },
+            index=[f"subject{i}" for i in range(1, n*2+1)],
+        )
+
+        exp_lfc = np.log2([4/5, 7/6, 7/7, 6/8, 5/9, 7/4])
+        exp_lfc = (exp_lfc - exp_lfc.mean())  # convert to CLR coordinates
+
+        res_100 = dirmult_lme(formula="covar2", data=table, metadata=metadata, groups="covar1", seed=0, p_adjust="sidak", reml=True)
+
+        # increase sequencing depth by 100 fold
+        depth = 10000
+        data = np.vstack(
+            (
+                [np.random.multinomial(depth, p1) for _ in range(n)],
+                [np.random.multinomial(depth, p2) for _ in range(n)]
+            )
+        )
+        table = pd.DataFrame(data)
+        table.columns = ["feature1", "feature2", "feature3", "feature4", "feature5", "feature6"]
+        table.index = [f"subject{i}" for i in range(1, n*2+1)]
+        res_10000 = dirmult_lme(formula="covar2", data=table, metadata=metadata, groups="covar1", seed=0, p_adjust="sidak", reml=True)
+
+        # when the sequencing depth increases, the confidence intervals
+        # should also shrink
+        npt.assert_array_less(res_100['CI(2.5)'], res_10000['CI(2.5)'])
+        npt.assert_array_less(res_10000['CI(97.5)'], res_100['CI(97.5)'])
 
     def test_dirmult_lme_inconsistent_indexes(self):
         with self.assertRaises(ValueError):
