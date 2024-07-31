@@ -1516,18 +1516,48 @@ class DirMultLMETests(TestCase):
             index=["subject1", "subject2", "subject3", "subject4", "subject5", "subject6"],
         )
 
+    def test_dirmult_lme_formatting(self):
+        res = dirmult_lme(formula="Covar2 + Covar3", data=self.table, metadata=self.metadata, groups='Covar1', seed=0, p_adjust="sidak", reml=True)
+        self.assertIsInstance(res, pd.DataFrame)
+        self.assertEqual(res.shape[1], 7)  # Expected number of columns
+        pdt.assert_series_equal(res.iloc[:, 0], pd.Series(['feature1', 'feature1', 'feature2', 'feature2', 'feature3', 'feature3', 'feature4', 'feature4', 'feature5', 'feature5', 'feature6', 'feature6', 'feature7', 'feature7'], name='FeatureID'))
 
     def test_dirmult_lme_output(self):
         formula = "Covar2 + Covar3"
         res = dirmult_lme(formula=formula, data=self.table, metadata=self.metadata, groups='Covar1', seed=0, p_adjust="sidak", reml=True)
-        self.assertIsInstance(res, pd.DataFrame)
-        self.assertEqual(res.shape[1], 7)  # Expected number of columns
-        pdt.assert_series_equal(res.iloc[:, 0], pd.Series(['feature1', 'feature1', 'feature2', 'feature2', 'feature3', 'feature3', 'feature4', 'feature4', 'feature5', 'feature5', 'feature6', 'feature6', 'feature7', 'feature7'], name='FeatureID'))
         npt.assert_array_less(res['Log2(FC)'], res['CI(97.5)'])
         npt.assert_array_less(res['CI(2.5)'], res['Log2(FC)'])
 
     def test_dirmult_lme_toy_data(self):
-        pass
+        p1 = np.array([5, 6, 7])
+        p2 = np.array([4, 7, 7])
+        p1, p2 = p1 / p1.sum(), p2 / p2.sum()
+        depth = 1000
+        n = 10
+        data = np.vstack(
+            (
+                [np.random.multinomial(depth, p1) for _ in range(n)],
+                [np.random.multinomial(depth, p2) for _ in range(n)]
+            )
+        )
+        table = pd.DataFrame(data)
+        table.columns = ["feature1", "feature2", "feature3"]
+        table.index = [f"subject{i}" for i in range(1, n*2+1)]
+
+        exp_lfc = np.log2([4/5, 7/6, 7/7])
+        exp_lfc = (exp_lfc - exp_lfc.mean())  # convert to CLR coordinates
+
+        metadata = pd.DataFrame(
+            {
+                "covar1": [1,1,2,2,3,3,4,4,5,5,6,6,7,7,8,8,9,9,10,10],
+                "covar2": [1,1,1,1,1,1,1,1,1,1,2,2,2,2,2,2,2,2,2,2],
+            },
+            index=[f"subject{i}" for i in range(1, n*2+1)],
+        )
+
+        res = dirmult_lme(formula="covar2", data=table, metadata=metadata, groups="covar1", seed=0, p_adjust="sidak", reml=True)
+        npt.assert_array_less(exp_lfc, res['CI(97.5)'])
+        npt.assert_array_less(res['CI(2.5)'], exp_lfc)
 
 if __name__ == "__main__":
     main()
