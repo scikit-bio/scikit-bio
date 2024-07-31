@@ -1533,6 +1533,14 @@ class DirMultLMETests(TestCase):
         result = dirmult_lme(formula=formula, data=self.table, metadata=self.metadata, groups='Covar1', seed=0, p_adjust=None, reml=True)
         pdt.assert_series_equal(result['pvalue'], result['qvalue'], check_names=False)
 
+    def test_dirmult_ttest_no_reml(self):
+        formula = "Covar2 + Covar3"
+        res_reml = dirmult_lme(formula=formula, data=self.table, metadata=self.metadata, groups='Covar1', seed=0, p_adjust=None, reml=True)
+        res_ml = dirmult_lme(formula=formula, data=self.table, metadata=self.metadata, groups='Covar1', seed=0, p_adjust=None, reml=False)
+        npt.assert_raises(AssertionError, npt.assert_allclose, res_reml['CI(97.5)'], res_ml['CI(97.5)'])
+        npt.assert_raises(AssertionError, npt.assert_allclose, res_reml['CI(2.5)'], res_ml['CI(2.5)'])
+        npt.assert_raises(AssertionError, npt.assert_allclose, res_reml['pvalue'], res_ml['pvalue'])
+
     def test_dirmult_lme_invalid_table_type(self):
         with self.assertRaises(TypeError):
             formula = "Covar2 + Covar3"
