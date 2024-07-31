@@ -2455,16 +2455,4 @@ def dirmult_lme(
                 }
             )
 
-    final_res = pd.DataFrame(final_res)
-
-    col_order = [
-        "FeatureID",
-        "Covariate",
-        "Log2(FC)",
-        "CI(2.5)",
-        "CI(97.5)",
-        "pvalue",
-        "qvalue",
-    ]
-
-    return final_res[col_order]
+    return pd.DataFrame(final_res)
