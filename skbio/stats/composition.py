@@ -2109,25 +2109,25 @@ def _lme_call(
     if len(data) == 0:
         raise ValueError(
             (
-                "No more samples left.  Check to make sure that "
+                "No more samples left. Check to make sure that "
                 "the sample names between `metadata` and `data` "
-                "are consistent"
+                "are consistent."
             )
         )
 
     design_matrix = dmatrix(formula, metadata, return_type="dataframe")
 
     # Obtaining the list of covariates by selecting the relevant columns
-    list_of_vars = list(design_matrix.columns)
+    list_of_vars = design_matrix.columns.tolist()
 
     # Removing intercept since it is not a covariate, and is included by default
     list_of_vars.remove("Intercept")
 
     output = []
-    for b in table.columns:
+    for response_var in table.columns:
         # mixed effects code is obtained here:
         # http://stackoverflow.com/a/22439820/1167475
-        stats_formula = "%s ~ %s" % (b, formula)
+        stats_formula = "%s ~ %s" % (response_var, formula)
         model = MixedLM.from_formula(
             formula=stats_formula, data=data, groups=groups, **kwargs
         )
@@ -2137,7 +2137,7 @@ def _lme_call(
 
         for var_name in list_of_vars:
             individial_results = {
-                "FeatureID": b,
+                "FeatureID": response_var,
                 "Covariate": var_name,
                 "Log2(FC)": float(results.summary().tables[1]["Coef."][var_name]),
                 "CI(2.5)": float(results.summary().tables[1]["[0.025"][var_name]),
@@ -2301,59 +2301,46 @@ def dirmult_lme(
     """
 
     # Test if data is a pandas DataFrame
+    errmsg = (
+        "%s must be a pandas DataFrame or a numpy structured or rec array or "
+        "a dictionary."
+    )
+
     if not isinstance(data, pd.DataFrame):
         try:
             data = pd.DataFrame(data)
         except (TypeError, ValueError):
-            raise TypeError(
-                """data must be a pandas DataFrame or a numpy structured
-                  or rec array or a dictionary"""
-            )
+            raise TypeError(errmsg % "Data")
 
     if data.ndim != 2:
         try:
             data = pd.DataFrame(data, index=data.dtype.names)
         except (TypeError, ValueError):
-            raise TypeError(
-                """data must be a pandas DataFrame or a numpy structured
-                  or rec array or a dictionary"""
-            )
+            raise TypeError(errmsg % "Data")
 
     if not hasattr(data, "__getitem__"):
         try:
             data = pd.DataFrame(data)
         except (TypeError, ValueError):
-            raise TypeError(
-                """data must be a pandas DataFrame or a numpy structured
-                  or rec array or a dictionary"""
-            )
+            raise TypeError(errmsg % "Data")
 
     if not isinstance(metadata, pd.DataFrame):
         try:
             metadata = pd.DataFrame(metadata)
         except (TypeError, ValueError):
-            raise TypeError(
-                """metadata must be a pandas DataFrame or a numpy structured
-                  or rec array or a dictionary"""
-            )
+            raise TypeError(errmsg % "Metadata")
 
     # Test if data has missing values
     if data.isnull().values.any():
-        raise ValueError("Cannot handle missing values in 'data'")
+        raise ValueError("Cannot handle missing values in data.")
 
     # Test if metadata has missing values
     if metadata.isnull().values.any():
-        raise ValueError("Cannot handle missing values in 'metadata'")
+        raise ValueError("Cannot handle missing values in metadata.")
 
-    # Test if metadata and data have the same index
-    if (
-        not data.index.isin(metadata.index).all()
-        or not metadata.index.isin(data.index).all()
-    ):
-        raise ValueError(
-            "data and metadata must have the same index. Current data index: {} and"
-            "metadata index: {}".format(data.index, metadata.index)
-        )
+    # Test if metadata and data have the same index, regardless of order
+    if not data.index.sort_values().equals(metadata.index.sort_values()):
+        raise ValueError("Data and metadata must have the same index.")
 
     rng = get_rng(seed)
 
@@ -2382,24 +2369,15 @@ def dirmult_lme(
     # array index: 0: pvalue, 1: CI(2.5), 2: CI(97.5), 3: log2fc, 4: qvalue
     res_dict = {}
 
-    for b in data.columns:
-        res_dict[b] = {}
+    for feature in data.columns:
+        res_ = res_dict[feature] = {}
         for covar in list_of_vars:
-            res_dict[b][covar] = [0, 0, 0, 0, 0]
+            res_[covar] = [0] * 5
 
     for single_covar_data in res:
-        res_dict[single_covar_data["FeatureID"]][single_covar_data["Covariate"]][0] = (
-            single_covar_data["pvalue"]
-        )
-        res_dict[single_covar_data["FeatureID"]][single_covar_data["Covariate"]][1] = (
-            single_covar_data["CI(2.5)"]
-        )
-        res_dict[single_covar_data["FeatureID"]][single_covar_data["Covariate"]][2] = (
-            single_covar_data["CI(97.5)"]
-        )
-        res_dict[single_covar_data["FeatureID"]][single_covar_data["Covariate"]][3] = (
-            single_covar_data["Log2(FC)"]
-        )
+        group = res_dict[single_covar_data["FeatureID"]][single_covar_data["Covariate"]]
+        for i, key in enumerate(("pvalue", "CI(2.5)", "CI(97.5)", "Log2(FC)")):
+            group[i] = single_covar_data[key]
 
     for i in range(1, draws):
         posterior = [
@@ -2427,35 +2405,25 @@ def dirmult_lme(
         for single_covar_data in ires:
             curr_feature_id = single_covar_data["FeatureID"]
             curr_covariate = single_covar_data["Covariate"]
-
-            res_dict[curr_feature_id][curr_covariate][0] = (
-                i * res_dict[curr_feature_id][curr_covariate][0]
-                + single_covar_data["pvalue"]
-            ) / (i + 1)
-            res_dict[curr_feature_id][curr_covariate][1] = np.minimum(
-                res_dict[curr_feature_id][curr_covariate][1],
-                single_covar_data["CI(2.5)"],
-            )
-            res_dict[curr_feature_id][curr_covariate][2] = np.maximum(
-                res_dict[curr_feature_id][curr_covariate][2],
-                single_covar_data["CI(97.5)"],
-            )
-            res_dict[curr_feature_id][curr_covariate][3] = (
-                i * res_dict[curr_feature_id][curr_covariate][3]
-                + single_covar_data["Log2(FC)"]
-            ) / (i + 1)
+            res_ = res_dict[curr_feature_id][curr_covariate]
+            res_[0] = (i * res_[0] + single_covar_data["pvalue"]) / (i + 1)
+            res_[1] = np.minimum(res_[1], single_covar_data["CI(2.5)"])
+            res_[2] = np.maximum(res_[2], single_covar_data["CI(97.5)"])
+            res_[3] = (i * res_[3] + single_covar_data["Log2(FC)"]) / (i + 1)
 
     # convert all log fold changes to base 2
-    for b in data.columns:
+    log2_ = np.log(2)
+    for feature in data.columns:
         for covar in list_of_vars:
-            res_dict[b][covar][1] = res_dict[b][covar][1] / np.log(2)
-            res_dict[b][covar][2] = res_dict[b][covar][2] / np.log(2)
-            res_dict[b][covar][3] = res_dict[b][covar][3] / np.log(2)
+            res_ = res_dict[feature][covar]
+            for i in range(1, 4):
+                res_[i] /= log2_
 
     p_value_arr = []
-    for b in data.columns:
+    for feature in data.columns:
+        res_ = res_dict[feature]
         for covar in list_of_vars:
-            p_value_arr.append(res_dict[b][covar][0])
+            p_value_arr.append(res_[covar][0])
 
     # multiple comparison
     if p_adjust is not None:
@@ -2464,9 +2432,10 @@ def dirmult_lme(
         qval = p_value_arr
 
     count = 0
-    for b in data.columns:
+    for feature in data.columns:
+        res_ = res_dict[feature]
         for covar in list_of_vars:
-            res_dict[b][covar][4] = qval[count]
+            res_[covar][4] = qval[count]
             count += 1
 
     final_res = pd.DataFrame(
@@ -2481,17 +2450,18 @@ def dirmult_lme(
         ]
     )
 
-    for b in data.columns:
+    for feature in data.columns:
         for covar in list_of_vars:
+            res_ = res_dict[feature][covar]
             final_res = final_res._append(
                 {
-                    "FeatureID": b,
+                    "FeatureID": feature,
                     "Covariate": covar,
-                    "Log2(FC)": res_dict[b][covar][3],
-                    "CI(2.5)": res_dict[b][covar][1],
-                    "CI(97.5)": res_dict[b][covar][2],
-                    "pvalue": res_dict[b][covar][0],
-                    "qvalue": res_dict[b][covar][4],
+                    "Log2(FC)": res_[3],
+                    "CI(2.5)": res_[1],
+                    "CI(97.5)": res_[2],
+                    "pvalue": res_[0],
+                    "qvalue": res_[4],
                 },
                 ignore_index=True,
             )
