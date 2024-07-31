@@ -2438,22 +2438,12 @@ def dirmult_lme(
             res_[covar][4] = qval[count]
             count += 1
 
-    final_res = pd.DataFrame(
-        columns=[
-            "FeatureID",
-            "Covariate",
-            "Log2(FC)",
-            "CI(2.5)",
-            "CI(97.5)",
-            "pvalue",
-            "qvalue",
-        ]
-    )
+    final_res = []
 
     for feature in data.columns:
         for covar in list_of_vars:
             res_ = res_dict[feature][covar]
-            final_res = final_res._append(
+            final_res.append(
                 {
                     "FeatureID": feature,
                     "Covariate": covar,
@@ -2462,9 +2452,10 @@ def dirmult_lme(
                     "CI(97.5)": res_[2],
                     "pvalue": res_[0],
                     "qvalue": res_[4],
-                },
-                ignore_index=True,
+                }
             )
+
+    final_res = pd.DataFrame(final_res)
 
     col_order = [
         "FeatureID",
