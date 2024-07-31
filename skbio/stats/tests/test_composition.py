@@ -1528,6 +1528,22 @@ class DirMultLMETests(TestCase):
         npt.assert_array_less(res['Log2(FC)'], res['CI(97.5)'])
         npt.assert_array_less(res['CI(2.5)'], res['Log2(FC)'])
 
+    def test_dirmult_lme_no_p_adjust(self):
+        formula = "Covar2 + Covar3"
+        result = dirmult_lme(formula=formula, data=self.table, metadata=self.metadata, groups='Covar1', seed=0, p_adjust=None, reml=True)
+        pdt.assert_series_equal(result['pvalue'], result['qvalue'], check_names=False)
+
+    def test_dirmult_lme_invalid_table_type(self):
+        with self.assertRaises(TypeError):
+            formula = "Covar2 + Covar3"
+            dirmult_lme(formula=formula, data="not a table", metadata=self.metadata, groups='Covar1', seed=0, p_adjust="sidak", reml=True)
+
+    def test_dirmult_lme_invalid_metadata_type(self):
+        with self.assertRaises(TypeError):
+            formula = "Covar2 + Covar3"
+            dirmult_lme(formula=formula, data=self.table, metadata="not a table", groups='Covar1', seed=0, p_adjust="sidak", reml=True)
+
+
     def test_dirmult_lme_toy_data(self):
         p1 = np.array([5, 6, 7])
         p2 = np.array([4, 7, 7])
@@ -1558,6 +1574,12 @@ class DirMultLMETests(TestCase):
         res = dirmult_lme(formula="covar2", data=table, metadata=metadata, groups="covar1", seed=0, p_adjust="sidak", reml=True)
         npt.assert_array_less(exp_lfc, res['CI(97.5)'])
         npt.assert_array_less(res['CI(2.5)'], exp_lfc)
+
+    def test_dirmult_lme_inconsistent_indexes(self):
+        with self.assertRaises(ValueError):
+            self.table.index = ["a", "b", "c", "d", "e", "f"]  # Change table index
+            formula = "Covar2 + Covar3"
+            dirmult_lme(formula=formula, data=self.table, metadata=self.metadata, groups='Covar1', seed=0, p_adjust="sidak", reml=True)
 
 if __name__ == "__main__":
     main()

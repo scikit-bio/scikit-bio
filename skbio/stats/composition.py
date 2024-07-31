@@ -2152,8 +2152,8 @@ def _lme_call(
 
 def dirmult_lme(
     formula,
-    data: pd.DataFrame,
-    metadata: pd.DataFrame,
+    data,
+    metadata,
     groups,
     reml=True,
     method=None,
@@ -2304,8 +2304,8 @@ def dirmult_lme(
     if not isinstance(data, pd.DataFrame):
         try:
             data = pd.DataFrame(data)
-        except ValueError:
-            raise ValueError(
+        except (TypeError, ValueError):
+            raise TypeError(
                 """data must be a pandas DataFrame or a numpy structured
                   or rec array or a dictionary"""
             )
@@ -2314,7 +2314,7 @@ def dirmult_lme(
         try:
             data = pd.DataFrame(data, index=data.dtype.names)
         except (TypeError, ValueError):
-            raise ValueError(
+            raise TypeError(
                 """data must be a pandas DataFrame or a numpy structured
                   or rec array or a dictionary"""
             )
@@ -2322,9 +2322,18 @@ def dirmult_lme(
     if not hasattr(data, "__getitem__"):
         try:
             data = pd.DataFrame(data)
-        except ValueError:
-            raise ValueError(
+        except (TypeError, ValueError):
+            raise TypeError(
                 """data must be a pandas DataFrame or a numpy structured
+                  or rec array or a dictionary"""
+            )
+
+    if not isinstance(metadata, pd.DataFrame):
+        try:
+            metadata = pd.DataFrame(metadata)
+        except (TypeError, ValueError):
+            raise TypeError(
+                """metadata must be a pandas DataFrame or a numpy structured
                   or rec array or a dictionary"""
             )
 
