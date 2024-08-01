@@ -69,8 +69,7 @@ def upgma(dm, weighted=False):
 
     >>> print(tree)
     (c:1.25,(a:0.5,b:0.5):0.75);
-
-
+    <BLANKLINE>
     """
     # Ensure the input is a DistanceMatrix object
     if not isinstance(dm, DistanceMatrix):
