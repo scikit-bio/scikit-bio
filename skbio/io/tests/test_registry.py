@@ -14,7 +14,6 @@ import unittest
 import warnings
 import types
 from tempfile import mkstemp
-from sys import platform
 
 from skbio.io import (FormatIdentificationWarning, UnrecognizedFormatError,
                       ArgumentOverrideWarning, io_registry, sniff,
@@ -640,17 +639,17 @@ class TestSniff(RegistryTest):
         def sniffer(fh):
             return True, {}
 
-        with io.open(get_data_path('real_file')) as fh:
-            if platform == "win32":
-                fh.seek(3)
-                self.registry.sniff(fh)
-                self.assertEqual(fh.tell(), 3)
-                self.assertEqual('b\n', fh.readline())
+        with io.open(get_data_path('real_file'), 'r') as fh:
+            if len(os.linesep) == 1:
+                pos = len(os.linesep) + 1
+            elif len(os.linesep) == 2:
+                pos = len(os.linesep) + 1
             else:
-                fh.seek(2)
-                self.registry.sniff(fh)
-                self.assertEqual(fh.tell(), 2)
-                self.assertEqual('b\n', fh.readline())
+                pos = 3
+            fh.seek(pos)
+            self.registry.sniff(fh)
+            self.assertEqual(fh.tell(), pos)
+            self.assertEqual('b\n', fh.readline())
 
     def test_position_not_mutated_fileish(self):
         formatx = self.registry.create_format('formatx')
