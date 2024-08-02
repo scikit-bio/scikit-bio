@@ -2105,7 +2105,7 @@ def _lme_call(
     submodels = []
     metadata = _type_cast_to_float(metadata.copy())
 
-    data = pd.merge(table, metadata, left_index=True, right_index=True)
+    data = pd.merge(table, metadata, left_index=True, right_index=True, how="inner")
     if len(data) == 0:
         raise ValueError(
             (
@@ -2211,15 +2211,16 @@ def dirmult_lme(
     ----------
     formula : str or generic Formula object
         The formula specifying the model
-    data : DataFrame
-        The data for the model. data must define __getitem__ with the keys in
-        the formula terms args and kwargs are passed on to the model
-        instantiation. E.g., a numpy structured or rec array, a dictionary,
-        or a pandas DataFrame.
-    metadata: pd.DataFrame
-        Metadata table that contains information about the samples contained
-        in the `table` object.  Samples correspond to rows and covariates
-        correspond to columns.
+    data : array-like
+        The data for the model. If data is a pd.DataFrame, it must contain the
+        dependent variables in data.columns. If data is not a pd.DataFrame, it must
+        contain the dependent variable in indices of data. data can be a
+        a numpy structured array, or a numpy recarray, or a dictionary.
+    metadata: array-like
+        The metadata for the model. If metadata is a pd.DataFrame, it must contain
+        the covariates in metadata.columns. If metadata is not a pd.DataFrame,
+        it must contain the covariates in indices of metadata. metadata can
+        be a numpy structured array, or a numpy recarray, or a dictionary.
     groups : str
         The column name in data that identifies the grouping variable
     reml : bool
@@ -2331,9 +2332,13 @@ def dirmult_lme(
         "a dictionary."
     )
 
+    attr_errmsg = "Please ensure you have added a list of feature IDs to %s"
+
     if not isinstance(data, pd.DataFrame):
         try:
             data = pd.DataFrame(data)
+        except AttributeError:
+            raise AttributeError(attr_errmsg % "Data")
         except (TypeError, ValueError):
             raise TypeError(errmsg % "Data")
 
@@ -2343,15 +2348,11 @@ def dirmult_lme(
         except (TypeError, ValueError):
             raise TypeError(errmsg % "Data")
 
-    if not hasattr(data, "__getitem__"):
-        try:
-            data = pd.DataFrame(data)
-        except (TypeError, ValueError):
-            raise TypeError(errmsg % "Data")
-
     if not isinstance(metadata, pd.DataFrame):
         try:
             metadata = pd.DataFrame(metadata)
+        except AttributeError:
+            raise ValueError(attr_errmsg % "Metadata")
         except (TypeError, ValueError):
             raise TypeError(errmsg % "Metadata")
 
