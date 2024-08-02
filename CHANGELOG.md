@@ -2,6 +2,10 @@
 
 ## Version 0.6.3-dev
 
+### Features
+
+* Wrapped UPGMA and WPGMA from SciPy's linkage method ([#2094](https://github.com/scikit-bio/scikit-bio/pull/2094)).
+
 ### Performance enhancements
 
 * Improved the performance of tree traversal algorithms ([#2093](https://github.com/scikit-bio/scikit-bio/pull/2093)).
