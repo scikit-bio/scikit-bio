@@ -41,7 +41,8 @@ extensions = [
     'numpydoc',
     'sphinx_design',
     'sphinx_copybutton',
-    'matplotlib.sphinxext.plot_directive'
+    'matplotlib.sphinxext.plot_directive',
+    'sphinx_sitemap',
 ]
 
 root_doc = 'index'
@@ -94,6 +95,13 @@ extlinks = {
     'home': (f'{html_baseurl}/%s', None),
     'repo': (f'{github_url}/%s', None),
 }
+
+
+# -- Sitemap configuration ---------------------------------------------------
+
+doc_dir = 'dev' if version.endswith('-dev') else version
+# sitemap_url_scheme = '/docs/dev/{link}'
+sitemap_url_scheme = f'/docs/{doc_dir}/{{link}}'
 
 
 # -- numpydoc configuration --------------------------------------------------

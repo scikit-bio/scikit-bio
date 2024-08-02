@@ -67,8 +67,10 @@ jobs:
       - name: Build documentation
         run: make doc
 
-      - name: Substitute URLs
-        run: python doc/suburl.py
+      - name: Modify documentation
+        run: |
+          python doc/suburl.py
+          python doc/editmap.py
 
       - name: Check out website
         uses: actions/checkout@v4
@@ -80,6 +82,7 @@ jobs:
       - name: Update documentation
         run: |
           rsync -av --delete doc/build/html/ website/docs/${{ github.ref_name }}
+          sed -i 's/docs\/${{ github.ref_name }}\//docs\/latest\//g' doc/build/html/sitemap.xml
           rsync -av --delete doc/build/html/ website/docs/latest
 
       - name: Publish website
