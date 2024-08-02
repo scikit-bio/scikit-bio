@@ -2136,14 +2136,39 @@ def _lme_call(
         results = model.fit(reml=reml, method=method, **fit_kwargs)
 
         for var_name in list_of_vars:
-            individial_results = {
-                "FeatureID": response_var,
-                "Covariate": var_name,
-                "Log2(FC)": float(results.summary().tables[1]["Coef."][var_name]),
-                "CI(2.5)": float(results.summary().tables[1]["[0.025"][var_name]),
-                "CI(97.5)": float(results.summary().tables[1]["0.975]"][var_name]),
-                "pvalue": results.pvalues[var_name],
-            }
+            try:
+                individial_results = {
+                    "FeatureID": response_var,
+                    "Covariate": var_name,
+                    "Log2(FC)": float(results.summary().tables[1]["Coef."][var_name]),
+                    "CI(2.5)": float(results.summary().tables[1]["[0.025"][var_name]),
+                    "CI(97.5)": float(results.summary().tables[1]["0.975]"][var_name]),
+                    "pvalue": results.pvalues[var_name],
+                }
+            except Exception:
+                try:
+                    logfc = float(results.summary().tables[1]["Coef."][var_name])
+                except Exception:
+                    logfc = np.NaN
+
+                try:
+                    ci25 = float(results.summary().tables[1]["[0.025"][var_name])
+                except Exception:
+                    ci25 = np.NaN
+
+                try:
+                    ci975 = float(results.summary().tables[1]["0.975]"][var_name])
+                except Exception:
+                    ci975 = np.NaN
+
+                individial_results = {
+                    "FeatureID": response_var,
+                    "Covariate": var_name,
+                    "Log2(FC)": logfc,
+                    "CI(2.5)": ci25,
+                    "CI(97.5)": ci975,
+                    "pvalue": results.pvalues[var_name],
+                }
 
             output.append(individial_results)
 
@@ -2154,7 +2179,7 @@ def dirmult_lme(
     formula,
     data,
     metadata,
-    groups,
+    groups=None,
     reml=True,
     method=None,
     draws=128,
