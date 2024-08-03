@@ -2100,7 +2100,15 @@ def _lme_call(
     **kwargs,
 ):
     # TODO: add docs when this implementation is approved
-    # list_of_vars is essentially the list of covariates
+    # _covariate_list is essentially the list of covariates
+
+    FEATUREID = "FeatureID"
+    LOG2FC = "Log2(FC)"
+    CI25 = "CI(2.5)"
+    CI975 = "CI(97.5)"
+    PVALUE = "pvalue"
+    COVARIATE = "Covariate"
+    QVALUE = "qvalue"
 
     submodels = []
     metadata = _type_cast_to_float(metadata.copy())
@@ -2118,10 +2126,10 @@ def _lme_call(
     design_matrix = dmatrix(formula, metadata, return_type="dataframe")
 
     # Obtaining the list of covariates by selecting the relevant columns
-    list_of_vars = design_matrix.columns.tolist()
+    _covariate_list = design_matrix.columns.tolist()
 
     # Removing intercept since it is not a covariate, and is included by default
-    list_of_vars.remove("Intercept")
+    _covariate_list.remove("Intercept")
 
     output = []
     for response_var in table.columns:
@@ -2132,18 +2140,17 @@ def _lme_call(
             formula=stats_formula, data=data, groups=groups, **kwargs
         )
 
-        submodels.append(model)
         results = model.fit(reml=reml, method=method, **fit_kwargs)
 
-        for var_name in list_of_vars:
+        for var_name in _covariate_list:
             try:
                 individial_results = {
-                    "FeatureID": response_var,
-                    "Covariate": var_name,
-                    "Log2(FC)": float(results.summary().tables[1]["Coef."][var_name]),
-                    "CI(2.5)": float(results.summary().tables[1]["[0.025"][var_name]),
-                    "CI(97.5)": float(results.summary().tables[1]["0.975]"][var_name]),
-                    "pvalue": results.pvalues[var_name],
+                    FEATUREID: response_var,
+                    COVARIATE: var_name,
+                    LOG2FC: float(results.summary().tables[1]["Coef."][var_name]),
+                    CI25: float(results.summary().tables[1]["[0.025"][var_name]),
+                    CI975: float(results.summary().tables[1]["0.975]"][var_name]),
+                    PVALUE: results.pvalues[var_name],
                 }
             except Exception:
                 try:
@@ -2162,17 +2169,17 @@ def _lme_call(
                     ci975 = np.NaN
 
                 individial_results = {
-                    "FeatureID": response_var,
-                    "Covariate": var_name,
-                    "Log2(FC)": logfc,
-                    "CI(2.5)": ci25,
-                    "CI(97.5)": ci975,
-                    "pvalue": results.pvalues[var_name],
+                    FEATUREID: response_var,
+                    COVARIATE: var_name,
+                    LOG2FC: logfc,
+                    CI25: ci25,
+                    CI975: ci975,
+                    PVALUE: results.pvalues[var_name],
                 }
 
             output.append(individial_results)
 
-    return (output, submodels, list_of_vars)
+    return (output, submodels, _covariate_list)
 
 
 def dirmult_lme(
@@ -2368,6 +2375,14 @@ def dirmult_lme(
     if not data.index.sort_values().equals(metadata.index.sort_values()):
         raise ValueError("Data and metadata must have the same index.")
 
+    FEATUREID = "FeatureID"
+    LOG2FC = "Log2(FC)"
+    CI25 = "CI(2.5)"
+    CI975 = "CI(97.5)"
+    PVALUE = "pvalue"
+    COVARIATE = "Covariate"
+    QVALUE = "qvalue"
+
     rng = get_rng(seed)
 
     posterior = [
@@ -2376,7 +2391,7 @@ def dirmult_lme(
 
     dir_table = pd.DataFrame(clr(posterior), index=data.index, columns=data.columns)
 
-    _call_res = _lme_call(
+    res, _submodels, _covariate_list = _lme_call(
         formula=formula,
         table=dir_table,
         metadata=metadata,
@@ -2387,22 +2402,19 @@ def dirmult_lme(
         **kwargs,
     )
 
-    res = _call_res[0]
-    list_of_vars = _call_res[2]
-
     # Creating an empty dict to store sum of values (Using a DataFrame threw errors)
     # uses a separate array for each covariate and each feature
     # array index: 0: pvalue, 1: CI(2.5), 2: CI(97.5), 3: log2fc, 4: qvalue
     res_dict = {}
 
     for feature in data.columns:
-        res_ = res_dict[feature] = {}
-        for covar in list_of_vars:
-            res_[covar] = [0] * 5
+        group = res_dict[feature] = {}
+        for covar in _covariate_list:
+            group[covar] = [0] * 5
 
     for single_covar_data in res:
-        group = res_dict[single_covar_data["FeatureID"]][single_covar_data["Covariate"]]
-        for i, key in enumerate(("pvalue", "CI(2.5)", "CI(97.5)", "Log2(FC)")):
+        group = res_dict[single_covar_data[FEATUREID]][single_covar_data[COVARIATE]]
+        for i, key in enumerate((PVALUE, CI25, CI975, LOG2FC)):
             group[i] = single_covar_data[key]
 
     for i in range(1, draws):
@@ -2411,7 +2423,7 @@ def dirmult_lme(
         ]
         dir_table = pd.DataFrame(clr(posterior), index=data.index, columns=data.columns)
 
-        _call_ires = _lme_call(
+        ires = _lme_call(
             formula=formula,
             table=dir_table,
             metadata=metadata,
@@ -2420,36 +2432,32 @@ def dirmult_lme(
             method=method,
             fit_kwargs=fit_kwargs,
             **kwargs,
-        )
-
-        ires = _call_ires[0]
+        )[0]
 
         if ires is None:
             continue
 
         # online average to avoid holding all of the results in memory
         for single_covar_data in ires:
-            curr_feature_id = single_covar_data["FeatureID"]
-            curr_covariate = single_covar_data["Covariate"]
-            res_ = res_dict[curr_feature_id][curr_covariate]
-            res_[0] = (i * res_[0] + single_covar_data["pvalue"]) / (i + 1)
-            res_[1] = np.minimum(res_[1], single_covar_data["CI(2.5)"])
-            res_[2] = np.maximum(res_[2], single_covar_data["CI(97.5)"])
-            res_[3] = (i * res_[3] + single_covar_data["Log2(FC)"]) / (i + 1)
+            group = res_dict[single_covar_data[FEATUREID]][single_covar_data[COVARIATE]]
+            group[0] = (i * group[0] + single_covar_data[PVALUE]) / (i + 1)
+            group[1] = np.minimum(group[1], single_covar_data[CI25])
+            group[2] = np.maximum(group[2], single_covar_data[CI975])
+            group[3] = (i * group[3] + single_covar_data[LOG2FC]) / (i + 1)
 
     # convert all log fold changes to base 2
     log2_ = np.log(2)
     for feature in data.columns:
-        for covar in list_of_vars:
-            res_ = res_dict[feature][covar]
+        for covar in _covariate_list:
+            group = res_dict[feature][covar]
             for i in range(1, 4):
-                res_[i] /= log2_
+                group[i] /= log2_
 
     p_value_arr = []
     for feature in data.columns:
-        res_ = res_dict[feature]
-        for covar in list_of_vars:
-            p_value_arr.append(res_[covar][0])
+        group = res_dict[feature]
+        for covar in _covariate_list:
+            p_value_arr.append(group[covar][0])
 
     # multiple comparison
     if p_adjust is not None:
@@ -2459,25 +2467,25 @@ def dirmult_lme(
 
     count = 0
     for feature in data.columns:
-        res_ = res_dict[feature]
-        for covar in list_of_vars:
-            res_[covar][4] = qval[count]
+        group = res_dict[feature]
+        for covar in _covariate_list:
+            group[covar][4] = qval[count]
             count += 1
 
     final_res = []
 
     for feature in data.columns:
-        for covar in list_of_vars:
-            res_ = res_dict[feature][covar]
+        for covar in _covariate_list:
+            group = res_dict[feature][covar]
             final_res.append(
                 {
-                    "FeatureID": feature,
-                    "Covariate": covar,
-                    "Log2(FC)": res_[3],
-                    "CI(2.5)": res_[1],
-                    "CI(97.5)": res_[2],
-                    "pvalue": res_[0],
-                    "qvalue": res_[4],
+                    FEATUREID: feature,
+                    COVARIATE: covar,
+                    LOG2FC: group[3],
+                    CI25: group[1],
+                    CI975: group[2],
+                    PVALUE: group[0],
+                    QVALUE: group[4],
                 }
             )
 
