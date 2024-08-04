@@ -80,7 +80,9 @@ jobs:
       # save built documentation (HTML) for deployment
       - name: Substitute URLs
         if: github.event_name == 'push'
-        run: python doc/suburl.py
+        run: |
+          python doc/suburl.py
+          python doc/editmap.py
       - name: Save documentation
         if: github.event_name == 'push'
         uses: actions/upload-artifact@v4

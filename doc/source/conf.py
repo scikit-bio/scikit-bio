@@ -11,9 +11,10 @@
 # Instructions:
 # https://www.sphinx-doc.org/en/master/usage/configuration.html
 
-import os
 import sys
+import inspect
 from datetime import datetime
+from os.path import relpath, dirname
 
 import skbio
 
@@ -41,7 +42,8 @@ extensions = [
     'numpydoc',
     'sphinx_design',
     'sphinx_copybutton',
-    'matplotlib.sphinxext.plot_directive'
+    'matplotlib.sphinxext.plot_directive',
+    'sphinx_sitemap',
 ]
 
 root_doc = 'index'
@@ -96,6 +98,12 @@ extlinks = {
 }
 
 
+# -- Sitemap configuration ---------------------------------------------------
+
+doc_dir = 'dev' if version.endswith('-dev') else version
+sitemap_url_scheme = f'/docs/{doc_dir}/{{link}}'
+
+
 # -- numpydoc configuration --------------------------------------------------
 
 # References:
@@ -141,7 +149,7 @@ html_theme_options = {
     # version switcher
     'switcher': {
         'json_url': f'{html_baseurl}/versions.json',
-        'version_match': 'dev' if version.endswith('-dev') else version,
+        'version_match': doc_dir,
     },
 
     # simplify section navigation
@@ -194,10 +202,6 @@ plot_html_show_formats = False
 
 
 # -- Source code links --------------------------------------------------------
-
-import inspect
-from os.path import relpath, dirname
-
 
 def linkcode_resolve(domain, info):
     """Determine the URL corresponding to a Python object.

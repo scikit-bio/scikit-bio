@@ -11,7 +11,7 @@ from operator import or_, itemgetter
 from copy import copy, deepcopy
 from itertools import combinations
 from functools import reduce
-from collections import defaultdict
+from collections import defaultdict, deque
 
 import numpy as np
 import pandas as pd
@@ -1740,32 +1740,21 @@ class TreeNode(SkbioObject):
         return not self.is_tip()
 
     def traverse(self, self_before=True, self_after=False, include_self=True):
-        r"""Return iterator over descendants.
-
-        This is a depth-first traversal. Since the trees are not binary,
-        preorder and postorder traversals are possible, but inorder traversals
-        would depend on the data in the tree and are not handled here.
+        r"""Traverse over tree.
 
         Parameters
         ----------
         self_before : bool, optional
-            Includes each node before its descendants if True (default).
+            Whether include each node before its descendants (default: ``True``).
         self_after : bool, optional
-            Includes each node after its descendants if True. Default is False.
+            Whether include each node after its descendants (default: ``False``).
         include_self : bool, optional
-            Include the initial node if True (default).
-
-
-        `self_before` and `self_after` are independent. If neither is `True`,
-        only terminal nodes will be returned.
-
-        Note that if self is terminal, it will only be included once even if
-        `self_before` and `self_after` are both `True`.
+            Include the initial node if ``True`` (default).
 
         Yields
         ------
         TreeNode
-            Traversed node.
+            Visited node.
 
         See Also
         --------
@@ -1776,16 +1765,41 @@ class TreeNode(SkbioObject):
         tips
         non_tips
 
+        Notes
+        -----
+        This is a depth-first search (DFS). ``self_before`` and ``self_after``
+        determine whether a node should be visited before and after traversing
+        its children. They are independent. If both ``True``, each internal
+        node (and root) will be visited twice. If neither is ``True``, only
+        tips will be returned.
+
+        This method is a generalization of ``preorder``, ``postorder``,
+        ``pre_and_postorder`` and ``tips``. The default mode
+        (``self_before=True, self_after=False``) is equivalent to preorder
+        traversal.
+
         Examples
         --------
         >>> from skbio import TreeNode
-        >>> tree = TreeNode.read(["((a,b)c);"])
+        >>> tree = TreeNode.read(["((a,b)c,(d,e)f)g;"])
+        >>> print(tree.ascii_art())
+                            /-a
+                  /c-------|
+                 |          \-b
+        -g-------|
+                 |          /-d
+                  \f-------|
+                            \-e
+
         >>> for node in tree.traverse():
         ...     print(node.name)
-        None
+        g
         c
         a
         b
+        f
+        d
+        e
 
         """
         if self_before:
@@ -1800,7 +1814,7 @@ class TreeNode(SkbioObject):
                 return self.tips(include_self=include_self)
 
     def preorder(self, include_self=True):
-        r"""Perform preorder iteration over tree.
+        r"""Perform preorder traversal over tree.
 
         Parameters
         ----------
@@ -1810,7 +1824,7 @@ class TreeNode(SkbioObject):
         Yields
         ------
         TreeNode
-            Traversed node.
+            Visited node.
 
         See Also
         --------
@@ -1818,35 +1832,48 @@ class TreeNode(SkbioObject):
         postorder
         pre_and_postorder
         levelorder
-        tips
-        non_tips
+
+        Notes
+        -----
+        Preorder traversal visits each node followed by traversing each of its
+        children in order. It is also known as NLR (node - left - right). It is
+        a depth-first search (DFS). The overall direction of traversal is from
+        root to tips.
 
         Examples
         --------
         >>> from skbio import TreeNode
-        >>> tree = TreeNode.read(["((a,b)c);"])
+        >>> tree = TreeNode.read(["((a,b)c,(d,e)f)g;"])
+        >>> print(tree.ascii_art())
+                            /-a
+                  /c-------|
+                 |          \-b
+        -g-------|
+                 |          /-d
+                  \f-------|
+                            \-e
+
         >>> for node in tree.preorder():
         ...     print(node.name)
-        None
+        g
         c
         a
         b
+        f
+        d
+        e
 
         """
-        stack = [self]
+        stack = [self] if include_self else self.children[::-1]
+        stack_pop = stack.pop
+        stack_extend = stack.extend
         while stack:
-            curr = stack.pop()
-            if include_self or (curr is not self):
-                yield curr
+            yield (curr := stack_pop())
             if curr.children:
-                stack.extend(curr.children[::-1])
+                stack_extend(curr.children[::-1])
 
     def postorder(self, include_self=True):
-        r"""Perform postorder iteration over tree.
-
-        This is somewhat inelegant compared to saving the node and its index
-        on the stack, but is 30% faster in the average case and 3x faster in
-        the worst case (for a comb tree).
+        r"""Perform postorder traversal over tree.
 
         Parameters
         ----------
@@ -1856,7 +1883,7 @@ class TreeNode(SkbioObject):
         Yields
         ------
         TreeNode
-            Traversed node.
+            Visited node.
 
         See Also
         --------
@@ -1864,33 +1891,55 @@ class TreeNode(SkbioObject):
         preorder
         pre_and_postorder
         levelorder
-        tips
-        non_tips
+
+        Notes
+        -----
+        Postorder traversal traverses all children of a node in order before
+        visiting the parent node. It is also known as LRN (left - right -
+        node). It is a depth-first search (DFS). The overall direction of
+        traversal is from tips to root.
 
         Examples
         --------
         >>> from skbio import TreeNode
-        >>> tree = TreeNode.read(["((a,b)c);"])
+        >>> tree = TreeNode.read(["((a,b)c,(d,e)f)g;"])
+        >>> print(tree.ascii_art())
+                            /-a
+                  /c-------|
+                 |          \-b
+        -g-------|
+                 |          /-d
+                  \f-------|
+                            \-e
+
         >>> for node in tree.postorder():
         ...     print(node.name)
         a
         b
         c
-        None
+        d
+        e
+        f
+        g
 
         """
+        # This is somewhat inelegant compared to saving the node and its index
+        # on the stack, but is 30% faster in the average case and 3x faster in
+        # the worst case (for a comb tree).
         child_index_stack = [0]
+        child_index_stack_append = child_index_stack.append
+        child_index_stack_pop = child_index_stack.pop
         curr = self
         curr_children = self.children
         curr_children_len = len(curr_children)
-        while 1:
+        while True:
             curr_index = child_index_stack[-1]
             # if there are children left, process them
             if curr_index < curr_children_len:
                 curr_child = curr_children[curr_index]
                 # if the current child has children, go there
                 if curr_child.children:
-                    child_index_stack.append(0)
+                    child_index_stack_append(0)
                     curr = curr_child
                     curr_children = curr.children
                     curr_children_len = len(curr_children)
@@ -1909,11 +1958,11 @@ class TreeNode(SkbioObject):
                 curr = curr.parent
                 curr_children = curr.children
                 curr_children_len = len(curr_children)
-                child_index_stack.pop()
+                child_index_stack_pop()
                 child_index_stack[-1] += 1
 
     def pre_and_postorder(self, include_self=True):
-        r"""Perform iteration over tree, visiting node before and after.
+        r"""Perform traversal over tree, visiting nodes before and after.
 
         Parameters
         ----------
@@ -1923,7 +1972,7 @@ class TreeNode(SkbioObject):
         Yields
         ------
         TreeNode
-            Traversed node.
+            Visited node.
 
         See Also
         --------
@@ -1931,21 +1980,39 @@ class TreeNode(SkbioObject):
         postorder
         preorder
         levelorder
-        tips
-        non_tips
+
+        Notes
+        -----
+        Pre- and post-order traversal visits each node before and after
+        traversing all children of the node. Therefore, each internal node (and
+        root) is visited twice. It is a depth-first search (DFS). The overall
+        direction of traversal is from root to tips then back to root.
 
         Examples
         --------
         >>> from skbio import TreeNode
-        >>> tree = TreeNode.read(["((a,b)c);"])
+        >>> tree = TreeNode.read(["((a,b)c,(d,e)f)g;"])
+        >>> print(tree.ascii_art())
+                            /-a
+                  /c-------|
+                 |          \-b
+        -g-------|
+                 |          /-d
+                  \f-------|
+                            \-e
+
         >>> for node in tree.pre_and_postorder():
         ...     print(node.name)
-        None
+        g
         c
         a
         b
         c
-        None
+        f
+        d
+        e
+        f
+        g
 
         """
         # handle simple case first
@@ -1954,9 +2021,11 @@ class TreeNode(SkbioObject):
                 yield self
             return
         child_index_stack = [0]
+        child_index_stack_append = child_index_stack.append
+        child_index_stack_pop = child_index_stack.pop
         curr = self
         curr_children = self.children
-        while 1:
+        while True:
             curr_index = child_index_stack[-1]
             if not curr_index:
                 if include_self or (curr is not self):
@@ -1966,7 +2035,7 @@ class TreeNode(SkbioObject):
                 curr_child = curr_children[curr_index]
                 # if the current child has children, go there
                 if curr_child.children:
-                    child_index_stack.append(0)
+                    child_index_stack_append(0)
                     curr = curr_child
                     curr_children = curr.children
                     curr_index = 0
@@ -1983,11 +2052,11 @@ class TreeNode(SkbioObject):
                     break
                 curr = curr.parent
                 curr_children = curr.children
-                child_index_stack.pop()
+                child_index_stack_pop()
                 child_index_stack[-1] += 1
 
     def levelorder(self, include_self=True):
-        r"""Perform levelorder iteration over tree.
+        r"""Perform level order traversal over tree.
 
         Parameters
         ----------
@@ -1997,24 +2066,37 @@ class TreeNode(SkbioObject):
         Yields
         ------
         TreeNode
-            Traversed node.
+            Visited node.
 
         See Also
         --------
-        traverse
         postorder
         preorder
         pre_and_postorder
-        tips
-        non_tips
+        traverse
+
+        Notes
+        -----
+        Level order traversal visits all nodes at each depth from the root
+        before visiting nodes at the next depth. It is a breadth-first search
+        (BFS). The overall direction of traversal is from root to tips.
 
         Examples
         --------
         >>> from skbio import TreeNode
-        >>> tree = TreeNode.read(["((a,b)c,(d,e)f);"])
+        >>> tree = TreeNode.read(["((a,b)c,(d,e)f)g;"])
+        >>> print(tree.ascii_art())
+                            /-a
+                  /c-------|
+                 |          \-b
+        -g-------|
+                 |          /-d
+                  \f-------|
+                            \-e
+
         >>> for node in tree.levelorder():
         ...     print(node.name)
-        None
+        g
         c
         f
         a
@@ -2023,43 +2105,50 @@ class TreeNode(SkbioObject):
         e
 
         """
-        queue = [self]
+        queue = deque([self]) if include_self else deque(self.children)
+        queue_popleft = queue.popleft
+        queue_extend = queue.extend
         while queue:
-            curr = queue.pop(0)
-            if include_self or (curr is not self):
-                yield curr
+            yield (curr := queue_popleft())
             if curr.children:
-                queue.extend(curr.children)
+                queue_extend(curr.children)
 
     def tips(self, include_self=False):
-        r"""Iterate over tips descended from `self`.
-
-        Node order is consistent between calls and is ordered by a
-        postorder traversal of the tree.
+        r"""Iterate over tips descended from the current node.
 
         Parameters
         ----------
         include_self : bool, optional
-            Include the initial node if True. Default is False.
+            Whether include the initial node if it is a tip (default: False).
 
         Yields
         ------
         TreeNode
-            Traversed node.
+            Visited tip.
 
         See Also
         --------
-        traverse
-        postorder
-        preorder
-        pre_and_postorder
-        levelorder
         non_tips
+        postorder
+
+        Notes
+        -----
+        Nodes are ordered by a postorder traversal of the tree. The order is
+        consistent between calls.
 
         Examples
         --------
         >>> from skbio import TreeNode
         >>> tree = TreeNode.read(["((a,b)c,(d,e)f);"])
+        >>> print(tree.ascii_art())
+                            /-a
+                  /c-------|
+                 |          \-b
+        ---------|
+                 |          /-d
+                  \f-------|
+                            \-e
+
         >>> for node in tree.tips():
         ...     print(node.name)
         a
@@ -2073,36 +2162,41 @@ class TreeNode(SkbioObject):
                 yield n
 
     def non_tips(self, include_self=False):
-        r"""Iterate over nontips descended from self.
-
-        `include_self`, if `True` (default is False), will return the current
-        node as part of non_tips if it is a non_tip. Node order is consistent
-        between calls and is ordered by a postorder traversal of the tree.
-
+        r"""Iterate over non-tip nodes descended from the current node.
 
         Parameters
         ----------
         include_self : bool, optional
-            Include the initial node if True. Default is False.
+            Whether include the initial node if it is not a tip (default: False).
 
         Yields
         ------
         TreeNode
-            Traversed node.
+            Visited non-tip node.
 
         See Also
         --------
-        traverse
-        postorder
-        preorder
-        pre_and_postorder
-        levelorder
         tips
+        postorder
+
+        Notes
+        -----
+        Nodes are ordered by a postorder traversal of the tree. The order is
+        consistent between calls.
 
         Examples
         --------
         >>> from skbio import TreeNode
         >>> tree = TreeNode.read(["((a,b)c,(d,e)f);"])
+        >>> print(tree.ascii_art())
+                            /-a
+                  /c-------|
+                 |          \-b
+        ---------|
+                 |          /-d
+                  \f-------|
+                            \-e
+
         >>> for node in tree.non_tips():
         ...     print(node.name)
         c
