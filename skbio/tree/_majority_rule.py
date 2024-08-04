@@ -266,7 +266,7 @@ def majority_rule(
     ...     TreeNode.read(["((a,b),(c,d),(e,f));"]),
     ...     TreeNode.read(["(a,(c,d),b,(e,f));"]),
     ...     TreeNode.read(["((c,d),(e,f),b);"]),
-    ...     TreeNode.read(["(a,(c,d),(e,f));")]]
+    ...     TreeNode.read(["(a,(c,d),(e,f));"])]
     >>> consensus_trees = majority_rule(trees)
     >>> len(consensus_trees)
     4
