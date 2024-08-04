@@ -530,26 +530,110 @@ class TreeTests(TestCase):
         self.assertIs(t, self.simple_t.children[0].root())
         self.assertIs(t, self.simple_t.children[1].children[1].root())
 
-    def test_invalidate_lookup_caches(self):
-        t = self.simple_t
+    def test_clear_caches(self):
+        # delete lookup caches
+        t = TreeNode.read(["((a:1.2,b:1.6)c:0.3,(d:0.8,e:1.0)f:0.6)g;"])
         t.create_caches()
         keys = ("_tip_cache", "_non_tip_cache")
         for key in keys:
             self.assertTrue(hasattr(t, key))
-        t.invalidate_caches()
+        t.clear_caches(attr=False)
         for key in keys:
             self.assertFalse(hasattr(t, key))
 
-    def test_invalidate_attr_caches(self):
-        t = TreeNode.read(["((a,b,(c,d)e)f,(g,h)i)root;"])
-
-        def f(n):
-            return [n.name] if n.is_tip() else []
-
-        t.cache_attr(f, "tip_names")
-        t.invalidate_caches()
+        # delete all attribute caches
+        t.cache_attr(lambda n: [n.name] if n.is_tip() else [], "tip_names")
+        t.clear_caches(lookup=False)
+        self.assertFalse(hasattr(t, "_registered_caches"))
         for node in t.traverse(include_self=True):
             self.assertFalse(hasattr(node, "tip_names"))
+
+        # delete individual attribute caches
+        t.cache_attr(lambda n: 1, "node_count", sum)
+        t.cache_attr(lambda n: n.length or 0.0, "total_length", sum)
+        t.clear_caches(attr="node_count")
+        self.assertTrue(hasattr(t, "_registered_caches"))
+        self.assertNotIn("node_count", t._registered_caches)
+        self.assertIn("total_length", t._registered_caches)
+        for node in t.traverse(include_self=True):
+            self.assertFalse(hasattr(node, "node_count"))
+            self.assertTrue(hasattr(node, "total_length"))
+        t.clear_caches(attr="total_length")
+        self.assertFalse(hasattr(t, "_registered_caches"))
+        for node in t.traverse(include_self=True):
+            self.assertFalse(hasattr(node, "total_length"))
+
+    def test_cache_attr(self):
+        # cache names of all descending tips
+        t = TreeNode.read(["((a,b)c,(d,e)f)g;"])
+        f = lambda n: [n.name] if n.is_tip() else []
+        t.cache_attr(f, "tip_names")
+        self.assertIn("tip_names", t._registered_caches)
+        self.assertListEqual(t.tip_names, list("abde"))
+        self.assertListEqual(t.children[0].tip_names, list("ab"))
+        self.assertListEqual(t.children[1].tip_names, list("de"))
+
+        # don't register as cache
+        t.clear_caches()
+        t.cache_attr(f, "tip_names", register=False)
+        self.assertFalse(hasattr(t, "_registered_caches"))
+        self.assertListEqual(t.tip_names, list("abde"))
+
+        # tuple instead of list
+        t.cache_attr(f, "tip_names", tuple)
+        self.assertTupleEqual(t.tip_names, tuple("abde"))
+
+        # set and frozenset
+        t.cache_attr(f, "tip_names", set)
+        self.assertIs(type(t.tip_names), set)
+        self.assertSetEqual(t.tip_names, set("abde"))
+        t.cache_attr(f, "tip_names", frozenset)
+        self.assertIs(type(t.tip_names), frozenset)
+        self.assertSetEqual(t.tip_names, set("abde"))
+
+        # cache number of nodes per clade
+        t = TreeNode.read(["((a:1.2,b:1.6)c:0.3,(d:0.8,e:1.0)f:0.6)g;"])
+        f = lambda n: 1
+        t.cache_attr(f, "node_count", sum)
+        self.assertEqual(t.node_count, 7)
+        self.assertEqual(t.children[0].node_count, 3)
+        self.assertEqual(t.children[1].node_count, 3)
+
+        # cache total branch length per clade
+        t.clear_caches()
+        f = lambda n: n.length or 0.0
+        t.cache_attr(f, "total_length", sum)
+        self.assertAlmostEqual(t.total_length, 5.5)
+        self.assertAlmostEqual(t.children[0].total_length, 3.1)
+        self.assertAlmostEqual(t.children[1].total_length, 2.4)
+
+        # cache accumulative distance from tips using a custom function
+        t.clear_caches()
+        dist_f = lambda x: np.array(x.length or 0.0, ndmin=1)
+        comb_f = lambda prev, curr: np.concatenate(prev) + curr if prev else curr
+        t.cache_attr(dist_f, "accu_dist", comb_f)
+        npt.assert_almost_equal(t.accu_dist, np.array([1.5, 1.9, 1.4, 1.6]))
+        npt.assert_almost_equal(t.children[0].accu_dist, np.array([1.5, 1.9]))
+
+        # cache and combine accumulative distance using a custom function
+        t.clear_caches()
+
+        def depths_f(node):
+            if node.is_tip():
+                return [0.0]
+            else:
+                return [y + (x.length or 0.0) for x in node.children for y in x.depths]
+
+        t.cache_attr(depths_f, "depths", None)
+        for obs, exp in zip(t.depths, [1.5, 1.9, 1.4, 1.6]):
+            self.assertAlmostEqual(obs, exp)
+        for obs, exp in zip(t.children[0].depths, [1.2, 1.6]):
+            self.assertAlmostEqual(obs, exp)
+
+        # invalid cache type
+        msg = "Cache type is invalid."
+        with self.assertRaisesRegex(TypeError, msg):
+            t.cache_attr(sum, "missing", "invalid")
 
     def test_create_caches(self):
         t = TreeNode.read(["(((a,b)x,(c,d)x,e),(f,g)y)root;"])
@@ -567,7 +651,7 @@ class TreeTests(TestCase):
 
         # can create a lookup table for the entire tree from any node
         node = t.find("b")
-        t.invalidate_caches(attr=False)
+        t.clear_caches(attr=False)
         node.create_caches()
         self.assertEqual(t._tip_cache["c"].name, "c")
         self.assertListEqual([

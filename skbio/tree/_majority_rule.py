@@ -19,9 +19,9 @@ def _walk_clades(trees, weights):
     Parameters
     ----------
     trees : list of TreeNode
-        The trees to walk
+        The trees to walk.
     weights : np.array
-        Tree weights
+        Tree weights.
 
     Returns
     -------
@@ -236,23 +236,21 @@ def majority_rule(
     rule extended.
 
     >>> from skbio.tree import TreeNode
-    >>> from io import StringIO
     >>> trees = [
-    ... TreeNode.read(StringIO("(A,(B,(H,(D,(J,(((G,E),(F,I)),C))))));")),
-    ... TreeNode.read(StringIO("(A,(B,(D,((J,H),(((G,E),(F,I)),C)))));")),
-    ... TreeNode.read(StringIO("(A,(B,(D,(H,(J,(((G,E),(F,I)),C))))));")),
-    ... TreeNode.read(StringIO("(A,(B,(E,(G,((F,I),((J,(H,D)),C))))));")),
-    ... TreeNode.read(StringIO("(A,(B,(E,(G,((F,I),(((J,H),D),C))))));")),
-    ... TreeNode.read(StringIO("(A,(B,(E,((F,I),(G,((J,(H,D)),C))))));")),
-    ... TreeNode.read(StringIO("(A,(B,(E,((F,I),(G,(((J,H),D),C))))));")),
-    ... TreeNode.read(StringIO("(A,(B,(E,((G,(F,I)),((J,(H,D)),C)))));")),
-    ... TreeNode.read(StringIO("(A,(B,(E,((G,(F,I)),(((J,H),D),C)))));"))]
+    ... TreeNode.read(["(A,(B,(H,(D,(J,(((G,E),(F,I)),C))))));"]),
+    ... TreeNode.read(["(A,(B,(D,((J,H),(((G,E),(F,I)),C)))));"]),
+    ... TreeNode.read(["(A,(B,(D,(H,(J,(((G,E),(F,I)),C))))));"]),
+    ... TreeNode.read(["(A,(B,(E,(G,((F,I),((J,(H,D)),C))))));"]),
+    ... TreeNode.read(["(A,(B,(E,(G,((F,I),(((J,H),D),C))))));"]),
+    ... TreeNode.read(["(A,(B,(E,((F,I),(G,((J,(H,D)),C))))));"]),
+    ... TreeNode.read(["(A,(B,(E,((F,I),(G,(((J,H),D),C))))));"]),
+    ... TreeNode.read(["(A,(B,(E,((G,(F,I)),((J,(H,D)),C)))));"]),
+    ... TreeNode.read(["(A,(B,(E,((G,(F,I)),(((J,H),D),C)))));"])]
     >>> consensus = majority_rule(trees, cutoff=0.5)[0]
-    >>> for node in sorted(consensus.non_tips(),
-    ...                    key=lambda k: k.count(tips=True)):
+    >>> for node in sorted(consensus.non_tips(), key=lambda k: k.count(tips=True)):
     ...     support_value = node.support
     ...     names = ' '.join(sorted(n.name for n in node.tips()))
-    ...     print("Tips: %s, support: %s" % (names, support_value))
+    ...     print(f"Tips: {names}, support: {support_value}")
     Tips: F I, support: 9.0
     Tips: D H J, support: 6.0
     Tips: C D H J, support: 6.0
@@ -265,10 +263,10 @@ def majority_rule(
     if not all tips are present across all trees.
 
     >>> trees = [
-    ...     TreeNode.read(StringIO("((a,b),(c,d),(e,f));")),
-    ...     TreeNode.read(StringIO("(a,(c,d),b,(e,f));")),
-    ...     TreeNode.read(StringIO("((c,d),(e,f),b);")),
-    ...     TreeNode.read(StringIO("(a,(c,d),(e,f));"))]
+    ...     TreeNode.read(["((a,b),(c,d),(e,f));"]),
+    ...     TreeNode.read(["(a,(c,d),b,(e,f));"]),
+    ...     TreeNode.read(["((c,d),(e,f),b);"]),
+    ...     TreeNode.read(["(a,(c,d),(e,f));")]]
     >>> consensus_trees = majority_rule(trees)
     >>> len(consensus_trees)
     4
