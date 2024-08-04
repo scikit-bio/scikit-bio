@@ -624,12 +624,12 @@ class TreeNode(SkbioObject):
         Parameters
         ----------
         deep : bool, optional
-            Whether perform a deep (``True``, default) or shallow (``False``)
-            copy of node attributes.
+            Whether perform a deep (True, default) or shallow (False) copy of node
+            attributes.
 
             .. versionadded:: 0.6.2
 
-            .. note:: The default value will be changed to ``False`` in 0.7.0.
+            .. note:: The default value will be changed to False in 0.7.0.
 
         Returns
         -------
@@ -702,30 +702,29 @@ class TreeNode(SkbioObject):
         Parameters
         ----------
         parent : TreeNode or None
-            Direction of walking (from parent to self). If specified, walking
-            to the parent will be prohibited.
+            Direction of walking (from parent to self). If specified, walking to the
+            parent will be prohibited.
 
         branch_attrs : set of str, optional
-            Attributes of ``TreeNode`` objects that should be considered as
-            branch attributes during the operation.
+            Attributes of ``TreeNode`` objects that should be considered as branch
+            attributes during the operation.
 
             .. versionadded:: 0.6.2
 
-            .. note:: ``name`` will be removed from the default in 0.7.0, as
-                it is usually considered as an attribute of the node instead of
-                the branch.
+            .. note:: ``name`` will be removed from the default in 0.7.0, as it is
+                usually considered as an attribute of the node instead of the branch.
 
         root_name : str or None, optional
             Name for the new root node, if it doesn't have one.
 
             .. versionadded:: 0.6.2
 
-            .. note:: This parameter will be removed in 0.7.0, and the root
-                node will not be renamed.
+            .. note:: This parameter will be removed in 0.7.0, and the root node will
+                not be renamed.
 
         deep : bool, optional
-            Whether perform a shallow (``False``, default) or deep (``True``)
-            copy of node attributes.
+            Whether perform a shallow (False, default) or deep (True) copy of node
+            attributes.
 
             .. versionadded:: 0.6.2
 
@@ -740,8 +739,8 @@ class TreeNode(SkbioObject):
 
         Warnings
         --------
-        The default behavior of ``unrooted_copy`` is subject to change in
-        0.7.0. The new default behavior can be achieved by specifying
+        The default behavior of ``unrooted_copy`` is subject to change in 0.7.0. The
+        new default behavior can be achieved by specifying
         ``branch_attrs={"length", "support"}, root_name=None``.
 
         See Also
@@ -939,8 +938,8 @@ class TreeNode(SkbioObject):
 
         Parameters
         ----------
-        tips : bool
-            If ``True``, only return the count of tips.
+        tips : bool, optional
+            If True, only return the count of tips (default: False).
 
         Returns
         -------
@@ -1210,22 +1209,21 @@ class TreeNode(SkbioObject):
                 Becomes optional.
 
         above : bool, float, or int, optional
-            Whether and where to insert a new root node. If ``False``
-            (default), the target node will serve as the root node. If
-            ``True``, a new root node will be created and inserted at the
-            midpoint of the branch connecting the target node and its parent.
-            If a number, the new root will be inserted at this distance from
-            the target node. The number ranges between 0 and branch length.
+            Whether and where to insert a new root node. If False (default), the target
+            node will serve as the root node. If True, a new root node will be created
+            and inserted at the midpoint of the branch connecting the target node and
+            its parent. If a number, the new root will be inserted at this distance
+            from the target node. The number ranges between 0 and branch length.
 
             .. versionadded:: 0.6.2
 
         reset : bool, optional
             Whether remove the original root of a rooted tree before performing
-            the rerooting operation. Default is ``False``.
+            the rerooting operation. Default is False.
 
             .. versionadded:: 0.6.2
 
-            .. note:: The default value will be set as ``True`` in 0.7.0.
+            .. note:: The default value will be set as True in 0.7.0.
 
         branch_attrs : iterable of str, optional
             Attributes of each node that should be considered as attributes of
@@ -1375,11 +1373,11 @@ class TreeNode(SkbioObject):
         ----------
         reset : bool, optional
             Whether remove the original root of a rooted tree before performing
-            the rerooting operation. Default is ``False``.
+            the rerooting operation. Default is False.
 
             .. versionadded:: 0.6.2
 
-            .. note:: The default value will be set as ``True`` in 0.7.0.
+            .. note:: The default value will be set as True in 0.7.0.
 
         branch_attrs : iterable of str, optional
             Attributes of each node that should be considered as attributes of
@@ -1530,24 +1528,24 @@ class TreeNode(SkbioObject):
         Parameters
         ----------
         outgroup : iterable of str
-            Taxon set to serve as outgroup. Must be a proper subset of taxa in
-            the tree. The tree will be rooted at the lowest common ancestor
-            (LCA) of the outgroup.
+            Taxon set to serve as outgroup. Must be a proper subset of taxa in the
+            tree. The tree will be rooted at the lowest common ancestor (LCA) of the
+            outgroup.
         above : bool, float, or int, optional
-            Whether and where to insert a new root node. If ``False``, the
-            LCA will serve as the root node. If ``True`` (default), a new root
-            node will be created and inserted at the midpoint of the branch
-            connecting the LCA and its parent (i.e., the midpoint between
-            outgroup and ingroup). If a number between 0 and branch length, the
-            new root will be inserted at this distance from the LCA.
+            Whether and where to insert a new root node. If False, the LCA will serve
+            as the root node. If True (default), a new root node will be created and
+            inserted at the midpoint of the branch connecting the LCA and its parent
+            (i.e., the midpoint between outgroup and ingroup). If a number between 0
+            and branch length, the new root will be inserted at this distance from the
+            LCA.
         reset : bool, optional
-            Whether remove the original root of a rooted tree before performing
-            the rerooting operation. Default is ``True``.
+            Whether remove the original root of a rooted tree before performing the
+            rerooting operation. Default is True.
         branch_attrs : iterable of str, optional
-            Attributes of each node that should be considered as attributes of
-            the branch connecting the node to its parent. This is important for
-            the correct rerooting operation. "length" and "support" will be
-            automatically included as they are always branch attributes.
+            Attributes of each node that should be considered as attributes of the
+            branch connecting the node to its parent. This is important for the correct
+            rerooting operation. "length" and "support" will be automatically included
+            as they are always branch attributes.
         root_name : str or None, optional
             Name for the root node, if it doesn't already have one.
 
@@ -1745,11 +1743,11 @@ class TreeNode(SkbioObject):
         Parameters
         ----------
         self_before : bool, optional
-            Whether include each node before its descendants (default: ``True``).
+            Whether include each node before its descendants (default: True).
         self_after : bool, optional
-            Whether include each node after its descendants (default: ``False``).
+            Whether include each node after its descendants (default: False).
         include_self : bool, optional
-            Include the initial node if ``True`` (default).
+            Include the initial node if True (default).
 
         Yields
         ------
@@ -1768,10 +1766,9 @@ class TreeNode(SkbioObject):
         Notes
         -----
         This is a depth-first search (DFS). ``self_before`` and ``self_after``
-        determine whether a node should be visited before and after traversing
-        its children. They are independent. If both ``True``, each internal
-        node (and root) will be visited twice. If neither is ``True``, only
-        tips will be returned.
+        determine whether a node should be visited before and after traversing its
+        children. They are independent. If both True, each internal node (and root)
+        will be visited twice. If neither is True, only tips will be returned.
 
         This method is a generalization of ``preorder``, ``postorder``,
         ``pre_and_postorder`` and ``tips``. The default mode
@@ -2848,11 +2845,10 @@ class TreeNode(SkbioObject):
 
         Notes
         -----
-        If ``allow_empty`` is ``True`` and the root node does not have a name,
-        then that name will not be included. This is because it is common to
-        have multiple domains represented in the taxonomy, which would result
-        in a root node that does not have a name and does not make sense to
-        represent in the output.
+        If ``allow_empty`` is True and the root node does not have a name, that name
+        will not be included. This is because it is common to have multiple domains
+        represented in the taxonomy, which would result in a root node that does not
+        have a name and does not make sense to represent in the output.
 
         Examples
         --------
