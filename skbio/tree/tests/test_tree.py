@@ -525,37 +525,90 @@ class TreeTests(TestCase):
 
     def test_root(self):
         """Get the root!"""
-        root = self.simple_t
-        self.assertIs(root, self.simple_t.root())
-        self.assertIs(root, self.simple_t.children[0].root())
-        self.assertIs(root, self.simple_t.children[1].children[1].root())
+        t = self.simple_t
+        self.assertIs(t, self.simple_t.root())
+        self.assertIs(t, self.simple_t.children[0].root())
+        self.assertIs(t, self.simple_t.children[1].children[1].root())
 
     def test_invalidate_lookup_caches(self):
-        root = self.simple_t
-        root.create_caches()
-        self.assertNotEqual(root._tip_cache, {})
-        self.assertNotEqual(root._non_tip_cache, {})
-        root.invalidate_caches()
-        self.assertFalse(hasattr(root, "_tip_cache"))
-        self.assertFalse(hasattr(root, "_non_tip_cache"))
+        t = self.simple_t
+        t.create_caches()
+        keys = ("_tip_cache", "_non_tip_cache")
+        for key in keys:
+            self.assertTrue(hasattr(t, key))
+        t.invalidate_caches()
+        for key in keys:
+            self.assertFalse(hasattr(t, key))
 
     def test_invalidate_attr_caches(self):
-        tree = TreeNode.read(["((a,b,(c,d)e)f,(g,h)i)root;"])
+        t = TreeNode.read(["((a,b,(c,d)e)f,(g,h)i)root;"])
 
         def f(n):
             return [n.name] if n.is_tip() else []
 
-        tree.cache_attr(f, "tip_names")
-        tree.invalidate_caches()
-        for n in tree.traverse(include_self=True):
-            self.assertFalse(hasattr(n, "tip_names"))
+        t.cache_attr(f, "tip_names")
+        t.invalidate_caches()
+        for node in t.traverse(include_self=True):
+            self.assertFalse(hasattr(node, "tip_names"))
 
-    def test_create_caches_duplicate_tip_names(self):
-        with self.assertRaises(DuplicateNodeError):
+    def test_create_caches(self):
+        t = TreeNode.read(["(((a,b)x,(c,d)x,e),(f,g)y)root;"])
+
+        # create a lookup table for a fresh tree
+        t.create_caches()
+        self.assertEqual(t._tip_cache["a"].name, "a")
+        self.assertEqual(len(t._non_tip_cache["x"]), 2)
+        self.assertEqual(len(t._non_tip_cache["y"][0].children), 2)
+
+        # skip re-creating a lookup table if the tree already has it
+        t._tip_cache["a"] = None
+        t.create_caches()
+        self.assertIsNone(t._tip_cache["a"])
+
+        # can create a lookup table for the entire tree from any node
+        node = t.find("b")
+        t.invalidate_caches(attr=False)
+        node.create_caches()
+        self.assertEqual(t._tip_cache["c"].name, "c")
+        self.assertListEqual([
+            x.name for x in t._non_tip_cache["y"][0].children], ["f", "g"])
+
+        # raise if duplicate tip names found
+        msg = "Duplicate tip name 'a' found."
+        with self.assertRaisesRegex(DuplicateNodeError, msg):
             TreeNode.read(["(a,a);"]).create_caches()
+
+    def test_find(self):
+        t = TreeNode.read(["((a,b)c,(d,e)f);"])
+
+        # find an internal node
+        exp = t.children[0]
+        obs = t.find("c")
+        self.assertEqual(obs, exp)
+
+        # find a tip
+        exp = t.children[0].children[1]
+        obs = t.find("b")
+        self.assertEqual(obs, exp)
+
+        # input is node
+        obs = t.find(exp)
+        self.assertIs(obs, exp)
+
+        # name not found
+        msg = "Node 'missing' is not found."
+        with self.assertRaisesRegex(MissingNodeError, msg):
+            t.find("missing")
 
     def test_find_all(self):
         t = TreeNode.read(["((a,b)c,((d,e)c)c,(f,(g,h)c)a)root;"])
+
+        # find all nodes with a given name
+        exp = [t.children[2],
+               t.children[0].children[0]]
+        obs = t.find_all("a")
+        self.assertEqual(obs, exp)
+
         exp = [t.children[0],
                t.children[1].children[0],
                t.children[1],
@@ -563,47 +616,19 @@ class TreeTests(TestCase):
         obs = t.find_all("c")
         self.assertEqual(obs, exp)
 
-        identity = t.find_all(t)
-        self.assertEqual(len(identity), 1)
-        self.assertEqual(identity[0], t)
-
-        identity_name = t.find_all("root")
-        self.assertEqual(len(identity_name), 1)
-        self.assertEqual(identity_name[0], t)
-
-        exp = [t.children[2],
-               t.children[0].children[0]]
-        obs = t.find_all("a")
+        # input is TreeNode
+        obs = t.find_all(t.children[0])
         self.assertEqual(obs, exp)
 
-        with self.assertRaises(MissingNodeError):
+        # find root itself
+        obs = t.find_all("root")
+        self.assertEqual(len(obs), 1)
+        self.assertIs(obs[0], t)
+
+        # node not found
+        msg = "Node 'missing' is not found."
+        with self.assertRaisesRegex(MissingNodeError, msg):
             t.find_all("missing")
-
-    def test_find(self):
-        """Find a node in a tree"""
-        t = TreeNode.read(["((a,b)c,(d,e)f);"])
-        exp = t.children[0]
-        obs = t.find("c")
-        self.assertEqual(obs, exp)
-
-        exp = t.children[0].children[1]
-        obs = t.find("b")
-        self.assertEqual(obs, exp)
-
-        with self.assertRaises(MissingNodeError):
-            t.find("does not exist")
-
-    def test_find_cache_bug(self):
-        """First implementation did not force the cache to be at the root"""
-        t = TreeNode.read(["((a,b)c,(d,e)f,(g,h)f);"])
-        exp_tip_cache_keys = set(["a", "b", "d", "e", "g", "h"])
-        exp_non_tip_cache_keys = set(["c", "f"])
-        tip_a = t.children[0].children[0]
-        tip_a.create_caches()
-        self.assertFalse(hasattr(tip_a, "_tip_cache"))
-        self.assertEqual(set(t._tip_cache), exp_tip_cache_keys)
-        self.assertEqual(set(t._non_tip_cache), exp_non_tip_cache_keys)
-        self.assertEqual(t._non_tip_cache["f"], [t.children[1], t.children[2]])
 
     def test_find_by_id(self):
         """Find a node by id"""
