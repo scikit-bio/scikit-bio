@@ -1,6 +1,7 @@
 .git
 .nojekyll
 docs
+robots.txt
 CNAME
 LICENSE
 README.md
