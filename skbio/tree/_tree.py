@@ -2352,7 +2352,7 @@ class TreeNode(SkbioObject):
 
         Cache a list of all descending tip names on each node. This faciliates the
         assignment of taxon set under each clade in the tree. It resembles but is more
-        efficient than calling ``subset`` for multiple times.
+        efficient than calling ``subset`` multiple times.
 
         >>> f = lambda n: [n.name] if n.is_tip() else []
         >>> tree.cache_attr(f, 'tip_names')
@@ -2368,7 +2368,7 @@ class TreeNode(SkbioObject):
 
         Cache the number of nodes per clade. The function ``sum`` is used in place of
         cache type such that the count will be accumulated. This resembles but is more
-        efficient than calling ``count`` for multiple times.
+        efficient than calling ``count`` multiple times.
 
         >>> f = lambda n: 1
         >>> tree.cache_attr(f, 'node_count', sum)
@@ -2376,7 +2376,7 @@ class TreeNode(SkbioObject):
         7
 
         Cache the sum of branch lengths per clade. This resembles but is more efficient
-        than calling ``descending_branch_length`` for multiple times. Note: the result
+        than calling ``descending_branch_length`` multiple times. Note: the result
         includes the stem branch of each clade. One needs to subtract ``length`` from
         each value in order to match the result of ``descending_branch_length``.
 
@@ -2389,7 +2389,7 @@ class TreeNode(SkbioObject):
         clade. This allows one to measure the depth of a clade from the surface (tips)
         of a tree. One can further apply calculations like mean and standard deviation
         to the results. This is more efficient than calling ``accumulate_to_ancestor``
-        for multiple times. Also note that the result includes the stem branch of each
+        multiple times. Also note that the result includes the stem branch of each
         clade.
 
         >>> import numpy as np
@@ -2588,6 +2588,19 @@ class TreeNode(SkbioObject):
         --------
         >>> from skbio.tree import TreeNode
         >>> tree = TreeNode.read(["((a,b)c,(d,e)d,(f,g)c);"])
+        >>> print(tree.ascii_art())
+                            /-a
+                  /c-------|
+                 |          \-b
+                 |
+                 |          /-d
+        ---------|-d-------|
+                 |          \-e
+                 |
+                 |          /-f
+                  \c-------|
+                            \-g
+
         >>> for node in tree.find_all('c'):
         ...     print(node.name, node.children[0].name, node.children[1].name)
         c a b
