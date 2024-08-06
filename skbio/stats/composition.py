@@ -2182,6 +2182,11 @@ def _lme_call(
     return (output, submodels, _covariate_list)
 
 
+def _dirichlet_with_pseudocount(row, pseudocount, seed):
+    rng = get_rng(seed)
+    return rng.dirichlet(row + pseudocount)
+
+
 def dirmult_lme(
     formula,
     data,
@@ -2375,6 +2380,7 @@ def dirmult_lme(
     if not data.index.sort_values().equals(metadata.index.sort_values()):
         raise ValueError("Data and metadata must have the same index.")
 
+    # Columns in the final result
     FEATUREID = "FeatureID"
     LOG2FC = "Log2(FC)"
     CI25 = "CI(2.5)"
@@ -2383,11 +2389,14 @@ def dirmult_lme(
     COVARIATE = "Covariate"
     QVALUE = "qvalue"
 
-    rng = get_rng(seed)
+    posterior = data.apply(
+        lambda row: _dirichlet_with_pseudocount(row.values, pseudocount, seed), axis=1
+    )
+    posterior = list(posterior)
 
-    posterior = [
-        rng.dirichlet(data.values[i] + pseudocount) for i in range(data.shape[0])
-    ]
+    # posterior = [
+    #     rng.dirichlet(data.values[i] + pseudocount) for i in range(data.shape[0])
+    # ]
 
     dir_table = pd.DataFrame(clr(posterior), index=data.index, columns=data.columns)
 
@@ -2418,9 +2427,12 @@ def dirmult_lme(
             group[i] = single_covar_data[key]
 
     for i in range(1, draws):
-        posterior = [
-            rng.dirichlet(data.values[i] + pseudocount) for i in range(data.shape[0])
-        ]
+        posterior = data.apply(
+            lambda row: _dirichlet_with_pseudocount(row.values, pseudocount, seed),
+            axis=1,
+        )
+        posterior = list(posterior)
+
         dir_table = pd.DataFrame(clr(posterior), index=data.index, columns=data.columns)
 
         ires = _lme_call(
