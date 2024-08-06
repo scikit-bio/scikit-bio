@@ -256,12 +256,14 @@ def _objects_to_embed(objs, fh, include_embedding_pointer=True):
             # the corresponding string representation
             if "idptr" in h5grp:
                 idptr_fh = h5grp["idptr"]
-                if resize:
-                    idptr_fh.resize((ceil(i * resize_by),))
-                    print("no error on iteration")
+                #if resize:
+                idptr_fh.resize((ceil(i * resize_by),))
                 print("len(idptr):", len(idptr_fh), 
                       "i:", i, "len(arr):", 
                       len(arr), "resize:", resize)
+                
+                for id in idptr_fh:
+                    print(id)
 
                 idptr_fh[i] = len(arr) + idptr_fh[i - 1]
             else:
@@ -285,8 +287,8 @@ def _objects_to_embed(objs, fh, include_embedding_pointer=True):
             if include_embedding_pointer:
                 if "embedding_ptr" in h5grp:
                     embptr_fh = h5grp["embedding_ptr"]
-                    if resize:
-                        embptr_fh.resize((ceil(i * resize_by),))
+                    #if resize:
+                    embptr_fh.resize((ceil(i * resize_by),))
                     embptr_fh[i] = emb.shape[0] + embptr_fh[i - 1]
 
                 else:
