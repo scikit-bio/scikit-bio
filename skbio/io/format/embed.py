@@ -226,17 +226,29 @@ def _objects_to_embed(objs, fh, include_embedding_pointer=True):
                 h5grp.attrs["dim"] = emb.shape[1]
 
             # resize if necessary
-            if i > 0:
+            if i > 0: # we don't need to resize for the first object
                 if include_embedding_pointer:
-                    if (len(arr) + idptr_fh[i - 1]) > max_idsize or (
-                        emb.shape[0] + embptr_fh[i - 1]
-                    ) > max_embsize:
-                        max_idsize = ceil(len(arr) + idptr_fh[i - 1]) * resize_by
-                        max_embsize = ceil(emb.shape[0] + embptr_fh[i - 1]) * resize_by
+                    print("new_seq_len:", len(arr), 
+                          "old_size:", idptr_fh[i-1],
+                          "max_idsize:", max_idsize)
+                    print("new_emb_len", emb.shape[0],
+                          "old_size", embptr_fh[i-1],
+                          "max_embsize:", max_embsize)
+                    # if (new ID + old IDs) > max_idsize or (new emb + old embs) > max_embsize
+                    if (len(arr) + idptr_fh[i - 1]) >= max_idsize or (
+                        emb.shape[0] + embptr_fh[i - 1]) >= max_embsize:
+                        print("resizing")
+                        max_idsize = ceil((len(arr) + idptr_fh[i - 1]) * resize_by)
+                        max_embsize = ceil((emb.shape[0] + embptr_fh[i - 1]) * resize_by)
+                        
+                        print("new_resized_id:", max_idsize, "new_resized_emb", max_embsize)
+                        
                         resize = True
-                else:
+                else: # only check ID size
+                    print("entering ID only stmt")
+                    # if (new ID + old IDs) > max_idsize
                     if len(arr) + idptr_fh[i - 1] > max_idsize:
-                        max_idsize = ceil(len(arr) + idptr_fh[i - 1] * resize_by)
+                        max_idsize = ceil((len(arr) + idptr_fh[i - 1] * resize_by))
                         resize = True
 
             # store the pointers that keep track of the start and
@@ -246,6 +258,11 @@ def _objects_to_embed(objs, fh, include_embedding_pointer=True):
                 idptr_fh = h5grp["idptr"]
                 if resize:
                     idptr_fh.resize((ceil(i * resize_by),))
+                    print("no error on iteration")
+                print("len(idptr):", len(idptr_fh), 
+                      "i:", i, "len(arr):", 
+                      len(arr), "resize:", resize)
+
                 idptr_fh[i] = len(arr) + idptr_fh[i - 1]
             else:
                 idptr_fh = h5grp.create_dataset(
