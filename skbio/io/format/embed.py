@@ -228,25 +228,15 @@ def _objects_to_embed(objs, fh, include_embedding_pointer=True):
             # resize if necessary
             if i > 0: # we don't need to resize for the first object
                 if include_embedding_pointer:
-                    print("new_seq_len:", len(arr), 
-                          "old_size:", idptr_fh[i-1],
-                          "max_idsize:", max_idsize)
-                    print("new_emb_len", emb.shape[0],
-                          "old_size", embptr_fh[i-1],
-                          "max_embsize:", max_embsize)
                     # if (new ID + old IDs) > max_idsize or (new emb + old embs) > max_embsize
                     if (len(arr) + idptr_fh[i - 1]) >= max_idsize or (
                         emb.shape[0] + embptr_fh[i - 1]) >= max_embsize or (
                         i >= len(idptr_fh)):
-                        print("resizing")
                         max_idsize = ceil((len(arr) + idptr_fh[i - 1]) * resize_by)
                         max_embsize = ceil((emb.shape[0] + embptr_fh[i - 1]) * resize_by)
                         
-                        print("new_resized_id:", max_idsize, "new_resized_emb", max_embsize)
-                        
                         resize = True
                 else: # only check ID size
-                    print("entering ID only stmt")
                     # if (new ID + old IDs) > max_idsize
                     if len(arr) + idptr_fh[i - 1] > max_idsize:
                         max_idsize = ceil((len(arr) + idptr_fh[i - 1] * resize_by))
@@ -257,16 +247,8 @@ def _objects_to_embed(objs, fh, include_embedding_pointer=True):
             # the corresponding string representation
             if "idptr" in h5grp:
                 idptr_fh = h5grp["idptr"]
-                print("resize ceil:", ceil(i * resize_by))
                 if resize:
                     idptr_fh.resize((ceil(i * resize_by),))
-                print("len(idptr):", len(idptr_fh), 
-                      "i:", i, "len(arr):", 
-                      len(arr), "resize:", resize)
-                
-                for id in idptr_fh:
-                    print(id)
-
                 idptr_fh[i] = len(arr) + idptr_fh[i - 1]
             else:
                 idptr_fh = h5grp.create_dataset(
