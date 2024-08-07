@@ -236,7 +236,8 @@ def _objects_to_embed(objs, fh, include_embedding_pointer=True):
                           "max_embsize:", max_embsize)
                     # if (new ID + old IDs) > max_idsize or (new emb + old embs) > max_embsize
                     if (len(arr) + idptr_fh[i - 1]) >= max_idsize or (
-                        emb.shape[0] + embptr_fh[i - 1]) >= max_embsize:
+                        emb.shape[0] + embptr_fh[i - 1]) >= max_embsize or (
+                        i >= len(idptr_fh)):
                         print("resizing")
                         max_idsize = ceil((len(arr) + idptr_fh[i - 1]) * resize_by)
                         max_embsize = ceil((emb.shape[0] + embptr_fh[i - 1]) * resize_by)
@@ -256,8 +257,9 @@ def _objects_to_embed(objs, fh, include_embedding_pointer=True):
             # the corresponding string representation
             if "idptr" in h5grp:
                 idptr_fh = h5grp["idptr"]
-                #if resize:
-                idptr_fh.resize((ceil(i * resize_by),))
+                print("resize ceil:", ceil(i * resize_by))
+                if resize:
+                    idptr_fh.resize((ceil(i * resize_by),))
                 print("len(idptr):", len(idptr_fh), 
                       "i:", i, "len(arr):", 
                       len(arr), "resize:", resize)
@@ -287,8 +289,8 @@ def _objects_to_embed(objs, fh, include_embedding_pointer=True):
             if include_embedding_pointer:
                 if "embedding_ptr" in h5grp:
                     embptr_fh = h5grp["embedding_ptr"]
-                    #if resize:
-                    embptr_fh.resize((ceil(i * resize_by),))
+                    if resize:
+                        embptr_fh.resize((ceil(i * resize_by),))
                     embptr_fh[i] = emb.shape[0] + embptr_fh[i - 1]
 
                 else:
@@ -304,8 +306,8 @@ def _objects_to_embed(objs, fh, include_embedding_pointer=True):
                     "Embedding dimension mismatch between objects. "
                     f"({embed_fh.shape}) and ({emb.shape})"
                 )
-                if resize:
-                    embed_fh.resize(max_embsize, axis=0)
+                #if resize:
+                embed_fh.resize(max_embsize, axis=0)
 
                 if include_embedding_pointer:
                     embed_fh[embptr_fh[i - 1] : embptr_fh[i]] = emb
