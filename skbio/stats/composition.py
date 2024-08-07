@@ -2141,12 +2141,13 @@ def _lme_call(
         )
 
         results = model.fit(reml=reml, method=method, **fit_kwargs)
+        summary = results.summary()
 
         for var_name in _covariate_list:
             try:
-                _LME_COEF = float(results.summary().tables[1]["Coef."][var_name])
-                _LME_25 = float(results.summary().tables[1]["[0.025"][var_name])
-                _LME_975 = float(results.summary().tables[1]["0.975]"][var_name])
+                _LME_COEF = float(summary.tables[1]["Coef."][var_name])
+                _LME_25 = float(summary.tables[1]["[0.025"][var_name])
+                _LME_975 = float(summary.tables[1]["0.975]"][var_name])
 
                 individual_results = {
                     FEATUREID: response_var,
@@ -2168,7 +2169,6 @@ def _lme_call(
                     CI975: _LME_975,
                 }
 
-                summary = results.summary()
                 if len(summary.tables) >= 2:
                     table = summary.tables[1]
 
@@ -2187,11 +2187,6 @@ def _lme_call(
             output.append(individual_results)
 
     return (output, submodels, _covariate_list)
-
-
-def _dirichlet_with_pseudocount(row, pseudocount, seed):
-    rng = get_rng(seed)
-    return rng.dirichlet(row + pseudocount)
 
 
 def dirmult_lme(
