@@ -2108,7 +2108,6 @@ def _lme_call(
     CI975 = "CI(97.5)"
     PVALUE = "pvalue"
     COVARIATE = "Covariate"
-    QVALUE = "qvalue"
 
     submodels = []
     metadata = _type_cast_to_float(metadata.copy())
@@ -2453,11 +2452,9 @@ def dirmult_lme(
 
     # convert all log fold changes to base 2
     log2_ = np.log(2)
-    for feature in data.columns:
-        for covar in _covariate_list:
-            group = res_dict[feature][covar]
-            for i in range(1, 4):
-                group[i] /= log2_
+    for feature, covar_dict in res_dict.items():
+        for covar, group in covar_dict.items():
+            group[1:4] /= log2_
 
     p_value_arr = []
     for feature in data.columns:
