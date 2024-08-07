@@ -2389,15 +2389,10 @@ def dirmult_lme(
     COVARIATE = "Covariate"
     QVALUE = "qvalue"
 
-    posterior = data.apply(
-        lambda row: _dirichlet_with_pseudocount(row.values, pseudocount, seed), axis=1
-    )
-    posterior = list(posterior)
-
-    # posterior = [
-    #     rng.dirichlet(data.values[i] + pseudocount) for i in range(data.shape[0])
-    # ]
-
+    rng = get_rng(seed)
+    posterior = [
+        rng.dirichlet(data.values[i] + pseudocount) for i in range(data.shape[0])
+    ]
     dir_table = pd.DataFrame(clr(posterior), index=data.index, columns=data.columns)
 
     res, _submodels, _covariate_list = _lme_call(
@@ -2427,12 +2422,9 @@ def dirmult_lme(
             group[i] = single_covar_data[key]
 
     for i in range(1, draws):
-        posterior = data.apply(
-            lambda row: _dirichlet_with_pseudocount(row.values, pseudocount, seed),
-            axis=1,
-        )
-        posterior = list(posterior)
-
+        posterior = [
+            rng.dirichlet(data.values[i] + pseudocount) for i in range(data.shape[0])
+        ]
         dir_table = pd.DataFrame(clr(posterior), index=data.index, columns=data.columns)
 
         ires = _lme_call(
