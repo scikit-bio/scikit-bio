@@ -2394,7 +2394,12 @@ def dirmult_lme(
     posterior = [
         rng.dirichlet(data.values[i] + pseudocount) for i in range(data.shape[0])
     ]
-    dir_table = pd.DataFrame(clr(posterior), index=data.index, columns=data.columns)
+    dir_table = pd.DataFrame(posterior, index=data.index, columns=data.columns).apply(
+        clr, axis=1
+    )
+    dir_table = pd.DataFrame(
+        dir_table.tolist(), index=dir_table.index, columns=data.columns
+    )
 
     res, _submodels, _covariate_list = _lme_call(
         formula=formula,
@@ -2426,7 +2431,12 @@ def dirmult_lme(
         posterior = [
             rng.dirichlet(data.values[i] + pseudocount) for i in range(data.shape[0])
         ]
-        dir_table = pd.DataFrame(clr(posterior), index=data.index, columns=data.columns)
+        dir_table = pd.DataFrame(
+            posterior, index=data.index, columns=data.columns
+        ).apply(clr, axis=1)
+        dir_table = pd.DataFrame(
+            dir_table.tolist(), index=dir_table.index, columns=data.columns
+        )
 
         ires = _lme_call(
             formula=formula,
