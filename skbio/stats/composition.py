@@ -2156,32 +2156,47 @@ def _lme_call(
                     CI975: _LME_975,
                     PVALUE: results.pvalues[var_name],
                 }
-            except Exception:
-                measures = {
-                    LOG2FC: np.nan,
-                    CI25: np.nan,
-                    CI975: np.nan,
-                }
-                mapping = {
-                    LOG2FC: _LME_COEF,
-                    CI25: _LME_25,
-                    CI975: _LME_975,
-                }
+            except Exception as e:
+                if type(e) is not ValueError:
+                    print("Something went really wrong, details below: ")
+                    print(type(e))
+                    print(e)
 
-                if len(summary.tables) >= 2:
-                    table = summary.tables[1]
+                    individual_results = {
+                        FEATUREID: response_var,
+                        COVARIATE: var_name,
+                        LOG2FC: np.nan,
+                        CI25: np.nan,
+                        CI975: np.nan,
+                        PVALUE: np.nan,
+                    }
 
-                    for key_final, key_table in mapping.items():
-                        if key_table in table and var_name in table[key_table]:
-                            measures[key_final] = table[key_table][var_name]
+                else:
+                    measures = {
+                        LOG2FC: np.nan,
+                        CI25: np.nan,
+                        CI975: np.nan,
+                    }
+                    mapping = {
+                        LOG2FC: _LME_COEF,
+                        CI25: _LME_25,
+                        CI975: _LME_975,
+                    }
 
-                individual_results = {
-                    "FeatureID": response_var,
-                    "Covariate": var_name,
-                    "pvalue": results.pvalues[var_name],
-                }
+                    if len(summary.tables) >= 2:
+                        table = summary.tables[1]
 
-                individual_results.update(measures)
+                        for key_final, key_table in mapping.items():
+                            if key_table in table and var_name in table[key_table]:
+                                measures[key_final] = table[key_table][var_name]
+
+                    individual_results = {
+                        "FeatureID": response_var,
+                        "Covariate": var_name,
+                        "pvalue": results.pvalues[var_name],
+                    }
+
+                    individual_results.update(measures)
 
             output.append(individual_results)
 
