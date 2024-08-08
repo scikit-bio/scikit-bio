@@ -9,6 +9,20 @@
 ### Performance enhancements
 
 * Improved the performance of tree traversal algorithms ([#2093](https://github.com/scikit-bio/scikit-bio/pull/2093)).
+* Further improved the caching mechanism of `TreeNode`. Specifically: 1. Node attribute caches are only registered at the root node, which improves memory efficiency. 2. ``clear_caches`` can be customized to clear node attribute and/or lookup caches, or specified attribute caches ([#2099](https://github.com/scikit-bio/scikit-bio/pull/2099)).
+* Expanded the functionality of `TreeNode.cache_attr`. It can now take a custom function to combine children and self attributes. This makes it possible to cache multiple useful clade properties such as node count and total branch length. Also enriched the method's docstring to provide multiple examples of caching clade properties ([#2099](https://github.com/scikit-bio/scikit-bio/pull/2099)).
+
+### Bug fixes
+
+* Fixed a bug in `TreeNode.find_all` which does not look for other nodes with the same name if a `TreeNode` instance is provided, as in contrast to what the documentation claims ([#2099](https://github.com/scikit-bio/scikit-bio/pull/2099)).
+
+### Miscellaneous
+
+* Renamed `TreeNode.invalidate_caches` as `clear_caches`. The old name is preserved as an alias ([#2099](https://github.com/scikit-bio/scikit-bio/pull/2099)).
+
+### Deprecated functionality
+
+* Method `Treenode.create_caches` is deprecated. It will become a private member in version 0.7.0 ([#2099](https://github.com/scikit-bio/scikit-bio/pull/2099)).
 
 
 ## Version 0.6.2
@@ -44,6 +58,7 @@ during the rerooting operation. The default behavior is preserved but is subject
 * Fixed the Zenodo link in the README to always point to the most recent version ([#2078](https://github.com/scikit-bio/scikit-bio/pull/2078)).
 
 ### Miscellaneous
+
 * Added statsmodels as a dependency of scikit-bio. It replaces some of the from-scratch statistical analyses in scikit-bio, including Welch's t-test (with confidence intervals), Benjamini-Hochberg FDR correction, and Holm-Bonferroni FDR correction ([#2049](https://github.com/scikit-bio/scikit-bio/pull/2049), ([#2063](https://github.com/scikit-bio/scikit-bio/pull/2063))).
 
 ### Deprecated functionality

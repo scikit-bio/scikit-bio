@@ -26,6 +26,7 @@ extensions = [
     'sphinx_design',
     'sphinx_copybutton',
     'sphinxcontrib.youtube',
+    'sphinx_sitemap',
 ]
 
 root_doc = 'index'
@@ -38,6 +39,8 @@ exclude_patterns = ['_build', 'Thumbs.db', '.DS_Store']
 html_title = project
 html_short_title = project
 html_baseurl = 'https://scikit.bio'
+sitemap_url_scheme = '/{link}'
+
 html_logo = '_static/img/logo.svg'
 html_favicon = '_static/favicon.ico'
 

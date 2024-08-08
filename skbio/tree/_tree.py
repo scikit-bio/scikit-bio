@@ -9,7 +9,7 @@
 from warnings import warn, simplefilter
 from operator import or_, itemgetter
 from copy import copy, deepcopy
-from itertools import combinations
+from itertools import chain, combinations
 from functools import reduce
 from collections import defaultdict, deque
 
@@ -34,17 +34,22 @@ from skbio.util._warning import _warn_deprecated
 def distance_from_r(m1, m2):
     r"""Estimate distance as (1-r)/2: neg correl = max distance.
 
+    .. deprecated:: 0.6.3
+        This function will become a private member in version 0.7.0. It has never
+        been exposed in the documentation, and it has a very specific usage in this
+        module.
+
     Parameters
     ----------
     m1 : DistanceMatrix
-        a distance matrix to compare
+        First distance matrix to compare.
     m2 : DistanceMatrix
-        a distance matrix to compare
+        Second distance matrix to compare.
 
     Returns
     -------
     float
-        The distance between m1 and m2
+        The distance between m1 and m2.
 
     """
     return correlation(m1.data.flat, m2.data.flat) / 2
@@ -82,7 +87,7 @@ class TreeNode(SkbioObject):
     """
 
     default_write_format = "newick"
-    _exclude_from_copy = set(["parent", "children", "_tip_cache", "_non_tip_cache"])
+    _exclude_from_copy = {"parent", "children", "_tip_cache", "_non_tip_cache"}
 
     def __init__(
         self, name=None, length=None, support=None, parent=None, children=None
@@ -154,20 +159,20 @@ class TreeNode(SkbioObject):
         return str("".join(self.write([])))
 
     def __iter__(self):
-        r"""Node iter iterates over the `children`."""
+        r"""Node iter iterates over the ``children``."""
         return iter(self.children)
 
     def __len__(self):
         return len(self.children)
 
     def __getitem__(self, i):
-        r"""Node delegates slicing to `children`."""
+        r"""Node delegates slicing to ``children``."""
         return self.children[i]
 
     def _adopt(self, node):
-        r"""Update `parent` references but does NOT update `children`."""
-        if node.parent is not None:
-            node.parent.remove(node)
+        r"""Update ``parent`` references but does NOT update ``children``."""
+        if (parent := node.parent) is not None:
+            parent.remove(node)
         node.parent = self
         return node
 
@@ -202,7 +207,7 @@ class TreeNode(SkbioObject):
         <BLANKLINE>
 
         """
-        self.invalidate_caches()
+        self.clear_caches()
         self.children.append(self._adopt(node))
 
     def extend(self, nodes):
@@ -233,7 +238,7 @@ class TreeNode(SkbioObject):
         <BLANKLINE>
 
         """
-        self.invalidate_caches()
+        self.clear_caches()
         self.children.extend([self._adopt(n) for n in nodes[:]])
 
     def insert(self, node, distance=None, branch_attrs=[]):
@@ -302,7 +307,7 @@ class TreeNode(SkbioObject):
         # position in the parent's list of children, instead of appending to
         # the end. Additionally, the current code performs cache invalidation
         # only once.
-        self.invalidate_caches()
+        self.clear_caches()
 
         # replace self with node in the parent's list of children
         node.parent = parent
@@ -376,7 +381,7 @@ class TreeNode(SkbioObject):
         The actual (and only) method that performs node removal.
 
         """
-        self.invalidate_caches()
+        self.clear_caches()
         node = self.children.pop(idx)
         node.parent = None
         return node
@@ -624,12 +629,12 @@ class TreeNode(SkbioObject):
         Parameters
         ----------
         deep : bool, optional
-            Whether perform a deep (``True``, default) or shallow (``False``)
-            copy of node attributes.
+            Whether perform a deep (True, default) or shallow (False) copy of node
+            attributes.
 
             .. versionadded:: 0.6.2
 
-            .. note:: The default value will be changed to ``False`` in 0.7.0.
+            .. note:: The default value will be changed to False in 0.7.0.
 
         Returns
         -------
@@ -702,30 +707,29 @@ class TreeNode(SkbioObject):
         Parameters
         ----------
         parent : TreeNode or None
-            Direction of walking (from parent to self). If specified, walking
-            to the parent will be prohibited.
+            Direction of walking (from parent to self). If specified, walking to the
+            parent will be prohibited.
 
         branch_attrs : set of str, optional
-            Attributes of ``TreeNode`` objects that should be considered as
-            branch attributes during the operation.
+            Attributes of ``TreeNode`` objects that should be considered as branch
+            attributes during the operation.
 
             .. versionadded:: 0.6.2
 
-            .. note:: ``name`` will be removed from the default in 0.7.0, as
-                it is usually considered as an attribute of the node instead of
-                the branch.
+            .. note:: ``name`` will be removed from the default in 0.7.0, as it is
+                usually considered as an attribute of the node instead of the branch.
 
         root_name : str or None, optional
             Name for the new root node, if it doesn't have one.
 
             .. versionadded:: 0.6.2
 
-            .. note:: This parameter will be removed in 0.7.0, and the root
-                node will not be renamed.
+            .. note:: This parameter will be removed in 0.7.0, and the root node will
+                not be renamed.
 
         deep : bool, optional
-            Whether perform a shallow (``False``, default) or deep (``True``)
-            copy of node attributes.
+            Whether perform a shallow (False, default) or deep (True) copy of node
+            attributes.
 
             .. versionadded:: 0.6.2
 
@@ -740,8 +744,8 @@ class TreeNode(SkbioObject):
 
         Warnings
         --------
-        The default behavior of ``unrooted_copy`` is subject to change in
-        0.7.0. The new default behavior can be achieved by specifying
+        The default behavior of ``unrooted_copy`` is subject to change in 0.7.0. The
+        new default behavior can be achieved by specifying
         ``branch_attrs={"length", "support"}, root_name=None``.
 
         See Also
@@ -939,8 +943,8 @@ class TreeNode(SkbioObject):
 
         Parameters
         ----------
-        tips : bool
-            If ``True``, only return the count of tips.
+        tips : bool, optional
+            If True, only return the count of tips (default: False).
 
         Returns
         -------
@@ -1007,7 +1011,7 @@ class TreeNode(SkbioObject):
         raise NotImplementedError()
 
     def subset(self):
-        r"""Return set of names that descend from specified node.
+        r"""Return set of tip names that descend from specified node.
 
         Get the set of `name` on tips that descend from this node.
 
@@ -1032,7 +1036,7 @@ class TreeNode(SkbioObject):
         return frozenset({i.name for i in self.tips()})
 
     def subsets(self):
-        r"""Return all sets of names that come from self and its descendants.
+        r"""Return all sets of tip names that come from self and its descendants.
 
         Compute all subsets of tip names over `self`, or, represent a tree as a
         set of nested sets.
@@ -1057,13 +1061,14 @@ class TreeNode(SkbioObject):
 
         """
         sets = []
+        sets_append = sets.append
         for i in self.postorder(include_self=False):
             if not i.children:
                 i.__leaf_set = frozenset([i.name])
             else:
                 leaf_set = reduce(or_, [c.__leaf_set for c in i.children])
                 if len(leaf_set) > 1:
-                    sets.append(leaf_set)
+                    sets_append(leaf_set)
                 i.__leaf_set = leaf_set
         return frozenset(sets)
 
@@ -1154,7 +1159,7 @@ class TreeNode(SkbioObject):
         chosen, other = bases[side], bases[1 - side]
 
         # remove chosen node and re-attach its children to root
-        root.invalidate_caches()
+        root.clear_caches()
         chosen.parent = None
         for child in chosen.children:
             child.parent = root
@@ -1210,22 +1215,21 @@ class TreeNode(SkbioObject):
                 Becomes optional.
 
         above : bool, float, or int, optional
-            Whether and where to insert a new root node. If ``False``
-            (default), the target node will serve as the root node. If
-            ``True``, a new root node will be created and inserted at the
-            midpoint of the branch connecting the target node and its parent.
-            If a number, the new root will be inserted at this distance from
-            the target node. The number ranges between 0 and branch length.
+            Whether and where to insert a new root node. If False (default), the target
+            node will serve as the root node. If True, a new root node will be created
+            and inserted at the midpoint of the branch connecting the target node and
+            its parent. If a number, the new root will be inserted at this distance
+            from the target node. The number ranges between 0 and branch length.
 
             .. versionadded:: 0.6.2
 
         reset : bool, optional
             Whether remove the original root of a rooted tree before performing
-            the rerooting operation. Default is ``False``.
+            the rerooting operation. Default is False.
 
             .. versionadded:: 0.6.2
 
-            .. note:: The default value will be set as ``True`` in 0.7.0.
+            .. note:: The default value will be set as True in 0.7.0.
 
         branch_attrs : iterable of str, optional
             Attributes of each node that should be considered as attributes of
@@ -1375,11 +1379,11 @@ class TreeNode(SkbioObject):
         ----------
         reset : bool, optional
             Whether remove the original root of a rooted tree before performing
-            the rerooting operation. Default is ``False``.
+            the rerooting operation. Default is False.
 
             .. versionadded:: 0.6.2
 
-            .. note:: The default value will be set as ``True`` in 0.7.0.
+            .. note:: The default value will be set as True in 0.7.0.
 
         branch_attrs : iterable of str, optional
             Attributes of each node that should be considered as attributes of
@@ -1530,24 +1534,24 @@ class TreeNode(SkbioObject):
         Parameters
         ----------
         outgroup : iterable of str
-            Taxon set to serve as outgroup. Must be a proper subset of taxa in
-            the tree. The tree will be rooted at the lowest common ancestor
-            (LCA) of the outgroup.
+            Taxon set to serve as outgroup. Must be a proper subset of taxa in the
+            tree. The tree will be rooted at the lowest common ancestor (LCA) of the
+            outgroup.
         above : bool, float, or int, optional
-            Whether and where to insert a new root node. If ``False``, the
-            LCA will serve as the root node. If ``True`` (default), a new root
-            node will be created and inserted at the midpoint of the branch
-            connecting the LCA and its parent (i.e., the midpoint between
-            outgroup and ingroup). If a number between 0 and branch length, the
-            new root will be inserted at this distance from the LCA.
+            Whether and where to insert a new root node. If False, the LCA will serve
+            as the root node. If True (default), a new root node will be created and
+            inserted at the midpoint of the branch connecting the LCA and its parent
+            (i.e., the midpoint between outgroup and ingroup). If a number between 0
+            and branch length, the new root will be inserted at this distance from the
+            LCA.
         reset : bool, optional
-            Whether remove the original root of a rooted tree before performing
-            the rerooting operation. Default is ``True``.
+            Whether remove the original root of a rooted tree before performing the
+            rerooting operation. Default is True.
         branch_attrs : iterable of str, optional
-            Attributes of each node that should be considered as attributes of
-            the branch connecting the node to its parent. This is important for
-            the correct rerooting operation. "length" and "support" will be
-            automatically included as they are always branch attributes.
+            Attributes of each node that should be considered as attributes of the
+            branch connecting the node to its parent. This is important for the correct
+            rerooting operation. "length" and "support" will be automatically included
+            as they are always branch attributes.
         root_name : str or None, optional
             Name for the root node, if it doesn't already have one.
 
@@ -1690,17 +1694,22 @@ class TreeNode(SkbioObject):
         return not self.children
 
     def is_root(self):
-        r"""Return `True` if the current is a root, i.e. has no `parent`.
+        r"""Check if the current node is the root of a tree.
 
         Returns
         -------
         bool
-            `True` if the node is the root
+            Whether the node is the root.
 
         See Also
         --------
         is_tip
         has_children
+
+        Notes
+        -----
+        A root is defined as a node that has no ``parent``. A tree has exactly one
+        root.
 
         Examples
         --------
@@ -1745,11 +1754,11 @@ class TreeNode(SkbioObject):
         Parameters
         ----------
         self_before : bool, optional
-            Whether include each node before its descendants (default: ``True``).
+            Whether include each node before its descendants (default: True).
         self_after : bool, optional
-            Whether include each node after its descendants (default: ``False``).
+            Whether include each node after its descendants (default: False).
         include_self : bool, optional
-            Include the initial node if ``True`` (default).
+            Include the initial node if True (default).
 
         Yields
         ------
@@ -1768,10 +1777,9 @@ class TreeNode(SkbioObject):
         Notes
         -----
         This is a depth-first search (DFS). ``self_before`` and ``self_after``
-        determine whether a node should be visited before and after traversing
-        its children. They are independent. If both ``True``, each internal
-        node (and root) will be visited twice. If neither is ``True``, only
-        tips will be returned.
+        determine whether a node should be visited before and after traversing its
+        children. They are independent. If both True, each internal node (and root)
+        will be visited twice. If neither is True, only tips will be returned.
 
         This method is a generalization of ``preorder``, ``postorder``,
         ``pre_and_postorder`` and ``tips``. The default mode
@@ -1819,7 +1827,7 @@ class TreeNode(SkbioObject):
         Parameters
         ----------
         include_self : bool, optional
-            Include the initial node if ``True`` (default).
+            Include the initial node if True (default).
 
         Yields
         ------
@@ -1878,7 +1886,7 @@ class TreeNode(SkbioObject):
         Parameters
         ----------
         include_self : bool, optional
-            Include the initial node if ``True`` (default).
+            Include the initial node if True (default).
 
         Yields
         ------
@@ -1967,7 +1975,7 @@ class TreeNode(SkbioObject):
         Parameters
         ----------
         include_self : bool, optional
-            Include the initial node if ``True`` (default).
+            Include the initial node if True (default).
 
         Yields
         ------
@@ -2061,7 +2069,7 @@ class TreeNode(SkbioObject):
         Parameters
         ----------
         include_self : bool, optional
-            Include the initial node if ``True`` (default).
+            Include the initial node if True (default).
 
         Yields
         ------
@@ -2119,7 +2127,7 @@ class TreeNode(SkbioObject):
         Parameters
         ----------
         include_self : bool, optional
-            Whether include the initial node if a tip (default: ``False``).
+            Whether include the initial node if it is a tip (default: False).
 
         Yields
         ------
@@ -2167,7 +2175,7 @@ class TreeNode(SkbioObject):
         Parameters
         ----------
         include_self : bool, optional
-            Whether include the initial node if not a tip (default: ``False``).
+            Whether include the initial node if it is not a tip (default: False).
 
         Yields
         ------
@@ -2207,111 +2215,360 @@ class TreeNode(SkbioObject):
             if not n.is_tip():
                 yield n
 
-    def invalidate_caches(self, attr=True):
-        r"""Delete lookup and attribute caches.
+    def clear_caches(self, attr=True, lookup=True):
+        r"""Delete node attribute and lookup caches of a tree.
+
+        .. versionchanged:: 0.6.3
+
+            Renamed from ``invalidate_caches``. The old name is preserved as an alias.
+            But it may be removed in a future version.
 
         Parameters
         ----------
-        attr : bool, optional
-            If ``True``, invalidate attribute caches created by
-            `TreeNode.cache_attr`.
+        attr : bool or str, optional
+            Whether delete attribute caches created by ``cache_attr`` (default: True).
+            One may instead provide an attribute name such that only this attribute
+            will be deleted.
+
+            .. versionchanged:: 0.6.3
+
+                Can provide a specific attribute name.
+
+        lookup : bool, optional
+            Whether delete lookup caches created during name searching (default: True).
+
+            .. versionadded:: 0.6.3
 
         See Also
         --------
-        create_caches
-        cache_attr
-        find
-
-        """
-        if not self.is_root():
-            self.root().invalidate_caches()
-        else:
-            if hasattr(self, "_tip_cache"):
-                delattr(self, "_tip_cache")
-            if hasattr(self, "_non_tip_cache"):
-                delattr(self, "_non_tip_cache")
-
-            if hasattr(self, "_registered_caches") and attr:
-                for node in self.traverse():
-                    for cache in self._registered_caches:
-                        if hasattr(node, cache):
-                            delattr(node, cache)
-
-    def create_caches(self):
-        r"""Construct an internal lookup table to facilitate searching by name.
-
-        Raises
-        ------
-        DuplicateNodeError
-            The tip cache requires that names are unique (with the exception of
-            names that are ``None``).
-
-        See Also
-        --------
-        invalidate_caches
         cache_attr
         find
 
         Notes
         -----
-        This method will not cache nodes whose name is ``None``. This method
-        will raise ``DuplicateNodeError`` if a name conflict in the tips
-        is discovered, but will not raise if on internal nodes. This is
-        because, in practice, the tips of a tree are required to be unique
-        while no such requirement holds for internal nodes.
+        This method may be called from any node within a tree. The caches, which were
+        attached to the root node of the tree, will be deleted.
+
+        This method will silently skip if the specified caches do not exist.
 
         """
-        if not self.is_root():
-            self.root().create_caches()
-        else:
-            if hasattr(self, "_tip_cache") and hasattr(self, "_non_tip_cache"):
-                return
+        tree = self.root()
 
-            self.invalidate_caches(attr=False)
+        # delete attribute caches
+        if attr and hasattr(tree, "_registered_caches"):
+            attrs = tree._registered_caches
 
-            tip_cache = {}
-            non_tip_cache = defaultdict(list)
-
-            for node in self.postorder():
-                name = node.name
-
-                if name is None:
-                    continue
-
-                if node.is_tip():
-                    if name in tip_cache:
-                        raise DuplicateNodeError(
-                            f"Tip with name '{name}' already exists."
-                        )
-
-                    tip_cache[name] = node
+            # delete a single attribute
+            if isinstance(attr, str):
+                if attr not in attrs:
+                    return
+                for node in tree.traverse():
+                    if hasattr(node, attr):
+                        delattr(node, attr)
+                if len(attrs) == 1:
+                    delattr(tree, "_registered_caches")
                 else:
-                    non_tip_cache[name].append(node)
+                    attrs.remove(attr)
 
-            self._tip_cache = tip_cache
-            self._non_tip_cache = non_tip_cache
+            # delete all attributes
+            else:
+                for node in tree.traverse():
+                    for attr in attrs:
+                        if hasattr(node, attr):
+                            delattr(node, attr)
+                delattr(tree, "_registered_caches")
 
-    def find_all(self, name):
-        r"""Find all nodes that match `name`.
+        # delete lookup caches
+        if lookup:
+            for key in ("_tip_cache", "_non_tip_cache"):
+                if hasattr(tree, key):
+                    delattr(tree, key)
 
-        The first call to `find_all` will cache all nodes in the tree on the
-        assumption that additional calls to `find_all` will be made.
+    invalidate_caches = clear_caches  # alias; to be removed in a future version
+
+    def cache_attr(self, func, cache_attrname, cache_type=list, register=True):
+        r"""Cache attributes on nodes of the tree through a postorder traversal.
+
+        Parameters
+        ----------
+        func : callable
+            Function to calculate the attribute of the current node. The result will be
+            combined with the attributes of the previous nodes, if applicable.
+
+        cache_attrname : str
+            Name of the attribute to be attached to each node.
+
+        cache_type : {list, tuple, set, frozenset}, callable, or None
+            The type of the cache. Can be any of the four iterable types: list
+            (default), tuple, set, or frozenset. In these cases, combination of
+            attributes of the node's children and itself will be automated.
+
+            Or a custom function that takes two arguments: list of attributes of its
+            children, and attribute calculated from itself by ``func``, and returns the
+            combined attribute of the node.
+
+            Or None, in which case combination of attributes of children and self
+            will not take place, unless explicitly customized within ``func``.
+
+            .. versionchanged:: 0.6.3
+
+                Tuple, custom function and None were added to the options.
+
+        register : bool, optional
+            Whether register the attribute name as a cache of the tree, such that the
+            attributes will be deleted from all nodes when the tree is manipulated or
+            the ``clear_caches`` method is explicitly invoked. Default is True.
+
+            .. versionadded:: 0.6.3
+
+        Notes
+        -----
+        This method provides an efficient interface to assign a custom attribute to
+        every node of a tree through one postorder travesal. It is particularly useful
+        if one needs to frequently look up attributes that would normally require one
+        traversal of the tree per lookup. The assigned attributes may be automatically
+        deleted when the tree is manipulated.
+
+        Raises
+        ------
+        TypeError
+            If ``cache_type`` is invalid.
+
+        Examples
+        --------
+        This method facilitates evaluation for various useful node properties. Some
+        representative examples are provided below.
+
+        >>> from skbio import TreeNode
+        >>> tree = TreeNode.read(["((a:1.2,b:1.6)c:0.3,(d:0.8,e:1.0)f:0.6)g;"])
+        >>> print(tree.ascii_art())
+                            /-a
+                  /c-------|
+                 |          \-b
+        -g-------|
+                 |          /-d
+                  \f-------|
+                            \-e
+
+        Cache a list of all descending tip names on each node. This faciliates the
+        assignment of taxon set under each clade in the tree. It resembles but is more
+        efficient than calling ``subset`` multiple times.
+
+        >>> f = lambda n: [n.name] if n.is_tip() else []
+        >>> tree.cache_attr(f, 'tip_names')
+        >>> for node in tree.traverse(include_self=True):
+        ...     print(f"Node: {node.name}, tips: {node.tip_names}")
+        Node: g, tips: ['a', 'b', 'd', 'e']
+        Node: c, tips: ['a', 'b']
+        Node: a, tips: ['a']
+        Node: b, tips: ['b']
+        Node: f, tips: ['d', 'e']
+        Node: d, tips: ['d']
+        Node: e, tips: ['e']
+
+        Cache the number of nodes per clade. The function ``sum`` is used in place of
+        cache type such that the count will be accumulated. This resembles but is more
+        efficient than calling ``count`` multiple times.
+
+        >>> f = lambda n: 1
+        >>> tree.cache_attr(f, 'node_count', sum)
+        >>> tree.node_count
+        7
+
+        Cache the sum of branch lengths per clade. This resembles but is more efficient
+        than calling ``descending_branch_length`` multiple times. Note: the result
+        includes the stem branch of each clade. One needs to subtract ``length`` from
+        each value in order to match the result of ``descending_branch_length``.
+
+        >>> f = lambda n: n.length or 0.0
+        >>> tree.cache_attr(f, 'total_length', sum)
+        >>> tree.total_length
+        5.5
+
+        Cache the accumulative distances from all tips to the common ancestor of each
+        clade. This allows one to measure the depth of a clade from the surface (tips)
+        of a tree. One can further apply calculations like mean and standard deviation
+        to the results. This is more efficient than calling ``accumulate_to_ancestor``
+        multiple times. Also note that the result includes the stem branch of each
+        clade.
+
+        >>> import numpy as np
+        >>> dist_f = lambda n: np.array(n.length or 0.0, ndmin=1)
+        >>> comb_f = lambda prev, curr: np.concatenate(prev) + curr if prev else curr
+        >>> tree.cache_attr(dist_f, 'accu_dists', comb_f)
+        >>> tree.accu_dists
+        array([ 1.5,  1.9,  1.4,  1.6])
+
+        """
+        if cache_type in (set, frozenset):
+
+            def combine_f(prev, curr):
+                return cache_type().union(*prev + [curr])
+
+        elif cache_type in (list, tuple):
+
+            def combine_f(prev, curr):
+                return cache_type(chain.from_iterable(prev + [curr]))
+
+        elif callable(cache_type) or cache_type is None:
+            combine_f = cache_type
+        else:
+            raise TypeError("Cache type is invalid.")
+
+        # register attribute name as a cache
+        if register:
+            tree = self.root()
+            if not hasattr(tree, "_registered_caches"):
+                tree._registered_caches = set()
+            tree._registered_caches.add(cache_attrname)
+
+        # traverse tree and assign attributes
+        if combine_f is not None:
+            for node in self.postorder(include_self=True):
+                prev_attrs = [getattr(c, cache_attrname) for c in node.children]
+                curr_attr = func(node)
+                setattr(node, cache_attrname, combine_f(prev_attrs, curr_attr))
+        else:
+            for node in self.postorder(include_self=True):
+                setattr(node, cache_attrname, func(node))
+
+    def create_caches(self):
+        r"""Construct an internal lookup table to facilitate searching by name.
+
+        .. deprecated:: 0.6.3
+            This method will become a private member in version 0.7.0. It is meant to
+            be called automatically by ``find`` and ``find_all``, and it does not make
+            any public-facing effect.
+
+        Raises
+        ------
+        DuplicateNodeError
+            If there are duplicate tip names.
+
+        See Also
+        --------
+        clear_caches
+        cache_attr
+        find
+
+        Notes
+        -----
+        This method is automatically called during the first search in a tree (methods
+        ``find`` and ``find_all``). After that, subsequent searches will utilize the
+        constructed lookup table, until it is deleted.
+
+        This method may be called from any node within a tree. The lookup table will be
+        attached to the root node of the tree.
+
+        This method will not cache nodes whose name is ``None``. This method will
+        raise an error if a name conflict in the tips is discovered, but will not raise
+        if on internal nodes. This is because, in practice, the tips of a tree are
+        required to be unique while no such requirement holds for internal nodes.
+
+        """
+        tree = self.root()
+        if hasattr(tree, "_tip_cache") and hasattr(tree, "_non_tip_cache"):
+            return
+
+        tip_cache, non_tip_cache = {}, {}
+        non_tip_cache_setdefault = non_tip_cache.setdefault
+        for node in tree.postorder():
+            if (name := node.name) is None:
+                continue
+            if node.is_tip():
+                if name in tip_cache:
+                    raise DuplicateNodeError(f"Duplicate tip name '{name}' found.")
+                tip_cache[name] = node
+            else:
+                non_tip_cache_setdefault(name, []).append(node)
+
+        tree._tip_cache = tip_cache
+        tree._non_tip_cache = non_tip_cache
+
+    def find(self, name):
+        r"""Find a node by name.
 
         Parameters
         ----------
         name : TreeNode or str
-            The name or node to find. If `name` is `TreeNode` then all other
-            nodes with the same name will be returned.
+            The name of the node to find. If a ``TreeNode`` object is provided,
+            then it is simply returned.
+
+        Returns
+        -------
+        TreeNode
+            The found node.
 
         Raises
         ------
         MissingNodeError
-            Raises if the node to be searched for is not found
+            If the node to be searched for is not found.
+
+        See Also
+        --------
+        find_all
+        find_by_id
+        find_by_func
+
+        Notes
+        -----
+        ``find`` will first attempt to find the node in the tips. If it cannot find a
+        corresponding tip, then it will search through the internal nodes of the tree.
+        In practice, phylogenetic trees and other common trees in biology do not have
+        unique internal node names. As a result, this find method will only return the
+        first occurrence of an internal node encountered on a postorder traversal of
+        the tree.
+
+        The first call to ``find`` will cache all nodes in the tree on the assumption
+        that additional calls to ``find`` will be made.
+
+        Examples
+        --------
+        >>> from skbio import TreeNode
+        >>> tree = TreeNode.read(["((a,b)c,(d,e)f);"])
+        >>> print(tree.find('c').name)
+        c
+
+        """
+        tree = self.root()
+
+        # if what is being passed in looks like a node, just return it
+        if isinstance(name, tree.__class__):
+            return name
+
+        # create lookup table if not already
+        tree.create_caches()
+
+        # look up name in tips
+        node = tree._tip_cache.get(name, None)
+        if node is not None:
+            return node
+
+        # look up name in non-tips
+        node = tree._non_tip_cache.get(name, [None])[0]
+        if node is not None:
+            return node
+
+        raise MissingNodeError(f"Node '{name}' is not found.")
+
+    def find_all(self, name):
+        r"""Find all nodes that match a given name.
+
+        Parameters
+        ----------
+        name : TreeNode or str
+            The name or node to find. If a ``TreeNode`` object is provided, all nodes
+            with the same name will be returned.
 
         Returns
         -------
         list of TreeNode
-            The nodes found
+            The found nodes.
+
+        Raises
+        ------
+        MissingNodeError
+            If the node to be searched for is not found.
 
         See Also
         --------
@@ -2319,10 +2576,31 @@ class TreeNode(SkbioObject):
         find_by_id
         find_by_func
 
+        Notes
+        -----
+        All internal nodes (including root) and tips with the given name will be
+        returned, with the former placed before the latter in the returned list.
+
+        The first call to ``find_all`` will cache all nodes in the tree on the
+        assumption that additional calls to ``find_all`` will be made.
+
         Examples
         --------
         >>> from skbio.tree import TreeNode
         >>> tree = TreeNode.read(["((a,b)c,(d,e)d,(f,g)c);"])
+        >>> print(tree.ascii_art())
+                            /-a
+                  /c-------|
+                 |          \-b
+                 |
+                 |          /-d
+        ---------|-d-------|
+                 |          \-e
+                 |
+                 |          /-f
+                  \c-------|
+                            \-g
+
         >>> for node in tree.find_all('c'):
         ...     print(node.name, node.children[0].name, node.children[1].name)
         c a b
@@ -2335,116 +2613,48 @@ class TreeNode(SkbioObject):
         <BLANKLINE>
 
         """
-        root = self.root()
-
-        # if what is being passed in looks like a node, just return it
-        if isinstance(name, root.__class__):
-            return [name]
-
-        root.create_caches()
-
-        tip = root._tip_cache.get(name, None)
-        nodes = root._non_tip_cache.get(name, [])
-
-        nodes.append(tip) if tip is not None else None
-
+        tree = self.root()
+        if isinstance(name, tree.__class__):
+            name = name.name
+        tree.create_caches()
+        tip = tree._tip_cache.get(name, None)
+        nodes = tree._non_tip_cache.get(name, [])
+        if tip is not None:
+            nodes.append(tip)
         if not nodes:
-            raise MissingNodeError(f"Node '{name}' is not in self.")
+            raise MissingNodeError(f"Node '{name}' is not found.")
         else:
             return nodes
 
-    def find(self, name):
-        r"""Find a node by name.
-
-        Parameters
-        ----------
-        name : TreeNode or str
-            The name of the node to find. If a ``TreeNode`` object is provided,
-            then it is simply returned.
-
-        Raises
-        ------
-        MissingNodeError
-            Raises if the node to be searched for is not found.
-
-        Returns
-        -------
-        TreeNode
-            The found node.
-
-        See Also
-        --------
-        find_all
-        find_by_id
-        find_by_func
-
-        Notes
-        -----
-        The first call to ``find`` will cache all nodes in the tree on the
-        assumption that additional calls to ``find`` will be made.
-
-        ``find`` will first attempt to find the node in the tips. If it cannot
-        find a corresponding tip, then it will search through the internal
-        nodes of the tree. In practice, phylogenetic trees and other common
-        trees in biology do not have unique internal node names. As a result,
-        this find method will only return the first occurrence of an internal
-        node encountered on a postorder traversal of the tree.
-
-        Examples
-        --------
-        >>> from skbio import TreeNode
-        >>> tree = TreeNode.read(["((a,b)c,(d,e)f);"])
-        >>> print(tree.find('c').name)
-        c
-
-        """
-        root = self.root()
-
-        # if what is being passed in looks like a node, just return it
-        if isinstance(name, root.__class__):
-            return name
-
-        root.create_caches()
-        node = root._tip_cache.get(name, None)
-
-        if node is None:
-            node = root._non_tip_cache.get(name, [None])[0]
-
-        if node is None:
-            raise MissingNodeError("Node %s is not in self" % name)
-        else:
-            return node
-
     def find_by_id(self, node_id):
-        r"""Find a node by `id`.
+        r"""Find a node by ID.
 
         This search method is based from the root.
 
         Parameters
         ----------
         node_id : int
-            The `id` of a node in the tree
+            The ID of a node in the tree.
 
         Returns
         -------
         TreeNode
-            The tree node with the matching id
-
-        Notes
-        -----
-        This method does not cache id associations. A full traversal of the
-        tree is performed to find a node by an id on every call.
+            The node with the matching ID.
 
         Raises
         ------
         MissingNodeError
-            This method will raise if the `id` cannot be found
+            If the ID cannot be found.
 
         See Also
         --------
+        assign_ids
         find
-        find_all
-        find_by_func
+
+        Notes
+        -----
+        This method does not cache ID associations. A full traversal of the
+        tree is performed to find a node by an ID on every call.
 
         Examples
         --------
@@ -2454,21 +2664,11 @@ class TreeNode(SkbioObject):
         d
 
         """
-        # if this method gets used frequently, then we should cache by ID
-        # as well
-        root = self.root()
-        root.assign_ids()
-
-        node = None
-        for n in self.traverse(include_self=True):
-            if n.id == node_id:
-                node = n
-                break
-
-        if node is None:
-            raise MissingNodeError("ID %d is not in self" % node_id)
-        else:
-            return node
+        self.root().assign_ids()
+        for node in self.traverse(include_self=True):
+            if node.id == node_id:
+                return node
+        raise MissingNodeError(f"ID {node_id} is not in self.")
 
     def find_by_func(self, func):
         r"""Find all nodes given a function.
@@ -2484,7 +2684,7 @@ class TreeNode(SkbioObject):
         Yields
         ------
         TreeNode
-            Node found by `func`.
+            The found node.
 
         See Also
         --------
@@ -2527,9 +2727,7 @@ class TreeNode(SkbioObject):
         result = []
         curr = self
         while not curr.is_root():
-            result.append(curr.parent)
-            curr = curr.parent
-
+            result.append((curr := curr.parent))
         return result
 
     def root(self):
@@ -2863,11 +3061,10 @@ class TreeNode(SkbioObject):
 
         Notes
         -----
-        If ``allow_empty`` is ``True`` and the root node does not have a name,
-        then that name will not be included. This is because it is common to
-        have multiple domains represented in the taxonomy, which would result
-        in a root node that does not have a name and does not make sense to
-        represent in the output.
+        If ``allow_empty`` is True and the root node does not have a name, that name
+        will not be included. This is because it is common to have multiple domains
+        represented in the taxonomy, which would result in a root node that does not
+        have a name and does not make sense to represent in the output.
 
         Examples
         --------
@@ -2904,6 +3101,8 @@ class TreeNode(SkbioObject):
         self.assign_ids()
         seen = set()
         lineage = []
+        lineage_pop = lineage.pop
+        lineage_append = lineage.append
 
         # visit internal nodes while traversing out to the tips, and on the
         # way back up
@@ -2920,9 +3119,9 @@ class TreeNode(SkbioObject):
                         continue
 
                 if node.id in seen:
-                    lineage.pop(-1)
+                    lineage_pop()
                 else:
-                    lineage.append(node.name)
+                    lineage_append(node.name)
                     seen.add(node.id)
 
     def to_array(self, attrs=None, nan_length_value=None):
@@ -3706,7 +3905,7 @@ class TreeNode(SkbioObject):
         return id_index, child_index
 
     def assign_ids(self):
-        """Assign topologically stable unique ids to self.
+        """Assign topologically stable unique IDs to self.
 
         Following the call, all nodes in the tree will have their id
         attribute set.
@@ -3784,78 +3983,6 @@ class TreeNode(SkbioObject):
                 for n in self.postorder(include_self=False)
                 if n.length is not None
             )
-
-    def cache_attr(self, func, cache_attrname, cache_type=list):
-        """Cache attributes on internal nodes of the tree.
-
-        Parameters
-        ----------
-        func : function
-            func will be provided the node currently being evaluated and must
-            return a list of item (or items) to cache from that node or an
-            empty list.
-        cache_attrname : str
-            Name of the attribute to decorate on containing the cached values
-        cache_type : {set, frozenset, list}
-            The type of the cache
-
-        Notes
-        -----
-        This method is particularly useful if you need to frequently look up
-        attributes that would normally require a traversal of the tree.
-
-        WARNING: any cache created by this method will be invalidated if the
-        topology of the tree changes (e.g., if `TreeNode.invalidate_caches` is
-        called).
-
-        Raises
-        ------
-        TypeError
-            If an cache_type that is not a `set` or a `list` is specified.
-
-        Examples
-        --------
-        Cache the tip names of the tree on its internal nodes
-
-        >>> from skbio import TreeNode
-        >>> tree = TreeNode.read(["((a,b,(c,d)e)f,(g,h)i)root;"])
-        >>> f = lambda n: [n.name] if n.is_tip() else []
-        >>> tree.cache_attr(f, 'tip_names')
-        >>> for n in tree.traverse(include_self=True):
-        ...     print("Node name: %s, cache: %r" % (n.name, n.tip_names))
-        Node name: root, cache: ['a', 'b', 'c', 'd', 'g', 'h']
-        Node name: f, cache: ['a', 'b', 'c', 'd']
-        Node name: a, cache: ['a']
-        Node name: b, cache: ['b']
-        Node name: e, cache: ['c', 'd']
-        Node name: c, cache: ['c']
-        Node name: d, cache: ['d']
-        Node name: i, cache: ['g', 'h']
-        Node name: g, cache: ['g']
-        Node name: h, cache: ['h']
-
-        """
-        if cache_type in (set, frozenset):
-
-            def reduce_f(a, b):
-                return a | b
-
-        elif cache_type is list:
-
-            def reduce_f(a, b):
-                return a + b
-
-        else:
-            raise TypeError("Only list, set and frozenset are supported.")
-
-        for node in self.postorder(include_self=True):
-            if not hasattr(node, "_registered_caches"):
-                node._registered_caches = set()
-            node._registered_caches.add(cache_attrname)
-
-            cached = [getattr(c, cache_attrname) for c in node.children]
-            cached.append(cache_type(func(node)))
-            setattr(node, cache_attrname, reduce(reduce_f, cached))
 
     def shuffle(self, k=None, names=None, shuffle_f=np.random.shuffle, n=1):
         """Yield trees with shuffled tip names.
@@ -3940,7 +4067,7 @@ class TreeNode(SkbioObject):
 
         # Since the names are being shuffled, the association between ID and
         # name is no longer reliable
-        self.invalidate_caches()
+        self.clear_caches()
 
         counter = 0
         while counter < n:
@@ -4096,9 +4223,9 @@ class TreeNode(SkbioObject):
 
         Parameters
         ----------
-        func : function
-            a function that accepts a TreeNode and returns `True` or `False`,
-            where `True` indicates the node is to be unpacked
+        func : callable
+            A function that accepts a ``TreeNode`` and returns True or False, where
+            True indicates the node is to be unpacked.
 
         See Also
         --------
