@@ -268,7 +268,7 @@ def phydiv(
         Whether branch lengths should be weighted by the relative abundance of taxa
         descending from the branch (default: False). A float within [0, 1] indicates
         the degree of partial-weighting (0: unweighted, 1: fully-weighted).
-    validate: bool, optional
+    validate : bool, optional
         Whether validate the input data. See :func:`faith_pd` for details.
     otu_ids : list, np.array
         Alias of ``taxa`` for backward compatibility. Deprecated and to be removed in a
