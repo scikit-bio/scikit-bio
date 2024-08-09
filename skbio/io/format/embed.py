@@ -226,17 +226,21 @@ def _objects_to_embed(objs, fh, include_embedding_pointer=True):
                 h5grp.attrs["dim"] = emb.shape[1]
 
             # resize if necessary
-            if i > 0:
+            if i > 0: # we don't need to resize for the first object
                 if include_embedding_pointer:
-                    if (len(arr) + idptr_fh[i - 1]) > max_idsize or (
-                        emb.shape[0] + embptr_fh[i - 1]
-                    ) > max_embsize:
-                        max_idsize = ceil(len(arr) + idptr_fh[i - 1]) * resize_by
-                        max_embsize = ceil(emb.shape[0] + embptr_fh[i - 1]) * resize_by
+                    # if (new ID/embs + old ID/embs) > max_size
+                    if (len(arr) + idptr_fh[i - 1]) >= max_idsize or (
+                        emb.shape[0] + embptr_fh[i - 1]) >= max_embsize or (
+                        i >= len(idptr_fh) or ( # check array len
+                        i >= embptr_fh.shape[0])):
+                        max_idsize = ceil((len(arr)+idptr_fh[i-1])*resize_by)
+                        max_embsize = ceil((emb.shape[0]+embptr_fh[i-1])*resize_by)
+                        
                         resize = True
-                else:
+                else: # only check ID size
+                    # if (new ID + old IDs) > max_idsize
                     if len(arr) + idptr_fh[i - 1] > max_idsize:
-                        max_idsize = ceil(len(arr) + idptr_fh[i - 1] * resize_by)
+                        max_idsize = ceil((len(arr) + idptr_fh[i - 1] * resize_by))
                         resize = True
 
             # store the pointers that keep track of the start and
