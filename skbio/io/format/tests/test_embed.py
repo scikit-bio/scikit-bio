@@ -10,6 +10,8 @@ from pathlib import Path
 import tempfile
 from unittest.mock import MagicMock
 
+import os
+import re
 import h5py
 import numpy as np
 
@@ -27,59 +29,26 @@ from skbio.io.format.embed import (
     _protein_to_vector, _vector_to_protein
 )
 
-from transformers import T5Tokenizer, T5EncoderModel
-from tqdm import tqdm
-import torch
-import re
-
 class TestWriteError(TestCase):
     def test_write_function(self):
-        model_name = "Rostlab/prot_t5_xl_uniref50"
-        tokenizer_name = "Rostlab/prot_t5_xl_uniref50"
-        sequence_list = ["MKTVRQERLKSIVRILERSKEPVSGAQLAEELSVSRQVIVQDIAYLRSLGYNIVATPRGYVLAGG", "MKTVRQERLKSIVRILERSKEPVSGAQLAEELSVSRQVIVQDIAYLRSLGYNIVATPRGYVLAGG"]
-
-        # Mock implementation of to_embeddings function
-        def mock_load_protein_t5_embedding(sequence, model_name, tokenizer_name):   
-            tokenizer = T5Tokenizer.from_pretrained(tokenizer_name)
-            model = T5EncoderModel.from_pretrained(model_name)
-            
-            # convert sequence to formatted list of strings
-            seq_list = []
-            seq_list.append(sequence)
-            seqs = [" ".join(list(re.sub(r"[UZOB]", "X", str(seq)))) for seq in seq_list]
-            
-            # tokenize sequences and pad up to the longest sequence in the batch
-            ids = tokenizer.batch_encode_plus(seqs, add_special_tokens=True, padding="longest")
-            input_ids = torch.tensor(ids['input_ids'])
-            attention_mask = torch.tensor(ids['attention_mask'])
-            
-            # generate embeddings
-            with torch.no_grad():
-                embedding_repr = model(input_ids=input_ids,attention_mask=attention_mask)
-            emb = embedding_repr.last_hidden_state[0, :-1, :].squeeze().detach().cpu().numpy()
-            
-            return ProteinEmbedding(emb, sequence)
-
-        # Mock implementation of load_protein_t5_embedding function
-        def mock_to_embeddings(sequences : list, model_name, tokenizer_name):
-            # Embed the random/inputted protein sequence(s)
-            for sequence in tqdm(sequences):
-                test_embed = load_protein_t5_embedding(str(sequence), model_name, tokenizer_name)
-                #reshape embeddings to fit the skbio format
-                yield test_embed
-
-        # Replace the to_embeddings and load_protein_t5_embedding functions with mock implementations
-        to_embeddings = MagicMock(side_effect=mock_to_embeddings)
-        load_protein_t5_embedding = MagicMock(side_effect=mock_load_protein_t5_embedding)
-
-        model_name = "Rostlab/prot_t5_xl_uniref50"
-        tokenizer_name = "Rostlab/prot_t5_xl_uniref50"
-
-        # Parse bagel.fa
-        sequence_list = read("data/pdb_hits.fa", format='fasta')
-        embed_list = to_embeddings(sequence_list, model_name, tokenizer_name)
-        write(embed_list, format='embed', into='data/test_pdb_hits.h5')
-        # Add assertions to check if the file is created and contains the expected data      
+        embeddings = np.load('data/tiny_embedding_file.npz')
+        emb_list = embeddings.values() 
+        sequences = np.loadtxt('data/pdb_hits.txt', dtype=str)
+        seq_list = [" ".join(list(re.sub(r"[UZOB]", "X", str(seq)))) for seq in sequences]   
+        
+        embed_list = []
+        for emb, seq in zip(emb_list, seq_list):
+            embed_list.append(ProteinEmbedding(embedding=emb, sequence=seq))
+        
+        # create generator object for write testing
+        embed_list = (emb for emb in embed_list)
+        
+        write(embed_list, format='embed', into='data/test_pdb_hits.h5')     
+        
+    def tearDown(self):
+        # Clean up: remove the created file
+        if os.path.exists('data/test_pdb_hits.h5'):
+            os.remove('data/test_pdb_hits.h5')
 
 
 class EmbedTests(TestCase):
@@ -91,13 +60,13 @@ class EmbedTests(TestCase):
                 (
                     np.load(get_data_path('embed1.txt.npy')),
                     Protein(('IGKEEIQQRLAQFVDHWKELKQLAAARGQRL'
-                             'EESLEYQQFVANVEEEEAWINEKMTLVASED'),
+                            'EESLEYQQFVANVEEEEAWINEKMTLVASED'),
                             metadata={"id": "seq1"})
-                 ),
+                ),
                 (
                     np.load(get_data_path('embed2.txt.npy')),
                     Protein(('QQNKELNFKLREKQNEIFELKKIAETLRSKL'
-                             'EKYVDITKKLEDQNLNLQIKISDLEKKLSDA'),
+                            'EKYVDITKKLEDQNLNLQIKISDLEKKLSDA'),
                             metadata={"id": "seq2"})
                 )
             ]
@@ -145,13 +114,13 @@ class EmbedTests(TestCase):
             (
                 np.load(get_data_path('embed1.txt.npy')),
                 Protein(('IGKEEIQQRLAQFVDHWKELKQLAAARGQRL'
-                         'EESLEYQQFVANVEEEEAWINEKMTLVASED'),
+                        'EESLEYQQFVANVEEEEAWINEKMTLVASED'),
                         metadata={"id": "seq1"})
             ),
             (
                 np.load(get_data_path('embed2.txt.npy')),
                 Protein(('QQNKELNFKLREKQNEIFELKKIAETLRSKL'
-                         'EKYVDITKKLEDQNLNLQIKISDLEKKLSDA'),
+                        'EKYVDITKKLEDQNLNLQIKISDLEKKLSDA'),
                         metadata={"id": "seq2"})
             )
         ]
@@ -178,13 +147,13 @@ class VectorTests(TestCase):
                 (
                     np.random.randn(rk),
                     Protein(('IGKEEIQQRLAQFVDHWKELKQLAAARGQRL'
-                             'EESLEYQQFVANVEEEEAWINEKMTLVASED'),
+                            'EESLEYQQFVANVEEEEAWINEKMTLVASED'),
                             metadata={"id": "seq1"})
-                 ),
+                ),
                 (
                     np.random.randn(rk),
                     Protein(('QQNKELNFKLREKQNEIFELKKIAETLRSKL'
-                             'EKYVDITKKLEDQNLNLQIKISDLEKKLSDA'),
+                            'EKYVDITKKLEDQNLNLQIKISDLEKKLSDA'),
                             metadata={"id": "seq2"})
                 )
             ]

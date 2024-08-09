@@ -228,12 +228,13 @@ def _objects_to_embed(objs, fh, include_embedding_pointer=True):
             # resize if necessary
             if i > 0: # we don't need to resize for the first object
                 if include_embedding_pointer:
-                    # if (new ID + old IDs) > max_idsize or (new emb + old embs) > max_embsize
+                    # if (new ID/embs + old ID/embs) > max_size
                     if (len(arr) + idptr_fh[i - 1]) >= max_idsize or (
                         emb.shape[0] + embptr_fh[i - 1]) >= max_embsize or (
-                        i >= len(idptr_fh)):
-                        max_idsize = ceil((len(arr) + idptr_fh[i - 1]) * resize_by)
-                        max_embsize = ceil((emb.shape[0] + embptr_fh[i - 1]) * resize_by)
+                        i >= len(idptr_fh) or ( # check array len
+                        i >= embptr_fh.shape[0])):
+                        max_idsize = ceil((len(arr)+idptr_fh[i-1])*resize_by)
+                        max_embsize = ceil((emb.shape[0]+embptr_fh[i-1])*resize_by)
                         
                         resize = True
                 else: # only check ID size
@@ -288,8 +289,8 @@ def _objects_to_embed(objs, fh, include_embedding_pointer=True):
                     "Embedding dimension mismatch between objects. "
                     f"({embed_fh.shape}) and ({emb.shape})"
                 )
-                #if resize:
-                embed_fh.resize(max_embsize, axis=0)
+                if resize:
+                    embed_fh.resize(max_embsize, axis=0)
 
                 if include_embedding_pointer:
                     embed_fh[embptr_fh[i - 1] : embptr_fh[i]] = emb
