@@ -233,12 +233,13 @@ gff3 = create_format("gff3")
 @gff3.sniffer()
 def _gff3_sniffer(fh):
     # check the 1st real line is a valid ID line
-    if _too_many_blanks(fh, 5):
+    blanks, _ = _too_many_blanks(fh, 5)
+    if blanks:
         return False, {}
 
     try:
         line = next(_line_generator(fh, skip_blanks=True, strip=False))
-    except StopIteration:
+    except StopIteration as e:
         return False, {}
 
     if re.match(r"##gff-version\s+3", line):

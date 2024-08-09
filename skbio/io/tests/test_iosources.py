@@ -37,7 +37,6 @@ class TestIOSource(unittest.TestCase):
         with self.assertRaises(NotImplementedError):
             self.source.get_writer()
 
-
 class TestCompressor(TestIOSource):
     def setUp(self):
         super(TestCompressor, self).setUp()
