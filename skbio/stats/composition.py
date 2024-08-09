@@ -2138,7 +2138,12 @@ def _lme_call(
         # http://stackoverflow.com/a/22439820/1167475
         stats_formula = "%s ~ %s" % (response_var, formula)
         model = MixedLM.from_formula(
-            formula=stats_formula, data=data, groups=groups, **kwargs
+            formula=stats_formula,
+            data=data,
+            groups=groups,
+            re_formula=re_formula,
+            vc_formula=vc_formula,
+            **kwargs,
         )
 
         results = model.fit(reml=reml, method=method, **fit_kwargs)
@@ -2146,16 +2151,17 @@ def _lme_call(
 
         for var_name in _covariate_list:
             try:
-                _LME_COEF = float(summary.tables[1]["Coef."][var_name])
-                _LME_25 = float(summary.tables[1]["[0.025"][var_name])
-                _LME_975 = float(summary.tables[1]["0.975]"][var_name])
+                _lme_coef, _lme_25, _lme_975 = np.nan, np.nan, np.nan
+                _lme_coef = float(summary.tables[1]["Coef."][var_name])
+                _lme_25 = float(summary.tables[1]["[0.025"][var_name])
+                _lme_975 = float(summary.tables[1]["0.975]"][var_name])
 
                 individual_results = {
                     FEATUREID: response_var,
                     COVARIATE: var_name,
-                    LOG2FC: _LME_COEF,
-                    CI25: _LME_25,
-                    CI975: _LME_975,
+                    LOG2FC: _lme_coef,
+                    CI25: _lme_25,
+                    CI975: _lme_975,
                     PVALUE: results.pvalues[var_name],
                 }
             except Exception as e:
@@ -2180,9 +2186,9 @@ def _lme_call(
                         CI975: np.nan,
                     }
                     mapping = {
-                        LOG2FC: _LME_COEF,
-                        CI25: _LME_25,
-                        CI975: _LME_975,
+                        LOG2FC: _lme_coef,
+                        CI25: _lme_25,
+                        CI975: _lme_975,
                     }
 
                     if len(summary.tables) >= 2:
