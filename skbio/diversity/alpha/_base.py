@@ -29,7 +29,7 @@ def _validate_alpha(empty=None, cast_int=False):
         Return this value if set instead of calling the function when an input
         community is empty (i.e., no taxon, or all taxa have zero counts).
     cast_int : bool, optional
-        Cast values into integers, if not already. ``False`` by default.
+        Whether cast values into integers, if not already. Default is False.
 
     Returns
     -------
@@ -188,7 +188,7 @@ def dominance(counts, finite=False):
     counts : 1-D array_like, int
         Vector of counts.
     finite : bool, optional
-        If ``True``, correct for finite sampling.
+        If True, correct for finite sampling.
 
     Returns
     -------
@@ -255,7 +255,7 @@ def enspie(counts, finite=False):
     counts : 1-D array_like, int
         Vector of counts.
     finite : bool, optional
-        If ``True``, correct for finite sampling.
+        If True, correct for finite sampling.
 
     Returns
     -------
@@ -657,7 +657,7 @@ def inv_simpson(counts, finite=False):
     counts : 1-D array_like, int
         Vector of counts.
     finite : bool, optional
-        If ``True``, correct for finite sampling when calculating :math:`D`.
+        If True, correct for finite sampling when calculating :math:`D`.
 
     Returns
     -------
@@ -1267,7 +1267,7 @@ def shannon(counts, base=None, exp=False):
             consistency with the majority of literature.
 
     exp : bool, optional
-        If ``True``, return the exponential of Shannon index.
+        If True, return the exponential of Shannon index.
 
     Returns
     -------
@@ -1327,7 +1327,7 @@ def simpson(counts, finite=False):
     counts : 1-D array_like, int
         Vector of counts.
     finite : bool, optional
-        If ``True``, correct for finite sampling when calculating :math:`D`.
+        If True, correct for finite sampling when calculating :math:`D`.
 
     Returns
     -------
@@ -1364,7 +1364,7 @@ def simpson_d(counts, finite=False):
     counts : 1-D array_like, int
         Vector of counts.
     finite : bool, optional
-        If ``True``, correct for finite sampling.
+        If True, correct for finite sampling.
 
     Returns
     -------
