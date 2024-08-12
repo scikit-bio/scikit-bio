@@ -1994,7 +1994,6 @@ def dirmult_ttest(
         rng.dirichlet(table.values[i] + pseudocount) for i in range(table.shape[0])
     ]
     dir_table = pd.DataFrame(clr(posterior), index=table.index, columns=table.columns)
-
     res = [
         _welch_ttest(
             np.array(dir_table.loc[trt_group.index, x].values),
@@ -2114,8 +2113,8 @@ def _lme_call(
     submodels = []
     metadata = _type_cast_to_float(metadata.copy())
 
-    data = pd.merge(table, metadata, left_index=True, right_index=True, how="inner")
-    if len(data) == 0:
+    merged_data = pd.merge(table, metadata, left_index=True, right_index=True)
+    if len(merged_data) == 0:
         raise ValueError(
             (
                 "No more samples left. Check to make sure that "
@@ -2139,7 +2138,7 @@ def _lme_call(
         stats_formula = "%s ~ %s" % (response_var, formula)
         model = MixedLM.from_formula(
             formula=stats_formula,
-            data=data,
+            data=merged_data,
             groups=groups,
             re_formula=re_formula,
             vc_formula=vc_formula,
@@ -2211,6 +2210,25 @@ def _lme_call(
     return (output, submodels, _covariate_list)
 
 
+def _obtain_dir_table(data, pseudocount, rng):
+    if data.shape[1] > 1:
+        posterior = [
+            rng.dirichlet(data.values[i] + pseudocount) for i in range(data.shape[0])
+        ]
+        dir_table = pd.DataFrame(
+            posterior, index=data.index, columns=data.columns
+        ).apply(clr, axis=1)
+        dir_table = pd.DataFrame(
+            dir_table.tolist(), index=dir_table.index, columns=data.columns
+        )
+    else:
+        posterior = rng.dirichlet(data.values.flatten() + pseudocount)
+        dir_table = np.log(posterior)
+        dir_table = pd.DataFrame(dir_table, index=data.index, columns=data.columns)
+
+    return dir_table
+
+
 def dirmult_lme(
     formula,
     data,
@@ -2253,12 +2271,14 @@ def dirmult_lme(
         The data for the model. If data is a pd.DataFrame, it must contain the
         dependent variables in data.columns. If data is not a pd.DataFrame, it must
         contain the dependent variable in indices of data. data can be a
-        a numpy structured array, or a numpy recarray, or a dictionary.
+        a numpy structured array, or a numpy recarray, or a dictionary. It must not
+        contain duplicate indices.
     metadata: array-like
         The metadata for the model. If metadata is a pd.DataFrame, it must contain
         the covariates in metadata.columns. If metadata is not a pd.DataFrame,
         it must contain the covariates in indices of metadata. metadata can
-        be a numpy structured array, or a numpy recarray, or a dictionary.
+        be a numpy structured array, or a numpy recarray, or a dictionary. It must
+        not contain duplicate indices.
     groups : str
         The column name in data that identifies the grouping variable
     reml : bool
@@ -2357,10 +2377,10 @@ def dirmult_lme(
     ... )
     >>> res
       FeatureID  Covariate  Log2(FC)   CI(2.5)  CI(97.5)    pvalue    qvalue
-    0        Y1       time -0.210769 -1.532142  1.122417  0.403737  0.873598
-    1        Y1  treatment -0.744093 -3.401875  1.582636  0.252057  0.687051
-    2        Y2       time  0.210769 -1.122417  1.532142  0.403737  0.873598
-    3        Y2  treatment  0.744093 -1.582636  3.401875  0.252057  0.687051
+    0        Y1       time -0.210769 -1.571095  1.144057  0.411140  0.879760
+    1        Y1  treatment -0.164704 -3.456697  3.384563  0.593769  0.972767
+    2        Y2       time  0.210769 -1.144057  1.571095  0.411140  0.879760
+    3        Y2  treatment  0.164704 -3.384563  3.456697  0.593769  0.972767
 
     """
 
@@ -2404,7 +2424,17 @@ def dirmult_lme(
 
     # Test if metadata and data have the same index, regardless of order
     if not data.index.sort_values().equals(metadata.index.sort_values()):
+        print(data.index)
+        print(metadata.index)
         raise ValueError("Data and metadata must have the same index.")
+
+    # Modifying the indices of data and metadata to use unique integers,
+    # so that merging them will not affect the result. append "row" before the
+    # index to make it unique
+    data.index = list(range(data.shape[0]))
+    data.index = ["row" + str(i) for i in data.index]
+    metadata.index = list(range(metadata.shape[0]))
+    metadata.index = ["row" + str(i) for i in metadata.index]
 
     # Columns in the final result
     FEATUREID = "FeatureID"
@@ -2416,15 +2446,7 @@ def dirmult_lme(
     QVALUE = "qvalue"
 
     rng = get_rng(seed)
-    posterior = [
-        rng.dirichlet(data.values[i] + pseudocount) for i in range(data.shape[0])
-    ]
-    dir_table = pd.DataFrame(posterior, index=data.index, columns=data.columns).apply(
-        clr, axis=1
-    )
-    dir_table = pd.DataFrame(
-        dir_table.tolist(), index=dir_table.index, columns=data.columns
-    )
+    dir_table = _obtain_dir_table(data, pseudocount, rng)
 
     res, _submodels, _covariate_list = _lme_call(
         formula=formula,
@@ -2439,7 +2461,7 @@ def dirmult_lme(
         **kwargs,
     )
 
-    # Creating an empty dict to store sum of values (Using a DataFrame threw errors)
+    # Creating an empty dict to store sum of values (Using a DataFrame throws errors)
     # uses a separate array for each covariate and each feature
     # array index: 0: pvalue, 1: CI(2.5), 2: CI(97.5), 3: log2fc, 4: qvalue
     res_dict = {}
@@ -2455,15 +2477,7 @@ def dirmult_lme(
             group[i] = single_covar_data[key]
 
     for i in range(1, draws):
-        posterior = [
-            rng.dirichlet(data.values[i] + pseudocount) for i in range(data.shape[0])
-        ]
-        dir_table = pd.DataFrame(
-            posterior, index=data.index, columns=data.columns
-        ).apply(clr, axis=1)
-        dir_table = pd.DataFrame(
-            dir_table.tolist(), index=dir_table.index, columns=data.columns
-        )
+        dir_table = _obtain_dir_table(data, pseudocount, rng)
 
         ires = _lme_call(
             formula=formula,
