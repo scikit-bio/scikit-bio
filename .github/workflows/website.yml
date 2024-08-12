@@ -28,6 +28,7 @@ jobs:
       - name: Set up conda
         uses: conda-incubator/setup-miniconda@v3
         with:
+          channels: conda-forge
           auto-update-conda: true
           python-version: ${{ env.latest_python }}
           miniforge-version: ${{ env.miniforge_version }}
