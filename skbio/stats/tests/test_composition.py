@@ -1522,22 +1522,16 @@ class DirMultLMETests(TestCase):
         self.assertIsInstance(res, pd.DataFrame)
         self.assertEqual(res.shape[1], 7)  # Expected number of columns
         pdt.assert_series_equal(res.iloc[:, 0], pd.Series(['feature1', 'feature1', 'feature2', 'feature2', 'feature3', 'feature3', 'feature4', 'feature4'], name='FeatureID'))
-
-    def test_dirmult_lme_output(self):
-        formula = "Covar2 + Covar3"
-        res = dirmult_lme(formula=formula, data=self.table, metadata=self.metadata, groups='Covar1', seed=0, p_adjust="sidak", reml=True)
         npt.assert_array_less(res['Log2(FC)'], res['CI(97.5)'])
         npt.assert_array_less(res['CI(2.5)'], res['Log2(FC)'])
 
-    def test_dirmult_lme_no_p_adjust(self):
+    def test_dirmult_lme_no_p_adjust_and_reml(self):
         formula = "Covar2 + Covar3"
         result = dirmult_lme(formula=formula, data=self.table, metadata=self.metadata, groups='Covar1', seed=0, p_adjust=None, reml=True)
+        res_ml = dirmult_lme(formula=formula, data=self.table, metadata=self.metadata, groups='Covar1', seed=0, p_adjust=None, reml=False)
         pdt.assert_series_equal(result['pvalue'], result['qvalue'], check_names=False)
 
-    def test_dirmult_ttest_no_reml(self):
-        formula = "Covar2 + Covar3"
-        res_reml = dirmult_lme(formula=formula, data=self.table, metadata=self.metadata, groups='Covar1', seed=0, p_adjust=None, reml=True)
-        res_ml = dirmult_lme(formula=formula, data=self.table, metadata=self.metadata, groups='Covar1', seed=0, p_adjust=None, reml=False)
+        res_reml = result
         npt.assert_raises(AssertionError, npt.assert_allclose, res_reml['CI(97.5)'], res_ml['CI(97.5)'])
         npt.assert_raises(AssertionError, npt.assert_allclose, res_reml['CI(2.5)'], res_ml['CI(2.5)'])
         npt.assert_raises(AssertionError, npt.assert_allclose, res_reml['pvalue'], res_ml['pvalue'])
@@ -1644,7 +1638,11 @@ class DirMultLMETests(TestCase):
         a predictor variable. The second model will be fitted with two random effects
         for each animal: a random intercept, and a random slope (with respect to time).
         The model will have a better fit. This is observed by increase in CI 97.5% and
-        Coefficients, and a decrease in CI 2.5% for this dataset.
+        Coefficients (ie: Log2(FC)), and a decrease in CI 2.5% for this dataset.
+        Similarly, vc_formula describes the random effects of the LME model. The third
+        model will be fitted with the variance component of Feed variable being
+        described. The model will have a better fit. This is observed by increase in
+        CI 97.5% and Coefficients (ie: Log2(FC)), and a decrease in CI 2.5% for this dataset.
         """
         data = smdatasets.get_rdataset('dietox', 'geepack').data
         table = data[["Weight"]]
@@ -1677,9 +1675,27 @@ class DirMultLMETests(TestCase):
             method="lbfgs",
         )
 
+        vc = {"Feed": "1 + Feed"}
+
+        res3 = dirmult_lme(
+            formula="Time",
+            data=table,
+            metadata=metadata,
+            groups="Pig",
+            vc_formula=vc,
+            seed=0,
+            p_adjust="sidak",
+            reml=False,
+            method="lbfgs",
+        )
+
         npt.assert_array_less(res['CI(97.5)'], res2['CI(97.5)'])
         npt.assert_array_less(res2['CI(2.5)'], res['CI(2.5)'])
         npt.assert_array_less(res['Log2(FC)'], res2['Log2(FC)'])
+
+        npt.assert_array_less(res['CI(97.5)'], res3['CI(97.5)'])
+        npt.assert_array_less(res3['CI(2.5)'], res['CI(2.5)'])
+        npt.assert_array_less(res['Log2(FC)'], res3['Log2(FC)'])
 
 if __name__ == "__main__":
     main()
