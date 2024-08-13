@@ -20,7 +20,7 @@ from skbio.tree._gme import (
     _edge_estimation, gme)
 
 
-class GmeTests(TestCase):
+class BmeTests(TestCase):
 
     def setUp(self):
         data1 = [[0,  5,  9,  9,  8],
