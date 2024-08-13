@@ -12,8 +12,8 @@ from unittest import TestCase, main
 from skbio import DistanceMatrix, TreeNode
 from skbio.tree._nni import (
     nni, _perform_swap,
-    _swap_length, _swap_heap,
-    _average_distance_matrix, nni)
+    _swap_length, _balanced_swap_length,
+    _swap_heap, _average_distance_matrix, nni)
 
 
 class NniTests(TestCase):
@@ -94,19 +94,19 @@ class NniTests(TestCase):
                 io.StringIO(self.post3_nni_str))
 
     def test_nni_dm1(self):
-        actual_TreeNode = nni(self.pre1_nni_TreeNode, self.dm1, inplace=False)
+        actual_TreeNode = nni(self.pre1_nni_TreeNode, self.dm1, inplace=False, balanced=False)
         self.assertAlmostEqual(actual_TreeNode.compare_tip_distances(
             self.post1_nni_TreeNode), 0.0, places=10)
 
     def test_nni_dm2(self):
         # Resulting tree topology is equivalent to result from nj, however,
         # resulting edge lengths are almost equal to 2 places.
-        actual_TreeNode = nni(self.pre2_nni_TreeNode, self.dm2, inplace=False)
+        actual_TreeNode = nni(self.pre2_nni_TreeNode, self.dm2, inplace=False, balanced=False)
         self.assertAlmostEqual(actual_TreeNode.compare_tip_distances(
             self.post2_nni_TreeNode), 0.0)
 
     def test_nni_dm3(self):
-        actual_TreeNode = nni(self.pre3_nni_TreeNode, self.dm3, inplace=False)
+        actual_TreeNode = nni(self.pre3_nni_TreeNode, self.dm3, inplace=False, balanced=False)
         self.assertAlmostEqual(actual_TreeNode.compare_tip_distances(
             self.post3_nni_TreeNode), 0.0)
         
@@ -122,7 +122,7 @@ class NniTests(TestCase):
         expected_str = "((c:1.0,b:2.0):1.0)a;"
         expected_TreeNode = TreeNode.read(
                 io.StringIO(expected_str))
-        self.assertEqual(str(nni(pre_TreeNode, dm, inplace=False)),
+        self.assertEqual(str(nni(pre_TreeNode, dm, inplace=False, balanced=False)),
                          str(expected_TreeNode))
 
     def test_nni_binary_flag(self):
@@ -133,7 +133,7 @@ class NniTests(TestCase):
         pre_TreeNode = TreeNode.read(io.StringIO(pre_str))
         msg = "Could not perform NNI. Tree needs to be a binary tree."
         with self.assertRaises(TypeError) as cm:
-            nni(pre_TreeNode, dm)
+            nni(pre_TreeNode, dm, balanced=False)
         self.assertEqual(str(cm.exception), msg)
 
     def test_nni_leaf_root_flag(self):
@@ -141,7 +141,7 @@ class NniTests(TestCase):
         pre_TreeNode = TreeNode.read(io.StringIO(pre_str))
         msg = "Could not perform NNI. Tree needs to be rooted at a leaf node."
         with self.assertRaises(TypeError) as cm:
-            nni(pre_TreeNode, self.dm1)
+            nni(pre_TreeNode, self.dm1, balanced=False)
         self.assertEqual(str(cm.exception), msg)
 
     def test_perform_swap(self):
@@ -166,6 +166,13 @@ class NniTests(TestCase):
         adm = _average_distance_matrix(expected_TreeNode, self.dm1)
         self.assertAlmostEqual(_swap_length(
             2, 1, 1, 1, 6, 3, 0, 1, adm), 2.5, places=10)
+        
+    def test_balanced_swap_length(self):
+        expected_str = ("(((b,d),(e,c)))a;")
+        expected_TreeNode = TreeNode.read(io.StringIO(expected_str))
+        adm = _average_distance_matrix(expected_TreeNode, self.dm1)
+        self.assertAlmostEqual(_balanced_swap_length(
+            6, 3, 0, 1, adm), 2.5, places=10)
 
     def test_swap_heap(self):
         # swap length is stored into the maxheap as a negative integer

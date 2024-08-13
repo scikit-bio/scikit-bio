@@ -19,7 +19,7 @@ Tree structure and operations
     TreeNode
 
 
-Phylogenetic reconstruction
+Tree Construction
 ---------------------------
 
 .. autosummary::
@@ -27,6 +27,7 @@ Phylogenetic reconstruction
 
     nj
     gme
+    bme
 
 
 Tree Rearrangement
@@ -213,7 +214,8 @@ __all__ = [
     "TreeNode",
     "nj",
     "gme",
-    "bme" "nni",
+    "bme",
+    "nni",
     "majority_rule",
     "TreeError",
     "NoLengthError",

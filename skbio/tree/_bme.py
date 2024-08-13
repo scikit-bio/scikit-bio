@@ -10,7 +10,7 @@ import numpy as np
 
 from operator import itemgetter
 from skbio.tree import TreeNode
-from skbio.tree._gme import _tip_or_root
+from skbio.tree._gme import _average_distance_k, _average_distance_k_upper
 
 
 def bme(dm, allow_edge_estimation=True):
@@ -100,7 +100,12 @@ def bme(dm, allow_edge_estimation=True):
     for k in range(3, n):
         taxa = root.count(tips=True) + 1
         # calculate average distance matrix between subtrees of T_(k-1)
-        adm = _average_distance_matrix(root, dm)
+        # Note that this could be replaced with an updating step to an
+        # initially computed average distance matrix, as noted in GME,
+        # however the updating step requires all subtrees to be updated
+        # in contrast to GME, so instead the matrix is recomputed after
+        # every iteration.
+        adm = _balanced_average_matrix(root, dm)
         # create node for taxa k
         node_k_name = dm.ids[k]
         connecting_node = TreeNode("")
@@ -110,8 +115,8 @@ def bme(dm, allow_edge_estimation=True):
         # node_k = connecting_node.find(node_k_name)
         # create average distance lists for subtrees of T_(k-1)
         ordered = list(root.postorder(include_self=False))
-        lowerlist = _lower_subtree_list(ordered, node_k, dm)
-        upperlist = _upper_subtree_list(ordered, node_k, taxa, dm)
+        lowerlist = _balanced_lower(ordered, node_k, dm)
+        upperlist = _balanced_upper(ordered, node_k, taxa, dm)
         # Initialize the list of edge parent nodes for computation.
         # The tuple is a pair of a TreeNode object and the value of the tree
         # length for attaching at the edge consisting of the node and its parent.
@@ -122,10 +127,10 @@ def bme(dm, allow_edge_estimation=True):
             if a.is_tip():
                 continue
             a1, a2 = a.children
-            value1 = _edge_attachment_length(
+            value1 = _balanced_attach_length(
                 a1, lowerlist, upperlist, ordered, taxa, adm
             )
-            value2 = _edge_attachment_length(
+            value2 = _balanced_attach_length(
                 a2, lowerlist, upperlist, ordered, taxa, adm
             )
             e1 = (a1, value1 + i)
@@ -139,42 +144,11 @@ def bme(dm, allow_edge_estimation=True):
         minimum_parent.append(connecting_node)
         connecting_node.append(minimum_child)
     if allow_edge_estimation:
-        _edge_estimation(root, dm)
+        _bal_ols_edge(root, dm)
     return root
 
 
-def _average_distance_k(nodek, nodesubtree, dm):
-    """Return the average distance between a subtree, defined
-    by a node and its descendants, and a taxa to attach.
-
-    The subtree here is referred to as a lower subtree.
-
-    """
-    nodelistk = [nodek.name]
-    nodelistsubtree = _tip_or_root(nodesubtree)
-    df = dm.between(nodelistk, nodelistsubtree)
-    return df["value"].mean()
-
-
-def _average_distance_k_upper(nodek, nodesubtree, dm):
-    """Return the average distance between a subtree, defined
-    by all nodes that are not descendants, and a taxa to attach.
-
-    The subtree here is referred to as an upper subtree.
-
-    """
-    nodelistk = [nodek.name]
-    if nodesubtree.is_root():
-        nodelistsubtree = []
-    else:
-        root = nodesubtree.root()
-        nodelistsubtree = [root.name]
-        nodelistsubtree.extend(root.subset() - nodesubtree.subset())
-    df = dm.between(nodelistk, nodelistsubtree)
-    return df["value"].mean()
-
-
-def _lower_subtree_list(ordered, node, dm):
+def _balanced_lower(ordered, node, dm):
     """Return the list of values representing the change in tree length
     after attaching a taxa at an edge not the root edge. The subtree
     involved is a lower subtree.
@@ -195,7 +169,7 @@ def _lower_subtree_list(ordered, node, dm):
     return lower_list
 
 
-def _upper_subtree_list(ordered, node, taxa, dm):
+def _balanced_upper(ordered, node, taxa, dm):
     """Return the list of values representing the change in tree length
     after attaching a taxa at an edge not the root edge. The subtree
     involved is an upper subtree.
@@ -218,11 +192,12 @@ def _upper_subtree_list(ordered, node, taxa, dm):
     return upper_list
 
 
-def _edge_attachment_length(child, lowerlist, upperlist, ordered, taxa, adm):
+def _balanced_attach_length(child, lowerlist, upperlist, ordered, taxa, adm):
     """Return the change in the length of a tree after attaching a new taxa
     at an edge in comparison to attaching at the root edge.
 
-    The value of attaching at the root edge is considered to be 0.
+    The value of attaching at the root edge is considered to be 0. This uses
+    the balanced framework for average distance.
 
     """
     parent = child.parent
@@ -240,7 +215,7 @@ def _edge_attachment_length(child, lowerlist, upperlist, ordered, taxa, adm):
     return length
 
 
-def _balanced_avg_distance_matrix(tree, dm):
+def _balanced_average_matrix(tree, dm):
     """Return the matrix of distances between pairs of subtrees.
 
     Here, the definition of average distance coincides with the balanced minimum
@@ -319,14 +294,14 @@ def _balanced_avg_distance_matrix(tree, dm):
     return adm
 
 
-def _balanced_edge_estimation(tree, dm):
+def _bal_ols_edge(tree, dm):
     """Assign estimated edge values to a tree based on a given distance matrix.
 
     Estimation of edge values is based on an ordinary least squares (OLS) framework.
     Average distances defined here coincide with the balanced minimum evolution problem.
 
     """
-    adm = _average_distance_matrix(tree, dm)
+    adm = _balanced_average_matrix(tree, dm)
     ordered = list(tree.postorder(include_self=False))
     root = tree.root()
     # identify edges by first finding the child node of an edge

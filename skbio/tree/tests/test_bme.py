@@ -10,14 +10,10 @@ import io
 from unittest import TestCase, main
 
 from skbio import DistanceMatrix, TreeNode
-from skbio.tree._gme import (
-    _average_distance_k, _average_distance_k_upper,
-    _lower_subtree_list, _upper_subtree_list,
-    _edge_attachment_length,
-    _average_distance, _tip_or_root,
-    _average_distance_upper, _subtree_count,
-    _average_subtree_distance, _average_distance_matrix, 
-    _edge_estimation, gme)
+from skbio.tree._bme import (
+    _balanced_lower, _balanced_upper,
+    _balanced_attach_length, _balanced_average_matrix,
+    _bal_ols_edge, bme)
 
 
 class BmeTests(TestCase):
@@ -36,10 +32,10 @@ class BmeTests(TestCase):
         self.expected1_str = ("((b:3.0,(c:4.0,(e:1.0,d:2.0):2.0):3.0):2.0)a;")
         self.expected1_TreeNode = TreeNode.read(
                 io.StringIO(self.expected1_str))
-        self.gme_starting1_str = ("((b,c))a;")
-        self.gme_starting1_TreeNode = TreeNode.read(
-                io.StringIO(self.gme_starting1_str))
-        self.gme_attach_node = TreeNode.read(["()d;"])
+        self.bme_starting1_str = ("((b,c))a;")
+        self.bme_starting1_TreeNode = TreeNode.read(
+                io.StringIO(self.bme_starting1_str))
+        self.bme_attach_node = TreeNode.read(["()d;"])
 
         # this example was pulled from the Phylip manual
         # http://evolution.genetics.washington.edu/phylip/doc/neighbor.html
@@ -82,122 +78,56 @@ class BmeTests(TestCase):
         ids4 = list('abcde')
         self.dm4 = DistanceMatrix(data4, ids4)
 
-    def test_gme_dm1(self):
-        actual_TreeNode = gme(self.dm1)
+    def test_bme_dm1(self):
+        actual_TreeNode = bme(self.dm1)
         self.assertAlmostEqual(actual_TreeNode.compare_tip_distances(
             self.expected1_TreeNode), 0.0, places=10)
 
-    def test_gme_dm2(self):
-        actual_TreeNode = gme(self.dm2)
+    def test_bme_dm2(self):
+        actual_TreeNode = bme(self.dm2)
         self.assertAlmostEqual(actual_TreeNode.compare_tip_distances(
             self.expected2_TreeNode), 0.0, places=10)
 
-    def test_gme_dm3(self):
-        actual_TreeNode = gme(self.dm3)
+    def test_bme_dm3(self):
+        actual_TreeNode = bme(self.dm3)
         self.assertAlmostEqual(actual_TreeNode.compare_tip_distances(
             self.expected3_TreeNode), 0.0, places=10)
 
-    def test_gme_zero_branch_length(self):
+    def test_bme_zero_branch_length(self):
         # OLS-based edge estimation can produce negative branch 
         # lengths when some dm values are much larger than
         # others, analogous to negative branch lengths produced by nj
-        tree = gme(self.dm4)
+        tree = bme(self.dm4)
         self.assertTrue(tree.find('b').length < 0)
         self.assertTrue(tree.find('c').length < 0)
         self.assertTrue(tree.find('d').length < 0)
         self.assertTrue(tree.find('e').length > 0)
 
-    def test_gme_error(self):
+    def test_bme_error(self):
         data = [[0, 3],
                 [3, 0]]
         dm = DistanceMatrix(data, list('ab'))
-        self.assertRaises(ValueError, gme, dm)
+        self.assertRaises(ValueError, bme, dm)
 
-    def test_average_distance_k(self):
-        nodesubtree = self.gme_starting1_TreeNode.find('c').parent
-        self.assertAlmostEqual(_average_distance_k(self.gme_attach_node, nodesubtree, self.dm1),
-                               9.0, places=10)
-
-    def test_average_distance_k_upper(self):
-        nodesubtree = self.gme_starting1_TreeNode.find('c').parent
-        self.assertAlmostEqual(_average_distance_k_upper(self.gme_attach_node, nodesubtree, self.dm1),
-                               9.0, places=10)
-
-    def test_lower_subtree_list(self):
-        ordered = list(self.gme_starting1_TreeNode.postorder(include_self=False))
+    def test_balanced_lower(self):
+        ordered = list(self.bme_starting1_TreeNode.postorder(include_self=False))
         expected_list = [10.0, 8.0, 9.0]
-        self.assertEqual(_lower_subtree_list(ordered, self.gme_attach_node, self.dm1), expected_list)
+        self.assertEqual(_balanced_lower(ordered, self.bme_attach_node, self.dm1), expected_list)
 
-    def test_upper_subtree_list(self):
-        ordered = list(self.gme_starting1_TreeNode.postorder(include_self=False))
+    def test_balanced_upper(self):
+        ordered = list(self.bme_starting1_TreeNode.postorder(include_self=False))
         expected_list = [8.5, 9.5, 9.0]
-        self.assertEqual(_upper_subtree_list(ordered, self.gme_attach_node, 3, self.dm1), expected_list)
+        self.assertEqual(_balanced_upper(ordered, self.bme_attach_node, 3, self.dm1), expected_list)
 
-    def test_edge_attachment_length(self):
-        ordered = list(self.gme_starting1_TreeNode.postorder(include_self=False))
-        child = self.gme_starting1_TreeNode.find('c')
-        lowerlist = _lower_subtree_list(ordered, self.gme_attach_node, self.dm1)
-        upperlist = _upper_subtree_list(ordered, self.gme_attach_node, 3, self.dm1)
-        adm = _average_distance_matrix(self.gme_starting1_TreeNode, self.dm1)
-        self.assertEqual(_edge_attachment_length(child, lowerlist, upperlist, ordered, 3, adm), -1.5)
+    def test_balanced_attach_length(self):
+        ordered = list(self.bme_starting1_TreeNode.postorder(include_self=False))
+        child = self.bme_starting1_TreeNode.find('c')
+        lowerlist = _balanced_lower(ordered, self.bme_attach_node, self.dm1)
+        upperlist = _balanced_upper(ordered, self.bme_attach_node, 3, self.dm1)
+        adm = _balanced_average_matrix(self.bme_starting1_TreeNode, self.dm1)
+        self.assertEqual(_balanced_attach_length(child, lowerlist, upperlist, ordered, 3, adm), -1.5)
 
-    def test_average_distance(self):
-        expected_str = ("((((e:1.0,d:2.0):2.0,c:4.0):3.0,b:3.0):2.0)a;")
-        expected_TreeNode = TreeNode.read(io.StringIO(expected_str))
-        node1 = expected_TreeNode.find('b')
-        node2 = expected_TreeNode.find('d').parent
-        self.assertAlmostEqual(_average_distance(node1, node2, self.dm1),
-                               9.5, places=10)
-
-    def test_tip_or_root(self):
-        expected_str = ("((((e:1.0,d:2.0):2.0,c:4.0):3.0,b:3.0):2.0)a;")
-        expected_TreeNode = TreeNode.read(io.StringIO(expected_str))
-        node_internal = expected_TreeNode.find('d').parent
-        node_leaf = expected_TreeNode.find('b')
-        root = expected_TreeNode.root()
-        self.assertEqual(len(_tip_or_root(node_internal)), 2)
-        self.assertEqual(str(_tip_or_root(node_leaf)[0]),
-                             str(node_leaf.name))
-        self.assertEqual(str(_tip_or_root(root)[0]),
-                             str(root.name))
-
-    def test_average_distance_upper(self):
-        # computed manually
-        data = [[0, 0.02, 0.18, 0.34, 0.55],
-                [0.02, 0, 0.19, 0.35, 0.55],
-                [0.18, 0.19, 0, 0.34, 0.54],
-                [0.34, 0.35, 0.34, 0, 0.62],
-                [0.55, 0.55, 0.54, 0.62, 0]]
-        ids = ['human','monkey','pig','rat','chicken']
-        dm = DistanceMatrix(data, ids)
-        expected_str = "((rat,(human,(pig,monkey))))chicken;"
-        expected_TreeNode = TreeNode.read(io.StringIO(expected_str))
-        node1 = expected_TreeNode.find('pig').parent
-        node2 = expected_TreeNode.find('human').parent.parent
-        self.assertAlmostEqual(_average_distance_upper(node1, node2, dm), 0.545, places=10)
-
-    def test_subtree_count(self):
-        expected_str = ("((((e:1.0,d:2.0):2.0,c:4.0):3.0,b:3.0):2.0)a;")
-        expected_TreeNode = TreeNode.read(io.StringIO(expected_str))
-        internal_node = expected_TreeNode.find('d').parent.parent
-        leaf = expected_TreeNode.find('d')
-        root = expected_TreeNode.root()
-        self.assertEqual(_subtree_count(internal_node), 3)
-        self.assertEqual(_subtree_count(leaf), 1)
-        self.assertEqual(_subtree_count(root), 1)
-
-    def test_average_subtree_distance(self):
-        # computed manually
-        expected_str = ("(((b,d),(e,c)))a;")
-        expected_TreeNode = TreeNode.read(io.StringIO(expected_str))
-        a = expected_TreeNode.find('e').parent
-        b = expected_TreeNode.find('b')
-        a1 = expected_TreeNode.find('e')
-        a2 = expected_TreeNode.find('c')
-        self.assertAlmostEqual(_average_subtree_distance(a, b, a1, a2, self.dm1),
-                               9.5, places=10)
-
-    def test_average_distance_matrix_trivial(self):
+    def test_balanced_average_matrix_trivial(self):
         # In this case, the average distance matrix is equivalent to
         # the original distance matrix
         data = [[0, 3, 2],
@@ -208,25 +138,25 @@ class BmeTests(TestCase):
         expected_str = "((c,b))a;"
         expected_TreeNode = TreeNode.read(io.StringIO(expected_str))
         index = [0, 1, 2]
-        actual_adm = _average_distance_matrix(expected_TreeNode, dm)
+        actual_adm = _balanced_average_matrix(expected_TreeNode, dm)
         for i in index:
             for j in index:
                 if j < i:
                     self.assertEqual(dm[i][j], actual_adm[i][j])
                     self.assertEqual(dm[j][i], actual_adm[j][i])
 
-    def test_average_distance_matrix(self):
+    def test_balanced_average_matrix(self):
         # computed manually
         expected_str = ("(((b,d),(e,c)))a;")
         expected_TreeNode = TreeNode.read(io.StringIO(expected_str))
-        expected_adm = [[0.0, 10.0, 8.0, 9.0, 10.0, 9.5, 5.0],
-                        [10.0, 0.0, 6.666666666666667, 3.0, 8.0, 5.5, 9.0],
-                        [8.0, 6.666666666666667, 0.0, 6.0, 9.0, 7.5, 7.0],
-                        [9.0, 3.0, 6.0, 0.0, 7.0, 6.666666666666667, 8.0],
+        expected_adm = [[0.0, 10.0, 7.25, 9.0, 10.0, 9.5, 5.0],
+                        [10.0, 0.0, 7.25, 3.0, 8.0, 5.5, 9.0],
+                        [7.25, 7.25, 0.0, 6.0, 9.0, 7.5, 7.0],
+                        [9.0, 3.0, 6.0, 0.0, 7.0, 7.0, 8.0],
                         [10.0, 8.0, 9.0, 7.0, 0.0, 9.0, 9.0],
-                        [9.5, 5.5, 7.5, 6.666666666666667, 9.0, 0.0, 8.5],
+                        [9.5, 5.5, 7.5, 7.0, 9.0, 0.0, 8.5],
                         [5.0, 9.0, 7.0, 8.0, 9.0, 8.5, 0.0]]
-        actual_adm = _average_distance_matrix(expected_TreeNode, self.dm1)
+        actual_adm = _balanced_average_matrix(expected_TreeNode, self.dm1)
         index = [0, 1, 2, 3, 4, 5, 6]
         for i in index:
             for j in index:
@@ -243,7 +173,7 @@ class BmeTests(TestCase):
         pre_estimation_str = "((c,b))a;"
         expected_str = "((c:1.0,b:2.0):1.0)a;"
         actual_TreeNode = TreeNode.read(io.StringIO(pre_estimation_str))
-        _edge_estimation(actual_TreeNode, dm)
+        _bal_ols_edge(actual_TreeNode, dm)
         expected_TreeNode = TreeNode.read(io.StringIO(expected_str))
         self.assertAlmostEqual(actual_TreeNode.compare_tip_distances(
             expected_TreeNode), 1, places=10)
