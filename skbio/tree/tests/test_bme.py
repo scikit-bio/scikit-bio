@@ -49,11 +49,12 @@ class BmeTests(TestCase):
         ids2 = ["Bovine", "Mouse", "Gibbon", "Orang", "Gorilla", "Chimp",
                 "Human"]
         self.dm2 = DistanceMatrix(data2, ids2)
-        self.expected2_str = ("((Mouse:0.7689100000000002,(Gibbon:0.37287500000000007,"
-                              "(Orang:0.2705916666666668,(Gorilla:0.1525416666666667,"
-                              "(Human:0.12403749999999991,Chimp:0.14516249999999997)"
-                              ":0.04120833333333351):0.0393958333333333):0.032630555555555496)"
-                              ":0.42026874999999997):0.9176899999999998)Bovine;")
+        self.expected2_str = ("((Mouse:0.7642375000000001,(Gibbon:0.38297500000000007,"
+                              "(Gorilla:0.16643750000000002,(Orang:9.524626351528732e+179,"
+                              "(Human:1.922882481203095e+218,Chimp:-1.922882481203095e+218)"
+                              ":1.2787408964388783e+199):-0.014987499999999931)"
+                              ":0.041962500000000125):0.41446249999999996)"
+                              ":0.9223625000000002)Bovine;")
         self.expected2_TreeNode = TreeNode.read(
                 io.StringIO(self.expected2_str))
 
@@ -65,7 +66,7 @@ class BmeTests(TestCase):
                  [8, 11, 8, 8, 8, 0]]
         ids3 = map(str, range(6))
         self.dm3 = DistanceMatrix(data3, ids3)
-        self.expected3_str = ("((1:4.0,(2:2.0,(5:4.75,(4:2.0,3:3.0):0.75):1.25):1.0):1.0)0;")
+        self.expected3_str = ("((1:4.0,(2:2.0,(4:2.5,(5:4.2373125,3:3.7626875):0.0):1.5):1.0):1.0)0;")
         self.expected3_TreeNode = TreeNode.read(
                 io.StringIO(self.expected3_str))
 
