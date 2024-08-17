@@ -43,7 +43,7 @@
 
 .. hidden page title
 
-.. title:: scikit-bio
+.. title:: scikit-bio: Bioinformatics in Python
 
 
 .. light/dark logo image
