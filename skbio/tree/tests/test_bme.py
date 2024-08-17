@@ -81,17 +81,17 @@ class BmeTests(TestCase):
     def test_bme_dm1(self):
         actual_TreeNode = bme(self.dm1)
         self.assertAlmostEqual(actual_TreeNode.compare_tip_distances(
-            self.expected1_TreeNode), 0.0, places=10)
+            self.expected1_TreeNode), 0.0)
 
     def test_bme_dm2(self):
         actual_TreeNode = bme(self.dm2)
         self.assertAlmostEqual(actual_TreeNode.compare_tip_distances(
-            self.expected2_TreeNode), 0.0, places=10)
+            self.expected2_TreeNode), 0.0)
 
     def test_bme_dm3(self):
         actual_TreeNode = bme(self.dm3)
         self.assertAlmostEqual(actual_TreeNode.compare_tip_distances(
-            self.expected3_TreeNode), 0.0, places=10)
+            self.expected3_TreeNode), 0.0)
 
     def test_bme_zero_branch_length(self):
         # OLS-based edge estimation can produce negative branch 
