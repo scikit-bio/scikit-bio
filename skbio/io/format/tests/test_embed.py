@@ -31,7 +31,8 @@ from skbio.io.format.embed import (
 
 class TestWriteError(TestCase):
     def test_write_function(self):
-        embeddings = np.load('data/tiny_embedding_file.npz')
+        embed_file = os.path.join('data', 'tiny_embedding_file.npz')
+        embeddings = np.load(embed_file, allow_pickle=False)
         emb_list = embeddings.values() 
         sequences = np.loadtxt('data/pdb_hits.txt', dtype=str)
         seq_list = [" ".join(list(re.sub(r"[UZOB]", "X", str(seq)))) for seq in sequences]   
