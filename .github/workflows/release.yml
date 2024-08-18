@@ -70,6 +70,7 @@ jobs:
       - name: Modify documentation
         run: |
           python doc/suburl.py
+          python doc/metatag.py
           python doc/editmap.py
 
       - name: Check out website
