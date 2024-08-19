@@ -11,8 +11,6 @@
 # class from which each member is inherited, and create a link to the stub
 # page of the base class' member.
 
-# See: https://www.sphinx-doc.org/en/master/usage/extensions/autosummary.html
-
 from sphinx.ext.autosummary import Autosummary
 from sphinx.util.inspect import safe_getattr
 
@@ -31,12 +29,19 @@ def trace_inherit(name, real_name):
     except ValueError:
         return
 
-    # import the class which has the member
+    # Import the class which has the member.
     try:
         module = __import__(mod_name, fromlist=[cls_name])
-        cls = safe_getattr(module, cls_name, None)
-    except ModuleNotFoundError:
+    except ImportError:
         return
+    try:
+        cls = safe_getattr(module, cls_name, None)
+    except AttributeError:
+        return
+
+    # Make sure class has the member.
+    # If the member is inherited, `hasattr` returns True but `cls.__dict__`
+    # does not have it.
     if not hasattr(cls, name):
         return
 
@@ -46,10 +51,9 @@ def trace_inherit(name, real_name):
     # will return the current class.
     origin = None
     for base in cls.__mro__:
-        if not base.__module__.startswith("skbio."):
-            break
         if name in base.__dict__:
-            origin = base
+            if base.__module__.startswith("skbio."):
+                origin = base
             break
     if not origin:
         return
