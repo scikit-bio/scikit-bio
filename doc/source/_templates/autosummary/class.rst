@@ -69,7 +69,6 @@
 .. currentmodule:: {{ module }}
 
 .. autoclass:: {{ objname }}
-   :show-inheritance:
 
 
 {# Table of contents #}
@@ -87,7 +86,7 @@
    {% if inherited_attributes %}
    .. rubric:: Attributes (inherited)
 
-   .. autosummary::
+   .. autoinherit::
    {% for item in inherited_attributes %}
       ~{{ name }}.{{ item }}
    {%- endfor %}
@@ -102,14 +101,14 @@
       :toctree:
    {% for item in own_methods %}
       ~{{ name }}.{{ item }}
-   {%- endfor %}
+   {% endfor %}
    {% endif %}
 
    {% if inherited_methods %}
    .. rubric:: Methods (inherited)
 
-   .. autosummary::
-   {% for item in inherited_methods %}
+   .. autoinherit::
+   {%- for item in inherited_methods %}
       ~{{ name }}.{{ item }}
    {%- endfor %}
    {% endif %}
@@ -128,7 +127,7 @@
    {% if inherited_special_methods %}
    .. rubric:: Special methods (inherited)
 
-   .. autosummary::
+   .. autoinherit::
    {% for item in inherited_special_methods %}
       ~{{ name }}.{{ item }}
    {%- endfor %}
