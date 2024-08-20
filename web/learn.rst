@@ -1,10 +1,31 @@
 Learn scikit-bio
 ================
 
+
+Tutorials
+---------
+
+:bdg-info:`New` `scikit-bio tutorials <https://github.com/scikit-bio/scikit-bio-tutorials>`_ given at ISMB 2024 are now publicly available. From basic sequence operations to protein language models. Code, instructions and test datasets included.
+
+.. button-link:: https://github.com/scikit-bio/scikit-bio-tutorials
+   :color: primary
+   :shadow:
+
+   Tutorial repository
+
+Also check out the classical `scikit-bio-cookbook <https://github.com/scikit-bio/scikit-bio-cookbook>`_: A series of Jupyter Notebooks containing executable "recipes" for bioinformatics workflows using scikit-bio.
+
+.. button-link:: https://nbviewer.org/github/biocore/scikit-bio-cookbook/blob/main/Index.ipynb
+   :color: primary
+   :shadow:
+
+   Cookbook frontpage
+
+
 Workshops
 ---------
 
-:bdg-info:`New` Upcoming scikit-bio workshop at `ISMB 2024 <https://www.iscb.org/ismb2024/home/>`_! The tutorial will introduce the revitalized scikit-bio, with a focus on multi-omic data integration for microbiome research. Tutorial materials will be shared via a public GitHub repository. Welcome to join us!
+We are thrilled with the successful completion of our scikit-bio workshop at `ISMB 2024 <https://www.iscb.org/ismb2024/home/>`_! :fa:`beer-mug-empty` Huge thanks to everyone who attended and participated. It was great to connect with the bioinformatics community and explore the latest in the field. Stay tuned for more!
 
 - **When**: 9:00 - 18:00 EDT, July 12, 2024 | **Where**: Montreal, Canada
 
@@ -12,19 +33,7 @@ Workshops
    :color: primary
    :shadow:
 
-   ISMB 2024 tutorials
-
-
-Cookbooks
----------
-
-`scikit-bio-cookbook <https://github.com/scikit-bio/scikit-bio-cookbook>`_: A series of Jupyter Notebooks containing executable "recipes" for bioinformatics workflows using scikit-bio. You can find the table of contents, installation instructions, and other information at:
-
-.. button-link:: https://nbviewer.org/github/biocore/scikit-bio-cookbook/blob/main/Index.ipynb
-   :color: primary
-   :shadow:
-
-   Cookbook frontpage
+   ISMB 2024 workshop
 
 
 Books
