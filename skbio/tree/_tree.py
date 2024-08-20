@@ -139,12 +139,12 @@ class TreeNode(SkbioObject):
         )
 
     def __str__(self):
-        r"""Return string version of self, with names and distances.
+        r"""Return a Newick string of self, with names and distances.
 
         Returns
         -------
         str
-            Returns a Newick representation of the tree.
+            Newick representation of the tree.
 
         See Also
         --------
@@ -162,14 +162,15 @@ class TreeNode(SkbioObject):
         return str("".join(self.write([])))
 
     def __iter__(self):
-        r"""Node iter iterates over the ``children``."""
+        r"""Iterate over the children of self."""
         return iter(self.children)
 
     def __len__(self):
+        """Return the number of children of self."""
         return len(self.children)
 
     def __getitem__(self, i):
-        r"""Node delegates slicing to ``children``."""
+        r"""Slice the children of self."""
         return self.children[i]
 
     # ------------------------------------------------
