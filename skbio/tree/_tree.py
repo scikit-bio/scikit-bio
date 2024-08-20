@@ -3207,15 +3207,14 @@ class TreeNode(SkbioObject):
         return accum
 
     def descending_branch_length(self, tip_subset=None):
-        """Find total descending branch length from self to a set of tips.
+        r"""Find total descending branch length from self to a set of tips.
 
         Parameters
         ----------
-        tip_subset : Iterable, or None
-            If None, the total descending branch length for all tips in the
-            tree will be returned. If a list of tips is provided then only the
-            total descending branch length associated with those tips will be
-            returned.
+        tip_subset : iterable of str, optional
+            If None, the total descending branch length for all tips in the tree will
+            be returned. If a list of tip names is provided then only the total
+            descending branch length associated with those tips will be returned.
 
         Returns
         -------
@@ -3225,8 +3224,7 @@ class TreeNode(SkbioObject):
         Raises
         ------
         ValueError
-            A ValueError is raised if the list of tips supplied to tip_subset
-            contains internal nodes or non-tips.
+            If ``tip_subset`` contains internal nodes or non-tips.
 
         Notes
         -----
@@ -3245,7 +3243,7 @@ class TreeNode(SkbioObject):
         >>> tr = TreeNode.read(["(((A:.1,B:1.2)C:.6,(D:.9,E:.6)F:.9)G:2.4,"
         ...                     "(H:.4,I:.5)J:1.3)K;"])
         >>> tdbl = tr.descending_branch_length()
-        >>> sdbl = tr.descending_branch_length(['A','E'])
+        >>> sdbl = tr.descending_branch_length(['A', 'E'])
         >>> print(round(tdbl, 1), round(sdbl, 1))
         8.9 2.2
 
@@ -3938,7 +3936,7 @@ class TreeNode(SkbioObject):
 
         Cache a list of all descending tip names on each node. This faciliates the
         assignment of taxon set under each clade in the tree. It resembles but is more
-        efficient than calling ``subset`` multiple times.
+        efficient than calling :meth:`subset` multiple times.
 
         >>> f = lambda n: [n.name] if n.is_tip() else []
         >>> tree.cache_attr(f, 'tip_names')
@@ -3954,7 +3952,7 @@ class TreeNode(SkbioObject):
 
         Cache the number of nodes per clade. The function ``sum`` is used in place of
         cache type such that the count will be accumulated. This resembles but is more
-        efficient than calling ``count`` multiple times.
+        efficient than calling :meth:`count` multiple times.
 
         >>> f = lambda n: 1
         >>> tree.cache_attr(f, 'node_count', sum)
@@ -3962,7 +3960,7 @@ class TreeNode(SkbioObject):
         7
 
         Cache the sum of branch lengths per clade. This resembles but is more efficient
-        than calling ``descending_branch_length`` multiple times. Note: the result
+        than calling :meth:`descending_branch_length` multiple times. Note: the result
         includes the stem branch of each clade. One needs to subtract ``length`` from
         each value in order to match the result of ``descending_branch_length``.
 
@@ -3974,9 +3972,9 @@ class TreeNode(SkbioObject):
         Cache the accumulative distances from all tips to the common ancestor of each
         clade. This allows one to measure the depth of a clade from the surface (tips)
         of a tree. One can further apply calculations like mean and standard deviation
-        to the results. This is more efficient than calling ``accumulate_to_ancestor``
-        multiple times. Also note that the result includes the stem branch of each
-        clade.
+        to the results. This is more efficient than calling
+        :meth:`accumulate_to_ancestor` multiple times. Also note that the result
+        includes the stem branch of each clade.
 
         >>> import numpy as np
         >>> dist_f = lambda n: np.array(n.length or 0.0, ndmin=1)
@@ -4105,8 +4103,8 @@ class TreeNode(SkbioObject):
         Notes
         -----
         This method is automatically called during the first search in a tree (methods
-        ``find`` and ``find_all``). After that, subsequent searches will utilize the
-        constructed lookup table, until it is deleted.
+        :meth:`find` and :meth:`find_all`). After that, subsequent searches will
+        utilize the constructed lookup table, until it is deleted.
 
         This method may be called from any node within a tree. The lookup table will be
         attached to the root node of the tree.
