@@ -652,8 +652,8 @@ class TreeNode(SkbioObject):
         children. They are independent. If both True, each internal node (and root)
         will be visited twice. If neither is True, only tips will be returned.
 
-        This method is a generalization of ``preorder``, ``postorder``,
-        ``pre_and_postorder`` and ``tips``. The default mode
+        This method is a generalization of :meth:`preorder`, :meth:`postorder`,
+        :meth:`pre_and_postorder` and :meth:`tips`. The default mode
         (``self_before=True, self_after=False``) is equivalent to preorder
         traversal.
 
@@ -2005,7 +2005,7 @@ class TreeNode(SkbioObject):
 
         .. note:: In the case where the basal node has just one child, the
             resulting tree will still appear rooted as it has two basal nodes.
-            To avoid this scenario, call ``prune`` to remove all one-child
+            To avoid this scenario, call :meth:`prune` to remove all one-child
             internal nodes.
 
         Examples
