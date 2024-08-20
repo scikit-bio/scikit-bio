@@ -389,7 +389,7 @@ class TreeTests(TestCase):
         t3 = TreeNode.read(["((x2,x3)o,(x4,x5)p)q;"])
         n3 = t3.find("o")
         t2.create_caches()
-        t2.append(n3, clear_caches=False)
+        t2.append(n3, uncache=False)
         self.assertEqual(len((c2 := t2.children)), 3)
         self.assertEqual(c2[0].name, "x")
         self.assertEqual(c2[1].name, "y")
@@ -429,7 +429,7 @@ class TreeTests(TestCase):
         t4 = TreeNode.read(["(x2,y2)z2;"])
         t1.create_caches()
         t4.create_caches()
-        t1.extend(t4.children, clear_caches=False)
+        t1.extend(t4.children, uncache=False)
         self.assertEqual(len(t4.children), 0)
         self.assertEqual(len(c := t1.children), 4)
         self.assertEqual(c[0].name, "x1")
@@ -494,7 +494,7 @@ class TreeTests(TestCase):
         t.assign_supports()
         t.create_caches()
         n = t.lca(["a", "b"])
-        t.lca(["a", "b"]).insert(TreeNode("x"), clear_caches=False)
+        t.lca(["a", "b"]).insert(TreeNode("x"), uncache=False)
         self.assertTrue(hasattr(t, "_tip_cache"))
         self.assertEqual(n.parent.name, "x")
         self.assertEqual(n.parent.parent.name, "d")
@@ -530,7 +530,7 @@ class TreeTests(TestCase):
 
         # pop first child, keep cache
         t.create_caches()
-        i1 = t.pop(0, clear_caches=False)
+        i1 = t.pop(0, uncache=False)
         self.assertEqual(i1.name, "i1")
         self.assertIsNone(i1.parent)
         self.assertEqual(len(t.children), 2)
@@ -564,7 +564,7 @@ class TreeTests(TestCase):
 
         # keep cache
         t.create_caches()
-        self.assertTrue(t.remove(parent, clear_caches=False))
+        self.assertTrue(t.remove(parent, uncache=False))
         self.assertTrue(hasattr(t, "_tip_cache"))
 
     def test_remove_by_func(self):
@@ -580,7 +580,7 @@ class TreeTests(TestCase):
 
         # lambda function, keep cache
         t.create_caches()
-        t.remove_by_func(lambda x: x.name == "a", clear_caches=False)
+        t.remove_by_func(lambda x: x.name == "a", uncache=False)
         self.assertEqual(str(t), "(i1,(c)i2)root;\n")
         self.assertTrue(hasattr(t, "_tip_cache"))
 
@@ -635,7 +635,7 @@ class TreeTests(TestCase):
         # keep cache
         t = TreeNode.read(["((((a)b)c)d)e;"])
         t.create_caches()
-        t.prune(clear_caches=False)
+        t.prune(uncache=False)
         self.assertEqual(t.name, "a")
         self.assertTrue(hasattr(t, "_tip_cache"))
 
@@ -669,7 +669,7 @@ class TreeTests(TestCase):
         # keep cache
         t = TreeNode.read(["((H:1,G:1):2,(R:0.5,M:0.7):3);"])
         t.create_caches()
-        obs = t.shear(["G", "M"], inplace=True, clear_caches=False)
+        obs = t.shear(["G", "M"], inplace=True, uncache=False)
         self.assertEqual(str(t), exp)
         self.assertTrue(hasattr(t, "_tip_cache"))
 
@@ -742,7 +742,7 @@ class TreeTests(TestCase):
 
         # keep cache
         tree = TreeNode.read(["((c,d)a,(e,f)b);"])
-        tree.find("b").unpack(clear_caches=False)
+        tree.find("b").unpack(uncache=False)
         self.assertEqual(str(tree), exp)
         self.assertTrue(hasattr(tree, "_tip_cache"))
 
@@ -779,7 +779,7 @@ class TreeTests(TestCase):
         # keep cache
         tree = TreeNode.read(["((c:2,d:3)a:1,(e:1,f:2)b:2);"])
         tree.create_caches()
-        tree.unpack_by_func(func, clear_caches=False)
+        tree.unpack_by_func(func, uncache=False)
         self.assertEqual(str(tree).rstrip(), exp)
         self.assertTrue(hasattr(tree, "_tip_cache"))
 
@@ -851,7 +851,7 @@ class TreeTests(TestCase):
         # keep cache
         t1 = TreeNode.read(["(((a,b),c),(d,e));"])
         t1.create_caches()
-        t1.bifurcate(clear_caches=False)
+        t1.bifurcate(uncache=False)
         self.assertEqual(str(t1), "(((a,b),c),(d,e));\n")
         self.assertTrue(hasattr(t1, "_tip_cache"))
 
@@ -959,7 +959,7 @@ class TreeTests(TestCase):
 
         # keep caches
         t = TreeNode.read(["((a,b)c,(d,e)f)g;"])
-        t.find("c").unroot(clear_caches=False)
+        t.find("c").unroot(uncache=False)
         exp = "(a,b,(d,e)f)c;\n"
         self.assertEqual(str(t), exp)
         self.assertTrue(hasattr(t, "_tip_cache"))
@@ -1084,7 +1084,7 @@ class TreeTests(TestCase):
         # keep caches
         tcopy = t.copy()
         obs = tcopy.find("c")
-        obs.unrooted_move(clear_caches=False)
+        obs.unrooted_move(uncache=False)
         self.assertTrue(hasattr(tcopy, "_tip_cache"))
 
     def test_root_at(self):

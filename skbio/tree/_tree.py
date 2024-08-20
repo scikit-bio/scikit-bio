@@ -1089,14 +1089,14 @@ class TreeNode(SkbioObject):
     # Tree manipulation
     # ------------------------------------------------
 
-    def append(self, node, clear_caches=True):
+    def append(self, node, uncache=True):
         r"""Add a node to self's children.
 
         Parameters
         ----------
         node : TreeNode
             Node to add as a child.
-        clear_caches : bool, optional
+        uncache : bool, optional
             Whether to clear caches of the tree if present (default: True). See
             :meth:`details <has_caches>`.
 
@@ -1113,7 +1113,7 @@ class TreeNode(SkbioObject):
         if any, but its children will be preserved. Therefore, this method is able to
         move an entire clade.
 
-        The ``clear_caches`` parameter applies to both donor and recipient trees.
+        The ``uncache`` parameter applies to both donor and recipient trees.
 
         Examples
         --------
@@ -1128,7 +1128,7 @@ class TreeNode(SkbioObject):
         <BLANKLINE>
 
         """
-        if clear_caches:
+        if uncache:
             self.clear_caches()
             node.clear_caches()
 
@@ -1142,7 +1142,7 @@ class TreeNode(SkbioObject):
         node.parent = self
         self.children.append(node)
 
-    def extend(self, nodes, clear_caches=True):
+    def extend(self, nodes, uncache=True):
         r"""Add a list of nodes to self's children.
 
         Parameters
@@ -1154,7 +1154,7 @@ class TreeNode(SkbioObject):
 
                 Can accept any iterable type in addition to list as input.
 
-        clear_caches : bool, optional
+        uncache : bool, optional
             Whether to clear caches of the tree if present (default: True). See
             :meth:`details <has_caches>`.
 
@@ -1169,7 +1169,7 @@ class TreeNode(SkbioObject):
         This method will remove existing parents of the nodes if they have any, set
         their parents to self, and add the nodes to the end of self's children.
 
-        The ``clear_caches`` parameter applies to both donor and recipient trees.
+        The ``uncache`` parameter applies to both donor and recipient trees.
 
         Examples
         --------
@@ -1184,7 +1184,7 @@ class TreeNode(SkbioObject):
         # make a shallow copy of nodes, which is necessary for working with iterators
         # and containers that are mutable during reconnection (like `children`)
         nodes = list(nodes)
-        if clear_caches:
+        if uncache:
             self.clear_caches()
             for node in nodes:
                 node.clear_caches()
@@ -1199,7 +1199,7 @@ class TreeNode(SkbioObject):
             node.parent = self
         self.children.extend(nodes)
 
-    def insert(self, node, distance=None, branch_attrs=[], clear_caches=True):
+    def insert(self, node, distance=None, branch_attrs=[], uncache=True):
         r"""Insert a node into the branch connecting self and its parent.
 
         .. versionadded:: 0.6.2
@@ -1216,7 +1216,7 @@ class TreeNode(SkbioObject):
             Attributes of self that should be transferred to the inserted node
             as they are considered as attributes of the branch. ``support``
             will be automatically included as it is always a branch attribute.
-        clear_caches : bool, optional
+        uncache : bool, optional
             Whether to clear caches of the tree if present (default: True). See
             :meth:`details <has_caches>`.
 
@@ -1242,7 +1242,7 @@ class TreeNode(SkbioObject):
         position in the parent's children is consistent with that of self prior to
         insertion.
 
-        The ``clear_caches`` parameter applies to both donor and recipient trees.
+        The ``uncache`` parameter applies to both donor and recipient trees.
 
         Examples
         --------
@@ -1270,12 +1270,12 @@ class TreeNode(SkbioObject):
         """
         if (parent := self.parent) is None:
             raise NoParentError("Self has no parent.")
-        if clear_caches:
+        if uncache:
             self.clear_caches()
 
         # detach node from original tree if applicable
         if node.parent is not None:
-            node.parent.remove(node, clear_caches)
+            node.parent.remove(node, uncache)
 
         # replace self with node in the parent's list of children
         node.parent = parent
@@ -1309,14 +1309,14 @@ class TreeNode(SkbioObject):
             node.length = self.length - distance
             self.length = distance
 
-    def pop(self, index=-1, clear_caches=True):
+    def pop(self, index=-1, uncache=True):
         r"""Remove and return a child node by index position from self.
 
         Parameters
         ----------
         index : int, optional
             The index position in ``children`` to pop.
-        clear_caches : bool, optional
+        uncache : bool, optional
             Whether to clear caches of the tree if present (default: True). See
             :meth:`details <has_caches>`.
 
@@ -1350,20 +1350,20 @@ class TreeNode(SkbioObject):
         <BLANKLINE>
 
         """
-        if clear_caches:
+        if uncache:
             self.clear_caches()
         node = self.children.pop(index)
         node.parent = None
         return node
 
-    def remove(self, node, clear_caches=True):
+    def remove(self, node, uncache=True):
         r"""Remove a child node by identity from self.
 
         Parameters
         ----------
         node : TreeNode
             The node to remove from self's children.
-        clear_caches : bool, optional
+        uncache : bool, optional
             Whether to clear caches of the tree if present (default: True). See
             :meth:`details <has_caches>`.
 
@@ -1393,7 +1393,7 @@ class TreeNode(SkbioObject):
         True
 
         """
-        if clear_caches:
+        if uncache:
             self.clear_caches()
 
         # it is necessary to perform removal by identity (`is`), instead of removal by
@@ -1405,7 +1405,7 @@ class TreeNode(SkbioObject):
                 return True
         return False
 
-    def remove_by_func(self, func, clear_caches=True):
+    def remove_by_func(self, func, uncache=True):
         r"""Remove nodes of a tree that meet certain criteria.
 
         .. versionchanged:: 0.6.3
@@ -1416,7 +1416,7 @@ class TreeNode(SkbioObject):
         func : callable
             A function that accepts a ``TreeNode`` and returns True or False, where
             True indicates the node is to be deleted.
-        clear_caches : bool, optional
+        uncache : bool, optional
             Whether to clear caches of the tree if present (default: True). See
             :meth:`details <has_caches>`.
 
@@ -1446,15 +1446,15 @@ class TreeNode(SkbioObject):
         <BLANKLINE>
 
         """
-        if clear_caches:
+        if uncache:
             self.clear_caches()
         for node in self.traverse(include_self=False):
             if func(node):
-                node.parent.remove(node, clear_caches=False)
+                node.parent.remove(node, uncache=False)
 
     remove_deleted = remove_by_func  # alias; to be removed in a future version
 
-    def prune(self, clear_caches=True):
+    def prune(self, uncache=True):
         r"""Collapse single-child nodes in the tree.
 
         Internal nodes with only one child will be removed, and direct connections will
@@ -1464,7 +1464,7 @@ class TreeNode(SkbioObject):
 
         Parameters
         ----------
-        clear_caches : bool, optional
+        uncache : bool, optional
             Whether to clear caches of the tree if present (default: True). See
             :meth:`details <has_caches>`.
 
@@ -1513,7 +1513,7 @@ class TreeNode(SkbioObject):
                             \-i
 
         """
-        if clear_caches:
+        if uncache:
             self.clear_caches()
 
         # build up the list of nodes to remove so the topology is not altered
@@ -1534,8 +1534,8 @@ class TreeNode(SkbioObject):
             if (parent := node.parent) is not None:
                 # TODO: replace the original node's index position, rather than append
                 # to the end.
-                parent.append(child, clear_caches=False)
-                parent.remove(node, clear_caches=False)
+                parent.append(child, uncache=False)
+                parent.remove(node, uncache=False)
 
         # If there is a single descendent from the root, the root will adopt the
         # child's properties. We can't "delete" the root as that would be deleting
@@ -1549,10 +1549,10 @@ class TreeNode(SkbioObject):
             for key, value in child.__dict__.items():
                 if key not in ("length", "parent", "children"):
                     self.__dict__[key] = value
-            self.remove(child, clear_caches=False)
-            self.extend(child.children, clear_caches=False)
+            self.remove(child, uncache=False)
+            self.extend(child.children, uncache=False)
 
-    def shear(self, names, strict=True, prune=True, inplace=False, clear_caches=True):
+    def shear(self, names, strict=True, prune=True, inplace=False, uncache=True):
         r"""Refine a tree such that it just has the desired tip names.
 
         Parameters
@@ -1577,7 +1577,7 @@ class TreeNode(SkbioObject):
 
             .. versionadded:: 0.6.3
 
-        clear_caches : bool, optional
+        uncache : bool, optional
             Whether to clear caches of the tree if present (default: True). See
             :meth:`details <has_caches>`. Only applicable when ``inplace`` is True.
 
@@ -1640,7 +1640,7 @@ class TreeNode(SkbioObject):
         # modify (sub)tree in place
         if inplace:
             tree = self
-            if clear_caches:
+            if uncache:
                 tree.clear_caches()
 
             # temporarily disconnect subtree from parent
@@ -1671,11 +1671,11 @@ class TreeNode(SkbioObject):
         # within clades that are already removed
         for node in list(tree.traverse()):
             if node not in marked:
-                node.parent.remove(node, clear_caches=False)
+                node.parent.remove(node, uncache=False)
 
         # remove single-child nodes
         if prune:
-            tree.prune(clear_caches=False)
+            tree.prune(uncache=False)
 
         # reconnect subtree to parent
         if inplace:
@@ -1683,12 +1683,12 @@ class TreeNode(SkbioObject):
         else:
             return tree
 
-    def unpack(self, clear_caches=True):
+    def unpack(self, uncache=True):
         """Unpack an internal node in place.
 
         Parameters
         ----------
-        clear_caches : bool, optional
+        uncache : bool, optional
             Whether to clear caches of the tree if present (default: True). See
             :meth:`details <has_caches>`.
 
@@ -1724,17 +1724,17 @@ class TreeNode(SkbioObject):
             raise TreeError("Cannot unpack root.")
         if self.is_tip():
             raise TreeError("Cannot unpack tip.")
-        if clear_caches:
+        if uncache:
             self.clear_caches()
         parent = self.parent
         blen = self.length or 0.0
         for child in self.children:
             clen = child.length or 0.0
             child.length = clen + blen or None
-        parent.remove(self, clear_caches=False)
-        parent.extend(self.children, clear_caches=False)
+        parent.remove(self, uncache=False)
+        parent.extend(self.children, uncache=False)
 
-    def unpack_by_func(self, func, clear_caches=True):
+    def unpack_by_func(self, func, uncache=True):
         """Unpack internal nodes of a tree that meet certain criteria.
 
         Parameters
@@ -1742,7 +1742,7 @@ class TreeNode(SkbioObject):
         func : callable
             A function that accepts a ``TreeNode`` and returns True or False, where
             True indicates the node is to be unpacked.
-        clear_caches : bool, optional
+        uncache : bool, optional
             Whether to clear caches of the tree if present (default: True). See
             :meth:`details <has_caches>`.
 
@@ -1769,7 +1769,7 @@ class TreeNode(SkbioObject):
         <BLANKLINE>
 
         """
-        if clear_caches:
+        if uncache:
             self.clear_caches()
         nodes_to_unpack = []
         nodes_to_unpack_append = nodes_to_unpack.append
@@ -1777,9 +1777,9 @@ class TreeNode(SkbioObject):
             if func(node):
                 nodes_to_unpack_append(node)
         for node in nodes_to_unpack:
-            node.unpack(clear_caches=False)
+            node.unpack(uncache=False)
 
-    def bifurcate(self, insert_length=None, clear_caches=True):
+    def bifurcate(self, insert_length=None, uncache=True):
         r"""Convert the tree into a bifurcating tree.
 
         All nodes that have more than two children will have additional intermediate
@@ -1789,7 +1789,7 @@ class TreeNode(SkbioObject):
         ----------
         insert_length : int, optional
             The branch length assigned to all inserted nodes.
-        clear_caches : bool, optional
+        uncache : bool, optional
             Whether to clear caches of the tree if present (default: True). See
             :meth:`details <has_caches>`.
 
@@ -1836,7 +1836,7 @@ class TreeNode(SkbioObject):
                             \-e
 
         """
-        if clear_caches:
+        if uncache:
             self.clear_caches()
         treenode = self.__class__
         for node in self.traverse(include_self=True):
@@ -1845,10 +1845,10 @@ class TreeNode(SkbioObject):
                 while len(stack) > 2:
                     ind = stack.pop()
                     interm = treenode(length=insert_length, children=stack[:])
-                    node.append(interm, clear_caches=False)
+                    node.append(interm, uncache=False)
                     for child in stack:
-                        node.remove(child, clear_caches=False)
-                    node.extend([ind, interm], clear_caches=False)
+                        node.remove(child, uncache=False)
+                    node.extend([ind, interm], uncache=False)
 
     def shuffle(self, k=None, names=None, shuffle_f=np.random.shuffle, n=1):
         r"""Yield trees with shuffled tip names.
@@ -1958,7 +1958,7 @@ class TreeNode(SkbioObject):
     # Tree rerooting
     # ------------------------------------------------
 
-    def unroot(self, side=None, clear_caches=True):
+    def unroot(self, side=None, uncache=True):
         r"""Convert a rooted tree into unrooted.
 
         .. versionadded:: 0.6.2
@@ -1969,7 +1969,7 @@ class TreeNode(SkbioObject):
             Which basal node (i.e., children of root) will be elevated to root. Must be
             0 or 1. If not provided, will elevate the first basal node that is not a
             tip.
-        clear_caches : bool, optional
+        uncache : bool, optional
             Whether to clear caches of the tree if present (default: True). See
             :meth:`details <has_caches>`.
 
@@ -2044,7 +2044,7 @@ class TreeNode(SkbioObject):
         if len(bases := root.children) != 2:
             return root
 
-        if clear_caches:
+        if uncache:
             root.clear_caches()
 
         # choose a basal node to elevate
@@ -2282,7 +2282,7 @@ class TreeNode(SkbioObject):
         self,
         parent=None,
         branch_attrs={"length", "support"},
-        clear_caches=True,
+        uncache=True,
     ):
         r"""Walk the tree unrooted-style and rearrange it.
 
@@ -2296,7 +2296,7 @@ class TreeNode(SkbioObject):
         branch_attrs : set of str, optional
             Attributes of ``TreeNode`` objects that should be considered as
             branch attributes during the operation.
-        clear_caches : bool, optional
+        uncache : bool, optional
             Whether to clear caches of the tree if present (default: True). See
             :meth:`details <has_caches>`.
 
@@ -2329,7 +2329,7 @@ class TreeNode(SkbioObject):
         <BLANKLINE>
 
         """
-        if clear_caches:
+        if uncache:
             self.clear_caches()
 
         # recursively add parent to children
@@ -2337,7 +2337,7 @@ class TreeNode(SkbioObject):
         if (old_parent := self.parent) is not None:
             children.append(old_parent)
             old_parent.unrooted_move(
-                parent=self, branch_attrs=branch_attrs, clear_caches=False
+                parent=self, branch_attrs=branch_attrs, uncache=False
             )
 
         # 1. starting point (becomes root)
@@ -2569,7 +2569,7 @@ class TreeNode(SkbioObject):
         if above is not False:
             to_insert = node.__class__()
             distance = None if above is True else above
-            node.insert(to_insert, distance, branch_attrs, clear_caches=False)
+            node.insert(to_insert, distance, branch_attrs, uncache=False)
             node = to_insert
 
         branch_attrs = set(branch_attrs)
@@ -2579,7 +2579,7 @@ class TreeNode(SkbioObject):
         if to_copy:
             return node.unrooted_copy(branch_attrs=branch_attrs, root_name=root_name)
         else:
-            node.unrooted_move(branch_attrs=branch_attrs, clear_caches=False)
+            node.unrooted_move(branch_attrs=branch_attrs, uncache=False)
             if root_name and node.name is None:
                 node.name = root_name
             return node
@@ -2712,7 +2712,7 @@ class TreeNode(SkbioObject):
             tree = tree.copy()
 
         if reset:
-            tree.unroot(clear_caches=False)
+            tree.unroot(uncache=False)
 
         max_dist, tips = tree.get_max_distance()
         half_max_dist = max_dist / 2.0
@@ -2743,9 +2743,7 @@ class TreeNode(SkbioObject):
         # insert a new root node into the branch
         else:
             new_root = tree.__class__()
-            climb_node.insert(
-                new_root, half_max_dist - dist_climbed, clear_caches=False
-            )
+            climb_node.insert(new_root, half_max_dist - dist_climbed, uncache=False)
             # TODO: Here, `branch_attrs` should be added to `insert`. However, this
             # will cause a backward-incompatible behavior. This change will be made
             # in version 0.7.0, along with the removal of `name` from the default of
@@ -2753,7 +2751,7 @@ class TreeNode(SkbioObject):
 
         branch_attrs = set(branch_attrs)
         branch_attrs.update(["length", "support"])
-        new_root.unrooted_move(branch_attrs=branch_attrs, clear_caches=False)
+        new_root.unrooted_move(branch_attrs=branch_attrs, uncache=False)
         if root_name and new_root.name is None:
             new_root.name = root_name
         return new_root
@@ -3785,9 +3783,8 @@ class TreeNode(SkbioObject):
 
         When the tree is manipulated, caches typically become obsolete and are
         automatically cleared. If the caches are not present or not relevant to the
-        analysis, you may set ``clear_caches=False`` when performing individual
-        operations to suppress clearing. This can improve the performance of these
-        operations.
+        analysis, you may set ``uncache=False`` when performing individual operations
+        to suppress clearing. This can improve the performance of these operations.
 
         You may explicitly call :meth:`clear_caches` to clear caches of a tree.
 
@@ -4505,8 +4502,8 @@ class TreeNode(SkbioObject):
             child_b.length = path_length - child_b._balanced_distance_to_tip()
 
             new_cluster = node_lookup[newest_cluster_index]
-            new_cluster.append(child_a, clear_caches=False)
-            new_cluster.append(child_b, clear_caches=False)
+            new_cluster.append(child_a, uncache=False)
+            new_cluster.append(child_b, uncache=False)
 
             newest_cluster_index += 1
 
@@ -4585,10 +4582,10 @@ class TreeNode(SkbioObject):
                     new_node = cls(name=name)
                     new_node._lookup = {}
                     cur_node._lookup[name] = new_node
-                    cur_node.append(new_node, clear_caches=False)
+                    cur_node.append(new_node, uncache=False)
                     cur_node = new_node
 
-            cur_node.append(cls(name=id_), clear_caches=False)
+            cur_node.append(cls(name=id_), uncache=False)
 
         # scrub the lookups
         for node in root.non_tips(include_self=True):
@@ -4790,7 +4787,7 @@ class TreeNode(SkbioObject):
                 child.rank = ranks[id_]
                 _extend_tree(child)
                 children.append(child)
-            node.extend(children, clear_caches=False)
+            node.extend(children, uncache=False)
 
         # extend tree
         _extend_tree(tree)
