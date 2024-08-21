@@ -78,11 +78,10 @@ jobs:
       - name: Make documentation
         run: make doc
       # save built documentation (HTML) for deployment
-      - name: Modify documentation
+      - name: Substitute URLs
         if: github.event_name == 'push'
         run: |
           python doc/suburl.py
-          python doc/metatag.py
           python doc/editmap.py
       - name: Save documentation
         if: github.event_name == 'push'

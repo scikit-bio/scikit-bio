@@ -25,7 +25,6 @@ Phylogenetic reconstruction
 .. autosummary::
    :toctree: generated/
 
-    upgma
     nj
     gme
 
@@ -197,7 +196,6 @@ pairwise tip-to-tip distances between trees:
 # ----------------------------------------------------------------------------
 
 from ._tree import TreeNode
-from ._upgma import upgma
 from ._nj import nj
 from ._gme import gme
 from ._nni import nni
@@ -212,7 +210,6 @@ from ._exception import (
 
 __all__ = [
     "TreeNode",
-    "upgma",
     "nj",
     "gme",
     "nni",

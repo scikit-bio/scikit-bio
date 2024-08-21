@@ -7,9 +7,8 @@ This package provides general exception/warning definitions used throughout
 scikit-bio, as well as various utility functionality, including I/O and
 unit-testing convenience functions.
 
-
-Testing utilities
------------------
+Testing functionality
+^^^^^^^^^^^^^^^^^^^^^
 
 Common functionality to support testing in skbio.
 
@@ -20,18 +19,8 @@ Common functionality to support testing in skbio.
    assert_ordination_results_equal
    assert_data_frame_almost_equal
 
-
-Plotting utilities
-------------------
-
-.. autosummary::
-   :toctree: generated/
-
-   PlottableMixin
-
-
-Miscellaneous utilities
------------------------
+Miscellaneous functionality
+^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 Generally useful functionality that doesn't fit in more specific locations.
 
@@ -43,21 +32,14 @@ Generally useful functionality that doesn't fit in more specific locations.
    safe_md5
    classproperty
 
-
 Developer warnings
-------------------
+^^^^^^^^^^^^^^^^^^
 
 .. autosummary::
+   :toctree: generated/
 
    EfficiencyWarning
    RepresentationWarning
-
-
-Details
--------
-
-.. autoexception:: EfficiencyWarning
-.. autoexception:: RepresentationWarning
 
 
 """  # noqa: D412, D416, D205, D415
@@ -79,7 +61,6 @@ from ._testing import (
     pytestrunner,
 )
 from ._decorator import classproperty
-from ._plotting import PlottableMixin
 
 __all__ = [
     "SkbioWarning",
@@ -94,5 +75,4 @@ __all__ = [
     "assert_data_frame_almost_equal",
     "classproperty",
     "pytestrunner",
-    "PlottableMixin",
 ]
