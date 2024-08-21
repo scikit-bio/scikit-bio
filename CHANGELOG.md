@@ -5,25 +5,34 @@
 ### Features
 
 * Wrapped UPGMA and WPGMA from SciPy's linkage method ([#2094](https://github.com/scikit-bio/scikit-bio/pull/2094)).
+* Added `TreeNode.has_caches` to check if a tree has caches ([#2103](https://github.com/scikit-bio/scikit-bio/pull/2103)).
 
 ### Performance enhancements
 
 * Improved the performance of tree traversal algorithms ([#2093](https://github.com/scikit-bio/scikit-bio/pull/2093)).
-* Further improved the caching mechanism of `TreeNode`. Specifically: 1. Node attribute caches are only registered at the root node, which improves memory efficiency. 2. ``clear_caches`` can be customized to clear node attribute and/or lookup caches, or specified attribute caches ([#2099](https://github.com/scikit-bio/scikit-bio/pull/2099)).
+* Improved the performance of tree copying ([#2103](https://github.com/scikit-bio/scikit-bio/pull/2103)).
+* Further improved the caching mechanism of `TreeNode`. Specifically: 1. Node attribute caches are only registered at the root node, which improves memory efficiency. 2. Method `clear_caches` can be customized to clear node attribute and/or lookup caches, or specified attribute caches ([#2099](https://github.com/scikit-bio/scikit-bio/pull/2099)). 3. Added parameter `uncache` to multiple methods that involves tree manipulation. Default is True. When one knows that caches are not present or relevant, one may set this parameter as False to skip cache clearing to significantly improve performance ([#2103](https://github.com/scikit-bio/scikit-bio/pull/2103)).
 * Expanded the functionality of `TreeNode.cache_attr`. It can now take a custom function to combine children and self attributes. This makes it possible to cache multiple useful clade properties such as node count and total branch length. Also enriched the method's docstring to provide multiple examples of caching clade properties ([#2099](https://github.com/scikit-bio/scikit-bio/pull/2099)).
+* Added parameter `inplace` to methods `shear`, `root_at`, `root_at_midpoint` and `root_by_outgroup` of `TreeNode` to enable manipulating the tree in place (True), which is more efficient that making a manipulated copy of the tree (False, default) ([#2103](https://github.com/scikit-bio/scikit-bio/pull/2103)).
+* `TreeNode.extend` can accept any iterable type of nodes as input ([#2103](https://github.com/scikit-bio/scikit-bio/pull/2103)).
+* Added parameter `strict` to `TreeNode.shear` ([#2103](https://github.com/scikit-bio/scikit-bio/pull/2103)).
+* Added parameter `exclude_attrs` to `TreeNode.unrooted_copy` ([#2103](https://github.com/scikit-bio/scikit-bio/pull/2103)).
 
 ### Bug fixes
 
 * Fixed a bug in `TreeNode.find_all` which does not look for other nodes with the same name if a `TreeNode` instance is provided, as in contrast to what the documentation claims ([#2099](https://github.com/scikit-bio/scikit-bio/pull/2099)).
+* Fixed a bug in `TreeNode.unrooted_move` which does not respect specified branch attributes ([#2103](https://github.com/scikit-bio/scikit-bio/pull/2103)).
 
 ### Miscellaneous
 
-* Renamed `TreeNode.invalidate_caches` as `clear_caches`. The old name is preserved as an alias ([#2099](https://github.com/scikit-bio/scikit-bio/pull/2099)).
 * Remodeled documentation. Special methods (previously referred to as built-in methods) and inherited methods of a class no longer have separate stub pages. This significantly reduced the total number of webpages in the documentation ([#2110](https://github.com/scikit-bio/scikit-bio/pull/2110)).
+* Renamed `TreeNode.invalidate_caches` as `clear_caches`, because the caches are indeed deleted rather than marked as obsolete. The old name is preserved as an alias ([#2099](https://github.com/scikit-bio/scikit-bio/pull/2099)).
+* Renamed `TreeNode.remove_deleted` as `remove_by_func`. The old name is preserved as an alias ([#2103](https://github.com/scikit-bio/scikit-bio/pull/2103)).
 
 ### Deprecated functionality
 
-* Method `Treenode.create_caches` is deprecated. It will become a private member in version 0.7.0 ([#2099](https://github.com/scikit-bio/scikit-bio/pull/2099)).
+* Method `TreeNode.create_caches` is deprecated. It will become a private member in version 0.7.0 ([#2099](https://github.com/scikit-bio/scikit-bio/pull/2099)).
+* Method `TreeNode.subtree` is deprecated. It will become a private member in version 0.7.0 ([#2103](https://github.com/scikit-bio/scikit-bio/pull/2103)).
 
 
 ## Version 0.6.2
@@ -49,8 +58,7 @@
 * `Treenode.copy` and `TreeNode.unrooted_copy` can now perform shallow copy of a tree in addition to deep copy.
 * `TreeNode.unrooted_copy` can now copy all attributes of the nodes, in addition to name and length ([#2073](https://github.com/scikit-bio/scikit-bio/pull/2073)).
 * Paremter `above` was added to `TreeNode.root_at`, such that the user can root the tree within the branch connecting the given node and its parent, thereby creating a rooted tree ([#2073](https://github.com/scikit-bio/scikit-bio/pull/2073)).
-* Parameter `branch_attrs` was added to the `unrooted_copy`, `root_at`, and `root_at_midpoint` methods of `TreeNode`, such that the user can customize which node attributes should be considered as branch attributes and treated accordingly
-during the rerooting operation. The default behavior is preserved but is subject ot change in version 0.7.0 ([#2073](https://github.com/scikit-bio/scikit-bio/pull/2073)).
+* Parameter `branch_attrs` was added to the `unrooted_copy`, `root_at`, and `root_at_midpoint` methods of `TreeNode`, such that the user can customize which node attributes should be considered as branch attributes and treated accordingly during the rerooting operation. The default behavior is preserved but is subject ot change in version 0.7.0 ([#2073](https://github.com/scikit-bio/scikit-bio/pull/2073)).
 * Parameter `root_name` was added to the `unrooted_copy`, `root_at`, and `root_at_midpoint` methods of `TreeNode`, such that the user can customize (or omit) the name to be given to the root node. The default behavior is preserved but is subject ot change in version 0.7.0 ([#2073](https://github.com/scikit-bio/scikit-bio/pull/2073)).
 
 ### Bug fixes
