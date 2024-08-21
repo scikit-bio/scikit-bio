@@ -24,7 +24,6 @@ Embedding vector types
 .. autosummary::
     :toctree: generated/
 
-    EmbeddingVector
     SequenceVector
     ProteinVector
 

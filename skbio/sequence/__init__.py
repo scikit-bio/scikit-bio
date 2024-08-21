@@ -46,15 +46,6 @@ Distance calculation
    distance
 
 
-Abstract classes
-----------------
-
-.. autosummary::
-   :toctree: generated/
-
-   NucleotideMixin
-
-
 Tutorial
 --------
 
@@ -336,7 +327,6 @@ from ._rna import RNA
 from ._genetic_code import GeneticCode
 from ._grammared_sequence import GrammaredSequence
 from ._substitution import SubstitutionMatrix
-from ._nucleotide_mixin import NucleotideMixin
 
 __all__ = [
     "Sequence",
@@ -346,5 +336,4 @@ __all__ = [
     "GeneticCode",
     "GrammaredSequence",
     "SubstitutionMatrix",
-    "NucleotideMixin",
 ]

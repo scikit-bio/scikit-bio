@@ -16,7 +16,6 @@ import pandas as pd
 import pandas.testing as pdt
 from scipy.sparse import coo_matrix
 from scipy.stats import f_oneway
-from statsmodels.api import datasets as smdatasets
 
 from skbio import TreeNode
 from skbio.util import assert_data_frame_almost_equal
@@ -1617,7 +1616,6 @@ class DirMultLMETests(TestCase):
         table = pd.DataFrame(data)
         table.columns = ["feature1", "feature2", "feature3", "feature4", "feature5", "feature6"]
         table.index = [f"subject{i}" for i in range(1, n*2+1)]
-        metadata.index = [f"subject{i}" for i in range(1, n*2+1)]
         res_10000 = dirmult_lme(formula="covar2", data=table, metadata=metadata, groups="covar1", seed=0, p_adjust="sidak", reml=True)
 
         # when the sequencing depth increases, the confidence intervals
