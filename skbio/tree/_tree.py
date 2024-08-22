@@ -509,15 +509,9 @@ class TreeNode(SkbioObject):
         ['d', 'f']
 
         """
-        if self.is_root():
-            return []
-
-        result = self.parent.children[:]
-
-        # TODO: This removal should be by identity (`is`) instead of equality.
-        result.remove(self)
-
-        return result
+        return (
+            [] if self.is_root() else [x for x in self.parent.children if x is not self]
+        )
 
     def neighbors(self, ignore=None):
         r"""Return all nodes that are neighbors of the current node.
