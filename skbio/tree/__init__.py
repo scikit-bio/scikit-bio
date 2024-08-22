@@ -15,6 +15,7 @@ Tree structure and operations
 
 .. autosummary::
    :toctree: generated/
+   :template: TreeNode.rst
 
     TreeNode
 
