@@ -55,34 +55,61 @@ def distance_from_r(m1, m2):
     return correlation(m1.data.flat, m2.data.flat) / 2
 
 
-class TreeNode(SkbioObject):
-    r"""Representation of a node within a tree.
+# ----------------------------------------------------------------------------
+# Important note: The TreeNode class has a large number of methods. They are
+# organized under several categories, which are defined in this script as well
+# as in `doc/source/_templates/TreeNode.rst`, which is a template file for the
+# documentation. When methods are added, removed or re-organized, one needs to
+# edit the template file to reflect the changes.
+# ----------------------------------------------------------------------------
 
-    A `TreeNode` instance stores links to its parent and optional children
-    nodes. In addition, the `TreeNode` can represent a `length` (e.g., a
-    branch length) between itself and its parent. Within this object, the use
-    of "children" and "descendants" is frequent in the documentation. A child
-    is a direct descendant of a node, while descendants are all nodes that are
-    below a given node (e.g., grand-children, etc).
+
+class TreeNode(SkbioObject):
+    r"""Represent a node within a tree.
+
+    A ``TreeNode`` instance stores links from a node to its parent node and optionally
+    child nodes. In addition, it can represent the length of the branch connecting
+    itself and its parent, and the support of this branch.
 
     Parameters
     ----------
     name : str or None
-        A node can have a name. It is common for tips in particular to have
-        names, for instance, in a phylogenetic tree where the tips correspond
-        to species.
+        Name of the node. It is common for tips in particular to have names, for
+        instance, in a phylogenetic tree where the tips correspond to taxa. Internal
+        nodes and the root may also have names.
     length : float, int, or None
         Length of the branch connecting this node to its parent. Can represent
         ellapsed time, amount of mutations, or other measures of evolutionary
         distance.
     support : float, int, or None
         Support value of the branch connecting this node to its parent. Can be
-        bootstrap value, posterior probability, or other metrics measuring the
-        confidence or frequency of this branch.
+        bootstrap value, posterior probability, or other measures of the confidence or
+        frequency of this branch.
     parent : TreeNode or None
-        Connect this node to a parent
+        Parent node to which this node is connected. A node without a parent is the
+        root of the tree.
     children : list of TreeNode or None
-        Connect this node to existing children
+        Child nodes to which this node is connected. A node without any children is a
+        tip (leaf) of the tree.
+
+    Notes
+    -----
+    A tree is a graph in which any two nodes (vertices) are connected by exactly one
+    path. The ``TreeNode`` class is capable of representing various tree structures,
+    including binary trees, phylogenetic trees, and other hierarchical systems such as
+    taxonomies and ontologies. While the class is versatile, many of its terms and
+    methods are specifically designed for phylogenetic analysis.
+
+    In scikit-bio, trees are modeled as a collection of interconnected ``TreeNode``
+    objects, each representing a single node in the tree. There is no explicit class
+    for the entire tree, a clade, or a branch (edge). Instead, a tree is implicitly
+    defined by its root node, from which the entire tree can be traversed. Starting
+    from any node, one can navigate up to its parent and ancestors, down to its
+    children and descendants, or sideways to its siblings.
+
+    The underlying data structure of a tree composed of ``TreeNode`` objects is an
+    ordered, rooted tree. However, the ``TreeNode`` class has the flexibility to handle
+    unrooted and unordered trees as well, which are common in phylogenetics.
 
     """
 
@@ -136,26 +163,7 @@ class TreeNode(SkbioObject):
         )
 
     def __str__(self):
-        r"""Return string version of self, with names and distances.
-
-        Returns
-        -------
-        str
-            Returns a Newick representation of the tree
-
-        See Also
-        --------
-        read
-        write
-
-        Examples
-        --------
-        >>> from skbio import TreeNode
-        >>> tree = TreeNode.read(["((a,b)c);"])
-        >>> str(tree)
-        '((a,b)c);\n'
-
-        """
+        r"""Return a Newick string of self, with names and distances."""
         return str("".join(self.write([])))
 
     def __iter__(self):
