@@ -15,6 +15,7 @@ Tree structure and operations
 
 .. autosummary::
    :toctree: generated/
+   :template: TreeNode.rst
 
     TreeNode
 
@@ -25,6 +26,7 @@ Tree Construction
 .. autosummary::
    :toctree: generated/
 
+    upgma
     nj
     gme
     bme
@@ -197,6 +199,7 @@ pairwise tip-to-tip distances between trees:
 # ----------------------------------------------------------------------------
 
 from ._tree import TreeNode
+from ._upgma import upgma
 from ._nj import nj
 from ._gme import gme
 from ._bme import bme
@@ -212,6 +215,7 @@ from ._exception import (
 
 __all__ = [
     "TreeNode",
+    "upgma",
     "nj",
     "gme",
     "bme",
