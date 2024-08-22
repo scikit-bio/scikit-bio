@@ -23,7 +23,7 @@ def _validate_counts_vector(counts, cast_int=False):
     counts : array_like of int or float of shape (n_taxa,)
         Vector of counts.
     cast_int : bool, optional
-        Cast values into integers, if not already. ``False`` by default.
+        Whether cast values into integers, if not already. Default is False.
 
     Returns
     -------
@@ -86,7 +86,7 @@ def _validate_counts_matrix(counts, ids=None, cast_int=False):
     ids : array_like of shape (n_samples,), optional
         Sample IDs to check against counts dimensions.
     cast_int : bool, optional
-        Cast values into integers, if not already. ``False`` by default.
+        Whether cast values into integers, if not already. Default is False.
 
     Returns
     -------
@@ -239,7 +239,7 @@ def _quantitative_to_qualitative_counts(counts):
 
 
 def _check_taxa_alias(taxa, tree, otu_ids):
-    # make `taxa` an alias of `taxa`; for backward compatibility
+    # make `otu_ids` an alias of `taxa`; for backward compatibility
     if taxa is None:
         if otu_ids is None:
             raise ValueError("A list of taxon IDs must be provided.")
@@ -272,10 +272,10 @@ def _validate_table(counts, ids, kwargs):
     WARNING: this implicitly adds an entry to kwargs IF `tree` is present.
     """
     if ids is not None:
-        raise ValueError("Cannot provide a `Table` as `counts` and `ids`")
+        raise ValueError("Cannot provide a `Table` as `counts` and `ids`.")
 
     if "taxa" in kwargs:
-        raise ValueError("Cannot provide a `Table` as `counts` and `taxa`")
+        raise ValueError("Cannot provide a `Table` as `counts` and `taxa`.")
 
     dense_counts, sample_ids, feature_ids = _table_to_numpy(counts)
     if "tree" in kwargs:

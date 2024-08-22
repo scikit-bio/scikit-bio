@@ -15,7 +15,7 @@ from skbio.tree import TreeNode
 
 
 def nj(dm, disallow_negative_branch_length=True, result_constructor=None):
-    r"""Apply neighbor joining for phylogenetic reconstruction.
+    r"""Perform neighbor joining (NJ) for phylogenetic reconstruction.
 
     Parameters
     ----------
@@ -40,6 +40,7 @@ def nj(dm, disallow_negative_branch_length=True, result_constructor=None):
 
     See Also
     --------
+    upgma
     TreeNode.root_at_midpoint
 
     Notes

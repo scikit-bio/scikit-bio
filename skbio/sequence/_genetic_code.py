@@ -15,19 +15,19 @@ from skbio._base import ElasticLines
 
 
 class GeneticCode(SkbioObject):
-    """Genetic code for translating codons to amino acids.
+    r"""Genetic code for translating codons to amino acids.
 
     Parameters
     ----------
     amino_acids : consumable by ``skbio.Protein`` constructor
         64-character vector containing IUPAC amino acid characters. The order
         of the amino acids should correspond to NCBI's codon order (see *Notes*
-        section below). `amino_acids` is the "AAs" field in NCBI's genetic
+        section below). ``amino_acids`` is the "AAs" field in NCBI's genetic
         code format [1]_.
     starts : consumable by ``skbio.Protein`` constructor
         64-character vector containing only M and - characters, with start
         codons indicated by M. The order of the amino acids should correspond
-        to NCBI's codon order (see *Notes* section below). `starts` is the
+        to NCBI's codon order (see *Notes* section below). ``starts`` is the
         "Starts" field in NCBI's genetic code format [1]_.
     name : str, optional
         Genetic code name. This is simply metadata and does not affect the
@@ -41,12 +41,12 @@ class GeneticCode(SkbioObject):
 
     Notes
     -----
-    The genetic codes available via ``GeneticCode.from_ncbi`` and used
+    The genetic codes available via :meth:`from_ncbi` and used
     throughout the examples are defined in [1]_. The genetic code strings
     defined there are directly compatible with the ``GeneticCode`` constructor.
 
-    The order of `amino_acids` and `starts` should correspond to NCBI's codon
-    order, defined in [1]_::
+    The order of ``amino_acids`` and ``starts`` should correspond to NCBI's
+    codon order, defined in [1]_::
 
         UUUUUUUUUUUUUUUUCCCCCCCCCCCCCCCCAAAAAAAAAAAAAAAAGGGGGGGGGGGGGGGG
         UUUUCCCCAAAAGGGGUUUUCCCCAAAAGGGGUUUUCCCCAAAAGGGGUUUUCCCCAAAAGGGG
@@ -141,7 +141,7 @@ class GeneticCode(SkbioObject):
 
     @classonlymethod
     def from_ncbi(cls, table_id=1):
-        """Return NCBI genetic code specified by table ID.
+        r"""Return NCBI genetic code specified by table ID.
 
         Parameters
         ----------
@@ -180,7 +180,7 @@ class GeneticCode(SkbioObject):
 
     @classproperty
     def reading_frames(cls):
-        """Six possible reading frames.
+        r"""Six possible reading frames.
 
         Reading frames are ordered:
 
@@ -191,8 +191,7 @@ class GeneticCode(SkbioObject):
         * -2 (reverse)
         * -3 (reverse)
 
-        This property can be passed into
-        ``GeneticCode.translate(reading_frame)``.
+        This property can be passed into ``GeneticCode.translate(reading_frame)``.
 
         Returns
         -------
@@ -204,7 +203,7 @@ class GeneticCode(SkbioObject):
 
     @property
     def name(self):
-        """Genetic code name.
+        r"""Genetic code name.
 
         This is simply metadata and does not affect the functionality of the
         genetic code itself.
@@ -267,7 +266,7 @@ class GeneticCode(SkbioObject):
         return codon
 
     def __str__(self):
-        """Return string representation of the genetic code.
+        r"""Return string representation of the genetic code.
 
         Returns
         -------
@@ -286,7 +285,7 @@ class GeneticCode(SkbioObject):
         return self._build_repr(include_name=False)
 
     def __repr__(self):
-        """Return string representation of the genetic code.
+        r"""Return string representation of the genetic code.
 
         Returns
         -------
@@ -328,7 +327,7 @@ class GeneticCode(SkbioObject):
         return lines.to_str()
 
     def __eq__(self, other):
-        """Determine if the genetic code is equal to another.
+        r"""Determine if the genetic code is equal to another.
 
         Genetic codes are equal if they are *exactly* the same type and
         defined by the same `amino_acids` and `starts`. A genetic code's name
@@ -375,7 +374,7 @@ class GeneticCode(SkbioObject):
         return True
 
     def __ne__(self, other):
-        """Determine if the genetic code is not equal to another.
+        r"""Determine if the genetic code is not equal to another.
 
         Genetic codes are not equal if their type, `amino_acids`, or `starts`
         differ. A genetic code's name (accessed via ``name`` property) does not
@@ -395,7 +394,7 @@ class GeneticCode(SkbioObject):
         return not (self == other)
 
     def translate(self, sequence, reading_frame=1, start="ignore", stop="ignore"):
-        """Translate RNA sequence into protein sequence.
+        r"""Translate RNA sequence into protein sequence.
 
         Parameters
         ----------

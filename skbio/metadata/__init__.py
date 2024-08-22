@@ -40,6 +40,17 @@ Interval metadata
    Interval
    IntervalMetadata
 
+
+Abstract classes
+----------------
+
+.. autosummary::
+   :toctree: generated/
+
+   MetadataMixin
+   PositionalMetadataMixin
+   IntervalMetadataMixin
+
 """  # noqa: D205, D415
 
 # ----------------------------------------------------------------------------
@@ -57,6 +68,11 @@ from ._metadata import (
     CategoricalMetadataColumn,
 )
 from ._interval import Interval, IntervalMetadata
+from ._mixin import (
+    MetadataMixin,
+    PositionalMetadataMixin,
+    IntervalMetadataMixin,
+)
 
 __all__ = [
     "SampleMetadata",
@@ -65,4 +81,7 @@ __all__ = [
     "CategoricalMetadataColumn",
     "Interval",
     "IntervalMetadata",
+    "MetadataMixin",
+    "PositionalMetadataMixin",
+    "IntervalMetadataMixin",
 ]
