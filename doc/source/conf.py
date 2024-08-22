@@ -14,11 +14,9 @@
 import sys
 import inspect
 from datetime import datetime
-from os.path import abspath, relpath, dirname
+from os.path import relpath, dirname
 
 import skbio
-
-sys.path.insert(0, abspath('.'))
 
 
 # -- Project information -----------------------------------------------------
@@ -264,12 +262,3 @@ def _closure():
 
     classproperty.__get__ = __get__
 _closure()
-
-
-# Import the patched autosummary extension to support automatic inheritance.
-
-from autoinherit import InheritedAutosummary
-
-
-def setup(app):
-    app.add_directive('autoinherit', InheritedAutosummary)

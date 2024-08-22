@@ -95,6 +95,8 @@ from skbio.util import find_duplicates
 from skbio.util._misc import get_rng
 from skbio.util._warning import _warn_deprecated
 from statsmodels.stats.multitest import multipletests as sm_multipletests
+from statsmodels.regression.mixed_linear_model import MixedLM
+from patsy import dmatrix
 
 
 def closure(mat):
@@ -1992,6 +1994,7 @@ def dirmult_ttest(
         rng.dirichlet(table.values[i] + pseudocount) for i in range(table.shape[0])
     ]
     dir_table = pd.DataFrame(clr(posterior), index=table.index, columns=table.columns)
+
     res = [
         _welch_ttest(
             np.array(dir_table.loc[trt_group.index, x].values),
@@ -2058,3 +2061,486 @@ def dirmult_ttest(
         "Reject null hypothesis",
     ]
     return res[col_order]
+
+
+def _type_cast_to_float(df):
+    """Attempt to cast all of the values in dataframe to float.
+
+    This will try to type cast all of the series within the
+    dataframe into floats.  If a column cannot be type casted,
+    it will be kept as is.
+
+    Parameters
+    ----------
+    df : pd.DataFrame
+
+    Returns
+    -------
+    pd.DataFrame
+    """
+    # Implementation based on https://github.com/mortonjt/differential/blob/65752567ef4cf303471405b0a9be503eb10a0bbb/differential/util.py#L4
+    # TODO: Will need to improve this, as this is a very hacky solution.
+    for c in df.columns:
+        s = df[c]
+        try:
+            df[c] = s.astype(np.float64)
+        except Exception:
+            continue
+    return df
+
+
+def _lme_call(
+    formula,
+    metadata,
+    table,
+    groups,
+    reml=True,
+    method=None,
+    re_formula=None,
+    vc_formula=None,
+    fit_kwargs={},
+    **kwargs,
+):
+    # TODO: add docs when this implementation is approved
+    # _covariate_list is essentially the list of covariates
+
+    FEATUREID = "FeatureID"
+    LOG2FC = "Log2(FC)"
+    CI25 = "CI(2.5)"
+    CI975 = "CI(97.5)"
+    PVALUE = "pvalue"
+    COVARIATE = "Covariate"
+
+    submodels = []
+    metadata = _type_cast_to_float(metadata.copy())
+
+    merged_data = pd.merge(
+        table, metadata, left_index=True, right_index=True, how="inner"
+    )
+    if len(merged_data) == 0:
+        raise ValueError(
+            (
+                "No more samples left. Check to make sure that "
+                "the sample names between `metadata` and `data` "
+                "are consistent."
+            )
+        )
+
+    design_matrix = dmatrix(formula, metadata, return_type="dataframe")
+
+    # Obtaining the list of covariates by selecting the relevant columns
+    _covariate_list = design_matrix.columns.tolist()
+
+    # Removing intercept since it is not a covariate, and is included by default
+    _covariate_list.remove("Intercept")
+
+    output = []
+    for response_var in table.columns:
+        # mixed effects code is obtained here:
+        # http://stackoverflow.com/a/22439820/1167475
+        stats_formula = "%s ~ %s" % (response_var, formula)
+        model = MixedLM.from_formula(
+            formula=stats_formula,
+            data=merged_data,
+            groups=groups,
+            re_formula=re_formula,
+            vc_formula=vc_formula,
+            **kwargs,
+        )
+
+        results = model.fit(reml=reml, method=method, **fit_kwargs)
+        summary = results.summary()
+
+        for var_name in _covariate_list:
+            try:
+                _lme_coef, _lme_25, _lme_975 = np.nan, np.nan, np.nan
+                _lme_coef = float(summary.tables[1]["Coef."][var_name])
+                _lme_25 = float(summary.tables[1]["[0.025"][var_name])
+                _lme_975 = float(summary.tables[1]["0.975]"][var_name])
+
+                individual_results = {
+                    FEATUREID: response_var,
+                    COVARIATE: var_name,
+                    LOG2FC: _lme_coef,
+                    CI25: _lme_25,
+                    CI975: _lme_975,
+                    PVALUE: results.pvalues[var_name],
+                }
+            except Exception as e:
+                if type(e) is not ValueError:
+                    print("Something went really wrong, details below: ")
+                    print(type(e))
+                    print(e)
+
+                    individual_results = {
+                        FEATUREID: response_var,
+                        COVARIATE: var_name,
+                        LOG2FC: np.nan,
+                        CI25: np.nan,
+                        CI975: np.nan,
+                        PVALUE: np.nan,
+                    }
+
+                else:
+                    measures = {
+                        LOG2FC: np.nan,
+                        CI25: np.nan,
+                        CI975: np.nan,
+                    }
+                    mapping = {
+                        LOG2FC: _lme_coef,
+                        CI25: _lme_25,
+                        CI975: _lme_975,
+                    }
+
+                    if len(summary.tables) >= 2:
+                        table = summary.tables[1]
+
+                        for key_final, key_table in mapping.items():
+                            if key_table in table and var_name in table[key_table]:
+                                measures[key_final] = table[key_table][var_name]
+
+                    individual_results = {
+                        "FeatureID": response_var,
+                        "Covariate": var_name,
+                        "pvalue": results.pvalues[var_name],
+                    }
+
+                    individual_results.update(measures)
+
+            output.append(individual_results)
+
+    return (output, submodels, _covariate_list)
+
+
+def _obtain_dir_table(data, pseudocount, rng):
+    if data.shape[1] > 1:
+        posterior = [
+            rng.dirichlet(data.values[i] + pseudocount) for i in range(data.shape[0])
+        ]
+        dir_table = pd.DataFrame(
+            posterior, index=data.index, columns=data.columns
+        ).apply(clr, axis=1)
+        dir_table = pd.DataFrame(
+            dir_table.tolist(), index=dir_table.index, columns=data.columns
+        )
+    else:
+        posterior = rng.dirichlet(data.values.flatten() + pseudocount)
+        dir_table = np.log(posterior)
+        dir_table = pd.DataFrame(dir_table, index=data.index, columns=data.columns)
+
+    return dir_table
+
+
+def dirmult_lme(
+    formula,
+    data,
+    metadata,
+    groups=None,
+    reml=True,
+    method=None,
+    re_formula=None,
+    vc_formula=None,
+    draws=128,
+    seed=None,
+    pseudocount=0.5,
+    p_adjust="holm",
+    fit_kwargs={},
+    **kwargs,
+):
+    r"""Fit a Dirichlet Multinomial linear mixed effects model.
+
+    The Dirichlet-multinomial distribution is a compound distribution that
+    combines a Dirichlet distribution over the probabilities of a multinomial
+    distribution. This distribution is used to model the distribution of
+    species abundances in a community.
+
+    To fit the linear mixed effect model we first fit a Dirichlet-multinomial
+    distribution for each sample, and then we compute the fold change and
+    *p*-value for each feature. The fold change is computed as the slopes
+    from the resulting model. Statistical tests are then performed on the posterior
+    samples, drawn from each Dirichlet-multinomial distribution. The
+    log-fold changes as well as their credible intervals, the *p*-values and
+    the multiple comparison corrected *p*-values are reported.
+
+    This function uses ``MixedLM`` module from
+    ``statsmodels.regression.mixed_linear_model``
+
+    Parameters
+    ----------
+    formula : str or generic Formula object
+        The formula specifying the model
+    data : array-like
+        The data for the model. If data is a pd.DataFrame, it must contain the
+        dependent variables in data.columns. If data is not a pd.DataFrame, it must
+        contain the dependent variable in indices of data. data can be a
+        a numpy structured array, or a numpy recarray, or a dictionary.
+    metadata: array-like
+        The metadata for the model. If metadata is a pd.DataFrame, it must contain
+        the covariates in metadata.columns. If metadata is not a pd.DataFrame,
+        it must contain the covariates in indices of metadata. metadata can
+        be a numpy structured array, or a numpy recarray, or a dictionary.
+    groups : str
+        The column name in data that identifies the grouping variable
+    reml : bool
+        If true, fit according to the REML likelihood, else fit the standard
+        likelihood using ML.
+    method : str
+        Optimization method. Can be a scipy.optimize method name, or a list of such
+        names to be tried in sequence.
+        See https://docs.scipy.org/doc/scipy/tutorial/optimize.html for all options.
+    draws : int, optional
+        The number of draws from the Dirichilet-multinomial posterior distribution
+    seed : int or np.random.Generator, optional
+        A user-provided random seed or random generator instance.
+    pseudocount : float, optional
+        A non-zero value added to the input counts to ensure that all of the
+        estimated abundances are strictly greater than zero.
+    p_adjust : str or None, optional
+        Method to correct *p*-values for multiple comparisons. Options are Holm-
+        Boniferroni ("holm" or "holm-bonferroni") (default), Benjamini-
+        Hochberg ("bh", "fdr_bh" or "benjamini-hochberg"), or any method supported
+        by statsmodels' ``multipletests`` function. Case-insensitive. If None, no
+        correction will be performed.
+    fit_kwargs : dict
+        Keyword arguments to pass to the model fit function.
+        See ``statsmodels.regression.mixed_linear_model.MixedLM.fit``
+    **kwargs
+        Additional keyword arguments to pass to the mixedlm function only.
+
+    Returns
+    -------
+    pd.DataFrame
+        A table of features, their log-fold changes and other relevant statistics.
+
+        ``FeatureID`` is the feature identifier, ie: dependent variables
+
+        ``Covariate`` is the covariate name, ie: independent variables
+
+        ``Log2(FC)`` is the expected log2-fold change. The reported ``Log2(FC)``
+        is the average of all of the log2-fold changes computed from each of the
+        posterior draws.
+
+        ``CI(2.5)`` is the 2.5% quantile of the log2-fold change. The reported
+        ``CI(2.5)`` is the average of the 2.5% quantile of all of the log2-fold
+        changes computed from each of the posterior draws.
+
+        ``CI(97.5)`` is the 97.5% quantile of the log2-fold change. The
+        reported ``CI(97.5)`` is the average of the 97.5% quantile of all of
+        the log2-fold changes computed from each of the posterior draws.
+
+        ``pvalue`` is the *p*-value of the linear mixed effects model. The
+        reported values are the average of all of the *p*-values computed from the
+        linear mixed effects models calculated across all of the posterior draws.
+
+        ``qvalue`` is the corrected *p*-value of the linear mixed effects model
+        for multiple comparisons. The reported values are the average of all of
+        the *q*-values computed from the linear mixed effects models calculated
+        across all of the posterior draws.
+
+    See Also
+    --------
+    statsmodels.formula.api.mixedlm
+    statsmodels.regression.mixed_linear_model.MixedLM
+    differential.regression.mixedlm
+
+    Examples
+    --------
+    >>> table = pd.DataFrame(
+    ...     {
+    ...         "u1": [1.00000053, 6.09924644],
+    ...         "u2": [0.99999843, 7.0000045],
+    ...         "u3": [1.09999884, 8.08474053],
+    ...         "x1": [1.09999758, 1.10000349],
+    ...         "x2": [0.99999902, 2.00000027],
+    ...         "x3": [1.09999862, 2.99998318],
+    ...         "y1": [1.00000084, 2.10001257],
+    ...         "y2": [0.9999991, 3.09998418],
+    ...         "y3": [0.99999899, 3.9999742],
+    ...         "z1": [1.10000124, 5.0001796],
+    ...         "z2": [1.00000053, 6.09924644],
+    ...         "z3": [1.10000173, 6.99693644],
+    ...     },
+    ...     index=["Y1", "Y2"],
+    ... ).T
+    >>> metadata = pd.DataFrame(
+    ...     {
+    ...         "patient": [1, 1, 1, 2, 2, 2, 3, 3, 3, 4, 4, 4],
+    ...         "treatment": [1, 1, 1, 1, 1, 1, 2, 2, 2, 2, 2, 2],
+    ...         "time": [1, 2, 3, 1, 2, 3, 1, 2, 3, 1, 2, 3],
+    ...     },
+    ...     index=["x1", "x2", "x3", "y1", "y2", "y3",
+    ...            "z1", "z2", "z3", "u1", "u2", "u3"],
+    ... )
+    >>> res = dirmult_lme(
+    ...     formula="time + treatment", data=table, metadata=metadata,
+    ...     groups="patient", seed=0, p_adjust="sidak"
+    ... )
+    >>> res
+      FeatureID  Covariate  Log2(FC)   CI(2.5)  CI(97.5)    pvalue    qvalue
+    0        Y1       time -0.210769 -1.571095  1.144057  0.411140  0.879760
+    1        Y1  treatment -0.164704 -3.456697  3.384563  0.593769  0.972767
+    2        Y2       time  0.210769 -1.144057  1.571095  0.411140  0.879760
+    3        Y2  treatment  0.164704 -3.384563  3.456697  0.593769  0.972767
+
+    """
+
+    # Test if data is a pandas DataFrame
+    errmsg = (
+        "%s must be a pandas DataFrame or a numpy structured or rec array or "
+        "a dictionary."
+    )
+
+    attr_errmsg = "Please ensure you have added a list of feature IDs to %s"
+
+    if not isinstance(data, pd.DataFrame):
+        try:
+            data = pd.DataFrame(data)
+        except AttributeError:
+            raise AttributeError(attr_errmsg % "Data")
+        except (TypeError, ValueError):
+            raise TypeError(errmsg % "Data")
+
+    if data.ndim != 2:
+        try:
+            data = pd.DataFrame(data, index=data.dtype.names)
+        except (TypeError, ValueError):
+            raise TypeError(errmsg % "Data")
+
+    if not isinstance(metadata, pd.DataFrame):
+        try:
+            metadata = pd.DataFrame(metadata)
+        except AttributeError:
+            raise ValueError(attr_errmsg % "Metadata")
+        except (TypeError, ValueError):
+            raise TypeError(errmsg % "Metadata")
+
+    # Test if data has missing values
+    if data.isnull().values.any():
+        raise ValueError("Cannot handle missing values in data.")
+
+    # Test if metadata has missing values
+    if metadata.isnull().values.any():
+        raise ValueError("Cannot handle missing values in metadata.")
+
+    # Test if metadata and data have the same index, regardless of order
+    if not data.index.sort_values().equals(metadata.index.sort_values()):
+        raise ValueError("Data and metadata must have the same index.")
+
+    # Modifying the indices of data and metadata to use unique integers,
+    # so that merging them will not affect the result
+    data.index = list(range(data.shape[0]))
+    data.index = ["row" + str(i) for i in data.index]
+    metadata.index = list(range(metadata.shape[0]))
+    metadata.index = ["row" + str(i) for i in metadata.index]
+
+    # Columns in the final result
+    FEATUREID = "FeatureID"
+    LOG2FC = "Log2(FC)"
+    CI25 = "CI(2.5)"
+    CI975 = "CI(97.5)"
+    PVALUE = "pvalue"
+    COVARIATE = "Covariate"
+    QVALUE = "qvalue"
+
+    rng = get_rng(seed)
+    dir_table = _obtain_dir_table(data, pseudocount, rng)
+
+    res, _submodels, _covariate_list = _lme_call(
+        formula=formula,
+        table=dir_table,
+        metadata=metadata,
+        groups=groups,
+        re_formula=re_formula,
+        vc_formula=vc_formula,
+        reml=reml,
+        method=method,
+        fit_kwargs=fit_kwargs,
+        **kwargs,
+    )
+
+    # Creating an empty dict to store sum of values (Using a DataFrame throws errors)
+    # uses a separate array for each covariate and each feature
+    # array index: 0: pvalue, 1: CI(2.5), 2: CI(97.5), 3: log2fc, 4: qvalue
+    res_dict = {}
+
+    for feature in data.columns:
+        group = res_dict[feature] = {}
+        for covar in _covariate_list:
+            group[covar] = [0] * 5
+
+    for single_covar_data in res:
+        group = res_dict[single_covar_data[FEATUREID]][single_covar_data[COVARIATE]]
+        for i, key in enumerate((PVALUE, CI25, CI975, LOG2FC)):
+            group[i] = single_covar_data[key]
+
+    for i in range(1, draws):
+        dir_table = _obtain_dir_table(data, pseudocount, rng)
+
+        ires = _lme_call(
+            formula=formula,
+            table=dir_table,
+            metadata=metadata,
+            groups=groups,
+            re_formula=re_formula,
+            vc_formula=vc_formula,
+            reml=reml,
+            method=method,
+            fit_kwargs=fit_kwargs,
+            **kwargs,
+        )[0]
+
+        if ires is None:
+            continue
+
+        # online average to avoid holding all of the results in memory
+        for single_covar_data in ires:
+            group = res_dict[single_covar_data[FEATUREID]][single_covar_data[COVARIATE]]
+            group[0] = (i * group[0] + single_covar_data[PVALUE]) / (i + 1)
+            group[1] = np.minimum(group[1], single_covar_data[CI25])
+            group[2] = np.maximum(group[2], single_covar_data[CI975])
+            group[3] = (i * group[3] + single_covar_data[LOG2FC]) / (i + 1)
+
+    # convert all log fold changes to base 2
+    log2_ = np.log(2)
+    for feature, covar_dict in res_dict.items():
+        for covar, group in covar_dict.items():
+            group[1:4] /= log2_
+
+    p_value_arr = []
+    for feature in data.columns:
+        group = res_dict[feature]
+        for covar in _covariate_list:
+            p_value_arr.append(group[covar][0])
+
+    # multiple comparison
+    if p_adjust is not None:
+        qval = _calc_p_adjust(p_adjust, p_value_arr)
+    else:
+        qval = p_value_arr
+
+    count = 0
+    for feature in data.columns:
+        group = res_dict[feature]
+        for covar in _covariate_list:
+            group[covar][4] = qval[count]
+            count += 1
+
+    final_res = []
+
+    for feature in data.columns:
+        for covar in _covariate_list:
+            group = res_dict[feature][covar]
+            final_res.append(
+                {
+                    FEATUREID: feature,
+                    COVARIATE: covar,
+                    LOG2FC: group[3],
+                    CI25: group[1],
+                    CI975: group[2],
+                    PVALUE: group[0],
+                    QVALUE: group[4],
+                }
+            )
+
+    return pd.DataFrame(final_res)

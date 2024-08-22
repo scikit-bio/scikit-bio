@@ -14,8 +14,6 @@
 
    </style>
 
-.. meta::
-   :description: A community-driven Python library for bioinformatics, providing versatile data structures, algorithms and educational resources.
 
 .. hidden page title
 

@@ -7,35 +7,33 @@
 # ----------------------------------------------------------------------------
 
 from scipy.cluster.hierarchy import linkage
-from skbio.tree import TreeNode
+from skbio import TreeNode
 from skbio.stats.distance import DistanceMatrix
 
 
 def upgma(dm, weighted=False):
-    r"""Perform unweighted pair group method with arithmetic mean (UPGMA) or its
-    weighted variant (WPGMA) for phylogenetic reconstruction.
+    r"""
+    This function implements the Unweighted Pair Group Method with Arithmetic
+    mean (UPGMA) algorithm as well as the weighted variant (WPGMA) for phylogenetic
+    reconstruction.
 
     Parameters
     ----------
     dm : skbio.DistanceMatrix
         The input distance matrix.
     weighted : bool, optional
-        If True, WPGMA is performed instead of UPGMA. WPGMA is a variant of UPGMA
-        which is unbiased towards the size of subtrees computed.
+        If 'True', WPGMA is performed instead of UPGMA. WPGMA is a variant of
+        UPGMA which is unbiased towards the size of subtrees computed.
 
     Returns
     -------
     TreeNode
-        A TreeNode object with estimated edge values.
-
-    See Also
-    --------
-    nj
+        A TreeNode object with estimated edge values
 
     Notes
     -----
-    UPGMA is a hierarchical clustering method appearing as the `average` function
-    in the SciPy package, where the linkage matrix produced by `average` is used
+    UPGMA is a hierarchical clustering method appearing as the 'average' function
+    in the SciPy package, where the linkage matrix produced by 'average' is used
     to construct a TreeNode object. A weighted variant is known as WPGMA, and both
     variants are due to Sokal and Michener [1]_.
 
