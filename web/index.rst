@@ -43,7 +43,7 @@
 
 .. hidden page title
 
-.. title:: scikit-bio
+.. title:: scikit-bio: Bioinformatics in Python
 
 
 .. light/dark logo image
@@ -283,11 +283,11 @@
 
          .. card::
 
-            New `DOE award <https://genomicscience.energy.gov/compbioawards2023/#Expanding>`_ for scikit-bio development in multi-omics and complex modeling.
+            Thrilled with completion of `scikit-bio workshop <https://www.iscb.org/ismb2024/programme-schedule/tutorials#ip3>`_ at ISMB 2024. Materials are `publicly available <https://github.com/scikit-bio/scikit-bio-tutorials>`_.
 
          .. card::
 
-            Upcoming scikit-bio `workshop at ISMB 2024 <https://www.iscb.org/ismb2024/programme-schedule/tutorials#ip3>`_, July 12, Montreal, Canada. Welcome to join!
+            New `DOE award <https://genomicscience.energy.gov/compbioawards2023/#Expanding>`_ for scikit-bio development in multi-omics and complex modeling.
 
          .. card::
 

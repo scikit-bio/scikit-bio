@@ -74,7 +74,7 @@ Develop custom formats
 
 
 Exceptions and warnings
-^^^^^^^^^^^^^^^^^^^^^^^
+-----------------------
 
 .. currentmodule:: skbio.io
 
