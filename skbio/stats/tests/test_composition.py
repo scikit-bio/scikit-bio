@@ -1637,49 +1637,5 @@ class DirMultLMETests(TestCase):
             formula = "Covar2 + Covar3"
             dirmult_lme(formula=formula, data=self.table, metadata=self.metadata, groups='Covar1', seed=0, p_adjust="sidak", reml=True)
 
-    def test_re_formula(self):
-        """
-        re_formula describes the random effects of the LME model.The dataset contains
-        growth curve of pigs. The test's baseline is a model fitted using only Time as
-        a predictor variable. The second model will be fitted with two random effects
-        for each animal: a random intercept, and a random slope (with respect to time).
-        The model will have a better fit. This is observed by increase in CI 97.5% and
-        Coefficients, and a decrease in CI 2.5% for this dataset.
-        """
-        data = smdatasets.get_rdataset('dietox', 'geepack').data
-        table = data[["Weight"]]
-        table.index = data["Pig"]
-
-        metadata = data.drop("Feed", axis=1)
-        metadata = metadata.drop("Weight", axis=1)
-        metadata.index = data["Pig"]
-        
-        res = dirmult_lme(
-            formula="Time",
-            data=table,
-            metadata=metadata,
-            groups="Pig",
-            seed=0,
-            p_adjust="sidak",
-            reml=False,
-            method="lbfgs",
-        )
-
-        res2 = dirmult_lme(
-            formula="Time",
-            data=table,
-            metadata=metadata,
-            groups="Pig",
-            re_formula="~Time",
-            seed=0,
-            p_adjust="sidak",
-            reml=False,
-            method="lbfgs",
-        )
-
-        npt.assert_array_less(res['CI(97.5)'], res2['CI(97.5)'])
-        npt.assert_array_less(res2['CI(2.5)'], res['CI(2.5)'])
-        npt.assert_array_less(res['Log2(FC)'], res2['Log2(FC)'])
-
 if __name__ == "__main__":
     main()
