@@ -16,7 +16,6 @@ import pandas as pd
 import pandas.testing as pdt
 from scipy.sparse import coo_matrix
 from scipy.stats import f_oneway
-from statsmodels.api import datasets as smdatasets
 
 from skbio import TreeNode
 from skbio.util import assert_data_frame_almost_equal
