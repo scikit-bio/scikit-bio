@@ -2177,7 +2177,10 @@ def _lme_call(
                 }
             except Exception as e:
                 if type(e) is not ValueError:
-                    print("Something went really wrong, details below: ")
+                    print(
+                        f"""LME fit failed for covariate {var_name}
+                         and `response_var`, outputting nans."""
+                    )
                     print(type(e))
                     print(e)
 
