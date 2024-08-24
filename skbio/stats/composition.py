@@ -2105,7 +2105,6 @@ def _lme_call(
     metadata,
     table,
     groups,
-    reml=True,
     method=None,
     re_formula=None,
     vc_formula=None,
@@ -2157,7 +2156,7 @@ def _lme_call(
             **kwargs,
         )
 
-        results = model.fit(reml=reml, method=method, **fit_kwargs)
+        results = model.fit(method=method, **fit_kwargs)
         summary = results.summary()
 
         for var_name in _covariate_list:
@@ -2230,7 +2229,6 @@ def dirmult_lme(
     data,
     metadata,
     groups=None,
-    reml=True,
     method=None,
     re_formula=None,
     vc_formula=None,
@@ -2277,9 +2275,6 @@ def dirmult_lme(
         not contain duplicate indices.
     groups : str
         The column name in data that identifies the grouping variable
-    reml : bool
-        If true, fit according to the REML likelihood, else fit the standard
-        likelihood using ML.
     method : str
         Optimization method. Can be a scipy.optimize method name, or a list of such
         names to be tried in sequence.
@@ -2451,7 +2446,6 @@ def dirmult_lme(
         groups=groups,
         re_formula=re_formula,
         vc_formula=vc_formula,
-        reml=reml,
         method=method,
         fit_kwargs=fit_kwargs,
         **kwargs,
@@ -2482,7 +2476,6 @@ def dirmult_lme(
             groups=groups,
             re_formula=re_formula,
             vc_formula=vc_formula,
-            reml=reml,
             method=method,
             fit_kwargs=fit_kwargs,
             **kwargs,
