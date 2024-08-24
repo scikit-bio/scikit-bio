@@ -33,9 +33,11 @@ class TestWriteError(TestCase):
         self.tempdir = tempfile.TemporaryDirectory()
 
     def test_write_function(self):
+        # note: tiny_embedding_file stores embeddings for our 20 seqs.
         with open(get_data_path('tiny_embedding_file.npz'), 'rb') as fh:
             embeddings = np.load(fh)
             emb_list = [embeddings[arrs] for arrs in embeddings.files]
+        # note: pdb_hits.txt stores sequence strings for our 20 seqs.
         seqs = np.loadtxt(get_data_path('pdb_hits.txt'), dtype=str)
         seq_list = [" ".join(list(re.sub(r"[UZOB]", "X", str(seq))))
                     for seq in seqs]
