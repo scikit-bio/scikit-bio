@@ -1809,6 +1809,25 @@ def _welch_ttest(a, b):
     )
 
 
+def _obtain_dir_table(data, pseudocount, rng):
+    if data.shape[1] > 1:
+        posterior = [
+            rng.dirichlet(data.values[i] + pseudocount) for i in range(data.shape[0])
+        ]
+        dir_table = pd.DataFrame(
+            posterior, index=data.index, columns=data.columns
+        ).apply(clr, axis=1)
+        dir_table = pd.DataFrame(
+            dir_table.tolist(), index=dir_table.index, columns=data.columns
+        )
+    else:
+        posterior = rng.dirichlet(data.values.flatten() + pseudocount)
+        dir_table = np.log(posterior)
+        dir_table = pd.DataFrame(dir_table, index=data.index, columns=data.columns)
+
+    return dir_table
+
+
 def dirmult_ttest(
     table,
     grouping,
@@ -1990,10 +2009,8 @@ def dirmult_ttest(
 
     trt_group = grouping.loc[grouping == treatment]
     ref_group = grouping.loc[grouping == reference]
-    posterior = [
-        rng.dirichlet(table.values[i] + pseudocount) for i in range(table.shape[0])
-    ]
-    dir_table = pd.DataFrame(clr(posterior), index=table.index, columns=table.columns)
+    dir_table = _obtain_dir_table(table, pseudocount, rng)
+
     res = [
         _welch_ttest(
             np.array(dir_table.loc[trt_group.index, x].values),
@@ -2003,12 +2020,7 @@ def dirmult_ttest(
     ]
     res = pd.concat(res)
     for i in range(1, draws):
-        posterior = [
-            rng.dirichlet(table.values[i] + pseudocount) for i in range(table.shape[0])
-        ]
-        dir_table = pd.DataFrame(
-            clr(posterior), index=table.index, columns=table.columns
-        )
+        dir_table = _obtain_dir_table(table, pseudocount, rng)
 
         ires = [
             _welch_ttest(
@@ -2208,25 +2220,6 @@ def _lme_call(
             output.append(individual_results)
 
     return (output, submodels, _covariate_list)
-
-
-def _obtain_dir_table(data, pseudocount, rng):
-    if data.shape[1] > 1:
-        posterior = [
-            rng.dirichlet(data.values[i] + pseudocount) for i in range(data.shape[0])
-        ]
-        dir_table = pd.DataFrame(
-            posterior, index=data.index, columns=data.columns
-        ).apply(clr, axis=1)
-        dir_table = pd.DataFrame(
-            dir_table.tolist(), index=dir_table.index, columns=data.columns
-        )
-    else:
-        posterior = rng.dirichlet(data.values.flatten() + pseudocount)
-        dir_table = np.log(posterior)
-        dir_table = pd.DataFrame(dir_table, index=data.index, columns=data.columns)
-
-    return dir_table
 
 
 def dirmult_lme(
