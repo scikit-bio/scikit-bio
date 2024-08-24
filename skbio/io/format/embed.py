@@ -237,7 +237,8 @@ def _objects_to_embed(objs, fh, include_embedding_pointer=True):
                         i >= embptr_fh.shape[0])):
                         # check if adding obj exceeds embedding array size
                             max_idsize = ceil((len(arr)+idptr_fh[i-1])*resize_by)
-                            max_embsize = ceil((emb.shape[0] + embptr_fh[i - 1]) * resize_by)
+                            max_embsize = ceil((emb.shape[0] + embptr_fh[i - 1]) *
+                                                                resize_by)
                             resize = True
                 else:  # only check ID size conditions
                     if len(arr) + idptr_fh[i - 1] > max_idsize or i >= len(idptr_fh):
