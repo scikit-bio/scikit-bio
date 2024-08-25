@@ -1635,5 +1635,13 @@ class DirMultLMETests(TestCase):
             formula = "Covar2 + Covar3"
             dirmult_lme(formula=formula, data=self.table, metadata=self.metadata, groups='Covar1', seed=0, p_adjust="sidak")
 
+    def test_dirmult_lme_single_feature(self):
+        with self.assertRaises(ValueError):
+            # keep only the first column in the table
+            self.table = self.table.iloc[:, :1]
+            print(self.table)
+            formula = "Covar1"
+            dirmult_lme(formula=formula, data=self.table, metadata=self.metadata, groups='Covar1', seed=0, p_adjust="sidak")
+
 if __name__ == "__main__":
     main()

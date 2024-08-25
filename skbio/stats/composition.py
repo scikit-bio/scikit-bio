@@ -1810,20 +1810,15 @@ def _welch_ttest(a, b):
 
 
 def _obtain_dir_table(data, pseudocount, rng):
-    if data.shape[1] > 1:
-        posterior = [
-            rng.dirichlet(data.values[i] + pseudocount) for i in range(data.shape[0])
-        ]
-        dir_table = pd.DataFrame(
-            posterior, index=data.index, columns=data.columns
-        ).apply(clr, axis=1)
-        dir_table = pd.DataFrame(
-            dir_table.tolist(), index=dir_table.index, columns=data.columns
-        )
-    else:
-        posterior = rng.dirichlet(data.values.flatten() + pseudocount)
-        dir_table = np.log(posterior)
-        dir_table = pd.DataFrame(dir_table, index=data.index, columns=data.columns)
+    posterior = [
+        rng.dirichlet(data.values[i] + pseudocount) for i in range(data.shape[0])
+    ]
+    dir_table = pd.DataFrame(posterior, index=data.index, columns=data.columns).apply(
+        clr, axis=1
+    )
+    dir_table = pd.DataFrame(
+        dir_table.tolist(), index=dir_table.index, columns=data.columns
+    )
 
     return dir_table
 
@@ -2418,6 +2413,9 @@ def dirmult_lme(
         print(data.index)
         print(metadata.index)
         raise ValueError("Data and metadata must have the same index.")
+
+    if data.shape[0] == 1:
+        raise ValueError("Data must have at least two features.")
 
     # Modifying the indices of data and metadata to use unique integers,
     # so that merging them will not affect the result. append "row" before the
