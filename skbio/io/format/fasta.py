@@ -581,6 +581,60 @@ CATCGTC
 >>> new_fasta_fh.close()
 >>> new_qual_fh.close()
 
+Reading multi-FASTA Files
+^^^^^^^^^^^^^^^^^^^^^^^^^
+Suppose you have a multi-FASTA file and want to read each sequence into a ``DNA``
+object in a list. We'll be using ``io.StringIO`` to make a mock FASTA file in
+memory.
+
+>>> from io import StringIO
+>>> import skbio
+>>> from skbio.sequence import DNA
+>>> fl = ">seq1 Turkey\n" +\
+...      "AAGCTNGGGCATTTCAGGGTGAGCCCGGGCAATACAGGGTAT\n" +\
+...      ">seq2 Salmo gair\n" +\
+...      "AAGCCTTGGCAGTGCAGGGTGAGCCGTGG\n" +\
+...      "CCGGGCACGGTAT\n" +\
+...      ">seq3 H. Sapiens\n" +\
+...      "ACCGGTTGGCCGTTCAGGGTACAGGTTGGCCGTTCAGGGTAA\n" +\
+...      ">seq4 Chimp\n" +\
+...      "AAACCCTTGCCG\n" +\
+...      "TTACGCTTAAAC\n" +\
+...      "CGAGGCCGGGAC\n" +\
+...      "ACTCAT\n" +\
+...      ">seq5 Gorilla\n" +\
+...      "AAACCCTTGCCGGTACGCTTAAACCATTGCCGGTACGCTTAA\n"
+>>> mock_fl = StringIO(fl)
+>>> res = list(skbio.io.read(mock_fl, format="fasta", constructor=DNA))
+>>> res[0]
+DNA
+------------------------------------------------
+Metadata:
+    'description': 'Turkey'
+    'id': 'seq1'
+Stats:
+    length: 42
+    has gaps: False
+    has degenerates: True
+    has definites: True
+    GC-content: 54.76%
+------------------------------------------------
+0 AAGCTNGGGC ATTTCAGGGT GAGCCCGGGC AATACAGGGT AT
+>>> res[1]
+DNA
+------------------------------------------------
+Metadata:
+    'description': 'Salmo gair'
+    'id': 'seq2'
+Stats:
+    length: 42
+    has gaps: False
+    has degenerates: False
+    has definites: True
+    GC-content: 66.67%
+------------------------------------------------
+0 AAGCCTTGGC AGTGCAGGGT GAGCCGTGGC CGGGCACGGT AT
+
 References
 ----------
 .. [1] Lipman, DJ; Pearson, WR (1985). "Rapid and sensitive protein similarity
