@@ -213,6 +213,20 @@ In the procedural interface, ``format`` is required. Without it, scikit-bio does
 not know how you want to serialize an object. OO interfaces define a default
 ``format``, so it may not be necessary to include it.
 
+Streaming files with read and write
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+If you are working with particularly large files, streaming them might be preferable.
+Scikit-bio's ``io`` module offers the ability to contruct a streaming interface from
+the ``read`` and ``write`` functions.
+
+``skbio.io.read`` returns a generator, which can then be passed to ``skbio.io.write``
+to write only one chunk from the generator at a time.
+
+.. code-block:: python
+
+   seq_gen = skbio.io.read(big_file, format='someformat')
+   skbio.io.write(seq_gen, into=write_file, format='someformat')
+
 
 """  # noqa: D205, D415
 
