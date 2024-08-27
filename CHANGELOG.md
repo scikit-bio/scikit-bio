@@ -4,7 +4,8 @@
 
 ### Features
 
-* Implemented linear mixed effects with Dirichlet-multinomial distribution ([#2113](https://github.com/scikit-bio/scikit-bio/pull/2113))
+* Implemented linear mixed effects with Dirichlet-multinomial distribution ([#2113](https://github.com/scikit-bio/scikit-bio/pull/2113)).
+* Corrected write function error for embeddings ([#2100](https://github.com/scikit-bio/scikit-bio/pull/2100)).
 * Wrapped UPGMA and WPGMA from SciPy's linkage method ([#2094](https://github.com/scikit-bio/scikit-bio/pull/2094)).
 * Added `TreeNode.has_caches` to check if a tree has caches ([#2103](https://github.com/scikit-bio/scikit-bio/pull/2103)).
 
