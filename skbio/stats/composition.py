@@ -58,6 +58,7 @@ Functions
    ancom
    sbp_basis
    dirmult_ttest
+   dirmult_lme
 
 References
 ----------
