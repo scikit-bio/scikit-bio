@@ -1257,8 +1257,9 @@ def ancom(
         Method to correct *p*-values for multiple comparisons. Options are Holm-
         Boniferroni ("holm" or "holm-bonferroni") (default), Benjamini-
         Hochberg ("bh", "fdr_bh" or "benjamini-hochberg"), or any method supported
-        by statsmodels' ``multipletests`` function. Case-insensitive. If None, no
-        correction will be performed.
+        by statsmodels'
+        :func:`multipletests <statsmodels.stats.multitest.multipletests>` function.
+        Case-insensitive. If None, no correction will be performed.
 
         .. versionchanged:: 0.6.0
 
@@ -1877,8 +1878,9 @@ def dirmult_ttest(
         Method to correct *p*-values for multiple comparisons. Options are Holm-
         Boniferroni ("holm" or "holm-bonferroni") (default), Benjamini-
         Hochberg ("bh", "fdr_bh" or "benjamini-hochberg"), or any method supported
-        by statsmodels' ``multipletests`` function. Case-insensitive. If None, no
-        correction will be performed.
+        by statsmodels'
+        :func:`multipletests <statsmodels.stats.multitest.multipletests>` function.
+        Case-insensitive. If None, no correction will be performed.
     seed : int or np.random.Generator, optional
         A user-provided random seed or random generator instance.
 
@@ -2235,7 +2237,7 @@ def dirmult_lme(
     fit_kwargs={},
     **kwargs,
 ):
-    r"""Fit a Dirichlet Multinomial linear mixed effects model.
+    r"""Fit a Dirichlet-multinomial linear mixed effects model.
 
     The Dirichlet-multinomial distribution is a compound distribution that
     combines a Dirichlet distribution over the probabilities of a multinomial
@@ -2250,13 +2252,14 @@ def dirmult_lme(
     log-fold changes as well as their credible intervals, the *p*-values and
     the multiple comparison corrected *p*-values are reported.
 
-    This function uses ``MixedLM`` module from
-    ``statsmodels.regression.mixed_linear_model``
+    This function uses the
+    :class:`MixedLM <statsmodels.regression.mixed_linear_model.MixedLM>` class from
+    statsmodels.
 
     Parameters
     ----------
     formula : str or generic Formula object
-        The formula specifying the model
+        The formula specifying the model.
     data : array-like
         The data for the model. If data is a pd.DataFrame, it must contain the
         dependent variables in data.columns. If data is not a pd.DataFrame, it must
@@ -2270,29 +2273,39 @@ def dirmult_lme(
         be a numpy structured array, or a numpy recarray, or a dictionary. It must
         not contain duplicate indices.
     groups : str
-        The column name in data that identifies the grouping variable
-    method : str
-        Optimization method. Can be a scipy.optimize method name, or a list of such
-        names to be tried in sequence.
-        See https://docs.scipy.org/doc/scipy/tutorial/optimize.html for all options.
+        The column name in data that identifies the grouping variable.
+    method : str or list of str, optional
+        Optimization method for model fitting. Can be a single method name, or a list
+        of method names to be tried sequentially. See `statsmodels.optimization
+        <https://www.statsmodels.org/stable/optimization.html>`_
+        for available methods. If None, a default list of methods will be tried.
+    re_formula : str, optional
+        Random coefficient formula. See :meth:`MixedLM.from_formula
+        <statsmodels.regression.mixed_linear_model.MixedLM.from_formula>`.
+    vc_formula : str, optional
+        Variance component formula. See :meth:`MixedLM.from_formula
+        <statsmodels.regression.mixed_linear_model.MixedLM.from_formula>`.
     draws : int, optional
-        The number of draws from the Dirichilet-multinomial posterior distribution
+        The number of draws from the Dirichilet-multinomial posterior distribution.
+        Default is 128.
     seed : int or np.random.Generator, optional
         A user-provided random seed or random generator instance.
     pseudocount : float, optional
         A non-zero value added to the input counts to ensure that all of the
-        estimated abundances are strictly greater than zero.
+        estimated abundances are strictly greater than zero. Default is 0.5.
     p_adjust : str or None, optional
         Method to correct *p*-values for multiple comparisons. Options are Holm-
         Boniferroni ("holm" or "holm-bonferroni") (default), Benjamini-
         Hochberg ("bh", "fdr_bh" or "benjamini-hochberg"), or any method supported
-        by statsmodels' ``multipletests`` function. Case-insensitive. If None, no
-        correction will be performed.
+        by statsmodels'
+        :func:`multipletests <statsmodels.stats.multitest.multipletests>` function.
+        Case-insensitive. If None, no correction will be performed.
     fit_kwargs : dict
-        Keyword arguments to pass to the model fit function.
-        See ``statsmodels.regression.mixed_linear_model.MixedLM.fit``
+        Keyword arguments to pass to :meth:`MixedLM.fit
+        <statsmodels.regression.mixed_linear_model.MixedLM.fit>`.
     **kwargs
-        Additional keyword arguments to pass to the mixedlm function only.
+        Additional keyword arguments to pass to :meth:`MixedLM.from_formula
+        <statsmodels.regression.mixed_linear_model.MixedLM.from_formula>`
 
     Returns
     -------
@@ -2328,6 +2341,7 @@ def dirmult_lme(
     --------
     statsmodels.formula.api.mixedlm
     statsmodels.regression.mixed_linear_model.MixedLM
+    statsmodels.stats.multitest.multipletests
     differential.regression.mixedlm
 
     Examples

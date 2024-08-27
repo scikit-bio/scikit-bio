@@ -1532,7 +1532,7 @@ class DirMultLMETests(TestCase):
         formula = "Covar2 + Covar3"
         result = dirmult_lme(formula=formula, data=self.table, metadata=self.metadata, groups='Covar1', seed=0, p_adjust=None)
         pdt.assert_series_equal(result['pvalue'], result['qvalue'], check_names=False)
-        
+
         fit_kwargs = {"reml": False}
         res_ml = dirmult_lme(formula=formula, data=self.table, metadata=self.metadata, groups='Covar1', seed=0, p_adjust=None, fit_kwargs=fit_kwargs)
 
