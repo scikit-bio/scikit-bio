@@ -605,6 +605,10 @@ memory.
 ...      ">seq5 Gorilla\n" +\
 ...      "AAACCCTTGCCGGTACGCTTAAACCATTGCCGGTACGCTTAA\n"
 >>> mock_fl = StringIO(fl)
+
+The following code will read the sequences into scikit-bio. In practice, ``mock_fl``
+may be replaced with an opened file handle, or the path to the file.
+
 >>> res = list(skbio.io.read(mock_fl, format="fasta", constructor=DNA))
 >>> res[0]
 DNA
