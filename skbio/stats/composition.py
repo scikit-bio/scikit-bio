@@ -1925,6 +1925,7 @@ def dirmult_ttest(
 
     See Also
     --------
+    dirmult_lme
     scipy.stats.ttest_ind
 
     Notes
@@ -1946,10 +1947,11 @@ def dirmult_ttest(
 
     References
     ----------
-    .. [1] Fernandes et al. "Unifying the analysis of
-       high-throughput sequencing datasets: characterizing RNA-seq,
-       16S rRNA gene sequencing and selective growth experiments by
-       compositional data analysis." Microbiome (2014).
+    .. [1] Fernandes, A. D., Reid, J. N., Macklaim, J. M., McMurrough, T. A., Edgell,
+       D. R., & Gloor, G. B. (2014). Unifying the analysis of high-throughput
+       sequencing datasets: characterizing RNA-seq, 16S rRNA gene sequencing and
+       selective growth experiments by compositional data analysis. Microbiome, 2,
+       1-13.
 
     Examples
     --------
@@ -2339,12 +2341,14 @@ def dirmult_lme(
 
     See Also
     --------
+    dirmult_ttest
     statsmodels.formula.api.mixedlm
     statsmodels.regression.mixed_linear_model.MixedLM
-    statsmodels.stats.multitest.multipletests
 
     Examples
     --------
+    >>> import pandas as pd
+    >>> from skbio.stats.composition import dirmult_lme
     >>> table = pd.DataFrame(
     ...     {
     ...         "u1": [1.00000053, 6.09924644],
@@ -2390,7 +2394,7 @@ def dirmult_lme(
         "a dictionary."
     )
 
-    attr_errmsg = "Please ensure you have added a list of feature IDs to %s"
+    attr_errmsg = "Please ensure you have added a list of feature IDs to %s."
 
     if not isinstance(data, pd.DataFrame):
         try:
