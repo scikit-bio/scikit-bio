@@ -2342,7 +2342,6 @@ def dirmult_lme(
     statsmodels.formula.api.mixedlm
     statsmodels.regression.mixed_linear_model.MixedLM
     statsmodels.stats.multitest.multipletests
-    differential.regression.mixedlm
 
     Examples
     --------
