@@ -173,7 +173,7 @@ def _average_distance_k_upper(nodek, nodesubtree, dm):
     else:
         root = nodesubtree.root()
         nodelistsubtree = [root.name]
-        nodelistsubtree.extend(root.subset() - nodesubtree.subset())
+        nodelistsubtree.extend(sorted(root.subset() - nodesubtree.subset()))
     df = dm.between(nodelistk, nodelistsubtree)
     return df["value"].mean()
 
@@ -293,7 +293,7 @@ def _average_distance_upper(node1, node2, dm):
     else:
         root2 = node2.root()
         nodelist2 = [root2.name]
-        nodelist2.extend(root2.subset() - node2.subset())
+        nodelist2.extend(sorted(root2.subset() - node2.subset()))
     df = dm.between(nodelist1, nodelist2)
     return df["value"].mean()
 

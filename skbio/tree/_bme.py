@@ -277,9 +277,7 @@ def _balanced_average_matrix(tree, dm):
         # skipping over unique descendant
         if b in tree.children:
             continue
-        s_ = b.siblings()
-        for sibling in s_:
-            s = sibling
+        s = b.siblings()[0]
         p = b.parent
         for k, x in enumerate(ordered):
             if x is s:
@@ -313,13 +311,13 @@ def _bal_ols_edge(tree, dm):
         # calculate edge length for the edge adjacent to the root
         elif parent.is_root():
             for index, node in enumerate(ordered):
-                if node == edge_node:
+                if node is edge_node:
                     i1 = index
             a, b = edge_node.children
             for index, node in enumerate(ordered):
-                if node == a:
+                if node is a:
                     i2 = index
-                elif node == b:
+                elif node is b:
                     i3 = index
             edge_node.length = 0.5 * (adm[i2, i1] + adm[i3, i1] - adm[i2, i3])
         # calculate edge lengths for external edges
@@ -328,28 +326,25 @@ def _bal_ols_edge(tree, dm):
             if a.is_root():
                 for child in a.children:
                     a = child
-            for siblingnode in edge_node.siblings():
-                b = siblingnode
-                for index, node in enumerate(ordered):
-                    if node is edge_node:
-                        i1 = index
-                    elif node is a:
-                        i2 = index
-                    elif node is b:
-                        i3 = index
+            b = edge_node.siblings()[0]
+            for index, node in enumerate(ordered):
+                if node is edge_node:
+                    i1 = index
+                elif node is a:
+                    i2 = index
+                elif node is b:
+                    i3 = index
             edge_node.length = 0.5 * (adm[i2][i1] + adm[i3][i1] - adm[i2][i3])
         # calculate edge lengths for internal edges
         else:
             a = parent.parent
             if a.is_root():
-                for child in a.children:
-                    a = child
+                a = a.children[0]
             for index, node in enumerate(ordered):
-                if node == a:
+                if node is a:
                     i1 = index
             c, d = edge_node.children
-            for sibling in edge_node.siblings():
-                b = sibling
+            b = edge_node.siblings()[0]
             for index, node in enumerate(ordered):
                 if node is b:
                     i2 = index
