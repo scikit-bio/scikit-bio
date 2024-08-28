@@ -207,7 +207,7 @@ class TreeTests(TestCase):
         self.assertEqual([o.name for o in obs], exp)
 
     def test_siblings(self):
-        """Get the siblings"""
+        """Get siblings of a node."""
         exp = []
         obs = self.simple_t.siblings()
         self.assertEqual(obs, exp)
