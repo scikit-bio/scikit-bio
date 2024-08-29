@@ -7,7 +7,7 @@
 # ----------------------------------------------------------------------------
 
 from warnings import warn, simplefilter
-from operator import or_, itemgetter
+from operator import or_, ne, gt, itemgetter
 from copy import copy, deepcopy
 from itertools import chain, combinations
 from functools import reduce
@@ -1801,11 +1801,14 @@ class TreeNode(SkbioObject):
         See Also
         --------
         prune
+        is_bifurcating
 
         Notes
         -----
         This method does not modify single-child nodes. These nodes can be collapsed
         using :meth:`prune` prior to this method to create a strictly bifurcating tree.
+
+        This method modifies the subtree under the current node.
 
         Examples
         --------
@@ -3122,6 +3125,49 @@ class TreeNode(SkbioObject):
                 node.support = None
             else:
                 node.support, node.name = node._extract_support()
+
+    def is_bifurcating(self, strict=False):
+        r"""Check if the tree is bifurcating.
+
+        .. versionadded:: 0.6.3
+
+        Parameters
+        ----------
+        strict : bool, optional
+            Whether to consider single-child nodes as violations of bifurcation.
+            Default is False.
+
+        See Also
+        --------
+        bifurcate
+        prune
+
+        Notes
+        -----
+        In a bifurcating tree (a.k.a. binary tree), every node has at most two
+        children. The property of bifurcation is necessary for a wide range of tree
+        analyses. In contrast, if a node has three or more children, it is considered
+        as multifurcating, or polytomy in phylogenetics.
+
+        In strict mode, every internal node (including root) has to have exactly two
+        children in order for the tree to be bifurcating. Single-child nodes are
+        considered as violations. These nodes can be collapsed by :meth:`prune`.
+
+        This method operates on the subtree below the current node.
+
+        Examples
+        --------
+        >>> from skbio import TreeNode
+        >>> tree = TreeNode.read(["((a,b,c),(d,e))root;"])
+        >>> tree.is_bifurcating()
+        False
+
+        """
+        test = ne if strict else gt
+        for node in self.traverse(include_self=True):
+            if (children := node.children) and test(len(children), 2):
+                return False
+        return True
 
     def observed_node_counts(self, tip_counts):
         """Return counts of node observations from counts of tip observations.
