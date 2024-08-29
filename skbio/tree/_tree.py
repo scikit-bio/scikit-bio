@@ -3661,28 +3661,29 @@ class TreeNode(SkbioObject):
 
         return 1 - (2 * intersection_length / float(total_subsets))
 
-    def compare_tip_distances(
-        self, other, sample=None, dist_f=distance_from_r, shuffle_f=np.random.shuffle
-    ):
-        """Compare self to other using tip-to-tip distance matrices.
-
-        Value returned is `dist_f(m1, m2)` for the two matrices. Default is to use the
-        Pearson correlation coefficient, with +1 giving a distance of 0 and -1 giving a
-        distance of +1 (the maximum possible value). Depending on the application, you
-        might instead want to use distance_from_r_squared, which counts correlations of
-        both +1 and -1 as identical (0 distance).
+    def compare_tip_distances(self, other, sample=None, dist_f=None, shuffle_f=None):
+        r"""Compare self to other using tip-to-tip distance matrices.
 
         Parameters
         ----------
         other : TreeNode
-            The tree to compare
+            The tree to compare.
         sample : int, optional
             Randomly subsample this number of tips in common between the trees to
             compare. This is useful when comparing very large trees.
         dist_f : callable, optional
             The distance function used to compare two the tip-tip distance matrices.
-        shuffle_f : callable, optional
-            The shuffling function used if ``sample`` is not None.
+            Default is :math:`(1-r)/2`, where :math:`r` is the Pearson correlation
+            coefficient between the two matrices.
+        shuffle_f : int, np.random.Generator or callable, optional
+            The shuffling function used if ``sample`` is specified. Default is the
+            :meth:`shuffle <numpy.random.Generator.shuffle>` method of a NumPy random
+            generator. If an integer is provided, a random generator will be
+            constructed using this number as the seed.
+
+            .. versionchanged:: 0.6.3
+                Switched to NumPy's new random generator. Can accept a random seed or
+                random generator instance.
 
         Returns
         -------
@@ -3698,8 +3699,7 @@ class TreeNode(SkbioObject):
         --------
         compare_subsets
         compare_rfd
-        numpy.random.shuffle
-        numpy.random.Generator.shuffle
+        scipy.spatial.distance.correlation
 
         Notes
         -----
@@ -3709,14 +3709,12 @@ class TreeNode(SkbioObject):
         one needs to reorder the names in the two trees to match up the distance
         matrices.
 
-        The default shuffling function is stochastic. To ensure the reproducibility of
-        the result, you should use a generator-based function, such as ``rng.shuffle``
-        where ``rng`` is a pre-constructed random generator.
-
         Examples
         --------
+        Calculate the distance between two trees. Note that only three taxa are shared
+        between the trees.
+
         >>> from skbio import TreeNode
-        >>> # note, only three common taxa between the trees
         >>> tree1 = TreeNode.read(["((a:1,b:1):2,(c:0.5,X:0.7):3);"])
         >>> tree2 = TreeNode.read(["(((a:1,b:1,Y:1):2,c:3):1,Z:4);"])
         >>> dist = tree1.compare_tip_distances(tree2)
@@ -3735,7 +3733,12 @@ class TreeNode(SkbioObject):
         if len(common_names) <= 2:
             return 1  # the two trees must match by definition in this case
 
+        if dist_f is None:
+            dist_f = distance_from_r
+
         if sample is not None:
+            if not callable(shuffle_f):
+                shuffle_f = get_rng(shuffle_f).shuffle
             shuffle_f(common_names)
             common_names = common_names[:sample]
 

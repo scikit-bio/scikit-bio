@@ -1763,6 +1763,7 @@ class TreeTests(TestCase):
         self.assertEqual(result, 1)
 
     def test_compare_tip_distances(self):
+        # default behavior
         t = TreeNode.read(["((H:1,G:1):2,(R:0.5,M:0.7):3);"])
         t2 = TreeNode.read(["(((H:1,G:1,O:1):2,R:3):1,X:4);"])
         obs = t.compare_tip_distances(t2)
@@ -1772,32 +1773,31 @@ class TreeTests(TestCase):
         r = pearsonr(m1.flat, m2.flat)[0]
         self.assertAlmostEqual(obs, (1 - r) / 2)
 
-    def test_compare_tip_distances_sample(self):
+        # sample a subset of taxa
         t = TreeNode.read(["((H:1,G:1):2,(R:0.5,M:0.7):3);"])
         t2 = TreeNode.read(["(((H:1,G:1,O:1):2,R:3):1,X:4);"])
-        obs = t.compare_tip_distances(t2, sample=3, shuffle_f=sorted)
-        # note: common taxa are H, G, R (only)
+        obs = t.compare_tip_distances(t2, sample=3)
+        # Note: common taxa are H, G, R (only), all of which are selected, despite that
+        # the default shuffling function is stochastic.
         m1 = np.array([[0, 2, 6.5], [2, 0, 6.5], [6.5, 6.5, 0]])
         m2 = np.array([[0, 2, 6], [2, 0, 6], [6, 6, 0]])
         r = pearsonr(m1.flat, m2.flat)[0]
         self.assertAlmostEqual(obs, (1 - r) / 2)
 
-        # 4 common taxa, still picking H, G, R
+        # 4 common taxa, custom shuffling function, still picking H, G, R
         t = TreeNode.read(["((H:1,G:1):2,(R:0.5,M:0.7,Q:5):3);"])
         t3 = TreeNode.read(["(((H:1,G:1,O:1):2,R:3,Q:10):1,X:4);"])
         obs = t.compare_tip_distances(t3, sample=3, shuffle_f=sorted)
 
-    def test_compare_tip_distances_no_common_tips(self):
+        # no common taxa
         t = TreeNode.read(["((H:1,G:1):2,(R:0.5,M:0.7):3);"])
         t2 = TreeNode.read(["(((Z:1,Y:1,X:1):2,W:3):1,V:4);"])
-
         with self.assertRaises(ValueError):
             t.compare_tip_distances(t2)
 
-    def test_compare_tip_distances_single_common_tip(self):
+        # single common taxon
         t = TreeNode.read(["((H:1,G:1):2,(R:0.5,M:0.7):3);"])
         t2 = TreeNode.read(["(((R:1,Y:1,X:1):2,W:3):1,V:4);"])
-
         self.assertEqual(t.compare_tip_distances(t2), 1)
         self.assertEqual(t2.compare_tip_distances(t), 1)
 
