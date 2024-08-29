@@ -99,6 +99,7 @@
       ~{{ name }}.subset
       ~{{ name }}.subsets
       ~{{ name }}.assign_supports
+      ~{{ name }}.is_bifurcating
       ~{{ name }}.observed_node_counts
       ~{{ name }}.accumulate_to_ancestor
       ~{{ name }}.descending_branch_length
