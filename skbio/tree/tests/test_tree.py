@@ -1419,6 +1419,16 @@ class TreeTests(TestCase):
         for node in tree.children:
             self.assertIsNone(node.support)
 
+    def test_is_bifurcating(self):
+        """Check if tree is bifurcating."""
+        t = self.simple_t
+        self.assertTrue(t.is_bifurcating())
+        t = TreeNode.read(["((a,b,c),(d,e))root;"])
+        self.assertFalse(t.is_bifurcating())
+        t = TreeNode.read(["((((a,b)c)d)e,f)root;"])
+        self.assertTrue(t.is_bifurcating())
+        self.assertFalse(t.is_bifurcating(strict=True))
+
     def test_observed_node_counts(self):
         """returns observed nodes counts given vector of observed taxon counts
         """
