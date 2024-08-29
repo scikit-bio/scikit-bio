@@ -26,7 +26,7 @@ from skbio.tree._exception import (
     MissingNodeError,
     TreeError,
 )
-from skbio.util import RepresentationWarning
+from skbio.util import get_rng, RepresentationWarning
 from skbio.util._decorator import classonlymethod
 from skbio.util._warning import _warn_deprecated
 
@@ -1853,21 +1853,33 @@ class TreeNode(SkbioObject):
                         node.remove(child, uncache=False)
                     node.extend([ind, interm], uncache=False)
 
-    def shuffle(self, k=None, names=None, shuffle_f=np.random.shuffle, n=1):
-        r"""Yield trees with shuffled tip names.
+    def shuffle(self, k=None, names=None, shuffle_f=None, n=1):
+        r"""Shuffled tip names of the tree.
 
         Parameters
         ----------
         k : int, optional
-            The number of tips to shuffle. If not None, this number of tips are
-            randomly selected, and only those names will be shuffled.
+            The number of tips to shuffle. If provided, this number of tips will be
+            randomly selected by ``shuffle_f``, and only those names will be shuffled.
+            Conflicts with ``names``.
         names : list, optional
-            The specific tip names to shuffle.
-        shuffle_f : callable, optional
-            Shuffling function, which must accept a list and modify inplace.
+            The specific tip names to shuffle. Conflicts with ``k``.
+        shuffle_f : int, np.random.Generator or callable, optional
+            Shuffling function, which must accept a list and modify in place. Default
+            is the :meth:`shuffle <numpy.random.Generator.shuffle>` method of a NumPy
+            random generator. If an integer is provided, a random generator will be
+            constructed using this number as the seed.
+
+            .. versionchanged:: 0.6.3
+                Switched to NumPy's new random generator. Can accept a random seed or
+                random generator instance.
+
         n : int, optional
-            The number of iterations to perform. Value must be > 0 and ``np.inf`` can
-            be specified for an infinite number of iterations.
+            The number of iterations to perform. Must be a positive integer. Default
+            is 1. If None or ``np.inf``, iterations will be infinite.
+
+            .. versionchanged:: 0.6.3
+                Can accept None.
 
         Yields
         ------
@@ -1885,7 +1897,6 @@ class TreeNode(SkbioObject):
 
         See Also
         --------
-        numpy.random.shuffle
         numpy.random.Generator.shuffle
 
         Notes
@@ -1894,66 +1905,62 @@ class TreeNode(SkbioObject):
         in place in the original tree and the tree is yielded prior to the next round
         of shuffling. Tree caches will be cleared prior to shuffling.
 
-        ``k`` and ``names`` cannot be specified at the same time, or an error will be
-        raised. If neither ``k`` nor ``names`` are provided, all tips are shuffled.
-
-        The default shuffling function is stochastic. To ensure the reproducibility of
-        the result, you should use a generator-based function, such as ``rng.shuffle``
-        where ``rng`` is a pre-constructed random generator.
+        ``k`` and ``names`` cannot be specified at the same time. If neither ``k`` nor
+        ``names`` are provided, all tips will be shuffled.
 
         Examples
         --------
-        Alternate the names on two of the tips, 'a', and 'b', and do this 5 times:
+        Shuffle the names of a 4-tip tree for 5 times:
 
         >>> from skbio import TreeNode
         >>> tree = TreeNode.read(["((a,b),(c,d));"])
-        >>> rev = lambda items: items.reverse()
-        >>> shuffler = tree.shuffle(names=['a', 'b'], shuffle_f=rev, n=5)
-        >>> for shuffled_tree in shuffler:
-        ...     print(shuffled_tree)
-        ((b,a),(c,d));
+        >>> for shuffled in tree.shuffle(shuffle_f=42, n=5):
+        ...     print(shuffled)
+        ((d,c),(b,a));
         <BLANKLINE>
-        ((a,b),(c,d));
+        ((a,b),(d,c));
         <BLANKLINE>
-        ((b,a),(c,d));
+        ((a,c),(d,b));
         <BLANKLINE>
-        ((a,b),(c,d));
+        ((d,b),(a,c));
         <BLANKLINE>
-        ((b,a),(c,d));
+        ((a,c),(d,b));
         <BLANKLINE>
 
         """
-        if k is not None and k < 2:
-            raise ValueError("k must be None or >= 2.")
-        if k is not None and names is not None:
-            raise ValueError("n and names cannot be specified at the same time.")
-        if n < 1:
+        if k is not None:
+            if k < 2:
+                raise ValueError("k must be None or >= 2.")
+            if names is not None:
+                raise ValueError("k and names cannot be specified at the same time.")
+        if n is None:
+            n = np.inf
+        elif n < 1:
             raise ValueError("n must be > 0.")
 
-        self.assign_ids()
+        # determine shuffling function
+        if not callable(shuffle_f):
+            shuffle_f = get_rng(shuffle_f).shuffle
 
-        if names is None:
-            all_tips = list(self.tips())
+        # determine tip names to shuffle
+        if names is not None:
+            tips = [self.find(x) for x in names]
+        else:
+            tips = list(self.tips())
+            if k is not None:
+                shuffle_f(tips)
+                tips = tips[:k]
+            names = [x.name for x in tips]
 
-            # this case won't happen
-            # if n is None:
-            #     n = len(all_tips)
-
-            shuffle_f(all_tips)
-            names = [tip.name for tip in all_tips[:k]]
-
-        nodes = [self.find(name) for name in names]
-
-        # Since the names are being shuffled, the association between ID and
-        # name is no longer reliable
+        # since the names are being shuffled, the caches are no longer reliable
         self.clear_caches()
 
+        # iteratively shuffle tip names and yield tree
         counter = 0
         while counter < n:
             shuffle_f(names)
-            for node, name in zip(nodes, names):
-                node.name = name
-
+            for tip, name in zip(tips, names):
+                tip.name = name
             yield self
             counter += 1
 

@@ -92,7 +92,7 @@ from statsmodels.stats.weightstats import CompareMeans
 
 from skbio.stats.distance import DistanceMatrix
 from skbio.util import find_duplicates
-from skbio.util._misc import get_rng
+from skbio.util import get_rng
 from skbio.util._warning import _warn_deprecated
 from statsmodels.stats.multitest import multipletests as sm_multipletests
 from statsmodels.regression.mixed_linear_model import MixedLM
