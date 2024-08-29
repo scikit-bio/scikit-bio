@@ -3160,12 +3160,11 @@ class TreeNode(SkbioObject):
             for node in self.non_tips(include_self=True):
                 if len(node.children) != 2:
                     return False
-            return True
         else:
             for node in self.traverse(include_self=True):
                 if len(node.children) > 2:
                     return False
-            return True
+        return True
 
     def observed_node_counts(self, tip_counts):
         """Return counts of node observations from counts of tip observations.
