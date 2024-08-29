@@ -7,7 +7,7 @@
 # ----------------------------------------------------------------------------
 
 from warnings import warn, simplefilter
-from operator import or_, itemgetter
+from operator import or_, ne, gt, itemgetter
 from copy import copy, deepcopy
 from itertools import chain, combinations
 from functools import reduce
@@ -3156,14 +3156,10 @@ class TreeNode(SkbioObject):
         False
 
         """
-        if strict:
-            for node in self.non_tips(include_self=True):
-                if len(node.children) != 2:
-                    return False
-        else:
-            for node in self.traverse(include_self=True):
-                if len(node.children) > 2:
-                    return False
+        test = ne if strict else gt
+        for node in self.traverse(include_self=True):
+            if (children := node.children) and test(len(children), 2):
+                return False
         return True
 
     def observed_node_counts(self, tip_counts):
