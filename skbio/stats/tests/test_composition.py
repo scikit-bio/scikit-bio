@@ -1517,24 +1517,24 @@ class DirMultLMETests(TestCase):
         )
 
     def test_dirmult_lme_formatting(self):
-        res = dirmult_lme(formula="Covar2 + Covar3", data=self.table, metadata=self.metadata, groups='Covar1', seed=0, p_adjust="sidak")
+        res = dirmult_lme(formula="Covar2 + Covar3", table=self.table, metadata=self.metadata, groups='Covar1', seed=0, p_adjust="sidak")
         self.assertIsInstance(res, pd.DataFrame)
         self.assertEqual(res.shape[1], 7)  # Expected number of columns
         pdt.assert_series_equal(res.iloc[:, 0], pd.Series(['feature1', 'feature1', 'feature2', 'feature2', 'feature3', 'feature3', 'feature4', 'feature4'], name='FeatureID'))
 
     def test_dirmult_lme_output(self):
         formula = "Covar2 + Covar3"
-        res = dirmult_lme(formula=formula, data=self.table, metadata=self.metadata, groups='Covar1', seed=0, p_adjust="sidak")
+        res = dirmult_lme(formula=formula, table=self.table, metadata=self.metadata, groups='Covar1', seed=0, p_adjust="sidak")
         npt.assert_array_less(res['Log2(FC)'], res['CI(97.5)'])
         npt.assert_array_less(res['CI(2.5)'], res['Log2(FC)'])
 
     def test_dirmult_lme_no_p_adjust_and_reml(self):
         formula = "Covar2 + Covar3"
-        result = dirmult_lme(formula=formula, data=self.table, metadata=self.metadata, groups='Covar1', seed=0, p_adjust=None)
+        result = dirmult_lme(formula=formula, table=self.table, metadata=self.metadata, groups='Covar1', seed=0, p_adjust=None)
         pdt.assert_series_equal(result['pvalue'], result['qvalue'], check_names=False)
 
         fit_kwargs = {"reml": False}
-        res_ml = dirmult_lme(formula=formula, data=self.table, metadata=self.metadata, groups='Covar1', seed=0, p_adjust=None, fit_kwargs=fit_kwargs)
+        res_ml = dirmult_lme(formula=formula, table=self.table, metadata=self.metadata, groups='Covar1', seed=0, p_adjust=None, fit_kwargs=fit_kwargs)
 
         npt.assert_raises(AssertionError, npt.assert_allclose, result['CI(97.5)'], res_ml['CI(97.5)'])
         npt.assert_raises(AssertionError, npt.assert_allclose, result['CI(2.5)'], res_ml['CI(2.5)'])
@@ -1543,12 +1543,12 @@ class DirMultLMETests(TestCase):
     def test_dirmult_lme_invalid_table_type(self):
         with self.assertRaises(TypeError):
             formula = "Covar2 + Covar3"
-            dirmult_lme(formula=formula, data="not a table", metadata=self.metadata, groups='Covar1', seed=0, p_adjust="sidak")
+            dirmult_lme(formula=formula, table="not a table", metadata=self.metadata, groups='Covar1', seed=0, p_adjust="sidak")
 
     def test_dirmult_lme_invalid_metadata_type(self):
         with self.assertRaises(TypeError):
             formula = "Covar2 + Covar3"
-            dirmult_lme(formula=formula, data=self.table, metadata="not a table", groups='Covar1', seed=0, p_adjust="sidak")
+            dirmult_lme(formula=formula, table=self.table, metadata="not a table", groups='Covar1', seed=0, p_adjust="sidak")
 
     def test_dirmult_lme_toy_data(self):
         p1 = np.array([5, 6, 7])
@@ -1577,7 +1577,7 @@ class DirMultLMETests(TestCase):
             index=[f"subject{i}" for i in range(1, n*2+1)],
         )
 
-        res = dirmult_lme(formula="covar2", data=table, metadata=metadata, groups="covar1", seed=0, p_adjust="sidak")
+        res = dirmult_lme(formula="covar2", table=table, metadata=metadata, groups="covar1", seed=0, p_adjust="sidak")
         npt.assert_array_less(exp_lfc, res['CI(97.5)'])
         npt.assert_array_less(res['CI(2.5)'], exp_lfc)
 
@@ -1608,7 +1608,7 @@ class DirMultLMETests(TestCase):
         exp_lfc = np.log2([4/5, 7/6, 7/7, 6/8, 5/9, 7/4])
         exp_lfc = (exp_lfc - exp_lfc.mean())  # convert to CLR coordinates
 
-        res_100 = dirmult_lme(formula="covar2", data=table, metadata=metadata, groups="covar1", seed=0, p_adjust="sidak")
+        res_100 = dirmult_lme(formula="covar2", table=table, metadata=metadata, groups="covar1", seed=0, p_adjust="sidak")
 
         # increase sequencing depth by 100 fold
         depth = 10000
@@ -1622,7 +1622,7 @@ class DirMultLMETests(TestCase):
         table.columns = ["feature1", "feature2", "feature3", "feature4", "feature5", "feature6"]
         table.index = [f"subject{i}" for i in range(1, n*2+1)]
         metadata.index = [f"subject{i}" for i in range(1, n*2+1)]
-        res_10000 = dirmult_lme(formula="covar2", data=table, metadata=metadata, groups="covar1", seed=0, p_adjust="sidak")
+        res_10000 = dirmult_lme(formula="covar2", table=table, metadata=metadata, groups="covar1", seed=0, p_adjust="sidak")
 
         # when the sequencing depth increases, the confidence intervals
         # should also shrink
@@ -1633,14 +1633,14 @@ class DirMultLMETests(TestCase):
         with self.assertRaises(ValueError):
             self.table.index = ["a", "b", "c", "d", "e", "f"]  # Change table index
             formula = "Covar2 + Covar3"
-            dirmult_lme(formula=formula, data=self.table, metadata=self.metadata, groups='Covar1', seed=0, p_adjust="sidak")
+            dirmult_lme(formula=formula, table=self.table, metadata=self.metadata, groups='Covar1', seed=0, p_adjust="sidak")
 
     def test_dirmult_lme_single_feature(self):
         with self.assertRaises(ValueError):
             # only keep the first column of the table
             self.table = self.table.iloc[:, :1]
             formula = "Covar1"
-            dirmult_lme(formula=formula, data=self.table, metadata=self.metadata, groups='Covar1', seed=0, p_adjust="sidak")
+            dirmult_lme(formula=formula, table=self.table, metadata=self.metadata, groups='Covar1', seed=0, p_adjust="sidak")
 
 if __name__ == "__main__":
     main()

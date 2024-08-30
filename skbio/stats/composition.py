@@ -82,7 +82,7 @@ References
 # The full license is in the file LICENSE.txt, distributed with this software.
 # ----------------------------------------------------------------------------
 
-from warnings import warn, simplefilter
+from warnings import warn, catch_warnings, simplefilter
 
 import numpy as np
 import pandas as pd
@@ -97,6 +97,7 @@ from skbio.util._misc import get_rng
 from skbio.util._warning import _warn_deprecated
 from statsmodels.stats.multitest import multipletests as sm_multipletests
 from statsmodels.regression.mixed_linear_model import MixedLM
+from statsmodels.tools.sm_exceptions import ConvergenceWarning
 from patsy import dmatrix
 
 
@@ -1811,17 +1812,15 @@ def _welch_ttest(a, b):
     )
 
 
-def _obtain_dir_table(data, pseudocount, rng):
-    posterior = [
-        rng.dirichlet(data.values[i] + pseudocount) for i in range(data.shape[0])
-    ]
-    dir_table = pd.DataFrame(posterior, index=data.index, columns=data.columns).apply(
+def _obtain_dir_table(table, pseudocount, rng):
+    values = table.values + pseudocount
+    posterior = [rng.dirichlet(values[i]) for i in range(table.shape[0])]
+    dir_table = pd.DataFrame(posterior, index=table.index, columns=table.columns).apply(
         clr, axis=1
     )
     dir_table = pd.DataFrame(
-        dir_table.tolist(), index=dir_table.index, columns=data.columns
+        dir_table.tolist(), index=dir_table.index, columns=table.columns
     )
-
     return dir_table
 
 
@@ -2105,12 +2104,14 @@ def _lme_call(
     metadata,
     table,
     groups,
-    method=None,
+    fit_method=None,
     re_formula=None,
     vc_formula=None,
+    model_kwargs={},
     fit_kwargs={},
-    **kwargs,
+    fit_warnings=False,
 ):
+    """Call MixedLM of statsmodels."""
     # TODO: add docs when this implementation is approved
     # _covariate_list is essentially the list of covariates
 
@@ -2153,10 +2154,16 @@ def _lme_call(
             groups=groups,
             re_formula=re_formula,
             vc_formula=vc_formula,
-            **kwargs,
+            **model_kwargs,
         )
 
-        results = model.fit(method=method, **fit_kwargs)
+        # mute warnings during the fitting process
+        with catch_warnings():
+            if not fit_warnings:
+                simplefilter("ignore", UserWarning)
+                simplefilter("ignore", ConvergenceWarning)
+            results = model.fit(method=fit_method, **fit_kwargs)
+
         summary = results.summary()
 
         for var_name in _covariate_list:
@@ -2226,18 +2233,18 @@ def _lme_call(
 
 def dirmult_lme(
     formula,
-    data,
+    table,
     metadata,
     groups=None,
-    method=None,
+    fit_method=None,
     re_formula=None,
     vc_formula=None,
     draws=128,
     seed=None,
     pseudocount=0.5,
     p_adjust="holm",
+    model_kwargs={},
     fit_kwargs={},
-    **kwargs,
 ):
     r"""Fit a Dirichlet-multinomial linear mixed effects model.
 
@@ -2262,7 +2269,7 @@ def dirmult_lme(
     ----------
     formula : str or generic Formula object
         The formula specifying the model.
-    data : array-like
+    table : array-like
         The data for the model. If data is a pd.DataFrame, it must contain the
         dependent variables in data.columns. If data is not a pd.DataFrame, it must
         contain the dependent variable in indices of data. data can be a
@@ -2276,7 +2283,7 @@ def dirmult_lme(
         not contain duplicate indices.
     groups : str
         The column name in data that identifies the grouping variable.
-    method : str or list of str, optional
+    fit_method : str or list of str, optional
         Optimization method for model fitting. Can be a single method name, or a list
         of method names to be tried sequentially. See `statsmodels.optimization
         <https://www.statsmodels.org/stable/optimization.html>`_
@@ -2302,12 +2309,12 @@ def dirmult_lme(
         by statsmodels'
         :func:`multipletests <statsmodels.stats.multitest.multipletests>` function.
         Case-insensitive. If None, no correction will be performed.
-    fit_kwargs : dict
-        Keyword arguments to pass to :meth:`MixedLM.fit
-        <statsmodels.regression.mixed_linear_model.MixedLM.fit>`.
-    **kwargs
+    model_kwargs : dict, optional
         Additional keyword arguments to pass to :meth:`MixedLM.from_formula
         <statsmodels.regression.mixed_linear_model.MixedLM.from_formula>`
+    fit_kwargs : dict, optional
+        Additional keyword arguments to pass to :meth:`MixedLM.fit
+        <statsmodels.regression.mixed_linear_model.MixedLM.fit>`.
 
     Returns
     -------
@@ -2387,59 +2394,51 @@ def dirmult_lme(
     3        Y2  treatment  0.164704 -3.384563  3.456697  0.593769  0.972767
 
     """
-
-    # Test if data is a pandas DataFrame
-    errmsg = (
+    type_errmsg = (
         "%s must be a pandas DataFrame or a numpy structured or rec array or "
         "a dictionary."
     )
+    attr_errmsg = "Please ensure %s contains feature IDs."
+    null_errmsg = "Cannot handle missing values in %s."
 
-    attr_errmsg = "Please ensure you have added a list of feature IDs to %s."
-
-    if not isinstance(data, pd.DataFrame):
+    # Validate data table.
+    if not isinstance(table, pd.DataFrame):
         try:
-            data = pd.DataFrame(data)
+            table = pd.DataFrame(table)
         except AttributeError:
-            raise AttributeError(attr_errmsg % "Data")
+            raise AttributeError(attr_errmsg % "table")
         except (TypeError, ValueError):
-            raise TypeError(errmsg % "Data")
-
-    if data.ndim != 2:
+            raise TypeError(type_errmsg % "Table")
+    if table.ndim != 2:
         try:
-            data = pd.DataFrame(data, index=data.dtype.names)
+            table = pd.DataFrame(table, index=table.dtype.names)
         except (TypeError, ValueError):
-            raise TypeError(errmsg % "Data")
+            raise TypeError(type_errmsg % "Table")
+    if table.shape[0] == 1:
+        raise ValueError("Table must have at least two features.")
+    if table.isnull().values.any():
+        raise ValueError(null_errmsg % "table")
 
+    # Validate metadata table.
     if not isinstance(metadata, pd.DataFrame):
         try:
             metadata = pd.DataFrame(metadata)
         except AttributeError:
-            raise ValueError(attr_errmsg % "Metadata")
+            raise ValueError(attr_errmsg % "metadata")
         except (TypeError, ValueError):
-            raise TypeError(errmsg % "Metadata")
-
-    # Test if data has missing values
-    if data.isnull().values.any():
-        raise ValueError("Cannot handle missing values in data.")
-
-    # Test if metadata has missing values
+            raise TypeError(type_errmsg % "Metadata")
     if metadata.isnull().values.any():
-        raise ValueError("Cannot handle missing values in metadata.")
+        raise ValueError(null_errmsg % "metadata")
 
     # Test if metadata and data have the same index, regardless of order
-    if not data.index.sort_values().equals(metadata.index.sort_values()):
-        print(data.index)
-        print(metadata.index)
-        raise ValueError("Data and metadata must have the same index.")
-
-    if data.shape[0] == 1:
-        raise ValueError("Data must have at least two features.")
+    if not table.index.sort_values().equals(metadata.index.sort_values()):
+        raise ValueError("Table and metadata must have the same samples.")
 
     # Modifying the indices of data and metadata to use unique integers,
     # so that merging them will not affect the result. append "row" before the
     # index to make it unique
-    data.index = list(range(data.shape[0]))
-    data.index = ["row" + str(i) for i in data.index]
+    table.index = list(range(table.shape[0]))
+    table.index = ["row" + str(i) for i in table.index]
     metadata.index = list(range(metadata.shape[0]))
     metadata.index = ["row" + str(i) for i in metadata.index]
 
@@ -2453,7 +2452,7 @@ def dirmult_lme(
     QVALUE = "qvalue"
 
     rng = get_rng(seed)
-    dir_table = _obtain_dir_table(data, pseudocount, rng)
+    dir_table = _obtain_dir_table(table, pseudocount, rng)
 
     res, _submodels, _covariate_list = _lme_call(
         formula=formula,
@@ -2462,9 +2461,9 @@ def dirmult_lme(
         groups=groups,
         re_formula=re_formula,
         vc_formula=vc_formula,
-        method=method,
+        fit_method=fit_method,
+        model_kwargs=model_kwargs,
         fit_kwargs=fit_kwargs,
-        **kwargs,
     )
 
     # Creating an empty dict to store sum of values (Using a DataFrame throws errors)
@@ -2472,7 +2471,7 @@ def dirmult_lme(
     # array index: 0: pvalue, 1: CI(2.5), 2: CI(97.5), 3: log2fc, 4: qvalue
     res_dict = {}
 
-    for feature in data.columns:
+    for feature in table.columns:
         group = res_dict[feature] = {}
         for covar in _covariate_list:
             group[covar] = [0] * 5
@@ -2483,7 +2482,7 @@ def dirmult_lme(
             group[i] = single_covar_data[key]
 
     for i in range(1, draws):
-        dir_table = _obtain_dir_table(data, pseudocount, rng)
+        dir_table = _obtain_dir_table(table, pseudocount, rng)
 
         ires = _lme_call(
             formula=formula,
@@ -2492,9 +2491,9 @@ def dirmult_lme(
             groups=groups,
             re_formula=re_formula,
             vc_formula=vc_formula,
-            method=method,
+            fit_method=fit_method,
+            model_kwargs=model_kwargs,
             fit_kwargs=fit_kwargs,
-            **kwargs,
         )[0]
 
         if ires is None:
@@ -2515,7 +2514,7 @@ def dirmult_lme(
             group[1:4] /= log2_
 
     p_value_arr = []
-    for feature in data.columns:
+    for feature in table.columns:
         group = res_dict[feature]
         for covar in _covariate_list:
             p_value_arr.append(group[covar][0])
@@ -2527,7 +2526,7 @@ def dirmult_lme(
         qval = p_value_arr
 
     count = 0
-    for feature in data.columns:
+    for feature in table.columns:
         group = res_dict[feature]
         for covar in _covariate_list:
             group[covar][4] = qval[count]
@@ -2535,7 +2534,7 @@ def dirmult_lme(
 
     final_res = []
 
-    for feature in data.columns:
+    for feature in table.columns:
         for covar in _covariate_list:
             group = res_dict[feature][covar]
             final_res.append(
