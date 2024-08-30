@@ -1814,14 +1814,9 @@ def _welch_ttest(a, b):
 
 def _obtain_dir_table(table, pseudocount, rng):
     values = table.values + pseudocount
-    posterior = [rng.dirichlet(values[i]) for i in range(table.shape[0])]
-    dir_table = pd.DataFrame(posterior, index=table.index, columns=table.columns).apply(
-        clr, axis=1
-    )
-    dir_table = pd.DataFrame(
-        dir_table.tolist(), index=dir_table.index, columns=table.columns
-    )
-    return dir_table
+    values = np.apply_along_axis(rng.dirichlet, axis=1, arr=values)
+    values = np.apply_along_axis(clr, axis=1, arr=values)
+    return pd.DataFrame(values, index=table.index, columns=table.columns)
 
 
 def dirmult_ttest(
