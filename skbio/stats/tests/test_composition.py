@@ -1503,7 +1503,9 @@ class DirMultLMETests(TestCase):
                 [200, 202, 10, 10],
                 [203, 201, 14, 10],
             ],
-            index=["subject1", "subject2", "subject3", "subject4", "subject5", "subject6"],
+            index=[
+                "subject1", "subject2", "subject3", "subject4", "subject5", "subject6"
+            ],
             columns=["feature1", "feature2", "feature3", "feature4"],
         )
 
@@ -1513,7 +1515,9 @@ class DirMultLMETests(TestCase):
                 "Covar2": [1,1,1,1,2,2],
                 "Covar3": [1,2,1,2,1,2],
             },
-            index=["subject1", "subject2", "subject3", "subject4", "subject5", "subject6"],
+            index=[
+                "subject1", "subject2", "subject3", "subject4", "subject5", "subject6"
+            ],
         )
 
     def test_dirmult_lme_formatting(self):

@@ -1876,7 +1876,8 @@ def dirmult_ttest(
         :func:`multipletests <statsmodels.stats.multitest.multipletests>` function.
         Case-insensitive. If None, no correction will be performed.
     seed : int or np.random.Generator, optional
-        A user-provided random seed or random generator instance.
+        A user-provided random seed or random generator instance for drawing from the
+        Dirichlet distribution.
 
     Returns
     -------
@@ -2071,9 +2072,8 @@ def dirmult_ttest(
 def _type_cast_to_float(df):
     """Attempt to cast all of the values in dataframe to float.
 
-    This will try to type cast all of the series within the
-    dataframe into floats.  If a column cannot be type casted,
-    it will be kept as is.
+    This will try to type cast all of the series within the dataframe into floats. If a
+    column cannot be type casted, it will be kept as is.
 
     Parameters
     ----------
@@ -2082,6 +2082,7 @@ def _type_cast_to_float(df):
     Returns
     -------
     pd.DataFrame
+
     """
     # Implementation based on https://github.com/mortonjt/differential/blob/65752567ef4cf303471405b0a9be503eb10a0bbb/differential/util.py#L4
     # TODO: Will need to improve this, as this is a very hacky solution.
@@ -2107,8 +2108,7 @@ def _lme_call(
     fit_warnings=False,
 ):
     """Call MixedLM of statsmodels."""
-    # TODO: add docs when this implementation is approved
-    # _covariate_list is essentially the list of covariates
+    # TODO: add documentation
 
     FEATUREID = "FeatureID"
     LOG2FC = "Log2(FC)"
@@ -2132,11 +2132,15 @@ def _lme_call(
 
     design_matrix = dmatrix(formula, metadata, return_type="dataframe")
 
-    # Obtaining the list of covariates by selecting the relevant columns
+    # Obtain the list of covariates by selecting the relevant columns
     _covariate_list = design_matrix.columns.tolist()
 
-    # Removing intercept since it is not a covariate, and is included by default
+    # Remove intercept since it is not a covariate, and is included by default
     _covariate_list.remove("Intercept")
+
+    fit_fail_msg = (
+        "LME fit failed for covariate %s and `response_var`, outputting nans."
+    )
 
     output = []
     for response_var in table.columns:
@@ -2178,12 +2182,7 @@ def _lme_call(
                 }
             except Exception as e:
                 if type(e) is not ValueError:
-                    print(
-                        f"""LME fit failed for covariate {var_name}
-                         and `response_var`, outputting nans."""
-                    )
-                    print(type(e))
-                    print(e)
+                    warn(fit_fail_msg % var_name, UserWarning)
 
                     individual_results = {
                         FEATUREID: response_var,
@@ -2231,14 +2230,15 @@ def dirmult_lme(
     table,
     metadata,
     groups=None,
-    fit_method=None,
+    pseudocount=0.5,
+    draws=128,
+    p_adjust="holm",
+    seed=None,
     re_formula=None,
     vc_formula=None,
-    draws=128,
-    seed=None,
-    pseudocount=0.5,
-    p_adjust="holm",
     model_kwargs={},
+    fit_method=None,
+    fit_warnings=False,
     fit_kwargs={},
 ):
     r"""Fit a Dirichlet-multinomial linear mixed effects model.
@@ -2278,25 +2278,12 @@ def dirmult_lme(
         not contain duplicate indices.
     groups : str
         The column name in data that identifies the grouping variable.
-    fit_method : str or list of str, optional
-        Optimization method for model fitting. Can be a single method name, or a list
-        of method names to be tried sequentially. See `statsmodels.optimization
-        <https://www.statsmodels.org/stable/optimization.html>`_
-        for available methods. If None, a default list of methods will be tried.
-    re_formula : str, optional
-        Random coefficient formula. See :meth:`MixedLM.from_formula
-        <statsmodels.regression.mixed_linear_model.MixedLM.from_formula>`.
-    vc_formula : str, optional
-        Variance component formula. See :meth:`MixedLM.from_formula
-        <statsmodels.regression.mixed_linear_model.MixedLM.from_formula>`.
-    draws : int, optional
-        The number of draws from the Dirichilet-multinomial posterior distribution.
-        Default is 128.
-    seed : int or np.random.Generator, optional
-        A user-provided random seed or random generator instance.
     pseudocount : float, optional
         A non-zero value added to the input counts to ensure that all of the
         estimated abundances are strictly greater than zero. Default is 0.5.
+    draws : int, optional
+        The number of draws from the Dirichilet-multinomial posterior distribution.
+        Default is 128.
     p_adjust : str or None, optional
         Method to correct *p*-values for multiple comparisons. Options are Holm-
         Boniferroni ("holm" or "holm-bonferroni") (default), Benjamini-
@@ -2304,9 +2291,27 @@ def dirmult_lme(
         by statsmodels'
         :func:`multipletests <statsmodels.stats.multitest.multipletests>` function.
         Case-insensitive. If None, no correction will be performed.
+    seed : int or np.random.Generator, optional
+        A user-provided random seed or random generator instance for drawing from the
+        Dirichlet distribution.
+    re_formula : str, optional
+        Random coefficient formula. See :meth:`MixedLM.from_formula
+        <statsmodels.regression.mixed_linear_model.MixedLM.from_formula>`.
+    vc_formula : str, optional
+        Variance component formula. See :meth:`MixedLM.from_formula
+        <statsmodels.regression.mixed_linear_model.MixedLM.from_formula>`.
     model_kwargs : dict, optional
         Additional keyword arguments to pass to :meth:`MixedLM.from_formula
         <statsmodels.regression.mixed_linear_model.MixedLM.from_formula>`
+    fit_method : str or list of str, optional
+        Optimization method for model fitting. Can be a single method name, or a list
+        of method names to be tried sequentially. See `statsmodels.optimization
+        <https://www.statsmodels.org/stable/optimization.html>`_
+        for available methods. If None, a default list of methods will be tried.
+    fit_warnings : bool, optional
+        Issue warnings if any during the model fitting process. Default is False.
+        Warnings are usually issued when the optimization methods do not converge,
+        which is common in the analysis.
     fit_kwargs : dict, optional
         Additional keyword arguments to pass to :meth:`MixedLM.fit
         <statsmodels.regression.mixed_linear_model.MixedLM.fit>`.
@@ -2456,8 +2461,9 @@ def dirmult_lme(
         groups=groups,
         re_formula=re_formula,
         vc_formula=vc_formula,
-        fit_method=fit_method,
         model_kwargs=model_kwargs,
+        fit_method=fit_method,
+        fit_warnings=fit_warnings,
         fit_kwargs=fit_kwargs,
     )
 
@@ -2486,8 +2492,9 @@ def dirmult_lme(
             groups=groups,
             re_formula=re_formula,
             vc_formula=vc_formula,
-            fit_method=fit_method,
             model_kwargs=model_kwargs,
+            fit_method=fit_method,
+            fit_warnings=fit_warnings,
             fit_kwargs=fit_kwargs,
         )[0]
 
