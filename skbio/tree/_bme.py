@@ -222,20 +222,17 @@ def _balanced_average_matrix(tree, dm):
     evolution problem.
 
     """
-
+    # start from unique descendant
+    name = tree.name
+    (tree,) = tree.children
     ordered = list(tree.postorder(include_self=False))
     n = len(ordered)
-    r = tree.root()
-    taxa_size = r.count(tips=True) + 1
-    adm = np.empty((n, n))
+    adm = np.zeros((n + 1, n + 1))
     for i, a in enumerate(ordered):
         ancestors = a.ancestors()
-        # skip over unique descendant
-        if a in tree.children:
-            continue
         # find the average distance between given node and root
         if a.is_tip():
-            adm[n - 1, i] = adm[i, n - 1] = dm[a.name, r.name]
+            adm[n, i] = adm[i, n] = dm[a.name, name]
         else:
             a1, a2 = a.children
             for k, x in enumerate(ordered):
@@ -243,10 +240,10 @@ def _balanced_average_matrix(tree, dm):
                     i1 = k
                 if x is a2:
                     i2 = k
-            adm[n - 1, i] = adm[i, n - 1] = (adm[n - 1, i1] + adm[n - 1, i2]) * 0.5
+            adm[n, i] = adm[i, n] = (adm[n, i1] + adm[n, i2]) * 0.5
         # find the average distance between first node and a second node
         # which is above the first node in the postorder as well as an ancestor
-        for j in range(i + 1, n - 1):  # part (a)
+        for j in range(i + 1, n):  # part (a)
             b = ordered[j]
             # skipping over ancestors
             if b in ancestors:
@@ -274,10 +271,7 @@ def _balanced_average_matrix(tree, dm):
                 adm[i, j] = adm[j, i] = (adm[j1, i] + adm[j2, i]) * 0.5
     # calculating for second nodes which are ancestors
     for j, b in enumerate(ordered):
-        # skipping over unique descendant
-        if b in tree.children:
-            continue
-        s = b.siblings()[0]
+        (s,) = b.siblings()
         p = b.parent
         for k, x in enumerate(ordered):
             if x is s:
@@ -287,8 +281,6 @@ def _balanced_average_matrix(tree, dm):
         for i, a in enumerate(ordered):
             if b in a.ancestors():
                 adm[i, j] = adm[j, i] = (adm[i, j_s] + adm[i, j_p]) * 0.5
-                # zero the diagonal
-                adm[i, i] = 0
     return adm
 
 
