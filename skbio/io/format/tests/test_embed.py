@@ -9,21 +9,49 @@ from unittest import TestCase, main
 from pathlib import Path
 import tempfile
 
+import os
+import re
 import h5py
 import numpy as np
 
 import skbio
+from skbio.io import write
 from skbio import Protein
 from skbio.util import get_data_path
 from skbio.embedding._protein import ProteinEmbedding
 from skbio.embedding._protein import ProteinVector
 from skbio.io.format.embed import (
     _embed_sniffer, _embed_to_generator,
-    _embed_to_object, _generator_to_embed,
-    _objects_to_embed,
-    _embed_to_protein, _protein_to_embed,
-    _protein_to_vector, _vector_to_protein
+    _generator_to_embed, _embed_to_protein,
+    _protein_to_embed, _protein_to_vector,
+    _vector_to_protein
 )
+
+
+class TestWriteError(TestCase):
+    def setUp(self):
+        self.tempdir = tempfile.TemporaryDirectory()
+
+    def test_write_function(self):
+        # note: tiny_embedding_file stores embeddings for our 20 seqs.
+        with open(get_data_path('tiny_embedding_file.npz'), 'rb') as fh:
+            embeddings = np.load(fh)
+            emb_list = [embeddings[arrs] for arrs in embeddings.files]
+        # note: pdb_hits.txt stores sequence strings for our 20 seqs.
+        seqs = np.loadtxt(get_data_path('pdb_hits.txt'), dtype=str)
+        seq_list = [" ".join(list(re.sub(r"[UZOB]", "X", str(seq))))
+                    for seq in seqs]
+
+        embed_list = []
+        for emb, seq in zip(emb_list, seq_list):
+            embed_list.append(ProteinEmbedding(embedding=emb, sequence=seq))
+
+        # create generator object for write testing
+        embed_list = (emb for emb in embed_list)
+        file_path = os.path.join(self.tempdir.name, 'test_pdb_hits.h5')
+
+        write(embed_list, 'embed', into=get_data_path(file_path))
+        self.assertTrue(os.path.exists(file_path))
 
 
 class EmbedTests(TestCase):
@@ -35,13 +63,13 @@ class EmbedTests(TestCase):
                 (
                     np.load(get_data_path('embed1.txt.npy')),
                     Protein(('IGKEEIQQRLAQFVDHWKELKQLAAARGQRL'
-                             'EESLEYQQFVANVEEEEAWINEKMTLVASED'),
+                            'EESLEYQQFVANVEEEEAWINEKMTLVASED'),
                             metadata={"id": "seq1"})
-                 ),
+                ),
                 (
                     np.load(get_data_path('embed2.txt.npy')),
                     Protein(('QQNKELNFKLREKQNEIFELKKIAETLRSKL'
-                             'EKYVDITKKLEDQNLNLQIKISDLEKKLSDA'),
+                            'EKYVDITKKLEDQNLNLQIKISDLEKKLSDA'),
                             metadata={"id": "seq2"})
                 )
             ]
@@ -89,13 +117,13 @@ class EmbedTests(TestCase):
             (
                 np.load(get_data_path('embed1.txt.npy')),
                 Protein(('IGKEEIQQRLAQFVDHWKELKQLAAARGQRL'
-                         'EESLEYQQFVANVEEEEAWINEKMTLVASED'),
+                        'EESLEYQQFVANVEEEEAWINEKMTLVASED'),
                         metadata={"id": "seq1"})
             ),
             (
                 np.load(get_data_path('embed2.txt.npy')),
                 Protein(('QQNKELNFKLREKQNEIFELKKIAETLRSKL'
-                         'EKYVDITKKLEDQNLNLQIKISDLEKKLSDA'),
+                        'EKYVDITKKLEDQNLNLQIKISDLEKKLSDA'),
                         metadata={"id": "seq2"})
             )
         ]
@@ -122,13 +150,13 @@ class VectorTests(TestCase):
                 (
                     np.random.randn(rk),
                     Protein(('IGKEEIQQRLAQFVDHWKELKQLAAARGQRL'
-                             'EESLEYQQFVANVEEEEAWINEKMTLVASED'),
+                            'EESLEYQQFVANVEEEEAWINEKMTLVASED'),
                             metadata={"id": "seq1"})
-                 ),
+                ),
                 (
                     np.random.randn(rk),
                     Protein(('QQNKELNFKLREKQNEIFELKKIAETLRSKL'
-                             'EKYVDITKKLEDQNLNLQIKISDLEKKLSDA'),
+                            'EKYVDITKKLEDQNLNLQIKISDLEKKLSDA'),
                             metadata={"id": "seq2"})
                 )
             ]

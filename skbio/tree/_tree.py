@@ -7,7 +7,7 @@
 # ----------------------------------------------------------------------------
 
 from warnings import warn, simplefilter
-from operator import or_, itemgetter
+from operator import or_, ne, gt, itemgetter
 from copy import copy, deepcopy
 from itertools import chain, combinations
 from functools import reduce
@@ -26,7 +26,7 @@ from skbio.tree._exception import (
     MissingNodeError,
     TreeError,
 )
-from skbio.util import RepresentationWarning
+from skbio.util import get_rng, RepresentationWarning
 from skbio.util._decorator import classonlymethod
 from skbio.util._warning import _warn_deprecated
 
@@ -509,15 +509,9 @@ class TreeNode(SkbioObject):
         ['d', 'f']
 
         """
-        if self.is_root():
-            return []
-
-        result = self.parent.children[:]
-
-        # TODO: This removal should be by identity (`is`) instead of equality.
-        result.remove(self)
-
-        return result
+        return (
+            [] if self.is_root() else [x for x in self.parent.children if x is not self]
+        )
 
     def neighbors(self, ignore=None):
         r"""Return all nodes that are neighbors of the current node.
@@ -1807,11 +1801,14 @@ class TreeNode(SkbioObject):
         See Also
         --------
         prune
+        is_bifurcating
 
         Notes
         -----
         This method does not modify single-child nodes. These nodes can be collapsed
         using :meth:`prune` prior to this method to create a strictly bifurcating tree.
+
+        This method modifies the subtree under the current node.
 
         Examples
         --------
@@ -1859,21 +1856,33 @@ class TreeNode(SkbioObject):
                         node.remove(child, uncache=False)
                     node.extend([ind, interm], uncache=False)
 
-    def shuffle(self, k=None, names=None, shuffle_f=np.random.shuffle, n=1):
-        r"""Yield trees with shuffled tip names.
+    def shuffle(self, k=None, names=None, shuffle_f=None, n=1):
+        r"""Shuffled tip names of the tree.
 
         Parameters
         ----------
         k : int, optional
-            The number of tips to shuffle. If not None, this number of tips are
-            randomly selected, and only those names will be shuffled.
+            The number of tips to shuffle. If provided, this number of tips will be
+            randomly selected by ``shuffle_f``, and only those names will be shuffled.
+            Conflicts with ``names``.
         names : list, optional
-            The specific tip names to shuffle.
-        shuffle_f : callable, optional
-            Shuffling function, which must accept a list and modify inplace.
+            The specific tip names to shuffle. Conflicts with ``k``.
+        shuffle_f : int, np.random.Generator or callable, optional
+            Shuffling function, which must accept a list and modify in place. Default
+            is the :meth:`shuffle <numpy.random.Generator.shuffle>` method of a NumPy
+            random generator. If an integer is provided, a random generator will be
+            constructed using this number as the seed.
+
+            .. versionchanged:: 0.6.3
+                Switched to NumPy's new random generator. Can accept a random seed or
+                random generator instance.
+
         n : int, optional
-            The number of iterations to perform. Value must be > 0 and ``np.inf`` can
-            be specified for an infinite number of iterations.
+            The number of iterations to perform. Must be a positive integer. Default
+            is 1. If None or ``np.inf``, iterations will be infinite.
+
+            .. versionchanged:: 0.6.3
+                Can accept None.
 
         Yields
         ------
@@ -1891,7 +1900,6 @@ class TreeNode(SkbioObject):
 
         See Also
         --------
-        numpy.random.shuffle
         numpy.random.Generator.shuffle
 
         Notes
@@ -1900,66 +1908,62 @@ class TreeNode(SkbioObject):
         in place in the original tree and the tree is yielded prior to the next round
         of shuffling. Tree caches will be cleared prior to shuffling.
 
-        ``k`` and ``names`` cannot be specified at the same time, or an error will be
-        raised. If neither ``k`` nor ``names`` are provided, all tips are shuffled.
-
-        The default shuffling function is stochastic. To ensure the reproducibility of
-        the result, you should use a generator-based function, such as ``rng.shuffle``
-        where ``rng`` is a pre-constructed random generator.
+        ``k`` and ``names`` cannot be specified at the same time. If neither ``k`` nor
+        ``names`` are provided, all tips will be shuffled.
 
         Examples
         --------
-        Alternate the names on two of the tips, 'a', and 'b', and do this 5 times:
+        Shuffle the names of a 4-tip tree for 5 times:
 
         >>> from skbio import TreeNode
         >>> tree = TreeNode.read(["((a,b),(c,d));"])
-        >>> rev = lambda items: items.reverse()
-        >>> shuffler = tree.shuffle(names=['a', 'b'], shuffle_f=rev, n=5)
-        >>> for shuffled_tree in shuffler:
-        ...     print(shuffled_tree)
-        ((b,a),(c,d));
+        >>> for shuffled in tree.shuffle(shuffle_f=42, n=5):
+        ...     print(shuffled)
+        ((d,c),(b,a));
         <BLANKLINE>
-        ((a,b),(c,d));
+        ((a,b),(d,c));
         <BLANKLINE>
-        ((b,a),(c,d));
+        ((a,c),(d,b));
         <BLANKLINE>
-        ((a,b),(c,d));
+        ((d,b),(a,c));
         <BLANKLINE>
-        ((b,a),(c,d));
+        ((a,c),(d,b));
         <BLANKLINE>
 
         """
-        if k is not None and k < 2:
-            raise ValueError("k must be None or >= 2.")
-        if k is not None and names is not None:
-            raise ValueError("n and names cannot be specified at the same time.")
-        if n < 1:
+        if k is not None:
+            if k < 2:
+                raise ValueError("k must be None or >= 2.")
+            if names is not None:
+                raise ValueError("k and names cannot be specified at the same time.")
+        if n is None:
+            n = np.inf
+        elif n < 1:
             raise ValueError("n must be > 0.")
 
-        self.assign_ids()
+        # determine shuffling function
+        if not callable(shuffle_f):
+            shuffle_f = get_rng(shuffle_f).shuffle
 
-        if names is None:
-            all_tips = list(self.tips())
+        # determine tip names to shuffle
+        if names is not None:
+            tips = [self.find(x) for x in names]
+        else:
+            tips = list(self.tips())
+            if k is not None:
+                shuffle_f(tips)
+                tips = tips[:k]
+            names = [x.name for x in tips]
 
-            # this case won't happen
-            # if n is None:
-            #     n = len(all_tips)
-
-            shuffle_f(all_tips)
-            names = [tip.name for tip in all_tips[:k]]
-
-        nodes = [self.find(name) for name in names]
-
-        # Since the names are being shuffled, the association between ID and
-        # name is no longer reliable
+        # since the names are being shuffled, the caches are no longer reliable
         self.clear_caches()
 
+        # iteratively shuffle tip names and yield tree
         counter = 0
         while counter < n:
             shuffle_f(names)
-            for node, name in zip(nodes, names):
-                node.name = name
-
+            for tip, name in zip(tips, names):
+                tip.name = name
             yield self
             counter += 1
 
@@ -3122,6 +3126,49 @@ class TreeNode(SkbioObject):
             else:
                 node.support, node.name = node._extract_support()
 
+    def is_bifurcating(self, strict=False):
+        r"""Check if the tree is bifurcating.
+
+        .. versionadded:: 0.6.3
+
+        Parameters
+        ----------
+        strict : bool, optional
+            Whether to consider single-child nodes as violations of bifurcation.
+            Default is False.
+
+        See Also
+        --------
+        bifurcate
+        prune
+
+        Notes
+        -----
+        In a bifurcating tree (a.k.a. binary tree), every node has at most two
+        children. The property of bifurcation is necessary for a wide range of tree
+        analyses. In contrast, if a node has three or more children, it is considered
+        as multifurcating, or polytomy in phylogenetics.
+
+        In strict mode, every internal node (including root) has to have exactly two
+        children in order for the tree to be bifurcating. Single-child nodes are
+        considered as violations. These nodes can be collapsed by :meth:`prune`.
+
+        This method operates on the subtree below the current node.
+
+        Examples
+        --------
+        >>> from skbio import TreeNode
+        >>> tree = TreeNode.read(["((a,b,c),(d,e))root;"])
+        >>> tree.is_bifurcating()
+        False
+
+        """
+        test = ne if strict else gt
+        for node in self.traverse(include_self=True):
+            if (children := node.children) and test(len(children), 2):
+                return False
+        return True
+
     def observed_node_counts(self, tip_counts):
         """Return counts of node observations from counts of tip observations.
 
@@ -3660,28 +3707,29 @@ class TreeNode(SkbioObject):
 
         return 1 - (2 * intersection_length / float(total_subsets))
 
-    def compare_tip_distances(
-        self, other, sample=None, dist_f=distance_from_r, shuffle_f=np.random.shuffle
-    ):
-        """Compare self to other using tip-to-tip distance matrices.
-
-        Value returned is `dist_f(m1, m2)` for the two matrices. Default is to use the
-        Pearson correlation coefficient, with +1 giving a distance of 0 and -1 giving a
-        distance of +1 (the maximum possible value). Depending on the application, you
-        might instead want to use distance_from_r_squared, which counts correlations of
-        both +1 and -1 as identical (0 distance).
+    def compare_tip_distances(self, other, sample=None, dist_f=None, shuffle_f=None):
+        r"""Compare self to other using tip-to-tip distance matrices.
 
         Parameters
         ----------
         other : TreeNode
-            The tree to compare
+            The tree to compare.
         sample : int, optional
             Randomly subsample this number of tips in common between the trees to
             compare. This is useful when comparing very large trees.
         dist_f : callable, optional
             The distance function used to compare two the tip-tip distance matrices.
-        shuffle_f : callable, optional
-            The shuffling function used if ``sample`` is not None.
+            Default is :math:`(1-r)/2`, where :math:`r` is the Pearson correlation
+            coefficient between the two matrices.
+        shuffle_f : int, np.random.Generator or callable, optional
+            The shuffling function used if ``sample`` is specified. Default is the
+            :meth:`shuffle <numpy.random.Generator.shuffle>` method of a NumPy random
+            generator. If an integer is provided, a random generator will be
+            constructed using this number as the seed.
+
+            .. versionchanged:: 0.6.3
+                Switched to NumPy's new random generator. Can accept a random seed or
+                random generator instance.
 
         Returns
         -------
@@ -3697,8 +3745,7 @@ class TreeNode(SkbioObject):
         --------
         compare_subsets
         compare_rfd
-        numpy.random.shuffle
-        numpy.random.Generator.shuffle
+        scipy.spatial.distance.correlation
 
         Notes
         -----
@@ -3708,14 +3755,12 @@ class TreeNode(SkbioObject):
         one needs to reorder the names in the two trees to match up the distance
         matrices.
 
-        The default shuffling function is stochastic. To ensure the reproducibility of
-        the result, you should use a generator-based function, such as ``rng.shuffle``
-        where ``rng`` is a pre-constructed random generator.
-
         Examples
         --------
+        Calculate the distance between two trees. Note that only three taxa are shared
+        between the trees.
+
         >>> from skbio import TreeNode
-        >>> # note, only three common taxa between the trees
         >>> tree1 = TreeNode.read(["((a:1,b:1):2,(c:0.5,X:0.7):3);"])
         >>> tree2 = TreeNode.read(["(((a:1,b:1,Y:1):2,c:3):1,Z:4);"])
         >>> dist = tree1.compare_tip_distances(tree2)
@@ -3734,7 +3779,12 @@ class TreeNode(SkbioObject):
         if len(common_names) <= 2:
             return 1  # the two trees must match by definition in this case
 
+        if dist_f is None:
+            dist_f = distance_from_r
+
         if sample is not None:
+            if not callable(shuffle_f):
+                shuffle_f = get_rng(shuffle_f).shuffle
             shuffle_f(common_names)
             common_names = common_names[:sample]
 

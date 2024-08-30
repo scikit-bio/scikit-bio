@@ -57,16 +57,6 @@ class TreeTests(TestCase):
         #          |
         #           \-h
 
-        def rev_f(items):
-            items.reverse()
-
-        def rotate_f(items):
-            tmp = items[-1]
-            items[1:] = items[:-1]
-            items[0] = tmp
-
-        self.rev_f = rev_f
-        self.rotate_f = rotate_f
         self.complex_tree = TreeNode.read([
             "(((a,b)int1,(x,y,(w,z)int2,(c,d)int3)int4),(e,f)int5);"])
 
@@ -207,7 +197,7 @@ class TreeTests(TestCase):
         self.assertEqual([o.name for o in obs], exp)
 
     def test_siblings(self):
-        """Get the siblings"""
+        """Get siblings of a node."""
         exp = []
         obs = self.simple_t.siblings()
         self.assertEqual(obs, exp)
@@ -863,7 +853,7 @@ class TreeTests(TestCase):
         t3.bifurcate(insert_length=0)
         self.assertEqual(str(t3), "((c,(a,b):0));\n")
         
-    def test_bifurcate_with_subclass(self):
+        # bifurcate with subclass
         tree = TreeNodeSubclass()
         tree.append(TreeNodeSubclass())
         tree.append(TreeNodeSubclass())
@@ -875,62 +865,110 @@ class TreeTests(TestCase):
         for node in tree.traverse():
             self.assertIs(type(node), TreeNodeSubclass)
 
-    def test_shuffle_invalid_iter(self):
-        shuffler = self.simple_t.shuffle(n=-1)
-        with self.assertRaises(ValueError):
-            next(shuffler)
+    def test_shuffle(self):
+        # default behavior: all tips are shuffled, only one tree is yielded
+        # shuffling method is stochastic and so is the result
+        t = self.simple_t.copy()
+        obs = list(t.shuffle())
+        self.assertEqual(len(obs), 1)
+        self.assertSetEqual(obs[0].subset(), set('abcd'))
 
-    def test_shuffle_n_2(self):
+        # specify a random generator to make results deterministic
+        rng = np.random.default_rng(42)
+        t = self.simple_t.copy()
+        obs = str(next(t.shuffle(shuffle_f=rng)))
+        exp = "((d,c)i1,(b,a)i2)root;\n"
+        self.assertEqual(obs, exp)
+
+        # can also specify a random seed; result is the same
+        t = self.simple_t.copy()
+        obs = str(next(t.shuffle(shuffle_f=42)))
+        self.assertEqual(obs, exp)
+
+        # can also supply a function; result is the same
+        t = self.simple_t.copy()
+        f = np.random.default_rng(42).shuffle
+        obs = str(next(t.shuffle(shuffle_f=f)))
+        self.assertEqual(obs, exp)
+
+        # yield a row of 5 trees
+        rng = np.random.default_rng(42)
+        t = self.simple_t.copy()
+        obs = list(map(str, t.shuffle(shuffle_f=rng, n=5)))
+        self.assertEqual(len(obs), 5)
+        exp = ["((d,c)i1,(b,a)i2)root;\n",
+               "((a,b)i1,(d,c)i2)root;\n",
+               "((a,c)i1,(d,b)i2)root;\n",
+               "((d,b)i1,(a,c)i2)root;\n",
+               "((a,c)i1,(d,b)i2)root;\n"]
+        self.assertListEqual(obs, exp)
+
+        # yield infinitely
+        rng = np.random.default_rng(42)
+        t = self.simple_t.copy()
+        gen = t.shuffle(shuffle_f=rng, n=None)
+        obs = [str(next(gen)) for i in range(100)]
+        self.assertListEqual(obs[:5], exp)
+
+        # define two simple, non-stochastic shuffling functions
+        def rev_f(items):
+            items.reverse()
+
+        def rotate_f(items):
+            tmp = items[-1]
+            items[1:] = items[:-1]
+            items[0] = tmp
+
+        # apply a simple function
+        t = self.simple_t.copy()
+        obs = str(next(t.shuffle(shuffle_f=rev_f)))
+        exp = "((d,c)i1,(b,a)i2)root;\n"
+        self.assertEqual(obs, exp)
+
+        # specify names to shuffle
+        t = self.simple_t.copy()
+        obs = list(map(str, t.shuffle(names=list("abc"), shuffle_f=rotate_f, n=4)))
+        exp = ["((c,a)i1,(b,d)i2)root;\n",
+               "((b,c)i1,(a,d)i2)root;\n",
+               "((a,b)i1,(c,d)i2)root;\n",
+               "((c,a)i1,(b,d)i2)root;\n"]
+        self.assertListEqual(obs, exp)
+
+        # specify number of names to shuffle
+        t = self.simple_t.copy()
+        obs = list(map(str, t.shuffle(k=2, shuffle_f=rev_f, n=5)))
         exp = ["((a,b)i1,(d,c)i2)root;\n",
                "((a,b)i1,(c,d)i2)root;\n",
                "((a,b)i1,(d,c)i2)root;\n",
                "((a,b)i1,(c,d)i2)root;\n",
                "((a,b)i1,(d,c)i2)root;\n"]
+        self.assertListEqual(obs, exp)
 
-        obs_g = self.simple_t.shuffle(k=2, shuffle_f=self.rev_f, n=np.inf)
-        obs = [str(next(obs_g)) for i in range(5)]
-        self.assertEqual(obs, exp)
-
-    def test_shuffle_n_none(self):
-        exp = ["((d,c)i1,(b,a)i2)root;\n",
-               "((a,b)i1,(c,d)i2)root;\n",
-               "((d,c)i1,(b,a)i2)root;\n",
-               "((a,b)i1,(c,d)i2)root;\n"]
-        obs_g = self.simple_t.shuffle(shuffle_f=self.rev_f, n=4)
-        obs = [str(next(obs_g)) for i in range(4)]
-        self.assertEqual(obs, exp)
-
-    def test_shuffle_complex(self):
+        # a complex example
+        obs = list(map(str, self.complex_tree.shuffle(
+            shuffle_f=rev_f, names=["c", "d", "e", "f"], n=4)))
         exp = ["(((a,b)int1,(x,y,(w,z)int2,(f,e)int3)int4),(d,c)int5);\n",
                "(((a,b)int1,(x,y,(w,z)int2,(c,d)int3)int4),(e,f)int5);\n",
                "(((a,b)int1,(x,y,(w,z)int2,(f,e)int3)int4),(d,c)int5);\n",
                "(((a,b)int1,(x,y,(w,z)int2,(c,d)int3)int4),(e,f)int5);\n"]
+        self.assertListEqual(obs, exp)
 
-        obs_g = self.complex_tree.shuffle(shuffle_f=self.rev_f,
-                                          names=["c", "d", "e", "f"], n=4)
-        obs = [str(next(obs_g)) for i in range(4)]
-        self.assertEqual(obs, exp)
-
-    def test_shuffle_names(self):
-        exp = ["((c,a)i1,(b,d)i2)root;\n",
-               "((b,c)i1,(a,d)i2)root;\n",
-               "((a,b)i1,(c,d)i2)root;\n",
-               "((c,a)i1,(b,d)i2)root;\n"]
-
-        obs_g = self.simple_t.shuffle(names=["a", "b", "c"],
-                                      shuffle_f=self.rotate_f, n=np.inf)
-        obs = [str(next(obs_g)) for i in range(4)]
-        self.assertEqual(obs, exp)
-
-    def test_shuffle_raises(self):
+        # invalid number of iterations
+        t = self.simple_t.copy()
         with self.assertRaises(ValueError):
-            next(self.simple_t.shuffle(k=1))
+            next(t.shuffle(n=-1))
 
+        # invalid number of names to shuffle
         with self.assertRaises(ValueError):
-            next(self.simple_t.shuffle(k=5, names=["a", "b"]))
+            next(t.shuffle(k=1))
 
+        # k and names conflict
+        with self.assertRaises(ValueError):
+            next(t.shuffle(k=5, names=["a", "b"]))
+
+        # tip names not found
         with self.assertRaises(MissingNodeError):
-            next(self.simple_t.shuffle(names=["x", "y"]))
+            next(t.shuffle(names=["x", "y"]))
 
     # ------------------------------------------------
     # Tree rerooting
@@ -1419,6 +1457,16 @@ class TreeTests(TestCase):
         for node in tree.children:
             self.assertIsNone(node.support)
 
+    def test_is_bifurcating(self):
+        """Check if tree is bifurcating."""
+        t = self.simple_t
+        self.assertTrue(t.is_bifurcating())
+        t = TreeNode.read(["((a,b,c),(d,e))root;"])
+        self.assertFalse(t.is_bifurcating())
+        t = TreeNode.read(["((((a,b)c)d)e,f)root;"])
+        self.assertTrue(t.is_bifurcating())
+        self.assertFalse(t.is_bifurcating(strict=True))
+
     def test_observed_node_counts(self):
         """returns observed nodes counts given vector of observed taxon counts
         """
@@ -1725,6 +1773,7 @@ class TreeTests(TestCase):
         self.assertEqual(result, 1)
 
     def test_compare_tip_distances(self):
+        # default behavior
         t = TreeNode.read(["((H:1,G:1):2,(R:0.5,M:0.7):3);"])
         t2 = TreeNode.read(["(((H:1,G:1,O:1):2,R:3):1,X:4);"])
         obs = t.compare_tip_distances(t2)
@@ -1734,32 +1783,31 @@ class TreeTests(TestCase):
         r = pearsonr(m1.flat, m2.flat)[0]
         self.assertAlmostEqual(obs, (1 - r) / 2)
 
-    def test_compare_tip_distances_sample(self):
+        # sample a subset of taxa
         t = TreeNode.read(["((H:1,G:1):2,(R:0.5,M:0.7):3);"])
         t2 = TreeNode.read(["(((H:1,G:1,O:1):2,R:3):1,X:4);"])
-        obs = t.compare_tip_distances(t2, sample=3, shuffle_f=sorted)
-        # note: common taxa are H, G, R (only)
+        obs = t.compare_tip_distances(t2, sample=3)
+        # Note: common taxa are H, G, R (only), all of which are selected, despite that
+        # the default shuffling function is stochastic.
         m1 = np.array([[0, 2, 6.5], [2, 0, 6.5], [6.5, 6.5, 0]])
         m2 = np.array([[0, 2, 6], [2, 0, 6], [6, 6, 0]])
         r = pearsonr(m1.flat, m2.flat)[0]
         self.assertAlmostEqual(obs, (1 - r) / 2)
 
-        # 4 common taxa, still picking H, G, R
+        # 4 common taxa, custom shuffling function, still picking H, G, R
         t = TreeNode.read(["((H:1,G:1):2,(R:0.5,M:0.7,Q:5):3);"])
         t3 = TreeNode.read(["(((H:1,G:1,O:1):2,R:3,Q:10):1,X:4);"])
         obs = t.compare_tip_distances(t3, sample=3, shuffle_f=sorted)
 
-    def test_compare_tip_distances_no_common_tips(self):
+        # no common taxa
         t = TreeNode.read(["((H:1,G:1):2,(R:0.5,M:0.7):3);"])
         t2 = TreeNode.read(["(((Z:1,Y:1,X:1):2,W:3):1,V:4);"])
-
         with self.assertRaises(ValueError):
             t.compare_tip_distances(t2)
 
-    def test_compare_tip_distances_single_common_tip(self):
+        # single common taxon
         t = TreeNode.read(["((H:1,G:1):2,(R:0.5,M:0.7):3);"])
         t2 = TreeNode.read(["(((R:1,Y:1,X:1):2,W:3):1,V:4);"])
-
         self.assertEqual(t.compare_tip_distances(t2), 1)
         self.assertEqual(t2.compare_tip_distances(t), 1)
 
