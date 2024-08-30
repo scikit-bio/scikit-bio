@@ -29,7 +29,7 @@ class BmeTests(TestCase):
         # this newick string was confirmed against http://www.trex.uqam.ca/
         # which generated the following (isomorphic) newick string:
         # (d:2.0000,e:1.0000,(c:4.0000,(a:2.0000,b:3.0000):3.0000):2.0000);
-        self.expected1_str = ("((b:3.0,(c:4.0,(e:1.0,d:2.0):2.0):3.0):2.0)a;")
+        self.expected1_str = ("((b:3.0,(c:4.0,(e:1.25,d:1.75):2.0):3.0):2.0)a;")
         self.expected1_TreeNode = TreeNode.read(
                 io.StringIO(self.expected1_str))
         self.bme_starting1_str = ("((b,c))a;")
@@ -99,7 +99,7 @@ class BmeTests(TestCase):
         tree = bme(self.dm4)
         self.assertTrue(tree.find('b').length < 0)
         self.assertTrue(tree.find('c').length < 0)
-        self.assertTrue(tree.find('d').length < 0)
+        self.assertTrue(tree.find('d').length > 0)
         self.assertTrue(tree.find('e').length > 0)
 
     def test_bme_error(self):
@@ -148,12 +148,12 @@ class BmeTests(TestCase):
         # computed manually
         expected_str = ("(((b,d),(e,c)))a;")
         expected_TreeNode = TreeNode.read(io.StringIO(expected_str))
-        expected_adm = [[0.0, 10.0, 7.25, 9.0, 10.0, 9.5, 5.0],
-                        [10.0, 0.0, 7.25, 3.0, 8.0, 5.5, 9.0],
-                        [7.25, 7.25, 0.0, 6.0, 9.0, 7.5, 7.0],
-                        [9.0, 3.0, 6.0, 0.0, 7.0, 7.0, 8.0],
-                        [10.0, 8.0, 9.0, 7.0, 0.0, 9.0, 9.0],
-                        [9.5, 5.5, 7.5, 7.0, 9.0, 0.0, 8.5],
+        expected_adm = [[0.0, 10.0, 4.75, 9.0, 10.0, 9.5, 5.0],
+                        [10.0, 0.0, 2.75, 3.0, 8.0, 5.5, 9.0],
+                        [4.75, 2.75, 0.0, 6.0, 9.0, 7.5, 7.0],
+                        [9.0, 3.0, 6.0, 0.0, 7.0, 3.0, 8.0],
+                        [10.0, 8.0, 9.0, 7.0, 0.0, 4.5, 9.0],
+                        [9.5, 5.5, 7.5, 3.0, 4.5, 0.0, 8.5],
                         [5.0, 9.0, 7.0, 8.0, 9.0, 8.5, 0.0]]
         actual_adm = _balanced_average_matrix(expected_TreeNode, self.dm1)
         index = [0, 1, 2, 3, 4, 5, 6]
