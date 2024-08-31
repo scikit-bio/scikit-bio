@@ -188,6 +188,8 @@ intersphinx_mapping = {
     'scipy': ('https://docs.scipy.org/doc/scipy/', None),
     'matplotlib': ('https://matplotlib.org/stable/', None),
     'pandas': ('https://pandas.pydata.org/pandas-docs/stable/', None),
+    'sklearn': ('https://scikit-learn.org/stable/', None),
+    'statsmodels': ('https://www.statsmodels.org/stable/', None),
     'biom-format': ('https://biom-format.org/', None)
 }
 
