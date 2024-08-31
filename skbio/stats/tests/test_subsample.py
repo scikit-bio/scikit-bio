@@ -209,8 +209,8 @@ class ISubsampleTests(unittest.TestCase):
     def test_binf_is_none(self):
         maximum = 2
         items = [1, 2]
-        exp = [(True, 1), (True, 2)]
-        obs = isubsample(items, maximum)
+        exp = [(True, 2), (True, 1)]
+        obs = isubsample(items, maximum, seed=123)
         self.assertEqual(list(obs), exp)
 
 

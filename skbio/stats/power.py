@@ -26,8 +26,8 @@ between the number of samples we use and the rate of false negatives, also
 called the statistical power of the test.
 
 To generate complete power curves from data which appears underpowered, the
-`statsmodels.stats.power` package can be used to solve for an effect size. The
-effect size can be used to extrapolate a power curve for the data.
+:mod:`statsmodels.stats.power` module can be used to solve for an effect size.
+The effect size can be used to extrapolate a power curve for the data.
 
 Most functions in this module accept a statistical test function which takes a
 list of samples and returns a p value. The test is then evaluated over a series
@@ -53,7 +53,7 @@ Functions
 Examples
 --------
 Suppose we wanted to test that there's a relationship between two random
-variables, `ind` and `dep`. Let's use random subsampling to estimate the
+variables, ``ind`` and ``dep``. Let's use random subsampling to estimate the
 statistical power of our test with an alpha of 0.1, 0.01, and 0.001.
 
 We will use a random seed to ensure the reproducibility of results.
@@ -65,52 +65,48 @@ We will use a random seed to ensure the reproducibility of results.
 array([ 1, 15, 13,  8,  8, 17,  1, 13,  4,  1, 10, 19, 14, 15, 14]...
 >>> dep = (3 * ind + 5 + rng.standard_normal(15) * 5).round(3)
 >>> dep
-array([ 7.916, 45.735, 48.397, 32.889, 29.33 , 61.636, 10.338, 39.704,
-       18.844,  3.206, 39.392, 61.75 , 46.076, 46.595, 53.113])
+array([  7.916,  45.735,  48.397,  32.889,  29.33 ,  61.636,  10.338,
+        39.704,  18.844,   3.206,  39.392,  61.75 ,  46.076,  46.595,
+        53.113])
 
 Let's define a test that will draw a list of sample pairs and determine
-if they're correlated. We'll use `scipy.stats.pearsonr` which takes two arrays
-and returns a correlation coefficient and a p-value representing the
-probability the two distributions are correlated.
+if they're correlated. We'll use :func:`scipy.stats.pearsonr` which takes
+two arrays and returns a correlation coefficient and a p-value representing
+the probability the two distributions are correlated.
 
 >>> from scipy.stats import pearsonr
->>> f = lambda x: pearsonr(x[0], x[1])[1]
+>>> f = lambda x: pearsonr(*x).pvalue
 
 Now, let's use random sampling to estimate the power of our test on
 the first distribution.
 
 >>> samples = [ind, dep]
->>> print("%.3e" % f(samples))
+>>> print('{:.3e}'.format(f(samples)))
 1.606e-10
 
-In `subsample_power`, we can maintain a paired relationship between samples
-by setting `draw_mode` to "matched". We can also set our critical value, so
+In "func:`subsample_power`, we can maintain a paired relationship between samples
+by setting ``draw_mode`` to "matched". We can also set our critical value, so
 that we estimate power for a critical value of :math:`\alpha = 0.05`, an
 estimate for the critical value of 0.01, and a critical value of 0.001.
 
 >>> from skbio.stats.power import subsample_power
 >>> pwr_100, counts_100 = subsample_power(
 ...     test=f, samples=samples, max_counts=10, min_counts=3, counts_interval=1,
-...     draw_mode="matched", alpha_pwr=0.1, num_iter=25, seed=rng)
+...     draw_mode='matched', alpha_pwr=0.1, num_iter=25, seed=rng)
 >>> counts_100
 array([3, 4, 5, 6, 7, 8, 9])
 >>> pwr_100.mean(0)
-array([0.512, 0.936, 0.984, 1.   , 1.   , 1.   , 1.   ])
+array([ 0.512,  0.936,  0.984,  1.   ,  1.   ,  1.   ,  1.   ])
 >>> pwr_010, counts_010 = subsample_power(
 ...     test=f, samples=samples, max_counts=10, min_counts=3, counts_interval=1,
-...     draw_mode="matched", alpha_pwr=0.01, num_iter=25, seed=rng)
+...     draw_mode='matched', alpha_pwr=0.01, num_iter=25, seed=rng)
 >>> pwr_010.mean(0)
-array([0.072, 0.416, 0.888, 0.964, 1.   , 0.996, 1.   ])
->>> pwr_001, counts_001 = subsample_power(test=f,
-...                                       samples=samples,
-...                                       max_counts=10,
-...                                       min_counts=3,
-...                                       counts_interval=1,
-...                                       draw_mode="matched",
-...                                       alpha_pwr=0.001,
-...                                       num_iter=25)
+array([ 0.072,  0.416,  0.888,  0.964,  1.   ,  0.996,  1.   ])
+>>> pwr_001, counts_001 = subsample_power(
+...     test=f, samples=samples, max_counts=10, min_counts=3, counts_interval=1,
+...     draw_mode='matched', alpha_pwr=0.001, num_iter=25, seed=rng)
 >>> pwr_001.mean(0)
-array([0.   , 0.044, 0.204, 0.796, 0.948, 0.996, 1.   ])
+array([ 0.   ,  0.044,  0.204,  0.796,  0.948,  0.996,  1.   ])
 
 Based on this power estimate, as we increase our confidence that we have not
 committed a type I error and identified a false positive, the number of samples
@@ -239,58 +235,55 @@ def subsample_power(
     these samples using a binomial model. (*Note that this is a simulation.*)
 
     >>> import numpy as np
-    >>> rng = np.random.default_rng(42)
+    >>> rng = np.random.default_rng(123)
     >>> pre_rate = rng.binomial(1, 0.85, size=50)
     >>> print(pre_rate.sum())
-    44
+    42
     >>> pos_rate = rng.binomial(1, 0.40, size=50)
     >>> print(pos_rate.sum())
     16
 
     Let's set up a test function, so we can test the probability of
     finding a difference in frequency between the two groups. We'll use
-    `scipy.stats.chisquare` to look for the difference in frequency between
-    groups.
+    :func:`scipy.stats.chisquare` to look for the difference in frequency
+    between groups.
 
     >>> from scipy.stats import chisquare
     >>> test = lambda x: chisquare(np.array([x[i].sum() for i in
-    ...     range(len(x))]))[1]
+    ...     range(len(x))])).pvalue
 
     Let's make sure that our two distributions are different.
 
-    >>> print(round(test([pre_rate, pos_rate]), 5))
-    0.0003
+    >>> print('{:.5f}'.format(test([pre_rate, pos_rate])))
+    0.00064
 
     Since there are an even number of samples, and we don't have enough
     information to try controlling the data, we'll use
     :func:`subsample_power` to compare the two groups. If we had
     metadata about other risk factors, like a reproductive history, BMI,
     tobacco use, we might want to use :func:`subsample_paired_power`.
-    We'll also use "ind" `draw_mode`, since there is no linkage between the
+    We'll also use "ind" ``draw_mode``, since there is no linkage between the
     two groups of samples.
 
     >>> from skbio.stats.power import subsample_power
-    >>> pwr_est, counts = subsample_power(test=test,
-    ...                                   samples=[pre_rate, pos_rate],
-    ...                                   num_iter=100,
-    ...                                   num_runs=5,
-    ...                                   counts_interval=5,
-    ...                                   seed=rng)
+    >>> pwr_est, counts = subsample_power(
+    ...     test=test, samples=[pre_rate, pos_rate], num_iter=100, num_runs=5,
+    ...     counts_interval=5, seed=rng)
     >>> counts
     array([ 5, 10, 15, 20, 25, 30, 35, 40, 45])
     >>> np.nanmean(pwr_est, axis=0) # doctest: +NORMALIZE_WHITESPACE
-    array([ 0.134,  0.254,  0.512,  0.82 ,  0.958,  0.992, 1.   ,  1.   ,
+    array([ 0.11 ,  0.19 ,  0.45 ,  0.684,  0.874,  0.964, 1.   ,  1.   ,
             1.   ])
-    >>> print(counts[np.nanmean(pwr_est, axis=0) > 0.8].min())
-    20
+    >>> counts[np.nanmean(pwr_est, axis=0) > 0.8].min()
+    25
 
     So, we can estimate that we will see a significant difference in the
     presence of *G. vaginalis* in the stool of pre and post women with UTIs if
-    we have at least 20 samples per group.
+    we have at least 25 samples per group.
 
     If we wanted to test the relationship of a second candidate taxa which is
     more rare in the population, but may have a similar effect, based on
-    available literature, we might also start by trying to identify 20
+    available literature, we might also start by trying to identify 25
     samples per group where the second candidate taxa is present.
 
     Suppose, now, that we want to test that a secondary metabolite seen only in
@@ -310,30 +303,25 @@ def subsample_power(
     normal.
 
     >>> from scipy.stats import kruskal
-    >>> def metabolite_test(x):
-    ...     return kruskal(x[0], x[1])[1]
-    >>> print(round(metabolite_test([met_pos, met_neg]), 3))
-    0.007
+    >>> test2 = lambda x: kruskal(*x).pvalue
+    >>> print('{:.3e}'.format(test2([met_pos, met_neg])))
+    9.783e-06
 
     When we go to perform the statistical test on all the data, you might
     notice that there are twice as many samples from women with *G. vaginalis*
     than those without. It might make sense to account for this difference when
-    we're testing power. So, we're going to set the `ratio` parameter, which
+    we're testing power. So, we're going to set the ``ratio`` parameter, which
     lets us draw twice as many samples from women with *G. vaginalis*.
 
-    >>> pwr_est2, counts2 = subsample_power(test=metabolite_test,
-    ...                                     samples=[met_pos, met_neg],
-    ...                                     counts_interval=5,
-    ...                                     num_iter=100,
-    ...                                     num_runs=5,
-    ...                                     ratio=[2, 1],
-    ...                                     seed=rng)
+    >>> pwr_est2, counts2 = subsample_power(
+    ...     test=test2, samples=[met_pos, met_neg], counts_interval=5,
+    ...     num_iter=100, num_runs=5, ratio=[2, 1], seed=rng)
     >>> counts2
-    array([  5.,  10.,  15.,  20.,  25.,  30.])
+    array([  5.,  10.,  15.,  20.,  25.])
     >>> np.nanmean(pwr_est2, axis=0)
-    array([ 0.14 ,  0.272,  0.426,  0.646,  0.824,  0.996])
+    array([ 0.388,  0.688,  0.898,  0.986,  1.   ])
     >>> counts2[np.nanmean(pwr_est2, axis=0) > 0.8].min()
-    25.0
+    15.0
 
     When we consider the number of samples per group needed in the power
     analysis, we need to look at the ratio. The analysis says that we need 25
@@ -400,7 +388,7 @@ def subsample_paired_power(
     ----------
     test : function
         The statistical test which accepts a list of arrays sample ids and
-        returns a p value.
+        returns a p-value.
     meta : pandas.DataFrame
         The metadata associated with the samples.
     cat : str
@@ -477,7 +465,7 @@ def subsample_paired_power(
 
     >>> import numpy as np
     >>> import pandas as pd
-    >>> rng = np.random.default_rng(42)
+    >>> rng = np.random.default_rng(123)
     >>> data = pd.DataFrame.from_dict({
     ...     'CELL_LINE': rng.binomial(1, 0.5, size=(60,)),
     ...     'SOURCE': rng.binomial(2, 0.33, size=(60,)),
@@ -493,14 +481,14 @@ def subsample_paired_power(
     between the cytokine treated and untreated cells.
 
     >>> from scipy.stats import kruskal
-    >>> f = lambda x: kruskal(*[data.loc[i, 'OUTCOME'] for i in x])[1]
+    >>> f = lambda x: kruskal(*[data.loc[i, 'OUTCOME'] for i in x]).pvalue
 
     Let's check that cytokine treatment has a significant effect across all
     the cells.
 
     >>> treatment_stat = [g for g in data.groupby('TREATMENT').groups.values()]
-    >>> round(f(treatment_stat), 17)
-    0.00193863362662502
+    >>> print('{:.5f}'.format(f(treatment_stat)))
+    0.00176
 
     Now, let's pick the control categories. It seems reasonable to assume there
     may be an effect of cell line on the treatment outcome, which may be
@@ -518,20 +506,15 @@ def subsample_paired_power(
 
     >>> control_cats = ['SOURCE', 'CELL_LINE']
     >>> from skbio.stats.power import subsample_paired_power
-    >>> pwr, cnt = subsample_paired_power(test=f,
-    ...                                   meta=data,
-    ...                                   cat='TREATMENT',
-    ...                                   control_cats=control_cats,
-    ...                                   counts_interval=5,
-    ...                                   num_iter=25,
-    ...                                   num_runs=5,
-    ...                                   seed=rng)
+    >>> pwr, cnt = subsample_paired_power(
+    ...     test=f, meta=data, cat='TREATMENT', control_cats=control_cats,
+    ...     counts_interval=5, num_iter=25, num_runs=5, seed=rng)
     >>> cnt
     array([  5.,  10.,  15.,  20.])
     >>> pwr.mean(0)
-    array([ 0.24 ,  0.528,  0.68 ,  0.88 ])
+    array([ 0.272,  0.52 ,  0.712,  0.952])
     >>> pwr.std(0).round(3)
-    array([ 0.088,  0.127,  0.168,  0.08 ])
+    array([ 0.069,  0.057,  0.053,  0.039])
 
     Estimating off the power curve, it looks like 20 cells per group may
     provide adequate power for this experiment, although the large variance
