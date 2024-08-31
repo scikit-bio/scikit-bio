@@ -188,6 +188,8 @@ def subsample_power(
     seed : int or np.random.Generator, optional
         A user-provided random seed or random generator instance.
 
+        .. versionadded:: 0.6.3
+
     Returns
     -------
     power : array
@@ -427,6 +429,8 @@ def subsample_paired_power(
     seed : int or np.random.Generator, optional
         A user-provided random seed or random generator instance.
 
+        .. versionadded:: 0.6.3
+
     Returns
     -------
     power : array
@@ -652,6 +656,8 @@ def paired_subsamples(
         matches.
     seed : int or np.random.Generator, optional
         A user-provided random seed or random generator instance.
+
+        .. versionadded:: 0.6.3
 
     Returns
     -------

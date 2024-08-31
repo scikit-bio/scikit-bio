@@ -50,6 +50,8 @@ def isubsample(items, maximum, minimum=1, buf_size=1000, bin_f=None, seed=None):
     seed : int or np.random.Generator, optional
         A user-provided random seed or random generator instance.
 
+        .. versionadded:: 0.6.3
+
     Returns
     -------
     generator

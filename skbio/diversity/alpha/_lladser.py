@@ -24,6 +24,8 @@ def lladser_pe(counts, r=10, seed=None):
     seed : int or np.random.Generator, optional
         A user-provided random seed or random generator instance.
 
+        .. versionadded:: 0.6.3
+
     Returns
     -------
     double
@@ -81,6 +83,8 @@ def lladser_ci(counts, r, alpha=0.95, f=10, ci_type="ULCL", seed=None):
         fixed to 0.0. If ``'L'``, lower bound only, upper bound fixed to 1.0.
     seed : int or np.random.Generator, optional
         A user-provided random seed or random generator instance.
+
+        .. versionadded:: 0.6.3
 
     Returns
     -------
