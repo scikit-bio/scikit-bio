@@ -2095,14 +2095,14 @@ def _type_cast_to_float(df):
 
 
 def _lme_call(
-    formula,
-    metadata,
     table,
-    groups,
-    fit_method=None,
+    metadata,
+    formula,
+    grouping,
     re_formula=None,
     vc_formula=None,
     model_kwargs={},
+    fit_method=None,
     fit_kwargs={},
     fit_warnings=False,
 ):
@@ -2119,8 +2119,8 @@ def _lme_call(
     submodels = []
     metadata = _type_cast_to_float(metadata.copy())
 
-    merged_data = pd.merge(table, metadata, left_index=True, right_index=True)
-    if len(merged_data) == 0:
+    merged_table = pd.merge(table, metadata, left_index=True, right_index=True)
+    if len(merged_table) == 0:
         raise ValueError(
             (
                 "No more samples left. Check to make sure that "
@@ -2148,8 +2148,8 @@ def _lme_call(
         stats_formula = "%s ~ %s" % (response_var, formula)
         model = MixedLM.from_formula(
             formula=stats_formula,
-            data=merged_data,
-            groups=groups,
+            data=merged_table,
+            groups=grouping,
             re_formula=re_formula,
             vc_formula=vc_formula,
             **model_kwargs,
@@ -2225,10 +2225,10 @@ def _lme_call(
 
 
 def dirmult_lme(
-    formula,
     table,
     metadata,
-    groups=None,
+    formula,
+    grouping=None,
     pseudocount=0.5,
     draws=128,
     p_adjust="holm",
@@ -2261,8 +2261,6 @@ def dirmult_lme(
 
     Parameters
     ----------
-    formula : str or generic Formula object
-        The formula specifying the model.
     table : array-like
         The data for the model. If data is a pd.DataFrame, it must contain the
         dependent variables in data.columns. If data is not a pd.DataFrame, it must
@@ -2275,7 +2273,9 @@ def dirmult_lme(
         it must contain the covariates in indices of metadata. metadata can
         be a numpy structured array, or a numpy recarray, or a dictionary. It must
         not contain duplicate indices.
-    groups : str
+    formula : str or generic Formula object
+        The formula specifying the model.
+    grouping : str
         The column name in data that identifies the grouping variable.
     pseudocount : float, optional
         A non-zero value added to the input counts to ensure that all of the
@@ -2378,8 +2378,8 @@ def dirmult_lme(
     ...     index=['x1', 'x2', 'x3', 'y1', 'y2', 'y3', 'z1', 'z2', 'z3', 'u1',
     ...            'u2', 'u3'])
     >>> res = dirmult_lme(
-    ...     formula="time + treatment", data=table, metadata=metadata,
-    ...     groups="patient", seed=0, p_adjust="sidak"
+    ...     data=table, metadata=metadata, formula='time + treatment',
+    ...     grouping='patient', seed=0, p_adjust='sidak'
     ... )
     >>> res
       FeatureID  Covariate  Log2(FC)   CI(2.5)  CI(97.5)    pvalue    qvalue
@@ -2450,10 +2450,10 @@ def dirmult_lme(
     dir_table = _obtain_dir_table(table, pseudocount, rng)
 
     res, _submodels, _covariate_list = _lme_call(
-        formula=formula,
         table=dir_table,
         metadata=metadata,
-        groups=groups,
+        formula=formula,
+        grouping=grouping,
         re_formula=re_formula,
         vc_formula=vc_formula,
         model_kwargs=model_kwargs,
@@ -2481,10 +2481,10 @@ def dirmult_lme(
         dir_table = _obtain_dir_table(table, pseudocount, rng)
 
         ires = _lme_call(
-            formula=formula,
             table=dir_table,
             metadata=metadata,
-            groups=groups,
+            formula=formula,
+            grouping=grouping,
             re_formula=re_formula,
             vc_formula=vc_formula,
             model_kwargs=model_kwargs,
