@@ -1492,67 +1492,84 @@ class DirMultTTestTests(TestCase):
 class DirMultLMETests(TestCase):
     def setUp(self):
         np.random.seed(0)
+        index = ["subject1", "subject2", "subject3", "subject4", "subject5", "subject6"]
+        columns=["feature1", "feature2", "feature3", "feature4"]
 
         # create sample data for testing
-        self.table = pd.DataFrame(
-            [
-                [20, 110, 100, 101],
-                [33, 110, 120, 100],
-                [12, 110, 100, 110],
-                [202, 201, 9, 10],
-                [200, 202, 10, 10],
-                [203, 201, 14, 10],
-            ],
-            index=[
-                "subject1", "subject2", "subject3", "subject4", "subject5", "subject6"
-            ],
-            columns=["feature1", "feature2", "feature3", "feature4"],
-        )
+        self.table = pd.DataFrame([
+            [20, 110, 100, 101],
+            [33, 110, 120, 100],
+            [12, 110, 100, 110],
+            [202, 201, 9, 10],
+            [200, 202, 10, 10],
+            [203, 201, 14, 10]],
+            index=index,
+            columns=columns)
 
-        self.metadata = pd.DataFrame(
-            {
-                "Covar1": [1,1,2,2,3,3],
-                "Covar2": [1,1,1,1,2,2],
-                "Covar3": [1,2,1,2,1,2],
-            },
-            index=[
-                "subject1", "subject2", "subject3", "subject4", "subject5", "subject6"
-            ],
-        )
+        self.metadata = pd.DataFrame({
+            "Covar1": [1,1,2,2,3,3],
+            "Covar2": [1,1,1,1,2,2],
+            "Covar3": [1,2,1,2,1,2]},
+            index=index)
 
     def test_dirmult_lme_formatting(self):
-        res = dirmult_lme(formula="Covar2 + Covar3", table=self.table, metadata=self.metadata, groups='Covar1', seed=0, p_adjust="sidak")
+        res = dirmult_lme(
+            formula="Covar2 + Covar3", table=self.table, metadata=self.metadata,
+            groups='Covar1', draws=1, seed=0, p_adjust="sidak")
         self.assertIsInstance(res, pd.DataFrame)
-        self.assertEqual(res.shape[1], 7)  # Expected number of columns
-        pdt.assert_series_equal(res.iloc[:, 0], pd.Series(['feature1', 'feature1', 'feature2', 'feature2', 'feature3', 'feature3', 'feature4', 'feature4'], name='FeatureID'))
+        self.assertEqual(res.shape[1], 7)  # expected number of columns
+        pdt.assert_series_equal(res.iloc[:, 0], pd.Series([
+            'feature1', 'feature1', 'feature2', 'feature2', 'feature3', 'feature3',
+            'feature4', 'feature4'], name='FeatureID'))
 
     def test_dirmult_lme_output(self):
         formula = "Covar2 + Covar3"
-        res = dirmult_lme(formula=formula, table=self.table, metadata=self.metadata, groups='Covar1', seed=0, p_adjust="sidak")
+        res = dirmult_lme(
+            formula=formula, table=self.table, metadata=self.metadata, groups='Covar1',
+            draws=1, seed=0, p_adjust="sidak")
         npt.assert_array_less(res['Log2(FC)'], res['CI(97.5)'])
         npt.assert_array_less(res['CI(2.5)'], res['Log2(FC)'])
 
     def test_dirmult_lme_no_p_adjust_and_reml(self):
         formula = "Covar2 + Covar3"
-        result = dirmult_lme(formula=formula, table=self.table, metadata=self.metadata, groups='Covar1', seed=0, p_adjust=None)
+        result = dirmult_lme(
+            formula=formula, table=self.table, metadata=self.metadata, groups='Covar1',
+            draws=1, seed=0, p_adjust=None)
         pdt.assert_series_equal(result['pvalue'], result['qvalue'], check_names=False)
 
         fit_kwargs = {"reml": False}
-        res_ml = dirmult_lme(formula=formula, table=self.table, metadata=self.metadata, groups='Covar1', seed=0, p_adjust=None, fit_kwargs=fit_kwargs)
+        res_ml = dirmult_lme(
+            formula=formula, table=self.table, metadata=self.metadata, groups='Covar1',
+            draws=1, seed=0, p_adjust=None, fit_kwargs=fit_kwargs)
 
-        npt.assert_raises(AssertionError, npt.assert_allclose, result['CI(97.5)'], res_ml['CI(97.5)'])
-        npt.assert_raises(AssertionError, npt.assert_allclose, result['CI(2.5)'], res_ml['CI(2.5)'])
-        npt.assert_raises(AssertionError, npt.assert_allclose, result['pvalue'], res_ml['pvalue'])
+        with self.assertRaises(AssertionError):
+            npt.assert_allclose(result['CI(97.5)'], res_ml['CI(97.5)'])
+            npt.assert_allclose(result['CI(2.5)'], res_ml['CI(2.5)'])
+            npt.assert_allclose(result['pvalue'], res_ml['pvalue'])
 
     def test_dirmult_lme_invalid_table_type(self):
         with self.assertRaises(TypeError):
-            formula = "Covar2 + Covar3"
-            dirmult_lme(formula=formula, table="not a table", metadata=self.metadata, groups='Covar1', seed=0, p_adjust="sidak")
+            dirmult_lme(formula="Covar2 + Covar3", table="not a table",
+                        metadata=self.metadata, groups='Covar1')
 
     def test_dirmult_lme_invalid_metadata_type(self):
         with self.assertRaises(TypeError):
-            formula = "Covar2 + Covar3"
-            dirmult_lme(formula=formula, table=self.table, metadata="not a table", groups='Covar1', seed=0, p_adjust="sidak")
+            dirmult_lme(formula="Covar2 + Covar3", table=self.table,
+                        metadata="not a table", groups='Covar1')
+
+    def test_dirmult_lme_inconsistent_indexes(self):
+        # change table index
+        self.table.index = ["a", "b", "c", "d", "e", "f"]
+        with self.assertRaises(ValueError):
+            dirmult_lme(formula="Covar2 + Covar3", table=self.table,
+                        metadata=self.metadata, groups='Covar1')
+
+    def test_dirmult_lme_single_feature(self):
+        # only keep the first column of the table
+        self.table = self.table.iloc[:, :1]
+        with self.assertRaises(ValueError):
+            dirmult_lme(formula="Covar1", table=self.table,
+                        metadata=self.metadata, groups='Covar1')
 
     def test_dirmult_lme_toy_data(self):
         p1 = np.array([5, 6, 7])
@@ -1560,28 +1577,26 @@ class DirMultLMETests(TestCase):
         p1, p2 = p1 / p1.sum(), p2 / p2.sum()
         depth = 1000
         n = 10
-        data = np.vstack(
-            (
-                [np.random.multinomial(depth, p1) for _ in range(n)],
-                [np.random.multinomial(depth, p2) for _ in range(n)]
-            )
-        )
+        index_range = range(1, n * 2 + 1)
+        data = np.vstack((
+            [np.random.multinomial(depth, p1) for _ in range(n)],
+            [np.random.multinomial(depth, p2) for _ in range(n)]))
         table = pd.DataFrame(data)
         table.columns = ["feature1", "feature2", "feature3"]
-        table.index = [f"subject{i}" for i in range(1, n*2+1)]
+        table.index = [f"subject{i}" for i in index_range]
 
         exp_lfc = np.log2([4/5, 7/6, 7/7])
         exp_lfc = (exp_lfc - exp_lfc.mean())  # convert to CLR coordinates
 
-        metadata = pd.DataFrame(
-            {
-                "covar1": [1,1,2,2,3,3,4,4,5,5,6,6,7,7,8,8,9,9,10,10],
-                "covar2": [1,1,1,1,1,1,1,1,1,1,2,2,2,2,2,2,2,2,2,2],
-            },
-            index=[f"subject{i}" for i in range(1, n*2+1)],
-        )
+        metadata = pd.DataFrame({
+            "covar1": [1,1,2,2,3,3,4,4,5,5,6,6,7,7,8,8,9,9,10,10],
+            "covar2": [1,1,1,1,1,1,1,1,1,1,2,2,2,2,2,2,2,2,2,2]},
+            index=[f"subject{i}" for i in index_range])
 
-        res = dirmult_lme(formula="covar2", table=table, metadata=metadata, groups="covar1", seed=0, p_adjust="sidak")
+        res = dirmult_lme(
+            formula="covar2", table=table, metadata=metadata, groups="covar1",
+            draws=16, seed=0, p_adjust="sidak")
+
         npt.assert_array_less(exp_lfc, res['CI(97.5)'])
         npt.assert_array_less(res['CI(2.5)'], exp_lfc)
 
@@ -1591,60 +1606,46 @@ class DirMultLMETests(TestCase):
         p1, p2 = p1 / p1.sum(), p2 / p2.sum()
         depth = 100
         n = 10
-        data = np.vstack(
-            (
-                [np.random.multinomial(depth, p1) for _ in range(n)],
-                [np.random.multinomial(depth, p2) for _ in range(n)]
-            )
-        )
+        index_range = range(1, n * 2 + 1)
+        data = np.vstack((
+            [np.random.multinomial(depth, p1) for _ in range(n)],
+            [np.random.multinomial(depth, p2) for _ in range(n)]))
         table = pd.DataFrame(data)
-        table.columns = ["feature1", "feature2", "feature3", "feature4", "feature5", "feature6"]
-        table.index = [f"subject{i}" for i in range(1, n*2+1)]
+        table.columns = [
+            "feature1", "feature2", "feature3", "feature4", "feature5", "feature6"]
+        table.index = [f"subject{i}" for i in index_range]
 
-        metadata = pd.DataFrame(
-            {
-                "covar1": [1,1,2,2,3,3,4,4,5,5,6,6,7,7,8,8,9,9,10,10],
-                "covar2": [1,1,1,1,1,1,1,1,1,1,2,2,2,2,2,2,2,2,2,2],
-            },
-            index=[f"subject{i}" for i in range(1, n*2+1)],
-        )
+        metadata = pd.DataFrame({
+            "covar1": [1,1,2,2,3,3,4,4,5,5,6,6,7,7,8,8,9,9,10,10],
+            "covar2": [1,1,1,1,1,1,1,1,1,1,2,2,2,2,2,2,2,2,2,2]},
+            index=[f"subject{i}" for i in index_range])
 
         exp_lfc = np.log2([4/5, 7/6, 7/7, 6/8, 5/9, 7/4])
         exp_lfc = (exp_lfc - exp_lfc.mean())  # convert to CLR coordinates
 
-        res_100 = dirmult_lme(formula="covar2", table=table, metadata=metadata, groups="covar1", seed=0, p_adjust="sidak")
+        res_100 = dirmult_lme(
+            formula="covar2", table=table, metadata=metadata, groups="covar1",
+            draws=16, seed=0, p_adjust="sidak")
 
         # increase sequencing depth by 100 fold
         depth = 10000
-        data = np.vstack(
-            (
-                [np.random.multinomial(depth, p1) for _ in range(n)],
-                [np.random.multinomial(depth, p2) for _ in range(n)]
-            )
-        )
+        data = np.vstack((
+            [np.random.multinomial(depth, p1) for _ in range(n)],
+            [np.random.multinomial(depth, p2) for _ in range(n)]))
         table = pd.DataFrame(data)
-        table.columns = ["feature1", "feature2", "feature3", "feature4", "feature5", "feature6"]
-        table.index = [f"subject{i}" for i in range(1, n*2+1)]
-        metadata.index = [f"subject{i}" for i in range(1, n*2+1)]
-        res_10000 = dirmult_lme(formula="covar2", table=table, metadata=metadata, groups="covar1", seed=0, p_adjust="sidak")
+        table.columns = [
+            "feature1", "feature2", "feature3", "feature4", "feature5", "feature6"]
+        table.index = [f"subject{i}" for i in index_range]
+        metadata.index = [f"subject{i}" for i in index_range]
+        res_10000 = dirmult_lme(
+            formula="covar2", table=table, metadata=metadata, groups="covar1",
+            draws=16, seed=0, p_adjust="sidak")
 
         # when the sequencing depth increases, the confidence intervals
         # should also shrink
         npt.assert_array_less(res_100['CI(2.5)'], res_10000['CI(2.5)'])
         npt.assert_array_less(res_10000['CI(97.5)'], res_100['CI(97.5)'])
 
-    def test_dirmult_lme_inconsistent_indexes(self):
-        with self.assertRaises(ValueError):
-            self.table.index = ["a", "b", "c", "d", "e", "f"]  # Change table index
-            formula = "Covar2 + Covar3"
-            dirmult_lme(formula=formula, table=self.table, metadata=self.metadata, groups='Covar1', seed=0, p_adjust="sidak")
-
-    def test_dirmult_lme_single_feature(self):
-        with self.assertRaises(ValueError):
-            # only keep the first column of the table
-            self.table = self.table.iloc[:, :1]
-            formula = "Covar1"
-            dirmult_lme(formula=formula, table=self.table, metadata=self.metadata, groups='Covar1', seed=0, p_adjust="sidak")
 
 if __name__ == "__main__":
     main()
