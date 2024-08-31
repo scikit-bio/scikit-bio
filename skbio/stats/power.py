@@ -56,20 +56,17 @@ Suppose we wanted to test that there's a relationship between two random
 variables, `ind` and `dep`. Let's use random subsampling to estimate the
 statistical power of our test with an alpha of 0.1, 0.01, and 0.001.
 
-To control for the pseudo-random number generation, we will use a seed.
-When using these functions with your own data, you don't need to include the
-step.
+We will use a random seed to ensure the reproducibility of results.
 
 >>> import numpy as np
->>> np.random.seed(20)
->>> ind = np.random.randint(0, 20, 15)
+>>> rng = np.random.default_rng(42)
+>>> ind = rng.integers(0, 20, 15)
 >>> ind # doctest: +ELLIPSIS
-array([ 3, 15,  9, 11,  7,  2,  0,  8, 19, 16,  6,  6, 16,  9,  5]...
->>> dep = (3 * ind + 5 + np.random.randn(15) * 5).round(3)
+array([ 1, 15, 13,  8,  8, 17,  1, 13,  4,  1, 10, 19, 14, 15, 14]...
+>>> dep = (3 * ind + 5 + rng.standard_normal(15) * 5).round(3)
 >>> dep
-array([ 15.617,  47.533,  28.04 ,  33.788,  19.602,  12.229,   4.779,
-        36.838,  67.256,  55.032,  22.157,   7.051,  58.601,  38.664,
-        18.783])
+array([ 7.916, 45.735, 48.397, 32.889, 29.33 , 61.636, 10.338, 39.704,
+       18.844,  3.206, 39.392, 61.75 , 46.076, 46.595, 53.113])
 
 Let's define a test that will draw a list of sample pairs and determine
 if they're correlated. We'll use `scipy.stats.pearsonr` which takes two arrays
@@ -84,7 +81,7 @@ the first distribution.
 
 >>> samples = [ind, dep]
 >>> print("%.3e" % f(samples))
-3.646e-08
+1.606e-10
 
 In `subsample_power`, we can maintain a paired relationship between samples
 by setting `draw_mode` to "matched". We can also set our critical value, so
@@ -92,22 +89,18 @@ that we estimate power for a critical value of :math:`\alpha = 0.05`, an
 estimate for the critical value of 0.01, and a critical value of 0.001.
 
 >>> from skbio.stats.power import subsample_power
->>> pwr_100, counts_100 = subsample_power(test=f,
-...                                       samples=samples,
-...                                       max_counts=10,
-...                                       min_counts=3,
-...                                       counts_interval=1,
-...                                       draw_mode="matched",
-...                                       alpha_pwr=0.1,
-...                                       num_iter=25)
->>> pwr_010, counts_010 = subsample_power(test=f,
-...                                       samples=samples,
-...                                       max_counts=10,
-...                                       min_counts=3,
-...                                       counts_interval=1,
-...                                       draw_mode="matched",
-...                                       alpha_pwr=0.01,
-...                                       num_iter=25)
+>>> pwr_100, counts_100 = subsample_power(
+...     test=f, samples=samples, max_counts=10, min_counts=3, counts_interval=1,
+...     draw_mode="matched", alpha_pwr=0.1, num_iter=25, seed=rng)
+>>> counts_100
+array([3, 4, 5, 6, 7, 8, 9])
+>>> pwr_100.mean(0)
+array([0.512, 0.936, 0.984, 1.   , 1.   , 1.   , 1.   ])
+>>> pwr_010, counts_010 = subsample_power(
+...     test=f, samples=samples, max_counts=10, min_counts=3, counts_interval=1,
+...     draw_mode="matched", alpha_pwr=0.01, num_iter=25, seed=rng)
+>>> pwr_010.mean(0)
+array([0.072, 0.416, 0.888, 0.964, 1.   , 0.996, 1.   ])
 >>> pwr_001, counts_001 = subsample_power(test=f,
 ...                                       samples=samples,
 ...                                       max_counts=10,
@@ -116,19 +109,12 @@ estimate for the critical value of 0.01, and a critical value of 0.001.
 ...                                       draw_mode="matched",
 ...                                       alpha_pwr=0.001,
 ...                                       num_iter=25)
->>> counts_100
-array([3, 4, 5, 6, 7, 8, 9])
->>> pwr_100.mean(0)
-array([ 0.484,  0.844,  0.932,  0.984,  1.   ,  1.   ,  1.   ])
->>> pwr_010.mean(0)
-array([ 0.044,  0.224,  0.572,  0.836,  0.928,  0.996,  1.   ])
 >>> pwr_001.mean(0)
-array([ 0.   ,  0.016,  0.108,  0.332,  0.572,  0.848,  0.956])
+array([0.   , 0.044, 0.204, 0.796, 0.948, 0.996, 1.   ])
 
 Based on this power estimate, as we increase our confidence that we have not
 committed a type I error and identified a false positive, the number of samples
 we need to be confident that we have not committed a type II error increases.
-
 
 """  # noqa: D205, D415
 
@@ -146,6 +132,8 @@ import copy
 import numpy as np
 import scipy.stats
 
+from skbio.util import get_rng
+
 
 def subsample_power(
     test,
@@ -158,6 +146,7 @@ def subsample_power(
     min_counts=None,
     num_iter=500,
     num_runs=10,
+    seed=None,
 ):
     r"""Subsample data to iteratively calculate power.
 
@@ -200,6 +189,8 @@ def subsample_power(
         on the curve.
     num_runs : positive int, optional
         The number of times to calculate each curve.
+    seed : int or np.random.Generator, optional
+        A user-provided random seed or random generator instance.
 
     Returns
     -------
@@ -228,7 +219,6 @@ def subsample_power(
     TypeError
         `test` does not return a float or a 1-dimensional numpy array.
 
-
     Examples
     --------
     Let's say we wanted to look at the relationship between the presence of a
@@ -249,13 +239,13 @@ def subsample_power(
     these samples using a binomial model. (*Note that this is a simulation.*)
 
     >>> import numpy as np
-    >>> np.random.seed(25)
-    >>> pre_rate = np.random.binomial(1, 0.85, size=(50,))
-    >>> pre_rate.sum()
-    45
-    >>> pos_rate = np.random.binomial(1, 0.40, size=(50,))
-    >>> pos_rate.sum()
-    21
+    >>> rng = np.random.default_rng(42)
+    >>> pre_rate = rng.binomial(1, 0.85, size=50)
+    >>> print(pre_rate.sum())
+    44
+    >>> pos_rate = rng.binomial(1, 0.40, size=50)
+    >>> print(pos_rate.sum())
+    16
 
     Let's set up a test function, so we can test the probability of
     finding a difference in frequency between the two groups. We'll use
@@ -268,15 +258,14 @@ def subsample_power(
 
     Let's make sure that our two distributions are different.
 
-    >>> print(round(test([pre_rate, pos_rate]), 3))
-    0.003
+    >>> print(round(test([pre_rate, pos_rate]), 5))
+    0.0003
 
     Since there are an even number of samples, and we don't have enough
     information to try controlling the data, we'll use
-    `skbio.stats.power.subsample_power` to compare the two groups. If we had
+    :func:`subsample_power` to compare the two groups. If we had
     metadata about other risk factors, like a reproductive history, BMI,
-    tobacco use, we might want to use
-    `skbio.stats.power.subsample_paired_power`.
+    tobacco use, we might want to use :func:`subsample_paired_power`.
     We'll also use "ind" `draw_mode`, since there is no linkage between the
     two groups of samples.
 
@@ -285,32 +274,33 @@ def subsample_power(
     ...                                   samples=[pre_rate, pos_rate],
     ...                                   num_iter=100,
     ...                                   num_runs=5,
-    ...                                   counts_interval=5)
+    ...                                   counts_interval=5,
+    ...                                   seed=rng)
     >>> counts
     array([ 5, 10, 15, 20, 25, 30, 35, 40, 45])
     >>> np.nanmean(pwr_est, axis=0) # doctest: +NORMALIZE_WHITESPACE
-    array([ 0.056,  0.074,  0.226,  0.46 ,  0.61 ,  0.806,  0.952,  1.   ,
+    array([ 0.134,  0.254,  0.512,  0.82 ,  0.958,  0.992, 1.   ,  1.   ,
             1.   ])
-    >>> counts[np.nanmean(pwr_est, axis=0) > 0.8].min()
-    30
+    >>> print(counts[np.nanmean(pwr_est, axis=0) > 0.8].min())
+    20
 
     So, we can estimate that we will see a significant difference in the
     presence of *G. vaginalis* in the stool of pre and post women with UTIs if
-    we have at least 30 samples per group.
+    we have at least 20 samples per group.
 
     If we wanted to test the relationship of a second candidate taxa which is
     more rare in the population, but may have a similar effect, based on
-    available literature, we might also start by trying to identify 30
+    available literature, we might also start by trying to identify 20
     samples per group where the second candidate taxa is present.
 
     Suppose, now, that we want to test that a secondary metabolite seen only in
     the presence of *G vaginalis* to see if it is also correlated with UTIs. We
     can model the abundance of the metabolite as a normal distribution.
 
-    >>> met_pos = (np.random.randn(pre_rate.sum() + pos_rate.sum()) * 2000 +
-    ...     2500)
+    >>> met_pos = (rng.standard_normal(pre_rate.sum() + pos_rate.sum()) *
+    ...     2000 + 2500)
     >>> met_pos[met_pos < 0] = 0
-    >>> met_neg = met_neg = (np.random.randn(100 - (pre_rate.sum() +
+    >>> met_neg = met_neg = (rng.standard_normal(100 - (pre_rate.sum() +
     ...     pos_rate.sum())) * 2000 + 500)
     >>> met_neg[met_neg < 0] = 0
 
@@ -323,7 +313,7 @@ def subsample_power(
     >>> def metabolite_test(x):
     ...     return kruskal(x[0], x[1])[1]
     >>> print(round(metabolite_test([met_pos, met_neg]), 3))
-    0.005
+    0.007
 
     When we go to perform the statistical test on all the data, you might
     notice that there are twice as many samples from women with *G. vaginalis*
@@ -336,7 +326,8 @@ def subsample_power(
     ...                                     counts_interval=5,
     ...                                     num_iter=100,
     ...                                     num_runs=5,
-    ...                                     ratio=[2, 1])
+    ...                                     ratio=[2, 1],
+    ...                                     seed=rng)
     >>> counts2
     array([  5.,  10.,  15.,  20.,  25.,  30.])
     >>> np.nanmean(pwr_est2, axis=0)
@@ -366,6 +357,8 @@ def subsample_power(
     # Prealocates the power array
     power = np.zeros((num_runs, len(sample_counts), num_p))
 
+    rng = get_rng(seed)
+
     # Calculates the power instances
     for id2, c in enumerate(sample_counts):
         count = np.round(c * ratio, 0).astype(int)
@@ -377,6 +370,7 @@ def subsample_power(
                 counts=count,
                 num_iter=num_iter,
                 mode=draw_mode,
+                seed=rng,
             )
             power[id1, id2, :] = _calculate_power(ps, alpha_pwr)
 
@@ -398,6 +392,7 @@ def subsample_paired_power(
     min_counts=None,
     num_iter=500,
     num_runs=10,
+    seed=None,
 ):
     r"""Estimate power iteratively using samples with matching metadata.
 
@@ -441,6 +436,8 @@ def subsample_paired_power(
         The number of p-values to generate for each point on the curve.
     num_runs : positive int, optional
         The number of times to calculate each curve.
+    seed : int or np.random.Generator, optional
+        A user-provided random seed or random generator instance.
 
     Returns
     -------
@@ -464,7 +461,6 @@ def subsample_paired_power(
     TypeError
         `test` does not return a float or a 1-dimensional numpy array.
 
-
     Examples
     --------
     Assume you are interested in the role of a specific cytokine of protein
@@ -481,14 +477,14 @@ def subsample_paired_power(
 
     >>> import numpy as np
     >>> import pandas as pd
-    >>> np.random.seed(25)
+    >>> rng = np.random.default_rng(42)
     >>> data = pd.DataFrame.from_dict({
-    ...     'CELL_LINE': np.random.binomial(1, 0.5, size=(60,)),
-    ...     'SOURCE': np.random.binomial(2, 0.33, size=(60,)),
+    ...     'CELL_LINE': rng.binomial(1, 0.5, size=(60,)),
+    ...     'SOURCE': rng.binomial(2, 0.33, size=(60,)),
     ...     'TREATMENT': np.hstack((np.zeros((30)), np.ones((30)))),
-    ...     'INCUBATOR': np.random.binomial(1, 0.2, size=(60,))})
+    ...     'INCUBATOR': rng.binomial(1, 0.2, size=(60,))})
     >>> data['OUTCOME'] = (0.25 + data.TREATMENT * 0.25) + \
-    ...     np.random.randn(60) * (0.1 + data.SOURCE/10 + data.CELL_LINE/5)
+    ...     rng.standard_normal(60) * (0.1 + data.SOURCE/10 + data.CELL_LINE/5)
     >>> data.loc[data.OUTCOME < 0, 'OUTCOME'] = 0
     >>> data.loc[data.OUTCOME > 1, 'OUTCOME'] = 1
 
@@ -528,7 +524,8 @@ def subsample_paired_power(
     ...                                   control_cats=control_cats,
     ...                                   counts_interval=5,
     ...                                   num_iter=25,
-    ...                                   num_runs=5)
+    ...                                   num_runs=5,
+    ...                                   seed=rng)
     >>> cnt
     array([  5.,  10.,  15.,  20.])
     >>> pwr.mean(0)
@@ -547,6 +544,8 @@ def subsample_paired_power(
         order = sorted(meta.groupby(cat).groups.keys())
     order = np.array(order)
 
+    rng = get_rng(seed)
+
     # Checks for the number of sampling pairs available
     meta_pairs, index = _identify_sample_groups(
         meta, cat, control_cats, order, strict_match
@@ -557,7 +556,7 @@ def subsample_paired_power(
             np.floor(len(index) * 0.9),
         ]
     )
-    sub_ids = _draw_paired_samples(meta_pairs, index, min_obs)
+    sub_ids = _draw_paired_samples(meta_pairs, index, min_obs, rng)
 
     ratio, num_p, sample_counts = _check_subsample_power_inputs(
         test=test,
@@ -576,7 +575,7 @@ def subsample_paired_power(
         for id1 in range(num_runs):
             ps = np.zeros((num_p, num_iter))
             for id3 in range(num_iter):
-                subs = _draw_paired_samples(meta_pairs, index, c)
+                subs = _draw_paired_samples(meta_pairs, index, c, rng)
                 ps[:, id3] = test(subs)
             power[id1, id2, :] = _calculate_power(ps, alpha_pwr)
 
@@ -637,7 +636,9 @@ def confidence_bound(vec, alpha=0.05, df=None, axis=None):
     return bound
 
 
-def paired_subsamples(meta, cat, control_cats, order=None, strict_match=True):
+def paired_subsamples(
+    meta, cat, control_cats, order=None, strict_match=True, seed=None
+):
     r"""Draw a list of samples varied by `cat` and matched for `control_cats`.
 
     This function is designed to provide controlled samples, based on a
@@ -666,7 +667,8 @@ def paired_subsamples(meta, cat, control_cats, order=None, strict_match=True):
         will be ignored when `strict_match` is True. If `strict_match` is
         False, missing values (NaN) in the `control_cats` can be considered
         matches.
-
+    seed : int or np.random.Generator, optional
+        A user-provided random seed or random generator instance.
 
     Returns
     -------
@@ -726,7 +728,9 @@ def paired_subsamples(meta, cat, control_cats, order=None, strict_match=True):
     )
 
     # Draws paired ids
-    ids = _draw_paired_samples(meta_pairs=meta_pairs, index=index, num_samps=min_obs)
+    ids = _draw_paired_samples(
+        meta_pairs=meta_pairs, index=index, num_samps=min_obs, seed=seed
+    )
 
     return ids
 
@@ -780,7 +784,9 @@ def _calculate_power(p_values, alpha=0.05):
     return w
 
 
-def _compare_distributions(test, samples, num_p, counts=5, mode="ind", num_iter=100):
+def _compare_distributions(
+    test, samples, num_p, counts=5, mode="ind", num_iter=100, seed=None
+):
     r"""Compare two distribution arrays iteratively.
 
     Parameters
@@ -810,13 +816,15 @@ def _compare_distributions(test, samples, num_p, counts=5, mode="ind", num_iter=
     num_iter : positive int, optional
         Default 1000. The number of p-values to generate for each point on the
         curve.
+    seed : int or np.random.Generator, optional
+        A user-provided random seed or random generator instance.
 
     Returns
     -------
     p_values : array
         The p-values for the subsampled tests. If `test` returned a single
         p value, p_values is a one-dimensional array. If `test` returned an
-        array, `p_values` has dimensions `num_iter` x `num_p`
+        array, `p_values` has dimensions `num_iter` x `num_p`.
 
     Raises
     ------
@@ -838,13 +846,14 @@ def _compare_distributions(test, samples, num_p, counts=5, mode="ind", num_iter=
     if isinstance(counts, int):
         counts = np.array([counts] * num_groups)
 
+    rng = get_rng(seed)
     for idx in range(num_iter):
         if mode == "matched":
-            pos = np.random.choice(np.arange(0, samp_lens[0]), counts[0], replace=False)
+            pos = rng.choice(np.arange(0, samp_lens[0]), counts[0], replace=False)
             subs = [sample[pos] for sample in samples]
         else:
             subs = [
-                np.random.choice(np.array(pop), counts[i], replace=False)
+                rng.choice(np.array(pop), counts[i], replace=False)
                 for i, pop in enumerate(samples)
             ]
 
@@ -1060,7 +1069,7 @@ def _identify_sample_groups(meta, cat, control_cats, order, strict_match):
     return meta_pairs, index
 
 
-def _draw_paired_samples(meta_pairs, index, num_samps):
+def _draw_paired_samples(meta_pairs, index, num_samps, seed=None):
     """Draw a random set of ids from a matched list.
 
     Parameters
@@ -1077,6 +1086,8 @@ def _draw_paired_samples(meta_pairs, index, num_samps):
         position of the reference group sample in the list of samples.
     num_samps : int
         The number of samples.
+    seed : int or np.random.Generator, optional
+        A user-provided random seed or random generator instance.
 
     Returns
     -------
@@ -1088,8 +1099,10 @@ def _draw_paired_samples(meta_pairs, index, num_samps):
     if "no" in meta_pairs:
         return [np.array([]) for o in meta_pairs["no"]]
 
+    rng = get_rng(seed)
+
     # Identifies the absolute positions of the control group being drawn
-    set_pos = np.random.choice(index, int(num_samps), replace=False).astype(int)
+    set_pos = rng.choice(index, int(num_samps), replace=False).astype(int)
 
     subs = []
 
@@ -1108,7 +1121,7 @@ def _draw_paired_samples(meta_pairs, index, num_samps):
     # now set_list is ordered and we can iterate over it to get counter obj
     for set_ in set_list:
         num_ = counter[set_]
-        r2 = [np.random.choice(col, num_, replace=False) for col in meta_pairs[set_]]
+        r2 = [rng.choice(col, num_, replace=False) for col in meta_pairs[set_]]
         subs.append(r2)
 
     ids = [np.hstack(ids) for ids in zip(*subs)]
@@ -1117,7 +1130,14 @@ def _draw_paired_samples(meta_pairs, index, num_samps):
 
 
 def _calculate_power_curve(
-    test, samples, sample_counts, ratio=None, mode="ind", num_iter=1000, alpha=0.05
+    test,
+    samples,
+    sample_counts,
+    ratio=None,
+    mode="ind",
+    num_iter=1000,
+    alpha=0.05,
+    seed=None,
 ):
     r"""Generate an empirical power curve for the samples.
 
@@ -1148,6 +1168,8 @@ def _calculate_power_curve(
         on the curve.
     alpha : float, optional
         The significance level for the statistical test. Defaults to 0.05.
+    seed : int or np.random.Generator, optional
+        A user-provided random seed or random generator instance.
 
     Returns
     -------
@@ -1181,6 +1203,7 @@ def _calculate_power_curve(
         raise ValueError("There must be a ratio for each group.")
 
     # Loops through the sample sizes
+    rng = get_rng(seed)
     for id2, s in enumerate(sample_counts):
         count = np.round(s * ratio, 0).astype(int)
         for id1, a in enumerate(alpha):
@@ -1191,6 +1214,7 @@ def _calculate_power_curve(
                 num_p=1,
                 num_iter=num_iter,
                 mode=mode,
+                seed=rng,
             )
             if vec:
                 pwr[id2] = (_calculate_power(ps, a)).item()

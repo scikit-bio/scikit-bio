@@ -51,8 +51,6 @@ class PowerAnalysisTest(TestCase):
         self.meta_f = meta_f
         self.num_p = 1
 
-        # Sets the random seed
-        np.random.seed(5)
         # Sets up the distributions of data for use
         self.s1 = np.arange(0, 10, 1)
         # Sets up two distributions which will never be equal by a rank-sum
@@ -360,42 +358,42 @@ class PowerAnalysisTest(TestCase):
 
     def test__calculate_power_curve_default(self):
         # Sets the known output
-        known = np.array([0.509, 0.822, 0.962, 0.997, 1.000, 1.000, 1.000,
-                          1.000, 1.000])
+        known = np.array([0.49, 0.83, 0.97, 1., 1., 1., 1., 1., 1.])
         # Generates the test values
         test = _calculate_power_curve(self.f,
                                       self.pop,
                                       self.num_samps,
-                                      num_iter=100)
+                                      num_iter=100,
+                                      seed=42)
         # Checks the samples returned sanely
         npt.assert_allclose(test, known, rtol=0.1, atol=0.01)
 
     def test__calculate_power_curve_alpha(self):
         # Sets the know output
-        known = np.array([0.31, 0.568, 0.842, 0.954, 0.995, 1.000, 1.000,
-                          1.000, 1.000])
+        known = np.array([0.22, 0.62, 0.83, 0.94, 1., 1., 1., 1., 1.])
 
         # Generates the test values
         test = _calculate_power_curve(self.f,
                                       self.pop,
                                       self.num_samps,
                                       alpha=0.01,
-                                      num_iter=100)
+                                      num_iter=100,
+                                      seed=42)
 
         # Checks the samples returned sanely
         npt.assert_allclose(test, known, rtol=0.1, atol=0.1)
 
     def test__calculate_power_curve_ratio(self):
         # Sets the know output
-        known = np.array([0.096, 0.333, 0.493, 0.743, 0.824, 0.937, 0.969,
-                          0.996, 0.998])
+        known = np.array([0.08, 0.31, 0.59, 0.69, 0.77, 0.91, 0.99, 0.99, 1.])
 
         # Generates the test values
         test = _calculate_power_curve(self.f,
                                       self.pop,
                                       self.num_samps,
                                       ratio=np.array([0.25, 0.75]),
-                                      num_iter=100)
+                                      num_iter=100,
+                                      seed=42)
 
         # Checks the samples returned sanely
         npt.assert_allclose(test, known, rtol=0.1, atol=0.1)
