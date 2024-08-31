@@ -2377,11 +2377,9 @@ def dirmult_lme(
     ...      'time': [1, 2, 3, 1, 2, 3, 1, 2, 3, 1, 2, 3],},
     ...     index=['x1', 'x2', 'x3', 'y1', 'y2', 'y3', 'z1', 'z2', 'z3', 'u1',
     ...            'u2', 'u3'])
-    >>> res = dirmult_lme(
-    ...     data=table, metadata=metadata, formula='time + treatment',
-    ...     grouping='patient', seed=0, p_adjust='sidak'
-    ... )
-    >>> res
+    >>> result = dirmult_lme(table, metadata, formula='time + treatment',
+    ...                      grouping='patient', seed=0, p_adjust='sidak')
+    >>> result
       FeatureID  Covariate  Log2(FC)   CI(2.5)  CI(97.5)    pvalue    qvalue
     0        Y1       time -0.210769 -1.571095  1.144057  0.411140  0.879760
     1        Y1  treatment -0.164704 -3.456697  3.384563  0.593769  0.972767
