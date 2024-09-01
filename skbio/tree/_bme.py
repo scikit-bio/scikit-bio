@@ -92,10 +92,10 @@ def bme(dm, allow_edge_estimation=True):
     n = dm.shape[0]
 
     # create the list of taxa
-    taxa = dm.ids
+    taxa_list = dm.ids
 
     # create initial nodes
-    root_name, node_a_name, node_b_name, *_ = taxa
+    root_name, node_a_name, node_b_name, *_ = taxa_list
     root = TreeNode(root_name)
     root_child = TreeNode("")
     node_a = TreeNode(node_a_name)
@@ -115,7 +115,7 @@ def bme(dm, allow_edge_estimation=True):
         # every iteration.
         adm = _balanced_average_matrix(root, dm)
         # create node for taxa k
-        node_k_name = taxa[k]
+        node_k_name = taxa_list[k]
         connecting_node = TreeNode("")
         node_k = TreeNode(node_k_name)
         connecting_node.append(node_k)
