@@ -131,10 +131,7 @@ def nni(tree, dm, allow_edge_estimation=True, inplace=True, balanced=True):
         # create heap of possible swaps and then swapping subtrees
         # until no more swaps are possible.
         adm = _average_distance_matrix(tree, dm)
-        if balanced:
-            heap = _swap_heap(tree, adm)
-        else:
-            heap = _swap_heap(tree, adm, balanced=False)
+        heap = _swap_heap(tree, adm, balanced)
         if not heap:
             break
         swap = hq.heappop(heap)

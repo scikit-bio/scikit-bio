@@ -21,14 +21,19 @@ def bme(dm, allow_edge_estimation=True):
     dm : skbio.DistanceMatrix
         Input distance matrix containing distances between taxa.
     allow_edge_estimation : bool, optional
-        Whether to perform an OLS-based estimation of edge values (``True``, default)
-        or return a tree without edge values assigned (``False``).
+        Whether to perform an OLS-based estimation of branch lengths (``True``, default)
+        or return a tree without branch lengths assigned (``False``).
 
     Returns
     -------
     TreeNode
         Reconstructed phylogenetic Tree with estimated edge
         values (if ``allow_edge_estimation`` is ``True``).
+
+    See Also
+    --------
+    gme
+    nj
 
     Notes
     -----
@@ -84,10 +89,13 @@ def bme(dm, allow_edge_estimation=True):
         )
 
     # count the number of taxa
-    n = len(dm.ids)
+    n = dm.shape[0]
+
+    # create the list of taxa
+    taxa = dm.ids
 
     # create initial nodes
-    root_name, node_a_name, node_b_name = dm.ids[0], dm.ids[1], dm.ids[2]
+    root_name, node_a_name, node_b_name, *_ = taxa
     root = TreeNode(root_name)
     root_child = TreeNode("")
     node_a = TreeNode(node_a_name)
@@ -107,7 +115,7 @@ def bme(dm, allow_edge_estimation=True):
         # every iteration.
         adm = _balanced_average_matrix(root, dm)
         # create node for taxa k
-        node_k_name = dm.ids[k]
+        node_k_name = taxa[k]
         connecting_node = TreeNode("")
         node_k = TreeNode(node_k_name)
         connecting_node.append(node_k)
@@ -302,48 +310,47 @@ def _bal_ols_edge(tree, dm):
             continue
         # calculate edge length for the edge adjacent to the root
         elif parent.is_root():
-            for index, node in enumerate(ordered):
+            for i, node in enumerate(ordered):
                 if node is edge_node:
-                    i1 = index
+                    i1 = i
             a, b = edge_node.children
-            for index, node in enumerate(ordered):
+            for i, node in enumerate(ordered):
                 if node is a:
-                    i2 = index
+                    i2 = i
                 elif node is b:
-                    i3 = index
+                    i3 = i
             edge_node.length = 0.5 * (adm[i2, i1] + adm[i3, i1] - adm[i2, i3])
         # calculate edge lengths for external edges
         elif edge_node.is_tip():
             a = parent.parent
             if a.is_root():
-                for child in a.children:
-                    a = child
-            b = edge_node.siblings()[0]
-            for index, node in enumerate(ordered):
+                (a,) = a.children
+            (b,) = edge_node.siblings()
+            for i, node in enumerate(ordered):
                 if node is edge_node:
-                    i1 = index
+                    i1 = i
                 elif node is a:
-                    i2 = index
+                    i2 = i
                 elif node is b:
-                    i3 = index
+                    i3 = i
             edge_node.length = 0.5 * (adm[i2][i1] + adm[i3][i1] - adm[i2][i3])
         # calculate edge lengths for internal edges
         else:
             a = parent.parent
             if a.is_root():
                 a = a.children[0]
-            for index, node in enumerate(ordered):
+            for i, node in enumerate(ordered):
                 if node is a:
-                    i1 = index
+                    i1 = i
             c, d = edge_node.children
-            b = edge_node.siblings()[0]
-            for index, node in enumerate(ordered):
+            (b,) = edge_node.siblings()
+            for i, node in enumerate(ordered):
                 if node is b:
-                    i2 = index
+                    i2 = i
                 elif node is c:
-                    i3 = index
+                    i3 = i
                 elif node is d:
-                    i4 = index
+                    i4 = i
             # calculate the edge length
             edge_node.length = 0.5 * (
                 (0.5 * (adm[i1, i3] + adm[i2, i4]))
