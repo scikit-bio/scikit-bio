@@ -111,7 +111,6 @@ class SubsampleCountsTests(unittest.TestCase):
 
 class ISubsampleTests(unittest.TestCase):
     def setUp(self):
-        np.random.seed(123)
 
         # comment indicates the expected random value
         self.sequences = [
@@ -138,19 +137,19 @@ class ISubsampleTests(unittest.TestCase):
 
         # note, the result here is sorted by sequence_id but is in heap order
         # by the random values associated to each sequence
-        exp = sorted([('a', {'SequenceID': 'a_5', 'Sequence': 'AATTGGCC-a5'}),
-                      ('a', {'SequenceID': 'a_1', 'Sequence': 'AATTGGCC-a1'}),
+        exp = sorted([('a', {'SequenceID': 'a_2', 'Sequence': 'AATTGGCC-a2'}),
+                      ('a', {'SequenceID': 'a_5', 'Sequence': 'AATTGGCC-a5'}),
                       ('a', {'SequenceID': 'a_4', 'Sequence': 'AATTGGCC-a4'}),
                       ('a', {'SequenceID': 'a_3', 'Sequence': 'AATTGGCC-a3'}),
-                      ('a', {'SequenceID': 'a_2', 'Sequence': 'AATTGGCC-a2'}),
+                      ('a', {'SequenceID': 'a_1', 'Sequence': 'AATTGGCC-a1'}),
                       ('b', {'SequenceID': 'b_2', 'Sequence': 'AATTGGCC-b2'}),
                       ('b', {'SequenceID': 'b_1', 'Sequence': 'AATTGGCC-b1'}),
-                      ('c', {'SequenceID': 'c_3', 'Sequence': 'AATTGGCC-c3'}),
                       ('c', {'SequenceID': 'c_2', 'Sequence': 'AATTGGCC-c2'}),
-                      ('c', {'SequenceID': 'c_1', 'Sequence': 'AATTGGCC-c1'})],
+                      ('c', {'SequenceID': 'c_1', 'Sequence': 'AATTGGCC-c1'}),
+                      ('c', {'SequenceID': 'c_3', 'Sequence': 'AATTGGCC-c3'})],
                      key=lambda x: x[0])
         obs = isubsample(self.mock_sequence_iter(self.sequences), maximum,
-                         bin_f=bin_f)
+                         bin_f=bin_f, seed=123)
         self.assertEqual(sorted(obs, key=lambda x: x[0]), exp)
 
     def test_per_sample_sequences_min_seqs(self):
@@ -162,17 +161,17 @@ class ISubsampleTests(unittest.TestCase):
 
         # note, the result here is sorted by sequence_id but is in heap order
         # by the random values associated to each sequence
-        exp = sorted([('a', {'SequenceID': 'a_5', 'Sequence': 'AATTGGCC-a5'}),
-                      ('a', {'SequenceID': 'a_1', 'Sequence': 'AATTGGCC-a1'}),
+        exp = sorted([('a', {'SequenceID': 'a_2', 'Sequence': 'AATTGGCC-a2'}),
+                      ('a', {'SequenceID': 'a_5', 'Sequence': 'AATTGGCC-a5'}),
                       ('a', {'SequenceID': 'a_4', 'Sequence': 'AATTGGCC-a4'}),
                       ('a', {'SequenceID': 'a_3', 'Sequence': 'AATTGGCC-a3'}),
-                      ('a', {'SequenceID': 'a_2', 'Sequence': 'AATTGGCC-a2'}),
-                      ('c', {'SequenceID': 'c_3', 'Sequence': 'AATTGGCC-c3'}),
+                      ('a', {'SequenceID': 'a_1', 'Sequence': 'AATTGGCC-a1'}),
                       ('c', {'SequenceID': 'c_2', 'Sequence': 'AATTGGCC-c2'}),
-                      ('c', {'SequenceID': 'c_1', 'Sequence': 'AATTGGCC-c1'})],
+                      ('c', {'SequenceID': 'c_1', 'Sequence': 'AATTGGCC-c1'}),
+                      ('c', {'SequenceID': 'c_3', 'Sequence': 'AATTGGCC-c3'})],
                      key=lambda x: x[0])
         obs = isubsample(self.mock_sequence_iter(self.sequences), maximum,
-                         minimum, bin_f=bin_f)
+                         minimum, bin_f=bin_f, seed=123)
         self.assertEqual(sorted(obs, key=lambda x: x[0]), exp)
 
     def test_per_sample_sequences_complex(self):
@@ -181,15 +180,15 @@ class ISubsampleTests(unittest.TestCase):
         def bin_f(x):
             return x['SequenceID'].rsplit('_', 1)[0]
 
-        exp = sorted([('a', {'SequenceID': 'a_2', 'Sequence': 'AATTGGCC-a2'}),
+        exp = sorted([('a', {'SequenceID': 'a_1', 'Sequence': 'AATTGGCC-a1'}),
                       ('a', {'SequenceID': 'a_3', 'Sequence': 'AATTGGCC-a3'}),
                       ('b', {'SequenceID': 'b_2', 'Sequence': 'AATTGGCC-b2'}),
                       ('b', {'SequenceID': 'b_1', 'Sequence': 'AATTGGCC-b1'}),
-                      ('c', {'SequenceID': 'c_1', 'Sequence': 'AATTGGCC-c1'}),
-                      ('c', {'SequenceID': 'c_2', 'Sequence': 'AATTGGCC-c2'})],
+                      ('c', {'SequenceID': 'c_3', 'Sequence': 'AATTGGCC-c3'}),
+                      ('c', {'SequenceID': 'c_1', 'Sequence': 'AATTGGCC-c1'})],
                      key=lambda x: x[0])
         obs = isubsample(self.mock_sequence_iter(self.sequences), maximum,
-                         bin_f=bin_f, buf_size=1)
+                         bin_f=bin_f, buf_size=1, seed=123)
         self.assertEqual(sorted(obs, key=lambda x: x[0]), exp)
 
     def test_min_gt_max(self):
@@ -210,8 +209,8 @@ class ISubsampleTests(unittest.TestCase):
     def test_binf_is_none(self):
         maximum = 2
         items = [1, 2]
-        exp = [(True, 1), (True, 2)]
-        obs = isubsample(items, maximum)
+        exp = [(True, 2), (True, 1)]
+        obs = isubsample(items, maximum, seed=123)
         self.assertEqual(list(obs), exp)
 
 
