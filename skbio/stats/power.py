@@ -84,7 +84,7 @@ the first distribution.
 >>> print('{:.3e}'.format(f(samples)))
 1.606e-10
 
-In "func:`subsample_power`, we can maintain a paired relationship between samples
+In :func:`subsample_power`, we can maintain a paired relationship between samples
 by setting ``draw_mode`` to "matched". We can also set our critical value, so
 that we estimate power for a critical value of :math:`\alpha = 0.05`, an
 estimate for the critical value of 0.01, and a critical value of 0.001.
