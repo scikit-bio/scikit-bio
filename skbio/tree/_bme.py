@@ -125,7 +125,7 @@ def bme(dm, allow_edge_estimation=True):
         # create average distance lists for subtrees of T_(k-1)
         ordered = list(root.postorder(include_self=False))
         lowerlist = _balanced_lower(ordered, node_k, dm)
-        upperlist = _balanced_upper(ordered, node_k, k, dm)
+        upperlist = _balanced_upper(ordered, node_k, dm)
         # Initialize the list of edge parent nodes for computation.
         # The tuple is a pair of a TreeNode object and the value of the tree
         # length for attaching at the edge consisting of the node and its parent.
@@ -136,8 +136,8 @@ def bme(dm, allow_edge_estimation=True):
             if a.is_tip():
                 continue
             a1, a2 = a.children
-            value1 = _balanced_attach_length(a1, lowerlist, upperlist, ordered, k, adm)
-            value2 = _balanced_attach_length(a2, lowerlist, upperlist, ordered, k, adm)
+            value1 = _balanced_attach_length(a1, lowerlist, upperlist, ordered, adm)
+            value2 = _balanced_attach_length(a2, lowerlist, upperlist, ordered, adm)
             e1 = (a1, value1 + i)
             e2 = (a2, value2 + i)
             edge_list.append(e1)
