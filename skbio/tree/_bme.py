@@ -21,8 +21,9 @@ def bme(dm, allow_edge_estimation=True):
     dm : skbio.DistanceMatrix
         Input distance matrix containing distances between taxa.
     allow_edge_estimation : bool, optional
-        Whether to perform an OLS-based estimation of branch lengths (``True``, default)
-        or return a tree without branch lengths assigned (``False``).
+        Whether to perform an OLS-based estimation of branch
+        lengths (``True``, default) or return a tree without
+        branch lengths assigned (``False``).
 
     Returns
     -------
@@ -39,8 +40,8 @@ def bme(dm, allow_edge_estimation=True):
     -----
     Balanced Minimum Evolution (BME) is a refinement of the distance-based minimum
     evolution problem where average distances between subtrees ignores the size of the
-    subtrees. The BME algorithm implemented here uses the same OLS based edge estimation
-    used with Greedy Minimum Evolution (GME).
+    subtrees. The BME algorithm implemented here uses the same OLS based edge
+    estimation used with Greedy Minimum Evolution (GME).
 
     References
     ----------
@@ -104,9 +105,11 @@ def bme(dm, allow_edge_estimation=True):
     root_child.append(node_a)
     root_child.append(node_b)
 
+    # set key value for sorting edge list
+    key = itemgetter(1)
+
     # loop over rest of nodes for k = 4 to n
     for k in range(3, n):
-        taxa = root.count(tips=True) + 1
         # calculate average distance matrix between subtrees of T_(k-1)
         # Note that this could be replaced with an updating step to an
         # initially computed average distance matrix, as noted in GME,
@@ -119,12 +122,10 @@ def bme(dm, allow_edge_estimation=True):
         connecting_node = TreeNode("")
         node_k = TreeNode(node_k_name)
         connecting_node.append(node_k)
-        # connecting_node = TreeNode.read(["(%s);" % (node_k_name)])
-        # node_k = connecting_node.find(node_k_name)
         # create average distance lists for subtrees of T_(k-1)
         ordered = list(root.postorder(include_self=False))
         lowerlist = _balanced_lower(ordered, node_k, dm)
-        upperlist = _balanced_upper(ordered, node_k, taxa, dm)
+        upperlist = _balanced_upper(ordered, node_k, k, dm)
         # Initialize the list of edge parent nodes for computation.
         # The tuple is a pair of a TreeNode object and the value of the tree
         # length for attaching at the edge consisting of the node and its parent.
@@ -135,18 +136,14 @@ def bme(dm, allow_edge_estimation=True):
             if a.is_tip():
                 continue
             a1, a2 = a.children
-            value1 = _balanced_attach_length(
-                a1, lowerlist, upperlist, ordered, taxa, adm
-            )
-            value2 = _balanced_attach_length(
-                a2, lowerlist, upperlist, ordered, taxa, adm
-            )
+            value1 = _balanced_attach_length(a1, lowerlist, upperlist, ordered, k, adm)
+            value2 = _balanced_attach_length(a2, lowerlist, upperlist, ordered, k, adm)
             e1 = (a1, value1 + i)
             e2 = (a2, value2 + i)
             edge_list.append(e1)
             edge_list.append(e2)
         # find the edge with minimum length after edge attachment
-        minimum_child = sorted(edge_list, key=itemgetter(1))[0][0]
+        minimum_child = sorted(edge_list, key=key)[0][0]
         # attach new taxa to the edge
         minimum_parent = minimum_child.parent
         minimum_parent.append(connecting_node)
@@ -158,7 +155,7 @@ def bme(dm, allow_edge_estimation=True):
 
 def _balanced_lower(ordered, node, dm):
     """Return the list of values representing the change in tree length
-    after attaching a taxa at an edge not the root edge. The subtree
+    after attaching a taxon at an edge not the root edge. The subtree
     involved is a lower subtree.
 
     This list is indexed by the tree's postorder.
@@ -177,7 +174,7 @@ def _balanced_lower(ordered, node, dm):
     return lower_list
 
 
-def _balanced_upper(ordered, node, taxa, dm):
+def _balanced_upper(ordered, node, dm):
     """Return the list of values representing the change in tree length
     after attaching a taxa at an edge not the root edge. The subtree
     involved is an upper subtree.
@@ -200,7 +197,7 @@ def _balanced_upper(ordered, node, taxa, dm):
     return upper_list
 
 
-def _balanced_attach_length(child, lowerlist, upperlist, ordered, taxa, adm):
+def _balanced_attach_length(child, lowerlist, upperlist, ordered, adm):
     """Return the change in the length of a tree after attaching a new taxa
     at an edge in comparison to attaching at the root edge.
 
@@ -296,7 +293,8 @@ def _bal_ols_edge(tree, dm):
     """Assign estimated edge values to a tree based on a given distance matrix.
 
     Estimation of edge values is based on an ordinary least squares (OLS) framework.
-    Average distances defined here coincide with the balanced minimum evolution problem.
+    Average distances defined here coincide with the balanced minimum evolution
+    problem.
 
     """
     adm = _balanced_average_matrix(tree, dm)
