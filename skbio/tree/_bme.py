@@ -162,7 +162,7 @@ def _balanced_lower(ordered, node, dm):
 
     """
     lower_list = []
-    for i, a in enumerate(ordered):
+    for a in ordered:
         if a.is_tip():
             lower_list.append(dm[a.name, node.name])
         else:
