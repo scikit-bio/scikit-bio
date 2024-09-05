@@ -21,6 +21,7 @@
 * Added parameter `strict` to `TreeNode.shear` ([#2103](https://github.com/scikit-bio/scikit-bio/pull/2103)).
 * Added parameter `exclude_attrs` to `TreeNode.unrooted_copy` ([#2103](https://github.com/scikit-bio/scikit-bio/pull/2103)).
 * Allowed `shuffle` and `compare_tip_distances` of `TreeNode` to accept a random seed or random generator to generate the shuffling function, which ensures output reproducibility ([#2118](https://github.com/scikit-bio/scikit-bio/pull/2118)).
+* Added support for legacy random generator (`RandomState`) to ensure backward compatibility ([#2122](https://github.com/scikit-bio/scikit-bio/pull/2122)).
 * Added parameter `seed` to functions `lladser_pe`, `lladser_ci`, `isubsample`, `subsample_power`, `subsample_paired_power`, and `paired_subsamples` to accept a random seed or random generator to ensure output reproducibility ([#2120](https://github.com/scikit-bio/scikit-bio/pull/2120)).
 
 ### Bug fixes

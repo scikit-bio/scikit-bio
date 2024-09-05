@@ -9,6 +9,7 @@
 import hashlib
 import inspect
 from types import FunctionType
+from numbers import Integral
 
 import numpy as np
 
@@ -209,11 +210,14 @@ def find_duplicates(iterable):
 
 
 def get_rng(seed=None):
-    """Get a random generator.
+    r"""Get a random generator.
+
+    .. versionchanged:: 0.6.3
+        Added legacy random generator support.
 
     Parameters
     ----------
-    seed : int or np.random.Generator, optional
+    seed : int, Generator or RandomState, optional
         A user-provided random seed or random generator instance.
 
     Returns
@@ -221,11 +225,51 @@ def get_rng(seed=None):
     np.random.Generator
         Random generator instance.
 
+    See Also
+    --------
+    numpy.random.Generator
+    numpy.random.RandomState
+
     Notes
     -----
-    NumPy's new random generator [1]_ was introduced in version 1.17. It is not
-    backward compatible with ``RandomState``, the legacy random generator [2]_.
+    A random generator ensures reproducibility of outputs. scikit-bio utilizes NumPy's
+    new random generator (``Generator``) [1]_, which was introduced in version 1.17.
     See NEP 19 [3]_ for an introduction to this change.
+
+    The following code demonstrates the recommended usage of the random generator with
+    various scikit-bio functions that are stochastic. With a random generator created
+    in advance, you can plug it into multiple function calls. The results of the entire
+    code will be reproducible.
+
+    (42 is an arbitrarily chosen random seed. It can be any non-negative integer.)
+
+    .. code-block:: python
+
+       rng = np.random.default_rng(42)
+       skbio_func1(..., seed=rng)
+       skbio_func2(..., seed=rng)
+       ...
+
+    Alternatively, you may specify an integer seed to make the result of each function
+    call reproducible, such as:
+
+    .. code-block:: python
+
+       skbio_func1(..., seed=42)
+       skbio_func2(..., seed=42)
+       ...
+
+    Meanwhile, scikit-bio respects the legacy random generator (``RandomState``) [4]_.
+    If ``np.random.seed`` has been called, or a ``RandomState`` instance is provided.
+    This ensures reproducibility of legacy code and compatibility with packages that
+    use the legacy mechanism. For example:
+
+    .. code-block:: python
+
+       np.random.seed(42)
+       skbio_func1(...)
+       skbio_func2(...)
+       ...
 
     References
     ----------
@@ -235,18 +279,53 @@ def get_rng(seed=None):
 
     .. [3] https://numpy.org/neps/nep-0019-rng-policy.html
 
+    .. [4] https://numpy.org/doc/stable/reference/random/legacy.html
+
     """
-    try:
-        if seed is None or isinstance(seed, int):
+    # Seed is a new Generator: directly return it.
+    # This code will work for legacy NumPy (<1.17) without Generator.
+    has_rng = hasattr(np.random, "Generator")
+    if has_rng and isinstance(seed, np.random.Generator):
+        return seed
+
+    # Seed is a legacy RandomState: directly return it.
+    # This code may work for future NumPy without RandomState.
+    has_rs = hasattr(np.random, "RandomState")
+    if has_rs and isinstance(seed, np.random.RandomState):
+        return seed
+
+    # Seed is an integer: create a generator from it.
+    # Integral is compatible with NumPy integers.
+    if isinstance(seed, Integral):
+        # Return a new generator if available, otherwise a legacy one.
+        if has_rng:
             return np.random.default_rng(seed)
-        if isinstance(seed, np.random.Generator):
-            return seed
-        raise ValueError(
-            "Invalid seed. It must be an integer or an "
-            "instance of np.random.Generator."
-        )
-    except AttributeError:
-        raise ValueError(
-            "The installed NumPy version does not support "
-            "random.Generator. Please use NumPy >= 1.17."
-        )
+        if has_rs:
+            return np.random.RandomState(seed)
+        raise ValueError("Supported random generators are not available.")
+
+    # Seed is not provided: create a generator.
+    if seed is None:
+        # Recover the global random generator, which should be a legacy RandomState
+        # instance and could be set by np.random.seed.
+        # This behavior is consistent with SciPy and scikit-learn's check_random_state.
+        if has_rs:
+            return np.random.mtrand._rand
+
+        # However, a potential method to adopt the new generator stochasticity is:
+        #   seed = np.random.randint(np.iinfo(np.int32).max + 1)
+        #   return np.random.default_rng(seed)
+        # Here, the result of np.iinfo(np.int32).max + 1 is usually 2,147,483,648, or
+        # 1 << 31, which is also the result of np.random.get_state()[1][0] if np.random
+        # hasn't been called.
+
+        # Otherwise (for future NumPy), return a new generator without seed, which is
+        # stochastic.
+        if has_rng:
+            return np.random.default_rng()
+        raise ValueError("Supported random generators are not available.")
+
+    # Seed is invalid.
+    raise ValueError(
+        "Invalid seed. It must be an integer or a random generator instance."
+    )
