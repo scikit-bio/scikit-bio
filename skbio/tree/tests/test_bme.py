@@ -116,15 +116,15 @@ class BmeTests(TestCase):
     def test_balanced_upper(self):
         ordered = list(self.bme_starting1_TreeNode.postorder(include_self=False))
         expected_list = [8.5, 9.5, 9.0]
-        self.assertEqual(_balanced_upper(ordered, self.bme_attach_node, 3, self.dm1), expected_list)
+        self.assertEqual(_balanced_upper(ordered, self.bme_attach_node, self.dm1), expected_list)
 
     def test_balanced_attach_length(self):
         ordered = list(self.bme_starting1_TreeNode.postorder(include_self=False))
         child = self.bme_starting1_TreeNode.find('c')
         lowerlist = _balanced_lower(ordered, self.bme_attach_node, self.dm1)
-        upperlist = _balanced_upper(ordered, self.bme_attach_node, 3, self.dm1)
+        upperlist = _balanced_upper(ordered, self.bme_attach_node, self.dm1)
         adm = _balanced_average_matrix(self.bme_starting1_TreeNode, self.dm1)
-        self.assertEqual(_balanced_attach_length(child, lowerlist, upperlist, ordered, 3, adm), -1.5)
+        self.assertEqual(_balanced_attach_length(child, lowerlist, upperlist, ordered, adm), -1.5)
 
     def test_balanced_average_matrix_trivial(self):
         # In this case, the average distance matrix is equivalent to
