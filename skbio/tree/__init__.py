@@ -20,7 +20,7 @@ Tree structure and operations
     TreeNode
 
 
-Phylogenetic reconstruction
+Tree Construction
 ---------------------------
 
 .. autosummary::
@@ -29,6 +29,7 @@ Phylogenetic reconstruction
     upgma
     nj
     gme
+    bme
 
 
 Tree Rearrangement
@@ -201,6 +202,7 @@ from ._tree import TreeNode
 from ._upgma import upgma
 from ._nj import nj
 from ._gme import gme
+from ._bme import bme
 from ._nni import nni
 from ._majority_rule import majority_rule
 from ._exception import (
@@ -216,6 +218,7 @@ __all__ = [
     "upgma",
     "nj",
     "gme",
+    "bme",
     "nni",
     "majority_rule",
     "TreeError",

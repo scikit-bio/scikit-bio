@@ -9,6 +9,7 @@
 * Added `TreeNode.has_caches` to check if a tree has caches ([#2103](https://github.com/scikit-bio/scikit-bio/pull/2103)).
 * Added `TreeNode.is_bifurcating` to check if a tree is bifurcating (i.e., binary) ([#2117](https://github.com/scikit-bio/scikit-bio/pull/2117)).
 * Added support for Python's `pathlib` module in the IO system. ([#2119](https://github.com/scikit-bio/scikit-bio/pull/2119))
+* Added Balanced Minimum Evolution (BME) function and `balanced` option for NNI ([#2105](https://github.com/scikit-bio/scikit-bio/pull/2105))
 
 ### Performance enhancements
 

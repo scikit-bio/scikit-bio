@@ -100,7 +100,10 @@ def gme(dm, allow_edge_estimation=True):
     # loop over rest of nodes for k = 4 to n
     for k in range(3, n):
         taxa = root.count(tips=True) + 1
-        # calculate average distance matrix between subtrees of T_(k-1)
+        # Calculate average distance matrix between subtrees of T_(k-1).
+        # Note that this should be replaced with a step to update an initial
+        # computation of the average distance matrix rather than to recompute
+        # the matrix after every iteration as implemented here.
         adm = _average_distance_matrix(root, dm)
         # create node for taxa k
         node_k_name = dm.ids[k]
@@ -140,7 +143,7 @@ def gme(dm, allow_edge_estimation=True):
         minimum_parent.append(connecting_node)
         connecting_node.append(minimum_child)
     if allow_edge_estimation:
-        _edge_estimation(root, dm)
+        _ols_edge(root, dm)
     return root
 
 
@@ -170,7 +173,7 @@ def _average_distance_k_upper(nodek, nodesubtree, dm):
     else:
         root = nodesubtree.root()
         nodelistsubtree = [root.name]
-        nodelistsubtree.extend(root.subset() - nodesubtree.subset())
+        nodelistsubtree.extend(sorted(root.subset() - nodesubtree.subset()))
     df = dm.between(nodelistk, nodelistsubtree)
     return df["value"].mean()
 
@@ -290,7 +293,7 @@ def _average_distance_upper(node1, node2, dm):
     else:
         root2 = node2.root()
         nodelist2 = [root2.name]
-        nodelist2.extend(root2.subset() - node2.subset())
+        nodelist2.extend(sorted(root2.subset() - node2.subset()))
     df = dm.between(nodelist1, nodelist2)
     return df["value"].mean()
 
@@ -372,7 +375,7 @@ def _average_distance_matrix(tree, dm):
     return adm
 
 
-def _edge_estimation(tree, dm):
+def _ols_edge(tree, dm):
     """Assign estimated edge values to a tree based on a given distance matrix.
 
     Estimation of edge values is based on an ordinary least squares (OLS) framework.

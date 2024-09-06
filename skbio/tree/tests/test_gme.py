@@ -17,10 +17,10 @@ from skbio.tree._gme import (
     _average_distance, _tip_or_root,
     _average_distance_upper, _subtree_count,
     _average_subtree_distance, _average_distance_matrix, 
-    _edge_estimation, gme)
+    _ols_edge, gme)
 
 
-class NniTests(TestCase):
+class GmeTests(TestCase):
 
     def setUp(self):
         data1 = [[0,  5,  9,  9,  8],
@@ -243,7 +243,7 @@ class NniTests(TestCase):
         pre_estimation_str = "((c,b))a;"
         expected_str = "((c:1.0,b:2.0):1.0)a;"
         actual_TreeNode = TreeNode.read(io.StringIO(pre_estimation_str))
-        _edge_estimation(actual_TreeNode, dm)
+        _ols_edge(actual_TreeNode, dm)
         expected_TreeNode = TreeNode.read(io.StringIO(expected_str))
         self.assertAlmostEqual(actual_TreeNode.compare_tip_distances(
             expected_TreeNode), 1, places=10)
