@@ -46,7 +46,6 @@ class TestIOSource(unittest.TestCase):
             self.source.get_writer()
             self.source_path.get_writer()
 
-
 class TestCompressor(TestIOSource):
     def setUp(self):
         super(TestCompressor, self).setUp()

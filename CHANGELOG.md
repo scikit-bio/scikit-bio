@@ -83,6 +83,10 @@
 * Methods `deepcopy` and `unrooted_deepcopy` of `Treenode` are deprecated. Use `copy` and `unrooted_copy` instead.
 
 
+### Performance enhancements
+
+* Added support for standard input (stdin) streaming to I/O reading. ([#2017](https://github.com/scikit-bio/scikit-bio/issues/2017))
+
 ## Version 0.6.1
 
 ### Features

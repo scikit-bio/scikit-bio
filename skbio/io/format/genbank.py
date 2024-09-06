@@ -353,8 +353,10 @@ _HEADERS = [
 @genbank.sniffer()
 def _genbank_sniffer(fh):
     # check the 1st real line is a valid LOCUS line
-    if _too_many_blanks(fh, 5):
+    blanks, _ = _too_many_blanks(fh, 5)
+    if blanks:
         return False, {}
+
     try:
         line = next(_line_generator(fh, skip_blanks=True, strip=False))
     except StopIteration:

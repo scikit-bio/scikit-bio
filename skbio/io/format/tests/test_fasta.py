@@ -150,11 +150,17 @@ class SnifferTests(TestCase):
 
     def test_positives(self):
         for fp in self.positive_fps:
-            self.assertEqual(_fasta_sniffer(fp), (True, {}))
+            # ignore the 3rd element, as that is the consumed lines which vary from file to file
+            res = list(_fasta_sniffer(fp))
+            res[2] = []
+            self.assertEqual(tuple(res), (True, {}, []))
 
     def test_negatives(self):
         for fp in self.negative_fps:
-            self.assertEqual(_fasta_sniffer(fp), (False, {}))
+            # ignore the 3rd element, as that is the consumed lines which vary from file to file
+            res = list(_fasta_sniffer(fp))
+            res[2] = []
+            self.assertEqual(tuple(res), (False, {}, []))
 
 
 class ReaderTests(TestCase):
