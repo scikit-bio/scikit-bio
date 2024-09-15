@@ -23,12 +23,14 @@
 * Added parameter `exclude_attrs` to `TreeNode.unrooted_copy` ([#2103](https://github.com/scikit-bio/scikit-bio/pull/2103)).
 * Allowed `shuffle` and `compare_tip_distances` of `TreeNode` to accept a random seed or random generator to generate the shuffling function, which ensures output reproducibility ([#2118](https://github.com/scikit-bio/scikit-bio/pull/2118)).
 * Added parameter `seed` to functions `lladser_pe`, `lladser_ci`, `isubsample`, `subsample_power`, `subsample_paired_power`, and `paired_subsamples` to accept a random seed or random generator to ensure output reproducibility ([#2120](https://github.com/scikit-bio/scikit-bio/pull/2120)).
+* Added beta diversity metric `jensenshannon`, which calculates Jensen-Shannon distance. Thank @quliping for suggesting this in [#2125](https://github.com/scikit-bio/scikit-bio/pull/2125).
 
 ### Bug fixes
 
 * Fixed a bug in `TreeNode.find_all` which does not look for other nodes with the same name if a `TreeNode` instance is provided, as in contrast to what the documentation claims ([#2099](https://github.com/scikit-bio/scikit-bio/pull/2099)).
 * Fixed a bug in `skbio.io.format.embed` which was not correctly updating the idptr sizing. ([#2100](https://github.com/scikit-bio/scikit-bio/pull/2100)).
 * Fixed a bug in `TreeNode.unrooted_move` which does not respect specified branch attributes ([#2103](https://github.com/scikit-bio/scikit-bio/pull/2103)).
+* Fixed a bug in `skbio.diversity.get_beta_diversity_metrics` which does not display metrics other than UniFrac ([#2126](https://github.com/scikit-bio/scikit-bio/pull/2126)).
 
 ### Miscellaneous
 
@@ -41,6 +43,10 @@
 
 * Method `TreeNode.create_caches` is deprecated. It will become a private member in version 0.7.0 ([#2099](https://github.com/scikit-bio/scikit-bio/pull/2099)).
 * Method `TreeNode.subtree` is deprecated. It will become a private member in version 0.7.0 ([#2103](https://github.com/scikit-bio/scikit-bio/pull/2103)).
+
+### Backward-incompatible changes
+
+* Beta diversity metric `mahalanobis` was removed. This metric requires sample number greater than feature number, which is rarely the case in omic data analysis. Thank @quliping for noting this in [#2125](https://github.com/scikit-bio/scikit-bio/pull/2125).
 
 
 ## Version 0.6.2

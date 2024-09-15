@@ -123,7 +123,7 @@ def get_beta_diversity_metrics():
     ``scipy.spatial.distance.pdist`` for more details.
 
     """
-    return sorted(["unweighted_unifrac", "weighted_unifrac"])
+    return sorted(_valid_beta_metrics + ["unweighted_unifrac", "weighted_unifrac"])
 
 
 def alpha_diversity(metric, counts, ids=None, validate=True, **kwargs):
@@ -338,7 +338,7 @@ _valid_beta_metrics = [
     "dice",
     "hamming",
     "jaccard",
-    "mahalanobis",
+    "jensenshannon",
     "manhattan",  # aliases to "cityblock" in beta_diversity
     "matching",
     "minkowski",
