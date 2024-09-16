@@ -399,13 +399,19 @@ class IORegistry:
             # BufferedReader which has already been iterated over (via next()).
             matches = []
             backup = fh.tell()
+            text_lookup = self._text_formats
+            bin_lookup = self._binary_formats
             if is_binary_file and kwargs.get("encoding", "binary") == "binary":
-                matches = self._find_matches(fh, self._binary_formats, into, **kwargs)
+                if into is not None:
+                    bin_lookup = self._reduce_formats(bin_lookup, into)
+                matches = self._find_matches(fh, bin_lookup, **kwargs)
 
             if kwargs.get("encoding", None) != "binary":
                 # We can always turn a binary file into a text file, but the
                 # reverse doesn't make sense.
-                matches += self._find_matches(fh, self._text_formats, into, **kwargs)
+                if into is not None:
+                    text_lookup = self._reduce_formats(text_lookup, into)
+                matches += self._find_matches(fh, text_lookup, **kwargs)
                 fh.seek(backup)
             elif not is_binary_file:
                 raise ValueError("Cannot decode text source (%r) as binary." % file)
@@ -422,14 +428,16 @@ class IORegistry:
 
         return matches[0]
 
-    def _find_matches(self, file, lookup, into=None, **kwargs):
+    def _reduce_formats(self, lookup, into):
+        # Reduce possible formats to only those which make sense for the given object.
+        pos_fmts = self.list_read_formats(into)
+        new_lookup = {
+            key: fmt for key, fmt in lookup.copy().items() if fmt.name in pos_fmts
+        }
+        return new_lookup
+
+    def _find_matches(self, file, lookup, **kwargs):
         matches = []
-        # Only run sniffers for the relevant formats for the given skbio object.
-        if into is not None:
-            pos_fmts = self.list_read_formats(into)
-            lookup = {
-                key: fmt for key, fmt in lookup.copy().items() if fmt.name in pos_fmts
-            }
         for format in lookup.values():
             if format.sniffer_function is not None:
                 is_format, skwargs = format.sniffer_function(file, **kwargs)
