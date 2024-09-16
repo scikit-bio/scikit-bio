@@ -73,7 +73,7 @@ def hommola_cospeciation(host_dist, par_dist, interaction, permutations=999, see
         Number of permutations used to compute p-value. Must be greater than or
         equal to zero. If zero, statistical significance calculations will be
         skipped and the p-value will be ``np.nan``.
-    seed : int, Generator or RandomState, optional
+    seed : int or np.random.Generator, optional
         A user-provided random seed or random generator instance. See
         :func:`details <skbio.util.get_rng>`.
 
