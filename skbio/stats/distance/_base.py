@@ -15,7 +15,7 @@ from scipy.spatial.distance import squareform
 
 from skbio._base import SkbioObject
 from skbio.stats._misc import _pprint_strs
-from skbio.util import find_duplicates
+from skbio.util import find_duplicates, get_rng
 from skbio.util._decorator import classonlymethod
 from skbio.util._misc import resolve_key
 from skbio.util._plotting import PlottableMixin
@@ -1102,7 +1102,7 @@ class DistanceMatrix(DissimilarityMatrix):
         """
         return squareform(self._data, force="tovector", checks=False)
 
-    def permute(self, condensed=False):
+    def permute(self, condensed=False, seed=None):
         """Randomly permute both rows and columns in the matrix.
 
         Randomly permutes the ordering of rows and columns in the matrix. The
@@ -1116,6 +1116,11 @@ class DistanceMatrix(DissimilarityMatrix):
             If ``True``, return the permuted distance matrix in condensed
             format. Otherwise, return the permuted distance matrix as a new
             ``DistanceMatrix`` instance.
+        seed : int, Generator or RandomState, optional
+            A user-provided random seed or random generator instance. See
+            :func:`details <skbio.util.get_rng>`.
+
+            .. versionadded:: 0.6.3
 
         Returns
         -------
@@ -1134,7 +1139,8 @@ class DistanceMatrix(DissimilarityMatrix):
         distance matrix and then converting to condensed format.
 
         """
-        order = np.random.permutation(self.shape[0])
+        rng = get_rng(seed)
+        order = rng.permutation(self.shape[0])
 
         if condensed:
             permuted_condensed = distmat_reorder_condensed(self._data, order)
@@ -1389,7 +1395,7 @@ def _df_to_vector(ids, df, column):
     return grouping.tolist()
 
 
-def _run_monte_carlo_stats(test_stat_function, grouping, permutations):
+def _run_monte_carlo_stats(test_stat_function, grouping, permutations, seed=None):
     """Run stat test and compute significance with Monte Carlo permutations."""
     if permutations < 0:
         raise ValueError(
@@ -1397,13 +1403,13 @@ def _run_monte_carlo_stats(test_stat_function, grouping, permutations):
         )
 
     stat = test_stat_function(grouping)
-
+    rng = get_rng(seed)
     p_value = np.nan
     if permutations > 0:
         perm_stats = np.empty(permutations, dtype=np.float64)
 
         for i in range(permutations):
-            perm_grouping = np.random.permutation(grouping)
+            perm_grouping = rng.permutation(grouping)
             perm_stats[i] = test_stat_function(perm_grouping)
 
         p_value = ((perm_stats >= stat).sum() + 1) / (permutations + 1)

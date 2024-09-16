@@ -928,12 +928,10 @@ class DistanceMatrixTestBase(DissimilarityMatrixTestData):
 
         dm_copy = self.dm_3x3.copy()
 
-        np.random.seed(0)
-
-        obs = self.dm_3x3.permute(condensed=True)
+        obs = self.dm_3x3.permute(condensed=True, seed=3)
         npt.assert_equal(obs, np.array([12.0, 4.2, 0.01]))
 
-        obs = self.dm_3x3.permute(condensed=True)
+        obs = self.dm_3x3.permute(condensed=True, seed=2)
         npt.assert_equal(obs, np.array([4.2, 12.0, 0.01]))
 
         # Ensure dm hasn't changed after calling permute() on it a couple of
@@ -949,18 +947,16 @@ class DistanceMatrixTestBase(DissimilarityMatrixTestData):
         self.assertEqual(obs, self.dm_2x2)
         self.assertFalse(obs is self.dm_2x2)
 
-        np.random.seed(0)
-
         exp = self.matobj([[0, 12, 4.2],
                            [12, 0, 0.01],
                            [4.2, 0.01, 0]], self.dm_3x3.ids)
-        obs = self.dm_3x3.permute()
+        obs = self.dm_3x3.permute(seed=3)
         self.assertEqual(obs, exp)
 
         exp = self.matobj([[0, 4.2, 12],
                            [4.2, 0, 0.01],
                            [12, 0.01, 0]], self.dm_3x3.ids)
-        obs = self.dm_3x3.permute()
+        obs = self.dm_3x3.permute(seed=2)
         self.assertEqual(obs, exp)
 
     def test_eq(self):

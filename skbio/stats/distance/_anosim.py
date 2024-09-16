@@ -14,8 +14,8 @@ from scipy.stats import rankdata
 from ._base import _preprocess_input, _run_monte_carlo_stats, _build_results
 
 
-def anosim(distance_matrix, grouping, column=None, permutations=999):
-    """Test for significant differences between groups using ANOSIM.
+def anosim(distance_matrix, grouping, column=None, permutations=999, seed=None):
+    r"""Test for significant differences between groups using ANOSIM.
 
     Analysis of Similarities (ANOSIM) is a non-parametric method that tests
     whether two or more groups of objects (e.g., samples) are significantly
@@ -56,6 +56,11 @@ def anosim(distance_matrix, grouping, column=None, permutations=999):
         significance. Must be greater than or equal to zero. If zero,
         statistical significance calculations will be skipped and the p-value
         will be ``np.nan``.
+    seed : int, Generator or RandomState, optional
+        A user-provided random seed or random generator instance. See
+        :func:`details <skbio.util.get_rng>`.
+
+        .. versionadded:: 0.6.3
 
     Returns
     -------
@@ -96,19 +101,17 @@ def anosim(distance_matrix, grouping, column=None, permutations=999):
     ...                     ['s1', 's2', 's3', 's4'])
     >>> grouping = ['Group1', 'Group1', 'Group2', 'Group2']
 
-    Run ANOSIM using 99 permutations to calculate the p-value:
+    Run ANOSIM using 99 permutations to calculate the p-value. The seed is to
+    make the output deterministic. You may skip it if that's not necessary.
 
-    >>> import numpy as np
-    >>> # make output deterministic; not necessary for normal use
-    >>> np.random.seed(0)
     >>> from skbio.stats.distance import anosim
-    >>> anosim(dm, grouping, permutations=99)
+    >>> anosim(dm, grouping, permutations=99, seed=42)
     method name               ANOSIM
     test statistic name            R
     sample size                    4
     number of groups               2
     test statistic              0.25
-    p-value                     0.67
+    p-value                     0.66
     number of permutations        99
     Name: ANOSIM results, dtype: object
 
@@ -134,18 +137,17 @@ def anosim(distance_matrix, grouping, column=None, permutations=999):
     previous examples:
 
     >>> # make output deterministic; not necessary for normal use
-    >>> np.random.seed(0)
     >>> import pandas as pd
     >>> df = pd.DataFrame.from_dict(
     ...     {'Group': {'s2': 'Group1', 's3': 'Group2', 's4': 'Group2',
     ...                's5': 'Group3', 's1': 'Group1'}})
-    >>> anosim(dm, df, column='Group', permutations=99)
+    >>> anosim(dm, df, column='Group', permutations=99, seed=42)
     method name               ANOSIM
     test statistic name            R
     sample size                    4
     number of groups               2
     test statistic              0.25
-    p-value                     0.67
+    p-value                     0.66
     number of permutations        99
     Name: ANOSIM results, dtype: object
 
@@ -173,7 +175,9 @@ def anosim(distance_matrix, grouping, column=None, permutations=999):
     ranked_dists = rankdata(distances, method="average")
 
     test_stat_function = partial(_compute_r_stat, tri_idxs, ranked_dists, divisor)
-    stat, p_value = _run_monte_carlo_stats(test_stat_function, grouping, permutations)
+    stat, p_value = _run_monte_carlo_stats(
+        test_stat_function, grouping, permutations, seed
+    )
 
     return _build_results(
         "ANOSIM", "R", sample_size, num_groups, stat, p_value, permutations

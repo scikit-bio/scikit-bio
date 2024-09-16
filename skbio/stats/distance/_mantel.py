@@ -17,6 +17,7 @@ from scipy.stats import ConstantInputWarning
 from scipy.stats import NearConstantInputWarning
 
 from skbio.stats.distance import DistanceMatrix
+from skbio.util import get_rng
 
 from ._cutils import mantel_perm_pearsonr_cy
 
@@ -29,6 +30,7 @@ def mantel(
     alternative="two-sided",
     strict=True,
     lookup=None,
+    seed=None,
 ):
     r"""Compute correlation between distance matrices using the Mantel test.
 
@@ -112,6 +114,11 @@ def mantel(
         already match between the distance matrices, this parameter is not
         necessary. This parameter is disallowed if `x` and `y` are
         ``array_like``.
+    seed : int, Generator or RandomState, optional
+        A user-provided random seed or random generator instance. See
+        :func:`details <skbio.util.get_rng>`.
+
+        .. versionadded:: 0.6.3
 
     Returns
     -------
@@ -260,6 +267,7 @@ def mantel(
     ``array_like`` because there is no notion of IDs.
 
     """
+    rng = get_rng(seed)
     special = False  # set to true, if we have a dedicated implementation
     if method == "pearson":
         special = True
@@ -289,11 +297,11 @@ def mantel(
     if special:
         if method == "pearson":
             orig_stat, comp_stat, permuted_stats = _mantel_stats_pearson(
-                x, y, permutations
+                x, y, permutations, rng
             )
         elif method == "spearman":
             orig_stat, comp_stat, permuted_stats = _mantel_stats_spearman(
-                x, y, permutations
+                x, y, permutations, rng
             )
         else:
             raise ValueError("Invalid correlation method '%s'." % method)
@@ -307,7 +315,7 @@ def mantel(
         permuted_stats = []
         if not (permutations == 0 or np.isnan(orig_stat)):
             perm_gen = (
-                corr_func(x.permute(condensed=True), y_flat)[0]
+                corr_func(x.permute(condensed=True, seed=rng), y_flat)[0]
                 for _ in range(permutations)
             )
             permuted_stats = np.fromiter(perm_gen, float, count=permutations)
@@ -329,7 +337,7 @@ def mantel(
     return orig_stat, p_value, n
 
 
-def _mantel_stats_pearson_flat(x, y_flat, permutations):
+def _mantel_stats_pearson_flat(x, y_flat, permutations, seed=None):
     """Compute original and permuted stats using pearsonr.
 
     Parameters
@@ -343,6 +351,8 @@ def _mantel_stats_pearson_flat(x, y_flat, permutations):
         significance. Must be greater than or equal to zero. If zero,
         statistical significance calculations will be skipped and
         permuted_stats will be an empty array.
+    seed : int, Generator or RandomState, optional
+        A user-provided random seed or random generator instance.
 
     Returns
     -------
@@ -357,6 +367,7 @@ def _mantel_stats_pearson_flat(x, y_flat, permutations):
         Permuted correlation coefficients of the test.
 
     """
+    rng = get_rng(seed)
     x_flat = x.condensed_form()
 
     # If an input is constant, the correlation coefficient is not defined.
@@ -407,7 +418,7 @@ def _mantel_stats_pearson_flat(x, y_flat, permutations):
         # first row/statistic will be comp_stat
         perm_order[0, :] = np.arange(mat_n)
         for row in range(1, permutations + 1):
-            perm_order[row, :] = np.random.permutation(mat_n)
+            perm_order[row, :] = rng.permutation(mat_n)
 
         permuted_stats = np.empty(permutations + 1, dtype=x_data.dtype)
         mantel_perm_pearsonr_cy(
@@ -419,7 +430,7 @@ def _mantel_stats_pearson_flat(x, y_flat, permutations):
     return orig_stat, comp_stat, permuted_stats
 
 
-def _mantel_stats_pearson(x, y, permutations):
+def _mantel_stats_pearson(x, y, permutations, seed=None):
     """Compute original and permuted stats using pearsonr.
 
     Parameters
@@ -431,6 +442,8 @@ def _mantel_stats_pearson(x, y, permutations):
         significance. Must be greater than or equal to zero. If zero,
         statistical significance calculations will be skipped and
         permuted_stats will be an empty array.
+    seed : int, Generator or RandomState, optional
+        A user-provided random seed or random generator instance.
 
     Returns
     -------
@@ -446,10 +459,10 @@ def _mantel_stats_pearson(x, y, permutations):
 
     """
     y_flat = y.condensed_form()
-    return _mantel_stats_pearson_flat(x, y_flat, permutations)
+    return _mantel_stats_pearson_flat(x, y_flat, permutations, seed)
 
 
-def _mantel_stats_spearman(x, y, permutations):
+def _mantel_stats_spearman(x, y, permutations, seed=None):
     """Compute original and permuted stats using spearmanr.
 
     Parameters
@@ -461,6 +474,8 @@ def _mantel_stats_spearman(x, y, permutations):
         significance. Must be greater than or equal to zero. If zero,
         statistical significance calculations will be skipped and
         permuted_stats will be an empty array.
+    seed : int, Generator or RandomState, optional
+        A user-provided random seed or random generator instance.
 
     Returns
     -------
@@ -493,7 +508,7 @@ def _mantel_stats_spearman(x, y, permutations):
     del x_rank
 
     # for our purposes, spearman is just pearson on rankdata
-    return _mantel_stats_pearson_flat(x_rank_matrix, y_rank, permutations)
+    return _mantel_stats_pearson_flat(x_rank_matrix, y_rank, permutations, seed)
 
 
 def pwmantel(
@@ -504,6 +519,7 @@ def pwmantel(
     alternative="two-sided",
     strict=True,
     lookup=None,
+    seed=None,
 ):
     """Run Mantel tests for every pair of given distance matrices.
 
@@ -535,6 +551,11 @@ def pwmantel(
         Handling of nonmatching IDs. See ``mantel`` function for more details.
     lookup : dict, optional
         Map existing IDs to new IDs. See ``mantel`` function for more details.
+    seed : int, Generator or RandomState, optional
+        A user-provided random seed or random generator instance. See
+        :func:`details <skbio.util.get_rng>`.
+
+        .. versionadded:: 0.6.3
 
     Returns
     -------
@@ -591,6 +612,7 @@ def pwmantel(
     p-values in the output are labelled ``NaN``.
 
     """
+    rng = get_rng(seed)
     num_dms = len(dms)
 
     if num_dms < 2:
@@ -634,6 +656,7 @@ def pwmantel(
             alternative=alternative,
             strict=strict,
             lookup=lookup,
+            seed=rng,
         )
 
         results[i] = (xlabel, ylabel, stat, p_val, n, method, permutations, alternative)
