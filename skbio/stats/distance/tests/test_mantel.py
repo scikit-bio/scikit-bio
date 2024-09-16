@@ -640,7 +640,6 @@ class PairwiseMantelTests(MantelTestData):
             get_data_path('dm2.txt'),
         ]
         obs = pwmantel(dms, seed=42)
-        obs.to_csv('/home/drz/Desktop/xxx.tsv', sep='\t')
         self.assert_pwmantel_almost_equal(obs, self.exp_results_dm_dm2)
 
     def test_many_filepaths_as_input(self):
