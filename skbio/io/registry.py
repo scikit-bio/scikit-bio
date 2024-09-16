@@ -399,9 +399,9 @@ class IORegistry:
             # BufferedReader which has already been iterated over (via next()).
             matches = []
             backup = fh.tell()
-            text_lookup = self._text_formats
-            bin_lookup = self._binary_formats
+
             if is_binary_file and kwargs.get("encoding", "binary") == "binary":
+                bin_lookup = self._binary_formats
                 if into is not None:
                     bin_lookup = self._reduce_formats(bin_lookup, into)
                 matches = self._find_matches(fh, bin_lookup, **kwargs)
@@ -409,6 +409,7 @@ class IORegistry:
             if kwargs.get("encoding", None) != "binary":
                 # We can always turn a binary file into a text file, but the
                 # reverse doesn't make sense.
+                text_lookup = self._text_formats
                 if into is not None:
                     text_lookup = self._reduce_formats(text_lookup, into)
                 matches += self._find_matches(fh, text_lookup, **kwargs)
@@ -431,10 +432,7 @@ class IORegistry:
     def _reduce_formats(self, lookup, into):
         # Reduce possible formats to only those which make sense for the given object.
         pos_fmts = self.list_read_formats(into)
-        new_lookup = {
-            key: fmt for key, fmt in lookup.copy().items() if fmt.name in pos_fmts
-        }
-        return new_lookup
+        return {k: v for k, v in lookup.items() if k in pos_fmts}
 
     def _find_matches(self, file, lookup, **kwargs):
         matches = []
