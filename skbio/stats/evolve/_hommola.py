@@ -10,9 +10,10 @@ import numpy as np
 from scipy.stats import pearsonr
 
 from skbio import DistanceMatrix
+from skbio.util import get_rng
 
 
-def hommola_cospeciation(host_dist, par_dist, interaction, permutations=999):
+def hommola_cospeciation(host_dist, par_dist, interaction, permutations=999, seed=None):
     """Perform Hommola et al (2009) host/parasite cospeciation test.
 
     This test for host/parasite cospeciation is as described in [1]_. This test
@@ -72,6 +73,11 @@ def hommola_cospeciation(host_dist, par_dist, interaction, permutations=999):
         Number of permutations used to compute p-value. Must be greater than or
         equal to zero. If zero, statistical significance calculations will be
         skipped and the p-value will be ``np.nan``.
+    seed : int, Generator or RandomState, optional
+        A user-provided random seed or random generator instance. See
+        :func:`details <skbio.util.get_rng>`.
+
+        .. versionadded:: 0.6.3
 
     Returns
     -------
@@ -123,7 +129,7 @@ def hommola_cospeciation(host_dist, par_dist, interaction, permutations=999):
     p-value:
 
     >>> corr_coeff, p_value, perm_stats = hommola_cospeciation(
-    ...     hdist, pdist, interaction, permutations=99)
+    ...     hdist, pdist, interaction, permutations=99, seed=42)
     >>> print("%.3f" % corr_coeff)
     0.832
 
@@ -190,12 +196,13 @@ def hommola_cospeciation(host_dist, par_dist, interaction, permutations=999):
         p_value = np.nan
         perm_stats.fill(np.nan)
     else:
+        rng = get_rng(seed)
         for i in range(permutations):
             # generate a shuffled list of indexes for each permutation. this
             # effectively randomizes which host is associated with which
             # symbiont, but maintains the distribution of genetic distances
-            np.random.shuffle(mp)
-            np.random.shuffle(mh)
+            rng.shuffle(mp)
+            rng.shuffle(mh)
 
             # get pairwise distances in shuffled order
             y_p = _get_dist(pars_k_labels, pars_t_labels, par_dist.data, mp)
