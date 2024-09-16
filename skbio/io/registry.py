@@ -353,7 +353,7 @@ class IORegistry:
                 if cls in getattr(format, lookup_name):
                     yield format.name
 
-    def sniff(self, file, **kwargs):
+    def sniff(self, file, into=None, **kwargs):
         r"""Detect the format of a given file and suggest kwargs for reading.
 
         Parameters
@@ -400,12 +400,12 @@ class IORegistry:
             matches = []
             backup = fh.tell()
             if is_binary_file and kwargs.get("encoding", "binary") == "binary":
-                matches = self._find_matches(fh, self._binary_formats, **kwargs)
+                matches = self._find_matches(fh, self._binary_formats, into, **kwargs)
 
             if kwargs.get("encoding", None) != "binary":
                 # We can always turn a binary file into a text file, but the
                 # reverse doesn't make sense.
-                matches += self._find_matches(fh, self._text_formats, **kwargs)
+                matches += self._find_matches(fh, self._text_formats, into, **kwargs)
                 fh.seek(backup)
             elif not is_binary_file:
                 raise ValueError("Cannot decode text source (%r) as binary." % file)
@@ -422,8 +422,14 @@ class IORegistry:
 
         return matches[0]
 
-    def _find_matches(self, file, lookup, **kwargs):
+    def _find_matches(self, file, lookup, into=None, **kwargs):
         matches = []
+        # Only run sniffers for the relevant formats for the given skbio object.
+        if into is not None:
+            pos_fmts = self.list_read_formats(into)
+            lookup = {
+                key: fmt for key, fmt in lookup.copy().items() if fmt.name in pos_fmts
+            }
         for format in lookup.values():
             if format.sniffer_function is not None:
                 is_format, skwargs = format.sniffer_function(file, **kwargs)
@@ -525,7 +531,7 @@ class IORegistry:
     def _init_reader(self, file, fmt, into, verify, kwargs, io_kwargs):
         skwargs = {}
         if fmt is None:
-            fmt, skwargs = self.sniff(file, **io_kwargs)
+            fmt, skwargs = self.sniff(file, into, **io_kwargs)
         elif verify:
             sniffer = self.get_sniffer(fmt)
             if sniffer is not None:
