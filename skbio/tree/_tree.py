@@ -617,6 +617,72 @@ class TreeNode(SkbioObject):
 
     lca = lowest_common_ancestor  # for convenience
 
+    def path(self, other, include_ends=False):
+        r"""Return the list of node names in the path from one node to another.
+
+        Parameters
+        ----------
+        other : TreeNode
+            Final node of path.
+        include_ends: bool, optional
+            Whether to include the initial and final nodes in the list.
+
+        Returns
+        -------
+        list
+            List of names of TreeNode objects.
+
+        Examples
+        --------
+        >>> from skbio import TreeNode
+        >>> tree = TreeNode.read(["((a,b)c,(d,e)f)root;"])
+        >>> node_1, node_2 = tree.find('a'), tree.find('b')
+        >>> path = node_1.path(node_2)
+        >>> print(path)
+        ['c', 'root', 'f']
+        >>> path_2 = node_1.path(node_2, include_ends=True)
+        >>> print(path_2)
+        ['a', 'c', 'root', 'f', 'e']
+
+        """
+        # find root
+        root = self.root()
+
+        # find the lowest common ancestor
+        lca = (
+            self
+            if self in other.ancestors()
+            else other
+            if other in self.ancestors()
+            else root.lowest_common_ancestor([self, other])
+        )
+
+        # create tree rooted at lca
+        lca_tree = lca.copy()
+
+        # find path from each node to the lowest common ancestor.
+        node_1, node_2 = lca_tree.find(self.name), lca_tree.find(other.name)
+        list_1, list_2 = (
+            [node.name for node in node_1.ancestors()],
+            [node.name for node in node_2.ancestors()],
+        )
+
+        # reverse the path of final node to ensure correct order
+        list_2.reverse()
+
+        # remove the lca from the first list since the lca
+        # is also contained in the second list.
+        list_1 = list_1[:-1]
+
+        # combine the lists
+        path_list = list_1 + list_2
+
+        # insert initial and final nodes if desired
+        if include_ends is True:
+            path_list.insert(0, self.name)
+            path_list.append(other.name)
+        return path_list
+
     # ------------------------------------------------
     # Tree traversal
     # ------------------------------------------------
