@@ -636,19 +636,19 @@ class TreeNode(SkbioObject):
         --------
         >>> from skbio import TreeNode
         >>> tree = TreeNode.read(["((a,b)c,(d,e)f)root;"])
-        >>> node_1, node_2 = tree.find('a'), tree.find('b')
+        >>> node_1, node_2 = tree.find('a'), tree.find('d')
         >>> path = node_1.path(node_2)
         >>> print(path)
         ['c', 'root', 'f']
         >>> path_2 = node_1.path(node_2, include_ends=True)
         >>> print(path_2)
-        ['a', 'c', 'root', 'f', 'e']
+        ['a', 'c', 'root', 'f', 'd']
 
         """
         # find root
         root = self.root()
 
-        # find the lowest common ancestor
+        # find the lowest common ancestor if not ancestors of each other
         lca = (
             self
             if self in other.ancestors()
