@@ -10,16 +10,18 @@ import numpy as np
 import pandas as pd
 from numpy import dot, hstack
 from numpy.linalg import qr, svd
-from numpy.random import standard_normal
 from scipy.linalg import eigh
 from warnings import warn
 
+from skbio.util import get_rng
 from skbio.stats.distance import DistanceMatrix
 from ._ordination_results import OrdinationResults
 from ._utils import center_distance_matrix, scale
 
 
-def pcoa(distance_matrix, method="eigh", number_of_dimensions=0, inplace=False):
+def pcoa(
+    distance_matrix, method="eigh", number_of_dimensions=0, inplace=False, seed=None
+):
     r"""Perform Principal Coordinate Analysis.
 
     Principal Coordinate Analysis (PCoA) is a method similar
@@ -67,6 +69,12 @@ def pcoa(distance_matrix, method="eigh", number_of_dimensions=0, inplace=False):
     inplace : bool, optional
         If true, centers a distance matrix in-place in a manner that reduces
         memory consumption.
+    seed : int or np.random.Generator, optional
+        A user-provided random seed or random generator instance for faster
+        heuristic eigendecomposition. Relevant when `method="fsvd"`. See
+        :func:`details <skbio.util.get_rng>`.
+
+        .. versionadded:: 0.6.3
 
     Returns
     -------
@@ -129,7 +137,7 @@ def pcoa(distance_matrix, method="eigh", number_of_dimensions=0, inplace=False):
         eigvals, eigvecs = eigh(matrix_data)
         long_method_name = "Principal Coordinate Analysis"
     elif method == "fsvd":
-        eigvals, eigvecs = _fsvd(matrix_data, number_of_dimensions)
+        eigvals, eigvecs = _fsvd(matrix_data, number_of_dimensions, seed=seed)
         long_method_name = "Approximate Principal Coordinate Analysis " "using FSVD"
     else:
         raise ValueError(
@@ -217,7 +225,7 @@ def pcoa(distance_matrix, method="eigh", number_of_dimensions=0, inplace=False):
     )
 
 
-def _fsvd(centered_distance_matrix, number_of_dimensions=10):
+def _fsvd(centered_distance_matrix, number_of_dimensions=10, seed=None):
     """Perform singular value decomposition.
 
     More specifically in this case eigendecomposition, using fast heuristic algorithm
@@ -232,6 +240,8 @@ def _fsvd(centered_distance_matrix, number_of_dimensions=10):
     number_of_dimensions : int
        Number of dimensions to keep. Must be lower than or equal to the
        rank of the given distance_matrix.
+    seed : int or np.random.Generator, optional
+        A user-provided random seed or random generator instance.
 
     Returns
     -------
@@ -284,7 +294,8 @@ def _fsvd(centered_distance_matrix, number_of_dimensions=10):
 
     # Form a real nxl matrix G whose entries are independent, identically
     # distributed Gaussian random variables of zero mean and unit variance
-    G = standard_normal(size=(n, k))
+    rng = get_rng(seed)
+    G = rng.standard_normal(size=(n, k))
 
     if use_power_method:
         # use only the given exponent
