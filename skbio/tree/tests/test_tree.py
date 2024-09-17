@@ -297,6 +297,14 @@ class TreeTests(TestCase):
         self.assertEqual(obs2, exp2)
         self.assertEqual(obs3, exp3)
 
+        # include ends
+        t_ends = TreeNode.read(["((a,b)c,(d,e)f)root;"])
+        init = t_ends.find("a")
+        fin = t_ends.find("e")
+        exp = ['a', 'c', 'root', 'f', 'e']
+        obs = init.path(fin, include_ends=True)
+        self.assertEqual(obs, exp)
+
     # ------------------------------------------------
     # Tree traversal
     # ------------------------------------------------
