@@ -353,7 +353,7 @@ class IORegistry:
                 if cls in getattr(format, lookup_name):
                     yield format.name
 
-    def sniff(self, file, **kwargs):
+    def sniff(self, file, into=None, **kwargs):
         r"""Detect the format of a given file and suggest kwargs for reading.
 
         Parameters
@@ -399,13 +399,20 @@ class IORegistry:
             # BufferedReader which has already been iterated over (via next()).
             matches = []
             backup = fh.tell()
+
             if is_binary_file and kwargs.get("encoding", "binary") == "binary":
-                matches = self._find_matches(fh, self._binary_formats, **kwargs)
+                bin_lookup = self._binary_formats
+                if into is not None:
+                    bin_lookup = self._reduce_formats(bin_lookup, into)
+                matches = self._find_matches(fh, bin_lookup, **kwargs)
 
             if kwargs.get("encoding", None) != "binary":
                 # We can always turn a binary file into a text file, but the
                 # reverse doesn't make sense.
-                matches += self._find_matches(fh, self._text_formats, **kwargs)
+                text_lookup = self._text_formats
+                if into is not None:
+                    text_lookup = self._reduce_formats(text_lookup, into)
+                matches += self._find_matches(fh, text_lookup, **kwargs)
                 fh.seek(backup)
             elif not is_binary_file:
                 raise ValueError("Cannot decode text source (%r) as binary." % file)
@@ -421,6 +428,11 @@ class IORegistry:
             raise UnrecognizedFormatError("Could not detect the format of %r" % file)
 
         return matches[0]
+
+    def _reduce_formats(self, lookup, into):
+        # Reduce possible formats to only those which make sense for the given object.
+        pos_fmts = self.list_read_formats(into)
+        return {k: v for k, v in lookup.items() if k in pos_fmts}
 
     def _find_matches(self, file, lookup, **kwargs):
         matches = []
@@ -525,7 +537,7 @@ class IORegistry:
     def _init_reader(self, file, fmt, into, verify, kwargs, io_kwargs):
         skwargs = {}
         if fmt is None:
-            fmt, skwargs = self.sniff(file, **io_kwargs)
+            fmt, skwargs = self.sniff(file, into, **io_kwargs)
         elif verify:
             sniffer = self.get_sniffer(fmt)
             if sniffer is not None:
