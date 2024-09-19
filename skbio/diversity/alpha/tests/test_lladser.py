@@ -61,12 +61,11 @@ class LladserTests(unittest.TestCase):
 
     def test_lladser_ci(self):
         """lladser_ci estimate using defaults contains p with 95% prob"""
-        np.random.seed(12345678)
         reps = 100
         sum = 0
         for i in range(reps):
             fake_obs, exp_p = create_fake_observation()
-            (low, high) = lladser_ci(fake_obs, r=10)
+            (low, high) = lladser_ci(fake_obs, r=10, seed=123)
             if (low <= exp_p <= high):
                 sum += 1
 
@@ -80,14 +79,13 @@ class LladserTests(unittest.TestCase):
         # probs we expect to have more than 5 misses of the interval in 38%
         # of all test runs. To make this test pass reliable we thus have to
         # set a defined seed
-        np.random.seed(12345678)
         reps = 1000
         sum = 0
         for i in range(reps):
             # re-create the obs for every estimate, such that they are truly
             # independent events
             fake_obs, exp_p = create_fake_observation()
-            (low, high) = lladser_ci(fake_obs, r=14, f=3)
+            (low, high) = lladser_ci(fake_obs, r=14, f=3, seed=123)
             if (low <= exp_p <= high):
                 sum += 1
 

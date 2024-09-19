@@ -33,14 +33,14 @@ def permdisp(
     permutations=999,
     method="eigh",
     number_of_dimensions=10,
+    seed=None,
 ):
-    """Test for Homogeneity of Multivariate Groups Disperisons.
+    r"""Test for Homogeneity of Multivariate Groups Disperisons.
 
     PERMDISP is a multivariate analogue of Levene's test for homogeneity of
     multivariate variances. Distances are handled by reducing the
     original distances to principal coordinates. PERMDISP calculates an
     F-statistic to assess whether the dispersions between groups is significant
-
 
     Parameters
     ----------
@@ -84,6 +84,11 @@ def permdisp(
     number_of_dimensions : int, optional
         Dimensions to reduce the distance matrix to if using the `fsvd` method.
         Not used if the `eigh` method is being selected.
+    seed : int, Generator or RandomState, optional
+        A user-provided random seed or random generator instance. See
+        :func:`details <skbio.util.get_rng>`.
+
+        .. versionadded:: 0.6.3
 
     Returns
     -------
@@ -153,19 +158,17 @@ def permdisp(
     ...                       ['s1', 's2', 's3', 's4', 's5', 's6'])
     >>> grouping = ['G1', 'G1', 'G1', 'G2', 'G2', 'G2']
 
-    Run PERMDISP using 99 permutations to caluculate the p-value:
+    Run PERMDISP using 99 permutations to caluculate the p-value. The seed is to
+    make the output deterministic. You may skip it if that's not necessary.
 
     >>> from skbio.stats.distance import permdisp
-    >>> import numpy as np
-    >>> #make output deterministic, should not be included during normal use
-    >>> np.random.seed(0)
-    >>> permdisp(dm, grouping, permutations=99)
+    >>> permdisp(dm, grouping, permutations=99, seed=42)
     method name               PERMDISP
     test statistic name        F-value
     sample size                      6
     number of groups                 2
-    test statistic     ... 1.03...
-    p-value            ...
+    test statistic             1.03296
+    p-value                       0.28
     number of permutations          99
     Name: PERMDISP results, dtype: object
 
@@ -180,7 +183,7 @@ def permdisp(
     test statistic name        F-value
     sample size                      6
     number of groups                 2
-    test statistic      ... 1.03...
+    test statistic             1.03296
     p-value                        NaN
     number of permutations           0
     Name: PERMDISP results, dtype: object
@@ -194,14 +197,13 @@ def permdisp(
     formula. As such the two different tests yeild slightly different F
     statistics.
 
-    >>> np.random.seed(0)
-    >>> permdisp(dm, grouping, test='centroid', permutations=6)
+    >>> permdisp(dm, grouping, test='centroid', permutations=6, seed=42)
     method name               PERMDISP
     test statistic name        F-value
     sample size                      6
     number of groups                 2
-    test statistic     ... 3.67...
-    p-value            ... 0.42...
+    test statistic            3.670816
+    p-value                   0.285714
     number of permutations           6
     Name: PERMDISP results, dtype: object
 
@@ -214,13 +216,13 @@ def permdisp(
     >>> df = pd.DataFrame.from_dict(
     ...      {'Grouping': {'s1': 'G1', 's2': 'G1', 's3': 'G1', 's4': 'G2',
     ...                    's5': 'G2', 's6': 'G2'}})
-    >>> permdisp(dm, df, 'Grouping', permutations=6, test='centroid')
+    >>> permdisp(dm, df, 'Grouping', permutations=6, test='centroid', seed=42)
     method name               PERMDISP
     test statistic name        F-value
     sample size                      6
     number of groups                 2
-    test statistic      ... 3.67...
-    p-value             ... 0.42...
+    test statistic            3.670816
+    p-value                   0.285714
     number of permutations           6
     Name: PERMDISP results, dtype: object
 
@@ -275,7 +277,9 @@ def permdisp(
 
     test_stat_function = partial(_compute_groups, samples, test)
 
-    stat, p_value = _run_monte_carlo_stats(test_stat_function, grouping, permutations)
+    stat, p_value = _run_monte_carlo_stats(
+        test_stat_function, grouping, permutations, seed
+    )
 
     return _build_results(
         "PERMDISP", "F-value", sample_size, num_groups, stat, p_value, permutations

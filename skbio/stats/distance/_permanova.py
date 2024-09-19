@@ -19,8 +19,8 @@ from ._base import (
 from ._cutils import permanova_f_stat_sW_cy
 
 
-def permanova(distance_matrix, grouping, column=None, permutations=999):
-    """Test for significant differences between groups using PERMANOVA.
+def permanova(distance_matrix, grouping, column=None, permutations=999, seed=None):
+    r"""Test for significant differences between groups using PERMANOVA.
 
     Permutational Multivariate Analysis of Variance (PERMANOVA) is a
     non-parametric method that tests whether two or more groups of objects
@@ -62,6 +62,11 @@ def permanova(distance_matrix, grouping, column=None, permutations=999):
         significance. Must be greater than or equal to zero. If zero,
         statistical significance calculations will be skipped and the p-value
         will be ``np.nan``.
+    seed : int, Generator or RandomState, optional
+        A user-provided random seed or random generator instance. See
+        :func:`details <skbio.util.get_rng>`.
+
+        .. versionadded:: 0.6.3
 
     Returns
     -------
@@ -111,7 +116,9 @@ def permanova(distance_matrix, grouping, column=None, permutations=999):
     test_stat_function = partial(
         _compute_f_stat, sample_size, num_groups, distance_matrix, group_sizes, s_T
     )
-    stat, p_value = _run_monte_carlo_stats(test_stat_function, grouping, permutations)
+    stat, p_value = _run_monte_carlo_stats(
+        test_stat_function, grouping, permutations, seed
+    )
 
     return _build_results(
         "PERMANOVA", "pseudo-F", sample_size, num_groups, stat, p_value, permutations

@@ -168,15 +168,14 @@ class testPERMDISP(TestCase):
     def test_centroid_normal(self):
         exp = pd.Series(index=self.exp_index,
                         data=['PERMDISP', 'F-value', 9, 2, 0.244501519876,
-                              0.63, 99],
+                              0.53, 99],
                         name='PERMDISP results')
 
         grouping = ['Control', 'Control', 'Control', 'Control', 'Control',
                     'Fast', 'Fast', 'Fast', 'Fast']
 
-        np.random.seed(0)
         obs = permdisp(self.unifrac_dm, grouping, test='centroid',
-                       permutations=99)
+                       permutations=99, seed=42)
 
         self.assert_series_equal(obs, exp)
 
@@ -184,20 +183,18 @@ class testPERMDISP(TestCase):
 
         exp = pd.Series(index=self.exp_index,
                         data=['PERMDISP', 'F-value', 9, 2, 0.139475441876,
-                              0.61, 99],
+                              0.51, 99],
                         name='PERMDISP results')
 
-        np.random.seed(0)
         obs = permdisp(self.unifrac_dm, self.unif_grouping, test='median',
-                       permutations=99)
+                       permutations=99, seed=42)
 
         self.assert_series_equal(obs, exp)
 
-        np.random.seed(0)
         po = pcoa(self.unifrac_dm)
 
         obs2 = permdisp(po, self.unif_grouping, test='median',
-                        permutations=99)
+                        permutations=99, seed=42)
 
         self.assert_series_equal(obs2, exp)
 
@@ -205,20 +202,18 @@ class testPERMDISP(TestCase):
 
         exp = pd.Series(index=self.exp_index,
                         data=['PERMDISP', 'F-value', 9, 2, 0.04078077215673714,
-                              0.8, 99],
+                              0.79, 99],
                         name='PERMDISP results')
 
-        np.random.seed(0)
         obs = permdisp(self.unifrac_dm, self.unif_grouping, test='median',
                        permutations=99,
-                       method='fsvd', number_of_dimensions=3)
+                       method='fsvd', number_of_dimensions=3, seed=42)
 
         self.assert_series_equal(obs, exp)
 
-        np.random.seed(0)
         po = pcoa(self.unifrac_dm, method='fsvd', number_of_dimensions=3)
         obs = permdisp(po, self.unif_grouping, test='median',
-                       permutations=99)
+                       permutations=99, seed=42)
 
         self.assert_series_equal(obs, exp)
 
@@ -256,10 +251,9 @@ class testPERMDISP(TestCase):
         mp_mf = pd.read_csv(get_data_path('moving_pictures_mf.tsv'), sep='\t')
         mp_mf.set_index('#SampleID', inplace=True)
 
-        obs_med_mp = permdisp(mp_dm, mp_mf,
-                              column='BodySite')
-        obs_cen_mp = permdisp(mp_dm, mp_mf, column='BodySite',
-                              test='centroid')
+        obs_med_mp = permdisp(mp_dm, mp_mf, column='BodySite', seed=42)
+        obs_cen_mp = permdisp(mp_dm, mp_mf, column='BodySite', test='centroid',
+                              seed=42)
 
         exp_data_m = ['PERMDISP', 'F-value', 33, 4, 10.1956, 0.001, 999]
         exp_data_c = ['PERMDISP', 'F-value', 33, 4, 17.4242, 0.001, 999]
@@ -285,11 +279,9 @@ class testPERMDISP(TestCase):
         grouping = pd.read_csv(get_data_path("frameSeries_grouping.tsv"),
                                sep="\t", index_col=0)
 
-        np.random.seed(0)
-        obs_frame = permdisp(dm, grouping, column='tumor')
+        obs_frame = permdisp(dm, grouping, column='tumor', seed=42)
 
-        np.random.seed(0)
-        obs_series = permdisp(dm, grouping['tumor'])
+        obs_series = permdisp(dm, grouping['tumor'], seed=42)
 
         # in principle, both tests - if seed is the same - should return the
         # exact same results. However, they don't for the current example ...
