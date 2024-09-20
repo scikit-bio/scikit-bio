@@ -21,8 +21,9 @@ def lladser_pe(counts, r=10, seed=None):
         Vector of counts.
     r : int, optional
         Number of new colors that are required for the next prediction.
-    seed : int or np.random.Generator, optional
-        A user-provided random seed or random generator instance.
+    seed : int, Generator or RandomState, optional
+        A user-provided random seed or random generator instance. See
+        :func:`details <skbio.util.get_rng>`.
 
         .. versionadded:: 0.6.3
 
@@ -81,8 +82,9 @@ def lladser_ci(counts, r, alpha=0.95, f=10, ci_type="ULCL", seed=None):
         conservative lower bound. If ``'ULCU'``, upper and lower bounds with
         conservative upper bound. If ``'U'``, upper bound only, lower bound
         fixed to 0.0. If ``'L'``, lower bound only, upper bound fixed to 1.0.
-    seed : int or np.random.Generator, optional
-        A user-provided random seed or random generator instance.
+    seed : int, Generator or RandomState, optional
+        A user-provided random seed or random generator instance. See
+        :func:`details <skbio.util.get_rng>`.
 
         .. versionadded:: 0.6.3
 
@@ -136,8 +138,9 @@ def _lladser_point_estimates(sample, r=10, seed=None):
         Series of random observations.
     r : int, optional
         Number of new colors that are required for the next prediction.
-    seed : int or np.random.Generator, optional
-        A user-provided random seed or random generator instance.
+    seed : int, Generator or RandomState, optional
+        A user-provided random seed or random generator instance. See
+        :func:`details <skbio.util.get_rng>`.
 
     Returns
     -------
@@ -246,8 +249,9 @@ def _lladser_ci_series(seq, r, alpha=0.95, f=10, ci_type="ULCL", seed=None):
         conservative lower bound. If ``'ULCU'``, upper and lower bounds with
         conservative upper bound. If ``'U'``, upper bound only, lower bound
         fixed to 0.0. If ``'L'``, lower bound only, upper bound fixed to 1.0.
-    seed : int or np.random.Generator, optional
-        A user-provided random seed or random generator instance.
+    seed : int, Generator or RandomState, optional
+        A user-provided random seed or random generator instance. See
+        :func:`details <skbio.util.get_rng>`.
 
     Returns
     -------
