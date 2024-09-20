@@ -185,8 +185,9 @@ def subsample_power(
         on the curve.
     num_runs : positive int, optional
         The number of times to calculate each curve.
-    seed : int or np.random.Generator, optional
-        A user-provided random seed or random generator instance.
+    seed : int, Generator or RandomState, optional
+        A user-provided random seed or random generator instance. See
+        :func:`details <skbio.util.get_rng>`.
 
         .. versionadded:: 0.6.3
 
@@ -426,8 +427,9 @@ def subsample_paired_power(
         The number of p-values to generate for each point on the curve.
     num_runs : positive int, optional
         The number of times to calculate each curve.
-    seed : int or np.random.Generator, optional
-        A user-provided random seed or random generator instance.
+    seed : int, Generator or RandomState, optional
+        A user-provided random seed or random generator instance. See
+        :func:`details <skbio.util.get_rng>`.
 
         .. versionadded:: 0.6.3
 
@@ -654,8 +656,9 @@ def paired_subsamples(
         will be ignored when `strict_match` is True. If `strict_match` is
         False, missing values (NaN) in the `control_cats` can be considered
         matches.
-    seed : int or np.random.Generator, optional
-        A user-provided random seed or random generator instance.
+    seed : int, Generator or RandomState, optional
+        A user-provided random seed or random generator instance. See
+        :func:`details <skbio.util.get_rng>`.
 
         .. versionadded:: 0.6.3
 
@@ -805,8 +808,9 @@ def _compare_distributions(
     num_iter : positive int, optional
         Default 1000. The number of p-values to generate for each point on the
         curve.
-    seed : int or np.random.Generator, optional
-        A user-provided random seed or random generator instance.
+    seed : int, Generator or RandomState, optional
+        A user-provided random seed or random generator instance. See
+        :func:`details <skbio.util.get_rng>`.
 
     Returns
     -------
@@ -1075,8 +1079,9 @@ def _draw_paired_samples(meta_pairs, index, num_samps, seed=None):
         position of the reference group sample in the list of samples.
     num_samps : int
         The number of samples.
-    seed : int or np.random.Generator, optional
-        A user-provided random seed or random generator instance.
+    seed : int, Generator or RandomState, optional
+        A user-provided random seed or random generator instance. See
+        :func:`details <skbio.util.get_rng>`.
 
     Returns
     -------
@@ -1157,8 +1162,9 @@ def _calculate_power_curve(
         on the curve.
     alpha : float, optional
         The significance level for the statistical test. Defaults to 0.05.
-    seed : int or np.random.Generator, optional
-        A user-provided random seed or random generator instance.
+    seed : int, Generator or RandomState, optional
+        A user-provided random seed or random generator instance. See
+        :func:`details <skbio.util.get_rng>`.
 
     Returns
     -------

@@ -21,6 +21,7 @@
 * `TreeNode.extend` can accept any iterable type of nodes as input ([#2103](https://github.com/scikit-bio/scikit-bio/pull/2103)).
 * Added parameter `strict` to `TreeNode.shear` ([#2103](https://github.com/scikit-bio/scikit-bio/pull/2103)).
 * Added parameter `exclude_attrs` to `TreeNode.unrooted_copy` ([#2103](https://github.com/scikit-bio/scikit-bio/pull/2103)).
+* Added support for legacy random generator to `get_rng`, such that outputs of scikit-bio functions become reproducible with code that starts with `np.random.seed` or uses `RandomState` ([#2130](https://github.com/scikit-bio/scikit-bio/pull/2130)).
 * Allowed `shuffle` and `compare_tip_distances` of `TreeNode` to accept a random seed or random generator to generate the shuffling function, which ensures output reproducibility ([#2118](https://github.com/scikit-bio/scikit-bio/pull/2118)).
 * Added parameter `seed` to functions `pcoa`, `anosim`, `permanova`, `permdisp`, `randdm`, `lladser_pe`, `lladser_ci`, `isubsample`, `subsample_power`, `subsample_paired_power`, `paired_subsamples` and `hommola_cospeciation` to accept a random seed or random generator to ensure output reproducibility ([#2120](https://github.com/scikit-bio/scikit-bio/pull/2120) and [#2129](https://github.com/scikit-bio/scikit-bio/pull/2129)).
 * Made the `IORegistry` sniffer only attempt file formats which are logical given a specific object, thus improving reading efficiency.
