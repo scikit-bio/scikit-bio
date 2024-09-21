@@ -656,14 +656,16 @@ class TreeNode(SkbioObject):
             [node for node in other.ancestors()],
         )
 
-        # find lca and delete nodes from intersection of ancestors
+        # find lowest common ancestor
         for n1, n2 in zip(reversed(anc1), reversed(anc2)):
             if n1 is n2:
-                del anc1[anc1.index(n1)]
-                del anc2[anc2.index(n2)]
-                lca = [n1]
+                lca = n1
             else:
                 break
+
+        # delete nodes from intersection of ancestors
+        del anc1[anc1.index(lca) :]
+        del anc2[anc2.index(lca) :]
 
         # reverse the second list for correct order
         anc2.reverse()
@@ -674,7 +676,7 @@ class TreeNode(SkbioObject):
         elif other in anc1:
             del anc1[anc1.index(other)]
         else:
-            anc1 = anc1 + lca
+            anc1 = anc1 + [lca]
 
         # create list of nodes in path
         path_list = anc1 + anc2
