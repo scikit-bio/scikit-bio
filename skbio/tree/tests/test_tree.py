@@ -301,7 +301,9 @@ class TreeTests(TestCase):
         t = TreeNode.read(["((a,b)c,(d,e)f)root;"])
         init = t.find("a")
         fin = t.find("e")
-        exp = [t.find("a"), t.find("c"), t.find("root"), t.find("f"), t.find("e")]
+        exp = [
+            t.find("a"), t.find("c"), t.find("root"), t.find("f"), t.find("e")
+            ]
         obs = init.path(fin, include_ends=True)
         self.assertEqual(obs, exp)
 
