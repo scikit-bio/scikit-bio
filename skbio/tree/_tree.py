@@ -638,11 +638,17 @@ class TreeNode(SkbioObject):
         >>> tree = TreeNode.read(["((a,b)c,(d,e)f)root;"])
         >>> node_1, node_2 = tree.find('a'), tree.find('d')
         >>> path = node_1.path(node_2)
-        >>> print(path)
-        ['c', 'root', 'f']
+        >>> for node in path: print(node.name)
+        c
+        root
+        f
         >>> path_2 = node_1.path(node_2, include_ends=True)
-        >>> print(path_2)
-        ['a', 'c', 'root', 'f', 'd']
+        >>> for node in path: print(node.name)
+        a
+        c
+        root
+        f
+        d
 
         """
         # create list of ancestors for both nodes
