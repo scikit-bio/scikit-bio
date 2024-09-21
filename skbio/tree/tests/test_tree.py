@@ -287,9 +287,9 @@ class TreeTests(TestCase):
         fin1 = t1.find("g") # tip
         fin2 = t2.find("c") # tip
         fin3 = t3.find("i") # internal node
-        exp1 = ['e', 'j', 'i']
-        exp2 = ['j', 'e', 'd']
-        exp3 = ['j']
+        exp1 = [t1.find("e"), t1.find("j"), t1.find("i")]
+        exp2 = [t2.find("e"), t2.find("d")]
+        exp3 = [t3.find("j")]
         obs1 = init1.path(fin1) # tip-to-tip
         obs2 = init2.path(fin2) # root-to-tip
         obs3 = init3.path(fin3) # internal-to-internal
@@ -304,6 +304,16 @@ class TreeTests(TestCase):
         exp = ['a', 'c', 'root', 'f', 'e']
         obs = init.path(fin, include_ends=True)
         self.assertEqual(obs, exp)
+
+        # flag for no existing path
+        t1 = TreeNode.read(["((a,b)c,(d,e)f);"])
+        t2 = TreeNode.read(["((g,h)i,(j,k)l);"])
+        node1 = t1.find("a")
+        node2 = t2.find("g")
+        msg = "Could not find path between nodes."
+        with self.assertRaises(TypeError) as cm:
+            node1.path(node2)
+        self.assertEqual(str(cm.exception), msg)
 
     # ------------------------------------------------
     # Tree traversal

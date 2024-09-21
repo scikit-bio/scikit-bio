@@ -645,42 +645,38 @@ class TreeNode(SkbioObject):
         ['a', 'c', 'root', 'f', 'd']
 
         """
-        # find root
-        root = self.root()
-
-        # find the lowest common ancestor if not ancestors of each other
-        lca = (
-            self
-            if self in other.ancestors()
-            else other
-            if other in self.ancestors()
-            else root.lowest_common_ancestor([self, other])
+        # create list of ancestors for both nodes
+        anc1, anc2 = (
+            [node for node in self.ancestors()],
+            [node for node in other.ancestors()],
         )
 
-        # create tree rooted at lca
-        lca_tree = lca.copy()
+        # find lca and delete nodes from intersection of ancestors
+        for n1, n2 in zip(reversed(anc1), reversed(anc2)):
+            if n1 is n2:
+                del anc1[anc1.index(n1)]
+                del anc2[anc2.index(n2)]
+                lca = [n1]
+            else:
+                raise TypeError("Could not find path between nodes.")
 
-        # find path from each node to the lowest common ancestor.
-        node_1, node_2 = lca_tree.find(self.name), lca_tree.find(other.name)
-        list_1, list_2 = (
-            [node.name for node in node_1.ancestors()],
-            [node.name for node in node_2.ancestors()],
-        )
+        # reverse the second list for correct order
+        anc2.reverse()
 
-        # reverse the path of final node to ensure correct order
-        list_2.reverse()
-
-        # remove the lca from the first list since the lca
-        # is also contained in the second list.
-        list_1 = list_1[:-1]
-
-        # combine the lists
-        path_list = list_1 + list_2
+        # handle cases for nodes that are ancestors of each other
+        if self in anc2:
+            del anc2[anc2.index(self)]
+        elif other in anc1:
+            del anc1[anc1.index(other)]
+        else:
+            anc1 = anc1 + lca
+        path_list = anc1 + anc2
 
         # insert initial and final nodes if desired
         if include_ends is True:
             path_list.insert(0, self.name)
             path_list.append(other.name)
+
         return path_list
 
     # ------------------------------------------------
