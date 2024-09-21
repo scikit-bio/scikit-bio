@@ -618,7 +618,7 @@ class TreeNode(SkbioObject):
     lca = lowest_common_ancestor  # for convenience
 
     def path(self, other, include_ends=False):
-        r"""Return the list of node names in the path from one node to another.
+        r"""Return the list of nodes in the path from one node to another.
 
         Parameters
         ----------
@@ -630,7 +630,7 @@ class TreeNode(SkbioObject):
         Returns
         -------
         list
-            List of names of TreeNode objects.
+            List of TreeNode objects.
 
         Examples
         --------
@@ -675,6 +675,8 @@ class TreeNode(SkbioObject):
             del anc1[anc1.index(other)]
         else:
             anc1 = anc1 + lca
+
+        # create list of nodes in path
         path_list = anc1 + anc2
 
         # insert initial and final nodes if desired
