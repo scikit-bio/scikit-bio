@@ -685,8 +685,8 @@ class TreeNode(SkbioObject):
 
         # insert initial and final nodes if desired
         if include_ends is True:
-            path_list.insert(0, self.name)
-            path_list.append(other.name)
+            path_list.insert(0, self)
+            path_list.append(other)
 
         return path_list
 
