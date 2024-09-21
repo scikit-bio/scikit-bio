@@ -651,6 +651,11 @@ class TreeNode(SkbioObject):
         d
 
         """
+        # check to see if nodes are on same tree
+        root1, root2 = self.root(), other.root()
+        if root1 is not root2:
+            raise TypeError("Could not find path between nodes.")
+
         # create list of ancestors for both nodes
         anc1, anc2 = (
             [node for node in self.ancestors()],
@@ -664,7 +669,7 @@ class TreeNode(SkbioObject):
                 del anc2[anc2.index(n2)]
                 lca = [n1]
             else:
-                raise TypeError("Could not find path between nodes.")
+                break
 
         # reverse the second list for correct order
         anc2.reverse()
