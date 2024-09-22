@@ -645,48 +645,46 @@ class TreeNode(SkbioObject):
         5
 
         """
-        # check to see if nodes are on same tree
-        root1, root2 = self.root(), other.root()
-        if root1 is not root2:
-            raise TypeError("Could not find path between nodes.")
-
-        # create list of ancestors for both nodes
+        # create list of ancestors including nodes themselves
         anc1, anc2 = (
-            [node for node in self.ancestors()],
-            [node for node in other.ancestors()],
+            [self] + self.ancestors(),
+            [other] + other.ancestors(),
         )
 
+        # initialize variables
+        lca = None
+        lca_i = None
+        path = None
+
         # find lowest common ancestor
-        for n1, n2 in zip(reversed(anc1), reversed(anc2)):
+        for i, (n1, n2) in enumerate(zip(reversed(anc1), reversed(anc2))):
             if n1 is n2:
                 lca = n1
+                lca_i = i
             else:
                 break
 
-        # delete nodes from intersection of ancestors
-        del anc1[anc1.index(lca) :]
-        del anc2[anc2.index(lca) :]
-
-        # reverse the second list for correct order
-        anc2.reverse()
+        # check to see if nodes are on same tree
+        if lca is None:
+            raise TypeError("Could not find path between nodes.")
 
         # handle cases for nodes that are ancestors of each other
         if self in anc2:
-            del anc2[anc2.index(self)]
+            path = anc2[: len(anc2) - lca_i][::-1]
         elif other in anc1:
-            del anc1[anc1.index(other)]
+            path = anc1[: len(anc1) - lca_i]
         else:
-            anc1 = anc1 + [lca]
+            path = (
+                anc1[: len(anc1) - lca_i - 1]
+                + [lca]
+                + anc2[: len(anc2) - lca_i - 1][::-1]
+            )
 
-        # create list of nodes in path
-        path_list = anc1 + anc2
+        # remove initial and final nodes if desired
+        if include_ends is False:
+            path = path[1:-1]
 
-        # insert initial and final nodes if desired
-        if include_ends is True:
-            path_list.insert(0, self)
-            path_list.append(other)
-
-        return path_list
+        return path
 
     # ------------------------------------------------
     # Tree traversal
