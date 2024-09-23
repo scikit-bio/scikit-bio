@@ -626,6 +626,7 @@ class TreeNode(SkbioObject):
             Final node of path.
         include_ends: bool, optional
             Whether to include the initial and final nodes in the list.
+            Default is False.
 
         Returns
         -------
@@ -640,9 +641,13 @@ class TreeNode(SkbioObject):
         >>> path = node_1.path(node_2)
         >>> print(len(path))
         3
+        >>> print('-'.join(x.name for x in path))
+        c-root-f
         >>> path_2 = node_1.path(node_2, include_ends=True)
         >>> print(len(path_2))
         5
+        >>> print('-'.join(x.name for x in path_2))
+        a-c-root-f-d
 
         """
         # create list of ancestors including nodes themselves
@@ -664,7 +669,7 @@ class TreeNode(SkbioObject):
 
         # check to see if nodes are on same tree
         if lca is None:
-            raise TypeError("Could not find path between nodes.")
+            raise TreeError("Could not find path between nodes.")
 
         # create path list
         path = (
