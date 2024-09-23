@@ -313,7 +313,7 @@ class TreeTests(TestCase):
         node1 = t1.find("a")
         node2 = t2.find("g")
         msg = "Could not find path between nodes."
-        with self.assertRaises(TypeError) as cm:
+        with self.assertRaises(TreeError) as cm:
             node1.path(node2)
         self.assertEqual(str(cm.exception), msg)
 
