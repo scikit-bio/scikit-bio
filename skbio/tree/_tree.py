@@ -651,11 +651,6 @@ class TreeNode(SkbioObject):
             [other] + other.ancestors(),
         )
 
-        # initialize variables
-        lca = None
-        lca_i = None
-        path = None
-
         # find lowest common ancestor
         for i, (n1, n2) in enumerate(zip(reversed(anc1), reversed(anc2))):
             if n1 is n2:
@@ -668,17 +663,10 @@ class TreeNode(SkbioObject):
         if lca is None:
             raise TypeError("Could not find path between nodes.")
 
-        # handle cases for nodes that are ancestors of each other
-        if self in anc2:
-            path = anc2[: len(anc2) - lca_i][::-1]
-        elif other in anc1:
-            path = anc1[: len(anc1) - lca_i]
-        else:
-            path = (
-                anc1[: len(anc1) - lca_i - 1]
-                + [lca]
-                + anc2[: len(anc2) - lca_i - 1][::-1]
-            )
+        # create path list
+        path = (
+            anc1[: len(anc1) - lca_i - 1] + [lca] + anc2[: len(anc2) - lca_i - 1][::-1]
+        )
 
         # remove initial and final nodes if desired
         if include_ends is False:
