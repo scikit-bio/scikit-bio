@@ -509,9 +509,10 @@ class TreeNode(SkbioObject):
         ['d', 'f']
 
         """
-        return (
-            [] if self.is_root() else [x for x in self.parent.children if x is not self]
-        )
+        try:
+            return [x for x in self.parent.children if x is not self]
+        except AttributeError:
+            return []
 
     def neighbors(self, ignore=None):
         r"""Return all nodes that are neighbors of the current node.
@@ -539,7 +540,10 @@ class TreeNode(SkbioObject):
         ['a', 'b', 'root']
 
         """
-        nodes = [n for n in self.children + [self.parent] if n is not None]
+        if (parent := self.parent) is not None:
+            nodes = self.children + [parent]
+        else:
+            nodes = self.children[:]
         if ignore is None:
             return nodes
         else:
