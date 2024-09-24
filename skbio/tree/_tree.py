@@ -619,6 +619,71 @@ class TreeNode(SkbioObject):
 
     lca = lowest_common_ancestor  # for convenience
 
+    def path(self, other, include_ends=False):
+        r"""Return the list of nodes in the path from one node to another.
+
+        Parameters
+        ----------
+        other : TreeNode
+            Final node of path.
+        include_ends: bool, optional
+            Whether to include the initial and final nodes in the list.
+            Default is False.
+
+        Returns
+        -------
+        list
+            List of TreeNode objects.
+
+        Examples
+        --------
+        >>> from skbio import TreeNode
+        >>> tree = TreeNode.read(["((a,b)c,(d,e)f)root;"])
+        >>> node_1, node_2 = tree.find('a'), tree.find('d')
+        >>> path = node_1.path(node_2)
+        >>> print(len(path))
+        3
+        >>> print('-'.join(x.name for x in path))
+        c-root-f
+        >>> path_2 = node_1.path(node_2, include_ends=True)
+        >>> print(len(path_2))
+        5
+        >>> print('-'.join(x.name for x in path_2))
+        a-c-root-f-d
+
+        """
+        # create list of ancestors including nodes themselves
+        anc1, anc2 = (
+            [self] + self.ancestors(),
+            [other] + other.ancestors(),
+        )
+
+        # initialize lowest common ancestor variable
+        lca = None
+
+        # find lowest common ancestor
+        for i, (n1, n2) in enumerate(zip(reversed(anc1), reversed(anc2))):
+            if n1 is n2:
+                lca = n1
+                lca_i = i
+            else:
+                break
+
+        # check to see if nodes are on same tree
+        if lca is None:
+            raise TreeError("Could not find path between nodes.")
+
+        # create path list
+        path = (
+            anc1[: len(anc1) - lca_i - 1] + [lca] + anc2[: len(anc2) - lca_i - 1][::-1]
+        )
+
+        # remove initial and final nodes if desired
+        if include_ends is False:
+            path = path[1:-1]
+
+        return path
+
     # ------------------------------------------------
     # Tree traversal
     # ------------------------------------------------

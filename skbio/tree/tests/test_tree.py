@@ -287,6 +287,47 @@ class TreeTests(TestCase):
         with self.assertRaises(ValueError):
             t1.lowest_common_ancestor([])
 
+    def test_path(self):
+        """List of TreeNode object names in path between nodes"""
+        t1 = TreeNode.read(["((a,(b,c)d)e,f,(g,h)i)j;"])
+        t2 = t1.copy()
+        t3 = t1.copy()
+        init1 = t1.find("a") # tip
+        init2 = t2.find("j") # root node
+        init3 = t3.find("e") # internal node
+        fin1 = t1.find("g") # tip
+        fin2 = t2.find("c") # tip
+        fin3 = t3.find("i") # internal node
+        exp1 = [t1.find("e"), t1.find("j"), t1.find("i")]
+        exp2 = [t2.find("e"), t2.find("d")]
+        exp3 = [t3.find("j")]
+        obs1 = init1.path(fin1) # tip-to-tip
+        obs2 = init2.path(fin2) # root-to-tip
+        obs3 = init3.path(fin3) # internal-to-internal
+        self.assertEqual(obs1, exp1)
+        self.assertEqual(obs2, exp2)
+        self.assertEqual(obs3, exp3)
+
+        # include ends
+        t = TreeNode.read(["((a,b)c,(d,e)f)root;"])
+        init = t.find("a")
+        fin = t.find("e")
+        exp = [
+            t.find("a"), t.find("c"), t.find("root"), t.find("f"), t.find("e")
+            ]
+        obs = init.path(fin, include_ends=True)
+        self.assertEqual(obs, exp)
+
+        # flag for no existing path
+        t1 = TreeNode.read(["((a,b)c,(d,e)f);"])
+        t2 = TreeNode.read(["((g,h)i,(j,k)l);"])
+        node1 = t1.find("a")
+        node2 = t2.find("g")
+        msg = "Could not find path between nodes."
+        with self.assertRaises(TreeError) as cm:
+            node1.path(node2)
+        self.assertEqual(str(cm.exception), msg)
+
     # ------------------------------------------------
     # Tree traversal
     # ------------------------------------------------
