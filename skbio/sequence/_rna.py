@@ -10,6 +10,7 @@ import skbio
 from skbio.util._decorator import classproperty, overrides
 from ._nucleotide_mixin import NucleotideMixin, _motifs as _parent_motifs
 from ._grammared_sequence import GrammaredSequence
+from skbio.io.util import DocDescriptor
 
 
 class RNA(GrammaredSequence, NucleotideMixin):
@@ -119,6 +120,9 @@ class RNA(GrammaredSequence, NucleotideMixin):
     0 ACCGAAU
 
     """
+
+    read = DocDescriptor("read")
+    write = DocDescriptor("write")
 
     @classproperty
     @overrides(NucleotideMixin)

@@ -29,6 +29,7 @@ from skbio.tree._exception import (
 from skbio.util import get_rng, RepresentationWarning
 from skbio.util._decorator import classonlymethod
 from skbio.util._warning import _warn_deprecated
+from skbio.io.util import DocDescriptor
 
 
 def distance_from_r(m1, m2):
@@ -114,6 +115,10 @@ class TreeNode(SkbioObject):
     """
 
     default_write_format = "newick"
+
+    read = DocDescriptor("read")
+
+    write = DocDescriptor("write")
 
     def __init__(
         self, name=None, length=None, support=None, parent=None, children=None

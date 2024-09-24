@@ -27,6 +27,7 @@ Functions
 
 import io
 from contextlib import contextmanager, ExitStack
+from types import MethodType
 
 from skbio.io import IOSourceError
 from skbio.io._iosources import get_io_sources, get_compression_handler
@@ -36,6 +37,7 @@ from skbio.io._fileobject import (
     CompressedBufferedReader,
     CompressedBufferedWriter,
 )
+import skbio
 
 _d = dict(
     mode="r",
@@ -294,3 +296,109 @@ def open_files(files, **kwargs):
     """
     with ExitStack() as stack:
         yield [stack.enter_context(open_file(f, **kwargs)) for f in files]
+
+
+class DocDescriptor:
+    """ "A descriptor class to generate read/write methods and their documentation."""
+
+    def __init__(self, method):
+        """Initialize the descriptor with the method (read/write)."""
+        # self.cls_name = cls_name
+        self.method = method
+
+    def __get__(self, instance, owner):
+        """Return the generated method (read/write) with its documentation."""
+        if self.method == "read":
+            return self._generate_read_method(owner)
+        elif self.method == "write":
+            if instance is None:
+                return self._generate_write_method(owner)
+            else:
+                return MethodType(self._generate_write_method(owner), instance)
+
+    def _generate_read_method(self, cls):
+        def read_method(file, format=None, **kwargs):
+            return skbio.io.read(file, into=cls, format=format, **kwargs)
+
+        read_method.__doc__ = self._make_docstring(cls, "read")
+
+        return read_method
+
+    def _generate_write_method(self, cls):
+        def write_method(self, file, format=None, **kwargs):
+            if format is None:
+                if hasattr(cls, "default_write_format"):
+                    format = cls.default_write_format
+                else:
+                    raise ValueError(f"{cls.__name__} has no default write format.")
+            return skbio.io.write(self, into=file, format=format, **kwargs)
+
+        write_method.__doc__ = self._make_docstring(cls, "write")
+
+        return write_method
+
+    def _make_docstring(self, cls, method):
+        """
+        Generate a docstring for the read or write method.
+
+        Parameters:
+        cls (type): The class for which the method docstring is being generated.
+        method (str): The method for which the docstring is generated
+        ('read' or 'write').
+
+        Returns:
+        str: The dynamically generated docstring.
+        """
+        if method == "read":
+            doc = f"""Create a new ``{cls.__name__}`` instance from a file.
+
+This is a convenience method for :func:`skbio.io.read`. For more information about the
+I/O system in scikit-bio, please see :mod:`skbio.io`.
+
+Supported file formats include:
+
+{cls.list_read_formats}
+
+Parameters
+----------
+file : openable (filepath, URL, filehandle, etc.)
+    The location to read the given `format` into. Something that is understood by
+    :func"`skbio.io.util.open`. Filehandles are not automatically closed, it is the
+    responsibility of the caller.
+format : str, optional
+    The format of the file. If None, the format will be inferred.
+kwargs : dict, optional
+    Additional arguments passed to the reader for {cls.__name__}.
+
+Returns
+-------
+{cls.__name__}
+    A new instance of {cls.__name__}.
+
+See Also
+--------
+skbio.io.read
+"""
+        elif method == "write":
+            doc = f"""Write the {cls.__name__} instance to a file.
+
+This is a convenience method for :func:`skbio.io.write`.
+
+Parameters
+----------
+file : openable (filepath, URL, filehandle, etc.)
+    The location to write the given `format`.
+format : str, optional
+    The format to write the {cls.__name__} object as.
+kwargs : dict, optional
+    Additional arguments passed to the writer for {cls.__name__}.
+
+Returns
+-------
+None
+
+See Also
+--------
+skbio.io.write
+"""
+        return doc

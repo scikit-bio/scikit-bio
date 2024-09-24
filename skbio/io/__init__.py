@@ -325,4 +325,4 @@ import_module("skbio.io.format.emptyfile")
 
 # Now that all of our I/O has loaded, we can add the object oriented methods
 # (read and write) to each class which has registered I/O operations.
-io_registry.monkey_patch()
+# io_registry.monkey_patch()

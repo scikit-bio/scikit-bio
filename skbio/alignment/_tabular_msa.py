@@ -20,6 +20,7 @@ from skbio.sequence._grammared_sequence import GrammaredSequence
 from skbio.util._decorator import classonlymethod, overrides
 from skbio.util._misc import resolve_key
 from skbio.alignment._indexing import TabularMSAILoc, TabularMSALoc
+from skbio.io.util import DocDescriptor
 
 from skbio.alignment._repr import _TabularMSAReprBuilder
 
@@ -142,6 +143,9 @@ class TabularMSA(MetadataMixin, PositionalMetadataMixin, SkbioObject):
 
     default_write_format = "fasta"
     __hash__ = None
+
+    read = DocDescriptor("read")
+    write = DocDescriptor("write")
 
     @property
     def dtype(self):

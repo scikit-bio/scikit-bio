@@ -13,6 +13,7 @@ import numpy as np
 from skbio._base import SkbioObject
 from skbio.stats._misc import _pprint_strs
 from skbio.util._plotting import PlottableMixin
+from skbio.io.util import DocDescriptor
 
 
 class OrdinationResults(SkbioObject, PlottableMixin):
@@ -58,6 +59,9 @@ class OrdinationResults(SkbioObject, PlottableMixin):
     """
 
     default_write_format = "ordination"
+
+    read = DocDescriptor("read")
+    write = DocDescriptor("write")
 
     def __init__(
         self,
