@@ -10,9 +10,11 @@
 * Added `TreeNode.is_bifurcating` to check if a tree is bifurcating (i.e., binary) ([#2117](https://github.com/scikit-bio/scikit-bio/pull/2117)).
 * Added support for Python's `pathlib` module in the IO system. ([#2119](https://github.com/scikit-bio/scikit-bio/pull/2119))
 * Added Balanced Minimum Evolution (BME) function and `balanced` option for NNI ([#2105](https://github.com/scikit-bio/scikit-bio/pull/2105))
+* Added path function to `TreeNode`. ([#2131](https://github.com/scikit-bio/scikit-bio/pull/2131))
 
 ### Performance enhancements
 
+* Improved the performance of the `siblings` and `neighbors` of `TreeNode` ([#2133](https://github.com/scikit-bio/scikit-bio/pull/2133)).
 * Improved the performance of tree traversal algorithms ([#2093](https://github.com/scikit-bio/scikit-bio/pull/2093)).
 * Improved the performance of tree copying ([#2103](https://github.com/scikit-bio/scikit-bio/pull/2103)).
 * Further improved the caching mechanism of `TreeNode`. Specifically: 1. Node attribute caches are only registered at the root node, which improves memory efficiency. 2. Method `clear_caches` can be customized to clear node attribute and/or lookup caches, or specified attribute caches ([#2099](https://github.com/scikit-bio/scikit-bio/pull/2099)). 3. Added parameter `uncache` to multiple methods that involves tree manipulation. Default is True. When one knows that caches are not present or relevant, one may set this parameter as False to skip cache clearing to significantly improve performance ([#2103](https://github.com/scikit-bio/scikit-bio/pull/2103)).
