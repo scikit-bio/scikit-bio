@@ -460,7 +460,7 @@ class TreeNode(SkbioObject):
             curr = curr.parent
         return curr
 
-    def ancestors(self):
+    def ancestors(self, include_self=False):
         r"""Return all ancestors from self back to the root.
 
         This call will return all nodes in the path back to root, but does not
@@ -469,7 +469,9 @@ class TreeNode(SkbioObject):
         Returns
         -------
         list of TreeNode
-            The path, toward the root, from self
+            The path, toward the root, from self.
+        include_self : bool, optional
+            Whether to include the initial node in the path (default: False).
 
         Examples
         --------
@@ -479,10 +481,11 @@ class TreeNode(SkbioObject):
         ['c', 'root']
 
         """
-        result = []
         curr = self
-        while not curr.is_root():
-            result.append((curr := curr.parent))
+        result = [curr] if include_self else []
+        result_append = result.append
+        while (curr := curr.parent) is not None:
+            result_append(curr)
         return result
 
     def siblings(self):
