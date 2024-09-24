@@ -461,10 +461,7 @@ class TreeNode(SkbioObject):
         return curr
 
     def ancestors(self, include_self=False):
-        r"""Return all ancestors from self back to the root.
-
-        This call will return all nodes in the path back to root, but does not
-        include the node instance that the call was made from.
+        r"""Return all ancestral nodes from self back to the root.
 
         Returns
         -------
@@ -476,9 +473,20 @@ class TreeNode(SkbioObject):
         Examples
         --------
         >>> from skbio import TreeNode
-        >>> tree = TreeNode.read(["((a,b)c,(d,e)f)root;"])
-        >>> [node.name for node in tree.find('a').ancestors()]
-        ['c', 'root']
+        >>> tree = TreeNode.read(["((a,b)c,(d,e)f)g;"])
+        >>> print(tree.ascii_art())
+                            /-a
+                  /c-------|
+                 |          \-b
+        -g-------|
+                 |          /-d
+                  \f-------|
+                            \-e
+        >>> tip = tree.find('a')
+        >>> [node.name for node in tip.ancestors()]
+        ['c', 'g']
+        >>> [node.name for node in tip.ancestors(include_self=True)]
+        ['a', 'c', 'g']
 
         """
         curr = self
