@@ -18,6 +18,7 @@
       ~{{ name }}.neighbors
       ~{{ name }}.lowest_common_ancestor
       ~{{ name }}.lca
+      ~{{ name }}.path
 
    .. rubric:: Tree traversal
 
