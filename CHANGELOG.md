@@ -10,6 +10,7 @@
 * Added `TreeNode.is_bifurcating` to check if a tree is bifurcating (i.e., binary) ([#2117](https://github.com/scikit-bio/scikit-bio/pull/2117)).
 * Added support for Python's `pathlib` module in the IO system. ([#2119](https://github.com/scikit-bio/scikit-bio/pull/2119))
 * Added Balanced Minimum Evolution (BME) function and `balanced` option for NNI ([#2105](https://github.com/scikit-bio/scikit-bio/pull/2105))
+* Added path function to `TreeNode`. ([#2131](https://github.com/scikit-bio/scikit-bio/pull/2131))
 
 ### Performance enhancements
 
