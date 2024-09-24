@@ -40,6 +40,7 @@ def nj(dm, disallow_negative_branch_length=True, result_constructor=None):
 
     See Also
     --------
+    bme
     upgma
     TreeNode.root_at_midpoint
 

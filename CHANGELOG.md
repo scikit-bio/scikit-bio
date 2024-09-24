@@ -4,8 +4,12 @@
 
 ### Features
 
+* Implemented linear mixed effects with Dirichlet-multinomial distribution ([#2113](https://github.com/scikit-bio/scikit-bio/pull/2113)).
 * Wrapped UPGMA and WPGMA from SciPy's linkage method ([#2094](https://github.com/scikit-bio/scikit-bio/pull/2094)).
 * Added `TreeNode.has_caches` to check if a tree has caches ([#2103](https://github.com/scikit-bio/scikit-bio/pull/2103)).
+* Added `TreeNode.is_bifurcating` to check if a tree is bifurcating (i.e., binary) ([#2117](https://github.com/scikit-bio/scikit-bio/pull/2117)).
+* Added support for Python's `pathlib` module in the IO system. ([#2119](https://github.com/scikit-bio/scikit-bio/pull/2119))
+* Added Balanced Minimum Evolution (BME) function and `balanced` option for NNI ([#2105](https://github.com/scikit-bio/scikit-bio/pull/2105))
 
 ### Performance enhancements
 
@@ -17,14 +21,20 @@
 * `TreeNode.extend` can accept any iterable type of nodes as input ([#2103](https://github.com/scikit-bio/scikit-bio/pull/2103)).
 * Added parameter `strict` to `TreeNode.shear` ([#2103](https://github.com/scikit-bio/scikit-bio/pull/2103)).
 * Added parameter `exclude_attrs` to `TreeNode.unrooted_copy` ([#2103](https://github.com/scikit-bio/scikit-bio/pull/2103)).
+* Added support for legacy random generator to `get_rng`, such that outputs of scikit-bio functions become reproducible with code that starts with `np.random.seed` or uses `RandomState` ([#2130](https://github.com/scikit-bio/scikit-bio/pull/2130)).
+* Allowed `shuffle` and `compare_tip_distances` of `TreeNode` to accept a random seed or random generator to generate the shuffling function, which ensures output reproducibility ([#2118](https://github.com/scikit-bio/scikit-bio/pull/2118)).
+* Added parameter `seed` to functions `pcoa`, `anosim`, `permanova`, `permdisp`, `randdm`, `lladser_pe`, `lladser_ci`, `isubsample`, `subsample_power`, `subsample_paired_power`, `paired_subsamples` and `hommola_cospeciation` to accept a random seed or random generator to ensure output reproducibility ([#2120](https://github.com/scikit-bio/scikit-bio/pull/2120) and [#2129](https://github.com/scikit-bio/scikit-bio/pull/2129)).
+* Made the `IORegistry` sniffer only attempt file formats which are logical given a specific object, thus improving reading efficiency.
 
 ### Bug fixes
 
 * Fixed a bug in `TreeNode.find_all` which does not look for other nodes with the same name if a `TreeNode` instance is provided, as in contrast to what the documentation claims ([#2099](https://github.com/scikit-bio/scikit-bio/pull/2099)).
+* Fixed a bug in `skbio.io.format.embed` which was not correctly updating the idptr sizing. ([#2100](https://github.com/scikit-bio/scikit-bio/pull/2100)).
 * Fixed a bug in `TreeNode.unrooted_move` which does not respect specified branch attributes ([#2103](https://github.com/scikit-bio/scikit-bio/pull/2103)).
 
 ### Miscellaneous
 
+* Refactored `dirmult_ttest` to use a separate function for fitting data to Dirichlet-multinomial distribution ([#2113](https://github.com/scikit-bio/scikit-bio/pull/2113))
 * Remodeled documentation. Special methods (previously referred to as built-in methods) and inherited methods of a class no longer have separate stub pages. This significantly reduced the total number of webpages in the documentation ([#2110](https://github.com/scikit-bio/scikit-bio/pull/2110)).
 * Renamed `TreeNode.invalidate_caches` as `clear_caches`, because the caches are indeed deleted rather than marked as obsolete. The old name is preserved as an alias ([#2099](https://github.com/scikit-bio/scikit-bio/pull/2099)).
 * Renamed `TreeNode.remove_deleted` as `remove_by_func`. The old name is preserved as an alias ([#2103](https://github.com/scikit-bio/scikit-bio/pull/2103)).

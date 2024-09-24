@@ -8,10 +8,11 @@
 
 import heapq as hq
 
-from skbio.tree._gme import _average_distance_matrix, _edge_estimation
+from skbio.tree._gme import _average_distance_matrix, _ols_edge
+from skbio.tree._bme import _balanced_average_matrix, _bal_ols_edge
 
 
-def nni(tree, dm, allow_edge_estimation=True, inplace=True):
+def nni(tree, dm, allow_edge_estimation=True, inplace=True, balanced=True):
     r"""Perform nearest neighbor interchange (NNI) on a phylogenetic tree.
 
     Parameters
@@ -26,6 +27,11 @@ def nni(tree, dm, allow_edge_estimation=True, inplace=True):
     inplace : bool, optional
         Whether manipulate the tree in place (``True``, default) or return a
         copy of the tree (``False``).
+    balanced : bool, optional
+        Whether to use the minimum evolution framework or the balanced
+        minimum evolution framework. The definition of average distance
+        between subtrees either ignores subtree size (``True``, default)
+        or calculates based on subtree size (``False``).
 
     Returns
     -------
@@ -36,10 +42,17 @@ def nni(tree, dm, allow_edge_estimation=True, inplace=True):
     -----
     NNI algorithm for minimum evolution problem on phylogenetic trees. It rearranges
     an initial tree topology by performing subtree exchanges such that the distance
-    is minimized. This implementation is based on the FastNNI algorithm [1]_.
+    is minimized. This implementation is based on the FastNNI algorithm and the
+    BNNI algorithm (BNNI)[1]_.
 
-    The input tree is required to be binary and rooted at a leaf node such that
-    there is a unique descendant from the root.
+    The two versions of NNI are due to the relationship with minimum evolution
+    and the use of average distances between subtrees. FastNNI is based on the
+    Minimum Evolution (ME) problem while BNNI is based on the Balanced Minimum
+    Evolution (BME) problem. In BME the sizes of subtrees are ignored while ME
+    considers the size of subtrees in the calculation of average distance.
+
+    For both versions of NNI, the input tree is required to be binary and rooted
+    at a leaf node such that there is a unique descendant from the root.
 
     References
     ----------
@@ -79,8 +92,8 @@ def nni(tree, dm, allow_edge_estimation=True, inplace=True):
                         \--------|
                                   \-monkey
 
-    Perform nearest neighbor interchange (NNI). By default, the tree is
-    rearrangede in place.
+    Perform nearest neighbor interchange (NNI), here the BNNI version is used.
+    By default, the tree is rearrangede in place.
 
     >>> nni(tree, dm)
     >>> print(tree.ascii_art())
@@ -110,19 +123,25 @@ def nni(tree, dm, allow_edge_estimation=True, inplace=True):
     for node in tree.non_tips():
         if len(node.children) != 2:
             raise TypeError("Could not perform NNI. Tree needs to be a binary tree.")
-    adm = _average_distance_matrix(tree, dm)
+    if balanced:
+        adm = _balanced_average_matrix(tree, dm)
+    else:
+        adm = _average_distance_matrix(tree, dm)
     while True:
         # create heap of possible swaps and then swapping subtrees
         # until no more swaps are possible.
         adm = _average_distance_matrix(tree, dm)
-        heap = _swap_heap(tree, adm)
+        heap = _swap_heap(tree, adm, balanced)
         if not heap:
             break
         swap = hq.heappop(heap)
         _perform_swap(swap[1][0], swap[1][1])
     # edge values are added using an OLS framework.
     if allow_edge_estimation:
-        _edge_estimation(tree, dm)
+        if balanced:
+            _bal_ols_edge(tree, dm)
+        else:
+            _ols_edge(tree, dm)
     if not inplace:
         return tree
 
@@ -150,8 +169,23 @@ def _swap_length(a, b, c, d, i, j, k, m, adm):
     )
 
 
-def _swap_heap(tree, adm):
-    """Return a maxheap ordered by the swap length for all possible swaps."""
+def _balanced_swap_length(i, j, k, m, adm):
+    """Return the change in overall tree length after a given swap.
+
+    Uses the definition of average distance from the balanced minimum evolution
+    problem, and only requires a node's index while ignoring subtree size.
+
+    """
+    return 0.25 * ((adm[i][j] + adm[k][m]) - (adm[i][k] + adm[j][m]))
+
+
+def _swap_heap(tree, adm, balanced=True):
+    """Return a maxheap ordered by the swap length for all possible swaps.
+
+    The 'balanced' option uses the balanced definition (``True``, default)
+    or the classical definition (``False``).
+
+    """
     heap = []
     ordered = list(tree.postorder(include_self=False))
     root = tree.root()
@@ -189,8 +223,12 @@ def _swap_heap(tree, adm):
             b_, c_, d_ = sub_tips
             a_ = n_taxa - b_ - c_ - d_
             # calculate the swap length for the two possible swaps given the edge
-            swap_1 = _swap_length(a_, b_, c_, d_, i1, i2, i3, i4, adm)
-            swap_2 = _swap_length(a_, b_, d_, c_, i1, i2, i4, i3, adm)
+            if balanced:
+                swap_1 = _swap_length(a_, b_, c_, d_, i1, i2, i3, i4, adm)
+                swap_2 = _swap_length(a_, b_, d_, c_, i1, i2, i4, i3, adm)
+            else:
+                swap_1 = _balanced_swap_length(i1, i2, i3, i4, adm)
+                swap_2 = _balanced_swap_length(i1, i2, i4, i3, adm)
             # store the best possible swap into a maxheap
             if swap_1 > swap_2 and swap_1 > 0:
                 swap = -1 * swap_1

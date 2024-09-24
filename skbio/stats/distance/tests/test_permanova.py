@@ -74,25 +74,22 @@ class TestPERMANOVA(TestCase):
         # inputs. Also ensure we get the same results if we run the method
         # using a grouping vector or a data frame with equivalent groupings.
         exp = pd.Series(index=self.exp_index,
-                        data=['PERMANOVA', 'pseudo-F', 4, 2, 2.0, 0.671, 999],
+                        data=['PERMANOVA', 'pseudo-F', 4, 2, 2.0, 0.68, 999],
                         name='PERMANOVA results')
 
         for _ in range(2):
-            np.random.seed(0)
-            obs = permanova(self.dm_ties, self.grouping_equal)
+            obs = permanova(self.dm_ties, self.grouping_equal, seed=42)
             self.assert_series_equal(obs, exp)
 
         for _ in range(2):
-            np.random.seed(0)
-            obs = permanova(self.dm_ties, self.df, column='Group')
+            obs = permanova(self.dm_ties, self.df, column='Group', seed=42)
             self.assert_series_equal(obs, exp)
 
     def test_call_no_ties(self):
         exp = pd.Series(index=self.exp_index,
-                        data=['PERMANOVA', 'pseudo-F', 4, 2, 4.4, 0.332, 999],
+                        data=['PERMANOVA', 'pseudo-F', 4, 2, 4.4, 0.345, 999],
                         name='PERMANOVA results')
-        np.random.seed(0)
-        obs = permanova(self.dm_no_ties, self.grouping_equal)
+        obs = permanova(self.dm_no_ties, self.grouping_equal, seed=42)
         self.assert_series_equal(obs, exp)
 
     def test_call_no_permutations(self):
@@ -105,15 +102,13 @@ class TestPERMANOVA(TestCase):
     def test_call_unequal_group_sizes(self):
         exp = pd.Series(
             index=self.exp_index,
-            data=['PERMANOVA', 'pseudo-F', 6, 3, 0.578848, 0.645, 999],
+            data=['PERMANOVA', 'pseudo-F', 6, 3, 0.578848, 0.655, 999],
             name='PERMANOVA results')
 
-        np.random.seed(0)
-        obs = permanova(self.dm_unequal, self.grouping_unequal)
+        obs = permanova(self.dm_unequal, self.grouping_unequal, seed=42)
         self.assert_series_equal(obs, exp)
 
-        np.random.seed(0)
-        obs = permanova(self.dm_unequal, self.grouping_unequal_relabeled)
+        obs = permanova(self.dm_unequal, self.grouping_unequal_relabeled, seed=42)
         self.assert_series_equal(obs, exp)
 
     def test_call_via_series(self):
@@ -124,11 +119,9 @@ class TestPERMANOVA(TestCase):
         grouping = pd.read_csv(get_data_path("frameSeries_grouping.tsv"),
                                sep="\t", index_col=0)
 
-        np.random.seed(0)
-        obs_frame = permanova(dm, grouping, column='tumor')
+        obs_frame = permanova(dm, grouping, column='tumor', seed=42)
 
-        np.random.seed(0)
-        obs_series = permanova(dm, grouping['tumor'])
+        obs_series = permanova(dm, grouping['tumor'], seed=42)
 
         # in principle, both tests - if seed is the same - should return the
         # exact same results. However, they don't for the current example ...
