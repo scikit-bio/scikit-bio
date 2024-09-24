@@ -357,7 +357,7 @@ I/O system in scikit-bio, please see :mod:`skbio.io`.
 
 Supported file formats include:
 
-{cls.list_read_formats}
+something like cls.list_read_formats
 
 Parameters
 ----------

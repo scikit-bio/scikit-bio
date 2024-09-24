@@ -11,5 +11,6 @@ from skbio.io.util import ReadWriteDescriptor
 
 Table.default_write_format = "biom"
 
-read = ReadWriteDescriptor("read")
-write = ReadWriteDescriptor("write")
+# Define read and write methods for the Table class.
+Table.read = ReadWriteDescriptor("read")
+Table.write = ReadWriteDescriptor("write")
