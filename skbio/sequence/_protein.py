@@ -10,7 +10,7 @@ import numpy as np
 
 from skbio.util._decorator import classproperty, overrides
 from ._grammared_sequence import GrammaredSequence, _motifs as parent_motifs
-from skbio.io.util import DocDescriptor
+from skbio.io.util import ReadWriteDescriptor
 
 
 class Protein(GrammaredSequence):
@@ -168,8 +168,8 @@ class Protein(GrammaredSequence):
 
     __stop_codes = None
 
-    read = DocDescriptor("read")
-    write = DocDescriptor("write")
+    read = ReadWriteDescriptor("read")
+    write = ReadWriteDescriptor("write")
 
     @classproperty
     def _stop_codes(cls):

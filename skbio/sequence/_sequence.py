@@ -30,7 +30,7 @@ from skbio.sequence._alphabet import (
 )
 from skbio.util import find_duplicates
 from skbio.util._decorator import classonlymethod, overrides
-from skbio.io.util import DocDescriptor
+from skbio.io.util import ReadWriteDescriptor
 
 
 class Sequence(
@@ -366,8 +366,8 @@ fuzzy=[(True, False)], metadata={'gene': 'foo'})
 
     """
 
-    read = DocDescriptor("read")
-    write = DocDescriptor("write")
+    read = ReadWriteDescriptor("read")
+    write = ReadWriteDescriptor("write")
 
     _num_ascii_codes = 128
     _num_extended_ascii_codes = 256

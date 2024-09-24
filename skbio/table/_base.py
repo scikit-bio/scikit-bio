@@ -7,9 +7,9 @@
 # ----------------------------------------------------------------------------
 
 from biom import Table, example_table
-from skbio.io.util import DocDescriptor
+from skbio.io.util import ReadWriteDescriptor
 
 Table.default_write_format = "biom"
 
-read = DocDescriptor("read")
-write = DocDescriptor("write")
+read = ReadWriteDescriptor("read")
+write = ReadWriteDescriptor("write")

@@ -298,8 +298,8 @@ def open_files(files, **kwargs):
         yield [stack.enter_context(open_file(f, **kwargs)) for f in files]
 
 
-class DocDescriptor:
-    """ "A descriptor class to generate read/write methods and their documentation."""
+class ReadWriteDescriptor:
+    """A descriptor class to generate read/write methods and their documentation."""
 
     def __init__(self, method):
         """Initialize the descriptor with the method (read/write)."""

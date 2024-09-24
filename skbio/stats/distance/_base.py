@@ -19,7 +19,7 @@ from skbio.util import find_duplicates, get_rng
 from skbio.util._decorator import classonlymethod
 from skbio.util._misc import resolve_key
 from skbio.util._plotting import PlottableMixin
-from skbio.io.util import DocDescriptor
+from skbio.io.util import ReadWriteDescriptor
 
 from ._utils import is_symmetric_and_hollow
 from ._utils import distmat_reorder, distmat_reorder_condensed
@@ -99,8 +99,8 @@ class DissimilarityMatrix(SkbioObject, PlottableMixin):
     # Used in __str__
     _matrix_element_name = "dissimilarity"
 
-    read = DocDescriptor("read")
-    write = DocDescriptor("write")
+    read = ReadWriteDescriptor("read")
+    write = ReadWriteDescriptor("write")
 
     def __init__(self, data, ids=None, validate=True):
         validate_full = validate
@@ -1024,8 +1024,8 @@ class DistanceMatrix(DissimilarityMatrix):
     # Override here, used in superclass __str__
     _matrix_element_name = "distance"
 
-    read = DocDescriptor("read")
-    write = DocDescriptor("write")
+    read = ReadWriteDescriptor("read")
+    write = ReadWriteDescriptor("write")
 
     @classonlymethod
     def from_iterable(cls, iterable, metric, key=None, keys=None, validate=True):

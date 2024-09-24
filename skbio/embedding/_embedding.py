@@ -14,7 +14,7 @@ from skbio.sequence import Sequence
 from skbio._base import SkbioObject
 from skbio.stats.ordination import OrdinationResults
 from skbio.diversity import beta_diversity
-from skbio.io.util import DocDescriptor
+from skbio.io.util import ReadWriteDescriptor
 
 
 def _repr_helper(rstr, org_name, new_name, dim_name, regex_match, shape):
@@ -40,8 +40,8 @@ class Embedding(SkbioObject):
 
     """
 
-    read = DocDescriptor("read")
-    write = DocDescriptor("write")
+    read = ReadWriteDescriptor("read")
+    write = ReadWriteDescriptor("write")
 
     @property
     def embedding(self):
