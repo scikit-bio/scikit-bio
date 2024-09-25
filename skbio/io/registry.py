@@ -430,7 +430,8 @@ class IORegistry:
         return matches[0]
 
     def _reduce_formats(self, lookup, into):
-        # Reduce possible formats to only those which make sense for the given object.
+        """Reduce possible formats to only those which make sense for the given
+        object."""
         pos_fmts = self.list_read_formats(into)
         return {k: v for k, v in lookup.items() if k in pos_fmts}
 
@@ -948,7 +949,7 @@ class Format:
 
         return decorator
 
-    def reader(self, cls, monkey_patch=False, override=False):
+    def reader(self, cls, override=False):
         r"""Decorate a function to act as the reader for a class in this format.
 
         The function should take an argument which will be an implementation
@@ -964,9 +965,6 @@ class Format:
         cls : type or None
             The class which the function will be registered to handle. If
             None, it is assumed that the function will produce a generator.
-        monkey_patch : bool, optional
-            Whether to allow an IORegistry to attach a `read` method to `cls`
-            with this format listed as an option.
         override : bool, optional
             If True, any existing readers for `cls` in this format will be
             overriden.
@@ -979,13 +977,15 @@ class Format:
 
         Examples
         --------
-        >>> from skbio.io.registry import Format, IORegistry
-        >>> registry = IORegistry()
+        >>> from skbio.io.registry import Format, io_registry
+        >>> from skbio.io.util import ReadWriteDescriptor
         >>> myformat = Format('myformat')
-        >>> registry.add_format(myformat)
+        >>> io_registry.add_format(myformat)
         >>> # If developing a new format for skbio, use the create_format()
         >>> # factory instead of the above.
         >>> class MyObject:
+        ...     read = ReadWriteDescriptor("read")
+        ...     write = ReadWriteDescriptor("write")
         ...     def __init__(self, content):
         ...         self.content = content
         ...
@@ -1030,12 +1030,12 @@ class Format:
                         kwargs.update(zip(file_keys, fhs[:-1]))
                         yield from reader_function(fhs[-1], **kwargs)
 
-            self._add_reader(cls, wrapped_reader, monkey_patch, override)
+            self._add_reader(cls, wrapped_reader, override)
             return wrapped_reader
 
         return decorator
 
-    def writer(self, cls, monkey_patch=False, override=False):
+    def writer(self, cls, override=False):
         r"""Decorate a function to act as the writer for a class in this format.
 
         The function should take an instance of `cls` as its first argument
@@ -1052,9 +1052,6 @@ class Format:
         cls : type or None
             The class which the function will be registered to handle. If
             None, it is assumed that the function will consume a generator.
-        monkey_patch : bool, optional
-            Whether to allow an IORegistry to attach a `write` method to `cls`
-            with this format listed as an option.
         override : bool, optional
             If True, any existing writers for `cls` in this format will be
             overriden.
@@ -1067,14 +1064,16 @@ class Format:
 
         Examples
         --------
-        >>> from skbio.io.registry import Format, IORegistry
-        >>> registry = IORegistry()
+        >>> from skbio.io.registry import Format, io_registry
+        >>> from skbio.io.util import ReadWriteDescriptor
         >>> myformat = Format('myformat')
-        >>> registry.add_format(myformat)
+        >>> io_registry.add_format(myformat)
         >>> # If developing a new format for skbio, use the create_format()
         >>> # factory instead of the above.
         >>> class MyObject:
         ...     default_write_format = 'myformat'
+        ...     read = ReadWriteDescriptor("read")
+        ...     write = ReadWriteDescriptor("write")
         ...     def __init__(self, content):
         ...         self.content = content
         ...
@@ -1105,7 +1104,7 @@ class Format:
                     kwargs.update(zip(file_keys, fhs[:-1]))
                     writer_function(obj, fhs[-1], **kwargs)
 
-            self._add_writer(cls, wrapped_writer, monkey_patch, override)
+            self._add_writer(cls, wrapped_writer, override)
             return wrapped_writer
 
         return decorator
@@ -1152,25 +1151,25 @@ class Format:
 
         return file_keys, files
 
-    def _add_writer(self, cls, writer, monkey_patch, override):
+    def _add_writer(self, cls, writer, override):
         if cls in self._writers and not override:
             raise DuplicateRegistrationError(
                 "There is already a writer"
                 " registered to %s in format: %s" % (cls, self._name)
             )
         self._writers[cls] = writer
-        if monkey_patch and cls is not None:
-            self._monkey_patch["write"].add(cls)
+        # if cls is not None:
+        #     self._monkey_patch["write"].add(cls)
 
-    def _add_reader(self, cls, reader, monkey_patch, override):
+    def _add_reader(self, cls, reader, override):
         if cls in self._readers and not override:
             raise DuplicateRegistrationError(
                 "There is already a reader"
                 " registered to %s in format: %s" % (cls, self._name)
             )
         self._readers[cls] = reader
-        if monkey_patch and cls is not None:
-            self._monkey_patch["read"].add(cls)
+        # if cls is not None:
+        #     self._monkey_patch["read"].add(cls)
 
 
 io_registry = IORegistry()
