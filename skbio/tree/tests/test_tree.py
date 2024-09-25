@@ -188,6 +188,10 @@ class TreeTests(TestCase):
         obs = self.simple_t.children[0].children[0].ancestors()
         self.assertEqual([o.name for o in obs], exp)
 
+        exp = ["a", "i1", "root"]
+        obs = self.simple_t.children[0].children[0].ancestors(include_self=True)
+        self.assertEqual([o.name for o in obs], exp)
+
         exp = ["root"]
         obs = self.simple_t.children[0].ancestors()
         self.assertEqual([o.name for o in obs], exp)

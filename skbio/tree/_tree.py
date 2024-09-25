@@ -460,29 +460,40 @@ class TreeNode(SkbioObject):
             curr = curr.parent
         return curr
 
-    def ancestors(self):
-        r"""Return all ancestors from self back to the root.
-
-        This call will return all nodes in the path back to root, but does not
-        include the node instance that the call was made from.
+    def ancestors(self, include_self=False):
+        r"""Return all ancestral nodes from self back to the root.
 
         Returns
         -------
         list of TreeNode
-            The path, toward the root, from self
+            The path, toward the root, from self.
+        include_self : bool, optional
+            Whether to include the initial node in the path (default: False).
 
         Examples
         --------
         >>> from skbio import TreeNode
-        >>> tree = TreeNode.read(["((a,b)c,(d,e)f)root;"])
-        >>> [node.name for node in tree.find('a').ancestors()]
-        ['c', 'root']
+        >>> tree = TreeNode.read(["((a,b)c,(d,e)f)g;"])
+        >>> print(tree.ascii_art())
+                            /-a
+                  /c-------|
+                 |          \-b
+        -g-------|
+                 |          /-d
+                  \f-------|
+                            \-e
+        >>> tip = tree.find('a')
+        >>> [node.name for node in tip.ancestors()]
+        ['c', 'g']
+        >>> [node.name for node in tip.ancestors(include_self=True)]
+        ['a', 'c', 'g']
 
         """
-        result = []
         curr = self
-        while not curr.is_root():
-            result.append((curr := curr.parent))
+        result = [curr] if include_self else []
+        result_append = result.append
+        while (curr := curr.parent) is not None:
+            result_append(curr)
         return result
 
     def siblings(self):
