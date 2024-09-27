@@ -172,6 +172,7 @@ import itertools
 import inspect
 from functools import wraps
 
+import skbio
 from ._exception import DuplicateRegistrationError, InvalidRegistrationError
 from . import (
     UnrecognizedFormatError,
@@ -243,6 +244,31 @@ class IORegistry:
             self._binary_formats[name] = format_object
         else:
             self._text_formats[name] = format_object
+
+    def remove_format(self, format):
+        """Remove a format from the IORegistry.
+
+        Parameters
+        ----------
+        format : str or Format object
+            The format to be removed from the registry. It can be a name or the Format
+            object itself.
+
+        """
+        if isinstance(format, skbio.io.registry.Format):
+            # print(format)
+            format = format.name
+        success = False
+        for lookup in self._lookups:
+            try:
+                if format in lookup:
+                    del lookup[format]
+                    success = True
+                    break
+            except KeyError():
+                continue
+        if not success:
+            raise KeyError(f"Format {format} is not in the IO registry.")
 
     def get_sniffer(self, format_name):
         """Locate the sniffer for a format.
@@ -630,156 +656,6 @@ class IORegistry:
         return into
 
 
-#     def monkey_patch(self):
-#         r"""Monkey-patch ``read`` and ``write`` methods onto registered classes.
-
-#         Will modify classes which have been registered to a reader or writer to have
-#         ``read`` and ``write`` methods which will contain documentation specifying
-#         useable formats for that class.
-
-#         The actual functionality will be a pass-through to :func:`skbio.io.read` and
-#         :func:`skbio.io.write` respectively.
-#         """
-#         reads = set()
-#         writes = set()
-#         for lookup in self._lookups:
-#             for format in lookup.values():
-#                 reads |= format.monkey_patched_readers
-#                 writes |= format.monkey_patched_writers
-
-#         for cls in reads:
-#             self._apply_read(cls)
-
-#         for cls in writes:
-#             self._apply_write(cls)
-
-#     def _apply_read(registry, cls):
-#         """Add read method if any formats have a reader for `cls`."""
-#         read_formats = registry.list_read_formats(cls)
-
-#         @classonlymethod
-#         def read(cls, file, format=None, **kwargs):
-#             return registry.read(file, into=cls, format=format, **kwargs)
-
-#         imports = registry._import_paths(read_formats)
-#         doc_list = registry._formats_for_docs(read_formats, imports)
-#         read.__func__.__doc__ = _read_docstring % {
-#             "name": cls.__name__,
-#             "list": doc_list,
-#             "see": "\n".join(imports),
-#         }
-#         cls.read = read
-
-#     def _apply_write(registry, cls):
-#         """Add write method if any formats have a writer for `cls`."""
-#         write_formats = registry.list_write_formats(cls)
-#         if not hasattr(cls, "default_write_format"):
-#             raise NotImplementedError(
-#                 "Classes with registered writers must provide a "
-#                 "`default_write_format`. Please add `default_write_format`"
-#                 " to '%s'." % cls.__name__
-#             )
-
-#         def write(self, file, format=cls.default_write_format, **kwargs):
-#             return registry.write(self, into=file, format=format, **kwargs)
-
-#         imports = registry._import_paths(write_formats)
-#         doc_list = registry._formats_for_docs(write_formats, imports)
-#         write.__doc__ = _write_docstring % {
-#             "name": cls.__name__,
-#             "list": doc_list,
-#             "see": "\n".join(imports),
-#             "default": cls.default_write_format,
-#         }
-
-#         cls.write = write
-
-#     def _import_paths(self, formats):
-#         lines = []
-#         for fmt in formats:
-#             lines.append("skbio.io.format." + fmt)
-#         return lines
-
-#     def _formats_for_docs(self, formats, imports):
-#         lines = []
-#         for fmt, imp in zip(formats, imports):
-#             lines.append("- ``'%s'`` (:mod:`%s`)" % (fmt, imp))
-#         return "\n".join(lines)
-
-
-# _read_docstring = """Create a new ``%(name)s`` instance from a file.
-
-# This is a convenience method for :func:`skbio.io.registry.read`. For
-# more information about the I/O system in scikit-bio, please see
-# :mod:`skbio.io`.
-
-# Supported file formats include:
-
-# %(list)s
-
-# Parameters
-# ----------
-# file : openable (filepath, URL, filehandle, etc.)
-#     The location to read the given `format`. Something that is
-#     understood by :func:`skbio.io.util.open`. Filehandles are not
-#     automatically closed, it is the responsibility of the caller.
-# format : str, optional
-#     The format must be a format name with a reader for ``%(name)s``.
-#     If a `format` is not provided or is None, it will attempt to
-#     guess the format.
-# kwargs : dict, optional
-#     Keyword arguments passed to :func:`skbio.io.registry.read` and
-#     the file format reader for ``%(name)s``.
-
-# Returns
-# -------
-# %(name)s
-#     A new instance.
-
-# See Also
-# --------
-# write
-# skbio.io.registry.read
-# skbio.io.util.open
-# %(see)s
-
-# """
-
-# _write_docstring = """Write an instance of ``%(name)s`` to a file.
-
-# This is a convenience method for :func:`skbio.io.registry.write`.
-# For more information about the I/O system in scikit-bio, please
-# see :mod:`skbio.io`.
-
-# Supported file formats include:
-
-# %(list)s
-
-# Parameters
-# ----------
-# file : openable (filepath, URL, filehandle, etc.)
-#     The location to write the given `format` into.  Something
-#     that is understood by :func:`skbio.io.util.open`. Filehandles
-#     are not automatically closed, it is the responsibility of the
-#     caller.
-# format : str
-#     The format must be a registered format name with a writer for
-#     ``%(name)s``.
-#     Default is `'%(default)s'`.
-# kwargs : dict, optional
-#     Keyword arguments passed to :func:`skbio.io.registry.write`
-#     and the file format writer.
-
-# See Also
-# --------
-# read
-# skbio.io.registry.write
-# skbio.io.util.open
-# %(see)s
-
-# """
-
-
 class Format:
     """Defines a format on which readers/writers/sniffer can be registered.
 
@@ -823,16 +699,6 @@ class Format:
         """Dictionary that maps classes to their writers for this format."""
         return self._writers
 
-    # @property
-    # def monkey_patched_readers(self):
-    #     """Set of classes bound to readers to monkey patch."""
-    #     return self._monkey_patch["read"]
-
-    # @property
-    # def monkey_patched_writers(self):
-    #     """Set of classes bound to writers to monkey patch."""
-    #     return self._monkey_patch["write"]
-
     def __init__(self, name, encoding=None, newline=None):
         """Initialize format for registering sniffers, readers, and writers."""
         self._encoding = encoding
@@ -842,7 +708,6 @@ class Format:
         self._sniffer_function = None
         self._readers = {}
         self._writers = {}
-        # self._monkey_patch = {"read": set(), "write": set()}
 
     def sniffer(self, override=False):
         r"""Decorate a function to act as the sniffer for this format.
@@ -996,6 +861,8 @@ class Format:
         >>> MyObject.read(["myformat2\n", "some content here!\n"],
         ...               format='myformat').content
         ['some content here!\n']
+        >>> # Cleanup
+        >>> io_registry.remove_format('myformat')
 
         """
         self._check_registration(cls)
@@ -1086,6 +953,8 @@ class Format:
         >>> obj = MyObject(["some content here!\n"])
         >>> obj.write([], format='myformat')
         ['myformat2\n', 'some content here!\n']
+        >>> # Cleanup
+        >>> io_registry.remove_format('myformat')
 
         """
         self._check_registration(cls)
