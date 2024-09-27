@@ -38,6 +38,7 @@
 * Fixed a bug in `skbio.io.format.embed` which was not correctly updating the idptr sizing. ([#2100](https://github.com/scikit-bio/scikit-bio/pull/2100)).
 * Fixed a bug in `TreeNode.unrooted_move` which does not respect specified branch attributes ([#2103](https://github.com/scikit-bio/scikit-bio/pull/2103)).
 * Fixed a bug in `skbio.diversity.get_beta_diversity_metrics` which does not display metrics other than UniFrac ([#2126](https://github.com/scikit-bio/scikit-bio/pull/2126)).
+* Raises an error when beta diversity metric `mahalanobis` is called but sample number is smaller than or equal to feature number in the data. Thank @quliping for noting this in [#2125](https://github.com/scikit-bio/scikit-bio/pull/2125).
 
 ### Miscellaneous
 
@@ -50,10 +51,6 @@
 
 * Method `TreeNode.create_caches` is deprecated. It will become a private member in version 0.7.0 ([#2099](https://github.com/scikit-bio/scikit-bio/pull/2099)).
 * Method `TreeNode.subtree` is deprecated. It will become a private member in version 0.7.0 ([#2103](https://github.com/scikit-bio/scikit-bio/pull/2103)).
-
-### Backward-incompatible changes
-
-* Beta diversity metric `mahalanobis` was removed. This metric requires sample number greater than feature number, which is rarely the case in omic data analysis. Thank @quliping for noting this in [#2125](https://github.com/scikit-bio/scikit-bio/pull/2125).
 
 
 ## Version 0.6.2
