@@ -47,8 +47,9 @@ def isubsample(items, maximum, minimum=1, buf_size=1000, bin_f=None, seed=None):
         This function will be provided with each entry in items, and must
         return a hashable value indicating the bin that that entry should be
         placed in.
-    seed : int or np.random.Generator, optional
-        A user-provided random seed or random generator instance.
+    seed : int, Generator or RandomState, optional
+        A user-provided random seed or random generator instance. See
+        :func:`details <skbio.util.get_rng>`.
 
         .. versionadded:: 0.6.3
 
@@ -166,8 +167,9 @@ def subsample_counts(counts, n, replace=False, seed=None):
     replace : bool, optional
         If ``True``, subsample with replacement. If ``False`` (the default),
         subsample without replacement.
-    seed : int or np.random.Generator, optional
-        A user-provided random seed or random generator instance.
+    seed : int, Generator or RandomState, optional
+        A user-provided random seed or random generator instance. See
+        :func:`details <skbio.util.get_rng>`.
 
     Returns
     -------

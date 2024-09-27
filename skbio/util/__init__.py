@@ -38,6 +38,7 @@ Generally useful functionality that doesn't fit in more specific locations.
 .. autosummary::
    :toctree: generated/
 
+   get_rng
    cardinal_to_ordinal
    find_duplicates
    safe_md5

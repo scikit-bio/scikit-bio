@@ -1875,9 +1875,9 @@ def dirmult_ttest(
         by statsmodels'
         :func:`multipletests <statsmodels.stats.multitest.multipletests>` function.
         Case-insensitive. If None, no correction will be performed.
-    seed : int or np.random.Generator, optional
+    seed : int, Generator or RandomState, optional
         A user-provided random seed or random generator instance for drawing from the
-        Dirichlet distribution.
+        Dirichlet distribution. See :func:`details <skbio.util.get_rng>`.
 
     Returns
     -------
@@ -2290,9 +2290,9 @@ def dirmult_lme(
         by statsmodels'
         :func:`multipletests <statsmodels.stats.multitest.multipletests>` function.
         Case-insensitive. If None, no correction will be performed.
-    seed : int or np.random.Generator, optional
+    seed : int, Generator or RandomState, optional
         A user-provided random seed or random generator instance for drawing from the
-        Dirichlet distribution.
+        Dirichlet distribution. See :func:`details <skbio.util.get_rng>`.
     re_formula : str, optional
         Random coefficient formula. See :meth:`MixedLM.from_formula
         <statsmodels.regression.mixed_linear_model.MixedLM.from_formula>`.

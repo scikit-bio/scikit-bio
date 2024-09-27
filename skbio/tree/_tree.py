@@ -460,29 +460,40 @@ class TreeNode(SkbioObject):
             curr = curr.parent
         return curr
 
-    def ancestors(self):
-        r"""Return all ancestors from self back to the root.
-
-        This call will return all nodes in the path back to root, but does not
-        include the node instance that the call was made from.
+    def ancestors(self, include_self=False):
+        r"""Return all ancestral nodes from self back to the root.
 
         Returns
         -------
         list of TreeNode
-            The path, toward the root, from self
+            The path, toward the root, from self.
+        include_self : bool, optional
+            Whether to include the initial node in the path (default: False).
 
         Examples
         --------
         >>> from skbio import TreeNode
-        >>> tree = TreeNode.read(["((a,b)c,(d,e)f)root;"])
-        >>> [node.name for node in tree.find('a').ancestors()]
-        ['c', 'root']
+        >>> tree = TreeNode.read(["((a,b)c,(d,e)f)g;"])
+        >>> print(tree.ascii_art())
+                            /-a
+                  /c-------|
+                 |          \-b
+        -g-------|
+                 |          /-d
+                  \f-------|
+                            \-e
+        >>> tip = tree.find('a')
+        >>> [node.name for node in tip.ancestors()]
+        ['c', 'g']
+        >>> [node.name for node in tip.ancestors(include_self=True)]
+        ['a', 'c', 'g']
 
         """
-        result = []
         curr = self
-        while not curr.is_root():
-            result.append((curr := curr.parent))
+        result = [curr] if include_self else []
+        result_append = result.append
+        while (curr := curr.parent) is not None:
+            result_append(curr)
         return result
 
     def siblings(self):
@@ -509,9 +520,10 @@ class TreeNode(SkbioObject):
         ['d', 'f']
 
         """
-        return (
-            [] if self.is_root() else [x for x in self.parent.children if x is not self]
-        )
+        try:
+            return [x for x in self.parent.children if x is not self]
+        except AttributeError:
+            return []
 
     def neighbors(self, ignore=None):
         r"""Return all nodes that are neighbors of the current node.
@@ -539,14 +551,17 @@ class TreeNode(SkbioObject):
         ['a', 'b', 'root']
 
         """
-        nodes = [n for n in self.children + [self.parent] if n is not None]
+        if (parent := self.parent) is not None:
+            nodes = self.children + [parent]
+        else:
+            nodes = self.children[:]
         if ignore is None:
             return nodes
         else:
             return [n for n in nodes if n is not ignore]
 
     def lowest_common_ancestor(self, tipnames):
-        r"""Find the lowest common ancestor of a list of tips.
+        r"""Find the lowest common ancestor of a list of nodes.
 
         Parameters
         ----------
@@ -563,6 +578,11 @@ class TreeNode(SkbioObject):
         ValueError
             If no tips could be found in the tree, or if not all tips were found.
 
+        Notes
+        -----
+        Despite the parameter is named as ``tipnames``, it can accept both tips and
+        internal nodes.
+
         Examples
         --------
         >>> from skbio import TreeNode
@@ -577,45 +597,107 @@ class TreeNode(SkbioObject):
         root
 
         """
-        if len(tipnames) == 1:
-            return self.find(next(iter(tipnames)))
+        nodes = [self.find(x) for x in tipnames]
+        if not nodes:
+            raise ValueError("No node is found.")
+        elif len(nodes) == 1:
+            return nodes[0]
 
-        tips = [self.find(name) for name in tipnames]
+        # A temporary attribute "prev" will be assigned to visited nodes. It represents
+        # the previous node in the upward path, or None, which indicates the current
+        # node is the beginning of the path, or there are more than one previous node.
+        visited = []
+        visited_append = visited.append
 
-        if len(tips) == 0:
-            raise ValueError("No tips found.")
-
-        nodes_to_scrub = []
-
-        for t in tips:
-            if t.is_root():
-                # has to be the LCA...
-                return t
-
-            prev = t
-            curr = t.parent
-
-            while curr and not hasattr(curr, "black"):
-                setattr(curr, "black", [prev])
-                nodes_to_scrub.append(curr)
+        for curr in nodes:
+            prev = None
+            while curr is not None:
+                # set prev as None if already visited
+                if hasattr(curr, "prev"):
+                    curr.prev = None
+                    break
+                curr.prev = prev
+                visited_append(curr)
                 prev = curr
                 curr = curr.parent
 
-            # increase black count, multiple children lead to here
-            if curr:
-                curr.black.append(prev)
-
+        # walk down the tree until last node with prev is None
         curr = self
-        while len(curr.black) == 1:
-            curr = curr.black[0]
+        while (prev := curr.prev) is not None:
+            curr = prev
 
-        # clean up tree
-        for n in nodes_to_scrub:
-            delattr(n, "black")
+        # clean up temporary attribute "prev"
+        for node in visited:
+            delattr(node, "prev")
 
         return curr
 
     lca = lowest_common_ancestor  # for convenience
+
+    def path(self, other, include_ends=False):
+        r"""Return the list of nodes in the path from one node to another.
+
+        Parameters
+        ----------
+        other : TreeNode
+            Final node of path.
+        include_ends: bool, optional
+            Whether to include the initial and final nodes in the list.
+            Default is False.
+
+        Returns
+        -------
+        list
+            List of TreeNode objects.
+
+        Examples
+        --------
+        >>> from skbio import TreeNode
+        >>> tree = TreeNode.read(["((a,b)c,(d,e)f)root;"])
+        >>> node_1, node_2 = tree.find('a'), tree.find('d')
+        >>> path = node_1.path(node_2)
+        >>> print(len(path))
+        3
+        >>> print('-'.join(x.name for x in path))
+        c-root-f
+        >>> path_2 = node_1.path(node_2, include_ends=True)
+        >>> print(len(path_2))
+        5
+        >>> print('-'.join(x.name for x in path_2))
+        a-c-root-f-d
+
+        """
+        # create list of ancestors including nodes themselves
+        anc1, anc2 = (
+            [self] + self.ancestors(),
+            [other] + other.ancestors(),
+        )
+
+        # initialize lowest common ancestor variable
+        lca = None
+
+        # find lowest common ancestor
+        for i, (n1, n2) in enumerate(zip(reversed(anc1), reversed(anc2))):
+            if n1 is n2:
+                lca = n1
+                lca_i = i
+            else:
+                break
+
+        # check to see if nodes are on same tree
+        if lca is None:
+            raise TreeError("Could not find path between nodes.")
+
+        # create path list
+        path = (
+            anc1[: len(anc1) - lca_i - 1] + [lca] + anc2[: len(anc2) - lca_i - 1][::-1]
+        )
+
+        # remove initial and final nodes if desired
+        if include_ends is False:
+            path = path[1:-1]
+
+        return path
 
     # ------------------------------------------------
     # Tree traversal

@@ -8,11 +8,14 @@
 * Wrapped UPGMA and WPGMA from SciPy's linkage method ([#2094](https://github.com/scikit-bio/scikit-bio/pull/2094)).
 * Added `TreeNode.has_caches` to check if a tree has caches ([#2103](https://github.com/scikit-bio/scikit-bio/pull/2103)).
 * Added `TreeNode.is_bifurcating` to check if a tree is bifurcating (i.e., binary) ([#2117](https://github.com/scikit-bio/scikit-bio/pull/2117)).
-* Added support for Python's `pathlib` module in the IO system. ([#2119](https://github.com/scikit-bio/scikit-bio/pull/2119))
-* Added Balanced Minimum Evolution (BME) function and `balanced` option for NNI ([#2105](https://github.com/scikit-bio/scikit-bio/pull/2105))
+* Added support for Python's `pathlib` module in the IO system ([#2119](https://github.com/scikit-bio/scikit-bio/pull/2119)).
+* Added Balanced Minimum Evolution (BME) function and `balanced` option for NNI ([#2105](https://github.com/scikit-bio/scikit-bio/pull/2105)).
+* Added `TreeNode.path` to return a list of nodes representing the path from one node to another ([#2131](https://github.com/scikit-bio/scikit-bio/pull/2131)).
 
 ### Performance enhancements
 
+* Improved the performance of `TreeNode.lowest_common_ancestor` ([#2132](https://github.com/scikit-bio/scikit-bio/pull/2132)).
+* Improved the performance of `TreeNode` methods: `ancestors`, `siblings`, and `neighbors` ([#2133](https://github.com/scikit-bio/scikit-bio/pull/2133), [#2135](https://github.com/scikit-bio/scikit-bio/pull/2135)).
 * Improved the performance of tree traversal algorithms ([#2093](https://github.com/scikit-bio/scikit-bio/pull/2093)).
 * Improved the performance of tree copying ([#2103](https://github.com/scikit-bio/scikit-bio/pull/2103)).
 * Further improved the caching mechanism of `TreeNode`. Specifically: 1. Node attribute caches are only registered at the root node, which improves memory efficiency. 2. Method `clear_caches` can be customized to clear node attribute and/or lookup caches, or specified attribute caches ([#2099](https://github.com/scikit-bio/scikit-bio/pull/2099)). 3. Added parameter `uncache` to multiple methods that involves tree manipulation. Default is True. When one knows that caches are not present or relevant, one may set this parameter as False to skip cache clearing to significantly improve performance ([#2103](https://github.com/scikit-bio/scikit-bio/pull/2103)).
@@ -21,12 +24,16 @@
 * `TreeNode.extend` can accept any iterable type of nodes as input ([#2103](https://github.com/scikit-bio/scikit-bio/pull/2103)).
 * Added parameter `strict` to `TreeNode.shear` ([#2103](https://github.com/scikit-bio/scikit-bio/pull/2103)).
 * Added parameter `exclude_attrs` to `TreeNode.unrooted_copy` ([#2103](https://github.com/scikit-bio/scikit-bio/pull/2103)).
+* Added support for legacy random generator to `get_rng`, such that outputs of scikit-bio functions become reproducible with code that starts with `np.random.seed` or uses `RandomState` ([#2130](https://github.com/scikit-bio/scikit-bio/pull/2130)).
 * Allowed `shuffle` and `compare_tip_distances` of `TreeNode` to accept a random seed or random generator to generate the shuffling function, which ensures output reproducibility ([#2118](https://github.com/scikit-bio/scikit-bio/pull/2118)).
-* Added parameter `seed` to functions `lladser_pe`, `lladser_ci`, `isubsample`, `subsample_power`, `subsample_paired_power`, and `paired_subsamples` to accept a random seed or random generator to ensure output reproducibility ([#2120](https://github.com/scikit-bio/scikit-bio/pull/2120)).
 * Added beta diversity metric `jensenshannon`, which calculates Jensen-Shannon distance. Thank @quliping for suggesting this in [#2125](https://github.com/scikit-bio/scikit-bio/pull/2125).
+* Added parameter `include_self` to `TreeNode.ancestors` to optionally include the initial node in the path (default: False) ([#2135](https://github.com/scikit-bio/scikit-bio/pull/2135)).
+* Added parameter `seed` to functions `pcoa`, `anosim`, `permanova`, `permdisp`, `randdm`, `lladser_pe`, `lladser_ci`, `isubsample`, `subsample_power`, `subsample_paired_power`, `paired_subsamples` and `hommola_cospeciation` to accept a random seed or random generator to ensure output reproducibility ([#2120](https://github.com/scikit-bio/scikit-bio/pull/2120) and [#2129](https://github.com/scikit-bio/scikit-bio/pull/2129)).
+* Made the `IORegistry` sniffer only attempt file formats which are logical given a specific object, thus improving reading efficiency.
 
 ### Bug fixes
 
+* Fixed a bug in `TreeNode.lowest_common_ancestor` which returns the parent of input node X instead of X itself if X is ancestral to other input nodes ([#2132](https://github.com/scikit-bio/scikit-bio/pull/2132)).
 * Fixed a bug in `TreeNode.find_all` which does not look for other nodes with the same name if a `TreeNode` instance is provided, as in contrast to what the documentation claims ([#2099](https://github.com/scikit-bio/scikit-bio/pull/2099)).
 * Fixed a bug in `skbio.io.format.embed` which was not correctly updating the idptr sizing. ([#2100](https://github.com/scikit-bio/scikit-bio/pull/2100)).
 * Fixed a bug in `TreeNode.unrooted_move` which does not respect specified branch attributes ([#2103](https://github.com/scikit-bio/scikit-bio/pull/2103)).

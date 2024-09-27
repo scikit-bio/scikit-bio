@@ -188,6 +188,10 @@ class TreeTests(TestCase):
         obs = self.simple_t.children[0].children[0].ancestors()
         self.assertEqual([o.name for o in obs], exp)
 
+        exp = ["a", "i1", "root"]
+        obs = self.simple_t.children[0].children[0].ancestors(include_self=True)
+        self.assertEqual([o.name for o in obs], exp)
+
         exp = ["root"]
         obs = self.simple_t.children[0].ancestors()
         self.assertEqual([o.name for o in obs], exp)
@@ -236,27 +240,32 @@ class TreeTests(TestCase):
         self.assertEqual(obs, exp)
 
     def test_lowest_common_ancestor(self):
-        """TreeNode lowestCommonAncestor should return LCA for set of tips"""
+        """Return LCA for set of nodes."""
         t1 = TreeNode.read(["((a,(b,c)d)e,f,(g,h)i)j;"])
         t2 = t1.copy()
         t3 = t1.copy()
         t4 = t1.copy()
+        t5 = t1.copy()
         input1 = ["a"]  # return self
         input2 = ["a", "b"]  # return e
         input3 = ["b", "c"]  # return d
         input4 = ["a", "h", "g"]  # return j
+        input5 = ["g", "i"]  # return i (nested)
         exp1 = t1.find("a")
         exp2 = t2.find("e")
         exp3 = t3.find("d")
         exp4 = t4
+        exp5 = t5.find("i")
         obs1 = t1.lowest_common_ancestor(input1)
         obs2 = t2.lowest_common_ancestor(input2)
         obs3 = t3.lowest_common_ancestor(input3)
         obs4 = t4.lowest_common_ancestor(input4)
+        obs5 = t5.lowest_common_ancestor(input5)
         self.assertEqual(obs1, exp1)
         self.assertEqual(obs2, exp2)
         self.assertEqual(obs3, exp3)
         self.assertEqual(obs4, exp4)
+        self.assertEqual(obs5, exp5)
 
         # verify multiple calls work
         t_mul = t1.copy()
@@ -267,6 +276,12 @@ class TreeTests(TestCase):
         self.assertEqual(obs_1, exp_1)
         self.assertEqual(obs_2, exp_2)
 
+        # verify subtree call
+        t_sub = t1.copy()
+        obs = t_sub.find("e").lowest_common_ancestor(["b", "c"])
+        exp = t_sub.find("d")
+        self.assertEqual(obs, exp)
+
         # root included
         t_root = TreeNode.read(["(a,b)c;"])
         obs = t_root.lowest_common_ancestor(["a", "c"])
@@ -275,6 +290,47 @@ class TreeTests(TestCase):
         # empty case
         with self.assertRaises(ValueError):
             t1.lowest_common_ancestor([])
+
+    def test_path(self):
+        """List of TreeNode object names in path between nodes"""
+        t1 = TreeNode.read(["((a,(b,c)d)e,f,(g,h)i)j;"])
+        t2 = t1.copy()
+        t3 = t1.copy()
+        init1 = t1.find("a") # tip
+        init2 = t2.find("j") # root node
+        init3 = t3.find("e") # internal node
+        fin1 = t1.find("g") # tip
+        fin2 = t2.find("c") # tip
+        fin3 = t3.find("i") # internal node
+        exp1 = [t1.find("e"), t1.find("j"), t1.find("i")]
+        exp2 = [t2.find("e"), t2.find("d")]
+        exp3 = [t3.find("j")]
+        obs1 = init1.path(fin1) # tip-to-tip
+        obs2 = init2.path(fin2) # root-to-tip
+        obs3 = init3.path(fin3) # internal-to-internal
+        self.assertEqual(obs1, exp1)
+        self.assertEqual(obs2, exp2)
+        self.assertEqual(obs3, exp3)
+
+        # include ends
+        t = TreeNode.read(["((a,b)c,(d,e)f)root;"])
+        init = t.find("a")
+        fin = t.find("e")
+        exp = [
+            t.find("a"), t.find("c"), t.find("root"), t.find("f"), t.find("e")
+            ]
+        obs = init.path(fin, include_ends=True)
+        self.assertEqual(obs, exp)
+
+        # flag for no existing path
+        t1 = TreeNode.read(["((a,b)c,(d,e)f);"])
+        t2 = TreeNode.read(["((g,h)i,(j,k)l);"])
+        node1 = t1.find("a")
+        node2 = t2.find("g")
+        msg = "Could not find path between nodes."
+        with self.assertRaises(TreeError) as cm:
+            node1.path(node2)
+        self.assertEqual(str(cm.exception), msg)
 
     # ------------------------------------------------
     # Tree traversal
