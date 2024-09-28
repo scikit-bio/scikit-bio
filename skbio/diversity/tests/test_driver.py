@@ -436,7 +436,7 @@ class BetaDiversityTests(TestCase):
                            tree=self.tree1)
 
     def test_invalid_input_mahalanobis(self):
-        error_msg = (r"requires more samples than features in the data")
+        error_msg = (r"requires more samples than features")
         with self.assertRaisesRegex(ValueError, error_msg):
             beta_diversity('mahalanobis', self.table2)
 

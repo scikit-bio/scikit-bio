@@ -8,7 +8,6 @@
 
 from functools import partial
 from itertools import chain
-from operator import lt
 from warnings import warn
 
 import numpy as np
@@ -460,10 +459,13 @@ def beta_diversity(
         counts = counts_by_node
     elif metric == "manhattan":
         metric = "cityblock"
-    elif metric == "mahalanobis" and lt(*counts.shape):
-        raise ValueError(
-            "Metric 'mahalanobis' requires more samples than features in the data."
-        )
+    elif metric == "mahalanobis":
+        nrow, ncol = counts.shape
+        if nrow < ncol:
+            raise ValueError(
+                "Metric 'mahalanobis' requires more samples than features. "
+                f"The input has {nrow} samples and {ncol} features."
+            )
     elif callable(metric):
         metric = partial(metric, **kwargs)
         # remove all values from kwargs, since they have already been provided
