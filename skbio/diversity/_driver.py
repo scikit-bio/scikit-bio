@@ -6,13 +6,13 @@
 # The full license is in the file LICENSE.txt, distributed with this software.
 # ----------------------------------------------------------------------------
 
-import functools
-import itertools
+from functools import partial
+from itertools import chain
 from warnings import warn
 
 import numpy as np
-import scipy.spatial.distance
 import pandas as pd
+from scipy.spatial.distance import pdist
 
 import skbio
 from skbio.diversity.alpha._pd import _faith_pd, _phydiv, _setup_pd
@@ -123,7 +123,7 @@ def get_beta_diversity_metrics():
     ``scipy.spatial.distance.pdist`` for more details.
 
     """
-    return sorted(["unweighted_unifrac", "weighted_unifrac"])
+    return sorted(_valid_beta_metrics + ["unweighted_unifrac", "weighted_unifrac"])
 
 
 def alpha_diversity(metric, counts, ids=None, validate=True, **kwargs):
@@ -187,7 +187,7 @@ def alpha_diversity(metric, counts, ids=None, validate=True, **kwargs):
             counts, taxa, tree, validate, rooted=True, single_sample=False
         )
         counts = counts_by_node
-        metric = functools.partial(_faith_pd, branch_lengths=branch_lengths, **kwargs)
+        metric = partial(_faith_pd, branch_lengths=branch_lengths, **kwargs)
 
     elif metric == "phydiv":
         taxa, tree, kwargs = _get_phylogenetic_kwargs(counts, **kwargs)
@@ -199,12 +199,12 @@ def alpha_diversity(metric, counts, ids=None, validate=True, **kwargs):
             kwargs["rooted"] = len(tree.root().children) == 2
         if "weight" not in kwargs:
             kwargs["weight"] = False
-        metric = functools.partial(_phydiv, branch_lengths=branch_lengths, **kwargs)
+        metric = partial(_phydiv, branch_lengths=branch_lengths, **kwargs)
 
     elif callable(metric):
-        metric = functools.partial(metric, **kwargs)
+        metric = partial(metric, **kwargs)
     elif metric in metric_map:
-        metric = functools.partial(metric_map[metric], **kwargs)
+        metric = partial(metric_map[metric], **kwargs)
     else:
         raise ValueError("Unknown metric provided: %r." % metric)
 
@@ -278,7 +278,7 @@ def partial_beta_diversity(metric, counts, ids, id_pairs, validate=True, **kwarg
         counts = _validate_counts_matrix(counts, ids=ids)
 
     id_pairs = list(id_pairs)
-    all_ids_in_pairs = set(itertools.chain.from_iterable(id_pairs))
+    all_ids_in_pairs = set(chain.from_iterable(id_pairs))
     if not all_ids_in_pairs.issubset(ids):
         raise ValueError("`id_pairs` are not a subset of `ids`")
 
@@ -303,7 +303,7 @@ def partial_beta_diversity(metric, counts, ids, id_pairs, validate=True, **kwarg
         )
         counts = counts_by_node
     elif callable(metric):
-        metric = functools.partial(metric, **kwargs)
+        metric = partial(metric, **kwargs)
         # remove all values from kwargs, since they have already been provided
         # through the partial
         kwargs = {}
@@ -338,6 +338,7 @@ _valid_beta_metrics = [
     "dice",
     "hamming",
     "jaccard",
+    "jensenshannon",
     "mahalanobis",
     "manhattan",  # aliases to "cityblock" in beta_diversity
     "matching",
@@ -458,8 +459,15 @@ def beta_diversity(
         counts = counts_by_node
     elif metric == "manhattan":
         metric = "cityblock"
+    elif metric == "mahalanobis":
+        nrow, ncol = counts.shape
+        if nrow < ncol:
+            raise ValueError(
+                "Metric 'mahalanobis' requires more samples than features. "
+                f"The input has {nrow} samples and {ncol} features."
+            )
     elif callable(metric):
-        metric = functools.partial(metric, **kwargs)
+        metric = partial(metric, **kwargs)
         # remove all values from kwargs, since they have already been provided
         # through the partial
         kwargs = {}
@@ -480,7 +488,7 @@ def beta_diversity(
         pass
 
     if pairwise_func is None:
-        pairwise_func = scipy.spatial.distance.pdist
+        pairwise_func = pdist
 
     distances = pairwise_func(counts, metric=metric, **kwargs)
     return DistanceMatrix(distances, ids)
