@@ -435,6 +435,11 @@ class BetaDiversityTests(TestCase):
             beta_diversity(weighted_unifrac, example_table, taxa=['foo', 'bar'],
                            tree=self.tree1)
 
+    def test_invalid_input_mahalanobis(self):
+        error_msg = (r"requires more samples than features")
+        with self.assertRaisesRegex(ValueError, error_msg):
+            beta_diversity('mahalanobis', self.table2)
+
     def test_invalid_input_phylogenetic(self):
         # taxa not provided
         self.assertRaises(ValueError, beta_diversity, 'weighted_unifrac',
