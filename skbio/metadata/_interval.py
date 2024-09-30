@@ -12,7 +12,7 @@ import functools
 
 from ._intersection import IntervalTree
 from skbio.util._decorator import classonlymethod
-from skbio.io.util import ReadWriteDescriptor
+from skbio.io.util import Read, Write
 
 
 class Interval:
@@ -509,8 +509,8 @@ fuzzy=[(False, False)], metadata={'gene': 'sagB'})
 
     """
 
-    read = ReadWriteDescriptor("read")
-    write = ReadWriteDescriptor("write")
+    read = Read()
+    write = Write()
 
     default_write_format = "gff3"
 

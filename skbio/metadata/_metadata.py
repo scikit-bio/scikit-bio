@@ -19,7 +19,7 @@ import numpy as np
 import skbio.metadata.missing as _missing
 from skbio.util import find_duplicates
 from .base import SUPPORTED_COLUMN_TYPES, FORMATTED_ID_HEADERS, is_id_header
-from skbio.io.util import ReadWriteDescriptor
+from skbio.io.util import Read, Write
 
 
 DEFAULT_MISSING = _missing.DEFAULT_MISSING
@@ -35,8 +35,8 @@ class _MetadataBase:
 
     """
 
-    read = ReadWriteDescriptor("read")
-    write = ReadWriteDescriptor("write")
+    read = Read()
+    write = Write()
 
     @property
     def id_header(self):

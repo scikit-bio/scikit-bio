@@ -29,7 +29,7 @@ from skbio.tree._exception import (
 from skbio.util import get_rng, RepresentationWarning
 from skbio.util._decorator import classonlymethod
 from skbio.util._warning import _warn_deprecated
-from skbio.io.util import ReadWriteDescriptor
+from skbio.io.util import Read, Write
 
 
 def distance_from_r(m1, m2):
@@ -116,9 +116,8 @@ class TreeNode(SkbioObject):
 
     default_write_format = "newick"
 
-    read = ReadWriteDescriptor("read")
-
-    write = ReadWriteDescriptor("write")
+    read = Read()
+    write = Write()
 
     def __init__(
         self, name=None, length=None, support=None, parent=None, children=None

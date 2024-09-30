@@ -843,14 +843,14 @@ class Format:
         Examples
         --------
         >>> from skbio.io.registry import Format, io_registry
-        >>> from skbio.io.util import ReadWriteDescriptor
+        >>> from skbio.io.util import Read, Write
         >>> myformat = Format('myformat')
         >>> io_registry.add_format(myformat)
         >>> # If developing a new format for skbio, use the create_format()
         >>> # factory instead of the above.
         >>> class MyObject:
-        ...     read = ReadWriteDescriptor("read")
-        ...     write = ReadWriteDescriptor("write")
+        ...     read = Read()
+        ...     write = Write()
         ...     def __init__(self, content):
         ...         self.content = content
         ...
@@ -932,15 +932,15 @@ class Format:
         Examples
         --------
         >>> from skbio.io.registry import Format, io_registry
-        >>> from skbio.io.util import ReadWriteDescriptor
+        >>> from skbio.io.util import Read, Write
         >>> myformat = Format('myformat')
         >>> io_registry.add_format(myformat)
         >>> # If developing a new format for skbio, use the create_format()
         >>> # factory instead of the above.
         >>> class MyObject:
         ...     default_write_format = 'myformat'
-        ...     read = ReadWriteDescriptor("read")
-        ...     write = ReadWriteDescriptor("write")
+        ...     read = Read()
+        ...     write = Write()
         ...     def __init__(self, content):
         ...         self.content = content
         ...
