@@ -1090,17 +1090,11 @@ class Read:
         def read_method(file, format=None, **kwargs):
             return skbio.io.read(file, into=cls, format=format, **kwargs)
 
-        # if not hasattr(cls, "_docstring_made"):
-        #     print('docstring empty\n\n')
-        # read_method.__doc__ = self._make_docstring(cls)
-        #     cls._docstring_made = True
-        # else:
-        #     print('docstring not empty\n\n')
+        read_method.__doc__ = self._make_docstring(cls)
 
         return read_method
 
     def _make_docstring(self, cls):
-        # Format things
         read_formats = io_registry.list_read_formats(cls)
         imports = io_registry._import_paths(read_formats)
         doc_list = io_registry._formats_for_docs(read_formats, imports)
@@ -1165,20 +1159,37 @@ class Write:
         return write_method
 
     def _make_docstring(self, cls):
-        return f"""Write the {cls.__name__} instance to a file.
+        write_formats = io_registry.list_write_formats(cls)
+        imports = io_registry._import_paths(write_formats)
+        doc_list = io_registry._formats_for_docs(write_formats, imports)
+        name = cls.__name__
+        default = getattr(cls, "default_write_format", "None")
+        return f"""Write an instance of ``{name}`` to a file.
 
-This is a convenience method for :func:`skbio.io.write`.
+This is a convenience method for :func:`skbio.io.registry.write()`. For more
+information about the I/O system in scikit-bio, please see :mod:`skbio.io`.
+
+Supported file formats include:
+
+{doc_list}
 
 Parameters
 ----------
 file : openable (filepath, URL, filehandle, etc.)
-    The location to write the given `format`.
+    The location to write the given `format` into. Something that is understood by
+    :func:`skbio.io.util.open()`. Filehandles are not automatically closed, it is the
+    responsibility of the caller.
 format : str, optional
-    The format to write the {cls.__name__} object as.
+    The format to write the ``{name}`` object as. The format must be a registered
+    format name with a writer for ``{name}``. Default is ``'{default}'``.
 kwargs : dict, optional
-    Additional arguments passed to the writer for {cls.__name__}.
+    Additional arguments passed to the writer for ``{name}``.
 
-Returns
--------
-None
+See Also
+--------
+read
+skbio.io.registry.write
+skbio.io.util.open
+{'\n'.join(imports)}
+
 """
