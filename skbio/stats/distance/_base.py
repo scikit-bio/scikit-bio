@@ -19,7 +19,7 @@ from skbio.util import find_duplicates, get_rng
 from skbio.util._decorator import classonlymethod
 from skbio.util._misc import resolve_key
 from skbio.util._plotting import PlottableMixin
-from skbio.io.util import Read, Write
+from skbio.io.registry import Read, Write
 
 from ._utils import is_symmetric_and_hollow
 from ._utils import distmat_reorder, distmat_reorder_condensed

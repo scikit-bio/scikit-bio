@@ -7,7 +7,7 @@
 # ----------------------------------------------------------------------------
 
 from biom import Table, example_table
-from skbio.io.util import Read, Write
+from skbio.io.registry import Read, Write
 
 Table.default_write_format = "biom"
 

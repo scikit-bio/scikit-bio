@@ -12,7 +12,7 @@ import functools
 
 from ._intersection import IntervalTree
 from skbio.util._decorator import classonlymethod
-from skbio.io.util import Read, Write
+from skbio.io.registry import Read, Write
 
 
 class Interval:

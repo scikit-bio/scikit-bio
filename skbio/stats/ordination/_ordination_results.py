@@ -13,7 +13,7 @@ import numpy as np
 from skbio._base import SkbioObject
 from skbio.stats._misc import _pprint_strs
 from skbio.util._plotting import PlottableMixin
-from skbio.io.util import Read, Write
+from skbio.io.registry import Read, Write
 
 
 class OrdinationResults(SkbioObject, PlottableMixin):

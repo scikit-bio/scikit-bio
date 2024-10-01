@@ -10,7 +10,7 @@ import numpy as np
 
 from skbio.util._decorator import classproperty, overrides
 from ._grammared_sequence import GrammaredSequence, _motifs as parent_motifs
-from skbio.io.util import Read, Write
+from skbio.io.registry import Read, Write
 
 
 class Protein(GrammaredSequence):

@@ -20,7 +20,7 @@ from skbio.sequence._grammared_sequence import GrammaredSequence
 from skbio.util._decorator import classonlymethod, overrides
 from skbio.util._misc import resolve_key
 from skbio.alignment._indexing import TabularMSAILoc, TabularMSALoc
-from skbio.io.util import Read, Write
+from skbio.io.registry import Read, Write
 
 from skbio.alignment._repr import _TabularMSAReprBuilder
 

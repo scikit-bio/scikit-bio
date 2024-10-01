@@ -655,6 +655,18 @@ class IORegistry:
         writer(obj, into, **kwargs)
         return into
 
+    def _import_paths(self, formats):
+        lines = []
+        for fmt in formats:
+            lines.append("skbio.io.format." + fmt)
+        return lines
+
+    def _formats_for_docs(self, formats, imports):
+        lines = []
+        for fmt, imp in zip(formats, imports):
+            lines.append("- ``'%s'`` (:mod:`%s`)" % (fmt, imp))
+        return "\n".join(lines)
+
 
 class Format:
     """Defines a format on which readers/writers/sniffer can be registered.
@@ -843,7 +855,7 @@ class Format:
         Examples
         --------
         >>> from skbio.io.registry import Format, io_registry
-        >>> from skbio.io.util import Read, Write
+        >>> from skbio.io.registry import Read, Write
         >>> myformat = Format('myformat')
         >>> io_registry.add_format(myformat)
         >>> # If developing a new format for skbio, use the create_format()
@@ -932,7 +944,7 @@ class Format:
         Examples
         --------
         >>> from skbio.io.registry import Format, io_registry
-        >>> from skbio.io.util import Read, Write
+        >>> from skbio.io.registry import Read, Write
         >>> myformat = Format('myformat')
         >>> io_registry.add_format(myformat)
         >>> # If developing a new format for skbio, use the create_format()
@@ -1066,3 +1078,107 @@ def write(obj, format, into, **kwargs):
 def create_format(*args, **kwargs):
     """Make a new format."""
     return io_registry.create_format(*args, **kwargs)
+
+
+class Read:
+    """A descriptor class to generate read methods for scikit-bio objects."""
+
+    def __get__(self, instance, cls):
+        return self._generate_read_method(cls)
+
+    def _generate_read_method(self, cls):
+        def read_method(file, format=None, **kwargs):
+            return skbio.io.read(file, into=cls, format=format, **kwargs)
+
+        # if not hasattr(cls, "_docstring_made"):
+        #     print('docstring empty\n\n')
+        # read_method.__doc__ = self._make_docstring(cls)
+        #     cls._docstring_made = True
+        # else:
+        #     print('docstring not empty\n\n')
+
+        return read_method
+
+    def _make_docstring(self, cls):
+        # Format things
+        read_formats = io_registry.list_read_formats(cls)
+        imports = io_registry._import_paths(read_formats)
+        doc_list = io_registry._formats_for_docs(read_formats, imports)
+        name = cls.__name__
+        return f"""Create a new ``{name}`` instance from a file.
+
+This is a convenience method for :func:`skbio.io.registry.read`. For more information
+about the I/O system in scikit-bio, please see :mod:`skbio.io`.
+
+Supported file formats include:
+
+{doc_list}
+
+Parameters
+----------
+file : openable (filepath, URL, filehandle, etc.)
+    The location to read the given `format` into. Something that is understood by
+    :func:`skbio.io.util.open`. Filehandles are not automatically closed, it is the
+    responsibility of the caller.
+format : str, optional
+    The format of the file. The format must be a format name with a reader for
+    ``{name}``. If None, the format will be inferred.
+kwargs : dict, optional
+    Additional arguments passed to :func:`skbio.io.registry.read()` and the reader for
+    ``{name}``.
+
+Returns
+-------
+``{name}``
+    A new instance.
+
+See Also
+--------
+write
+skbio.io.registry.read
+skbio.io.util.open
+{'\n'.join(imports)}
+
+"""
+
+
+class Write:
+    """A descriptor class to generate write methods for scikit-bio objects."""
+
+    def __get__(self, instance, cls):
+        if instance is None:
+            return self._generate_write_method(cls)
+        else:
+            return types.MethodType(self._generate_write_method(cls), instance)
+
+    def _generate_write_method(self, cls):
+        def write_method(self, file, format=None, **kwargs):
+            if format is None:
+                if hasattr(cls, "default_write_format"):
+                    format = cls.default_write_format
+                else:
+                    raise ValueError(f"{cls.__name__} has no default write format.")
+            return skbio.io.write(self, into=file, format=format, **kwargs)
+
+        write_method.__doc__ = self._make_docstring(cls)
+
+        return write_method
+
+    def _make_docstring(self, cls):
+        return f"""Write the {cls.__name__} instance to a file.
+
+This is a convenience method for :func:`skbio.io.write`.
+
+Parameters
+----------
+file : openable (filepath, URL, filehandle, etc.)
+    The location to write the given `format`.
+format : str, optional
+    The format to write the {cls.__name__} object as.
+kwargs : dict, optional
+    Additional arguments passed to the writer for {cls.__name__}.
+
+Returns
+-------
+None
+"""
