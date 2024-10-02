@@ -1084,15 +1084,16 @@ class Read:
     """A descriptor class to generate read methods for scikit-bio objects."""
 
     def __get__(self, instance, cls):
-        return self._generate_read_method(cls)
+        if "_read_method" not in cls.__dict__:
+            cls._read_method = self._generate_read_method(cls)
+        return cls._read_method
 
     def _generate_read_method(self, cls):
-        def read_method(file, format=None, **kwargs):
+        def _read_method(file, format=None, **kwargs):
             return skbio.io.read(file, into=cls, format=format, **kwargs)
 
-        read_method.__doc__ = self._make_docstring(cls)
-
-        return read_method
+        _read_method.__doc__ = self._make_docstring(cls)
+        return _read_method
 
     def _make_docstring(self, cls):
         read_formats = io_registry.list_read_formats(cls)
@@ -1140,13 +1141,20 @@ class Write:
     """A descriptor class to generate write methods for scikit-bio objects."""
 
     def __get__(self, instance, cls):
+        """This gets called when any skbio object accesses its ``read`` attribute."""
         if instance is None:
-            return self._generate_write_method(cls)
+            if "_write_method" not in cls.__dict__:
+                cls._write_method = self._generate_write_method(cls)
+            return cls._write_method
         else:
-            return types.MethodType(self._generate_write_method(cls), instance)
+            if "_write_method" not in instance.__dict__:
+                instance._write_method = types.MethodType(
+                    self._generate_write_method(cls), instance
+                )
+            return instance._write_method
 
     def _generate_write_method(self, cls):
-        def write_method(self, file, format=None, **kwargs):
+        def _write_method(self, file, format=None, **kwargs):
             if format is None:
                 if hasattr(cls, "default_write_format"):
                     format = cls.default_write_format
@@ -1154,9 +1162,9 @@ class Write:
                     raise ValueError(f"{cls.__name__} has no default write format.")
             return skbio.io.write(self, into=file, format=format, **kwargs)
 
-        write_method.__doc__ = self._make_docstring(cls)
+        _write_method.__doc__ = self._make_docstring(cls)
 
-        return write_method
+        return _write_method
 
     def _make_docstring(self, cls):
         write_formats = io_registry.list_write_formats(cls)
