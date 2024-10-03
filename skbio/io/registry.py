@@ -1141,17 +1141,16 @@ class Write:
     """A descriptor class to generate write methods for scikit-bio objects."""
 
     def __get__(self, instance, cls):
-        """This gets called when any skbio object accesses its ``read`` attribute."""
+        """This gets called when any skbio object accesses its ``write`` attribute."""
         if instance is None:
             if "_write_method" not in cls.__dict__:
                 cls._write_method = self._generate_write_method(cls)
             return cls._write_method
-        else:
-            if "_write_method" not in instance.__dict__:
-                instance._write_method = types.MethodType(
-                    self._generate_write_method(cls), instance
-                )
-            return instance._write_method
+        if "_write_method" not in instance.__dict__:
+            instance._write_method = types.MethodType(
+                self._generate_write_method(cls), instance
+            )
+        return instance._write_method
 
     def _generate_write_method(self, cls):
         def _write_method(self, file, format=None, **kwargs):

@@ -215,6 +215,9 @@ class TreeNode(SkbioObject):
         if hasattr((root := self.root()), "_registered_caches"):
             exclude_attrs = exclude_attrs | root._registered_caches
 
+        # exclude dynamically generated methods
+        exclude_attrs = exclude_attrs | {"_write_method"}
+
         # tree node class (default is TreeNode)
         # this is _possibly_ dangerous, we're assuming the node to copy is
         # of the same class as self, and has the same exclusion criteria.
