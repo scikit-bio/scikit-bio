@@ -37,7 +37,6 @@ from skbio.io._fileobject import (
     CompressedBufferedWriter,
 )
 
-
 _d = dict(
     mode="r",
     encoding=None,
