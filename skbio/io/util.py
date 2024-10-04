@@ -27,7 +27,6 @@ Functions
 
 import io
 from contextlib import contextmanager, ExitStack
-from types import MethodType
 
 from skbio.io import IOSourceError
 from skbio.io._iosources import get_io_sources, get_compression_handler
@@ -38,8 +37,6 @@ from skbio.io._fileobject import (
     CompressedBufferedWriter,
 )
 
-# from skbio.io.registry import io_registry
-import skbio
 
 _d = dict(
     mode="r",
