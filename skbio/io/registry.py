@@ -1098,16 +1098,18 @@ class Read:
     def _make_docstring(self, cls):
         read_formats = io_registry.list_read_formats(cls)
         imports = io_registry._import_paths(read_formats)
-        doc_list = io_registry._formats_for_docs(read_formats, imports)
+        formats = io_registry._formats_for_docs(read_formats, imports)
+        if formats:
+            supported_fmts = f"Supported file formats include:\n\n{formats}"
+        else:
+            supported_fmts = ""
         name = cls.__name__
         return f"""Create a new ``{name}`` instance from a file.
 
 This is a convenience method for :func:`skbio.io.registry.read`. For more information
 about the I/O system in scikit-bio, please see :mod:`skbio.io`.
 
-Supported file formats include:
-
-{doc_list}
+{supported_fmts}
 
 Parameters
 ----------
@@ -1168,7 +1170,11 @@ class Write:
     def _make_docstring(self, cls):
         write_formats = io_registry.list_write_formats(cls)
         imports = io_registry._import_paths(write_formats)
-        doc_list = io_registry._formats_for_docs(write_formats, imports)
+        formats = io_registry._formats_for_docs(write_formats, imports)
+        if formats:
+            supported_fmts = f"Supported file formats include:\n\n{formats}"
+        else:
+            supported_fmts = ""
         name = cls.__name__
         default = getattr(cls, "default_write_format", "None")
         return f"""Write an instance of ``{name}`` to a file.
@@ -1176,9 +1182,7 @@ class Write:
 This is a convenience method for :func:`skbio.io.registry.write()`. For more
 information about the I/O system in scikit-bio, please see :mod:`skbio.io`.
 
-Supported file formats include:
-
-{doc_list}
+{supported_fmts}
 
 Parameters
 ----------

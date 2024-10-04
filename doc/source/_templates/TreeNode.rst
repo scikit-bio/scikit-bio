@@ -10,6 +10,7 @@
       :toctree:
 
       ~{{ name }}.read
+      ~{{ name }}.write
 
    .. rubric:: Tree navigation
 
