@@ -259,13 +259,10 @@ class IORegistry:
             format = format.name
         success = False
         for lookup in self._lookups:
-            try:
-                if format in lookup:
-                    del lookup[format]
-                    success = True
-                    break
-            except KeyError():
-                continue
+            if format in lookup:
+                del lookup[format]
+                success = True
+                break
         if not success:
             raise KeyError(f"Format {format} is not in the IO registry.")
 
