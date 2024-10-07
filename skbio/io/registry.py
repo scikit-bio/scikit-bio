@@ -1035,8 +1035,6 @@ class Format:
                 " registered to %s in format: %s" % (cls, self._name)
             )
         self._writers[cls] = writer
-        # if cls is not None:
-        #     self._monkey_patch["write"].add(cls)
 
     def _add_reader(self, cls, reader, override):
         if cls in self._readers and not override:
@@ -1045,8 +1043,6 @@ class Format:
                 " registered to %s in format: %s" % (cls, self._name)
             )
         self._readers[cls] = reader
-        # if cls is not None:
-        #     self._monkey_patch["read"].add(cls)
 
 
 io_registry = IORegistry()
