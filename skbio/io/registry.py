@@ -256,7 +256,6 @@ class IORegistry:
 
         """
         if isinstance(format, skbio.io.registry.Format):
-            # print(format)
             format = format.name
         success = False
         for lookup in self._lookups:
