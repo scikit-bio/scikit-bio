@@ -1088,14 +1088,7 @@ class Read:
         return _read_method
 
     def _make_docstring(self, cls):
-        read_formats = io_registry.list_read_formats(cls)
-        imports = io_registry._import_paths(read_formats)
-        formats = io_registry._formats_for_docs(read_formats, imports)
-        if formats:
-            supported_fmts = f"Supported file formats include:\n\n{formats}"
-        else:
-            supported_fmts = ""
-        name = cls.__name__
+        name, supported_fmts, default, see = _docstring_vars(cls, "read")
         return f"""Create a new ``{name}`` instance from a file.
 
 This is a convenience method for :func:`skbio.io.registry.read`. For more information
@@ -1126,7 +1119,7 @@ See Also
 write
 skbio.io.registry.read
 skbio.io.util.open
-{'\n'.join(imports)}
+{see}
 
 """
 
@@ -1160,15 +1153,7 @@ class Write:
         return _write_method
 
     def _make_docstring(self, cls):
-        write_formats = io_registry.list_write_formats(cls)
-        imports = io_registry._import_paths(write_formats)
-        formats = io_registry._formats_for_docs(write_formats, imports)
-        if formats:
-            supported_fmts = f"Supported file formats include:\n\n{formats}"
-        else:
-            supported_fmts = ""
-        name = cls.__name__
-        default = getattr(cls, "default_write_format", "None")
+        name, supported_fmts, default, see = _docstring_vars(cls, "write")
         return f"""Write an instance of ``{name}`` to a file.
 
 This is a convenience method for :func:`skbio.io.registry.write()`. For more
@@ -1193,6 +1178,28 @@ See Also
 read
 skbio.io.registry.write
 skbio.io.util.open
-{'\n'.join(imports)}
+{see}
 
 """
+
+
+def _docstring_vars(cls, func):
+    """Generate variables for dynamically generated docstrings."""
+    if func == "write":
+        formats = io_registry.list_write_formats(cls)
+    elif func == "read":
+        formats = io_registry.list_read_formats(cls)
+    else:
+        raise ValueError("'func' parameter must be 'read' or 'write'.")
+
+    imports = io_registry._import_paths(formats)
+    formats = io_registry._formats_for_docs(formats, imports)
+    if formats:
+        supported_fmts = f"Supported file formats include:\n\n{formats}"
+    else:
+        supported_fmts = ""
+    name = cls.__name__
+    default = getattr(cls, "default_write_format", "None")
+    see = "\n".join(imports)
+
+    return name, supported_fmts, default, see
