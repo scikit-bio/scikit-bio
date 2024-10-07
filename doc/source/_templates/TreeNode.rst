@@ -4,6 +4,14 @@
 
    {% block methods %}
 
+   .. rubric:: Tree IO
+      
+   .. autosummary::
+      :toctree:
+
+      ~{{ name }}.read
+      ~{{ name }}.write
+
    .. rubric:: Tree navigation
 
    .. autosummary::

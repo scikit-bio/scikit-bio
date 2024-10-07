@@ -29,6 +29,7 @@ from skbio.tree._exception import (
 from skbio.util import get_rng, RepresentationWarning
 from skbio.util._decorator import classonlymethod
 from skbio.util._warning import _warn_deprecated
+from skbio.io.registry import Read, Write
 
 
 def distance_from_r(m1, m2):
@@ -114,6 +115,9 @@ class TreeNode(SkbioObject):
     """
 
     default_write_format = "newick"
+
+    read = Read()
+    write = Write()
 
     def __init__(
         self, name=None, length=None, support=None, parent=None, children=None
@@ -210,6 +214,9 @@ class TreeNode(SkbioObject):
         exclude_attrs = self._exclude_from_copy
         if hasattr((root := self.root()), "_registered_caches"):
             exclude_attrs = exclude_attrs | root._registered_caches
+
+        # exclude dynamically generated methods
+        exclude_attrs = exclude_attrs | {"_write_method"}
 
         # tree node class (default is TreeNode)
         # this is _possibly_ dangerous, we're assuming the node to copy is

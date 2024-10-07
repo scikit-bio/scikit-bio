@@ -290,7 +290,7 @@ _taxdump_column_schemes["nodes_new"] = dict(
 )
 
 
-@taxdump.reader(pd.DataFrame, monkey_patch=False)
+@taxdump.reader(pd.DataFrame)
 def _taxdump_to_data_frame(fh, scheme):
     """Read a taxdump file into a data frame.
 
