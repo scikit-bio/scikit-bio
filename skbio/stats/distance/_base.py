@@ -19,6 +19,7 @@ from skbio.util import find_duplicates, get_rng
 from skbio.util._decorator import classonlymethod
 from skbio.util._misc import resolve_key
 from skbio.util._plotting import PlottableMixin
+from skbio.io.registry import Read, Write
 
 from ._utils import is_symmetric_and_hollow
 from ._utils import distmat_reorder, distmat_reorder_condensed
@@ -97,6 +98,9 @@ class DissimilarityMatrix(SkbioObject, PlottableMixin):
     default_write_format = "lsmat"
     # Used in __str__
     _matrix_element_name = "dissimilarity"
+
+    read = Read()
+    write = Write()
 
     def __init__(self, data, ids=None, validate=True):
         validate_full = validate
