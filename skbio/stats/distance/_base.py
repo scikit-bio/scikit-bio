@@ -1024,9 +1024,6 @@ class DistanceMatrix(DissimilarityMatrix):
     # Override here, used in superclass __str__
     _matrix_element_name = "distance"
 
-    read = Read()
-    write = Write()
-
     @classonlymethod
     def from_iterable(cls, iterable, metric, key=None, keys=None, validate=True):
         """Create DistanceMatrix from all pairs in an iterable given a metric.

@@ -1163,7 +1163,7 @@ information about the I/O system in scikit-bio, please see :mod:`skbio.io`.
 
 Parameters
 ----------
-file : openable (filepath, URL, filehandle, etc.)
+file : openable (filepath, filehandle, etc.)
     The location to write the given `format` into. Something that is understood by
     :func:`skbio.io.util.open()`. Filehandles are not automatically closed, it is the
     responsibility of the caller.
