@@ -32,33 +32,81 @@ The multiplicative replacement technique [3]_ can be used to substitute these
 zeros with small pseudocounts without introducing major distortions to the
 data.
 
-Functions
----------
+
+Differential abundance
+----------------------
+
+Statistical tests for the differential abundance (DA) of components among groups of
+compositions.
 
 .. autosummary::
    :toctree:
 
+   ancom
+   dirmult_ttest
+   dirmult_lme
+
+
+Aitchison arithmetics
+---------------------
+
+Manipulate compositional data within the Aitchison space.
+
+.. autosummary::
+   :toctree:
+
+   centralize
    closure
-   multi_replace
-   multiplicative_replacement
+   inner
    perturb
    perturb_inv
    power
-   inner
+
+
+Log-ratio transformation
+------------------------
+
+Convert compositional data into log-ratio space to enable subsequent comparison
+and statistical analysis.
+
+.. autosummary::
+   :toctree:
+
+   alr
+   alr_inv
    clr
    clr_inv
    ilr
    ilr_inv
-   alr
-   alr_inv
-   centralize
    vlr
    pairwise_vlr
-   tree_basis
-   ancom
+
+
+Zero handling
+-------------
+
+Replace zero values in compositional data with positive values, which is
+necessary prior to logarithmic operations.
+
+.. autosummary::
+   :toctree:
+
+   multi_replace
+   multiplicative_replacement
+
+
+Basis construction
+------------------
+
+Generate basis vectors for compositional data via hierarchical partitioning, to
+allow for decomposition and transformation, such as ilr transform.
+
+.. autosummary::
+   :toctree:
+
    sbp_basis
-   dirmult_ttest
-   dirmult_lme
+   tree_basis
+
 
 References
 ----------
@@ -1662,7 +1710,7 @@ def _gram_schmidt_basis(n):
 
 
 def sbp_basis(sbp):
-    r"""Build an orthogonal basis from a sequential binary partition (SBP).
+    r"""Build an orthonormal basis from a sequential binary partition (SBP).
 
     A SBP is a hierarchical collection of binary divisions of compositional
     parts ([1]_). The child groups are divided again until all groups contain a
