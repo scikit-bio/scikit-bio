@@ -47,7 +47,7 @@ compositions.
    dirmult_lme
 
 
-Aitchison arithmetics
+Arithmetic operations
 ---------------------
 
 Manipulate compositional data within the Aitchison space.
@@ -78,6 +78,16 @@ and statistical analysis.
    clr_inv
    ilr
    ilr_inv
+
+
+Correlation analysis
+--------------------
+
+Measure the pairwise relationships of compositional data.
+
+.. autosummary::
+   :toctree:
+
    vlr
    pairwise_vlr
 
