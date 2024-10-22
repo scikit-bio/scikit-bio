@@ -171,6 +171,7 @@ import traceback
 import itertools
 import inspect
 from functools import wraps
+from importlib import import_module
 
 import skbio
 from ._exception import DuplicateRegistrationError, InvalidRegistrationError
@@ -202,6 +203,7 @@ class IORegistry:
         formats if they are irrelevant. (They are incompatible with such a
         filehandle anyways.)
         """
+        print("correct version")
         self._binary_formats = {}
         self._text_formats = {}
         self._lookups = (self._binary_formats, self._text_formats)
@@ -280,6 +282,12 @@ class IORegistry:
             The sniffer associated with `format_name`
 
         """
+        if not any(format_name in x for x in self._lookups):
+            try:
+                import_module(f"skbio.io.format.{format_name}")
+            except ImportError:
+                pass
+
         for lookup in self._lookups:
             if format_name in lookup:
                 return lookup[format_name].sniffer_function
@@ -326,6 +334,12 @@ class IORegistry:
         return self._get_rw(format_name, cls, "writers")
 
     def _get_rw(self, format_name, cls, lookup_name):
+        if not any(format_name in x for x in self._lookups):
+            try:
+                import_module(f"skbio.io.format.{format_name}")
+            except ImportError:
+                pass
+
         for lookup in self._lookups:
             if format_name in lookup:
                 format_lookup = getattr(lookup[format_name], lookup_name)
@@ -459,12 +473,19 @@ class IORegistry:
 
     def _find_matches(self, file, lookup, **kwargs):
         matches = []
-        for format in lookup.values():
-            if format.sniffer_function is not None:
-                is_format, skwargs = format.sniffer_function(file, **kwargs)
+        for format, format_obj in lookup.items():
+            try:
+                print(f"getting to import")
+                print(f"{format}\n")
+                import_module(f"skbio.io.format.{format}")
+            except ImportError:
+                pass
+
+            if format_obj.sniffer_function is not None:
+                is_format, skwargs = format_obj.sniffer_function(file, **kwargs)
                 file.seek(0)
                 if is_format:
-                    matches.append((format.name, skwargs))
+                    matches.append((format_obj.name, skwargs))
         return matches
 
     def read(self, file, format=None, into=None, verify=True, **kwargs):
