@@ -478,12 +478,11 @@ class IORegistry:
                 # We can always turn a binary file into a text file, but the
                 # reverse doesn't make sense.
                 for fmt in self._text_formats_list:
-                    ## print(f"\nformat in sniff {fmt}")
-                    # Blast+6, Blast+7, and <emptyfile> format names do not match
-                    # their respective module names, so we strip everything non
-                    # alphanumeric or underscore.
-                    fmt_strip = sub(r"[^A-Za-z0-9_]", "", fmt)
                     if not any(fmt in x for x in self._lookups):
+                        # Blast+6, Blast+7, and <emptyfile> format names do not match
+                        # their respective module names, so we strip everything non
+                        # alphanumeric or underscore.
+                        fmt_strip = sub(r"[^A-Za-z0-9_]", "", fmt)
                         # print(f"importing {fmt}\nfrom sniff\n")
                         import_module(f"skbio.io.format.{fmt_strip}")
                 text_lookup = self._text_formats
