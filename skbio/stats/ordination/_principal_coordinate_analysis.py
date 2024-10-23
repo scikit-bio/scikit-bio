@@ -11,6 +11,7 @@ from ._ordination_results import OrdinationResults
 from ._utils import center_distance_matrix, scale
 
 
+
 def pcoa(distance_matrix, method="eigh", number_of_dimensions=0, inplace=False):
     r"""Perform Principal Coordinate Analysis.
 
@@ -37,28 +38,30 @@ def pcoa(distance_matrix, method="eigh", number_of_dimensions=0, inplace=False):
         A distance matrix.
     method : str, optional
         Eigendecomposition method to use in performing PCoA.
-        By default, uses SciPy's eigh, which computes exact
+        By default, uses SciPy's `eigh`, which computes exact
         eigenvectors and eigenvalues for all dimensions. The alternate
-        method, fsvd, uses faster heuristic eigendecomposition but loses
+        method, `fsvd`, uses faster heuristic eigendecomposition but loses
         accuracy. The magnitude of accuracy lost is dependent on dataset.
     number_of_dimensions : int, optional
         Dimensions to reduce the distance matrix to. This number determines
         how many eigenvectors and eigenvalues will be returned.
         By default, equal to the number of dimensions of the distance matrix,
-        as default eigendecomposition using SciPy's eigh method computes
+        as default eigendecomposition using SciPy's `eigh` method computes
         all eigenvectors and eigenvalues. If using fast heuristic
-        eigendecomposition through fsvd, a desired number of dimensions
+        eigendecomposition through `fsvd`, a desired number of dimensions
         should be specified. Note that the default eigendecomposition
-        method eigh does not natively support a specifying number of
+        method `eigh` does not natively support a specifying number of
         dimensions to reduce a matrix to, so if this parameter is specified,
         all eigenvectors and eigenvalues will be simply be computed with no
-        speed gain, and only the number specified by number_of_dimensions
-        will be returned. Specifying a value of 0, the default, will
-        set number_of_dimensions equal to the number of dimensions of the
-        specified distance_matrix.
+        speed gain, and only the number specified by `number_of_dimensions`
+        will be returned. Specifying a value of `0`, the default, will
+        set `number_of_dimensions` equal to the number of dimensions of the
+        specified `distance_matrix`.
     inplace : bool, optional
         If true, centers a distance matrix in-place in a manner that reduces
         memory consumption.
+        
+        .. versionadded:: 0.6.3
 
     Returns
     -------
@@ -104,11 +107,13 @@ def pcoa(distance_matrix, method="eigh", number_of_dimensions=0, inplace=False):
         number_of_dimensions = matrix_data.shape[0]
     elif number_of_dimensions < 0:
         raise ValueError(
-            "Invalid operation: cannot reduce distance matrix to negative dimensions using PCoA. Did you intend "
+            "Invalid operation: cannot reduce distance matrix "
+            "to negative dimensions using PCoA. Did you intend "
             'to specify the default value "0", which sets '
             "the number_of_dimensions equal to the "
             "dimensionality of the given distance matrix?"
         )
+        
     # Perform eigendecomposition
     if method == "eigh":
         # eigh does not natively support specifying number_of_dimensions, i.e.
@@ -119,6 +124,7 @@ def pcoa(distance_matrix, method="eigh", number_of_dimensions=0, inplace=False):
         eigvals, eigvecs = eigh(matrix_data)
         long_method_name = "Principal Coordinate Analysis"
     elif method == "fsvd":
+        long_method_name = "Approximate Principal Coordinate Analysis " "using FSVD"
         num_dimensions = number_of_dimensions  #new parameter for num_dimensions = number of dimensions (accounting for non-int values)
         if isinstance(number_of_dimensions, float):
             warn(
@@ -136,8 +142,10 @@ def pcoa(distance_matrix, method="eigh", number_of_dimensions=0, inplace=False):
         raise ValueError(
             "PCoA eigendecomposition method {} not supported.".format(method)
         )
+        
     # Ensure number_of_dimensions does not exceed available dimensions
     number_of_dimensions = min(number_of_dimensions, eigvals.shape[0])
+    
     # cogent makes eigenvalues positive by taking the
     # abs value, but that doesn't seem to be an approach accepted
     # by L&L to deal with negative eigenvalues. We raise a warning
@@ -234,18 +242,18 @@ def _fsvd(centered_distance_matrix, number_of_dimensions=10):
     Parameters
     ----------
     centered_distance_matrix : np.array
-        Numpy matrix representing the distance matrix for which the
-        eigenvectors and eigenvalues shall be computed
+       Numpy matrix representing the distance matrix for which the
+       eigenvectors and eigenvalues shall be computed
     number_of_dimensions : int
-        Number of dimensions to keep. Must be lower than or equal to the
-        rank of the given distance_matrix.
+       Number of dimensions to keep. Must be lower than or equal to the
+       rank of the given distance_matrix.
 
     Returns
     -------
     np.array
-        Array of eigenvectors, each with number_of_dimensions length.
+       Array of eigenvectors, each with number_of_dimensions length.
     np.array
-        Array of eigenvalues, a total number of number_of_dimensions.
+       Array of eigenvalues, a total number of number_of_dimensions.
 
     Notes
     -----
@@ -312,6 +320,7 @@ def _fsvd(centered_distance_matrix, number_of_dimensions=10):
         H = hstack((H, dot(centered_distance_matrix, dot(centered_distance_matrix, H))))
         for x in range(3, num_levels + 2):
             tmp = dot(centered_distance_matrix, dot(centered_distance_matrix, H))
+            
             H = hstack(
                 (H, dot(centered_distance_matrix, dot(centered_distance_matrix, tmp)))
             )
@@ -332,6 +341,7 @@ def _fsvd(centered_distance_matrix, number_of_dimensions=10):
     Ut = dot(Q, W)
 
     U_fsvd = Ut[:, :number_of_dimensions]
+    
     S = St[:number_of_dimensions]
 
     # drop imaginary component, if we got one
@@ -355,10 +365,10 @@ def pcoa_biplot(ordination, y):
 
     Parameters
     ----------
-    ordination : OrdinationResults
+    ordination: OrdinationResults
         The computed principal coordinates analysis of dimensions (n, c) where
-        the matrix `y will be projected onto.
-    y : DataFrame
+        the matrix ``y`` will be projected onto.
+    y: DataFrame
         Samples by features table of dimensions (n, m). These can be
         environmental features or abundance counts. This table should be
         normalized in cases of dimensionally heterogenous physical variables.
@@ -367,19 +377,19 @@ def pcoa_biplot(ordination, y):
     -------
     OrdinationResults
         The modified input object that includes projected features onto the
-        ordination space in the `features` attribute.
+        ordination space in the ``features`` attribute.
 
     """
     # acknowledge that most saved ordinations lack a name, however if they have
     # a name, it should be PCoA
     if ordination.short_method_name != "" and ordination.short_method_name != "PCoA":
         raise ValueError(
-            "This biplot computation can only be performed in a PCoA matrix."
+            "This biplot computation can only be performed in a " "PCoA matrix."
         )
 
     if set(y.index) != set(ordination.samples.index):
         raise ValueError(
-            "The eigenvectors and the descriptors must describe the same samples."
+            "The eigenvectors and the descriptors must describe " "the same samples."
         )
 
     eigvals = ordination.eigvals.values
