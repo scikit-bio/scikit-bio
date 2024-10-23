@@ -339,7 +339,7 @@ def _blast7_sniffer(fh):
     return True, {}
 
 
-@blast7.reader(pd.DataFrame, monkey_patch=False)
+@blast7.reader(pd.DataFrame)
 def _blast7_to_data_frame(fh):
     line_num = 0
     columns = None

@@ -172,6 +172,7 @@ import itertools
 import inspect
 from functools import wraps
 
+import skbio
 from ._exception import DuplicateRegistrationError, InvalidRegistrationError
 from . import (
     UnrecognizedFormatError,
@@ -243,6 +244,27 @@ class IORegistry:
             self._binary_formats[name] = format_object
         else:
             self._text_formats[name] = format_object
+
+    def remove_format(self, format):
+        """Remove a format from the IORegistry.
+
+        Parameters
+        ----------
+        format : str or Format object
+            The format to be removed from the registry. It can be a name or the Format
+            object itself.
+
+        """
+        if isinstance(format, skbio.io.registry.Format):
+            format = format.name
+        success = False
+        for lookup in self._lookups:
+            if format in lookup:
+                del lookup[format]
+                success = True
+                break
+        if not success:
+            raise KeyError(f"Format {format} is not in the IO registry.")
 
     def get_sniffer(self, format_name):
         """Locate the sniffer for a format.
@@ -430,7 +452,8 @@ class IORegistry:
         return matches[0]
 
     def _reduce_formats(self, lookup, into):
-        # Reduce possible formats to only those which make sense for the given object.
+        """Reduce possible formats to only those which make sense for the given
+        object."""
         pos_fmts = self.list_read_formats(into)
         return {k: v for k, v in lookup.items() if k in pos_fmts}
 
@@ -628,70 +651,6 @@ class IORegistry:
         writer(obj, into, **kwargs)
         return into
 
-    def monkey_patch(self):
-        r"""Monkey-patch ``read`` and ``write`` methods onto registered classes.
-
-        Will modify classes which have been registered to a reader or writer to have
-        ``read`` and ``write`` methods which will contain documentation specifying
-        useable formats for that class.
-
-        The actual functionality will be a pass-through to :func:`skbio.io.read` and
-        :func:`skbio.io.write` respectively.
-        """
-        reads = set()
-        writes = set()
-        for lookup in self._lookups:
-            for format in lookup.values():
-                reads |= format.monkey_patched_readers
-                writes |= format.monkey_patched_writers
-
-        for cls in reads:
-            self._apply_read(cls)
-
-        for cls in writes:
-            self._apply_write(cls)
-
-    def _apply_read(registry, cls):
-        """Add read method if any formats have a reader for `cls`."""
-        read_formats = registry.list_read_formats(cls)
-
-        @classonlymethod
-        def read(cls, file, format=None, **kwargs):
-            return registry.read(file, into=cls, format=format, **kwargs)
-
-        imports = registry._import_paths(read_formats)
-        doc_list = registry._formats_for_docs(read_formats, imports)
-        read.__func__.__doc__ = _read_docstring % {
-            "name": cls.__name__,
-            "list": doc_list,
-            "see": "\n".join(imports),
-        }
-        cls.read = read
-
-    def _apply_write(registry, cls):
-        """Add write method if any formats have a writer for `cls`."""
-        write_formats = registry.list_write_formats(cls)
-        if not hasattr(cls, "default_write_format"):
-            raise NotImplementedError(
-                "Classes with registered writers must provide a "
-                "`default_write_format`. Please add `default_write_format`"
-                " to '%s'." % cls.__name__
-            )
-
-        def write(self, file, format=cls.default_write_format, **kwargs):
-            return registry.write(self, into=file, format=format, **kwargs)
-
-        imports = registry._import_paths(write_formats)
-        doc_list = registry._formats_for_docs(write_formats, imports)
-        write.__doc__ = _write_docstring % {
-            "name": cls.__name__,
-            "list": doc_list,
-            "see": "\n".join(imports),
-            "default": cls.default_write_format,
-        }
-
-        cls.write = write
-
     def _import_paths(self, formats):
         lines = []
         for fmt in formats:
@@ -703,79 +662,6 @@ class IORegistry:
         for fmt, imp in zip(formats, imports):
             lines.append("- ``'%s'`` (:mod:`%s`)" % (fmt, imp))
         return "\n".join(lines)
-
-
-_read_docstring = """Create a new ``%(name)s`` instance from a file.
-
-This is a convenience method for :func:`skbio.io.registry.read`. For
-more information about the I/O system in scikit-bio, please see
-:mod:`skbio.io`.
-
-Supported file formats include:
-
-%(list)s
-
-Parameters
-----------
-file : openable (filepath, URL, filehandle, etc.)
-    The location to read the given `format`. Something that is
-    understood by :func:`skbio.io.util.open`. Filehandles are not
-    automatically closed, it is the responsibility of the caller.
-format : str, optional
-    The format must be a format name with a reader for ``%(name)s``.
-    If a `format` is not provided or is None, it will attempt to
-    guess the format.
-kwargs : dict, optional
-    Keyword arguments passed to :func:`skbio.io.registry.read` and
-    the file format reader for ``%(name)s``.
-
-Returns
--------
-%(name)s
-    A new instance.
-
-See Also
---------
-write
-skbio.io.registry.read
-skbio.io.util.open
-%(see)s
-
-"""
-
-_write_docstring = """Write an instance of ``%(name)s`` to a file.
-
-This is a convenience method for :func:`skbio.io.registry.write`.
-For more information about the I/O system in scikit-bio, please
-see :mod:`skbio.io`.
-
-Supported file formats include:
-
-%(list)s
-
-Parameters
-----------
-file : openable (filepath, URL, filehandle, etc.)
-    The location to write the given `format` into.  Something
-    that is understood by :func:`skbio.io.util.open`. Filehandles
-    are not automatically closed, it is the responsibility of the
-    caller.
-format : str
-    The format must be a registered format name with a writer for
-    ``%(name)s``.
-    Default is `'%(default)s'`.
-kwargs : dict, optional
-    Keyword arguments passed to :func:`skbio.io.registry.write`
-    and the file format writer.
-
-See Also
---------
-read
-skbio.io.registry.write
-skbio.io.util.open
-%(see)s
-
-"""
 
 
 class Format:
@@ -821,16 +707,6 @@ class Format:
         """Dictionary that maps classes to their writers for this format."""
         return self._writers
 
-    @property
-    def monkey_patched_readers(self):
-        """Set of classes bound to readers to monkey patch."""
-        return self._monkey_patch["read"]
-
-    @property
-    def monkey_patched_writers(self):
-        """Set of classes bound to writers to monkey patch."""
-        return self._monkey_patch["write"]
-
     def __init__(self, name, encoding=None, newline=None):
         """Initialize format for registering sniffers, readers, and writers."""
         self._encoding = encoding
@@ -840,7 +716,6 @@ class Format:
         self._sniffer_function = None
         self._readers = {}
         self._writers = {}
-        self._monkey_patch = {"read": set(), "write": set()}
 
     def sniffer(self, override=False):
         r"""Decorate a function to act as the sniffer for this format.
@@ -947,7 +822,7 @@ class Format:
 
         return decorator
 
-    def reader(self, cls, monkey_patch=True, override=False):
+    def reader(self, cls, override=False):
         r"""Decorate a function to act as the reader for a class in this format.
 
         The function should take an argument which will be an implementation
@@ -963,9 +838,6 @@ class Format:
         cls : type or None
             The class which the function will be registered to handle. If
             None, it is assumed that the function will produce a generator.
-        monkey_patch : bool, optional
-            Whether to allow an IORegistry to attach a `read` method to `cls`
-            with this format listed as an option.
         override : bool, optional
             If True, any existing readers for `cls` in this format will be
             overriden.
@@ -978,13 +850,15 @@ class Format:
 
         Examples
         --------
-        >>> from skbio.io.registry import Format, IORegistry
-        >>> registry = IORegistry()
+        >>> from skbio.io.registry import Format, io_registry
+        >>> from skbio.io.registry import Read, Write
         >>> myformat = Format('myformat')
-        >>> registry.add_format(myformat)
+        >>> io_registry.add_format(myformat)
         >>> # If developing a new format for skbio, use the create_format()
         >>> # factory instead of the above.
         >>> class MyObject:
+        ...     read = Read()
+        ...     write = Write()
         ...     def __init__(self, content):
         ...         self.content = content
         ...
@@ -992,10 +866,11 @@ class Format:
         ... def myformat_reader(fh):
         ...     return MyObject(fh.readlines()[1:])
         ...
-        >>> registry.monkey_patch() # If developing skbio, this isn't needed
         >>> MyObject.read(["myformat2\n", "some content here!\n"],
         ...               format='myformat').content
         ['some content here!\n']
+        >>> # Cleanup
+        >>> io_registry.remove_format('myformat')
 
         """
         self._check_registration(cls)
@@ -1030,12 +905,12 @@ class Format:
                         kwargs.update(zip(file_keys, fhs[:-1]))
                         yield from reader_function(fhs[-1], **kwargs)
 
-            self._add_reader(cls, wrapped_reader, monkey_patch, override)
+            self._add_reader(cls, wrapped_reader, override)
             return wrapped_reader
 
         return decorator
 
-    def writer(self, cls, monkey_patch=True, override=False):
+    def writer(self, cls, override=False):
         r"""Decorate a function to act as the writer for a class in this format.
 
         The function should take an instance of `cls` as its first argument
@@ -1052,9 +927,6 @@ class Format:
         cls : type or None
             The class which the function will be registered to handle. If
             None, it is assumed that the function will consume a generator.
-        monkey_patch : bool, optional
-            Whether to allow an IORegistry to attach a `write` method to `cls`
-            with this format listed as an option.
         override : bool, optional
             If True, any existing writers for `cls` in this format will be
             overriden.
@@ -1067,14 +939,16 @@ class Format:
 
         Examples
         --------
-        >>> from skbio.io.registry import Format, IORegistry
-        >>> registry = IORegistry()
+        >>> from skbio.io.registry import Format, io_registry
+        >>> from skbio.io.registry import Read, Write
         >>> myformat = Format('myformat')
-        >>> registry.add_format(myformat)
+        >>> io_registry.add_format(myformat)
         >>> # If developing a new format for skbio, use the create_format()
         >>> # factory instead of the above.
         >>> class MyObject:
         ...     default_write_format = 'myformat'
+        ...     read = Read()
+        ...     write = Write()
         ...     def __init__(self, content):
         ...         self.content = content
         ...
@@ -1084,10 +958,11 @@ class Format:
         ...     for c in obj.content:
         ...         fh.write(c)
         ...
-        >>> registry.monkey_patch() # If developing skbio, this isn't needed
         >>> obj = MyObject(["some content here!\n"])
         >>> obj.write([], format='myformat')
         ['myformat2\n', 'some content here!\n']
+        >>> # Cleanup
+        >>> io_registry.remove_format('myformat')
 
         """
         self._check_registration(cls)
@@ -1106,7 +981,7 @@ class Format:
                     kwargs.update(zip(file_keys, fhs[:-1]))
                     writer_function(obj, fhs[-1], **kwargs)
 
-            self._add_writer(cls, wrapped_writer, monkey_patch, override)
+            self._add_writer(cls, wrapped_writer, override)
             return wrapped_writer
 
         return decorator
@@ -1153,25 +1028,21 @@ class Format:
 
         return file_keys, files
 
-    def _add_writer(self, cls, writer, monkey_patch, override):
+    def _add_writer(self, cls, writer, override):
         if cls in self._writers and not override:
             raise DuplicateRegistrationError(
                 "There is already a writer"
                 " registered to %s in format: %s" % (cls, self._name)
             )
         self._writers[cls] = writer
-        if monkey_patch and cls is not None:
-            self._monkey_patch["write"].add(cls)
 
-    def _add_reader(self, cls, reader, monkey_patch, override):
+    def _add_reader(self, cls, reader, override):
         if cls in self._readers and not override:
             raise DuplicateRegistrationError(
                 "There is already a reader"
                 " registered to %s in format: %s" % (cls, self._name)
             )
         self._readers[cls] = reader
-        if monkey_patch and cls is not None:
-            self._monkey_patch["read"].add(cls)
 
 
 io_registry = IORegistry()
@@ -1199,3 +1070,136 @@ def write(obj, format, into, **kwargs):
 def create_format(*args, **kwargs):
     """Make a new format."""
     return io_registry.create_format(*args, **kwargs)
+
+
+class Read:
+    """A descriptor class to generate read methods for scikit-bio objects."""
+
+    def __get__(self, instance, cls):
+        if "_read_method" not in cls.__dict__:
+            cls._read_method = self._generate_read_method(cls)
+        return cls._read_method
+
+    def _generate_read_method(self, cls):
+        def _read_method(file, format=None, **kwargs):
+            return skbio.io.read(file, into=cls, format=format, **kwargs)
+
+        _read_method.__doc__ = self._make_docstring(cls)
+        return _read_method
+
+    def _make_docstring(self, cls):
+        name, supported_fmts, default, see = _docstring_vars(cls, "read")
+        return f"""Create a new ``{name}`` instance from a file.
+
+This is a convenience method for :func:`skbio.io.registry.read`. For more information
+about the I/O system in scikit-bio, please see :mod:`skbio.io`.
+
+{supported_fmts}
+
+Parameters
+----------
+file : openable (filepath, URL, filehandle, etc.)
+    The location to read the given `format` into. Something that is understood by
+    :func:`skbio.io.util.open`. Filehandles are not automatically closed, it is the
+    responsibility of the caller.
+format : str, optional
+    The format of the file. The format must be a format name with a reader for
+    ``{name}``. If None, the format will be inferred.
+kwargs : dict, optional
+    Additional arguments passed to :func:`skbio.io.registry.read()` and the reader for
+    ``{name}``.
+
+Returns
+-------
+``{name}``
+    A new instance.
+
+See Also
+--------
+write
+skbio.io.registry.read
+skbio.io.util.open
+{see}
+
+"""
+
+
+class Write:
+    """A descriptor class to generate write methods for scikit-bio objects."""
+
+    def __get__(self, instance, cls):
+        """This gets called when any skbio object accesses its ``write`` attribute."""
+        if instance is None:
+            if "_write_method" not in cls.__dict__:
+                cls._write_method = self._generate_write_method(cls)
+            return cls._write_method
+        if "_write_method" not in instance.__dict__:
+            instance._write_method = types.MethodType(
+                self._generate_write_method(cls), instance
+            )
+        return instance._write_method
+
+    def _generate_write_method(self, cls):
+        def _write_method(self, file, format=None, **kwargs):
+            if format is None:
+                if hasattr(cls, "default_write_format"):
+                    format = cls.default_write_format
+                else:
+                    raise ValueError(f"{cls.__name__} has no default write format.")
+            return skbio.io.write(self, into=file, format=format, **kwargs)
+
+        _write_method.__doc__ = self._make_docstring(cls)
+
+        return _write_method
+
+    def _make_docstring(self, cls):
+        name, supported_fmts, default, see = _docstring_vars(cls, "write")
+        return f"""Write an instance of ``{name}`` to a file.
+
+This is a convenience method for :func:`skbio.io.registry.write()`. For more
+information about the I/O system in scikit-bio, please see :mod:`skbio.io`.
+
+{supported_fmts}
+
+Parameters
+----------
+file : openable (filepath, filehandle, etc.)
+    The location to write the given `format` into. Something that is understood by
+    :func:`skbio.io.util.open()`. Filehandles are not automatically closed, it is the
+    responsibility of the caller.
+format : str, optional
+    The format to write the ``{name}`` object as. The format must be a registered
+    format name with a writer for ``{name}``. Default is ``'{default}'``.
+kwargs : dict, optional
+    Additional arguments passed to the writer for ``{name}``.
+
+See Also
+--------
+read
+skbio.io.registry.write
+skbio.io.util.open
+{see}
+
+"""
+
+
+def _docstring_vars(cls, func):
+    """Generate variables for dynamically generated docstrings."""
+    if func == "write":
+        formats = io_registry.list_write_formats(cls)
+    elif func == "read":
+        formats = io_registry.list_read_formats(cls)
+    else:
+        raise ValueError("'func' parameter must be 'read' or 'write'.")
+
+    imports = io_registry._import_paths(formats)
+    formats = io_registry._formats_for_docs(formats, imports)
+    if formats:
+        supported_fmts = f"Supported file formats include:\n\n{formats}"
+    else:
+        supported_fmts = ""
+    name = cls.__name__
+    default = getattr(cls, "default_write_format", "None")
+    see = "\n".join(imports)
+
+    return name, supported_fmts, default, see
