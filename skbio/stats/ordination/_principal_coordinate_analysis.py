@@ -1,27 +1,18 @@
-# ----------------------------------------------------------------------------
-# Copyright (c) 2013--, scikit-bio development team.
-#
-# Distributed under the terms of the Modified BSD License.
-#
-# The full license is in the file LICENSE.txt, distributed with this software.
-# ----------------------------------------------------------------------------
-
 import numpy as np
 import pandas as pd
 from numpy import dot, hstack
 from numpy.linalg import qr, svd
+from numpy.random import standard_normal
 from scipy.linalg import eigh
 from warnings import warn
 
-from skbio.util import get_rng
 from skbio.stats.distance import DistanceMatrix
 from ._ordination_results import OrdinationResults
 from ._utils import center_distance_matrix, scale
 
 
-def pcoa(
-    distance_matrix, method="eigh", number_of_dimensions=0, inplace=False, seed=None
-):
+
+def pcoa(distance_matrix, method="eigh", number_of_dimensions=0, inplace=False):
     r"""Perform Principal Coordinate Analysis.
 
     Principal Coordinate Analysis (PCoA) is a method similar
@@ -69,11 +60,7 @@ def pcoa(
     inplace : bool, optional
         If true, centers a distance matrix in-place in a manner that reduces
         memory consumption.
-    seed : int or np.random.Generator, optional
-        A user-provided random seed or random generator instance for faster
-        heuristic eigendecomposition. Relevant when `method="fsvd"`. See
-        :func:`details <skbio.util.get_rng>`.
-
+        
         .. versionadded:: 0.6.3
 
     Returns
@@ -126,7 +113,7 @@ def pcoa(
             "the number_of_dimensions equal to the "
             "dimensionality of the given distance matrix?"
         )
-
+        
     # Perform eigendecomposition
     if method == "eigh":
         # eigh does not natively support specifying number_of_dimensions, i.e.
@@ -137,13 +124,28 @@ def pcoa(
         eigvals, eigvecs = eigh(matrix_data)
         long_method_name = "Principal Coordinate Analysis"
     elif method == "fsvd":
-        eigvals, eigvecs = _fsvd(matrix_data, number_of_dimensions, seed=seed)
         long_method_name = "Approximate Principal Coordinate Analysis " "using FSVD"
+        num_dimensions = number_of_dimensions  #new parameter for num_dimensions = number of dimensions (accounting for non-int values)
+        if isinstance(number_of_dimensions, float):
+            warn(
+                "FSVD: since value for number_of_dimensions is specified as float, "
+                "PCoA for all dimensions will be computed, which may "
+                "result in long computation time if the original "
+                "distance matrix is large."
+                "Consider specifying an integer value to optimize performance.",
+                RuntimeWarning,
+            )
+            num_dimensions = matrix_data.shape[0]  
+        eigvals, eigvecs = _fsvd(matrix_data, num_dimensions)
+        long_method_name = "Approximate Principal Coordinate Analysis using FSVD"
     else:
         raise ValueError(
             "PCoA eigendecomposition method {} not supported.".format(method)
         )
-
+        
+    # Ensure number_of_dimensions does not exceed available dimensions
+    number_of_dimensions = min(number_of_dimensions, eigvals.shape[0])
+    
     # cogent makes eigenvalues positive by taking the
     # abs value, but that doesn't seem to be an approach accepted
     # by L&L to deal with negative eigenvalues. We raise a warning
@@ -187,7 +189,7 @@ def pcoa(
         # it to be relative to the entire dimensionality of the
         # centered distance matrix.
 
-        # An alternative method of calculating th sum of eigenvalues is by
+        # An alternative method of calculating the sum of eigenvalues is by
         # computing the trace of the centered distance matrix.
         # See proof outlined here: https://goo.gl/VAYiXx
         sum_eigenvalues = np.trace(matrix_data)
@@ -196,6 +198,11 @@ def pcoa(
         sum_eigenvalues = np.sum(eigvals)
 
     proportion_explained = eigvals / sum_eigenvalues
+    if isinstance(number_of_dimensions, float):
+        cumulative_variance = np.cumsum(proportion_explained)  
+        num_dimensions = np.searchsorted(cumulative_variance, number_of_dimensions) + 1 
+        #gives the number of dimensions need to reach specified variance
+        number_of_dimensions = num_dimensions #updates number of dimensions to reach the requirement of variance. 
 
     # In case eigh is used, eigh computes all eigenvectors and -values.
     # So if number_of_dimensions was specified, we manually need to ensure
@@ -225,7 +232,7 @@ def pcoa(
     )
 
 
-def _fsvd(centered_distance_matrix, number_of_dimensions=10, seed=None):
+def _fsvd(centered_distance_matrix, number_of_dimensions=10):
     """Perform singular value decomposition.
 
     More specifically in this case eigendecomposition, using fast heuristic algorithm
@@ -240,8 +247,6 @@ def _fsvd(centered_distance_matrix, number_of_dimensions=10, seed=None):
     number_of_dimensions : int
        Number of dimensions to keep. Must be lower than or equal to the
        rank of the given distance_matrix.
-    seed : int or np.random.Generator, optional
-        A user-provided random seed or random generator instance.
 
     Returns
     -------
@@ -294,8 +299,7 @@ def _fsvd(centered_distance_matrix, number_of_dimensions=10, seed=None):
 
     # Form a real nxl matrix G whose entries are independent, identically
     # distributed Gaussian random variables of zero mean and unit variance
-    rng = get_rng(seed)
-    G = rng.standard_normal(size=(n, k))
+    G = standard_normal(size=(n, k))
 
     if use_power_method:
         # use only the given exponent
@@ -316,7 +320,7 @@ def _fsvd(centered_distance_matrix, number_of_dimensions=10, seed=None):
         H = hstack((H, dot(centered_distance_matrix, dot(centered_distance_matrix, H))))
         for x in range(3, num_levels + 2):
             tmp = dot(centered_distance_matrix, dot(centered_distance_matrix, H))
-
+            
             H = hstack(
                 (H, dot(centered_distance_matrix, dot(centered_distance_matrix, tmp)))
             )
@@ -337,7 +341,7 @@ def _fsvd(centered_distance_matrix, number_of_dimensions=10, seed=None):
     Ut = dot(Q, W)
 
     U_fsvd = Ut[:, :number_of_dimensions]
-
+    
     S = St[:number_of_dimensions]
 
     # drop imaginary component, if we got one
