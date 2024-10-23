@@ -172,6 +172,7 @@ import itertools
 import inspect
 from functools import wraps
 from importlib import import_module
+from re import sub
 
 import skbio
 from ._exception import DuplicateRegistrationError, InvalidRegistrationError
@@ -203,9 +204,33 @@ class IORegistry:
         formats if they are irrelevant. (They are incompatible with such a
         filehandle anyways.)
         """
-        print("correct version")
         self._binary_formats = {}
         self._text_formats = {}
+        # These lists are what enable lazy loading. Before a module is imported,
+        # the registry has no information about the relations between skbio objects
+        # and formats. With these lists, the registry is at least aware of the names
+        # of the default formats to be imported. Custom formats and their
+        # readers/writers will still be added to the dictionaries above as usual.
+        self._binary_formats_list = ["binary_dm", "biom", "embed"]
+        self._text_formats_list = [
+            "blast+6",
+            "blast+7",
+            "clustal",
+            "embl",
+            "fasta",
+            "fastq",
+            "lsmat",
+            "newick",
+            "ordination",
+            "phylip",
+            "qseq",
+            "genbank",
+            "gff3",
+            "stockholm",
+            "taxdump",
+            "sample_metadata",
+            "<emptyfile>",
+        ]
         self._lookups = (self._binary_formats, self._text_formats)
 
     def create_format(self, *args, **kwargs):
@@ -284,6 +309,7 @@ class IORegistry:
         """
         if not any(format_name in x for x in self._lookups):
             try:
+                # print(f"importing {format_name}\nfrom get_sniffer\n")
                 import_module(f"skbio.io.format.{format_name}")
             except ImportError:
                 pass
@@ -334,11 +360,13 @@ class IORegistry:
         return self._get_rw(format_name, cls, "writers")
 
     def _get_rw(self, format_name, cls, lookup_name):
-        if not any(format_name in x for x in self._lookups):
-            try:
-                import_module(f"skbio.io.format.{format_name}")
-            except ImportError:
-                pass
+        # Leave this one commented out. It may not be necessary.
+        # if not any(format_name in x for x in self._lookups):
+        #     try:
+        #         print(f"importing {format_name}\nfrom get_rw\n")
+        #         import_module(f"skbio.io.format.{format_name}")
+        #     except ImportError:
+        #         print("no import")
 
         for lookup in self._lookups:
             if format_name in lookup:
@@ -437,6 +465,10 @@ class IORegistry:
             backup = fh.tell()
 
             if is_binary_file and kwargs.get("encoding", "binary") == "binary":
+                for fmt in self._binary_formats_list:
+                    if not any(fmt in x for x in self._lookups):
+                        # print(f"importing {fmt}\nfrom sniff\n")
+                        import_module(f"skbio.io.format.{fmt}")
                 bin_lookup = self._binary_formats
                 if into is not None:
                     bin_lookup = self._reduce_formats(bin_lookup, into)
@@ -445,6 +477,15 @@ class IORegistry:
             if kwargs.get("encoding", None) != "binary":
                 # We can always turn a binary file into a text file, but the
                 # reverse doesn't make sense.
+                for fmt in self._text_formats_list:
+                    ## print(f"\nformat in sniff {fmt}")
+                    # Blast+6, Blast+7, and <emptyfile> format names do not match
+                    # their respective module names, so we strip everything non
+                    # alphanumeric or underscore.
+                    fmt_strip = sub(r"[^A-Za-z0-9_]", "", fmt)
+                    if not any(fmt in x for x in self._lookups):
+                        # print(f"importing {fmt}\nfrom sniff\n")
+                        import_module(f"skbio.io.format.{fmt_strip}")
                 text_lookup = self._text_formats
                 if into is not None:
                     text_lookup = self._reduce_formats(text_lookup, into)
@@ -473,19 +514,12 @@ class IORegistry:
 
     def _find_matches(self, file, lookup, **kwargs):
         matches = []
-        for format, format_obj in lookup.items():
-            try:
-                print(f"getting to import")
-                print(f"{format}\n")
-                import_module(f"skbio.io.format.{format}")
-            except ImportError:
-                pass
-
-            if format_obj.sniffer_function is not None:
-                is_format, skwargs = format_obj.sniffer_function(file, **kwargs)
+        for format in lookup.values():
+            if format.sniffer_function is not None:
+                is_format, skwargs = format.sniffer_function(file, **kwargs)
                 file.seek(0)
                 if is_format:
-                    matches.append((format_obj.name, skwargs))
+                    matches.append((format.name, skwargs))
         return matches
 
     def read(self, file, format=None, into=None, verify=True, **kwargs):
