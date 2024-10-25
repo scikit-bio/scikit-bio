@@ -137,12 +137,27 @@ def pcoa(
         eigvals, eigvecs = eigh(matrix_data)
         long_method_name = "Principal Coordinate Analysis"
     elif method == "fsvd":
-        eigvals, eigvecs = _fsvd(matrix_data, number_of_dimensions, seed=seed)
+        # new parameter for num_dimensions = number of dimensions (accounting for
+        # non-int values)
+        num_dimensions = number_of_dimensions
+        if isinstance(number_of_dimensions, float):
+            warn(
+                "FSVD: since value for number_of_dimensions is specified as float, "
+                "PCoA for all dimensions will be computed, which may "
+                "result in long computation time if the original "
+                "distance matrix is large."
+                "Consider specifying an integer value to optimize performance.",
+                RuntimeWarning,
+            )
+            num_dimensions = matrix_data.shape[0]
+        eigvals, eigvecs = _fsvd(matrix_data, num_dimensions, seed=seed)
         long_method_name = "Approximate Principal Coordinate Analysis " "using FSVD"
     else:
         raise ValueError(
             "PCoA eigendecomposition method {} not supported.".format(method)
         )
+    # Ensure number_of_dimensions does not exceed available dimensions
+    # number_of_dimensions = min(number_of_dimensions, eigvals.shape[0])
 
     # cogent makes eigenvalues positive by taking the
     # abs value, but that doesn't seem to be an approach accepted
@@ -196,6 +211,12 @@ def pcoa(
         sum_eigenvalues = np.sum(eigvals)
 
     proportion_explained = eigvals / sum_eigenvalues
+    if isinstance(number_of_dimensions, float):
+        cumulative_variance = np.cumsum(proportion_explained)
+        num_dimensions = np.searchsorted(cumulative_variance, number_of_dimensions) + 1
+        # gives the number of dimensions need to reach specified variance
+        # updates number of dimensions to reach the requirement of variance.
+        number_of_dimensions = num_dimensions
 
     # In case eigh is used, eigh computes all eigenvectors and -values.
     # So if number_of_dimensions was specified, we manually need to ensure
