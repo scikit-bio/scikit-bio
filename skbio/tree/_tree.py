@@ -7,10 +7,9 @@
 # ----------------------------------------------------------------------------
 
 from warnings import warn, simplefilter
-from operator import or_, ne, gt, itemgetter
+from operator import ne, gt, itemgetter
 from copy import copy, deepcopy
 from itertools import chain, combinations
-from functools import reduce
 from collections import defaultdict, deque
 
 import numpy as np
@@ -1105,6 +1104,8 @@ class TreeNode(SkbioObject):
         -----
         Nodes are ordered by a postorder traversal of the tree. The order is
         consistent between calls.
+
+        If self is a tip, it won't be yieled unless `include_self` is True.
 
         Examples
         --------
@@ -3053,67 +3054,419 @@ class TreeNode(SkbioObject):
         else:
             return len(list(self.traverse(include_self=True)))
 
-    def subset(self):
-        r"""Return set of tip names that descend from specified node.
+    def subset(self, include_self=False):
+        r"""Return a subset of taxa descending from self.
 
-        Get the set of `name` on tips that descend from this node.
+        A subset can be considered as taxa (tip names) within a clade defined by the
+        current node (branch), selected from all taxa within the tree.
+
+        Parameters
+        ----------
+        include_self : bool, optional
+            Whether to include the current node if it is a tip (default: False).
+
+            .. versionadded:: 0.6.3
 
         Returns
         -------
-        frozenset
-            The set of names at the tips of the clade that descends from self
+        frozenset of str
+            The set of names at the tips of the clade that descends from self.
 
         See Also
         --------
+        tips
         subsets
-        compare_subsets
+        bipartition
+
+        Notes
+        -----
+        This is a convenient method to return all taxa (tip names) rather than the tip
+        nodes themselves. Internal node names will not be included.
+
+        The returned value (a frozenset) is unordered and hashable, therefore can be
+        used to define clades, lineages and taxon groups for efficient lookup. For
+        example, one can check whether a taxon exists in the current tree or clade.
+
+        By default, if this method is applied to a tip, an empty set will be returned,
+        because a tip does not have descendants. If `include_self` is True, a single-
+        element set containing the name of the tip will be returned. This behavior can
+        be considered as returning taxa descending from the branch connecting self
+        and its parent.
+
+        Applying this method to the root node of a tree will return all taxa in the
+        tree.
 
         Examples
         --------
         >>> from skbio import TreeNode
         >>> tree = TreeNode.read(["((a,(b,c)d)e,(f,g)h)i;"])
+        >>> print(tree.ascii_art())
+                            /-a
+                  /e-------|
+                 |         |          /-b
+                 |          \d-------|
+        -i-------|                    \-c
+                 |
+                 |          /-f
+                  \h-------|
+                            \-g
+
         >>> sorted(tree.subset())
         ['a', 'b', 'c', 'f', 'g']
 
+        >>> subset = tree.find('e').subset()
+        >>> sorted(subset)
+        ['a', 'b', 'c']
+
+        >>> 'a' in subset
+        True
+
+        >>> 'f' in subset
+        False
+
         """
-        return frozenset({i.name for i in self.tips()})
+        return frozenset({i.name for i in self.tips(include_self=include_self)})
 
-    def subsets(self):
-        r"""Return all sets of tip names that come from self and its descendants.
+    def subsets(self, within=None, include_full=False, include_singles=False):
+        r"""Return all subsets of taxa defined by nodes descending from self.
 
-        Compute all subsets of tip names over `self`, or, represent a tree as a
-        set of nested sets.
+        Parameters
+        ----------
+        within : iterable of str, optional
+            A custom set of taxa to refine the result. Only taxa within it will be
+            considered. If None (default), all taxa in the tree will be considered.
+
+            .. versionadded:: 0.6.3
+
+        include_full : bool, optional
+            Whether to include a set of all taxa in the result. Default is False, as
+            such a set provides no topological information.
+
+            .. versionadded:: 0.6.3
+
+        include_singles : bool, optional
+            Whether to include subsets with only one taxon in the result. Default is
+            False, as such sets provide no topological information.
+
+            .. versionadded:: 0.6.3
 
         Returns
         -------
-        frozenset
-            A frozenset of frozensets of str
+        frozenset of frozensets of str
+            All subsets of taxa defined by nodes descending from self.
 
         See Also
         --------
         subset
         compare_subsets
+        bipartitions
+
+        Notes
+        -----
+        The returned value represents the tree as a set of nested sets, each of which
+        representing a clade in the tree. It is useful for assessing topological
+        patterns of a tree.
+
+        The returned value itself and each of its components (frozensets) are unordered
+        and hashable, making it efficient for lookup and comparison. For example, one
+        can check whether a group of taxa form a clade in the tree, regardless of its
+        internal structure.
+
+        This method can be applied to both rooted and unrooted trees. However, the
+        underlying assumption is that the direction of descendance is from the current
+        node to the tips below. That is, the root of the tree, even if not explicitly
+        defined, should be at or above the current node. This should be considered when
+        applying this method to an unrooted tree. If such an assumption is not present,
+        one should consider using :meth:`bipartitions` instead.
+
+        This method operates on the subtree below the current node.
 
         Examples
         --------
         >>> from skbio import TreeNode
-        >>> tree = TreeNode.read(["(((a,b)c,(d,e)f)h)root;"])
+        >>> tree = TreeNode.read(["((a,(b,c)d)e,(f,g)h)i;"])
+        >>> print(tree.ascii_art())
+                            /-a
+                  /e-------|
+                 |         |          /-b
+                 |          \d-------|
+        -i-------|                    \-c
+                 |
+                 |          /-f
+                  \h-------|
+                            \-g
+
         >>> subsets = tree.subsets()
-        >>> len(subsets)
-        3
+        >>> for s in sorted(subsets, key=sorted):
+        ...     print(sorted(s))
+        ['a', 'b', 'c']
+        ['b', 'c']
+        ['f', 'g']
+
+        >>> {'a', 'b', 'c'} in subsets
+        True
+
+        >>> {'a', 'b'} in subsets
+        False
 
         """
-        sets = []
-        sets_append = sets.append
-        for i in self.postorder(include_self=False):
-            if not i.children:
-                i.__leaf_set = frozenset([i.name])
+        if within and not isinstance(within, (set, frozenset, dict)):
+            within = frozenset(within)
+
+        subsets = []
+        subsets_append = subsets.append
+        for node in self.postorder(include_self=include_full):
+            # tip: create a one-taxon set
+            if not node.children:
+                if not within or node.name in within:
+                    subset = frozenset([node.name])
+                else:
+                    subset = frozenset()
+
+            # internal node: merge sets of children
             else:
-                leaf_set = reduce(or_, [c.__leaf_set for c in i.children])
-                if len(leaf_set) > 1:
-                    sets_append(leaf_set)
-                i.__leaf_set = leaf_set
-        return frozenset(sets)
+                subset = frozenset()
+                for child in node.children:
+                    subset |= child._subset
+                    delattr(child, "_subset")
+
+            if subset and include_singles or len(subset) > 1:
+                subsets_append(subset)
+            node._subset = subset
+
+        # final clean up
+        if include_full:
+            delattr(self, "_subset")
+        else:
+            for child in self.children:
+                delattr(child, "_subset")
+
+        return frozenset(subsets)
+
+    def bipartition(self):
+        r"""Return a bipartition of the tree at the current branch.
+
+        .. versionadded:: 0.6.3
+
+        A bipartition, partition or split of a tree is the division of all taxa (tip
+        names) into two complementary subsets, separated at a given branch. In this
+        context, it is the branch connecting self and its parent. One subset consists
+        of all taxa descending from self and the other consists of all remaining taxa.
+        The smaller subset of the two is returned.
+
+        Returns
+        -------
+        frozenset of str
+            The set of names at the tips on the smaller side of the current branch.
+
+        See Also
+        --------
+        subset
+        bipartitions
+
+        Notes
+        -----
+        A bipartition describes the topological placement of a branch regardless of
+        other branches and the root of the tree.
+
+        The returned value is a set of tip names on the smaller side of the branch, as
+        determined by the number of tips. If a tie is observed, the tip names on both
+        sides are sorted lexicographically and the first set is returned.
+
+        The returned value (a frozenset) is unordered and hashable, making it efficient
+        for lookup and comparison. For example, one can check whether two branches in
+        two unrooted trees with the same taxa agree with each other.
+
+        Rerooting a tree will not change the bipartition of a branch. However, one
+        should be cautious because this method applies to a node, and rerooting may
+        change the branch above the current node.
+
+        Applying this method to a root node will return an empty set. Applying this
+        method to a tip will return a single-element set containing the tip name. These
+        two situations produce outputs independent of the topology of the tree.
+
+        Examples
+        --------
+        >>> from skbio import TreeNode
+        >>> tree = TreeNode.read(["(((a,(b,c)X)Y,d)Z,(e,f),g);"])
+        >>> print(tree.ascii_art())
+                                      /-a
+                            /Y-------|
+                           |         |          /-b
+                  /Z-------|          \X-------|
+                 |         |                    \-c
+                 |         |
+                 |          \-d
+        ---------|
+                 |          /-e
+                 |---------|
+                 |          \-f
+                 |
+                  \-g
+
+        Clade has less than half taxa, return them.
+
+        >>> sorted(tree.find('X').bipartition())
+        ['b', 'c']
+
+        Clade has more than half taxa, return remaining taxa.
+
+        >>> sorted(tree.find('Z').bipartition())
+        ['e', 'f', 'g']
+
+        Clade has exactly half taxa, return the lexicographically smaller side.
+
+        >>> sorted(tree.find('Y').bipartition())
+        ['a', 'b', 'c']
+
+        A second tree with the same topology but different root position.
+
+        >>> tree2 = TreeNode.read(["((c,b)X2,a,(((f,e),g)Y2,d));"])
+        >>> print(tree2.ascii_art())
+                            /-c
+                  /X2------|
+                 |          \-b
+                 |
+                 |--a
+        ---------|
+                 |                              /-f
+                 |                    /--------|
+                 |          /Y2------|          \-e
+                 |         |         |
+                  \--------|          \-g
+                           |
+                            \-d
+
+        Although the tree has been re-positioned, the corresponding branches have the
+        same bipartitions, whereas non-corresponding branches don't.
+
+        >>> tree.find('X').bipartition() == tree2.find('X2').bipartition()
+        True
+
+        >>> tree.find('Y').bipartition() == tree2.find('Y2').bipartition()
+        False
+
+        """
+        bipart = self.subset(include_self=True)
+        full = self.root().subset(include_self=True)
+        if (size := len(bipart)) > (th := len(full) * 0.5):
+            bipart = full - bipart
+        elif size == th:
+            bipart, _ = sorted([bipart, full - bipart], key=sorted)
+        return bipart
+
+    def bipartitions(self, within=None, include_singles=False):
+        r"""Return all bipartitions within the tree under self.
+
+        .. versionadded:: 0.6.3
+
+        Parameters
+        ----------
+        within : iterable of str, optional
+            A custom set of taxa to refine the result. Only taxa within it will be
+            considered. If None (default), all taxa in the tree will be considered.
+        include_singles : bool, optional
+            Whether to include bipartitions with only one taxon at either side.
+            Default is False, as such bipartitions provide no topological
+            information.
+
+        Returns
+        -------
+        frozenset of frozensets of str
+            All sets of names at the tips on the smaller side of each branch.
+
+        See Also
+        --------
+        bipartition
+        subsets
+
+        Notes
+        -----
+        The returned value represents the tree as a set of nested sets, each of which
+        representing the position of a branch in the tree. It is useful for assessing
+        topological patterns of a tree.
+
+        The returned value itself and each of its components (frozensets) are unordered
+        and hashable, making it efficient for lookup and comparison. For example, one
+        can check whether the topologies of two trees are consistent, regardless of
+        their root positions.
+
+        This method can be applied to both rooted and unrooted trees. However, a rooted
+        tree implies the direction of descendance, which may violate the purpose of
+        bipartitioning a tree on arbitrary branches. If this is a concern, one should
+        consider using :meth:`subsets` instead.
+
+        This method operates on the subtree below the current node.
+
+        Examples
+        --------
+        >>> from skbio import TreeNode
+        >>> tree = TreeNode.read(["((a,(b,c)),(d,e),f);"])
+        >>> print(tree.ascii_art())
+                            /-a
+                  /--------|
+                 |         |          /-b
+                 |          \--------|
+                 |                    \-c
+        ---------|
+                 |          /-d
+                 |---------|
+                 |          \-e
+                 |
+                  \-f
+
+        Return all bipartitions of an unrooted tree.
+
+        >>> biparts = tree.bipartitions()
+        >>> for s in sorted(biparts, key=sorted):
+        ...     print(sorted(s))
+        ['a', 'b', 'c']
+        ['b', 'c']
+        ['d', 'e']
+
+        A second tree with the same topology but different root position.
+
+        >>> tree2 = TreeNode.read(["(a,((b,c),((d,e),f)));"])
+        >>> print(tree2.ascii_art())
+                  /-a
+                 |
+        ---------|                    /-b
+                 |          /--------|
+                 |         |          \-c
+                  \--------|
+                           |                    /-d
+                           |          /--------|
+                            \--------|          \-e
+                                     |
+                                      \-f
+
+        Although the tree has been re-positioned, the bipartitions remain the same.
+
+        >>> biparts == tree2.bipartitions()
+        True
+
+        """
+        # identify full set (universe)
+        full = self.subset()
+        if within:
+            if not isinstance(within, (set, frozenset)):
+                within = frozenset(within)
+            full &= within
+        th = len(full) * 0.5
+
+        biparts = []
+        biparts_append = biparts.append
+        for s in self.subsets(within=within, include_singles=include_singles):
+            # keep the smaller part by size, then by lexicographical order
+            if (size := len(s)) < th:
+                smaller = s
+            elif size > th:
+                smaller = full - s
+            else:
+                smaller, _ = sorted([s, full - s], key=sorted)
+            if smaller and include_singles or len(smaller) > 1:
+                biparts_append(smaller)
+        return frozenset(biparts)
 
     def _extract_support(self):
         """Extract the support value from a node label, if available.
@@ -3122,9 +3475,9 @@ class TreeNode(SkbioObject):
         -------
         tuple of
             int, float or None
-                The support value extracted from the node label
+                The support value extracted from the node label.
             str or None
-                The node label with the support value stripped
+                The node label with the support value stripped.
 
         """
         support, label = None, None
@@ -3151,7 +3504,7 @@ class TreeNode(SkbioObject):
         Returns
         -------
         str
-            Generated node label
+            Generated node label.
 
         """
         lblst = []
@@ -3675,40 +4028,76 @@ class TreeNode(SkbioObject):
 
         return DistanceMatrix(result + result.T, [n.name for n in tip_order])
 
-    def compare_rfd(self, other, proportion=False):
-        """Calculate the Robinson and Foulds symmetric difference.
+    def _compare_topology(self, other, method, shared_only, proportion):
+        """Calculate the difference of subsets or bipartitions."""
+        topo1, topo2 = getattr(self, method), getattr(other, method)
+        if shared_only:
+            set1, set2 = self.subset(), other.subset()
+            n_shared = len(shared := set1 & set2)
+            sets1 = topo1(within=(shared if len(set1) > n_shared else None))
+            sets2 = topo2(within=(shared if len(set2) > n_shared else None))
+        else:
+            sets1, sets2 = topo1(), topo2()
+        result = len(sets1.symmetric_difference(sets2))
+        if proportion:
+            result /= len(sets1) + len(sets2)
+        return result
+
+    def compare_rfd(self, other, proportion=False, rooted=None):
+        r"""Calculate the Robinson-Foulds (RF) distance between two trees.
 
         Parameters
         ----------
         other : TreeNode
-            A tree to compare against
-        proportion : bool
-            Return a proportional difference
+            The other tree to compare with.
+        proportion : bool, optional
+            Whether to return the RF distance as count (False, default) or proportion
+            (True).
+        rooted : bool, optional
+            Whether to consider the trees as rooted or unrooted. If None (default),
+            this will be determined based on whether self is rooted. However, one
+            can override it by explicitly specifying True (rooted) or False (unrooted).
+
+            .. versionadded:: 0.6.3
 
         Returns
         -------
-        float
-            The distance between the trees
+        int or float
+            The Robinson-Foulds distance as count or proportion between the trees.
+
+        .. versionchanged:: 0.6.3
+            When the tree is unrooted, the calculation is based on bipartitions instead
+            of subsets.
 
         Notes
         -----
-        Implementation based off of code by Julia Goodrich. The original
-        description of the algorithm can be found in [1]_.
+        The Robinson-Foulds (RF) distance, or symmetric difference, was originally
+        described in [1]_. It is the number of bipartitions that are not shared between
+        two unrooted trees. It is equivalent to :meth:`compare_bipartitions`.
 
-        Raises
-        ------
-        ValueError
-            If the tip names between `self` and `other` are equal.
+        For rooted trees, the RF distance is calculated as the number of unshared
+        clades (subsets). It is equivalent to :meth:`compare_subsets`.
+
+        This method determines whether the unrooted or rooted version of the RF
+        distance should be calculated according to whether self is rooted (see
+        :meth:`details <unroot>`). However, one can override this behavior using the
+        ``rooted`` parameter.
+
+        By specifying ``proportion=True``, a unit distance will be returned, ranging
+        from 0 (identical) to 1 (completely different).
+
+        Only taxa shared between the two trees are considered.
 
         See Also
         --------
         compare_subsets
+        compare_bipartitions
         compare_tip_distances
 
         References
         ----------
-        .. [1] Comparison of phylogenetic trees. Robinson and Foulds.
-           Mathematical Biosciences. 1981. 53:131-141
+        .. [1] Comparison of phylogenetic trees. Robinson and Foulds. Mathematical
+           Biosciences. 1981. 53:131-141
 
         Examples
         --------
@@ -3716,59 +4105,59 @@ class TreeNode(SkbioObject):
         >>> tree1 = TreeNode.read(["((a,b),(c,d));"])
         >>> tree2 = TreeNode.read(["(((a,b),c),d);"])
         >>> tree1.compare_rfd(tree2)
-        2.0
+        2
 
         """
-        t1names = {n.name for n in self.tips()}
-        t2names = {n.name for n in other.tips()}
+        if rooted is None:
+            rooted = len(self.children) == 2
+        method = "subsets" if rooted else "bipartitions"
+        return self._compare_topology(other, method, True, proportion)
 
-        if t1names != t2names:
-            if t1names < t2names:
-                tree1 = self
-                tree2 = other.shear(t1names)
-            else:
-                tree1 = self.shear(t2names)
-                tree2 = other
-        else:
-            tree1 = self
-            tree2 = other
-
-        tree1_sets = tree1.subsets()
-        tree2_sets = tree2.subsets()
-
-        not_in_both = tree1_sets.symmetric_difference(tree2_sets)
-
-        dist = float(len(not_in_both))
-
-        if proportion:
-            total_subsets = len(tree1_sets) + len(tree2_sets)
-            dist /= total_subsets
-
-        return dist
-
-    def compare_subsets(self, other, exclude_absent_taxa=False):
-        """Return fraction of overlapping subsets where self and other differ.
-
-        Names present in only one of the two trees will count as mismatches,
-        if you don't want this behavior, strip out the non-matching tips first.
+    def compare_subsets(
+        self,
+        other,
+        shared_only=False,
+        proportion=True,
+        exclude_absent_taxa=False,
+    ):
+        r"""Calculate the difference of subsets between two trees.
 
         Parameters
         ----------
         other : TreeNode
-            The tree to compare
-        exclude_absent_taxa : bool
-            Strip out names that don't occur in both trees
+            The other tree to compare with.
+        shared_only : bool, optional
+            Only consider taxa shared with the other tree. Default is False.
+
+            .. versionadded:: 0.6.3
+
+        proportion : bool, optional
+            Whether to return count (False) or proportion (True, default) of different
+            subsets.
+        exclude_absent_taxa : bool, optional
+            Alias of ``shared_only`` for backward compatibility. Deprecated and to be
+            removed in a future release.
+
+            .. deprecated:: 0.6.3
 
         Returns
         -------
-        float
-            The fraction of overlapping subsets that differ between the trees
+        int or float
+            The count or proportion of subsets that differ between the trees.
+
+        .. versionchanged:: 0.6.3
+            The algorithm is now identical to that of :meth:`compare_rfd` for rooted
+                trees.
 
         See Also
         --------
-        compare_rfd
-        compare_tip_distances
         subsets
+        compare_rfd
+        compare_bipartitions
+
+        Notes
+        -----
+        This metric is equivalent to the Robinson-Foulds distance on rooted trees.
 
         Examples
         --------
@@ -3779,22 +4168,49 @@ class TreeNode(SkbioObject):
         0.5
 
         """
-        self_sets, other_sets = self.subsets(), other.subsets()
+        shared_only |= exclude_absent_taxa
+        return self._compare_topology(other, "subsets", shared_only, proportion)
 
-        if exclude_absent_taxa:
-            in_both = self.subset() & other.subset()
-            self_sets = (i & in_both for i in self_sets)
-            self_sets = frozenset({i for i in self_sets if len(i) > 1})
-            other_sets = (i & in_both for i in other_sets)
-            other_sets = frozenset({i for i in other_sets if len(i) > 1})
+    def compare_bipartitions(self, other, proportion=True):
+        r"""Calculate the difference of bipartitions between two trees.
 
-        total_subsets = len(self_sets) + len(other_sets)
-        intersection_length = len(self_sets & other_sets)
+        .. versionadded:: 0.6.3
 
-        if not total_subsets:  # no common subsets after filtering, so max dist
-            return 1
+        Parameters
+        ----------
+        other : TreeNode
+            The other tree to compare with.
+        proportion : bool, optional
+            Whether to return count (False) or proportion (True, default) of different
+            bipartitions.
 
-        return 1 - (2 * intersection_length / float(total_subsets))
+        Returns
+        -------
+        int or float
+            The count or proportion of bipartitions that differ between the trees.
+
+        See Also
+        --------
+        bipartitions
+        compare_rfd
+        compare_subsets
+
+        Notes
+        -----
+        This metric is equivalent to the Robinson-Foulds distance on unrooted trees.
+
+        Only taxa shared between the two trees are considered.
+
+        Examples
+        --------
+        >>> from skbio import TreeNode
+        >>> tree1 = TreeNode.read(["((a,b),(c,d));"])
+        >>> tree2 = TreeNode.read(["(((a,b),c),d);"])
+        >>> tree1.compare_bipartitions(tree2)
+        0.0
+
+        """
+        return self._compare_topology(other, "bipartitions", True, proportion)
 
     def compare_tip_distances(self, other, sample=None, dist_f=None, shuffle_f=None):
         r"""Compare self to other using tip-to-tip distance matrices.

@@ -59,6 +59,25 @@ class TreeTests(TestCase):
 
         self.complex_tree = TreeNode.read([
             "(((a,b)int1,(x,y,(w,z)int2,(c,d)int3)int4),(e,f)int5);"])
+        #                               /-a
+        #                     /int1----|
+        #                    |          \-b
+        #                    |
+        #           /--------|          /-x
+        #          |         |         |
+        #          |         |         |--y
+        #          |         |         |
+        #          |          \int4----|          /-w
+        #          |                   |-int2----|
+        # ---------|                   |          \-z
+        #          |                   |
+        #          |                   |          /-c
+        #          |                    \int3----|
+        #          |                              \-d
+        #          |
+        #          |          /-e
+        #           \int5----|
+        #                     \-f
 
     def test_gops(self):
         """Basic TreeNode operations should work as expected."""
@@ -1438,19 +1457,121 @@ class TreeTests(TestCase):
         self.assertEqual(obs, exp)
 
     def test_subset(self):
-        """subset should return set of leaves that descends from node"""
+        """Return a set of tip names descending from a node."""
         t = self.simple_t
         self.assertEqual(t.subset(), frozenset("abcd"))
         c = t.children[0]
         self.assertEqual(c.subset(), frozenset("ab"))
         leaf = c.children[1]
         self.assertEqual(leaf.subset(), frozenset(""))
+        self.assertEqual(leaf.subset(include_self=True), frozenset("b"))
 
     def test_subsets(self):
-        """subsets should return all subsets descending from a set"""
+        """Return all subsets descending from a node."""
         t = self.simple_t
-        self.assertEqual(t.subsets(), frozenset(
+
+        # default case
+        self.assertSetEqual(t.subsets(), frozenset(
             [frozenset("ab"), frozenset("cd")]))
+
+        # make sure intermediates are cleaned
+        for node in t.traverse(include_self=False):
+            self.assertFalse(hasattr(node, "_subset"))
+
+        # custom range
+        self.assertSetEqual(t.subsets(within={"a", "b", "c"}), frozenset(
+            [frozenset("ab")]))
+        self.assertSetEqual(t.subsets(within="abc"), frozenset(
+            [frozenset("ab")]))
+
+        # include all
+        self.assertSetEqual(t.subsets(include_full=True), frozenset(
+            [frozenset("ab"), frozenset("cd"), frozenset("abcd")]))
+        for node in t.traverse(include_self=False):
+            self.assertFalse(hasattr(node, "_subset"))
+
+        # include singles
+        self.assertSetEqual(t.subsets(include_singles=True), frozenset(
+            [frozenset("ab"), frozenset("cd"), frozenset("a"), frozenset("b"),
+             frozenset("c"), frozenset("d")]))
+
+    def test_bipartition(self):
+        """Return a set of tip names on the smaller side of the branch."""
+        t = self.complex_tree
+
+        # typical cases (internal node): get smaller side
+        # taxa below node (same as subset)
+        self.assertSetEqual(t.find("int1").bipartition(), frozenset("ab"))
+        self.assertSetEqual(t.find("int3").bipartition(), frozenset("cd"))
+        self.assertSetEqual(t.find("int5").bipartition(), frozenset("ef"))
+
+        # when clade is larger than half of tree, get remaining taxa
+        self.assertSetEqual(t.find("int4").bipartition(), frozenset("abef"))
+
+        # at root: empty set
+        self.assertSetEqual(t.bipartition(), frozenset())
+
+        # at tip: singleton
+        self.assertSetEqual(t.find("a").bipartition(), frozenset("a"))
+
+        # when size is equal, get lexicographically smaller side
+        t = self.simple_t
+        self.assertSetEqual(t.find("i1").bipartition(), frozenset("ab"))
+        self.assertSetEqual(t.find("i2").bipartition(), frozenset("ab"))
+
+        # an unrooted tree
+        t = TreeNode.read(["((a,(b,c))X,(d,e)Y,f);"])
+        self.assertSetEqual(t.find("X").bipartition(), frozenset("abc"))
+        self.assertSetEqual(t.find("Y").bipartition(), frozenset("de"))
+
+    def test_bipartitions(self):
+        """Return all sets of tip names on the smaller side of each branch."""
+
+        # an unrooted, bifurcating tree (typical case)
+        t = TreeNode.read(["(((a,(b,c)),d),(e,f),g);"])
+        self.assertSetEqual(t.bipartitions(), frozenset({
+            frozenset({"e", "f"}),
+            frozenset({"e", "f", "g"}),
+            frozenset({"b", "c"}),
+            frozenset({"a", "b", "c"})}))
+
+        # a rooted tree with polytomy
+        t = self.complex_tree
+        self.assertSetEqual(t.bipartitions(), frozenset({
+            frozenset({"e", "f"}),
+            frozenset({"c", "d"}),
+            frozenset({"a", "b"}),
+            frozenset({"w", "z"}),
+            frozenset({"a", "b", "e", "f"})}))
+
+        # within given taxa
+        self.assertSetEqual(t.bipartitions(within="abcdef"), frozenset({
+            frozenset({"c", "d"}),
+            frozenset({"a", "b"}),
+            frozenset({"e", "f"})}))
+
+        self.assertSetEqual(
+            t.bipartitions(within="cbda"),
+            t.bipartitions(within={"a", "b", "c", "d"}))
+
+        # within a subtree
+        self.assertSetEqual(t.children[0].bipartitions(), frozenset({
+            frozenset({"c", "d"}),
+            frozenset({"a", "b"}),
+            frozenset({"w", "z"})}))
+
+        # a simple tree with only one bipartition
+        t = self.simple_t
+        self.assertSetEqual(t.bipartitions(), frozenset({
+            frozenset({"a", "b"})}))
+
+        # include singletons (tips)
+        self.assertSetEqual(t.bipartitions(include_singles=True), frozenset({
+            frozenset({"a", "b"}),
+            frozenset({"a"}),
+            frozenset({"b"}),
+            frozenset({"c"}),
+            frozenset({"d"})}))
 
     def test_assign_supports(self):
         """Extract support values of internal nodes."""
@@ -1783,26 +1904,49 @@ class TreeTests(TestCase):
         self.assertEqual(t_dm, exp_t_dm)
 
     def test_compare_rfd(self):
-        """compare_rfd should return the Robinson Foulds distance"""
+        """Return the Robinson-Foulds distance."""
+        # original example          
         t = TreeNode.read(["((H,G),(R,M));"])
         t2 = TreeNode.read(["(((H,G),R),M);"])
-        t4 = TreeNode.read(["(((H,G),(O,R)),X);"])
-
-        obs = t.compare_rfd(t2)
-        exp = 2.0
-        self.assertEqual(obs, exp)
-
+        self.assertEqual(t.compare_rfd(t2), 2)
         self.assertEqual(t.compare_rfd(t2), t2.compare_rfd(t))
+        self.assertEqual(t.compare_rfd(t2, proportion=True), 0.5)
 
-        obs = t.compare_rfd(t2, proportion=True)
-        exp = 0.5
-        self.assertEqual(obs, exp)
+        # two conflicting quartets
+        t1 = TreeNode.read(["((a,b),(c,d));"])
+        t2 = TreeNode.read(["((a,c),(b,d));"])
+        self.assertEqual(t1.compare_rfd(t2), 4)
+        self.assertEqual(t1.compare_rfd(t2, proportion=True), 1.0)
+        self.assertEqual(t1.compare_rfd(t2, rooted=False), 2)
 
-        with self.assertRaises(ValueError):
-            t.compare_rfd(t4)
+        # same topology but different rooting
+        t1 = TreeNode.read(["(((a,b),c),(d,e));"])
+        t2 = TreeNode.read(["((a,b),(c,(d,e)));"])
+        self.assertEqual(t1.compare_rfd(t2), 2)
+        self.assertAlmostEqual(t1.compare_rfd(t2, proportion=True), 1 / 3)
+        self.assertEqual(t1.compare_rfd(t2, rooted=False), 0)
+
+        # different topologies
+        t1 = TreeNode.read(["(((a,b),c),((d,e),f));"])
+        t2 = TreeNode.read(["(((a,(b,c)),d),(e,f));"])
+        self.assertEqual(t1.compare_rfd(t2), 6)
+        self.assertEqual(t1.compare_rfd(t2, proportion=True), 0.75)
+        self.assertEqual(t1.compare_rfd(t2, rooted=False), 4)
+
+        # unrooted trees
+        t1.unroot()
+        t2.unroot()
+        self.assertEqual(t1.compare_rfd(t2), 4)
+        self.assertEqual(t1.compare_rfd(t2, rooted=True), 6)
+
+        # with polytomy
+        t1 = TreeNode.read(["((a,b,(c,d)),((e,f),(g,h),i));"])
+        t2 = TreeNode.read(["((((a,b),c,d),e),((f,g,h),i));"])
+        self.assertEqual(t1.compare_rfd(t2), 8)
+        self.assertEqual(t1.compare_rfd(t2, rooted=False), 6)
 
     def test_compare_subsets(self):
-        """compare_subsets should return the fraction of shared subsets"""
+        """Return the amount of unshared subsets."""
         t = TreeNode.read(["((H,G),(R,M));"])
         t2 = TreeNode.read(["(((H,G),R),M);"])
         t4 = TreeNode.read(["(((H,G),(O,R)),X);"])
@@ -1810,22 +1954,40 @@ class TreeTests(TestCase):
         result = t.compare_subsets(t)
         self.assertEqual(result, 0)
 
-        result = t2.compare_subsets(t2)
-        self.assertEqual(result, 0)
-
         result = t.compare_subsets(t2)
         self.assertEqual(result, 0.5)
 
-        result = t.compare_subsets(t4)
-        self.assertEqual(result, 1 - 2. / 5)
+        result = t.compare_subsets(t4, proportion=False)
+        self.assertEqual(result, 3)
 
-        result = t.compare_subsets(t4, exclude_absent_taxa=True)
-        self.assertEqual(result, 1 - 2. / 3)
+        result = t.compare_subsets(t4, shared_only=True)
+        self.assertAlmostEqual(result, 1 / 3)
 
         result = t.compare_subsets(self.TreeRoot, exclude_absent_taxa=True)
         self.assertEqual(result, 1)
 
         result = t.compare_subsets(self.TreeRoot)
+        self.assertEqual(result, 1)
+
+    def test_compare_bipartitions(self):
+        """Return the amount of unshared bipartitions."""
+        t = TreeNode.read(["((H,G),(R,M));"])
+        t2 = TreeNode.read(["(((H,G),R),M);"])
+        t3 = TreeNode.read(["(((H,R),G),M);"])
+
+        result = t.compare_bipartitions(t)
+        self.assertEqual(result, 0)
+
+        result = t.compare_bipartitions(t2)
+        self.assertEqual(result, 0)
+
+        result = t.compare_bipartitions(t3)
+        self.assertEqual(result, 1)
+
+        result = t.compare_bipartitions(t3, proportion=False)
+        self.assertEqual(result, 2)
+
+        result = t.compare_bipartitions(self.TreeRoot)
         self.assertEqual(result, 1)
 
     def test_compare_tip_distances(self):

@@ -155,7 +155,7 @@ indicates the trees do not share any common clades:
 >>> print(tree1.compare_subsets(tree2))  # same tree but different clade order
 0.0
 >>> print(tree1.compare_subsets(tree3))  # only 1 of 3 common subsets
-0.6666666666666667
+0.6666666666666666
 
 We can additionally take into account branch length when computing distances
 between trees. First, we're going to construct two new trees with described
