@@ -619,36 +619,36 @@ class TreeNode(SkbioObject):
             prev = None
             while curr is not None:
                 # set prev as None if already visited
-                if hasattr(curr, "prev"):
-                    curr.prev = None
+                if hasattr(curr, "_prev"):
+                    curr._prev = None
                     break
-                curr.prev = prev
+                curr._prev = prev
                 visited_append(curr)
                 prev = curr
                 curr = curr.parent
 
         # walk down the tree until last node with prev is None
         curr = self
-        while (prev := curr.prev) is not None:
+        while (prev := curr._prev) is not None:
             curr = prev
 
         # clean up temporary attribute "prev"
         for node in visited:
-            delattr(node, "prev")
+            del node._prev
 
         return curr
 
     lca = lowest_common_ancestor  # for convenience
 
     def path(self, other, include_ends=False):
-        r"""Return the list of nodes in the path from one node to another.
+        r"""Return the list of nodes in the path from self to another node.
 
         Parameters
         ----------
         other : TreeNode
             Final node of path.
         include_ends: bool, optional
-            Whether to include the initial and final nodes in the list.
+            Whether to include the initial (self) and final (other) nodes in the list.
             Default is False.
 
         Returns
@@ -656,10 +656,23 @@ class TreeNode(SkbioObject):
         list
             List of TreeNode objects.
 
+        See Also
+        --------
+        distance
+
         Examples
         --------
         >>> from skbio import TreeNode
         >>> tree = TreeNode.read(["((a,b)c,(d,e)f)root;"])
+        >>> print(tree.ascii_art())
+                            /-a
+                  /c-------|
+                 |          \-b
+        -root----|
+                 |          /-d
+                  \f-------|
+                            \-e
+
         >>> node_1, node_2 = tree.find('a'), tree.find('d')
         >>> path = node_1.path(node_2)
         >>> print(len(path))
@@ -3228,7 +3241,7 @@ class TreeNode(SkbioObject):
                 subset = frozenset()
                 for child in node.children:
                     subset |= child._subset
-                    delattr(child, "_subset")
+                    del child._subset
 
             if subset and include_singles or len(subset) > 1:
                 subsets_append(subset)
@@ -3236,10 +3249,10 @@ class TreeNode(SkbioObject):
 
         # final clean up
         if include_full:
-            delattr(self, "_subset")
+            del self._subset
         else:
             for child in self.children:
-                delattr(child, "_subset")
+                del child._subset
 
         return frozenset(subsets)
 
@@ -3771,9 +3784,6 @@ class TreeNode(SkbioObject):
     def distance(self, other):
         """Calculate the distance between self and another node.
 
-        This method can be used to compute the distances between two tips,
-        however, it is not optimized for computing pairwise tip distances.
-
         Parameters
         ----------
         other : TreeNode
@@ -3791,10 +3801,26 @@ class TreeNode(SkbioObject):
 
         See Also
         --------
+        path
         tip_tip_distances
         accumulate_to_ancestor
         compare_tip_distances
         get_max_distance
+
+        Notes
+        -----
+        The distance between two nodes is the sum of lengths of branches connecting
+        them. It is also known as the patristic distance [1]_.
+
+        This method can be used to compute the distance between two given nodes.
+        However, it is not optimized for computing all pairwise tip distances. Use
+        :meth:`tip_tip_distances` instead for that purpose.
+
+        References
+        ----------
+        .. [1] Fourment, M., & Gibbs, M. J. (2006). PATRISTIC: a program for
+           calculating patristic distances and graphically comparing the components of
+           genetic change. BMC evolutionary biology, 6, 1-5.
 
         Examples
         --------
@@ -3919,26 +3945,23 @@ class TreeNode(SkbioObject):
         return longest, tips
 
     def tip_tip_distances(self, endpoints=None):
-        """Return distance matrix between pairs of tips, and a tip order.
-
-        By default, all pairwise distances are calculated in the tree. If
-        `endpoints` are specified, then only the distances between those tips
-        are computed.
+        r"""Return a distance matrix between pairs of tips.
 
         Parameters
         ----------
-        endpoints : list of TreeNode or str, or None
-            A list of TreeNode objects or names of TreeNode objects
+        endpoints : list of TreeNode or str, optional
+            Tips or their names (i.e., taxa) to be included in the calculation. If not
+            specified, all tips will be included.
 
         Returns
         -------
         DistanceMatrix
-            The distance matrix
+            The distance matrix.
 
         Raises
         ------
         ValueError
-            If any of the specified `endpoints` are not tips
+            If any of the specified ``endpoints`` are not tips.
 
         See Also
         --------
@@ -3947,8 +3970,17 @@ class TreeNode(SkbioObject):
 
         Notes
         -----
-        If a node does not have an associated length, 0.0 will be used and a
+        This method calculates the sum of branch lengths connecting each pair of tips.
+        It is also known as the patristic distance [1]_.
+
+        If a node does not have an associated branch length, 0.0 will be used and a
         ``RepresentationWarning`` will be raised.
+
+        References
+        ----------
+        .. [1] Fourment, M., & Gibbs, M. J. (2006). PATRISTIC: a program for
+           calculating patristic distances and graphically comparing the components of
+           genetic change. BMC evolutionary biology, 6, 1-5.
 
         Examples
         --------
@@ -3973,15 +4005,15 @@ class TreeNode(SkbioObject):
             tip_order = [self.find(n) for n in endpoints]
             for n in tip_order:
                 if not n.is_tip():
-                    raise ValueError("Node with name '%s' is not a tip." % n.name)
+                    raise ValueError(f"Node with name '{n.name}' is not a tip.")
 
         # linearize all tips in postorder
-        # .__start, .__stop compose the slice in tip_order.
+        # ._start, ._stop compose the slice in tip_order.
         for i, node in enumerate(all_tips):
-            node.__start, node.__stop = i, i + 1
+            node._start, node._stop = i, i + 1
 
         # the result map provides index in the result matrix
-        result_map = {n.__start: i for i, n in enumerate(tip_order)}
+        result_map = {n._start: i for i, n in enumerate(tip_order)}
         num_all_tips = len(all_tips)  # total number of tips
         num_tips = len(tip_order)  # total number of tips in result
         result = np.zeros((num_tips, num_tips), float)  # tip by tip matrix
@@ -3990,11 +4022,11 @@ class TreeNode(SkbioObject):
         def update_result():
             # set tip_tip distance between tips of different child
             for child1, child2 in combinations(node.children, 2):
-                for tip1 in range(child1.__start, child1.__stop):
+                for tip1 in range(child1._start, child1._stop):
                     if tip1 not in result_map:
                         continue
                     t1idx = result_map[tip1]
-                    for tip2 in range(child2.__start, child2.__stop):
+                    for tip2 in range(child2._start, child2._stop):
                         if tip2 not in result_map:
                             continue
                         t2idx = result_map[tip2]
@@ -4016,15 +4048,22 @@ class TreeNode(SkbioObject):
                         RepresentationWarning,
                     )
                     length = 0.0
-                distances[child.__start : child.__stop] += length
+                distances[child._start : child._stop] += length
 
-                starts.append(child.__start)
-                stops.append(child.__stop)
+                starts.append(child._start)
+                stops.append(child._stop)
 
-            node.__start, node.__stop = min(starts), max(stops)
+            node._start, node._stop = min(starts), max(stops)
 
             if len(node.children) > 1:
                 update_result()
+
+            for child in node.children:
+                del child._start
+                del child._stop
+
+        del self._start
+        del self._stop
 
         return DistanceMatrix(result + result.T, [n.name for n in tip_order])
 
@@ -4071,22 +4110,32 @@ class TreeNode(SkbioObject):
 
         Notes
         -----
-        The Robinson-Foulds (RF) distance, or symmetric difference, was originally
-        described in [1]_. It is the number of bipartitions that are not shared between
-        two unrooted trees. It is equivalent to :meth:`compare_bipartitions`.
+        The Robinson-Foulds (RF) distance, a.k.a. symmetric difference, is a measure of
+        topological dissimilarity between two trees. It was originally described in
+        [1]_. It is calculated as the number of bipartitions that differ between two
+        unrooted trees. It is equivalent to :meth:`compare_bipartitions`.
+
+        .. math::
+
+           RF(T_1, T_2) = |S_1 \triangle S_2| = |(S_1 \setminus S_2) \cup (S_2
+           \setminus S_1)|
+
+        where :math:`S_1` and :math:`S_2` are the sets of bipartitions of trees
+        :math:`T_1` and :math:`T_2`, respectively.
 
         For rooted trees, the RF distance is calculated as the number of unshared
-        clades (subsets). It is equivalent to :meth:`compare_subsets`.
+        clades (subsets of taxa) [2]_. It is equivalent to :meth:`compare_subsets`.
 
-        This method determines whether the unrooted or rooted version of the RF
-        distance should be calculated according to whether self is rooted (see
-        :meth:`details <unroot>`). However, one can override this behavior using the
-        ``rooted`` parameter.
+        This method automatically determines whether to use the unrooted or rooted
+        RF distance based on to whether self is rooted (see :meth:`details <unroot>`).
+        This can be overridden by the ``rooted`` parameter, which is recommended for
+        explicity.
 
         By specifying ``proportion=True``, a unit distance will be returned, ranging
         from 0 (identical) to 1 (completely different).
 
-        Only taxa shared between the two trees are considered.
+        Only taxa shared between the two trees are considered. Taxa unique to either
+        tree are excluded from the calculation.
 
         See Also
         --------
@@ -4096,16 +4145,52 @@ class TreeNode(SkbioObject):
 
         References
         ----------
-        .. [1] Comparison of phylogenetic trees. Robinson and Foulds. Mathematical
-           Biosciences. 1981. 53:131-141
+        .. [1] Robinson, D. F., & Foulds, L. R. (1981). Comparison of phylogenetic
+           trees. Mathematical biosciences, 53(1-2), 131-147.
+
+        .. [2] Bogdanowicz, D., & Giaro, K. (2013). On a matching distance between
+           rooted phylogenetic trees. International Journal of Applied Mathematics
+           and Computer Science, 23(3), 669-684.
 
         Examples
         --------
+        Calculate the RF distance between two unrooted trees with the same taxa but
+        different topologies. Each tree has three non-trivial bipartitions, as defined
+        by individual internal branches, among which one pair (abc|def) is shared
+        whereas the other two of each tree are unique (ab|cdef, abcf|de, bc|adef,
+        abcd|ef). Therefore the RF distance is 2 + 2 = 4.
+
         >>> from skbio import TreeNode
-        >>> tree1 = TreeNode.read(["((a,b),(c,d));"])
-        >>> tree2 = TreeNode.read(["(((a,b),c),d);"])
+        >>> tree1 = TreeNode.read(["((a,b),c,((d,e),f));"])
+        >>> print(tree1.ascii_art())
+                            /-a
+                  /--------|
+                 |          \-b
+                 |
+        ---------|--c
+                 |
+                 |                    /-d
+                 |          /--------|
+                  \--------|          \-e
+                           |
+                            \-f
+
+        >>> tree2 = TreeNode.read(["((a,(b,c)),d,(e,f));"])
+        >>> print(tree2.ascii_art())
+                            /-a
+                  /--------|
+                 |         |          /-b
+                 |          \--------|
+                 |                    \-c
+        ---------|
+                 |--d
+                 |
+                 |          /-e
+                  \--------|
+                            \-f
+
         >>> tree1.compare_rfd(tree2)
-        2
+        4
 
         """
         if rooted is None:
@@ -4409,7 +4494,7 @@ class TreeNode(SkbioObject):
                     if hasattr(node, attr):
                         delattr(node, attr)
                 if len(attrs) == 1:
-                    delattr(tree, "_registered_caches")
+                    del tree._registered_caches
                 else:
                     attrs.remove(attr)
 
@@ -4419,7 +4504,7 @@ class TreeNode(SkbioObject):
                     for attr in attrs:
                         if hasattr(node, attr):
                             delattr(node, attr)
-                delattr(tree, "_registered_caches")
+                del tree._registered_caches
 
         # delete lookup caches
         if lookup:

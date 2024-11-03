@@ -1865,7 +1865,7 @@ class TreeTests(TestCase):
         self.assertEqual([n.MaxDistTips for n in t.postorder()], exp)
 
     def test_tip_tip_distances_endpoints(self):
-        """Test getting specifc tip distances  with tipToTipDistances"""
+        """Test getting specifc tip distances with tipToTipDistances"""
         t = TreeNode.read(["((H:1,G:1):2,(R:0.5,M:0.7):3);"])
         nodes = [t.find("H"), t.find("G"), t.find("M")]
         names = ["H", "G", "M"]
@@ -1878,6 +1878,10 @@ class TreeTests(TestCase):
 
         obs = t.tip_tip_distances(endpoints=nodes)
         self.assertEqual(obs, exp)
+
+        for node in t.traverse(include_self=True):
+            assert not hasattr(node, '_start')
+            assert not hasattr(node, '_stop')
 
     def test_tip_tip_distances_non_tip_endpoints(self):
         t = TreeNode.read(["((H:1,G:1)foo:2,(R:0.5,M:0.7):3);"])
