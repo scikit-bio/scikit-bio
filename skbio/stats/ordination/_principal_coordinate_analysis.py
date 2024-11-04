@@ -6,12 +6,14 @@
 # The full license is in the file LICENSE.txt, distributed with this software.
 # ----------------------------------------------------------------------------
 
+from numbers import Integral
+from warnings import warn
+
 import numpy as np
 import pandas as pd
 from numpy import dot, hstack
 from numpy.linalg import qr, svd
 from scipy.linalg import eigh
-from warnings import warn
 
 from skbio.util import get_rng
 from skbio.stats.distance import DistanceMatrix
@@ -51,21 +53,13 @@ def pcoa(
         eigenvectors and eigenvalues for all dimensions. The alternate
         method, `fsvd`, uses faster heuristic eigendecomposition but loses
         accuracy. The magnitude of accuracy lost is dependent on dataset.
-    number_of_dimensions : int, optional
+    number_of_dimensions : int or float, optional
         Dimensions to reduce the distance matrix to. This number determines
-        how many eigenvectors and eigenvalues will be returned.
-        By default, equal to the number of dimensions of the distance matrix,
-        as default eigendecomposition using SciPy's `eigh` method computes
-        all eigenvectors and eigenvalues. If using fast heuristic
-        eigendecomposition through `fsvd`, a desired number of dimensions
-        should be specified. Note that the default eigendecomposition
-        method `eigh` does not natively support a specifying number of
-        dimensions to reduce a matrix to, so if this parameter is specified,
-        all eigenvectors and eigenvalues will be simply be computed with no
-        speed gain, and only the number specified by `number_of_dimensions`
-        will be returned. Specifying a value of `0`, the default, will
-        set `number_of_dimensions` equal to the number of dimensions of the
-        specified `distance_matrix`.
+        how many eigenvectors and eigenvalues will be returned. If an integer
+        is provided, the exact number of dimensions will be retained in the
+        output. If a float between 0 and 1, it represents the fractional
+        cumulative variance retained in the output. Default is 0, which will
+        retain the same number of dimensions as the distance matrix.
     inplace : bool, optional
         If true, centers a distance matrix in-place in a manner that reduces
         memory consumption.
@@ -89,14 +83,26 @@ def pcoa(
 
     Notes
     -----
-    .. note:: If the distance is not euclidean (for example if it is a
-        semimetric and the triangle inequality doesn't hold),
-        negative eigenvalues can appear. There are different ways
-        to deal with that problem (see Legendre & Legendre 1998, \S
-        9.2.3), but none are currently implemented here.
-        However, a warning is raised whenever negative eigenvalues
-        appear, allowing the user to decide if they can be safely
-        ignored.
+    If the distance is not euclidean (for example if it is a
+    semimetric and the triangle inequality doesn't hold),
+    negative eigenvalues can appear. There are different ways
+    to deal with that problem (see Legendre & Legendre 1998, \S
+    9.2.3), but none are currently implemented here.
+    However, a warning is raised whenever negative eigenvalues
+    appear, allowing the user to decide if they can be safely
+    ignored.
+
+    Default eigendecomposition uses SciPy's `eigh` method which computes
+    all eigenvectors and eigenvalues. If using fast heuristic
+    eigendecomposition through `fsvd`, a desired number of dimensions
+    should be specified. Note that the default eigendecomposition
+    method `eigh` does not natively support a specifying number of
+    dimensions to reduce a matrix to, so if this parameter is specified,
+    all eigenvectors and eigenvalues will be simply be computed with no
+    speed gain, and only the number specified by `number_of_dimensions`
+    will be returned. Specifying a value of `0`, the default, will
+    set `number_of_dimensions` equal to the number of dimensions of the
+    specified `distance_matrix`.
 
     """
     distance_matrix = DistanceMatrix(distance_matrix)
@@ -126,6 +132,11 @@ def pcoa(
             "the number_of_dimensions equal to the "
             "dimensionality of the given distance matrix?"
         )
+    elif not isinstance(number_of_dimensions, Integral) and number_of_dimensions > 1:
+        raise ValueError(
+            "Invalid operation: A floating-point number greater than 1 cannot be "
+            "supplied as the number of dimensions."
+        )
 
     # Perform eigendecomposition
     if method == "eigh":
@@ -140,7 +151,7 @@ def pcoa(
         # new parameter for num_dimensions = number of dimensions (accounting for
         # non-int values)
         num_dimensions = number_of_dimensions
-        if isinstance(number_of_dimensions, float):
+        if 0 < number_of_dimensions < 1:
             warn(
                 "FSVD: since value for number_of_dimensions is specified as float, "
                 "PCoA for all dimensions will be computed, which may "
@@ -211,10 +222,12 @@ def pcoa(
         sum_eigenvalues = np.sum(eigvals)
 
     proportion_explained = eigvals / sum_eigenvalues
-    if isinstance(number_of_dimensions, float):
+    if 0 < number_of_dimensions < 1:
         cumulative_variance = np.cumsum(proportion_explained)
-        num_dimensions = np.searchsorted(cumulative_variance, number_of_dimensions) + 1
-        # gives the number of dimensions need to reach specified variance
+        num_dimensions = (
+            np.searchsorted(cumulative_variance, number_of_dimensions, side="left") + 1
+        )
+        # gives the number of dimensions needed to reach specified variance
         # updates number of dimensions to reach the requirement of variance.
         number_of_dimensions = num_dimensions
 
