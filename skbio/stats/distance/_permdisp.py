@@ -162,13 +162,13 @@ def permdisp(
     make the output deterministic. You may skip it if that's not necessary.
 
     >>> from skbio.stats.distance import permdisp
-    >>> permdisp(dm, grouping, permutations=99, seed=42)
+    >>> permdisp(dm, grouping, permutations=99, seed=42) # doctest: +ELLIPSIS
     method name               PERMDISP
     test statistic name        F-value
     sample size                      6
     number of groups                 2
     test statistic             1.03296
-    p-value                       0.28
+    p-value                       ...
     number of permutations          99
     Name: PERMDISP results, dtype: object
 

@@ -9,7 +9,7 @@ on:
     paths: [ "web/**", "!**.md" ]
 
 env:
-  latest_python: "3.12"
+  latest_python: "3.13"
   miniforge_version: "23.11.0-0"
   miniforge_variant: "Mambaforge"
 

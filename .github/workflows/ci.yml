@@ -9,8 +9,8 @@ on:
     paths-ignore: ["web/**", "**.md", "README.rst"]
 
 env:
-  latest_python: "3.12"
-  supported_pythons: '["3.8", "3.9", "3.10", "3.11", "3.12"]'
+  latest_python: "3.13"
+  supported_pythons: '["3.8", "3.9", "3.10", "3.11", "3.12", "3.13"]'
   miniforge_version: "23.11.0-0"
   miniforge_variant: "Mambaforge"
 
