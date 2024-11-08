@@ -14,7 +14,7 @@ from collections import defaultdict, deque
 
 import numpy as np
 import pandas as pd
-from scipy.spatial.distance import correlation
+import scipy.spatial.distance as spdist
 
 from skbio._base import SkbioObject
 from skbio.stats.distance import DistanceMatrix
@@ -52,7 +52,7 @@ def distance_from_r(m1, m2):
         The distance between m1 and m2.
 
     """
-    return correlation(m1.data.flat, m2.data.flat) / 2
+    return spdist.correlation(m1.data.flat, m2.data.flat) / 2
 
 
 # ----------------------------------------------------------------------------
@@ -3089,7 +3089,7 @@ class TreeNode(SkbioObject):
         --------
         tips
         subsets
-        bipartition
+        bipart
 
         Notes
         -----
@@ -3140,7 +3140,13 @@ class TreeNode(SkbioObject):
         """
         return frozenset({i.name for i in self.tips(include_self=include_self)})
 
-    def subsets(self, within=None, include_full=False, include_singles=False):
+    def subsets(
+        self,
+        within=None,
+        include_full=False,
+        include_single=False,
+        map_to_length=False,
+    ):
         r"""Return all subsets of taxa defined by nodes descending from self.
 
         Parameters
@@ -3157,22 +3163,32 @@ class TreeNode(SkbioObject):
 
             .. versionadded:: 0.6.3
 
-        include_singles : bool, optional
+        include_single : bool, optional
             Whether to include subsets with only one taxon in the result. Default is
             False, as such sets provide no topological information.
 
             .. versionadded:: 0.6.3
 
+        map_to_length : bool, optional
+            If True, return a mapping of subsets to their branch lengths. Missing
+            branch lengths will be replaced with 0. Default is False.
+
+            .. versionadded:: 0.6.3
+
         Returns
         -------
-        frozenset of frozensets of str
-            All subsets of taxa defined by nodes descending from self.
+        frozenset of frozenset of str, or
+            All subsets of taxa defined by nodes descending from self. Returned if
+            `map_to_length` is False.
+        dict of {frozenset of str: float}
+            Mapping of all subsets of taxa to their branch lengths. Returned if
+            `map_to_length` is True.
 
         See Also
         --------
         subset
         compare_subsets
-        bipartitions
+        biparts
 
         Notes
         -----
@@ -3190,7 +3206,7 @@ class TreeNode(SkbioObject):
         node to the tips below. That is, the root of the tree, even if not explicitly
         defined, should be at or above the current node. This should be considered when
         applying this method to an unrooted tree. If such an assumption is not present,
-        one should consider using :meth:`bipartitions` instead.
+        one should consider using :meth:`biparts` instead.
 
         This method operates on the subtree below the current node.
 
@@ -3226,8 +3242,14 @@ class TreeNode(SkbioObject):
         if within and not isinstance(within, (set, frozenset, dict)):
             within = frozenset(within)
 
-        subsets = []
-        subsets_append = subsets.append
+        # initiate result
+        if map_to_length:
+            subsets = {}
+            subsets_get = subsets.get
+        else:
+            subsets = []
+            subsets_append = subsets.append
+
         for node in self.postorder(include_self=include_full):
             # tip: create a one-taxon set
             if not node.children:
@@ -3243,8 +3265,13 @@ class TreeNode(SkbioObject):
                     subset |= child._subset
                     del child._subset
 
-            if subset and include_singles or len(subset) > 1:
-                subsets_append(subset)
+            # add to result
+            if subset and include_single or len(subset) > 1:
+                if map_to_length:
+                    subsets[subset] = subsets_get(subset, 0) + (node.length or 0)
+                else:
+                    subsets_append(subset)
+
             node._subset = subset
 
         # final clean up
@@ -3254,9 +3281,9 @@ class TreeNode(SkbioObject):
             for child in self.children:
                 del child._subset
 
-        return frozenset(subsets)
+        return subsets if map_to_length else frozenset(subsets)
 
-    def bipartition(self):
+    def bipart(self):
         r"""Return a bipartition of the tree at the current branch.
 
         .. versionadded:: 0.6.3
@@ -3275,7 +3302,7 @@ class TreeNode(SkbioObject):
         See Also
         --------
         subset
-        bipartitions
+        biparts
 
         Notes
         -----
@@ -3319,17 +3346,17 @@ class TreeNode(SkbioObject):
 
         Clade has less than half taxa, return them.
 
-        >>> sorted(tree.find('X').bipartition())
+        >>> sorted(tree.find('X').bipart())
         ['b', 'c']
 
         Clade has more than half taxa, return remaining taxa.
 
-        >>> sorted(tree.find('Z').bipartition())
+        >>> sorted(tree.find('Z').bipart())
         ['e', 'f', 'g']
 
         Clade has exactly half taxa, return the lexicographically smaller side.
 
-        >>> sorted(tree.find('Y').bipartition())
+        >>> sorted(tree.find('Y').bipart())
         ['a', 'b', 'c']
 
         A second tree with the same topology but different root position.
@@ -3353,10 +3380,10 @@ class TreeNode(SkbioObject):
         Although the tree has been re-positioned, the corresponding branches have the
         same bipartitions, whereas non-corresponding branches don't.
 
-        >>> tree.find('X').bipartition() == tree2.find('X2').bipartition()
+        >>> tree.find('X').bipart() == tree2.find('X2').bipart()
         True
 
-        >>> tree.find('Y').bipartition() == tree2.find('Y2').bipartition()
+        >>> tree.find('Y').bipart() == tree2.find('Y2').bipart()
         False
 
         """
@@ -3368,7 +3395,7 @@ class TreeNode(SkbioObject):
             bipart, _ = sorted([bipart, full - bipart], key=sorted)
         return bipart
 
-    def bipartitions(self, within=None, include_singles=False):
+    def biparts(self, within=None, include_single=False, map_to_length=False):
         r"""Return all bipartitions within the tree under self.
 
         .. versionadded:: 0.6.3
@@ -3378,19 +3405,26 @@ class TreeNode(SkbioObject):
         within : iterable of str, optional
             A custom set of taxa to refine the result. Only taxa within it will be
             considered. If None (default), all taxa in the tree will be considered.
-        include_singles : bool, optional
+        include_single : bool, optional
             Whether to include bipartitions with only one taxon at either side.
             Default is False, as such bipartitions provide no topological
             information.
+        map_to_length : bool, optional
+            If True, return a mapping of subsets to their branch lengths. Missing
+            branch lengths will be replaced with 0. Default is False.
 
         Returns
         -------
-        frozenset of frozensets of str
-            All sets of names at the tips on the smaller side of each branch.
+        frozenset of frozenset of str, or
+            All sets of names at the tips on the smaller side of each branch. Returned
+            if `map_to_length` is False.
+        dict of {frozenset of str: float}
+            Mapping of All sets of smaller-side tip names to branch lengths. Returned
+            if `map_to_length` is True.
 
         See Also
         --------
-        bipartition
+        bipart
         subsets
 
         Notes
@@ -3430,7 +3464,7 @@ class TreeNode(SkbioObject):
 
         Return all bipartitions of an unrooted tree.
 
-        >>> biparts = tree.bipartitions()
+        >>> biparts = tree.biparts()
         >>> for s in sorted(biparts, key=sorted):
         ...     print(sorted(s))
         ['a', 'b', 'c']
@@ -3455,7 +3489,7 @@ class TreeNode(SkbioObject):
 
         Although the tree has been re-positioned, the bipartitions remain the same.
 
-        >>> biparts == tree2.bipartitions()
+        >>> biparts == tree2.biparts()
         True
 
         """
@@ -3467,19 +3501,66 @@ class TreeNode(SkbioObject):
             full &= within
         th = len(full) * 0.5
 
-        biparts = []
-        biparts_append = biparts.append
-        for s in self.subsets(within=within, include_singles=include_singles):
-            # keep the smaller part by size, then by lexicographical order
-            if (size := len(s)) < th:
-                smaller = s
-            elif size > th:
-                smaller = full - s
+        # initiate result
+        if map_to_length:
+            biparts = {}
+            biparts_get = biparts.get
+        else:
+            biparts = []
+            biparts_append = biparts.append
+
+        for node in self.postorder(include_self=False):
+            # tip: create a one-taxon set
+            if not node.children:
+                if not within or node.name in full:
+                    bipart = frozenset([node.name])
+                else:
+                    bipart = frozenset()
+                flip = False
+
+            # internal node: merge sets of children
+            # `_bipart` of a node is either the taxa below it, or, if the former has
+            # reached half of the full set, it "flips" to the other half that is above
+            # the node, and `_flip` will be set to True.
+            # Taxa below should be united, whereas taxa above should be intersected.
+            # If at least one child is already flipped, the current node should also be
+            # flipped. Otherwise, the set will be compared to the half to determine the
+            # flipping status.
             else:
-                smaller, _ = sorted([s, full - s], key=sorted)
-            if smaller and include_singles or len(smaller) > 1:
-                biparts_append(smaller)
-        return frozenset(biparts)
+                aboves, belows = [], []
+                for child in node.children:
+                    (aboves if child._flip else belows).append(child._bipart)
+                    del child._bipart
+                    del child._flip
+
+                if aboves:
+                    bipart, flip = (
+                        frozenset.intersection(*aboves).difference(*belows),
+                        True,
+                    )
+                else:
+                    bipart, flip = frozenset().union(*belows), False
+                    if (size := len(bipart)) >= th:
+                        other = full - bipart
+                        if size > th or sorted(bipart) > sorted(other):
+                            bipart, flip = other, True
+
+            # add to result
+            if bipart and include_single or len(bipart) > 1:
+                if map_to_length:
+                    biparts[bipart] = biparts_get(bipart, 0) + (node.length or 0)
+                else:
+                    biparts_append(bipart)
+
+            node._bipart = bipart
+            node._flip = flip
+
+        # final clean up
+        for child in self.children:
+            del child._bipart
+            del child._flip
+
+        return biparts if map_to_length else frozenset(biparts)
 
     def _extract_support(self):
         """Extract the support value from a node label, if available.
@@ -3857,6 +3938,7 @@ class TreeNode(SkbioObject):
         intent of being able to determine max tip to tip distances between
         nodes on large trees efficiently. The code has been modified to track
         the specific tips the distance is between
+
         """
         maxkey = itemgetter(0)
 
@@ -3888,7 +3970,7 @@ class TreeNode(SkbioObject):
         return distmtx[idx_max], max_pair
 
     def get_max_distance(self):
-        """Return the max tip tip distance between any pair of tips.
+        r"""Return the max tip tip distance between any pair of tips.
 
         Returns
         -------
@@ -4067,23 +4149,87 @@ class TreeNode(SkbioObject):
 
         return DistanceMatrix(result + result.T, [n.name for n in tip_order])
 
-    def _compare_topology(self, other, method, shared_only, proportion):
-        """Calculate the difference of subsets or bipartitions."""
+    def _compare_topology(
+        self,
+        other,
+        method="subsets",
+        shared_only=True,
+        proportion=False,
+        symmetric=True,
+        include_single=False,
+        weighted=False,
+        metric="euclidean",
+    ):
+        r"""Calculate the topological difference between self and other.
+
+        This function calculates the Robinson-Foulds (RF) distance or its derivates.
+
+        Parameters
+        ----------
+        other : TreeNode
+            The other tree to compare with.
+        method : str, optional
+            Subsets or bipartitions.
+        shared_only : bool, optional
+            Refine to shared taxa.
+        proportion : bool, optional
+            Normalize to fraction.
+        symmetric : bool, optional
+            Symmetric difference.
+        weighted : bool, optional
+            Weight by branch length.
+        metric : str or callable, optional
+            Pairwise distance metric.
+
+        Returns
+        -------
+        int or float
+            Difference between self and other.
+
+        See Also
+        --------
+        compare_rfd
+        compare_subsets
+        compare_biparts
+
+        """
         topo1, topo2 = getattr(self, method), getattr(other, method)
+        kwargs = dict(include_single=include_single, map_to_length=weighted)
         if shared_only:
             set1, set2 = self.subset(), other.subset()
             n_shared = len(shared := set1 & set2)
-            sets1 = topo1(within=(shared if len(set1) > n_shared else None))
-            sets2 = topo2(within=(shared if len(set2) > n_shared else None))
+            sets1 = topo1(within=(shared if len(set1) > n_shared else None), **kwargs)
+            sets2 = topo2(within=(shared if len(set2) > n_shared else None), **kwargs)
         else:
-            sets1, sets2 = topo1(), topo2()
-        result = len(sets1.symmetric_difference(sets2))
-        if proportion:
-            result /= len(sets1) + len(sets2)
+            sets1, sets2 = topo1(**kwargs), topo2(**kwargs)
+
+        # unweighted (set difference)
+        if not weighted:
+            result = len(
+                getattr(sets1, ("symmetric_" if symmetric else "") + "difference")(
+                    sets2
+                )
+            )
+            # normalize result to unit range [0, 1]
+            # if total is 0, return 1 (dist = 1 means saturation)
+            if proportion:
+                total = len(sets1) + (symmetric and len(sets2))
+                result = result / total if total else 1.0
+
+        # branch length weighted (vector distance)
+        else:
+            union = frozenset(sets1.keys()).union(sets2.keys())
+            L1 = [sets1.get(x, 0) for x in union]
+            L2 = [sets2.get(x, 0) for x in union]
+            if isinstance(metric, str):
+                result = getattr(spdist, metric)(L1, L2)
+            else:
+                result = metric(L1, L2)
+
         return result
 
     def compare_rfd(self, other, proportion=False, rooted=None):
-        r"""Calculate the Robinson-Foulds (RF) distance between two trees.
+        r"""Calculate Robinson-Foulds distance between two trees.
 
         Parameters
         ----------
@@ -4139,8 +4285,9 @@ class TreeNode(SkbioObject):
 
         See Also
         --------
+        compare_wrfd
         compare_subsets
-        compare_bipartitions
+        compare_biparts
         compare_tip_distances
 
         References
@@ -4195,14 +4342,173 @@ class TreeNode(SkbioObject):
         """
         if rooted is None:
             rooted = len(self.children) == 2
-        method = "subsets" if rooted else "bipartitions"
-        return self._compare_topology(other, method, True, proportion)
+        method = "subsets" if rooted else "biparts"
+        return self._compare_topology(other, method, proportion=proportion)
+
+    def compare_wrfd(self, other, metric="wrf", rooted=None, include_single=True):
+        r"""Calculate weighted Robinson-Foulds distance or variants between two trees.
+
+        .. versionadded:: 0.6.3
+
+        Parameters
+        ----------
+        other : TreeNode
+            The other tree to compare with.
+        metric : str or callable, optional
+            The pairwise distance metric to use. Can be a preset (see below), the name
+            of a distance function under :mod:`scipy.spatial.distance`, or a custom
+            function that takes two vectors and returns a number. Some options are:
+
+            - "wrf" (default) or "cityblock": City block (Manhattan) distance. The
+              result matches the original weighted Robinson-Foulds distance [1]_.
+            - "kf", "bs" or "euclidean": Euclidean distance. The result matches the
+              Kuhner-Felsenstein (KF) distance, a.k.a. branch score (Bs) distance [2]_.
+            - "correlation": 1 - Pearson's correlation coefficient (:math:`r`). Ranges
+              between 0 (maximum similarity) and 2 (maximum dissimilarity). Independent
+              of tree scale.
+            - "unitcorr": :math:`(1 - r) / 2`, which returns a unit distance (range:
+              [0, 1]).
+
+        rooted : bool, optional
+            Whether to consider the trees as rooted or unrooted. If None (default),
+            this will be determined based on whether self is rooted. However, one
+            can override it by explicitly specifying True (rooted) or False (unrooted).
+            See :meth:`compare_rfd` for details.
+        include_single : bool, optional
+            Whether to include single-taxon biparitions (terminal branches) in the
+            calculation. Default is True, such that all branches in the trees are
+            considered. Set this as False if terminal branch lengths are absent or
+            irrelevant.
+
+        Returns
+        -------
+        float
+            The weighted Robinson-Foulds distance or variants between the trees.
+
+        Notes
+        -----
+        The Robinson-Foulds (RF) distance may be weighted by the branch lengths of
+        biparitions to account for evolutionary distances in addition to branching
+        patterns.
+
+        The default behavior of this method calculates the original weighted RF (wRF)
+        distance [1]_, which is the sum of differences of branch lengths of matching
+        biparitions. Bipartitions unique to one tree are given a length of 0 in the
+        other tree during calculation.
+
+        .. math::
+
+           wRF(T_1, T_2) = \sum_{s \in S_1 \cup S_2} |l_1(s) - l_2(s)|
+
+        where :math:`S_1` and :math:`S_2` are the sets of bipartitions of trees
+        :math:`T_1` and :math:`T_2`, respectively. :math:`l_1` and :math:`l_2` are the
+        branch lengths of bipartition :math:`s` in :math:`T_1` and :math:`T_2`,
+        respectively (or 0 if :math:`s` is unique to the other tree).
+
+        When ``metric="euclidean"``, it calculates the Kuhner-Felsenstein (KF)
+        distance, a.k.a., branch score (Bs) distance [2]_, which replaces absolute
+        difference with squared difference in the equation.
+
+        .. math::
+
+           KF(T_1, T_2) = \sqrt{\sum_{s \in S_1 \cup S_2} (l_1(s) - l_2(s))^2}
+
+        Only taxa shared between the two trees are considered. Taxa unique to either
+        tree are excluded from the calculation.
+
+        See Also
+        --------
+        compare_rfd
+        compare_tip_distances
+
+        References
+        ----------
+        .. [1] Robinson, D. F., & Foulds, L. R. (1979) Comparison of weighted labelled
+           trees. In Combinatorial Mathematics VI: Proceedings of the Sixth Australian
+           Conference on Combinatorial Mathematics, Armidale, Australia (pp. 119-126).
+
+        .. [2] Kuhner, M. K., & Felsenstein, J. (1994). A simulation comparison of
+           phylogeny algorithms under equal and unequal evolutionary rates. Molecular
+           biology and evolution, 11(3), 459-468.
+
+        Examples
+        --------
+        Calculate the weighted RF (wRF) distance between two unrooted trees with branch
+        lengths.
+
+        >>> from skbio import TreeNode
+        >>> tree1 = TreeNode.read(["((a:1,b:2):1,c:4,((d:4,e:5):2,f:6):1);"])
+        >>> print(tree1.ascii_art())
+                            /-a
+                  /--------|
+                 |          \-b
+                 |
+        ---------|--c
+                 |
+                 |                    /-d
+                 |          /--------|
+                  \--------|          \-e
+                           |
+                            \-f
+
+        >>> tree2 = TreeNode.read(["((a:3,(b:2,c:2):1):3,d:8,(e:5,f:6):2);"])
+        >>> print(tree2.ascii_art())
+                            /-a
+                  /--------|
+                 |         |          /-b
+                 |          \--------|
+                 |                    \-c
+        ---------|
+                 |--d
+                 |
+                 |          /-e
+                  \--------|
+                            \-f
+
+        >>> tree1.compare_wrfd(tree2)
+        16.0
+
+        Calculated the wRF distance while considering trees as rooted (therefore based
+        on subsets instead of bipartitions).
+
+        >>> tree1.compare_wrfd(tree2, rooted=True)
+        18.0
+
+        Calculate the Kuhner-Felsenstein (KF) distance.
+
+        >>> tree1.compare_wrfd(tree2, metric="kf")
+        6.164414002968976
+
+        Calculate the KF distance without considering terminal branches.
+
+        >>> tree1.compare_wrfd(tree2, metric="kf", include_single=False)
+        3.7416573867739413
+
+        """
+        if rooted is None:
+            rooted = len(self.children) == 2
+        method = "subsets" if rooted else "biparts"
+        half = False
+        if isinstance(metric, str):
+            if metric == "wrf":
+                metric = "cityblock"
+            elif metric in ("kf", "bs"):
+                metric = "euclidean"
+            elif metric == "unitcorr":
+                metric, half = "correlation", True
+        result = self._compare_topology(
+            other, method, include_single=include_single, weighted=True, metric=metric
+        )
+        if half:
+            result *= 0.5
+        return result
 
     def compare_subsets(
         self,
         other,
         shared_only=False,
         proportion=True,
+        symmetric=True,
         exclude_absent_taxa=False,
     ):
         r"""Calculate the difference of subsets between two trees.
@@ -4219,6 +4525,12 @@ class TreeNode(SkbioObject):
         proportion : bool, optional
             Whether to return count (False) or proportion (True, default) of different
             subsets.
+        symmetric : bool, optional
+            Whether to calculate the symmetric difference between self and other (True,
+            default), or only the difference from self to other (False).
+
+            .. versionadded:: 0.6.3
+
         exclude_absent_taxa : bool, optional
             Alias of ``shared_only`` for backward compatibility. Deprecated and to be
             removed in a future release.
@@ -4232,13 +4544,13 @@ class TreeNode(SkbioObject):
 
         .. versionchanged:: 0.6.3
             The algorithm is now identical to that of :meth:`compare_rfd` for rooted
-                trees.
+            trees.
 
         See Also
         --------
         subsets
         compare_rfd
-        compare_bipartitions
+        compare_biparts
 
         Notes
         -----
@@ -4254,9 +4566,11 @@ class TreeNode(SkbioObject):
 
         """
         shared_only |= exclude_absent_taxa
-        return self._compare_topology(other, "subsets", shared_only, proportion)
+        return self._compare_topology(
+            other, "subsets", shared_only, proportion, symmetric
+        )
 
-    def compare_bipartitions(self, other, proportion=True):
+    def compare_biparts(self, other, proportion=True, symmetric=True):
         r"""Calculate the difference of bipartitions between two trees.
 
         .. versionadded:: 0.6.3
@@ -4268,6 +4582,9 @@ class TreeNode(SkbioObject):
         proportion : bool, optional
             Whether to return count (False) or proportion (True, default) of different
             bipartitions.
+        symmetric : bool, optional
+            Whether to calculate the symmetric difference between self and other (True,
+            default), or only the difference from self to other (False).
 
         Returns
         -------
@@ -4276,7 +4593,7 @@ class TreeNode(SkbioObject):
 
         See Also
         --------
-        bipartitions
+        biparts
         compare_rfd
         compare_subsets
 
@@ -4291,11 +4608,11 @@ class TreeNode(SkbioObject):
         >>> from skbio import TreeNode
         >>> tree1 = TreeNode.read(["((a,b),(c,d));"])
         >>> tree2 = TreeNode.read(["(((a,b),c),d);"])
-        >>> tree1.compare_bipartitions(tree2)
+        >>> tree1.compare_biparts(tree2)
         0.0
 
         """
-        return self._compare_topology(other, "bipartitions", True, proportion)
+        return self._compare_topology(other, "biparts", True, proportion, symmetric)
 
     def compare_tip_distances(self, other, sample=None, dist_f=None, shuffle_f=None):
         r"""Compare self to other using tip-to-tip distance matrices.

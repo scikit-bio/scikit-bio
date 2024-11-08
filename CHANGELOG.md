@@ -5,8 +5,9 @@
 ### Features
 
 * Implemented linear mixed effects with Dirichlet-multinomial distribution ([#2113](https://github.com/scikit-bio/scikit-bio/pull/2113)).
+* Added `TreeNode.compare_wrfd` to calculate the weighted Robinson-Foulds distance or its variants between two trees ([#2144](https://github.com/scikit-bio/scikit-bio/pull/2144)).
 * Wrapped UPGMA and WPGMA from SciPy's linkage method ([#2094](https://github.com/scikit-bio/scikit-bio/pull/2094)).
-* Added `TreeNode` methods: `bipartition`, `bipartitions` and `compare_bipartitions` to retrieve and compare bipartitions in a tree ([#2144](https://github.com/scikit-bio/scikit-bio/pull/2144)).
+* Added `TreeNode` methods: `bipart`, `biparts` and `compare_biparts` to encode and compare bipartitions in a tree ([#2144](https://github.com/scikit-bio/scikit-bio/pull/2144)).
 * Added `TreeNode.has_caches` to check if a tree has caches ([#2103](https://github.com/scikit-bio/scikit-bio/pull/2103)).
 * Added `TreeNode.is_bifurcating` to check if a tree is bifurcating (i.e., binary) ([#2117](https://github.com/scikit-bio/scikit-bio/pull/2117)).
 * Added support for Python's `pathlib` module in the IO system ([#2119](https://github.com/scikit-bio/scikit-bio/pull/2119)).
@@ -16,9 +17,9 @@
 
 ### Performance enhancements
 
-* Supported Robinson-Foulds distance calculation (`TreeNode.compare_rfd`) based on bipartitions (equivalent to `compare_bipartitions`). This is automatically enabled when the input tree is unrooted. Otherwise the calculation is still based on subsets (equivalent to `compare_subsets`). The user can override this behavior using the `rooted` parameter ([#2144](https://github.com/scikit-bio/scikit-bio/pull/2144)).
+* Supported Robinson-Foulds distance calculation (`TreeNode.compare_rfd`) based on bipartitions (equivalent to `compare_biparts`). This is automatically enabled when the input tree is unrooted. Otherwise the calculation is still based on subsets (equivalent to `compare_subsets`). The user can override this behavior using the `rooted` parameter ([#2144](https://github.com/scikit-bio/scikit-bio/pull/2144)).
 * Re-wrote the underlying algorithm of `TreeNode.compare_subsets` because it is equivalent to the Robinson-Foulds distance on rooted trees. Added parameter `proportion`. Renamed parameter `exclude_absent_taxa` as `shared_only` ([#2144](https://github.com/scikit-bio/scikit-bio/pull/2144)).
-* Added parameter `include_self` to `TreeNode.subset`. Added parameters `within`, `include_full` and `include_singles` to `TreeNode.subsets` ([#2144](https://github.com/scikit-bio/scikit-bio/pull/2144)).
+* Added parameter `include_self` to `TreeNode.subset`. Added parameters `within`, `include_full` and `include_single` to `TreeNode.subsets` ([#2144](https://github.com/scikit-bio/scikit-bio/pull/2144)).
 * Improved the performance of `TreeNode.lowest_common_ancestor` ([#2132](https://github.com/scikit-bio/scikit-bio/pull/2132)).
 * Improved the performance of `TreeNode` methods: `ancestors`, `siblings`, and `neighbors` ([#2133](https://github.com/scikit-bio/scikit-bio/pull/2133), [#2135](https://github.com/scikit-bio/scikit-bio/pull/2135)).
 * Improved the performance of tree traversal algorithms ([#2093](https://github.com/scikit-bio/scikit-bio/pull/2093)).
@@ -126,6 +127,7 @@
 * Removed hdmedians as a dependency by porting its `geomedian` function (geometric median) into scikit-bio ([#2003](https://github.com/scikit-bio/scikit-bio/pull/2003)).
 * Removed 98% warnings issued during the test process ([#2045](https://github.com/scikit-bio/scikit-bio/pull/2045) and [#2037](https://github.com/scikit-bio/scikit-bio/pull/2037)).
 
+
 ## Version 0.6.0
 
 ### Performance enhancements
@@ -185,6 +187,7 @@
 * Incorporated Ruff's formatting and linting via pre-commit hooks and GitHub Actions. See PR [#1924](https://github.com/scikit-bio/scikit-bio/pull/1924).
 * Improved docstrings for functions accross the entire codebase. See [#1933](https://github.com/scikit-bio/scikit-bio/pull/1933) and [#1940](https://github.com/scikit-bio/scikit-bio/pull/1940)
 * Removed API lifecycle decorators in favor of deprecation warnings. See [#1916](https://github.com/scikit-bio/scikit-bio/issues/1916)
+
 
 ## Version 0.5.9
 
