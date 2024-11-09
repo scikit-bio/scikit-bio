@@ -311,7 +311,7 @@ class TreeTests(TestCase):
             t1.lowest_common_ancestor([])
 
     def test_path(self):
-        """List of TreeNode object names in path between nodes"""
+        """List of TreeNode objects in path between nodes."""
         t1 = TreeNode.read(["((a,(b,c)d)e,f,(g,h)i)j;"])
         t2 = t1.copy()
         t3 = t1.copy()
@@ -335,9 +335,7 @@ class TreeTests(TestCase):
         t = TreeNode.read(["((a,b)c,(d,e)f)root;"])
         init = t.find("a")
         fin = t.find("e")
-        exp = [
-            t.find("a"), t.find("c"), t.find("root"), t.find("f"), t.find("e")
-            ]
+        exp = [t.find("a"), t.find("c"), t.find("root"), t.find("f"), t.find("e")]
         obs = init.path(fin, include_ends=True)
         self.assertEqual(obs, exp)
 
@@ -346,7 +344,7 @@ class TreeTests(TestCase):
         t2 = TreeNode.read(["((g,h)i,(j,k)l);"])
         node1 = t1.find("a")
         node2 = t2.find("g")
-        msg = "Could not find path between nodes."
+        msg = "Could not find a path between self and other."
         with self.assertRaises(TreeError) as cm:
             node1.path(node2)
         self.assertEqual(str(cm.exception), msg)
@@ -1823,7 +1821,7 @@ class TreeTests(TestCase):
         self.assertEqual(tree.find("A").distance(tree.find("g__genus1")), 1.0)
 
     def test_distance(self):
-        """Get the distance between two nodes"""
+        """Get the path length (patristic) distance between two nodes."""
         t = TreeNode.read(["((a:0.1,b:0.2)c:0.3,(d:0.4,e)f:0.5)root;"])
         tips = sorted([n for n in t.tips()], key=lambda x: x.name)
 
@@ -1832,6 +1830,9 @@ class TreeTests(TestCase):
         npt.assert_almost_equal(tips[0].distance(tips[2]), 1.3)
         with self.assertRaises(NoLengthError):
             tips[0].distance(tips[3])
+
+        npt.assert_almost_equal(
+            tips[0].distance(tips[3], missing_as_zero=True), 0.9)
 
         npt.assert_almost_equal(tips[1].distance(tips[0]), 0.3)
         npt.assert_almost_equal(tips[1].distance(tips[1]), 0.0)
@@ -1845,55 +1846,52 @@ class TreeTests(TestCase):
         with self.assertRaises(NoLengthError):
             tips[2].distance(tips[3])
 
+    def test_distance_count(self):
+        """Get the path distance (edge count) between two nodes."""
+        t = TreeNode.read(["((a:0.1,b:0.2)c:0.3,(d:0.4,e)f:0.5)root;"])
+        tips = sorted([n for n in t.tips()], key=lambda x: x.name)
+
+        self.assertEqual(tips[0].distance(tips[0], False), 0)
+        self.assertEqual(tips[0].distance(tips[1], False), 2)
+        self.assertEqual(tips[0].distance(tips[2], False), 4)
+        self.assertEqual(tips[0].distance(tips[3], False), 4)
+
+        self.assertEqual(tips[1].distance(tips[0], False), 2)
+        self.assertEqual(tips[1].distance(tips[1], False), 0)
+        self.assertEqual(tips[1].distance(tips[2], False), 4)
+        self.assertEqual(tips[1].distance(tips[3], False), 4)
+
+        self.assertEqual(tips[2].distance(tips[0], False), 4)
+        self.assertEqual(tips[2].distance(tips[1], False), 4)
+        self.assertEqual(tips[2].distance(tips[2], False), 0)
+        self.assertEqual(tips[2].distance(tips[3], False), 2)
+
     def test_get_max_distance(self):
-        """get_max_distance should get max tip distance across tree"""
+        """Get maximum tip-to-tip distance across tree. """
+        # regular case
         tree = TreeNode.read([
             "((a:0.1,b:0.2)c:0.3,(d:0.4,e:0.5)f:0.6)root;"])
         dist, nodes = tree.get_max_distance()
         npt.assert_almost_equal(dist, 1.6)
-        self.assertEqual(sorted([n.name for n in nodes]), ["b", "e"])
+        self.assertListEqual([n.name for n in nodes], ["e", "b"])
 
-    def test_set_max_distance(self):
-        """set_max_distance sets MaxDistTips across tree"""
-        tree = TreeNode.read([
-            "((a:0.1,b:0.2)c:0.3,(d:0.4,e:0.5)f:0.6)root;"])
-        tree._set_max_distance()
-        tip_a, tip_b = tree.MaxDistTips
-        self.assertEqual(tip_a[0] + tip_b[0], 1.6)
-        self.assertEqual(sorted([tip_a[1].name, tip_b[1].name]), ["b", "e"])
+        # number of branches
+        dist, nodes = tree.get_max_distance(length=False)
+        self.assertEqual(dist, 4)
+        self.assertListEqual([n.name for n in nodes], ["a", "d"])
 
-    def test_set_max_distance_tie_bug(self):
-        """Corresponds to #1077"""
-        t = TreeNode.read(["((a:1,b:1)c:2,(d:3,e:4)f:5)root;"])
-        exp = ((3.0, t.find("a")), (9.0, t.find("e")))
+        # tree with a single-child node and missing lengths
+        tree = TreeNode.read(["((a:1,b:2),c:4,(((d:4,e:5):2):3,f:6));"])
+        dist, nodes = tree.get_max_distance()
+        npt.assert_almost_equal(dist, 16)
+        self.assertListEqual([n.name for n in nodes], ["e", "f"])
 
-        # the above tree would trigger an exception in max. The central issue
-        # was that the data being passed to max were a tuple of tuple:
-        # ((left_d, left_n), (right_d, right_n))
-        # the call to max would break in this scenario as it would fall onto
-        # idx 1 of each tuple to assess the "max".
-        t._set_max_distance()
-
-        self.assertEqual(t.MaxDistTips, exp)
-
-    def test_set_max_distance_inplace_modification_bug(self):
-        """Corresponds to #1223"""
-        t = TreeNode.read(["((a:1,b:1)c:2,(d:3,e:4)f:5)root;"])
-
-        exp = [((0.0, t.find("a")), (0.0, t.find("a"))),
-               ((0.0, t.find("b")), (0.0, t.find("b"))),
-               ((1.0, t.find("a")), (1.0, t.find("b"))),
-               ((0.0, t.find("d")), (0.0, t.find("d"))),
-               ((0.0, t.find("e")), (0.0, t.find("e"))),
-               ((3.0, t.find("d")), (4.0, t.find("e"))),
-               ((3.0, t.find("a")), (9.0, t.find("e")))]
-
-        t._set_max_distance()
-
-        self.assertEqual([n.MaxDistTips for n in t.postorder()], exp)
+        dist, nodes = tree.get_max_distance(length=False)
+        self.assertEqual(dist, 6)
+        self.assertListEqual([n.name for n in nodes], ["d", "a"])
 
     def test_tip_tip_distances_endpoints(self):
-        """Test getting specifc tip distances with tipToTipDistances"""
+        """Get a tip-to-tip distance matrix."""
         t = TreeNode.read(["((H:1,G:1):2,(R:0.5,M:0.7):3);"])
         nodes = [t.find("H"), t.find("G"), t.find("M")]
         names = ["H", "G", "M"]
@@ -1905,6 +1903,25 @@ class TreeTests(TestCase):
         self.assertEqual(obs, exp)
 
         obs = t.tip_tip_distances(endpoints=nodes)
+        self.assertEqual(obs, exp)
+
+        for node in t.traverse(include_self=True):
+            assert not hasattr(node, '_start')
+            assert not hasattr(node, '_stop')
+
+    def test_tip_tip_distances_counts(self):
+        """Get a tip-to-tip distance matrix in counts."""
+        t = TreeNode.read(["((H:1,G:1):2,(R:0.5,M:0.7):3);"])
+        nodes = [t.find("H"), t.find("G"), t.find("M")]
+        names = ["H", "G", "M"]
+        exp = DistanceMatrix(np.array([[0, 2, 4],
+                                       [2, 0, 4],
+                                       [4, 4, 0]]), ["H", "G", "M"])
+
+        obs = t.tip_tip_distances(endpoints=names, length=False)
+        self.assertEqual(obs, exp)
+
+        obs = t.tip_tip_distances(endpoints=nodes, length=False)
         self.assertEqual(obs, exp)
 
         for node in t.traverse(include_self=True):
@@ -1934,6 +1951,8 @@ class TreeTests(TestCase):
 
         t_dm = npt.assert_warns(RepresentationWarning, t.tip_tip_distances)
         self.assertEqual(t_dm, exp_t_dm)
+
+
 
     def test_compare_rfd(self):
         """Return Robinson-Foulds distance."""

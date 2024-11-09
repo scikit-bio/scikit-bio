@@ -469,12 +469,15 @@ class TreeNode(SkbioObject):
     def ancestors(self, include_self=False):
         r"""Return all ancestral nodes from self back to the root.
 
+        Parameters
+        ----------
+        include_self : bool, optional
+            Whether to include the initial node in the path (default: False).
+
         Returns
         -------
         list of TreeNode
-            The path, toward the root, from self.
-        include_self : bool, optional
-            Whether to include the initial node in the path (default: False).
+            The path from self toward the root.
 
         Examples
         --------
@@ -488,6 +491,7 @@ class TreeNode(SkbioObject):
                  |          /-d
                   \f-------|
                             \-e
+
         >>> tip = tree.find('a')
         >>> [node.name for node in tip.ancestors()]
         ['c', 'g']
@@ -640,6 +644,27 @@ class TreeNode(SkbioObject):
 
     lca = lowest_common_ancestor  # for convenience
 
+    def _path(self, other):
+        anc1 = self.ancestors(include_self=True)
+        anc2 = other.ancestors(include_self=True)
+
+        # find lowest common ancestor of the two by iterating down from root
+        # and stopping at divergence
+        # pos is lca's index from root + 1
+        lca, pos = None, None
+        for i, (n1, n2) in enumerate(zip(reversed(anc1), reversed(anc2))):
+            if n1 is n2:
+                lca = n1
+            else:
+                pos = i
+                break
+        if lca is None:
+            raise TreeError("Could not find a path between self and other.")
+        if pos is None:
+            pos = i + 1
+
+        return lca, anc1[: len(anc1) - pos], anc2[: len(anc2) - pos]
+
     def path(self, other, include_ends=False):
         r"""Return the list of nodes in the path from self to another node.
 
@@ -686,31 +711,8 @@ class TreeNode(SkbioObject):
         a-c-root-f-d
 
         """
-        # create list of ancestors including nodes themselves
-        anc1, anc2 = (
-            [self] + self.ancestors(),
-            [other] + other.ancestors(),
-        )
-
-        # initialize lowest common ancestor variable
-        lca = None
-
-        # find lowest common ancestor
-        for i, (n1, n2) in enumerate(zip(reversed(anc1), reversed(anc2))):
-            if n1 is n2:
-                lca = n1
-                lca_i = i
-            else:
-                break
-
-        # check to see if nodes are on same tree
-        if lca is None:
-            raise TreeError("Could not find path between nodes.")
-
-        # create path list
-        path = (
-            anc1[: len(anc1) - lca_i - 1] + [lca] + anc2[: len(anc2) - lca_i - 1][::-1]
-        )
+        lca, self_path, other_path = self._path(other)
+        path = self_path + [lca] + other_path[::-1]
 
         # remove initial and final nodes if desired
         if include_ends is False:
@@ -1141,9 +1143,9 @@ class TreeNode(SkbioObject):
         e
 
         """
-        for n in self.postorder(include_self=include_self):
-            if n.is_tip():
-                yield n
+        for node in self.postorder(include_self=include_self):
+            if not node.children:
+                yield node
 
     def non_tips(self, include_self=False):
         r"""Iterate over non-tip nodes descended from the current node.
@@ -1187,9 +1189,9 @@ class TreeNode(SkbioObject):
         f
 
         """
-        for n in self.postorder(include_self):
-            if not n.is_tip():
-                yield n
+        for node in self.postorder(include_self):
+            if node.children:
+                yield node
 
     # ------------------------------------------------
     # Tree manipulation
@@ -3268,7 +3270,7 @@ class TreeNode(SkbioObject):
             # add to result
             if subset and include_single or len(subset) > 1:
                 if map_to_length:
-                    subsets[subset] = subsets_get(subset, 0) + (node.length or 0)
+                    subsets[subset] = subsets_get(subset, 0.0) + (node.length or 0.0)
                 else:
                     subsets_append(subset)
 
@@ -3548,7 +3550,7 @@ class TreeNode(SkbioObject):
             # add to result
             if bipart and include_single or len(bipart) > 1:
                 if map_to_length:
-                    biparts[bipart] = biparts_get(bipart, 0) + (node.length or 0)
+                    biparts[bipart] = biparts_get(bipart, 0.0) + (node.length or 0.0)
                 else:
                     biparts_append(bipart)
 
@@ -3862,23 +3864,34 @@ class TreeNode(SkbioObject):
                 if n.length is not None
             )
 
-    def distance(self, other):
+    def distance(self, other, length=True, missing_as_zero=False):
         """Calculate the distance between self and another node.
 
         Parameters
         ----------
         other : TreeNode
             The node to compute a distance to.
+        length : bool, optional
+            Whether to return the sum of branch lengths (True, default) or the number
+            of branches (False) connecting self and other.
+
+            .. versionadded:: 0.6.3
+
+        missing_as_zero : bool, optional
+            When a node without an associated branch length is encountered, raise an
+            error (False, default) or use 0 (True). Applicable when `length` is True.
+
+            .. versionadded:: 0.6.3
 
         Returns
         -------
-        float
+        float or int
             The distance between two nodes.
 
         Raises
         ------
         NoLengthError
-            If a node without branch length is encountered.
+            If nodes without branch length are encountered.
 
         See Also
         --------
@@ -3890,8 +3903,10 @@ class TreeNode(SkbioObject):
 
         Notes
         -----
-        The distance between two nodes is the sum of lengths of branches connecting
+        The distance between two nodes is the length of the path (branches) connecting
         them. It is also known as the patristic distance [1]_.
+
+        When `length=False`, it is the number of branches in the path.
 
         This method can be used to compute the distance between two given nodes.
         However, it is not optimized for computing all pairwise tip distances. Use
@@ -3911,85 +3926,58 @@ class TreeNode(SkbioObject):
         >>> tip_d = tree.find('d')
         >>> tip_a.distance(tip_d)
         14.0
+        >>> tip_a.distance(tip_d, length=False)
+        4
 
         """
-        if self is other:
-            return 0.0
+        _, self_path, other_path = self._path(other)
+        if not length:
+            return len(self_path) + len(other_path)
+        if missing_as_zero:
+            return sum(x.length or 0.0 for x in chain(self_path, other_path))
+        try:
+            return sum(x.length for x in chain(self_path, other_path))
+        except TypeError:
+            raise NoLengthError("Nodes without branch length are encountered.")
 
-        self_ancestors = [self] + list(self.ancestors())
-        other_ancestors = [other] + list(other.ancestors())
+    def get_max_distance(self, length=True):
+        r"""Return the maximum path distance between any pair of tips.
 
-        if self in other_ancestors:
-            return other.accumulate_to_ancestor(self)
-        elif other in self_ancestors:
-            return self.accumulate_to_ancestor(other)
-        else:
-            root = self.root()
-            lca = root.lowest_common_ancestor([self, other])
-            accum = self.accumulate_to_ancestor(lca)
-            accum += other.accumulate_to_ancestor(lca)
+        This is also referred to as the diameter of a tree [1]_.
 
-            return accum
+        Parameters
+        ----------
+        length : bool, optional
+            Whether to return the sum of branch lengths (True, default) or the number
+            of branches (False) connecting each pair of tips.
 
-    def _set_max_distance(self):
-        """Propagate tip distance information up the tree.
-
-        This method was originally implemented by Julia Goodrich with the
-        intent of being able to determine max tip to tip distances between
-        nodes on large trees efficiently. The code has been modified to track
-        the specific tips the distance is between
-
-        """
-        maxkey = itemgetter(0)
-
-        for n in self.postorder():
-            if n.is_tip():
-                n.MaxDistTips = ((0.0, n), (0.0, n))
-            else:
-                if len(n.children) == 1:
-                    raise TreeError("No support for single descedent nodes")
-                else:
-                    tip_info = [(max(c.MaxDistTips, key=maxkey), c) for c in n.children]
-
-                    dists = [i[0][0] for i in tip_info]
-                    best_idx = np.argsort(dists)[-2:]
-                    (tip_a_d, tip_a), child_a = tip_info[best_idx[0]]
-                    (tip_b_d, tip_b), child_b = tip_info[best_idx[1]]
-                    tip_a_d += child_a.length or 0.0
-                    tip_b_d += child_b.length or 0.0
-                n.MaxDistTips = ((tip_a_d, tip_a), (tip_b_d, tip_b))
-
-    def _get_max_distance_singledesc(self):
-        """Return the max distance between any pair of tips.
-
-        Also returns the tip names  that it is between as a tuple
-        """
-        distmtx = self.tip_tip_distances()
-        idx_max = divmod(distmtx.data.argmax(), distmtx.shape[1])
-        max_pair = (distmtx.ids[idx_max[0]], distmtx.ids[idx_max[1]])
-        return distmtx[idx_max], max_pair
-
-    def get_max_distance(self):
-        r"""Return the max tip tip distance between any pair of tips.
+            .. versionadded:: 0.6.3
 
         Returns
         -------
-        float
-            The distance between the two most distant tips in the tree
-        tuple of TreeNode
-            The two most distant tips in the tree
-
-        Raises
-        ------
-        NoLengthError
-            A NoLengthError will be thrown if a node without length is
-            encountered
+        float or int
+            The distance between the two most distant tips in the tree.
+        tuple of (TreeNode, TreeNode)
+            The two most distant tips in the tree.
 
         See Also
         --------
         distance
         tip_tip_distances
         compare_tip_distances
+
+        Notes
+        -----
+        If a node does not have an associated branch length, 0 will be used.
+
+        When a tie is observed among more than one pair of tips, only one pair will be
+        returned. The choice is stable. This often happens when `length=False`.
+
+        References
+        ----------
+        .. [1] Mai, U., & Mirarab, S. (2018). TreeShrink: fast and accurate detection
+           of outlier long branches in collections of phylogenetic trees. BMC genomics,
+           19, 23-40.
 
         Examples
         --------
@@ -3999,34 +3987,63 @@ class TreeNode(SkbioObject):
         >>> dist
         16.0
         >>> [n.name for n in tips]
-        ['b', 'e']
+        ['e', 'b']
 
         """
-        # _set_max_distance will throw a TreeError if a node with a single
-        # child is encountered
-        try:
-            self._set_max_distance()
-        except TreeError:  #
-            return self._get_max_distance_singledesc()
+        # The code performs a post-order traversal and appends two pieces of
+        # information to each node:
+        #   a: The maximum distance from the node to any descending tip.
+        #   b: The maximum distance between any two descending tips.
+        # The information is updated at each internal node:
+        #   a becomes the maximum of any child's (a + length).
+        #   b becomes the larger of the maximum of any b and the sum of the two
+        # largest (a + length). The latter represents the new plausible maximum
+        # distance that crosses the node.
+        maxkey = itemgetter(0)
+        for node in self.postorder():
+            # initialize maximum at tip: (up_dist, up_tip, in_dist, in_tip1, in_tip2)
+            if not node.children:
+                node._maxdist = (0, node, 0, None, None)
 
-        longest = 0.0
-        tips = [None, None]
-        for n in self.non_tips(include_self=True):
-            tip_a, tip_b = n.MaxDistTips
-            dist = tip_a[0] + tip_b[0]
+            # internal node: update the maximum
+            elif len(children := node.children) > 1:
+                ups, ins = [], []
+                for child in children:
+                    up_dist, up_tip, in_dist, in_tip1, in_tip2 = child._maxdist
+                    del child._maxdist
+                    ups.append(
+                        (up_dist + (child.length or 0.0 if length else 1), up_tip)
+                    )
+                    ins.append((in_dist, in_tip1, in_tip2))
 
-            if dist > longest:
-                longest = dist
-                tips = [tip_a[1], tip_b[1]]
+                # compare the previous maximum with the distance between the two
+                # longest descendants from any two child clades
+                ups.sort(key=maxkey, reverse=True)
+                (up_dist, up_tip), (up_dist2, up_tip2) = ups[:2]
+                in_dist, in_tip1, in_tip2 = max(ins, key=maxkey)
+                if (x_dist := up_dist + up_dist2) > in_dist:
+                    node._maxdist = (up_dist, up_tip, x_dist, up_tip, up_tip2)
+                else:
+                    node._maxdist = (up_dist, up_tip, in_dist, in_tip1, in_tip2)
 
-        # The MaxDistTips attribute causes problems during deep copy because it
-        # contains references to other nodes. This patch removes the attribute.
-        for n in self.traverse():
-            del n.MaxDistTips
+            # internal node with only one child: inherit the maximum
+            else:
+                (child,) = children
+                up_dist, up_tip, in_dist, in_tip1, in_tip2 = child._maxdist
+                del child._maxdist
+                node._maxdist = (
+                    up_dist + (child.length or 0.0 if length else 1),
+                    up_tip,
+                    in_dist,
+                    in_tip1,
+                    in_tip2,
+                )
 
-        return longest, tips
+        max_dist, max_tip1, max_tip2 = self._maxdist[2:]
+        del self._maxdist
+        return max_dist, (max_tip1, max_tip2)
 
-    def tip_tip_distances(self, endpoints=None):
+    def tip_tip_distances(self, endpoints=None, length=True):
         r"""Return a distance matrix between pairs of tips.
 
         Parameters
@@ -4034,6 +4051,11 @@ class TreeNode(SkbioObject):
         endpoints : list of TreeNode or str, optional
             Tips or their names (i.e., taxa) to be included in the calculation. If not
             specified, all tips will be included.
+        length : bool, optional
+            Whether to return the sum of branch lengths (True, default) or the number
+            of branches (False) connecting each pair of tips.
+
+            .. versionadded:: 0.6.3
 
         Returns
         -------
@@ -4055,8 +4077,7 @@ class TreeNode(SkbioObject):
         This method calculates the sum of branch lengths connecting each pair of tips.
         It is also known as the patristic distance [1]_.
 
-        If a node does not have an associated branch length, 0.0 will be used and a
-        ``RepresentationWarning`` will be raised.
+        If a node does not have an associated branch length, 0 will be used.
 
         References
         ----------
@@ -4068,6 +4089,9 @@ class TreeNode(SkbioObject):
         --------
         >>> from skbio import TreeNode
         >>> tree = TreeNode.read(["((a:1,b:2)c:3,(d:4,e:5)f:6)root;"])
+
+        Calculate path length distances (patristic distances).
+
         >>> mat = tree.tip_tip_distances()
         >>> print(mat)
         4x4 distance matrix
@@ -4079,15 +4103,28 @@ class TreeNode(SkbioObject):
          [ 14.  15.   0.   9.]
          [ 15.  16.   9.   0.]]
 
+        Calculate path distances (branch counts).
+
+        >>> mat = tree.tip_tip_distances(length=False)
+        >>> print(mat)
+        4x4 distance matrix
+        IDs:
+        'a', 'b', 'd', 'e'
+        Data:
+        [[ 0.  2.  4.  4.]
+         [ 2.  0.  4.  4.]
+         [ 4.  4.  0.  2.]
+         [ 4.  4.  2.  0.]]
+
         """
         all_tips = list(self.tips())
         if endpoints is None:
             tip_order = all_tips
         else:
             tip_order = [self.find(n) for n in endpoints]
-            for n in tip_order:
-                if not n.is_tip():
-                    raise ValueError(f"Node with name '{n.name}' is not a tip.")
+            for node in tip_order:
+                if node.children:
+                    raise ValueError(f"Node with name '{node.name}' is not a tip.")
 
         # linearize all tips in postorder
         # ._start, ._stop compose the slice in tip_order.
@@ -4098,12 +4135,12 @@ class TreeNode(SkbioObject):
         result_map = {n._start: i for i, n in enumerate(tip_order)}
         num_all_tips = len(all_tips)  # total number of tips
         num_tips = len(tip_order)  # total number of tips in result
-        result = np.zeros((num_tips, num_tips), float)  # tip by tip matrix
-        distances = np.zeros((num_all_tips), float)  # dist from tip to tip
+        result = np.zeros((num_tips, num_tips), dtype=float)  # tip by tip matrix
+        distances = np.zeros(num_all_tips, dtype=float)  # dist from tip to tip
 
         def update_result():
             # set tip_tip distance between tips of different child
-            for child1, child2 in combinations(node.children, 2):
+            for child1, child2 in combinations(children, 2):
                 for tip1 in range(child1._start, child1._stop):
                     if tip1 not in result_map:
                         continue
@@ -4117,30 +4154,31 @@ class TreeNode(SkbioObject):
         for node in self.postorder():
             if not node.children:
                 continue
-            # subtree with solved child wedges
+            # subtree with solved child edges
             # can possibly use np.zeros
-            starts, stops = [], []  # to calc ._start and ._stop for curr node
-            for child in node.children:
-                length = child.length
-                if length is None:
+            starts, stops = [], []
+            for child in (children := node.children):
+                starts.append(_start := child._start)
+                stops.append(_stop := child._stop)
+                if not length:
+                    L = 1
+                elif (L := child.length) is None:
+                    L = 0.0
                     warn(
-                        "`TreeNode.tip_tip_distances`: Node with name %r does "
-                        "not have an associated length, so a length of 0.0 "
-                        "will be used." % child.name,
+                        f"Node with name {child.name} does not have an associated "
+                        "length, so a length of 0 will be used.",
                         RepresentationWarning,
                     )
-                    length = 0.0
-                distances[child._start : child._stop] += length
-
-                starts.append(child._start)
-                stops.append(child._stop)
+                distances[_start:_stop] += L
+                # no warning:
+                # distances[_start : _stop] += (child.length or 0.0) if length else 1
 
             node._start, node._stop = min(starts), max(stops)
 
-            if len(node.children) > 1:
+            if len(children) > 1:
                 update_result()
 
-            for child in node.children:
+            for child in children:
                 del child._start
                 del child._stop
 
@@ -4176,6 +4214,8 @@ class TreeNode(SkbioObject):
             Normalize to fraction.
         symmetric : bool, optional
             Symmetric difference.
+        include_single : bool, optional
+            Include singletons.
         weighted : bool, optional
             Weight by branch length.
         metric : str or callable, optional
@@ -4189,6 +4229,7 @@ class TreeNode(SkbioObject):
         See Also
         --------
         compare_rfd
+        compare_wrfd
         compare_subsets
         compare_biparts
 
