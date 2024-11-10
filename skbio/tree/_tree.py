@@ -4284,6 +4284,9 @@ class TreeNode(SkbioObject):
         proportion : bool, optional
             Whether to return count (False) or proportion (True, default) of different
             subsets.
+
+            .. versionadded:: 0.6.3
+
         symmetric : bool, optional
             Whether to calculate the symmetric difference between self and other (True,
             default), or only the difference from self to other (False).
@@ -4294,16 +4297,10 @@ class TreeNode(SkbioObject):
             Alias of ``shared_only`` for backward compatibility. Deprecated and to be
             removed in a future release.
 
-            .. deprecated:: 0.6.3
-
         Returns
         -------
         int or float
             The count or proportion of subsets that differ between the trees.
-
-        .. versionchanged:: 0.6.3
-            The algorithm is now identical to that of :meth:`compare_rfd` for rooted
-            trees.
 
         See Also
         --------

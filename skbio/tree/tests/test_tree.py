@@ -1776,8 +1776,8 @@ class TreeTests(TestCase):
             "(((A:.1,B:1.2)C:.6,(D:.9,E:.6)F:.9)G:2.4,(H:.4,I:.5)J:1.3)K;"])
         tdbl = tr.descending_branch_length()
         sdbl = tr.descending_branch_length(["A", "E"])
-        npt.assert_almost_equal(tdbl, 8.9)
-        npt.assert_almost_equal(sdbl, 2.2)
+        self.assertAlmostEqual(tdbl, 8.9)
+        self.assertAlmostEqual(sdbl, 2.2)
         self.assertRaises(ValueError, tr.descending_branch_length,
                           ["A", "DNE"])
         self.assertRaises(ValueError, tr.descending_branch_length, ["A", "C"])
@@ -1785,35 +1785,35 @@ class TreeTests(TestCase):
         tr = TreeNode.read([
             "(((A,B:1.2)C:.6,(D:.9,E:.6)F:.9)G:2.4,(H:.4,I:.5)J:1.3)K;"])
         tdbl = tr.descending_branch_length()
-        npt.assert_almost_equal(tdbl, 8.8)
+        self.assertAlmostEqual(tdbl, 8.8)
 
         tr = TreeNode.read([
             "(((A,B:1.2)C:.6,(D:.9,E:.6)F)G:2.4,(H:.4,I:.5)J:1.3)K;"])
         tdbl = tr.descending_branch_length()
-        npt.assert_almost_equal(tdbl, 7.9)
+        self.assertAlmostEqual(tdbl, 7.9)
 
         tr = TreeNode.read([
             "(((A,B:1.2)C:.6,(D:.9,E:.6)F)G:2.4,(H:.4,I:.5)J:1.3)K;"])
         tdbl = tr.descending_branch_length(["A", "D", "E"])
-        npt.assert_almost_equal(tdbl, 2.1)
+        self.assertAlmostEqual(tdbl, 2.1)
 
         tr = TreeNode.read([
             "(((A,B:1.2)C:.6,(D:.9,E:.6)F:.9)G:2.4,(H:.4,I:.5)J:1.3)K;"])
         tdbl = tr.descending_branch_length(["I", "D", "E"])
-        npt.assert_almost_equal(tdbl, 6.6)
+        self.assertAlmostEqual(tdbl, 6.6)
 
         # test with a situation where we have unnamed internal nodes
         tr = TreeNode.read([
             "(((A,B:1.2):.6,(D:.9,E:.6)F):2.4,(H:.4,I:.5)J:1.3);"])
         tdbl = tr.descending_branch_length()
-        npt.assert_almost_equal(tdbl, 7.9)
+        self.assertAlmostEqual(tdbl, 7.9)
 
         # issue 1847
         tr = TreeNode.read([
             "(((A:.1,B:1.2)C:.6,(D:.9,E:.6)F:.9)G:2.4,(H:.4,I:.5)J:1.3)K;"])
         tr.length = 1
         tdbl = tr.descending_branch_length()
-        npt.assert_almost_equal(tdbl, 8.9)
+        self.assertAlmostEqual(tdbl, 8.9)
 
     def test_distance_nontip(self):
         # example derived from issue #807, credit @wwood
@@ -1826,24 +1826,24 @@ class TreeTests(TestCase):
         t = TreeNode.read(["((a:0.1,b:0.2)c:0.3,(d:0.4,e)f:0.5)root;"])
         tips = sorted([n for n in t.tips()], key=lambda x: x.name)
 
-        npt.assert_almost_equal(tips[0].distance(tips[0]), 0.0)
-        npt.assert_almost_equal(tips[0].distance(tips[1]), 0.3)
-        npt.assert_almost_equal(tips[0].distance(tips[2]), 1.3)
+        self.assertAlmostEqual(tips[0].distance(tips[0]), 0.0)
+        self.assertAlmostEqual(tips[0].distance(tips[1]), 0.3)
+        self.assertAlmostEqual(tips[0].distance(tips[2]), 1.3)
         with self.assertRaises(NoLengthError):
             tips[0].distance(tips[3])
 
-        npt.assert_almost_equal(
+        self.assertAlmostEqual(
             tips[0].distance(tips[3], missing_as_zero=True), 0.9)
 
-        npt.assert_almost_equal(tips[1].distance(tips[0]), 0.3)
-        npt.assert_almost_equal(tips[1].distance(tips[1]), 0.0)
-        npt.assert_almost_equal(tips[1].distance(tips[2]), 1.4)
+        self.assertAlmostEqual(tips[1].distance(tips[0]), 0.3)
+        self.assertAlmostEqual(tips[1].distance(tips[1]), 0.0)
+        self.assertAlmostEqual(tips[1].distance(tips[2]), 1.4)
         with self.assertRaises(NoLengthError):
             tips[1].distance(tips[3])
 
-        self.assertEqual(tips[2].distance(tips[0]), 1.3)
-        self.assertEqual(tips[2].distance(tips[1]), 1.4)
-        self.assertEqual(tips[2].distance(tips[2]), 0.0)
+        self.assertAlmostEqual(tips[2].distance(tips[0]), 1.3)
+        self.assertAlmostEqual(tips[2].distance(tips[1]), 1.4)
+        self.assertAlmostEqual(tips[2].distance(tips[2]), 0.0)
         with self.assertRaises(NoLengthError):
             tips[2].distance(tips[3])
 
@@ -1873,7 +1873,7 @@ class TreeTests(TestCase):
         tree = TreeNode.read([
             "((a:0.1,b:0.2)c:0.3,(d:0.4,e:0.5)f:0.6)root;"])
         dist, nodes = tree.get_max_distance()
-        npt.assert_almost_equal(dist, 1.6)
+        self.assertAlmostEqual(dist, 1.6)
         self.assertListEqual([n.name for n in nodes], ["e", "b"])
 
         # number of branches
@@ -1884,7 +1884,7 @@ class TreeTests(TestCase):
         # tree with a single-child node and missing lengths
         tree = TreeNode.read(["((a:1,b:2),c:4,(((d:4,e:5):2):3,f:6));"])
         dist, nodes = tree.get_max_distance()
-        npt.assert_almost_equal(dist, 16)
+        self.assertAlmostEqual(dist, 16)
         self.assertListEqual([n.name for n in nodes], ["e", "f"])
 
         dist, nodes = tree.get_max_distance(use_length=False)
@@ -1952,8 +1952,6 @@ class TreeTests(TestCase):
 
         t_dm = npt.assert_warns(RepresentationWarning, t.tip_tip_distances)
         self.assertEqual(t_dm, exp_t_dm)
-
-
 
     def test_compare_rfd(self):
         """Return Robinson-Foulds distance."""
