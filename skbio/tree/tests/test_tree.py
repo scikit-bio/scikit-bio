@@ -13,6 +13,7 @@ import numpy as np
 import numpy.testing as npt
 import pandas as pd
 from scipy.stats import pearsonr
+from scipy.spatial.distance import euclidean
 
 from skbio import DistanceMatrix, TreeNode
 from skbio.tree import (DuplicateNodeError, NoLengthError,
@@ -1876,7 +1877,7 @@ class TreeTests(TestCase):
         self.assertListEqual([n.name for n in nodes], ["e", "b"])
 
         # number of branches
-        dist, nodes = tree.get_max_distance(length=False)
+        dist, nodes = tree.get_max_distance(use_length=False)
         self.assertEqual(dist, 4)
         self.assertListEqual([n.name for n in nodes], ["a", "d"])
 
@@ -1886,7 +1887,7 @@ class TreeTests(TestCase):
         npt.assert_almost_equal(dist, 16)
         self.assertListEqual([n.name for n in nodes], ["e", "f"])
 
-        dist, nodes = tree.get_max_distance(length=False)
+        dist, nodes = tree.get_max_distance(use_length=False)
         self.assertEqual(dist, 6)
         self.assertListEqual([n.name for n in nodes], ["d", "a"])
 
@@ -1918,10 +1919,10 @@ class TreeTests(TestCase):
                                        [2, 0, 4],
                                        [4, 4, 0]]), ["H", "G", "M"])
 
-        obs = t.tip_tip_distances(endpoints=names, length=False)
+        obs = t.tip_tip_distances(endpoints=names, use_length=False)
         self.assertEqual(obs, exp)
 
-        obs = t.tip_tip_distances(endpoints=nodes, length=False)
+        obs = t.tip_tip_distances(endpoints=nodes, use_length=False)
         self.assertEqual(obs, exp)
 
         for node in t.traverse(include_self=True):
@@ -1942,7 +1943,7 @@ class TreeTests(TestCase):
         self.assertEqual(t_dm, exp_t_dm)
 
         for node in t.preorder():
-            self.assertIs(node.length, None)
+            self.assertIsNone(node.length)
 
     def test_tip_tip_distances_missing_length(self):
         t = TreeNode.read(["((a,b:6)c:4,(d,e:0)f);"])
@@ -2005,25 +2006,23 @@ class TreeTests(TestCase):
         t1 = TreeNode.read(["((a:1,b:2):1,c:4,((d:4,e:5):2,f:6):1);"])
         t2 = TreeNode.read(["((a:3,(b:2,c:2):1):3,d:8,(e:5,f:6):2);"])
 
-        # weighted RF distance (matches phangorn's wRF.dist and dendropy's
+        # weighted RF distance (matches phangorn::wRF.dist and dendropy's
         # weighted_robinson_foulds_distance)
         self.assertAlmostEqual(t1.compare_wrfd(t2), 16)
-        self.assertAlmostEqual(t1.compare_wrfd(t2, metric="wrf"), 16)
         self.assertAlmostEqual(t1.compare_wrfd(t2, metric="cityblock"), 16)
 
-        # KF branch score distance (matches phangorn's KF.dist and dendropy's
+        # KF branch score distance (matches phangorn::KF.dist and dendropy's
         # euclidean_distance)
-        self.assertAlmostEqual(t1.compare_wrfd(t2, metric="kf"), 6.1644140)
-        self.assertAlmostEqual(t1.compare_wrfd(t2, metric="bs"), 6.1644140)
         self.assertAlmostEqual(t1.compare_wrfd(t2, metric="euclidean"), 6.1644140)
 
-        # no terminal branches (matches ape's dist.topo with method="score")
-        self.assertAlmostEqual(t1.compare_wrfd(t2, metric="kf", include_single=False),
-                               3.7416574)
+        # no terminal branches (matches ape::dist.topo with method="score")
+        self.assertAlmostEqual(t1.compare_wrfd(
+            t2, metric="euclidean", include_single=False), 3.7416574)
 
         # force rooted (considers subsets not bipartitions)
         self.assertAlmostEqual(t1.compare_wrfd(t2, rooted=True), 18)
-        self.assertAlmostEqual(t1.compare_wrfd(t2, metric="kf", rooted=True), 6.6332496)
+        self.assertAlmostEqual(
+            t1.compare_wrfd(t2, metric="euclidean", rooted=True), 6.6332496)
 
         # correlation distance
         self.assertAlmostEqual(t1.compare_wrfd(t2, metric="correlation"), 0.3164447)
@@ -2097,43 +2096,81 @@ class TreeTests(TestCase):
         self.assertEqual(result, 1)
 
     def test_compare_tip_distances(self):
-        # default behavior
+        """Return distance between two trees based on tip distances."""
         t = TreeNode.read(["((H:1,G:1):2,(R:0.5,M:0.7):3);"])
         t2 = TreeNode.read(["(((H:1,G:1,O:1):2,R:3):1,X:4);"])
-        obs = t.compare_tip_distances(t2)
+
+        # default behavior (half correlation, use length, include self)
         # note: common taxa are H, G, R (only)
+        # note: version 0.7.0 will ignore self by default (see below)
+        obs = t.compare_tip_distances(t2)
         m1 = np.array([[0, 2, 6.5], [2, 0, 6.5], [6.5, 6.5, 0]])
         m2 = np.array([[0, 2, 6], [2, 0, 6], [6, 6, 0]])
         r = pearsonr(m1.flat, m2.flat)[0]
-        self.assertAlmostEqual(obs, (1 - r) / 2)
+        exp = (1 - r) / 2
+        self.assertAlmostEqual(obs, exp)
 
         # sample a subset of taxa
-        t = TreeNode.read(["((H:1,G:1):2,(R:0.5,M:0.7):3);"])
-        t2 = TreeNode.read(["(((H:1,G:1,O:1):2,R:3):1,X:4);"])
+        # note: all common taxa are selected, despite that the default
+        # shuffler function is stochastic.
         obs = t.compare_tip_distances(t2, sample=3)
-        # Note: common taxa are H, G, R (only), all of which are selected, despite that
-        # the default shuffling function is stochastic.
-        m1 = np.array([[0, 2, 6.5], [2, 0, 6.5], [6.5, 6.5, 0]])
-        m2 = np.array([[0, 2, 6], [2, 0, 6], [6, 6, 0]])
-        r = pearsonr(m1.flat, m2.flat)[0]
-        self.assertAlmostEqual(obs, (1 - r) / 2)
+        self.assertAlmostEqual(obs, exp)
 
-        # 4 common taxa, custom shuffling function, still picking H, G, R
-        t = TreeNode.read(["((H:1,G:1):2,(R:0.5,M:0.7,Q:5):3);"])
-        t3 = TreeNode.read(["(((H:1,G:1,O:1):2,R:3,Q:10):1,X:4);"])
-        obs = t.compare_tip_distances(t3, sample=3, shuffle_f=sorted)
+        # 4 common taxa, custom shuffler, still picking H, G, R
+        tx = TreeNode.read(["((H:1,G:1):2,(R:0.5,M:0.7,U:5):3);"])
+        t2x = TreeNode.read(["(((H:1,G:1,O:1):2,R:3,U:10):1,X:4);"])
+        obs = tx.compare_tip_distances(t2x, sample=3, shuffler=list.sort)
+        self.assertAlmostEqual(obs, exp)
+        obs = tx.compare_tip_distances(t2x, sample=3, shuffle_f=list.sort)
+        self.assertAlmostEqual(obs, exp)
 
         # no common taxa
-        t = TreeNode.read(["((H:1,G:1):2,(R:0.5,M:0.7):3);"])
-        t2 = TreeNode.read(["(((Z:1,Y:1,X:1):2,W:3):1,V:4);"])
+        t3 = TreeNode.read(["(((Z:1,Y:1,X:1):2,W:3):1,V:4);"])
         with self.assertRaises(ValueError):
-            t.compare_tip_distances(t2)
+            t.compare_tip_distances(t3)
 
         # single common taxon
-        t = TreeNode.read(["((H:1,G:1):2,(R:0.5,M:0.7):3);"])
-        t2 = TreeNode.read(["(((R:1,Y:1,X:1):2,W:3):1,V:4);"])
-        self.assertEqual(t.compare_tip_distances(t2), 1)
-        self.assertEqual(t2.compare_tip_distances(t), 1)
+        t4 = TreeNode.read(["(((R:1,Y:1,X:1):2,W:3):1,V:4);"])
+        self.assertTrue(np.isnan(t.compare_tip_distances(t4)))
+
+        # two common taxa
+        t5 = TreeNode.read(["(((R:1,Y:1,X:1):2,M:3):1,V:4);"])
+        self.assertAlmostEqual(t.compare_tip_distances(t5), 0)
+        self.assertTrue(np.isnan(t.compare_tip_distances(t5, ignore_self=True)))
+
+    def test_compare_tip_distances_new(self):
+        """Return distance between two trees based on tip distances."""
+        # This test case is more comprehensive and reflects the new behavior
+        # and options of the method.
+        t1 = TreeNode.read(["((a:1,b:2):1,c:4,((d:4,e:5):2,f:6):1);"])
+        t2 = TreeNode.read(["((a:3,(b:2,c:2):1):3,d:8,(e:5,f:6):2);"])
+
+        # default behavior (old, will change in version 0.7.0)
+        obs = t1.compare_tip_distances(t2)
+        self.assertAlmostEqual(obs, 0.0453512)
+
+        # new default behavior
+        obs = t1.compare_tip_distances(t2, ignore_self=True)
+        self.assertAlmostEqual(obs, 0.1413090)
+
+        # path length distance (matches phangorn::path.dist(use.weight=TRUE))
+        obs = t1.compare_tip_distances(t2, metric="euclidean", ignore_self=True)
+        self.assertAlmostEqual(obs, 13.7113092)
+        obs = t1.compare_tip_distances(t2, metric=euclidean, ignore_self=True)
+        self.assertAlmostEqual(obs, 13.7113092)
+        obs = t1.compare_tip_distances(t2, dist_f=euclidean, ignore_self=True)
+        self.assertAlmostEqual(obs, 13.7113092)
+
+        # path distance (matches phangorn::path.dist)
+        obs = t1.compare_tip_distances(
+            t2, metric="euclidean", use_length=False, ignore_self=True)
+        self.assertAlmostEqual(obs, 4.0)
+
+        # unit correlation distance is independent of tree scale
+        for node in t2.traverse(include_self=False):
+            node.length *= 3
+        obs = t1.compare_tip_distances(t2, ignore_self=True)
+        self.assertAlmostEqual(obs, 0.1413090)
 
     # ------------------------------------------------
     # Tree indexing and searching
