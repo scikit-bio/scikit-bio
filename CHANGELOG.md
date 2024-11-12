@@ -15,6 +15,7 @@
 
 ### Performance enhancements
 
+* Significantly improved the performance of the neighbor joining (NJ) algorithm for phylogenetic reconstruction (`nj`) ([#2147](https://github.com/scikit-bio/scikit-bio/pull/2147)).
 * Improved the performance of `TreeNode.lowest_common_ancestor` ([#2132](https://github.com/scikit-bio/scikit-bio/pull/2132)).
 * Improved the performance of `TreeNode` methods: `ancestors`, `siblings`, and `neighbors` ([#2133](https://github.com/scikit-bio/scikit-bio/pull/2133), [#2135](https://github.com/scikit-bio/scikit-bio/pull/2135)).
 * Improved the performance of tree traversal algorithms ([#2093](https://github.com/scikit-bio/scikit-bio/pull/2093)).
