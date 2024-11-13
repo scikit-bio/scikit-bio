@@ -31,30 +31,6 @@ from skbio.util._warning import _warn_deprecated
 from skbio.io.registry import Read, Write
 
 
-def distance_from_r(m1, m2):
-    r"""Estimate distance as (1-r)/2: neg correl = max distance.
-
-    .. deprecated:: 0.6.3
-        This function will become a private member in version 0.7.0. It has never
-        been exposed in the documentation, and it has a very specific usage in this
-        module.
-
-    Parameters
-    ----------
-    m1 : DistanceMatrix
-        First distance matrix to compare.
-    m2 : DistanceMatrix
-        Second distance matrix to compare.
-
-    Returns
-    -------
-    float
-        The distance between m1 and m2.
-
-    """
-    return spdist.correlation(m1.data.flat, m2.data.flat) / 2
-
-
 # ----------------------------------------------------------------------------
 # Important note: The TreeNode class has a large number of methods. They are
 # organized under several categories, which are defined in this script as well
@@ -3865,7 +3841,7 @@ class TreeNode(SkbioObject):
             )
 
     def distance(self, other, use_length=True, missing_as_zero=False):
-        """Calculate the distance between self and another node.
+        r"""Calculate the distance between self and another node.
 
         Parameters
         ----------
@@ -3879,7 +3855,8 @@ class TreeNode(SkbioObject):
 
         missing_as_zero : bool, optional
             When a node without an associated branch length is encountered, raise an
-            error (False, default) or use 0 (True). Applicable when `length` is True.
+            error (False, default) or use 0 (True). Applicable when ``use_length`` is
+            True.
 
             .. versionadded:: 0.6.3
 
@@ -4401,11 +4378,11 @@ class TreeNode(SkbioObject):
         The Robinson-Foulds (RF) distance, a.k.a. symmetric difference, is a measure of
         topological dissimilarity between two trees. It was originally described in
         [1]_. It is calculated as the number of bipartitions that differ between two
-        unrooted trees. It is equivalent to :meth:`compare_bipartitions`.
+        unrooted trees. It is equivalent to :meth:`compare_biparts`.
 
         .. math::
 
-           RF(T_1, T_2) = |S_1 \triangle S_2| = |(S_1 \setminus S_2) \cup (S_2
+           \text{RF}(T_1, T_2) = |S_1 \triangle S_2| = |(S_1 \setminus S_2) \cup (S_2
            \setminus S_1)|
 
         where :math:`S_1` and :math:`S_2` are the sets of bipartitions of trees
@@ -4514,7 +4491,7 @@ class TreeNode(SkbioObject):
         rooted : bool, optional
             Whether to consider the trees as rooted or unrooted. If None (default),
             this will be determined based on whether self is rooted. However, one
-            can override it by explicitly specifying True (rooted) or False (unrooted).
+            can override it by explicitly setting True (rooted) or False (unrooted).
             See :meth:`compare_rfd` for details.
         include_single : bool, optional
             Whether to include single-taxon biparitions (terminal branches) in the
@@ -4540,7 +4517,7 @@ class TreeNode(SkbioObject):
 
         .. math::
 
-           wRF(T_1, T_2) = \sum_{s \in S_1 \cup S_2} |l_1(s) - l_2(s)|
+           \text{wRF}(T_1, T_2) = \sum_{s \in S_1 \cup S_2} |l_1(s) - l_2(s)|
 
         where :math:`S_1` and :math:`S_2` are the sets of bipartitions of trees
         :math:`T_1` and :math:`T_2`, respectively. :math:`l_1` and :math:`l_2` are the
@@ -4553,7 +4530,7 @@ class TreeNode(SkbioObject):
 
         .. math::
 
-           KF(T_1, T_2) = \sqrt{\sum_{s \in S_1 \cup S_2} (l_1(s) - l_2(s))^2}
+           \text{KF}(T_1, T_2) = \sqrt{\sum_{s \in S_1 \cup S_2} (l_1(s) - l_2(s))^2}
 
         Only taxa shared between the two trees are considered. Taxa unique to either
         tree are excluded from the calculation.
