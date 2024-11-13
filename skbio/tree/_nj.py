@@ -112,15 +112,15 @@ def nj(
 
     >>> tree = nj(dm)
     >>> print(tree.ascii_art())
-                        /-a
-              /--------|
-             |          \-b
+                                  /-a
+                        /--------|
+              /--------|          \-b
+             |         |
+             |          \-c
+    ---------|
+             |--e
              |
-    ---------|--c
-             |
-             |          /-d
-              \--------|
-                        \-e
+              \-d
 
     """
     # @deprecated
@@ -291,6 +291,10 @@ def _tree_from_linkmat(lm, taxa, rooted=True, clip_to_zero=True):
     TreeNode
         Converted phylogenetic tree.
 
+    See Also
+    --------
+    TreeNode.from_linkage_matrix
+
     Notes
     -----
     The linkage matrix data structure resembles that used in SciPy's hierarchical
@@ -307,9 +311,12 @@ def _tree_from_linkmat(lm, taxa, rooted=True, clip_to_zero=True):
         taxon1, taxon2, length1, length2
 
     """
+    # allocate node list
     nodes = [TreeNode(name=x) for x in taxa] + [TreeNode() for _ in range(len(lm))]
+
+    # build tree incrementally
     idx = len(taxa)
-    for c1, c2, l1, l2 in lm:
+    for c1, c2, l1, l2 in lm if rooted else lm[:-2]:
         c1, c2 = nodes[int(c1)], nodes[int(c2)]
         if clip_to_zero:
             c1.length = l1 if l1 >= 0 else 0.0
@@ -318,7 +325,19 @@ def _tree_from_linkmat(lm, taxa, rooted=True, clip_to_zero=True):
             c1.length, c2.length = l1, l2
         nodes[idx].extend([c1, c2], uncache=False)
         idx += 1
-    tree = nodes[-1]
+
+    # final treatment of an unroot tree
     if not rooted:
-        tree.unroot(uncache=False)
-    return tree
+        # this code assumes that the first element of the last row is the node
+        # see the end of _nj
+        c0, _, l0, _ = lm[-1]
+        c1, c2, l1, l2 = lm[-2]
+        c0, c1, c2 = nodes[int(c0)], nodes[int(c1)], nodes[int(c2)]
+        if clip_to_zero:
+            c0.length = l0 if l0 >= 0 else 0.0
+            c1.length = l1 if l1 >= 0 else 0.0
+            c2.length = l2 if l2 >= 0 else 0.0
+        else:
+            c0.length, c1.length, c2.length = l0, l1, l2
+        nodes[-1].extend([c0, c1, c2], uncache=False)
+    return nodes[-1]
