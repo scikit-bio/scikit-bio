@@ -193,74 +193,71 @@ def _nj(dm):
 
     # Iteratively merge taxa until there are three left.
     while n > 3:
+        # Create views of currently relevant array areas.
+        dm_ = dm[:n, :n]
+        sums_ = sums[:n]
+        idxs_ = idxs[:n]
+
         # Find the minimum value of the Q-matrix and return its position (i, j).
         #   Q(i, j) = (n - 2) d(i, j) - \sum d(i) - \sum d(j)
         # The function call avoids constructing the entire Q-matrix, but instead
         # computes values and finds the minimum as the computation goes.
-        i, j = nj_minq_cy(dm[:n, :n], sums[:n])
+        i, j = nj_minq_cy(dm_, sums_)
 
         # Get half of the original distance at (i, j).
         d_ij_ = dm[i, j] / 2
 
-        # Taxa i and j will be merged into a cluster, therefore the values in rows
-        # and columns i and j are no longer needed, and their memory space can be
-        # utilized.
-
-        # The updated distance from cluster {i, j} to any other taxon k is:
+        # Taxa i and j will be merged into a cluster {i, j}. The updated distance from
+        # cluster to any other taxon k is:
         #   d({i, j}, k) = (d(i, k) + d(j, k) - d(i, j)) / 2
         # We first compute (d(i, k) + d(j, k)) / 2 and save the results in row i.
-        dm[i, :n] += dm[j, :n]
-        dm[i, :n] /= 2
+        dm_[i] += dm_[j]
+        dm_[i] /= 2
 
         # Compute branch lengths of taxa i and j.
         #   \delta = (\sum d(i) - \sum d(j)) / (2(n - 2))
         #   L(i) = d(i, j) / 2 + \delta
         #   L(j) = d(i, j) / 2 - \delta
-        delta_ = (sums[i] - sums[j]) / (2 * n - 4)
+        delta_ = (sums_[i] - sums_[j]) / (2 * n - 4)
         L_i = d_ij_ + delta_
         L_j = d_ij_ - delta_
 
-        # The previously calculated sums can be re-used, but they need to be updated.
-        # For taxon k, there is:
-        #   new sum = old sum - d(i, k) - d(j, k) + d({i, j}, k)
+        # The previously calculated sums can be updated for re-use. Specifically, for
+        # taxon k, there is:
+        #   new sum = old sum - d(i, k) - d(j, k) + d({i,j}, k)
         #           = old sum - d(i, k) - d(j, k) + (d(i, k) + d(j, k) - d(i, j)) / 2
         #           = old sum - (d(i, k) + d(j, k)) / 2 - d(i, j) / 2
         # We already have (d(i, k) + d(j, k)) / 2 stored in row i, therefore:
-        sums[:n] -= dm[i, :n]
-        sums[:n] -= d_ij_
+        sums_[:] -= dm_[i]
+        sums_[:] -= d_ij_
 
         # Now complete the calculation of the updated distances d({i, j}, k).
-        dm[i, :n] -= d_ij_
+        dm_[i] -= d_ij_
+
+        # Update column i to match row i.
+        dm_[:, i] = dm_[i]
 
         # Because two taxa have been merged into one cluster, we will shrink the
-        # distance matrix from (n, n) to (n - 1, n - 1). Specifically, we will delete
-        # row/column j, and update row/column i.
+        # distance matrix from (n, n) to (n - 1, n - 1). Specifically, we will move
+        # the last row/column (index: n - 1) to row/column j.
+        n_1 = n - 1
+        dm_[j] = dm_[n_1]
+        dm_[:, j] = dm_[:, n_1]
 
-        # Every row/column beyond j will be moved -1 position. This involves moving
-        # the right block leftward, moving the bottom block upward, and moving the
-        # bottom-right block upleftward.
-        dm[j : n - 1, :j] = dm[j + 1 : n, :j]
-        dm[:j, j : n - 1] = dm[:j, j + 1 : n]
-        dm[j : n - 1, j : n - 1] = dm[j + 1 : n, j + 1 : n]
-
-        # Also move the sums beyond j leftward.
-        sums[j : n - 1] = sums[j + 1 : n]
-
-        # Then update row/column i. Because the updated distances were already stored
-        # in row i, we only need to update column i.
-        dm[: n - 1, i] = dm[i, : n - 1]
+        # Also move the last sum to j.
+        sums_[j] = sums_[n_1]
 
         # Then calculate the updated sum at i (now cluster {i, j}), which is the sum
-        # of updated distances.
-        sums[i] = dm[i, : n - 1].sum()
+        # of the updated distances.
+        sums_[i] = dm_[i, :n_1].sum()
 
         # Store the taxa and branch lengths to the linkage matrix.
-        lm[N - n] = idxs[i], idxs[j], L_i, L_j
+        lm[N - n] = idxs_[i], idxs_[j], L_i, L_j
 
         # Update cluster indices. Specifically, position i will have the new cluster
-        # index. Meanwhile, indices beyond j will be moved leftward.
-        idxs[i] = 2 * N - n
-        idxs[j : n - 1] = idxs[j + 1 : n]
+        # index. Meanwhile, position j will be replaced with the last cluster.
+        idxs_[i] = 2 * N - n
+        idxs_[j] = idxs_[n_1]
 
         n -= 1
 
