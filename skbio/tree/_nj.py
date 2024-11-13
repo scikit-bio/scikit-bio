@@ -6,11 +6,8 @@
 # The full license is in the file LICENSE.txt, distributed with this software.
 # ----------------------------------------------------------------------------
 
-import io
-
 import numpy as np
 
-from skbio.stats.distance import DistanceMatrix
 from skbio.tree import TreeNode
 from skbio.util._warning import _warn_deprecated
 from ._cutils import nj_minq_cy
@@ -65,10 +62,11 @@ def nj(
 
     Notes
     -----
-    Neighbor joining (NJ) was initially described in Saitou and Nei (1987) [1]_. The
-    example presented here is derived from the Wikipedia page on neighbor joining [2]_.
-    Gascuel and Steel (2006) provide a detailed overview of neighbor joining in terms
-    of its biological relevance and limitations [3]_.
+    Neighbor joining (NJ) was initially described by Saitou and Nei (1987) [1]_. It is
+    a simple and efficient agglomerative clustering method that builds a phylogenetic
+    tree based on a distance matrix. Gascuel and Steel (2006) provide a detailed
+    overview of neighbor joining in terms of its biological relevance and limitations
+    [2]_.
 
     Neighbor joining, by definition, creates unrooted trees with varying tip heights,
     which contrasts UPGMA (:func:`upgma`). One strategy for rooting the resulting tree
@@ -79,17 +77,27 @@ def nj(
     re-arrangement operations such as nearest neighbor interchange (NNI) (:func:`nni`)
     can be performed.
 
+    Neighbor joining is most accurate when distances are additive -- the distance
+    between two taxa in the matrix equals to the sum of branch lengths connecting them
+    in the tree. When this assumption is violated, which is common in real-world data,
+    negative branch lengths may be produced, which cause challenges in interpretation
+    and subsequent analyses. This function converts negative branch lengths into zeros
+    by default, but this behavior can be disabled by setting ``clip_to_zero`` to False.
+
+    The example presented here is derived from the Wikipedia page on neighbor joining
+    [3]_.
+
     References
     ----------
     .. [1] Saitou N, and Nei M. (1987) "The neighbor-joining method: a new
        method for reconstructing phylogenetic trees." Molecular Biology and
        Evolution. PMID: 3447015.
 
-    .. [2] http://en.wikipedia.org/wiki/Neighbour_joining
-
-    .. [3] Gascuel O, and Steel M. (2006) "Neighbor-Joining Revealed" Molecular
+    .. [2] Gascuel O, and Steel M. (2006) "Neighbor-Joining Revealed" Molecular
        Biology and Evolution, Volume 23, Issue 11, November 2006,
        Pages 1997-2000, https://doi.org/10.1093/molbev/msl072
+
+    .. [3] http://en.wikipedia.org/wiki/Neighbour_joining
 
     Examples
     --------
@@ -125,24 +133,18 @@ def nj(
     """
     # @deprecated
     if disallow_negative_branch_length is not None:
-        _warn_deprecated(
-            nj,
-            "0.6.3",
-            msg=(
-                "`disallow_negative_branch_length` has been renamed as `clip_to_zero`."
-                "The old name will be removed in a future release."
-            ),
+        msg = (
+            "`disallow_negative_branch_length` has been renamed as `clip_to_zero`."
+            "The old name will be removed in a future release."
         )
+        _warn_deprecated(nj, "0.6.3", msg)
         clip_to_zero = disallow_negative_branch_length
     if result_constructor is not None:
-        _warn_deprecated(
-            nj,
-            "0.6.3",
-            msg=(
-                "`result_constructor` is deprecated and will be removed in a future "
-                "release."
-            ),
+        msg = (
+            "`result_constructor` is deprecated and will be removed in a future "
+            "release."
         )
+        _warn_deprecated(nj, "0.6.3", msg)
 
     if dm.shape[0] < 3:
         raise ValueError(
@@ -193,7 +195,7 @@ def _nj(dm):
 
     # Iteratively merge taxa until there are three left.
     while n > 3:
-        # Create views of currently relevant array areas.
+        # Create memory views of currently relevant array areas.
         dm_ = dm[:n, :n]
         sums_ = sums[:n]
         idxs_ = idxs[:n]
@@ -304,11 +306,11 @@ def _tree_from_linkmat(lm, taxa, rooted=True, clip_to_zero=True):
     In SciPy's linkage matrix, the four elements per row are (see:
     https://stackoverflow.com/questions/9838861/):
 
-        taxon1, taxon2, length1+2, # original taxa
+        cluster1, cluster2, length1+2, # original taxa
 
     In the current data structure, they are:
 
-        taxon1, taxon2, length1, length2
+        cluster1, cluster2, length1, length2
 
     """
     # allocate node list
@@ -316,28 +318,27 @@ def _tree_from_linkmat(lm, taxa, rooted=True, clip_to_zero=True):
 
     # build tree incrementally
     idx = len(taxa)
-    for c1, c2, l1, l2 in lm if rooted else lm[:-2]:
+    for c1, c2, L1, L2 in lm if rooted else lm[:-2]:
         c1, c2 = nodes[int(c1)], nodes[int(c2)]
         if clip_to_zero:
-            c1.length = l1 if l1 >= 0 else 0.0
-            c2.length = l2 if l2 >= 0 else 0.0
+            c1.length = L1 if L1 >= 0 else 0.0
+            c2.length = L2 if L2 >= 0 else 0.0
         else:
-            c1.length, c2.length = l1, l2
+            c1.length, c2.length = L1, L2
         nodes[idx].extend([c1, c2], uncache=False)
         idx += 1
 
-    # final treatment of an unroot tree
+    # final treatment of an unroot tree (root is trifurcating)
     if not rooted:
         # this code assumes that the first element of the last row is the node
         # see the end of _nj
-        c0, _, l0, _ = lm[-1]
-        c1, c2, l1, l2 = lm[-2]
+        (c0, _, L0, _), (c1, c2, L1, L2) = lm[-1], lm[-2]
         c0, c1, c2 = nodes[int(c0)], nodes[int(c1)], nodes[int(c2)]
         if clip_to_zero:
-            c0.length = l0 if l0 >= 0 else 0.0
-            c1.length = l1 if l1 >= 0 else 0.0
-            c2.length = l2 if l2 >= 0 else 0.0
+            c0.length = L0 if L0 >= 0 else 0.0
+            c1.length = L1 if L1 >= 0 else 0.0
+            c2.length = L2 if L2 >= 0 else 0.0
         else:
-            c0.length, c1.length, c2.length = l0, l1, l2
+            c0.length, c1.length, c2.length = L0, L1, L2
         nodes[-1].extend([c0, c1, c2], uncache=False)
     return nodes[-1]
