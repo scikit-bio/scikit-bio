@@ -53,18 +53,18 @@ def nj_minq_cy(double[:, :] dm, double[:] sums):
     cdef Py_ssize_t min_i, min_j
     cdef double min_q = DBL_MAX
 
-    # current minimum q value plus \sum d(i)
-    cdef double min_q_plus
+    # current q value and minimum q value plus \sum d(i)
+    cdef double q_plus, min_q_plus
 
     # loop the upper-right triangle of the distance matrix
     # i < j is guaranteed
     for i in range(n):
         min_q_plus = min_q + sums[i]
         for j in range(i + 1, n):
-            q = dm[i, j] * n_2 - sums[j]
-            if q < min_q_plus:
-                min_q_plus = q
-                min_q = q - sums[i]
+            q_plus = dm[i, j] * n_2 - sums[j]
+            if q_plus < min_q_plus:
+                min_q_plus = q_plus
+                min_q = q_plus - sums[i]
                 min_i, min_j = i, j
 
     return min_i, min_j
