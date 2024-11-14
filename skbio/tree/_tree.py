@@ -4235,7 +4235,7 @@ class TreeNode(SkbioObject):
 
         # branch length weighted (vector distance)
         else:
-            union = frozenset(sets1.keys()).union(sets2.keys())
+            union = frozenset(sets1).union(sets2)
             L1 = [sets1.get(x, 0) for x in union]
             L2 = [sets2.get(x, 0) for x in union]
             if isinstance(metric, str):
