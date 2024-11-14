@@ -83,7 +83,7 @@ def pcoa(
 
     Notes
     -----
-    If the distance is not euclidean (for example if it is a
+    If the distance is not Euclidean (for example if it is a
     semimetric and the triangle inequality doesn't hold),
     negative eigenvalues can appear. There are different ways
     to deal with that problem (see Legendre & Legendre 1998, \S
