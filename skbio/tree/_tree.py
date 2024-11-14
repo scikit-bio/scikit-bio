@@ -3244,7 +3244,7 @@ class TreeNode(SkbioObject):
                     del child._subset
 
             # add to result
-            if subset and include_single or len(subset) > 1:
+            if subset and (include_single or len(subset) > 1):
                 if map_to_length:
                     subsets[subset] = subsets_get(subset, 0.0) + (node.length or 0.0)
                 else:
@@ -3507,24 +3507,27 @@ class TreeNode(SkbioObject):
             else:
                 aboves, belows = [], []
                 for child in node.children:
-                    (aboves if child._flip else belows).append(child._bipart)
+                    if child._flip:
+                        aboves.append(child._bipart)
+                    else:
+                        belows.append(child._bipart)
                     del child._bipart
                     del child._flip
 
                 if aboves:
-                    bipart, flip = (
-                        frozenset.intersection(*aboves).difference(*belows),
-                        True,
-                    )
+                    bipart = frozenset.intersection(*aboves).difference(*belows)
+                    flip = True
                 else:
-                    bipart, flip = frozenset().union(*belows), False
+                    bipart = frozenset().union(*belows)
+                    flip = False
                     if (size := len(bipart)) >= th:
                         other = full - bipart
                         if size > th or sorted(bipart) > sorted(other):
-                            bipart, flip = other, True
+                            bipart = other
+                            flip = True
 
             # add to result
-            if bipart and include_single or len(bipart) > 1:
+            if bipart and (include_single or len(bipart) > 1):
                 if map_to_length:
                     biparts[bipart] = biparts_get(bipart, 0.0) + (node.length or 0.0)
                 else:
@@ -3920,7 +3923,7 @@ class TreeNode(SkbioObject):
     def get_max_distance(self, use_length=True):
         r"""Return the maximum path distance between any pair of tips.
 
-        This is also referred to as the diameter of a tree [1]_.
+        This is also referred to as the diameter of a tree.
 
         Parameters
         ----------
@@ -3949,12 +3952,6 @@ class TreeNode(SkbioObject):
 
         When a tie is observed among more than one pair of tips, only one pair will be
         returned. The choice is stable. This often happens when `use_length=False`.
-
-        References
-        ----------
-        .. [1] Mai, U., & Mirarab, S. (2018). TreeShrink: fast and accurate detection
-           of outlier long branches in collections of phylogenetic trees. BMC genomics,
-           19, 23-40.
 
         Examples
         --------
@@ -4211,15 +4208,24 @@ class TreeNode(SkbioObject):
         if shared_only:
             set1, set2 = self.subset(), other.subset()
             n_shared = len(shared := set1 & set2)
-            sets1 = topo1(within=(shared if len(set1) > n_shared else None), **kwargs)
-            sets2 = topo2(within=(shared if len(set2) > n_shared else None), **kwargs)
+            if len(set1) > n_shared:
+                sets1 = topo1(within=shared, **kwargs)
+            else:
+                sets1 = topo1(**kwargs)
+            if len(set2) > n_shared:
+                sets2 = topo2(within=shared, **kwargs)
+            else:
+                sets2 = topo2(**kwargs)
         else:
             sets1, sets2 = topo1(**kwargs), topo2(**kwargs)
 
         # unweighted (set difference)
         if not weighted:
-            method = ("symmetric_" if symmetric else "") + "difference"
-            result = len(getattr(sets1, method)(sets2))
+            if symmetric:
+                result = sets1.symmetric_difference(sets2)
+            else:
+                result = sets1.difference(sets2)
+            result = len(result)
 
             # normalize result to unit range [0, 1]
             # if total is 0, return 1 (dist = 1 means saturation)
