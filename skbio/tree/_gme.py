@@ -138,7 +138,7 @@ def gme(dm, allow_edge_estimation=True):
             edge_list.append(e1)
             edge_list.append(e2)
         # find the edge with minimum length after edge attachment
-        minimum_child = sorted(edge_list, key=itemgetter(1))[0][:2]
+        minimum_child = sorted(edge_list, key=itemgetter(2))[0][:2]
         # attach new taxa to the edge
         subtree_nodes = _subtree(minimum_child[0], leaves[0])
         move_subtree(

@@ -119,8 +119,7 @@ def _array_to_tree(taxa, tree_array):
     # create leaf_array from reordering tree_array from index values
     sorted_tree_indices = np.argsort(tree_array[1])
     sorted_tree_array = tree_array[:, sorted_tree_indices]
-    leaf_array = sorted_tree_array[0]
-    print(leaf_array)
+    leaf_array = np.unique(sorted_tree_array[0][sorted_tree_array[0] != 0])
 
     # Iterate over nodes in order of greatest value, where values of
     # nodes are according to their index in a complete binary tree.
