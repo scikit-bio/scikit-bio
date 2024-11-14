@@ -162,7 +162,7 @@ def pcoa(
             )
             num_dimensions = matrix_data.shape[0]
         eigvals, eigvecs = _fsvd(matrix_data, num_dimensions, seed=seed)
-        long_method_name = "Approximate Principal Coordinate Analysis " "using FSVD"
+        long_method_name = "Approximate Principal Coordinate Analysis using FSVD"
     else:
         raise ValueError(
             "PCoA eigendecomposition method {} not supported.".format(method)
