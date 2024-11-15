@@ -1508,6 +1508,11 @@ class TreeTests(TestCase):
         self.assertDictEqual(t.subsets(map_to_length=True), {
             frozenset("ab"): 0, frozenset("de"): 2, frozenset("def"): 1})
 
+        # when a basal taxon is excluded
+        t = TreeNode.read(['(((a,b),(c,d)),e);'])
+        self.assertSetEqual(t.subsets(within="abcd"), frozenset(
+            [frozenset("ab"), frozenset("cd")]))
+
     def test_bipart(self):
         """Return a set of tip names on the smaller side of the branch."""
         t = self.complex_tree
@@ -1599,6 +1604,11 @@ class TreeTests(TestCase):
         t.children[0].length = None
         self.assertDictEqual(t.biparts(map_to_length=True), {
             frozenset("ab"): 1, frozenset("de"): 2, frozenset("abc"): 2})
+
+        # when a basal taxon is excluded
+        t = TreeNode.read(['(((a,b),(c,d)),e);'])
+        self.assertSetEqual(t.biparts(within="abcd"), frozenset(
+            [frozenset("ab")]))
 
     def test_assign_supports(self):
         """Extract support values of internal nodes."""
@@ -2005,6 +2015,10 @@ class TreeTests(TestCase):
         self.assertEqual(t1.compare_rfd(t2), 8)
         self.assertEqual(t1.compare_rfd(t2, rooted=False), 6)
 
+        c1, c2 = t1.children[0], t2.children[0]
+        self.assertEqual(c1.compare_rfd(c2), 2)
+        self.assertEqual(c1.compare_rfd(c2, rooted=False), 0)
+
     def test_compare_wrfd(self):
         """Return weighted Robinson-Foulds distance or variants."""
         t1 = TreeNode.read(["((a:1,b:2):1,c:4,((d:4,e:5):2,f:6):1);"])
@@ -2063,7 +2077,7 @@ class TreeTests(TestCase):
         self.assertEqual(result, 3)
 
         result = t.compare_subsets(t4, shared_only=True)
-        self.assertAlmostEqual(result, 1 / 3)
+        self.assertEqual(result, 0)
 
         result = t.compare_subsets(t4, symmetric=False)
         self.assertEqual(result, 0.5)

@@ -3221,14 +3221,18 @@ class TreeNode(SkbioObject):
             within = frozenset(within)
 
         # initiate result
+        subsets = []
+        subsets_append = subsets.append
         if map_to_length:
-            subsets = {}
-            subsets_get = subsets.get
-        else:
-            subsets = []
-            subsets_append = subsets.append
+            lengths = []
+            lengths_append = lengths.append
 
-        for node in self.postorder(include_self=include_full):
+        # If the current subset has been encountered during postorder traversal, it
+        # must be the immediately previous subset. This happens when a single-child
+        # node is encountered after refining taxa to the "within" set.
+        last = None
+
+        for node in self.postorder(include_self=True):
             # tip: create a one-taxon set
             if not node.children:
                 if not within or node.name in within:
@@ -3245,21 +3249,28 @@ class TreeNode(SkbioObject):
 
             # add to result
             if subset and (include_single or len(subset) > 1):
-                if map_to_length:
-                    subsets[subset] = subsets_get(subset, 0.0) + (node.length or 0.0)
-                else:
-                    subsets_append(subset)
+                if subset != last:
+                    subsets_append(last := subset)
+                    if map_to_length:
+                        lengths_append(node.length or 0.0)
+                elif map_to_length:
+                    lengths[-1] += node.length or 0.0
 
             node._subset = subset
 
         # final clean up
-        if include_full:
-            del self._subset
-        else:
-            for child in self.children:
-                del child._subset
+        del self._subset
 
-        return subsets if map_to_length else frozenset(subsets)
+        # remove the full set
+        if not include_full:
+            subsets = subsets[:-1]
+            if map_to_length:
+                lengths = lengths[:-1]
+
+        if map_to_length:
+            return dict(zip(subsets, lengths))
+        else:
+            return frozenset(subsets)
 
     def bipart(self):
         r"""Return a bipartition of the tree at the current branch.
@@ -4415,8 +4426,9 @@ class TreeNode(SkbioObject):
         By specifying ``proportion=True``, a unit distance will be returned, ranging
         from 0 (identical) to 1 (completely different).
 
-        Only taxa shared between the two trees are considered. Taxa unique to either
-        tree are excluded from the calculation.
+        This method operates on the subtrees below the given nodes. Only taxa shared
+        between the two trees are considered. Taxa unique to either tree are excluded
+        from the calculation.
 
         See Also
         --------
@@ -4548,8 +4560,9 @@ class TreeNode(SkbioObject):
 
            \text{KF}(T_1, T_2) = \sqrt{\sum_{s \in S_1 \cup S_2} (l_1(s) - l_2(s))^2}
 
-        Only taxa shared between the two trees are considered. Taxa unique to either
-        tree are excluded from the calculation.
+        This method operates on the subtrees below the given nodes. Only taxa shared
+        between the two trees are considered. Taxa unique to either tree are excluded
+        from the calculation.
 
         See Also
         --------

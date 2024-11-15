@@ -42,6 +42,7 @@
 * Fixed a bug in `TreeNode.get_max_distance` which returns tip names instead of tip instances when there are single-child nodes in the tree ([#2144](https://github.com/scikit-bio/scikit-bio/pull/2144)).
 * Fixed an issue in `subsets` and `tip_tip_distances` of `TreeNode` which leaves remnant attributes at each node after execution ([#2144](https://github.com/scikit-bio/scikit-bio/pull/2144)).
 * Fixed a bug in `TreeNode.compare_rfd` which raises an error if taxa of the two trees are not subsets of each other ([#2144](https://github.com/scikit-bio/scikit-bio/pull/2144)).
+* Fixed a bug in `TreeNode.compare_subsets` which includes the full set (not a subset) of shared taxa between two trees if a basal clade of either tree consists of entirely unshared taxa ([#2144](https://github.com/scikit-bio/scikit-bio/pull/2144)).
 * Fixed a bug in `TreeNode.lowest_common_ancestor` which returns the parent of input node X instead of X itself if X is ancestral to other input nodes ([#2132](https://github.com/scikit-bio/scikit-bio/pull/2132)).
 * Fixed a bug in `TreeNode.find_all` which does not look for other nodes with the same name if a `TreeNode` instance is provided, as in contrast to what the documentation claims ([#2099](https://github.com/scikit-bio/scikit-bio/pull/2099)).
 * Fixed a bug in `skbio.io.format.embed` which was not correctly updating the idptr sizing. ([#2100](https://github.com/scikit-bio/scikit-bio/pull/2100)).
