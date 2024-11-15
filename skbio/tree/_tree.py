@@ -3865,7 +3865,7 @@ class TreeNode(SkbioObject):
 
         Returns
         -------
-        float or int
+        float
             The distance between two nodes.
 
         Raises
@@ -3907,12 +3907,12 @@ class TreeNode(SkbioObject):
         >>> tip_a.distance(tip_d)
         14.0
         >>> tip_a.distance(tip_d, use_length=False)
-        4
+        4.0
 
         """
         _, self_path, other_path = self._path(other)
         if not use_length:
-            return len(self_path) + len(other_path)
+            return float(len(self_path) + len(other_path))
         if missing_as_zero:
             return sum(x.length or 0.0 for x in chain(self_path, other_path))
         try:
@@ -3935,7 +3935,7 @@ class TreeNode(SkbioObject):
 
         Returns
         -------
-        float or int
+        float
             The distance between the two most distant tips in the tree.
         tuple of (TreeNode, TreeNode)
             The two most distant tips in the tree.
@@ -4010,6 +4010,8 @@ class TreeNode(SkbioObject):
 
         max_dist, max_tip1, max_tip2 = self._maxdist[2:]
         del self._maxdist
+        if not use_length:
+            max_dist = float(max_dist)
         return max_dist, (max_tip1, max_tip2)
 
     def tip_tip_distances(self, endpoints=None, use_length=True):
@@ -4192,7 +4194,7 @@ class TreeNode(SkbioObject):
 
         Returns
         -------
-        int or float
+        float
             Difference between self and other.
 
         See Also
@@ -4233,11 +4235,15 @@ class TreeNode(SkbioObject):
                 total = len(sets1) + (symmetric and len(sets2))
                 result = result / total if total else 1.0
 
+            # cast result to float
+            else:
+                result = float(result)
+
         # branch length weighted (vector distance)
         else:
             union = frozenset(sets1).union(sets2)
-            L1 = [sets1.get(x, 0) for x in union]
-            L2 = [sets2.get(x, 0) for x in union]
+            L1 = [sets1.get(x, 0.0) for x in union]
+            L2 = [sets2.get(x, 0.0) for x in union]
             if isinstance(metric, str):
                 result = getattr(spdist, metric)(L1, L2)
             else:
@@ -4282,7 +4288,7 @@ class TreeNode(SkbioObject):
 
         Returns
         -------
-        int or float
+        float
             The count or proportion of subsets that differ between the trees.
 
         See Also
@@ -4327,7 +4333,7 @@ class TreeNode(SkbioObject):
 
         Returns
         -------
-        int or float
+        float
             The count or proportion of bipartitions that differ between the trees.
 
         See Also
@@ -4372,7 +4378,7 @@ class TreeNode(SkbioObject):
 
         Returns
         -------
-        int or float
+        float
             The Robinson-Foulds distance as count or proportion between the trees.
 
         .. versionchanged:: 0.6.3
@@ -4397,10 +4403,14 @@ class TreeNode(SkbioObject):
         For rooted trees, the RF distance is calculated as the number of unshared
         clades (subsets of taxa) [2]_. It is equivalent to :meth:`compare_subsets`.
 
-        This method automatically determines whether to use the unrooted or rooted
-        RF distance based on to whether self is rooted (see :meth:`details <unroot>`).
-        This can be overridden by the ``rooted`` parameter, which is recommended for
-        explicity.
+        This method automatically determines whether to use the unrooted or rooted RF
+        distance based on whether self is rooted or not. Specifically, if self has two
+        two children (see :meth:`details <unroot>`), or has a parent (i.e., it is a
+        subtree within a larger tree), it will be considered as rooted. Otherwise it
+        will be considered as unrooted.
+
+        One can override this automatic decision by setting the ``rooted`` parameter,
+        which is recommended for explicity.
 
         By specifying ``proportion=True``, a unit distance will be returned, ranging
         from 0 (identical) to 1 (completely different).
@@ -4462,11 +4472,11 @@ class TreeNode(SkbioObject):
                             \-f
 
         >>> tree1.compare_rfd(tree2)
-        4
+        4.0
 
         """
         if rooted is None:
-            rooted = len(self.children) == 2
+            rooted = self.parent is not None or len(self.children) == 2
         method = "subsets" if rooted else "biparts"
         return self._compare_topology(other, method, proportion=proportion)
 
@@ -4613,7 +4623,7 @@ class TreeNode(SkbioObject):
 
         """
         if rooted is None:
-            rooted = len(self.children) == 2
+            rooted = self.parent is not None or len(self.children) == 2
         method = "subsets" if rooted else "biparts"
         half = False
         if metric == "unitcorr":
@@ -5571,12 +5581,12 @@ class TreeNode(SkbioObject):
 
         Returns
         -------
-        float or int
+        float
             The distance to tip of a length-balanced tree.
 
         """
         node = self
-        distance = 0
+        distance = 0.0
         while node.has_children():
             distance += node.children[0].length
             node = node.children[0]

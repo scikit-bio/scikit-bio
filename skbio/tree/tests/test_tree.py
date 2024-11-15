@@ -1993,6 +1993,12 @@ class TreeTests(TestCase):
         self.assertEqual(t1.compare_rfd(t2), 4)
         self.assertEqual(t1.compare_rfd(t2, rooted=True), 6)
 
+        # make self a subtree (therefore rooted)
+        t1.parent = TreeNode("x")
+        self.assertEqual(t1.compare_rfd(t2), 6)
+        self.assertEqual(t1.compare_rfd(t2, rooted=False), 4)
+        t1.parent = None
+
         # with polytomy
         t1 = TreeNode.read(["((a,b,(c,d)),((e,f),(g,h),i));"])
         t2 = TreeNode.read(["((((a,b),c,d),e),((f,g,h),i));"])
@@ -2021,6 +2027,11 @@ class TreeTests(TestCase):
         self.assertAlmostEqual(t1.compare_wrfd(t2, rooted=True), 18)
         self.assertAlmostEqual(
             t1.compare_wrfd(t2, metric="euclidean", rooted=True), 6.6332496)
+
+        # make self a subtree, therefore it is considered as rooted
+        t1.parent = TreeNode("x")
+        self.assertAlmostEqual(t1.compare_wrfd(t2), 18)
+        t1.parent = None
 
         # correlation distance
         self.assertAlmostEqual(t1.compare_wrfd(t2, metric="correlation"), 0.3164447)
