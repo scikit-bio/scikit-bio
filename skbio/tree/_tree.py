@@ -3381,6 +3381,8 @@ class TreeNode(SkbioObject):
         if (size := len(bipart)) > (th := len(full) * 0.5):
             bipart = full - bipart
         elif size == th:
+            # sort the elements of each part by lexicographic order, then order the two
+            # parts and pick the smaller part
             bipart, _ = sorted([bipart, full - bipart], key=sorted)
         return bipart
 
