@@ -66,6 +66,13 @@ def rda(y, x, scale_Y=False, scaling=1):
         transformed coordinates for feature and samples, biplot
         scores, sample constraints, etc.
 
+    Raises
+    ------
+    ValueError
+        If the data matrices have different numbers of rows.
+    ValueError
+        If explanatory variables have less rows than columns.
+
     See Also
     --------
     ca

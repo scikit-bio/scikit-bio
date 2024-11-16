@@ -24,8 +24,8 @@ class TestRDAErrors(TestCase):
         for n, p, n_, m in [(3, 4, 2, 1), (3, 4, 3, 10)]:
             Y = pd.DataFrame(np.random.randn(n, p))
             X = pd.DataFrame(np.random.randn(n_, m))
-            yield npt.assert_raises, ValueError, rda, Y, X, None, None
-
+            with self.assertRaises(ValueError):
+                rda(Y, X, None, None)
 
 class TestRDAResults(TestCase):
     # STATUS: L&L only shows results with scaling 1, and they agree

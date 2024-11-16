@@ -52,10 +52,8 @@ def _warn_deprecated(func, ver, msg=None):
     """Warn of deprecated status."""
     if not hasattr(func, "warned"):
         simplefilter("once", DeprecationWarning)
+        message = f"{func.__name__} is deprecated as of {ver}."
         if msg:
-            warn(
-                f"{func.__name__} is deprecated as of {ver}. {msg}", DeprecationWarning
-            )
-        else:
-            warn(f"{func.__name__} is deprecated as of {ver}.")
+            message += f" {msg}"
+        warn(message, DeprecationWarning)
         func.warned = True
