@@ -18,7 +18,6 @@ from scipy.spatial.distance import euclidean
 from skbio import DistanceMatrix, TreeNode
 from skbio.tree import (DuplicateNodeError, NoLengthError,
                         TreeError, MissingNodeError, NoParentError)
-from skbio.util import RepresentationWarning
 
 
 class TreeNodeSubclass(TreeNode):
@@ -1939,28 +1938,35 @@ class TreeTests(TestCase):
             assert not hasattr(node, '_start')
             assert not hasattr(node, '_stop')
 
-    def test_tip_tip_distances_non_tip_endpoints(self):
+    def test_tip_tip_distances_bad_endpoints(self):
         t = TreeNode.read(["((H:1,G:1)foo:2,(R:0.5,M:0.7):3);"])
         with self.assertRaises(ValueError):
             t.tip_tip_distances(endpoints=["foo"])
+        with self.assertRaises(MissingNodeError):
+            t.tip_tip_distances(endpoints=["bar"])
+
+        with self.assertRaises(DuplicateNodeError):
+            t.tip_tip_distances(endpoints=["H", "R", "H"])
+
+    def test_tip_tip_distances_duplicate_tips(self):
+        t = TreeNode.read(["((H:1,G:1):2,(R:0.5,H:0.7):3);"])
+        with self.assertRaises(DuplicateNodeError):
+            t.tip_tip_distances()
+        with self.assertRaises(DuplicateNodeError):
+            t.tip_tip_distances(endpoints=["H", "R", "H"])
 
     def test_tip_tip_distances_no_length(self):
         t = TreeNode.read(["((a,b)c,(d,e)f);"])
         exp_t = TreeNode.read(["((a:0,b:0)c:0,(d:0,e:0)f:0);"])
         exp_t_dm = exp_t.tip_tip_distances()
-
-        t_dm = npt.assert_warns(RepresentationWarning, t.tip_tip_distances)
+        t_dm = t.tip_tip_distances()
         self.assertEqual(t_dm, exp_t_dm)
-
-        for node in t.preorder():
-            self.assertIsNone(node.length)
 
     def test_tip_tip_distances_missing_length(self):
         t = TreeNode.read(["((a,b:6)c:4,(d,e:0)f);"])
         exp_t = TreeNode.read(["((a:0,b:6)c:4,(d:0,e:0)f:0);"])
+        t_dm = t.tip_tip_distances()
         exp_t_dm = exp_t.tip_tip_distances()
-
-        t_dm = npt.assert_warns(RepresentationWarning, t.tip_tip_distances)
         self.assertEqual(t_dm, exp_t_dm)
 
     def test_compare_rfd(self):

@@ -51,14 +51,12 @@ Developer warnings
 .. autosummary::
 
    EfficiencyWarning
-   RepresentationWarning
 
 
 Details
 -------
 
 .. autoexception:: EfficiencyWarning
-.. autoexception:: RepresentationWarning
 
 
 """  # noqa: D412, D416, D205, D415
@@ -71,7 +69,7 @@ Details
 # The full license is in the file LICENSE.txt, distributed with this software.
 # ----------------------------------------------------------------------------
 
-from ._warning import EfficiencyWarning, RepresentationWarning, SkbioWarning
+from ._warning import EfficiencyWarning, SkbioWarning
 from ._misc import cardinal_to_ordinal, find_duplicates, safe_md5, get_rng
 from ._testing import (
     get_data_path,
@@ -85,7 +83,6 @@ from ._plotting import PlottableMixin
 __all__ = [
     "SkbioWarning",
     "EfficiencyWarning",
-    "RepresentationWarning",
     "cardinal_to_ordinal",
     "find_duplicates",
     "safe_md5",

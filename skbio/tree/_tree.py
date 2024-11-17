@@ -25,7 +25,7 @@ from skbio.tree._exception import (
     MissingNodeError,
     TreeError,
 )
-from skbio.util import get_rng, RepresentationWarning
+from skbio.util import get_rng
 from skbio.util._decorator import classonlymethod
 from skbio.util._warning import _warn_deprecated
 from skbio.io.registry import Read, Write
@@ -4033,8 +4033,9 @@ class TreeNode(SkbioObject):
         Parameters
         ----------
         endpoints : list of TreeNode or str, optional
-            Tips or their names (i.e., taxa) to be included in the calculation. If not
-            specified, all tips will be included.
+            Tips or their names (i.e., taxa) to be included in the calculation. The
+            returned distance matrix will use this order. If not specified, all tips
+            will be included.
         use_length : bool, optional
             Whether to return the sum of branch lengths (True, default) or the number
             of branches (False) connecting each pair of tips.
@@ -4048,6 +4049,10 @@ class TreeNode(SkbioObject):
 
         Raises
         ------
+        MissingNodeError
+            If any of the specified ``endpoints`` are not found in the tree.
+        DuplicateNodeError
+            If the specified ``endpoints`` have duplicates.
         ValueError
             If any of the specified ``endpoints`` are not tips.
 
@@ -4059,9 +4064,13 @@ class TreeNode(SkbioObject):
         Notes
         -----
         This method calculates the sum of branch lengths connecting each pair of tips.
-        It is also known as the patristic distance [1]_.
+        It is also known as the patristic distance [1]_. If a node does not have an
+        associated branch length, 0 will be used.
 
-        If a node does not have an associated branch length, 0 will be used.
+        If ``use_length`` is False, the method instead calculates the number of
+        branches connecting each pair of tips.
+
+        This method operates on the subtree below the current node.
 
         References
         ----------
@@ -4101,75 +4110,96 @@ class TreeNode(SkbioObject):
          [ 4.  4.  2.  0.]]
 
         """
-        all_tips = list(self.tips())
-        if endpoints is None:
-            tip_order = all_tips
+        taxa = []
+        taxa_append = taxa.append
+
+        # Include all tips.
+        # `tips()` performs a postorder traversal, which guarantees the continuity
+        # of tip indices within each node. A `_range` attribute is assigned to each
+        # node, representing the range of tip indices.
+        if not endpoints:
+            for i, tip in enumerate(self.tips()):
+                tip._range = (i, i + 1)
+                taxa_append(tip.name)
+            num_tips = len(taxa)
+
+            # A tree could have duplicate taxa so this check is desired.
+            if len(set(taxa)) < num_tips:
+                raise DuplicateNodeError(f"Tree contains duplicate tip names.")
+
+        # Include only selected tips in order.
+        # Only selected tips are indexed, but the continuity of tip indices (see above)
+        # is still ensured.
         else:
-            tip_order = [self.find(n) for n in endpoints]
-            for node in tip_order:
-                if node.children:
-                    raise ValueError(f"Node with name '{node.name}' is not a tip.")
+            idxmap = {}
+            for i, tip in enumerate(endpoints):
+                # The `find` call will raise if there are duplicate taxa in the tree.
+                tip = self.find(tip)
+                if tip.children:
+                    raise ValueError(f"Node with name '{tip.name}' is not a tip.")
+                taxa_append(name := tip.name)
+                if name in idxmap:
+                    raise DuplicateNodeError(f"Duplicate tip name '{name}' found.")
+                idxmap[name] = i
+            num_tips = len(taxa)
 
-        # linearize all tips in postorder
-        # ._start, ._stop compose the slice in tip_order.
-        for i, node in enumerate(all_tips):
-            node._start, node._stop = i, i + 1
+            # Create an index array to store the order of indices of original tips.
+            order = np.empty(num_tips, dtype=int)
+            i = 0
+            for tip in self.tips():
+                if (name := tip.name) in idxmap:
+                    tip._range = (i, i + 1)
+                    order[idxmap[name]] = i
+                    i += 1
 
-        # the result map provides index in the result matrix
-        result_map = {n._start: i for i, n in enumerate(tip_order)}
-        num_all_tips = len(all_tips)  # total number of tips
-        num_tips = len(tip_order)  # total number of tips in result
-        result = np.zeros((num_tips, num_tips), dtype=float)  # tip by tip matrix
-        distances = np.zeros(num_all_tips, dtype=float)  # dist from tip to tip
+        # Initiate the resulting distance matrix.
+        result = np.zeros((num_tips, num_tips))
 
-        def update_result():
-            # set tip_tip distance between tips of different child
-            for child1, child2 in combinations(children, 2):
-                for tip1 in range(child1._start, child1._stop):
-                    if tip1 not in result_map:
-                        continue
-                    t1idx = result_map[tip1]
-                    for tip2 in range(child2._start, child2._stop):
-                        if tip2 not in result_map:
-                            continue
-                        t2idx = result_map[tip2]
-                        result[t1idx, t2idx] = distances[tip1] + distances[tip2]
+        # An intermediate vector storing the accumulative distance from each tip to
+        # the current node.
+        depths = np.zeros(num_tips)
 
+        # Traverse internal nodes.
+        # This method involves two postorder traversals. Theoretically, one can perform
+        # only one traversal, and store tip and internal node references into two lists
+        # for use. However, this method isn't more efficient according to benchmarks.
         for node in self.postorder():
             if not node.children:
                 continue
-            # subtree with solved child edges
-            # can possibly use np.zeros
-            starts, stops = [], []
-            for child in (children := node.children):
-                starts.append(_start := child._start)
-                stops.append(_stop := child._stop)
-                if not use_length:
-                    L = 1
-                elif (L := child.length) is None:
-                    L = 0.0
-                    warn(
-                        f"Node with name {child.name} does not have an associated "
-                        "length, so a length of 0 will be used.",
-                        RepresentationWarning,
-                    )
-                distances[_start:_stop] += L
-                # no warning:
-                # distances[_start : _stop] += (child.length or 0.0) if length else 1
 
-            node._start, node._stop = min(starts), max(stops)
+            # Record tip ranges of each child clade, and increment the tip depths.
+            ranges = []
+            for child in node.children:
+                if not hasattr(child, "_range"):
+                    continue
+                ranges.append(range_ := slice(*child._range))
+                depths[range_] += (child.length or 0.0) if use_length else 1
+                del child._range
 
-            if len(children) > 1:
-                update_result()
+            # Calculate tip-to-tip distances between each pair of child clades, and
+            # save the results to both upper and lower triangles of the resulting
+            # distance matrix.
+            # This is significantly faster than saving to only one triangle and doing
+            # doing `result += result.T` after the iteration.
+            for range1, range2 in combinations(ranges, 2):
+                dists = depths[range1][:, np.newaxis] + depths[range2]
+                result[range1, range2] = dists
+                result[range2, range1] = dists.T
 
-            for child in children:
-                del child._start
-                del child._stop
+            # Due to the continuity of tip indices (see above), it is guaranteed that
+            # the first child is the smallest and the last child is the largest.
+            if ranges:
+                node._range = (ranges[0].start, ranges[-1].stop)
 
-        del self._start
-        del self._stop
+        if hasattr(self, "_range"):
+            del self._range
 
-        return DistanceMatrix(result + result.T, [n.name for n in tip_order])
+        # Reorder the distance matrix to reflect the given order of endpoints.
+        if endpoints:
+            result = result[order][:, order]
+
+        # Skip validation as all items to validate are guaranteed.
+        return DistanceMatrix(result, taxa, validate=False)
 
     def _compare_topology(
         self,
