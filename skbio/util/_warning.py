@@ -57,5 +57,5 @@ def _warn_deprecated(func, ver, msg=None):
                 f"{func.__name__} is deprecated as of {ver}. {msg}", DeprecationWarning
             )
         else:
-            warn(f"{func.__name__} is deprecated as of {ver}.")
+            warn(f"{func.__name__} is deprecated as of {ver}.", DeprecationWarning)
         func.warned = True
