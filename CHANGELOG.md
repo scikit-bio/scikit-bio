@@ -17,6 +17,7 @@
 
 ### Performance enhancements
 
+* Significantly improved the efficiency of the neighbor joining (NJ) algorithm for phylogenetic reconstruction (`nj`) ([#2147](https://github.com/scikit-bio/scikit-bio/pull/2147)).
 * Supported Robinson-Foulds distance calculation (`TreeNode.compare_rfd`) based on bipartitions (equivalent to `compare_biparts`). This is automatically enabled when the input tree is unrooted. Otherwise the calculation is still based on subsets (equivalent to `compare_subsets`). The user can override this behavior using the `rooted` parameter ([#2144](https://github.com/scikit-bio/scikit-bio/pull/2144)).
 * Re-wrote the underlying algorithm of `TreeNode.compare_subsets` because it is equivalent to the Robinson-Foulds distance on rooted trees. Added parameter `proportion`. Renamed parameter `exclude_absent_taxa` as `shared_only` ([#2144](https://github.com/scikit-bio/scikit-bio/pull/2144)).
 * Added parameter `include_self` to `TreeNode.subset`. Added parameters `within`, `include_full` and `include_single` to `TreeNode.subsets` ([#2144](https://github.com/scikit-bio/scikit-bio/pull/2144)).

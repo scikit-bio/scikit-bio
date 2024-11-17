@@ -184,6 +184,11 @@ extensions = [
         include_dirs=[np.get_include()],
     ),
     Extension(
+        "skbio.tree._cutils",
+        ["skbio/tree/_cutils" + ext],
+        include_dirs=[np.get_include()],
+    ),
+    Extension(
         "skbio.diversity._phylogenetic",
         ["skbio/diversity/_phylogenetic" + ext],
         include_dirs=[np.get_include()],
