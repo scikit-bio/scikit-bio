@@ -107,6 +107,8 @@
       ~{{ name }}.count
       ~{{ name }}.subset
       ~{{ name }}.subsets
+      ~{{ name }}.bipart
+      ~{{ name }}.biparts
       ~{{ name }}.assign_supports
       ~{{ name }}.is_bifurcating
       ~{{ name }}.observed_node_counts
@@ -116,7 +118,9 @@
       ~{{ name }}.get_max_distance
       ~{{ name }}.tip_tip_distances
       ~{{ name }}.compare_rfd
+      ~{{ name }}.compare_wrfd
       ~{{ name }}.compare_subsets
+      ~{{ name }}.compare_biparts
       ~{{ name }}.compare_tip_distances
 
    .. rubric:: Tree visualization
