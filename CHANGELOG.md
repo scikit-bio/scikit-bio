@@ -31,6 +31,7 @@
 * Added parameter `include_self` to `TreeNode.ancestors` to optionally include the initial node in the path (default: False) ([#2135](https://github.com/scikit-bio/scikit-bio/pull/2135)).
 * Added parameter `seed` to functions `pcoa`, `anosim`, `permanova`, `permdisp`, `randdm`, `lladser_pe`, `lladser_ci`, `isubsample`, `subsample_power`, `subsample_paired_power`, `paired_subsamples` and `hommola_cospeciation` to accept a random seed or random generator to ensure output reproducibility ([#2120](https://github.com/scikit-bio/scikit-bio/pull/2120) and [#2129](https://github.com/scikit-bio/scikit-bio/pull/2129)).
 * Made the `IORegistry` sniffer only attempt file formats which are logical given a specific object, thus improving reading efficiency.
+* Allowed the `number_of_dimensions` parameter in the function `pcoa` to accept float values between 0 and 1 to capture fractional cumulative variance. 
 
 ### Bug fixes
 
