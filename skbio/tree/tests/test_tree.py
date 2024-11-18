@@ -2431,19 +2431,37 @@ class TreeTests(TestCase):
         obs = t.find("c")
         self.assertEqual(obs, exp)
 
+        # input is node object
+        obs = t.find(exp)
+        self.assertIs(obs, exp)
+
         # find a tip
         exp = t.children[0].children[1]
         obs = t.find("b")
         self.assertEqual(obs, exp)
 
-        # input is node
+        # input is tip object
         obs = t.find(exp)
-        self.assertIs(obs, exp)
+        self.assertEqual(obs, exp)
 
         # name not found
-        msg = "Node 'missing' is not found."
+        msg = "Node 'missing' is not found in the tree."
         with self.assertRaisesRegex(MissingNodeError, msg):
             t.find("missing")
+
+        # input is a node but not in current tree
+        with self.assertRaisesRegex(MissingNodeError, msg):
+            t.find(TreeNode("missing"))
+
+        # input node name matches a tip but it's not in the current tree
+        msg = "Node 'a' is not found in the tree."
+        with self.assertRaisesRegex(MissingNodeError, msg):
+            t.find(TreeNode("a"))
+
+        # input node name matches a non-tip but it's not in the current tree
+        msg = "Node 'c' is not found in the tree."
+        with self.assertRaisesRegex(MissingNodeError, msg):
+            t.find(TreeNode("c"))
 
     def test_find_all(self):
         t = TreeNode.read(["((a,b)c,((d,e)c)c,(f,(g,h)c)a)root;"])
