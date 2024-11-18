@@ -32,7 +32,7 @@ def _ordered(tree_array):
     return np.array([ordered, ids_index])
 
 
-def pair_lca(left_node, right_node):
+def _pair_lca(left_node, right_node):
     left_path = []
     while left_node != 0:
         if left_node % 2 == 0:
@@ -48,7 +48,7 @@ def pair_lca(left_node, right_node):
     return right_node
 
 
-def num_dist(anc, desc):
+def _num_dist(anc, desc):
     dist = 0
     while desc != anc:
         if desc < anc:
@@ -64,10 +64,10 @@ def num_dist(anc, desc):
     return dist
 
 
-def subtree_root(taxa):
-    lca = pair_lca(taxa[0], taxa[1])
+def _subtree_root(taxa):
+    lca = _pair_lca(taxa[0], taxa[1])
     for taxon in taxa[2 : len(taxa)]:
-        lca = pair_lca(lca, taxon)
+        lca = _pair_lca(lca, taxon)
     return lca
 
 
@@ -88,26 +88,26 @@ def _sibling(node):
 
 
 def _ancestors(x, array):
-    result = [v for v in array if num_dist(v, x) > 0]
+    result = [v for v in array if _num_dist(v, x) > 0]
     return np.array(result)
 
 
 def _subtree(x, array):
-    result = [v for v in array if num_dist(x, v) >= 0]
+    result = [v for v in array if _num_dist(x, v) >= 0]
     return np.array(result)
 
 
-def move_subtree(tree_array, subtree_nodes, old_lca, new_lca):
+def _move_subtree(tree_array, subtree_nodes, old_lca, new_lca):
     for leaf in subtree_nodes:
-        tree_array[0, np.where(tree_array[0] == leaf)[0][0]] = move_node(
+        tree_array[0, np.where(tree_array[0] == leaf)[0][0]] = _move_node(
             leaf, old_lca, new_lca
         )
     return
 
 
-def move_node(x, old_lca, new_lca):
+def _move_node(x, old_lca, new_lca):
     diff = new_lca - old_lca
-    return x + (diff * (2 ** num_dist(old_lca, x)))
+    return x + (diff * (2 ** _num_dist(old_lca, x)))
 
 
 def _array_to_tree(taxa, tree_array):

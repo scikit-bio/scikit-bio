@@ -9,15 +9,14 @@
 import numpy as np
 
 from operator import itemgetter
-from skbio.tree import TreeNode
 from skbio.tree._util import (
     _ordered,
-    num_dist,
+    _num_dist,
     _parent,
     _sibling,
     _ancestors,
     _subtree,
-    move_subtree,
+    _move_subtree,
     _array_to_tree,
 )
 
@@ -141,7 +140,7 @@ def gme(dm, allow_edge_estimation=True):
         minimum_child = sorted(edge_list, key=itemgetter(2))[0][:2]
         # attach new taxa to the edge
         subtree_nodes = _subtree(minimum_child[0], leaves[0])
-        move_subtree(
+        _move_subtree(
             tree_array, subtree_nodes, minimum_child[0], 2 * minimum_child[0] + 1
         )
         tree_array[0, k - 1] = 2 * minimum_child[0] + 2
@@ -280,7 +279,7 @@ def _tip_or_root(node, ordered, leaves, ids):
     if ids_index == 0:
         index_list = []
         for x in np.transpose(leaves):
-            if num_dist(node, x[0]) > 0:
+            if _num_dist(node, x[0]) > 0:
                 index_list.append(int(x[1]))
             else:
                 continue
@@ -298,7 +297,7 @@ def _tip_or_root_upper(node, ordered, leaves, ids, root_name):
     if ids_index == 0:
         index_list = []
         for x in np.transpose(leaves):
-            if num_dist(node, x[0]) < 0:
+            if _num_dist(node, x[0]) < 0:
                 index_list.append(int(x[1]))
             else:
                 continue
@@ -332,7 +331,7 @@ def _subtree_count(subtree, leaves):
     """
     count = 0
     for x in leaves[0]:
-        if num_dist(subtree, x) > 0:
+        if _num_dist(subtree, x) > 0:
             count += 1
     if count == 0:
         count = 1
