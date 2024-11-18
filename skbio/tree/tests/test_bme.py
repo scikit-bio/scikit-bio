@@ -175,7 +175,7 @@ class BmeTests(TestCase):
         _bal_ols_edge(actual_TreeNode, dm)
         expected_TreeNode = TreeNode.read(io.StringIO(expected_str))
         self.assertAlmostEqual(actual_TreeNode.compare_tip_distances(
-            expected_TreeNode), 1, places=10)
+            expected_TreeNode), 0.0, places=10)
 
 if __name__ == "__main__":
     main()

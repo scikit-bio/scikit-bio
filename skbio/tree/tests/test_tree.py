@@ -13,11 +13,11 @@ import numpy as np
 import numpy.testing as npt
 import pandas as pd
 from scipy.stats import pearsonr
+from scipy.spatial.distance import euclidean
 
 from skbio import DistanceMatrix, TreeNode
 from skbio.tree import (DuplicateNodeError, NoLengthError,
                         TreeError, MissingNodeError, NoParentError)
-from skbio.util import RepresentationWarning
 
 
 class TreeNodeSubclass(TreeNode):
@@ -59,6 +59,25 @@ class TreeTests(TestCase):
 
         self.complex_tree = TreeNode.read([
             "(((a,b)int1,(x,y,(w,z)int2,(c,d)int3)int4),(e,f)int5);"])
+        #                               /-a
+        #                     /int1----|
+        #                    |          \-b
+        #                    |
+        #           /--------|          /-x
+        #          |         |         |
+        #          |         |         |--y
+        #          |         |         |
+        #          |          \int4----|          /-w
+        #          |                   |-int2----|
+        # ---------|                   |          \-z
+        #          |                   |
+        #          |                   |          /-c
+        #          |                    \int3----|
+        #          |                              \-d
+        #          |
+        #          |          /-e
+        #           \int5----|
+        #                     \-f
 
     def test_gops(self):
         """Basic TreeNode operations should work as expected."""
@@ -292,7 +311,7 @@ class TreeTests(TestCase):
             t1.lowest_common_ancestor([])
 
     def test_path(self):
-        """List of TreeNode object names in path between nodes"""
+        """List of TreeNode objects in path between nodes."""
         t1 = TreeNode.read(["((a,(b,c)d)e,f,(g,h)i)j;"])
         t2 = t1.copy()
         t3 = t1.copy()
@@ -316,9 +335,7 @@ class TreeTests(TestCase):
         t = TreeNode.read(["((a,b)c,(d,e)f)root;"])
         init = t.find("a")
         fin = t.find("e")
-        exp = [
-            t.find("a"), t.find("c"), t.find("root"), t.find("f"), t.find("e")
-            ]
+        exp = [t.find("a"), t.find("c"), t.find("root"), t.find("f"), t.find("e")]
         obs = init.path(fin, include_ends=True)
         self.assertEqual(obs, exp)
 
@@ -327,7 +344,7 @@ class TreeTests(TestCase):
         t2 = TreeNode.read(["((g,h)i,(j,k)l);"])
         node1 = t1.find("a")
         node2 = t2.find("g")
-        msg = "Could not find path between nodes."
+        msg = "Could not find a path between self and other."
         with self.assertRaises(TreeError) as cm:
             node1.path(node2)
         self.assertEqual(str(cm.exception), msg)
@@ -1438,19 +1455,159 @@ class TreeTests(TestCase):
         self.assertEqual(obs, exp)
 
     def test_subset(self):
-        """subset should return set of leaves that descends from node"""
+        """Return a set of tip names descending from a node."""
         t = self.simple_t
         self.assertEqual(t.subset(), frozenset("abcd"))
         c = t.children[0]
         self.assertEqual(c.subset(), frozenset("ab"))
         leaf = c.children[1]
         self.assertEqual(leaf.subset(), frozenset(""))
+        self.assertEqual(leaf.subset(include_self=True), frozenset("b"))
 
     def test_subsets(self):
-        """subsets should return all subsets descending from a set"""
+        """Return all subsets descending from a node."""
         t = self.simple_t
-        self.assertEqual(t.subsets(), frozenset(
+
+        # default case
+        self.assertSetEqual(t.subsets(), frozenset(
             [frozenset("ab"), frozenset("cd")]))
+
+        # make sure intermediates are cleaned
+        for node in t.traverse(include_self=False):
+            self.assertFalse(hasattr(node, "_subset"))
+
+        # custom range
+        self.assertSetEqual(t.subsets(within={"a", "b", "c"}), frozenset(
+            [frozenset("ab")]))
+        self.assertSetEqual(t.subsets(within="abc"), frozenset(
+            [frozenset("ab")]))
+
+        # include all
+        self.assertSetEqual(t.subsets(include_full=True), frozenset(
+            [frozenset("ab"), frozenset("cd"), frozenset("abcd")]))
+        for node in t.traverse(include_self=False):
+            self.assertFalse(hasattr(node, "_subset"))
+
+        # include singles
+        self.assertSetEqual(t.subsets(include_single=True), frozenset(
+            [frozenset("ab"), frozenset("cd"), frozenset("a"), frozenset("b"),
+             frozenset("c"), frozenset("d")]))
+
+        # map to length
+        t = TreeNode.read(["((a:1,b:2):1,c:4,((d:4,e:5):2,f:6):1);"])
+        self.assertDictEqual(t.subsets(map_to_length=True), {
+            frozenset("ab"): 1, frozenset("de"): 2, frozenset("def"): 1})
+
+        # merged lengths
+        self.assertDictEqual(t.subsets(within="abde", map_to_length=True), {
+            frozenset("ab"): 1, frozenset("de"): 3})
+
+        # missing length
+        t.children[0].length = None
+        self.assertDictEqual(t.subsets(map_to_length=True), {
+            frozenset("ab"): 0, frozenset("de"): 2, frozenset("def"): 1})
+
+        # when a basal taxon is excluded
+        t = TreeNode.read(['(((a,b),(c,d)),e);'])
+        self.assertSetEqual(t.subsets(within="abcd"), frozenset(
+            [frozenset("ab"), frozenset("cd")]))
+
+    def test_bipart(self):
+        """Return a set of tip names on the smaller side of the branch."""
+        t = self.complex_tree
+
+        # typical cases (internal node): get smaller side
+        # taxa below node (same as subset)
+        self.assertSetEqual(t.find("int1").bipart(), frozenset("ab"))
+        self.assertSetEqual(t.find("int3").bipart(), frozenset("cd"))
+        self.assertSetEqual(t.find("int5").bipart(), frozenset("ef"))
+
+        # when clade is larger than half of tree, get remaining taxa
+        self.assertSetEqual(t.find("int4").bipart(), frozenset("abef"))
+
+        # at root: empty set
+        self.assertSetEqual(t.bipart(), frozenset())
+
+        # at tip: singleton
+        self.assertSetEqual(t.find("a").bipart(), frozenset("a"))
+
+        # when size is equal, get lexicographically smaller side
+        t = self.simple_t
+        self.assertSetEqual(t.find("i1").bipart(), frozenset("ab"))
+        self.assertSetEqual(t.find("i2").bipart(), frozenset("ab"))
+
+        # an unrooted tree
+        t = TreeNode.read(["((a,(b,c))X,(d,e)Y,f);"])
+        self.assertSetEqual(t.find("X").bipart(), frozenset("abc"))
+        self.assertSetEqual(t.find("Y").bipart(), frozenset("de"))
+
+    def test_biparts(self):
+        """Return all sets of tip names on the smaller side of each branch."""
+
+        # an unrooted, bifurcating tree (typical case)
+        t = TreeNode.read(["(((a,(b,c)),d),(e,f),g);"])
+        self.assertSetEqual(t.biparts(), frozenset({
+            frozenset({"e", "f"}),
+            frozenset({"e", "f", "g"}),
+            frozenset({"b", "c"}),
+            frozenset({"a", "b", "c"})}))
+
+        # a rooted tree with polytomy
+        t = self.complex_tree
+        self.assertSetEqual(t.biparts(), frozenset({
+            frozenset({"e", "f"}),
+            frozenset({"c", "d"}),
+            frozenset({"a", "b"}),
+            frozenset({"w", "z"}),
+            frozenset({"a", "b", "e", "f"})}))
+
+        # within given taxa
+        self.assertSetEqual(t.biparts(within="abcdef"), frozenset({
+            frozenset({"c", "d"}),
+            frozenset({"a", "b"}),
+            frozenset({"e", "f"})}))
+
+        self.assertSetEqual(
+            t.biparts(within="cbda"),
+            t.biparts(within={"a", "b", "c", "d"}))
+
+        # within a subtree
+        self.assertSetEqual(t.children[0].biparts(), frozenset({
+            frozenset({"c", "d"}),
+            frozenset({"a", "b"}),
+            frozenset({"w", "z"})}))
+
+        # a simple tree with only one bipartition
+        t = self.simple_t
+        self.assertSetEqual(t.biparts(), frozenset({
+            frozenset({"a", "b"})}))
+
+        # include singletons (tips)
+        self.assertSetEqual(t.biparts(include_single=True), frozenset({
+            frozenset({"a", "b"}),
+            frozenset({"a"}),
+            frozenset({"b"}),
+            frozenset({"c"}),
+            frozenset({"d"})}))
+
+        # map to length ("abc" crosses the root)
+        t = TreeNode.read(["(((a:1,b:2):1,c:3):2,((d:4,e:5):2,f:6):2);"])
+        self.assertDictEqual(t.biparts(map_to_length=True), {
+            frozenset("ab"): 1, frozenset("de"): 2, frozenset("abc"): 4})
+
+        # merged lengths
+        self.assertDictEqual(t.biparts(within="abde", map_to_length=True), {
+            frozenset("ab"): 7})
+
+        # missing length
+        t.children[0].length = None
+        self.assertDictEqual(t.biparts(map_to_length=True), {
+            frozenset("ab"): 1, frozenset("de"): 2, frozenset("abc"): 2})
+
+        # when a basal taxon is excluded
+        t = TreeNode.read(['(((a,b),(c,d)),e);'])
+        self.assertSetEqual(t.biparts(within="abcd"), frozenset(
+            [frozenset("ab")]))
 
     def test_assign_supports(self):
         """Extract support values of internal nodes."""
@@ -1628,8 +1785,8 @@ class TreeTests(TestCase):
             "(((A:.1,B:1.2)C:.6,(D:.9,E:.6)F:.9)G:2.4,(H:.4,I:.5)J:1.3)K;"])
         tdbl = tr.descending_branch_length()
         sdbl = tr.descending_branch_length(["A", "E"])
-        npt.assert_almost_equal(tdbl, 8.9)
-        npt.assert_almost_equal(sdbl, 2.2)
+        self.assertAlmostEqual(tdbl, 8.9)
+        self.assertAlmostEqual(sdbl, 2.2)
         self.assertRaises(ValueError, tr.descending_branch_length,
                           ["A", "DNE"])
         self.assertRaises(ValueError, tr.descending_branch_length, ["A", "C"])
@@ -1637,35 +1794,35 @@ class TreeTests(TestCase):
         tr = TreeNode.read([
             "(((A,B:1.2)C:.6,(D:.9,E:.6)F:.9)G:2.4,(H:.4,I:.5)J:1.3)K;"])
         tdbl = tr.descending_branch_length()
-        npt.assert_almost_equal(tdbl, 8.8)
+        self.assertAlmostEqual(tdbl, 8.8)
 
         tr = TreeNode.read([
             "(((A,B:1.2)C:.6,(D:.9,E:.6)F)G:2.4,(H:.4,I:.5)J:1.3)K;"])
         tdbl = tr.descending_branch_length()
-        npt.assert_almost_equal(tdbl, 7.9)
+        self.assertAlmostEqual(tdbl, 7.9)
 
         tr = TreeNode.read([
             "(((A,B:1.2)C:.6,(D:.9,E:.6)F)G:2.4,(H:.4,I:.5)J:1.3)K;"])
         tdbl = tr.descending_branch_length(["A", "D", "E"])
-        npt.assert_almost_equal(tdbl, 2.1)
+        self.assertAlmostEqual(tdbl, 2.1)
 
         tr = TreeNode.read([
             "(((A,B:1.2)C:.6,(D:.9,E:.6)F:.9)G:2.4,(H:.4,I:.5)J:1.3)K;"])
         tdbl = tr.descending_branch_length(["I", "D", "E"])
-        npt.assert_almost_equal(tdbl, 6.6)
+        self.assertAlmostEqual(tdbl, 6.6)
 
         # test with a situation where we have unnamed internal nodes
         tr = TreeNode.read([
             "(((A,B:1.2):.6,(D:.9,E:.6)F):2.4,(H:.4,I:.5)J:1.3);"])
         tdbl = tr.descending_branch_length()
-        npt.assert_almost_equal(tdbl, 7.9)
+        self.assertAlmostEqual(tdbl, 7.9)
 
         # issue 1847
         tr = TreeNode.read([
             "(((A:.1,B:1.2)C:.6,(D:.9,E:.6)F:.9)G:2.4,(H:.4,I:.5)J:1.3)K;"])
         tr.length = 1
         tdbl = tr.descending_branch_length()
-        npt.assert_almost_equal(tdbl, 8.9)
+        self.assertAlmostEqual(tdbl, 8.9)
 
     def test_distance_nontip(self):
         # example derived from issue #807, credit @wwood
@@ -1674,77 +1831,77 @@ class TreeTests(TestCase):
         self.assertEqual(tree.find("A").distance(tree.find("g__genus1")), 1.0)
 
     def test_distance(self):
-        """Get the distance between two nodes"""
+        """Get the path length (patristic) distance between two nodes."""
         t = TreeNode.read(["((a:0.1,b:0.2)c:0.3,(d:0.4,e)f:0.5)root;"])
         tips = sorted([n for n in t.tips()], key=lambda x: x.name)
 
-        npt.assert_almost_equal(tips[0].distance(tips[0]), 0.0)
-        npt.assert_almost_equal(tips[0].distance(tips[1]), 0.3)
-        npt.assert_almost_equal(tips[0].distance(tips[2]), 1.3)
+        self.assertAlmostEqual(tips[0].distance(tips[0]), 0.0)
+        self.assertAlmostEqual(tips[0].distance(tips[1]), 0.3)
+        self.assertAlmostEqual(tips[0].distance(tips[2]), 1.3)
         with self.assertRaises(NoLengthError):
             tips[0].distance(tips[3])
 
-        npt.assert_almost_equal(tips[1].distance(tips[0]), 0.3)
-        npt.assert_almost_equal(tips[1].distance(tips[1]), 0.0)
-        npt.assert_almost_equal(tips[1].distance(tips[2]), 1.4)
+        self.assertAlmostEqual(
+            tips[0].distance(tips[3], missing_as_zero=True), 0.9)
+
+        self.assertAlmostEqual(tips[1].distance(tips[0]), 0.3)
+        self.assertAlmostEqual(tips[1].distance(tips[1]), 0.0)
+        self.assertAlmostEqual(tips[1].distance(tips[2]), 1.4)
         with self.assertRaises(NoLengthError):
             tips[1].distance(tips[3])
 
-        self.assertEqual(tips[2].distance(tips[0]), 1.3)
-        self.assertEqual(tips[2].distance(tips[1]), 1.4)
-        self.assertEqual(tips[2].distance(tips[2]), 0.0)
+        self.assertAlmostEqual(tips[2].distance(tips[0]), 1.3)
+        self.assertAlmostEqual(tips[2].distance(tips[1]), 1.4)
+        self.assertAlmostEqual(tips[2].distance(tips[2]), 0.0)
         with self.assertRaises(NoLengthError):
             tips[2].distance(tips[3])
 
+    def test_distance_count(self):
+        """Get the path distance (edge count) between two nodes."""
+        t = TreeNode.read(["((a:0.1,b:0.2)c:0.3,(d:0.4,e)f:0.5)root;"])
+        tips = sorted([n for n in t.tips()], key=lambda x: x.name)
+
+        self.assertEqual(tips[0].distance(tips[0], False), 0)
+        self.assertEqual(tips[0].distance(tips[1], False), 2)
+        self.assertEqual(tips[0].distance(tips[2], False), 4)
+        self.assertEqual(tips[0].distance(tips[3], False), 4)
+
+        self.assertEqual(tips[1].distance(tips[0], False), 2)
+        self.assertEqual(tips[1].distance(tips[1], False), 0)
+        self.assertEqual(tips[1].distance(tips[2], False), 4)
+        self.assertEqual(tips[1].distance(tips[3], False), 4)
+
+        self.assertEqual(tips[2].distance(tips[0], False), 4)
+        self.assertEqual(tips[2].distance(tips[1], False), 4)
+        self.assertEqual(tips[2].distance(tips[2], False), 0)
+        self.assertEqual(tips[2].distance(tips[3], False), 2)
+
     def test_get_max_distance(self):
-        """get_max_distance should get max tip distance across tree"""
+        """Get maximum tip-to-tip distance across tree. """
+        # regular case
         tree = TreeNode.read([
             "((a:0.1,b:0.2)c:0.3,(d:0.4,e:0.5)f:0.6)root;"])
         dist, nodes = tree.get_max_distance()
-        npt.assert_almost_equal(dist, 1.6)
-        self.assertEqual(sorted([n.name for n in nodes]), ["b", "e"])
+        self.assertAlmostEqual(dist, 1.6)
+        self.assertListEqual([n.name for n in nodes], ["e", "b"])
 
-    def test_set_max_distance(self):
-        """set_max_distance sets MaxDistTips across tree"""
-        tree = TreeNode.read([
-            "((a:0.1,b:0.2)c:0.3,(d:0.4,e:0.5)f:0.6)root;"])
-        tree._set_max_distance()
-        tip_a, tip_b = tree.MaxDistTips
-        self.assertEqual(tip_a[0] + tip_b[0], 1.6)
-        self.assertEqual(sorted([tip_a[1].name, tip_b[1].name]), ["b", "e"])
+        # number of branches
+        dist, nodes = tree.get_max_distance(use_length=False)
+        self.assertEqual(dist, 4)
+        self.assertListEqual([n.name for n in nodes], ["a", "d"])
 
-    def test_set_max_distance_tie_bug(self):
-        """Corresponds to #1077"""
-        t = TreeNode.read(["((a:1,b:1)c:2,(d:3,e:4)f:5)root;"])
-        exp = ((3.0, t.find("a")), (9.0, t.find("e")))
+        # tree with a single-child node and missing lengths
+        tree = TreeNode.read(["((a:1,b:2),c:4,(((d:4,e:5):2):3,f:6));"])
+        dist, nodes = tree.get_max_distance()
+        self.assertAlmostEqual(dist, 16)
+        self.assertListEqual([n.name for n in nodes], ["e", "f"])
 
-        # the above tree would trigger an exception in max. The central issue
-        # was that the data being passed to max were a tuple of tuple:
-        # ((left_d, left_n), (right_d, right_n))
-        # the call to max would break in this scenario as it would fall onto
-        # idx 1 of each tuple to assess the "max".
-        t._set_max_distance()
-
-        self.assertEqual(t.MaxDistTips, exp)
-
-    def test_set_max_distance_inplace_modification_bug(self):
-        """Corresponds to #1223"""
-        t = TreeNode.read(["((a:1,b:1)c:2,(d:3,e:4)f:5)root;"])
-
-        exp = [((0.0, t.find("a")), (0.0, t.find("a"))),
-               ((0.0, t.find("b")), (0.0, t.find("b"))),
-               ((1.0, t.find("a")), (1.0, t.find("b"))),
-               ((0.0, t.find("d")), (0.0, t.find("d"))),
-               ((0.0, t.find("e")), (0.0, t.find("e"))),
-               ((3.0, t.find("d")), (4.0, t.find("e"))),
-               ((3.0, t.find("a")), (9.0, t.find("e")))]
-
-        t._set_max_distance()
-
-        self.assertEqual([n.MaxDistTips for n in t.postorder()], exp)
+        dist, nodes = tree.get_max_distance(use_length=False)
+        self.assertEqual(dist, 6)
+        self.assertListEqual([n.name for n in nodes], ["d", "a"])
 
     def test_tip_tip_distances_endpoints(self):
-        """Test getting specifc tip distances  with tipToTipDistances"""
+        """Get a tip-to-tip distance matrix."""
         t = TreeNode.read(["((H:1,G:1):2,(R:0.5,M:0.7):3);"])
         nodes = [t.find("H"), t.find("G"), t.find("M")]
         names = ["H", "G", "M"]
@@ -1758,51 +1915,157 @@ class TreeTests(TestCase):
         obs = t.tip_tip_distances(endpoints=nodes)
         self.assertEqual(obs, exp)
 
-    def test_tip_tip_distances_non_tip_endpoints(self):
+        for node in t.traverse(include_self=True):
+            assert not hasattr(node, '_start')
+            assert not hasattr(node, '_stop')
+
+    def test_tip_tip_distances_counts(self):
+        """Get a tip-to-tip distance matrix in counts."""
+        t = TreeNode.read(["((H:1,G:1):2,(R:0.5,M:0.7):3);"])
+        nodes = [t.find("H"), t.find("G"), t.find("M")]
+        names = ["H", "G", "M"]
+        exp = DistanceMatrix(np.array([[0, 2, 4],
+                                       [2, 0, 4],
+                                       [4, 4, 0]]), ["H", "G", "M"])
+
+        obs = t.tip_tip_distances(endpoints=names, use_length=False)
+        self.assertEqual(obs, exp)
+
+        obs = t.tip_tip_distances(endpoints=nodes, use_length=False)
+        self.assertEqual(obs, exp)
+
+        for node in t.traverse(include_self=True):
+            assert not hasattr(node, '_start')
+            assert not hasattr(node, '_stop')
+
+    def test_tip_tip_distances_bad_endpoints(self):
         t = TreeNode.read(["((H:1,G:1)foo:2,(R:0.5,M:0.7):3);"])
         with self.assertRaises(ValueError):
             t.tip_tip_distances(endpoints=["foo"])
+        with self.assertRaises(MissingNodeError):
+            t.tip_tip_distances(endpoints=["bar"])
+
+        with self.assertRaises(DuplicateNodeError):
+            t.tip_tip_distances(endpoints=["H", "R", "H"])
+
+    def test_tip_tip_distances_duplicate_tips(self):
+        t = TreeNode.read(["((H:1,G:1):2,(R:0.5,H:0.7):3);"])
+        with self.assertRaises(DuplicateNodeError):
+            t.tip_tip_distances()
+        with self.assertRaises(DuplicateNodeError):
+            t.tip_tip_distances(endpoints=["H", "R", "H"])
 
     def test_tip_tip_distances_no_length(self):
         t = TreeNode.read(["((a,b)c,(d,e)f);"])
         exp_t = TreeNode.read(["((a:0,b:0)c:0,(d:0,e:0)f:0);"])
         exp_t_dm = exp_t.tip_tip_distances()
-
-        t_dm = npt.assert_warns(RepresentationWarning, t.tip_tip_distances)
+        t_dm = t.tip_tip_distances()
         self.assertEqual(t_dm, exp_t_dm)
-
-        for node in t.preorder():
-            self.assertIs(node.length, None)
 
     def test_tip_tip_distances_missing_length(self):
         t = TreeNode.read(["((a,b:6)c:4,(d,e:0)f);"])
         exp_t = TreeNode.read(["((a:0,b:6)c:4,(d:0,e:0)f:0);"])
+        t_dm = t.tip_tip_distances()
         exp_t_dm = exp_t.tip_tip_distances()
-
-        t_dm = npt.assert_warns(RepresentationWarning, t.tip_tip_distances)
         self.assertEqual(t_dm, exp_t_dm)
 
     def test_compare_rfd(self):
-        """compare_rfd should return the Robinson Foulds distance"""
-        t = TreeNode.read(["((H,G),(R,M));"])
+        """Return Robinson-Foulds distance."""
+        # original example          
+        t1 = TreeNode.read(["((H,G),(R,M));"])
         t2 = TreeNode.read(["(((H,G),R),M);"])
-        t4 = TreeNode.read(["(((H,G),(O,R)),X);"])
+        self.assertEqual(t1.compare_rfd(t2), 2)
 
-        obs = t.compare_rfd(t2)
-        exp = 2.0
-        self.assertEqual(obs, exp)
+        # zero distance to self
+        self.assertEqual(t1.compare_rfd(t2), t2.compare_rfd(t1))
 
-        self.assertEqual(t.compare_rfd(t2), t2.compare_rfd(t))
+        # return proportion
+        self.assertEqual(t1.compare_rfd(t2, proportion=True), 0.5)
 
-        obs = t.compare_rfd(t2, proportion=True)
-        exp = 0.5
-        self.assertEqual(obs, exp)
+        # two conflicting quartets
+        t1 = TreeNode.read(["((a,b),(c,d));"])
+        t2 = TreeNode.read(["((a,c),(b,d));"])
+        self.assertEqual(t1.compare_rfd(t2), 4)
+        self.assertEqual(t1.compare_rfd(t2, proportion=True), 1.0)
+        self.assertEqual(t1.compare_rfd(t2, rooted=False), 2)
 
-        with self.assertRaises(ValueError):
-            t.compare_rfd(t4)
+        # same topology but different rooting
+        t1 = TreeNode.read(["(((a,b),c),(d,e));"])
+        t2 = TreeNode.read(["((a,b),(c,(d,e)));"])
+        self.assertEqual(t1.compare_rfd(t2), 2)
+        self.assertAlmostEqual(t1.compare_rfd(t2, proportion=True), 1 / 3)
+        self.assertEqual(t1.compare_rfd(t2, rooted=False), 0)
+
+        # different topologies
+        t1 = TreeNode.read(["(((a,b),c),((d,e),f));"])
+        t2 = TreeNode.read(["(((a,(b,c)),d),(e,f));"])
+        self.assertEqual(t1.compare_rfd(t2), 6)
+        self.assertEqual(t1.compare_rfd(t2, proportion=True), 0.75)
+        self.assertEqual(t1.compare_rfd(t2, rooted=False), 4)
+
+        # unrooted trees
+        t1.unroot()
+        t2.unroot()
+        self.assertEqual(t1.compare_rfd(t2), 4)
+        self.assertEqual(t1.compare_rfd(t2, rooted=True), 6)
+
+        # make self a subtree (therefore rooted)
+        t1.parent = TreeNode("x")
+        self.assertEqual(t1.compare_rfd(t2), 6)
+        self.assertEqual(t1.compare_rfd(t2, rooted=False), 4)
+        t1.parent = None
+
+        # with polytomy
+        t1 = TreeNode.read(["((a,b,(c,d)),((e,f),(g,h),i));"])
+        t2 = TreeNode.read(["((((a,b),c,d),e),((f,g,h),i));"])
+        self.assertEqual(t1.compare_rfd(t2), 8)
+        self.assertEqual(t1.compare_rfd(t2, rooted=False), 6)
+
+        c1, c2 = t1.children[0], t2.children[0]
+        self.assertEqual(c1.compare_rfd(c2), 2)
+        self.assertEqual(c1.compare_rfd(c2, rooted=False), 0)
+
+    def test_compare_wrfd(self):
+        """Return weighted Robinson-Foulds distance or variants."""
+        t1 = TreeNode.read(["((a:1,b:2):1,c:4,((d:4,e:5):2,f:6):1);"])
+        t2 = TreeNode.read(["((a:3,(b:2,c:2):1):3,d:8,(e:5,f:6):2);"])
+
+        # weighted RF distance (matches phangorn::wRF.dist and dendropy's
+        # weighted_robinson_foulds_distance)
+        self.assertAlmostEqual(t1.compare_wrfd(t2), 16)
+        self.assertAlmostEqual(t1.compare_wrfd(t2, metric="cityblock"), 16)
+
+        # KF branch score distance (matches phangorn::KF.dist and dendropy's
+        # euclidean_distance)
+        self.assertAlmostEqual(t1.compare_wrfd(t2, metric="euclidean"), 6.1644140)
+
+        # no terminal branches (matches ape::dist.topo with method="score")
+        self.assertAlmostEqual(t1.compare_wrfd(
+            t2, metric="euclidean", include_single=False), 3.7416574)
+
+        # force rooted (considers subsets not bipartitions)
+        self.assertAlmostEqual(t1.compare_wrfd(t2, rooted=True), 18)
+        self.assertAlmostEqual(
+            t1.compare_wrfd(t2, metric="euclidean", rooted=True), 6.6332496)
+
+        # make self a subtree, therefore it is considered as rooted
+        t1.parent = TreeNode("x")
+        self.assertAlmostEqual(t1.compare_wrfd(t2), 18)
+        t1.parent = None
+
+        # correlation distance
+        self.assertAlmostEqual(t1.compare_wrfd(t2, metric="correlation"), 0.3164447)
+
+        # unit correlation distance
+        self.assertAlmostEqual(t1.compare_wrfd(t2, metric="unitcorr"), 0.1582224)
+
+        # correlation distance is independent of scale
+        for node in t2.traverse(include_self=False):
+            node.length *= 10
+        self.assertAlmostEqual(t1.compare_wrfd(t2, metric="correlation"), 0.3164447)
 
     def test_compare_subsets(self):
-        """compare_subsets should return the fraction of shared subsets"""
+        """Return the amount of unshared subsets."""
         t = TreeNode.read(["((H,G),(R,M));"])
         t2 = TreeNode.read(["(((H,G),R),M);"])
         t4 = TreeNode.read(["(((H,G),(O,R)),X);"])
@@ -1810,17 +2073,20 @@ class TreeTests(TestCase):
         result = t.compare_subsets(t)
         self.assertEqual(result, 0)
 
-        result = t2.compare_subsets(t2)
-        self.assertEqual(result, 0)
-
         result = t.compare_subsets(t2)
         self.assertEqual(result, 0.5)
 
         result = t.compare_subsets(t4)
-        self.assertEqual(result, 1 - 2. / 5)
+        self.assertEqual(result, 0.6)
 
-        result = t.compare_subsets(t4, exclude_absent_taxa=True)
-        self.assertEqual(result, 1 - 2. / 3)
+        result = t.compare_subsets(t4, proportion=False)
+        self.assertEqual(result, 3)
+
+        result = t.compare_subsets(t4, shared_only=True)
+        self.assertEqual(result, 0)
+
+        result = t.compare_subsets(t4, symmetric=False)
+        self.assertEqual(result, 0.5)
 
         result = t.compare_subsets(self.TreeRoot, exclude_absent_taxa=True)
         self.assertEqual(result, 1)
@@ -1828,44 +2094,112 @@ class TreeTests(TestCase):
         result = t.compare_subsets(self.TreeRoot)
         self.assertEqual(result, 1)
 
+        result = TreeNode('x').compare_subsets(TreeNode('y'))
+        self.assertEqual(result, 1)
+
+    def test_compare_biparts(self):
+        """Return the amount of unshared bipartitions."""
+        t = TreeNode.read(["((H,G),(R,M));"])
+        t2 = TreeNode.read(["(((H,G),R),M);"])
+        t3 = TreeNode.read(["(((H,R),G),M);"])
+
+        result = t.compare_biparts(t)
+        self.assertEqual(result, 0)
+
+        result = t.compare_biparts(t2)
+        self.assertEqual(result, 0)
+
+        result = t.compare_biparts(t3)
+        self.assertEqual(result, 1)
+
+        result = t.compare_biparts(t3, proportion=False)
+        self.assertEqual(result, 2)
+
+        result = t.compare_biparts(t3, proportion=False, symmetric=False)
+        self.assertEqual(result, 1)
+
+        result = t.compare_biparts(self.TreeRoot)
+        self.assertEqual(result, 1)
+
+        result = TreeNode('x').compare_biparts(TreeNode('y'))
+        self.assertEqual(result, 1)
+
     def test_compare_tip_distances(self):
-        # default behavior
+        """Return distance between two trees based on tip distances."""
         t = TreeNode.read(["((H:1,G:1):2,(R:0.5,M:0.7):3);"])
         t2 = TreeNode.read(["(((H:1,G:1,O:1):2,R:3):1,X:4);"])
-        obs = t.compare_tip_distances(t2)
+
+        # default behavior (half correlation, use length, include self)
         # note: common taxa are H, G, R (only)
+        # note: version 0.7.0 will ignore self by default (see below)
+        obs = t.compare_tip_distances(t2)
         m1 = np.array([[0, 2, 6.5], [2, 0, 6.5], [6.5, 6.5, 0]])
         m2 = np.array([[0, 2, 6], [2, 0, 6], [6, 6, 0]])
         r = pearsonr(m1.flat, m2.flat)[0]
-        self.assertAlmostEqual(obs, (1 - r) / 2)
+        exp = (1 - r) / 2
+        self.assertAlmostEqual(obs, exp)
 
         # sample a subset of taxa
-        t = TreeNode.read(["((H:1,G:1):2,(R:0.5,M:0.7):3);"])
-        t2 = TreeNode.read(["(((H:1,G:1,O:1):2,R:3):1,X:4);"])
+        # note: all common taxa are selected, despite that the default
+        # shuffler function is stochastic.
         obs = t.compare_tip_distances(t2, sample=3)
-        # Note: common taxa are H, G, R (only), all of which are selected, despite that
-        # the default shuffling function is stochastic.
-        m1 = np.array([[0, 2, 6.5], [2, 0, 6.5], [6.5, 6.5, 0]])
-        m2 = np.array([[0, 2, 6], [2, 0, 6], [6, 6, 0]])
-        r = pearsonr(m1.flat, m2.flat)[0]
-        self.assertAlmostEqual(obs, (1 - r) / 2)
+        self.assertAlmostEqual(obs, exp)
 
-        # 4 common taxa, custom shuffling function, still picking H, G, R
-        t = TreeNode.read(["((H:1,G:1):2,(R:0.5,M:0.7,Q:5):3);"])
-        t3 = TreeNode.read(["(((H:1,G:1,O:1):2,R:3,Q:10):1,X:4);"])
-        obs = t.compare_tip_distances(t3, sample=3, shuffle_f=sorted)
+        # 4 common taxa, custom shuffler, still picking H, G, R
+        tx = TreeNode.read(["((H:1,G:1):2,(R:0.5,M:0.7,U:5):3);"])
+        t2x = TreeNode.read(["(((H:1,G:1,O:1):2,R:3,U:10):1,X:4);"])
+        obs = tx.compare_tip_distances(t2x, sample=3, shuffler=list.sort)
+        self.assertAlmostEqual(obs, exp)
+        obs = tx.compare_tip_distances(t2x, sample=3, shuffle_f=list.sort)
+        self.assertAlmostEqual(obs, exp)
 
         # no common taxa
-        t = TreeNode.read(["((H:1,G:1):2,(R:0.5,M:0.7):3);"])
-        t2 = TreeNode.read(["(((Z:1,Y:1,X:1):2,W:3):1,V:4);"])
+        t3 = TreeNode.read(["(((Z:1,Y:1,X:1):2,W:3):1,V:4);"])
         with self.assertRaises(ValueError):
-            t.compare_tip_distances(t2)
+            t.compare_tip_distances(t3)
 
         # single common taxon
-        t = TreeNode.read(["((H:1,G:1):2,(R:0.5,M:0.7):3);"])
-        t2 = TreeNode.read(["(((R:1,Y:1,X:1):2,W:3):1,V:4);"])
-        self.assertEqual(t.compare_tip_distances(t2), 1)
-        self.assertEqual(t2.compare_tip_distances(t), 1)
+        t4 = TreeNode.read(["(((R:1,Y:1,X:1):2,W:3):1,V:4);"])
+        self.assertTrue(np.isnan(t.compare_tip_distances(t4)))
+
+        # two common taxa
+        t5 = TreeNode.read(["(((R:1,Y:1,X:1):2,M:3):1,V:4);"])
+        self.assertAlmostEqual(t.compare_tip_distances(t5), 0)
+        self.assertTrue(np.isnan(t.compare_tip_distances(t5, ignore_self=True)))
+
+    def test_compare_tip_distances_new(self):
+        """Return distance between two trees based on tip distances."""
+        # This test case is more comprehensive and reflects the new behavior
+        # and options of the method.
+        t1 = TreeNode.read(["((a:1,b:2):1,c:4,((d:4,e:5):2,f:6):1);"])
+        t2 = TreeNode.read(["((a:3,(b:2,c:2):1):3,d:8,(e:5,f:6):2);"])
+
+        # default behavior (old, will change in version 0.7.0)
+        obs = t1.compare_tip_distances(t2)
+        self.assertAlmostEqual(obs, 0.0453512)
+
+        # new default behavior
+        obs = t1.compare_tip_distances(t2, ignore_self=True)
+        self.assertAlmostEqual(obs, 0.1413090)
+
+        # path length distance (matches phangorn::path.dist(use.weight=TRUE))
+        obs = t1.compare_tip_distances(t2, metric="euclidean", ignore_self=True)
+        self.assertAlmostEqual(obs, 13.7113092)
+        obs = t1.compare_tip_distances(t2, metric=euclidean, ignore_self=True)
+        self.assertAlmostEqual(obs, 13.7113092)
+        obs = t1.compare_tip_distances(t2, dist_f=euclidean, ignore_self=True)
+        self.assertAlmostEqual(obs, 13.7113092)
+
+        # path distance (matches phangorn::path.dist)
+        obs = t1.compare_tip_distances(
+            t2, metric="euclidean", use_length=False, ignore_self=True)
+        self.assertAlmostEqual(obs, 4.0)
+
+        # unit correlation distance is independent of tree scale
+        for node in t2.traverse(include_self=False):
+            node.length *= 3
+        obs = t1.compare_tip_distances(t2, ignore_self=True)
+        self.assertAlmostEqual(obs, 0.1413090)
 
     # ------------------------------------------------
     # Tree indexing and searching

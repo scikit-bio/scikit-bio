@@ -29,19 +29,6 @@ class EfficiencyWarning(SkbioWarning):
     pass
 
 
-class RepresentationWarning(SkbioWarning):
-    """Warn about assumptions made for the successful completion of a process.
-
-    Warn about substitutions, assumptions, or particular alterations that were
-    made for the successful completion of a process. For example, if a value
-    that is required for a task is not present, a best guess or least
-    deleterious value could be used, accompanied by this warning.
-
-    """
-
-    pass
-
-
 class DeprecationWarning(DeprecationWarning, SkbioWarning):
     """Used to indicate deprecated functionality in scikit-bio."""
 
