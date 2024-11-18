@@ -5320,7 +5320,7 @@ class TreeNode(SkbioObject):
         ----------
         name : TreeNode or str
             The name of the node to find. If a ``TreeNode`` object is provided,
-            then it is simply returned.
+            will find this particular node in the tree.
 
         Returns
         -------
@@ -5330,7 +5330,7 @@ class TreeNode(SkbioObject):
         Raises
         ------
         MissingNodeError
-            If the node to be searched for is not found.
+            If the node to be searched for is not found in the current tree.
 
         See Also
         --------
@@ -5351,34 +5351,44 @@ class TreeNode(SkbioObject):
         assumption that additional calls to ``find`` will be made. See
         :meth:`details <has_caches>`.
 
+        This method searches within the entire tree where self is located, regardless
+        if self is the root node.
+
         Examples
         --------
         >>> from skbio import TreeNode
         >>> tree = TreeNode.read(["((a,b)c,(d,e)f);"])
-        >>> print(tree.find('c').name)
-        c
+        >>> node = tree.find('c')
+        >>> node.name
+        'c'
 
         """
         tree = self.root()
 
-        # if what is being passed in looks like a node, just return it
-        if isinstance(name, tree.__class__):
-            return name
-
         # create lookup table if not already
         tree.create_caches()
 
+        # if input is a node, get its name
+        name_is_node = isinstance(name, tree.__class__)
+        name_ = name.name if name_is_node else name
+
         # look up name in tips
-        node = tree._tip_cache.get(name, None)
+        node = tree._tip_cache.get(name_, None)
         if node is not None:
-            return node
+            if not name_is_node or node is name:
+                return node
 
         # look up name in non-tips
-        node = tree._non_tip_cache.get(name, [None])[0]
-        if node is not None:
-            return node
+        nodes = tree._non_tip_cache.get(name_, None)
+        if nodes is not None:
+            if name_is_node:
+                for node in nodes:
+                    if node is name:
+                        return node
+            else:
+                return nodes[0]
 
-        raise MissingNodeError(f"Node '{name}' is not found.")
+        raise MissingNodeError(f"Node '{name_}' is not found in the tree.")
 
     def find_all(self, name):
         r"""Find all nodes that match a given name.
@@ -5413,6 +5423,9 @@ class TreeNode(SkbioObject):
         The first call to ``find_all`` will cache a node lookup table in the tree on
         the assumption that additional calls to ``find_all`` will be made. See
         :meth:`details <has_caches>`.
+
+        This method searches within the entire tree where self is located, regardless
+        if self is the root node.
 
         Examples
         --------
@@ -5481,7 +5494,8 @@ class TreeNode(SkbioObject):
 
         Notes
         -----
-        This search method is based from the root of the tree.
+        This method searches within the subtree under the current node. But the IDs
+        are assigned from the root of the entire tree.
 
         This method does not cache ID associations. A full traversal of the
         tree is performed to find a node by an ID on every call.

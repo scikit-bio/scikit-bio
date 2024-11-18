@@ -42,6 +42,7 @@
 
 ### Bug fixes
 
+* Fixed a bug in `TreeNode.find` which returns the input node object even if it's not in the current tree ([#2153](https://github.com/scikit-bio/scikit-bio/pull/2153)).
 * Fixed a bug in `TreeNode.get_max_distance` which returns tip names instead of tip instances when there are single-child nodes in the tree ([#2144](https://github.com/scikit-bio/scikit-bio/pull/2144)).
 * Fixed an issue in `subsets` and `tip_tip_distances` of `TreeNode` which leaves remnant attributes at each node after execution ([#2144](https://github.com/scikit-bio/scikit-bio/pull/2144)).
 * Fixed a bug in `TreeNode.compare_rfd` which raises an error if taxa of the two trees are not subsets of each other ([#2144](https://github.com/scikit-bio/scikit-bio/pull/2144)).
