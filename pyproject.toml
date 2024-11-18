@@ -2,8 +2,19 @@
 requires = ["setuptools", "wheel", "numpy", "cython"]
 
 [tool.pytest.ini_options]
+addopts = [
+    "--pyargs",
+    "skbio",
+    "--doctest-modules",
+    "--doctest-glob",
+    "*.pyx",
+]
 filterwarnings = [
     "ignore::skbio.util.SkbioWarning",
+]
+doctest_optionflags = [
+    "NORMALIZE_WHITESPACE",
+    "IGNORE_EXCEPTION_DETAIL",
 ]
 
 [tool.check-manifest]

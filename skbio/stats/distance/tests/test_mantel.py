@@ -14,7 +14,7 @@ import pandas as pd
 
 import scipy
 from scipy.spatial.distance import squareform
-from scipy.stats import pearsonr, spearmanr
+from scipy.stats import pearsonr, spearmanr, ConstantInputWarning
 
 from skbio import DistanceMatrix
 from skbio.stats.distance import (DissimilarityMatrixError,
@@ -405,35 +405,30 @@ class MantelTests(MantelTestData):
         self.assert_mantel_almost_equal(obs, [0.283791, 0.003, 24])
 
     def test_no_variation_pearson(self):
+        exp = (np.nan, np.nan, 3)
         for alt in self.alternatives:
             # test one or both inputs having no variation in their
             # distances
-            obs = mantel(self.miny, self.no_variation, method='pearson',
-                         alternative=alt)
-            npt.assert_equal(obs, (np.nan, np.nan, 3))
-
-            obs = mantel(self.no_variation, self.miny, method='pearson',
-                         alternative=alt)
-            npt.assert_equal(obs, (np.nan, np.nan, 3))
-
-            obs = mantel(self.no_variation, self.no_variation,
-                         method='pearson', alternative=alt)
-            npt.assert_equal(obs, (np.nan, np.nan, 3))
+            for x, y in (
+                (self.miny, self.no_variation),
+                (self.no_variation, self.miny),
+                (self.no_variation, self.no_variation),
+            ):
+                with self.assertWarns(ConstantInputWarning):
+                    obs = mantel(x, y, method='pearson', alternative=alt)
+                npt.assert_equal(obs, exp)
 
     def test_no_variation_spearman(self):
         exp = (np.nan, np.nan, 3)
         for alt in self.alternatives:
-            obs = mantel(self.miny, self.no_variation, method='spearman',
-                         alternative=alt)
-            npt.assert_equal(obs, exp)
-
-            obs = mantel(self.no_variation, self.miny, method='spearman',
-                         alternative=alt)
-            npt.assert_equal(obs, exp)
-
-            obs = mantel(self.no_variation, self.no_variation,
-                         method='spearman', alternative=alt)
-            npt.assert_equal(obs, exp)
+            for x, y in (
+                (self.miny, self.no_variation),
+                (self.no_variation, self.miny),
+                (self.no_variation, self.no_variation),
+            ):
+                with self.assertWarns(ConstantInputWarning):
+                    obs = mantel(x, y, method='spearman', alternative=alt)
+                npt.assert_equal(obs, exp)
 
     def test_no_side_effects(self):
         minx = np.asarray(self.minx, dtype='float')

@@ -7,15 +7,14 @@
 # ----------------------------------------------------------------------------
 
 from warnings import warn, simplefilter
-from operator import or_, ne, gt, itemgetter
+from operator import ne, gt, itemgetter
 from copy import copy, deepcopy
 from itertools import chain, combinations
-from functools import reduce
 from collections import defaultdict, deque
 
 import numpy as np
 import pandas as pd
-from scipy.spatial.distance import correlation
+import scipy.spatial.distance as spdist
 
 from skbio._base import SkbioObject
 from skbio.stats.distance import DistanceMatrix
@@ -26,34 +25,10 @@ from skbio.tree._exception import (
     MissingNodeError,
     TreeError,
 )
-from skbio.util import get_rng, RepresentationWarning
+from skbio.util import get_rng
 from skbio.util._decorator import classonlymethod
 from skbio.util._warning import _warn_deprecated
 from skbio.io.registry import Read, Write
-
-
-def distance_from_r(m1, m2):
-    r"""Estimate distance as (1-r)/2: neg correl = max distance.
-
-    .. deprecated:: 0.6.3
-        This function will become a private member in version 0.7.0. It has never
-        been exposed in the documentation, and it has a very specific usage in this
-        module.
-
-    Parameters
-    ----------
-    m1 : DistanceMatrix
-        First distance matrix to compare.
-    m2 : DistanceMatrix
-        Second distance matrix to compare.
-
-    Returns
-    -------
-    float
-        The distance between m1 and m2.
-
-    """
-    return correlation(m1.data.flat, m2.data.flat) / 2
 
 
 # ----------------------------------------------------------------------------
@@ -470,12 +445,15 @@ class TreeNode(SkbioObject):
     def ancestors(self, include_self=False):
         r"""Return all ancestral nodes from self back to the root.
 
+        Parameters
+        ----------
+        include_self : bool, optional
+            Whether to include the initial node in the path (default: False).
+
         Returns
         -------
         list of TreeNode
-            The path, toward the root, from self.
-        include_self : bool, optional
-            Whether to include the initial node in the path (default: False).
+            The path from self toward the root.
 
         Examples
         --------
@@ -489,6 +467,7 @@ class TreeNode(SkbioObject):
                  |          /-d
                   \f-------|
                             \-e
+
         >>> tip = tree.find('a')
         >>> [node.name for node in tip.ancestors()]
         ['c', 'g']
@@ -620,36 +599,57 @@ class TreeNode(SkbioObject):
             prev = None
             while curr is not None:
                 # set prev as None if already visited
-                if hasattr(curr, "prev"):
-                    curr.prev = None
+                if hasattr(curr, "_prev"):
+                    curr._prev = None
                     break
-                curr.prev = prev
+                curr._prev = prev
                 visited_append(curr)
                 prev = curr
                 curr = curr.parent
 
         # walk down the tree until last node with prev is None
         curr = self
-        while (prev := curr.prev) is not None:
+        while (prev := curr._prev) is not None:
             curr = prev
 
         # clean up temporary attribute "prev"
         for node in visited:
-            delattr(node, "prev")
+            del node._prev
 
         return curr
 
     lca = lowest_common_ancestor  # for convenience
 
+    def _path(self, other):
+        anc1 = self.ancestors(include_self=True)
+        anc2 = other.ancestors(include_self=True)
+
+        # find lowest common ancestor of the two by iterating down from root
+        # and stopping at divergence
+        # pos is lca's index from root + 1
+        lca, pos = None, None
+        for i, (n1, n2) in enumerate(zip(reversed(anc1), reversed(anc2))):
+            if n1 is n2:
+                lca = n1
+            else:
+                pos = i
+                break
+        if lca is None:
+            raise TreeError("Could not find a path between self and other.")
+        if pos is None:
+            pos = i + 1
+
+        return lca, anc1[: len(anc1) - pos], anc2[: len(anc2) - pos]
+
     def path(self, other, include_ends=False):
-        r"""Return the list of nodes in the path from one node to another.
+        r"""Return the list of nodes in the path from self to another node.
 
         Parameters
         ----------
         other : TreeNode
             Final node of path.
         include_ends: bool, optional
-            Whether to include the initial and final nodes in the list.
+            Whether to include the initial (self) and final (other) nodes in the list.
             Default is False.
 
         Returns
@@ -657,10 +657,23 @@ class TreeNode(SkbioObject):
         list
             List of TreeNode objects.
 
+        See Also
+        --------
+        distance
+
         Examples
         --------
         >>> from skbio import TreeNode
         >>> tree = TreeNode.read(["((a,b)c,(d,e)f)root;"])
+        >>> print(tree.ascii_art())
+                            /-a
+                  /c-------|
+                 |          \-b
+        -root----|
+                 |          /-d
+                  \f-------|
+                            \-e
+
         >>> node_1, node_2 = tree.find('a'), tree.find('d')
         >>> path = node_1.path(node_2)
         >>> print(len(path))
@@ -674,31 +687,8 @@ class TreeNode(SkbioObject):
         a-c-root-f-d
 
         """
-        # create list of ancestors including nodes themselves
-        anc1, anc2 = (
-            [self] + self.ancestors(),
-            [other] + other.ancestors(),
-        )
-
-        # initialize lowest common ancestor variable
-        lca = None
-
-        # find lowest common ancestor
-        for i, (n1, n2) in enumerate(zip(reversed(anc1), reversed(anc2))):
-            if n1 is n2:
-                lca = n1
-                lca_i = i
-            else:
-                break
-
-        # check to see if nodes are on same tree
-        if lca is None:
-            raise TreeError("Could not find path between nodes.")
-
-        # create path list
-        path = (
-            anc1[: len(anc1) - lca_i - 1] + [lca] + anc2[: len(anc2) - lca_i - 1][::-1]
-        )
+        lca, self_path, other_path = self._path(other)
+        path = self_path + [lca] + other_path[::-1]
 
         # remove initial and final nodes if desired
         if include_ends is False:
@@ -1106,6 +1096,8 @@ class TreeNode(SkbioObject):
         Nodes are ordered by a postorder traversal of the tree. The order is
         consistent between calls.
 
+        If self is a tip, it won't be yieled unless `include_self` is True.
+
         Examples
         --------
         >>> from skbio import TreeNode
@@ -1127,9 +1119,9 @@ class TreeNode(SkbioObject):
         e
 
         """
-        for n in self.postorder(include_self=include_self):
-            if n.is_tip():
-                yield n
+        for node in self.postorder(include_self=include_self):
+            if not node.children:
+                yield node
 
     def non_tips(self, include_self=False):
         r"""Iterate over non-tip nodes descended from the current node.
@@ -1173,9 +1165,9 @@ class TreeNode(SkbioObject):
         f
 
         """
-        for n in self.postorder(include_self):
-            if not n.is_tip():
-                yield n
+        for node in self.postorder(include_self):
+            if node.children:
+                yield node
 
     # ------------------------------------------------
     # Tree manipulation
@@ -3053,67 +3045,516 @@ class TreeNode(SkbioObject):
         else:
             return len(list(self.traverse(include_self=True)))
 
-    def subset(self):
-        r"""Return set of tip names that descend from specified node.
+    def subset(self, include_self=False):
+        r"""Return a subset of taxa descending from self.
 
-        Get the set of `name` on tips that descend from this node.
+        A subset can be considered as taxa (tip names) within a clade defined by the
+        current node (branch), selected from all taxa within the tree.
+
+        Parameters
+        ----------
+        include_self : bool, optional
+            Whether to include the current node if it is a tip (default: False).
+
+            .. versionadded:: 0.6.3
 
         Returns
         -------
-        frozenset
-            The set of names at the tips of the clade that descends from self
+        frozenset of str
+            The set of names at the tips of the clade that descends from self.
 
         See Also
         --------
+        tips
         subsets
-        compare_subsets
+        bipart
+
+        Notes
+        -----
+        This is a convenient method to return all taxa (tip names) rather than the tip
+        nodes themselves. Internal node names will not be included.
+
+        The returned value (a frozenset) is unordered and hashable, therefore can be
+        used to define clades, lineages and taxon groups for efficient lookup. For
+        example, one can check whether a taxon exists in the current tree or clade.
+
+        By default, if this method is applied to a tip, an empty set will be returned,
+        because a tip does not have descendants. If `include_self` is True, a single-
+        element set containing the name of the tip will be returned. This behavior can
+        be considered as returning taxa descending from the branch connecting self
+        and its parent.
+
+        Applying this method to the root node of a tree will return all taxa in the
+        tree.
 
         Examples
         --------
         >>> from skbio import TreeNode
         >>> tree = TreeNode.read(["((a,(b,c)d)e,(f,g)h)i;"])
+        >>> print(tree.ascii_art())
+                            /-a
+                  /e-------|
+                 |         |          /-b
+                 |          \d-------|
+        -i-------|                    \-c
+                 |
+                 |          /-f
+                  \h-------|
+                            \-g
+
         >>> sorted(tree.subset())
         ['a', 'b', 'c', 'f', 'g']
 
+        >>> subset = tree.find('e').subset()
+        >>> sorted(subset)
+        ['a', 'b', 'c']
+
+        >>> 'a' in subset
+        True
+
+        >>> 'f' in subset
+        False
+
         """
-        return frozenset({i.name for i in self.tips()})
+        return frozenset({i.name for i in self.tips(include_self=include_self)})
 
-    def subsets(self):
-        r"""Return all sets of tip names that come from self and its descendants.
+    def subsets(
+        self,
+        within=None,
+        include_full=False,
+        include_single=False,
+        map_to_length=False,
+    ):
+        r"""Return all subsets of taxa defined by nodes descending from self.
 
-        Compute all subsets of tip names over `self`, or, represent a tree as a
-        set of nested sets.
+        Parameters
+        ----------
+        within : iterable of str, optional
+            A custom set of taxa to refine the result. Only taxa within it will be
+            considered. If None (default), all taxa in the tree will be considered.
+
+            .. versionadded:: 0.6.3
+
+        include_full : bool, optional
+            Whether to include a set of all taxa in the result. Default is False, as
+            such a set provides no topological information.
+
+            .. versionadded:: 0.6.3
+
+        include_single : bool, optional
+            Whether to include subsets with only one taxon in the result. Default is
+            False, as such sets provide no topological information.
+
+            .. versionadded:: 0.6.3
+
+        map_to_length : bool, optional
+            If True, return a mapping of subsets to their branch lengths. Missing
+            branch lengths will be replaced with 0. Default is False.
+
+            .. versionadded:: 0.6.3
 
         Returns
         -------
-        frozenset
-            A frozenset of frozensets of str
+        frozenset of frozenset of str, or
+            All subsets of taxa defined by nodes descending from self. Returned if
+            `map_to_length` is False.
+        dict of {frozenset of str: float}
+            Mapping of all subsets of taxa to their branch lengths. Returned if
+            `map_to_length` is True.
 
         See Also
         --------
         subset
         compare_subsets
+        biparts
+
+        Notes
+        -----
+        The returned value represents the tree as a set of nested sets, each of which
+        representing a clade in the tree. It is useful for assessing topological
+        patterns of a tree.
+
+        The returned value itself and each of its components (frozensets) are unordered
+        and hashable, making it efficient for lookup and comparison. For example, one
+        can check whether a group of taxa form a clade in the tree, regardless of its
+        internal structure.
+
+        This method can be applied to both rooted and unrooted trees. However, the
+        underlying assumption is that the direction of descendance is from the current
+        node to the tips below. That is, the root of the tree, even if not explicitly
+        defined, should be at or above the current node. This should be considered when
+        applying this method to an unrooted tree. If such an assumption is not present,
+        one should consider using :meth:`biparts` instead.
+
+        This method operates on the subtree below the current node.
 
         Examples
         --------
         >>> from skbio import TreeNode
-        >>> tree = TreeNode.read(["(((a,b)c,(d,e)f)h)root;"])
+        >>> tree = TreeNode.read(["((a,(b,c)d)e,(f,g)h)i;"])
+        >>> print(tree.ascii_art())
+                            /-a
+                  /e-------|
+                 |         |          /-b
+                 |          \d-------|
+        -i-------|                    \-c
+                 |
+                 |          /-f
+                  \h-------|
+                            \-g
+
         >>> subsets = tree.subsets()
-        >>> len(subsets)
-        3
+        >>> for s in sorted(subsets, key=sorted):
+        ...     print(sorted(s))
+        ['a', 'b', 'c']
+        ['b', 'c']
+        ['f', 'g']
+
+        >>> {'a', 'b', 'c'} in subsets
+        True
+
+        >>> {'a', 'b'} in subsets
+        False
 
         """
-        sets = []
-        sets_append = sets.append
-        for i in self.postorder(include_self=False):
-            if not i.children:
-                i.__leaf_set = frozenset([i.name])
+        if within and not isinstance(within, (set, frozenset, dict)):
+            within = frozenset(within)
+
+        # initiate result
+        subsets = []
+        subsets_append = subsets.append
+        if map_to_length:
+            lengths = []
+            lengths_append = lengths.append
+
+        # If the current subset has been encountered during postorder traversal, it
+        # must be the immediately previous subset. This happens when a single-child
+        # node is encountered after refining taxa to the "within" set.
+        last = None
+
+        for node in self.postorder(include_self=True):
+            # tip: create a one-taxon set
+            if not node.children:
+                if not within or node.name in within:
+                    subset = frozenset([node.name])
+                else:
+                    subset = frozenset()
+
+            # internal node: merge sets of children
             else:
-                leaf_set = reduce(or_, [c.__leaf_set for c in i.children])
-                if len(leaf_set) > 1:
-                    sets_append(leaf_set)
-                i.__leaf_set = leaf_set
-        return frozenset(sets)
+                subset = frozenset()
+                for child in node.children:
+                    subset |= child._subset
+                    del child._subset
+
+            # add to result
+            if subset and (include_single or len(subset) > 1):
+                if subset != last:
+                    subsets_append(last := subset)
+                    if map_to_length:
+                        lengths_append(node.length or 0.0)
+                elif map_to_length:
+                    lengths[-1] += node.length or 0.0
+
+            node._subset = subset
+
+        # final clean up
+        del self._subset
+
+        # remove the full set
+        if not include_full:
+            subsets = subsets[:-1]
+            if map_to_length:
+                lengths = lengths[:-1]
+
+        if map_to_length:
+            return dict(zip(subsets, lengths))
+        else:
+            return frozenset(subsets)
+
+    def bipart(self):
+        r"""Return a bipartition of the tree at the current branch.
+
+        .. versionadded:: 0.6.3
+
+        A bipartition, partition or split of a tree is the division of all taxa (tip
+        names) into two complementary subsets, separated at a given branch. In this
+        context, it is the branch connecting self and its parent. One subset consists
+        of all taxa descending from self and the other consists of all remaining taxa.
+        The smaller subset of the two is returned.
+
+        Returns
+        -------
+        frozenset of str
+            The set of names at the tips on the smaller side of the current branch.
+
+        See Also
+        --------
+        subset
+        biparts
+
+        Notes
+        -----
+        A bipartition describes the topological placement of a branch regardless of
+        other branches and the root of the tree.
+
+        The returned value is a set of tip names on the smaller side of the branch, as
+        determined by the number of tips. If a tie is observed, the tip names on both
+        sides are sorted lexicographically and the first set is returned.
+
+        The returned value (a frozenset) is unordered and hashable, making it efficient
+        for lookup and comparison. For example, one can check whether two branches in
+        two unrooted trees with the same taxa agree with each other.
+
+        Rerooting a tree will not change the bipartition of a branch. However, one
+        should be cautious because this method applies to a node, and rerooting may
+        change the branch above the current node.
+
+        Applying this method to a root node will return an empty set. Applying this
+        method to a tip will return a single-element set containing the tip name. These
+        two situations produce outputs independent of the topology of the tree.
+
+        Examples
+        --------
+        >>> from skbio import TreeNode
+        >>> tree = TreeNode.read(["(((a,(b,c)X)Y,d)Z,(e,f),g);"])
+        >>> print(tree.ascii_art())
+                                      /-a
+                            /Y-------|
+                           |         |          /-b
+                  /Z-------|          \X-------|
+                 |         |                    \-c
+                 |         |
+                 |          \-d
+        ---------|
+                 |          /-e
+                 |---------|
+                 |          \-f
+                 |
+                  \-g
+
+        Clade has less than half taxa, return them.
+
+        >>> sorted(tree.find('X').bipart())
+        ['b', 'c']
+
+        Clade has more than half taxa, return remaining taxa.
+
+        >>> sorted(tree.find('Z').bipart())
+        ['e', 'f', 'g']
+
+        Clade has exactly half taxa, return the lexicographically smaller side.
+
+        >>> sorted(tree.find('Y').bipart())
+        ['a', 'b', 'c']
+
+        A second tree with the same topology but different root position.
+
+        >>> tree2 = TreeNode.read(["((c,b)X2,a,(((f,e),g)Y2,d));"])
+        >>> print(tree2.ascii_art())
+                            /-c
+                  /X2------|
+                 |          \-b
+                 |
+                 |--a
+        ---------|
+                 |                              /-f
+                 |                    /--------|
+                 |          /Y2------|          \-e
+                 |         |         |
+                  \--------|          \-g
+                           |
+                            \-d
+
+        Although the tree has been re-positioned, the corresponding branches have the
+        same bipartitions, whereas non-corresponding branches don't.
+
+        >>> tree.find('X').bipart() == tree2.find('X2').bipart()
+        True
+
+        >>> tree.find('Y').bipart() == tree2.find('Y2').bipart()
+        False
+
+        """
+        bipart = self.subset(include_self=True)
+        full = self.root().subset(include_self=True)
+        if (size := len(bipart)) > (th := len(full) * 0.5):
+            bipart = full - bipart
+        elif size == th:
+            # sort the elements of each part by lexicographic order, then order the two
+            # parts and pick the smaller part
+            bipart, _ = sorted([bipart, full - bipart], key=sorted)
+        return bipart
+
+    def biparts(self, within=None, include_single=False, map_to_length=False):
+        r"""Return all bipartitions within the tree under self.
+
+        .. versionadded:: 0.6.3
+
+        Parameters
+        ----------
+        within : iterable of str, optional
+            A custom set of taxa to refine the result. Only taxa within it will be
+            considered. If None (default), all taxa in the tree will be considered.
+        include_single : bool, optional
+            Whether to include bipartitions with only one taxon at either side.
+            Default is False, as such bipartitions provide no topological
+            information.
+        map_to_length : bool, optional
+            If True, return a mapping of subsets to their branch lengths. Missing
+            branch lengths will be replaced with 0. Default is False.
+
+        Returns
+        -------
+        frozenset of frozenset of str, or
+            All sets of names at the tips on the smaller side of each branch. Returned
+            if `map_to_length` is False.
+        dict of {frozenset of str: float}
+            Mapping of All sets of smaller-side tip names to branch lengths. Returned
+            if `map_to_length` is True.
+
+        See Also
+        --------
+        bipart
+        subsets
+
+        Notes
+        -----
+        The returned value represents the tree as a set of nested sets, each of which
+        representing the position of a branch in the tree. It is useful for assessing
+        topological patterns of a tree.
+
+        The returned value itself and each of its components (frozensets) are unordered
+        and hashable, making it efficient for lookup and comparison. For example, one
+        can check whether the topologies of two trees are consistent, regardless of
+        their root positions.
+
+        This method can be applied to both rooted and unrooted trees. However, a rooted
+        tree implies the direction of descendance, which may violate the purpose of
+        bipartitioning a tree on arbitrary branches. If this is a concern, one should
+        consider using :meth:`subsets` instead.
+
+        This method operates on the subtree below the current node.
+
+        Examples
+        --------
+        >>> from skbio import TreeNode
+        >>> tree = TreeNode.read(["((a,(b,c)),(d,e),f);"])
+        >>> print(tree.ascii_art())
+                            /-a
+                  /--------|
+                 |         |          /-b
+                 |          \--------|
+                 |                    \-c
+        ---------|
+                 |          /-d
+                 |---------|
+                 |          \-e
+                 |
+                  \-f
+
+        Return all bipartitions of an unrooted tree.
+
+        >>> biparts = tree.biparts()
+        >>> for s in sorted(biparts, key=sorted):
+        ...     print(sorted(s))
+        ['a', 'b', 'c']
+        ['b', 'c']
+        ['d', 'e']
+
+        A second tree with the same topology but different root position.
+
+        >>> tree2 = TreeNode.read(["(a,((b,c),((d,e),f)));"])
+        >>> print(tree2.ascii_art())
+                  /-a
+                 |
+        ---------|                    /-b
+                 |          /--------|
+                 |         |          \-c
+                  \--------|
+                           |                    /-d
+                           |          /--------|
+                            \--------|          \-e
+                                     |
+                                      \-f
+
+        Although the tree has been re-positioned, the bipartitions remain the same.
+
+        >>> biparts == tree2.biparts()
+        True
+
+        """
+        # identify full set (universe)
+        full = self.subset()
+        if within:
+            if not isinstance(within, (set, frozenset)):
+                within = frozenset(within)
+            full &= within
+        th = len(full) * 0.5
+
+        # initiate result
+        if map_to_length:
+            biparts = {}
+            biparts_get = biparts.get
+        else:
+            biparts = []
+            biparts_append = biparts.append
+
+        for node in self.postorder(include_self=False):
+            # tip: create a one-taxon set
+            if not node.children:
+                if not within or node.name in full:
+                    bipart = frozenset([node.name])
+                else:
+                    bipart = frozenset()
+                flip = False
+
+            # internal node: merge sets of children
+            # `_bipart` of a node is either the taxa below it, or, if the former has
+            # reached half of the full set, it "flips" to the other half that is above
+            # the node, and `_flip` will be set to True.
+            # Taxa below should be united, whereas taxa above should be intersected.
+            # If at least one child is already flipped, the current node should also be
+            # flipped. Otherwise, the set will be compared to the half to determine the
+            # flipping status.
+            else:
+                aboves, belows = [], []
+                for child in node.children:
+                    if child._flip:
+                        aboves.append(child._bipart)
+                    else:
+                        belows.append(child._bipart)
+                    del child._bipart
+                    del child._flip
+
+                if aboves:
+                    bipart = frozenset.intersection(*aboves).difference(*belows)
+                    flip = True
+                else:
+                    bipart = frozenset().union(*belows)
+                    flip = False
+                    if (size := len(bipart)) >= th:
+                        other = full - bipart
+                        if size > th or sorted(bipart) > sorted(other):
+                            bipart = other
+                            flip = True
+
+            # add to result
+            if bipart and (include_single or len(bipart) > 1):
+                if map_to_length:
+                    biparts[bipart] = biparts_get(bipart, 0.0) + (node.length or 0.0)
+                else:
+                    biparts_append(bipart)
+
+            node._bipart = bipart
+            node._flip = flip
+
+        # final clean up
+        for child in self.children:
+            del child._bipart
+            del child._flip
+
+        return biparts if map_to_length else frozenset(biparts)
 
     def _extract_support(self):
         """Extract the support value from a node label, if available.
@@ -3122,9 +3563,9 @@ class TreeNode(SkbioObject):
         -------
         tuple of
             int, float or None
-                The support value extracted from the node label
+                The support value extracted from the node label.
             str or None
-                The node label with the support value stripped
+                The node label with the support value stripped.
 
         """
         support, label = None, None
@@ -3151,7 +3592,7 @@ class TreeNode(SkbioObject):
         Returns
         -------
         str
-            Generated node label
+            Generated node label.
 
         """
         lblst = []
@@ -3415,16 +3856,25 @@ class TreeNode(SkbioObject):
                 if n.length is not None
             )
 
-    def distance(self, other):
-        """Calculate the distance between self and another node.
-
-        This method can be used to compute the distances between two tips,
-        however, it is not optimized for computing pairwise tip distances.
+    def distance(self, other, use_length=True, missing_as_zero=False):
+        r"""Calculate the distance between self and another node.
 
         Parameters
         ----------
         other : TreeNode
             The node to compute a distance to.
+        use_length : bool, optional
+            Whether to return the sum of branch lengths (True, default) or the number
+            of branches (False) connecting self and other.
+
+            .. versionadded:: 0.6.3
+
+        missing_as_zero : bool, optional
+            When a node without an associated branch length is encountered, raise an
+            error (False, default) or use 0 (True). Applicable when ``use_length`` is
+            True.
+
+            .. versionadded:: 0.6.3
 
         Returns
         -------
@@ -3434,14 +3884,32 @@ class TreeNode(SkbioObject):
         Raises
         ------
         NoLengthError
-            If a node without branch length is encountered.
+            If nodes without branch length are encountered.
 
         See Also
         --------
+        path
         tip_tip_distances
         accumulate_to_ancestor
         compare_tip_distances
         get_max_distance
+
+        Notes
+        -----
+        The distance between two nodes is the length of the path (branches) connecting
+        them. It is also known as the patristic distance [1]_.
+
+        When `use_length=False`, it is the number of branches in the path.
+
+        This method can be used to compute the distance between two given nodes.
+        However, it is not optimized for computing all pairwise tip distances. Use
+        :meth:`tip_tip_distances` instead for that purpose.
+
+        References
+        ----------
+        .. [1] Fourment, M., & Gibbs, M. J. (2006). PATRISTIC: a program for
+           calculating patristic distances and graphically comparing the components of
+           genetic change. BMC evolutionary biology, 6, 1-5.
 
         Examples
         --------
@@ -3451,84 +3919,52 @@ class TreeNode(SkbioObject):
         >>> tip_d = tree.find('d')
         >>> tip_a.distance(tip_d)
         14.0
+        >>> tip_a.distance(tip_d, use_length=False)
+        4.0
 
         """
-        if self is other:
-            return 0.0
+        _, self_path, other_path = self._path(other)
+        if not use_length:
+            return float(len(self_path) + len(other_path))
+        if missing_as_zero:
+            return sum(x.length or 0.0 for x in chain(self_path, other_path))
+        try:
+            return sum(x.length for x in chain(self_path, other_path))
+        except TypeError:
+            raise NoLengthError("Nodes without branch length are encountered.")
 
-        self_ancestors = [self] + list(self.ancestors())
-        other_ancestors = [other] + list(other.ancestors())
+    def get_max_distance(self, use_length=True):
+        r"""Return the maximum path distance between any pair of tips.
 
-        if self in other_ancestors:
-            return other.accumulate_to_ancestor(self)
-        elif other in self_ancestors:
-            return self.accumulate_to_ancestor(other)
-        else:
-            root = self.root()
-            lca = root.lowest_common_ancestor([self, other])
-            accum = self.accumulate_to_ancestor(lca)
-            accum += other.accumulate_to_ancestor(lca)
+        This is also referred to as the diameter of a tree.
 
-            return accum
+        Parameters
+        ----------
+        use_length : bool, optional
+            Whether to return the sum of branch lengths (True, default) or the number
+            of branches (False) connecting each pair of tips.
 
-    def _set_max_distance(self):
-        """Propagate tip distance information up the tree.
-
-        This method was originally implemented by Julia Goodrich with the
-        intent of being able to determine max tip to tip distances between
-        nodes on large trees efficiently. The code has been modified to track
-        the specific tips the distance is between
-        """
-        maxkey = itemgetter(0)
-
-        for n in self.postorder():
-            if n.is_tip():
-                n.MaxDistTips = ((0.0, n), (0.0, n))
-            else:
-                if len(n.children) == 1:
-                    raise TreeError("No support for single descedent nodes")
-                else:
-                    tip_info = [(max(c.MaxDistTips, key=maxkey), c) for c in n.children]
-
-                    dists = [i[0][0] for i in tip_info]
-                    best_idx = np.argsort(dists)[-2:]
-                    (tip_a_d, tip_a), child_a = tip_info[best_idx[0]]
-                    (tip_b_d, tip_b), child_b = tip_info[best_idx[1]]
-                    tip_a_d += child_a.length or 0.0
-                    tip_b_d += child_b.length or 0.0
-                n.MaxDistTips = ((tip_a_d, tip_a), (tip_b_d, tip_b))
-
-    def _get_max_distance_singledesc(self):
-        """Return the max distance between any pair of tips.
-
-        Also returns the tip names  that it is between as a tuple
-        """
-        distmtx = self.tip_tip_distances()
-        idx_max = divmod(distmtx.data.argmax(), distmtx.shape[1])
-        max_pair = (distmtx.ids[idx_max[0]], distmtx.ids[idx_max[1]])
-        return distmtx[idx_max], max_pair
-
-    def get_max_distance(self):
-        """Return the max tip tip distance between any pair of tips.
+            .. versionadded:: 0.6.3
 
         Returns
         -------
         float
-            The distance between the two most distant tips in the tree
-        tuple of TreeNode
-            The two most distant tips in the tree
-
-        Raises
-        ------
-        NoLengthError
-            A NoLengthError will be thrown if a node without length is
-            encountered
+            The distance between the two most distant tips in the tree.
+        tuple of (TreeNode, TreeNode)
+            The two most distant tips in the tree.
 
         See Also
         --------
         distance
         tip_tip_distances
         compare_tip_distances
+
+        Notes
+        -----
+        If a node does not have an associated branch length, 0 will be used.
+
+        When a tie is observed among more than one pair of tips, only one pair will be
+        returned. The choice is stable. This often happens when `use_length=False`.
 
         Examples
         --------
@@ -3538,54 +3974,87 @@ class TreeNode(SkbioObject):
         >>> dist
         16.0
         >>> [n.name for n in tips]
-        ['b', 'e']
+        ['e', 'b']
 
         """
-        # _set_max_distance will throw a TreeError if a node with a single
-        # child is encountered
-        try:
-            self._set_max_distance()
-        except TreeError:  #
-            return self._get_max_distance_singledesc()
+        # The code performs a post-order traversal and appends two pieces of
+        # information to each node:
+        #   a: The maximum distance from the node to any descending tip.
+        #   b: The maximum distance between any two descending tips.
+        # The information is updated at each internal node:
+        #   a becomes the maximum of any child's (a + length).
+        #   b becomes the larger of the maximum of any b and the sum of the two
+        # largest (a + length). The latter represents the new plausible maximum
+        # distance that crosses the node.
+        maxkey = itemgetter(0)
+        for node in self.postorder():
+            # initialize maximum at tip: (up_dist, up_tip, in_dist, in_tip1, in_tip2)
+            if not node.children:
+                node._maxdist = (0, node, 0, None, None)
 
-        longest = 0.0
-        tips = [None, None]
-        for n in self.non_tips(include_self=True):
-            tip_a, tip_b = n.MaxDistTips
-            dist = tip_a[0] + tip_b[0]
+            # internal node: update the maximum
+            elif len(children := node.children) > 1:
+                ups, ins = [], []
+                for child in children:
+                    up_dist, up_tip, in_dist, in_tip1, in_tip2 = child._maxdist
+                    del child._maxdist
+                    ups.append(
+                        (up_dist + (child.length or 0.0 if use_length else 1), up_tip)
+                    )
+                    ins.append((in_dist, in_tip1, in_tip2))
 
-            if dist > longest:
-                longest = dist
-                tips = [tip_a[1], tip_b[1]]
+                # compare the previous maximum with the distance between the two
+                # longest descendants from any two child clades
+                ups.sort(key=maxkey, reverse=True)
+                (up_dist, up_tip), (up_dist2, up_tip2) = ups[:2]
+                in_dist, in_tip1, in_tip2 = max(ins, key=maxkey)
+                if (x_dist := up_dist + up_dist2) > in_dist:
+                    node._maxdist = (up_dist, up_tip, x_dist, up_tip, up_tip2)
+                else:
+                    node._maxdist = (up_dist, up_tip, in_dist, in_tip1, in_tip2)
 
-        # The MaxDistTips attribute causes problems during deep copy because it
-        # contains references to other nodes. This patch removes the attribute.
-        for n in self.traverse():
-            del n.MaxDistTips
+            # internal node with only one child: inherit the maximum
+            else:
+                (child,) = children
+                up_dist, up_tip, in_dist, in_tip1, in_tip2 = child._maxdist
+                del child._maxdist
+                up_dist += child.length or 0.0 if use_length else 1
+                node._maxdist = (up_dist, up_tip, in_dist, in_tip1, in_tip2)
 
-        return longest, tips
+        max_dist, max_tip1, max_tip2 = self._maxdist[2:]
+        del self._maxdist
+        if not use_length:
+            max_dist = float(max_dist)
+        return max_dist, (max_tip1, max_tip2)
 
-    def tip_tip_distances(self, endpoints=None):
-        """Return distance matrix between pairs of tips, and a tip order.
-
-        By default, all pairwise distances are calculated in the tree. If
-        `endpoints` are specified, then only the distances between those tips
-        are computed.
+    def tip_tip_distances(self, endpoints=None, use_length=True):
+        r"""Return a distance matrix between pairs of tips.
 
         Parameters
         ----------
-        endpoints : list of TreeNode or str, or None
-            A list of TreeNode objects or names of TreeNode objects
+        endpoints : list of TreeNode or str, optional
+            Tips or their names (i.e., taxa) to be included in the calculation. The
+            returned distance matrix will use this order. If not specified, all tips
+            will be included.
+        use_length : bool, optional
+            Whether to return the sum of branch lengths (True, default) or the number
+            of branches (False) connecting each pair of tips.
+
+            .. versionadded:: 0.6.3
 
         Returns
         -------
         DistanceMatrix
-            The distance matrix
+            The distance matrix.
 
         Raises
         ------
+        MissingNodeError
+            If any of the specified ``endpoints`` are not found in the tree.
+        DuplicateNodeError
+            If the specified ``endpoints`` have duplicates.
         ValueError
-            If any of the specified `endpoints` are not tips
+            If any of the specified ``endpoints`` are not tips.
 
         See Also
         --------
@@ -3594,13 +4063,28 @@ class TreeNode(SkbioObject):
 
         Notes
         -----
-        If a node does not have an associated length, 0.0 will be used and a
-        ``RepresentationWarning`` will be raised.
+        This method calculates the sum of branch lengths connecting each pair of tips.
+        It is also known as the patristic distance [1]_. If a node does not have an
+        associated branch length, 0 will be used.
+
+        If ``use_length`` is False, the method instead calculates the number of
+        branches connecting each pair of tips.
+
+        This method operates on the subtree below the current node.
+
+        References
+        ----------
+        .. [1] Fourment, M., & Gibbs, M. J. (2006). PATRISTIC: a program for
+           calculating patristic distances and graphically comparing the components of
+           genetic change. BMC evolutionary biology, 6, 1-5.
 
         Examples
         --------
         >>> from skbio import TreeNode
         >>> tree = TreeNode.read(["((a:1,b:2)c:3,(d:4,e:5)f:6)root;"])
+
+        Calculate path length distances (patristic distances).
+
         >>> mat = tree.tip_tip_distances()
         >>> print(mat)
         4x4 distance matrix
@@ -3612,163 +4096,253 @@ class TreeNode(SkbioObject):
          [ 14.  15.   0.   9.]
          [ 15.  16.   9.   0.]]
 
+        Calculate path distances (branch counts).
+
+        >>> mat = tree.tip_tip_distances(use_length=False)
+        >>> print(mat)
+        4x4 distance matrix
+        IDs:
+        'a', 'b', 'd', 'e'
+        Data:
+        [[ 0.  2.  4.  4.]
+         [ 2.  0.  4.  4.]
+         [ 4.  4.  0.  2.]
+         [ 4.  4.  2.  0.]]
+
         """
-        all_tips = list(self.tips())
-        if endpoints is None:
-            tip_order = all_tips
+        taxa = []
+        taxa_append = taxa.append
+
+        # Include all tips.
+        # `tips()` performs a postorder traversal, which guarantees the continuity
+        # of tip indices within each node. A `_range` attribute is assigned to each
+        # node, representing the range of tip indices.
+        if not endpoints:
+            for i, tip in enumerate(self.tips()):
+                tip._range = (i, i + 1)
+                taxa_append(tip.name)
+            num_tips = len(taxa)
+
+            # A tree could have duplicate taxa so this check is desired.
+            if len(set(taxa)) < num_tips:
+                raise DuplicateNodeError(f"Tree contains duplicate tip names.")
+
+        # Include only selected tips in order.
+        # Only selected tips are indexed, but the continuity of tip indices (see above)
+        # is still ensured.
         else:
-            tip_order = [self.find(n) for n in endpoints]
-            for n in tip_order:
-                if not n.is_tip():
-                    raise ValueError("Node with name '%s' is not a tip." % n.name)
+            idxmap = {}
+            for i, tip in enumerate(endpoints):
+                # The `find` call will raise if there are duplicate taxa in the tree.
+                tip = self.find(tip)
+                if tip.children:
+                    raise ValueError(f"Node with name '{tip.name}' is not a tip.")
+                taxa_append(name := tip.name)
+                if name in idxmap:
+                    raise DuplicateNodeError(f"Duplicate tip name '{name}' found.")
+                idxmap[name] = i
+            num_tips = len(taxa)
 
-        # linearize all tips in postorder
-        # .__start, .__stop compose the slice in tip_order.
-        for i, node in enumerate(all_tips):
-            node.__start, node.__stop = i, i + 1
+            # Create an index array to store the order of indices of original tips.
+            order = np.empty(num_tips, dtype=int)
+            i = 0
+            for tip in self.tips():
+                if (name := tip.name) in idxmap:
+                    tip._range = (i, i + 1)
+                    order[idxmap[name]] = i
+                    i += 1
 
-        # the result map provides index in the result matrix
-        result_map = {n.__start: i for i, n in enumerate(tip_order)}
-        num_all_tips = len(all_tips)  # total number of tips
-        num_tips = len(tip_order)  # total number of tips in result
-        result = np.zeros((num_tips, num_tips), float)  # tip by tip matrix
-        distances = np.zeros((num_all_tips), float)  # dist from tip to tip
+        # Initiate the resulting distance matrix.
+        result = np.zeros((num_tips, num_tips))
 
-        def update_result():
-            # set tip_tip distance between tips of different child
-            for child1, child2 in combinations(node.children, 2):
-                for tip1 in range(child1.__start, child1.__stop):
-                    if tip1 not in result_map:
-                        continue
-                    t1idx = result_map[tip1]
-                    for tip2 in range(child2.__start, child2.__stop):
-                        if tip2 not in result_map:
-                            continue
-                        t2idx = result_map[tip2]
-                        result[t1idx, t2idx] = distances[tip1] + distances[tip2]
+        # An intermediate vector storing the accumulative distance from each tip to
+        # the current node.
+        depths = np.zeros(num_tips)
 
+        # Traverse internal nodes.
+        # This method involves two postorder traversals. Theoretically, one can perform
+        # only one traversal, and store tip and internal node references into two lists
+        # for use. However, this method isn't more efficient according to benchmarks.
         for node in self.postorder():
             if not node.children:
                 continue
-            # subtree with solved child wedges
-            # can possibly use np.zeros
-            starts, stops = [], []  # to calc ._start and ._stop for curr node
+
+            # Record tip ranges of each child clade, and increment the tip depths.
+            ranges = []
             for child in node.children:
-                length = child.length
-                if length is None:
-                    warn(
-                        "`TreeNode.tip_tip_distances`: Node with name %r does "
-                        "not have an associated length, so a length of 0.0 "
-                        "will be used." % child.name,
-                        RepresentationWarning,
-                    )
-                    length = 0.0
-                distances[child.__start : child.__stop] += length
+                if not hasattr(child, "_range"):
+                    continue
+                ranges.append(range_ := slice(*child._range))
+                depths[range_] += (child.length or 0.0) if use_length else 1
+                del child._range
 
-                starts.append(child.__start)
-                stops.append(child.__stop)
+            # Calculate tip-to-tip distances between each pair of child clades, and
+            # save the results to both upper and lower triangles of the resulting
+            # distance matrix.
+            # This is significantly faster than saving to only one triangle and doing
+            # doing `result += result.T` after the iteration.
+            for range1, range2 in combinations(ranges, 2):
+                dists = depths[range1][:, np.newaxis] + depths[range2]
+                result[range1, range2] = dists
+                result[range2, range1] = dists.T
 
-            node.__start, node.__stop = min(starts), max(stops)
+            # Due to the continuity of tip indices (see above), it is guaranteed that
+            # the first child is the smallest and the last child is the largest.
+            if ranges:
+                node._range = (ranges[0].start, ranges[-1].stop)
 
-            if len(node.children) > 1:
-                update_result()
+        if hasattr(self, "_range"):
+            del self._range
 
-        return DistanceMatrix(result + result.T, [n.name for n in tip_order])
+        # Reorder the distance matrix to reflect the given order of endpoints.
+        if endpoints:
+            result = result[order][:, order]
 
-    def compare_rfd(self, other, proportion=False):
-        """Calculate the Robinson and Foulds symmetric difference.
+        # Skip validation as all items to validate are guaranteed.
+        return DistanceMatrix(result, taxa, validate=False)
 
-        Parameters
-        ----------
-        other : TreeNode
-            A tree to compare against
-        proportion : bool
-            Return a proportional difference
+    def _compare_topology(
+        self,
+        other,
+        method="subsets",
+        shared_only=True,
+        proportion=False,
+        symmetric=True,
+        include_single=False,
+        weighted=False,
+        metric="euclidean",
+    ):
+        r"""Calculate the topological difference between self and other.
 
-        Returns
-        -------
-        float
-            The distance between the trees
-
-        Notes
-        -----
-        Implementation based off of code by Julia Goodrich. The original
-        description of the algorithm can be found in [1]_.
-
-        Raises
-        ------
-        ValueError
-            If the tip names between `self` and `other` are equal.
-
-        See Also
-        --------
-        compare_subsets
-        compare_tip_distances
-
-        References
-        ----------
-        .. [1] Comparison of phylogenetic trees. Robinson and Foulds.
-           Mathematical Biosciences. 1981. 53:131-141
-
-        Examples
-        --------
-        >>> from skbio import TreeNode
-        >>> tree1 = TreeNode.read(["((a,b),(c,d));"])
-        >>> tree2 = TreeNode.read(["(((a,b),c),d);"])
-        >>> tree1.compare_rfd(tree2)
-        2.0
-
-        """
-        t1names = {n.name for n in self.tips()}
-        t2names = {n.name for n in other.tips()}
-
-        if t1names != t2names:
-            if t1names < t2names:
-                tree1 = self
-                tree2 = other.shear(t1names)
-            else:
-                tree1 = self.shear(t2names)
-                tree2 = other
-        else:
-            tree1 = self
-            tree2 = other
-
-        tree1_sets = tree1.subsets()
-        tree2_sets = tree2.subsets()
-
-        not_in_both = tree1_sets.symmetric_difference(tree2_sets)
-
-        dist = float(len(not_in_both))
-
-        if proportion:
-            total_subsets = len(tree1_sets) + len(tree2_sets)
-            dist /= total_subsets
-
-        return dist
-
-    def compare_subsets(self, other, exclude_absent_taxa=False):
-        """Return fraction of overlapping subsets where self and other differ.
-
-        Names present in only one of the two trees will count as mismatches,
-        if you don't want this behavior, strip out the non-matching tips first.
+        This function calculates the Robinson-Foulds (RF) distance or its derivates.
 
         Parameters
         ----------
         other : TreeNode
-            The tree to compare
-        exclude_absent_taxa : bool
-            Strip out names that don't occur in both trees
+            The other tree to compare with.
+        method : str, optional
+            Subsets or bipartitions.
+        shared_only : bool, optional
+            Refine to shared taxa.
+        proportion : bool, optional
+            Normalize to fraction.
+        symmetric : bool, optional
+            Symmetric difference.
+        include_single : bool, optional
+            Include singletons.
+        weighted : bool, optional
+            Weight by branch length.
+        metric : str or callable, optional
+            Pairwise distance metric.
 
         Returns
         -------
         float
-            The fraction of overlapping subsets that differ between the trees
+            Difference between self and other.
 
         See Also
         --------
         compare_rfd
-        compare_tip_distances
+        compare_wrfd
+        compare_subsets
+        compare_biparts
+
+        """
+        topo1, topo2 = getattr(self, method), getattr(other, method)
+        kwargs = dict(include_single=include_single, map_to_length=weighted)
+        if shared_only:
+            set1, set2 = self.subset(), other.subset()
+            n_shared = len(shared := set1 & set2)
+            if len(set1) > n_shared:
+                sets1 = topo1(within=shared, **kwargs)
+            else:
+                sets1 = topo1(**kwargs)
+            if len(set2) > n_shared:
+                sets2 = topo2(within=shared, **kwargs)
+            else:
+                sets2 = topo2(**kwargs)
+        else:
+            sets1, sets2 = topo1(**kwargs), topo2(**kwargs)
+
+        # unweighted (set difference)
+        if not weighted:
+            if symmetric:
+                result = sets1.symmetric_difference(sets2)
+            else:
+                result = sets1.difference(sets2)
+            result = len(result)
+
+            # normalize result to unit range [0, 1]
+            # if total is 0, return 1 (dist = 1 means saturation)
+            if proportion:
+                total = len(sets1) + (symmetric and len(sets2))
+                result = result / total if total else 1.0
+
+            # cast result to float
+            else:
+                result = float(result)
+
+        # branch length weighted (vector distance)
+        else:
+            union = frozenset(sets1).union(sets2)
+            L1 = [sets1.get(x, 0.0) for x in union]
+            L2 = [sets2.get(x, 0.0) for x in union]
+            if isinstance(metric, str):
+                result = getattr(spdist, metric)(L1, L2)
+            else:
+                result = metric(L1, L2)
+
+        return result
+
+    def compare_subsets(
+        self,
+        other,
+        shared_only=False,
+        proportion=True,
+        symmetric=True,
+        exclude_absent_taxa=False,
+    ):
+        r"""Calculate the difference of subsets between two trees.
+
+        Parameters
+        ----------
+        other : TreeNode
+            The other tree to compare with.
+        shared_only : bool, optional
+            Only consider taxa shared with the other tree. Default is False.
+
+            .. versionadded:: 0.6.3
+
+        proportion : bool, optional
+            Whether to return count (False) or proportion (True, default) of different
+            subsets.
+
+            .. versionadded:: 0.6.3
+
+        symmetric : bool, optional
+            Whether to calculate the symmetric difference between self and other (True,
+            default), or only the difference from self to other (False).
+
+            .. versionadded:: 0.6.3
+
+        exclude_absent_taxa : bool, optional
+            Alias of ``shared_only`` for backward compatibility. Deprecated and to be
+            removed in a future release.
+
+        Returns
+        -------
+        float
+            The count or proportion of subsets that differ between the trees.
+
+        See Also
+        --------
         subsets
+        compare_rfd
+        compare_biparts
+
+        Notes
+        -----
+        This metric is equivalent to the Robinson-Foulds distance on rooted trees.
 
         Examples
         --------
@@ -3779,39 +4353,374 @@ class TreeNode(SkbioObject):
         0.5
 
         """
-        self_sets, other_sets = self.subsets(), other.subsets()
+        shared_only |= exclude_absent_taxa
+        return self._compare_topology(
+            other, "subsets", shared_only, proportion, symmetric
+        )
 
-        if exclude_absent_taxa:
-            in_both = self.subset() & other.subset()
-            self_sets = (i & in_both for i in self_sets)
-            self_sets = frozenset({i for i in self_sets if len(i) > 1})
-            other_sets = (i & in_both for i in other_sets)
-            other_sets = frozenset({i for i in other_sets if len(i) > 1})
+    def compare_biparts(self, other, proportion=True, symmetric=True):
+        r"""Calculate the difference of bipartitions between two trees.
 
-        total_subsets = len(self_sets) + len(other_sets)
-        intersection_length = len(self_sets & other_sets)
-
-        if not total_subsets:  # no common subsets after filtering, so max dist
-            return 1
-
-        return 1 - (2 * intersection_length / float(total_subsets))
-
-    def compare_tip_distances(self, other, sample=None, dist_f=None, shuffle_f=None):
-        r"""Compare self to other using tip-to-tip distance matrices.
+        .. versionadded:: 0.6.3
 
         Parameters
         ----------
         other : TreeNode
-            The tree to compare.
+            The other tree to compare with.
+        proportion : bool, optional
+            Whether to return count (False) or proportion (True, default) of different
+            bipartitions.
+        symmetric : bool, optional
+            Whether to calculate the symmetric difference between self and other (True,
+            default), or only the difference from self to other (False).
+
+        Returns
+        -------
+        float
+            The count or proportion of bipartitions that differ between the trees.
+
+        See Also
+        --------
+        biparts
+        compare_rfd
+        compare_subsets
+
+        Notes
+        -----
+        This metric is equivalent to the Robinson-Foulds distance on unrooted trees.
+
+        Only taxa shared between the two trees are considered.
+
+        Examples
+        --------
+        >>> from skbio import TreeNode
+        >>> tree1 = TreeNode.read(["((a,b),(c,d));"])
+        >>> tree2 = TreeNode.read(["(((a,b),c),d);"])
+        >>> tree1.compare_biparts(tree2)
+        0.0
+
+        """
+        return self._compare_topology(other, "biparts", True, proportion, symmetric)
+
+    def compare_rfd(self, other, proportion=False, rooted=None):
+        r"""Calculate Robinson-Foulds distance between two trees.
+
+        Parameters
+        ----------
+        other : TreeNode
+            The other tree to compare with.
+        proportion : bool, optional
+            Whether to return the RF distance as count (False, default) or proportion
+            (True).
+        rooted : bool, optional
+            Whether to consider the trees as rooted or unrooted. If None (default),
+            this will be determined based on whether self is rooted. However, one
+            can override it by explicitly specifying True (rooted) or False (unrooted).
+
+            .. versionadded:: 0.6.3
+
+        Returns
+        -------
+        float
+            The Robinson-Foulds distance as count or proportion between the trees.
+
+        .. versionchanged:: 0.6.3
+            When the tree is unrooted, the calculation is based on bipartitions instead
+            of subsets.
+
+        Notes
+        -----
+        The Robinson-Foulds (RF) distance, a.k.a. symmetric difference, is a measure of
+        topological dissimilarity between two trees. It was originally described in
+        [1]_. It is calculated as the number of bipartitions that differ between two
+        unrooted trees. It is equivalent to :meth:`compare_biparts`.
+
+        .. math::
+
+           \text{RF}(T_1, T_2) = |S_1 \triangle S_2| = |(S_1 \setminus S_2) \cup (S_2
+           \setminus S_1)|
+
+        where :math:`S_1` and :math:`S_2` are the sets of bipartitions of trees
+        :math:`T_1` and :math:`T_2`, respectively.
+
+        For rooted trees, the RF distance is calculated as the number of unshared
+        clades (subsets of taxa) [2]_. It is equivalent to :meth:`compare_subsets`.
+
+        This method automatically determines whether to use the unrooted or rooted RF
+        distance based on whether self is rooted or not. Specifically, if self has two
+        two children (see :meth:`details <unroot>`), or has a parent (i.e., it is a
+        subtree within a larger tree), it will be considered as rooted. Otherwise it
+        will be considered as unrooted.
+
+        One can override this automatic decision by setting the ``rooted`` parameter,
+        which is recommended for explicity.
+
+        By specifying ``proportion=True``, a unit distance will be returned, ranging
+        from 0 (identical) to 1 (completely different).
+
+        This method operates on the subtrees below the given nodes. Only taxa shared
+        between the two trees are considered. Taxa unique to either tree are excluded
+        from the calculation.
+
+        See Also
+        --------
+        compare_wrfd
+        compare_subsets
+        compare_biparts
+        compare_tip_distances
+
+        References
+        ----------
+        .. [1] Robinson, D. F., & Foulds, L. R. (1981). Comparison of phylogenetic
+           trees. Mathematical biosciences, 53(1-2), 131-147.
+
+        .. [2] Bogdanowicz, D., & Giaro, K. (2013). On a matching distance between
+           rooted phylogenetic trees. International Journal of Applied Mathematics
+           and Computer Science, 23(3), 669-684.
+
+        Examples
+        --------
+        Calculate the RF distance between two unrooted trees with the same taxa but
+        different topologies. Each tree has three non-trivial bipartitions, as defined
+        by individual internal branches, among which one pair (abc|def) is shared
+        whereas the other two of each tree are unique (ab|cdef, abcf|de, bc|adef,
+        abcd|ef). Therefore the RF distance is 2 + 2 = 4.
+
+        >>> from skbio import TreeNode
+        >>> tree1 = TreeNode.read(["((a,b),c,((d,e),f));"])
+        >>> print(tree1.ascii_art())
+                            /-a
+                  /--------|
+                 |          \-b
+                 |
+        ---------|--c
+                 |
+                 |                    /-d
+                 |          /--------|
+                  \--------|          \-e
+                           |
+                            \-f
+
+        >>> tree2 = TreeNode.read(["((a,(b,c)),d,(e,f));"])
+        >>> print(tree2.ascii_art())
+                            /-a
+                  /--------|
+                 |         |          /-b
+                 |          \--------|
+                 |                    \-c
+        ---------|
+                 |--d
+                 |
+                 |          /-e
+                  \--------|
+                            \-f
+
+        >>> tree1.compare_rfd(tree2)
+        4.0
+
+        """
+        if rooted is None:
+            rooted = self.parent is not None or len(self.children) == 2
+        method = "subsets" if rooted else "biparts"
+        return self._compare_topology(other, method, proportion=proportion)
+
+    def compare_wrfd(self, other, metric="cityblock", rooted=None, include_single=True):
+        r"""Calculate weighted Robinson-Foulds distance or variants between two trees.
+
+        .. versionadded:: 0.6.3
+
+        Parameters
+        ----------
+        other : TreeNode
+            The other tree to compare with.
+        metric : str or callable, optional
+            The pairwise distance metric to use. Can be a preset, a distance function
+            name under :mod:`scipy.spatial.distance`, or a custom function that takes
+            two vectors and returns a number. Some notable options are:
+
+            - "cityblock" (default): City block (Manhattan) distance. The result
+              matches the original weighted Robinson-Foulds distance [1]_.
+            - "euclidean": Euclidean distance. The result matches the
+              Kuhner-Felsenstein (KF) distance, a.k.a. branch score (Bs) distance [2]_.
+            - "correlation": 1 - Pearson's correlation coefficient (:math:`r`). Ranges
+              between 0 (maximum similarity) and 2 (maximum dissimilarity). Independent
+              of tree scale.
+            - "unitcorr": :math:`(1 - r) / 2`, which returns a unit correlation
+              distance (range: [0, 1]).
+
+        rooted : bool, optional
+            Whether to consider the trees as rooted or unrooted. If None (default),
+            this will be determined based on whether self is rooted. However, one
+            can override it by explicitly setting True (rooted) or False (unrooted).
+            See :meth:`compare_rfd` for details.
+        include_single : bool, optional
+            Whether to include single-taxon biparitions (terminal branches) in the
+            calculation. Default is True, such that all branches in the trees are
+            considered. Set this as False if terminal branch lengths are absent or
+            irrelevant.
+
+        Returns
+        -------
+        float
+            The weighted Robinson-Foulds distance or variants between the trees.
+
+        Notes
+        -----
+        The Robinson-Foulds (RF) distance may be weighted by the branch lengths of
+        biparitions to account for evolutionary distances in addition to branching
+        patterns.
+
+        The default behavior of this method calculates the original weighted RF (wRF)
+        distance [1]_, which is the sum of differences of branch lengths of matching
+        biparitions. Bipartitions unique to one tree are given a length of 0 in the
+        other tree during calculation.
+
+        .. math::
+
+           \text{wRF}(T_1, T_2) = \sum_{s \in S_1 \cup S_2} |l_1(s) - l_2(s)|
+
+        where :math:`S_1` and :math:`S_2` are the sets of bipartitions of trees
+        :math:`T_1` and :math:`T_2`, respectively. :math:`l_1` and :math:`l_2` are the
+        branch lengths of bipartition :math:`s` in :math:`T_1` and :math:`T_2`,
+        respectively (or 0 if :math:`s` is unique to the other tree).
+
+        When ``metric="euclidean"``, it calculates the Kuhner-Felsenstein (KF)
+        distance, a.k.a., branch score (Bs) distance [2]_, which replaces absolute
+        difference with squared difference in the equation.
+
+        .. math::
+
+           \text{KF}(T_1, T_2) = \sqrt{\sum_{s \in S_1 \cup S_2} (l_1(s) - l_2(s))^2}
+
+        This method operates on the subtrees below the given nodes. Only taxa shared
+        between the two trees are considered. Taxa unique to either tree are excluded
+        from the calculation.
+
+        See Also
+        --------
+        compare_rfd
+        compare_tip_distances
+
+        References
+        ----------
+        .. [1] Robinson, D. F., & Foulds, L. R. (1979) Comparison of weighted labelled
+           trees. In Combinatorial Mathematics VI: Proceedings of the Sixth Australian
+           Conference on Combinatorial Mathematics, Armidale, Australia (pp. 119-126).
+
+        .. [2] Kuhner, M. K., & Felsenstein, J. (1994). A simulation comparison of
+           phylogeny algorithms under equal and unequal evolutionary rates. Molecular
+           biology and evolution, 11(3), 459-468.
+
+        Examples
+        --------
+        >>> from skbio import TreeNode
+        >>> tree1 = TreeNode.read(["((a:1,b:2):1,c:4,((d:4,e:5):2,f:6):1);"])
+        >>> print(tree1.ascii_art())
+                            /-a
+                  /--------|
+                 |          \-b
+                 |
+        ---------|--c
+                 |
+                 |                    /-d
+                 |          /--------|
+                  \--------|          \-e
+                           |
+                            \-f
+
+        >>> tree2 = TreeNode.read(["((a:3,(b:2,c:2):1):3,d:8,(e:5,f:6):2);"])
+        >>> print(tree2.ascii_art())
+                            /-a
+                  /--------|
+                 |         |          /-b
+                 |          \--------|
+                 |                    \-c
+        ---------|
+                 |--d
+                 |
+                 |          /-e
+                  \--------|
+                            \-f
+
+        Calculate the weighted RF (wRF) distance between two unrooted trees with branch
+        lengths.
+
+        >>> tree1.compare_wrfd(tree2)
+        16.0
+
+        Calculated the wRF distance while considering trees as rooted (therefore based
+        on subsets instead of bipartitions).
+
+        >>> tree1.compare_wrfd(tree2, rooted=True)
+        18.0
+
+        Calculate the Kuhner-Felsenstein (KF) distance.
+
+        >>> d = tree1.compare_wrfd(tree2, metric="euclidean")
+        >>> print(round(d, 5))
+        6.16441
+
+        Calculate the KF distance without considering terminal branches.
+
+        >>> d = tree1.compare_wrfd(tree2, metric="euclidean", include_single=False)
+        >>> print(round(d, 5))
+        3.74166
+
+        """
+        if rooted is None:
+            rooted = self.parent is not None or len(self.children) == 2
+        method = "subsets" if rooted else "biparts"
+        half = False
+        if metric == "unitcorr":
+            metric, half = "correlation", True
+        result = self._compare_topology(
+            other, method, include_single=include_single, weighted=True, metric=metric
+        )
+        if half:
+            result *= 0.5
+        return result
+
+    def compare_tip_distances(
+        self,
+        other,
+        sample=None,
+        metric="unitcorr",
+        shuffler=None,
+        use_length=True,
+        ignore_self=False,
+        dist_f=None,
+        shuffle_f=None,
+    ):
+        r"""Calculate the distance between two trees based on tip-to-tip distances.
+
+        Parameters
+        ----------
+        other : TreeNode
+            The other tree to compare with.
         sample : int, optional
             Randomly subsample this number of tips in common between the trees to
             compare. This is useful when comparing very large trees.
-        dist_f : callable, optional
-            The distance function used to compare two the tip-tip distance matrices.
-            Default is :math:`(1-r)/2`, where :math:`r` is the Pearson correlation
-            coefficient between the two matrices.
-        shuffle_f : int, np.random.Generator or callable, optional
-            The shuffling function used if ``sample`` is specified. Default is the
+        metric : str or callable, optional
+            The pairwise distance metric to use. Can be a preset, a distance function
+            name under :mod:`scipy.spatial.distance`, or a custom function that takes
+            two vectors and returns a number. Some notable options are:
+
+            - "cityblock": City block (Manhattan) distance.
+            - "euclidean": Euclidean distance. The result matches the path-length
+              distance [1]_, or the path distance [2]_ if ``use_length`` is False.
+            - "correlation": 1 - Pearson's correlation coefficient (:math:`r`). Ranges
+              between 0 (maximum similarity) and 2 (maximum dissimilarity). Independent
+              of tree scale.
+            - "unitcorr" (default): :math:`(1 - r) / 2`, which returns a unit
+              correlation distance (range: [0, 1]).
+
+            .. versionchanged:: 0.6.3
+                Accepts a function on two vectors instead of two `DistanceMatrix`
+                instances. The default value "unitcorr" is consistent with the previous
+                default behavior.
+
+        shuffler : int, np.random.Generator or callable, optional
+            The shuffling function to use if ``sample`` is specified. Default is the
             :meth:`shuffle <numpy.random.Generator.shuffle>` method of a NumPy random
             generator. If an integer is provided, a random generator will be
             constructed using this number as the seed.
@@ -3820,70 +4729,192 @@ class TreeNode(SkbioObject):
                 Switched to NumPy's new random generator. Can accept a random seed or
                 random generator instance.
 
+        use_length : bool, optional
+            Whether to calculate the sum of branch lengths (True, default) or the
+            number of branches (False) connecting each pair of tips.
+
+            .. versionadded:: 0.6.3
+
+        ignore_self : bool, optional
+            Whether to ignore the distance between each tip and itself (which must be
+            0). Default is False.
+
+            .. versionadded:: 0.6.3
+
+            .. note:: The default value will be set as True in 0.7.0.
+
+        dist_f : str or callable, optional
+            Alias of ``metric`` for backward compatibility. Deprecated and to be
+            removed in a future release.
+        shuffle_f : int, np.random.Generator or callable, optional
+            Alias of ``shuffler`` for backward compatibility. Deprecated and to be
+            removed in a future release.
+
         Returns
         -------
         float
             The distance between the trees.
 
+        .. versionchanged:: 0.6.3
+            Improved customizability to allow calculation of published metrics, such
+            as path distance and path-length distance, while preserving the previous
+            default behavior.
+
+            Edge cases are now handled by the specified distance metric rather than
+            being treated separately.
+
         Raises
         ------
         ValueError
-            If there does not exist common tips between the trees.
+            If there are no common tips between the trees.
 
         See Also
         --------
-        compare_subsets
+        tip_tip_distances
         compare_rfd
-        scipy.spatial.distance.correlation
+        compare_wrfd
 
         Notes
         -----
-        This method automatically strips out the names that do not match. This is
-        necessary for this method because the distance between non-matching names and
-        matching names is undefined in the tree where they don't match, and because
-        one needs to reorder the names in the two trees to match up the distance
-        matrices.
+        This method calculates the dissimilarity between the tip-to-tip distance
+        matrices of two trees. Tips are identified by their names (i.e., taxa). Only
+        tips shared between the two trees are considered. Tips unique to either tree
+        are excluded from the calculation.
+
+        The default behavior returns a unit correlation distance (range: [0, 1]),
+        measuring the dissimilarity between the relative evolutionary distances among
+        taxa, regardless of the tree scale (i.e., multiply all branch lengths in one
+        tree by a factor and the result remains the same).
+
+        When the metric is Euclidean and lengths are used, it returns the **path-length
+        distance** [1]_, which is the square root of the sum of squared differences of
+        path lengths among all pairs of taxa.
+
+        .. math::
+
+           d(T_1, T_2) = \sqrt{\sum (d_1(i,j) - d_2(i,j))^2}
+
+        where :math:`d_1` and :math:`d_2` are the sums of branch lengths connecting a
+        pair of tips :math:`i` and :math:`j` in trees :math:`T_1` and :math:`T_2`,
+        respectively.
+
+        When the metric is Euclidean and lengths are not used, it returns the **path
+        distance** [2]_, which insteads considers the number of edges in the path.
+
+        References
+        ----------
+        .. [1] Lapointe, F. J., & Cucumel, G. (1997). The average consensus procedure:
+           combination of weighted trees containing identical or overlapping sets of
+           taxa. Systematic Biology, 46(2), 306-312.
+
+        .. [2] Steel, M. A., & Penny, D. (1993). Distributions of tree comparison
+           metrics—some new results. Systematic Biology, 42(2), 126-141.
 
         Examples
         --------
-        Calculate the distance between two trees. Note that only three taxa are shared
-        between the trees.
-
         >>> from skbio import TreeNode
-        >>> tree1 = TreeNode.read(["((a:1,b:1):2,(c:0.5,X:0.7):3);"])
-        >>> tree2 = TreeNode.read(["(((a:1,b:1,Y:1):2,c:3):1,Z:4);"])
-        >>> dist = tree1.compare_tip_distances(tree2)
-        >>> print("%.9f" % dist)
-        0.000133446
+        >>> tree1 = TreeNode.read(["((a:1,b:2):1,c:4,((d:4,e:5):2,f:6):1);"])
+        >>> print(tree1.ascii_art())
+                            /-a
+                  /--------|
+                 |          \-b
+                 |
+        ---------|--c
+                 |
+                 |                    /-d
+                 |          /--------|
+                  \--------|          \-e
+                           |
+                            \-f
+
+        >>> tree2 = TreeNode.read(["((a:3,(b:2,c:2):1):3,d:8,(e:5,f:6):2);"])
+        >>> print(tree2.ascii_art())
+                            /-a
+                  /--------|
+                 |         |          /-b
+                 |          \--------|
+                 |                    \-c
+        ---------|
+                 |--d
+                 |
+                 |          /-e
+                  \--------|
+                            \-f
+
+        Calculate the unit correlation distance between the two trees.
+
+        >>> d = tree1.compare_tip_distances(tree2, ignore_self=True)
+        >>> print(round(d, 5))
+        0.14131
+
+        Calculate the path-length distance between the two trees.
+
+        >>> d = tree1.compare_tip_distances(tree2, metric="euclidean",
+        ...                                 ignore_self=True)
+        >>> print(round(d, 5))
+        13.71131
+
+        Calculate the path distance between the two trees.
+
+        >>> tree1.compare_tip_distances(
+        ...     tree2, metric="euclidean", use_length=False, ignore_self=True)
+        4.0
 
         """
-        self_names = {i.name: i for i in self.tips()}
-        other_names = {i.name: i for i in other.tips()}
-        common_names = frozenset(self_names) & frozenset(other_names)
-        common_names = list(common_names)
+        # future warning
+        if ignore_self is False:
+            func = self.__class__.compare_tip_distances
+            if not hasattr(func, "warned"):
+                simplefilter("once", FutureWarning)
+                warn(
+                    "The default behavior of `compare_tip_distances` is subject to "
+                    "change in 0.7.0. The new default behavior can be achieved by "
+                    "specifying `ignore_self=True`.",
+                    FutureWarning,
+                )
+                func.warned = True
 
-        if not common_names:
-            raise ValueError("No tip names in common between the two trees.")
+        if dist_f is not None:
+            metric = dist_f
+        if shuffle_f is not None:
+            shuffler = shuffle_f
 
-        if len(common_names) <= 2:
-            return 1  # the two trees must match by definition in this case
-
-        if dist_f is None:
-            dist_f = distance_from_r
+        tipmap1 = {n.name: n for n in self.tips()}
+        tipmap2 = {n.name: n for n in other.tips()}
+        shared = list(frozenset(tipmap1).intersection(tipmap2))
+        if not shared:
+            raise ValueError("No tips are in common between the two trees.")
 
         if sample is not None:
-            if not callable(shuffle_f):
-                shuffle_f = get_rng(shuffle_f).shuffle
-            shuffle_f(common_names)
-            common_names = common_names[:sample]
+            if not callable(shuffler):
+                shuffler = get_rng(shuffler).shuffle
+            shuffler(shared)
+            shared = shared[:sample]
 
-        self_nodes = [self_names[k] for k in common_names]
-        other_nodes = [other_names[k] for k in common_names]
+        tips1 = [tipmap1[x] for x in shared]
+        tips2 = [tipmap2[x] for x in shared]
 
-        self_matrix = self.tip_tip_distances(endpoints=self_nodes)
-        other_matrix = other.tip_tip_distances(endpoints=other_nodes)
+        dm1 = self.tip_tip_distances(endpoints=tips1, use_length=use_length)
+        dm2 = other.tip_tip_distances(endpoints=tips2, use_length=use_length)
 
-        return dist_f(self_matrix, other_matrix)
+        if ignore_self:
+            dm1 = dm1.condensed_form()
+            dm2 = dm2.condensed_form()
+        else:
+            dm1 = dm1.data.flat
+            dm2 = dm2.data.flat
+
+        half = False
+        if isinstance(metric, str):
+            if metric == "unitcorr":
+                metric, half = spdist.correlation, True
+            else:
+                metric = getattr(spdist, metric)
+        result = metric(dm1, dm2)
+        if half:
+            result *= 0.5
+
+        return result
 
     # ------------------------------------------------
     # Tree indexing and searching
@@ -3993,7 +5024,7 @@ class TreeNode(SkbioObject):
                     if hasattr(node, attr):
                         delattr(node, attr)
                 if len(attrs) == 1:
-                    delattr(tree, "_registered_caches")
+                    del tree._registered_caches
                 else:
                     attrs.remove(attr)
 
@@ -4003,7 +5034,7 @@ class TreeNode(SkbioObject):
                     for attr in attrs:
                         if hasattr(node, attr):
                             delattr(node, attr)
-                delattr(tree, "_registered_caches")
+                del tree._registered_caches
 
         # delete lookup caches
         if lookup:
@@ -4289,7 +5320,7 @@ class TreeNode(SkbioObject):
         ----------
         name : TreeNode or str
             The name of the node to find. If a ``TreeNode`` object is provided,
-            then it is simply returned.
+            will find this particular node in the tree.
 
         Returns
         -------
@@ -4299,7 +5330,7 @@ class TreeNode(SkbioObject):
         Raises
         ------
         MissingNodeError
-            If the node to be searched for is not found.
+            If the node to be searched for is not found in the current tree.
 
         See Also
         --------
@@ -4320,34 +5351,44 @@ class TreeNode(SkbioObject):
         assumption that additional calls to ``find`` will be made. See
         :meth:`details <has_caches>`.
 
+        This method searches within the entire tree where self is located, regardless
+        if self is the root node.
+
         Examples
         --------
         >>> from skbio import TreeNode
         >>> tree = TreeNode.read(["((a,b)c,(d,e)f);"])
-        >>> print(tree.find('c').name)
-        c
+        >>> node = tree.find('c')
+        >>> node.name
+        'c'
 
         """
         tree = self.root()
 
-        # if what is being passed in looks like a node, just return it
-        if isinstance(name, tree.__class__):
-            return name
-
         # create lookup table if not already
         tree.create_caches()
 
+        # if input is a node, get its name
+        name_is_node = isinstance(name, tree.__class__)
+        name_ = name.name if name_is_node else name
+
         # look up name in tips
-        node = tree._tip_cache.get(name, None)
+        node = tree._tip_cache.get(name_, None)
         if node is not None:
-            return node
+            if not name_is_node or node is name:
+                return node
 
         # look up name in non-tips
-        node = tree._non_tip_cache.get(name, [None])[0]
-        if node is not None:
-            return node
+        nodes = tree._non_tip_cache.get(name_, None)
+        if nodes is not None:
+            if name_is_node:
+                for node in nodes:
+                    if node is name:
+                        return node
+            else:
+                return nodes[0]
 
-        raise MissingNodeError(f"Node '{name}' is not found.")
+        raise MissingNodeError(f"Node '{name_}' is not found in the tree.")
 
     def find_all(self, name):
         r"""Find all nodes that match a given name.
@@ -4382,6 +5423,9 @@ class TreeNode(SkbioObject):
         The first call to ``find_all`` will cache a node lookup table in the tree on
         the assumption that additional calls to ``find_all`` will be made. See
         :meth:`details <has_caches>`.
+
+        This method searches within the entire tree where self is located, regardless
+        if self is the root node.
 
         Examples
         --------
@@ -4450,7 +5494,8 @@ class TreeNode(SkbioObject):
 
         Notes
         -----
-        This search method is based from the root of the tree.
+        This method searches within the subtree under the current node. But the IDs
+        are assigned from the root of the entire tree.
 
         This method does not cache ID associations. A full traversal of the
         tree is performed to find a node by an ID on every call.
@@ -4595,12 +5640,12 @@ class TreeNode(SkbioObject):
 
         Returns
         -------
-        float or int
+        float
             The distance to tip of a length-balanced tree.
 
         """
         node = self
-        distance = 0
+        distance = 0.0
         while node.has_children():
             distance += node.children[0].length
             node = node.children[0]

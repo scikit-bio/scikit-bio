@@ -303,7 +303,7 @@ def multiplicative_replacement(mat, delta=None):
     multi_replace
 
     """
-    _warn_deprecated(multiplicative_replacement, "0.6.0")
+    _warn_deprecated(multiplicative_replacement, "0.6.0", "Use multi_replace instead.")
     return multi_replace(mat, delta)
 
 
