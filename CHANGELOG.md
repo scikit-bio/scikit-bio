@@ -17,7 +17,8 @@
 
 ### Performance enhancements
 
-* Significantly improved the efficiency of the neighbor joining (NJ) algorithm for phylogenetic reconstruction (`nj`) ([#2147](https://github.com/scikit-bio/scikit-bio/pull/2147)).
+* Significantly improved the performance of the neighbor joining (NJ) algorithm for phylogenetic reconstruction (`nj`) ([#2147](https://github.com/scikit-bio/scikit-bio/pull/2147)).
+* Significantly improved the performance of `TreeNode.tip_tip_distances` for computing a patristic distance matrix among all or selected tips of a tree ([#2152](https://github.com/scikit-bio/scikit-bio/pull/2152)).
 * Supported Robinson-Foulds distance calculation (`TreeNode.compare_rfd`) based on bipartitions (equivalent to `compare_biparts`). This is automatically enabled when the input tree is unrooted. Otherwise the calculation is still based on subsets (equivalent to `compare_subsets`). The user can override this behavior using the `rooted` parameter ([#2144](https://github.com/scikit-bio/scikit-bio/pull/2144)).
 * Re-wrote the underlying algorithm of `TreeNode.compare_subsets` because it is equivalent to the Robinson-Foulds distance on rooted trees. Added parameter `proportion`. Renamed parameter `exclude_absent_taxa` as `shared_only` ([#2144](https://github.com/scikit-bio/scikit-bio/pull/2144)).
 * Added parameter `include_self` to `TreeNode.subset`. Added parameters `within`, `include_full` and `include_single` to `TreeNode.subsets` ([#2144](https://github.com/scikit-bio/scikit-bio/pull/2144)).
@@ -63,6 +64,10 @@
 
 * Method `TreeNode.create_caches` is deprecated. It will become a private member in version 0.7.0 ([#2099](https://github.com/scikit-bio/scikit-bio/pull/2099)).
 * Method `TreeNode.subtree` is deprecated. It will become a private member in version 0.7.0 ([#2103](https://github.com/scikit-bio/scikit-bio/pull/2103)).
+
+### Backward-incompatible changes
+
+* Removed ``skbio.util.RepresentationWarning``. Previously it was only used in `TreeNode.tip_tip_distances` when a node has no branch length. The new code removed this behavior ([#2152](https://github.com/scikit-bio/scikit-bio/pull/2152)).
 
 
 ## Version 0.6.2
