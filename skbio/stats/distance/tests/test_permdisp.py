@@ -13,7 +13,7 @@ import numpy as np
 import numpy.testing as npt
 import pandas as pd
 from pandas.testing import assert_series_equal
-from scipy.stats import f_oneway
+from scipy.stats import f_oneway, ConstantInputWarning
 
 from skbio import DistanceMatrix
 from skbio.stats.ordination import pcoa
@@ -162,7 +162,8 @@ class testPERMDISP(TestCase):
         dm = pcoa(self.null_mat)
         dm = dm.samples
 
-        obs_null = _compute_groups(dm, 'centroid', self.grouping_eq)
+        with self.assertWarns(ConstantInputWarning):
+            obs_null = _compute_groups(dm, 'centroid', self.grouping_eq)
         np.isnan(obs_null)
 
     def test_centroid_normal(self):

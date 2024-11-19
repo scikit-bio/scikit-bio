@@ -2210,7 +2210,7 @@ fuzzy=[(True, False)], metadata={'gene': 'foo'})
                 gap_chars = list(map(ord, gap_chars))
 
                 # locate gaps in sequence
-                gaps = np.in1d(seq, gap_chars)
+                gaps = np.isin(seq, gap_chars)
                 if mask_gaps is True or gaps.any():
                     mask, seq = gaps, seq[~gaps]
 
