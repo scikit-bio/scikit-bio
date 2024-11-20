@@ -7,13 +7,13 @@ This module provides input/output (I/O) functionality for scikit-bio.
 
 For general guidance on reading and writing files and working with scikit-bio objects,
 see the :ref:`tutorial` section and the
-`Reading and writing files <https://github.com/scikit-bio/scikit-bio-cookbook/blob/\
+`Reading and writing files <https://github.com/scikit-bio/scikit-bio-cookbook/blob/
 master/Reading%20and%20writing%20files.ipynb>`_
 notebook. For guidance on a specific format or scikit-bio object,
 see the documentation for that specific format or object.
 
 See the
-`IORegistry docs <https://scikit.bio/docs/latest/generated/skbio.io.registry.html\
+`IORegistry docs <https://scikit.bio/docs/latest/generated/skbio.io.registry.html
 #creating-a-new-format-for-scikit-bio>`_
 for guidance on custom format creation and registering custom readers, writers, and
 sniffers.
@@ -125,24 +125,6 @@ Exceptions and warnings
 Tutorial
 --------
 
-The :mod:`skbio.io` module was developed to handle the many-to-many relationships which
-exist between scikit-bio objects and scikit-bio formats. The main feature of the module
-is the :class:`skbio.io.registry.IORegistry` class, which is implemented as a single
-instance as ``io_registry``. This registry contains all the information regarding the
-relationships between scikit-bio supported formats and scikit-bio objects. For example,
-the FASTA format (:mod:`skbio.io.format.fasta`) could be read into several scikit-bio
-objects:  :class:`skbio.alignment.TabularMSA`, :class:`skbio.sequence.DNA`, and
-:class:`skbio.sequence.Protein`, just to name a few.
-
-Additionally, any given scikit-bio object may write to several different supported
-formats. The :class:`skbio.alignment.TabularMSA` object may be written to 5 different
-formats, not including any custom formats that you the user may create. For more
-information regarding **custom format creation in scikit-bio**, see
-:mod:`skbio.io.registry`.
-
-The examples in this tutorial are relatively simple. For more extensive examples,
-see
-
 Reading and writing files (I/O) can be a complicated task:
 
 * A file format can sometimes be read into more than one in-memory representation
@@ -177,24 +159,33 @@ procedural interface:
 
    my_obj = skbio.io.read(file, format='someformat', into=SomeSkbioClass)
 
-The second is to use the object-oriented (OO) interface which is automatically
+The second is to use the object-oriented interface which is automatically
 constructed from the procedural interface:
 
 .. code-block:: python
 
    my_obj = SomeSkbioClass.read(file, format='someformat')
 
-For example, to read a ``newick`` file using both interfaces you would type:
+.. note::
+   A very common use case in bioinformatics is to read multi-line FASTA and
+   FASTQ files. For examples on how to achieve this with scikit-bio, please see the
+   `FASTA documentation <https://scikit.bio/docs/dev/generated/skbio.io.format.fasta.html
+   #examples>`_
+   or the
+   `FASTQ documentation <https://scikit.bio/docs/dev/generated/skbio.io.format.fastq.html
+   #examples>`_.
 
->>> from skbio import read
+As an example, to read a ``newick`` file using both interfaces you would type:
+
+>>> from skbio import read as sk_read
 >>> from skbio import TreeNode
 >>> from io import StringIO
 >>> open_filehandle = StringIO('(a, b);')
->>> tree = read(open_filehandle, format='newick', into=TreeNode)
+>>> tree = sk_read(open_filehandle, format='newick', into=TreeNode)
 >>> tree
 <TreeNode, name: unnamed, internal node count: 0, tips count: 2>
 
-For the OO interface:
+Or, using the object-oriented interface:
 
 >>> open_filehandle = StringIO('(a, b);')
 >>> tree = TreeNode.read(open_filehandle, format='newick')
@@ -206,9 +197,9 @@ generator will be returned. What the generator yields will depend on what
 format is being read.
 
 When ``into`` is provided, format may be omitted and the registry will use its
-knowledge of the available formats for the requested class to infer the correct
-format. This format inference is also available in the OO interface, meaning
-that ``format`` may be omitted there as well.
+knowledge of the available formats for the requested class to infer (**sniff**) the
+correct format. This format inference is also available in the object-oriented
+interface, meaning that ``format`` may be omitted there as well.
 
 As an example:
 
@@ -222,8 +213,11 @@ class of Python's standard library. The goal of a ``sniffer`` is two-fold: to
 identify if a file is a specific format, and if it is, to provide ``**kwargs``
 which can be used to better parse the file.
 
-.. note:: There is a built-in ``sniffer`` which results in a useful error message
-   if an empty file is provided as input and the format was omitted.
+.. note::
+   There is a built-in ``sniffer`` which results in a useful error message
+   if an empty file is provided as input and the format was omitted. See the
+   `sniff documentation <https://scikit.bio/docs/dev/generated/skbio.io.registry.sniff.
+   html>`_ for more information.
 
 Writing files from scikit-bio
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
@@ -235,21 +229,26 @@ Procedural Interface:
 
    skbio.io.write(my_obj, format='someformat', into=file)
 
-OO Interface:
+Object-oriented Interface:
 
 .. code-block:: python
 
    my_obj.write(file, format='someformat')
 
 In the procedural interface, ``format`` is required. Without it, scikit-bio does
-not know how you want to serialize an object. OO interfaces define a default
-``format``, so it may not be necessary to include it.
+not know how you want to serialize an object. Object-oriented interfaces define a
+default ``format``, so it may not be necessary to include it.
+
+For more information on writing to a specific file format, please see that format's
+documentation page.
 
 Streaming files with read and write
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 If you are working with particularly large files, streaming them might be preferable.
-Scikit-bio's ``io`` module offers the ability to contruct a streaming interface from
-the ``read`` and ``write`` functions.
+For instance, if your file is larger than your available memory, you won't be able
+to read the entire file into memory at once. One way to get around this is to use
+streaming. Scikit-bio's ``io`` module offers the ability to contruct a streaming
+interface from the ``read`` and ``write`` functions.
 
 ``skbio.io.read`` returns a generator, which can then be passed to ``skbio.io.write``
 to write only one chunk from the generator at a time.
