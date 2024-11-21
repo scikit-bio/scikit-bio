@@ -115,7 +115,7 @@ class testPERMDISP(TestCase):
                [2.17349240061718, 2.3192679626679946, 2.028338553903792]]
         exp_stat, _ = f_oneway(*exp)
 
-        dm = pcoa(self.eq_mat)
+        dm = pcoa(self.eq_mat, warn_neg_eigval=False)
         dm = dm.samples
 
         obs = _compute_groups(dm, 'centroid', self.grouping_eq)
@@ -135,7 +135,7 @@ class testPERMDISP(TestCase):
                 2.8547180589306036, 3.218568759338847]]
         exp_stat, _ = f_oneway(*exp)
 
-        dm = pcoa(self.uneq_mat)
+        dm = pcoa(self.uneq_mat, warn_neg_eigval=False)
         dm = dm.samples
 
         obs = _compute_groups(dm, 'centroid', self.grouping_uneq)
@@ -150,7 +150,7 @@ class testPERMDISP(TestCase):
                [1.724817266046108, 1.724817266046108],
                [2.4333280644972795, 2.389000390879655,
                 2.8547180589306036, 3.218568759338847]]
-        dm = pcoa(self.uneq_mat)
+        dm = pcoa(self.uneq_mat, warn_neg_eigval=False)
         dm = dm.samples
 
         exp_stat, _ = f_oneway(*exp)
@@ -236,7 +236,8 @@ class testPERMDISP(TestCase):
         npt.assert_raises(ValueError, permdisp, self.unifrac_dm, gr)
 
     def test_no_permuations(self):
-        obs = permdisp(self.eq_mat, self.grouping_eq, permutations=0)
+        obs = permdisp(self.eq_mat, self.grouping_eq, permutations=0,
+                       warn_neg_eigval=False)
 
         pval = obs['p-value']
         np.isnan(pval)
@@ -280,9 +281,10 @@ class testPERMDISP(TestCase):
         grouping = pd.read_csv(get_data_path("frameSeries_grouping.tsv"),
                                sep="\t", index_col=0)
 
-        obs_frame = permdisp(dm, grouping, column='tumor', seed=42)
+        obs_frame = permdisp(dm, grouping, column='tumor', seed=42,
+                             warn_neg_eigval=False)
 
-        obs_series = permdisp(dm, grouping['tumor'], seed=42)
+        obs_series = permdisp(dm, grouping['tumor'], seed=42, warn_neg_eigval=False)
 
         # in principle, both tests - if seed is the same - should return the
         # exact same results. However, they don't for the current example ...

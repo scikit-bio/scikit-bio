@@ -103,14 +103,13 @@ def pcoa(
     message will be displayed. The paramter ``warn_neg_eigval`` controls the threshold
     for the warning.
 
-    PCoA is equivalent to Principal Component Analysis (PCA) when the distances are
-    Euclidean. However, in ecology, the Euclidean distance preserved by PCA is often
-    not a good choice because it deals poorly with double zeros. For example, species
-    have unimodal distributions along environmental gradients. If a species is absent
-    from two sites simultaneously, it can't be known if an environmental variable is
-    too high in one of them and too low in the other, or too low in both, etc. On the
-    other hand, if a species is present in two sites, that means that the sites are
-    similar.
+    PCoA on Euclidean distances is equivalent to Principal Component Analysis (PCA).
+    However, in ecology, the Euclidean distance preserved by PCA is often not a good
+    choice because it deals poorly with double zeros. For example, species have
+    unimodal distributions along environmental gradients. If a species is absent from
+    two sites simultaneously, it can't be known if an environmental variable is too
+    high in one of them and too low in the other, or too low in both, etc. On the other
+    hand, if a species is present in two sites, that means that the sites are similar.
 
     Note that the returned eigenvectors are not normalized to unit length.
 
