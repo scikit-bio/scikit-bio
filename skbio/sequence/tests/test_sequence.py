@@ -321,8 +321,8 @@ class TestSequence(TestSequenceBase, ReallyEqualMixin):
                   '.ABC\t123  xyz-',
                   np.array('.ABC\t123  xyz-', dtype='c'),
                   np.frombuffer(b'.ABC\t123  xyz-', dtype=np.uint8),
-                  Sequence('.ABC\t123  xyz-')):
-            seq = Sequence(s)
+                  Sequence('.ABC\t123  xyz-', remove_spaces=False)):
+            seq = Sequence(s, remove_spaces=False)
 
             self.assertIsInstance(seq.values, np.ndarray)
             self.assertEqual(seq.values.dtype, '|S1')
@@ -395,7 +395,7 @@ class TestSequence(TestSequenceBase, ReallyEqualMixin):
     def test_init_from_contiguous_sequence_bytes_view(self):
         bytes = np.array([65, 42, 66, 42, 65], dtype=np.uint8)
         view = bytes[:3]
-        seq = Sequence(view)
+        seq = Sequence(view, remove_spaces=False)
 
         # sequence should be what we'd expect
         self.assertEqual(seq, Sequence('A*B'))
@@ -438,7 +438,7 @@ class TestSequence(TestSequenceBase, ReallyEqualMixin):
 
     def test_init_no_copy_of_sequence(self):
         bytes = np.array([65, 66, 65], dtype=np.uint8)
-        seq = Sequence(bytes)
+        seq = Sequence(bytes, remove_spaces=False)
 
         # should share the same memory
         self.assertIs(seq._bytes, bytes)
@@ -529,7 +529,8 @@ class TestSequence(TestSequenceBase, ReallyEqualMixin):
         self.assertEqual(Sequence('zzz').observed_chars, {'z'})
         self.assertEqual(Sequence('xYzxxZz').observed_chars,
                          {'x', 'Y', 'z', 'Z'})
-        self.assertEqual(Sequence('\t   ').observed_chars, {' ', '\t'})
+        self.assertEqual(Sequence('\t   ', remove_spaces=False).observed_chars,
+                         {' ', '\t'})
 
         im = IntervalMetadata(6)
         im.add([(0, 2)], metadata={'gene': 'sagB'})
@@ -673,7 +674,8 @@ class TestSequence(TestSequenceBase, ReallyEqualMixin):
         length = len(s)
         seq = Sequence(s, metadata={'id': 'id', 'description': 'dsc'},
                        positional_metadata={'quality': np.arange(length,
-                                                                 dtype=np.int64)})
+                                                                 dtype=np.int64)},
+                       remove_spaces=False)
 
         eseq = Sequence("S", {'id': 'id', 'description': 'dsc'},
                         positional_metadata={'quality': np.array([0], dtype=np.int64)})
@@ -726,7 +728,8 @@ class TestSequence(TestSequenceBase, ReallyEqualMixin):
 
     def test_getitem_with_int_no_positional_metadata(self):
         seq = Sequence("Sequence string !1@2#3?.,",
-                       metadata={'id': 'id2', 'description': 'no_qual'})
+                       metadata={'id': 'id2', 'description': 'no_qual'},
+                       remove_spaces=False)
 
         eseq = Sequence("t", metadata={'id': 'id2', 'description': 'no_qual'})
         self.assertEqual(seq[10], eseq)
@@ -1461,7 +1464,7 @@ class TestSequence(TestSequenceBase, ReallyEqualMixin):
         self.assertEqual(seq.frequencies(relative=True),
                          {'x': 3/7, 'Y': 1/7, 'Z': 1/7, 'z': 2/7})
 
-        seq = Sequence('\t   ')
+        seq = Sequence('\t   ', remove_spaces=False)
         self.assertEqual(seq.frequencies(), {'\t': 1, ' ': 3})
         self.assertEqual(seq.frequencies(relative=True), {'\t': 1/4, ' ': 3/4})
 
@@ -2753,7 +2756,7 @@ class SequenceReprDoctests:
 
     >>> import string
     >>> Sequence((string.ascii_letters + string.punctuation + string.digits +
-    ...          'a space') * 567)
+    ...          'a space') * 567, remove_spaces=False)
     Sequence
     -----------------------------------------------------------------------
     Stats:
