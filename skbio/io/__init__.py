@@ -5,17 +5,23 @@ r"""Input and Output (:mod:`skbio.io`)
 
 This module provides input/output (I/O) functionality for scikit-bio.
 
+In bioinformatics there are many different file formats, and in scikit-bio there are
+many different classes which can read and write these formats. The many-to-many
+nature of the relationships between scikit-bio objects and file formats inspired
+the creation of the scikit-bio io module, which manages these relationships
+transparently.
+
 For general guidance on reading and writing files and working with scikit-bio objects,
 see the :ref:`tutorial` section and the
 `Reading and writing files <https://github.com/scikit-bio/scikit-bio-cookbook/blob/
 master/Reading%20and%20writing%20files.ipynb>`_
 notebook. For guidance on a specific format or scikit-bio object,
-see the documentation for that specific format or object.
+see the documentation for that format or object.
 
 See the
 `IORegistry docs <https://scikit.bio/docs/latest/generated/skbio.io.registry.html
 #creating-a-new-format-for-scikit-bio>`_
-for guidance on custom format creation and registering custom readers, writers, and
+for guidance on creating custom formats and registering custom readers, writers, and
 sniffers.
 
 Supported file formats
@@ -159,8 +165,11 @@ procedural interface:
 
    my_obj = skbio.io.read(file, format='someformat', into=SomeSkbioClass)
 
-The second is to use the object-oriented interface which is automatically
-constructed from the procedural interface:
+Here, ``file`` can be a path to a file, a file handle, or any of the other
+objects with read support listed in the :func:`skbio.io.util.open` documentation.
+
+The second way to read files is to use the object-oriented interface, which is
+automatically constructed from the procedural interface:
 
 .. code-block:: python
 
@@ -175,7 +184,13 @@ constructed from the procedural interface:
    `FASTQ documentation <https://scikit.bio/docs/dev/generated/skbio.io.format.fastq.html
    #examples>`_.
 
-As an example, to read a ``newick`` file using both interfaces you would type:
+As an example, let's read a
+`newick <https://scikit.bio/docs/latest/generated/skbio.io.format.newick.html>`_
+file into a
+`TreeNode <https://scikit.bio/docs/latest/generated/skbio.tree.TreeNode.html>`_
+object using both interfaces. Here we will use Python's built-in
+`StringIO <https://docs.python.org/3/library/io.html#io.StringIO>`_
+class to mimick an open file:
 
 >>> from skbio import read as sk_read
 >>> from skbio import TreeNode
@@ -197,7 +212,7 @@ generator will be returned. What the generator yields will depend on what
 format is being read.
 
 When ``into`` is provided, format may be omitted and the registry will use its
-knowledge of the available formats for the requested class to infer (**sniff**) the
+knowledge of the available formats for the requested class to infer (sniff) the
 correct format. This format inference is also available in the object-oriented
 interface, meaning that ``format`` may be omitted there as well.
 
