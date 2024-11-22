@@ -9,6 +9,8 @@
 import io
 from unittest import TestCase, main
 
+import numpy.testing as npt
+
 from skbio import DistanceMatrix, TreeNode
 from skbio.tree._nj import nj, _tree_from_linkmat
 
@@ -87,6 +89,18 @@ class NjTests(TestCase):
         actual_TreeNode = nj(self.dm3)
         self.assertAlmostEqual(actual_TreeNode.compare_tip_distances(
             self.expected3_TreeNode), 0.0)
+
+    def test_nj_inplace(self):
+        dm = self.dm3.copy()
+        obs = nj(dm)
+        exp = self.expected3_TreeNode
+        self.assertAlmostEqual(obs.compare_tip_distances(exp), 0.0)
+        npt.assert_almost_equal(dm.data, self.dm3.data)
+
+        obs = nj(dm, inplace=True)
+        self.assertAlmostEqual(obs.compare_tip_distances(exp), 0.0)
+        with self.assertRaises(AssertionError):
+            npt.assert_almost_equal(dm.data, self.dm3.data)
 
     def test_nj_zero_branch_length(self):
         # no nodes have negative branch length when we disallow negative

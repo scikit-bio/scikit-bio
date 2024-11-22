@@ -17,6 +17,7 @@ def nj(
     dm,
     clip_to_zero=True,
     result_constructor=None,
+    inplace=False,
     disallow_negative_branch_length=None,
 ):
     r"""Perform neighbor joining (NJ) for phylogenetic reconstruction.
@@ -36,6 +37,12 @@ def nj(
         future release.
 
         .. deprecated:: 0.6.3
+
+    inplace : bool, optional
+        If True, the input distance matrix will be manipulated in-place to reduce
+        memory consumption, at the cost of losing the original data. Default is False.
+
+        .. versionadded:: 0.6.3
 
     disallow_negative_branch_length : bool, optional
         Alias of ``clip_to_zero`` for backward compatibility. Deprecated and to be
@@ -151,8 +158,13 @@ def nj(
             "Distance matrix must be at least 3x3 to generate a neighbor joining tree."
         )
     taxa = list(dm.ids)
-    dm_ = dm.data.astype(float)  # make a copy of the distance matrix data
+
+    dm_ = dm.data
+    if not inplace:
+        dm_ = dm_.copy()
+
     lm = _nj(dm_)
+
     tree = _tree_from_linkmat(lm, taxa, rooted=False, clip_to_zero=clip_to_zero)
     if result_constructor is not None:
         tree = result_constructor(str(tree))
