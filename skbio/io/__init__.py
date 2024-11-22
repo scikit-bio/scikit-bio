@@ -8,7 +8,7 @@ This module provides input/output (I/O) functionality for scikit-bio.
 In bioinformatics there are many different file formats, and in scikit-bio there are
 many different classes which can read and write these formats. The many-to-many
 nature of the relationships between scikit-bio objects and file formats inspired
-the creation of the scikit-bio io module, which manages these relationships
+the creation of the scikit-bio ``io`` module, which manages these relationships
 transparently.
 
 For general guidance on reading and writing files and working with scikit-bio objects,
@@ -184,13 +184,9 @@ automatically constructed from the procedural interface:
    `FASTQ documentation <https://scikit.bio/docs/dev/generated/skbio.io.format.fastq.html
    #examples>`_.
 
-As an example, let's read a
-`newick <https://scikit.bio/docs/latest/generated/skbio.io.format.newick.html>`_
-file into a
-`TreeNode <https://scikit.bio/docs/latest/generated/skbio.tree.TreeNode.html>`_
-object using both interfaces. Here we will use Python's built-in
-`StringIO <https://docs.python.org/3/library/io.html#io.StringIO>`_
-class to mimick an open file:
+As an example, let's read a :mod:`~skbio.io.format.newick` file into a
+:class:`~skbio.tree.TreeNode` object using both interfaces. Here we will use Python's
+built-in :class:`~io.StringIO` class to mimick an open file:
 
 >>> from skbio import read as sk_read
 >>> from skbio import TreeNode
