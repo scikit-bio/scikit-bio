@@ -26,7 +26,7 @@ from skbio.tree._exception import (
     TreeError,
 )
 from skbio.util import get_rng
-from skbio.util._decorator import classonlymethod
+from skbio.util._decorator import classonlymethod, aliased, register_aliases, meth_alias
 from skbio.util._warning import _warn_deprecated
 from skbio.io.registry import Read, Write
 
@@ -40,6 +40,7 @@ from skbio.io.registry import Read, Write
 # ----------------------------------------------------------------------------
 
 
+@register_aliases
 class TreeNode(SkbioObject):
     r"""Represent a node within a tree.
 
@@ -546,6 +547,7 @@ class TreeNode(SkbioObject):
         else:
             return [n for n in nodes if n is not ignore]
 
+    @meth_alias("lca")
     def lowest_common_ancestor(self, tipnames):
         r"""Find the lowest common ancestor of a list of nodes.
 
@@ -618,7 +620,7 @@ class TreeNode(SkbioObject):
 
         return curr
 
-    lca = lowest_common_ancestor  # for convenience
+    # lca = lowest_common_ancestor  # for convenience
 
     def _path(self, other):
         anc1 = self.ancestors(include_self=True)

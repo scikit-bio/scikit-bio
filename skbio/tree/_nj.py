@@ -9,10 +9,12 @@
 import numpy as np
 
 from skbio.tree import TreeNode
+from skbio.util._decorator import aliased
 from skbio.util._warning import _warn_deprecated
 from ._cutils import nj_minq_cy
 
 
+@aliased("neighbor_joining", deprecated="0.7.0")
 def nj(
     dm,
     clip_to_zero=True,

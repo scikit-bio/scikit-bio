@@ -9,9 +9,6 @@ addopts = [
     "--doctest-glob",
     "*.pyx",
 ]
-filterwarnings = [
-    "ignore::skbio.util.SkbioWarning",
-]
 doctest_optionflags = [
     "NORMALIZE_WHITESPACE",
     "IGNORE_EXCEPTION_DETAIL",

@@ -68,7 +68,9 @@
 
 ### Backward-incompatible changes
 
-* Removed ``skbio.util.RepresentationWarning``. Previously it was only used in `TreeNode.tip_tip_distances` when a node has no branch length. The new code removed this behavior ([#2152](https://github.com/scikit-bio/scikit-bio/pull/2152)).
+* Removed `skbio.util.SkbioWarning`. Now there are no specific warnings to scikit-bio.
+* Removed `skbio.util.EfficiencyWarning`. Previously it was only used in the Python implementations of pairwise sequence alignment algorithms. The new code replaced it with `PendingDeprecationWarning`.
+* Removed `skbio.util.RepresentationWarning`. Previously it was only used in `TreeNode.tip_tip_distances` when a node has no branch length. The new code removed this behavior ([#2152](https://github.com/scikit-bio/scikit-bio/pull/2152)).
 
 
 ## Version 0.6.2

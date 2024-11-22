@@ -6,10 +6,93 @@
 # The full license is in the file LICENSE.txt, distributed with this software.
 # ----------------------------------------------------------------------------
 
+import sys
+from functools import wraps
+
 from ._exception import OverrideError
+from ._warning import _warn_renamed
 
 
-# Adapted from http://stackoverflow.com/a/8313042/579416
+def aliased(alias, deprecated=False):
+    """Specify an alias for a function.
+
+    Parameters
+    ----------
+    alias : str
+        Alias name of the function.
+    deprecated : bool or str, optional
+        Whether to display a deprecation warning when the alias is called. Can also
+        specify a version number indicating when the alias will be removed.
+
+    """
+
+    def decorator(func):
+        @wraps(func)
+        def wrapper(*args, **kwargs):
+            _warn_renamed(func, alias, deprecated)
+            return func(*args, **kwargs)
+
+        # get parent module
+        module = func.__module__
+        mpath, _, mname = module.rpartition(".")
+        if mname.startswith("_"):
+            module = mpath
+        parent = sys.modules[module]
+
+        # get parent class (if applicable)
+        # https://stackoverflow.com/questions/3589311/
+        # qualname = func.__qualname__.split(".<locals>", 1)[0]
+        # for level in qualname.split(".")[:-1]:
+        #     parent = getattr(parent, level)
+
+        target = wrapper if deprecated else func
+        setattr(parent, alias, target)
+
+        # add alias to docstring
+        msg = f"    Alias: ``{alias}``{' (deprecated)' if deprecated else ''}.\n"
+        if (doc := func.__doc__) is None:
+            func.__doc__ = msg
+        elif pos := doc.find("\n\n") + 1:
+            func.__doc__ = doc[:pos] + "\n" + msg + doc[pos:]
+        else:
+            func.__doc__ += "\n" + msg
+
+        return func
+
+    return decorator
+
+
+def meth_alias(alias_name, deprecated=False):
+    def decorator(func):
+        func._alias = alias_name
+
+        @wraps(func)
+        def wrapper(*args, **kwargs):
+            return func(*args, **kwargs)
+
+        return func
+
+    return decorator
+
+
+def register_aliases(cls):
+    toadd = []
+    for meth in cls.__dict__.values():
+        if hasattr(meth, "_alias"):
+            toadd.append(meth)
+    for meth in toadd:
+        alias = meth._alias
+
+        @wraps(meth)
+        def wrapper(*args, **kwargs):
+            _warn_renamed(meth, alias, "0.9.5")
+            return meth(*args, **kwargs)
+
+        setattr(cls, alias, wrapper)
+        delattr(meth, "_alias")
+    return cls
+
+
 def overrides(interface_class):
     """Indicate that a member is being overridden from a specific parent class.
 
@@ -35,6 +118,7 @@ def overrides(interface_class):
         as the decorated member.
 
     """
+    # Adapted from http://stackoverflow.com/a/8313042/579416
 
     def overrider(method):
         if method.__name__ not in dir(interface_class):

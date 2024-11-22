@@ -44,21 +44,6 @@ Generally useful functionality that doesn't fit in more specific locations.
    safe_md5
    classproperty
 
-
-Developer warnings
-------------------
-
-.. autosummary::
-
-   EfficiencyWarning
-
-
-Details
--------
-
-.. autoexception:: EfficiencyWarning
-
-
 """  # noqa: D412, D416, D205, D415
 
 # ----------------------------------------------------------------------------
@@ -69,7 +54,6 @@ Details
 # The full license is in the file LICENSE.txt, distributed with this software.
 # ----------------------------------------------------------------------------
 
-from ._warning import EfficiencyWarning, SkbioWarning
 from ._misc import cardinal_to_ordinal, find_duplicates, safe_md5, get_rng
 from ._testing import (
     get_data_path,
@@ -81,8 +65,6 @@ from ._decorator import classproperty
 from ._plotting import PlottableMixin
 
 __all__ = [
-    "SkbioWarning",
-    "EfficiencyWarning",
     "cardinal_to_ordinal",
     "find_duplicates",
     "safe_md5",

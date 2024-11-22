@@ -9,32 +9,6 @@
 from warnings import warn, simplefilter
 
 
-class SkbioWarning(Warning):
-    """Filter our warnings from warnings given by 3rd parties."""
-
-    pass
-
-
-class EfficiencyWarning(SkbioWarning):
-    """Warn about potentially accidental use of inefficient code.
-
-    For example, if a user doesn't have an optimized version of a
-    function/algorithm available in their scikit-bio installation, a slower,
-    pure-Python implementation may be used instead. This warning can be used to
-    let the user know they are using a version of the function that could be
-    potentially orders of magnitude slower.
-
-    """
-
-    pass
-
-
-class DeprecationWarning(DeprecationWarning, SkbioWarning):
-    """Used to indicate deprecated functionality in scikit-bio."""
-
-    pass
-
-
 def _warn_deprecated(func, ver, msg=None):
     """Warn of deprecated status."""
     if not hasattr(func, "warned"):
@@ -43,4 +17,18 @@ def _warn_deprecated(func, ver, msg=None):
         if msg:
             message += f" {msg}"
         warn(message, DeprecationWarning)
+        func.warned = True
+
+
+def _warn_renamed(func, oldname, ver=None):
+    """Warn of renaming status."""
+    if not hasattr(func, "warned"):
+        simplefilter("once", DeprecationWarning)
+        if not ver:
+            ver = "a future release"
+        msg = (
+            f"`{oldname}` has been renamed as `{func.__name__}`. The old name is "
+            f"deprecated and will be removed in {ver}."
+        )
+        warn(msg, DeprecationWarning)
         func.warned = True

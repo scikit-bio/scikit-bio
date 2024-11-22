@@ -16,7 +16,6 @@ from skbio.alignment._ssw_wrapper import StripedSmithWaterman
 from skbio.sequence import DNA, RNA, Protein
 from skbio.sequence import GrammaredSequence
 from skbio.sequence import SubstitutionMatrix
-from skbio.util import EfficiencyWarning
 from skbio.util._warning import _warn_deprecated
 
 
@@ -224,7 +223,7 @@ def local_pairwise_align(
         "You're using skbio's python implementation of Smith-Waterman "
         "alignment. This will be very slow (e.g., thousands of times slower) "
         "than skbio.alignment.local_pairwise_align_ssw.",
-        EfficiencyWarning,
+        PendingDeprecationWarning,
     )
 
     for seq in seq1, seq2:
@@ -541,7 +540,7 @@ def global_pairwise_align(
         "slower than a native C implementation). We'll be adding a faster "
         "version soon (see https://github.com/scikit-bio/scikit-bio/issues/"
         "254 to track progress on this).",
-        EfficiencyWarning,
+        PendingDeprecationWarning,
     )
 
     for seq in seq1, seq2:
