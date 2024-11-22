@@ -56,6 +56,7 @@
 
 ### Miscellaneous
 
+* Added a parameter `warn_neg_eigval` to `pcoa` and `permdisp` to control when to raise a warning when negative eigenvalues are encountered. The default setting is more relaxed than the previous behavior, therefore warnings will not be raised when the negative eigenvalues are small in magnitude, which is the case in many real-world scenarios [#2154](https://github.com/scikit-bio/scikit-bio/pull/2154).
 * Refactored `dirmult_ttest` to use a separate function for fitting data to Dirichlet-multinomial distribution ([#2113](https://github.com/scikit-bio/scikit-bio/pull/2113))
 * Remodeled documentation. Special methods (previously referred to as built-in methods) and inherited methods of a class no longer have separate stub pages. This significantly reduced the total number of webpages in the documentation ([#2110](https://github.com/scikit-bio/scikit-bio/pull/2110)).
 * Renamed `TreeNode.invalidate_caches` as `clear_caches`, because the caches are indeed deleted rather than marked as obsolete. The old name is preserved as an alias ([#2099](https://github.com/scikit-bio/scikit-bio/pull/2099)).
