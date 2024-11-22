@@ -22,60 +22,57 @@ from ._utils import center_distance_matrix, scale
 
 
 def pcoa(
-    distance_matrix, method="eigh", number_of_dimensions=0, inplace=False, seed=None
+    distance_matrix,
+    method="eigh",
+    number_of_dimensions=0,
+    inplace=False,
+    seed=None,
+    warn_neg_eigval=0.01,
 ):
-    r"""Perform Principal Coordinate Analysis.
+    r"""Perform Principal Coordinate Analysis (PCoA).
 
-    Principal Coordinate Analysis (PCoA) is a method similar
-    to Principal Components Analysis (PCA) with the difference that PCoA
-    operates on distance matrices, typically with non-euclidian and thus
-    ecologically meaningful distances like UniFrac in microbiome research.
-
-    In ecology, the euclidean distance preserved by Principal
-    Component Analysis (PCA) is often not a good choice because it
-    deals poorly with double zeros (Species have unimodal
-    distributions along environmental gradients, so if a species is
-    absent from two sites at the same site, it can't be known if an
-    environmental variable is too high in one of them and too low in
-    the other, or too low in both, etc. On the other hand, if an
-    species is present in two sites, that means that the sites are
-    similar.).
-
-    Note that the returned eigenvectors are not normalized to unit length.
+    PCoA is an ordination method similar to Principal Components Analysis (PCA), with
+    the difference that it operates on distance matrices, calculated using meaningful
+    and typically non-Euclidian methods.
 
     Parameters
     ----------
     distance_matrix : DistanceMatrix
-        A distance matrix.
+        The input distance matrix.
     method : str, optional
-        Eigendecomposition method to use in performing PCoA.
-        By default, uses SciPy's `eigh`, which computes exact
-        eigenvectors and eigenvalues for all dimensions. The alternate
-        method, `fsvd`, uses faster heuristic eigendecomposition but loses
-        accuracy. The magnitude of accuracy lost is dependent on dataset.
+        Matrix decomposition method to use. Default is "eigh" (eigendecomposition),
+        which computes exact eigenvectors and eigenvalues for all dimensions. The
+        alternate is "fsvd" (fast singular value decomposition), a heuristic that can
+        compute only a given number of dimensions.
     number_of_dimensions : int or float, optional
-        Dimensions to reduce the distance matrix to. This number determines
-        how many eigenvectors and eigenvalues will be returned. If an integer
-        is provided, the exact number of dimensions will be retained in the
-        output. If a float between 0 and 1, it represents the fractional
-        cumulative variance retained in the output. Default is 0, which will
-        retain the same number of dimensions as the distance matrix.
+        Dimensions to reduce the distance matrix to. This number determines how many
+        eigenvectors and eigenvalues will be returned. If an integer is provided, the
+        exact number of dimensions will be retained. If a float between 0 and 1, it
+        represents the fractional cumulative variance to be retained. Default is 0,
+        which will retain the same number of dimensions as the distance matrix.
     inplace : bool, optional
-        If true, centers a distance matrix in-place in a manner that reduces
-        memory consumption.
+        If True, the input distance matrix will be centered in-place to reduce memory
+        consumption, at the cost of losing the original distances. Default is False.
     seed : int or np.random.Generator, optional
-        A user-provided random seed or random generator instance for faster
-        heuristic eigendecomposition. Relevant when `method="fsvd"`. See
-        :func:`details <skbio.util.get_rng>`.
+        A user-provided random seed or random generator instance for method "fsvd".
+        See :func:`details <skbio.util.get_rng>`.
+
+        .. versionadded:: 0.6.3
+
+    warn_neg_eigval : bool or float, optional
+        Raise a warning if any negative eigenvalue is obtained and its magnitude
+        exceeds the specified fraction threshold compared to the largest positive
+        eigenvalue, which suggests potential inaccuracy in the PCoA result. Default is
+        0.01. Set True to warn regardless of the magnitude. Set False to disable
+        warning completely.
 
         .. versionadded:: 0.6.3
 
     Returns
     -------
     OrdinationResults
-        Object that stores the PCoA results, including eigenvalues, the
-        proportion explained by each of them, and transformed sample
-        coordinates.
+        Object that stores the PCoA results, including eigenvalues, the proportion
+        explained by each of them, and transformed sample coordinates.
 
     See Also
     --------
@@ -83,26 +80,47 @@ def pcoa(
 
     Notes
     -----
-    If the distance is not Euclidean (for example if it is a
-    semimetric and the triangle inequality doesn't hold),
-    negative eigenvalues can appear. There are different ways
-    to deal with that problem (see Legendre & Legendre 1998, \S
-    9.2.3), but none are currently implemented here.
-    However, a warning is raised whenever negative eigenvalues
-    appear, allowing the user to decide if they can be safely
-    ignored.
+    Principal Coordinate Analysis (PCoA) was first described in [1]_.
 
-    Default eigendecomposition uses SciPy's `eigh` method which computes
-    all eigenvectors and eigenvalues. If using fast heuristic
-    eigendecomposition through `fsvd`, a desired number of dimensions
-    should be specified. Note that the default eigendecomposition
-    method `eigh` does not natively support a specifying number of
-    dimensions to reduce a matrix to, so if this parameter is specified,
-    all eigenvectors and eigenvalues will be simply be computed with no
-    speed gain, and only the number specified by `number_of_dimensions`
-    will be returned. Specifying a value of `0`, the default, will
-    set `number_of_dimensions` equal to the number of dimensions of the
-    specified `distance_matrix`.
+    This function uses a choice of two methods for matrix decomposition: The default
+    method, ``eigh``, performs eigendecomposition, an exact method that computes all
+    eigenvectors and eigenvalues. The alternative method, ``fsvd``, performs fast
+    singular value decomposition (FSVD) [2]_, an efficient heuristic method that
+    allows a custom number of dimensions to be specified to reduce calculation at the
+    cost of losing accuracy. The degree of accuracy lost is dependent on dataset.
+
+    Note that the default method ``eigh`` does not natively support a given number of
+    dimensions to reduce a matrix to. Therefore, if this parameter is specified, all
+    eigenvectors and eigenvalues will be simply be computed with no speed gain, and
+    only the specified number of dimensions will be returned.
+
+    Eigenvalues represent the magnitude of individual principal coordinates, and
+    they are usually positive. However, negative eigenvalues can occur when the
+    distances were calculated using a non-Euclidean metric that does not satisfy
+    triangle inequality. If the negative eigenvalues are small in magnitude compared
+    to the largest positive eigenvalue, it is usually safe to ignore them. However,
+    large negative eigenvalues may indicate result inaccuracy, in which case a warning
+    message will be displayed. The paramter ``warn_neg_eigval`` controls the threshold
+    for the warning.
+
+    PCoA on Euclidean distances is equivalent to Principal Component Analysis (PCA).
+    However, in ecology, the Euclidean distance preserved by PCA is often not a good
+    choice because it deals poorly with double zeros. For example, species have
+    unimodal distributions along environmental gradients. If a species is absent from
+    two sites simultaneously, it can't be known if an environmental variable is too
+    high in one of them and too low in the other, or too low in both, etc. On the other
+    hand, if a species is present in two sites, that means that the sites are similar.
+
+    Note that the returned eigenvectors are not normalized to unit length.
+
+    References
+    ----------
+    .. [1] Gower, J. C. (1966). Some distance properties of latent root and vector
+       methods used in multivariate analysis. Biometrika, 53(3-4), 325-338.
+
+    .. [2] Halko, N., Martinsson, P. G., Shkolnisky, Y., & Tygert, M. (2011). An
+       algorithm for the principal component analysis of large data sets. SIAM
+       Journal on Scientific computing, 33(5), 2580-2594.
 
     """
     distance_matrix = DistanceMatrix(distance_matrix)
@@ -138,6 +156,12 @@ def pcoa(
             "supplied as the number of dimensions."
         )
 
+    if warn_neg_eigval and not 0 <= warn_neg_eigval <= 1:
+        raise ValueError(
+            "warn_neg_eigval must be Boolean or a floating-point number between 0 "
+            "and 1."
+        )
+
     # Perform eigendecomposition
     if method == "eigh":
         # eigh does not natively support specifying number_of_dimensions, i.e.
@@ -156,7 +180,7 @@ def pcoa(
                 "FSVD: since value for number_of_dimensions is specified as float, "
                 "PCoA for all dimensions will be computed, which may "
                 "result in long computation time if the original "
-                "distance matrix is large."
+                "distance matrix is large. "
                 "Consider specifying an integer value to optimize performance.",
                 RuntimeWarning,
             )
@@ -176,23 +200,24 @@ def pcoa(
     # in that case. First, we make values close to 0 equal to 0.
     negative_close_to_zero = np.isclose(eigvals, 0)
     eigvals[negative_close_to_zero] = 0
-    if np.any(eigvals < 0):
-        warn(
-            "The result contains negative eigenvalues."
-            " Please compare their magnitude with the magnitude of some"
-            " of the largest positive eigenvalues. If the negative ones"
-            " are smaller, it's probably safe to ignore them, but if they"
-            " are large in magnitude, the results won't be useful. See the"
-            " Notes section for more details. The smallest eigenvalue is"
-            " {0} and the largest is {1}.".format(eigvals.min(), eigvals.max()),
-            RuntimeWarning,
-        )
 
     # eigvals might not be ordered, so we first sort them, then analogously
     # sort the eigenvectors by the ordering of the eigenvalues too
     idxs_descending = eigvals.argsort()[::-1]
     eigvals = eigvals[idxs_descending]
     eigvecs = eigvecs[:, idxs_descending]
+
+    # large negative eigenvalues suggest result inaccuracy
+    # see: https://github.com/scikit-bio/scikit-bio/issues/1410
+    if warn_neg_eigval and eigvals[-1] < 0:
+        if warn_neg_eigval is True or -eigvals[-1] > eigvals[0] * warn_neg_eigval:
+            warn(
+                "The result contains negative eigenvalues that are large in magnitude,"
+                " which may suggest result inaccuracy. See Notes for details. The"
+                " negative-most eigenvalue is {0} whereas the largest positive one is"
+                " {1}.".format(eigvals[-1], eigvals[0]),
+                RuntimeWarning,
+            )
 
     # If we return only the coordinates that make sense (i.e., that have a
     # corresponding positive eigenvalue), then Jackknifed Beta Diversity
@@ -286,13 +311,17 @@ def _fsvd(centered_distance_matrix, number_of_dimensions=10, seed=None):
 
     Notes
     -----
-    The algorithm is based on 'An Algorithm for the Principal
-    Component analysis of Large Data Sets'
-    by N. Halko, P.G. Martinsson, Y. Shkolnisky, and M. Tygert.
-    Original Paper: https://arxiv.org/abs/1007.5510
+    The algorithm is based on [1]_.
 
-    Ported from MATLAB implementation described here:
-    https://stats.stackexchange.com/a/11934/211065
+    Ported from MATLAB implementation described in [2]_.
+
+    References
+    ----------
+    .. [1] Halko, N., Martinsson, P. G., Shkolnisky, Y., & Tygert, M. (2011). An
+       algorithm for the principal component analysis of large data sets. SIAM
+       Journal on Scientific computing, 33(5), 2580-2594.
+
+    .. [2] https://stats.stackexchange.com/a/11934/211065
 
     """
     m, n = centered_distance_matrix.shape
@@ -390,9 +419,6 @@ def _fsvd(centered_distance_matrix, number_of_dimensions=10, seed=None):
 def pcoa_biplot(ordination, y):
     """Compute the projection of descriptors into a PCoA matrix.
 
-    This implementation is as described in Chapter 9 of Legendre & Legendre,
-    Numerical Ecology 3rd edition.
-
     Parameters
     ----------
     ordination: OrdinationResults
@@ -408,6 +434,14 @@ def pcoa_biplot(ordination, y):
     OrdinationResults
         The modified input object that includes projected features onto the
         ordination space in the ``features`` attribute.
+
+    Notes
+    -----
+    This implementation is as described in Chapter 9 of [1]_.
+
+    References
+    ----------
+    .. [1] Legendre P. and Legendre L. 1998. Numerical Ecology. Elsevier, Amsterdam.
 
     """
     # acknowledge that most saved ordinations lack a name, however if they have
