@@ -610,16 +610,17 @@ fuzzy=[(True, False)], metadata={'gene': 'foo'})
         lowercase=False,
         remove_spaces=True,
     ):
+        self.remove_spaces = remove_spaces
         if isinstance(sequence, np.ndarray):
             if sequence.dtype == np.uint8:
-                self._set_bytes_contiguous(sequence, remove_spaces)
+                self._set_bytes_contiguous(sequence)
             elif sequence.dtype == "|S1":
                 sequence = sequence.view(np.uint8)
                 # Guarantee the sequence is an array (might be scalar before
                 # this).
                 if sequence.shape == ():
                     sequence = np.array([sequence], dtype=np.uint8)
-                self._set_bytes_contiguous(sequence, remove_spaces)
+                self._set_bytes_contiguous(sequence)
             else:
                 raise TypeError(
                     "Can only create sequence from numpy.ndarray of dtype "
@@ -638,7 +639,7 @@ fuzzy=[(True, False)], metadata={'gene': 'foo'})
                 interval_metadata = sequence.interval_metadata
             sequence = sequence._bytes
             self._owns_bytes = False
-            self._set_bytes(sequence, remove_spaces)
+            self._set_bytes(sequence)
         else:
             # Encode as ascii to raise UnicodeEncodeError if necessary.
             if isinstance(sequence, str):
@@ -656,8 +657,7 @@ fuzzy=[(True, False)], metadata={'gene': 'foo'})
 
             sequence = s
             self._owns_bytes = False
-
-            self._set_bytes(sequence, remove_spaces)
+            self._set_bytes(sequence)
 
         MetadataMixin._init_(self, metadata=metadata)
         PositionalMetadataMixin._init_(self, positional_metadata=positional_metadata)
@@ -678,7 +678,7 @@ fuzzy=[(True, False)], metadata={'gene': 'foo'})
                 "string, but got %s" % type(lowercase)
             )
 
-    def _set_bytes_contiguous(self, sequence, remove_spaces):
+    def _set_bytes_contiguous(self, sequence):
         r"""Munge the sequence data into a numpy array of dtype uint8."""
         if not sequence.flags["C_CONTIGUOUS"]:
             # numpy doesn't support views of non-contiguous arrays. Since we're
@@ -690,10 +690,10 @@ fuzzy=[(True, False)], metadata={'gene': 'foo'})
             self._owns_bytes = True
         else:
             self._owns_bytes = False
-        self._set_bytes(sequence, remove_spaces)
+        self._set_bytes(sequence)
 
-    def _set_bytes(self, sequence, remove_spaces):
-        if remove_spaces:
+    def _set_bytes(self, sequence):
+        if self.remove_spaces:
             # Filter out spaces (ASCII code 32).
             sequence = sequence[sequence != 32]
         sequence.flags.writeable = False
@@ -978,7 +978,10 @@ fuzzy=[(True, False)], metadata={'gene': 'foo'})
             metadata = self.metadata
 
         return self._constructor(
-            sequence=seq, metadata=metadata, positional_metadata=positional_metadata
+            sequence=seq,
+            metadata=metadata,
+            positional_metadata=positional_metadata,
+            remove_spaces=self.remove_spaces,
         )
 
     def _slice_positional_metadata(self, indexable):
