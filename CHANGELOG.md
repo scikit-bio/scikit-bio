@@ -53,8 +53,7 @@
 * Fixed a bug in `TreeNode.unrooted_move` which does not respect specified branch attributes ([#2103](https://github.com/scikit-bio/scikit-bio/pull/2103)).
 * Fixed a bug in `skbio.diversity.get_beta_diversity_metrics` which does not display metrics other than UniFrac ([#2126](https://github.com/scikit-bio/scikit-bio/pull/2126)).
 * Raises an error when beta diversity metric `mahalanobis` is called but sample number is smaller than or equal to feature number in the data. Thank @quliping for noting this in [#2125](https://github.com/scikit-bio/scikit-bio/pull/2125).
-* Fixed a bug in `skbio.sequence.Sequence` that improperly handled sequences containing
-spaces. ([#2156](https://github.com/scikit-bio/scikit-bio/pull/2156))
+* Fixed a bug in `skbio.sequence.Sequence` that improperly handled sequences containing spaces. ([#2156](https://github.com/scikit-bio/scikit-bio/pull/2156))
 
 ### Miscellaneous
 
