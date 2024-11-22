@@ -2590,6 +2590,17 @@ class TestDistance(TestSequenceBase):
         with self.assertRaises(ValueError):
             seq_wrong.distance(seq1)
 
+    def test_remove_spaces(self):
+        seq1 = Sequence("abc def")
+        obs = str(seq1)
+        exp = "abcdef"
+        self.assertEqual(obs, exp)
+
+        seq2 = Sequence("abc def", remove_spaces=False)
+        obs = str(seq2)
+        exp = "abc def"
+        self.assertEqual(obs, exp)
+
 
 # NOTE: this must be a *separate* class for doctests only (no unit tests). nose
 # will not run the unit tests otherwise
