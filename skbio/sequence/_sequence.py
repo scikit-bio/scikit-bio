@@ -77,10 +77,6 @@ class Sequence(
         the object. All lowercase characters will be converted to uppercase,
         and a ``True`` value will be stored in a boolean array in the
         positional metadata under the key.
-    remove_spaces : bool, optional
-        If ``True``, any spaces in the sequence will be removed. Filtering
-        is done via removing the integer 32 (ASCII code for spaces)
-        from the underlying array. Defaults to ``True``.
 
     See Also
     --------
@@ -608,9 +604,7 @@ fuzzy=[(True, False)], metadata={'gene': 'foo'})
         positional_metadata=None,
         interval_metadata=None,
         lowercase=False,
-        # remove_spaces=False,
     ):
-        # self.remove_spaces = remove_spaces
         if isinstance(sequence, np.ndarray):
             if sequence.dtype == np.uint8:
                 self._set_bytes_contiguous(sequence)
@@ -978,7 +972,6 @@ fuzzy=[(True, False)], metadata={'gene': 'foo'})
             sequence=seq,
             metadata=metadata,
             positional_metadata=positional_metadata,
-            # remove_spaces=self.remove_spaces,
         )
 
     def _slice_positional_metadata(self, indexable):
