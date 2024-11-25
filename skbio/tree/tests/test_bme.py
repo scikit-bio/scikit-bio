@@ -79,17 +79,17 @@ class BmeTests(TestCase):
 
     def test_bme_dm1(self):
         actual_TreeNode = bme(self.dm1)
-        self.assertAlmostEqual(actual_TreeNode.compare_tip_distances(
+        self.assertAlmostEqual(actual_TreeNode.compare_cophenet(
             self.expected1_TreeNode), 0.0)
 
     def test_bme_dm2(self):
         actual_TreeNode = bme(self.dm2)
-        self.assertAlmostEqual(actual_TreeNode.compare_tip_distances(
+        self.assertAlmostEqual(actual_TreeNode.compare_cophenet(
             self.expected2_TreeNode), 0.0)
 
     def test_bme_dm3(self):
         actual_TreeNode = bme(self.dm3)
-        self.assertAlmostEqual(actual_TreeNode.compare_tip_distances(
+        self.assertAlmostEqual(actual_TreeNode.compare_cophenet(
             self.expected3_TreeNode), 0.0)
 
     def test_bme_zero_branch_length(self):
@@ -174,7 +174,7 @@ class BmeTests(TestCase):
         actual_TreeNode = TreeNode.read(io.StringIO(pre_estimation_str))
         _bal_ols_edge(actual_TreeNode, dm)
         expected_TreeNode = TreeNode.read(io.StringIO(expected_str))
-        self.assertAlmostEqual(actual_TreeNode.compare_tip_distances(
+        self.assertAlmostEqual(actual_TreeNode.compare_cophenet(
             expected_TreeNode), 0.0, places=10)
 
 if __name__ == "__main__":
