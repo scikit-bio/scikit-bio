@@ -608,9 +608,9 @@ fuzzy=[(True, False)], metadata={'gene': 'foo'})
         positional_metadata=None,
         interval_metadata=None,
         lowercase=False,
-        remove_spaces=True,
+        # remove_spaces=False,
     ):
-        self.remove_spaces = remove_spaces
+        # self.remove_spaces = remove_spaces
         if isinstance(sequence, np.ndarray):
             if sequence.dtype == np.uint8:
                 self._set_bytes_contiguous(sequence)
@@ -693,9 +693,6 @@ fuzzy=[(True, False)], metadata={'gene': 'foo'})
         self._set_bytes(sequence)
 
     def _set_bytes(self, sequence):
-        if self.remove_spaces:
-            # Filter out spaces (ASCII code 32).
-            sequence = sequence[sequence != 32]
         sequence.flags.writeable = False
         self._bytes = sequence
 
@@ -981,7 +978,7 @@ fuzzy=[(True, False)], metadata={'gene': 'foo'})
             sequence=seq,
             metadata=metadata,
             positional_metadata=positional_metadata,
-            remove_spaces=self.remove_spaces,
+            # remove_spaces=self.remove_spaces,
         )
 
     def _slice_positional_metadata(self, indexable):

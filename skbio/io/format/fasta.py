@@ -730,9 +730,14 @@ def _sniffer_data_parser(chunks):
 
 @fasta.reader(None)
 def _fasta_to_generator(fh, qual=FileSentinel, constructor=Sequence, **kwargs):
+    kwargs = kwargs.copy()
+    if "remove_spaces" in kwargs:
+        kwarg = {"remove_spaces": kwargs.pop("remove_spaces")}
+    else:
+        kwarg = {}
     if qual is None:
         for seq, id_, desc in _parse_fasta_raw(
-            fh, _parse_sequence_data, FASTAFormatError
+            fh, _parse_sequence_data, FASTAFormatError, **kwarg
         ):
             yield constructor(seq, metadata={"id": id_, "description": desc}, **kwargs)
     else:
@@ -958,7 +963,7 @@ def _tabular_msa_to_fasta(
     )
 
 
-def _parse_fasta_raw(fh, data_parser, error_type):
+def _parse_fasta_raw(fh, data_parser, error_type, remove_spaces=False):
     """Raw parser for FASTA or QUAL files.
 
     Returns raw values (seq/qual, id, description). It is the responsibility of
@@ -995,6 +1000,8 @@ def _parse_fasta_raw(fh, data_parser, error_type):
                     raise error_type(
                         "Found blank or whitespace-only line within record."
                     )
+                if remove_spaces:
+                    line = line.replace(" ", "")
                 data_chunks.append(line)
         prev = line
     # yield last record in file
