@@ -188,7 +188,10 @@ format.
 
 Reader-specific Parameters
 ^^^^^^^^^^^^^^^^^^^^^^^^^^
-The available reader parameters differ depending on which reader is used.
+The ``remove_spaces`` parameter can be used with any reader. If set to ``True``,
+all spaces in the input will be removed. Default is ``False``.
+
+The following reader parameters differ depending on which reader is used.
 
 Generator and TabularMSA Reader Parameters
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
