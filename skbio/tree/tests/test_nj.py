@@ -9,6 +9,8 @@
 import io
 from unittest import TestCase, main
 
+import numpy.testing as npt
+
 from skbio import DistanceMatrix, TreeNode
 from skbio.tree._nj import nj, _tree_from_linkmat
 
@@ -75,18 +77,30 @@ class NjTests(TestCase):
 
     def test_nj_dm1(self):
         actual_TreeNode = nj(self.dm1)
-        self.assertAlmostEqual(actual_TreeNode.compare_tip_distances(
+        self.assertAlmostEqual(actual_TreeNode.compare_cophenet(
             self.expected1_TreeNode), 0.0)
 
     def test_nj_dm2(self):
         actual_TreeNode = nj(self.dm2)
-        self.assertAlmostEqual(actual_TreeNode.compare_tip_distances(
+        self.assertAlmostEqual(actual_TreeNode.compare_cophenet(
             self.expected2_TreeNode), 0.0)
 
     def test_nj_dm3(self):
         actual_TreeNode = nj(self.dm3)
-        self.assertAlmostEqual(actual_TreeNode.compare_tip_distances(
+        self.assertAlmostEqual(actual_TreeNode.compare_cophenet(
             self.expected3_TreeNode), 0.0)
+
+    def test_nj_inplace(self):
+        dm = self.dm3.copy()
+        obs = nj(dm)
+        exp = self.expected3_TreeNode
+        self.assertAlmostEqual(obs.compare_cophenet(exp), 0.0)
+        npt.assert_almost_equal(dm.data, self.dm3.data)
+
+        obs = nj(dm, inplace=True)
+        self.assertAlmostEqual(obs.compare_cophenet(exp), 0.0)
+        with self.assertRaises(AssertionError):
+            npt.assert_almost_equal(dm.data, self.dm3.data)
 
     def test_nj_zero_branch_length(self):
         # no nodes have negative branch length when we disallow negative
@@ -106,7 +120,7 @@ class NjTests(TestCase):
 
         # deprecated functionality
         t2 = nj(self.dm4, disallow_negative_branch_length=False)
-        self.assertAlmostEqual(tree.compare_tip_distances(t2), 0.0)
+        self.assertAlmostEqual(tree.compare_cophenet(t2), 0.0)
 
     def test_nj_trivial(self):
         data = [[0, 3, 2],
@@ -114,7 +128,7 @@ class NjTests(TestCase):
                 [2, 3, 0]]
         dm = DistanceMatrix(data, list('abc'))
         exp = TreeNode.read(["(b:2.000000, a:1.000000, c:1.000000);"])
-        self.assertAlmostEqual(nj(dm).compare_tip_distances(exp), 0.0)
+        self.assertAlmostEqual(nj(dm).compare_cophenet(exp), 0.0)
 
         # deprecated functionality
         self.assertEqual(nj(dm, result_constructor=str), "(a:1.0,b:2.0,c:1.0);\n")

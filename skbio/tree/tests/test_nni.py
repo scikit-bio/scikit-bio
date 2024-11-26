@@ -95,19 +95,19 @@ class NniTests(TestCase):
 
     def test_nni_dm1(self):
         actual_TreeNode = nni(self.pre1_nni_TreeNode, self.dm1, inplace=False, balanced=False)
-        self.assertAlmostEqual(actual_TreeNode.compare_tip_distances(
+        self.assertAlmostEqual(actual_TreeNode.compare_cophenet(
             self.post1_nni_TreeNode), 0.0, places=10)
 
     def test_nni_dm2(self):
         # Resulting tree topology is equivalent to result from nj, however,
         # resulting edge lengths are almost equal to 2 places.
         actual_TreeNode = nni(self.pre2_nni_TreeNode, self.dm2, inplace=False, balanced=False)
-        self.assertAlmostEqual(actual_TreeNode.compare_tip_distances(
+        self.assertAlmostEqual(actual_TreeNode.compare_cophenet(
             self.post2_nni_TreeNode), 0.0)
 
     def test_nni_dm3(self):
         actual_TreeNode = nni(self.pre3_nni_TreeNode, self.dm3, inplace=False, balanced=False)
-        self.assertAlmostEqual(actual_TreeNode.compare_tip_distances(
+        self.assertAlmostEqual(actual_TreeNode.compare_cophenet(
             self.post3_nni_TreeNode), 0.0)
         
     def test_nni_trivial(self):
