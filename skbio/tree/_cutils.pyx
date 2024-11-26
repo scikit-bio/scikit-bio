@@ -67,10 +67,8 @@ def nj_minq_cy(double[:, :] dm, double[:] sums):
                 min_q = q_plus - sums[i]
                 min_i, min_j = i, j
 
-    return min_i, min_j
+    return min_i, min_j  
 
-@cython.boundscheck(False)
-@cython.wraparound(False)
 def num_dist_cy(int anc, int desc):
     """Distance as number of nodes between ancestor and descendant."""
     # initialize distance
