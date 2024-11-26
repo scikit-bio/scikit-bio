@@ -8,6 +8,7 @@
 
 import numpy as np
 from skbio.tree import TreeNode
+from ._cutils import num_dist_cy
 
 
 def _ordered(tree_array):
@@ -48,22 +49,6 @@ def _pair_lca(left_node, right_node):
     return right_node
 
 
-def _num_dist(anc, desc):
-    dist = 0
-    while desc != anc:
-        if desc < anc:
-            dist = -1
-            break
-        if desc % 2 == 0:
-            desc = int(((desc - 2) * 0.5))
-        else:
-            desc = int(((desc - 1) * 0.5))
-        dist += 1
-    # if dist == -1:
-    # raise ValueError("no ancestral path")
-    return dist
-
-
 def _subtree_root(taxa):
     lca = _pair_lca(taxa[0], taxa[1])
     for taxon in taxa[2 : len(taxa)]:
@@ -88,12 +73,12 @@ def _sibling(node):
 
 
 def _ancestors(x, array):
-    result = [v for v in array if _num_dist(v, x) > 0]
+    result = [v for v in array if num_dist_cy(v, x) > 0]
     return np.array(result)
 
 
 def _subtree(x, array):
-    result = [v for v in array if _num_dist(x, v) >= 0]
+    result = [v for v in array if num_dist_cy(x, v) >= 0]
     return np.array(result)
 
 
@@ -107,7 +92,7 @@ def _move_subtree(tree_array, subtree_nodes, old_lca, new_lca):
 
 def _move_node(x, old_lca, new_lca):
     diff = new_lca - old_lca
-    return x + (diff * (2 ** _num_dist(old_lca, x)))
+    return x + (diff * (2 ** num_dist_cy(old_lca, x)))
 
 
 def _array_to_tree(taxa, tree_array):

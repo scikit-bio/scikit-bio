@@ -13,10 +13,11 @@ import numpy as np
 from skbio import TreeNode
 
 from skbio.tree._util import (
-    _ordered, _pair_lca, _num_dist,
+    _ordered, _pair_lca,
     _subtree_root, _parent, _sibling,
     _ancestors, _subtree, _move_subtree,
     _move_node, _array_to_tree)
+from ._cutils import num_dist_cy
 
 
 class UtilTests(TestCase):
@@ -49,9 +50,9 @@ class UtilTests(TestCase):
         data_2 = [1, 2]
         # checking distance to self
         data_3 = [1, 1]
-        self.assertEqual(_num_dist(data_1[0], data_1[1]), 2)
-        self.assertEqual(_num_dist(data_1[0], data_1[1]), -1)
-        self.assertEqual(_num_dist(data_1[0], data_1[1]), 0)
+        self.assertEqual(num_dist_cy(data_1[0], data_1[1]), 2)
+        self.assertEqual(num_dist_cy(data_1[0], data_1[1]), -1)
+        self.assertEqual(num_dist_cy(data_1[0], data_1[1]), 0)
     
     def test_subtree_root(self):
         data = [7, 17, 18]

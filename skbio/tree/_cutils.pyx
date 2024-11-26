@@ -68,3 +68,16 @@ def nj_minq_cy(double[:, :] dm, double[:] sums):
                 min_i, min_j = i, j
 
     return min_i, min_j
+
+def num_dist_cy(int anc, int desc):
+    """Distance as number of nodes between ancestor and descendant."""
+    # initialize distance
+    cdef int dist = 0
+    # iterating over parents of descendant until reaching the ancestor
+    while desc > anc:
+        desc = (desc - 1) // 2
+        dist += 1
+    # return negative value for nodes that are not in an ancestral line
+    if desc < anc:
+        dist = -1
+    return dist
