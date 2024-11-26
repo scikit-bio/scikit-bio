@@ -315,6 +315,13 @@ class TreeTests(TestCase):
         obs = t_root.lowest_common_ancestor(["a", "c"])
         self.assertIs(obs, t_root)
 
+        # nested nodes
+        t_sub = t1.copy()
+        obs = t_sub.lowest_common_ancestor(["b", "d", "g", "i"])
+        self.assertIs(obs, t_sub)
+        obs = t_sub.lowest_common_ancestor(["e", "b", "d", "h"])
+        self.assertIs(obs, t_sub)
+
         # empty case
         with self.assertRaises(ValueError):
             t1.lowest_common_ancestor([])
@@ -1807,7 +1814,7 @@ class TreeTests(TestCase):
         sdbl = tr.total_length([tr.find("A"), tr.find("E")])
         self.assertAlmostEqual(sdbl, 2.2)
 
-        # old parameter name
+        # parameter alias
         sdbl = tr.total_length(tip_subset="AE")
         self.assertAlmostEqual(sdbl, 2.2)
 
@@ -1858,7 +1865,7 @@ class TreeTests(TestCase):
         self.assertAlmostEqual(tdbl, 8.9)
 
         # include root length
-        tdbl = tr.total_length(include_root=True)
+        tdbl = tr.total_length(include_self=True)
         self.assertAlmostEqual(tdbl, 9.9)
 
         # internal nodes
@@ -1870,7 +1877,7 @@ class TreeTests(TestCase):
         self.assertEqual(tdbl, 0.0)
         self.assertIsInstance(tdbl, float)
 
-        tdbl = tr.total_length("B", include_root=True)
+        tdbl = tr.total_length("B", include_self=True)
         self.assertAlmostEqual(tdbl, 1.2)
 
     def test_total_length_subtree(self):
@@ -1881,7 +1888,7 @@ class TreeTests(TestCase):
         obs = tsub.total_length()
         self.assertAlmostEqual(obs, 4.2)
 
-        obs = tsub.total_length(include_root=True)
+        obs = tsub.total_length(include_self=True)
         self.assertAlmostEqual(obs, 6.6)
 
         obs = tsub.total_length(["D", "E"])
@@ -1890,10 +1897,10 @@ class TreeTests(TestCase):
         obs = tsub.total_length(["D", "E"], include_stem=True)
         self.assertAlmostEqual(obs, 2.4)
 
-        obs = tsub.total_length(["D", "E"], include_root=True)
+        obs = tsub.total_length(["D", "E"], include_self=True)
         self.assertAlmostEqual(obs, 2.4)
 
-        obs = tsub.total_length(["D", "E"], include_stem=True, include_root=True)
+        obs = tsub.total_length(["D", "E"], include_stem=True, include_self=True)
         self.assertAlmostEqual(obs, 4.8)
 
         # node outside subtree

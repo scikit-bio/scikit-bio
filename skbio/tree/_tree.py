@@ -624,8 +624,8 @@ class TreeNode(SkbioObject):
                 curr = curr.parent
             curr._prev = None
 
-        # walk down the tree until last node with prev is None
-        curr = self.root()
+        # walk down from root until a node with prev as None
+        curr = prev
         while (prev := curr._prev) is not None:
             curr = prev
 
@@ -3810,9 +3810,9 @@ class TreeNode(SkbioObject):
         return accum
 
     def total_length(
-        self, nodes=None, include_stem=False, include_root=False, **kwargs
+        self, nodes=None, include_stem=False, include_self=False, **kwargs
     ):
-        r"""Find the total length of branches descending from self.
+        r"""Calculate the total length of branches descending from self.
 
         .. versionchanged:: 0.6.3
             Renamed from ``descending_branch_length``. The old name is kept as an alias.
@@ -3836,10 +3836,10 @@ class TreeNode(SkbioObject):
 
             .. versionadded:: 0.6.3
 
-        include_root : bool, optional
-            Whether to include the length of the root node of relevant nodes. When
-            ``nodes`` is provided and ``include_stem`` is False, this node is the LCA
-            of the subset of nodes. Otherwise, this node is self. Default is False.
+        include_self : bool, optional
+            Whether to include the length of self. When ``nodes`` is provided and
+            ``include_stem`` is False, it is instead the LCA of the subset of nodes.
+            Default is False.
 
             .. versionadded:: 0.6.3
 
@@ -3855,8 +3855,8 @@ class TreeNode(SkbioObject):
 
         Notes
         -----
-        The metric quantifies the total amount of evolutionary change across all
-        lineages in the (sub)tree.
+        The metric can be considered as the total amount of evolutionary change across
+        all lineages in the tree.
 
         This metric is closely related to phylogenetic diversity (PD) in community
         ecology. When ``include_stem`` is True, it is equivalent to Faith's PD (see
@@ -3903,7 +3903,7 @@ class TreeNode(SkbioObject):
         ## shortcut for the entire subtree
         if not nodes:
             return sum(
-                n.length or 0.0 for n in self.postorder(include_self=include_root)
+                n.length or 0.0 for n in self.postorder(include_self=include_self)
             )
 
         nodes = [self.find(x) for x in nodes]
@@ -3953,7 +3953,7 @@ class TreeNode(SkbioObject):
 
         # Identify the range of nodes to be included in calculation depending on the
         # parameter setting
-        stop = (i_self if include_stem else i_lca) + include_root
+        stop = (i_self if include_stem else i_lca) + include_self
 
         # sum up branch lengths
         return (
@@ -5245,13 +5245,11 @@ class TreeNode(SkbioObject):
         7
 
         Cache the sum of branch lengths per clade. This resembles but is more efficient
-        than calling :meth:`descending_branch_length` multiple times. Note: the result
-        includes the stem branch of each clade. One needs to subtract ``length`` from
-        each value in order to match the result of ``descending_branch_length``.
+        than calling :meth:`total_length` (with `include_stem=True`) multiple times.
 
         >>> f = lambda n: n.length or 0.0
-        >>> tree.cache_attr(f, 'total_length', sum)
-        >>> tree.total_length
+        >>> tree.cache_attr(f, 'clade_size', sum)
+        >>> tree.clade_size
         5.5
 
         Cache the accumulative distances from all tips to the common ancestor of each
