@@ -546,13 +546,16 @@ class TreeNode(SkbioObject):
         else:
             return [n for n in nodes if n is not ignore]
 
-    def lowest_common_ancestor(self, tipnames):
+    def lowest_common_ancestor(self, nodes=None, **kwargs):
         r"""Find the lowest common ancestor of a list of nodes.
 
         Parameters
         ----------
-        tipnames : iterable of TreeNode or str
-            The nodes of interest.
+        nodes : iterable of TreeNode or str
+            Instances or names of the nodes of interest.
+
+            .. versionchanged:: 0.6.3
+                Renamed from ``tipnames``. The old name is preserved as an alias.
 
         Returns
         -------
@@ -561,13 +564,18 @@ class TreeNode(SkbioObject):
 
         Raises
         ------
-        ValueError
-            If no tips could be found in the tree, or if not all tips were found.
+        MissingNodeError
+            If some nodes cannot be found in the tree.
 
         Notes
         -----
-        Despite the parameter is named as ``tipnames``, it can accept both tips and
-        internal nodes.
+        Both tips and internal nodes may be provided in ``nodes``. If internal node
+        names are provided, it is the user's responsibility to ensure that they are
+        unique in the tree.
+
+        This method considers the entire tree rather than the subtree below self.
+        Therefore, if some nodes are not descendants of self, the LCA of nodes will be
+        ancestral to self.
 
         Examples
         --------
@@ -583,36 +591,47 @@ class TreeNode(SkbioObject):
         root
 
         """
-        nodes = [self.find(x) for x in tipnames]
+        if kwargs and "tipnames" in kwargs:
+            nodes = kwargs["tipnames"]
         if not nodes:
-            raise ValueError("No node is found.")
-        elif len(nodes) == 1:
+            raise ValueError("No node is specified.")
+        nodes = [self.find(x) for x in nodes]
+        if len(nodes) == 1:
             return nodes[0]
-
-        # A temporary attribute "prev" will be assigned to visited nodes. It represents
-        # the previous node in the upward path, or None, which indicates the current
-        # node is the beginning of the path, or there are more than one previous node.
         visited = []
         visited_append = visited.append
 
-        for curr in nodes:
-            prev = None
+        # Path of the first node to root. LCA must be in this path.
+        # A temporary attribute "prev" will be assigned to visited nodes. It represents
+        # the previous node in the upward path.
+        curr = nodes[0]
+        prev = None
+        while curr is not None:
+            curr._prev = prev
+            visited_append(curr)
+            prev = curr
+            curr = curr.parent
+
+        # Paths of other nodes to root.
+        # The prev attribute no longer needs to record the previous node. It is
+        # uniformly set as None. When the path hits a previously visited node, it will
+        # stop. If the node is in the first path, its prev becomes None, indicating
+        # that it has been visited more than once.
+        for curr in nodes[1:]:
             while curr is not None:
-                # set prev as None if already visited
                 if hasattr(curr, "_prev"):
                     curr._prev = None
                     break
-                curr._prev = prev
+                curr._prev = None
                 visited_append(curr)
-                prev = curr
                 curr = curr.parent
 
         # walk down the tree until last node with prev is None
-        curr = self
+        curr = self.root()
         while (prev := curr._prev) is not None:
             curr = prev
 
-        # clean up temporary attribute "prev"
+        # clean up temporary attribute prev
         for node in visited:
             del node._prev
 

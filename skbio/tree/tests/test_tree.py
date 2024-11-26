@@ -286,6 +286,10 @@ class TreeTests(TestCase):
         self.assertEqual(obs4, exp4)
         self.assertEqual(obs5, exp5)
 
+        # parameter alias
+        self.assertEqual(t1.lowest_common_ancestor(nodes=input1), exp1)
+        self.assertEqual(t1.lowest_common_ancestor(tipnames=input1), exp1)
+
         # verify multiple calls work
         t_mul = t1.copy()
         exp_1 = t_mul.find("d")
@@ -301,6 +305,11 @@ class TreeTests(TestCase):
         exp = t_sub.find("d")
         self.assertEqual(obs, exp)
 
+        # lca outside subtree
+        obs = t_sub.find("e").lowest_common_ancestor(["b", "g"])
+        exp = t_sub
+        self.assertEqual(obs, exp)
+
         # root included
         t_root = TreeNode.read(["(a,b)c;"])
         obs = t_root.lowest_common_ancestor(["a", "c"])
@@ -309,6 +318,8 @@ class TreeTests(TestCase):
         # empty case
         with self.assertRaises(ValueError):
             t1.lowest_common_ancestor([])
+        with self.assertRaises(ValueError):
+            t1.lowest_common_ancestor()
 
     def test_path(self):
         """List of TreeNode objects in path between nodes."""
