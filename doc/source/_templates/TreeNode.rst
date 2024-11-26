@@ -115,12 +115,15 @@
       ~{{ name }}.accumulate_to_ancestor
       ~{{ name }}.descending_branch_length
       ~{{ name }}.distance
+      ~{{ name }}.maxdist
       ~{{ name }}.get_max_distance
+      ~{{ name }}.cophenet
       ~{{ name }}.tip_tip_distances
       ~{{ name }}.compare_rfd
       ~{{ name }}.compare_wrfd
       ~{{ name }}.compare_subsets
       ~{{ name }}.compare_biparts
+      ~{{ name }}.compare_cophenet
       ~{{ name }}.compare_tip_distances
 
    .. rubric:: Tree visualization
