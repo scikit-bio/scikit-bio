@@ -661,6 +661,8 @@ class TreeNode(SkbioObject):
     def path(self, other, include_ends=False):
         r"""Return the list of nodes in the path from self to another node.
 
+        .. versionadded:: 0.6.3
+
         Parameters
         ----------
         other : TreeNode
@@ -1510,7 +1512,8 @@ class TreeNode(SkbioObject):
         r"""Remove nodes of a tree that meet certain criteria.
 
         .. versionchanged:: 0.6.3
-            This method was renamed from ``remove_deleted``.
+            Renamed from ``remove_deleted``. The old name is kept as an alias. But it
+            may be removed in a future version.
 
         Parameters
         ----------
@@ -2825,7 +2828,7 @@ class TreeNode(SkbioObject):
         if reset:
             tree.unroot(uncache=False)
 
-        max_dist, tips = tree.get_max_distance()
+        max_dist, tips = tree.maxdist()
         half_max_dist = max_dist / 2.0
 
         if max_dist == 0.0:
@@ -3995,10 +3998,10 @@ class TreeNode(SkbioObject):
         See Also
         --------
         path
-        tip_tip_distances
+        cophenet
         accumulate_to_ancestor
-        compare_tip_distances
-        get_max_distance
+        compare_cophenet
+        maxdist
 
         Notes
         -----
@@ -4009,7 +4012,7 @@ class TreeNode(SkbioObject):
 
         This method can be used to compute the distance between two given nodes.
         However, it is not optimized for computing all pairwise tip distances. Use
-        :meth:`tip_tip_distances` instead for that purpose.
+        :meth:`cophenet` instead for that purpose.
 
         References
         ----------
@@ -4039,10 +4042,13 @@ class TreeNode(SkbioObject):
         except TypeError:
             raise NoLengthError("Nodes without branch length are encountered.")
 
-    def get_max_distance(self, use_length=True):
-        r"""Return the maximum path distance between any pair of tips.
+    def maxdist(self, use_length=True):
+        r"""Return the maximum distance between any pair of tips in the tree.
 
-        This is also referred to as the diameter of a tree.
+        .. versionchanged:: 0.6.3
+            Renamed from ``get_max_distance``. The old name is kept as an alias.
+
+        This measure is also referred to as the **diameter** of a tree.
 
         Parameters
         ----------
@@ -4062,21 +4068,26 @@ class TreeNode(SkbioObject):
         See Also
         --------
         distance
-        tip_tip_distances
-        compare_tip_distances
+        cophenet
+        scipy.cluster.hierarchy.maxdists
 
         Notes
         -----
-        If a node does not have an associated branch length, 0 will be used.
+        This method identifies the two furthest apart tips in a tree, as measured by
+        the sum of branch lengths (i.e., patristic distance) connecting them. Missing
+        branch lengths will be replaced with 0. When ``use_length=False``, the number
+        of branches connecting two tips will be considered instead.
 
         When a tie is observed among more than one pair of tips, only one pair will be
-        returned. The choice is stable. This often happens when `use_length=False`.
+        returned. The choice is stable. This often happens when ``use_length=False``.
+
+        This method operates on the subtree below the current node.
 
         Examples
         --------
         >>> from skbio import TreeNode
         >>> tree = TreeNode.read(["((a:1,b:2)c:3,(d:4,e:5)f:6)root;"])
-        >>> dist, tips = tree.get_max_distance()
+        >>> dist, tips = tree.maxdist()
         >>> dist
         16.0
         >>> [n.name for n in tips]
@@ -4133,8 +4144,13 @@ class TreeNode(SkbioObject):
             max_dist = float(max_dist)
         return max_dist, (max_tip1, max_tip2)
 
-    def tip_tip_distances(self, endpoints=None, use_length=True):
-        r"""Return a distance matrix between pairs of tips.
+    get_max_distance = maxdist
+
+    def cophenet(self, endpoints=None, use_length=True):
+        r"""Return a distance matrix between each pair of tips in the tree.
+
+        .. versionchanged:: 0.6.3
+            Renamed from ``tip_tip_distances``. The old name is kept as an alias.
 
         Parameters
         ----------
@@ -4151,7 +4167,7 @@ class TreeNode(SkbioObject):
         Returns
         -------
         DistanceMatrix
-            The distance matrix.
+            The cophenetic distance matrix.
 
         Raises
         ------
@@ -4165,22 +4181,42 @@ class TreeNode(SkbioObject):
         See Also
         --------
         distance
-        compare_tip_distances
+        compare_cophenet
+        scipy.cluster.hierarchy.cophenet
 
         Notes
         -----
-        This method calculates the sum of branch lengths connecting each pair of tips.
-        It is also known as the patristic distance [1]_. If a node does not have an
-        associated branch length, 0 will be used.
+        The cophenetic distance [1]_ between a pair of tips is essentially the sum of
+        branch lengths connecting them (i.e., patristic distance [2]_, see
+        :meth:`distance`). It measures the divergence between two taxa in evolution.
 
-        If ``use_length`` is False, the method instead calculates the number of
-        branches connecting each pair of tips.
+        This method calculates the cophenetic distances between all pairs of tips in a
+        tree and returns a distance matrix. Missing branch lengths will be replaced with
+        0's. If ``use_length`` is False, the method instead calculates the number of
+        branches connecting each pair of tips. This method operates on the subtree below
+        the current node.
 
-        This method operates on the subtree below the current node.
+        In hierarchical clustering, the cophenetic distance is commonly used to measure
+        the dissimilarity between two objects before they are joined in a dendrogram.
+        In that context, it is also defined as the height of the lowest common ancestor
+        (LCA) from the surface of the tree. However, phylogenetic trees are usually
+        non-ultrametric (e.g., :func:`~skbio.tree.nj`), and the two child clades of a
+        node may have different heights. Therefore, the cophenetic distance is instead
+        defined as the patristic distance between the two tips. For ultrametric trees
+        (e.g., :func:`~skbio.tree.upgma`), this method's result should match SciPy's
+        :func:`~scipy.cluster.hierarchy.cophenet`.
+
+        One should also distinguish cophenetic distance from a related metric:
+        cophenetic value [1]_, which is the patristic distance between the LCA of two
+        tips and the root of the tree. It quantifies the shared evolutionary history
+        between two taxa, as in contrast to the cophenetic distance.
 
         References
         ----------
-        .. [1] Fourment, M., & Gibbs, M. J. (2006). PATRISTIC: a program for
+        .. [1] Sokal, R. R., & Rohlf, F. J. (1962). The comparison of dendrograms by
+           objective methods. Taxon, 33-40.
+
+        .. [2] Fourment, M., & Gibbs, M. J. (2006). PATRISTIC: a program for
            calculating patristic distances and graphically comparing the components of
            genetic change. BMC evolutionary biology, 6, 1-5.
 
@@ -4189,9 +4225,10 @@ class TreeNode(SkbioObject):
         >>> from skbio import TreeNode
         >>> tree = TreeNode.read(["((a:1,b:2)c:3,(d:4,e:5)f:6)root;"])
 
-        Calculate path length distances (patristic distances).
+        Calculate cophenetic distances as the sum of branch lengths (i.e., patristic
+        distance).
 
-        >>> mat = tree.tip_tip_distances()
+        >>> mat = tree.cophenet()
         >>> print(mat)
         4x4 distance matrix
         IDs:
@@ -4202,9 +4239,9 @@ class TreeNode(SkbioObject):
          [ 14.  15.   0.   9.]
          [ 15.  16.   9.   0.]]
 
-        Calculate path distances (branch counts).
+        Calculate cophenetic distances as the number of branches.
 
-        >>> mat = tree.tip_tip_distances(use_length=False)
+        >>> mat = tree.cophenet(use_length=False)
         >>> print(mat)
         4x4 distance matrix
         IDs:
@@ -4306,6 +4343,8 @@ class TreeNode(SkbioObject):
 
         # Skip validation as all items to validate are guaranteed.
         return DistanceMatrix(result, taxa, validate=False)
+
+    tip_tip_distances = cophenet
 
     def _compare_topology(
         self,
@@ -4573,7 +4612,7 @@ class TreeNode(SkbioObject):
         compare_wrfd
         compare_subsets
         compare_biparts
-        compare_tip_distances
+        compare_cophenet
 
         References
         ----------
@@ -4705,7 +4744,7 @@ class TreeNode(SkbioObject):
         See Also
         --------
         compare_rfd
-        compare_tip_distances
+        compare_cophenet
 
         References
         ----------
@@ -4786,7 +4825,7 @@ class TreeNode(SkbioObject):
             result *= 0.5
         return result
 
-    def compare_tip_distances(
+    def compare_cophenet(
         self,
         other,
         sample=None,
@@ -4797,7 +4836,10 @@ class TreeNode(SkbioObject):
         dist_f=None,
         shuffle_f=None,
     ):
-        r"""Calculate the distance between two trees based on tip-to-tip distances.
+        r"""Calculate the distance between two trees based on cophenetic distances.
+
+        .. versionchanged:: 0.6.3
+            Renamed from ``compare_tip_distances``. The old name is kept as an alias.
 
         Parameters
         ----------
@@ -4876,24 +4918,28 @@ class TreeNode(SkbioObject):
 
         See Also
         --------
-        tip_tip_distances
+        cophenet
         compare_rfd
         compare_wrfd
 
         Notes
         -----
-        This method calculates the dissimilarity between the tip-to-tip distance
-        matrices of two trees. Tips are identified by their names (i.e., taxa). Only
-        tips shared between the two trees are considered. Tips unique to either tree
-        are excluded from the calculation.
+        This method calculates the dissimilarity between the cophenetic distance [1]_
+        (i.e., tip-to-tip distance) matrices of two trees. Tips are identified by
+        their names (i.e., taxa). Only tips shared between the trees are considered.
+        Tips unique to either tree are excluded from the calculation.
 
         The default behavior returns a unit correlation distance (range: [0, 1]),
         measuring the dissimilarity between the relative evolutionary distances among
         taxa, regardless of the tree scale (i.e., multiply all branch lengths in one
-        tree by a factor and the result remains the same).
+        tree by a factor and the result remains the same). This measure is closely
+        related to **cophenetic correlation**, which measures the similarity (instead
+        of dissimilarity) between two cophenetic distance matrices, or between a
+        cophenetic distance matrix and the original distance matrix among taxa on
+        which hierarchical clustering was performed.
 
         When the metric is Euclidean and lengths are used, it returns the **path-length
-        distance** [1]_, which is the square root of the sum of squared differences of
+        distance** [2]_, which is the square root of the sum of squared differences of
         path lengths among all pairs of taxa.
 
         .. math::
@@ -4905,15 +4951,18 @@ class TreeNode(SkbioObject):
         respectively.
 
         When the metric is Euclidean and lengths are not used, it returns the **path
-        distance** [2]_, which insteads considers the number of edges in the path.
+        distance** [3]_, which insteads considers the number of edges in the path.
 
         References
         ----------
-        .. [1] Lapointe, F. J., & Cucumel, G. (1997). The average consensus procedure:
+        .. [1] Sokal, R. R., & Rohlf, F. J. (1962). The comparison of dendrograms by
+           objective methods. Taxon, 33-40.
+
+        .. [2] Lapointe, F. J., & Cucumel, G. (1997). The average consensus procedure:
            combination of weighted trees containing identical or overlapping sets of
            taxa. Systematic Biology, 46(2), 306-312.
 
-        .. [2] Steel, M. A., & Penny, D. (1993). Distributions of tree comparison
+        .. [3] Steel, M. A., & Penny, D. (1993). Distributions of tree comparison
            metrics—some new results. Systematic Biology, 42(2), 126-141.
 
         Examples
@@ -4949,31 +4998,31 @@ class TreeNode(SkbioObject):
 
         Calculate the unit correlation distance between the two trees.
 
-        >>> d = tree1.compare_tip_distances(tree2, ignore_self=True)
+        >>> d = tree1.compare_cophenet(tree2, ignore_self=True)
         >>> print(round(d, 5))
         0.14131
 
         Calculate the path-length distance between the two trees.
 
-        >>> d = tree1.compare_tip_distances(tree2, metric="euclidean",
+        >>> d = tree1.compare_cophenet(tree2, metric="euclidean",
         ...                                 ignore_self=True)
         >>> print(round(d, 5))
         13.71131
 
         Calculate the path distance between the two trees.
 
-        >>> tree1.compare_tip_distances(
+        >>> tree1.compare_cophenet(
         ...     tree2, metric="euclidean", use_length=False, ignore_self=True)
         4.0
 
         """
         # future warning
         if ignore_self is False:
-            func = self.__class__.compare_tip_distances
+            func = self.__class__.compare_cophenet
             if not hasattr(func, "warned"):
                 simplefilter("once", FutureWarning)
                 warn(
-                    "The default behavior of `compare_tip_distances` is subject to "
+                    "The default behavior of `compare_cophenet` is subject to "
                     "change in 0.7.0. The new default behavior can be achieved by "
                     "specifying `ignore_self=True`.",
                     FutureWarning,
@@ -5000,8 +5049,8 @@ class TreeNode(SkbioObject):
         tips1 = [tipmap1[x] for x in shared]
         tips2 = [tipmap2[x] for x in shared]
 
-        dm1 = self.tip_tip_distances(endpoints=tips1, use_length=use_length)
-        dm2 = other.tip_tip_distances(endpoints=tips2, use_length=use_length)
+        dm1 = self.cophenet(endpoints=tips1, use_length=use_length)
+        dm2 = other.cophenet(endpoints=tips2, use_length=use_length)
 
         if ignore_self:
             dm1 = dm1.condensed_form()
@@ -5021,6 +5070,8 @@ class TreeNode(SkbioObject):
             result *= 0.5
 
         return result
+
+    compare_tip_distances = compare_cophenet
 
     # ------------------------------------------------
     # Tree indexing and searching
