@@ -8,6 +8,7 @@
 
 import io
 import unittest
+import re
 
 import numpy as np
 import numpy.testing as npt
@@ -104,24 +105,30 @@ class TestMiniRegistry(unittest.TestCase):
         self.registry.interpolate(SomethingToInterpolate, "interpolate_me")
         subclass_registry.interpolate(Subclass, "interpolate_me")
 
-        self.assertEqual(SomethingToInterpolate.interpolate_me.__doc__,
-                         "First line\n\n                Some description of th"
-                         "ings, also this:\n\n\t'a'\n\t  x\n\t'b'\n\t  y\n\t'c"
-                         "'\n\t  z\n\n                Other things are happeni"
-                         "ng now.\n                ")
-        self.assertEqual(SomethingToInterpolate.dont_interpolate_me.__doc__,
-                         "First line\n\n                Some description of th"
-                         "ings, also this:\n\n                Other things are"
-                         " happening now.\n                ")
-        self.assertEqual(Subclass.interpolate_me.__doc__,
-                         "First line\n\n                Some description of th"
-                         "ings, also this:\n\n\t'a'\n\t  x\n\t'b'\n\t  y\n\t'c"
-                         "'\n\t  z\n\t'o'\n\t  p\n\n                Other thin"
-                         "gs are happening now.\n                ")
-        self.assertEqual(Subclass.dont_interpolate_me.__doc__,
-                         "First line\n\n                Some description of th"
-                         "ings, also this:\n\n                Other things are"
-                         " happening now.\n                ")
+        # Python 3.13+ removes leading whitespaces from a docstring, therefore it is
+        # necessary to make this edit.
+        def _strip_spaces(s):
+            return re.sub(r'^\s+', '', s, flags=re.MULTILINE)
+
+        obs = _strip_spaces(SomethingToInterpolate.interpolate_me.__doc__)
+        exp = ("First line\nSome description of things, also this:\n'a'\nx"
+               "\n'b'\ny\n'c'\nz\nOther things are happening now.\n")
+        self.assertEqual(obs, exp)
+
+        obs = _strip_spaces(SomethingToInterpolate.dont_interpolate_me.__doc__)
+        exp = ("First line\nSome description of things, also this:\nOther things "
+               "are happening now.\n")
+        self.assertEqual(obs, exp)
+
+        obs = _strip_spaces(Subclass.interpolate_me.__doc__)
+        exp = ("First line\nSome description of things, also this:\n'a'\nx\n'b'\ny\n"
+               "'c'\nz\n'o'\np\nOther things are happening now.\n")
+        self.assertEqual(obs, exp)
+
+        obs = _strip_spaces(Subclass.dont_interpolate_me.__doc__)
+        exp = ("First line\nSome description of things, also this:\nOther things "
+               "are happening now.\n")
+        self.assertEqual(obs, exp)
 
 
 class ResolveKeyTests(unittest.TestCase):

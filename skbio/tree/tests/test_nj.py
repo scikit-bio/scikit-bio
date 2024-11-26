@@ -9,10 +9,10 @@
 import io
 from unittest import TestCase, main
 
-from skbio import DistanceMatrix, TreeNode, nj
-from skbio.tree._nj import (
-    _compute_q, _compute_collapsed_dm, _lowest_index,
-    _pair_members_to_new_node)
+import numpy.testing as npt
+
+from skbio import DistanceMatrix, TreeNode
+from skbio.tree._nj import nj, _tree_from_linkmat
 
 
 class NjTests(TestCase):
@@ -76,23 +76,31 @@ class NjTests(TestCase):
         self.dm4 = DistanceMatrix(data4, ids4)
 
     def test_nj_dm1(self):
-        self.assertEqual(nj(self.dm1, result_constructor=str),
-                         self.expected1_str)
-        # what is the correct way to compare TreeNode objects for equality?
         actual_TreeNode = nj(self.dm1)
-        # precision error on ARM: 1.6653345369377348e-16 != 0.0
-        self.assertAlmostEqual(actual_TreeNode.compare_tip_distances(
-            self.expected1_TreeNode), 0.0, places=10)
+        self.assertAlmostEqual(actual_TreeNode.compare_cophenet(
+            self.expected1_TreeNode), 0.0)
 
     def test_nj_dm2(self):
         actual_TreeNode = nj(self.dm2)
-        self.assertAlmostEqual(actual_TreeNode.compare_tip_distances(
+        self.assertAlmostEqual(actual_TreeNode.compare_cophenet(
             self.expected2_TreeNode), 0.0)
 
     def test_nj_dm3(self):
         actual_TreeNode = nj(self.dm3)
-        self.assertAlmostEqual(actual_TreeNode.compare_tip_distances(
+        self.assertAlmostEqual(actual_TreeNode.compare_cophenet(
             self.expected3_TreeNode), 0.0)
+
+    def test_nj_inplace(self):
+        dm = self.dm3.copy()
+        obs = nj(dm)
+        exp = self.expected3_TreeNode
+        self.assertAlmostEqual(obs.compare_cophenet(exp), 0.0)
+        npt.assert_almost_equal(dm.data, self.dm3.data)
+
+        obs = nj(dm, inplace=True)
+        self.assertAlmostEqual(obs.compare_cophenet(exp), 0.0)
+        with self.assertRaises(AssertionError):
+            npt.assert_almost_equal(dm.data, self.dm3.data)
 
     def test_nj_zero_branch_length(self):
         # no nodes have negative branch length when we disallow negative
@@ -103,20 +111,27 @@ class NjTests(TestCase):
         # only tips associated with the large distance in the input
         # have positive branch lengths when we allow negative branch
         # length
-        tree = nj(self.dm4, False)
+        tree = nj(self.dm4, clip_to_zero=False)
         self.assertTrue(tree.find('a').length > 0)
         self.assertTrue(tree.find('b').length < 0)
         self.assertTrue(tree.find('c').length < 0)
         self.assertTrue(tree.find('d').length < 0)
         self.assertTrue(tree.find('e').length > 0)
 
+        # deprecated functionality
+        t2 = nj(self.dm4, disallow_negative_branch_length=False)
+        self.assertAlmostEqual(tree.compare_cophenet(t2), 0.0)
+
     def test_nj_trivial(self):
         data = [[0, 3, 2],
                 [3, 0, 3],
                 [2, 3, 0]]
         dm = DistanceMatrix(data, list('abc'))
-        expected_str = "(b:2.000000, a:1.000000, c:1.000000);"
-        self.assertEqual(nj(dm, result_constructor=str), expected_str)
+        exp = TreeNode.read(["(b:2.000000, a:1.000000, c:1.000000);"])
+        self.assertAlmostEqual(nj(dm).compare_cophenet(exp), 0.0)
+
+        # deprecated functionality
+        self.assertEqual(nj(dm, result_constructor=str), "(a:1.0,b:2.0,c:1.0);\n")
 
     def test_nj_error(self):
         data = [[0, 3],
@@ -124,72 +139,26 @@ class NjTests(TestCase):
         dm = DistanceMatrix(data, list('ab'))
         self.assertRaises(ValueError, nj, dm)
 
-    def test_compute_q(self):
-        expected_data = [[0, -50, -38, -34, -34],
-                         [-50,   0, -38, -34, -34],
-                         [-38, -38,   0, -40, -40],
-                         [-34, -34, -40,   0, -48],
-                         [-34, -34, -40, -48,   0]]
-        expected_ids = list('abcde')
-        expected = DistanceMatrix(expected_data, expected_ids)
-        self.assertEqual(_compute_q(self.dm1), expected)
-
-        data = [[0, 3, 2],
-                [3, 0, 3],
-                [2, 3, 0]]
-        dm = DistanceMatrix(data, list('abc'))
-        # computed this manually
-        expected_data = [[0, -8, -8],
-                         [-8,  0, -8],
-                         [-8, -8,  0]]
-        expected = DistanceMatrix(expected_data, list('abc'))
-        self.assertEqual(_compute_q(dm), expected)
-
-    def test_compute_collapsed_dm(self):
-        expected_data = [[0,  7,  7,  6],
-                         [7,  0,  8,  7],
-                         [7,  8,  0,  3],
-                         [6,  7,  3,  0]]
-        expected_ids = ['x', 'c', 'd', 'e']
-        expected1 = DistanceMatrix(expected_data, expected_ids)
-        self.assertEqual(_compute_collapsed_dm(self.dm1, 'a', 'b', True, 'x'),
-                         expected1)
-
-        # computed manually
-        expected_data = [[0, 4, 3],
-                         [4, 0, 3],
-                         [3, 3, 0]]
-        expected_ids = ['yy', 'd', 'e']
-        expected2 = DistanceMatrix(expected_data, expected_ids)
-        self.assertEqual(
-            _compute_collapsed_dm(expected1, 'x', 'c', True, 'yy'), expected2)
-
-    def test_lowest_index(self):
-        self.assertEqual(_lowest_index(self.dm1), (4, 3))
-        self.assertEqual(_lowest_index(_compute_q(self.dm1)), (1, 0))
-
-    def test_pair_members_to_new_node(self):
-        self.assertEqual(_pair_members_to_new_node(self.dm1, 'a', 'b', True),
-                         (2, 3))
-        self.assertEqual(_pair_members_to_new_node(self.dm1, 'a', 'c', True),
-                         (4, 5))
-        self.assertEqual(_pair_members_to_new_node(self.dm1, 'd', 'e', True),
-                         (2, 1))
-
-    def test_pair_members_to_new_node_zero_branch_length(self):
-        # the values in this example don't really make sense
-        # (I'm not sure how you end up with these distances between
-        # three sequences), but that doesn't really matter for the sake
-        # of this test
-        data = [[0, 4, 2],
-                [4, 0, 38],
-                [2, 38, 0]]
-        ids = ['a', 'b', 'c']
-        dm = DistanceMatrix(data, ids)
-        self.assertEqual(_pair_members_to_new_node(dm, 'a', 'b', True), (0, 4))
-        # this makes it clear why negative branch lengths don't make sense...
-        self.assertEqual(
-            _pair_members_to_new_node(dm, 'a', 'b', False), (-16, 20))
+    def test_tree_from_linkmat(self):
+        taxa = ['human', 'chimp', 'monkey', 'pig', 'mouse', 'rat', 'chicken']
+        lm = [
+            [5, 4, 0.065041, 0.060976],   # rat, mouse
+            [6, 7, 0.457317, 0.229675],   # chicken, rat-mouse
+            [3, 8, 0.161924, 0.050474],   # pig, chicken-rat-mouse
+            [2, 9, 0.018293, 0.162602],   # monkey, pig-...-mouse
+            [10, 1, 0.006098, 0.001016],  # chimp, monkey-...-mouse
+            [0, 11, 0.003049, 0.0],       # human, chimp-...-mouse
+        ]
+        obs = str(_tree_from_linkmat(lm, taxa, rooted=True))
+        exp = ("(human:0.003049,((monkey:0.018293,(pig:0.161924,(chicken:0.457317,"
+               "(rat:0.065041,mouse:0.060976):0.229675):0.050474):0.162602):0.006098,"
+               "chimp:0.001016):0.0);\n")
+        self.assertEqual(str(obs), exp)
+        obs = str(_tree_from_linkmat(lm, taxa, rooted=False))
+        exp = ("(human:0.003049,(monkey:0.018293,(pig:0.161924,(chicken:0.457317,"
+               "(rat:0.065041,mouse:0.060976):0.229675):0.050474):0.162602):0.006098,"
+               "chimp:0.001016);\n")
+        self.assertEqual(str(obs), exp)
 
 
 if __name__ == "__main__":

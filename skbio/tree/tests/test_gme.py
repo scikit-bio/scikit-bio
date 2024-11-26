@@ -84,17 +84,17 @@ class GmeTests(TestCase):
 
     def test_gme_dm1(self):
         actual_TreeNode = gme(self.dm1)
-        self.assertAlmostEqual(actual_TreeNode.compare_tip_distances(
+        self.assertAlmostEqual(actual_TreeNode.compare_cophenet(
             self.expected1_TreeNode), 0.0, places=10)
 
     def test_gme_dm2(self):
         actual_TreeNode = gme(self.dm2)
-        self.assertAlmostEqual(actual_TreeNode.compare_tip_distances(
+        self.assertAlmostEqual(actual_TreeNode.compare_cophenet(
             self.expected2_TreeNode), 0.0, places=10)
 
     def test_gme_dm3(self):
         actual_TreeNode = gme(self.dm3)
-        self.assertAlmostEqual(actual_TreeNode.compare_tip_distances(
+        self.assertAlmostEqual(actual_TreeNode.compare_cophenet(
             self.expected3_TreeNode), 0.0, places=10)
 
     def test_gme_zero_branch_length(self):
@@ -245,8 +245,8 @@ class GmeTests(TestCase):
         actual_TreeNode = TreeNode.read(io.StringIO(pre_estimation_str))
         _ols_edge(actual_TreeNode, dm)
         expected_TreeNode = TreeNode.read(io.StringIO(expected_str))
-        self.assertAlmostEqual(actual_TreeNode.compare_tip_distances(
-            expected_TreeNode), 1, places=10)
+        self.assertAlmostEqual(actual_TreeNode.compare_cophenet(
+            expected_TreeNode), 0.0, places=10)
 
 if __name__ == "__main__":
     main()

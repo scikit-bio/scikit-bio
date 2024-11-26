@@ -258,7 +258,7 @@ class Protein(GrammaredSequence):
         array([False, False, False,  True, False,  True], dtype=bool)
 
         """
-        return np.in1d(self._bytes, self._stop_codes)
+        return np.isin(self._bytes, self._stop_codes)
 
     def has_stops(self):
         """Determine if the sequence contains one or more stop characters.

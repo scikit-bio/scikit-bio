@@ -15,7 +15,7 @@ from numpy.random import normal
 import pandas as pd
 import pandas.testing as pdt
 from scipy.sparse import coo_matrix
-from scipy.stats import f_oneway
+from scipy.stats import f_oneway, ConstantInputWarning
 
 from skbio import TreeNode
 from skbio.util import assert_data_frame_almost_equal
@@ -1130,7 +1130,8 @@ class AncomTests(TestCase):
         assert_data_frame_almost_equal(result[0], exp)
 
     def test_ancom_no_signal(self):
-        result = ancom(self.table3, self.cats3, p_adjust=None)
+        with self.assertWarns(ConstantInputWarning):
+            result = ancom(self.table3, self.cats3, p_adjust=None)
         exp = pd.DataFrame(
             {'W': np.array([0]*7),
              'Reject null hypothesis': np.array([False]*7, dtype=bool)})

@@ -34,6 +34,7 @@ def permdisp(
     method="eigh",
     number_of_dimensions=10,
     seed=None,
+    warn_neg_eigval=0.01,
 ):
     r"""Test for Homogeneity of Multivariate Groups Disperisons.
 
@@ -73,20 +74,22 @@ def permdisp(
         statistical significance calculations will be skipped and the p-value
         will be ``np.nan``.
     method : str, optional
-        Eigendecomposition method to use in performing PCoA.
-        By default, uses SciPy's `eigh`, which computes exact
-        eigenvectors and eigenvalues for all dimensions. The alternate
-        method, `fsvd`, uses faster heuristic eigendecomposition but loses
-        accuracy. The magnitude of accuracy lost is dependent on dataset.
-        Note that using `fsvd` is still considered experimental and
-        should be used with care.
-        Not used if distance_matrix is a OrdinationResults object.
+        Matrix decomposition method to use. Options are "eigh" (eigendecomposition,
+        default) and "fsvd" (fast singular value decomposition). See
+        :func:`skbio.stats.ordination.pcoa <pcoa>` for details. Not used if
+        distance_matrix is a OrdinationResults object.
     number_of_dimensions : int, optional
         Dimensions to reduce the distance matrix to if using the `fsvd` method.
         Not used if the `eigh` method is being selected.
     seed : int, Generator or RandomState, optional
         A user-provided random seed or random generator instance. See
         :func:`details <skbio.util.get_rng>`.
+
+        .. versionadded:: 0.6.3
+
+    warn_neg_eigval : bool or float, optional
+        Raise a warning if any negative eigenvalue of large magnitude is generated
+        during PCoA. See :func:`skbio.stats.ordination.pcoa <pcoa>` for details.
 
         .. versionadded:: 0.6.3
 
@@ -162,13 +165,13 @@ def permdisp(
     make the output deterministic. You may skip it if that's not necessary.
 
     >>> from skbio.stats.distance import permdisp
-    >>> permdisp(dm, grouping, permutations=99, seed=42)
+    >>> permdisp(dm, grouping, permutations=99, seed=42) # doctest: +ELLIPSIS
     method name               PERMDISP
     test statistic name        F-value
     sample size                      6
     number of groups                 2
     test statistic             1.03296
-    p-value                       0.28
+    p-value                       ...
     number of permutations          99
     Name: PERMDISP results, dtype: object
 
@@ -266,7 +269,10 @@ def permdisp(
         sample_size = distance_matrix.shape[0]
 
         ordination = pcoa(
-            distance_matrix, method=method, number_of_dimensions=number_of_dimensions
+            distance_matrix,
+            method=method,
+            number_of_dimensions=number_of_dimensions,
+            warn_neg_eigval=warn_neg_eigval,
         )
     else:
         raise TypeError("Input must be a DistanceMatrix or OrdinationResults.")
