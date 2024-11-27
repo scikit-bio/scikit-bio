@@ -8,7 +8,7 @@
 
 import numpy as np
 from skbio.tree import TreeNode
-from ._cutils import num_dist_cy
+from skbio.tree._cutils import num_dist_cy
 
 
 def _ordered(tree_array):
