@@ -1784,18 +1784,19 @@ class TreeTests(TestCase):
         exp[t2.find("f")] = 1
         self.assertEqual(t2.observed_node_counts(taxon_counts), exp)
 
-    def test_accumulate_to_ancestor(self):
-        """Get the distance from a node to its ancestor"""
-        t = TreeNode.read([
-            "((a:0.1,b:0.2)c:0.3,(d:0.4,e)f:0.5)root;"])
+    def test_depth(self):
+        """Calculate the distance from a node to root or an ancestor."""
+        t = TreeNode.read(["((a:0.1,b:0.2)c:0.3,(d:0.4,e)f:0.5)root;"])
         a = t.find("a")
-        b = t.find("b")
-        exp_to_root = 0.1 + 0.3
-        obs_to_root = a.accumulate_to_ancestor(t)
-        self.assertEqual(obs_to_root, exp_to_root)
-
-        with self.assertRaises(NoParentError):
-            a.accumulate_to_ancestor(b)
+        self.assertAlmostEqual(a.depth(), 0.4)
+        self.assertAlmostEqual(a.depth(t), 0.4)
+        self.assertAlmostEqual(a.depth(include_root=True, missing_as_zero=True), 0.4)
+        self.assertRaises(NoLengthError, a.depth, include_root=True)
+        self.assertAlmostEqual(a.depth(t.find("c")), 0.1)
+        self.assertAlmostEqual(a.depth(t.find("c"), include_root=True), 0.4)
+        self.assertRaises(NoParentError, a.depth, t.find("b"))
+        self.assertAlmostEqual(a.depth(use_length=False), 2.0)
+        self.assertAlmostEqual(a.depth(include_root=True, use_length=False), 3.0)
 
     def test_total_length(self):
         """Calculate total branch length descending from self."""
