@@ -17,7 +17,7 @@ from skbio.tree._util import (
     _subtree_root, _parent, _sibling,
     _ancestors, _subtree, _move_subtree,
     _move_node, _array_to_tree)
-from ._cutils import num_dist_cy
+from skbio.tree._cutils import num_dist_cy
 
 
 class UtilTests(TestCase):
