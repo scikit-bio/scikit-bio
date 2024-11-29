@@ -1798,6 +1798,40 @@ class TreeTests(TestCase):
         self.assertAlmostEqual(a.depth(use_length=False), 2.0)
         self.assertAlmostEqual(a.depth(include_root=True, use_length=False), 3.0)
 
+    def test_height(self):
+        """Calculate the distance from a node to the farthese tip."""
+        t = TreeNode.read(["((a:0.1,b:0.2)c:0.3,(d:0.4,e:0.0)f:0.5)root;"])
+        H, tip = t.height()
+        self.assertAlmostEqual(H, 0.9)
+        self.assertIs(tip, t.find("d"))
+
+        a = t.find("a")
+        H, tip = a.height()
+        self.assertAlmostEqual(H, 0.0)
+        self.assertIs(tip, a)
+        self.assertAlmostEqual(a.height(include_self=True)[0], 0.1)
+        self.assertAlmostEqual(a.height(include_self=True, use_length=False)[0], 1.0)
+
+        b = t.find("b")
+        c = t.find("c")
+        H, tip = c.height()
+        self.assertAlmostEqual(H, 0.2)
+        self.assertIs(tip, b)
+        H, tip = c.height(use_length=False)
+        self.assertAlmostEqual(H, 1.0)
+        self.assertIs(tip, a)
+        self.assertAlmostEqual(c.height(include_self=True)[0], 0.5)
+        self.assertAlmostEqual(c.height(include_self=True, use_length=False)[0], 2.0)
+
+        self.assertRaises(NoLengthError, t.height, include_self=True)
+        H = t.height(include_self=True, missing_as_zero=True)[0]
+        self.assertAlmostEqual(H, 0.9)
+        t.find("e").length = None
+        f = t.find("f")
+        self.assertRaises(NoLengthError, f.height)
+        H = f.height(missing_as_zero=True)[0]
+        self.assertAlmostEqual(H, 0.4)
+
     def test_total_length(self):
         """Calculate total branch length descending from self."""
         tr = TreeNode.read([

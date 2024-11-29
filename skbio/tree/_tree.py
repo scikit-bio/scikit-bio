@@ -598,6 +598,9 @@ class TreeNode(SkbioObject):
         nodes = [self.find(x) for x in nodes]
         if len(nodes) == 1:
             return nodes[0]
+
+        # Keep a record of visited nodes, such that the temporary attribute assigned
+        # to each node can be cleared after getting LCA.
         visited = []
         visited_append = visited.append
 
@@ -650,16 +653,21 @@ class TreeNode(SkbioObject):
         TreeNode
             LCA of self and other.
         list of TreeNode
-            self (inclusive) to LCA (exclusive)
+            self (inclusive) to LCA (exclusive).
         list of TreeNode
-            other (inclusive) to LCA (exclusive)
+            other (inclusive) to LCA (exclusive).
+
+        Notes
+        -----
+        This algorithm is optimized for finding the LCA of two nodes. Instead, `lca`
+        is optimized for finding the LCA of multiple nodes.
 
         """
         anc1 = self.ancestors(include_self=True)
         anc2 = other.ancestors(include_self=True)
 
-        # find lowest common ancestor of the two by iterating down from root
-        # and stopping at divergence
+        # find lowest common ancestor of the two by iterating down from root and
+        # stopping at divergence
         # pos is lca's index from root + 1
         lca, pos = None, None
         for i, (n1, n2) in enumerate(zip(reversed(anc1), reversed(anc2))):
@@ -3830,6 +3838,7 @@ class TreeNode(SkbioObject):
 
         See Also
         --------
+        height
         distance
 
         Examples
@@ -3866,6 +3875,90 @@ class TreeNode(SkbioObject):
             raise NoLengthError("Nodes without branch length are encountered.")
 
     accumulate_to_ancestor = depth
+
+    def height(self, include_self=False, use_length=True, missing_as_zero=False):
+        r"""Calculate the height of the current node.
+
+        .. versionadded:: 0.6.3
+
+        The **height** of a node is the maximum sum of branch lengths from it to any of
+        its descending tips.
+
+        Parameters
+        ----------
+        include_self : bool, optional
+            If True, the height will include the length of the current node. Default
+            is False.
+        use_length : bool, optional
+            Whether to return the sum of branch lengths (True, default) or the number
+            of branches (False) from self to the most distant tip.
+        missing_as_zero : bool, optional
+            When a node without an associated branch length is encountered, raise an
+            error (False, default) or use 0 (True). Applicable when ``use_length`` is
+            True.
+
+        Returns
+        -------
+        float
+            The height of self.
+        TreeNode
+            The most distant descending tip from self.
+
+        Raises
+        ------
+        NoLengthError
+            If nodes without branch length are encountered, but ``missing_as_zero`` is
+            False.
+
+        See Also
+        --------
+        depth
+        distance
+
+        Notes
+        -----
+        When a tie is observed among multiple tips, only one of them will be returned.
+        The choice is stable. This often happens when ``use_length=False``.
+
+        Examples
+        --------
+        >>> from skbio import TreeNode
+        >>> tree = TreeNode.read(["((a:1,b:2)c:3,(d:4,e:5)f:6)root;"])
+        >>> dist, tip = tree.find('c').height()
+        >>> dist
+        2.0
+        >>> tip.name
+        'b'
+
+        """
+        errmsg = "Nodes without branch length are encountered."
+        maxkey = itemgetter(0)
+        for node in self.postorder(include_self=True):
+            if not node.children:
+                node._height = (0.0, node)
+            else:
+                heights = []
+                for child in node.children:
+                    H, tip = child._height
+                    del child._height
+                    if not use_length:
+                        H += 1.0
+                    elif (L := child.length) is not None:
+                        H += L
+                    elif not missing_as_zero:
+                        raise NoLengthError(errmsg)
+                    heights.append((H, tip))
+                node._height = max(heights, key=maxkey)
+        H, tip = self._height
+        del self._height
+        if include_self:
+            if not use_length:
+                H += 1.0
+            elif (L := self.length) is not None:
+                H += L
+            elif not missing_as_zero:
+                raise NoLengthError(errmsg)
+        return H, tip
 
     def total_length(
         self, nodes=None, include_stem=False, include_self=False, **kwargs
@@ -3988,8 +4081,8 @@ class TreeNode(SkbioObject):
                 curr = curr.parent
             curr._unique = False
 
-        # Iterative the first path in reverse order (from root to starting node) and
-        # find the indices of self and LCA.
+        # Iterate the first path in reverse order (from root to starting node) and find
+        # the indices of self and LCA.
         i_self, i_lca = None, 0
         for i in reversed(range(len(first_path))):
             if (node := first_path[i]) is self:
