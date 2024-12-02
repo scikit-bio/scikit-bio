@@ -370,7 +370,7 @@ def _average_distance_matrix(dm, ordered, leaves, root):
         ancestors = _ancestors(a[0], ordered[0])
 
         # skip over unique descendant
-        # TODO: there is only one instance which is always at the end, therefore this
+        # TO-DO: there is only one instance which is always at the end, therefore this
         # check can be skipped and the for loop should be ordered.T[:-1].
         if a[0] == 0:
             continue
@@ -395,7 +395,7 @@ def _average_distance_matrix(dm, ordered, leaves, root):
 
             # b is an ancestor of a
             if b[0] in ancestors:
-                # TODO: stop before the last element (see above)
+                # TO-DO: stop before the last element (see above)
                 if b[0] == 0:
                     continue
                 s = _sibling(b[0])
