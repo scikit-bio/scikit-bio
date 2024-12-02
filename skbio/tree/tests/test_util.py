@@ -85,8 +85,10 @@ class UtilTests(TestCase):
         # root has no ancestor
         # and returns empty list
         data_node_3 = 0
-        self.assertEqual(_ancestors(data_node_1, self.ordered_array), [5, 2, 0])
-        self.assertEqual(_ancestors(data_node_2, self.ordered_array), [0])
+        self.assertEqual(_ancestors(data_node_1, self.ordered_array)[0], 5)
+        self.assertEqual(_ancestors(data_node_1, self.ordered_array)[1], 2)
+        self.assertEqual(_ancestors(data_node_1, self.ordered_array)[2], 0)
+        self.assertEqual(_ancestors(data_node_2, self.ordered_array)[0], 0)
         self.assertEqual(_ancestors(data_node_3, self.ordered_array).size, 0)
         
     def test_subtree(self):
