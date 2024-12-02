@@ -187,7 +187,7 @@ def _array_to_tree(taxa, tree_array):
     # value to avoid needing unnecessary spaces in the array.
     # Also, only leaf node values are needed which further reduces the
     # size of the array to n-1 for a tree with n leaves.
-    if iterating:
+    while iterating:
         node = np.max(np.concatenate((leaf_array, internal)))
         # Create nodes as they are chosen from the array.
         # Can be replaced with Newick strings instead of TreeNode.
