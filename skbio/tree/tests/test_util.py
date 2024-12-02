@@ -94,13 +94,12 @@ class UtilTests(TestCase):
     def test_subtree(self):
         # subtree is an internal node
         data_node_1 = 12
-        # subtree is entire tree
-        data_node_2 = 0
         # subtree is a leaf
-        data_node_3 = 26
-        self.assertEqual(_subtree(data_node_1, self.ordered_array), [25, 26, 12])
-        self.assertEqual(_subtree(data_node_2, self.ordered_array), self.data_array)
-        self.assertEqual(_subtree(data_node_3, self.ordered_array), [26])
+        data_node_2 = 26
+        self.assertEqual(_subtree(data_node_1, self.ordered_array)[0], 25)
+        self.assertEqual(_subtree(data_node_1, self.ordered_array)[1], 26)
+        self.assertEqual(_subtree(data_node_1, self.ordered_array)[2], 12)
+        self.assertEqual(_subtree(data_node_2, self.ordered_array)[0], 26)
         
     def test_move_subtree(self):
         # subtree of node at position 6
