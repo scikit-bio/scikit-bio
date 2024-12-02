@@ -133,7 +133,7 @@ class UtilTests(TestCase):
     def test_array_to_tree(self):
         data_taxa = ['a', 'b', 'c', 'd', 'e', 'f']
         actual_tree = _array_to_tree(data_taxa, self.tree_array)
-        expected_nwk = "((b,(c,(d,e))))a;"
+        expected_nwk = "((b,(c,(d,e))))a;\n"
         self.assertEqual(str(actual_tree), expected_nwk)
 
 
