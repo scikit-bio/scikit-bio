@@ -86,17 +86,17 @@ class GmeTests(TestCase):
 
     def test_gme_dm1(self):
         actual_TreeNode = gme(self.dm1)
-        self.assertAlmostEqual(actual_TreeNode.compare_cophenet(
+        self.assertAlmostEqual(actual_TreeNode.compare_tip_distances(
             self.expected1_TreeNode), 0.0, places=10)
 
     def test_gme_dm2(self):
         actual_TreeNode = gme(self.dm2)
-        self.assertAlmostEqual(actual_TreeNode.compare_cophenet(
+        self.assertAlmostEqual(actual_TreeNode.compare_tip_distances(
             self.expected2_TreeNode), 0.0, places=10)
 
     def test_gme_dm3(self):
         actual_TreeNode = gme(self.dm3)
-        self.assertAlmostEqual(actual_TreeNode.compare_cophenet(
+        self.assertAlmostEqual(actual_TreeNode.compare_tip_distances(
             self.expected3_TreeNode), 0.0, places=10)
 
     def test_gme_zero_branch_length(self):
@@ -221,6 +221,9 @@ class GmeTests(TestCase):
                 [2, 3, 0]]
         ids = list('abc')
         dm = DistanceMatrix(data, ids)
+        expected_dm = [[0, 3, 3],
+                       [3, 0, 3],
+                       [3, 3, 0]]
         tips = np.array([[2, 1], [1, 2]])
         ordered = np.array([[2, 0, 1], [1, 0, 2]])
         index = [0, 1, 2]
@@ -228,20 +231,20 @@ class GmeTests(TestCase):
         for i in index:
             for j in index:
                 if j < i:
-                    self.assertEqual(dm[i][j], actual_adm[i][j])
-                    self.assertEqual(dm[j][i], actual_adm[j][i])
+                    self.assertEqual(expected_dm[i][j], actual_adm[i][j])
+                    self.assertEqual(expected_dm[j][i], actual_adm[j][i])
 
     def test_average_distance_matrix(self):
         # computed manually
         tips = np.array([[3, 6, 4, 5], [1, 2, 3, 4]])
         ordered = np.array([[3, 6, 2, 0, 4, 1, 5], [1, 2, 0, 0, 3, 0, 4]])
-        expected_adm = [[0.0, 10.0, 9.5, 9.0, 10.0, 8.0, 5.0],
+        expected_adm = np.array([[0.0, 10.0, 9.5, 9.0, 10.0, 8.0, 5.0],
                         [10.0, 0.0, 9.0, 3.0, 8.0, 9.0, 9.0],
                         [9.5, 9.0, 0.0, 6.0, 5.5, 7.5, 8.5],
                         [9.0, 3.0, 6.0, 0.0, 7.0, 6.666666666666667, 8.0],
                         [10.0, 8.0, 5.5, 7.0, 0.0, 6.666666666666667, 9.0],
                         [8.0, 9.0, 7.5, 6.666666666666667, 6.666666666666667, 0.0, 7.0],
-                        [5.0, 9.0, 8.5, 8.0, 9.0, 7.0, 0.0]]
+                        [5.0, 9.0, 8.5, 8.0, 9.0, 7.0, 0.0]])
         actual_adm = _average_distance_matrix(self.dm1, ordered, tips, 0)
         index = [0, 1, 2, 3, 4, 5, 6]
         for i in index:
