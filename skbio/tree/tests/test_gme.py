@@ -236,6 +236,13 @@ class GmeTests(TestCase):
 
     def test_average_distance_matrix(self):
         # computed manually
+        data = [[0,  5,  9,  9,  8],
+                 [5,  0, 10, 10,  9],
+                 [9, 10,  0,  8,  7],
+                 [9, 10,  8,  0,  3],
+                 [8,  9,  7,  3,  0]]
+        ids = list('abcde')
+        dm = DistanceMatrix(data, ids)
         tips = np.array([[3, 6, 4, 5], [1, 2, 3, 4]])
         ordered = np.array([[3, 6, 2, 0, 4, 1, 5], [1, 2, 0, 0, 3, 0, 4]])
         expected_adm = np.array([[0.0, 10.0, 9.5, 9.0, 10.0, 8.0, 5.0],
@@ -245,8 +252,7 @@ class GmeTests(TestCase):
                         [10.0, 8.0, 5.5, 7.0, 0.0, 6.666666666666667, 9.0],
                         [8.0, 9.0, 7.5, 6.666666666666667, 6.666666666666667, 0.0, 7.0],
                         [5.0, 9.0, 8.5, 8.0, 9.0, 7.0, 0.0]])
-        actual_adm = _average_distance_matrix(self.dm1, ordered, tips, 0)
-        print(actual_adm)
+        actual_adm = _average_distance_matrix(dm, ordered, tips, 0)
         index = [0, 1, 2, 3, 4, 5, 6]
         for i in index:
             for j in index:
