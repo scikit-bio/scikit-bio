@@ -12,9 +12,21 @@ from skbio.tree._cutils import num_dist_cy
 
 
 def _ordered(tree_array):
+    """Constructs a postorder of nodes as a numerical array.
+
+    First row contains node locations, and second row contains the id indexes of
+    leaf nodes and zero for internal nodes.
+
+    TODO: Pre-allocate ordered list since you know its size.
+
+    """
+    # take row of node locations of taxa
     tree_array_top = tree_array[0]
+    # remove unassigned taxa
     filtered_tree_array = tree_array[:, tree_array[0] != 0]
+    # initialize node locations list for postorder
     ordered = []
+    # iterating over leaf nodes
     for x in filtered_tree_array[0]:
         if x % 2 != 0:
             ordered.append(int(x))
@@ -34,13 +46,21 @@ def _ordered(tree_array):
 
 
 def _pair_lca(left_node, right_node):
+    """Finds the LCA of a pair of nodes."""
+    # initialize variables the left node's path back to root
     left_path = []
+    # iterating over parents of left node
+    # until back to root which is represented as zero
     while left_node != 0:
         if left_node % 2 == 0:
             left_node = int(((left_node - 2) * 0.5))
         else:
             left_node = int(((left_node - 1) * 0.5))
+        # left_path contains nodes back to parent in order
         left_path.append(left_node)
+    # iterating over parents of right night
+    # until reaching a node in the left path which
+    # represents the LCA
     while right_node not in left_path:
         if right_node % 2 == 0:
             right_node = int(((right_node - 2) * 0.5))
@@ -49,49 +69,104 @@ def _pair_lca(left_node, right_node):
     return right_node
 
 
+def _num_dist(anc, desc):
+    """Distance as number of nodes between ancestor and descendant."""
+    # initialize distance
+    dist = 0
+    # iterating over parents of descendant until reaching the ancestor
+    while desc != anc:
+        # return negative value for nodes
+        # that are not in an ancestral line
+        if desc < anc:
+            dist = -1
+            break
+        # handle for even and odd cases
+        if desc % 2 == 0:
+            desc = int(((desc - 2) * 0.5))
+        else:
+            desc = int(((desc - 1) * 0.5))
+        dist += 1
+    return dist
+
+
 def _subtree_root(taxa):
+    """Find the root node of a subtree given the leaves of the subtree."""
+    # find LCA of first pair
     lca = _pair_lca(taxa[0], taxa[1])
+    # iterate over remaining nodes in list of taxa.
     for taxon in taxa[2 : len(taxa)]:
+        # skip taxa that are ancestral to
+        # the current lca
+        if _num_dist(lca, taxon) >= 0:
+            continue
         lca = _pair_lca(lca, taxon)
     return lca
 
 
 def _parent(node):
+    """Find parent node of a given node."""
+    # case for node with even value location
     if node % 2 == 0:
         parent = int((node - 2) * 0.5)
+    # case for node with odd value location
     else:
         parent = int((node - 1) * 0.5)
     return parent
 
 
 def _sibling(node):
+    """Find sibling node of a given node."""
+    # case for node with even value location
     if node % 2 == 0:
         sibling = node - 1
+    # case for node with odd value location
     else:
         sibling = node + 1
     return sibling
 
 
 def _ancestors(x, array):
-    result = [v for v in array if num_dist_cy(v, x) > 0]
+    """Returns list of ancestral nodes for
+    a given node.
+
+    """
+    # _num_dist checks for ancestral lineage
+    result = [v for v in array if _num_dist(v, x) > 0]
     return np.array(result)
 
 
 def _subtree(x, array):
-    result = [v for v in array if num_dist_cy(x, v) >= 0]
+    """Return nodes in array of node locations that
+    are in the subtree rooted at a given node.
+
+    """
+    result = [v for v in array if _num_dist(x, v) >= 0]
     return np.array(result)
 
 
 def _move_subtree(tree_array, subtree_nodes, old_lca, new_lca):
+    """Adjusts the node locations of nodes in a subtree where the root
+    is relocated to a new node location value.
+
+    """
+    # moves each node in subtree individually
     for leaf in subtree_nodes:
         tree_array[0, np.where(tree_array[0] == leaf)[0][0]] = _move_node(
             leaf, old_lca, new_lca
         )
-    return
 
 
 def _move_node(x, old_lca, new_lca):
+    """Adjusts the node location of a given node when also given an initial and final
+    location not necessarily the location of the given node. The initial node
+    location can be viewed as the location of the root of a subtree that contains
+    the given node.
+
+    For use when not considering a subtree, the initial node location can be the
+    location of the given node.
+    """
     diff = new_lca - old_lca
+    # order of arguments in distance function ensures a positive value is returned
     return x + (diff * (2 ** num_dist_cy(old_lca, x)))
 
 
