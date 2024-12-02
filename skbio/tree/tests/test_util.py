@@ -32,7 +32,11 @@ class UtilTests(TestCase):
 
     def test_ordered(self):
         expected_array = np.array([[1, 5, 13, 14, 6, 2, 0], [1, 2, 3, 4, 0, 0, 0]])
-        self.assertEqual(_ordered(self.tree_array), expected_array)
+        index = [0, 1, 2, 3, 4, 5, 6]
+        actual_ordered = _ordered(self.tree_array)
+        for i in index:
+            self.assertEqual(actual_ordered[0][i], expected_array[0][i])
+            self.assertEqual(actual_ordered[1][i], expected_array[1][i])
 
     def test_pair_lca(self):
         # Values are node locations
@@ -51,8 +55,8 @@ class UtilTests(TestCase):
         # checking distance to self
         data_3 = [1, 1]
         self.assertEqual(num_dist_cy(data_1[0], data_1[1]), 2)
-        self.assertEqual(num_dist_cy(data_1[0], data_1[1]), -1)
-        self.assertEqual(num_dist_cy(data_1[0], data_1[1]), 0)
+        self.assertEqual(num_dist_cy(data_2[0], data_2[1]), -1)
+        self.assertEqual(num_dist_cy(data_3[0], data_3[1]), 0)
     
     def test_subtree_root(self):
         data = [7, 17, 18]
@@ -106,9 +110,14 @@ class UtilTests(TestCase):
         data_subtree = [13, 14]
         # old and new lca's
         data_lca = [6, 13]
-        actual_tree = self.tree_array
+        # tree array to be changed
+        actual_tree = np.array([[1, 5, 13, 14, 0], [1, 2, 3, 4, 0]])
         _move_subtree(actual_tree, data_subtree, data_lca[0], data_lca[1])
-        self.assertEqual(actual_tree, self.expected_array)
+        # checking each index
+        index = [0, 1, 2, 3, 4]
+        for i in index:
+            self.assertEqual(actual_tree[0][i], self.expected_array[0][i])
+            self.assertEqual(actual_tree[1][i], self.expected_array[1][i])
         
     def test_move_node(self):
         # move to sibling position
@@ -124,7 +133,8 @@ class UtilTests(TestCase):
     def test_array_to_tree(self):
         data_taxa = ['a', 'b', 'c', 'd', 'e', 'f']
         actual_tree = _array_to_tree(data_taxa, self.tree_array)
-        self.assertEqual(actual_tree, self.expected_TreeNode)
+        expected_nwk = "((b,(c,(d,e))))a;"
+        self.assertEqual(str(actual_tree), expected_nwk)
 
 
 if __name__ == "__main__":
