@@ -51,7 +51,7 @@ def _gme(dm):
         # Note that this should be replaced with a step to update an initial
         # computation of the average distance matrix rather than to recompute
         # the matrix after every iteration as implemented here.
-        adm = _average_distance_matrix(dm, ordered, leaves, 0)
+        adm = _average_distance_matrix(dm, ordered, leaves)
 
         # create average distance lists for subtrees of T_(k-1)
         lowerlist = _lower_subtree_list(k, ordered, leaves, dm, 0)
@@ -343,7 +343,7 @@ def _upper_subtree_list(k, ordered, leaves, dm, root):
     return upper_list
 
 
-def _average_distance_matrix(dm, ordered, leaves, root):
+def _average_distance_matrix(dm, ordered, leaves):
     """Return the matrix of distances between pairs of subtrees.
 
     Parameters
@@ -469,7 +469,7 @@ def _ols_edge(tree, dm, ordered, leaves, root):
     Estimation of edge values is based on an ordinary least squares (OLS) framework.
 
     """
-    adm = _average_distance_matrix(dm, ordered, leaves, root)
+    adm = _average_distance_matrix(dm, ordered, leaves)
     ordered = list(tree.postorder(include_self=False))
     root = tree.root()
     taxa_size = root.count(tips=True) + 1

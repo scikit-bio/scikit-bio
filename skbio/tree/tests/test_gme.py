@@ -153,7 +153,7 @@ class GmeTests(TestCase):
             self.gme_attach_node, self.gme_starting1_ordered,
             self.gme_starting1_tips, self.dm1, 0)
         adm = _average_distance_matrix(
-            self.dm1, self.gme_starting1_ordered, self.gme_starting1_tips, 0)
+            self.dm1, self.gme_starting1_ordered, self.gme_starting1_tips)
         self.assertEqual(_edge_attachment_length(
             child, lowerlist, upperlist,
             self.gme_starting1_ordered, self.gme_starting1_tips, adm), -1.5)
@@ -227,7 +227,7 @@ class GmeTests(TestCase):
         tips = np.array([[2, 1], [1, 2]])
         ordered = np.array([[2, 0, 1], [1, 0, 2]])
         index = [0, 1, 2]
-        actual_adm = _average_distance_matrix(dm, ordered, tips, 0)
+        actual_adm = _average_distance_matrix(dm, ordered, tips)
         for i in index:
             for j in index:
                 if j < i:
@@ -252,7 +252,7 @@ class GmeTests(TestCase):
                         [10.0, 8.0, 5.5, 7.0, 0.0, 6.666666666666667, 9.0],
                         [8.0, 9.0, 7.5, 6.666666666666667, 6.666666666666667, 0.0, 7.0],
                         [5.0, 9.0, 8.5, 8.0, 9.0, 7.0, 0.0]])
-        actual_adm = _average_distance_matrix(dm, ordered, tips, 0)
+        actual_adm = _average_distance_matrix(dm, ordered, tips)
         index = [0, 1, 2, 3, 4, 5, 6]
         for i in index:
             for j in index:
