@@ -474,13 +474,13 @@ def _ols_edge(tree, dm, ordered, leaves, root):
     root = tree.root()
     taxa_size = root.count(tips=True) + 1
 
-    ### identify edges by first finding the child node of an edge
+    # identify edges by first finding the child node of an edge
     for edge_node in ordered:
         parent = edge_node.parent
         ### skip over root node
         if edge_node.is_root():
             continue
-        ### calculate edge length for the edge adjacent to the root
+        # calculate edge length for the edge adjacent to the root
         elif parent.is_root():
             for index, node in enumerate(ordered):
                 if node == edge_node:
@@ -492,7 +492,7 @@ def _ols_edge(tree, dm, ordered, leaves, root):
                 elif node == b:
                     i3 = index
             edge_node.length = 0.5 * (adm[i2, i1] + adm[i3, i1] - adm[i2, i3])
-        ### calculate edge lengths for external edges
+        # calculate edge lengths for external edges
         elif edge_node.is_tip():
             a = parent.parent
             if a.is_root():
@@ -508,7 +508,7 @@ def _ols_edge(tree, dm, ordered, leaves, root):
                     elif node is b:
                         i3 = index
             edge_node.length = 0.5 * (adm[i2][i1] + adm[i3][i1] - adm[i2][i3])
-        ### calculate edge lengths for internal edges
+        # calculate edge lengths for internal edges
         else:
             a = parent.parent
             if a.is_root():
@@ -527,13 +527,13 @@ def _ols_edge(tree, dm, ordered, leaves, root):
                     i3 = index
                 elif node is d:
                     i4 = index
-            ### count the tips of subtrees which are adjacent to the internal edge
+            # count the tips of subtrees which are adjacent to the internal edge
             sub_tips = []
             for subtree in b, c, d:
                 sub_tips.append(1 if subtree.is_tip() else subtree.count(tips=True))
             b_, c_, d_ = sub_tips
             a_ = taxa_size - b_ - c_ - d_
-            ## calculate the edge length
+            # calculate the edge length
             lambda1 = (a_ * d_ + b_ * c_) / ((a_ + b_) * (c_ + d_))
             edge_node.length = 0.5 * (
                 (lambda1 * (adm[i1, i3] + adm[i2, i4]))
