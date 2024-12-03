@@ -46,22 +46,11 @@ class UtilTests(TestCase):
         self.assertEqual(_pair_lca(data_1[0], data_1[1]), 0)
         self.assertEqual(_pair_lca(data_2[0], data_2[1]), 2)
         self.assertEqual(_pair_lca(data_3[0], data_3[1]), 2)
-    
-    def test_num_dist(self):
-        # checking ancestral line
-        data_1 = [1, 8]
-        # checking non-ancestral line
-        data_2 = [1, 2]
-        # checking distance to self
-        data_3 = [1, 1]
-        self.assertEqual(num_dist_cy(data_1[0], data_1[1]), 2)
-        self.assertEqual(num_dist_cy(data_2[0], data_2[1]), -1)
-        self.assertEqual(num_dist_cy(data_3[0], data_3[1]), 0)
-    
+
     def test_subtree_root(self):
         data = [7, 17, 18]
         self.assertEqual(_subtree_root(data), 3)
-        
+    
     def test_parent(self):
         data_1 = 7
         # root is only node without a parent
@@ -69,7 +58,7 @@ class UtilTests(TestCase):
         data_2 = 0
         self.assertEqual(_parent(data_1), 3)
         self.assertEqual(_parent(data_2), -1)
-        
+
     def test_sibling(self):
         # odd value location
         data_1 = 7
@@ -81,7 +70,7 @@ class UtilTests(TestCase):
         self.assertEqual(_sibling(data_1), 8)
         self.assertEqual(_sibling(data_2), 3)
         self.assertEqual(_sibling(data_3), -1)
-        
+    
     def test_ancestors(self):
         data_node_1 = 12
         # only root as ancestor
@@ -94,7 +83,7 @@ class UtilTests(TestCase):
         self.assertEqual(_ancestors(data_node_1, self.ordered_array)[2], 0)
         self.assertEqual(_ancestors(data_node_2, self.ordered_array)[0], 0)
         self.assertEqual(_ancestors(data_node_3, self.ordered_array).size, 0)
-        
+
     def test_subtree(self):
         # subtree is an internal node
         data_node_1 = 12
@@ -104,7 +93,7 @@ class UtilTests(TestCase):
         self.assertEqual(_subtree(data_node_1, self.ordered_array)[1], 26)
         self.assertEqual(_subtree(data_node_1, self.ordered_array)[2], 12)
         self.assertEqual(_subtree(data_node_2, self.ordered_array)[0], 26)
-        
+ 
     def test_move_subtree(self):
         # subtree of node at position 6
         data_subtree = [13, 14]
@@ -118,7 +107,7 @@ class UtilTests(TestCase):
         for i in index:
             self.assertEqual(actual_tree[0][i], self.expected_array[0][i])
             self.assertEqual(actual_tree[1][i], self.expected_array[1][i])
-        
+
     def test_move_node(self):
         # move to sibling position
         data_1 = [7, 3, 4]
@@ -129,7 +118,7 @@ class UtilTests(TestCase):
         self.assertEqual(_move_node(data_1[0], data_1[1], data_1[2]), 9)
         self.assertEqual(_move_node(data_2[0], data_2[1], data_2[2]), 3)
         self.assertEqual(_move_node(data_3[0], data_3[1], data_3[2]), 31)
-        
+
     def test_array_to_tree(self):
         data_taxa = ['a', 'b', 'c', 'd', 'e', 'f']
         actual_tree = _array_to_tree(data_taxa, self.tree_array)

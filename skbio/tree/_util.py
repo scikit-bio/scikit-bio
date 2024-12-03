@@ -69,26 +69,6 @@ def _pair_lca(left_node, right_node):
     return right_node
 
 
-def _num_dist(anc, desc):
-    """Distance as number of nodes between ancestor and descendant."""
-    # initialize distance
-    dist = 0
-    # iterating over parents of descendant until reaching the ancestor
-    while desc != anc:
-        # return negative value for nodes
-        # that are not in an ancestral line
-        if desc < anc:
-            dist = -1
-            break
-        # handle for even and odd cases
-        if desc % 2 == 0:
-            desc = int(((desc - 2) * 0.5))
-        else:
-            desc = int(((desc - 1) * 0.5))
-        dist += 1
-    return dist
-
-
 def _subtree_root(taxa):
     """Find the root node of a subtree given the leaves of the subtree."""
     # find LCA of first pair
@@ -97,7 +77,7 @@ def _subtree_root(taxa):
     for taxon in taxa[2 : len(taxa)]:
         # skip taxa that are ancestral to
         # the current lca
-        if _num_dist(lca, taxon) >= 0:
+        if num_dist_cy(lca, taxon) >= 0:
             continue
         lca = _pair_lca(lca, taxon)
     return lca
@@ -131,7 +111,7 @@ def _ancestors(x, array):
 
     """
     # _num_dist checks for ancestral lineage
-    result = [v for v in array if _num_dist(v, x) > 0]
+    result = [v for v in array if num_dist_cy(v, x) > 0]
     return np.array(result)
 
 
@@ -140,7 +120,7 @@ def _subtree(x, array):
     are in the subtree rooted at a given node.
 
     """
-    result = [v for v in array if _num_dist(x, v) >= 0]
+    result = [v for v in array if num_dist_cy(x, v) >= 0]
     return np.array(result)
 
 
