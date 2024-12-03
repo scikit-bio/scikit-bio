@@ -246,7 +246,6 @@ class GmeTests(TestCase):
                         [8.0, 9.0, 7.5, 6.66666667, 6.66666667, 0.0, 7.0],
                         [5.0, 9.0, 8.5, 8.0, 9.0, 7.0, 0.0]])
         actual_adm = _average_distance_matrix(self.dm1, ordered, tips)
-        print(actual_adm)
         index = [0, 1, 2, 3, 4, 5, 6]
         for i in index:
             for j in index:
