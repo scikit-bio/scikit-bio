@@ -591,7 +591,7 @@ class TreeNode(SkbioObject):
         root
 
         """
-        if kwargs and "tipnames" in kwargs:
+        if nodes is None and kwargs and "tipnames" in kwargs:
             nodes = kwargs["tipnames"]
         if not nodes:
             raise ValueError("No node is specified.")
@@ -3900,7 +3900,7 @@ class TreeNode(SkbioObject):
         6.3
 
         """
-        if kwargs and "tip_subset" in kwargs:
+        if nodes is None and kwargs and "tip_subset" in kwargs:
             nodes = kwargs["tip_subset"]
 
         ## shortcut for the entire subtree
@@ -3933,7 +3933,7 @@ class TreeNode(SkbioObject):
                 curr = curr.parent
             curr._unique = False
 
-        # Iterative the first path in reverse order (from root to starting node) and
+        # Iterate over the first path in reverse order (from root to starting node) and
         # find the indices of self and LCA.
         i_self, i_lca = None, 0
         for i in reversed(range(len(first_path))):
@@ -3955,7 +3955,7 @@ class TreeNode(SkbioObject):
             raise MissingNodeError("Some nodes are not descendants of self.")
 
         # Identify the range of nodes to be included in calculation depending on the
-        # parameter setting
+        # parameter setting.
         stop = (i_self if include_stem else i_lca) + include_self
 
         # sum up branch lengths
