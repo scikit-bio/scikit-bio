@@ -113,6 +113,7 @@
       ~{{ name }}.is_bifurcating
       ~{{ name }}.observed_node_counts
       ~{{ name }}.accumulate_to_ancestor
+      ~{{ name }}.total_length
       ~{{ name }}.descending_branch_length
       ~{{ name }}.distance
       ~{{ name }}.maxdist

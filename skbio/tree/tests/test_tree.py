@@ -286,6 +286,10 @@ class TreeTests(TestCase):
         self.assertEqual(obs4, exp4)
         self.assertEqual(obs5, exp5)
 
+        # parameter alias
+        self.assertEqual(t1.lowest_common_ancestor(nodes=input1), exp1)
+        self.assertEqual(t1.lowest_common_ancestor(tipnames=input1), exp1)
+
         # verify multiple calls work
         t_mul = t1.copy()
         exp_1 = t_mul.find("d")
@@ -301,14 +305,28 @@ class TreeTests(TestCase):
         exp = t_sub.find("d")
         self.assertEqual(obs, exp)
 
+        # lca outside subtree
+        obs = t_sub.find("e").lowest_common_ancestor(["b", "g"])
+        exp = t_sub
+        self.assertEqual(obs, exp)
+
         # root included
         t_root = TreeNode.read(["(a,b)c;"])
         obs = t_root.lowest_common_ancestor(["a", "c"])
         self.assertIs(obs, t_root)
 
+        # nested nodes
+        t_sub = t1.copy()
+        obs = t_sub.lowest_common_ancestor(["b", "d", "g", "i"])
+        self.assertIs(obs, t_sub)
+        obs = t_sub.lowest_common_ancestor(["e", "b", "d", "h"])
+        self.assertIs(obs, t_sub)
+
         # empty case
         with self.assertRaises(ValueError):
             t1.lowest_common_ancestor([])
+        with self.assertRaises(ValueError):
+            t1.lowest_common_ancestor()
 
     def test_path(self):
         """List of TreeNode objects in path between nodes."""
@@ -1779,50 +1797,114 @@ class TreeTests(TestCase):
         with self.assertRaises(NoParentError):
             a.accumulate_to_ancestor(b)
 
-    def test_descending_branch_length(self):
-        """Calculate descending branch_length"""
+    def test_total_length(self):
+        """Calculate total branch length descending from self."""
         tr = TreeNode.read([
             "(((A:.1,B:1.2)C:.6,(D:.9,E:.6)F:.9)G:2.4,(H:.4,I:.5)J:1.3)K;"])
-        tdbl = tr.descending_branch_length()
-        sdbl = tr.descending_branch_length(["A", "E"])
+        tdbl = tr.total_length()
         self.assertAlmostEqual(tdbl, 8.9)
+
+        # specify nodes
+        sdbl = tr.total_length(["A", "E"])
         self.assertAlmostEqual(sdbl, 2.2)
-        self.assertRaises(ValueError, tr.descending_branch_length,
-                          ["A", "DNE"])
-        self.assertRaises(ValueError, tr.descending_branch_length, ["A", "C"])
+
+        sdbl = tr.total_length("AE")
+        self.assertAlmostEqual(sdbl, 2.2)
+
+        sdbl = tr.total_length([tr.find("A"), tr.find("E")])
+        self.assertAlmostEqual(sdbl, 2.2)
+
+        # parameter alias
+        sdbl = tr.total_length(tip_subset="AE")
+        self.assertAlmostEqual(sdbl, 2.2)
+
+        # missing node
+        self.assertRaises(MissingNodeError, tr.total_length, ["A", "DNE"])
 
         tr = TreeNode.read([
             "(((A,B:1.2)C:.6,(D:.9,E:.6)F:.9)G:2.4,(H:.4,I:.5)J:1.3)K;"])
-        tdbl = tr.descending_branch_length()
+        tdbl = tr.total_length()
         self.assertAlmostEqual(tdbl, 8.8)
 
         tr = TreeNode.read([
             "(((A,B:1.2)C:.6,(D:.9,E:.6)F)G:2.4,(H:.4,I:.5)J:1.3)K;"])
-        tdbl = tr.descending_branch_length()
+        tdbl = tr.total_length()
         self.assertAlmostEqual(tdbl, 7.9)
 
+        # nodes whose LCA is not root
         tr = TreeNode.read([
             "(((A,B:1.2)C:.6,(D:.9,E:.6)F)G:2.4,(H:.4,I:.5)J:1.3)K;"])
-        tdbl = tr.descending_branch_length(["A", "D", "E"])
+        tdbl = tr.total_length(["A", "D", "E"])
         self.assertAlmostEqual(tdbl, 2.1)
 
+        # include stem length
+        tdbl = tr.total_length(["A", "D", "E"], include_stem=True)
+        self.assertAlmostEqual(tdbl, 4.5)
+
+        # nodes whose LCA is root
         tr = TreeNode.read([
             "(((A,B:1.2)C:.6,(D:.9,E:.6)F:.9)G:2.4,(H:.4,I:.5)J:1.3)K;"])
-        tdbl = tr.descending_branch_length(["I", "D", "E"])
+        tdbl = tr.total_length(["I", "D", "E"])
+        self.assertAlmostEqual(tdbl, 6.6)
+
+        # there is no stem to add
+        tdbl = tr.total_length(["I", "D", "E"], include_stem=True)
         self.assertAlmostEqual(tdbl, 6.6)
 
         # test with a situation where we have unnamed internal nodes
         tr = TreeNode.read([
             "(((A,B:1.2):.6,(D:.9,E:.6)F):2.4,(H:.4,I:.5)J:1.3);"])
-        tdbl = tr.descending_branch_length()
+        tdbl = tr.total_length()
         self.assertAlmostEqual(tdbl, 7.9)
 
-        # issue 1847
+        # issue 1847 (ignoring root length)
         tr = TreeNode.read([
             "(((A:.1,B:1.2)C:.6,(D:.9,E:.6)F:.9)G:2.4,(H:.4,I:.5)J:1.3)K;"])
         tr.length = 1
-        tdbl = tr.descending_branch_length()
+        tdbl = tr.total_length()
         self.assertAlmostEqual(tdbl, 8.9)
+
+        # include root length
+        tdbl = tr.total_length(include_self=True)
+        self.assertAlmostEqual(tdbl, 9.9)
+
+        # internal nodes
+        tdbl = tr.total_length(["C", "F", "J"])
+        self.assertAlmostEqual(tdbl, 5.2)
+
+        # only one node
+        tdbl = tr.total_length("B")
+        self.assertEqual(tdbl, 0.0)
+        self.assertIsInstance(tdbl, float)
+
+        tdbl = tr.total_length("B", include_self=True)
+        self.assertAlmostEqual(tdbl, 1.2)
+
+    def test_total_length_subtree(self):
+        """Calculate total branch length of a subtree."""
+        tr = TreeNode.read([
+            "(((A,B:1.2)C:.6,(D:.9,E:.6)F:.9)G:2.4,(H:.4,I:.5)J:1.3)K;"])
+        tsub = tr.children[0]
+        obs = tsub.total_length()
+        self.assertAlmostEqual(obs, 4.2)
+
+        obs = tsub.total_length(include_self=True)
+        self.assertAlmostEqual(obs, 6.6)
+
+        obs = tsub.total_length(["D", "E"])
+        self.assertAlmostEqual(obs, 1.5)
+
+        obs = tsub.total_length(["D", "E"], include_stem=True)
+        self.assertAlmostEqual(obs, 2.4)
+
+        obs = tsub.total_length(["D", "E"], include_self=True)
+        self.assertAlmostEqual(obs, 2.4)
+
+        obs = tsub.total_length(["D", "E"], include_stem=True, include_self=True)
+        self.assertAlmostEqual(obs, 4.8)
+
+        # node outside subtree
+        self.assertRaises(MissingNodeError, tsub.total_length, ["A", "I"])
 
     def test_distance_nontip(self):
         # example derived from issue #807, credit @wwood
@@ -2237,19 +2319,19 @@ class TreeTests(TestCase):
 
         # delete individual attribute caches
         t.cache_attr(lambda n: 1, "node_count", sum)
-        t.cache_attr(lambda n: n.length or 0.0, "total_length", sum)
+        t.cache_attr(lambda n: n.length or 0.0, "length_sum", sum)
         t.clear_caches(attr="node_count")
         self.assertTrue(hasattr(t, "_registered_caches"))
         self.assertNotIn("node_count", t._registered_caches)
-        self.assertIn("total_length", t._registered_caches)
+        self.assertIn("length_sum", t._registered_caches)
         for node in t.traverse(include_self=True):
             self.assertFalse(hasattr(node, "node_count"))
-            self.assertTrue(hasattr(node, "total_length"))
-        delattr(t.children[1], "total_length")
-        t.clear_caches(attr="total_length")
+            self.assertTrue(hasattr(node, "length_sum"))
+        delattr(t.children[1], "length_sum")
+        t.clear_caches(attr="length_sum")
         self.assertFalse(hasattr(t, "_registered_caches"))
         for node in t.traverse(include_self=True):
-            self.assertFalse(hasattr(node, "total_length"))
+            self.assertFalse(hasattr(node, "length_sum"))
 
     def test_cache_attr(self):
         # cache names of all descending tips
