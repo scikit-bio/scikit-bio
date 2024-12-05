@@ -78,17 +78,23 @@ def rf_dists(trees, ids=None, shared_by_all=True, proportion=False, rooted=False
     n_trees = len(trees)
     method = "subsets" if rooted else "biparts"
     result = np.zeros((n_trees, n_trees))
+    taxon_sets = [t.subset() for t in trees]
+    if shared_by_all:
+        within = frozenset.intersection(*taxon_sets)
     for i, j in combinations(range(n_trees), 2):
+        if not shared_by_all:
+            within = taxon_sets[i] & taxon_sets[j]
         result[i, j] = result[j, i] = _compare_topology(
-            trees[i], trees[j], method, proportion=proportion
+            trees[i], trees[j], method, within=within, proportion=proportion
         )
     return DistanceMatrix(result, ids, validate=False)
 
 
 def _compare_topology(
-    self,
-    other,
+    tree1,
+    tree2,
     method="subsets",
+    within=None,
     shared_only=True,
     proportion=False,
     symmetric=True,
@@ -96,16 +102,20 @@ def _compare_topology(
     weighted=False,
     metric="euclidean",
 ):
-    r"""Calculate the topological difference between self and other.
+    r"""Calculate the topological difference between two trees.
 
     This function calculates the Robinson-Foulds (RF) distance or its derivates.
 
     Parameters
     ----------
-    other : TreeNode
-        The other tree to compare with.
+    tree1 : TreeNode
+        The first tree to compare with.
+    tree2 : TreeNode
+        The second tree to compare with.
     method : str, optional
         Subsets or bipartitions.
+    within : set of str, optional
+        Refine to given taxa.
     shared_only : bool, optional
         Refine to shared taxa.
     proportion : bool, optional
@@ -132,10 +142,12 @@ def _compare_topology(
     compare_biparts
 
     """
-    topo1, topo2 = getattr(self, method), getattr(other, method)
+    topo1, topo2 = getattr(tree1, method), getattr(tree2, method)
     kwargs = dict(include_single=include_single, map_to_length=weighted)
-    if shared_only:
-        set1, set2 = self.subset(), other.subset()
+    if within:
+        sets1, sets2 = topo1(within=within, **kwargs), topo2(within=within, **kwargs)
+    elif shared_only:
+        set1, set2 = tree1.subset(), tree2.subset()
         n_shared = len(shared := set1 & set2)
         if len(set1) > n_shared:
             sets1 = topo1(within=shared, **kwargs)
