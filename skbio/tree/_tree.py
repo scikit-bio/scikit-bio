@@ -591,7 +591,7 @@ class TreeNode(SkbioObject):
         root
 
         """
-        if kwargs and "tipnames" in kwargs:
+        if nodes is None and kwargs and "tipnames" in kwargs:
             nodes = kwargs["tipnames"]
         if not nodes:
             raise ValueError("No node is specified.")
