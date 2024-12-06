@@ -21,7 +21,7 @@ Tree structure and operations
 
 
 Tree Construction
----------------------------
+-----------------
 
 .. autosummary::
    :toctree: generated/
@@ -39,6 +39,15 @@ Tree Rearrangement
    :toctree: generated/
 
     nni
+
+
+Tree Distances
+--------------
+
+.. autosummary::
+   :toctree: generated/
+
+    rf_dists
 
 
 Tree utilities
@@ -205,7 +214,7 @@ from ._gme import gme
 from ._bme import bme
 from ._nni import nni
 from ._majority_rule import majority_rule
-from ._compare import rf_dists
+from ._dists import rf_dists
 from ._exception import (
     TreeError,
     NoLengthError,
@@ -221,6 +230,7 @@ __all__ = [
     "gme",
     "bme",
     "nni",
+    "rf_dists",
     "majority_rule",
     "TreeError",
     "NoLengthError",
