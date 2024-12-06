@@ -189,7 +189,7 @@ format.
 Reader-specific Parameters
 ^^^^^^^^^^^^^^^^^^^^^^^^^^
 The ``remove_spaces`` parameter can be used with any reader. If set to ``True``,
-all spaces in the input will be removed. Default is ``False``.
+all spaces in the input will be removed. Default is ``True``.
 
 The following reader parameters differ depending on which reader is used.
 
@@ -744,8 +744,12 @@ def _fasta_to_generator(fh, qual=FileSentinel, constructor=Sequence, **kwargs):
         ):
             yield constructor(seq, metadata={"id": id_, "description": desc}, **kwargs)
     else:
-        fasta_gen = _parse_fasta_raw(fh, _parse_sequence_data, FASTAFormatError)
-        qual_gen = _parse_fasta_raw(qual, _parse_quality_scores, QUALFormatError)
+        fasta_gen = _parse_fasta_raw(
+            fh, _parse_sequence_data, FASTAFormatError, **kwarg
+        )
+        qual_gen = _parse_fasta_raw(
+            qual, _parse_quality_scores, QUALFormatError, **kwarg
+        )
 
         for fasta_rec, qual_rec in itertools.zip_longest(
             fasta_gen, qual_gen, fillvalue=None
@@ -966,7 +970,7 @@ def _tabular_msa_to_fasta(
     )
 
 
-def _parse_fasta_raw(fh, data_parser, error_type, remove_spaces=False):
+def _parse_fasta_raw(fh, data_parser, error_type, remove_spaces=True):
     """Raw parser for FASTA or QUAL files.
 
     Returns raw values (seq/qual, id, description). It is the responsibility of
@@ -1003,8 +1007,10 @@ def _parse_fasta_raw(fh, data_parser, error_type, remove_spaces=False):
                     raise error_type(
                         "Found blank or whitespace-only line within record."
                     )
-                if remove_spaces:
-                    line = line.replace(" ", "")
+                # don't remove spaces if the line consists of qual scores
+                if not any(x.isdigit() for x in line):
+                    if remove_spaces:
+                        line = line.replace(" ", "")
                 data_chunks.append(line)
         prev = line
     # yield last record in file
