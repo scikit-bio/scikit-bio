@@ -651,7 +651,6 @@ fuzzy=[(True, False)], metadata={'gene': 'foo'})
 
             sequence = s
             self._owns_bytes = False
-
             self._set_bytes(sequence)
 
         MetadataMixin._init_(self, metadata=metadata)
@@ -970,7 +969,9 @@ fuzzy=[(True, False)], metadata={'gene': 'foo'})
             metadata = self.metadata
 
         return self._constructor(
-            sequence=seq, metadata=metadata, positional_metadata=positional_metadata
+            sequence=seq,
+            metadata=metadata,
+            positional_metadata=positional_metadata,
         )
 
     def _slice_positional_metadata(self, indexable):

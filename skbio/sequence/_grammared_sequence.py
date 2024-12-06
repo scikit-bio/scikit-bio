@@ -380,7 +380,11 @@ class GrammaredSequence(Sequence, metaclass=GrammaredSequenceMeta):
         validate=True,
     ):
         super(GrammaredSequence, self).__init__(
-            sequence, metadata, positional_metadata, interval_metadata, lowercase
+            sequence,
+            metadata,
+            positional_metadata,
+            interval_metadata,
+            lowercase,
         )
 
         if validate:

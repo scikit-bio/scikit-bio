@@ -68,6 +68,7 @@ class SnifferTests(TestCase):
             'fasta_single_rna_seq_defaults',
             'fasta_description_newline_replacement_empty_str',
             'fasta_multi_seq',
+            'fasta_multi_seq_spaces',
             'fasta_single_dna_seq_non_defaults',
             'fasta_single_rna_seq_non_defaults',
             'fasta_description_newline_replacement_multi_char',
@@ -220,6 +221,7 @@ class ReaderTests(TestCase):
                                                  dtype=np.uint8)})],
             {},
             list(map(get_data_path, ['fasta_multi_seq', 'fasta_max_width_5',
+                                     'fasta_multi_seq_spaces',
                                      'fasta_blank_lines_between_records',
                                      'fasta_ws_lines_between_records',
                                      'fasta_5_blanks_start_of_file',
@@ -654,6 +656,24 @@ class ReaderTests(TestCase):
     def test_fasta_to_tabular_msa_no_constructor(self):
         with self.assertRaisesRegex(ValueError, r'`constructor`'):
             _fasta_to_tabular_msa(get_data_path('fasta_single_seq'))
+
+    def test_remove_spaces(self):
+        fp = get_data_path('fasta_multi_seq_spaces')
+
+        # test RNA, DNA, and Protein
+        read_fns = [_fasta_to_dna, _fasta_to_rna, _fasta_to_protein]
+        for read_fn in read_fns:
+            with self.assertRaises(ValueError) as e:
+                read_fn(fp, remove_spaces=False, lowercase=True)
+            self.assertTrue(str(e.exception).startswith("Invalid char"))
+
+        # test generator
+        obs = str(next(_fasta_to_generator(fp, remove_spaces=False)))
+        self.assertEqual(obs, "ACGT - acgt.")
+
+        # test Sequence
+        obs = str(_fasta_to_sequence(fp, remove_spaces=False))
+        self.assertEqual(obs, "ACGT - acgt.")
 
 
 class WriterTests(TestCase):

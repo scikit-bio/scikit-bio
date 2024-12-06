@@ -188,7 +188,10 @@ format.
 
 Reader-specific Parameters
 ^^^^^^^^^^^^^^^^^^^^^^^^^^
-The available reader parameters differ depending on which reader is used.
+The ``remove_spaces`` parameter can be used with any reader. If set to ``True``,
+all spaces in the input will be removed. Default is ``True``.
+
+The following reader parameters differ depending on which reader is used.
 
 Generator and TabularMSA Reader Parameters
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -730,14 +733,23 @@ def _sniffer_data_parser(chunks):
 
 @fasta.reader(None)
 def _fasta_to_generator(fh, qual=FileSentinel, constructor=Sequence, **kwargs):
+    kwargs = kwargs.copy()
+    if "remove_spaces" in kwargs:
+        kwarg = {"remove_spaces": kwargs.pop("remove_spaces")}
+    else:
+        kwarg = {}
     if qual is None:
         for seq, id_, desc in _parse_fasta_raw(
-            fh, _parse_sequence_data, FASTAFormatError
+            fh, _parse_sequence_data, FASTAFormatError, **kwarg
         ):
             yield constructor(seq, metadata={"id": id_, "description": desc}, **kwargs)
     else:
-        fasta_gen = _parse_fasta_raw(fh, _parse_sequence_data, FASTAFormatError)
-        qual_gen = _parse_fasta_raw(qual, _parse_quality_scores, QUALFormatError)
+        fasta_gen = _parse_fasta_raw(
+            fh, _parse_sequence_data, FASTAFormatError, **kwarg
+        )
+        qual_gen = _parse_fasta_raw(
+            qual, _parse_quality_scores, QUALFormatError, **kwarg
+        )
 
         for fasta_rec, qual_rec in itertools.zip_longest(
             fasta_gen, qual_gen, fillvalue=None
@@ -958,7 +970,7 @@ def _tabular_msa_to_fasta(
     )
 
 
-def _parse_fasta_raw(fh, data_parser, error_type):
+def _parse_fasta_raw(fh, data_parser, error_type, remove_spaces=True):
     """Raw parser for FASTA or QUAL files.
 
     Returns raw values (seq/qual, id, description). It is the responsibility of
@@ -995,6 +1007,10 @@ def _parse_fasta_raw(fh, data_parser, error_type):
                     raise error_type(
                         "Found blank or whitespace-only line within record."
                     )
+                # don't remove spaces if the line consists of qual scores
+                if not any(x.isdigit() for x in line):
+                    if remove_spaces:
+                        line = line.replace(" ", "")
                 data_chunks.append(line)
         prev = line
     # yield last record in file
