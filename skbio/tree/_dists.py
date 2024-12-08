@@ -16,9 +16,13 @@ from skbio.stats.distance import DistanceMatrix
 from ._utils import _check_dist_metric, _check_shuffler
 
 
-def _check_ids(ids):
-    """Check if IDs contain duplicates."""
-    if ids and len(set(ids)) < len(ids):
+def _check_ids(trees, ids):
+    """Check tree IDs."""
+    if ids is None:
+        return
+    if (n := len(ids)) != len(trees):
+        raise ValueError(f"ID number does not match tree number.")
+    if n > len(set(ids)):
         raise ValueError(f"IDs contain duplicates.")
 
 
@@ -108,7 +112,7 @@ def rf_dists(trees, ids=None, shared_by_all=True, proportion=False, rooted=False
      [ 0.  2.  2.  0.]]
 
     """
-    _check_ids(ids)
+    _check_ids(trees, ids)
     if not shared_by_all:
         metric = partial(TreeNode.compare_rfd, proportion=proportion, rooted=rooted)
         return DistanceMatrix.from_iterable(
@@ -217,7 +221,7 @@ def wrf_dists(
      [ 15.  27.   0.]]
 
     """
-    _check_ids(ids)
+    _check_ids(trees, ids)
     if not shared_by_all:
         metric = partial(
             TreeNode.compare_wrfd,
@@ -347,7 +351,7 @@ def path_dists(
      [ 11.87434209  19.5192213    0.        ]]
 
     """
-    _check_ids(ids)
+    _check_ids(trees, ids)
 
     if sample is not None:
         shuffler = _check_shuffler(shuffler)

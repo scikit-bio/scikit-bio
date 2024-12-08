@@ -81,6 +81,10 @@ class DistsTests(TestCase):
         with self.assertRaises(ValueError):
             rf_dists(trees, list("xxxx"))
 
+        # ID number doesn't match
+        with self.assertRaises(ValueError):
+            rf_dists(trees, list("abc"))
+
         # no shared taxon among trees
         nwks = ["((a,b),(c,d));",
                 "((e,f),(g,h));"]
