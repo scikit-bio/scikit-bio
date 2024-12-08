@@ -182,6 +182,10 @@ class DistsTests(TestCase):
         exp = np.array([4.24264069, 7.87400787, 9.2736185])
         npt.assert_array_almost_equal(obs, exp)
 
+        # too many samples
+        with self.assertRaises(ValueError):
+            path_dists(trees, sample=10)
+
         # with unique taxa
         nwks = ["((a:1,b:2):1,(c:3,d:4):2,e:5);",
                 "((a:1,(b:2,d:4):1):2,e:5,f:6);",

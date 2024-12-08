@@ -13,7 +13,7 @@ import numpy as np
 
 from skbio.tree import TreeNode
 from skbio.stats.distance import DistanceMatrix
-from ._utils import _check_dist_metric
+from ._utils import _check_dist_metric, _check_shuffler
 
 
 def _check_ids(ids):
@@ -74,13 +74,13 @@ def rf_dists(trees, ids=None, shared_by_all=True, proportion=False, rooted=False
     of bipartitions differing between two trees.
 
     This function is equivalent to :meth:`TreeNode.compare_rfd` for two trees. Refer
-    to the latter for details of the algorithm and parameters. However, the current
-    function operates on an arbitrary number of trees and returns a distance matrix
-    among them.
+    to the latter for details about the metric and its parameters. However, the current
+    function extends the operation to an arbitrary number of trees and returns a
+    distance matrix for them.
 
     This function is optimized for calculation based on taxa shared across all trees.
     One can instead set ``shared_by_all`` to False to calculate based on taxa shared
-    between each pair of trees, which is however less efficient as bipartitions need
+    between each pair of trees, which is however less efficient since bipartitions need
     to be re-inferred during each comparison.
 
     References
@@ -179,9 +179,11 @@ def wrf_dists(
     branch lengths of matching bipartitions between a pair of trees.
 
     This function is equivalent to :meth:`TreeNode.compare_wrfd` for two trees. Refer
-    to the latter for details of the algorithm and parameters. However, the current
-    function operates on an arbitrary number of trees and returns a distance matrix
-    among them. A restriction of the current function compared to the latter is that
+    to the latter for details about the metric and its variants, and the parameter
+    settings for calculating them. However, the current function extends the operation
+    to an arbitrary number of trees and returns a distance matrix for them.
+
+    A restriction of the current function compared to ``compare_wrfd`` is that
     ``metric`` must be symmetric (i.e., :math:`d(x, y) = d(y, x)`), and equals zero
     from a vector to itself (i.e., :math:`d(x, x) = 0`). It does not have to suffice
     non-negativity or triangle inequality though.
@@ -305,10 +307,11 @@ def path_dists(
     of path lengths among all pairs of taxa between two trees.
 
     This function is equivalent to :meth:`TreeNode.compare_cophenet` for two trees.
-    Refer to the latter for details of the algorithm and parameters. However, the
-    current function operates on an arbitrary number of trees and returns a distance
-    matrix among them. It is named so because the term "cophenetic distance" refers
-    to the distance between two taxa in a tree instead.
+    Refer to the latter for details about the metric and its variants, and parameter
+    settings for calculating them. However, the current function extends the operation
+    to an arbitrary number of trees and returns a distance matrix for them. It is named
+    so because the term "cophenetic distance" refers to the distance between two taxa
+    in a tree instead.
 
     A restriction of the current function compared to ``compare_cophenet`` is that
     ``metric`` must be symmetric (i.e., :math:`d(x, y) = d(y, x)`), and equals zero
@@ -347,8 +350,7 @@ def path_dists(
     _check_ids(ids)
 
     if sample is not None:
-        if not callable(shuffler):
-            shuffler = get_rng(shuffler).shuffle
+        shuffler = _check_shuffler(shuffler)
 
     if not shared_by_all:
         metric = partial(

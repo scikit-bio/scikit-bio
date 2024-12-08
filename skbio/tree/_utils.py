@@ -8,6 +8,8 @@
 
 import scipy.spatial.distance as spdist
 
+from skbio.util import get_rng
+
 
 def _check_dist_metric(metric):
     """Validate distance metric."""
@@ -20,3 +22,10 @@ def _check_dist_metric(metric):
     elif not callable(metric):
         raise ValueError("`metric` must be a string or callable.")
     return metric, half
+
+
+def _check_shuffler(shuffler):
+    """Validate sample shuffler."""
+    if not callable(shuffler):
+        shuffler = get_rng(shuffler).shuffle
+    return shuffler

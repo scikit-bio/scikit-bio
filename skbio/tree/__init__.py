@@ -41,8 +41,8 @@ Tree Rearrangement
     nni
 
 
-Tree Distances
---------------
+Tree Comparison
+---------------
 
 .. autosummary::
    :toctree: generated/

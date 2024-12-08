@@ -949,25 +949,30 @@ class TreeTests(TestCase):
         # specify a random generator to make results deterministic
         rng = np.random.default_rng(42)
         t = self.simple_t.copy()
-        obs = str(next(t.shuffle(shuffle_f=rng)))
+        obs = str(next(t.shuffle(shuffler=rng)))
         exp = "((d,c)i1,(b,a)i2)root;\n"
         self.assertEqual(obs, exp)
 
         # can also specify a random seed; result is the same
         t = self.simple_t.copy()
-        obs = str(next(t.shuffle(shuffle_f=42)))
+        obs = str(next(t.shuffle(shuffler=42)))
         self.assertEqual(obs, exp)
 
         # can also supply a function; result is the same
         t = self.simple_t.copy()
         f = np.random.default_rng(42).shuffle
-        obs = str(next(t.shuffle(shuffle_f=f)))
+        obs = str(next(t.shuffle(shuffler=f)))
+        self.assertEqual(obs, exp)
+
+        # renamed parameter
+        t = self.simple_t.copy()
+        obs = str(next(t.shuffle(shuffle_f=42)))
         self.assertEqual(obs, exp)
 
         # yield a row of 5 trees
         rng = np.random.default_rng(42)
         t = self.simple_t.copy()
-        obs = list(map(str, t.shuffle(shuffle_f=rng, n=5)))
+        obs = list(map(str, t.shuffle(shuffler=rng, n=5)))
         self.assertEqual(len(obs), 5)
         exp = ["((d,c)i1,(b,a)i2)root;\n",
                "((a,b)i1,(d,c)i2)root;\n",
@@ -979,7 +984,7 @@ class TreeTests(TestCase):
         # yield infinitely
         rng = np.random.default_rng(42)
         t = self.simple_t.copy()
-        gen = t.shuffle(shuffle_f=rng, n=None)
+        gen = t.shuffle(shuffler=rng, n=None)
         obs = [str(next(gen)) for i in range(100)]
         self.assertListEqual(obs[:5], exp)
 
@@ -994,13 +999,13 @@ class TreeTests(TestCase):
 
         # apply a simple function
         t = self.simple_t.copy()
-        obs = str(next(t.shuffle(shuffle_f=rev_f)))
+        obs = str(next(t.shuffle(shuffler=rev_f)))
         exp = "((d,c)i1,(b,a)i2)root;\n"
         self.assertEqual(obs, exp)
 
         # specify names to shuffle
         t = self.simple_t.copy()
-        obs = list(map(str, t.shuffle(names=list("abc"), shuffle_f=rotate_f, n=4)))
+        obs = list(map(str, t.shuffle(names=list("abc"), shuffler=rotate_f, n=4)))
         exp = ["((c,a)i1,(b,d)i2)root;\n",
                "((b,c)i1,(a,d)i2)root;\n",
                "((a,b)i1,(c,d)i2)root;\n",
@@ -1009,7 +1014,7 @@ class TreeTests(TestCase):
 
         # specify number of names to shuffle
         t = self.simple_t.copy()
-        obs = list(map(str, t.shuffle(k=2, shuffle_f=rev_f, n=5)))
+        obs = list(map(str, t.shuffle(k=2, shuffler=rev_f, n=5)))
         exp = ["((a,b)i1,(d,c)i2)root;\n",
                "((a,b)i1,(c,d)i2)root;\n",
                "((a,b)i1,(d,c)i2)root;\n",
@@ -1019,7 +1024,7 @@ class TreeTests(TestCase):
 
         # a complex example
         obs = list(map(str, self.complex_tree.shuffle(
-            shuffle_f=rev_f, names=["c", "d", "e", "f"], n=4)))
+            shuffler=rev_f, names=["c", "d", "e", "f"], n=4)))
         exp = ["(((a,b)int1,(x,y,(w,z)int2,(f,e)int3)int4),(d,c)int5);\n",
                "(((a,b)int1,(x,y,(w,z)int2,(c,d)int3)int4),(e,f)int5);\n",
                "(((a,b)int1,(x,y,(w,z)int2,(f,e)int3)int4),(d,c)int5);\n",
@@ -2152,6 +2157,10 @@ class TreeTests(TestCase):
         self.assertAlmostEqual(obs, exp)
         obs = tx.compare_cophenet(t2x, sample=3, shuffle_f=list.sort)
         self.assertAlmostEqual(obs, exp)
+
+        # sample too large
+        with self.assertRaises(ValueError):
+            tx.compare_cophenet(t2x, sample=10)
 
         # no common taxa
         t3 = TreeNode.read(["(((Z:1,Y:1,X:1):2,W:3):1,V:4);"])
