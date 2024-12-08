@@ -14,7 +14,6 @@ from collections import defaultdict, deque
 
 import numpy as np
 import pandas as pd
-import scipy.spatial.distance as spdist
 
 from skbio._base import SkbioObject
 from skbio.stats.distance import DistanceMatrix
@@ -29,6 +28,7 @@ from skbio.util import get_rng
 from skbio.util._decorator import classonlymethod
 from skbio.util._warning import _warn_deprecated
 from skbio.io.registry import Read, Write
+from ._utils import _check_dist_metric
 
 
 # ----------------------------------------------------------------------------
@@ -4249,7 +4249,7 @@ class TreeNode(SkbioObject):
         symmetric=True,
         include_single=False,
         weighted=False,
-        metric="euclidean",
+        metric=None,
     ):
         r"""Calculate the topological difference between self and other.
 
@@ -4271,8 +4271,8 @@ class TreeNode(SkbioObject):
             Include singletons.
         weighted : bool, optional
             Weight by branch length.
-        metric : str or callable, optional
-            Pairwise distance metric.
+        metric : callable, optional
+            Pairwise distance metric (must provide if weighted).
 
         Returns
         -------
@@ -4306,9 +4306,9 @@ class TreeNode(SkbioObject):
         # unweighted (set difference)
         if not weighted:
             if symmetric:
-                result = sets1.symmetric_difference(sets2)
+                result = sets1 ^ sets2
             else:
-                result = sets1.difference(sets2)
+                result = sets1 - sets2
             result = len(result)
 
             # normalize result to unit range [0, 1]
@@ -4326,10 +4326,7 @@ class TreeNode(SkbioObject):
             union = frozenset(sets1).union(sets2)
             L1 = [sets1.get(x, 0.0) for x in union]
             L2 = [sets2.get(x, 0.0) for x in union]
-            if isinstance(metric, str):
-                result = getattr(spdist, metric)(L1, L2)
-            else:
-                result = metric(L1, L2)
+            result = metric(L1, L2)
 
         return result
 
@@ -4606,12 +4603,12 @@ class TreeNode(SkbioObject):
         Notes
         -----
         The Robinson-Foulds (RF) distance may be weighted by the branch lengths of
-        biparitions to account for evolutionary distances in addition to branching
+        bipartitions to account for evolutionary distances in addition to branching
         patterns.
 
         The default behavior of this method calculates the original weighted RF (wRF)
         distance [1]_, which is the sum of differences of branch lengths of matching
-        biparitions. Bipartitions unique to one tree are given a length of 0 in the
+        bipartitions. Bipartitions unique to one tree are given a length of 0 in the
         other tree during calculation.
 
         .. math::
@@ -4709,9 +4706,7 @@ class TreeNode(SkbioObject):
         if rooted is None:
             rooted = self.parent is not None or len(self.children) == 2
         method = "subsets" if rooted else "biparts"
-        half = False
-        if metric == "unitcorr":
-            metric, half = "correlation", True
+        metric, half = _check_dist_metric(metric)
         result = self._compare_topology(
             other, method, include_single=include_single, weighted=True, metric=metric
         )
@@ -4762,10 +4757,9 @@ class TreeNode(SkbioObject):
                 default behavior.
 
         shuffler : int, np.random.Generator or callable, optional
-            The shuffling function to use if ``sample`` is specified. Default is the
-            :meth:`shuffle <numpy.random.Generator.shuffle>` method of a NumPy random
-            generator. If an integer is provided, a random generator will be
-            constructed using this number as the seed.
+            The shuffling function to use if ``sample`` is specified. Default is
+            :meth:`~numpy.random.Generator.shuffle`. If an integer is provided, a
+            random generator will be constructed using this number as the seed.
 
             .. versionchanged:: 0.6.3
                 Switched to NumPy's new random generator. Can accept a random seed or
@@ -4953,12 +4947,7 @@ class TreeNode(SkbioObject):
             dm1 = dm1.data.flat
             dm2 = dm2.data.flat
 
-        half = False
-        if isinstance(metric, str):
-            if metric == "unitcorr":
-                metric, half = spdist.correlation, True
-            else:
-                metric = getattr(spdist, metric)
+        metric, half = _check_dist_metric(metric)
         result = metric(dm1, dm2)
         if half:
             result *= 0.5
