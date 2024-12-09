@@ -14,7 +14,6 @@ from collections import defaultdict, deque
 
 import numpy as np
 import pandas as pd
-import scipy.spatial.distance as spdist
 
 from skbio._base import SkbioObject
 from skbio.stats.distance import DistanceMatrix
@@ -25,10 +24,10 @@ from skbio.tree._exception import (
     MissingNodeError,
     TreeError,
 )
-from skbio.util import get_rng
 from skbio.util._decorator import classonlymethod
 from skbio.util._warning import _warn_deprecated
 from skbio.io.registry import Read, Write
+from ._utils import _check_dist_metric, _check_shuffler
 
 
 # ----------------------------------------------------------------------------
@@ -1957,8 +1956,8 @@ class TreeNode(SkbioObject):
                         node.remove(child, uncache=False)
                     node.extend([ind, interm], uncache=False)
 
-    def shuffle(self, k=None, names=None, shuffle_f=None, n=1):
-        r"""Shuffled tip names of the tree.
+    def shuffle(self, k=None, names=None, shuffler=None, n=1, **kwargs):
+        r"""Randomly shuffle tip names of the tree.
 
         Parameters
         ----------
@@ -1968,7 +1967,7 @@ class TreeNode(SkbioObject):
             Conflicts with ``names``.
         names : list, optional
             The specific tip names to shuffle. Conflicts with ``k``.
-        shuffle_f : int, np.random.Generator or callable, optional
+        shuffler : int, np.random.Generator or callable, optional
             Shuffling function, which must accept a list and modify in place. Default
             is the :meth:`shuffle <numpy.random.Generator.shuffle>` method of a NumPy
             random generator. If an integer is provided, a random generator will be
@@ -1977,6 +1976,8 @@ class TreeNode(SkbioObject):
             .. versionchanged:: 0.6.3
                 Switched to NumPy's new random generator. Can accept a random seed or
                 random generator instance.
+
+                Renamed from ``shuffle_f``. The old name is kept as an alias.
 
         n : int, optional
             The number of iterations to perform. Must be a positive integer. Default
@@ -2042,9 +2043,12 @@ class TreeNode(SkbioObject):
         elif n < 1:
             raise ValueError("n must be > 0.")
 
+        # renamed parameter
+        if shuffler is None and "shuffle_f" in kwargs:
+            shuffler = kwargs["shuffle_f"]
+
         # determine shuffling function
-        if not callable(shuffle_f):
-            shuffle_f = get_rng(shuffle_f).shuffle
+        shuffler = _check_shuffler(shuffler)
 
         # determine tip names to shuffle
         if names is not None:
@@ -2052,7 +2056,7 @@ class TreeNode(SkbioObject):
         else:
             tips = list(self.tips())
             if k is not None:
-                shuffle_f(tips)
+                shuffler(tips)
                 tips = tips[:k]
             names = [x.name for x in tips]
 
@@ -2062,7 +2066,7 @@ class TreeNode(SkbioObject):
         # iteratively shuffle tip names and yield tree
         counter = 0
         while counter < n:
-            shuffle_f(names)
+            shuffler(names)
             for tip, name in zip(tips, names):
                 tip.name = name
             yield self
@@ -4355,7 +4359,7 @@ class TreeNode(SkbioObject):
         symmetric=True,
         include_single=False,
         weighted=False,
-        metric="euclidean",
+        metric=None,
     ):
         r"""Calculate the topological difference between self and other.
 
@@ -4377,8 +4381,8 @@ class TreeNode(SkbioObject):
             Include singletons.
         weighted : bool, optional
             Weight by branch length.
-        metric : str or callable, optional
-            Pairwise distance metric.
+        metric : callable, optional
+            Distance metric (must provide if weighted).
 
         Returns
         -------
@@ -4412,9 +4416,9 @@ class TreeNode(SkbioObject):
         # unweighted (set difference)
         if not weighted:
             if symmetric:
-                result = sets1.symmetric_difference(sets2)
+                result = sets1 ^ sets2
             else:
-                result = sets1.difference(sets2)
+                result = sets1 - sets2
             result = len(result)
 
             # normalize result to unit range [0, 1]
@@ -4432,10 +4436,7 @@ class TreeNode(SkbioObject):
             union = frozenset(sets1).union(sets2)
             L1 = [sets1.get(x, 0.0) for x in union]
             L2 = [sets2.get(x, 0.0) for x in union]
-            if isinstance(metric, str):
-                result = getattr(spdist, metric)(L1, L2)
-            else:
-                result = metric(L1, L2)
+            result = metric(L1, L2)
 
         return result
 
@@ -4679,9 +4680,9 @@ class TreeNode(SkbioObject):
         other : TreeNode
             The other tree to compare with.
         metric : str or callable, optional
-            The pairwise distance metric to use. Can be a preset, a distance function
-            name under :mod:`scipy.spatial.distance`, or a custom function that takes
-            two vectors and returns a number. Some notable options are:
+            The distance metric to use. Can be a preset, a distance function name under
+            :mod:`scipy.spatial.distance`, or a custom function that takes two vectors
+            and returns a number. Some notable options are:
 
             - "cityblock" (default): City block (Manhattan) distance. The result
               matches the original weighted Robinson-Foulds distance [1]_.
@@ -4712,12 +4713,12 @@ class TreeNode(SkbioObject):
         Notes
         -----
         The Robinson-Foulds (RF) distance may be weighted by the branch lengths of
-        biparitions to account for evolutionary distances in addition to branching
+        bipartitions to account for evolutionary distances in addition to branching
         patterns.
 
         The default behavior of this method calculates the original weighted RF (wRF)
         distance [1]_, which is the sum of differences of branch lengths of matching
-        biparitions. Bipartitions unique to one tree are given a length of 0 in the
+        bipartitions. Bipartitions unique to one tree are given a length of 0 in the
         other tree during calculation.
 
         .. math::
@@ -4815,9 +4816,7 @@ class TreeNode(SkbioObject):
         if rooted is None:
             rooted = self.parent is not None or len(self.children) == 2
         method = "subsets" if rooted else "biparts"
-        half = False
-        if metric == "unitcorr":
-            metric, half = "correlation", True
+        metric, half = _check_dist_metric(metric)
         result = self._compare_topology(
             other, method, include_single=include_single, weighted=True, metric=metric
         )
@@ -4833,8 +4832,7 @@ class TreeNode(SkbioObject):
         shuffler=None,
         use_length=True,
         ignore_self=False,
-        dist_f=None,
-        shuffle_f=None,
+        **kwargs,
     ):
         r"""Calculate the distance between two trees based on cophenetic distances.
 
@@ -4849,9 +4847,9 @@ class TreeNode(SkbioObject):
             Randomly subsample this number of tips in common between the trees to
             compare. This is useful when comparing very large trees.
         metric : str or callable, optional
-            The pairwise distance metric to use. Can be a preset, a distance function
-            name under :mod:`scipy.spatial.distance`, or a custom function that takes
-            two vectors and returns a number. Some notable options are:
+            The distance metric to use. Can be a preset, a distance function name under
+            :mod:`scipy.spatial.distance`, or a custom function that takes two vectors
+            and returns a number. Some notable options are:
 
             - "cityblock": City block (Manhattan) distance.
             - "euclidean": Euclidean distance. The result matches the path-length
@@ -4867,15 +4865,18 @@ class TreeNode(SkbioObject):
                 instances. The default value "unitcorr" is consistent with the previous
                 default behavior.
 
+                Renamed from ``dist_f``. The old name is kept as an alias.
+
         shuffler : int, np.random.Generator or callable, optional
-            The shuffling function to use if ``sample`` is specified. Default is the
-            :meth:`shuffle <numpy.random.Generator.shuffle>` method of a NumPy random
-            generator. If an integer is provided, a random generator will be
-            constructed using this number as the seed.
+            The shuffling function to use if ``sample`` is specified. Default is
+            :meth:`~numpy.random.Generator.shuffle`. If an integer is provided, a
+            random generator will be constructed using this number as the seed.
 
             .. versionchanged:: 0.6.3
                 Switched to NumPy's new random generator. Can accept a random seed or
                 random generator instance.
+
+                Renamed from ``shuffle_f``. The old name is kept as an alias.
 
         use_length : bool, optional
             Whether to calculate the sum of branch lengths (True, default) or the
@@ -4890,13 +4891,6 @@ class TreeNode(SkbioObject):
             .. versionadded:: 0.6.3
 
             .. note:: The default value will be set as True in 0.7.0.
-
-        dist_f : str or callable, optional
-            Alias of ``metric`` for backward compatibility. Deprecated and to be
-            removed in a future release.
-        shuffle_f : int, np.random.Generator or callable, optional
-            Alias of ``shuffler`` for backward compatibility. Deprecated and to be
-            removed in a future release.
 
         Returns
         -------
@@ -5029,20 +5023,26 @@ class TreeNode(SkbioObject):
                 )
                 func.warned = True
 
-        if dist_f is not None:
-            metric = dist_f
-        if shuffle_f is not None:
-            shuffler = shuffle_f
+        # renamed parameters
+        if kwargs:
+            if shuffler is None and "shuffle_f" in kwargs:
+                shuffler = kwargs["shuffle_f"]
+            if metric == "unitcorr" and "dist_f" in kwargs:
+                metric = kwargs["dist_f"]
 
         tipmap1 = {n.name: n for n in self.tips()}
         tipmap2 = {n.name: n for n in other.tips()}
-        shared = list(frozenset(tipmap1).intersection(tipmap2))
+        shared = [x for x in tipmap1 if x in tipmap2]
         if not shared:
             raise ValueError("No tips are in common between the two trees.")
 
         if sample is not None:
-            if not callable(shuffler):
-                shuffler = get_rng(shuffler).shuffle
+            if (n_shared := len(shared)) < sample:
+                raise ValueError(
+                    f"{sample} taxa are to be sampled whereas only {n_shared} taxa are "
+                    "shared between the trees."
+                )
+            shuffler = _check_shuffler(shuffler)
             shuffler(shared)
             shared = shared[:sample]
 
@@ -5059,12 +5059,7 @@ class TreeNode(SkbioObject):
             dm1 = dm1.data.flat
             dm2 = dm2.data.flat
 
-        half = False
-        if isinstance(metric, str):
-            if metric == "unitcorr":
-                metric, half = spdist.correlation, True
-            else:
-                metric = getattr(spdist, metric)
+        metric, half = _check_dist_metric(metric)
         result = metric(dm1, dm2)
         if half:
             result *= 0.5
