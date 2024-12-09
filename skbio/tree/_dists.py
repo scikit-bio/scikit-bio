@@ -42,7 +42,7 @@ def _withins(trees):
     return [shared if len(s) > n_shared else None for s in taxon_sets]
 
 
-def rf_dists(trees, ids=None, shared_by_all=True, proportion=False, rooted=False):
+def rf_dists(trees, ids=None, pairwise=False, proportion=False, rooted=False):
     r"""Calculate Robinson-Foulds (RF) distances among trees.
 
     .. versionadded:: 0.6.3
@@ -54,9 +54,9 @@ def rf_dists(trees, ids=None, shared_by_all=True, proportion=False, rooted=False
     ids : list of str, optional
         Unique identifiers of input trees. If omitted, will use incremental integers
         "0", "1", "2",...
-    shared_by_all : bool, optional
+    pairwise : bool, optional
         Calculate the distance between each pair of trees based on taxa shared across
-        all trees (True, default), or shared between the current pair of trees (False).
+        all trees (False, default), or shared between the current pair of trees (True).
     proportion : bool, optional
         Whether to return the RF distance as count (False, default) or proportion
         (True).
@@ -83,9 +83,9 @@ def rf_dists(trees, ids=None, shared_by_all=True, proportion=False, rooted=False
     distance matrix for them.
 
     This function is optimized for calculation based on taxa shared across all trees.
-    One can instead set ``shared_by_all`` to False to calculate based on taxa shared
-    between each pair of trees, which is however less efficient since bipartitions need
-    to be re-inferred during each comparison.
+    One can instead set ``pairwise`` to True to calculate based on taxa shared between
+    each pair of trees, which is however less efficient since bipartitions need to be
+    re-inferred during each comparison.
 
     References
     ----------
@@ -113,7 +113,7 @@ def rf_dists(trees, ids=None, shared_by_all=True, proportion=False, rooted=False
 
     """
     _check_ids(trees, ids)
-    if not shared_by_all:
+    if pairwise:
         metric = partial(TreeNode.compare_rfd, proportion=proportion, rooted=rooted)
         return DistanceMatrix.from_iterable(
             trees, metric=metric, keys=ids, validate=False
@@ -138,7 +138,7 @@ def rf_dists(trees, ids=None, shared_by_all=True, proportion=False, rooted=False
 def wrf_dists(
     trees,
     ids=None,
-    shared_by_all=True,
+    pairwise=False,
     metric="cityblock",
     rooted=False,
     include_single=True,
@@ -154,14 +154,13 @@ def wrf_dists(
     ids : list of str, optional
         Unique identifiers of input trees. If omitted, will use incremental integers
         "0", "1", "2",...
-    shared_by_all : bool, optional
+    pairwise : bool, optional
         Calculate the distance between each pair of trees based on taxa shared across
-        all trees (True, default), or shared between the current pair of trees (False).
+        all trees (False, default), or shared between the current pair of trees (True).
     metric : str or callable, optional
-        The pairwise distance metric to use. Can be a preset, a distance function
-        name under :mod:`scipy.spatial.distance`, or a custom function that takes
-        two vectors and returns a number. See :meth:`~TreeNode.compare_wrfd` for
-        details.
+        The distance metric to use. Can be a preset, a distance function name under
+        :mod:`scipy.spatial.distance`, or a custom function that takes two vectors and
+        returns a number. See :meth:`~TreeNode.compare_wrfd` for details.
     rooted : bool, optional
         Whether to consider the trees as unrooted (False, default) or rooted (True).
     include_single : bool, optional
@@ -193,9 +192,9 @@ def wrf_dists(
     non-negativity or triangle inequality though.
 
     This function is optimized for calculation based on taxa shared across all trees.
-    One can instead set ``shared_by_all`` to False to calculate based on taxa shared
-    between each pair of trees, which is however less efficient as bipartitions need
-    to be re-inferred during each comparison.
+    One can instead set ``pairwise`` to True to calculate based on taxa shared between
+    each pair of trees, which is however less efficient as bipartitions need to be
+    re-inferred during each comparison.
 
     References
     ----------
@@ -222,7 +221,7 @@ def wrf_dists(
 
     """
     _check_ids(trees, ids)
-    if not shared_by_all:
+    if pairwise:
         metric = partial(
             TreeNode.compare_wrfd,
             metric=metric,
@@ -260,7 +259,7 @@ def wrf_dists(
 def path_dists(
     trees,
     ids=None,
-    shared_by_all=True,
+    pairwise=False,
     metric="euclidean",
     use_length=True,
     sample=None,
@@ -277,14 +276,13 @@ def path_dists(
     ids : list of str, optional
         Unique identifiers of input trees. If omitted, will use incremental integers
         "0", "1", "2",...
-    shared_by_all : bool, optional
+    pairwise : bool, optional
         Calculate the distance between each pair of trees based on taxa shared across
-        all trees (True, default), or shared between the current pair of trees (False).
+        all trees (False, default), or shared between the current pair of trees (True).
     metric : str or callable, optional
-        The pairwise distance metric to use. Can be a preset, a distance function
-        name under :mod:`scipy.spatial.distance`, or a custom function that takes
-        two vectors and returns a number. See :meth:`~TreeNode.compare_cophenet` for
-        details.
+        The distance metric to use. Can be a preset, a distance function name under
+        :mod:`scipy.spatial.distance`, or a custom function that takes two vectors and
+        returns a number. See :meth:`~TreeNode.compare_cophenet` for details.
     use_length : bool, optional
         Whether to calculate the sum of branch lengths (True, default) or the
         number of branches (False) connecting each pair of tips.
@@ -323,9 +321,9 @@ def path_dists(
     non-negativity or triangle inequality though.
 
     This function is optimized for calculation based on taxa shared across all trees.
-    One can instead set ``shared_by_all`` to False to calculate based on taxa shared
-    between each pair of trees, which is however less efficient as the path lengths
-    need to be re-calculated during each comparison.
+    One can instead set ``pairwise`` to True to calculate based on taxa shared between
+    each pair of trees, which is however less efficient as the path lengths need to be
+    re-calculated during each comparison.
 
     References
     ----------
@@ -356,7 +354,7 @@ def path_dists(
     if sample is not None:
         shuffler = _check_shuffler(shuffler)
 
-    if not shared_by_all:
+    if pairwise:
         metric = partial(
             TreeNode.compare_cophenet,
             sample=sample,

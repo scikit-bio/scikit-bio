@@ -4276,7 +4276,7 @@ class TreeNode(SkbioObject):
         weighted : bool, optional
             Weight by branch length.
         metric : callable, optional
-            Pairwise distance metric (must provide if weighted).
+            Distance metric (must provide if weighted).
 
         Returns
         -------
@@ -4574,9 +4574,9 @@ class TreeNode(SkbioObject):
         other : TreeNode
             The other tree to compare with.
         metric : str or callable, optional
-            The pairwise distance metric to use. Can be a preset, a distance function
-            name under :mod:`scipy.spatial.distance`, or a custom function that takes
-            two vectors and returns a number. Some notable options are:
+            The distance metric to use. Can be a preset, a distance function name under
+            :mod:`scipy.spatial.distance`, or a custom function that takes two vectors
+            and returns a number. Some notable options are:
 
             - "cityblock" (default): City block (Manhattan) distance. The result
               matches the original weighted Robinson-Foulds distance [1]_.
@@ -4741,9 +4741,9 @@ class TreeNode(SkbioObject):
             Randomly subsample this number of tips in common between the trees to
             compare. This is useful when comparing very large trees.
         metric : str or callable, optional
-            The pairwise distance metric to use. Can be a preset, a distance function
-            name under :mod:`scipy.spatial.distance`, or a custom function that takes
-            two vectors and returns a number. Some notable options are:
+            The distance metric to use. Can be a preset, a distance function name under
+            :mod:`scipy.spatial.distance`, or a custom function that takes two vectors
+            and returns a number. Some notable options are:
 
             - "cityblock": City block (Manhattan) distance.
             - "euclidean": Euclidean distance. The result matches the path-length

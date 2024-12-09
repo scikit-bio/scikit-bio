@@ -70,7 +70,7 @@ class DistsTests(TestCase):
         npt.assert_array_almost_equal(obs, exp)
 
         # pairwise sharing
-        obs = rf_dists(trees, shared_by_all=False).data
+        obs = rf_dists(trees, pairwise=True).data
         exp = np.array([[0, 4, 2, 6],
                         [4, 0, 6, 4],
                         [2, 6, 0, 6],
@@ -146,7 +146,7 @@ class DistsTests(TestCase):
         npt.assert_array_almost_equal(obs, exp)
 
         # pairwise sharing
-        obs = wrf_dists(trees, shared_by_all=False).data
+        obs = wrf_dists(trees, pairwise=True).data
         exp = np.array([[0, 4, 0],
                         [4, 0, 6],
                         [0, 6, 0]], dtype=float)
@@ -200,7 +200,7 @@ class DistsTests(TestCase):
         npt.assert_array_almost_equal(obs, exp)
 
         # pairwise sharing
-        obs = path_dists(trees, shared_by_all=False).condensed_form()
+        obs = path_dists(trees, pairwise=True).condensed_form()
         exp = np.array([4.47213595, 2.0, 4.35889894])
         npt.assert_array_almost_equal(obs, exp)
 
