@@ -1007,8 +1007,7 @@ def _parse_fasta_raw(fh, data_parser, error_type, remove_spaces=True):
                     raise error_type(
                         "Found blank or whitespace-only line within record."
                     )
-                # don't remove spaces if the line consists of qual scores
-                if not any(x.isdigit() for x in line):
+                if not any(x.isdigit() for x in line[:10]):
                     if remove_spaces:
                         line = line.replace(" ", "")
                 data_chunks.append(line)
@@ -1020,6 +1019,8 @@ def _parse_fasta_raw(fh, data_parser, error_type, remove_spaces=True):
 def _parse_sequence_data(chunks):
     if not chunks:
         raise FASTAFormatError("Found header without sequence data.")
+    if any(x.isdigit() for x in chunks[0]):
+        raise FASTAFormatError("A FASTA sequence must not contain numeric values.")
     return "".join(chunks)
 
 

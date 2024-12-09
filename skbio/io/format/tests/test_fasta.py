@@ -21,7 +21,7 @@ from skbio.io.format.fasta import (
     _fasta_to_dna, _fasta_to_rna, _fasta_to_protein,
     _fasta_to_tabular_msa, _generator_to_fasta,
     _sequence_to_fasta, _dna_to_fasta, _rna_to_fasta, _protein_to_fasta,
-    _tabular_msa_to_fasta)
+    _tabular_msa_to_fasta, _parse_sequence_data)
 from skbio.sequence import GrammaredSequence
 from skbio.util import get_data_path
 from skbio.util import classproperty
@@ -82,7 +82,6 @@ class SnifferTests(TestCase):
             'fasta_10_seqs',
             'fasta_invalid_after_10_seqs',
             'fasta_mixed_qual_scores',
-            'qual_3_seqs_non_defaults'
         ]))
 
         self.negative_fps = list(map(get_data_path, [
@@ -109,6 +108,7 @@ class SnifferTests(TestCase):
             'qual_3_seqs_defaults_extra',
             'qual_3_seqs_defaults_id_mismatch',
             'qual_3_seqs_defaults_length_mismatch',
+            'qual_3_seqs_non_defaults',
             'qual_description_newline_replacement_empty_str',
             'qual_description_newline_replacement_multi_char',
             'qual_description_newline_replacement_none',
@@ -156,6 +156,11 @@ class SnifferTests(TestCase):
     def test_negatives(self):
         for fp in self.negative_fps:
             self.assertEqual(_fasta_sniffer(fp), (False, {}))
+
+    def test_numerical_sequence(self):
+        chunks = ["1 2 3 4"]
+        with self.assertRaises(FASTAFormatError):
+            _parse_sequence_data(chunks)
 
 
 class ReaderTests(TestCase):
