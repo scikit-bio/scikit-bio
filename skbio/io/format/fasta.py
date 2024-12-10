@@ -188,8 +188,9 @@ format.
 
 Reader-specific Parameters
 ^^^^^^^^^^^^^^^^^^^^^^^^^^
-The ``remove_spaces`` parameter can be used with any reader. If set to ``True``,
-all spaces in the input will be removed. Default is ``True``.
+The ``keep_spaces`` parameter can be used with any reader. If set to ``True``,
+all spaces in the input will be preserved. If set to ``False``, all spaces in
+the input will be removed. Default is ``False``.
 
 The following reader parameters differ depending on which reader is used.
 
@@ -734,8 +735,8 @@ def _sniffer_data_parser(chunks):
 @fasta.reader(None)
 def _fasta_to_generator(fh, qual=FileSentinel, constructor=Sequence, **kwargs):
     kwargs = kwargs.copy()
-    if "remove_spaces" in kwargs:
-        kwarg = {"remove_spaces": kwargs.pop("remove_spaces")}
+    if "keep_spaces" in kwargs:
+        kwarg = {"keep_spaces": kwargs.pop("keep_spaces")}
     else:
         kwarg = {}
     if qual is None:
@@ -970,7 +971,7 @@ def _tabular_msa_to_fasta(
     )
 
 
-def _parse_fasta_raw(fh, data_parser, error_type, remove_spaces=True):
+def _parse_fasta_raw(fh, data_parser, error_type, keep_spaces=False):
     """Raw parser for FASTA or QUAL files.
 
     Returns raw values (seq/qual, id, description). It is the responsibility of
@@ -1008,7 +1009,7 @@ def _parse_fasta_raw(fh, data_parser, error_type, remove_spaces=True):
                         "Found blank or whitespace-only line within record."
                     )
                 if not any(x.isdigit() for x in line[:10]):
-                    if remove_spaces:
+                    if not keep_spaces:
                         line = line.replace(" ", "")
                 data_chunks.append(line)
         prev = line
