@@ -993,6 +993,9 @@ def _parse_fasta_raw(fh, data_parser, error_type, keep_spaces=False):
             "\n%s" % seq_header
         )
 
+    # will remove spaces from each sequence (but not quality scores)
+    trim_spaces = data_parser.__name__ == "_parse_sequence_data" and not keep_spaces
+
     data_chunks = []
     prev = seq_header
     for line in _line_generator(fh, skip_blanks=False):
@@ -1001,17 +1004,13 @@ def _parse_fasta_raw(fh, data_parser, error_type, keep_spaces=False):
             yield data_parser(data_chunks), id_, desc
             data_chunks = []
             id_, desc = _parse_fasta_like_header(line)
-        else:
-            if line:
-                # ensure no blank lines within a single record
-                if not prev:
-                    raise error_type(
-                        "Found blank or whitespace-only line within record."
-                    )
-                if not any(x.isdigit() for x in line[:10]):
-                    if not keep_spaces:
-                        line = line.replace(" ", "")
-                data_chunks.append(line)
+        elif line:
+            # ensure no blank lines within a single record
+            if not prev:
+                raise error_type("Found blank or whitespace-only line within record.")
+            if trim_spaces:
+                line = line.replace(" ", "")
+            data_chunks.append(line)
         prev = line
     # yield last record in file
     yield data_parser(data_chunks), id_, desc
@@ -1020,8 +1019,6 @@ def _parse_fasta_raw(fh, data_parser, error_type, keep_spaces=False):
 def _parse_sequence_data(chunks):
     if not chunks:
         raise FASTAFormatError("Found header without sequence data.")
-    if any(x.isdigit() for x in chunks[0]):
-        raise FASTAFormatError("A FASTA sequence must not contain numeric values.")
     return "".join(chunks)
 
 
