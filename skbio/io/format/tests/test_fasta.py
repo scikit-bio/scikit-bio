@@ -662,7 +662,7 @@ class ReaderTests(TestCase):
         with self.assertRaisesRegex(ValueError, r'`constructor`'):
             _fasta_to_tabular_msa(get_data_path('fasta_single_seq'))
 
-    def test_remove_spaces(self):
+    def test_keep_spaces(self):
         fp = get_data_path('fasta_multi_seq_spaces')
 
         # test RNA, DNA, and Protein
