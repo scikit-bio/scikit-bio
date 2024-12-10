@@ -669,15 +669,15 @@ class ReaderTests(TestCase):
         read_fns = [_fasta_to_dna, _fasta_to_rna, _fasta_to_protein]
         for read_fn in read_fns:
             with self.assertRaises(ValueError) as e:
-                read_fn(fp, remove_spaces=False, lowercase=True)
+                read_fn(fp, keep_spaces=True, lowercase=True)
             self.assertTrue(str(e.exception).startswith("Invalid char"))
 
         # test generator
-        obs = str(next(_fasta_to_generator(fp, remove_spaces=False)))
+        obs = str(next(_fasta_to_generator(fp, keep_spaces=True)))
         self.assertEqual(obs, "ACGT - acgt.")
 
         # test Sequence
-        obs = str(_fasta_to_sequence(fp, remove_spaces=False))
+        obs = str(_fasta_to_sequence(fp, keep_spaces=True))
         self.assertEqual(obs, "ACGT - acgt.")
 
 
