@@ -21,7 +21,7 @@ from skbio.io.format.fasta import (
     _fasta_to_dna, _fasta_to_rna, _fasta_to_protein,
     _fasta_to_tabular_msa, _generator_to_fasta,
     _sequence_to_fasta, _dna_to_fasta, _rna_to_fasta, _protein_to_fasta,
-    _tabular_msa_to_fasta)
+    _tabular_msa_to_fasta, _parse_sequence_data)
 from skbio.sequence import GrammaredSequence
 from skbio.util import get_data_path
 from skbio.util import classproperty
@@ -68,6 +68,7 @@ class SnifferTests(TestCase):
             'fasta_single_rna_seq_defaults',
             'fasta_description_newline_replacement_empty_str',
             'fasta_multi_seq',
+            'fasta_multi_seq_spaces',
             'fasta_single_dna_seq_non_defaults',
             'fasta_single_rna_seq_non_defaults',
             'fasta_description_newline_replacement_multi_char',
@@ -81,7 +82,6 @@ class SnifferTests(TestCase):
             'fasta_10_seqs',
             'fasta_invalid_after_10_seqs',
             'fasta_mixed_qual_scores',
-            'qual_3_seqs_non_defaults'
         ]))
 
         self.negative_fps = list(map(get_data_path, [
@@ -108,6 +108,7 @@ class SnifferTests(TestCase):
             'qual_3_seqs_defaults_extra',
             'qual_3_seqs_defaults_id_mismatch',
             'qual_3_seqs_defaults_length_mismatch',
+            'qual_3_seqs_non_defaults',
             'qual_description_newline_replacement_empty_str',
             'qual_description_newline_replacement_multi_char',
             'qual_description_newline_replacement_none',
@@ -155,6 +156,11 @@ class SnifferTests(TestCase):
     def test_negatives(self):
         for fp in self.negative_fps:
             self.assertEqual(_fasta_sniffer(fp), (False, {}))
+
+    def test_numerical_sequence(self):
+        chunks = ["1 2 3 4"]
+        with self.assertRaises(FASTAFormatError):
+            _parse_sequence_data(chunks)
 
 
 class ReaderTests(TestCase):
@@ -220,6 +226,7 @@ class ReaderTests(TestCase):
                                                  dtype=np.uint8)})],
             {},
             list(map(get_data_path, ['fasta_multi_seq', 'fasta_max_width_5',
+                                     'fasta_multi_seq_spaces',
                                      'fasta_blank_lines_between_records',
                                      'fasta_ws_lines_between_records',
                                      'fasta_5_blanks_start_of_file',
@@ -654,6 +661,24 @@ class ReaderTests(TestCase):
     def test_fasta_to_tabular_msa_no_constructor(self):
         with self.assertRaisesRegex(ValueError, r'`constructor`'):
             _fasta_to_tabular_msa(get_data_path('fasta_single_seq'))
+
+    def test_keep_spaces(self):
+        fp = get_data_path('fasta_multi_seq_spaces')
+
+        # test RNA, DNA, and Protein
+        read_fns = [_fasta_to_dna, _fasta_to_rna, _fasta_to_protein]
+        for read_fn in read_fns:
+            with self.assertRaises(ValueError) as e:
+                read_fn(fp, keep_spaces=True, lowercase=True)
+            self.assertTrue(str(e.exception).startswith("Invalid char"))
+
+        # test generator
+        obs = str(next(_fasta_to_generator(fp, keep_spaces=True)))
+        self.assertEqual(obs, "ACGT - acgt.")
+
+        # test Sequence
+        obs = str(_fasta_to_sequence(fp, keep_spaces=True))
+        self.assertEqual(obs, "ACGT - acgt.")
 
 
 class WriterTests(TestCase):
