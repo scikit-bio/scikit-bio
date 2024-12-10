@@ -12,10 +12,10 @@ import numpy as np
 import numpy.testing as npt
 
 from skbio import TreeNode
-from skbio.tree._dists import rf_dists, wrf_dists, path_dists
+from skbio.tree._compare import rf_dists, wrf_dists, path_dists
 
 
-class DistsTests(TestCase):
+class CompareTests(TestCase):
 
     def test_rf_dists(self):
         """Calculate Robinson-Foulds distances among trees."""

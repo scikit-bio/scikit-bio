@@ -27,7 +27,13 @@ from skbio.tree._exception import (
 from skbio.util._decorator import classonlymethod
 from skbio.util._warning import _warn_deprecated
 from skbio.io.registry import Read, Write
-from ._utils import _check_dist_metric, _check_shuffler
+from ._compare import (
+    _check_dist_metric,
+    _check_shuffler,
+    _sample_taxa,
+    _topo_dist,
+    _path_dist,
+)
 
 
 # ----------------------------------------------------------------------------
@@ -4244,96 +4250,6 @@ class TreeNode(SkbioObject):
 
     tip_tip_distances = cophenet
 
-    def _compare_topology(
-        self,
-        other,
-        method="subsets",
-        shared_only=True,
-        proportion=False,
-        symmetric=True,
-        include_single=False,
-        weighted=False,
-        metric=None,
-    ):
-        r"""Calculate the topological difference between self and other.
-
-        This function calculates the Robinson-Foulds (RF) distance or its derivates.
-
-        Parameters
-        ----------
-        other : TreeNode
-            The other tree to compare with.
-        method : str, optional
-            Subsets or bipartitions.
-        shared_only : bool, optional
-            Refine to shared taxa.
-        proportion : bool, optional
-            Normalize to fraction.
-        symmetric : bool, optional
-            Symmetric difference.
-        include_single : bool, optional
-            Include singletons.
-        weighted : bool, optional
-            Weight by branch length.
-        metric : callable, optional
-            Distance metric (must provide if weighted).
-
-        Returns
-        -------
-        float
-            Difference between self and other.
-
-        See Also
-        --------
-        compare_rfd
-        compare_wrfd
-        compare_subsets
-        compare_biparts
-
-        """
-        topo1, topo2 = getattr(self, method), getattr(other, method)
-        kwargs = dict(include_single=include_single, map_to_length=weighted)
-        if shared_only:
-            set1, set2 = self.subset(), other.subset()
-            n_shared = len(shared := set1 & set2)
-            if len(set1) > n_shared:
-                sets1 = topo1(within=shared, **kwargs)
-            else:
-                sets1 = topo1(**kwargs)
-            if len(set2) > n_shared:
-                sets2 = topo2(within=shared, **kwargs)
-            else:
-                sets2 = topo2(**kwargs)
-        else:
-            sets1, sets2 = topo1(**kwargs), topo2(**kwargs)
-
-        # unweighted (set difference)
-        if not weighted:
-            if symmetric:
-                result = sets1 ^ sets2
-            else:
-                result = sets1 - sets2
-            result = len(result)
-
-            # normalize result to unit range [0, 1]
-            # if total is 0, return 1 (dist = 1 means saturation)
-            if proportion:
-                total = len(sets1) + (symmetric and len(sets2))
-                result = result / total if total else 1.0
-
-            # cast result to float
-            else:
-                result = float(result)
-
-        # branch length weighted (vector distance)
-        else:
-            union = frozenset(sets1).union(sets2)
-            L1 = [sets1.get(x, 0.0) for x in union]
-            L2 = [sets2.get(x, 0.0) for x in union]
-            result = metric(L1, L2)
-
-        return result
-
     def compare_subsets(
         self,
         other,
@@ -4394,9 +4310,7 @@ class TreeNode(SkbioObject):
 
         """
         shared_only |= exclude_absent_taxa
-        return self._compare_topology(
-            other, "subsets", shared_only, proportion, symmetric
-        )
+        return _topo_dist(self, other, "subsets", shared_only, proportion, symmetric)
 
     def compare_biparts(self, other, proportion=True, symmetric=True):
         r"""Calculate the difference of bipartitions between two trees.
@@ -4440,7 +4354,7 @@ class TreeNode(SkbioObject):
         0.0
 
         """
-        return self._compare_topology(other, "biparts", True, proportion, symmetric)
+        return _topo_dist(self, other, "biparts", True, proportion, symmetric)
 
     def compare_rfd(self, other, proportion=False, rooted=None):
         r"""Calculate Robinson-Foulds distance between two trees.
@@ -4562,7 +4476,7 @@ class TreeNode(SkbioObject):
         if rooted is None:
             rooted = self.parent is not None or len(self.children) == 2
         method = "subsets" if rooted else "biparts"
-        return self._compare_topology(other, method, proportion=proportion)
+        return _topo_dist(self, other, method, proportion=proportion)
 
     def compare_wrfd(self, other, metric="cityblock", rooted=None, include_single=True):
         r"""Calculate weighted Robinson-Foulds distance or variants between two trees.
@@ -4710,13 +4624,15 @@ class TreeNode(SkbioObject):
         if rooted is None:
             rooted = self.parent is not None or len(self.children) == 2
         method = "subsets" if rooted else "biparts"
-        metric, half = _check_dist_metric(metric)
-        result = self._compare_topology(
-            other, method, include_single=include_single, weighted=True, metric=metric
+        metric = _check_dist_metric(metric)
+        return _topo_dist(
+            self,
+            other,
+            method=method,
+            include_single=include_single,
+            weighted=True,
+            metric=metric,
         )
-        if half:
-            result *= 0.5
-        return result
 
     def compare_cophenet(
         self,
@@ -4924,41 +4840,15 @@ class TreeNode(SkbioObject):
             if metric == "unitcorr" and "dist_f" in kwargs:
                 metric = kwargs["dist_f"]
 
-        tipmap1 = {n.name: n for n in self.tips()}
-        tipmap2 = {n.name: n for n in other.tips()}
-        shared = [x for x in tipmap1 if x in tipmap2]
-        if not shared:
-            raise ValueError("No tips are in common between the two trees.")
-
-        if sample is not None:
-            if (n_shared := len(shared)) < sample:
-                raise ValueError(
-                    f"{sample} taxa are to be sampled whereas only {n_shared} taxa are "
-                    "shared between the trees."
-                )
-            shuffler = _check_shuffler(shuffler)
-            shuffler(shared)
-            shared = shared[:sample]
-
-        tips1 = [tipmap1[x] for x in shared]
-        tips2 = [tipmap2[x] for x in shared]
-
-        dm1 = self.cophenet(endpoints=tips1, use_length=use_length)
-        dm2 = other.cophenet(endpoints=tips2, use_length=use_length)
-
-        if ignore_self:
-            dm1 = dm1.condensed_form()
-            dm2 = dm2.condensed_form()
-        else:
-            dm1 = dm1.data.flat
-            dm2 = dm2.data.flat
-
-        metric, half = _check_dist_metric(metric)
-        result = metric(dm1, dm2)
-        if half:
-            result *= 0.5
-
-        return result
+        return _path_dist(
+            self,
+            other,
+            sample=sample,
+            metric=metric,
+            shuffler=shuffler,
+            use_length=use_length,
+            ignore_self=ignore_self,
+        )
 
     compare_tip_distances = compare_cophenet
 

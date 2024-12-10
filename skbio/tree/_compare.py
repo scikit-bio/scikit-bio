@@ -10,10 +10,34 @@ from functools import partial
 from itertools import combinations
 
 import numpy as np
+import scipy.spatial.distance as spdist
 
-from skbio.tree import TreeNode
 from skbio.stats.distance import DistanceMatrix
-from ._utils import _check_dist_metric, _check_shuffler
+from skbio.util import get_rng
+
+
+def unitcorr(a, b):
+    """Calculate unit correlation distance."""
+    return spdist.correlation(a, b) * 0.5
+
+
+def _check_dist_metric(metric):
+    """Validate distance metric."""
+    if isinstance(metric, str):
+        if metric == "unitcorr":
+            metric = unitcorr
+        else:
+            metric = getattr(spdist, metric)
+    elif not callable(metric):
+        raise ValueError("`metric` must be a string or callable.")
+    return metric
+
+
+def _check_shuffler(shuffler):
+    """Validate sample shuffler."""
+    if not callable(shuffler):
+        shuffler = get_rng(shuffler).shuffle
+    return shuffler
 
 
 def _check_ids(trees, ids):
@@ -40,6 +64,112 @@ def _withins(trees):
     shared, taxon_sets = _shared(trees)
     n_shared = len(shared)
     return [shared if len(s) > n_shared else None for s in taxon_sets]
+
+
+def _sample_taxa(sample, taxa, shuffler):
+    """Sample a given number of taxa using a given shuffler."""
+    if (n_taxa := len(taxa)) < sample:
+        raise ValueError(
+            f"{sample} taxa are to be sampled whereas only {n_taxa} taxa are shared "
+            "between the trees."
+        )
+    shuffler(taxa)
+    return taxa[:sample]
+
+
+def _topo_dist(
+    tree1,
+    tree2,
+    method="biparts",
+    shared_only=True,
+    proportion=False,
+    symmetric=True,
+    include_single=False,
+    weighted=False,
+    metric=None,
+):
+    r"""Calculate the topological distance between two trees.
+
+    This function calculates the Robinson-Foulds (RF) distance or its derivates.
+
+    Parameters
+    ----------
+    tree1 : TreeNode
+        The first tree to compare.
+    tree2 : TreeNode
+        The second tree to compare.
+    method : str, optional
+        "subsets" or "biparts"
+    shared_only : bool, optional
+        Refine to shared taxa.
+    proportion : bool, optional
+        Normalize to proportion.
+    symmetric : bool, optional
+        Symmetric difference.
+    include_single : bool, optional
+        Include singletons.
+    weighted : bool, optional
+        Weight by branch length.
+    metric : callable, optional
+        Distance metric (must provide if weighted).
+
+    Returns
+    -------
+    float
+        Difference between the two trees.
+
+    See Also
+    --------
+    rf_dists
+    wrfd_dists
+    TreeNode.compare_rfd
+    TreeNode.compare_wrfd
+    TreeNode.compare_subsets
+    TreeNode.compare_biparts
+
+    """
+    topo1, topo2 = getattr(tree1, method), getattr(tree2, method)
+    kwargs = dict(include_single=include_single, map_to_length=weighted)
+    if shared_only:
+        set1, set2 = tree1.subset(), tree2.subset()
+        n_shared = len(shared := set1 & set2)
+        if len(set1) > n_shared:
+            sets1 = topo1(within=shared, **kwargs)
+        else:
+            sets1 = topo1(**kwargs)
+        if len(set2) > n_shared:
+            sets2 = topo2(within=shared, **kwargs)
+        else:
+            sets2 = topo2(**kwargs)
+    else:
+        sets1, sets2 = topo1(**kwargs), topo2(**kwargs)
+
+    # unweighted (set difference)
+    if not weighted:
+        if symmetric:
+            result = sets1 ^ sets2  # symmetric difference
+        else:
+            result = sets1 - sets2  # difference
+        result = len(result)
+
+        # normalize result to unit range [0, 1]
+        # if total is 0, return 1 (dist = 1 means saturation)
+        if proportion:
+            total = len(sets1) + (symmetric and len(sets2))
+            result = result / total if total else 1.0
+
+        # cast result to float
+        else:
+            result = float(result)
+
+    # branch length weighted (vector distance)
+    else:
+        union = frozenset(sets1).union(sets2)
+        L1 = [sets1.get(x, 0.0) for x in union]
+        L2 = [sets2.get(x, 0.0) for x in union]
+        result = metric(L1, L2)
+
+    return result
 
 
 def rf_dists(trees, ids=None, pairwise=False, proportion=False, rooted=False):
@@ -113,13 +243,14 @@ def rf_dists(trees, ids=None, pairwise=False, proportion=False, rooted=False):
 
     """
     _check_ids(trees, ids)
+    method = "subsets" if rooted else "biparts"
+
     if pairwise:
-        metric = partial(TreeNode.compare_rfd, proportion=proportion, rooted=rooted)
+        metric = partial(_topo_dist, method=method, proportion=proportion)
         return DistanceMatrix.from_iterable(
             trees, metric=metric, keys=ids, validate=False
         )
 
-    method = "subsets" if rooted else "biparts"
     withins = _withins(trees)
     sets = [getattr(x, method)(within=y) for x, y in zip(trees, withins)]
     lens = [len(s) for s in sets]
@@ -221,20 +352,21 @@ def wrf_dists(
 
     """
     _check_ids(trees, ids)
+    metric = _check_dist_metric(metric)
+    method = "subsets" if rooted else "biparts"
+
     if pairwise:
         metric = partial(
-            TreeNode.compare_wrfd,
+            _topo_dist,
+            method=method,
+            weighted=True,
             metric=metric,
-            rooted=rooted,
             include_single=include_single,
         )
         return DistanceMatrix.from_iterable(
             trees, metric=metric, keys=ids, validate=False
         )
 
-    metric, half = _check_dist_metric(metric)
-
-    method = "subsets" if rooted else "biparts"
     withins = _withins(trees)
     maps = [
         getattr(x, method)(within=y, include_single=include_single, map_to_length=True)
@@ -250,10 +382,43 @@ def wrf_dists(
         Lj = [gets[j](x, 0.0) for x in union]
         result[i, j] = result[j, i] = metric(Li, Lj)
 
-    if half:
-        result *= 0.5
-
     return DistanceMatrix(result, ids, validate=False)
+
+
+def _path_dist(
+    tree1,
+    tree2,
+    sample=None,
+    metric="unitcorr",
+    shuffler=None,
+    use_length=True,
+    ignore_self=False,
+):
+    tipmap1 = {n.name: n for n in tree1.tips()}
+    tipmap2 = {n.name: n for n in tree2.tips()}
+    shared = [x for x in tipmap1 if x in tipmap2]
+    if not shared:
+        raise ValueError("No tips are in common between the two trees.")
+
+    if sample is not None:
+        shuffler = _check_shuffler(shuffler)
+        shared = _sample_taxa(sample, shared, shuffler)
+
+    tips1 = [tipmap1[x] for x in shared]
+    tips2 = [tipmap2[x] for x in shared]
+
+    dm1 = tree1.cophenet(endpoints=tips1, use_length=use_length)
+    dm2 = tree2.cophenet(endpoints=tips2, use_length=use_length)
+
+    if ignore_self:
+        dm1 = dm1.condensed_form()
+        dm2 = dm2.condensed_form()
+    else:
+        dm1 = dm1.data.flat
+        dm2 = dm2.data.flat
+
+    metric = _check_dist_metric(metric)
+    return metric(dm1, dm2)
 
 
 def path_dists(
@@ -356,7 +521,7 @@ def path_dists(
 
     if pairwise:
         metric = partial(
-            TreeNode.compare_cophenet,
+            _path_dist,
             sample=sample,
             metric=metric,
             shuffler=shuffler,
@@ -367,18 +532,12 @@ def path_dists(
             trees, metric=metric, keys=ids, validate=False
         )
 
-    metric, half = _check_dist_metric(metric)
+    metric = _check_dist_metric(metric)
 
     shared = sorted(_shared(trees)[0])
 
     if sample is not None:
-        if (n_shared := len(shared)) < sample:
-            raise ValueError(
-                f"{sample} taxa are to be sampled whereas only {n_shared} taxa are "
-                "shared among all trees."
-            )
-        shuffler(shared)
-        shared = shared[:sample]
+        shared = _sample_taxa(sample, shared, shuffler)
 
     paths = [
         x.cophenet(endpoints=shared, use_length=use_length).condensed_form()
@@ -388,8 +547,5 @@ def path_dists(
     result = np.zeros((n_trees := len(trees), n_trees))
     for i, j in combinations(range(n_trees), 2):
         result[i, j] = result[j, i] = metric(paths[i], paths[j])
-
-    if half:
-        result *= 0.5
 
     return DistanceMatrix(result, ids, validate=False)

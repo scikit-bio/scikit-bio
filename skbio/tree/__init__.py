@@ -216,7 +216,7 @@ from ._gme import gme
 from ._bme import bme
 from ._nni import nni
 from ._majority_rule import majority_rule
-from ._dists import rf_dists, wrf_dists, path_dists
+from ._compare import rf_dists, wrf_dists, path_dists
 from ._exception import (
     TreeError,
     NoLengthError,
