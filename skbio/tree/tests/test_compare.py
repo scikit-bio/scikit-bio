@@ -77,13 +77,6 @@ class CompareTests(TestCase):
                         [6, 4, 6, 0]], dtype=float)
         npt.assert_array_almost_equal(obs, exp)
 
-        # no shared taxon
-        nwks = ["((a,b),(c,d));",
-                "((e,f),(g,h));"]
-        trees = [TreeNode.read([x]) for x in nwks]
-        obs = rf_dists(trees).data
-        self.assertFalse(np.any(obs))
-
         # duplicate IDs
         with self.assertRaises(ValueError):
             rf_dists(trees, list("xxxx"))
@@ -91,6 +84,21 @@ class CompareTests(TestCase):
         # ID number doesn't match
         with self.assertRaises(ValueError):
             rf_dists(trees, list("abc"))
+
+        # no shared taxon
+        nwks = ["((a,b),(c,d));",
+                "((e,f),(g,h));"]
+        trees = [TreeNode.read([x]) for x in nwks]
+        obs = rf_dists(trees).data
+        self.assertFalse(np.any(obs))
+
+        # only one tree
+        obs = rf_dists([TreeNode.read(["((a,b),(c,d));"])]).data
+        npt.assert_array_equal(obs, np.zeros((1, 1)))
+
+        # no tree
+        with self.assertRaises(ValueError):
+            rf_dists([])
 
     def test_wrf_dists(self):
         """Calculate weighted Robinson-Foulds distances among trees."""
@@ -134,6 +142,12 @@ class CompareTests(TestCase):
                         [0.13211014, 0.32552865, 0]])
         npt.assert_array_almost_equal(obs, exp)
 
+        # invalide distance metric
+        with self.assertRaises(ValueError):
+            wrf_dists(trees, metric=100)
+        with self.assertRaises(AttributeError):
+            wrf_dists(trees, metric="hello")
+
         # with unique taxa
         nwks = ["((a:1,b:2):1,(c:3,d:4):2);",
                 "((a:1,(b:2,d:4):1):2,e:5);",
@@ -151,13 +165,6 @@ class CompareTests(TestCase):
                         [4, 0, 6],
                         [0, 6, 0]], dtype=float)
         npt.assert_array_almost_equal(obs, exp)
-
-        # no shared taxon
-        nwks = ["((a,b),(c,d));",
-                "((e,f),(g,h));"]
-        trees = [TreeNode.read([x]) for x in nwks]
-        obs = wrf_dists(trees).data
-        self.assertFalse(np.any(obs))
 
     def test_path_dists(self):
         """Calculate path-length distances among trees."""

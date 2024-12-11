@@ -19,10 +19,22 @@ from skbio.util import get_rng
 def unitcorr(a, b):
     """Calculate unit correlation distance.
 
-    result = (1 - r) / 2, in which r is the Pearson's correlation coefficient.
+    d = (1 - r) / 2, in which r is the Pearson's correlation coefficient.
 
     """
     return spdist.correlation(a, b) * 0.5
+
+
+def _check_input(trees, ids):
+    """Validate input trees and IDs."""
+    if not (n := len(trees)):
+        raise ValueError(f"No tree is provided.")
+    if ids is None:
+        return
+    if (m := len(ids)) != n:
+        raise ValueError(f"Numbers of IDs and trees don't match.")
+    if m > len(set(ids)):
+        raise ValueError(f"IDs contain duplicates.")
 
 
 def _check_dist_metric(metric):
@@ -44,32 +56,6 @@ def _check_shuffler(shuffler):
     return shuffler
 
 
-def _check_ids(trees, ids):
-    """Validate tree IDs."""
-    if ids is None:
-        return
-    if (n := len(ids)) != len(trees):
-        raise ValueError(f"ID number does not match tree number.")
-    if n > len(set(ids)):
-        raise ValueError(f"IDs contain duplicates.")
-
-
-def _check_topo_type(rooted):
-    """Determine topological unit type based on tree rootedness."""
-    return "subsets" if rooted else "biparts"
-
-
-def _sample_taxa(sample, taxa, shuffler):
-    """Sample a given number of taxa using a given shuffler."""
-    if (n_taxa := len(taxa)) < sample:
-        raise ValueError(
-            f"{sample} taxa are to be sampled whereas only {n_taxa} taxa are shared "
-            "between the trees."
-        )
-    shuffler(taxa)
-    return taxa[:sample]
-
-
 def _calc_dists(trees, ids, func, kwargs, shared_by_all):
     """Calculate paiwise distances among trees."""
     if shared_by_all:
@@ -77,12 +63,11 @@ def _calc_dists(trees, ids, func, kwargs, shared_by_all):
         result = squareform(np.array(result, dtype=float), checks=False)
         return DistanceMatrix(result, ids, validate=False)
     else:
-
-        def metric(x, y):
-            return lambda x, y: func((x, y), **kwargs)[0]
-
         return DistanceMatrix.from_iterable(
-            trees, metric=metric, keys=ids, validate=False
+            trees,
+            metric=lambda x, y: func((x, y), **kwargs)[0],
+            keys=ids,
+            validate=False,
         )
 
 
@@ -123,10 +108,10 @@ def _mapdiff(a, b, metric):
 
 def _topo_dists(
     trees,
-    method="biparts",
+    rooted=False,
     shared_only=True,
     proportion=False,
-    include_single=False,
+    include_tips=False,
     weighted=False,
     metric=None,
 ):
@@ -142,13 +127,13 @@ def _topo_dists(
     ----------
     trees : list of TreeNode
         The trees to compare.
-    method : str, optional
-        "subsets" or "biparts".
+    rooted : bool, optional
+        Rooted or unrooted.
     shared_only : bool, optional
         Refine to shared taxa.
     proportion : bool, optional
         Normalize to proportion.
-    include_single : bool, optional
+    include_tips : bool, optional
         Include singletons.
     weighted : bool, optional
         Weight by branch length.
@@ -170,7 +155,7 @@ def _topo_dists(
     TreeNode.compare_biparts
 
     """
-    kwargs = dict(include_single=include_single, map_to_length=weighted)
+    kwargs = dict(include_tips=include_tips, map_to_length=weighted)
 
     # get topological units reflecting shared taxa
     if shared_only:
@@ -183,11 +168,17 @@ def _topo_dists(
         withins = [shared if len(s) > n_shared else None for s in taxon_sets]
 
         # get topological units from all trees
-        sets = [getattr(t, method)(within=w, **kwargs) for t, w in zip(trees, withins)]
+        if rooted:
+            sets = [t.subsets(within=w, **kwargs) for t, w in zip(trees, withins)]
+        else:
+            sets = [
+                t.biparts(within=w, full=s, **kwargs)
+                for t, w, s in zip(trees, withins, taxon_sets)
+            ]
 
     # get all topological units
     else:
-        sets = [getattr(t, method)(**kwargs) for t in trees]
+        sets = [(t.subsets if rooted else t.biparts)(**kwargs) for t in trees]
 
     # unweighted (symmetric difference between sets)
     if not weighted:
@@ -252,6 +243,7 @@ def rf_dists(trees, ids=None, shared_by_all=True, proportion=False, rooted=False
 
     Examples
     --------
+    >>> from skbio import TreeNode
     >>> trees = [TreeNode.read([x]) for x in (
     ...     "(((a,b),c),d,e);",
     ...     "((a,(b,c)),d,e);",
@@ -270,13 +262,12 @@ def rf_dists(trees, ids=None, shared_by_all=True, proportion=False, rooted=False
      [ 0.  2.  2.  0.]]
 
     """
-    _check_ids(trees, ids)
-    method = _check_topo_type(rooted)
+    _check_input(trees, ids)
     kwargs = dict(
-        method=method,
+        rooted=rooted,
         shared_only=True,
         proportion=proportion,
-        include_single=False,
+        include_tips=False,
         weighted=False,
         metric=None,
     )
@@ -289,7 +280,7 @@ def wrf_dists(
     shared_by_all=True,
     metric="cityblock",
     rooted=False,
-    include_single=True,
+    include_tips=True,
 ):
     r"""Calculate weighted Robinson-Foulds (wRF) distances or variants among trees.
 
@@ -311,7 +302,7 @@ def wrf_dists(
         returns a number. See :meth:`~TreeNode.compare_wrfd` for details.
     rooted : bool, optional
         Whether to consider the trees as unrooted (False, default) or rooted (True).
-    include_single : bool, optional
+    include_tips : bool, optional
         Whether to include single-taxon biparitions (terminal branches) in the
         calculation. Default is True.
 
@@ -352,6 +343,7 @@ def wrf_dists(
 
     Examples
     --------
+    >>> from skbio import TreeNode
     >>> trees = [TreeNode.read([x]) for x in (
     ...     "((a:1,b:2):1,c:4,((d:4,e:5):2,f:6):1);",
     ...     "((a:3,(b:2,c:2):1):3,d:8,(e:5,f:6):2);",
@@ -368,13 +360,12 @@ def wrf_dists(
      [ 15.  27.   0.]]
 
     """
-    _check_ids(trees, ids)
+    _check_input(trees, ids)
     metric = _check_dist_metric(metric)
-    method = _check_topo_type(rooted)
     kwargs = dict(
-        method=method,
+        rooted=rooted,
         shared_only=True,
-        include_single=include_single,
+        include_tips=include_tips,
         weighted=True,
         metric=metric,
     )
@@ -418,12 +409,19 @@ def _path_dists(trees, sample, metric, shuffler, use_length, ignore_self):
     # Get shared taxa among trees.
     shared = frozenset.intersection(*(t.subset() for t in trees))
 
-    # Sort shared taxa. This is for the stability of sampling as set is unordered.
+    # Sort shared taxa. This is for the stability of sampling and distance calculation
+    # as Python set is unordered.
     shared = sorted(shared)
 
-    # Randomly sample taxa.
+    # Randomly sample a subset of taxa.
     if sample is not None:
-        shared = _sample_taxa(sample, shared, shuffler)
+        if (n_shared := len(shared)) < sample:
+            raise ValueError(
+                f"Sample size ({sample}) is greater than the number of shared taxa "
+                f"({n_shared})."
+            )
+        shuffler(shared)
+        shared = shared[:sample]
 
     # Generate cophenetic (tip-to-tip) distance matrices.
     paths = [x.cophenet(endpoints=shared, use_length=use_length) for x in trees]
@@ -519,6 +517,7 @@ def path_dists(
 
     Examples
     --------
+    >>> from skbio import TreeNode
     >>> trees = [TreeNode.read([x]) for x in (
     ...     "((a:1,b:2):1,c:4,((d:4,e:5):2,f:6):1);",
     ...     "((a:3,(b:2,c:2):1):3,d:8,(e:5,f:6):2);",
@@ -535,7 +534,7 @@ def path_dists(
      [ 11.87434209  19.5192213    0.        ]]
 
     """
-    _check_ids(trees, ids)
+    _check_input(trees, ids)
     metric = _check_dist_metric(metric)
     if sample is not None:
         shuffler = _check_shuffler(shuffler)

@@ -1494,7 +1494,7 @@ class TreeTests(TestCase):
             self.assertFalse(hasattr(node, "_subset"))
 
         # include singles
-        self.assertSetEqual(t.subsets(include_single=True), frozenset(
+        self.assertSetEqual(t.subsets(include_tips=True), frozenset(
             [frozenset("ab"), frozenset("cd"), frozenset("a"), frozenset("b"),
              frozenset("c"), frozenset("d")]))
 
@@ -1593,12 +1593,16 @@ class TreeTests(TestCase):
             frozenset({"a", "b"})}))
 
         # include singletons (tips)
-        self.assertSetEqual(t.biparts(include_single=True), frozenset({
+        self.assertSetEqual(t.biparts(include_tips=True), frozenset({
             frozenset({"a", "b"}),
             frozenset({"a"}),
             frozenset({"b"}),
             frozenset({"c"}),
             frozenset({"d"})}))
+
+        # full set pre-computed
+        self.assertSetEqual(t.biparts(full=t.subset()), frozenset({
+            frozenset({"a", "b"})}))
 
         # map to length ("abc" crosses the root)
         t = TreeNode.read(["(((a:1,b:2):1,c:3):2,((d:4,e:5):2,f:6):2);"])
@@ -2056,7 +2060,7 @@ class TreeTests(TestCase):
 
         # no terminal branches (matches ape::dist.topo with method="score")
         self.assertAlmostEqual(t1.compare_wrfd(
-            t2, metric="euclidean", include_single=False), 3.7416574)
+            t2, metric="euclidean", include_tips=False), 3.7416574)
 
         # force rooted (considers subsets not bipartitions)
         self.assertAlmostEqual(t1.compare_wrfd(t2, rooted=True), 18)

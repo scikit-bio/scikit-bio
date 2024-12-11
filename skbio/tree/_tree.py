@@ -29,7 +29,6 @@ from skbio.util._warning import _warn_deprecated
 from skbio.io.registry import Read, Write
 from ._compare import (
     _check_dist_metric,
-    _check_topo_type,
     _check_shuffler,
     _topo_dists,
     _path_dists,
@@ -3135,7 +3134,7 @@ class TreeNode(SkbioObject):
         self,
         within=None,
         include_full=False,
-        include_single=False,
+        include_tips=False,
         map_to_length=False,
     ):
         r"""Return all subsets of taxa defined by nodes descending from self.
@@ -3154,7 +3153,7 @@ class TreeNode(SkbioObject):
 
             .. versionadded:: 0.6.3
 
-        include_single : bool, optional
+        include_tips : bool, optional
             Whether to include subsets with only one taxon in the result. Default is
             False, as such sets provide no topological information.
 
@@ -3262,7 +3261,7 @@ class TreeNode(SkbioObject):
                     del child._subset
 
             # add to result
-            if subset and (include_single or len(subset) > 1):
+            if subset and (include_tips or len(subset) > 1):
                 if subset != last:
                     subsets_append(last := subset)
                     if map_to_length:
@@ -3400,7 +3399,7 @@ class TreeNode(SkbioObject):
             bipart, _ = sorted([bipart, full - bipart], key=sorted)
         return bipart
 
-    def biparts(self, within=None, include_single=False, map_to_length=False):
+    def biparts(self, within=None, include_tips=False, map_to_length=False, full=None):
         r"""Return all bipartitions within the tree under self.
 
         .. versionadded:: 0.6.3
@@ -3410,13 +3409,16 @@ class TreeNode(SkbioObject):
         within : iterable of str, optional
             A custom set of taxa to refine the result. Only taxa within it will be
             considered. If None (default), all taxa in the tree will be considered.
-        include_single : bool, optional
+        include_tips : bool, optional
             Whether to include bipartitions with only one taxon at either side.
             Default is False, as such bipartitions provide no topological
             information.
         map_to_length : bool, optional
             If True, return a mapping of subsets to their branch lengths. Missing
             branch lengths will be replaced with 0. Default is False.
+        full : frozenset of str, optional
+            Pre-computed full set of taxa of the current tree. Providing this parameter
+            can save one tree traversal from computing.
 
         Returns
         -------
@@ -3499,7 +3501,8 @@ class TreeNode(SkbioObject):
 
         """
         # identify full set (universe)
-        full = self.subset()
+        if full is None:
+            full = self.subset()
         if not (getall := within is None):
             if not isinstance(within, (set, frozenset)):
                 within = frozenset(within)
@@ -3554,7 +3557,7 @@ class TreeNode(SkbioObject):
                             flip = True
 
             # add to result
-            if bipart and (include_single or len(bipart) > 1):
+            if bipart and (include_tips or len(bipart) > 1):
                 if map_to_length:
                     biparts[bipart] = biparts_get(bipart, 0.0) + (node.length or 0.0)
                 else:
@@ -4297,7 +4300,7 @@ class TreeNode(SkbioObject):
         # renamed parameter
         if shared_only is False and "exclude_absent_taxa" in kwargs:
             shared_only = kwargs["exclude_absent_taxa"]
-        return _topo_dists((self, other), "subsets", shared_only, proportion)[0]
+        return _topo_dists((self, other), True, shared_only, proportion)[0]
 
     def compare_biparts(self, other, proportion=True):
         r"""Calculate the difference of bipartitions between two trees.
@@ -4338,7 +4341,7 @@ class TreeNode(SkbioObject):
         0.0
 
         """
-        return _topo_dists((self, other), "biparts", True, proportion)[0]
+        return _topo_dists((self, other), False, True, proportion)[0]
 
     def compare_rfd(self, other, proportion=False, rooted=None):
         r"""Calculate Robinson-Foulds distance between two trees.
@@ -4459,10 +4462,9 @@ class TreeNode(SkbioObject):
         """
         if rooted is None:
             rooted = self.parent is not None or len(self.children) == 2
-        method = _check_topo_type(rooted)
-        return _topo_dists((self, other), method, proportion=proportion)[0]
+        return _topo_dists((self, other), rooted, proportion=proportion)[0]
 
-    def compare_wrfd(self, other, metric="cityblock", rooted=None, include_single=True):
+    def compare_wrfd(self, other, metric="cityblock", rooted=None, include_tips=True):
         r"""Calculate weighted Robinson-Foulds distance or variants between two trees.
 
         .. versionadded:: 0.6.3
@@ -4491,7 +4493,7 @@ class TreeNode(SkbioObject):
             this will be determined based on whether self is rooted. However, one
             can override it by explicitly setting True (rooted) or False (unrooted).
             See :meth:`compare_rfd` for details.
-        include_single : bool, optional
+        include_tips : bool, optional
             Whether to include single-taxon biparitions (terminal branches) in the
             calculation. Default is True, such that all branches in the trees are
             considered. Set this as False if terminal branch lengths are absent or
@@ -4601,19 +4603,18 @@ class TreeNode(SkbioObject):
 
         Calculate the KF distance without considering terminal branches.
 
-        >>> d = tree1.compare_wrfd(tree2, metric="euclidean", include_single=False)
+        >>> d = tree1.compare_wrfd(tree2, metric="euclidean", include_tips=False)
         >>> print(round(d, 5))
         3.74166
 
         """
         if rooted is None:
             rooted = self.parent is not None or len(self.children) == 2
-        method = _check_topo_type(rooted)
         metric = _check_dist_metric(metric)
         return _topo_dists(
             (self, other),
-            method=method,
-            include_single=include_single,
+            rooted=rooted,
+            include_tips=include_tips,
             weighted=True,
             metric=metric,
         )[0]
