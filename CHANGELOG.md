@@ -6,6 +6,7 @@
 
 * Implemented linear mixed effects with Dirichlet-multinomial distribution ([#2113](https://github.com/scikit-bio/scikit-bio/pull/2113)).
 * Added functions `rf_dists`, `wrf_dists` and `path_dists` under `skbio.tree` to calculate multiple pariwise distance metrics among an arbitrary number of trees. They correspond to `TreeNode` methods `compare_rfd`, `compare_wrfd` and `compare_cophenet` for two trees ([#2166](https://github.com/scikit-bio/scikit-bio/pull/2166)).
+* Added `height` and `depth` methods under `TreeNode` to calculate the height and depth of a given node.
 * Added `TreeNode.compare_wrfd` to calculate the weighted Robinson-Foulds distance or its variants between two trees ([#2144](https://github.com/scikit-bio/scikit-bio/pull/2144)).
 * Wrapped UPGMA and WPGMA from SciPy's linkage method ([#2094](https://github.com/scikit-bio/scikit-bio/pull/2094)).
 * Added `TreeNode` methods: `bipart`, `biparts` and `compare_biparts` to encode and compare bipartitions in a tree ([#2144](https://github.com/scikit-bio/scikit-bio/pull/2144)).
@@ -23,6 +24,7 @@
 * Supported Robinson-Foulds distance calculation (`TreeNode.compare_rfd`) based on bipartitions (equivalent to `compare_biparts`). This is automatically enabled when the input tree is unrooted. Otherwise the calculation is still based on subsets (equivalent to `compare_subsets`). The user can override this behavior using the `rooted` parameter ([#2144](https://github.com/scikit-bio/scikit-bio/pull/2144)).
 * Re-wrote the underlying algorithm of `TreeNode.compare_subsets` because it is equivalent to the Robinson-Foulds distance on rooted trees. Added parameter `proportion`. Renamed parameter `exclude_absent_taxa` as `shared_only` ([#2144](https://github.com/scikit-bio/scikit-bio/pull/2144)).
 * Added parameter `include_self` to `TreeNode.subset`. Added parameters `within`, `include_full` and `include_tips` to `TreeNode.subsets` ([#2144](https://github.com/scikit-bio/scikit-bio/pull/2144)).
+* Improved the performance and customizability of `TreeNode.total_length` (renamed from `descending_branch_length`). Added parameters `include_stem` and `include_self`.
 * Improved the performance of `TreeNode.lowest_common_ancestor` ([#2132](https://github.com/scikit-bio/scikit-bio/pull/2132)).
 * Improved the performance of `TreeNode` methods: `ancestors`, `siblings`, and `neighbors` ([#2133](https://github.com/scikit-bio/scikit-bio/pull/2133), [#2135](https://github.com/scikit-bio/scikit-bio/pull/2135)).
 * Improved the performance of tree traversal algorithms ([#2093](https://github.com/scikit-bio/scikit-bio/pull/2093)).
@@ -35,6 +37,7 @@
 * Added parameter `exclude_attrs` to `TreeNode.unrooted_copy` ([#2103](https://github.com/scikit-bio/scikit-bio/pull/2103)).
 * Added support for legacy random generator to `get_rng`, such that outputs of scikit-bio functions become reproducible with code that starts with `np.random.seed` or uses `RandomState` ([#2130](https://github.com/scikit-bio/scikit-bio/pull/2130)).
 * Allowed `shuffle` and `compare_cophenet` (renamed from `compare_tip_distances`) of `TreeNode` to accept a random seed or random generator to generate the shuffling function, which ensures output reproducibility ([#2118](https://github.com/scikit-bio/scikit-bio/pull/2118)).
+* Replaced `accumulate_to_ancestor` with `depth` under `TreeNode`. The latter has expanded functionality which covers the default behavior of the former.
 * Added beta diversity metric `jensenshannon`, which calculates Jensen-Shannon distance. Thank @quliping for suggesting this in [#2125](https://github.com/scikit-bio/scikit-bio/pull/2125).
 * Added parameter `include_self` to `TreeNode.ancestors` to optionally include the initial node in the path (default: False) ([#2135](https://github.com/scikit-bio/scikit-bio/pull/2135)).
 * Added parameter `seed` to functions `pcoa`, `anosim`, `permanova`, `permdisp`, `randdm`, `lladser_pe`, `lladser_ci`, `isubsample`, `subsample_power`, `subsample_paired_power`, `paired_subsamples` and `hommola_cospeciation` to accept a random seed or random generator to ensure output reproducibility ([#2120](https://github.com/scikit-bio/scikit-bio/pull/2120) and [#2129](https://github.com/scikit-bio/scikit-bio/pull/2129)).
@@ -54,15 +57,17 @@
 * Fixed a bug in `TreeNode.unrooted_move` which does not respect specified branch attributes ([#2103](https://github.com/scikit-bio/scikit-bio/pull/2103)).
 * Fixed a bug in `skbio.diversity.get_beta_diversity_metrics` which does not display metrics other than UniFrac ([#2126](https://github.com/scikit-bio/scikit-bio/pull/2126)).
 * Raises an error when beta diversity metric `mahalanobis` is called but sample number is smaller than or equal to feature number in the data. Thank @quliping for noting this in [#2125](https://github.com/scikit-bio/scikit-bio/pull/2125).
+* Fixed a bug in `io.format.fasta` that improperly handled sequences containing spaces. ([#2156](https://github.com/scikit-bio/scikit-bio/pull/2156))
 
 ### Miscellaneous
 
 * Added a parameter `warn_neg_eigval` to `pcoa` and `permdisp` to control when to raise a warning when negative eigenvalues are encountered. The default setting is more relaxed than the previous behavior, therefore warnings will not be raised when the negative eigenvalues are small in magnitude, which is the case in many real-world scenarios [#2154](https://github.com/scikit-bio/scikit-bio/pull/2154).
 * Refactored `dirmult_ttest` to use a separate function for fitting data to Dirichlet-multinomial distribution ([#2113](https://github.com/scikit-bio/scikit-bio/pull/2113))
 * Remodeled documentation. Special methods (previously referred to as built-in methods) and inherited methods of a class no longer have separate stub pages. This significantly reduced the total number of webpages in the documentation ([#2110](https://github.com/scikit-bio/scikit-bio/pull/2110)).
-* Renamed `TreeNode.invalidate_caches` as `clear_caches`, because the caches are indeed deleted rather than marked as obsolete. The old name is preserved as an alias ([#2099](https://github.com/scikit-bio/scikit-bio/pull/2099)).
-* Renamed `TreeNode.remove_deleted` as `remove_by_func`. The old name is preserved as an alias ([#2103](https://github.com/scikit-bio/scikit-bio/pull/2103)).
-* Renamed `get_max_distance` as `maxdist`. Renamed `tip_tip_distances` as `cophenet`. Renamed `compare_tip_distances` as `compare_cophenet`. The new names are consistent with SciPy's relevant functions and the main body of the literature. The old names are preserved as aliases.
+* Renamed `invalidate_caches` as `clear_caches` under `TreeNode`, because the caches are indeed deleted rather than marked as obsolete. The old name is preserved as an alias ([#2099](https://github.com/scikit-bio/scikit-bio/pull/2099)).
+* Renamed `remove_deleted` as `remove_by_func` under `TreeNode`. The old name is preserved as an alias ([#2103](https://github.com/scikit-bio/scikit-bio/pull/2103)).
+* Renamed `descending_branch_length` as `total_length` under `TreeNode`. The old name is preserved as an alias.
+* Under `TreeNode`, renamed `get_max_distance` as `maxdist`. Renamed `tip_tip_distances` as `cophenet`. Renamed `compare_tip_distances` as `compare_cophenet`. The new names are consistent with SciPy's relevant functions and the main body of the literature. The old names are preserved as aliases.
 
 ### Deprecated functionality
 
@@ -71,6 +76,7 @@
 
 ### Backward-incompatible changes
 
+* Dropped support for Python 3.8 as it has reached end-of-life (EOL). scikit-bio may still be installed under Python 3.8 and will likely work, but the development team no longer guarantee that all functionality will work as intended.
 * Removed ``skbio.util.RepresentationWarning``. Previously it was only used in `TreeNode.tip_tip_distances` when a node has no branch length. The new code removed this behavior ([#2152](https://github.com/scikit-bio/scikit-bio/pull/2152)).
 
 

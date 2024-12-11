@@ -188,7 +188,11 @@ format.
 
 Reader-specific Parameters
 ^^^^^^^^^^^^^^^^^^^^^^^^^^
-The available reader parameters differ depending on which reader is used.
+The ``keep_spaces`` parameter can be used with any reader. If set to ``True``,
+all spaces in the input will be preserved. If set to ``False``, all spaces in
+the input will be removed. Default is ``False``.
+
+The following reader parameters differ depending on which reader is used.
 
 Generator and TabularMSA Reader Parameters
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -730,14 +734,23 @@ def _sniffer_data_parser(chunks):
 
 @fasta.reader(None)
 def _fasta_to_generator(fh, qual=FileSentinel, constructor=Sequence, **kwargs):
+    kwargs = kwargs.copy()
+    if "keep_spaces" in kwargs:
+        kwarg = {"keep_spaces": kwargs.pop("keep_spaces")}
+    else:
+        kwarg = {}
     if qual is None:
         for seq, id_, desc in _parse_fasta_raw(
-            fh, _parse_sequence_data, FASTAFormatError
+            fh, _parse_sequence_data, FASTAFormatError, **kwarg
         ):
             yield constructor(seq, metadata={"id": id_, "description": desc}, **kwargs)
     else:
-        fasta_gen = _parse_fasta_raw(fh, _parse_sequence_data, FASTAFormatError)
-        qual_gen = _parse_fasta_raw(qual, _parse_quality_scores, QUALFormatError)
+        fasta_gen = _parse_fasta_raw(
+            fh, _parse_sequence_data, FASTAFormatError, **kwarg
+        )
+        qual_gen = _parse_fasta_raw(
+            qual, _parse_quality_scores, QUALFormatError, **kwarg
+        )
 
         for fasta_rec, qual_rec in itertools.zip_longest(
             fasta_gen, qual_gen, fillvalue=None
@@ -958,7 +971,7 @@ def _tabular_msa_to_fasta(
     )
 
 
-def _parse_fasta_raw(fh, data_parser, error_type):
+def _parse_fasta_raw(fh, data_parser, error_type, keep_spaces=False):
     """Raw parser for FASTA or QUAL files.
 
     Returns raw values (seq/qual, id, description). It is the responsibility of
@@ -980,6 +993,9 @@ def _parse_fasta_raw(fh, data_parser, error_type):
             "\n%s" % seq_header
         )
 
+    # will remove spaces from each sequence (but not quality scores)
+    trim_spaces = data_parser.__name__ == "_parse_sequence_data" and not keep_spaces
+
     data_chunks = []
     prev = seq_header
     for line in _line_generator(fh, skip_blanks=False):
@@ -988,14 +1004,13 @@ def _parse_fasta_raw(fh, data_parser, error_type):
             yield data_parser(data_chunks), id_, desc
             data_chunks = []
             id_, desc = _parse_fasta_like_header(line)
-        else:
-            if line:
-                # ensure no blank lines within a single record
-                if not prev:
-                    raise error_type(
-                        "Found blank or whitespace-only line within record."
-                    )
-                data_chunks.append(line)
+        elif line:
+            # ensure no blank lines within a single record
+            if not prev:
+                raise error_type("Found blank or whitespace-only line within record.")
+            if trim_spaces:
+                line = line.replace(" ", "")
+            data_chunks.append(line)
         prev = line
     # yield last record in file
     yield data_parser(data_chunks), id_, desc

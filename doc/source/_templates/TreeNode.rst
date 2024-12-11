@@ -112,7 +112,10 @@
       ~{{ name }}.assign_supports
       ~{{ name }}.is_bifurcating
       ~{{ name }}.observed_node_counts
+      ~{{ name }}.depth
       ~{{ name }}.accumulate_to_ancestor
+      ~{{ name }}.height
+      ~{{ name }}.total_length
       ~{{ name }}.descending_branch_length
       ~{{ name }}.distance
       ~{{ name }}.maxdist
