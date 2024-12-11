@@ -6,18 +6,22 @@
 # The full license is in the file LICENSE.txt, distributed with this software.
 # ----------------------------------------------------------------------------
 
-from functools import partial
 from itertools import combinations
 
 import numpy as np
 import scipy.spatial.distance as spdist
+from scipy.spatial.distance import squareform
 
 from skbio.stats.distance import DistanceMatrix
 from skbio.util import get_rng
 
 
 def unitcorr(a, b):
-    """Calculate unit correlation distance."""
+    """Calculate unit correlation distance.
+
+    result = (1 - r) / 2, in which r is the Pearson's correlation coefficient.
+
+    """
     return spdist.correlation(a, b) * 0.5
 
 
@@ -41,7 +45,7 @@ def _check_shuffler(shuffler):
 
 
 def _check_ids(trees, ids):
-    """Check tree IDs."""
+    """Validate tree IDs."""
     if ids is None:
         return
     if (n := len(ids)) != len(trees):
@@ -50,20 +54,9 @@ def _check_ids(trees, ids):
         raise ValueError(f"IDs contain duplicates.")
 
 
-def _shared(trees):
-    """Get shared taxa among multiple trees."""
-    taxon_sets = [t.subset() for t in trees]
-    shared = frozenset.intersection(*taxon_sets)
-    if not shared:
-        raise ValueError("No taxon is shared across all trees.")
-    return shared, taxon_sets
-
-
-def _withins(trees):
-    """Set the "within" parameter based on shared taxa among multiple trees."""
-    shared, taxon_sets = _shared(trees)
-    n_shared = len(shared)
-    return [shared if len(s) > n_shared else None for s in taxon_sets]
+def _check_topo_type(rooted):
+    """Determine topological unit type based on tree rootedness."""
+    return "subsets" if rooted else "biparts"
 
 
 def _sample_taxa(sample, taxa, shuffler):
@@ -77,35 +70,84 @@ def _sample_taxa(sample, taxa, shuffler):
     return taxa[:sample]
 
 
-def _topo_dist(
-    tree1,
-    tree2,
+def _calc_dists(trees, ids, func, kwargs, shared_by_all):
+    """Calculate paiwise distances among trees."""
+    if shared_by_all:
+        result = func(trees, **kwargs)
+        result = squareform(np.array(result, dtype=float), checks=False)
+        return DistanceMatrix(result, ids, validate=False)
+    else:
+
+        def metric(x, y):
+            return lambda x, y: func((x, y), **kwargs)[0]
+
+        return DistanceMatrix.from_iterable(
+            trees, metric=metric, keys=ids, validate=False
+        )
+
+
+def _setdiff(a, b, proportion):
+    r"""Quantify the difference between two sets.
+
+    For Robinson-Foulds (RF) distance calculation.
+
+    """
+    # calculate symmetric difference
+    result = len(a ^ b)
+
+    # normalize result to unit range [0, 1]
+    # if total is 0, return 1 (dist = 1 means saturation)
+    if proportion:
+        total = len(a) + len(b)
+        result = result / total if total else 1.0
+
+    # cast result to float
+    else:
+        result = float(result)
+
+    return result
+
+
+def _mapdiff(a, b, metric):
+    r"""Quantify the difference between two mappings.
+
+    For weighted Robinson-Foulds (wRF) distance calculation.
+
+    """
+    # unique keys are assigned value 0
+    union = frozenset(a).union(b)
+    La = [a.get(x, 0.0) for x in union]
+    Lb = [b.get(x, 0.0) for x in union]
+    return metric(La, Lb)
+
+
+def _topo_dists(
+    trees,
     method="biparts",
     shared_only=True,
     proportion=False,
-    symmetric=True,
     include_single=False,
     weighted=False,
     metric=None,
 ):
-    r"""Calculate the topological distance between two trees.
+    r"""Calculate the topological distances among multiple trees.
 
-    This function calculates the Robinson-Foulds (RF) distance or its derivates.
+    This function calculates the Robinson-Foulds (RF) distance or its variants. These
+    metrics rely on the compatibility of branches between two trees.
+
+    See :meth:`TreeNode.compare_rfd` and :meth:`~TreeNode.compare_wrfd` for details of
+    the metrics and parameters.
 
     Parameters
     ----------
-    tree1 : TreeNode
-        The first tree to compare.
-    tree2 : TreeNode
-        The second tree to compare.
+    trees : list of TreeNode
+        The trees to compare.
     method : str, optional
-        "subsets" or "biparts"
+        "subsets" or "biparts".
     shared_only : bool, optional
         Refine to shared taxa.
     proportion : bool, optional
         Normalize to proportion.
-    symmetric : bool, optional
-        Symmetric difference.
     include_single : bool, optional
         Include singletons.
     weighted : bool, optional
@@ -115,8 +157,8 @@ def _topo_dist(
 
     Returns
     -------
-    float
-        Difference between the two trees.
+    list of float
+        Pairwise path-length distances or variants in condensed form.
 
     See Also
     --------
@@ -128,51 +170,37 @@ def _topo_dist(
     TreeNode.compare_biparts
 
     """
-    topo1, topo2 = getattr(tree1, method), getattr(tree2, method)
     kwargs = dict(include_single=include_single, map_to_length=weighted)
+
+    # get topological units reflecting shared taxa
     if shared_only:
-        set1, set2 = tree1.subset(), tree2.subset()
-        n_shared = len(shared := set1 & set2)
-        if len(set1) > n_shared:
-            sets1 = topo1(within=shared, **kwargs)
-        else:
-            sets1 = topo1(**kwargs)
-        if len(set2) > n_shared:
-            sets2 = topo2(within=shared, **kwargs)
-        else:
-            sets2 = topo2(**kwargs)
+        taxon_sets = [t.subset() for t in trees]
+        shared = frozenset.intersection(*taxon_sets)
+        n_shared = len(shared)
+
+        # Decide the "within" parameter (None or shared taxa) for each method call,
+        # which is more efficient when within=None.
+        withins = [shared if len(s) > n_shared else None for s in taxon_sets]
+
+        # get topological units from all trees
+        sets = [getattr(t, method)(within=w, **kwargs) for t, w in zip(trees, withins)]
+
+    # get all topological units
     else:
-        sets1, sets2 = topo1(**kwargs), topo2(**kwargs)
+        sets = [getattr(t, method)(**kwargs) for t in trees]
 
-    # unweighted (set difference)
+    # unweighted (symmetric difference between sets)
     if not weighted:
-        if symmetric:
-            result = sets1 ^ sets2  # symmetric difference
-        else:
-            result = sets1 - sets2  # difference
-        result = len(result)
-
-        # normalize result to unit range [0, 1]
-        # if total is 0, return 1 (dist = 1 means saturation)
-        if proportion:
-            total = len(sets1) + (symmetric and len(sets2))
-            result = result / total if total else 1.0
-
-        # cast result to float
-        else:
-            result = float(result)
+        result = [_setdiff(a, b, proportion) for a, b in combinations(sets, 2)]
 
     # branch length weighted (vector distance)
     else:
-        union = frozenset(sets1).union(sets2)
-        L1 = [sets1.get(x, 0.0) for x in union]
-        L2 = [sets2.get(x, 0.0) for x in union]
-        result = metric(L1, L2)
+        result = [_mapdiff(a, b, metric) for a, b in combinations(sets, 2)]
 
     return result
 
 
-def rf_dists(trees, ids=None, pairwise=False, proportion=False, rooted=False):
+def rf_dists(trees, ids=None, shared_by_all=True, proportion=False, rooted=False):
     r"""Calculate Robinson-Foulds (RF) distances among trees.
 
     .. versionadded:: 0.6.3
@@ -184,9 +212,9 @@ def rf_dists(trees, ids=None, pairwise=False, proportion=False, rooted=False):
     ids : list of str, optional
         Unique identifiers of input trees. If omitted, will use incremental integers
         "0", "1", "2",...
-    pairwise : bool, optional
+    shared_by_all : bool, optional
         Calculate the distance between each pair of trees based on taxa shared across
-        all trees (False, default), or shared between the current pair of trees (True).
+        all trees (True, default), or shared between the current pair of trees (False).
     proportion : bool, optional
         Whether to return the RF distance as count (False, default) or proportion
         (True).
@@ -213,14 +241,14 @@ def rf_dists(trees, ids=None, pairwise=False, proportion=False, rooted=False):
     distance matrix for them.
 
     This function is optimized for calculation based on taxa shared across all trees.
-    One can instead set ``pairwise`` to True to calculate based on taxa shared between
-    each pair of trees, which is however less efficient since bipartitions need to be
-    re-inferred during each comparison.
+    One can instead set ``shared_by_all`` to False to calculate based on taxa shared
+    between each pair of trees, which is however less efficient since bipartitions need
+    to be re-inferred during each comparison.
 
     References
     ----------
-    .. [1] Robinson, D. F., & Foulds, L. R. (1981). Comparison of phylogenetic
-        trees. Mathematical biosciences, 53(1-2), 131-147.
+    .. [1] Robinson, D. F., & Foulds, L. R. (1981). Comparison of phylogenetic trees.
+       Mathematical biosciences, 53(1-2), 131-147.
 
     Examples
     --------
@@ -243,33 +271,22 @@ def rf_dists(trees, ids=None, pairwise=False, proportion=False, rooted=False):
 
     """
     _check_ids(trees, ids)
-    method = "subsets" if rooted else "biparts"
-
-    if pairwise:
-        metric = partial(_topo_dist, method=method, proportion=proportion)
-        return DistanceMatrix.from_iterable(
-            trees, metric=metric, keys=ids, validate=False
-        )
-
-    withins = _withins(trees)
-    sets = [getattr(x, method)(within=y) for x, y in zip(trees, withins)]
-    lens = [len(s) for s in sets]
-
-    result = np.zeros((n_trees := len(trees), n_trees))
-    for i, j in combinations(range(n_trees), 2):
-        rf = len(sets[i] ^ sets[j])
-        if proportion:
-            total = lens[i] + lens[j]
-            rf = rf / total if total else 1.0
-        result[i, j] = result[j, i] = rf
-
-    return DistanceMatrix(result, ids, validate=False)
+    method = _check_topo_type(rooted)
+    kwargs = dict(
+        method=method,
+        shared_only=True,
+        proportion=proportion,
+        include_single=False,
+        weighted=False,
+        metric=None,
+    )
+    return _calc_dists(trees, ids, _topo_dists, kwargs, shared_by_all)
 
 
 def wrf_dists(
     trees,
     ids=None,
-    pairwise=False,
+    shared_by_all=True,
     metric="cityblock",
     rooted=False,
     include_single=True,
@@ -285,9 +302,9 @@ def wrf_dists(
     ids : list of str, optional
         Unique identifiers of input trees. If omitted, will use incremental integers
         "0", "1", "2",...
-    pairwise : bool, optional
+    shared_by_all : bool, optional
         Calculate the distance between each pair of trees based on taxa shared across
-        all trees (False, default), or shared between the current pair of trees (True).
+        all trees (True, default), or shared between the current pair of trees (False).
     metric : str or callable, optional
         The distance metric to use. Can be a preset, a distance function name under
         :mod:`scipy.spatial.distance`, or a custom function that takes two vectors and
@@ -323,15 +340,15 @@ def wrf_dists(
     non-negativity or triangle inequality though.
 
     This function is optimized for calculation based on taxa shared across all trees.
-    One can instead set ``pairwise`` to True to calculate based on taxa shared between
-    each pair of trees, which is however less efficient as bipartitions need to be
-    re-inferred during each comparison.
+    One can instead set ``shared_by_all`` to False to calculate based on taxa shared
+    between each pair of trees, which is however less efficient as bipartitions need to
+    be re-inferred during each comparison.
 
     References
     ----------
     .. [1] Robinson, D. F., & Foulds, L. R. (1979) Comparison of weighted labelled
-        trees. In Combinatorial Mathematics VI: Proceedings of the Sixth Australian
-        Conference on Combinatorial Mathematics, Armidale, Australia (pp. 119-126).
+       trees. In Combinatorial Mathematics VI: Proceedings of the Sixth Australian
+       Conference on Combinatorial Mathematics, Armidale, Australia (pp. 119-126).
 
     Examples
     --------
@@ -353,78 +370,82 @@ def wrf_dists(
     """
     _check_ids(trees, ids)
     metric = _check_dist_metric(metric)
-    method = "subsets" if rooted else "biparts"
-
-    if pairwise:
-        metric = partial(
-            _topo_dist,
-            method=method,
-            weighted=True,
-            metric=metric,
-            include_single=include_single,
-        )
-        return DistanceMatrix.from_iterable(
-            trees, metric=metric, keys=ids, validate=False
-        )
-
-    withins = _withins(trees)
-    maps = [
-        getattr(x, method)(within=y, include_single=include_single, map_to_length=True)
-        for x, y in zip(trees, withins)
-    ]
-    gets = [x.get for x in maps]
-    sets = [frozenset(x) for x in maps]
-
-    result = np.zeros((n_trees := len(trees), n_trees))
-    for i, j in combinations(range(n_trees), 2):
-        union = sets[i] | sets[j]
-        Li = [gets[i](x, 0.0) for x in union]
-        Lj = [gets[j](x, 0.0) for x in union]
-        result[i, j] = result[j, i] = metric(Li, Lj)
-
-    return DistanceMatrix(result, ids, validate=False)
+    method = _check_topo_type(rooted)
+    kwargs = dict(
+        method=method,
+        shared_only=True,
+        include_single=include_single,
+        weighted=True,
+        metric=metric,
+    )
+    return _calc_dists(trees, ids, _topo_dists, kwargs, shared_by_all)
 
 
-def _path_dist(
-    tree1,
-    tree2,
-    sample=None,
-    metric="unitcorr",
-    shuffler=None,
-    use_length=True,
-    ignore_self=False,
-):
-    tipmap1 = {n.name: n for n in tree1.tips()}
-    tipmap2 = {n.name: n for n in tree2.tips()}
-    shared = [x for x in tipmap1 if x in tipmap2]
-    if not shared:
-        raise ValueError("No tips are in common between the two trees.")
+def _path_dists(trees, sample, metric, shuffler, use_length, ignore_self):
+    r"""Calculate path-length distances or variants among multiple trees.
 
+    This function calculates several tree distance metrics based on the lengths of
+    paths connecting pairs of taxa, a.k.a., cophenetic distances.
+
+    See :meth:`TreeNode.compare_cophenet` for details of the metrics and parameters.
+
+    Parameters
+    ----------
+    trees : list of TreeNode
+        The trees to compare.
+    sample : int, optional
+        Number of taxa to sample.
+    metric : callable, optional
+        Distance function.
+    shuffler : callable, optional
+        Shuffling function.
+    use_length : bool, optional
+        Use branch lengths.
+    ignore_self : bool, optional
+        Ignore taxon to itself.
+
+    Returns
+    -------
+    list of float
+        Pairwise path-length distances or variants in condensed form.
+
+    See Also
+    --------
+    path_dists
+    TreeNode.compare_cophenet
+
+    """
+    # Get shared taxa among trees.
+    shared = frozenset.intersection(*(t.subset() for t in trees))
+
+    # Sort shared taxa. This is for the stability of sampling as set is unordered.
+    shared = sorted(shared)
+
+    # Randomly sample taxa.
     if sample is not None:
-        shuffler = _check_shuffler(shuffler)
         shared = _sample_taxa(sample, shared, shuffler)
 
-    tips1 = [tipmap1[x] for x in shared]
-    tips2 = [tipmap2[x] for x in shared]
+    # Generate cophenetic (tip-to-tip) distance matrices.
+    paths = [x.cophenet(endpoints=shared, use_length=use_length) for x in trees]
 
-    dm1 = tree1.cophenet(endpoints=tips1, use_length=use_length)
-    dm2 = tree2.cophenet(endpoints=tips2, use_length=use_length)
-
+    # Convert square matrices into condensed 1-D arrays, such that diagonal (d(x, x) =
+    # 0) and symmetric (d(x, y) = d(y, x)) comparisons are omitted.
     if ignore_self:
-        dm1 = dm1.condensed_form()
-        dm2 = dm2.condensed_form()
-    else:
-        dm1 = dm1.data.flat
-        dm2 = dm2.data.flat
+        paths = [x.condensed_form() for x in paths]
 
-    metric = _check_dist_metric(metric)
-    return metric(dm1, dm2)
+    # Otherwise, create 1-D views of the entire square matrics. `ravel` copies the data
+    # only when necessary, and in this case doesn't.
+    else:
+        paths = [x.data.ravel() for x in paths]
+
+    # Calculate pairwise distances among matrices.
+    return [metric(a, b) for a, b in combinations(paths, 2)]
 
 
 def path_dists(
     trees,
     ids=None,
-    pairwise=False,
+    shared_by_all=True,
     metric="euclidean",
     use_length=True,
     sample=None,
@@ -441,9 +462,9 @@ def path_dists(
     ids : list of str, optional
         Unique identifiers of input trees. If omitted, will use incremental integers
         "0", "1", "2",...
-    pairwise : bool, optional
+    shared_by_all : bool, optional
         Calculate the distance between each pair of trees based on taxa shared across
-        all trees (False, default), or shared between the current pair of trees (True).
+        all trees (True, default), or shared between the current pair of trees (False).
     metric : str or callable, optional
         The distance metric to use. Can be a preset, a distance function name under
         :mod:`scipy.spatial.distance`, or a custom function that takes two vectors and
@@ -486,15 +507,15 @@ def path_dists(
     non-negativity or triangle inequality though.
 
     This function is optimized for calculation based on taxa shared across all trees.
-    One can instead set ``pairwise`` to True to calculate based on taxa shared between
-    each pair of trees, which is however less efficient as the path lengths need to be
-    re-calculated during each comparison.
+    One can instead set ``shared_by_all`` to False to calculate based on taxa shared
+    between each pair of trees, which is however less efficient as the path lengths
+    need to be re-calculated during each comparison.
 
     References
     ----------
     .. [1] Lapointe, F. J., & Cucumel, G. (1997). The average consensus procedure:
-        combination of weighted trees containing identical or overlapping sets of
-        taxa. Systematic Biology, 46(2), 306-312.
+       combination of weighted trees containing identical or overlapping sets of
+       taxa. Systematic Biology, 46(2), 306-312.
 
     Examples
     --------
@@ -515,37 +536,14 @@ def path_dists(
 
     """
     _check_ids(trees, ids)
-
+    metric = _check_dist_metric(metric)
     if sample is not None:
         shuffler = _check_shuffler(shuffler)
-
-    if pairwise:
-        metric = partial(
-            _path_dist,
-            sample=sample,
-            metric=metric,
-            shuffler=shuffler,
-            use_length=use_length,
-            ignore_self=True,
-        )
-        return DistanceMatrix.from_iterable(
-            trees, metric=metric, keys=ids, validate=False
-        )
-
-    metric = _check_dist_metric(metric)
-
-    shared = sorted(_shared(trees)[0])
-
-    if sample is not None:
-        shared = _sample_taxa(sample, shared, shuffler)
-
-    paths = [
-        x.cophenet(endpoints=shared, use_length=use_length).condensed_form()
-        for x in trees
-    ]
-
-    result = np.zeros((n_trees := len(trees), n_trees))
-    for i, j in combinations(range(n_trees), 2):
-        result[i, j] = result[j, i] = metric(paths[i], paths[j])
-
-    return DistanceMatrix(result, ids, validate=False)
+    kwargs = dict(
+        sample=sample,
+        metric=metric,
+        shuffler=shuffler,
+        use_length=use_length,
+        ignore_self=True,
+    )
+    return _calc_dists(trees, ids, _path_dists, kwargs, shared_by_all)

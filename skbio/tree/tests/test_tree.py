@@ -1517,6 +1517,11 @@ class TreeTests(TestCase):
         self.assertSetEqual(t.subsets(within="abcd"), frozenset(
             [frozenset("ab"), frozenset("cd")]))
 
+        # nothing to include
+        self.assertFalse(t.subsets(within=set()))
+        self.assertFalse(t.subsets(within=""))
+        self.assertFalse(t.subsets(within="xyz"))
+
     def test_bipart(self):
         """Return a set of tip names on the smaller side of the branch."""
         t = self.complex_tree
@@ -1613,6 +1618,11 @@ class TreeTests(TestCase):
         t = TreeNode.read(['(((a,b),(c,d)),e);'])
         self.assertSetEqual(t.biparts(within="abcd"), frozenset(
             [frozenset("ab")]))
+
+        # nothing to include
+        self.assertFalse(t.biparts(within=set()))
+        self.assertFalse(t.biparts(within=""))
+        self.assertFalse(t.biparts(within="xyz"))
 
     def test_assign_supports(self):
         """Extract support values of internal nodes."""
@@ -2090,9 +2100,6 @@ class TreeTests(TestCase):
         result = t.compare_subsets(t4, shared_only=True)
         self.assertEqual(result, 0)
 
-        result = t.compare_subsets(t4, symmetric=False)
-        self.assertEqual(result, 0.5)
-
         result = t.compare_subsets(self.TreeRoot, exclude_absent_taxa=True)
         self.assertEqual(result, 1)
 
@@ -2119,9 +2126,6 @@ class TreeTests(TestCase):
 
         result = t.compare_biparts(t3, proportion=False)
         self.assertEqual(result, 2)
-
-        result = t.compare_biparts(t3, proportion=False, symmetric=False)
-        self.assertEqual(result, 1)
 
         result = t.compare_biparts(self.TreeRoot)
         self.assertEqual(result, 1)

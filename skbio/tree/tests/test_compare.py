@@ -70,12 +70,19 @@ class CompareTests(TestCase):
         npt.assert_array_almost_equal(obs, exp)
 
         # pairwise sharing
-        obs = rf_dists(trees, pairwise=True).data
+        obs = rf_dists(trees, shared_by_all=False).data
         exp = np.array([[0, 4, 2, 6],
                         [4, 0, 6, 4],
                         [2, 6, 0, 6],
                         [6, 4, 6, 0]], dtype=float)
         npt.assert_array_almost_equal(obs, exp)
+
+        # no shared taxon
+        nwks = ["((a,b),(c,d));",
+                "((e,f),(g,h));"]
+        trees = [TreeNode.read([x]) for x in nwks]
+        obs = rf_dists(trees).data
+        self.assertFalse(np.any(obs))
 
         # duplicate IDs
         with self.assertRaises(ValueError):
@@ -84,13 +91,6 @@ class CompareTests(TestCase):
         # ID number doesn't match
         with self.assertRaises(ValueError):
             rf_dists(trees, list("abc"))
-
-        # no shared taxon among trees
-        nwks = ["((a,b),(c,d));",
-                "((e,f),(g,h));"]
-        trees = [TreeNode.read([x]) for x in nwks]
-        with self.assertRaises(ValueError):
-            rf_dists(trees)
 
     def test_wrf_dists(self):
         """Calculate weighted Robinson-Foulds distances among trees."""
@@ -146,11 +146,18 @@ class CompareTests(TestCase):
         npt.assert_array_almost_equal(obs, exp)
 
         # pairwise sharing
-        obs = wrf_dists(trees, pairwise=True).data
+        obs = wrf_dists(trees, shared_by_all=False).data
         exp = np.array([[0, 4, 0],
                         [4, 0, 6],
                         [0, 6, 0]], dtype=float)
         npt.assert_array_almost_equal(obs, exp)
+
+        # no shared taxon
+        nwks = ["((a,b),(c,d));",
+                "((e,f),(g,h));"]
+        trees = [TreeNode.read([x]) for x in nwks]
+        obs = wrf_dists(trees).data
+        self.assertFalse(np.any(obs))
 
     def test_path_dists(self):
         """Calculate path-length distances among trees."""
@@ -200,7 +207,7 @@ class CompareTests(TestCase):
         npt.assert_array_almost_equal(obs, exp)
 
         # pairwise sharing
-        obs = path_dists(trees, pairwise=True).condensed_form()
+        obs = path_dists(trees, shared_by_all=False).condensed_form()
         exp = np.array([4.47213595, 2.0, 4.35889894])
         npt.assert_array_almost_equal(obs, exp)
 
