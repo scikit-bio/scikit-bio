@@ -4662,7 +4662,7 @@ class TreeNode(SkbioObject):
         compare_wrfd
         compare_subsets
         compare_biparts
-        skbio.tree.rfd_dists
+        skbio.tree.rf_dists
 
         References
         ----------
@@ -4794,7 +4794,7 @@ class TreeNode(SkbioObject):
         --------
         compare_rfd
         compare_cophenet
-        skbio.tree.wrfd_dists
+        skbio.tree.wrf_dists
 
         References
         ----------
