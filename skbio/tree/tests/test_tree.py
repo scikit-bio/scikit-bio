@@ -286,6 +286,10 @@ class TreeTests(TestCase):
         self.assertEqual(obs4, exp4)
         self.assertEqual(obs5, exp5)
 
+        # parameter alias
+        self.assertEqual(t1.lowest_common_ancestor(nodes=input1), exp1)
+        self.assertEqual(t1.lowest_common_ancestor(tipnames=input1), exp1)
+
         # verify multiple calls work
         t_mul = t1.copy()
         exp_1 = t_mul.find("d")
@@ -301,14 +305,28 @@ class TreeTests(TestCase):
         exp = t_sub.find("d")
         self.assertEqual(obs, exp)
 
+        # lca outside subtree
+        obs = t_sub.find("e").lowest_common_ancestor(["b", "g"])
+        exp = t_sub
+        self.assertEqual(obs, exp)
+
         # root included
         t_root = TreeNode.read(["(a,b)c;"])
         obs = t_root.lowest_common_ancestor(["a", "c"])
         self.assertIs(obs, t_root)
 
+        # nested nodes
+        t_sub = t1.copy()
+        obs = t_sub.lowest_common_ancestor(["b", "d", "g", "i"])
+        self.assertIs(obs, t_sub)
+        obs = t_sub.lowest_common_ancestor(["e", "b", "d", "h"])
+        self.assertIs(obs, t_sub)
+
         # empty case
         with self.assertRaises(ValueError):
             t1.lowest_common_ancestor([])
+        with self.assertRaises(ValueError):
+            t1.lowest_common_ancestor()
 
     def test_path(self):
         """List of TreeNode objects in path between nodes."""
@@ -1302,15 +1320,15 @@ class TreeTests(TestCase):
         result = t.root_at_midpoint()
         self.assertEqual(result.distance(result.find("e")), 1.5)
         self.assertEqual(result.distance(result.find("g")), 2.5)
-        exp_dist = t.tip_tip_distances()
-        obs_dist = result.tip_tip_distances()
+        exp_dist = t.cophenet()
+        obs_dist = result.cophenet()
         self.assertEqual(obs_dist, exp_dist)
 
         # in-place rerooting
         b = t.find("b")
         result = t.root_at_midpoint(inplace=True)
         self.assertIs(b.parent, result)
-        self.assertEqual(result.tip_tip_distances(), exp_dist)
+        self.assertEqual(result.cophenet(), exp_dist)
 
     def test_root_at_midpoint_no_lengths(self):
         # should get same tree back (a copy)
@@ -1766,63 +1784,162 @@ class TreeTests(TestCase):
         exp[t2.find("f")] = 1
         self.assertEqual(t2.observed_node_counts(taxon_counts), exp)
 
-    def test_accumulate_to_ancestor(self):
-        """Get the distance from a node to its ancestor"""
-        t = TreeNode.read([
-            "((a:0.1,b:0.2)c:0.3,(d:0.4,e)f:0.5)root;"])
+    def test_depth(self):
+        """Calculate the distance from a node to root or an ancestor."""
+        t = TreeNode.read(["((a:0.1,b:0.2)c:0.3,(d:0.4,e)f:0.5)root;"])
         a = t.find("a")
+        self.assertAlmostEqual(a.depth(), 0.4)
+        self.assertAlmostEqual(a.depth(t), 0.4)
+        self.assertAlmostEqual(a.depth(include_root=True, missing_as_zero=True), 0.4)
+        self.assertRaises(NoLengthError, a.depth, include_root=True)
+        self.assertAlmostEqual(a.depth(t.find("c")), 0.1)
+        self.assertAlmostEqual(a.depth(t.find("c"), include_root=True), 0.4)
+        self.assertRaises(NoParentError, a.depth, t.find("b"))
+        self.assertAlmostEqual(a.depth(use_length=False), 2.0)
+        self.assertAlmostEqual(a.depth(include_root=True, use_length=False), 3.0)
+
+    def test_height(self):
+        """Calculate the distance from a node to the farthese tip."""
+        t = TreeNode.read(["((a:0.1,b:0.2)c:0.3,(d:0.4,e:0.0)f:0.5)root;"])
+        H, tip = t.height()
+        self.assertAlmostEqual(H, 0.9)
+        self.assertIs(tip, t.find("d"))
+
+        a = t.find("a")
+        H, tip = a.height()
+        self.assertAlmostEqual(H, 0.0)
+        self.assertIs(tip, a)
+        self.assertAlmostEqual(a.height(include_self=True)[0], 0.1)
+        self.assertAlmostEqual(a.height(include_self=True, use_length=False)[0], 1.0)
+
         b = t.find("b")
-        exp_to_root = 0.1 + 0.3
-        obs_to_root = a.accumulate_to_ancestor(t)
-        self.assertEqual(obs_to_root, exp_to_root)
+        c = t.find("c")
+        H, tip = c.height()
+        self.assertAlmostEqual(H, 0.2)
+        self.assertIs(tip, b)
+        H, tip = c.height(use_length=False)
+        self.assertAlmostEqual(H, 1.0)
+        self.assertIs(tip, a)
+        self.assertAlmostEqual(c.height(include_self=True)[0], 0.5)
+        self.assertAlmostEqual(c.height(include_self=True, use_length=False)[0], 2.0)
 
-        with self.assertRaises(NoParentError):
-            a.accumulate_to_ancestor(b)
+        self.assertRaises(NoLengthError, t.height, include_self=True)
+        H = t.height(include_self=True, missing_as_zero=True)[0]
+        self.assertAlmostEqual(H, 0.9)
+        t.find("e").length = None
+        f = t.find("f")
+        self.assertRaises(NoLengthError, f.height)
+        H = f.height(missing_as_zero=True)[0]
+        self.assertAlmostEqual(H, 0.4)
 
-    def test_descending_branch_length(self):
-        """Calculate descending branch_length"""
+    def test_total_length(self):
+        """Calculate total branch length descending from self."""
         tr = TreeNode.read([
             "(((A:.1,B:1.2)C:.6,(D:.9,E:.6)F:.9)G:2.4,(H:.4,I:.5)J:1.3)K;"])
-        tdbl = tr.descending_branch_length()
-        sdbl = tr.descending_branch_length(["A", "E"])
+        tdbl = tr.total_length()
         self.assertAlmostEqual(tdbl, 8.9)
+
+        # specify nodes
+        sdbl = tr.total_length(["A", "E"])
         self.assertAlmostEqual(sdbl, 2.2)
-        self.assertRaises(ValueError, tr.descending_branch_length,
-                          ["A", "DNE"])
-        self.assertRaises(ValueError, tr.descending_branch_length, ["A", "C"])
+
+        sdbl = tr.total_length("AE")
+        self.assertAlmostEqual(sdbl, 2.2)
+
+        sdbl = tr.total_length([tr.find("A"), tr.find("E")])
+        self.assertAlmostEqual(sdbl, 2.2)
+
+        # parameter alias
+        sdbl = tr.total_length(tip_subset="AE")
+        self.assertAlmostEqual(sdbl, 2.2)
+
+        # missing node
+        self.assertRaises(MissingNodeError, tr.total_length, ["A", "DNE"])
 
         tr = TreeNode.read([
             "(((A,B:1.2)C:.6,(D:.9,E:.6)F:.9)G:2.4,(H:.4,I:.5)J:1.3)K;"])
-        tdbl = tr.descending_branch_length()
+        tdbl = tr.total_length()
         self.assertAlmostEqual(tdbl, 8.8)
 
         tr = TreeNode.read([
             "(((A,B:1.2)C:.6,(D:.9,E:.6)F)G:2.4,(H:.4,I:.5)J:1.3)K;"])
-        tdbl = tr.descending_branch_length()
+        tdbl = tr.total_length()
         self.assertAlmostEqual(tdbl, 7.9)
 
+        # nodes whose LCA is not root
         tr = TreeNode.read([
             "(((A,B:1.2)C:.6,(D:.9,E:.6)F)G:2.4,(H:.4,I:.5)J:1.3)K;"])
-        tdbl = tr.descending_branch_length(["A", "D", "E"])
+        tdbl = tr.total_length(["A", "D", "E"])
         self.assertAlmostEqual(tdbl, 2.1)
 
+        # include stem length
+        tdbl = tr.total_length(["A", "D", "E"], include_stem=True)
+        self.assertAlmostEqual(tdbl, 4.5)
+
+        # nodes whose LCA is root
         tr = TreeNode.read([
             "(((A,B:1.2)C:.6,(D:.9,E:.6)F:.9)G:2.4,(H:.4,I:.5)J:1.3)K;"])
-        tdbl = tr.descending_branch_length(["I", "D", "E"])
+        tdbl = tr.total_length(["I", "D", "E"])
+        self.assertAlmostEqual(tdbl, 6.6)
+
+        # there is no stem to add
+        tdbl = tr.total_length(["I", "D", "E"], include_stem=True)
         self.assertAlmostEqual(tdbl, 6.6)
 
         # test with a situation where we have unnamed internal nodes
         tr = TreeNode.read([
             "(((A,B:1.2):.6,(D:.9,E:.6)F):2.4,(H:.4,I:.5)J:1.3);"])
-        tdbl = tr.descending_branch_length()
+        tdbl = tr.total_length()
         self.assertAlmostEqual(tdbl, 7.9)
 
-        # issue 1847
+        # issue 1847 (ignoring root length)
         tr = TreeNode.read([
             "(((A:.1,B:1.2)C:.6,(D:.9,E:.6)F:.9)G:2.4,(H:.4,I:.5)J:1.3)K;"])
         tr.length = 1
-        tdbl = tr.descending_branch_length()
+        tdbl = tr.total_length()
         self.assertAlmostEqual(tdbl, 8.9)
+
+        # include root length
+        tdbl = tr.total_length(include_self=True)
+        self.assertAlmostEqual(tdbl, 9.9)
+
+        # internal nodes
+        tdbl = tr.total_length(["C", "F", "J"])
+        self.assertAlmostEqual(tdbl, 5.2)
+
+        # only one node
+        tdbl = tr.total_length("B")
+        self.assertEqual(tdbl, 0.0)
+        self.assertIsInstance(tdbl, float)
+
+        tdbl = tr.total_length("B", include_self=True)
+        self.assertAlmostEqual(tdbl, 1.2)
+
+    def test_total_length_subtree(self):
+        """Calculate total branch length of a subtree."""
+        tr = TreeNode.read([
+            "(((A,B:1.2)C:.6,(D:.9,E:.6)F:.9)G:2.4,(H:.4,I:.5)J:1.3)K;"])
+        tsub = tr.children[0]
+        obs = tsub.total_length()
+        self.assertAlmostEqual(obs, 4.2)
+
+        obs = tsub.total_length(include_self=True)
+        self.assertAlmostEqual(obs, 6.6)
+
+        obs = tsub.total_length(["D", "E"])
+        self.assertAlmostEqual(obs, 1.5)
+
+        obs = tsub.total_length(["D", "E"], include_stem=True)
+        self.assertAlmostEqual(obs, 2.4)
+
+        obs = tsub.total_length(["D", "E"], include_self=True)
+        self.assertAlmostEqual(obs, 2.4)
+
+        obs = tsub.total_length(["D", "E"], include_stem=True, include_self=True)
+        self.assertAlmostEqual(obs, 4.8)
+
+        # node outside subtree
+        self.assertRaises(MissingNodeError, tsub.total_length, ["A", "I"])
 
     def test_distance_nontip(self):
         # example derived from issue #807, credit @wwood
@@ -1876,31 +1993,31 @@ class TreeTests(TestCase):
         self.assertEqual(tips[2].distance(tips[2], False), 0)
         self.assertEqual(tips[2].distance(tips[3], False), 2)
 
-    def test_get_max_distance(self):
+    def test_maxdist(self):
         """Get maximum tip-to-tip distance across tree. """
         # regular case
         tree = TreeNode.read([
             "((a:0.1,b:0.2)c:0.3,(d:0.4,e:0.5)f:0.6)root;"])
-        dist, nodes = tree.get_max_distance()
+        dist, nodes = tree.maxdist()
         self.assertAlmostEqual(dist, 1.6)
         self.assertListEqual([n.name for n in nodes], ["e", "b"])
 
         # number of branches
-        dist, nodes = tree.get_max_distance(use_length=False)
+        dist, nodes = tree.maxdist(use_length=False)
         self.assertEqual(dist, 4)
         self.assertListEqual([n.name for n in nodes], ["a", "d"])
 
         # tree with a single-child node and missing lengths
         tree = TreeNode.read(["((a:1,b:2),c:4,(((d:4,e:5):2):3,f:6));"])
-        dist, nodes = tree.get_max_distance()
+        dist, nodes = tree.maxdist()
         self.assertAlmostEqual(dist, 16)
         self.assertListEqual([n.name for n in nodes], ["e", "f"])
 
-        dist, nodes = tree.get_max_distance(use_length=False)
+        dist, nodes = tree.maxdist(use_length=False)
         self.assertEqual(dist, 6)
         self.assertListEqual([n.name for n in nodes], ["d", "a"])
 
-    def test_tip_tip_distances_endpoints(self):
+    def test_cophenet_endpoints(self):
         """Get a tip-to-tip distance matrix."""
         t = TreeNode.read(["((H:1,G:1):2,(R:0.5,M:0.7):3);"])
         nodes = [t.find("H"), t.find("G"), t.find("M")]
@@ -1909,17 +2026,17 @@ class TreeTests(TestCase):
                                        [2.0, 0, 6.7],
                                        [6.7, 6.7, 0.0]]), ["H", "G", "M"])
 
-        obs = t.tip_tip_distances(endpoints=names)
+        obs = t.cophenet(endpoints=names)
         self.assertEqual(obs, exp)
 
-        obs = t.tip_tip_distances(endpoints=nodes)
+        obs = t.cophenet(endpoints=nodes)
         self.assertEqual(obs, exp)
 
         for node in t.traverse(include_self=True):
             assert not hasattr(node, '_start')
             assert not hasattr(node, '_stop')
 
-    def test_tip_tip_distances_counts(self):
+    def test_cophenet_counts(self):
         """Get a tip-to-tip distance matrix in counts."""
         t = TreeNode.read(["((H:1,G:1):2,(R:0.5,M:0.7):3);"])
         nodes = [t.find("H"), t.find("G"), t.find("M")]
@@ -1928,45 +2045,45 @@ class TreeTests(TestCase):
                                        [2, 0, 4],
                                        [4, 4, 0]]), ["H", "G", "M"])
 
-        obs = t.tip_tip_distances(endpoints=names, use_length=False)
+        obs = t.cophenet(endpoints=names, use_length=False)
         self.assertEqual(obs, exp)
 
-        obs = t.tip_tip_distances(endpoints=nodes, use_length=False)
+        obs = t.cophenet(endpoints=nodes, use_length=False)
         self.assertEqual(obs, exp)
 
         for node in t.traverse(include_self=True):
             assert not hasattr(node, '_start')
             assert not hasattr(node, '_stop')
 
-    def test_tip_tip_distances_bad_endpoints(self):
+    def test_cophenet_bad_endpoints(self):
         t = TreeNode.read(["((H:1,G:1)foo:2,(R:0.5,M:0.7):3);"])
         with self.assertRaises(ValueError):
-            t.tip_tip_distances(endpoints=["foo"])
+            t.cophenet(endpoints=["foo"])
         with self.assertRaises(MissingNodeError):
-            t.tip_tip_distances(endpoints=["bar"])
+            t.cophenet(endpoints=["bar"])
 
         with self.assertRaises(DuplicateNodeError):
-            t.tip_tip_distances(endpoints=["H", "R", "H"])
+            t.cophenet(endpoints=["H", "R", "H"])
 
-    def test_tip_tip_distances_duplicate_tips(self):
+    def test_cophenet_duplicate_tips(self):
         t = TreeNode.read(["((H:1,G:1):2,(R:0.5,H:0.7):3);"])
         with self.assertRaises(DuplicateNodeError):
-            t.tip_tip_distances()
+            t.cophenet()
         with self.assertRaises(DuplicateNodeError):
-            t.tip_tip_distances(endpoints=["H", "R", "H"])
+            t.cophenet(endpoints=["H", "R", "H"])
 
-    def test_tip_tip_distances_no_length(self):
+    def test_cophenet_no_length(self):
         t = TreeNode.read(["((a,b)c,(d,e)f);"])
         exp_t = TreeNode.read(["((a:0,b:0)c:0,(d:0,e:0)f:0);"])
-        exp_t_dm = exp_t.tip_tip_distances()
-        t_dm = t.tip_tip_distances()
+        exp_t_dm = exp_t.cophenet()
+        t_dm = t.cophenet()
         self.assertEqual(t_dm, exp_t_dm)
 
-    def test_tip_tip_distances_missing_length(self):
+    def test_cophenet_missing_length(self):
         t = TreeNode.read(["((a,b:6)c:4,(d,e:0)f);"])
         exp_t = TreeNode.read(["((a:0,b:6)c:4,(d:0,e:0)f:0);"])
-        t_dm = t.tip_tip_distances()
-        exp_t_dm = exp_t.tip_tip_distances()
+        t_dm = t.cophenet()
+        exp_t_dm = exp_t.cophenet()
         self.assertEqual(t_dm, exp_t_dm)
 
     def test_compare_rfd(self):
@@ -2124,7 +2241,7 @@ class TreeTests(TestCase):
         result = TreeNode('x').compare_biparts(TreeNode('y'))
         self.assertEqual(result, 1)
 
-    def test_compare_tip_distances(self):
+    def test_compare_cophenet(self):
         """Return distance between two trees based on tip distances."""
         t = TreeNode.read(["((H:1,G:1):2,(R:0.5,M:0.7):3);"])
         t2 = TreeNode.read(["(((H:1,G:1,O:1):2,R:3):1,X:4);"])
@@ -2132,7 +2249,7 @@ class TreeTests(TestCase):
         # default behavior (half correlation, use length, include self)
         # note: common taxa are H, G, R (only)
         # note: version 0.7.0 will ignore self by default (see below)
-        obs = t.compare_tip_distances(t2)
+        obs = t.compare_cophenet(t2)
         m1 = np.array([[0, 2, 6.5], [2, 0, 6.5], [6.5, 6.5, 0]])
         m2 = np.array([[0, 2, 6], [2, 0, 6], [6, 6, 0]])
         r = pearsonr(m1.flat, m2.flat)[0]
@@ -2142,32 +2259,32 @@ class TreeTests(TestCase):
         # sample a subset of taxa
         # note: all common taxa are selected, despite that the default
         # shuffler function is stochastic.
-        obs = t.compare_tip_distances(t2, sample=3)
+        obs = t.compare_cophenet(t2, sample=3)
         self.assertAlmostEqual(obs, exp)
 
         # 4 common taxa, custom shuffler, still picking H, G, R
         tx = TreeNode.read(["((H:1,G:1):2,(R:0.5,M:0.7,U:5):3);"])
         t2x = TreeNode.read(["(((H:1,G:1,O:1):2,R:3,U:10):1,X:4);"])
-        obs = tx.compare_tip_distances(t2x, sample=3, shuffler=list.sort)
+        obs = tx.compare_cophenet(t2x, sample=3, shuffler=list.sort)
         self.assertAlmostEqual(obs, exp)
-        obs = tx.compare_tip_distances(t2x, sample=3, shuffle_f=list.sort)
+        obs = tx.compare_cophenet(t2x, sample=3, shuffle_f=list.sort)
         self.assertAlmostEqual(obs, exp)
 
         # no common taxa
         t3 = TreeNode.read(["(((Z:1,Y:1,X:1):2,W:3):1,V:4);"])
         with self.assertRaises(ValueError):
-            t.compare_tip_distances(t3)
+            t.compare_cophenet(t3)
 
         # single common taxon
         t4 = TreeNode.read(["(((R:1,Y:1,X:1):2,W:3):1,V:4);"])
-        self.assertTrue(np.isnan(t.compare_tip_distances(t4)))
+        self.assertTrue(np.isnan(t.compare_cophenet(t4)))
 
         # two common taxa
         t5 = TreeNode.read(["(((R:1,Y:1,X:1):2,M:3):1,V:4);"])
-        self.assertAlmostEqual(t.compare_tip_distances(t5), 0)
-        self.assertTrue(np.isnan(t.compare_tip_distances(t5, ignore_self=True)))
+        self.assertAlmostEqual(t.compare_cophenet(t5), 0)
+        self.assertTrue(np.isnan(t.compare_cophenet(t5, ignore_self=True)))
 
-    def test_compare_tip_distances_new(self):
+    def test_compare_cophenet_new(self):
         """Return distance between two trees based on tip distances."""
         # This test case is more comprehensive and reflects the new behavior
         # and options of the method.
@@ -2175,30 +2292,30 @@ class TreeTests(TestCase):
         t2 = TreeNode.read(["((a:3,(b:2,c:2):1):3,d:8,(e:5,f:6):2);"])
 
         # default behavior (old, will change in version 0.7.0)
-        obs = t1.compare_tip_distances(t2)
+        obs = t1.compare_cophenet(t2)
         self.assertAlmostEqual(obs, 0.0453512)
 
         # new default behavior
-        obs = t1.compare_tip_distances(t2, ignore_self=True)
+        obs = t1.compare_cophenet(t2, ignore_self=True)
         self.assertAlmostEqual(obs, 0.1413090)
 
         # path length distance (matches phangorn::path.dist(use.weight=TRUE))
-        obs = t1.compare_tip_distances(t2, metric="euclidean", ignore_self=True)
+        obs = t1.compare_cophenet(t2, metric="euclidean", ignore_self=True)
         self.assertAlmostEqual(obs, 13.7113092)
-        obs = t1.compare_tip_distances(t2, metric=euclidean, ignore_self=True)
+        obs = t1.compare_cophenet(t2, metric=euclidean, ignore_self=True)
         self.assertAlmostEqual(obs, 13.7113092)
-        obs = t1.compare_tip_distances(t2, dist_f=euclidean, ignore_self=True)
+        obs = t1.compare_cophenet(t2, dist_f=euclidean, ignore_self=True)
         self.assertAlmostEqual(obs, 13.7113092)
 
         # path distance (matches phangorn::path.dist)
-        obs = t1.compare_tip_distances(
+        obs = t1.compare_cophenet(
             t2, metric="euclidean", use_length=False, ignore_self=True)
         self.assertAlmostEqual(obs, 4.0)
 
         # unit correlation distance is independent of tree scale
         for node in t2.traverse(include_self=False):
             node.length *= 3
-        obs = t1.compare_tip_distances(t2, ignore_self=True)
+        obs = t1.compare_cophenet(t2, ignore_self=True)
         self.assertAlmostEqual(obs, 0.1413090)
 
     # ------------------------------------------------
@@ -2237,19 +2354,19 @@ class TreeTests(TestCase):
 
         # delete individual attribute caches
         t.cache_attr(lambda n: 1, "node_count", sum)
-        t.cache_attr(lambda n: n.length or 0.0, "total_length", sum)
+        t.cache_attr(lambda n: n.length or 0.0, "length_sum", sum)
         t.clear_caches(attr="node_count")
         self.assertTrue(hasattr(t, "_registered_caches"))
         self.assertNotIn("node_count", t._registered_caches)
-        self.assertIn("total_length", t._registered_caches)
+        self.assertIn("length_sum", t._registered_caches)
         for node in t.traverse(include_self=True):
             self.assertFalse(hasattr(node, "node_count"))
-            self.assertTrue(hasattr(node, "total_length"))
-        delattr(t.children[1], "total_length")
-        t.clear_caches(attr="total_length")
+            self.assertTrue(hasattr(node, "length_sum"))
+        delattr(t.children[1], "length_sum")
+        t.clear_caches(attr="length_sum")
         self.assertFalse(hasattr(t, "_registered_caches"))
         for node in t.traverse(include_self=True):
-            self.assertFalse(hasattr(node, "total_length"))
+            self.assertFalse(hasattr(node, "length_sum"))
 
     def test_cache_attr(self):
         # cache names of all descending tips

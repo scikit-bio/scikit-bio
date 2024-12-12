@@ -548,13 +548,16 @@ class TreeNode(SkbioObject):
             return [n for n in nodes if n is not ignore]
 
     @meth_alias("lca")
-    def lowest_common_ancestor(self, tipnames):
+    def lowest_common_ancestor(self, nodes=None, **kwargs):
         r"""Find the lowest common ancestor of a list of nodes.
 
         Parameters
         ----------
-        tipnames : iterable of TreeNode or str
-            The nodes of interest.
+        nodes : iterable of TreeNode or str
+            Instances or names of the nodes of interest.
+
+            .. versionchanged:: 0.6.3
+                Renamed from ``tipnames``. The old name is preserved as an alias.
 
         Returns
         -------
@@ -563,13 +566,18 @@ class TreeNode(SkbioObject):
 
         Raises
         ------
-        ValueError
-            If no tips could be found in the tree, or if not all tips were found.
+        MissingNodeError
+            If some nodes cannot be found in the tree.
 
         Notes
         -----
-        Despite the parameter is named as ``tipnames``, it can accept both tips and
-        internal nodes.
+        Both tips and internal nodes may be provided in ``nodes``. If internal node
+        names are provided, it is the user's responsibility to ensure that they are
+        unique in the tree.
+
+        This method considers the entire tree rather than the subtree below self.
+        Therefore, if some nodes are not descendants of self, the LCA of nodes will be
+        ancestral to self.
 
         Examples
         --------
@@ -585,36 +593,48 @@ class TreeNode(SkbioObject):
         root
 
         """
-        nodes = [self.find(x) for x in tipnames]
+        if nodes is None and kwargs and "tipnames" in kwargs:
+            nodes = kwargs["tipnames"]
         if not nodes:
-            raise ValueError("No node is found.")
-        elif len(nodes) == 1:
+            raise ValueError("No node is specified.")
+        nodes = [self.find(x) for x in nodes]
+        if len(nodes) == 1:
             return nodes[0]
 
-        # A temporary attribute "prev" will be assigned to visited nodes. It represents
-        # the previous node in the upward path, or None, which indicates the current
-        # node is the beginning of the path, or there are more than one previous node.
+        # Keep a record of visited nodes, such that the temporary attribute assigned
+        # to each node can be cleared after getting LCA.
         visited = []
         visited_append = visited.append
 
-        for curr in nodes:
-            prev = None
-            while curr is not None:
-                # set prev as None if already visited
-                if hasattr(curr, "_prev"):
-                    curr._prev = None
-                    break
-                curr._prev = prev
-                visited_append(curr)
-                prev = curr
-                curr = curr.parent
+        # Path of the first node to root. LCA must be in this path.
+        # A temporary attribute "prev" will be assigned to visited nodes. It represents
+        # the previous node in the upward path.
+        curr = next(nodes := iter(nodes))
+        prev = None
+        while curr is not None:
+            visited_append(curr)
+            curr._prev = prev
+            prev = curr
+            curr = curr.parent
 
-        # walk down the tree until last node with prev is None
-        curr = self
+        # Paths of other nodes to root.
+        # The prev attribute no longer needs to record the previous node. It is
+        # uniformly set as None. When the path hits a previously visited node, it will
+        # stop. If the node is in the first path, its prev becomes None, indicating
+        # that it has been visited more than once.
+        for curr in nodes:
+            while not hasattr(curr, "_prev"):
+                visited_append(curr)
+                curr._prev = None
+                curr = curr.parent
+            curr._prev = None
+
+        # walk down from root until a node with prev as None
+        curr = prev
         while (prev := curr._prev) is not None:
             curr = prev
 
-        # clean up temporary attribute "prev"
+        # clear temporary attribute
         for node in visited:
             del node._prev
 
@@ -623,11 +643,33 @@ class TreeNode(SkbioObject):
     # lca = lowest_common_ancestor  # for convenience
 
     def _path(self, other):
+        r"""Return the path from self to other.
+
+        Parameters
+        ----------
+        other : TreeNode
+            Target node.
+
+        Returns
+        -------
+        TreeNode
+            LCA of self and other.
+        list of TreeNode
+            self (inclusive) to LCA (exclusive).
+        list of TreeNode
+            other (inclusive) to LCA (exclusive).
+
+        Notes
+        -----
+        This algorithm is optimized for finding the LCA of two nodes. Instead, `lca`
+        is optimized for finding the LCA of multiple nodes.
+
+        """
         anc1 = self.ancestors(include_self=True)
         anc2 = other.ancestors(include_self=True)
 
-        # find lowest common ancestor of the two by iterating down from root
-        # and stopping at divergence
+        # find lowest common ancestor of the two by iterating down from root and
+        # stopping at divergence
         # pos is lca's index from root + 1
         lca, pos = None, None
         for i, (n1, n2) in enumerate(zip(reversed(anc1), reversed(anc2))):
@@ -645,6 +687,8 @@ class TreeNode(SkbioObject):
 
     def path(self, other, include_ends=False):
         r"""Return the list of nodes in the path from self to another node.
+
+        .. versionadded:: 0.6.3
 
         Parameters
         ----------
@@ -1495,7 +1539,8 @@ class TreeNode(SkbioObject):
         r"""Remove nodes of a tree that meet certain criteria.
 
         .. versionchanged:: 0.6.3
-            This method was renamed from ``remove_deleted``.
+            Renamed from ``remove_deleted``. The old name is kept as an alias. But it
+            may be removed in a future version.
 
         Parameters
         ----------
@@ -2810,7 +2855,7 @@ class TreeNode(SkbioObject):
         if reset:
             tree.unroot(uncache=False)
 
-        max_dist, tips = tree.get_max_distance()
+        max_dist, tips = tree.maxdist()
         half_max_dist = max_dist / 2.0
 
         if max_dist == 0.0:
@@ -2820,7 +2865,7 @@ class TreeNode(SkbioObject):
         tip2 = tree.find(tips[1])
         lca = tree.lowest_common_ancestor([tip1, tip2])
 
-        if tip1.accumulate_to_ancestor(lca) > half_max_dist:
+        if tip1.depth(lca) > half_max_dist:
             climb_node = tip1
         else:
             climb_node = tip2
@@ -3741,122 +3786,334 @@ class TreeNode(SkbioObject):
                     result[internal_node] += count
         return result
 
-    def accumulate_to_ancestor(self, ancestor):
-        r"""Calculate the distance between self and an ancestor.
+    def depth(
+        self, ancestor=None, include_root=False, use_length=True, missing_as_zero=False
+    ):
+        r"""Calculate the depth of the current node.
 
-        The distance is the sum of branch lengths connecting the current node and the
-        given ancestral node.
+        .. versionchanged:: 0.6.3
+            Renamed from ``accumulate_to_ancestor``. The old name is kept as an alias.
+
+        The **depth** of a node is the sum of branch lengths from it to the root of the
+        tree.
 
         Parameters
         ----------
-        ancestor : TreeNode
-            The ancestral node to accumulate distance to.
+        ancestor : TreeNode, optional
+            An ancestral node of self. If provided, the distance from self to this node
+            instead of the root node will be calculated.
+
+            .. versionchanged:: 0.6.3
+                Becomes optional.
+
+        include_root : bool, optional
+            If True, the distance will include the length of the root node, or the
+            given ancestral node if ``ancestor`` is provided. Default is False.
+
+            .. versionadded:: 0.6.3
+
+        use_length : bool, optional
+            Whether to return the sum of branch lengths (True, default) or the number
+            of branches (False) from self to root.
+
+            .. versionadded:: 0.6.3
+
+        missing_as_zero : bool, optional
+            When a node without an associated branch length is encountered, raise an
+            error (False, default) or use 0 (True). Applicable when ``use_length`` is
+            True.
+
+            .. versionadded:: 0.6.3
 
         Returns
         -------
         float
-            The distance between self and ancestor.
+            The depth of self.
 
         Raises
         ------
         NoParentError
             If the given ancestral node is not an ancestor of self.
         NoLengthError
-            If one of the nodes between self and ancestor (including self) does not
-            have branch length.
+            If nodes without branch length are encountered, but ``missing_as_zero`` is
+            False.
 
         See Also
         --------
+        height
         distance
 
         Examples
         --------
         >>> from skbio import TreeNode
         >>> tree = TreeNode.read(["((a:1,b:2)c:3,(d:4,e:5)f:6)root;"])
-        >>> root = tree
-        >>> tree.find('a').accumulate_to_ancestor(root)
+        >>> tree.find('a').depth()
         4.0
+        >>> tree.find('a').depth(tree.find('c'))
+        1.0
 
         """
-        accum = 0.0
         curr = self
-        while curr is not ancestor:
-            if curr.is_root():
-                raise NoParentError("Provided ancestor is not in the path")
+        path = [curr]
+        path_append = path.append
+        if ancestor is None:
+            while (curr := curr.parent) is not None:
+                path_append(curr)
+        else:
+            try:
+                while curr is not ancestor:
+                    path_append(curr := curr.parent)
+            except AttributeError:
+                raise NoParentError("Provided ancestor is not ancestral to self.")
+        if not include_root:
+            path = path[:-1]
+        if not use_length:
+            return float(len(path))
+        if missing_as_zero:
+            return sum(x.length or 0.0 for x in path)
+        try:
+            return sum(x.length for x in path)
+        except TypeError:
+            raise NoLengthError("Nodes without branch length are encountered.")
 
-            if curr.length is None:
-                raise NoLengthError(
-                    "No length on node %s found." % curr.name or "unnamed"
-                )
+    accumulate_to_ancestor = depth
 
-            accum += curr.length
-            curr = curr.parent
+    def height(self, include_self=False, use_length=True, missing_as_zero=False):
+        r"""Calculate the height of the current node.
 
-        return accum
+        .. versionadded:: 0.6.3
 
-    def descending_branch_length(self, tip_subset=None):
-        r"""Find total descending branch length from self to a set of tips.
+        The **height** of a node is the maximum sum of branch lengths from it to any of
+        its descending tips.
 
         Parameters
         ----------
-        tip_subset : iterable of str, optional
-            If None, the total descending branch length for all tips in the tree will
-            be returned. If a list of tip names is provided then only the total
-            descending branch length associated with those tips will be returned.
+        include_self : bool, optional
+            If True, the height will include the length of the current node. Default
+            is False.
+        use_length : bool, optional
+            Whether to return the sum of branch lengths (True, default) or the number
+            of branches (False) from self to the most distant tip.
+        missing_as_zero : bool, optional
+            When a node without an associated branch length is encountered, raise an
+            error (False, default) or use 0 (True). Applicable when ``use_length`` is
+            True.
 
         Returns
         -------
         float
-            The total descending branch length for the specified set of tips.
+            The height of self.
+        TreeNode
+            The most distant descending tip from self.
 
         Raises
         ------
-        ValueError
-            If ``tip_subset`` contains internal nodes or non-tips.
+        NoLengthError
+            If nodes without branch length are encountered, but ``missing_as_zero`` is
+            False.
+
+        See Also
+        --------
+        depth
+        distance
 
         Notes
         -----
-        This function replicates cogent's totalDescendingBranch Length method
-        and extends that method to allow the calculation of total descending
-        branch length of a subset of the tips if requested. The postorder
-        guarantees that the function will always be able to add the descending
-        branch length if the node is not a tip.
-
-        Nodes with no length will have their length set to 0. The root length
-        (if it exists) is ignored.
+        When a tie is observed among multiple tips, only one of them will be returned.
+        The choice is stable. This often happens when ``use_length=False``.
 
         Examples
         --------
         >>> from skbio import TreeNode
-        >>> tr = TreeNode.read(["(((A:.1,B:1.2)C:.6,(D:.9,E:.6)F:.9)G:2.4,"
-        ...                     "(H:.4,I:.5)J:1.3)K;"])
-        >>> tdbl = tr.descending_branch_length()
-        >>> sdbl = tr.descending_branch_length(['A', 'E'])
-        >>> print(round(tdbl, 1), round(sdbl, 1))
-        8.9 2.2
+        >>> tree = TreeNode.read(["((a:1,b:2)c:3,(d:4,e:5)f:6)root;"])
+        >>> dist, tip = tree.find('c').height()
+        >>> dist
+        2.0
+        >>> tip.name
+        'b'
 
         """
-        self.assign_ids()
-        if tip_subset is not None:
-            all_tips = self.subset()
-            if not set(tip_subset).issubset(all_tips):
-                raise ValueError("tip_subset contains ids that aren't tip " "names.")
+        errmsg = "Nodes without branch length are encountered."
+        maxkey = itemgetter(0)
+        for node in self.postorder(include_self=True):
+            if not node.children:
+                node._height = (0.0, node)
+            else:
+                heights = []
+                for child in node.children:
+                    H, tip = child._height
+                    del child._height
+                    if not use_length:
+                        H += 1.0
+                    elif (L := child.length) is not None:
+                        H += L
+                    elif not missing_as_zero:
+                        raise NoLengthError(errmsg)
+                    heights.append((H, tip))
+                node._height = max(heights, key=maxkey)
+        H, tip = self._height
+        del self._height
+        if include_self:
+            if not use_length:
+                H += 1.0
+            elif (L := self.length) is not None:
+                H += L
+            elif not missing_as_zero:
+                raise NoLengthError(errmsg)
+        return H, tip
 
-            lca = self.lowest_common_ancestor(tip_subset)
-            ancestors = {}
-            for tip in tip_subset:
-                curr = self.find(tip)
-                while curr is not lca:
-                    ancestors[curr.id] = curr.length if curr.length is not None else 0.0
-                    curr = curr.parent
-            return sum(ancestors.values())
+    def total_length(
+        self, nodes=None, include_stem=False, include_self=False, **kwargs
+    ):
+        r"""Calculate the total length of branches descending from self.
 
-        else:
+        .. versionchanged:: 0.6.3
+            Renamed from ``descending_branch_length``. The old name is kept as an alias.
+
+        Parameters
+        ----------
+        nodes : iterable of TreeNode or str, optional
+            Instances or names of a subset of descending nodes to refine the result.
+            If provided, the total length of branches connecting these nodes will be
+            returned. Otherwise, the total branch length of the tree will be returned.
+
+            .. versionchanged:: 0.6.3
+                Renamed from ``tip_subset``. The old name is kept as an alias.
+                Can accept TreeNode instances in addition to names.
+                Can accept internal nodes in addition to tips.
+
+        include_stem : bool, optional
+            Whether to include the path from the lowest common ancestor (LCA) of the
+            subset of nodes to self. Applicable when ``nodes`` is specified. Default is
+            False.
+
+            .. versionadded:: 0.6.3
+
+        include_self : bool, optional
+            Whether to include the length of self. When ``nodes`` is provided and
+            ``include_stem`` is False, it is instead the LCA of the subset of nodes.
+            Default is False.
+
+            .. versionadded:: 0.6.3
+
+        Returns
+        -------
+        float
+            The total descending branch length.
+
+        Raises
+        ------
+        MissingNodeError
+            If some nodes are not found in the tree or are not descendants of self.
+
+        Notes
+        -----
+        The metric can be considered as the total amount of evolutionary change across
+        all lineages in the tree.
+
+        This metric is closely related to phylogenetic diversity (PD) in community
+        ecology. When ``include_stem`` is True, it is equivalent to Faith's PD (see
+        :func:`~skbio.diversity.alpha.faith_pd`). However, this method is optimized
+        to handle a single set of nodes, whereas the referred function is optimized
+        to simultaneously calculate for multiple taxon sets (i.e., communities).
+
+        Missing branch lengths will be replaced with 0.
+
+        Examples
+        --------
+        >>> from skbio import TreeNode
+        >>> tree = TreeNode.read([
+        ...     "(((A:.1,B:1.2)C:.6,(D:.9,E:.6)F:.9)G:2.4,(H:.4,I:.5)J:1.3)K;"])
+        >>> print(tree.ascii_art())
+                                      /-A
+                            /C-------|
+                           |          \-B
+                  /G-------|
+                 |         |          /-D
+                 |          \F-------|
+        -K-------|                    \-E
+                 |
+                 |          /-H
+                  \J-------|
+                            \-I
+
+        Calculate the total branch length of the tree.
+
+        >>> L = tree.total_length()
+        >>> print(round(L, 1))
+        8.9
+
+        Calculate the total branch length connecting three taxa.
+
+        >>> L = tree.total_length(['A', 'E', 'H'])
+        >>> print(round(L, 1))
+        6.3
+
+        """
+        if kwargs and "tip_subset" in kwargs:
+            nodes = kwargs["tip_subset"]
+
+        ## shortcut for the entire subtree
+        if not nodes:
             return sum(
-                n.length
-                for n in self.postorder(include_self=False)
-                if n.length is not None
+                n.length or 0.0 for n in self.postorder(include_self=include_self)
             )
+
+        nodes = [self.find(x) for x in nodes]
+
+        # Identify all nodes that need to be visited during the navigation from all
+        # tips to the root. This algorithm resembles that of `lca`. However, we will
+        # separate the visited nodes of the first path and all other paths. Also, we
+        # don't need to record the previous node. All we need is whether each node is
+        # unique in all paths.
+        first_path = []
+        first_path_append = first_path.append
+        curr = next(nodes := iter(nodes))
+        while curr is not None:
+            first_path_append(curr)
+            curr._unique = True
+            curr = curr.parent
+
+        other_paths = []
+        other_paths_append = other_paths.append
+        for curr in nodes:
+            while not hasattr(curr, "_unique"):
+                other_paths_append(curr)
+                curr._unique = True
+                curr = curr.parent
+            curr._unique = False
+
+        # Iterate the first path in reverse order (from root to starting node) and find
+        # the indices of self and LCA.
+        i_self, i_lca = None, 0
+        for i in reversed(range(len(first_path))):
+            if (node := first_path[i]) is self:
+                i_self = i
+            if node._unique is False:
+                i_lca = i
+                break
+
+        # clear temporary attribute
+        for node in first_path:
+            del node._unique
+        for node in other_paths:
+            del node._unique
+
+        # If all nodes are descendants of self, LCA must also be self or one of its
+        # descendants, and self must be identified when iterating the first path.
+        if i_self is None:
+            raise MissingNodeError("Some nodes are not descendants of self.")
+
+        # Identify the range of nodes to be included in calculation depending on the
+        # parameter setting
+        stop = (i_self if include_stem else i_lca) + include_self
+
+        # sum up branch lengths
+        return (
+            sum(n.length or 0.0 for n in chain(first_path[:stop], other_paths)) or 0.0
+        )
+
+    descending_branch_length = total_length
 
     def distance(self, other, use_length=True, missing_as_zero=False):
         r"""Calculate the distance between self and another node.
@@ -3886,15 +4143,15 @@ class TreeNode(SkbioObject):
         Raises
         ------
         NoLengthError
-            If nodes without branch length are encountered.
+            If nodes without branch length are encountered, but ``missing_as_zero`` is
+            False.
 
         See Also
         --------
         path
-        tip_tip_distances
-        accumulate_to_ancestor
-        compare_tip_distances
-        get_max_distance
+        cophenet
+        compare_cophenet
+        maxdist
 
         Notes
         -----
@@ -3905,7 +4162,7 @@ class TreeNode(SkbioObject):
 
         This method can be used to compute the distance between two given nodes.
         However, it is not optimized for computing all pairwise tip distances. Use
-        :meth:`tip_tip_distances` instead for that purpose.
+        :meth:`cophenet` instead for that purpose.
 
         References
         ----------
@@ -3935,10 +4192,13 @@ class TreeNode(SkbioObject):
         except TypeError:
             raise NoLengthError("Nodes without branch length are encountered.")
 
-    def get_max_distance(self, use_length=True):
-        r"""Return the maximum path distance between any pair of tips.
+    def maxdist(self, use_length=True):
+        r"""Return the maximum distance between any pair of tips in the tree.
 
-        This is also referred to as the diameter of a tree.
+        .. versionchanged:: 0.6.3
+            Renamed from ``get_max_distance``. The old name is kept as an alias.
+
+        This measure is also referred to as the **diameter** of a tree.
 
         Parameters
         ----------
@@ -3958,21 +4218,26 @@ class TreeNode(SkbioObject):
         See Also
         --------
         distance
-        tip_tip_distances
-        compare_tip_distances
+        cophenet
+        scipy.cluster.hierarchy.maxdists
 
         Notes
         -----
-        If a node does not have an associated branch length, 0 will be used.
+        This method identifies the two furthest apart tips in a tree, as measured by
+        the sum of branch lengths (i.e., patristic distance) connecting them. Missing
+        branch lengths will be replaced with 0. When ``use_length=False``, the number
+        of branches connecting two tips will be considered instead.
 
         When a tie is observed among more than one pair of tips, only one pair will be
-        returned. The choice is stable. This often happens when `use_length=False`.
+        returned. The choice is stable. This often happens when ``use_length=False``.
+
+        This method operates on the subtree below the current node.
 
         Examples
         --------
         >>> from skbio import TreeNode
         >>> tree = TreeNode.read(["((a:1,b:2)c:3,(d:4,e:5)f:6)root;"])
-        >>> dist, tips = tree.get_max_distance()
+        >>> dist, tips = tree.maxdist()
         >>> dist
         16.0
         >>> [n.name for n in tips]
@@ -4029,8 +4294,13 @@ class TreeNode(SkbioObject):
             max_dist = float(max_dist)
         return max_dist, (max_tip1, max_tip2)
 
-    def tip_tip_distances(self, endpoints=None, use_length=True):
-        r"""Return a distance matrix between pairs of tips.
+    get_max_distance = maxdist
+
+    def cophenet(self, endpoints=None, use_length=True):
+        r"""Return a distance matrix between each pair of tips in the tree.
+
+        .. versionchanged:: 0.6.3
+            Renamed from ``tip_tip_distances``. The old name is kept as an alias.
 
         Parameters
         ----------
@@ -4047,7 +4317,7 @@ class TreeNode(SkbioObject):
         Returns
         -------
         DistanceMatrix
-            The distance matrix.
+            The cophenetic distance matrix.
 
         Raises
         ------
@@ -4061,22 +4331,42 @@ class TreeNode(SkbioObject):
         See Also
         --------
         distance
-        compare_tip_distances
+        compare_cophenet
+        scipy.cluster.hierarchy.cophenet
 
         Notes
         -----
-        This method calculates the sum of branch lengths connecting each pair of tips.
-        It is also known as the patristic distance [1]_. If a node does not have an
-        associated branch length, 0 will be used.
+        The cophenetic distance [1]_ between a pair of tips is essentially the sum of
+        branch lengths connecting them (i.e., patristic distance [2]_, see
+        :meth:`distance`). It measures the divergence between two taxa in evolution.
 
-        If ``use_length`` is False, the method instead calculates the number of
-        branches connecting each pair of tips.
+        This method calculates the cophenetic distances between all pairs of tips in a
+        tree and returns a distance matrix. Missing branch lengths will be replaced with
+        0's. If ``use_length`` is False, the method instead calculates the number of
+        branches connecting each pair of tips. This method operates on the subtree below
+        the current node.
 
-        This method operates on the subtree below the current node.
+        In hierarchical clustering, the cophenetic distance is commonly used to measure
+        the dissimilarity between two objects before they are joined in a dendrogram.
+        In that context, it is also defined as the height of the lowest common ancestor
+        (LCA) from the surface of the tree. However, phylogenetic trees are usually
+        non-ultrametric (e.g., :func:`~skbio.tree.nj`), and the two child clades of a
+        node may have different heights. Therefore, the cophenetic distance is instead
+        defined as the patristic distance between the two tips. For ultrametric trees
+        (e.g., :func:`~skbio.tree.upgma`), this method's result should match SciPy's
+        :func:`~scipy.cluster.hierarchy.cophenet`.
+
+        One should also distinguish cophenetic distance from a related metric:
+        cophenetic value [1]_, which is the patristic distance between the LCA of two
+        tips and the root of the tree. It quantifies the shared evolutionary history
+        between two taxa, as in contrast to the cophenetic distance.
 
         References
         ----------
-        .. [1] Fourment, M., & Gibbs, M. J. (2006). PATRISTIC: a program for
+        .. [1] Sokal, R. R., & Rohlf, F. J. (1962). The comparison of dendrograms by
+           objective methods. Taxon, 33-40.
+
+        .. [2] Fourment, M., & Gibbs, M. J. (2006). PATRISTIC: a program for
            calculating patristic distances and graphically comparing the components of
            genetic change. BMC evolutionary biology, 6, 1-5.
 
@@ -4085,9 +4375,10 @@ class TreeNode(SkbioObject):
         >>> from skbio import TreeNode
         >>> tree = TreeNode.read(["((a:1,b:2)c:3,(d:4,e:5)f:6)root;"])
 
-        Calculate path length distances (patristic distances).
+        Calculate cophenetic distances as the sum of branch lengths (i.e., patristic
+        distance).
 
-        >>> mat = tree.tip_tip_distances()
+        >>> mat = tree.cophenet()
         >>> print(mat)
         4x4 distance matrix
         IDs:
@@ -4098,9 +4389,9 @@ class TreeNode(SkbioObject):
          [ 14.  15.   0.   9.]
          [ 15.  16.   9.   0.]]
 
-        Calculate path distances (branch counts).
+        Calculate cophenetic distances as the number of branches.
 
-        >>> mat = tree.tip_tip_distances(use_length=False)
+        >>> mat = tree.cophenet(use_length=False)
         >>> print(mat)
         4x4 distance matrix
         IDs:
@@ -4202,6 +4493,8 @@ class TreeNode(SkbioObject):
 
         # Skip validation as all items to validate are guaranteed.
         return DistanceMatrix(result, taxa, validate=False)
+
+    tip_tip_distances = cophenet
 
     def _compare_topology(
         self,
@@ -4469,7 +4762,7 @@ class TreeNode(SkbioObject):
         compare_wrfd
         compare_subsets
         compare_biparts
-        compare_tip_distances
+        compare_cophenet
 
         References
         ----------
@@ -4601,7 +4894,7 @@ class TreeNode(SkbioObject):
         See Also
         --------
         compare_rfd
-        compare_tip_distances
+        compare_cophenet
 
         References
         ----------
@@ -4682,7 +4975,7 @@ class TreeNode(SkbioObject):
             result *= 0.5
         return result
 
-    def compare_tip_distances(
+    def compare_cophenet(
         self,
         other,
         sample=None,
@@ -4693,7 +4986,10 @@ class TreeNode(SkbioObject):
         dist_f=None,
         shuffle_f=None,
     ):
-        r"""Calculate the distance between two trees based on tip-to-tip distances.
+        r"""Calculate the distance between two trees based on cophenetic distances.
+
+        .. versionchanged:: 0.6.3
+            Renamed from ``compare_tip_distances``. The old name is kept as an alias.
 
         Parameters
         ----------
@@ -4772,24 +5068,28 @@ class TreeNode(SkbioObject):
 
         See Also
         --------
-        tip_tip_distances
+        cophenet
         compare_rfd
         compare_wrfd
 
         Notes
         -----
-        This method calculates the dissimilarity between the tip-to-tip distance
-        matrices of two trees. Tips are identified by their names (i.e., taxa). Only
-        tips shared between the two trees are considered. Tips unique to either tree
-        are excluded from the calculation.
+        This method calculates the dissimilarity between the cophenetic distance [1]_
+        (i.e., tip-to-tip distance) matrices of two trees. Tips are identified by
+        their names (i.e., taxa). Only tips shared between the trees are considered.
+        Tips unique to either tree are excluded from the calculation.
 
         The default behavior returns a unit correlation distance (range: [0, 1]),
         measuring the dissimilarity between the relative evolutionary distances among
         taxa, regardless of the tree scale (i.e., multiply all branch lengths in one
-        tree by a factor and the result remains the same).
+        tree by a factor and the result remains the same). This measure is closely
+        related to **cophenetic correlation**, which measures the similarity (instead
+        of dissimilarity) between two cophenetic distance matrices, or between a
+        cophenetic distance matrix and the original distance matrix among taxa on
+        which hierarchical clustering was performed.
 
         When the metric is Euclidean and lengths are used, it returns the **path-length
-        distance** [1]_, which is the square root of the sum of squared differences of
+        distance** [2]_, which is the square root of the sum of squared differences of
         path lengths among all pairs of taxa.
 
         .. math::
@@ -4801,15 +5101,18 @@ class TreeNode(SkbioObject):
         respectively.
 
         When the metric is Euclidean and lengths are not used, it returns the **path
-        distance** [2]_, which insteads considers the number of edges in the path.
+        distance** [3]_, which insteads considers the number of edges in the path.
 
         References
         ----------
-        .. [1] Lapointe, F. J., & Cucumel, G. (1997). The average consensus procedure:
+        .. [1] Sokal, R. R., & Rohlf, F. J. (1962). The comparison of dendrograms by
+           objective methods. Taxon, 33-40.
+
+        .. [2] Lapointe, F. J., & Cucumel, G. (1997). The average consensus procedure:
            combination of weighted trees containing identical or overlapping sets of
            taxa. Systematic Biology, 46(2), 306-312.
 
-        .. [2] Steel, M. A., & Penny, D. (1993). Distributions of tree comparison
+        .. [3] Steel, M. A., & Penny, D. (1993). Distributions of tree comparison
            metrics—some new results. Systematic Biology, 42(2), 126-141.
 
         Examples
@@ -4845,31 +5148,31 @@ class TreeNode(SkbioObject):
 
         Calculate the unit correlation distance between the two trees.
 
-        >>> d = tree1.compare_tip_distances(tree2, ignore_self=True)
+        >>> d = tree1.compare_cophenet(tree2, ignore_self=True)
         >>> print(round(d, 5))
         0.14131
 
         Calculate the path-length distance between the two trees.
 
-        >>> d = tree1.compare_tip_distances(tree2, metric="euclidean",
+        >>> d = tree1.compare_cophenet(tree2, metric="euclidean",
         ...                                 ignore_self=True)
         >>> print(round(d, 5))
         13.71131
 
         Calculate the path distance between the two trees.
 
-        >>> tree1.compare_tip_distances(
+        >>> tree1.compare_cophenet(
         ...     tree2, metric="euclidean", use_length=False, ignore_self=True)
         4.0
 
         """
         # future warning
         if ignore_self is False:
-            func = self.__class__.compare_tip_distances
+            func = self.__class__.compare_cophenet
             if not hasattr(func, "warned"):
                 simplefilter("once", FutureWarning)
                 warn(
-                    "The default behavior of `compare_tip_distances` is subject to "
+                    "The default behavior of `compare_cophenet` is subject to "
                     "change in 0.7.0. The new default behavior can be achieved by "
                     "specifying `ignore_self=True`.",
                     FutureWarning,
@@ -4896,8 +5199,8 @@ class TreeNode(SkbioObject):
         tips1 = [tipmap1[x] for x in shared]
         tips2 = [tipmap2[x] for x in shared]
 
-        dm1 = self.tip_tip_distances(endpoints=tips1, use_length=use_length)
-        dm2 = other.tip_tip_distances(endpoints=tips2, use_length=use_length)
+        dm1 = self.cophenet(endpoints=tips1, use_length=use_length)
+        dm2 = other.cophenet(endpoints=tips2, use_length=use_length)
 
         if ignore_self:
             dm1 = dm1.condensed_form()
@@ -4917,6 +5220,8 @@ class TreeNode(SkbioObject):
             result *= 0.5
 
         return result
+
+    compare_tip_distances = compare_cophenet
 
     # ------------------------------------------------
     # Tree indexing and searching
@@ -5141,21 +5446,16 @@ class TreeNode(SkbioObject):
         7
 
         Cache the sum of branch lengths per clade. This resembles but is more efficient
-        than calling :meth:`descending_branch_length` multiple times. Note: the result
-        includes the stem branch of each clade. One needs to subtract ``length`` from
-        each value in order to match the result of ``descending_branch_length``.
+        than calling :meth:`total_length` multiple times.
 
         >>> f = lambda n: n.length or 0.0
-        >>> tree.cache_attr(f, 'total_length', sum)
-        >>> tree.total_length
+        >>> tree.cache_attr(f, 'clade_size', sum)
+        >>> tree.clade_size
         5.5
 
         Cache the accumulative distances from all tips to the common ancestor of each
-        clade. This allows one to measure the depth of a clade from the surface (tips)
-        of a tree. One can further apply calculations like mean and standard deviation
-        to the results. This is more efficient than calling
-        :meth:`accumulate_to_ancestor` multiple times. Also note that the result
-        includes the stem branch of each clade.
+        clade. This is more efficient than calling :meth:`depth` multiple times. One
+        can further apply calculations like mean and standard deviation to the results.
 
         >>> import numpy as np
         >>> dist_f = lambda n: np.array(n.length or 0.0, ndmin=1)
