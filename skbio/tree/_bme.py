@@ -10,7 +10,7 @@ import numpy as np
 
 from operator import itemgetter
 from skbio.tree import TreeNode
-from skbio.tree._gme import _average_distance_k, _average_distance_k_upper
+from skbio.tree._gme import _average_distance_k
 
 
 def bme(dm, allow_edge_estimation=True):
