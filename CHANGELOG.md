@@ -5,6 +5,7 @@
 ### Features
 
 * Implemented linear mixed effects with Dirichlet-multinomial distribution ([#2113](https://github.com/scikit-bio/scikit-bio/pull/2113)).
+* Added functions `rf_dists`, `wrf_dists` and `path_dists` under `skbio.tree` to calculate multiple pariwise distance metrics among an arbitrary number of trees. They correspond to `TreeNode` methods `compare_rfd`, `compare_wrfd` and `compare_cophenet` for two trees ([#2166](https://github.com/scikit-bio/scikit-bio/pull/2166)).
 * Added `height` and `depth` methods under `TreeNode` to calculate the height and depth of a given node.
 * Added `TreeNode.compare_wrfd` to calculate the weighted Robinson-Foulds distance or its variants between two trees ([#2144](https://github.com/scikit-bio/scikit-bio/pull/2144)).
 * Wrapped UPGMA and WPGMA from SciPy's linkage method ([#2094](https://github.com/scikit-bio/scikit-bio/pull/2094)).
@@ -22,7 +23,7 @@
 * Significantly improved the performance of `TreeNode.cophenet` (renamed from `tip_tip_distances`) for computing a patristic distance matrix among all or selected tips of a tree ([#2152](https://github.com/scikit-bio/scikit-bio/pull/2152)).
 * Supported Robinson-Foulds distance calculation (`TreeNode.compare_rfd`) based on bipartitions (equivalent to `compare_biparts`). This is automatically enabled when the input tree is unrooted. Otherwise the calculation is still based on subsets (equivalent to `compare_subsets`). The user can override this behavior using the `rooted` parameter ([#2144](https://github.com/scikit-bio/scikit-bio/pull/2144)).
 * Re-wrote the underlying algorithm of `TreeNode.compare_subsets` because it is equivalent to the Robinson-Foulds distance on rooted trees. Added parameter `proportion`. Renamed parameter `exclude_absent_taxa` as `shared_only` ([#2144](https://github.com/scikit-bio/scikit-bio/pull/2144)).
-* Added parameter `include_self` to `TreeNode.subset`. Added parameters `within`, `include_full` and `include_single` to `TreeNode.subsets` ([#2144](https://github.com/scikit-bio/scikit-bio/pull/2144)).
+* Added parameter `include_self` to `TreeNode.subset`. Added parameters `within`, `include_full` and `include_tips` to `TreeNode.subsets` ([#2144](https://github.com/scikit-bio/scikit-bio/pull/2144)).
 * Improved the performance and customizability of `TreeNode.total_length` (renamed from `descending_branch_length`). Added parameters `include_stem` and `include_self`.
 * Improved the performance of `TreeNode.lowest_common_ancestor` ([#2132](https://github.com/scikit-bio/scikit-bio/pull/2132)).
 * Improved the performance of `TreeNode` methods: `ancestors`, `siblings`, and `neighbors` ([#2133](https://github.com/scikit-bio/scikit-bio/pull/2133), [#2135](https://github.com/scikit-bio/scikit-bio/pull/2135)).
