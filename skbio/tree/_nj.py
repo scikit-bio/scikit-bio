@@ -9,15 +9,17 @@
 import numpy as np
 
 from skbio.tree import TreeNode
-from skbio.util._decorator import aliased, params_aliased
+from skbio.util._decorator import aliased, params_aliased, ParamAlias
 from skbio.util._warning import _warn_deprecated
 from ._cutils import nj_minq_cy
 
 
-@aliased("neighbor_joining", since="0.6.3", warn=True)
+@aliased("neighbor_joining")
 @params_aliased(
     [
-        ("clip_to_zero", "disallow_negative_branch_length", "0.6.3", None, True),
+        ParamAlias(
+            "clip_to_zero", "disallow_negative_branch_length", since="0.6.3", warn=True
+        )
     ]
 )
 def nj(
@@ -34,9 +36,6 @@ def nj(
         Input distance matrix containing pairwise distances among taxa.
     clip_to_zero : bool, optional
         If True (default), convert negative branch lengths into zeros.
-
-        .. versionadded:: 0.6.3
-
     result_constructor : function, optional
         Function to apply to construct the result object. This must take a
         newick-formatted string as input. Deprecated and to be removed in a
@@ -49,12 +48,6 @@ def nj(
         memory consumption, at the cost of losing the original data. Default is False.
 
         .. versionadded:: 0.6.3
-
-    disallow_negative_branch_length : bool, optional
-        Alias of ``clip_to_zero`` for backward compatibility. Deprecated and to be
-        removed in a future release.
-
-        .. deprecated:: 0.6.3
 
     Returns
     -------

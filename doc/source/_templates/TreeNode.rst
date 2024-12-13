@@ -88,7 +88,6 @@
 
       ~{{ name }}.has_caches
       ~{{ name }}.clear_caches
-      ~{{ name }}.invalidate_caches
       ~{{ name }}.cache_attr
       ~{{ name }}.assign_ids
       ~{{ name }}.index_tree
@@ -112,21 +111,22 @@
       ~{{ name }}.is_bifurcating
       ~{{ name }}.observed_node_counts
       ~{{ name }}.depth
-      ~{{ name }}.accumulate_to_ancestor
       ~{{ name }}.height
       ~{{ name }}.total_length
-      ~{{ name }}.descending_branch_length
       ~{{ name }}.distance
       ~{{ name }}.maxdist
-      ~{{ name }}.get_max_distance
       ~{{ name }}.cophenet
-      ~{{ name }}.tip_tip_distances
+
+   .. rubric:: Tree comparison
+
+   .. autosummary::
+      :toctree:
+
       ~{{ name }}.compare_rfd
       ~{{ name }}.compare_wrfd
       ~{{ name }}.compare_subsets
       ~{{ name }}.compare_biparts
       ~{{ name }}.compare_cophenet
-      ~{{ name }}.compare_tip_distances
 
    .. rubric:: Tree visualization
 

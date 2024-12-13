@@ -6,65 +6,16 @@
 # The full license is in the file LICENSE.txt, distributed with this software.
 # ----------------------------------------------------------------------------
 
+import re
 from functools import wraps
-from inspect import signature
+from collections import namedtuple
 
 from ._exception import OverrideError
 from ._warning import _warn_renamed
 
 
-# def func_alias(alias, deprecated=False):
-#     """Create an alias for a function.
-
-#     Parameters
-#     ----------
-#     alias : str
-#         Alias name of the function.
-#     deprecated : bool or str, optional
-#         Whether to display a deprecation warning when the alias is called. Can also
-#         specify a version number indicating when the alias will be removed.
-
-#     """
-
-#     def decorator(func):
-#         @wraps(func)
-#         def wrapper(*args, **kwargs):
-#             _warn_renamed(func, alias, deprecated)
-#             return func(*args, **kwargs)
-
-#         # get parent module
-#         module = func.__module__
-#         mpath, _, mname = module.rpartition(".")
-#         if mname.startswith("_"):
-#             module = mpath
-#         parent = sys.modules[module]
-
-#         # get parent class, if applicable
-#         # see: https://stackoverflow.com/questions/3589311/
-#         # this code however doesn't work as it triggers circular import
-#         qualname = func.__qualname__.split(".<locals>", 1)[0]
-#         for level in qualname.split(".")[:-1]:
-#             parent = getattr(parent, level)
-
-#         target = wrapper if deprecated else func
-#         setattr(parent, alias, target)
-
-#         # add alias to docstring
-#         msg = f"    Alias: ``{alias}``{' (deprecated)' if deprecated else ''}.\n"
-#         if (doc := func.__doc__) is None:
-#             func.__doc__ = msg
-#         elif pos := doc.find("\n\n") + 1:
-#             func.__doc__ = doc[:pos] + "\n" + msg + doc[pos:]
-#         else:
-#             func.__doc__ += "\n" + msg
-
-#         return func
-
-#     return decorator
-
-
-def alias_doc(func, name, since=None, until=None, warn=False, params={}):
-    """Modify the docstring of a function to indicate the alias status."""
+def _alias_msg(name, since=None, until=None, warn=False):
+    """Create a message indicating the alias status of a function or a parameter."""
     if not since:
         msg = f"Alias: ``{name}``"
     else:
@@ -77,12 +28,25 @@ def alias_doc(func, name, since=None, until=None, warn=False, params={}):
             if until:
                 msg += f" and will be removed in {until}"
         msg += "."
+    return msg
 
-    func.__doc__ = alias_into_doc(func.__doc__, msg)
 
+def _msg_into_doc(msg, doc):
+    """Insert a message into a docstring under the description.
 
-def alias_into_doc(doc, msg):
-    """Insert text into the docstring of a function."""
+    Parameters
+    ----------
+    msg : str
+        Message to insert.
+    doc : str
+        Docstring to modify.
+
+    Returns
+    -------
+    str
+        Modified docstring.
+
+    """
     # no docstring: message becomes the entire docstring.
     if doc is None:
         return msg + "\n"
@@ -108,7 +72,7 @@ def alias_into_doc(doc, msg):
     return doc + "\n" + indent + msg + "\n"
 
 
-def aliased(name, since=None, until=None, warn=False, params={}):
+def aliased(name, since=None, until=None, warn=False):
     """Create an alias for a function or method.
 
     Parameters
@@ -121,9 +85,6 @@ def aliased(name, since=None, until=None, warn=False, params={}):
         Version when alias will be removed.
     warn : bool, optional
         Raise a deprecation warning when alias is called.
-    params : dict, optional
-        Aliases of parameters. Each key is a parameter, and its value consists of
-        name, since, until and warn.
 
     See Also
     --------
@@ -137,7 +98,7 @@ def aliased(name, since=None, until=None, warn=False, params={}):
     """
 
     def decorator(func):
-        func._alias = (name, since, until, warn, params)
+        func._alias = (name, since, until, warn)
         return func
 
     return decorator
@@ -161,7 +122,7 @@ def add_aliases(cls):
             toadd.append(func)
 
     for func in toadd:
-        name, since, until, warn, params = func._alias
+        name, since, until, warn = func._alias
 
         @wraps(func)
         def wrapper(*args, **kwargs):
@@ -173,18 +134,102 @@ def add_aliases(cls):
         delattr(wrapper, "_alias")
         setattr(cls, name, wrapper)
 
-        alias_doc(func, name, since, until, warn, params)
+        msg = _alias_msg(name, since, until, warn)
+        func.__doc__ = _msg_into_doc(msg, func.__doc__)
 
     return cls
 
 
+# parameter alias
+ParamAlias = namedtuple(
+    "ParamAlias",
+    ["param", "alias", "since", "until", "warn"],
+    defaults=[None, None, False],
+)
+
+
+def _param_msg_into_doc(param, msg, doc):
+    """Insert a message into a docstring under the description of a parameter.
+
+    Parameters
+    ----------
+    param : str
+        Target parameter.
+    msg : str
+        Message to insert.
+    doc : str
+        Docstring to modify.
+
+    Returns
+    -------
+    str
+        Modified docstring.
+
+    Raises
+    ------
+    ValueError
+        Parameter is missing or its format is invalid.
+
+    """
+    # Find the header line of the parameter.
+    match = re.search(rf"(^\s*{param}\s*:.*?\n)", doc, re.MULTILINE)
+    if not match:
+        raise ValueError(
+            f'Parameter "{param}" is missing from the docstring or its format is '
+            "invalid."
+        )
+    header = match.group(1)
+
+    # Determine the indentation of the header line.
+    indent = len(header) - len(header.lstrip())
+
+    # Find the next line with the same or less indentation, which indicates the next
+    # parameter or the end of the "Parameters" section.
+    end = match.end()
+    after = doc[end:]
+    match = re.search(rf"(^\s{{0,{indent}}}[^\s].*?$)", after, re.MULTILINE)
+
+    # Determine the insertion point.
+    insert = end + (match.start() if match else len(after))
+
+    # Insert the message. It should have 1+ indentation level (i.e., 4 spaces) than
+    # the header line.
+    return doc[:insert] + "\n" + " " * (indent + 4) + msg + "\n\n" + doc[insert:]
+
+
 def params_aliased(params=[]):
+    r"""Create aliases for parameters of a function or method.
+
+    Parameters
+    ----------
+    params : list of ParamAlias
+        Aliases of parameters.
+
+    See Also
+    --------
+    aliased
+
+    Notes
+    -----
+    This is a decorator that can be applied to a function or method to create an alias
+    for one of its parameters. It can be applied multiple times to create aliases for
+    multiple parameters. Unlike :func:`aliased`, this decorator does not require
+    :func:`add_aliases` added to the module or class.
+
+    """
+
     def decorator(func):
+        for param, alias, since, until, warn in params:
+            msg = _alias_msg(alias, since, until, warn)
+            func.__doc__ = _param_msg_into_doc(param, msg, func.__doc__)
+
         @wraps(func)
         def wrapper(*args, **kwargs):
-            for key, alias, since, until, warn in params:
+            for param, alias, since, until, warn in params:
                 if alias in kwargs:
-                    kwargs[key] = kwargs.pop(alias)
+                    kwargs[param] = kwargs.pop(alias)
+                    if warn:
+                        _warn_renamed(func, alias, since, until, param=param)
             return func(*args, **kwargs)
 
         return wrapper

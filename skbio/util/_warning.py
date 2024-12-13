@@ -20,16 +20,32 @@ def _warn_deprecated(func, since, msg=None):
         func.warned = True
 
 
-def _warn_renamed(func, oldname, since=None, until=None):
+def _warn_renamed(func, oldname, since=None, until=None, param=None):
     """Warn of renamed status."""
-    if not hasattr(func, "warned"):
-        simplefilter("once", DeprecationWarning)
-        msg = (
-            f"`{oldname}` was renamed to `{func.__name__}` in {since}. The old name "
-            "is kept as an alias but is deprecated"
+    # warning message
+    msg_until = f" It will be removed in {until}." if until else ""
+    msg_param = f"`{func.__name__}`'s parameter " if param else ""
+    msg = (
+        msg_param
+        + (
+            f"`{oldname}` was renamed to `{param or func.__name__}` in {since}."
+            " The old name is kept as an alias but is deprecated."
         )
-        if until:
-            msg += f" and will be removed in {until}."
-        msg += "."
-        warn(msg, DeprecationWarning)
-        func.warned = True
+        + msg_until
+    )
+
+    # alias of the function
+    if not param:
+        if not hasattr(func, "warned"):
+            simplefilter("once", DeprecationWarning)
+            warn(msg, DeprecationWarning)
+            func.warned = True
+
+    # alias of a parameter
+    else:
+        if not hasattr(func, "params_warned"):
+            func.params_warned = set()
+        if param not in func.params_warned:
+            simplefilter("once", DeprecationWarning)
+            warn(msg, DeprecationWarning)
+            func.params_warned.add(param)

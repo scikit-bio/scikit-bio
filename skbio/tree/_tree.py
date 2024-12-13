@@ -26,7 +26,13 @@ from skbio.tree._exception import (
     TreeError,
 )
 from skbio.util import get_rng
-from skbio.util._decorator import classonlymethod, add_aliases, aliased
+from skbio.util._decorator import (
+    classonlymethod,
+    add_aliases,
+    aliased,
+    ParamAlias,
+    params_aliased,
+)
 from skbio.util._warning import _warn_deprecated
 from skbio.io.registry import Read, Write
 
@@ -547,17 +553,15 @@ class TreeNode(SkbioObject):
         else:
             return [n for n in nodes if n is not ignore]
 
-    @aliased("lowest_common_ancestor", since="0.6.3", until="0.7.0", warn=True)
-    def lca(self, nodes=None, **kwargs):
+    @aliased("lowest_common_ancestor")
+    @params_aliased([ParamAlias("nodes", "tipnames", since="0.6.3", warn=True)])
+    def lca(self, nodes=None):
         r"""Find the lowest common ancestor of a list of nodes.
 
         Parameters
         ----------
         nodes : iterable of TreeNode or str
             Instances or names of the nodes of interest.
-
-            .. versionchanged:: 0.6.3
-                Renamed from ``tipnames``. The old name is preserved as an alias.
 
         Returns
         -------
@@ -593,8 +597,6 @@ class TreeNode(SkbioObject):
         root
 
         """
-        if nodes is None and kwargs and "tipnames" in kwargs:
-            nodes = kwargs["tipnames"]
         if not nodes:
             raise ValueError("No node is specified.")
         nodes = [self.find(x) for x in nodes]
@@ -659,8 +661,8 @@ class TreeNode(SkbioObject):
 
         Notes
         -----
-        This algorithm is optimized for finding the LCA of two nodes. Instead, `lca`
-        is optimized for finding the LCA of multiple nodes.
+        This algorithm is optimized for finding the LCA of two nodes. Instead,
+        :meth:`lca` is optimized for finding the LCA of multiple nodes.
 
         """
         anc1 = self.ancestors(include_self=True)
@@ -1533,12 +1535,9 @@ class TreeNode(SkbioObject):
                 return True
         return False
 
+    @aliased("remove_deleted", since="0.6.3", warn=True)
     def remove_by_func(self, func, uncache=True):
         r"""Remove nodes of a tree that meet certain criteria.
-
-        .. versionchanged:: 0.6.3
-            Renamed from ``remove_deleted``. The old name is kept as an alias. But it
-            may be removed in a future version.
 
         Parameters
         ----------
@@ -1580,8 +1579,6 @@ class TreeNode(SkbioObject):
         for node in self.traverse(include_self=False):
             if func(node):
                 node.parent.remove(node, uncache=False)
-
-    remove_deleted = remove_by_func  # alias; to be removed in a future version
 
     def prune(self, uncache=True):
         r"""Collapse single-child nodes in the tree.
@@ -3784,13 +3781,11 @@ class TreeNode(SkbioObject):
                     result[internal_node] += count
         return result
 
+    @aliased("accumulate_to_ancestor", since="0.6.3")
     def depth(
         self, ancestor=None, include_root=False, use_length=True, missing_as_zero=False
     ):
         r"""Calculate the depth of the current node.
-
-        .. versionchanged:: 0.6.3
-            Renamed from ``accumulate_to_ancestor``. The old name is kept as an alias.
 
         The **depth** of a node is the sum of branch lengths from it to the root of the
         tree.
@@ -3873,8 +3868,6 @@ class TreeNode(SkbioObject):
             return sum(x.length for x in path)
         except TypeError:
             raise NoLengthError("Nodes without branch length are encountered.")
-
-    accumulate_to_ancestor = depth
 
     def height(self, include_self=False, use_length=True, missing_as_zero=False):
         r"""Calculate the height of the current node.
@@ -3960,13 +3953,10 @@ class TreeNode(SkbioObject):
                 raise NoLengthError(errmsg)
         return H, tip
 
-    def total_length(
-        self, nodes=None, include_stem=False, include_self=False, **kwargs
-    ):
+    @aliased("descending_branch_length", since="0.6.3")
+    @params_aliased([ParamAlias("nodes", "tip_subset", since="0.6.3", warn=True)])
+    def total_length(self, nodes=None, include_stem=False, include_self=False):
         r"""Calculate the total length of branches descending from self.
-
-        .. versionchanged:: 0.6.3
-            Renamed from ``descending_branch_length``. The old name is kept as an alias.
 
         Parameters
         ----------
@@ -3976,7 +3966,6 @@ class TreeNode(SkbioObject):
             returned. Otherwise, the total branch length of the tree will be returned.
 
             .. versionchanged:: 0.6.3
-                Renamed from ``tip_subset``. The old name is kept as an alias.
                 Can accept TreeNode instances in addition to names.
                 Can accept internal nodes in addition to tips.
 
@@ -4111,8 +4100,6 @@ class TreeNode(SkbioObject):
             sum(n.length or 0.0 for n in chain(first_path[:stop], other_paths)) or 0.0
         )
 
-    descending_branch_length = total_length
-
     def distance(self, other, use_length=True, missing_as_zero=False):
         r"""Calculate the distance between self and another node.
 
@@ -4190,11 +4177,9 @@ class TreeNode(SkbioObject):
         except TypeError:
             raise NoLengthError("Nodes without branch length are encountered.")
 
+    @aliased("get_max_distance", since="0.6.3")
     def maxdist(self, use_length=True):
         r"""Return the maximum distance between any pair of tips in the tree.
-
-        .. versionchanged:: 0.6.3
-            Renamed from ``get_max_distance``. The old name is kept as an alias.
 
         This measure is also referred to as the **diameter** of a tree.
 
@@ -4292,13 +4277,9 @@ class TreeNode(SkbioObject):
             max_dist = float(max_dist)
         return max_dist, (max_tip1, max_tip2)
 
-    get_max_distance = maxdist
-
+    @aliased("tip_tip_distances", since="0.6.3")
     def cophenet(self, endpoints=None, use_length=True):
         r"""Return a distance matrix between each pair of tips in the tree.
-
-        .. versionchanged:: 0.6.3
-            Renamed from ``tip_tip_distances``. The old name is kept as an alias.
 
         Parameters
         ----------
@@ -4491,8 +4472,6 @@ class TreeNode(SkbioObject):
 
         # Skip validation as all items to validate are guaranteed.
         return DistanceMatrix(result, taxa, validate=False)
-
-    tip_tip_distances = cophenet
 
     def _compare_topology(
         self,
@@ -4973,6 +4952,7 @@ class TreeNode(SkbioObject):
             result *= 0.5
         return result
 
+    @aliased("compare_tip_distances", since="0.6.3")
     def compare_cophenet(
         self,
         other,
@@ -4985,9 +4965,6 @@ class TreeNode(SkbioObject):
         shuffle_f=None,
     ):
         r"""Calculate the distance between two trees based on cophenetic distances.
-
-        .. versionchanged:: 0.6.3
-            Renamed from ``compare_tip_distances``. The old name is kept as an alias.
 
         Parameters
         ----------
@@ -5276,13 +5253,9 @@ class TreeNode(SkbioObject):
         lookup = hasattr(tree, "_tip_cache") and hasattr(tree, "_non_tip_cache")
         return attrs, lookup
 
+    @aliased("invalidate_caches", since="0.6.3", warn=True)
     def clear_caches(self, attr=True, lookup=True):
         r"""Delete node attribute and lookup caches of a tree.
-
-        .. versionchanged:: 0.6.3
-
-            Renamed from ``invalidate_caches``. The old name is preserved as an alias.
-            But it may be removed in a future version.
 
         Parameters
         ----------
