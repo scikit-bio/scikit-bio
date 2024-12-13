@@ -9,18 +9,22 @@
 import numpy as np
 
 from skbio.tree import TreeNode
-from skbio.util._decorator import aliased
+from skbio.util._decorator import aliased, params_aliased
 from skbio.util._warning import _warn_deprecated
 from ._cutils import nj_minq_cy
 
 
-@aliased("neighbor_joining", deprecated="0.7.0")
+@aliased("neighbor_joining", since="0.6.3", warn=True)
+@params_aliased(
+    [
+        ("clip_to_zero", "disallow_negative_branch_length", "0.6.3", None, True),
+    ]
+)
 def nj(
     dm,
     clip_to_zero=True,
     result_constructor=None,
     inplace=False,
-    disallow_negative_branch_length=None,
 ):
     r"""Perform neighbor joining (NJ) for phylogenetic reconstruction.
 
@@ -141,13 +145,13 @@ def nj(
 
     """
     # @deprecated
-    if disallow_negative_branch_length is not None:
-        msg = (
-            "`disallow_negative_branch_length` has been renamed as `clip_to_zero`."
-            "The old name will be removed in a future release."
-        )
-        _warn_deprecated(nj, "0.6.3", msg)
-        clip_to_zero = disallow_negative_branch_length
+    # if disallow_negative_branch_length is not None:
+    #     msg = (
+    #         "`disallow_negative_branch_length` has been renamed as `clip_to_zero`."
+    #         "The old name will be removed in a future release."
+    #     )
+    #     _warn_deprecated(nj, "0.6.3", msg)
+    #     clip_to_zero = disallow_negative_branch_length
     if result_constructor is not None:
         msg = (
             "`result_constructor` is deprecated and will be removed in a future "

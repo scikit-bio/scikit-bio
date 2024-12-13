@@ -16,7 +16,7 @@ from scipy.spatial.distance import squareform
 from skbio._base import SkbioObject
 from skbio.stats._misc import _pprint_strs
 from skbio.util import find_duplicates, get_rng
-from skbio.util._decorator import classonlymethod
+from skbio.util._decorator import classonlymethod, add_aliases, aliased
 from skbio.util._misc import resolve_key
 from skbio.util._plotting import PlottableMixin
 from skbio.io.registry import Read, Write
@@ -45,6 +45,7 @@ class MissingIDError(DissimilarityMatrixError):
         self.args = ("The ID '%s' is not in the dissimilarity matrix." % missing_id,)
 
 
+@add_aliases
 class DissimilarityMatrix(SkbioObject, PlottableMixin):
     """Store dissimilarities between objects.
 
@@ -333,6 +334,7 @@ class DissimilarityMatrix(SkbioObject, PlottableMixin):
         else:
             raise MissingIDError(lookup_id)
 
+    @aliased("square")
     def redundant_form(self):
         """Return an array of dissimilarities in redundant format.
 

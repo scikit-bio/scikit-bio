@@ -26,7 +26,7 @@ from skbio.tree._exception import (
     TreeError,
 )
 from skbio.util import get_rng
-from skbio.util._decorator import classonlymethod, aliased, register_aliases, meth_alias
+from skbio.util._decorator import classonlymethod, add_aliases, aliased
 from skbio.util._warning import _warn_deprecated
 from skbio.io.registry import Read, Write
 
@@ -40,7 +40,7 @@ from skbio.io.registry import Read, Write
 # ----------------------------------------------------------------------------
 
 
-@register_aliases
+@add_aliases
 class TreeNode(SkbioObject):
     r"""Represent a node within a tree.
 
@@ -547,8 +547,8 @@ class TreeNode(SkbioObject):
         else:
             return [n for n in nodes if n is not ignore]
 
-    @meth_alias("lca")
-    def lowest_common_ancestor(self, nodes=None, **kwargs):
+    @aliased("lowest_common_ancestor", since="0.6.3", until="0.7.0", warn=True)
+    def lca(self, nodes=None, **kwargs):
         r"""Find the lowest common ancestor of a list of nodes.
 
         Parameters
@@ -584,7 +584,7 @@ class TreeNode(SkbioObject):
         >>> from skbio import TreeNode
         >>> tree = TreeNode.read(["((a,b)c,(d,e)f)root;"])
         >>> nodes = [tree.find('a'), tree.find('b')]
-        >>> lca = tree.lowest_common_ancestor(nodes)
+        >>> lca = tree.lca(nodes)
         >>> print(lca.name)
         c
         >>> nodes = [tree.find('a'), tree.find('e')]
@@ -639,8 +639,6 @@ class TreeNode(SkbioObject):
             del node._prev
 
         return curr
-
-    # lca = lowest_common_ancestor  # for convenience
 
     def _path(self, other):
         r"""Return the path from self to other.
@@ -2863,7 +2861,7 @@ class TreeNode(SkbioObject):
 
         tip1 = tree.find(tips[0])
         tip2 = tree.find(tips[1])
-        lca = tree.lowest_common_ancestor([tip1, tip2])
+        lca = tree.lca([tip1, tip2])
 
         if tip1.depth(lca) > half_max_dist:
             climb_node = tip1

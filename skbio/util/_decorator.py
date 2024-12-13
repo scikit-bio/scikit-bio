@@ -6,91 +6,190 @@
 # The full license is in the file LICENSE.txt, distributed with this software.
 # ----------------------------------------------------------------------------
 
-import sys
 from functools import wraps
+from inspect import signature
 
 from ._exception import OverrideError
 from ._warning import _warn_renamed
 
 
-def aliased(alias, deprecated=False):
-    """Specify an alias for a function.
+# def func_alias(alias, deprecated=False):
+#     """Create an alias for a function.
+
+#     Parameters
+#     ----------
+#     alias : str
+#         Alias name of the function.
+#     deprecated : bool or str, optional
+#         Whether to display a deprecation warning when the alias is called. Can also
+#         specify a version number indicating when the alias will be removed.
+
+#     """
+
+#     def decorator(func):
+#         @wraps(func)
+#         def wrapper(*args, **kwargs):
+#             _warn_renamed(func, alias, deprecated)
+#             return func(*args, **kwargs)
+
+#         # get parent module
+#         module = func.__module__
+#         mpath, _, mname = module.rpartition(".")
+#         if mname.startswith("_"):
+#             module = mpath
+#         parent = sys.modules[module]
+
+#         # get parent class, if applicable
+#         # see: https://stackoverflow.com/questions/3589311/
+#         # this code however doesn't work as it triggers circular import
+#         qualname = func.__qualname__.split(".<locals>", 1)[0]
+#         for level in qualname.split(".")[:-1]:
+#             parent = getattr(parent, level)
+
+#         target = wrapper if deprecated else func
+#         setattr(parent, alias, target)
+
+#         # add alias to docstring
+#         msg = f"    Alias: ``{alias}``{' (deprecated)' if deprecated else ''}.\n"
+#         if (doc := func.__doc__) is None:
+#             func.__doc__ = msg
+#         elif pos := doc.find("\n\n") + 1:
+#             func.__doc__ = doc[:pos] + "\n" + msg + doc[pos:]
+#         else:
+#             func.__doc__ += "\n" + msg
+
+#         return func
+
+#     return decorator
+
+
+def alias_doc(func, name, since=None, until=None, warn=False, params={}):
+    """Modify the docstring of a function to indicate the alias status."""
+    if not since:
+        msg = f"Alias: ``{name}``"
+    else:
+        msg = (
+            f".. versionchanged:: {since} "
+            f"Renamed from ``{name}``. The old name is kept as an alias"
+        )
+        if warn:
+            msg += " but is deprecated"
+            if until:
+                msg += f" and will be removed in {until}"
+        msg += "."
+
+    func.__doc__ = alias_into_doc(func.__doc__, msg)
+
+
+def alias_into_doc(doc, msg):
+    """Insert text into the docstring of a function."""
+    # no docstring: message becomes the entire docstring.
+    if doc is None:
+        return msg + "\n"
+
+    lines = doc.splitlines()
+    n = len(lines)
+
+    # find indentation size, which is important for the docstring to be rendered
+    indent = 0
+    for line in lines[1:]:
+        if line:
+            indent = len(line) - len(line.lstrip())
+            break
+
+    indent = " " * indent
+
+    # docstring has at least two paragraphs: insert message after the first paragraph
+    for i in range(1, n):
+        if not lines[i]:
+            return "\n".join(lines[:i] + ["", indent + msg] + lines[i:])
+
+    # docstring has only one paragraph: append message to the end of docstring
+    return doc + "\n" + indent + msg + "\n"
+
+
+def aliased(name, since=None, until=None, warn=False, params={}):
+    """Create an alias for a function or method.
 
     Parameters
     ----------
-    alias : str
-        Alias name of the function.
-    deprecated : bool or str, optional
-        Whether to display a deprecation warning when the alias is called. Can also
-        specify a version number indicating when the alias will be removed.
+    name : str
+        Alias name of the function or method.
+    since : str, optional
+        Version when alias was created.
+    until : str, optional
+        Version when alias will be removed.
+    warn : bool, optional
+        Raise a deprecation warning when alias is called.
+    params : dict, optional
+        Aliases of parameters. Each key is a parameter, and its value consists of
+        name, since, until and warn.
+
+    See Also
+    --------
+    add_aliases
+
+    Notes
+    -----
+    This is a decorator that can be applied to a function or method to indicate its
+    alias status.
 
     """
 
     def decorator(func):
-        @wraps(func)
-        def wrapper(*args, **kwargs):
-            _warn_renamed(func, alias, deprecated)
-            return func(*args, **kwargs)
-
-        # get parent module
-        module = func.__module__
-        mpath, _, mname = module.rpartition(".")
-        if mname.startswith("_"):
-            module = mpath
-        parent = sys.modules[module]
-
-        # get parent class (if applicable)
-        # https://stackoverflow.com/questions/3589311/
-        # qualname = func.__qualname__.split(".<locals>", 1)[0]
-        # for level in qualname.split(".")[:-1]:
-        #     parent = getattr(parent, level)
-
-        target = wrapper if deprecated else func
-        setattr(parent, alias, target)
-
-        # add alias to docstring
-        msg = f"    Alias: ``{alias}``{' (deprecated)' if deprecated else ''}.\n"
-        if (doc := func.__doc__) is None:
-            func.__doc__ = msg
-        elif pos := doc.find("\n\n") + 1:
-            func.__doc__ = doc[:pos] + "\n" + msg + doc[pos:]
-        else:
-            func.__doc__ += "\n" + msg
-
+        func._alias = (name, since, until, warn, params)
         return func
 
     return decorator
 
 
-def meth_alias(alias_name, deprecated=False):
-    def decorator(func):
-        func._alias = alias_name
+def add_aliases(cls):
+    """Register aliases of members of a module or class.
 
-        @wraps(func)
-        def wrapper(*args, **kwargs):
-            return func(*args, **kwargs)
+    For each member that has an alias, create a wrapper named as the alias, and add a
+    "skip" flag which instructs Sphinx autodoc to skip it when rendering the
+    documentation.
 
-        return func
+    See Also
+    --------
+    aliased
 
-    return decorator
-
-
-def register_aliases(cls):
+    """
     toadd = []
-    for meth in cls.__dict__.values():
-        if hasattr(meth, "_alias"):
-            toadd.append(meth)
-    for meth in toadd:
-        alias = meth._alias
+    for func in cls.__dict__.values():
+        if hasattr(func, "_alias"):
+            toadd.append(func)
 
-        @wraps(meth)
+    for func in toadd:
+        name, since, until, warn, params = func._alias
+
+        @wraps(func)
         def wrapper(*args, **kwargs):
-            _warn_renamed(meth, alias, "0.9.5")
-            return meth(*args, **kwargs)
+            if warn:
+                _warn_renamed(func, name, since, until)
+            return func(*args, **kwargs)
 
-        setattr(cls, alias, wrapper)
-        delattr(meth, "_alias")
+        wrapper._skip = True
+        delattr(wrapper, "_alias")
+        setattr(cls, name, wrapper)
+
+        alias_doc(func, name, since, until, warn, params)
+
     return cls
+
+
+def params_aliased(params=[]):
+    def decorator(func):
+        @wraps(func)
+        def wrapper(*args, **kwargs):
+            for key, alias, since, until, warn in params:
+                if alias in kwargs:
+                    kwargs[key] = kwargs.pop(alias)
+            return func(*args, **kwargs)
+
+        return wrapper
+
+    return decorator
 
 
 def overrides(interface_class):

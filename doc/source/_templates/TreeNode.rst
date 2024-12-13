@@ -24,7 +24,6 @@
       ~{{ name }}.ancestors
       ~{{ name }}.siblings
       ~{{ name }}.neighbors
-      ~{{ name }}.lowest_common_ancestor
       ~{{ name }}.lca
       ~{{ name }}.path
 

@@ -267,5 +267,12 @@ _closure()
 from autoinherit import InheritedAutosummary
 
 
+# Let autosummary skip members that have a "_skip" attribute that is True.
+
+def skip_member(app, what, name, obj, skip, options):
+    return getattr(obj, "_skip", None)
+
+
 def setup(app):
     app.add_directive('autoinherit', InheritedAutosummary)
+    app.connect("autodoc-skip-member", skip_member)

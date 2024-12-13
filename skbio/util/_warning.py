@@ -9,26 +9,27 @@
 from warnings import warn, simplefilter
 
 
-def _warn_deprecated(func, ver, msg=None):
+def _warn_deprecated(func, since, msg=None):
     """Warn of deprecated status."""
     if not hasattr(func, "warned"):
         simplefilter("once", DeprecationWarning)
-        message = f"{func.__name__} is deprecated as of {ver}."
+        message = f"{func.__name__} has been deprecated since {since}."
         if msg:
             message += f" {msg}"
         warn(message, DeprecationWarning)
         func.warned = True
 
 
-def _warn_renamed(func, oldname, ver=None):
-    """Warn of renaming status."""
+def _warn_renamed(func, oldname, since=None, until=None):
+    """Warn of renamed status."""
     if not hasattr(func, "warned"):
         simplefilter("once", DeprecationWarning)
-        if not ver:
-            ver = "a future release"
         msg = (
-            f"`{oldname}` has been renamed as `{func.__name__}`. The old name is "
-            f"deprecated and will be removed in {ver}."
+            f"`{oldname}` was renamed to `{func.__name__}` in {since}. The old name "
+            "is kept as an alias but is deprecated"
         )
+        if until:
+            msg += f" and will be removed in {until}."
+        msg += "."
         warn(msg, DeprecationWarning)
         func.warned = True
