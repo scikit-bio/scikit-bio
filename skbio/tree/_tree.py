@@ -1984,7 +1984,8 @@ class TreeNode(SkbioObject):
                         node.remove(child, uncache=False)
                     node.extend([ind, interm], uncache=False)
 
-    def shuffle(self, k=None, names=None, shuffler=None, n=1, **kwargs):
+    @params_aliased([ParamAlias("shuffler", "shuffle_f", since="0.6.3", warn=True)])
+    def shuffle(self, k=None, names=None, shuffler=None, n=1):
         r"""Randomly shuffle tip names of the tree.
 
         Parameters
@@ -2004,8 +2005,6 @@ class TreeNode(SkbioObject):
             .. versionchanged:: 0.6.3
                 Switched to NumPy's new random generator. Can accept a random seed or
                 random generator instance.
-
-                Renamed from ``shuffle_f``. The old name is kept as an alias.
 
         n : int, optional
             The number of iterations to perform. Must be a positive integer. Default
@@ -2047,7 +2046,7 @@ class TreeNode(SkbioObject):
 
         >>> from skbio import TreeNode
         >>> tree = TreeNode.read(["((a,b),(c,d));"])
-        >>> for shuffled in tree.shuffle(shuffle_f=42, n=5):
+        >>> for shuffled in tree.shuffle(shuffler=42, n=5):
         ...     print(shuffled)
         ((d,c),(b,a));
         <BLANKLINE>
@@ -2070,10 +2069,6 @@ class TreeNode(SkbioObject):
             n = np.inf
         elif n < 1:
             raise ValueError("n must be > 0.")
-
-        # renamed parameter
-        if shuffler is None and "shuffle_f" in kwargs:
-            shuffler = kwargs["shuffle_f"]
 
         # determine shuffling function
         shuffler = _check_shuffler(shuffler)
@@ -4052,9 +4047,6 @@ class TreeNode(SkbioObject):
         6.3
 
         """
-        if kwargs and "tip_subset" in kwargs:
-            nodes = kwargs["tip_subset"]
-
         ## shortcut for the entire subtree
         if not nodes:
             return sum(
@@ -4530,9 +4522,6 @@ class TreeNode(SkbioObject):
         0.5
 
         """
-        # renamed parameter
-        if shared_only is False and "exclude_absent_taxa" in kwargs:
-            shared_only = kwargs["exclude_absent_taxa"]
         return _topo_dists((self, other), True, shared_only, proportion)[0]
 
     def compare_biparts(self, other, proportion=True):
@@ -4853,6 +4842,12 @@ class TreeNode(SkbioObject):
         )[0]
 
     @aliased("compare_tip_distances", since="0.6.3")
+    @params_aliased(
+        [
+            ParamAlias("shuffler", "shuffle_f", since="0.6.3", warn=True),
+            ParamAlias("metric", "dist_f", since="0.6.3", warn=True),
+        ]
+    )
     def compare_cophenet(
         self,
         other,
@@ -4861,7 +4856,6 @@ class TreeNode(SkbioObject):
         shuffler=None,
         use_length=True,
         ignore_self=False,
-        **kwargs,
     ):
         r"""Calculate the distance between two trees based on cophenetic distances.
 
@@ -4891,8 +4885,6 @@ class TreeNode(SkbioObject):
                 instances. The default value "unitcorr" is consistent with the previous
                 default behavior.
 
-                Renamed from ``dist_f``. The old name is kept as an alias.
-
         shuffler : int, np.random.Generator or callable, optional
             The shuffling function to use if ``sample`` is specified. Default is
             :meth:`~numpy.random.Generator.shuffle`. If an integer is provided, a
@@ -4901,8 +4893,6 @@ class TreeNode(SkbioObject):
             .. versionchanged:: 0.6.3
                 Switched to NumPy's new random generator. Can accept a random seed or
                 random generator instance.
-
-                Renamed from ``shuffle_f``. The old name is kept as an alias.
 
         use_length : bool, optional
             Whether to calculate the sum of branch lengths (True, default) or the
@@ -5050,13 +5040,6 @@ class TreeNode(SkbioObject):
                 )
                 func.warned = True
 
-        # renamed parameters
-        if kwargs:
-            if shuffler is None and "shuffle_f" in kwargs:
-                shuffler = kwargs["shuffle_f"]
-            if metric == "unitcorr" and "dist_f" in kwargs:
-                metric = kwargs["dist_f"]
-
         metric = _check_dist_metric(metric)
         if sample is not None:
             shuffler = _check_shuffler(shuffler)
@@ -5069,8 +5052,6 @@ class TreeNode(SkbioObject):
             use_length=use_length,
             ignore_self=ignore_self,
         )[0]
-
-    compare_tip_distances = compare_cophenet
 
     # ------------------------------------------------
     # Tree indexing and searching
