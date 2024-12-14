@@ -419,6 +419,18 @@ class TestDocstring(unittest.TestCase):
         with self.assertRaises(ValueError):
             note_into_doc_param(note, self.docstring, "param3")
 
+        # no more section
+        doc = self.docstring[:self.docstring.find("Returns")]
+        obs = note_into_doc_param(note, doc, "param2")
+        exp = """
+        param2 : str, optional
+            The second parameter.
+
+            .. note:: This is a note.
+
+        """
+        self.assertTrue(obs.endswith(exp))
+
 
 if __name__ == '__main__':
     unittest.main()

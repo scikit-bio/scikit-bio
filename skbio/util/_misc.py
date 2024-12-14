@@ -400,26 +400,23 @@ def note_into_doc_param(note, doc, param):
     note = note.rstrip() + "\n"
 
     # Find the header line of the parameter.
-    match = re.search(rf"(^\s*{param}\s*:.*?\n)", doc, re.MULTILINE)
-    if not match:
+    if not (match := re.search(rf"(^\s*){param}\s*:.*?\n", doc, re.MULTILINE)):
         raise ValueError(
             f'Parameter "{param}" is missing from the docstring or its format is '
             "invalid."
         )
-    header = match.group(1)
 
     # Determine the indentation of the header line.
-    indent = len(header) - len(header.lstrip())
+    indent = match.group(1)
 
     # Find the next line with the same or less indentation, which indicates the next
     # parameter or the end of the "Parameters" section.
-    end = match.end()
-    after = doc[end:]
-    match = re.search(rf"(^\s{{0,{indent}}}[^\s].*?$)", after, re.MULTILINE)
+    after = doc[(end := match.end()) :]
+    match = re.search(rf"^{indent}(\S|$)", after, re.MULTILINE)
 
     # Determine the insertion point.
-    insert = end + (match.start() if match else len(after))
+    pos = end + (match.start() if match else len(after))
 
     # Insert the message. It should have 1+ indentation level (i.e., 4 spaces) than
     # the header line.
-    return f"{doc[:insert].rstrip()}\n\n{" " * (indent + 4)}{note}\n{doc[insert:]}"
+    return f"{doc[:pos].rstrip()}\n\n{indent}    {note}\n{doc[pos:]}"
