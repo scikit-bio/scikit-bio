@@ -14,7 +14,6 @@ from collections import defaultdict, deque
 
 import numpy as np
 import pandas as pd
-import scipy.spatial.distance as spdist
 
 from skbio._base import SkbioObject
 from skbio.stats.distance import DistanceMatrix
@@ -35,6 +34,12 @@ from skbio.util._decorator import (
 )
 from skbio.util._warning import _warn_deprecated
 from skbio.io.registry import Read, Write
+from ._compare import (
+    _check_dist_metric,
+    _check_shuffler,
+    _topo_dists,
+    _path_dists,
+)
 
 
 # ----------------------------------------------------------------------------
@@ -1979,8 +1984,8 @@ class TreeNode(SkbioObject):
                         node.remove(child, uncache=False)
                     node.extend([ind, interm], uncache=False)
 
-    def shuffle(self, k=None, names=None, shuffle_f=None, n=1):
-        r"""Shuffled tip names of the tree.
+    def shuffle(self, k=None, names=None, shuffler=None, n=1, **kwargs):
+        r"""Randomly shuffle tip names of the tree.
 
         Parameters
         ----------
@@ -1990,7 +1995,7 @@ class TreeNode(SkbioObject):
             Conflicts with ``names``.
         names : list, optional
             The specific tip names to shuffle. Conflicts with ``k``.
-        shuffle_f : int, np.random.Generator or callable, optional
+        shuffler : int, np.random.Generator or callable, optional
             Shuffling function, which must accept a list and modify in place. Default
             is the :meth:`shuffle <numpy.random.Generator.shuffle>` method of a NumPy
             random generator. If an integer is provided, a random generator will be
@@ -1999,6 +2004,8 @@ class TreeNode(SkbioObject):
             .. versionchanged:: 0.6.3
                 Switched to NumPy's new random generator. Can accept a random seed or
                 random generator instance.
+
+                Renamed from ``shuffle_f``. The old name is kept as an alias.
 
         n : int, optional
             The number of iterations to perform. Must be a positive integer. Default
@@ -2064,9 +2071,12 @@ class TreeNode(SkbioObject):
         elif n < 1:
             raise ValueError("n must be > 0.")
 
+        # renamed parameter
+        if shuffler is None and "shuffle_f" in kwargs:
+            shuffler = kwargs["shuffle_f"]
+
         # determine shuffling function
-        if not callable(shuffle_f):
-            shuffle_f = get_rng(shuffle_f).shuffle
+        shuffler = _check_shuffler(shuffler)
 
         # determine tip names to shuffle
         if names is not None:
@@ -2074,7 +2084,7 @@ class TreeNode(SkbioObject):
         else:
             tips = list(self.tips())
             if k is not None:
-                shuffle_f(tips)
+                shuffler(tips)
                 tips = tips[:k]
             names = [x.name for x in tips]
 
@@ -2084,7 +2094,7 @@ class TreeNode(SkbioObject):
         # iteratively shuffle tip names and yield tree
         counter = 0
         while counter < n:
-            shuffle_f(names)
+            shuffler(names)
             for tip, name in zip(tips, names):
                 tip.name = name
             yield self
@@ -3164,7 +3174,7 @@ class TreeNode(SkbioObject):
         self,
         within=None,
         include_full=False,
-        include_single=False,
+        include_tips=False,
         map_to_length=False,
     ):
         r"""Return all subsets of taxa defined by nodes descending from self.
@@ -3183,7 +3193,7 @@ class TreeNode(SkbioObject):
 
             .. versionadded:: 0.6.3
 
-        include_single : bool, optional
+        include_tips : bool, optional
             Whether to include subsets with only one taxon in the result. Default is
             False, as such sets provide no topological information.
 
@@ -3259,8 +3269,9 @@ class TreeNode(SkbioObject):
         False
 
         """
-        if within and not isinstance(within, (set, frozenset, dict)):
-            within = frozenset(within)
+        if not (getall := within is None):
+            if not isinstance(within, (set, frozenset, dict)):
+                within = frozenset(within)
 
         # initiate result
         subsets = []
@@ -3277,7 +3288,7 @@ class TreeNode(SkbioObject):
         for node in self.postorder(include_self=True):
             # tip: create a one-taxon set
             if not node.children:
-                if not within or node.name in within:
+                if getall or node.name in within:
                     subset = frozenset([node.name])
                 else:
                     subset = frozenset()
@@ -3290,7 +3301,7 @@ class TreeNode(SkbioObject):
                     del child._subset
 
             # add to result
-            if subset and (include_single or len(subset) > 1):
+            if subset and (include_tips or len(subset) > 1):
                 if subset != last:
                     subsets_append(last := subset)
                     if map_to_length:
@@ -3428,7 +3439,7 @@ class TreeNode(SkbioObject):
             bipart, _ = sorted([bipart, full - bipart], key=sorted)
         return bipart
 
-    def biparts(self, within=None, include_single=False, map_to_length=False):
+    def biparts(self, within=None, include_tips=False, map_to_length=False, full=None):
         r"""Return all bipartitions within the tree under self.
 
         .. versionadded:: 0.6.3
@@ -3438,13 +3449,16 @@ class TreeNode(SkbioObject):
         within : iterable of str, optional
             A custom set of taxa to refine the result. Only taxa within it will be
             considered. If None (default), all taxa in the tree will be considered.
-        include_single : bool, optional
+        include_tips : bool, optional
             Whether to include bipartitions with only one taxon at either side.
             Default is False, as such bipartitions provide no topological
             information.
         map_to_length : bool, optional
             If True, return a mapping of subsets to their branch lengths. Missing
             branch lengths will be replaced with 0. Default is False.
+        full : frozenset of str, optional
+            Pre-computed full set of taxa of the current tree. Providing this parameter
+            can save one tree traversal from computing.
 
         Returns
         -------
@@ -3527,8 +3541,9 @@ class TreeNode(SkbioObject):
 
         """
         # identify full set (universe)
-        full = self.subset()
-        if within:
+        if full is None:
+            full = self.subset()
+        if not (getall := within is None):
             if not isinstance(within, (set, frozenset)):
                 within = frozenset(within)
             full &= within
@@ -3545,7 +3560,7 @@ class TreeNode(SkbioObject):
         for node in self.postorder(include_self=False):
             # tip: create a one-taxon set
             if not node.children:
-                if not within or node.name in full:
+                if getall or node.name in full:
                     bipart = frozenset([node.name])
                 else:
                     bipart = frozenset()
@@ -3582,7 +3597,7 @@ class TreeNode(SkbioObject):
                             flip = True
 
             # add to result
-            if bipart and (include_single or len(bipart) > 1):
+            if bipart and (include_tips or len(bipart) > 1):
                 if map_to_length:
                     biparts[bipart] = biparts_get(bipart, 0.0) + (node.length or 0.0)
                 else:
@@ -4473,107 +4488,10 @@ class TreeNode(SkbioObject):
         # Skip validation as all items to validate are guaranteed.
         return DistanceMatrix(result, taxa, validate=False)
 
-    def _compare_topology(
-        self,
-        other,
-        method="subsets",
-        shared_only=True,
-        proportion=False,
-        symmetric=True,
-        include_single=False,
-        weighted=False,
-        metric="euclidean",
-    ):
-        r"""Calculate the topological difference between self and other.
-
-        This function calculates the Robinson-Foulds (RF) distance or its derivates.
-
-        Parameters
-        ----------
-        other : TreeNode
-            The other tree to compare with.
-        method : str, optional
-            Subsets or bipartitions.
-        shared_only : bool, optional
-            Refine to shared taxa.
-        proportion : bool, optional
-            Normalize to fraction.
-        symmetric : bool, optional
-            Symmetric difference.
-        include_single : bool, optional
-            Include singletons.
-        weighted : bool, optional
-            Weight by branch length.
-        metric : str or callable, optional
-            Pairwise distance metric.
-
-        Returns
-        -------
-        float
-            Difference between self and other.
-
-        See Also
-        --------
-        compare_rfd
-        compare_wrfd
-        compare_subsets
-        compare_biparts
-
-        """
-        topo1, topo2 = getattr(self, method), getattr(other, method)
-        kwargs = dict(include_single=include_single, map_to_length=weighted)
-        if shared_only:
-            set1, set2 = self.subset(), other.subset()
-            n_shared = len(shared := set1 & set2)
-            if len(set1) > n_shared:
-                sets1 = topo1(within=shared, **kwargs)
-            else:
-                sets1 = topo1(**kwargs)
-            if len(set2) > n_shared:
-                sets2 = topo2(within=shared, **kwargs)
-            else:
-                sets2 = topo2(**kwargs)
-        else:
-            sets1, sets2 = topo1(**kwargs), topo2(**kwargs)
-
-        # unweighted (set difference)
-        if not weighted:
-            if symmetric:
-                result = sets1.symmetric_difference(sets2)
-            else:
-                result = sets1.difference(sets2)
-            result = len(result)
-
-            # normalize result to unit range [0, 1]
-            # if total is 0, return 1 (dist = 1 means saturation)
-            if proportion:
-                total = len(sets1) + (symmetric and len(sets2))
-                result = result / total if total else 1.0
-
-            # cast result to float
-            else:
-                result = float(result)
-
-        # branch length weighted (vector distance)
-        else:
-            union = frozenset(sets1).union(sets2)
-            L1 = [sets1.get(x, 0.0) for x in union]
-            L2 = [sets2.get(x, 0.0) for x in union]
-            if isinstance(metric, str):
-                result = getattr(spdist, metric)(L1, L2)
-            else:
-                result = metric(L1, L2)
-
-        return result
-
-    def compare_subsets(
-        self,
-        other,
-        shared_only=False,
-        proportion=True,
-        symmetric=True,
-        exclude_absent_taxa=False,
-    ):
+    @params_aliased(
+        [ParamAlias("shared_only", "exclude_absent_taxa", since="0.6.3", warn=True)]
+    )
+    def compare_subsets(self, other, shared_only=False, proportion=True):
         r"""Calculate the difference of subsets between two trees.
 
         Parameters
@@ -4582,24 +4500,11 @@ class TreeNode(SkbioObject):
             The other tree to compare with.
         shared_only : bool, optional
             Only consider taxa shared with the other tree. Default is False.
-
-            .. versionadded:: 0.6.3
-
         proportion : bool, optional
             Whether to return count (False) or proportion (True, default) of different
             subsets.
 
             .. versionadded:: 0.6.3
-
-        symmetric : bool, optional
-            Whether to calculate the symmetric difference between self and other (True,
-            default), or only the difference from self to other (False).
-
-            .. versionadded:: 0.6.3
-
-        exclude_absent_taxa : bool, optional
-            Alias of ``shared_only`` for backward compatibility. Deprecated and to be
-            removed in a future release.
 
         Returns
         -------
@@ -4625,12 +4530,12 @@ class TreeNode(SkbioObject):
         0.5
 
         """
-        shared_only |= exclude_absent_taxa
-        return self._compare_topology(
-            other, "subsets", shared_only, proportion, symmetric
-        )
+        # renamed parameter
+        if shared_only is False and "exclude_absent_taxa" in kwargs:
+            shared_only = kwargs["exclude_absent_taxa"]
+        return _topo_dists((self, other), True, shared_only, proportion)[0]
 
-    def compare_biparts(self, other, proportion=True, symmetric=True):
+    def compare_biparts(self, other, proportion=True):
         r"""Calculate the difference of bipartitions between two trees.
 
         .. versionadded:: 0.6.3
@@ -4642,9 +4547,6 @@ class TreeNode(SkbioObject):
         proportion : bool, optional
             Whether to return count (False) or proportion (True, default) of different
             bipartitions.
-        symmetric : bool, optional
-            Whether to calculate the symmetric difference between self and other (True,
-            default), or only the difference from self to other (False).
 
         Returns
         -------
@@ -4672,7 +4574,7 @@ class TreeNode(SkbioObject):
         0.0
 
         """
-        return self._compare_topology(other, "biparts", True, proportion, symmetric)
+        return _topo_dists((self, other), False, True, proportion)[0]
 
     def compare_rfd(self, other, proportion=False, rooted=None):
         r"""Calculate Robinson-Foulds distance between two trees.
@@ -4739,7 +4641,7 @@ class TreeNode(SkbioObject):
         compare_wrfd
         compare_subsets
         compare_biparts
-        compare_cophenet
+        skbio.tree.rf_dists
 
         References
         ----------
@@ -4793,10 +4695,9 @@ class TreeNode(SkbioObject):
         """
         if rooted is None:
             rooted = self.parent is not None or len(self.children) == 2
-        method = "subsets" if rooted else "biparts"
-        return self._compare_topology(other, method, proportion=proportion)
+        return _topo_dists((self, other), rooted, proportion=proportion)[0]
 
-    def compare_wrfd(self, other, metric="cityblock", rooted=None, include_single=True):
+    def compare_wrfd(self, other, metric="cityblock", rooted=None, include_tips=True):
         r"""Calculate weighted Robinson-Foulds distance or variants between two trees.
 
         .. versionadded:: 0.6.3
@@ -4806,9 +4707,9 @@ class TreeNode(SkbioObject):
         other : TreeNode
             The other tree to compare with.
         metric : str or callable, optional
-            The pairwise distance metric to use. Can be a preset, a distance function
-            name under :mod:`scipy.spatial.distance`, or a custom function that takes
-            two vectors and returns a number. Some notable options are:
+            The distance metric to use. Can be a preset, a distance function name under
+            :mod:`scipy.spatial.distance`, or a custom function that takes two vectors
+            and returns a number. Some notable options are:
 
             - "cityblock" (default): City block (Manhattan) distance. The result
               matches the original weighted Robinson-Foulds distance [1]_.
@@ -4825,7 +4726,7 @@ class TreeNode(SkbioObject):
             this will be determined based on whether self is rooted. However, one
             can override it by explicitly setting True (rooted) or False (unrooted).
             See :meth:`compare_rfd` for details.
-        include_single : bool, optional
+        include_tips : bool, optional
             Whether to include single-taxon biparitions (terminal branches) in the
             calculation. Default is True, such that all branches in the trees are
             considered. Set this as False if terminal branch lengths are absent or
@@ -4839,12 +4740,12 @@ class TreeNode(SkbioObject):
         Notes
         -----
         The Robinson-Foulds (RF) distance may be weighted by the branch lengths of
-        biparitions to account for evolutionary distances in addition to branching
+        bipartitions to account for evolutionary distances in addition to branching
         patterns.
 
         The default behavior of this method calculates the original weighted RF (wRF)
         distance [1]_, which is the sum of differences of branch lengths of matching
-        biparitions. Bipartitions unique to one tree are given a length of 0 in the
+        bipartitions. Bipartitions unique to one tree are given a length of 0 in the
         other tree during calculation.
 
         .. math::
@@ -4872,6 +4773,7 @@ class TreeNode(SkbioObject):
         --------
         compare_rfd
         compare_cophenet
+        skbio.tree.wrf_dists
 
         References
         ----------
@@ -4934,23 +4836,21 @@ class TreeNode(SkbioObject):
 
         Calculate the KF distance without considering terminal branches.
 
-        >>> d = tree1.compare_wrfd(tree2, metric="euclidean", include_single=False)
+        >>> d = tree1.compare_wrfd(tree2, metric="euclidean", include_tips=False)
         >>> print(round(d, 5))
         3.74166
 
         """
         if rooted is None:
             rooted = self.parent is not None or len(self.children) == 2
-        method = "subsets" if rooted else "biparts"
-        half = False
-        if metric == "unitcorr":
-            metric, half = "correlation", True
-        result = self._compare_topology(
-            other, method, include_single=include_single, weighted=True, metric=metric
-        )
-        if half:
-            result *= 0.5
-        return result
+        metric = _check_dist_metric(metric)
+        return _topo_dists(
+            (self, other),
+            rooted=rooted,
+            include_tips=include_tips,
+            weighted=True,
+            metric=metric,
+        )[0]
 
     @aliased("compare_tip_distances", since="0.6.3")
     def compare_cophenet(
@@ -4961,8 +4861,7 @@ class TreeNode(SkbioObject):
         shuffler=None,
         use_length=True,
         ignore_self=False,
-        dist_f=None,
-        shuffle_f=None,
+        **kwargs,
     ):
         r"""Calculate the distance between two trees based on cophenetic distances.
 
@@ -4974,9 +4873,9 @@ class TreeNode(SkbioObject):
             Randomly subsample this number of tips in common between the trees to
             compare. This is useful when comparing very large trees.
         metric : str or callable, optional
-            The pairwise distance metric to use. Can be a preset, a distance function
-            name under :mod:`scipy.spatial.distance`, or a custom function that takes
-            two vectors and returns a number. Some notable options are:
+            The distance metric to use. Can be a preset, a distance function name under
+            :mod:`scipy.spatial.distance`, or a custom function that takes two vectors
+            and returns a number. Some notable options are:
 
             - "cityblock": City block (Manhattan) distance.
             - "euclidean": Euclidean distance. The result matches the path-length
@@ -4992,15 +4891,18 @@ class TreeNode(SkbioObject):
                 instances. The default value "unitcorr" is consistent with the previous
                 default behavior.
 
+                Renamed from ``dist_f``. The old name is kept as an alias.
+
         shuffler : int, np.random.Generator or callable, optional
-            The shuffling function to use if ``sample`` is specified. Default is the
-            :meth:`shuffle <numpy.random.Generator.shuffle>` method of a NumPy random
-            generator. If an integer is provided, a random generator will be
-            constructed using this number as the seed.
+            The shuffling function to use if ``sample`` is specified. Default is
+            :meth:`~numpy.random.Generator.shuffle`. If an integer is provided, a
+            random generator will be constructed using this number as the seed.
 
             .. versionchanged:: 0.6.3
                 Switched to NumPy's new random generator. Can accept a random seed or
                 random generator instance.
+
+                Renamed from ``shuffle_f``. The old name is kept as an alias.
 
         use_length : bool, optional
             Whether to calculate the sum of branch lengths (True, default) or the
@@ -5015,13 +4917,6 @@ class TreeNode(SkbioObject):
             .. versionadded:: 0.6.3
 
             .. note:: The default value will be set as True in 0.7.0.
-
-        dist_f : str or callable, optional
-            Alias of ``metric`` for backward compatibility. Deprecated and to be
-            removed in a future release.
-        shuffle_f : int, np.random.Generator or callable, optional
-            Alias of ``shuffler`` for backward compatibility. Deprecated and to be
-            removed in a future release.
 
         Returns
         -------
@@ -5046,6 +4941,7 @@ class TreeNode(SkbioObject):
         cophenet
         compare_rfd
         compare_wrfd
+        skbio.tree.path_dists
 
         Notes
         -----
@@ -5154,47 +5050,25 @@ class TreeNode(SkbioObject):
                 )
                 func.warned = True
 
-        if dist_f is not None:
-            metric = dist_f
-        if shuffle_f is not None:
-            shuffler = shuffle_f
+        # renamed parameters
+        if kwargs:
+            if shuffler is None and "shuffle_f" in kwargs:
+                shuffler = kwargs["shuffle_f"]
+            if metric == "unitcorr" and "dist_f" in kwargs:
+                metric = kwargs["dist_f"]
 
-        tipmap1 = {n.name: n for n in self.tips()}
-        tipmap2 = {n.name: n for n in other.tips()}
-        shared = list(frozenset(tipmap1).intersection(tipmap2))
-        if not shared:
-            raise ValueError("No tips are in common between the two trees.")
-
+        metric = _check_dist_metric(metric)
         if sample is not None:
-            if not callable(shuffler):
-                shuffler = get_rng(shuffler).shuffle
-            shuffler(shared)
-            shared = shared[:sample]
+            shuffler = _check_shuffler(shuffler)
 
-        tips1 = [tipmap1[x] for x in shared]
-        tips2 = [tipmap2[x] for x in shared]
-
-        dm1 = self.cophenet(endpoints=tips1, use_length=use_length)
-        dm2 = other.cophenet(endpoints=tips2, use_length=use_length)
-
-        if ignore_self:
-            dm1 = dm1.condensed_form()
-            dm2 = dm2.condensed_form()
-        else:
-            dm1 = dm1.data.flat
-            dm2 = dm2.data.flat
-
-        half = False
-        if isinstance(metric, str):
-            if metric == "unitcorr":
-                metric, half = spdist.correlation, True
-            else:
-                metric = getattr(spdist, metric)
-        result = metric(dm1, dm2)
-        if half:
-            result *= 0.5
-
-        return result
+        return _path_dists(
+            trees=(self, other),
+            sample=sample,
+            metric=metric,
+            shuffler=shuffler,
+            use_length=use_length,
+            ignore_self=ignore_self,
+        )[0]
 
     compare_tip_distances = compare_cophenet
 

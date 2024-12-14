@@ -965,25 +965,30 @@ class TreeTests(TestCase):
         # specify a random generator to make results deterministic
         rng = np.random.default_rng(42)
         t = self.simple_t.copy()
-        obs = str(next(t.shuffle(shuffle_f=rng)))
+        obs = str(next(t.shuffle(shuffler=rng)))
         exp = "((d,c)i1,(b,a)i2)root;\n"
         self.assertEqual(obs, exp)
 
         # can also specify a random seed; result is the same
         t = self.simple_t.copy()
-        obs = str(next(t.shuffle(shuffle_f=42)))
+        obs = str(next(t.shuffle(shuffler=42)))
         self.assertEqual(obs, exp)
 
         # can also supply a function; result is the same
         t = self.simple_t.copy()
         f = np.random.default_rng(42).shuffle
-        obs = str(next(t.shuffle(shuffle_f=f)))
+        obs = str(next(t.shuffle(shuffler=f)))
+        self.assertEqual(obs, exp)
+
+        # renamed parameter
+        t = self.simple_t.copy()
+        obs = str(next(t.shuffle(shuffle_f=42)))
         self.assertEqual(obs, exp)
 
         # yield a row of 5 trees
         rng = np.random.default_rng(42)
         t = self.simple_t.copy()
-        obs = list(map(str, t.shuffle(shuffle_f=rng, n=5)))
+        obs = list(map(str, t.shuffle(shuffler=rng, n=5)))
         self.assertEqual(len(obs), 5)
         exp = ["((d,c)i1,(b,a)i2)root;\n",
                "((a,b)i1,(d,c)i2)root;\n",
@@ -995,7 +1000,7 @@ class TreeTests(TestCase):
         # yield infinitely
         rng = np.random.default_rng(42)
         t = self.simple_t.copy()
-        gen = t.shuffle(shuffle_f=rng, n=None)
+        gen = t.shuffle(shuffler=rng, n=None)
         obs = [str(next(gen)) for i in range(100)]
         self.assertListEqual(obs[:5], exp)
 
@@ -1010,13 +1015,13 @@ class TreeTests(TestCase):
 
         # apply a simple function
         t = self.simple_t.copy()
-        obs = str(next(t.shuffle(shuffle_f=rev_f)))
+        obs = str(next(t.shuffle(shuffler=rev_f)))
         exp = "((d,c)i1,(b,a)i2)root;\n"
         self.assertEqual(obs, exp)
 
         # specify names to shuffle
         t = self.simple_t.copy()
-        obs = list(map(str, t.shuffle(names=list("abc"), shuffle_f=rotate_f, n=4)))
+        obs = list(map(str, t.shuffle(names=list("abc"), shuffler=rotate_f, n=4)))
         exp = ["((c,a)i1,(b,d)i2)root;\n",
                "((b,c)i1,(a,d)i2)root;\n",
                "((a,b)i1,(c,d)i2)root;\n",
@@ -1025,7 +1030,7 @@ class TreeTests(TestCase):
 
         # specify number of names to shuffle
         t = self.simple_t.copy()
-        obs = list(map(str, t.shuffle(k=2, shuffle_f=rev_f, n=5)))
+        obs = list(map(str, t.shuffle(k=2, shuffler=rev_f, n=5)))
         exp = ["((a,b)i1,(d,c)i2)root;\n",
                "((a,b)i1,(c,d)i2)root;\n",
                "((a,b)i1,(d,c)i2)root;\n",
@@ -1035,7 +1040,7 @@ class TreeTests(TestCase):
 
         # a complex example
         obs = list(map(str, self.complex_tree.shuffle(
-            shuffle_f=rev_f, names=["c", "d", "e", "f"], n=4)))
+            shuffler=rev_f, names=["c", "d", "e", "f"], n=4)))
         exp = ["(((a,b)int1,(x,y,(w,z)int2,(f,e)int3)int4),(d,c)int5);\n",
                "(((a,b)int1,(x,y,(w,z)int2,(c,d)int3)int4),(e,f)int5);\n",
                "(((a,b)int1,(x,y,(w,z)int2,(f,e)int3)int4),(d,c)int5);\n",
@@ -1505,7 +1510,7 @@ class TreeTests(TestCase):
             self.assertFalse(hasattr(node, "_subset"))
 
         # include singles
-        self.assertSetEqual(t.subsets(include_single=True), frozenset(
+        self.assertSetEqual(t.subsets(include_tips=True), frozenset(
             [frozenset("ab"), frozenset("cd"), frozenset("a"), frozenset("b"),
              frozenset("c"), frozenset("d")]))
 
@@ -1527,6 +1532,11 @@ class TreeTests(TestCase):
         t = TreeNode.read(['(((a,b),(c,d)),e);'])
         self.assertSetEqual(t.subsets(within="abcd"), frozenset(
             [frozenset("ab"), frozenset("cd")]))
+
+        # nothing to include
+        self.assertFalse(t.subsets(within=set()))
+        self.assertFalse(t.subsets(within=""))
+        self.assertFalse(t.subsets(within="xyz"))
 
     def test_bipart(self):
         """Return a set of tip names on the smaller side of the branch."""
@@ -1599,12 +1609,16 @@ class TreeTests(TestCase):
             frozenset({"a", "b"})}))
 
         # include singletons (tips)
-        self.assertSetEqual(t.biparts(include_single=True), frozenset({
+        self.assertSetEqual(t.biparts(include_tips=True), frozenset({
             frozenset({"a", "b"}),
             frozenset({"a"}),
             frozenset({"b"}),
             frozenset({"c"}),
             frozenset({"d"})}))
+
+        # full set pre-computed
+        self.assertSetEqual(t.biparts(full=t.subset()), frozenset({
+            frozenset({"a", "b"})}))
 
         # map to length ("abc" crosses the root)
         t = TreeNode.read(["(((a:1,b:2):1,c:3):2,((d:4,e:5):2,f:6):2);"])
@@ -1624,6 +1638,11 @@ class TreeTests(TestCase):
         t = TreeNode.read(['(((a,b),(c,d)),e);'])
         self.assertSetEqual(t.biparts(within="abcd"), frozenset(
             [frozenset("ab")]))
+
+        # nothing to include
+        self.assertFalse(t.biparts(within=set()))
+        self.assertFalse(t.biparts(within=""))
+        self.assertFalse(t.biparts(within="xyz"))
 
     def test_assign_supports(self):
         """Extract support values of internal nodes."""
@@ -2156,7 +2175,7 @@ class TreeTests(TestCase):
 
         # no terminal branches (matches ape::dist.topo with method="score")
         self.assertAlmostEqual(t1.compare_wrfd(
-            t2, metric="euclidean", include_single=False), 3.7416574)
+            t2, metric="euclidean", include_tips=False), 3.7416574)
 
         # force rooted (considers subsets not bipartitions)
         self.assertAlmostEqual(t1.compare_wrfd(t2, rooted=True), 18)
@@ -2200,9 +2219,6 @@ class TreeTests(TestCase):
         result = t.compare_subsets(t4, shared_only=True)
         self.assertEqual(result, 0)
 
-        result = t.compare_subsets(t4, symmetric=False)
-        self.assertEqual(result, 0.5)
-
         result = t.compare_subsets(self.TreeRoot, exclude_absent_taxa=True)
         self.assertEqual(result, 1)
 
@@ -2229,9 +2245,6 @@ class TreeTests(TestCase):
 
         result = t.compare_biparts(t3, proportion=False)
         self.assertEqual(result, 2)
-
-        result = t.compare_biparts(t3, proportion=False, symmetric=False)
-        self.assertEqual(result, 1)
 
         result = t.compare_biparts(self.TreeRoot)
         self.assertEqual(result, 1)
@@ -2267,6 +2280,10 @@ class TreeTests(TestCase):
         self.assertAlmostEqual(obs, exp)
         obs = tx.compare_cophenet(t2x, sample=3, shuffle_f=list.sort)
         self.assertAlmostEqual(obs, exp)
+
+        # sample too large
+        with self.assertRaises(ValueError):
+            tx.compare_cophenet(t2x, sample=10)
 
         # no common taxa
         t3 = TreeNode.read(["(((Z:1,Y:1,X:1):2,W:3):1,V:4);"])
