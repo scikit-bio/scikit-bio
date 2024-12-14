@@ -244,6 +244,6 @@ __all__ = [
 ]
 
 from sys import modules
-from skbio.util._decorator import add_aliases
+from skbio.util._decorator import register_aliases
 
-add_aliases(modules[__name__])
+register_aliases(modules[__name__])

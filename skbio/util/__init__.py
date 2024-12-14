@@ -30,6 +30,21 @@ Plotting utilities
    PlottableMixin
 
 
+Decorators
+----------
+
+.. autosummary::
+   :toctree: generated/
+
+   overrides
+   classproperty
+   classonlymethod
+   aliased
+   register_aliases
+   params_aliased
+   ParamAlias
+
+
 Miscellaneous utilities
 -----------------------
 
@@ -42,7 +57,6 @@ Generally useful functionality that doesn't fit in more specific locations.
    cardinal_to_ordinal
    find_duplicates
    safe_md5
-   classproperty
 
 """  # noqa: D412, D416, D205, D415
 
@@ -61,7 +75,15 @@ from ._testing import (
     assert_data_frame_almost_equal,
     pytestrunner,
 )
-from ._decorator import classproperty
+from ._decorator import (
+    overrides,
+    classproperty,
+    classonlymethod,
+    aliased,
+    register_aliases,
+    ParamAlias,
+    params_aliased,
+)
 from ._plotting import PlottableMixin
 
 __all__ = [
@@ -72,7 +94,13 @@ __all__ = [
     "get_data_path",
     "assert_ordination_results_equal",
     "assert_data_frame_almost_equal",
-    "classproperty",
     "pytestrunner",
     "PlottableMixin",
+    "overrides",
+    "classproperty",
+    "classonlymethod",
+    "aliased",
+    "register_aliases",
+    "ParamAlias",
+    "params_aliased",
 ]

@@ -27,7 +27,7 @@ from skbio.tree._exception import (
 from skbio.util import get_rng
 from skbio.util._decorator import (
     classonlymethod,
-    add_aliases,
+    register_aliases,
     aliased,
     ParamAlias,
     params_aliased,
@@ -51,7 +51,7 @@ from ._compare import (
 # ----------------------------------------------------------------------------
 
 
-@add_aliases
+@register_aliases
 class TreeNode(SkbioObject):
     r"""Represent a node within a tree.
 
@@ -5174,8 +5174,6 @@ class TreeNode(SkbioObject):
             for key in ("_tip_cache", "_non_tip_cache"):
                 if hasattr(tree, key):
                     delattr(tree, key)
-
-    invalidate_caches = clear_caches  # alias; to be removed in a future version
 
     def cache_attr(self, func, cache_attrname, cache_type=list, register=True):
         r"""Cache attributes on nodes of the tree through a postorder traversal.
