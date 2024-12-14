@@ -6,12 +6,12 @@
 # The full license is in the file LICENSE.txt, distributed with this software.
 # ----------------------------------------------------------------------------
 
-import re
 from functools import wraps
 from collections import namedtuple
 
 from ._exception import OverrideError
 from ._warning import _warn_renamed
+from ._misc import note_into_doc, note_into_doc_param
 
 
 def _alias_msg(name, since=None, until=None, warn=False):
@@ -29,47 +29,6 @@ def _alias_msg(name, since=None, until=None, warn=False):
                 msg += f" and will be removed in {until}"
         msg += "."
     return msg
-
-
-def _msg_into_doc(msg, doc):
-    """Insert a message into a docstring under the description.
-
-    Parameters
-    ----------
-    msg : str
-        Message to insert.
-    doc : str
-        Docstring to modify.
-
-    Returns
-    -------
-    str
-        Modified docstring.
-
-    """
-    # no docstring: message becomes the entire docstring.
-    if doc is None:
-        return msg + "\n"
-
-    lines = doc.splitlines()
-    n = len(lines)
-
-    # find indentation size, which is important for the docstring to be rendered
-    indent = 0
-    for line in lines[1:]:
-        if line:
-            indent = len(line) - len(line.lstrip())
-            break
-
-    indent = " " * indent
-
-    # docstring has at least two paragraphs: insert message after the first paragraph
-    for i in range(1, n):
-        if not lines[i]:
-            return "\n".join(lines[:i] + ["", indent + msg] + lines[i:])
-
-    # docstring has only one paragraph: append message to the end of docstring
-    return doc + "\n" + indent + msg + "\n"
 
 
 def aliased(name, since=None, until=None, warn=False):
@@ -135,7 +94,7 @@ def add_aliases(cls):
         setattr(cls, name, wrapper)
 
         msg = _alias_msg(name, since, until, warn)
-        func.__doc__ = _msg_into_doc(msg, func.__doc__)
+        func.__doc__ = note_into_doc(msg, func.__doc__)
 
     return cls
 
@@ -146,55 +105,6 @@ ParamAlias = namedtuple(
     ["param", "alias", "since", "until", "warn"],
     defaults=[None, None, False],
 )
-
-
-def _param_msg_into_doc(param, msg, doc):
-    """Insert a message into a docstring under the description of a parameter.
-
-    Parameters
-    ----------
-    param : str
-        Target parameter.
-    msg : str
-        Message to insert.
-    doc : str
-        Docstring to modify.
-
-    Returns
-    -------
-    str
-        Modified docstring.
-
-    Raises
-    ------
-    ValueError
-        Parameter is missing or its format is invalid.
-
-    """
-    # Find the header line of the parameter.
-    match = re.search(rf"(^\s*{param}\s*:.*?\n)", doc, re.MULTILINE)
-    if not match:
-        raise ValueError(
-            f'Parameter "{param}" is missing from the docstring or its format is '
-            "invalid."
-        )
-    header = match.group(1)
-
-    # Determine the indentation of the header line.
-    indent = len(header) - len(header.lstrip())
-
-    # Find the next line with the same or less indentation, which indicates the next
-    # parameter or the end of the "Parameters" section.
-    end = match.end()
-    after = doc[end:]
-    match = re.search(rf"(^\s{{0,{indent}}}[^\s].*?$)", after, re.MULTILINE)
-
-    # Determine the insertion point.
-    insert = end + (match.start() if match else len(after))
-
-    # Insert the message. It should have 1+ indentation level (i.e., 4 spaces) than
-    # the header line.
-    return doc[:insert] + "\n" + " " * (indent + 4) + msg + "\n\n" + doc[insert:]
 
 
 def params_aliased(params=[]):
@@ -221,7 +131,7 @@ def params_aliased(params=[]):
     def decorator(func):
         for param, alias, since, until, warn in params:
             msg = _alias_msg(alias, since, until, warn)
-            func.__doc__ = _param_msg_into_doc(param, msg, func.__doc__)
+            func.__doc__ = note_into_doc_param(msg, func.__doc__, param)
 
         @wraps(func)
         def wrapper(*args, **kwargs):

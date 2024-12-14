@@ -13,8 +13,17 @@ import re
 import numpy as np
 import numpy.testing as npt
 
-from skbio.util import cardinal_to_ordinal, safe_md5, find_duplicates, get_rng
-from skbio.util._misc import MiniRegistry, chunk_str, resolve_key
+from skbio.util._misc import (
+    cardinal_to_ordinal,
+    safe_md5,
+    find_duplicates,
+    MiniRegistry,
+    chunk_str,
+    resolve_key,
+    get_rng,
+    note_into_doc,
+    note_into_doc_param,
+)
 
 
 class TestMiniRegistry(unittest.TestCase):
@@ -317,6 +326,98 @@ class TestGetRng(unittest.TestCase):
         with self.assertRaises(ValueError) as cm:
             get_rng('hello')
         self.assertEqual(str(cm.exception), msg)
+
+
+class TestDocstring(unittest.TestCase):
+    def setUp(self):
+        self.docstring = """An example function.
+
+        Here is an example function with a typical docstring.
+
+        Parameters
+        ----------
+        param1 : int
+            The first parameter.
+        param2 : str, optional
+            The second parameter.
+
+        Returns
+        -------
+        float
+            The return value.
+
+        """
+
+    def test_note_into_doc(self):
+        note = ".. note:: This is a note.\n"
+
+        # normal case
+        obs = note_into_doc(note, self.docstring)
+        exp = """An example function.
+
+        .. note:: This is a note.
+
+        Here is an example function with a typical docstring.
+
+        """
+        self.assertIn(exp, obs)
+
+        # no docstring
+        obs = note_into_doc(note, "")
+        self.assertEqual(obs, note)
+
+        # single-line docstring
+        obs = note_into_doc(note, "Hello!")
+        self.assertEqual(obs, f"Hello!\n\n{note}")
+        obs = note_into_doc(note, "Hello!\n")
+        self.assertEqual(obs, f"Hello!\n\n{note}")
+
+        # single-paragraph docstring
+        obs = note_into_doc(note, "Hello!\nHello!\nHello!\n")
+        self.assertEqual(obs, f"Hello!\nHello!\nHello!\n\n{note}")
+
+        # single-paragraph docstring with indentation
+        doc = """Hello! I am the
+            header paragraph.
+            """
+        obs = note_into_doc(note, doc)
+        exp = """Hello! I am the
+            header paragraph.
+
+            .. note:: This is a note.
+            """
+        self.assertEqual(obs, exp)
+
+    def test_note_into_doc_param(self):
+        note = ".. note:: This is a note."
+
+        # first parameter
+        obs = note_into_doc_param(note, self.docstring, "param1")
+        exp = """
+        param1 : int
+            The first parameter.
+
+            .. note:: This is a note.
+
+        param2 : str, optional
+        """
+        self.assertIn(exp, obs)
+
+        # last parameter
+        obs = note_into_doc_param(note, self.docstring, "param2")
+        exp = """
+        param2 : str, optional
+            The second parameter.
+
+            .. note:: This is a note.
+
+        Returns
+        """
+        self.assertIn(exp, obs)
+
+        # missing parameter
+        with self.assertRaises(ValueError):
+            note_into_doc_param(note, self.docstring, "param3")
 
 
 if __name__ == '__main__':
