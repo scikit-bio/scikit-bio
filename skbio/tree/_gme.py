@@ -78,44 +78,45 @@ def gme(dm, allow_edge_estimation=True):
     needing to re-root the tree.
 
     """
-    if dm.shape[0] < 3:
+    if (n := dm.shape[0]) < 3:
         raise ValueError(
             "Distance matrix must be at least 3x3 to "
             "generate a minimum evolution tree."
         )
 
-    # count the number of taxa
-    n = len(dm.ids)
+    # extract taxa and matrix data
+    taxa = dm.ids
+    dm = dm.data
 
     # create initial nodes
-    root_name, node_a_name, node_b_name = dm.ids[0], dm.ids[1], dm.ids[2]
-    root = TreeNode(root_name)
-    root_child = TreeNode("")
-    node_a = TreeNode(node_a_name)
-    node_b = TreeNode(node_b_name)
-    root.append(root_child)
-    root_child.append(node_a)
-    root_child.append(node_b)
+    root, left, right = [TreeNode(i) for i in range(3)]
+    root_child = TreeNode(children=[left, right])
+    root.append(root_child, uncache=False)
+
+    sortkey = itemgetter(1)
 
     # loop over rest of nodes for k = 4 to n
     for k in range(3, n):
-        taxa = root.count(tips=True) + 1
+        n_taxa = k + 1
+
         # Calculate average distance matrix between subtrees of T_(k-1).
         # Note that this should be replaced with a step to update an initial
         # computation of the average distance matrix rather than to recompute
         # the matrix after every iteration as implemented here.
         adm = _average_distance_matrix(root, dm)
-        # create node for taxa k
-        node_k_name = dm.ids[k]
-        connecting_node = TreeNode("")
-        node_k = TreeNode(node_k_name)
-        connecting_node.append(node_k)
-        # connecting_node = TreeNode.read(["(%s);" % (node_k_name)])
-        # node_k = connecting_node.find(node_k_name)
+
+        # create node for taxon k
+        node_k = TreeNode(k)
+        connecting_node = TreeNode()
+        connecting_node.append(node_k, uncache=False)
+
         # create average distance lists for subtrees of T_(k-1)
+        # TODO: avoid repeated postorder traversal
         ordered = list(root.postorder(include_self=False))
+
         lowerlist = _lower_subtree_list(ordered, node_k, dm)
-        upperlist = _upper_subtree_list(ordered, node_k, taxa, dm)
+        upperlist = _upper_subtree_list(ordered, node_k, n_taxa, dm)
+
         # Initialize the list of edge parent nodes for computation.
         # The tuple is a pair of a TreeNode object and the value of the tree
         # length for attaching at the edge consisting of the node and its parent.
@@ -123,27 +124,33 @@ def gme(dm, allow_edge_estimation=True):
         # defined by the root and its unique descendant to 0.
         edge_list = [(root_child, 0)]
         for a, i in edge_list:
-            if a.is_tip():
-                continue
-            a1, a2 = a.children
-            value1 = _edge_attachment_length(
-                a1, lowerlist, upperlist, ordered, taxa, adm
-            )
-            value2 = _edge_attachment_length(
-                a2, lowerlist, upperlist, ordered, taxa, adm
-            )
-            e1 = (a1, value1 + i)
-            e2 = (a2, value2 + i)
-            edge_list.append(e1)
-            edge_list.append(e2)
+            if a.children:
+                a1, a2 = a.children
+                value1 = _edge_attachment_length(
+                    a1, lowerlist, upperlist, ordered, n_taxa, adm
+                )
+                value2 = _edge_attachment_length(
+                    a2, lowerlist, upperlist, ordered, n_taxa, adm
+                )
+                edge_list.extend([(a1, value1 + i), (a2, value2 + i)])
+
         # find the edge with minimum length after edge attachment
-        minimum_child = sorted(edge_list, key=itemgetter(1))[0][0]
+        minimum_child = sorted(edge_list, key=sortkey)[0][0]
+
         # attach new taxa to the edge
         minimum_parent = minimum_child.parent
-        minimum_parent.append(connecting_node)
-        connecting_node.append(minimum_child)
+        minimum_parent.append(connecting_node, uncache=False)
+        connecting_node.append(minimum_child, uncache=False)
+
+    # estimate branch lengths
     if allow_edge_estimation:
         _ols_edge(root, dm)
+
+    # replace taxon indices with taxon names
+    for node in root.postorder(include_self=True):
+        if (name := node.name) is not None:
+            node.name = taxa[name]
+
     return root
 
 
@@ -156,8 +163,7 @@ def _average_distance_k(nodek, nodesubtree, dm):
     """
     nodelistk = [nodek.name]
     nodelistsubtree = _tip_or_root(nodesubtree)
-    df = dm.between(nodelistk, nodelistsubtree)
-    return df["value"].mean()
+    return dm[nodelistk][:, nodelistsubtree].mean()
 
 
 def _average_distance_k_upper(nodek, nodesubtree, dm):
@@ -174,8 +180,9 @@ def _average_distance_k_upper(nodek, nodesubtree, dm):
         root = nodesubtree.root()
         nodelistsubtree = [root.name]
         nodelistsubtree.extend(sorted(root.subset() - nodesubtree.subset()))
-    df = dm.between(nodelistk, nodelistsubtree)
-    return df["value"].mean()
+    return dm[nodelistk][:, nodelistsubtree].mean()
+    # df = dm.between(nodelistk, nodelistsubtree)
+    # return df["value"].mean()
 
 
 def _lower_subtree_list(ordered, node, dm):
@@ -261,8 +268,9 @@ def _average_distance(node1, node2, dm):
     """
     nodelist1 = _tip_or_root(node1)
     nodelist2 = _tip_or_root(node2)
-    df = dm.between(nodelist1, nodelist2)
-    return df["value"].mean()
+    return dm[nodelist1][:, nodelist2].mean()
+    # df = dm.between(nodelist1, nodelist2)
+    # return df["value"].mean()
 
 
 def _tip_or_root(node):
@@ -294,8 +302,9 @@ def _average_distance_upper(node1, node2, dm):
         root2 = node2.root()
         nodelist2 = [root2.name]
         nodelist2.extend(sorted(root2.subset() - node2.subset()))
-    df = dm.between(nodelist1, nodelist2)
-    return df["value"].mean()
+    return dm[nodelist1][:, nodelist2].mean()
+    # df = dm.between(nodelist1, nodelist2)
+    # return df["value"].mean()
 
 
 def _subtree_count(subtree):
@@ -319,23 +328,42 @@ def _average_subtree_distance(a, b, a1, a2, dm):
 
 
 def _average_distance_matrix(tree, dm):
-    """Return the matrix of distances between pairs of subtrees."""
+    """Return the matrix of distances between pairs of subtrees.
+
+    For a tree with k taxa (including root), the resulting distance matrix should have
+    2 * k - 3 elements (nodes except for root).
+
+    """
     ordered = list(tree.postorder(include_self=False))
-    n = len(ordered)
-    r = tree.root()
-    taxa_size = r.count(tips=True) + 1
-    adm = np.empty((n, n))
-    for i, a in enumerate(ordered):
+
+    n = len(ordered)  # number of nodes
+    m = (n + 3) // 2  # number of taxa
+
+    # adm = np.empty((n, n))
+    adm = np.full((n, n), np.nan)
+
+    # Calculate the average distance between each pair of subtrees defined by nodes
+    # a and b
+
+    # skip the stem (the unique descendant of root, which is always the last node in
+    # the postorder traversal)
+    for i, a in enumerate(ordered[:-1]):
         ancestors = a.ancestors()
-        # skip over unique descendant
-        if a in tree.children:
-            continue
-        # find the average distance between given node and root
-        if a.is_tip():
-            adm[n - 1, i] = adm[i, n - 1] = dm[a.name, r.name]
+
+        # Find the average distance between a given subtree and the root (i.e., the
+        # first taxon).
+        # When a is a tip (taxon): the average distance is simply the distance from a
+        # to root.
+        if not a.children:
+            adm[n - 1, i] = adm[i, n - 1] = dm[a.name, 0]
+
+        # when a is an internal node,
         else:
             a1, a2 = a.children
-            adm[n - 1, i] = adm[i, n - 1] = _average_subtree_distance(a, r, a1, a2, dm)
+            adm[n - 1, i] = adm[i, n - 1] = _average_subtree_distance(
+                a, tree, a1, a2, dm
+            )
+
         # find the average distance between first node and a second node
         # which is above the first node in the postorder as well as an ancestor
         for j in range(i + 1, n - 1):  # part (a)
@@ -354,6 +382,7 @@ def _average_distance_matrix(tree, dm):
             else:
                 b1, b2 = b.children
                 adm[i, j] = adm[j, i] = _average_subtree_distance(b, a, b1, b2, dm)
+
     # calculating for second nodes which are ancestors
     for j, b in enumerate(ordered):
         # skipping over unique descendant
@@ -367,11 +396,10 @@ def _average_distance_matrix(tree, dm):
             if b in a.ancestors():
                 adm[i, j] = adm[j, i] = (
                     _subtree_count(s) * _average_distance(a, s, dm)
-                    + (taxa_size - _subtree_count(p))
-                    * _average_distance_upper(a, p, dm)
-                ) / (taxa_size - _subtree_count(b))
-                # zero the diagonal
-                adm[i, i] = 0
+                    + (m - _subtree_count(p)) * _average_distance_upper(a, p, dm)
+                ) / (m - _subtree_count(b))
+
+    np.fill_diagonal(adm, 0)
     return adm
 
 
