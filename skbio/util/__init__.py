@@ -42,6 +42,15 @@ Decorators
    aliased
    register_aliases
    params_aliased
+
+
+Decorator helpers
+-----------------
+
+.. autosummary::
+   :toctree: generated/
+   :template: namedtuple.rst
+
    ParamAlias
 
 

@@ -270,7 +270,7 @@ from autoinherit import InheritedAutosummary
 # Let autosummary skip members that have a "skipdoc" attribute that is True.
 
 def skip_member(app, what, name, obj, skip, options):
-    return getattr(obj, "skipdoc", None)
+    return getattr(obj, "_skipdoc", None)
 
 
 def setup(app):

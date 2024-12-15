@@ -21,10 +21,9 @@ from skbio import TreeNode
 from skbio.util import assert_data_frame_almost_equal
 from skbio.stats.distance import DistanceMatrixError
 from skbio.stats.composition import (
-    closure, multi_replace, multiplicative_replacement, perturb, perturb_inv, power,
-    inner, clr, clr_inv, ilr, ilr_inv, alr, alr_inv, sbp_basis, _gram_schmidt_basis,
-    centralize, _calc_p_adjust, ancom, vlr, pairwise_vlr, tree_basis, dirmult_ttest, 
-    dirmult_lme)
+    closure, multi_replace, perturb, perturb_inv, power, inner, clr, clr_inv, ilr,
+    ilr_inv, alr, alr_inv, sbp_basis, _gram_schmidt_basis, centralize, _calc_p_adjust,
+    ancom, vlr, pairwise_vlr, tree_basis, dirmult_ttest, dirmult_lme)
 
 
 def assert_coo_allclose(res, exp, rtol=1e-7, atol=1e-7):
@@ -240,10 +239,6 @@ class CompositionTests(TestCase):
     def multi_replace_warning(self):
         with self.assertRaises(ValueError):
             multi_replace([0, 1, 2], delta=1)
-
-    def test_multiplicative_replacement(self):
-        mat = closure(self.cdata3)
-        npt.assert_allclose(multiplicative_replacement(mat), multi_replace(mat))
 
     def test_clr(self):
         cmat = clr(closure(self.cdata1))
@@ -1082,16 +1077,6 @@ class AncomTests(TestCase):
             result = ancom(self.table1, self.cats1, p_adjust=method,
                            significance_test='mannwhitneyu')
             assert_data_frame_almost_equal(result[0], exp)
-
-    def test_ancom_multiple_comparisons_deprecated(self):
-        # @deprecated
-        exp = pd.DataFrame(
-            {'W': np.array([0] * 7),
-             'Reject null hypothesis': np.array([False] * 7, dtype=bool)})
-        result = ancom(self.table1, self.cats1,
-                       significance_test='mannwhitneyu',
-                       multiple_comparisons_correction=None)
-        assert_data_frame_almost_equal(result[0], exp)
 
     def test_ancom_alternative_test(self):
         result = ancom(self.table1, self.cats1, p_adjust=None,

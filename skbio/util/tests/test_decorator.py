@@ -6,12 +6,21 @@
 # The full license is in the file LICENSE.txt, distributed with this software.
 # ----------------------------------------------------------------------------
 
+import sys
 import unittest
 import inspect
 import warnings
 
 from skbio.util import classproperty
-from skbio.util._decorator import overrides, classonlymethod
+from skbio.util._decorator import (
+    overrides,
+    classproperty,
+    classonlymethod,
+    aliased,
+    register_aliases,
+    ParamAlias,
+    params_aliased,
+)
 from skbio.util._exception import OverrideError
 
 
@@ -130,6 +139,90 @@ class TestClassProperty(unittest.TestCase):
 
         with self.assertRaises(AttributeError):
             f.foo = 4242
+
+
+class TestAliases(unittest.TestCase):
+    def test_aliased(self):
+
+        # apply to a function
+        @aliased("bar")
+        def foo(param):
+            return param
+
+        self.assertEqual(foo._alias[0], "bar")
+        self.assertTrue(callable(foo._alias[1]))
+        self.assertTrue(foo._alias[1]._skipdoc)
+        self.assertEqual(foo.__doc__, f"Alias: ``bar``\n")
+        self.assertEqual(foo(42), 42)
+        self.assertEqual(foo._alias[1](42), 42)
+
+        # apply to a class method
+        class Foo:
+
+            @aliased("bar")
+            def foo(cls, param):
+                return param
+
+        self.assertEqual(Foo.foo._alias[0], "bar")
+
+    def test_register_aliases(self):
+
+        @register_aliases
+        class Foo:
+
+            @aliased("bar", since="1.0", until="2.0", warn=True)
+            def foo(self, param):
+                return param
+
+        # class level
+        self.assertTrue(hasattr(Foo, "bar"))
+        self.assertTrue(Foo.bar._skipdoc)
+
+        # instance level
+        f = Foo()
+        self.assertTrue(hasattr(f, "bar"))
+
+        # check warning
+        self.assertFalse(hasattr(f.foo, "warned"))
+        msg = "`bar` was renamed to `foo` in 1.0.* It will be removed in 2.0."
+        with self.assertWarnsRegex(DeprecationWarning, msg):
+            f.bar(42)
+        self.assertTrue(hasattr(f.foo, "warned"))
+
+    def test_params_aliased(self):
+
+        @params_aliased([
+            ParamAlias("param1", "alias1"),
+            ParamAlias("param2", "alias2", since="1.0", warn=True),
+        ])
+        def foo(param1, param2):
+            """I am a function.
+
+            Parameters
+            ----------
+            param1 : int
+                The first parameter.
+            param2 : int
+                The second parameter.
+            
+            Returns
+            -------
+            int
+                Sum of the two parameters.
+
+            """
+            return param1 + param2
+
+        self.assertIn("Renamed from ``alias2``.", foo.__doc__)
+        self.assertEqual(foo(1, 2), 3)
+        self.assertEqual(foo(param1=1, param2=2), 3)
+        self.assertEqual(foo(alias1=1, param2=2), 3)
+        msg = "`foo`'s parameter `alias2` was renamed to `param2` in 1.0."
+        with self.assertWarnsRegex(DeprecationWarning, msg):
+            obs = foo(param1=1, alias2=2)
+        self.assertEqual(obs, 3)
+        with self.assertRaises(TypeError):
+            foo(1, 2, alias1=2)
 
 
 if __name__ == '__main__':

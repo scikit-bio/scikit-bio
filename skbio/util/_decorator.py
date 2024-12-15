@@ -166,10 +166,10 @@ def aliased(name, since=None, until=None, warn=False):
             return func(*args, **kwargs)
 
         # signal Sphinx to skip the alias (see conf.py)
-        wrapper.skipdoc = True
+        wrapper._skipdoc = True
 
         # signal parent to add this alias (see register_aliases)
-        func.alias = (name, wrapper)
+        func._alias = (name, wrapper)
 
         # return the original function (not the wrapper)
         return func
@@ -204,14 +204,13 @@ def register_aliases(cls):
     """
     aliases = []
     for func in cls.__dict__.values():
-        if hasattr(func, "alias"):
-            aliases.append(func.alias)
+        if hasattr(func, "_alias"):
+            aliases.append(func._alias)
     for name, wrapper in aliases:
         setattr(cls, name, wrapper)
     return cls
 
 
-# parameter alias
 ParamAlias = namedtuple(
     "ParamAlias",
     ["param", "alias", "since", "until", "warn"],
@@ -264,7 +263,8 @@ def params_aliased(params=[]):
     def decorator(func):
         for param, alias, since, until, warn in params:
             msg = _alias_msg(alias, since, until, warn)
-            func.__doc__ = note_into_doc_param(msg, func.__doc__, param)
+            if doc := func.__doc__:
+                func.__doc__ = note_into_doc_param(msg, doc, param)
 
         @wraps(func)
         def wrapper(*args, **kwargs):

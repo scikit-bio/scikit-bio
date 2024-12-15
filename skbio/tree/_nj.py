@@ -137,14 +137,6 @@ def nj(
               \-d
 
     """
-    # @deprecated
-    # if disallow_negative_branch_length is not None:
-    #     msg = (
-    #         "`disallow_negative_branch_length` has been renamed as `clip_to_zero`."
-    #         "The old name will be removed in a future release."
-    #     )
-    #     _warn_deprecated(nj, "0.6.3", msg)
-    #     clip_to_zero = disallow_negative_branch_length
     if result_constructor is not None:
         msg = (
             "`result_constructor` is deprecated and will be removed in a future "
