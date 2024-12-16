@@ -152,7 +152,6 @@ from statsmodels.stats.weightstats import CompareMeans
 from skbio.stats.distance import DistanceMatrix
 from skbio.util import find_duplicates
 from skbio.util import get_rng
-from skbio.util._warning import _warn_deprecated
 from skbio.util._decorator import aliased, register_aliases, params_aliased, ParamAlias
 from statsmodels.stats.multitest import multipletests as sm_multipletests
 from statsmodels.regression.mixed_linear_model import MixedLM
@@ -1288,7 +1287,6 @@ def ancom(
         by statsmodels'
         :func:`multipletests <statsmodels.stats.multitest.multipletests>` function.
         Case-insensitive. If None, no correction will be performed.
-
     significance_test : str or callable, optional
         A function to test for significance between classes. It must be able to
         accept at least two vectors of floats and returns a test statistic and

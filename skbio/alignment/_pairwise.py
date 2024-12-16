@@ -16,7 +16,7 @@ from skbio.alignment._ssw_wrapper import StripedSmithWaterman
 from skbio.sequence import DNA, RNA, Protein
 from skbio.sequence import GrammaredSequence
 from skbio.sequence import SubstitutionMatrix
-from skbio.util._warning import _warn_deprecated
+from skbio.util._decorator import deprecated
 
 
 def local_pairwise_align_nucleotide(
@@ -594,6 +594,11 @@ def global_pairwise_align(
     return msa, score, start_end_positions
 
 
+@deprecated(
+    "0.5.8",
+    msg="It will be removed in favor of more general purpose and performant aligners. "
+    "Additional details at https://github.com/scikit-bio/scikit-bio/issues/1814.",
+)
 def local_pairwise_align_ssw(sequence1, sequence2, **kwargs):
     """Align query and target sequences with Striped Smith-Waterman.
 
@@ -613,12 +618,6 @@ def local_pairwise_align_ssw(sequence1, sequence2, **kwargs):
         (float), and start/end positions of each input sequence (iterable
         of two-item tuples). Note that start/end positions are indexes into the
         unaligned sequences.
-
-    Warnings
-    --------
-    ``local_pairwise_align_ssw`` is deprecated as of ``0.5.8`` and will be removed in
-    favor of more general-purpose and performant aligners. Additional details at
-    :repo:`issues/1814`.
 
     Notes
     -----
@@ -644,15 +643,6 @@ def local_pairwise_align_ssw(sequence1, sequence2, **kwargs):
     skbio.alignment.StripedSmithWaterman
 
     """
-    # @deprecated
-    _warn_deprecated(
-        local_pairwise_align_ssw,
-        "0.5.8",
-        msg="It will be removed in favor of more general purpose and performant "
-        "aligners. Additional details at "
-        "https://github.com/scikit-bio/scikit-bio/issues/1814.",
-    )
-
     for seq in sequence1, sequence2:
         if not isinstance(seq, (DNA, RNA, Protein)):
             raise TypeError(
@@ -710,6 +700,11 @@ def local_pairwise_align_ssw(sequence1, sequence2, **kwargs):
     return msa, alignment.optimal_alignment_score, start_end
 
 
+@deprecated(
+    "0.4.0",
+    msg="It has been replaced by the SubstitutionMatrix class. Additional details at: "
+    "https://github.com/scikit-bio/scikit-bio/pull/1913.",
+)
 def make_identity_substitution_matrix(match_score, mismatch_score, alphabet="ACGTU"):
     """Generate substitution matrix where all matches are scored equally.
 
@@ -731,22 +726,7 @@ def make_identity_substitution_matrix(match_score, mismatch_score, alphabet="ACG
         pair of characters can be looked up to get their match or mismatch
         score.
 
-    Warnings
-    --------
-    ``make_identity_substitution_matrix`` is deprecated as of ``0.4.0``. It has been
-    replaced by a SubstitutionMatrix class. Additional details at :repo:`pull/1913`.
-
     """
-    # @deprecated
-    _warn_deprecated(
-        make_identity_substitution_matrix,
-        "0.4.0",
-        msg="It has been "
-        "replaced by the SubstitutionMatrix class. Additional "
-        "details at "
-        "https://github.com/scikit-bio/scikit-bio/pull/1913.",
-    )
-
     result = {}
     for c1 in alphabet:
         row = {}

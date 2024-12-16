@@ -39,6 +39,7 @@ Decorators
    overrides
    classproperty
    classonlymethod
+   deprecated
    aliased
    register_aliases
    params_aliased
@@ -88,6 +89,7 @@ from ._decorator import (
     overrides,
     classproperty,
     classonlymethod,
+    deprecated,
     aliased,
     register_aliases,
     ParamAlias,
@@ -108,6 +110,7 @@ __all__ = [
     "overrides",
     "classproperty",
     "classonlymethod",
+    "deprecated",
     "aliased",
     "register_aliases",
     "ParamAlias",

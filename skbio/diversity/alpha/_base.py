@@ -15,7 +15,6 @@ from scipy.optimize import fmin_powell, minimize_scalar
 
 from skbio.stats import subsample_counts
 from skbio.diversity._util import _validate_counts_vector
-from skbio.util._warning import _warn_deprecated
 from skbio.util._decorator import aliased
 
 

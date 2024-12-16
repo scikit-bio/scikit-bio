@@ -27,12 +27,13 @@ from skbio.tree._exception import (
 from skbio.util import get_rng
 from skbio.util._decorator import (
     classonlymethod,
+    deprecated,
     register_aliases,
     aliased,
     ParamAlias,
     params_aliased,
 )
-from skbio.util._warning import _warn_deprecated
+from skbio.util._warning import _warn_once
 from skbio.io.registry import Read, Write
 from ._compare import (
     _check_dist_metric,
@@ -311,11 +312,9 @@ class TreeNode(SkbioObject):
         """
         return self._copy(deep, {})
 
+    @deprecated("0.6.2", msg="Use `copy` instead.")
     def deepcopy(self):
         r"""Return a deep copy of self using an iterative approach.
-
-        .. deprecated:: 0.6.2
-            Use :meth:`copy` instead.
 
         Returns
         -------
@@ -332,9 +331,6 @@ class TreeNode(SkbioObject):
         currently the default behavior of the latter.
 
         """
-        msg = "Use copy instead."
-        _warn_deprecated(self.__class__.deepcopy, "0.6.2", msg)
-
         return self._copy(True, {})
 
     def subtree(self, tip_list=None):
@@ -2305,16 +2301,13 @@ class TreeNode(SkbioObject):
         """
         # future warning
         if branch_attrs == {"name", "length", "support"} and root_name == "root":
-            func = self.__class__.unrooted_copy
-            if not hasattr(func, "warned"):
-                simplefilter("once", FutureWarning)
-                warn(
-                    "The default behavior of `unrooted_copy` is subject to change in "
-                    "0.7.0. The new default behavior can be achieved by specifying "
-                    '`branch_attrs={"length", "support"}, root_name=None`.',
-                    FutureWarning,
-                )
-                func.warned = True
+            _warn_once(
+                self.__class__.unrooted_copy,
+                FutureWarning,
+                "The default behavior of `unrooted_copy` is subject to change in "
+                "0.7.0. The new default behavior can be achieved by specifying "
+                '`branch_attrs={"length", "support"}, root_name=None`.',
+            )
 
         # determine copy mode
         _copy = deepcopy if deep else copy
@@ -2375,12 +2368,13 @@ class TreeNode(SkbioObject):
 
         return result
 
+    @deprecated(
+        "0.6.2",
+        msg="Because it generates a redundant copy of the tree. Use `unrooted_copy` "
+        "instead.",
+    )
     def unrooted_deepcopy(self, parent=None):
         r"""Walk the tree unrooted-style and returns a new deepcopy.
-
-        .. deprecated:: 0.6.2
-            This function is deprecated as it generates a redundant copy of the tree.
-            Use :meth:`unrooted_copy` instead.
 
         Parameters
         ----------
@@ -2407,9 +2401,6 @@ class TreeNode(SkbioObject):
         This method calls :meth:`unrooted_copy` which is recursive.
 
         """
-        msg = "Use unrooted_copy instead."
-        _warn_deprecated(self.__class__.unrooted_deepcopy, "0.6.2", msg)
-
         root = self.root()
         root.assign_ids()
 
@@ -2642,16 +2633,13 @@ class TreeNode(SkbioObject):
         """
         # future warning
         if reset is False and branch_attrs == ["name"] and root_name == "root":
-            func = self.__class__.root_at
-            if not hasattr(func, "warned"):
-                simplefilter("once", FutureWarning)
-                warn(
-                    "The default behavior of `root_at` is subject to change in 0.7.0. "
-                    "The new default behavior can be achieved by specifying "
-                    "`reset=True, branch_attrs=[], root_name=None`.",
-                    FutureWarning,
-                )
-                func.warned = True
+            _warn_once(
+                self.__class__.root_at,
+                FutureWarning,
+                "The default behavior of `root_at` is subject to change in 0.7.0. "
+                "The new default behavior can be achieved by specifying "
+                "`reset=True, branch_attrs=[], root_name=None`.",
+            )
 
         # locate to-be root node
         tree = self.root()
@@ -2835,16 +2823,13 @@ class TreeNode(SkbioObject):
         """
         # future warning
         if reset is False and branch_attrs == ["name"] and root_name == "root":
-            func = self.__class__.root_at_midpoint
-            if not hasattr(func, "warned"):
-                simplefilter("once", FutureWarning)
-                warn(
-                    "The default behavior of `root_at_midpoint` is subject to change "
-                    "in 0.7.0. The new default behavior can be achieved by specifying "
-                    "`reset=True, branch_attrs=[], root_name=None`.",
-                    FutureWarning,
-                )
-                func.warned = True
+            _warn_once(
+                self.__class__.root_at_midpoint,
+                FutureWarning,
+                "The default behavior of `root_at_midpoint` is subject to change in "
+                "0.7.0. The new default behavior can be achieved by specifying "
+                "`reset=True, branch_attrs=[], root_name=None`.",
+            )
 
         tree = self.root()
         if inplace:
@@ -5029,16 +5014,13 @@ class TreeNode(SkbioObject):
         """
         # future warning
         if ignore_self is False:
-            func = self.__class__.compare_cophenet
-            if not hasattr(func, "warned"):
-                simplefilter("once", FutureWarning)
-                warn(
-                    "The default behavior of `compare_cophenet` is subject to "
-                    "change in 0.7.0. The new default behavior can be achieved by "
-                    "specifying `ignore_self=True`.",
-                    FutureWarning,
-                )
-                func.warned = True
+            _warn_once(
+                self.__class__.compare_cophenet,
+                FutureWarning,
+                "The default behavior of `compare_cophenet` is subject to change in "
+                "0.7.0. The new default behavior can be achieved by specifying "
+                "`ignore_self=True`.",
+            )
 
         metric = _check_dist_metric(metric)
         if sample is not None:
@@ -5386,13 +5368,14 @@ class TreeNode(SkbioObject):
 
         return id_index, child_index
 
+    @deprecated(
+        "0.6.3",
+        msg="This method will become a private member in 0.7.0. It is meant to be "
+        "called automatically by `find` and `find_all`, and it does not make any "
+        "public-facing effect.",
+    )
     def create_caches(self):
         r"""Construct an internal lookup table to facilitate searching by name.
-
-        .. deprecated:: 0.6.3
-            This method will become a private member in version 0.7.0. It is meant to
-            be called automatically by :meth:`find` and :meth:`find_all`, and it does
-            not make any public-facing effect.
 
         Raises
         ------

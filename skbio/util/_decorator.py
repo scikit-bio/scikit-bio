@@ -10,8 +10,8 @@ from functools import wraps
 from collections import namedtuple
 
 from ._exception import OverrideError
-from ._warning import _warn_renamed
-from ._misc import note_into_doc, note_into_doc_param
+from ._docstring import _note_into_doc, _note_into_doc_param
+from ._warning import _warn_deprecated, _warn_renamed
 
 
 def overrides(interface_class):
@@ -108,6 +108,43 @@ class classonlymethod(classmethod):
         return super().__get__(obj, cls)
 
 
+def deprecated(ver, msg=None, append=True):
+    """Mark a function or a method as deprecated.
+
+    Parameters
+    ----------
+    ver : str
+        The version when deprecation became effective.
+    msg : str, optional
+        A custom warning message.
+    append : bool, optional
+        Append the custom message to the end of the default message (True, default),
+        or replace the entire default message with the custom message (False).
+
+    Notes
+    -----
+    This decorator has two effects: 1) A note will be added to the docstring of the
+    function below the title line to indicate the deprecated status. 2) When the
+    function is called at the first time, a deprecation warning will be displayed.
+
+    """
+
+    def decorator(func):
+        note = f".. deprecated:: {ver}"
+        if msg:
+            note += " " + msg
+        func.__doc__ = _note_into_doc(note, func.__doc__)
+
+        @wraps(func)
+        def wrapper(*args, **kwargs):
+            _warn_deprecated(func, ver, msg, append)
+            return func(*args, **kwargs)
+
+        return wrapper
+
+    return decorator
+
+
 def _alias_msg(name, since=None, until=None, warn=False):
     """Create a message indicating the alias status of a function or a parameter."""
     if not since:
@@ -155,7 +192,7 @@ def aliased(name, since=None, until=None, warn=False):
     def decorator(func):
         # modify docstring to indicate the alias
         msg = _alias_msg(name, since, until, warn)
-        func.__doc__ = note_into_doc(msg, func.__doc__)
+        func.__doc__ = _note_into_doc(msg, func.__doc__)
 
         # create the alias, which is a wrapper of the function
         @wraps(func)
@@ -235,6 +272,10 @@ ParamAlias.__doc__ = r"""Alias for a parameter of a function or method.
     --------
     params_aliased
 
+    Notes
+    -----
+    This class is used within :func:`params_aliased`.
+
     """
 
 
@@ -264,7 +305,7 @@ def params_aliased(params=[]):
         for param, alias, since, until, warn in params:
             msg = _alias_msg(alias, since, until, warn)
             if doc := func.__doc__:
-                func.__doc__ = note_into_doc_param(msg, doc, param)
+                func.__doc__ = _note_into_doc_param(msg, doc, param)
 
         @wraps(func)
         def wrapper(*args, **kwargs):

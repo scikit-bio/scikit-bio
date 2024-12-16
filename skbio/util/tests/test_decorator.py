@@ -16,6 +16,7 @@ from skbio.util._decorator import (
     overrides,
     classproperty,
     classonlymethod,
+    deprecated,
     aliased,
     register_aliases,
     ParamAlias,
@@ -139,6 +140,29 @@ class TestClassProperty(unittest.TestCase):
 
         with self.assertRaises(AttributeError):
             f.foo = 4242
+
+
+class TestDeprecated(unittest.TestCase):
+    def test_deprecated(self):
+
+        @deprecated("1.0", msg="It will be removed soon.")
+        def foo(param):
+            """I am a function.
+
+            Parameters
+            ----------
+            param : str
+                I am a parameter.
+
+            """
+            pass
+
+        msg = ".. deprecated:: 1.0 It will be removed soon."
+        self.assertIn(msg, foo.__doc__)
+        with self.assertWarns(DeprecationWarning) as ctx:
+            foo("bar")
+        msg = "`foo` has been deprecated since 1.0. It will be removed soon."
+        self.assertEqual(str(ctx.warning), msg)
 
 
 class TestAliases(unittest.TestCase):
