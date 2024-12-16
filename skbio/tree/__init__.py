@@ -190,12 +190,12 @@ E 0.5
 root None
 
 Now let's compare two trees using the distances computed pairwise between tips
-in the trees. The distance computed, by default, is the correlation of all
-pairwise tip-to-tip distances between trees:
+in the trees. The distance computed, by default, is the correlation of
+cophenetic (tip-to-tip) distances between trees:
 
->>> print(tree1.compare_tip_distances(tree1))  # identity case
+>>> print(tree1.compare_cophenet(tree1))  # identity case
 0.0
->>> print(tree1.compare_tip_distances(tree2))
+>>> print(tree1.compare_cophenet(tree2))
 0.120492524415
 
 

@@ -17,9 +17,9 @@ from skbio import TreeNode
 from skbio.diversity.alpha import (
     berger_parker_d, brillouin_d, dominance, doubles, enspie, esty_ci, fisher_alpha,
     goods_coverage, heip_e, hill, inv_simpson, kempton_taylor_q, margalef, mcintosh_d,
-    mcintosh_e, menhinick, michaelis_menten_fit, observed_features, observed_otus, osd,
-    pielou_e, renyi, robbins, shannon, simpson, simpson_d, simpson_e, singles, sobs,
-    strong, tsallis)
+    mcintosh_e, menhinick, michaelis_menten_fit, observed_features, osd, pielou_e,
+    renyi, robbins, shannon, simpson, simpson_d, simpson_e, singles, sobs, strong,
+    tsallis)
 
 
 class BaseTests(TestCase):
@@ -287,12 +287,6 @@ class BaseTests(TestCase):
     def test_observed_features(self):
         for vec in (np.array([4, 3, 4, 0, 1, 0, 2]), self.counts):
             self.assertEqual(observed_features(vec), sobs(vec))
-
-    def test_observed_otus(self):
-        with warnings.catch_warnings():
-            warnings.simplefilter("ignore")
-            for vec in (np.array([4, 3, 4, 0, 1, 0, 2]), self.counts):
-                self.assertEqual(observed_otus(vec), sobs(vec))
 
     def test_osd(self):
         self.assertEqual(osd(self.counts), (9, 3, 3))

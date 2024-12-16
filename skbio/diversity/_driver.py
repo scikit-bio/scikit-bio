@@ -29,7 +29,7 @@ from skbio.diversity._util import (
     _table_to_numpy,
     _validate_table,
 )
-from skbio.util._warning import _warn_deprecated
+from skbio.util._decorator import deprecated
 
 
 def _get_alpha_diversity_metric_map():
@@ -213,6 +213,12 @@ def alpha_diversity(metric, counts, ids=None, validate=True, **kwargs):
     return pd.Series(results, index=ids)
 
 
+@deprecated(
+    "0.5.0",
+    msg="The return type is unstable. Developer caution is advised. The resulting "
+    "DistanceMatrix object will include zeros when distance has not been calculated, "
+    "and therefore can be misleading.",
+)
 def partial_beta_diversity(metric, counts, ids, id_pairs, validate=True, **kwargs):
     """Compute distances only between specified ID pairs.
 
@@ -243,13 +249,6 @@ def partial_beta_diversity(metric, counts, ids, id_pairs, validate=True, **kwarg
         distances not defined by id_pairs will be 0.0. Use this resulting
         DistanceMatrix with caution as 0.0 is a valid distance.
 
-    Warnings
-    --------
-    ``partial_beta_diversity`` is deprecated as of ``0.5.0``. The return type is
-    unstable. Developer caution is advised. The resulting DistanceMatrix object will
-    include zeros when distance has not been calculated, and therefore can be
-    misleading.
-
     Raises
     ------
     ValueError
@@ -265,15 +264,6 @@ def partial_beta_diversity(metric, counts, ids, id_pairs, validate=True, **kwarg
     skbio.diversity.get_beta_diversity_metrics
 
     """
-    # @deprecated
-    _warn_deprecated(
-        partial_beta_diversity,
-        "0.5.0",
-        msg="The return type is unstable. Developer caution is advised. The resulting "
-        "DistanceMatrix object will include zeros when distance has not been "
-        "calculated, and therefore can be misleading.",
-    )
-
     if validate:
         counts = _validate_counts_matrix(counts, ids=ids)
 

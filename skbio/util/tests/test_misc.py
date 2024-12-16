@@ -13,8 +13,15 @@ import re
 import numpy as np
 import numpy.testing as npt
 
-from skbio.util import cardinal_to_ordinal, safe_md5, find_duplicates, get_rng
-from skbio.util._misc import MiniRegistry, chunk_str, resolve_key
+from skbio.util._misc import (
+    cardinal_to_ordinal,
+    safe_md5,
+    find_duplicates,
+    MiniRegistry,
+    chunk_str,
+    resolve_key,
+    get_rng,
+)
 
 
 class TestMiniRegistry(unittest.TestCase):
