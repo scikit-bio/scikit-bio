@@ -152,7 +152,7 @@ from statsmodels.stats.weightstats import CompareMeans
 from skbio.stats.distance import DistanceMatrix
 from skbio.util import find_duplicates
 from skbio.util import get_rng
-from skbio.util._decorator import aliased, register_aliases, params_aliased, ParamAlias
+from skbio.util._decorator import aliased, register_aliases, params_aliased
 from statsmodels.stats.multitest import multipletests as sm_multipletests
 from statsmodels.regression.mixed_linear_model import MixedLM
 from statsmodels.tools.sm_exceptions import ConvergenceWarning
@@ -203,7 +203,7 @@ def closure(mat):
     return mat.squeeze()
 
 
-@aliased("multiplicative_replacement", since="0.6.0", warn=True)
+@aliased("multiplicative_replacement", "0.6.0", True)
 def multi_replace(mat, delta=None):
     r"""Replace all zeros with small non-zero values.
 
@@ -1221,13 +1221,7 @@ def _calc_p_adjust(name, p):
         return res[1]
 
 
-@params_aliased(
-    [
-        ParamAlias(
-            "p_adjust", "multiple_comparisons_correction", since="0.6.0", warn=True
-        )
-    ]
-)
+@params_aliased([("p_adjust", "multiple_comparisons_correction", "0.6.0", True)])
 def ancom(
     table,
     grouping,

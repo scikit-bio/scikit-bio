@@ -242,8 +242,3 @@ __all__ = [
     "MissingNodeError",
     "NoParentError",
 ]
-
-from sys import modules
-from skbio.util._decorator import register_aliases
-
-register_aliases(modules[__name__])

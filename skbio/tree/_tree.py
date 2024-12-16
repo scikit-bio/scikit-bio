@@ -30,7 +30,6 @@ from skbio.util._decorator import (
     deprecated,
     register_aliases,
     aliased,
-    ParamAlias,
     params_aliased,
 )
 from skbio.util._warning import _warn_once
@@ -555,7 +554,7 @@ class TreeNode(SkbioObject):
             return [n for n in nodes if n is not ignore]
 
     @aliased("lowest_common_ancestor")
-    @params_aliased([ParamAlias("nodes", "tipnames", since="0.6.3", warn=True)])
+    @params_aliased([("nodes", "tipnames", "0.6.3", True)])
     def lca(self, nodes=None):
         r"""Find the lowest common ancestor of a list of nodes.
 
@@ -1536,7 +1535,7 @@ class TreeNode(SkbioObject):
                 return True
         return False
 
-    @aliased("remove_deleted", since="0.6.3", warn=True)
+    @aliased("remove_deleted", "0.6.3", True)
     def remove_by_func(self, func, uncache=True):
         r"""Remove nodes of a tree that meet certain criteria.
 
@@ -1980,7 +1979,7 @@ class TreeNode(SkbioObject):
                         node.remove(child, uncache=False)
                     node.extend([ind, interm], uncache=False)
 
-    @params_aliased([ParamAlias("shuffler", "shuffle_f", since="0.6.3", warn=True)])
+    @params_aliased([("shuffler", "shuffle_f", "0.6.3", True)])
     def shuffle(self, k=None, names=None, shuffler=None, n=1):
         r"""Randomly shuffle tip names of the tree.
 
@@ -3776,7 +3775,7 @@ class TreeNode(SkbioObject):
                     result[internal_node] += count
         return result
 
-    @aliased("accumulate_to_ancestor", since="0.6.3")
+    @aliased("accumulate_to_ancestor", "0.6.3")
     def depth(
         self, ancestor=None, include_root=False, use_length=True, missing_as_zero=False
     ):
@@ -3948,8 +3947,8 @@ class TreeNode(SkbioObject):
                 raise NoLengthError(errmsg)
         return H, tip
 
-    @aliased("descending_branch_length", since="0.6.3")
-    @params_aliased([ParamAlias("nodes", "tip_subset", since="0.6.3", warn=True)])
+    @aliased("descending_branch_length", "0.6.3")
+    @params_aliased([("nodes", "tip_subset", "0.6.3", True)])
     def total_length(self, nodes=None, include_stem=False, include_self=False):
         r"""Calculate the total length of branches descending from self.
 
@@ -4169,7 +4168,7 @@ class TreeNode(SkbioObject):
         except TypeError:
             raise NoLengthError("Nodes without branch length are encountered.")
 
-    @aliased("get_max_distance", since="0.6.3")
+    @aliased("get_max_distance", "0.6.3")
     def maxdist(self, use_length=True):
         r"""Return the maximum distance between any pair of tips in the tree.
 
@@ -4269,7 +4268,7 @@ class TreeNode(SkbioObject):
             max_dist = float(max_dist)
         return max_dist, (max_tip1, max_tip2)
 
-    @aliased("tip_tip_distances", since="0.6.3")
+    @aliased("tip_tip_distances", "0.6.3")
     def cophenet(self, endpoints=None, use_length=True):
         r"""Return a distance matrix between each pair of tips in the tree.
 
@@ -4465,9 +4464,7 @@ class TreeNode(SkbioObject):
         # Skip validation as all items to validate are guaranteed.
         return DistanceMatrix(result, taxa, validate=False)
 
-    @params_aliased(
-        [ParamAlias("shared_only", "exclude_absent_taxa", since="0.6.3", warn=True)]
-    )
+    @params_aliased([("shared_only", "exclude_absent_taxa", "0.6.3", True)])
     def compare_subsets(self, other, shared_only=False, proportion=True):
         r"""Calculate the difference of subsets between two trees.
 
@@ -4826,11 +4823,11 @@ class TreeNode(SkbioObject):
             metric=metric,
         )[0]
 
-    @aliased("compare_tip_distances", since="0.6.3")
+    @aliased("compare_tip_distances", "0.6.3")
     @params_aliased(
         [
-            ParamAlias("shuffler", "shuffle_f", since="0.6.3", warn=True),
-            ParamAlias("metric", "dist_f", since="0.6.3", warn=True),
+            ("shuffler", "shuffle_f", "0.6.3", True),
+            ("metric", "dist_f", "0.6.3", True),
         ]
     )
     def compare_cophenet(
@@ -5090,7 +5087,7 @@ class TreeNode(SkbioObject):
         lookup = hasattr(tree, "_tip_cache") and hasattr(tree, "_non_tip_cache")
         return attrs, lookup
 
-    @aliased("invalidate_caches", since="0.6.3", warn=True)
+    @aliased("invalidate_caches", "0.6.3", True)
     def clear_caches(self, attr=True, lookup=True):
         r"""Delete node attribute and lookup caches of a tree.
 

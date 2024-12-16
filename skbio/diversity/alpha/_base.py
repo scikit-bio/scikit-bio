@@ -1424,7 +1424,7 @@ def singles(counts):
     return (counts == 1).sum()
 
 
-@aliased("observed_otus", since="0.6.0", warn=True)
+@aliased("observed_otus", "0.6.0", True)
 @_validate_alpha()
 def sobs(counts):
     """Calculate the observed species richness of a sample.

@@ -10,8 +10,13 @@ from functools import wraps
 from collections import namedtuple
 
 from ._exception import OverrideError
-from ._docstring import _note_into_doc, _note_into_doc_param
-from ._warning import _warn_deprecated, _warn_renamed
+from ._docstring import (
+    _note_into_doc,
+    _note_into_doc_param,
+    _deprecation_note,
+    _renaming_note,
+)
+from ._warning import _warn_deprecated, _warn_renamed, _warn_param_renamed
 
 
 def overrides(interface_class):
@@ -114,7 +119,7 @@ def deprecated(ver, msg=None, append=True):
     Parameters
     ----------
     ver : str
-        The version when deprecation became effective.
+        Version when deprecation became effective.
     msg : str, optional
         A custom warning message.
     append : bool, optional
@@ -130,9 +135,7 @@ def deprecated(ver, msg=None, append=True):
     """
 
     def decorator(func):
-        note = f".. deprecated:: {ver}"
-        if msg:
-            note += " " + msg
+        note = _deprecation_note(ver, msg)
         func.__doc__ = _note_into_doc(note, func.__doc__)
 
         @wraps(func)
@@ -145,39 +148,21 @@ def deprecated(ver, msg=None, append=True):
     return decorator
 
 
-def _alias_msg(name, since=None, until=None, warn=False):
-    """Create a message indicating the alias status of a function or a parameter."""
-    if not since:
-        msg = f"Alias: ``{name}``"
-    else:
-        msg = (
-            f".. versionchanged:: {since} "
-            f"Renamed from ``{name}``. The old name is kept as an alias"
-        )
-        if warn:
-            msg += " but is deprecated"
-            if until:
-                msg += f" and will be removed in {until}"
-        msg += "."
-    return msg
-
-
-def aliased(name, since=None, until=None, warn=False):
+def aliased(name, ver=None, warn=False):
     """Create an alias for a function or method.
 
     Parameters
     ----------
     name : str
         Alias name of the function or method.
-    since : str, optional
+    ver : str, optional
         Version when alias was created.
-    until : str, optional
-        Version when alias will be removed.
     warn : bool, optional
-        Raise a deprecation warning when alias is called.
+        If True, raise a deprecation warning when alias is called.
 
     See Also
     --------
+    deprecated
     register_aliases
     params_aliased
 
@@ -190,25 +175,17 @@ def aliased(name, since=None, until=None, warn=False):
     """
 
     def decorator(func):
-        # modify docstring to indicate the alias
-        msg = _alias_msg(name, since, until, warn)
+        msg = _renaming_note(name, ver, warn)
         func.__doc__ = _note_into_doc(msg, func.__doc__)
 
-        # create the alias, which is a wrapper of the function
         @wraps(func)
         def wrapper(*args, **kwargs):
-            # warn renaming status once
             if warn:
-                _warn_renamed(func, name, since, until)
+                _warn_renamed(func, name, ver)
             return func(*args, **kwargs)
 
-        # signal Sphinx to skip the alias (see conf.py)
         wrapper._skipdoc = True
-
-        # signal parent to add this alias (see register_aliases)
         func._alias = (name, wrapper)
-
-        # return the original function (not the wrapper)
         return func
 
     return decorator
@@ -248,72 +225,40 @@ def register_aliases(cls):
     return cls
 
 
-ParamAlias = namedtuple(
-    "ParamAlias",
-    ["param", "alias", "since", "until", "warn"],
-    defaults=[None, None, False],
-)
-ParamAlias.__doc__ = r"""Alias for a parameter of a function or method.
-
-    Attributes
-    ----------
-    param : str
-        Name of the parameter.
-    alias : str
-        Alias name of the parameter.
-    since : str, optional
-        Version when alias was created.
-    until : str, optional
-        Version when alias will be removed.
-    warn : bool, optional
-        Raise a deprecation warning when alias is assigned.
-
-    See Also
-    --------
-    params_aliased
-
-    Notes
-    -----
-    This class is used within :func:`params_aliased`.
-
-    """
-
-
 def params_aliased(params=[]):
     r"""Create aliases for parameters of a function or method.
 
     Parameters
     ----------
-    params : list of ParamAlias
-        Aliases of parameters.
+    params : list of tuple
+        Aliases of parameters. Each tuple has four elements: param, alias, ver, and
+        warn. Refer to :func:`aliased` for definitions.
 
     See Also
     --------
     aliased
-    ParamAlias
 
     Notes
     -----
-    This is a decorator that can be applied to a function or method to create an alias
-    for one of its parameters. It can be applied multiple times to create aliases for
-    multiple parameters. Unlike :func:`aliased`, this decorator does not require
+    This is a decorator that can be applied to a function or method to create aliases
+    for its parameters. Unlike :func:`aliased`, this decorator does not require
     :func:`register_aliases` added to the module or class.
 
     """
 
     def decorator(func):
-        for param, alias, since, until, warn in params:
-            msg = _alias_msg(alias, since, until, warn)
+        for param, alias, ver, warn in params:
+            msg = _renaming_note(alias, ver, warn)
             if doc := func.__doc__:
                 func.__doc__ = _note_into_doc_param(msg, doc, param)
 
         @wraps(func)
         def wrapper(*args, **kwargs):
-            for param, alias, since, until, warn in params:
+            for param, alias, ver, warn in params:
                 if alias in kwargs:
                     kwargs[param] = kwargs.pop(alias)
                     if warn:
-                        _warn_renamed(func, alias, since, until, param=param)
+                        _warn_param_renamed(func, param, alias, ver)
             return func(*args, **kwargs)
 
         return wrapper

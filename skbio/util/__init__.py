@@ -45,16 +45,6 @@ Decorators
    params_aliased
 
 
-Decorator helpers
------------------
-
-.. autosummary::
-   :toctree: generated/
-   :template: namedtuple.rst
-
-   ParamAlias
-
-
 Miscellaneous utilities
 -----------------------
 
@@ -92,7 +82,6 @@ from ._decorator import (
     deprecated,
     aliased,
     register_aliases,
-    ParamAlias,
     params_aliased,
 )
 from ._plotting import PlottableMixin
@@ -113,6 +102,5 @@ __all__ = [
     "deprecated",
     "aliased",
     "register_aliases",
-    "ParamAlias",
     "params_aliased",
 ]

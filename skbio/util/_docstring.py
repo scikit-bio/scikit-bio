@@ -109,3 +109,25 @@ def _note_into_doc_param(note, doc, param):
     # Insert the message. It should have 1+ indentation level (i.e., 4 spaces) than
     # the header line.
     return f"{doc[:pos].rstrip()}\n\n{indent}    {note}\n{doc[pos:]}"
+
+
+def _deprecation_note(ver=None, msg=None):
+    """Create a note indicating deprecation."""
+    note = f".. deprecated:: {ver}"
+    if msg:
+        note += " " + msg
+    return note
+
+
+def _renaming_note(name, ver=None, warn=False):
+    """Create a message indicating renaming."""
+    if not ver:
+        return f"Alias: ``{name}``"
+    note = (
+        f".. versionchanged:: {ver} "
+        f"Renamed from ``{name}``. The old name is kept as an alias"
+    )
+    if warn:
+        note += " but is deprecated"
+    note += "."
+    return note

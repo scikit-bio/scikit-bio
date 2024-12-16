@@ -19,7 +19,6 @@ from skbio.util._decorator import (
     deprecated,
     aliased,
     register_aliases,
-    ParamAlias,
     params_aliased,
 )
 from skbio.util._exception import OverrideError
@@ -194,7 +193,7 @@ class TestAliases(unittest.TestCase):
         @register_aliases
         class Foo:
 
-            @aliased("bar", since="1.0", until="2.0", warn=True)
+            @aliased("bar", ver="1.0", warn=True)
             def foo(self, param):
                 return param
 
@@ -207,17 +206,17 @@ class TestAliases(unittest.TestCase):
         self.assertTrue(hasattr(f, "bar"))
 
         # check warning
-        self.assertFalse(hasattr(f.foo, "warned"))
-        msg = "`bar` was renamed to `foo` in 1.0.* It will be removed in 2.0."
+        self.assertFalse(hasattr(f.foo, "_warned"))
+        msg = "`bar` was renamed to `foo` in 1.0."
         with self.assertWarnsRegex(DeprecationWarning, msg):
             f.bar(42)
-        self.assertTrue(hasattr(f.foo, "warned"))
+        self.assertTrue(hasattr(f.foo, "_warned"))
 
     def test_params_aliased(self):
 
         @params_aliased([
-            ParamAlias("param1", "alias1"),
-            ParamAlias("param2", "alias2", since="1.0", warn=True),
+            ("param1", "alias1", None, False),
+            ("param2", "alias2", "1.0", True),
         ])
         def foo(param1, param2):
             """I am a function.

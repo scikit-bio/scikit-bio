@@ -9,19 +9,12 @@
 import numpy as np
 
 from skbio.tree import TreeNode
-from skbio.util._decorator import aliased, params_aliased, ParamAlias
+from skbio.util._decorator import params_aliased
 from skbio.util._warning import _warn_deprecated
 from ._cutils import nj_minq_cy
 
 
-@aliased("neighbor_joining")
-@params_aliased(
-    [
-        ParamAlias(
-            "clip_to_zero", "disallow_negative_branch_length", since="0.6.3", warn=True
-        )
-    ]
-)
+@params_aliased([("clip_to_zero", "disallow_negative_branch_length", "0.6.3", True)])
 def nj(
     dm,
     clip_to_zero=True,

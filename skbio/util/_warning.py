@@ -15,37 +15,37 @@ def _warn_once(func, warning, message, param=None):
     Parameters
     ----------
     func : callable
-        The function that triggers the warning.
+        Function that triggers the warning.
     warning : class
         Warning type.
     message : str
         Warning message.
     param : str, optional
-        A parameter of the function that triggers the warning.
+        Parameter of the function that triggers the warning.
 
     Notes
     -----
-    The warning is raised only at the first call of the function. Meanwhile, a "warned"
+    The warning is raised only at the first call of the function. Meanwhile, a "_warned"
     attribute is added to the function, which prevents subsequent warnings.
 
     If a parameter is given, the warning is raised at the first use of the particular
     parameter, while not affect the host function or other parameters. Meanwhile, a
-    "warned_params" attribute of the function will contain the parameter to prevent
+    "_warned_params" attribute of the function will contain the parameter to prevent
     subsequent warnings.
 
     """
     if not param:
-        if not hasattr(func, "warned"):
+        if not hasattr(func, "_warned"):
             simplefilter("once", warning)
             warn(message, warning)
-            func.warned = True
+            func._warned = True
     else:
-        if not hasattr(func, "warned_params"):
-            func.warned_params = set()
-        if param not in func.warned_params:
+        if not hasattr(func, "_warned_params"):
+            func._warned_params = set()
+        if param not in func._warned_params:
             simplefilter("once", warning)
             warn(message, warning)
-            func.warned_params.add(param)
+            func._warned_params.add(param)
 
 
 def _deprecation_message(name, ver=None, msg=None, append=True):
@@ -67,9 +67,9 @@ def _warn_deprecated(func, ver=None, msg=None, append=True):
     Parameters
     ----------
     func : callable
-        The function that triggers the warning.
+        Function that triggers the warning.
     ver : str, optional
-        The version when deprecation became effective.
+        Version when deprecation became effective.
     msg : str, optional
         A custom warning message.
     append : bool, optional
@@ -91,9 +91,9 @@ def _warn_param_deprecated(func, param, ver=None, msg=None, append=True):
     Parameters
     ----------
     func : callable
-        The function that hosts the parameter.
+        Function that hosts the parameter.
     param : str
-        The parameter that triggers the warning.
+        Parameter that triggers the warning.
     ver : str, optional
     msg : str, optional
     append : bool, optional
@@ -110,24 +110,25 @@ def _warn_param_deprecated(func, param, ver=None, msg=None, append=True):
     _warn_once(func, DeprecationWarning, msg, param)
 
 
-def _warn_renamed(func, oldname, since=None, until=None, param=None):
-    """Warn of renamed status."""
-    # warning message
-    msg_until = f" It will be removed in {until}." if until else ""
-    msg_param = f"`{func.__name__}`'s parameter " if param else ""
-    msg = (
-        msg_param
-        + (
-            f"`{oldname}` was renamed to `{param or func.__name__}` in {since}."
-            " The old name is kept as an alias but is deprecated."
-        )
-        + msg_until
-    )
-
-    # alias of the function
-    if not param:
-        _warn_once(func, DeprecationWarning, msg)
-
-    # alias of a parameter
+def _renaming_message(oldname, newname, ver=None):
+    """Create a message indicating renaming."""
+    if ver:
+        message = f"{oldname} was renamed to {newname} in {ver}."
     else:
-        _warn_once(func, DeprecationWarning, msg, param)
+        message = f"{oldname} has been renamed to {newname}."
+    message += " The old name is kept as an alias but is deprecated."
+    return message
+
+
+def _warn_renamed(func, oldname, ver=None):
+    """Warn of renaming status of a function."""
+    msg = _renaming_message(f"`{oldname}`", f"`{func.__name__}`", ver)
+    _warn_once(func, DeprecationWarning, msg)
+
+
+def _warn_param_renamed(func, param, oldname, ver=None):
+    """Warn of renaming status of a parameter of a function."""
+    msg = _renaming_message(
+        f"`{func.__name__}`'s parameter `{oldname}`", f"`{param}`", ver
+    )
+    _warn_once(func, DeprecationWarning, msg, param)

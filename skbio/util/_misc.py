@@ -6,7 +6,6 @@
 # The full license is in the file LICENSE.txt, distributed with this software.
 # ----------------------------------------------------------------------------
 
-import re
 import inspect
 from types import FunctionType
 from numbers import Integral
