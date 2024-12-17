@@ -146,10 +146,14 @@ def gme(dm, allow_edge_estimation=True):
     if allow_edge_estimation:
         _ols_edge(root, dm)
 
-    # replace taxon indices with taxon names
-    for node in root.postorder(include_self=True):
-        if (name := node.name) is not None:
-            node.name = taxa[name]
+    # replace taxon indices with taxon names, and clean up intermediate attributes
+    root.name = taxa[0]
+    for node in root.children[0].traverse(include_self=True):
+        if not node.children:
+            node.name = taxa[node.name]
+        delattr(node, "taxa")
+        delattr(node, "size")
+        delattr(node, "i")
 
     return root
 
@@ -587,7 +591,7 @@ def _average_distance_matrix_old(tree, dm):
     return adm
 
 
-def _ols_edge(tree, dm):
+def _ols_edge_old(tree, dm):
     """Assign estimated edge values to a tree based on a given distance matrix.
 
     Estimation of edge values is based on an ordinary least squares (OLS) framework.
@@ -663,3 +667,45 @@ def _ols_edge(tree, dm):
                 + ((1 - lambda1) * (adm[i1, i4] + adm[i2, i3]))
                 - (adm[i1, i2] + adm[i3, i4])
             )
+
+
+def _ols_edge(tree, dm, adm=None):
+    """Calculate branch lengths of a tree based on a distance matrix of taxa.
+
+    Estimation of branch lengths is based on an ordinary least squares (OLS) framework.
+
+    This algorithm is implemented according to Eqs. 3 & 4 of Desper and Gascuel (2002).
+
+    """
+    # calculate average distance matrix if not provided
+    if adm is None:
+        adm = _average_distance_matrix(tree, dm)
+
+    m = dm.shape[0]
+    for node in tree.children[0].traverse(include_self=False):
+        p = node.parent
+        a, b = p.children
+        s = a if node is b else b
+
+        # External (terminal) branch: based on the triplet (iAB) of self (i), parent
+        # (A), and sibling (B) (Eq. 4).
+        if not node.children:
+            node.length = 0.5 * (adm[p.i, node.i] + adm[s.i, node.i] - adm[p.i, s.i])
+
+        # Internal branch: based on the quartet (AB|CD) of parent (A, upper), sibling
+        # (B), and children (C and D) (Eq. 3).
+        else:
+            a, b = node.children
+            lambda_ = ((m - p.size) * b.size + s.size * a.size) / (
+                (m - p.size + s.size) * (a.size + b.size)
+            )
+            node.length = 0.5 * (
+                lambda_ * (adm[p.i, a.i] + adm[s.i, b.i])
+                + (1 - lambda_) * (adm[p.i, b.i] + adm[s.i, a.i])
+                - (adm[p.i, s.i] + adm[a.i, b.i])
+            )
+
+    # branch connecting stem and root
+    node = tree.children[0]
+    a, b = node.children
+    node.length = 0.5 * (adm[a.i, -1] + adm[b.i, -1] - adm[a.i, b.i])
