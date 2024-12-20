@@ -38,31 +38,10 @@ def ca(X, scaling=1):
         homogeneous (quantitative or binary). The rows correspond to the
         samples and the columns correspond to the features.
     scaling : {1, 2}
-        For a more detailed explanation of the interpretation, check Legendre &
-        Legendre 1998, section 9.4.3. The notes that follow are quick
-        recommendations.
-
-        Scaling type 1 maintains :math:`\chi^2` distances between rows
-        (samples): in the transformed space, the euclidean distances between
-        rows are equal to the :math:`\chi^2` distances between rows in the
-        original space. It should be used when studying the ordination of
-        samples. Rows (samples) that are near a column (features) have high
-        contributions from it.
-
-        Scaling type 2 preserves :math:`\chi^2` distances between columns
-        (features), so euclidean distance between columns after transformation
-        is equal to :math:`\chi^2` distance between columns in the original
-        space. It is best used when we are interested in the ordination of
-        features. A column (features) that is next to a row (sample) means that
-        it is more abundant there.
-
-        Other types of scalings are currently not implemented, as they're less
-        used by ecologists (Legendre & Legendre 1998, p. 456).
-
-        In general, features appearing far from the center of the biplot and
-        far from its edges will probably exhibit better relationships than
-        features either in the center (may be multimodal features, not related
-        to the shown ordination axes...) or the edges (sparse features...).
+        Scaling type 1 maintains :math:`\chi^2` distances between rows.
+        Scaling type 2 preserves :math:`\chi^2` distances between columns.
+        For a more detailed explanation of the interpretation,
+        check notes below and Legendre & Legendre 1998, section 9.4.3.
 
     Returns
     -------
@@ -88,6 +67,23 @@ def ca(X, scaling=1):
     -----
     The algorithm is based on [1]_, \S 9.4.1., and is expected to give the same
     results as ``cca(X)`` in R's package vegan.
+
+    In Scaling type 1, the euclidean distances between rows in the transformed
+    space equal their :math:`\chi^2` distances in the original space.
+    Rows (samples) near a column (features) indicate high contributions from
+    that feature.
+
+    In Scaling type 2, the euclidean distances between columns in the
+    transformed space equal their :math:`\chi^2` distances in the original
+    space. Columns (features) near a row (sample) indicate higher abundance
+    in that sample.
+    Other types of scalings are currently not implemented, as they are less used
+    by ecologists (Legendre & Legendre 1998, p. 456).
+
+    Features far from the center of the biplot and far from its edges often
+    exhibit better relationships than features either in the center (may represent
+    multimodal features, not related to the shown ordination axes) or the
+    edges (sparse features).
 
     References
     ----------
