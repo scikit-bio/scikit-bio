@@ -115,6 +115,35 @@ class TestPCoA(TestCase):
                                    r"no value for number_of_dimensions"):
             pcoa(dm_big, method="fsvd", number_of_dimensions=0)
 
+    def test_integer_dimensions(self):
+        """Test with an integer number_of_dimensions."""
+        results = pcoa(self.dm, number_of_dimensions=3)
+        self.assertEqual(results.samples.shape[1], 3)
+
+    def test_large_float(self):
+        """Test with a float number_of_dimensions > 1."""
+        msg = "A floating-point number greater than 1 cannot be"
+        with self.assertRaisesRegex(ValueError, msg):
+            pcoa(self.dm, number_of_dimensions=2.5)
+
+    def test_eigh_method_with_float(self):
+        """Test with a float number_of_dimensions with eigh method to retain 80% variance."""
+        results = pcoa(self.dm, method="eigh", number_of_dimensions=0.8, inplace=False, seed=None)
+        cumulative_variance = np.cumsum(results.proportion_explained.values)
+        self.assertGreaterEqual(cumulative_variance[-1], 0.8)
+
+    def test_edge_case_for_all_variance(self):
+        """Test with a number_of_dimensions close to 1 to retain nearly all variance."""
+        results = pcoa(self.dm, number_of_dimensions=0.9999)
+        cumulative_variance = np.cumsum(results.proportion_explained.values)
+        self.assertGreaterEqual(cumulative_variance[-1], 0.9999)
+
+    def test_fsvd_method_with_float(self):
+        """Test FSVD with float number_of_dimensions for variance threshold."""
+        results = pcoa(self.dm, method="fsvd", number_of_dimensions=0.7, inplace=False, seed=None)
+        cumulative_variance = np.cumsum(results.proportion_explained.values)
+        self.assertGreaterEqual(cumulative_variance[-1], 0.7)
+
     def test_permutted(self):
         # this should not throw
         pcoa(self.dm3, method="fsvd", number_of_dimensions=3, inplace=False)
