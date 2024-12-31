@@ -183,8 +183,6 @@ def subsample_counts(counts, n, replace=False, seed=None):
     ValueError
         If `n` is less than zero or greater than the sum of `counts`
         when `replace=False`.
-    EfficiencyWarning
-        If the accelerated code isn't present or hasn't been compiled.
 
     See Also
     --------

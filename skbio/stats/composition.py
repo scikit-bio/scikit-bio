@@ -102,7 +102,6 @@ necessary prior to logarithmic operations.
    :toctree:
 
    multi_replace
-   multiplicative_replacement
 
 
 Basis construction
@@ -140,6 +139,7 @@ References
 # The full license is in the file LICENSE.txt, distributed with this software.
 # ----------------------------------------------------------------------------
 
+from sys import modules
 from warnings import warn, catch_warnings, simplefilter
 
 import numpy as np
@@ -152,7 +152,7 @@ from statsmodels.stats.weightstats import CompareMeans
 from skbio.stats.distance import DistanceMatrix
 from skbio.util import find_duplicates
 from skbio.util import get_rng
-from skbio.util._warning import _warn_deprecated
+from skbio.util._decorator import aliased, register_aliases, params_aliased
 from statsmodels.stats.multitest import multipletests as sm_multipletests
 from statsmodels.regression.mixed_linear_model import MixedLM
 from statsmodels.tools.sm_exceptions import ConvergenceWarning
@@ -203,6 +203,7 @@ def closure(mat):
     return mat.squeeze()
 
 
+@aliased("multiplicative_replacement", "0.6.0", True)
 def multi_replace(mat, delta=None):
     r"""Replace all zeros with small non-zero values.
 
@@ -266,45 +267,6 @@ def multi_replace(mat, delta=None):
         )
     mat = np.where(z_mat, delta, zcnts * mat)
     return mat.squeeze()
-
-
-def multiplicative_replacement(mat, delta=None):
-    r"""Replace all zeros with small non-zero values.
-
-    This function is an alias for ``multi_replace``.
-
-    Parameters
-    ----------
-    mat : array_like of shape (n_compositions, n_components)
-        A matrix of proportions.
-    delta : float, optional
-        A small number to be used to replace zeros. If not specified, the
-        default value is :math:`\delta = \frac{1}{N^2}` where :math:`N` is the
-        number of components.
-
-    Returns
-    -------
-    ndarray of shape (n_compositions, n_components)
-        The matrix where all of the values are non-zero and each composition
-        (row) adds up to 1.
-
-    Raises
-    ------
-    ValueError
-        If negative proportions are created due to a large ``delta``.
-
-    Warnings
-    --------
-    ``multiplicative_replacement`` is deprecated as of ``0.6.0`` in favor of
-    ``multi_replace``.
-
-    See Also
-    --------
-    multi_replace
-
-    """
-    _warn_deprecated(multiplicative_replacement, "0.6.0", "Use multi_replace instead.")
-    return multi_replace(mat, delta)
 
 
 def perturb(x, y):
@@ -1259,6 +1221,7 @@ def _calc_p_adjust(name, p):
         return res[1]
 
 
+@params_aliased([("p_adjust", "multiple_comparisons_correction", "0.6.0", True)])
 def ancom(
     table,
     grouping,
@@ -1268,7 +1231,6 @@ def ancom(
     p_adjust="holm",
     significance_test="f_oneway",
     percentiles=(0.0, 25.0, 50.0, 75.0, 100.0),
-    multiple_comparisons_correction="holm-bonferroni",
 ):
     r"""Perform a differential abundance test using ANCOM.
 
@@ -1319,11 +1281,6 @@ def ancom(
         by statsmodels'
         :func:`multipletests <statsmodels.stats.multitest.multipletests>` function.
         Case-insensitive. If None, no correction will be performed.
-
-        .. versionchanged:: 0.6.0
-
-            Replaces ``multiple_comparisons_correction`` for conciseness.
-
     significance_test : str or callable, optional
         A function to test for significance between classes. It must be able to
         accept at least two vectors of floats and returns a test statistic and
@@ -1338,8 +1295,6 @@ def ancom(
         Percentile abundances to return for each feature in each group. By
         default, will return the minimum, 25th percentile, median, 75th
         percentile, and maximum abundances for each feature in each group.
-    multiple_comparisons_correction : str or None, optional
-        Alias for ``p_adjust``. For backward compatibility. Deprecated.
 
     Returns
     -------
@@ -1367,14 +1322,6 @@ def ancom(
     scipy.stats.f_oneway
     scipy.stats.wilcoxon
     scipy.stats.kruskal
-
-    Warnings
-    --------
-    ``multiple_comparisons_correction`` is deprecated as of ``0.6.0``. It has
-    been renamed to ``p_adjust``.
-
-    ``significance_test=None`` is deprecated as of ``0.6.0``. The default value
-    is now "f_oneway".
 
     Notes
     -----
@@ -1534,11 +1481,6 @@ def ancom(
 
     if not 0 < theta < 1:
         raise ValueError("`theta`=%f is not within 0 and 1." % theta)
-
-    # @deprecated
-    if multiple_comparisons_correction != "holm-bonferroni":
-        _warn_deprecated(ancom, "0.6.0")
-        p_adjust = multiple_comparisons_correction
 
     if (grouping.isnull()).any():
         raise ValueError("Cannot handle missing values in `grouping`.")
@@ -2603,3 +2545,6 @@ def dirmult_lme(
             )
 
     return pd.DataFrame(final_res)
+
+
+register_aliases(modules[__name__])

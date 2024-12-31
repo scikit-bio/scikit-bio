@@ -6,7 +6,6 @@
 # The full license is in the file LICENSE.txt, distributed with this software.
 # ----------------------------------------------------------------------------
 
-import hashlib
 import inspect
 from types import FunctionType
 from numbers import Integral
@@ -173,6 +172,8 @@ def safe_md5(open_file, block_size=2**20):
     >>> fd.close()
 
     """
+    import hashlib
+
     md5 = hashlib.md5()
     data = True
     while data:

@@ -24,8 +24,15 @@ from skbio.tree._exception import (
     MissingNodeError,
     TreeError,
 )
-from skbio.util._decorator import classonlymethod
-from skbio.util._warning import _warn_deprecated
+from skbio.util import get_rng
+from skbio.util._decorator import (
+    classonlymethod,
+    deprecated,
+    register_aliases,
+    aliased,
+    params_aliased,
+)
+from skbio.util._warning import _warn_once
 from skbio.io.registry import Read, Write
 from ._compare import (
     _check_dist_metric,
@@ -44,6 +51,7 @@ from ._compare import (
 # ----------------------------------------------------------------------------
 
 
+@register_aliases
 class TreeNode(SkbioObject):
     r"""Represent a node within a tree.
 
@@ -303,11 +311,9 @@ class TreeNode(SkbioObject):
         """
         return self._copy(deep, {})
 
+    @deprecated("0.6.2", msg="Use `copy` instead.")
     def deepcopy(self):
         r"""Return a deep copy of self using an iterative approach.
-
-        .. deprecated:: 0.6.2
-            Use :meth:`copy` instead.
 
         Returns
         -------
@@ -324,9 +330,6 @@ class TreeNode(SkbioObject):
         currently the default behavior of the latter.
 
         """
-        msg = "Use copy instead."
-        _warn_deprecated(self.__class__.deepcopy, "0.6.2", msg)
-
         return self._copy(True, {})
 
     def subtree(self, tip_list=None):
@@ -550,16 +553,15 @@ class TreeNode(SkbioObject):
         else:
             return [n for n in nodes if n is not ignore]
 
-    def lowest_common_ancestor(self, nodes=None, **kwargs):
+    @aliased("lowest_common_ancestor")
+    @params_aliased([("nodes", "tipnames", "0.6.3", True)])
+    def lca(self, nodes=None):
         r"""Find the lowest common ancestor of a list of nodes.
 
         Parameters
         ----------
         nodes : iterable of TreeNode or str
             Instances or names of the nodes of interest.
-
-            .. versionchanged:: 0.6.3
-                Renamed from ``tipnames``. The old name is preserved as an alias.
 
         Returns
         -------
@@ -586,7 +588,7 @@ class TreeNode(SkbioObject):
         >>> from skbio import TreeNode
         >>> tree = TreeNode.read(["((a,b)c,(d,e)f)root;"])
         >>> nodes = [tree.find('a'), tree.find('b')]
-        >>> lca = tree.lowest_common_ancestor(nodes)
+        >>> lca = tree.lca(nodes)
         >>> print(lca.name)
         c
         >>> nodes = [tree.find('a'), tree.find('e')]
@@ -595,8 +597,6 @@ class TreeNode(SkbioObject):
         root
 
         """
-        if nodes is None and kwargs and "tipnames" in kwargs:
-            nodes = kwargs["tipnames"]
         if not nodes:
             raise ValueError("No node is specified.")
         nodes = [self.find(x) for x in nodes]
@@ -642,8 +642,6 @@ class TreeNode(SkbioObject):
 
         return curr
 
-    lca = lowest_common_ancestor  # for convenience
-
     def _path(self, other):
         r"""Return the path from self to other.
 
@@ -663,8 +661,8 @@ class TreeNode(SkbioObject):
 
         Notes
         -----
-        This algorithm is optimized for finding the LCA of two nodes. Instead, `lca`
-        is optimized for finding the LCA of multiple nodes.
+        This algorithm is optimized for finding the LCA of two nodes. Instead,
+        :meth:`lca` is optimized for finding the LCA of multiple nodes.
 
         """
         anc1 = self.ancestors(include_self=True)
@@ -1537,12 +1535,9 @@ class TreeNode(SkbioObject):
                 return True
         return False
 
+    @aliased("remove_deleted", "0.6.3", True)
     def remove_by_func(self, func, uncache=True):
         r"""Remove nodes of a tree that meet certain criteria.
-
-        .. versionchanged:: 0.6.3
-            Renamed from ``remove_deleted``. The old name is kept as an alias. But it
-            may be removed in a future version.
 
         Parameters
         ----------
@@ -1584,8 +1579,6 @@ class TreeNode(SkbioObject):
         for node in self.traverse(include_self=False):
             if func(node):
                 node.parent.remove(node, uncache=False)
-
-    remove_deleted = remove_by_func  # alias; to be removed in a future version
 
     def prune(self, uncache=True):
         r"""Collapse single-child nodes in the tree.
@@ -1986,7 +1979,8 @@ class TreeNode(SkbioObject):
                         node.remove(child, uncache=False)
                     node.extend([ind, interm], uncache=False)
 
-    def shuffle(self, k=None, names=None, shuffler=None, n=1, **kwargs):
+    @params_aliased([("shuffler", "shuffle_f", "0.6.3", True)])
+    def shuffle(self, k=None, names=None, shuffler=None, n=1):
         r"""Randomly shuffle tip names of the tree.
 
         Parameters
@@ -2006,8 +2000,6 @@ class TreeNode(SkbioObject):
             .. versionchanged:: 0.6.3
                 Switched to NumPy's new random generator. Can accept a random seed or
                 random generator instance.
-
-                Renamed from ``shuffle_f``. The old name is kept as an alias.
 
         n : int, optional
             The number of iterations to perform. Must be a positive integer. Default
@@ -2049,7 +2041,7 @@ class TreeNode(SkbioObject):
 
         >>> from skbio import TreeNode
         >>> tree = TreeNode.read(["((a,b),(c,d));"])
-        >>> for shuffled in tree.shuffle(shuffle_f=42, n=5):
+        >>> for shuffled in tree.shuffle(shuffler=42, n=5):
         ...     print(shuffled)
         ((d,c),(b,a));
         <BLANKLINE>
@@ -2072,10 +2064,6 @@ class TreeNode(SkbioObject):
             n = np.inf
         elif n < 1:
             raise ValueError("n must be > 0.")
-
-        # renamed parameter
-        if shuffler is None and "shuffle_f" in kwargs:
-            shuffler = kwargs["shuffle_f"]
 
         # determine shuffling function
         shuffler = _check_shuffler(shuffler)
@@ -2312,16 +2300,13 @@ class TreeNode(SkbioObject):
         """
         # future warning
         if branch_attrs == {"name", "length", "support"} and root_name == "root":
-            func = self.__class__.unrooted_copy
-            if not hasattr(func, "warned"):
-                simplefilter("once", FutureWarning)
-                warn(
-                    "The default behavior of `unrooted_copy` is subject to change in "
-                    "0.7.0. The new default behavior can be achieved by specifying "
-                    '`branch_attrs={"length", "support"}, root_name=None`.',
-                    FutureWarning,
-                )
-                func.warned = True
+            _warn_once(
+                self.__class__.unrooted_copy,
+                FutureWarning,
+                "The default behavior of `unrooted_copy` is subject to change in "
+                "0.7.0. The new default behavior can be achieved by specifying "
+                '`branch_attrs={"length", "support"}, root_name=None`.',
+            )
 
         # determine copy mode
         _copy = deepcopy if deep else copy
@@ -2382,12 +2367,13 @@ class TreeNode(SkbioObject):
 
         return result
 
+    @deprecated(
+        "0.6.2",
+        msg="Because it generates a redundant copy of the tree. Use `unrooted_copy` "
+        "instead.",
+    )
     def unrooted_deepcopy(self, parent=None):
         r"""Walk the tree unrooted-style and returns a new deepcopy.
-
-        .. deprecated:: 0.6.2
-            This function is deprecated as it generates a redundant copy of the tree.
-            Use :meth:`unrooted_copy` instead.
 
         Parameters
         ----------
@@ -2414,9 +2400,6 @@ class TreeNode(SkbioObject):
         This method calls :meth:`unrooted_copy` which is recursive.
 
         """
-        msg = "Use unrooted_copy instead."
-        _warn_deprecated(self.__class__.unrooted_deepcopy, "0.6.2", msg)
-
         root = self.root()
         root.assign_ids()
 
@@ -2649,16 +2632,13 @@ class TreeNode(SkbioObject):
         """
         # future warning
         if reset is False and branch_attrs == ["name"] and root_name == "root":
-            func = self.__class__.root_at
-            if not hasattr(func, "warned"):
-                simplefilter("once", FutureWarning)
-                warn(
-                    "The default behavior of `root_at` is subject to change in 0.7.0. "
-                    "The new default behavior can be achieved by specifying "
-                    "`reset=True, branch_attrs=[], root_name=None`.",
-                    FutureWarning,
-                )
-                func.warned = True
+            _warn_once(
+                self.__class__.root_at,
+                FutureWarning,
+                "The default behavior of `root_at` is subject to change in 0.7.0. "
+                "The new default behavior can be achieved by specifying "
+                "`reset=True, branch_attrs=[], root_name=None`.",
+            )
 
         # locate to-be root node
         tree = self.root()
@@ -2842,16 +2822,13 @@ class TreeNode(SkbioObject):
         """
         # future warning
         if reset is False and branch_attrs == ["name"] and root_name == "root":
-            func = self.__class__.root_at_midpoint
-            if not hasattr(func, "warned"):
-                simplefilter("once", FutureWarning)
-                warn(
-                    "The default behavior of `root_at_midpoint` is subject to change "
-                    "in 0.7.0. The new default behavior can be achieved by specifying "
-                    "`reset=True, branch_attrs=[], root_name=None`.",
-                    FutureWarning,
-                )
-                func.warned = True
+            _warn_once(
+                self.__class__.root_at_midpoint,
+                FutureWarning,
+                "The default behavior of `root_at_midpoint` is subject to change in "
+                "0.7.0. The new default behavior can be achieved by specifying "
+                "`reset=True, branch_attrs=[], root_name=None`.",
+            )
 
         tree = self.root()
         if inplace:
@@ -2870,7 +2847,7 @@ class TreeNode(SkbioObject):
 
         tip1 = tree.find(tips[0])
         tip2 = tree.find(tips[1])
-        lca = tree.lowest_common_ancestor([tip1, tip2])
+        lca = tree.lca([tip1, tip2])
 
         if tip1.depth(lca) > half_max_dist:
             climb_node = tip1
@@ -3798,13 +3775,11 @@ class TreeNode(SkbioObject):
                     result[internal_node] += count
         return result
 
+    @aliased("accumulate_to_ancestor", "0.6.3")
     def depth(
         self, ancestor=None, include_root=False, use_length=True, missing_as_zero=False
     ):
         r"""Calculate the depth of the current node.
-
-        .. versionchanged:: 0.6.3
-            Renamed from ``accumulate_to_ancestor``. The old name is kept as an alias.
 
         The **depth** of a node is the sum of branch lengths from it to the root of the
         tree.
@@ -3887,8 +3862,6 @@ class TreeNode(SkbioObject):
             return sum(x.length for x in path)
         except TypeError:
             raise NoLengthError("Nodes without branch length are encountered.")
-
-    accumulate_to_ancestor = depth
 
     def height(self, include_self=False, use_length=True, missing_as_zero=False):
         r"""Calculate the height of the current node.
@@ -3974,13 +3947,10 @@ class TreeNode(SkbioObject):
                 raise NoLengthError(errmsg)
         return H, tip
 
-    def total_length(
-        self, nodes=None, include_stem=False, include_self=False, **kwargs
-    ):
+    @aliased("descending_branch_length", "0.6.3")
+    @params_aliased([("nodes", "tip_subset", "0.6.3", True)])
+    def total_length(self, nodes=None, include_stem=False, include_self=False):
         r"""Calculate the total length of branches descending from self.
-
-        .. versionchanged:: 0.6.3
-            Renamed from ``descending_branch_length``. The old name is kept as an alias.
 
         Parameters
         ----------
@@ -3990,7 +3960,6 @@ class TreeNode(SkbioObject):
             returned. Otherwise, the total branch length of the tree will be returned.
 
             .. versionchanged:: 0.6.3
-                Renamed from ``tip_subset``. The old name is kept as an alias.
                 Can accept TreeNode instances in addition to names.
                 Can accept internal nodes in addition to tips.
 
@@ -4062,9 +4031,6 @@ class TreeNode(SkbioObject):
         6.3
 
         """
-        if kwargs and "tip_subset" in kwargs:
-            nodes = kwargs["tip_subset"]
-
         ## shortcut for the entire subtree
         if not nodes:
             return sum(
@@ -4124,8 +4090,6 @@ class TreeNode(SkbioObject):
         return (
             sum(n.length or 0.0 for n in chain(first_path[:stop], other_paths)) or 0.0
         )
-
-    descending_branch_length = total_length
 
     def distance(self, other, use_length=True, missing_as_zero=False):
         r"""Calculate the distance between self and another node.
@@ -4204,11 +4168,9 @@ class TreeNode(SkbioObject):
         except TypeError:
             raise NoLengthError("Nodes without branch length are encountered.")
 
+    @aliased("get_max_distance", "0.6.3")
     def maxdist(self, use_length=True):
         r"""Return the maximum distance between any pair of tips in the tree.
-
-        .. versionchanged:: 0.6.3
-            Renamed from ``get_max_distance``. The old name is kept as an alias.
 
         This measure is also referred to as the **diameter** of a tree.
 
@@ -4306,13 +4268,9 @@ class TreeNode(SkbioObject):
             max_dist = float(max_dist)
         return max_dist, (max_tip1, max_tip2)
 
-    get_max_distance = maxdist
-
+    @aliased("tip_tip_distances", "0.6.3")
     def cophenet(self, endpoints=None, use_length=True):
         r"""Return a distance matrix between each pair of tips in the tree.
-
-        .. versionchanged:: 0.6.3
-            Renamed from ``tip_tip_distances``. The old name is kept as an alias.
 
         Parameters
         ----------
@@ -4506,9 +4464,8 @@ class TreeNode(SkbioObject):
         # Skip validation as all items to validate are guaranteed.
         return DistanceMatrix(result, taxa, validate=False)
 
-    tip_tip_distances = cophenet
-
-    def compare_subsets(self, other, shared_only=False, proportion=True, **kwargs):
+    @params_aliased([("shared_only", "exclude_absent_taxa", "0.6.3", True)])
+    def compare_subsets(self, other, shared_only=False, proportion=True):
         r"""Calculate the difference of subsets between two trees.
 
         Parameters
@@ -4517,10 +4474,6 @@ class TreeNode(SkbioObject):
             The other tree to compare with.
         shared_only : bool, optional
             Only consider taxa shared with the other tree. Default is False.
-
-            .. versionchanged:: 0.6.3
-                Renamed from ``exclude_absent_taxa``. The old name is kept as an alias.
-
         proportion : bool, optional
             Whether to return count (False) or proportion (True, default) of different
             subsets.
@@ -4551,9 +4504,6 @@ class TreeNode(SkbioObject):
         0.5
 
         """
-        # renamed parameter
-        if shared_only is False and "exclude_absent_taxa" in kwargs:
-            shared_only = kwargs["exclude_absent_taxa"]
         return _topo_dists((self, other), True, shared_only, proportion)[0]
 
     def compare_biparts(self, other, proportion=True):
@@ -4873,6 +4823,13 @@ class TreeNode(SkbioObject):
             metric=metric,
         )[0]
 
+    @aliased("compare_tip_distances", "0.6.3")
+    @params_aliased(
+        [
+            ("shuffler", "shuffle_f", "0.6.3", True),
+            ("metric", "dist_f", "0.6.3", True),
+        ]
+    )
     def compare_cophenet(
         self,
         other,
@@ -4881,12 +4838,8 @@ class TreeNode(SkbioObject):
         shuffler=None,
         use_length=True,
         ignore_self=False,
-        **kwargs,
     ):
         r"""Calculate the distance between two trees based on cophenetic distances.
-
-        .. versionchanged:: 0.6.3
-            Renamed from ``compare_tip_distances``. The old name is kept as an alias.
 
         Parameters
         ----------
@@ -4914,8 +4867,6 @@ class TreeNode(SkbioObject):
                 instances. The default value "unitcorr" is consistent with the previous
                 default behavior.
 
-                Renamed from ``dist_f``. The old name is kept as an alias.
-
         shuffler : int, np.random.Generator or callable, optional
             The shuffling function to use if ``sample`` is specified. Default is
             :meth:`~numpy.random.Generator.shuffle`. If an integer is provided, a
@@ -4924,8 +4875,6 @@ class TreeNode(SkbioObject):
             .. versionchanged:: 0.6.3
                 Switched to NumPy's new random generator. Can accept a random seed or
                 random generator instance.
-
-                Renamed from ``shuffle_f``. The old name is kept as an alias.
 
         use_length : bool, optional
             Whether to calculate the sum of branch lengths (True, default) or the
@@ -5062,23 +5011,13 @@ class TreeNode(SkbioObject):
         """
         # future warning
         if ignore_self is False:
-            func = self.__class__.compare_cophenet
-            if not hasattr(func, "warned"):
-                simplefilter("once", FutureWarning)
-                warn(
-                    "The default behavior of `compare_cophenet` is subject to "
-                    "change in 0.7.0. The new default behavior can be achieved by "
-                    "specifying `ignore_self=True`.",
-                    FutureWarning,
-                )
-                func.warned = True
-
-        # renamed parameters
-        if kwargs:
-            if shuffler is None and "shuffle_f" in kwargs:
-                shuffler = kwargs["shuffle_f"]
-            if metric == "unitcorr" and "dist_f" in kwargs:
-                metric = kwargs["dist_f"]
+            _warn_once(
+                self.__class__.compare_cophenet,
+                FutureWarning,
+                "The default behavior of `compare_cophenet` is subject to change in "
+                "0.7.0. The new default behavior can be achieved by specifying "
+                "`ignore_self=True`.",
+            )
 
         metric = _check_dist_metric(metric)
         if sample is not None:
@@ -5092,8 +5031,6 @@ class TreeNode(SkbioObject):
             use_length=use_length,
             ignore_self=ignore_self,
         )[0]
-
-    compare_tip_distances = compare_cophenet
 
     # ------------------------------------------------
     # Tree indexing and searching
@@ -5150,13 +5087,9 @@ class TreeNode(SkbioObject):
         lookup = hasattr(tree, "_tip_cache") and hasattr(tree, "_non_tip_cache")
         return attrs, lookup
 
+    @aliased("invalidate_caches", "0.6.3", True)
     def clear_caches(self, attr=True, lookup=True):
         r"""Delete node attribute and lookup caches of a tree.
-
-        .. versionchanged:: 0.6.3
-
-            Renamed from ``invalidate_caches``. The old name is preserved as an alias.
-            But it may be removed in a future version.
 
         Parameters
         ----------
@@ -5220,8 +5153,6 @@ class TreeNode(SkbioObject):
             for key in ("_tip_cache", "_non_tip_cache"):
                 if hasattr(tree, key):
                     delattr(tree, key)
-
-    invalidate_caches = clear_caches  # alias; to be removed in a future version
 
     def cache_attr(self, func, cache_attrname, cache_type=list, register=True):
         r"""Cache attributes on nodes of the tree through a postorder traversal.
@@ -5436,11 +5367,6 @@ class TreeNode(SkbioObject):
 
     def create_caches(self):
         r"""Construct an internal lookup table to facilitate searching by name.
-
-        .. deprecated:: 0.6.3
-            This method will become a private member in version 0.7.0. It is meant to
-            be called automatically by :meth:`find` and :meth:`find_all`, and it does
-            not make any public-facing effect.
 
         Raises
         ------
