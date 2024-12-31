@@ -34,7 +34,7 @@ class NjTests(TestCase):
                 io.StringIO(self.expected1_str))
 
         # this example was pulled from the Phylip manual
-        # http://evolution.genetics.washington.edu/phylip/doc/neighbor.html
+        # https://phylipweb.github.io/phylip/doc/neighbor.html
         data2 = [[0.0000, 1.6866, 1.7198, 1.6606, 1.5243, 1.6043, 1.5905],
                  [1.6866, 0.0000, 1.5232, 1.4841, 1.4465, 1.4389, 1.4629],
                  [1.7198, 1.5232, 0.0000, 0.7115, 0.5958, 0.6179, 0.5583],
