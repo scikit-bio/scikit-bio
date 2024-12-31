@@ -5365,12 +5365,6 @@ class TreeNode(SkbioObject):
 
         return id_index, child_index
 
-    @deprecated(
-        "0.6.3",
-        msg="This method will become a private member in 0.7.0. It is meant to be "
-        "called automatically by `find` and `find_all`, and it does not make any "
-        "public-facing effect.",
-    )
     def create_caches(self):
         r"""Construct an internal lookup table to facilitate searching by name.
 
