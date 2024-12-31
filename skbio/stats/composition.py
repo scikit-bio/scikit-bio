@@ -44,7 +44,6 @@ compositions.
 
    ancom
    dirmult_ttest
-   dirmult_lme
 
 
 Arithmetic operations
@@ -1920,7 +1919,6 @@ def dirmult_ttest(
 
     See Also
     --------
-    dirmult_lme
     scipy.stats.ttest_ind
 
     Notes
