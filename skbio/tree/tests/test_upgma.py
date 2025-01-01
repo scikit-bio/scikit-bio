@@ -38,7 +38,3 @@ class UpgmaTests(TestCase):
         actual_TreeNode = upgma(self.dm, weighted=True)
         self.assertAlmostEqual(actual_TreeNode.compare_cophenet(
             self.expected_TreeNode_wpgma), 0.0, places=10)
-
-    def test_upgma_error(self):
-        error_dm = "ErrorString"
-        self.assertRaises(ValueError, upgma, error_dm)

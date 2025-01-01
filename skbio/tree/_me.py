@@ -9,10 +9,13 @@
 import numpy as np
 
 from skbio.tree import TreeNode
+from ._utils import _check_dm
 
 
 def gme(dm):
     r"""Perform greedy minimum evolution (GME) for phylogenetic reconstruction.
+
+    .. versionadded:: 0.6.2
 
     Parameters
     ----------
@@ -33,21 +36,21 @@ def gme(dm):
     -----
     Greedy Minimum Evolution (GME) is a distance-based algorithm for phylogenetic
     reconstruction utilizing the minimum evolution principle for selecting a tree
-    topology with the lowest sum of branch lengths according to a given method
-    of estimating branch lengths. Ordinary Least Squares (OLS) is a natural
-    framework for edge estimation as it is statistically consistent with
-    minimum evolution and is used for GME.
+    topology with the lowest sum of branch lengths according to a given method of
+    estimating branch lengths. Ordinary Least Squares (OLS) is a natural framework for
+    edge estimation as it is statistically consistent with minimum evolution and is
+    used for GME.
 
     References
     ----------
-    .. [1] Desper R, Gascuel O. Fast and accurate phylogeny reconstruction
-       algorithms based on the minimum-evolution principle. J Comput Biol.
-       2002;9(5):687-705.
+    .. [1] Desper, R., & Gascuel, O. (2002). Fast and accurate phylogeny reconstruction
+       algorithms based on the minimum-evolution principle. J Comput Biol, 9(5),
+       687-705.
 
     Examples
     --------
-    Define a new distance matrix object describing the distances between five
-    taxa: human, monkey, pig, rat, and chicken.
+    Define a new distance matrix object describing the distances between five taxa:
+    human, monkey, pig, rat, and chicken.
 
     >>> from skbio import DistanceMatrix
     >>> from skbio.tree import gme
@@ -76,8 +79,7 @@ def gme(dm):
               \-human
 
     """
-    if dm.shape[0] < 3:
-        raise ValueError("Distance matrix must be at least 3x3 to generate a tree.")
+    _check_dm(dm)
 
     # reconstruct tree topology and branch lengths using GME
     tree, lens = _gme(dm.data)
@@ -87,6 +89,8 @@ def gme(dm):
 
 def bme(dm):
     r"""Perform balanced minimum evolution (BME) for phylogenetic reconstruction.
+
+    .. versionadded:: 0.6.3
 
     Parameters
     ----------
@@ -112,14 +116,14 @@ def bme(dm):
 
     References
     ----------
-    .. [1] Desper R, Gascuel O. Fast and accurate phylogeny reconstruction
-       algorithms based on the minimum-evolution principle. J Comput Biol.
-       2002;9(5):687-705.
+    .. [1] Desper, R., & Gascuel, O. (2002). Fast and accurate phylogeny reconstruction
+       algorithms based on the minimum-evolution principle. J Comput Biol, 9(5),
+       687-705.
 
     Examples
     --------
-    Define a new distance matrix object describing the distances between five
-    taxa: human, monkey, pig, rat, and chicken.
+    Define a new distance matrix object describing the distances between five taxa:
+    human, monkey, pig, rat, and chicken.
 
     >>> from skbio import DistanceMatrix
     >>> from skbio.tree import bme
@@ -148,8 +152,7 @@ def bme(dm):
               \-human
 
     """
-    if dm.shape[0] < 3:
-        raise ValueError("Distance matrix must be at least 3x3 to generate a tree.")
+    _check_dm(dm)
 
     # reconstruct tree topology and branch lengths using BME
     tree, lens = _bme(dm.data)
@@ -162,14 +165,14 @@ def _gme(dm):
 
     Parameters
     ----------
-    dm : ndarray of (m, m) of float
+    dm : ndarray of float of shape (m, m)
         Input distance matrix containing distances between taxa.
 
     Returns
     -------
-    tree : ndarray of (2m - 3, 4) of int
+    tree : ndarray of int of shape (2m - 3, 4)
         Reconstructed tree topology by GME.
-    lens : ndarray of (2m - 3,) of float
+    lens : ndarray of float of shape (2m - 3,)
         Estimated branch lengths by OLS.
 
     Notes
@@ -246,7 +249,7 @@ def _gme(dm):
         _avgdist_d2_insert(ad2, target, adk, tree, preodr)
 
         # insert new taxon into tree
-        _insert_taxon(k, target, tree, preodr, postodr)
+        _insert_taxon(k, target, tree, preodr, postodr, False)
 
     # calculate branch lengths using an OLS framework
     _ols_lengths_d2(lens, ad2, tree, preodr)
@@ -259,14 +262,14 @@ def _bme(dm):
 
     Parameters
     ----------
-    dm : ndarray of (m, m) of float
+    dm : ndarray of float of shape (m, m)
         Input distance matrix containing distances between taxa.
 
     Returns
     -------
-    tree : ndarray of (2m - 3, 4) of int
-        Reconstructed tree topology by GME.
-    lens : ndarray of (2m - 3,) of float
+    tree : ndarray of int of shape (2m - 3, 4)
+        Reconstructed tree topology by BME.
+    lens : ndarray of float of shape (2m - 3,)
         Estimated branch lengths by a balanced framework.
 
     Notes
@@ -289,6 +292,9 @@ def _bme(dm):
     tree, preodr, postodr, adm, adk, lens, stack = _allocate_arrays(n, True)
     _init_tree(dm, tree, preodr, postodr, adm, True)
 
+    # pre-calculate negative powers of 2
+    powers = 2.0 ** -np.arange(m)
+
     for k in range(3, m):
         # calculate balanced average distances from new taxon to existing subtrees
         _bal_avgdist_taxon(adk, k, dm, tree, preodr, postodr)
@@ -297,10 +303,10 @@ def _bme(dm):
         target = _bal_min_branch(lens, adm, adk, tree, preodr)
 
         # update balanced average distance matrix between all subtrees
-        _bal_avgdist_insert(adm, target, adk, tree, preodr, postodr)
+        _bal_avgdist_insert(adm, target, adk, tree, preodr, postodr, powers, stack)
 
         # insert new taxon into tree
-        _insert_taxon(k, target, tree, preodr, postodr)
+        _insert_taxon(k, target, tree, preodr, postodr, True)
 
     # calculate branch lengths using a balanced framework
     _bal_lengths(lens, adm, tree, preodr)
@@ -411,7 +417,7 @@ def _check_tree(tree, preodr, postodr):
 
 
 def _to_treenode(tree, taxa, lens=None, unroot=False):
-    """Convert an array-based tree structure into a TreeNode object.
+    r"""Convert an array-based tree structure into a TreeNode object.
 
     Parameters
     ----------
@@ -535,6 +541,10 @@ def _preorder(order, tree, stack, start=0):
     array is pre-allocated. The output (ordered nodes) is also written into a
     pre-allocated array.
 
+    This function and :func:`_postorder` are not actually used in the greedy algorithms
+    in this module, which incrementally grow the tree as well as the orders. The two
+    functions are implemented for reference and test purpose.
+
     """
     stack[0] = start
     order_i = 0  # next index of order
@@ -555,7 +565,11 @@ def _preorder(order, tree, stack, start=0):
 
 
 def _postorder(order, tree, stack, start=0):
-    """Perform postorder traversal."""
+    """Perform postorder traversal.
+
+    See also :func:`_preorder`.
+
+    """
     stack[0] = start
     curr = tree[start, 0]
     order_i = 0
@@ -657,7 +671,7 @@ def _init_tree(dm, tree, preodr, postodr, ads, matrix=False):
 # ------------------------------------------------
 
 
-def _insert_taxon(taxon, target, tree, preodr, postodr):
+def _insert_taxon(taxon, target, tree, preodr, postodr, depth=True):
     r"""Insert a taxon between a target node and its parent.
 
     For example, with the following local structure of the original tree:
@@ -764,7 +778,8 @@ def _insert_taxon(taxon, target, tree, preodr, postodr):
         ]
 
         # clade depth +1
-        tree[clade, 5] += 1
+        if depth:
+            tree[clade, 5] += 1
 
         # preorder shift: nodes after clade +2, tip inserted after clade, nodes within
         # clade +1, link inserted before clade
@@ -827,6 +842,8 @@ def _avgdist_matrix_naive(adm, dm, tree, postodr):
     distances, as discussed in Eq. 1 of Desper and Gascuel (2002). instead of adopting
     a recursive strategy (Eq. 2). Therefore, it is significantly slower.
 
+        d(A, B) = \frac{1}{|A||B|} \sum_{i \in A, j \in B} d(i, j)
+
     This algorithm is implemented as a reference and for comparison purpose. It is not
     used in the actual GME algorithm.
 
@@ -844,13 +861,12 @@ def _avgdist_matrix_naive(adm, dm, tree, postodr):
 
     for a in range(n):
         for b in range(a + 1, n):
-            a_taxa, b_taxa = taxas[a], taxas[b]
-            # a is a descendant (proper subset) of b
-            if a_taxa < b_taxa:
-                b_taxa = full - b_taxa
-            # a is an ancestor (proper superset) of b
-            elif a_taxa > b_taxa:
+            # If a is an ancestor (proper superset) of b, flip a's taxon set as the
+            # the upper subtree of a will be considered.
+            if (a_taxa := taxas[a]) > (b_taxa := taxas[b]):
                 a_taxa = full - a_taxa
+            # Because this is postorder traversal, a cannot be a descendant (proper
+            # subset) of b.
             adm[a, b] = adm[b, a] = dm[list(a_taxa)][:, list(b_taxa)].mean()
 
 
@@ -860,15 +876,26 @@ def _avgdist_matrix(adm, dm, tree, preodr, postodr):
     This function will update adm, a float array of (n, n) representing pairwise
     distances between all nodes (tips, internal nodes and the root) in the tree.
 
-    Implemented according to Appendix 4 of Desper and Gascuel (2002).
+    Implemented according to Appendix 4 of Desper and Gascuel (2002). Basically, this
+    algorithm traverses the tree and calculates the average distance between each pair
+    of subtrees. Here, a "subtree" is identified by a node, but it can be one of the
+    two scenarios:
+
+    0. Lower subtree (L): the subtree descending from a node (including the node).
+    1. Upper subtree (U): the subtree branching from the node upward. The root of this
+       subtree is the node's parent. Its immediate children are the parent's parent
+       and the node's sibling.
+
+    Then it iteratively applies Eq. 2 to calculate the average distance between two
+    subtrees based on the average distances from the children of one of the subtrees
+    to the other.
+
+        d(A, B) = (|B_1| * d(A, B_1) + |B_2| * d(A, B_2)) / |B|
 
     """
     # total numbers of taxa and nodes in the tree
     m = tree[0, 4] + 1
     n = 2 * m - 3
-
-    # initialize matrix
-    adm[:n, :n].fill(0)  # TODO: this is probably not necessary
 
     # Calculate the average distance between each pair of subtrees defined by nodes
     # a and b (A4.1 of the paper).
@@ -974,11 +1001,14 @@ def _bal_avgdist_matrix(adm, dm, tree, preodr, postodr):
 
     This function resembles :func:`_avgdist_matrix`, but it weighs subtrees equally
     regardless of their sizes. Specifically, it replaces Eq. 2 with Eq. 6. of Desper
-    and Gascuel (2002). Same for all functions starting with `bal_`.
+    and Gascuel (2002):
+
+        d(A, B) = (d(A, B_1) + d(A, B_2)) / 2
+
+    Same for all functions starting with `bal_`.
 
     """
     n = 2 * tree[0, 4] - 1
-    adm[:n, :n].fill(0)
 
     # Step 1: Calculate non-nested subtree to subtree distances.
     for a in postodr[: n - 1]:
@@ -1063,7 +1093,9 @@ def _avgdist_taxon(adk, taxon, dm, tree, preodr, postodr):
     represent the average distances from the taxon to the lower and upper subtrees of
     each existing node, respectively.
 
-    Implemented according to Appendix 3 of Desper and Gascuel (2002).
+    Implemented according to Appendix 3 of Desper and Gascuel (2002). Basically, this
+    algorithm calculates all lower subtree distances via a postorder traversal, then
+    calculates all upper subtree distances via a preorder traversal.
 
     """
     # distance from taxon to all other taxa
@@ -1116,18 +1148,30 @@ def _bal_avgdist_taxon(adk, taxon, dm, tree, preodr, postodr):
 def _avgdist_d2_insert(ad2, target, adk, tree, preodr):
     r"""Update average distances between distant-2 subtrees after taxon insertion.
 
-    A new taxon will be inserted into the branch connecting the target node and its
-    parent. After insertion, the new taxon will become the sibling of the target.
+    This function will update ad2, a float array of (n, 2) representing pairwise
+    distances between all distant-2 subtrees in the tree. Here, `distant-2 subtrees`
+    refer to subtrees that are two branches away from each other. Specifically, there
+    are two scenarios:
 
-              parent
-               /  \
-            link  sibling
-             / \
+    - Column 0: Distance between the lower subtree of the current node and the upper
+      subtree of its parent.
+    - Column 1: Distance between the lower subtree of the current node and the lower
+      subtree of its sibling.
+
+    This function assumes that the taxon will be inserted into the branch connecting
+    the target node and its parent. After insertion, the taxon will become the sibling
+    of the target.
+
+               parent
+                /  \
+             link  sibling
+             /  \
         target  taxon
 
-    Implemented according to Eq. 8 of Desper and Gascuel (2002).
+    This function should be executed *before* calling :func:`_insert_taxon`, which will
+    mutate the tree.
 
-    This function should be executed *before* calling `_insert_taxon`.
+    Implemented according to Eq. 8 of Desper and Gascuel (2002).
 
     """
     m = tree[0, 4] + 1
@@ -1212,11 +1256,15 @@ def _avgdist_d2_insert(ad2, target, adk, tree, preodr):
         parent, sibling, size = tree[curr, 2:5]
 
 
-def _bal_avgdist_insert(adm, target, adk, tree, preodr, postodr):
+def _bal_avgdist_insert(adm, target, adk, tree, preodr, postodr, powers, stack):
     r"""Update balanced average distance matrix after taxon insertion.
 
     This function resembles :func:`_avgdist_d2_insert` but it 1) uses the balanced
     framework and 2) updates the entire matrix.
+
+    Two additional parameters are provided: `powers` is a pre-calculated array of
+    2^(-l) powers (l is the depth difference between two nodes). `stack` is an
+    integer array to store ancestral nodes of target.
 
     """
     m = tree[0, 4] + 1
@@ -1250,10 +1298,9 @@ def _bal_avgdist_insert(adm, target, adk, tree, preodr, postodr):
         for a in range(1, n):
             if tree[a, 0] > 0:
                 descs = postodr[(i := tree[a, 7]) - tree[a, 4] * 2 + 2 : i]
-                fac = 2.0 ** -(tree[a, 5] + 1)
-                adm[a, descs] = adm[descs, a] = adm[a, descs] + fac * (
-                    adk[descs, 0] - adm[0, descs]
-                )
+                adm[a, descs] = adm[descs, a] = adm[a, descs] + powers[
+                    tree[a, 5] + 1
+                ] * (adk[descs, 0] - adm[0, descs])
 
         return
 
@@ -1292,20 +1339,18 @@ def _bal_avgdist_insert(adm, target, adk, tree, preodr, postodr):
     # distance between the upper subtree of a (containing k) and the lower subtree of b.
     for a in clade:
         if tree[a, 0]:
-            fac = 2.0 ** -(tree[a, 5] - depth + 1)
             descs = postodr[(i := tree[a, 7]) - tree[a, 4] * 2 + 2 : i]
-            adm[a, descs] = adm[descs, a] = adm[a, descs] + fac * (
-                adk[descs, 0] - adm[target, descs]
-            )
+            adm[a, descs] = adm[descs, a] = adm[a, descs] + powers[
+                tree[a, 5] - depth + 1
+            ] * (adk[descs, 0] - adm[target, descs])
 
     ### Step 3: Distances among nodes outside the clade. ###
 
     # Iterate over ancestors of target in ascending order.
-    ancs = np.zeros((n,), dtype=int)  # TODO: pre-allocate
     i = 0
     curr = target
     while curr:
-        ancs[i] = anc = tree[curr, 2]
+        stack[i] = anc = tree[curr, 2]
 
         # Transfer the pre-calculated distance between k and the ancestor (upper).
         adm[anc, n + 1] = adm[n + 1, anc] = adk[anc, 1]
@@ -1316,11 +1361,10 @@ def _bal_avgdist_insert(adm, target, adk, tree, preodr, postodr):
 
         # Calculate the distance between each previous ancestor (lower, containing k)
         # and the current ancestor (upper).
-        prevs = ancs[:i]
-        fac = 2.0 ** -(depth - tree[prevs, 5] + 1)
-        adm[anc, prevs] = adm[prevs, anc] = adm[anc, prevs] + fac * (
-            adk[anc, 1] - adm[target, anc]
-        )
+        prevs = stack[:i]
+        adm[anc, prevs] = adm[prevs, anc] = adm[anc, prevs] + powers[
+            depth - tree[prevs, 5] + 1
+        ] * (adk[anc, 1] - adm[target, anc])
 
         # Identify the sibling clade descending from the ancestor.
         cousin = tree[curr, 3]
@@ -1337,20 +1381,18 @@ def _bal_avgdist_insert(adm, target, adk, tree, preodr, postodr):
         # Calculate the distance between each previous ancestor (lower, containing k)
         # and each descendant (lower).
         for a in prevs:
-            fac = 2.0 ** -(depth - tree[a, 5] + 1)
-            adm[a, clade] = adm[clade, a] = adm[a, clade] + fac * (
-                adk[clade, 0] - adm[clade, target]
-            )
+            adm[a, clade] = adm[clade, a] = adm[a, clade] + powers[
+                depth - tree[a, 5] + 1
+            ] * (adk[clade, 0] - adm[clade, target])
 
         # Iterate over descendants of each member of the clade, and calculate the
         # distance between the former (upper, containing k) and the latter (lower).
         for a in clade:
             if tree[a, 0]:
                 descs = postodr[(j := tree[a, 7]) - tree[a, 4] * 2 + 2 : j]
-                fac = 2.0 ** -(depth + tree[a, 5] - 2 * tree[anc, 5])
-                adm[a, descs] = adm[descs, a] = adm[a, descs] + fac * (
-                    adk[descs, 0] - adm[descs, target]
-                )
+                adm[a, descs] = adm[descs, a] = adm[a, descs] + powers[
+                    depth + tree[a, 5] - 2 * tree[anc, 5]
+                ] * (adk[descs, 0] - adm[descs, target])
 
         curr = anc
         i += 1
@@ -1558,7 +1600,8 @@ def _bal_min_branch(lens, adm, adk, tree, preodr):
     """Find the branch with the minimum length change after inserting a new taxon.
 
     This function resembles :func:`_ols_min_branch_d2` but it 1) uses the
-    balanced framework and 2) calculates based on the entire matrix.
+    balanced framework and 2) calculates based on the entire matrix. See also
+    the important note of the latter.
 
     Implemented according to Eq. 10 of Desper and Gascuel (2002).
 

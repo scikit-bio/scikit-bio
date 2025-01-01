@@ -373,6 +373,13 @@ class MeTests(TestCase):
         for o, e in zip(obs, exp):
             npt.assert_array_equal(o, e)
 
+        # no depth
+        obs = self.tree1m1.copy(), self.preodr1m1.copy(), self.postodr1m1.copy()
+        _insert_taxon(4, 4, *obs)
+        exp[0][:, 5] = [0, 1, 1, 2, 3, 2, 3]
+        for o, e in zip(obs, exp):
+            npt.assert_array_equal(o, e)
+
         # insert taxon e (4) above b (1)
         obs = self.tree1m1.copy(), self.preodr1m1.copy(), self.postodr1m1.copy()
         _insert_taxon(4, 1, *obs)
@@ -483,6 +490,20 @@ class MeTests(TestCase):
         ])
         npt.assert_array_almost_equal(obs, exp)
 
+        # alternative tree
+        obs = np.zeros((n, n), dtype=float)
+        _avgdist_matrix_naive(obs, self.dm1, self.tree1v2, self.postodr1v2)
+        exp = np.array([
+            [ 0.  ,  7.  ,  8.5 ,  5.  ,  9.  ,  8.  ,  9.  ],
+            [ 7.  ,  0.  ,  7.5 ,  8.  ,  6.67,  6.  ,  9.  ],
+            [ 8.5 ,  7.5 ,  0.  ,  9.5 ,  5.5 ,  6.67,  9.  ],
+            [ 5.  ,  8.  ,  9.5 ,  0.  , 10.  ,  9.  , 10.  ],
+            [ 9.  ,  6.67,  5.5 , 10.  ,  0.  ,  3.  ,  8.  ],
+            [ 8.  ,  6.  ,  6.67,  9.  ,  3.  ,  0.  ,  7.  ],
+            [ 9.  ,  9.  ,  9.  , 10.  ,  8.  ,  7.  ,  0.  ],
+        ])
+        npt.assert_array_equal(obs.round(2), exp)
+
     def test_avgdist_matrix(self):
         """Calculate an average distance matrix."""
         # Test if the algorithm produces the same result as the native method does.
@@ -492,6 +513,12 @@ class MeTests(TestCase):
         _avgdist_matrix(obs, dm, tree, preodr, postodr)
         exp = np.zeros((n, n), dtype=float)
         _avgdist_matrix_naive(exp, dm, tree, postodr)
+        npt.assert_array_almost_equal(obs, exp)
+
+        # make sure all cells are populated
+        _avgdist_matrix(obs := np.full((n, n), np.nan), dm, tree, preodr, postodr)
+        np.fill_diagonal(obs, 0)
+        _avgdist_matrix_naive(exp := np.zeros((n, n)), dm, tree, postodr)
         npt.assert_array_almost_equal(obs, exp)
 
         # incomplete tree
@@ -534,6 +561,10 @@ class MeTests(TestCase):
             [ 8.  ,  9.  ,  8.5 ,  7.  ,  7.75,  0.  ,  3.  ],
             [ 9.  , 10.  ,  9.5 ,  8.  ,  8.75,  3.  ,  0.  ],
         ])
+        npt.assert_array_almost_equal(obs, exp)
+
+        _bal_avgdist_matrix(obs := np.full((n, n), np.nan), dm, tree, preodr, postodr)
+        np.fill_diagonal(obs, 0)
         npt.assert_array_almost_equal(obs, exp)
 
         dm, tree, preodr, postodr = self.dm3, self.tree3, self.preodr3, self.postodr3
@@ -682,6 +713,8 @@ class MeTests(TestCase):
         # Test if the algorithm produces the same result as calculated from the full
         # matrix after taxon insertion.
         tree, preodr, postodr = self.tree1m1, self.preodr1m1, self.postodr1m1
+        powers = 2.0 ** -np.arange(5)
+        stack = np.zeros(7, dtype=int)
         adm = np.array([
             [ 0. ,  5. ,  9. ,  9. ,  9. ,  0. ,  0. ],
             [ 5. ,  0. , 10. , 10. , 10. ,  0. ,  0. ],
@@ -703,7 +736,7 @@ class MeTests(TestCase):
         # Insert e as a sibling of d. This should recover tree1.
         target = 4
         _bal_avgdist_insert(
-            obs := adm.copy(), target, adk, tree, preodr, postodr
+            obs := adm.copy(), target, adk, tree, preodr, postodr, powers, stack
         )
         exp = np.array([
             [ 0.  ,  5.  ,  8.75,  9.  ,  9.  ,  8.5 ,  8.  ],
@@ -723,11 +756,13 @@ class MeTests(TestCase):
         ran_ = np.arange(n)
         _bal_avgdist_matrix(adm := np.zeros((n, n)), dm, tree, preodr, postodr)
         _bal_avgdist_taxon(adk := np.zeros((n, 2)), m, dm, tree, preodr, postodr)
+        powers = 2.0 ** -np.arange(m)
+        stack = np.zeros(n, dtype=int)
 
         for i in range(n - 2):
             # update matrix using the algorithm
             _bal_avgdist_insert(
-                obs := adm.copy(), i, adk, tree, preodr, postodr
+                obs := adm.copy(), i, adk, tree, preodr, postodr, powers, stack
             )
 
             # insert taxon and calculate full matrix

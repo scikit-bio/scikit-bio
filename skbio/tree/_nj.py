@@ -10,6 +10,7 @@ import numpy as np
 
 from skbio.tree import TreeNode
 from skbio.util._warning import _warn_deprecated
+from ._utils import _check_dm
 from ._cutils import nj_minq_cy
 
 
@@ -153,10 +154,7 @@ def nj(
         )
         _warn_deprecated(nj, "0.6.3", msg)
 
-    if dm.shape[0] < 3:
-        raise ValueError(
-            "Distance matrix must be at least 3x3 to generate a neighbor joining tree."
-        )
+    _check_dm(dm)
     taxa = list(dm.ids)
 
     dm_ = dm.data
