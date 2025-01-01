@@ -4,7 +4,6 @@
 
 ### Features
 
-* Implemented linear mixed effects with Dirichlet-multinomial distribution ([#2113](https://github.com/scikit-bio/scikit-bio/pull/2113)).
 * Added functions `rf_dists`, `wrf_dists` and `path_dists` under `skbio.tree` to calculate multiple pariwise distance metrics among an arbitrary number of trees. They correspond to `TreeNode` methods `compare_rfd`, `compare_wrfd` and `compare_cophenet` for two trees ([#2166](https://github.com/scikit-bio/scikit-bio/pull/2166)).
 * Added `height` and `depth` methods under `TreeNode` to calculate the height and depth of a given node.
 * Added `TreeNode.compare_wrfd` to calculate the weighted Robinson-Foulds distance or its variants between two trees ([#2144](https://github.com/scikit-bio/scikit-bio/pull/2144)).
@@ -25,7 +24,7 @@
 * Re-wrote the underlying algorithm of `TreeNode.compare_subsets` because it is equivalent to the Robinson-Foulds distance on rooted trees. Added parameter `proportion`. Renamed parameter `exclude_absent_taxa` as `shared_only` ([#2144](https://github.com/scikit-bio/scikit-bio/pull/2144)).
 * Added parameter `include_self` to `TreeNode.subset`. Added parameters `within`, `include_full` and `include_tips` to `TreeNode.subsets` ([#2144](https://github.com/scikit-bio/scikit-bio/pull/2144)).
 * Improved the performance and customizability of `TreeNode.total_length` (renamed from `descending_branch_length`). Added parameters `include_stem` and `include_self`.
-* Improved the performance of `TreeNode.lowest_common_ancestor` ([#2132](https://github.com/scikit-bio/scikit-bio/pull/2132)).
+* Improved the performance of `TreeNode.lca` ([#2132](https://github.com/scikit-bio/scikit-bio/pull/2132)).
 * Improved the performance of `TreeNode` methods: `ancestors`, `siblings`, and `neighbors` ([#2133](https://github.com/scikit-bio/scikit-bio/pull/2133), [#2135](https://github.com/scikit-bio/scikit-bio/pull/2135)).
 * Improved the performance of tree traversal algorithms ([#2093](https://github.com/scikit-bio/scikit-bio/pull/2093)).
 * Improved the performance of tree copying ([#2103](https://github.com/scikit-bio/scikit-bio/pull/2103)).
@@ -51,7 +50,7 @@
 * Fixed an issue in `subsets` and `cophenet` (renamed from `tip_tip_distances`) of `TreeNode` which leaves remnant attributes at each node after execution ([#2144](https://github.com/scikit-bio/scikit-bio/pull/2144)).
 * Fixed a bug in `TreeNode.compare_rfd` which raises an error if taxa of the two trees are not subsets of each other ([#2144](https://github.com/scikit-bio/scikit-bio/pull/2144)).
 * Fixed a bug in `TreeNode.compare_subsets` which includes the full set (not a subset) of shared taxa between two trees if a basal clade of either tree consists of entirely unshared taxa ([#2144](https://github.com/scikit-bio/scikit-bio/pull/2144)).
-* Fixed a bug in `TreeNode.lowest_common_ancestor` which returns the parent of input node X instead of X itself if X is ancestral to other input nodes ([#2132](https://github.com/scikit-bio/scikit-bio/pull/2132)).
+* Fixed a bug in `TreeNode.lca` which returns the parent of input node X instead of X itself if X is ancestral to other input nodes ([#2132](https://github.com/scikit-bio/scikit-bio/pull/2132)).
 * Fixed a bug in `TreeNode.find_all` which does not look for other nodes with the same name if a `TreeNode` instance is provided, as in contrast to what the documentation claims ([#2099](https://github.com/scikit-bio/scikit-bio/pull/2099)).
 * Fixed a bug in `skbio.io.format.embed` which was not correctly updating the idptr sizing. ([#2100](https://github.com/scikit-bio/scikit-bio/pull/2100)).
 * Fixed a bug in `TreeNode.unrooted_move` which does not respect specified branch attributes ([#2103](https://github.com/scikit-bio/scikit-bio/pull/2103)).
@@ -71,13 +70,14 @@
 
 ### Deprecated functionality
 
-* Method `TreeNode.create_caches` is deprecated. It will become a private member in version 0.7.0 ([#2099](https://github.com/scikit-bio/scikit-bio/pull/2099)).
 * Method `TreeNode.subtree` is deprecated. It will become a private member in version 0.7.0 ([#2103](https://github.com/scikit-bio/scikit-bio/pull/2103)).
 
 ### Backward-incompatible changes
 
+* Removed `skbio.util.SkbioWarning`. Now there are no specific warnings to scikit-bio.
+* Removed `skbio.util.EfficiencyWarning`. Previously it was only used in the Python implementations of pairwise sequence alignment algorithms. The new code replaced it with `PendingDeprecationWarning`.
+* Removed `skbio.util.RepresentationWarning`. Previously it was only used in `TreeNode.tip_tip_distances` when a node has no branch length. The new code removed this behavior ([#2152](https://github.com/scikit-bio/scikit-bio/pull/2152)).
 * Dropped support for Python 3.8 as it has reached end-of-life (EOL). scikit-bio may still be installed under Python 3.8 and will likely work, but the development team no longer guarantee that all functionality will work as intended.
-* Removed ``skbio.util.RepresentationWarning``. Previously it was only used in `TreeNode.tip_tip_distances` when a node has no branch length. The new code removed this behavior ([#2152](https://github.com/scikit-bio/scikit-bio/pull/2152)).
 
 
 ## Version 0.6.2

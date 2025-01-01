@@ -11,6 +11,7 @@ relative_files = True
 
 [report]
 exclude_lines =
+    pass
     pragma: no cover
     raise NotImplementedError
     if __name__ == .__main__.:
