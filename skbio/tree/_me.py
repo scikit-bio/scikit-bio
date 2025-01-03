@@ -9,6 +9,18 @@
 import numpy as np
 
 from skbio.tree import TreeNode
+from ._c_me import (
+    _preorder,
+    _postorder,
+    _avgdist_taxon,
+    _bal_avgdist_taxon,
+    _avgdist_d2_insert,
+    _bal_avgdist_insert,
+    _ols_lengths_d2,
+    _bal_lengths,
+    _ols_min_branch_d2,
+    _bal_min_branch,
+)
 from ._utils import _check_dm
 
 
@@ -293,7 +305,7 @@ def _bme(dm):
     _init_tree(dm, tree, preodr, postodr, adm, True)
 
     # pre-calculate negative powers of 2
-    powers = 2.0 ** -np.arange(m)
+    powers = np.ldexp(1.0, -np.arange(m))
 
     for k in range(3, m):
         # calculate balanced average distances from new taxon to existing subtrees
@@ -534,7 +546,7 @@ def _from_treenode(tree, taxa):
 # ------------------------------------------------
 
 
-def _preorder(order, tree, stack, start=0):
+def _preorder_py(order, tree, stack, start=0):
     r"""Perform preorder traversal.
 
     This function and :func:`_postorder` use stacks to avoid recursion. The stack
@@ -564,7 +576,7 @@ def _preorder(order, tree, stack, start=0):
             stack_i += 2
 
 
-def _postorder(order, tree, stack, start=0):
+def _postorder_py(order, tree, stack, start=0):
     """Perform postorder traversal.
 
     See also :func:`_preorder`.
@@ -608,6 +620,9 @@ def _allocate_arrays(n, matrix=False):
     while the remaining positions are left as zero. There is no need to reset array
     values to zero after each iteration.
 
+    Since they are created de novo, all arrays are C-continuous. This permits further
+    optimization in the Cython code.
+
     `ads` stores the average distances between subtrees within the current tree. If
     `matrix` is True, an n by n square matrix will be allocated to cover all pairs of
     subtrees. This is required by BME and NNI. Such a matrix represents the primary
@@ -618,24 +633,24 @@ def _allocate_arrays(n, matrix=False):
 
     """
     # tree structure
-    tree = np.zeros((n, 8), dtype=int)
+    tree = np.empty((n, 8), dtype=int)
 
     # nodes in pre- and postorder
-    preodr = np.zeros((n,), dtype=int)
-    postodr = np.zeros((n,), dtype=int)
+    preodr = np.empty((n,), dtype=int)
+    postodr = np.empty((n,), dtype=int)
 
     # average distances between subtrees
     x = n if matrix else 2
-    ads = np.zeros((n, x), dtype=float)
+    ads = np.empty((n, x), dtype=float)
 
     # average distances from a taxon to each subtree
-    adk = np.zeros((n, 2), dtype=float)
+    adk = np.empty((n, 2), dtype=float)
 
     # branch lengths or length changes
-    lens = np.zeros((n,), dtype=float)
+    lens = np.empty((n,), dtype=float)
 
     # a stack for traversal operations
-    stack = np.zeros((n,), dtype=int)
+    stack = np.empty((n,), dtype=int)
 
     return tree, preodr, postodr, ads, adk, lens, stack
 
@@ -664,6 +679,7 @@ def _init_tree(dm, tree, preodr, postodr, ads, matrix=False):
         ads[1, 0] = dm[0, 1]
         ads[2, 0] = dm[0, 2]
         ads[1, 1] = ads[2, 1] = dm[1, 2]
+        ads[0, 0] = ads[0, 1] = 0
 
 
 # ------------------------------------------------
@@ -671,7 +687,7 @@ def _init_tree(dm, tree, preodr, postodr, ads, matrix=False):
 # ------------------------------------------------
 
 
-def _insert_taxon(taxon, target, tree, preodr, postodr, depth=True):
+def _insert_taxon(taxon, target, tree, preodr, postodr, use_depth=True):
     r"""Insert a taxon between a target node and its parent.
 
     For example, with the following local structure of the original tree:
@@ -778,7 +794,7 @@ def _insert_taxon(taxon, target, tree, preodr, postodr, depth=True):
         ]
 
         # clade depth +1
-        if depth:
+        if use_depth:
             tree[clade, 5] += 1
 
         # preorder shift: nodes after clade +2, tip inserted after clade, nodes within
@@ -870,7 +886,7 @@ def _avgdist_matrix_naive(adm, dm, tree, postodr):
             adm[a, b] = adm[b, a] = dm[list(a_taxa)][:, list(b_taxa)].mean()
 
 
-def _avgdist_matrix(adm, dm, tree, preodr, postodr):
+def _avgdist_matrix_py(adm, dm, tree, preodr, postodr):
     r"""Calculate a matrix of average distances between all pairs of subtrees.
 
     This function will update adm, a float array of (n, n) representing pairwise
@@ -996,7 +1012,7 @@ def _avgdist_matrix(adm, dm, tree, preodr, postodr):
             adm[a, b] = adm[b, a] = dist
 
 
-def _bal_avgdist_matrix(adm, dm, tree, preodr, postodr):
+def _bal_avgdist_matrix_py(adm, dm, tree, preodr, postodr):
     r"""Calculate a matrix of balanced average distances between all pairs of subtrees.
 
     This function resembles :func:`_avgdist_matrix`, but it weighs subtrees equally
@@ -1086,7 +1102,7 @@ def _avgdist_taxon_naive(adk, taxon, dm, tree, postodr):
         adk[node, 1] = dk[list(taxa_upper)].mean()
 
 
-def _avgdist_taxon(adk, taxon, dm, tree, preodr, postodr):
+def _avgdist_taxon_py(adk, taxon, dm, tree, preodr, postodr):
     """Calculate average distances between a new taxon and existing subtrees.
 
     This function will update adk, a float array of (n, 2) in which columns 0 and 1
@@ -1126,7 +1142,7 @@ def _avgdist_taxon(adk, taxon, dm, tree, preodr, postodr):
         ) / (m - tree[node, 4])
 
 
-def _bal_avgdist_taxon(adk, taxon, dm, tree, preodr, postodr):
+def _bal_avgdist_taxon_py(adk, taxon, dm, tree, preodr, postodr):
     r"""Calculate balanced average distances between a new taxon and existing subtrees.
 
     This function resembles :func:`_avgdist_taxon` but uses the balanced framework.
@@ -1145,7 +1161,7 @@ def _bal_avgdist_taxon(adk, taxon, dm, tree, preodr, postodr):
         adk[node, 1] = 0.5 * (adk[tree[node, 2], 1] + adk[tree[node, 3], 0])
 
 
-def _avgdist_d2_insert(ad2, target, adk, tree, preodr):
+def _avgdist_d2_insert_py(ad2, target, adk, tree, preodr):
     r"""Update average distances between distant-2 subtrees after taxon insertion.
 
     This function will update ad2, a float array of (n, 2) representing pairwise
@@ -1256,7 +1272,7 @@ def _avgdist_d2_insert(ad2, target, adk, tree, preodr):
         parent, sibling, size = tree[curr, 2:5]
 
 
-def _bal_avgdist_insert(adm, target, adk, tree, preodr, postodr, powers, stack):
+def _bal_avgdist_insert_py(adm, target, adk, tree, preodr, postodr, powers, stack):
     r"""Update balanced average distance matrix after taxon insertion.
 
     This function resembles :func:`_avgdist_d2_insert` but it 1) uses the balanced
@@ -1403,7 +1419,7 @@ def _bal_avgdist_insert(adm, target, adk, tree, preodr, postodr, powers, stack):
 # ------------------------------------------------
 
 
-def _ols_lengths(lens, adm, tree, preodr):
+def _ols_lengths_py(lens, adm, tree, preodr):
     r"""Calculate branch lengths of a tree based on the OLS framework.
 
     Using an average distance matrix between all pairs of subtrees.
@@ -1446,7 +1462,7 @@ def _ols_lengths(lens, adm, tree, preodr):
     lens[0] = 0.5 * (adm[left, 0] + adm[right, 0] - adm[left, right])
 
 
-def _ols_lengths_d2(lens, ad2, tree, preodr):
+def _ols_lengths_d2_py(lens, ad2, tree, preodr):
     r"""Calculate branch lengths of a tree based on an OLS framework.
 
     Using only average distances between pairs of distant-2 subtrees.
@@ -1519,7 +1535,7 @@ def _ols_lengths_d2(lens, ad2, tree, preodr):
     lens[0] = 0.5 * (ad2[left, 0] + ad2[right, 0] - ad2[left, 1])
 
 
-def _bal_lengths(lens, adm, tree, preodr):
+def _bal_lengths_py(lens, adm, tree, preodr):
     r"""Calculate branch lengths of a tree based on the balanced framework.
 
     Using a balanced average distance matrix between all pairs of subtrees.
@@ -1555,7 +1571,7 @@ def _bal_lengths(lens, adm, tree, preodr):
 # ------------------------------------------------
 
 
-def _ols_min_branch_d2(lens, ad2, adk, tree, preodr):
+def _ols_min_branch_d2_py(lens, ad2, adk, tree, preodr):
     """Find the branch with the minimum length change after inserting a new taxon.
 
     It returns the node at the lower end of the branch.
@@ -1596,7 +1612,7 @@ def _ols_min_branch_d2(lens, ad2, adk, tree, preodr):
     return min_node
 
 
-def _bal_min_branch(lens, adm, adk, tree, preodr):
+def _bal_min_branch_py(lens, adm, adk, tree, preodr):
     """Find the branch with the minimum length change after inserting a new taxon.
 
     This function resembles :func:`_ols_min_branch_d2` but it 1) uses the

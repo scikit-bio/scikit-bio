@@ -11,8 +11,8 @@ import numpy as np
 from skbio.tree import TreeNode
 from skbio.util._decorator import params_aliased
 from skbio.util._warning import _warn_deprecated
+from ._c_nj import nj_minq_cy
 from ._utils import _check_dm
-from ._cutils import nj_minq_cy
 
 
 @params_aliased([("clip_to_zero", "disallow_negative_branch_length", "0.6.3", True)])
@@ -68,14 +68,14 @@ def nj(
     overview of neighbor joining in terms of its biological relevance and limitations
     [2]_.
 
+    This function implements the canonical NJ method. The algorithm was optimized to
+    improve its efficiency, but no heuristic was involved to further accelerate it at
+    the cost of accuracy. Therefore, one is guaranteed to obtain an optimal tree. The
+    algorithm is *O*(*n*:sup:`3`) in time and *O*(*n*:sup:`2`) in memory.
+
     Neighbor joining, by definition, creates unrooted trees with varying tip heights,
     which contrasts UPGMA (:func:`upgma`). One strategy for rooting the resulting tree
     is midpoint rooting, which is accessible as :meth:`TreeNode.root_at_midpoint`.
-
-    Note that the tree constructed using neighbor joining is not rooted at a tip,
-    unlike minimum evolution (:func:`bme`), so re-rooting is required before tree
-    re-arrangement operations such as nearest neighbor interchange (NNI) (:func:`nni`)
-    can be performed.
 
     Neighbor joining is most accurate when distances are additive -- the distance
     between two taxa in the matrix equals to the sum of branch lengths connecting them
@@ -180,7 +180,7 @@ def _nj(dm):
     # This function only operates on arrays of numbers, therefore it can be further
     # Cythonized. However, Cythonization did not bring significant performance gain in
     # tests, likely because all operations already utilize NumPy APIs. That being said,
-    # Further optimization and testing should be convenient.
+    # further optimization and testing should be convenient.
 
     N = n = dm.shape[0]  # dimension
     sums = dm.sum(axis=0)  # distance sums
