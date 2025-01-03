@@ -10,7 +10,46 @@ import numpy as np
 
 from operator import itemgetter
 from skbio.tree import TreeNode
-from skbio.tree._gme import _average_distance_k, _average_distance_k_upper
+# from skbio.tree._gme import _average_distance_k, _average_distance_k_upper
+
+
+def _tip_or_root(node):
+    """Get name(s) of a node if it's a tip or root, otherwise its descending tips."""
+    if node.is_tip() or node.is_root():
+        return [node.name]
+    else:
+        return [x.name for x in node.tips()]
+
+
+def _average_distance_k(nodek, nodesubtree, dm):
+    """Return the average distance between a subtree, defined
+    by a node and its descendants, and a taxa to attach.
+
+    The subtree here is referred to as a lower subtree.
+
+    """
+    nodelistk = [nodek.name]
+    nodelistsubtree = _tip_or_root(nodesubtree)
+    df = dm.between(nodelistk, nodelistsubtree)
+    return df["value"].mean()
+
+
+def _average_distance_k_upper(nodek, nodesubtree, dm):
+    """Return the average distance between a subtree, defined
+    by all nodes that are not descendants, and a taxa to attach.
+
+    The subtree here is referred to as an upper subtree.
+
+    """
+    nodelistk = [nodek.name]
+    if nodesubtree.is_root():
+        nodelistsubtree = []
+    else:
+        root = nodesubtree.root()
+        nodelistsubtree = [root.name]
+        nodelistsubtree.extend(sorted(root.subset() - nodesubtree.subset()))
+    df = dm.between(nodelistk, nodelistsubtree)
+    return df["value"].mean()
 
 
 def bme(dm, allow_edge_estimation=True):
@@ -220,7 +259,7 @@ def _balanced_attach_length(child, lowerlist, upperlist, ordered, adm):
     return length
 
 
-def _balanced_average_matrix(tree, dm):
+def _balanced_average_matrix_old(tree, dm):
     """Return the matrix of distances between pairs of subtrees.
 
     Here, the definition of average distance coincides with the balanced minimum
@@ -286,6 +325,68 @@ def _balanced_average_matrix(tree, dm):
         for i, a in enumerate(ordered):
             if b in a.ancestors():
                 adm[i, j] = adm[j, i] = (adm[i, j_s] + adm[i, j_p]) * 0.5
+    return adm
+
+
+def _balanced_average_matrix(tree, dm):
+    """Calculate a matrix of balanced average distances between pairs of subtrees.
+
+    This is the balanced version of `_gme._average_distance_matrix`. Specifically,
+    the average distance between a pair of subtrees is no longer weighted by their
+    sizes.
+
+    """
+    ordered, i = [], 0
+    for node in tree.postorder(include_self=False):
+        if not node.children:
+            node.taxa = frozenset([node.name])
+        else:
+            node.taxa = frozenset().union(*[x.taxa for x in node.children])
+        ordered.append(node)
+        node.i = i
+        i += 1
+    tree.children[0].taxa = frozenset([0])
+
+    n = len(ordered)
+    adm = np.zeros((n, n), dtype=float)
+    for i in range(n - 1):
+        a = ordered[i]
+
+        for j in range(i + 1, n - 1):
+            b = ordered[j]
+            if not b.taxa.isdisjoint(a.taxa):
+                continue
+
+            if not b.children and not a.children:
+                dist = dm[a.name, b.name]
+
+            elif a.children:
+                a1, a2 = a.children
+                dist = (adm[a1.i, b.i] + adm[a2.i, b.i]) / 2
+
+            else:
+                b1, b2 = b.children
+                dist = (adm[a.i, b1.i] + adm[a.i, b2.i]) / 2
+
+            adm[i, j] = adm[j, i] = dist
+
+    for i, a in enumerate(ordered[:-1]):
+        if not a.children:
+            dist = dm[tree.name, a.name]
+        else:
+            a1, a2 = a.children
+            dist = (adm[a1.i, n - 1] + adm[a2.i, n - 1]) / 2
+
+        adm[a.i, n - 1] = adm[n - 1, a.i] = dist
+
+    for b in tree.children[0].preorder(include_self=False):
+        p = b.parent
+        s = p.children[0] if b is p.children[1] else p.children[1]
+
+        for a in b.postorder(include_self=False):
+            dist = (adm[a.i, s.i] + adm[a.i, p.i]) / 2
+            adm[a.i, b.i] = adm[b.i, a.i] = dist
+
     return adm
 
 
