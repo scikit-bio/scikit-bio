@@ -32,6 +32,15 @@ Tree Construction
     bme
 
 
+Tree Rearrangement
+-----------------
+
+.. autosummary::
+   :toctree: generated/
+
+    nni
+
+
 Tree Comparison
 ---------------
 
@@ -203,7 +212,7 @@ cophenetic (tip-to-tip) distances between trees:
 from ._tree import TreeNode
 from ._upgma import upgma
 from ._nj import nj
-from ._me import gme, bme
+from ._me import gme, bme, nni
 from ._majority_rule import majority_rule
 from ._compare import rf_dists, wrf_dists, path_dists
 from ._exception import (
@@ -220,6 +229,7 @@ __all__ = [
     "nj",
     "gme",
     "bme",
+    "nni",
     "rf_dists",
     "wrf_dists",
     "path_dists",

@@ -185,12 +185,14 @@ extensions = [
     Extension(
         "skbio.tree._c_nj",
         ["skbio/tree/_c_nj" + ext],
-        include_dirs=[np.get_include()],
+        extra_compile_args=stats_extra_compile_args,
+        extra_link_args=stats_extra_link_args,
     ),
     Extension(
         "skbio.tree._c_me",
         ["skbio/tree/_c_me" + ext],
-        include_dirs=[np.get_include()],
+        extra_compile_args=stats_extra_compile_args,
+        extra_link_args=stats_extra_link_args,
     ),
     Extension(
         "skbio.diversity._phylogenetic",
