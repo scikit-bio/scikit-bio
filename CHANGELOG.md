@@ -4,6 +4,7 @@
 
 ### Features
 
+* Python 3.13+ is now supported ([#2146](https://github.com/scikit-bio/scikit-bio/pull/2146)).
 * Added functions `rf_dists`, `wrf_dists` and `path_dists` under `skbio.tree` to calculate multiple pariwise distance metrics among an arbitrary number of trees. They correspond to `TreeNode` methods `compare_rfd`, `compare_wrfd` and `compare_cophenet` for two trees ([#2166](https://github.com/scikit-bio/scikit-bio/pull/2166)).
 * Added `height` and `depth` methods under `TreeNode` to calculate the height and depth of a given node.
 * Added `TreeNode.compare_wrfd` to calculate the weighted Robinson-Foulds distance or its variants between two trees ([#2144](https://github.com/scikit-bio/scikit-bio/pull/2144)).
@@ -12,13 +13,12 @@
 * Added `TreeNode.has_caches` to check if a tree has caches ([#2103](https://github.com/scikit-bio/scikit-bio/pull/2103)).
 * Added `TreeNode.is_bifurcating` to check if a tree is bifurcating (i.e., binary) ([#2117](https://github.com/scikit-bio/scikit-bio/pull/2117)).
 * Added support for Python's `pathlib` module in the IO system ([#2119](https://github.com/scikit-bio/scikit-bio/pull/2119)).
-* Added Balanced Minimum Evolution (BME) function and `balanced` option for NNI ([#2105](https://github.com/scikit-bio/scikit-bio/pull/2105)).
+* Added Balanced Minimum Evolution (BME) function and `balanced` option for NNI ([#2105](https://github.com/scikit-bio/scikit-bio/pull/2105) and [#2174](https://github.com/scikit-bio/scikit-bio/pull/2174)).
 * Added `TreeNode.path` to return a list of nodes representing the path from one node to another ([#2131](https://github.com/scikit-bio/scikit-bio/pull/2131)).
-* Python 3.13+ is now supported ([#2146](https://github.com/scikit-bio/scikit-bio/pull/2146))
 
 ### Performance enhancements
 
-* Significantly improved the performance of the neighbor joining (NJ) algorithm for phylogenetic reconstruction (`nj`) ([#2147](https://github.com/scikit-bio/scikit-bio/pull/2147)).
+* Significantly improved the performance of the neighbor joining (NJ) algorithm (`nj`) ([#2147](https://github.com/scikit-bio/scikit-bio/pull/2147)) and the greedy minimum evolution (GME) algorithm (`gme`) for phylogenetic reconstruction, and the NNI algorithm for tree rearrangement ([#2174](https://github.com/scikit-bio/scikit-bio/pull/2174)).
 * Significantly improved the performance of `TreeNode.cophenet` (renamed from `tip_tip_distances`) for computing a patristic distance matrix among all or selected tips of a tree ([#2152](https://github.com/scikit-bio/scikit-bio/pull/2152)).
 * Supported Robinson-Foulds distance calculation (`TreeNode.compare_rfd`) based on bipartitions (equivalent to `compare_biparts`). This is automatically enabled when the input tree is unrooted. Otherwise the calculation is still based on subsets (equivalent to `compare_subsets`). The user can override this behavior using the `rooted` parameter ([#2144](https://github.com/scikit-bio/scikit-bio/pull/2144)).
 * Re-wrote the underlying algorithm of `TreeNode.compare_subsets` because it is equivalent to the Robinson-Foulds distance on rooted trees. Added parameter `proportion`. Renamed parameter `exclude_absent_taxa` as `shared_only` ([#2144](https://github.com/scikit-bio/scikit-bio/pull/2144)).
@@ -74,10 +74,10 @@
 
 ### Backward-incompatible changes
 
+* Dropped support for Python 3.8 as it has reached end-of-life (EOL). scikit-bio may still be installed under Python 3.8 and will likely work, but the development team no longer guarantee that all functionality will work as intended.
 * Removed `skbio.util.SkbioWarning`. Now there are no specific warnings to scikit-bio.
 * Removed `skbio.util.EfficiencyWarning`. Previously it was only used in the Python implementations of pairwise sequence alignment algorithms. The new code replaced it with `PendingDeprecationWarning`.
 * Removed `skbio.util.RepresentationWarning`. Previously it was only used in `TreeNode.tip_tip_distances` when a node has no branch length. The new code removed this behavior ([#2152](https://github.com/scikit-bio/scikit-bio/pull/2152)).
-* Dropped support for Python 3.8 as it has reached end-of-life (EOL). scikit-bio may still be installed under Python 3.8 and will likely work, but the development team no longer guarantee that all functionality will work as intended.
 
 
 ## Version 0.6.2
