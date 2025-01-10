@@ -337,7 +337,7 @@ def nni(tree, dm, balanced=False, clip_to_zero=True):
     Perform nearest neighbor interchange (NNI). This will rearrange tree topolgy to
     better approach the minimum evolution criterion.
 
-    >>> tree = nni(tree, dm)
+    >>> tree = nni(tree, dm, balanced=True)
     >>> print(tree.ascii_art())
                         /-pig
               /--------|
