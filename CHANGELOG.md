@@ -5,6 +5,7 @@
 ### Features
 
 * Python 3.13+ is now supported ([#2146](https://github.com/scikit-bio/scikit-bio/pull/2146)).
+* Added Balanced Minimum Evolution (BME) function for phylogenetic reconstruction and `balanced` option for NNI ([#2105](https://github.com/scikit-bio/scikit-bio/pull/2105) and [#2169](https://github.com/scikit-bio/scikit-bio/pull/2169)).
 * Added functions `rf_dists`, `wrf_dists` and `path_dists` under `skbio.tree` to calculate multiple pariwise distance metrics among an arbitrary number of trees. They correspond to `TreeNode` methods `compare_rfd`, `compare_wrfd` and `compare_cophenet` for two trees ([#2166](https://github.com/scikit-bio/scikit-bio/pull/2166)).
 * Added `height` and `depth` methods under `TreeNode` to calculate the height and depth of a given node.
 * Added `TreeNode.compare_wrfd` to calculate the weighted Robinson-Foulds distance or its variants between two trees ([#2144](https://github.com/scikit-bio/scikit-bio/pull/2144)).
@@ -13,12 +14,11 @@
 * Added `TreeNode.has_caches` to check if a tree has caches ([#2103](https://github.com/scikit-bio/scikit-bio/pull/2103)).
 * Added `TreeNode.is_bifurcating` to check if a tree is bifurcating (i.e., binary) ([#2117](https://github.com/scikit-bio/scikit-bio/pull/2117)).
 * Added support for Python's `pathlib` module in the IO system ([#2119](https://github.com/scikit-bio/scikit-bio/pull/2119)).
-* Added Balanced Minimum Evolution (BME) function and `balanced` option for NNI ([#2105](https://github.com/scikit-bio/scikit-bio/pull/2105) and [#2174](https://github.com/scikit-bio/scikit-bio/pull/2174)).
 * Added `TreeNode.path` to return a list of nodes representing the path from one node to another ([#2131](https://github.com/scikit-bio/scikit-bio/pull/2131)).
 
 ### Performance enhancements
 
-* Significantly improved the performance of the neighbor joining (NJ) algorithm (`nj`) ([#2147](https://github.com/scikit-bio/scikit-bio/pull/2147)) and the greedy minimum evolution (GME) algorithm (`gme`) for phylogenetic reconstruction, and the NNI algorithm for tree rearrangement ([#2174](https://github.com/scikit-bio/scikit-bio/pull/2174)).
+* Significantly improved the performance of the neighbor joining (NJ) algorithm (`nj`) ([#2147](https://github.com/scikit-bio/scikit-bio/pull/2147)) and the greedy minimum evolution (GME) algorithm (`gme`) for phylogenetic reconstruction, and the NNI algorithm for tree rearrangement ([#2169](https://github.com/scikit-bio/scikit-bio/pull/2169)).
 * Significantly improved the performance of `TreeNode.cophenet` (renamed from `tip_tip_distances`) for computing a patristic distance matrix among all or selected tips of a tree ([#2152](https://github.com/scikit-bio/scikit-bio/pull/2152)).
 * Supported Robinson-Foulds distance calculation (`TreeNode.compare_rfd`) based on bipartitions (equivalent to `compare_biparts`). This is automatically enabled when the input tree is unrooted. Otherwise the calculation is still based on subsets (equivalent to `compare_subsets`). The user can override this behavior using the `rooted` parameter ([#2144](https://github.com/scikit-bio/scikit-bio/pull/2144)).
 * Re-wrote the underlying algorithm of `TreeNode.compare_subsets` because it is equivalent to the Robinson-Foulds distance on rooted trees. Added parameter `proportion`. Renamed parameter `exclude_absent_taxa` as `shared_only` ([#2144](https://github.com/scikit-bio/scikit-bio/pull/2144)).

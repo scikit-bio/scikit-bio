@@ -341,9 +341,9 @@ def nni(tree, dm, balanced=False, clip_to_zero=True):
     >>> print(tree.ascii_art())
                         /-pig
               /--------|
-             |         |          /-rat
+             |         |          /-chicken
              |          \--------|
-    ---------|                    \-chicken
+    ---------|                    \-rat
              |
              |--monkey
              |
