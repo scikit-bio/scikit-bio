@@ -15,6 +15,8 @@
 * Added Balanced Minimum Evolution (BME) function and `balanced` option for NNI ([#2105](https://github.com/scikit-bio/scikit-bio/pull/2105)).
 * Added `TreeNode.path` to return a list of nodes representing the path from one node to another ([#2131](https://github.com/scikit-bio/scikit-bio/pull/2131)).
 * Python 3.13+ is now supported ([#2146](https://github.com/scikit-bio/scikit-bio/pull/2146))
+* Exposed `vectorize_counts_and_tree` function from the `diversity` module to
+allow use for improving ML accuracy in downstream pipelines ([#2173](https://github.com/scikit-bio/scikit-bio/pull/2173))
 
 ### Performance enhancements
 
