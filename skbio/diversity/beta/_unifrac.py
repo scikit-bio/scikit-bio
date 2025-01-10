@@ -13,7 +13,7 @@ import numpy as np
 from skbio.diversity._util import (
     _validate_counts_matrix,
     _validate_taxa_and_tree,
-    _vectorize_counts_and_tree,
+    vectorize_counts_and_tree,
     _check_taxa_alias,
 )
 from skbio.diversity._phylogenetic import _tip_distances
@@ -341,11 +341,11 @@ def _setup_pairwise_unifrac(
         _validate(u_counts, v_counts, taxa, tree)
 
     # temporarily store u_counts and v_counts in a 2-D array as that's what
-    # _vectorize_counts_and_tree takes
+    # vectorize_counts_and_tree takes
     u_counts = np.asarray(u_counts)
     v_counts = np.asarray(v_counts)
     counts = np.vstack([u_counts, v_counts])
-    counts_by_node, tree_index, branch_lengths = _vectorize_counts_and_tree(
+    counts_by_node, tree_index, branch_lengths = vectorize_counts_and_tree(
         counts, taxa, tree
     )
     # unpack counts vectors for single pairwise UniFrac calculation
@@ -496,7 +496,7 @@ def _setup_multiple_unifrac(counts, taxa, tree, validate):
     if validate:
         _validate_taxa_and_tree(counts[0], taxa, tree)
 
-    counts_by_node, tree_index, branch_lengths = _vectorize_counts_and_tree(
+    counts_by_node, tree_index, branch_lengths = vectorize_counts_and_tree(
         counts, taxa, tree
     )
 
