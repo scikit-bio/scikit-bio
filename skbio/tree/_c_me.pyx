@@ -541,8 +541,7 @@ def _bal_lengths(
 
     Using a balanced average distance matrix between all pairs of subtrees.
 
-    This function resembles :func:`_ols_lengths` but it uses the balanced
-    framework.
+    This function resembles :func:`_ols_lengths` but it uses the balanced framework.
 
     Implemented according to Eqs. 3 & 4 and the description on top of pg. 691 of Desper
     and Gascuel (2002).

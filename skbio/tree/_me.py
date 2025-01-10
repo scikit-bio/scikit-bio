@@ -250,7 +250,7 @@ def bme(dm, clip_to_zero=True, **kwargs):
     return _to_treenode(tree, dm.ids, lens, unroot=True)
 
 
-def nni(tree, dm, balanced=False, clip_to_zero=True):
+def nni(tree, dm, balanced=True, clip_to_zero=True):
     r"""Perform nearest neighbor interchange (NNI) to improve a phylogenetic tree.
 
     .. versionadded:: 0.6.2
@@ -265,7 +265,7 @@ def nni(tree, dm, balanced=False, clip_to_zero=True):
     dm : skbio.DistanceMatrix
         Input distance matrix containing distances between taxa.
     balanced : bool, optional
-        Use the OLS framework (False, default) or the balanced framework (True).
+        Use the OLS framework (False) or the balanced framework (True, default).
     clip_to_zero : bool, optional
         If True (default), convert negative branch lengths into zeros.
 
@@ -318,8 +318,7 @@ def nni(tree, dm, balanced=False, clip_to_zero=True):
     ...                      [0.55,  0.55,  0.54,  0.62,  0]],
     ...                     ['human','monkey','pig','rat','chicken'])
 
-    Provide a tree to be rearranged. The tree is required to be bifurcating (except for
-    the root of an unrooted tree, which may have three children). Branches lengths are
+    Provide a tree to be rearranged. The tree must be bifurcating. Branches lengths are
     not required.
 
     >>> tree = TreeNode.read(["((human,chicken),(rat,monkey),pig);"])
@@ -337,7 +336,7 @@ def nni(tree, dm, balanced=False, clip_to_zero=True):
     Perform nearest neighbor interchange (NNI). This will rearrange tree topolgy to
     better approach the minimum evolution criterion.
 
-    >>> tree = nni(tree, dm, balanced=True)
+    >>> tree = nni(tree, dm)
     >>> print(tree.ascii_art())
                         /-pig
               /--------|
@@ -354,7 +353,7 @@ def nni(tree, dm, balanced=False, clip_to_zero=True):
 
     >>> rat = tree.find('rat')
     >>> print(rat.length)
-    0.21
+    0.20875
 
     """
     _check_dm_tree(dm, tree)
