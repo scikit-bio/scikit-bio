@@ -1904,7 +1904,7 @@ class TreeNode(SkbioObject):
         for node in nodes_to_unpack:
             node.unpack(uncache=False)
 
-    def bifurcate(self, insert_length=None, uncache=True):
+    def bifurcate(self, insert_length=None, include_self=True, uncache=True):
         r"""Convert the tree into a bifurcating tree.
 
         All nodes that have more than two children will have additional intermediate
@@ -1914,6 +1914,12 @@ class TreeNode(SkbioObject):
         ----------
         insert_length : int, optional
             The branch length assigned to all inserted nodes.
+        include_self : bool, optional
+            If False, will not convert the current node. This is useful for keeping an
+            unrooted tree unrooted. Default is True.
+
+            .. versionadded:: 0.6.3
+
         uncache : bool, optional
             Whether to clear caches of the tree if present (default: True). See
             :meth:`details <has_caches>`.
@@ -1967,7 +1973,7 @@ class TreeNode(SkbioObject):
         if uncache:
             self.clear_caches()
         treenode = self.__class__
-        for node in self.traverse(include_self=True):
+        for node in self.traverse(include_self=include_self):
             if len(node.children) > 2:
                 stack = node.children
                 while len(stack) > 2:
@@ -2103,7 +2109,7 @@ class TreeNode(SkbioObject):
         side : int, optional
             Which basal node (i.e., children of root) will be elevated to root. Must be
             0 or 1. If not provided, will elevate the first basal node that is not a
-            tip.
+            tip. The choice won't impact tree topology.
         uncache : bool, optional
             Whether to clear caches of the tree if present (default: True). See
             :meth:`details <has_caches>`.
@@ -3703,7 +3709,7 @@ class TreeNode(SkbioObject):
             else:
                 node.support, node.name = node._extract_support()
 
-    def is_bifurcating(self, strict=False):
+    def is_bifurcating(self, strict=False, include_self=True):
         r"""Check if the tree is bifurcating.
 
         .. versionadded:: 0.6.3
@@ -3713,6 +3719,9 @@ class TreeNode(SkbioObject):
         strict : bool, optional
             Whether to consider single-child nodes as violations of bifurcation.
             Default is False.
+        include_self : bool, optional
+            If False, will not check the current node. This is useful for checking an
+            unrooted tree, whose root node may have three children. Default is True.
 
         See Also
         --------
@@ -3741,7 +3750,7 @@ class TreeNode(SkbioObject):
 
         """
         test = ne if strict else gt
-        for node in self.traverse(include_self=True):
+        for node in self.traverse(include_self=include_self):
             if (children := node.children) and test(len(children), 2):
                 return False
         return True

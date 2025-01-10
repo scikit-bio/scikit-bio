@@ -16,6 +16,15 @@ cnp.import_array()
 from cython.parallel import prange
 
 
+# This script hosts components of the greedy algorithms for phylogenetic reconstruction
+# using the minimum evolution (ME) principle. Specifically, it supports GME and BME for
+# de novo tree building, and FastNNI and BNNI for tree arrangement.
+
+# Most functions don't create any intermediate arrays, but repeatedly use pre-allocated
+# arrays for all operations. This improves computational efficiency.
+
+
+# chunk size for parallelization (experimental)
 cdef int CHUNKSIZE = 10000
 
 
@@ -27,9 +36,9 @@ def _preorder(
 ):
     r"""Perform preorder traversal.
 
-    This function and :func:`_postorder` use stacks to avoid recursion. The stack
-    array is pre-allocated. The output (ordered nodes) is also written into a
-    pre-allocated array.
+    This function and :func:`_postorder` use stacks to avoid recursion. The stack array
+    is pre-allocated. The output (ordered nodes) is also written into a pre-allocated
+    array.
 
     This function and :func:`_postorder` are not actually used in the greedy algorithms
     in this module, which incrementally grow the tree as well as the orders. The two
@@ -109,14 +118,17 @@ def _avgdist_matrix(
 
     0. Lower subtree (L): the subtree descending from a node (including the node).
     1. Upper subtree (U): the subtree branching from the node upward. The root of this
-       subtree is the node's parent. Its immediate children are the parent's parent
-       and the node's sibling.
+       subtree is the node's parent (NOT the node itself). Its immediate children are
+       the parent's parent and the node's sibling.
 
     Then it iteratively applies Eq. 2 to calculate the average distance between two
-    subtrees based on the average distances from the children of one of the subtrees
-    to the other.
+    subtrees based on the average distances from the children (1 and 2) of one of the
+    subtrees (B) to the other (A):
 
         d(A, B) = (|B_1| * d(A, B_1) + |B_2| * d(A, B_2)) / |B|
+
+    TODO: It might be possible to only fill half of the matrix (upper or lower
+    triangle). Same for other functions, especially those in BME.
 
     """
     cdef Py_ssize_t i, j, k
@@ -144,6 +156,7 @@ def _avgdist_matrix(
     for i in range(n - 1):
         a = postodr[i]
         a_size = tree[a, 4]
+
         # check if a is a tip
         if a_size == 1:
             a_taxon = tree[a, 1]
@@ -167,7 +180,7 @@ def _avgdist_matrix(
             # This postorder doesn't need to be re-calculated. Because all nodes within
             # a clade are continuous in postorder, one can take a slice of the full
             # postorder that represent the descending nodes of the current node. The
-            # size of the slice is taxon count * 2 - 2. *
+            # size of the slice is 2 x taxon count - 2. *
             k = tree[sibling, 7]
             for j in range(k - tree[sibling, 4] * 2 + 2, k + 1):
                 b = postodr[j]
@@ -316,7 +329,7 @@ def _avgdist_taxon(
     Py_ssize_t[::1] preodr,
     Py_ssize_t[::1] postodr,
 ):
-    """Calculate average distances between a new taxon and existing subtrees.
+    """Calculate average distances between a new taxon (k) and existing subtrees.
 
     This function will update adk, a float array of (n, 2) in which columns 0 and 1
     represent the average distances from the taxon to the lower and upper subtrees of
@@ -396,6 +409,8 @@ def _ols_lengths(
     Using an average distance matrix between all pairs of subtrees.
 
     Implemented according to Eqs. 3 & 4 of Desper and Gascuel (2002).
+
+    TODO: Can be parallelized. Although this isn't a bottlenecking step.
 
     """
     cdef Py_ssize_t node, left, right, parent, sibling
@@ -586,6 +601,9 @@ def _ols_min_branch_d2(
     cdef Py_ssize_t n = 2 * m - 3
 
     lens[min_node] = min_len
+
+    # Traverse tree in preorder and calculate the length change of each branch from its
+    # previous branch.
     for i in range(1, n):
         node = preodr[i]
         parent = tree[node, 2]
@@ -598,7 +616,8 @@ def _ols_min_branch_d2(
         lambda_0 = numerator / ((s_size + size) * (p_size + 1))
         lambda_1 = numerator / ((s_size + p_size) * (size + 1))
 
-        lens[node] = L = lens[parent] + 0.5 * (
+        # factor 0.5 is omitted
+        lens[node] = L = lens[parent] + (
             (lambda_0 - lambda_1) * (adk[sibling, 0] + ad2[node, 0])
             + (lambda_1 - 1) * (ad2[sibling, 1] + adk[parent, 1])
             + (1 - lambda_0) * (ad2[sibling, 0] + adk[node, 0])
@@ -619,9 +638,9 @@ def _bal_min_branch(
 ):
     """Find the branch with the minimum length change after inserting a new taxon.
 
-    This function resembles :func:`_ols_min_branch_d2` but it 1) uses the
-    balanced framework and 2) calculates based on the entire matrix. See also
-    the important note of the latter.
+    This function resembles :func:`_ols_min_branch_d2` but it 1) uses the balanced
+    framework and 2) calculates based on the entire matrix. See also the note of the
+    latter.
 
     Implemented according to Eq. 10 of Desper and Gascuel (2002).
 
@@ -638,7 +657,9 @@ def _bal_min_branch(
         node = preodr[i]
         parent = tree[node, 2]
         sibling = tree[node, 3]
-        lens[node] = L = lens[parent] + 0.25 * (
+
+        # factor 0.25 is omitted
+        lens[node] = L = lens[parent] + (
             adm[sibling, parent] + adk[node, 0] - adm[sibling, node] - adk[parent, 1]
         )
         if L < min_len:
@@ -669,11 +690,11 @@ def _avgdist_d2_insert(
     the target node and its parent. After insertion, the taxon will become the sibling
     of the target.
 
-               parent
-                /  \
-             link  sibling
-             /  \
-        target  taxon (k)
+                                    parent
+             parent                  /  \
+             /  \        =>       link  sibling
+        target  sibling           /  \
+                             target  taxon (k)
 
     This function should be executed *before* calling :func:`_insert_taxon`, which will
     mutate the tree.
@@ -786,7 +807,8 @@ def _bal_avgdist_insert(
     r"""Update balanced average distance matrix after taxon insertion.
 
     This function resembles :func:`_avgdist_d2_insert` but it 1) uses the balanced
-    framework and 2) updates the entire matrix.
+    framework and 2) updates the entire matrix. The latter makes it the dominant term
+    of the entire algorithm.
 
     Two additional parameters are provided: `powers` is a pre-calculated array of
     2^(-l) powers (l is the depth difference between two nodes). `stack` is an
@@ -1124,17 +1146,194 @@ def _bal_avgdist_insert_p(
         anc_i += 1
 
 
-def _anc_size_1plus(
-    Py_ssize_t node,
-    Py_ssize_t[:, ::1] tree
+def _insert_taxon(
+    Py_ssize_t taxon,
+    Py_ssize_t target,
+    Py_ssize_t[:, ::1] tree,
+    Py_ssize_t[::1] preodr,
+    Py_ssize_t[::1] postodr,
+    bint use_depth=True,
 ):
-    r"""Increase the sizes of ancestors by one."""
-    cdef Py_ssize_t parent
-    cdef Py_ssize_t curr = node
-    while curr:
-        parent = tree[curr, 2]
-        tree[parent, 4] += 1
-        curr = parent
+    r"""Insert a taxon between a target node and its parent.
+
+    For example, with the following local structure of the original tree:
+
+          A
+         / \
+        B   C
+
+    With target=B, this function inserts a taxon into the branch A-B. The structure
+    becomes:
+
+            A
+           / \
+        link  C
+         / \
+        B  taxon
+
+    The link and taxon will be appended to the end of the tree array, but the pre- and
+    postorders need to be muted such that new nodes can be inserted. Specifically:
+
+        Preorder:  A - B - C => A - link - B - taxon - C
+        Postorder: B - C - A => B - taxon - link - C - A
+
+    A special case is that the taxon is inserted into the root branch (node=0). The
+    tree becomes:
+
+            A
+           / \
+        link taxon
+         / \
+        B   C
+
+    The inserted taxon always becomes the right child.
+
+    """
+    # This function can be simplified by Python and NumPy APIs. Although I hoped that
+    # NumPy vectorization can accelerate the code, especially the pre- and postorder
+    # parts, the reality according to my tests is that cell-by-cell Cython code is
+    # significantly faster than NumPy, and greatly reduces the overall runtime of the
+    # entire algorithms. This effect is more obvious when the dataset is small, but
+    # less so when it is large (but it is still there).
+    #
+    # The reason might be that when moving a block of elements within the same array,
+    # NumPy needs to create a temporary array, but Cython can do the job in place.
+    #
+    # There might be a chance to re-consider NumPy (or even CuPy) API in the future.
+    cdef Py_ssize_t left, right, parent, sibling, size, depth, pre_i, post_i
+    cdef Py_ssize_t i, k, side, clade_n, pre_i_after, curr
+
+    # determine tree dimensions
+    # typically n = 2 * taxon - 3, but this function doesn't enforce this
+    cdef Py_ssize_t m = tree[0, 4]
+    cdef Py_ssize_t n = m * 2 - 1
+    cdef Py_ssize_t link = n
+    cdef Py_ssize_t tip = n + 1
+
+    # Special case (root branch): taxon k becomes the sibling of all existing taxa
+    # except for the root (taxon 0).
+    if target == 0:
+        # children
+        left, right = tree[0, 0], tree[0, 1]
+        tree[left, 2] = tree[right, 2] = link
+
+        # root
+        tree[0, 0] = link
+        tree[0, 1] = tip
+        tree[0, 4] = m + 1
+        tree[0, 7] = n + 1
+
+        # link
+        tree[link, 0] = left
+        tree[link, 1] = right
+        tree[link, 2] = 0
+        tree[link, 3] = tip
+        tree[link, 4] = m
+        tree[link, 5] = 1
+        tree[link, 6] = 1
+        tree[link, 7] = n - 1
+
+        # tip
+        tree[tip, 0] = 0
+        tree[tip, 1] = taxon
+        tree[tip, 2] = 0
+        tree[tip, 3] = link
+        tree[tip, 4] = 1
+        tree[tip, 5] = 1
+        tree[tip, 6] = n + 1
+        tree[tip, 7] = n
+
+        # entire tree depth + 1
+        if use_depth:
+            for i in range(1, n):
+                tree[i, 5] += 1
+
+        # preorder
+        for i in range(n - 1, 0, -1):
+            tree[i, 6] += 1
+            preodr[i + 1] = preodr[i]
+        preodr[1] = link
+        preodr[n + 1] = tip
+
+        # postorder
+        postodr[n - 1] = link
+        postodr[n] = tip
+        postodr[n + 1] = 0
+
+    # Regular case (any other branch): The link becomes the parent of the target node,
+    # and child of its original parent. Taxon k becomes the sibling
+    else:
+        left = tree[target, 0]
+        right = tree[target, 1]
+        parent = tree[target, 2]
+        sibling = tree[target, 3]
+        size = tree[target, 4]
+        depth = tree[target, 5]
+        pre_i = tree[target, 6]
+        post_i = tree[target, 7]
+
+        side = int(tree[parent, 0] != target)
+        tree[parent, side] = link
+        tree[sibling, 3] = link
+        tree[target, 2] = link
+        tree[target, 3] = tip
+
+        # preorder index of node after clade
+        pre_i_after = pre_i + size * 2 - 1
+
+        # link
+        tree[link, 0] = target
+        tree[link, 1] = tip
+        tree[link, 2] = parent
+        tree[link, 3] = sibling
+        tree[link, 4] = size + 1
+        tree[link, 5] = depth
+        tree[link, 6] = pre_i
+        tree[link, 7] = post_i + 2
+
+        # tip
+        tree[tip, 0] = 0
+        tree[tip, 1] = taxon
+        tree[tip, 2] = link
+        tree[tip, 3] = target
+        tree[tip, 4] = 1
+        tree[tip, 5] = depth + 1
+        tree[tip, 6] = pre_i_after + 1
+        tree[tip, 7] = post_i + 1
+
+        # clade depth +1
+        if use_depth:
+            for i in range(pre_i, pre_i_after):
+                tree[preodr[i], 5] += 1
+
+        # preorder shift: nodes after clade +2, tip inserted after clade, nodes within
+        # clade +1, link inserted before clade
+        for i in range(n - 1, pre_i_after - 1, -1):
+            k = preodr[i]
+            tree[k, 6] += 2
+            preodr[i + 2] = k
+        preodr[pre_i_after + 1] = tip
+
+        for i in range(pre_i_after - 1, pre_i - 1, -1):
+            k = preodr[i]
+            tree[k, 6] += 1
+            preodr[i + 1] = k
+        preodr[pre_i] = link
+
+        # postorder shift: all nodes after clade +2, tip and link inserted after clade
+        for i in range(n - 1, post_i, -1):
+            k = postodr[i]
+            tree[k, 7] += 2
+            postodr[i + 2] = k
+        postodr[post_i + 2] = link
+        postodr[post_i + 1] = tip
+
+        # size +1 from link to root
+        curr = link
+        while curr:
+            parent = tree[curr, 2]
+            tree[parent, 4] += 1
+            curr = parent
 
 
 def _avgdist_swap(
@@ -1167,7 +1366,7 @@ def _avgdist_swap(
 
     This function should be executed *after* calling :func:`_swap_branches`.
 
-    Implemented according to A4.2(b) of Desper and Gascuel (2002).
+    Implemented according to A4.3(b) of Desper and Gascuel (2002).
 
     """
     cdef Py_ssize_t node
@@ -1189,9 +1388,30 @@ def _avgdist_swap(
     cdef Py_ssize_t s_size = tree[sibling, 4]
     cdef Py_ssize_t p_size = m - tree[parent, 4]
 
-    # locate the clade below target, which consists of sibling and other
+    # Loop over all nodes except for target. These nodes can be divided into ones
+    # within the clade below target (former sibling and other), and ones that are
+    # outside the clade (former child and parent). Their distances to the target will
+    # be updated separately.
     cdef Py_ssize_t start = tree[target, 6]
     cdef Py_ssize_t end = start + tree[target, 4] * 2 - 1
+
+    # # 1) subtrees within (parent, child) vs sibling (lower) + other (lower)
+    # for node in range(start):
+    #     adm[node, target] = adm[target, node] = (
+    #         s_size * adm[node, sibling] + o_size * adm[node, other]
+    #     ) / (s_size + o_size)
+
+    # # 2) # subtrees within (sibling, other) vs parent (upper) + child (lower)
+    # for node in range(start + 1, end):
+    #     adm[node, target] = adm[target, node] = (
+    #         p_size * adm[node, parent] + c_size * adm[node, child]
+    #     ) / (c_size + p_size)
+
+    # # 3) same as 1)
+    # for node in range(end, n):
+    #     adm[node, target] = adm[target, node] = (
+    #         s_size * adm[node, sibling] + o_size * adm[node, other]
+    #     ) / (s_size + o_size)
 
     cdef double temp_val = adm[target, target]
 
@@ -1225,6 +1445,8 @@ def _bal_avgdist_swap(
 
     This function resembles :func:`_avgdist_swap`, but it uses a balanced framework.
     Specifically, it follows Eq. 18 and Appendix 5.3 of Desper and Gascuel (2002).
+
+    This function is the dominant term of the entire BNNI algorithm.
 
     """
     cdef Py_ssize_t node, curr, before, after, cousin, a, b

@@ -6,14 +6,13 @@
 # The full license is in the file LICENSE.txt, distributed with this software.
 # ----------------------------------------------------------------------------
 
-import sys
-
 import numpy as np
 
 from skbio.tree import TreeNode
 from ._c_me import (
     _preorder,
     _postorder,
+    _insert_taxon,
     _avgdist_taxon,
     _bal_avgdist_taxon,
     _avgdist_d2_insert,
@@ -23,7 +22,6 @@ from ._c_me import (
     _bal_lengths,
     _ols_min_branch_d2,
     _bal_min_branch,
-    _anc_size_1plus,
     _avgdist_matrix,
     _bal_avgdist_matrix,
     _avgdist_swap,
@@ -33,24 +31,23 @@ from ._c_me import (
     _bal_all_swaps,
     _bal_avgdist_insert_p,
 )
-from ._utils import _check_dm
+from ._utils import _check_dm, _check_dm_tree
 
 
-def gme(dm, rearrange=None, clip_to_zero=True):
+def gme(dm, clip_to_zero=True):
     r"""Perform greedy minimum evolution (GME) for phylogenetic reconstruction.
 
     .. versionadded:: 0.6.2
+
+    .. versionchanged:: 0.6.3
+        Computational efficiency significantly improved.
 
     Parameters
     ----------
     dm : skbio.DistanceMatrix
         Input distance matrix containing distances between taxa.
-    rearrange : str, optional
-        Further improve the constructed tree using a rearrangement method. Option:
-        "nni".
     clip_to_zero : bool, optional
-        If True (default), convert negative branch lengths into zeros. See :func:`nj`
-        for details.
+        If True (default), convert negative branch lengths into zeros.
 
     Returns
     -------
@@ -65,18 +62,52 @@ def gme(dm, rearrange=None, clip_to_zero=True):
 
     Notes
     -----
-    Greedy Minimum Evolution (GME) is a distance-based algorithm for phylogenetic
-    reconstruction utilizing the minimum evolution principle for selecting a tree
-    topology with the lowest sum of branch lengths according to a given method of
-    estimating branch lengths. Ordinary Least Squares (OLS) is a natural framework for
-    edge estimation as it is statistically consistent with minimum evolution and is
-    used for GME.
+    Greedy Minimum Evolution (GME) [1]_ is a distance-based algorithm for phylogenetic
+    reconstruction. It utilizes the minimum evolution (ME) principle [2]_ for selecting
+    a tree topology with the lowest sum of branch lengths, as calculated using an
+    ordinary least squares (OLS) framework [3]_.
+
+    GME is *O*\(*n*:sup:`2`) in time and *O*\(*n*) in space, making it a more scalable
+    method that multiple alternatives (e.g., :func:`nj` and :func:`bme`). Therefore it
+    is suitable for reconstructing very large phylogenetic trees.
+
+    GME generates an unrooted tree with variable tip heights and potentially some
+    negative branch lengths. The first taxon in the distance matrix is always placed as
+    a child of the root node. See the notes of :func:`nj` for how to deal with unrooted
+    trees and negative branch lengths.
+
+    A GME-generated tree may be further improved by executing the FastNNI algorithm
+    implemented in :func:`nni` (with ``balanced=False``).
+
+    A similar but less scalable algorithm using the balanced instead of OLS framework
+    is provided in :func:`bme`.
+
+    The same methods underlying :func:`gme`, :func:`bme` and :func:`nni` NI were also
+    provided by the software package FastME [4]_.
+
+    .. note::
+        These scikit-bio functions were implemented following the original paper [1]_.
+        It is not guaranteed that they will precisely mirror FastME's output. Although
+        in practices they typically generate identical or equally optimal phylogenetic
+        trees as FastME does.
 
     References
     ----------
     .. [1] Desper, R., & Gascuel, O. (2002). Fast and accurate phylogeny reconstruction
        algorithms based on the minimum-evolution principle. J Comput Biol, 9(5),
        687-705.
+
+    .. [2] Rzhetsky, A., & Nei, M. (1993). Theoretical foundation of the
+       minimum-evolution method of phylogenetic inference. Mol Biol Evol, 10(5),
+       1073-1095.
+
+    .. [3] Cavalli-Sforza, L. L., & Edwards, A. W. (1967). Phylogenetic analysis.
+       Models and estimation procedures. American journal of human genetics,
+       19(3 Pt 1), 233.
+
+    .. [4] Lefort, V., Desper, R., & Gascuel, O. (2015). FastME 2.0: a comprehensive,
+       accurate, and fast distance-based phylogeny inference program. Mol Biol Evol,
+       32(10), 2798-2800.
 
     Examples
     --------
@@ -113,7 +144,7 @@ def gme(dm, rearrange=None, clip_to_zero=True):
     _check_dm(dm)
 
     # reconstruct tree topology and branch lengths using GME
-    tree, lens = _gme(dm.data, rearrange)
+    tree, lens = _gme(dm.data)
 
     if clip_to_zero:
         lens[lens < 0] = 0
@@ -121,7 +152,7 @@ def gme(dm, rearrange=None, clip_to_zero=True):
     return _to_treenode(tree, dm.ids, lens, unroot=True)
 
 
-def bme(dm, rearrange=None, clip_to_zero=True, **kwargs):
+def bme(dm, clip_to_zero=True, **kwargs):
     r"""Perform balanced minimum evolution (BME) for phylogenetic reconstruction.
 
     .. versionadded:: 0.6.3
@@ -130,12 +161,8 @@ def bme(dm, rearrange=None, clip_to_zero=True, **kwargs):
     ----------
     dm : skbio.DistanceMatrix
         Input distance matrix containing distances between taxa.
-    rearrange : str, optional
-        Further improve the constructed tree using a rearrangement method. Option:
-        "nni".
     clip_to_zero : bool, optional
-        If True (default), convert negative branch lengths into zeros. See :func:`nj`
-        for details.
+        If True (default), convert negative branch lengths into zeros.
 
     Returns
     -------
@@ -150,16 +177,35 @@ def bme(dm, rearrange=None, clip_to_zero=True, **kwargs):
 
     Notes
     -----
-    Balanced Minimum Evolution (BME) is a refinement of the distance-based minimum
-    evolution problem where average distances between subtrees ignores the size of the
-    subtrees. The BME algorithm implemented here uses the same OLS based edge
-    estimation used with Greedy Minimum Evolution (GME).
+    Balanced Minimum Evolution (BME) [1]_ is a refinement of the distance-based minimum
+    evolution problem where the average distances between subtrees are independent of
+    the sizes of the subtrees. This is referred to as a balanced (or simply BME)
+    framework [2]_, as in contrast to the OLS framework used by GME (:func:`gme`).
+
+    The BME algorithm implemented here uses a similar greedy algorithm as implemented
+    in :func:`gme`, but less scalable due to the need to update subtree distances as
+    the tree topology changes. The algorithm is sub-*O*\(*n*:sup:`3`) in time and
+    *O*\(*n*:sup:`2`) in space.
+
+    Refer to :func:`gme` for the format of the output tree and subsequent treatments.
+
+    A BME-generated tree may be further improved by executing the BNNI algorithm
+    implemented in :func:`nni` (with ``balanced=True``).
+
+    The same method was provided by FastME [3]_. See :func:`gme` for notes on this.
 
     References
     ----------
     .. [1] Desper, R., & Gascuel, O. (2002). Fast and accurate phylogeny reconstruction
        algorithms based on the minimum-evolution principle. J Comput Biol, 9(5),
        687-705.
+
+    .. [2] Pauplin, Y. (2000). Direct calculation of a tree length using a distance
+       matrix. J Mol Evol, 51, 41-47.
+
+    .. [3] Lefort, V., Desper, R., & Gascuel, O. (2015). FastME 2.0: a comprehensive,
+       accurate, and fast distance-based phylogeny inference program. Mol Biol Evol,
+       32(10), 2798-2800.
 
     Examples
     --------
@@ -196,7 +242,7 @@ def bme(dm, rearrange=None, clip_to_zero=True, **kwargs):
     _check_dm(dm)
 
     # reconstruct tree topology and branch lengths using BME
-    tree, lens = _bme(dm.data, rearrange, **kwargs)
+    tree, lens = _bme(dm.data, **kwargs)
 
     if clip_to_zero:
         lens[lens < 0] = 0
@@ -205,7 +251,12 @@ def bme(dm, rearrange=None, clip_to_zero=True, **kwargs):
 
 
 def nni(tree, dm, balanced=False, clip_to_zero=True):
-    r"""Perform nearest neighbor interchange (NNI) on a phylogenetic tree.
+    r"""Perform nearest neighbor interchange (NNI) to improve a phylogenetic tree.
+
+    .. versionadded:: 0.6.2
+
+    .. versionchanged:: 0.6.3
+        Computational efficiency significantly improved.
 
     Parameters
     ----------
@@ -214,13 +265,9 @@ def nni(tree, dm, balanced=False, clip_to_zero=True):
     dm : skbio.DistanceMatrix
         Input distance matrix containing distances between taxa.
     balanced : bool, optional
-        Whether to use the minimum evolution framework or the balanced
-        minimum evolution framework. The definition of average distance
-        between subtrees either ignores subtree size (``True``, default)
-        or calculates based on subtree size (``False``).
+        Use the OLS framework (False, default) or the balanced framework (True).
     clip_to_zero : bool, optional
-        If True (default), convert negative branch lengths into zeros. See :func:`nj`
-        for details.
+        If True (default), convert negative branch lengths into zeros.
 
     Returns
     -------
@@ -229,25 +276,33 @@ def nni(tree, dm, balanced=False, clip_to_zero=True):
 
     Notes
     -----
-    NNI algorithm for minimum evolution problem on phylogenetic trees. It rearranges
-    an initial tree topology by performing subtree exchanges such that the distance
-    is minimized. This implementation is based on the FastNNI algorithm and the
-    BNNI algorithm (BNNI)[1]_.
+    Nearest neighbor interchange (NNI) is a method for tree rearrangement aiming at
+    optimizing a given tree topology according to certain criteria. It iteratively
+    swaps neighboring branches that could result in better trees, until no such swaps
+    remain in the optimized tree.
 
-    The two versions of NNI are due to the relationship with minimum evolution
-    and the use of average distances between subtrees. FastNNI is based on the
-    Minimum Evolution (ME) problem while BNNI is based on the Balanced Minimum
-    Evolution (BME) problem. In BME the sizes of subtrees are ignored while ME
-    considers the size of subtrees in the calculation of average distance.
+    This function performs NNI for the minimum evolution (ME) problem on phylogenetic
+    trees. The implementation is based on [1]_. Two versions of the method are
+    provided: the FastNNI algorithm (``balanced=False``) based on an ordinary least
+    squares (OLS) framework (see also :func:`gme`) and the BNNI algorithm
+    (``balanced=True``) based on a balanced framework (see also :func:`bme`). The
+    former is more scalable than the latter.
 
-    For both versions of NNI, the input tree is required to be binary and rooted
-    at a leaf node such that there is a unique descendant from the root.
+    The input tree may be rooted or unrooted, and it must be strictly bifurcating. One
+    can apply :meth:`~TreeNode.is_bifurcating` or :meth:`~TreeNode.bifurcate` to check
+    or make a bifurcating tree. The set of taxa in the tree (accessible via
+    :meth:`~TreeNode.subset`) must match those in the distance matrix.
+
+    The output tree is unrooted, with the first taxon in the distance matrix placed as
+    a child of the root node. Branch lengths are assigned according to the framework of
+    choice. See also :func:`nj` regarding rooting an unrooted tree and dealing with
+    potential negative branch lengths.
 
     References
     ----------
-    .. [1] Desper R, Gascuel O. Fast and accurate phylogeny reconstruction
-       algorithms based on the minimum-evolution principle. J Comput Biol.
-       2002;9(5):687-705. doi: 10.1089/106652702761034136. PMID: 12487758.
+    .. [1] Desper, R., & Gascuel, O. (2002). Fast and accurate phylogeny reconstruction
+       algorithms based on the minimum-evolution principle. J Comput Biol, 9(5),
+       687-705.
 
     Examples
     --------
@@ -302,23 +357,18 @@ def nni(tree, dm, balanced=False, clip_to_zero=True):
     0.21
 
     """
-    _check_dm(dm)
-
-    taxa = dm.ids
-    if frozenset(taxa) != tree.subset():
-        raise ValueError("Inconsistent taxa between tree and distance matrix.")
+    _check_dm_tree(dm, tree)
 
     # generate tree array
+    taxa = dm.ids
     tree, preodr, postodr = _root_from_treenode(tree, taxa)
 
     # allocate lengths
     lens = np.empty(len(tree), dtype=float)
 
     # perform BNNI or FastNNI
-    if balanced:
-        _bnni(dm.data, tree, preodr, postodr, lens)
-    else:
-        _fastnni(dm.data, tree, preodr, postodr, lens)
+    func = _bnni if balanced else _fastnni
+    func(dm.data, tree, preodr, postodr, lens)
 
     if clip_to_zero:
         lens[lens < 0] = 0
@@ -327,15 +377,13 @@ def nni(tree, dm, balanced=False, clip_to_zero=True):
     return _to_treenode(tree, taxa, lens, unroot=True)
 
 
-def _gme(dm, rearrange=None):
+def _gme(dm):
     r"""Perform greedy minimum evolution (GME) for phylogenetic reconstruction.
 
     Parameters
     ----------
     dm : ndarray of float of shape (m, m)
         Input distance matrix containing distances between taxa.
-    rearrange : str, optional
-        Rearrangement post tree construction. Option: "nni".
 
     Returns
     -------
@@ -389,9 +437,17 @@ def _gme(dm, rearrange=None):
     The root is always the first row in the tree array. Other nodes are appended to the
     tree array in the same order as they are added to the tree.
 
+    ---
+
     For an input distance matrix with m taxa, the output tree will have 2m - 3 nodes.
-    This memory space is pre-allocated to improve efficiency. All operations consider
-    only the required block of indices within each array during each iteration.
+    This memory space is pre-allocated to improve efficiency. The algorithm doesn't
+    remake arrays during iteration, but repeatedly uses the already allocated space.
+    During an interation involving x nodes, the first x positions of each array are
+    occupied, while the remaining positions are disregarded. There is no need to reset
+    array values after each iteration.
+
+    Since they are created de novo, all arrays are C-continuous. This permits further
+    optimization in the Cython code.
 
     """
     # number of taxa
@@ -400,8 +456,18 @@ def _gme(dm, rearrange=None):
     # number of nodes in the final tree
     n = 2 * m - 3
 
-    # Pre-allocate memory space.
-    tree, preodr, postodr, ad2, adk, lens, stack = _allocate_arrays(n, matrix=False)
+    # Pre-allocate memory spaces:
+    # tree structure
+    tree, preodr, postodr = _allocate_tree(n)
+
+    # average distances between distant-2 subtrees
+    ad2 = np.empty((n, 2), dtype=float)
+
+    # average distances from a taxon to each subtree
+    adk = np.empty((n, 2), dtype=float)
+
+    # branch lengths or length changes
+    lens = np.empty((n,), dtype=float)
 
     # Initialize 3-taxon tree.
     _init_tree(dm, tree, preodr, postodr, ad2, matrix=False)
@@ -420,26 +486,19 @@ def _gme(dm, rearrange=None):
         # Insert new taxon into tree.
         _insert_taxon(k, target, tree, preodr, postodr, use_depth=False)
 
-    # Perform tree rearrangement using NNI.
-    if rearrange == "nni":
-        _fastnni(dm, tree, preodr, postodr, lens)
-
-    # Calculate branch lengths using a balanced framework.
-    else:
-        _ols_lengths_d2(lens, ad2, tree)
+    # Calculate branch lengths using an OLS framework.
+    _ols_lengths_d2(lens, ad2, tree)
 
     return tree, lens
 
 
-def _bme(dm, rearrange=None, parallel=False):
+def _bme(dm, parallel=False):
     r"""Perform balanced minimum evolution (BME) for phylogenetic reconstruction.
 
     Parameters
     ----------
     dm : ndarray of float of shape (m, m)
         Input distance matrix containing distances between taxa.
-    rearrange : str, optional
-        Rearrangement post tree construction. Option: "nni".
 
     Returns
     -------
@@ -465,9 +524,24 @@ def _bme(dm, rearrange=None, parallel=False):
     m = dm.shape[0]
     n = 2 * m - 3
 
-    # Pre-allocate memory space and initialize 3-taxon tree (same as GME but creates a
-    # full matrix).
-    tree, preodr, postodr, adm, adk, lens, stack = _allocate_arrays(n, matrix=True)
+    # Pre-allocate memory spaces:
+    # tree structure
+    tree, preodr, postodr = _allocate_tree(n)
+
+    # average distances between all subtrees
+    # (This is the dominant factor in BME, and what makes it more expensive than GME.)
+    adm = np.empty((n, n), dtype=float)
+
+    # average distances from a taxon to each subtree
+    adk = np.empty((n, 2), dtype=float)
+
+    # branch lengths or length changes
+    lens = np.empty((n,), dtype=float)
+
+    # a stack for traversal operations
+    stack = np.empty((n,), dtype=int)
+
+    # initialize 3-taxon tree
     _init_tree(dm, tree, preodr, postodr, adm, matrix=True)
 
     # Pre-calculate negative powers of 2.
@@ -487,27 +561,38 @@ def _bme(dm, rearrange=None, parallel=False):
         # Insert new taxon into tree.
         _insert_taxon(k, target, tree, preodr, postodr, use_depth=True)
 
-    # Perform tree rearrangement using NNI.
-    if rearrange == "nni":
-        _bnni(dm, tree, preodr, postodr, lens, adm=adm, powers=powers)
-
     # Calculate branch lengths using a balanced framework.
-    else:
-        _bal_lengths(lens, adm, tree)
+    _bal_lengths(lens, adm, tree)
 
     return tree, lens
 
 
 def _fastnni(dm, tree, preodr, postodr, lens):
-    r"""Perform nearest neighbor interchange (NNI) on a tree in an OLS framework.
+    r"""Perform nearest neighbor interchange (NNI) on a tree.
 
-    This function produces the same result as :func:`_ols_fastnni`. However, it
-    re-calculates the length changes of all possible swaps after each swap and picks
-    the largest positive one through a simple argmax. Therefore, it is significantly
-    slower.
+    To improve the tree under the minimum evolution (ME) criterion using an OLS
+    framework on a distance matrix between taxa.
 
-    This algorithm is implemented as a reference and for comparison purpose. It is not
-    used in the actual NNI algorithm.
+    This algorithm was implemented following Section 2.2 and Appendix 4 of Desper and
+    Gascuel (2002). Basically, it creates a full average distance matrix between all
+    pairs of subtrees, evaluates all possible swaps, then it iteratively perform
+    swaps that lead to the maximum reduction of overall branch lengths. During this
+    process, it needs to update the evaluation of the four corner branches after one
+    branch is swapped.
+
+    ---
+
+    The original paper suggests using a maxheap structure to store positive swaps for
+    quick lookup. However, it doesn't discuss how to update existing swaps in the heap,
+    which is seemingly linear, which reduces the benefit of using a heap.
+
+    In my experiments I created a working solution using `np.searchsorted` to update
+    existing swaps. It is theoretically efficient (logarithmic search time). However,
+    further optimization is needed.
+
+    Eventually, the current code only uses a naive approach that stores all swaps
+    (positive or not) and performs `np.argmax` during every iteration. This is not
+    ideal, and should be revisited later.
 
     """
     n = tree.shape[0]
@@ -551,26 +636,35 @@ def _fastnni(dm, tree, preodr, postodr, lens):
     return res
 
 
-def _bnni(dm, tree, preodr, postodr, lens, adm=None, powers=None):
+def _bnni(dm, tree, preodr, postodr, lens):
     r"""Perform balanced nearest neighbor interchange (BNNI) on a tree.
 
     To improve the tree under the balanced minimum evolution (BME) criterion given a
     distance matrix between taxa.
 
-    Implemented according to Section 3.2 of Desper and Gascuel (2002).
+    Implemented according to Section 3.2 and Appendix 5 of Desper and Gascuel (2002).
+    Basically, BNNI is similar to FastNNI (see `_fastnni`), but it needs to update
+    more than the four corner branches after each swap, as balanced average distances
+    are dependent on the topology of the tree.
+
+    ---
+
+    The original paper doesn't explain how to store and update positive swaps. Because
+    a large proportion of swaps need to be re-evaluated during every iteration, one
+    would expect that a heap structure as suggested for the FastNNI algorithm may not
+    be efficient. The current code simply stores all swaps (positive or not) and runs
+    `np.argmax` on all of them during each iteration.
 
     """
     n = tree.shape[0]
     stack = np.empty(n, dtype=int)
 
     # Calculate balanced average distances between all pairs of subtrees.
-    if adm is None:
-        adm = np.empty((n, n))
-        _bal_avgdist_matrix(adm, dm, tree, preodr, postodr)
+    adm = np.empty((n, n))
+    _bal_avgdist_matrix(adm, dm, tree, preodr, postodr)
 
     # Pre-calculate negative powers of 2.
-    if powers is None:
-        powers = np.ldexp(1.0, -np.arange(dm.shape[0]))
+    powers = np.ldexp(1.0, -np.arange(dm.shape[0]))
 
     # Initialize branch swapping information.
     gains, sides, nodes = _init_swaps(tree)
@@ -1058,74 +1152,6 @@ def _root_from_treenode(obj, taxa):
     return tree, preodr, postodr
 
 
-def _allocate_arrays(n, matrix=False):
-    r"""Pre-allocate memory space for arrays.
-
-    This function creates multiple arrays. Each array has a length of n on axis 1.
-    Here, n is the number of nodes in the final tree. Thus, one doesn't need to remake
-    arrays during iteration, but repeatedly uses the already allocated space. During an
-    interation involving x nodes, the first x positions of each array are occupied,
-    while the remaining positions are left as zero. There is no need to reset array
-    values to zero after each iteration.
-
-    Since they are created de novo, all arrays are C-continuous. This permits further
-    optimization in the Cython code.
-
-    `ads` stores the average distances between subtrees within the current tree. If
-    `matrix` is True, an n by n square matrix will be allocated to cover all pairs of
-    subtrees. This is required by BME and NNI. Such a matrix represents the primary
-    memory bound in the entire algorithm.
-
-    Otherwise, an n by 2 array will be allocated, only to include pairs of distant-2
-    subtrees. This is adopted by GME to reduce computational complexity.
-
-    """
-    # tree structure
-    tree = np.empty((n, 8), dtype=int)
-
-    # nodes in pre- and postorder
-    preodr = np.empty((n,), dtype=int)
-    postodr = np.empty((n,), dtype=int)
-
-    # average distances between subtrees
-    x = n if matrix else 2
-    ads = np.empty((n, x), dtype=float)
-
-    # average distances from a taxon to each subtree
-    adk = np.empty((n, 2), dtype=float)
-
-    # branch lengths or length changes
-    lens = np.empty((n,), dtype=float)
-
-    # a stack for traversal operations
-    stack = np.empty((n,), dtype=int)
-
-    return tree, preodr, postodr, ads, adk, lens, stack
-
-
-def _allocate_tree(n):
-    r"""Pre-allocate memory space for an array-based tree structure.
-
-    Parameters
-    ----------
-    n : int
-        Total number of nodes in the tree.
-
-    Returns
-    -------
-    (n, 8) ndarray of int
-        Tree structure.
-    (n,) ndarray of int
-        Nodes in preorder.
-    (n,) ndarray of int
-        Nodes in postorder.
-    """
-    tree = np.empty((n, 8), dtype=int)
-    preodr = np.empty((n,), dtype=int)
-    postodr = np.empty((n,), dtype=int)
-    return tree, preodr, postodr
-
-
 def _init_tree(dm, tree, preodr, postodr, ads, matrix=False):
     """Initialize tree (triplet with taxa 0, 1 and 2)."""
     # triplet tree
@@ -1151,140 +1177,6 @@ def _init_tree(dm, tree, preodr, postodr, ads, matrix=False):
         ads[2, 0] = dm[0, 2]
         ads[1, 1] = ads[2, 1] = dm[1, 2]
         ads[0, 0] = ads[0, 1] = 0
-
-
-def _insert_taxon(taxon, target, tree, preodr, postodr, use_depth=True):
-    r"""Insert a taxon between a target node and its parent.
-
-    For example, with the following local structure of the original tree:
-
-          A
-         / \
-        B   C
-
-    With target=B, this function inserts a taxon into the branch A-B. The structure
-    becomes:
-
-            A
-           / \
-        link  C
-         / \
-        B  taxon
-
-    A special case is that the taxon is inserted into the root branch (node=0). The
-    tree becomes:
-
-            A
-           / \
-        link taxon
-         / \
-        B   C
-
-    The inserted taxon always becomes the right child.
-
-    """
-    # This function uses lots of NumPy indexing tricks, and won't benefit much from
-    # Cythonization. But further optimization is possible.
-
-    # determine tree dimensions
-    # typically n = 2 * taxon - 3, but this function doesn't enforce this
-    m = tree[0, 4]
-    n = m * 2 - 1
-    link = n
-    tip = n + 1
-
-    # Special case (root branch): taxon k becomes the sibling of all existing taxa
-    # except for the root (taxon 0).
-    if target == 0:
-        # children
-        left, right = tree[0, :2]
-        tree[left, 2] = tree[right, 2] = link
-
-        # root
-        tree[0, :2] = [link, tip]
-        tree[0, 4] = m + 1
-        tree[0, 7] = n + 1
-
-        # link
-        tree[link] = [left, right, 0, tip, m, 1, 1, n - 1]
-
-        # tip
-        tree[tip] = [0, taxon, 0, link, 1, 1, n + 1, n]
-
-        # entire tree depth + 1
-        tree[1:n, 5] += 1
-
-        # preorder
-        tree[1:n, 6] += 1
-        preodr[2 : n + 1] = preodr[1:n]
-        preodr[1] = link
-        preodr[n + 1] = tip
-
-        # postorder
-        postodr[n - 1 : n + 2] = [link, tip, 0]
-
-    # Regular case (any other branch): The link becomes the parent of the target node,
-    # and child of its original parent. Taxon k becomes the sibling
-    else:
-        left, right, parent, sibling, size, depth, pre_i, post_i = tree[target]
-        side = (tree[parent, 0] != target).astype(int)
-        tree[parent, side] = link
-        tree[sibling, 3] = link
-        tree[target, 2] = link
-        tree[target, 3] = tip
-
-        # identify nodes desceding from target
-        clade_n = size * 2 - 1  # number of nodes in clade (including target)
-        pre_i_after = pre_i + clade_n  # preorder index of node after clade
-        clade = preodr[pre_i:pre_i_after]  # range of clade in preorder
-
-        # link
-        tree[link] = [
-            target,
-            tip,
-            parent,
-            sibling,
-            size + 1,
-            depth,
-            pre_i,
-            post_i + 2,
-        ]
-
-        # tip
-        tree[tip] = [
-            0,
-            taxon,
-            link,
-            target,
-            1,
-            depth + 1,
-            pre_i_after + 1,
-            post_i + 1,
-        ]
-
-        # clade depth +1
-        if use_depth:
-            tree[clade, 5] += 1
-
-        # preorder shift: nodes after clade +2, tip inserted after clade, nodes within
-        # clade +1, link inserted before clade
-        pre_after = preodr[pre_i_after:n]
-        tree[pre_after, 6] += 2
-        preodr[pre_i_after + 2 : n + 2] = pre_after
-        preodr[pre_i_after + 1] = tip
-        tree[clade, 6] += 1
-        preodr[pre_i + 1 : pre_i_after + 1] = clade
-        preodr[pre_i] = link
-
-        # postorder shift: all nodes after clade +2, tip and link inserted after clade
-        post_after = postodr[post_i + 1 : n]
-        tree[post_after, 7] += 2
-        postodr[post_i + 3 : n + 2] = post_after
-        postodr[post_i + 2] = link
-        postodr[post_i + 1] = tip
-
-        # size +1 from link to root
-        _anc_size_1plus(link, tree)
 
 
 def _insert_taxon_treenode(taxon, target, tree):
@@ -1403,6 +1295,7 @@ def _init_swaps(tree):
     sides = np.empty((n,), dtype=int)
     nodes = np.empty((n,), dtype=int)
 
+    # identify all internal branches
     branch = 0
     for node in range(1, tree.shape[0]):
         if tree[node, 0]:
@@ -1444,6 +1337,8 @@ def _swap_branches(target, side, tree, preodr, stack, use_depth=True):
     implemented.
 
     """
+    # This function can potentially optimized using Cython. See _insert_taxon.
+
     child = tree[target, side]
     other = tree[target, 1 - side]  # other child
     parent = tree[target, 2]
@@ -1487,8 +1382,8 @@ def _swap_branches(target, side, tree, preodr, stack, use_depth=True):
 
     # update depth (if needed)
     if use_depth:
-        tree[preodr[c_start:c_end], 5] -= 1
-        tree[preodr[s_start:s_end], 5] += 1
+        tree[c_clade, 5] -= 1
+        tree[s_clade, 5] += 1
 
     # update preorder (naive)
     # _preorder(preodr, tree, stack)

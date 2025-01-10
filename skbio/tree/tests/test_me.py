@@ -21,10 +21,8 @@ from skbio.tree._me import (
     _to_treenode,
     _from_treenode,
     _root_from_treenode,
-    _allocate_arrays,
     _init_tree,
     _insert_taxon_treenode,
-    _insert_taxon,
     _avgdist_matrix_naive,
     _avgdist_taxon_naive,
     _init_swaps,
@@ -34,6 +32,7 @@ from skbio.tree._me import (
 from skbio.tree._c_me import (
     _preorder,
     _postorder,
+    _insert_taxon,
     _avgdist_matrix,
     _bal_avgdist_matrix,
     _avgdist_taxon,
@@ -514,32 +513,25 @@ class MeTests(TestCase):
         _postorder(obs := np.full(n, 0), self.tree3, stack)
         npt.assert_array_equal(obs, self.postodr3)
 
-    def test_allocate_arrays(self):
+    def test_allocate_tree(self):
         """Allocate memory space for arrays."""
         n = 5
-        tree, preodr, postodr, ads, adk, lens, stack = _allocate_arrays(n)
+        tree, preodr, postodr = _allocate_tree(n)
         self.assertTupleEqual(tree.shape, (5, 8))
         self.assertTupleEqual(preodr.shape, (5,))
         self.assertTupleEqual(postodr.shape, (5,))
-        self.assertTupleEqual(ads.shape, (5, 2))
-        self.assertTupleEqual(adk.shape, (5, 2))
-        self.assertTupleEqual(lens.shape, (5,))
-        self.assertTupleEqual(stack.shape, (5,))
 
         # make sure arrays are C-continuous
-        for arr in tree, preodr, postodr, ads, adk, lens, stack:
+        for arr in tree, preodr, postodr:
             self.assertTrue(arr.flags.c_contiguous)
-
-        _, _, _, ads, _, _, _ = _allocate_arrays(n, matrix=True)
-        self.assertTupleEqual(ads.shape, (5, 5))
-        self.assertTrue(ads.flags.c_contiguous)
 
     def test_init_tree(self):
         """Initialize triplet tree."""
         dm = np.array([[0, 1, 2], [1, 0, 3], [2, 3, 0]])
         n = 3
-        tree, preodr, postodr, ads, _, _, _ = _allocate_arrays(n)
-        _init_tree(dm, tree, preodr, postodr, ads)
+        tree, preodr, postodr = _allocate_tree(n)
+        ad2 = np.empty((n, 2))
+        _init_tree(dm, tree, preodr, postodr, ad2)
         npt.assert_array_equal(tree, np.array([
             [1, 2, 0, 0, 2, 0, 0, 2],
             [0, 1, 0, 2, 1, 1, 1, 0],
@@ -547,16 +539,17 @@ class MeTests(TestCase):
         ]))
         npt.assert_array_equal(preodr, np.array([0, 1, 2]))
         npt.assert_array_equal(postodr, np.array([1, 2, 0]))
-        npt.assert_array_equal(ads, np.array([
+        npt.assert_array_equal(ad2, np.array([
             [0, 0],
             [1, 3],
             [2, 3],
         ]))
 
-        tree, preodr, postodr, ads, _, _, _ = _allocate_arrays(n, matrix=True)
-        _init_tree(dm, tree, preodr, postodr, ads, matrix=True)
-        np.fill_diagonal(ads, 0)
-        npt.assert_array_equal(ads, np.array([
+        tree, preodr, postodr = _allocate_tree(n)
+        adm = np.empty((n, n))
+        _init_tree(dm, tree, preodr, postodr, adm, matrix=True)
+        np.fill_diagonal(adm, 0)
+        npt.assert_array_equal(adm, np.array([
             [0, 1, 2],
             [1, 0, 3],
             [2, 3, 0],
@@ -1087,7 +1080,8 @@ class MeTests(TestCase):
         res = _ols_min_branch_d2(obs := np.zeros(n), ad2, adk, tree, preodr)
         self.assertEqual(res, 4)
         exp = np.array([0, 0, -2, -2, -3, 0, 0], dtype=float)
-        npt.assert_array_almost_equal(obs, exp)
+        # The algorithm omits factor 0.5, therefore we need to x2 here.
+        npt.assert_array_almost_equal(obs, 2 * exp)
 
         # Test if result matches that calculated from the entire tree.
         dm, tree, preodr, postodr = self.dm3, self.tree3, self.preodr3, self.postodr3
@@ -1111,7 +1105,7 @@ class MeTests(TestCase):
             exp[i] = lens.sum()
         exp[:n - 2] -= exp[0]
 
-        npt.assert_array_almost_equal(obs, exp)
+        npt.assert_array_almost_equal(obs, exp * 2)
         self.assertEqual(res, exp[:n - 2].argmin())
 
     def test_bal_min_branch(self):
@@ -1126,7 +1120,8 @@ class MeTests(TestCase):
         res = _bal_min_branch(obs := np.zeros(n), adm, adk, tree, preodr)
         self.assertEqual(res, 4)
         exp = np.array([0, 0, -2, -2, -3, 0, 0], dtype=float)
-        npt.assert_array_almost_equal(obs, exp)
+        # The algorithm omits factor 0.25, therefore we need to x4 here.
+        npt.assert_array_almost_equal(obs, 4 * exp)
 
         # Test if result matches that calculated from the entire tree.
         dm, tree, preodr, postodr = self.dm3, self.tree3, self.preodr3, self.postodr3
@@ -1144,7 +1139,7 @@ class MeTests(TestCase):
             exp[i] = lens.sum()
         exp[:n - 2] -= exp[0]
 
-        npt.assert_array_almost_equal(obs, exp)
+        npt.assert_array_almost_equal(obs, 4 * exp)
         self.assertEqual(res, exp[:n - 2].argmin())
 
     def test_swap_branches(self):

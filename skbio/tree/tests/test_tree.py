@@ -942,6 +942,13 @@ class TreeTests(TestCase):
         t3.bifurcate(insert_length=0)
         self.assertEqual(str(t3), "((c,(a,b):0));\n")
         
+        # rooted and unrooted tree
+        t4 = TreeNode.read(["((a,b),(c,d),e);"])
+        t4.bifurcate(include_self=False)
+        self.assertEqual(str(t4), "((a,b),(c,d),e);\n")
+        t4.bifurcate(include_self=True)
+        self.assertEqual(str(t4), "(e,((a,b),(c,d)));\n")
+
         # bifurcate with subclass
         tree = TreeNodeSubclass()
         tree.append(TreeNodeSubclass())
@@ -1718,6 +1725,9 @@ class TreeTests(TestCase):
         t = TreeNode.read(["((((a,b)c)d)e,f)root;"])
         self.assertTrue(t.is_bifurcating())
         self.assertFalse(t.is_bifurcating(strict=True))
+        t = TreeNode.read(["((a,b),(c,d),e)root;"])
+        self.assertFalse(t.is_bifurcating())
+        self.assertTrue(t.is_bifurcating(include_self=False))
 
     def test_observed_node_counts(self):
         """returns observed nodes counts given vector of observed taxon counts

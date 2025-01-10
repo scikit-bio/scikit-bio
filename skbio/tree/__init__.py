@@ -33,7 +33,7 @@ Tree Construction
 
 
 Tree Rearrangement
------------------
+------------------
 
 .. autosummary::
    :toctree: generated/
