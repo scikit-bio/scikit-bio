@@ -6,6 +6,8 @@
 # The full license is in the file LICENSE.txt, distributed with this software.
 # ----------------------------------------------------------------------------
 
+from heapq import heapify, heappop
+
 import numpy as np
 
 from skbio.tree import TreeNode
@@ -193,6 +195,11 @@ def bme(dm, clip_to_zero=True, **kwargs):
     implemented in :func:`nni` (with ``balanced=True``).
 
     The same method was provided by FastME [3]_. See :func:`gme` for notes on this.
+
+    .. note::
+        Experimental feature: Add ``parallel=True`` will enable parallelization,
+        which might increase the performance of the algorithm. This feature may not
+        be stable and may be modified without notice in the future.
 
     References
     ----------
@@ -567,7 +574,7 @@ def _bme(dm, parallel=False):
 
 
 def _fastnni(dm, tree, preodr, postodr, lens):
-    r"""Perform nearest neighbor interchange (NNI) on a tree.
+    r"""Perform fast nearest neighbor interchange (FastNNI) on a tree.
 
     To improve the tree under the minimum evolution (ME) criterion using an OLS
     framework on a distance matrix between taxa.
@@ -581,17 +588,35 @@ def _fastnni(dm, tree, preodr, postodr, lens):
 
     ---
 
-    The original paper suggests using a maxheap structure to store positive swaps for
-    quick lookup. However, it doesn't discuss how to update existing swaps in the heap,
-    which is seemingly linear, which reduces the benefit of using a heap.
+    The swaps that can reduce overall branch length are stored in a heap. The paper
+    suggests using a maxheap, but the following code uses Python's heapq which is a
+    minheap. Therefore the length changes are negated (in contrast to `_bnni`). Each
+    item in the heap is a tuple consisting of:
 
-    In my experiments I created a working solution using `np.searchsorted` to update
-    existing swaps. It is theoretically efficient (logarithmic search time). However,
-    further optimization is needed.
+        0. Length change (negative; smaller is better)
+        1. Corresponding node index
+        2. Corresponding side (0: left, 1: right) child to be swapped with sibling
 
-    Eventually, the current code only uses a naive approach that stores all swaps
-    (positive or not) and performs `np.argmax` during every iteration. This is not
-    ideal, and should be revisited later.
+    For example, (-0.15, 7, 1) means that swapping the right child and the sibling of
+    node 7 will reduce the overall branch length by 0.15.
+
+    Meanwhile, the length change of each node is stored in `lens`. For root and tips,
+    this value is 0. For internal nodes, this value is negative or 0. Only negative
+    values are stored in the heap. 0 means this node is not useful.
+
+    Additionally, the "side" information is stored in column 7 of the tree array.
+
+    When a swap is updated, the new length change (if negative) is pushed into the
+    heap, but the old length change won't be deleted from the heap (which would be
+    inefficient as O(n)). Instead, a "lazy deletion" mechanism is adopted: When the
+    negative-most swap is popped out of the heap, it is checked against the stored
+    length change (in `lens`) and side (in `tree[:, 7]`). If they don't match, then
+    it means that it is outdated and should be skipped. Otherwise, it is considered
+    relevant and the swap will be performed.
+
+    TODO: heapq is a Python module and may not be efficient. Tests showed that the
+    code isn't significantly faster than a naive `np.argmax` on then entire `lens`.
+    Consider optimization.
 
     """
     n = tree.shape[0]
@@ -601,24 +626,27 @@ def _fastnni(dm, tree, preodr, postodr, lens):
     adm = np.empty((n, n))
     _avgdist_matrix(adm, dm, tree, preodr, postodr)
 
-    # Initialize branch swapping information.
-    gains, sides, nodes = _init_swaps(tree)
+    # Calculate length changes of all possible swaps.
+    _ols_all_swaps(lens, tree, adm)
 
-    # Calculate length reductions of all possible swaps.
-    _ols_all_swaps(gains, sides, nodes, adm, tree)
+    # Create a heap that stores negative length changes and their nodes and sides.
+    heap = [(lens[i], i, tree[i, 7]) for i in np.nonzero(lens)[0]]
+    heapify(heap)
 
     res = []
     res_append = res.append
 
     # Iteratively swap branches until there is no more beneficial swap.
-    while True:
-        # Find the swap with the maximum length reduction, and stop if non-positive.
-        branch = gains.argmax()
-        if (gain := gains[branch]) <= 0:
-            break
-        side = sides[branch]
-        target = nodes[branch]
-        res_append((gain, target, side))
+    while heap:
+        # Pop the swap that reduces the most length.
+        L, target, side = heappop(heap)
+
+        # Skip if this swap is outdated.
+        if L != lens[target] or side != tree[target, 7]:
+            continue
+
+        # Reset this swap.
+        lens[target] = 0
 
         # Swap the branches in the tree.
         _swap_branches(target, side, tree, preodr, stack, use_depth=False)
@@ -627,12 +655,10 @@ def _fastnni(dm, tree, preodr, postodr, lens):
         _avgdist_swap(adm, target, side, tree)
 
         # Update length reductions of swaps of the four corner branches.
-        _ols_corner_swaps(target, gains, sides, nodes, adm, tree)
+        _ols_corner_swaps(target, heap, lens, tree, adm)
 
     # Calculate branch lengths using an OLS framework.
     _ols_lengths(lens, adm, tree)
-
-    return res
 
 
 def _bnni(dm, tree, preodr, postodr, lens):
@@ -682,7 +708,6 @@ def _bnni(dm, tree, preodr, postodr, lens):
             break
         side = sides[branch]
         target = nodes[branch]
-        res_append((gain, target, side))
 
         # Swap the branches in the tree.
         _swap_branches(target, side, tree, preodr, stack, use_depth=True)
@@ -692,8 +717,6 @@ def _bnni(dm, tree, preodr, postodr, lens):
 
     # Calculate branch lengths using a balanced framework.
     _bal_lengths(lens, adm, tree)
-
-    return res
 
 
 def _check_tree(tree, preodr, postodr):

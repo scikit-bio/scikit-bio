@@ -14,6 +14,7 @@ import numpy as np
 cimport numpy as cnp
 cnp.import_array()
 from cython.parallel import prange
+from heapq import heappush
 
 
 # This script hosts components of the greedy algorithms for phylogenetic reconstruction
@@ -26,6 +27,27 @@ from cython.parallel import prange
 
 # chunk size for parallelization (experimental)
 cdef int CHUNKSIZE = 10000
+
+# ------------------------------------------------------------------------------------
+# NOTE on parallelization: The algorithms implemented here were designed to facilitate
+# parallelization. Specifically, the preorder and postorder are stored, with which the
+# code can identify the entire clade under any given node, without needing to redo the
+# tree traversal. Operations that are topology-independent can be parallelized across
+# nodes within the clade.
+# 
+# A challenge to parallelization is scheduling. Clades vary greatly in size, therefore
+# iterations also have greatly varying compute loads. It is tricky to allocate chunks
+# of iterations to individual threads such that all threads have roughly the same load.
+# In the experimental code `_bal_avgdist_insert_p`, a "dynamic" policy with a chunk
+# size inversely proportional to the clade size is adopted, thus fewer larger clades
+# will be processed in each thread.
+#
+# Additionally, it would have been ideal to disable parallelization if the clade being
+# processed is small. In a typical traversal, half of the clades are tips, making it
+# useless to parallelize. Cython 3.1 will introduce a parameter `use_threads_if`, which
+# can address this issue. But we need to put it on hold before Cython 3.1 is released
+# and widely adopted.
+# ------------------------------------------------------------------------------------
 
 
 def _preorder(
@@ -1007,7 +1029,7 @@ def _bal_avgdist_insert_p(
 
         # Iterate over all nodes but the root.
         for i in prange(
-            n - 1, nogil=True, schedule="guided", chunksize=max(1, CHUNKSIZE // n)
+            n - 1, nogil=True, schedule="dynamic", chunksize=max(1, CHUNKSIZE // n)
         ):
             a = postodr[i]
 
@@ -1055,7 +1077,7 @@ def _bal_avgdist_insert_p(
     ii = tree[target, 7]
     ops = tree[target, 4] * 2 - 1
     for i in prange(
-        ii - ops + 1, ii, nogil=True, schedule="guided", chunksize=max(1, CHUNKSIZE // ops)
+        ii - ops + 1, ii, nogil=True, schedule="dynamic", chunksize=max(1, CHUNKSIZE // ops)
     ):
         a = postodr[i]
 
@@ -1112,7 +1134,7 @@ def _bal_avgdist_insert_p(
         ii = tree[cousin, 7]
         ops = tree[cousin, 4] * 2 - 1
         for i in prange(
-            ii - ops + 1, ii + 1, nogil=True, schedule="guided", chunksize=max(1, CHUNKSIZE // ops)
+            ii - ops + 1, ii + 1, nogil=True, schedule="dynamic", chunksize=max(1, CHUNKSIZE // ops)
         ):
             a = postodr[i]
 
@@ -1572,107 +1594,117 @@ def _bal_avgdist_swap(
     # )
 
 
-cdef double _ols_swap_length(
-    Py_ssize_t i,
-    Py_ssize_t j,
-    Py_ssize_t k,
-    Py_ssize_t m,
-    Py_ssize_t a,
-    Py_ssize_t b,
-    Py_ssize_t c,
-    Py_ssize_t d,
-    double[:, ::1] adm,
-) nogil:
-    """Calculate the change in overall tree length after a given swap.
+cdef void _ols_swap(
+    double* L,
+    Py_ssize_t* side,
+    Py_ssize_t p_size,
+    Py_ssize_t s_size,
+    Py_ssize_t l_size,
+    Py_ssize_t r_size,
+    double ad_before,
+    double ad_left,
+    double ad_right,
+) noexcept nogil:
+    r"""Calculate the change in overall tree length after a given swap.
 
-    In a given quartet AB|CD, the swap takes place between subtrees B and C.
+    In a given quartet AB|CD, the swap takes place between subtrees B and C. The
+    decrease of overall branch length, delta L (larger is better), can be calculated
+    according to Eq. 9 of Desper and Gascuel (2002):
 
-    The node indices are denoted 'i, j, k, m' while subtree sizes are denoted 'a, b, c,
-    d', respectively.
+        delta L = ((lambda - 1)(d(A, C) + d(B, D)) - (lambda' - 1)(d(A, B) + d(C, D))
+            - (lambda - lambda')(d(A, D) + d(B, C))) / 2
 
-    Implemented according to Eq. 9 of Desper and Gascuel (2002).
+    Where:
 
-    """
-    cdef double numerator = a * d + b * c
-    cdef double lambda_0 = numerator / ((a + b) * (c + d))
-    cdef double lambda_1 = numerator / ((a + c) * (b + d))
+        lambda  = (|A||D| + |B||C|) / ((|A| + |B|)(|C| + |D|))
+        lambda' = (|A||D| + |B||C|) / ((|A| + |C|)(|B| + |D|))
 
-    # factor 0.5 is omitted
-    return (
-        (lambda_0 - 1) * (adm[i, k] + adm[j, m])
-        - (lambda_1 - 1) * (adm[i, j] + adm[k, m])
-        - (lambda_0 - lambda_1) * (adm[i, m] + adm[j, k])
-    )
+    This function calculates delta L for two scenarios: 1) swap between left child and
+    sibling, and 2) swap between right child and sibling.
 
+    These two calculations share some steps, which are exploited by the following code.
 
-cdef int _ols_swap(
-    Py_ssize_t node,
-    double[::1] gains,
-    Py_ssize_t[::1] sides,
-    double[:, ::1] adm,
-    Py_ssize_t[:, ::1] tree,
-) nogil:
-    r"""Evaluate the two possible swaps at a given internal branch.
+    Factor 0.5 (/2) is omitted. The output value is negated, in order to match Python's
+    minheap data structure (smallest popped first).
 
-    And record the larger one if it is positive.
-
-    Implemented according to A4.2(a) of Desper and Gascuel (2002).
+    Then the smaller change if negative is retained, according to A4.2.
 
     """
-    cdef Py_ssize_t left = tree[node, 0]
-    cdef Py_ssize_t right = tree[node, 1]
-    cdef Py_ssize_t parent = tree[node, 2]
-    cdef Py_ssize_t sibling = tree[node, 3]
+    cdef Py_ssize_t size_0 = p_size * s_size + l_size * r_size
+    cdef Py_ssize_t size_1 = p_size * r_size + s_size * l_size
+    cdef Py_ssize_t size_2 = p_size * l_size + s_size * r_size
 
-    cdef Py_ssize_t branch = tree[node, 7]
+    cdef double ad_bl = ad_before - ad_left
+    cdef double ad_br = ad_before - ad_right
 
-    cdef Py_ssize_t l_size = tree[left, 4]
-    cdef Py_ssize_t r_size = tree[right, 4]
-    cdef Py_ssize_t p_size = tree[0, 4] - tree[parent, 4] + 1
-    cdef Py_ssize_t s_size = tree[sibling, 4]
+    cdef double ad_lr_size = (ad_left - ad_right) / (size_1 + size_2)
 
-    # a parent, b sibling, c child, d other
-    cdef double L1 = _ols_swap_length(
-        parent, sibling, left, right, p_size, s_size, l_size, r_size, adm
-    )
-    cdef double L2 = _ols_swap_length(
-        parent, sibling, right, left, p_size, s_size, r_size, l_size, adm
-    )
+    cdef double L1 = size_1 * (ad_br / (size_0 + size_1) - ad_lr_size) - ad_bl
+    cdef double L2 = size_2 * (ad_bl / (size_0 + size_2) + ad_lr_size) - ad_br
 
-    if L1 <= 0 and L2 <= 0:
-        gains[branch] = 0
-    elif L1 >= L2:
-        gains[branch], sides[branch] = L1, 0
+    if L1 >= 0 and L2 >= 0:
+        L[0] = 0
+    elif L1 <= L2:
+        L[0] = L1
+        side[0] = 0
     else:
-        gains[branch], sides[branch] = L2, 1
+        L[0] = L2
+        side[0] = 1
 
 
 def _ols_all_swaps(
-    double[::1] gains,
-    Py_ssize_t[::1] sides,
-    Py_ssize_t[::1] nodes,
-    double[:, ::1] adm,
+    double[::1] lens,
     Py_ssize_t[:, ::1] tree,
+    double[:, ::1] adm,
 ):
-    r"""Evaluate all possible swaps at all branches of a tree.
+    r"""Evaluate all possible swaps at all internal branches of a tree.
 
     Using an OLS framework.
+
+    The results (length change, smaller is better) are saved to `lens`. The child side
+    of each node that achieves this length change is saved to column 7 of the tree.
 
     Implemented according to A4.2(a) of Desper and Gascuel (2002).
 
     """
-    cdef Py_ssize_t i
-    for i in range(nodes.shape[0]):
-        _ols_swap(nodes[i], gains, sides, adm, tree)
+    cdef Py_ssize_t m = tree[0, 4] + 1
+    cdef Py_ssize_t node, left, right, parent, sibling
+    
+    # root is zero
+    lens[0] = 0
+
+    # calculate on internal branches (nodes with children)
+    for node in range(1, tree.shape[0]):
+        if tree[node, 0]:
+            left = tree[node, 0]
+            right = tree[node, 1]
+            parent = tree[node, 2]
+            sibling = tree[node, 3]
+
+            # calculate length change
+            _ols_swap(
+                &lens[node],
+                &tree[node, 7],
+                m - tree[parent, 4],
+                tree[sibling, 4],
+                tree[left, 4],
+                tree[right, 4],
+                adm[parent, sibling] + adm[left, right],
+                adm[parent, left] + adm[sibling, right],
+                adm[parent, right] + adm[sibling, left],
+            )
+        
+        # tips are zero
+        else:
+            lens[node] = 0
 
 
 def _ols_corner_swaps(
     Py_ssize_t target,
-    double[::1] gains,
-    Py_ssize_t[::1] sides,
-    Py_ssize_t[::1] nodes,
-    double[:, ::1] adm,
+    list heap,
+    double[::1] lens,
     Py_ssize_t[:, ::1] tree,
+    double[:, ::1] adm,
 ):
     r"""Update swaps of the four corner branches of a swapped branch.
 
@@ -1694,10 +1726,10 @@ def _ols_corner_swaps(
     Implemented according to A4.2(c) of Desper and Gascuel (2002).
 
     """
-    cdef Py_ssize_t i, node
-
-    # reset the swapped branch
-    gains[tree[target, 7]] = 0
+    cdef Py_ssize_t m = tree[0, 4] + 1
+    cdef Py_ssize_t i, side
+    cdef double gain
+    cdef Py_ssize_t left, right, parent, sibling
 
     # update four corner branches if they are internal
     # 0: left, 1: right, 2: parent, 3: sibling
@@ -1705,7 +1737,27 @@ def _ols_corner_swaps(
     for i in range(4):
         node = tree[target, i]
         if (node if i == 2 else tree[node, 0]):
-            _ols_swap(node, gains, sides, adm, tree)
+            left = tree[node, 0]
+            right = tree[node, 1]
+            parent = tree[node, 2]
+            sibling = tree[node, 3]
+
+            # calculate length change
+            _ols_swap(
+                &lens[node],
+                &tree[node, 7],
+                m - tree[parent, 4],
+                tree[sibling, 4],
+                tree[left, 4],
+                tree[right, 4],
+                adm[parent, sibling] + adm[left, right],
+                adm[parent, left] + adm[sibling, right],
+                adm[parent, right] + adm[sibling, left],
+            )
+
+            # if length is reduced, push the swap into the heap
+            if lens[node]:
+                heappush(heap, (lens[node], node, tree[node, 7]))
 
 
 def _bal_all_swaps(

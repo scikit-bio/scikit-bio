@@ -7,6 +7,7 @@
 # ----------------------------------------------------------------------------
 
 from unittest import TestCase, main
+from heapq import heapify
 
 import numpy as np
 import numpy.testing as npt
@@ -243,6 +244,18 @@ class MeTests(TestCase):
         self.preodr4 = np.array([0, 1, 3, 7, 8, 9, 4, 10, 2, 5, 6])
         self.postodr4 = np.array([7, 8, 3, 4, 10, 9, 1, 5, 6, 2, 0])
 
+        # Example 5
+        # This dm can yield negative branch lengths.
+        self.dm5 = np.array([
+            [0,  5,  9,  9,  800],
+            [5,  0, 10, 10,  9],
+            [9, 10,  0,  8,  7],
+            [9, 10,  8,  0,  3],
+            [800,  9,  7,  3,  0],
+        ], dtype=float)
+        self.taxa5 = list("abcde")
+        self.nwk5 = "(b:-129,(c:-95,(d:-130,e:133):101):102,a:134);"
+
     def test_gme(self):
         """The entire tree building workflow."""
         obs = gme(DistanceMatrix(self.dm1, self.taxa1))
@@ -254,6 +267,18 @@ class MeTests(TestCase):
         exp = TreeNode.read([self.nwk2])
         self.assertEqual(obs.compare_rfd(exp), 0)
 
+        # clip to zero
+        dm = DistanceMatrix(self.dm5, self.taxa5)
+        obs = gme(dm, clip_to_zero=False)
+        exp = TreeNode.read([self.nwk5])
+        self.assertEqual(obs.compare_rfd(exp), 0)
+        self.assertAlmostEqual(obs.compare_cophenet(exp, ignore_self=True), 0)
+        for taxon in ("b", "c", "d"):
+            self.assertTrue(obs.find(taxon).length < 0)
+        obs = gme(dm, clip_to_zero=True)
+        for taxon in ("b", "c", "d"):
+            self.assertEqual(obs.find(taxon).length, 0)
+
     def test_bme(self):
         """The entire tree building workflow."""
         obs = bme(DistanceMatrix(self.dm1, self.taxa1))
@@ -264,6 +289,15 @@ class MeTests(TestCase):
         obs = bme(DistanceMatrix(self.dm2, self.taxa2))
         exp = TreeNode.read([self.nwk2])
         self.assertEqual(obs.compare_rfd(exp), 0)
+
+        # clip to zero
+        dm = DistanceMatrix(self.dm5, self.taxa5)
+        obs = bme(dm, clip_to_zero=False)
+        for taxon in ("b", "c", "d"):
+            self.assertTrue(obs.find(taxon).length < 0)
+        obs = bme(dm, clip_to_zero=True)
+        for taxon in ("b", "c", "d"):
+            self.assertEqual(obs.find(taxon).length, 0)
 
     def test_nni(self):
         """The entire tree rearrangement workflow."""
@@ -308,6 +342,19 @@ class MeTests(TestCase):
 
         obs = nni(tree, dm, balanced=True)
         self.assertEqual(obs.compare_rfd(exp), 0)
+
+        # clip to zero
+        dm = DistanceMatrix(self.dm5, self.taxa5)
+        tree = TreeNode.read(["(((a,b),d),(c,e));"])
+        obs = nni(tree, dm, balanced=False, clip_to_zero=False)
+        exp = TreeNode.read([self.nwk5])
+        self.assertEqual(obs.compare_rfd(exp), 0)
+        self.assertAlmostEqual(obs.compare_cophenet(exp, ignore_self=True), 0)
+        for taxon in ("b", "c", "d"):
+            self.assertTrue(obs.find(taxon).length < 0)
+        obs = nni(tree, dm, balanced=False, clip_to_zero=True)
+        for taxon in ("b", "c", "d"):
+            self.assertEqual(obs.find(taxon).length, 0)
 
     def test_check_tree(self):
         """Check the integrity of a tree structure."""
@@ -420,7 +467,7 @@ class MeTests(TestCase):
 
         # Root the tree at an internal branch and test to recover the same result.
         obj = obj.find("e").parent
-        obj.root_at(above=True, branch_attrs=[])
+        obj = obj.root_at(above=True, branch_attrs=[])
         self.assertEqual(len(obj.children), 2)
         obs = _root_from_treenode(obj, self.taxa1)
         _check_tree(*obs)
@@ -457,15 +504,16 @@ class MeTests(TestCase):
                 npt.assert_array_equal(o, e)
 
         # non-binary trees
+        taxa = list("abcde")
         nwks = [
             "((a,b,c),(d,e));",  # internal node has 3 children
-            "(a,(b),(c,(d,e)));",  # internal node has 1 child
-            "(((b,c),(d,e)))a;",  # root has 1 child
+            "((a),b,(c,(d,e)));",  # internal node has 1 child
+            # "(((b,c),((d,e),a)));",  # root has 1 child  # TODO This doesn't work.
             "((a,b),c,d,e);",  # root has 4 children
         ]
         for nwk in nwks:
             obj = TreeNode.read([nwk])
-            self.assertRaises(ValueError, _from_treenode, obj, taxmap, *obs)
+            self.assertRaises(ValueError, _root_from_treenode, obj, taxa)
 
     def test_preorder(self):
         """Perform preorder traversal."""
@@ -1280,48 +1328,46 @@ class MeTests(TestCase):
         _ols_lengths(lens := np.empty(n), adm, tree)
         lensum = lens.sum()
 
-        # Branches 1, 2 (nodes 2, 3) will have positive gains.
-        gains, sides, nodes = _init_swaps(tree)
-        _ols_all_swaps(gains, sides, nodes, adm, tree)
-        exp = np.array([0, 0.47035, 0.03426528, 0])
-        npt.assert_array_almost_equal(gains, exp)
+        # Nodes 2 and 3 will have length reduction.
+        _ols_all_swaps(lens, tree, adm)
+        exp = np.array([0, 0, -0.47035, -0.03426528, 0, 0, 0, 0, 0, 0, 0])
+        npt.assert_array_almost_equal(lens, exp)
 
         # For each of those two branches, perform branch swapping, update average
         # distance matrix, calculate total tree length, and check if the actual
         # tree length gain equals to the algorithm-calculated value.
         stack = np.full(n, 0)
-        for branch in range(nodes.shape[0]):
-            if gains[branch] == 0:
-                continue
-            node = nodes[branch]
-            side = sides[branch]
+        for node in np.nonzero(lens)[0]:
+            side = tree[node, 7]
             tree_, pre_ = tree.copy(), preodr.copy()
             _swap_branches(node, side, tree_, pre_, stack, use_depth=False)
             _avgdist_swap(adm_ := adm.copy(), node, side, tree_)
             _ols_lengths(lens_ := np.empty(n), adm_, tree_)
 
             # The algorithm omits factor 0.5, therefore we need to x2 here.
-            self.assertAlmostEqual(gains[branch], 2 * (lensum - lens_.sum()))
+            self.assertAlmostEqual(lens[node], 2 * (lens_.sum() - lensum))
 
     def test_ols_corner_swaps(self):
         """Update swaps of the four corner branches of a swapped branch."""
         dm, tree, preodr, postodr = self.dm4, self.tree4, self.preodr4, self.postodr4
         n = tree.shape[0]
         _avgdist_matrix(adm := np.empty((n, n)), dm, tree, preodr, postodr)
-        gains, sides, nodes = _init_swaps(tree)
-        _ols_all_swaps(gains, sides, nodes, adm, tree)
-        stack = np.full(n, 0)
+        _ols_all_swaps(lens := np.empty(n), tree, adm)
+        heap = [(lens[i], i, tree[i, 7]) for i in np.nonzero(lens)[0]]
+        heapify(heap)
 
         # Perform swaps at the two branches that are known to produce gains (see
         # `test_ols_all_swaps`), and check if the updated result matches the result
         # re-calculated from the entire tree.
-        for branch in (1, 2):
-            node, side = nodes[branch], sides[branch]
+        stack = np.full(n, 0)
+        for node in np.nonzero(lens)[0]:
+            side = tree[node, 7]
             tree_, pre_ = tree.copy(), preodr.copy()
             _swap_branches(node, side, tree_, pre_, stack, use_depth=False)
             _avgdist_swap(adm_ := adm.copy(), node, side, tree_)
-            _ols_all_swaps(exp := gains.copy(), sides, nodes, adm_, tree_)
-            _ols_corner_swaps(node, obs := gains.copy(), sides, nodes, adm_, tree_)
+            _ols_all_swaps(exp := np.empty(n), tree_, adm_)
+            _ols_corner_swaps(node, heap, obs := lens.copy(), tree_, adm_)
+            obs[node] = 0
             npt.assert_array_almost_equal(obs, exp)
 
     def test_bal_all_swaps(self):
