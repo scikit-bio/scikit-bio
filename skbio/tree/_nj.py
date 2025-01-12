@@ -11,7 +11,8 @@ import numpy as np
 from skbio.tree import TreeNode
 from skbio.util._decorator import params_aliased
 from skbio.util._warning import _warn_deprecated
-from ._cutils import nj_minq_cy
+from ._c_nj import nj_minq_cy
+from ._utils import _check_dm
 
 
 @params_aliased([("clip_to_zero", "disallow_negative_branch_length", "0.6.3", True)])
@@ -49,7 +50,7 @@ def nj(
 
         .. versionchanged:: 0.6.3
             The NJ algorithm has been optimized. The output may be slightly different
-            from the previous one in root placement, node ordering, and the numeric
+            from the previous version in root placement, node ordering, and the numeric
             precision of branch lengths. However, the overall tree topology and branch
             lengths should remain the same.
 
@@ -63,38 +64,41 @@ def nj(
     -----
     Neighbor joining (NJ) was initially described by Saitou and Nei (1987) [1]_. It is
     a simple and efficient agglomerative clustering method that builds a phylogenetic
-    tree based on a distance matrix. Gascuel and Steel (2006) provide a detailed
-    overview of neighbor joining in terms of its biological relevance and limitations
-    [2]_.
+    tree based on a distance matrix.
 
-    Neighbor joining, by definition, creates unrooted trees with varying tip heights,
-    which contrasts UPGMA (:func:`upgma`). One strategy for rooting the resulting tree
-    is midpoint rooting, which is accessible as :meth:`TreeNode.root_at_midpoint`.
+    This function implements the canonical NJ method. The algorithm has been optimized
+    to improve efficiency, but no heuristic was involved to further accelerate it at
+    the cost of accuracy. Therefore, one is guaranteed to obtain an optimal tree. The
+    algorithm is *O*\(*n*:sup:`3`) in time and *O*\(*n*:sup:`2`) in space.
 
-    Note that the tree constructed using neighbor joining is not rooted at a tip,
-    unlike minimum evolution (:func:`bme`), so re-rooting is required before tree
-    re-arrangement operations such as nearest neighbor interchange (NNI) (:func:`nni`)
-    can be performed.
+    NJ creates an **unrooted** tree with varying tip heights. This contrasts UPGMA
+    (:func:`upgma`), which always produces ultrametric trees. One may subsequently use
+    choice of strategies such as midpoint rooting (:meth:`~TreeNode.root_at_midpoint`)
+    or outgroup rooting (:meth:`~TreeNode.root_by_outgroup`) to convert the result into
+    a rooted tree.
 
-    Neighbor joining is most accurate when distances are additive -- the distance
-    between two taxa in the matrix equals to the sum of branch lengths connecting them
-    in the tree. When this assumption is violated, which is common in real-world data,
-    negative branch lengths may be produced, which cause challenges in interpretation
-    and subsequent analyses. This function converts negative branch lengths into zeros
-    by default, but this behavior can be disabled by setting ``clip_to_zero`` to False.
+    NJ is most accurate when distances are **additive** -- the distance between two
+    taxa in the matrix equals to the sum of branch lengths connecting them in the tree.
+    When this assumption is violated, which is common in real studies, negative branch
+    lengths may be produced, challenging interpretation and subsequent analyses. To
+    address this issue, this function converts negative branch lengths into zeros by
+    default, but this behavior can be disabled by setting ``clip_to_zero`` to False.
+
+    Gascuel and Steel (2006) provide a detailed overview of neighbor joining in terms
+    of its biological relevance and limitations [2]_. They proved that NJ is a greedy
+    heuristic to the balanced minimum evolution (BME) problem. An alternative method
+    to this problem is provided by :func:`bme`.
 
     The example presented here is derived from the Wikipedia page on neighbor joining
     [3]_.
 
     References
     ----------
-    .. [1] Saitou N, and Nei M. (1987) "The neighbor-joining method: a new
-       method for reconstructing phylogenetic trees." Molecular Biology and
-       Evolution. PMID: 3447015.
+    .. [1] Saitou, N., & Nei, M. (1987). The neighbor-joining method: a new method for
+       reconstructing phylogenetic trees. Mol Biol Evol, 4(4), 406-425.
 
-    .. [2] Gascuel O, and Steel M. (2006) "Neighbor-Joining Revealed" Molecular
-       Biology and Evolution, Volume 23, Issue 11, November 2006,
-       Pages 1997-2000, https://doi.org/10.1093/molbev/msl072
+    .. [2] Gascuel, O., & Steel, M. (2006). Neighbor-joining revealed. Mol Biol Evol,
+       23(11), 1997-2000.
 
     .. [3] http://en.wikipedia.org/wiki/Neighbour_joining
 
@@ -137,10 +141,7 @@ def nj(
         )
         _warn_deprecated(nj, "0.6.3", msg)
 
-    if dm.shape[0] < 3:
-        raise ValueError(
-            "Distance matrix must be at least 3x3 to generate a neighbor joining tree."
-        )
+    _check_dm(dm)
     taxa = list(dm.ids)
 
     dm_ = dm.data
@@ -182,7 +183,7 @@ def _nj(dm):
     # This function only operates on arrays of numbers, therefore it can be further
     # Cythonized. However, Cythonization did not bring significant performance gain in
     # tests, likely because all operations already utilize NumPy APIs. That being said,
-    # Further optimization and testing should be convenient.
+    # further optimization and testing should be convenient.
 
     N = n = dm.shape[0]  # dimension
     sums = dm.sum(axis=0)  # distance sums

@@ -183,9 +183,16 @@ extensions = [
         include_dirs=[np.get_include()],
     ),
     Extension(
-        "skbio.tree._cutils",
-        ["skbio/tree/_cutils" + ext],
-        include_dirs=[np.get_include()],
+        "skbio.tree._c_nj",
+        ["skbio/tree/_c_nj" + ext],
+        extra_compile_args=stats_extra_compile_args,
+        extra_link_args=stats_extra_link_args,
+    ),
+    Extension(
+        "skbio.tree._c_me",
+        ["skbio/tree/_c_me" + ext],
+        extra_compile_args=stats_extra_compile_args,
+        extra_link_args=stats_extra_link_args,
     ),
     Extension(
         "skbio.diversity._phylogenetic",

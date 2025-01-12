@@ -212,9 +212,7 @@ cophenetic (tip-to-tip) distances between trees:
 from ._tree import TreeNode
 from ._upgma import upgma
 from ._nj import nj
-from ._gme import gme
-from ._bme import bme
-from ._nni import nni
+from ._me import gme, bme, nni
 from ._majority_rule import majority_rule
 from ._compare import rf_dists, wrf_dists, path_dists
 from ._exception import (
