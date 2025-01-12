@@ -53,6 +53,15 @@ Beta diversity
    block_beta_diversity
 
 
+Utility functions
+-----------------
+
+.. autosummary::
+   :toctree: generated/
+
+   vectorize_counts_and_tree
+
+
 Introduction
 ------------
 
@@ -444,6 +453,7 @@ from ._driver import (
     get_beta_diversity_metrics,
 )
 from ._block import block_beta_diversity
+from ._util import vectorize_counts_and_tree
 
 __all__ = [
     "alpha_diversity",
@@ -452,4 +462,5 @@ __all__ = [
     "get_beta_diversity_metrics",
     "partial_beta_diversity",
     "block_beta_diversity",
+    "vectorize_counts_and_tree",
 ]

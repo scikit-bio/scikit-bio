@@ -11,7 +11,7 @@ import numpy as np
 from skbio.diversity._util import (
     _validate_counts_vector,
     _validate_taxa_and_tree,
-    _vectorize_counts_and_tree,
+    vectorize_counts_and_tree,
     _check_taxa_alias,
 )
 
@@ -26,7 +26,7 @@ def _setup_pd(counts, taxa, tree, validate, rooted, single_sample):
         else:
             _validate_taxa_and_tree(counts[0], taxa, tree, rooted)
 
-    counts_by_node, _, branch_lengths = _vectorize_counts_and_tree(counts, taxa, tree)
+    counts_by_node, _, branch_lengths = vectorize_counts_and_tree(counts, taxa, tree)
 
     return counts_by_node, branch_lengths
 

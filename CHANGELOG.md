@@ -15,6 +15,7 @@
 * Added `TreeNode.is_bifurcating` to check if a tree is bifurcating (i.e., binary) ([#2117](https://github.com/scikit-bio/scikit-bio/pull/2117)).
 * Added support for Python's `pathlib` module in the IO system ([#2119](https://github.com/scikit-bio/scikit-bio/pull/2119)).
 * Added `TreeNode.path` to return a list of nodes representing the path from one node to another ([#2131](https://github.com/scikit-bio/scikit-bio/pull/2131)).
+* Exposed `vectorize_counts_and_tree` function from the `diversity` module to allow use for improving ML accuracy in downstream pipelines ([#2173](https://github.com/scikit-bio/scikit-bio/pull/2173))
 
 ### Performance enhancements
 
