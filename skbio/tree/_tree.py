@@ -24,7 +24,6 @@ from skbio.tree._exception import (
     MissingNodeError,
     TreeError,
 )
-from skbio.util import get_rng
 from skbio.util._decorator import (
     classonlymethod,
     deprecated,
@@ -1905,7 +1904,7 @@ class TreeNode(SkbioObject):
         for node in nodes_to_unpack:
             node.unpack(uncache=False)
 
-    def bifurcate(self, insert_length=None, uncache=True):
+    def bifurcate(self, insert_length=None, include_self=True, uncache=True):
         r"""Convert the tree into a bifurcating tree.
 
         All nodes that have more than two children will have additional intermediate
@@ -1915,6 +1914,12 @@ class TreeNode(SkbioObject):
         ----------
         insert_length : int, optional
             The branch length assigned to all inserted nodes.
+        include_self : bool, optional
+            If False, will not convert the current node. This is useful for keeping an
+            unrooted tree unrooted. Default is True.
+
+            .. versionadded:: 0.6.3
+
         uncache : bool, optional
             Whether to clear caches of the tree if present (default: True). See
             :meth:`details <has_caches>`.
@@ -1968,7 +1973,7 @@ class TreeNode(SkbioObject):
         if uncache:
             self.clear_caches()
         treenode = self.__class__
-        for node in self.traverse(include_self=True):
+        for node in self.traverse(include_self=include_self):
             if len(node.children) > 2:
                 stack = node.children
                 while len(stack) > 2:
@@ -2104,7 +2109,7 @@ class TreeNode(SkbioObject):
         side : int, optional
             Which basal node (i.e., children of root) will be elevated to root. Must be
             0 or 1. If not provided, will elevate the first basal node that is not a
-            tip.
+            tip. The choice won't impact tree topology.
         uncache : bool, optional
             Whether to clear caches of the tree if present (default: True). See
             :meth:`details <has_caches>`.
@@ -2411,13 +2416,17 @@ class TreeNode(SkbioObject):
 
     def unrooted_move(
         self,
-        parent=None,
         branch_attrs={"length", "support"},
         uncache=True,
     ):
         r"""Walk the tree unrooted-style and rearrange it.
 
         .. versionadded:: 0.6.2
+
+        .. versionchanged:: 0.6.3
+            The underlying algorithm is now iterative instead of recursive, therefore
+            won't be constrained by Python's maximum recursion limit when working with
+            large trees. Parameter ``parent`` was removed as it is no longer needed.
 
         Parameters
         ----------
@@ -2440,10 +2449,10 @@ class TreeNode(SkbioObject):
 
         Notes
         -----
-        This method recursively walks a tree from a given node in an unrooted
-        style (i.e., directions of branches are not assumed). It rerranges the
-        tree such that the given node becomes the root node and all other nodes
-        are re-positioned accordingly, whereas the topology remains the same.
+        This method walks a tree from a given node in an unrooted style (i.e.,
+        directions of branches are not assumed). It rerranges the tree such that
+        the given node becomes the root node and all other nodes are re-positioned
+        accordingly, whereas the topology remains the same.
 
         This method manipulates the tree in place. There is no return value.
         The new tree should be referred to by the node where the operation
@@ -2463,29 +2472,37 @@ class TreeNode(SkbioObject):
         if uncache:
             self.clear_caches()
 
-        # recursively add parent to children
-        children = self.children
-        if (old_parent := self.parent) is not None:
-            children.append(old_parent)
-            old_parent.unrooted_move(
-                parent=self, branch_attrs=branch_attrs, uncache=False
-            )
+        # This algorithm uses an iterative approach to avoid the maximum recursion
+        # limit imposed by Python. Two rounds of iterations are involved to 1) flip
+        # the tree and to 2) reconstruct the upward branches.
+        self.old_child = None
+        curr = self
+        parent = None
 
-        # 1. starting point (becomes root)
-        if parent is None:
-            self.parent = None
-            for attr in branch_attrs:
-                setattr(self, attr, None)
-
-        # 2. walk up (parent becomes child)
-        else:
-            for i, child in enumerate(children):
-                if child is parent:
-                    children.pop(i)
+        # move up in the original tree and move parent to children
+        while (old_parent := curr.parent) is not None:
+            for i, child in enumerate(old_parent.children):
+                if child is curr:
+                    old_parent.children.pop(i)
                     break
-            self.parent = parent
+            curr.children.append(old_parent)
+            old_parent.old_child = curr
+            curr.parent = parent
+            parent = curr
+            curr = old_parent
+
+        # move up in the new tree and rebuild parent connection
+        while curr.old_child is not None:
+            child = curr.old_child
+            curr.parent = child
             for attr in branch_attrs:
-                setattr(self, attr, getattr(parent, attr, None))
+                setattr(curr, attr, getattr(child, attr, None))
+            del curr.old_child
+            curr = child
+
+        del self.old_child
+        for attr in branch_attrs:
+            setattr(self, attr, None)
 
     def root_at(
         self,
@@ -3692,7 +3709,7 @@ class TreeNode(SkbioObject):
             else:
                 node.support, node.name = node._extract_support()
 
-    def is_bifurcating(self, strict=False):
+    def is_bifurcating(self, strict=False, include_self=True):
         r"""Check if the tree is bifurcating.
 
         .. versionadded:: 0.6.3
@@ -3702,6 +3719,9 @@ class TreeNode(SkbioObject):
         strict : bool, optional
             Whether to consider single-child nodes as violations of bifurcation.
             Default is False.
+        include_self : bool, optional
+            If False, will not check the current node. This is useful for checking an
+            unrooted tree, whose root node may have three children. Default is True.
 
         See Also
         --------
@@ -3730,7 +3750,7 @@ class TreeNode(SkbioObject):
 
         """
         test = ne if strict else gt
-        for node in self.traverse(include_self=True):
+        for node in self.traverse(include_self=include_self):
             if (children := node.children) and test(len(children), 2):
                 return False
         return True
