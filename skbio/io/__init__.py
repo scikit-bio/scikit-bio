@@ -134,11 +134,11 @@ Tutorial
 Reading and writing files (I/O) can be a complicated task:
 
 * A file format can sometimes be read into more than one in-memory representation
-  (i.e., object). For example, a FASTA file can be read into an
-  :class:`skbio.alignment.TabularMSA` or :class:`skbio.sequence.DNA` depending on
+  (i.e., object). For example, a FASTA file can be read into a
+  :class:`~skbio.alignment.TabularMSA` or :class:`~skbio.sequence.DNA` depending on
   what operations you'd like to perform on your data.
 * A single object might be writeable to more than one file format. For example, an
-  :class:`skbio.alignment.TabularMSA` object could be written to FASTA, FASTQ,
+  :class:`~skbio.alignment.TabularMSA` object could be written to FASTA, FASTQ,
   CLUSTAL, or PHYLIP formats, just to name a few.
 * You might not know the exact file format of your file, but you want to read
   it into an appropriate object.
@@ -149,7 +149,7 @@ Reading and writing files (I/O) can be a complicated task:
 
 To address these issues (and others), scikit-bio provides a simple, powerful
 interface for dealing with I/O. We accomplish this by using a single I/O
-registry defined in :class:`skbio.io.registry.IORegistry`.
+registry defined in :class:`~skbio.io.registry.IORegistry`.
 
 What kinds of files scikit-bio can use
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^

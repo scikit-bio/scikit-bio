@@ -36,7 +36,7 @@ from ._c_me import (
 from ._utils import _check_dm, _check_dm_tree
 
 
-def gme(dm, clip_to_zero=True):
+def gme(dm, neg_as_zero=True):
     r"""Perform greedy minimum evolution (GME) for phylogenetic reconstruction.
 
     .. versionadded:: 0.6.2
@@ -48,7 +48,7 @@ def gme(dm, clip_to_zero=True):
     ----------
     dm : skbio.DistanceMatrix
         Input distance matrix containing distances between taxa.
-    clip_to_zero : bool, optional
+    neg_as_zero : bool, optional
         If True (default), convert negative branch lengths into zeros.
 
     Returns
@@ -70,7 +70,7 @@ def gme(dm, clip_to_zero=True):
     ordinary least squares (OLS) framework [3]_.
 
     GME is *O*\(*n*:sup:`2`) in time and *O*\(*n*) in space, making it a more scalable
-    method that multiple alternatives (e.g., :func:`nj` and :func:`bme`). Therefore it
+    method than multiple alternatives (e.g., :func:`nj` and :func:`bme`). Therefore it
     is suitable for reconstructing very large phylogenetic trees.
 
     GME generates an unrooted tree with variable tip heights and potentially some
@@ -84,13 +84,13 @@ def gme(dm, clip_to_zero=True):
     A similar but less scalable algorithm using the balanced instead of OLS framework
     is provided in :func:`bme`.
 
-    The same methods underlying :func:`gme`, :func:`bme` and :func:`nni` NI were also
+    The same methods underlying :func:`gme`, :func:`bme` and :func:`nni` were also
     provided by the software package FastME [4]_.
 
     .. note::
         These scikit-bio functions were implemented following the original paper [1]_.
         It is not guaranteed that they will precisely mirror FastME's output. Although
-        in practices they typically generate identical or equally optimal phylogenetic
+        in practices they usually generate identical or equally optimal phylogenetic
         trees as FastME does.
 
     References
@@ -148,13 +148,13 @@ def gme(dm, clip_to_zero=True):
     # reconstruct tree topology and branch lengths using GME
     tree, lens = _gme(dm.data)
 
-    if clip_to_zero:
+    if neg_as_zero:
         lens[lens < 0] = 0
 
     return _to_treenode(tree, dm.ids, lens, unroot=True)
 
 
-def bme(dm, clip_to_zero=True, **kwargs):
+def bme(dm, neg_as_zero=True, **kwargs):
     r"""Perform balanced minimum evolution (BME) for phylogenetic reconstruction.
 
     .. versionadded:: 0.6.3
@@ -163,7 +163,7 @@ def bme(dm, clip_to_zero=True, **kwargs):
     ----------
     dm : skbio.DistanceMatrix
         Input distance matrix containing distances between taxa.
-    clip_to_zero : bool, optional
+    neg_as_zero : bool, optional
         If True (default), convert negative branch lengths into zeros.
 
     Returns
@@ -198,7 +198,7 @@ def bme(dm, clip_to_zero=True, **kwargs):
 
     .. note::
         Experimental feature: Add ``parallel=True`` will enable parallelization,
-        which might increase the performance of the algorithm. This feature may not
+        which may increase the performance of the algorithm. This feature may not
         be stable and may be modified without notice in the future.
 
     References
@@ -251,13 +251,13 @@ def bme(dm, clip_to_zero=True, **kwargs):
     # reconstruct tree topology and branch lengths using BME
     tree, lens = _bme(dm.data, **kwargs)
 
-    if clip_to_zero:
+    if neg_as_zero:
         lens[lens < 0] = 0
 
     return _to_treenode(tree, dm.ids, lens, unroot=True)
 
 
-def nni(tree, dm, balanced=True, clip_to_zero=True):
+def nni(tree, dm, balanced=True, neg_as_zero=True):
     r"""Perform nearest neighbor interchange (NNI) to improve a phylogenetic tree.
 
     .. versionadded:: 0.6.2
@@ -273,7 +273,7 @@ def nni(tree, dm, balanced=True, clip_to_zero=True):
         Input distance matrix containing distances between taxa.
     balanced : bool, optional
         Use the OLS framework (False) or the balanced framework (True, default).
-    clip_to_zero : bool, optional
+    neg_as_zero : bool, optional
         If True (default), convert negative branch lengths into zeros.
 
     Returns
@@ -285,7 +285,7 @@ def nni(tree, dm, balanced=True, clip_to_zero=True):
     -----
     Nearest neighbor interchange (NNI) is a method for tree rearrangement aiming at
     optimizing a given tree topology according to certain criteria. It iteratively
-    swaps neighboring branches that could result in better trees, until no such swaps
+    swaps neighboring branches that could result in a better tree, until no such swaps
     remain in the optimized tree.
 
     This function performs NNI for the minimum evolution (ME) problem on phylogenetic
@@ -305,11 +305,17 @@ def nni(tree, dm, balanced=True, clip_to_zero=True):
     choice. See also :func:`nj` regarding rooting an unrooted tree and dealing with
     potential negative branch lengths.
 
+    The same methods were provided by FastME [2]_. See :func:`gme` for notes on this.
+
     References
     ----------
     .. [1] Desper, R., & Gascuel, O. (2002). Fast and accurate phylogeny reconstruction
        algorithms based on the minimum-evolution principle. J Comput Biol, 9(5),
        687-705.
+
+    .. [2] Lefort, V., Desper, R., & Gascuel, O. (2015). FastME 2.0: a comprehensive,
+       accurate, and fast distance-based phylogeny inference program. Mol Biol Evol,
+       32(10), 2798-2800.
 
     Examples
     --------
@@ -376,7 +382,7 @@ def nni(tree, dm, balanced=True, clip_to_zero=True):
     func = _bnni if balanced else _fastnni
     func(dm.data, tree, preodr, postodr, lens)
 
-    if clip_to_zero:
+    if neg_as_zero:
         lens[lens < 0] = 0
 
     # generate TreeNode object
@@ -633,9 +639,6 @@ def _fastnni(dm, tree, preodr, postodr, lens):
     heap = [(lens[i], i, tree[i, 7]) for i in np.nonzero(lens)[0]]
     heapify(heap)
 
-    res = []
-    res_append = res.append
-
     # Iteratively swap branches until there is no more beneficial swap.
     while heap:
         # Pop the swap that reduces the most length.
@@ -693,9 +696,6 @@ def _bnni(dm, tree, preodr, postodr, lens):
 
     # Initialize branch swapping information.
     gains, sides, nodes = _init_swaps(tree)
-
-    res = []
-    res_append = res.append
 
     # Iteratively swap branches until there is no more beneficial swap.
     while True:
@@ -1138,8 +1138,8 @@ def _root_from_treenode(obj, taxa):
         elif n_sibs == 2:
             # Current node is the root of an unrooted tree (i.e., it has three
             # children): Add the current node, then add the other two children of it.
-            #                          prev
-            #       curr                |
+            #                         prev
+            #       curr               |
             #     /  |  \    =>       curr
             # left right prev        /   \
             #                     left   right

@@ -4154,7 +4154,7 @@ class TreeNode(SkbioObject):
         The distance between two nodes is the length of the path (branches) connecting
         them. It is also known as the patristic distance [1]_.
 
-        When `use_length=False`, it is the number of branches in the path.
+        When ``use_length=False``, it is the number of branches in the path.
 
         This method can be used to compute the distance between two given nodes.
         However, it is not optimized for computing all pairwise tip distances. Use
@@ -4613,9 +4613,9 @@ class TreeNode(SkbioObject):
 
         This method automatically determines whether to use the unrooted or rooted RF
         distance based on whether self is rooted or not. Specifically, if self has two
-        two children (see :meth:`details <unroot>`), or has a parent (i.e., it is a
-        subtree within a larger tree), it will be considered as rooted. Otherwise it
-        will be considered as unrooted.
+        children (see :meth:`details <unroot>`), or has a parent (i.e., it is a subtree
+        within a larger tree), it will be considered as rooted. Otherwise it will be
+        considered as unrooted.
 
         One can override this automatic decision by setting the ``rooted`` parameter,
         which is recommended for explicity.

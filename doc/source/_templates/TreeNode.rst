@@ -17,28 +17,28 @@
    .. autosummary::
       :toctree:
 
-      ~{{ name }}.is_tip
-      ~{{ name }}.is_root
-      ~{{ name }}.has_children
-      ~{{ name }}.root
       ~{{ name }}.ancestors
-      ~{{ name }}.siblings
-      ~{{ name }}.neighbors
+      ~{{ name }}.has_children
+      ~{{ name }}.is_root
+      ~{{ name }}.is_tip
       ~{{ name }}.lca
+      ~{{ name }}.neighbors
       ~{{ name }}.path
+      ~{{ name }}.root
+      ~{{ name }}.siblings
 
    .. rubric:: Tree traversal
 
    .. autosummary::
       :toctree:
 
-      ~{{ name }}.traverse
-      ~{{ name }}.preorder
+      ~{{ name }}.levelorder
+      ~{{ name }}.non_tips
       ~{{ name }}.postorder
       ~{{ name }}.pre_and_postorder
-      ~{{ name }}.levelorder
+      ~{{ name }}.preorder
       ~{{ name }}.tips
-      ~{{ name }}.non_tips
+      ~{{ name }}.traverse
 
    .. rubric:: Tree copying
 
@@ -55,78 +55,77 @@
       :toctree:
 
       ~{{ name }}.append
+      ~{{ name }}.bifurcate
       ~{{ name }}.extend
       ~{{ name }}.insert
       ~{{ name }}.pop
+      ~{{ name }}.prune
       ~{{ name }}.remove
       ~{{ name }}.remove_by_func
       ~{{ name }}.remove_deleted
-      ~{{ name }}.prune
       ~{{ name }}.shear
+      ~{{ name }}.shuffle
       ~{{ name }}.unpack
       ~{{ name }}.unpack_by_func
-      ~{{ name }}.bifurcate
-      ~{{ name }}.shuffle
 
    .. rubric:: Tree rerooting
 
    .. autosummary::
       :toctree:
 
+      ~{{ name }}.root_at
+      ~{{ name }}.root_at_midpoint
+      ~{{ name }}.root_by_outgroup
       ~{{ name }}.unroot
       ~{{ name }}.unrooted_copy
       ~{{ name }}.unrooted_deepcopy
       ~{{ name }}.unrooted_move
-      ~{{ name }}.root_at
-      ~{{ name }}.root_at_midpoint
-      ~{{ name }}.root_by_outgroup
 
    .. rubric:: Tree searching
 
    .. autosummary::
       :toctree:
 
-      ~{{ name }}.has_caches
-      ~{{ name }}.clear_caches
-      ~{{ name }}.cache_attr
       ~{{ name }}.assign_ids
-      ~{{ name }}.index_tree
+      ~{{ name }}.cache_attr
+      ~{{ name }}.clear_caches
       ~{{ name }}.create_caches
+      ~{{ name }}.has_caches
       ~{{ name }}.find
       ~{{ name }}.find_all
-      ~{{ name }}.find_by_id
       ~{{ name }}.find_by_func
+      ~{{ name }}.find_by_id
+      ~{{ name }}.index_tree
 
    .. rubric:: Tree analysis
 
    .. autosummary::
       :toctree:
 
-      ~{{ name }}.count
-      ~{{ name }}.subset
-      ~{{ name }}.subsets
       ~{{ name }}.bipart
       ~{{ name }}.biparts
-      ~{{ name }}.assign_supports
-      ~{{ name }}.is_bifurcating
-      ~{{ name }}.observed_node_counts
-      ~{{ name }}.depth
-      ~{{ name }}.height
-      ~{{ name }}.total_length
-      ~{{ name }}.distance
-      ~{{ name }}.maxdist
       ~{{ name }}.cophenet
+      ~{{ name }}.count
+      ~{{ name }}.depth
+      ~{{ name }}.distance
+      ~{{ name }}.height
+      ~{{ name }}.is_bifurcating
+      ~{{ name }}.maxdist
+      ~{{ name }}.observed_node_counts
+      ~{{ name }}.subset
+      ~{{ name }}.subsets
+      ~{{ name }}.total_length
 
    .. rubric:: Tree comparison
 
    .. autosummary::
       :toctree:
 
-      ~{{ name }}.compare_rfd
-      ~{{ name }}.compare_wrfd
-      ~{{ name }}.compare_subsets
       ~{{ name }}.compare_biparts
       ~{{ name }}.compare_cophenet
+      ~{{ name }}.compare_rfd
+      ~{{ name }}.compare_subsets
+      ~{{ name }}.compare_wrfd
 
    .. rubric:: Tree visualization
 
@@ -140,10 +139,11 @@
    .. autosummary::
       :toctree:
 
+      ~{{ name }}.assign_supports
       ~{{ name }}.from_linkage_matrix
-      ~{{ name }}.from_taxonomy
-      ~{{ name }}.to_taxonomy
       ~{{ name }}.from_taxdump
+      ~{{ name }}.from_taxonomy
       ~{{ name }}.to_array
+      ~{{ name }}.to_taxonomy
 
    {% endblock %}

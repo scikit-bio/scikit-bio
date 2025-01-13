@@ -15,10 +15,10 @@ from ._c_nj import nj_minq_cy
 from ._utils import _check_dm
 
 
-@params_aliased([("clip_to_zero", "disallow_negative_branch_length", "0.6.3", True)])
+@params_aliased([("neg_as_zero", "disallow_negative_branch_length", "0.6.3", True)])
 def nj(
     dm,
-    clip_to_zero=True,
+    neg_as_zero=True,
     result_constructor=None,
     inplace=False,
 ):
@@ -28,7 +28,7 @@ def nj(
     ----------
     dm : skbio.DistanceMatrix
         Input distance matrix containing pairwise distances among taxa.
-    clip_to_zero : bool, optional
+    neg_as_zero : bool, optional
         If True (default), convert negative branch lengths into zeros.
     result_constructor : function, optional
         Function to apply to construct the result object. This must take a
@@ -82,7 +82,7 @@ def nj(
     When this assumption is violated, which is common in real studies, negative branch
     lengths may be produced, challenging interpretation and subsequent analyses. To
     address this issue, this function converts negative branch lengths into zeros by
-    default, but this behavior can be disabled by setting ``clip_to_zero`` to False.
+    default, but this behavior can be disabled by setting ``neg_as_zero`` to False.
 
     Gascuel and Steel (2006) provide a detailed overview of neighbor joining in terms
     of its biological relevance and limitations [2]_. They proved that NJ is a greedy
@@ -150,7 +150,7 @@ def nj(
 
     lm = _nj(dm_)
 
-    tree = _tree_from_linkmat(lm, taxa, rooted=False, clip_to_zero=clip_to_zero)
+    tree = _tree_from_linkmat(lm, taxa, rooted=False, neg_as_zero=neg_as_zero)
     if result_constructor is not None:
         tree = result_constructor(str(tree))
     return tree
@@ -269,7 +269,7 @@ def _nj(dm):
     return lm
 
 
-def _tree_from_linkmat(lm, taxa, rooted=True, clip_to_zero=True):
+def _tree_from_linkmat(lm, taxa, rooted=True, neg_as_zero=True):
     r"""Convert a linkage matrix into a tree structure.
 
     Parameters
@@ -282,7 +282,7 @@ def _tree_from_linkmat(lm, taxa, rooted=True, clip_to_zero=True):
         If True (default), will generate a rooted binary tree, with two children
         attached to the root node. If False, will generate an unrooted tree with
         three children attached to the root node.
-    clip_to_zero : bool, optional
+    neg_as_zero : bool, optional
         Convert negative branch lengths to zero.
 
     Returns
@@ -317,7 +317,7 @@ def _tree_from_linkmat(lm, taxa, rooted=True, clip_to_zero=True):
     idx = len(taxa)
     for c1, c2, L1, L2 in lm if rooted else lm[:-2]:
         c1, c2 = nodes[int(c1)], nodes[int(c2)]
-        if clip_to_zero:
+        if neg_as_zero:
             c1.length = L1 if L1 >= 0 else 0.0
             c2.length = L2 if L2 >= 0 else 0.0
         else:
@@ -331,7 +331,7 @@ def _tree_from_linkmat(lm, taxa, rooted=True, clip_to_zero=True):
         # see the end of _nj
         (c0, _, L0, _), (c1, c2, L1, L2) = lm[-1], lm[-2]
         c0, c1, c2 = nodes[int(c0)], nodes[int(c1)], nodes[int(c2)]
-        if clip_to_zero:
+        if neg_as_zero:
             c0.length = L0 if L0 >= 0 else 0.0
             c1.length = L1 if L1 >= 0 else 0.0
             c2.length = L2 if L2 >= 0 else 0.0

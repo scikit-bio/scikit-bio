@@ -88,15 +88,20 @@ html_css_files = ['css/style.css']
 # do not show source links
 html_show_sourcelink = False
 
+# do not show () after function link
+add_function_parentheses = False
+
 
 # -- External links ----------------------------------------------------------
 
 github_url = f'https://github.com/{project}/{project}'
 twitter_url = 'https://twitter.com/scikitbio'
+wiki_url = 'https://en.wikipedia.org/wiki'
 
 extlinks = {
     'home': (f'{html_baseurl}/%s', None),
     'repo': (f'{github_url}/%s', None),
+    'wiki': (f'{wiki_url}/%s', None),
 }
 
 
