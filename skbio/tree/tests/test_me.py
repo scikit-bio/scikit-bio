@@ -269,13 +269,13 @@ class MeTests(TestCase):
 
         # clip to zero
         dm = DistanceMatrix(self.dm5, self.taxa5)
-        obs = gme(dm, clip_to_zero=False)
+        obs = gme(dm, neg_as_zero=False)
         exp = TreeNode.read([self.nwk5])
         self.assertEqual(obs.compare_rfd(exp), 0)
         self.assertAlmostEqual(obs.compare_cophenet(exp, ignore_self=True), 0)
         for taxon in ("b", "c", "d"):
             self.assertTrue(obs.find(taxon).length < 0)
-        obs = gme(dm, clip_to_zero=True)
+        obs = gme(dm, neg_as_zero=True)
         for taxon in ("b", "c", "d"):
             self.assertEqual(obs.find(taxon).length, 0)
 
@@ -292,10 +292,10 @@ class MeTests(TestCase):
 
         # clip to zero
         dm = DistanceMatrix(self.dm5, self.taxa5)
-        obs = bme(dm, clip_to_zero=False)
+        obs = bme(dm, neg_as_zero=False)
         for taxon in ("b", "c", "d"):
             self.assertTrue(obs.find(taxon).length < 0)
-        obs = bme(dm, clip_to_zero=True)
+        obs = bme(dm, neg_as_zero=True)
         for taxon in ("b", "c", "d"):
             self.assertEqual(obs.find(taxon).length, 0)
 
@@ -346,13 +346,13 @@ class MeTests(TestCase):
         # clip to zero
         dm = DistanceMatrix(self.dm5, self.taxa5)
         tree = TreeNode.read(["(((a,b),d),(c,e));"])
-        obs = nni(tree, dm, balanced=False, clip_to_zero=False)
+        obs = nni(tree, dm, balanced=False, neg_as_zero=False)
         exp = TreeNode.read([self.nwk5])
         self.assertEqual(obs.compare_rfd(exp), 0)
         self.assertAlmostEqual(obs.compare_cophenet(exp, ignore_self=True), 0)
         for taxon in ("b", "c", "d"):
             self.assertTrue(obs.find(taxon).length < 0)
-        obs = nni(tree, dm, balanced=False, clip_to_zero=True)
+        obs = nni(tree, dm, balanced=False, neg_as_zero=True)
         for taxon in ("b", "c", "d"):
             self.assertEqual(obs.find(taxon).length, 0)
 

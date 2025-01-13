@@ -111,7 +111,7 @@ class NjTests(TestCase):
         # only tips associated with the large distance in the input
         # have positive branch lengths when we allow negative branch
         # length
-        tree = nj(self.dm4, clip_to_zero=False)
+        tree = nj(self.dm4, neg_as_zero=False)
         self.assertTrue(tree.find('a').length > 0)
         self.assertTrue(tree.find('b').length < 0)
         self.assertTrue(tree.find('c').length < 0)
