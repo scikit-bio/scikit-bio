@@ -273,13 +273,13 @@
 
          .. card::
 
-            Latest release (2024-07-07):
+            Latest release (2025-01-13):
 
-            .. button-link:: https://github.com/scikit-bio/scikit-bio/releases/tag/0.6.2
+            .. button-link:: https://github.com/scikit-bio/scikit-bio/releases/tag/0.6.3
                :color: success
                :shadow:
 
-               scikit-bio 0.6.2
+               scikit-bio 0.6.3
 
          .. card::
 

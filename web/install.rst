@@ -5,7 +5,7 @@ Install scikit-bio
 Python
 ------
 
-scikit-bio requires `Python <https://www.python.org/>`_ 3.8 or later installed in your system.
+scikit-bio requires `Python <https://www.python.org/>`_ 3.9 or later installed in your system.
 
 
 Conda
