@@ -3,8 +3,6 @@ requires = ["setuptools", "wheel", "numpy", "cython"]
 
 [tool.pytest.ini_options]
 addopts = [
-    "--pyargs",
-    "skbio",
     "--doctest-modules",
     "--doctest-glob",
     "*.pyx",
