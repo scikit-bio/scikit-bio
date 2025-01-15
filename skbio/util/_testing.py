@@ -425,5 +425,5 @@ def pytestrunner():
     # import here, cause outside the eggs aren't loaded
     import pytest
 
-    errno = pytest.main(args=sys.argv[1:])
+    errno = pytest.main(args=["--pyargs", "skbio"] + sys.argv[1:])
     sys.exit(errno)
