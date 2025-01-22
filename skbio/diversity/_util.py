@@ -250,17 +250,6 @@ def _quantitative_to_qualitative_counts(counts):
     return counts > 0.0
 
 
-def _check_taxa_alias(taxa, tree, otu_ids):
-    # make `otu_ids` an alias of `taxa`; for backward compatibility
-    if taxa is None:
-        if otu_ids is None:
-            raise ValueError("A list of taxon IDs must be provided.")
-        taxa = otu_ids
-    if tree is None:
-        raise ValueError("A phylogenetic tree must be provided.")
-    return taxa
-
-
 def _table_to_numpy(table):
     """Convert a skbio.table.Table to a dense representation.
 
