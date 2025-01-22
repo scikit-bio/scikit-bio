@@ -2,6 +2,9 @@
 
 ## Version 0.6.4-dev
 
+### Bug Fixes
+* Fixed a bug in the documentation in which the `source` button would link to decorator code, instead of the relevant function ([#2184](https://github.com/scikit-bio/scikit-bio/pull/2184)).
+
 
 ## Version 0.6.3
 
