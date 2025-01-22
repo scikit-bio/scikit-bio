@@ -20,7 +20,6 @@ from skbio.diversity._util import (_validate_counts_vector,
                                    _validate_taxa_and_tree,
                                    vectorize_counts_and_tree,
                                    _quantitative_to_qualitative_counts,
-                                   _check_taxa_alias,
                                    _table_to_numpy,
                                    _validate_table)
 from skbio.tree import DuplicateNodeError, MissingNodeError
@@ -284,23 +283,6 @@ class ValidationTests(TestCase):
         exp = np.array([[False, False, False], [True, False, True]])
         obs = _quantitative_to_qualitative_counts(counts)
         npt.assert_equal(obs, exp)
-
-    def test_check_taxa_alias(self):
-        # for backward compatibility; will be removed in the future
-        msg = "A list of taxon IDs must be provided."
-        with self.assertRaises(ValueError) as cm:
-            _check_taxa_alias(None, None, None)
-        self.assertEqual(str(cm.exception), msg)
-
-        msg = "A phylogenetic tree must be provided."
-        with self.assertRaises(ValueError) as cm:
-            _check_taxa_alias([1], None, None)
-        self.assertEqual(str(cm.exception), msg)
-
-        obs = _check_taxa_alias([1], '1', None)
-        self.assertListEqual(obs, [1])
-        obs = _check_taxa_alias(None, '1', [1])
-        self.assertListEqual(obs, [1])
 
 
 class TableConversionTests(TestCase):
