@@ -12,6 +12,7 @@ from scipy.linalg import svd, lstsq
 
 from ._ordination_results import OrdinationResults
 from ._utils import corr, svd_rank, scale
+from skbio._dispatcher import create_table, create_table_1d
 
 
 def cca(y, x, scaling=1):
@@ -211,14 +212,23 @@ def cca(y, x, scaling=1):
     pc_ids = ["CCA%d" % (i + 1) for i in range(len(eigenvalues))]
     sample_ids = y.index
     feature_ids = y.columns
-    eigvals = pd.Series(eigenvalues, index=pc_ids)
-    samples = pd.DataFrame(sample_scores, columns=pc_ids, index=sample_ids)
-    features = pd.DataFrame(features_scores, columns=pc_ids, index=feature_ids)
+    # eigvals = pd.Series(eigenvalues, index=pc_ids)
+    eigvals = create_table_1d(eigenvalues, index=pc_ids)
+    # samples = pd.DataFrame(sample_scores, columns=pc_ids, index=sample_ids)
+    samples = create_table(sample_scores, columns=pc_ids, index=sample_ids)
+    # features = pd.DataFrame(features_scores, columns=pc_ids, index=feature_ids)
+    features = create_table(features_scores, columns=pc_ids, index=feature_ids)
 
-    biplot_scores = pd.DataFrame(
+    # biplot_scores = pd.DataFrame(
+    #     biplot_scores, index=x.columns, columns=pc_ids[: biplot_scores.shape[1]]
+    # )
+    biplot_scores = create_table(
         biplot_scores, index=x.columns, columns=pc_ids[: biplot_scores.shape[1]]
     )
-    sample_constraints = pd.DataFrame(
+    # sample_constraints = pd.DataFrame(
+    #     sample_constraints, index=sample_ids, columns=pc_ids
+    # )
+    sample_constraints = create_table(
         sample_constraints, index=sample_ids, columns=pc_ids
     )
 

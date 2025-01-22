@@ -12,6 +12,7 @@ from scipy.linalg import svd
 
 from ._ordination_results import OrdinationResults
 from ._utils import svd_rank
+from skbio._dispatcher import create_table, create_table_1d
 
 
 def ca(X, scaling=1):
@@ -177,11 +178,18 @@ def ca(X, scaling=1):
         "%s%d" % (short_method_name, i + 1) for i in range(features_scores.shape[1])
     ]
 
-    eigvals = pd.Series(
+    # eigvals = pd.Series(
+    #     eigvals, ["%s%d" % (short_method_name, i + 1) for
+    # i in range(eigvals.shape[0])]
+    # )
+    eigvals = create_table_1d(
         eigvals, ["%s%d" % (short_method_name, i + 1) for i in range(eigvals.shape[0])]
     )
-    samples = pd.DataFrame(sample_scores, row_ids, sample_columns)
-    features = pd.DataFrame(features_scores, column_ids, feature_columns)
+    # samples = pd.DataFrame(sample_scores, row_ids, sample_columns)
+    samples = create_table(sample_scores, index=row_ids, columns=sample_columns)
+    # features = pd.DataFrame(features_scores, column_ids, feature_columns)
+    features = create_table(features_scores, index=column_ids, columns=feature_columns)
+    # proportion_explained = eigvals / eigvals.sum()
     proportion_explained = eigvals / eigvals.sum()
     return OrdinationResults(
         short_method_name,
