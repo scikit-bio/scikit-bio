@@ -27,7 +27,7 @@ _normalize_weighted_unifrac_by_default = False
 
 
 @params_aliased([("taxa", "otu_ids", "0.6.0", True)])
-def unweighted_unifrac(u_counts, v_counts, taxa=None, tree=None, validate=True):
+def unweighted_unifrac(u_counts, v_counts, taxa, tree, validate=True):
     """Compute unweighted UniFrac.
 
     Parameters
@@ -157,8 +157,8 @@ def unweighted_unifrac(u_counts, v_counts, taxa=None, tree=None, validate=True):
 def weighted_unifrac(
     u_counts,
     v_counts,
-    taxa=None,
-    tree=None,
+    taxa,
+    tree,
     normalized=_normalize_weighted_unifrac_by_default,
     validate=True,
 ):

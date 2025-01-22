@@ -51,7 +51,7 @@ def _faith_pd(counts_by_node, branch_lengths):
 
 
 @params_aliased([("taxa", "otu_ids", "0.6.0", True)])
-def faith_pd(counts, taxa=None, tree=None, validate=True):
+def faith_pd(counts, taxa, tree, validate=True):
     r"""Calculate Faith's phylogenetic diversity (Faith's PD) metric.
 
     The Faith's PD metric is defined as:
@@ -242,7 +242,7 @@ def _phydiv(counts_by_node, branch_lengths, rooted, weight):
 
 
 @params_aliased([("taxa", "otu_ids", "0.6.0", True)])
-def phydiv(counts, taxa=None, tree=None, rooted=None, weight=False, validate=True):
+def phydiv(counts, taxa, tree, rooted=None, weight=False, validate=True):
     r"""Calculate generalized phylogenetic diversity (PD) metrics.
 
     Parameters
