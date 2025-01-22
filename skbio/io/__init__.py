@@ -269,6 +269,29 @@ to write only one chunk from the generator at a time.
    seq_gen = skbio.io.read(big_file, format='someformat')
    skbio.io.write(seq_gen, into=write_file, format='someformat')
 
+Support for stdin
+^^^^^^^^^^^^^^^^^
+You may stream files in scikit-bio through stdin. To do this, you must set the
+``verify`` parameter of the ``read`` function to ``False``. This will bypass
+scikit-bio's sniffers, which is what enables piping to function. However, the cost is
+that scikit-bio is no longer checking that your file formats are correct, so the user
+must be confident that they know the file format they are working with.
+
+For example, if you wanted to pipe a FASTA file into a python script, your script could
+look like this.
+
+.. code-block:: python
+
+   import skbio
+   import sys
+   for r in skbio.read(sys.stdin, format='fasta', verify=False):
+      print(r.metadata['id'])
+
+This would then enable you to do the following.
+
+.. code-block:: bash
+
+   $ cat some_file.fna | python script.py
 
 """  # noqa: D205, D415
 
