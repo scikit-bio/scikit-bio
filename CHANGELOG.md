@@ -2,6 +2,10 @@
 
 ## Version 0.6.4-dev
 
+### Miscellaneous
+
+* Updated documentation to include description of how to stream data through stdin with scikit-bio's `read` function ([2185](https://github.com/scikit-bio/scikit-bio/pull/2185))
+
 
 ## Version 0.6.3
 
