@@ -6,8 +6,6 @@
 # The full license is in the file LICENSE.txt, distributed with this software.
 # ----------------------------------------------------------------------------
 
-from sys import modules
-
 import numpy as np
 
 from skbio.diversity._util import (
