@@ -227,6 +227,10 @@ def linkcode_resolve(domain, info):
         except:
             return None
 
+    # Link to functions, not decorators
+    while hasattr(obj, "__wrapped__"):
+        obj = obj.__wrapped__
+
     try:
         fn = inspect.getsourcefile(obj)
     except:
