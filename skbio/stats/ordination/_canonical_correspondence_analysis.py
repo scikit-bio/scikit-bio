@@ -237,6 +237,7 @@ def cca(y, x, scaling=1):
         "Canonical Correspondence Analysis",
         eigvals,
         samples,
+        sample_ids=sample_ids,
         features=features,
         biplot_scores=biplot_scores,
         sample_constraints=sample_constraints,

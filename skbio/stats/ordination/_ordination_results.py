@@ -9,6 +9,7 @@
 import functools
 
 import numpy as np
+import pandas as pd
 
 from skbio._base import SkbioObject
 from skbio.stats._misc import _pprint_strs
@@ -37,6 +38,8 @@ class OrdinationResults(SkbioObject, PlottableMixin):
     samples : pd.DataFrame
         The position of the samples in the ordination space, row-indexed by the
         sample id.
+    sample_ids : list of str, or should it be pd.Index?
+        The names of the samples. Must be provided if samples is an array.
     features : pd.DataFrame
         The position of the features in the ordination space, row-indexed by
         the feature id.
@@ -70,6 +73,7 @@ class OrdinationResults(SkbioObject, PlottableMixin):
         long_method_name,
         eigvals,
         samples,
+        sample_ids=None,
         features=None,
         biplot_scores=None,
         sample_constraints=None,
@@ -79,7 +83,24 @@ class OrdinationResults(SkbioObject, PlottableMixin):
         self.long_method_name = long_method_name
 
         self.eigvals = eigvals
-        self.samples = samples
+
+        if isinstance(samples, pd.DataFrame):
+            self.samples = samples
+            self.sample_ids = list(samples.index)
+        elif isinstance(samples, np.ndarray):
+            if sample_ids is None:
+                raise ValueError(
+                    "`sample_ids` must be provided when `samples` is a numpy array."
+                )
+            if len(sample_ids) != samples.shape[0]:
+                raise ValueError(
+                    "Lenght of `sample_ids` must match number of rows in `samples`."
+                )
+            self.samples = samples
+            self.sample_ids = sample_ids
+        else:
+            raise TypeError("samples must be DataFrame or numpy array")
+
         self.features = features
         self.biplot_scores = biplot_scores
         self.sample_constraints = sample_constraints
@@ -263,7 +284,16 @@ class OrdinationResults(SkbioObject, PlottableMixin):
 
         self._get_mpl_plt()
 
-        coord_matrix = self.samples.values.T
+        print(df)
+
+        if get_option("table_backend") == "pandas":
+            coord_matrix = self.samples.values.T
+        elif get_option("table_backend") == "numpy":
+            coord_matrix = self.samples.T
+
+        point_colors, category_to_color = self._get_plot_point_colors(
+            df, column, self.sample_ids, cmap
+        )
         self._validate_plot_axes(coord_matrix, axes)
 
         fig = self.plt.figure()
@@ -272,10 +302,6 @@ class OrdinationResults(SkbioObject, PlottableMixin):
         xs = coord_matrix[axes[0]]
         ys = coord_matrix[axes[1]]
         zs = coord_matrix[axes[2]]
-
-        point_colors, category_to_color = self._get_plot_point_colors(
-            df, column, self.samples.index, cmap
-        )
 
         scatter_fn = functools.partial(ax.scatter, xs, ys, zs, s=s)
         if point_colors is None:
@@ -338,7 +364,7 @@ class OrdinationResults(SkbioObject, PlottableMixin):
         """
         if (df is None and column is not None) or (df is not None and column is None):
             raise ValueError(
-                "Both df and column must be provided, or both " "must be None."
+                "Both df and column must be provided, or both must be None."
             )
         elif df is None and column is None:
             point_colors, category_to_color = None, None
