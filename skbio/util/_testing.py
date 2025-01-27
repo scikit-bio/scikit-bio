@@ -15,6 +15,8 @@ import numpy.testing as npt
 import pandas.testing as pdt
 from scipy.spatial.distance import pdist
 
+from skbio._config import get_option
+
 
 class ReallyEqualMixin:
     """Use this for testing __eq__/__ne__.
@@ -116,54 +118,109 @@ def assert_ordination_results_equal(
         If the two objects are not equal.
 
     """
-    npt.assert_equal(type(left) is type(right), True)
+    if get_option("table_backend") == "pandas":
+        npt.assert_equal(type(left) is type(right), True)
 
-    if not ignore_method_names:
-        npt.assert_equal(left.short_method_name, right.short_method_name)
-        npt.assert_equal(left.long_method_name, right.long_method_name)
+        if not ignore_method_names:
+            npt.assert_equal(left.short_method_name, right.short_method_name)
+            npt.assert_equal(left.long_method_name, right.long_method_name)
 
-    _assert_frame_dists_equal(
-        left.samples,
-        right.samples,
-        ignore_columns=ignore_axis_labels,
-        ignore_directionality=ignore_directionality,
-        decimal=decimal,
-    )
+        _assert_frame_dists_equal(
+            left.samples,
+            right.samples,
+            ignore_columns=ignore_axis_labels,
+            ignore_directionality=ignore_directionality,
+            decimal=decimal,
+        )
 
-    _assert_frame_dists_equal(
-        left.features,
-        right.features,
-        ignore_columns=ignore_axis_labels,
-        ignore_directionality=ignore_directionality,
-        decimal=decimal,
-    )
+        _assert_frame_dists_equal(
+            left.features,
+            right.features,
+            ignore_columns=ignore_axis_labels,
+            ignore_directionality=ignore_directionality,
+            decimal=decimal,
+        )
 
-    _assert_frame_dists_equal(
-        left.biplot_scores,
-        right.biplot_scores,
-        ignore_columns=ignore_axis_labels,
-        ignore_directionality=ignore_directionality,
-        decimal=decimal,
-    )
+        _assert_frame_dists_equal(
+            left.biplot_scores,
+            right.biplot_scores,
+            ignore_columns=ignore_axis_labels,
+            ignore_directionality=ignore_directionality,
+            decimal=decimal,
+        )
 
-    _assert_frame_dists_equal(
-        left.sample_constraints,
-        right.sample_constraints,
-        ignore_columns=ignore_axis_labels,
-        ignore_directionality=ignore_directionality,
-        decimal=decimal,
-    )
+        _assert_frame_dists_equal(
+            left.sample_constraints,
+            right.sample_constraints,
+            ignore_columns=ignore_axis_labels,
+            ignore_directionality=ignore_directionality,
+            decimal=decimal,
+        )
 
-    _assert_series_equal(
-        left.eigvals, right.eigvals, ignore_axis_labels, decimal=decimal
-    )
+        _assert_series_equal(
+            left.eigvals, right.eigvals, ignore_axis_labels, decimal=decimal
+        )
 
-    _assert_series_equal(
-        left.proportion_explained,
-        right.proportion_explained,
-        ignore_axis_labels,
-        decimal=decimal,
-    )
+        _assert_series_equal(
+            left.proportion_explained,
+            right.proportion_explained,
+            ignore_axis_labels,
+            decimal=decimal,
+        )
+
+    elif get_option("table_backend") == "numpy":
+        npt.assert_equal(type(left) is type(right), True)
+
+        if not ignore_method_names:
+            npt.assert_equal(left.short_method_name, right.short_method_name)
+            npt.assert_equal(left.long_method_name, right.long_method_name)
+
+        _assert_frame_dists_equal(
+            left.samples,
+            right.samples,
+            ignore_columns=ignore_axis_labels,
+            ignore_directionality=ignore_directionality,
+            decimal=decimal,
+            ignore_index=ignore_axis_labels,
+        )
+
+        _assert_frame_dists_equal(
+            left.features,
+            right.features,
+            ignore_columns=ignore_axis_labels,
+            ignore_directionality=ignore_directionality,
+            decimal=decimal,
+            ignore_index=ignore_axis_labels,
+        )
+
+        _assert_frame_dists_equal(
+            left.biplot_scores,
+            right.biplot_scores,
+            ignore_columns=ignore_axis_labels,
+            ignore_directionality=ignore_directionality,
+            decimal=decimal,
+            ignore_index=ignore_axis_labels,
+        )
+
+        _assert_frame_dists_equal(
+            left.sample_constraints,
+            right.sample_constraints,
+            ignore_columns=ignore_axis_labels,
+            ignore_directionality=ignore_directionality,
+            decimal=decimal,
+            ignore_index=ignore_axis_labels,
+        )
+
+        _assert_series_equal(
+            left.eigvals, right.eigvals, ignore_axis_labels, decimal=decimal
+        )
+
+        _assert_series_equal(
+            left.proportion_explained,
+            right.proportion_explained,
+            ignore_axis_labels,
+            decimal=decimal,
+        )
 
 
 def _assert_series_equal(left_s, right_s, ignore_index=False, decimal=7):
@@ -171,9 +228,12 @@ def _assert_series_equal(left_s, right_s, ignore_index=False, decimal=7):
     if left_s is None or right_s is None:
         assert left_s is None and right_s is None
     else:
-        npt.assert_almost_equal(left_s.values, right_s.values, decimal=decimal)
-        if not ignore_index:
-            pdt.assert_index_equal(left_s.index, right_s.index)
+        if get_option("table_backend") == "pandas":
+            npt.assert_almost_equal(left_s.values, right_s.values, decimal=decimal)
+            if not ignore_index:
+                pdt.assert_index_equal(left_s.index, right_s.index)
+        elif get_option("table_backend") == "numpy":
+            npt.assert_almost_equal(left_s, right_s, decimal=decimal)
 
 
 def _assert_frame_dists_equal(
@@ -187,8 +247,12 @@ def _assert_frame_dists_equal(
     if left_df is None or right_df is None:
         assert left_df is None and right_df is None
     else:
-        left_values = left_df.values
-        right_values = right_df.values
+        if get_option("table_backend") == "pandas":
+            left_values = left_df.values
+            right_values = right_df.values
+        elif get_option("table_backend") == "numpy":
+            left_values = left_df
+            right_values = right_df
         left_dists = pdist(left_values)
         right_dists = pdist(right_values)
         npt.assert_almost_equal(left_dists, right_dists, decimal=decimal)
@@ -211,8 +275,12 @@ def _assert_frame_equal(
     if left_df is None or right_df is None:
         assert left_df is None and right_df is None
     else:
-        left_values = left_df.values
-        right_values = right_df.values
+        if get_option("table_backend") == "pandas":
+            left_values = left_df.values
+            right_values = right_df.values
+        elif get_option("table_backend") == "numpy":
+            left_values = left_df
+            right_values = right_df
         if ignore_directionality:
             left_values, right_values = _normalize_signs(left_values, right_values)
         npt.assert_almost_equal(left_values, right_values, decimal=decimal)

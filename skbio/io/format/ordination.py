@@ -191,6 +191,7 @@ import pandas as pd
 
 from skbio.stats.ordination import OrdinationResults
 from skbio.io import create_format, OrdinationFormatError
+from skbio._config import get_option
 
 ordination = create_format("ordination")
 
@@ -228,33 +229,36 @@ def _ordination_to_ordination_results(fh):
     _check_length_against_eigvals(prop_expl, eigvals, "proportion explained values")
     _check_empty_line(fh)
 
-    species = _parse_array_section(fh, "Species")
+    species, feature_ids = _parse_array_section(fh, "Species")
     _check_length_against_eigvals(species, eigvals, "coordinates per species")
     _check_empty_line(fh)
 
-    site = _parse_array_section(fh, "Site")
+    site, sample_ids = _parse_array_section(fh, "Site")
     _check_length_against_eigvals(site, eigvals, "coordinates per site")
     _check_empty_line(fh)
 
     # biplot does not have ids to parse (the other arrays do)
-    biplot = _parse_array_section(fh, "Biplot", has_ids=False)
+    biplot = _parse_array_section(fh, "Biplot", has_ids=False)[0]
     _check_empty_line(fh)
 
-    cons = _parse_array_section(fh, "Site constraints")
+    cons = _parse_array_section(fh, "Site constraints")[0]
 
     if cons is not None and site is not None:
-        if not np.array_equal(cons.index, site.index):
-            raise OrdinationFormatError(
-                "Site constraints ids and site ids must be equal: %s != %s"
-                % (cons.index, site.index)
-            )
+        if get_option("table_backend") == "pandas":
+            if not np.array_equal(cons.index, site.index):
+                raise OrdinationFormatError(
+                    "Site constraints ids and site ids must be equal: %s != %s"
+                    % (cons.index, site.index)
+                )
 
     return OrdinationResults(
         short_method_name="",
         long_method_name="",
         eigvals=eigvals,
         features=species,
+        feature_ids=feature_ids,
         samples=site,
+        sample_ids=sample_ids,
         biplot_scores=biplot,
         sample_constraints=cons,
         proportion_explained=prop_expl,
@@ -280,7 +284,7 @@ def _check_empty_line(fh):
     line = next(fh, None)
     if line is None:
         raise OrdinationFormatError(
-            "Reached end of file while looking for blank line separating " "sections."
+            "Reached end of file while looking for blank line separating sections."
         )
 
     if line.strip():
@@ -315,7 +319,10 @@ def _parse_vector_section(fh, header_id):
                 "Reached end of file while looking for line containing values "
                 "for %s section." % header_id
             )
-        vals = pd.Series(np.asarray(line.strip().split("\t"), dtype=np.float64))
+        if get_option("table_backend") == "pandas":
+            vals = pd.Series(np.asarray(line.strip().split("\t"), dtype=np.float64))
+        elif get_option("table_backend") == "numpy":
+            vals = np.asarray(line.strip().split("\t"), dtype=np.float64)
         if len(vals) != num_vals:
             raise OrdinationFormatError(
                 "Expected %d values in %s section, but found %d."
@@ -370,20 +377,27 @@ def _parse_array_section(fh, header_id, has_ids=True):
                     % (cols, len(vals), i + 1)
                 )
             data[i, :] = np.asarray(vals, dtype=np.float64)
-        data = pd.DataFrame(data, index=ids)
+        if get_option("table_backend") == "pandas":
+            data = pd.DataFrame(data, index=ids)
+        # elif get_option("table_backend") == "numpy":
+        #     data = np.asarray(data)
 
-    return data
+    return data, ids
 
 
 @ordination.writer(OrdinationResults)
 def _ordination_results_to_ordination(obj, fh):
     _write_vector_section(fh, "Eigvals", obj.eigvals)
     _write_vector_section(fh, "Proportion explained", obj.proportion_explained)
-    _write_array_section(fh, "Species", obj.features)
-    _write_array_section(fh, "Site", obj.samples)
+    _write_array_section(fh, "Species", obj.features, ids=obj.feature_ids)
+    _write_array_section(fh, "Site", obj.samples, ids=obj.sample_ids)
     _write_array_section(fh, "Biplot", obj.biplot_scores, has_ids=False)
     _write_array_section(
-        fh, "Site constraints", obj.sample_constraints, include_section_separator=False
+        fh,
+        "Site constraints",
+        obj.sample_constraints,
+        ids=obj.sample_ids,
+        include_section_separator=False,
     )
 
 
@@ -395,12 +409,15 @@ def _write_vector_section(fh, header_id, vector):
     fh.write("%s\t%d\n" % (header_id, shape))
 
     if vector is not None:
-        fh.write(_format_vector(vector.values))
+        if get_option("table_backend") == "pandas":
+            fh.write(_format_vector(vector.values))
+        elif get_option("table_backend") == "numpy":
+            fh.write(_format_vector(vector))
     fh.write("\n")
 
 
 def _write_array_section(
-    fh, header_id, data, has_ids=True, include_section_separator=True
+    fh, header_id, data, ids=None, has_ids=True, include_section_separator=True
 ):
     # write section header
     if data is None:
@@ -411,12 +428,20 @@ def _write_array_section(
 
     # write section data
     if data is not None:
-        if not has_ids:
-            for vals in data.values:
-                fh.write(_format_vector(vals))
-        else:
-            for id_, vals in zip(data.index, data.values):
-                fh.write(_format_vector(vals, id_))
+        if get_option("table_backend") == "pandas":
+            if not has_ids:
+                for vals in data.values:
+                    fh.write(_format_vector(vals))
+            else:
+                for id_, vals in zip(data.index, data.values):
+                    fh.write(_format_vector(vals, id_))
+        elif get_option("table_backend") == "numpy":
+            if not has_ids:
+                for vals in data:
+                    fh.write(_format_vector(vals))
+            else:
+                for id_, vals in zip(ids, data):
+                    fh.write(_format_vector(vals, id_))
 
     if include_section_separator:
         fh.write("\n")

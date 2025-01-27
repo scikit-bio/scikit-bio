@@ -239,6 +239,7 @@ def cca(y, x, scaling=1):
         samples,
         sample_ids=sample_ids,
         features=features,
+        feature_ids=feature_ids,
         biplot_scores=biplot_scores,
         sample_constraints=sample_constraints,
         proportion_explained=eigvals / eigvals.sum(),

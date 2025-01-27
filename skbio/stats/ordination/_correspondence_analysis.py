@@ -196,6 +196,8 @@ def ca(X, scaling=1):
         long_method_name,
         eigvals,
         samples=samples,
+        sample_ids=row_ids,
         features=features,
+        feature_ids=column_ids,
         proportion_explained=proportion_explained,
     )

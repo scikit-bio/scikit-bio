@@ -32,7 +32,7 @@ class OrdinationResults(SkbioObject, PlottableMixin):
         Abbreviated ordination method name.
     long_method_name : str
         Ordination method name.
-    eigvals : pd.Series
+    eigvals : pd.Series, or np.ndarray
         The resulting eigenvalues.  The index corresponds to the ordination
         axis labels
     samples : pd.DataFrame
@@ -75,6 +75,7 @@ class OrdinationResults(SkbioObject, PlottableMixin):
         samples,
         sample_ids=None,
         features=None,
+        feature_ids=None,
         biplot_scores=None,
         sample_constraints=None,
         proportion_explained=None,
@@ -101,7 +102,29 @@ class OrdinationResults(SkbioObject, PlottableMixin):
         else:
             raise TypeError("samples must be DataFrame or numpy array")
 
-        self.features = features
+        if features is not None:
+            if isinstance(features, pd.DataFrame):
+                self.features = features
+                self.feature_ids = list(features.index)
+            elif isinstance(features, np.ndarray):
+                if feature_ids is None:
+                    raise ValueError(
+                        "`feature_ids` must be provided when `features` "
+                        "is a numpy array."
+                    )
+                if len(feature_ids) != features.shape[0]:
+                    raise ValueError(
+                        "Length of `feature_ids` must match number of rows "
+                        "in `features`."
+                    )
+                self.features = features
+                self.feature_ids = feature_ids
+            else:
+                raise TypeError("features must be DataFrame or numpy array")
+        else:
+            self.features = features
+            self.feature_ids = feature_ids
+
         self.biplot_scores = biplot_scores
         self.sample_constraints = sample_constraints
         self.proportion_explained = proportion_explained
@@ -139,16 +162,22 @@ class OrdinationResults(SkbioObject, PlottableMixin):
 
             lines.append(self._format_attribute(attr, attr_label, formatter))
 
-        lines.append(
-            self._format_attribute(
-                self.features, "Feature IDs", lambda e: _pprint_strs(e.index.tolist())
+        if get_option("table_backend") == "pandas":
+            lines.append(
+                self._format_attribute(
+                    self.features,
+                    "Feature IDs",
+                    lambda e: _pprint_strs(e.index.tolist()),
+                )
             )
-        )
-        lines.append(
-            self._format_attribute(
-                self.samples, "Sample IDs", lambda e: _pprint_strs(e.index.tolist())
+            lines.append(
+                self._format_attribute(
+                    self.samples, "Sample IDs", lambda e: _pprint_strs(e.index.tolist())
+                )
             )
-        )
+        elif get_option("table_backend") == "numpy":
+            lines.append("\t%s: %s" % ("Feature IDs", _pprint_strs(self.feature_ids)))
+            lines.append("\t%s: %s" % ("Sample IDs", _pprint_strs(self.sample_ids)))
 
         return "\n".join(lines)
 
@@ -284,7 +313,7 @@ class OrdinationResults(SkbioObject, PlottableMixin):
 
         self._get_mpl_plt()
 
-        print(df)
+        # print(df)
 
         if get_option("table_backend") == "pandas":
             coord_matrix = self.samples.values.T
