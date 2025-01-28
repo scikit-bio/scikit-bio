@@ -244,7 +244,7 @@ def _ordination_to_ordination_results(fh):
     cons = _parse_array_section(fh, "Site constraints")[0]
 
     if cons is not None and site is not None:
-        if get_option("table_backend") == "pandas":
+        if get_option("tabular_backend") == "pandas":
             if not np.array_equal(cons.index, site.index):
                 raise OrdinationFormatError(
                     "Site constraints ids and site ids must be equal: %s != %s"
@@ -319,9 +319,9 @@ def _parse_vector_section(fh, header_id):
                 "Reached end of file while looking for line containing values "
                 "for %s section." % header_id
             )
-        if get_option("table_backend") == "pandas":
+        if get_option("tabular_backend") == "pandas":
             vals = pd.Series(np.asarray(line.strip().split("\t"), dtype=np.float64))
-        elif get_option("table_backend") == "numpy":
+        elif get_option("tabular_backend") == "numpy":
             vals = np.asarray(line.strip().split("\t"), dtype=np.float64)
         if len(vals) != num_vals:
             raise OrdinationFormatError(
@@ -377,9 +377,9 @@ def _parse_array_section(fh, header_id, has_ids=True):
                     % (cols, len(vals), i + 1)
                 )
             data[i, :] = np.asarray(vals, dtype=np.float64)
-        if get_option("table_backend") == "pandas":
+        if get_option("tabular_backend") == "pandas":
             data = pd.DataFrame(data, index=ids)
-        # elif get_option("table_backend") == "numpy":
+        # elif get_option("tabular_backend") == "numpy":
         #     data = np.asarray(data)
 
     return data, ids
@@ -409,9 +409,9 @@ def _write_vector_section(fh, header_id, vector):
     fh.write("%s\t%d\n" % (header_id, shape))
 
     if vector is not None:
-        if get_option("table_backend") == "pandas":
+        if get_option("tabular_backend") == "pandas":
             fh.write(_format_vector(vector.values))
-        elif get_option("table_backend") == "numpy":
+        elif get_option("tabular_backend") == "numpy":
             fh.write(_format_vector(vector))
     fh.write("\n")
 
@@ -428,14 +428,14 @@ def _write_array_section(
 
     # write section data
     if data is not None:
-        if get_option("table_backend") == "pandas":
+        if get_option("tabular_backend") == "pandas":
             if not has_ids:
                 for vals in data.values:
                     fh.write(_format_vector(vals))
             else:
                 for id_, vals in zip(data.index, data.values):
                     fh.write(_format_vector(vals, id_))
-        elif get_option("table_backend") == "numpy":
+        elif get_option("tabular_backend") == "numpy":
             if not has_ids:
                 for vals in data:
                     fh.write(_format_vector(vals))

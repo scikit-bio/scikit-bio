@@ -265,14 +265,14 @@ class OrdinationResultsReaderWriterTests(OrdinationTestData):
     def test_read_valid_files_np(self):
         # this is working, but as of right now I don't have tests for making sure
         # sample_ids and feature_ids are correct
-        set_option("table_backend", "numpy")
+        set_option("tabular_backend", "numpy")
         for fp, obj in zip(self.valid_fps_np, self.ordination_results_objs_np):
             obs = _ordination_to_ordination_results(fp)
             assert_ordination_results_equal(
                 obs, obj, ignore_method_names=True,
                 ignore_axis_labels=True,
             )
-        set_option("table_backend", "pandas")
+        set_option("tabular_backend", "pandas")
 
     def test_read_invalid_files(self):
         for invalid_fp, error_msg_regexp, _ in self.invalid_fps:

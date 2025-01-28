@@ -118,7 +118,7 @@ def assert_ordination_results_equal(
         If the two objects are not equal.
 
     """
-    if get_option("table_backend") == "pandas":
+    if get_option("tabular_backend") == "pandas":
         npt.assert_equal(type(left) is type(right), True)
 
         if not ignore_method_names:
@@ -168,7 +168,7 @@ def assert_ordination_results_equal(
             decimal=decimal,
         )
 
-    elif get_option("table_backend") == "numpy":
+    elif get_option("tabular_backend") == "numpy":
         npt.assert_equal(type(left) is type(right), True)
 
         if not ignore_method_names:
@@ -228,11 +228,11 @@ def _assert_series_equal(left_s, right_s, ignore_index=False, decimal=7):
     if left_s is None or right_s is None:
         assert left_s is None and right_s is None
     else:
-        if get_option("table_backend") == "pandas":
+        if get_option("tabular_backend") == "pandas":
             npt.assert_almost_equal(left_s.values, right_s.values, decimal=decimal)
             if not ignore_index:
                 pdt.assert_index_equal(left_s.index, right_s.index)
-        elif get_option("table_backend") == "numpy":
+        elif get_option("tabular_backend") == "numpy":
             npt.assert_almost_equal(left_s, right_s, decimal=decimal)
 
 
@@ -247,10 +247,10 @@ def _assert_frame_dists_equal(
     if left_df is None or right_df is None:
         assert left_df is None and right_df is None
     else:
-        if get_option("table_backend") == "pandas":
+        if get_option("tabular_backend") == "pandas":
             left_values = left_df.values
             right_values = right_df.values
-        elif get_option("table_backend") == "numpy":
+        elif get_option("tabular_backend") == "numpy":
             left_values = left_df
             right_values = right_df
         left_dists = pdist(left_values)
@@ -275,10 +275,10 @@ def _assert_frame_equal(
     if left_df is None or right_df is None:
         assert left_df is None and right_df is None
     else:
-        if get_option("table_backend") == "pandas":
+        if get_option("tabular_backend") == "pandas":
             left_values = left_df.values
             right_values = right_df.values
-        elif get_option("table_backend") == "numpy":
+        elif get_option("tabular_backend") == "numpy":
             left_values = left_df
             right_values = right_df
         if ignore_directionality:

@@ -5,9 +5,27 @@ from ._config import get_option
 
 
 def create_table(data, columns=None, index=None, backend=None):
-    """Create a table object using the specified backend."""
+    """Create a table object using the specified backend.
+
+    Parameters
+    ----------
+    data : ndarray
+    columns : array-like
+        Column labels to use if data does not have them.
+    index : array-like
+        Index labels to use if data does not have them.
+    backend : str
+        The desired data structure to be used within scikit-bio functions.
+
+    Returns
+    -------
+    pd.DataFrame or np.array
+        Representation of the data in the appropriate format depending on the
+        underlying configuration option.
+
+    """
     if backend is None:
-        backend = get_option("table_backend")
+        backend = get_option("tabular_backend")
 
     if backend == "pandas":
         return pd.DataFrame(data, index=index, columns=columns)
@@ -18,9 +36,27 @@ def create_table(data, columns=None, index=None, backend=None):
 
 
 def create_table_1d(data, index=None, backend=None):
-    """Create a 1d array using the specified backend."""
+    """Create a 1d array using the specified backend.
+
+    Parameters
+    ----------
+    data : ndarray
+    columns : array-like
+        Column labels to use if data does not have them.
+    index : array-like
+        Index labels to use if data does not have them.
+    backend : str
+        The desired data structure to be used within scikit-bio functions.
+
+    Returns
+    -------
+    pd.Series or numpy array
+        Representation of the data in the appropriate format depending on the
+        underlying configuration option.
+
+    """
     if backend is None:
-        backend = get_option("table_backend")
+        backend = get_option("tabular_backend")
 
     if backend == "pandas":
         return pd.Series(data, index=index)

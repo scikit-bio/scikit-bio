@@ -162,7 +162,7 @@ class OrdinationResults(SkbioObject, PlottableMixin):
 
             lines.append(self._format_attribute(attr, attr_label, formatter))
 
-        if get_option("table_backend") == "pandas":
+        if get_option("tabular_backend") == "pandas":
             lines.append(
                 self._format_attribute(
                     self.features,
@@ -175,7 +175,7 @@ class OrdinationResults(SkbioObject, PlottableMixin):
                     self.samples, "Sample IDs", lambda e: _pprint_strs(e.index.tolist())
                 )
             )
-        elif get_option("table_backend") == "numpy":
+        elif get_option("tabular_backend") == "numpy":
             lines.append("\t%s: %s" % ("Feature IDs", _pprint_strs(self.feature_ids)))
             lines.append("\t%s: %s" % ("Sample IDs", _pprint_strs(self.sample_ids)))
 
@@ -315,9 +315,9 @@ class OrdinationResults(SkbioObject, PlottableMixin):
 
         # print(df)
 
-        if get_option("table_backend") == "pandas":
+        if get_option("tabular_backend") == "pandas":
             coord_matrix = self.samples.values.T
-        elif get_option("table_backend") == "numpy":
+        elif get_option("tabular_backend") == "numpy":
             coord_matrix = self.samples.T
 
         point_colors, category_to_color = self._get_plot_point_colors(
