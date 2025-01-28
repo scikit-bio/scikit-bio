@@ -16,6 +16,7 @@ from skbio.stats._misc import _pprint_strs
 from skbio.util._plotting import PlottableMixin
 from skbio.io.registry import Read, Write
 from skbio._config import get_option
+from skbio._optionals import _get_polars
 
 
 class OrdinationResults(SkbioObject, PlottableMixin):
@@ -43,6 +44,8 @@ class OrdinationResults(SkbioObject, PlottableMixin):
     features : pd.DataFrame
         The position of the features in the ordination space, row-indexed by
         the feature id.
+    feature_ids : array-like of str
+        The names of the features. Must be provided if features is an array.
     biplot_scores : pd.DataFrame
         Correlation coefficients of the samples with respect to the features.
     sample_constraints : pd.DataFrame
@@ -85,6 +88,9 @@ class OrdinationResults(SkbioObject, PlottableMixin):
 
         self.eigvals = eigvals
 
+        if get_option("tabular_backend") == "polars":
+            polars = _get_polars()
+
         if isinstance(samples, pd.DataFrame):
             self.samples = samples
             self.sample_ids = list(samples.index)
@@ -97,6 +103,9 @@ class OrdinationResults(SkbioObject, PlottableMixin):
                 raise ValueError(
                     "Lenght of `sample_ids` must match number of rows in `samples`."
                 )
+            self.samples = samples
+            self.sample_ids = sample_ids
+        elif isinstance(samples, polars.LazyFrame):
             self.samples = samples
             self.sample_ids = sample_ids
         else:
@@ -117,6 +126,9 @@ class OrdinationResults(SkbioObject, PlottableMixin):
                         "Length of `feature_ids` must match number of rows "
                         "in `features`."
                     )
+                self.features = features
+                self.feature_ids = feature_ids
+            elif isinstance(features, polars.LazyFrame):
                 self.features = features
                 self.feature_ids = feature_ids
             else:
