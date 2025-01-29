@@ -317,3 +317,24 @@ def get_rng(seed=None):
         )
 
     return np.random.default_rng(seed)
+
+
+def ingest_array(input_data, row_ids=None, col_ids=None, dtype=None):
+    # pd.DataFrame
+    if hasattr(input_data, "index"):
+        data_ = input_data.values
+        row_ids = list(input_data.index)
+        col_ids = list(input_data.columns)
+    # pl.DataFrame
+    elif hasattr(input_data, "schema"):
+        data_ = input_data.to_numpy()
+        col_ids = list(input_data.schema)
+    # ndarray
+    elif isinstance(input_data, np.ndarray):
+        data_ = input_data
+    else:
+        raise TypeError(
+            "Input data must be pandas DataFrame, polars DataFrame, or numpy ndarray"
+        )
+
+    return data_, row_ids, col_ids

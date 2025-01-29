@@ -13,9 +13,10 @@ from scipy.linalg import svd, lstsq
 from ._ordination_results import OrdinationResults
 from ._utils import corr, svd_rank, scale
 from skbio._dispatcher import create_table, create_table_1d
+from skbio.util._misc import ingest_array
 
 
-def cca(y, x, scaling=1):
+def cca(y, x, scaling=1, sample_ids=None, feature_ids=None):
     r"""Compute canonical (also known as constrained) correspondence analysis.
 
     Canonical (or constrained) correspondence analysis is a
@@ -36,10 +37,16 @@ def cca(y, x, scaling=1):
 
     Parameters
     ----------
-    y : DataFrame
-        Samples by features table (n, m)
-    x : DataFrame
-        Samples by constraints table (n, q)
+    y : DataFrame or ndarray
+        Samples by features table (n, m). DataFrame may be pandas or polars.
+    x : DataFrame or ndarray
+        Samples by constraints table (n, q). DataFrame may be pandas or polars.
+    sample_ids : list of str
+        List of ids of samples. If not provided implicitly by X or explicitly
+        by the user, sample_ids will default to a range index starting at zero.
+    feature_ids : list of str
+        List of ids of features. If not provided implicitly by X or explicitly
+        by the user, they will default to a range index starting at zero.
     scaling : int, {1, 2}, optional
         Scaling type 1 maintains :math:`\chi^2` distances between rows.
         Scaling type 2 preserves :math:`\chi^2` distances between columns.
@@ -98,8 +105,10 @@ def cca(y, x, scaling=1):
        Ecology. Elsevier, Amsterdam.
 
     """
-    Y = y.values
-    X = x.values
+    Y, y_sample_ids, y_feature_ids = ingest_array(y)
+    X, x_sample_ids, x_feature_ids = ingest_array(x)
+    # Y = y.values
+    # X = x.values
 
     # Perform parameter sanity checks
     if X.shape[0] != Y.shape[0]:
@@ -210,26 +219,26 @@ def cca(y, x, scaling=1):
     biplot_scores = corr(X_weighted, u)
 
     pc_ids = ["CCA%d" % (i + 1) for i in range(len(eigenvalues))]
-    sample_ids = y.index
-    feature_ids = y.columns
+    # sample_ids = y.index
+    # feature_ids = y.columns
     # eigvals = pd.Series(eigenvalues, index=pc_ids)
     eigvals = create_table_1d(eigenvalues, index=pc_ids)
     # samples = pd.DataFrame(sample_scores, columns=pc_ids, index=sample_ids)
-    samples = create_table(sample_scores, columns=pc_ids, index=sample_ids)
+    samples = create_table(sample_scores, columns=pc_ids, index=y_sample_ids)
     # features = pd.DataFrame(features_scores, columns=pc_ids, index=feature_ids)
-    features = create_table(features_scores, columns=pc_ids, index=feature_ids)
+    features = create_table(features_scores, columns=pc_ids, index=y_feature_ids)
 
     # biplot_scores = pd.DataFrame(
     #     biplot_scores, index=x.columns, columns=pc_ids[: biplot_scores.shape[1]]
     # )
     biplot_scores = create_table(
-        biplot_scores, index=x.columns, columns=pc_ids[: biplot_scores.shape[1]]
+        biplot_scores, index=x_feature_ids, columns=pc_ids[: biplot_scores.shape[1]]
     )
     # sample_constraints = pd.DataFrame(
     #     sample_constraints, index=sample_ids, columns=pc_ids
     # )
     sample_constraints = create_table(
-        sample_constraints, index=sample_ids, columns=pc_ids
+        sample_constraints, index=y_sample_ids, columns=pc_ids
     )
 
     return OrdinationResults(
@@ -237,9 +246,9 @@ def cca(y, x, scaling=1):
         "Canonical Correspondence Analysis",
         eigvals,
         samples,
-        sample_ids=sample_ids,
+        sample_ids=y_sample_ids,
         features=features,
-        feature_ids=feature_ids,
+        feature_ids=y_feature_ids,
         biplot_scores=biplot_scores,
         sample_constraints=sample_constraints,
         proportion_explained=eigvals / eigvals.sum(),

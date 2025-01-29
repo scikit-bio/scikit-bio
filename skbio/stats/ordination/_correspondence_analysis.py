@@ -13,9 +13,10 @@ from scipy.linalg import svd
 from ._ordination_results import OrdinationResults
 from ._utils import svd_rank
 from skbio._dispatcher import create_table, create_table_1d
+from skbio.util._misc import ingest_array
 
 
-def ca(X, scaling=1):
+def ca(X, scaling=1, sample_ids=None, feature_ids=None):
     r"""Compute correspondence analysis.
 
     Correspondence analysis is a multivariate statistical technique for ordination.
@@ -33,11 +34,17 @@ def ca(X, scaling=1):
 
     Parameters
     ----------
-    X : pd.DataFrame
+    X : pd.DataFrame, pl.DataFrame, or np.ndarray
         Samples by features table (n, m). It can be applied to different kinds
         of data tables but data must be non-negative and dimensionally
         homogeneous (quantitative or binary). The rows correspond to the
         samples and the columns correspond to the features.
+    sample_ids : list of str
+        List of ids of samples. If not provided implicitly by X or explicitly
+        by the user, sample_ids will default to a range index starting at zero.
+    feature_ids : list of str
+        List of ids of features. If not provided implicitly by X or explicitly
+        by the user, they will default to a range index starting at zero.
     scaling : {1, 2}
         Scaling type 1 maintains :math:`\chi^2` distances between rows.
         Scaling type 2 preserves :math:`\chi^2` distances between columns.
@@ -100,9 +107,11 @@ def ca(X, scaling=1):
 
     # we deconstruct the dataframe to avoid duplicating the data and be able
     # to perform operations on the matrix
-    row_ids = X.index
-    column_ids = X.columns
-    X = np.asarray(X.values, dtype=np.float64)
+    # row_ids = X.index
+    # column_ids = X.columns
+    # X = np.asarray(X.values, dtype=np.float64)
+    X, row_ids, column_ids = ingest_array(X, row_ids=sample_ids, col_ids=feature_ids)
+    # X = np.array(X, dtype=np.float64)
 
     # Correspondance Analysis
     r, c = X.shape
