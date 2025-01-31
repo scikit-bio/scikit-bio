@@ -376,6 +376,7 @@ fuzzy=[(True, False)], metadata={'gene': 'foo'})
     _ascii_invert_case_bit_offset = 32
     _ascii_lowercase_boundary = 90
     default_write_format = "fasta"
+    """The default write format for this object. Defaults to ``fasta``."""
     __hash__ = None
 
     @property

@@ -327,6 +327,7 @@ class SampleMetadata(_MetadataBase):
     """
 
     default_write_format = "sample_metadata"
+    """The default write format for this object. Defaults to ``sample_metadata``."""
 
     @classmethod
     def load(
