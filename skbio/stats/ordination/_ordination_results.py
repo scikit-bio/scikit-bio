@@ -59,7 +59,7 @@ class OrdinationResults(SkbioObject, PlottableMixin):
     """
 
     default_write_format = "ordination"
-    """The default write format for this object. Defaults to ``ordination``."""
+    """Default write format for this object: ``ordination``."""
 
     read = Read()
     write = Write()

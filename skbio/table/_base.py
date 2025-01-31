@@ -10,7 +10,7 @@ from biom import Table, example_table
 from skbio.io.registry import Read, Write
 
 Table.default_write_format = "biom"
-"""The default write format for this object. Defaults to ``biom``."""
+"""Default write format for this object: ``biom``."""
 
 # Define read and write methods for the Table class.
 Table.read = Read()

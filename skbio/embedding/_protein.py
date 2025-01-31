@@ -71,7 +71,7 @@ class ProteinEmbedding(SequenceEmbedding):
     """
 
     default_write_format = "embed"
-    """The default write format for this object. Defaults to ``embed``."""
+    """Default write format for this object: ``embed``."""
 
     def __init__(self, embedding, sequence, clip_head=False, clip_tail=False, **kwargs):
         embedding = np.asarray(embedding)
@@ -159,7 +159,7 @@ class ProteinVector(SequenceVector):
     """
 
     default_write_format = "embed"
-    """The default write format for this object. Defaults to ``embed``."""
+    """Default write format for this object: ``embed``."""
 
     def __init__(self, vector, sequence: str, **kwargs):
         sequence = _validate_protein(sequence)
