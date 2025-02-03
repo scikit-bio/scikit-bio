@@ -7,6 +7,7 @@
 # ----------------------------------------------------------------------------
 
 import numpy as np
+import narwhals as nw
 import pandas as pd
 from scipy.linalg import svd
 
@@ -34,7 +35,7 @@ def ca(X, scaling=1, sample_ids=None, feature_ids=None):
 
     Parameters
     ----------
-    X : pd.DataFrame, pl.DataFrame, or np.ndarray
+    X : DataFrame
         Samples by features table (n, m). It can be applied to different kinds
         of data tables but data must be non-negative and dimensionally
         homogeneous (quantitative or binary). The rows correspond to the
@@ -110,8 +111,12 @@ def ca(X, scaling=1, sample_ids=None, feature_ids=None):
     # row_ids = X.index
     # column_ids = X.columns
     # X = np.asarray(X.values, dtype=np.float64)
-    X, row_ids, column_ids = ingest_array(X, row_ids=sample_ids, col_ids=feature_ids)
+    # X, row_ids, column_ids = ingest_array(X, row_ids=sample_ids, col_ids=feature_ids)
     # X = np.array(X, dtype=np.float64)
+    df = nw.from_native(X)
+    column_ids = df.columns
+    row_ids = nw.maybe_get_index(df)
+    X = np.asarray(df.rows(), dtype=np.float64)
 
     # Correspondance Analysis
     r, c = X.shape
@@ -187,26 +192,22 @@ def ca(X, scaling=1, sample_ids=None, feature_ids=None):
         "%s%d" % (short_method_name, i + 1) for i in range(features_scores.shape[1])
     ]
 
-    # eigvals = pd.Series(
-    #     eigvals, ["%s%d" % (short_method_name, i + 1) for
-    # i in range(eigvals.shape[0])]
-    # )
-    eigvals = create_table_1d(
+    eigvals = pd.Series(
         eigvals, ["%s%d" % (short_method_name, i + 1) for i in range(eigvals.shape[0])]
     )
-    # samples = pd.DataFrame(sample_scores, row_ids, sample_columns)
-    samples = create_table(sample_scores, index=row_ids, columns=sample_columns)
-    # features = pd.DataFrame(features_scores, column_ids, feature_columns)
-    features = create_table(features_scores, index=column_ids, columns=feature_columns)
-    # proportion_explained = eigvals / eigvals.sum()
+    samples = pd.DataFrame(sample_scores, row_ids, sample_columns)
+    # samples = create_table(sample_scores, index=row_ids, columns=sample_columns)
+    features = pd.DataFrame(features_scores, column_ids, feature_columns)
+    # features = create_table(features_scores, index=column_ids,
+    # columns=feature_columns)
     proportion_explained = eigvals / eigvals.sum()
     return OrdinationResults(
         short_method_name,
         long_method_name,
         eigvals,
         samples=samples,
-        sample_ids=row_ids,
+        # sample_ids=row_ids,
         features=features,
-        feature_ids=column_ids,
+        # feature_ids=column_ids,
         proportion_explained=proportion_explained,
     )

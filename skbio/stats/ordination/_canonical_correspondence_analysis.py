@@ -7,6 +7,7 @@
 # ----------------------------------------------------------------------------
 
 import numpy as np
+import narwhals as nw
 import pandas as pd
 from scipy.linalg import svd, lstsq
 
@@ -105,10 +106,15 @@ def cca(y, x, scaling=1, sample_ids=None, feature_ids=None):
        Ecology. Elsevier, Amsterdam.
 
     """
-    Y, y_sample_ids, y_feature_ids = ingest_array(y)
-    X, x_sample_ids, x_feature_ids = ingest_array(x)
     # Y = y.values
     # X = x.values
+    df_y = nw.from_native(y)
+    Y = np.asarray(df_y.rows())
+    sample_ids = nw.maybe_get_index(df_y)
+    feature_ids = df_y.columns
+
+    df_x = nw.from_native(x)
+    X = np.asarray(df_x.rows())
 
     # Perform parameter sanity checks
     if X.shape[0] != Y.shape[0]:
@@ -219,36 +225,38 @@ def cca(y, x, scaling=1, sample_ids=None, feature_ids=None):
     biplot_scores = corr(X_weighted, u)
 
     pc_ids = ["CCA%d" % (i + 1) for i in range(len(eigenvalues))]
-    # sample_ids = y.index
-    # feature_ids = y.columns
-    # eigvals = pd.Series(eigenvalues, index=pc_ids)
-    eigvals = create_table_1d(eigenvalues, index=pc_ids)
-    # samples = pd.DataFrame(sample_scores, columns=pc_ids, index=sample_ids)
-    samples = create_table(sample_scores, columns=pc_ids, index=y_sample_ids)
-    # features = pd.DataFrame(features_scores, columns=pc_ids, index=feature_ids)
-    features = create_table(features_scores, columns=pc_ids, index=y_feature_ids)
-
-    # biplot_scores = pd.DataFrame(
-    #     biplot_scores, index=x.columns, columns=pc_ids[: biplot_scores.shape[1]]
-    # )
-    biplot_scores = create_table(
-        biplot_scores, index=x_feature_ids, columns=pc_ids[: biplot_scores.shape[1]]
+    sample_ids = y.index
+    feature_ids = y.columns
+    eigvals = pd.Series(eigenvalues, index=pc_ids)
+    # eigvals = create_table_1d(eigenvalues, index=pc_ids)
+    # eigvals = eigenvalues
+    samples = pd.DataFrame(sample_scores, columns=pc_ids, index=sample_ids)
+    # samples = create_table(sample_scores, columns=pc_ids, index=y_sample_ids)
+    # samples = sample_scores
+    features = pd.DataFrame(features_scores, columns=pc_ids, index=feature_ids)
+    # features = create_table(features_scores, columns=pc_ids, index=y_feature_ids)
+    # features = features_scores
+    biplot_scores = pd.DataFrame(
+        biplot_scores, index=x.columns, columns=pc_ids[: biplot_scores.shape[1]]
     )
-    # sample_constraints = pd.DataFrame(
-    #     sample_constraints, index=sample_ids, columns=pc_ids
+    # biplot_scores = create_table(
+    #     biplot_scores, index=x_feature_ids, columns=pc_ids[: biplot_scores.shape[1]]
     # )
-    sample_constraints = create_table(
-        sample_constraints, index=y_sample_ids, columns=pc_ids
+    sample_constraints = pd.DataFrame(
+        sample_constraints, index=sample_ids, columns=pc_ids
     )
+    # sample_constraints = create_table(
+    #     sample_constraints, index=y_sample_ids, columns=pc_ids
+    # )
 
     return OrdinationResults(
         "CCA",
         "Canonical Correspondence Analysis",
         eigvals,
         samples,
-        sample_ids=y_sample_ids,
+        # sample_ids=sample_ids,
         features=features,
-        feature_ids=y_feature_ids,
+        # feature_ids=feature_ids,
         biplot_scores=biplot_scores,
         sample_constraints=sample_constraints,
         proportion_explained=eigvals / eigvals.sum(),
