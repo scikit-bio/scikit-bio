@@ -139,6 +139,7 @@ class OrdinationResults(SkbioObject, PlottableMixin):
         title="",
         cmap=None,
         s=20,
+        plot_centroids=False,
     ):
         """Create a 3-D scatterplot of ordination results colored by metadata.
 
@@ -183,6 +184,8 @@ class OrdinationResults(SkbioObject, PlottableMixin):
         s : scalar or iterable of scalars, optional
             Size of points. See matplotlib's ``Axes3D.scatter`` documentation
             for more details.
+         plot_centroids : bool, optional
+            If True, plot the centroids of each category in `column`.
 
         Returns
         -------
@@ -282,6 +285,20 @@ class OrdinationResults(SkbioObject, PlottableMixin):
         else:
             plot = scatter_fn(c=point_colors)
 
+        if plot_centroids and category_to_color:
+            centroids = self.samples.groupby(df[column]).mean()
+            for label, color in category_to_color.items():
+                if label in centroids.index:
+                    ax.scatter(
+                        centroids.loc[label, axes[0]],
+                        centroids.loc[label, axes[1]],
+                        centroids.loc[label, axes[2]],
+                        color=color,
+                        marker="X",
+                        s=100,
+                        edgecolors="black",
+                    )
+
         if axis_labels is None:
             axis_labels = ["%d" % axis for axis in axes]
         elif len(axis_labels) != 3:
@@ -298,13 +315,13 @@ class OrdinationResults(SkbioObject, PlottableMixin):
         ax.set_zticklabels([])
         ax.set_title(title)
 
-        # create legend/colorbar
         if point_colors is not None:
             if category_to_color is None:
                 fig.colorbar(plot)
             else:
                 self._plot_categorical_legend(ax, category_to_color)
-
+        if plot_centroids:
+            ax.legend()
         return fig
 
     def _validate_plot_axes(self, coord_matrix, axes):
