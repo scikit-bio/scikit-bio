@@ -15,8 +15,6 @@ from skbio._base import SkbioObject
 from skbio.stats._misc import _pprint_strs
 from skbio.util._plotting import PlottableMixin
 from skbio.io.registry import Read, Write
-from skbio._config import get_option
-from skbio._optionals import _get_polars
 
 
 class OrdinationResults(SkbioObject, PlottableMixin):
@@ -86,61 +84,13 @@ class OrdinationResults(SkbioObject, PlottableMixin):
         self.short_method_name = short_method_name
         self.long_method_name = long_method_name
         self.eigvals = eigvals
-        self.samples = samples  # pd.DataFrame(samples, index=sample_ids)
+        # self.samples, self.sample_ids = self._process_input(samples, sample_ids)
+        # self.features, self.feature_ids = self._process_input(features, feature_ids)
+        self.samples = samples
         self.sample_ids = sample_ids
-        self.features = features  # pd.DataFrame(features, index=feature_ids)
+        self.features = features
         self.feature_ids = feature_ids
-
-        # if get_option("tabular_backend") == "polars":
-        #     polars = _get_polars()
-
-        # if isinstance(samples, pd.DataFrame):
-        #     self.samples = samples
-        #     self.sample_ids = list(samples.index)
-        # elif isinstance(samples, np.ndarray):
-        #     if sample_ids is None:
-        #         raise ValueError(
-        #             "`sample_ids` must be provided when `samples` is a numpy array."
-        #         )
-        #     if len(sample_ids) != samples.shape[0]:
-        #         raise ValueError(
-        #             "Lenght of `sample_ids` must match number of rows in `samples`."
-        #         )
-        #     self.samples = samples
-        #     self.sample_ids = sample_ids
-        # elif isinstance(samples, polars.LazyFrame):
-        #     self.samples = samples
-        #     self.sample_ids = sample_ids
-        # else:
-        #     raise TypeError("samples must be DataFrame or numpy array")
-
-        # if features is not None:
-        #     if isinstance(features, pd.DataFrame):
-        #         self.features = features
-        #         self.feature_ids = list(features.index)
-        #     elif isinstance(features, np.ndarray):
-        #         if feature_ids is None:
-        #             raise ValueError(
-        #                 "`feature_ids` must be provided when `features` "
-        #                 "is a numpy array."
-        #             )
-        #         if len(feature_ids) != features.shape[0]:
-        #             raise ValueError(
-        #                 "Length of `feature_ids` must match number of rows "
-        #                 "in `features`."
-        #             )
-        #         self.features = features
-        #         self.feature_ids = feature_ids
-        #     elif isinstance(features, polars.LazyFrame):
-        #         self.features = features
-        #         self.feature_ids = feature_ids
-        #     else:
-        #         raise TypeError("features must be DataFrame or numpy array")
-        # else:
-        #     self.features = features
-        #     self.feature_ids = feature_ids
-
-        self.biplot_scores = biplot_scores  # pd.DataFrame(biplot_scores)
+        self.biplot_scores = biplot_scores
         self.sample_constraints = sample_constraints
         self.proportion_explained = proportion_explained
 
@@ -177,22 +127,52 @@ class OrdinationResults(SkbioObject, PlottableMixin):
 
             lines.append(self._format_attribute(attr, attr_label, formatter))
 
-        # if get_option("tabular_backend") == "pandas":
-        lines.append(
-            self._format_attribute(
-                self.features,
-                "Feature IDs",
-                lambda e: _pprint_strs(e.index.tolist()),
-            )
-        )
-        #     lines.append(
-        #         self._format_attribute(
-        #      self.samples, "Sample IDs", lambda e: _pprint_strs(e.index.tolist())
-        #         )
-        #     )
-        # elif get_option("tabular_backend") == "numpy":
-        # lines.append("\t%s: %s" % ("Feature IDs", _pprint_strs(self.feature_ids)))
-        # lines.append("\t%s: %s" % ("Sample IDs", _pprint_strs(self.sample_ids)))
+        # This handles if feature_ids have been provided
+        if self.feature_ids is not None:
+            lines.append("\t%s: %s" % ("Feature IDs", _pprint_strs(self.feature_ids)))
+        # If feature_ids has not been provided
+        else:
+            # If features is a pandas df, use index
+            if hasattr(self.features, "index"):
+                lines.append(
+                    self._format_attribute(
+                        self.features,
+                        "Feature IDs",
+                        lambda e: _pprint_strs(e.index.tolist()),
+                    )
+                )
+            # If features is a polars df or np array, use shape
+            else:
+                lines.append(
+                    self._format_attribute(
+                        self.features,
+                        "Feature IDs",
+                        lambda e: _pprint_strs(list(range(0, self.features.shape[0]))),
+                    )
+                )
+
+        if self.sample_ids is not None:
+            lines.append("\t%s: %s" % ("Sample IDs", _pprint_strs(self.sample_ids)))
+        # If sample_ids has not been provided
+        else:
+            # If samples is a pandas df, use index
+            if hasattr(self.samples, "index"):
+                lines.append(
+                    self._format_attribute(
+                        self.samples,
+                        "Sample IDs",
+                        lambda e: _pprint_strs(e.index.tolist()),
+                    )
+                )
+            # If samples is a polars df or np array, use shape
+            else:
+                lines.append(
+                    self._format_attribute(
+                        self.samples,
+                        "Sample IDs",
+                        lambda e: _pprint_strs(list(range(0, self.features.shape[0]))),
+                    )
+                )
 
         return "\n".join(lines)
 
@@ -330,10 +310,12 @@ class OrdinationResults(SkbioObject, PlottableMixin):
 
         # print(df)
 
-        if get_option("tabular_backend") == "pandas":
-            coord_matrix = self.samples.values.T
-        elif get_option("tabular_backend") == "numpy":
-            coord_matrix = self.samples.T
+        # This handles any input, numpy/pandas/polars
+        coord_matrix = np.atleast_2d(self.samples).T
+        # if get_option("tabular_backend") == "pandas":
+        #     coord_matrix = self.samples.values.T
+        # elif get_option("tabular_backend") == "numpy":
+        #     coord_matrix = self.samples.T
 
         point_colors, category_to_color = self._get_plot_point_colors(
             df, column, self.sample_ids, cmap

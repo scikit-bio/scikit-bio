@@ -17,7 +17,15 @@ from skbio._dispatcher import create_table, create_table_1d
 from skbio.util._misc import ingest_array
 
 
-def cca(y, x, scaling=1, sample_ids=None, feature_ids=None):
+def cca(
+    y,
+    x,
+    scaling=1,
+    sample_ids=None,
+    feature_ids=None,
+    constraint_ids=None,
+    output_format=None,
+):
     r"""Compute canonical (also known as constrained) correspondence analysis.
 
     Canonical (or constrained) correspondence analysis is a
@@ -42,17 +50,27 @@ def cca(y, x, scaling=1, sample_ids=None, feature_ids=None):
         Samples by features table (n, m). DataFrame may be pandas or polars.
     x : DataFrame or ndarray
         Samples by constraints table (n, q). DataFrame may be pandas or polars.
-    sample_ids : list of str
-        List of ids of samples. If not provided implicitly by X or explicitly
-        by the user, sample_ids will default to a range index starting at zero.
-    feature_ids : list of str
-        List of ids of features. If not provided implicitly by X or explicitly
-        by the user, they will default to a range index starting at zero.
     scaling : int, {1, 2}, optional
         Scaling type 1 maintains :math:`\chi^2` distances between rows.
         Scaling type 2 preserves :math:`\chi^2` distances between columns.
         For a more detailed explanation of the interpretation, check Legendre &
         Legendre 1998, section 9.4.3.
+    sample_ids : list of str, optional
+        List of ids of samples. If not provided implicitly by the input DataFrame or
+        explicitly by the user, sample_ids will default to a range index starting at
+        zero.
+    feature_ids : list of str, optional
+        List of ids of features. If not provided implicitly by y or explicitly by the
+        user, it will default to a range index starting at zero.
+    constraint_ids : list of str, optional
+        List of ids of constraints. If not provided implicitly by y or explicitly by
+        the user, it will default to a range index starting at zero.
+    output_format : str, optional
+        The desired format of the output object. Can be ``pandas``, ``polars``, or
+        ``numpy``. Note that all scikit-bio ordination functions return an
+        ``OrdinationResults`` object. In this case the attributes of the
+        ``OrdinationResults`` object will be in the specified format. Default is
+        ``pandas``.
 
     Returns
     -------
@@ -106,15 +124,12 @@ def cca(y, x, scaling=1, sample_ids=None, feature_ids=None):
        Ecology. Elsevier, Amsterdam.
 
     """
-    # Y = y.values
-    # X = x.values
-    df_y = nw.from_native(y)
-    Y = np.asarray(df_y.rows())
-    sample_ids = nw.maybe_get_index(df_y)
-    feature_ids = df_y.columns
-
-    df_x = nw.from_native(x)
-    X = np.asarray(df_x.rows())
+    Y, y_sample_ids, feature_ids = ingest_array(
+        y, row_ids=sample_ids, col_ids=feature_ids
+    )
+    X, x_sample_ids, constraint_ids = ingest_array(
+        x, row_ids=sample_ids, col_ids=constraint_ids
+    )
 
     # Perform parameter sanity checks
     if X.shape[0] != Y.shape[0]:
@@ -225,38 +240,31 @@ def cca(y, x, scaling=1, sample_ids=None, feature_ids=None):
     biplot_scores = corr(X_weighted, u)
 
     pc_ids = ["CCA%d" % (i + 1) for i in range(len(eigenvalues))]
-    sample_ids = y.index
-    feature_ids = y.columns
-    eigvals = pd.Series(eigenvalues, index=pc_ids)
-    # eigvals = create_table_1d(eigenvalues, index=pc_ids)
-    # eigvals = eigenvalues
-    samples = pd.DataFrame(sample_scores, columns=pc_ids, index=sample_ids)
-    # samples = create_table(sample_scores, columns=pc_ids, index=y_sample_ids)
-    # samples = sample_scores
-    features = pd.DataFrame(features_scores, columns=pc_ids, index=feature_ids)
-    # features = create_table(features_scores, columns=pc_ids, index=y_feature_ids)
-    # features = features_scores
-    biplot_scores = pd.DataFrame(
-        biplot_scores, index=x.columns, columns=pc_ids[: biplot_scores.shape[1]]
+    eigvals = create_table_1d(eigenvalues, index=pc_ids, backend=output_format)
+    samples = create_table(
+        sample_scores, columns=pc_ids, index=y_sample_ids, backend=output_format
     )
-    # biplot_scores = create_table(
-    #     biplot_scores, index=x_feature_ids, columns=pc_ids[: biplot_scores.shape[1]]
-    # )
-    sample_constraints = pd.DataFrame(
-        sample_constraints, index=sample_ids, columns=pc_ids
+    features = create_table(
+        features_scores, columns=pc_ids, index=feature_ids, backend=output_format
     )
-    # sample_constraints = create_table(
-    #     sample_constraints, index=y_sample_ids, columns=pc_ids
-    # )
+    biplot_scores = create_table(
+        biplot_scores,
+        index=constraint_ids,
+        columns=pc_ids[: biplot_scores.shape[1]],
+        backend=output_format,
+    )
+    sample_constraints = create_table(
+        sample_constraints, index=y_sample_ids, columns=pc_ids, backend=output_format
+    )
 
     return OrdinationResults(
         "CCA",
         "Canonical Correspondence Analysis",
         eigvals,
         samples,
-        # sample_ids=sample_ids,
+        sample_ids=y_sample_ids,
         features=features,
-        # feature_ids=feature_ids,
+        feature_ids=feature_ids,
         biplot_scores=biplot_scores,
         sample_constraints=sample_constraints,
         proportion_explained=eigvals / eigvals.sum(),

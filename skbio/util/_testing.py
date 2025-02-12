@@ -168,6 +168,7 @@ def assert_ordination_results_equal(
             decimal=decimal,
         )
 
+    # TODO Is this necessary?
     elif get_option("tabular_backend") == "numpy":
         npt.assert_equal(type(left) is type(right), True)
 
@@ -232,6 +233,7 @@ def _assert_series_equal(left_s, right_s, ignore_index=False, decimal=7):
             npt.assert_almost_equal(left_s.values, right_s.values, decimal=decimal)
             if not ignore_index:
                 pdt.assert_index_equal(left_s.index, right_s.index)
+        # TODO Is this necessary?
         elif get_option("tabular_backend") == "numpy":
             npt.assert_almost_equal(left_s, right_s, decimal=decimal)
 
@@ -258,6 +260,8 @@ def _assert_frame_dists_equal(
         npt.assert_almost_equal(left_dists, right_dists, decimal=decimal)
 
         if not ignore_index:
+            print("\n\n", left_df, "\n\n")
+            print(right_df, "\n\n")
             pdt.assert_index_equal(left_df.index, right_df.index)
         if not ignore_columns:
             pdt.assert_index_equal(left_df.columns, right_df.columns)

@@ -146,8 +146,10 @@ class TestCAResults(TestCase):
                                 proportion_explained=proportion_explained)
 
         scores = ca(self.contingency, 2)
-        scores_polars = ca(self.contingency, 2)
-        scores_np = ca(self.X, 2)
+        # This only tests input, does not test output
+        scores_polars = ca(self.contingency, 2, sample_ids=self.sample_ids)
+        scores_np = ca(self.X, 2, sample_ids=self.sample_ids,
+                       feature_ids=self.feature_ids)
 
         assert_ordination_results_equal(exp, scores, decimal=5,
                                         ignore_directionality=True)
@@ -177,8 +179,9 @@ class TestCAResults(TestCase):
                                 samples=samples,
                                 proportion_explained=proportion_explained)
         scores = ca(self.contingency, 1)
-        scores_polars = ca(self.contingency, 1)
-        scores_np = ca(self.X, 1)
+        scores_polars = ca(self.contingency_polars, 1, sample_ids=self.sample_ids)
+        scores_np = ca(self.X, 1, sample_ids=self.sample_ids,
+                       feature_ids=self.feature_ids)
 
         assert_ordination_results_equal(exp, scores, decimal=5,
                                         ignore_directionality=True)        
@@ -217,4 +220,4 @@ class TestCAErrors(TestCase):
 
 
 if __name__ == '__main__':
-    main()
+    main(buffer=False)

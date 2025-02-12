@@ -34,7 +34,7 @@ def create_table(data, columns=None, index=None, backend=None):
         return np.array(data)
     elif backend == "polars":
         polars = _get_polars()
-        return polars.LazyFrame(data)
+        return polars.DataFrame(data, schema=columns)
     else:
         raise ValueError(f"Unsupported backend '{backend}'")
 

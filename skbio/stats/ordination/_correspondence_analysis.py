@@ -17,7 +17,7 @@ from skbio._dispatcher import create_table, create_table_1d
 from skbio.util._misc import ingest_array
 
 
-def ca(X, scaling=1, sample_ids=None, feature_ids=None):
+def ca(X, scaling=1, sample_ids=None, feature_ids=None, output_format=None):
     r"""Compute correspondence analysis.
 
     Correspondence analysis is a multivariate statistical technique for ordination.
@@ -42,15 +42,21 @@ def ca(X, scaling=1, sample_ids=None, feature_ids=None):
         samples and the columns correspond to the features.
     sample_ids : list of str
         List of ids of samples. If not provided implicitly by X or explicitly
-        by the user, sample_ids will default to a range index starting at zero.
+        by the user, it will default to a range index starting at zero.
     feature_ids : list of str
         List of ids of features. If not provided implicitly by X or explicitly
-        by the user, they will default to a range index starting at zero.
+        by the user, it will default to a range index starting at zero.
     scaling : {1, 2}
         Scaling type 1 maintains :math:`\chi^2` distances between rows.
         Scaling type 2 preserves :math:`\chi^2` distances between columns.
         For a more detailed explanation of the interpretation,
         check notes below and Legendre & Legendre 1998, section 9.4.3.
+    output_format : str
+        The desired format of the output object. Can be ``pandas``, ``polars``, or
+        ``numpy``. Note that all scikit-bio ordination functions return an
+        ``OrdinationResults`` object. In this case the attributes of the
+        ``OrdinationResults`` object will be in the specified format. Default is
+        ``pandas``.
 
     Returns
     -------
@@ -108,15 +114,7 @@ def ca(X, scaling=1, sample_ids=None, feature_ids=None):
 
     # we deconstruct the dataframe to avoid duplicating the data and be able
     # to perform operations on the matrix
-    # row_ids = X.index
-    # column_ids = X.columns
-    # X = np.asarray(X.values, dtype=np.float64)
-    # X, row_ids, column_ids = ingest_array(X, row_ids=sample_ids, col_ids=feature_ids)
-    # X = np.array(X, dtype=np.float64)
-    df = nw.from_native(X)
-    column_ids = df.columns
-    row_ids = nw.maybe_get_index(df)
-    X = np.asarray(df.rows(), dtype=np.float64)
+    X, row_ids, column_ids = ingest_array(X, row_ids=sample_ids, col_ids=feature_ids)
 
     # Correspondance Analysis
     r, c = X.shape
@@ -191,23 +189,28 @@ def ca(X, scaling=1, sample_ids=None, feature_ids=None):
     feature_columns = [
         "%s%d" % (short_method_name, i + 1) for i in range(features_scores.shape[1])
     ]
-
-    eigvals = pd.Series(
-        eigvals, ["%s%d" % (short_method_name, i + 1) for i in range(eigvals.shape[0])]
+    eigvals = create_table_1d(
+        eigvals,
+        index=["%s%d" % (short_method_name, i + 1) for i in range(eigvals.shape[0])],
+        backend=output_format,
     )
-    samples = pd.DataFrame(sample_scores, row_ids, sample_columns)
-    # samples = create_table(sample_scores, index=row_ids, columns=sample_columns)
-    features = pd.DataFrame(features_scores, column_ids, feature_columns)
-    # features = create_table(features_scores, index=column_ids,
-    # columns=feature_columns)
-    proportion_explained = eigvals / eigvals.sum()
+    samples = create_table(
+        sample_scores, index=row_ids, columns=sample_columns, backend=output_format
+    )
+    features = create_table(
+        features_scores,
+        index=column_ids,
+        columns=feature_columns,
+        backend=output_format,
+    )
+
     return OrdinationResults(
         short_method_name,
         long_method_name,
         eigvals,
         samples=samples,
-        # sample_ids=row_ids,
+        sample_ids=row_ids,
         features=features,
-        # feature_ids=column_ids,
-        proportion_explained=proportion_explained,
+        feature_ids=column_ids,
+        proportion_explained=eigvals / eigvals.sum(),
     )

@@ -409,10 +409,7 @@ def _write_vector_section(fh, header_id, vector):
     fh.write("%s\t%d\n" % (header_id, shape))
 
     if vector is not None:
-        if get_option("tabular_backend") == "pandas":
-            fh.write(_format_vector(vector.values))
-        elif get_option("tabular_backend") == "numpy":
-            fh.write(_format_vector(vector))
+        fh.write(_format_vector(np.asarray(vector)))
     fh.write("\n")
 
 
@@ -428,20 +425,15 @@ def _write_array_section(
 
     # write section data
     if data is not None:
-        if get_option("tabular_backend") == "pandas":
-            if not has_ids:
-                for vals in data.values:
-                    fh.write(_format_vector(vals))
-            else:
-                for id_, vals in zip(data.index, data.values):
-                    fh.write(_format_vector(vals, id_))
-        elif get_option("tabular_backend") == "numpy":
-            if not has_ids:
-                for vals in data:
-                    fh.write(_format_vector(vals))
-            else:
-                for id_, vals in zip(ids, data):
-                    fh.write(_format_vector(vals, id_))
+        if not has_ids:
+            # Using np.asarray to handle any input, pandas/polars/numpy
+            for vals in np.asarray(data):
+                fh.write(_format_vector(vals))
+        else:
+            if hasattr(data, "index"):
+                ids = data.index
+            for id_, vals in zip(ids, np.asarray(data)):
+                fh.write(_format_vector(vals, id_))
 
     if include_section_separator:
         fh.write("\n")

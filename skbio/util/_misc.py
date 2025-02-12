@@ -323,12 +323,12 @@ def ingest_array(input_data, row_ids=None, col_ids=None, dtype=None):
     # pd.DataFrame
     if hasattr(input_data, "index"):
         data_ = input_data.values
-        row_ids = list(input_data.index)
-        col_ids = list(input_data.columns)
+        row_ids = list(input_data.index) if row_ids is None else row_ids
+        col_ids = list(input_data.columns) if col_ids is None else col_ids
     # pl.DataFrame
     elif hasattr(input_data, "schema"):
         data_ = input_data.to_numpy()
-        col_ids = list(input_data.schema)
+        col_ids = list(input_data.schema) if col_ids is None else col_ids
     # ndarray
     elif isinstance(input_data, np.ndarray):
         data_ = input_data
