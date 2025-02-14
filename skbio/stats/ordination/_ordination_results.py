@@ -290,13 +290,14 @@ class OrdinationResults(SkbioObject, PlottableMixin):
             for label, color in category_to_color.items():
                 if label in centroids.index:
                     ax.scatter(
-                        centroids.loc[label, axes[0]],
-                        centroids.loc[label, axes[1]],
-                        centroids.loc[label, axes[2]],
+                        centroids.loc[label].iloc[axes[0]],
+                        centroids.loc[label].iloc[axes[1]],
+                        centroids.loc[label].iloc[axes[2]],
                         color=color,
-                        marker="X",
-                        s=100,
-                        edgecolors="black",
+                        marker="x",
+                        s=30,
+                        label=f"'{label}' centroid",
+                        # edgecolors="black",
                     )
 
         if axis_labels is None:
