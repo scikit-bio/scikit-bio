@@ -36,7 +36,7 @@ def create_table(data, columns=None, index=None, backend=None):
         polars = _get_polars()
         return polars.DataFrame(data, schema=columns)
     else:
-        raise ValueError(f"Unsupported backend '{backend}'")
+        raise ValueError(f"Unsupported backend: '{backend}'")
 
 
 def create_table_1d(data, index=None, backend=None):
@@ -70,4 +70,4 @@ def create_table_1d(data, index=None, backend=None):
         polars = _get_polars()
         return polars.Series(values=data)
     else:
-        raise ValueError(f"Unsupported backend '{backend}'")
+        raise ValueError(f"Unsupported backend: '{backend}'")
