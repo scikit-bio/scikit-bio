@@ -7,7 +7,6 @@
 # ----------------------------------------------------------------------------
 
 import numpy as np
-import narwhals as nw
 import pandas as pd
 from scipy.linalg import svd
 
