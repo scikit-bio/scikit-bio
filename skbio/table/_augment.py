@@ -14,21 +14,6 @@ import pandas as pd
 import random
 
 
-def biom_to_dataframe(biom_table):
-    """Convert a biom table to pandas DataFrame
-
-    Parameters
-    ----------
-    biom_table : biom.Table
-        The biom table to convert to a pandas DataFrame.
-
-    Returns
-    -------
-    pandas.DataFrame
-    """
-    return biom_table.to_dataframe()
-
-
 class Augmentation(SkbioObject):
     """Augmentation of a table with metadata.
 
@@ -49,9 +34,49 @@ class Augmentation(SkbioObject):
         self.dataframe = self.table.to_dataframe()
         self.matrix = self.dataframe.values
         self.label = label
+        if self.label is not None and len(self.label.shape) == 1:
+            self.one_hot_label = pd.get_dummies(self.label).values
+        else:
+            self.one_hot_label = self.label
 
     def __str__(self):
         return f"Augmentation(method={self.method})"
+
+    def _aitchison_addition(self, x, v):
+        r"""Perform Aitchison addition on two samples x and v
+
+        Parameters
+        ----------
+        x : numpy.ndarray
+            The first sample.
+        v : numpy.ndarray
+            The second sample.
+
+        Returns
+        -------
+        numpy.ndarray
+            The result of Aitchison addition.
+        """
+        sum_xv = np.sum(x * v)
+        return (x * v) / sum_xv
+
+    def _aitchison_scalar_multiplication(self, lam, x):
+        r"""Perform Aitchison multiplication on sample x, with scal ar lambda
+
+        Parameters
+        ----------
+        lam : float
+            The scalar to multiply the sample by.
+        x : numpy.ndarray
+            The sample to multiply.
+
+        Returns
+        -------
+        numpy.ndarray
+            The result of Aitchison multiplication.
+        """
+        sum_x_times_lam = np.sum(x * lam)
+        return (x**lam) / sum_x_times_lam
 
     def _get_all_possible_pairs(self):
         r"""Get all possible pairs of samples that can be used for augmentation
@@ -69,12 +94,13 @@ class Augmentation(SkbioObject):
 
     def mixup(self, n_samples, alpha=2):
         r"""Data Augmentation by vanilla mixup
-
         Randomly select two samples s1 and s2 from the OTU table,
         and generate a new sample s by a linear combination of s1 and s2.
         s = lambda * s1 + (1 - lambda) * s2
         where lambda is a random number sampled from a beta distribution
         with parameters alpha and alpha.
+
+
         Parameters
         ----------
         n_samples : int
@@ -87,9 +113,9 @@ class Augmentation(SkbioObject):
         augmented_matrix : numpy.ndarray
             The augmented matrix.
         augmented_label : numpy.ndarray
-            The augmented label.
+            The augmented label, in one-hot encoding.
         """
-        possible_pairs = self.get_all_possible_pairs()
+        possible_pairs = self._get_all_possible_pairs()
         selected_pairs = possible_pairs[
             np.random.randint(0, len(possible_pairs), size=n_samples)
         ]
@@ -103,12 +129,71 @@ class Augmentation(SkbioObject):
         )
         if self.label is not None:
             augmented_y = (
-                lambdas * self.label[indices1] + (1 - lambdas) * self.label[indices2]
+                lambdas.T * self.one_hot_label[indices1]
+                + (1 - lambdas).T * self.one_hot_label[indices2]
             )
             augmented_matrix = np.concatenate([self.matrix, augmented_x], axis=1)
-            augmented_label = np.concatenate([self.label, augmented_y])
+            augmented_label = np.concatenate([self.one_hot_label, augmented_y])
         else:
             augmented_matrix = np.concatenate([self.matrix, augmented_x], axis=1)
+            augmented_label = None
+
+        return augmented_matrix, augmented_label
+
+    def aitchison_mixup(self, n_samples, alpha=2):
+        r"""Implementation of Aitchison mixup,
+        which is essentially the vanilla mixup in the Aitchison geometry.
+        This mixup method only works on the Compositional data.
+        where a set of datapoints are living in the simplex:
+        x_i > 0, and \sum_{i=1}^{p} x_i = 1
+        See paper:
+        Data Augmentation for Compositional Data:
+        Advancing Predictive Models of the Microbiome
+
+        Parameters
+        ----------
+        n_samples : int
+            The number of new samples to generate.
+        alpha : float
+            The alpha parameter of the beta distribution.
+
+        Returns
+        -------
+        augmented_matrix : numpy.ndarray
+            The augmented matrix.
+        augmented_label : numpy.ndarray
+            The augmented label, in one-hot encoding.
+        """
+        possible_pairs = self._get_all_possible_pairs()
+        selected_pairs = possible_pairs[
+            np.random.randint(0, len(possible_pairs), size=n_samples)
+        ]
+
+        augmented_matrix = []
+        augmented_label = []
+        for idx1, idx2 in selected_pairs:
+            _lambda = np.random.beta(alpha, alpha)
+            augmented_x = self._aitchison_addition(
+                self._aitchison_scalar_multiplication(_lambda, self.matrix[:, idx1]),
+                self._aitchison_scalar_multiplication(
+                    1 - _lambda, self.matrix[:, idx2]
+                ),
+            )
+            if self.label is not None:
+                augmented_y = (
+                    _lambda * self.one_hot_label[idx1]
+                    + (1 - _lambda) * self.one_hot_label[idx2]
+                )
+            else:
+                augmented_y = None
+            augmented_matrix.append(augmented_x)
+            augmented_label.append(augmented_y)
+        augmented_matrix = np.array(augmented_matrix).T
+        if self.label is not None:
+            augmented_matrix = np.concatenate([self.matrix, augmented_matrix], axis=1)
+            augmented_label = np.concatenate([self.one_hot_label, augmented_label])
+        else:
+            augmented_matrix = np.concatenate([self.matrix, augmented_matrix], axis=1)
             augmented_label = None
 
         return augmented_matrix, augmented_label
@@ -136,7 +221,7 @@ class Augmentation(SkbioObject):
         augmented_matrix : numpy.ndarray
             The augmented matrix.
         augmented_label : numpy.ndarray
-            The augmented label.
+            The augmented label, in one-hot encoding.
         """
 
         if self.tree is None:
@@ -151,7 +236,7 @@ class Augmentation(SkbioObject):
         all_nodes = [node for node in self.tree.levelorder()]
         num_leaves = len(leave_names)
 
-        possible_pairs = self.get_all_possible_pairs()
+        possible_pairs = self._get_all_possible_pairs()
         selected_pairs = possible_pairs[
             np.random.randint(0, len(possible_pairs), size=n_samples)
         ]
@@ -187,15 +272,17 @@ class Augmentation(SkbioObject):
                 mixed_x[selected_index] = new_counts
             else:
                 mixed_x[selected_index] = leaf_counts1
+            augment_label = _lambda * self.one_hot_label[pair[0]]
+            +(1 - _lambda) * self.one_hot_label[pair[1]]
 
             augmented_matrix.append(mixed_x)
-            augmented_label.append(pair[0])
+            augmented_label.append(augment_label)
 
         if self.label is not None:
             augmented_matrix = np.array(augmented_matrix).T
             augmented_label = np.array(augmented_label)
             augmented_matrix = np.concatenate([self.matrix, augmented_matrix], axis=1)
-            augmented_label = np.concatenate([self.label, augmented_label])
+            augmented_label = np.concatenate([self.one_hot_label, augmented_label])
         else:
             augmented_matrix = np.concatenate(
                 [self.matrix, np.array(augmented_matrix).T], axis=1
@@ -203,60 +290,3 @@ class Augmentation(SkbioObject):
             augmented_label = None
 
         return augmented_matrix, augmented_label
-
-
-if __name__ == "__main__":
-    from biom import example_table
-    from skbio.tree import TreeNode
-    from collections import defaultdict
-
-    # construnct 4 x 4 table
-    data = np.arange(16).reshape(4, 4)
-    sample_ids = ["S%d" % i for i in range(4)]
-    observ_ids = ["O%d" % i for i in range(4)]
-    sample_metadata = [
-        {"environment": "A"},
-        {"environment": "B"},
-        {"environment": "A"},
-        {"environment": "B"},
-    ]
-    observ_metadata = [
-        {"phylogeny": "a"},
-        {"phylogeny": "b"},
-        {"phylogeny": "d"},
-        {"phylogeny": "e"},
-    ]
-    table = Table(
-        data, observ_ids, sample_ids, observ_metadata, sample_metadata, observ_metadata
-    )
-
-    # Create a simple tree
-    tree = TreeNode.read(["((a,b)c,(d, e)f)root;"])
-    tree.bifurcate()
-    tree_tips = {tip.name for tip in tree.tips()}
-    tips_to_obs_mapping = {}
-    for idx, metadata in enumerate(table.metadata(axis="observation")):
-        if metadata and "phylogeny" in metadata:
-            phylogeny_label = metadata["phylogeny"]
-            if phylogeny_label in tree_tips:
-                tips_to_obs_mapping[phylogeny_label] = idx
-
-    print("tips to Observation index mapping:")
-    print(tips_to_obs_mapping)
-
-    # Test phylomix method
-    print(table)
-    augmentation_phylomix = Augmentation(table, "phylomix", tree=tree)
-    augmented_matrix_phylomix, augmented_label_phylomix = (
-        augmentation_phylomix.phylomix(tips_to_obs_mapping, n_samples=3)
-    )
-    print(augmented_matrix_phylomix)
-    print(augmented_label_phylomix)
-
-    # Test mixup method
-    augmentation_mixup = Augmentation(table, "mixup")
-    augmented_matrix_mixup, augmented_label_mixup = augmentation_mixup.mixup(
-        n_samples=3
-    )
-    print(augmented_matrix_mixup)
-    print(augmented_label_mixup)
