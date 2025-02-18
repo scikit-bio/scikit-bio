@@ -8,7 +8,7 @@ def _get_polars():
     msg = "Using the polars backend requires the polars package to be installed."
     try:
         polars = importlib.import_module("polars")
-    except ImportError:
+    except (ImportError, ModuleNotFoundError):
         raise ImportError(msg)
 
     return polars
