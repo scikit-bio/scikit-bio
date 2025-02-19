@@ -3,7 +3,7 @@ import pandas as pd
 
 from skbio.table import Table
 from ._config import get_option
-from ._optionals import _get_polars
+from ._optionals import _get_package
 
 
 def create_table(data, columns=None, index=None, backend=None):
@@ -34,8 +34,8 @@ def create_table(data, columns=None, index=None, backend=None):
     elif backend == "numpy":
         return np.array(data)
     elif backend == "polars":
-        polars = _get_polars()
-        return polars.DataFrame(data, schema=columns)
+        pl = _get_package(backend)
+        return pl.DataFrame(data, schema=columns)
     # elif backend == "biom":
     #     return Table(data, observation_ids=index, sample_ids=columns)
     else:
@@ -70,8 +70,8 @@ def create_table_1d(data, index=None, backend=None):
     elif backend == "numpy":
         return np.array(data)
     elif backend == "polars":
-        polars = _get_polars()
-        return polars.Series(values=data)
+        pl = _get_package(backend)
+        return pl.Series(values=data)
     else:
         raise ValueError(f"Unsupported backend: '{backend}'")
 
@@ -103,11 +103,13 @@ def ingest_array(input_data, row_ids=None, col_ids=None, dtype=None):
         col_ids = list(input_data.ids()) if col_ids is None else col_ids
     # pl.DataFrame
     elif hasattr(input_data, "schema"):
-        pl = _get_polars()
+        # Can't do an explicit check until polars is imported,
+        # so check for schema first
+        pl = _get_package("polars")
         if isinstance(input_data, pl.DataFrame):
             data_ = input_data.to_numpy()
             col_ids = list(input_data.schema) if col_ids is None else col_ids
-    # ndarray
+    # anndata
 
     else:
         raise TypeError(

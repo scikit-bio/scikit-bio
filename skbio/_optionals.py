@@ -3,12 +3,11 @@
 import importlib
 
 
-def _get_polars():
-    """Import polars."""
-    msg = "Using the polars backend requires the polars package to be installed."
+def _get_package(name):
+    msg = f"Using the {name} backend requires the {name} package to be installed."
     try:
-        polars = importlib.import_module("polars")
+        pkg = importlib.import_module(f"{name}")
     except (ImportError, ModuleNotFoundError):
         raise ImportError(msg)
 
-    return polars
+    return pkg
