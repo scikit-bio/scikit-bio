@@ -15,6 +15,7 @@ from unittest import TestCase, main
 from skbio import OrdinationResults
 from skbio.stats.ordination import ca
 from skbio.util import get_data_path, assert_ordination_results_equal
+from skbio._optionals import _get_polars
 
 
 def chi_square_distance(data_table, between_rows=True):
@@ -114,6 +115,12 @@ class TestCAResults(TestCase):
         self.pc_ids = ['CA1', 'CA2']
         self.contingency = pd.DataFrame(self.X, self.sample_ids,
                                         self.feature_ids)
+        try:
+            polars = _get_polars()
+            self.contingency_polars = polars.DataFrame(self.X.T, schema=self.feature_ids)
+        except ImportError:
+            # need to improve this
+            pass
 
     def test_scaling2(self):
 
@@ -139,8 +146,16 @@ class TestCAResults(TestCase):
                                 proportion_explained=proportion_explained)
 
         scores = ca(self.contingency, 2)
+        # This only tests input, does not test output
+        scores_polars = ca(self.contingency, 2, sample_ids=self.sample_ids)
+        scores_np = ca(self.X, 2, sample_ids=self.sample_ids,
+                       feature_ids=self.feature_ids)
 
         assert_ordination_results_equal(exp, scores, decimal=5,
+                                        ignore_directionality=True)
+        assert_ordination_results_equal(exp, scores_polars, decimal=5,
+                                        ignore_directionality=True)
+        assert_ordination_results_equal(exp, scores_np, decimal=5,
                                         ignore_directionality=True)
 
     def test_scaling1(self):
@@ -164,8 +179,15 @@ class TestCAResults(TestCase):
                                 samples=samples,
                                 proportion_explained=proportion_explained)
         scores = ca(self.contingency, 1)
+        scores_polars = ca(self.contingency_polars, 1, sample_ids=self.sample_ids)
+        scores_np = ca(self.X, 1, sample_ids=self.sample_ids,
+                       feature_ids=self.feature_ids)
 
         assert_ordination_results_equal(exp, scores, decimal=5,
+                                        ignore_directionality=True)        
+        assert_ordination_results_equal(exp, scores_polars, decimal=5,
+                                        ignore_directionality=True)
+        assert_ordination_results_equal(exp, scores_np, decimal=5,
                                         ignore_directionality=True)
 
     def test_maintain_chi_square_distance_scaling1(self):
@@ -198,4 +220,4 @@ class TestCAErrors(TestCase):
 
 
 if __name__ == '__main__':
-    main()
+    main(buffer=False)
