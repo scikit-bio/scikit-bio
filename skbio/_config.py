@@ -15,7 +15,7 @@ def set_option(option: str, value: str):
     if option not in _BACKEND_OPTIONS:
         raise ValueError(f"Unknown option: '{option}'")
     # possible options for now
-    pos_opts = ["pandas", "polars", "numpy"]
+    pos_opts = ["pandas", "polars", "numpy"]  # , "biom"]
     if value not in pos_opts:
         raise ValueError(f"Unsupported value '{value}' for '{option}'")
     _BACKEND_OPTIONS[option] = value
