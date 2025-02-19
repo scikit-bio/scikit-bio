@@ -127,52 +127,8 @@ class OrdinationResults(SkbioObject, PlottableMixin):
 
             lines.append(self._format_attribute(attr, attr_label, formatter))
 
-        # This handles if feature_ids have been provided
-        if self.feature_ids is not None:
-            lines.append("\t%s: %s" % ("Feature IDs", _pprint_strs(self.feature_ids)))
-        # If feature_ids has not been provided
-        else:
-            # If features is a pandas df, use index
-            if hasattr(self.features, "index"):
-                lines.append(
-                    self._format_attribute(
-                        self.features,
-                        "Feature IDs",
-                        lambda e: _pprint_strs(e.index.tolist()),
-                    )
-                )
-            # If features is a polars df or np array, use shape
-            else:
-                lines.append(
-                    self._format_attribute(
-                        self.features,
-                        "Feature IDs",
-                        lambda e: _pprint_strs(list(range(0, self.features.shape[0]))),
-                    )
-                )
-
-        if self.sample_ids is not None:
-            lines.append("\t%s: %s" % ("Sample IDs", _pprint_strs(self.sample_ids)))
-        # If sample_ids has not been provided
-        else:
-            # If samples is a pandas df, use index
-            if hasattr(self.samples, "index"):
-                lines.append(
-                    self._format_attribute(
-                        self.samples,
-                        "Sample IDs",
-                        lambda e: _pprint_strs(e.index.tolist()),
-                    )
-                )
-            # If samples is a polars df or np array, use shape
-            else:
-                lines.append(
-                    self._format_attribute(
-                        self.samples,
-                        "Sample IDs",
-                        lambda e: _pprint_strs(list(range(0, self.features.shape[0]))),
-                    )
-                )
+        lines.append(self._add_id_line("Feature IDs", self.feature_ids, self.features))
+        lines.append(self._add_id_line("Sample IDs", self.sample_ids, self.samples))
 
         return "\n".join(lines)
 
@@ -494,3 +450,23 @@ class OrdinationResults(SkbioObject, PlottableMixin):
                 "The IDs in mapper do not include all IDs in the %s matrix." % matrix
             )
         df.rename(index=mapper, inplace=True)
+
+    def _add_id_line(self, attr_name, ids, data):
+        """Helper to append ids to str."""
+        if ids is not None:
+            return "\t%s: %s" % (attr_name, _pprint_strs(ids))
+        else:
+            # Handle pd.DataFrames with index
+            if hasattr(data, "index"):
+                func = self._extract_ids(data)
+            # Handle polars or numpy
+            else:
+                func = self._generic_ids(data)
+
+        return self._format_attribute(data, attr_name, func)
+
+    def _extract_ids(data):
+        return _pprint_strs(data.index.tolist())
+
+    def _generic_ids(data):
+        return _pprint_strs(list(range(0, data.shape[0])))
