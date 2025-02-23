@@ -53,7 +53,7 @@ class TestAugmentation(TestCase):
         #         |          /-x
         #          \int3----|
         #                    \-y
-        
+
         self.complex_tree = TreeNode.read([
             "(((a,b)int1,(x,y,(w,z)int2,(c,d)int3)int4),(e,f)int5);"])
         #                               /-a
@@ -164,7 +164,7 @@ class TestAugmentation(TestCase):
         # check if all entry are integers
         self.assertTrue(np.all(augmented_matrix == np.round(augmented_matrix)))
         self.assertEqual(len(augmented_label), len(self.labels) + 20)
-        
+
 
 if __name__ == '__main__':
     main()
