@@ -144,7 +144,7 @@ class Augmentation(SkbioObject):
         Examples
         --------
         >>> from skbio.table import Table
-        >>> from skbio.table.augment import Augmentation
+        >>> from skbio.table import Augmentation
         >>> data = np.arange(40).reshape(10, 4)
         >>> sample_ids = ['S%d' % i for i in range(4)]
         >>> observ_ids = ['O%d' % i for i in range(10)]
@@ -216,7 +216,7 @@ class Augmentation(SkbioObject):
         Examples
         --------
         >>> from skbio.table import Table
-        >>> from skbio.table.augment import Augmentation
+        >>> from skbio.table import Augmentation
         >>> data = np.arange(40).reshape(10, 4)
         >>> sample_ids = ['S%d' % i for i in range(4)]
         >>> observ_ids = ['O%d' % i for i in range(10)]
@@ -322,7 +322,7 @@ class Augmentation(SkbioObject):
         Examples
         --------
         >>> from skbio.table import Table
-        >>> from skbio.table.augment import Augmentation
+        >>> from skbio.table import Augmentation
         >>> data = np.arange(40).reshape(10, 4)
         >>> sample_ids = ['S%d' % i for i in range(4)]
         >>> observ_ids = ['O%d' % i for i in range(10)]
@@ -415,7 +415,7 @@ class Augmentation(SkbioObject):
         Examples
         --------
         >>> from skbio.table import Table
-        >>> from skbio.table.augment import Augmentation
+        >>> from skbio.table import Augmentation
         >>> data = np.arange(10).reshape(5, 2)
         >>> sample_ids = ['S%d' % i for i in range(2)]
         >>> observ_ids = ['O%d' % i for i in range(5)]
