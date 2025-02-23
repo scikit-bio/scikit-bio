@@ -240,11 +240,24 @@ class Augmentation(SkbioObject):
         where a set of datapoints are living in the simplex:
         :math:`x_i > 0`, and :math:`\sum_{i=1}^{p} x_i = 1`.
         The augmented sample is computed as the linear combination of
-        the two samples in the Aitchison geometry.
+        the two samples in the Aitchison geometry. In the Aitchision
+        Geometry, we define the addition and scalar multiplication as:
 
         .. math::
 
-            s = (\lambda \bigodot  s_1) \bigoplus ((1 - \lambda) \bigodot s_2)
+            \lambda \otimes s =
+            \frac{1}{\sum_{j=1}^{p} s_j^{\lambda}}
+            (x_1^{\lambda}, x_2^{\lambda}, ..., x_p^{\lambda})
+
+        .. math::
+
+            s \oplus t =
+            \frac{1}{\sum_{j=1}^{p} s_j t_j}
+            (s_1 t_1, s_2 t_2, ..., s_p t_p)
+
+        .. math::
+
+            s = (\lambda \otimes  s_1) \oplus ((1 - \lambda) \otimes s_2)
 
         The label is computed as the linear combination of
         the two labels of the two samples
@@ -299,15 +312,13 @@ class Augmentation(SkbioObject):
 
         return augmented_matrix, augmented_label
 
-    def compositional_cutmix(self, n_samples, alpha=2, seed=None):
+    def compositional_cutmix(self, n_samples, seed=None):
         r"""Data Augmentation by compositional cutmix
 
         Parameters
         ----------
         n_samples : int
             The number of new samples to generate.
-        alpha : float
-            The alpha parameter of the beta distribution.
         seed : int, Generator or RandomState, optional
             A user-provided random seed or random generator instance. See
             :func:`details <skbio.util.get_rng>`.
@@ -375,7 +386,7 @@ class Augmentation(SkbioObject):
         augmented_label = []
         for idx1, idx2 in selected_pairs:
             x1, x2 = self.matrix[:, idx1], self.matrix[:, idx2]
-            _lambda = rng.beta(alpha, alpha)
+            _lambda = rng.uniform(0, 1)
             indicator_binomial = rng.binomial(self.matrix.shape[0], _lambda)
             augmented_x = x1 * indicator_binomial + x2 * (1 - indicator_binomial)
             augmented_matrix.append(augmented_x)
