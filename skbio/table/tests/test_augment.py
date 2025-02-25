@@ -31,6 +31,8 @@ class TestAugmentation(TestCase):
                              ]
         # a complex tree to test the phylomix method
         self.table = Table(data, observ_ids, sample_ids, observ_metadata)
+        self.table_min = np.min(self.table.to_dataframe().values)
+        self.table_max = np.max(self.table.to_dataframe().values)
 
         data_simple = np.arange(10).reshape(5, 2)
         sample_ids_simple = ['S%d' % i for i in range(2)]
@@ -94,6 +96,21 @@ class TestAugmentation(TestCase):
         self.labels = np.random.randint(0, 2, size=self.table.shape[1])
         self.labels_simple = np.random.randint(0, 2, size=self.table_simple.shape[1])
 
+    def test_init(self):
+        augmentation = Augmentation(self.table, self.labels)
+        self.assertIsInstance(augmentation, Augmentation)
+        self.assertEqual(augmentation.table, self.table)
+        self.assertTrue(np.array_equal(augmentation.label, self.labels))
+        
+        augmentation_with_tree = Augmentation(self.table, self.labels, self.complex_tree)
+        self.assertEqual(augmentation_with_tree.tree, self.complex_tree)
+        
+        with self.assertRaisesRegex(ValueError, "table must be a skbio.table.Table"):
+            Augmentation(np.array([[1, 2, 3], [4, 5, 6]]))
+        
+        with self.assertRaisesRegex(ValueError, "tree must be a skbio.tree.TreeNode"):
+            Augmentation(self.table, self.labels, tree="not_a_tree")
+
     def test_get_all_possible_pairs(self):
         data_simple = np.arange(40).reshape(10, 4)
         sample_ids = ['S%d' % i for i in range(4)]
@@ -118,6 +135,8 @@ class TestAugmentation(TestCase):
         self.assertEqual(len(augmented_label), len(self.labels) + 10)
         self.assertEqual(len(augmented_label[0]), 2)
         self.assertTrue(np.allclose(np.sum(augmented_label, axis=1), 1.0))
+        self.assertTrue(np.all(augmented_matrix >= self.table_min))
+        self.assertTrue(np.all(augmented_matrix <= self.table_max))
 
     def test_aitchison_mixup(self):
         table_compositional = self.table.norm(axis="sample")
@@ -132,6 +151,8 @@ class TestAugmentation(TestCase):
         self.assertEqual(len(augmented_label), len(self.labels) + 20)
         self.assertEqual(len(augmented_label[0]), 2)
         self.assertTrue(np.allclose(np.sum(augmented_label, axis=1), 1.0))
+        self.assertTrue(np.all(augmented_matrix >= self.table_min))
+        self.assertTrue(np.all(augmented_matrix <= self.table_max))
 
     def test_phylomix_simple(self):
         augmentation = Augmentation(self.table_simple, label=self.labels_simple, tree=self.simple_tree)
@@ -140,6 +161,8 @@ class TestAugmentation(TestCase):
 
         self.assertEqual(augmented_matrix.shape[1], self.table_simple.shape[1] + 20)
         self.assertEqual(augmented_matrix.shape[0], self.table_simple.shape[0])
+        self.assertTrue(np.all(augmented_matrix >= self.table_min))
+        self.assertTrue(np.all(augmented_matrix <= self.table_max))
 
     def test_phylomix(self):
         augmentation = Augmentation(self.table, label=self.labels, tree=self.complex_tree)
@@ -153,6 +176,8 @@ class TestAugmentation(TestCase):
         self.assertEqual(len(augmented_label), len(self.labels) + 20)
         self.assertTrue(len(augmented_label[0]) == 2)
         self.assertTrue(np.allclose(np.sum(augmented_label, axis=1), 1.0))
+        self.assertTrue(np.all(augmented_matrix >= self.table_min))
+        self.assertTrue(np.all(augmented_matrix <= self.table_max))
 
     def test_compositional_cutmix(self):
         augmentation = Augmentation(self.table, label=self.labels)
@@ -164,6 +189,8 @@ class TestAugmentation(TestCase):
         # check if all entry are integers
         self.assertTrue(np.all(augmented_matrix == np.round(augmented_matrix)))
         self.assertEqual(len(augmented_label), len(self.labels) + 20)
+        self.assertTrue(np.all(augmented_matrix >= self.table_min))
+        self.assertTrue(np.all(augmented_matrix <= self.table_max))
 
 
 if __name__ == '__main__':

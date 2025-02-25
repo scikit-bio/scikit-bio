@@ -12,6 +12,7 @@ from skbio._base import SkbioObject
 from skbio.util import get_rng
 import numpy as np
 import pandas as pd
+import warnings
 
 
 class Augmentation(SkbioObject):
@@ -29,18 +30,24 @@ class Augmentation(SkbioObject):
     """
 
     def __init__(self, table, label=None, tree=None):
+        if table is not None and not isinstance(table, Table):
+            raise ValueError("table must be a skbio.table.Table")
         self.table = table
+
+        if tree is not None and not isinstance(tree, TreeNode):
+            raise ValueError("tree must be a skbio.tree.TreeNode")
         self.tree = tree
+
         self.dataframe = self.table.to_dataframe()
         self.matrix = self.dataframe.values
         self.label = label
         self.one_hot_label = np.eye(2)[self.label]
 
     def __str__(self):
-        return f"Augmentation(method={self.method})"
+        return f"Augmentation(shape={self.matrix.shape})"
 
     def _aitchison_addition(self, x, v):
-        r"""Perform Aitchison addition on two samples x and v
+        r"""Perform Aitchison addition on two samples x and v.
 
         Parameters
         ----------
@@ -57,7 +64,7 @@ class Augmentation(SkbioObject):
         return (xv := x * v) / np.sum(xv)
 
     def _aitchison_scalar_multiplication(self, lam, x):
-        r"""Perform Aitchison multiplication on sample x, with scalar lambda
+        r"""Perform Aitchison multiplication on sample x, with scalar lambda.
 
         Parameters
         ----------
@@ -77,7 +84,7 @@ class Augmentation(SkbioObject):
     def _get_all_possible_pairs(self, intra_class=False):
         r"""Get all possible pairs of samples that can be used for augmentation
         if intra_class is True, only return pairs of samples within the same class
-        if intra_class is False, return all possible pairs of samples
+        if intra_class is False, return all possible pairs of samples.
 
         Parameters
         ----------
@@ -113,7 +120,8 @@ class Augmentation(SkbioObject):
         return np.array(possible_pairs)
 
     def mixup(self, n_samples, alpha=2, seed=None):
-        r"""Data Augmentation by vanilla mixup
+        r"""Data Augmentation by vanilla mixup.
+
         Randomly select two samples :math:`s_1` and :math:`s_2` from the OTU table,
         and generate a new sample :math:`s` by a linear combination
         of :math:`s_1` and :math:`s_2`, as follows:
@@ -192,7 +200,9 @@ class Augmentation(SkbioObject):
         return augmented_matrix, augmented_label
 
     def aitchison_mixup(self, n_samples, alpha=2, seed=None):
-        r"""Data Augmentation by Aitchison mixup
+        r"""Data Augmentation by Aitchison mixup.
+        it requires the data to be compositional, if the
+        table is not normalized, it will be normalized first.
 
         Parameters
         ----------
@@ -221,16 +231,15 @@ class Augmentation(SkbioObject):
         >>> sample_ids = ['S%d' % i for i in range(4)]
         >>> observ_ids = ['O%d' % i for i in range(10)]
         >>> table = Table(data, observ_ids, sample_ids)
+        >>> table_compositional = table.norm(axis="sample")
         >>> label = np.random.randint(0, 2, size=4)
-        >>> augmentation = Augmentation(table, label)
+        >>> augmentation = Augmentation(table_compositional, label)
         >>> aug_matrix, aug_label = augmentation.aitchison_mixup(n_samples=5)
         >>> print(aug_matrix.shape)
         (10, 9)
         >>> print(aug_label.shape)
         (9, 2)
 
-
-        Notes
         Notes
         -----
         The algorithm is based on [1]_, and leverages the Aitchison geometry
@@ -277,6 +286,12 @@ class Augmentation(SkbioObject):
             Systems, 35, 20551-20565.
 
         """
+        if not np.allclose(np.sum(self.matrix, axis=0), 1):
+            warnings.warn("The data is not compositional, it will be normalized first.")
+            if np.any(np.sum(self.matrix, axis=0) == 0):
+                self.matrix = self.matrix + 1e-5
+            self.matrix = self.matrix / np.sum(self.matrix, axis=0)
+
         rng = get_rng(seed)
         possible_pairs = self._get_all_possible_pairs()
         selected_pairs = possible_pairs[
@@ -313,7 +328,7 @@ class Augmentation(SkbioObject):
         return augmented_matrix, augmented_label
 
     def compositional_cutmix(self, n_samples, seed=None):
-        r"""Data Augmentation by compositional cutmix
+        r"""Data Augmentation by compositional cutmix.
 
         Parameters
         ----------
@@ -387,7 +402,7 @@ class Augmentation(SkbioObject):
         for idx1, idx2 in selected_pairs:
             x1, x2 = self.matrix[:, idx1], self.matrix[:, idx2]
             _lambda = rng.uniform(0, 1)
-            indicator_binomial = rng.binomial(self.matrix.shape[0], _lambda)
+            indicator_binomial = rng.binomial(1, _lambda, size=self.matrix.shape[0])
             augmented_x = x1 * indicator_binomial + x2 * (1 - indicator_binomial)
             augmented_matrix.append(augmented_x)
             label = self.label[idx1]
@@ -400,7 +415,7 @@ class Augmentation(SkbioObject):
         return augmented_matrix, augmented_label
 
     def phylomix(self, tip_to_obs_mapping, n_samples, alpha=2, seed=None):
-        r"""Data Augmentation by phylomix
+        r"""Data Augmentation by phylomix.
 
         Parameters
         ----------
