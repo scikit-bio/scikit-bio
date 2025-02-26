@@ -429,8 +429,6 @@ def _write_array_section(
             for vals in np.asarray(data):
                 fh.write(_format_vector(vals))
         else:
-            if hasattr(data, "index"):
-                ids = data.index
             for id_, vals in zip(ids, np.asarray(data)):
                 fh.write(_format_vector(vals, id_))
 

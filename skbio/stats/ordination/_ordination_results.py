@@ -15,6 +15,7 @@ from skbio._base import SkbioObject
 from skbio.stats._misc import _pprint_strs
 from skbio.util._plotting import PlottableMixin
 from skbio.io.registry import Read, Write
+from skbio._dispatcher import extract_row_ids
 
 
 class OrdinationResults(SkbioObject, PlottableMixin):
@@ -85,10 +86,19 @@ class OrdinationResults(SkbioObject, PlottableMixin):
         self.short_method_name = short_method_name
         self.long_method_name = long_method_name
         self.eigvals = eigvals
+
         self.samples = samples
-        self.sample_ids = sample_ids
+        if sample_ids is None:
+            self.sample_ids = extract_row_ids(samples)
+        else:
+            self.sample_ids = sample_ids
+
         self.features = features
-        self.feature_ids = feature_ids
+        if feature_ids is None and features is not None:
+            self.feature_ids = extract_row_ids(features)
+        else:
+            self.feature_ids = feature_ids
+
         self.biplot_scores = biplot_scores
         self.sample_constraints = sample_constraints
         self.constraint_ids = constraint_ids

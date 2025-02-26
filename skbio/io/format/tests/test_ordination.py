@@ -31,13 +31,6 @@ class OrdinationTestData(TestCase):
              'ordination_PCoA_sample_data_3_scores',
              'ordination_example2_scores'])
 
-        # need to do this better, just doing it to see if tests will pass
-        self.valid_fps_np = map(
-            get_data_path,
-            ['ordination_L&L_CA_data_scores', 'ordination_example3_scores'])
-            #  'ordination_PCoA_sample_data_3_scores',
-            #  'ordination_example2_scores'])
-
         # Store filepath, regex for matching the error message that should be
         # raised when reading the file, and whether the file should be matched
         # by the sniffer (True) or not (False).
@@ -266,7 +259,7 @@ class OrdinationResultsReaderWriterTests(OrdinationTestData):
         # this is working, but as of right now I don't have tests for making sure
         # sample_ids and feature_ids are correct
         set_option("tabular_backend", "numpy")
-        for fp, obj in zip(self.valid_fps_np, self.ordination_results_objs_np):
+        for fp, obj in zip(self.valid_fps, self.ordination_results_objs_np):
             obs = _ordination_to_ordination_results(fp)
             assert_ordination_results_equal(
                 obs, obj, ignore_method_names=True,

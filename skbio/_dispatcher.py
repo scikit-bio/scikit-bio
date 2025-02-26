@@ -77,6 +77,32 @@ def create_table_1d(data, index=None, backend=None):
 
 
 def ingest_array(input_data, row_ids=None, col_ids=None, dtype=None):
+    """Process an input dataframe, table, or array into individual components.
+
+    Parameters
+    ----------
+    input_data : tabular
+        The original source of data. May be pandas or polars DataFrame, numpy array,
+        or BIOM table.
+    row_ids : list of str
+        IDs corresponding to the rows of the input data. If ``None``, extraction from
+        input data will be attempted. In the case that IDs may not be extracted, they
+        will be assigned integer values starting at 0.
+    col_ids : list of str
+        IDs corresponding to the columns of the input data. If ``None``, extraction
+        from input data will be atttempted. In the case that IDs may not be extracted,
+        they will be assigned integer values starting at 0.
+
+    Returns
+    -------
+    data_ : ndarray
+        The raw numeric values from the input data.
+    row_ids : list of str
+        The extracted or provided row_ids.
+    col_ids : list of str
+        The extracted or provided col_ids.
+
+    """
     # pd.DataFrame
     if isinstance(input_data, pd.DataFrame):
         data_ = input_data.values
@@ -117,3 +143,13 @@ def ingest_array(input_data, row_ids=None, col_ids=None, dtype=None):
         )
 
     return data_, row_ids, col_ids
+
+
+def extract_row_ids(input_data):
+    """Extract row ids from a dataframe or table."""
+    if isinstance(input_data, pd.DataFrame):
+        return list(input_data.index)
+    # for right now, just going to worry about pandas/polars/numpy,
+    # which is to say that if it's not pandas, then it doesn't have ids
+    else:
+        return list(range(input_data.shape[0]))
