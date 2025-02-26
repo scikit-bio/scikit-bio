@@ -127,10 +127,48 @@ class OrdinationResults(SkbioObject, PlottableMixin):
 
             lines.append(self._format_attribute(attr, attr_label, formatter))
 
-        lines.append(self._add_id_line("Feature IDs", self.feature_ids, self.features))
-        lines.append(self._add_id_line("Sample IDs", self.sample_ids, self.samples))
+        lines.append(
+            self._add_id_line(
+                attr_name="Feature IDs", ids=self.feature_ids, data=self.features
+            )
+        )
+        lines.append(
+            self._add_id_line(
+                attr_name="Sample IDs", ids=self.sample_ids, data=self.samples
+            )
+        )
 
         return "\n".join(lines)
+
+    def _add_id_line(self, attr_name, ids, data):
+        """Helper to append ids to str."""
+        if ids is not None:
+            return "\t%s: %s" % (attr_name, _pprint_strs(ids))
+        elif data is not None:
+            # Handle pd.DataFrames with index
+            if isinstance(data, pd.DataFrame):
+                func = self._extract_ids
+            # Handle polars or numpy
+            else:
+                func = self._generic_ids
+
+            return self._format_attribute(data, attr_name, func)
+        else:
+            return "\t%s: N/A" % attr_name
+
+    def _extract_ids(self, data):
+        return _pprint_strs(data.index.tolist())
+
+    def _generic_ids(self, data):
+        # print('\n', data, '\n')
+        return _pprint_strs(list(range(0, data.shape[0])))
+
+    def _format_attribute(self, attr, attr_label, formatter):
+        if attr is None:
+            formatted_attr = "N/A"
+        else:
+            formatted_attr = formatter(attr)
+        return "\t%s: %s" % (attr_label, formatted_attr)
 
     def plot(
         self,
@@ -406,13 +444,6 @@ class OrdinationResults(SkbioObject, PlottableMixin):
             borderaxespad=0.0,
         )
 
-    def _format_attribute(self, attr, attr_label, formatter):
-        if attr is None:
-            formatted_attr = "N/A"
-        else:
-            formatted_attr = formatter(attr)
-        return "\t%s: %s" % (attr_label, formatted_attr)
-
     def rename(self, mapper, matrix="samples", strict=True):
         r"""Rename sample or feature IDs in the data matrix.
 
@@ -450,23 +481,3 @@ class OrdinationResults(SkbioObject, PlottableMixin):
                 "The IDs in mapper do not include all IDs in the %s matrix." % matrix
             )
         df.rename(index=mapper, inplace=True)
-
-    def _add_id_line(self, attr_name, ids, data):
-        """Helper to append ids to str."""
-        if ids is not None:
-            return "\t%s: %s" % (attr_name, _pprint_strs(ids))
-        else:
-            # Handle pd.DataFrames with index
-            if hasattr(data, "index"):
-                func = self._extract_ids(data)
-            # Handle polars or numpy
-            else:
-                func = self._generic_ids(data)
-
-        return self._format_attribute(data, attr_name, func)
-
-    def _extract_ids(data):
-        return _pprint_strs(data.index.tolist())
-
-    def _generic_ids(data):
-        return _pprint_strs(list(range(0, data.shape[0])))

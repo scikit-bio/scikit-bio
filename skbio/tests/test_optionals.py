@@ -11,14 +11,14 @@ import importlib
 
 from unittest import mock
 
-from skbio._optionals import _get_polars
+from skbio._optionals import _get_package
 
 
-class TestGetPolars(unittest.TestCase):
+class TestGetPackage(unittest.TestCase):
     def test_get_polars_import_error(self):
         with mock.patch.object(importlib, "import_module", side_effect=ImportError):
             with self.assertRaises(ImportError) as c:
-                _get_polars()
+                _get_package("polars")
             self.assertIn(
                 "Using the polars backend requires the polars package to be installed.",
                 str(c.exception),

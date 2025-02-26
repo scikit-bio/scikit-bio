@@ -15,7 +15,7 @@ from unittest import TestCase, main
 from skbio import OrdinationResults
 from skbio.stats.ordination import ca
 from skbio.util import get_data_path, assert_ordination_results_equal
-from skbio._optionals import _get_polars
+from skbio._optionals import _get_package
 
 
 def chi_square_distance(data_table, between_rows=True):
@@ -116,8 +116,8 @@ class TestCAResults(TestCase):
         self.contingency = pd.DataFrame(self.X, self.sample_ids,
                                         self.feature_ids)
         try:
-            polars = _get_polars()
-            self.contingency_polars = polars.DataFrame(self.X.T, schema=self.feature_ids)
+            pl = _get_package("polars")
+            self.contingency_polars = pl.DataFrame(self.X.T, schema=self.feature_ids)
         except ImportError:
             # need to improve this
             pass
