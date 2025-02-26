@@ -265,5 +265,6 @@ def cca(
         feature_ids=feature_ids,
         biplot_scores=biplot_scores,
         sample_constraints=sample_constraints,
+        constraint_ids=constraint_ids,
         proportion_explained=eigvals / eigvals.sum(),
     )

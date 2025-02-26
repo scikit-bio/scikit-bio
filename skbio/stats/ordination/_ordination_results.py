@@ -79,19 +79,19 @@ class OrdinationResults(SkbioObject, PlottableMixin):
         feature_ids=None,
         biplot_scores=None,
         sample_constraints=None,
+        constraint_ids=None,
         proportion_explained=None,
     ):
         self.short_method_name = short_method_name
         self.long_method_name = long_method_name
         self.eigvals = eigvals
-        # self.samples, self.sample_ids = self._process_input(samples, sample_ids)
-        # self.features, self.feature_ids = self._process_input(features, feature_ids)
         self.samples = samples
         self.sample_ids = sample_ids
         self.features = features
         self.feature_ids = feature_ids
         self.biplot_scores = biplot_scores
         self.sample_constraints = sample_constraints
+        self.constraint_ids = constraint_ids
         self.proportion_explained = proportion_explained
 
     def __str__(self):
