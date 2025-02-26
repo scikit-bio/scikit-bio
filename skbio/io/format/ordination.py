@@ -191,7 +191,7 @@ import pandas as pd
 
 from skbio.stats.ordination import OrdinationResults
 from skbio.io import create_format, OrdinationFormatError
-from skbio._config import get_option
+from skbio._dispatcher import create_table, create_table_1d
 
 ordination = create_format("ordination")
 
@@ -238,18 +238,17 @@ def _ordination_to_ordination_results(fh):
     _check_empty_line(fh)
 
     # biplot does not have ids to parse (the other arrays do)
-    biplot = _parse_array_section(fh, "Biplot", has_ids=False)[0]
+    biplot = _parse_array_section(fh, "Biplot", has_ids=False)
     _check_empty_line(fh)
 
-    cons = _parse_array_section(fh, "Site constraints")[0]
+    cons, con_sample_ids = _parse_array_section(fh, "Site constraints")
 
     if cons is not None and site is not None:
-        if get_option("tabular_backend") == "pandas":
-            if not np.array_equal(cons.index, site.index):
-                raise OrdinationFormatError(
-                    "Site constraints ids and site ids must be equal: %s != %s"
-                    % (cons.index, site.index)
-                )
+        if not np.array_equal(con_sample_ids, sample_ids):
+            raise OrdinationFormatError(
+                "Site constraints ids and site ids must be equal: %s != %s"
+                % (cons.index, site.index)
+            )
 
     return OrdinationResults(
         short_method_name="",
@@ -319,10 +318,9 @@ def _parse_vector_section(fh, header_id):
                 "Reached end of file while looking for line containing values "
                 "for %s section." % header_id
             )
-        if get_option("tabular_backend") == "pandas":
-            vals = pd.Series(np.asarray(line.strip().split("\t"), dtype=np.float64))
-        elif get_option("tabular_backend") == "numpy":
-            vals = np.asarray(line.strip().split("\t"), dtype=np.float64)
+        vals = create_table_1d(
+            data=np.asarray(line.strip().split("\t"), dtype=np.float64)
+        )
         if len(vals) != num_vals:
             raise OrdinationFormatError(
                 "Expected %d values in %s section, but found %d."
@@ -377,12 +375,13 @@ def _parse_array_section(fh, header_id, has_ids=True):
                     % (cols, len(vals), i + 1)
                 )
             data[i, :] = np.asarray(vals, dtype=np.float64)
-        if get_option("tabular_backend") == "pandas":
-            data = pd.DataFrame(data, index=ids)
-        # elif get_option("tabular_backend") == "numpy":
-        #     data = np.asarray(data)
 
-    return data, ids
+        data = create_table(data=data, index=ids)
+
+    if has_ids:
+        return data, ids
+    else:
+        return data
 
 
 @ordination.writer(OrdinationResults)
