@@ -155,23 +155,11 @@ class OrdinationResults(SkbioObject, PlottableMixin):
         if ids is not None:
             return "\t%s: %s" % (attr_name, _pprint_strs(ids))
         elif data is not None:
-            # Handle pd.DataFrames with index
-            if isinstance(data, pd.DataFrame):
-                func = self._extract_ids
-            # Handle polars or numpy
-            else:
-                func = self._generic_ids
-
-            return self._format_attribute(data, attr_name, func)
+            return self._format_attribute(
+                data, attr_name, _pprint_strs(extract_row_ids)
+            )
         else:
             return "\t%s: N/A" % attr_name
-
-    def _extract_ids(self, data):
-        return _pprint_strs(data.index.tolist())
-
-    def _generic_ids(self, data):
-        # print('\n', data, '\n')
-        return _pprint_strs(list(range(0, data.shape[0])))
 
     def _format_attribute(self, attr, attr_label, formatter):
         if attr is None:
