@@ -18,6 +18,7 @@ Common functionality to support testing in skbio.
 
    get_data_path
    assert_ordination_results_equal
+   assert_ordination_results_equal_np
    assert_data_frame_almost_equal
 
 
@@ -72,6 +73,7 @@ from ._misc import cardinal_to_ordinal, find_duplicates, safe_md5, get_rng
 from ._testing import (
     get_data_path,
     assert_ordination_results_equal,
+    assert_ordination_results_equal_np,
     assert_data_frame_almost_equal,
     pytestrunner,
 )
@@ -93,6 +95,7 @@ __all__ = [
     "get_rng",
     "get_data_path",
     "assert_ordination_results_equal",
+    "assert_ordination_results_equal_np",
     "assert_data_frame_almost_equal",
     "pytestrunner",
     "PlottableMixin",

@@ -15,8 +15,6 @@ import numpy.testing as npt
 import pandas.testing as pdt
 from scipy.spatial.distance import pdist
 
-from skbio._config import get_option
-
 
 class ReallyEqualMixin:
     """Use this for testing __eq__/__ne__.
@@ -118,109 +116,100 @@ def assert_ordination_results_equal(
         If the two objects are not equal.
 
     """
-    if get_option("tabular_backend") == "pandas":
-        npt.assert_equal(type(left) is type(right), True)
+    npt.assert_equal(type(left) is type(right), True)
 
-        if not ignore_method_names:
-            npt.assert_equal(left.short_method_name, right.short_method_name)
-            npt.assert_equal(left.long_method_name, right.long_method_name)
+    if not ignore_method_names:
+        npt.assert_equal(left.short_method_name, right.short_method_name)
+        npt.assert_equal(left.long_method_name, right.long_method_name)
 
-        _assert_frame_dists_equal(
-            left.samples,
-            right.samples,
-            ignore_columns=ignore_axis_labels,
-            ignore_directionality=ignore_directionality,
-            decimal=decimal,
-        )
+    _assert_frame_dists_equal(
+        left.samples,
+        right.samples,
+        ignore_columns=ignore_axis_labels,
+        ignore_directionality=ignore_directionality,
+        decimal=decimal,
+    )
 
-        _assert_frame_dists_equal(
-            left.features,
-            right.features,
-            ignore_columns=ignore_axis_labels,
-            ignore_directionality=ignore_directionality,
-            decimal=decimal,
-        )
+    _assert_frame_dists_equal(
+        left.features,
+        right.features,
+        ignore_columns=ignore_axis_labels,
+        ignore_directionality=ignore_directionality,
+        decimal=decimal,
+    )
 
-        _assert_frame_dists_equal(
-            left.biplot_scores,
-            right.biplot_scores,
-            ignore_columns=ignore_axis_labels,
-            ignore_directionality=ignore_directionality,
-            decimal=decimal,
-        )
+    _assert_frame_dists_equal(
+        left.biplot_scores,
+        right.biplot_scores,
+        ignore_columns=ignore_axis_labels,
+        ignore_directionality=ignore_directionality,
+        decimal=decimal,
+    )
 
-        _assert_frame_dists_equal(
-            left.sample_constraints,
-            right.sample_constraints,
-            ignore_columns=ignore_axis_labels,
-            ignore_directionality=ignore_directionality,
-            decimal=decimal,
-        )
+    _assert_frame_dists_equal(
+        left.sample_constraints,
+        right.sample_constraints,
+        ignore_columns=ignore_axis_labels,
+        ignore_directionality=ignore_directionality,
+        decimal=decimal,
+    )
 
-        _assert_series_equal(
-            left.eigvals, right.eigvals, ignore_axis_labels, decimal=decimal
-        )
+    _assert_series_equal(
+        left.eigvals, right.eigvals, ignore_axis_labels, decimal=decimal
+    )
 
-        _assert_series_equal(
-            left.proportion_explained,
-            right.proportion_explained,
-            ignore_axis_labels,
-            decimal=decimal,
-        )
+    _assert_series_equal(
+        left.proportion_explained,
+        right.proportion_explained,
+        ignore_axis_labels,
+        decimal=decimal,
+    )
 
-    # TODO Is this necessary?
-    elif get_option("tabular_backend") == "numpy":
-        npt.assert_equal(type(left) is type(right), True)
 
-        if not ignore_method_names:
-            npt.assert_equal(left.short_method_name, right.short_method_name)
-            npt.assert_equal(left.long_method_name, right.long_method_name)
+def assert_ordination_results_equal_np(obs, exp, ignore_method_names=False, decimal=7):
+    """NumPy version of testing ordination results."""
+    if not ignore_method_names:
+        npt.assert_equal(obs.short_method_name, exp.short_method_name)
+        npt.assert_equal(obs.long_method_name, exp.long_method_name)
 
-        _assert_frame_dists_equal(
-            left.samples,
-            right.samples,
-            ignore_columns=ignore_axis_labels,
-            ignore_directionality=ignore_directionality,
-            decimal=decimal,
-            ignore_index=ignore_axis_labels,
-        )
+    # do this for samples, features, biplot_scores, sample_constraints
+    obs_dists_samp = pdist(obs.samples)
+    exp_dists_samp = pdist(exp.samples)
+    npt.assert_almost_equal(obs_dists_samp, exp_dists_samp, decimal=decimal)
 
-        _assert_frame_dists_equal(
-            left.features,
-            right.features,
-            ignore_columns=ignore_axis_labels,
-            ignore_directionality=ignore_directionality,
-            decimal=decimal,
-            ignore_index=ignore_axis_labels,
-        )
+    # test features
+    if exp.features is None:
+        assert obs.features is None
+    else:
+        obs_dists_feat = pdist(obs.features)
+        exp_dists_feat = pdist(exp.features)
+        npt.assert_almost_equal(obs_dists_feat, exp_dists_feat, decimal=decimal)
 
-        _assert_frame_dists_equal(
-            left.biplot_scores,
-            right.biplot_scores,
-            ignore_columns=ignore_axis_labels,
-            ignore_directionality=ignore_directionality,
-            decimal=decimal,
-            ignore_index=ignore_axis_labels,
-        )
+    # test biplot_scores
+    if exp.biplot_scores is None:
+        assert obs.biplot_scores is None
+    else:
+        obs_dists_biplot = pdist(obs.biplot_scores)
+        exp_dists_biplot = pdist(exp.biplot_scores)
+        npt.assert_almost_equal(obs_dists_biplot, exp_dists_biplot, decimal=decimal)
 
-        _assert_frame_dists_equal(
-            left.sample_constraints,
-            right.sample_constraints,
-            ignore_columns=ignore_axis_labels,
-            ignore_directionality=ignore_directionality,
-            decimal=decimal,
-            ignore_index=ignore_axis_labels,
-        )
+    # test sample_constraints
+    if exp.sample_constraints is None:
+        assert obs.sample_constraints is None
+    else:
+        obs_dists_cons = pdist(obs.sample_constraints)
+        exp_dists_cons = pdist(exp.sample_constraints)
+        npt.assert_almost_equal(obs_dists_cons, exp_dists_cons, decimal=decimal)
 
-        _assert_series_equal(
-            left.eigvals, right.eigvals, ignore_axis_labels, decimal=decimal
-        )
+    # test eigvals
+    npt.assert_almost_equal(obs.eigvals, exp.eigvals, decimal=decimal)
 
-        _assert_series_equal(
-            left.proportion_explained,
-            right.proportion_explained,
-            ignore_axis_labels,
-            decimal=decimal,
+    # test proportion_explained
+    if exp.proportion_explained is None:
+        assert obs.proportion_explained is None
+    else:
+        npt.assert_almost_equal(
+            obs.proportion_explained, exp.proportion_explained, decimal=decimal
         )
 
 
@@ -229,13 +218,9 @@ def _assert_series_equal(left_s, right_s, ignore_index=False, decimal=7):
     if left_s is None or right_s is None:
         assert left_s is None and right_s is None
     else:
-        if get_option("tabular_backend") == "pandas":
-            npt.assert_almost_equal(left_s.values, right_s.values, decimal=decimal)
-            if not ignore_index:
-                pdt.assert_index_equal(left_s.index, right_s.index)
-        # TODO Is this necessary?
-        elif get_option("tabular_backend") == "numpy":
-            npt.assert_almost_equal(left_s, right_s, decimal=decimal)
+        npt.assert_almost_equal(left_s.values, right_s.values, decimal=decimal)
+        if not ignore_index:
+            pdt.assert_index_equal(left_s.index, right_s.index)
 
 
 def _assert_frame_dists_equal(
@@ -249,19 +234,13 @@ def _assert_frame_dists_equal(
     if left_df is None or right_df is None:
         assert left_df is None and right_df is None
     else:
-        if get_option("tabular_backend") == "pandas":
-            left_values = left_df.values
-            right_values = right_df.values
-        elif get_option("tabular_backend") == "numpy":
-            left_values = left_df
-            right_values = right_df
+        left_values = left_df.values
+        right_values = right_df.values
         left_dists = pdist(left_values)
         right_dists = pdist(right_values)
         npt.assert_almost_equal(left_dists, right_dists, decimal=decimal)
 
         if not ignore_index:
-            print("\n\n", left_df, "\n\n")
-            print(right_df, "\n\n")
             pdt.assert_index_equal(left_df.index, right_df.index)
         if not ignore_columns:
             pdt.assert_index_equal(left_df.columns, right_df.columns)
@@ -279,12 +258,8 @@ def _assert_frame_equal(
     if left_df is None or right_df is None:
         assert left_df is None and right_df is None
     else:
-        if get_option("tabular_backend") == "pandas":
-            left_values = left_df.values
-            right_values = right_df.values
-        elif get_option("tabular_backend") == "numpy":
-            left_values = left_df
-            right_values = right_df
+        left_values = left_df.values
+        right_values = right_df.values
         if ignore_directionality:
             left_values, right_values = _normalize_signs(left_values, right_values)
         npt.assert_almost_equal(left_values, right_values, decimal=decimal)

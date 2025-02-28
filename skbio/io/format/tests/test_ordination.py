@@ -19,7 +19,7 @@ from skbio.io import OrdinationFormatError
 from skbio.io.format.ordination import (
     _ordination_to_ordination_results, _ordination_results_to_ordination,
     _ordination_sniffer)
-from skbio.util import get_data_path, assert_ordination_results_equal
+from skbio.util import get_data_path, assert_ordination_results_equal, assert_ordination_results_equal_np
 from skbio._config import set_option
 
 
@@ -256,14 +256,11 @@ class OrdinationResultsReaderWriterTests(OrdinationTestData):
                 ignore_axis_labels=True)
 
     def test_read_valid_files_np(self):
-        # this is working, but as of right now I don't have tests for making sure
-        # sample_ids and feature_ids are correct
         set_option("tabular_backend", "numpy")
         for fp, obj in zip(self.valid_fps, self.ordination_results_objs_np):
             obs = _ordination_to_ordination_results(fp)
-            assert_ordination_results_equal(
-                obs, obj, ignore_method_names=True,
-                ignore_axis_labels=True,
+            assert_ordination_results_equal_np(
+                obs, obj, ignore_method_names=True
             )
         set_option("tabular_backend", "pandas")
 
@@ -318,4 +315,4 @@ class SnifferTests(OrdinationTestData):
 
 
 if __name__ == '__main__':
-    main(buffer=False)
+    main()
