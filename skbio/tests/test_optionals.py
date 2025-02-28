@@ -6,7 +6,7 @@
 # The full license is in the file LICENSE.txt, distributed with this software.
 # ----------------------------------------------------------------------------
 
-import unittest
+from unittest import TestCase, main
 import importlib
 
 from unittest import mock
@@ -14,7 +14,7 @@ from unittest import mock
 from skbio._optionals import _get_package
 
 
-class TestGetPackage(unittest.TestCase):
+class TestGetPackage(TestCase):
     def test_get_polars_import_error(self):
         with mock.patch.object(importlib, "import_module", side_effect=ImportError):
             with self.assertRaises(ImportError) as c:
@@ -26,4 +26,4 @@ class TestGetPackage(unittest.TestCase):
 
 
 if __name__ == "__main__":
-    unittest.main()
+    main()

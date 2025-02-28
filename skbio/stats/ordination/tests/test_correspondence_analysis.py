@@ -10,7 +10,15 @@ import numpy as np
 import numpy.testing as npt
 import pandas as pd
 from scipy.spatial.distance import pdist
-from unittest import TestCase, main
+from unittest import TestCase, main, skipIf
+
+try:
+    import polars as pl
+    import polars.testing as plt
+except (ImportError, ModuleNotFoundError):
+    has_polars = False
+else:
+    has_polars = True
 
 from skbio import OrdinationResults
 from skbio.stats.ordination import ca
@@ -123,7 +131,7 @@ class TestCAResults(TestCase):
             pass
 
     def test_scaling2(self):
-
+        # this test handles pandas and numpy input, as these are required dependencies
         eigvals = pd.Series(np.array([0.09613302, 0.04094181]), self.pc_ids)
         # p. 460 L&L 1998
         features = pd.DataFrame(np.array([[0.40887, -0.06955],  # F_hat
@@ -147,13 +155,10 @@ class TestCAResults(TestCase):
 
         scores = ca(self.contingency, 2)
         # This only tests input, does not test output
-        scores_polars = ca(self.contingency, 2, sample_ids=self.sample_ids)
         scores_np = ca(self.X, 2, sample_ids=self.sample_ids,
                        feature_ids=self.feature_ids)
 
         assert_ordination_results_equal(exp, scores, decimal=5,
-                                        ignore_directionality=True)
-        assert_ordination_results_equal(exp, scores_polars, decimal=5,
                                         ignore_directionality=True)
         assert_ordination_results_equal(exp, scores_np, decimal=5,
                                         ignore_directionality=True)
@@ -179,15 +184,93 @@ class TestCAResults(TestCase):
                                 samples=samples,
                                 proportion_explained=proportion_explained)
         scores = ca(self.contingency, 1)
-        scores_polars = ca(self.contingency_polars, 1, sample_ids=self.sample_ids)
         scores_np = ca(self.X, 1, sample_ids=self.sample_ids,
                        feature_ids=self.feature_ids)
 
         assert_ordination_results_equal(exp, scores, decimal=5,
-                                        ignore_directionality=True)        
-        assert_ordination_results_equal(exp, scores_polars, decimal=5,
                                         ignore_directionality=True)
         assert_ordination_results_equal(exp, scores_np, decimal=5,
+                                        ignore_directionality=True)
+
+    def test_maintain_chi_square_distance_scaling1(self):
+        """In scaling 1, chi^2 distance among rows (samples) is equal to
+        euclidean distance between them in transformed space."""
+        frequencies = self.X / self.X.sum()
+        chi2_distances = chi_square_distance(frequencies)
+        transformed_sites = ca(self.contingency, 1).samples.values
+        euclidean_distances = pdist(transformed_sites, 'euclidean')
+        npt.assert_almost_equal(chi2_distances, euclidean_distances)
+
+    def test_maintain_chi_square_distance_scaling2(self):
+        """In scaling 2, chi^2 distance among columns (features) is
+        equal to euclidean distance between them in transformed space."""
+        frequencies = self.X / self.X.sum()
+        chi2_distances = chi_square_distance(frequencies, between_rows=False)
+        transformed_species = ca(self.contingency, 2).features.values
+        euclidean_distances = pdist(transformed_species, 'euclidean')
+        npt.assert_almost_equal(chi2_distances, euclidean_distances)
+
+
+@skipIf(not has_polars, "Polars is not available for unit tests.")
+class TestCAResults_Polars(TestCase):
+    def setUp(self):
+        """Data from table 9.11 in Legendre & Legendre 1998."""
+        self.X = np.loadtxt(get_data_path('L&L_CA_data'))
+        self.sample_ids = ['Site1', 'Site2', 'Site3']
+        self.feature_ids = ['Species1', 'Species2', 'Species3']
+        self.pc_ids = ['CA1', 'CA2']
+        self.contingency = pl.DataFrame(self.X.T, schema=self.feature_ids)
+
+    def test_scaling2(self):
+        eigvals = pd.Series(np.array([0.09613302, 0.04094181]), self.pc_ids)
+        # p. 460 L&L 1998
+        features = pd.DataFrame(np.array([[0.40887, -0.06955],  # F_hat
+                                          [-0.11539, 0.29977],
+                                          [-0.30997, -0.18739]]),
+                                self.feature_ids,
+                                self.pc_ids)
+        samples = pd.DataFrame(np.array([[-0.84896, -0.88276],  # V_hat
+                                         [-0.22046, 1.34482],
+                                         [1.66697, -0.47032]]),
+                               self.sample_ids,
+                               self.pc_ids)
+
+        proportion_explained = pd.Series(np.array([0.701318, 0.298682]),
+                                         self.pc_ids)
+
+        exp = OrdinationResults('CA', 'Correspondance Analysis',
+                                eigvals=eigvals, features=features,
+                                samples=samples,
+                                proportion_explained=proportion_explained)
+
+        scores = ca(self.contingency, 2, sample_ids=self.sample_ids)
+
+        assert_ordination_results_equal(exp, scores, decimal=5,
+                                        ignore_directionality=True)
+
+    def test_scaling1(self):
+        eigvals = pd.Series(np.array([0.09613302, 0.04094181]), self.pc_ids)
+        # p. 458
+        features = pd.DataFrame(np.array([[1.31871, -0.34374],  # V
+                                          [-0.37215, 1.48150],
+                                          [-0.99972, -0.92612]]),
+                                self.feature_ids,
+                                self.pc_ids)
+        samples = pd.DataFrame(np.array([[-0.26322, -0.17862],  # F
+                                         [-0.06835, 0.27211],
+                                         [0.51685, -0.09517]]),
+                               self.sample_ids,
+                               self.pc_ids)
+        proportion_explained = pd.Series(np.array([0.701318, 0.298682]),
+                                         self.pc_ids)
+
+        exp = OrdinationResults('CA', 'Correspondance Analysis',
+                                eigvals=eigvals, features=features,
+                                samples=samples,
+                                proportion_explained=proportion_explained)
+        scores = ca(self.contingency, 1, sample_ids=self.sample_ids)
+
+        assert_ordination_results_equal(exp, scores, decimal=5,
                                         ignore_directionality=True)
 
     def test_maintain_chi_square_distance_scaling1(self):

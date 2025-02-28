@@ -6,12 +6,12 @@
 # The full license is in the file LICENSE.txt, distributed with this software.
 # ----------------------------------------------------------------------------
 
-import unittest
+from unittest import TestCase, main
 
 from skbio._config import get_option, set_option
 
 
-class TestOptions(unittest.TestCase):
+class TestOptions(TestCase):
     def test_set_option_bad_option(self):
         with self.assertRaisesRegex(ValueError, "Unknown option: 'nonsense'"):
             set_option("nonsense", "asdf")
@@ -28,4 +28,4 @@ class TestOptions(unittest.TestCase):
 
 
 if __name__ == "__main__":
-    unittest.main()
+    main()

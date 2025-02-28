@@ -6,7 +6,7 @@
 # The full license is in the file LICENSE.txt, distributed with this software.
 # ----------------------------------------------------------------------------
 
-import unittest
+from unittest import TestCase, main, skipIf
 
 import numpy as np
 import numpy.testing as npt
@@ -16,7 +16,7 @@ import pandas.testing as pdt
 try:
     import polars as pl
     import polars.testing as plt
-except ImportError:
+except (ImportError, ModuleNotFoundError):
     has_polars = False
 else:
     has_polars = True
@@ -26,7 +26,7 @@ from skbio._config import get_option, set_option
 from skbio.util._testing import assert_data_frame_almost_equal
 
 
-class TestPandas(unittest.TestCase):
+class TestPandas(TestCase):
     def setUp(self):
         set_option("tabular_backend", "pandas")
         self.data = [[0, 1, 2], [3, 4, 5], [6, 7, 8]]
@@ -87,7 +87,7 @@ class TestPandas(unittest.TestCase):
             create_table_1d(self.data, backend="nonsense")
 
 
-class TestNumpy(unittest.TestCase):
+class TestNumpy(TestCase):
     def setUp(self):
         set_option("tabular_backend", "numpy")
         self.data = [[0, 1, 2], [3, 4, 5], [6, 7, 8]]
@@ -151,8 +151,8 @@ class TestNumpy(unittest.TestCase):
             create_table_1d(self.data, backend="nonsense")
 
 
-@unittest.skipIf(not has_polars, "Polars is not available for unit tests.")
-class TestPolars(unittest.TestCase):
+@skipIf(not has_polars, "Polars is not available for unit tests.")
+class TestPolars(TestCase):
     def setUp(self):
         set_option("tabular_backend", "polars")
         self.data = [[0, 1, 2], [3, 4, 5], [6, 7, 8]]
@@ -231,4 +231,4 @@ class TestPolars(unittest.TestCase):
 
 
 if __name__ == "__main__":
-    unittest.main()
+    main()
