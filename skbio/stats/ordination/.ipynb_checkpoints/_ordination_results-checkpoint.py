@@ -134,11 +134,12 @@ class OrdinationResults(SkbioObject, PlottableMixin):
         self,
         df=None,
         column=None,
-        axes=(0, 1),
+        axes=(0, 1, 2),
         axis_labels=None,
         title="",
         cmap=None,
         s=20,
+        plot_centroids=False,
     ):
         """Create a 3-D scatterplot of ordination results colored by metadata.
 
@@ -165,10 +166,9 @@ class OrdinationResults(SkbioObject, PlottableMixin):
             not be colored by metadata.
         axes : iterable of int, optional
             Indices of sample coordinates to plot on the x-, y-, and z-axes.
-            For example, if plotting PCoA results, ``axes=(0, 1)`` will plot
-            PC 1 on the x-axis and PC 2 on the y-axis. If plotting PCoA results,
-            ``axes=(0, 1, 2)`` will plot PC 1 on the x-axis, PC 2 on the y-axis,
-            and PC 3 on the z-axis.Must contain exactly two or three elements.
+            For example, if plotting PCoA results, ``axes=(0, 1, 2)`` will plot
+            PC 1 on the x-axis, PC 2 on the y-axis, and PC 3 on the z-axis.
+            Must contain exactly three elements.
         axis_labels : iterable of str, optional
             Labels for the x-, y-, and z-axes. If ``None``, labels will be the
             values of `axes` cast as strings.
@@ -184,6 +184,8 @@ class OrdinationResults(SkbioObject, PlottableMixin):
         s : scalar or iterable of scalars, optional
             Size of points. See matplotlib's ``Axes3D.scatter`` documentation
             for more details.
+         plot_centroids : bool, optional
+            If True, plot the centroids of each category in `column`.
 
         Returns
         -------
@@ -266,76 +268,78 @@ class OrdinationResults(SkbioObject, PlottableMixin):
         coord_matrix = self.samples.values.T
         self._validate_plot_axes(coord_matrix, axes)
 
-        if len(axes) == 3:  # 3d functionality
-            fig = self.plt.figure()
-            ax = fig.add_subplot(projection="3d")
-            xs, ys, zs = (
-                coord_matrix[axes[0]],
-                coord_matrix[axes[1]],
-            )
-            coord_matrix[axes[2]]
-        else:  # 2d funcitonality
-            fig, ax = self.plt.subplots()
-            xs, ys = coord_matrix[axes[0]], coord_matrix[axes[1]]
-            zs = None
+        fig = self.plt.figure()
+        ax = fig.add_subplot(projection="3d")
+
+        xs = coord_matrix[axes[0]]
+        ys = coord_matrix[axes[1]]
+        zs = coord_matrix[axes[2]]
 
         point_colors, category_to_color = self._get_plot_point_colors(
             df, column, self.samples.index, cmap
         )
 
-        if zs is None:
-            scatter_fn = functools.partial(ax.scatter, xs, ys, s=s)
-        else:
-            scatter_fn = functools.partial(ax.scatter, xs, ys, zs, s=s)
-
+        scatter_fn = functools.partial(ax.scatter, xs, ys, zs, s=s)
         if point_colors is None:
             plot = scatter_fn()
         else:
             plot = scatter_fn(c=point_colors)
 
+        if plot_centroids and category_to_color:
+            centroids = self.samples.groupby(df[column]).mean()
+            for label, color in category_to_color.items():
+                if label in centroids.index:
+                    ax.scatter(
+                        centroids.loc[label].iloc[axes[0]],
+                        centroids.loc[label].iloc[axes[1]],
+                        centroids.loc[label].iloc[axes[2]],
+                        color=color,
+                        marker="x",
+                        s=30,
+                        label=f"'{label}' centroid",
+                        # edgecolors="black",
+                    )
+
         if axis_labels is None:
             axis_labels = ["%d" % axis for axis in axes]
-        elif len(axis_labels) not in [2, 3]:
+        elif len(axis_labels) != 3:
             raise ValueError(
-                "axis_labels must contain exactly two or three elements "
+                "axis_labels must contain exactly three elements "
                 "(found %d elements)." % len(axis_labels)
             )
 
         ax.set_xlabel(axis_labels[0])
         ax.set_ylabel(axis_labels[1])
+        ax.set_zlabel(axis_labels[2])
         ax.set_xticklabels([])
         ax.set_yticklabels([])
+        ax.set_zticklabels([])
+        ax.set_title(title)
 
-        if len(axes) == 3:
-            ax.set_zlabel(axis_labels[2])
-            ax.set_zticklabels([])
-        else:
-            ax.set_title(title)
-
-        # create legend/colorbar
         if point_colors is not None:
             if category_to_color is None:
                 fig.colorbar(plot)
             else:
                 self._plot_categorical_legend(ax, category_to_color)
-
+        if plot_centroids:
+            ax.legend()
         return fig
 
     def _validate_plot_axes(self, coord_matrix, axes):
         """Validate `axes` against coordinates matrix."""
         num_dims = coord_matrix.shape[0]
-        if num_dims < 2:
+        if num_dims < 3:
             raise ValueError(
-                "At least two dimensions are required to plot "
+                "At least three dimensions are required to plot "
                 "ordination results. There are only %d "
                 "dimension(s)." % num_dims
             )
-        if len(axes) not in [2, 3]:
+        if len(axes) != 3:
             raise ValueError(
-                "`axes` must contain exactly two or three elements "
+                "`axes` must contain exactly three elements "
                 "(found %d elements)." % len(axes)
             )
-        if len(set(axes)) != len(axes):
+        if len(set(axes)) != 3:
             raise ValueError("The values provided for `axes` must be unique.")
 
         for idx, axis in enumerate(axes):
