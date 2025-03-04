@@ -28,7 +28,7 @@ from skbio.util import (
     assert_ordination_results_equal_np,
 )
 from skbio._optionals import _get_package
-from skbio._config import set_option
+from skbio._config import set_config
 
 
 def chi_square_distance(data_table, between_rows=True):
@@ -244,7 +244,7 @@ class TestCAResults(TestCase):
 class TestCAResults_NumPy(TestCase):
     def setUp(self):
         """Data from table 9.11 in Legendre & Legendre 1998."""
-        set_option("tabular_backend", "numpy")
+        set_config("output", "numpy")
         self.X = np.loadtxt(get_data_path("L&L_CA_data"))
         self.sample_ids = ["Site1", "Site2", "Site3"]
         self.feature_ids = ["Species1", "Species2", "Species3"]
@@ -252,7 +252,7 @@ class TestCAResults_NumPy(TestCase):
 
     def tearDown(self):
         # set backend back to default
-        set_option("tabular_backend", "pandas")
+        set_config("output", "pandas")
 
     def test_scaling2(self):
         eigvals = np.array([0.09613302, 0.04094181])

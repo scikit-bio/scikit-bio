@@ -1,7 +1,7 @@
-_BACKEND_OPTIONS = {"tabular_backend": "pandas"}
+_BACKEND_OPTIONS = {"output": "pandas"}
 
 
-def set_option(option: str, value: str):
+def set_config(option: str, value: str):
     """Set an skbio config option.
 
     Parameters
@@ -21,7 +21,7 @@ def set_option(option: str, value: str):
     _BACKEND_OPTIONS[option] = value
 
 
-def get_option(option: str) -> str:
+def get_config(option: str) -> str:
     """Get the current value of an skbio config option.
 
     Parameters

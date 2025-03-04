@@ -22,13 +22,13 @@ else:
     has_polars = True
 
 from skbio._dispatcher import create_table, create_table_1d
-from skbio._config import get_option, set_option
+from skbio._config import get_config, set_config
 from skbio.util._testing import assert_data_frame_almost_equal
 
 
 class TestPandas(TestCase):
     def setUp(self):
-        set_option("tabular_backend", "pandas")
+        set_config("output", "pandas")
         self.data = [[0, 1, 2], [3, 4, 5], [6, 7, 8]]
         self.data_1d = self.data[0]
         self.index = ["A", "B", "C"]
@@ -89,14 +89,14 @@ class TestPandas(TestCase):
 
 class TestNumpy(TestCase):
     def setUp(self):
-        set_option("tabular_backend", "numpy")
+        set_config("output", "numpy")
         self.data = [[0, 1, 2], [3, 4, 5], [6, 7, 8]]
         self.data_1d = self.data[0]
         self.index = ["A", "B", "C"]
         self.columns = ["f1", "f2", "f3"]
 
     def tearDown(self):
-        set_option("tabular_backend", "pandas")
+        set_config("output", "pandas")
 
     def test_create_table_no_backend(self):
         obs = create_table(data=self.data, columns=self.columns, index=self.index)
@@ -154,14 +154,14 @@ class TestNumpy(TestCase):
 @skipIf(not has_polars, "Polars is not available for unit tests.")
 class TestPolars(TestCase):
     def setUp(self):
-        set_option("tabular_backend", "polars")
+        set_config("output", "polars")
         self.data = [[0, 1, 2], [3, 4, 5], [6, 7, 8]]
         self.data_1d = self.data[0]
         self.index = ["A", "B", "C"]
         self.columns = ["f1", "f2", "f3"]
 
     def tearDown(self):
-        set_option("tabular_backend", "pandas")
+        set_config("output", "pandas")
 
     def test_create_table_no_backend(self):
         obs = create_table(data=self.data, columns=self.columns, index=self.index)

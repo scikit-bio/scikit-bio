@@ -2,7 +2,7 @@ import numpy as np
 import pandas as pd
 
 from skbio.table import Table
-from ._config import get_option
+from ._config import get_config
 from ._optionals import _get_package
 
 
@@ -27,7 +27,7 @@ def create_table(data, columns=None, index=None, backend=None):
 
     """
     if backend is None:
-        backend = get_option("tabular_backend")
+        backend = get_config("output")
 
     if backend == "pandas":
         return pd.DataFrame(data, index=index, columns=columns)
@@ -63,7 +63,7 @@ def create_table_1d(data, index=None, backend=None):
 
     """
     if backend is None:
-        backend = get_option("tabular_backend")
+        backend = get_config("output")
 
     if backend in ("pandas"):  # , "biom"):
         return pd.Series(data, index=index)

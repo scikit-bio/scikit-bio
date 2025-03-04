@@ -304,9 +304,9 @@ class OrdinationResults(SkbioObject, PlottableMixin):
 
         # This handles any input, numpy/pandas/polars
         coord_matrix = np.atleast_2d(self.samples).T
-        # if get_option("tabular_backend") == "pandas":
+        # if get_config("output") == "pandas":
         #     coord_matrix = self.samples.values.T
-        # elif get_option("tabular_backend") == "numpy":
+        # elif get_config("output") == "numpy":
         #     coord_matrix = self.samples.T
 
         point_colors, category_to_color = self._get_plot_point_colors(

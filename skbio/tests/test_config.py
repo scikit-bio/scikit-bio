@@ -8,23 +8,23 @@
 
 from unittest import TestCase, main
 
-from skbio._config import get_option, set_option
+from skbio._config import get_config, set_config
 
 
 class TestOptions(TestCase):
-    def test_set_option_bad_option(self):
+    def test_set_config_bad_option(self):
         with self.assertRaisesRegex(ValueError, "Unknown option: 'nonsense'"):
-            set_option("nonsense", "asdf")
+            set_config("nonsense", "asdf")
 
-    def test_set_option_bad_value(self):
+    def test_set_config_bad_value(self):
         with self.assertRaisesRegex(
-            ValueError, "Unsupported value 'asdf' for 'tabular_backend'"
+            ValueError, "Unsupported value 'asdf' for 'output'"
         ):
-            set_option("tabular_backend", "asdf")
+            set_config("output", "asdf")
 
-    def test_get_option_bad_option(self):
+    def test_get_config_bad_option(self):
         with self.assertRaisesRegex(ValueError, "Unknown option: 'frontend'"):
-            get_option("frontend")
+            get_config("frontend")
 
 
 if __name__ == "__main__":
