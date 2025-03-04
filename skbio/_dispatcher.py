@@ -119,14 +119,16 @@ def ingest_array(input_data, row_ids=None, col_ids=None, dtype=None):
         # columns must be features (observations), then we don't worry about it
         print(
             "BIOM format uses samples as columns and features as rows. Most "
-            "scikit-bio functions expect samples as rows and features as columns."
+            "scikit-bio functions expect samples as rows and features as columns. "
             "Please ensure your input is in the correct orientation.\n"
         )
         data_ = input_data.to_dataframe().values
         row_ids = (
-            list(input_data.ids(axis="observation")) if row_ids is None else row_ids
+            [str(x) for x in input_data.ids(axis="observation")]
+            if row_ids is None
+            else row_ids
         )
-        col_ids = list(input_data.ids()) if col_ids is None else col_ids
+        col_ids = [str(x) for x in input_data.ids()] if col_ids is None else col_ids
     # pl.DataFrame
     elif hasattr(input_data, "schema"):
         # Can't do an explicit check until polars is imported,
@@ -139,7 +141,8 @@ def ingest_array(input_data, row_ids=None, col_ids=None, dtype=None):
 
     else:
         raise TypeError(
-            "Input data must be pandas DataFrame, polars DataFrame, or numpy ndarray"
+            "Input data must be pandas DataFrame, polars DataFrame, numpy ndarray, "
+            "or skbio.Table."
         )
 
     return data_, row_ids, col_ids
