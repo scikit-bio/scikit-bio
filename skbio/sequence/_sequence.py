@@ -30,6 +30,7 @@ from skbio.sequence._alphabet import (
 )
 from skbio.util import find_duplicates
 from skbio.util._decorator import classonlymethod, overrides
+from skbio.io.registry import Read, Write
 
 
 class Sequence(
@@ -365,6 +366,9 @@ fuzzy=[(True, False)], metadata={'gene': 'foo'})
 
     """
 
+    read = Read()
+    write = Write()
+
     _num_ascii_codes = 128
     _num_extended_ascii_codes = 256
     # ASCII is built such that the difference between uppercase and lowercase
@@ -647,7 +651,6 @@ fuzzy=[(True, False)], metadata={'gene': 'foo'})
 
             sequence = s
             self._owns_bytes = False
-
             self._set_bytes(sequence)
 
         MetadataMixin._init_(self, metadata=metadata)
@@ -966,7 +969,9 @@ fuzzy=[(True, False)], metadata={'gene': 'foo'})
             metadata = self.metadata
 
         return self._constructor(
-            sequence=seq, metadata=metadata, positional_metadata=positional_metadata
+            sequence=seq,
+            metadata=metadata,
+            positional_metadata=positional_metadata,
         )
 
     def _slice_positional_metadata(self, indexable):
@@ -2206,7 +2211,7 @@ fuzzy=[(True, False)], metadata={'gene': 'foo'})
                 gap_chars = list(map(ord, gap_chars))
 
                 # locate gaps in sequence
-                gaps = np.in1d(seq, gap_chars)
+                gaps = np.isin(seq, gap_chars)
                 if mask_gaps is True or gaps.any():
                     mask, seq = gaps, seq[~gaps]
 

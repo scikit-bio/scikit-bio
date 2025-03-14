@@ -10,6 +10,7 @@ import numpy as np
 
 from skbio.util._decorator import classproperty, overrides
 from ._grammared_sequence import GrammaredSequence, _motifs as parent_motifs
+from skbio.io.registry import Read, Write
 
 
 class Protein(GrammaredSequence):
@@ -167,6 +168,9 @@ class Protein(GrammaredSequence):
 
     __stop_codes = None
 
+    read = Read()
+    write = Write()
+
     @classproperty
     def _stop_codes(cls):
         if cls.__stop_codes is None:
@@ -254,7 +258,7 @@ class Protein(GrammaredSequence):
         array([False, False, False,  True, False,  True], dtype=bool)
 
         """
-        return np.in1d(self._bytes, self._stop_codes)
+        return np.isin(self._bytes, self._stop_codes)
 
     def has_stops(self):
         """Determine if the sequence contains one or more stop characters.

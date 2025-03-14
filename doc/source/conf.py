@@ -88,15 +88,20 @@ html_css_files = ['css/style.css']
 # do not show source links
 html_show_sourcelink = False
 
+# do not show () after function link
+add_function_parentheses = False
+
 
 # -- External links ----------------------------------------------------------
 
 github_url = f'https://github.com/{project}/{project}'
 twitter_url = 'https://twitter.com/scikitbio'
+wiki_url = 'https://en.wikipedia.org/wiki'
 
 extlinks = {
     'home': (f'{html_baseurl}/%s', None),
     'repo': (f'{github_url}/%s', None),
+    'wiki': (f'{wiki_url}/%s', None),
 }
 
 
@@ -134,12 +139,6 @@ html_theme_options = {
       'image_light': '_static/logo.svg',
       'image_dark': '_static/logo_inv.svg',
     },
-
-    # announcement banner on top of the screen
-    # 'announcement': (
-    #     f"{project} is back in active development! Check out our <a href='"
-    #     f"{github_url}/discussions/1935'>announcement of revitalization</a>."
-    # ),
 
     # social media links displayed as icons
     'github_url': github_url,
@@ -188,6 +187,8 @@ intersphinx_mapping = {
     'scipy': ('https://docs.scipy.org/doc/scipy/', None),
     'matplotlib': ('https://matplotlib.org/stable/', None),
     'pandas': ('https://pandas.pydata.org/pandas-docs/stable/', None),
+    'sklearn': ('https://scikit-learn.org/stable/', None),
+    'statsmodels': ('https://www.statsmodels.org/stable/', None),
     'biom-format': ('https://biom-format.org/', None)
 }
 
@@ -225,6 +226,10 @@ def linkcode_resolve(domain, info):
             obj = getattr(obj, part)
         except:
             return None
+
+    # Link to functions, not decorators
+    while hasattr(obj, "__wrapped__"):
+        obj = obj.__wrapped__
 
     try:
         fn = inspect.getsourcefile(obj)
@@ -271,5 +276,12 @@ _closure()
 from autoinherit import InheritedAutosummary
 
 
+# Let autosummary skip members that have a "skipdoc" attribute that is True.
+
+def skip_member(app, what, name, obj, skip, options):
+    return getattr(obj, "_skipdoc", None)
+
+
 def setup(app):
     app.add_directive('autoinherit', InheritedAutosummary)
+    app.connect("autodoc-skip-member", skip_member)

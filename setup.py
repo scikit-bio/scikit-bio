@@ -124,11 +124,11 @@ classes = """
     Topic :: Scientific/Engineering :: Bio-Informatics
     Programming Language :: Python :: 3
     Programming Language :: Python :: 3 :: Only
-    Programming Language :: Python :: 3.8
     Programming Language :: Python :: 3.9
     Programming Language :: Python :: 3.10
     Programming Language :: Python :: 3.11
     Programming Language :: Python :: 3.12
+    Programming Language :: Python :: 3.13
     Operating System :: Unix
     Operating System :: POSIX
     Operating System :: MacOS :: MacOS X
@@ -181,6 +181,18 @@ extensions = [
         ["skbio/alignment/_ssw_wrapper" + ext, "skbio/alignment/_lib/ssw.c"],
         extra_compile_args=ssw_extra_compile_args,
         include_dirs=[np.get_include()],
+    ),
+    Extension(
+        "skbio.tree._c_nj",
+        ["skbio/tree/_c_nj" + ext],
+        extra_compile_args=stats_extra_compile_args,
+        extra_link_args=stats_extra_link_args,
+    ),
+    Extension(
+        "skbio.tree._c_me",
+        ["skbio/tree/_c_me" + ext],
+        extra_compile_args=stats_extra_compile_args,
+        extra_link_args=stats_extra_link_args,
     ),
     Extension(
         "skbio.diversity._phylogenetic",

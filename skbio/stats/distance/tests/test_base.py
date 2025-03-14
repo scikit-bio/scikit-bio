@@ -928,12 +928,10 @@ class DistanceMatrixTestBase(DissimilarityMatrixTestData):
 
         dm_copy = self.dm_3x3.copy()
 
-        np.random.seed(0)
-
-        obs = self.dm_3x3.permute(condensed=True)
+        obs = self.dm_3x3.permute(condensed=True, seed=3)
         npt.assert_equal(obs, np.array([12.0, 4.2, 0.01]))
 
-        obs = self.dm_3x3.permute(condensed=True)
+        obs = self.dm_3x3.permute(condensed=True, seed=2)
         npt.assert_equal(obs, np.array([4.2, 12.0, 0.01]))
 
         # Ensure dm hasn't changed after calling permute() on it a couple of
@@ -949,18 +947,16 @@ class DistanceMatrixTestBase(DissimilarityMatrixTestData):
         self.assertEqual(obs, self.dm_2x2)
         self.assertFalse(obs is self.dm_2x2)
 
-        np.random.seed(0)
-
         exp = self.matobj([[0, 12, 4.2],
                            [12, 0, 0.01],
                            [4.2, 0.01, 0]], self.dm_3x3.ids)
-        obs = self.dm_3x3.permute()
+        obs = self.dm_3x3.permute(seed=3)
         self.assertEqual(obs, exp)
 
         exp = self.matobj([[0, 4.2, 12],
                            [4.2, 0, 0.01],
                            [12, 0.01, 0]], self.dm_3x3.ids)
-        obs = self.dm_3x3.permute()
+        obs = self.dm_3x3.permute(seed=2)
         self.assertEqual(obs, exp)
 
     def test_eq(self):
@@ -1119,9 +1115,9 @@ class RandomDistanceMatrixTests(TestCase):
         self.assertEqual(type(obs), DissimilarityMatrix)
 
     def test_random_fn(self):
-        def myrand(num_rows, num_cols):
+        def myrand(size):
             # One dm to rule them all...
-            data = np.empty((num_rows, num_cols))
+            data = np.empty(size)
             data.fill(42)
             return data
 
@@ -1129,6 +1125,15 @@ class RandomDistanceMatrixTests(TestCase):
                                          [42, 42, 0]]), ['1', '2', '3'])
         obs = randdm(3, random_fn=myrand)
         self.assertEqual(obs, exp)
+
+    def test_random_seed(self):
+        obs = randdm(5, random_fn=42).data
+        exp = np.array([[0., 0.97562235, 0.37079802, 0.22723872, 0.75808774],
+                        [0.97562235, 0., 0.92676499, 0.55458479, 0.35452597],
+                        [0.37079802, 0.92676499, 0., 0.06381726, 0.97069802],
+                        [0.22723872, 0.55458479, 0.06381726, 0., 0.89312112],
+                        [0.75808774, 0.35452597, 0.97069802, 0.89312112, 0.]])
+        npt.assert_almost_equal(obs, exp)
 
     def test_invalid_input(self):
         # Invalid dimensions.

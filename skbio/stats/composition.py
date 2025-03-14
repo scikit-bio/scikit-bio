@@ -32,32 +32,89 @@ The multiplicative replacement technique [3]_ can be used to substitute these
 zeros with small pseudocounts without introducing major distortions to the
 data.
 
-Functions
----------
+
+Differential abundance
+----------------------
+
+Statistical tests for the differential abundance (DA) of components among groups of
+compositions.
 
 .. autosummary::
    :toctree:
 
+   ancom
+   dirmult_ttest
+
+
+Arithmetic operations
+---------------------
+
+Manipulate compositional data within the Aitchison space.
+
+.. autosummary::
+   :toctree:
+
+   centralize
    closure
-   multi_replace
-   multiplicative_replacement
+   inner
    perturb
    perturb_inv
    power
-   inner
+
+
+Log-ratio transformation
+------------------------
+
+Convert compositional data into log-ratio space to enable subsequent comparison
+and statistical analysis.
+
+.. autosummary::
+   :toctree:
+
+   alr
+   alr_inv
    clr
    clr_inv
    ilr
    ilr_inv
-   alr
-   alr_inv
-   centralize
+
+
+Correlation analysis
+--------------------
+
+Measure the pairwise relationships of compositional data.
+
+.. autosummary::
+   :toctree:
+
    vlr
    pairwise_vlr
-   tree_basis
-   ancom
+
+
+Zero handling
+-------------
+
+Replace zero values in compositional data with positive values, which is
+necessary prior to logarithmic operations.
+
+.. autosummary::
+   :toctree:
+
+   multi_replace
+
+
+Basis construction
+------------------
+
+Generate basis vectors for compositional data via hierarchical partitioning, to
+allow for decomposition and transformation, such as ilr transform.
+
+.. autosummary::
+   :toctree:
+
    sbp_basis
-   dirmult_ttest
+   tree_basis
+
 
 References
 ----------
@@ -81,7 +138,8 @@ References
 # The full license is in the file LICENSE.txt, distributed with this software.
 # ----------------------------------------------------------------------------
 
-from warnings import warn, simplefilter
+from sys import modules
+from warnings import warn, catch_warnings, simplefilter
 
 import numpy as np
 import pandas as pd
@@ -92,10 +150,11 @@ from statsmodels.stats.weightstats import CompareMeans
 
 from skbio.stats.distance import DistanceMatrix
 from skbio.util import find_duplicates
-from skbio.util._misc import get_rng
-from skbio.util._warning import _warn_deprecated
+from skbio.util import get_rng
+from skbio.util._decorator import aliased, register_aliases, params_aliased
 from statsmodels.stats.multitest import multipletests as sm_multipletests
 from statsmodels.regression.mixed_linear_model import MixedLM
+from statsmodels.tools.sm_exceptions import ConvergenceWarning
 from patsy import dmatrix
 
 
@@ -143,6 +202,7 @@ def closure(mat):
     return mat.squeeze()
 
 
+@aliased("multiplicative_replacement", "0.6.0", True)
 def multi_replace(mat, delta=None):
     r"""Replace all zeros with small non-zero values.
 
@@ -206,45 +266,6 @@ def multi_replace(mat, delta=None):
         )
     mat = np.where(z_mat, delta, zcnts * mat)
     return mat.squeeze()
-
-
-def multiplicative_replacement(mat, delta=None):
-    r"""Replace all zeros with small non-zero values.
-
-    This function is an alias for ``multi_replace``.
-
-    Parameters
-    ----------
-    mat : array_like of shape (n_compositions, n_components)
-        A matrix of proportions.
-    delta : float, optional
-        A small number to be used to replace zeros. If not specified, the
-        default value is :math:`\delta = \frac{1}{N^2}` where :math:`N` is the
-        number of components.
-
-    Returns
-    -------
-    ndarray of shape (n_compositions, n_components)
-        The matrix where all of the values are non-zero and each composition
-        (row) adds up to 1.
-
-    Raises
-    ------
-    ValueError
-        If negative proportions are created due to a large ``delta``.
-
-    Warnings
-    --------
-    ``multiplicative_replacement`` is deprecated as of ``0.6.0`` in favor of
-    ``multi_replace``.
-
-    See Also
-    --------
-    multi_replace
-
-    """
-    _warn_deprecated(multiplicative_replacement, "0.6.0")
-    return multi_replace(mat, delta)
 
 
 def perturb(x, y):
@@ -1199,6 +1220,7 @@ def _calc_p_adjust(name, p):
         return res[1]
 
 
+@params_aliased([("p_adjust", "multiple_comparisons_correction", "0.6.0", True)])
 def ancom(
     table,
     grouping,
@@ -1208,7 +1230,6 @@ def ancom(
     p_adjust="holm",
     significance_test="f_oneway",
     percentiles=(0.0, 25.0, 50.0, 75.0, 100.0),
-    multiple_comparisons_correction="holm-bonferroni",
 ):
     r"""Perform a differential abundance test using ANCOM.
 
@@ -1256,13 +1277,9 @@ def ancom(
         Method to correct *p*-values for multiple comparisons. Options are Holm-
         Boniferroni ("holm" or "holm-bonferroni") (default), Benjamini-
         Hochberg ("bh", "fdr_bh" or "benjamini-hochberg"), or any method supported
-        by statsmodels' ``multipletests`` function. Case-insensitive. If None, no
-        correction will be performed.
-
-        .. versionchanged:: 0.6.0
-
-            Replaces ``multiple_comparisons_correction`` for conciseness.
-
+        by statsmodels'
+        :func:`multipletests <statsmodels.stats.multitest.multipletests>` function.
+        Case-insensitive. If None, no correction will be performed.
     significance_test : str or callable, optional
         A function to test for significance between classes. It must be able to
         accept at least two vectors of floats and returns a test statistic and
@@ -1277,8 +1294,6 @@ def ancom(
         Percentile abundances to return for each feature in each group. By
         default, will return the minimum, 25th percentile, median, 75th
         percentile, and maximum abundances for each feature in each group.
-    multiple_comparisons_correction : str or None, optional
-        Alias for ``p_adjust``. For backward compatibility. Deprecated.
 
     Returns
     -------
@@ -1306,14 +1321,6 @@ def ancom(
     scipy.stats.f_oneway
     scipy.stats.wilcoxon
     scipy.stats.kruskal
-
-    Warnings
-    --------
-    ``multiple_comparisons_correction`` is deprecated as of ``0.6.0``. It has
-    been renamed to ``p_adjust``.
-
-    ``significance_test=None`` is deprecated as of ``0.6.0``. The default value
-    is now "f_oneway".
 
     Notes
     -----
@@ -1473,11 +1480,6 @@ def ancom(
 
     if not 0 < theta < 1:
         raise ValueError("`theta`=%f is not within 0 and 1." % theta)
-
-    # @deprecated
-    if multiple_comparisons_correction != "holm-bonferroni":
-        _warn_deprecated(ancom, "0.6.0")
-        p_adjust = multiple_comparisons_correction
 
     if (grouping.isnull()).any():
         raise ValueError("Cannot handle missing values in `grouping`.")
@@ -1659,7 +1661,7 @@ def _gram_schmidt_basis(n):
 
 
 def sbp_basis(sbp):
-    r"""Build an orthogonal basis from a sequential binary partition (SBP).
+    r"""Build an orthonormal basis from a sequential binary partition (SBP).
 
     A SBP is a hierarchical collection of binary divisions of compositional
     parts ([1]_). The child groups are divided again until all groups contain a
@@ -1809,18 +1811,11 @@ def _welch_ttest(a, b):
     )
 
 
-def _obtain_dir_table(data, pseudocount, rng):
-    posterior = [
-        rng.dirichlet(data.values[i] + pseudocount) for i in range(data.shape[0])
-    ]
-    dir_table = pd.DataFrame(posterior, index=data.index, columns=data.columns).apply(
-        clr, axis=1
-    )
-    dir_table = pd.DataFrame(
-        dir_table.tolist(), index=dir_table.index, columns=data.columns
-    )
-
-    return dir_table
+def _obtain_dir_table(table, pseudocount, rng):
+    values = table.values + pseudocount
+    values = np.apply_along_axis(rng.dirichlet, axis=1, arr=values)
+    values = np.apply_along_axis(clr, axis=1, arr=values)
+    return pd.DataFrame(values, index=table.index, columns=table.columns)
 
 
 def dirmult_ttest(
@@ -1876,10 +1871,12 @@ def dirmult_ttest(
         Method to correct *p*-values for multiple comparisons. Options are Holm-
         Boniferroni ("holm" or "holm-bonferroni") (default), Benjamini-
         Hochberg ("bh", "fdr_bh" or "benjamini-hochberg"), or any method supported
-        by statsmodels' ``multipletests`` function. Case-insensitive. If None, no
-        correction will be performed.
-    seed : int or np.random.Generator, optional
-        A user-provided random seed or random generator instance.
+        by statsmodels'
+        :func:`multipletests <statsmodels.stats.multitest.multipletests>` function.
+        Case-insensitive. If None, no correction will be performed.
+    seed : int, Generator or RandomState, optional
+        A user-provided random seed or random generator instance for drawing from the
+        Dirichlet distribution. See :func:`details <skbio.util.get_rng>`.
 
     Returns
     -------
@@ -1943,10 +1940,11 @@ def dirmult_ttest(
 
     References
     ----------
-    .. [1] Fernandes et al. "Unifying the analysis of
-       high-throughput sequencing datasets: characterizing RNA-seq,
-       16S rRNA gene sequencing and selective growth experiments by
-       compositional data analysis." Microbiome (2014).
+    .. [1] Fernandes, A. D., Reid, J. N., Macklaim, J. M., McMurrough, T. A., Edgell,
+       D. R., & Gloor, G. B. (2014). Unifying the analysis of high-throughput
+       sequencing datasets: characterizing RNA-seq, 16S rRNA gene sequencing and
+       selective growth experiments by compositional data analysis. Microbiome, 2,
+       1-13.
 
     Examples
     --------
@@ -1959,8 +1957,7 @@ def dirmult_ttest(
     ...                       [200, 202, 10, 10, 13, 10, 10],
     ...                       [203, 201, 14, 10, 10, 13, 12]],
     ...                      index=['s1', 's2', 's3', 's4', 's5', 's6'],
-    ...                      columns=['b1', 'b2', 'b3', 'b4', 'b5', 'b6',
-    ...                               'b7'])
+    ...                      columns=['b1', 'b2', 'b3', 'b4', 'b5', 'b6', 'b7'])
     >>> grouping = pd.Series(['treatment', 'treatment', 'treatment',
     ...                       'placebo', 'placebo', 'placebo'],
     ...                      index=['s1', 's2', 's3', 's4', 's5', 's6'])
@@ -2072,9 +2069,8 @@ def dirmult_ttest(
 def _type_cast_to_float(df):
     """Attempt to cast all of the values in dataframe to float.
 
-    This will try to type cast all of the series within the
-    dataframe into floats.  If a column cannot be type casted,
-    it will be kept as is.
+    This will try to type cast all of the series within the dataframe into floats. If a
+    column cannot be type casted, it will be kept as is.
 
     Parameters
     ----------
@@ -2083,6 +2079,7 @@ def _type_cast_to_float(df):
     Returns
     -------
     pd.DataFrame
+
     """
     # Implementation based on https://github.com/mortonjt/differential/blob/65752567ef4cf303471405b0a9be503eb10a0bbb/differential/util.py#L4
     # TODO: Will need to improve this, as this is a very hacky solution.
@@ -2096,18 +2093,19 @@ def _type_cast_to_float(df):
 
 
 def _lme_call(
-    formula,
-    metadata,
     table,
-    groups,
-    method=None,
+    metadata,
+    formula,
+    grouping,
     re_formula=None,
     vc_formula=None,
+    model_kwargs={},
+    fit_method=None,
     fit_kwargs={},
-    **kwargs,
+    fit_warnings=False,
 ):
-    # TODO: add docs when this implementation is approved
-    # _covariate_list is essentially the list of covariates
+    """Call MixedLM of statsmodels."""
+    # TODO: add documentation
 
     FEATUREID = "FeatureID"
     LOG2FC = "Log2(FC)"
@@ -2119,8 +2117,8 @@ def _lme_call(
     submodels = []
     metadata = _type_cast_to_float(metadata.copy())
 
-    merged_data = pd.merge(table, metadata, left_index=True, right_index=True)
-    if len(merged_data) == 0:
+    merged_table = pd.merge(table, metadata, left_index=True, right_index=True)
+    if len(merged_table) == 0:
         raise ValueError(
             (
                 "No more samples left. Check to make sure that "
@@ -2131,11 +2129,15 @@ def _lme_call(
 
     design_matrix = dmatrix(formula, metadata, return_type="dataframe")
 
-    # Obtaining the list of covariates by selecting the relevant columns
+    # Obtain the list of covariates by selecting the relevant columns
     _covariate_list = design_matrix.columns.tolist()
 
-    # Removing intercept since it is not a covariate, and is included by default
+    # Remove intercept since it is not a covariate, and is included by default
     _covariate_list.remove("Intercept")
+
+    fit_fail_msg = (
+        "LME fit failed for covariate %s and `response_var`, outputting nans."
+    )
 
     output = []
     for response_var in table.columns:
@@ -2144,14 +2146,20 @@ def _lme_call(
         stats_formula = "%s ~ %s" % (response_var, formula)
         model = MixedLM.from_formula(
             formula=stats_formula,
-            data=merged_data,
-            groups=groups,
+            data=merged_table,
+            groups=grouping,
             re_formula=re_formula,
             vc_formula=vc_formula,
-            **kwargs,
+            **model_kwargs,
         )
 
-        results = model.fit(method=method, **fit_kwargs)
+        # mute warnings during the fitting process
+        with catch_warnings():
+            if not fit_warnings:
+                simplefilter("ignore", UserWarning)
+                simplefilter("ignore", ConvergenceWarning)
+            results = model.fit(method=fit_method, **fit_kwargs)
+
         summary = results.summary()
 
         for var_name in _covariate_list:
@@ -2171,12 +2179,7 @@ def _lme_call(
                 }
             except Exception as e:
                 if type(e) is not ValueError:
-                    print(
-                        f"""LME fit failed for covariate {var_name}
-                         and `response_var`, outputting nans."""
-                    )
-                    print(type(e))
-                    print(e)
+                    warn(fit_fail_msg % var_name, UserWarning)
 
                     individual_results = {
                         FEATUREID: response_var,
@@ -2220,21 +2223,22 @@ def _lme_call(
 
 
 def dirmult_lme(
-    formula,
-    data,
+    table,
     metadata,
-    groups=None,
-    method=None,
+    formula,
+    grouping=None,
+    pseudocount=0.5,
+    draws=128,
+    p_adjust="holm",
+    seed=None,
     re_formula=None,
     vc_formula=None,
-    draws=128,
-    seed=None,
-    pseudocount=0.5,
-    p_adjust="holm",
+    model_kwargs={},
+    fit_method=None,
+    fit_warnings=False,
     fit_kwargs={},
-    **kwargs,
 ):
-    r"""Fit a Dirichlet Multinomial linear mixed effects model.
+    r"""Fit a Dirichlet-multinomial linear mixed effects model.
 
     The Dirichlet-multinomial distribution is a compound distribution that
     combines a Dirichlet distribution over the probabilities of a multinomial
@@ -2249,14 +2253,13 @@ def dirmult_lme(
     log-fold changes as well as their credible intervals, the *p*-values and
     the multiple comparison corrected *p*-values are reported.
 
-    This function uses ``MixedLM`` module from
-    ``statsmodels.regression.mixed_linear_model``
+    This function uses the
+    :class:`MixedLM <statsmodels.regression.mixed_linear_model.MixedLM>` class from
+    statsmodels.
 
     Parameters
     ----------
-    formula : str or generic Formula object
-        The formula specifying the model
-    data : array-like
+    table : array-like
         The data for the model. If data is a pd.DataFrame, it must contain the
         dependent variables in data.columns. If data is not a pd.DataFrame, it must
         contain the dependent variable in indices of data. data can be a
@@ -2268,30 +2271,47 @@ def dirmult_lme(
         it must contain the covariates in indices of metadata. metadata can
         be a numpy structured array, or a numpy recarray, or a dictionary. It must
         not contain duplicate indices.
-    groups : str
-        The column name in data that identifies the grouping variable
-    method : str
-        Optimization method. Can be a scipy.optimize method name, or a list of such
-        names to be tried in sequence.
-        See https://docs.scipy.org/doc/scipy/tutorial/optimize.html for all options.
-    draws : int, optional
-        The number of draws from the Dirichilet-multinomial posterior distribution
-    seed : int or np.random.Generator, optional
-        A user-provided random seed or random generator instance.
+    formula : str or generic Formula object
+        The formula specifying the model.
+    grouping : str
+        The column name in data that identifies the grouping variable.
     pseudocount : float, optional
         A non-zero value added to the input counts to ensure that all of the
-        estimated abundances are strictly greater than zero.
+        estimated abundances are strictly greater than zero. Default is 0.5.
+    draws : int, optional
+        The number of draws from the Dirichilet-multinomial posterior distribution.
+        Default is 128.
     p_adjust : str or None, optional
         Method to correct *p*-values for multiple comparisons. Options are Holm-
         Boniferroni ("holm" or "holm-bonferroni") (default), Benjamini-
         Hochberg ("bh", "fdr_bh" or "benjamini-hochberg"), or any method supported
-        by statsmodels' ``multipletests`` function. Case-insensitive. If None, no
-        correction will be performed.
-    fit_kwargs : dict
-        Keyword arguments to pass to the model fit function.
-        See ``statsmodels.regression.mixed_linear_model.MixedLM.fit``
-    **kwargs
-        Additional keyword arguments to pass to the mixedlm function only.
+        by statsmodels'
+        :func:`multipletests <statsmodels.stats.multitest.multipletests>` function.
+        Case-insensitive. If None, no correction will be performed.
+    seed : int, Generator or RandomState, optional
+        A user-provided random seed or random generator instance for drawing from the
+        Dirichlet distribution. See :func:`details <skbio.util.get_rng>`.
+    re_formula : str, optional
+        Random coefficient formula. See :meth:`MixedLM.from_formula
+        <statsmodels.regression.mixed_linear_model.MixedLM.from_formula>`.
+    vc_formula : str, optional
+        Variance component formula. See :meth:`MixedLM.from_formula
+        <statsmodels.regression.mixed_linear_model.MixedLM.from_formula>`.
+    model_kwargs : dict, optional
+        Additional keyword arguments to pass to :meth:`MixedLM.from_formula
+        <statsmodels.regression.mixed_linear_model.MixedLM.from_formula>`
+    fit_method : str or list of str, optional
+        Optimization method for model fitting. Can be a single method name, or a list
+        of method names to be tried sequentially. See `statsmodels.optimization
+        <https://www.statsmodels.org/stable/optimization.html>`_
+        for available methods. If None, a default list of methods will be tried.
+    fit_warnings : bool, optional
+        Issue warnings if any during the model fitting process. Default is False.
+        Warnings are usually issued when the optimization methods do not converge,
+        which is common in the analysis.
+    fit_kwargs : dict, optional
+        Additional keyword arguments to pass to :meth:`MixedLM.fit
+        <statsmodels.regression.mixed_linear_model.MixedLM.fit>`.
 
     Returns
     -------
@@ -2325,43 +2345,39 @@ def dirmult_lme(
 
     See Also
     --------
+    dirmult_ttest
     statsmodels.formula.api.mixedlm
     statsmodels.regression.mixed_linear_model.MixedLM
-    differential.regression.mixedlm
 
     Examples
     --------
+    >>> import pandas as pd
+    >>> from skbio.stats.composition import dirmult_lme
     >>> table = pd.DataFrame(
-    ...     {
-    ...         "u1": [1.00000053, 6.09924644],
-    ...         "u2": [0.99999843, 7.0000045],
-    ...         "u3": [1.09999884, 8.08474053],
-    ...         "x1": [1.09999758, 1.10000349],
-    ...         "x2": [0.99999902, 2.00000027],
-    ...         "x3": [1.09999862, 2.99998318],
-    ...         "y1": [1.00000084, 2.10001257],
-    ...         "y2": [0.9999991, 3.09998418],
-    ...         "y3": [0.99999899, 3.9999742],
-    ...         "z1": [1.10000124, 5.0001796],
-    ...         "z2": [1.00000053, 6.09924644],
-    ...         "z3": [1.10000173, 6.99693644],
-    ...     },
-    ...     index=["Y1", "Y2"],
-    ... ).T
+    ...     [[1.00000053, 6.09924644],
+    ...      [0.99999843, 7.0000045],
+    ...      [1.09999884, 8.08474053],
+    ...      [1.09999758, 1.10000349],
+    ...      [0.99999902, 2.00000027],
+    ...      [1.09999862, 2.99998318],
+    ...      [1.00000084, 2.10001257],
+    ...      [0.9999991, 3.09998418],
+    ...      [0.99999899, 3.9999742],
+    ...      [1.10000124, 5.0001796],
+    ...      [1.00000053, 6.09924644],
+    ...      [1.10000173, 6.99693644]],
+    ...     index=['u1', 'u2', 'u3', 'x1', 'x2', 'x3', 'y1', 'y2', 'y3', 'z1',
+    ...            'z2', 'z3'],
+    ...     columns=['Y1', 'Y2'])
     >>> metadata = pd.DataFrame(
-    ...     {
-    ...         "patient": [1, 1, 1, 2, 2, 2, 3, 3, 3, 4, 4, 4],
-    ...         "treatment": [1, 1, 1, 1, 1, 1, 2, 2, 2, 2, 2, 2],
-    ...         "time": [1, 2, 3, 1, 2, 3, 1, 2, 3, 1, 2, 3],
-    ...     },
-    ...     index=["x1", "x2", "x3", "y1", "y2", "y3",
-    ...            "z1", "z2", "z3", "u1", "u2", "u3"],
-    ... )
-    >>> res = dirmult_lme(
-    ...     formula="time + treatment", data=table, metadata=metadata,
-    ...     groups="patient", seed=0, p_adjust="sidak"
-    ... )
-    >>> res
+    ...     {'patient': [1, 1, 1, 2, 2, 2, 3, 3, 3, 4, 4, 4],
+    ...      'treatment': [1, 1, 1, 1, 1, 1, 2, 2, 2, 2, 2, 2],
+    ...      'time': [1, 2, 3, 1, 2, 3, 1, 2, 3, 1, 2, 3],},
+    ...     index=['x1', 'x2', 'x3', 'y1', 'y2', 'y3', 'z1', 'z2', 'z3', 'u1',
+    ...            'u2', 'u3'])
+    >>> result = dirmult_lme(table, metadata, formula='time + treatment',
+    ...                      grouping='patient', seed=0, p_adjust='sidak')
+    >>> result
       FeatureID  Covariate  Log2(FC)   CI(2.5)  CI(97.5)    pvalue    qvalue
     0        Y1       time -0.210769 -1.571095  1.144057  0.411140  0.879760
     1        Y1  treatment -0.164704 -3.456697  3.384563  0.593769  0.972767
@@ -2369,59 +2385,51 @@ def dirmult_lme(
     3        Y2  treatment  0.164704 -3.384563  3.456697  0.593769  0.972767
 
     """
-
-    # Test if data is a pandas DataFrame
-    errmsg = (
+    type_errmsg = (
         "%s must be a pandas DataFrame or a numpy structured or rec array or "
         "a dictionary."
     )
+    attr_errmsg = "Please ensure %s contains feature IDs."
+    null_errmsg = "Cannot handle missing values in %s."
 
-    attr_errmsg = "Please ensure you have added a list of feature IDs to %s"
-
-    if not isinstance(data, pd.DataFrame):
+    # Validate data table.
+    if not isinstance(table, pd.DataFrame):
         try:
-            data = pd.DataFrame(data)
+            table = pd.DataFrame(table)
         except AttributeError:
-            raise AttributeError(attr_errmsg % "Data")
+            raise AttributeError(attr_errmsg % "table")
         except (TypeError, ValueError):
-            raise TypeError(errmsg % "Data")
-
-    if data.ndim != 2:
+            raise TypeError(type_errmsg % "Table")
+    if table.ndim != 2:
         try:
-            data = pd.DataFrame(data, index=data.dtype.names)
+            table = pd.DataFrame(table, index=table.dtype.names)
         except (TypeError, ValueError):
-            raise TypeError(errmsg % "Data")
+            raise TypeError(type_errmsg % "Table")
+    if table.shape[0] == 1:
+        raise ValueError("Table must have at least two features.")
+    if table.isnull().values.any():
+        raise ValueError(null_errmsg % "table")
 
+    # Validate metadata table.
     if not isinstance(metadata, pd.DataFrame):
         try:
             metadata = pd.DataFrame(metadata)
         except AttributeError:
-            raise ValueError(attr_errmsg % "Metadata")
+            raise ValueError(attr_errmsg % "metadata")
         except (TypeError, ValueError):
-            raise TypeError(errmsg % "Metadata")
-
-    # Test if data has missing values
-    if data.isnull().values.any():
-        raise ValueError("Cannot handle missing values in data.")
-
-    # Test if metadata has missing values
+            raise TypeError(type_errmsg % "Metadata")
     if metadata.isnull().values.any():
-        raise ValueError("Cannot handle missing values in metadata.")
+        raise ValueError(null_errmsg % "metadata")
 
     # Test if metadata and data have the same index, regardless of order
-    if not data.index.sort_values().equals(metadata.index.sort_values()):
-        print(data.index)
-        print(metadata.index)
-        raise ValueError("Data and metadata must have the same index.")
-
-    if data.shape[0] == 1:
-        raise ValueError("Data must have at least two features.")
+    if not table.index.sort_values().equals(metadata.index.sort_values()):
+        raise ValueError("Table and metadata must have the same samples.")
 
     # Modifying the indices of data and metadata to use unique integers,
     # so that merging them will not affect the result. append "row" before the
     # index to make it unique
-    data.index = list(range(data.shape[0]))
-    data.index = ["row" + str(i) for i in data.index]
+    table.index = list(range(table.shape[0]))
+    table.index = ["row" + str(i) for i in table.index]
     metadata.index = list(range(metadata.shape[0]))
     metadata.index = ["row" + str(i) for i in metadata.index]
 
@@ -2435,18 +2443,19 @@ def dirmult_lme(
     QVALUE = "qvalue"
 
     rng = get_rng(seed)
-    dir_table = _obtain_dir_table(data, pseudocount, rng)
+    dir_table = _obtain_dir_table(table, pseudocount, rng)
 
     res, _submodels, _covariate_list = _lme_call(
-        formula=formula,
         table=dir_table,
         metadata=metadata,
-        groups=groups,
+        formula=formula,
+        grouping=grouping,
         re_formula=re_formula,
         vc_formula=vc_formula,
-        method=method,
+        model_kwargs=model_kwargs,
+        fit_method=fit_method,
+        fit_warnings=fit_warnings,
         fit_kwargs=fit_kwargs,
-        **kwargs,
     )
 
     # Creating an empty dict to store sum of values (Using a DataFrame throws errors)
@@ -2454,7 +2463,7 @@ def dirmult_lme(
     # array index: 0: pvalue, 1: CI(2.5), 2: CI(97.5), 3: log2fc, 4: qvalue
     res_dict = {}
 
-    for feature in data.columns:
+    for feature in table.columns:
         group = res_dict[feature] = {}
         for covar in _covariate_list:
             group[covar] = [0] * 5
@@ -2465,18 +2474,19 @@ def dirmult_lme(
             group[i] = single_covar_data[key]
 
     for i in range(1, draws):
-        dir_table = _obtain_dir_table(data, pseudocount, rng)
+        dir_table = _obtain_dir_table(table, pseudocount, rng)
 
         ires = _lme_call(
-            formula=formula,
             table=dir_table,
             metadata=metadata,
-            groups=groups,
+            formula=formula,
+            grouping=grouping,
             re_formula=re_formula,
             vc_formula=vc_formula,
-            method=method,
+            model_kwargs=model_kwargs,
+            fit_method=fit_method,
+            fit_warnings=fit_warnings,
             fit_kwargs=fit_kwargs,
-            **kwargs,
         )[0]
 
         if ires is None:
@@ -2497,7 +2507,7 @@ def dirmult_lme(
             group[1:4] /= log2_
 
     p_value_arr = []
-    for feature in data.columns:
+    for feature in table.columns:
         group = res_dict[feature]
         for covar in _covariate_list:
             p_value_arr.append(group[covar][0])
@@ -2509,7 +2519,7 @@ def dirmult_lme(
         qval = p_value_arr
 
     count = 0
-    for feature in data.columns:
+    for feature in table.columns:
         group = res_dict[feature]
         for covar in _covariate_list:
             group[covar][4] = qval[count]
@@ -2517,7 +2527,7 @@ def dirmult_lme(
 
     final_res = []
 
-    for feature in data.columns:
+    for feature in table.columns:
         for covar in _covariate_list:
             group = res_dict[feature][covar]
             final_res.append(
@@ -2533,3 +2543,6 @@ def dirmult_lme(
             )
 
     return pd.DataFrame(final_res)
+
+
+register_aliases(modules[__name__])

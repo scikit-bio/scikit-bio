@@ -88,12 +88,6 @@ html_theme_options = {
       'image_dark': '_static/img/logo_inv.svg',
     },
 
-    # announcement banner on top of the screen
-    # 'announcement': (
-    #     f"{project} is back in active development! Check out our <a href='"
-    #     f"{github_url}/discussions/1935'>announcement of revitalization</a>."
-    # ),
-
     # social media links displayed as icons
     'github_url': github_url,
     'twitter_url': twitter_url,

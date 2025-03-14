@@ -33,14 +33,15 @@ def permdisp(
     permutations=999,
     method="eigh",
     number_of_dimensions=10,
+    seed=None,
+    warn_neg_eigval=0.01,
 ):
-    """Test for Homogeneity of Multivariate Groups Disperisons.
+    r"""Test for Homogeneity of Multivariate Groups Disperisons.
 
     PERMDISP is a multivariate analogue of Levene's test for homogeneity of
     multivariate variances. Distances are handled by reducing the
     original distances to principal coordinates. PERMDISP calculates an
     F-statistic to assess whether the dispersions between groups is significant
-
 
     Parameters
     ----------
@@ -73,17 +74,24 @@ def permdisp(
         statistical significance calculations will be skipped and the p-value
         will be ``np.nan``.
     method : str, optional
-        Eigendecomposition method to use in performing PCoA.
-        By default, uses SciPy's `eigh`, which computes exact
-        eigenvectors and eigenvalues for all dimensions. The alternate
-        method, `fsvd`, uses faster heuristic eigendecomposition but loses
-        accuracy. The magnitude of accuracy lost is dependent on dataset.
-        Note that using `fsvd` is still considered experimental and
-        should be used with care.
-        Not used if distance_matrix is a OrdinationResults object.
+        Matrix decomposition method to use. Options are "eigh" (eigendecomposition,
+        default) and "fsvd" (fast singular value decomposition). See
+        :func:`skbio.stats.ordination.pcoa <pcoa>` for details. Not used if
+        distance_matrix is a OrdinationResults object.
     number_of_dimensions : int, optional
         Dimensions to reduce the distance matrix to if using the `fsvd` method.
         Not used if the `eigh` method is being selected.
+    seed : int, Generator or RandomState, optional
+        A user-provided random seed or random generator instance. See
+        :func:`details <skbio.util.get_rng>`.
+
+        .. versionadded:: 0.6.3
+
+    warn_neg_eigval : bool or float, optional
+        Raise a warning if any negative eigenvalue of large magnitude is generated
+        during PCoA. See :func:`skbio.stats.ordination.pcoa <pcoa>` for details.
+
+        .. versionadded:: 0.6.3
 
     Returns
     -------
@@ -153,19 +161,17 @@ def permdisp(
     ...                       ['s1', 's2', 's3', 's4', 's5', 's6'])
     >>> grouping = ['G1', 'G1', 'G1', 'G2', 'G2', 'G2']
 
-    Run PERMDISP using 99 permutations to caluculate the p-value:
+    Run PERMDISP using 99 permutations to caluculate the p-value. The seed is to
+    make the output deterministic. You may skip it if that's not necessary.
 
     >>> from skbio.stats.distance import permdisp
-    >>> import numpy as np
-    >>> #make output deterministic, should not be included during normal use
-    >>> np.random.seed(0)
-    >>> permdisp(dm, grouping, permutations=99)
+    >>> permdisp(dm, grouping, permutations=99, seed=42) # doctest: +ELLIPSIS
     method name               PERMDISP
     test statistic name        F-value
     sample size                      6
     number of groups                 2
-    test statistic     ... 1.03...
-    p-value            ...
+    test statistic             1.03296
+    p-value                       ...
     number of permutations          99
     Name: PERMDISP results, dtype: object
 
@@ -180,7 +186,7 @@ def permdisp(
     test statistic name        F-value
     sample size                      6
     number of groups                 2
-    test statistic      ... 1.03...
+    test statistic             1.03296
     p-value                        NaN
     number of permutations           0
     Name: PERMDISP results, dtype: object
@@ -194,14 +200,13 @@ def permdisp(
     formula. As such the two different tests yeild slightly different F
     statistics.
 
-    >>> np.random.seed(0)
-    >>> permdisp(dm, grouping, test='centroid', permutations=6)
+    >>> permdisp(dm, grouping, test='centroid', permutations=6, seed=42)
     method name               PERMDISP
     test statistic name        F-value
     sample size                      6
     number of groups                 2
-    test statistic     ... 3.67...
-    p-value            ... 0.42...
+    test statistic            3.670816
+    p-value                   0.285714
     number of permutations           6
     Name: PERMDISP results, dtype: object
 
@@ -214,13 +219,13 @@ def permdisp(
     >>> df = pd.DataFrame.from_dict(
     ...      {'Grouping': {'s1': 'G1', 's2': 'G1', 's3': 'G1', 's4': 'G2',
     ...                    's5': 'G2', 's6': 'G2'}})
-    >>> permdisp(dm, df, 'Grouping', permutations=6, test='centroid')
+    >>> permdisp(dm, df, 'Grouping', permutations=6, test='centroid', seed=42)
     method name               PERMDISP
     test statistic name        F-value
     sample size                      6
     number of groups                 2
-    test statistic      ... 3.67...
-    p-value             ... 0.42...
+    test statistic            3.670816
+    p-value                   0.285714
     number of permutations           6
     Name: PERMDISP results, dtype: object
 
@@ -264,7 +269,10 @@ def permdisp(
         sample_size = distance_matrix.shape[0]
 
         ordination = pcoa(
-            distance_matrix, method=method, number_of_dimensions=number_of_dimensions
+            distance_matrix,
+            method=method,
+            number_of_dimensions=number_of_dimensions,
+            warn_neg_eigval=warn_neg_eigval,
         )
     else:
         raise TypeError("Input must be a DistanceMatrix or OrdinationResults.")
@@ -275,7 +283,9 @@ def permdisp(
 
     test_stat_function = partial(_compute_groups, samples, test)
 
-    stat, p_value = _run_monte_carlo_stats(test_stat_function, grouping, permutations)
+    stat, p_value = _run_monte_carlo_stats(
+        test_stat_function, grouping, permutations, seed
+    )
 
     return _build_results(
         "PERMDISP", "F-value", sample_size, num_groups, stat, p_value, permutations

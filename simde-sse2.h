@@ -1,6 +1,6 @@
 /* AUTOMATICALLY GENERATED FILE, DO NOT MODIFY */
-/* 8025b06b07f4789aad472563d363f86671d9e372 */
-/* :: Begin x86/sse2.h :: */
+/* 71fd833d9666141edcd1d3c109a80e228303d8d7 */
+/* :: Begin simde/x86/sse2.h :: */
 /* SPDX-License-Identifier: MIT
  *
  * Permission is hereby granted, free of charge, to any person
@@ -36,8 +36,8 @@
 #define SIMDE_X86_SSE2_H
 
 /* AUTOMATICALLY GENERATED FILE, DO NOT MODIFY */
-/* 8025b06b07f4789aad472563d363f86671d9e372 */
-/* :: Begin x86/sse.h :: */
+/* 71fd833d9666141edcd1d3c109a80e228303d8d7 */
+/* :: Begin simde/x86/sse.h :: */
 /* SPDX-License-Identifier: MIT
  *
  * Permission is hereby granted, free of charge, to any person
@@ -71,8 +71,8 @@
 #define SIMDE_X86_SSE_H
 
 /* AUTOMATICALLY GENERATED FILE, DO NOT MODIFY */
-/* 8025b06b07f4789aad472563d363f86671d9e372 */
-/* :: Begin x86/mmx.h :: */
+/* 71fd833d9666141edcd1d3c109a80e228303d8d7 */
+/* :: Begin simde/x86/mmx.h :: */
 /* SPDX-License-Identifier: MIT
  *
  * Permission is hereby granted, free of charge, to any person
@@ -103,8 +103,8 @@
 #define SIMDE_X86_MMX_H
 
 /* AUTOMATICALLY GENERATED FILE, DO NOT MODIFY */
-/* 8025b06b07f4789aad472563d363f86671d9e372 */
-/* :: Begin simde-common.h :: */
+/* 71fd833d9666141edcd1d3c109a80e228303d8d7 */
+/* :: Begin simde/simde-common.h :: */
 /* SPDX-License-Identifier: MIT
  *
  * Permission is hereby granted, free of charge, to any person
@@ -129,14 +129,16 @@
  *
  * Copyright:
  *   2017-2020 Evan Nemerson <evan@nemerson.com>
+ *   2023      Yi-Yen Chung <eric681@andestech.com> (Copyright owned by Andes Technology)
+ *   2023      Ju-Hung Li <jhlee@pllab.cs.nthu.edu.tw> (Copyright owned by NTHU pllab)
  */
 
 #if !defined(SIMDE_COMMON_H)
 #define SIMDE_COMMON_H
 
 /* AUTOMATICALLY GENERATED FILE, DO NOT MODIFY */
-/* 8025b06b07f4789aad472563d363f86671d9e372 */
-/* :: Begin hedley.h :: */
+/* 71fd833d9666141edcd1d3c109a80e228303d8d7 */
+/* :: Begin simde/hedley.h :: */
 /* Hedley - https://nemequ.github.io/hedley
  * Created by Evan Nemerson <evan@nemerson.com>
  *
@@ -323,6 +325,7 @@
 #  undef HEDLEY_EMSCRIPTEN_VERSION
 #endif
 #if defined(__EMSCRIPTEN__)
+#  include <emscripten.h>
 #  define HEDLEY_EMSCRIPTEN_VERSION HEDLEY_VERSION_ENCODE(__EMSCRIPTEN_major__, __EMSCRIPTEN_minor__, __EMSCRIPTEN_tiny__)
 #endif
 
@@ -2181,11 +2184,11 @@ HEDLEY_DIAGNOSTIC_POP
 #define HEDLEY_CLANG_HAS_WARNING(warning) HEDLEY_HAS_WARNING(warning)
 
 #endif /* !defined(HEDLEY_VERSION) || (HEDLEY_VERSION < X) */
-/* :: End hedley.h :: */
+/* :: End simde/hedley.h :: */
 
 #define SIMDE_VERSION_MAJOR 0
-#define SIMDE_VERSION_MINOR 7
-#define SIMDE_VERSION_MICRO 6
+#define SIMDE_VERSION_MINOR 8
+#define SIMDE_VERSION_MICRO 2
 #define SIMDE_VERSION HEDLEY_VERSION_ENCODE(SIMDE_VERSION_MAJOR, SIMDE_VERSION_MINOR, SIMDE_VERSION_MICRO)
 // Also update meson.build in the root directory of the repository
 
@@ -2193,8 +2196,8 @@ HEDLEY_DIAGNOSTIC_POP
 #include <stdint.h>
 
 /* AUTOMATICALLY GENERATED FILE, DO NOT MODIFY */
-/* 8025b06b07f4789aad472563d363f86671d9e372 */
-/* :: Begin simde-detect-clang.h :: */
+/* 71fd833d9666141edcd1d3c109a80e228303d8d7 */
+/* :: Begin simde/simde-detect-clang.h :: */
 /* Detect Clang Version
  * Created by Evan Nemerson <evan@nemerson.com>
  *
@@ -2257,13 +2260,19 @@ HEDLEY_DIAGNOSTIC_POP
  */
 
 #if defined(__clang__) && !defined(SIMDE_DETECT_CLANG_VERSION)
-#  if __has_attribute(nouwtable)  // no new warnings in 16.0
+#  if __has_warning("-Wmissing-designated-field-initializers")
+#    define SIMDE_DETECT_CLANG_VERSION 190000
+#  elif __has_warning("-Woverriding-option")
+#    define SIMDE_DETECT_CLANG_VERSION 180000
+#  elif __has_attribute(unsafe_buffer_usage)  // no new warnings in 17.0
+#    define SIMDE_DETECT_CLANG_VERSION 170000
+#  elif __has_attribute(nouwtable)  // no new warnings in 16.0
 #    define SIMDE_DETECT_CLANG_VERSION 160000
 #  elif __has_warning("-Warray-parameter")
 #    define SIMDE_DETECT_CLANG_VERSION 150000
 #  elif __has_warning("-Wbitwise-instead-of-logical")
 #    define SIMDE_DETECT_CLANG_VERSION 140000
-#  elif __has_warning("-Wwaix-compat")
+#  elif __has_warning("-Waix-compat")
 #    define SIMDE_DETECT_CLANG_VERSION 130000
 #  elif __has_warning("-Wformat-insufficient-args")
 #    define SIMDE_DETECT_CLANG_VERSION 120000
@@ -2275,7 +2284,7 @@ HEDLEY_DIAGNOSTIC_POP
 #    define SIMDE_DETECT_CLANG_VERSION 90000
 #  elif __has_warning("-Wextra-semi-stmt") || __has_builtin(__builtin_rotateleft32)
 #    define SIMDE_DETECT_CLANG_VERSION 80000
-// For reasons unknown, XCode 10.3 (Apple LLVM version 10.0.1) is apparently
+// For reasons unknown, Xcode 10.3 (Apple LLVM version 10.0.1) is apparently
 // based on Clang 7, but does not support the warning we test.
 // See https://en.wikipedia.org/wiki/Xcode#Toolchain_versions and
 // https://trac.macports.org/wiki/XcodeVersionInfo.
@@ -2320,10 +2329,10 @@ HEDLEY_DIAGNOSTIC_POP
 #endif
 
 #endif /* !defined(SIMDE_DETECT_CLANG_H) */
-/* :: End simde-detect-clang.h :: */
+/* :: End simde/simde-detect-clang.h :: */
 /* AUTOMATICALLY GENERATED FILE, DO NOT MODIFY */
-/* 8025b06b07f4789aad472563d363f86671d9e372 */
-/* :: Begin simde-arch.h :: */
+/* 71fd833d9666141edcd1d3c109a80e228303d8d7 */
+/* :: Begin simde/simde-arch.h :: */
 /* Architecture detection
  * Created by Evan Nemerson <evan@nemerson.com>
  *
@@ -2369,7 +2378,7 @@ HEDLEY_DIAGNOSTIC_POP
 #define SIMDE_ARCH_H
 
 /* AUTOMATICALLY GENERATED FILE, DO NOT MODIFY */
-/* 8025b06b07f4789aad472563d363f86671d9e372 */
+/* 71fd833d9666141edcd1d3c109a80e228303d8d7 */
 
 /* Alpha
    <https://en.wikipedia.org/wiki/DEC_Alpha> */
@@ -2448,8 +2457,50 @@ HEDLEY_DIAGNOSTIC_POP
 #    define SIMDE_ARCH_ARM_NEON SIMDE_ARCH_ARM
 #  endif
 #endif
-#if defined(__ARM_FEATURE_SVE)
+#if defined(__ARM_FEATURE_AES) && __ARM_FEATURE_AES
+#  define SIMDE_ARCH_ARM_AES
+#endif
+#if defined(__ARM_FEATURE_COMPLEX) && __ARM_FEATURE_COMPLEX
+#  define SIMDE_ARCH_ARM_COMPLEX
+#endif
+#if defined(__ARM_FEATURE_CRYPTO) && __ARM_FEATURE_CRYPTO
+#  define SIMDE_ARCH_ARM_CRYPTO
+#endif
+#if defined(__ARM_FEATURE_DOTPROD) && __ARM_FEATURE_DOTPROD
+#  define SIMDE_ARCH_ARM_DOTPROD
+#endif
+#if defined(__ARM_FEATURE_FMA) && __ARM_FEATURE_FMA
+#  define SIMDE_ARCH_ARM_FMA
+#endif
+#if defined(__ARM_FEATURE_FP16_FML) && __ARM_FEATURE_FP16_FML
+#  define SIMDE_ARCH_ARM_FP16_FML
+#endif
+#if defined(__ARM_FEATURE_FRINT) && __ARM_FEATURE_FRINT
+#  define SIMDE_ARCH_ARM_FRINT
+#endif
+#if defined(__ARM_FEATURE_MATMUL_INT8) && __ARM_FEATURE_MATMUL_INT8
+#  define SIMDE_ARCH_ARM_MATMUL_INT8
+#endif
+#if defined(__ARM_FEATURE_SHA2) && __ARM_FEATURE_SHA2 && !defined(__APPLE_CC__)
+#  define SIMDE_ARCH_ARM_SHA2
+#endif
+#if defined(__ARM_FEATURE_SHA3) && __ARM_FEATURE_SHA3
+#  define SIMDE_ARCH_ARM_SHA3
+#endif
+#if defined(__ARM_FEATURE_SHA512) && __ARM_FEATURE_SHA512
+#  define SIMDE_ARCH_ARM_SHA512
+#endif
+#if defined(__ARM_FEATURE_SM3) && __ARM_FEATURE_SM3
+#  define SIMDE_ARCH_ARM_SM3
+#endif
+#if defined(__ARM_FEATURE_SM4) && __ARM_FEATURE_SM4
+#  define SIMDE_ARCH_ARM_SM4
+#endif
+#if defined(__ARM_FEATURE_SVE) && __ARM_FEATURE_SVE
 #  define SIMDE_ARCH_ARM_SVE
+#endif
+#if defined(__ARM_FEATURE_QRDMX) && __ARM_FEATURE_QRDMX
+#  define SIMDE_ARCH_ARM_QRDMX
 #endif
 
 /* Blackfin
@@ -2596,7 +2647,7 @@ HEDLEY_DIAGNOSTIC_POP
 #    if !defined(SIMDE_ARCH_X86_SSE4_1)
 #      define SIMDE_ARCH_X86_SSE4_1 1
 #    endif
-#    if !defined(SIMDE_ARCH_X86_SSE4_1)
+#    if !defined(SIMDE_ARCH_X86_SSE4_2)
 #      define SIMDE_ARCH_X86_SSE4_2 1
 #    endif
 #  endif
@@ -2651,6 +2702,9 @@ HEDLEY_DIAGNOSTIC_POP
 #  if defined(__AVX512VL__)
 #    define SIMDE_ARCH_X86_AVX512VL 1
 #  endif
+#  if defined(__AVX512FP16__)
+#    define SIMDE_ARCH_X86_AVX512FP16 1
+#  endif
 #  if defined(__GFNI__)
 #    define SIMDE_ARCH_X86_GFNI 1
 #  endif
@@ -2662,6 +2716,9 @@ HEDLEY_DIAGNOSTIC_POP
 #  endif
 #  if defined(__F16C__) || (defined(HEDLEY_MSVC_VERSION) && HEDLEY_MSVC_VERSION_CHECK(19,30,0) && defined(SIMDE_ARCH_X86_AVX2) )
 #    define SIMDE_ARCH_X86_F16C 1
+#  endif
+#  if defined(__AES__)
+#    define SIMDE_ARCH_X86_AES 1
 #  endif
 #endif
 
@@ -2791,6 +2848,42 @@ HEDLEY_DIAGNOSTIC_POP
   #define SIMDE_ARCH_POWER_ALTIVEC_CHECK(version) (0)
 #endif
 
+/* RISC-V
+   <https://en.wikipedia.org/wiki/RISC-V> */
+#if defined(__riscv) || defined(__riscv__)
+#  if __riscv_xlen == 64
+#     define SIMDE_ARCH_RISCV64
+#  elif __riscv_xlen == 32
+#     define SIMDE_ARCH_RISCV32
+#  endif
+#endif
+
+/* RISC-V SIMD ISA extensions */
+#if defined(__riscv_zve32x)
+#  define SIMDE_ARCH_RISCV_ZVE32X 1
+#endif
+#if defined(__riscv_zve32f)
+#  define SIMDE_ARCH_RISCV_ZVE32F 1
+#endif
+#if defined(__riscv_zve64x)
+#  define SIMDE_ARCH_RISCV_ZVE64X 1
+#endif
+#if defined(__riscv_zve64f)
+#  define SIMDE_ARCH_RISCV_ZVE64F 1
+#endif
+#if defined(__riscv_zve64d)
+#  define SIMDE_ARCH_RISCV_ZVE64D 1
+#endif
+#if defined(__riscv_v)
+#  define SIMDE_ARCH_RISCV_V 1
+#endif
+#if defined(__riscv_zvfh)
+#  define SIMDE_ARCH_RISCV_ZVFH 1
+#endif
+#if defined(__riscv_zvfhmin)
+#  define SIMDE_ARCH_RISCV_ZVFHMIN 1
+#endif
+
 /* SPARC
    <https://en.wikipedia.org/wiki/SPARC> */
 #if defined(__sparc_v9__) || defined(__sparcv9)
@@ -2889,6 +2982,10 @@ HEDLEY_DIAGNOSTIC_POP
 #  define SIMDE_ARCH_WASM_SIMD128
 #endif
 
+#if defined(SIMDE_ARCH_WASM) && defined(__wasm_relaxed_simd__)
+#  define SIMDE_ARCH_WASM_RELAXED_SIMD
+#endif
+
 /* Xtensa
    <https://en.wikipedia.org/wiki/> */
 #if defined(__xtensa__) || defined(__XTENSA__)
@@ -2898,6 +2995,11 @@ HEDLEY_DIAGNOSTIC_POP
 /* Availability of 16-bit floating-point arithmetic intrinsics */
 #if defined(__ARM_FEATURE_FP16_VECTOR_ARITHMETIC)
 #  define SIMDE_ARCH_ARM_NEON_FP16
+#endif
+
+/* Availability of 16-bit brain floating-point arithmetic intrinsics */
+#if defined(__ARM_FEATURE_BF16_VECTOR_ARITHMETIC)
+#  define SIMDE_ARCH_ARM_NEON_BF16
 #endif
 
 /* LoongArch
@@ -2919,10 +3021,10 @@ HEDLEY_DIAGNOSTIC_POP
 #endif
 
 #endif /* !defined(SIMDE_ARCH_H) */
-/* :: End simde-arch.h :: */
+/* :: End simde/simde-arch.h :: */
 /* AUTOMATICALLY GENERATED FILE, DO NOT MODIFY */
-/* 8025b06b07f4789aad472563d363f86671d9e372 */
-/* :: Begin simde-features.h :: */
+/* 71fd833d9666141edcd1d3c109a80e228303d8d7 */
+/* :: Begin simde/simde-features.h :: */
 /* SPDX-License-Identifier: MIT
  *
  * Permission is hereby granted, free of charge, to any person
@@ -2947,6 +3049,7 @@ HEDLEY_DIAGNOSTIC_POP
  *
  * Copyright:
  *   2020      Evan Nemerson <evan@nemerson.com>
+ *   2023      Ju-Hung Li <jhlee@pllab.cs.nthu.edu.tw> (Copyright owned by NTHU pllab)
  */
 
 /* simde-arch.h is used to determine which features are available according
@@ -2957,10 +3060,10 @@ HEDLEY_DIAGNOSTIC_POP
 #define SIMDE_FEATURES_H
 
 /* AUTOMATICALLY GENERATED FILE, DO NOT MODIFY */
-/* 8025b06b07f4789aad472563d363f86671d9e372 */
+/* 71fd833d9666141edcd1d3c109a80e228303d8d7 */
 /* AUTOMATICALLY GENERATED FILE, DO NOT MODIFY */
-/* 8025b06b07f4789aad472563d363f86671d9e372 */
-/* :: Begin simde-diagnostic.h :: */
+/* 71fd833d9666141edcd1d3c109a80e228303d8d7 */
+/* :: Begin simde/simde-diagnostic.h :: */
 /* SPDX-License-Identifier: MIT
  *
  * Permission is hereby granted, free of charge, to any person
@@ -3011,11 +3114,11 @@ HEDLEY_DIAGNOSTIC_POP
 #define SIMDE_DIAGNOSTIC_H
 
 /* AUTOMATICALLY GENERATED FILE, DO NOT MODIFY */
-/* 8025b06b07f4789aad472563d363f86671d9e372 */
+/* 71fd833d9666141edcd1d3c109a80e228303d8d7 */
 /* AUTOMATICALLY GENERATED FILE, DO NOT MODIFY */
-/* 8025b06b07f4789aad472563d363f86671d9e372 */
+/* 71fd833d9666141edcd1d3c109a80e228303d8d7 */
 /* AUTOMATICALLY GENERATED FILE, DO NOT MODIFY */
-/* 8025b06b07f4789aad472563d363f86671d9e372 */
+/* 71fd833d9666141edcd1d3c109a80e228303d8d7 */
 
 /* This is only to help us implement functions like _mm_undefined_ps. */
 #if defined(SIMDE_DIAGNOSTIC_DISABLE_UNINITIALIZED_)
@@ -3238,7 +3341,7 @@ HEDLEY_DIAGNOSTIC_POP
   #define SIMDE_DIAGNOSTIC_DISABLE_CAST_FUNCTION_TYPE_
 #endif
 
-/* clang will emit this warning when we use C99 extensions whan not in
+/* clang will emit this warning when we use C99 extensions when not in
  * C99 mode, even though it does support this.  In such cases we check
  * the compiler and version first, so we know it's not a problem. */
 #if HEDLEY_HAS_WARNING("-Wc99-extensions")
@@ -3420,15 +3523,12 @@ HEDLEY_DIAGNOSTIC_POP
   SIMDE_DIAGNOSTIC_DISABLE_RESERVED_ID_
 
 #endif /* !defined(SIMDE_DIAGNOSTIC_H) */
-/* :: End simde-diagnostic.h :: */
+/* :: End simde/simde-diagnostic.h :: */
 
 #if !defined(SIMDE_X86_SVML_NATIVE) && !defined(SIMDE_X86_SVML_NO_NATIVE) && !defined(SIMDE_NO_NATIVE)
   #if defined(SIMDE_ARCH_X86_SVML)
     #define SIMDE_X86_SVML_NATIVE
   #endif
-#endif
-#if defined(SIMDE_X86_SVML_NATIVE) && !defined(SIMDE_X86_AVX512F_NATIVE)
-  #define SIMDE_X86_AVX512F_NATIVE
 #endif
 
 #if !defined(SIMDE_X86_AVX512VP2INTERSECT_NATIVE) && !defined(SIMDE_X86_AVX512VP2INTERSECT_NO_NATIVE) && !defined(SIMDE_NO_NATIVE)
@@ -3530,6 +3630,15 @@ HEDLEY_DIAGNOSTIC_POP
   #define SIMDE_X86_AVX512F_NATIVE
 #endif
 
+#if !defined(SIMDE_X86_AVX512FP16_NATIVE) && !defined(SIMDE_X86_AVX512FP16_NO_NATIVE) && !defined(SIMDE_NO_NATIVE)
+  #if defined(SIMDE_ARCH_X86_AVX512FP16)
+    #define SIMDE_X86_AVX512FP16_NATIVE
+  #endif
+#endif
+#if defined(SIMDE_X86_AVX512BW_NATIVE) && !defined(SIMDE_X86_AVX512F_NATIVE)
+  #define SIMDE_X86_AVX512F_NATIVE
+#endif
+
 #if !defined(SIMDE_X86_AVX512BF16_NATIVE) && !defined(SIMDE_X86_AVX512BF16_NO_NATIVE) && !defined(SIMDE_NO_NATIVE)
   #if defined(SIMDE_ARCH_X86_AVX512BF16)
     #define SIMDE_X86_AVX512BF16_NATIVE
@@ -3620,6 +3729,15 @@ HEDLEY_DIAGNOSTIC_POP
   #define SIMDE_X86_SSE2_NATIVE
 #endif
 
+#if !defined(SIMDE_X86_AES_NATIVE) && !defined(SIMDE_X86_AES_NO_NATIVE) && !defined(SIMDE_NO_NATIVE)
+  #if defined(SIMDE_ARCH_X86_AES)
+    #define SIMDE_X86_AES_NATIVE
+  #endif
+#endif
+#if defined(SIMDE_X86_AES_NATIVE) && !defined(SIMDE_X86_SSE2_NATIVE)
+  #define SIMDE_X86_SSE2_NATIVE
+#endif
+
 #if !defined(SIMDE_X86_SSE2_NATIVE) && !defined(SIMDE_X86_SSE2_NO_NATIVE) && !defined(SIMDE_NO_NATIVE)
   #if defined(SIMDE_ARCH_X86_SSE2)
     #define SIMDE_X86_SSE2_NATIVE
@@ -3666,7 +3784,7 @@ HEDLEY_DIAGNOSTIC_POP
 #endif
 
 #if !defined(SIMDE_X86_SVML_NATIVE) && !defined(SIMDE_X86_SVML_NO_NATIVE) && !defined(SIMDE_NO_NATIVE)
-  #if defined(__INTEL_COMPILER)
+  #if defined(SIMDE_ARCH_X86) && (defined(__INTEL_COMPILER) || (HEDLEY_MSVC_VERSION_CHECK(14, 20, 0) && !defined(__clang__)))
     #define SIMDE_X86_SVML_NATIVE
   #endif
 #endif
@@ -3677,7 +3795,7 @@ HEDLEY_DIAGNOSTIC_POP
 #endif
 
 #if \
-    defined(SIMDE_X86_AVX_NATIVE) || defined(SIMDE_X86_GFNI_NATIVE)
+    defined(SIMDE_X86_AVX_NATIVE) || defined(SIMDE_X86_GFNI_NATIVE) || defined(SIMDE_X86_SVML_NATIVE)
   #include <immintrin.h>
 #elif defined(SIMDE_X86_SSE4_2_NATIVE)
   #include <nmmintrin.h>
@@ -3703,6 +3821,10 @@ HEDLEY_DIAGNOSTIC_POP
   #endif
 #endif
 
+#if defined(SIMDE_X86_AES_NATIVE)
+  #include <wmmintrin.h>
+#endif
+
 #if defined(HEDLEY_MSVC_VERSION)
   #pragma warning(pop)
 #endif
@@ -3720,6 +3842,9 @@ HEDLEY_DIAGNOSTIC_POP
   #if defined(SIMDE_ARCH_ARM_NEON) && SIMDE_ARCH_ARM_CHECK(8,0) && (__ARM_NEON_FP & 0x02)
     #define SIMDE_ARM_NEON_A32V8_NATIVE
   #endif
+#endif
+#if defined(__ARM_ACLE)
+  #include <arm_acle.h>
 #endif
 #if defined(SIMDE_ARM_NEON_A32V8_NATIVE) && !defined(SIMDE_ARM_NEON_A32V7_NATIVE)
   #define SIMDE_ARM_NEON_A32V7_NATIVE
@@ -3744,12 +3869,27 @@ HEDLEY_DIAGNOSTIC_POP
   #endif
 #endif
 
+#if !defined(SIMDE_RISCV_V_NATIVE) && !defined(SIMDE_RISCV_V_NO_NATIVE) && !defined(SIMDE_NO_NATIVE)
+  #if defined(SIMDE_ARCH_RISCV_V)
+    #define SIMDE_RISCV_V_NATIVE
+  #endif
+#endif
+#if defined(SIMDE_RISCV_V_NATIVE)
+  #include <riscv_vector.h>
+#endif
+
 #if !defined(SIMDE_WASM_SIMD128_NATIVE) && !defined(SIMDE_WASM_SIMD128_NO_NATIVE) && !defined(SIMDE_NO_NATIVE)
   #if defined(SIMDE_ARCH_WASM_SIMD128)
     #define SIMDE_WASM_SIMD128_NATIVE
   #endif
 #endif
-#if defined(SIMDE_WASM_SIMD128_NATIVE)
+
+#if !defined(SIMDE_WASM_RELAXED_SIMD_NATIVE) && !defined(SIMDE_WASM_RELAXED_SIMD_NO_NATIVE) && !defined(SIMDE_NO_NATIVE)
+  #if defined(SIMDE_ARCH_WASM_RELAXED_SIMD)
+    #define SIMDE_WASM_RELAXED_SIMD_NATIVE
+  #endif
+#endif
+#if defined(SIMDE_WASM_SIMD128_NATIVE) || defined(SIMDE_WASM_RELAXED_SIMD_NATIVE)
   #include <wasm_simd128.h>
 #endif
 
@@ -3909,6 +4049,9 @@ HEDLEY_DIAGNOSTIC_POP
     #define SIMDE_NATURAL_FLOAT_VECTOR_SIZE (128)
     #define SIMDE_NATURAL_INT_VECTOR_SIZE (64)
     #define SIMDE_NATURAL_DOUBLE_VECTOR_SIZE (0)
+  #elif defined(SIMDE_RISCV_V_NATIVE) && defined(__riscv_v_fixed_vlen)
+        //FIXME : SIMDE_NATURAL_VECTOR_SIZE == __riscv_v_fixed_vlen
+        #define SIMDE_NATURAL_VECTOR_SIZE (128)
   #endif
 
   #if !defined(SIMDE_NATURAL_VECTOR_SIZE)
@@ -4005,11 +4148,17 @@ HEDLEY_DIAGNOSTIC_POP
   #if !defined(SIMDE_X86_AVX512VPOPCNTDQ_NATIVE)
     #define SIMDE_X86_AVX512VPOPCNTDQ_ENABLE_NATIVE_ALIASES
   #endif
+  #if !defined(SIMDE_X86_AVX512VP2INTERSECT_NATIVE)
+    #define SIMDE_X86_AVX512VP2INTERSECT_ENABLE_NATIVE_ALIASES
+  #endif
   #if !defined(SIMDE_X86_AVX512DQ_NATIVE)
     #define SIMDE_X86_AVX512DQ_ENABLE_NATIVE_ALIASES
   #endif
   #if !defined(SIMDE_X86_AVX512CD_NATIVE)
     #define SIMDE_X86_AVX512CD_ENABLE_NATIVE_ALIASES
+  #endif
+  #if !defined(SIMDE_X86_AVX512FP16_NATIVE)
+    #define SIMDE_X86_AVX512FP16_ENABLE_NATIVE_ALIASES
   #endif
   #if !defined(SIMDE_X86_GFNI_NATIVE)
     #define SIMDE_X86_GFNI_ENABLE_NATIVE_ALIASES
@@ -4022,6 +4171,12 @@ HEDLEY_DIAGNOSTIC_POP
   #endif
   #if !defined(SIMDE_X86_F16C_NATIVE)
     #define SIMDE_X86_F16C_ENABLE_NATIVE_ALIASES
+  #endif
+  #if !defined(SIMDE_X86_AES_NATIVE)
+    #define SIMDE_X86_AES_ENABLE_NATIVE_ALIASES
+  #endif
+  #if !defined(SIMDE_X86_SVML_NATIVE)
+    #define SIMDE_X86_SVML_ENABLE_NATIVE_ALIASES
   #endif
 
   #if !defined(SIMDE_ARM_NEON_A32V7_NATIVE)
@@ -4036,6 +4191,14 @@ HEDLEY_DIAGNOSTIC_POP
 
   #if !defined(SIMDE_ARM_SVE_NATIVE)
     #define SIMDE_ARM_SVE_ENABLE_NATIVE_ALIASES
+  #endif
+
+  #if !defined(SIMDE_RISCV_V_NATIVE)
+    #define SIMDE_RISCV_V_ENABLE_NATIVE_ALIASES
+  #endif
+
+  #if !defined(SIMDE_MIPS_MSA_NATIVE)
+    #define SIMDE_MIPS_MSA_ENABLE_NATIVE_ALIASES
   #endif
 
   #if !defined(SIMDE_WASM_SIMD128_NATIVE)
@@ -4070,6 +4233,10 @@ HEDLEY_DIAGNOSTIC_POP
   #define SIMDE_ARM_NEON_FP16
 #endif
 
+#if defined(SIMDE_ARCH_ARM_NEON_BF16)
+  #define SIMDE_ARM_NEON_BF16
+#endif
+
 #if !defined(SIMDE_LOONGARCH_LASX_NATIVE) && !defined(SIMDE_LOONGARCH_LASX_NO_NATIVE) && !defined(SIMDE_NO_NATIVE)
   #if defined(SIMDE_ARCH_LOONGARCH_LASX)
     #define SIMDE_LOONGARCH_LASX_NATIVE
@@ -4090,12 +4257,12 @@ HEDLEY_DIAGNOSTIC_POP
 #endif
 
 #endif /* !defined(SIMDE_FEATURES_H) */
-/* :: End simde-features.h :: */
+/* :: End simde/simde-features.h :: */
 /* AUTOMATICALLY GENERATED FILE, DO NOT MODIFY */
-/* 8025b06b07f4789aad472563d363f86671d9e372 */
+/* 71fd833d9666141edcd1d3c109a80e228303d8d7 */
 /* AUTOMATICALLY GENERATED FILE, DO NOT MODIFY */
-/* 8025b06b07f4789aad472563d363f86671d9e372 */
-/* :: Begin simde-math.h :: */
+/* 71fd833d9666141edcd1d3c109a80e228303d8d7 */
+/* :: Begin simde/simde-math.h :: */
 /* SPDX-License-Identifier: MIT
  *
  * Permission is hereby granted, free of charge, to any person
@@ -4120,6 +4287,7 @@ HEDLEY_DIAGNOSTIC_POP
  *
  * Copyright:
  *   2017-2020 Evan Nemerson <evan@nemerson.com>
+ *   2023      Yi-Yen Chung <eric681@andestech.com> (Copyright owned by Andes Technology)
  */
 
 /* Attempt to find math functions.  Functions may be in <cmath>,
@@ -4131,9 +4299,9 @@ HEDLEY_DIAGNOSTIC_POP
 #define SIMDE_MATH_H 1
 
 /* AUTOMATICALLY GENERATED FILE, DO NOT MODIFY */
-/* 8025b06b07f4789aad472563d363f86671d9e372 */
+/* 71fd833d9666141edcd1d3c109a80e228303d8d7 */
 /* AUTOMATICALLY GENERATED FILE, DO NOT MODIFY */
-/* 8025b06b07f4789aad472563d363f86671d9e372 */
+/* 71fd833d9666141edcd1d3c109a80e228303d8d7 */
 
 #include <stdint.h>
 #if defined(SIMDE_ARM_NEON_A64V8_NATIVE)
@@ -4532,6 +4700,91 @@ simde_math_fpclassify(double v) {
       simde_math_isinf(v)    ? SIMDE_MATH_FP_INFINITE  :
                                SIMDE_MATH_FP_SUBNORMAL;
   #endif
+}
+
+#define SIMDE_MATH_FP_QNAN      0x01
+#define SIMDE_MATH_FP_PZERO     0x02
+#define SIMDE_MATH_FP_NZERO     0x04
+#define SIMDE_MATH_FP_PINF      0x08
+#define SIMDE_MATH_FP_NINF      0x10
+#define SIMDE_MATH_FP_DENORMAL  0x20
+#define SIMDE_MATH_FP_NEGATIVE  0x40
+#define SIMDE_MATH_FP_SNAN      0x80
+
+static HEDLEY_INLINE
+uint8_t
+simde_math_fpclassf(float v, const int imm8) {
+  union {
+    float f;
+    uint32_t u;
+  } fu;
+  fu.f = v;
+  uint32_t bits = fu.u;
+  uint8_t NegNum = (bits >> 31) & 1;
+  uint32_t const ExpMask = 0x3F800000; // [30:23]
+  uint32_t const MantMask = 0x007FFFFF; // [22:0]
+  uint8_t ExpAllOnes = ((bits & ExpMask) == ExpMask);
+  uint8_t ExpAllZeros = ((bits & ExpMask) == 0);
+  uint8_t MantAllZeros = ((bits & MantMask) == 0);
+  uint8_t ZeroNumber = ExpAllZeros & MantAllZeros;
+  uint8_t SignalingBit = (bits >> 22) & 1;
+
+  uint8_t result = 0;
+  uint8_t qNaN_res = ExpAllOnes & (!MantAllZeros) & SignalingBit;
+  uint8_t Pzero_res = (!NegNum) & ExpAllZeros & MantAllZeros;
+  uint8_t Nzero_res = NegNum & ExpAllZeros & MantAllZeros;
+  uint8_t Pinf_res = (!NegNum) & ExpAllOnes & MantAllZeros;
+  uint8_t Ninf_res = NegNum & ExpAllOnes & MantAllZeros;
+  uint8_t Denorm_res = ExpAllZeros & (!MantAllZeros);
+  uint8_t FinNeg_res = NegNum & (!ExpAllOnes) & (!ZeroNumber);
+  uint8_t sNaN_res = ExpAllOnes & (!MantAllZeros) & (!SignalingBit);
+  result = (((imm8 >> 0) & qNaN_res)   | \
+            ((imm8 >> 1) & Pzero_res)  | \
+            ((imm8 >> 2) & Nzero_res)  | \
+            ((imm8 >> 3) & Pinf_res)   | \
+            ((imm8 >> 4) & Ninf_res)   | \
+            ((imm8 >> 5) & Denorm_res) | \
+            ((imm8 >> 6) & FinNeg_res) | \
+            ((imm8 >> 7) & sNaN_res));
+  return result;
+}
+
+static HEDLEY_INLINE
+uint8_t
+simde_math_fpclass(double v, const int imm8) {
+  union {
+    double d;
+    uint64_t u;
+  } du;
+  du.d = v;
+  uint64_t bits = du.u;
+  uint8_t NegNum = (bits >> 63) & 1;
+  uint64_t const ExpMask =  0x3FF0000000000000; // [62:52]
+  uint64_t const MantMask = 0x000FFFFFFFFFFFFF; // [51:0]
+  uint8_t ExpAllOnes = ((bits & ExpMask) == ExpMask);
+  uint8_t ExpAllZeros = ((bits & ExpMask) == 0);
+  uint8_t MantAllZeros = ((bits & MantMask) == 0);
+  uint8_t ZeroNumber = ExpAllZeros & MantAllZeros;
+  uint8_t SignalingBit = (bits >> 51) & 1;
+
+  uint8_t result = 0;
+  uint8_t qNaN_res = ExpAllOnes & (!MantAllZeros) & SignalingBit;
+  uint8_t Pzero_res = (!NegNum) & ExpAllZeros & MantAllZeros;
+  uint8_t Nzero_res = NegNum & ExpAllZeros & MantAllZeros;
+  uint8_t Pinf_res = (!NegNum) & ExpAllOnes & MantAllZeros;
+  uint8_t Ninf_res = NegNum & ExpAllOnes & MantAllZeros;
+  uint8_t Denorm_res = ExpAllZeros & (!MantAllZeros);
+  uint8_t FinNeg_res = NegNum & (!ExpAllOnes) & (!ZeroNumber);
+  uint8_t sNaN_res = ExpAllOnes & (!MantAllZeros) & (!SignalingBit);
+  result = (((imm8 >> 0) & qNaN_res)   | \
+            ((imm8 >> 1) & Pzero_res)  | \
+            ((imm8 >> 2) & Nzero_res)  | \
+            ((imm8 >> 3) & Pinf_res)   | \
+            ((imm8 >> 4) & Ninf_res)   | \
+            ((imm8 >> 5) & Denorm_res) | \
+            ((imm8 >> 6) & FinNeg_res) | \
+            ((imm8 >> 7) & sNaN_res));
+  return result;
 }
 
 /*** Manipulation functions ***/
@@ -5280,7 +5533,7 @@ simde_math_fpclassify(double v) {
 
 #if !defined(simde_math_roundeven)
   #if \
-     (!defined(HEDLEY_EMSCRIPTEN_VERSION) && HEDLEY_HAS_BUILTIN(__builtin_roundeven)) || \
+     ((!defined(HEDLEY_EMSCRIPTEN_VERSION) || HEDLEY_EMSCRIPTEN_VERSION_CHECK(3, 1, 43)) && HEDLEY_HAS_BUILTIN(__builtin_roundeven)) || \
       HEDLEY_GCC_VERSION_CHECK(10,0,0)
     #define simde_math_roundeven(v) __builtin_roundeven(v)
   #elif defined(simde_math_round) && defined(simde_math_fabs)
@@ -5300,7 +5553,7 @@ simde_math_fpclassify(double v) {
 
 #if !defined(simde_math_roundevenf)
   #if \
-     (!defined(HEDLEY_EMSCRIPTEN_VERSION) && HEDLEY_HAS_BUILTIN(__builtin_roundevenf)) || \
+     ((!defined(HEDLEY_EMSCRIPTEN_VERSION) || HEDLEY_EMSCRIPTEN_VERSION_CHECK(3, 1, 43)) && HEDLEY_HAS_BUILTIN(__builtin_roundevenf)) || \
       HEDLEY_GCC_VERSION_CHECK(10,0,0)
     #define simde_math_roundevenf(v) __builtin_roundevenf(v)
   #elif defined(simde_math_roundf) && defined(simde_math_fabsf)
@@ -5375,6 +5628,16 @@ simde_math_fpclassify(double v) {
     #define simde_math_sqrtf(v) std::sqrt(v)
   #elif defined(SIMDE_MATH_HAVE_MATH_H)
     #define simde_math_sqrtf(v) sqrtf(v)
+  #endif
+#endif
+
+#if !defined(simde_math_sqrtl)
+  #if SIMDE_MATH_BUILTIN_LIBM(sqrtl)
+    #define simde_math_sqrtl(v) __builtin_sqrtl(v)
+  #elif defined(SIMDE_MATH_HAVE_CMATH)
+    #define simde_math_sqrtl(v) std::sqrt(v)
+  #elif defined(SIMDE_MATH_HAVE_MATH_H)
+    #define simde_math_sqrtl(v) sqrtl(v)
   #endif
 #endif
 
@@ -5518,7 +5781,7 @@ simde_math_fpclassify(double v) {
   static HEDLEY_INLINE
   double
   simde_math_cdfnorminv(double p) {
-    static const double a[] = {
+    static const double a[6] = {
       -3.969683028665376e+01,
        2.209460984245205e+02,
       -2.759285104469687e+02,
@@ -5527,7 +5790,7 @@ simde_math_fpclassify(double v) {
        2.506628277459239e+00
     };
 
-    static const double b[] = {
+    static const double b[5] = {
       -5.447609879822406e+01,
        1.615858368580409e+02,
       -1.556989798598866e+02,
@@ -5535,7 +5798,7 @@ simde_math_fpclassify(double v) {
       -1.328068155288572e+01
     };
 
-    static const double c[] = {
+    static const double c[6] = {
       -7.784894002430293e-03,
       -3.223964580411365e-01,
       -2.400758277161838e+00,
@@ -5544,7 +5807,7 @@ simde_math_fpclassify(double v) {
        2.938163982698783e+00
     };
 
-    static const double d[] = {
+    static const double d[4] = {
       7.784695709041462e-03,
       3.224671290700398e-01,
       2.445134137142996e+00,
@@ -5585,7 +5848,7 @@ simde_math_fpclassify(double v) {
   static HEDLEY_INLINE
   float
   simde_math_cdfnorminvf(float p) {
-    static const float a[] = {
+    static const float a[6] = {
       -3.969683028665376e+01f,
        2.209460984245205e+02f,
       -2.759285104469687e+02f,
@@ -5593,14 +5856,14 @@ simde_math_fpclassify(double v) {
       -3.066479806614716e+01f,
        2.506628277459239e+00f
     };
-    static const float b[] = {
+    static const float b[5] = {
       -5.447609879822406e+01f,
        1.615858368580409e+02f,
       -1.556989798598866e+02f,
        6.680131188771972e+01f,
       -1.328068155288572e+01f
     };
-    static const float c[] = {
+    static const float c[6] = {
       -7.784894002430293e-03f,
       -3.223964580411365e-01f,
       -2.400758277161838e+00f,
@@ -5608,7 +5871,7 @@ simde_math_fpclassify(double v) {
        4.374664141464968e+00f,
        2.938163982698783e+00f
     };
-    static const float d[] = {
+    static const float d[4] = {
       7.784695709041462e-03f,
       3.224671290700398e-01f,
       2.445134137142996e+00f,
@@ -6067,10 +6330,10 @@ simde_math_subs_u64(uint64_t a, uint64_t b) {
 HEDLEY_DIAGNOSTIC_POP
 
 #endif /* !defined(SIMDE_MATH_H) */
-/* :: End simde-math.h :: */
+/* :: End simde/simde-math.h :: */
 /* AUTOMATICALLY GENERATED FILE, DO NOT MODIFY */
-/* 8025b06b07f4789aad472563d363f86671d9e372 */
-/* :: Begin simde-constify.h :: */
+/* 71fd833d9666141edcd1d3c109a80e228303d8d7 */
+/* :: Begin simde/simde-constify.h :: */
 /* SPDX-License-Identifier: MIT
  *
  * Permission is hereby granted, free of charge, to any person
@@ -6124,7 +6387,7 @@ HEDLEY_DIAGNOSTIC_POP
 #define SIMDE_CONSTIFY_H
 
 /* AUTOMATICALLY GENERATED FILE, DO NOT MODIFY */
-/* 8025b06b07f4789aad472563d363f86671d9e372 */
+/* 71fd833d9666141edcd1d3c109a80e228303d8d7 */
 
 HEDLEY_DIAGNOSTIC_PUSH
 SIMDE_DIAGNOSTIC_DISABLE_VARIADIC_MACROS_
@@ -6469,10 +6732,10 @@ SIMDE_DIAGNOSTIC_DISABLE_CPP98_COMPAT_PEDANTIC_
 HEDLEY_DIAGNOSTIC_POP
 
 #endif
-/* :: End simde-constify.h :: */
+/* :: End simde/simde-constify.h :: */
 /* AUTOMATICALLY GENERATED FILE, DO NOT MODIFY */
-/* 8025b06b07f4789aad472563d363f86671d9e372 */
-/* :: Begin simde-align.h :: */
+/* 71fd833d9666141edcd1d3c109a80e228303d8d7 */
+/* :: Begin simde/simde-align.h :: */
 /* Alignment
  * Created by Evan Nemerson <evan@nemerson.com>
  *
@@ -6486,7 +6749,7 @@ HEDLEY_DIAGNOSTIC_POP
  **********************************************************************
  *
  * This is portability layer which should help iron out some
- * differences across various compilers, as well as various verisons of
+ * differences across various compilers, as well as various versions of
  * C and C++.
  *
  * It was originally developed for SIMD Everywhere
@@ -6528,10 +6791,10 @@ HEDLEY_DIAGNOSTIC_POP
 #define SIMDE_ALIGN_H
 
 /* AUTOMATICALLY GENERATED FILE, DO NOT MODIFY */
-/* 8025b06b07f4789aad472563d363f86671d9e372 */
+/* 71fd833d9666141edcd1d3c109a80e228303d8d7 */
 
 /* I know this seems a little silly, but some non-hosted compilers
- * don't have stddef.h, so we try to accomodate them. */
+ * don't have stddef.h, so we try to accommodate them. */
 #if !defined(SIMDE_ALIGN_SIZE_T_)
   #if defined(__SIZE_TYPE__)
     #define SIMDE_ALIGN_SIZE_T_ __SIZE_TYPE__
@@ -6881,7 +7144,7 @@ HEDLEY_DIAGNOSTIC_POP
 
 /* SIMDE_ALIGN_ASSUME_LIKE(Pointer, Type)
  *
- * Tihs is similar to SIMDE_ALIGN_ASSUME_TO, except that it takes a
+ * This is similar to SIMDE_ALIGN_ASSUME_TO, except that it takes a
  * type instead of a numeric value. */
 #if defined(SIMDE_ALIGN_OF) && defined(SIMDE_ALIGN_ASSUME_TO)
   #define SIMDE_ALIGN_ASSUME_LIKE(Pointer, Type) SIMDE_ALIGN_ASSUME_TO(Pointer, SIMDE_ALIGN_OF(Type))
@@ -6924,7 +7187,7 @@ HEDLEY_DIAGNOSTIC_POP
 #define SIMDE_ALIGN_ASSUME_CAST(Type, Pointer) SIMDE_ALIGN_ASSUME_LIKE(SIMDE_ALIGN_CAST(Type, Pointer), Type)
 
 #endif /* !defined(SIMDE_ALIGN_H) */
-/* :: End simde-align.h :: */
+/* :: End simde/simde-align.h :: */
 
 /* In some situations, SIMDe has to make large performance sacrifices
  * for small increases in how faithfully it reproduces an API, but
@@ -7442,6 +7705,57 @@ typedef SIMDE_FLOAT32_TYPE simde_float32;
 #endif
 typedef SIMDE_FLOAT64_TYPE simde_float64;
 
+#if defined(SIMDE_POLY8_TYPE)
+#  undef SIMDE_POLY8_TYPE
+#endif
+#if defined(SIMDE_ARM_NEON_A32V7_NATIVE)
+#  define SIMDE_POLY8_TYPE poly8_t
+#  define SIMDE_POLY8_C(value) (HEDLEY_STATIC_CAST(poly8_t, value))
+#else
+#  define SIMDE_POLY8_TYPE uint8_t
+#  define SIMDE_POLY8_C(value) (HEDLEY_STATIC_CAST(uint8_t, value))
+#endif
+typedef SIMDE_POLY8_TYPE simde_poly8;
+
+#if defined(SIMDE_POLY16_TYPE)
+#  undef SIMDE_POLY16_TYPE
+#endif
+#if defined(SIMDE_ARM_NEON_A32V7_NATIVE)
+#  define SIMDE_POLY16_TYPE poly16_t
+#  define SIMDE_POLY16_C(value) (HEDLEY_STATIC_CAST(poly16_t, value))
+#else
+#  define SIMDE_POLY16_TYPE uint16_t
+#  define SIMDE_POLY16_C(value) (HEDLEY_STATIC_CAST(uint16_t, value))
+#endif
+typedef SIMDE_POLY16_TYPE simde_poly16;
+
+#if defined(SIMDE_POLY64_TYPE)
+#  undef SIMDE_POLY64_TYPE
+#endif
+#if defined(SIMDE_ARM_NEON_A32V8_NATIVE)
+#  define SIMDE_POLY64_TYPE poly64_t
+#  define SIMDE_POLY64_C(value) (HEDLEY_STATIC_CAST(poly64_t, value ## ull))
+#else
+#  define SIMDE_POLY64_TYPE uint64_t
+#  define SIMDE_POLY64_C(value) value ## ull
+#endif
+typedef SIMDE_POLY64_TYPE simde_poly64;
+
+#if defined(SIMDE_POLY128_TYPE)
+#  undef SIMDE_POLY128_TYPE
+#endif
+#if defined(SIMDE_ARM_NEON_A32V8_NATIVE) && defined(SIMDE_ARCH_ARM_CRYPTO)
+#  define SIMDE_POLY128_TYPE poly128_t
+#  define SIMDE_POLY128_C(value) value
+#elif defined(__SIZEOF_INT128__)
+#  define SIMDE_POLY128_TYPE __int128
+#  define SIMDE_POLY128_C(value) (HEDLEY_STATIC_CAST(__int128, value))
+#else
+#  define SIMDE_POLY128_TYPE uint64_t
+#  define SIMDE_TARGET_NOT_SUPPORT_INT128_TYPE 1
+#endif
+typedef SIMDE_POLY128_TYPE simde_poly128;
+
 #if defined(__cplusplus)
   typedef bool simde_bool;
 #elif defined(__STDC_VERSION__) && (__STDC_VERSION__ >= 199901L)
@@ -7675,8 +7989,8 @@ SIMDE_DEFINE_CONVERSION_FUNCTION_(simde_float64_as_uint64,      uint64_t, simde_
 SIMDE_DEFINE_CONVERSION_FUNCTION_(simde_uint64_as_float64, simde_float64, uint64_t)
 
 /* AUTOMATICALLY GENERATED FILE, DO NOT MODIFY */
-/* 8025b06b07f4789aad472563d363f86671d9e372 */
-/* :: Begin check.h :: */
+/* 71fd833d9666141edcd1d3c109a80e228303d8d7 */
+/* :: Begin simde/check.h :: */
 /* Check (assertions)
  * Portable Snippets - https://github.com/nemequ/portable-snippets
  * Created by Evan Nemerson <evan@nemerson.com>
@@ -7697,9 +8011,9 @@ SIMDE_DEFINE_CONVERSION_FUNCTION_(simde_uint64_as_float64, simde_float64, uint64
 #endif
 
 /* AUTOMATICALLY GENERATED FILE, DO NOT MODIFY */
-/* 8025b06b07f4789aad472563d363f86671d9e372 */
+/* 71fd833d9666141edcd1d3c109a80e228303d8d7 */
 /* AUTOMATICALLY GENERATED FILE, DO NOT MODIFY */
-/* 8025b06b07f4789aad472563d363f86671d9e372 */
+/* 71fd833d9666141edcd1d3c109a80e228303d8d7 */
 #include <stdint.h>
 
 #if !defined(_WIN32)
@@ -7740,8 +8054,8 @@ SIMDE_DEFINE_CONVERSION_FUNCTION_(simde_uint64_as_float64, simde_float64, uint64
 #  endif
 
 /* AUTOMATICALLY GENERATED FILE, DO NOT MODIFY */
-/* 8025b06b07f4789aad472563d363f86671d9e372 */
-/* :: Begin debug-trap.h :: */
+/* 71fd833d9666141edcd1d3c109a80e228303d8d7 */
+/* :: Begin simde/debug-trap.h :: */
 /* Debugging assertions and traps
  * Portable Snippets - https://github.com/nemequ/portable-snippets
  * Created by Evan Nemerson <evan@nemerson.com>
@@ -7827,7 +8141,7 @@ SIMDE_DEFINE_CONVERSION_FUNCTION_(simde_uint64_as_float64, simde_float64, uint64
 #endif
 
 #endif /* !defined(SIMDE_DEBUG_TRAP_H) */
-/* :: End debug-trap.h :: */
+/* :: End simde/debug-trap.h :: */
 
    HEDLEY_DIAGNOSTIC_PUSH
    SIMDE_DIAGNOSTIC_DISABLE_VARIADIC_MACROS_
@@ -8043,7 +8357,7 @@ SIMDE_DEFINE_CONVERSION_FUNCTION_(simde_uint64_as_float64, simde_float64, uint64
   simde_assert_ptr(ptr, !=, NULL)
 
 #endif /* !defined(SIMDE_CHECK_H) */
-/* :: End check.h :: */
+/* :: End simde/check.h :: */
 
 /* GCC/clang have a bunch of functionality in builtins which we would
  * like to access, but the suffixes indicate whether the operate on
@@ -8181,6 +8495,9 @@ HEDLEY_DIAGNOSTIC_POP
 #    if !HEDLEY_GCC_VERSION_CHECK(4,6,0)
 #      define SIMDE_BUG_GCC_BAD_MM_EXTRACT_EPI8 /* TODO: find relevant bug or commit */
 #    endif
+#    if !HEDLEY_GCC_VERSION_CHECK(7,4,0) || (HEDLEY_GCC_VERSION_CHECK(8,0,0) && !HEDLEY_GCC_VERSION_CHECK(8,3,0))
+#      define SIMDE_BUG_GCC_87467
+#    endif
 #    if !HEDLEY_GCC_VERSION_CHECK(8,0,0)
 #      define SIMDE_BUG_GCC_REV_247851
 #    endif
@@ -8195,7 +8512,9 @@ HEDLEY_DIAGNOSTIC_POP
 #    if !HEDLEY_GCC_VERSION_CHECK(9,0,0) && defined(SIMDE_ARCH_AARCH64)
 #      define SIMDE_BUG_GCC_BAD_VEXT_REV32
 #    endif
-#    if defined(SIMDE_ARCH_X86) && !defined(SIMDE_ARCH_AMD64)
+#    if !(HEDLEY_GCC_VERSION_CHECK(9,4,0) \
+          || (HEDLEY_GCC_VERSION_CHECK(8,5,0) && !HEDLEY_GCC_VERSION_CHECK(9,0,0)) \
+         ) && defined(SIMDE_ARCH_X86) && !defined(SIMDE_ARCH_AMD64)
 #      define SIMDE_BUG_GCC_94482
 #    endif
 #    if (defined(SIMDE_ARCH_X86) && !defined(SIMDE_ARCH_AMD64)) || defined(SIMDE_ARCH_ZARCH)
@@ -8211,7 +8530,9 @@ HEDLEY_DIAGNOSTIC_POP
 #      if defined(__OPTIMIZE__)
 #        define SIMDE_BUG_GCC_100927
 #      endif
-#      define SIMDE_BUG_GCC_98521
+#      if !(HEDLEY_GCC_VERSION_CHECK(10,3,0))
+#        define SIMDE_BUG_GCC_98521
+#      endif
 #    endif
 #    if !HEDLEY_GCC_VERSION_CHECK(9,4,0) && defined(SIMDE_ARCH_AARCH64)
 #      define SIMDE_BUG_GCC_94488
@@ -8219,20 +8540,30 @@ HEDLEY_DIAGNOSTIC_POP
 #    if !HEDLEY_GCC_VERSION_CHECK(9,1,0) && defined(SIMDE_ARCH_AARCH64)
 #      define SIMDE_BUG_GCC_REV_264019
 #    endif
-#    if defined(SIMDE_ARCH_ARM)
+#    if (!HEDLEY_GCC_VERSION_CHECK(9,0,0) && !defined(SIMDE_ARCH_AARCH64)) || (!defined(SIMDE_ARCH_AARCH64) && defined(SIMDE_ARCH_ARM))
+#      define SIMDE_BUG_GCC_REV_260989
+#    endif
+#    if defined(SIMDE_ARCH_ARM) && !defined(SIMDE_ARCH_AARCH64)
 #      define SIMDE_BUG_GCC_95399
 #      define SIMDE_BUG_GCC_95471
-#    elif defined(SIMDE_ARCH_POWER)
+#      define SIMDE_BUG_GCC_111609
+#      if SIMDE_ARCH_ARM_CHECK(8,0)
+#        define SIMDE_BUG_GCC_113065
+#      endif
+#    endif
+#    if defined(SIMDE_ARCH_POWER)
 #      define SIMDE_BUG_GCC_95227
 #      define SIMDE_BUG_GCC_95782
 #      if !HEDLEY_GCC_VERSION_CHECK(12,0,0)
 #        define SIMDE_BUG_VEC_CPSGN_REVERSED_ARGS
 #      endif
-#    elif defined(SIMDE_ARCH_X86) || defined(SIMDE_ARCH_AMD64)
+#    endif
+#    if defined(SIMDE_ARCH_X86) || defined(SIMDE_ARCH_AMD64)
 #      if !HEDLEY_GCC_VERSION_CHECK(10,2,0) && !defined(__OPTIMIZE__)
 #        define SIMDE_BUG_GCC_96174
 #      endif
-#    elif defined(SIMDE_ARCH_ZARCH)
+#    endif
+#    if defined(SIMDE_ARCH_ZARCH)
 #      define SIMDE_BUG_GCC_95782
 #      if HEDLEY_GCC_VERSION_CHECK(10,0,0)
 #        define SIMDE_BUG_GCC_101614
@@ -8246,14 +8577,21 @@ HEDLEY_DIAGNOSTIC_POP
 #        define SIMDE_BUG_GCC_100762
 #      endif
 #    endif
-#    define SIMDE_BUG_GCC_95399
-#    if !defined(__OPTIMIZE__)
+#    if !defined(__OPTIMIZE__) && !(\
+       HEDLEY_GCC_VERSION_CHECK(11,4,0) \
+       || (HEDLEY_GCC_VERSION_CHECK(10,4,0) && !(HEDLEY_GCC_VERSION_CHECK(11,0,0))) \
+       || (HEDLEY_GCC_VERSION_CHECK(9,5,0) && !(HEDLEY_GCC_VERSION_CHECK(10,0,0))))
 #      define SIMDE_BUG_GCC_105339
 #    endif
 #  elif defined(__clang__)
 #    if defined(SIMDE_ARCH_AARCH64)
-#      define SIMDE_BUG_CLANG_45541
-#      define SIMDE_BUG_CLANG_48257
+#      define SIMDE_BUG_CLANG_48257  // https://github.com/llvm/llvm-project/issues/47601
+#      define SIMDE_BUG_CLANG_71362  // https://github.com/llvm/llvm-project/issues/71362
+#      define SIMDE_BUG_CLANG_71365  // https://github.com/llvm/llvm-project/issues/71365
+#      define SIMDE_BUG_CLANG_71751  // https://github.com/llvm/llvm-project/issues/71751
+#      if !SIMDE_DETECT_CLANG_VERSION_CHECK(15,0,0)
+#        define SIMDE_BUG_CLANG_45541
+#      endif
 #      if !SIMDE_DETECT_CLANG_VERSION_CHECK(12,0,0)
 #        define SIMDE_BUG_CLANG_46840
 #        define SIMDE_BUG_CLANG_46844
@@ -8270,6 +8608,9 @@ HEDLEY_DIAGNOSTIC_POP
 #      if !SIMDE_DETECT_CLANG_VERSION_CHECK(11,0,0)
 #        define SIMDE_BUG_CLANG_BAD_VGET_SET_LANE_TYPES
 #      endif
+#      if defined(SIMDE_ARM_NEON_A32V7_NATIVE) && !defined(SIMDE_ARM_NEON_A32V8_NATIVE)
+#        define SIMDE_BUG_CLANG_71763  // https://github.com/llvm/llvm-project/issues/71763
+#      endif
 #    endif
 #    if defined(SIMDE_ARCH_POWER) && !SIMDE_DETECT_CLANG_VERSION_CHECK(12,0,0)
 #      define SIMDE_BUG_CLANG_46770
@@ -8284,7 +8625,9 @@ HEDLEY_DIAGNOSTIC_POP
 #      define SIMDE_BUG_CLANG_POWER9_16x4_BAD_SHIFT
 #    endif
 #    if defined(SIMDE_ARCH_POWER)
-#      define SIMDE_BUG_CLANG_50932
+#      if !SIMDE_DETECT_CLANG_VERSION_CHECK(14,0,0)
+#        define SIMDE_BUG_CLANG_50932
+#      endif
 #      if !SIMDE_DETECT_CLANG_VERSION_CHECK(12,0,0)
 #        define SIMDE_BUG_VEC_CPSGN_REVERSED_ARGS
 #      endif
@@ -8311,10 +8654,10 @@ HEDLEY_DIAGNOSTIC_POP
 #      if HEDLEY_HAS_WARNING("-Wvector-conversion") && SIMDE_DETECT_CLANG_VERSION_NOT(11,0,0)
 #        define SIMDE_BUG_CLANG_44589
 #      endif
-#      define SIMDE_BUG_CLANG_48673
+#      define SIMDE_BUG_CLANG_48673  // https://github.com/llvm/llvm-project/issues/48017
 #    endif
-#    define SIMDE_BUG_CLANG_45959
-#    if defined(SIMDE_ARCH_WASM_SIMD128)
+#    define SIMDE_BUG_CLANG_45959  // https://github.com/llvm/llvm-project/issues/45304
+#    if defined(SIMDE_ARCH_WASM_SIMD128) && !SIMDE_DETECT_CLANG_VERSION_CHECK(17,0,0)
 #      define SIMDE_BUG_CLANG_60655
 #    endif
 #  elif defined(HEDLEY_MSVC_VERSION)
@@ -8363,11 +8706,39 @@ HEDLEY_DIAGNOSTIC_POP
   #define SIMDE_CAST_VECTOR_SHIFT_COUNT(width, value) HEDLEY_STATIC_CAST(int##width##_t, (value))
 #endif
 
+/* Initial support for RISCV V extensions based on ZVE64D. */
+#if defined(SIMDE_ARCH_RISCV_ZVE64D) && SIMDE_NATURAL_VECTOR_SIZE >= 64
+  #define RVV_FIXED_TYPE_DEF(name, lmul) \
+    typedef vint8##name##_t  fixed_vint8##name##_t __attribute__((riscv_rvv_vector_bits(__riscv_v_fixed_vlen * lmul))); \
+    typedef vint16##name##_t fixed_vint16##name##_t __attribute__((riscv_rvv_vector_bits(__riscv_v_fixed_vlen * lmul))); \
+    typedef vint32##name##_t fixed_vint32##name##_t __attribute__((riscv_rvv_vector_bits(__riscv_v_fixed_vlen * lmul))); \
+    typedef vuint8##name##_t fixed_vuint8##name##_t __attribute__((riscv_rvv_vector_bits(__riscv_v_fixed_vlen * lmul))); \
+    typedef vuint16##name##_t fixed_vuint16##name##_t __attribute__((riscv_rvv_vector_bits(__riscv_v_fixed_vlen * lmul))); \
+    typedef vuint32##name##_t fixed_vuint32##name##_t __attribute__((riscv_rvv_vector_bits(__riscv_v_fixed_vlen * lmul))); \
+    typedef vfloat32##name##_t fixed_vfloat32##name##_t __attribute__((riscv_rvv_vector_bits(__riscv_v_fixed_vlen * lmul)));
+    RVV_FIXED_TYPE_DEF(mf2, 1/2);
+    RVV_FIXED_TYPE_DEF(m1, 1);
+    RVV_FIXED_TYPE_DEF(m2, 2);
+  #define RVV_FIXED_TYPE_DEF_64B(name, lmul) \
+    typedef vint64##name##_t fixed_vint64##name##_t __attribute__((riscv_rvv_vector_bits(__riscv_v_fixed_vlen * lmul))); \
+    typedef vuint64##name##_t fixed_vuint64##name##_t __attribute__((riscv_rvv_vector_bits(__riscv_v_fixed_vlen * lmul))); \
+    typedef vfloat64##name##_t fixed_vfloat64##name##_t __attribute__((riscv_rvv_vector_bits(__riscv_v_fixed_vlen * lmul)));
+    RVV_FIXED_TYPE_DEF_64B(m1, 1);
+    RVV_FIXED_TYPE_DEF_64B(m2, 2);
+  #if defined(SIMDE_ARCH_RISCV_ZVFH)
+    #define RVV_FIXED_TYPE_DEF_16F(name, lmul) \
+      typedef vfloat16##name##_t fixed_vfloat16##name##_t __attribute__((riscv_rvv_vector_bits(__riscv_v_fixed_vlen * lmul)));
+    RVV_FIXED_TYPE_DEF_16F(mf2, 1/2);
+    RVV_FIXED_TYPE_DEF_16F(m1, 1);
+    RVV_FIXED_TYPE_DEF_16F(m2, 2);
+  #endif
+#endif
+
 /* SIMDE_DIAGNOSTIC_DISABLE_USED_BUT_MARKED_UNUSED_ */
 HEDLEY_DIAGNOSTIC_POP
 
 #endif /* !defined(SIMDE_COMMON_H) */
-/* :: End simde-common.h :: */
+/* :: End simde/simde-common.h :: */
 
 HEDLEY_DIAGNOSTIC_PUSH
 SIMDE_DISABLE_UNWANTED_DIAGNOSTICS
@@ -10736,7 +11107,335 @@ SIMDE_END_DECLS_
 HEDLEY_DIAGNOSTIC_POP
 
 #endif /* !defined(SIMDE_X86_MMX_H) */
-/* :: End x86/mmx.h :: */
+/* :: End simde/x86/mmx.h :: */
+/* AUTOMATICALLY GENERATED FILE, DO NOT MODIFY */
+/* 71fd833d9666141edcd1d3c109a80e228303d8d7 */
+/* :: Begin simde/simde-f16.h :: */
+/* SPDX-License-Identifier: MIT
+ *
+ * Permission is hereby granted, free of charge, to any person
+ * obtaining a copy of this software and associated documentation
+ * files (the "Software"), to deal in the Software without
+ * restriction, including without limitation the rights to use, copy,
+ * modify, merge, publish, distribute, sublicense, and/or sell copies
+ * of the Software, and to permit persons to whom the Software is
+ * furnished to do so, subject to the following conditions:
+ *
+ * The above copyright notice and this permission notice shall be
+ * included in all copies or substantial portions of the Software.
+ *
+ * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND,
+ * EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF
+ * MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND
+ * NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS
+ * BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN
+ * ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN
+ * CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+ * SOFTWARE.
+ *
+ * Copyright:
+ *   2021      Evan Nemerson <evan@nemerson.com>
+ *   2023      Ju-Hung Li <jhlee@pllab.cs.nthu.edu.tw> (Copyright owned by NTHU pllab)
+ */
+
+/* AUTOMATICALLY GENERATED FILE, DO NOT MODIFY */
+/* 71fd833d9666141edcd1d3c109a80e228303d8d7 */
+/* AUTOMATICALLY GENERATED FILE, DO NOT MODIFY */
+/* 71fd833d9666141edcd1d3c109a80e228303d8d7 */
+/* AUTOMATICALLY GENERATED FILE, DO NOT MODIFY */
+/* 71fd833d9666141edcd1d3c109a80e228303d8d7 */
+
+#if !defined(SIMDE_FLOAT16_H)
+#define SIMDE_FLOAT16_H
+
+HEDLEY_DIAGNOSTIC_PUSH
+SIMDE_DISABLE_UNWANTED_DIAGNOSTICS
+SIMDE_BEGIN_DECLS_
+
+/* Portable version which should work on pretty much any compiler.
+ * Obviously you can't rely on compiler support for things like
+ * conversion to/from 32-bit floats, so make sure you always use the
+ * functions and macros in this file!
+ *
+ * The portable implementations are (heavily) based on CC0 code by
+ * Fabian Giesen: <https://gist.github.com/rygorous/2156668> (see also
+ * <https://fgiesen.wordpress.com/2012/03/28/half-to-float-done-quic/>).
+ * I have basically just modified it to get rid of some UB (lots of
+ * aliasing, right shifting a negative value), use fixed-width types,
+ * and work in C. */
+#define SIMDE_FLOAT16_API_PORTABLE 1
+/* _Float16, per C standard (TS 18661-3;
+ * <http://www.open-std.org/jtc1/sc22/wg14/www/docs/n1945.pdf>). */
+#define SIMDE_FLOAT16_API_FLOAT16 2
+/* clang >= 6.0 supports __fp16 as an interchange format on all
+ * targets, but only allows you to use them for arguments and return
+ * values on targets which have defined an ABI.  We get around the
+ * restriction by wrapping the __fp16 in a struct, but we can't do
+ * that on Arm since it would break compatibility with the NEON F16
+ * functions. */
+#define SIMDE_FLOAT16_API_FP16_NO_ABI 3
+/* This is basically __fp16 as specified by Arm, where arguments and
+ * return values are raw __fp16 values not structs. */
+#define SIMDE_FLOAT16_API_FP16 4
+
+/* Choosing an implementation.  This is a bit rough, but I don't have
+ * any ideas on how to improve it.  If you do, patches are definitely
+ * welcome. */
+#if !defined(SIMDE_FLOAT16_API)
+  #if defined(__ARM_FP16_FORMAT_IEEE) && (defined(SIMDE_ARM_NEON_FP16) || defined(__ARM_FP16_ARGS))
+    #define SIMDE_FLOAT16_API SIMDE_FLOAT16_API_FP16
+  #elif !defined(__EMSCRIPTEN__) && !(defined(__clang__) && defined(SIMDE_ARCH_POWER)) && \
+    !(defined(HEDLEY_MSVC_VERSION) && defined(__clang__)) && \
+    !(defined(SIMDE_ARCH_MIPS) && defined(__clang__)) && \
+    !(defined(__clang__) && defined(SIMDE_ARCH_RISCV64)) && ( \
+      defined(SIMDE_X86_AVX512FP16_NATIVE) || \
+      (defined(SIMDE_ARCH_X86_SSE2) && HEDLEY_GCC_VERSION_CHECK(12,0,0)) || \
+      (defined(SIMDE_ARCH_AARCH64) && HEDLEY_GCC_VERSION_CHECK(7,0,0) && !defined(__cplusplus)) || \
+      ((defined(SIMDE_ARCH_X86) || defined(SIMDE_ARCH_AMD64)) && SIMDE_DETECT_CLANG_VERSION_CHECK(15,0,0)) || \
+      (!(defined(SIMDE_ARCH_X86) || defined(SIMDE_ARCH_AMD64)) && SIMDE_DETECT_CLANG_VERSION_CHECK(6,0,0))) || \
+      defined(SIMDE_ARCH_RISCV_ZVFH)
+    /* We haven't found a better way to detect this.  It seems like defining
+    * __STDC_WANT_IEC_60559_TYPES_EXT__, then including float.h, then
+    * checking for defined(FLT16_MAX) should work, but both gcc and
+    * clang will define the constants even if _Float16 is not
+    * supported.  Ideas welcome. */
+    #define SIMDE_FLOAT16_API SIMDE_FLOAT16_API_FLOAT16
+  #elif defined(__FLT16_MIN__) && \
+      (defined(__clang__) && \
+      (!defined(SIMDE_ARCH_AARCH64) || SIMDE_DETECT_CLANG_VERSION_CHECK(7,0,0)) \
+      && !defined(SIMDE_ARCH_RISCV64))
+    #define SIMDE_FLOAT16_API SIMDE_FLOAT16_API_FP16_NO_ABI
+  #else
+    #define SIMDE_FLOAT16_API SIMDE_FLOAT16_API_PORTABLE
+  #endif
+#endif
+
+#if SIMDE_FLOAT16_API == SIMDE_FLOAT16_API_FLOAT16
+  typedef _Float16 simde_float16;
+  #define SIMDE_FLOAT16_IS_SCALAR 1
+  #if !defined(__cplusplus)
+    #define SIMDE_FLOAT16_C(value) value##f16
+  #else
+    #define SIMDE_FLOAT16_C(value) HEDLEY_STATIC_CAST(_Float16, (value))
+  #endif
+#elif SIMDE_FLOAT16_API == SIMDE_FLOAT16_API_FP16_NO_ABI
+  typedef struct { __fp16 value; } simde_float16;
+  #if defined(SIMDE_STATEMENT_EXPR_) && !defined(SIMDE_TESTS_H)
+    #define SIMDE_FLOAT16_C(value) (__extension__({ ((simde_float16) { HEDLEY_DIAGNOSTIC_PUSH SIMDE_DIAGNOSTIC_DISABLE_C99_EXTENSIONS_ HEDLEY_STATIC_CAST(__fp16, (value)) }); HEDLEY_DIAGNOSTIC_POP }))
+  #else
+    #define SIMDE_FLOAT16_C(value) ((simde_float16) { HEDLEY_STATIC_CAST(__fp16, (value)) })
+    #define SIMDE_FLOAT16_IS_SCALAR 1
+  #endif
+#elif SIMDE_FLOAT16_API == SIMDE_FLOAT16_API_FP16
+  typedef __fp16 simde_float16;
+  #define SIMDE_FLOAT16_IS_SCALAR 1
+  #define SIMDE_FLOAT16_C(value) HEDLEY_STATIC_CAST(__fp16, (value))
+#elif SIMDE_FLOAT16_API == SIMDE_FLOAT16_API_PORTABLE
+  typedef struct { uint16_t value; } simde_float16;
+#else
+  #error No 16-bit floating point API.
+#endif
+
+#if \
+    defined(SIMDE_VECTOR_OPS) && \
+    (SIMDE_FLOAT16_API != SIMDE_FLOAT16_API_PORTABLE) && \
+    (SIMDE_FLOAT16_API != SIMDE_FLOAT16_API_FP16_NO_ABI)
+  #define SIMDE_FLOAT16_VECTOR
+#endif
+
+/* Reinterpret -- you *generally* shouldn't need these, they're really
+ * intended for internal use.  However, on x86 half-precision floats
+ * get stuffed into a __m128i/__m256i, so it may be useful. */
+
+SIMDE_DEFINE_CONVERSION_FUNCTION_(simde_float16_as_uint16,      uint16_t, simde_float16)
+SIMDE_DEFINE_CONVERSION_FUNCTION_(simde_uint16_as_float16, simde_float16,      uint16_t)
+
+#if SIMDE_FLOAT16_API == SIMDE_FLOAT16_API_PORTABLE
+  #define SIMDE_NANHF simde_uint16_as_float16(0x7E00) // a quiet Not-a-Number
+  #define SIMDE_INFINITYHF simde_uint16_as_float16(0x7C00)
+  #define SIMDE_NINFINITYHF simde_uint16_as_float16(0xFC00)
+#else
+  #if SIMDE_FLOAT16_API == SIMDE_FLOAT16_API_FP16_NO_ABI
+    #if SIMDE_MATH_BUILTIN_LIBM(nanf16)
+      #define SIMDE_NANHF SIMDE_FLOAT16_C(__builtin_nanf16(""))
+    #elif defined(SIMDE_MATH_NAN)
+      #define SIMDE_NANHF SIMDE_FLOAT16_C(SIMDE_MATH_NAN)
+    #endif
+    #if SIMDE_MATH_BUILTIN_LIBM(inf16)
+      #define SIMDE_INFINITYHF SIMDE_FLOAT16_C(__builtin_inf16())
+      #define SIMDE_NINFINITYHF SIMDE_FLOAT16_C(-__builtin_inf16())
+    #else
+      #define SIMDE_INFINITYHF SIMDE_FLOAT16_C(SIMDE_MATH_INFINITY)
+      #define SIMDE_NINFINITYHF SIMDE_FLOAT16_C(-SIMDE_MATH_INFINITY)
+    #endif
+  #else
+    #if SIMDE_MATH_BUILTIN_LIBM(nanf16)
+      #define SIMDE_NANHF  __builtin_nanf16("")
+    #elif defined(SIMDE_MATH_NAN)
+      #define SIMDE_NANHF SIMDE_MATH_NAN
+    #endif
+    #if SIMDE_MATH_BUILTIN_LIBM(inf16)
+      #define SIMDE_INFINITYHF __builtin_inf16()
+      #define SIMDE_NINFINITYHF -(__builtin_inf16())
+    #else
+      #define SIMDE_INFINITYHF HEDLEY_STATIC_CAST(simde_float16, SIMDE_MATH_INFINITY)
+      #define SIMDE_NINFINITYHF HEDLEY_STATIC_CAST(simde_float16, -SIMDE_MATH_INFINITY)
+    #endif
+  #endif
+#endif
+
+/* Conversion -- convert between single-precision and half-precision
+ * floats. */
+static HEDLEY_ALWAYS_INLINE HEDLEY_CONST
+simde_float16
+simde_float16_from_float32 (simde_float32 value) {
+  simde_float16 res;
+
+  #if \
+      (SIMDE_FLOAT16_API == SIMDE_FLOAT16_API_FLOAT16) || \
+      (SIMDE_FLOAT16_API == SIMDE_FLOAT16_API_FP16)
+    res = HEDLEY_STATIC_CAST(simde_float16, value);
+  #elif (SIMDE_FLOAT16_API == SIMDE_FLOAT16_API_FP16_NO_ABI)
+    res.value = HEDLEY_STATIC_CAST(__fp16, value);
+  #else
+    /* This code is CC0, based heavily on code by Fabian Giesen. */
+    uint32_t f32u = simde_float32_as_uint32(value);
+    static const uint32_t f32u_infty = UINT32_C(255) << 23;
+    static const uint32_t f16u_max = (UINT32_C(127) + UINT32_C(16)) << 23;
+    static const uint32_t denorm_magic =
+      ((UINT32_C(127) - UINT32_C(15)) + (UINT32_C(23) - UINT32_C(10)) + UINT32_C(1)) << 23;
+    uint16_t f16u;
+
+    uint32_t sign = f32u & (UINT32_C(1) << 31);
+    f32u ^= sign;
+
+   /* NOTE all the integer compares in this function cast the operands
+    * to signed values to help compilers vectorize to SSE2, which lacks
+    * unsigned comparison instructions.  This is fine since all
+    * operands are below 0x80000000 (we clear the sign bit). */
+
+    if (f32u > f16u_max) { /* result is Inf or NaN (all exponent bits set) */
+      f16u = (f32u > f32u_infty) ?  UINT32_C(0x7e00) : UINT32_C(0x7c00); /* NaN->qNaN and Inf->Inf */
+    } else { /* (De)normalized number or zero */
+      if (f32u < (UINT32_C(113) << 23)) { /* resulting FP16 is subnormal or zero */
+        /* use a magic value to align our 10 mantissa bits at the bottom of
+        * the float. as long as FP addition is round-to-nearest-even this
+        * just works. */
+        f32u = simde_float32_as_uint32(simde_uint32_as_float32(f32u) + simde_uint32_as_float32(denorm_magic));
+
+        /* and one integer subtract of the bias later, we have our final float! */
+        f16u = HEDLEY_STATIC_CAST(uint16_t, f32u - denorm_magic);
+      } else {
+        uint32_t mant_odd = (f32u >> 13) & 1;
+
+        /* update exponent, rounding bias part 1 */
+        f32u += (HEDLEY_STATIC_CAST(uint32_t, 15 - 127) << 23) + UINT32_C(0xfff);
+        /* rounding bias part 2 */
+        f32u += mant_odd;
+        /* take the bits! */
+        f16u = HEDLEY_STATIC_CAST(uint16_t, f32u >> 13);
+      }
+    }
+
+    f16u |= sign >> 16;
+    res = simde_uint16_as_float16(f16u);
+  #endif
+
+  return res;
+}
+
+static HEDLEY_ALWAYS_INLINE HEDLEY_CONST
+simde_float32
+simde_float16_to_float32 (simde_float16 value) {
+  simde_float32 res;
+
+  #if defined(SIMDE_FLOAT16_FLOAT16) || defined(SIMDE_FLOAT16_FP16)
+    res = HEDLEY_STATIC_CAST(simde_float32, value);
+  #else
+    /* This code is CC0, based heavily on code by Fabian Giesen. */
+    uint16_t half = simde_float16_as_uint16(value);
+    const simde_float32 denorm_magic = simde_uint32_as_float32((UINT32_C(113) << 23));
+    const uint32_t shifted_exp = UINT32_C(0x7c00) << 13; /* exponent mask after shift */
+    uint32_t f32u;
+
+    f32u = (half & UINT32_C(0x7fff)) << 13; /* exponent/mantissa bits */
+    uint32_t exp = shifted_exp & f32u; /* just the exponent */
+    f32u += (UINT32_C(127) - UINT32_C(15)) << 23; /* exponent adjust */
+
+    /* handle exponent special cases */
+    if (exp == shifted_exp) /* Inf/NaN? */
+      f32u += (UINT32_C(128) - UINT32_C(16)) << 23; /* extra exp adjust */
+    else if (exp == 0) { /* Zero/Denormal? */
+      f32u += (1) << 23; /* extra exp adjust */
+      f32u = simde_float32_as_uint32(simde_uint32_as_float32(f32u) - denorm_magic); /* renormalize */
+    }
+
+    f32u |= (half & UINT32_C(0x8000)) << 16; /* sign bit */
+    res = simde_uint32_as_float32(f32u);
+  #endif
+
+  return res;
+}
+
+#ifdef SIMDE_FLOAT16_C
+  #define SIMDE_FLOAT16_VALUE(value) SIMDE_FLOAT16_C(value)
+#else
+  #define SIMDE_FLOAT16_VALUE(value) simde_float16_from_float32(SIMDE_FLOAT32_C(value))
+#endif
+
+#if !defined(simde_isinfhf) && defined(simde_math_isinff)
+  #define simde_isinfhf(a) simde_math_isinff(simde_float16_to_float32(a))
+#endif
+#if !defined(simde_isnanhf) && defined(simde_math_isnanf)
+  #define simde_isnanhf(a) simde_math_isnanf(simde_float16_to_float32(a))
+#endif
+#if !defined(simde_isnormalhf) && defined(simde_math_isnormalf)
+  #define simde_isnormalhf(a) simde_math_isnormalf(simde_float16_to_float32(a))
+#endif
+#if !defined(simde_issubnormalhf) && defined(simde_math_issubnormalf)
+  #define simde_issubnormalhf(a) simde_math_issubnormalf(simde_float16_to_float32(a))
+#endif
+
+#define simde_fpclassifyhf(a) simde_math_fpclassifyf(simde_float16_to_float32(a))
+
+static HEDLEY_INLINE
+uint8_t
+simde_fpclasshf(simde_float16 v, const int imm8) {
+  uint16_t bits = simde_float16_as_uint16(v);
+  uint8_t negative = (bits >> 15) & 1;
+  uint16_t const ExpMask = 0x7C00; // [14:10]
+  uint16_t const MantMask = 0x03FF; // [9:0]
+  uint8_t exponent_all_ones = ((bits & ExpMask) == ExpMask);
+  uint8_t exponent_all_zeros = ((bits & ExpMask) == 0);
+  uint8_t mantissa_all_zeros = ((bits & MantMask) == 0);
+  uint8_t zero = exponent_all_zeros & mantissa_all_zeros;
+  uint8_t signaling_bit = (bits >> 9) & 1;
+
+  uint8_t result = 0;
+  uint8_t snan = exponent_all_ones & (!mantissa_all_zeros) & (!signaling_bit);
+  uint8_t qnan = exponent_all_ones & (!mantissa_all_zeros) & signaling_bit;
+  uint8_t positive_zero = (!negative) & zero;
+  uint8_t negative_zero = negative & zero;
+  uint8_t positive_infinity = (!negative) & exponent_all_ones & mantissa_all_zeros;
+  uint8_t negative_infinity = negative & exponent_all_ones & mantissa_all_zeros;
+  uint8_t denormal = exponent_all_zeros & (!mantissa_all_zeros);
+  uint8_t finite_negative = negative & (!exponent_all_ones) & (!zero);
+  result = (((imm8 >> 0) & qnan)              | \
+            ((imm8 >> 1) & positive_zero)     | \
+            ((imm8 >> 2) & negative_zero)     | \
+            ((imm8 >> 3) & positive_infinity) | \
+            ((imm8 >> 4) & negative_infinity) | \
+            ((imm8 >> 5) & denormal)          | \
+            ((imm8 >> 6) & finite_negative)   | \
+            ((imm8 >> 7) & snan));
+  return result;
+}
+
+SIMDE_END_DECLS_
+HEDLEY_DIAGNOSTIC_POP
+
+#endif /* !defined(SIMDE_FLOAT16_H) */
+/* :: End simde/simde-f16.h :: */
 
 #if defined(_WIN32) && !defined(SIMDE_X86_SSE_NATIVE) && defined(_MSC_VER)
   #define NOMINMAX
@@ -10765,6 +11464,11 @@ typedef union {
     SIMDE_ALIGN_TO_16 simde_int128  i128 SIMDE_VECTOR(16) SIMDE_MAY_ALIAS;
     SIMDE_ALIGN_TO_16 simde_uint128 u128 SIMDE_VECTOR(16) SIMDE_MAY_ALIAS;
     #endif
+    #if defined(SIMDE_FLOAT16_VECTOR)
+    SIMDE_ALIGN_TO_16 simde_float16  f16 SIMDE_VECTOR(16) SIMDE_MAY_ALIAS;
+    #else
+    SIMDE_ALIGN_TO_16 simde_float16  f16[8];
+    #endif
     SIMDE_ALIGN_TO_16 simde_float32  f32 SIMDE_VECTOR(16) SIMDE_MAY_ALIAS;
     SIMDE_ALIGN_TO_16 int_fast32_t  i32f SIMDE_VECTOR(16) SIMDE_MAY_ALIAS;
     SIMDE_ALIGN_TO_16 uint_fast32_t u32f SIMDE_VECTOR(16) SIMDE_MAY_ALIAS;
@@ -10781,6 +11485,7 @@ typedef union {
     SIMDE_ALIGN_TO_16 simde_int128  i128[1];
     SIMDE_ALIGN_TO_16 simde_uint128 u128[1];
     #endif
+    SIMDE_ALIGN_TO_16 simde_float16  f16[8];
     SIMDE_ALIGN_TO_16 simde_float32  f32[4];
     SIMDE_ALIGN_TO_16 int_fast32_t  i32f[16 / sizeof(int_fast32_t)];
     SIMDE_ALIGN_TO_16 uint_fast32_t u32f[16 / sizeof(uint_fast32_t)];
@@ -10961,6 +11666,14 @@ enum {
     SIMDE_MM_ROUND_TOWARD_ZERO = 0x6000
   #endif
 };
+#if defined(_MM_ROUND_MASK)
+#  define SIMDE_MM_ROUND_MASK _MM_ROUND_MASK
+#else
+#  define SIMDE_MM_ROUND_MASK (0x6000)
+#endif
+#if defined(SIMDE_X86_SSE_ENABLE_NATIVE_ALIASES)
+  #define _MM_ROUND_MASK SIMDE_MM_ROUND_MASK
+#endif
 
 #if defined(_MM_FROUND_TO_NEAREST_INT)
 #  define SIMDE_MM_FROUND_TO_NEAREST_INT _MM_FROUND_TO_NEAREST_INT
@@ -11128,7 +11841,7 @@ enum {
 #endif
 
 SIMDE_FUNCTION_ATTRIBUTES
-unsigned int
+uint32_t
 SIMDE_MM_GET_ROUNDING_MODE(void) {
   #if defined(SIMDE_X86_SSE_NATIVE)
     return _MM_GET_ROUNDING_MODE();
@@ -11176,7 +11889,7 @@ SIMDE_MM_GET_ROUNDING_MODE(void) {
 
 SIMDE_FUNCTION_ATTRIBUTES
 void
-SIMDE_MM_SET_ROUNDING_MODE(unsigned int a) {
+SIMDE_MM_SET_ROUNDING_MODE(uint32_t a) {
   #if defined(SIMDE_X86_SSE_NATIVE)
     _MM_SET_ROUNDING_MODE(a);
   #elif defined(SIMDE_HAVE_FENV_H)
@@ -11230,7 +11943,7 @@ SIMDE_MM_GET_FLUSH_ZERO_MODE (void) {
   #endif
 }
 #if defined(SIMDE_X86_SSE_ENABLE_NATIVE_ALIASES)
-  #define _MM_SET_FLUSH_ZERO_MODE(a) SIMDE_MM_SET_FLUSH_ZERO_MODE(a)
+  #define _MM_GET_FLUSH_ZERO_MODE(a) SIMDE_MM_GET_FLUSH_ZERO_MODE(a)
 #endif
 
 SIMDE_FUNCTION_ATTRIBUTES
@@ -11265,7 +11978,7 @@ simde_mm_setcsr (uint32_t a) {
   #if defined(SIMDE_X86_SSE_NATIVE)
     _mm_setcsr(a);
   #else
-    SIMDE_MM_SET_ROUNDING_MODE(HEDLEY_STATIC_CAST(unsigned int, a));
+    SIMDE_MM_SET_ROUNDING_MODE(HEDLEY_STATIC_CAST(uint32_t, a & SIMDE_MM_ROUND_MASK));
   #endif
 }
 #if defined(SIMDE_X86_SSE_ENABLE_NATIVE_ALIASES)
@@ -11495,7 +12208,7 @@ simde_mm_move_ss (simde__m128 a, simde__m128 b) {
 SIMDE_FUNCTION_ATTRIBUTES
 simde__m128
 simde_x_mm_broadcastlow_ps(simde__m128 a) {
-  /* This function broadcasts the first element in the inpu vector to
+  /* This function broadcasts the first element in the input vector to
    * all lanes.  It is used to avoid generating spurious exceptions in
    * *_ss functions since there may be garbage in the upper lanes. */
 
@@ -13908,7 +14621,9 @@ simde_mm_movehl_ps (simde__m128 a, simde__m128 b) {
       a_ = simde__m128_to_private(a),
       b_ = simde__m128_to_private(b);
 
-    #if defined(SIMDE_ARM_NEON_A32V7_NATIVE)
+    #if defined(SIMDE_ARM_NEON_A64V8_NATIVE)
+      r_.neon_u64 = vzip2q_u64(b_.neon_u64, a_.neon_u64);
+    #elif defined(SIMDE_ARM_NEON_A32V7_NATIVE)
       float32x2_t a32 = vget_high_f32(a_.neon_f32);
       float32x2_t b32 = vget_high_f32(b_.neon_f32);
       r_.neon_f32 = vcombine_f32(b32, a32);
@@ -14012,28 +14727,17 @@ simde_mm_movemask_ps (simde__m128 a) {
     int r = 0;
     simde__m128_private a_ = simde__m128_to_private(a);
 
-    #if defined(SIMDE_ARM_NEON_A32V7_NATIVE)
+    #if defined(SIMDE_ARM_NEON_A64V8_NATIVE)
+      static const int32_t shift[4] = {0, 1, 2, 3};
+      uint32x4_t tmp = vshrq_n_u32(a_.neon_u32, 31);
+      return HEDLEY_STATIC_CAST(int32_t, vaddvq_u32(vshlq_u32(tmp, vld1q_s32(shift))));
+    #elif defined(SIMDE_ARM_NEON_A32V7_NATIVE)
       // Shift out everything but the sign bits with a 32-bit unsigned shift right.
       uint64x2_t high_bits = vreinterpretq_u64_u32(vshrq_n_u32(a_.neon_u32, 31));
       // Merge the two pairs together with a 64-bit unsigned shift right + add.
       uint8x16_t paired = vreinterpretq_u8_u64(vsraq_n_u64(high_bits, high_bits, 31));
       // Extract the result.
       return vgetq_lane_u8(paired, 0) | (vgetq_lane_u8(paired, 8) << 2);
-    #elif defined(SIMDE_ARM_NEON_A32V7_NATIVE)
-      static const uint32_t md[4] = {
-        1 << 0, 1 << 1, 1 << 2, 1 << 3
-      };
-
-      uint32x4_t extended = vreinterpretq_u32_s32(vshrq_n_s32(a_.neon_i32, 31));
-      uint32x4_t masked = vandq_u32(vld1q_u32(md), extended);
-      #if defined(SIMDE_ARM_NEON_A64V8_NATIVE)
-        return HEDLEY_STATIC_CAST(int32_t, vaddvq_u32(masked));
-      #else
-        uint64x2_t t64 = vpaddlq_u32(masked);
-        return
-          HEDLEY_STATIC_CAST(int, vgetq_lane_u64(t64, 0)) +
-          HEDLEY_STATIC_CAST(int, vgetq_lane_u64(t64, 1));
-      #endif
     #elif defined(SIMDE_POWER_ALTIVEC_P8_NATIVE) && defined(SIMDE_BUG_CLANG_50932)
       SIMDE_POWER_ALTIVEC_VECTOR(unsigned char) idx = { 96, 64, 32, 0, 128, 128, 128, 128, 128, 128, 128, 128, 128, 128, 128, 128 };
       SIMDE_POWER_ALTIVEC_VECTOR(unsigned char) res = HEDLEY_REINTERPRET_CAST(SIMDE_POWER_ALTIVEC_VECTOR(unsigned char), vec_bperm(HEDLEY_REINTERPRET_CAST(SIMDE_POWER_ALTIVEC_VECTOR(unsigned __int128), a_.altivec_u64), idx));
@@ -15454,16 +16158,19 @@ void
 simde_mm_stream_pi (simde__m64* mem_addr, simde__m64 a) {
   #if defined(SIMDE_X86_SSE_NATIVE) && defined(SIMDE_X86_MMX_NATIVE)
     _mm_stream_pi(HEDLEY_REINTERPRET_CAST(__m64*, mem_addr), a);
+  #elif HEDLEY_HAS_BUILTIN(__builtin_nontemporal_store) && ( \
+      defined(SIMDE_ARM_NEON_A32V7_NATIVE) || defined(SIMDE_MIPS_LOONGSON_MMI_NATIVE) || \
+      defined(SIMDE_VECTOR_SUBSCRIPT))
+    __builtin_nontemporal_store(a, mem_addr);
+  #elif defined(SIMDE_ARM_NEON_A32V7_NATIVE)
+    simde__m64_private a_ = simde__m64_to_private(a);
+    vst1_s64(HEDLEY_REINTERPRET_CAST(int64_t *, mem_addr), a_.neon_i64);
   #else
     simde__m64_private*
       dest = HEDLEY_REINTERPRET_CAST(simde__m64_private*, mem_addr),
       a_ = simde__m64_to_private(a);
 
-    #if defined(SIMDE_ARM_NEON_A32V7_NATIVE)
-      dest->i64[0] = vget_lane_s64(a_.neon_i64, 0);
-    #else
-      dest->i64[0] = a_.i64[0];
-    #endif
+    dest->i64[0] = a_.i64[0];
   #endif
 }
 #if defined(SIMDE_X86_SSE_ENABLE_NATIVE_ALIASES)
@@ -15475,9 +16182,11 @@ void
 simde_mm_stream_ps (simde_float32 mem_addr[4], simde__m128 a) {
   #if defined(SIMDE_X86_SSE_NATIVE)
     _mm_stream_ps(mem_addr, a);
-  #elif HEDLEY_HAS_BUILTIN(__builtin_nontemporal_store) && defined(SIMDE_VECTOR_SUBSCRIPT_OPS)
-    simde__m128_private a_ = simde__m128_to_private(a);
-    __builtin_nontemporal_store(a_.f32, SIMDE_ALIGN_CAST(__typeof__(a_.f32)*, mem_addr));
+  #elif HEDLEY_HAS_BUILTIN(__builtin_nontemporal_store) && ( \
+      defined(SIMDE_ARM_NEON_A32V7_NATIVE) || defined(SIMDE_VECTOR_SUBSCRIPT) || \
+      defined(SIMDE_WASM_SIMD128_NATIVE) || defined(SIMDE_POWER_ALTIVEC_P6_NATIVE) || \
+      defined(SIMDE_ZARCH_ZVECTOR_13_NATIVE) || defined(SIMDE_LOONGARCH_LSX_NATIVE))
+    __builtin_nontemporal_store(a, SIMDE_ALIGN_ASSUME_CAST(__typeof__(a)*, mem_addr));
   #else
     simde_mm_store_ps(mem_addr, a);
   #endif
@@ -15523,7 +16232,9 @@ SIMDE_END_DECLS_
 HEDLEY_DIAGNOSTIC_POP
 
 #endif /* !defined(SIMDE_X86_SSE_H) */
-/* :: End x86/sse.h :: */
+/* :: End simde/x86/sse.h :: */
+/* AUTOMATICALLY GENERATED FILE, DO NOT MODIFY */
+/* 71fd833d9666141edcd1d3c109a80e228303d8d7 */
 
 HEDLEY_DIAGNOSTIC_PUSH
 SIMDE_DISABLE_UNWANTED_DIAGNOSTICS
@@ -15543,6 +16254,11 @@ typedef union {
     SIMDE_ALIGN_TO_16 simde_int128  i128 SIMDE_VECTOR(16) SIMDE_MAY_ALIAS;
     SIMDE_ALIGN_TO_16 simde_uint128 u128 SIMDE_VECTOR(16) SIMDE_MAY_ALIAS;
     #endif
+    #if defined(SIMDE_FLOAT16_VECTOR)
+    SIMDE_ALIGN_TO_16 simde_float16  f16 SIMDE_VECTOR(16) SIMDE_MAY_ALIAS;
+    #else
+    SIMDE_ALIGN_TO_16 simde_float16  f16[8];
+    #endif
     SIMDE_ALIGN_TO_16 simde_float32  f32 SIMDE_VECTOR(16) SIMDE_MAY_ALIAS;
     SIMDE_ALIGN_TO_16 simde_float64  f64 SIMDE_VECTOR(16) SIMDE_MAY_ALIAS;
 
@@ -15561,6 +16277,7 @@ typedef union {
     SIMDE_ALIGN_TO_16 simde_int128  i128[1];
     SIMDE_ALIGN_TO_16 simde_uint128 u128[1];
     #endif
+    SIMDE_ALIGN_TO_16 simde_float16  f16[8];
     SIMDE_ALIGN_TO_16 simde_float32  f32[4];
     SIMDE_ALIGN_TO_16 simde_float64  f64[2];
 
@@ -15658,7 +16375,7 @@ typedef union {
     SIMDE_ALIGN_TO_16 simde__m64_private m64_private[2];
     SIMDE_ALIGN_TO_16 simde__m64         m64[2];
 
-  #if defined(SIMDE_X86_SSE2_NATIVE)
+  #if defined(SIMDE_X86_SSE2_NATIVE) || defined(SIMDE_X86_SVML_NATIVE)
     SIMDE_ALIGN_TO_16 __m128d        n;
   #elif defined(SIMDE_ARM_NEON_A32V7_NATIVE)
     SIMDE_ALIGN_TO_16 int8x16_t      neon_i8;
@@ -15710,7 +16427,7 @@ typedef union {
   #endif
 } simde__m128d_private;
 
-#if defined(SIMDE_X86_SSE2_NATIVE)
+#if defined(SIMDE_X86_SSE2_NATIVE) || defined(SIMDE_X86_SVML_NATIVE)
   typedef __m128i simde__m128i;
   typedef __m128d simde__m128d;
 #elif defined(SIMDE_ARM_NEON_A32V7_NATIVE)
@@ -15740,7 +16457,7 @@ typedef union {
   typedef simde__m128d_private simde__m128d;
 #endif
 
-#if defined(SIMDE_X86_SSE2_ENABLE_NATIVE_ALIASES)
+#if defined(SIMDE_X86_SSE2_ENABLE_NATIVE_ALIASES) || defined(SIMDE_X86_SVML_ENABLE_NATIVE_ALIASES)
   typedef simde__m128i __m128i;
   typedef simde__m128d __m128d;
 #endif
@@ -18718,7 +19435,7 @@ simde_mm_cvttps_epi32 (simde__m128 a) {
 
         r_.wasm_v128 = wasm_v128_bitselect(r_.wasm_v128, wasm_i32x4_splat(INT32_MIN), valid_input);
       #endif
-    #elif defined(SIMDE_CONVERT_VECTOR_)
+    #elif defined(SIMDE_CONVERT_VECTOR_) && !defined(SIMDE_ARCH_POWER)
       SIMDE_CONVERT_VECTOR_(r_.i32, a_.f32);
 
       #if !defined(SIMDE_FAST_CONVERSION_RANGE) || !defined(SIMDE_FAST_NANS)
@@ -18979,13 +19696,13 @@ simde__m128i
 simde_mm_load_si128 (simde__m128i const* mem_addr) {
   #if defined(SIMDE_X86_SSE2_NATIVE)
     return _mm_load_si128(HEDLEY_REINTERPRET_CAST(__m128i const*, mem_addr));
+  #elif defined(SIMDE_ARM_NEON_A32V7_NATIVE)
+    return vld1q_s64(HEDLEY_REINTERPRET_CAST(int64_t const*, mem_addr));
   #else
     simde__m128i_private r_;
 
     #if defined(SIMDE_POWER_ALTIVEC_P6_NATIVE)
       r_.altivec_i32 = vec_ld(0, HEDLEY_REINTERPRET_CAST(SIMDE_POWER_ALTIVEC_VECTOR(int) const*, mem_addr));
-    #elif defined(SIMDE_ARM_NEON_A32V7_NATIVE)
-      r_.neon_i32 = vld1q_s32(HEDLEY_REINTERPRET_CAST(int32_t const*, mem_addr));
     #else
       simde_memcpy(&r_, SIMDE_ALIGN_ASSUME_LIKE(mem_addr, simde__m128i), sizeof(simde__m128i));
     #endif
@@ -20254,6 +20971,28 @@ void
 simde_mm_pause (void) {
   #if defined(SIMDE_X86_SSE2_NATIVE)
     _mm_pause();
+  #elif defined(SIMDE_ARCH_X86)
+    #if defined(_MSC_VER)
+      __asm pause;
+    #else
+      __asm__ __volatile__("pause");
+    #endif
+  #elif defined(SIMDE_ARCH_ARM_NEON)
+    #if defined(_MSC_VER)
+      __isb(_ARM64_BARRIER_SY);
+    #else
+      __asm__ __volatile__("isb\n");
+    #endif
+  #elif defined(SIMDE_ARCH_POWER)
+    __asm__ __volatile__ ("or 27,27,27" ::: "memory");
+  #elif defined(SIMDE_ARCH_WASM)
+    __asm__ __volatile__ ("nop");
+  #elif defined(HEDLEY_GCC_VERSION)
+    #if defined(SIMDE_ARCH_RISCV)
+      __builtin_riscv_pause();
+    #else
+      __asm__ __volatile__ ("nop" ::: "memory");
+    #endif
   #endif
 }
 #if defined(SIMDE_X86_SSE2_ENABLE_NATIVE_ALIASES)
@@ -20433,6 +21172,10 @@ simde_mm_loadu_si32 (void const* mem_addr) {
     return _mm_loadu_si32(mem_addr);
   #elif defined(SIMDE_WASM_SIMD128_NATIVE)
     return simde__m128i_from_wasm_v128(wasm_v128_load32_zero(mem_addr));
+  #elif defined(SIMDE_ARM_NEON_A32V7_NATIVE)
+    simde__m128i_private r_;
+    r_.neon_i32 = vsetq_lane_s32(* HEDLEY_REINTERPRET_CAST(const int32_t *, mem_addr), vdupq_n_s32(0), 0);
+    return simde__m128i_from_private(r_);
   #else
     int32_t val;
     simde_memcpy(&val, mem_addr, sizeof(val));
@@ -22084,8 +22827,13 @@ void
 simde_mm_stream_pd (simde_float64 mem_addr[HEDLEY_ARRAY_PARAM(2)], simde__m128d a) {
   #if defined(SIMDE_X86_SSE2_NATIVE)
     _mm_stream_pd(mem_addr, a);
+  #elif HEDLEY_HAS_BUILTIN(__builtin_nontemporal_store) && ( \
+      defined(SIMDE_VECTOR_SUBSCRIPT) || defined(SIMDE_ARM_NEON_A64V8_NATIVE) || \
+      defined(SIMDE_WASM_SIMD128_NATIVE) || defined(SIMDE_POWER_ALTIVEC_P7_NATIVE) || \
+      defined(SIMDE_ZARCH_ZVECTOR_13_NATIVE))
+      __builtin_nontemporal_store(a, SIMDE_ALIGN_CAST(__typeof__(a)*, mem_addr));
   #else
-    simde_memcpy(mem_addr, &a, sizeof(a));
+    simde_mm_store_pd(mem_addr, a);
   #endif
 }
 #if defined(SIMDE_X86_SSE2_ENABLE_NATIVE_ALIASES)
@@ -22097,8 +22845,13 @@ void
 simde_mm_stream_si128 (simde__m128i* mem_addr, simde__m128i a) {
   #if defined(SIMDE_X86_SSE2_NATIVE) && defined(SIMDE_ARCH_AMD64)
     _mm_stream_si128(HEDLEY_STATIC_CAST(__m128i*, mem_addr), a);
+  #elif HEDLEY_HAS_BUILTIN(__builtin_nontemporal_store) && ( \
+      defined(SIMDE_VECTOR_SUBSCRIPT) || defined(SIMDE_ARM_NEON_A32V7_NATIVE) || \
+      defined(SIMDE_WASM_SIMD128_NATIVE) || defined(SIMDE_POWER_ALTIVEC_P6_NATIVE) || \
+      defined(SIMDE_ZARCH_ZVECTOR_13_NATIVE))
+      __builtin_nontemporal_store(a, SIMDE_ALIGN_CAST(__typeof__(a)*, mem_addr));
   #else
-    simde_memcpy(mem_addr, &a, sizeof(a));
+    simde_mm_store_si128(mem_addr, a);
   #endif
 }
 #if defined(SIMDE_X86_SSE2_ENABLE_NATIVE_ALIASES)
@@ -22110,6 +22863,10 @@ void
 simde_mm_stream_si32 (int32_t* mem_addr, int32_t a) {
   #if defined(SIMDE_X86_SSE2_NATIVE)
     _mm_stream_si32(mem_addr, a);
+  #elif HEDLEY_HAS_BUILTIN(__builtin_nontemporal_store)
+    __builtin_nontemporal_store(a, mem_addr);
+  #elif defined(SIMDE_ARM_NEON_A32V7_NATIVE)
+    vst1q_lane_s32(mem_addr, vdupq_n_s32(a), 0);
   #else
     *mem_addr = a;
   #endif
@@ -22123,6 +22880,10 @@ void
 simde_mm_stream_si64 (int64_t* mem_addr, int64_t a) {
   #if defined(SIMDE_X86_SSE2_NATIVE) && defined(SIMDE_ARCH_AMD64) && !defined(HEDLEY_MSVC_VERSION)
     _mm_stream_si64(SIMDE_CHECKED_REINTERPRET_CAST(long long int*, int64_t*, mem_addr), a);
+  #elif HEDLEY_HAS_BUILTIN(__builtin_nontemporal_store)
+    __builtin_nontemporal_store(a, mem_addr);
+  #elif defined(SIMDE_ARM_NEON_A32V7_NATIVE)
+    vst1_s64(mem_addr, vdup_n_s64(a));
   #else
     *mem_addr = a;
   #endif
@@ -23179,4 +23940,4 @@ SIMDE_END_DECLS_
 HEDLEY_DIAGNOSTIC_POP
 
 #endif /* !defined(SIMDE_X86_SSE2_H) */
-/* :: End x86/sse2.h :: */
+/* :: End simde/x86/sse2.h :: */

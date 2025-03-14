@@ -11,9 +11,9 @@ import numpy as np
 from skbio.diversity._util import (
     _validate_counts_vector,
     _validate_taxa_and_tree,
-    _vectorize_counts_and_tree,
-    _check_taxa_alias,
+    vectorize_counts_and_tree,
 )
+from skbio.util._decorator import params_aliased
 
 
 def _setup_pd(counts, taxa, tree, validate, rooted, single_sample):
@@ -26,7 +26,7 @@ def _setup_pd(counts, taxa, tree, validate, rooted, single_sample):
         else:
             _validate_taxa_and_tree(counts[0], taxa, tree, rooted)
 
-    counts_by_node, _, branch_lengths = _vectorize_counts_and_tree(counts, taxa, tree)
+    counts_by_node, _, branch_lengths = vectorize_counts_and_tree(counts, taxa, tree)
 
     return counts_by_node, branch_lengths
 
@@ -50,7 +50,8 @@ def _faith_pd(counts_by_node, branch_lengths):
     return (branch_lengths * (counts_by_node > 0)).sum()
 
 
-def faith_pd(counts, taxa=None, tree=None, validate=True, otu_ids=None):
+@params_aliased([("taxa", "otu_ids", "0.6.0", True)])
+def faith_pd(counts, taxa, tree, validate=True):
     r"""Calculate Faith's phylogenetic diversity (Faith's PD) metric.
 
     The Faith's PD metric is defined as:
@@ -81,9 +82,6 @@ def faith_pd(counts, taxa=None, tree=None, validate=True, otu_ids=None):
         so this step should not be bypassed if you're not certain that your input data
         are valid. See :mod:`skbio.diversity` for the description of what validation
         entails so you can determine if you can safely disable validation.
-    otu_ids : list, np.array
-        Alias of ``taxa`` for backward compatibility. Deprecated and to be removed in a
-        future release.
 
     Returns
     -------
@@ -185,8 +183,6 @@ def faith_pd(counts, taxa=None, tree=None, validate=True, otu_ids=None):
     """
     # TODO: Remove `otu_ids` and make `taxa` and `tree` required in a future version.
 
-    taxa = _check_taxa_alias(taxa, tree, otu_ids)
-
     counts_by_node, branch_lengths = _setup_pd(
         counts, taxa, tree, validate, rooted=True, single_sample=True
     )
@@ -245,9 +241,8 @@ def _phydiv(counts_by_node, branch_lengths, rooted, weight):
     return (branch_lengths * fracs_by_node).sum()
 
 
-def phydiv(
-    counts, taxa=None, tree=None, rooted=None, weight=False, validate=True, otu_ids=None
-):
+@params_aliased([("taxa", "otu_ids", "0.6.0", True)])
+def phydiv(counts, taxa, tree, rooted=None, weight=False, validate=True):
     r"""Calculate generalized phylogenetic diversity (PD) metrics.
 
     Parameters
@@ -270,9 +265,6 @@ def phydiv(
         the degree of partial-weighting (0: unweighted, 1: fully-weighted).
     validate : bool, optional
         Whether validate the input data. See :func:`faith_pd` for details.
-    otu_ids : list, np.array
-        Alias of ``taxa`` for backward compatibility. Deprecated and to be removed in a
-        future release.
 
     Returns
     -------
@@ -435,8 +427,6 @@ def phydiv(
        2106-2113.
 
     """
-    taxa = _check_taxa_alias(taxa, tree, otu_ids)
-
     # whether tree is rooted should not affect whether metric can be calculated
     # ; it is common unrooted PD is calculated on a rooted tree
     counts_by_node, branch_lengths = _setup_pd(

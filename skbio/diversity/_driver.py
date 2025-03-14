@@ -6,13 +6,13 @@
 # The full license is in the file LICENSE.txt, distributed with this software.
 # ----------------------------------------------------------------------------
 
-import functools
-import itertools
+from functools import partial
+from itertools import chain
 from warnings import warn
 
 import numpy as np
-import scipy.spatial.distance
 import pandas as pd
+from scipy.spatial.distance import pdist
 
 import skbio
 from skbio.diversity.alpha._pd import _faith_pd, _phydiv, _setup_pd
@@ -29,7 +29,7 @@ from skbio.diversity._util import (
     _table_to_numpy,
     _validate_table,
 )
-from skbio.util._warning import _warn_deprecated
+from skbio.util._decorator import deprecated
 
 
 def _get_alpha_diversity_metric_map():
@@ -123,7 +123,7 @@ def get_beta_diversity_metrics():
     ``scipy.spatial.distance.pdist`` for more details.
 
     """
-    return sorted(["unweighted_unifrac", "weighted_unifrac"])
+    return sorted(_valid_beta_metrics + ["unweighted_unifrac", "weighted_unifrac"])
 
 
 def alpha_diversity(metric, counts, ids=None, validate=True, **kwargs):
@@ -187,7 +187,7 @@ def alpha_diversity(metric, counts, ids=None, validate=True, **kwargs):
             counts, taxa, tree, validate, rooted=True, single_sample=False
         )
         counts = counts_by_node
-        metric = functools.partial(_faith_pd, branch_lengths=branch_lengths, **kwargs)
+        metric = partial(_faith_pd, branch_lengths=branch_lengths, **kwargs)
 
     elif metric == "phydiv":
         taxa, tree, kwargs = _get_phylogenetic_kwargs(counts, **kwargs)
@@ -199,12 +199,12 @@ def alpha_diversity(metric, counts, ids=None, validate=True, **kwargs):
             kwargs["rooted"] = len(tree.root().children) == 2
         if "weight" not in kwargs:
             kwargs["weight"] = False
-        metric = functools.partial(_phydiv, branch_lengths=branch_lengths, **kwargs)
+        metric = partial(_phydiv, branch_lengths=branch_lengths, **kwargs)
 
     elif callable(metric):
-        metric = functools.partial(metric, **kwargs)
+        metric = partial(metric, **kwargs)
     elif metric in metric_map:
-        metric = functools.partial(metric_map[metric], **kwargs)
+        metric = partial(metric_map[metric], **kwargs)
     else:
         raise ValueError("Unknown metric provided: %r." % metric)
 
@@ -213,6 +213,12 @@ def alpha_diversity(metric, counts, ids=None, validate=True, **kwargs):
     return pd.Series(results, index=ids)
 
 
+@deprecated(
+    "0.5.0",
+    msg="The return type is unstable. Developer caution is advised. The resulting "
+    "DistanceMatrix object will include zeros when distance has not been calculated, "
+    "and therefore can be misleading.",
+)
 def partial_beta_diversity(metric, counts, ids, id_pairs, validate=True, **kwargs):
     """Compute distances only between specified ID pairs.
 
@@ -243,13 +249,6 @@ def partial_beta_diversity(metric, counts, ids, id_pairs, validate=True, **kwarg
         distances not defined by id_pairs will be 0.0. Use this resulting
         DistanceMatrix with caution as 0.0 is a valid distance.
 
-    Warnings
-    --------
-    ``partial_beta_diversity`` is deprecated as of ``0.5.0``. The return type is
-    unstable. Developer caution is advised. The resulting DistanceMatrix object will
-    include zeros when distance has not been calculated, and therefore can be
-    misleading.
-
     Raises
     ------
     ValueError
@@ -265,20 +264,11 @@ def partial_beta_diversity(metric, counts, ids, id_pairs, validate=True, **kwarg
     skbio.diversity.get_beta_diversity_metrics
 
     """
-    # @deprecated
-    _warn_deprecated(
-        partial_beta_diversity,
-        "0.5.0",
-        msg="The return type is unstable. Developer caution is advised. The resulting "
-        "DistanceMatrix object will include zeros when distance has not been "
-        "calculated, and therefore can be misleading.",
-    )
-
     if validate:
         counts = _validate_counts_matrix(counts, ids=ids)
 
     id_pairs = list(id_pairs)
-    all_ids_in_pairs = set(itertools.chain.from_iterable(id_pairs))
+    all_ids_in_pairs = set(chain.from_iterable(id_pairs))
     if not all_ids_in_pairs.issubset(ids):
         raise ValueError("`id_pairs` are not a subset of `ids`")
 
@@ -303,7 +293,7 @@ def partial_beta_diversity(metric, counts, ids, id_pairs, validate=True, **kwarg
         )
         counts = counts_by_node
     elif callable(metric):
-        metric = functools.partial(metric, **kwargs)
+        metric = partial(metric, **kwargs)
         # remove all values from kwargs, since they have already been provided
         # through the partial
         kwargs = {}
@@ -338,6 +328,7 @@ _valid_beta_metrics = [
     "dice",
     "hamming",
     "jaccard",
+    "jensenshannon",
     "mahalanobis",
     "manhattan",  # aliases to "cityblock" in beta_diversity
     "matching",
@@ -458,8 +449,15 @@ def beta_diversity(
         counts = counts_by_node
     elif metric == "manhattan":
         metric = "cityblock"
+    elif metric == "mahalanobis":
+        nrow, ncol = counts.shape
+        if nrow < ncol:
+            raise ValueError(
+                "Metric 'mahalanobis' requires more samples than features. "
+                f"The input has {nrow} samples and {ncol} features."
+            )
     elif callable(metric):
-        metric = functools.partial(metric, **kwargs)
+        metric = partial(metric, **kwargs)
         # remove all values from kwargs, since they have already been provided
         # through the partial
         kwargs = {}
@@ -480,7 +478,7 @@ def beta_diversity(
         pass
 
     if pairwise_func is None:
-        pairwise_func = scipy.spatial.distance.pdist
+        pairwise_func = pdist
 
     distances = pairwise_func(counts, metric=metric, **kwargs)
     return DistanceMatrix(distances, ids)

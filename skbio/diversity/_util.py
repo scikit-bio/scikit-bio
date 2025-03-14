@@ -183,7 +183,7 @@ def _validate_taxa_and_tree(counts, taxa, tree, rooted=True):
         )
 
 
-def _vectorize_counts_and_tree(counts, taxa, tree):
+def vectorize_counts_and_tree(counts, taxa, tree):
     """Index tree and convert counts to np.array in corresponding order.
 
     Parameters
@@ -208,6 +208,18 @@ def _vectorize_counts_and_tree(counts, taxa, tree):
     See Also
     --------
     skbio.tree.TreeNode.to_array
+
+    Notes
+    -----
+    Leveraging internal node counts in the tree (in addition to tip abundances) can
+    double the accuracy in downstream machine learning pipelines [1]_.
+
+    References
+    ----------
+    .. [1] Martino C., McDonald D., Cantrell K., Dilmore AH., Vázquez-Baeza Y.,
+       Shenhav L., Shaffer J.P., Rahman G., Armstrong G., Allaband C., Song S.J.,
+       Knight R. Compositionally aware phylogenetic beta-diversity measures better
+       resolve microbiomes associated with phenotype. mSystems. 7(3) (2022).
 
     """
     tree_index = tree.to_array(nan_length_value=0.0)
@@ -236,17 +248,6 @@ def _get_phylogenetic_kwargs(counts, **kwargs):
 
 def _quantitative_to_qualitative_counts(counts):
     return counts > 0.0
-
-
-def _check_taxa_alias(taxa, tree, otu_ids):
-    # make `otu_ids` an alias of `taxa`; for backward compatibility
-    if taxa is None:
-        if otu_ids is None:
-            raise ValueError("A list of taxon IDs must be provided.")
-        taxa = otu_ids
-    if tree is None:
-        raise ValueError("A phylogenetic tree must be provided.")
-    return taxa
 
 
 def _table_to_numpy(table):

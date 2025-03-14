@@ -7,44 +7,13 @@
 
 *scikit-bio is an open-source, BSD-licensed Python 3 package providing data structures, algorithms and educational resources for bioinformatics.*
 
-
-🌟 Announcing the revitalization of scikit-bio! 🌟
---------------------------------------------------
-
-We are excited to announce the resurgence of **scikit-bio** (`<https://scikit.bio>`_)! With a re-assembled developer team and funding from the DOE, we're back with renewed vigor in 2024!
-
-Our vision is to expand scikit-bio into a more robust and versatile library, catering to the ever-growing demands of multi-omic data analysis. This resurgence marks a new chapter in which we will focus on:
-
-- Streamlining the analysis of diverse, massive omic data, emphasizing efficiency and versatility.
-- Integrating advanced techniques for multi-omic integration to unravel the complex interplay between biological systems and environments.
-- Implementing methods for modeling and annotating biological features utilizing community ecology and phylogenetics.
-
-We invite the scientific community to join us in shaping the future of scikit-bio. Your expertise, feedback, and contributions will be the driving force behind this exciting phase.
-
-Stay `tuned for updates <https://github.com/scikit-bio/scikit-bio/discussions/categories/announcements>`_, and let's innovate together for a deeper understanding of bio-complexities!
-
-
-Get involved with scikit-bio
-----------------------------
-
-Your questions, ideas, and contributions matter!
-
-Join our community on `GitHub Discussions <https://github.com/scikit-bio/scikit-bio/discussions>`_: This is your go-to place for asking questions, sharing insights, and participating in discussions about scikit-bio. Engage with both the developers and fellow users here.
-
-Report issues and bugs: If you encounter specific problems when using scikit-bio, let us know directly through the `GitHub Issues <https://github.com/scikit-bio/scikit-bio/issues>`_ page. Your reports are vital for the continuous improvement of scikit-bio.
-
-Wanna contribute? We enthusiastically welcome community contributors! Whether it's adding new features, improving code, or enhancing documentation, your contributions drive scikit-bio and open-source bioinformatics forward. Start your journey by reading the `Contributor's guidelines <https://scikit.bio/contribute.html>`_.
-
-
-----
-
-Visit the new scikit-bio website: https://scikit.bio to learn more about this project.
+Visit the scikit-bio website: https://scikit.bio to learn more about this project.
 
 
 Releases
 --------
 
-Latest release: `0.6.2 <https://github.com/scikit-bio/scikit-bio/releases/tag/0.6.2>`_ (`documentation <https://scikit.bio/docs/0.6.2/index.html>`_, `changelog <https://github.com/scikit-bio/scikit-bio/blob/main/CHANGELOG.md#version-062>`_). Compatible with Python 3.8 and above.
+Latest release: `0.6.3 <https://github.com/scikit-bio/scikit-bio/releases/tag/0.6.3>`_ (`documentation <https://scikit.bio/docs/0.6.3/index.html>`_, `changelog <https://github.com/scikit-bio/scikit-bio/blob/main/CHANGELOG.md#version-063>`_). Compatible with Python 3.9 and above.
 
 
 Installation

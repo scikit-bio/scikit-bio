@@ -70,7 +70,7 @@ Once the release is created on GitHub, it's a good idea to test out the release 
 
 1. Create a new ``conda`` environment for testing (fill in a name for ``<environment>``)::
 
-    conda create -n <environment> python=3.8 numpy
+    conda create -n <environment> python=3.9 numpy
     conda activate <environment>
 
 2. Install the release tarball from GitHub and run the tests::
@@ -119,7 +119,7 @@ You'll need to have ``conda-build`` and ``anaconda-client`` installed to perform
 Due to its C extensions, releasing scikit-bio packages for different platforms will require you to perform the following steps on each of those platforms. For example, an ``osx-64`` package will need to be built on OS X, and a ``linux-64`` package will need to be built on 64-bit Linux. These steps will be the same on all platforms, so you should repeat them for every platform you want to release for::
 
     conda skeleton pypi scikit-bio
-    conda build scikit-bio --python 3.8
+    conda build scikit-bio --python 3.9
 
 When building 64-bit Linux packages, it is recommended that you use conda-forge's ``linux-anvil``` Docker image. This ensures a consistent Linux build environment that has an old enough version of `libc` to be compatible on most Linux systems. To start up a ``linux-anvil`` Docker container::
 
@@ -128,7 +128,7 @@ When building 64-bit Linux packages, it is recommended that you use conda-forge'
     sed -i '/conda-forge/d' ~/.condarc
     # Run the build commands from above
 
-At this stage you have built Python 3.8 packages. The absolute path to the packages will be provided as output from each ``conda build`` commands. You should now create conda environments for each, and run the tests as described above. You can install these local package as follows::
+At this stage you have built Python 3.9 packages. The absolute path to the packages will be provided as output from each ``conda build`` commands. You should now create conda environments for each, and run the tests as described above. You can install these local package as follows::
 
     conda install --use-local scikit-bio
 
@@ -136,7 +136,7 @@ If the tests pass, you're ready to upload::
 
     anaconda upload -u biocore <package-filepath>
 
-``<package-filepath>`` should be replaced with the path to the package that was was created above. Repeat this for each package you created (here, the Python 3.8 package).
+``<package-filepath>`` should be replaced with the path to the package that was was created above. Repeat this for each package you created (here, the Python 3.9 package).
 
 After uploading, you should create new environments for every package you uploaded, install scikit-bio from each package, and re-run the tests. You can install the packages you uploaded as follows::
 

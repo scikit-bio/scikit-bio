@@ -14,7 +14,7 @@ import pandas as pd
 
 import scipy
 from scipy.spatial.distance import squareform
-from scipy.stats import pearsonr, spearmanr
+from scipy.stats import pearsonr, spearmanr, ConstantInputWarning
 
 from skbio import DistanceMatrix
 from skbio.stats.distance import (DissimilarityMatrixError,
@@ -182,18 +182,18 @@ class InternalMantelTests(MantelTestData):
 
         num_perms = 12
 
-        np.random.seed(0)
+        rng = np.random.default_rng(0)
         orig_stat_fast, comp_stat, permuted_stats_fast = \
-            _mantel_stats_pearson(x, y, num_perms)
+            _mantel_stats_pearson(x, y, num_perms, seed=rng)
 
         # compute the traditional way
-        np.random.seed(0)
+        rng = np.random.default_rng(0)
         x_flat = x.condensed_form()
         y_flat = y.condensed_form()
 
         orig_stat = pearsonr(x_flat, y_flat)[0]
 
-        perm_gen = (pearsonr(x.permute(condensed=True), y_flat)[0]
+        perm_gen = (pearsonr(x.permute(condensed=True, seed=rng), y_flat)[0]
                     for _ in range(num_perms))
         permuted_stats = np.fromiter(perm_gen, float,
                                      count=num_perms)
@@ -213,18 +213,18 @@ class InternalMantelTests(MantelTestData):
 
         num_perms = 12
 
-        np.random.seed(0)
+        rng = np.random.default_rng(0)
         orig_stat_fast, comp_stat, permuted_stats_fast = \
-            _mantel_stats_spearman(x, y, num_perms)
+            _mantel_stats_spearman(x, y, num_perms, seed=rng)
 
         # compute the traditional way
-        np.random.seed(0)
+        rng = np.random.default_rng(0)
         x_flat = x.condensed_form()
         y_flat = y.condensed_form()
 
         orig_stat = spearmanr(x_flat, y_flat)[0]
 
-        perm_gen = (spearmanr(x.permute(condensed=True), y_flat)[0]
+        perm_gen = (spearmanr(x.permute(condensed=True, seed=rng), y_flat)[0]
                     for _ in range(num_perms))
         permuted_stats = np.fromiter(perm_gen, float,
                                      count=num_perms)
@@ -330,9 +330,7 @@ class MantelTests(MantelTestData):
 
     def test_distance_matrix_instances_as_input(self):
         # Matrices with all matching IDs in the same order.
-        np.random.seed(0)
-
-        obs = mantel(self.minx_dm, self.miny_dm, alternative='less')
+        obs = mantel(self.minx_dm, self.miny_dm, alternative='less', seed=0)
 
         self.assert_mantel_almost_equal(obs, [self.exp_x_vs_y, 0.843, 3])
 
@@ -344,10 +342,8 @@ class MantelTests(MantelTestData):
         with self.assertRaises(ValueError):
             mantel(x, y, alternative='less', strict=True)
 
-        np.random.seed(0)
-
         # strict=False should ignore IDs that aren't found in both matrices
-        obs = mantel(x, y, alternative='less', strict=False)
+        obs = mantel(x, y, alternative='less', strict=False, seed=0)
 
         self.assert_mantel_almost_equal(obs, [self.exp_x_vs_y, 0.843, 3])
 
@@ -357,21 +353,17 @@ class MantelTests(MantelTestData):
         lookup = {'a': 'A', 'b': 'B', 'c': 'C',
                   'd': 'A', 'e': 'B', 'f': 'C'}
 
-        np.random.seed(0)
-
         obs = mantel(self.minx_dm, self.miny_dm, alternative='less',
-                     lookup=lookup)
+                     lookup=lookup, seed=0)
         self.assert_mantel_almost_equal(obs, [self.exp_x_vs_y, 0.843, 3])
 
     def test_one_sided_greater(self):
-        np.random.seed(0)
-
-        obs = mantel(self.minx, self.miny, alternative='greater')
+        obs = mantel(self.minx, self.miny, alternative='greater', seed=0)
         self.assertAlmostEqual(obs[0], self.exp_x_vs_y)
-        self.assertAlmostEqual(obs[1], 0.324)
+        self.assertAlmostEqual(obs[1], 0.319)
         self.assertEqual(obs[2], 3)
 
-        obs = mantel(self.minx, self.minx, alternative='greater')
+        obs = mantel(self.minx, self.minx, alternative='greater', seed=0)
         self.assert_mantel_almost_equal(obs, [1, 0.172, 3])
 
     def test_one_sided_less(self):
@@ -382,72 +374,61 @@ class MantelTests(MantelTestData):
                          alternative='less')
             npt.assert_almost_equal(obs, (1, 1, 3))
 
-        np.random.seed(0)
-
-        obs = mantel(self.minx, self.miny, alternative='less')
+        obs = mantel(self.minx, self.miny, alternative='less', seed=0)
         self.assert_mantel_almost_equal(obs, [self.exp_x_vs_y, 0.843, 3])
 
-        obs = mantel(self.minx, self.minz, alternative='less')
+        obs = mantel(self.minx, self.minz, alternative='less', seed=0)
         self.assert_mantel_almost_equal(obs, [self.exp_x_vs_z, 0.172, 3])
 
     def test_two_sided(self):
-        np.random.seed(0)
-
         obs = mantel(self.minx, self.minx, method='spearman',
-                     alternative='two-sided')
-        self.assert_mantel_almost_equal(obs, [1.0, 0.328, 3])
+                     alternative='two-sided', seed=0)
+        self.assert_mantel_almost_equal(obs, [1.0, 0.347, 3])
 
         obs = mantel(self.minx, self.miny, method='spearman',
-                     alternative='two-sided')
+                     alternative='two-sided', seed=0)
         self.assert_mantel_almost_equal(obs, [0.5, 1.0, 3])
 
         obs = mantel(self.minx, self.minz, method='spearman',
-                     alternative='two-sided')
-        self.assert_mantel_almost_equal(obs, [-1, 0.322, 3])
+                     alternative='two-sided', seed=0)
+        self.assert_mantel_almost_equal(obs, [-1, 0.347, 3])
 
     def test_vegan_example(self):
-        np.random.seed(0)
-
         # pearson
         obs = mantel(self.veg_dm_vegan, self.env_dm_vegan,
-                     alternative='greater')
+                     alternative='greater', seed=0)
         self.assert_mantel_almost_equal(obs, [0.3047454, 0.002, 24])
 
         # spearman
         obs = mantel(self.veg_dm_vegan, self.env_dm_vegan,
-                     alternative='greater', method='spearman')
+                     alternative='greater', method='spearman', seed=0)
         self.assert_mantel_almost_equal(obs, [0.283791, 0.003, 24])
 
     def test_no_variation_pearson(self):
+        exp = (np.nan, np.nan, 3)
         for alt in self.alternatives:
             # test one or both inputs having no variation in their
             # distances
-            obs = mantel(self.miny, self.no_variation, method='pearson',
-                         alternative=alt)
-            npt.assert_equal(obs, (np.nan, np.nan, 3))
-
-            obs = mantel(self.no_variation, self.miny, method='pearson',
-                         alternative=alt)
-            npt.assert_equal(obs, (np.nan, np.nan, 3))
-
-            obs = mantel(self.no_variation, self.no_variation,
-                         method='pearson', alternative=alt)
-            npt.assert_equal(obs, (np.nan, np.nan, 3))
+            for x, y in (
+                (self.miny, self.no_variation),
+                (self.no_variation, self.miny),
+                (self.no_variation, self.no_variation),
+            ):
+                with self.assertWarns(ConstantInputWarning):
+                    obs = mantel(x, y, method='pearson', alternative=alt)
+                npt.assert_equal(obs, exp)
 
     def test_no_variation_spearman(self):
         exp = (np.nan, np.nan, 3)
         for alt in self.alternatives:
-            obs = mantel(self.miny, self.no_variation, method='spearman',
-                         alternative=alt)
-            npt.assert_equal(obs, exp)
-
-            obs = mantel(self.no_variation, self.miny, method='spearman',
-                         alternative=alt)
-            npt.assert_equal(obs, exp)
-
-            obs = mantel(self.no_variation, self.no_variation,
-                         method='spearman', alternative=alt)
-            npt.assert_equal(obs, exp)
+            for x, y in (
+                (self.miny, self.no_variation),
+                (self.no_variation, self.miny),
+                (self.no_variation, self.no_variation),
+            ):
+                with self.assertWarns(ConstantInputWarning):
+                    obs = mantel(x, y, method='spearman', alternative=alt)
+                npt.assert_equal(obs, exp)
 
     def test_no_side_effects(self):
         minx = np.asarray(self.minx, dtype='float')
@@ -553,36 +534,30 @@ class PairwiseMantelTests(MantelTestData):
 
     def test_minimal_compatible_input(self):
         # Matrices are already in the correct order and have matching IDs.
-        np.random.seed(0)
-
         # input as DistanceMatrix instances
-        obs = pwmantel(self.min_dms, alternative='greater')
+        obs = pwmantel(self.min_dms, alternative='greater', seed=42)
         assert_data_frame_almost_equal(obs, self.exp_results_minimal)
-
-        np.random.seed(0)
 
         # input as array_like
         obs = pwmantel((self.minx, self.miny, self.minz),
-                       alternative='greater')
+                       alternative='greater', seed=42)
         assert_data_frame_almost_equal(obs, self.exp_results_minimal)
 
     def test_minimal_compatible_input_with_labels(self):
-        np.random.seed(0)
-
         obs = pwmantel(self.min_dms, alternative='greater',
-                       labels=('minx', 'miny', 'minz'))
+                       labels=('minx', 'miny', 'minz'), seed=42)
         assert_data_frame_almost_equal(
             obs,
             self.exp_results_minimal_with_labels)
 
     def test_duplicate_dms(self):
         obs = pwmantel((self.minx_dm, self.minx_dm, self.minx_dm),
-                       alternative='less')
+                       alternative='less', seed=42)
         assert_data_frame_almost_equal(obs, self.exp_results_duplicate_dms)
 
     def test_na_p_value(self):
         obs = pwmantel((self.miny_dm, self.minx_dm), method='spearman',
-                       permutations=0)
+                       permutations=0, seed=42)
         assert_data_frame_almost_equal(obs, self.exp_results_na_p_value)
 
     def test_reordered_distance_matrices(self):
@@ -591,9 +566,7 @@ class PairwiseMantelTests(MantelTestData):
         y = self.miny_dm.filter(['0', '2', '1'])
         z = self.minz_dm.filter(['1', '2', '0'])
 
-        np.random.seed(0)
-
-        obs = pwmantel((x, y, z), alternative='greater')
+        obs = pwmantel((x, y, z), alternative='greater', seed=42)
         assert_data_frame_almost_equal(
             obs,
             self.exp_results_reordered_distance_matrices)
@@ -605,10 +578,8 @@ class PairwiseMantelTests(MantelTestData):
         y = self.miny_dm.filter(['0', '2', '1'])
         z = self.minz_dm_extra.filter(['bar', '1', '2', '0'])
 
-        np.random.seed(0)
-
         # strict=False should discard IDs that aren't found in both matrices
-        obs = pwmantel((x, y, z), alternative='greater', strict=False)
+        obs = pwmantel((x, y, z), alternative='greater', strict=False, seed=42)
         assert_data_frame_almost_equal(
             obs,
             self.exp_results_reordered_distance_matrices)
@@ -629,10 +600,9 @@ class PairwiseMantelTests(MantelTestData):
         y_copy = y.copy()
         z_copy = z.copy()
 
-        np.random.seed(0)
-
         obs = pwmantel((x, y, z), alternative='greater', strict=False,
-                       lookup=lookup)
+                       lookup=lookup, seed=42)
+
         assert_data_frame_almost_equal(
             obs,
             self.exp_results_reordered_distance_matrices)
@@ -664,9 +634,7 @@ class PairwiseMantelTests(MantelTestData):
             get_data_path('dm.txt'),
             get_data_path('dm2.txt'),
         ]
-        np.random.seed(0)
-
-        obs = pwmantel(dms)
+        obs = pwmantel(dms, seed=42)
         self.assert_pwmantel_almost_equal(obs, self.exp_results_dm_dm2)
 
     def test_many_filepaths_as_input(self):
@@ -676,9 +644,7 @@ class PairwiseMantelTests(MantelTestData):
             get_data_path('dm4.txt'),
             get_data_path('dm3.txt')
         ]
-        np.random.seed(0)
-
-        obs = pwmantel(dms)
+        obs = pwmantel(dms, seed=42)
         self.assert_pwmantel_almost_equal(obs, self.exp_results_all_dms)
 
 

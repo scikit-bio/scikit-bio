@@ -11,6 +11,7 @@ import gzip
 import bz2
 import tempfile
 import itertools
+from pathlib import Path
 
 import requests
 
@@ -83,7 +84,7 @@ class Compressor(IOSource):
 
 class FilePathSource(IOSource):
     def can_read(self):
-        return isinstance(self.file, str)
+        return isinstance(self.file, (str, Path))
 
     def can_write(self):
         return self.can_read()

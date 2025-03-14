@@ -15,7 +15,7 @@ from scipy.optimize import fmin_powell, minimize_scalar
 
 from skbio.stats import subsample_counts
 from skbio.diversity._util import _validate_counts_vector
-from skbio.util._warning import _warn_deprecated
+from skbio.util._decorator import aliased
 
 
 def _validate_alpha(empty=None, cast_int=False):
@@ -971,39 +971,6 @@ def observed_features(counts):
     return sobs(counts)
 
 
-def observed_otus(counts):
-    """Calculate the number of distinct OTUs.
-
-    Parameters
-    ----------
-    counts : 1-D array_like, int
-        Vector of counts.
-
-    Returns
-    -------
-    int
-        Distinct OTU count.
-
-    Warnings
-    --------
-    ``observed_otus`` is deprecated as of ``0.6.0`` due to its usage of the
-    historical term "OTU".
-
-    See Also
-    --------
-    sobs
-
-    Notes
-    -----
-    ``observed_otus`` is an alias for ``sobs``.
-
-    """
-    # @deprecated
-    _warn_deprecated(observed_otus, "0.6.0")
-
-    return sobs(counts)
-
-
 @_validate_alpha()
 def osd(counts):
     """Calculate observed taxa, singletons, and doubletons.
@@ -1457,6 +1424,7 @@ def singles(counts):
     return (counts == 1).sum()
 
 
+@aliased("observed_otus", "0.6.0", True)
 @_validate_alpha()
 def sobs(counts):
     """Calculate the observed species richness of a sample.

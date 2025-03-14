@@ -251,7 +251,7 @@ def _normalize_signs(arr1, arr2):
     flips the sign of the column as needed.
 
     """
-    # Let's convert everyting to floating point numbers (it's
+    # Let's convert everything to floating point numbers (it's
     # reasonable to assume that eigenvectors will already be floating
     # point numbers). This is necessary because np.array(1) /
     # np.array(0) != np.array(1.) / np.array(0.)
@@ -425,15 +425,5 @@ def pytestrunner():
     # import here, cause outside the eggs aren't loaded
     import pytest
 
-    args = [
-        "--pyargs",
-        "skbio",
-        "--doctest-modules",
-        "--doctest-glob",
-        "*.pyx",
-        "-o",
-        '"doctest_optionflags=NORMALIZE_WHITESPACE' ' IGNORE_EXCEPTION_DETAIL"',
-    ] + sys.argv[1:]
-
-    errno = pytest.main(args=args)
+    errno = pytest.main(args=["--pyargs", "skbio"] + sys.argv[1:])
     sys.exit(errno)

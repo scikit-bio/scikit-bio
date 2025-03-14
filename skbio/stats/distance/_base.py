@@ -15,10 +15,11 @@ from scipy.spatial.distance import squareform
 
 from skbio._base import SkbioObject
 from skbio.stats._misc import _pprint_strs
-from skbio.util import find_duplicates
+from skbio.util import find_duplicates, get_rng
 from skbio.util._decorator import classonlymethod
 from skbio.util._misc import resolve_key
 from skbio.util._plotting import PlottableMixin
+from skbio.io.registry import Read, Write
 
 from ._utils import is_symmetric_and_hollow
 from ._utils import distmat_reorder, distmat_reorder_condensed
@@ -97,6 +98,9 @@ class DissimilarityMatrix(SkbioObject, PlottableMixin):
     default_write_format = "lsmat"
     # Used in __str__
     _matrix_element_name = "dissimilarity"
+
+    read = Read()
+    write = Write()
 
     def __init__(self, data, ids=None, validate=True):
         validate_full = validate
@@ -1102,7 +1106,7 @@ class DistanceMatrix(DissimilarityMatrix):
         """
         return squareform(self._data, force="tovector", checks=False)
 
-    def permute(self, condensed=False):
+    def permute(self, condensed=False, seed=None):
         """Randomly permute both rows and columns in the matrix.
 
         Randomly permutes the ordering of rows and columns in the matrix. The
@@ -1116,6 +1120,11 @@ class DistanceMatrix(DissimilarityMatrix):
             If ``True``, return the permuted distance matrix in condensed
             format. Otherwise, return the permuted distance matrix as a new
             ``DistanceMatrix`` instance.
+        seed : int, Generator or RandomState, optional
+            A user-provided random seed or random generator instance. See
+            :func:`details <skbio.util.get_rng>`.
+
+            .. versionadded:: 0.6.3
 
         Returns
         -------
@@ -1134,7 +1143,8 @@ class DistanceMatrix(DissimilarityMatrix):
         distance matrix and then converting to condensed format.
 
         """
-        order = np.random.permutation(self.shape[0])
+        rng = get_rng(seed)
+        order = rng.permutation(self.shape[0])
 
         if condensed:
             permuted_condensed = distmat_reorder_condensed(self._data, order)
@@ -1214,52 +1224,57 @@ class DistanceMatrix(DissimilarityMatrix):
 
 
 def randdm(num_objects, ids=None, constructor=None, random_fn=None):
-    """Generate a distance matrix populated with random distances.
+    r"""Generate a distance matrix populated with random distances.
 
-    Using the default `random_fn`, distances are randomly drawn from a uniform
+    Using the default ``random_fn``, distances are randomly drawn from a uniform
     distribution over ``[0, 1)``.
 
-    Regardless of `random_fn`, the resulting distance matrix is guaranteed to
+    Regardless of ``random_fn``, the resulting distance matrix is guaranteed to
     be symmetric and hollow.
 
     Parameters
     ----------
     num_objects : int
         The number of objects in the resulting distance matrix. For example, if
-        `num_objects` is 3, a 3x3 distance matrix will be returned.
+        ``num_objects`` is 3, a 3x3 distance matrix will be returned.
     ids : sequence of str or None, optional
         A sequence of strings to be used as IDs. ``len(ids)`` must be equal to
-        `num_objects`. If not provided, IDs will be monotonically-increasing
+        ``num_objects``. If not provided, IDs will be monotonically-increasing
         integers cast as strings (numbering starts at 1). For example,
         ``('1', '2', '3')``.
     constructor : type, optional
         `DissimilarityMatrix` or subclass constructor to use when creating the
         random distance matrix. The returned distance matrix will be of this
-        type. If ``None`` (the default), a `DistanceMatrix` instance will be
-        returned.
-    random_fn : function, optional
-        Function to generate random values. `random_fn` must accept two
-        arguments (number of rows and number of columns) and return a 2D
-        ``numpy.ndarray`` of floats (or something that can be cast to float).
-        If ``None`` (the default), ``numpy.random.rand`` will be used.
+        type. By default, a `DistanceMatrix` instance will be returned.
+    random_fn : int, np.random.Generator or callable, optional
+        Functionfor generating random values. It must accept (n_rows, n_columns) and
+        return a 2D array of float-like. Default is the
+        :meth:`random <numpy.random.Generator.random>` method of a NumPy random
+        generator. If an integer is provided, a random generator will be constructed
+        using this number as the seed.
+
+        .. versionchanged:: 0.6.3
+            Switched to NumPy's new random generator. Can accept a random seed or
+            random generator instance. The function takes one tuple parameter instead
+            of two separate parameters.
 
     Returns
     -------
     DissimilarityMatrix
         `DissimilarityMatrix` (or subclass) instance of random distances. Type
-        depends on `constructor`.
+        depends on ``constructor``.
 
     See Also
     --------
-    numpy.random.rand
+    numpy.random.Generator.random
 
     """
     if constructor is None:
         constructor = DistanceMatrix
-    if random_fn is None:
-        random_fn = np.random.rand
+    if not callable(random_fn):
+        random_fn = get_rng(random_fn).random
 
-    data = np.tril(random_fn(num_objects, num_objects), -1)
+    data = np.tril(random_fn((num_objects, num_objects)), -1)
     data += data.T
 
     if not ids:
@@ -1389,7 +1404,7 @@ def _df_to_vector(ids, df, column):
     return grouping.tolist()
 
 
-def _run_monte_carlo_stats(test_stat_function, grouping, permutations):
+def _run_monte_carlo_stats(test_stat_function, grouping, permutations, seed=None):
     """Run stat test and compute significance with Monte Carlo permutations."""
     if permutations < 0:
         raise ValueError(
@@ -1397,13 +1412,13 @@ def _run_monte_carlo_stats(test_stat_function, grouping, permutations):
         )
 
     stat = test_stat_function(grouping)
-
+    rng = get_rng(seed)
     p_value = np.nan
     if permutations > 0:
         perm_stats = np.empty(permutations, dtype=np.float64)
 
         for i in range(permutations):
-            perm_grouping = np.random.permutation(grouping)
+            perm_grouping = rng.permutation(grouping)
             perm_stats[i] = test_stat_function(perm_grouping)
 
         p_value = ((perm_stats >= stat).sum() + 1) / (permutations + 1)

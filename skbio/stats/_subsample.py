@@ -18,7 +18,7 @@ from skbio.util import get_rng
 from biom import subsample as biom_subsample
 
 
-def isubsample(items, maximum, minimum=1, buf_size=1000, bin_f=None):
+def isubsample(items, maximum, minimum=1, buf_size=1000, bin_f=None, seed=None):
     """Randomly subsample items from bins, without replacement.
 
     Randomly subsample items without replacement from an unknown number of
@@ -47,6 +47,11 @@ def isubsample(items, maximum, minimum=1, buf_size=1000, bin_f=None):
         This function will be provided with each entry in items, and must
         return a hashable value indicating the bin that that entry should be
         placed in.
+    seed : int, Generator or RandomState, optional
+        A user-provided random seed or random generator instance. See
+        :func:`details <skbio.util.get_rng>`.
+
+        .. versionadded:: 0.6.3
 
     Returns
     -------
@@ -81,8 +86,6 @@ def isubsample(items, maximum, minimum=1, buf_size=1000, bin_f=None):
     sequences:
 
     >>> from skbio.stats import isubsample
-    >>> import numpy as np
-    >>> np.random.seed(123)
     >>> seqs = [('sampleA', 'AATTGG'),
     ...         ('sampleB', 'ATATATAT'),
     ...         ('sampleC', 'ATGGCC'),
@@ -90,23 +93,23 @@ def isubsample(items, maximum, minimum=1, buf_size=1000, bin_f=None):
     ...         ('sampleB', 'ATGGCG'),
     ...         ('sampleA', 'ATGGCA')]
     >>> bin_f = lambda item: item[0]
-    >>> for bin_, item in sorted(isubsample(seqs, 2, bin_f=bin_f)):
+    >>> for bin_, item in sorted(isubsample(seqs, 2, bin_f=bin_f, seed=123)):
     ...     print(bin_, item[1])
     sampleA AATTGG
     sampleA ATGGCA
-    sampleB ATATATAT
     sampleB ATGGCG
+    sampleB ATGGCT
     sampleC ATGGCC
 
     Now, let's set the minimum to 2:
 
     >>> bin_f = lambda item: item[0]
-    >>> for bin_, item in sorted(isubsample(seqs, 2, 2, bin_f=bin_f)):
+    >>> for bin_, item in sorted(isubsample(seqs, 2, 2, bin_f=bin_f, seed=123)):
     ...     print(bin_, item[1])
     sampleA AATTGG
     sampleA ATGGCA
-    sampleB ATATATAT
     sampleB ATGGCG
+    sampleB ATGGCT
 
     """
     if minimum > maximum:
@@ -118,8 +121,10 @@ def isubsample(items, maximum, minimum=1, buf_size=1000, bin_f=None):
         def bin_f(x):
             return True
 
+    rng = get_rng(seed)
+
     # buffer some random values
-    random_values = np.random.randint(0, sys.maxsize, buf_size, dtype=np.int64)
+    random_values = rng.integers(0, sys.maxsize, buf_size, dtype=np.int64)
     random_idx = 0
 
     result = defaultdict(list)
@@ -132,7 +137,7 @@ def isubsample(items, maximum, minimum=1, buf_size=1000, bin_f=None):
         random_value = random_values[random_idx]
         random_idx += 1
         if random_idx >= buf_size:
-            random_values = np.random.randint(0, sys.maxsize, buf_size, dtype=np.int64)
+            random_values = rng.integers(0, sys.maxsize, buf_size, dtype=np.int64)
             random_idx = 0
 
         # push our item on to the heap and drop the smallest if necessary
@@ -162,8 +167,9 @@ def subsample_counts(counts, n, replace=False, seed=None):
     replace : bool, optional
         If ``True``, subsample with replacement. If ``False`` (the default),
         subsample without replacement.
-    seed : int or np.random.Generator, optional
-        A user-provided random seed or random generator instance.
+    seed : int, Generator or RandomState, optional
+        A user-provided random seed or random generator instance. See
+        :func:`details <skbio.util.get_rng>`.
 
     Returns
     -------
@@ -177,8 +183,6 @@ def subsample_counts(counts, n, replace=False, seed=None):
     ValueError
         If `n` is less than zero or greater than the sum of `counts`
         when `replace=False`.
-    EfficiencyWarning
-        If the accelerated code isn't present or hasn't been compiled.
 
     See Also
     --------

@@ -8,10 +8,11 @@
 
 import numpy as np
 
+from skbio.util import get_rng
 from skbio.diversity._util import _validate_counts_vector
 
 
-def lladser_pe(counts, r=10):
+def lladser_pe(counts, r=10, seed=None):
     """Calculate single point estimate of conditional uncovered probability.
 
     Parameters
@@ -20,6 +21,11 @@ def lladser_pe(counts, r=10):
         Vector of counts.
     r : int, optional
         Number of new colors that are required for the next prediction.
+    seed : int, Generator or RandomState, optional
+        A user-provided random seed or random generator instance. See
+        :func:`details <skbio.util.get_rng>`.
+
+        .. versionadded:: 0.6.3
 
     Returns
     -------
@@ -47,7 +53,8 @@ def lladser_pe(counts, r=10):
     """
     counts = _validate_counts_vector(counts)
     sample = _expand_counts(counts)
-    np.random.shuffle(sample)
+    rng = get_rng(seed)
+    rng.shuffle(sample)
 
     try:
         pe = list(_lladser_point_estimates(sample, r))[-1][0]
@@ -57,7 +64,7 @@ def lladser_pe(counts, r=10):
     return pe
 
 
-def lladser_ci(counts, r, alpha=0.95, f=10, ci_type="ULCL"):
+def lladser_ci(counts, r, alpha=0.95, f=10, ci_type="ULCL", seed=None):
     """Calculate single CI of the conditional uncovered probability.
 
     Parameters
@@ -75,6 +82,11 @@ def lladser_ci(counts, r, alpha=0.95, f=10, ci_type="ULCL"):
         conservative lower bound. If ``'ULCU'``, upper and lower bounds with
         conservative upper bound. If ``'U'``, upper bound only, lower bound
         fixed to 0.0. If ``'L'``, lower bound only, upper bound fixed to 1.0.
+    seed : int, Generator or RandomState, optional
+        A user-provided random seed or random generator instance. See
+        :func:`details <skbio.util.get_rng>`.
+
+        .. versionadded:: 0.6.3
 
     Returns
     -------
@@ -100,10 +112,11 @@ def lladser_ci(counts, r, alpha=0.95, f=10, ci_type="ULCL"):
     """
     counts = _validate_counts_vector(counts)
     sample = _expand_counts(counts)
-    np.random.shuffle(sample)
+    rng = get_rng(seed)
+    rng.shuffle(sample)
 
     try:
-        ci = list(_lladser_ci_series(sample, r, alpha, f, ci_type))[-1]
+        ci = list(_lladser_ci_series(sample, r, alpha, f, ci_type, rng))[-1]
     except IndexError:
         ci = (np.nan, np.nan)
 
@@ -116,7 +129,7 @@ def _expand_counts(counts):
     return np.repeat(np.arange(counts.size), counts)
 
 
-def _lladser_point_estimates(sample, r=10):
+def _lladser_point_estimates(sample, r=10, seed=None):
     """Series of point estimates of the conditional uncovered probability.
 
     Parameters
@@ -125,6 +138,9 @@ def _lladser_point_estimates(sample, r=10):
         Series of random observations.
     r : int, optional
         Number of new colors that are required for the next prediction.
+    seed : int, Generator or RandomState, optional
+        A user-provided random seed or random generator instance. See
+        :func:`details <skbio.util.get_rng>`.
 
     Returns
     -------
@@ -151,9 +167,9 @@ def _lladser_point_estimates(sample, r=10):
     """
     if r <= 2:
         raise ValueError("r must be greater than or equal to 3.")
-
+    rng = get_rng(seed)
     for count, seen, cost, i in _get_interval_for_r_new_taxa(sample, r):
-        t = np.random.gamma(count, 1)
+        t = rng.gamma(count, 1)
         point_est = (r - 1) / t
         yield point_est, i, t
 
@@ -215,7 +231,7 @@ def _get_interval_for_r_new_taxa(seq, r):
         yield count, set(seen), cost, i
 
 
-def _lladser_ci_series(seq, r, alpha=0.95, f=10, ci_type="ULCL"):
+def _lladser_ci_series(seq, r, alpha=0.95, f=10, ci_type="ULCL", seed=None):
     """Construct r-color confidence intervals for uncovered conditional prob.
 
     Parameters
@@ -233,6 +249,9 @@ def _lladser_ci_series(seq, r, alpha=0.95, f=10, ci_type="ULCL"):
         conservative lower bound. If ``'ULCU'``, upper and lower bounds with
         conservative upper bound. If ``'U'``, upper bound only, lower bound
         fixed to 0.0. If ``'L'``, lower bound only, upper bound fixed to 1.0.
+    seed : int, Generator or RandomState, optional
+        A user-provided random seed or random generator instance. See
+        :func:`details <skbio.util.get_rng>`.
 
     Returns
     -------
@@ -240,8 +259,9 @@ def _lladser_ci_series(seq, r, alpha=0.95, f=10, ci_type="ULCL"):
         Yields one CI prediction for each new color that is detected and where.
 
     """
+    rng = get_rng(seed)
     for count, seen, cost, i in _get_interval_for_r_new_taxa(seq, r):
-        t = np.random.gamma(count, 1)
+        t = rng.gamma(count, 1)
         yield _lladser_ci_from_r(r, t, alpha, f, ci_type)
 
 

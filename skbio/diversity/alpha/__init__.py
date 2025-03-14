@@ -32,7 +32,6 @@ of observed species in the sample.
    menhinick
    michaelis_menten_fit
    observed_features
-   observed_otus
    osd
    singles
    sobs
@@ -161,7 +160,6 @@ from ._base import (
     menhinick,
     michaelis_menten_fit,
     observed_features,
-    observed_otus,
     osd,
     pielou_e,
     renyi,
@@ -208,7 +206,6 @@ __all__ = [
     "menhinick",
     "michaelis_menten_fit",
     "observed_features",
-    "observed_otus",
     "osd",
     "phydiv",
     "pielou_e",
@@ -223,3 +220,9 @@ __all__ = [
     "strong",
     "tsallis",
 ]
+
+
+from sys import modules
+from skbio.util._decorator import register_aliases
+
+register_aliases(modules[__name__])

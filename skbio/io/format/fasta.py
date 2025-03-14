@@ -188,7 +188,11 @@ format.
 
 Reader-specific Parameters
 ^^^^^^^^^^^^^^^^^^^^^^^^^^
-The available reader parameters differ depending on which reader is used.
+The ``keep_spaces`` parameter can be used with any reader. If set to ``True``,
+all spaces in the input will be preserved. If set to ``False``, all spaces in
+the input will be removed. Default is ``False``.
+
+The following reader parameters differ depending on which reader is used.
 
 Generator and TabularMSA Reader Parameters
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -581,6 +585,64 @@ CATCGTC
 >>> new_fasta_fh.close()
 >>> new_qual_fh.close()
 
+Reading multi-FASTA Files
+^^^^^^^^^^^^^^^^^^^^^^^^^
+Suppose you have a multi-FASTA file and want to read each sequence into a ``DNA``
+object in a list. We'll be using ``io.StringIO`` to make a mock FASTA file in
+memory.
+
+>>> from io import StringIO
+>>> import skbio
+>>> from skbio.sequence import DNA
+>>> fl = ">seq1 Turkey\n" +\
+...      "AAGCTNGGGCATTTCAGGGTGAGCCCGGGCAATACAGGGTAT\n" +\
+...      ">seq2 Salmo gair\n" +\
+...      "AAGCCTTGGCAGTGCAGGGTGAGCCGTGG\n" +\
+...      "CCGGGCACGGTAT\n" +\
+...      ">seq3 H. Sapiens\n" +\
+...      "ACCGGTTGGCCGTTCAGGGTACAGGTTGGCCGTTCAGGGTAA\n" +\
+...      ">seq4 Chimp\n" +\
+...      "AAACCCTTGCCG\n" +\
+...      "TTACGCTTAAAC\n" +\
+...      "CGAGGCCGGGAC\n" +\
+...      "ACTCAT\n" +\
+...      ">seq5 Gorilla\n" +\
+...      "AAACCCTTGCCGGTACGCTTAAACCATTGCCGGTACGCTTAA\n"
+>>> mock_fl = StringIO(fl)
+
+The following code will read the sequences into scikit-bio. In practice, ``mock_fl``
+may be replaced with an opened file handle, or the path to the file.
+
+>>> res = list(skbio.io.read(mock_fl, format="fasta", constructor=DNA))
+>>> res[0]
+DNA
+------------------------------------------------
+Metadata:
+    'description': 'Turkey'
+    'id': 'seq1'
+Stats:
+    length: 42
+    has gaps: False
+    has degenerates: True
+    has definites: True
+    GC-content: 54.76%
+------------------------------------------------
+0 AAGCTNGGGC ATTTCAGGGT GAGCCCGGGC AATACAGGGT AT
+>>> res[1]
+DNA
+------------------------------------------------
+Metadata:
+    'description': 'Salmo gair'
+    'id': 'seq2'
+Stats:
+    length: 42
+    has gaps: False
+    has degenerates: False
+    has definites: True
+    GC-content: 66.67%
+------------------------------------------------
+0 AAGCCTTGGC AGTGCAGGGT GAGCCGTGGC CGGGCACGGT AT
+
 References
 ----------
 .. [1] Lipman, DJ; Pearson, WR (1985). "Rapid and sensitive protein similarity
@@ -672,14 +734,23 @@ def _sniffer_data_parser(chunks):
 
 @fasta.reader(None)
 def _fasta_to_generator(fh, qual=FileSentinel, constructor=Sequence, **kwargs):
+    kwargs = kwargs.copy()
+    if "keep_spaces" in kwargs:
+        kwarg = {"keep_spaces": kwargs.pop("keep_spaces")}
+    else:
+        kwarg = {}
     if qual is None:
         for seq, id_, desc in _parse_fasta_raw(
-            fh, _parse_sequence_data, FASTAFormatError
+            fh, _parse_sequence_data, FASTAFormatError, **kwarg
         ):
             yield constructor(seq, metadata={"id": id_, "description": desc}, **kwargs)
     else:
-        fasta_gen = _parse_fasta_raw(fh, _parse_sequence_data, FASTAFormatError)
-        qual_gen = _parse_fasta_raw(qual, _parse_quality_scores, QUALFormatError)
+        fasta_gen = _parse_fasta_raw(
+            fh, _parse_sequence_data, FASTAFormatError, **kwarg
+        )
+        qual_gen = _parse_fasta_raw(
+            qual, _parse_quality_scores, QUALFormatError, **kwarg
+        )
 
         for fasta_rec, qual_rec in itertools.zip_longest(
             fasta_gen, qual_gen, fillvalue=None
@@ -900,7 +971,7 @@ def _tabular_msa_to_fasta(
     )
 
 
-def _parse_fasta_raw(fh, data_parser, error_type):
+def _parse_fasta_raw(fh, data_parser, error_type, keep_spaces=False):
     """Raw parser for FASTA or QUAL files.
 
     Returns raw values (seq/qual, id, description). It is the responsibility of
@@ -922,6 +993,9 @@ def _parse_fasta_raw(fh, data_parser, error_type):
             "\n%s" % seq_header
         )
 
+    # will remove spaces from each sequence (but not quality scores)
+    trim_spaces = data_parser.__name__ == "_parse_sequence_data" and not keep_spaces
+
     data_chunks = []
     prev = seq_header
     for line in _line_generator(fh, skip_blanks=False):
@@ -930,14 +1004,13 @@ def _parse_fasta_raw(fh, data_parser, error_type):
             yield data_parser(data_chunks), id_, desc
             data_chunks = []
             id_, desc = _parse_fasta_like_header(line)
-        else:
-            if line:
-                # ensure no blank lines within a single record
-                if not prev:
-                    raise error_type(
-                        "Found blank or whitespace-only line within record."
-                    )
-                data_chunks.append(line)
+        elif line:
+            # ensure no blank lines within a single record
+            if not prev:
+                raise error_type("Found blank or whitespace-only line within record.")
+            if trim_spaces:
+                line = line.replace(" ", "")
+            data_chunks.append(line)
         prev = line
     # yield last record in file
     yield data_parser(data_chunks), id_, desc

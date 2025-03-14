@@ -31,14 +31,10 @@ class UpgmaTests(TestCase):
 
     def test_upgma_dm(self):
         actual_TreeNode = upgma(self.dm)
-        self.assertAlmostEqual(actual_TreeNode.compare_tip_distances(
+        self.assertAlmostEqual(actual_TreeNode.compare_cophenet(
             self.expected_TreeNode_upgma), 0.0, places=10)
 
     def test_wpgma_dm(self):
         actual_TreeNode = upgma(self.dm, weighted=True)
-        self.assertAlmostEqual(actual_TreeNode.compare_tip_distances(
+        self.assertAlmostEqual(actual_TreeNode.compare_cophenet(
             self.expected_TreeNode_wpgma), 0.0, places=10)
-
-    def test_upgma_error(self):
-        error_dm = "ErrorString"
-        self.assertRaises(ValueError, upgma, error_dm)

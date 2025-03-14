@@ -30,6 +30,21 @@ Plotting utilities
    PlottableMixin
 
 
+Decorators
+----------
+
+.. autosummary::
+   :toctree: generated/
+
+   overrides
+   classproperty
+   classonlymethod
+   deprecated
+   aliased
+   register_aliases
+   params_aliased
+
+
 Miscellaneous utilities
 -----------------------
 
@@ -38,27 +53,10 @@ Generally useful functionality that doesn't fit in more specific locations.
 .. autosummary::
    :toctree: generated/
 
+   get_rng
    cardinal_to_ordinal
    find_duplicates
    safe_md5
-   classproperty
-
-
-Developer warnings
-------------------
-
-.. autosummary::
-
-   EfficiencyWarning
-   RepresentationWarning
-
-
-Details
--------
-
-.. autoexception:: EfficiencyWarning
-.. autoexception:: RepresentationWarning
-
 
 """  # noqa: D412, D416, D205, D415
 
@@ -70,7 +68,6 @@ Details
 # The full license is in the file LICENSE.txt, distributed with this software.
 # ----------------------------------------------------------------------------
 
-from ._warning import EfficiencyWarning, RepresentationWarning, SkbioWarning
 from ._misc import cardinal_to_ordinal, find_duplicates, safe_md5, get_rng
 from ._testing import (
     get_data_path,
@@ -78,13 +75,18 @@ from ._testing import (
     assert_data_frame_almost_equal,
     pytestrunner,
 )
-from ._decorator import classproperty
+from ._decorator import (
+    overrides,
+    classproperty,
+    classonlymethod,
+    deprecated,
+    aliased,
+    register_aliases,
+    params_aliased,
+)
 from ._plotting import PlottableMixin
 
 __all__ = [
-    "SkbioWarning",
-    "EfficiencyWarning",
-    "RepresentationWarning",
     "cardinal_to_ordinal",
     "find_duplicates",
     "safe_md5",
@@ -92,7 +94,13 @@ __all__ = [
     "get_data_path",
     "assert_ordination_results_equal",
     "assert_data_frame_almost_equal",
-    "classproperty",
     "pytestrunner",
     "PlottableMixin",
+    "overrides",
+    "classproperty",
+    "classonlymethod",
+    "deprecated",
+    "aliased",
+    "register_aliases",
+    "params_aliased",
 ]

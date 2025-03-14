@@ -13,10 +13,10 @@ import numpy as np
 from skbio.diversity._util import (
     _validate_counts_matrix,
     _validate_taxa_and_tree,
-    _vectorize_counts_and_tree,
-    _check_taxa_alias,
+    vectorize_counts_and_tree,
 )
 from skbio.diversity._phylogenetic import _tip_distances
+from skbio.util._decorator import params_aliased
 
 
 # The default value indicating whether normalization should be applied
@@ -26,9 +26,8 @@ from skbio.diversity._phylogenetic import _tip_distances
 _normalize_weighted_unifrac_by_default = False
 
 
-def unweighted_unifrac(
-    u_counts, v_counts, taxa=None, tree=None, validate=True, otu_ids=None
-):
+@params_aliased([("taxa", "otu_ids", "0.6.0", True)])
+def unweighted_unifrac(u_counts, v_counts, taxa, tree, validate=True):
     """Compute unweighted UniFrac.
 
     Parameters
@@ -50,9 +49,6 @@ def unweighted_unifrac(
         bypassed if you're not certain that your input data are valid. See
         :mod:`skbio.diversity` for the description of what validation entails
         so you can determine if you can safely disable validation.
-    otu_ids : list, np.array
-        Alias of ``taxa`` for backward compatibility. Deprecated and to be
-        removed in a future release.
 
     Returns
     -------
@@ -151,21 +147,20 @@ def unweighted_unifrac(
     0.37
 
     """
-    taxa = _check_taxa_alias(taxa, tree, otu_ids)
     u_node_counts, v_node_counts, _, _, tree_index = _setup_pairwise_unifrac(
         u_counts, v_counts, taxa, tree, validate, normalized=False, unweighted=True
     )
     return _unweighted_unifrac(u_node_counts, v_node_counts, tree_index["length"])
 
 
+@params_aliased([("taxa", "otu_ids", "0.6.0", True)])
 def weighted_unifrac(
     u_counts,
     v_counts,
-    taxa=None,
-    tree=None,
+    taxa,
+    tree,
     normalized=_normalize_weighted_unifrac_by_default,
     validate=True,
-    otu_ids=None,
 ):
     """Compute weighted UniFrac with or without branch length normalization.
 
@@ -191,9 +186,6 @@ def weighted_unifrac(
         bypassed if you're not certain that your input data are valid. See
         :mod:`skbio.diversity` for the description of what validation entails
         so you can determine if you can safely disable validation.
-    otu_ids : list, np.array
-        Alias of ``taxa`` for backward compatibility. Deprecated and to be
-        removed in a future release.
 
     Returns
     -------
@@ -294,7 +286,6 @@ def weighted_unifrac(
     0.33
 
     """
-    taxa = _check_taxa_alias(taxa, tree, otu_ids)
     (
         u_node_counts,
         v_node_counts,
@@ -341,11 +332,11 @@ def _setup_pairwise_unifrac(
         _validate(u_counts, v_counts, taxa, tree)
 
     # temporarily store u_counts and v_counts in a 2-D array as that's what
-    # _vectorize_counts_and_tree takes
+    # vectorize_counts_and_tree takes
     u_counts = np.asarray(u_counts)
     v_counts = np.asarray(v_counts)
     counts = np.vstack([u_counts, v_counts])
-    counts_by_node, tree_index, branch_lengths = _vectorize_counts_and_tree(
+    counts_by_node, tree_index, branch_lengths = vectorize_counts_and_tree(
         counts, taxa, tree
     )
     # unpack counts vectors for single pairwise UniFrac calculation
@@ -496,7 +487,7 @@ def _setup_multiple_unifrac(counts, taxa, tree, validate):
     if validate:
         _validate_taxa_and_tree(counts[0], taxa, tree)
 
-    counts_by_node, tree_index, branch_lengths = _vectorize_counts_and_tree(
+    counts_by_node, tree_index, branch_lengths = vectorize_counts_and_tree(
         counts, taxa, tree
     )
 
