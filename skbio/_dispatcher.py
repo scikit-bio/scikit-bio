@@ -38,8 +38,6 @@ def create_table(data, columns=None, index=None, backend=None):
     elif backend == "polars":
         pl = _get_package(backend)
         return pl.DataFrame(data, schema=columns)
-    # elif backend == "biom":
-    #     return Table(data, observation_ids=index, sample_ids=columns)
     else:
         raise ValueError(f"Unsupported backend: '{backend}'")
 
@@ -78,14 +76,14 @@ def create_table_1d(data, index=None, backend=None):
         raise ValueError(f"Unsupported backend: '{backend}'")
 
 
-def ingest_array(input_data, row_ids=None, col_ids=None, dtype=None):
+def ingest_array(input_data, row_ids=None, col_ids=None):
     """Process an input dataframe, table, or array into individual components.
 
     Parameters
     ----------
     input_data : tabular
         The original source of data. May be pandas or polars DataFrame, numpy array,
-        or BIOM table.
+        BIOM table, or anndata.AnnData.
     row_ids : list of str
         IDs corresponding to the rows of the input data. If ``None``, extraction from
         input data will be attempted. In the case that IDs may not be extracted, they
@@ -142,11 +140,16 @@ def ingest_array(input_data, row_ids=None, col_ids=None, dtype=None):
             data_ = input_data.to_numpy()
             col_ids = list(input_data.schema) if col_ids is None else col_ids
     # anndata
-
+    elif hasattr(input_data, "X"):
+        adt = _get_package("anndata")
+        if isinstance(input_data, adt.AnnData):
+            data_ = input_data.X
+            row_ids = list(input_data.obs.index) if row_ids is None else row_ids
+            col_ids = list(input_data.var.index) if col_ids is None else col_ids
     else:
         raise TypeError(
             "Input data must be pandas DataFrame, polars DataFrame, numpy ndarray, "
-            "or skbio.Table."
+            "skbio.Table, or anndata.AnnData."
         )
 
     return data_, row_ids, col_ids
