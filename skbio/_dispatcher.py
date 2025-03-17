@@ -1,6 +1,8 @@
 import numpy as np
 import pandas as pd
 
+from warnings import warn
+
 from skbio.table import Table
 from ._config import get_config
 from ._optionals import _get_package
@@ -117,10 +119,12 @@ def ingest_array(input_data, row_ids=None, col_ids=None, dtype=None):
         # accordingly
         # Or, maybe it's better just to enforce that rows must be samples and
         # columns must be features (observations), then we don't worry about it
-        print(
+        warn(
             "BIOM format uses samples as columns and features as rows. Most "
             "scikit-bio functions expect samples as rows and features as columns. "
-            "Please ensure your input is in the correct orientation.\n"
+            "Please ensure your input is in the correct orientation.\n",
+            UserWarning,
+            stacklevel=2,
         )
         data_ = input_data.to_dataframe().values
         row_ids = (

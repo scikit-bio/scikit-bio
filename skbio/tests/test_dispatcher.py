@@ -21,7 +21,8 @@ except (ImportError, ModuleNotFoundError):
 else:
     has_polars = True
 
-from skbio._dispatcher import create_table, create_table_1d
+from skbio.table import Table
+from skbio._dispatcher import create_table, create_table_1d, ingest_array
 from skbio._config import get_config, set_config
 from skbio.util._testing import assert_data_frame_almost_equal
 
@@ -228,6 +229,49 @@ class TestPolars(TestCase):
     def test_create_table_1d_bad_backend(self):
         with self.assertRaisesRegex(ValueError, "Unsupported backend: 'nonsense'"):
             create_table_1d(self.data, backend="nonsense")
+
+
+class TestNonbackendInputs(TestCase):
+    def setUp(self):
+        set_config("output", "polars")
+        self.data = np.array([[0, 1, 2], [3, 4, 5], [6, 7, 8]])
+        self.data_1d = self.data[0]
+        self.samples = ["A", "B", "C"]
+        self.features = ["f1", "f2", "f3"]
+
+    def test_biom_input(self):
+        # need to transpose to ensure proper orientation of data
+        tbl = Table(
+            self.data.T, observation_ids=self.features, sample_ids=self.samples
+        ).transpose()
+        with self.assertWarnsRegex(
+            UserWarning,
+            "BIOM format uses samples as columns and features as rows. Most "
+            "scikit-bio functions expect samples as rows and features as columns. "
+            "Please ensure your input is in the correct orientation.\n",
+        ):
+            data, row_ids, col_ids = ingest_array(tbl)
+        npt.assert_array_equal(data, self.data)
+        self.assertEqual(row_ids, self.samples)
+        self.assertEqual(col_ids, self.features)
+
+    def test_biom_input_pass_ids(self):
+        # need to transpose to ensure proper orientation of data
+        tbl = Table(
+            self.data.T, observation_ids=self.features, sample_ids=self.samples
+        ).transpose()
+        with self.assertWarnsRegex(
+            UserWarning,
+            "BIOM format uses samples as columns and features as rows. Most "
+            "scikit-bio functions expect samples as rows and features as columns. "
+            "Please ensure your input is in the correct orientation.\n",
+        ):
+            data, row_ids, col_ids = ingest_array(
+                tbl, row_ids=self.samples, col_ids=self.features
+            )
+        npt.assert_array_equal(data, self.data)
+        self.assertEqual(row_ids, self.samples)
+        self.assertEqual(col_ids, self.features)
 
 
 if __name__ == "__main__":
