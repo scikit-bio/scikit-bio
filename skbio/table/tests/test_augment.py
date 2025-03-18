@@ -182,14 +182,13 @@ class TestAugmentation(TestCase):
         self.assertTrue(np.all(augmented_matrix <= self.table_max))
 
     def test_compositional_cutmix(self):
-        augmentation = Augmentation(self.table, label=self.labels, num_classes=2)
+        table_compositional = self.table.norm(axis="sample")
+        augmentation = Augmentation(table_compositional, label=self.labels, num_classes=2)
 
         augmented_matrix, augmented_label = augmentation.compositional_cutmix(n_samples=20)
 
         self.assertEqual(augmented_matrix.shape[1], self.table.shape[0])
         self.assertEqual(augmented_matrix.shape[0], self.table.shape[1] + 20)
-        # check if all entry are integers
-        self.assertTrue(np.all(augmented_matrix == np.round(augmented_matrix)))
         self.assertEqual(len(augmented_label), len(self.labels) + 20)
         self.assertTrue(np.all(augmented_matrix >= self.table_min))
         self.assertTrue(np.all(augmented_matrix <= self.table_max))

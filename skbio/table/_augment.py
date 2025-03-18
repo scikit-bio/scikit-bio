@@ -398,7 +398,7 @@ class Augmentation(SkbioObject):
         -----
 
         The algorithm is described in [1]_,
-        This method needs to do cutmix on data in the same class.
+        This method needs to do cutmix on compositional data in the same class.
         by randomly select count from one of two samples to generate
         a new sample. For this method to work, the label must be provided.
         The algorithm has 4 steps:
@@ -425,6 +425,10 @@ class Augmentation(SkbioObject):
         """
 
         rng = get_rng(seed)
+
+        if not np.allclose(np.sum(self.matrix, axis=1), 1):
+            self.matrix = closure(self.matrix)
+
         possible_pairs = self._get_all_possible_pairs(intra_class=True)
         selected_pairs = possible_pairs[
             rng.integers(0, len(possible_pairs), size=n_samples)
