@@ -304,4 +304,4 @@ class TestAnndata(TestCase):
 
 
 if __name__ == "__main__":
-    main(buffer=False)
+    main()

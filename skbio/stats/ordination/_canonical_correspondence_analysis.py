@@ -45,9 +45,11 @@ def cca(
     Parameters
     ----------
     y : DataFrame or ndarray
-        Samples by features table (n, m). DataFrame may be pandas or polars.
+        Samples by features table (n, m). Can be numpy, pandas, polars, AnnData,
+        or BIOM (skbio.Table).
     x : DataFrame or ndarray
-        Samples by constraints table (n, q). DataFrame may be pandas or polars.
+        Samples by constraints table (n, q). Can be numpy, pandas, polars, AnnData,
+        or BIOM (skbio.Table).
     scaling : int, {1, 2}, optional
         Scaling type 1 maintains :math:`\chi^2` distances between rows.
         Scaling type 2 preserves :math:`\chi^2` distances between columns.
@@ -55,14 +57,14 @@ def cca(
         Legendre 1998, section 9.4.3.
     sample_ids : list of str, optional
         List of ids of samples. If not provided implicitly by the input DataFrame or
-        explicitly by the user, sample_ids will default to a range index starting at
-        zero.
+        explicitly by the user, sample_ids will default to a list of integers starting
+        at zero.
     feature_ids : list of str, optional
         List of ids of features. If not provided implicitly by y or explicitly by the
-        user, it will default to a range index starting at zero.
+        user, it will default to a list of integers starting at zero.
     constraint_ids : list of str, optional
         List of ids of constraints. If not provided implicitly by y or explicitly by
-        the user, it will default to a range index starting at zero.
+        the user, it will default to a list of integers starting at zero.
     output_format : str, optional
         The desired format of the output object. Can be ``pandas``, ``polars``, or
         ``numpy``. Note that all scikit-bio ordination functions return an
