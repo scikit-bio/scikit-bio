@@ -210,6 +210,9 @@ class Augmentation(SkbioObject):
             The augmented matrix.
         augmented_label : numpy.ndarray
             The augmented label, in one-hot encoding.
+            if the user want to use the augmented label for regression,
+            users can simply call ``np.argmax(aug_label, axis=1)``
+            to get the discrete labels.
 
         Notes
         -----
@@ -288,6 +291,9 @@ class Augmentation(SkbioObject):
             The augmented matrix.
         augmented_label : numpy.ndarray
             The augmented label, in one-hot encoding.
+            if the user want to use the augmented label for regression,
+            users can simply call ``np.argmax(aug_label, axis=1)``
+            to get the discrete labels.
 
         Examples
         --------
@@ -404,7 +410,8 @@ class Augmentation(SkbioObject):
         augmented_matrix : numpy.ndarray
             The augmented matrix.
         augmented_label : numpy.ndarray
-            The augmented label, the label is in 0 and 1.
+            The augmented label, the label is 1D array.
+            User can use the 1D label for both classification and regression.
 
         Examples
         --------
@@ -501,6 +508,9 @@ class Augmentation(SkbioObject):
             The augmented matrix.
         augmented_label : numpy.ndarray
             The augmented label, in one-hot encoding.
+            if the user want to use the augmented label for regression,
+            users can simply call ``np.argmax(aug_label, axis=1)``
+            to get the discrete labels.
 
         Examples
         --------
