@@ -17,8 +17,11 @@ from skbio.util import get_rng
 
 
 class Augmentation(SkbioObject):
-    """Data Augmentation of a table,
-    for predictive microbiome models.
+    """Data Augmentation of a omic data table,
+    for predictive models on omic data.
+
+    The Augmentation class is mainly designed to enhance the performance of
+    classification models on omic data.
 
     Parameters
     ----------
@@ -26,12 +29,12 @@ class Augmentation(SkbioObject):
         The table to augment.
     label : numpy.ndarray, optional
         The label of the table. The label is expected to has a shape of ``(n_samples,)``
-        or ``(n_samples, n_classes)``.
+        or ``(n_samples, n_classes)``. Can be none if the label is not needed.
     num_classes : int, optional
         The number of classes in the label. If None, either the no label is provided,
         or the label already one-hot encoded.
     tree : skbio.tree.TreeNode, optional
-        The tree to use to augment the table.
+        The tree to use to augment the table. Only required for method ``phylomix``.
     """
 
     def __init__(self, table, label=None, num_classes=None, tree=None):
@@ -45,7 +48,32 @@ class Augmentation(SkbioObject):
 
         self.dataframe = self.table.to_dataframe()
         self.matrix = self.dataframe.values.T
-        self.label = label
+
+        if label is not None:
+            if not isinstance(label, np.ndarray):
+                raise ValueError(
+                    f"label must be a numpy.ndarray, but got {type(label)} instead."
+                )
+            if label.ndim not in [1, 2]:
+                raise ValueError(
+                    f"labels should have shape (n_samples,) or (n_samples, n_classes)"
+                    f"but got {label.shape} instead."
+                )
+            if label.ndim == 1 and num_classes is None:
+                raise ValueError("num_classes must be provided if the labels are 1D")
+            if (
+                label.ndim == 2
+                and num_classes is not None
+                and label.shape[1] != num_classes
+            ):
+                raise ValueError(
+                    f"When passing 2D labels, "
+                    f"the number of elements in last dimension must match num_classes: "
+                    f"{label.shape[1]} != {num_classes}. "
+                    f"You can set num_classes to None"
+                )
+            self.label = label
+
         if num_classes is not None:
             self.one_hot_label = np.eye(num_classes)[self.label]
         else:
@@ -201,7 +229,7 @@ class Augmentation(SkbioObject):
         3. This implementation returns an augmented dataset with both original and
            new samples, while PyTorch's implementation transforms a batch in-place.
 
-        4. This implementation is designed for microbiome data tables,
+        4. This implementation is designed for omic data tables,
            while PyTorch's is primarily for image data.
            And this implementation is mainly based on the Numpy Library.
 
@@ -281,7 +309,7 @@ class Augmentation(SkbioObject):
         Notes
         -----
         The algorithm is based on [1]_, and leverages the Aitchison geometry
-        to guide data augmentation in compositional microbiome data,
+        to guide data augmentation in compositional data,
         this is essentially the vanilla mixup in the Aitchison geometry.
         This mixup method only works on the Compositional data.
         where a set of datapoints are living in the simplex:
@@ -495,27 +523,28 @@ class Augmentation(SkbioObject):
         Notes
         -----
         The algorithm is based on [1]_, and leverages phylogenetic
-        relationships to guide data augmentation in compositional microbiome data.
-        By mixing the counts of the leaves of a selected node, Phylomix preserves
-        phylogenetic structure while introducing new synthetic samples.
+        relationships to guide data augmentation in microbiome and other omic data.
+        By mixing the abundances of phylogenetically related
+        taxa (leaves of a selected node), Phylomix preserves the biological
+        structure while introducing new synthetic samples.
 
         The selection of nodes follows a random sampling approach,
-        where a subset of leaves is chosen based on a
+        where a subset of taxa is chosen based on a
         Beta-distributed mixing coefficient. This ensures that the augmented
-        data maintains meaningful compositional relationships.
+        data maintains biologically meaningful compositional relationships.
 
-        In the paper, the author made assumption that the tree is bifurcated,
-        but in this implmentation, the phylogenetic tree is not necessary
-        to be bifurcated. However, if the user want to use the bifurcated tree,
-        they can run ``skbio.tree.TreeNode.bifurcate()`` to bifurcate the tree.
+        In the original paper, the authors assumed a bifurcated phylogenetic tree,
+        but this implementation works with any tree structure. If desired,
+        users can bifurcate their tree using ``skbio.tree.TreeNode.bifurcate()``
+        before augmentation.
 
-        Phylomix is particularly useful for microbiome-trait association studies,
-        where the preservation of phylogenetic similarity is crucial for
-        accurate downstream predictions.
+        Phylomix is particularly valuable for microbiome-trait association studies,
+        where preserving phylogenetic similarity between related taxa is crucial for
+        accurate downstream predictions. This approach helps address the
+        common challenge of limited sample sizes in omic data studies.
 
         The method assumes that all tips in the phylogenetic tree
-        are represented in the ``tip_to_obs_mapping`` dictionary,
-        and that the tree is bifurcated before augmentation.
+        are represented in the ``tip_to_obs_mapping`` dictionary.
 
         References
         ----------

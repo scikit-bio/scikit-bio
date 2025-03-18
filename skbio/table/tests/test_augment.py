@@ -95,6 +95,7 @@ class TestAugmentation(TestCase):
                     self.tips_to_feature_mapping_simple[phylogeny_label] = idx
         self.labels = np.random.randint(0, 2, size=self.table.shape[1])
         self.labels_simple = np.random.randint(0, 2, size=self.table_simple.shape[1])
+        self.one_hot_labels = np.eye(2)[self.labels]
 
     def test_init(self):
         augmentation = Augmentation(self.table, label=self.labels, num_classes=2)
@@ -112,6 +113,20 @@ class TestAugmentation(TestCase):
         
         with self.assertRaisesRegex(ValueError, "tree must be a skbio.tree.TreeNode"):
             Augmentation(self.table, self.labels, tree="not_a_tree")
+
+        with self.assertRaises(ValueError):
+            # when label is 1D but num_classes is not provided
+            Augmentation(self.table, self.labels, None)
+
+        with self.assertRaises(ValueError):
+            # when label is 2D, num_classes is provided 
+            # but does not match the number of classes in the label
+            Augmentation(self.table, self.one_hot_labels, num_classes=3)
+
+        with self.assertRaises(ValueError):
+            # when label has wrong dimension
+            self.wrong_label = self.one_hot_labels[..., np.newaxis]
+            Augmentation(self.table, self.wrong_label, num_classes=2)
 
     def test_get_all_possible_pairs(self):
         data_simple = np.arange(40).reshape(10, 4)
