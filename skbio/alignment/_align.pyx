@@ -11,7 +11,7 @@ cnp.import_array()
 # Scoring constants
 cdef uint8_t GAP = 1
 cdef uint8_t GAP_SCORE = 255
-cdef int32_t NEG_INF = -2147483648 + 10
+cdef int32_t NEG_INF = -2147483647
 
 # Alignment score wrapper function for export
 def align_score(seq1, seq2, subMatrix, gap_open, gap_extend):
