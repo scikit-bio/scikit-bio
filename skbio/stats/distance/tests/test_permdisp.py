@@ -23,7 +23,7 @@ from skbio.stats.distance._cutils import geomedian_axis_one
 from skbio.util import get_data_path
 
 
-class testPERMDISP(TestCase):
+class PERMDISPTests(TestCase):
 
     def setUp(self):
         # test with 2 groups of equal size
@@ -289,6 +289,16 @@ class testPERMDISP(TestCase):
         # in principle, both tests - if seed is the same - should return the
         # exact same results. However, they don't for the current example ...
         self.assert_series_equal(obs_frame, obs_series)
+
+    def test_invalid_test(self):
+        with self.assertRaises(ValueError) as cm:
+            permdisp(self.unifrac_dm, [], test='invalid')
+        self.assertEqual(str(cm.exception), "Test must be centroid or median.")
+
+    def test_invalid_method(self):
+        with self.assertRaises(ValueError) as cm:
+            permdisp(self.unifrac_dm, [], method='invalid')
+        self.assertEqual(str(cm.exception), "Method must be eigh or fsvd.")
 
 
 if __name__ == '__main__':
