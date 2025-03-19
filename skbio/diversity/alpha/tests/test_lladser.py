@@ -37,10 +37,6 @@ def create_fake_observation():
 class LladserTests(unittest.TestCase):
     def test_lladser_pe(self):
         """lladser_pe returns point estimates within the expected variance"""
-
-        obs = lladser_pe([3], r=4)
-        self.assertTrue(np.isnan(obs))
-
         fake_obs, exp_p = create_fake_observation()
         reps = 100
         sum = 0
@@ -51,6 +47,13 @@ class LladserTests(unittest.TestCase):
         # Estimator has variance of (1-p)^2/(r-2),
         # which for r=30 and p~=0.9 is 0.0289
         self.assertTrue(abs(obs - exp_p) < 0.0289)
+
+        # edge cases
+        obs = lladser_pe([3], r=4)
+        self.assertTrue(np.isnan(obs))
+
+        obs = lladser_pe([1], r=3)
+        self.assertTrue(np.isnan(obs))
 
     def test_lladser_ci_nan(self):
         """lladser_ci returns nan if sample is too short to make an estimate"""
@@ -197,6 +200,10 @@ class LladserTests(unittest.TestCase):
                                                ci_type=ci_type)
         npt.assert_almost_equal(obs_low, 0.0817691447)
         npt.assert_almost_equal(obs_high, 1)
+
+        # constant not precomputed
+        with self.assertRaises(ValueError):
+            _lladser_ci_from_r(r=r, t=t, f=f, alpha=0.88)
 
     def test_lladser_ci_from_r_invalid_input(self):
         # unsupported alpha for ci_type='U'
