@@ -33,11 +33,10 @@ cdef float32_t _align_score(const uint8_t[::1] seq1, const uint8_t[::1] seq2, co
         # Gap in seq1
         if seq1[i] == GAP_SCORE:
             # Either no current gap or gap in seq2
+            score += gap_extend
             if state == 0 or state == 2:
-                score += gap_open + gap_extend
+                score += gap_open
                 state = 1
-            else:
-                score += gap_extend
         # Gap in seq2
         elif seq2[i] == GAP_SCORE:
             # Either no current gap or gap in seq1
