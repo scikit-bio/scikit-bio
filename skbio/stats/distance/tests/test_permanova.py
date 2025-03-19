@@ -20,7 +20,7 @@ from skbio.util import get_data_path
 from skbio.stats.distance._base import _preprocess_input_sng
 
 
-class TestPERMANOVA(TestCase):
+class PERMANOVATests(TestCase):
     """All results were verified with R (vegan::adonis)."""
 
     def setUp(self):
@@ -165,6 +165,10 @@ class TestPERMANOVA(TestCase):
         with self.assertRaises(ValueError):
             _preprocess_input_sng(dm.ids, dm.shape[0],
                                   grouping['tumor'], 'foo')
+
+    def test_invalid_input(self):
+        with self.assertRaises(TypeError):
+            permanova(self.dm_ties.data, self.grouping_equal, seed=42)
 
 
 if __name__ == '__main__':
