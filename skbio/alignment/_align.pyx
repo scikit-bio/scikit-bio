@@ -40,11 +40,10 @@ cdef float32_t _align_score(const uint8_t[::1] seq1, const uint8_t[::1] seq2, co
         # Gap in seq2
         elif seq2[i] == GAP_SCORE:
             # Either no current gap or gap in seq1
+            score += gap_extend
             if state == 0 or state == 1:
-                score += gap_open + gap_extend
+                score += gap_open
                 state = 2
-            else:
-                score += gap_extend
         # No gaps
         else:
             score += subMatrix[seq1[i], seq2[i]] 
