@@ -268,13 +268,12 @@ def mantel(
 
     """
     rng = get_rng(seed)
-    special = False  # set to true, if we have a dedicated implementation
-    if method == "pearson":
-        special = True
-    elif method == "spearman":
+
+    if method in ("pearson", "spearman"):
         special = True
     elif method == "kendalltau":
         corr_func = kendalltau
+        special = False  # set to true, if we have a dedicated implementation
     else:
         raise ValueError("Invalid correlation method '%s'." % method)
 
@@ -299,12 +298,11 @@ def mantel(
             orig_stat, comp_stat, permuted_stats = _mantel_stats_pearson(
                 x, y, permutations, rng
             )
-        elif method == "spearman":
+        else:
             orig_stat, comp_stat, permuted_stats = _mantel_stats_spearman(
                 x, y, permutations, rng
             )
-        else:
-            raise ValueError("Invalid correlation method '%s'." % method)
+
     else:
         x_flat = x.condensed_form()
         y_flat = y.condensed_form()
