@@ -20,7 +20,7 @@ from skbio.io.format.ordination import (
     _ordination_to_ordination_results, _ordination_results_to_ordination,
     _ordination_sniffer)
 from skbio.util import get_data_path, assert_ordination_results_equal, assert_ordination_results_equal_np
-from skbio._config import set_config
+from skbio.util.config._config import set_config
 
 
 class OrdinationTestData(TestCase):

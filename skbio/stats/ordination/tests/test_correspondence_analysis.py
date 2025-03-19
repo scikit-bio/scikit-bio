@@ -27,8 +27,8 @@ from skbio.util import (
     assert_ordination_results_equal,
     assert_ordination_results_equal_np,
 )
-from skbio._optionals import _get_package
-from skbio._config import set_config
+from skbio.util.config._optionals import _get_package
+from skbio.util.config._config import set_config
 
 
 def chi_square_distance(data_table, between_rows=True):

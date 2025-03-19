@@ -191,7 +191,7 @@ import pandas as pd
 
 from skbio.stats.ordination import OrdinationResults
 from skbio.io import create_format, OrdinationFormatError
-from skbio._dispatcher import create_table, create_table_1d
+from skbio.util.config._dispatcher import create_table, create_table_1d
 
 ordination = create_format("ordination")
 

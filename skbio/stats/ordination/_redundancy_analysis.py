@@ -12,7 +12,7 @@ from scipy.linalg import svd, lstsq
 
 from ._ordination_results import OrdinationResults
 from ._utils import corr, svd_rank, scale
-from skbio._dispatcher import ingest_array, create_table, create_table_1d
+from skbio.util.config._dispatcher import ingest_array, create_table, create_table_1d
 
 
 def rda(

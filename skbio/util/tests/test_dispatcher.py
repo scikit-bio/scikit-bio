@@ -29,8 +29,8 @@ else:
     has_anndata = True
 
 from skbio.table import Table
-from skbio._dispatcher import create_table, create_table_1d, ingest_array
-from skbio._config import set_config
+from skbio.util.config._dispatcher import create_table, create_table_1d, ingest_array
+from skbio.util import set_config
 from skbio.util._testing import assert_data_frame_almost_equal
 
 

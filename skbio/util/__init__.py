@@ -8,6 +8,19 @@ scikit-bio, as well as various utility functionality, including I/O and
 unit-testing convenience functions.
 
 
+User configuration utilities
+----------------------------
+
+Configuration options for functional input and output.
+
+.. autosummary::
+   :toctree: generated/
+
+   config
+   get_config
+   set_config
+
+
 Testing utilities
 -----------------
 
@@ -87,6 +100,7 @@ from ._decorator import (
     params_aliased,
 )
 from ._plotting import PlottableMixin
+from .config._config import get_config, set_config
 
 __all__ = [
     "cardinal_to_ordinal",
@@ -106,4 +120,6 @@ __all__ = [
     "aliased",
     "register_aliases",
     "params_aliased",
+    "get_config",
+    "set_config",
 ]

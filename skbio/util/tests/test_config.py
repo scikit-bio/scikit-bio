@@ -8,7 +8,7 @@
 
 from unittest import TestCase, main
 
-from skbio._config import get_config, set_config
+from skbio.util.config import get_config, set_config
 
 
 class TestOptions(TestCase):

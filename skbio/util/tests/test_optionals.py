@@ -11,7 +11,7 @@ import importlib
 
 from unittest import mock
 
-from skbio._optionals import _get_package
+from skbio.util.config._optionals import _get_package
 
 
 class TestGetPackage(TestCase):
