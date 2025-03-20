@@ -1,4 +1,6 @@
 matplotlib
+polars
+anndata
 pytest
 responses
 coverage
