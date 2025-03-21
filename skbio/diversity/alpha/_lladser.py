@@ -198,6 +198,7 @@ def _get_interval_for_r_new_taxa(seq, r):
 
     """
     seen = set()
+    seen_add = seen.add
     seq_len = len(seq)
 
     # note: first iteration is after looking at first char
@@ -206,7 +207,7 @@ def _get_interval_for_r_new_taxa(seq, r):
         if curr in seen:
             continue
         else:
-            seen.add(curr)
+            seen_add(curr)
 
         # otherwise, need to see distance to get k colors
         unseen = 0
@@ -223,8 +224,10 @@ def _get_interval_for_r_new_taxa(seq, r):
         cost = j
 
         # bail out if not enough unseen
+        # note: unit test coverage can be increased by not breaking if it is
+        # the last iteration, but code will be awkward
         if not count or (unseen < r):
-            return
+            break
 
         # make a copy of seen before yielding, as we'll continue to add to the
         # set in subsequent iterations
