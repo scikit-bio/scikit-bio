@@ -187,11 +187,12 @@ jobs:
           miniforge-version: ${{ env.miniforge_version }}
           miniforge-variant: ${{ env.miniforge_variant }}
           environment-file: ci/conda_host_env.yml
-      - name: Install dependencies (conda)
-        # msvc-runtime handles Visual C++ DLLs (Dynamic Link Libraries)
+      # msvc-runtime handles Visual C++ DLLs (Dynamic Link Libraries)
+      - name: Install C++ DLLs
         if: runner.os == 'Windows'
         run: |
           pip install msvc-runtime
+      - name: Install dependencies (conda)
         if: ${{ matrix.use_conda }}
         run: |
           conda install -q --yes -c conda-forge --file ci/conda_requirements.txt
