@@ -24,7 +24,7 @@ cdef struct TracebackRes:
     Index start
     Index end
 
-def align_wrapper(seq1, seq2, subMatrix, gap_open, gap_extend, scope):
+def pairwise_align(seq1, seq2, subMatrix, gap_open, gap_extend, scope):
     """
     Public facing align function, runs Cythonized algorithm.
 
@@ -87,9 +87,9 @@ def arg_pass(const uint8_t[::1] seq1, const uint8_t[::1] seq2, cnp.ndarray align
     Helper function to connect Python code with Cython code
     '''
 
-    return align_main(seq1, seq2, aligned_seq1, aligned_seq2, subMatrix, gap_open, gap_extend, fill_func, trace_func)
+    return _pairwise_align(seq1, seq2, aligned_seq1, aligned_seq2, subMatrix, gap_open, gap_extend, fill_func, trace_func)
 
-cdef TracebackRes align_main(const uint8_t[::1] seq1, const uint8_t[::1] seq2, cnp.ndarray aligned_seq1, cnp.ndarray aligned_seq2, const float64_t[:, ::1] subMatrix, const int8_t gap_open, const int8_t gap_extend, fill_func, trace_func) noexcept:
+cdef TracebackRes _pairwise_align(const uint8_t[::1] seq1, const uint8_t[::1] seq2, cnp.ndarray aligned_seq1, cnp.ndarray aligned_seq2, const float64_t[:, ::1] subMatrix, const int8_t gap_open, const int8_t gap_extend, fill_func, trace_func) noexcept:
     """
     Calculate alignment between seq1 and seq2 using given scope and penalties.
 
