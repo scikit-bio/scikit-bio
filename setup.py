@@ -211,6 +211,13 @@ extensions = [
         extra_compile_args=stats_extra_compile_args,
         extra_link_args=stats_extra_link_args,
     ),
+    Extension(
+        "skbio.alignment._align",
+        ["skbio/alignment/_align" + ext],
+        extra_compile_args=stats_extra_compile_args,
+        extra_link_args=stats_extra_link_args,
+        include_dirs=[np.get_include()],
+    ),
 ]
 
 extensions = cythonize(extensions, force=True)
