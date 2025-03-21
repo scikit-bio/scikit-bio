@@ -1,5 +1,5 @@
 matplotlib
-polars-lts-cpu
+polars
 anndata
 pytest
 responses
