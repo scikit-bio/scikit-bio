@@ -192,10 +192,16 @@ jobs:
       #   if: runner.os == 'Windows'
       #   run: |
       #     pip install msvc-runtime
-      - name: Install dependencies (conda)
-        if: ${{ matrix.use_conda }}
+      - name: Install dependencies (conda) (non-Windows)
+        if: ${{ matrix.use_conda && os.runner != 'Windows' }}
         run: |
-          conda install -q --yes -c conda-forge --file ci/conda_requirements.txt --file ci/requirements.test.txt
+          conda install -q --yes -c conda-forge --file ci/conda_requirements.txt
+          pip install . --no-deps
+          conda list
+      - name: Install dependencies (conda) (Windows)
+        if: ${{ matrix.use_conda && os.runner == 'Windows' }}
+          conda install -q --yes -c conda-forge --file ci/conda_requirements.txt
+          conda remove polars
           pip install . --no-deps
           conda list
       - name: Install dependencies
