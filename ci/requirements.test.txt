@@ -1,4 +1,5 @@
 matplotlib
+anndata
 pytest
 responses
 coverage
