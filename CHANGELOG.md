@@ -6,6 +6,8 @@
 
 * Started implementation of a configuration system which will allow users to provide data types beyond pandas Dataframes as input to scikit-bio functions, as well as choosing which data type will be used as output. Newly supported types include NumPy ndarrays, Polars DataFrames, AnnData objects, and scikit-bio Table objects ([#2187](https://github.com/scikit-bio/scikit-bio/pull/2187))
 
+* Implemented new faster pairwise alignment algorithm in the alignment module. Can be accessed with the front-facing function ```pairwise_align()```. ([#1864]())
+
 ### Bug Fixes
 
 * Fixed a bug in the documentation in which the `source` button would link to decorator code, instead of the relevant function ([#2184](https://github.com/scikit-bio/scikit-bio/pull/2184)).
