@@ -272,9 +272,10 @@ class OrdinationResults(SkbioObject, PlottableMixin):
             xs, ys, zs = (
                 coord_matrix[axes[0]],
                 coord_matrix[axes[1]],
+                coord_matrix[axes[2]],
             )
-            coord_matrix[axes[2]]
-        else:  # 2d funcitonality
+
+        else:  # 2d functionality
             fig, ax = self.plt.subplots()
             xs, ys = coord_matrix[axes[0]], coord_matrix[axes[1]]
             zs = None
