@@ -12,9 +12,19 @@ from scipy.linalg import svd, lstsq
 
 from ._ordination_results import OrdinationResults
 from ._utils import corr, svd_rank, scale
+from skbio.util.config._dispatcher import ingest_array, create_table, create_table_1d
 
 
-def rda(y, x, scale_Y=False, scaling=1):
+def rda(
+    y,
+    x,
+    scale_Y=False,
+    scaling=1,
+    sample_ids=None,
+    feature_ids=None,
+    constraint_ids=None,
+    output_format=None,
+):
     r"""Compute redundancy analysis, a type of canonical analysis.
 
     It is related to PCA and multiple regression because the explained
@@ -27,18 +37,20 @@ def rda(y, x, scale_Y=False, scaling=1):
 
     Parameters
     ----------
-    y : pd.DataFrame
+    y : DataFrame or ndarray
         :math:`n \times p` response matrix, where :math:`n` is the number
         of samples and :math:`p` is the number of features. Its columns
         need be dimensionally homogeneous (or you can set `scale_Y=True`).
         This matrix is also referred to as the community matrix that
-        commonly stores information about species abundances
-    x : pd.DataFrame
+        commonly stores information about species abundances. Can be numpy,
+        pandas, polars, AnnData, or BIOM (skbio.Table).
+    x : DataFrame or ndarray
         :math:`n \times m, n \geq m` matrix of explanatory
         variables, where :math:`n` is the number of samples and
         :math:`m` is the number of metadata variables. Its columns
         need not be standardized, but doing so turns regression
-        coefficients into standard regression coefficients.
+        coefficients into standard regression coefficients. Can be numpy,
+        pandas, polars, AnnData, or BIOM (skbio.Table).
     scale_Y : bool, optional
         Controls whether the response matrix columns are scaled to
         have unit standard deviation. Defaults to `False`.
@@ -48,6 +60,23 @@ def rda(y, x, scale_Y=False, scaling=1):
         distances approximate their original euclidean
         distances. Especially interesting when most explanatory
         variables are binary.
+    sample_ids : list of str, optional
+        List of ids of samples. If not provided implicitly by the input DataFrame or
+        explicitly by the user, sample_ids will default to a list of integers starting
+        at zero.
+    feature_ids : list of str, optional
+        List of ids of features. If not provided implicitly by y or explicitly by the
+        user, it will default to list of integers starting at zero.
+    constraint_ids : list of str, optional
+        List of ids of metadata variables (constraints). If not provided implicitly
+        by y or explicitly by the user, it will default to a list of integers
+        starting at zero.
+    output_format : str, optional
+        The desired format of the output object. Can be ``pandas``, ``polars``, or
+        ``numpy``. Note that all scikit-bio ordination functions return an
+        ``OrdinationResults`` object. In this case the attributes of the
+        ``OrdinationResults`` object will be in the specified format. Default is
+        ``pandas``.
 
         Scaling type 2 produces a correlation biplot. It focuses
         on the relationships among explained variables (`y`). It
@@ -94,19 +123,19 @@ def rda(y, x, scale_Y=False, scaling=1):
        Ecology. Elsevier, Amsterdam.
 
     """
-    Y = y.values
-    X = x.values
+    Y, y_rows, y_cols = ingest_array(y)
+    X, x_rows, x_cols = ingest_array(x)
 
-    n, p = y.shape
-    n_, m = x.shape
+    n, p = Y.shape
+    n_, m = X.shape
     if n != n_:
         raise ValueError("Both data matrices must have the same number of rows.")
     if n < m:
         # Mmm actually vegan is able to do this case, too
         raise ValueError("Explanatory variables cannot have less rows than columns.")
 
-    sample_ids = y.index
-    feature_ids = y.columns
+    sample_ids = y_rows
+    feature_ids = y_cols
     # Centre response variables (they must be dimensionally
     # homogeneous)
     Y = scale(Y, with_std=scale_Y)
@@ -184,8 +213,10 @@ def rda(y, x, scale_Y=False, scaling=1):
     # According to the vegan-FAQ.pdf, the scaling factor for scores
     # is (notice that L&L 1998 says in p. 586 that such scaling
     # doesn't affect the interpretation of a biplot):
-    eigvals = pd.Series(
-        eigenvalues, index=["RDA%d" % (i + 1) for i in range(len(eigenvalues))]
+    eigvals = create_table_1d(
+        eigenvalues,
+        index=["RDA%d" % (i + 1) for i in range(len(eigenvalues))],
+        backend=output_format,
     )
     const = np.sum(eigenvalues**2) ** 0.25
     if scaling == 1:
@@ -195,22 +226,25 @@ def rda(y, x, scale_Y=False, scaling=1):
     feature_scores = np.hstack((U, U_res)) * scaling_factor
     sample_scores = np.hstack((F, F_res)) / scaling_factor
 
-    feature_scores = pd.DataFrame(
+    feature_scores = create_table(
         feature_scores,
         index=feature_ids,
         columns=["RDA%d" % (i + 1) for i in range(feature_scores.shape[1])],
+        backend=output_format,
     )
-    sample_scores = pd.DataFrame(
+    sample_scores = create_table(
         sample_scores,
         index=sample_ids,
         columns=["RDA%d" % (i + 1) for i in range(sample_scores.shape[1])],
+        backend=output_format,
     )
     # TODO not yet used/displayed
     sample_constraints = np.hstack((Z, F_res)) / scaling_factor
-    sample_constraints = pd.DataFrame(
+    sample_constraints = create_table(
         sample_constraints,
         index=sample_ids,
         columns=["RDA%d" % (i + 1) for i in range(sample_constraints.shape[1])],
+        backend=output_format,
     )
     # Vegan seems to compute them as corr(X[:, :rank_X],
     # u) but I don't think that's a good idea. In fact, if
@@ -219,18 +253,20 @@ def rda(y, x, scale_Y=False, scaling=1):
     # environmental variables (depth, coral, sand, other) even if
     # other = not(coral or sand)
     biplot_scores = corr(X, u)
-    biplot_scores = pd.DataFrame(
+    biplot_scores = create_table(
         biplot_scores,
-        index=x.columns,
+        index=x_cols,
         columns=["RDA%d" % (i + 1) for i in range(biplot_scores.shape[1])],
+        backend=output_format,
     )
     # The "Correlations of environmental variables with sample
     # scores" from table 11.4 are quite similar to vegan's biplot
     # scores, but they're computed like this:
     # corr(X, F))
-    p_explained = pd.Series(
+    p_explained = create_table_1d(
         eigenvalues / eigenvalues.sum(),
         index=["RDA%d" % (i + 1) for i in range(len(eigenvalues))],
+        backend=output_format,
     )
     return OrdinationResults(
         "RDA",
@@ -238,7 +274,10 @@ def rda(y, x, scale_Y=False, scaling=1):
         eigvals=eigvals,
         proportion_explained=p_explained,
         features=feature_scores,
+        feature_ids=feature_ids,
         samples=sample_scores,
+        sample_ids=sample_ids,
         biplot_scores=biplot_scores,
         sample_constraints=sample_constraints,
+        constraint_ids=x_cols,
     )
