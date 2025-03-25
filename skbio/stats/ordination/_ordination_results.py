@@ -172,7 +172,7 @@ class OrdinationResults(SkbioObject, PlottableMixin):
         self,
         df=None,
         column=None,
-        axes=(0, 1, 2),
+        axes=(0, 1),
         axis_labels=None,
         title="",
         cmap=None,
@@ -203,9 +203,10 @@ class OrdinationResults(SkbioObject, PlottableMixin):
             not be colored by metadata.
         axes : iterable of int, optional
             Indices of sample coordinates to plot on the x-, y-, and z-axes.
-            For example, if plotting PCoA results, ``axes=(0, 1, 2)`` will plot
-            PC 1 on the x-axis, PC 2 on the y-axis, and PC 3 on the z-axis.
-            Must contain exactly three elements.
+            For example, if plotting PCoA results, ``axes=(0, 1)`` will plot
+            PC 1 on the x-axis and PC 2 on the y-axis. If plotting PCoA results,
+            ``axes=(0, 1, 2)`` will plot PC 1 on the x-axis, PC 2 on the y-axis,
+            and PC 3 on the z-axis.Must contain exactly two or three elements.
         axis_labels : iterable of str, optional
             Labels for the x-, y-, and z-axes. If ``None``, labels will be the
             values of `axes` cast as strings.
@@ -314,14 +315,29 @@ class OrdinationResults(SkbioObject, PlottableMixin):
         )
         self._validate_plot_axes(coord_matrix, axes)
 
-        fig = self.plt.figure()
-        ax = fig.add_subplot(projection="3d")
+        if len(axes) == 3:  # 3d functionality
+            fig = self.plt.figure()
+            ax = fig.add_subplot(projection="3d")
+            xs, ys, zs = (
+                coord_matrix[axes[0]],
+                coord_matrix[axes[1]],
+                coord_matrix[axes[2]],
+            )
 
-        xs = coord_matrix[axes[0]]
-        ys = coord_matrix[axes[1]]
-        zs = coord_matrix[axes[2]]
+        else:  # 2d functionality
+            fig, ax = self.plt.subplots()
+            xs, ys = coord_matrix[axes[0]], coord_matrix[axes[1]]
+            zs = None
 
-        scatter_fn = functools.partial(ax.scatter, xs, ys, zs, s=s)
+        point_colors, category_to_color = self._get_plot_point_colors(
+            df, column, self.samples.index, cmap
+        )
+
+        if zs is None:
+            scatter_fn = functools.partial(ax.scatter, xs, ys, s=s)
+        else:
+            scatter_fn = functools.partial(ax.scatter, xs, ys, zs, s=s)
+
         if point_colors is None:
             plot = scatter_fn()
         else:
@@ -329,19 +345,22 @@ class OrdinationResults(SkbioObject, PlottableMixin):
 
         if axis_labels is None:
             axis_labels = ["%d" % axis for axis in axes]
-        elif len(axis_labels) != 3:
+        elif len(axis_labels) not in [2, 3]:
             raise ValueError(
-                "axis_labels must contain exactly three elements "
+                "axis_labels must contain exactly two or three elements "
                 "(found %d elements)." % len(axis_labels)
             )
 
         ax.set_xlabel(axis_labels[0])
         ax.set_ylabel(axis_labels[1])
-        ax.set_zlabel(axis_labels[2])
         ax.set_xticklabels([])
         ax.set_yticklabels([])
-        ax.set_zticklabels([])
-        ax.set_title(title)
+
+        if len(axes) == 3:
+            ax.set_zlabel(axis_labels[2])
+            ax.set_zticklabels([])
+        else:
+            ax.set_title(title)
 
         # create legend/colorbar
         if point_colors is not None:
