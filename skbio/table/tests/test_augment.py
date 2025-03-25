@@ -114,9 +114,9 @@ class TestAugmentation(TestCase):
         with self.assertRaisesRegex(ValueError, "tree must be a skbio.tree.TreeNode"):
             Augmentation(self.table, self.labels, tree="not_a_tree")
 
-        with self.assertRaises(ValueError):
+        with self.assertRaisesRegex(ValueError, "num_classes must be provided if the labels are 1D"):
             # when label is 1D but num_classes is not provided
-            Augmentation(self.table, self.labels, None)
+            Augmentation(self.table, label=self.labels, num_classes=None)
 
         with self.assertRaises(ValueError):
             # when label is 2D, num_classes is provided 
@@ -127,6 +127,17 @@ class TestAugmentation(TestCase):
             # when label has wrong dimension
             self.wrong_label = self.one_hot_labels[..., np.newaxis]
             Augmentation(self.table, self.wrong_label, num_classes=2)
+
+        with self.assertRaisesRegex(
+            ValueError,
+            "label must be a numpy.ndarray, but got <class 'int'> instead."
+        ):
+            Augmentation(self.table, label=3)
+
+    def test_str(self):
+        exp = "Augmentation(shape=(4, 10))"
+        obs = str(Augmentation(self.table))
+        self.assertEqual(exp, obs)
 
     def test_get_all_possible_pairs(self):
         data_simple = np.arange(40).reshape(10, 4)
@@ -142,6 +153,17 @@ class TestAugmentation(TestCase):
         self.assertEqual(len(possible_pairs_intra), 2)
         self.assertTrue(np.all(possible_pairs_intra == np.array([(0, 1), (2, 3)])))
 
+    def test_get_all_possible_pairs_no_label(self):
+        data_simple = np.arange(40).reshape(10, 4)
+        sample_ids = ['S%d' % i for i in range(4)]
+        feature_ids = ['O%d' % i for i in range(10)]
+        labels_simple = np.array([0, 0, 1, 1])
+        table_simple = Table(data_simple, feature_ids, sample_ids)
+        augmentation = Augmentation(table_simple, label=None, num_classes=2)
+        with self.assertRaisesRegex(ValueError, "label is required for intra-class augmentation"):
+            possible_pairs = augmentation._get_all_possible_pairs(intra_class=True)
+
+
     def test_mixup(self):
         augmentation = Augmentation(self.table, label=self.labels, num_classes=2)
 
@@ -154,6 +176,11 @@ class TestAugmentation(TestCase):
         self.assertTrue(np.allclose(np.sum(augmented_label, axis=1), 1.0))
         self.assertTrue(np.all(augmented_matrix >= self.table_min))
         self.assertTrue(np.all(augmented_matrix <= self.table_max))
+
+    def test_mixup_no_label(self):
+        augmentation = Augmentation(self.table, label=None)
+        augmented_matrix, augmented_label = augmentation.mixup(alpha=2, n_samples=10)
+        self.assertIsNone(augmented_label)
 
     def test_aitchison_mixup(self):
         table_compositional = self.table.norm(axis="sample")
@@ -171,6 +198,26 @@ class TestAugmentation(TestCase):
         self.assertTrue(np.all(augmented_matrix >= self.table_min))
         self.assertTrue(np.all(augmented_matrix <= self.table_max))
 
+    def test_aitchison_mixup_non_compositional(self):
+        augmentation = Augmentation(self.table, label=self.labels, num_classes=2)
+
+        augmented_matrix, augmented_label = augmentation.aitchison_mixup(alpha=2, n_samples=20)
+
+        self.assertEqual(augmented_matrix.shape[1], self.table.shape[0])
+        self.assertEqual(augmented_matrix.shape[0], self.table.shape[1] + 20)
+        # check if the augmented data is compositional
+        self.assertTrue(np.allclose(np.sum(augmented_matrix, axis=1), 1.0))
+        self.assertEqual(len(augmented_label), len(self.labels) + 20)
+        self.assertEqual(len(augmented_label[0]), 2)
+        self.assertTrue(np.allclose(np.sum(augmented_label, axis=1), 1.0))
+        self.assertTrue(np.all(augmented_matrix >= self.table_min))
+        self.assertTrue(np.all(augmented_matrix <= self.table_max))
+
+    def test_aitchison_mixup_no_label(self):
+        augmentation = Augmentation(self.table, label=None)
+        augmented_matrix, augmented_label = augmentation.aitchison_mixup(alpha=2, n_samples=20)
+        self.assertIsNone(augmented_label)
+
     def test_phylomix_simple(self):
         augmentation = Augmentation(self.table_simple, label=self.labels_simple, num_classes=2, tree=self.simple_tree)
 
@@ -180,6 +227,29 @@ class TestAugmentation(TestCase):
         self.assertEqual(augmented_matrix.shape[0], self.table_simple.shape[1] + 20)
         self.assertTrue(np.all(augmented_matrix >= self.table_min))
         self.assertTrue(np.all(augmented_matrix <= self.table_max))
+
+    def test_phylomix_no_tree(self):
+        augmentation = Augmentation(self.table_simple, label=self.labels_simple, num_classes=2, tree=None)
+        with self.assertRaisesRegex(ValueError, "tree is required for phylomix augmentation"):
+            augmentation.phylomix(self.tips_to_feature_mapping_simple, n_samples=20)
+
+    def test_phylomix_bad_tips(self):
+        bad_mapping = {k: v for k, v in self.tips_to_feature_mapping_simple.items() if k != 'a'}
+        augmentation = Augmentation(self.table_simple, label=self.labels_simple, num_classes=2, tree=self.simple_tree)
+        with self.assertRaisesRegex(ValueError, "tip_to_obs_mapping must contain all tips in the tree"):
+            augmentation.phylomix(bad_mapping, n_samples=20)
+
+    def test_phylomix_no_label(self):
+        augmentation = Augmentation(self.table_simple, label=None, tree=self.simple_tree)
+
+        augmented_matrix, augmented_label = augmentation.phylomix(self.tips_to_feature_mapping_simple, n_samples=20)
+
+        self.assertEqual(augmented_matrix.shape[1], self.table_simple.shape[0])
+        self.assertEqual(augmented_matrix.shape[0], self.table_simple.shape[1] + 20)
+        self.assertTrue(np.all(augmented_matrix >= self.table_min))
+        self.assertTrue(np.all(augmented_matrix <= self.table_max))
+
+        self.assertIsNone(augmented_label)
 
     def test_phylomix(self):
         augmentation = Augmentation(self.table, label=self.labels, num_classes=2, tree=self.complex_tree)

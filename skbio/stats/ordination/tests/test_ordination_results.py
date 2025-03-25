@@ -196,45 +196,45 @@ class TestOrdinationResults2DPlotting(unittest.TestCase):
 
     def test_plot_with_categorical_metadata_and_plot_options(self):
         fig = self.min_ord_results.plot(
-            self.df, 'categorical', axes=[2, 0, 1], title='a title',
+            self.df, 'categorical', axes=[0, 1], title='a title',
             cmap='Accent')
-        self.check_basic_figure_sanity(fig, 1, 'a title', True, '2', '0', '1')
+        self.check_basic_figure_sanity(fig, 1, 'a title', True, '0', '1')
 
     def test_plot_with_invalid_axis_labels(self):
         with self.assertRaisesRegex(ValueError, r'axis_labels.*4'):
-            self.min_ord_results.plot(axes=[2, 0, 1],
-                                      axis_labels=('a', 'b', 'c', 'd'))
+            self.min_ord_results.plot(axes=[0, 1],
+                                      axis_labels=('a', 'b', 'c'))
 
     def test_validate_plot_axes_valid_input(self):
         # shouldn't raise an error on valid input. nothing is returned, so
         # nothing to check here
         samples = self.min_ord_results.samples.values.T
-        self.min_ord_results._validate_plot_axes(samples, (1, 2, 0))
+        self.min_ord_results._validate_plot_axes(samples, (0,1))
 
     def test_validate_plot_axes_invalid_input(self):
         # not enough dimensions
-        with self.assertRaisesRegex(ValueError, r'2 dimension\(s\)'):
+        with self.assertRaisesRegex(ValueError, r'1 dimension\(s\)'):
             self.min_ord_results._validate_plot_axes(
-                np.asarray([[0.1, 0.2, 0.3], [0.2, 0.3, 0.4]]), (0, 1, 2))
+                np.asarray([[0.1, 0.2], [0.2, 0.3]]), (0, 1, 2))
 
         coord_matrix = self.min_ord_results.samples.values.T
 
         # wrong number of axes
-        with self.assertRaisesRegex(ValueError, r'exactly three.*found 0'):
+        with self.assertRaisesRegex(ValueError, r'exactly two.*found 0'):
             self.min_ord_results._validate_plot_axes(coord_matrix, [])
-        with self.assertRaisesRegex(ValueError, r'exactly three.*found 4'):
+        with self.assertRaisesRegex(ValueError, r'exactly two.*found 3'):
             self.min_ord_results._validate_plot_axes(coord_matrix,
-                                                     (0, 1, 2, 3))
+                                                     (0, 1, 2))
 
         # duplicate axes
         with self.assertRaisesRegex(ValueError, r'must be unique'):
-            self.min_ord_results._validate_plot_axes(coord_matrix, (0, 1, 0))
+            self.min_ord_results._validate_plot_axes(coord_matrix, (0, 0))
 
         # out of range axes
+        with self.assertRaisesRegex(ValueError, r'axes\[0\].*3'):
+            self.min_ord_results._validate_plot_axes(coord_matrix, (0, -1))
         with self.assertRaisesRegex(ValueError, r'axes\[1\].*3'):
-            self.min_ord_results._validate_plot_axes(coord_matrix, (0, -1, 2))
-        with self.assertRaisesRegex(ValueError, r'axes\[2\].*3'):
-            self.min_ord_results._validate_plot_axes(coord_matrix, (0, 2, 3))
+            self.min_ord_results._validate_plot_axes(coord_matrix, (0, 3))
 
     def test_get_plot_point_colors_invalid_input(self):
         # column provided without df
@@ -255,12 +255,12 @@ class TestOrdinationResults2DPlotting(unittest.TestCase):
         # id not in df
         with self.assertRaisesRegex(ValueError, r'numeric'):
             self.min_ord_results._get_plot_point_colors(
-                self.df, 'numeric', ['B', 'C', 'missingid', 'A'], 'jet')
+                self.df, 'numeric', ['B', 'missingid'], 'jet')
 
         # missing data in df
         with self.assertRaisesRegex(ValueError, r'nancolumn'):
             self.min_ord_results._get_plot_point_colors(self.df, 'nancolumn',
-                                                        ['B', 'C', 'A'], 'jet')
+                                                        ['B', 'C'], 'jet')
 
     def test_get_plot_point_colors_no_df_or_column(self):
         obs = self.min_ord_results._get_plot_point_colors(None, None,
@@ -269,22 +269,22 @@ class TestOrdinationResults2DPlotting(unittest.TestCase):
 
     def test_get_plot_point_colors_numeric_column(self):
         # subset of the ids in df
-        exp = [0.0, -4.2, 42.0]
+        exp = [0.0, -4.2]
         obs = self.min_ord_results._get_plot_point_colors(
-            self.df, 'numeric', ['B', 'C', 'A'], 'jet')
+            self.df, 'numeric', ['B', 'C'], 'jet')
         npt.assert_almost_equal(obs[0], exp)
         self.assertTrue(obs[1] is None)
 
         # all ids in df
-        exp = [0.0, 42.0, 42.19, -4.2]
+        exp = [0.0, 42.0]
         obs = self.min_ord_results._get_plot_point_colors(
-            self.df, 'numeric', ['B', 'A', 'D', 'C'], 'jet')
+            self.df, 'numeric', ['B', 'A'], 'jet')
         npt.assert_almost_equal(obs[0], exp)
         self.assertTrue(obs[1] is None)
 
     def test_get_plot_point_colors_categorical_column(self):
         # subset of the ids in df
-        exp_colors = [[0., 0., 0.5, 1.], [0., 0., 0.5, 1.], [0.5, 0., 0., 1.]]
+        exp_colors = [[0., 0., 0.5, 1.], [0., 0., 0.5, 1.]]
         exp_color_dict = {
             'foo': [0.5, 0., 0., 1.],
             22: [0., 0., 0.5, 1.]
@@ -295,17 +295,16 @@ class TestOrdinationResults2DPlotting(unittest.TestCase):
         npt.assert_equal(obs[1], exp_color_dict)
 
         # all ids in df
-        exp_colors = [[0., 0., 0.5, 1.], [0.5, 0., 0., 1.], [0.5, 0., 0., 1.],
-                      [0., 0., 0.5, 1.]]
+        exp_colors = [[0., 0., 0.5, 1.], [0.5, 0., 0., 1.]]
         obs = self.min_ord_results._get_plot_point_colors(
-            self.df, 'categorical', ['B', 'A', 'D', 'C'], 'jet')
+            self.df, 'categorical', ['B', 'A'], 'jet')
         npt.assert_almost_equal(obs[0], exp_colors)
         # should get same color dict as before
         npt.assert_equal(obs[1], exp_color_dict)
 
     def test_plot_categorical_legend(self):
         fig = plt.figure()
-        ax = fig.add_subplot(111, projection='3d')
+        ax = fig.add_subplot(111)
 
         # we shouldn't have a legend yet
         self.assertTrue(ax.get_legend() is None)
