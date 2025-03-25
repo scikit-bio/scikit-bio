@@ -121,6 +121,12 @@ jobs:
         run: |
           pip install .
           conda list
+      # install anndata and polars here to test as optional dependencies.
+      # encountered errors when installing using conda
+      - name: Install optional dependencies
+        run: |
+          pip install anndata polars
+          conda list
       - name: Run unit tests
         env:
           WITH_COVERAGE: "TRUE"
@@ -191,7 +197,6 @@ jobs:
         if: ${{ matrix.use_conda }}
         run: |
           conda install -q --yes -c conda-forge --file ci/conda_requirements.txt
-          conda install --force-reinstall -c conda-forge anndata polars
           pip install . --no-deps
           conda list
       - name: Install dependencies
