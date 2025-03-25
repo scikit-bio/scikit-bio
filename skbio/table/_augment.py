@@ -48,7 +48,7 @@ class Augmentation(SkbioObject):
 
         self.dataframe = self.table.to_dataframe()
         self.matrix = self.dataframe.values.T
-
+        self.label = label
         if label is not None:
             if not isinstance(label, np.ndarray):
                 raise ValueError(
@@ -72,15 +72,8 @@ class Augmentation(SkbioObject):
                     f"{label.shape[1]} != {num_classes}. "
                     f"You can set num_classes to None"
                 )
-            self.label = label
-
-        if num_classes is not None:
-            self.one_hot_label = np.eye(num_classes)[self.label]
-        else:
-            if label is not None and label.ndim == 1:
-                raise ValueError(
-                    "label must be one-hot encoded or provided num_classes"
-                )
+            if num_classes is not None:
+                self.one_hot_label = np.eye(num_classes)[self.label]
 
     def __str__(self):
         return f"Augmentation(shape={self.matrix.shape})"
@@ -256,15 +249,14 @@ class Augmentation(SkbioObject):
             lambdas * self.matrix[indices1] + (1 - lambdas) * self.matrix[indices2]
         )
 
+        augmented_matrix = np.concatenate([self.matrix, augmented_x], axis=0)
         if self.label is not None:
             augmented_y = (
                 lambdas * self.one_hot_label[indices1]
                 + (1 - lambdas) * self.one_hot_label[indices2]
             )
-            augmented_matrix = np.concatenate([self.matrix, augmented_x], axis=0)
             augmented_label = np.concatenate([self.one_hot_label, augmented_y])
         else:
-            augmented_matrix = np.concatenate([self.matrix, augmented_x], axis=0)
             augmented_label = None
 
         return augmented_matrix, augmented_label
@@ -380,16 +372,14 @@ class Augmentation(SkbioObject):
                     _lambda * self.one_hot_label[idx1]
                     + (1 - _lambda) * self.one_hot_label[idx2]
                 )
-            else:
-                augmented_y = None
+                augmented_label.append(augmented_y)
             augmented_matrix.append(augmented_x)
-            augmented_label.append(augmented_y)
-        augmented_matrix = np.array(augmented_matrix)
+        augmented_matrix = np.concatenate(
+            [self.matrix, np.array(augmented_matrix)], axis=0
+        )
         if self.label is not None:
-            augmented_matrix = np.concatenate([self.matrix, augmented_matrix], axis=0)
             augmented_label = np.concatenate([self.one_hot_label, augmented_label])
         else:
-            augmented_matrix = np.concatenate([self.matrix, augmented_matrix], axis=0)
             augmented_label = None
 
         return augmented_matrix, augmented_label
@@ -617,13 +607,14 @@ class Augmentation(SkbioObject):
                 mixed_x[selected_index] = new_counts
             else:
                 mixed_x[selected_index] = leaf_counts1
-            augment_label = (
-                _lambda * self.one_hot_label[pair[0]]
-                + (1 - _lambda) * self.one_hot_label[pair[1]]
-            )
 
+            if self.label is not None:
+                augment_label = (
+                    _lambda * self.one_hot_label[pair[0]]
+                    + (1 - _lambda) * self.one_hot_label[pair[1]]
+                )
+                augmented_label.append(augment_label)
             augmented_matrix.append(mixed_x)
-            augmented_label.append(augment_label)
 
         if self.label is not None:
             augmented_matrix = np.array(augmented_matrix)
@@ -632,7 +623,7 @@ class Augmentation(SkbioObject):
             augmented_label = np.concatenate([self.one_hot_label, augmented_label])
         else:
             augmented_matrix = np.concatenate(
-                [self.matrix, np.array(augmented_matrix).T], axis=0
+                [self.matrix, np.array(augmented_matrix)], axis=0
             )
             augmented_label = None
 
