@@ -16,6 +16,7 @@ from unittest import TestCase, main
 from skbio import DistanceMatrix, OrdinationResults
 from skbio.stats.distance import DissimilarityMatrixError
 from skbio.stats.ordination import pcoa, pcoa_biplot
+from skbio.stats.ordination._principal_coordinate_analysis import _fsvd
 from skbio.util import (get_data_path, assert_ordination_results_equal,
                         assert_data_frame_almost_equal)
 
@@ -26,6 +27,7 @@ class TestPCoA(TestCase):
         # of multivariate analysis, 2000, Oxford University Press.
         self.dm = DistanceMatrix(np.loadtxt(get_data_path('PCoA_sample_data')))
         self.dm3 = DistanceMatrix.read(get_data_path('PCoA_sample_data_3'))
+        self.dm_invalid = np.array([[1, 2], [3, 4], [5, 6]])
 
     def test_simple(self):
         eigvals = [0.51236726, 0.30071909, 0.26791207, 0.20898868,
@@ -271,6 +273,29 @@ class TestPCoA(TestCase):
                            inplace=False, seed=None)
         cumulative_variance = np.cumsum(results.proportion_explained.values)
         self.assertGreaterEqual(cumulative_variance[-1], 0.7)
+
+    def test_invalid_method(self):
+        """Test that correct error is raised when method is invalid."""
+        with self.assertRaisesRegex(
+            ValueError,
+            "PCoA eigendecomposition method asdf not supported."
+            ):
+            results = pcoa(self.dm3, method="asdf")
+
+    def test_fsvd_non_square_input(self):
+        with self.assertRaisesRegex(ValueError, "FSVD expects square distance matrix"):
+            results = _fsvd(self.dm_invalid)
+
+    def test_fsvd_invalid_dimensions(self):
+        with self.assertRaisesRegex(
+            ValueError,
+            ("Invalid operation: cannot reduce distance matrix "
+            "to negative dimensions using PCoA. Did you intend " 
+            'to specify the default value "0", which sets ' 
+            "the number_of_dimensions equal to the " 
+            "dimensionality of the given distance matrix?")
+            ):
+            results = _fsvd(self.dm_invalid[1:4], number_of_dimensions=-1)
 
 
 class TestPCoABiplot(TestCase):

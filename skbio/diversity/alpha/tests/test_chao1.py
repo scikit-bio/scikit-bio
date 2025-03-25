@@ -52,6 +52,10 @@ class Chao1Tests(TestCase):
         obs = chao1_ci(self.no_doubles, bias_corrected=False)
         npt.assert_array_almost_equal(obs, (4.08, 17.27), decimal=2)
 
+        # edge case (sobs == chao1)
+        obs = chao1_ci([1, 2, 3])
+        npt.assert_array_almost_equal(obs, (3, 3))
+
     def test_chao1_var(self):
         # Should match observed results from EstimateS.NOTE: EstimateS reports
         # sd, not var, and rounds to 2 dp.

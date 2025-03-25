@@ -340,6 +340,9 @@ class UnifracTests(TestCase):
         expected = 0.238095238095
         self.assertAlmostEqual(actual, expected)
         actual = unweighted_unifrac(
+            self.b1[0], self.b1[1], self.oids1, self.t1, validate=False)
+        self.assertAlmostEqual(actual, expected)
+        actual = unweighted_unifrac(
             self.b1[0], self.b1[2], self.oids1, self.t1)
         expected = 0.52
         self.assertAlmostEqual(actual, expected)

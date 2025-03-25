@@ -43,7 +43,8 @@ class TestOrdinationResults(unittest.TestCase):
 
         self.ordination_results = OrdinationResults(
             'CA', 'Correspondance Analysis', eigvals=eigvals,
-            samples=samples_df, features=features_df)
+            samples=samples_df, features=features_df,
+            feature_ids=features_ids, sample_ids=sample_ids)
 
     def test_str(self):
         exp = ("Ordination results:\n"
