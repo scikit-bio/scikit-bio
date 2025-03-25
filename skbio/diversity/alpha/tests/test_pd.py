@@ -45,6 +45,8 @@ class FaithPDTests(TestCase):
         actual = faith_pd(self.b1[0], self.oids1, self.t1)
         expected = 4.5
         self.assertAlmostEqual(actual, expected)
+        actual = faith_pd(self.b1[0], self.oids1, self.t1, validate=False)
+        self.assertAlmostEqual(actual, expected)
         actual = faith_pd(self.b1[1], self.oids1, self.t1)
         expected = 4.75
         self.assertAlmostEqual(actual, expected)

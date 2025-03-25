@@ -26,6 +26,14 @@ Example data
 
    example_table
 
+Data Augmentation
+-----------------
+
+.. autosummary::
+   :toctree: generated/
+
+   Augmentation
+
 """  # noqa: D205, D415
 
 # ----------------------------------------------------------------------------
@@ -37,5 +45,6 @@ Example data
 # ----------------------------------------------------------------------------
 
 from skbio.table._base import Table, example_table
+from skbio.table._augment import Augmentation
 
-__all__ = ["Table", "example_table"]
+__all__ = ["Table", "example_table", "Augmentation"]

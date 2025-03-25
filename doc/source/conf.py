@@ -189,7 +189,9 @@ intersphinx_mapping = {
     'pandas': ('https://pandas.pydata.org/pandas-docs/stable/', None),
     'sklearn': ('https://scikit-learn.org/stable/', None),
     'statsmodels': ('https://www.statsmodels.org/stable/', None),
-    'biom-format': ('https://biom-format.org/', None)
+    'biom-format': ('https://biom-format.org/', None),
+    'polars': ('https://docs.pola.rs/api/python/stable/', None),
+    'anndata': ('https://anndata.readthedocs.io/en/stable/', None),
 }
 
 
