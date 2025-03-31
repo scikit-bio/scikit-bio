@@ -172,7 +172,7 @@ class OrdinationResults(SkbioObject, PlottableMixin):
         self,
         df=None,
         column=None,
-        axes=(0, 1),
+        axes=None,
         axis_labels=None,
         title="",
         cmap=None,
@@ -299,6 +299,9 @@ class OrdinationResults(SkbioObject, PlottableMixin):
         # instead be added to EMPeror (http://biocore.github.io/emperor/).
         # Only bug fixes and minor updates should be made to this method.
 
+        if axes is None:
+            axes = np.arange(len(self.eigvals))
+
         self._get_mpl_plt()
 
         # print(df)
@@ -314,7 +317,6 @@ class OrdinationResults(SkbioObject, PlottableMixin):
             df, column, self.sample_ids, cmap
         )
         self._validate_plot_axes(coord_matrix, axes)
-
         if len(axes) == 3:  # 3d functionality
             fig = self.plt.figure()
             ax = fig.add_subplot(projection="3d")
@@ -324,7 +326,7 @@ class OrdinationResults(SkbioObject, PlottableMixin):
                 coord_matrix[axes[2]],
             )
 
-        else:  # 2d functionality
+        elif len(axes) == 2:  # 2d functionality
             fig, ax = self.plt.subplots()
             xs, ys = coord_matrix[axes[0]], coord_matrix[axes[1]]
             zs = None
@@ -345,7 +347,7 @@ class OrdinationResults(SkbioObject, PlottableMixin):
 
         if axis_labels is None:
             axis_labels = ["%d" % axis for axis in axes]
-        elif len(axis_labels) not in [2, 3]:
+        elif len(axis_labels) != len(axes):
             raise ValueError(
                 "axis_labels must contain exactly two or three elements "
                 "(found %d elements)." % len(axis_labels)
@@ -359,8 +361,8 @@ class OrdinationResults(SkbioObject, PlottableMixin):
         if len(axes) == 3:
             ax.set_zlabel(axis_labels[2])
             ax.set_zticklabels([])
-        else:
-            ax.set_title(title)
+
+        ax.set_title(title)
 
         # create legend/colorbar
         if point_colors is not None:
@@ -374,18 +376,18 @@ class OrdinationResults(SkbioObject, PlottableMixin):
     def _validate_plot_axes(self, coord_matrix, axes):
         """Validate `axes` against coordinates matrix."""
         num_dims = coord_matrix.shape[0]
-        if num_dims < 3:
+        if num_dims < 2:
             raise ValueError(
-                "At least three dimensions are required to plot "
+                "At least two dimensions are required to plot "
                 "ordination results. There are only %d "
                 "dimension(s)." % num_dims
             )
-        if len(axes) != 3:
+        if len(axes) not in [2, 3]:
             raise ValueError(
-                "`axes` must contain exactly three elements "
+                "`axes` must contain exactly two or three elements "
                 "(found %d elements)." % len(axes)
             )
-        if len(set(axes)) != 3:
+        if len(set(axes)) != len(axes):
             raise ValueError("The values provided for `axes` must be unique.")
 
         for idx, axis in enumerate(axes):

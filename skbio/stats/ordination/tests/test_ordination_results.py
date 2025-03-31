@@ -404,7 +404,7 @@ class TestOrdinationResults2DPlotting(unittest.TestCase):
         self.check_basic_figure_sanity(fig, 1, 'a title', True, '0', '1')
 
     def test_plot_with_invalid_axis_labels(self):
-        with self.assertRaisesRegex(ValueError, r'axis_labels.*4'):
+        with self.assertRaisesRegex(ValueError, r'axis_labels.*3'):
             self.min_ord_results.plot(axes=[0, 1],
                                       axis_labels=('a', 'b', 'c'))
 
@@ -487,20 +487,21 @@ class TestOrdinationResults2DPlotting(unittest.TestCase):
 
     def test_get_plot_point_colors_categorical_column(self):
         # subset of the ids in df
-        exp_colors = [[0., 0., 0.5, 1.], [0., 0., 0.5, 1.]]
+        exp_colors = [[0., 0., 0.5, 1.], [0.5, 0., 0., 1.]]
         exp_color_dict = {
             'foo': [0.5, 0., 0., 1.],
             22: [0., 0., 0.5, 1.]
         }
         obs = self.min_ord_results._get_plot_point_colors(
-            self.df, 'categorical', ['B', 'C', 'A'], 'jet')
+            self.df, 'categorical', ['B', 'A'], 'jet')
         npt.assert_almost_equal(obs[0], exp_colors)
         npt.assert_equal(obs[1], exp_color_dict)
 
         # all ids in df
-        exp_colors = [[0., 0., 0.5, 1.], [0.5, 0., 0., 1.]]
+        exp_colors = [[0., 0., 0.5, 1.], [0.5, 0., 0., 1.], 
+                      [0.5, 0., 0., 1.], [0., 0., 0.5, 1.]]
         obs = self.min_ord_results._get_plot_point_colors(
-            self.df, 'categorical', ['B', 'A'], 'jet')
+            self.df, 'categorical', ['B', 'A', 'D', 'C'], 'jet')
         npt.assert_almost_equal(obs[0], exp_colors)
         # should get same color dict as before
         npt.assert_equal(obs[1], exp_color_dict)
@@ -529,4 +530,4 @@ class TestOrdinationResults2DPlotting(unittest.TestCase):
         
 
 if __name__ == '__main__':
-    unittest.main()
+    unittest.main(buffer=False)
