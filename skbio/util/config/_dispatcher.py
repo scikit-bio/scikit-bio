@@ -16,7 +16,7 @@ from ._config import get_config
 from ._optionals import _get_package
 
 
-def create_table(data, columns=None, index=None, backend=None):
+def _create_table(data, columns=None, index=None, backend=None):
     """Create a table object using the specified backend.
 
     Parameters
@@ -50,7 +50,7 @@ def create_table(data, columns=None, index=None, backend=None):
         raise ValueError(f"Unsupported backend: '{backend}'")
 
 
-def create_table_1d(data, index=None, backend=None):
+def _create_table_1d(data, index=None, backend=None):
     """Create a 1d array using the specified backend.
 
     Parameters
@@ -84,7 +84,7 @@ def create_table_1d(data, index=None, backend=None):
         raise ValueError(f"Unsupported backend: '{backend}'")
 
 
-def ingest_array(input_data, row_ids=None, col_ids=None):
+def _ingest_array(input_data, row_ids=None, col_ids=None):
     """Process an input dataframe, table, or array into individual components.
 
     Parameters
@@ -163,7 +163,7 @@ def ingest_array(input_data, row_ids=None, col_ids=None):
     return data_, row_ids, col_ids
 
 
-def extract_row_ids(input_data):
+def _extract_row_ids(input_data):
     """Extract row ids from a dataframe or table."""
     if isinstance(input_data, pd.DataFrame):
         return list(input_data.index)
