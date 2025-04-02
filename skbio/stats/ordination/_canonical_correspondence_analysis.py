@@ -12,7 +12,7 @@ from scipy.linalg import svd, lstsq
 
 from ._ordination_results import OrdinationResults
 from ._utils import corr, svd_rank, scale
-from skbio.util.config import _create_table, _create_table_1d, _ingest_array
+from skbio.util.config._dispatcher import _create_table, _create_table_1d, _ingest_array
 
 
 def cca(

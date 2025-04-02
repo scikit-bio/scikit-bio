@@ -79,20 +79,21 @@ Additionally, input and output formats do not have to match.
 """
 
 from ._config import get_config, set_config
-from ._dispatcher import (
-    _create_table,
-    _create_table_1d,
-    _extract_row_ids,
-    _ingest_array,
-)
+
+# from ._dispatcher import (
+#     _create_table,
+#     _create_table_1d,
+#     _extract_row_ids,
+#     _ingest_array,
+# )
 from ._optionals import _get_package
 
 __all__ = [
     "get_config",
     "set_config",
-    "_create_table",
-    "_create_table_1d",
-    "_extract_row_ids",
-    "_ingest_array",
+    # "_create_table",
+    # "_create_table_1d",
+    # "_extract_row_ids",
+    # "_ingest_array",
     "_get_package",
 ]

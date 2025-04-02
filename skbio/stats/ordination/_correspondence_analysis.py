@@ -12,7 +12,7 @@ from scipy.linalg import svd
 
 from ._ordination_results import OrdinationResults
 from ._utils import svd_rank
-from skbio.util.config import _create_table, _create_table_1d, _ingest_array
+from skbio.util.config._dispatcher import _create_table, _create_table_1d, _ingest_array
 
 
 def ca(X, scaling=1, sample_ids=None, feature_ids=None, output_format=None):
