@@ -12,7 +12,7 @@ from scipy.linalg import svd
 
 from ._ordination_results import OrdinationResults
 from ._utils import svd_rank
-from skbio.util.config._dispatcher import create_table, create_table_1d, ingest_array
+from skbio.util.config import _create_table, _create_table_1d, _ingest_array
 
 
 def ca(X, scaling=1, sample_ids=None, feature_ids=None, output_format=None):
@@ -113,7 +113,7 @@ def ca(X, scaling=1, sample_ids=None, feature_ids=None, output_format=None):
 
     # we deconstruct the dataframe to avoid duplicating the data and be able
     # to perform operations on the matrix
-    X, row_ids, column_ids = ingest_array(X, row_ids=sample_ids, col_ids=feature_ids)
+    X, row_ids, column_ids = _ingest_array(X, row_ids=sample_ids, col_ids=feature_ids)
 
     # Correspondance Analysis
     r, c = X.shape
@@ -188,15 +188,15 @@ def ca(X, scaling=1, sample_ids=None, feature_ids=None, output_format=None):
     feature_columns = [
         "%s%d" % (short_method_name, i + 1) for i in range(features_scores.shape[1])
     ]
-    eigvals = create_table_1d(
+    eigvals = _create_table_1d(
         eigvals,
         index=["%s%d" % (short_method_name, i + 1) for i in range(eigvals.shape[0])],
         backend=output_format,
     )
-    samples = create_table(
+    samples = _create_table(
         sample_scores, index=row_ids, columns=sample_columns, backend=output_format
     )
-    features = create_table(
+    features = _create_table(
         features_scores,
         index=column_ids,
         columns=feature_columns,

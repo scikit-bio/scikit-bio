@@ -17,7 +17,7 @@ from scipy.linalg import eigh
 
 from skbio.util import get_rng
 from skbio.stats.distance import DistanceMatrix
-from skbio.util.config._dispatcher import create_table, create_table_1d
+from skbio.util.config import _create_table, _create_table_1d
 from ._ordination_results import OrdinationResults
 from ._utils import center_distance_matrix, scale
 
@@ -278,14 +278,14 @@ def pcoa(
     return OrdinationResults(
         short_method_name="PCoA",
         long_method_name=long_method_name,
-        eigvals=create_table_1d(eigvals, index=axis_labels, backend=output_format),
-        samples=create_table(
+        eigvals=_create_table_1d(eigvals, index=axis_labels, backend=output_format),
+        samples=_create_table(
             coordinates,
             index=distance_matrix.ids,
             columns=axis_labels,
             backend=output_format,
         ),
-        proportion_explained=create_table_1d(
+        proportion_explained=_create_table_1d(
             proportion_explained, index=axis_labels, backend=output_format
         ),
     )

@@ -12,7 +12,7 @@ from scipy.linalg import svd, lstsq
 
 from ._ordination_results import OrdinationResults
 from ._utils import corr, svd_rank, scale
-from skbio.util.config._dispatcher import create_table, create_table_1d, ingest_array
+from skbio.util.config import _create_table, _create_table_1d, _ingest_array
 
 
 def cca(
@@ -124,10 +124,10 @@ def cca(
        Ecology. Elsevier, Amsterdam.
 
     """
-    Y, y_sample_ids, feature_ids = ingest_array(
+    Y, y_sample_ids, feature_ids = _ingest_array(
         y, row_ids=sample_ids, col_ids=feature_ids
     )
-    X, x_sample_ids, constraint_ids = ingest_array(
+    X, x_sample_ids, constraint_ids = _ingest_array(
         x, row_ids=sample_ids, col_ids=constraint_ids
     )
 
@@ -240,20 +240,20 @@ def cca(
     biplot_scores = corr(X_weighted, u)
 
     pc_ids = ["CCA%d" % (i + 1) for i in range(len(eigenvalues))]
-    eigvals = create_table_1d(eigenvalues, index=pc_ids, backend=output_format)
-    samples = create_table(
+    eigvals = _create_table_1d(eigenvalues, index=pc_ids, backend=output_format)
+    samples = _create_table(
         sample_scores, columns=pc_ids, index=y_sample_ids, backend=output_format
     )
-    features = create_table(
+    features = _create_table(
         features_scores, columns=pc_ids, index=feature_ids, backend=output_format
     )
-    biplot_scores = create_table(
+    biplot_scores = _create_table(
         biplot_scores,
         index=constraint_ids,
         columns=pc_ids[: biplot_scores.shape[1]],
         backend=output_format,
     )
-    sample_constraints = create_table(
+    sample_constraints = _create_table(
         sample_constraints, index=y_sample_ids, columns=pc_ids, backend=output_format
     )
 

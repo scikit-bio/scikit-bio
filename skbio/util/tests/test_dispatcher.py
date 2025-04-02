@@ -29,7 +29,7 @@ else:
     has_anndata = True
 
 from skbio.table import Table
-from skbio.util.config._dispatcher import create_table, create_table_1d, ingest_array
+from skbio.util.config import _create_table, _create_table_1d, _ingest_array
 from skbio.util import set_config
 from skbio.util._testing import assert_data_frame_almost_equal
 
@@ -43,24 +43,24 @@ class TestPandas(TestCase):
         self.columns = ["f1", "f2", "f3"]
 
     def test_create_table_no_backend(self):
-        obs = create_table(data=self.data, columns=self.columns, index=self.index)
+        obs = _create_table(data=self.data, columns=self.columns, index=self.index)
         exp = pd.DataFrame(self.data, columns=self.columns, index=self.index)
         assert_data_frame_almost_equal(obs, exp)
 
     def test_create_table_no_optionals(self):
-        obs = create_table(self.data)
+        obs = _create_table(self.data)
         exp = pd.DataFrame(self.data)
         assert_data_frame_almost_equal(obs, exp)
 
     def test_create_table_same_backend(self):
-        obs = create_table(
+        obs = _create_table(
             data=self.data, columns=self.columns, index=self.index, backend="pandas"
         )
         exp = pd.DataFrame(self.data, columns=self.columns, index=self.index)
         assert_data_frame_almost_equal(obs, exp)
 
     def test_create_table_numpy_backend(self):
-        obs = create_table(
+        obs = _create_table(
             data=self.data, columns=self.columns, index=self.index, backend="numpy"
         )
         exp = np.array(self.data)
@@ -68,31 +68,31 @@ class TestPandas(TestCase):
 
     def test_create_table_bad_backend(self):
         with self.assertRaisesRegex(ValueError, "Unsupported backend: 'nonsense'"):
-            create_table(self.data, backend="nonsense")
+            _create_table(self.data, backend="nonsense")
 
     def test_create_table_1d_no_backend(self):
-        obs = create_table_1d(self.data_1d, index=self.index)
+        obs = _create_table_1d(self.data_1d, index=self.index)
         exp = pd.Series(self.data_1d, index=self.index)
         pdt.assert_series_equal(obs, exp)
 
     def test_create_table_1d_no_optionals(self):
-        obs = create_table_1d(self.data_1d)
+        obs = _create_table_1d(self.data_1d)
         exp = pd.Series(self.data_1d)
         pdt.assert_series_equal(obs, exp)
 
     def test_create_table_1d_same_backend(self):
-        obs = create_table_1d(self.data_1d, index=self.index, backend="pandas")
+        obs = _create_table_1d(self.data_1d, index=self.index, backend="pandas")
         exp = pd.Series(self.data_1d, index=self.index)
         pdt.assert_series_equal(obs, exp)
 
     def test_create_table_1d_numpy_backend(self):
-        obs = create_table_1d(self.data_1d, index=self.index, backend="numpy")
+        obs = _create_table_1d(self.data_1d, index=self.index, backend="numpy")
         exp = np.array(self.data_1d)
         npt.assert_array_equal(obs, exp)
 
     def test_create_table_1d_bad_backend(self):
         with self.assertRaisesRegex(ValueError, "Unsupported backend: 'nonsense'"):
-            create_table_1d(self.data, backend="nonsense")
+            _create_table_1d(self.data, backend="nonsense")
 
 
 class TestNumpy(TestCase):
@@ -107,24 +107,24 @@ class TestNumpy(TestCase):
         set_config("output", "pandas")
 
     def test_create_table_no_backend(self):
-        obs = create_table(data=self.data, columns=self.columns, index=self.index)
+        obs = _create_table(data=self.data, columns=self.columns, index=self.index)
         exp = np.array(self.data)
         npt.assert_array_equal(obs, exp)
 
     def test_create_table_no_optionals(self):
-        obs = create_table(self.data)
+        obs = _create_table(self.data)
         exp = np.array(self.data)
         npt.assert_array_equal(obs, exp)
 
     def test_create_table_same_backend(self):
-        obs = create_table(
+        obs = _create_table(
             data=self.data, columns=self.columns, index=self.index, backend="numpy"
         )
         exp = np.array(self.data)
         npt.assert_array_equal(obs, exp)
 
     def test_create_table_pandas_backend(self):
-        obs = create_table(
+        obs = _create_table(
             data=self.data, columns=self.columns, index=self.index, backend="pandas"
         )
         exp = pd.DataFrame(self.data, columns=self.columns, index=self.index)
@@ -132,31 +132,31 @@ class TestNumpy(TestCase):
 
     def test_create_table_bad_backend(self):
         with self.assertRaisesRegex(ValueError, "Unsupported backend: 'nonsense'"):
-            create_table(self.data, backend="nonsense")
+            _create_table(self.data, backend="nonsense")
 
     def test_create_table_1d_no_backend(self):
-        obs = create_table_1d(self.data_1d, index=self.index)
+        obs = _create_table_1d(self.data_1d, index=self.index)
         exp = np.array(self.data_1d)
         npt.assert_array_equal(obs, exp)
 
     def test_create_table_1d_no_optionals(self):
-        obs = create_table_1d(self.data_1d)
+        obs = _create_table_1d(self.data_1d)
         exp = np.array(self.data_1d)
         npt.assert_array_equal(obs, exp)
 
     def test_create_table_1d_same_backend(self):
-        obs = create_table_1d(self.data_1d, index=self.index, backend="numpy")
+        obs = _create_table_1d(self.data_1d, index=self.index, backend="numpy")
         exp = np.array(self.data_1d)
         npt.assert_array_equal(obs, exp)
 
     def test_create_table_1d_pandas_backend(self):
-        obs = create_table_1d(self.data_1d, index=self.index, backend="pandas")
+        obs = _create_table_1d(self.data_1d, index=self.index, backend="pandas")
         exp = pd.Series(self.data_1d, index=self.index)
         pdt.assert_series_equal(obs, exp)
 
     def test_create_table_1d_bad_backend(self):
         with self.assertRaisesRegex(ValueError, "Unsupported backend: 'nonsense'"):
-            create_table_1d(self.data, backend="nonsense")
+            _create_table_1d(self.data, backend="nonsense")
 
 
 @skipIf(not has_polars, "Polars is not available for unit tests.")
@@ -172,31 +172,31 @@ class TestPolars(TestCase):
         set_config("output", "pandas")
 
     def test_create_table_no_backend(self):
-        obs = create_table(data=self.data, columns=self.columns, index=self.index)
+        obs = _create_table(data=self.data, columns=self.columns, index=self.index)
         exp = pl.DataFrame(self.data, schema=self.columns)
         plt.assert_frame_equal(obs, exp)
 
     def test_create_table_no_optionals(self):
-        obs = create_table(self.data)
+        obs = _create_table(self.data)
         exp = pl.DataFrame(self.data)
         plt.assert_frame_equal(obs, exp)
 
     def test_create_table_same_backend(self):
-        obs = create_table(
+        obs = _create_table(
             data=self.data, columns=self.columns, index=self.index, backend="polars"
         )
         exp = pl.DataFrame(self.data, schema=self.columns)
         plt.assert_frame_equal(obs, exp)
 
     def test_create_table_numpy_backend(self):
-        obs = create_table(
+        obs = _create_table(
             data=self.data, columns=self.columns, index=self.index, backend="numpy"
         )
         exp = np.array(self.data)
         npt.assert_array_equal(obs, exp)
 
     def test_create_table_pandas_backend(self):
-        obs = create_table(
+        obs = _create_table(
             data=self.data, columns=self.columns, index=self.index, backend="pandas"
         )
         exp = pd.DataFrame(self.data, columns=self.columns, index=self.index)
@@ -204,30 +204,30 @@ class TestPolars(TestCase):
 
     def test_create_table_bad_backend(self):
         with self.assertRaisesRegex(ValueError, "Unsupported backend: 'nonsense'"):
-            create_table(self.data, backend="nonsense")
+            _create_table(self.data, backend="nonsense")
 
     def test_create_table_1d_no_backend(self):
-        obs = create_table_1d(self.data_1d, index=self.index)
+        obs = _create_table_1d(self.data_1d, index=self.index)
         exp = pl.Series(self.data_1d)
         plt.assert_series_equal(obs, exp)
 
     def test_create_table_1d_no_optionals(self):
-        obs = create_table_1d(self.data_1d)
+        obs = _create_table_1d(self.data_1d)
         exp = pl.Series(self.data_1d)
         plt.assert_series_equal(obs, exp)
 
     def test_create_table_1d_same_backend(self):
-        obs = create_table_1d(self.data_1d, index=self.index, backend="polars")
+        obs = _create_table_1d(self.data_1d, index=self.index, backend="polars")
         exp = pl.Series(self.data_1d)
         plt.assert_series_equal(obs, exp)
 
     def test_create_table_1d_pandas_backend(self):
-        obs = create_table_1d(self.data_1d, index=self.index, backend="pandas")
+        obs = _create_table_1d(self.data_1d, index=self.index, backend="pandas")
         exp = pd.Series(self.data_1d, index=self.index)
         pdt.assert_series_equal(obs, exp)
 
     def test_create_table_1d_numpy_backend(self):
-        obs = create_table(
+        obs = _create_table(
             data=self.data, columns=self.columns, index=self.index, backend="numpy"
         )
         exp = np.array(self.data)
@@ -235,7 +235,7 @@ class TestPolars(TestCase):
 
     def test_create_table_1d_bad_backend(self):
         with self.assertRaisesRegex(ValueError, "Unsupported backend: 'nonsense'"):
-            create_table_1d(self.data, backend="nonsense")
+            _create_table_1d(self.data, backend="nonsense")
 
 
 class TestBIOM(TestCase):
@@ -255,7 +255,7 @@ class TestBIOM(TestCase):
             "scikit-bio functions expect samples as rows and features as columns. "
             "Please ensure your input is in the correct orientation.\n",
         ):
-            data, row_ids, col_ids = ingest_array(tbl)
+            data, row_ids, col_ids = _ingest_array(tbl)
         npt.assert_array_equal(data, self.data)
         self.assertEqual(row_ids, self.samples)
         self.assertEqual(col_ids, self.features)
@@ -271,7 +271,7 @@ class TestBIOM(TestCase):
             "scikit-bio functions expect samples as rows and features as columns. "
             "Please ensure your input is in the correct orientation.\n",
         ):
-            data, row_ids, col_ids = ingest_array(
+            data, row_ids, col_ids = _ingest_array(
                 tbl, row_ids=self.samples, col_ids=self.features
             )
         npt.assert_array_equal(data, self.data)
@@ -288,14 +288,14 @@ class TestAnndata(TestCase):
 
     def test_anndata_input(self):
         tbl = adt.AnnData(self.data, obs=self.samples, var=self.features)
-        data, row_ids, col_ids = ingest_array(tbl)
+        data, row_ids, col_ids = _ingest_array(tbl)
         npt.assert_array_equal(data, self.data)
         self.assertEqual(row_ids, list(self.samples.index))
         self.assertEqual(col_ids, list(self.features.index))
 
     def test_anndata_input_pass_ids(self):
         tbl = adt.AnnData(self.data, obs=self.samples, var=self.features)
-        data, row_ids, col_ids = ingest_array(
+        data, row_ids, col_ids = _ingest_array(
             tbl, row_ids=list(self.samples.index), col_ids=list(self.features.index)
         )
         npt.assert_array_equal(data, self.data)

@@ -12,7 +12,7 @@ from scipy.linalg import svd, lstsq
 
 from ._ordination_results import OrdinationResults
 from ._utils import corr, svd_rank, scale
-from skbio.util.config._dispatcher import ingest_array, create_table, create_table_1d
+from skbio.util.config import _ingest_array, _create_table, _create_table_1d
 
 
 def rda(
@@ -123,8 +123,8 @@ def rda(
        Ecology. Elsevier, Amsterdam.
 
     """
-    Y, y_rows, y_cols = ingest_array(y)
-    X, x_rows, x_cols = ingest_array(x)
+    Y, y_rows, y_cols = _ingest_array(y)
+    X, x_rows, x_cols = _ingest_array(x)
 
     n, p = Y.shape
     n_, m = X.shape
@@ -213,7 +213,7 @@ def rda(
     # According to the vegan-FAQ.pdf, the scaling factor for scores
     # is (notice that L&L 1998 says in p. 586 that such scaling
     # doesn't affect the interpretation of a biplot):
-    eigvals = create_table_1d(
+    eigvals = _create_table_1d(
         eigenvalues,
         index=["RDA%d" % (i + 1) for i in range(len(eigenvalues))],
         backend=output_format,
@@ -226,13 +226,13 @@ def rda(
     feature_scores = np.hstack((U, U_res)) * scaling_factor
     sample_scores = np.hstack((F, F_res)) / scaling_factor
 
-    feature_scores = create_table(
+    feature_scores = _create_table(
         feature_scores,
         index=feature_ids,
         columns=["RDA%d" % (i + 1) for i in range(feature_scores.shape[1])],
         backend=output_format,
     )
-    sample_scores = create_table(
+    sample_scores = _create_table(
         sample_scores,
         index=sample_ids,
         columns=["RDA%d" % (i + 1) for i in range(sample_scores.shape[1])],
@@ -240,7 +240,7 @@ def rda(
     )
     # TODO not yet used/displayed
     sample_constraints = np.hstack((Z, F_res)) / scaling_factor
-    sample_constraints = create_table(
+    sample_constraints = _create_table(
         sample_constraints,
         index=sample_ids,
         columns=["RDA%d" % (i + 1) for i in range(sample_constraints.shape[1])],
@@ -253,7 +253,7 @@ def rda(
     # environmental variables (depth, coral, sand, other) even if
     # other = not(coral or sand)
     biplot_scores = corr(X, u)
-    biplot_scores = create_table(
+    biplot_scores = _create_table(
         biplot_scores,
         index=x_cols,
         columns=["RDA%d" % (i + 1) for i in range(biplot_scores.shape[1])],
@@ -263,7 +263,7 @@ def rda(
     # scores" from table 11.4 are quite similar to vegan's biplot
     # scores, but they're computed like this:
     # corr(X, F))
-    p_explained = create_table_1d(
+    p_explained = _create_table_1d(
         eigenvalues / eigenvalues.sum(),
         index=["RDA%d" % (i + 1) for i in range(len(eigenvalues))],
         backend=output_format,

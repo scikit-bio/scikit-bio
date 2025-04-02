@@ -89,13 +89,13 @@ class OrdinationResults(SkbioObject, PlottableMixin):
 
         self.samples = samples
         if sample_ids is None:
-            self.sample_ids = extract_row_ids(samples)
+            self.sample_ids = _extract_row_ids(samples)
         else:
             self.sample_ids = sample_ids
 
         self.features = features
         if feature_ids is None and features is not None:
-            self.feature_ids = extract_row_ids(features)
+            self.feature_ids = _extract_row_ids(features)
         else:
             self.feature_ids = feature_ids
 
@@ -156,7 +156,7 @@ class OrdinationResults(SkbioObject, PlottableMixin):
             return "\t%s: %s" % (attr_name, _pprint_strs(ids))
         elif data is not None:
             return self._format_attribute(
-                data, attr_name, _pprint_strs(extract_row_ids)
+                data, attr_name, _pprint_strs(_extract_row_ids)
             )
         else:
             return "\t%s: N/A" % attr_name
