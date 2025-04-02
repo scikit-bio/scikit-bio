@@ -13,20 +13,9 @@ import numpy.testing as npt
 import pandas as pd
 import pandas.testing as pdt
 
-try:
-    import polars as pl
-    import polars.testing as plt
-except (ImportError, ModuleNotFoundError):
-    has_polars = False
-else:
-    has_polars = True
-
-try:
-    import anndata as adt
-except (ImportError, ModuleNotFoundError):
-    has_anndata = False
-else:
-    has_anndata = True
+from skbio.util.config._optionals import _get_package
+pl, has_polars = _get_package('polars', raise_error=False, no_bool=False)
+adt, has_anndata = _get_package('anndata', raise_error=False, no_bool=False)
 
 from skbio.table import Table
 from skbio.util.config._dispatcher import _create_table, _create_table_1d, _ingest_array
@@ -174,19 +163,19 @@ class TestPolars(TestCase):
     def test_create_table_no_backend(self):
         obs = _create_table(data=self.data, columns=self.columns, index=self.index)
         exp = pl.DataFrame(self.data, schema=self.columns)
-        plt.assert_frame_equal(obs, exp)
+        pl.testing.assert_frame_equal(obs, exp)
 
     def test_create_table_no_optionals(self):
         obs = _create_table(self.data)
         exp = pl.DataFrame(self.data)
-        plt.assert_frame_equal(obs, exp)
+        pl.testing.assert_frame_equal(obs, exp)
 
     def test_create_table_same_backend(self):
         obs = _create_table(
             data=self.data, columns=self.columns, index=self.index, backend="polars"
         )
         exp = pl.DataFrame(self.data, schema=self.columns)
-        plt.assert_frame_equal(obs, exp)
+        pl.testing.assert_frame_equal(obs, exp)
 
     def test_create_table_numpy_backend(self):
         obs = _create_table(
@@ -209,17 +198,17 @@ class TestPolars(TestCase):
     def test_create_table_1d_no_backend(self):
         obs = _create_table_1d(self.data_1d, index=self.index)
         exp = pl.Series(self.data_1d)
-        plt.assert_series_equal(obs, exp)
+        pl.testing.assert_series_equal(obs, exp)
 
     def test_create_table_1d_no_optionals(self):
         obs = _create_table_1d(self.data_1d)
         exp = pl.Series(self.data_1d)
-        plt.assert_series_equal(obs, exp)
+        pl.testing.assert_series_equal(obs, exp)
 
     def test_create_table_1d_same_backend(self):
         obs = _create_table_1d(self.data_1d, index=self.index, backend="polars")
         exp = pl.Series(self.data_1d)
-        plt.assert_series_equal(obs, exp)
+        pl.testing.assert_series_equal(obs, exp)
 
     def test_create_table_1d_pandas_backend(self):
         obs = _create_table_1d(self.data_1d, index=self.index, backend="pandas")
