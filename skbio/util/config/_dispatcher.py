@@ -163,11 +163,22 @@ def _ingest_array(input_data, row_ids=None, col_ids=None):
     return data_, row_ids, col_ids
 
 
-def _extract_row_ids(input_data):
+def _extract_row_ids(input_data, warn_ids=False):
     """Extract row ids from a dataframe or table."""
     if isinstance(input_data, pd.DataFrame):
         return list(input_data.index)
     # for right now, just going to worry about pandas/polars/numpy,
     # which is to say that if it's not pandas, then it doesn't have ids
     else:
+        # Raise warning if sample_ids and feature_ids are both None, as this means
+        # that both will have arbitrary integer IDs starting at 0.
+        if warn_ids:
+            warn(
+                (
+                    "sample_ids and feature_ids were both None. As a "
+                    "result, both have been set to integer IDs "
+                    "starting at 0. Namespaces for sample_ids and "
+                    "feature_ids are no longer mutually exclusive."
+                )
+            )
         return list(range(input_data.shape[0]))

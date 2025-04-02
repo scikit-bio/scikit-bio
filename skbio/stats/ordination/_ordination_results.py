@@ -7,6 +7,7 @@
 # ----------------------------------------------------------------------------
 
 import functools
+from warnings import warn
 
 import numpy as np
 import pandas as pd
@@ -89,13 +90,15 @@ class OrdinationResults(SkbioObject, PlottableMixin):
 
         self.samples = samples
         if sample_ids is None:
+            no_samp_ids = True
             self.sample_ids = _extract_row_ids(samples)
         else:
+            no_samp_ids = False
             self.sample_ids = sample_ids
 
         self.features = features
         if feature_ids is None and features is not None:
-            self.feature_ids = _extract_row_ids(features)
+            self.feature_ids = _extract_row_ids(features, warn_ids=no_samp_ids)
         else:
             self.feature_ids = feature_ids
 
