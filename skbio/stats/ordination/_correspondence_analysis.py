@@ -33,29 +33,19 @@ def ca(X, scaling=1, sample_ids=None, feature_ids=None, output_format=None):
 
     Parameters
     ----------
-    X : DataFrame or ndarray
+    X : TableData
         Samples by features table (n, m). It can be applied to different kinds
         of data tables but data must be non-negative and dimensionally
-        homogeneous (quantitative or binary). The rows correspond to the
-        samples and the columns correspond to the features. Can be numpy,
-        pandas, polars, AnnData, or BIOM (skbio.Table).
-    sample_ids : list of str
-        List of ids of samples. If not provided implicitly by X or explicitly
-        by the user, it will default to a list of integers starting at zero.
-    feature_ids : list of str
-        List of ids of features. If not provided implicitly by X or explicitly
-        by the user, it will default to a list of integers starting at zero.
+        homogeneous (quantitative or binary). See :mod:`skbio.util.config`
+        for information on the ``TableData`` type.
     scaling : {1, 2}
         Scaling type 1 maintains :math:`\chi^2` distances between rows.
         Scaling type 2 preserves :math:`\chi^2` distances between columns.
         For a more detailed explanation of the interpretation,
         check notes below and Legendre & Legendre 1998, section 9.4.3.
-    output_format : str
-        The desired format of the output object. Can be ``pandas``, ``polars``, or
-        ``numpy``. Note that all scikit-bio ordination functions return an
-        ``OrdinationResults`` object. In this case the attributes of the
-        ``OrdinationResults`` object will be in the specified format. Default is
-        ``pandas``.
+    sample_ids, feature_ids, output_format : optional
+        Standard ``TableData`` parameters. See :mod:`skbio.util.config`
+        for details.
 
     Returns
     -------

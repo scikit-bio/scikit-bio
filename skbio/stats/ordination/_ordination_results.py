@@ -33,28 +33,35 @@ class OrdinationResults(SkbioObject, PlottableMixin):
         Abbreviated ordination method name.
     long_method_name : str
         Ordination method name.
-    eigvals : ndarray
+    eigvals : TableData
         The resulting eigenvalues.  The index corresponds to the ordination
-        axis labels
-    samples : ndarray
+        axis labels. See :mod:`skbio.util.config` for information for details
+        on the ``TableData`` type.
+    samples : TableData
         The position of the samples in the ordination space, row-indexed by the
-        sample id.
-    sample_ids : list of str, or should it be pd.Index?
-        The names of the samples. Must be provided if samples is an array.
-    features : ndarray
+        sample id. See :mod:`skbio.util.config` for information for details
+        on the ``TableData`` type.
+    features : TableData
         The position of the features in the ordination space, row-indexed by
-        the feature id.
-    feature_ids : array-like of str
-        The names of the features. Must be provided if features is an array.
-    biplot_scores : ndarray
+        the feature id. See :mod:`skbio.util.config` for information for details
+        on the ``TableData`` type.
+    biplot_scores : TableData
         Correlation coefficients of the samples with respect to the features.
-    sample_constraints : ndarray
+        See :mod:`skbio.util.config` for information for details on the
+        ``TableData`` type.
+    sample_constraints : TableData
         Site constraints (linear combinations of constraining variables):
         coordinates of the sites in the space of the explanatory variables X.
-        These are the fitted site scores
-    proportion_explained : ndarray
+        These are the fitted site scores. See :mod:`skbio.util.config` for
+        information for details on the ``TableData`` type.
+    proportion_explained : TableData
         Proportion explained by each of the dimensions in the ordination space.
-        The index corresponds to the ordination axis labels
+        The index corresponds to the ordination axis labels. See
+        :mod:`skbio.util.config` for information for details on the ``TableData``
+        type.
+    sample_ids, feature_ids, constraint_ids, output_format : optional
+        Standard ``TableData`` parameters. See :mod:`skbio.util.config`
+        for details.
 
     See Also
     --------

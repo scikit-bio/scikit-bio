@@ -37,20 +37,22 @@ def rda(
 
     Parameters
     ----------
-    y : DataFrame or ndarray
+    y : TableData
         :math:`n \times p` response matrix, where :math:`n` is the number
         of samples and :math:`p` is the number of features. Its columns
         need be dimensionally homogeneous (or you can set `scale_Y=True`).
         This matrix is also referred to as the community matrix that
-        commonly stores information about species abundances. Can be numpy,
-        pandas, polars, AnnData, or BIOM (skbio.Table).
-    x : DataFrame or ndarray
+        commonly stores information about species abundances. See
+        :mod:`skbio.util.config` for details on the ``TableData``
+        type.
+    x : TableData
         :math:`n \times m, n \geq m` matrix of explanatory
         variables, where :math:`n` is the number of samples and
         :math:`m` is the number of metadata variables. Its columns
         need not be standardized, but doing so turns regression
-        coefficients into standard regression coefficients. Can be numpy,
-        pandas, polars, AnnData, or BIOM (skbio.Table).
+        coefficients into standard regression coefficients. See
+        :mod:`skbio.util.config` for details on the ``TableData``
+        type.
     scale_Y : bool, optional
         Controls whether the response matrix columns are scaled to
         have unit standard deviation. Defaults to `False`.
@@ -60,24 +62,6 @@ def rda(
         distances approximate their original euclidean
         distances. Especially interesting when most explanatory
         variables are binary.
-    sample_ids : list of str, optional
-        List of ids of samples. If not provided implicitly by the input DataFrame or
-        explicitly by the user, sample_ids will default to a list of integers starting
-        at zero.
-    feature_ids : list of str, optional
-        List of ids of features. If not provided implicitly by y or explicitly by the
-        user, it will default to list of integers starting at zero.
-    constraint_ids : list of str, optional
-        List of ids of metadata variables (constraints). If not provided implicitly
-        by y or explicitly by the user, it will default to a list of integers
-        starting at zero.
-    output_format : str, optional
-        The desired format of the output object. Can be ``pandas``, ``polars``, or
-        ``numpy``. Note that all scikit-bio ordination functions return an
-        ``OrdinationResults`` object. In this case the attributes of the
-        ``OrdinationResults`` object will be in the specified format. Default is
-        ``pandas``.
-
         Scaling type 2 produces a correlation biplot. It focuses
         on the relationships among explained variables (`y`). It
         is interpreted like scaling type 1, but taking into
@@ -86,6 +70,9 @@ def rda(
 
         See more details about distance and correlation biplots in
         [1]_, \S 9.1.4.
+    sample_ids, feature_ids, constraint_ids, output_format : optional
+        Standard ``TableData`` parameters. See :mod:`skbio.util.config`
+        for details.
 
     Returns
     -------

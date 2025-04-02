@@ -20,8 +20,10 @@ Functions
    set_config
 
 
-Supported Input Formats
------------------------
+The TableData Type
+----------------------
+The ``TableData`` type is the a set comprising the following types of objects:
+
 - Numpy :class:`~numpy.ndarray` (2D)
 - pandas :class:`~pandas.DataFrame`
 - Polars :class:`~polars.DataFrame`
@@ -33,6 +35,38 @@ configuration variable to use whichever input type you like. When possible, row 
 column identifiers will be preserved and carried through operations to the results.
 When IDs are not available from the input data and not provided explicitly, integer
 indices starting from 0 will be used.
+
+Common TableData Parameters
+---------------------------
+Many functions that accept ``TableData`` inputs share a set of common parameters that
+control how identifiers are handled and specify output format preferences:
+
+sample_ids : list of str, optional
+    List of identifiers for samples (rows). If not provided implicitly by the input
+    data structure or explicitly by the user, defaults to integers starting at zero.
+    This parameter is useful when the input format doesn't support row labels
+    (e.g., NumPy arrays) or when you want to override existing labels.
+
+feature_ids : list of str, optional
+    List of identifiers for features (columns). If not provided implicitly by the
+    input data structure or explicitly by the user, defaults to integers starting
+    at zero. This parameter is useful when the input format doesn't support column
+    labels (e.g., NumPy arrays) or when you want to override existing labels.
+
+constraint_ids : list of str, optional
+    List of identifiers for metadata variables or constraints (applicable in
+    constrained ordination methods). If not provided implicitly by the input data
+    structure or explicitly by the user, defaults to integers starting at zero.
+
+output_format : str, optional
+    Specifies the desired format for the output. Valid options are:
+
+    - ``"pandas"`` (default): Return pandas DataFrames/Series
+    - ``"numpy"``: Return NumPy ndarrays
+    - ``"polars"``: Return Polars DataFrames/Series
+
+    Note that this parameter overrides the global configuration setting for
+    the specific function call.
 
 Supported Output Formats
 ------------------------

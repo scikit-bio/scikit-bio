@@ -70,6 +70,10 @@ def pcoa(
 
         .. versionadded:: 0.6.3
 
+    output_format : optional
+        Standard ``TableData`` parameter. See :mod:`skbio.util.config`
+        for details.
+
     Returns
     -------
     OrdinationResults
