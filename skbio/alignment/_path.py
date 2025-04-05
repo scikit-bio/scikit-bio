@@ -173,7 +173,7 @@ class AlignPath(SkbioObject):
 
         Returns
         -------
-        ndarray of (0, 1) of shape (n_seqs, n_positions)
+        ndarray of (0, 1) of shape (n_sequences, n_positions)
             Array of zeros (character) and ones (gap) which represent the alignment.
 
         Examples
@@ -203,7 +203,7 @@ class AlignPath(SkbioObject):
 
         Parameters
         ----------
-        bits : array_like of (0, 1) of shape (n_seqs, n_positions)
+        bits : array_like of (0, 1) of shape (n_sequences, n_positions)
             Array of zeros (character) and ones (gap) which represent the alignment.
         starts : array_like of int of shape (n_sequences,), optional
             Start position (0-based) of each sequence in the alignment. If omitted,
@@ -311,7 +311,7 @@ class AlignPath(SkbioObject):
 
         Returns
         -------
-        ndarray of int of shape (n_seqs, n_positions)
+        ndarray of int of shape (n_sequences, n_positions)
             Array of indices of characters in the original sequences.
 
         Examples
@@ -358,7 +358,7 @@ class AlignPath(SkbioObject):
 
         Parameters
         ----------
-        indices : array_like of int of shape (n_seqs, n_positions)
+        indices : array_like of int of shape (n_sequences, n_positions)
             Each element in the array is the index in the corresponding sequence.
         gap : int or "mask", optional
             The value which represents a gap in the alignment. Defaults to -1, but
@@ -414,7 +414,7 @@ class AlignPath(SkbioObject):
 
         Returns
         -------
-        ndarray of int of shape (n_seqs, n_segments)
+        ndarray of int of shape (n_sequences, n_segments)
             Array where each value defines the start positions (index) of each segment
             for each sequence.
 
@@ -444,7 +444,7 @@ class AlignPath(SkbioObject):
 
         Parameters
         ----------
-        coords : array_like of int of shape (n_seqs, n_segments)
+        coords : array_like of int of shape (n_sequences, n_segments)
             Array where each value defines the start positions (index) of each segment
             for each sequence.
 
@@ -515,7 +515,7 @@ class PairAlignPath(AlignPath):
 
         Parameters
         ----------
-        bits : array_like of 0's and 1's of shape (n_seqs, n_positions)
+        bits : array_like of 0's and 1's of shape (n_sequences, n_positions)
             Array of zeros (character) and ones (gap) which represent the alignment.
 
         Returns
