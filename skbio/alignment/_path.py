@@ -235,7 +235,7 @@ class AlignPath(SkbioObject):
 
         """
         bits = np.unpackbits(
-            np.atleast_2d(self._states), axis=0, count=self._shape[0], bitorder="little"
+            self._states, axis=0, count=self._shape[0], bitorder="little"
         )
         if expand:
             bits = np.repeat(bits, self._lengths, axis=1)
@@ -273,22 +273,23 @@ class AlignPath(SkbioObject):
         states: [0 2 0 6 0]
 
         """
-        # Pack bits into integers.
+        # pack bits into integers
         ints = np.packbits(bits, axis=0, bitorder="little")
 
-        # Get indices where segments start.
+        # get indices where segments start
         idx = np.append(0, np.where((ints[:, :-1] != ints[:, 1:]).any(axis=0))[0] + 1)
-        # Get lengths of segments.
+
+        # get lengths of segments
         lens = np.append(idx[1:] - idx[:-1], ints.shape[1] - idx[-1])
 
-        # Keep indices of segment starts.
+        # keep indices of segment starts
         ints = ints[:, idx]
 
         # set start positions as zeros if not specified
         if starts is None:
             starts = np.zeros(bits.shape[0], dtype=int)
 
-        # return per-segment lengths and bits
+        # return per-segment lengths and states
         return cls(lens, ints, starts)
 
     @classonlymethod
@@ -550,7 +551,7 @@ class PairAlignPath(AlignPath):
     def __repr__(self):
         r"""Return summary of the alignment path."""
         return (
-            f"<{self.__class__.__name__}, shape: {self._shape}, "
+            f"<{self.__class__.__name__}, position count: {self._shape[1]}, "
             f"CIGAR: '{self.to_cigar()}'>"
         )
 
