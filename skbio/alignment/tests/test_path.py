@@ -54,14 +54,42 @@ class TestAlignPath(unittest.TestCase):
         self.assertEqual(obs.position, 20)
 
     def test_to_bits(self):
+        path = AlignPath(lengths=[2, 2, 2, 1, 1],
+                         states=[0, 2, 0, 6, 0],
+                         starts=[0, 0, 0])
+        
+        # return array of segments
+        obs = path.to_bits(expand=False)
+        exp = np.array([[0, 0, 0, 0, 0],
+                        [0, 1, 0, 1, 0],
+                        [0, 0, 0, 1, 0]])
+        npt.assert_array_equal(obs, exp)
+
+        # return array of positions (default)
+        obs = path.to_bits()
+        exp = np.array([[0, 0, 0, 0, 0, 0, 0, 0],
+                        [0, 0, 1, 1, 0, 0, 1, 0],
+                        [0, 0, 0, 0, 0, 0, 1, 0]])
+        npt.assert_array_equal(obs, exp)
+
+        # more complex example
         path = AlignPath(lengths=[3, 2, 5, 1, 4, 3, 2],
                          states=[0, 2, 0, 6, 0, 1, 0],
                          starts=[0, 0, 0])
         exp = np.array(([0, 0, 0, 0, 0, 1, 0],
                         [0, 1, 0, 1, 0, 0, 0],
                         [0, 0, 0, 1, 0, 0, 0]))
-        obs = path.to_bits()
+        obs = path.to_bits(expand=False)
         npt.assert_array_equal(obs, exp)
+
+        # edge case: 0-length alignment
+        path = AlignPath(lengths=[],
+                         states=[],
+                         starts=[0, 0, 0])
+        for expand in True, False:
+            exp = path.to_bits(expand=expand)
+            self.assertEqual(exp.size, 0)
+            self.assertTupleEqual(exp.shape, (3, 0))
 
     def test_from_bits(self):
         # test 1D base case, less than 8 sequences

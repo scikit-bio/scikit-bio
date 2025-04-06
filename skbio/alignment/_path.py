@@ -35,9 +35,12 @@ _cigar_mapping = {
 
 
 class AlignPath(SkbioObject):
-    r"""Create an alignment path from segment lengths and states.
+    r"""Store an alignment path between two or more sequences.
 
-    The underliying data structure of the ``AlignPath`` class efficiently represents a
+    It defines the operations of aligning sequences by inserting gaps into designated
+    positions between characters.
+
+    The underlying data structure of the ``AlignPath`` class efficiently represents a
     sequence alignment as two equal-length vectors: lengths and gap status. The lengths
     vector contains the lengths of individual segments of the alignment with consistent
     gap status. The gap status vector contains the encoded bits of the gap (1) and
@@ -60,8 +63,24 @@ class AlignPath(SkbioObject):
 
     See Also
     --------
+    PairAlignPath
     skbio.sequence.Sequence
     skbio.alignment.TabularMSA
+
+    Notes
+    -----
+    The underlying logic of the ``AlignPath`` data structure is rooted in two concepts:
+    run length encoding and bit arrays.
+
+    The lengths array is calculated by performing run length encoding on the alignment,
+    considering each segment with consistent gap status to be an individual unit in the
+    encoding. In the above example, the first three positions of the alignment contain
+    no gaps, so the first value in the lengths array is 3, and so on.
+
+    The states array is calculated by turning the alignment segments into a bit array
+    where gaps become 1's, and characters become zeros. Then, the 0's and 1's are
+    converted into bytes. In the above example, the fourth segment, which has length 1,
+    would become [0, 1, 1], which then becomes 6.
 
     Examples
     --------
@@ -93,50 +112,35 @@ class AlignPath(SkbioObject):
     lengths: [3 2 5 1 4 3 2]
     states: [0 2 0 6 0 1 0]
 
-    Notes
-    -----
-    The underlying logic of the ``AlignPath`` data structure is rooted in two concepts:
-    run length encoding and bit arrays.
-
-    The lengths array is calculated by performing run length encoding on the alignment,
-    considering each segment with consistent gap status to be an individual unit in the
-    encoding. In the above example, the first three positions of the alignment contain
-    no gaps, so the first value in the lengths array is 3, and so on.
-
-    The states array is calculated by turning the alignment segments into a bit array
-    where gaps become 1's, and characters become zeros. Then, the 0's and 1's are
-    converted into bytes. In the above example, the fourth segment, which has length 1,
-    would become [0, 1, 1], which then becomes 6.
-
     """
 
     def __init__(self, lengths, states, starts):
         self._lengths = np.asarray(lengths, dtype=np.int64)
         self._states = np.atleast_2d(np.asarray(states, dtype=np.uint8))
 
-        # start positions
         # Number of sequences needs to be explicitly provided, because the packed bits
         # does not contain this information. (It is merely in multiples of 8.)
         self._starts = np.asarray(starts, dtype=np.int64)
         if self._starts.ndim > 1:
             raise TypeError("`starts` must be a 1-D vector.")
-        n_seqs = self._starts.size
-        if np.ceil(n_seqs / 8) != self._states.shape[0]:
+
+        n_sequences = len(self._starts)
+        if np.ceil(n_sequences / 8) != self._states.shape[0]:
             raise ValueError("Sizes of `starts` and `states` do not match.")
 
-        # Shape is n_seqs (rows) x n_positions (columns), which is consistent with
+        # Shape is n_sequences (rows) x n_positions (columns), which is consistent with
         # TabularMSA
-        n_positions = self._lengths.sum()
-        self._shape = _Shape(sequence=n_seqs, position=n_positions)
+        n_positions = int(self._lengths.sum())
+        self._shape = _Shape(sequence=n_sequences, position=n_positions)
 
     def __str__(self):
-        r"""String representation of this AlignPath."""
+        r"""Return string representation of this alignment path."""
         # Not sure if this makes sense for this class, but it is needed for all
         # SkbioObjects.
         return self.__repr__()
 
     def __repr__(self):
-        r"""Summary of the alignment path."""
+        r"""Return summary of the alignment path."""
         return (
             f"{self.__class__.__name__}\n{self._shape}\nlengths: "
             f"{self._lengths}\nstates: {np.squeeze(self._states)}"
@@ -168,12 +172,24 @@ class AlignPath(SkbioObject):
         """
         return self._shape
 
-    def to_bits(self):
-        r"""Unpack states into an array of bits.
+    def to_bits(self, expand=True):
+        r"""Unpack the alignment path into an array of bits.
+
+        .. versionchanged:: 0.6.4
+            The default behavior now returns positions.
+
+        Parameters
+        ----------
+        expand : bool, optional
+            If True (default), each column in the returned array represents a position
+            in the original alignment. If False, each column represents a segment in
+            the alignment path.
+
+            .. versionadded:: 0.6.4
 
         Returns
         -------
-        ndarray of (0, 1) of shape (n_sequences, n_positions)
+        ndarray of (0, 1) of shape (n_sequences, n_positions or n_segments)
             Array of zeros (character) and ones (gap) which represent the alignment.
 
         Examples
@@ -187,15 +203,28 @@ class AlignPath(SkbioObject):
         ... ]
         >>> msa = TabularMSA(seqs)
         >>> path = AlignPath.from_tabular(msa)
+
+        Return a bit array representing positions:
+
         >>> path.to_bits()
+        array([[0, 0, 0, 0, 0, 0, 0, 0],
+               [0, 0, 1, 1, 0, 0, 1, 0],
+               [0, 0, 0, 0, 0, 0, 1, 0]], dtype=uint8)
+
+        Return a bit array representing segments:
+
+        >>> path.to_bits(expand=False)
         array([[0, 0, 0, 0, 0],
                [0, 1, 0, 1, 0],
                [0, 0, 0, 1, 0]], dtype=uint8)
 
         """
-        return np.unpackbits(
+        bits = np.unpackbits(
             np.atleast_2d(self._states), axis=0, count=self._shape[0], bitorder="little"
         )
+        if expand:
+            bits = np.repeat(bits, self._lengths, axis=1)
+        return bits
 
     @classonlymethod
     def from_bits(cls, bits, starts=None):
@@ -337,7 +366,7 @@ class AlignPath(SkbioObject):
         elif not np.issubdtype(type(gap), np.integer):
             raise TypeError(errmsg)
 
-        bits = np.squeeze(self.to_bits())
+        bits = np.squeeze(self.to_bits(expand=False))
         # TODO: Consider optimization using np.arange.
         # thought: initiate [-1, -1, -1 ... -1], then add slices of arange into it
         pos = np.repeat(1 - bits, self._lengths, axis=1)
@@ -430,7 +459,7 @@ class AlignPath(SkbioObject):
                [0, 1, 1, 3, 3]]...
 
         """
-        lens = self._lengths * (1 - self.to_bits())
+        lens = self._lengths * (1 - self.to_bits(expand=False))
         col0 = np.zeros((self._shape[0], 1), dtype=int)
         lens = np.append(col0, lens, axis=1)
         if self.starts.any():
@@ -440,7 +469,7 @@ class AlignPath(SkbioObject):
 
     @classonlymethod
     def from_coordinates(cls, coords):
-        r"""Generate an alignment path from an array of segment coordinates.
+        r"""Create an alignment path from an array of segment coordinates.
 
         Parameters
         ----------
@@ -479,7 +508,10 @@ class AlignPath(SkbioObject):
 
 
 class PairAlignPath(AlignPath):
-    r"""Create a pairwise alignment path from segment lengths and states.
+    r"""Store a pairwise alignment path between two sequences.
+
+    ``PairAlignPath`` is a subclass of ``AlignPath``, with additional methods specific
+    to pairwise alignments, such as the processing of CIGAR strings.
 
     Parameters
     ----------
@@ -493,13 +525,14 @@ class PairAlignPath(AlignPath):
 
     See Also
     --------
+    AlignPath
     skbio.sequence.Sequence
     skbio.alignment.TabularMSA
 
     """
 
     def __str__(self):
-        r"""Return string representation of this AlignPath."""
+        r"""Return string representation of this alignment path."""
         return self.__repr__()
 
     def __repr__(self):
@@ -522,6 +555,7 @@ class PairAlignPath(AlignPath):
         -------
         PairAlignPath
             The pairwise alignment path of the provided bit array.
+
         """
         # Ensure bits is a 2D array-like of ones and zeros.
         if not isinstance(bits, np.ndarray):
@@ -536,14 +570,31 @@ class PairAlignPath(AlignPath):
         lens = np.append(idx[1:] - idx[:-1], ints.size - idx[-1])
         return cls(lens, ints[idx], np.zeros(bits.shape[0], dtype=int))
 
-    def to_bits(self):
-        r"""Unpack states into an array of bits."""
-        if not np.all(np.isin(self._states, [0, 1, 2, 3])):
-            raise ValueError(
-                "For pairwise alignment, `states` must only contain "
-                "zeros, ones, twos, or threes."
-            )
-        return np.stack([self._states & 1, self._states >> 1])
+    def to_bits(self, expand=True):
+        r"""Unpack the alignment path into an array of bits.
+
+        .. versionchanged:: 0.6.4
+            The default behavior now returns positions.
+
+        Parameters
+        ----------
+        expand : bool, optional
+            If True (default), each column in the returned array represents a position
+            in the original alignment. If False, each column represents a segment in
+            the alignment path.
+
+            .. versionadded:: 0.6.4
+
+        Returns
+        -------
+        ndarray of (0, 1) of shape (2, n_positions or n_segments)
+            Array of zeros (character) and ones (gap) which represent the alignment.
+
+        """
+        bits = np.stack([self._states & 1, self._states >> 1])
+        if expand:
+            bits = np.repeat(bits, self._lengths, axis=1)
+        return bits
 
     def to_cigar(self, seqs=None):
         r"""Generate a CIGAR string representing the pairwise alignment path.
