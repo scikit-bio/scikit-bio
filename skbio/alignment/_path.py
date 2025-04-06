@@ -276,29 +276,13 @@ class AlignPath(SkbioObject):
         # Pack bits into integers.
         ints = np.packbits(bits, axis=0, bitorder="little")
 
-        # If there are 8 or less sequences, squeeze the 2D array into 1D.
-        # This is an optional optimization especially for pairwise alignment.
-        if ints.shape[0] == 1:
-            ints = np.squeeze(ints, axis=0)
+        # Get indices where segments start.
+        idx = np.append(0, np.where((ints[:, :-1] != ints[:, 1:]).any(axis=0))[0] + 1)
+        # Get lengths of segments.
+        lens = np.append(idx[1:] - idx[:-1], ints.shape[1] - idx[-1])
 
-            # Get indices where segments start. Equivalent to but faster than:
-            # idx = np.where(np.diff(ints, prepend=np.nan))[0]
-            idx = np.append(0, np.where(ints[:-1] != ints[1:])[0] + 1)
-
-            # Get lengths of segments. Equivalent to but faster than:
-            # lens = np.diff(idx, append=ints.size)
-            lens = np.append(idx[1:] - idx[:-1], ints.size - idx[-1])
-
-            # Keep indices of segment starts.
-            ints = ints[idx]
-
-        # This is the 2D equivalent of the above code.
-        else:
-            idx = np.append(
-                0, np.where((ints[:, :-1] != ints[:, 1:]).any(axis=0))[0] + 1
-            )
-            lens = np.append(idx[1:] - idx[:-1], ints.shape[1] - idx[-1])
-            ints = ints[:, idx]
+        # Keep indices of segment starts.
+        ints = ints[:, idx]
 
         # set start positions as zeros if not specified
         if starts is None:
@@ -548,10 +532,15 @@ class PairAlignPath(AlignPath):
 
     def __init__(self, lengths, states, starts=(0, 0)):
         super().__init__(lengths, states, starts)
+        if (self._states[0] > 3).any():
+            raise ValueError(
+                "For pairwise alignment, `states` must only contain zeros, ones, "
+                "twos, or threes."
+            )
         if self._shape[0] != 2:
             raise ValueError(
-                "A `PairAlignPath` must represent exactly two sequences, but "
-                f"{self._shape[0]} were provided."
+                "A pairwise alignment must represent exactly two sequences, but "
+                f"{self._shape[0]} were given."
             )
 
     def __str__(self):
@@ -566,58 +555,35 @@ class PairAlignPath(AlignPath):
         )
 
     @classonlymethod
-    def from_bits(cls, bits):
+    def from_bits(cls, bits, starts=None):
         r"""Create a pairwise alignment path from a bit array.
+
+        Refer to :meth:`AlignPath.from_bits` for usage.
 
         Parameters
         ----------
-        bits : array_like of 0's and 1's of shape (n_sequences, n_positions)
-            Array of zeros (character) and ones (gap) which represent the alignment.
+        bits : array_like of (0, 1) of shape (2, n_positions)
+            Bit array representing the alignment.
+        starts : array_like of int of shape (2,), optional
+            Start positions of sequences.
 
         Returns
         -------
         PairAlignPath
-            The pairwise alignment path of the provided bit array.
+            The pairwise alignment path created from the given bit array.
+
+        See Also
+        --------
+        AlignPath.from_bits
 
         """
-        # Ensure bits is a 2D array-like of ones and zeros.
-        if not isinstance(bits, np.ndarray):
-            bits = np.atleast_2d(bits)
-        if bits.ndim != 2 or bits.shape[1] == 0:
-            raise TypeError("Input 'bits' must be a non-empty 2D numpy array.")
-        if not (np.logical_or(bits == 0, bits == 1).all()):
-            raise ValueError("Input 'bits' must contain only zeros and ones.")
-
-        ints = bits[0] + (bits[1] << 1)
-        idx = np.append(0, np.where(ints[:-1] != ints[1:])[0] + 1)
-        lens = np.append(idx[1:] - idx[:-1], ints.size - idx[-1])
-        return cls(lens, ints[idx], np.zeros(bits.shape[0], dtype=int))
-
-    def to_bits(self, expand=True):
-        r"""Unpack the alignment path into an array of bits.
-
-        .. versionchanged:: 0.6.4
-            The default behavior now returns positions.
-
-        Parameters
-        ----------
-        expand : bool, optional
-            If True (default), each column in the returned array represents a position
-            in the original alignment. If False, each column represents a segment in
-            the alignment path.
-
-            .. versionadded:: 0.6.4
-
-        Returns
-        -------
-        ndarray of (0, 1) of shape (2, n_positions or n_segments)
-            Array of zeros (character) and ones (gap) which represent the alignment.
-
-        """
-        bits = np.stack([self._states & 1, self._states >> 1])
-        if expand:
-            bits = np.repeat(bits, self._lengths, axis=1)
-        return bits
+        bits = np.asarray(bits)
+        if bits.shape[0] != 2:
+            raise ValueError(
+                "A pairwise alignment must represent exactly two sequences, but "
+                f"{bits.shape[0]} were given."
+            )
+        return super().from_bits(bits, starts)
 
     def to_cigar(self, seqs=None):
         r"""Generate a CIGAR string representing the pairwise alignment path.
