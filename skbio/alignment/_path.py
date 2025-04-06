@@ -35,7 +35,7 @@ _cigar_mapping = {
 
 
 class AlignPath(SkbioObject):
-    r"""Store an alignment path between two or more sequences.
+    r"""Store an alignment path between sequences.
 
     It defines the operations of aligning sequences by inserting gaps into designated
     positions between characters.
@@ -116,17 +116,32 @@ class AlignPath(SkbioObject):
 
     def __init__(self, lengths, states, starts):
         self._lengths = np.asarray(lengths, dtype=np.int64)
+        if self._lengths.ndim > 1:
+            raise TypeError("`lengths` must be a 1-D array.")
+
         self._states = np.atleast_2d(np.asarray(states, dtype=np.uint8))
+        if self._states.ndim > 2:
+            raise TypeError("`states` must be a 1-D or 2-D array.")
+
+        if self._lengths.shape[0] != self._states.shape[1]:
+            raise ValueError(
+                f"Numbers of segments in `lengths` ({self._lengths.shape[0]}) "
+                f"and `states` ({self._states.shape[1]}) do not match."
+            )
 
         # Number of sequences needs to be explicitly provided, because the packed bits
         # does not contain this information. (It is merely in multiples of 8.)
         self._starts = np.asarray(starts, dtype=np.int64)
         if self._starts.ndim > 1:
-            raise TypeError("`starts` must be a 1-D vector.")
+            raise TypeError("`starts` must be a 1-D array.")
 
         n_sequences = len(self._starts)
         if np.ceil(n_sequences / 8) != self._states.shape[0]:
-            raise ValueError("Sizes of `starts` and `states` do not match.")
+            max_seqs = self._states.shape[0] * 8
+            raise ValueError(
+                f"Number of sequences in `starts` ({n_sequences}) and capacity of "
+                f"`states` ({max_seqs - 7} to {max_seqs}) do not match."
+            )
 
         # Shape is n_sequences (rows) x n_positions (columns), which is consistent with
         # TabularMSA
@@ -521,7 +536,7 @@ class PairAlignPath(AlignPath):
         Bits representing character (0) or gap (1) status per sequence per segment in
         the alignment.
     starts : array_like of (int, int), optional
-        Start position (0-based) of each sequence in the alignment.
+        Start position (0-based) of each sequence in the alignment. Default is (0, 0).
 
     See Also
     --------
@@ -530,6 +545,14 @@ class PairAlignPath(AlignPath):
     skbio.alignment.TabularMSA
 
     """
+
+    def __init__(self, lengths, states, starts=(0, 0)):
+        super().__init__(lengths, states, starts)
+        if self._shape[0] != 2:
+            raise ValueError(
+                "A `PairAlignPath` must represent exactly two sequences, but "
+                f"{self._shape[0]} were provided."
+            )
 
     def __str__(self):
         r"""Return string representation of this alignment path."""

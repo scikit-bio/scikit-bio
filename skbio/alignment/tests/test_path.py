@@ -17,16 +17,48 @@ from skbio.sequence import DNA
 
 
 class TestAlignPath(unittest.TestCase):
-    def test_init(self):
-        # test 1-D starts vector
-        with self.assertRaises(TypeError, msg="`starts` must be a 1-D vector."):
-            path = AlignPath(lengths=[1, 2, 3], states=[1, 2, 3], starts=[[0], [0]])
+    def setUp(self):
+        # alignment path with 3 sequences, 20 positions and 7 segments
+        self.path1 = dict(
+            lengths=[3, 2, 5, 1, 4, 3, 2],
+            states=[0, 2, 0, 6, 0, 1, 0],
+            starts=[0, 0, 0],
+        )
 
-        # test states and starts matching
-        with self.assertRaises(ValueError, msg="Sizes of `starts` and `states` do not "
-                               "match."):
-            path = AlignPath(lengths=[1, 2, 3], states=[1, 2, 3],
-                             starts=[0, 0, 0, 0, 0, 0, 0, 0, 0, 0])
+    def test_init(self):
+        # test normal case
+        path = AlignPath(*self.path1.values())
+        npt.assert_array_equal(path.lengths, np.array(self.path1["lengths"]))
+        npt.assert_array_equal(path.states, np.atleast_2d(self.path1["states"]))
+        npt.assert_array_equal(path.starts, np.array(self.path1["starts"]))
+        self.assertTupleEqual(path.shape, (3, 20))
+
+        # test errors
+        msg = "`lengths` must be a 1-D array."
+        with self.assertRaises(TypeError) as cm:
+            path = AlignPath(lengths=[[1, 2, 3]], states=[0, 1, 2], starts=[0, 0])
+        self.assertEqual(str(cm.exception), msg)
+
+        msg = "`states` must be a 1-D or 2-D array."
+        with self.assertRaises(TypeError) as cm:
+            path = AlignPath(lengths=[1, 2, 3], states=[[[]]], starts=[0, 0])
+        self.assertEqual(str(cm.exception), msg)
+
+        msg = "Numbers of segments in `lengths` (3) and `states` (4) do not match."
+        with self.assertRaises(ValueError) as cm:
+            path = AlignPath(lengths=[1, 2, 3], states=[1, 0, 1, 0], starts=[0, 0])
+        self.assertEqual(str(cm.exception), msg)
+
+        msg = "`starts` must be a 1-D array."
+        with self.assertRaises(TypeError) as cm:
+            path = AlignPath(lengths=[1, 2, 3], states=[0, 1, 2], starts=[[0], [0]])
+        self.assertEqual(str(cm.exception), msg)
+
+        msg = ("Number of sequences in `starts` (10) and the capacity of `states` "
+               "(1 to 8) do not match.")
+        with self.assertRaises(ValueError) as cm:
+            path = AlignPath(lengths=[1, 2, 3], states=[0, 1, 2], starts=[0] * 10)
+        self.assertEqual(str(cm.exception), msg)
 
     def test_lengths(self):
         obs = AlignPath(lengths=[3, 2, 5, 1, 4, 3, 2],
@@ -310,6 +342,34 @@ class TestAlignPath(unittest.TestCase):
 
 
 class TestPairAlignPath(unittest.TestCase):
+    def setUp(self):
+        # alignment path with 3 sequences, 20 positions and 7 segments
+        self.path1 = dict(
+            lengths=[3, 2, 5, 1, 4, 3, 2],
+            states=[0, 2, 0, 2, 0, 1, 0],
+            starts=[0, 0],
+        )
+
+    def test_init(self):
+        # normal case
+        path = PairAlignPath(*self.path1.values())
+        npt.assert_array_equal(path.lengths, np.array(self.path1["lengths"]))
+        npt.assert_array_equal(path.states, np.atleast_2d(self.path1["states"]))
+        npt.assert_array_equal(path.starts, np.array(self.path1["starts"]))
+        self.assertTupleEqual(path.shape, (2, 20))
+
+        # omit starts
+        path = PairAlignPath(self.path1["lengths"], self.path1["states"])
+        npt.assert_array_equal(path.starts, np.array(self.path1["starts"]))
+        self.assertTupleEqual(path.shape, (2, 20))
+
+        # more than two sequences
+        msg = ("A `PairAlignPath` must represent exactly two sequences, but 3 were "
+               "provided.")
+        with self.assertRaises(ValueError) as cm:
+            path = PairAlignPath(lengths=[1, 2, 3], states=[0, 1, 2], starts=[0, 0, 0])
+        self.assertEqual(str(cm.exception), msg)
+
     def test_from_cigar(self):
         # test valid cigar with no = or X
         cigar = "3M42I270M32D"
