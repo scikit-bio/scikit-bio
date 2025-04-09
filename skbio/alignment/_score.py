@@ -106,14 +106,16 @@ def align_score(alignment, sub_score, gap_cost, terminal_gaps=False, gap_chars="
 
     sub_score : int, float, array_like of (2,), SubstitutionMatrix, or str
         Score of a match, mismatch or substitution. It can be one of the following:
+
         - Tuple of two numbers: Match score and mismatch score.
         - SubstitutionMatrix: A matrix of substitution scores.
         - String: Name of the substitution matrix that can be recognized by
           ``SubstitutionMatrix.by_name``.
 
     gap_cost : int, float, or array_like of (2,)
-        Score of a gap. The value is usually negative, indicating a penalty to the
-        alignment score. It can be one of the following:
+        Penalty of a gap. The value is usually positive, representing a subtraction
+        from the alignment score. It can be one of the following:
+
         - One number: Linear gap penalty. Each gap position is penalized by this value
           (g). A continuous gap of length n has a total penalty of g * n.
         - Two numbers: Affine gap penalty. The two numbers (o, e) represent gap open
@@ -122,6 +124,7 @@ def align_score(alignment, sub_score, gap_cost, terminal_gaps=False, gap_chars="
 
     terminal_gaps : bool, optional
         Whether gaps at the terminals of the sequences should be penalized. It can be:
+
         - False (default): Do not penalize terminal gaps. This behavior is known as the
           semi-global (or "glocal") alignment.
         - True: Penalize terminal gaps using the same method defined by ``gap_cost``.

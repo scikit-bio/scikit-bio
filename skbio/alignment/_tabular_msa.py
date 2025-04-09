@@ -2488,10 +2488,10 @@ class TabularMSA(MetadataMixin, PositionalMetadataMixin, SkbioObject):
         if not all(isinstance(x, GrammaredSequence) for x in seqs):
             raise ValueError("`seqs` must be of skbio.Sequence type.")
         seqtype = seqs[0].__class__
-        bits = path.to_bits(expand=True)
+        bits = path.to_bits().astype(bool)
         gap_char = ord(seqtype.default_gap_char)
-        byte_arr = np.full(path.shape, gap_char, dtype=np.uint8)
-        byte_arr[bits == 0] = np.concatenate(
-            [x._bytes[x._bytes != gap_char] for x in seqs]
-        )
+        byte_arr = np.empty(path.shape, dtype=np.uint8)
+        byte_arr[bits] = gap_char
+        byte_arr[~bits] = np.concatenate([x._bytes for x in seqs])
+        # TODO: start and len
         return cls([seqtype(x) for x in byte_arr])

@@ -683,7 +683,7 @@ class PairAlignPath(AlignPath):
         >>> cigar = "2M5P3D1I"
         >>> path = PairAlignPath.from_cigar(cigar)
         >>> path
-        <PairAlignPath, shape: Shape(sequence=2, position=11), CIGAR: '2M5P3D1I'>
+        <PairAlignPath, position count: 11, CIGAR: '2M5P3D1I'>
 
         """
         # Make sure cigar is not empty.
