@@ -2122,7 +2122,7 @@ fuzzy=[(True, False)], metadata={'gene': 'foo'})
         mask_gaps : 'auto' or bool, optional
             Mask gap characters in the sequence, and return a masked array
             instead of a standard array. The gap characters are defined by the
-            sequence's `gap_characters` attribute. If `'auto'` (default), will
+            sequence's `gap_chars` attribute. If `'auto'` (default), will
             return a standard array if no gap character is found, or a masked
             array if gap character(s) are found.
         wildcard : 'auto', str of length 1 or None, optional

@@ -3021,7 +3021,7 @@ class TestConsensus(unittest.TestCase):
             DNA('A-T', positional_metadata={'foo': [42, 43, 42],
                                             'bar': ['a', 'b', 'c']}))
 
-    def test_mixed_gap_characters_as_majority(self):
+    def test_mixed_gap_chars_as_majority(self):
         seqs = [
             DNA('A'),
             DNA('A'),
@@ -3539,7 +3539,7 @@ class TestGapFrequencies(unittest.TestCase):
 
         npt.assert_array_equal(np.array([1.0]), freqs)
 
-    def test_custom_gap_characters(self):
+    def test_custom_gap_chars(self):
         class CustomSequence(GrammaredSequence):
             @classproperty
             @overrides(GrammaredSequence)

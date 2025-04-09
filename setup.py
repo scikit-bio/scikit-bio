@@ -212,8 +212,8 @@ extensions = [
         extra_link_args=stats_extra_link_args,
     ),
     Extension(
-        "skbio.alignment._c_align",
-        ["skbio/alignment/_c_align" + ext],
+        "skbio.alignment._c_score",
+        ["skbio/alignment/_c_score" + ext],
         extra_compile_args=stats_extra_compile_args,
         extra_link_args=stats_extra_link_args,
         include_dirs=[np.get_include()],
