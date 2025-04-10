@@ -88,9 +88,9 @@ def trim_terminal_gaps(alignment, gap_chars="-."):
     bits = np.isin(seqs, gap_chars)
     n = seqs.shape[0]
     starts = np.empty(n, dtype=int)
-    ends = np.empty(n, dtype=int)
-    _trim_terminal_gaps(bits, starts, ends)
-    return starts, ends
+    stops = np.empty(n, dtype=int)
+    _trim_terminal_gaps(bits, starts, stops)
+    return starts, stops
 
 
 def align_score(alignment, sub_score, gap_cost, terminal_gaps=False, gap_chars="-."):
@@ -108,7 +108,7 @@ def align_score(alignment, sub_score, gap_cost, terminal_gaps=False, gap_chars="
         Score of a match, mismatch or substitution. It can be one of the following:
 
         - Tuple of two numbers: Match score and mismatch score.
-        - SubstitutionMatrix: A matrix of substitution scores.
+        - :class:`~skbio.sequence.SubstitutionMatrix`: A matrix of substitution scores.
         - String: Name of the substitution matrix that can be recognized by
           ``SubstitutionMatrix.by_name``.
 
@@ -117,10 +117,11 @@ def align_score(alignment, sub_score, gap_cost, terminal_gaps=False, gap_chars="
         from the alignment score. It can be one of the following:
 
         - One number: Linear gap penalty. Each gap position is penalized by this value
-          (g). A continuous gap of length n has a total penalty of g * n.
-        - Two numbers: Affine gap penalty. The two numbers (o, e) represent gap open
-          penalty and gap extension penalty. A continuous gap of length n has a total
-          penalty of o + e * (n - 1).
+          (*g*). A contiguous gap of length *n* has a total penalty of *g* * *n*.
+        - Tuple of two numbers: Affine gap penalty. The two numbers (*o*, *e*)
+          represent gap open penalty and gap extension penalty, respectively. A
+          contiguous gap of length *n* has a total penalty of *o* + *e* * (*n* - 1).
+          See also notes below.
 
     terminal_gaps : bool, optional
         Whether gaps at the terminals of the sequences should be penalized. It can be:
@@ -132,7 +133,7 @@ def align_score(alignment, sub_score, gap_cost, terminal_gaps=False, gap_chars="
 
     gap_chars : iterable of 1-length str, optional
         Character(s) that represent gaps. Only relevant when ``alignment`` is
-        not a ``TabularMSA`` (which itself defines gap character(s)).
+        not a ``TabularMSA`` object, which itself defines gap character(s).
 
     Returns
     -------
@@ -144,7 +145,12 @@ def align_score(alignment, sub_score, gap_cost, terminal_gaps=False, gap_chars="
     ValueError
         If there are less than two sequences in the alignment.
     ValueError
+        If the alignment has zero length.
+    ValueError
         If any sequence in the alignment contains only gaps.
+    ValueError
+        If any sequence contains characters not present in the designated
+        substitution matrix.
 
     See Also
     --------
@@ -152,7 +158,8 @@ def align_score(alignment, sub_score, gap_cost, terminal_gaps=False, gap_chars="
 
     Notes
     -----
-    For a gap of length :math:`n`, the penalty is calculated as:
+    Under the affine gap penalty mode, which is the most common situation, the penalty
+    of a contiguous gap of length :math:`n` is calculated as:
 
     .. math::
 
@@ -160,23 +167,22 @@ def align_score(alignment, sub_score, gap_cost, terminal_gaps=False, gap_chars="
 
     where :math:`o` is the gap open penalty and :math:`e` is the gap extension penalty.
 
-    .. note::
-        Discrepancy exists among literature and implementations regarding whether gap
-        extension penalty should apply to the first position of a gap. scikit-bio's
-        formula is consistent with multiple common alignment tools, including EMBOSS,
-        parasail, Biopython and Biotite.
+    It should be noted that, discrepancy exists among literature and implementations
+    regarding whether gap extension penalty should apply to the first position of a
+    gap. scikit-bio's formula is consistent with multiple common alignment tools,
+    including EMBOSS, parasail, Biopython and Biotite.
 
-        Meanwhile, multiple other tools, such as BLAST ([1]_), Minimap2, SeqAn3, and
-        WFA2-lib, use the following formula instead:
+    Meanwhile, multiple other tools, such as BLAST ([1]_), Minimap2, SeqAn3, and
+    WFA2-lib, use the following formula instead:
 
-        .. math::
+    .. math::
 
-            G(n) = o + e \times n
+       G(n) = o + e \times n
 
-        Therefore, if you intend to reproduce the behavior of a software tool of the
-        latter category using scikit-bio, you will need to add :math:`e` to :math:`o`
-        while adopting their parameters. For example, BLASTN's default parameters
-        ``o=5, e=2`` will become ``o=7, e=2`` in scikit-bio. Vice versa.
+    Therefore, if you intend to reproduce the behavior of a software tool of the
+    latter category using scikit-bio, you will need to add :math:`e` to :math:`o`
+    while adopting their parameters. For example, BLASTN's default parameters
+    ``o=5, e=2`` will become ``o=7, e=2`` in scikit-bio. Vice versa.
 
     References
     ----------
@@ -184,6 +190,7 @@ def align_score(alignment, sub_score, gap_cost, terminal_gaps=False, gap_chars="
 
     """
     # process sequences
+    # TODO: Add support for (path, seqs) structure.
     seqs, gap_chars = _extract_seqs(alignment, gap_chars)
     if (n_seqs := seqs.shape[0]) == 1:
         raise ValueError("There is only one sequence in the alignment.")
@@ -212,7 +219,7 @@ def align_score(alignment, sub_score, gap_cost, terminal_gaps=False, gap_chars="
         match, mismatch = sub_score
 
     # affine or linear gap penalty
-    # TODO: add support for dual affine gap penalty
+    # TODO: Add support for dual affine gap penalty (four numbers).
     if isinstance(gap_cost, Real):
         gap_open, gap_extend = gap_cost, gap_cost
     else:
@@ -223,17 +230,18 @@ def align_score(alignment, sub_score, gap_cost, terminal_gaps=False, gap_chars="
 
     # identify terminal gaps
     starts = np.empty(n_seqs, dtype=int)
-    ends = np.empty(n_seqs, dtype=int)
-    _trim_terminal_gaps(bits, starts, ends)
-    if not (starts + ends).all():
+    stops = np.empty(n_seqs, dtype=int)
+    _trim_terminal_gaps(bits, starts, stops)
+    if not (starts + stops).all():
         raise ValueError("The alignment contains gap-only sequence(s).")
 
+    # TODO: Add support for different treatments of 5' and 3' terminal gaps.
     return _multi_align_score(
         seqs,
         bits,
         lens,
         starts,
-        ends,
+        stops,
         submat,
         match,
         mismatch,

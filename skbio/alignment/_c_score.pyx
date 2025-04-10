@@ -13,7 +13,7 @@
 def _trim_terminal_gaps(
     unsigned char[:, :] bits,
     Py_ssize_t[::1] starts,
-    Py_ssize_t[::1] ends,
+    Py_ssize_t[::1] stops,
 ):
     r"""Identify the terminal gap-free region of a multiple alignment.
 
@@ -24,8 +24,8 @@ def _trim_terminal_gaps(
     starts : ndarray of int of shape (n_sequences,)
         Start position of terminal gap-free region of each sequence.
         (i.e., index of the first position within non-gap)
-    ends : ndarray of int of shape (n_sequences,)
-        End position of terminal gap-free region of each sequence.
+    stops : ndarray of int of shape (n_sequences,)
+        Stop position of terminal gap-free region of each sequence.
         (i.e., index of the first position after non-gap)
 
     Notes
@@ -36,10 +36,11 @@ def _trim_terminal_gaps(
     the alignment path (columns are segments).
 
     """
+    # TODO: Parallelization is possible, although perhaps unnecessary.
+
     cdef Py_ssize_t i, j, k
     cdef Py_ssize_t n = bits.shape[1]
 
-    # TODO: Parallelization is possible.
     for i in range(bits.shape[0]):
         k = n
         for j in range(n):
@@ -47,11 +48,11 @@ def _trim_terminal_gaps(
                 starts[i] = k = j
                 break
         if k == n:  # gap-only sequence
-            starts[i] = ends[i] = 0
+            starts[i] = stops[i] = 0
             continue
         for j in range(n - 1, k - 1, -1):
             if bits[i, j] == 0:
-                ends[i] = j + 1
+                stops[i] = j + 1
                 break
 
 
@@ -60,7 +61,7 @@ def _multi_align_score(
     unsigned char[:, :] bits,
     Py_ssize_t[:] lens,
     Py_ssize_t[:] starts,
-    Py_ssize_t[:] ends,
+    Py_ssize_t[:] stops,
     double[:, :] submat,
     double match,
     double mismatch,
@@ -70,6 +71,24 @@ def _multi_align_score(
 ):
     """Calculate sum-of-pairs (SP) alignment score of aligned sequences.
     """
+    # TODO: Some array parameters can be [::1].
+
+    # This function employs an algorithm that is more complex than intuition. Instead
+    # of iterating over all positions and accumulatively adding score or cost of each
+    # position, it operates on the alignment path, which divides the alignment into
+    # segments representing altering status. This design permits the calculation of
+    # gap costs on the entire contiguous gap rather than by each gap position. It not
+    # only saves compute, but also enables complex gap penalty schemes, such as convex
+    # and dual affine penalties, although they are not currently implemented.
+
+    # This algorithm calculates the alignment score between each pair of sequences and
+    # sums the results. Therefore, it has a time complexity of O(n^2), which isn't
+    # ideal especially when there are many sequences. Alternatively, one can iterate
+    # over positions, calculate character frequencies, then calculate the overall
+    # score accordingly. However, this design only works for linear gap penalty.
+
+    # TODO: Implement a separate algorithm for linear gap penalty on many sequences.
+
     cdef Py_ssize_t i1, i2, j, k
     cdef Py_ssize_t start, end, pos
     cdef int L, cumL, prev, curr
@@ -80,17 +99,17 @@ def _multi_align_score(
     cdef Py_ssize_t n = seqs.shape[0]  # number of sequences
 
     # calculate alignment score of each pair of sequences and sum up
-    # TODO: This can be parallelized.
+    # TODO: The current algorithm can be parallelized.
     for i1 in range(n):
         for i2 in range(i1 + 1, n):
 
             # determine start and end segment indices to iterate over
             if terminal_gaps:
                 start = min(starts[i1], starts[i2])
-                end = max(ends[i1], ends[i2])
+                end = max(stops[i1], stops[i2])
             else:
                 start = max(starts[i1], starts[i2])
-                end = min(ends[i1], ends[i2])
+                end = min(stops[i1], stops[i2])
 
             # determine start position in the alignment
             pos = 0

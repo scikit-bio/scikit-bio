@@ -2539,8 +2539,8 @@ class TabularMSA(MetadataMixin, PositionalMetadataMixin, SkbioObject):
         seqtype = seqs[0].__class__
         gap_char = ord(seqtype.default_gap_char)
 
-        # See also AlignPath.to_bits and AlignPath.ends. The following code mixes both
-        # to enhance performance.
+        # See also AlignPath.to_bits and AlignPath.stops. The following code mixes
+        # both to enhance performance.
         bits = np.unpackbits(path._states, axis=0, count=n_seqs, bitorder="little")
         starts = path._starts
         stops = starts + (path._lengths * (1 - bits)).sum(axis=1)

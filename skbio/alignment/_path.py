@@ -241,21 +241,21 @@ class AlignPath(SkbioObject):
             bits = np.repeat(bits, self._lengths, axis=1)
         return bits
 
-    def ends(self):
-        r"""Calculate the end positions of sequences in the alignment.
+    def stops(self):
+        r"""Calculate the stop positions of sequences in the alignment.
 
         Returns
         -------
         ndarray of int of shape (n_sequences,)
-            End position (0-based) of each sequence in the alignment.
+            Stop position (0-based) of each sequence in the alignment.
 
         Notes
         -----
-        The end position of a sequence is the position immediately after the aligned
+        The stop position of a sequence is the position immediately after the aligned
         region. Therefore, for any sequence, the aligned region can be extracted with:
-        ``seq[start:end]``.
+        ``seq[start:stop]``.
 
-        Unlike :attr:`starts`, which are stored in the alignment path, ``ends`` are
+        Unlike :attr:`starts`, which are stored in the alignment path, ``stops`` are
         calculated from the path when this method is called.
 
         """
