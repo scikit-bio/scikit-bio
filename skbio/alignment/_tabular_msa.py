@@ -2484,14 +2484,77 @@ class TabularMSA(MetadataMixin, PositionalMetadataMixin, SkbioObject):
 
     @classonlymethod
     def from_path_seqs(cls, path, seqs):
-        """Create a tabular MSA from an alignment path and sequences."""
+        """Create a tabular MSA from an alignment path and the original sequences.
+
+        Parameters
+        ----------
+        path : AlignPath
+            Alignment path.
+        seqs : iterable of GrammaredSequence
+            Original sequences.
+
+        Returns
+        -------
+        TabularMSA
+            The created tabular MSA object.
+
+        See Also
+        --------
+        skbio.alignment.AlignPath.from_tabular
+
+        Examples
+        --------
+        >>> from skbio import DNA, TabularMSA
+        >>> from skbio.alignment import AlignPath
+        >>> seqs = [
+        ...    DNA('CGTCGTGC'),
+        ...    DNA('CAGTC'),
+        ...    DNA('CGTCGTT')
+        ... ]
+        >>> path = AlignPath(
+        ...    [3, 2, 5, 1, 4, 3, 2],
+        ...    [0, 2, 0, 6, 0, 1, 0],
+        ...    [0, 0, 0],
+        ... )
+        >>> msa = TabularMSA.from_path_seqs(path, seqs)
+        >>> msa
+        TabularMSA[DNA]
+        ---------------------
+        Stats:
+            sequence count: 3
+            position count: 8
+        ---------------------
+        CGTCGTGC
+        CA--GT-C
+        CGTCGT-T
+
+        """
+        # TODO: add `minter` and `index` support
+
         if not all(isinstance(x, GrammaredSequence) for x in seqs):
             raise ValueError("`seqs` must be of skbio.Sequence type.")
+        if (n_seqs := len(seqs)) != path._shape[0]:
+            raise ValueError("Sequence counts in `path` and `seqs` do not match.")
+
         seqtype = seqs[0].__class__
-        bits = path.to_bits().astype(bool)
         gap_char = ord(seqtype.default_gap_char)
-        byte_arr = np.empty(path.shape, dtype=np.uint8)
+
+        # See also AlignPath.to_bits and AlignPath.ends. The following code mixes both
+        # to enhance performance.
+        bits = np.unpackbits(path._states, axis=0, count=n_seqs, bitorder="little")
+        starts = path._starts
+        ends = starts + (path._lengths * (1 - bits)).sum(axis=1)
+        bits = np.repeat(bits, path._lengths, axis=1).astype(bool)
+
+        # allocate byte array
+        byte_arr = np.empty(path._shape, dtype=np.uint8)
+
+        # fill in gaps
         byte_arr[bits] = gap_char
-        byte_arr[~bits] = np.concatenate([x._bytes for x in seqs])
-        # TODO: start and len
+
+        # fill in characters
+        byte_arr[~bits] = np.concatenate(
+            [seqs[i]._bytes[starts[i] : ends[i]] for i in range(n_seqs)]
+        )
+
         return cls([seqtype(x) for x in byte_arr])

@@ -252,6 +252,7 @@ setup(
     ],
     classifiers=classifiers,
     package_data={
+        "skbio.alignment.tests": ["data/*"],
         "skbio.diversity.alpha.tests": ["data/qiime-191-tt/*"],
         "skbio.diversity.beta.tests": ["data/qiime-191-tt/*"],
         "skbio.io.tests": ["data/*"],

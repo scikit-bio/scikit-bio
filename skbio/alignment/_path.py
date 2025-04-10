@@ -259,7 +259,7 @@ class AlignPath(SkbioObject):
         calculated from the path when this method is called.
 
         """
-        return self.starts + (self.lengths * (1 - self.to_bits(expand=False))).sum(
+        return self._starts + (self._lengths * (1 - self.to_bits(expand=False))).sum(
             axis=1
         )
 
