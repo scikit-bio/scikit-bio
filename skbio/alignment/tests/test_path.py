@@ -123,6 +123,13 @@ class TestAlignPath(unittest.TestCase):
             self.assertEqual(exp.size, 0)
             self.assertTupleEqual(exp.shape, (3, 0))
 
+    def test_ends(self):
+        obs = AlignPath(lengths=[3, 2, 5, 1, 4, 3, 2],
+                        states=[0, 2, 0, 6, 0, 1, 0],
+                        starts=[1, 2, 3]).ends()
+        exp = np.array([18, 19, 22])
+        npt.assert_array_equal(obs, exp)
+
     def test_from_bits(self):
         # test 1D base case, less than 8 sequences
         bits = np.array(([0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 1, 0, 0],
