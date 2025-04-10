@@ -249,8 +249,8 @@ def permdisp(
     determine whether clustering within groups is significant.
 
     """
-    if test not in ["centroid", "median"]:
-        raise ValueError("Test must be centroid or median")
+    if test not in ("centroid", "median"):
+        raise ValueError("Test must be centroid or median.")
 
     if isinstance(distance_matrix, OrdinationResults):
         ordination = distance_matrix
@@ -263,7 +263,7 @@ def permdisp(
             # and pcoa expects it to be 0
             number_of_dimensions = 0
         elif method != "fsvd":
-            raise ValueError("Method must be eigh or fsvd")
+            raise ValueError("Method must be eigh or fsvd.")
 
         ids = distance_matrix.ids
         sample_size = distance_matrix.shape[0]
@@ -298,7 +298,7 @@ def _compute_groups(samples, test_type, grouping):
     samples["grouping"] = grouping
     if test_type == "centroid":
         centroids = samples.groupby("grouping").aggregate("mean")
-    elif test_type == "median":
+    else:  # median
         grouping_cols = samples.columns.to_list()
         centroids = samples.groupby("grouping")[grouping_cols].apply(_config_med)
 
