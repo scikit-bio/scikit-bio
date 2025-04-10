@@ -2512,9 +2512,9 @@ class TabularMSA(MetadataMixin, PositionalMetadataMixin, SkbioObject):
         ...    DNA('CGTCGTT')
         ... ]
         >>> path = AlignPath(
-        ...    [3, 2, 5, 1, 4, 3, 2],
-        ...    [0, 2, 0, 6, 0, 1, 0],
-        ...    [0, 0, 0],
+        ...    lengths=[2, 2, 2, 1, 1],
+        ...    states=[0, 2, 0, 6, 0],
+        ...    starts=[0, 0, 0],
         ... )
         >>> msa = TabularMSA.from_path_seqs(path, seqs)
         >>> msa
@@ -2543,7 +2543,7 @@ class TabularMSA(MetadataMixin, PositionalMetadataMixin, SkbioObject):
         # to enhance performance.
         bits = np.unpackbits(path._states, axis=0, count=n_seqs, bitorder="little")
         starts = path._starts
-        ends = starts + (path._lengths * (1 - bits)).sum(axis=1)
+        stops = starts + (path._lengths * (1 - bits)).sum(axis=1)
         bits = np.repeat(bits, path._lengths, axis=1).astype(bool)
 
         # allocate byte array
@@ -2554,7 +2554,7 @@ class TabularMSA(MetadataMixin, PositionalMetadataMixin, SkbioObject):
 
         # fill in characters
         byte_arr[~bits] = np.concatenate(
-            [seqs[i]._bytes[starts[i] : ends[i]] for i in range(n_seqs)]
+            [seqs[i]._bytes[starts[i] : stops[i]] for i in range(n_seqs)]
         )
 
         return cls([seqtype(x) for x in byte_arr])
