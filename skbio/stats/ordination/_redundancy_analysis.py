@@ -70,7 +70,11 @@ def rda(
 
         See more details about distance and correlation biplots in
         [1]_, \S 9.1.4.
-    sample_ids, feature_ids, constraint_ids, output_format : optional
+    constraint_ids : list of str, optional
+        List of identifiers for metadata variables or constraints (applicable in
+        constrained ordination methods). If not provided implicitly by the input data
+        structure or explicitly by the user, defaults to integers starting at zero.
+    sample_ids, feature_ids, output_format : optional
         Standard ``TableData`` parameters. See :mod:`skbio.util.config`
         for details.
 

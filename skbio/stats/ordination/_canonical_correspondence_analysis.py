@@ -55,7 +55,11 @@ def cca(
         Scaling type 2 preserves :math:`\chi^2` distances between columns.
         For a more detailed explanation of the interpretation, check Legendre &
         Legendre 1998, section 9.4.3.
-    sample_ids, feature_ids, constraint_ids, output_format : optional
+    constraint_ids : list of str, optional
+        List of identifiers for metadata variables or constraints. If not provided
+        implicitly by the input data structure or explicitly by the user, defaults
+        to integers starting at zero.
+    sample_ids, feature_ids, output_format : optional
         Standard ``TableData`` parameters. See :mod:`skbio.util.config`
         for details.
 

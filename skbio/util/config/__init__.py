@@ -22,7 +22,7 @@ Functions
 
 The TableData Type
 ----------------------
-The ``TableData`` type is the a set comprising the following types of objects:
+The ``TableData`` type is the set comprised of the following types of objects:
 
 - Numpy :class:`~numpy.ndarray` (2D)
 - pandas :class:`~pandas.DataFrame`
@@ -30,11 +30,31 @@ The ``TableData`` type is the a set comprising the following types of objects:
 - scikit-bio :class:`~skbio.table.Table`
 - :class:`~anndata.AnnData` object
 
-Input handling of supported types is handled automatically. No need to set a
-configuration variable to use whichever input type you like. When possible, row and
-column identifiers will be preserved and carried through operations to the results.
-When IDs are not available from the input data and not provided explicitly, integer
-indices starting from 0 will be used.
+For all functions which accept a ``TableData`` type as input, any objects from this
+list are acceptable input. Input handling of supported types is handled automatically.
+No need to set a configuration variable to use whichever input type you like. When
+possible, row and column identifiers will be preserved and carried through operations
+to the results. When IDs are not available from the input data and not provided
+explicitly, integer indices starting from 0 will be used.
+
+Sample and Feature Identifiers
+------------------------------
+In scikit-bio, data is commonly organized in a two-dimensional structure:
+
+- **sample_ids**: Identifiers for rows, typically representing biological samples,
+  observations, or experimental units (e.g., patients, sites, time points).
+
+- **feature_ids**: Identifiers for columns, typically representing measured variables
+  or characteristics (e.g., taxa, genes, OTUs, metabolites, environmental parameters).
+
+Different data formats use different terminology for these concepts:
+
+- ``pandas``: "index" (rows) and "columns"
+- ``anndata``: "obs" (samples) and "var" (features)
+- ``scikit-bio Table``: "ids.(axis='sample')" (samples) and "ids.(axis='observation')"
+  (features)
+- ``polars``: rows (by position) and "schema" (features)
+
 
 Common TableData Parameters
 ---------------------------
@@ -53,15 +73,10 @@ feature_ids : list of str, optional
     at zero. This parameter is useful when the input format doesn't support column
     labels (e.g., NumPy arrays) or when you want to override existing labels.
 
-constraint_ids : list of str, optional
-    List of identifiers for metadata variables or constraints (applicable in
-    constrained ordination methods). If not provided implicitly by the input data
-    structure or explicitly by the user, defaults to integers starting at zero.
-
 output_format : str, optional
     Specifies the desired format for the output. Valid options are:
 
-    - ``"pandas"`` (default): Return pandas DataFrames/Series
+    - ``"pandas"``: Return pandas DataFrames/Series (default)
     - ``"numpy"``: Return NumPy ndarrays
     - ``"polars"``: Return Polars DataFrames/Series
 
@@ -70,6 +85,10 @@ output_format : str, optional
 
 Supported Output Formats
 ------------------------
+Currently, scikit-bio functions support outputing the following types of data. Note
+that this list is not equivalent to the input types supported through the ``TableData``
+type.
+
 - Numpy :class:`~numpy.ndarray` (2D and 1D)
 - pandas :class:`~pandas.DataFrame` and :class:`~pandas.Series` (default)
 - Polars :class:`~polars.DataFrame` and :class:`~polars.Series`
@@ -78,8 +97,8 @@ Configuring Output Format
 -------------------------
 There are two ways to control the output format.
 
-The first option is to use the `set_config` function. This function will change the
-global behavior of scikit-bio functions.:
+The first option is to use the :func:`set_config` function. This function will change
+the global behavior of scikit-bio functions.
 
 .. code-block:: python
 
@@ -93,7 +112,7 @@ global behavior of scikit-bio functions.:
     set_config("output", "pandas")
 
 The second option is to set the desired output format on a per-function basis, using
-the `output_format` parameter:
+the ``output_format`` parameter.
 
 .. code-block:: python
 
@@ -103,12 +122,6 @@ the `output_format` parameter:
     # :class:`~skbio.stats.ordination.OrdinationResults` object whose attributes are
     # numpy arrays
     res = cca(Y, X, output_format="numpy")
-
-
-Notes
------
-When using the default pandas backend, existing workflows remain unchanged.
-Additionally, input and output formats do not have to match.
 
 """
 
