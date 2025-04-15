@@ -51,7 +51,7 @@ Different data formats use different terminology for these concepts:
 
 - ``pandas``: "index" (rows) and "columns"
 - ``anndata``: "obs" (samples) and "var" (features)
-- ``scikit-bio Table``: "ids.(axis='sample')" (samples) and "ids.(axis='observation')"
+- ``scikit-bio Table``: "sample" (samples) and "observation"
   (features)
 - ``polars``: rows (by position) and "schema" (features)
 

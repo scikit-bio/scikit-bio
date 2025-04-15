@@ -33,11 +33,11 @@ def ca(X, scaling=1, sample_ids=None, feature_ids=None, output_format=None):
 
     Parameters
     ----------
-    X : TableData
+    X : table_like
         Samples by features table (n, m). It can be applied to different kinds
-        of data tables but data must be non-negative and dimensionally
-        homogeneous (quantitative or binary). See :mod:`skbio.util.config`
-        for information on the ``TableData`` type.
+        of data tables that are compatible with the
+        :class:`~skbio.util.config._types.DataTable` type, but data must be
+        non-negative and dimensionally homogeneous (quantitative or binary).
     scaling : {1, 2}
         Scaling type 1 maintains :math:`\chi^2` distances between rows.
         Scaling type 2 preserves :math:`\chi^2` distances between columns.

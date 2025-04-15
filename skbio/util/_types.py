@@ -15,13 +15,13 @@ from skbio.table import Table
 from skbio.util.config import _get_package
 
 # Base types which are always available
-TableData = Union[pd.DataFrame, np.ndarray, Table]
+DataTable = Union[pd.DataFrame, np.ndarray, Table]
 
 # add other types depending on availability
 pl, has_polars = _get_package("polars", raise_error=False, no_bool=False)
 if has_polars:
-    TableData = Union[TableData, pl.DataFrame]
+    DataTable = Union[DataTable, pl.DataFrame]
 
 adt, has_anndata = _get_package("anndata", raise_error=False, no_bool=False)
 if has_anndata:
-    TableData = Union[TableData, adt.AnnData]
+    DataTable = Union[DataTable, adt.AnnData]
