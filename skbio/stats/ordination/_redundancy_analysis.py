@@ -37,22 +37,22 @@ def rda(
 
     Parameters
     ----------
-    y : TableData
+    y : table_like
         :math:`n \times p` response matrix, where :math:`n` is the number
         of samples and :math:`p` is the number of features. Its columns
         need be dimensionally homogeneous (or you can set `scale_Y=True`).
         This matrix is also referred to as the community matrix that
-        commonly stores information about species abundances. See
-        :mod:`skbio.util.config` for details on the ``TableData``
-        type.
-    x : TableData
+        commonly stores information about species abundances. See the
+        `DataTable <https://scikit.bio/docs/dev/generated/skbio.util.config.html#
+        the-datatable-type>`_ type documentation for details.
+    x : table_like
         :math:`n \times m, n \geq m` matrix of explanatory
         variables, where :math:`n` is the number of samples and
         :math:`m` is the number of metadata variables. Its columns
         need not be standardized, but doing so turns regression
-        coefficients into standard regression coefficients. See
-        :mod:`skbio.util.config` for details on the ``TableData``
-        type.
+        coefficients into standard regression coefficients. See the
+        `DataTable <https://scikit.bio/docs/dev/generated/skbio.util.config.html#
+        the-datatable-type>`_ type documentation for details.
     scale_Y : bool, optional
         Controls whether the response matrix columns are scaled to
         have unit standard deviation. Defaults to `False`.
@@ -75,8 +75,9 @@ def rda(
         constrained ordination methods). If not provided implicitly by the input data
         structure or explicitly by the user, defaults to integers starting at zero.
     sample_ids, feature_ids, output_format : optional
-        Standard ``TableData`` parameters. See :mod:`skbio.util.config`
-        for details.
+        Standard ``DataTable`` parameters. See the `DataTable <https://scikit.bio/
+        docs/dev/generated/skbio.util.config.html#the-datatable-type>`_ type
+        documentation for details.
 
     Returns
     -------

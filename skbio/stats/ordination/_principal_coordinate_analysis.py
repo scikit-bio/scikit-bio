@@ -71,8 +71,9 @@ def pcoa(
         .. versionadded:: 0.6.3
 
     output_format : optional
-        Standard ``TableData`` parameter. See :mod:`skbio.util.config`
-        for details.
+        Standard ``DataTable`` parameter. See the `DataTable <https://scikit.bio/
+        docs/dev/generated/skbio.util.config.html#the-datatable-type>`_ type
+        documentation for details.
 
     Returns
     -------

@@ -21,7 +21,7 @@ def _create_table(data, columns=None, index=None, backend=None):
 
     Parameters
     ----------
-    data : TableData
+    data : DataTable
     columns : array-like
         Column labels to use if data does not have them.
     index : array-like
@@ -55,7 +55,7 @@ def _create_table_1d(data, index=None, backend=None):
 
     Parameters
     ----------
-    data : TableData
+    data : DataTable
     columns : array-like
         Column labels to use if data does not have them.
     index : array-like
@@ -89,7 +89,7 @@ def _ingest_array(input_data, row_ids=None, col_ids=None):
 
     Parameters
     ----------
-    input_data : TableData
+    input_data : DataTable
         The original source of data. May be pandas or polars DataFrame, numpy array,
         BIOM table, or anndata.AnnData.
     row_ids : list of str
