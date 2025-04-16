@@ -16,7 +16,7 @@ from skbio._base import SkbioObject
 from skbio.stats._misc import _pprint_strs
 from skbio.util._plotting import PlottableMixin
 from skbio.io.descriptors import Read, Write
-from skbio.util.config._dispatcher import extract_row_ids
+from skbio.util.config._dispatcher import _extract_row_ids
 
 
 class OrdinationResults(SkbioObject, PlottableMixin):
