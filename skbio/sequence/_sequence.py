@@ -30,7 +30,7 @@ from skbio.sequence._alphabet import (
 )
 from skbio.util import find_duplicates
 from skbio.util._decorator import classonlymethod, overrides
-from skbio.io.registry import Read, Write
+from skbio.io.descriptors import Read, Write
 
 
 class Sequence(
