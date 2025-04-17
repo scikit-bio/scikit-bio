@@ -32,7 +32,7 @@ from skbio.util._decorator import (
     params_aliased,
 )
 from skbio.util._warning import _warn_once
-from skbio.io.registry import Read, Write
+from skbio.io.descriptors import Read, Write
 from ._compare import (
     _check_dist_metric,
     _check_shuffler,

@@ -14,7 +14,7 @@ import pandas as pd
 from skbio._base import SkbioObject
 from skbio.stats._misc import _pprint_strs
 from skbio.util._plotting import PlottableMixin
-from skbio.io.registry import Read, Write
+from skbio.io.descriptors import Read, Write
 from skbio.util.config._dispatcher import extract_row_ids
 
 
