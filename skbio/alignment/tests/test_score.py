@@ -228,6 +228,12 @@ class TestScore(unittest.TestCase):
             align_score(aln, "NUC.4.4", (5, 2))
         self.assertEqual(str(cm.exception), msg)
 
+        aln = [chr(0) + chr(12) + chr(34) + chr(56) + chr(78) + chr(90),
+               chr(123) + chr(98) + chr(76) + "-" + chr(54) + chr(32)]
+        with self.assertRaises(ValueError) as cm:
+            align_score(aln, "BLOSUM62", (5, 2))
+        self.assertEqual(str(cm.exception), msg)
+
 
 if __name__ == "__main__":
     unittest.main()
