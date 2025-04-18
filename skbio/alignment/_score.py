@@ -97,7 +97,7 @@ def align_score(alignment, sub_score, gap_cost, terminal_gaps=False, gap_chars="
     r"""Calculate the alignment score of two or more aligned sequences.
 
     For two sequences, their pairwise alignment score will be calculated. For three or
-    more sequences, the sum-of-pairs (SP) alignment score of them will be returned.
+    more sequences, the sum-of-pairs (SP) alignment score will be returned.
 
     Parameters
     ----------

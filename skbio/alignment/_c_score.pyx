@@ -70,6 +70,37 @@ def _multi_align_score(
     bint terminal_gaps,
 ):
     """Calculate sum-of-pairs (SP) alignment score of aligned sequences.
+
+    Parameters
+    ----------
+    seqs : ndarray of uint8 of shape (n_sequences, n_positions)
+        Character array represented by ASCII code or alphabet index.
+    bits : ndarray of uint8 of shape (n_sequences, n_segments)
+        Bit array representing gap status in the alignment path.
+    lens : ndarray of int of shape (n_sequences, n_segments)
+        Lengths of segments in the alignment path.
+    starts : ndarray of int of shape (n_sequences,)
+        Start position of terminal gap-free region of each sequence.
+    stops : ndarray of int of shape (n_sequences,)
+        Stop position of terminal gap-free region of each sequence.
+    submat : ndarray of float of shape (n_alphabet, n_alphabet)
+        Substitution matrix.
+    match : float
+        Match score.
+    mismatch : float
+        Mismatch score.
+    gap_open : float
+        Gap opening penalty.
+    gap_extend : float
+        Gap extension penalty.
+    terminal_gaps : bool
+        Whether terminal gaps should be penalized.
+
+    Returns
+    -------
+    float
+        Alignment score.
+
     """
     # TODO: Some array parameters can be [::1].
 

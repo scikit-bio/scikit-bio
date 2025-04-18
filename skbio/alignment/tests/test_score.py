@@ -185,6 +185,13 @@ class TestScore(unittest.TestCase):
         obs = align_score(["A--", "-A-", "--A"], (5, -4), (5, 2))
         self.assertEqual(obs, 0)
 
+        # one pair doesn't align
+        aln = ["AAAAA", "AA---", "---AA"]
+        obs = align_score(aln, (5, -4), (5, 2), terminal_gaps=True)
+        self.assertEqual(obs, -12)
+        obs = align_score(aln, (5, -4), (5, 2), terminal_gaps=False)
+        self.assertEqual(obs, 20)
+
     def test_align_score_error(self):
         """Test on inputs that cause errors."""
         msg = "There is no sequence in the alignment."
