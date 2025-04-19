@@ -314,7 +314,7 @@ class AlignPath(SkbioObject):
         # return per-segment lengths and states
         return cls(lens, ints, starts)
 
-    def _to_matrices(self, seqs, gap_code=None):
+    def _to_matrices(self, seqs, gap_code=45):
         r"""Generate matrices representing the alignment.
 
         Parameters
@@ -322,7 +322,7 @@ class AlignPath(SkbioObject):
         seqs : list of ndarray of uint8
             Original sequences as bytes.
         gap_code : uint8, optional
-            Code to fill in gap positions in the character matrix.
+            Code to fill in gap positions in the character matrix. Default is 45 (-).
 
         Returns
         -------
@@ -340,6 +340,10 @@ class AlignPath(SkbioObject):
         This method is currently private. Its only use case is to prepare data for
         `align_score`. The code is efficient for this purpose because it avoids all
         unnecessary calculations.
+
+        If one intends to index the output with an ``SubstitutionMatrix`` object,
+        having a ``gap_code`` < 128 is necessary. Otherwise, setting ``gap_code`` as
+        None can save some compute.
 
         """
         # See also `to_bits` and `stops`. The following code mixes both to enhance

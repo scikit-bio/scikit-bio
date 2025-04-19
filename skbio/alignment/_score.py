@@ -160,7 +160,7 @@ def align_score(alignment, sub_score, gap_cost, terminal_gaps=False, gap_chars="
 
     gap_chars : iterable of 1-length str, optional
         Character(s) that represent gaps. Only relevant when ``alignment`` is
-        not a ``TabularMSA`` object, which itself defines gap character(s).
+        a list of aligned sequences.
 
     Returns
     -------
