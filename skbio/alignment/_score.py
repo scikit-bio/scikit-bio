@@ -11,7 +11,7 @@ from numbers import Real
 import numpy as np
 
 from skbio.sequence import Sequence, SubstitutionMatrix
-from skbio.alignment import TabularMSA
+from skbio.alignment import TabularMSA, AlignPath
 from ._c_score import _trim_terminal_gaps, _multi_align_score
 
 
@@ -38,7 +38,7 @@ def _parse_alignment(aln, gap_chars):
         not_path = True
 
     # 2. alignment path and list of original sequences
-    elif len(aln) == 2 and hasattr(aln[0], "_to_matrices"):
+    elif len(aln) == 2 and isinstance(aln[0], AlignPath):
         seqs = _seqs_to_bytes(aln[1])
         seqs, gaps, bits, lens = aln[0]._to_matrices(seqs)
         not_path = False
