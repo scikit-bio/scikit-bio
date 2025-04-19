@@ -123,15 +123,16 @@ def align_score(alignment, sub_score, gap_cost, terminal_gaps=False, gap_chars="
 
     Parameters
     ----------
-    alignment : TabularMSA, list of Sequence or str, or (AlignPath, list)
+    alignment : TabularMSA, list of Sequence or str, or (AlignPath, list of Sequence
+    or str)
         Aligned sequences. Can be any of the following:
 
-        - A tabular multiple sequence alignment (``TabularMSA``).
-        - A list of *aligned* sequences as raw strings or ``Sequence`` objects.
-        - An alignment path (``AlignPath``) and the corresponding list of *original*
-          (unaligned) sequences.
+        - :class:`~skbio.alignment.TabularMSA`.
+        - List of *aligned* sequences as raw strings or ``Sequence`` objects.
+        - Tuple of :class:`~skbio.alignment.AlignPath` and the corresponding list of
+          *original* (unaligned) sequences.
 
-    sub_score : int, float, array_like of (2,), SubstitutionMatrix, or str
+    sub_score : tuple of (float, float), SubstitutionMatrix, or str
         Score of a match, mismatch or substitution. It can be one of the following:
 
         - Tuple of two numbers: Match score and mismatch score.
@@ -139,14 +140,14 @@ def align_score(alignment, sub_score, gap_cost, terminal_gaps=False, gap_chars="
         - String: Name of the substitution matrix that can be recognized by
           ``SubstitutionMatrix.by_name``.
 
-    gap_cost : int, float, or array_like of (2,)
+    gap_cost : float or tuple of (float, float)
         Penalty of a gap. The value is usually positive, representing a subtraction
         from the alignment score. It can be one of the following:
 
         - One number: Linear gap penalty. Each gap position is penalized by this value
           (*g*). A contiguous gap of length *n* has a total penalty of *g* * *n*.
         - Tuple of two numbers: Affine gap penalty. The two numbers (*o*, *e*)
-          represent gap open penalty and gap extension penalty, respectively. A
+          represent gap opening penalty and gap extension penalty, respectively. A
           contiguous gap of length *n* has a total penalty of *o* + *e* * (*n* - 1).
           See also notes below.
 
@@ -192,7 +193,8 @@ def align_score(alignment, sub_score, gap_cost, terminal_gaps=False, gap_chars="
 
        G(n) = o + e \times (n - 1)
 
-    where :math:`o` is the gap open penalty and :math:`e` is the gap extension penalty.
+    where :math:`o` is the gap opening penalty and :math:`e` is the gap extension
+    penalty.
 
     It should be noted that, discrepancy exists among literature and implementations
     regarding whether gap extension penalty should apply to the first position of a
@@ -214,6 +216,31 @@ def align_score(alignment, sub_score, gap_cost, terminal_gaps=False, gap_chars="
     References
     ----------
     .. [1] https://www.ncbi.nlm.nih.gov/books/NBK62051/
+
+    Examples
+    --------
+    >>> from skbio.sequence import DNA, Protein
+    >>> from skbio.alignment import TabularMSA, align_score
+
+    Calculate the score of a pair of aligned DNA sequences, with match score = 2,
+    mismatch score = -3, gap opening penalty = 5, and gap extension penalty = 2 (the
+    default BLASTN parameters).
+
+    >>> seq1 = DNA("CGGTCGTAACGCGTA---CA")
+    >>> seq2 = DNA("CAG--GTAAG-CATACCTCA")
+    >>> align_score([seq1, seq2], (2, -3), (5, 2))
+    -8.0
+
+    Calculate the score of a multiple alignment of protein sequences, using the
+    BLOSUM62 substitution matrix, with gap opening and extension penalties being 11
+    and 1 (the default BLASTP parameters). Note that terminal gaps are not penalized
+    by default unless ``terminal_gaps`` is set to True.
+
+    >>> msa = TabularMSA([Protein("MKQ-PSV"),
+    ...                   Protein("MKIDTS-"),
+    ...                   Protein("MVIDPSS")])
+    >>> align_score(msa, "BLOSUM62", (11, 1))
+    13.0
 
     """
     # process input alignment
