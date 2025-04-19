@@ -2509,7 +2509,7 @@ class TabularMSA(MetadataMixin, PositionalMetadataMixin, SkbioObject):
         >>> seqs = [
         ...    DNA('CGTCGTGC'),
         ...    DNA('CAGTC'),
-        ...    DNA('CGTCGTT')
+        ...    DNA('CGTCGTT'),
         ... ]
         >>> path = AlignPath(
         ...    lengths=[2, 2, 2, 1, 1],
@@ -2530,31 +2530,12 @@ class TabularMSA(MetadataMixin, PositionalMetadataMixin, SkbioObject):
 
         """
         # TODO: add `minter` and `index` support
-
         if not all(isinstance(x, GrammaredSequence) for x in seqs):
             raise ValueError("`seqs` must be of skbio.Sequence type.")
-        if (n_seqs := len(seqs)) != path._shape[0]:
+        if len(seqs) != path._shape[0]:
             raise ValueError("Sequence counts in `path` and `seqs` do not match.")
-
         seqtype = seqs[0].__class__
-        gap_char = ord(seqtype.default_gap_char)
-
-        # See also AlignPath.to_bits and AlignPath.stops. The following code mixes
-        # both to enhance performance.
-        bits = np.unpackbits(path._states, axis=0, count=n_seqs, bitorder="little")
-        starts = path._starts
-        stops = starts + (path._lengths * (1 - bits)).sum(axis=1)
-        bits = np.repeat(bits, path._lengths, axis=1).astype(bool)
-
-        # allocate byte array
-        byte_arr = np.empty(path._shape, dtype=np.uint8)
-
-        # fill in gaps
-        byte_arr[bits] = gap_char
-
-        # fill in characters
-        byte_arr[~bits] = np.concatenate(
-            [seqs[i]._bytes[starts[i] : stops[i]] for i in range(n_seqs)]
-        )
-
+        gap_code = ord(seqtype.default_gap_char)
+        byte_lst = [x._bytes for x in seqs]
+        byte_arr = path._to_matrices(byte_lst, gap_code)[0]
         return cls([seqtype(x) for x in byte_arr])

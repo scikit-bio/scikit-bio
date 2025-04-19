@@ -187,6 +187,12 @@ class AlignPath(SkbioObject):
         """
         return self._shape
 
+    def _to_bits(self):
+        r"""Unpack the alignment path into an array of bits by segment."""
+        return np.unpackbits(
+            self._states, axis=0, count=self._shape[0], bitorder="little"
+        )
+
     def to_bits(self, expand=True):
         r"""Unpack the alignment path into an array of bits.
 
@@ -234,12 +240,8 @@ class AlignPath(SkbioObject):
                [0, 0, 0, 1, 0]], dtype=uint8)
 
         """
-        bits = np.unpackbits(
-            self._states, axis=0, count=self._shape[0], bitorder="little"
-        )
-        if expand:
-            bits = np.repeat(bits, self._lengths, axis=1)
-        return bits
+        bits = self._to_bits()
+        return np.repeat(bits, self._lengths, axis=1) if expand else bits
 
     def stops(self):
         r"""Calculate the stop positions of sequences in the alignment.
@@ -259,9 +261,7 @@ class AlignPath(SkbioObject):
         calculated from the path when this method is called.
 
         """
-        return self._starts + (self._lengths * (1 - self.to_bits(expand=False))).sum(
-            axis=1
-        )
+        return self._starts + (self._lengths * (1 - self._to_bits())).sum(axis=1)
 
     @classonlymethod
     def from_bits(cls, bits, starts=None):
@@ -313,6 +313,65 @@ class AlignPath(SkbioObject):
 
         # return per-segment lengths and states
         return cls(lens, ints, starts)
+
+    def _to_matrices(self, seqs, gap_code=None):
+        r"""Generate matrices representing the alignment.
+
+        Parameters
+        ----------
+        seqs : list of ndarray of uint8
+            Original sequences as bytes.
+        gap_code : uint8, optional
+            Code to fill in gap positions in the character matrix.
+
+        Returns
+        -------
+        ndarray of uint8 of shape (n_sequences, n_positions)
+            Matrix of character codes.
+        ndarray of bool of shape (n_sequences, n_positions)
+            Matrix of gap status.
+        ndarray of uint8 of shape (n_sequences, n_segments)
+            Matrix of segment status.
+        ndarray of int of shape (n_segments,)
+            Vector of segment lengths.
+
+        Notes
+        -----
+        This method is currently private. Its only use case is to prepare data for
+        `align_score`. The code is efficient for this purpose because it avoids all
+        unnecessary calculations.
+
+        """
+        # See also `to_bits` and `stops`. The following code mixes both to enhance
+        # performance.
+        bits = self._to_bits()
+        lens = self._lengths
+
+        # locate aligned region
+        starts = self._starts
+        stops = starts + (lens * (1 - bits)).sum(axis=1)
+
+        # create gap array
+        gaps = np.repeat(bits, lens, axis=1).astype(bool)
+
+        # allocate byte array
+        chars = np.empty(self._shape, dtype=np.uint8)
+
+        # fill in gaps (optional)
+        if gap_code is not None:
+            chars[gaps] = gap_code
+
+        # fill in characters
+        try:
+            chars[~gaps] = np.concatenate(
+                [seqs[i][starts[i] : stops[i]] for i in range(self._shape[0])]
+            )
+        except IndexError:
+            raise ValueError("Fewer sequences were provided than in alignment path.")
+        except ValueError:
+            raise ValueError("Some sequences are shorter than in alignment path.")
+
+        return chars, gaps, bits, lens
 
     @classonlymethod
     def from_tabular(cls, msa):
@@ -388,7 +447,7 @@ class AlignPath(SkbioObject):
         elif not np.issubdtype(type(gap), np.integer):
             raise TypeError(errmsg)
 
-        bits = np.squeeze(self.to_bits(expand=False))
+        bits = np.squeeze(self._to_bits())
         # TODO: Consider optimization using np.arange.
         # thought: initiate [-1, -1, -1 ... -1], then add slices of arange into it
         pos = np.repeat(1 - bits, self._lengths, axis=1)
@@ -481,7 +540,7 @@ class AlignPath(SkbioObject):
                [0, 1, 1, 3, 3]]...
 
         """
-        lens = self._lengths * (1 - self.to_bits(expand=False))
+        lens = self._lengths * (1 - self._to_bits())
         col0 = np.zeros((self._shape[0], 1), dtype=int)
         lens = np.append(col0, lens, axis=1)
         if self.starts.any():

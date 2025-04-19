@@ -149,6 +149,37 @@ class TestAlignPath(unittest.TestCase):
         npt.assert_array_equal(obs.lengths, exp.lengths)
         npt.assert_array_equal(obs.states, exp.states)
 
+    def test_to_matrices(self):
+        seqs = ["CGGTCGTAACGCGTACA",
+                "CAGGTAAGCATACCTCA",
+                "CGGTCGTCACTGTACACTA"]
+        seqs = [np.frombuffer(x.encode("ascii"), dtype=np.uint8) for x in seqs]
+        obs = self.path1._to_matrices(seqs, gap_code=45)
+        msa = ('CGGTCGTAACGCGTA---CA',
+               'CAG--GTAAG-CATACCTCA',
+               'CGGTCGTCAC-TGTACACTA')
+        exp0 = np.vstack([
+            np.frombuffer(x.encode("ascii"), dtype=np.uint8) for x in msa])
+        npt.assert_array_equal(obs[0], exp0)
+        exp1 = exp0 == 45
+        npt.assert_array_equal(obs[1], exp1)
+        npt.assert_array_equal(obs[2], self.path1._to_bits())
+        npt.assert_array_equal(obs[3], self.path1._lengths)
+
+        msg = "Fewer sequences were provided than in alignment path."
+        seqs = ["CGGTCGTAACGCGTACA", "CAGGTAAGCATACCTCA"]
+        seqs = [np.frombuffer(x.encode("ascii"), dtype=np.uint8) for x in seqs]
+        with self.assertRaises(ValueError) as cm:
+            self.path1._to_matrices(seqs, gap_code=45)
+        self.assertEqual(str(cm.exception), msg)
+
+        msg = "Some sequences are shorter than in alignment path."
+        seqs = ["AAAAA", "CCCCC", "GGGGG"]
+        seqs = [np.frombuffer(x.encode("ascii"), dtype=np.uint8) for x in seqs]
+        with self.assertRaises(ValueError) as cm:
+            self.path1._to_matrices(seqs, gap_code=45)
+        self.assertEqual(str(cm.exception), msg)
+
     def test_from_tabular(self):
         msa = ('CGGTCGTAACGCGTA---CA',
                'CAG--GTAAG-CATACCTCA',

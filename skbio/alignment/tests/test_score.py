@@ -12,7 +12,7 @@ import numpy as np
 import numpy.testing as npt
 
 from skbio.sequence import DNA, Protein, SubstitutionMatrix
-from skbio.alignment import TabularMSA
+from skbio.alignment import TabularMSA, AlignPath
 from skbio.util import get_data_path
 
 from skbio.alignment._score import trim_terminal_gaps, align_score
@@ -116,6 +116,20 @@ class TestScore(unittest.TestCase):
         obs = align_score(msa, (5, -4), (5, 2), gap_chars="A")
         self.assertEqual(obs, 65)
 
+        # alignment path
+        path = AlignPath(lengths=[3, 2, 5, 1, 4, 3, 2],
+                         states=[0, 2, 0, 6, 0, 1, 4],
+                         starts=[0, 3, 0])
+        seqs = ["CGGTCGTAACGCGTACA",
+                "GGGCAGGTAAGCATACCTCA",
+                "CGGTCGTCACTGTACACAAA"]
+        obs = align_score((path, seqs), (5, -4), (5, 2))
+        self.assertEqual(obs, 65)
+
+        # gap_chars doesn't impact AlignPath
+        obs = align_score((path, seqs), (5, -4), (5, 2), gap_chars="A")
+        self.assertEqual(obs, 65)
+
     def test_align_score_pair(self):
         """Test on pairwise alignments."""
         # single internal gap, no terminal gap
@@ -194,12 +208,16 @@ class TestScore(unittest.TestCase):
 
     def test_align_score_error(self):
         """Test on inputs that cause errors."""
-        msg = "There is no sequence in the alignment."
+        msg = "Sequences must be strings or Sequence objects."
+        with self.assertRaises(ValueError) as cm:
+            align_score([1, None, 0.5], (5, -4), (5, 2))
+        self.assertEqual(str(cm.exception), msg)
+
+        msg = "Alignment must contain at least two sequences."
         with self.assertRaises(ValueError) as cm:
             align_score([], (5, -4), (5, 2))
         self.assertEqual(str(cm.exception), msg)
 
-        msg = "There is only one sequence in the alignment."
         with self.assertRaises(ValueError) as cm:
             align_score(["ABC"], (5, -4), (5, 2))
         self.assertEqual(str(cm.exception), msg)
@@ -214,7 +232,7 @@ class TestScore(unittest.TestCase):
             align_score(["A", "AA", "AAA"], (5, -4), (5, 2))
         self.assertEqual(str(cm.exception), msg)
 
-        msg = "The alignment has a length of 0."
+        msg = "The alignment has a length of zero."
         with self.assertRaises(ValueError) as cm:
             align_score([""] * 3, (5, -4), (5, 2))
         self.assertEqual(str(cm.exception), msg)
