@@ -54,6 +54,9 @@ class ImportModuleTests(TestCase):
             self.fail(f"Failed to import format modules: {failed_imports}")
 
     def test_format_exceptions(self):
+        # Create dictionary of all existing format errors defined in the io module.
+        # name is a string which contains the name of the error, whereas obj is
+        # the actual object itself.
         io_exceptions = {
             name: obj
             for name, obj in vars(skbio.io).items()
@@ -64,12 +67,19 @@ class ImportModuleTests(TestCase):
         }
 
         for name, exception_cls in io_exceptions.items():
+            # First, try to instantiate and raise the exception object itself.
+            # If during these two steps (instantiation and raising), any other type
+            # of exception is raised besides the one we want to be raised
+            # (exception_cls), the test will fail.
             try:
                 ex = exception_cls()
                 raise ex
             except exception_cls:
+                # Pass if the exception_cls is raised, this is exactly what we are
+                # testing for.
                 pass
             except Exception as e:
+                # Fail if any other type of exception is raised.
                 self.fail(f"Failed to instantiate or raise {name}: {e}")
 
 
