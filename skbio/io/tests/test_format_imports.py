@@ -65,7 +65,7 @@ class ImportModuleTests(TestCase):
 
         for name, exception_cls in io_exceptions.items():
             try:
-                ex = exception_cls(f"Test raising {name}")
+                ex = exception_cls()
                 raise ex
             except exception_cls:
                 pass
