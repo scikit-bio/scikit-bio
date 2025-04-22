@@ -997,6 +997,26 @@ class DistanceMatrix(DissimilarityMatrix):
     requirement that the matrix data is symmetric. There are additional methods
     made available that take advantage of this symmetry.
 
+    Parameters
+    ----------
+    data : array_like or DissimilarityMatrix
+        Square, hollow, two-dimensional ``numpy.ndarray`` of distances
+        (floats), or a structure that can be converted to a ``numpy.ndarray``
+        using ``numpy.asarray`` or a one-dimensional vector of distances
+        (floats), as defined by `scipy.spatial.distance.squareform`. Can
+        instead be a `DissimilarityMatrix` (or `DistanceMatrix`) instance,
+        in which case the instance's data will be used.
+        Data will be converted to a float ``dtype`` if necessary. A copy will
+        *not* be made if already a ``numpy.ndarray`` with a float ``dtype``.
+    ids : sequence of str, optional
+        Sequence of strings to be used as object IDs. Must match the number of
+        rows/cols in `data`. If ``None`` (the default), IDs will be
+        monotonically-increasing integers cast as strings, with numbering
+        starting from zero, e.g., ``('0', '1', '2', '3', ...)``.
+    validate : bool, optional
+        If `validate` is ``True`` (the default) and data is not a
+        DistanceMatrix object, the input data will be validated.
+
     See Also
     --------
     DissimilarityMatrix
