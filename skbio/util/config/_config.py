@@ -10,14 +10,30 @@ _BACKEND_OPTIONS = {"output": "pandas"}
 
 
 def set_config(option: str, value: str):
-    """Set an skbio config option.
+    """Set a scikit-bio config option.
+
+    This function enables users to set the configuration of scikit-bio functions
+    globally.
 
     Parameters
     ----------
     option : str
-        The configuration option to be modified.
+        The configuration option to be modified. Currently there is only one
+        configurable option, ``"output"``.
     value : str
-        The value to update the configuration dictionary with.
+        The value to update the configuration dictionary with. For the
+        ``"output"`` option, ``value`` may be set to ``"pandas"``,
+        ``"polars"``, or ``"numpy"``. Defaults to ``"pandas"``.
+
+    Raises
+    ------
+    ValueError
+        If an unkown option is used or if an unsupported value for an option is used.
+
+    Examples
+    --------
+    >>> from skbio import set_config
+    >>> set_config("output", "numpy")
 
     """
     if option not in _BACKEND_OPTIONS:
