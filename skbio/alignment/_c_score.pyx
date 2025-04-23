@@ -162,7 +162,7 @@ def _multi_align_score(
 
                 # end of previous gap
                 if prev and curr != prev:
-                    score -= gap_open + (cumL - 1) * gap_extend
+                    score -= gap_open + cumL * gap_extend
 
                 # non-gap in both sequences
                 if curr == 0:
@@ -196,6 +196,6 @@ def _multi_align_score(
 
             # handle last gap
             if prev:
-                score -= gap_open + (cumL - 1) * gap_extend
+                score -= gap_open + cumL * gap_extend
 
     return score

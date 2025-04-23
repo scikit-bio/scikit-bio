@@ -41,43 +41,53 @@ class TestScore(unittest.TestCase):
         aln = ["CGGTCGTAACGCGTA---CA",
                "CAG--GTAAG-CATACCTCA",
                "CGGTCGTCAC-TGTACAC--"]
-        
-        # manual calculation:
 
+        # Typical setting: match/mismatch with affine gap penalty.
+        # Parameters were adopted from NCBI BLASTN:
+        # match = 2, mismatch = -3, gap_open = 5, gap_extend = 2
+        obs = align_score(aln, (2, -3), (5, 2))
+        self.assertEqual(obs, -28.0)
+
+        # Manual calculation:
         # 0: CGGTCGTAACGCGTA---CA
         # 1: CAG--GTAAG-CATACCTCA
-        # 5 * 11 - 4 * 3 - 5 * 3 - 2 * 3 = 22
-
+        # => 2 * 11 - 3 * 3 - 5 * 3 - 2 * 6 = -14
         # 0: CGGTCGTAACGCGTA---|CA
-        # 2: CGGTCGTCAC-TGTACAC|--
-        # 5 * 12 - 4 * 2 - 5 * 2 - 2 * 2 = 38
-
-        # 1: CAG--GTAAG-CATACCT|CA
-        # 2: CGGTCGTCAC-TGTACAC|--
-        # 5 * 8 - 4 * 7 - 5 * 1 - 2 * 1 = 5
-
-        # total: 22 + 38 + 5 = 65
-
-        # typical setting: match/mismatch with affine gap penalty
-        obs = align_score(aln, (5, -4), (5, 2))
-        self.assertEqual(obs, 65)
-
-        # linear gap penalty
-        obs = align_score(aln, (5, -4), 10)
-        self.assertEqual(obs, -13)
-
-        # substitution matrix
-        submat = SubstitutionMatrix.by_name("NUC.4.4")
-        obs = align_score(aln, submat, (5, 2))
-        self.assertEqual(obs, 65)
-
-        # substitution matrix by name
-        obs = align_score(aln, "NUC.4.4", (5, 2))
-        self.assertEqual(obs, 65)
+        # 2: CGGTCGTCAC-TGTACAC|xx
+        # => 2 * 12 - 3 * 2 - 5 * 2 - 2 * 4 = 0
+        # 1: CAG--GTAAG|x|CATACCT|CA
+        # 2: CGGTCGTCAC|x|TGTACAC|xx
+        # => 2 *  8 - 3 * 7 - 5 * 1 - 2 * 2 = -14
+        # total => -14 + 0 -14 = -28
 
         # penalize terminal gaps
-        obs = align_score(aln, (5, -4), (5, 2), True)
-        self.assertEqual(obs, 51)
+        obs = align_score(aln, (2, -3), (5, 2), True)
+        self.assertEqual(obs, -46.0)
+
+        # Alternative parameters: adopted from EMBOSS Needle:
+        # match = 5, mismatch = -4, gap_open = 10, gap_extend = 0.5
+        # Because EMBOSS doesn't apply gap_extend to the first gap position, we
+        # subtract gap_extend from gap_open here to mimic its behavior.
+        # 5 * 11 - 4 * 3 - 9.5 * 3 - 0.5 * 6 = 11.5
+        # 5 * 12 - 4 * 2 - 9.5 * 2 - 0.5 * 4 = 31
+        # 5 *  8 - 4 * 7 - 9.5 * 1 - 0.5 * 2 = 1.5
+        # total: 11.5 + 31 + 1.5 = 44
+        obs = align_score(aln, (5, -4), (9.5, 0.5))
+        self.assertEqual(obs, 44.0)
+
+        # The match/mismatch scores are from substitution matrix "NUC.4.4".
+        submat = SubstitutionMatrix.by_name("NUC.4.4")
+        obs = align_score(aln, submat, (9.5, 0.5))
+        self.assertEqual(obs, 44.0)
+
+        # substitution matrix by name
+        obs = align_score(aln, "NUC.4.4", (9.5, 0.5))
+        self.assertEqual(obs, 44.0)
+
+        # linear gap penalty
+        # 1 * (11 + 12 + 8) - 2 * (6 + 4 + 2) = 7
+        obs = align_score(aln, (1, 0), 2)
+        self.assertEqual(obs, 7.0)
 
     def test_align_score_input(self):
         """Test on various input formats."""
@@ -87,16 +97,16 @@ class TestScore(unittest.TestCase):
 
         # list of raw strings
         obs = align_score(aln, (5, -4), (5, 2))
-        self.assertEqual(obs, 65)
+        self.assertEqual(obs, 53)
 
         # list of Sequence objects
         seqs = list(map(DNA, aln))
         obs = align_score(seqs, (5, -4), (5, 2))
-        self.assertEqual(obs, 65)
+        self.assertEqual(obs, 53)
 
         # custom gap_chars
         obs = align_score(seqs, (5, -4), (5, 2), gap_chars="A")
-        self.assertEqual(obs, 8)
+        self.assertEqual(obs, -8)
 
         # which is equivalent to (- becomes X and A becomes -):
         aln2 = [
@@ -105,16 +115,16 @@ class TestScore(unittest.TestCase):
             "CGGTCGTC-CXTGT-C-CXX",
         ]
         obs = align_score(aln2, (5, -4), (5, 2))
-        self.assertEqual(obs, 8)
+        self.assertEqual(obs, -8)
 
         # TabularMSA object
         msa = TabularMSA(map(DNA, aln))
         obs = align_score(msa, (5, -4), (5, 2))
-        self.assertEqual(obs, 65)
+        self.assertEqual(obs, 53)
 
         # gap_chars doesn't impact TabularMSA
         obs = align_score(msa, (5, -4), (5, 2), gap_chars="A")
-        self.assertEqual(obs, 65)
+        self.assertEqual(obs, 53)
 
         # alignment path
         path = AlignPath(lengths=[3, 2, 5, 1, 4, 3, 2],
@@ -124,11 +134,11 @@ class TestScore(unittest.TestCase):
                 "GGGCAGGTAAGCATACCTCA",
                 "CGGTCGTCACTGTACACAAA"]
         obs = align_score((path, seqs), (5, -4), (5, 2))
-        self.assertEqual(obs, 65)
+        self.assertEqual(obs, 53)
 
         # gap_chars doesn't impact AlignPath
         obs = align_score((path, seqs), (5, -4), (5, 2), gap_chars="A")
-        self.assertEqual(obs, 65)
+        self.assertEqual(obs, 53)
 
     def test_align_score_pair(self):
         """Test on pairwise alignments."""
@@ -136,11 +146,11 @@ class TestScore(unittest.TestCase):
         aln = ["CCTCAT-C",
                "CGTCGTGC"]
         obs = align_score(aln, (5, -4), (5, 2))
-        self.assertEqual(obs, 12)
+        self.assertEqual(obs, 10)
         obs = align_score(aln, "NUC.4.4", (5, 2))
-        self.assertEqual(obs, 12)
+        self.assertEqual(obs, 10)
         obs = align_score(aln, (5, -4), (5, 2), terminal_gaps=True)
-        self.assertEqual(obs, 12)
+        self.assertEqual(obs, 10)
         obs = align_score(aln, (5, -4), 3)
         self.assertEqual(obs, 14)
 
@@ -148,7 +158,7 @@ class TestScore(unittest.TestCase):
         aln = ["ACGT---ACGT",
                "ACGTCCCACGT"]
         obs = align_score(aln, (5, -4), (5, 2))
-        self.assertEqual(obs, 31)
+        self.assertEqual(obs, 29)
 
         # with terminal gaps
         aln = ["CGTCAT--",
@@ -156,30 +166,30 @@ class TestScore(unittest.TestCase):
         obs = align_score(aln, (5, -4), (5, 2))
         self.assertEqual(obs, 20)
         obs = align_score(aln, (5, -4), (5, 2), terminal_gaps=True)
-        self.assertEqual(obs, 6)
+        self.assertEqual(obs, 2)
 
         # very complex gaps
         aln = ["--AA-AAA-----CC--TCAT--G------",
                "----C-GG--G--C-TC--GT---CCA---"]
         obs = align_score(aln, (5, -4), (5, 2))
-        self.assertEqual(obs, -41)
+        self.assertEqual(obs, -55)
         obs = align_score(aln, (5, -4), (5, 2), terminal_gaps=True)
-        self.assertEqual(obs, -57)
+        self.assertEqual(obs, -75)
 
     def test_align_score_real(self):
         """Test on real-world datasets."""
         # protein
         aln = TabularMSA.read(get_data_path("il6.prot.aln"), constructor=Protein)
-        exp = 11144
+        exp = 11044
         obs = align_score(aln, "BLOSUM62", (5, 2))
         self.assertEqual(obs, exp)
-        exp = 11030
+        exp = 10918
         obs = align_score(aln, "BLOSUM62", (5, 2), terminal_gaps=True)
         self.assertEqual(obs, exp)
 
         # DNA
         aln = TabularMSA.read(get_data_path("il6.nucl.aln"), constructor=DNA)
-        exp = 26658
+        exp = 26550
         obs = align_score(aln, (5, -4), (5, 2))
         self.assertEqual(obs, exp)
         obs = align_score(aln, "NUC.4.4", (5, 2))
@@ -202,7 +212,7 @@ class TestScore(unittest.TestCase):
         # one pair doesn't align
         aln = ["AAAAA", "AA---", "---AA"]
         obs = align_score(aln, (5, -4), (5, 2), terminal_gaps=True)
-        self.assertEqual(obs, -12)
+        self.assertEqual(obs, -20)
         obs = align_score(aln, (5, -4), (5, 2), terminal_gaps=False)
         self.assertEqual(obs, 20)
 
@@ -239,7 +249,7 @@ class TestScore(unittest.TestCase):
 
         aln = ["MKQ-PSV", "MKIDTS-"]
         obs = align_score(aln, "BLOSUM62", (5, 2))
-        self.assertEqual(obs, 5)
+        self.assertEqual(obs, 3)
         msg = ("Sequences contain characters that are not present in the provided "
                "substitution matrix.")
         with self.assertRaises(ValueError) as cm:

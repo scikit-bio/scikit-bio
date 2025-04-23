@@ -121,6 +121,8 @@ def align_score(alignment, sub_score, gap_cost, terminal_gaps=False, gap_chars="
     For two sequences, their pairwise alignment score will be calculated. For three or
     more sequences, the sum-of-pairs (SP) alignment score will be returned.
 
+    .. versionadded:: 0.6.4
+
     Parameters
     ----------
     alignment : TabularMSA, list of Sequence or str, or (AlignPath, list of Sequence
@@ -148,7 +150,7 @@ def align_score(alignment, sub_score, gap_cost, terminal_gaps=False, gap_chars="
           (*g*). A contiguous gap of length *n* has a total penalty of *g* * *n*.
         - Tuple of two numbers: Affine gap penalty. The two numbers (*o*, *e*)
           represent gap opening penalty and gap extension penalty, respectively. A
-          contiguous gap of length *n* has a total penalty of *o* + *e* * (*n* - 1).
+          contiguous gap of length *n* has a total penalty of *o* + *e* * *n*.
           See also notes below.
 
     terminal_gaps : bool, optional
@@ -191,27 +193,32 @@ def align_score(alignment, sub_score, gap_cost, terminal_gaps=False, gap_chars="
 
     .. math::
 
-       G(n) = o + e \times (n - 1)
+       G(n) = o + e \times n \tag{1}
 
     where :math:`o` is the gap opening penalty and :math:`e` is the gap extension
     penalty.
 
     It should be noted that, discrepancy exists among literature and implementations
     regarding whether gap extension penalty should apply to the first position of a
-    gap. scikit-bio's formula is consistent with multiple common alignment tools,
-    including EMBOSS, parasail, Biopython and Biotite.
+    gap. scikit-bio's equation is consistent with multiple common alignment tools,
+    such as BLAST ([1]_), Minimap2, SeqAn3, and WFA2-lib.
 
-    Meanwhile, multiple other tools, such as BLAST ([1]_), Minimap2, SeqAn3, and
-    WFA2-lib, use the following formula instead:
+    Meanwhile, multiple other tools, such as EMBOSS, parasail, Biopython and Biotite,
+    use the following equation instead:
 
     .. math::
 
-       G(n) = o + e \times n
+       G(n) = o + e \times (n - 1) \tag{2}
 
     Therefore, if you intend to reproduce the behavior of a software tool of the
-    latter category using scikit-bio, you will need to add :math:`e` to :math:`o`
-    while adopting their parameters. For example, BLASTN's default parameters
-    ``o=5, e=2`` will become ``o=7, e=2`` in scikit-bio. Vice versa.
+    latter category using scikit-bio, you will need to subtract :math:`e` from
+    :math:`o` when adopting its parameters. For example, EMBOSS' default parameters
+    ``o=10, e=0.5`` will become ``o=9.5, e=0.5`` in scikit-bio. Vice versa.
+
+    .. versionchanged:: 0.6.4
+        Previous alignment algorithms in scikit-bio used Eq. 2. These functions were
+        deprecated in 0.5.x and will be removed in 0.6.x. Future functions will
+        uniformly use Eq. 1.
 
     References
     ----------
@@ -229,7 +236,7 @@ def align_score(alignment, sub_score, gap_cost, terminal_gaps=False, gap_chars="
     >>> seq1 = DNA("CGGTCGTAACGCGTA---CA")
     >>> seq2 = DNA("CAG--GTAAG-CATACCTCA")
     >>> align_score([seq1, seq2], (2, -3), (5, 2))
-    -8.0
+    -14.0
 
     Calculate the score of a multiple alignment of protein sequences, using the
     BLOSUM62 substitution matrix, with gap opening and extension penalties being 11
@@ -240,7 +247,7 @@ def align_score(alignment, sub_score, gap_cost, terminal_gaps=False, gap_chars="
     ...                   Protein("MKIDTS-"),
     ...                   Protein("MVIDPSS")])
     >>> align_score(msa, "BLOSUM62", (11, 1))
-    13.0
+    11.0
 
     """
     # process input alignment
@@ -267,7 +274,7 @@ def align_score(alignment, sub_score, gap_cost, terminal_gaps=False, gap_chars="
     # affine or linear gap penalty
     # TODO: Add support for dual affine gap penalty (four numbers).
     if isinstance(gap_cost, Real):
-        gap_open, gap_extend = gap_cost, gap_cost
+        gap_open, gap_extend = 0, gap_cost
     else:
         gap_open, gap_extend = gap_cost
 
