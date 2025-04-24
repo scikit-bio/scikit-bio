@@ -530,4 +530,4 @@ class TestOrdinationResults2DPlotting(unittest.TestCase):
         
 
 if __name__ == '__main__':
-    unittest.main(buffer=False)
+    unittest.main()

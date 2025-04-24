@@ -59,6 +59,15 @@ Decorators
    params_aliased
 
 
+Types
+-----
+
+.. autosummary::
+   :toctree: generated/
+
+   DataTable
+
+
 Miscellaneous utilities
 -----------------------
 
@@ -101,6 +110,7 @@ from ._decorator import (
 )
 from ._plotting import PlottableMixin
 from .config._config import get_config, set_config
+from ._types import DataTable
 
 __all__ = [
     "cardinal_to_ordinal",
@@ -122,4 +132,5 @@ __all__ = [
     "params_aliased",
     "get_config",
     "set_config",
+    "DataTable",
 ]

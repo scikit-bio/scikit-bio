@@ -7,6 +7,7 @@
 # ----------------------------------------------------------------------------
 
 import functools
+from warnings import warn
 
 import numpy as np
 import pandas as pd
@@ -14,8 +15,8 @@ import pandas as pd
 from skbio._base import SkbioObject
 from skbio.stats._misc import _pprint_strs
 from skbio.util._plotting import PlottableMixin
-from skbio.io.registry import Read, Write
-from skbio.util.config._dispatcher import extract_row_ids
+from skbio.io.descriptors import Read, Write
+from skbio.util.config._dispatcher import _extract_row_ids
 
 
 class OrdinationResults(SkbioObject, PlottableMixin):
@@ -32,28 +33,41 @@ class OrdinationResults(SkbioObject, PlottableMixin):
         Abbreviated ordination method name.
     long_method_name : str
         Ordination method name.
-    eigvals : ndarray
+    eigvals : table_like
         The resulting eigenvalues.  The index corresponds to the ordination
-        axis labels
-    samples : ndarray
+        axis labels. See the `DataTable <https://scikit.bio/
+        docs/dev/generated/skbio.util.config.html#the-datatable-type>`_ type
+        documentation for details.
+    samples : table_like
         The position of the samples in the ordination space, row-indexed by the
-        sample id.
-    sample_ids : list of str, or should it be pd.Index?
-        The names of the samples. Must be provided if samples is an array.
-    features : ndarray
+        sample id. See the `DataTable <https://scikit.bio/
+        docs/dev/generated/skbio.util.config.html#the-datatable-type>`_ type
+        documentation for details.
+    features : table_like
         The position of the features in the ordination space, row-indexed by
-        the feature id.
-    feature_ids : array-like of str
-        The names of the features. Must be provided if features is an array.
-    biplot_scores : ndarray
+        the feature id. See the `DataTable <https://scikit.bio/
+        docs/dev/generated/skbio.util.config.html#the-datatable-type>`_ type
+        documentation for details.
+    biplot_scores : table_like
         Correlation coefficients of the samples with respect to the features.
-    sample_constraints : ndarray
+        See the `DataTable <https://scikit.bio/
+        docs/dev/generated/skbio.util.config.html#the-datatable-type>`_ type
+        documentation for details.
+    sample_constraints : table_like
         Site constraints (linear combinations of constraining variables):
         coordinates of the sites in the space of the explanatory variables X.
-        These are the fitted site scores
-    proportion_explained : ndarray
+        These are the fitted site scores. See the `DataTable <https://scikit.bio/
+        docs/dev/generated/skbio.util.config.html#the-datatable-type>`_ type
+        documentation for details.
+    proportion_explained : table_like
         Proportion explained by each of the dimensions in the ordination space.
-        The index corresponds to the ordination axis labels
+        The index corresponds to the ordination axis labels. See the
+        `DataTable <https://scikit.bio/docs/dev/generated/skbio.util.config.html#
+        the-datatable-type>`_ type documentation for details.
+    sample_ids, feature_ids, constraint_ids, output_format : optional
+        Standard ``DataTable`` parameters. See the `DataTable <https://scikit.bio/
+        docs/dev/generated/skbio.util.config.html#the-datatable-type>`_ type
+        documentation for details.
 
     See Also
     --------
@@ -89,13 +103,15 @@ class OrdinationResults(SkbioObject, PlottableMixin):
 
         self.samples = samples
         if sample_ids is None:
-            self.sample_ids = extract_row_ids(samples)
+            no_samp_ids = True
+            self.sample_ids = _extract_row_ids(samples)
         else:
+            no_samp_ids = False
             self.sample_ids = sample_ids
 
         self.features = features
         if feature_ids is None and features is not None:
-            self.feature_ids = extract_row_ids(features)
+            self.feature_ids = _extract_row_ids(features, warn_ids=no_samp_ids)
         else:
             self.feature_ids = feature_ids
 
@@ -156,7 +172,7 @@ class OrdinationResults(SkbioObject, PlottableMixin):
             return "\t%s: %s" % (attr_name, _pprint_strs(ids))
         elif data is not None:
             return self._format_attribute(
-                data, attr_name, _pprint_strs(extract_row_ids)
+                data, attr_name, _pprint_strs(_extract_row_ids)
             )
         else:
             return "\t%s: N/A" % attr_name
@@ -177,6 +193,7 @@ class OrdinationResults(SkbioObject, PlottableMixin):
         title="",
         cmap=None,
         s=20,
+        n_dims=3,
     ):
         """Create a 3-D scatterplot of ordination results colored by metadata.
 
@@ -300,7 +317,12 @@ class OrdinationResults(SkbioObject, PlottableMixin):
         # Only bug fixes and minor updates should be made to this method.
 
         if axes is None:
-            axes = np.arange(len(self.eigvals))
+            if n_dims == 2:
+                axes = [0, 1]
+            elif n_dims == 3:
+                axes = [0, 1, 2]
+            else:
+                raise ValueError("n_dims must be 2 or 3.")
 
         self._get_mpl_plt()
 
@@ -349,8 +371,9 @@ class OrdinationResults(SkbioObject, PlottableMixin):
             axis_labels = ["%d" % axis for axis in axes]
         elif len(axis_labels) != len(axes):
             raise ValueError(
-                "axis_labels must contain exactly two or three elements "
-                "(found %d elements)." % len(axis_labels)
+                f"axis_labels ({len(axis_labels)} elements) "
+                f"must contain the same number of elements as "
+                f"axes ({len(axes)} elements)."
             )
 
         ax.set_xlabel(axis_labels[0])

@@ -16,12 +16,12 @@ from ._config import get_config
 from ._optionals import _get_package
 
 
-def create_table(data, columns=None, index=None, backend=None):
+def _create_table(data, columns=None, index=None, backend=None):
     """Create a table object using the specified backend.
 
     Parameters
     ----------
-    data : ndarray
+    data : DataTable
     columns : array-like
         Column labels to use if data does not have them.
     index : array-like
@@ -50,12 +50,12 @@ def create_table(data, columns=None, index=None, backend=None):
         raise ValueError(f"Unsupported backend: '{backend}'")
 
 
-def create_table_1d(data, index=None, backend=None):
+def _create_table_1d(data, index=None, backend=None):
     """Create a 1d array using the specified backend.
 
     Parameters
     ----------
-    data : ndarray
+    data : DataTable
     columns : array-like
         Column labels to use if data does not have them.
     index : array-like
@@ -84,12 +84,12 @@ def create_table_1d(data, index=None, backend=None):
         raise ValueError(f"Unsupported backend: '{backend}'")
 
 
-def ingest_array(input_data, row_ids=None, col_ids=None):
+def _ingest_array(input_data, row_ids=None, col_ids=None):
     """Process an input dataframe, table, or array into individual components.
 
     Parameters
     ----------
-    input_data : tabular
+    input_data : DataTable
         The original source of data. May be pandas or polars DataFrame, numpy array,
         BIOM table, or anndata.AnnData.
     row_ids : list of str
@@ -163,11 +163,22 @@ def ingest_array(input_data, row_ids=None, col_ids=None):
     return data_, row_ids, col_ids
 
 
-def extract_row_ids(input_data):
+def _extract_row_ids(input_data, warn_ids=False):
     """Extract row ids from a dataframe or table."""
     if isinstance(input_data, pd.DataFrame):
         return list(input_data.index)
     # for right now, just going to worry about pandas/polars/numpy,
     # which is to say that if it's not pandas, then it doesn't have ids
     else:
+        # Raise warning if sample_ids and feature_ids are both None, as this means
+        # that both will have arbitrary integer IDs starting at 0.
+        if warn_ids:
+            warn(
+                (
+                    "sample_ids and feature_ids were both None. As a "
+                    "result, both have been set to integer IDs "
+                    "starting at 0. Namespaces for sample_ids and "
+                    "feature_ids are no longer mutually exclusive."
+                )
+            )
         return list(range(input_data.shape[0]))
