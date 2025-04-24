@@ -13,6 +13,8 @@
 * Enhanced `TabularMSA.from_path_seqs`. It now can extract the aligned region from the middle of a sequence. Also added docstring and doctests ([#2201](https://github.com/scikit-bio/scikit-bio/pull/2201)).
 * Enhanced and changed the default behavior of `AlignPath.to_bits`, which now returns a bit array representing positions instead of segments. This is desired because with the old default behavior, `to_bits` and `from_bits` are not consistent with each other ([#2201](https://github.com/scikit-bio/scikit-bio/pull/2201)).
 
+* Implemented new faster pairwise alignment algorithm in the alignment module. Can be accessed with the front-facing function ```pairwise_align()```. ([#1864](https://github.com/scikit-bio/scikit-bio/pull/2196))
+
 ### Bug Fixes
 
 * Fixed a bug in `AlignPath.to_indices` which would throw an error if the alignment path has only one segment ([#2201](https://github.com/scikit-bio/scikit-bio/pull/2201)).
