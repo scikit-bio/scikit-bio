@@ -387,7 +387,7 @@ class TestOrdinationResults2DPlotting(unittest.TestCase):
         npt.assert_equal(ax.get_ylabel(), exp_ylabel)
 
     def test_plot_no_metadata(self):
-        fig = self.min_ord_results.plot()
+        fig = self.min_ord_results.plot(n_dims=2)
         self.check_basic_figure_sanity(fig, 1, '', False, '0', '1')
 
     def test_plot_with_numeric_metadata_and_plot_options(self):
