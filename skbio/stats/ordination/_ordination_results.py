@@ -177,6 +177,7 @@ class OrdinationResults(SkbioObject, PlottableMixin):
         title="",
         cmap=None,
         s=20,
+        n_dims=3,
     ):
         """Create a 3-D scatterplot of ordination results colored by metadata.
 
@@ -300,7 +301,12 @@ class OrdinationResults(SkbioObject, PlottableMixin):
         # Only bug fixes and minor updates should be made to this method.
 
         if axes is None:
-            axes = np.arange(len(self.eigvals))
+            if n_dims == 2:
+                axes = [0, 1]
+            elif n_dims == 3:
+                axes = [0, 1, 2]
+            else:
+                raise ValueError("n_dims must be 2 or 3.")
 
         self._get_mpl_plt()
 
@@ -349,8 +355,9 @@ class OrdinationResults(SkbioObject, PlottableMixin):
             axis_labels = ["%d" % axis for axis in axes]
         elif len(axis_labels) != len(axes):
             raise ValueError(
-                "axis_labels must contain exactly two or three elements "
-                "(found %d elements)." % len(axis_labels)
+                f"axis_labels ({len(axis_labels)} elements) "
+                f"must contain the same number of elements as "
+                f"axes ({len(axes)} elements)."
             )
 
         ax.set_xlabel(axis_labels[0])
