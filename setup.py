@@ -211,6 +211,13 @@ extensions = [
         extra_compile_args=stats_extra_compile_args,
         extra_link_args=stats_extra_link_args,
     ),
+    Extension(
+        "skbio.alignment._c_score",
+        ["skbio/alignment/_c_score" + ext],
+        extra_compile_args=stats_extra_compile_args,
+        extra_link_args=stats_extra_link_args,
+        include_dirs=[np.get_include()],
+    ),
 ]
 
 extensions = cythonize(extensions, force=True)
@@ -245,6 +252,7 @@ setup(
     ],
     classifiers=classifiers,
     package_data={
+        "skbio.alignment.tests": ["data/*"],
         "skbio.diversity.alpha.tests": ["data/qiime-191-tt/*"],
         "skbio.diversity.beta.tests": ["data/qiime-191-tt/*"],
         "skbio.io.tests": ["data/*"],

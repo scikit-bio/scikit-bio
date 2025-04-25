@@ -17,50 +17,109 @@ from skbio.sequence import DNA
 
 
 class TestAlignPath(unittest.TestCase):
-    def test_init(self):
-        # test 1-D starts vector
-        with self.assertRaises(TypeError, msg="`starts` must be a 1-D vector."):
-            path = AlignPath(lengths=[1, 2, 3], states=[1, 2, 3], starts=[[0], [0]])
+    def setUp(self):
+        # alignment path with 3 sequences, 20 positions and 7 segments
+        self.data1 = dict(
+            lengths=[3, 2, 5, 1, 4, 3, 2],
+            states=[0, 2, 0, 6, 0, 1, 0],
+            starts=[0, 0, 0],
+        )
+        self.path1 = AlignPath(**self.data1)
 
-        # test states and starts matching
-        with self.assertRaises(ValueError, msg="Sizes of `starts` and `states` do not "
-                               "match."):
-            path = AlignPath(lengths=[1, 2, 3], states=[1, 2, 3],
-                             starts=[0, 0, 0, 0, 0, 0, 0, 0, 0, 0])
+    def test_init(self):
+        # test normal case
+        data = self.data1
+        obs = AlignPath(**data)
+        npt.assert_array_equal(obs.lengths, np.array(data["lengths"]))
+        npt.assert_array_equal(obs.states, np.atleast_2d(data["states"]))
+        npt.assert_array_equal(obs.starts, np.array(data["starts"]))
+        self.assertTupleEqual(obs.shape, (3, 20))
+
+        # test errors
+        msg = "`lengths` must be a 1-D array."
+        with self.assertRaises(TypeError) as cm:
+            AlignPath(lengths=[[1, 2, 3]], states=[0, 1, 2], starts=[0, 0])
+        self.assertEqual(str(cm.exception), msg)
+
+        msg = "`states` must be a 1-D or 2-D array."
+        with self.assertRaises(TypeError) as cm:
+            AlignPath(lengths=[1, 2, 3], states=[[[]]], starts=[0, 0])
+        self.assertEqual(str(cm.exception), msg)
+
+        msg = "Numbers of segments in `lengths` (3) and `states` (4) do not match."
+        with self.assertRaises(ValueError) as cm:
+            AlignPath(lengths=[1, 2, 3], states=[1, 0, 1, 0], starts=[0, 0])
+        self.assertEqual(str(cm.exception), msg)
+
+        msg = "`starts` must be a 1-D array."
+        with self.assertRaises(TypeError) as cm:
+            AlignPath(lengths=[1, 2, 3], states=[0, 1, 2], starts=[[0], [0]])
+        self.assertEqual(str(cm.exception), msg)
+
+        msg = ("Number of sequences in `starts` (10) and capacity of `states` "
+               "(1 to 8) do not match.")
+        with self.assertRaises(ValueError) as cm:
+            AlignPath(lengths=[1, 2, 3], states=[0, 1, 2], starts=[0] * 10)
+        self.assertEqual(str(cm.exception), msg)
 
     def test_lengths(self):
-        obs = AlignPath(lengths=[3, 2, 5, 1, 4, 3, 2],
-                        states=[0, 2, 0, 6, 0, 1, 0],
-                        starts=[0, 0, 0]).lengths
+        obs = self.path1.lengths
         npt.assert_array_equal(obs, np.array([3, 2, 5, 1, 4, 3, 2], dtype=np.int64))
 
     def test_states(self):
-        obs = AlignPath(lengths=[3, 2, 5, 1, 4, 3, 2],
-                        states=[0, 2, 0, 6, 0, 1, 0],
-                        starts=[0, 0, 0]).states
+        obs = self.path1.states
         npt.assert_array_equal(obs, np.array([[0, 2, 0, 6, 0, 1, 0]], dtype=np.uint8))
 
     def test_starts(self):
-        obs = AlignPath(lengths=[3, 2, 5, 1, 4, 3, 2],
-                        states=[0, 2, 0, 6, 0, 1, 0],
-                        starts=[0, 0, 0]).starts
+        obs = self.path1.starts
         npt.assert_array_equal(obs, np.array([0, 0, 0], dtype=np.int64))
 
     def test_shape(self):
-        obs = AlignPath(lengths=[3, 2, 5, 1, 4, 3, 2],
-                        states=[0, 2, 0, 6, 0, 1, 0],
-                        starts=[0, 0, 0]).shape
+        obs = self.path1.shape
         self.assertEqual(obs.sequence, 3)
         self.assertEqual(obs.position, 20)
+        self.assertTupleEqual(obs, (3, 20))
 
     def test_to_bits(self):
-        path = AlignPath(lengths=[3, 2, 5, 1, 4, 3, 2],
-                         states=[0, 2, 0, 6, 0, 1, 0],
+        path = AlignPath(lengths=[2, 2, 2, 1, 1],
+                         states=[0, 2, 0, 6, 0],
                          starts=[0, 0, 0])
+        
+        # return array of segments
+        obs = path.to_bits(expand=False)
+        exp = np.array([[0, 0, 0, 0, 0],
+                        [0, 1, 0, 1, 0],
+                        [0, 0, 0, 1, 0]])
+        npt.assert_array_equal(obs, exp)
+
+        # return array of positions (default)
+        obs = path.to_bits()
+        exp = np.array([[0, 0, 0, 0, 0, 0, 0, 0],
+                        [0, 0, 1, 1, 0, 0, 1, 0],
+                        [0, 0, 0, 0, 0, 0, 1, 0]])
+        npt.assert_array_equal(obs, exp)
+
+        # more complex example
         exp = np.array(([0, 0, 0, 0, 0, 1, 0],
                         [0, 1, 0, 1, 0, 0, 0],
                         [0, 0, 0, 1, 0, 0, 0]))
-        obs = path.to_bits()
+        obs = self.path1.to_bits(expand=False)
+        npt.assert_array_equal(obs, exp)
+
+        # edge case: 0-length alignment
+        path = AlignPath(lengths=[],
+                         states=[],
+                         starts=[0, 0, 0])
+        for expand in True, False:
+            exp = path.to_bits(expand=expand)
+            self.assertEqual(exp.size, 0)
+            self.assertTupleEqual(exp.shape, (3, 0))
+
+    def test_stops(self):
+        obs = AlignPath(lengths=[3, 2, 5, 1, 4, 3, 2],
+                        states=[0, 2, 0, 6, 0, 1, 0],
+                        starts=[1, 2, 3]).stops()
+        exp = np.array([18, 19, 22])
         npt.assert_array_equal(obs, exp)
 
     def test_from_bits(self):
@@ -68,9 +127,7 @@ class TestAlignPath(unittest.TestCase):
         bits = np.array(([0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 1, 0, 0],
                          [0, 0, 0, 1, 1, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0],
                          [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0]))
-        exp = AlignPath(lengths=[3, 2, 5, 1, 4, 3, 2],
-                        states=[0, 2, 0, 6, 0, 1, 0],
-                        starts=[0, 0, 0])
+        exp = self.path1
         obs = AlignPath.from_bits(bits)
         npt.assert_array_equal(obs.lengths, exp.lengths)
         npt.assert_array_equal(obs.states, exp.states)
@@ -92,6 +149,37 @@ class TestAlignPath(unittest.TestCase):
         npt.assert_array_equal(obs.lengths, exp.lengths)
         npt.assert_array_equal(obs.states, exp.states)
 
+    def test_to_matrices(self):
+        seqs = ["CGGTCGTAACGCGTACA",
+                "CAGGTAAGCATACCTCA",
+                "CGGTCGTCACTGTACACTA"]
+        seqs = [np.frombuffer(x.encode("ascii"), dtype=np.uint8) for x in seqs]
+        obs = self.path1._to_matrices(seqs, gap_code=45)
+        msa = ('CGGTCGTAACGCGTA---CA',
+               'CAG--GTAAG-CATACCTCA',
+               'CGGTCGTCAC-TGTACACTA')
+        exp0 = np.vstack([
+            np.frombuffer(x.encode("ascii"), dtype=np.uint8) for x in msa])
+        npt.assert_array_equal(obs[0], exp0)
+        exp1 = exp0 == 45
+        npt.assert_array_equal(obs[1], exp1)
+        npt.assert_array_equal(obs[2], self.path1._to_bits())
+        npt.assert_array_equal(obs[3], self.path1._lengths)
+
+        msg = "Fewer sequences were provided than in alignment path."
+        seqs = ["CGGTCGTAACGCGTACA", "CAGGTAAGCATACCTCA"]
+        seqs = [np.frombuffer(x.encode("ascii"), dtype=np.uint8) for x in seqs]
+        with self.assertRaises(ValueError) as cm:
+            self.path1._to_matrices(seqs, gap_code=45)
+        self.assertEqual(str(cm.exception), msg)
+
+        msg = "Some sequences are shorter than in alignment path."
+        seqs = ["AAAAA", "CCCCC", "GGGGG"]
+        seqs = [np.frombuffer(x.encode("ascii"), dtype=np.uint8) for x in seqs]
+        with self.assertRaises(ValueError) as cm:
+            self.path1._to_matrices(seqs, gap_code=45)
+        self.assertEqual(str(cm.exception), msg)
+
     def test_from_tabular(self):
         msa = ('CGGTCGTAACGCGTA---CA',
                'CAG--GTAAG-CATACCTCA',
@@ -105,15 +193,12 @@ class TestAlignPath(unittest.TestCase):
 
     def test_to_indices(self):
         # test gap = -1
-        path = AlignPath(lengths=[3, 2, 5, 1, 4, 3, 2],
-                         states=[0, 2, 0, 6, 0, 1, 0],
-                         starts=[0, 0, 0])
-        exp = np.array([[0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, -1, -1, -1,
-                         15, 16],
-                        [0, 1, 2, -1, -1, 3, 4, 5, 6, 7, -1, 8, 9, 10, 11, 12, 13, 14,
-                         15, 16],
-                        [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, -1, 10, 11, 12, 13, 14, 15, 16,
-                         17, 18]])
+        path = self.path1
+        exp = np.array([
+            [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, -1, -1, -1, 15, 16],
+            [0, 1, 2, -1, -1, 3, 4, 5, 6, 7, -1, 8, 9, 10, 11, 12, 13, 14, 15, 16],
+            [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, -1, 10, 11, 12, 13, 14, 15, 16, 17, 18],
+        ])
         obs = path.to_indices()
         npt.assert_array_equal(obs, exp)
 
@@ -192,12 +277,11 @@ class TestAlignPath(unittest.TestCase):
 
     def test_from_indices(self):
         # test no mask
-        indices = np.array([[0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, -1, -1,
-                             -1, 15, 16],
-                            [0, 1, 2, -1, -1, 3, 4, 5, 6, 7, -1, 8, 9, 10, 11, 12, 13,
-                             14, 15, 16],
-                            [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, -1, 10, 11, 12, 13, 14, 15,
-                             16, 17, 18]])
+        indices = np.array([
+            [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, -1, -1, -1, 15, 16],
+            [0, 1, 2, -1, -1, 3, 4, 5, 6, 7, -1, 8, 9, 10, 11, 12, 13, 14, 15, 16],
+            [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, -1, 10, 11, 12, 13, 14, 15, 16, 17, 18],
+        ])
         path = AlignPath.from_indices(indices)
         lengths = [3, 2, 5, 1, 4, 3, 2]
         states = [0, 2, 0, 6, 0, 1, 0]
@@ -282,6 +366,74 @@ class TestAlignPath(unittest.TestCase):
 
 
 class TestPairAlignPath(unittest.TestCase):
+    def setUp(self):
+        # alignment path with 3 sequences, 20 positions and 7 segments
+        self.data1 = dict(
+            lengths=[3, 2, 5, 1, 4, 3, 2],
+            states=[0, 2, 0, 2, 0, 1, 0],
+            starts=[0, 0],
+        )
+        self.path1 = PairAlignPath(**self.data1)
+
+    def test_init(self):
+        # normal case
+        data = self.data1
+        obs = PairAlignPath(**data)
+        npt.assert_array_equal(obs.lengths, np.array(data["lengths"]))
+        npt.assert_array_equal(obs.states, np.atleast_2d(data["states"]))
+        npt.assert_array_equal(obs.starts, np.array(data["starts"]))
+        self.assertTupleEqual(obs.shape, (2, 20))
+
+        # omit starts
+        obs = PairAlignPath(data["lengths"], data["states"])
+        npt.assert_array_equal(obs.starts, np.array(data["starts"]))
+        self.assertTupleEqual(obs.shape, (2, 20))
+
+        # more than two sequences
+        msg = ("A pairwise alignment must represent exactly two sequences, "
+               "but %d were given.")
+        with self.assertRaises(ValueError) as cm:
+            PairAlignPath(lengths=[1, 2, 3], states=[0, 1, 2], starts=[0, 0, 0])
+        self.assertEqual(str(cm.exception), msg % 3)
+
+        # only one sequence
+        bits = np.array([[0, 0, 1, 1, 0]])
+        with self.assertRaises(ValueError) as cm:
+            PairAlignPath(lengths=[1], states=[0], starts=[0])
+        self.assertEqual(str(cm.exception), msg % 1)
+
+        # invalid bits
+        msg = ("For pairwise alignment, `states` must only contain zeros, ones, "
+               "twos, or threes.")
+        with self.assertRaises(ValueError) as cm:
+            PairAlignPath(lengths=[1, 2, 3], states=[1, 2, 4], starts=[0, 0])
+        self.assertEqual(str(cm.exception), msg)
+
+    def test_from_bits(self):
+        # test base case
+        bits = np.array(([0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 1, 0, 0],
+                         [0, 0, 0, 1, 1, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0]))
+        exp = self.path1
+        obs = PairAlignPath.from_bits(bits)
+        npt.assert_array_equal(obs.lengths, exp.lengths)
+        npt.assert_array_equal(obs.states, exp.states)
+
+        # more than two sequences
+        msg = ("A pairwise alignment must represent exactly two sequences, "
+               "but %d were given.")
+        bits = np.array([[0, 0, 1, 1, 0],
+                         [1, 0, 1, 0, 0],
+                         [0, 1, 1, 0, 1]])
+        with self.assertRaises(ValueError) as cm:
+            PairAlignPath.from_bits(bits)
+        self.assertEqual(str(cm.exception), msg % 3)
+
+        # only one sequence
+        bits = np.array([[0, 0, 1, 1, 0]])
+        with self.assertRaises(ValueError) as cm:
+            PairAlignPath.from_bits(bits)
+        self.assertEqual(str(cm.exception), msg % 1)
+
     def test_from_cigar(self):
         # test valid cigar with no = or X
         cigar = "3M42I270M32D"
@@ -370,65 +522,13 @@ class TestPairAlignPath(unittest.TestCase):
         seq1 = 1
         seq2 = 'GTA---ATTA-'
         seqs = [seq1, seq2]
-        with self.assertRaises(TypeError,
-                               msg="`seqs` must be of type string or Sequence object."):
-            obs = path.to_cigar(seqs=seqs)
+        msg = "`seqs` must be strings or Sequence objects."
+        with self.assertRaises(TypeError) as cm:
+            path.to_cigar(seqs=seqs)
+        self.assertEqual(str(cm.exception), msg)
 
-    def test_from_bits(self):
-        # test base case
-        bits = np.array(([0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 1, 0, 0],
-                         [0, 0, 0, 1, 1, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0]))
-        exp = PairAlignPath(lengths=[3, 2, 5, 1, 4, 3, 2],
-                            states=[0, 2, 0, 2, 0, 1, 0],
-                            starts=[0, 0])
-        obs = PairAlignPath.from_bits(bits)
-        npt.assert_array_equal(obs.lengths, exp.lengths)
-        npt.assert_array_equal(obs.states, exp.states)
 
-        # test empty bit array
-        bits = np.array(([], []))
-        with self.assertRaises(TypeError,
-                               msg="Input 'bits' must be a non-empty 2D numpy array."):
-            PairAlignPath.from_bits(bits)
-
-        # test 1D bit array
-        bits = np.array([0, 0, 1])
-        with self.assertRaises(TypeError,
-                               msg="Input 'bits' must be a non-empty 2D numpy array."):
-            PairAlignPath.from_bits(bits)
-
-        # test array with invalid values
-        bits = np.array(([1, 2, 3], [0, 5, 1]))
-        with self.assertRaises(ValueError,
-                               msg="Input 'bits' must contain only zeros and ones."):
-            PairAlignPath.from_bits(bits)
-
-        # test non numpy array input
-        bits = [[0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 1, 0, 0],
-                [0, 0, 0, 1, 1, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0],
-                [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0]]
-        exp = PairAlignPath(lengths=[3, 2, 5, 1, 4, 3, 2],
-                            states=[0, 2, 0, 2, 0, 1, 0],
-                            starts=[0, 0, 0])
-        obs = PairAlignPath.from_bits(bits)
-        npt.assert_array_equal(obs.lengths, exp.lengths)
-        npt.assert_array_equal(obs.states, exp.states)
-
-    def test_to_bits(self):
-        # test input with invalid values
-        with self.assertRaises(ValueError,
-                               msg="For pairwise alignment, `states` must only "
-                               "contain zeros, ones, twos, or threes."):
-            PairAlignPath(lengths=[1, 2, 3], states=[1, 2, 4], starts=[0, 0]).to_bits()
-
-        # test base case
-        path = PairAlignPath(lengths=[3, 2, 5, 1, 4, 3, 2],
-                             states=[0, 2, 0, 2, 0, 1, 0],
-                             starts=[0, 0])
-        exp = np.array(([0, 0, 0, 0, 0, 1, 0], [0, 1, 0, 1, 0, 0, 0]))
-        obs = path.to_bits()
-        npt.assert_array_equal(np.squeeze(obs), exp)
-
+class TestMisc(unittest.TestCase):
     def test_run_length_encode(self):
         obs = _run_length_encode("ABBCCCDDDD")
         exp = "1A2B3C4D"

@@ -2484,16 +2484,58 @@ class TabularMSA(MetadataMixin, PositionalMetadataMixin, SkbioObject):
 
     @classonlymethod
     def from_path_seqs(cls, path, seqs):
-        """Create a tabular MSA from an alignment path and sequences."""
+        """Create a tabular MSA from an alignment path and the original sequences.
+
+        Parameters
+        ----------
+        path : AlignPath
+            Alignment path.
+        seqs : iterable of GrammaredSequence
+            Original sequences.
+
+        Returns
+        -------
+        TabularMSA
+            The created tabular MSA object.
+
+        See Also
+        --------
+        skbio.alignment.AlignPath.from_tabular
+
+        Examples
+        --------
+        >>> from skbio import DNA, TabularMSA
+        >>> from skbio.alignment import AlignPath
+        >>> seqs = [
+        ...    DNA('CGTCGTGC'),
+        ...    DNA('CAGTC'),
+        ...    DNA('CGTCGTT'),
+        ... ]
+        >>> path = AlignPath(
+        ...    lengths=[2, 2, 2, 1, 1],
+        ...    states=[0, 2, 0, 6, 0],
+        ...    starts=[0, 0, 0],
+        ... )
+        >>> msa = TabularMSA.from_path_seqs(path, seqs)
+        >>> msa
+        TabularMSA[DNA]
+        ---------------------
+        Stats:
+            sequence count: 3
+            position count: 8
+        ---------------------
+        CGTCGTGC
+        CA--GT-C
+        CGTCGT-T
+
+        """
+        # TODO: add `minter` and `index` support
         if not all(isinstance(x, GrammaredSequence) for x in seqs):
             raise ValueError("`seqs` must be of skbio.Sequence type.")
-        else:
-            seqtype = seqs[0].__class__
-            bits = path.to_bits()
-            gaps = np.repeat(bits, path.lengths, axis=1)
-            gap_char = ord(seqtype.default_gap_char)
-            byte_arr = np.full(path.shape, gap_char, dtype=np.uint8)
-            byte_arr[gaps == 0] = np.concatenate(
-                [x._bytes[x._bytes != gap_char] for x in seqs]
-            )
-            return cls([seqtype(x) for x in byte_arr])
+        if len(seqs) != path._shape[0]:
+            raise ValueError("Sequence counts in `path` and `seqs` do not match.")
+        seqtype = seqs[0].__class__
+        gap_code = ord(seqtype.default_gap_char)
+        byte_lst = [x._bytes for x in seqs]
+        byte_arr = path._to_matrices(byte_lst, gap_code)[0]
+        return cls([seqtype(x) for x in byte_arr])
