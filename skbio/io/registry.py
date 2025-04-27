@@ -171,6 +171,8 @@ import traceback
 import itertools
 import inspect
 from functools import wraps
+from importlib import import_module
+from re import sub
 
 import skbio
 from ._exception import DuplicateRegistrationError, InvalidRegistrationError
@@ -204,6 +206,31 @@ class IORegistry:
         """
         self._binary_formats = {}
         self._text_formats = {}
+        # These lists are what enable lazy loading. Before a module is imported,
+        # the registry has no information about the relations between skbio objects
+        # and formats. With these lists, the registry is at least aware of the names
+        # of the default formats to be imported. Custom formats and their
+        # readers/writers will still be added to the dictionaries above as usual.
+        self._binary_formats_list = ["binary_dm", "biom", "embed"]
+        self._text_formats_list = [
+            "blast+6",
+            "blast+7",
+            "clustal",
+            "embl",
+            "fasta",
+            "fastq",
+            "lsmat",
+            "newick",
+            "ordination",
+            "phylip",
+            "qseq",
+            "genbank",
+            "gff3",
+            "stockholm",
+            "taxdump",
+            "sample_metadata",
+            "<emptyfile>",
+        ]
         self._lookups = (self._binary_formats, self._text_formats)
 
     def create_format(self, *args, **kwargs):
@@ -280,6 +307,13 @@ class IORegistry:
             The sniffer associated with `format_name`
 
         """
+        if not any(format_name in x for x in self._lookups):
+            try:
+                # print(f"importing {format_name}\nfrom get_sniffer\n")
+                import_module(f"skbio.io.format.{format_name}")
+            except ImportError:
+                pass
+
         for lookup in self._lookups:
             if format_name in lookup:
                 return lookup[format_name].sniffer_function
@@ -326,6 +360,14 @@ class IORegistry:
         return self._get_rw(format_name, cls, "writers")
 
     def _get_rw(self, format_name, cls, lookup_name):
+        # Leave this one commented out. It may not be necessary.
+        # if not any(format_name in x for x in self._lookups):
+        #     try:
+        #         print(f"importing {format_name}\nfrom get_rw\n")
+        #         import_module(f"skbio.io.format.{format_name}")
+        #     except ImportError:
+        #         print("no import")
+
         for lookup in self._lookups:
             if format_name in lookup:
                 format_lookup = getattr(lookup[format_name], lookup_name)
@@ -423,6 +465,10 @@ class IORegistry:
             backup = fh.tell()
 
             if is_binary_file and kwargs.get("encoding", "binary") == "binary":
+                for fmt in self._binary_formats_list:
+                    if not any(fmt in x for x in self._lookups):
+                        # print(f"importing {fmt}\nfrom sniff\n")
+                        import_module(f"skbio.io.format.{fmt}")
                 bin_lookup = self._binary_formats
                 if into is not None:
                     bin_lookup = self._reduce_formats(bin_lookup, into)
@@ -431,6 +477,14 @@ class IORegistry:
             if kwargs.get("encoding", None) != "binary":
                 # We can always turn a binary file into a text file, but the
                 # reverse doesn't make sense.
+                for fmt in self._text_formats_list:
+                    if not any(fmt in x for x in self._lookups):
+                        # Blast+6, Blast+7, and <emptyfile> format names do not match
+                        # their respective module names, so we strip everything non
+                        # alphanumeric or underscore.
+                        fmt_strip = sub(r"[^A-Za-z0-9_]", "", fmt)
+                        # print(f"importing {fmt}\nfrom sniff\n")
+                        import_module(f"skbio.io.format.{fmt_strip}")
                 text_lookup = self._text_formats
                 if into is not None:
                     text_lookup = self._reduce_formats(text_lookup, into)
