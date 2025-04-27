@@ -43,6 +43,16 @@ Alignment algorithms
    local_pairwise_align_protein
    local_pairwise_align
 
+
+Alignment statistics
+--------------------
+
+.. autosummary::
+   :toctree: generated/
+
+    align_score
+
+
 Deprecated functionality
 ^^^^^^^^^^^^^^^^^^^^^^^^
 
@@ -221,6 +231,7 @@ from ._pairwise import (
 )
 from skbio.alignment._ssw_wrapper import StripedSmithWaterman, AlignmentStructure
 from skbio.alignment._path import AlignPath, PairAlignPath
+from skbio.alignment._score import align_score
 
 __all__ = [
     "TabularMSA",
@@ -236,4 +247,5 @@ __all__ = [
     "local_pairwise_align_nucleotide",
     "local_pairwise_align_protein",
     "make_identity_substitution_matrix",
+    "align_score",
 ]
