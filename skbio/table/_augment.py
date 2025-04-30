@@ -26,17 +26,16 @@ class Augmentation(SkbioObject):
     ----------
     table : skbio.table.Table
         The table to augment.
-    label : numpy.ndarray, optional
+    label : numpy.ndarray of int, optional
         The label of the table. The label is expected to has a shape of ``(n_samples,)``
-        or ``(n_samples, n_classes)``. Can be none if the label is not needed.
-    num_classes : int, optional
-        The number of classes in the label. If None, either the no label is provided,
-        or the label already one-hot encoded.
+        or ``(n_samples, n_classes)`` if one hot encoding has been performed. Can be
+        none if the label is not needed. Values in label must be integer, and
+        correspond to class labels for model training and prediction.
     tree : skbio.tree.TreeNode, optional
         The tree to use to augment the table. Only required for method ``phylomix``.
     """
 
-    def __init__(self, table, label=None, num_classes=None, tree=None):
+    def __init__(self, table, label=None, tree=None):
         if table is not None and not isinstance(table, Table):
             raise ValueError("table must be a skbio.table.Table")
         self.table = table
@@ -58,21 +57,47 @@ class Augmentation(SkbioObject):
                     f"labels should have shape (n_samples,) or (n_samples, n_classes)"
                     f"but got {label.shape} instead."
                 )
-            if label.ndim == 1 and num_classes is None:
-                raise ValueError("num_classes must be provided if the labels are 1D")
-            if (
-                label.ndim == 2
-                and num_classes is not None
-                and label.shape[1] != num_classes
-            ):
-                raise ValueError(
-                    f"When passing 2D labels, "
-                    f"the number of elements in last dimension must match num_classes: "
-                    f"{label.shape[1]} != {num_classes}. "
-                    f"You can set num_classes to None"
-                )
-            if num_classes is not None:
-                self.one_hot_label = np.eye(num_classes)[self.label]
+            if label.ndim == 1:  # and num_classes is None:
+                if label.dtype != int:
+                    raise TypeError(f"label must only contain integer values.")
+                # check that labels is 0 indexed
+                unique_labels = np.unique(label)
+                if min(unique_labels) != 0:
+                    raise ValueError(
+                        "Labels must be zero-indexed. Minimum value must " "be 0."
+                    )
+                num_classes = len(unique_labels)
+                exp_labels = np.arange(num_classes)
+                # check that label is consecutive integers starting at 0
+                if not np.array_equal(unique_labels, exp_labels):
+                    raise ValueError(
+                        "Labels must be consecutive integers from 0 "
+                        "to num_classes - 1."
+                    )
+                self.one_hot_label = np.eye(num_classes, dtype=int)[self.label]
+            if label.ndim == 2:
+                # sanity checks to ensure valid one hot encoding.
+                # all rows should sum to 1
+                if not all(x == 1 for x in label.sum(axis=1)):
+                    raise ValueError(
+                        (
+                            "label is not properly one hot encoded. Rows "
+                            "(samples) were found with more than one label."
+                        )
+                    )
+                # sum of all values in label should match number of samples
+                if (
+                    not (label_samples := label.sum(axis=0).sum())
+                    == self.matrix.shape[1]
+                ):
+                    raise ValueError(
+                        (
+                            f"The number of samples represented by label "
+                            f"{label_samples} does not match the number of "
+                            f"samples in data {self.matrix.shape[1]}"
+                        )
+                    )
+                self.one_hot_label = label
 
     def __str__(self):
         return f"Augmentation(shape={self.matrix.shape})"
