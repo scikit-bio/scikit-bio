@@ -15,9 +15,11 @@ from skbio.tree import TreeNode
 class TestAugmentation(TestCase):
 
     def setUp(self):
-        data = np.arange(40).reshape(10, 4)
-        sample_ids = ['S%d' % i for i in range(4)]
-        feature_ids = ['O%d' % i for i in range(10)]
+        n_samples = 40
+        n_features = 100
+        data = np.arange(n_samples * n_features).reshape(n_features, n_samples)
+        sample_ids = ['S%d' % i for i in range(n_samples)]
+        feature_ids = ['O%d' % i for i in range(n_features)]
         feature_metadata = [{'phylogeny': 'a'},
                              {'phylogeny': 'b'},
                              {'phylogeny': 'x'},
@@ -26,6 +28,96 @@ class TestAugmentation(TestCase):
                              {'phylogeny': 'z'},
                              {'phylogeny': 'c'},
                              {'phylogeny': 'd'},
+                             {'phylogeny': 'e'},
+                             {'phylogeny': 'f'},
+                             {'phylogeny': 'a'},
+                             {'phylogeny': 'b'},
+                             {'phylogeny': 'x'},
+                             {'phylogeny': 'y'},
+                             {'phylogeny': 'w'},
+                             {'phylogeny': 'a'},
+                             {'phylogeny': 'b'},
+                             {'phylogeny': 'x'},
+                             {'phylogeny': 'a'},
+                             {'phylogeny': 'b'},
+                             {'phylogeny': 'x'},
+                             {'phylogeny': 'y'},
+                             {'phylogeny': 'w'},
+                             {'phylogeny': 'z'},
+                             {'phylogeny': 'c'},
+                             {'phylogeny': 'd'},
+                             {'phylogeny': 'e'},
+                             {'phylogeny': 'f'},
+                             {'phylogeny': 'y'},
+                             {'phylogeny': 'a'},
+                             {'phylogeny': 'b'},
+                             {'phylogeny': 'x'},
+                             {'phylogeny': 'y'},
+                             {'phylogeny': 'w'},
+                             {'phylogeny': 'z'},
+                             {'phylogeny': 'c'},
+                             {'phylogeny': 'd'},
+                             {'phylogeny': 'e'},
+                             {'phylogeny': 'a'},
+                             {'phylogeny': 'b'},
+                             {'phylogeny': 'x'},
+                             {'phylogeny': 'y'},
+                             {'phylogeny': 'w'},
+                             {'phylogeny': 'z'},
+                             {'phylogeny': 'c'},
+                             {'phylogeny': 'd'},
+                             {'phylogeny': 'e'},
+                             {'phylogeny': 'f'},
+                             {'phylogeny': 'f'},
+                             {'phylogeny': 'w'},
+                             {'phylogeny': 'z'},
+                             {'phylogeny': 'c'},
+                             {'phylogeny': 'a'},
+                             {'phylogeny': 'b'},
+                             {'phylogeny': 'x'},
+                             {'phylogeny': 'y'},
+                             {'phylogeny': 'w'},
+                             {'phylogeny': 'z'},
+                             {'phylogeny': 'c'},
+                             {'phylogeny': 'd'},
+                             {'phylogeny': 'e'},
+                             {'phylogeny': 'f'},
+                             {'phylogeny': 'd'},
+                             {'phylogeny': 'e'},
+                             {'phylogeny': 'f'},
+                             {'phylogeny': 'z'},
+                             {'phylogeny': 'c'},
+                             {'phylogeny': 'd'},
+                             {'phylogeny': 'a'},
+                             {'phylogeny': 'b'},
+                             {'phylogeny': 'x'},
+                             {'phylogeny': 'y'},
+                             {'phylogeny': 'w'},
+                             {'phylogeny': 'z'},
+                             {'phylogeny': 'c'},
+                             {'phylogeny': 'a'},
+                             {'phylogeny': 'b'},
+                             {'phylogeny': 'x'},
+                             {'phylogeny': 'y'},
+                             {'phylogeny': 'w'},
+                             {'phylogeny': 'z'},
+                             {'phylogeny': 'c'},
+                             {'phylogeny': 'd'},
+                             {'phylogeny': 'e'},
+                             {'phylogeny': 'f'},
+                             {'phylogeny': 'd'},
+                             {'phylogeny': 'a'},
+                             {'phylogeny': 'b'},
+                             {'phylogeny': 'x'},
+                             {'phylogeny': 'y'},
+                             {'phylogeny': 'w'},
+                             {'phylogeny': 'z'},
+                             {'phylogeny': 'c'},
+                             {'phylogeny': 'd'},
+                             {'phylogeny': 'e'},
+                             {'phylogeny': 'f'},
+                             {'phylogeny': 'e'},
+                             {'phylogeny': 'f'},
                              {'phylogeny': 'e'},
                              {'phylogeny': 'f'},
                              ]
@@ -94,17 +186,17 @@ class TestAugmentation(TestCase):
                 if phylogeny_label in tree_tips_simple:
                     self.tips_to_feature_mapping_simple[phylogeny_label] = idx
         self.labels = np.random.randint(0, 2, size=self.table.shape[1])
-        self.labels_simple = np.random.randint(0, 2, size=self.table_simple.shape[1])
+        self.labels_simple = np.array([0, 1])# np.random.randint(0, 2, size=self.table_simple.shape[1])
         self.one_hot_labels = np.eye(2)[self.labels]
 
     def test_init(self):
-        augmentation = Augmentation(self.table, label=self.labels, num_classes=2)
+        augmentation = Augmentation(self.table, label=self.labels) #, num_classes=2)
         self.assertIsInstance(augmentation, Augmentation)
         self.assertEqual(augmentation.table, self.table)
         self.assertTrue(np.array_equal(augmentation.label, self.labels))
         
         augmentation_with_tree = Augmentation(
-            self.table, label=self.labels, num_classes=2, tree=self.complex_tree
+            self.table, label=self.labels, tree=self.complex_tree
             )
         self.assertEqual(augmentation_with_tree.tree, self.complex_tree)
         
@@ -114,19 +206,19 @@ class TestAugmentation(TestCase):
         with self.assertRaisesRegex(ValueError, "tree must be a skbio.tree.TreeNode"):
             Augmentation(self.table, self.labels, tree="not_a_tree")
 
-        with self.assertRaisesRegex(ValueError, "num_classes must be provided if the labels are 1D"):
-            # when label is 1D but num_classes is not provided
-            Augmentation(self.table, label=self.labels, num_classes=None)
+        # with self.assertRaisesRegex(ValueError, "num_classes must be provided if the labels are 1D"):
+        #     # when label is 1D but num_classes is not provided
+        #     Augmentation(self.table, label=self.labels) #, num_classes=None)
 
         with self.assertRaises(ValueError):
             # when label is 2D, num_classes is provided 
             # but does not match the number of classes in the label
-            Augmentation(self.table, self.one_hot_labels, num_classes=3)
+            Augmentation(self.table, self.one_hot_labels) # , num_classes=3)
 
         with self.assertRaises(ValueError):
             # when label has wrong dimension
             self.wrong_label = self.one_hot_labels[..., np.newaxis]
-            Augmentation(self.table, self.wrong_label, num_classes=2)
+            Augmentation(self.table, self.wrong_label) #, num_classes=2)
 
         with self.assertRaisesRegex(
             ValueError,
@@ -135,7 +227,7 @@ class TestAugmentation(TestCase):
             Augmentation(self.table, label=3)
 
     def test_str(self):
-        exp = "Augmentation(shape=(4, 10))"
+        exp = "Augmentation(shape=(40, 100))"
         obs = str(Augmentation(self.table))
         self.assertEqual(exp, obs)
 
@@ -145,7 +237,7 @@ class TestAugmentation(TestCase):
         feature_ids = ['O%d' % i for i in range(10)]
         labels_simple = np.array([0, 0, 1, 1])
         table_simple = Table(data_simple, feature_ids, sample_ids)
-        augmentation = Augmentation(table_simple, label=labels_simple, num_classes=2)
+        augmentation = Augmentation(table_simple, label=labels_simple) #, num_classes=2)
         possible_pairs = augmentation._get_all_possible_pairs()
         possible_pairs_intra = augmentation._get_all_possible_pairs(intra_class=True)
 
@@ -159,13 +251,13 @@ class TestAugmentation(TestCase):
         feature_ids = ['O%d' % i for i in range(10)]
         labels_simple = np.array([0, 0, 1, 1])
         table_simple = Table(data_simple, feature_ids, sample_ids)
-        augmentation = Augmentation(table_simple, label=None, num_classes=2)
+        augmentation = Augmentation(table_simple, label=None) #, num_classes=2)
         with self.assertRaisesRegex(ValueError, "label is required for intra-class augmentation"):
             possible_pairs = augmentation._get_all_possible_pairs(intra_class=True)
 
 
     def test_mixup(self):
-        augmentation = Augmentation(self.table, label=self.labels, num_classes=2)
+        augmentation = Augmentation(self.table, label=self.labels) #, num_classes=2)
 
         augmented_matrix, augmented_label = augmentation.mixup(alpha=2, n_samples=10)
 
@@ -184,7 +276,7 @@ class TestAugmentation(TestCase):
 
     def test_aitchison_mixup(self):
         table_compositional = self.table.norm(axis="sample")
-        augmentation = Augmentation(table_compositional, label=self.labels, num_classes=2)
+        augmentation = Augmentation(table_compositional, label=self.labels) #, num_classes=2)
 
         augmented_matrix, augmented_label = augmentation.aitchison_mixup(alpha=2, n_samples=20)
 
@@ -199,7 +291,7 @@ class TestAugmentation(TestCase):
         self.assertTrue(np.all(augmented_matrix <= self.table_max))
 
     def test_aitchison_mixup_non_compositional(self):
-        augmentation = Augmentation(self.table, label=self.labels, num_classes=2)
+        augmentation = Augmentation(self.table, label=self.labels) #, num_classes=2)
 
         augmented_matrix, augmented_label = augmentation.aitchison_mixup(alpha=2, n_samples=20)
 
@@ -219,7 +311,7 @@ class TestAugmentation(TestCase):
         self.assertIsNone(augmented_label)
 
     def test_phylomix_simple(self):
-        augmentation = Augmentation(self.table_simple, label=self.labels_simple, num_classes=2, tree=self.simple_tree)
+        augmentation = Augmentation(self.table_simple, label=self.labels_simple, tree=self.simple_tree)
 
         augmented_matrix, _ = augmentation.phylomix(self.tips_to_feature_mapping_simple, n_samples=20)
 
@@ -229,13 +321,13 @@ class TestAugmentation(TestCase):
         self.assertTrue(np.all(augmented_matrix <= self.table_max))
 
     def test_phylomix_no_tree(self):
-        augmentation = Augmentation(self.table_simple, label=self.labels_simple, num_classes=2, tree=None)
+        augmentation = Augmentation(self.table_simple, label=self.labels_simple, tree=None)
         with self.assertRaisesRegex(ValueError, "tree is required for phylomix augmentation"):
             augmentation.phylomix(self.tips_to_feature_mapping_simple, n_samples=20)
 
     def test_phylomix_bad_tips(self):
         bad_mapping = {k: v for k, v in self.tips_to_feature_mapping_simple.items() if k != 'a'}
-        augmentation = Augmentation(self.table_simple, label=self.labels_simple, num_classes=2, tree=self.simple_tree)
+        augmentation = Augmentation(self.table_simple, label=self.labels_simple, tree=self.simple_tree)
         with self.assertRaisesRegex(ValueError, "tip_to_obs_mapping must contain all tips in the tree"):
             augmentation.phylomix(bad_mapping, n_samples=20)
 
@@ -252,7 +344,7 @@ class TestAugmentation(TestCase):
         self.assertIsNone(augmented_label)
 
     def test_phylomix(self):
-        augmentation = Augmentation(self.table, label=self.labels, num_classes=2, tree=self.complex_tree)
+        augmentation = Augmentation(self.table, label=self.labels, tree=self.complex_tree)
 
         augmented_matrix, augmented_label = augmentation.phylomix(self.tips_to_feature_mapping, n_samples=20)
 
@@ -268,7 +360,7 @@ class TestAugmentation(TestCase):
 
     def test_compositional_cutmix(self):
         table_compositional = self.table.norm(axis="sample")
-        augmentation = Augmentation(table_compositional, label=self.labels, num_classes=2)
+        augmentation = Augmentation(table_compositional, label=self.labels)
 
         augmented_matrix, augmented_label = augmentation.compositional_cutmix(n_samples=20)
 
@@ -280,7 +372,7 @@ class TestAugmentation(TestCase):
 
     def test_multiclass_phylomix(self):
         labels = np.random.randint(0, 3, size=self.table.shape[1])
-        augmentation = Augmentation(self.table, label=labels, num_classes=3, tree=self.complex_tree)
+        augmentation = Augmentation(self.table, label=labels, tree=self.complex_tree)
 
         augmented_matrix, augmented_label = augmentation.phylomix(self.tips_to_feature_mapping, n_samples=20)
 
