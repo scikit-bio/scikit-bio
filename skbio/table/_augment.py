@@ -17,8 +17,7 @@ from skbio.util import get_rng
 
 
 class Augmentation(SkbioObject):
-    """Data Augmentation of a omic data table,
-    for predictive models on omic data.
+    """Data Augmentation of a omic data table, for predictive models on omic data.
 
     The Augmentation class is mainly designed to enhance the performance of
     classification models on omic data.
@@ -114,14 +113,13 @@ class Augmentation(SkbioObject):
         return (x_to_lam := x**lam) / np.sum(x_to_lam)
 
     def _get_all_possible_pairs(self, intra_class=False):
-        r"""Get all possible pairs of samples that can be used for augmentation
-        if intra_class is True, only return pairs of samples within the same class
-        if intra_class is False, return all possible pairs of samples.
+        r"""Get all possible pairs of samples that can be used for augmentation.
 
         Parameters
         ----------
         intra_class : bool
-            Whether to get all possible pairs of samples within the same class.
+            If ``True``, only return pairs of samples within the same class.
+            If ``False``, return all possible pairs of samples.
 
         Returns
         -------
@@ -165,7 +163,7 @@ class Augmentation(SkbioObject):
         where :math:`\lambda` is a random number sampled from a beta distribution
         with parameters :math:`\alpha` and :math:`\alpha`.
         The label is computed as the linear combination of
-        the two labels of the two samples
+        the two labels of the two samples:
 
         .. math::
 
@@ -203,7 +201,7 @@ class Augmentation(SkbioObject):
             The augmented matrix.
         augmented_label : numpy.ndarray
             The augmented label, in one-hot encoding.
-            if the user want to use the augmented label for regression,
+            If the user wants to use the augmented label for regression,
             users can simply call ``np.argmax(aug_label, axis=1)``
             to get the discrete labels.
 
@@ -264,7 +262,7 @@ class Augmentation(SkbioObject):
     def aitchison_mixup(self, n_samples, alpha=2, seed=None):
         r"""Data Augmentation by Aitchison mixup.
 
-        it requires the data to be compositional, if the
+        This function requires the data to be compositional. If the
         table is not normalized, it will be normalized first.
 
         Parameters
@@ -424,7 +422,7 @@ class Augmentation(SkbioObject):
 
         The algorithm is described in [1]_,
         This method needs to do cutmix on compositional data in the same class.
-        by randomly select count from one of two samples to generate
+        by randomly selecting counts from one of two samples to generate
         a new sample. For this method to work, the label must be provided.
         The algorithm has 4 steps:
 
@@ -477,7 +475,7 @@ class Augmentation(SkbioObject):
         return augmented_matrix, augmented_label
 
     def phylomix(self, tip_to_obs_mapping, n_samples, alpha=2, seed=None):
-        r"""Data Augmentation by phylomix.
+        r"""Data augmentation by phylomix.
 
         Parameters
         ----------
