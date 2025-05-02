@@ -65,14 +65,6 @@ class PlottableMixin:
 
         return f.getvalue()
 
-    def _repr_png_(self):
-        """Generate a PNG format figure for display in IPython."""
-        return self._figure_data("png")
-
-    def _repr_svg_(self):
-        """Generate an SVG format figure for display in IPython."""
-        return self._figure_data("svg")
-
     @property
     def png(self):
         """Get figure data in PNG format.
