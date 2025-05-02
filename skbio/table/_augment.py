@@ -17,10 +17,6 @@ from skbio.util import get_rng
 from skbio.util.config._dispatcher import _ingest_array
 
 
-def _validate_table(table):
-    pass
-
-
 def _validate_tree(tree):
     if tree is not None and not isinstance(tree, TreeNode):
         raise TypeError("`tree` must be a skbio.tree.TreeNode object.")
@@ -480,6 +476,157 @@ def compositional_cutmix(table, n_samples, label=None, seed=None):
     augmented_label = np.array(augmented_label)
     augmented_matrix = np.concatenate([matrix, augmented_matrix], axis=0)
     augmented_label = np.concatenate([label, augmented_label])
+    return augmented_matrix, augmented_label
+
+
+def phylomix(
+    table, tree, tip_to_obs_mapping, n_samples, label=None, alpha=2, seed=None
+):
+    r"""Data augmentation by phylomix.
+
+    Parameters
+    ----------
+    tip_to_obs_mapping : dict
+        A dictionary mapping tips to feature indices.
+    n_samples : int
+        The number of new samples to generate.
+    alpha : float
+        The alpha parameter of the beta distribution.
+    seed : int, Generator or RandomState, optional
+        A user-provided random seed or random generator instance. See
+        :func:`details <skbio.util.get_rng>`.
+
+
+    Returns
+    -------
+    augmented_matrix : numpy.ndarray
+        The augmented matrix.
+    augmented_label : numpy.ndarray
+        The augmented label, in one-hot encoding.
+        if the user want to use the augmented label for regression,
+        users can simply call ``np.argmax(aug_label, axis=1)``
+        to get the discrete labels.
+
+    Examples
+    --------
+    >>> from skbio.table import Table
+    >>> from skbio.table import Augmentation
+    >>> data = np.arange(10).reshape(5, 2)
+    >>> sample_ids = ['S%d' % i for i in range(2)]
+    >>> feature_ids = ['O%d' % i for i in range(5)]
+    >>> tree = TreeNode.read(["(((a,b)int1,c)int2,(x,y)int3);"])
+    >>> table = Table(data, feature_ids, sample_ids)
+    >>> label = np.random.randint(0, 2, size=2)
+    >>> aug = Augmentation(table, label, tree=tree)
+    >>> tip_to_obs_mapping = {'a': 0, 'b': 1, 'c': 2, 'x': 3, 'y': 4}
+    >>> aug_matrix, aug_label = aug.phylomix(tip_to_obs_mapping, n_samples=5)
+    >>> print(aug_matrix.shape)
+    (7, 5)
+    >>> print(aug_label.shape)
+    (7, 2)
+
+    Notes
+    -----
+    The algorithm is based on [1]_, and leverages phylogenetic
+    relationships to guide data augmentation in microbiome and other omic data.
+    By mixing the abundances of phylogenetically related
+    taxa (leaves of a selected node), Phylomix preserves the biological
+    structure while introducing new synthetic samples.
+
+    The selection of nodes follows a random sampling approach,
+    where a subset of taxa is chosen based on a
+    Beta-distributed mixing coefficient. This ensures that the augmented
+    data maintains biologically meaningful compositional relationships.
+
+    In the original paper, the authors assumed a bifurcated phylogenetic tree,
+    but this implementation works with any tree structure. If desired,
+    users can bifurcate their tree using ``skbio.tree.TreeNode.bifurcate()``
+    before augmentation.
+
+    Phylomix is particularly valuable for microbiome-trait association studies,
+    where preserving phylogenetic similarity between related taxa is crucial for
+    accurate downstream predictions. This approach helps address the
+    common challenge of limited sample sizes in omic data studies.
+
+    The method assumes that all tips in the phylogenetic tree
+    are represented in the ``tip_to_obs_mapping`` dictionary.
+
+    References
+    ----------
+    .. [1] Jiang, Y., Liao, D., Zhu, Q., & Lu, Y. Y. (2025).
+        PhyloMix: Enhancing microbiome-trait association prediction through
+        phylogeny-mixing augmentation. Bioinformatics, btaf014.
+
+    """
+    rng = get_rng(seed)
+    matrix, row_ids, col_ids = _ingest_array(table)
+    label, one_hot_label = _validate_label(label, matrix)
+    _validate_tree(tree)
+
+    leave_names = [tip.name for tip in tree.tips()]
+
+    if set(tip_to_obs_mapping.keys()) != set(leave_names):
+        raise ValueError("tip_to_obs_mapping must contain all tips in the tree")
+
+    # Convert nodes to indices for random selection
+    all_nodes = [node for node in tree.levelorder()]
+    node_indices = np.arange(len(all_nodes))
+    num_leaves = len(leave_names)
+
+    possible_pairs = _get_all_possible_pairs(matrix)
+    selected_pairs = possible_pairs[
+        rng.integers(0, len(possible_pairs), size=n_samples)
+    ]
+    feature_dict = {feature_name: idx for idx, feature_name in enumerate(tree.tips())}
+    augmented_matrix = []
+    augmented_label = []
+    for pair in selected_pairs:
+        x1, x2 = matrix[pair[0]], matrix[pair[1]]
+        _lambda = rng.beta(alpha, alpha)
+        n_leaves = int(np.ceil((1 - _lambda) * num_leaves))
+        selected_index = set()
+        mixed_x = x1.copy()
+
+        while len(selected_index) < n_leaves:
+            # Select a random node using index
+            node_idx = rng.choice(node_indices)
+            available_node = all_nodes[node_idx]
+            leaf_idx = [feature_dict[leaf] for leaf in available_node.tips()]
+            obs_idx = [tip_to_obs_mapping[leaf.name] for leaf in available_node.tips()]
+            selected_index.update(obs_idx)
+
+        selected_index = rng.choice(list(selected_index), n_leaves, replace=False)
+
+        leaf_counts1, leaf_counts2 = (
+            x1[selected_index].astype(np.float32),
+            x2[selected_index].astype(np.float32),
+        )
+
+        total1, total2 = leaf_counts1.sum(), leaf_counts2.sum()
+        if total1 > 0 and total2 > 0:
+            leaf_counts2_normalized = leaf_counts2 / total2
+            new_counts = (total1 * leaf_counts2_normalized).astype(int)
+            mixed_x[selected_index] = new_counts
+        else:
+            mixed_x[selected_index] = leaf_counts1
+
+        if label is not None:
+            augment_label = (
+                _lambda * one_hot_label[pair[0]]
+                + (1 - _lambda) * one_hot_label[pair[1]]
+            )
+            augmented_label.append(augment_label)
+        augmented_matrix.append(mixed_x)
+
+    if label is not None:
+        augmented_matrix = np.array(augmented_matrix)
+        augmented_label = np.array(augmented_label)
+        augmented_matrix = np.concatenate([matrix, augmented_matrix], axis=0)
+        augmented_label = np.concatenate([one_hot_label, augmented_label])
+    else:
+        augmented_matrix = np.concatenate([matrix, np.array(augmented_matrix)], axis=0)
+        augmented_label = None
+
     return augmented_matrix, augmented_label
 
 
