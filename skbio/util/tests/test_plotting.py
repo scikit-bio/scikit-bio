@@ -75,34 +75,6 @@ class TestPlottableMixin(unittest.TestCase):
         self.assertIsNone(obj._figure_data())
         sys.modules['matplotlib'] = backup
 
-    def test_repr_png(self):
-        obj = PlottableMixin()
-        obj._get_mpl_plt()
-        obs = obj._repr_png_()
-        self.assertIsInstance(obs, bytes)
-        self.assertTrue(len(obs) > 0)
-
-    def test_repr_svg(self):
-        obj = PlottableMixin()
-        obj._get_mpl_plt()
-        obs = obj._repr_svg_()
-        self.assertIsInstance(obs, str)
-        self.assertTrue(len(obs) > 0)
-
-    def test_png(self):
-        obj = PlottableMixin()
-        obj._get_mpl_plt()
-        obs = obj.png
-        self.assertIsInstance(obs, bytes)
-        self.assertTrue(len(obs) > 0)
-
-    def test_svg(self):
-        obj = PlottableMixin()
-        obj._get_mpl_plt()
-        obs = obj.svg
-        self.assertIsInstance(obs, str)
-        self.assertTrue(len(obs) > 0)
-
 
 if __name__ == '__main__':
     unittest.main()

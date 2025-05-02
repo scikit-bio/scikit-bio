@@ -64,27 +64,3 @@ class PlottableMixin:
         self.plt.close(fig)
 
         return f.getvalue()
-
-    @property
-    def png(self):
-        """Get figure data in PNG format.
-
-        Returns
-        -------
-        bytes
-            Figure data in PNG format.
-
-        """
-        return self._repr_png_()
-
-    @property
-    def svg(self):
-        """Get figure data in SVG format.
-
-        Returns
-        -------
-        str
-            Figure data in SVG format.
-
-        """
-        return self._repr_svg_()
