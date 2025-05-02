@@ -387,6 +387,102 @@ def aitchison_mixup(table, n_samples, label=None, alpha=2, seed=None):
     return augmented_matrix, augmented_label
 
 
+def compositional_cutmix(table, n_samples, label=None, seed=None):
+    r"""Data Augmentation by compositional cutmix.
+
+    Parameters
+    ----------
+    n_samples : int
+        The number of new samples to generate.
+    seed : int, Generator or RandomState, optional
+        A user-provided random seed or random generator instance. See
+        :func:`details <skbio.util.get_rng>`.
+
+    Returns
+    -------
+    augmented_matrix : numpy.ndarray
+        The augmented matrix.
+    augmented_label : numpy.ndarray
+        The augmented label, the label is 1D array.
+        User can use the 1D label for both classification and regression.
+
+    Examples
+    --------
+    >>> from skbio.table import Table
+    >>> from skbio.table import Augmentation
+    >>> data = np.arange(40).reshape(10, 4)
+    >>> sample_ids = ['S%d' % i for i in range(4)]
+    >>> feature_ids = ['O%d' % i for i in range(10)]
+    >>> table = Table(data, feature_ids, sample_ids)
+    >>> label = np.random.randint(0, 2, size=4)
+    >>> augmentation = Augmentation(table, label)
+    >>> aug_matrix, aug_label = augmentation.compositional_cutmix(n_samples=5)
+    >>> print(aug_matrix.shape)
+    (9, 10)
+    >>> print(aug_label.shape)
+    (9,)
+
+    Notes
+    -----
+
+    The algorithm is described in [1]_,
+    This method needs to do cutmix on compositional data in the same class.
+    by randomly selecting counts from one of two samples to generate
+    a new sample. For this method to work, the label must be provided.
+    The algorithm has 4 steps:
+
+    1. Draw a class :math:`c` from the class prior
+    and draw :math:`\lambda \sim Uniform(0, 1)`
+
+    2. Draw two training points :math:`i_1, i_2` from the training set
+    such that :math:`y_{i_1} = y_{i_2} = c`, uniformly at random
+
+    3. For each :math:`j \in \{1, ..., p\}`, draw :math:`I_j \sim Binomial(\lambda)`
+    and set :math:`\tilde{x}_j = x_{i_1j}` if :math:`I_j = 1`,
+    and :math:`\tilde{x}_j = x_{i_2j}` if :math:`I_j = 0`
+
+    4. Set :math:`\tilde{y} = c`
+
+    References
+    ----------
+    .. [1] Gordon-Rodriguez, E., Quinn, T., & Cunningham, J. P. (2022).
+        Data augmentation for compositional data: Advancing predictive
+        models of the microbiome. Advances in Neural Information Processing
+        Systems, 35, 20551-20565.
+
+    """
+
+    rng = get_rng(seed)
+
+    matrix, row_ids, col_ids = _ingest_array(table)
+    label, one_hot_label = _validate_label(label, matrix)
+
+    if not np.allclose(np.sum(matrix, axis=1), 1):
+        matrix = closure(matrix)
+
+    possible_pairs = _get_all_possible_pairs(matrix, label=label, intra_class=True)
+    selected_pairs = possible_pairs[
+        rng.integers(0, len(possible_pairs), size=n_samples)
+    ]
+
+    augmented_matrix = []
+    augmented_label = []
+    for idx1, idx2 in selected_pairs:
+        x1, x2 = matrix[idx1], matrix[idx2]
+        _lambda = rng.uniform(0, 1)
+        indicator_binomial = rng.binomial(1, _lambda, size=matrix.shape[1])
+        augmented_x = x1 * indicator_binomial + x2 * (1 - indicator_binomial)
+        augmented_matrix.append(augmented_x)
+        label_ = label[idx1]
+        augmented_label.append(label_)
+
+    augmented_matrix = np.array(augmented_matrix)
+    augmented_label = np.array(augmented_label)
+    augmented_matrix = np.concatenate([matrix, augmented_matrix], axis=0)
+    augmented_label = np.concatenate([label, augmented_label])
+    return augmented_matrix, augmented_label
+
+
 class Augmentation(SkbioObject):
     """Data Augmentation of a omic data table, for predictive models on omic data.
 
