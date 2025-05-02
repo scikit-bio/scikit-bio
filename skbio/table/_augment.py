@@ -263,6 +263,130 @@ def mixup(table, n_samples, label=None, alpha=2, seed=None):
     return augmented_matrix, augmented_label
 
 
+def aitchison_mixup(table, n_samples, label=None, alpha=2, seed=None):
+    r"""Data Augmentation by Aitchison mixup.
+
+    This function requires the data to be compositional. If the
+    table is not normalized, it will be normalized first.
+
+    Parameters
+    ----------
+    n_samples : int
+        The number of new samples to generate.
+    alpha : float
+        The alpha parameter of the beta distribution.
+    seed : int, Generator or RandomState, optional
+        A user-provided random seed or random generator instance. See
+        :func:`details <skbio.util.get_rng>`.
+
+    Returns
+    -------
+    augmented_matrix : numpy.ndarray
+        The augmented matrix.
+    augmented_label : numpy.ndarray
+        The augmented label, in one-hot encoding.
+        if the user want to use the augmented label for regression,
+        users can simply call ``np.argmax(aug_label, axis=1)``
+        to get the discrete labels.
+
+    Examples
+    --------
+    >>> from skbio.table import Table
+    >>> from skbio.table import Augmentation
+    >>> data = np.arange(40).reshape(10, 4)
+    >>> sample_ids = ['S%d' % i for i in range(4)]
+    >>> feature_ids = ['O%d' % i for i in range(10)]
+    >>> table = Table(data, feature_ids, sample_ids)
+    >>> table_compositional = table.norm(axis="sample")
+    >>> label = np.random.randint(0, 2, size=table.shape[1])
+    >>> augmentation = Augmentation(table_compositional, label)
+    >>> aug_matrix, aug_label = augmentation.aitchison_mixup(n_samples=5)
+    >>> print(aug_matrix.shape)
+    (9, 10)
+    >>> print(aug_label.shape)
+    (9, 2)
+
+    Notes
+    -----
+    The algorithm is based on [1]_, and leverages the Aitchison geometry
+    to guide data augmentation in compositional data,
+    this is essentially the vanilla mixup in the Aitchison geometry.
+    This mixup method only works on the Compositional data.
+    where a set of datapoints are living in the simplex:
+    :math:`x_i > 0`, and :math:`\sum_{i=1}^{p} x_i = 1`.
+    The augmented sample is computed as the linear combination of
+    the two samples in the Aitchison geometry. In the Aitchision
+    Geometry, we define the addition and scalar multiplication as:
+
+    .. math::
+
+        \lambda \otimes s =
+        \frac{1}{\sum_{j=1}^{p} s_j^{\lambda}}
+        (x_1^{\lambda}, x_2^{\lambda}, ..., x_p^{\lambda})
+
+    .. math::
+
+        s \oplus t =
+        \frac{1}{\sum_{j=1}^{p} s_j t_j}
+        (s_1 t_1, s_2 t_2, ..., s_p t_p)
+
+    .. math::
+
+        s = (\lambda \otimes  s_1) \oplus ((1 - \lambda) \otimes s_2)
+
+    The label is computed as the linear combination of
+    the two labels of the two samples
+
+    .. math::
+
+        y = \lambda \cdot y_1 + (1 - \lambda) \cdot y_2
+
+    By mixing the counts of two samples, Aitchison mixup preserves the
+    compositional nature of the data, and the sum-to-one property.
+
+    References
+    ----------
+    .. [1] Gordon-Rodriguez, E., Quinn, T., & Cunningham, J. P. (2022).
+        Data augmentation for compositional data: Advancing predictive
+        models of the microbiome. Advances in Neural Information Processing
+        Systems, 35, 20551-20565.
+
+    """
+    matrix, row_ids, col_ids = _ingest_array(table)
+    label, one_hot_label = _validate_label(label, matrix)
+
+    if not np.allclose(np.sum(matrix, axis=1), 1):
+        matrix = closure(matrix)
+
+    rng = get_rng(seed)
+    possible_pairs = _get_all_possible_pairs(matrix)
+    selected_pairs = possible_pairs[
+        rng.integers(0, len(possible_pairs), size=n_samples)
+    ]
+
+    augmented_matrix = []
+    augmented_label = []
+    for idx1, idx2 in selected_pairs:
+        _lambda = rng.beta(alpha, alpha)
+        augmented_x = _aitchison_addition(
+            _aitchison_scalar_multiplication(_lambda, matrix[idx1]),
+            _aitchison_scalar_multiplication(1 - _lambda, matrix[idx2]),
+        )
+        if label is not None:
+            augmented_y = (
+                _lambda * one_hot_label[idx1] + (1 - _lambda) * one_hot_label[idx2]
+            )
+            augmented_label.append(augmented_y)
+        augmented_matrix.append(augmented_x)
+    augmented_matrix = np.concatenate([matrix, np.array(augmented_matrix)], axis=0)
+    if label is not None:
+        augmented_label = np.concatenate([one_hot_label, augmented_label])
+    else:
+        augmented_label = None
+
+    return augmented_matrix, augmented_label
+
+
 class Augmentation(SkbioObject):
     """Data Augmentation of a omic data table, for predictive models on omic data.
 
