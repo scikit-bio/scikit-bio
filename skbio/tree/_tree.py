@@ -101,6 +101,7 @@ class TreeNode(SkbioObject):
     """
 
     default_write_format = "newick"
+    """Default write format for this object: ``newick``."""
 
     read = Read()
     write = Write()
