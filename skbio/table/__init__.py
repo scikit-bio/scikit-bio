@@ -32,7 +32,10 @@ Data Augmentation
 .. autosummary::
    :toctree: generated/
 
-   Augmentation
+   phylomix
+   compositional_cutmix
+   mixup
+   aitchison_mixup
 
 """  # noqa: D205, D415
 
@@ -45,6 +48,13 @@ Data Augmentation
 # ----------------------------------------------------------------------------
 
 from skbio.table._base import Table, example_table
-from skbio.table._augment import Augmentation
+from skbio.table._augment import phylomix, compositional_cutmix, aitchison_mixup, mixup
 
-__all__ = ["Table", "example_table", "Augmentation"]
+__all__ = [
+    "Table",
+    "example_table",
+    "phylomix",
+    "compositional_cutmix",
+    "aitchison_mixup",
+    "mixup",
+]
