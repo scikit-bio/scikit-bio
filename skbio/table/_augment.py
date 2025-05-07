@@ -158,7 +158,15 @@ def _get_all_possible_pairs(matrix, label=None, intra_class=False):
     return np.array(possible_pairs)
 
 
-def mixup(table, n_samples, label=None, alpha=2, seed=None, output_format=None):
+def mixup(
+    table,
+    n_samples,
+    label=None,
+    alpha=2,
+    seed=None,
+    output_format=None,
+    normalize=False,
+):
     r"""Data Augmentation by vanilla mixup.
 
     Randomly select two samples :math:`s_1` and :math:`s_2` from the OTU table,
@@ -244,6 +252,9 @@ def mixup(table, n_samples, label=None, alpha=2, seed=None, output_format=None):
 
     """
     matrix, row_ids, col_ids = _ingest_array(table)
+    if normalize:
+        if not np.allclose(np.sum(matrix, axis=1), 1):
+            matrix = closure(matrix)
     if label is not None:
         label, one_hot_label = _validate_label(label, matrix)
     rng = get_rng(seed)
@@ -273,7 +284,7 @@ def mixup(table, n_samples, label=None, alpha=2, seed=None, output_format=None):
 
 
 def aitchison_mixup(
-    table, n_samples, label=None, alpha=2, seed=None, output_format=None
+    table, n_samples, label=None, alpha=2, seed=None, output_format=None, normalize=True
 ):
     r"""Data Augmentation by Aitchison mixup.
 
@@ -367,8 +378,9 @@ def aitchison_mixup(
     if label is not None:
         label, one_hot_label = _validate_label(label, matrix)
 
-    if not np.allclose(np.sum(matrix, axis=1), 1):
-        matrix = closure(matrix)
+    if normalize:
+        if not np.allclose(np.sum(matrix, axis=1), 1):
+            matrix = closure(matrix)
 
     rng = get_rng(seed)
     possible_pairs = _get_all_possible_pairs(matrix)
@@ -401,7 +413,9 @@ def aitchison_mixup(
     )
 
 
-def compositional_cutmix(table, n_samples, label=None, seed=None, output_format=None):
+def compositional_cutmix(
+    table, n_samples, label=None, seed=None, output_format=None, normalize=True
+):
     r"""Data Augmentation by compositional cutmix.
 
     Parameters
@@ -472,8 +486,9 @@ def compositional_cutmix(table, n_samples, label=None, seed=None, output_format=
     if label is not None:
         label, one_hot_label = _validate_label(label, matrix)
 
-    if not np.allclose(np.sum(matrix, axis=1), 1):
-        matrix = closure(matrix)
+    if normalize:
+        if not np.allclose(np.sum(matrix, axis=1), 1):
+            matrix = closure(matrix)
 
     possible_pairs = _get_all_possible_pairs(matrix, label=label, intra_class=True)
     selected_pairs = possible_pairs[
@@ -509,6 +524,7 @@ def phylomix(
     alpha=2,
     seed=None,
     output_format=None,
+    normalize=False,
 ):
     r"""Data augmentation by phylomix.
 
@@ -588,6 +604,11 @@ def phylomix(
     """
     rng = get_rng(seed)
     matrix, row_ids, col_ids = _ingest_array(table)
+
+    if normalize:
+        if not np.allclose(np.sum(matrix, axis=1), 1):
+            matrix = closure(matrix)
+
     if label is not None:
         label, one_hot_label = _validate_label(label, matrix)
     _validate_tree(tree)
@@ -634,7 +655,8 @@ def phylomix(
         total1, total2 = leaf_counts1.sum(), leaf_counts2.sum()
         if total1 > 0 and total2 > 0:
             leaf_counts2_normalized = leaf_counts2 / total2
-            new_counts = (total1 * leaf_counts2_normalized).astype(int)
+            # removed astype(int) so phylomix could handle compositional input
+            new_counts = total1 * leaf_counts2_normalized
             mixed_x[selected_index] = new_counts
         else:
             mixed_x[selected_index] = leaf_counts1
