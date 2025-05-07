@@ -12,7 +12,7 @@ import numpy as np
 
 from skbio.sequence import Sequence, SubstitutionMatrix
 from skbio.alignment import TabularMSA, AlignPath
-from ._c_score import _trim_terminal_gaps, _multi_align_score
+from ._c_score import _trim_end_gaps, _multi_align_score
 
 
 def _seqs_to_bytes(seqs):
@@ -81,7 +81,7 @@ def _get_align_path(bits):
     return bits, lens
 
 
-def trim_terminal_gaps(alignment, gap_chars="-."):
+def trim_end_gaps(alignment, gap_chars="-."):
     r"""Identify the terminal gap-free region of a multiple alignment.
 
     Parameters
@@ -111,11 +111,11 @@ def trim_terminal_gaps(alignment, gap_chars="-."):
     n = seqs.shape[0]
     starts = np.empty(n, dtype=int)
     stops = np.empty(n, dtype=int)
-    _trim_terminal_gaps(gaps, starts, stops)
+    _trim_end_gaps(gaps, starts, stops)
     return starts, stops
 
 
-def align_score(alignment, sub_score, gap_cost, terminal_gaps=False, gap_chars="-."):
+def align_score(alignment, sub_score, gap_cost, free_ends=True, gap_chars="-."):
     r"""Calculate the alignment score of two or more aligned sequences.
 
     For two sequences, their pairwise alignment score will be calculated. For three or
@@ -153,12 +153,12 @@ def align_score(alignment, sub_score, gap_cost, terminal_gaps=False, gap_chars="
           contiguous gap of length *n* has a total penalty of *o* + *e* * *n*.
           See also notes below.
 
-    terminal_gaps : bool, optional
+    free_ends : bool, optional
         Whether gaps at the terminals of the sequences should be penalized. It can be:
 
-        - False (default): Do not penalize terminal gaps. This behavior is known as the
+        - True (default): Do not penalize terminal gaps. This behavior is known as the
           semi-global (or "glocal") alignment.
-        - True: Penalize terminal gaps using the same method defined by ``gap_cost``.
+        - False: Penalize terminal gaps using the same method defined by ``gap_cost``.
           This behavior is the true global alignment.
 
     gap_chars : iterable of 1-length str, optional
@@ -241,7 +241,7 @@ def align_score(alignment, sub_score, gap_cost, terminal_gaps=False, gap_chars="
     Calculate the score of a multiple alignment of protein sequences, using the
     BLOSUM62 substitution matrix, with gap opening and extension penalties being 11
     and 1 (the default BLASTP parameters). Note that terminal gaps are not penalized
-    by default unless ``terminal_gaps`` is set to True.
+    by default unless ``free_ends`` is set to False.
 
     >>> msa = TabularMSA([Protein("MKQ-PSV"),
     ...                   Protein("MKIDTS-"),
@@ -282,7 +282,7 @@ def align_score(alignment, sub_score, gap_cost, terminal_gaps=False, gap_chars="
     n = seqs.shape[0]
     starts = np.empty(n, dtype=int)
     stops = np.empty(n, dtype=int)
-    _trim_terminal_gaps(bits, starts, stops)
+    _trim_end_gaps(bits, starts, stops)
     if not (starts + stops).all():
         raise ValueError("The alignment contains gap-only sequence(s).")
 
@@ -298,5 +298,5 @@ def align_score(alignment, sub_score, gap_cost, terminal_gaps=False, gap_chars="
         mismatch,
         gap_open,
         gap_extend,
-        terminal_gaps,
+        free_ends,
     )

@@ -10,7 +10,7 @@
 # distutils: define_macros=NPY_NO_DEPRECATED_API=NPY_1_7_API_VERSION
 
 
-def _trim_terminal_gaps(
+def _trim_end_gaps(
     unsigned char[:, :] bits,
     Py_ssize_t[::1] starts,
     Py_ssize_t[::1] stops,
@@ -67,7 +67,7 @@ def _multi_align_score(
     double mismatch,
     double gap_open,
     double gap_extend,
-    bint terminal_gaps,
+    bint free_ends,
 ):
     """Calculate sum-of-pairs (SP) alignment score of aligned sequences.
 
@@ -93,8 +93,8 @@ def _multi_align_score(
         Gap opening penalty.
     gap_extend : float
         Gap extension penalty.
-    terminal_gaps : bool
-        Whether terminal gaps should be penalized.
+    free_ends : bool
+        Whether terminal gaps are free from penalization.
 
     Returns
     -------
@@ -135,12 +135,12 @@ def _multi_align_score(
         for i2 in range(i1 + 1, n):
 
             # determine start and end segment indices to iterate over
-            if terminal_gaps:
-                start = min(starts[i1], starts[i2])
-                end = max(stops[i1], stops[i2])
-            else:
+            if free_ends:
                 start = max(starts[i1], starts[i2])
                 end = min(stops[i1], stops[i2])
+            else:
+                start = min(starts[i1], starts[i2])
+                end = max(stops[i1], stops[i2])
 
             # determine start position in the alignment
             pos = 0

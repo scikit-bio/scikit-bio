@@ -8,19 +8,18 @@
 
 import unittest
 
-import numpy as np
 import numpy.testing as npt
 
 from skbio.sequence import DNA, Protein, SubstitutionMatrix
 from skbio.alignment import TabularMSA, AlignPath
 from skbio.util import get_data_path
 
-from skbio.alignment._score import trim_terminal_gaps, align_score
+from skbio.alignment._score import trim_end_gaps, align_score
 
 
 class TestScore(unittest.TestCase):
 
-    def test_trim_terminal_gaps(self):
+    def test_trim_end_gaps(self):
         aln = [
             "GAGTCCCA",  # no gap
             "--GTTCCA",  # leading gap
@@ -29,7 +28,7 @@ class TestScore(unittest.TestCase):
             "-AG--CC-",  # with internal gap
             "--------",  # gap-only
         ]
-        obs = trim_terminal_gaps(aln)
+        obs = trim_end_gaps(aln)
         exp = ([0, 2, 0, 1, 1, 0], [8, 8, 5, 7, 7, 0])
         for o, e in zip(obs, exp):
             npt.assert_array_equal(o, e)
@@ -61,7 +60,7 @@ class TestScore(unittest.TestCase):
         # total => -14 + 0 -14 = -28
 
         # penalize terminal gaps
-        obs = align_score(aln, (2, -3), (5, 2), True)
+        obs = align_score(aln, (2, -3), (5, 2), free_ends=False)
         self.assertEqual(obs, -46.0)
 
         # Alternative parameters: adopted from EMBOSS Needle:
@@ -149,7 +148,7 @@ class TestScore(unittest.TestCase):
         self.assertEqual(obs, 10)
         obs = align_score(aln, "NUC.4.4", (5, 2))
         self.assertEqual(obs, 10)
-        obs = align_score(aln, (5, -4), (5, 2), terminal_gaps=True)
+        obs = align_score(aln, (5, -4), (5, 2), free_ends=False)
         self.assertEqual(obs, 10)
         obs = align_score(aln, (5, -4), 3)
         self.assertEqual(obs, 14)
@@ -165,7 +164,7 @@ class TestScore(unittest.TestCase):
                "--TCATGC"]
         obs = align_score(aln, (5, -4), (5, 2))
         self.assertEqual(obs, 20)
-        obs = align_score(aln, (5, -4), (5, 2), terminal_gaps=True)
+        obs = align_score(aln, (5, -4), (5, 2), free_ends=False)
         self.assertEqual(obs, 2)
 
         # very complex gaps
@@ -173,7 +172,7 @@ class TestScore(unittest.TestCase):
                "----C-GG--G--C-TC--GT---CCA---"]
         obs = align_score(aln, (5, -4), (5, 2))
         self.assertEqual(obs, -55)
-        obs = align_score(aln, (5, -4), (5, 2), terminal_gaps=True)
+        obs = align_score(aln, (5, -4), (5, 2), free_ends=False)
         self.assertEqual(obs, -75)
 
     def test_align_score_real(self):
@@ -184,7 +183,7 @@ class TestScore(unittest.TestCase):
         obs = align_score(aln, "BLOSUM62", (5, 2))
         self.assertEqual(obs, exp)
         exp = 10918
-        obs = align_score(aln, "BLOSUM62", (5, 2), terminal_gaps=True)
+        obs = align_score(aln, "BLOSUM62", (5, 2), free_ends=False)
         self.assertEqual(obs, exp)
 
         # DNA
@@ -211,9 +210,9 @@ class TestScore(unittest.TestCase):
 
         # one pair doesn't align
         aln = ["AAAAA", "AA---", "---AA"]
-        obs = align_score(aln, (5, -4), (5, 2), terminal_gaps=True)
+        obs = align_score(aln, (5, -4), (5, 2), free_ends=False)
         self.assertEqual(obs, -20)
-        obs = align_score(aln, (5, -4), (5, 2), terminal_gaps=False)
+        obs = align_score(aln, (5, -4), (5, 2), free_ends=True)
         self.assertEqual(obs, 20)
 
     def test_align_score_error(self):
