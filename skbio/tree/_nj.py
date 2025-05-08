@@ -188,7 +188,7 @@ def _nj(dm):
     N = n = dm.shape[0]  # dimension
     sums = dm.sum(axis=0)  # distance sums
     idxs = np.arange(N)  # cluster indices
-    lm = np.empty((N - 1, 4))  # linkage matrix
+    lm = np.empty((N - 1, 4), dtype=dm.dtype)  # linkage matrix
 
     # Iteratively merge taxa until there are three left.
     while n > 3:
