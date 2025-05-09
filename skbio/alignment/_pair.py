@@ -15,6 +15,69 @@ from skbio.util._decorator import classonlymethod
 from skbio.sequence import Sequence, SubstitutionMatrix
 
 
+def pair_align(
+    seq1,
+    seq2,
+    mode="global",
+    sub_score=(1, -1),
+    gap_cost=2,
+    free_ends=False,
+):
+    # alignment mode
+    if mode not in ("global", "local"):
+        raise ValueError("`mode` must be either 'global' or 'local'.")
+    local = mode == "local"
+
+    # encode sequences
+    seq1 = _seq_to_bytes(seq1)
+    seq2 = _seq_to_bytes(seq2)
+    m = seq1.size
+    n = seq2.size
+
+    # substitution matrix
+    if isinstance(sub_score, str):
+        sub_score = SubstitutionMatrix.by_name(sub_score)
+    if isinstance(sub_score, SubstitutionMatrix):
+        submat = _submat_from_sm(seq1, seq2, sub_score)
+    # match/mismatch scores
+    else:
+        submat = _submat_from_mm(seq1, seq2, *sub_score)
+
+    # affine or linear gap penalty
+    if isinstance(gap_cost, Real):
+        gap_open, gap_extend = 0, gap_cost
+    else:
+        gap_open, gap_extend = gap_cost
+
+    # allocate alignment matrices
+    matrices = _alloc_matrices(m, n, gap_open)
+
+    # initialize alignment matrices
+    _init_matrices(*matrices, gap_open, gap_extend, local, free_ends)
+
+    # fill alignment matrices (compute-intensive)
+    if affine:
+        global_max, max_i, max_j = _fill_affine_matrix(
+            dirmat, scomat, insmat, delmat, submat, gap_open, gap_extend, local
+        )
+    else:
+        global_max, max_i, max_j = _fill_linear_matrix(
+            dirmat, scomat, submat, gap_extend, local
+        )
+
+    # locate alignment stops
+    stops = _get_linear_stops_all(m, n, scomat, local, free_ends)
+    score = scomat[*stops[0]]
+
+    # traceback
+    codes, sizes = traceback_one_cy6(*stops[0], dirmat, local)
+
+    # TODO: adjust for local
+    path = PairAlignPath(sizes, codes)
+
+    return score, path
+
+
 def _seq_to_bytes(seq):
     """Convert a sequence into bytes."""
     if isinstance(seq, Sequence):
@@ -40,10 +103,120 @@ def _moves(i, j, alnmat, seq1, seq2, mthmis, gap):
     )
 
 
-def _make_submat(seq1, seq2, match, mismatch):
+### Create substitution matrix
+
+
+def _submat_from_mm(seq1, seq2, match, mismatch):
     """Pre-compute a match/mismatch array to facilitate lookup."""
-    # This is an alternative to mthmis[int(seq1[i, j] != seq2[i, j])]
+    match, mismatch = float(match), float(mismatch)
     return np.where(seq1[:, None] == seq2[None, :], match, mismatch)
+
+
+def _submat_from_sm(seq1, seq2, sub_score):
+    """Pre-compute a match/mismatch array to facilitate lookup."""
+    seq1 = sub_score._char_hash[seq1]
+    seq2 = sub_score._char_hash[seq2]
+    try:
+        submat = sub_score._data[seq1][:, seq2]
+    except IndexError:
+        raise ValueError(
+            "Sequences contain characters that are not present in the provided "
+            "substitution matrix."
+        )
+    return np.ascontiguousarray(submat)
+
+
+### Step 1: Allocate alignment matrix ###
+
+
+def _alloc_matrices(m, n, affine, dtype=np.float64):
+    """Allocate alignment matrix(ces).
+
+    Parameters
+    ----------
+    m : int
+        Length of sequence 1.
+    n : int
+        Length of sequence 2.
+    affine : bool
+        Affine (True) or linear (False) gap penalty.
+    dtype : type, optional
+        Data type (np.float32 or np.float64)
+
+    Returns
+    -------
+    scomat : ndarray of shape (m, n)
+        Main matrix.
+    insmat : ndarray of shape (m, n)
+        Insertion matrix.
+    delmat : ndarray of shape (m, n)
+        Deletion matrix.
+
+    """
+    # Note: The array should be C-contiguous to facilitate row-wise iteration.
+    # NumPy's default array is already C-contiguous. This is also enforced by the
+    # unit test.
+    shape = (m + 1, n + 1)
+    scomat = np.empty(shape, dtype=dtype)
+    if affine:
+        insmat = np.empty(shape, dtype=dtype)
+        delmat = np.empty(shape, dtype=dtype)
+    else:
+        insmat = None
+        delmat = None
+    return scomat, insmat, delmat
+
+
+### Step 2: Initialize alignment matrix ###
+
+
+def _init_matrices(scomat, insmat, delmat, gap_open, gap_extend, local, free_ends):
+    """Initialize alignment matrix(ces) by populating first column and row.
+
+    Parameters
+    ----------
+    scomat : ndarray of shape (m, n)
+        Main matrix.
+    insmat : ndarray of shape (m, n)
+        Insertion matrix.
+    delmat : ndarray of shape (m, n)
+        Deletion matrix.
+    gap_open : float
+        Gap opening penalty.
+    gap_extend : float
+        Gap extension penalty.
+    local : bool
+        Local or global alignment.
+    free_ends : bool
+        If end gaps are free from penalty.
+
+    """
+    m1, n1 = scomat.shape
+
+    # initialize main scoring matrix
+    scomat[0, 0] = 0
+    if local or free_ends:
+        scomat[1:m1, 0] = 0
+        scomat[0, 1:n1] = 0
+    else:
+        series = np.arange(1, max(m1, n1))
+        series *= -gap_extend
+        if gap_open:
+            series -= gap_open
+        scomat[1:m1, 0] = series[: m1 - 1]
+        scomat[0, 1:n1] = series[: n1 - 1]
+
+    # initialize insertion and deletion matrices
+    if gap_open:
+        if local:
+            insmat[1:m1, 0] = 0
+            delmat[0, 1:n1] = 0
+        else:
+            insmat[1:m1, 0] = -np.inf
+            delmat[0, 1:n1] = -np.inf
+            # series -= gap_open
+            # insmat[1:m1, 0] = series[:m1 - 1]
+            # delmat[0, 1:n1] = series[:n1 - 1]
 
 
 class PairAligner(SkbioObject):
@@ -213,50 +386,6 @@ class PairAligner(SkbioObject):
                 pass
             else:
                 return self._trace_global_linear_iter()
-
-    ### Step 1: Allocate alignment matrix ###
-
-    def _alloc_linear_matrix(self):
-        """Allocate alignment matrix with linear gap penalty."""
-        # Note: The array should be C-contiguous to facilitate row-wise iteration.
-        # NumPy's default array is already C-contiguous. This is also enforced by the
-        # unit test.
-        self._alnmat = np.empty((self._len1 + 1, self._len2 + 1))
-        self._insmat = None
-        self._delmat = None
-
-    def _alloc_affine_matrix(self):
-        """Allocate alignment matrices with affine gap penalty."""
-        shape_ = (self._len1 + 1, self._len2 + 1)
-        self._alnmat = np.empty(shape_)
-        self._insmat = np.empty(shape_)
-        self._delmat = np.empty(shape_)
-
-    ### Step 2: Initialize alignment matrix ###
-
-    def _init_global_linear_matrix(self):
-        """Initialize global alignment matrix with linear gap penalty."""
-        m1, n1 = self._len1 + 1, self._len2 + 1
-        gap = self._gap_extend
-        alnmat = self._alnmat
-        alnmat[0, 0] = 0
-        alnmat[1:, 0] = np.arange(1, m1) * gap
-        alnmat[0, 1:] = np.arange(1, n1) * gap
-
-    def _init_local_linear_matrix(self):
-        """Initialize local alignment matrix with linear gap penalty."""
-        alnmat = self._alnmat
-        alnmat[0, 0] = 0
-        alnmat[1:, 0] = 0
-        alnmat[0, 1:] = 0
-
-    def _init_global_affine_matrix(self):
-        """Initiate global alignment matrices with affine gap penalty."""
-        pass
-
-    def _init_local_affine_matrix(self):
-        """Initiate local alignment matrices with affine gap penalty."""
-        pass
 
     ### Step 3: Fill alignment matrix (compute-intensive) ###
 

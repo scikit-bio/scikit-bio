@@ -17,6 +17,74 @@ from skbio.sequence import Sequence, DNA, Protein
 
 from skbio.alignment._pair import PairAligner
 
+from skbio.alignment._pair import (
+    _alloc_matrices,
+    _init_matrices,
+)
+
+
+
+class TestPairAlign(unittest.TestCase):
+    def setUp(self):
+        pass
+
+    def test_alloc_matrices(self):
+        # linear
+        obs = _alloc_matrices(3, 4, affine=False)
+        self.assertTrue(isinstance(obs[0], np.ndarray))
+        self.assertTupleEqual(obs[0].shape, (4, 5))
+        self.assertEqual(obs[0].dtype, np.float64)
+        self.assertIsNone(obs[1])
+        self.assertIsNone(obs[2])
+
+        # ensure matrix is C-contiguous
+        self.assertTrue(obs[0].flags.c_contiguous)
+
+        # affine
+        obs = _alloc_matrices(3, 4, affine=True)
+        for mat in obs:
+            self.assertTupleEqual(mat.shape, (4, 5))
+            self.assertEqual(mat.dtype, np.float64)
+
+        # float32
+        obs = _alloc_matrices(3, 4, affine=False, dtype=np.float32)
+        self.assertEqual(obs[0].dtype, np.float32)
+
+    def test_init_matrices(self):
+        # classical global alignment
+        obs = _alloc_matrices(3, 4, affine=False)
+        _init_matrices(*obs, 0, 2, local=False, free_ends=False)
+        npt.assert_array_equal(obs[0][:, 0], [0, -2, -4, -6])
+        npt.assert_array_equal(obs[0][0, :], [0, -2, -4, -6, -8])
+
+        # local alignment
+        obs = _alloc_matrices(3, 4, affine=False)
+        _init_matrices(*obs, 0, 2, local=True, free_ends=False)
+        self.assertTrue((obs[0][:, 0] == 0).all())
+        self.assertTrue((obs[0][0, :] == 0).all())
+
+        # semi-global alignment (free ends)
+        obs = _alloc_matrices(3, 4, affine=False)
+        _init_matrices(*obs, 0, 2, local=False, free_ends=True)
+        self.assertTrue((obs[0][:, 0] == 0).all())
+        self.assertTrue((obs[0][0, :] == 0).all())
+
+        # affine and global
+        obs = _alloc_matrices(3, 4, affine=True)
+        _init_matrices(*obs, 5, 2, local=False, free_ends=False)
+        npt.assert_array_equal(obs[0][:, 0], [0, -7, -9, -11])
+        npt.assert_array_equal(obs[0][0, :], [0, -7, -9, -11, -13])
+        self.assertTrue(np.isneginf(obs[1][1:, 0]).all())
+        self.assertTrue(np.isneginf(obs[2][0, 1:]).all())
+
+        # affine and local
+        obs = _alloc_matrices(3, 4, affine=True)
+        _init_matrices(*obs, 5, 2, local=True, free_ends=False)
+        self.assertTrue((obs[0][:, 0] == 0).all())
+        self.assertTrue((obs[0][0, :] == 0).all())
+        self.assertTrue((obs[1][1:, 0] == 0).all())
+        self.assertTrue((obs[2][0, 1:] == 0).all())
+
 
 class TestPairAligner(unittest.TestCase):
     def setUp(self):
