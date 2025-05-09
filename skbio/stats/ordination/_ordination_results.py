@@ -374,16 +374,27 @@ class OrdinationResults(SkbioObject, PlottableMixin):
             centroids = self.samples.groupby(df[column]).mean()
             for label, color in category_to_color.items():
                 if label in centroids.index:
-                    ax.scatter(
-                        centroids.loc[label].iloc[axes[0]],
-                        centroids.loc[label].iloc[axes[1]],
-                        centroids.loc[label].iloc[axes[2]],
-                        color=color,
-                        marker="x",
-                        s=30,
-                        label=f"'{label}' centroid",
-                        # edgecolors="black",
-                    )
+                    if zs is None:
+                        ax.scatter(
+                            centroids.loc[label].iloc[axes[0]],
+                            centroids.loc[label].iloc[axes[1]],
+                            color=color,
+                            marker="x",
+                            s=30,
+                            label=f"'{label}' centroid",
+                            edgecolors="black",
+                        )
+                    else:
+                        ax.scatter(
+                            centroids.loc[label].iloc[axes[0]],
+                            centroids.loc[label].iloc[axes[1]],
+                            centroids.loc[label].iloc[axes[2]],
+                            color=color,
+                            marker="x",
+                            s=30,
+                            label=f"'{label}' centroid",
+                            edgecolors="black",
+                        )
 
         if axis_labels is None:
             axis_labels = ["%d" % axis for axis in axes]
