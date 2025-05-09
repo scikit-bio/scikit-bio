@@ -7,6 +7,7 @@
 # ----------------------------------------------------------------------------
 
 import functools
+from warnings import warn
 
 import numpy as np
 import pandas as pd
@@ -14,8 +15,8 @@ import pandas as pd
 from skbio._base import SkbioObject
 from skbio.stats._misc import _pprint_strs
 from skbio.util._plotting import PlottableMixin
-from skbio.io.registry import Read, Write
-from skbio.util.config._dispatcher import extract_row_ids
+from skbio.io.descriptors import Read, Write
+from skbio.util.config._dispatcher import _extract_row_ids
 
 
 class OrdinationResults(SkbioObject, PlottableMixin):
@@ -32,28 +33,41 @@ class OrdinationResults(SkbioObject, PlottableMixin):
         Abbreviated ordination method name.
     long_method_name : str
         Ordination method name.
-    eigvals : ndarray
+    eigvals : table_like
         The resulting eigenvalues.  The index corresponds to the ordination
-        axis labels
-    samples : ndarray
+        axis labels. See the `DataTable <https://scikit.bio/
+        docs/dev/generated/skbio.util.config.html#the-datatable-type>`_ type
+        documentation for details.
+    samples : table_like
         The position of the samples in the ordination space, row-indexed by the
-        sample id.
-    sample_ids : list of str, or should it be pd.Index?
-        The names of the samples. Must be provided if samples is an array.
-    features : ndarray
+        sample id. See the `DataTable <https://scikit.bio/
+        docs/dev/generated/skbio.util.config.html#the-datatable-type>`_ type
+        documentation for details.
+    features : table_like
         The position of the features in the ordination space, row-indexed by
-        the feature id.
-    feature_ids : array-like of str
-        The names of the features. Must be provided if features is an array.
-    biplot_scores : ndarray
+        the feature id. See the `DataTable <https://scikit.bio/
+        docs/dev/generated/skbio.util.config.html#the-datatable-type>`_ type
+        documentation for details.
+    biplot_scores : table_like
         Correlation coefficients of the samples with respect to the features.
-    sample_constraints : ndarray
+        See the `DataTable <https://scikit.bio/
+        docs/dev/generated/skbio.util.config.html#the-datatable-type>`_ type
+        documentation for details.
+    sample_constraints : table_like
         Site constraints (linear combinations of constraining variables):
         coordinates of the sites in the space of the explanatory variables X.
-        These are the fitted site scores
-    proportion_explained : ndarray
+        These are the fitted site scores. See the `DataTable <https://scikit.bio/
+        docs/dev/generated/skbio.util.config.html#the-datatable-type>`_ type
+        documentation for details.
+    proportion_explained : table_like
         Proportion explained by each of the dimensions in the ordination space.
-        The index corresponds to the ordination axis labels
+        The index corresponds to the ordination axis labels. See the
+        `DataTable <https://scikit.bio/docs/dev/generated/skbio.util.config.html#
+        the-datatable-type>`_ type documentation for details.
+    sample_ids, feature_ids, constraint_ids, output_format : optional
+        Standard ``DataTable`` parameters. See the `DataTable <https://scikit.bio/
+        docs/dev/generated/skbio.util.config.html#the-datatable-type>`_ type
+        documentation for details.
 
     See Also
     --------
@@ -89,13 +103,15 @@ class OrdinationResults(SkbioObject, PlottableMixin):
 
         self.samples = samples
         if sample_ids is None:
-            self.sample_ids = extract_row_ids(samples)
+            no_samp_ids = True
+            self.sample_ids = _extract_row_ids(samples)
         else:
+            no_samp_ids = False
             self.sample_ids = sample_ids
 
         self.features = features
         if feature_ids is None and features is not None:
-            self.feature_ids = extract_row_ids(features)
+            self.feature_ids = _extract_row_ids(features, warn_ids=no_samp_ids)
         else:
             self.feature_ids = feature_ids
 
@@ -156,7 +172,7 @@ class OrdinationResults(SkbioObject, PlottableMixin):
             return "\t%s: %s" % (attr_name, _pprint_strs(ids))
         elif data is not None:
             return self._format_attribute(
-                data, attr_name, _pprint_strs(extract_row_ids)
+                data, attr_name, _pprint_strs(_extract_row_ids)
             )
         else:
             return "\t%s: N/A" % attr_name
@@ -178,6 +194,7 @@ class OrdinationResults(SkbioObject, PlottableMixin):
         cmap=None,
         s=20,
         n_dims=3,
+        plot_centroids=False,
     ):
         """Create a 3-D scatterplot of ordination results colored by metadata.
 
@@ -223,6 +240,8 @@ class OrdinationResults(SkbioObject, PlottableMixin):
         s : scalar or iterable of scalars, optional
             Size of points. See matplotlib's ``Axes3D.scatter`` documentation
             for more details.
+         plot_centroids : bool, optional
+            If True, plot the centroids of each category in `column`.
 
         Returns
         -------
@@ -351,6 +370,32 @@ class OrdinationResults(SkbioObject, PlottableMixin):
         else:
             plot = scatter_fn(c=point_colors)
 
+        if plot_centroids and category_to_color:
+            centroids = self.samples.groupby(df[column]).mean()
+            for label, color in category_to_color.items():
+                if label in centroids.index:
+                    if zs is None:
+                        ax.scatter(
+                            centroids.loc[label].iloc[axes[0]],
+                            centroids.loc[label].iloc[axes[1]],
+                            color=color,
+                            marker="x",
+                            s=30,
+                            label=f"'{label}' centroid",
+                            edgecolors="black",
+                        )
+                    else:
+                        ax.scatter(
+                            centroids.loc[label].iloc[axes[0]],
+                            centroids.loc[label].iloc[axes[1]],
+                            centroids.loc[label].iloc[axes[2]],
+                            color=color,
+                            marker="x",
+                            s=30,
+                            label=f"'{label}' centroid",
+                            edgecolors="black",
+                        )
+
         if axis_labels is None:
             axis_labels = ["%d" % axis for axis in axes]
         elif len(axis_labels) != len(axes):
@@ -371,13 +416,13 @@ class OrdinationResults(SkbioObject, PlottableMixin):
 
         ax.set_title(title)
 
-        # create legend/colorbar
         if point_colors is not None:
             if category_to_color is None:
                 fig.colorbar(plot)
             else:
                 self._plot_categorical_legend(ax, category_to_color)
-
+        if plot_centroids:
+            ax.legend()
         return fig
 
     def _validate_plot_axes(self, coord_matrix, axes):
