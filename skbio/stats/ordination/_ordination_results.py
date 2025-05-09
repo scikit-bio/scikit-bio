@@ -7,13 +7,16 @@
 # ----------------------------------------------------------------------------
 
 import functools
+from warnings import warn
 
 import numpy as np
+import pandas as pd
 
 from skbio._base import SkbioObject
 from skbio.stats._misc import _pprint_strs
 from skbio.util._plotting import PlottableMixin
-from skbio.io.registry import Read, Write
+from skbio.io.descriptors import Read, Write
+from skbio.util.config._dispatcher import _extract_row_ids
 
 
 class OrdinationResults(SkbioObject, PlottableMixin):
@@ -30,24 +33,41 @@ class OrdinationResults(SkbioObject, PlottableMixin):
         Abbreviated ordination method name.
     long_method_name : str
         Ordination method name.
-    eigvals : pd.Series
+    eigvals : table_like
         The resulting eigenvalues.  The index corresponds to the ordination
-        axis labels
-    samples : pd.DataFrame
+        axis labels. See the `DataTable <https://scikit.bio/
+        docs/dev/generated/skbio.util.config.html#the-datatable-type>`_ type
+        documentation for details.
+    samples : table_like
         The position of the samples in the ordination space, row-indexed by the
-        sample id.
-    features : pd.DataFrame
+        sample id. See the `DataTable <https://scikit.bio/
+        docs/dev/generated/skbio.util.config.html#the-datatable-type>`_ type
+        documentation for details.
+    features : table_like
         The position of the features in the ordination space, row-indexed by
-        the feature id.
-    biplot_scores : pd.DataFrame
+        the feature id. See the `DataTable <https://scikit.bio/
+        docs/dev/generated/skbio.util.config.html#the-datatable-type>`_ type
+        documentation for details.
+    biplot_scores : table_like
         Correlation coefficients of the samples with respect to the features.
-    sample_constraints : pd.DataFrame
+        See the `DataTable <https://scikit.bio/
+        docs/dev/generated/skbio.util.config.html#the-datatable-type>`_ type
+        documentation for details.
+    sample_constraints : table_like
         Site constraints (linear combinations of constraining variables):
         coordinates of the sites in the space of the explanatory variables X.
-        These are the fitted site scores
-    proportion_explained : pd.Series
+        These are the fitted site scores. See the `DataTable <https://scikit.bio/
+        docs/dev/generated/skbio.util.config.html#the-datatable-type>`_ type
+        documentation for details.
+    proportion_explained : table_like
         Proportion explained by each of the dimensions in the ordination space.
-        The index corresponds to the ordination axis labels
+        The index corresponds to the ordination axis labels. See the
+        `DataTable <https://scikit.bio/docs/dev/generated/skbio.util.config.html#
+        the-datatable-type>`_ type documentation for details.
+    sample_ids, feature_ids, constraint_ids, output_format : optional
+        Standard ``DataTable`` parameters. See the `DataTable <https://scikit.bio/
+        docs/dev/generated/skbio.util.config.html#the-datatable-type>`_ type
+        documentation for details.
 
     See Also
     --------
@@ -69,19 +89,35 @@ class OrdinationResults(SkbioObject, PlottableMixin):
         long_method_name,
         eigvals,
         samples,
+        sample_ids=None,
         features=None,
+        feature_ids=None,
         biplot_scores=None,
         sample_constraints=None,
+        constraint_ids=None,
         proportion_explained=None,
     ):
         self.short_method_name = short_method_name
         self.long_method_name = long_method_name
-
         self.eigvals = eigvals
+
         self.samples = samples
+        if sample_ids is None:
+            no_samp_ids = True
+            self.sample_ids = _extract_row_ids(samples)
+        else:
+            no_samp_ids = False
+            self.sample_ids = sample_ids
+
         self.features = features
+        if feature_ids is None and features is not None:
+            self.feature_ids = _extract_row_ids(features, warn_ids=no_samp_ids)
+        else:
+            self.feature_ids = feature_ids
+
         self.biplot_scores = biplot_scores
         self.sample_constraints = sample_constraints
+        self.constraint_ids = constraint_ids
         self.proportion_explained = proportion_explained
 
     def __str__(self):
@@ -118,27 +154,46 @@ class OrdinationResults(SkbioObject, PlottableMixin):
             lines.append(self._format_attribute(attr, attr_label, formatter))
 
         lines.append(
-            self._format_attribute(
-                self.features, "Feature IDs", lambda e: _pprint_strs(e.index.tolist())
+            self._add_id_line(
+                attr_name="Feature IDs", ids=self.feature_ids, data=self.features
             )
         )
         lines.append(
-            self._format_attribute(
-                self.samples, "Sample IDs", lambda e: _pprint_strs(e.index.tolist())
+            self._add_id_line(
+                attr_name="Sample IDs", ids=self.sample_ids, data=self.samples
             )
         )
 
         return "\n".join(lines)
 
+    def _add_id_line(self, attr_name, ids, data):
+        """Helper to append ids to str."""
+        if ids is not None:
+            return "\t%s: %s" % (attr_name, _pprint_strs(ids))
+        elif data is not None:
+            return self._format_attribute(
+                data, attr_name, _pprint_strs(_extract_row_ids)
+            )
+        else:
+            return "\t%s: N/A" % attr_name
+
+    def _format_attribute(self, attr, attr_label, formatter):
+        if attr is None:
+            formatted_attr = "N/A"
+        else:
+            formatted_attr = formatter(attr)
+        return "\t%s: %s" % (attr_label, formatted_attr)
+
     def plot(
         self,
         df=None,
         column=None,
-        axes=(0, 1, 2),
+        axes=None,
         axis_labels=None,
         title="",
         cmap=None,
         s=20,
+        n_dims=3,
         plot_centroids=False,
     ):
         """Create a 3-D scatterplot of ordination results colored by metadata.
@@ -166,9 +221,10 @@ class OrdinationResults(SkbioObject, PlottableMixin):
             not be colored by metadata.
         axes : iterable of int, optional
             Indices of sample coordinates to plot on the x-, y-, and z-axes.
-            For example, if plotting PCoA results, ``axes=(0, 1, 2)`` will plot
-            PC 1 on the x-axis, PC 2 on the y-axis, and PC 3 on the z-axis.
-            Must contain exactly three elements.
+            For example, if plotting PCoA results, ``axes=(0, 1)`` will plot
+            PC 1 on the x-axis and PC 2 on the y-axis. If plotting PCoA results,
+            ``axes=(0, 1, 2)`` will plot PC 1 on the x-axis, PC 2 on the y-axis,
+            and PC 3 on the z-axis.Must contain exactly two or three elements.
         axis_labels : iterable of str, optional
             Labels for the x-, y-, and z-axes. If ``None``, labels will be the
             values of `axes` cast as strings.
@@ -263,23 +319,52 @@ class OrdinationResults(SkbioObject, PlottableMixin):
         # instead be added to EMPeror (http://biocore.github.io/emperor/).
         # Only bug fixes and minor updates should be made to this method.
 
+        if axes is None:
+            if n_dims == 2:
+                axes = [0, 1]
+            elif n_dims == 3:
+                axes = [0, 1, 2]
+            else:
+                raise ValueError("n_dims must be 2 or 3.")
+
         self._get_mpl_plt()
 
-        coord_matrix = self.samples.values.T
+        # print(df)
+
+        # This handles any input, numpy/pandas/polars
+        coord_matrix = np.atleast_2d(self.samples).T
+        # if get_config("output") == "pandas":
+        #     coord_matrix = self.samples.values.T
+        # elif get_config("output") == "numpy":
+        #     coord_matrix = self.samples.T
+
+        point_colors, category_to_color = self._get_plot_point_colors(
+            df, column, self.sample_ids, cmap
+        )
         self._validate_plot_axes(coord_matrix, axes)
+        if len(axes) == 3:  # 3d functionality
+            fig = self.plt.figure()
+            ax = fig.add_subplot(projection="3d")
+            xs, ys, zs = (
+                coord_matrix[axes[0]],
+                coord_matrix[axes[1]],
+                coord_matrix[axes[2]],
+            )
 
-        fig = self.plt.figure()
-        ax = fig.add_subplot(projection="3d")
-
-        xs = coord_matrix[axes[0]]
-        ys = coord_matrix[axes[1]]
-        zs = coord_matrix[axes[2]]
+        elif len(axes) == 2:  # 2d functionality
+            fig, ax = self.plt.subplots()
+            xs, ys = coord_matrix[axes[0]], coord_matrix[axes[1]]
+            zs = None
 
         point_colors, category_to_color = self._get_plot_point_colors(
             df, column, self.samples.index, cmap
         )
 
-        scatter_fn = functools.partial(ax.scatter, xs, ys, zs, s=s)
+        if zs is None:
+            scatter_fn = functools.partial(ax.scatter, xs, ys, s=s)
+        else:
+            scatter_fn = functools.partial(ax.scatter, xs, ys, zs, s=s)
+
         if point_colors is None:
             plot = scatter_fn()
         else:
@@ -302,18 +387,22 @@ class OrdinationResults(SkbioObject, PlottableMixin):
 
         if axis_labels is None:
             axis_labels = ["%d" % axis for axis in axes]
-        elif len(axis_labels) != 3:
+        elif len(axis_labels) != len(axes):
             raise ValueError(
-                "axis_labels must contain exactly three elements "
-                "(found %d elements)." % len(axis_labels)
+                f"axis_labels ({len(axis_labels)} elements) "
+                f"must contain the same number of elements as "
+                f"axes ({len(axes)} elements)."
             )
 
         ax.set_xlabel(axis_labels[0])
         ax.set_ylabel(axis_labels[1])
-        ax.set_zlabel(axis_labels[2])
         ax.set_xticklabels([])
         ax.set_yticklabels([])
-        ax.set_zticklabels([])
+
+        if len(axes) == 3:
+            ax.set_zlabel(axis_labels[2])
+            ax.set_zticklabels([])
+
         ax.set_title(title)
 
         if point_colors is not None:
@@ -328,18 +417,18 @@ class OrdinationResults(SkbioObject, PlottableMixin):
     def _validate_plot_axes(self, coord_matrix, axes):
         """Validate `axes` against coordinates matrix."""
         num_dims = coord_matrix.shape[0]
-        if num_dims < 3:
+        if num_dims < 2:
             raise ValueError(
-                "At least three dimensions are required to plot "
+                "At least two dimensions are required to plot "
                 "ordination results. There are only %d "
                 "dimension(s)." % num_dims
             )
-        if len(axes) != 3:
+        if len(axes) not in [2, 3]:
             raise ValueError(
-                "`axes` must contain exactly three elements "
+                "`axes` must contain exactly two or three elements "
                 "(found %d elements)." % len(axes)
             )
-        if len(set(axes)) != 3:
+        if len(set(axes)) != len(axes):
             raise ValueError("The values provided for `axes` must be unique.")
 
         for idx, axis in enumerate(axes):
@@ -355,7 +444,7 @@ class OrdinationResults(SkbioObject, PlottableMixin):
         """
         if (df is None and column is not None) or (df is not None and column is None):
             raise ValueError(
-                "Both df and column must be provided, or both " "must be None."
+                "Both df and column must be provided, or both must be None."
             )
         elif df is None and column is None:
             point_colors, category_to_color = None, None
@@ -414,13 +503,6 @@ class OrdinationResults(SkbioObject, PlottableMixin):
             bbox_to_anchor=(1.05, 0.5),
             borderaxespad=0.0,
         )
-
-    def _format_attribute(self, attr, attr_label, formatter):
-        if attr is None:
-            formatted_attr = "N/A"
-        else:
-            formatted_attr = formatter(attr)
-        return "\t%s: %s" % (attr_label, formatted_attr)
 
     def rename(self, mapper, matrix="samples", strict=True):
         r"""Rename sample or feature IDs in the data matrix.

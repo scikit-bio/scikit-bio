@@ -121,6 +121,12 @@ jobs:
         run: |
           pip install .
           conda list
+      # install anndata and polars here to test as optional dependencies.
+      # encountered errors when installing using conda
+      - name: Install optional dependencies
+        run: |
+          pip install anndata polars
+          conda list
       - name: Run unit tests
         env:
           WITH_COVERAGE: "TRUE"

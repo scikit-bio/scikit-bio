@@ -14,7 +14,7 @@ import pandas as pd
 
 import scipy
 from scipy.spatial.distance import squareform
-from scipy.stats import pearsonr, spearmanr, ConstantInputWarning
+from scipy.stats import pearsonr, spearmanr, ConstantInputWarning, NearConstantInputWarning
 
 from skbio import DistanceMatrix
 from skbio.stats.distance import (DissimilarityMatrixError,
@@ -442,6 +442,19 @@ class MantelTests(MantelTestData):
         # Make sure we haven't modified the input.
         npt.assert_equal(minx, minx_copy)
         npt.assert_equal(miny, miny_copy)
+
+    def test_near_constant(self):
+        noise = 1e-15
+        mat = np.array(self.no_variation)
+        mat[0, 1] += noise
+        mat[1, 0] += noise
+        with self.assertWarns(NearConstantInputWarning) as context:
+            mantel(mat, mat, method="pearson")
+
+    def test_fortran_matrix(self):
+        mat = np.asfortranarray(self.minx)
+        obs = mantel(mat, mat, method="pearson")[0]
+        self.assertAlmostEqual(obs, 1)
 
     def test_invalid_distance_matrix(self):
         # Single asymmetric, non-hollow distance matrix.

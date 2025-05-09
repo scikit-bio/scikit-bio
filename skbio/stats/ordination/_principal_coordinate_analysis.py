@@ -17,6 +17,7 @@ from scipy.linalg import eigh
 
 from skbio.util import get_rng
 from skbio.stats.distance import DistanceMatrix
+from skbio.util.config._dispatcher import _create_table, _create_table_1d
 from ._ordination_results import OrdinationResults
 from ._utils import center_distance_matrix, scale
 
@@ -28,6 +29,7 @@ def pcoa(
     inplace=False,
     seed=None,
     warn_neg_eigval=0.01,
+    output_format=None,
 ):
     r"""Perform Principal Coordinate Analysis (PCoA).
 
@@ -67,6 +69,11 @@ def pcoa(
         warning completely.
 
         .. versionadded:: 0.6.3
+
+    output_format : optional
+        Standard ``DataTable`` parameter. See the `DataTable <https://scikit.bio/
+        docs/dev/generated/skbio.util.config.html#the-datatable-type>`_ type
+        documentation for details.
 
     Returns
     -------
@@ -276,11 +283,16 @@ def pcoa(
     return OrdinationResults(
         short_method_name="PCoA",
         long_method_name=long_method_name,
-        eigvals=pd.Series(eigvals, index=axis_labels),
-        samples=pd.DataFrame(
-            coordinates, index=distance_matrix.ids, columns=axis_labels
+        eigvals=_create_table_1d(eigvals, index=axis_labels, backend=output_format),
+        samples=_create_table(
+            coordinates,
+            index=distance_matrix.ids,
+            columns=axis_labels,
+            backend=output_format,
         ),
-        proportion_explained=pd.Series(proportion_explained, index=axis_labels),
+        proportion_explained=_create_table_1d(
+            proportion_explained, index=axis_labels, backend=output_format
+        ),
     )
 
 

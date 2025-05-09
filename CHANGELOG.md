@@ -2,6 +2,10 @@
 
 ## Version 0.6.4-dev
 
+### Features
+
+* Started implementation of a configuration system which will allow users to provide data types beyond pandas Dataframes as input to scikit-bio functions, as well as choosing which data type will be used as output. Newly supported types include NumPy ndarrays, Polars DataFrames, AnnData objects, and scikit-bio Table objects ([#2187](https://github.com/scikit-bio/scikit-bio/pull/2187))
+
 ### Bug Fixes
 
 * Fixed a bug in the documentation in which the `source` button would link to decorator code, instead of the relevant function ([#2184](https://github.com/scikit-bio/scikit-bio/pull/2184)).
@@ -9,6 +13,7 @@
 ### Miscellaneous
 
 * Updated documentation to include description of how to stream data through stdin with scikit-bio's `read` function ([2185](https://github.com/scikit-bio/scikit-bio/pull/2185))
+* Improved documentation for the `DistanceMatrix` object ([2204](https://github.com/scikit-bio/scikit-bio/pull/2204))
 
 
 ## Version 0.6.3
