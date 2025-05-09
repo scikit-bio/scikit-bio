@@ -13,6 +13,7 @@
 ### Miscellaneous
 
 * Updated documentation to include description of how to stream data through stdin with scikit-bio's `read` function ([2185](https://github.com/scikit-bio/scikit-bio/pull/2185))
+* Improved documentation for the `DistanceMatrix` object ([2204](https://github.com/scikit-bio/scikit-bio/pull/2204))
 
 
 ## Version 0.6.3

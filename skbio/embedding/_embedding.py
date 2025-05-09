@@ -14,7 +14,7 @@ from skbio.sequence import Sequence
 from skbio._base import SkbioObject
 from skbio.stats.ordination import OrdinationResults
 from skbio.diversity import beta_diversity
-from skbio.io.registry import Read, Write
+from skbio.io.descriptors import Read, Write
 
 
 def _repr_helper(rstr, org_name, new_name, dim_name, regex_match, shape):
