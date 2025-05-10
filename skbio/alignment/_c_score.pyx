@@ -9,6 +9,8 @@
 # cython: language_level=3, boundscheck=False, wraparound=False, cdivision=True
 # distutils: define_macros=NPY_NO_DEPRECATED_API=NPY_1_7_API_VERSION
 
+from cython cimport floating
+
 
 def _trim_end_gaps(
     unsigned char[:, :] bits,
@@ -62,11 +64,11 @@ def _multi_align_score(
     Py_ssize_t[:] lens,
     Py_ssize_t[::1] starts,
     Py_ssize_t[::1] stops,
-    double[:, :] submat,
-    double match,
-    double mismatch,
-    double gap_open,
-    double gap_extend,
+    floating[:, :] submat,
+    floating match,
+    floating mismatch,
+    floating gap_open,
+    floating gap_extend,
     bint free_ends,
 ):
     """Calculate sum-of-pairs (SP) alignment score of aligned sequences.
@@ -126,7 +128,7 @@ def _multi_align_score(
 
     cdef bint is_submat = submat.shape[0] > 0
 
-    cdef double score = 0  # cumulative alignment score
+    cdef floating score = 0  # cumulative alignment score
     cdef Py_ssize_t n = seqs.shape[0]  # number of sequences
 
     # calculate alignment score of each pair of sequences and sum up

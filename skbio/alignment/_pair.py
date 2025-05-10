@@ -13,6 +13,7 @@ import numpy as np
 from skbio._base import SkbioObject
 from skbio.util._decorator import classonlymethod
 from skbio.sequence import Sequence, SubstitutionMatrix
+from ._c_pair import _fill_linear_matrix, _fill_affine_matrices
 
 
 def pair_align(
@@ -55,27 +56,25 @@ def pair_align(
     # initialize alignment matrices
     _init_matrices(*matrices, gap_open, gap_extend, local, free_ends)
 
-    # fill alignment matrices (compute-intensive)
-    if affine:
-        global_max, max_i, max_j = _fill_affine_matrix(
-            dirmat, scomat, insmat, delmat, submat, gap_open, gap_extend, local
-        )
+    # fill alignment matrices (quadratic; compute-intensive)
+    if gap_open:
+        _fill_affine_matrices(*matrices, submat, gap_open, gap_extend, local)
     else:
-        global_max, max_i, max_j = _fill_linear_matrix(
-            dirmat, scomat, submat, gap_extend, local
-        )
+        _fill_linear_matrix(matrices[0], submat, gap_extend, local)
+
+    return matrices
 
     # locate alignment stops
-    stops = _get_linear_stops_all(m, n, scomat, local, free_ends)
-    score = scomat[*stops[0]]
+    # stops = _get_linear_stops_all(m, n, scomat, local, free_ends)
+    # score = scomat[*stops[0]]
 
     # traceback
-    codes, sizes = traceback_one_cy6(*stops[0], dirmat, local)
+    # codes, sizes = traceback_one_cy6(*stops[0], dirmat, local)
 
     # TODO: adjust for local
-    path = PairAlignPath(sizes, codes)
+    # path = PairAlignPath(sizes, codes)
 
-    return score, path
+    # return score, path
 
 
 def _seq_to_bytes(seq):
@@ -113,7 +112,7 @@ def _submat_from_mm(seq1, seq2, match, mismatch):
 
 
 def _submat_from_sm(seq1, seq2, sub_score):
-    """Pre-compute a match/mismatch array to facilitate lookup."""
+    """Pre-compute a substitution array to facilitate lookup."""
     seq1 = sub_score._char_hash[seq1]
     seq2 = sub_score._char_hash[seq2]
     try:
@@ -124,9 +123,6 @@ def _submat_from_sm(seq1, seq2, sub_score):
             "substitution matrix."
         )
     return np.ascontiguousarray(submat)
-
-
-### Step 1: Allocate alignment matrix ###
 
 
 def _alloc_matrices(m, n, affine, dtype=np.float64):
@@ -167,9 +163,6 @@ def _alloc_matrices(m, n, affine, dtype=np.float64):
     return scomat, insmat, delmat
 
 
-### Step 2: Initialize alignment matrix ###
-
-
 def _init_matrices(scomat, insmat, delmat, gap_open, gap_extend, local, free_ends):
     """Initialize alignment matrix(ces) by populating first column and row.
 
@@ -199,7 +192,7 @@ def _init_matrices(scomat, insmat, delmat, gap_open, gap_extend, local, free_end
         scomat[1:m1, 0] = 0
         scomat[0, 1:n1] = 0
     else:
-        series = np.arange(1, max(m1, n1))
+        series = np.arange(1, max(m1, n1), dtype=scomat.dtype)
         series *= -gap_extend
         if gap_open:
             series -= gap_open
@@ -208,15 +201,87 @@ def _init_matrices(scomat, insmat, delmat, gap_open, gap_extend, local, free_end
 
     # initialize insertion and deletion matrices
     if gap_open:
-        if local:
-            insmat[1:m1, 0] = 0
-            delmat[0, 1:n1] = 0
+        insmat[1:m1, 0] = -np.inf
+        delmat[0, 1:n1] = -np.inf
+        # series -= gap_open
+        # insmat[1:m1, 0] = series[:m1 - 1]
+        # delmat[0, 1:n1] = series[:n1 - 1]
+
+
+def _one_stop(scomat, local, free_ends):
+    """Locate one alignment stop.
+
+    Parameters
+    ----------
+    scomat : ndarray of shape (m, n)
+        Main matrix.
+    local : bool
+        Local or global alignment.
+    free_ends : bool
+        If end gaps are free from penalty.
+
+    Returns
+    -------
+    (int, int)
+        Coordinates of alignment end.
+
+    Notes
+    -----
+    When there is a tie, the smallest index (col, row) is favored.
+
+    """
+    m = scomat.shape[0] - 1
+    n = scomat.shape[1] - 1
+    if local:
+        return np.divmod(scomat.argmax(), n + 1)
+    if free_ends:
+        i = scomat[:, n].argmax()  # last column (ends with deletion)
+        j = scomat[m, :].argmax()  # last row (ends with insertion)
+        if scomat[i, n] >= scomat[m, j]:
+            return i, n
         else:
-            insmat[1:m1, 0] = -np.inf
-            delmat[0, 1:n1] = -np.inf
-            # series -= gap_open
-            # insmat[1:m1, 0] = series[:m1 - 1]
-            # delmat[0, 1:n1] = series[:n1 - 1]
+            return m, j
+    return m, n
+
+
+def _all_stops(scomat, local, free_ends):
+    """Locate all alignment stops.
+
+    Parameters
+    ----------
+    scomat : ndarray of shape (m, n)
+        Main matrix.
+    local : bool
+        Local or global alignment.
+    free_ends : bool
+        If end gaps are free from penalty.
+
+    Returns
+    -------
+    ndarray of int of shape (k, 2)
+        Coordinates of all (k) alignment ends.
+
+    Notes
+    -----
+    Coordinates (col, row) are in ascending order.
+
+    """
+    m = scomat.shape[0] - 1
+    n = scomat.shape[1] - 1
+    if local:
+        max_ = scomat.max()
+        return np.argwhere(scomat == max_)
+    if free_ends:
+        max_ = np.max([scomat[:, n].max(), scomat[m, :].max()])
+        ii = np.argwhere(scomat[:, n] == max_)
+        jj = np.argwhere(scomat[m, :-1] == max_)
+        return np.vstack(
+            (
+                np.column_stack((ii, np.full(ii.shape[0], n))),
+                np.column_stack((np.full(jj.shape[0], m), jj)),
+            )
+        )
+    return np.array([[m, n]])
 
 
 class PairAligner(SkbioObject):

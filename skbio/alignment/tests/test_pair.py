@@ -18,10 +18,17 @@ from skbio.sequence import Sequence, DNA, Protein
 from skbio.alignment._pair import PairAligner
 
 from skbio.alignment._pair import (
+    _submat_from_mm,
+    _submat_from_sm,
     _alloc_matrices,
     _init_matrices,
+    _one_stop,
+    _all_stops,
 )
-
+from skbio.alignment._c_pair import (
+    _fill_linear_matrix,
+    _fill_affine_matrices,
+)
 
 
 class TestPairAlign(unittest.TestCase):
@@ -84,6 +91,206 @@ class TestPairAlign(unittest.TestCase):
         self.assertTrue((obs[0][0, :] == 0).all())
         self.assertTrue((obs[1][1:, 0] == 0).all())
         self.assertTrue((obs[2][0, 1:] == 0).all())
+
+    def test_fill_linear_matrix(self):
+        seq1 = DNA("ACGT")._bytes
+        seq2 = DNA("AACTG")._bytes
+        m, n = seq1.size, seq2.size
+        submat = _submat_from_mm(seq1, seq2, 1, -1)
+
+        # global
+        obs = _alloc_matrices(m, n, False)
+        _init_matrices(*obs, 0, 2, local=False, free_ends=False)
+        _fill_linear_matrix(obs[0], submat, 2, local=False)
+        exp = np.array([[  0,  -2,  -4,  -6,  -8, -10],
+                        [ -2,   1,  -1,  -3,  -5,  -7],
+                        [ -4,  -1,   0,   0,  -2,  -4],
+                        [ -6,  -3,  -2,  -1,  -1,  -1],
+                        [ -8,  -5,  -4,  -3,   0,  -2]])
+        npt.assert_array_equal(obs[0], exp)
+
+        # local
+        obs = _alloc_matrices(m, n, False)
+        _init_matrices(*obs, 0, 2, local=True, free_ends=False)
+        _fill_linear_matrix(obs[0], submat, 2, local=True)
+        exp = np.array([[0, 0, 0, 0, 0, 0],
+                        [0, 1, 1, 0, 0, 0],
+                        [0, 0, 0, 2, 0, 0],
+                        [0, 0, 0, 0, 1, 1],
+                        [0, 0, 0, 0, 1, 0]])
+        npt.assert_array_equal(obs[0], exp)
+
+        # semi-global
+        obs = _alloc_matrices(m, n, False)
+        _init_matrices(*obs, 0, 2, local=False, free_ends=True)
+        _fill_linear_matrix(obs[0], submat, 2, local=False)
+        exp = np.array([[ 0,  0,  0,  0,  0,  0],
+                        [ 0,  1,  1, -1, -1, -1],
+                        [ 0, -1,  0,  2,  0, -2],
+                        [ 0, -1, -2,  0,  1,  1],
+                        [ 0, -1, -2, -2,  1,  0]])
+        npt.assert_array_equal(obs[0], exp)
+
+    def test_fill_affine_matrices(self):
+        seq1 = DNA("ACGT")._bytes
+        seq2 = DNA("AACTG")._bytes
+        m, n = seq1.size, seq2.size
+        submat = _submat_from_mm(seq1, seq2, 1, -1)
+
+        # global
+        obs = _alloc_matrices(m, n, True)
+        _init_matrices(*obs, 3, 1, local=False, free_ends=False)
+        _fill_affine_matrices(*obs, submat, 3, 1, local=False)
+        exp0 = np.array([[ 0, -4, -5, -6, -7, -8],
+                         [-4,  1, -3, -4, -5, -6],
+                         [-5, -3,  0, -2, -5, -6],
+                         [-6, -4, -4, -1, -3, -4],
+                         [-7, -5, -5, -5,  0, -4]])
+        npt.assert_array_equal(obs[0], exp0)
+        exp1 = np.array([[ -8,  -3,  -4,  -5,  -6],
+                         [ -9,  -7,  -4,  -5,  -6],
+                         [-10,  -8,  -8,  -5,  -6],
+                         [-11,  -9,  -9,  -9,  -4]])
+        npt.assert_array_equal(obs[1][1:, 1:], exp1)
+        exp2 = np.array([[ -8,  -9, -10, -11, -12],
+                         [ -3,  -7,  -8,  -9, -10],
+                         [ -4,  -4,  -6,  -9, -10],
+                         [ -5,  -5,  -5,  -7,  -8]])
+        npt.assert_array_equal(obs[2][1:, 1:], exp2)
+
+        # local
+        obs = _alloc_matrices(m, n, True)
+        _init_matrices(*obs, 3, 1, local=True, free_ends=False)
+        _fill_affine_matrices(*obs, submat, 3, 1, local=True)
+        exp0 = np.array([[0, 0, 0, 0, 0, 0],
+                         [0, 1, 1, 0, 0, 0],
+                         [0, 0, 0, 2, 0, 0],
+                         [0, 0, 0, 0, 1, 1],
+                         [0, 0, 0, 0, 1, 0]])
+        npt.assert_array_equal(obs[0], exp0)
+        exp1 = np.array([[-4, -3, -3, -4, -4],
+                         [-4, -4, -4, -2, -3],
+                         [-4, -4, -4, -4, -3],
+                         [-4, -4, -4, -4, -3]])
+        npt.assert_array_equal(obs[1][1:, 1:], exp1)
+        exp2 = np.array([[-4, -4, -4, -4, -4],
+                         [-3, -3, -4, -4, -4],
+                         [-4, -4, -2, -4, -4],
+                         [-4, -4, -3, -3, -3]])
+        npt.assert_array_equal(obs[2][1:, 1:], exp2)
+
+        # semi-global
+        obs = _alloc_matrices(m, n, True)
+        _init_matrices(*obs, 3, 1, local=False, free_ends=True)
+        _fill_affine_matrices(*obs, submat, 3, 1, local=False)
+        exp0 = np.array([[ 0,  0,  0,  0,  0,  0],
+                         [ 0,  1,  1, -1, -1, -1],
+                         [ 0, -1,  0,  2, -2, -2],
+                         [ 0, -1, -2, -1,  1, -1],
+                         [ 0, -1, -2, -3,  0,  0]])
+        npt.assert_array_equal(obs[0], exp0)
+        exp1 = np.array([[-4, -3, -3, -4, -5],
+                         [-4, -5, -4, -2, -3],
+                         [-4, -5, -6, -5, -3],
+                         [-4, -5, -6, -7, -4]])
+        npt.assert_array_equal(obs[1][1:, 1:], exp1)
+        exp2 = np.array([[-4, -4, -4, -4, -4],
+                         [-3, -3, -5, -5, -5],
+                         [-4, -4, -2, -6, -6],
+                         [-5, -5, -3, -3, -5]])
+        npt.assert_array_equal(obs[2][1:, 1:], exp2)
+
+    def test_one_stop(self):
+        # global (bottom-right corner)
+        scomat = np.array([[  0,  -2,  -4,  -6,  -8, -10],
+                           [ -2,   1,  -1,  -3,  -5,  -7],
+                           [ -4,  -1,   0,   0,  -2,  -4],
+                           [ -6,  -3,  -2,  -1,  -1,  -1],
+                           [ -8,  -5,  -4,  -3,   0,  -2]])
+        obs = _one_stop(scomat, local=False, free_ends=False)
+        self.assertTupleEqual(obs, (4, 5))
+
+        # local (maximum in the matrix)
+        scomat = np.array([[0, 0, 0, 0, 0, 0],
+                           [0, 1, 1, 0, 0, 0],
+                           [0, 0, 0, 2, 0, 0],
+                           [0, 0, 0, 0, 1, 1],
+                           [0, 0, 0, 0, 1, 0]])
+        obs = _one_stop(scomat, local=True, free_ends=False)
+        self.assertTupleEqual(obs, (2, 3))
+
+        # local, tie
+        scomat = np.array([[0, 0, 0, 0, 0, 0],
+                           [0, 0, 1, 0, 0, 0],
+                           [0, 0, 0, 2, 0, 1],
+                           [0, 1, 0, 0, 1, 0],
+                           [0, 0, 2, 0, 0, 0]])
+        obs = _one_stop(scomat, local=True, free_ends=False)
+        self.assertTupleEqual(obs, (2, 3))
+
+        # semi-global (maximum in last column and row)
+        scomat = np.array([[ 0,  0,  0,  0,  0,  0,  0],
+                           [ 0, -1,  1, -1, -1, -1, -1],
+                           [ 0, -1, -2,  2, -2, -2, -2],
+                           [ 0, -1, -2, -2,  3, -1, -1],
+                           [ 0,  1, -2, -3, -1,  4,  0]])
+        obs = _one_stop(scomat, local=True, free_ends=False)
+        self.assertTupleEqual(obs, (4, 5))
+
+        # semi-global, tie
+        scomat = np.array([[ 0,  0,  0,  0,  0,  0],
+                           [ 0,  1,  1, -1, -1, -1],
+                           [ 0, -1,  0,  2,  0, -2],
+                           [ 0, -1, -2,  0,  1,  1],
+                           [ 0, -1, -2, -2,  1,  0]])
+        obs = _one_stop(scomat, local=False, free_ends=True)
+        self.assertTupleEqual(obs, (3, 5))
+
+    def test_all_stops(self):
+        # global (always unique)
+        scomat = np.array([[  0,  -2,  -4,  -6,  -8, -10],
+                           [ -2,   1,  -1,  -3,  -5,  -7],
+                           [ -4,  -1,   0,   0,  -2,  -4],
+                           [ -6,  -3,  -2,  -1,  -1,  -1],
+                           [ -8,  -5,  -4,  -3,   0,  -2]])
+        obs = _all_stops(scomat, local=False, free_ends=False)
+        npt.assert_array_equal(obs, [[4, 5]])
+
+        # local, unique
+        scomat = np.array([[0, 0, 0, 0, 0, 0],
+                           [0, 1, 1, 0, 0, 0],
+                           [0, 0, 0, 2, 0, 0],
+                           [0, 0, 0, 0, 1, 1],
+                           [0, 0, 0, 0, 1, 0]])
+        obs = _all_stops(scomat, local=True, free_ends=False)
+        npt.assert_array_equal(obs, [[2, 3]])
+
+        # local, tie (CGTC vs. TCGAG)
+        scomat = np.array([[0, 0, 0, 0, 0, 0],
+                           [0, 0, 1, 0, 0, 0],
+                           [0, 0, 0, 2, 0, 1],
+                           [0, 1, 0, 0, 1, 0],
+                           [0, 0, 2, 0, 0, 0]])
+        obs = _all_stops(scomat, local=True, free_ends=False)
+        npt.assert_array_equal(obs, [[2, 3], [4, 2]])
+
+        # semi-global, unique (TCGA vs. ATCGAG)
+        scomat = np.array([[ 0,  0,  0,  0,  0,  0,  0],
+                           [ 0, -1,  1, -1, -1, -1, -1],
+                           [ 0, -1, -2,  2, -2, -2, -2],
+                           [ 0, -1, -2, -2,  3, -1, -1],
+                           [ 0,  1, -2, -3, -1,  4,  0]])
+        obs = _all_stops(scomat, local=False, free_ends=True)
+        npt.assert_array_equal(obs, [[4, 5]])
+
+        # semi-global, tie
+        scomat = np.array([[ 0,  0,  0,  0,  0,  0],
+                           [ 0,  1,  1, -1, -1, -1],
+                           [ 0, -1,  0,  2,  0, -2],
+                           [ 0, -1, -2,  0,  1,  1],
+                           [ 0, -1, -2, -2,  1,  0]])
+        obs = _all_stops(scomat, local=False, free_ends=True)
+        npt.assert_array_equal(obs, [[3, 5], [4, 4]])
 
 
 class TestPairAligner(unittest.TestCase):
