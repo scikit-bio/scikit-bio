@@ -230,6 +230,7 @@ def _one_stop(scomat, local, free_ends):
     When there is a tie, the smallest index (col, row) is favored.
 
     """
+    # TODO: tie breaks when bottom right corner is a win
     m = scomat.shape[0] - 1
     n = scomat.shape[1] - 1
     if local:
@@ -273,8 +274,8 @@ def _all_stops(scomat, local, free_ends):
         return np.argwhere(scomat == max_)
     if free_ends:
         max_ = np.max([scomat[:, n].max(), scomat[m, :].max()])
-        ii = np.argwhere(scomat[:, n] == max_)
-        jj = np.argwhere(scomat[m, :-1] == max_)
+        ii = np.argwhere(scomat[:-1, n] == max_)
+        jj = np.argwhere(scomat[m, :] == max_)
         return np.vstack(
             (
                 np.column_stack((ii, np.full(ii.shape[0], n))),
