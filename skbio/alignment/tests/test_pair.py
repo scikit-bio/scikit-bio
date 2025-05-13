@@ -11,6 +11,8 @@ import unittest
 import numpy as np
 import numpy.testing as npt
 
+import skbio.io
+from skbio.util import get_data_path
 from skbio.alignment import TabularMSA
 from skbio.sequence import Sequence, DNA, Protein, SubstitutionMatrix
 
@@ -37,7 +39,7 @@ def _get_aligned(seq1, seq2, path):
 
 
 class PairAlignTests(unittest.TestCase):
-    def test_align_nucl(self):
+    def test_pair_align_nucl(self):
         # Recognition sites of restriction enzymes EcoRI (GAATTC) and BglII (AGATCT).
         seq1 = DNA("GAATTC")
         seq2 = DNA("AGATCT")
@@ -61,10 +63,6 @@ class PairAlignTests(unittest.TestCase):
 
         # There are 3 matches and 2 mismatches, so score = 3 - 2 = 1.
         self.assertEqual(res.score, 1)
-
-        # This alignment stops with a deletion (position [5, 6], which resides in the
-        # right-most column of the alignment matrix).
-        npt.assert_array_equal(res.stops, [[5, 6]])
 
         # By default, the alignment matrix is discarded.
         self.assertEqual(len(res.matrices), 0)
@@ -157,17 +155,17 @@ class PairAlignTests(unittest.TestCase):
         obs = _get_aligned(seq1, seq2, res.paths[0])
         self.assertTupleEqual(obs, exp)
 
-    def test_align_prot(self):
+    def test_pair_align_prot(self):
         # Nuclear localization signals (NLS') of SV40 (PKKKRKV) (Kalderon et al.,
         # Cell, 1984) and c-Myc (PAAKRVKLD) (Dang & Lee, Mol Cell Biol, 1988).
         seq1 = Protein("PKKKRKV")
         seq2 = Protein("PAAKRVKLD")
 
         # Default BLASTP parameters.
-        res = pair_align(seq1, seq2, sub_score="BLOSUM62", gap_cost=(11, 1))
-        self.assertEqual(res.score, 11)
-        self.assertEqual(res.paths[0].to_cigar(), "7M2I")
-        self.assertTupleEqual(_get_aligned(seq1, seq2, res.paths[0]),
+        obs = pair_align(seq1, seq2, sub_score="BLOSUM62", gap_cost=(11, 1))
+        self.assertEqual(obs.score, 11)
+        self.assertEqual(obs.paths[0].to_cigar(), "7M2I")
+        self.assertTupleEqual(_get_aligned(seq1, seq2, obs.paths[0]),
             ("PKKKRKV--",
              "PAAKRVKLD"))
 
@@ -175,45 +173,110 @@ class PairAlignTests(unittest.TestCase):
         # and rat (NP_775421.1).
         seq1 = Protein("DCYCRIPACIAGEKKYGTCIYQGKLWAFCC")
         seq2 = Protein("CYCRIGACVSGERLTGACGLNGRIYRLCC")
-        res = pair_align(seq1, seq2, sub_score="BLOSUM62", gap_cost=(11, 1))
-        self.assertEqual(res.score, 97)
-        self.assertEqual(res.paths[0].to_cigar(), "1D29M")
+        obs = pair_align(seq1, seq2, sub_score="BLOSUM62", gap_cost=(11, 1))
+        self.assertEqual(obs.score, 97)
+        self.assertEqual(obs.paths[0].to_cigar(), "1D29M")
 
+    def test_pair_align_challenge(self):
+        # This example is from Altschul & Erickson, Bull Math Biol, 1986 (Fig. 2),
+        # which showed that the original Gotoh algorithm (1982) could fail in some
+        # situations. Specifically, if the traceback process does not jump between
+        # matrices, it won't be able to distinguish ties between creating a new gap
+        # vs. extending an existing gap. In this example, such a tie happens in cell
+        # (2, 5). This test could be useful during future attempts to improve the
+        # algorithm (e.g., by introducing a traceback matrix).
+        seq1 = DNA("AGT")
+        seq2 = DNA("TGAGTT")
+        obs = pair_align(seq1, seq2, sub_score=(0, -1), gap_cost=(1, 1),
+                         free_ends=False, max_paths=None, keep_matrices=True)
+        self.assertEqual(obs.score, -5)
+        self.assertEqual(len(obs.paths), 3)
+        self.assertEqual(obs.paths[0].to_cigar(), "2I3M1I")
+        self.assertEqual(obs.paths[1].to_cigar(), "2M3I1M")
+        self.assertEqual(obs.paths[2].to_cigar(), "2I2M1I1M")
+        npt.assert_array_equal(obs.matrices[0], np.array([
+            [ 0, -2, -3, -4, -5, -6, -7],
+            [-2, -1, -3, -3, -5, -6, -7],
+            [-3, -3, -1, -3, -3, -5, -6],
+            [-4, -3, -3, -2, -4, -3, -5]]))
+        npt.assert_array_equal(obs.matrices[1][1:, 1:], np.array([
+            [-4, -3, -4, -5, -6, -7],
+            [-5, -5, -3, -4, -5, -6],
+            [-6, -5, -5, -4, -5, -5]]))
+        npt.assert_array_equal(obs.matrices[2][1:, 1:], np.array([
+            [-4, -5, -6, -7, -8, -9],
+            [-3, -5, -5, -7, -8, -9],
+            [-4, -3, -5, -5, -7, -8]]))
 
-    # def test_align(self):
-    #     obs = PairAligner()
-    #     obs.align("AATCG", "AACG")
-    #     npt.assert_array_equal(obs._seq1, [65, 65, 84, 67, 71])
-    #     npt.assert_array_equal(obs._seq2, [65, 65, 67, 71])
-    #     self.assertEqual(obs._len1, 5)
-    #     self.assertEqual(obs._len2, 4)
-    #     self.assertEqual(obs._score, 2)
-    #     exp = np.array([
-    #         [  0,  -2,  -4,  -6,  -8],
-    #         [ -2,   1,  -1,  -3,  -5],
-    #         [ -4,  -1,   2,   0,  -2],
-    #         [ -6,  -3,   0,   1,  -1],
-    #         [ -8,  -5,  -2,   1,   0],
-    #         [-10,  -7,  -4,  -1,   2],
-    #     ])
-    #     npt.assert_array_equal(obs._alnmat, exp)
+    def test_pair_align_edge(self):
+        obs = pair_align("AAA", "TTT", sub_score=(1, -1), gap_cost=2)
+        self.assertEqual(obs.paths[0].to_cigar(), "3I3D")
 
-    #     obs = PairAligner()
-    #     obs.align("AAGCGTC", "AGCGGTA")
-    #     self.assertEqual(obs._score, 0)
-    #     exp = np.array([
-    #         [  0,  -2,  -4,  -6,  -8, -10, -12, -14],
-    #         [ -2,   1,  -1,  -3,  -5,  -7,  -9, -11],
-    #         [ -4,  -1,   0,  -2,  -4,  -6,  -8,  -8],
-    #         [ -6,  -3,   0,  -1,  -1,  -3,  -5,  -7],
-    #         [ -8,  -5,  -2,   1,  -1,  -2,  -4,  -6],
-    #         [-10,  -7,  -4,  -1,   2,   0,  -2,  -4],
-    #         [-12,  -9,  -6,  -3,   0,   1,   1,  -1],
-    #         [-14, -11,  -8,  -5,  -2,  -1,   0,   0],
-    #     ])
-    #     npt.assert_array_equal(obs._alnmat, exp)
+        # local alignment returns no path or stops
+        obs = pair_align("AAA", "TTT", local=True, sub_score=(1, -1), gap_cost=2)
+        self.assertEqual(len(obs.paths), 0)
 
+        # single character, identical
+        obs = pair_align("A", "A")
+        self.assertEqual(obs.paths[0].to_cigar(), "1M")
+        obs = pair_align("A", "A", free_ends=False)
+        self.assertEqual(obs.paths[0].to_cigar(), "1M")
+        obs = pair_align("A", "A", local=True)
+        self.assertEqual(obs.paths[0].to_cigar(), "1M")
 
+        # single character, different
+        obs = pair_align("A", "T")
+        self.assertEqual(obs.paths[0].to_cigar(), "1I1D")
+        obs = pair_align("A", "T", free_ends=False)
+        self.assertEqual(obs.paths[0].to_cigar(), "1M")
+        obs = pair_align("A", "T", local=True)
+        self.assertEqual(len(obs.paths), 0)  # no path returned
+
+    def test_pair_align_real(self):
+        # Perform semi-global alignment of the 16S rRNA gene sequences of Escherichia
+        # coli and Streptococcus pneumoniae, using BLASTN's default parameters.
+        with open(get_data_path("16s.frn"), "r") as fh:
+            seq1, seq2 = skbio.io.read(fh, format="fasta", constructor=DNA)
+        obs = pair_align(seq1, seq2, sub_score=(2, -3), gap_cost=(5, 2))
+        self.assertEqual(obs.score, 1199)
+
+        # Instead perform global alignment using EMBOSS needle's default parameters.
+        # Note: the score should be exact because it only involves half-integers.
+        # `assertAlmostEqual` is used here just in case.
+        obs = pair_align(seq1, seq2, sub_score="NUC.4.4", gap_cost=(9.5, 0.5),
+                         free_ends=False)
+        self.assertAlmostEqual(obs.score, 4355.5)
+
+        # Map the 16S rRNA V4 primers (515F and 806R) to the E. coli sequence. Note
+        # that there are degenerate characters in the primer sequences.
+        # Source: https://earthmicrobiome.org/protocols-and-standards/16s/
+        seq515F = DNA("GTGYCAGCMGCCGCGGTAA")
+        seq806R = DNA("GGACTACNVGGGTWTCTAAT").reverse_complement()
+
+        # Perform semi-global alignment using BLASTN's default parameters.
+        # There is a unique alignment.
+        obs = pair_align(seq515F, seq1, sub_score=(2, -3), gap_cost=(5, 2), max_paths=10)
+        self.assertEqual(obs.score, 28)
+        self.assertEqual(len(obs.paths), 1)
+        self.assertEqual(obs.paths[0].to_cigar(), "505I19M926I")
+        msa = TabularMSA.from_path_seqs(obs.paths[0], [seq515F, seq1])[:, 500:530]
+        self.assertEqual(str(msa[0]), "-----GTGYCAGCMGCCGCGGTAA------")
+        self.assertEqual(str(msa[1]), "ACTCCGTGCCAGCAGCCGCGGTAATACGGA")
+
+        obs = pair_align(seq806R, seq1, sub_score=(2, -3), gap_cost=(5, 2), max_paths=10)
+        self.assertEqual(obs.score, 25)
+        self.assertEqual(len(obs.paths), 1)
+        self.assertEqual(obs.paths[0].to_cigar(), "777I20M653I")
+        msa = TabularMSA.from_path_seqs(obs.paths[0], [seq806R, seq1])[:, 770:805]
+        self.assertEqual(str(msa[0]), "-------ATTAGAWACCCBNGTAGTCC--------")
+        self.assertEqual(str(msa[1]), "AAACAGGATTAGATACCCTGGTAGTCCACGCCGTA")
+
+        # Perform local alignment instead.
+        obs = pair_align(seq515F, seq1, local=True, sub_score=(2, -3),
+                         gap_cost=(5, 2), max_paths=10)
+        self.assertEqual(obs.score, 28)
+        self.assertEqual(len(obs.paths), 1)
+        self.assertEqual(obs.paths[0].to_cigar(), "19M")
 
     def test_alloc_matrices(self):
         # linear

@@ -63,8 +63,7 @@ def pair_align(
         trigger a less efficient traceback algorithm to enumerate up to this number of
         paths. Setting it as None will return all paths. However, be cautious that the
         total number of paths may be extremely large and could stress the system.
-        Setting it as 0 will disable traceback and return no path. See also ``stops``
-        below.
+        Setting it as 0 will disable traceback and return no path.
 
     tolerance : float, optional
         Absolute tolerance in comparing scores of alternative alignment paths. This is
@@ -87,14 +86,6 @@ def pair_align(
     paths : list of :class:`~skbio.alignment.PairAlignPath`
         Alignment paths. Up to ``max_paths`` paths will be returned. Note that all
         paths are optimal and share the same alignment score.
-
-    stops : ndarray of int of shape (n_stops, 2)
-        Positions in sequences 1 and 2 where the optimal alignment paths stop (i.e.,
-        the index immediately after the last character in the alignment). Each stop
-        may correspond to one or multiple paths. ``paths`` are grouped and ordered by
-        their stops. When ``max_paths`` is 0 or 1, only one stop (if any) is returned.
-        When it is larger than 1, all stops are returned, regardless of the number of
-        paths to return.
 
     matrices : list of ndarray of float of shape (m + 1, n + 1), optional
         Alignment matrices generated during the computation.
@@ -190,14 +181,11 @@ def pair_align(
     else:
         matrices = [matrices[0]]
 
-    return PairAlignResult(float(score), paths, stops, matrices)
+    return PairAlignResult(float(score), paths, matrices)
 
 
 # pairwise alignment result
-PairAlignResult = namedtuple(
-    "PairAlignResult",
-    ["score", "paths", "stops", "matrices"],
-)
+PairAlignResult = namedtuple("PairAlignResult", ["score", "paths", "matrices"])
 
 
 def _seq_to_bytes(seq):
@@ -925,31 +913,26 @@ def _traceback_all(
                 # to create copies of the path. Otherwise, we can use the same path to
                 # save memory and runtime.
                 if k < n_moves_1:
-                    new_lengths = lengths.copy()
-                    new_states = states.copy()
+                    lengths_ = lengths.copy()
+                    states_ = states.copy()
                 else:
-                    new_lengths = lengths
-                    new_states = states
+                    lengths_ = lengths
+                    states_ = states
 
-                # Extend existing segment or create new segment.
+                # Deal with gap state. 3 means jumping from main matrix into another
+                # matrix without advancing the path, therefore reset the state to the
+                # previous state. Otherwise (0, 1, 2), check if state is identical to
+                # the previous state. If so, extend the current segment. Else, create
+                # a new segment.
                 state = row[2]
-                if state < 3:
-                    if state == prev_state:
-                        new_lengths[-1] += 1
-                    else:
-                        new_lengths.append(1)
-                        new_states.append(state)
-                        prev_state = state
+                if state == 3:
+                    state = prev_state
+                elif state == prev_state:
+                    lengths_[-1] += 1
+                else:
+                    lengths_.append(1)
+                    states_.append(state)
 
-                stack.append(
-                    (
-                        i - row[0],
-                        j - row[1],
-                        row[3],
-                        new_lengths,
-                        new_states,
-                        prev_state,
-                    )
-                )
+                stack.append((i - row[0], j - row[1], row[3], lengths_, states_, state))
 
     return paths
