@@ -9,7 +9,7 @@
 
 This module exposes a :class:`NetEmbedMixin` that mirrors the pattern used in
 :pyfile:`skbio/util/_plotting.py`.  The mixin provides **lazy access** to the
-optional Rust extension package *graphembed-rs*, keeping the dependency strictly 
+optional Rust extension package *graphembed-rs*, keeping the dependency strictly
 optional at import time.
 """
 
