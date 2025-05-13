@@ -59,7 +59,7 @@ Alignment algorithms (new)
 .. autosummary::
    :toctree: generated/
 
-    PairAligner
+    pair_align
 
 
 Deprecated functionality
@@ -241,7 +241,7 @@ from ._pairwise import (
 from skbio.alignment._ssw_wrapper import StripedSmithWaterman, AlignmentStructure
 from skbio.alignment._path import AlignPath, PairAlignPath
 from skbio.alignment._score import align_score
-from ._pair import PairAligner
+from skbio.alignment._pair import pair_align
 
 __all__ = [
     "TabularMSA",
@@ -258,5 +258,5 @@ __all__ = [
     "local_pairwise_align_protein",
     "make_identity_substitution_matrix",
     "align_score",
-    "PairAligner",
+    "pair_align",
 ]

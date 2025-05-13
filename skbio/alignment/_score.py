@@ -154,7 +154,7 @@ def align_score(alignment, sub_score, gap_cost, free_ends=True, gap_chars="-."):
           See also notes below.
 
     free_ends : bool, optional
-        Whether gaps at the terminals of the sequences should be penalized. It can be:
+        Whether gaps at the sequence terminals are free from penalization. It can be:
 
         - True (default): Do not penalize terminal gaps. This behavior is known as the
           semi-global (or "glocal") alignment.
@@ -201,7 +201,7 @@ def align_score(alignment, sub_score, gap_cost, free_ends=True, gap_chars="-."):
     It should be noted that, discrepancy exists among literature and implementations
     regarding whether gap extension penalty should apply to the first position of a
     gap. scikit-bio's equation is consistent with multiple common alignment tools,
-    such as BLAST ([1]_), Minimap2, SeqAn3, and WFA2-lib.
+    such as BLAST [1]_, Minimap2, SeqAn3, and WFA2-lib.
 
     Meanwhile, multiple other tools, such as EMBOSS, parasail, Biopython and Biotite,
     use the following equation instead:
